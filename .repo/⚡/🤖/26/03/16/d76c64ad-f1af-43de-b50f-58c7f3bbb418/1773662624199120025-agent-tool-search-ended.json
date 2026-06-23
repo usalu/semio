@@ -17,7 +17,7 @@
         "maxResults": 20,
         "query": "onSelectionChange|onNodeClick|onNodesChange|selectedNodes|useEffect.*selection",
         "isRegexp": true,
-        "includePattern": "**/semio/sketchpad/sketchpad/shared.ts"
+        "includePattern": "**/compose/sketchpad/sketchpad/shared.ts"
       },
       "tool_response": "",
       "tool_use_id": "toolu_01EMvz3f2JQHuXeRj9D7jvkT__vscode-1773658270459",

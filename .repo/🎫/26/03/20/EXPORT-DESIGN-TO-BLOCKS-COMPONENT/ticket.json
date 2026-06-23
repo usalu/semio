@@ -3,7 +3,7 @@
   "emoji": "🧩",
   "status": "closed",
   "description": "Create a new Grasshopper component that exports a design to Rhino blocks. Every type becomes a block definition and every piece becomes a block instance. Takes Kit and DesignId as input, outputs native block instances.",
-  "summary": "Created ExportDesignToBlocksComponent in Semio.Grasshopper. The component takes a Kit, DesignId, and optional Tags as input. It resolves piece planes via BFS over connections using connector geometry (same algorithm as ExportDesignModel), creates a Rhino block definition per unique type (importing geometry from the type's model file blob), and outputs native InstanceReferenceGeometry block instances per piece positioned at their computed planes. Also made Kit.ExportFindMatchingModel public for reuse. Added 3 tests verifying param registration, GUID uniqueness, and metadata.",
+  "summary": "Created ExportDesignToBlocksComponent in Compose.Grasshopper. The component takes a Kit, DesignId, and optional Tags as input. It resolves piece planes via BFS over connections using connector geometry (same algorithm as ExportDesignModel), creates a Rhino block definition per unique type (importing geometry from the type's model file blob), and outputs native InstanceReferenceGeometry block instances per piece positioned at their computed planes. Also made Kit.ExportFindMatchingModel public for reuse. Added 3 tests verifying param registration, GUID uniqueness, and metadata.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1003"
   },

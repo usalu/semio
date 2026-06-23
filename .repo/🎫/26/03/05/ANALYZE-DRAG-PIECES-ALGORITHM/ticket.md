@@ -21,7 +21,7 @@ Bulk close
 
 ### Data Model
 
-In semio, connections define parent-child relationships:
+In compose, connections define parent-child relationships:
 - **connecting** piece = parent
 - **connected** piece = child
 - The connection's `u`/`v` encode the child's relative diagram position to its parent

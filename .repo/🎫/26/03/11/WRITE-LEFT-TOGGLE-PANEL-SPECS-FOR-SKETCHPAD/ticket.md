@@ -19,7 +19,7 @@ Added prompt-ready manual formula and diff addon template beneath Left Toggle Pa
 
 - Reopened existing ticket `2026/03/11/WRITE-LEFT-TOGGLE-PANEL-SPECS-FOR-SKETCHPAD` for follow-up spec format request.
 - Queried repository context with `./repo/cli/cli tree "left toggle panel sketchpad"`.
-- Updated `semio/js/sketchpad/README.md` to include formula/manual + diff-driven prompt template under the existing left panel specs.
+- Updated `compose/js/sketchpad/README.md` to include formula/manual + diff-driven prompt template under the existing left panel specs.
 
 ## Todos
 

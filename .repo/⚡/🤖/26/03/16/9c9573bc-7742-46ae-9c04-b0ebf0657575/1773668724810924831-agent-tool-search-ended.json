@@ -6,7 +6,7 @@
     "kind": "agent.file.read.ended",
     "second": "2026-03-16T13:45:24Z",
     "session": "9c9573bc-7742-46ae-9c04-b0ebf0657575",
-    "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
+    "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
   },
   "native": {
     "event": {
@@ -15,10 +15,10 @@
       "model": "default",
       "tool_name": "Grep",
       "tool_input": {
-        "pattern": "package semio",
-        "file_path": "/workspaces/semio/semio/go/semio_test.go"
+        "pattern": "package compose",
+        "file_path": "/workspaces/semio/compose/go/compose_test.go"
       },
-      "tool_output": "{\"pattern\":\"package semio\",\"success\":true}",
+      "tool_output": "{\"pattern\":\"package compose\",\"success\":true}",
       "duration": 24.487,
       "tool_use_id": "call_pAYhVxDIV4F165xMabJr0xEr\nfc_07029c2b3907fcc90169b809728fc0819a94bc80e4d859a950",
       "hook_event_name": "postToolUse",
@@ -27,7 +27,7 @@
         "/workspaces/semio"
       ],
       "user_email": "ueli.saluz@posteo.de",
-      "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
+      "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
     }
   },
   "response": {}

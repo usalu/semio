@@ -1,5 +1,5 @@
 ---
-goal: SEMIO/JS
+goal: COMPOSE/JS
 ---
 
 # Ticket

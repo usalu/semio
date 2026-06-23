@@ -27,7 +27,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "semio/semio/semio/js",
+              "path": "compose/compose/compose/js",
               "lines": {
                 "added": 0,
                 "removed": 2
@@ -42,7 +42,7 @@
           "modified": [],
           "added": [
             {
-              "path": "semio/js",
+              "path": "compose/js",
               "lines": {
                 "added": 0,
                 "removed": 0
@@ -55,7 +55,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "⚙semio/js/playwright.config.ts",
+              "path": "⚙compose/js/playwright.config.ts",
               "lines": {
                 "added": 5,
                 "removed": 7

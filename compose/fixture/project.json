@@ -1,0 +1,28 @@
+{
+  "name": "@compose/fixture",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "regenerate-metabolism-light": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "compose/fixture",
+        "command": "bun ./script.ts regenerate-metabolism-light"
+      }
+    },
+    "assemble-metabolism-initial-kit": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "compose/fixture",
+        "command": "bun -e \"import { assembleSplitInitialKitFromDirectory } from './script.ts'; console.log(JSON.stringify(assembleSplitInitialKitFromDirectory('kit/dev/metabolism/wip/initialKit')).length)\""
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "compose/fixture",
+        "command": "bun -e \"console.log('@compose/fixture is a source-only workspace and does not require a build step.')\"",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

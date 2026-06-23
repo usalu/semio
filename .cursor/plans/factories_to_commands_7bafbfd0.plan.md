@@ -1,6 +1,6 @@
 ---
 name: factories to commands
-overview: Generalize `FactorySpec` to a `CommandSpec` with declarative selection inputs (raw + analytic topology kinds), per-state `selection.accept` filters, and `CommandResponse { ok, errors, warnings, infos, diff, data }` outputs (semio-style nullable `TopologyDiff`), letting read-only commands like Distance/Area participate in the same pipeline.
+overview: Generalize `FactorySpec` to a `CommandSpec` with declarative selection inputs (raw + analytic topology kinds), per-state `selection.accept` filters, and `CommandResponse { ok, errors, warnings, infos, diff, data }` outputs (compose-style nullable `TopologyDiff`), letting read-only commands like Distance/Area participate in the same pipeline.
 todos:
   - id: rename
     content: Rename `factory` → `command` across core/stately/r3f/play + fixtures + schema string + preset keys
@@ -43,7 +43,7 @@ A `Command` = the previous `Factory` + first-class **selection inputs** + first-
 CommandResponse = { ok, errors[], warnings[], infos[], diff: TopologyDiff, data: unknown }
 TopologyDiff    = { vertices, edges, wires, faces, shells, cells, cellComplexes, clusters }
                   each = { added: Record<id, Record>, modified: Record<id, RecordDiff>, removed: string[] }
-RecordDiff      = partial nullable shadow (semio rule: nullable field present = update; `removeX: true` to clear by-default-nullable field)
+RecordDiff      = partial nullable shadow (compose rule: nullable field present = update; `removeX: true` to clear by-default-nullable field)
 ```
 
 Read-only commands (Distance, Area, Volume) emit an empty `diff` and populate `data` with the numeric/structured result. Write commands emit a non-empty `diff`; the runtime applies that diff to `ModelDocument.topology` and records a `DocumentCommand` whose `undo` is the inverse diff.

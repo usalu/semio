@@ -1,5 +1,5 @@
 *** Begin Patch
-*** Update File: c:/git/semio/semio/graphql/target.schema.graphql
+*** Update File: c:/git/compose/compose/graphql/target.schema.graphql
 interface Artifact implements RichStrongEntity {
   # Node
   id: ID! # data // uuidv7

@@ -2,7 +2,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-const fixtures = "c:/git/semio/spatial/fixtures";
+const fixtures = "c:/git/compose/spatial/fixtures";
 
 function migrate(raw: Record<string, unknown>): Record<string, unknown> {
 	const cells = Array.isArray(raw.cells) ? (raw.cells as { id: string }[]) : [];

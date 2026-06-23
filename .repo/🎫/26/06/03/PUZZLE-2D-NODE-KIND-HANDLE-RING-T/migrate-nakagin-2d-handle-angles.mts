@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** @emoji 🧾 One-off: rewrite nakagin 2d kind-catalog + instance handle angles from semio connector ring `t`. */
+/** @emoji 🧾 One-off: rewrite nakagin 2d kind-catalog + instance handle angles from compose connector ring `t`. */
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import {
@@ -10,7 +10,7 @@ import {
 } from "../../../../../../puzzle/2d/react/index.tsx";
 
 const repoRoot = join(import.meta.dir, "..", "..", "..", "..", "..", "..");
-const kitPath = join(repoRoot, "semio/fixtures/nakagin-capsule-tower.filtered.kit.semio.json");
+const kitPath = join(repoRoot, "compose/fixtures/nakagin-capsule-tower.filtered.kit.compose.json");
 const fixturePath = join(repoRoot, "puzzle/2d/fixture/nakagin-capsule-tower.2d.json");
 
 type PortRow = { readonly id: string; readonly name: string };

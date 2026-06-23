@@ -1,85 +1,85 @@
 [
   {
-    "source": "semio.metabolism.light.handle.019ab243-21f3-7380-93c6-994a9a023448",
-    "target": "semio.metabolism.light.handle.019ab243-21f3-7380-93c6-9e678ad2f321",
+    "source": "compose.metabolism.light.handle.019ab243-21f3-7380-93c6-994a9a023448",
+    "target": "compose.metabolism.light.handle.019ab243-21f3-7380-93c6-9e678ad2f321",
     "bidirectional": true,
     "specificity": "handle"
   },
   {
-    "source": "semio.metabolism.light.handle.019ab243-21f3-7380-93c6-a04a8b137527",
-    "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-46be42c7d6ab",
+    "source": "compose.metabolism.light.handle.019ab243-21f3-7380-93c6-a04a8b137527",
+    "target": "compose.metabolism.light.handle.019ab243-21f4-73df-8cb4-46be42c7d6ab",
     "bidirectional": true,
     "specificity": "handle"
   },
   {
-    "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
-    "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
+    "source": "compose.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+    "target": "compose.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
     "bidirectional": true,
     "specificity": "handle"
   },
   {
-    "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
-    "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
+    "source": "compose.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
+    "target": "compose.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
     "bidirectional": true,
     "specificity": "handle"
   },
   {
-    "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
-    "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
+    "source": "compose.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
+    "target": "compose.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
     "bidirectional": true,
     "specificity": "handle"
   },
   {
-    "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
-    "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-58d90f95991e",
+    "source": "compose.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
+    "target": "compose.metabolism.light.handle.019ab243-21f4-73df-8cb4-58d90f95991e",
     "bidirectional": true,
     "specificity": "handle"
   },
   {
-    "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
-    "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+    "source": "compose.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
+    "target": "compose.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
     "bidirectional": true,
     "specificity": "handle"
   },
   {
-    "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
-    "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-5d94ed5e51b1",
+    "source": "compose.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
+    "target": "compose.metabolism.light.handle.019ab243-21f4-73df-8cb4-5d94ed5e51b1",
     "bidirectional": true,
     "specificity": "handle"
   },
   {
-    "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-58d90f95991e",
-    "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
+    "source": "compose.metabolism.light.handle.019ab243-21f4-73df-8cb4-58d90f95991e",
+    "target": "compose.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
     "bidirectional": true,
     "specificity": "handle"
   },
   {
-    "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-5d94ed5e51b1",
-    "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
+    "source": "compose.metabolism.light.handle.019ab243-21f4-73df-8cb4-5d94ed5e51b1",
+    "target": "compose.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
     "bidirectional": true,
     "specificity": "handle"
   },
   {
-    "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-60ea93872506",
-    "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-671a4aea23eb",
+    "source": "compose.metabolism.light.handle.019ab243-21f4-73df-8cb4-60ea93872506",
+    "target": "compose.metabolism.light.handle.019ab243-21f4-73df-8cb4-671a4aea23eb",
     "bidirectional": true,
     "specificity": "handle"
   },
   {
-    "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-6b15b40049fb",
-    "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-6c704c2a75e6",
+    "source": "compose.metabolism.light.handle.019ab243-21f4-73df-8cb4-6b15b40049fb",
+    "target": "compose.metabolism.light.handle.019ab243-21f4-73df-8cb4-6c704c2a75e6",
     "bidirectional": true,
     "specificity": "handle"
   },
   {
-    "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-73ce526cb47c",
-    "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-76bc3f56347a",
+    "source": "compose.metabolism.light.handle.019ab243-21f4-73df-8cb4-73ce526cb47c",
+    "target": "compose.metabolism.light.handle.019ab243-21f4-73df-8cb4-76bc3f56347a",
     "bidirectional": true,
     "specificity": "handle"
   },
   {
-    "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7a9a1e3c40ea",
-    "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7ddf5d3ba702",
+    "source": "compose.metabolism.light.handle.019ab243-21f4-73df-8cb4-7a9a1e3c40ea",
+    "target": "compose.metabolism.light.handle.019ab243-21f4-73df-8cb4-7ddf5d3ba702",
     "bidirectional": true,
     "specificity": "handle"
   }

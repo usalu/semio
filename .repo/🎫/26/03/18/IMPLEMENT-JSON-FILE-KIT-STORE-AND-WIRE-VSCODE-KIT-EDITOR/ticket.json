@@ -2,7 +2,7 @@
   "title": "Implement Json File Kit Store And Wire Vscode Kit Editor",
   "emoji": "🔨",
   "status": "closed",
-  "description": "Implement JsonFileKitStore in semio/studio/studio.ts as a UndoableKitStore backed by JSON file I/O. Wire the semio/vscode extension to use JsonFileKitStore + embedded Sketchpad webview when opening *.kit.json files. Add tests for JsonFileKitStore. Update filename patterns and exports.",
+  "description": "Implement JsonFileKitStore in compose/studio/studio.ts as a UndoableKitStore backed by JSON file I/O. Wire the compose/vscode extension to use JsonFileKitStore + embedded Sketchpad webview when opening *.kit.json files. Add tests for JsonFileKitStore. Update filename patterns and exports.",
   "summary": "Implemented JsonFileKitStore in studio.ts with full UndoableKitStore contract (undo/redo, transact, save, reload, applyExternalUpdate). Created webview.tsx entry point mounting Sketchpad with JsonFileKitStore via VS Code postMessage adapter. Rewrote extension.ts with CustomTextEditorProvider bridging file I/O via message protocol. Updated vite.config.ts with dual-mode build (extension + webview). All 48 tests pass. Both builds succeed.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/970"

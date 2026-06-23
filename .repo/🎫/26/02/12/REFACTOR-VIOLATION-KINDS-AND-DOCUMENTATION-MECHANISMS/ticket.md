@@ -12,12 +12,12 @@ Refactored statute tree, documentation mechanisms, and file header format. Renam
 
 - **repo/cli/main.go**: Renamed statute constants (missing-header → missing-header-region, etc.), added 4 new statutes, updated StatuteMeta table, policy groups (File with nested Wrong Identification Id/Uri, Section with nested Wrong Format, Definition), FormatHeader to 6 params with [ID](URI) format and flat content (no License/Requirements subregions), headerPolicy with [ID](URI) regex validation, sectionPolicy isExempt simplified to `s.Name == "Header"`, requirementsPolicy with fallback to scan flat header spec lines when no Requirements child section, autofix for [ID](URI) format, added FileHeaderUri function.
 - **repo/cli/main_test.go**: Updated FormatHeader tests (6 args, [ID](URI) checks), autofix tests (line-based [ID](URI) replacement), bulk removal of 15 old License/Requirements subregion patterns, Statute round-trip test expectations (missing-header → missing-header-region), renamed TestHeaderPolicyOldFormatId.
-- **semio/assets/repo/some/folder/file_invalid.tsx**: Rewritten with no identification, AGPL+MIT (wrong license), no contributors, unnamed region, orphan definition.
-- **semio/assets/repo/some/folder/file_fixable.tsx**: Rewritten with missing endregion name and name mismatch breachs (autofixable).
-- **semio/assets/repo/some/folder/file_fixable_expected.tsx**: Rewritten with corrected endregion names.
-- **semio/assets/repo/some/folder/file_fixed.{tsx,py,cs,go}**: Valid headers with [ID](URI), flat license, summary.
-- **semio/assets/repo/some/folder/file_invalid.{py,cs,go}**: Old-format plain IDs.
-- **semio/assets/repo/some/folder/file_empty_region.tsx**: Valid header with [ID](URI).
+- **compose/assets/repo/some/folder/file_invalid.tsx**: Rewritten with no identification, AGPL+MIT (wrong license), no contributors, unnamed region, orphan definition.
+- **compose/assets/repo/some/folder/file_fixable.tsx**: Rewritten with missing endregion name and name mismatch breachs (autofixable).
+- **compose/assets/repo/some/folder/file_fixable_expected.tsx**: Rewritten with corrected endregion names.
+- **compose/assets/repo/some/folder/file_fixed.{tsx,py,cs,go}**: Valid headers with [ID](URI), flat license, summary.
+- **compose/assets/repo/some/folder/file_invalid.{py,cs,go}**: Old-format plain IDs.
+- **compose/assets/repo/some/folder/file_empty_region.tsx**: Valid header with [ID](URI).
 
 ## Log
 

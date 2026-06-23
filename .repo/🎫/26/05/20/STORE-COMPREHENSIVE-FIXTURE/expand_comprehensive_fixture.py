@@ -1,4 +1,4 @@
-"""Expand kit-store.comprehensive.semio.json to exercise every store GraphQL feature."""
+"""Expand kit-store.comprehensive.compose.json to exercise every store GraphQL feature."""
 import json
 from pathlib import Path
 
@@ -16,7 +16,7 @@ OFFSET = {"u": 0.25, "v": 0.25}
 FEATURES = [
     "replay.golden.kit_graph_engine",
     "backbone.devJson",
-    "backbone.localDotSemio",
+    "backbone.localDotCompose",
     "read.store.wip.heads",
     "read.store.authoritative",
     "read.store.conflicts",
@@ -58,14 +58,14 @@ FEATURES = [
 ]
 
 fixture = {
-    "kind": "semio.kit_store.comprehensive",
+    "kind": "compose.kit_store.comprehensive",
     "schema": "🎆26🌙06⬆️1",
     "title": "Kit Store Comprehensive Scenario Catalog",
-    "summary": "Ordered steps exercising every store GraphQL read head, VCS command, kit/design/piece write, replay engine, backbone replay, and semio-store sidecar flow.",
+    "summary": "Ordered steps exercising every store GraphQL read head, VCS command, kit/design/piece write, replay engine, backbone replay, and compose-store sidecar flow.",
     "storeId": "test-store",
     "sidecarStoreId": "e0",
-    "goldenOps": "kit-store.golden.ops.semio.json",
-    "goldenExpected": "kit-store.golden.expected.semio.json",
+    "goldenOps": "kit-store.golden.ops.compose.json",
+    "goldenExpected": "kit-store.golden.expected.compose.json",
     "features": FEATURES,
     "replayEngines": ["apply_create_fixed_piece", "kit_graph_engine"],
     "coverage": {
@@ -105,7 +105,7 @@ fixture = {
             "stubs (delete*, design flatten, piece fix/move, type port/connector, …)",
         ],
         "replay": ["createdFixedPiece via kit_graph_engine and apply_create_fixed_piece"],
-        "backbone": ["devJson", "localDotSemio"],
+        "backbone": ["devJson", "localDotCompose"],
         "sidecar": ["stores preview", "checkpoints", "install+rename"],
     },
     "steps": [
@@ -469,8 +469,8 @@ fixture = {
         {
             "id": "backbone-sqlite-replay",
             "kind": "replayGoldenOpsBackbone",
-            "backbone": "localDotSemio",
-            "feature": "backbone.localDotSemio",
+            "backbone": "localDotCompose",
+            "feature": "backbone.localDotCompose",
         },
     ],
     "sidecarSteps": [
@@ -512,6 +512,6 @@ fixture = {
 for eng in fixture["replayEngines"]:
     fixture["features"].append(f"replay.engine.{eng}")
 
-out = Path(r"c:\git\semio\semio\assets\semio\kit-store.comprehensive.semio.json")
+out = Path(r"c:\git\compose\compose\assets\compose\kit-store.comprehensive.compose.json")
 out.write_text(json.dumps(fixture, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 print("wrote", out, "steps", len(fixture["steps"]), "features", len(fixture["features"]))

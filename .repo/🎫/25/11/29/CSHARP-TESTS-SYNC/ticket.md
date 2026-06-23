@@ -14,7 +14,7 @@ The C# codebase was out of date compared to the JavaScript/TypeScript implementa
 
 # Changes
 
-## Schema Fixes (Semio.cs)
+## Schema Fixes (Compose.cs)
 
 1. **DiffUpdate<T> Wrapper Class**: Created generic wrapper for `{ Id, Diff }` structure used in `*sDiff.Updated` properties
 
@@ -38,7 +38,7 @@ The C# codebase was out of date compared to the JavaScript/TypeScript implementa
 
 5. **Added Guid to Attribute class**
 
-## Bug Fixes (Semio.cs)
+## Bug Fixes (Compose.cs)
 
 1. **Design.Flatten Dictionary Key Mismatch**:
    - Fixed `connectors` dictionary - was built with `type.Guid` as key but accessed with `type.Name`

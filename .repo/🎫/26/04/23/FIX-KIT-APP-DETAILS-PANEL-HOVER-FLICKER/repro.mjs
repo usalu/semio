@@ -54,19 +54,19 @@ await page.waitForLoadState("networkidle");
 await page.waitForTimeout(3000);
 
 // Load the metabolism kit fixture and ship raw bytes into the page for import.
-const metabolismZipPath = path.resolve("semio/assets/semio/metabolism.zip");
+const metabolismZipPath = path.resolve("compose/assets/compose/metabolism.zip");
 const metabolismZipBytes = await readFile(metabolismZipPath);
 const zipB64 = metabolismZipBytes.toString("base64");
 
 const kitId = await page.evaluate(async (b64) => {
-    const store = window.__SEMIO_STORE__;
+    const store = window.__COMPOSE_STORE__;
     if (!store) return null;
     const bin = atob(b64);
     const buf = new Uint8Array(bin.length);
     for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
-    const mod = await import("/@fs/C:/git/semio/semio/js/index.ts");
+    const mod = await import("/@fs/C:/git/compose/compose/js/index.ts");
     const { kit } = await mod.importArchiveKit(buf);
-    await store.execute?.("semio.sketchpad.createKit", "semio.sketchpad.test.repro", kit, false, false);
+    await store.execute?.("compose.sketchpad.createKit", "compose.sketchpad.test.repro", kit, false, false);
     // SPA navigate via history
     window.history.pushState({}, "", `/kits/${kit.id}`);
     window.dispatchEvent(new PopStateEvent("popstate"));
@@ -84,7 +84,7 @@ const url = page.url();
 console.log("url after =", url);
 
 // Open details panel if not open.
-const rightToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.rightSidePanel"]');
+const rightToggle = page.locator('[id="compose.sketchpad.navbar.panelToggle.rightSidePanel"]');
 if (await rightToggle.count()) {
     const rightPanelExists = await page.locator('[data-panel="rightSidePanel"]').count();
     console.log("rightPanelExists=", rightPanelExists);
@@ -101,7 +101,7 @@ await detailsPanel.waitFor({ state: "visible", timeout: 10000 }).catch(() => {})
 const box = await detailsPanel.boundingBox();
 console.log("detailsPanel box=", box);
 // Click the details tab button
-const detailsTab = page.locator('[id="semio.sketchpad.navbar.panelToggle.details.show"]').first();
+const detailsTab = page.locator('[id="compose.sketchpad.navbar.panelToggle.details.show"]').first();
 if (await detailsTab.count()) {
     await detailsTab.click();
     await page.waitForTimeout(500);
@@ -117,7 +117,7 @@ console.log("table rows count=", tableHtml);
 
 // Try selecting a row in the table - use store to programmatically select a type.
 await page.evaluate(async (kitId) => {
-    const store = window.__SEMIO_STORE__;
+    const store = window.__COMPOSE_STORE__;
     if (!store || !store.hasKitApp?.({ kit: kitId })) return;
     const kitApp = store.kitApp(kitId);
     const kit = store.kit(kitId).getSnapshot().kit;

@@ -13,7 +13,7 @@
 
 - Removed all `[DEBUG]` console output from `customCollisionDetection` in `Sketchpad.tsx` and left the collision flow untouched.
 - Cleaned out the catch logs in `Kit.tsx` and `Home.tsx` so dropped zip imports silently continue to swallow errors as before.
-- Eliminated the temporary debug guards in `semio.test.ts` so the flatten design assertions rely solely on the `expect` checks.
+- Eliminated the temporary debug guards in `compose.test.ts` so the flatten design assertions rely solely on the `expect` checks.
 
 ## Changes
 

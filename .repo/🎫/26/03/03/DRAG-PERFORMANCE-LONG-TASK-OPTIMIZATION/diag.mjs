@@ -3,7 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const BASE_URL = process.env.PLAYWRIGHT_BASE_URL || 'http://127.0.0.1:5173';
-const ZIP_PATH = path.resolve('/workspaces/semio/semio/assets/semio/metabolism.zip');
+const ZIP_PATH = path.resolve('/workspaces/semio/compose/assets/compose/metabolism.zip');
 async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 (async () => {
@@ -12,8 +12,8 @@ async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
   const page = await context.newPage();
   
   await page.addInitScript(() => {
-    window.__SEMIO_PERFORMANCE__ = { longTaskSupported: false, longTasks: [] };
-    const store = window.__SEMIO_PERFORMANCE__;
+    window.__COMPOSE_PERFORMANCE__ = { longTaskSupported: false, longTasks: [] };
+    const store = window.__COMPOSE_PERFORMANCE__;
     const obs = window.PerformanceObserver;
     if (!obs || !(obs.supportedEntryTypes || []).includes('longtask')) return;
     store.longTaskSupported = true;
@@ -26,7 +26,7 @@ async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
   await page.waitForLoadState('domcontentloaded');
   await sleep(2000);
   
-  const fileInput = page.locator('[id="semio.sketchpad.app.home.importKit"]');
+  const fileInput = page.locator('[id="compose.sketchpad.app.home.importKit"]');
   await fileInput.waitFor({ state: 'attached', timeout: 10000 });
   const [fileChooser] = await Promise.all([
     page.waitForEvent('filechooser', { timeout: 5000 }).catch(() => null),
@@ -68,13 +68,13 @@ async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
   }
   console.log(`Nodes: ${await nodes.count()}`);
   
-  const leftPanelToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.leftSidePanel"]');
+  const leftPanelToggle = page.locator('[id="compose.sketchpad.navbar.panelToggle.leftSidePanel"]');
   if (await leftPanelToggle.isVisible().catch(() => false)) {
     const leftPanelOpen = await page.locator('[data-panel="leftSidePanel"]').isVisible().catch(() => false);
     if (leftPanelOpen) { await leftPanelToggle.click(); await sleep(500); }
   }
   
-  await page.evaluate(() => { window.__SEMIO_PERFORMANCE__.longTasks = []; });
+  await page.evaluate(() => { window.__COMPOSE_PERFORMANCE__.longTasks = []; });
   
   const firstNode = nodes.first();
   const nodeBox = await firstNode.boundingBox();
@@ -83,7 +83,7 @@ async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
   // TEST 1: Single fast mouse.move (no steps)  
   console.log('\n=== TEST 1: Single mouse.move ===');
-  await page.evaluate(() => { window.__SEMIO_PERFORMANCE__.longTasks = []; });
+  await page.evaluate(() => { window.__COMPOSE_PERFORMANCE__.longTasks = []; });
   await page.mouse.move(startX, startY);
   await sleep(100);
   await page.mouse.down();
@@ -94,7 +94,7 @@ async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
   await sleep(3000);
   await page.evaluate(() => performance.mark('test1-end'));
   let lt1 = await page.evaluate(() => {
-    const s = window.__SEMIO_PERFORMANCE__;
+    const s = window.__COMPOSE_PERFORMANCE__;
     const m = performance.getEntriesByName('test1-start')[0]?.startTime ?? 0;
     const mEnd = performance.getEntriesByName('test1-end')[0]?.startTime ?? 0;
     const tasks = s.longTasks.filter(t => t.startTime >= m - 100 && t.startTime <= mEnd + 100);
@@ -107,7 +107,7 @@ async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
   
   // TEST 2: Drag with steps:1
   console.log('\n=== TEST 2: steps=1 ===');
-  await page.evaluate(() => { window.__SEMIO_PERFORMANCE__.longTasks = []; performance.clearMarks(); });
+  await page.evaluate(() => { window.__COMPOSE_PERFORMANCE__.longTasks = []; performance.clearMarks(); });
   await page.mouse.move(startX, startY); await sleep(100);
   await page.mouse.down(); await sleep(100);
   await page.evaluate(() => performance.mark('test2-start'));
@@ -116,7 +116,7 @@ async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
   await sleep(3000);
   await page.evaluate(() => performance.mark('test2-end'));
   let lt2 = await page.evaluate(() => {
-    const s = window.__SEMIO_PERFORMANCE__;
+    const s = window.__COMPOSE_PERFORMANCE__;
     const m = performance.getEntriesByName('test2-start')[0]?.startTime ?? 0;
     const mEnd = performance.getEntriesByName('test2-end')[0]?.startTime ?? 0;
     const tasks = s.longTasks.filter(t => t.startTime >= m - 100 && t.startTime <= mEnd + 100);
@@ -127,7 +127,7 @@ async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
   // TEST 3: Drag with steps:20 (original)
   console.log('\n=== TEST 3: steps=20 ===');
-  await page.evaluate(() => { window.__SEMIO_PERFORMANCE__.longTasks = []; performance.clearMarks(); });  
+  await page.evaluate(() => { window.__COMPOSE_PERFORMANCE__.longTasks = []; performance.clearMarks(); });  
   await page.mouse.move(startX, startY); await sleep(100);
   await page.mouse.down(); await sleep(100);
   await page.evaluate(() => performance.mark('test3-start'));
@@ -136,7 +136,7 @@ async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
   await sleep(3000);
   await page.evaluate(() => performance.mark('test3-end'));
   let lt3 = await page.evaluate(() => {
-    const s = window.__SEMIO_PERFORMANCE__;
+    const s = window.__COMPOSE_PERFORMANCE__;
     const m = performance.getEntriesByName('test3-start')[0]?.startTime ?? 0;
     const mEnd = performance.getEntriesByName('test3-end')[0]?.startTime ?? 0;
     const tasks = s.longTasks.filter(t => t.startTime >= m - 100 && t.startTime <= mEnd + 100);

@@ -1,0 +1,10 @@
+{
+  "title": "Fix Emojis and Descriptions in Compose Rs Lib Rs",
+  "status": "closed",
+  "description": "Fix Emojis and Descriptions in Compose Rs Lib Rs",
+  "summary": "Fixed all emojis and descriptions in compose/rs/lib.rs",
+  "goal": "🎯fixemojisanddescriptionsincomposerslibrs",
+  "sessions": [
+    "⚪5ae6c1c1bf784dfe913d715d404d7250"
+  ]
+}

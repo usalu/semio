@@ -7,37 +7,37 @@ import (
 "fmt"
 "os"
 
-semio "github.com/usalu/semio/go/semio"
+compose "github.com/usalu/semio/go/compose"
 )
 
 func main() {
-assetsDir := "semio/assets/semio/"
+assetsDir := "compose/assets/compose/"
 
 origData, err := os.ReadFile(assetsDir + "kit_metabolism.json")
 if err != nil {
 fmt.Fprintf(os.Stderr, "Error reading original: %v\n", err)
 os.Exit(1)
 }
-var orig semio.Kit
+var orig compose.Kit
 if err := json.Unmarshal(origData, &orig); err != nil {
 fmt.Fprintf(os.Stderr, "Error parsing original: %v\n", err)
 os.Exit(1)
 }
-orig.Designs = semio.FilterDesignsWithoutParent(orig.Designs)
+orig.Designs = compose.FilterDesignsWithoutParent(orig.Designs)
 
 diffedData, err := os.ReadFile(assetsDir + "kit_metabolism_diffed.json")
 if err != nil {
 fmt.Fprintf(os.Stderr, "Error reading diffed: %v\n", err)
 os.Exit(1)
 }
-var diffed semio.Kit
+var diffed compose.Kit
 if err := json.Unmarshal(diffedData, &diffed); err != nil {
 fmt.Fprintf(os.Stderr, "Error parsing diffed: %v\n", err)
 os.Exit(1)
 }
-diffed.Designs = semio.FilterDesignsWithoutParent(diffed.Designs)
+diffed.Designs = compose.FilterDesignsWithoutParent(diffed.Designs)
 
-diff := semio.GetKitDiff(orig, diffed)
+diff := compose.GetKitDiff(orig, diffed)
 
 diffJSON, err := json.MarshalIndent(diff, "", "  ")
 if err != nil {
@@ -50,7 +50,7 @@ os.Exit(1)
 }
 fmt.Println("Wrote diff_kit_metabolism.json")
 
-inverseDiff := semio.InverseKitDiff(orig, diff)
+inverseDiff := compose.InverseKitDiff(orig, diff)
 inverseJSON, err := json.MarshalIndent(inverseDiff, "", "  ")
 if err != nil {
 fmt.Fprintf(os.Stderr, "Error marshaling inverse diff: %v\n", err)
@@ -62,14 +62,14 @@ os.Exit(1)
 }
 fmt.Println("Wrote diff_kit_metabolism_inverted.json")
 
-applied := semio.ApplyKitDiff(orig, diff)
-if !semio.AreKitsEqual(applied, diffed) {
+applied := compose.ApplyKitDiff(orig, diff)
+if !compose.AreKitsEqual(applied, diffed) {
 fmt.Println("WARNING: Applied diff does NOT equal diffed kit!")
 } else {
 fmt.Println("OK: Applied diff equals diffed kit")
 }
-appliedBack := semio.ApplyKitDiff(diffed, inverseDiff)
-if !semio.AreKitsEqual(appliedBack, orig) {
+appliedBack := compose.ApplyKitDiff(diffed, inverseDiff)
+if !compose.AreKitsEqual(appliedBack, orig) {
 fmt.Println("WARNING: Applied inverse diff does NOT equal original kit!")
 } else {
 fmt.Println("OK: Applied inverse diff equals original kit")

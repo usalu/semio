@@ -45,7 +45,7 @@
           "hook_event_name": "UserPromptSubmit",
           "session_id": "aba661bf-cdce-4810-808e-599ddd9cc673",
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/aba661bf-cdce-4810-808e-599ddd9cc673.jsonl",
-          "prompt": "Use semio mcp and open metabolism under semio assets metabolism with #start_working_in_local_kit  . Show me the design #show_design and then #select_pieces Let me select pieces in Nakagin Capsule Tower Design. Dont do any manual file search only with mcp.",
+          "prompt": "Use compose mcp and open metabolism under compose assets metabolism with #start_working_in_local_kit  . Show me the design #show_design and then #select_pieces Let me select pieces in Nakagin Capsule Tower Design. Dont do any manual file search only with mcp.",
           "cwd": "/workspaces/semio"
         }
       },
@@ -72,7 +72,7 @@
             "todoList": [
               {
                 "id": 1,
-                "title": "Start local kit at semio/assets/metabolism",
+                "title": "Start local kit at compose/assets/metabolism",
                 "status": "in-progress"
               },
               {
@@ -124,7 +124,7 @@
             "todoList": [
               {
                 "id": 1,
-                "title": "Start local kit at semio/assets/metabolism",
+                "title": "Start local kit at compose/assets/metabolism",
                 "status": "in-progress"
               },
               {
@@ -172,9 +172,9 @@
           "hook_event_name": "PreToolUse",
           "session_id": "aba661bf-cdce-4810-808e-599ddd9cc673",
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/aba661bf-cdce-4810-808e-599ddd9cc673.jsonl",
-          "tool_name": "mcp_semio_start_working_in_local_kit",
+          "tool_name": "mcp_compose_start_working_in_local_kit",
           "tool_input": {
-            "path": "/workspaces/semio/semio/assets/metabolism"
+            "path": "/workspaces/semio/compose/assets/metabolism"
           },
           "tool_use_id": "call_sGbjPpI0kKVty804bHlSSZFL__vscode-1774398922721",
           "cwd": "/workspaces/semio"
@@ -198,11 +198,11 @@
           "hook_event_name": "PostToolUse",
           "session_id": "aba661bf-cdce-4810-808e-599ddd9cc673",
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/aba661bf-cdce-4810-808e-599ddd9cc673.jsonl",
-          "tool_name": "mcp_semio_start_working_in_local_kit",
+          "tool_name": "mcp_compose_start_working_in_local_kit",
           "tool_input": {
-            "path": "/workspaces/semio/semio/assets/metabolism"
+            "path": "/workspaces/semio/compose/assets/metabolism"
           },
-          "tool_response": "{\n  \"error\": \"Kit not found at path: /workspaces/semio/semio/assets/metabolism\"\n}",
+          "tool_response": "{\n  \"error\": \"Kit not found at path: /workspaces/semio/compose/assets/metabolism\"\n}",
           "tool_use_id": "call_sGbjPpI0kKVty804bHlSSZFL__vscode-1774398922721",
           "cwd": "/workspaces/semio"
         }
@@ -225,9 +225,9 @@
           "hook_event_name": "PreToolUse",
           "session_id": "aba661bf-cdce-4810-808e-599ddd9cc673",
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/aba661bf-cdce-4810-808e-599ddd9cc673.jsonl",
-          "tool_name": "mcp_semio_start_working_in_local_kit",
+          "tool_name": "mcp_compose_start_working_in_local_kit",
           "tool_input": {
-            "path": "semio/assets/metabolism"
+            "path": "compose/assets/metabolism"
           },
           "tool_use_id": "call_tqqcdcCTXCcg9dDibCEF4Df1__vscode-1774398922722",
           "cwd": "/workspaces/semio"
@@ -251,11 +251,11 @@
           "hook_event_name": "PostToolUse",
           "session_id": "aba661bf-cdce-4810-808e-599ddd9cc673",
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/aba661bf-cdce-4810-808e-599ddd9cc673.jsonl",
-          "tool_name": "mcp_semio_start_working_in_local_kit",
+          "tool_name": "mcp_compose_start_working_in_local_kit",
           "tool_input": {
-            "path": "semio/assets/metabolism"
+            "path": "compose/assets/metabolism"
           },
-          "tool_response": "{\n  \"error\": \"Kit not found at path: semio/assets/metabolism\"\n}",
+          "tool_response": "{\n  \"error\": \"Kit not found at path: compose/assets/metabolism\"\n}",
           "tool_use_id": "call_tqqcdcCTXCcg9dDibCEF4Df1__vscode-1774398922722",
           "cwd": "/workspaces/semio"
         }
@@ -278,9 +278,9 @@
           "hook_event_name": "PreToolUse",
           "session_id": "aba661bf-cdce-4810-808e-599ddd9cc673",
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/aba661bf-cdce-4810-808e-599ddd9cc673.jsonl",
-          "tool_name": "mcp_semio_start_working_in_local_kit",
+          "tool_name": "mcp_compose_start_working_in_local_kit",
           "tool_input": {
-            "path": "/workspaces/semio/semio/assets"
+            "path": "/workspaces/semio/compose/assets"
           },
           "tool_use_id": "call_PlgUE8RdEeCR71dh33OX4lUj__vscode-1774398922723",
           "cwd": "/workspaces/semio"
@@ -304,11 +304,11 @@
           "hook_event_name": "PostToolUse",
           "session_id": "aba661bf-cdce-4810-808e-599ddd9cc673",
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/aba661bf-cdce-4810-808e-599ddd9cc673.jsonl",
-          "tool_name": "mcp_semio_start_working_in_local_kit",
+          "tool_name": "mcp_compose_start_working_in_local_kit",
           "tool_input": {
-            "path": "/workspaces/semio/semio/assets"
+            "path": "/workspaces/semio/compose/assets"
           },
-          "tool_response": "{\n  \"error\": \"Kit not found at path: /workspaces/semio/semio/assets\"\n}",
+          "tool_response": "{\n  \"error\": \"Kit not found at path: /workspaces/semio/compose/assets\"\n}",
           "tool_use_id": "call_PlgUE8RdEeCR71dh33OX4lUj__vscode-1774398922723",
           "cwd": "/workspaces/semio"
         }
@@ -342,7 +342,7 @@
     "steps": [
       {
         "id": "",
-        "name": "Start local kit at semio/assets/metabolism",
+        "name": "Start local kit at compose/assets/metabolism",
         "status": "in-progress",
         "ideated": "2026-03-25T00:46:44Z",
         "started": "2026-03-25T00:46:44Z"

@@ -2,7 +2,7 @@
 import re
 from pathlib import Path
 
-path = Path(r"c:\git\semio\semio\rs\lib.rs")
+path = Path(r"c:\git\compose\compose\rs\lib.rs")
 s = path.read_text(encoding="utf-8")
 
 # Remove NewSession block

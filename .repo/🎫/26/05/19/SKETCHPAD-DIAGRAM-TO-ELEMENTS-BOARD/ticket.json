@@ -2,8 +2,8 @@
   "title": "Sketchpad Diagram To Elements Board",
   "emoji": "🎫",
   "status": "closed",
-  "description": "Replace the diagram in semio/sketchpad with the elements board (@elements/board). Wire kit/design topology views to Board instead of legacy Diagram/React Flow diagram components.",
-  "summary": "Kit and design diagrams use TopologyBoardPane (@elements/board) with sketchpadKitBuildBoardFixture and board event wiring. Playwright selectors use [data-topology-board-root] [data-testid=board-canvas]. schema_gap_surfaces gap macros compile (@apply_families/@apply_relays). @semio/rs WASM and @semio/sketchpad production builds pass. Dev server http://127.0.0.1:5173/ serves HTTP 200. Fixed CreateDesign/CreateType operation clones and kit_backbone wire JSON arms.",
+  "description": "Replace the diagram in compose/sketchpad with the elements board (@elements/board). Wire kit/design topology views to Board instead of legacy Diagram/React Flow diagram components.",
+  "summary": "Kit and design diagrams use TopologyBoardPane (@elements/board) with sketchpadKitBuildBoardFixture and board event wiring. Playwright selectors use [data-topology-board-root] [data-testid=board-canvas]. schema_gap_surfaces gap macros compile (@apply_families/@apply_relays). @compose/rs WASM and @compose/sketchpad production builds pass. Dev server http://127.0.0.1:5173/ serves HTTP 200. Fixed CreateDesign/CreateType operation clones and kit_backbone wire JSON arms.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1454"
   },

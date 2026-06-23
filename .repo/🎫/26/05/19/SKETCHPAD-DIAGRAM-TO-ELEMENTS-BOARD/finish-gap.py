@@ -3,8 +3,8 @@ import re
 import subprocess
 from pathlib import Path
 
-root = Path(r"c:\git\semio")
-lib_path = root / "semio/client/lib/rs/lib.rs"
+root = Path(r"c:\git\compose")
+lib_path = root / "compose/client/lib/rs/lib.rs"
 
 ns: dict = {}
 exec(
@@ -45,8 +45,8 @@ lib_path.write_text(cur, encoding="utf-8")
 print("spliced schema_gap_surfaces into current lib.rs", len(cur.splitlines()), "lines")
 
 for label, cmd, cwd in [
-    ("wasm", ["bun", "scripts/build-wasm.script.mjs"], root / "semio/client/lib/rs"),
-    ("sketchpad", ["bun", "nx", "run", "@semio/sketchpad:build"], root),
+    ("wasm", ["bun", "scripts/build-wasm.script.mjs"], root / "compose/client/lib/rs"),
+    ("sketchpad", ["bun", "nx", "run", "@compose/sketchpad:build"], root),
 ]:
     r = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, encoding="utf-8")
     if r.returncode != 0:

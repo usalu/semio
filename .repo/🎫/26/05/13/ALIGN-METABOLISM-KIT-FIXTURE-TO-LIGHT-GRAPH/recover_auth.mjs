@@ -3,8 +3,8 @@ import fs from "fs";
 
 const r = spawnSync(
   "git",
-  ["show", "HEAD:semio/assets/fixtures/metabolism.kit.semio.json"],
-  { cwd: "c:/git/semio", encoding: "utf8", maxBuffer: 1024 * 1024 * 200 },
+  ["show", "HEAD:compose/assets/fixtures/metabolism.kit.compose.json"],
+  { cwd: "c:/git/compose", encoding: "utf8", maxBuffer: 1024 * 1024 * 200 },
 );
 if (r.error) throw r.error;
 if (r.status !== 0) {

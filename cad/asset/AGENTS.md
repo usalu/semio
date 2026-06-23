@@ -12,4 +12,4 @@ bundle:
 - `modelDefinition/` — declarative spatial schemas consumed by `@cad/js/core`.
 - `play/` — sample model JSON for CAD play and integration tests that exercise real play payloads.
 
-Test-only synthetic JSON MUST NOT live here; use package-local test folders or `@semio/fixture` for semio kit data.
+Test-only synthetic JSON MUST NOT live here; use package-local test folders or `@compose/fixture` for compose kit data.

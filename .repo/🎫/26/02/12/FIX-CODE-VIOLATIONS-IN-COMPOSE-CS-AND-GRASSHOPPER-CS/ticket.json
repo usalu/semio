@@ -1,0 +1,11 @@
+{
+  "title": "Fix Code Breachs in Compose Cs and Grasshopper Cs",
+  "emoji": "🔧",
+  "status": "closed",
+  "description": "Fix all code breachs in compose/net/Compose/Compose.cs (84 breachs) and compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs (114 breachs) by adding summary comments after section markers and before definitions, plus spec comments with RFC2119 keywords on classes, structs, and methods.",
+  "summary": "Fixed all code breachs in compose/net/Compose/Compose.cs (47→0) and compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs (85→0). Added Imports/Namespace section wrappers for orphan definitions, RFC2119-keyword section summaries for 70 sections, and definition summary+spec comments for 29 class definitions across both files.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/528"
+  },
+  "goal": "🎯aioptimizedrepo🎯singlefilerepo🎯consistentsections"
+}

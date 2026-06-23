@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
 
-const dir = "c:/git/semio/elements/lib/framework/renderer/react";
+const dir = "c:/git/compose/elements/lib/framework/renderer/react";
 
 const FILES = [
 	"shell-chrome-types.tsx",

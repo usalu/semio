@@ -63,13 +63,13 @@ type Config struct {
 func loadConfig() Config {
 	cwd, _ := os.Getwd()
 	return Config{
-		Address:          envOrDefault("SEMIO_SERVER_ADDR", "127.0.0.1:8787"),
-		DatabasePath:     envOrDefault("SEMIO_SERVER_DB", "semio-server.db"),
-		RepoRoot:         envOrDefault("SEMIO_SERVER_REPO_ROOT", cwd),
-		Token:            envOrDefault("SEMIO_SERVER_TOKEN", ""),
-		GitHubSecret:     envOrDefault("SEMIO_SERVER_GITHUB_SECRET", ""),
-		DiscordWebhook:   envOrDefault("SEMIO_SERVER_DISCORD_WEBHOOK", ""),
-		RequestBodyLimit: envOrDefaultInt64("SEMIO_SERVER_BODY_LIMIT", 10*1024*1024),
+		Address:          envOrDefault("COMPOSE_SERVER_ADDR", "127.0.0.1:8787"),
+		DatabasePath:     envOrDefault("COMPOSE_SERVER_DB", "compose-server.db"),
+		RepoRoot:         envOrDefault("COMPOSE_SERVER_REPO_ROOT", cwd),
+		Token:            envOrDefault("COMPOSE_SERVER_TOKEN", ""),
+		GitHubSecret:     envOrDefault("COMPOSE_SERVER_GITHUB_SECRET", ""),
+		DiscordWebhook:   envOrDefault("COMPOSE_SERVER_DISCORD_WEBHOOK", ""),
+		RequestBodyLimit: envOrDefaultInt64("COMPOSE_SERVER_BODY_LIMIT", 10*1024*1024),
 	}
 }
 

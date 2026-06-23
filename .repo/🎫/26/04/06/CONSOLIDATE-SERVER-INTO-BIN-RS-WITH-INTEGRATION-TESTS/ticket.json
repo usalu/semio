@@ -2,7 +2,7 @@
   "title": "Consolidate Server Into Bin Rs With Integration Tests",
   "emoji": "🧹",
   "status": "closed",
-  "description": "Consolidate the semio/server/src/ modular files into a single semio/server/bin.rs file. Add integration tests that run a backend, connect several frontends, and use the metabolism asset and nakagin capsule tower diff for realistic scenarios.",
+  "description": "Consolidate the compose/server/src/ modular files into a single compose/server/bin.rs file. Add integration tests that run a backend, connect several frontends, and use the metabolism asset and nakagin capsule tower diff for realistic scenarios.",
   "summary": "Bulk close",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1276"

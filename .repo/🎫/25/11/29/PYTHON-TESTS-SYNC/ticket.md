@@ -3,7 +3,7 @@
 ## Todos
 # Previously
 
-- Analyzed semio.test.ts to understand JavaScript test structure
+- Analyzed compose.test.ts to understand JavaScript test structure
 - Analyzed engine.py to understand Python model structure
 - Identified SQLAlchemy/graphene-sqlalchemy compatibility issue with `typing.Optional["Model"]` type annotations
 - Discovered pytransform3d and networkx are already available as dependencies
@@ -13,7 +13,7 @@
 1. ✅ Add comprehensive Python tests that mirror JavaScript tests
 2. ✅ Use pytransform3d for spatial math operations
 3. ✅ Use networkx for graph operations (piece graph, hierarchy)
-4. ✅ Add validation tests matching semio.ts validation constraints
+4. ✅ Add validation tests matching compose.ts validation constraints
 5. ✅ Add flattenDesign tests with plane validation
 6. ✅ Add Kit diff tests (apply forward, apply inverse)
 7. ⏸️ Skip engine.py import tests due to SQLAlchemy compatibility issue (known pre-existing issue)

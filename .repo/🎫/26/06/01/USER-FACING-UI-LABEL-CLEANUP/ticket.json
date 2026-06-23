@@ -4,7 +4,7 @@
   "status": "closed",
   "description": "Clean UI labels to user perspective: engagement options → Commands/toggles, no state machine lingo in user space.",
   "summary": "Fixed Search/Find navbar inconsistency: sketchpad resolver no longer maps both toggles to search.open (find uses find.open + new i18n). Find toggle uses TextSearch icon vs Search magnifying glass. Aligned de copy (Finden vs Suche). UISearch/UIFind dialogs use ui.search.* / ui.find.* i18n. Tests: 108 @ui/react.",
-  "goal": "🎯semio🎯ui",
+  "goal": "🎯compose🎯ui",
   "sessions": [
     "⚪963db0d2e1ad4acca54842b96968fea1",
     "⚪bab7f48345a346ad8ecc0111fab5f43a",

@@ -9,7 +9,7 @@
 
 ## Summary
 
-All kit diff functions are fully implemented in `semio.ts`:
+All kit diff functions are fully implemented in `compose.ts`:
 
 - ✅ `getKitDiff(before, after)` - Computes comprehensive diff
 - ✅ `inverseKitDiff(original, appliedDiff)` - Computes inverse for undo
@@ -18,20 +18,20 @@ All kit diff functions are fully implemented in `semio.ts`:
 - ✅ `areKitsEqual(a, b)` - Deep equality for kits
 - ✅ `deepEqual(a, b)` - Generic deep equality
 
-Test in `semio.test.ts` with single test containing 4 expects for deep equality validation.
+Test in `compose.test.ts` with single test containing 4 expects for deep equality validation.
 
 **TypeScript:** 0 errors ✅  
-**Vitest:** Configuration issue prevents test execution ⚠️ (affects ALL tests in js/semio/)
+**Vitest:** Configuration issue prevents test execution ⚠️ (affects ALL tests in js/compose/)
 
 ## Accomplished
 
 1. **Created `scripts/generate-kit-diff-fixtures.mjs`**
-   - Loads metabolism kit from `assets/semio/kit_metabolism.json`
+   - Loads metabolism kit from `assets/compose/kit_metabolism.json`
    - Uses seeded random generator (seed=42) for reproducible modifications
    - Generates comprehensive KitDiff exercising all features
-   - Saves three JSON files in `assets/semio/`
+   - Saves three JSON files in `assets/compose/`
 
-2. **Implemented Kit Diff Functions in `js/semio/semio.ts`**
+2. **Implemented Kit Diff Functions in `js/compose/compose.ts`**
    - `getKitDiff(before, after)` - Computes diff between two kits
    - `inverseKitDiff(original, appliedDiff)` - Computes inverse diff
    - `applyKitDiff(base, diff)` - Applies diff to kit
@@ -39,7 +39,7 @@ Test in `semio.test.ts` with single test containing 4 expects for deep equality 
    - Generic collection diff helpers for reuse
    - Updated `KitDiffSchema` to include `attributes: AttributesDiffSchema`
 
-3. **Added tests to `js/semio/semio.test.ts`**
+3. **Added tests to `js/compose/compose.test.ts`**
    - Single comprehensive test with 4 expectations
    - Uses `deepEqual` for 100% recursive deep equality checking
    - Tests:
@@ -67,7 +67,7 @@ Created reusable helper functions:
 
 ## Known Problem
 
-Vitest configuration issue in `js/semio/` prevents test execution. All test files fail with "No test suite found". This is a separate infrastructure issue unrelated to the implementation.
+Vitest configuration issue in `js/compose/` prevents test execution. All test files fail with "No test suite found". This is a separate infrastructure issue unrelated to the implementation.
 
 ## Verification
 
@@ -76,17 +76,17 @@ The implementation is complete and type-safe:
 - ✅ No TypeScript errors
 - ✅ All functions properly typed
 - ✅ Test file properly structured with single test and 4 expectations
-- ✅ Uses `deepEqual` from semio.ts for deep recursive equality checks
+- ✅ Uses `deepEqual` from compose.ts for deep recursive equality checks
 - ⚠️ Cannot run tests due to vitest configuration issue
 
 ## Files Created/Modified
 
 - ✅ `scripts/generate-kit-diff-fixtures.mjs`
-- ✅ `assets/semio/diff_kit_metabolism.json`
-- ✅ `assets/semio/diff_kit_metabolism_inverted.json`
-- ✅ `assets/semio/kit_metabolism_diffed.json`
-- ✅ `js/semio/kit-diff.test.ts`
-- ✅ `js/semio/semio.ts` - Implemented getKitDiff, inverseKitDiff, applyKitDiff, mergeKitDiff
+- ✅ `assets/compose/diff_kit_metabolism.json`
+- ✅ `assets/compose/diff_kit_metabolism_inverted.json`
+- ✅ `assets/compose/kit_metabolism_diffed.json`
+- ✅ `js/compose/kit-diff.test.ts`
+- ✅ `js/compose/compose.ts` - Implemented getKitDiff, inverseKitDiff, applyKitDiff, mergeKitDiff
 
 ## Changes
 

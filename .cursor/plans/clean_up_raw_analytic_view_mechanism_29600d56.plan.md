@@ -123,5 +123,5 @@ The ticket `2026/05/26/REFACTOR-SPATIAL-SELECTION` is already open (`.repo/🎫/
 ## Out of scope
 
 - Volumes: `analyticSummary` already aggregates `surfaces` and `parts` only; adding a third entity is a separate ticket.
-- Any change to `./elements`, `./semio`, `./coda`, `./reuse`.
+- Any change to `./elements`, `./compose`, `./coda`, `./reuse`.
 - Changes to `SelectionTarget` / `SelectionSpec` types in `spatial/js/core/index.ts`.

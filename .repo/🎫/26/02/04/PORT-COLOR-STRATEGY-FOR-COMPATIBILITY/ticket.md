@@ -16,11 +16,11 @@
 - [x] Revalidate tests/build and close ticket.
 
 ## Changes
-- Added `js/semio/sketchpad/portColor.ts` with deterministic compatibility-family port tones, connector port guid helpers, and compatibility-state resolution.
-- Updated `js/semio/sketchpad/Design.tsx` connector handles to consume shared port tones and show compatibility/incompatibility emphasis while a source connector is selected.
-- Updated `js/semio/sketchpad/Type.tsx` connector scene visuals to use shared port tones and normalized connector port/compatible port editing paths.
-- Updated `js/semio/sketchpad/Kit.tsx` to apply shared port tones to port avatars in both table and diagram nodes.
-- Extended `js/semio/sketchpad/elements.tsx` `TableAvatar` with `fallbackStyle` so domain surfaces can supply deterministic avatar fills.
+- Added `js/compose/sketchpad/portColor.ts` with deterministic compatibility-family port tones, connector port guid helpers, and compatibility-state resolution.
+- Updated `js/compose/sketchpad/Design.tsx` connector handles to consume shared port tones and show compatibility/incompatibility emphasis while a source connector is selected.
+- Updated `js/compose/sketchpad/Type.tsx` connector scene visuals to use shared port tones and normalized connector port/compatible port editing paths.
+- Updated `js/compose/sketchpad/Kit.tsx` to apply shared port tones to port avatars in both table and diagram nodes.
+- Extended `js/compose/sketchpad/elements.tsx` `TableAvatar` with `fallbackStyle` so domain surfaces can supply deterministic avatar fills.
 - Updated `README.md` and `AGENTS.md` to document the compatibility-family port color strategy in Bundles/SRS/Codebase docs.
 - Reapplied `portColor` wiring in active Type/Design/Kit rendering paths where it was not present in the current working state.
 - Updated Type connector editing paths so port and compatible port fields write/read `PortId` values consistently.
@@ -30,12 +30,12 @@
 - Prompt: "create a color strategy for ports to enhance UX including compatible ports and different port types, refactor as needed, and ensure ticket plan/log/summary workflow."
 - Opened ticket via `repo ticket open` and initialized `plan.md`.
 - Implemented shared port color strategy and integrated it into Kit, Type, and Design rendering paths.
-- Validation run: `npx nx test @semio/js --skipNxCache`.
-- Validation run: `npx nx build @semio/js --skipNxCache`.
+- Validation run: `npx nx test @compose/js --skipNxCache`.
+- Validation run: `npx nx build @compose/js --skipNxCache`.
 - Reopened with prompt: "i cant see these color strategy".
 - Identified active code paths missing `portColor` consumption and corrected integrations.
-- Validation run: `npx nx test @semio/js --skipNxCache`.
-- Validation run: `npx nx build @semio/js --skipNxCache`.
+- Validation run: `npx nx test @compose/js --skipNxCache`.
+- Validation run: `npx nx build @compose/js --skipNxCache`.
 
 ## Summary
 

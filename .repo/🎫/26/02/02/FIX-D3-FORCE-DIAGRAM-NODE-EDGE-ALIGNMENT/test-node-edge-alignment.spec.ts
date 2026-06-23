@@ -5,22 +5,22 @@ test.describe("Kit Diagram Node-Edge Alignment", () => {
   test("measure node avatar size vs edge connection points", async ({ page }) => {
     await page.goto("http://localhost:5173");
     
-    await page.locator('[id="semio.sketchpad.navbar.home"]').click();
+    await page.locator('[id="compose.sketchpad.navbar.home"]').click();
     
-    await page.locator('[id="semio.sketchpad.app.home.createTemporary"]').click();
-    await page.waitForTimeout(500);
-    
-    await page.locator('[id="semio.sketchpad.app.kit.createType"]').click();
-    await page.waitForTimeout(500);
-    await page.locator('[id="semio.sketchpad.navbar.back"]').click();
+    await page.locator('[id="compose.sketchpad.app.home.createTemporary"]').click();
     await page.waitForTimeout(500);
     
-    await page.locator('[id="semio.sketchpad.app.kit.createType"]').click();
+    await page.locator('[id="compose.sketchpad.app.kit.createType"]').click();
     await page.waitForTimeout(500);
-    await page.locator('[id="semio.sketchpad.navbar.back"]').click();
+    await page.locator('[id="compose.sketchpad.navbar.back"]').click();
     await page.waitForTimeout(500);
     
-    const diagramToggle = page.locator('[id="semio.sketchpad.app.kit.windowKind.diagram"]');
+    await page.locator('[id="compose.sketchpad.app.kit.createType"]').click();
+    await page.waitForTimeout(500);
+    await page.locator('[id="compose.sketchpad.navbar.back"]').click();
+    await page.waitForTimeout(500);
+    
+    const diagramToggle = page.locator('[id="compose.sketchpad.app.kit.windowKind.diagram"]');
     await expect(diagramToggle).toBeVisible();
     await diagramToggle.click();
     await page.waitForTimeout(1000);
@@ -125,18 +125,18 @@ test.describe("Kit Diagram Node-Edge Alignment", () => {
   test("verify consistent node dimensions across diagram", async ({ page }) => {
     await page.goto("http://localhost:5173");
     
-    await page.locator('[id="semio.sketchpad.navbar.home"]').click();
-    await page.locator('[id="semio.sketchpad.app.home.createTemporary"]').click();
+    await page.locator('[id="compose.sketchpad.navbar.home"]').click();
+    await page.locator('[id="compose.sketchpad.app.home.createTemporary"]').click();
     await page.waitForTimeout(500);
     
     for (let i = 0; i < 3; i++) {
-      await page.locator('[id="semio.sketchpad.app.kit.createType"]').click();
+      await page.locator('[id="compose.sketchpad.app.kit.createType"]').click();
       await page.waitForTimeout(300);
-      await page.locator('[id="semio.sketchpad.navbar.back"]').click();
+      await page.locator('[id="compose.sketchpad.navbar.back"]').click();
       await page.waitForTimeout(300);
     }
     
-    const diagramToggle = page.locator('[id="semio.sketchpad.app.kit.windowKind.diagram"]');
+    const diagramToggle = page.locator('[id="compose.sketchpad.app.kit.windowKind.diagram"]');
     await diagramToggle.click();
     await page.waitForTimeout(1000);
     

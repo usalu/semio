@@ -7,8 +7,8 @@ import { join } from "node:path";
 
 const NEO4J_VERSION = "5.26.26";
 
-/** 🏗️Product graphs only (semio stack); not arbitrary developer databases. */
-export const NEO4J_PRODUCT_GRAPH_DATABASE_SPECS = [["semio"], ["elements"], ["coda"], ["reuse"]] as const;
+/** 🏗️Product graphs only (compose stack); not arbitrary developer databases. */
+export const NEO4J_PRODUCT_GRAPH_DATABASE_SPECS = [["compose"], ["elements"], ["coda"], ["reuse"]] as const;
 
 /** 🗑️Env key: comma-separated extra Bolt graph names for `bun run generate` and native `.repo/🛂/*.cypher` stubs. */
 export const NEO4J_EXTRA_GRAPH_DATABASES_ENV = "NEO4J_EXTRA_GRAPH_DATABASES";
@@ -183,7 +183,7 @@ export class Neo4jCypherExport {
       return false;
     }
     const joined =
-      nameParts.length > 0 ? joinNeo4jGraphDatabaseName(nameParts) : (process.env.NEO4J_DATABASE ?? "semio");
+      nameParts.length > 0 ? joinNeo4jGraphDatabaseName(nameParts) : (process.env.NEO4J_DATABASE ?? "compose");
     const allowed = neo4jExportDatabaseNameSet(process.env);
     if (!allowed.has(joined)) {
       const hint =

@@ -1,6 +1,6 @@
 from pathlib import Path
 
-root = Path(r"c:\git\semio")
+root = Path(r"c:\git\compose")
 main = root / "repo" / "client" / "cli" / "main.go"
 snippet_path = root / ".repo" / "\U0001f3ab" / "26" / "05" / "13" / "REFACTOR-LIB-RS-TO-GOLDEN-SCHEMA-PARTIAL" / "autofix_snippet.go"
 lines = main.read_text(encoding="utf-8").splitlines(keepends=True)

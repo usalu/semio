@@ -16,13 +16,13 @@ The sketchpad state management was being refactored to use XState instead of Y.j
 
 # Changes
 
-## `js/semio/sketchpad/Sketchpad.tsx`
+## `js/compose/sketchpad/Sketchpad.tsx`
 
 - Added `useSketchpadActorSafe()` call in `LayoutCanvas` to get the actor
 - Added `SketchpadActorContext.Provider` to `LayoutScopeWrapper` so GoldenLayout windows can access the XState actor
 - Root cause: When GoldenLayout creates new React roots for each window, they don't inherit context from the parent tree
 
-## `js/semio/sketchpad.test.ts`
+## `js/compose/sketchpad.test.ts`
 
 - Updated unhover threshold from 100ms to 600ms to account for:
   - 50ms debounce in mouse leave handler

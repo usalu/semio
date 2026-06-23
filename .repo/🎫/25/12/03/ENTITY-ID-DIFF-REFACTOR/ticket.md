@@ -3,7 +3,7 @@
 ## Todos
 # Previously
 
-The diff schemas in `semio.ts` used plain string IDs:
+The diff schemas in `compose.ts` used plain string IDs:
 
 - `removed: string[]` - array of guid strings
 - `updated: { id: string, diff: XDiff }[]` - id was a string
@@ -22,7 +22,7 @@ This made it unclear which entity was being referenced and was inconsistent with
 
 # Changes
 
-## `semio.ts`
+## `compose.ts`
 
 - Updated all `*DiffSchema` definitions to use `EntityIdSchema` in `removed` and `updated` arrays
 - Changed `updated` arrays from `{ id: string, diff }` to `{ <entity>: EntityId, diff }` format
@@ -53,13 +53,13 @@ This made it unclear which entity was being referenced and was inconsistent with
 
 ## Test Fixtures
 
-- Updated `assets/semio/validation.json` to use new EntityId format
-- Regenerated `assets/semio/diff_kit_metabolism.json` and `diff_kit_metabolism_inverted.json` using `scripts/generate-metabolism-diff.ts`
+- Updated `assets/compose/validation.json` to use new EntityId format
+- Regenerated `assets/compose/diff_kit_metabolism.json` and `diff_kit_metabolism_inverted.json` using `scripts/generate-metabolism-diff.ts`
 
 ## C# Schema
 
 - The C# diff test (`Kit_Plus_Diff_Equals_DiffedKit_And_DiffedKit_Plus_InverseDiff_Equals_Kit`) is skipped temporarily while the C# schema is updated to match the TypeScript EntityId format
-- The C# `Semio.cs` requires significant updates to:
+- The C# `Compose.cs` requires significant updates to:
   - Change `List<string> Removed` to `List<EntityId> Removed` in all diff classes
   - Create entity-specific diff update classes (e.g., `TypeDiffUpdate`, `DesignDiffUpdate`)
   - Update implicit conversion operators and helper methods

@@ -3,7 +3,7 @@
 ## Todos
 # Previously
 
-# The UI “horizontal container” components existed in multiple competing forms inside `js/semio/sketchpad/elements.tsx`, causing type mismatches (and effectively preventing consistent usage).
+# The UI “horizontal container” components existed in multiple competing forms inside `js/compose/sketchpad/elements.tsx`, causing type mismatches (and effectively preventing consistent usage).
 
 # TypeScript errors surfaced across Sketchpad and Storybook due to incompatible `Band`/`Navbar` props and missing `UiContext` fields used by the UI state machine.
 

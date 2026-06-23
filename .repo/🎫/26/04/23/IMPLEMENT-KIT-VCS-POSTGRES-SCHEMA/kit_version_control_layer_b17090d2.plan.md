@@ -1,6 +1,6 @@
 ---
 name: kit version control layer
-overview: "Add a VCS-like layer to `semio/rs` that promotes Kit from a mutable graph to a versioned artifact: an initial snapshot, a tree of checkpoints (each a list of operations), alternatives, and a materialization routine, with commands distinguished from change-producing operations."
+overview: "Add a VCS-like layer to `compose/rs` that promotes Kit from a mutable graph to a versioned artifact: an initial snapshot, a tree of checkpoints (each a list of operations), alternatives, and a materialization routine, with commands distinguished from change-producing operations."
 todos:
  - id: kit-diff
    content: Add pub mod kit_diff with KitDiff (kit-scope delta), between(), apply(), invert(), from_design_diff().
@@ -39,10 +39,10 @@ isProject: false
 
 ## Concept → type mapping
 
-- `kit store` → existing `KitStore` ([lib.rs:6213](semio/rs/src/lib.rs)). No schema change.
-- `initial kit` → `KitFullDto` ([lib.rs:6334](semio/rs/src/lib.rs)) stored inside `KitHistory::initial`.
-- `kit diff` → new `KitDiff` (kit-scope analogue of `DesignDiff`, [lib.rs:3838](semio/rs/src/lib.rs)).
-- `kit change` → new `KitChange { forward: KitDiff, backward: KitDiff, before?: KitFullDto, after?: KitFullDto, author?, time? }` (structurally the same shape as `DesignChange`, [lib.rs:3822](semio/rs/src/lib.rs), but kit-scoped).
+- `kit store` → existing `KitStore` ([lib.rs:6213](compose/rs/src/lib.rs)). No schema change.
+- `initial kit` → `KitFullDto` ([lib.rs:6334](compose/rs/src/lib.rs)) stored inside `KitHistory::initial`.
+- `kit diff` → new `KitDiff` (kit-scope analogue of `DesignDiff`, [lib.rs:3838](compose/rs/src/lib.rs)).
+- `kit change` → new `KitChange { forward: KitDiff, backward: KitDiff, before?: KitFullDto, after?: KitFullDto, author?, time? }` (structurally the same shape as `DesignChange`, [lib.rs:3822](compose/rs/src/lib.rs), but kit-scoped).
 - `kit command` → new `KitCommand` trait: `fn apply(&self, kit: &KitStoreRef) -> Result<Option<KitOperation>>`. `None` means the command was a pure query / had no effect; `Some` means it produced an operation to record.
 - `kit operation` → new `KitOperation { kind: KitOperationKind, change: KitChange }`, where `KitOperationKind` is an enum of semantic labels (`SetKitMetadata`, `AddType`, `RemoveType`, `ModifyType`, `AddDesign`, `RemoveDesign`, `AddPiece`, `RemovePiece`, `ModifyPiece`, `Connect`, `Disconnect`, `ApplyDesignDiff`, `ApplyKitDiff`, `Other(String)`, …).
 - `materialized kit` → new `MaterializedKit { initial: KitFullDto, operations: Vec<KitOperation>, computed: KitFullDto }`. `compute()` replays every operation's `forward` diff onto `initial`.
@@ -53,13 +53,13 @@ isProject: false
 
 ## Module layout (single-file `lib.rs` convention)
 
-Add five inline modules after `pub mod diff {…}` ([lib.rs:3808](semio/rs/src/lib.rs)) and before `pub mod error {…}` ([lib.rs:4056](semio/rs/src/lib.rs)):
+Add five inline modules after `pub mod diff {…}` ([lib.rs:3808](compose/rs/src/lib.rs)) and before `pub mod error {…}` ([lib.rs:4056](compose/rs/src/lib.rs)):
 
 - `pub mod kit_diff { … }` — `KitDiff`, `KitDiff::between(&KitFullDto, &KitFullDto)`, `KitDiff::apply(&self, &mut KitStore)`, `KitDiff::invert(&self, before: &KitFullDto) -> KitDiff`.
 - `pub mod kit_change { … }` — `KitChange`, `KitChange::between(before, after)`, `KitChange::apply_forward`, `KitChange::apply_backward`.
 - `pub mod kit_command { … }` — `trait KitCommand`, plus a tiny `BuiltinKitCommand` enum for common wrapping cases (e.g., `ApplyKitDiff`, `ApplyDesignDiff`, `ReplaceFromFullDto`). Existing RPC entry points (`apply_design_diff_rpc`, `add_child_rpc`, `remove_child_rpc`, …) get thin `KitCommand` adapters.
 - `pub mod kit_operation { … }` — `KitOperation`, `KitOperationKind`.
-- `pub mod history { … }` — `KitCheckpoint`, `KitHistory` with: `new(initial)`, `record_operation(op)`, `checkpoint(message, author)`, `open_alternative() -> Id`, `switch_alternative(Option<Id>)`, `promote_alternative(Id, message)`, `discard_alternative(Id)`, `the_kit()`, `materialize_at(checkpoint_id)`, `diff(a: &Id, b: &Id) -> KitDiff`, `walk(root..=head) -> impl Iterator<&KitCheckpoint>`, content-addressable hashing via the existing `HashWriter` ([lib.rs:6046](semio/rs/src/lib.rs)).
+- `pub mod history { … }` — `KitCheckpoint`, `KitHistory` with: `new(initial)`, `record_operation(op)`, `checkpoint(message, author)`, `open_alternative() -> Id`, `switch_alternative(Option<Id>)`, `promote_alternative(Id, message)`, `discard_alternative(Id)`, `the_kit()`, `materialize_at(checkpoint_id)`, `diff(a: &Id, b: &Id) -> KitDiff`, `walk(root..=head) -> impl Iterator<&KitCheckpoint>`, content-addressable hashing via the existing `HashWriter` ([lib.rs:6046](compose/rs/src/lib.rs)).
 
 ## Data flow
 
@@ -75,11 +75,11 @@ flowchart LR
   MatKit --> Store
 ```
 
-The trip from `KitCommand` to `KitChange` is: snapshot `before` via `to_full_dto()`, run the command's effect on `KitStore`, snapshot `after`, build `KitChange { forward: KitDiff::between(before, after), backward: KitDiff::between(after, before) }`. This reuses the exact technique in `with_undo` ([lib.rs:7084-7122](semio/rs/src/lib.rs)).
+The trip from `KitCommand` to `KitChange` is: snapshot `before` via `to_full_dto()`, run the command's effect on `KitStore`, snapshot `after`, build `KitChange { forward: KitDiff::between(before, after), backward: KitDiff::between(after, before) }`. This reuses the exact technique in `with_undo` ([lib.rs:7084-7122](compose/rs/src/lib.rs)).
 
 ## Session rewire
 
-Update `KitGraphSession` ([lib.rs:11706-11803](semio/rs/src/lib.rs)) to own `Arc<RwLock<KitHistory>>` alongside `KitStoreRef`:
+Update `KitGraphSession` ([lib.rs:11706-11803](compose/rs/src/lib.rs)) to own `Arc<RwLock<KitHistory>>` alongside `KitStoreRef`:
 
 - `new(kit)` captures `kit.to_full_dto()` as `initial` and stores an empty alternative.
 - Add `execute<C: KitCommand>(&self, cmd: C) -> Result<Option<KitOperation>>`. On `Some(op)` it pushes into the current alternative.
@@ -89,16 +89,16 @@ Update `KitGraphSession` ([lib.rs:11706-11803](semio/rs/src/lib.rs)) to own `Arc
 
 ## WASM surface
 
-Mirror the new API in `pub mod wasm { … }` ([lib.rs:15826](semio/rs/src/lib.rs)) with identical JS-facing names: `kitHistoryNew`, `kitHistoryExecute`, `kitHistoryCheckpoint`, `kitHistoryTheKit`, `kitHistoryMaterializeAt`, `kitHistoryOpenAlternative`, `kitHistorySwitchAlternative`, `kitHistoryPromoteAlternative`, `kitHistoryDiff`. Delegate to the OO API. DTOs go through `serde_wasm_bindgen`.
+Mirror the new API in `pub mod wasm { … }` ([lib.rs:15826](compose/rs/src/lib.rs)) with identical JS-facing names: `kitHistoryNew`, `kitHistoryExecute`, `kitHistoryCheckpoint`, `kitHistoryTheKit`, `kitHistoryMaterializeAt`, `kitHistoryOpenAlternative`, `kitHistorySwitchAlternative`, `kitHistoryPromoteAlternative`, `kitHistoryDiff`. Delegate to the OO API. DTOs go through `serde_wasm_bindgen`.
 
 ## Serialization
 
-`KitHistory` is serde-serializable so callers can persist it next to the kit. A `KitHistoryFullDto` mirrors `KitFullDto` style: all ids, all checkpoints in topo order, active head, active alternative map. Hashing uses the existing `Cache<String>` + `HashWriter` pattern used by `KitStore` ([lib.rs:6239](semio/rs/src/lib.rs), [lib.rs:6046](semio/rs/src/lib.rs)).
+`KitHistory` is serde-serializable so callers can persist it next to the kit. A `KitHistoryFullDto` mirrors `KitFullDto` style: all ids, all checkpoints in topo order, active head, active alternative map. Hashing uses the existing `Cache<String>` + `HashWriter` pattern used by `KitStore` ([lib.rs:6239](compose/rs/src/lib.rs), [lib.rs:6046](compose/rs/src/lib.rs)).
 
 ## What stays / what is deferred
 
-- `KitStore.undo_past`/`undo_future`/`with_undo`/`begin_tx`/`commit_tx` ([lib.rs:6242-6249](semio/rs/src/lib.rs), [lib.rs:7084-7299](semio/rs/src/lib.rs)) remain. They continue to power the low-level snapshot stack underneath; `KitHistory` is the user-facing versioning layer. A follow-up ticket can remove them once every RPC routes through `session.execute`.
-- `DesignDiff`/`DesignChange` ([lib.rs:3808-4054](semio/rs/src/lib.rs)) stay. Design-level changes are lifted to kit scope by a helper `KitDiff::from_design_diff(design_id, DesignDiff) -> KitDiff`.
+- `KitStore.undo_past`/`undo_future`/`with_undo`/`begin_tx`/`commit_tx` ([lib.rs:6242-6249](compose/rs/src/lib.rs), [lib.rs:7084-7299](compose/rs/src/lib.rs)) remain. They continue to power the low-level snapshot stack underneath; `KitHistory` is the user-facing versioning layer. A follow-up ticket can remove them once every RPC routes through `session.execute`.
+- `DesignDiff`/`DesignChange` ([lib.rs:3808-4054](compose/rs/src/lib.rs)) stay. Design-level changes are lifted to kit scope by a helper `KitDiff::from_design_diff(design_id, DesignDiff) -> KitDiff`.
 - Merging two alternatives is **out of scope** for this plan (tree is read-only across branches; only linear promote). Can be added on top by materializing both and running `KitDiff::between`.
 
 ## Tests

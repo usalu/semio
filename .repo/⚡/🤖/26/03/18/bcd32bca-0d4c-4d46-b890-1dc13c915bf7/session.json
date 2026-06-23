@@ -23,7 +23,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 1000,
-            "filePath": "/workspaces/semio/semio/sketchpad/sketchpad/Kit.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/sketchpad/Kit.tsx",
             "startLine": 800
           },
           "tool_response": "",
@@ -50,7 +50,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/sketchpad/shared.ts",
+            "includePattern": "**/compose/sketchpad/sketchpad/shared.ts",
             "isRegexp": true,
             "query": "RemoteProviders|SyncProviderFactory|PersistenceFactory|FileProvider|AppConfig|StoreState|StoreStatus"
           },
@@ -77,7 +77,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 1200,
-            "filePath": "/workspaces/semio/semio/sketchpad/sketchpad/shared.ts",
+            "filePath": "/workspaces/semio/compose/sketchpad/sketchpad/shared.ts",
             "startLine": 500
           },
           "tool_use_id": "toolu_bdrk_01F3QinKHG8t6wPqc7r6cmA3__vscode-1773763871777",
@@ -103,7 +103,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/sketchpad/shared.ts",
+            "includePattern": "**/compose/sketchpad/sketchpad/shared.ts",
             "isRegexp": true,
             "query": "RemoteProviders|SyncProviderFactory|PersistenceFactory|FileProvider|AppConfig|StoreState|StoreStatus"
           },
@@ -131,7 +131,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 1200,
-            "filePath": "/workspaces/semio/semio/sketchpad/sketchpad/shared.ts",
+            "filePath": "/workspaces/semio/compose/sketchpad/sketchpad/shared.ts",
             "startLine": 500
           },
           "tool_response": "",

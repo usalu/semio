@@ -27,7 +27,7 @@ Key characteristics:
 
 ## 1. Dependencies
 
-Add d3-force to `js/semio/package.json`:
+Add d3-force to `js/compose/package.json`:
 
 ```json
 "d3-force": "^3.0.0",
@@ -98,7 +98,7 @@ interface ForceLink extends SimulationLinkDatum<ForceNode> {
 
 ### 3.1 KitAppState Extension
 
-In `js/semio/sketchpad/Kit.tsx` (line ~259):
+In `js/compose/sketchpad/Kit.tsx` (line ~259):
 
 ```typescript
 export interface DiagramForceSettings {
@@ -125,7 +125,7 @@ export interface KitAppDiff {
 
 ### 3.3 Default State
 
-In `js/semio/sketchpad/Sketchpad.tsx` (createDefaultKitAppState ~8119):
+In `js/compose/sketchpad/Sketchpad.tsx` (createDefaultKitAppState ~8119):
 
 ```typescript
 export function createDefaultKitAppState(): KitAppState {
@@ -143,7 +143,7 @@ export function createDefaultKitAppState(): KitAppState {
 
 ## 4. XState Actions
 
-Add to `js/semio/sketchpad/Kit.tsx` (after line ~1030):
+Add to `js/compose/sketchpad/Kit.tsx` (after line ~1030):
 
 ```typescript
 registerRuntimeAction("kitSetDiagramForce", (context: any, event: any) => {
@@ -371,7 +371,7 @@ const KitSettingsContent: FC = () => {
       <TreeItem>
         <TreeContent>
           <Slider
-            id="semio.kitApp.settings.diagram.chargeStrength"
+            id="compose.kitApp.settings.diagram.chargeStrength"
             showLabel
             min={-500}
             max={0}
@@ -383,7 +383,7 @@ const KitSettingsContent: FC = () => {
       <TreeItem>
         <TreeContent>
           <Slider
-            id="semio.kitApp.settings.diagram.linkDistance"
+            id="compose.kitApp.settings.diagram.linkDistance"
             showLabel
             min={50}
             max={300}
@@ -395,7 +395,7 @@ const KitSettingsContent: FC = () => {
       <TreeItem>
         <TreeContent>
           <Slider
-            id="semio.kitApp.settings.diagram.collideRadius"
+            id="compose.kitApp.settings.diagram.collideRadius"
             showLabel
             min={10}
             max={100}
@@ -407,7 +407,7 @@ const KitSettingsContent: FC = () => {
       <TreeItem>
         <TreeContent>
           <Slider
-            id="semio.kitApp.settings.diagram.centerStrength"
+            id="compose.kitApp.settings.diagram.centerStrength"
             showLabel
             min={0}
             max={1}
@@ -424,17 +424,17 @@ const KitSettingsContent: FC = () => {
 
 ## 9. i18n Labels
 
-Add to `js/semio/sketchpad/locales/en.json`:
+Add to `js/compose/sketchpad/locales/en.json`:
 
 ```json
-"semio.kitApp.settings.diagram.chargeStrength": "Charge Strength",
-"semio.kitApp.settings.diagram.chargeStrength.description": "Node repulsion force (-500 strong repulsion, 0 none)",
-"semio.kitApp.settings.diagram.linkDistance": "Link Distance",
-"semio.kitApp.settings.diagram.linkDistance.description": "Target distance between connected nodes",
-"semio.kitApp.settings.diagram.collideRadius": "Collide Radius",
-"semio.kitApp.settings.diagram.collideRadius.description": "Minimum distance between nodes",
-"semio.kitApp.settings.diagram.centerStrength": "Center Strength",
-"semio.kitApp.settings.diagram.centerStrength.description": "Force pulling nodes towards center"
+"compose.kitApp.settings.diagram.chargeStrength": "Charge Strength",
+"compose.kitApp.settings.diagram.chargeStrength.description": "Node repulsion force (-500 strong repulsion, 0 none)",
+"compose.kitApp.settings.diagram.linkDistance": "Link Distance",
+"compose.kitApp.settings.diagram.linkDistance.description": "Target distance between connected nodes",
+"compose.kitApp.settings.diagram.collideRadius": "Collide Radius",
+"compose.kitApp.settings.diagram.collideRadius.description": "Minimum distance between nodes",
+"compose.kitApp.settings.diagram.centerStrength": "Center Strength",
+"compose.kitApp.settings.diagram.centerStrength.description": "Force pulling nodes towards center"
 ```
 
 Add corresponding entries to `de.json`.
@@ -443,11 +443,11 @@ Add corresponding entries to `de.json`.
 
 | File                                 | Changes                                                                                                                                                                                        |
 | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `js/semio/package.json`              | Add d3-force, @types/d3-force                                                                                                                                                                  |
-| `js/semio/sketchpad/Kit.tsx`         | KitAppState, DiagramForceSettings interface, registerRuntimeAction, useKitAppDiagramForce hook, KitArtifactNode circular redesign, KitDiagram d3-force integration, KitSettingsContent sliders |
-| `js/semio/sketchpad/Sketchpad.tsx`   | createDefaultKitAppState add diagramForce defaults                                                                                                                                             |
-| `js/semio/sketchpad/locales/en.json` | Add diagram force labels                                                                                                                                                                       |
-| `js/semio/sketchpad/locales/de.json` | Add diagram force labels                                                                                                                                                                       |
+| `js/compose/package.json`              | Add d3-force, @types/d3-force                                                                                                                                                                  |
+| `js/compose/sketchpad/Kit.tsx`         | KitAppState, DiagramForceSettings interface, registerRuntimeAction, useKitAppDiagramForce hook, KitArtifactNode circular redesign, KitDiagram d3-force integration, KitSettingsContent sliders |
+| `js/compose/sketchpad/Sketchpad.tsx`   | createDefaultKitAppState add diagramForce defaults                                                                                                                                             |
+| `js/compose/sketchpad/locales/en.json` | Add diagram force labels                                                                                                                                                                       |
+| `js/compose/sketchpad/locales/de.json` | Add diagram force labels                                                                                                                                                                       |
 | `AGENTS.md`                          | Document diagram force settings                                                                                                                                                                |
 
 ## 11. Implementation Order

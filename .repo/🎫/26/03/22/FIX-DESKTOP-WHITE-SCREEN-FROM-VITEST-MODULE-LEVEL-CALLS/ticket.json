@@ -2,8 +2,8 @@
   "title": "Fix Desktop White Screen From Vitest Module Level Calls",
   "emoji": "🔧",
   "status": "closed",
-  "description": "The desktop app shows a white screen because semio/js/index.ts has vitest describe/it/expect/beforeAll calls at module level. When the renderer loads @semio/js (via @semio/studio), vitest's getCurrentSuite() throws because there's no test runner. Need to guard all test code so it doesn't execute in browser contexts.",
-  "summary": "Fixed desktop white screen by guarding all test code in semio/js/index.ts with a vitest environment check. The describe/it/expect/beforeAll calls from vitest were executing at module level when the Electron renderer loaded @semio/js, causing vitest to throw 'failed to find the current suite' since there's no test runner in browser. Moved all test-only imports (vitest, react-dom/server, @elements/ui, @semio/assets, @semio/studio) to dynamic imports inside the guard block. Also fixed 12 missing guid fields on layer attributes in kit_metabolism.json that were added by a concurrent agent. All 79 tests pass.",
+  "description": "The desktop app shows a white screen because compose/js/index.ts has vitest describe/it/expect/beforeAll calls at module level. When the renderer loads @compose/js (via @compose/studio), vitest's getCurrentSuite() throws because there's no test runner. Need to guard all test code so it doesn't execute in browser contexts.",
+  "summary": "Fixed desktop white screen by guarding all test code in compose/js/index.ts with a vitest environment check. The describe/it/expect/beforeAll calls from vitest were executing at module level when the Electron renderer loaded @compose/js, causing vitest to throw 'failed to find the current suite' since there's no test runner in browser. Moved all test-only imports (vitest, react-dom/server, @elements/ui, @compose/assets, @compose/studio) to dynamic imports inside the guard block. Also fixed 12 missing guid fields on layer attributes in kit_metabolism.json that were added by a concurrent agent. All 79 tests pass.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1023"
   },

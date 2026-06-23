@@ -1,3 +1,0 @@
----
-folder: semio/examples
----

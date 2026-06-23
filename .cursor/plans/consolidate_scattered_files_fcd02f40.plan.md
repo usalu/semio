@@ -21,7 +21,7 @@ todos:
     content: Inline-fold infinite/cavas/vello icon_codec.rs (preserve include!) and theme.rs into lib.rs
     status: completed
   - id: py-test
-    content: Embed semio/client/lib/py store_test.py into main.py; delete store_test.py
+    content: Embed compose/client/lib/py store_test.py into main.py; delete store_test.py
     status: completed
   - id: verify
     content: Run nx test/build, cargo check/test, pytest for affected packages; confirm no runtime/bundle change; close ticket
@@ -64,14 +64,14 @@ Convert `pub mod X;` + sibling file into inline `pub mod X { ... }` `// #region`
 
 ## Workstream 3 - Python test embed
 
-- `semio/client/lib/py`: embed [store_test.py](semio/client/lib/py/store_test.py) into [main.py](semio/client/lib/py/main.py) (already the pytest `python_files` host with embedded tests); update relative imports; delete `store_test.py`.
+- `compose/client/lib/py`: embed [store_test.py](compose/client/lib/py/store_test.py) into [main.py](compose/client/lib/py/main.py) (already the pytest `python_files` host with embedded tests); update relative imports; delete `store_test.py`.
 
 ## Explicitly excluded (merging would change bundle/runtime)
 
-- Web workers: `semio/client/lib/js/kit-store.worker.ts`, `puzzle/3d/react/precompute.worker.ts`
-- Entry points: `semio/client/lib/sketchpad/js/boot.tsx` (Vite HTML + `./boot` export), `repo/client/vscode/extension.ts`/`extension.test.ts`, all Electron `preload.ts`/`renderer.tsx`, Next.js `app/**/route.tsx`
+- Web workers: `compose/client/lib/js/kit-store.worker.ts`, `puzzle/3d/react/precompute.worker.ts`
+- Entry points: `compose/client/lib/sketchpad/js/boot.tsx` (Vite HTML + `./boot` export), `repo/client/vscode/extension.ts`/`extension.test.ts`, all Electron `preload.ts`/`renderer.tsx`, Next.js `app/**/route.tsx`
 - `package.json` subpath exports: `ui/styling/js/resolve.ts`, generated `ui/styling/js/tokens.generated.ts`; and `ui/styling` Vite tooling files (`vite-elements-assets.ts`, `playground-*.ts`) stay split to avoid pulling node-only build code into the browser entry
-- Rust `build.rs` and shared `*.inc.rs` fragments; bin-only crates already single-file (`semio/server/hub/bin.rs`, `semio/client/bin/store/bin.rs`)
+- Rust `build.rs` and shared `*.inc.rs` fragments; bin-only crates already single-file (`compose/server/hub/bin.rs`, `compose/client/bin/store/bin.rs`)
 - Go `*_test.go` (runner requires separate file) and .NET `*.Tests` projects (separate assemblies)
 
 ## Verification

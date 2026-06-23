@@ -3,7 +3,7 @@
 ## Todos
 # Previously
 
-Task: Analyze the Sketchpad codebase and add missing IDs to all UI elements following the `semio.sketchpad.*` naming convention.
+Task: Analyze the Sketchpad codebase and add missing IDs to all UI elements following the `compose.sketchpad.*` naming convention.
 
 # Plan
 
@@ -16,22 +16,22 @@ Task: Analyze the Sketchpad codebase and add missing IDs to all UI elements foll
 
 ## Design.tsx
 
-- Added ID `semio.sketchpad.app.design.diagram.clusterMenu.cluster` to Cluster button in ClusterMenu component
-- Added ID `semio.sketchpad.app.design.diagram.expandMenu.expand` to Expand button in ExpandMenu component
+- Added ID `compose.sketchpad.app.design.diagram.clusterMenu.cluster` to Cluster button in ClusterMenu component
+- Added ID `compose.sketchpad.app.design.diagram.expandMenu.expand` to Expand button in ExpandMenu component
 
 ## Tutorials.tsx
 
-- Added ID `semio.sketchpad.tutorial.controls.stop` to tutorial stop button
-- Added ID `semio.sketchpad.tutorial.controls.previous` to previous milestone button
-- Added ID `semio.sketchpad.tutorial.controls.playPause` to play/pause button
-- Added ID `semio.sketchpad.tutorial.controls.next` to next milestone button
-- Added ID `semio.sketchpad.recording.controls.playPause` to recording play/pause button
-- Added ID `semio.sketchpad.recording.controls.stop` to recording stop button
+- Added ID `compose.sketchpad.tutorial.controls.stop` to tutorial stop button
+- Added ID `compose.sketchpad.tutorial.controls.previous` to previous milestone button
+- Added ID `compose.sketchpad.tutorial.controls.playPause` to play/pause button
+- Added ID `compose.sketchpad.tutorial.controls.next` to next milestone button
+- Added ID `compose.sketchpad.recording.controls.playPause` to recording play/pause button
+- Added ID `compose.sketchpad.recording.controls.stop` to recording stop button
 
 ## elements.tsx
 
-- Added ID `semio.sketchpad.docs.navigation.previous` to page navigation previous button
-- Added ID `semio.sketchpad.docs.navigation.next` to page navigation next button
+- Added ID `compose.sketchpad.docs.navigation.previous` to page navigation previous button
+- Added ID `compose.sketchpad.docs.navigation.next` to page navigation next button
 
 ## Verified Files (No Changes Needed)
 
@@ -46,16 +46,16 @@ Task: Analyze the Sketchpad codebase and add missing IDs to all UI elements foll
 
 ### en.json
 
-- `semio.sketchpad.app.design.diagram.clusterMenu.cluster` - Cluster button translations
-- `semio.sketchpad.app.design.diagram.expandMenu.expand` - Expand button translations
-- `semio.sketchpad.tutorial.controls.stop` - Tutorial stop button
-- `semio.sketchpad.tutorial.controls.previous` - Previous milestone button
-- `semio.sketchpad.tutorial.controls.playPause` - Play/pause button
-- `semio.sketchpad.tutorial.controls.next` - Next milestone button
-- `semio.sketchpad.recording.controls.playPause` - Recording play/pause button
-- `semio.sketchpad.recording.controls.stop` - Recording stop button
-- `semio.sketchpad.docs.navigation.previous` - Docs previous page button
-- `semio.sketchpad.docs.navigation.next` - Docs next page button
+- `compose.sketchpad.app.design.diagram.clusterMenu.cluster` - Cluster button translations
+- `compose.sketchpad.app.design.diagram.expandMenu.expand` - Expand button translations
+- `compose.sketchpad.tutorial.controls.stop` - Tutorial stop button
+- `compose.sketchpad.tutorial.controls.previous` - Previous milestone button
+- `compose.sketchpad.tutorial.controls.playPause` - Play/pause button
+- `compose.sketchpad.tutorial.controls.next` - Next milestone button
+- `compose.sketchpad.recording.controls.playPause` - Recording play/pause button
+- `compose.sketchpad.recording.controls.stop` - Recording stop button
+- `compose.sketchpad.docs.navigation.previous` - Docs previous page button
+- `compose.sketchpad.docs.navigation.next` - Docs next page button
 
 ### de.json
 

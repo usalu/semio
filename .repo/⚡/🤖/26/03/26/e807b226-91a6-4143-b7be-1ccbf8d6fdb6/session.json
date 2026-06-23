@@ -72,7 +72,7 @@
               "goal": "r2603",
               "llm": "sonnet-4-5",
               "no_github": true,
-              "prompt": "Continuing investigation of client-side rendering issues in semio engine MCP apps. Server-side _meta serialization confirmed correct. Now investigating client-side mcp-app.tsx for rendering bugs, testing built HTML, and cross-checking with ext-apps library.",
+              "prompt": "Continuing investigation of client-side rendering issues in compose engine MCP apps. Server-side _meta serialization confirmed correct. Now investigating client-side mcp-app.tsx for rendering bugs, testing built HTML, and cross-checking with ext-apps library.",
               "title": "Fix Mcp App Not Rendering When Executed on Client"
             },
             "mcp_tool_name": "ticket_open"
@@ -104,7 +104,7 @@
               "goal": "r2603",
               "llm": "sonnet-4-5",
               "no_github": true,
-              "prompt": "Continuing investigation of client-side rendering issues in semio engine MCP apps. Server-side _meta serialization confirmed correct. Now investigating client-side mcp-app.tsx for rendering bugs, testing built HTML, and cross-checking with ext-apps library.",
+              "prompt": "Continuing investigation of client-side rendering issues in compose engine MCP apps. Server-side _meta serialization confirmed correct. Now investigating client-side mcp-app.tsx for rendering bugs, testing built HTML, and cross-checking with ext-apps library.",
               "title": "Fix Mcp App Not Rendering When Executed on Client"
             },
             "mcp_tool_name": "ticket_open"
@@ -173,7 +173,7 @@
           "timestamp": "2026-03-26T17:46:34.455744191Z",
           "execution_id": "0ed46b64-8665-404c-9053-0ac7829acbeb",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/engine/main.py"
+            "file_path": "/workspaces/semio/compose/engine/main.py"
           }
         }
       },
@@ -195,7 +195,7 @@
           "timestamp": "2026-03-26T17:46:34.58772535Z",
           "execution_id": "0ed46b64-8665-404c-9053-0ac7829acbeb",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/engine/main.py"
+            "file_path": "/workspaces/semio/compose/engine/main.py"
           }
         }
       },
@@ -261,7 +261,7 @@
           "timestamp": "2026-03-26T17:46:51.191198597Z",
           "execution_id": "0ed46b64-8665-404c-9053-0ac7829acbeb",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/engine/main.py"
+            "file_path": "/workspaces/semio/compose/engine/main.py"
           }
         }
       },
@@ -283,7 +283,7 @@
           "timestamp": "2026-03-26T17:46:51.362657369Z",
           "execution_id": "0ed46b64-8665-404c-9053-0ac7829acbeb",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/engine/main.py"
+            "file_path": "/workspaces/semio/compose/engine/main.py"
           }
         }
       },
@@ -349,7 +349,7 @@
           "timestamp": "2026-03-26T17:47:26.177291864Z",
           "execution_id": "0ed46b64-8665-404c-9053-0ac7829acbeb",
           "tool_info": {
-            "command_line": "cd /workspaces/semio \u0026\u0026 npm run build:mcp-app --workspace=semio/engine 2\u003e\u00261 | tail -30",
+            "command_line": "cd /workspaces/semio \u0026\u0026 npm run build:mcp-app --workspace=compose/engine 2\u003e\u00261 | tail -30",
             "cwd": "/workspaces/semio"
           }
         }
@@ -416,7 +416,7 @@
           "timestamp": "2026-03-26T17:47:46.302726054Z",
           "execution_id": "0ed46b64-8665-404c-9053-0ac7829acbeb",
           "tool_info": {
-            "command_line": "head -c 5000 /workspaces/semio/semio/engine/dist/mcp-app.html",
+            "command_line": "head -c 5000 /workspaces/semio/compose/engine/dist/mcp-app.html",
             "cwd": "/workspaces/semio"
           }
         }
@@ -439,7 +439,7 @@
           "timestamp": "2026-03-26T17:47:57.032662832Z",
           "execution_id": "0ed46b64-8665-404c-9053-0ac7829acbeb",
           "tool_info": {
-            "command_line": "grep -c 'new Function' /workspaces/semio/semio/engine/dist/mcp-app.html",
+            "command_line": "grep -c 'new Function' /workspaces/semio/compose/engine/dist/mcp-app.html",
             "cwd": "/workspaces/semio"
           }
         }
@@ -462,7 +462,7 @@
           "timestamp": "2026-03-26T17:47:58.013869478Z",
           "execution_id": "0ed46b64-8665-404c-9053-0ac7829acbeb",
           "tool_info": {
-            "command_line": "grep -c 'allowsEval' /workspaces/semio/semio/engine/dist/mcp-app.html",
+            "command_line": "grep -c 'allowsEval' /workspaces/semio/compose/engine/dist/mcp-app.html",
             "cwd": "/workspaces/semio"
           }
         }
@@ -485,7 +485,7 @@
           "timestamp": "2026-03-26T17:47:58.982040933Z",
           "execution_id": "0ed46b64-8665-404c-9053-0ac7829acbeb",
           "tool_info": {
-            "command_line": "grep -oP 'from\"[^\"]*\"' /workspaces/semio/semio/engine/dist/mcp-app.html | sort -u",
+            "command_line": "grep -oP 'from\"[^\"]*\"' /workspaces/semio/compose/engine/dist/mcp-app.html | sort -u",
             "cwd": "/workspaces/semio"
           }
         }

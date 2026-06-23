@@ -3,7 +3,7 @@
   "emoji": "✏️",
   "status": "closed",
   "description": "Update Sketchpad Detail Panel From Repo Changes",
-  "summary": "Fixed the JSX parsing error causing semio play to not start. The error was due to a malformed and duplicated `TreeAlignedRow` block caused by a botched git merge in `elements/ui/index.tsx`, resulting in an unclosed `\u003cdiv\u003e`. Removed the duplicated logic and reconstructed the fallback logic correctly without missing tags.",
+  "summary": "Fixed the JSX parsing error causing compose play to not start. The error was due to a malformed and duplicated `TreeAlignedRow` block caused by a botched git merge in `elements/ui/index.tsx`, resulting in an unclosed `\u003cdiv\u003e`. Removed the duplicated logic and reconstructed the fallback logic correctly without missing tags.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1212"
   },

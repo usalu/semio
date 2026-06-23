@@ -1,12 +1,12 @@
 ---
 name: rs read command overhaul
-overview: Replace the sparse, `Other`-ridden `read_command` module in `semio/rs/lib.rs` with a fully exhaustive, statically typed read-command surface covering every stored and computed property of every kit-graph entity. Execute against the live `KitGraph`, reuse existing `*IdDto` / `*MetadataDto` / `*ShallowDto` / `*FullDto` as outputs, introduce narrow invariant-bearing output DTOs (e.g. `FixedPieceOutputDto`, `ConnectedPieceOutputDto`) only where they tighten invariants, and mirror the entire surface across wasm, `semio/js`, `semio/store` JSON-RPC, storybook, and tests in a single greenfield pass.
+overview: Replace the sparse, `Other`-ridden `read_command` module in `compose/rs/lib.rs` with a fully exhaustive, statically typed read-command surface covering every stored and computed property of every kit-graph entity. Execute against the live `KitGraph`, reuse existing `*IdDto` / `*MetadataDto` / `*ShallowDto` / `*FullDto` as outputs, introduce narrow invariant-bearing output DTOs (e.g. `FixedPieceOutputDto`, `ConnectedPieceOutputDto`) only where they tighten invariants, and mirror the entire surface across wasm, `compose/js`, `compose/store` JSON-RPC, storybook, and tests in a single greenfield pass.
 todos:
  - id: catalog
    content: Finalize the per-entity command catalog (every stored scalar + every child collection + every computed property + Full/Shallow/Metadata/Id) and the narrow Output DTOs (FixedPieceOutputDto, ConnectedPieceOutputDto).
    status: completed
  - id: rs-read-mod
-   content: Replace `pub mod read_command` in `semio/rs/lib.rs` with a new `pub mod read` containing one ReadXCommand + ReadXCommandOutput pair per entity, no Other variants, all serde camelCase.
+   content: Replace `pub mod read_command` in `compose/rs/lib.rs` with a new `pub mod read` containing one ReadXCommand + ReadXCommandOutput pair per entity, no Other variants, all serde camelCase.
    status: completed
  - id: rs-execute
    content: Implement execute impls for every Read command against the live KitGraph (PieceStoreRef, TypeStoreRef, DesignStoreRef, ...), wiring computed props (flatCenter, flatPlane, path, parentPiece, parentConnection, parentDesign, alternatives, flattenMap, etc.).
@@ -24,16 +24,16 @@ todos:
    content: Rewrite Rust tests in `vcs_command_tests` and `wasm_handle_tests` against the new variants; add coverage for every computed-property command.
    status: completed
  - id: store-jsonrpc
-   content: Update `semio/store/jsonrpc.rs` `kit.executeReadKitCommands` serde types to the new enums; keep method name.
+   content: Update `compose/store/jsonrpc.rs` `kit.executeReadKitCommands` serde types to the new enums; keep method name.
    status: completed
  - id: js-mirror
-   content: Hand-author exhaustive TS mirror of ReadKitCommand/Output trees in `semio/js/index.ts` and `worker.ts`; type `KitStoreClient.executeRead` statically.
+   content: Hand-author exhaustive TS mirror of ReadKitCommand/Output trees in `compose/js/index.ts` and `worker.ts`; type `KitStoreClient.executeRead` statically.
    status: completed
  - id: algorithms-storybook
    content: Regenerate `commandSchema.ts`, `CommandForm.tsx`, `HistoryControls.tsx`, `useKitStore.ts`, `KitStore.stories.tsx` presets/suggestions against the new schema.
    status: completed
  - id: docs
-   content: Update `semio/rs/AGENTS.md`, `semio/js/AGENTS.md`, `semio/store/AGENTS.md`, and `semio/AGENTS.md` glossary to describe the new read command surface; remove references to the old `Other`-based shape.
+   content: Update `compose/rs/AGENTS.md`, `compose/js/AGENTS.md`, `compose/store/AGENTS.md`, and `compose/AGENTS.md` glossary to describe the new read command surface; remove references to the old `Other`-based shape.
    status: completed
  - id: delete-legacy
    content: Delete the old `pub mod read_command` block, all `#[serde(other)]` escapes, old tests/presets, and any `any`/`unknown[]` typings on the TS side that referred to the legacy shape.
@@ -41,7 +41,7 @@ todos:
 isProject: false
 ---
 
-# Semio/rs Read Command Overhaul
+# Compose/rs Read Command Overhaul
 
 ## Design principles
 
@@ -49,7 +49,7 @@ isProject: false
 - All variants end in `...Command`. Nested variants take a typed `id` and `commands: Vec<Read<Child>Command>`.
 - All commands execute against the live `KitGraph` (drop snapshot-based execution). Each `execute` takes a typed `&KitGraph` plus the owning store ref where applicable, so computed properties (`flatCenter`, `flatPlane`, `path`, `parentPiece`, `parentConnection`, `parentDesign`, `alternatives`, `flattenMap`, `portByFamily`, …) are native first-class reads.
 - Outputs reuse existing DTOs (`PieceFullDto`, `PieceMetadataDto`, `PoseFullDto`, `Coordinate`, `Plane`, …). New `InputDto` / `OutputDto` types are introduced only when they carry stronger invariants than a stored DTO (e.g. `FixedPieceOutputDto` guarantees pose + no parents, `ConnectedPieceOutputDto` guarantees parent piece + parent connection + flat pose, no pose).
-- One source of truth in Rust. TypeScript hand-mirror in `semio/js` with serde parity.
+- One source of truth in Rust. TypeScript hand-mirror in `compose/js` with serde parity.
 - No backcompat: delete the legacy `read_command` module, legacy tests, legacy wasm wiring, legacy storybook presets. Greenfield.
 
 ## Entity coverage
@@ -82,7 +82,7 @@ Entities covered exhaustively:
 - `Attribute` (stored: id, key, value, definition)
 - `Stat` (stored: id, key, value, unit, description)
 
-Full per-entity variant list (generated mechanically from the above) lives inline in the new `pub mod read` module of `[semio/rs/lib.rs](semio/rs/lib.rs)`.
+Full per-entity variant list (generated mechanically from the above) lives inline in the new `pub mod read` module of `[compose/rs/lib.rs](compose/rs/lib.rs)`.
 
 ## Narrow output DTOs
 
@@ -117,22 +117,22 @@ Each todo lands fully within the same change set (no staged migration).
 
 ## Downstream alignment (same change set)
 
-- `[semio/rs/lib.rs](semio/rs/lib.rs)` `pub mod wasm`: `executeReadKitCommands` now resolves against the live `KitGraph` (drop the `to_full_dto()` detour). JS name preserved.
-- `[semio/rs/lib.rs](semio/rs/lib.rs)` `pub mod kit_store_command`: `KitStoreCommand::ReadKitCommands { commands }` inner list points at new `ReadKitCommand`.
-- `[semio/store/jsonrpc.rs](semio/store/jsonrpc.rs)`: `kit.executeReadKitCommands` `{ cmds, results }` serde types swap to the new enums. No method rename.
-- `[semio/js/index.ts](semio/js/index.ts)` + `[semio/js/worker.ts](semio/js/worker.ts)`: hand-authored exhaustive TS discriminated-union mirror (`ReadKitCommand`, `ReadKitCommandOutput`, `ReadTypeCommand`, `ReadTypeCommandOutput`, … for every entity) in place of today's `unknown[]`. `KitStoreClient.executeRead` typed `Promise<ReadKitCommandOutput[]>`.
-- `[semio/algorithms/.storybook/stories/kit-store/commandSchema.ts](semio/algorithms/.storybook/stories/kit-store/commandSchema.ts)` + `CommandForm.tsx` + `HistoryControls.tsx` + `useKitStore.ts` + `[semio/algorithms/.storybook/stories/KitStore.stories.tsx](semio/algorithms/.storybook/stories/KitStore.stories.tsx)`: regenerate presets, type suggestions and default JSONs from the new schema.
+- `[compose/rs/lib.rs](compose/rs/lib.rs)` `pub mod wasm`: `executeReadKitCommands` now resolves against the live `KitGraph` (drop the `to_full_dto()` detour). JS name preserved.
+- `[compose/rs/lib.rs](compose/rs/lib.rs)` `pub mod kit_store_command`: `KitStoreCommand::ReadKitCommands { commands }` inner list points at new `ReadKitCommand`.
+- `[compose/store/jsonrpc.rs](compose/store/jsonrpc.rs)`: `kit.executeReadKitCommands` `{ cmds, results }` serde types swap to the new enums. No method rename.
+- `[compose/js/index.ts](compose/js/index.ts)` + `[compose/js/worker.ts](compose/js/worker.ts)`: hand-authored exhaustive TS discriminated-union mirror (`ReadKitCommand`, `ReadKitCommandOutput`, `ReadTypeCommand`, `ReadTypeCommandOutput`, … for every entity) in place of today's `unknown[]`. `KitStoreClient.executeRead` typed `Promise<ReadKitCommandOutput[]>`.
+- `[compose/algorithms/.storybook/stories/kit-store/commandSchema.ts](compose/algorithms/.storybook/stories/kit-store/commandSchema.ts)` + `CommandForm.tsx` + `HistoryControls.tsx` + `useKitStore.ts` + `[compose/algorithms/.storybook/stories/KitStore.stories.tsx](compose/algorithms/.storybook/stories/KitStore.stories.tsx)`: regenerate presets, type suggestions and default JSONs from the new schema.
 - Tests: rewrite `vcs_command_tests::{read_type_name, read_command_nested_type, read_command_tree_returns_nested_results}` and any `wasm_handle_tests` exercising reads, against the new variants. Add coverage for every computed-property command (`readPieceFlatCenterCommand`, `readDesignFlattenMapCommand`, `readPieceParentPieceCommand`, `readPieceFixedCommand`, `readPieceConnectedCommand`, `readTypePortsCommand`).
-- Docs: `[semio/rs/AGENTS.md](semio/rs/AGENTS.md)` gets a new "Read command surface" section; `[semio/js/AGENTS.md](semio/js/AGENTS.md)` documents the TS mirror; `[semio/store/AGENTS.md](semio/store/AGENTS.md)` documents the wire schema; `[semio/AGENTS.md](semio/AGENTS.md)` glossary entry updated.
-- Delete: the entire existing `pub mod read_command` block (lines 4–338 of `[semio/rs/lib.rs](semio/rs/lib.rs)`), its `#[serde(other)]` escapes, the old `Other` variants, any `unknown[]` / `any` typings on the JS side, and any preset JSON referring to old variant names.
+- Docs: `[compose/rs/AGENTS.md](compose/rs/AGENTS.md)` gets a new "Read command surface" section; `[compose/js/AGENTS.md](compose/js/AGENTS.md)` documents the TS mirror; `[compose/store/AGENTS.md](compose/store/AGENTS.md)` documents the wire schema; `[compose/AGENTS.md](compose/AGENTS.md)` glossary entry updated.
+- Delete: the entire existing `pub mod read_command` block (lines 4–338 of `[compose/rs/lib.rs](compose/rs/lib.rs)`), its `#[serde(other)]` escapes, the old `Other` variants, any `unknown[]` / `any` typings on the JS side, and any preset JSON referring to old variant names.
 
 ## Mermaid: execution flow
 
 ```mermaid
 flowchart LR
-  JS[semio/js KitStoreClient.executeRead] --> WASM[executeReadKitCommands wasm]
+  JS[compose/js KitStoreClient.executeRead] --> WASM[executeReadKitCommands wasm]
   JS --> RPC[kit.executeReadKitCommands JSON-RPC]
-  RPC --> STORE[semio/store jsonrpc.rs]
+  RPC --> STORE[compose/store jsonrpc.rs]
   WASM --> RUST[KitStoreHandle]
   STORE --> RUST
   RUST --> GRAPH[live KitGraph]

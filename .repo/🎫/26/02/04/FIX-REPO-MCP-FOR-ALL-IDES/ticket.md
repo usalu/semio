@@ -31,5 +31,5 @@ Fixed MCP tool schema validation errors by adding `items` definition to array pr
 
 1. **Analyze**: Find the Go code responsible for generating JSON schemas for MCP tools.
 2. **Fix Schema**: Ensure that when a parameter is an array (like `files` in `draft_create` or `ticket_close`), it includes the `items` property in the schema.
-3. **Fix Naming**: Check how `ticket_open` is registered. Claude Code error says `No such tool available: mcp__mcp_semio_repo__ticket_open`. This looks like a namespacing issue.
+3. **Fix Naming**: Check how `ticket_open` is registered. Claude Code error says `No such tool available: mcp__mcp_compose_repo__ticket_open`. This looks like a namespacing issue.
 4. **Test**: Run existing tests, then extend them to validate the schemas of all registered tools.

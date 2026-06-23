@@ -1,6 +1,6 @@
 {
   "id": "0598acb2-45b0-40de-a319-d746e5bd9885",
-  "uri": "semiorepo://s/0598acb2-45b0-40de-a319-d746e5bd9885",
+  "uri": "composerepo://s/0598acb2-45b0-40de-a319-d746e5bd9885",
   "contributor": "🧑‍💻ueli",
   "client": "copilot-chat",
   "second": "2026-03-10T14:32:21Z",
@@ -14,7 +14,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 545,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 523
           },
           "tool_response": "",
@@ -33,18 +33,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio✂️attributesdiff",
+            "id": "👤compose📚go💻compose✂️attributesdiff",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio✂️location",
+            "id": "👤compose📚go💻compose✂️location",
             "loc": 6
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌523📌545"
+          "👤compose📚go💻compose📌523📌545"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚32⏱️21",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -62,7 +62,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 630,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 584
           },
           "tool_response": "",
@@ -81,22 +81,22 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio✂️authorsdiff",
+            "id": "👤compose📚go💻compose✂️authorsdiff",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio✂️file",
+            "id": "👤compose📚go💻compose✂️file",
             "loc": 14
           },
           {
-            "id": "👤semio📚go💻semio✂️filediff",
+            "id": "👤compose📚go💻compose✂️filediff",
             "loc": 11
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌584📌630"
+          "👤compose📚go💻compose📌584📌630"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚32⏱️22",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -114,7 +114,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 666,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 632
           },
           "tool_response": "",
@@ -133,22 +133,22 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio✂️filesdiff",
+            "id": "👤compose📚go💻compose✂️filesdiff",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio✂️folder",
+            "id": "👤compose📚go💻compose✂️folder",
             "loc": 9
           },
           {
-            "id": "👤semio📚go💻semio✂️folderdiff",
+            "id": "👤compose📚go💻compose✂️folderdiff",
             "loc": 6
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌632📌666"
+          "👤compose📚go💻compose📌632📌666"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚32⏱️22",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -166,7 +166,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 718,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 670
           },
           "tool_response": "",
@@ -185,26 +185,26 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio✂️benchmark",
+            "id": "👤compose📚go💻compose✂️benchmark",
             "loc": 11
           },
           {
-            "id": "👤semio📚go💻semio✂️benchmarkdiff",
+            "id": "👤compose📚go💻compose✂️benchmarkdiff",
             "loc": 10
           },
           {
-            "id": "👤semio📚go💻semio✂️benchmarksdiff",
+            "id": "👤compose📚go💻compose✂️benchmarksdiff",
             "loc": 5
           },
           {
-            "id": "👤semio📚go💻semio✂️foldersdiff",
+            "id": "👤compose📚go💻compose✂️foldersdiff",
             "loc": 8
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌670📌718"
+          "👤compose📚go💻compose📌670📌718"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚32⏱️23",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -222,7 +222,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 790,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 714
           },
           "tool_response": "",
@@ -241,30 +241,30 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio✂️benchmarksdiff",
+            "id": "👤compose📚go💻compose✂️benchmarksdiff",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio✂️qualitiesdiff",
+            "id": "👤compose📚go💻compose✂️qualitiesdiff",
             "loc": 4
           },
           {
-            "id": "👤semio📚go💻semio✂️quality",
+            "id": "👤compose📚go💻compose✂️quality",
             "loc": 20
           },
           {
-            "id": "👤semio📚go💻semio✂️qualitydiff",
+            "id": "👤compose📚go💻compose✂️qualitydiff",
             "loc": 17
           },
           {
-            "id": "👤semio📚go💻semio✂️qualitykind",
+            "id": "👤compose📚go💻compose✂️qualitykind",
             "loc": 13
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌714📌790"
+          "👤compose📚go💻compose📌714📌790"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚32⏱️23",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -282,7 +282,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 530,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 500
           },
           "tool_use_id": "toolu_bdrk_01YHnSeBU6aptUxjri5MFmNv__vscode-1773054464270",
@@ -301,22 +301,22 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio✂️attribute",
+            "id": "👤compose📚go💻compose✂️attribute",
             "loc": 6
           },
           {
-            "id": "👤semio📚go💻semio✂️attributediff",
+            "id": "👤compose📚go💻compose✂️attributediff",
             "loc": 5
           },
           {
-            "id": "👤semio📚go💻semio✂️attributesdiff",
+            "id": "👤compose📚go💻compose✂️attributesdiff",
             "loc": 8
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌500📌530"
+          "👤compose📚go💻compose📌500📌530"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚32⏱️29",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -334,7 +334,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 530,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 500
           },
           "tool_response": "",
@@ -353,22 +353,22 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio✂️attribute",
+            "id": "👤compose📚go💻compose✂️attribute",
             "loc": 6
           },
           {
-            "id": "👤semio📚go💻semio✂️attributediff",
+            "id": "👤compose📚go💻compose✂️attributediff",
             "loc": 5
           },
           {
-            "id": "👤semio📚go💻semio✂️attributesdiff",
+            "id": "👤compose📚go💻compose✂️attributesdiff",
             "loc": 8
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌500📌530"
+          "👤compose📚go💻compose📌500📌530"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚32⏱️43",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -386,7 +386,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/go/semio.go",
+            "includePattern": "**/compose/go/compose.go",
             "isRegexp": false,
             "query": "type AttributesDiff struct"
           },
@@ -422,7 +422,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/go/semio.go",
+            "includePattern": "**/compose/go/compose.go",
             "isRegexp": false,
             "query": "type AttributesDiff struct"
           },
@@ -458,7 +458,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 530,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 418
           },
           "tool_use_id": "toolu_bdrk_01SRokURbDA5NtUd4LoCVJMz__vscode-1773054464272",
@@ -477,66 +477,66 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio✂️attribute",
+            "id": "👤compose📚go💻compose✂️attribute",
             "loc": 6
           },
           {
-            "id": "👤semio📚go💻semio✂️attributediff",
+            "id": "👤compose📚go💻compose✂️attributediff",
             "loc": 5
           },
           {
-            "id": "👤semio📚go💻semio✂️attributesdiff",
+            "id": "👤compose📚go💻compose✂️attributesdiff",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio✂️camera",
+            "id": "👤compose📚go💻compose✂️camera",
             "loc": 5
           },
           {
-            "id": "👤semio📚go💻semio✂️connectionid",
+            "id": "👤compose📚go💻compose✂️connectionid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️coord",
+            "id": "👤compose📚go💻compose✂️coord",
             "loc": 4
           },
           {
-            "id": "👤semio📚go💻semio✂️designid",
+            "id": "👤compose📚go💻compose✂️designid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️kitid",
+            "id": "👤compose📚go💻compose✂️kitid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️plane",
+            "id": "👤compose📚go💻compose✂️plane",
             "loc": 5
           },
           {
-            "id": "👤semio📚go💻semio✂️point",
+            "id": "👤compose📚go💻compose✂️point",
             "loc": 5
           },
           {
-            "id": "👤semio📚go💻semio✂️sideid",
+            "id": "👤compose📚go💻compose✂️sideid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️statid",
+            "id": "👤compose📚go💻compose✂️statid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️vec",
+            "id": "👤compose📚go💻compose✂️vec",
             "loc": 4
           },
           {
-            "id": "👤semio📚go💻semio✂️vector",
+            "id": "👤compose📚go💻compose✂️vector",
             "loc": 5
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌418📌530"
+          "👤compose📚go💻compose📌418📌530"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚33⏱️05",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -554,7 +554,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 530,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 418
           },
           "tool_response": "",
@@ -573,66 +573,66 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio✂️attribute",
+            "id": "👤compose📚go💻compose✂️attribute",
             "loc": 6
           },
           {
-            "id": "👤semio📚go💻semio✂️attributediff",
+            "id": "👤compose📚go💻compose✂️attributediff",
             "loc": 5
           },
           {
-            "id": "👤semio📚go💻semio✂️attributesdiff",
+            "id": "👤compose📚go💻compose✂️attributesdiff",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio✂️camera",
+            "id": "👤compose📚go💻compose✂️camera",
             "loc": 5
           },
           {
-            "id": "👤semio📚go💻semio✂️connectionid",
+            "id": "👤compose📚go💻compose✂️connectionid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️coord",
+            "id": "👤compose📚go💻compose✂️coord",
             "loc": 4
           },
           {
-            "id": "👤semio📚go💻semio✂️designid",
+            "id": "👤compose📚go💻compose✂️designid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️kitid",
+            "id": "👤compose📚go💻compose✂️kitid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️plane",
+            "id": "👤compose📚go💻compose✂️plane",
             "loc": 5
           },
           {
-            "id": "👤semio📚go💻semio✂️point",
+            "id": "👤compose📚go💻compose✂️point",
             "loc": 5
           },
           {
-            "id": "👤semio📚go💻semio✂️sideid",
+            "id": "👤compose📚go💻compose✂️sideid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️statid",
+            "id": "👤compose📚go💻compose✂️statid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️vec",
+            "id": "👤compose📚go💻compose✂️vec",
             "loc": 4
           },
           {
-            "id": "👤semio📚go💻semio✂️vector",
+            "id": "👤compose📚go💻compose✂️vector",
             "loc": 5
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌418📌530"
+          "👤compose📚go💻compose📌418📌530"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚33⏱️17",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -650,7 +650,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 407,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 350
           },
           "tool_use_id": "toolu_bdrk_013F2Ab9rARhotXGV4Wi654X__vscode-1773054464273",
@@ -669,50 +669,50 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio✂️conceptid",
+            "id": "👤compose📚go💻compose✂️conceptid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️connectorid",
+            "id": "👤compose📚go💻compose✂️connectorid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️layerid",
+            "id": "👤compose📚go💻compose✂️layerid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️modelid",
+            "id": "👤compose📚go💻compose✂️modelid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️pieceid",
+            "id": "👤compose📚go💻compose✂️pieceid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️portid",
+            "id": "👤compose📚go💻compose✂️portid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️propid",
+            "id": "👤compose📚go💻compose✂️propid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️qualityid",
+            "id": "👤compose📚go💻compose✂️qualityid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️tagid",
+            "id": "👤compose📚go💻compose✂️tagid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️typeid",
+            "id": "👤compose📚go💻compose✂️typeid",
             "loc": 3
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌350📌407"
+          "👤compose📚go💻compose📌350📌407"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚33⏱️23",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -730,7 +730,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 407,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 350
           },
           "tool_response": "",
@@ -749,50 +749,50 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio✂️conceptid",
+            "id": "👤compose📚go💻compose✂️conceptid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️connectorid",
+            "id": "👤compose📚go💻compose✂️connectorid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️layerid",
+            "id": "👤compose📚go💻compose✂️layerid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️modelid",
+            "id": "👤compose📚go💻compose✂️modelid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️pieceid",
+            "id": "👤compose📚go💻compose✂️pieceid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️portid",
+            "id": "👤compose📚go💻compose✂️portid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️propid",
+            "id": "👤compose📚go💻compose✂️propid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️qualityid",
+            "id": "👤compose📚go💻compose✂️qualityid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️tagid",
+            "id": "👤compose📚go💻compose✂️tagid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️typeid",
+            "id": "👤compose📚go💻compose✂️typeid",
             "loc": 3
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌350📌407"
+          "👤compose📚go💻compose📌350📌407"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚33⏱️35",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -810,7 +810,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 355,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 280
           },
           "tool_use_id": "toolu_bdrk_01CaEwxXbgSEPCZxYb6HcyCK__vscode-1773054464274",
@@ -829,50 +829,50 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio✂️attributeid",
+            "id": "👤compose📚go💻compose✂️attributeid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️authorid",
+            "id": "👤compose📚go💻compose✂️authorid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️benchmarkid",
+            "id": "👤compose📚go💻compose✂️benchmarkid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️fileid",
+            "id": "👤compose📚go💻compose✂️fileid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️folderid",
+            "id": "👤compose📚go💻compose✂️folderid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️locationid",
+            "id": "👤compose📚go💻compose✂️locationid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️qualityid",
+            "id": "👤compose📚go💻compose✂️qualityid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio🛠️deepequal",
+            "id": "👤compose📚go💻compose🛠️deepequal",
             "loc": 1
           },
           {
-            "id": "👤semio📚go💻semio🛠️normalize",
+            "id": "👤compose📚go💻compose🛠️normalize",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio🛠️round",
+            "id": "👤compose📚go💻compose🛠️round",
             "loc": 7
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌280📌355"
+          "👤compose📚go💻compose📌280📌355"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚33⏱️39",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -890,7 +890,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 355,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 280
           },
           "tool_response": "",
@@ -909,50 +909,50 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio✂️attributeid",
+            "id": "👤compose📚go💻compose✂️attributeid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️authorid",
+            "id": "👤compose📚go💻compose✂️authorid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️benchmarkid",
+            "id": "👤compose📚go💻compose✂️benchmarkid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️fileid",
+            "id": "👤compose📚go💻compose✂️fileid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️folderid",
+            "id": "👤compose📚go💻compose✂️folderid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️locationid",
+            "id": "👤compose📚go💻compose✂️locationid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️qualityid",
+            "id": "👤compose📚go💻compose✂️qualityid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio🛠️deepequal",
+            "id": "👤compose📚go💻compose🛠️deepequal",
             "loc": 1
           },
           {
-            "id": "👤semio📚go💻semio🛠️normalize",
+            "id": "👤compose📚go💻compose🛠️normalize",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio🛠️round",
+            "id": "👤compose📚go💻compose🛠️round",
             "loc": 7
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌280📌355"
+          "👤compose📚go💻compose📌280📌355"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚33⏱️51",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -970,7 +970,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 4700,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 4597
           },
           "tool_use_id": "toolu_bdrk_01DxEEGuYZp5fyBZhLcZqwM1__vscode-1773054464275",
@@ -989,34 +989,34 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio🛠️getattributesdiff",
+            "id": "👤compose📚go💻compose🛠️getattributesdiff",
             "loc": 22
           },
           {
-            "id": "👤semio📚go💻semio🛠️getpropdiff",
+            "id": "👤compose📚go💻compose🛠️getpropdiff",
             "loc": 17
           },
           {
-            "id": "👤semio📚go💻semio🛠️getpropsdiff",
+            "id": "👤compose📚go💻compose🛠️getpropsdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️getstatsdiff",
+            "id": "👤compose📚go💻compose🛠️getstatsdiff",
             "loc": 9
           },
           {
-            "id": "👤semio📚go💻semio🛠️isattributesdiffempty",
+            "id": "👤compose📚go💻compose🛠️isattributesdiffempty",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio🛠️ispropdiffempty",
+            "id": "👤compose📚go💻compose🛠️ispropdiffempty",
             "loc": 3
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌4597📌4700"
+          "👤compose📚go💻compose📌4597📌4700"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚34⏱️00",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -1034,7 +1034,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 4830,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 4692
           },
           "tool_use_id": "toolu_bdrk_01WrhNCbLiG5knK6jP4MT6cN__vscode-1773054464276",
@@ -1053,38 +1053,38 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio🛠️getgroupsdiff",
+            "id": "👤compose📚go💻compose🛠️getgroupsdiff",
             "loc": 6
           },
           {
-            "id": "👤semio📚go💻semio🛠️getlayerdiff",
+            "id": "👤compose📚go💻compose🛠️getlayerdiff",
             "loc": 23
           },
           {
-            "id": "👤semio📚go💻semio🛠️getlayersdiff",
+            "id": "👤compose📚go💻compose🛠️getlayersdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️getstatdiff",
+            "id": "👤compose📚go💻compose🛠️getstatdiff",
             "loc": 20
           },
           {
-            "id": "👤semio📚go💻semio🛠️getstatsdiff",
+            "id": "👤compose📚go💻compose🛠️getstatsdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️islayerdiffempty",
+            "id": "👤compose📚go💻compose🛠️islayerdiffempty",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio🛠️isstatdiffempty",
+            "id": "👤compose📚go💻compose🛠️isstatdiffempty",
             "loc": 3
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌4692📌4830"
+          "👤compose📚go💻compose📌4692📌4830"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚34⏱️00",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -1102,7 +1102,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 4900,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 4825
           },
           "tool_use_id": "toolu_bdrk_01GXx8xDqA36XPsbdr3oTFaq__vscode-1773054464277",
@@ -1121,26 +1121,26 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio🛠️applyattributesdiff",
+            "id": "👤compose📚go💻compose🛠️applyattributesdiff",
             "loc": 14
           },
           {
-            "id": "👤semio📚go💻semio🛠️getgroupdiff",
+            "id": "👤compose📚go💻compose🛠️getgroupdiff",
             "loc": 17
           },
           {
-            "id": "👤semio📚go💻semio🛠️getgroupsdiff",
+            "id": "👤compose📚go💻compose🛠️getgroupsdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️isgroupdiffempty",
+            "id": "👤compose📚go💻compose🛠️isgroupdiffempty",
             "loc": 3
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌4825📌4900"
+          "👤compose📚go💻compose📌4825📌4900"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚34⏱️00",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -1158,7 +1158,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 5280,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 5105
           },
           "tool_use_id": "toolu_bdrk_01AAab4Bm36tD6r2XUtFSyxc__vscode-1773054464278",
@@ -1177,34 +1177,34 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio🛠️getconnectordiff",
+            "id": "👤compose📚go💻compose🛠️getconnectordiff",
             "loc": 57
           },
           {
-            "id": "👤semio📚go💻semio🛠️getconnectorsdiff",
+            "id": "👤compose📚go💻compose🛠️getconnectorsdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️getmodeldiff",
+            "id": "👤compose📚go💻compose🛠️getmodeldiff",
             "loc": 29
           },
           {
-            "id": "👤semio📚go💻semio🛠️getmodelsdiff",
+            "id": "👤compose📚go💻compose🛠️getmodelsdiff",
             "loc": 33
           },
           {
-            "id": "👤semio📚go💻semio🛠️getpiecesdiff",
+            "id": "👤compose📚go💻compose🛠️getpiecesdiff",
             "loc": 7
           },
           {
-            "id": "👤semio📚go💻semio🛠️isconnectordiffempty",
+            "id": "👤compose📚go💻compose🛠️isconnectordiffempty",
             "loc": 3
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌5105📌5280"
+          "👤compose📚go💻compose📌5105📌5280"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚34⏱️00",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -1222,7 +1222,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 5430,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 5274
           },
           "tool_use_id": "toolu_bdrk_01H1an8qc3crNABzZJL8B7xn__vscode-1773054464279",
@@ -1241,34 +1241,34 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio🛠️areplanesequal",
+            "id": "👤compose📚go💻compose🛠️areplanesequal",
             "loc": 5
           },
           {
-            "id": "👤semio📚go💻semio🛠️getconnectionsdiff",
+            "id": "👤compose📚go💻compose🛠️getconnectionsdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️getpiecediff",
+            "id": "👤compose📚go💻compose🛠️getpiecediff",
             "loc": 59
           },
           {
-            "id": "👤semio📚go💻semio🛠️getpiecesdiff",
+            "id": "👤compose📚go💻compose🛠️getpiecesdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️getsidediff",
+            "id": "👤compose📚go💻compose🛠️getsidediff",
             "loc": 10
           },
           {
-            "id": "👤semio📚go💻semio🛠️ispiecediffempty",
+            "id": "👤compose📚go💻compose🛠️ispiecediffempty",
             "loc": 3
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌5274📌5430"
+          "👤compose📚go💻compose📌5274📌5430"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚34⏱️00",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -1286,7 +1286,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 4700,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 4597
           },
           "tool_response": "",
@@ -1305,34 +1305,34 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio🛠️getattributesdiff",
+            "id": "👤compose📚go💻compose🛠️getattributesdiff",
             "loc": 22
           },
           {
-            "id": "👤semio📚go💻semio🛠️getpropdiff",
+            "id": "👤compose📚go💻compose🛠️getpropdiff",
             "loc": 17
           },
           {
-            "id": "👤semio📚go💻semio🛠️getpropsdiff",
+            "id": "👤compose📚go💻compose🛠️getpropsdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️getstatsdiff",
+            "id": "👤compose📚go💻compose🛠️getstatsdiff",
             "loc": 9
           },
           {
-            "id": "👤semio📚go💻semio🛠️isattributesdiffempty",
+            "id": "👤compose📚go💻compose🛠️isattributesdiffempty",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio🛠️ispropdiffempty",
+            "id": "👤compose📚go💻compose🛠️ispropdiffempty",
             "loc": 3
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌4597📌4700"
+          "👤compose📚go💻compose📌4597📌4700"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚34⏱️10",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -1350,7 +1350,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 4830,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 4692
           },
           "tool_response": "",
@@ -1369,38 +1369,38 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio🛠️getgroupsdiff",
+            "id": "👤compose📚go💻compose🛠️getgroupsdiff",
             "loc": 6
           },
           {
-            "id": "👤semio📚go💻semio🛠️getlayerdiff",
+            "id": "👤compose📚go💻compose🛠️getlayerdiff",
             "loc": 23
           },
           {
-            "id": "👤semio📚go💻semio🛠️getlayersdiff",
+            "id": "👤compose📚go💻compose🛠️getlayersdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️getstatdiff",
+            "id": "👤compose📚go💻compose🛠️getstatdiff",
             "loc": 20
           },
           {
-            "id": "👤semio📚go💻semio🛠️getstatsdiff",
+            "id": "👤compose📚go💻compose🛠️getstatsdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️islayerdiffempty",
+            "id": "👤compose📚go💻compose🛠️islayerdiffempty",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio🛠️isstatdiffempty",
+            "id": "👤compose📚go💻compose🛠️isstatdiffempty",
             "loc": 3
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌4692📌4830"
+          "👤compose📚go💻compose📌4692📌4830"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚34⏱️10",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -1418,7 +1418,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 4900,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 4825
           },
           "tool_response": "",
@@ -1437,26 +1437,26 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio🛠️applyattributesdiff",
+            "id": "👤compose📚go💻compose🛠️applyattributesdiff",
             "loc": 14
           },
           {
-            "id": "👤semio📚go💻semio🛠️getgroupdiff",
+            "id": "👤compose📚go💻compose🛠️getgroupdiff",
             "loc": 17
           },
           {
-            "id": "👤semio📚go💻semio🛠️getgroupsdiff",
+            "id": "👤compose📚go💻compose🛠️getgroupsdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️isgroupdiffempty",
+            "id": "👤compose📚go💻compose🛠️isgroupdiffempty",
             "loc": 3
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌4825📌4900"
+          "👤compose📚go💻compose📌4825📌4900"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚34⏱️11",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -1474,7 +1474,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 5280,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 5105
           },
           "tool_response": "",
@@ -1493,34 +1493,34 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio🛠️getconnectordiff",
+            "id": "👤compose📚go💻compose🛠️getconnectordiff",
             "loc": 57
           },
           {
-            "id": "👤semio📚go💻semio🛠️getconnectorsdiff",
+            "id": "👤compose📚go💻compose🛠️getconnectorsdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️getmodeldiff",
+            "id": "👤compose📚go💻compose🛠️getmodeldiff",
             "loc": 29
           },
           {
-            "id": "👤semio📚go💻semio🛠️getmodelsdiff",
+            "id": "👤compose📚go💻compose🛠️getmodelsdiff",
             "loc": 33
           },
           {
-            "id": "👤semio📚go💻semio🛠️getpiecesdiff",
+            "id": "👤compose📚go💻compose🛠️getpiecesdiff",
             "loc": 7
           },
           {
-            "id": "👤semio📚go💻semio🛠️isconnectordiffempty",
+            "id": "👤compose📚go💻compose🛠️isconnectordiffempty",
             "loc": 3
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌5105📌5280"
+          "👤compose📚go💻compose📌5105📌5280"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚34⏱️11",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -1538,7 +1538,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 5430,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 5274
           },
           "tool_response": "",
@@ -1557,34 +1557,34 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio🛠️areplanesequal",
+            "id": "👤compose📚go💻compose🛠️areplanesequal",
             "loc": 5
           },
           {
-            "id": "👤semio📚go💻semio🛠️getconnectionsdiff",
+            "id": "👤compose📚go💻compose🛠️getconnectionsdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️getpiecediff",
+            "id": "👤compose📚go💻compose🛠️getpiecediff",
             "loc": 59
           },
           {
-            "id": "👤semio📚go💻semio🛠️getpiecesdiff",
+            "id": "👤compose📚go💻compose🛠️getpiecesdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️getsidediff",
+            "id": "👤compose📚go💻compose🛠️getsidediff",
             "loc": 10
           },
           {
-            "id": "👤semio📚go💻semio🛠️ispiecediffempty",
+            "id": "👤compose📚go💻compose🛠️ispiecediffempty",
             "loc": 3
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌5274📌5430"
+          "👤compose📚go💻compose📌5274📌5430"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚34⏱️12",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -1602,7 +1602,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 2835,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 2725
           },
           "tool_use_id": "toolu_bdrk_017uDBBZkTCbXDLs6y8N1yGa__vscode-1773054464280",
@@ -1621,26 +1621,26 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio🛠️getdesignsdiff",
+            "id": "👤compose📚go💻compose🛠️getdesignsdiff",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio🛠️gettypediff",
+            "id": "👤compose📚go💻compose🛠️gettypediff",
             "loc": 63
           },
           {
-            "id": "👤semio📚go💻semio🛠️gettypesdiff",
+            "id": "👤compose📚go💻compose🛠️gettypesdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️istypediffempty",
+            "id": "👤compose📚go💻compose🛠️istypediffempty",
             "loc": 3
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌2725📌2835"
+          "👤compose📚go💻compose📌2725📌2835"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚34⏱️20",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -1658,7 +1658,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 2960,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 2833
           },
           "tool_use_id": "toolu_bdrk_01H6ejmdLcLUgfBvXskwFqsU__vscode-1773054464281",
@@ -1677,26 +1677,26 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio🛠️getdesigndiff",
+            "id": "👤compose📚go💻compose🛠️getdesigndiff",
             "loc": 74
           },
           {
-            "id": "👤semio📚go💻semio🛠️getdesignsdiff",
+            "id": "👤compose📚go💻compose🛠️getdesignsdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️gettagsdiff",
+            "id": "👤compose📚go💻compose🛠️gettagsdiff",
             "loc": 9
           },
           {
-            "id": "👤semio📚go💻semio🛠️isdesigndiffempty",
+            "id": "👤compose📚go💻compose🛠️isdesigndiffempty",
             "loc": 3
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌2833📌2960"
+          "👤compose📚go💻compose📌2833📌2960"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚34⏱️20",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -1714,7 +1714,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 3160,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 2952
           },
           "tool_use_id": "toolu_bdrk_012XaJVP78mW2iBG1Wuqwuiu__vscode-1773054464282",
@@ -1733,50 +1733,50 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio🛠️getconceptdiff",
+            "id": "👤compose📚go💻compose🛠️getconceptdiff",
             "loc": 20
           },
           {
-            "id": "👤semio📚go💻semio🛠️getconceptsdiff",
+            "id": "👤compose📚go💻compose🛠️getconceptsdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️getfilesdiff",
+            "id": "👤compose📚go💻compose🛠️getfilesdiff",
             "loc": 11
           },
           {
-            "id": "👤semio📚go💻semio🛠️getportdiff",
+            "id": "👤compose📚go💻compose🛠️getportdiff",
             "loc": 23
           },
           {
-            "id": "👤semio📚go💻semio🛠️getportsdiff",
+            "id": "👤compose📚go💻compose🛠️getportsdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️gettagdiff",
+            "id": "👤compose📚go💻compose🛠️gettagdiff",
             "loc": 20
           },
           {
-            "id": "👤semio📚go💻semio🛠️gettagsdiff",
+            "id": "👤compose📚go💻compose🛠️gettagsdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️isconceptdiffempty",
+            "id": "👤compose📚go💻compose🛠️isconceptdiffempty",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio🛠️isportdiffempty",
+            "id": "👤compose📚go💻compose🛠️isportdiffempty",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio🛠️istagdiffempty",
+            "id": "👤compose📚go💻compose🛠️istagdiffempty",
             "loc": 3
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌2952📌3160"
+          "👤compose📚go💻compose📌2952📌3160"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚34⏱️21",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -1794,7 +1794,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 3420,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 3150
           },
           "tool_use_id": "toolu_bdrk_01XVhGVsXa6isEc4TTED78k6__vscode-1773054464283",
@@ -1813,54 +1813,54 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio🛠️getauthordiff",
+            "id": "👤compose📚go💻compose🛠️getauthordiff",
             "loc": 14
           },
           {
-            "id": "👤semio📚go💻semio🛠️getauthorsdiff",
+            "id": "👤compose📚go💻compose🛠️getauthorsdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️getfilediff",
+            "id": "👤compose📚go💻compose🛠️getfilediff",
             "loc": 32
           },
           {
-            "id": "👤semio📚go💻semio🛠️getfilesdiff",
+            "id": "👤compose📚go💻compose🛠️getfilesdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️getfolderdiff",
+            "id": "👤compose📚go💻compose🛠️getfolderdiff",
             "loc": 17
           },
           {
-            "id": "👤semio📚go💻semio🛠️getfoldersdiff",
+            "id": "👤compose📚go💻compose🛠️getfoldersdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️inversekitdiff",
+            "id": "👤compose📚go💻compose🛠️inversekitdiff",
             "loc": 67
           },
           {
-            "id": "👤semio📚go💻semio🛠️inversetypesdiff",
+            "id": "👤compose📚go💻compose🛠️inversetypesdiff",
             "loc": 2
           },
           {
-            "id": "👤semio📚go💻semio🛠️isauthordiffempty",
+            "id": "👤compose📚go💻compose🛠️isauthordiffempty",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio🛠️isfilediffempty",
+            "id": "👤compose📚go💻compose🛠️isfilediffempty",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio🛠️isfolderdiffempty",
+            "id": "👤compose📚go💻compose🛠️isfolderdiffempty",
             "loc": 3
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌3150📌3420"
+          "👤compose📚go💻compose📌3150📌3420"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚34⏱️21",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -1878,7 +1878,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 2835,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 2725
           },
           "tool_response": "",
@@ -1897,26 +1897,26 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio🛠️getdesignsdiff",
+            "id": "👤compose📚go💻compose🛠️getdesignsdiff",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio🛠️gettypediff",
+            "id": "👤compose📚go💻compose🛠️gettypediff",
             "loc": 63
           },
           {
-            "id": "👤semio📚go💻semio🛠️gettypesdiff",
+            "id": "👤compose📚go💻compose🛠️gettypesdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️istypediffempty",
+            "id": "👤compose📚go💻compose🛠️istypediffempty",
             "loc": 3
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌2725📌2835"
+          "👤compose📚go💻compose📌2725📌2835"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚34⏱️30",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -1934,7 +1934,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 2960,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 2833
           },
           "tool_response": "",
@@ -1953,26 +1953,26 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio🛠️getdesigndiff",
+            "id": "👤compose📚go💻compose🛠️getdesigndiff",
             "loc": 74
           },
           {
-            "id": "👤semio📚go💻semio🛠️getdesignsdiff",
+            "id": "👤compose📚go💻compose🛠️getdesignsdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️gettagsdiff",
+            "id": "👤compose📚go💻compose🛠️gettagsdiff",
             "loc": 9
           },
           {
-            "id": "👤semio📚go💻semio🛠️isdesigndiffempty",
+            "id": "👤compose📚go💻compose🛠️isdesigndiffempty",
             "loc": 3
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌2833📌2960"
+          "👤compose📚go💻compose📌2833📌2960"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚34⏱️30",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -1990,7 +1990,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 3160,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 2952
           },
           "tool_response": "",
@@ -2009,50 +2009,50 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio🛠️getconceptdiff",
+            "id": "👤compose📚go💻compose🛠️getconceptdiff",
             "loc": 20
           },
           {
-            "id": "👤semio📚go💻semio🛠️getconceptsdiff",
+            "id": "👤compose📚go💻compose🛠️getconceptsdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️getfilesdiff",
+            "id": "👤compose📚go💻compose🛠️getfilesdiff",
             "loc": 11
           },
           {
-            "id": "👤semio📚go💻semio🛠️getportdiff",
+            "id": "👤compose📚go💻compose🛠️getportdiff",
             "loc": 23
           },
           {
-            "id": "👤semio📚go💻semio🛠️getportsdiff",
+            "id": "👤compose📚go💻compose🛠️getportsdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️gettagdiff",
+            "id": "👤compose📚go💻compose🛠️gettagdiff",
             "loc": 20
           },
           {
-            "id": "👤semio📚go💻semio🛠️gettagsdiff",
+            "id": "👤compose📚go💻compose🛠️gettagsdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️isconceptdiffempty",
+            "id": "👤compose📚go💻compose🛠️isconceptdiffempty",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio🛠️isportdiffempty",
+            "id": "👤compose📚go💻compose🛠️isportdiffempty",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio🛠️istagdiffempty",
+            "id": "👤compose📚go💻compose🛠️istagdiffempty",
             "loc": 3
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌2952📌3160"
+          "👤compose📚go💻compose📌2952📌3160"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚34⏱️31",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -2070,7 +2070,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 3420,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 3150
           },
           "tool_response": "",
@@ -2089,54 +2089,54 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio🛠️getauthordiff",
+            "id": "👤compose📚go💻compose🛠️getauthordiff",
             "loc": 14
           },
           {
-            "id": "👤semio📚go💻semio🛠️getauthorsdiff",
+            "id": "👤compose📚go💻compose🛠️getauthorsdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️getfilediff",
+            "id": "👤compose📚go💻compose🛠️getfilediff",
             "loc": 32
           },
           {
-            "id": "👤semio📚go💻semio🛠️getfilesdiff",
+            "id": "👤compose📚go💻compose🛠️getfilesdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️getfolderdiff",
+            "id": "👤compose📚go💻compose🛠️getfolderdiff",
             "loc": 17
           },
           {
-            "id": "👤semio📚go💻semio🛠️getfoldersdiff",
+            "id": "👤compose📚go💻compose🛠️getfoldersdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️inversekitdiff",
+            "id": "👤compose📚go💻compose🛠️inversekitdiff",
             "loc": 67
           },
           {
-            "id": "👤semio📚go💻semio🛠️inversetypesdiff",
+            "id": "👤compose📚go💻compose🛠️inversetypesdiff",
             "loc": 2
           },
           {
-            "id": "👤semio📚go💻semio🛠️isauthordiffempty",
+            "id": "👤compose📚go💻compose🛠️isauthordiffempty",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio🛠️isfilediffempty",
+            "id": "👤compose📚go💻compose🛠️isfilediffempty",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio🛠️isfolderdiffempty",
+            "id": "👤compose📚go💻compose🛠️isfolderdiffempty",
             "loc": 3
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌3150📌3420"
+          "👤compose📚go💻compose📌3150📌3420"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚34⏱️31",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -2154,7 +2154,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 3090,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 2952
           },
           "tool_use_id": "toolu_bdrk_015rqqQ34NctWY76nsfSGnm4__vscode-1773054464284",
@@ -2173,38 +2173,38 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio🛠️getconceptdiff",
+            "id": "👤compose📚go💻compose🛠️getconceptdiff",
             "loc": 20
           },
           {
-            "id": "👤semio📚go💻semio🛠️getconceptsdiff",
+            "id": "👤compose📚go💻compose🛠️getconceptsdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️getportsdiff",
+            "id": "👤compose📚go💻compose🛠️getportsdiff",
             "loc": 9
           },
           {
-            "id": "👤semio📚go💻semio🛠️gettagdiff",
+            "id": "👤compose📚go💻compose🛠️gettagdiff",
             "loc": 20
           },
           {
-            "id": "👤semio📚go💻semio🛠️gettagsdiff",
+            "id": "👤compose📚go💻compose🛠️gettagsdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️isconceptdiffempty",
+            "id": "👤compose📚go💻compose🛠️isconceptdiffempty",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio🛠️istagdiffempty",
+            "id": "👤compose📚go💻compose🛠️istagdiffempty",
             "loc": 3
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌2952📌3090"
+          "👤compose📚go💻compose📌2952📌3090"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚34⏱️41",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -2222,7 +2222,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 3230,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 3082
           },
           "tool_use_id": "toolu_bdrk_01Kznno2tereMwW48tfr3S6L__vscode-1773054464285",
@@ -2241,38 +2241,38 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio🛠️getfilediff",
+            "id": "👤compose📚go💻compose🛠️getfilediff",
             "loc": 32
           },
           {
-            "id": "👤semio📚go💻semio🛠️getfilesdiff",
+            "id": "👤compose📚go💻compose🛠️getfilesdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️getfoldersdiff",
+            "id": "👤compose📚go💻compose🛠️getfoldersdiff",
             "loc": 4
           },
           {
-            "id": "👤semio📚go💻semio🛠️getportdiff",
+            "id": "👤compose📚go💻compose🛠️getportdiff",
             "loc": 23
           },
           {
-            "id": "👤semio📚go💻semio🛠️getportsdiff",
+            "id": "👤compose📚go💻compose🛠️getportsdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️isfilediffempty",
+            "id": "👤compose📚go💻compose🛠️isfilediffempty",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio🛠️isportdiffempty",
+            "id": "👤compose📚go💻compose🛠️isportdiffempty",
             "loc": 3
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌3082📌3230"
+          "👤compose📚go💻compose📌3082📌3230"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚34⏱️41",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -2290,7 +2290,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 2730,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 2510
           },
           "tool_use_id": "toolu_bdrk_0117kMyDzV6eaXGNZE7hFRpD__vscode-1773054464286",
@@ -2309,34 +2309,34 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio🛠️areauthorsdiffsequal",
+            "id": "👤compose📚go💻compose🛠️areauthorsdiffsequal",
             "loc": 33
           },
           {
-            "id": "👤semio📚go💻semio🛠️arefilesdiffsequal",
+            "id": "👤compose📚go💻compose🛠️arefilesdiffsequal",
             "loc": 33
           },
           {
-            "id": "👤semio📚go💻semio🛠️arefoldersdiffsequal",
+            "id": "👤compose📚go💻compose🛠️arefoldersdiffsequal",
             "loc": 33
           },
           {
-            "id": "👤semio📚go💻semio🛠️areportsdiffsequal",
+            "id": "👤compose📚go💻compose🛠️areportsdiffsequal",
             "loc": 29
           },
           {
-            "id": "👤semio📚go💻semio🛠️getkitdiff",
+            "id": "👤compose📚go💻compose🛠️getkitdiff",
             "loc": 67
           },
           {
-            "id": "👤semio📚go💻semio🛠️gettypesdiff",
+            "id": "👤compose📚go💻compose🛠️gettypesdiff",
             "loc": 6
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌2510📌2730"
+          "👤compose📚go💻compose📌2510📌2730"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚34⏱️41",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -2354,7 +2354,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 3090,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 2952
           },
           "tool_response": "",
@@ -2373,38 +2373,38 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio🛠️getconceptdiff",
+            "id": "👤compose📚go💻compose🛠️getconceptdiff",
             "loc": 20
           },
           {
-            "id": "👤semio📚go💻semio🛠️getconceptsdiff",
+            "id": "👤compose📚go💻compose🛠️getconceptsdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️getportsdiff",
+            "id": "👤compose📚go💻compose🛠️getportsdiff",
             "loc": 9
           },
           {
-            "id": "👤semio📚go💻semio🛠️gettagdiff",
+            "id": "👤compose📚go💻compose🛠️gettagdiff",
             "loc": 20
           },
           {
-            "id": "👤semio📚go💻semio🛠️gettagsdiff",
+            "id": "👤compose📚go💻compose🛠️gettagsdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️isconceptdiffempty",
+            "id": "👤compose📚go💻compose🛠️isconceptdiffempty",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio🛠️istagdiffempty",
+            "id": "👤compose📚go💻compose🛠️istagdiffempty",
             "loc": 3
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌2952📌3090"
+          "👤compose📚go💻compose📌2952📌3090"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚34⏱️51",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -2422,7 +2422,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 3230,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 3082
           },
           "tool_response": "",
@@ -2441,38 +2441,38 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio🛠️getfilediff",
+            "id": "👤compose📚go💻compose🛠️getfilediff",
             "loc": 32
           },
           {
-            "id": "👤semio📚go💻semio🛠️getfilesdiff",
+            "id": "👤compose📚go💻compose🛠️getfilesdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️getfoldersdiff",
+            "id": "👤compose📚go💻compose🛠️getfoldersdiff",
             "loc": 4
           },
           {
-            "id": "👤semio📚go💻semio🛠️getportdiff",
+            "id": "👤compose📚go💻compose🛠️getportdiff",
             "loc": 23
           },
           {
-            "id": "👤semio📚go💻semio🛠️getportsdiff",
+            "id": "👤compose📚go💻compose🛠️getportsdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️isfilediffempty",
+            "id": "👤compose📚go💻compose🛠️isfilediffempty",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio🛠️isportdiffempty",
+            "id": "👤compose📚go💻compose🛠️isportdiffempty",
             "loc": 3
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌3082📌3230"
+          "👤compose📚go💻compose📌3082📌3230"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚34⏱️51",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -2490,7 +2490,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 2730,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 2510
           },
           "tool_response": "",
@@ -2509,34 +2509,34 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio🛠️areauthorsdiffsequal",
+            "id": "👤compose📚go💻compose🛠️areauthorsdiffsequal",
             "loc": 33
           },
           {
-            "id": "👤semio📚go💻semio🛠️arefilesdiffsequal",
+            "id": "👤compose📚go💻compose🛠️arefilesdiffsequal",
             "loc": 33
           },
           {
-            "id": "👤semio📚go💻semio🛠️arefoldersdiffsequal",
+            "id": "👤compose📚go💻compose🛠️arefoldersdiffsequal",
             "loc": 33
           },
           {
-            "id": "👤semio📚go💻semio🛠️areportsdiffsequal",
+            "id": "👤compose📚go💻compose🛠️areportsdiffsequal",
             "loc": 29
           },
           {
-            "id": "👤semio📚go💻semio🛠️getkitdiff",
+            "id": "👤compose📚go💻compose🛠️getkitdiff",
             "loc": 67
           },
           {
-            "id": "👤semio📚go💻semio🛠️gettypesdiff",
+            "id": "👤compose📚go💻compose🛠️gettypesdiff",
             "loc": 6
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌2510📌2730"
+          "👤compose📚go💻compose📌2510📌2730"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚34⏱️51",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -2554,7 +2554,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 2520,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 2360
           },
           "tool_use_id": "toolu_bdrk_011DyDchN2GpuJfqVvg4A1zo__vscode-1773054464287",
@@ -2573,30 +2573,30 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio🛠️areconceptsdiffsequal",
+            "id": "👤compose📚go💻compose🛠️areconceptsdiffsequal",
             "loc": 33
           },
           {
-            "id": "👤semio📚go💻semio🛠️aredesignsdiffsequal",
+            "id": "👤compose📚go💻compose🛠️aredesignsdiffsequal",
             "loc": 33
           },
           {
-            "id": "👤semio📚go💻semio🛠️areportsdiffsequal",
+            "id": "👤compose📚go💻compose🛠️areportsdiffsequal",
             "loc": 15
           },
           {
-            "id": "👤semio📚go💻semio🛠️aretagsdiffsequal",
+            "id": "👤compose📚go💻compose🛠️aretagsdiffsequal",
             "loc": 33
           },
           {
-            "id": "👤semio📚go💻semio🛠️aretypesdiffsequal",
+            "id": "👤compose📚go💻compose🛠️aretypesdiffsequal",
             "loc": 31
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌2360📌2520"
+          "👤compose📚go💻compose📌2360📌2520"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚35⏱️00",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -2614,7 +2614,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 4560,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 4325
           },
           "tool_use_id": "toolu_bdrk_01KkoJ1paYNPJdXUcn3Qxr2w__vscode-1773054464288",
@@ -2633,46 +2633,46 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio🛠️inverseattributesdiff",
+            "id": "👤compose📚go💻compose🛠️inverseattributesdiff",
             "loc": 15
           },
           {
-            "id": "👤semio📚go💻semio🛠️inversegroupdiff",
+            "id": "👤compose📚go💻compose🛠️inversegroupdiff",
             "loc": 20
           },
           {
-            "id": "👤semio📚go💻semio🛠️inversegroupsdiff",
+            "id": "👤compose📚go💻compose🛠️inversegroupsdiff",
             "loc": 27
           },
           {
-            "id": "👤semio📚go💻semio🛠️inverselayerdiff",
+            "id": "👤compose📚go💻compose🛠️inverselayerdiff",
             "loc": 23
           },
           {
-            "id": "👤semio📚go💻semio🛠️inverselayersdiff",
+            "id": "👤compose📚go💻compose🛠️inverselayersdiff",
             "loc": 27
           },
           {
-            "id": "👤semio📚go💻semio🛠️inversepropdiff",
+            "id": "👤compose📚go💻compose🛠️inversepropdiff",
             "loc": 17
           },
           {
-            "id": "👤semio📚go💻semio🛠️inversepropsdiff",
+            "id": "👤compose📚go💻compose🛠️inversepropsdiff",
             "loc": 27
           },
           {
-            "id": "👤semio📚go💻semio🛠️inversestatdiff",
+            "id": "👤compose📚go💻compose🛠️inversestatdiff",
             "loc": 20
           },
           {
-            "id": "👤semio📚go💻semio🛠️inversestatsdiff",
+            "id": "👤compose📚go💻compose🛠️inversestatsdiff",
             "loc": 27
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌4325📌4560"
+          "👤compose📚go💻compose📌4325📌4560"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚35⏱️00",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -2690,7 +2690,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 4640,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 4597
           },
           "tool_use_id": "toolu_bdrk_01DGRegWLwETRbcohVg4A64Z__vscode-1773054464289",
@@ -2709,22 +2709,22 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio🛠️getattributesdiff",
+            "id": "👤compose📚go💻compose🛠️getattributesdiff",
             "loc": 22
           },
           {
-            "id": "👤semio📚go💻semio🛠️getpropsdiff",
+            "id": "👤compose📚go💻compose🛠️getpropsdiff",
             "loc": 11
           },
           {
-            "id": "👤semio📚go💻semio🛠️isattributesdiffempty",
+            "id": "👤compose📚go💻compose🛠️isattributesdiffempty",
             "loc": 3
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌4597📌4640"
+          "👤compose📚go💻compose📌4597📌4640"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚35⏱️00",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -2742,7 +2742,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 2520,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 2360
           },
           "tool_response": "",
@@ -2761,30 +2761,30 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio🛠️areconceptsdiffsequal",
+            "id": "👤compose📚go💻compose🛠️areconceptsdiffsequal",
             "loc": 33
           },
           {
-            "id": "👤semio📚go💻semio🛠️aredesignsdiffsequal",
+            "id": "👤compose📚go💻compose🛠️aredesignsdiffsequal",
             "loc": 33
           },
           {
-            "id": "👤semio📚go💻semio🛠️areportsdiffsequal",
+            "id": "👤compose📚go💻compose🛠️areportsdiffsequal",
             "loc": 15
           },
           {
-            "id": "👤semio📚go💻semio🛠️aretagsdiffsequal",
+            "id": "👤compose📚go💻compose🛠️aretagsdiffsequal",
             "loc": 33
           },
           {
-            "id": "👤semio📚go💻semio🛠️aretypesdiffsequal",
+            "id": "👤compose📚go💻compose🛠️aretypesdiffsequal",
             "loc": 31
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌2360📌2520"
+          "👤compose📚go💻compose📌2360📌2520"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚35⏱️10",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -2802,7 +2802,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 4560,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 4325
           },
           "tool_response": "",
@@ -2821,46 +2821,46 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio🛠️inverseattributesdiff",
+            "id": "👤compose📚go💻compose🛠️inverseattributesdiff",
             "loc": 15
           },
           {
-            "id": "👤semio📚go💻semio🛠️inversegroupdiff",
+            "id": "👤compose📚go💻compose🛠️inversegroupdiff",
             "loc": 20
           },
           {
-            "id": "👤semio📚go💻semio🛠️inversegroupsdiff",
+            "id": "👤compose📚go💻compose🛠️inversegroupsdiff",
             "loc": 27
           },
           {
-            "id": "👤semio📚go💻semio🛠️inverselayerdiff",
+            "id": "👤compose📚go💻compose🛠️inverselayerdiff",
             "loc": 23
           },
           {
-            "id": "👤semio📚go💻semio🛠️inverselayersdiff",
+            "id": "👤compose📚go💻compose🛠️inverselayersdiff",
             "loc": 27
           },
           {
-            "id": "👤semio📚go💻semio🛠️inversepropdiff",
+            "id": "👤compose📚go💻compose🛠️inversepropdiff",
             "loc": 17
           },
           {
-            "id": "👤semio📚go💻semio🛠️inversepropsdiff",
+            "id": "👤compose📚go💻compose🛠️inversepropsdiff",
             "loc": 27
           },
           {
-            "id": "👤semio📚go💻semio🛠️inversestatdiff",
+            "id": "👤compose📚go💻compose🛠️inversestatdiff",
             "loc": 20
           },
           {
-            "id": "👤semio📚go💻semio🛠️inversestatsdiff",
+            "id": "👤compose📚go💻compose🛠️inversestatsdiff",
             "loc": 27
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌4325📌4560"
+          "👤compose📚go💻compose📌4325📌4560"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚35⏱️10",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -2878,7 +2878,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 4640,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 4597
           },
           "tool_response": "",
@@ -2897,22 +2897,22 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio🛠️getattributesdiff",
+            "id": "👤compose📚go💻compose🛠️getattributesdiff",
             "loc": 22
           },
           {
-            "id": "👤semio📚go💻semio🛠️getpropsdiff",
+            "id": "👤compose📚go💻compose🛠️getpropsdiff",
             "loc": 11
           },
           {
-            "id": "👤semio📚go💻semio🛠️isattributesdiffempty",
+            "id": "👤compose📚go💻compose🛠️isattributesdiffempty",
             "loc": 3
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌4597📌4640"
+          "👤compose📚go💻compose📌4597📌4640"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚35⏱️10",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -2930,7 +2930,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 4900,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 4597
           },
           "tool_use_id": "toolu_bdrk_018Vpj2V8qCkye9DN24AxiKo__vscode-1773054464290",
@@ -2949,70 +2949,70 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio🛠️applyattributesdiff",
+            "id": "👤compose📚go💻compose🛠️applyattributesdiff",
             "loc": 14
           },
           {
-            "id": "👤semio📚go💻semio🛠️getattributesdiff",
+            "id": "👤compose📚go💻compose🛠️getattributesdiff",
             "loc": 22
           },
           {
-            "id": "👤semio📚go💻semio🛠️getgroupdiff",
+            "id": "👤compose📚go💻compose🛠️getgroupdiff",
             "loc": 17
           },
           {
-            "id": "👤semio📚go💻semio🛠️getgroupsdiff",
+            "id": "👤compose📚go💻compose🛠️getgroupsdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️getlayerdiff",
+            "id": "👤compose📚go💻compose🛠️getlayerdiff",
             "loc": 23
           },
           {
-            "id": "👤semio📚go💻semio🛠️getlayersdiff",
+            "id": "👤compose📚go💻compose🛠️getlayersdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️getpropdiff",
+            "id": "👤compose📚go💻compose🛠️getpropdiff",
             "loc": 17
           },
           {
-            "id": "👤semio📚go💻semio🛠️getpropsdiff",
+            "id": "👤compose📚go💻compose🛠️getpropsdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️getstatdiff",
+            "id": "👤compose📚go💻compose🛠️getstatdiff",
             "loc": 20
           },
           {
-            "id": "👤semio📚go💻semio🛠️getstatsdiff",
+            "id": "👤compose📚go💻compose🛠️getstatsdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️isattributesdiffempty",
+            "id": "👤compose📚go💻compose🛠️isattributesdiffempty",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio🛠️isgroupdiffempty",
+            "id": "👤compose📚go💻compose🛠️isgroupdiffempty",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio🛠️islayerdiffempty",
+            "id": "👤compose📚go💻compose🛠️islayerdiffempty",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio🛠️ispropdiffempty",
+            "id": "👤compose📚go💻compose🛠️ispropdiffempty",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio🛠️isstatdiffempty",
+            "id": "👤compose📚go💻compose🛠️isstatdiffempty",
             "loc": 3
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌4597📌4900"
+          "👤compose📚go💻compose📌4597📌4900"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚35⏱️17",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -3030,7 +3030,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 4900,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 4597
           },
           "tool_response": "",
@@ -3049,70 +3049,70 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio🛠️applyattributesdiff",
+            "id": "👤compose📚go💻compose🛠️applyattributesdiff",
             "loc": 14
           },
           {
-            "id": "👤semio📚go💻semio🛠️getattributesdiff",
+            "id": "👤compose📚go💻compose🛠️getattributesdiff",
             "loc": 22
           },
           {
-            "id": "👤semio📚go💻semio🛠️getgroupdiff",
+            "id": "👤compose📚go💻compose🛠️getgroupdiff",
             "loc": 17
           },
           {
-            "id": "👤semio📚go💻semio🛠️getgroupsdiff",
+            "id": "👤compose📚go💻compose🛠️getgroupsdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️getlayerdiff",
+            "id": "👤compose📚go💻compose🛠️getlayerdiff",
             "loc": 23
           },
           {
-            "id": "👤semio📚go💻semio🛠️getlayersdiff",
+            "id": "👤compose📚go💻compose🛠️getlayersdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️getpropdiff",
+            "id": "👤compose📚go💻compose🛠️getpropdiff",
             "loc": 17
           },
           {
-            "id": "👤semio📚go💻semio🛠️getpropsdiff",
+            "id": "👤compose📚go💻compose🛠️getpropsdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️getstatdiff",
+            "id": "👤compose📚go💻compose🛠️getstatdiff",
             "loc": 20
           },
           {
-            "id": "👤semio📚go💻semio🛠️getstatsdiff",
+            "id": "👤compose📚go💻compose🛠️getstatsdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️isattributesdiffempty",
+            "id": "👤compose📚go💻compose🛠️isattributesdiffempty",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio🛠️isgroupdiffempty",
+            "id": "👤compose📚go💻compose🛠️isgroupdiffempty",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio🛠️islayerdiffempty",
+            "id": "👤compose📚go💻compose🛠️islayerdiffempty",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio🛠️ispropdiffempty",
+            "id": "👤compose📚go💻compose🛠️ispropdiffempty",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio🛠️isstatdiffempty",
+            "id": "👤compose📚go💻compose🛠️isstatdiffempty",
             "loc": 3
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌4597📌4900"
+          "👤compose📚go💻compose📌4597📌4900"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚35⏱️30",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -3130,7 +3130,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 5430,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 5105
           },
           "tool_use_id": "toolu_bdrk_01LaxCsacXX8qmyRJo26mo8z__vscode-1773054464291",
@@ -3149,54 +3149,54 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio🛠️areplanesequal",
+            "id": "👤compose📚go💻compose🛠️areplanesequal",
             "loc": 5
           },
           {
-            "id": "👤semio📚go💻semio🛠️getconnectionsdiff",
+            "id": "👤compose📚go💻compose🛠️getconnectionsdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️getconnectordiff",
+            "id": "👤compose📚go💻compose🛠️getconnectordiff",
             "loc": 57
           },
           {
-            "id": "👤semio📚go💻semio🛠️getconnectorsdiff",
+            "id": "👤compose📚go💻compose🛠️getconnectorsdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️getmodeldiff",
+            "id": "👤compose📚go💻compose🛠️getmodeldiff",
             "loc": 29
           },
           {
-            "id": "👤semio📚go💻semio🛠️getmodelsdiff",
+            "id": "👤compose📚go💻compose🛠️getmodelsdiff",
             "loc": 33
           },
           {
-            "id": "👤semio📚go💻semio🛠️getpiecediff",
+            "id": "👤compose📚go💻compose🛠️getpiecediff",
             "loc": 59
           },
           {
-            "id": "👤semio📚go💻semio🛠️getpiecesdiff",
+            "id": "👤compose📚go💻compose🛠️getpiecesdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️getsidediff",
+            "id": "👤compose📚go💻compose🛠️getsidediff",
             "loc": 10
           },
           {
-            "id": "👤semio📚go💻semio🛠️isconnectordiffempty",
+            "id": "👤compose📚go💻compose🛠️isconnectordiffempty",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio🛠️ispiecediffempty",
+            "id": "👤compose📚go💻compose🛠️ispiecediffempty",
             "loc": 3
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌5105📌5430"
+          "👤compose📚go💻compose📌5105📌5430"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚35⏱️37",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -3214,7 +3214,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 5120,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 4887
           },
           "tool_use_id": "toolu_bdrk_0131nMvwLEoTQH2vYRPMHfNo__vscode-1773054464292",
@@ -3233,50 +3233,50 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio🛠️applyattributesdiff",
+            "id": "👤compose📚go💻compose🛠️applyattributesdiff",
             "loc": 14
           },
           {
-            "id": "👤semio📚go💻semio🛠️applygroupdiff",
+            "id": "👤compose📚go💻compose🛠️applygroupdiff",
             "loc": 19
           },
           {
-            "id": "👤semio📚go💻semio🛠️applygroupsdiff",
+            "id": "👤compose📚go💻compose🛠️applygroupsdiff",
             "loc": 23
           },
           {
-            "id": "👤semio📚go💻semio🛠️applylayerdiff",
+            "id": "👤compose📚go💻compose🛠️applylayerdiff",
             "loc": 22
           },
           {
-            "id": "👤semio📚go💻semio🛠️applylayersdiff",
+            "id": "👤compose📚go💻compose🛠️applylayersdiff",
             "loc": 23
           },
           {
-            "id": "👤semio📚go💻semio🛠️applypropdiff",
+            "id": "👤compose📚go💻compose🛠️applypropdiff",
             "loc": 16
           },
           {
-            "id": "👤semio📚go💻semio🛠️applypropsdiff",
+            "id": "👤compose📚go💻compose🛠️applypropsdiff",
             "loc": 23
           },
           {
-            "id": "👤semio📚go💻semio🛠️applystatdiff",
+            "id": "👤compose📚go💻compose🛠️applystatdiff",
             "loc": 19
           },
           {
-            "id": "👤semio📚go💻semio🛠️applystatsdiff",
+            "id": "👤compose📚go💻compose🛠️applystatsdiff",
             "loc": 23
           },
           {
-            "id": "👤semio📚go💻semio🛠️getconnectorsdiff",
+            "id": "👤compose📚go💻compose🛠️getconnectorsdiff",
             "loc": 16
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌4887📌5120"
+          "👤compose📚go💻compose📌4887📌5120"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚35⏱️37",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -3294,7 +3294,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 5430,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 5105
           },
           "tool_response": "",
@@ -3313,54 +3313,54 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio🛠️areplanesequal",
+            "id": "👤compose📚go💻compose🛠️areplanesequal",
             "loc": 5
           },
           {
-            "id": "👤semio📚go💻semio🛠️getconnectionsdiff",
+            "id": "👤compose📚go💻compose🛠️getconnectionsdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️getconnectordiff",
+            "id": "👤compose📚go💻compose🛠️getconnectordiff",
             "loc": 57
           },
           {
-            "id": "👤semio📚go💻semio🛠️getconnectorsdiff",
+            "id": "👤compose📚go💻compose🛠️getconnectorsdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️getmodeldiff",
+            "id": "👤compose📚go💻compose🛠️getmodeldiff",
             "loc": 29
           },
           {
-            "id": "👤semio📚go💻semio🛠️getmodelsdiff",
+            "id": "👤compose📚go💻compose🛠️getmodelsdiff",
             "loc": 33
           },
           {
-            "id": "👤semio📚go💻semio🛠️getpiecediff",
+            "id": "👤compose📚go💻compose🛠️getpiecediff",
             "loc": 59
           },
           {
-            "id": "👤semio📚go💻semio🛠️getpiecesdiff",
+            "id": "👤compose📚go💻compose🛠️getpiecesdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️getsidediff",
+            "id": "👤compose📚go💻compose🛠️getsidediff",
             "loc": 10
           },
           {
-            "id": "👤semio📚go💻semio🛠️isconnectordiffempty",
+            "id": "👤compose📚go💻compose🛠️isconnectordiffempty",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio🛠️ispiecediffempty",
+            "id": "👤compose📚go💻compose🛠️ispiecediffempty",
             "loc": 3
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌5105📌5430"
+          "👤compose📚go💻compose📌5105📌5430"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚35⏱️47",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -3378,7 +3378,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 5120,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 4887
           },
           "tool_response": "",
@@ -3397,50 +3397,50 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio🛠️applyattributesdiff",
+            "id": "👤compose📚go💻compose🛠️applyattributesdiff",
             "loc": 14
           },
           {
-            "id": "👤semio📚go💻semio🛠️applygroupdiff",
+            "id": "👤compose📚go💻compose🛠️applygroupdiff",
             "loc": 19
           },
           {
-            "id": "👤semio📚go💻semio🛠️applygroupsdiff",
+            "id": "👤compose📚go💻compose🛠️applygroupsdiff",
             "loc": 23
           },
           {
-            "id": "👤semio📚go💻semio🛠️applylayerdiff",
+            "id": "👤compose📚go💻compose🛠️applylayerdiff",
             "loc": 22
           },
           {
-            "id": "👤semio📚go💻semio🛠️applylayersdiff",
+            "id": "👤compose📚go💻compose🛠️applylayersdiff",
             "loc": 23
           },
           {
-            "id": "👤semio📚go💻semio🛠️applypropdiff",
+            "id": "👤compose📚go💻compose🛠️applypropdiff",
             "loc": 16
           },
           {
-            "id": "👤semio📚go💻semio🛠️applypropsdiff",
+            "id": "👤compose📚go💻compose🛠️applypropsdiff",
             "loc": 23
           },
           {
-            "id": "👤semio📚go💻semio🛠️applystatdiff",
+            "id": "👤compose📚go💻compose🛠️applystatdiff",
             "loc": 19
           },
           {
-            "id": "👤semio📚go💻semio🛠️applystatsdiff",
+            "id": "👤compose📚go💻compose🛠️applystatsdiff",
             "loc": 23
           },
           {
-            "id": "👤semio📚go💻semio🛠️getconnectorsdiff",
+            "id": "👤compose📚go💻compose🛠️getconnectorsdiff",
             "loc": 16
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌4887📌5120"
+          "👤compose📚go💻compose📌4887📌5120"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚35⏱️47",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -3458,7 +3458,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 4700,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 6145
           },
           "tool_use_id": "toolu_bdrk_01NnJB2Snwx1DQCi2xcshUBL__vscode-1773054464293",
@@ -3478,7 +3478,7 @@
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌6145📌4700"
+          "👤compose📚go💻compose📌6145📌4700"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚35⏱️56",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -3496,7 +3496,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 6160,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 6145
           },
           "tool_use_id": "toolu_bdrk_014WzRWuwBnhit1X7rsH4cyK__vscode-1773054464294",
@@ -3515,18 +3515,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio🛠️arecoordsequal",
+            "id": "👤compose📚go💻compose🛠️arecoordsequal",
             "loc": 4
           },
           {
-            "id": "👤semio📚go💻semio🛠️aresidesequal",
+            "id": "👤compose📚go💻compose🛠️aresidesequal",
             "loc": 8
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌6145📌6160"
+          "👤compose📚go💻compose📌6145📌6160"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚35⏱️56",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -3544,7 +3544,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 4700,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 6145
           },
           "tool_response": "",
@@ -3564,7 +3564,7 @@
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌6145📌4700"
+          "👤compose📚go💻compose📌6145📌4700"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚36⏱️06",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -3582,7 +3582,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 6160,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 6145
           },
           "tool_response": "",
@@ -3601,18 +3601,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio🛠️arecoordsequal",
+            "id": "👤compose📚go💻compose🛠️arecoordsequal",
             "loc": 4
           },
           {
-            "id": "👤semio📚go💻semio🛠️aresidesequal",
+            "id": "👤compose📚go💻compose🛠️aresidesequal",
             "loc": 8
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌6145📌6160"
+          "👤compose📚go💻compose📌6145📌6160"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚36⏱️06",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -3629,7 +3629,7 @@
           "session_id": "0598acb2-45b0-40de-a319-d746e5bd9885",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "cd /workspaces/semio \u0026\u0026 grep -n 'func \\(get\\|apply\\|inverse\\)\\w*sDiff\\|\\.Updated\\|diff\\.Updated' semio/go/semio.go | head -200",
+            "command": "cd /workspaces/semio \u0026\u0026 grep -n 'func \\(get\\|apply\\|inverse\\)\\w*sDiff\\|\\.Updated\\|diff\\.Updated' compose/go/compose.go | head -200",
             "explanation": "Find all *sDiff functions and their Updated references",
             "goal": "Map Updated handling in all sDiff functions",
             "isBackground": false,
@@ -3666,13 +3666,13 @@
           "session_id": "0598acb2-45b0-40de-a319-d746e5bd9885",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "cd /workspaces/semio \u0026\u0026 grep -n 'func \\(get\\|apply\\|inverse\\)\\w*sDiff\\|\\.Updated\\|diff\\.Updated' semio/go/semio.go | head -200",
+            "command": "cd /workspaces/semio \u0026\u0026 grep -n 'func \\(get\\|apply\\|inverse\\)\\w*sDiff\\|\\.Updated\\|diff\\.Updated' compose/go/compose.go | head -200",
             "explanation": "Find all *sDiff functions and their Updated references",
             "goal": "Map Updated handling in all sDiff functions",
             "isBackground": false,
             "timeout": 10000
           },
-          "tool_response": "Note: The tool simplified the command to ` cd /workspaces/semio \u0026\u0026 grep -n 'func \\(get\\|apply\\|inverse\\)\\w*sDiff\\|\\.Updated\\|diff\\.Updated' semio/go/semio.go | head -200`, and this is the output of running that command instead:\n2381:   if len(a.Updated) != len(b.Updated) {\n2384:   for i := range a.Updated {\n2385:           if a.Updated[i].Type.Guid != b.Updated[i].Type.Guid {\n2418:   if len(a.Updated) != len(b.Updated) {\n2421:   for i := range a.Updated {\n2422:           if a.Updated[i].Design.Guid != b.Updated[i].Design.Guid {\n2455:   if len(a.Updated) != len(b.Updated) {\n2458:   for i := range a.Updated {\n2459:           if a.Updated[i].Tag.Guid != b.Updated[i].Tag.Guid {\n2492:   if len(a.Updated) != len(b.Updated) {\n2495:   for i := range a.Updated {\n2496:           if a.Updated[i].Concept.Guid != b.Updated[i].Concept.Guid {\n2529:   if len(a.Updated) != len(b.Updated) {\n2532:   for i := range a.Updated {\n2533:           if a.Updated[i].Port.Guid != b.Updated[i].Port.Guid {\n2566:   if len(a.Updated) != len(b.Updated) {\n2569:   for i := range a.Updated {\n2570:           if a.Updated[i].File.Guid != b.Updated[i].File.Guid {\n2603:   if len(a.Updated) != len(b.Updated) {\n2606:   for i := range a.Updated {\n2607:           if a.Updated[i].Folder.Guid != b.Updated[i].Folder.Guid {\n2640:   if len(a.Updated) != len(b.Updated) {\n2643:   for i := range a.Updated {\n2644:           if a.Updated[i].Author.Guid != b.Updated[i].Author.Guid {\n2684:   if len(typesDiff.Added) \u003e 0 || len(typesDiff.Removed) \u003e 0 || len(typesDi\nff.Updated) \u003e 0 {                                                               2688:   if len(designsDiff.Added) \u003e 0 || len(designsDiff.Removed) \u003e 0 || len(des\nignsDiff.Updated) \u003e 0 {                                                         2692:   if len(tagsDiff.Added) \u003e 0 || len(tagsDiff.Removed) \u003e 0 || len(tagsDiff.\nUpdated) \u003e 0 {                                                                  2696:   if len(conceptsDiff.Added) \u003e 0 || len(conceptsDiff.Removed) \u003e 0 || len(c\nonceptsDiff.Updated) \u003e 0 {                                                      2700:   if len(interfacesDiff.Added) \u003e 0 || len(interfacesDiff.Removed) \u003e 0 || l\nen(interfacesDiff.Updated) \u003e 0 {                                                2704:   if len(filesDiff.Added) \u003e 0 || len(filesDiff.Removed) \u003e 0 || len(filesDi\nff.Updated) \u003e 0 {                                                               2708:   if len(foldersDiff.Added) \u003e 0 || len(foldersDiff.Removed) \u003e 0 || len(fol\ndersDiff.Updated) \u003e 0 {                                                         2712:   if len(authorsDiff.Added) \u003e 0 || len(authorsDiff.Removed) \u003e 0 || len(aut\nhorsDiff.Updated) \u003e 0 {                                                         2725:func getTypesDiff(before, after []Type) TypesDiff {\n2746:                           diff.Updated = append(diff.Updated, struct {\n2805:   if len(connDiff.Added) \u003e 0 || len(connDiff.Removed) \u003e 0 || len(connDiff.\nUpdated) \u003e 0 {                                                                  2809:   if len(modelsDiff.Added) \u003e 0 || len(modelsDiff.Removed) \u003e 0 || len(model\nsDiff.Updated) \u003e 0 {                                                            2813:   if len(propsDiff.Added) \u003e 0 || len(propsDiff.Removed) \u003e 0 || len(propsDi\nff.Updated) \u003e 0 {                                                               2833:func getDesignsDiff(before, after []Design) DesignsDiff {\n2854:                           diff.Updated = append(diff.Updated, struct {\n2912:   if len(piecesDiff.Added) \u003e 0 || len(piecesDiff.Removed) \u003e 0 || len(piece\nsDiff.Updated) \u003e 0 {                                                            2916:   if len(connsDiff.Added) \u003e 0 || len(connsDiff.Removed) \u003e 0 || len(connsDi\nff.Updated) \u003e 0 {                                                               2920:   if len(statsDiff.Added) \u003e 0 || len(statsDiff.Removed) \u003e 0 || len(statsDi\nff.Updated) \u003e 0 {                                                               2924:   if len(propsDiff.Added) \u003e 0 || len(propsDiff.Removed) \u003e 0 || len(propsDi\nff.Updated) \u003e 0 {                                                               2928:   if len(layersDiff.Added) \u003e 0 || len(layersDiff.Removed) \u003e 0 || len(layer\nsDiff.Updated) \u003e 0 {                                                            2932:   if len(groupsDiff.Added) \u003e 0 || len(groupsDiff.Removed) \u003e 0 || len(group\nsDiff.Updated) \u003e 0 {                                                            2952:func getTagsDiff(before, after []Tag) TagsDiff {\n2973:                           diff.Updated = append(diff.Updated, struct {\n3017:func getConceptsDiff(before, after []Concept) ConceptsDiff {\n3038:                           diff.Updated = append(diff.Updated, struct {\n3082:func getPortsDiff(before, after []Port) PortsDiff {\n3103:                           diff.Updated = append(diff.Updated, struct {\n3150:func getFilesDiff(before, after []File) FilesDiff {\n3171:                           diff.Updated = append(diff.Updated, struct {\n3227:func getFoldersDiff(before, after []Folder) FoldersDiff {\n3248:                           diff.Updated = append(diff.Updated, struct {\n3289:func getAuthorsDiff(before, after []Author) AuthorsDiff {\n3310:                           diff.Updated = append(diff.Updated, struct {\n3419:func inverseTypesDiff(original []Type, appliedDiff TypesDiff) TypesDiff {\n3432:   for _, updated := range appliedDiff.Updated {\n3436:                           inverse.Updated = append(inverse.Updated, struct\n {                                                                              3517:func inverseDesignsDiff(original []Design, appliedDiff DesignsDiff) Designs\nDiff {                                                                          3530:   for _, updated := range appliedDiff.Updated {\n3534:                           inverse.Updated = append(inverse.Updated, struct\n {                                                                              3626:func inverseTagsDiff(original []Tag, appliedDiff TagsDiff) TagsDiff {\n3639:   for _, updated := range appliedDiff.Updated {\n3643:                           inverse.Updated = append(inverse.Updated, struct\n {                                                                              3681:func inverseConceptsDiff(original []Concept, appliedDiff ConceptsDiff) Conc\neptsDiff {                                                                      3694:   for _, updated := range appliedDiff.Updated {\n3698:                           inverse.Updated = append(inverse.Updated, struct\n {                                                                              3736:func inversePortsDiff(original []Port, appliedDiff PortsDiff) PortsDiff {\n3749:   for _, updated := range appliedDiff.Updated {\n3753:                           inverse.Updated = append(inverse.Updated, struct\n {                                                                              3794:func inverseFilesDiff(original []File, appliedDiff FilesDiff) FilesDiff {\n3807:   for _, updated := range appliedDiff.Updated {\n3811:                           inverse.Updated = append(inverse.Updated, struct\n {                                                                              3861:func inverseFoldersDiff(original []Folder, appliedDiff FoldersDiff) Folders\nDiff {                                                                          3874:   for _, updated := range appliedDiff.Updated {\n3878:                           inverse.Updated = append(inverse.Updated, struct\n {                                                                              3913:func inverseAuthorsDiff(original []Author, appliedDiff AuthorsDiff) Authors\nDiff {                                                                          3926:   for _, updated := range appliedDiff.Updated {\n3930:                           inverse.Updated = append(inverse.Updated, struct\n {                                                                              3962:func inverseConnectorsDiff(original []Connector, appliedDiff ConnectorsDiff\n) ConnectorsDiff {                                                              3975:   for _, updated := range appliedDiff.Updated {\n3979:                           inverse.Updated = append(inverse.Updated, struct\n {                                                                              4056:func inverseModelsDiff(original []Model, appliedDiff ModelsDiff) ModelsDiff\n {                                                                              4069:   for _, updated := range appliedDiff.Updated {\n4073:                           inverse.Updated = append(inverse.Updated, struct\n {                                                                              4111:func inversePiecesDiff(original []Piece, appliedDiff PiecesDiff) PiecesDiff\n {                                                                              4124:   for _, updated := range appliedDiff.Updated {\n4128:                           inverse.Updated = append(inverse.Updated, struct\n {                                                                              4224:func inverseConnectionsDiff(original []Connection, appliedDiff ConnectionsD\niff) ConnectionsDiff {                                                          4237:   for _, updated := range appliedDiff.Updated {\n4241:                           inverse.Updated = append(inverse.Updated, struct\n {                                                                              4325:func inverseAttributesDiff(original []Attribute, appliedDiff AttributesDiff\n) AttributesDiff {                                                              4344:func inversePropsDiff(original []Prop, appliedDiff PropsDiff) PropsDiff {\n4357:   for _, updated := range appliedDiff.Updated {\n4361:                           inverse.Updated = append(inverse.Updated, struct\n {                                                                              4396:func inverseStatsDiff(original []Stat, appliedDiff StatsDiff) StatsDiff {\n4409:   for _, updated := range appliedDiff.Updated {\n4413:                           inverse.Updated = append(inverse.Updated, struct\n {                                                                              4451:func inverseLayersDiff(original []Layer, appliedDiff LayersDiff) LayersDiff\n {                                                                              4464:   for _, updated := range appliedDiff.Updated {\n4468:                           inverse.Updated = append(inverse.Updated, struct\n {                                                                              4509:func inverseGroupsDiff(original []Group, appliedDiff GroupsDiff) GroupsDiff\n {                                                                              4522:   for _, updated := range appliedDiff.Updated {\n4526:                           inverse.Updated = append(inverse.Updated, struct\n {                                                                              4597:func getAttributesDiff(before, after []Attribute) AttributesDiff {\n4624:   return len(diff.Added) == 0 \u0026\u0026 len(diff.Removed) == 0 \u0026\u0026 len(diff.Update\nd) == 0                                                                         4630:func getPropsDiff(before, after []Prop) PropsDiff {\n4651:                           diff.Updated = append(diff.Updated, struct {\n4692:func getStatsDiff(before, after []Stat) StatsDiff {\n4713:                           diff.Updated = append(diff.Updated, struct {\n4757:func getLayersDiff(before, after []Layer) LayersDiff {\n4778:                           diff.Updated = append(diff.Updated, struct {\n4825:func getGroupsDiff(before, after []Group) GroupsDiff {\n4846:                           diff.Updated = append(diff.Updated, struct {\n4887:func applyAttributesDiff(base []Attribute, diff AttributesDiff) []Attribute\n {                                                                              4905:func applyPropsDiff(base []Prop, diff PropsDiff) []Prop {\n4912:   for _, u := range diff.Updated {\n4952:func applyStatsDiff(base []Stat, diff StatsDiff) []Stat {\n4959:   for _, u := range diff.Updated {\n5002:func applyLayersDiff(base []Layer, diff LayersDiff) []Layer {\n5009:   for _, u := range diff.Updated {\n5055:func applyGroupsDiff(base []Group, diff GroupsDiff) []Group {\n5062:   for _, u := range diff.Updated {\n5105:func getConnectorsDiff(before, after []Connector) ConnectorsDiff {\n5126:                           diff.Updated = append(diff.Updated, struct {\n5187:   if len(propsDiff.Added) \u003e 0 || len(propsDiff.Removed) \u003e 0 || len(propsDi\nff.Updated) \u003e 0 {                                                               5237:func getModelsDiff(before, after []Model) ModelsDiff {\n5258:                           diff.Updated = append(diff.Updated, struct {\n5274:func getPiecesDiff(before, after []Piece) PiecesDiff {\n5295:                           diff.Updated = append(diff.Updated, struct {\n5358:   if len(propsDiff.Added) \u003e 0 || len(propsDiff.Removed) \u003e 0 || len(propsDi\nff.Updated) \u003e 0 {                                                               5387:func getConnectionsDiff(before, after []Connection) ConnectionsDiff {\n5408:                           diff.Updated = append(diff.Updated, struct {\n6345:func applyTypesDiff(base []Type, diff TypesDiff) []Type {\n6352:   for _, u := range diff.Updated {\n6431:func applyConnectorsDiff(base []Connector, diff ConnectorsDiff) []Connector\n {                                                                              6438:   for _, u := range diff.Updated {\n6509:func applyModelsDiff(base []Model, diff ModelsDiff) []Model {\n6516:   for _, u := range diff.Updated {\n6559:func applyDesignsDiff(base []Design, diff DesignsDiff) []Design {\n6566:   for _, u := range diff.Updated {\n6657:func applyPiecesDiff(base []Piece, diff PiecesDiff) []Piece {\n6664:   for _, u := range diff.Updated {\n6809:func applyConnectionsDiff(base []Connection, diff ConnectionsDiff) []Connec\ntion {                                                                          6816:   for _, u := range diff.Updated {\n6897:func applyTagsDiff(base []Tag, diff TagsDiff) []Tag {\n6904:   for _, u := range diff.Updated {\n6944:func applyConceptsDiff(base []Concept, diff ConceptsDiff) []Concept {\n6951:   for _, u := range diff.Updated {\n6991:func applyPortsDiff(base []Port, diff PortsDiff) []Port {\n6998:   for _, u := range diff.Updated {\n7041:func applyFilesDiff(base []File, diff FilesDiff) []File {\n7048:   for _, u := range diff.Updated {\n7103:func applyFoldersDiff(base []Folder, diff FoldersDiff) []Folder {\n7110:   for _, u := range diff.Updated {\n7150:func applyAuthorsDiff(base []Author, diff AuthorsDiff) []Author {\n7157:   for _, u := range diff.Updated {\n",
+          "tool_response": "Note: The tool simplified the command to ` cd /workspaces/semio \u0026\u0026 grep -n 'func \\(get\\|apply\\|inverse\\)\\w*sDiff\\|\\.Updated\\|diff\\.Updated' compose/go/compose.go | head -200`, and this is the output of running that command instead:\n2381:   if len(a.Updated) != len(b.Updated) {\n2384:   for i := range a.Updated {\n2385:           if a.Updated[i].Type.Guid != b.Updated[i].Type.Guid {\n2418:   if len(a.Updated) != len(b.Updated) {\n2421:   for i := range a.Updated {\n2422:           if a.Updated[i].Design.Guid != b.Updated[i].Design.Guid {\n2455:   if len(a.Updated) != len(b.Updated) {\n2458:   for i := range a.Updated {\n2459:           if a.Updated[i].Tag.Guid != b.Updated[i].Tag.Guid {\n2492:   if len(a.Updated) != len(b.Updated) {\n2495:   for i := range a.Updated {\n2496:           if a.Updated[i].Concept.Guid != b.Updated[i].Concept.Guid {\n2529:   if len(a.Updated) != len(b.Updated) {\n2532:   for i := range a.Updated {\n2533:           if a.Updated[i].Port.Guid != b.Updated[i].Port.Guid {\n2566:   if len(a.Updated) != len(b.Updated) {\n2569:   for i := range a.Updated {\n2570:           if a.Updated[i].File.Guid != b.Updated[i].File.Guid {\n2603:   if len(a.Updated) != len(b.Updated) {\n2606:   for i := range a.Updated {\n2607:           if a.Updated[i].Folder.Guid != b.Updated[i].Folder.Guid {\n2640:   if len(a.Updated) != len(b.Updated) {\n2643:   for i := range a.Updated {\n2644:           if a.Updated[i].Author.Guid != b.Updated[i].Author.Guid {\n2684:   if len(typesDiff.Added) \u003e 0 || len(typesDiff.Removed) \u003e 0 || len(typesDi\nff.Updated) \u003e 0 {                                                               2688:   if len(designsDiff.Added) \u003e 0 || len(designsDiff.Removed) \u003e 0 || len(des\nignsDiff.Updated) \u003e 0 {                                                         2692:   if len(tagsDiff.Added) \u003e 0 || len(tagsDiff.Removed) \u003e 0 || len(tagsDiff.\nUpdated) \u003e 0 {                                                                  2696:   if len(conceptsDiff.Added) \u003e 0 || len(conceptsDiff.Removed) \u003e 0 || len(c\nonceptsDiff.Updated) \u003e 0 {                                                      2700:   if len(interfacesDiff.Added) \u003e 0 || len(interfacesDiff.Removed) \u003e 0 || l\nen(interfacesDiff.Updated) \u003e 0 {                                                2704:   if len(filesDiff.Added) \u003e 0 || len(filesDiff.Removed) \u003e 0 || len(filesDi\nff.Updated) \u003e 0 {                                                               2708:   if len(foldersDiff.Added) \u003e 0 || len(foldersDiff.Removed) \u003e 0 || len(fol\ndersDiff.Updated) \u003e 0 {                                                         2712:   if len(authorsDiff.Added) \u003e 0 || len(authorsDiff.Removed) \u003e 0 || len(aut\nhorsDiff.Updated) \u003e 0 {                                                         2725:func getTypesDiff(before, after []Type) TypesDiff {\n2746:                           diff.Updated = append(diff.Updated, struct {\n2805:   if len(connDiff.Added) \u003e 0 || len(connDiff.Removed) \u003e 0 || len(connDiff.\nUpdated) \u003e 0 {                                                                  2809:   if len(modelsDiff.Added) \u003e 0 || len(modelsDiff.Removed) \u003e 0 || len(model\nsDiff.Updated) \u003e 0 {                                                            2813:   if len(propsDiff.Added) \u003e 0 || len(propsDiff.Removed) \u003e 0 || len(propsDi\nff.Updated) \u003e 0 {                                                               2833:func getDesignsDiff(before, after []Design) DesignsDiff {\n2854:                           diff.Updated = append(diff.Updated, struct {\n2912:   if len(piecesDiff.Added) \u003e 0 || len(piecesDiff.Removed) \u003e 0 || len(piece\nsDiff.Updated) \u003e 0 {                                                            2916:   if len(connsDiff.Added) \u003e 0 || len(connsDiff.Removed) \u003e 0 || len(connsDi\nff.Updated) \u003e 0 {                                                               2920:   if len(statsDiff.Added) \u003e 0 || len(statsDiff.Removed) \u003e 0 || len(statsDi\nff.Updated) \u003e 0 {                                                               2924:   if len(propsDiff.Added) \u003e 0 || len(propsDiff.Removed) \u003e 0 || len(propsDi\nff.Updated) \u003e 0 {                                                               2928:   if len(layersDiff.Added) \u003e 0 || len(layersDiff.Removed) \u003e 0 || len(layer\nsDiff.Updated) \u003e 0 {                                                            2932:   if len(groupsDiff.Added) \u003e 0 || len(groupsDiff.Removed) \u003e 0 || len(group\nsDiff.Updated) \u003e 0 {                                                            2952:func getTagsDiff(before, after []Tag) TagsDiff {\n2973:                           diff.Updated = append(diff.Updated, struct {\n3017:func getConceptsDiff(before, after []Concept) ConceptsDiff {\n3038:                           diff.Updated = append(diff.Updated, struct {\n3082:func getPortsDiff(before, after []Port) PortsDiff {\n3103:                           diff.Updated = append(diff.Updated, struct {\n3150:func getFilesDiff(before, after []File) FilesDiff {\n3171:                           diff.Updated = append(diff.Updated, struct {\n3227:func getFoldersDiff(before, after []Folder) FoldersDiff {\n3248:                           diff.Updated = append(diff.Updated, struct {\n3289:func getAuthorsDiff(before, after []Author) AuthorsDiff {\n3310:                           diff.Updated = append(diff.Updated, struct {\n3419:func inverseTypesDiff(original []Type, appliedDiff TypesDiff) TypesDiff {\n3432:   for _, updated := range appliedDiff.Updated {\n3436:                           inverse.Updated = append(inverse.Updated, struct\n {                                                                              3517:func inverseDesignsDiff(original []Design, appliedDiff DesignsDiff) Designs\nDiff {                                                                          3530:   for _, updated := range appliedDiff.Updated {\n3534:                           inverse.Updated = append(inverse.Updated, struct\n {                                                                              3626:func inverseTagsDiff(original []Tag, appliedDiff TagsDiff) TagsDiff {\n3639:   for _, updated := range appliedDiff.Updated {\n3643:                           inverse.Updated = append(inverse.Updated, struct\n {                                                                              3681:func inverseConceptsDiff(original []Concept, appliedDiff ConceptsDiff) Conc\neptsDiff {                                                                      3694:   for _, updated := range appliedDiff.Updated {\n3698:                           inverse.Updated = append(inverse.Updated, struct\n {                                                                              3736:func inversePortsDiff(original []Port, appliedDiff PortsDiff) PortsDiff {\n3749:   for _, updated := range appliedDiff.Updated {\n3753:                           inverse.Updated = append(inverse.Updated, struct\n {                                                                              3794:func inverseFilesDiff(original []File, appliedDiff FilesDiff) FilesDiff {\n3807:   for _, updated := range appliedDiff.Updated {\n3811:                           inverse.Updated = append(inverse.Updated, struct\n {                                                                              3861:func inverseFoldersDiff(original []Folder, appliedDiff FoldersDiff) Folders\nDiff {                                                                          3874:   for _, updated := range appliedDiff.Updated {\n3878:                           inverse.Updated = append(inverse.Updated, struct\n {                                                                              3913:func inverseAuthorsDiff(original []Author, appliedDiff AuthorsDiff) Authors\nDiff {                                                                          3926:   for _, updated := range appliedDiff.Updated {\n3930:                           inverse.Updated = append(inverse.Updated, struct\n {                                                                              3962:func inverseConnectorsDiff(original []Connector, appliedDiff ConnectorsDiff\n) ConnectorsDiff {                                                              3975:   for _, updated := range appliedDiff.Updated {\n3979:                           inverse.Updated = append(inverse.Updated, struct\n {                                                                              4056:func inverseModelsDiff(original []Model, appliedDiff ModelsDiff) ModelsDiff\n {                                                                              4069:   for _, updated := range appliedDiff.Updated {\n4073:                           inverse.Updated = append(inverse.Updated, struct\n {                                                                              4111:func inversePiecesDiff(original []Piece, appliedDiff PiecesDiff) PiecesDiff\n {                                                                              4124:   for _, updated := range appliedDiff.Updated {\n4128:                           inverse.Updated = append(inverse.Updated, struct\n {                                                                              4224:func inverseConnectionsDiff(original []Connection, appliedDiff ConnectionsD\niff) ConnectionsDiff {                                                          4237:   for _, updated := range appliedDiff.Updated {\n4241:                           inverse.Updated = append(inverse.Updated, struct\n {                                                                              4325:func inverseAttributesDiff(original []Attribute, appliedDiff AttributesDiff\n) AttributesDiff {                                                              4344:func inversePropsDiff(original []Prop, appliedDiff PropsDiff) PropsDiff {\n4357:   for _, updated := range appliedDiff.Updated {\n4361:                           inverse.Updated = append(inverse.Updated, struct\n {                                                                              4396:func inverseStatsDiff(original []Stat, appliedDiff StatsDiff) StatsDiff {\n4409:   for _, updated := range appliedDiff.Updated {\n4413:                           inverse.Updated = append(inverse.Updated, struct\n {                                                                              4451:func inverseLayersDiff(original []Layer, appliedDiff LayersDiff) LayersDiff\n {                                                                              4464:   for _, updated := range appliedDiff.Updated {\n4468:                           inverse.Updated = append(inverse.Updated, struct\n {                                                                              4509:func inverseGroupsDiff(original []Group, appliedDiff GroupsDiff) GroupsDiff\n {                                                                              4522:   for _, updated := range appliedDiff.Updated {\n4526:                           inverse.Updated = append(inverse.Updated, struct\n {                                                                              4597:func getAttributesDiff(before, after []Attribute) AttributesDiff {\n4624:   return len(diff.Added) == 0 \u0026\u0026 len(diff.Removed) == 0 \u0026\u0026 len(diff.Update\nd) == 0                                                                         4630:func getPropsDiff(before, after []Prop) PropsDiff {\n4651:                           diff.Updated = append(diff.Updated, struct {\n4692:func getStatsDiff(before, after []Stat) StatsDiff {\n4713:                           diff.Updated = append(diff.Updated, struct {\n4757:func getLayersDiff(before, after []Layer) LayersDiff {\n4778:                           diff.Updated = append(diff.Updated, struct {\n4825:func getGroupsDiff(before, after []Group) GroupsDiff {\n4846:                           diff.Updated = append(diff.Updated, struct {\n4887:func applyAttributesDiff(base []Attribute, diff AttributesDiff) []Attribute\n {                                                                              4905:func applyPropsDiff(base []Prop, diff PropsDiff) []Prop {\n4912:   for _, u := range diff.Updated {\n4952:func applyStatsDiff(base []Stat, diff StatsDiff) []Stat {\n4959:   for _, u := range diff.Updated {\n5002:func applyLayersDiff(base []Layer, diff LayersDiff) []Layer {\n5009:   for _, u := range diff.Updated {\n5055:func applyGroupsDiff(base []Group, diff GroupsDiff) []Group {\n5062:   for _, u := range diff.Updated {\n5105:func getConnectorsDiff(before, after []Connector) ConnectorsDiff {\n5126:                           diff.Updated = append(diff.Updated, struct {\n5187:   if len(propsDiff.Added) \u003e 0 || len(propsDiff.Removed) \u003e 0 || len(propsDi\nff.Updated) \u003e 0 {                                                               5237:func getModelsDiff(before, after []Model) ModelsDiff {\n5258:                           diff.Updated = append(diff.Updated, struct {\n5274:func getPiecesDiff(before, after []Piece) PiecesDiff {\n5295:                           diff.Updated = append(diff.Updated, struct {\n5358:   if len(propsDiff.Added) \u003e 0 || len(propsDiff.Removed) \u003e 0 || len(propsDi\nff.Updated) \u003e 0 {                                                               5387:func getConnectionsDiff(before, after []Connection) ConnectionsDiff {\n5408:                           diff.Updated = append(diff.Updated, struct {\n6345:func applyTypesDiff(base []Type, diff TypesDiff) []Type {\n6352:   for _, u := range diff.Updated {\n6431:func applyConnectorsDiff(base []Connector, diff ConnectorsDiff) []Connector\n {                                                                              6438:   for _, u := range diff.Updated {\n6509:func applyModelsDiff(base []Model, diff ModelsDiff) []Model {\n6516:   for _, u := range diff.Updated {\n6559:func applyDesignsDiff(base []Design, diff DesignsDiff) []Design {\n6566:   for _, u := range diff.Updated {\n6657:func applyPiecesDiff(base []Piece, diff PiecesDiff) []Piece {\n6664:   for _, u := range diff.Updated {\n6809:func applyConnectionsDiff(base []Connection, diff ConnectionsDiff) []Connec\ntion {                                                                          6816:   for _, u := range diff.Updated {\n6897:func applyTagsDiff(base []Tag, diff TagsDiff) []Tag {\n6904:   for _, u := range diff.Updated {\n6944:func applyConceptsDiff(base []Concept, diff ConceptsDiff) []Concept {\n6951:   for _, u := range diff.Updated {\n6991:func applyPortsDiff(base []Port, diff PortsDiff) []Port {\n6998:   for _, u := range diff.Updated {\n7041:func applyFilesDiff(base []File, diff FilesDiff) []File {\n7048:   for _, u := range diff.Updated {\n7103:func applyFoldersDiff(base []Folder, diff FoldersDiff) []Folder {\n7110:   for _, u := range diff.Updated {\n7150:func applyAuthorsDiff(base []Author, diff AuthorsDiff) []Author {\n7157:   for _, u := range diff.Updated {\n",
           "tool_use_id": "toolu_bdrk_011DojUT9oBW4kBxjbXWiigd__vscode-1773054464295",
           "cwd": "/workspaces/semio"
         },
@@ -3790,7 +3790,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 4630,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 4597
           },
           "tool_use_id": "toolu_bdrk_01XaGSWMYVdea1aAdvVFByoH__vscode-1773054464297",
@@ -3809,22 +3809,22 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio🛠️getattributesdiff",
+            "id": "👤compose📚go💻compose🛠️getattributesdiff",
             "loc": 22
           },
           {
-            "id": "👤semio📚go💻semio🛠️getpropsdiff",
+            "id": "👤compose📚go💻compose🛠️getpropsdiff",
             "loc": 1
           },
           {
-            "id": "👤semio📚go💻semio🛠️isattributesdiffempty",
+            "id": "👤compose📚go💻compose🛠️isattributesdiffempty",
             "loc": 3
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌4597📌4630"
+          "👤compose📚go💻compose📌4597📌4630"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚36⏱️57",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -3842,7 +3842,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 4910,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 4887
           },
           "tool_use_id": "toolu_bdrk_01UraWgBzhQUHF3rVZUS6546__vscode-1773054464298",
@@ -3861,18 +3861,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio🛠️applyattributesdiff",
+            "id": "👤compose📚go💻compose🛠️applyattributesdiff",
             "loc": 14
           },
           {
-            "id": "👤semio📚go💻semio🛠️applypropsdiff",
+            "id": "👤compose📚go💻compose🛠️applypropsdiff",
             "loc": 6
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌4887📌4910"
+          "👤compose📚go💻compose📌4887📌4910"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚36⏱️57",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -3890,7 +3890,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 4340,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 4325
           },
           "tool_use_id": "toolu_bdrk_01AUXuiZaAhRG3GecvbUAyzS__vscode-1773054464299",
@@ -3909,14 +3909,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio🛠️inverseattributesdiff",
+            "id": "👤compose📚go💻compose🛠️inverseattributesdiff",
             "loc": 15
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌4325📌4340"
+          "👤compose📚go💻compose📌4325📌4340"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚36⏱️57",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -3934,7 +3934,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 4630,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 4597
           },
           "tool_response": "",
@@ -3953,22 +3953,22 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio🛠️getattributesdiff",
+            "id": "👤compose📚go💻compose🛠️getattributesdiff",
             "loc": 22
           },
           {
-            "id": "👤semio📚go💻semio🛠️getpropsdiff",
+            "id": "👤compose📚go💻compose🛠️getpropsdiff",
             "loc": 1
           },
           {
-            "id": "👤semio📚go💻semio🛠️isattributesdiffempty",
+            "id": "👤compose📚go💻compose🛠️isattributesdiffempty",
             "loc": 3
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌4597📌4630"
+          "👤compose📚go💻compose📌4597📌4630"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚37⏱️07",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -3986,7 +3986,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 4910,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 4887
           },
           "tool_response": "",
@@ -4005,18 +4005,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio🛠️applyattributesdiff",
+            "id": "👤compose📚go💻compose🛠️applyattributesdiff",
             "loc": 14
           },
           {
-            "id": "👤semio📚go💻semio🛠️applypropsdiff",
+            "id": "👤compose📚go💻compose🛠️applypropsdiff",
             "loc": 6
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌4887📌4910"
+          "👤compose📚go💻compose📌4887📌4910"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚37⏱️07",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -4034,7 +4034,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 4340,
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 4325
           },
           "tool_response": "",
@@ -4053,14 +4053,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio🛠️inverseattributesdiff",
+            "id": "👤compose📚go💻compose🛠️inverseattributesdiff",
             "loc": 15
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌4325📌4340"
+          "👤compose📚go💻compose📌4325📌4340"
         ],
         "second": "🎆26🌙03☀️10⏰14⌚37⏱️08",
         "session": "⚪0598acb245b040dea319d746e5bd9885"
@@ -4077,7 +4077,7 @@
           "session_id": "0598acb2-45b0-40de-a319-d746e5bd9885",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "cd /workspaces/semio \u0026\u0026 awk '/^func getAttributesDiff/,/^func [a-z]/' semio/go/semio.go | head -30",
+            "command": "cd /workspaces/semio \u0026\u0026 awk '/^func getAttributesDiff/,/^func [a-z]/' compose/go/compose.go | head -30",
             "explanation": "Extract getAttributesDiff function body",
             "goal": "Check if getAttributesDiff handles Updated",
             "isBackground": false,
@@ -4114,13 +4114,13 @@
           "session_id": "0598acb2-45b0-40de-a319-d746e5bd9885",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "cd /workspaces/semio \u0026\u0026 awk '/^func getAttributesDiff/,/^func [a-z]/' semio/go/semio.go | head -30",
+            "command": "cd /workspaces/semio \u0026\u0026 awk '/^func getAttributesDiff/,/^func [a-z]/' compose/go/compose.go | head -30",
             "explanation": "Extract getAttributesDiff function body",
             "goal": "Check if getAttributesDiff handles Updated",
             "isBackground": false,
             "timeout": 5000
           },
-          "tool_response": "Note: The tool simplified the command to ` cd /workspaces/semio \u0026\u0026 awk '/^func getAttributesDiff/,/^func [a-z]/' semio/go/semio.go | head -30`, and this is the output of running that command instead:\nfunc getAttributesDiff(before, after []Attribute) AttributesDiff {\n",
+          "tool_response": "Note: The tool simplified the command to ` cd /workspaces/semio \u0026\u0026 awk '/^func getAttributesDiff/,/^func [a-z]/' compose/go/compose.go | head -30`, and this is the output of running that command instead:\nfunc getAttributesDiff(before, after []Attribute) AttributesDiff {\n",
           "tool_use_id": "toolu_bdrk_01Fw1Mvps86Ha7CByZh2uqUK__vscode-1773054464300",
           "cwd": "/workspaces/semio"
         },
@@ -4151,7 +4151,7 @@
           "session_id": "0598acb2-45b0-40de-a319-d746e5bd9885",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "cd /workspaces/semio \u0026\u0026 sed -n '6190,6230p' semio/go/semio.go",
+            "command": "cd /workspaces/semio \u0026\u0026 sed -n '6190,6230p' compose/go/compose.go",
             "explanation": "Read around the getAttributesDiff function  location",
             "goal": "Find the actual getAttributesDiff location",
             "isBackground": false,
@@ -4188,13 +4188,13 @@
           "session_id": "0598acb2-45b0-40de-a319-d746e5bd9885",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "cd /workspaces/semio \u0026\u0026 sed -n '6190,6230p' semio/go/semio.go",
+            "command": "cd /workspaces/semio \u0026\u0026 sed -n '6190,6230p' compose/go/compose.go",
             "explanation": "Read around the getAttributesDiff function  location",
             "goal": "Find the actual getAttributesDiff location",
             "isBackground": false,
             "timeout": 5000
           },
-          "tool_response": "Note: The tool simplified the command to ` cd /workspaces/semio \u0026\u0026 sed -n '6190,6230p' semio/go/semio.go`, and this is the output of running that command instead:\n                                        return false\n                                }\n                                if !areAttributesEqual(sa.Attributes, sb.Attribu\ntes) {                                                                                                                  return false\n                                }\n                                found = true\n                                break\n                        }\n                }\n                if !found {\n                        return false\n                }\n        }\n        return true\n}\n\n// [👤semio📚go💻semio🔖kitoperations🛠️arelayersequal](semiorepo://p/u/semio/b/l/\ngo/f/semio.go/s/Kit%20Operations/d/i/areLayersEqual)                            // areLayersEqual holds the data fields for a areLayersEqual record.\n// areLayersEqual MUST perform the areLayersEqual operation.\nfunc areLayersEqual(a, b []Layer) bool {\n        if len(a) != len(b) {\n                return false\n        }\n        for _, la := range a {\n                found := false\n                for _, lb := range b {\n                        if la.Guid == lb.Guid {\n                                if la.Path != lb.Path {\n                                        return false\n                                }\n                                if !optBoolEqual(la.IsHidden, lb.IsHidden) {\n                                        return false\n                                }\n                                if !optBoolEqual(la.IsLocked, lb.IsLocked) {\n                                        return false\n                                }\n                                if normalizeStr(la.Color) != normalizeStr(lb.Col\nor) {                                                                                                                   return false\n                                }\n                                if normalizeStr(la.Description) != normalizeStr(\nlb.Description) {                                                                                                       return false\n",
+          "tool_response": "Note: The tool simplified the command to ` cd /workspaces/semio \u0026\u0026 sed -n '6190,6230p' compose/go/compose.go`, and this is the output of running that command instead:\n                                        return false\n                                }\n                                if !areAttributesEqual(sa.Attributes, sb.Attribu\ntes) {                                                                                                                  return false\n                                }\n                                found = true\n                                break\n                        }\n                }\n                if !found {\n                        return false\n                }\n        }\n        return true\n}\n\n// [👤compose📚go💻compose🔖kitoperations🛠️arelayersequal](composerepo://p/u/compose/b/l/\ngo/f/compose.go/s/Kit%20Operations/d/i/areLayersEqual)                            // areLayersEqual holds the data fields for a areLayersEqual record.\n// areLayersEqual MUST perform the areLayersEqual operation.\nfunc areLayersEqual(a, b []Layer) bool {\n        if len(a) != len(b) {\n                return false\n        }\n        for _, la := range a {\n                found := false\n                for _, lb := range b {\n                        if la.Guid == lb.Guid {\n                                if la.Path != lb.Path {\n                                        return false\n                                }\n                                if !optBoolEqual(la.IsHidden, lb.IsHidden) {\n                                        return false\n                                }\n                                if !optBoolEqual(la.IsLocked, lb.IsLocked) {\n                                        return false\n                                }\n                                if normalizeStr(la.Color) != normalizeStr(lb.Col\nor) {                                                                                                                   return false\n                                }\n                                if normalizeStr(la.Description) != normalizeStr(\nlb.Description) {                                                                                                       return false\n",
           "tool_use_id": "toolu_bdrk_017n7tScHa2EsuVishrpavAm__vscode-1773054464301",
           "cwd": "/workspaces/semio"
         },
@@ -4225,7 +4225,7 @@
           "session_id": "0598acb2-45b0-40de-a319-d746e5bd9885",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "cd /workspaces/semio \u0026\u0026 grep -n '^func get\\|^func apply\\|^func inverse' semio/go/semio.go | grep -i 'sdiff'",
+            "command": "cd /workspaces/semio \u0026\u0026 grep -n '^func get\\|^func apply\\|^func inverse' compose/go/compose.go | grep -i 'sdiff'",
             "explanation": "Get exact line numbers for all sDiff functions",
             "goal": "Precise function locations",
             "isBackground": false,
@@ -4262,13 +4262,13 @@
           "session_id": "0598acb2-45b0-40de-a319-d746e5bd9885",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "cd /workspaces/semio \u0026\u0026 grep -n '^func get\\|^func apply\\|^func inverse' semio/go/semio.go | grep -i 'sdiff'",
+            "command": "cd /workspaces/semio \u0026\u0026 grep -n '^func get\\|^func apply\\|^func inverse' compose/go/compose.go | grep -i 'sdiff'",
             "explanation": "Get exact line numbers for all sDiff functions",
             "goal": "Precise function locations",
             "isBackground": false,
             "timeout": 5000
           },
-          "tool_response": "Note: The tool simplified the command to ` cd /workspaces/semio \u0026\u0026 grep -n '^func get\\|^func apply\\|^func inverse' semio/go/semio.go | grep -i 'sdiff'`, and this is the output of running that command instead:\n2725:func getTypesDiff(before, after []Type) TypesDiff {\n2833:func getDesignsDiff(before, after []Design) DesignsDiff {\n2952:func getTagsDiff(before, after []Tag) TagsDiff {\n3017:func getConceptsDiff(before, after []Concept) ConceptsDiff {\n3082:func getPortsDiff(before, after []Port) PortsDiff {\n3150:func getFilesDiff(before, after []File) FilesDiff {\n3227:func getFoldersDiff(before, after []Folder) FoldersDiff {\n3289:func getAuthorsDiff(before, after []Author) AuthorsDiff {\n3419:func inverseTypesDiff(original []Type, appliedDiff TypesDiff) TypesDiff {\n3517:func inverseDesignsDiff(original []Design, appliedDiff DesignsDiff) Designs\nDiff {                                                                          3626:func inverseTagsDiff(original []Tag, appliedDiff TagsDiff) TagsDiff {\n3681:func inverseConceptsDiff(original []Concept, appliedDiff ConceptsDiff) Conc\neptsDiff {                                                                      3736:func inversePortsDiff(original []Port, appliedDiff PortsDiff) PortsDiff {\n3794:func inverseFilesDiff(original []File, appliedDiff FilesDiff) FilesDiff {\n3861:func inverseFoldersDiff(original []Folder, appliedDiff FoldersDiff) Folders\nDiff {                                                                          3913:func inverseAuthorsDiff(original []Author, appliedDiff AuthorsDiff) Authors\nDiff {                                                                          3962:func inverseConnectorsDiff(original []Connector, appliedDiff ConnectorsDiff\n) ConnectorsDiff {                                                              4056:func inverseModelsDiff(original []Model, appliedDiff ModelsDiff) ModelsDiff\n {                                                                              4111:func inversePiecesDiff(original []Piece, appliedDiff PiecesDiff) PiecesDiff\n {                                                                              4224:func inverseConnectionsDiff(original []Connection, appliedDiff ConnectionsD\niff) ConnectionsDiff {                                                          4325:func inverseAttributesDiff(original []Attribute, appliedDiff AttributesDiff\n) AttributesDiff {                                                              4344:func inversePropsDiff(original []Prop, appliedDiff PropsDiff) PropsDiff {\n4396:func inverseStatsDiff(original []Stat, appliedDiff StatsDiff) StatsDiff {\n4451:func inverseLayersDiff(original []Layer, appliedDiff LayersDiff) LayersDiff\n {                                                                              4509:func inverseGroupsDiff(original []Group, appliedDiff GroupsDiff) GroupsDiff\n {                                                                              4597:func getAttributesDiff(before, after []Attribute) AttributesDiff {\n4630:func getPropsDiff(before, after []Prop) PropsDiff {\n4692:func getStatsDiff(before, after []Stat) StatsDiff {\n4757:func getLayersDiff(before, after []Layer) LayersDiff {\n4825:func getGroupsDiff(before, after []Group) GroupsDiff {\n4887:func applyAttributesDiff(base []Attribute, diff AttributesDiff) []Attribute\n {                                                                              4905:func applyPropsDiff(base []Prop, diff PropsDiff) []Prop {\n4952:func applyStatsDiff(base []Stat, diff StatsDiff) []Stat {\n5002:func applyLayersDiff(base []Layer, diff LayersDiff) []Layer {\n5055:func applyGroupsDiff(base []Group, diff GroupsDiff) []Group {\n5105:func getConnectorsDiff(before, after []Connector) ConnectorsDiff {\n5237:func getModelsDiff(before, after []Model) ModelsDiff {\n5274:func getPiecesDiff(before, after []Piece) PiecesDiff {\n5387:func getConnectionsDiff(before, after []Connection) ConnectionsDiff {\n6345:func applyTypesDiff(base []Type, diff TypesDiff) []Type {\n6431:func applyConnectorsDiff(base []Connector, diff ConnectorsDiff) []Connector\n {                                                                              6509:func applyModelsDiff(base []Model, diff ModelsDiff) []Model {\n6559:func applyDesignsDiff(base []Design, diff DesignsDiff) []Design {\n6657:func applyPiecesDiff(base []Piece, diff PiecesDiff) []Piece {\n6809:func applyConnectionsDiff(base []Connection, diff ConnectionsDiff) []Connec\ntion {                                                                          6897:func applyTagsDiff(base []Tag, diff TagsDiff) []Tag {\n6944:func applyConceptsDiff(base []Concept, diff ConceptsDiff) []Concept {\n6991:func applyPortsDiff(base []Port, diff PortsDiff) []Port {\n7041:func applyFilesDiff(base []File, diff FilesDiff) []File {\n7103:func applyFoldersDiff(base []Folder, diff FoldersDiff) []Folder {\n7150:func applyAuthorsDiff(base []Author, diff AuthorsDiff) []Author {\n",
+          "tool_response": "Note: The tool simplified the command to ` cd /workspaces/semio \u0026\u0026 grep -n '^func get\\|^func apply\\|^func inverse' compose/go/compose.go | grep -i 'sdiff'`, and this is the output of running that command instead:\n2725:func getTypesDiff(before, after []Type) TypesDiff {\n2833:func getDesignsDiff(before, after []Design) DesignsDiff {\n2952:func getTagsDiff(before, after []Tag) TagsDiff {\n3017:func getConceptsDiff(before, after []Concept) ConceptsDiff {\n3082:func getPortsDiff(before, after []Port) PortsDiff {\n3150:func getFilesDiff(before, after []File) FilesDiff {\n3227:func getFoldersDiff(before, after []Folder) FoldersDiff {\n3289:func getAuthorsDiff(before, after []Author) AuthorsDiff {\n3419:func inverseTypesDiff(original []Type, appliedDiff TypesDiff) TypesDiff {\n3517:func inverseDesignsDiff(original []Design, appliedDiff DesignsDiff) Designs\nDiff {                                                                          3626:func inverseTagsDiff(original []Tag, appliedDiff TagsDiff) TagsDiff {\n3681:func inverseConceptsDiff(original []Concept, appliedDiff ConceptsDiff) Conc\neptsDiff {                                                                      3736:func inversePortsDiff(original []Port, appliedDiff PortsDiff) PortsDiff {\n3794:func inverseFilesDiff(original []File, appliedDiff FilesDiff) FilesDiff {\n3861:func inverseFoldersDiff(original []Folder, appliedDiff FoldersDiff) Folders\nDiff {                                                                          3913:func inverseAuthorsDiff(original []Author, appliedDiff AuthorsDiff) Authors\nDiff {                                                                          3962:func inverseConnectorsDiff(original []Connector, appliedDiff ConnectorsDiff\n) ConnectorsDiff {                                                              4056:func inverseModelsDiff(original []Model, appliedDiff ModelsDiff) ModelsDiff\n {                                                                              4111:func inversePiecesDiff(original []Piece, appliedDiff PiecesDiff) PiecesDiff\n {                                                                              4224:func inverseConnectionsDiff(original []Connection, appliedDiff ConnectionsD\niff) ConnectionsDiff {                                                          4325:func inverseAttributesDiff(original []Attribute, appliedDiff AttributesDiff\n) AttributesDiff {                                                              4344:func inversePropsDiff(original []Prop, appliedDiff PropsDiff) PropsDiff {\n4396:func inverseStatsDiff(original []Stat, appliedDiff StatsDiff) StatsDiff {\n4451:func inverseLayersDiff(original []Layer, appliedDiff LayersDiff) LayersDiff\n {                                                                              4509:func inverseGroupsDiff(original []Group, appliedDiff GroupsDiff) GroupsDiff\n {                                                                              4597:func getAttributesDiff(before, after []Attribute) AttributesDiff {\n4630:func getPropsDiff(before, after []Prop) PropsDiff {\n4692:func getStatsDiff(before, after []Stat) StatsDiff {\n4757:func getLayersDiff(before, after []Layer) LayersDiff {\n4825:func getGroupsDiff(before, after []Group) GroupsDiff {\n4887:func applyAttributesDiff(base []Attribute, diff AttributesDiff) []Attribute\n {                                                                              4905:func applyPropsDiff(base []Prop, diff PropsDiff) []Prop {\n4952:func applyStatsDiff(base []Stat, diff StatsDiff) []Stat {\n5002:func applyLayersDiff(base []Layer, diff LayersDiff) []Layer {\n5055:func applyGroupsDiff(base []Group, diff GroupsDiff) []Group {\n5105:func getConnectorsDiff(before, after []Connector) ConnectorsDiff {\n5237:func getModelsDiff(before, after []Model) ModelsDiff {\n5274:func getPiecesDiff(before, after []Piece) PiecesDiff {\n5387:func getConnectionsDiff(before, after []Connection) ConnectionsDiff {\n6345:func applyTypesDiff(base []Type, diff TypesDiff) []Type {\n6431:func applyConnectorsDiff(base []Connector, diff ConnectorsDiff) []Connector\n {                                                                              6509:func applyModelsDiff(base []Model, diff ModelsDiff) []Model {\n6559:func applyDesignsDiff(base []Design, diff DesignsDiff) []Design {\n6657:func applyPiecesDiff(base []Piece, diff PiecesDiff) []Piece {\n6809:func applyConnectionsDiff(base []Connection, diff ConnectionsDiff) []Connec\ntion {                                                                          6897:func applyTagsDiff(base []Tag, diff TagsDiff) []Tag {\n6944:func applyConceptsDiff(base []Concept, diff ConceptsDiff) []Concept {\n6991:func applyPortsDiff(base []Port, diff PortsDiff) []Port {\n7041:func applyFilesDiff(base []File, diff FilesDiff) []File {\n7103:func applyFoldersDiff(base []Folder, diff FoldersDiff) []Folder {\n7150:func applyAuthorsDiff(base []Author, diff AuthorsDiff) []Author {\n",
           "tool_use_id": "toolu_bdrk_01YZBTnmyWuBRz6J83XZSZVc__vscode-1773054464302",
           "cwd": "/workspaces/semio"
         },
@@ -4299,7 +4299,7 @@
           "session_id": "0598acb2-45b0-40de-a319-d746e5bd9885",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "cd /workspaces/semio \u0026\u0026 sed -n '4597,4629p' semio/go/semio.go",
+            "command": "cd /workspaces/semio \u0026\u0026 sed -n '4597,4629p' compose/go/compose.go",
             "explanation": "Read getAttributesDiff body",
             "goal": "Check Updated handling",
             "isBackground": false,
@@ -4336,13 +4336,13 @@
           "session_id": "0598acb2-45b0-40de-a319-d746e5bd9885",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "cd /workspaces/semio \u0026\u0026 sed -n '4597,4629p' semio/go/semio.go",
+            "command": "cd /workspaces/semio \u0026\u0026 sed -n '4597,4629p' compose/go/compose.go",
             "explanation": "Read getAttributesDiff body",
             "goal": "Check Updated handling",
             "isBackground": false,
             "timeout": 5000
           },
-          "tool_response": "Note: The tool simplified the command to ` cd /workspaces/semio \u0026\u0026 sed -n '4597,4629p' semio/go/semio.go`, and this is the output of running that command instead:\nfunc getAttributesDiff(before, after []Attribute) AttributesDiff {\n        diff := AttributesDiff{}\n        beforeMap := make(map[string]Attribute)\n        for _, a := range before {\n                beforeMap[a.Guid] = a\n        }\n        afterMap := make(map[string]Attribute)\n        for _, a := range after {\n                afterMap[a.Guid] = a\n        }\n        for _, a := range before {\n                if _, ok := afterMap[a.Guid]; !ok {\n                        diff.Removed = append(diff.Removed, AttributeId{Guid: a.\nGuid})                                                                                          }\n        }\n        for _, a := range after {\n                if _, ok := beforeMap[a.Guid]; !ok {\n                        diff.Added = append(diff.Added, a)\n                }\n        }\n        return diff\n}\n\n// [👤semio📚go💻semio🔖kitoperations🛠️isattributesdiffempty](semiorepo://p/u/sem\nio/b/l/go/f/semio.go/s/Kit%20Operations/d/i/isAttributesDiffEmpty)              // isAttributesDiffEmpty holds the data fields for a isAttributesDiffEmpty recor\nd.                                                                              // isAttributesDiffEmpty MUST perform the isAttributesDiffEmpty operation.\nfunc isAttributesDiffEmpty(diff AttributesDiff) bool {\n        return len(diff.Added) == 0 \u0026\u0026 len(diff.Removed) == 0 \u0026\u0026 len(diff.Update\nd) == 0                                                                         }\n\n// [👤semio📚go💻semio🔖kitoperations🛠️getpropsdiff](semiorepo://p/u/semio/b/l/go\n/f/semio.go/s/Kit%20Operations/d/i/getPropsDiff)                                // getPropsDiff holds the data fields for a getPropsDiff record.\n// getPropsDiff MUST perform the getPropsDiff operation.\n",
+          "tool_response": "Note: The tool simplified the command to ` cd /workspaces/semio \u0026\u0026 sed -n '4597,4629p' compose/go/compose.go`, and this is the output of running that command instead:\nfunc getAttributesDiff(before, after []Attribute) AttributesDiff {\n        diff := AttributesDiff{}\n        beforeMap := make(map[string]Attribute)\n        for _, a := range before {\n                beforeMap[a.Guid] = a\n        }\n        afterMap := make(map[string]Attribute)\n        for _, a := range after {\n                afterMap[a.Guid] = a\n        }\n        for _, a := range before {\n                if _, ok := afterMap[a.Guid]; !ok {\n                        diff.Removed = append(diff.Removed, AttributeId{Guid: a.\nGuid})                                                                                          }\n        }\n        for _, a := range after {\n                if _, ok := beforeMap[a.Guid]; !ok {\n                        diff.Added = append(diff.Added, a)\n                }\n        }\n        return diff\n}\n\n// [👤compose📚go💻compose🔖kitoperations🛠️isattributesdiffempty](composerepo://p/u/sem\nio/b/l/go/f/compose.go/s/Kit%20Operations/d/i/isAttributesDiffEmpty)              // isAttributesDiffEmpty holds the data fields for a isAttributesDiffEmpty recor\nd.                                                                              // isAttributesDiffEmpty MUST perform the isAttributesDiffEmpty operation.\nfunc isAttributesDiffEmpty(diff AttributesDiff) bool {\n        return len(diff.Added) == 0 \u0026\u0026 len(diff.Removed) == 0 \u0026\u0026 len(diff.Update\nd) == 0                                                                         }\n\n// [👤compose📚go💻compose🔖kitoperations🛠️getpropsdiff](composerepo://p/u/compose/b/l/go\n/f/compose.go/s/Kit%20Operations/d/i/getPropsDiff)                                // getPropsDiff holds the data fields for a getPropsDiff record.\n// getPropsDiff MUST perform the getPropsDiff operation.\n",
           "tool_use_id": "toolu_bdrk_01U9Dt7dgyHLvc9sdAjPiRnJ__vscode-1773054464303",
           "cwd": "/workspaces/semio"
         },
@@ -4373,7 +4373,7 @@
           "session_id": "0598acb2-45b0-40de-a319-d746e5bd9885",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "cd /workspaces/semio \u0026\u0026 sed -n '4887,4905p' semio/go/semio.go \u0026\u0026 echo \"---\" \u0026\u0026 sed -n '4325,4345p' semio/go/semio.go",
+            "command": "cd /workspaces/semio \u0026\u0026 sed -n '4887,4905p' compose/go/compose.go \u0026\u0026 echo \"---\" \u0026\u0026 sed -n '4325,4345p' compose/go/compose.go",
             "explanation": "Read applyAttributesDiff and inverseAttributesDiff bodies",
             "goal": "Check Updated handling",
             "isBackground": false,
@@ -4410,13 +4410,13 @@
           "session_id": "0598acb2-45b0-40de-a319-d746e5bd9885",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "cd /workspaces/semio \u0026\u0026 sed -n '4887,4905p' semio/go/semio.go \u0026\u0026 echo \"---\" \u0026\u0026 sed -n '4325,4345p' semio/go/semio.go",
+            "command": "cd /workspaces/semio \u0026\u0026 sed -n '4887,4905p' compose/go/compose.go \u0026\u0026 echo \"---\" \u0026\u0026 sed -n '4325,4345p' compose/go/compose.go",
             "explanation": "Read applyAttributesDiff and inverseAttributesDiff bodies",
             "goal": "Check Updated handling",
             "isBackground": false,
             "timeout": 5000
           },
-          "tool_response": "Note: The tool simplified the command to ` cd /workspaces/semio \u0026\u0026 sed -n '4887,4905p' semio/go/semio.go \u0026\u0026 echo \"---\" \u0026\u0026 sed -n '4325,4345p' semio/go/semio.go`, and this is the output of running that command instead:\nfunc applyAttributesDiff(base []Attribute, diff AttributesDiff) []Attribute {\n        result := make([]Attribute, 0)\n        removedGuids := make(map[string]bool)\n        for _, r := range diff.Removed {\n                removedGuids[r.Guid] = true\n        }\n        for _, a := range base {\n                if !removedGuids[a.Guid] {\n                        result = append(result, a)\n                }\n        }\n        result = append(result, diff.Added...)\n        return result\n}\n\n// [👤semio📚go💻semio🔖kitoperations🛠️applypropsdiff](semiorepo://p/u/semio/b/l/\ngo/f/semio.go/s/Kit%20Operations/d/i/applyPropsDiff)                            // applyPropsDiff holds the data fields for a applyPropsDiff record.\n// applyPropsDiff MUST perform the applyPropsDiff operation.\nfunc applyPropsDiff(base []Prop, diff PropsDiff) []Prop {\n---\nfunc inverseAttributesDiff(original []Attribute, appliedDiff AttributesDiff) Att\nributesDiff {                                                                           inverse := AttributesDiff{}\n        for _, added := range appliedDiff.Added {\n                inverse.Removed = append(inverse.Removed, AttributeId{Guid: adde\nd.Guid})                                                                                }\n        for _, removed := range appliedDiff.Removed {\n                for _, a := range original {\n                        if a.Guid == removed.Guid {\n                                inverse.Added = append(inverse.Added, a)\n                                break\n                        }\n                }\n        }\n        return inverse\n}\n\n// [👤semio📚go💻semio🔖kitoperations🛠️inversepropsdiff](semiorepo://p/u/semio/b/\nl/go/f/semio.go/s/Kit%20Operations/d/i/inversePropsDiff)                        // inversePropsDiff holds the data fields for a inversePropsDiff record.\n// inversePropsDiff MUST perform the inversePropsDiff operation.\nfunc inversePropsDiff(original []Prop, appliedDiff PropsDiff) PropsDiff {\n        inverse := PropsDiff{}\n",
+          "tool_response": "Note: The tool simplified the command to ` cd /workspaces/semio \u0026\u0026 sed -n '4887,4905p' compose/go/compose.go \u0026\u0026 echo \"---\" \u0026\u0026 sed -n '4325,4345p' compose/go/compose.go`, and this is the output of running that command instead:\nfunc applyAttributesDiff(base []Attribute, diff AttributesDiff) []Attribute {\n        result := make([]Attribute, 0)\n        removedGuids := make(map[string]bool)\n        for _, r := range diff.Removed {\n                removedGuids[r.Guid] = true\n        }\n        for _, a := range base {\n                if !removedGuids[a.Guid] {\n                        result = append(result, a)\n                }\n        }\n        result = append(result, diff.Added...)\n        return result\n}\n\n// [👤compose📚go💻compose🔖kitoperations🛠️applypropsdiff](composerepo://p/u/compose/b/l/\ngo/f/compose.go/s/Kit%20Operations/d/i/applyPropsDiff)                            // applyPropsDiff holds the data fields for a applyPropsDiff record.\n// applyPropsDiff MUST perform the applyPropsDiff operation.\nfunc applyPropsDiff(base []Prop, diff PropsDiff) []Prop {\n---\nfunc inverseAttributesDiff(original []Attribute, appliedDiff AttributesDiff) Att\nributesDiff {                                                                           inverse := AttributesDiff{}\n        for _, added := range appliedDiff.Added {\n                inverse.Removed = append(inverse.Removed, AttributeId{Guid: adde\nd.Guid})                                                                                }\n        for _, removed := range appliedDiff.Removed {\n                for _, a := range original {\n                        if a.Guid == removed.Guid {\n                                inverse.Added = append(inverse.Added, a)\n                                break\n                        }\n                }\n        }\n        return inverse\n}\n\n// [👤compose📚go💻compose🔖kitoperations🛠️inversepropsdiff](composerepo://p/u/compose/b/\nl/go/f/compose.go/s/Kit%20Operations/d/i/inversePropsDiff)                        // inversePropsDiff holds the data fields for a inversePropsDiff record.\n// inversePropsDiff MUST perform the inversePropsDiff operation.\nfunc inversePropsDiff(original []Prop, appliedDiff PropsDiff) PropsDiff {\n        inverse := PropsDiff{}\n",
           "tool_use_id": "toolu_bdrk_015GEYAHcgAruFHYq5xavCAk__vscode-1773054464304",
           "cwd": "/workspaces/semio"
         },
@@ -4447,7 +4447,7 @@
           "session_id": "0598acb2-45b0-40de-a319-d746e5bd9885",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "cd /workspaces/semio \u0026\u0026 grep -n 'func get\\(Qualities\\|Benchmarks\\)Diff\\|func apply\\(Qualities\\|Benchmarks\\)Diff\\|func inverse\\(Qualities\\|Benchmarks\\)Diff' semio/go/semio.go",
+            "command": "cd /workspaces/semio \u0026\u0026 grep -n 'func get\\(Qualities\\|Benchmarks\\)Diff\\|func apply\\(Qualities\\|Benchmarks\\)Diff\\|func inverse\\(Qualities\\|Benchmarks\\)Diff' compose/go/compose.go",
             "explanation": "Check for Qualities and Benchmarks diff functions",
             "goal": "Find missing diff function sets",
             "isBackground": false,
@@ -4484,13 +4484,13 @@
           "session_id": "0598acb2-45b0-40de-a319-d746e5bd9885",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "cd /workspaces/semio \u0026\u0026 grep -n 'func get\\(Qualities\\|Benchmarks\\)Diff\\|func apply\\(Qualities\\|Benchmarks\\)Diff\\|func inverse\\(Qualities\\|Benchmarks\\)Diff' semio/go/semio.go",
+            "command": "cd /workspaces/semio \u0026\u0026 grep -n 'func get\\(Qualities\\|Benchmarks\\)Diff\\|func apply\\(Qualities\\|Benchmarks\\)Diff\\|func inverse\\(Qualities\\|Benchmarks\\)Diff' compose/go/compose.go",
             "explanation": "Check for Qualities and Benchmarks diff functions",
             "goal": "Find missing diff function sets",
             "isBackground": false,
             "timeout": 5000
           },
-          "tool_response": "Note: The tool simplified the command to ` cd /workspaces/semio \u0026\u0026 grep -n 'func get\\(Qualities\\|Benchmarks\\)Diff\\|func apply\\(Qualities\\|Benchmarks\\)Diff\\|func inverse\\(Qualities\\|Benchmarks\\)Diff' semio/go/semio.go`, and this is the output of running that command instead:\nvscode ➜ /workspaces/semio (ueli/latest) $  cd /workspaces/semio \u0026\u0026 grep -n 'fun\nc get\\(Qualities\\|Benchmarks\\)Diff\\|func apply\\(Qualities\\|Benchmarks\\)Diff\\|fun\nc inverse\\(Qualities\\|Benchmarks\\)Diff' semio/go/semio.go\n\n\nCommand exited with code 1",
+          "tool_response": "Note: The tool simplified the command to ` cd /workspaces/semio \u0026\u0026 grep -n 'func get\\(Qualities\\|Benchmarks\\)Diff\\|func apply\\(Qualities\\|Benchmarks\\)Diff\\|func inverse\\(Qualities\\|Benchmarks\\)Diff' compose/go/compose.go`, and this is the output of running that command instead:\nvscode ➜ /workspaces/semio (ueli/latest) $  cd /workspaces/semio \u0026\u0026 grep -n 'fun\nc get\\(Qualities\\|Benchmarks\\)Diff\\|func apply\\(Qualities\\|Benchmarks\\)Diff\\|fun\nc inverse\\(Qualities\\|Benchmarks\\)Diff' compose/go/compose.go\n\n\nCommand exited with code 1",
           "tool_use_id": "toolu_bdrk_01U7bNVdY3JbnTmNfkZDjDp3__vscode-1773054464305",
           "cwd": "/workspaces/semio"
         },
@@ -4521,7 +4521,7 @@
           "session_id": "0598acb2-45b0-40de-a319-d746e5bd9885",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "cd /workspaces/semio \u0026\u0026 grep -n 'func get\\(Kits\\)Diff\\|func apply\\(Kits\\)Diff\\|func inverse\\(Kits\\)Diff' semio/go/semio.go",
+            "command": "cd /workspaces/semio \u0026\u0026 grep -n 'func get\\(Kits\\)Diff\\|func apply\\(Kits\\)Diff\\|func inverse\\(Kits\\)Diff' compose/go/compose.go",
             "explanation": "Check for Kits diff functions",
             "goal": "Find missing diff function sets",
             "isBackground": false,
@@ -4558,13 +4558,13 @@
           "session_id": "0598acb2-45b0-40de-a319-d746e5bd9885",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "cd /workspaces/semio \u0026\u0026 grep -n 'func get\\(Kits\\)Diff\\|func apply\\(Kits\\)Diff\\|func inverse\\(Kits\\)Diff' semio/go/semio.go",
+            "command": "cd /workspaces/semio \u0026\u0026 grep -n 'func get\\(Kits\\)Diff\\|func apply\\(Kits\\)Diff\\|func inverse\\(Kits\\)Diff' compose/go/compose.go",
             "explanation": "Check for Kits diff functions",
             "goal": "Find missing diff function sets",
             "isBackground": false,
             "timeout": 5000
           },
-          "tool_response": "Note: The tool simplified the command to ` cd /workspaces/semio \u0026\u0026 grep -n 'func get\\(Kits\\)Diff\\|func apply\\(Kits\\)Diff\\|func inverse\\(Kits\\)Diff' semio/go/semio.go`, and this is the output of running that command instead:\nvscode ➜ /workspaces/semio (ueli/latest) $  cd /workspaces/semio \u0026\u0026 grep -n 'fun\nc get\\(Kits\\)Diff\\|func apply\\(Kits\\)Diff\\|func inverse\\(Kits\\)Diff' semio/go/se\nmio.go\n\n\nCommand exited with code 1",
+          "tool_response": "Note: The tool simplified the command to ` cd /workspaces/semio \u0026\u0026 grep -n 'func get\\(Kits\\)Diff\\|func apply\\(Kits\\)Diff\\|func inverse\\(Kits\\)Diff' compose/go/compose.go`, and this is the output of running that command instead:\nvscode ➜ /workspaces/semio (ueli/latest) $  cd /workspaces/semio \u0026\u0026 grep -n 'fun\nc get\\(Kits\\)Diff\\|func apply\\(Kits\\)Diff\\|func inverse\\(Kits\\)Diff' compose/go/se\nmio.go\n\n\nCommand exited with code 1",
           "tool_use_id": "toolu_bdrk_016qaykKyH4dn2pRPkHKuv2N__vscode-1773054464306",
           "cwd": "/workspaces/semio"
         },

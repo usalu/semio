@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync } from "node:fs";
 
-const path = "c:/git/semio/cad/js/renderer/play/main.tsx";
+const path = "c:/git/compose/cad/js/renderer/play/main.tsx";
 const lines = readFileSync(path, "utf8").split(/\r?\n/);
 
 const headlessEnd = lines.findIndex((l) => l === "//#endregion 🔖Runtime");

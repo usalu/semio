@@ -6,15 +6,15 @@ Implemented typed semantic kit subscription events: Rust owns `SemanticKitEvent`
 
 ## Files touched
 
-- `semio/rs/lib.rs` — `SemanticKitEvent`, `semantic_kit_event_from_kit_change`, `KitEvent::SemanticChange`, emission sites, tests (`gql_kit_event_semantic_change_serializes_renamed_design`, event stream assertions without `PartialEq` on `KitEvent`)
-- `semio/graphql/schema.graphql` — `KitEvent` scalar documentation
-- `semio/js/index.ts` — wire types, `KitEvent` union, normalization, filters, embedded Vitest
+- `compose/rs/lib.rs` — `SemanticKitEvent`, `semantic_kit_event_from_kit_change`, `KitEvent::SemanticChange`, emission sites, tests (`gql_kit_event_semantic_change_serializes_renamed_design`, event stream assertions without `PartialEq` on `KitEvent`)
+- `compose/graphql/schema.graphql` — `KitEvent` scalar documentation
+- `compose/js/index.ts` — wire types, `KitEvent` union, normalization, filters, embedded Vitest
 
 ## Verification
 
-- `cargo test` in `semio/rs` (exit 0)
-- `npm --workspace @semio/js run build` (pass)
-- `npm --workspace @semio/js run test` (21 tests)
+- `cargo test` in `compose/rs` (exit 0)
+- `npm --workspace @compose/js run build` (pass)
+- `npm --workspace @compose/js run test` (21 tests)
 - `npm run depcruise:layers` (no violations)
 
 ## Log

@@ -1,10 +1,10 @@
 {
   "title": "Explore Drag Pieces Design Types",
   "status": "closed",
-  "description": "Find Design, Piece, Connection, DesignDiff, PieceDiff, ConnectionDiff types and region structure in semio.ts for adding dragPiecesInDesign function",
+  "description": "Find Design, Piece, Connection, DesignDiff, PieceDiff, ConnectionDiff types and region structure in compose.ts for adding dragPiecesInDesign function",
   "summary": "Bulk close",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/779"
   },
-  "goal": "🎯semio🎯js"
+  "goal": "🎯compose🎯js"
 }

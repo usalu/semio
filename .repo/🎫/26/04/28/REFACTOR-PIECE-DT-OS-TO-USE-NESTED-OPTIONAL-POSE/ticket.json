@@ -2,7 +2,7 @@
   "title": "Refactor Piece DTOs to Use Nested Optional Pose",
   "emoji": "🔧",
   "status": "open",
-  "description": "Refactor semio/rs/lib.rs: Pieces MUST NOT have plane and center as direct DTO fields. Instead they MUST have an optional `pose: Option\u003cPoseDto\u003e` (where PoseDto has optional plane and center). Additionally, the PieceStore's two separate flat caches (flat_plane: Cache\u003cPlane\u003e, flat_center: Cache\u003cCoordinate\u003e) MUST be merged into a single `flat_pose: Cache\u003cPoseFullDto\u003e` that is always computed and cached. Changes: (1) Add PoseDto struct with optional plane/center. (2) Update PieceMetadataDto/PieceShallowDto/PieceFullDto to replace plane+center with pose. (3) Update PieceDiff to replace plane/center with pose. (4) Merge flat_plane+flat_center caches into flat_pose. (5) Update all callers throughout lib.rs. (6) Make all tests pass.",
+  "description": "Refactor compose/rs/lib.rs: Pieces MUST NOT have plane and center as direct DTO fields. Instead they MUST have an optional `pose: Option\u003cPoseDto\u003e` (where PoseDto has optional plane and center). Additionally, the PieceStore's two separate flat caches (flat_plane: Cache\u003cPlane\u003e, flat_center: Cache\u003cCoordinate\u003e) MUST be merged into a single `flat_pose: Cache\u003cPoseFullDto\u003e` that is always computed and cached. Changes: (1) Add PoseDto struct with optional plane/center. (2) Update PieceMetadataDto/PieceShallowDto/PieceFullDto to replace plane+center with pose. (3) Update PieceDiff to replace plane/center with pose. (4) Merge flat_plane+flat_center caches into flat_pose. (5) Update all callers throughout lib.rs. (6) Make all tests pass.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1389"
   },

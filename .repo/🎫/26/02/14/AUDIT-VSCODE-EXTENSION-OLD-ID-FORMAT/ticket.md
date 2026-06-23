@@ -32,9 +32,9 @@ Key functions:
 
 #### `parseUri()` (line 771-775)
 
-- Parses `semiorepo://` URIs into `{type, path}` tuples
+- Parses `composerepo://` URIs into `{type, path}` tuples
 - **Does NOT parse IDs** — only parses URIs which are separate from IDs
-- URI format has no old/new distinction; it uses `semiorepo://type/path`
+- URI format has no old/new distinction; it uses `composerepo://type/path`
 
 #### `navigateToUri()` (line 777-960)
 
@@ -67,10 +67,10 @@ Key functions:
 - These test values don't follow either the old (`🎫2025/02/04/slug`) or new (`🎫YYYYMMDDslug`) format exactly
 - They're just testing emoji extraction and display label logic, not ID parsing
 
-#### File ID (line 848): `ID: "💻semio/go/semio.go"`
+#### File ID (line 848): `ID: "💻compose/go/compose.go"`
 
 - Uses old format: kind emoji directly without entity prefix
-- New format would be: `📄💻semio/go/semio.go` (entity emoji + kind emoji + value)
+- New format would be: `📄💻compose/go/compose.go` (entity emoji + kind emoji + value)
 
 #### Goal ID (line 853): `ID: "🎯my-goal"`
 
@@ -84,12 +84,12 @@ Key functions:
 
 | Entity      | Current `GetID()` format             | Example                               |
 | ----------- | ------------------------------------ | ------------------------------------- |
-| Project     | `{kindEmoji}@{name}`                 | `👤@semio`                            |
-| Bundle      | `{kindEmoji}{name}`                  | `📚semio/js`                          |
-| Folder      | `{kindEmoji}{path}`                  | `🗃️semio/js`                          |
-| File        | `{kindEmoji}{path}`                  | `💻semio/go/semio.go`                 |
-| Section     | `🔖{file}#{name}`                    | `🔖semio/js/semio.ts#Entity IDs`      |
-| Definition  | `{kindEmoji}{file}#{section}§{name}` | `🛠️semio/js/semio.ts#Kit§validateKit` |
+| Project     | `{kindEmoji}@{name}`                 | `👤@compose`                            |
+| Bundle      | `{kindEmoji}{name}`                  | `📚compose/js`                          |
+| Folder      | `{kindEmoji}{path}`                  | `🗃️compose/js`                          |
+| File        | `{kindEmoji}{path}`                  | `💻compose/go/compose.go`                 |
+| Section     | `🔖{file}#{name}`                    | `🔖compose/js/compose.ts#Entity IDs`      |
+| Definition  | `{kindEmoji}{file}#{section}§{name}` | `🛠️compose/js/compose.ts#Kit§validateKit` |
 | Ticket      | `🎫{YYYY}/{MM}/{DD}/{slug}`          | `🎫2026/02/14/MY-TICKET`              |
 | Goal        | `🎯{id}`                             | `🎯R26-02/RUNNING-SKETCHPAD`          |
 | Draft       | `✍{id}`                              | `✍MY-DRAFT`                           |
@@ -103,7 +103,7 @@ Key functions:
 
 **In the Go CLI (`main.go`)** — these are where actual ID construction happens:
 
-- `Project.GetID()` (line 7181): `{kindEmoji}@{name}` → needs `{entityEmoji}{kindEmoji}{name}` (i.e. `🏗️🏘️semio`)
+- `Project.GetID()` (line 7181): `{kindEmoji}@{name}` → needs `{entityEmoji}{kindEmoji}{name}` (i.e. `🏗️🏘️compose`)
 - `Bundle.GetID()` (line 7236): `{kindEmoji}{name}` → needs `📦{kindEmoji}{name}`
 - `Folder.GetID()` (line 7386): `{kindEmoji}{path}` → needs `📁{kindEmoji}{path}`
 - `File.GetID()` (line 7618): `{kindEmoji}{path}` → needs `📄{kindEmoji}{path}`
@@ -114,7 +114,7 @@ Key functions:
 **In `extension.test.ts`** — test data that mirrors old format:
 
 - Line 839: `ID: "🎫test"` — minor, emoji-only test
-- Line 848: `ID: "💻semio/go/semio.go"` — should become `📄💻semio/go/semio.go`
+- Line 848: `ID: "💻compose/go/compose.go"` — should become `📄💻compose/go/compose.go`
 - Line 920-927: `ID: "🛡️/code"` — should become `🛡️code` (no leading `/`)
 
 **In `extension.ts`** — NO changes needed because:

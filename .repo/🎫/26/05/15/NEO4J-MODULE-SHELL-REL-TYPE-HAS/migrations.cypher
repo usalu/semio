@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Hand-maintained Neo4j migrations for the semio graph. Run via migrate.neo4j.script.ts in this folder (not chained from generate).
-// Containment: `OWNS` for module trees, kit rows, and legacy `HAS`→`OWNS` relabel targets; structural `HAS` for `Module`→`Class`/`Interface`/`Scalar`/`Command` (see `semio/dev/schema/neo4j/schema.graphql`).
+// Hand-maintained Neo4j migrations for the compose graph. Run via migrate.neo4j.script.ts in this folder (not chained from generate).
+// Containment: `OWNS` for module trees, kit rows, and legacy `HAS`→`OWNS` relabel targets; structural `HAS` for `Module`→`Class`/`Interface`/`Scalar`/`Command` (see `compose/dev/schema/neo4j/schema.graphql`).
 
 //#region RelabelHasRelationshipsToOwns
 MATCH (a)-[r:HAS]->(b)
@@ -49,8 +49,8 @@ DROP INDEX index_computation_name IF EXISTS;
 CREATE RANGE INDEX index_derived_name IF NOT EXISTS FOR (n:Derived) ON (n.name);
 CREATE RANGE INDEX index_reference_name IF NOT EXISTS FOR (n:Reference) ON (n.name);
 DROP INDEX index_input_name IF EXISTS;
-DROP INDEX semio_name_fulltext IF EXISTS;
-CREATE FULLTEXT INDEX semio_name_fulltext IF NOT EXISTS FOR (n:Class|Command|Constraint|Data|Derived|Reference|Interface|Module|Scalar) ON EACH [n.name];
+DROP INDEX compose_name_fulltext IF EXISTS;
+CREATE FULLTEXT INDEX compose_name_fulltext IF NOT EXISTS FOR (n:Class|Command|Constraint|Data|Derived|Reference|Interface|Module|Scalar) ON EACH [n.name];
 //#endregion ReplaceFieldIndexes
 
 //#region RelabelLegacyComputationLabelToDerived
@@ -234,7 +234,7 @@ MATCH (fk:Module {name: 'FieldKind'})
 DETACH DELETE fk;
 //#endregion RemoveFieldKindMetaModule
 
-//#region StripLegacySemioGraphNodeProperties
+//#region StripLegacyComposeGraphNodeProperties
 // Persist only graph-native kit metadata: `rank` is sibling order (string); `isList` flags list-shaped members; `cached` only on Derived.
 MATCH (n:Data)
 SET n = { name: n.name, rank: coalesce(n.rank, ''), isList: coalesce(n.isList, false), soleOwnerKey: n.soleOwnerKey };
@@ -252,7 +252,7 @@ WITH n,
     ELSE 'constraint'
   END AS d
 SET n = { description: d };
-//#endregion StripLegacySemioGraphNodeProperties
+//#endregion StripLegacyComposeGraphNodeProperties
 
 //#region RemoveResidualKindProperty
 MATCH (n)

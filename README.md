@@ -1,45 +1,45 @@
 <p align="center">
     <a href="https://docs.semio-tech.com">
       <picture>
-          <source media="(prefers-color-scheme: dark)" srcset="semio/asset/logo/logo_dark.svg">
-          <source media="(prefers-color-scheme: light)" srcset="semio/asset/logo/logo.svg">
-          <img alt="semio" href="https://github.com/usalu/semio/" src="semio/asset/logo/logo.svg">
+          <source media="(prefers-color-scheme: dark)" srcset="compose/asset/logo/logo_dark.svg">
+          <source media="(prefers-color-scheme: light)" srcset="compose/asset/logo/logo.svg">
+          <img alt="compose" href="https://github.com/usalu/semio/" src="compose/asset/logo/logo.svg">
       </picture>
     </a>
     <br/>
-    <a href="https://play.semio-tech.com"><img src="semio/asset/badge/site-play.svg" alt="A free online playground to toy with semio without login."></a>
-    <a href="https://docs.semio-tech.com"><img src="semio/asset/badge/site-docs.svg" alt="The documentation page to learn semio."></a>
-    <a href="https://js.semio-tech.com"><img src="semio/asset/badge/dev-js.svg" alt="The elements Storybook for shared javascript UI elements."></a>
+    <a href="https://play.semio-tech.com"><img src="compose/asset/badge/site-play.svg" alt="A free online playground to toy with compose without login."></a>
+    <a href="https://docs.semio-tech.com"><img src="compose/asset/badge/site-docs.svg" alt="The documentation page to learn compose."></a>
+    <a href="https://js.semio-tech.com"><img src="compose/asset/badge/dev-js.svg" alt="The elements Storybook for shared javascript UI elements."></a>
     <a href="https://discord.gg/m6nnf6pQRc"><img src="https://img.shields.io/discord/1338232508264747130?style=flat-square&color=ff344f" alt="Discord"></a>
     <br/>
-     <a href="https://github.com/usalu/semio"><img src="semio/asset/badge/repo-semio.svg" alt="The repository."></a>
-    <a href="https://doi.org/10.5281/zenodo.8419156"><img src="semio/asset/badge/cite-zenodo.svg" alt="Cite"></a>
-    <a href="https://choosealicense.com/licenses/agpl-3.0/"><img src="semio/asset/badge/license-agpl-v3.svg" alt="Affero General Public License v3.0 or later"></a>
+     <a href="https://github.com/usalu/semio"><img src="compose/asset/badge/repo-compose.svg" alt="The repository."></a>
+    <a href="https://doi.org/10.5281/zenodo.8419156"><img src="compose/asset/badge/cite-zenodo.svg" alt="Cite"></a>
+    <a href="https://choosealicense.com/licenses/agpl-3.0/"><img src="compose/asset/badge/license-agpl-v3.svg" alt="Affero General Public License v3.0 or later"></a>
     <br/>
-    <a href="https://eg-ice-25.semio-tech.com"><img src="semio/asset/badge/presentation-egice25.svg" alt="The presentation of our latest research paper on LLMs with semio."></a>
-    <a href="https://doi.org/10.17868/strath.00093288"><img src="semio/asset/badge/latest-research.svg" alt="The latest research paper on LLMs with semio."></a>
-    <a href="https://eg-ice-23.semio-tech.com"><img src="semio/asset/badge/presentation-egice23.svg" alt="The presentation of our previous research paper on formalizing architecture."></a>
+    <a href="https://eg-ice-25.semio-tech.com"><img src="compose/asset/badge/presentation-egice25.svg" alt="The presentation of our latest research paper on LLMs with compose."></a>
+    <a href="https://doi.org/10.17868/strath.00093288"><img src="compose/asset/badge/latest-research.svg" alt="The latest research paper on LLMs with compose."></a>
+    <a href="https://eg-ice-23.semio-tech.com"><img src="compose/asset/badge/presentation-egice23.svg" alt="The presentation of our previous research paper on formalizing architecture."></a>
     <br/>
-    <a href="https://play.semio-tech.com"><img src="semio/asset/badge/ui-browser.svg" alt="Browser"></a>
-    <a href="https://www.grasshopper3d.com/"><img src="semio/asset/badge/ui-grasshopper.svg" alt="Grasshopper"></a>
-    <a href="https://www.microsoft.com/windows/windows-11"><img src="semio/asset/badge/ui-windows.svg" alt="Windows"></a>
-    <a href="https://apple.com/macos"><img src="semio/asset/badge/ui-macos.svg" alt="macOS"></a>
+    <a href="https://play.semio-tech.com"><img src="compose/asset/badge/ui-browser.svg" alt="Browser"></a>
+    <a href="https://www.grasshopper3d.com/"><img src="compose/asset/badge/ui-grasshopper.svg" alt="Grasshopper"></a>
+    <a href="https://www.microsoft.com/windows/windows-11"><img src="compose/asset/badge/ui-windows.svg" alt="Windows"></a>
+    <a href="https://apple.com/macos"><img src="compose/asset/badge/ui-macos.svg" alt="macOS"></a>
     <br/>
-    <a href="https://www.typescriptlang.org/"><img src="semio/asset/badge/powered-by-typescript.svg" alt="Typescript"></a>
-    <a href="https://www.python.org/"><img src="semio/asset/badge/powered-by-python.svg" alt="Python"></a>
-    <a href="https://learn.microsoft.com/en-us/dotnet/csharp/"><img src="semio/asset/badge/powered-by-csharp.svg" alt="C#"></a>
+    <a href="https://www.typescriptlang.org/"><img src="compose/asset/badge/powered-by-typescript.svg" alt="Typescript"></a>
+    <a href="https://www.python.org/"><img src="compose/asset/badge/powered-by-python.svg" alt="Python"></a>
+    <a href="https://learn.microsoft.com/en-us/dotnet/csharp/"><img src="compose/asset/badge/powered-by-csharp.svg" alt="C#"></a>
     <br/>
     <br/>
     <i>🧩 Design-Information-Modeling for Kit-of-Parts 🏘 </i>
 </p>
 <br/>
 
-You want to 🧩 the next 🏘🏛🏢🏭🏫🏨⛪🕌 with 🤖? But 📐🔢🗣👥🖱️️⌨️️ takes all your ⌚? Then try to 🧠 the 🧬 and let semio 💉🖥✒🖨🪄🚀
+You want to 🧩 the next 🏘🏛🏢🏭🏫🏨⛪🕌 with 🤖? But 📐🔢🗣👥🖱️️⌨️️ takes all your ⌚? Then try to 🧠 the 🧬 and let compose 💉🖥✒🖨🪄🚀
 
 # 👋 Hello contributor
 
 > [!NOTE]
-> Are you a user or new to semio? Then you might want to first check out our [docs](https://docs.semio-tech.com) 📖
+> Are you a user or new to compose? Then you might want to first check out our [docs](https://docs.semio-tech.com) 📖
 
 Glad to see you!
 
@@ -52,15 +52,15 @@ Let me walk you through 🚶
    - [👥 studio](#-studio-)
    - [☁ cloud](#%EF%B8%8F-cloud-)
    - [🤖 assistant](#-assistant-)
-   - [🦗 semio.gh](#-semiogh-)
-   - [🦏 semio.3dm](#-semio3dm-)
-   - [🐝 semio.wasp](#-semiowasp-)
-   - [🦌 semio.monoceros](#-semiomonoceros-)
-   - [🐞 semio.ladybug](#-semioladybug-)
+   - [🦗 compose.gh](#-composegh-)
+   - [🦏 compose.3dm](#-compose3dm-)
+   - [🐝 compose.wasp](#-composewasp-)
+   - [🦌 compose.monoceros](#-composemonoceros-)
+   - [🐞 compose.ladybug](#-composeladybug-)
 1. [🦑 Repo](#-repo-)
    - [⚖️ Principles](#-principles-)
    - [🏗️ Technologies](#-technologies-)
-     - [👤 semio](#-semio-)
+     - [👤 compose](#-compose-)
      - [🧰 repo](#-repo-)
      - [🔬 coda](#-coda-)
      - [🧩 elements](#-elements-)
@@ -123,63 +123,63 @@ Let me walk you through 🚶
 
 # 🛍 Products [↑](#-overview)
 
-> Do you wonder how semio is interoperable? The reason is a shared [specification](#-requirements-) 🪢
+> Do you wonder how compose is interoperable? The reason is a shared [specification](#-requirements-) 🪢
 
 ## ✏ sketchpad [↑](#%EF%B8%8F-products-)
 
-[sketchpad](#%EF%B8%8F-sketchpad-) is a simple-to-use, accessible and browser-based user interface for semio🖱️️
+[sketchpad](#%EF%B8%8F-sketchpad-) is a simple-to-use, accessible and browser-based user interface for compose🖱️️
 
-It is the digital pencil for sketching plans and digital scalpel for building models in semio ✍
+It is the digital pencil for sketching plans and digital scalpel for building models in compose ✍
 
-![sketchpad demo](semio/asset/image/sketchpad-demo.gif)
+![sketchpad demo](compose/asset/image/sketchpad-demo.gif)
 
 ## 👥 studio [↑](#%EF%B8%8F-products-)
 
-A studio is a synchronous collaboriation environment for teams to work together in semio 🤝
+A studio is a synchronous collaboriation environment for teams to work together in compose 🤝
 
-![semio studio Demo](semio/asset/image/studio-demo.png)
+![compose studio Demo](compose/asset/image/studio-demo.png)
 
 ## ☁ cloud [↑](#%EF%B8%8F-products-)
 
 Use any file-hosting platform as an asynchronous Common-Data-Environment 📁
 
-![Cloud Demo](semio/asset/image/cloud-demo.png)
+![Cloud Demo](compose/asset/image/cloud-demo.png)
 
 ## 🤖 assistant [↑](#%EF%B8%8F-products-)
 
-The assistant helps you on every step in the design process with semio ✍
+The assistant helps you on every step in the design process with compose ✍
 
-![semio assistant Demo](semio/asset/image/assistant-demo.png)
+![compose assistant Demo](compose/asset/image/assistant-demo.png)
 
-## 🦗 [semio.gh](https://docs.semio-tech.com/manual/grasshopper) [↑](#%EF%B8%8F-products-)
+## 🦗 [compose.gh](https://docs.semio-tech.com/manual/grasshopper) [↑](#%EF%B8%8F-products-)
 
-A batteries-included [Grasshopper](https://www.grasshopper3d.com) plugin for semio ⚡
+A batteries-included [Grasshopper](https://www.grasshopper3d.com) plugin for compose ⚡
 
-![semio Grasshopper Demo](semio/asset/image/grasshopper-demo.png)
+![compose Grasshopper Demo](compose/asset/image/grasshopper-demo.png)
 
-## 🦏 semio.3dm [↑](#%EF%B8%8F-products-)
+## 🦏 compose.3dm [↑](#%EF%B8%8F-products-)
 
-A Grasshopper-based integration of [Rhino](https://www.rhino3d.com) and semio 🔀
+A Grasshopper-based integration of [Rhino](https://www.rhino3d.com) and compose 🔀
 
-## 🐝 semio.wasp [↑](#%EF%B8%8F-products-)
+## 🐝 compose.wasp [↑](#%EF%B8%8F-products-)
 
-A Grasshopper-based integration of [Wasp](https://www.food4rhino.com/en/app/wasp) and semio 🔀
+A Grasshopper-based integration of [Wasp](https://www.food4rhino.com/en/app/wasp) and compose 🔀
 
-![Wasp Demo](semio/asset/image/wasp-demo.png)
+![Wasp Demo](compose/asset/image/wasp-demo.png)
 
-## 🦌 semio.monoceros [↑](#%EF%B8%8F-products-)
+## 🦌 compose.monoceros [↑](#%EF%B8%8F-products-)
 
-A Grasshopper-based integration of [Monoceros](https://monoceros.sub.digital) and semio 🔀
+A Grasshopper-based integration of [Monoceros](https://monoceros.sub.digital) and compose 🔀
 
-![Monoceros Demo](semio/asset/image/monoceros-demo.png)
+![Monoceros Demo](compose/asset/image/monoceros-demo.png)
 
-## 🐞 semio.ladybug [↑](#%EF%B8%8F-products-)
+## 🐞 compose.ladybug [↑](#%EF%B8%8F-products-)
 
-A Grasshopper-based integration of [Ladybug](https://www.ladybug.tools) and semio 🔀
+A Grasshopper-based integration of [Ladybug](https://www.ladybug.tools) and compose 🔀
 
 # 🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)
 
-This git repo has <strong>everything</strong> that exists in the open semio ecosystem 🤯
+This git repo has <strong>everything</strong> that exists in the open compose ecosystem 🤯
 
 ## ⚖️ Principles [↑](#-repo-)
 
@@ -349,7 +349,7 @@ If not, then you are probably good 👌
 <details>
 <summary><strong>🏷️ Never use `type` for naming enums, ports, or types. Always use `kind` instead ✅</strong></summary>
 
-To avoid confusion with the native `type` concept in Semio, always use `kind` for naming enums, ports, or types that represent categories or classifications 🏷️
+To avoid confusion with the native `type` concept in Compose, always use `kind` for naming enums, ports, or types that represent categories or classifications 🏷️
 
 Examples: `ArtifactType` → `ArtifactKind`, `WindowType` → `WindowKind`, etc. 🔄
 
@@ -374,7 +374,7 @@ Even if 95% of the codebase follows those principles, there are good reasons for
 
 The monorepo organizes its code into distinct technologies, each serving a specific domain in the ecosystem:
 
-### [👤 semio](semio/README.md) [↑](#-technologies-)
+### [👤 compose](compose/README.md) [↑](#-technologies-)
 
 The core design-information-modeling technology, containing the main schema, engines, and domain implementations.
 
@@ -401,7 +401,7 @@ We use [GitKraken Desktop](https://www.gitkraken.com/git-client) as our git clie
 
 It is the only nice chronological graphical overview for **all** branches at the same time that we found 🔍
 
-The devcontainer installs Linux GitKraken Desktop and bootstraps zero-touch local workspace config for the semio monorepo and its git submodules, so the default Semio workspace is ready after attach without manual repository grouping 🔀
+The devcontainer installs Linux GitKraken Desktop and bootstraps zero-touch local workspace config for the compose monorepo and its git submodules, so the default Compose workspace is ready after attach without manual repository grouping 🔀
 
 ### 🔍 ripgrep [↑](#-git-)
 
@@ -452,7 +452,7 @@ Before every [release](#-release-) the [repo](#-repo-) is archived 📦
 We have two different types of tags:
 
 - `rYY.MM-V` for [releases](#-release-) (e.g `r21.06-1`,`r23.07-2`,`r24.12-1`, `r25.07-1`, …)
-- `COMPONENT-vMAJOR.MINOR.PATCH` for [bundles](#-bundles-) which follow the [semver](https://semver.org/) versioning scheme (e.g [`engine-v4.0.2`](#-semioengine-), [`sketchpad-v1.0.0`](#-semiodesktop-), [`grasshopper-v5.4.0-beta`](#-semiograsshopper-), …)
+- `COMPONENT-vMAJOR.MINOR.PATCH` for [bundles](#-bundles-) which follow the [semver](https://semver.org/) versioning scheme (e.g [`engine-v4.0.2`](#-composeengine-), [`sketchpad-v1.0.0`](#-composedesktop-), [`grasshopper-v5.4.0-beta`](#-composegrasshopper-), …)
 
 ### 🌿 Branch [↑](#-gitstyle-)
 
@@ -546,7 +546,7 @@ The script installs the same baseline toolchain the devcontainer provides on a f
 
 After the bootstrap completes, open a new terminal and use the same repo commands as in the devcontainer. The script also keeps `PLAYWRIGHT_BROWSERS_PATH` on the repo-local shared cache so Playwright downloads stay warm across runs.
 
-Native Neo4j Desktop must own the local DBMS. Create a Neo4j Desktop **Local Instance** named `semio`, set the initial password to `password`, and start it. The repo setup then enables APOC on that DBMS, restarts it when needed, and configures/imports through Bolt without editing Desktop internals:
+Native Neo4j Desktop must own the local DBMS. Create a Neo4j Desktop **Local Instance** named `compose`, set the initial password to `password`, and start it. The repo setup then enables APOC on that DBMS, restarts it when needed, and configures/imports through Bolt without editing Desktop internals:
 
 - URL: `bolt://127.0.0.1:7687`
 - User: `neo4j`
@@ -560,7 +560,7 @@ Native macOS and Linux use the same root router:
 bun ./script.ts setup native
 ```
 
-IDE startup runs `bun ./script.ts start`, which checks the native Neo4j Desktop `semio` DBMS at `bolt://localhost:7687`, verifies APOC, and attempts to create the product graph databases `semio`, `elements`, `coda`, and `reuse`, plus any names listed in **`NEO4J_EXTRA_GRAPH_DATABASES`** (comma-separated, e.g. `metabolism,mydb`), when the DBMS edition supports multi-database administration. **Neo4j Community Edition allows only one standard user graph per DBMS** (often still named `neo4j` until you rename it). Those `CREATE DATABASE` calls do nothing useful on Community, so you will **not** see extra graphs in Desktop or Browser unless the edition supports them. Use **Neo4j Enterprise** (or another deployment that supports multiple standard databases) if you need isolated Bolt databases for each graph.
+IDE startup runs `bun ./script.ts start`, which checks the native Neo4j Desktop `compose` DBMS at `bolt://localhost:7687`, verifies APOC, and attempts to create the product graph databases `compose`, `elements`, `coda`, and `reuse`, plus any names listed in **`NEO4J_EXTRA_GRAPH_DATABASES`** (comma-separated, e.g. `metabolism,mydb`), when the DBMS edition supports multi-database administration. **Neo4j Community Edition allows only one standard user graph per DBMS** (often still named `neo4j` until you rename it). Those `CREATE DATABASE` calls do nothing useful on Community, so you will **not** see extra graphs in Desktop or Browser unless the edition supports them. Use **Neo4j Enterprise** (or another deployment that supports multiple standard databases) if you need isolated Bolt databases for each graph.
 
 **Where “databases” show up:** In Neo4j Browser, open your DBMS at `http://127.0.0.1:7474`, sign in, then use the **database dropdown** (next to the query editor). Only editions that support multi-database list more than one user graph besides `system`. To confirm what the server supports, run `SHOW DATABASES` while connected (Community typically shows `system` and one user database).
 
@@ -628,7 +628,7 @@ Good for larger experiments due to more generous free quota 🥼
 
 ### 💻 Editor [↑](#-tools-)
 
-#### ✈ [Copilot](.github/agents/semio.agent.md) [↑](#-ai-)
+#### ✈ [Copilot](.github/agents/compose.agent.md) [↑](#-ai-)
 
 <details>
 <summary><strong>📚 Resources:</strong></summary>
@@ -690,13 +690,13 @@ Used on the phone when no IDE is available 📱
 
 Used to ensure consistent order of source code, docs, …
 
-- [GitHub Agent](.github/agents/semio.agent.md)
+- [GitHub Agent](.github/agents/compose.agent.md)
 
 #### 🔁 Formatter [↑](#-agents-)
 
 Used to ensure consistent formatting of source code, docs, …
 
-- [GitHub Agent](.github/agents/semio.agent.md)
+- [GitHub Agent](.github/agents/compose.agent.md)
 
 ### 🤖 Models [↑](#-ai-)
 
@@ -715,15 +715,15 @@ All automation, CI runs, and agent workflows are controlled through the canonica
 The root `package.json` uses Nx to orchestrate the command pipeline, and delegates bundle builds, tests, and publishing to Nx targets (`bun nx run …`).
 Git hooks are not installed by this repo; run `bun run lint`, `bun run format`, and `bun run test` explicitly before pushing. `bun ./script.ts setup git` removes any legacy pre-commit or post-commit hooks that would block commits, rebases, or squashes.
 
-# 🏘 [Examples](semio/examples) [↑](#-overview)
+# 🏘 [Examples](compose/examples) [↑](#-overview)
 
-## 🚀 [Starter](semio/example/starters) [↑](#%EF%B8%8F-examples-)
+## 🚀 [Starter](compose/example/starters) [↑](#%EF%B8%8F-examples-)
 
-## 👋 [Hello semio](semio/example/hello-semio) [↑](#%EF%B8%8F-examples-)
+## 👋 [Hello compose](compose/example/hello-compose) [↑](#%EF%B8%8F-examples-)
 
-## 🌈 [Geometry](semio/example/geometry) [↑](#%EF%B8%8F-examples-)
+## 🌈 [Geometry](compose/example/geometry) [↑](#%EF%B8%8F-examples-)
 
-## 🫀 [Metabolism](semio/example/metabolism) [↑](#%EF%B8%8F-examples-)
+## 🫀 [Metabolism](compose/example/metabolism) [↑](#%EF%B8%8F-examples-)
 
 # 💯 Brand [↑](#-overview)
 
@@ -742,7 +742,7 @@ Git hooks are not installed by this repo; run `bun run lint`, `bun run format`, 
 
 ## 🌈 Colors [↑](#-brand-)
 
-![Palette](semio/asset/list/palette.png)
+![Palette](compose/asset/list/palette.png)
 
 | Name                                   | Hex     | RGB         | HSL              | HSV (or HSB)     | CMYK          | Color            |
 | -------------------------------------- | ------- | ----------- | ---------------- | ---------------- | ------------- | ---------------- |
@@ -804,7 +804,7 @@ We use it e.g. for:
 
 Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can come together for an invertible theme in a semantically meaningfull way? Well, here is how you achieve it with 33 colors 🤯
 
-![Grayscale](semio/asset/list/grayscale.png)
+![Grayscale](compose/asset/list/grayscale.png)
 
 ## 📄 Typography [↑](#-brand-)
 
@@ -822,13 +822,13 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
 - 📝 One symbol to summarize a title
 - 💡 One symbol to summarize a title description and one to think about in the end 🤔
 - `.` are forbidden ⛔
-- All components in `semio` (`sketchpad`,`studio`, …) start with a small letter 🔡
+- All components in `compose` (`sketchpad`,`studio`, …) start with a small letter 🔡
 - Did you know that `…` is just one character?
 
 > [!TIP]
 > In the end of a section you can give the curious reader a summarizing question to think about the consequences and a link to more resources 🤔
 
-### 🔡 [Typesetting](semio/asset/README.md#fonts) [↑](#-typography-)
+### 🔡 [Typesetting](compose/asset/README.md#fonts) [↑](#-typography-)
 
 - Sans serif: [Anta](https://fonts.google.com/specimen/Anta) 🖨
 - Serif: [Kelly Slab](https://fonts.google.com/specimen/Kelly+Slab) ✍
@@ -869,27 +869,27 @@ If you have any security vulnerabilities or concerns, please contact [us over em
         <br />
         <sub><b>Ueli Saluz</b></sub>
         <br />
-        <a href="#-semiojs-" title="🟨semio/js"><sub>🟨<sub></a>
-        <a href="#-semionet-" title="🟪semio/net"><sub>🟪<sub></a>
+        <a href="#-composejs-" title="🟨compose/js"><sub>🟨<sub></a>
+        <a href="#-composenet-" title="🟪compose/net"><sub>🟪<sub></a>
         <a href="#-python-" title="🐍Python"><sub>🐍<sub></a>
-        <a href="#-semiograsshopper-" title="🦗semio/grasshopper"><sub>🦗<sub></a>      
+        <a href="#-composegrasshopper-" title="🦗compose/grasshopper"><sub>🦗<sub></a>      
         <br />
-        <a href="#-semiodesktop-" title="✏semio/desktop"><sub>✏<sub></a>
-        <a href="#-semioengine-" title="⚙️️semio/engine"><sub>⚙️️<sub></a>
-        <a href="#-semioassistant-" title="🤖semio/assistant"><sub>🤖<sub></a>
-        <a href="#%EF%B8%8F-semioplay-" title="🎛semio/play"><sub>🎛<sub></a>
+        <a href="#-composedesktop-" title="✏compose/desktop"><sub>✏<sub></a>
+        <a href="#-composeengine-" title="⚙️️compose/engine"><sub>⚙️️<sub></a>
+        <a href="#-composeassistant-" title="🤖compose/assistant"><sub>🤖<sub></a>
+        <a href="#%EF%B8%8F-composeplay-" title="🎛compose/play"><sub>🎛<sub></a>
         <br />
-        <a href="#-semiodocs-" title="📚semio/docs"><sub>📚<sub></a>
-        <a href="#-semioassets-" title="🛍semio/asset"><sub>🛍<sub></a>
+        <a href="#-composedocs-" title="📚compose/docs"><sub>📚<sub></a>
+        <a href="#-composeassets-" title="🛍compose/asset"><sub>🛍<sub></a>
         <a href="#-brand-" title="💯Brand"><sub>💯<sub></a>
         <br />
-        <a href="#-semio.3dm-" title="🦏Rhino"><sub>🦏<sub></a>
-        <a href="#-semiowasp-" title="🐝Wasp"><sub>🐝<sub></a>
-        <a href="#-semiomonoceros-" title="🦌Monoceros"><sub>🦌<sub></a>
-        <a href="#-semioladybug-" title="🐞Ladybug"><sub>🐞<sub></a>
+        <a href="#-compose.3dm-" title="🦏Rhino"><sub>🦏<sub></a>
+        <a href="#-composewasp-" title="🐝Wasp"><sub>🐝<sub></a>
+        <a href="#-composemonoceros-" title="🦌Monoceros"><sub>🦌<sub></a>
+        <a href="#-composeladybug-" title="🐞Ladybug"><sub>🐞<sub></a>
         <br />
         <a href="#-metabolism-" title="🫀Metabolism"><sub>🫀<sub></a>
-        <a href="#-hello-semio-" title="👋Hello semio"><sub>👋<sub></a>
+        <a href="#-hello-compose-" title="👋Hello compose"><sub>👋<sub></a>
         <a href="#-starters-" title="🚀Starters"><sub>🚀<sub></a>
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/kinansarak">
@@ -897,55 +897,55 @@ If you have any security vulnerabilities or concerns, please contact [us over em
         <br />
         <sub><b>KinanSarak</b></sub></a>
         <br />
-        <a href="#-semiodocs-" title="📚semio/docs"><sub>📚<sub></a>
-        <a href="#-hello-semio-" title="👋 Hello semio"><sub>👋<sub></a>
-        <a href="#-semiograsshopper-" title="🦗semio/grasshopper"><sub>🦗<sub></a> 
+        <a href="#-composedocs-" title="📚compose/docs"><sub>📚<sub></a>
+        <a href="#-hello-compose-" title="👋 Hello compose"><sub>👋<sub></a>
+        <a href="#-composegrasshopper-" title="🦗compose/grasshopper"><sub>🦗<sub></a> 
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/EinMysterium">
         <img src=".repo/👤/EinMysterium/avatar-round-90x90.png" width="90px" alt="EinMysterium" style="border-radius: 50%;"/>
         <br />
         <sub><b>Christian Hödtke</b></sub></a>
         <br />
-        <a href="#-semiograsshopper-" title="🦗semio/grasshopper"><sub>🦗<sub></a>
+        <a href="#-composegrasshopper-" title="🦗compose/grasshopper"><sub>🦗<sub></a>
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/AdrianoCelentano">
         <img src=".repo/👤/AdrianoCelentano/avatar-round-90x90.png" width="90px" alt="AdrianoCelentano" style="border-radius: 50%;"/>
         <br />
         <sub><b>AdrianoCelentano</b></sub></a>
         <br />
-        <a href="#-semiojs-" title="🟨semio/js"><sub>🟨<sub></a>
+        <a href="#-composejs-" title="🟨compose/js"><sub>🟨<sub></a>
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/ellumpine">
         <img src=".repo/👤/ellumpine/avatar-round-90x90.png" width="90px" alt="ellumpine" style="border-radius: 50%;"/>
         <br />
         <sub><b>ellumpine</b></sub></a>
         <br />
-        <a href="#-semiograsshopper-" title="🦗semio/grasshopper"><sub>🦗<sub></a>
-        <a href="#-semioladybug-" title="🐞ladybug"><sub>🐞<sub></a>
+        <a href="#-composegrasshopper-" title="🦗compose/grasshopper"><sub>🦗<sub></a>
+        <a href="#-composeladybug-" title="🐞ladybug"><sub>🐞<sub></a>
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/kaatzjo">
         <img src=".repo/👤/kaatzjo/avatar-round-90x90.png" width="90px" alt="kaatzjo" style="border-radius: 50%;"/>
         <br />
         <sub><b>kaatzjo</b></sub></a>
         <br />
-        <a href="#-semioengine-" title="⚙️️semio/engine"><sub>⚙️️<sub></a> 
+        <a href="#-composeengine-" title="⚙️️compose/engine"><sub>⚙️️<sub></a> 
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/pizzadizza">
         <img src=".repo/👤/pizzadizza/avatar-round-90x90.png" width="90px" alt="pizzadizza" style="border-radius: 50%;"/>
         <br />
         <sub><b>pizzadizza</b></sub></a>
         <br />
-        <a href="#-semioassistant-" title="🤖semio/assistant"><sub>🤖<sub></a> 
+        <a href="#-composeassistant-" title="🤖compose/assistant"><sub>🤖<sub></a> 
       </td>
     </tr>
 </table>
 
 # 📊 [Stats](https://stats.docs.semio-tech.com)
 
-We use [Goatcounter](https://www.goatcounter.com) for gaining insights about our [docs](#-semiodocs-) 📈
+We use [Goatcounter](https://www.goatcounter.com) for gaining insights about our [docs](#-composedocs-) 📈
 
 <p align="center">
-    <a href="https://github.com/usalu/semio"><img src="https://myhits.vercel.app/api/hit/https%3A%2F%2Fgithub.com%2Fusalu%2Fsemio?color=gray&label=views&size=small" alt="views"/></a>
+    <a href="https://github.com/usalu/semio"><img src="https://myhits.vercel.app/api/hit/https%3A%2F%2Fgithub.com%2Fusalu%2Fcompose?color=gray&label=views&size=small" alt="views"/></a>
 </p>
 
 ![Pixel](https://stats.docs.semio-tech.com/count?p=https://github.com/usalu/semio)

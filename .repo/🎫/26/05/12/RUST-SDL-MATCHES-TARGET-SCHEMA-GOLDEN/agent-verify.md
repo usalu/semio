@@ -1,7 +1,7 @@
 # Verify (2026-05-12)
 
-- `cargo test -p semio --lib` (CARGO_TARGET_DIR=c:\\git\\semio\\.tmp-target-rust-sdl): **36 passed**, 1 ignored.
-- `cargo check -p semio --target wasm32-unknown-unknown`: **ok**.
+- `cargo test -p compose --lib` (CARGO_TARGET_DIR=c:\\git\\compose\\.tmp-target-rust-sdl): **36 passed**, 1 ignored.
+- `cargo check -p compose --target wasm32-unknown-unknown`: **ok**.
 
 ## Changes
 

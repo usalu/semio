@@ -8,7 +8,7 @@
 ## Prompt
 
 Duplicate Type Visibility Without App Switch.
-Scope: semio/js/sketchpad/Design.tsx and semio/js/sketchpad.test.ts only.
+Scope: compose/js/sketchpad/Design.tsx and compose/js/sketchpad.test.ts only.
 Ensure duplicate creates exactly one child under clicked parent, child is immediately visible in Workbench, URL stays on Design route (no /types/), and add-child naming/icon alignment is updated.
 
 ## Plan
@@ -28,12 +28,12 @@ Ensure duplicate creates exactly one child under clicked parent, child is immedi
 
 ## Changes
 
-1. `semio/js/sketchpad/Design.tsx`
+1. `compose/js/sketchpad/Design.tsx`
 
 - Updated Workbench type duplicate action icon from `CodeIcon` to `TypeIcon` for distinct visual identity from add-piece.
-- Kept action id as `semio.sketchpad.common.duplicateType`.
+- Kept action id as `compose.sketchpad.common.duplicateType`.
 
-2. `semio/js/sketchpad.test.ts`
+2. `compose/js/sketchpad.test.ts`
 
 - Tightened duplicate-type Design flow assertions:
 - Captures Design URL before duplicate click.
@@ -59,11 +59,11 @@ Ensure duplicate creates exactly one child under clicked parent, child is immedi
 
 - Outcome: ticket reopened locally; GitHub reopen/comment failed due network restrictions.
 
-3. `cd semio/js && npx playwright test sketchpad.test.ts --grep "Design" --timeout 240000 --workers=1 --max-failures=1 --reporter=list`
+3. `cd compose/js && npx playwright test sketchpad.test.ts --grep "Design" --timeout 240000 --workers=1 --max-failures=1 --reporter=list`
 
 - Outcome: failed before test start (`config.webServer` startup failure in this environment).
 
-4. `cd semio/js && PLAYWRIGHT_SKIP_WEBSERVER=1 npx playwright test ...`
+4. `cd compose/js && PLAYWRIGHT_SKIP_WEBSERVER=1 npx playwright test ...`
 
 - Outcome: initial run failed in sandbox due Chromium launch restriction; rerun required elevated permissions.
 
@@ -71,7 +71,7 @@ Ensure duplicate creates exactly one child under clicked parent, child is immedi
 
 - Outcome: failed with `ERR_CONNECTION_REFUSED`.
 
-6. `cd semio/js && npm run dev:sketchpad`
+6. `cd compose/js && npm run dev:sketchpad`
 
 - Outcome: success, dev server starts on `http://localhost:5173`.
 

@@ -57,4 +57,4 @@ Fixed pytest discovery failure caused by missing libEGL.so.1 system library requ
 
 **Additional Fix:** Updated a test assertion in `TestRestApi::test_get_kit_not_found` to accept 404 status code, which is the correct HTTP response for a non-existent resource.
 
-**Result:** All 52 Python tests now pass (51 engine tests + 10 semio tests - some are nested classes with multiple test functions).
+**Result:** All 52 Python tests now pass (51 engine tests + 10 compose tests - some are nested classes with multiple test functions).

@@ -2,7 +2,7 @@
   "title": "Encode File Blob as Data Uri",
   "emoji": "📋",
   "status": "closed",
-  "description": "File blobs should not be pure base64 encoded strings, but encoded as data URIs (data:\u0026lt;mime\u0026gt;;base64,\u0026lt;data\u0026gt;) using the file's mime type or application/octet-stream as fallback. Update import_kit/export_kit (encode/decode) in Go (kit_sqlite.go, semio_test.go), TypeScript (semio.ts), Python (semio.py, semio.test.py), and C# (Semio.cs). All tests must pass.",
+  "description": "File blobs should not be pure base64 encoded strings, but encoded as data URIs (data:\u0026lt;mime\u0026gt;;base64,\u0026lt;data\u0026gt;) using the file's mime type or application/octet-stream as fallback. Update import_kit/export_kit (encode/decode) in Go (kit_sqlite.go, compose_test.go), TypeScript (compose.ts), Python (compose.py, compose.test.py), and C# (Compose.cs). All tests must pass.",
   "summary": "Bulk close",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/813"

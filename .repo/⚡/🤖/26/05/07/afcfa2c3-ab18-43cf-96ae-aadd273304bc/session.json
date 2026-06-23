@@ -5,7 +5,7 @@
   "second": "2026-05-07T09:47:58Z",
   "checkpoint": "09ad1c69bff85fa8dbee324d7dfaf88a66092afc",
   "contributor": "unknown",
-  "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/afcfa2c3-ab18-43cf-96ae-aadd273304bc/afcfa2c3-ab18-43cf-96ae-aadd273304bc.jsonl",
+  "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/afcfa2c3-ab18-43cf-96ae-aadd273304bc/afcfa2c3-ab18-43cf-96ae-aadd273304bc.jsonl",
   "events": [
     {
       "event": {
@@ -15,7 +15,7 @@
         "kind": "agent.file.read.starting",
         "second": "2026-05-07T09:47:58Z",
         "session": "afcfa2c3-ab18-43cf-96ae-aadd273304bc",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/afcfa2c3-ab18-43cf-96ae-aadd273304bc/afcfa2c3-ab18-43cf-96ae-aadd273304bc.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/afcfa2c3-ab18-43cf-96ae-aadd273304bc/afcfa2c3-ab18-43cf-96ae-aadd273304bc.jsonl"
       },
       "native": {
         "event": {
@@ -23,7 +23,7 @@
           "generation_id": "afcfa2c3-ab18-43cf-96ae-aadd273304bc",
           "model": "composer-2",
           "content": "      setStatus(s);\n    } catch (e) {\n      const err = kitCtlSetError(e);\n      setLastError(err);\n      runtime.pushSetRejection(err);\n    } finally {\n      setPending(false);\n    }\n  }, [client, runtime.pushSetRejection]);\n\n  React.useEffect(() =\u003e {\n    void refresh();\n  }, [refresh]);\n\n  React.useEffect(() =\u003e {\n    if (!client || pollMs \u003c= 0) return;\n    const t = setInterval(() =\u003e {\n      void refresh();\n    }, pollMs);\n    return () =\u003e clearInterval(t);\n  }, [client, pollMs, refresh]);\n\n  return { status, pending, lastError, refresh };\n}\n\nexport function useAttachBackbone(): {\n  attach: (cfg: BackboneConfig) =\u003e Promise\u003cSetResult\u003e;\n  detach: () =\u003e Promise\u003cSetResult\u003e;\n  pending: boolean;\n  lastError?: SetError;\n} {\n  const runtime = useKitRuntime();\n  const client = runtime.kitClient;\n  const [pending, setPending] = React.useState(false);\n  const [lastError, setLastError] = React.useState\u003cSetError | undefined\u003e(undefined);\n\n  const attach = React.useCallback(\n    async (cfg: BackboneConfig) =\u003e {\n      if (!client?.attachBackbone || !client?.detachBackbone) {\n        const err: SetError = { kind: \"Internal\", message: \"no KitStoreClient on runtime\" };\n        setLastError(err);\n        runtime.pushSetRejection(err);\n        return { ok: false, error: err } as const;\n      }\n      setPending(true);\n      setLastError(undefined);\n      try {\n        const r = await client.attachBackbone(cfg);\n        if (!r.ok) {\n          setLastError(r.error);\n          runtime.pushSetRejection(r.error);\n        }\n        return r;\n      } catch (e) {\n        const err = kitCtlSetError(e);\n        setLastError(err);\n        runtime.pushSetRejection(err);\n        return { ok: false, error: err } as const;\n      } finally {\n        setPending(false);\n      }\n    },\n    [client, runtime.pushSetRejection],\n  );\n\n  const detach = React.useCallback(async () =\u003e {\n    if (!client?.detachBackbone) {\n      const err: SetError = { kind: \"Internal\", message: \"no KitStoreClient on runtime\" };\n      setLastError(err);\n      runtime.pushSetRejection(err);\n      return { ok: false, error: err } as const;\n    }\n    setPending(true);\n    setLastError(undefined);\n    try {\n      const r = await client.detachBackbone();\n      if (!r.ok) {\n        setLastError(r.error);\n        runtime.pushSetRejection(r.error);\n      }\n      return r;\n    } catch (e) {\n      const err = kitCtlSetError(e);\n      setLastError(err);\n      runtime.pushSetRejection(err);\n      return { ok: false, error: err } as const;\n    } finally {\n      setPending(false);\n    }\n  }, [client, runtime.pushSetRejection]);\n\n  return { attach, detach, pending, lastError };\n}\n\nexport function useDetachBackbone(): {\n  detach: () =\u003e Promise\u003cSetResult\u003e;\n  pending: boolean;\n  lastError?: SetError;\n} {\n  const runtime = useKitRuntime();\n  const client = runtime.kitClient;\n  const [pending, setPending] = React.useState(false);\n  const [lastError, setLastError] = React.useState\u003cSetError | undefined\u003e(undefined);\n\n  const detach = React.useCallback(async () =\u003e {\n    if (!client?.detachBackbone) {\n      const err: SetError = { kind: \"Internal\", message: \"no KitStoreClient on runtime\" };\n      setLastError(err);\n      runtime.pushSetRejection(err);\n      return { ok: false, error: err } as const;\n    }\n    setPending(true);\n    setLastError(undefined);\n    try {\n      const r = await client.detachBackbone();\n      if (!r.ok) {\n        setLastError(r.error);\n        runtime.pushSetRejection(r.error);\n      }\n      return r;",
-          "file_path": "/workspaces/semio/semio/react/index.tsx",
+          "file_path": "/workspaces/semio/compose/react/index.tsx",
           "attachments": [],
           "session_id": "afcfa2c3-ab18-43cf-96ae-aadd273304bc",
           "hook_event_name": "beforeReadFile",
@@ -32,7 +32,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/afcfa2c3-ab18-43cf-96ae-aadd273304bc/afcfa2c3-ab18-43cf-96ae-aadd273304bc.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/afcfa2c3-ab18-43cf-96ae-aadd273304bc/afcfa2c3-ab18-43cf-96ae-aadd273304bc.jsonl"
         }
       },
       "response": {}
@@ -45,7 +45,7 @@
         "kind": "agent.file.read.ended",
         "second": "2026-05-07T09:47:58Z",
         "session": "afcfa2c3-ab18-43cf-96ae-aadd273304bc",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/afcfa2c3-ab18-43cf-96ae-aadd273304bc/afcfa2c3-ab18-43cf-96ae-aadd273304bc.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/afcfa2c3-ab18-43cf-96ae-aadd273304bc/afcfa2c3-ab18-43cf-96ae-aadd273304bc.jsonl"
       },
       "native": {
         "event": {
@@ -55,7 +55,7 @@
           "tool_name": "Grep",
           "tool_input": {
             "pattern": "useKitStore|KitStoreContext|attachBackbone|gqlRun|readableKitGraph",
-            "file_path": "/workspaces/semio/semio/react/index.tsx"
+            "file_path": "/workspaces/semio/compose/react/index.tsx"
           },
           "tool_output": "{\"pattern\":\"useKitStore|KitStoreContext|attachBackbone|gqlRun|readableKitGraph\",\"success\":true}",
           "duration": 108.87,
@@ -67,7 +67,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/afcfa2c3-ab18-43cf-96ae-aadd273304bc/afcfa2c3-ab18-43cf-96ae-aadd273304bc.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/afcfa2c3-ab18-43cf-96ae-aadd273304bc/afcfa2c3-ab18-43cf-96ae-aadd273304bc.jsonl"
         }
       },
       "response": {}
@@ -80,7 +80,7 @@
         "kind": "agent.file.read.ended",
         "second": "2026-05-07T09:47:59Z",
         "session": "afcfa2c3-ab18-43cf-96ae-aadd273304bc",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/afcfa2c3-ab18-43cf-96ae-aadd273304bc/afcfa2c3-ab18-43cf-96ae-aadd273304bc.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/afcfa2c3-ab18-43cf-96ae-aadd273304bc/afcfa2c3-ab18-43cf-96ae-aadd273304bc.jsonl"
       },
       "native": {
         "event": {
@@ -89,9 +89,9 @@
           "model": "composer-2",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/workspaces/semio/semio/react/index.tsx"
+            "file_path": "/workspaces/semio/compose/react/index.tsx"
           },
-          "tool_output": "{\"file_path\":\"/workspaces/semio/semio/react/index.tsx\",\"content_length\":3500}",
+          "tool_output": "{\"file_path\":\"/workspaces/semio/compose/react/index.tsx\",\"content_length\":3500}",
           "duration": 106.81,
           "tool_use_id": "tool_3c954435-f871-4145-a387-ddf3c7d9898",
           "session_id": "afcfa2c3-ab18-43cf-96ae-aadd273304bc",
@@ -101,7 +101,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/afcfa2c3-ab18-43cf-96ae-aadd273304bc/afcfa2c3-ab18-43cf-96ae-aadd273304bc.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/afcfa2c3-ab18-43cf-96ae-aadd273304bc/afcfa2c3-ab18-43cf-96ae-aadd273304bc.jsonl"
         }
       },
       "response": {}
@@ -114,7 +114,7 @@
         "kind": "agent.ended",
         "second": "2026-05-07T09:49:03Z",
         "session": "afcfa2c3-ab18-43cf-96ae-aadd273304bc",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/afcfa2c3-ab18-43cf-96ae-aadd273304bc/afcfa2c3-ab18-43cf-96ae-aadd273304bc.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/afcfa2c3-ab18-43cf-96ae-aadd273304bc/afcfa2c3-ab18-43cf-96ae-aadd273304bc.jsonl"
       },
       "native": {
         "event": {
@@ -132,7 +132,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/afcfa2c3-ab18-43cf-96ae-aadd273304bc/afcfa2c3-ab18-43cf-96ae-aadd273304bc.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/afcfa2c3-ab18-43cf-96ae-aadd273304bc/afcfa2c3-ab18-43cf-96ae-aadd273304bc.jsonl"
         }
       },
       "response": {}

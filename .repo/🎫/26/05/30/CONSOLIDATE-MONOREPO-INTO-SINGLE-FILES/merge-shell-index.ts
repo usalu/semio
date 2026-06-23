@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-const root = "c:/git/semio/framework/playground/renderer/react";
+const root = "c:/git/compose/framework/playground/renderer/react";
 const boot = `
 
 //#region 🔖Boot

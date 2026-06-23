@@ -6,16 +6,16 @@ goal: OPERATIONAL-REPO/R26-02
 
 ## Summary
 
-Adapted entity kind repo→root in all 10 locations in main.go and 5 in main_test.go. Fixed pruneUnmatched tree search to keep children of matched nodes. Fixed StreamFiles scope resolution for bundle paths like semio/go. Fixed 6 pre-existing TestFormatResult failures and 3 fixture file ID mismatches. Added short-mode skips to 15+ slow integration tests. All short tests pass.
+Adapted entity kind repo→root in all 10 locations in main.go and 5 in main_test.go. Fixed pruneUnmatched tree search to keep children of matched nodes. Fixed StreamFiles scope resolution for bundle paths like compose/go. Fixed 6 pre-existing TestFormatResult failures and 3 fixture file ID mismatches. Added short-mode skips to 15+ slow integration tests. All short tests pass.
 ## Changes
 
 - [x] Renamed entity kind `"repo"` → `"root"` in GetArtifactID, GetArtifactURI, collectEntityProps (10 locations in main.go)
 - [x] Updated inferEntityKind return values from `"repo"` to `"root"`
 - [x] Updated all rendering callers passing `"repo"` as entity kind
-- [x] Updated UriToId for `semiorepo://root`
+- [x] Updated UriToId for `composerepo://root`
 - [x] Updated all existing tests to use `"root"` entity kind (5 locations in main_test.go)
 - [x] Fixed `pruneUnmatched` to preserve children when parent node matches (tree search was dropping files within matched bundles)
-- [x] Fixed `StreamFiles` scope resolution: was cutting "semio/" prefix and comparing "go" against bundle names "semio/go" - now matches against full scope, Name, Root
+- [x] Fixed `StreamFiles` scope resolution: was cutting "compose/" prefix and comparing "go" against bundle names "compose/go" - now matches against full scope, Name, Root
 - [x] Fixed TestFormatResult_* tests for new entity rendering (IDs now use Flat() format)
 - [x] Fixed TestFormatMarkdownResult_FileWithSections case sensitivity
 - [x] Fixed fixture file IDs in file_fixed.py, file_fixed.cs, file_fixed.go
@@ -25,9 +25,9 @@ Adapted entity kind repo→root in all 10 locations in main.go and 5 in main_tes
 
 - Analyzed current implementation vs new spec
 - Baseline: all 30+ GetArtifactID tests pass
-- Key delta: entity kind name `"repo"` → `"root"`, URI `semiorepo://repo` → `semiorepo://root`
+- Key delta: entity kind name `"repo"` → `"root"`, URI `composerepo://repo` → `composerepo://root`
 - Fixed `pruneUnmatched` to propagate `ancestorMatched` flag so children of matched nodes are kept
-- Fixed `StreamFiles` scope resolution bug where "semio/go" scope was matching against stripped "go" instead of full bundle name
+- Fixed `StreamFiles` scope resolution bug where "compose/go" scope was matching against stripped "go" instead of full bundle name
 - Fixed 6 pre-existing test failures in TestFormatResult_* tests (expectations were stale)
 - Added short-mode skips to 15+ slow integration tests to keep short test suite under timeout
 

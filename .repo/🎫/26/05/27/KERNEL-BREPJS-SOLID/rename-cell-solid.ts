@@ -1,7 +1,7 @@
 /** @emoji 🔄 Bulk cell→solid rename for core + kernel-brepjs. */
 import { readFileSync, writeFileSync } from "node:fs";
 
-const files = ["c:/git/semio/spatial/js/core/index.ts", "c:/git/semio/spatial/js/kernel-brepjs/index.ts"];
+const files = ["c:/git/compose/spatial/js/core/index.ts", "c:/git/compose/spatial/js/kernel-brepjs/index.ts"];
 
 const pairs: [string, string][] = [
 	["CellRecordDiff", "SolidRecordDiff"],

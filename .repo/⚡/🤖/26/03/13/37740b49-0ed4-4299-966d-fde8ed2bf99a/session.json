@@ -1,6 +1,6 @@
 {
   "id": "37740b49-0ed4-4299-966d-fde8ed2bf99a",
-  "uri": "semiorepo://s/37740b49-0ed4-4299-966d-fde8ed2bf99a",
+  "uri": "composerepo://s/37740b49-0ed4-4299-966d-fde8ed2bf99a",
   "contributor": "🧑‍💻ueli",
   "client": "windsurf-chat",
   "second": "2026-03-13T15:18:21Z",
@@ -13,7 +13,7 @@
           "timestamp": "2026-03-13T15:18:21.178059551Z",
           "execution_id": "6d01f102-cec8-4060-a10d-e451aa001134",
           "tool_info": {
-            "user_prompt": "Replace the keys with semantic keys:\nfrom e.g. \"area.gfa.net.usbl.ofc-work.ofc-rm\" to\ne.g. \"Grundfläche.Brutto-Grundfläche.Netto-Raumfläche.Nutzungsfläche.Wohnen und Aufenthalt.Wohnzimmerfläche.Wohnfläche\"\n@[coda/programming/programming.json] @[coda/examples/semio-blnbo-roomprogram/.progam/config.json] "
+            "user_prompt": "Replace the keys with semantic keys:\nfrom e.g. \"area.gfa.net.usbl.ofc-work.ofc-rm\" to\ne.g. \"Grundfläche.Brutto-Grundfläche.Netto-Raumfläche.Nutzungsfläche.Wohnen und Aufenthalt.Wohnzimmerfläche.Wohnfläche\"\n@[coda/programming/programming.json] @[coda/examples/compose-blnbo-roomprogram/.progam/config.json] "
           }
         }
       },
@@ -71,7 +71,7 @@
           "timestamp": "2026-03-13T15:18:34.457129472Z",
           "execution_id": "6d01f102-cec8-4060-a10d-e451aa001134",
           "tool_info": {
-            "file_path": "/workspaces/semio/coda/examples/semio-blnbo-roomprogram/.progam/config.json"
+            "file_path": "/workspaces/semio/coda/examples/compose-blnbo-roomprogram/.progam/config.json"
           }
         }
       },
@@ -81,13 +81,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🔬coda📚examples🗃️semioblnboroomprogram🛅progam⚙️config"
+            "id": "🔬coda📚examples🗃️composeblnboroomprogram🛅progam⚙️config"
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🔬coda📚examples🗃️semioblnboroomprogram🛅progam⚙️config📌1📌39"
+          "🔬coda📚examples🗃️composeblnboroomprogram🛅progam⚙️config📌1📌39"
         ],
         "second": "🎆26🌙03☀️13⏰15⌚18⏱️34",
         "session": "⚪37740b490ed44299966dfde8ed2bf99a"
@@ -143,7 +143,7 @@
                 "new_string": "\"din276\": \"Grundfläche.Brutto-Grundfläche.Netto-Raumfläche.Nutzungsfläche.Büroarbeit.Großraumbürofläche\""
               }
             ],
-            "file_path": "/workspaces/semio/coda/examples/semio-blnbo-roomprogram/.progam/config.json"
+            "file_path": "/workspaces/semio/coda/examples/compose-blnbo-roomprogram/.progam/config.json"
           }
         }
       },
@@ -174,7 +174,7 @@
                 "new_string": "\"din276\": \"Grundfläche.Brutto-Grundfläche.Netto-Raumfläche.Nutzungsfläche.Büroarbeit.Großraumbürofläche\""
               }
             ],
-            "file_path": "/workspaces/semio/coda/examples/semio-blnbo-roomprogram/.progam/config.json"
+            "file_path": "/workspaces/semio/coda/examples/compose-blnbo-roomprogram/.progam/config.json"
           }
         }
       },
@@ -213,7 +213,7 @@
                 "new_string": "\"to\": \"Grundfläche.Brutto-Grundfläche.Netto-Raumfläche.Nutzungsfläche.Büroarbeit.Großraumbürofläche\","
               }
             ],
-            "file_path": "/workspaces/semio/coda/examples/semio-blnbo-roomprogram/.progam/config.json"
+            "file_path": "/workspaces/semio/coda/examples/compose-blnbo-roomprogram/.progam/config.json"
           }
         }
       },
@@ -252,7 +252,7 @@
                 "new_string": "\"to\": \"Grundfläche.Brutto-Grundfläche.Netto-Raumfläche.Nutzungsfläche.Büroarbeit.Großraumbürofläche\","
               }
             ],
-            "file_path": "/workspaces/semio/coda/examples/semio-blnbo-roomprogram/.progam/config.json"
+            "file_path": "/workspaces/semio/coda/examples/compose-blnbo-roomprogram/.progam/config.json"
           }
         }
       },
@@ -277,7 +277,7 @@
           "timestamp": "2026-03-13T15:19:54.529963667Z",
           "execution_id": "6d01f102-cec8-4060-a10d-e451aa001134",
           "tool_info": {
-            "response": "*Rules used for this response:*\n- (Always On) Triggered Rule: AGENTS.md\n\n### Planner Response\n\nI'll help you replace the keys with semantic keys in the configuration files. Let me first examine the current structure of both files to understand the mapping.\n\n*Viewed file:///workspaces/semio/coda/programming/programming.json*\n- (Glob) Triggered Rule: AGENTS.md\n- (Glob) Triggered Rule: AGENTS.md\n\n*Viewed file:///workspaces/semio/coda/examples/semio-blnbo-roomprogram/.progam/config.json*\n- (Glob) Triggered Rule: AGENTS.md\n\n### Planner Response\n\nNow I understand the mapping. I need to replace the technical key `\"area.gfa.net.usbl.ofc-work.ofc-rm\"` with its semantic German equivalent from the programming.json file. Looking at the hierarchy, this corresponds to \"Großraumbürofläche\" with the full hierarchy path.\n\nLet me update the config file with the semantic key:\n\n*Edited relevant file*\n- (Glob) Triggered Rule: AGENTS.md\n\n### Planner Response\n\nNow I need to update the `byKind` section and all the adjacency references to use the semantic key as well:\n\n*Edited relevant file*\n\n### Planner Response\n\nPerfect! I've successfully replaced all the technical keys with semantic German keys in the configuration file. The transformation is complete:\n\n- **Original technical key**: `\"area.gfa.net.usbl.ofc-work.ofc-rm\"`\n- **New semantic key**: `\"Grundfläche.Brutto-Grundfläche.Netto-Raumfläche.Nutzungsfläche.Büroarbeit.Großraumbürofläche\"`\n\nAll occurrences have been updated in:\n- `programs[0].din276`\n- `byKind[0].kind` \n- All adjacency `from` and `to` references\n\nThe semantic key follows the DIN 276 hierarchy structure from the programming.json mapping, representing the full path from \"Grundfläche\" down to \"Großraumbürofläche\" (open-plan office area)."
+            "response": "*Rules used for this response:*\n- (Always On) Triggered Rule: AGENTS.md\n\n### Planner Response\n\nI'll help you replace the keys with semantic keys in the configuration files. Let me first examine the current structure of both files to understand the mapping.\n\n*Viewed file:///workspaces/semio/coda/programming/programming.json*\n- (Glob) Triggered Rule: AGENTS.md\n- (Glob) Triggered Rule: AGENTS.md\n\n*Viewed file:///workspaces/semio/coda/examples/compose-blnbo-roomprogram/.progam/config.json*\n- (Glob) Triggered Rule: AGENTS.md\n\n### Planner Response\n\nNow I understand the mapping. I need to replace the technical key `\"area.gfa.net.usbl.ofc-work.ofc-rm\"` with its semantic German equivalent from the programming.json file. Looking at the hierarchy, this corresponds to \"Großraumbürofläche\" with the full hierarchy path.\n\nLet me update the config file with the semantic key:\n\n*Edited relevant file*\n- (Glob) Triggered Rule: AGENTS.md\n\n### Planner Response\n\nNow I need to update the `byKind` section and all the adjacency references to use the semantic key as well:\n\n*Edited relevant file*\n\n### Planner Response\n\nPerfect! I've successfully replaced all the technical keys with semantic German keys in the configuration file. The transformation is complete:\n\n- **Original technical key**: `\"area.gfa.net.usbl.ofc-work.ofc-rm\"`\n- **New semantic key**: `\"Grundfläche.Brutto-Grundfläche.Netto-Raumfläche.Nutzungsfläche.Büroarbeit.Großraumbürofläche\"`\n\nAll occurrences have been updated in:\n- `programs[0].din276`\n- `byKind[0].kind` \n- All adjacency `from` and `to` references\n\nThe semantic key follows the DIN 276 hierarchy structure from the programming.json mapping, representing the full path from \"Grundfläche\" down to \"Großraumbürofläche\" (open-plan office area)."
           }
         }
       },

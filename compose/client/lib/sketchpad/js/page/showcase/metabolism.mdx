@@ -1,0 +1,193 @@
+---
+title: Metabolism
+description: See metametabolism on metabolism
+icon: �
+---
+
+{/*
+ * 2025 Ueli Saluz <ueli@semio-tech.com>
+ * 
+ * This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */}
+
+{/* ELO - Expected Learning Outcomes */}
+{/* - Show all features of compose */}
+
+import { FileTree, Steps } from "@compose/ui";
+
+While [metabolists](<https://en.wikipedia.org/wiki/Metabolism_(architecture)>) saw the built environment as an organism that should continuously be able to adapt to the evolving needs of its habitants, I see compose as a metabolistic tool for the evolving needs of a design 🔀
+
+Let me demonstrate metametabolism on metabolism 🤯
+
+![Design Variants](https://raw.githubusercontent.com/usalu/metabolism/main-tag/doc/design-variants.png)
+
+# 🗼 Nakagin Capsule Tower
+
+## 📚 Theory ... oh my
+
+There are countless ways to formalize a design ♾️
+
+Assuming I would have been Kisho Kurokawa and used compose I would chosen the following:
+
+![Artifacts](https://raw.githubusercontent.com/usalu/metabolism/main-tag/doc/artifacts-dark.svg)
+{/* prettier-ignore */}
+{/* <img>
+
+  <source
+    media="(prefers-color-scheme: dark)"
+    srcset="https://raw.githubusercontent.com/usalu/metabolism/main-tag/doc/artifacts-dark.svg"
+  />
+  <source
+    media="(prefers-color-scheme: light)"
+    srcset="https://raw.githubusercontent.com/usalu/metabolism/main-tag/doc/artifacts.svg"
+  />
+  <img
+    alt="Capsule Tower Artifacts"
+    src="https://raw.githubusercontent.com/usalu/metabolism/main-tag/doc/artifacts.svg"
+  />
+</img> */}
+
+Based on this formalization the design can be synthesized like this:
+
+![Computation](https://raw.githubusercontent.com/usalu/metabolism/main-tag/doc/computation-dark.svg)
+{/* prettier-ignore */}
+{/* <img>
+
+  <source
+    media="(prefers-color-scheme: dark)"
+    srcset="https://raw.githubusercontent.com/usalu/metabolism/main-tag/doc/computation-dark.svg"
+  />
+  <source
+    media="(prefers-color-scheme: light)"
+    srcset="https://raw.githubusercontent.com/usalu/metabolism/main-tag/doc/computation.svg"
+  />
+  <img
+    alt="Capsule Tower Computation"
+    src="https://raw.githubusercontent.com/usalu/metabolism/main-tag/doc/computation.svg"
+  />
+</img> */}
+
+## 🔨 Practice ... yey
+
+A bit overwhelmed? Just take a look at the source files 💡
+
+### ✏️ sketchpad
+
+![Sketchpad Overview](https://raw.githubusercontent.com/usalu/metabolism/main-tag/doc/sketchpad-overview.png)
+
+### 🦗 Grasshopper
+
+> Make sure to open Rhino 8 and set the representation units to `Meter` Ⓜ️
+
+Just open the main Grasshopper definition `nakagin-capule-tower.gh`, hit the run toggles and enjoy 🍸
+
+![Grasshopper Parametric Design](https://raw.githubusercontent.com/usalu/metabolism/main-tag/doc/grasshopper-definition.png)
+
+The `Capsule Dream` design should take around a minute to load the geometry 🐚
+
+![Design Variants](https://raw.githubusercontent.com/usalu/metabolism/main-tag/doc/design-variants-rhino.png)
+
+Every representation has a 1to500 representation:
+
+![Rhino Default Variant 1to500 volume](https://raw.githubusercontent.com/usalu/metabolism/main-tag/doc/rhino-default-variant-1to500-volume.png)
+
+and a 1to200 representation:
+
+![Rhino Default Variant 1to200 volume](https://raw.githubusercontent.com/usalu/metabolism/main-tag/doc/rhino-default-variant-1to200-volume.png)
+
+Changing the typology is a breeze 🔁
+
+![Rhino Futuristic Variant 1to500 volume](https://raw.githubusercontent.com/usalu/metabolism/main-tag/doc/rhino-futuristic-variant-1to500-volume.png)
+
+1to200 is still there 🪄
+
+![Rhino Futuristic Variant 1to200 volume](https://raw.githubusercontent.com/usalu/metabolism/main-tag/doc/rhino-futuristic-variant-1to200-volume.png)
+
+In a conventional block-based approach, block instances have insertion planes and are thus not linked 🪨
+
+Switching from one to another variant would look either like this:
+
+![Block-based Default to Futuristic](https://raw.githubusercontent.com/usalu/metabolism/main-tag/doc/block-based-default-to-futuristic.png)
+
+or this:
+
+![Block-based Futuristic to Default](https://raw.githubusercontent.com/usalu/metabolism/main-tag/doc/block-based-futuristic-to-default.png)
+
+Due to the connector-mechanism of compose, types are not inserted but instead linked 🔗
+
+Further they have metadata attached:
+
+![Block-based Futuristic to Default](https://raw.githubusercontent.com/usalu/metabolism/main-tag/doc/rhino-default-variant-metrics.png)
+
+### 💻 Integrations
+
+Looking closely at the `types`, you see that `representation` are not (only) linking to files but instead they link `urls`. This enables you to use any storage, collaboration and version environment you like (Speckle, Dropbox, OneDrive, GitHub, Nextcloud, Spline, ...) or all of them together 🕸️
+
+[Here](https://app.speckle.systems/projects/e7de1a2f8f) you can view the representations even on your phone 📱
+
+![Speckle Representations Overview](https://raw.githubusercontent.com/usalu/metabolism/main-tag/doc/speckle-representations-overview.png)
+
+Or load the geometry directly from Speckle into Grasshopper ⬇️
+
+![Speckle Representations Overview](https://raw.githubusercontent.com/usalu/metabolism/main-tag/doc/grasshopper-speckle.png)
+
+> The Speckle Grasshopper plugin is not particulary the best 🥴 Most likely your receive components are not fetching and instead showing errors or show no errors and still not fetch ❌ If you replace them with fresh receive components and hit `Receive` then it should work ✅ And yes, you have to do that every time you open the file again 🥵
+
+### 🤔 Curious, how it works?
+
+When analyzing the folder structure you see that there is a special file `.compose/kit.sqlite3` on the root level. This file is what turns a normal directory into a `kit`⬆️
+
+<FileTree
+  nodes={[
+    { name: ".compose", type: "folder" },
+    { name: "kit.gh", type: "file" },
+    {
+      name: "designs",
+      type: "folder",
+      children: [
+        { name: "nakagin-capsule-tower.gh", type: "file" },
+        { name: "capsule-dream.gh", type: "file" },
+      ],
+    },
+    {
+      name: "types",
+      type: "folder",
+      children: [
+        { name: "…", type: "file" },
+        { name: "capsule.gh", type: "file" },
+        { name: "…", type: "file" },
+      ],
+    },
+    {
+      name: "representations",
+      type: "folder",
+      children: [
+        { name: "…", type: "file" },
+        { name: "capsule_1.3dm", type: "file" },
+        { name: "capsule_1.glb", type: "file" },
+        { name: "capsule_1_1to200.3dm", type: "file" },
+        { name: "capsule_1_1to500.3dm", type: "file" },
+        { name: "…", type: "file" },
+      ],
+    },
+    {
+      name: "icons",
+      type: "folder",
+      children: [
+        { name: "capsule_1.3dm", type: "file" },
+        { name: "capsule_1.svg", type: "file" },
+        { name: "…", type: "file" },
+      ],
+    },
+  ]}
+/>
+
+From here, all user-interfaces can access the data over the GraphQL-API ⚡
+
+# 📊 Stats
+
+<p align="center">
+  <a href="https://github.com/usalu/metabolism">
+    <img src="https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Fusalu%2Fmetabolism&count_bg=%23FF344F&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=visits&edge_flat=true" />
+  </a>
+</p>

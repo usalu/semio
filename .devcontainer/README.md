@@ -4,10 +4,10 @@ Devcontainer configuration and lifecycle scripts.
 
 # Neo4j Desktop and MCP
 
-The monorepo registers Neo4j MCP servers in `.mcp.json` and per-client copies. They use `uvx mcp-neo4j-cypher` against graph database **`semio`** (Neo4j Community: one user database per DBMS, named `semio` via `initial.dbms.default_database`).
+The monorepo registers Neo4j MCP servers in `.mcp.json` and per-client copies. They use `uvx mcp-neo4j-cypher` against graph database **`compose`** (Neo4j Community: one user database per DBMS, named `compose` via `initial.dbms.default_database`).
 
-MCP server ids include **`neo4j-semio`**, **`neo4j-elements`**, **`neo4j-coda`**, **`neo4j-reuse`**, **`neo4j-metabolism`** (argv targets Bolt graph **`metabolism`**), and **`neo4j-extra`** (targets **`NEO4J_EXTRA_GRAPH_DATABASE`** when set).
-**Native (Windows / macOS / Linux):** Create a Neo4j Desktop **Local Instance** named **`semio`**, set password **`password`**, and start it on Bolt port **`7687`**. On DBMS editions that support multiple user databases, create the product graphs **`elements`**, **`coda`**, **`reuse`**, and any extra Bolt names you list in **`NEO4J_EXTRA_GRAPH_DATABASES`** (comma-separated) so `bun run generate` and MCP can target them. Graph argv for `neo4j-*` / `generate neo4j`: one or more tokens joined with `-` (e.g. `… neo4j my graph` → database `my-graph`). On **Neo4j Community**, only **one** standard user graph exists per DBMS; use **Enterprise** (or equivalent) for multiple isolated graphs, or point every MCP entry at your single graph name. Native setup enables APOC on the local DBMS when needed, uses the native Neo4j Desktop/DBMS only, does not depend on the devcontainer, and does not edit Desktop internals.
+MCP server ids include **`neo4j-compose`**, **`neo4j-elements`**, **`neo4j-coda`**, **`neo4j-reuse`**, **`neo4j-metabolism`** (argv targets Bolt graph **`metabolism`**), and **`neo4j-extra`** (targets **`NEO4J_EXTRA_GRAPH_DATABASE`** when set).
+**Native (Windows / macOS / Linux):** Create a Neo4j Desktop **Local Instance** named **`compose`**, set password **`password`**, and start it on Bolt port **`7687`**. On DBMS editions that support multiple user databases, create the product graphs **`elements`**, **`coda`**, **`reuse`**, and any extra Bolt names you list in **`NEO4J_EXTRA_GRAPH_DATABASES`** (comma-separated) so `bun run generate` and MCP can target them. Graph argv for `neo4j-*` / `generate neo4j`: one or more tokens joined with `-` (e.g. `… neo4j my graph` → database `my-graph`). On **Neo4j Community**, only **one** standard user graph exists per DBMS; use **Enterprise** (or equivalent) for multiple isolated graphs, or point every MCP entry at your single graph name. Native setup enables APOC on the local DBMS when needed, uses the native Neo4j Desktop/DBMS only, does not depend on the devcontainer, and does not edit Desktop internals.
 
 Native Neo4j Desktop connection:
 
@@ -15,17 +15,17 @@ Native Neo4j Desktop connection:
 - User: **`neo4j`**
 - Password: **`password`**
 - Browser: **`http://127.0.0.1:7474`**
-- Database: **`semio`**
+- Database: **`compose`**
 
-**Devcontainer:** Neo4j 5 Community runs inside the single **`semio`** devcontainer. Inside **`semio`**, `NEO4J_URI` is **`bolt://localhost:7687`**. The **`semio`** container publishes **`127.0.0.1:7687`** (Bolt) and **`127.0.0.1:7474`** (Browser) to the Docker host, and `devcontainer.json` forwards both ports for Codespaces and local devcontainers.
+**Devcontainer:** Neo4j 5 Community runs inside the single **`compose`** devcontainer. Inside **`compose`**, `NEO4J_URI` is **`bolt://localhost:7687`**. The **`compose`** container publishes **`127.0.0.1:7687`** (Bolt) and **`127.0.0.1:7474`** (Browser) to the Docker host, and `devcontainer.json` forwards both ports for Codespaces and local devcontainers.
 
-**Neo4j Desktop remote connection for devcontainers:** Docker Desktop must be running for local devcontainers. **Reopen in Container** after the image has been rebuilt once so the Neo4j Debian package is available inside **`semio`**. Then:
+**Neo4j Desktop remote connection for devcontainers:** Docker Desktop must be running for local devcontainers. **Reopen in Container** after the image has been rebuilt once so the Neo4j Debian package is available inside **`compose`**. Then:
 
 1. `Test-NetConnection -ComputerName 127.0.0.1 -Port 7687` on Windows, or `nc -vz 127.0.0.1 7687` on macOS/Linux.
 2. Desktop: **`bolt://127.0.0.1:7687`**, user **`neo4j`**, password **`password`**.
 3. Browser: **`http://127.0.0.1:7474`** with the same credentials.
 
-**Database:** The devcontainer’s sole user graph database is named **`semio`** (not `neo4j`). Legacy stores that still have only `neo4j` are cleared once on post-start so the DBMS can bootstrap `semio`.
+**Database:** The devcontainer’s sole user graph database is named **`compose`** (not `neo4j`). Legacy stores that still have only `neo4j` are cleared once on post-start so the DBMS can bootstrap `compose`.
 
 # Docs
 
@@ -35,13 +35,13 @@ Devcontainer configuration with VS Code customizations, container/remote env, po
 
 ## docker-compose.yml
 
-Compose stack for the devcontainer: **`semio`** only. Neo4j is installed in the **`semio`** image, started by **`post-start.sh`**, and persisted in repo-owned Cypher files under **`.repo/🛂`**. The live Neo4j store is container-local and replayed from those Cypher files on an empty DB. MCP uses **`bolt://localhost:7687`** from inside **`semio`**.
+Compose stack for the devcontainer: **`compose`** only. Neo4j is installed in the **`compose`** image, started by **`post-start.sh`**, and persisted in repo-owned Cypher files under **`.repo/🛂`**. The live Neo4j store is container-local and replayed from those Cypher files on an empty DB. MCP uses **`bolt://localhost:7687`** from inside **`compose`**.
 
 ## Neo4j Cypher Persistence
 
-APOC Core and APOC Extended are installed in the **`semio`** image and configured for file import/export. The canonical repo persistence paths are:
+APOC Core and APOC Extended are installed in the **`compose`** image and configured for file import/export. The canonical repo persistence paths are:
 
-- **`.repo/🛂/semio.cypher`**
+- **`.repo/🛂/compose.cypher`**
 - **`.repo/🛂/elements.cypher`**
 - **`.repo/🛂/coda.cypher`**
 - **`.repo/🛂/reuse.cypher`**
@@ -50,15 +50,15 @@ On devcontainer start, **`post-start.sh`** imports non-empty schema files with *
 
 ```cypher
 CALL apoc.export.cypher.query(
-  'MATCH (n:Semio) OPTIONAL MATCH (n)-[r]->(m:Semio) RETURN n, r, m',
-  '/workspaces/semio/.repo/\uD83D\uDEC2/semio.cypher',
+  'MATCH (n:Compose) OPTIONAL MATCH (n)-[r]->(m:Compose) RETURN n, r, m',
+  '/workspaces/semio/.repo/\uD83D\uDEC2/compose.cypher',
   {format: 'cypher-shell'}
 );
 ```
 
-## semio-entrypoint.sh
+## compose-entrypoint.sh
 
-Legacy helper kept for existing callers. The current setup does not need entrypoint startup logic because **`post-start.sh`** starts Neo4j inside **`semio`**.
+Legacy helper kept for existing callers. The current setup does not need entrypoint startup logic because **`post-start.sh`** starts Neo4j inside **`compose`**.
 
 ## post-create.sh
 
@@ -70,7 +70,7 @@ Devcontainer start script that fixes ownership for persisted volumes, normalizes
 
 ## post-attach.sh
 
-Devcontainer post-attach script that uninstalls any existing repo extension via IDE IPC hook CLIs and extensions directory cleanup, clears stale VS Code and Cursor caches, builds and installs the local semio extension via VS Code, Cursor, Windsurf, or Antigravity IPC hook CLIs with list-extensions validation and extensions directory fallback plus extensions.json registration (using `$mid` location keys) on WSL-only CLI responses, generates Windsurf and Codex MCP configs from the repo `.mcp.json`, installs Linux GitKraken Desktop plus CLI when missing, and bootstraps a GitKraken local workspace for the repo plus submodules.
+Devcontainer post-attach script that uninstalls any existing repo extension via IDE IPC hook CLIs and extensions directory cleanup, clears stale VS Code and Cursor caches, builds and installs the local compose extension via VS Code, Cursor, Windsurf, or Antigravity IPC hook CLIs with list-extensions validation and extensions directory fallback plus extensions.json registration (using `$mid` location keys) on WSL-only CLI responses, generates Windsurf and Codex MCP configs from the repo `.mcp.json`, installs Linux GitKraken Desktop plus CLI when missing, and bootstraps a GitKraken local workspace for the repo plus submodules.
 
 ## Devcontainer Persistence
 
@@ -79,7 +79,7 @@ Claude Code persists its auth files by storing `~/.claude.json` inside the mount
 Post-start ownership fixes keep the mounted volumes writable so chat history and tokens survive container replacement.
 Post-attach reconciles VS Code workspace chat storage for `GitHub.copilot-chat` and `openai.chatgpt` by merging transcript and chat resource folders from older workspace-storage hashes into the active workspace-storage directories after attach.
 Post-attach uninstalls any existing repo extension across IDE IPC hook CLIs and extensions directories, clears stale VS Code and Cursor caches, installs the fresh VSIX, validates installs by checking list-extensions output, and falls back to direct extensions directory installs plus extensions.json registration (with `$mid` location keys) when CLIs report WSL-only usage.
-Post-attach also materializes Windsurf's MCP config at `~/.codeium/windsurf/mcp_config.json` and merges Codex MCP server entries into `~/.codex/config.toml` from the monorepo `.mcp.json`, so both clients pick up the repo, semio, coda, and Playwright servers after rebuilds without manual setup while preserving existing Codex user settings such as model and personality.
+Post-attach also materializes Windsurf's MCP config at `~/.codeium/windsurf/mcp_config.json` and merges Codex MCP server entries into `~/.codex/config.toml` from the monorepo `.mcp.json`, so both clients pick up the repo, compose, coda, and Playwright servers after rebuilds without manual setup while preserving existing Codex user settings such as model and personality.
 Post-create installs Linux GitKraken Desktop plus the official GitKraken `gk` CLI into the devcontainer, and post-attach creates or updates the default local GitKraken workspace from the repo root plus submodules so the Linux GitKraken app picks up the monorepo layout without manual workspace setup.
 Engine compatibility for the local extension is aligned to the lowest supported editor build so Cursor and VS Code accept the same VSIX.
 
@@ -117,8 +117,8 @@ This keeps the active editor clean of stale versions while aligning installation
 
 ## GitKraken Zero Touch
 
-GitKraken zero-touch setup persists Linux GitKraken Desktop state, the `gk` runtime, and local workspace metadata across rebuilds and refreshes the Semio workspace automatically on attach.
-The bootstrap targets the repo root and declared git submodules, then sets the Semio GitKraken workspace as the default so the same graph opens immediately in Linux GitKraken Desktop.
+GitKraken zero-touch setup persists Linux GitKraken Desktop state, the `gk` runtime, and local workspace metadata across rebuilds and refreshes the Compose workspace automatically on attach.
+The bootstrap targets the repo root and declared git submodules, then sets the Compose GitKraken workspace as the default so the same graph opens immediately in Linux GitKraken Desktop.
 
 ### WSL Compatibility
 
@@ -142,7 +142,7 @@ The launcher script automatically:
 
 Configure GitKraken behavior with these environment variables:
 
-- `SEMIO_GITKRAKEN_WORKSPACE_NAME`: Workspace name (default: "semio")
+- `SEMIO_GITKRAKEN_WORKSPACE_NAME`: Workspace name (default: "compose")
 - `SEMIO_GITKRAKEN_AUTO_START`: Auto-start GitKraken on attach (default: "false", disabled to prevent spurious git stashing in concurrent editing workflows)
 - `SEMIO_POST_ATTACH_SKIP_EXTENSION_INSTALL`: Skip extension installation (default: empty)
 
@@ -174,7 +174,7 @@ Devcontainer post-attach MUST uninstall any existing repo extension via IDE IPC 
 
 Devcontainer post-attach MUST generate Windsurf MCP config, write `.cursor/mcp.json` with repo-root-absolute MCP commands (so Cursor discovers stdio servers even when the spawn cwd is not the repo root), and merge Codex MCP server entries from the monorepo `.mcp.json` into the clients' home config folders without removing unrelated Codex user settings.
 
-Semio VS Code extension engine compatibility MUST include Cursor's supported VS Code version range.
+Compose VS Code extension engine compatibility MUST include Cursor's supported VS Code version range.
 
 Playwright browser caches MUST use the workspace node_modules volume path so browser install stays cached across reloads.
 
@@ -187,7 +187,7 @@ Devcontainer provisioning MUST install Linux GitKraken Desktop and the official 
 
 Devcontainer lifecycle scripts MUST persist GitKraken CLI runtime files and local workspace metadata across rebuilds.
 
-Devcontainer post-attach MUST create or update the default Semio GitKraken local workspace from the repo root and submodules without manual GitKraken setup.
+Devcontainer post-attach MUST create or update the default Compose GitKraken local workspace from the repo root and submodules without manual GitKraken setup.
 
 Devcontainer provisioning MUST install a color emoji font and refresh fontconfig caches so GUI applications render emoji glyphs without manual setup.
 

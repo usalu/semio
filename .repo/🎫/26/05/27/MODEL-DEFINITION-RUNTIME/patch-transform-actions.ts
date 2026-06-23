@@ -2,7 +2,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-const base = "c:/git/semio/spatial/assets/modelDefinition/geometry/typology/transform";
+const base = "c:/git/compose/spatial/assets/modelDefinition/geometry/typology/transform";
 const transforms = [
 	{ dir: "move", id: "transform.move", label: "Move", typologyId: "builtin.transform.move" },
 	{ dir: "copy", id: "transform.copy", label: "Copy", typologyId: "builtin.transform.copy" },

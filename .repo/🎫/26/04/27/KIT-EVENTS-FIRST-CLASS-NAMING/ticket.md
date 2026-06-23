@@ -6,12 +6,12 @@ Flattened kit mutation events onto a single `KitEvent` tree: removed `SemanticCh
 
 ## Files
 
-- `semio/rs/lib.rs`
-- `semio/js/index.ts`
-- `semio/graphql/schema.graphql`
+- `compose/rs/lib.rs`
+- `compose/js/index.ts`
+- `compose/graphql/schema.graphql`
 
 ## Verification
 
 - `cargo test tests::events::backbone` (and `gql_kit_event` tests)
-- `npm --workspace @semio/js run build` + `test`
+- `npm --workspace @compose/js run build` + `test`
 - `npm run depcruise:layers`

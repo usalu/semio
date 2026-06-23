@@ -125,5 +125,5 @@ Open a new ticket `2026/05/26/REFACTOR-SPATIAL-SELECTION` via the repo MCP (sepa
 ## Out of scope
 
 - Adding `SelectAll` / `InvertSelection` interactions themselves (the refactor only makes the contribution path clean; the interactions land in separate tickets).
-- Touching `./elements`, `./semio`, `./coda`, or `./reuse`.
+- Touching `./elements`, `./compose`, `./coda`, or `./reuse`.
 - Any change to `spatial/js/core/index.ts` selection types — the `SelectionTarget` / `SelectionSpec` API is already correct.

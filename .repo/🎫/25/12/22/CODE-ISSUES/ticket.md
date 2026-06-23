@@ -25,11 +25,11 @@ The code.json report showed 497 issues including:
 - Added `isExcludedFromImportPolicies()` function to exclude .storybook, .stories, .test, config files
 - Fixed `scanTypescriptForbiddenImports()` to allow external packages for app files
 - Extended `sketchpadImportTargets` to include Tutorials and app modules
-- Extended `elementsAllowedTargets` to allow i18n and semio imports in elements.tsx
+- Extended `elementsAllowedTargets` to allow i18n and compose imports in elements.tsx
 - Updated `scanTypescriptForbiddenTerminology()` with allowed patterns for package names, URLs, and TypeScript keywords
 - Skip template expressions in dynamic imports (can't be statically analyzed)
 
-## js/semio/sketchpad/elements.tsx
+## js/compose/sketchpad/elements.tsx
 
 - Fixed duplicate Footer region
 - Fixed ActionGroupup typo to ActionGroup

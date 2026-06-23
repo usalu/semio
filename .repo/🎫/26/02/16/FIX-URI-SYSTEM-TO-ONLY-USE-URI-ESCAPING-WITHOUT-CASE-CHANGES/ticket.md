@@ -17,7 +17,7 @@ Fixed the URI system to only use URI-escaping (percent encoding) without any cas
 - **DefinitionIdValueToUriPath**: Replaced `Slugify` with `PathToUriPath` for all parts — preserves definition names
 - **StatuteUriPathToId**: Replaced `strings.ToLower` with `PathFromUriPath` — proper URI decoding
 - **IdToUri**: Removed all `strings.ToLower` and replaced `Slugify` with `PathToUriPath` for URI construction
-- **GetArtifactURI**: Removed `strings.ToLower` from interaction URI; fixed root to return `semiorepo://root`; fixed interaction URI to include `on/` prefix and kind suffix
+- **GetArtifactURI**: Removed `strings.ToLower` from interaction URI; fixed root to return `composerepo://root`; fixed interaction URI to include `on/` prefix and kind suffix
 - **UriToId**: Added URI-decoding of slugs before passing to `buildSectionID`/`buildDefinitionID`; fixed ticket handler to flatten full path (was using `filepath.Base` which dropped date portion); removed redundant `strings.ToLower` from folder, file, draft, todo, commit handlers
 - **Tree node URIs**: Replaced `strings.ToLower(Slugify(...))` with `PathToUriPath(...)` for entitykind, policy, territory, statute rendering, ticket slug URIs
 - **URI comparison**: Removed `strings.ToLower` for exact case-sensitive matching

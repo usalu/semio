@@ -2,8 +2,8 @@ W3 blocked at gate (2026-05-11).
 
 Gate requires BOTH:
 1. File W0.complete exists under this ticket folder — NOT PRESENT.
-2. cargo check passes in semio/rs — FAILED (exit 101; see W3.check.log).
+2. cargo check passes in compose/rs — FAILED (exit 101; see W3.check.log).
 
-Additionally: `entity_family!`, `entity_input!`, `HasSdlFragment`, and related `__entity_*` helpers from the macro-driven refactor plan are not present in semio/rs/lib.rs yet (only legacy `entity_relay!` exists). Type/Port/Connector/Representation cannot be converted until W0 lands.
+Additionally: `entity_family!`, `entity_input!`, `HasSdlFragment`, and related `__entity_*` helpers from the macro-driven refactor plan are not present in compose/rs/lib.rs yet (only legacy `entity_relay!` exists). Type/Port/Connector/Representation cannot be converted until W0 lands.
 
 Next: add W0.complete after foundation work, restore green `cargo check`, remove this file, then apply W3 (kit `r#type` module only, lib.rs).

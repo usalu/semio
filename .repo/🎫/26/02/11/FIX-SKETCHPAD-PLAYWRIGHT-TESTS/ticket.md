@@ -8,7 +8,7 @@ goal: R26-02/RUNNING-SKETCHPAD
 
 Fixed flaky URL-toggle race conditions in sketchpad Playwright tests. Replaced fixed waitForTimeout(500) with waitForURL() predicates for Home temporary-kind toggle and Kit designs-kind toggle. All 6 tests (Home, Kit, Type, Design, Docs, Feedback) now pass consistently across 3 consecutive runs.
 ## Changes
-1. **DONE** `semio/js/sketchpad.test.ts`: Replaced fixed `waitForTimeout(500)` with `waitForURL()` predicates for Home temporary-kind toggle and Kit designs-kind toggle, eliminating race conditions where URL hadn't updated before assertions.
+1. **DONE** `compose/js/sketchpad.test.ts`: Replaced fixed `waitForTimeout(500)` with `waitForURL()` predicates for Home temporary-kind toggle and Kit designs-kind toggle, eliminating race conditions where URL hadn't updated before assertions.
 
 ## Log
 - Initial analysis: All 6 tests were reported failing, but on first run 5/6 passed and Kit failed intermittently

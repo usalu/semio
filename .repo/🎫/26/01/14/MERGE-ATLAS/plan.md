@@ -2,16 +2,16 @@
 
 ## Objective
 Merge two versions of "The Programming & Systems Mind Atlas":
-- **Old version** (`.md.old`): More generic/universal explanations without semio context
-- **New version** (`.md`): Has semio examples integrated but incomplete in some areas
+- **Old version** (`.md.old`): More generic/universal explanations without compose context
+- **New version** (`.md`): Has compose examples integrated but incomplete in some areas
 
 ## Strategy
 Work section by section to:
 1. Preserve the breadth and clarity of the old atlas (universal concepts)
-2. Preserve the realism and specificity of the semio-based version
+2. Preserve the realism and specificity of the compose-based version
 3. Ensure every concept is:
    - First explained in general
-   - Then immediately grounded in semio examples
+   - Then immediately grounded in compose examples
 
 ## Sections to Merge
 
@@ -43,12 +43,12 @@ Work section by section to:
 ### Remaining Parts (from old atlas)
 - Part 2: The Larger Landscape
 - Part 3: How Real Systems Work
-- Part 4: Building Semio
+- Part 4: Building Compose
 - Part 5: Advanced Concepts
 - Appendices
 
 ## Approach
-1. First add missing Section 2.8 (Errors) with semio examples
-2. Then add Chapter 3 (Data) with semio examples
+1. First add missing Section 2.8 (Errors) with compose examples
+2. Then add Chapter 3 (Data) with compose examples
 3. Continue through remaining chapters
 4. Update log.md as we progress

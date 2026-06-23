@@ -1,9 +1,9 @@
 ---
 name: Single-file Static SDL
-overview: Replace the dynamic-schema runtime with a single, compile-time, type-safe `lib.rs` that emits exactly `target.schema.graphql` and fully wires every Mutation / Subscription / Operation. `gql_target.rs` is deleted; everything lives in [semio/rs/lib.rs](semio/rs/lib.rs).
+overview: Replace the dynamic-schema runtime with a single, compile-time, type-safe `lib.rs` that emits exactly `target.schema.graphql` and fully wires every Mutation / Subscription / Operation. `gql_target.rs` is deleted; everything lives in [compose/rs/lib.rs](compose/rs/lib.rs).
 todos:
   - id: drop-dynamic
-    content: Delete semio/rs/gql_target.rs, drop mod gql_target and dynamic-schema feature in Cargo.toml
+    content: Delete compose/rs/gql_target.rs, drop mod gql_target and dynamic-schema feature in Cargo.toml
     status: completed
   - id: lift-geom
     content: "Lift geometry types to Arc/RwLock + #[Object] with id/hash/entityOwner/ownedEntities"
@@ -54,8 +54,8 @@ isProject: false
 
 ## Goal
 
-- One file: [semio/rs/lib.rs](semio/rs/lib.rs).
-- Zero dynamic schema code. Drop `mod gql_target;` and delete [semio/rs/gql_target.rs](semio/rs/gql_target.rs).
+- One file: [compose/rs/lib.rs](compose/rs/lib.rs).
+- Zero dynamic schema code. Drop `mod gql_target;` and delete [compose/rs/gql_target.rs](compose/rs/gql_target.rs).
 - Use only `async_graphql::{Object, Interface, Union, SimpleObject, Enum, Scalar, InputObject, Subscription, Schema, MergedObject, MergedSubscription}` — every type known at `cargo build`.
 - Generated SDL byte-for-byte covers `target.schema.graphql` (689 types, 100 unions, 11 interfaces, 17 inputs, 95 ops, ~95 subscription fields).
 - Every operation runs real before/modification/after logic (no stubs).
@@ -112,8 +112,8 @@ Region tree (one `lib.rs`):
 
 ## Key code anchors
 
-- Replace [semio/rs/lib.rs L3520-L3556](semio/rs/lib.rs) (current `pub mod gql` proxying to `gql_target`) with a `Schema::build(Query, Mutation, Subscription)` builder.
-- Drop the `dynamic-schema` feature from [semio/rs/Cargo.toml](semio/rs/Cargo.toml); delete `gql_target.rs`.
+- Replace [compose/rs/lib.rs L3520-L3556](compose/rs/lib.rs) (current `pub mod gql` proxying to `gql_target`) with a `Schema::build(Query, Mutation, Subscription)` builder.
+- Drop the `dynamic-schema` feature from [compose/rs/Cargo.toml](compose/rs/Cargo.toml); delete `gql_target.rs`.
 - Existing pointer infrastructure (`Connector.port: Weak<Port>`, `Design.piece_weak_by_external_id`, `Kit.design_weak_by_id`, `Kit.type_weak_by_id`, `Type.connector_weak_by_id`/`port_weak_by_id`/`representation_weak_by_id`) carries over — every static resolver upgrades these weaks; no `_by_id` linear scans inside `#[Object]`.
 
 ## Validation
@@ -121,7 +121,7 @@ Region tree (one `lib.rs`):
 - New test `target_sdl_byte_match`: `assert_eq!(Schema::build(...).sdl(), include_str!("../graphql/target.schema.graphql"))` (after normalizing trailing whitespace).
 - Existing tests adapt: `parses_target_schema` becomes `static_sdl_contains_keys`; `create_fixed_piece_end_to_end` and `wip_and_authoritative_are_isolated` keep working through the new mutation root.
 - Add per-entity unit tests for one mutation per op family (Tag, Concept, Port, Quality, Type, Connector, Design, Piece, Kit) verifying before/after snapshots are distinct `Arc`s with the expected fields.
-- `cargo test -p semio` (native) and `cargo check -p semio --target wasm32-unknown-unknown --no-default-features` must pass.
+- `cargo test -p compose` (native) and `cargo check -p compose --target wasm32-unknown-unknown --no-default-features` must pass.
 
 ## Risk and size
 
@@ -131,6 +131,6 @@ Region tree (one `lib.rs`):
 
 ## Out of scope
 
-- `semio/js`, `semio/react`, hosts.
+- `compose/js`, `compose/react`, hosts.
 - Backbone storage migration (existing dev-json + sqlite paths keep working).
 - Removing or renaming `target.schema.graphql` itself.

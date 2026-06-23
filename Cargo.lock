@@ -4952,7 +4952,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio"
+name = "compose"
 version = "0.1.0"
 dependencies = [
  "async-broadcast",
@@ -4992,14 +4992,14 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-hub"
+name = "compose-hub"
 version = "0.1.0"
 dependencies = [
  "axum 0.8.9",
  "dashmap",
  "futures",
  "reqwest",
- "semio",
+ "compose",
  "serde",
  "serde_json",
  "sqlx-core",
@@ -5018,7 +5018,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-store"
+name = "compose-store"
 version = "0.1.0"
 dependencies = [
  "async-broadcast",
@@ -5027,7 +5027,7 @@ dependencies = [
  "axum 0.7.9",
  "futures-lite",
  "reqwest",
- "semio",
+ "compose",
  "serde",
  "serde_json",
  "tokio",
@@ -5037,7 +5037,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio_query"
+name = "compose_query"
 version = "0.1.0"
 dependencies = [
  "async-graphql",
@@ -5046,7 +5046,7 @@ dependencies = [
  "js-sys",
  "nom",
  "pin-project-lite",
- "semio",
+ "compose",
  "serde",
  "serde-wasm-bindgen",
  "serde_json",

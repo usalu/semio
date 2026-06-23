@@ -83,49 +83,49 @@
           "renamed": [],
           "modified": [
             {
-              "path": "semio/semio/semio/assets",
+              "path": "compose/compose/compose/assets",
               "lines": {
                 "added": 5,
                 "removed": 0
               }
             },
             {
-              "path": "semio/semio/semio/engine",
+              "path": "compose/compose/compose/engine",
               "lines": {
                 "added": 41,
                 "removed": 0
               }
             },
             {
-              "path": "semio/semio/semio/go",
+              "path": "compose/compose/compose/go",
               "lines": {
                 "added": 142,
                 "removed": 0
               }
             },
             {
-              "path": "semio/semio/semio/js",
+              "path": "compose/compose/compose/js",
               "lines": {
                 "added": 87,
                 "removed": 0
               }
             },
             {
-              "path": "semio/semio/semio/net",
+              "path": "compose/compose/compose/net",
               "lines": {
                 "added": 103,
                 "removed": 0
               }
             },
             {
-              "path": "semio/semio/semio/py",
+              "path": "compose/compose/compose/py",
               "lines": {
                 "added": 55,
                 "removed": 0
               }
             },
             {
-              "path": "semio/semio/semio/rs",
+              "path": "compose/compose/compose/rs",
               "lines": {
                 "added": 148,
                 "removed": 0
@@ -145,21 +145,21 @@
           "renamed": [],
           "modified": [
             {
-              "path": "💻semio/js/sketchpad/Design.tsx",
+              "path": "💻compose/js/sketchpad/Design.tsx",
               "lines": {
                 "added": 23,
                 "removed": 17
               }
             },
             {
-              "path": "🧪semio/engine/engine.test.py",
+              "path": "🧪compose/engine/engine.test.py",
               "lines": {
                 "added": 30,
                 "removed": 1
               }
             },
             {
-              "path": "🧪semio/js/semio.test.ts",
+              "path": "🧪compose/js/compose.test.ts",
               "lines": {
                 "added": 28,
                 "removed": 1
@@ -168,63 +168,63 @@
           ],
           "added": [
             {
-              "path": "💻semio/assets/index.ts",
+              "path": "💻compose/assets/index.ts",
               "lines": {
                 "added": 181,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/engine/engine.py",
+              "path": "💻compose/engine/engine.py",
               "lines": {
                 "added": 2039,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/go/semio.go",
+              "path": "💻compose/go/compose.go",
               "lines": {
                 "added": 5622,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/semio.ts",
+              "path": "💻compose/js/compose.ts",
               "lines": {
                 "added": 11779,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/net/Semio.Tests/Tests.cs",
+              "path": "💻compose/net/Compose.Tests/Tests.cs",
               "lines": {
                 "added": 275,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/net/Semio/Semio.cs",
+              "path": "💻compose/net/Compose/Compose.cs",
               "lines": {
                 "added": 8434,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/py/semio.py",
+              "path": "💻compose/py/compose.py",
               "lines": {
                 "added": 9955,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/rs/semio.rs",
+              "path": "💻compose/rs/compose.rs",
               "lines": {
                 "added": 4374,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/go/semio_test.go",
+              "path": "🧪compose/go/compose_test.go",
               "lines": {
                 "added": 392,
                 "removed": 0
@@ -237,98 +237,98 @@
           "renamed": [],
           "modified": [
             {
-              "path": "💻semio/assets/index.ts#Exports",
+              "path": "💻compose/assets/index.ts#Exports",
               "lines": {
                 "added": 5,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/engine/engine.py#Imports",
+              "path": "💻compose/engine/engine.py#Imports",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/engine/engine.py#Mcp",
+              "path": "💻compose/engine/engine.py#Mcp",
               "lines": {
                 "added": 11,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/go/semio.go#Flatten Design",
+              "path": "💻compose/go/compose.go#Flatten Design",
               "lines": {
                 "added": 86,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/semio.ts#Design",
+              "path": "💻compose/js/compose.ts#Design",
               "lines": {
                 "added": 54,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Imports",
+              "path": "💻compose/js/sketchpad/Design.tsx#Imports",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Diagram",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram",
               "lines": {
                 "added": 22,
                 "removed": 17
               }
             },
             {
-              "path": "💻semio/net/Semio/Semio.cs#Entitying#Design",
+              "path": "💻compose/net/Compose/Compose.cs#Entitying#Design",
               "lines": {
                 "added": 68,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/py/semio.py#Domain#Moved Graphene Nodes#FlattenDesign",
+              "path": "💻compose/py/compose.py#Domain#Moved Graphene Nodes#FlattenDesign",
               "lines": {
                 "added": 55,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/rs/semio.rs#FlattenDesign",
+              "path": "💻compose/rs/compose.rs#FlattenDesign",
               "lines": {
                 "added": 76,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/rs/semio.rs#Tests",
+              "path": "💻compose/rs/compose.rs#Tests",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/rs/semio.rs#Tests#Drag Tests",
+              "path": "💻compose/rs/compose.rs#Tests#Drag Tests",
               "lines": {
                 "added": 71,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/engine/engine.test.py#Constants",
+              "path": "🧪compose/engine/engine.test.py#Constants",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "🧪semio/engine/engine.test.py#MCP Tests",
+              "path": "🧪compose/engine/engine.test.py#MCP Tests",
               "lines": {
                 "added": 29,
                 "removed": 0
@@ -337,7 +337,7 @@
           ],
           "added": [
             {
-              "path": "semio/rs/semio.rs#Tests#Drag Tests",
+              "path": "compose/rs/compose.rs#Tests#Drag Tests",
               "lines": {
                 "added": 71,
                 "removed": 0
@@ -350,56 +350,56 @@
           "renamed": [],
           "modified": [
             {
-              "path": "💻semio/engine/engine.py#Mcp§drag_pieces_in_design",
+              "path": "💻compose/engine/engine.py#Mcp§drag_pieces_in_design",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/go/semio.go#Flatten Design§DragPiecesInDesign",
+              "path": "💻compose/go/compose.go#Flatten Design§DragPiecesInDesign",
               "lines": {
                 "added": 82,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/semio.ts#Design§dragPiecesInDesign",
+              "path": "💻compose/js/compose.ts#Design§dragPiecesInDesign",
               "lines": {
                 "added": 46,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/py/semio.py#Domain#Moved Graphene Nodes#FlattenDesign§dragPiecesInDesignDict",
+              "path": "💻compose/py/compose.py#Domain#Moved Graphene Nodes#FlattenDesign§dragPiecesInDesignDict",
               "lines": {
                 "added": 55,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/rs/semio.rs#FlattenDesign§drag_pieces_in_design",
+              "path": "💻compose/rs/compose.rs#FlattenDesign§drag_pieces_in_design",
               "lines": {
                 "added": 75,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/rs/semio.rs#Tests§tests",
+              "path": "💻compose/rs/compose.rs#Tests§tests",
               "lines": {
                 "added": 72,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/engine/engine.test.py#MCP Tests§TestMcp",
+              "path": "🧪compose/engine/engine.test.py#MCP Tests§TestMcp",
               "lines": {
                 "added": 29,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/go/semio_test.go§TestDrag",
+              "path": "🧪compose/go/compose_test.go§TestDrag",
               "lines": {
                 "added": 55,
                 "removed": 0
@@ -408,42 +408,42 @@
           ],
           "added": [
             {
-              "path": "💻semio/engine/engine.py#Mcp§drag_pieces_in_design",
+              "path": "💻compose/engine/engine.py#Mcp§drag_pieces_in_design",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/go/semio.go#Flatten Design§DragPiecesInDesign",
+              "path": "💻compose/go/compose.go#Flatten Design§DragPiecesInDesign",
               "lines": {
                 "added": 82,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/semio.ts#Design§dragPiecesInDesign",
+              "path": "💻compose/js/compose.ts#Design§dragPiecesInDesign",
               "lines": {
                 "added": 46,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/py/semio.py#Domain#Moved Graphene Nodes#FlattenDesign§dragPiecesInDesignDict",
+              "path": "💻compose/py/compose.py#Domain#Moved Graphene Nodes#FlattenDesign§dragPiecesInDesignDict",
               "lines": {
                 "added": 55,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/rs/semio.rs#FlattenDesign§drag_pieces_in_design",
+              "path": "💻compose/rs/compose.rs#FlattenDesign§drag_pieces_in_design",
               "lines": {
                 "added": 75,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/go/semio_test.go§TestDrag",
+              "path": "🧪compose/go/compose_test.go§TestDrag",
               "lines": {
                 "added": 55,
                 "removed": 0

@@ -3,7 +3,7 @@
   "emoji": "🧩",
   "status": "closed",
   "description": "Execute field-only Phase 1 for Piece, PiecesOperations, Connection: JS reads/mutations per schema, React hooks, artifact phase-1-piece-connection.json. No git commit.",
-  "summary": "Phase 1 (Piece + PiecesOperations + Connection): JS 🧩Piece field reads + PieceOperationInput mutations; 🪢PiecesOperations batch mutations; ⛓️Connection full read surface including ConnectionSideWire, u/v, artifact attributes. React regions 🧩Piece (reads + op hooks), 🪢Pieces (batch op hooks), ⛓️Connection (useConnection + field reads; useConnectionGap replaces useConnectionGapField). Port read* methods added so react Port hooks typecheck. Artifact: phase-1-piece-connection.json. Verified: tsc js+react exit 0; semio/react vitest run passed.",
+  "summary": "Phase 1 (Piece + PiecesOperations + Connection): JS 🧩Piece field reads + PieceOperationInput mutations; 🪢PiecesOperations batch mutations; ⛓️Connection full read surface including ConnectionSideWire, u/v, artifact attributes. React regions 🧩Piece (reads + op hooks), 🪢Pieces (batch op hooks), ⛓️Connection (useConnection + field reads; useConnectionGap replaces useConnectionGapField). Port read* methods added so react Port hooks typecheck. Artifact: phase-1-piece-connection.json. Verified: tsc js+react exit 0; compose/react vitest run passed.",
   "goal": "🎯r2602🎯runningsketchpad",
   "sessions": [
     "⚪d92247b20c5c42d495f516ff820577e0"

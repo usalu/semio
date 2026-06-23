@@ -32,13 +32,13 @@ Research complete: Documented full piece creation flow, model resolution, scene 
    - Creates piece: `{ guid: guid(), type: { guid: type.guid }, center, plane }`
 
 **Command chain:**
-- `useDesignAppAddPiece()` → `Design.tsx:2580` → `store.execute("semio.designApp.addPiece", ...)`
-- `"semio.designApp.addPiece"` handler → `Design.tsx:785` → returns `kitDiff` with `pieces.added: [piece]`
+- `useDesignAppAddPiece()` → `Design.tsx:2580` → `store.execute("compose.designApp.addPiece", ...)`
+- `"compose.designApp.addPiece"` handler → `Design.tsx:785` → returns `kitDiff` with `pieces.added: [piece]`
 - `kitDiff` applied via `kitStore.change(result.kitDiff)` → `Design.tsx:1371-1372`
 - `kitStore.change()` → `Sketchpad.tsx:6664` → `designStore.change(diff)` → `Sketchpad.tsx:5254`
 - `DesignStore.change()` at line 5270 calls `this.createPiece(piece)` for each `diff.pieces.added`
 
-**Alternate path: `semio.kit.addPiece`** — `Sketchpad.tsx:7984`
+**Alternate path: `compose.kit.addPiece`** — `Sketchpad.tsx:7984`
 - Lower-level command used by `kitStore.execute()`
 - Auto-adds default plane `{ origin: {0,0,0}, xAxis: {1,0,0}, yAxis: {0,1,0} }` if piece has no `plane` AND is not part of existing connections
 
@@ -65,7 +65,7 @@ Research complete: Documented full piece creation flow, model resolution, scene 
 - Workbench button: `Design.tsx:10353-10357` — `center={u:0,v:0}`, `plane` derived
 
 **Fallback plane for rendering** (`useFlatPiecePlane` at `Sketchpad.tsx:4150`):
-- Uses `piecesMetadata()` from `semio.ts:8171` which flattens the design via `flattenDesign(kit, designGuid)`
+- Uses `piecesMetadata()` from `compose.ts:8171` which flattens the design via `flattenDesign(kit, designGuid)`
 - Falls back to `{ origin: {0,0,0}, xAxis: {1,0,0}, yAxis: {0,1,0} }`
 
 **Inconsistency found:** Diagram drop does NOT set `id_` on the piece, but scene drop DOES set `id_: pieceGuid`. The `PieceStore` constructor at `Sketchpad.tsx:3770` does `this.localId = piece.guid` which uses `piece.guid` as fallback for `id_`.
@@ -89,7 +89,7 @@ Research complete: Documented full piece creation flow, model resolution, scene 
   - `.glb`/`.gltf` → `GLTFMesh` (uses `useGLTF`)
   - `.fbx` → `FBXMesh` (uses `useFBX`)
   - `.obj` → `OBJMesh` (uses `useLoader(OBJLoader)`)
-- `GLTFMesh`/`FBXMesh`/`OBJMesh` (`Design.tsx:8989-9097`) — Load, clone, apply rotation `toSemioRotation()`, apply plaster material, support highlight color
+- `GLTFMesh`/`FBXMesh`/`OBJMesh` (`Design.tsx:8989-9097`) — Load, clone, apply rotation `toComposeRotation()`, apply plaster material, support highlight color
 
 **Scene container:**
 - `DesignAppScene` (`Design.tsx:9458+`) — Wraps scene with drop zone, camera sync, fullscreen toggle
@@ -100,12 +100,12 @@ Research complete: Documented full piece creation flow, model resolution, scene 
 **Flow: Type → Model → File → URL**
 
 1. **Type has models array**: `type.models: Model[]`
-2. **Select best model** via `selectBestModel()` (`semio.ts:4139-4149`):
+2. **Select best model** via `selectBestModel()` (`compose.ts:4139-4149`):
    - If no tags selected: pick model with no tags, else first model
    - If tags selected: filter by tags via `filterModelsByTagGuids()`, then `findModel()`
 3. **Model → File**: `model.file` (string or `{ guid }`) → find in `kit.files`
 4. **File → URL**: `kitStore.getFileUrl(file.guid)` → `kitStore.getFileBlobUrl(file.guid)`
-5. **Supported formats**: `SUPPORTED_3D_EXTENSIONS` at `semio.ts:4159+`: gltf, glb, fbx, obj, dae, 3ds, stl, ply, usdz, vrm, ifc, 3mf, amf
+5. **Supported formats**: `SUPPORTED_3D_EXTENSIONS` at `compose.ts:4159+`: gltf, glb, fbx, obj, dae, 3ds, stl, ply, usdz, vrm, ifc, 3mf, amf
 
 **In Type.tsx** (`Type.tsx:1617-1660`): More elaborate resolution considering:
 - Explicit `selectedModelGuid`
@@ -119,7 +119,7 @@ Research complete: Documented full piece creation flow, model resolution, scene 
 
 ### 5. Design Component Location
 
-**Design.tsx is NOT empty** — it's **10,697 lines** at `/workspaces/semio/semio/js/sketchpad/Design.tsx` (439KB).
+**Design.tsx is NOT empty** — it's **10,697 lines** at `/workspaces/semio/compose/js/sketchpad/Design.tsx` (439KB).
 
 The `read_file` tool returns empty due to file size, but `sed`/`grep` confirm the content.
 
@@ -140,7 +140,7 @@ The `read_file` tool returns empty due to file size, but `sed`/`grep` confirm th
 
 ### 6. Test Structure (sketchpad.test.ts)
 
-**File**: `semio/js/sketchpad.test.ts` — **4,598 lines** (Playwright e2e tests)
+**File**: `compose/js/sketchpad.test.ts` — **4,598 lines** (Playwright e2e tests)
 
 **Test sections:**
 - `test("Home", ...)` — line 873 (180s timeout)
@@ -159,7 +159,7 @@ The `read_file` tool returns empty due to file size, but `sed`/`grep` confirm th
    - Asserts: piece count +1, typeGuid matches, plane not null, center not null, model resolution works
 
 2. **Plus button test** (line 2334-2370):
-   - Clicks `[id="semio.sketchpad.app.design.panel.workbench.types.addPiece"]`
+   - Clicks `[id="compose.sketchpad.app.design.panel.workbench.types.addPiece"]`
    - Asserts: piece count +1, typeGuid matches, plane not null, center = {u:0, v:0}, model resolution works
 
 **Test helpers:**
@@ -174,9 +174,9 @@ The `read_file` tool returns empty due to file size, but `sed`/`grep` confirm th
 
 3. **PieceMesh returns null when blobUrl is unavailable**: At `Design.tsx:9180`, if `blobUrl` is null (file not loaded yet or missing), the piece renders nothing. No fallback geometry.
 
-4. **`semio.designApp.addPiece` does NOT add default plane**: The Design-level command at `Design.tsx:785` just passes through the piece as-is. The Kit-level command at `Sketchpad.tsx:7984` adds a default plane. So if a piece is added without plane via the Design app (which in practice doesn't happen because all three UI paths provide plane), it would have no plane.
+4. **`compose.designApp.addPiece` does NOT add default plane**: The Design-level command at `Design.tsx:785` just passes through the piece as-is. The Kit-level command at `Sketchpad.tsx:7984` adds a default plane. So if a piece is added without plane via the Design app (which in practice doesn't happen because all three UI paths provide plane), it would have no plane.
 
-5. **No center computation in `semio.kit.addPiece`**: The Kit-level fallback at `Sketchpad.tsx:7984` adds a default plane but NOT a center. If a piece comes in without center, it stays without center.
+5. **No center computation in `compose.kit.addPiece`**: The Kit-level fallback at `Sketchpad.tsx:7984` adds a default plane but NOT a center. If a piece comes in without center, it stays without center.
 
 ## Changes
 

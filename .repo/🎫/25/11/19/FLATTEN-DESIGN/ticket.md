@@ -26,7 +26,7 @@ Implement and test the `flattenDesign` function that converts a design with conn
 - Applies connections changes (added, removed, updated)
 - Applies other design properties
 
-3.  Test created in `semio.test.ts`:
+3.  Test created in `compose.test.ts`:
 
 - Loads metabolism kit dynamically
 - Tests Nakagin Capsule Tower design

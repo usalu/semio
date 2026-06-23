@@ -1,0 +1,10 @@
+{
+  "title": "Fix Duplicate Code Across Compose Programming Languages Tests",
+  "status": "closed",
+  "description": "Fix duplicate code issues across all programming languages in the compose codebase (TypeScript, Python, Rust, Go, C#). Get all tests passing and complying again.",
+  "summary": "Bulk close",
+  "goal": "🎯compose",
+  "sessions": [
+    "⚪5a7a38227549418b9c931479bf068766"
+  ]
+}

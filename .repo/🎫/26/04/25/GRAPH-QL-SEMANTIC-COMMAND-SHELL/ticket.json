@@ -2,8 +2,8 @@
   "title": "GraphQL Semantic Command Shell",
   "emoji": "🎫",
   "status": "closed",
-  "description": "Extend semio/rs GraphQL API with a unified semantic command shell that allocates and returns request ids immediately, then sends accepted/succeeded/failed result events over the existing event stream. Wire semio/js stores to use this shell for kit mutations and keep semio/react consuming the emitted lifecycle events. Extend existing tests only and verify Rust/JS/React checks.",
-  "summary": "Added a unified GraphQL semantic command shell that returns a request id receipt immediately, emits accepted/succeeded/failed lifecycle events through the kit event stream, and executes embedded GraphQL mutation requests asynchronously. Updated semio/js clients to submit external kit writes through the shell and to build semantic change commands through GraphQL queries instead of depending on WASM helper exports. Extended existing embedded tests to cover the shell receipt/event flow and JS request id tracking.",
+  "description": "Extend compose/rs GraphQL API with a unified semantic command shell that allocates and returns request ids immediately, then sends accepted/succeeded/failed result events over the existing event stream. Wire compose/js stores to use this shell for kit mutations and keep compose/react consuming the emitted lifecycle events. Extend existing tests only and verify Rust/JS/React checks.",
+  "summary": "Added a unified GraphQL semantic command shell that returns a request id receipt immediately, emits accepted/succeeded/failed lifecycle events through the kit event stream, and executes embedded GraphQL mutation requests asynchronously. Updated compose/js clients to submit external kit writes through the shell and to build semantic change commands through GraphQL queries instead of depending on WASM helper exports. Extended existing embedded tests to cover the shell receipt/event flow and JS request id tracking.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1380"
   },

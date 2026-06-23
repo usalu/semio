@@ -1,17 +1,17 @@
 ---
 name: align lib.rs to target schema
-overview: Refactor [semio/rs/lib.rs](semio/rs/lib.rs) so that every type, interface, edge and connection declared in [semio/graphql/target.schema.graphql](semio/graphql/target.schema.graphql) exists as a hand-written Rust type with `async-graphql` derives — no build.rs codegen, no embedded schema strings, no schema parsing at runtime — while preserving all existing `kit`, `vcs`, `event`, `worker`, `wasm_bridge` and `kit_backbone` logic.
+overview: Refactor [compose/rs/lib.rs](compose/rs/lib.rs) so that every type, interface, edge and connection declared in [compose/graphql/target.schema.graphql](compose/graphql/target.schema.graphql) exists as a hand-written Rust type with `async-graphql` derives — no build.rs codegen, no embedded schema strings, no schema parsing at runtime — while preserving all existing `kit`, `vcs`, `event`, `worker`, `wasm_bridge` and `kit_backbone` logic.
 todos: []
 isProject: false
 ---
 
-# Align `semio/rs/lib.rs` to `target.schema.graphql`
+# Align `compose/rs/lib.rs` to `target.schema.graphql`
 
-The target schema is the spec, never a runtime input. Every concrete type, interface enum, edge, connection and input declared in [semio/graphql/target.schema.graphql](semio/graphql/target.schema.graphql) MUST exist as a hand-written Rust type in [semio/rs/lib.rs](semio/rs/lib.rs) using `async-graphql`'s `#[derive(Object)]` / `#[derive(Interface)]` / `#[derive(SimpleObject)]` / `#[derive(Union)]` / `#[derive(InputObject)]`. The existing in-memory `Arc + RwLock` style is preserved.
+The target schema is the spec, never a runtime input. Every concrete type, interface enum, edge, connection and input declared in [compose/graphql/target.schema.graphql](compose/graphql/target.schema.graphql) MUST exist as a hand-written Rust type in [compose/rs/lib.rs](compose/rs/lib.rs) using `async-graphql`'s `#[derive(Object)]` / `#[derive(Interface)]` / `#[derive(SimpleObject)]` / `#[derive(Union)]` / `#[derive(InputObject)]`. The existing in-memory `Arc + RwLock` style is preserved.
 
 ## Ground rules
 - No `build.rs`, no `include_str!("../graphql/target.schema.graphql")`, no `Schema::parse_sdl(...)`, no `paste!` or `macro_rules!` for the new types — every struct, every field, every interface arm is typed by hand in the file.
-- Single-file: keep all changes inside [semio/rs/lib.rs](semio/rs/lib.rs) under the existing `//#region` taxonomy. Add new regions only when an entirely new bundle (e.g. `diff`, `modification`, `modifications`, `entity`) is introduced.
+- Single-file: keep all changes inside [compose/rs/lib.rs](compose/rs/lib.rs) under the existing `//#region` taxonomy. Add new regions only when an entirely new bundle (e.g. `diff`, `modification`, `modifications`, `entity`) is introduced.
 - Preserve every existing public symbol used by `kit_graph_engine`, `kit_backbone`, `worker`, `gql`, `wasm_bridge`. Renames must be propagated to all call sites in the same file.
 - Banner taxonomy from the cleanup plan applies to the Rust definitions too: every `#[graphql(field(...))]` listed on an interface enum must follow `# Node` -> `# Entity` -> ... -> `# <ConcreteName>` order so the generated SDL matches the target.
 - Tests in the `🧪 tests` region MUST keep passing (`bun scripts/export-schema.ts` is still the gate). When a name changes (`Transaction` -> `Edit`, etc.) tests are updated in the same region.
@@ -22,7 +22,7 @@ Old name -> new name (every reference in the same file is updated):
 
 - `pub struct Transaction` -> `pub struct Edit` (region `💼 transaction` -> `💼 edit`); fields stay (`owner_draft` -> `owner_alternative_wip` rolled into `Alternative` state in step 2).
 - `pub struct Draft` -> removed; its state collapses into `Alternative` (each `Alternative` already represents a working lane in the target schema; `Draft` was the WIP buffer).
-- `pub enum ChangeOwnerRef` and `pub enum ChangeOwnerUnion` -> removed. `Change.owner` resolves to a new `crate::iface::ChangeOwner` interface arm (Alternative | Checkpoint), per [semio/graphql/target.schema.graphql](semio/graphql/target.schema.graphql) line 7893.
+- `pub enum ChangeOwnerRef` and `pub enum ChangeOwnerUnion` -> removed. `Change.owner` resolves to a new `crate::iface::ChangeOwner` interface arm (Alternative | Checkpoint), per [compose/graphql/target.schema.graphql](compose/graphql/target.schema.graphql) line 7893.
 - `pub struct OperationOwner` (in `operation`) -> removed. `Operation.owner` resolves through the new `EntityIface` enum where the only legal arm for `Operation` is `Arc<Edit>` (per `Operation.owner # reference // Edit`).
 - All `#[graphql(name = "Transaction")]` / `name = "Draft"` / `name = "ChangeOwner"` / `name = "OperationOwner"` annotations are removed; the new types use the canonical names.
 - `pub struct CommandReceipt { #[graphql(name = "Command")] }` keeps the receipt object; the GraphQL exposed `Command*` API surface is unchanged.
@@ -52,7 +52,7 @@ Plus the small unions the schema requires: `ChangeOwner` (Alternative | Checkpoi
 
 ## 3. Entity-type pass (region `🏷️ meta` + `📦 kit`)
 
-For every `# Entities` type in [semio/graphql/target.schema.graphql](semio/graphql/target.schema.graphql) that is not yet in [semio/rs/lib.rs](semio/rs/lib.rs), add three Rust types side-by-side using the existing pattern (see `Design`, `DesignEdge`, `DesignConnection` at lib.rs lines 547-569):
+For every `# Entities` type in [compose/graphql/target.schema.graphql](compose/graphql/target.schema.graphql) that is not yet in [compose/rs/lib.rs](compose/rs/lib.rs), add three Rust types side-by-side using the existing pattern (see `Design`, `DesignEdge`, `DesignConnection` at lib.rs lines 547-569):
 
 - `pub struct <X>` (`Arc + RwLock` fields, `#[Object(name = "<X>")]` impl with `async fn` resolvers)
 - `pub struct <X>Edge { node: Arc<X> }` with `#[derive(SimpleObject)] #[graphql(name = "<X>Edge")]`
@@ -70,7 +70,7 @@ Each entity registers itself with the right interface enum arm (e.g. `RichStrong
 
 ## 4. VCS pass (region `🌿 vcs`)
 
-Replace [semio/rs/lib.rs](semio/rs/lib.rs) lines 4677-6031 to match the target VCS region:
+Replace [compose/rs/lib.rs](compose/rs/lib.rs) lines 4677-6031 to match the target VCS region:
 
 - `Edit` (replaces `Transaction`): owner is `EditOwner` interface arm, exposes `forwards: OperationConnection!`, `backwards: OperationConnection!`, `sequenceNumber`, `startedAt`, `finishedAt`, `description`, `origin`. The previously bundled `change_seq: AtomicU64` and apply-pipeline state moves into `Alternative` (which is the WIP container in the new schema).
 - `Change`: owner is `ChangeOwner` interface arm; exposes `edits: EditConnection!`, `startedAt`, `savedAt`, `description`, `origin`, plus `saved: Boolean # computed`.

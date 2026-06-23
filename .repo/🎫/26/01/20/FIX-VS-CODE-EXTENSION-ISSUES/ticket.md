@@ -99,7 +99,7 @@ Skipping: no breachs found
 Skipping: no breachs found
 ✔ Repo diagnostics have code actions for autofixable breachs (10033ms)
 Refresh Diagnostics Test Suite
-✔ semio.refreshDiagnostics updates all open documents (3147ms)
+✔ compose.refreshDiagnostics updates all open documents (3147ms)
 Sidebar View Test Suite
 ✔ All expected views are registered
 ✔ Tickets view can be focused (88ms)

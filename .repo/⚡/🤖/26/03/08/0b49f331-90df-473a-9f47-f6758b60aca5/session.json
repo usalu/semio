@@ -1,6 +1,6 @@
 {
   "id": "0b49f331-90df-473a-9f47-f6758b60aca5",
-  "uri": "semiorepo://s/0b49f331-90df-473a-9f47-f6758b60aca5",
+  "uri": "composerepo://s/0b49f331-90df-473a-9f47-f6758b60aca5",
   "contributor": "🧑‍💻ueli",
   "client": "copilot-chat",
   "second": "2026-03-08T22:14:23Z",
@@ -14,7 +14,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 6050,
-            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "filePath": "/workspaces/semio/compose/js/compose.ts",
             "startLine": 5966
           },
           "tool_use_id": "toolu_01Rp25jeapt8CANQCPmE23pJ__vscode-1772913892921",
@@ -34,7 +34,7 @@
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚js💻semio📌5966📌6050"
+          "👤compose📚js💻compose📌5966📌6050"
         ],
         "second": "🎆26🌙03☀️08⏰22⌚14⏱️23",
         "session": "⚪0b49f33190df473a9f47f6758b60aca5"
@@ -52,7 +52,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 6050,
-            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "filePath": "/workspaces/semio/compose/js/compose.ts",
             "startLine": 5966
           },
           "tool_response": "",
@@ -72,7 +72,7 @@
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚js💻semio📌5966📌6050"
+          "👤compose📚js💻compose📌5966📌6050"
         ],
         "second": "🎆26🌙03☀️08⏰22⌚14⏱️35",
         "session": "⚪0b49f33190df473a9f47f6758b60aca5"

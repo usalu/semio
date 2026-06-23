@@ -1,6 +1,6 @@
 ---
 name: Clean Store Tasks
-overview: Implement a stateless `semio/js` store facade layer over the single Rust `KitStoreHandle.execute` boundary, and extend `semio/rs` so every execute call creates a task id with lifecycle/result events.
+overview: Implement a stateless `compose/js` store facade layer over the single Rust `KitStoreHandle.execute` boundary, and extend `compose/rs` so every execute call creates a task id with lifecycle/result events.
 todos:
  - id: ticket
    content: Open or reopen the repo ticket for this follow-up under the Running Sketchpad goal.
@@ -9,10 +9,10 @@ todos:
    content: Extend Rust execute to allocate task ids and emit task lifecycle events for every command.
    status: cancelled
  - id: js-stateless-stores
-   content: Refactor semio/js store exports into stateless facades over the single execute boundary.
+   content: Refactor compose/js store exports into stateless facades over the single execute boundary.
    status: cancelled
  - id: react-task-events
-   content: Update semio/react task event naming and hook consumption where needed.
+   content: Update compose/react task event naming and hook consumption where needed.
    status: completed
  - id: tests
    content: Extend existing Rust, JS, and React tests and run focused validation.
@@ -26,14 +26,14 @@ isProject: false
 
 - Work under the `Running Sketchpad` goal. Since the exact prior hook-refactor ticket is closed and this is a follow-up slice, open a new ticket after plan approval unless the user explicitly wants the open umbrella kit refactor ticket reused.
 - Primary files:
-  - [semio/rs/lib.rs](semio/rs/lib.rs)
-  - [semio/js/index.ts](semio/js/index.ts)
-  - [semio/js/worker.ts](semio/js/worker.ts)
-  - [semio/react/index.tsx](semio/react/index.tsx) only where public types/hooks need the renamed task semantics
+  - [compose/rs/lib.rs](compose/rs/lib.rs)
+  - [compose/js/index.ts](compose/js/index.ts)
+  - [compose/js/worker.ts](compose/js/worker.ts)
+  - [compose/react/index.tsx](compose/react/index.tsx) only where public types/hooks need the renamed task semantics
 
 ## Current Boundary
 
-`semio/js` already has a raw execute adapter, but higher-level clients still expose cached snapshots, generic `any` payloads, and direct field mutation helpers that need to be removed:
+`compose/js` already has a raw execute adapter, but higher-level clients still expose cached snapshots, generic `any` payloads, and direct field mutation helpers that need to be removed:
 
 ```ts
 export interface KitStoreClient {
@@ -56,13 +56,13 @@ Rust currently has `kit_store::KitStore::execute(cmd) -> KitStoreCommandResult` 
 
 ## Implementation Plan
 
-1. Add task semantics to `semio/rs` execute.
+1. Add task semantics to `compose/rs` execute.
    - Introduce a typed `TaskId`/`KitStoreTask` model and a `KitStoreTaskEvent` lifecycle shape: accepted, succeeded, failed.
    - Make `KitStoreHandle.execute` allocate a task id for every command, including read/control commands, and emit task lifecycle events with result or error.
    - Collapse the existing `requestId`/semantic command shell naming into `taskId` at the Rust wire boundary.
    - Keep command execution single-writer through the existing actor/coordinator paths; only the execute return contract changes to task receipt.
 
-2. Refactor `semio/js` into clean stateless stores.
+2. Refactor `compose/js` into clean stateless stores.
    - Add a small `KitStore` wrapper that only owns the Rust/worker handle plus a pending task id registry.
    - Add domain-scoped facades like `DesignStore`, `TypeStore`, `PieceStore`, etc. as stateless command builders over the owning `KitStore.execute` method.
    - Define a typed `KitCommandMap`/`KitCommandResultMap` (or equivalent) so every domain facade operation is statically tied to one command and one result shape.
@@ -73,23 +73,23 @@ Rust currently has `kit_store::KitStore::execute(cmd) -> KitStoreCommandResult` 
    - Delete the generic `setField` API and replace it with typed command builders for every supported mutation.
    - Route add-child, drag/move/fix, undo/redo, backbone commands, and read batches through the single typed `execute` call.
    - Convert `KitStoreExecuteResult`/`SetResult` to task-aware results: immediate `{ ok: true, taskId }` plus task lifecycle events for completion/result/error.
-   - Update worker API methods in `semio/js/worker.ts` to expose execute-only behavior instead of parallel command-specific methods.
+   - Update worker API methods in `compose/js/worker.ts` to expose execute-only behavior instead of parallel command-specific methods.
 
-4. Update `semio/react` consumers.
+4. Update `compose/react` consumers.
    - Rename request-id concepts to task-id concepts where the public API leaks them.
    - Keep hooks consuming lifecycle events, but adapt to the task event shape and the stateless store wrappers.
-   - Avoid reintroducing store-owned state in React-facing `@semio/js` classes.
+   - Avoid reintroducing store-owned state in React-facing `@compose/js` classes.
 
 5. Extend existing tests in place.
-   - In `semio/rs/lib.rs`, add Rust tests that `execute` always returns a task id and emits accepted/succeeded/failed events for read, write, and error cases.
-   - In `semio/js/index.ts`, extend embedded Vitest coverage to assert the stores keep only pending task ids, every store operation calls typed `execute`, no public `setField` remains, and no public `replace`/snapshot mutation path remains.
+   - In `compose/rs/lib.rs`, add Rust tests that `execute` always returns a task id and emits accepted/succeeded/failed events for read, write, and error cases.
+   - In `compose/js/index.ts`, extend embedded Vitest coverage to assert the stores keep only pending task ids, every store operation calls typed `execute`, no public `setField` remains, and no public `replace`/snapshot mutation path remains.
    - Add compile-time TypeScript checks in existing test/type-check locations for representative commands so invalid payload/result pairings fail before runtime.
-   - In `semio/react/index.tsx`, extend embedded coverage for task event consumption and error propagation if hook APIs change.
+   - In `compose/react/index.tsx`, extend embedded coverage for task event consumption and error propagation if hook APIs change.
 
 ## Verification
 
 - Run focused Rust tests for the new execute/task behavior.
-- Run `semio/js` embedded Vitest tests.
-- Run `semio/react` build/tests if public hook types change.
+- Run `compose/js` embedded Vitest tests.
+- Run `compose/react` build/tests if public hook types change.
 - Run lints on touched files.
-- Close the ticket with `semio/rs/lib.rs`, `semio/js/index.ts`, `semio/js/worker.ts`, and any `semio/react/index.tsx` changes listed.
+- Close the ticket with `compose/rs/lib.rs`, `compose/js/index.ts`, `compose/js/worker.ts`, and any `compose/react/index.tsx` changes listed.

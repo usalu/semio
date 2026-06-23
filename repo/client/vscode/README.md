@@ -18,7 +18,7 @@ Extension activation entrypoint that registers the two sidebar views (Monorepo a
 The Filter view exposes one item per filter kind with emoji + name labels, tooltip descriptions, and emoji-only menu actions for option toggles.
 The Monorepo view applies the shared filter state across all branches and uses GraphQL-backed data retrieval via the repo CLI executor.
 Section child rendering filters GraphQL section-interface children to section-typed nodes before building section rows so definitions are rendered only in definition rows.
-URI resolution uses the `repo://` scheme. the `semio.navigate` command accepts either a `repo://` uri or a plain artifact id and resolves it to the appropriate resource. ticket and goal uris resolve directly to filesystem paths. file, folder, bundle, technology, section, and definition uris resolve via a tree node cache built from the cli `tree --json` output. the `semio.navigateto` command shows a quick pick of all cached tree nodes. a `vscode.urihandler` is registered for the `repo` scheme to handle external uri navigation. all tree items (including goals) have click-to-navigate commands.
+URI resolution uses the `repo://` scheme. the `compose.navigate` command accepts either a `repo://` uri or a plain artifact id and resolves it to the appropriate resource. ticket and goal uris resolve directly to filesystem paths. file, folder, bundle, technology, section, and definition uris resolve via a tree node cache built from the cli `tree --json` output. the `compose.navigateto` command shows a quick pick of all cached tree nodes. a `vscode.urihandler` is registered for the `repo` scheme to handle external uri navigation. all tree items (including goals) have click-to-navigate commands.
 
 ## package.json
 

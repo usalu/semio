@@ -586,7 +586,7 @@ export interface StoragePort {
 }
 
 function namedLayoutStorageKey(appId: string): string {
-	return `semio.display.layouts.${appId}`;
+	return `compose.display.layouts.${appId}`;
 }
 
 /** @emoji 🧭 Observable store of user-saved {@link NamedLayout}s for one app. */

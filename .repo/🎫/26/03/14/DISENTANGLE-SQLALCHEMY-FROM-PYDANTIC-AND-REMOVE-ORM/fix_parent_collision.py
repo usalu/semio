@@ -4,7 +4,7 @@ Also add back optional parent back-reference fields (excluded from serialization
 
 import re
 
-SEMIO_PY = "/workspaces/semio/semio/py/semio.py"
+COMPOSE_PY = "/workspaces/semio/compose/py/compose.py"
 
 
 def read_file(path: str) -> str:
@@ -76,7 +76,7 @@ def fix_parent_entity_calls(content: str) -> str:
 
 
 def main():
-    content = read_file(SEMIO_PY)
+    content = read_file(COMPOSE_PY)
     print(f"[DEBUG] Before fix: {content.count(chr(10))} lines")
 
     content = rename_parent_methods(content)
@@ -91,7 +91,7 @@ def main():
     print(f"[DEBUG] parent fields: {parent_fields}")
     print(f"[DEBUG] remaining old parent() methods: {old_parent_methods}")
 
-    write_file(SEMIO_PY, content)
+    write_file(COMPOSE_PY, content)
     print("[DEBUG] Done")
 
 

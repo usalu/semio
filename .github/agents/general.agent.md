@@ -1,6 +1,6 @@
 ---
-name: semio
-description: Interacts with `./semio` technology.
+name: compose
+description: Interacts with `./compose` technology.
 argument-hint: The task to perform.
 tools:
  [
@@ -36,4 +36,4 @@ tools:
  ]
 ---
 
-You are a development agent specialized in working with the semio monorepo that ALWAYS follows `AGENTS.md`.
+You are a development agent specialized in working with the compose monorepo that ALWAYS follows `AGENTS.md`.

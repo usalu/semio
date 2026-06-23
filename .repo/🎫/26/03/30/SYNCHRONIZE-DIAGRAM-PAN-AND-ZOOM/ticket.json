@@ -2,7 +2,7 @@
   "title": "Synchronize Diagram Pan And Zoom",
   "emoji": "📊",
   "status": "closed",
-  "description": "Synchronize pan and zoom across all algorithm diagrams and prevent viewport resets when Storybook decorators change. In scenarios like delete, input, diff, and output diagrams must share one synchronized viewport state. Patch the shared semio/ui algorithm window wiring, extend the existing in-file tests to cover synchronized viewport props, verify with the semio/ui vitest suite, and track the touched files.",
+  "description": "Synchronize pan and zoom across all algorithm diagrams and prevent viewport resets when Storybook decorators change. In scenarios like delete, input, diff, and output diagrams must share one synchronized viewport state. Patch the shared compose/ui algorithm window wiring, extend the existing in-file tests to cover synchronized viewport props, verify with the compose/ui vitest suite, and track the touched files.",
   "summary": "Bulk close",
   "goal": "🎯sketchpadimprovements",
   "sessions": [

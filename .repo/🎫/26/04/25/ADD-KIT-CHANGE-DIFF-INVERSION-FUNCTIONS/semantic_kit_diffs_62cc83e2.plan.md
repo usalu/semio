@@ -1,6 +1,6 @@
 ---
 name: semantic kit diffs
-overview: Refactor `semio/rs` so external kit mutation enters through semantic kit commands, while all live graph writes and cache invalidation are centralized in a kit-diff application path.
+overview: Refactor `compose/rs` so external kit mutation enters through semantic kit commands, while all live graph writes and cache invalidation are centralized in a kit-diff application path.
 todos:
  - id: central-diff-writer
    content: Implement `KitGraph::apply_kit_diff` and route cache invalidation/event rewiring through it.
@@ -24,7 +24,7 @@ isProject: false
 
 ## Goal
 
-Make [semio/rs/lib.rs](semio/rs/lib.rs) match the intended architecture:
+Make [compose/rs/lib.rs](compose/rs/lib.rs) match the intended architecture:
 
 - External mutation APIs accept semantic kit commands only.
 - Semantic commands compute a `KitDiff` plus inverse metadata, but do not mutate the live graph directly.
@@ -41,7 +41,7 @@ flowchart LR
 
 ## Implementation Plan
 
-1. Establish the central diff writer in [semio/rs/lib.rs](semio/rs/lib.rs):
+1. Establish the central diff writer in [compose/rs/lib.rs](compose/rs/lib.rs):
    - Add `KitGraph::apply_kit_diff(&KitGraphRef, &KitDiff) -> Result<()>` as the only live-kit mutation mechanism for kit content.
    - Reuse existing `DesignStore::apply_diff`, type diff helpers, file/folder diff helpers, and collection merge logic instead of adding parallel mutation code.
    - Apply diffs in deterministic remove, update, add order for each collection, then run one graph rewiring / event bus / cache invalidation pass.
@@ -60,7 +60,7 @@ flowchart LR
    - Update `TransactionCommand::ChangeKitCommands`, `KitChange::apply_forward`, `apply_backward`, and GraphQL `change_kit_with_inverse` to consume the planner result and persist existing forward/inverse command history while applying only central diffs.
    - Preserve current undo/redo behavior and `KitChangeKind` semantics while making diffs ephemeral application products.
 
-5. Extend existing tests in [semio/rs/lib.rs](semio/rs/lib.rs):
+5. Extend existing tests in [compose/rs/lib.rs](compose/rs/lib.rs):
    - Add focused tests for `KitDiff::between`, `merge`, and central apply across kit metadata, type/design add-remove-update, and nested design piece/connection changes.
    - Extend existing change-command tests to assert commands do not directly mutate outside `apply_kit_diff` behavior by comparing final DTOs and invalidation/event effects.
    - Extend GraphQL/VCS tests so former direct custom mutations work through semantic commands and still return expected results.
@@ -69,7 +69,7 @@ flowchart LR
 
 Run targeted Rust tests first, then the full crate test suite:
 
-- `cargo test --manifest-path c:\git\semio\semio\rs\Cargo.toml change_command_rt`
-- `cargo test --manifest-path c:\git\semio\semio\rs\Cargo.toml events::diff_apply`
-- `cargo test --manifest-path c:\git\semio\semio\rs\Cargo.toml vcs_command_tests`
-- `cargo test --manifest-path c:\git\semio\semio\rs\Cargo.toml`
+- `cargo test --manifest-path c:\git\compose\compose\rs\Cargo.toml change_command_rt`
+- `cargo test --manifest-path c:\git\compose\compose\rs\Cargo.toml events::diff_apply`
+- `cargo test --manifest-path c:\git\compose\compose\rs\Cargo.toml vcs_command_tests`
+- `cargo test --manifest-path c:\git\compose\compose\rs\Cargo.toml`

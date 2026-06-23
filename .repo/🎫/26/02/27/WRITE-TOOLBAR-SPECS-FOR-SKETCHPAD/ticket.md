@@ -13,7 +13,7 @@ Write comprehensive specs for the sketchpad toolbar system documenting architect
 
 1. Read all toolbar-related code across the sketchpad codebase
 2. Document toolbar architecture, component hierarchy, registration contract, layout system, sizing normalization, group mechanics, sub-tool dropdown, per-app toolbar sections, and interaction semantics
-3. Write specs in the existing `semio/js/sketchpad/README.md` under `### Toolbar`
+3. Write specs in the existing `compose/js/sketchpad/README.md` under `### Toolbar`
 
 ## TODOs
 
@@ -23,7 +23,7 @@ Write comprehensive specs for the sketchpad toolbar system documenting architect
 
 ## Changes
 
-- `semio/js/sketchpad/README.md`: Replaced the `### Toolbar` section with comprehensive specs
+- `compose/js/sketchpad/README.md`: Replaced the `### Toolbar` section with comprehensive specs
 
 ## Summary
 

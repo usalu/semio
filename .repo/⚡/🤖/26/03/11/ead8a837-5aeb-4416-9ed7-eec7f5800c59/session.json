@@ -1,6 +1,6 @@
 {
   "id": "ead8a837-5aeb-4416-9ed7-eec7f5800c59",
-  "uri": "semiorepo://s/ead8a837-5aeb-4416-9ed7-eec7f5800c59",
+  "uri": "composerepo://s/ead8a837-5aeb-4416-9ed7-eec7f5800c59",
   "checkpoint": "5c0ab8b008efbe1510e11efe66a0fd119419a013",
   "contributor": "🧑‍💻ueli",
   "client": "copilot-chat",

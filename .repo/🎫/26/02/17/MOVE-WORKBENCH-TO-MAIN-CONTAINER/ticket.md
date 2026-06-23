@@ -16,7 +16,7 @@ None (research only).
 
 ### Research: Panel and Window Definitions per App
 
-#### apps/index.ts (semio/js/sketchpad/apps/index.ts, 23 lines)
+#### apps/index.ts (compose/js/sketchpad/apps/index.ts, 23 lines)
 
 Re-exports from shared.ts:
 ```ts
@@ -28,7 +28,7 @@ No panel/window definitions here. Just re-exports the plugin registration API.
 
 ---
 
-#### Home.tsx (semio/js/sketchpad/Home.tsx, 1791 lines)
+#### Home.tsx (compose/js/sketchpad/Home.tsx, 1791 lines)
 
 **WindowKind enum** (L96-100):
 ```ts
@@ -60,8 +60,8 @@ Single stack with 100% width containing Table, Settings, Chat.
 **getPanels** (L1779-1782):
 ```ts
 getPanels: (): PanelDefinition[] => [
-  createPanelDefinition(PanelKind.TOOLBAR, "semio.sketchpad.navbar.panelToggle.toolbar.show"),
-  createPanelDefinition(PanelKind.DETAILS, "semio.sketchpad.navbar.panelToggle.details.show"),
+  createPanelDefinition(PanelKind.TOOLBAR, "compose.sketchpad.navbar.panelToggle.toolbar.show"),
+  createPanelDefinition(PanelKind.DETAILS, "compose.sketchpad.navbar.panelToggle.details.show"),
 ],
 ```
 
@@ -71,7 +71,7 @@ getPanels: (): PanelDefinition[] => [
 
 ---
 
-#### Kit.tsx (semio/js/sketchpad/Kit.tsx, 9117 lines)
+#### Kit.tsx (compose/js/sketchpad/Kit.tsx, 9117 lines)
 
 **WindowKind enum** (L381-386):
 ```ts
@@ -105,8 +105,8 @@ Two stacks: 50% (Table, Settings, Chat) + 50% (Diagram).
 **getPanels** (L9105-9108):
 ```ts
 getPanels: (): PanelDefinition[] => [
-  createPanelDefinition(PanelKind.TOOLBAR, "semio.sketchpad.navbar.panelToggle.toolbar.show"),
-  createPanelDefinition(PanelKind.DETAILS, "semio.sketchpad.navbar.panelToggle.details.show"),
+  createPanelDefinition(PanelKind.TOOLBAR, "compose.sketchpad.navbar.panelToggle.toolbar.show"),
+  createPanelDefinition(PanelKind.DETAILS, "compose.sketchpad.navbar.panelToggle.details.show"),
 ],
 ```
 
@@ -116,7 +116,7 @@ getPanels: (): PanelDefinition[] => [
 
 ---
 
-#### Type.tsx (semio/js/sketchpad/Type.tsx, 4065 lines)
+#### Type.tsx (compose/js/sketchpad/Type.tsx, 4065 lines)
 
 **WindowKind enum** (L161-165):
 ```ts
@@ -145,11 +145,11 @@ Single stack 100% with Scene, Settings, Chat.
 **getPanels** (L4050-4056):
 ```ts
 getPanels: (): PanelDefinition[] => [
-  createPanelDefinition(PanelKind.WORKBENCH, "semio.sketchpad.navbar.panelToggle.workbench.show"),
-  createPanelDefinition(PanelKind.TOOLS, "semio.sketchpad.navbar.panelToggle.tools.show"),
-  createPanelDefinition(PanelKind.TOOLBAR, "semio.sketchpad.navbar.panelToggle.toolbar.show"),
-  createPanelDefinition(PanelKind.STATS, "semio.sketchpad.navbar.panelToggle.stats.show"),
-  createPanelDefinition(PanelKind.DETAILS, "semio.sketchpad.navbar.panelToggle.details.show"),
+  createPanelDefinition(PanelKind.WORKBENCH, "compose.sketchpad.navbar.panelToggle.workbench.show"),
+  createPanelDefinition(PanelKind.TOOLS, "compose.sketchpad.navbar.panelToggle.tools.show"),
+  createPanelDefinition(PanelKind.TOOLBAR, "compose.sketchpad.navbar.panelToggle.toolbar.show"),
+  createPanelDefinition(PanelKind.STATS, "compose.sketchpad.navbar.panelToggle.stats.show"),
+  createPanelDefinition(PanelKind.DETAILS, "compose.sketchpad.navbar.panelToggle.details.show"),
 ],
 ```
 
@@ -159,7 +159,7 @@ getPanels: (): PanelDefinition[] => [
 
 ---
 
-#### Design.tsx (semio/js/sketchpad/Design.tsx, 9821 lines)
+#### Design.tsx (compose/js/sketchpad/Design.tsx, 9821 lines)
 
 **WindowKind enum** (L306-311):
 ```ts
@@ -190,11 +190,11 @@ Two stacks: 50% (Diagram, Settings, Chat) + 50% (Scene).
 **getPanels** (L9804-9810):
 ```ts
 getPanels: (): PanelDefinition[] => [
-  createPanelDefinition(PanelKind.WORKBENCH, "semio.sketchpad.navbar.panelToggle.workbench.show"),
-  createPanelDefinition(PanelKind.TOOLS, "semio.sketchpad.navbar.panelToggle.tools.show"),
-  createPanelDefinition(PanelKind.TOOLBAR, "semio.sketchpad.navbar.panelToggle.toolbar.show"),
-  createPanelDefinition(PanelKind.STATS, "semio.sketchpad.navbar.panelToggle.stats.show"),
-  createPanelDefinition(PanelKind.DETAILS, "semio.sketchpad.navbar.panelToggle.details.show"),
+  createPanelDefinition(PanelKind.WORKBENCH, "compose.sketchpad.navbar.panelToggle.workbench.show"),
+  createPanelDefinition(PanelKind.TOOLS, "compose.sketchpad.navbar.panelToggle.tools.show"),
+  createPanelDefinition(PanelKind.TOOLBAR, "compose.sketchpad.navbar.panelToggle.toolbar.show"),
+  createPanelDefinition(PanelKind.STATS, "compose.sketchpad.navbar.panelToggle.stats.show"),
+  createPanelDefinition(PanelKind.DETAILS, "compose.sketchpad.navbar.panelToggle.details.show"),
 ],
 ```
 
@@ -209,7 +209,7 @@ getPanels: (): PanelDefinition[] => [
 
 ---
 
-#### Quality.tsx (semio/js/sketchpad/Quality.tsx, 2363 lines)
+#### Quality.tsx (compose/js/sketchpad/Quality.tsx, 2363 lines)
 
 **WindowKind enum** (L148-153):
 ```ts
@@ -240,11 +240,11 @@ Two stacks: width:20 (Formula) + width:80 (Diagram, Settings, Chat). Note: uses 
 **getPanels** (L2348-2354):
 ```ts
 getPanels: (): PanelDefinition[] => [
-  createPanelDefinition(PanelKind.WORKBENCH, "semio.sketchpad.navbar.panelToggle.workbench.show"),
-  createPanelDefinition(PanelKind.TOOLS, "semio.sketchpad.navbar.panelToggle.tools.show"),
-  createPanelDefinition(PanelKind.TOOLBAR, "semio.sketchpad.navbar.panelToggle.toolbar.show"),
-  createPanelDefinition(PanelKind.STATS, "semio.sketchpad.navbar.panelToggle.stats.show"),
-  createPanelDefinition(PanelKind.DETAILS, "semio.sketchpad.navbar.panelToggle.details.show"),
+  createPanelDefinition(PanelKind.WORKBENCH, "compose.sketchpad.navbar.panelToggle.workbench.show"),
+  createPanelDefinition(PanelKind.TOOLS, "compose.sketchpad.navbar.panelToggle.tools.show"),
+  createPanelDefinition(PanelKind.TOOLBAR, "compose.sketchpad.navbar.panelToggle.toolbar.show"),
+  createPanelDefinition(PanelKind.STATS, "compose.sketchpad.navbar.panelToggle.stats.show"),
+  createPanelDefinition(PanelKind.DETAILS, "compose.sketchpad.navbar.panelToggle.details.show"),
 ],
 ```
 
@@ -258,7 +258,7 @@ getPanels: (): PanelDefinition[] => [
 
 ---
 
-#### Docs.tsx (semio/js/sketchpad/Docs.tsx, ~1600 lines)
+#### Docs.tsx (compose/js/sketchpad/Docs.tsx, ~1600 lines)
 
 **WindowKind enum** (L1388-1392):
 ```ts
@@ -287,8 +287,8 @@ Single stack 100% with Page, Settings, Chat.
 **getPanels** (L1572-1581):
 ```ts
 getPanels: (getLabelFn, getHotkeyFn) => [
-  createPanelDefinition(PanelKind.WORKBENCH, "semio.sketchpad.navbar.panelToggle.workbench.show", getHotkeyFn("..."), { labelKey, manualPath }),
-  createPanelDefinition(PanelKind.DETAILS, "semio.sketchpad.navbar.panelToggle.details.show", getHotkeyFn("..."), { labelKey, manualPath }),
+  createPanelDefinition(PanelKind.WORKBENCH, "compose.sketchpad.navbar.panelToggle.workbench.show", getHotkeyFn("..."), { labelKey, manualPath }),
+  createPanelDefinition(PanelKind.DETAILS, "compose.sketchpad.navbar.panelToggle.details.show", getHotkeyFn("..."), { labelKey, manualPath }),
 ],
 ```
 
@@ -301,7 +301,7 @@ getPanels: (getLabelFn, getHotkeyFn) => [
 
 ---
 
-#### Feedback.tsx (semio/js/sketchpad/Feedback.tsx, ~600 lines)
+#### Feedback.tsx (compose/js/sketchpad/Feedback.tsx, ~600 lines)
 
 **WindowKind enum**: None. Feedback uses a direct `<FeedbackForm />` inside `<Canvas>` without LayoutCanvas.
 
@@ -309,7 +309,7 @@ getPanels: (getLabelFn, getHotkeyFn) => [
 
 **getPanels** (L550):
 ```ts
-getPanels: (): PanelDefinition[] => [createPanelDefinition(PanelKind.TOOLBAR, "semio.sketchpad.navbar.panelToggle.toolbar.show")],
+getPanels: (): PanelDefinition[] => [createPanelDefinition(PanelKind.TOOLBAR, "compose.sketchpad.navbar.panelToggle.toolbar.show")],
 ```
 
 **WORKBENCH references**: None.
@@ -318,7 +318,7 @@ getPanels: (): PanelDefinition[] => [createPanelDefinition(PanelKind.TOOLBAR, "s
 
 ---
 
-#### Tutorials.tsx (semio/js/sketchpad/Tutorials.tsx, 1232 lines)
+#### Tutorials.tsx (compose/js/sketchpad/Tutorials.tsx, 1232 lines)
 
 No app config, no getPanels, no windowKinds, no WORKBENCH references. This is a utility/component file for tutorial overlays, not a sketchpad app.
 

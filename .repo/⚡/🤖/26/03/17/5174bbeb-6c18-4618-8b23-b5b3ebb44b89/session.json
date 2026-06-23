@@ -1,6 +1,6 @@
 {
   "id": "5174bbeb-6c18-4618-8b23-b5b3ebb44b89",
-  "uri": "semiorepo://session/5174bbeb-6c18-4618-8b23-b5b3ebb44b89",
+  "uri": "composerepo://session/5174bbeb-6c18-4618-8b23-b5b3ebb44b89",
   "client": "copilot-chat",
   "second": "2026-03-17T19:35:30Z",
   "checkpoint": "fcab99680d4c062ed14b3d60102881b83154cc08",
@@ -22,7 +22,7 @@
           "session_id": "5174bbeb-6c18-4618-8b23-b5b3ebb44b89",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/js/package.json",
+            "filePath": "/workspaces/semio/compose/js/package.json",
             "startLine": 1,
             "endLine": 999
           },
@@ -50,7 +50,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 999,
-            "filePath": "/workspaces/semio/semio/sqlite/schema.sql",
+            "filePath": "/workspaces/semio/compose/sqlite/schema.sql",
             "startLine": 1
           },
           "tool_use_id": "toolu_bdrk_01WAK6nheafeJoHfQ3vrz7bV__vscode-1773763871024",
@@ -76,7 +76,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 999,
-            "filePath": "/workspaces/semio/semio/sqlite/schema.sql",
+            "filePath": "/workspaces/semio/compose/sqlite/schema.sql",
             "startLine": 1
           },
           "tool_response": "",
@@ -102,7 +102,7 @@
           "session_id": "5174bbeb-6c18-4618-8b23-b5b3ebb44b89",
           "tool_name": "file_search",
           "tool_input": {
-            "query": "**/semio/studio",
+            "query": "**/compose/studio",
             "maxResults": 20
           },
           "tool_response": "",
@@ -180,7 +180,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 999,
-            "filePath": "/workspaces/semio/semio/antlr/project.json",
+            "filePath": "/workspaces/semio/compose/antlr/project.json",
             "startLine": 1
           },
           "tool_use_id": "toolu_bdrk_01CTEadbUXsnjYcw3nf7Cagr__vscode-1773763871027",
@@ -232,7 +232,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 999,
-            "filePath": "/workspaces/semio/semio/antlr/project.json",
+            "filePath": "/workspaces/semio/compose/antlr/project.json",
             "startLine": 1
           },
           "tool_response": "",

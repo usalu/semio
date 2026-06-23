@@ -3,25 +3,25 @@ name: kit-name-rename-flow
 overview: "Implement the first canonical example of the new state-management architecture: an end-to-end, non-blocking kit-name rename flow where sketchpad's details panel input drives `useKitName()` -> `KitStore.rename()` -> GraphQL `renameKit` mutation -> rs validation/apply -> `kitRenamed` / `operationFailed` subscription events -> status fan-in to the input (idle / pending / success / error)."
 todos:
   - id: rs_validate_emit
-    content: Add 256-char name validation, emit Event::RenamedKit with requestId, and move CommandSucceeded after apply in semio/rs/lib.rs
+    content: Add 256-char name validation, emit Event::RenamedKit with requestId, and move CommandSucceeded after apply in compose/rs/lib.rs
     status: completed
   - id: rs_subscription
-    content: Add Subscription.kitRenamed in semio/rs/lib.rs and ensure RenamedKit + SemioError carry requestId
+    content: Add Subscription.kitRenamed in compose/rs/lib.rs and ensure RenamedKit + ComposeError carry requestId
     status: completed
   - id: graphql_sdl
-    content: Regenerate semio/graphql/schema.graphql from gql::sdl()
+    content: Regenerate compose/graphql/schema.graphql from gql::sdl()
     status: completed
   - id: js_kitstore_rename
-    content: Add KitStore.rename(name) + internal RxJS BehaviorSubjects for kitName / renameStatus + subscribe/get snapshot APIs in semio/js/index.ts
+    content: Add KitStore.rename(name) + internal RxJS BehaviorSubjects for kitName / renameStatus + subscribe/get snapshot APIs in compose/js/index.ts
     status: completed
   - id: js_subscription_wire
     content: Wire startSubscriptionLoop to dispatch kitRenamed/operationFailed into the new subjects, with requestId correlation
     status: completed
   - id: react_use_kit_name
-    content: Rewrite useKitName() in semio/react/index.tsx to use useSyncExternalStore against the KitStore subjects (return [name, rename, status])
+    content: Rewrite useKitName() in compose/react/index.tsx to use useSyncExternalStore against the KitStore subjects (return [name, rename, status])
     status: completed
   - id: sketchpad_input
-    content: Update KitSectionForm in semio/sketchpad/index.tsx to consume the triad and show inline Spinner (pending) + error text (error)
+    content: Update KitSectionForm in compose/sketchpad/index.tsx to consume the triad and show inline Spinner (pending) + error text (error)
     status: completed
   - id: verify_runtime
     content: Run sketchpad, edit kit name in details panel, verify success path (live name updates) and error path (>256 chars shows error inline, never blocks)
@@ -33,9 +33,9 @@ isProject: false
 
 Wire a single, clean `kit name` rename slice end-to-end through the new layered stack:
 
-`Input` (sketchpad) -> `useKitName()` (`semio/react`) -> `KitStore.rename()` (`semio/js`, internal RxJS) -> `renameKit` mutation + `kitRenamed`/`operationFailed` subscription (`semio/graphql`) -> validation + emission (`semio/rs`).
+`Input` (sketchpad) -> `useKitName()` (`compose/react`) -> `KitStore.rename()` (`compose/js`, internal RxJS) -> `renameKit` mutation + `kitRenamed`/`operationFailed` subscription (`compose/graphql`) -> validation + emission (`compose/rs`).
 
-The hook returns `[kitName, renameKit, status]` where `kitName` is live (auto-updated via `useSyncExternalStore`), `renameKit(name)` returns a `Promise<{ ok, requestId }>`, and `status` is the lifecycle of the latest request (`idle | pending | success | error`). `semio/rs` validates `name.len() <= 256` to demonstrate failure path.
+The hook returns `[kitName, renameKit, status]` where `kitName` is live (auto-updated via `useSyncExternalStore`), `renameKit(name)` returns a `Promise<{ ok, requestId }>`, and `status` is the lifecycle of the latest request (`idle | pending | success | error`). `compose/rs` validates `name.len() <= 256` to demonstrate failure path.
 
 ## Sequence
 
@@ -45,7 +45,7 @@ sequenceDiagram
   participant Hook as useKitName
   participant Store as KitStore.rename
   participant GQL as GraphQL transport
-  participant RS as semio/rs worker
+  participant RS as compose/rs worker
   participant Bus as EventBus
 
   UI->>Hook: renameKit("New Name")
@@ -69,15 +69,15 @@ sequenceDiagram
 
 ## Files
 
-- [semio/rs/lib.rs](semio/rs/lib.rs) - validation, `Event::RenamedKit` emission, `Subscription.kitRenamed` field, fix `commandSucceeded` ordering (currently emitted before `apply`).
-- [semio/graphql/schema.graphql](semio/graphql/schema.graphql) - regenerated SDL (target only; produced by `gql::sdl()`).
-- [semio/js/index.ts](semio/js/index.ts) - new `KitStore.rename(name)` and internal RxJS `BehaviorSubject`s for live kit name + rename-request status; subscription loop forwards `kitRenamed` / `operationFailed`.
-- [semio/react/index.tsx](semio/react/index.tsx) - rewrite `useKitName()` body to subscribe via `useSyncExternalStore` directly to `KitStore` (skip `useSchemaFieldState` for this slice).
-- [semio/sketchpad/index.tsx](semio/sketchpad/index.tsx) - in `KitSectionForm`, consume the triad and render inline `Spinner` + error text alongside the name `<Input>`. Non-blocking lazy commit stays.
+- [compose/rs/lib.rs](compose/rs/lib.rs) - validation, `Event::RenamedKit` emission, `Subscription.kitRenamed` field, fix `commandSucceeded` ordering (currently emitted before `apply`).
+- [compose/graphql/schema.graphql](compose/graphql/schema.graphql) - regenerated SDL (target only; produced by `gql::sdl()`).
+- [compose/js/index.ts](compose/js/index.ts) - new `KitStore.rename(name)` and internal RxJS `BehaviorSubject`s for live kit name + rename-request status; subscription loop forwards `kitRenamed` / `operationFailed`.
+- [compose/react/index.tsx](compose/react/index.tsx) - rewrite `useKitName()` body to subscribe via `useSyncExternalStore` directly to `KitStore` (skip `useSchemaFieldState` for this slice).
+- [compose/sketchpad/index.tsx](compose/sketchpad/index.tsx) - in `KitSectionForm`, consume the triad and render inline `Spinner` + error text alongside the name `<Input>`. Non-blocking lazy commit stays.
 
 ## Concrete changes
 
-### 1. `semio/rs/lib.rs`
+### 1. `compose/rs/lib.rs`
 
 In `gql` Mutation `renameKit` (around line 6276) keep signature `renameKit(draftId, transactionId, name): ID!`. JS still passes ephemeral ids (existing wip write anchors), so no rs API churn.
 
@@ -96,7 +96,7 @@ In `apply` for `Command::RenameKit { request_id, name, .. }` (around line 6057) 
 ```rust
 Command::RenameKit { request_id, name, .. } => {
     if name.chars().count() > 256 {
-        return Err(SemioError::invalid(format!("Kit name too long: {} > 256", name.chars().count())));
+        return Err(ComposeError::invalid(format!("Kit name too long: {} > 256", name.chars().count())));
     }
     *self.graph.the_kit.name.write().await = name.clone();
     self.graph.the_kit.bump_touch_epoch().await;
@@ -117,13 +117,13 @@ pub async fn kit_renamed(&self, ctx: &Context<'_>) -> async_graphql::Result<KitR
 }
 ```
 
-Also keep `operationFailed` as the failure channel; ensure `SemioError` payload includes `request_id` so JS can correlate.
+Also keep `operationFailed` as the failure channel; ensure `ComposeError` payload includes `request_id` so JS can correlate.
 
-### 2. `semio/graphql/schema.graphql`
+### 2. `compose/graphql/schema.graphql`
 
-Regenerate via `SEMIO_GRAPHQL_SCHEMA_OUT=... cargo test` (the rs export path) so the SDL exposes `kitRenamed` and the `RenamedKit { requestId, name, ... }` shape. Do not hand-edit drift.
+Regenerate via `COMPOSE_GRAPHQL_SCHEMA_OUT=... cargo test` (the rs export path) so the SDL exposes `kitRenamed` and the `RenamedKit { requestId, name, ... }` shape. Do not hand-edit drift.
 
-### 3. `semio/js/index.ts`
+### 3. `compose/js/index.ts`
 
 In the `KitStore` class:
 
@@ -155,7 +155,7 @@ async rename(name: string): Promise<{ ok: boolean; requestId: string; error?: Se
 
 Region-place all of this under a new `//#region 🪪Rename` block inside the `KitStore` class.
 
-### 4. `semio/react/index.tsx`
+### 4. `compose/react/index.tsx`
 
 Replace `useKitName` body (around line 8763). New implementation pulls the active `KitStore` directly (via the existing runtime / scope context that already surfaces `KitStoreClient`; expose the underlying `KitStore` if not already accessible) and uses `React.useSyncExternalStore` twice:
 
@@ -178,7 +178,7 @@ export function useKitName(): readonly [string, (n: string) => Promise<SetResult
 
 (Drop the `useSchemaFieldState("Kit", "name", ...)` indirection for this slice; it stays for other fields untouched.)
 
-### 5. `semio/sketchpad/index.tsx` - `KitSectionForm` (around line 15639)
+### 5. `compose/sketchpad/index.tsx` - `KitSectionForm` (around line 15639)
 
 Replace:
 
@@ -204,7 +204,7 @@ const [kitName, renameKit, status] = useKitName();
 </TreeRow>
 ```
 
-`Spinner` is already imported from `@semio/ui`. No changes needed in `elements/ui` -- composition is local and non-invasive.
+`Spinner` is already imported from `@compose/ui`. No changes needed in `elements/ui` -- composition is local and non-invasive.
 
 ## Out of scope (intentionally)
 

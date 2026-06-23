@@ -12,8 +12,8 @@ Fixed tree nesting indentation in the detail panel. Two issues were found and fi
 
 ## Changes
 
-- `semio/js/sketchpad/elements.tsx`: Changed TreeContent paddingLeft from `${level * 0.75}rem` to `${level * 0.75 + 1.25}rem` (line ~3764)
-- `semio/js/sketchpad/Sketchpad.tsx`: Removed `[&_[data-slot='tree-content']]:!pl-0` from rightSidePanelElementSizingClassName (was line ~17739)
+- `compose/js/sketchpad/elements.tsx`: Changed TreeContent paddingLeft from `${level * 0.75}rem` to `${level * 0.75 + 1.25}rem` (line ~3764)
+- `compose/js/sketchpad/Sketchpad.tsx`: Removed `[&_[data-slot='tree-content']]:!pl-0` from rightSidePanelElementSizingClassName (was line ~17739)
 
 ## Log
 

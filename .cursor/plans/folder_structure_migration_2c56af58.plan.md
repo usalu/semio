@@ -1,6 +1,6 @@
 ---
 name: Folder Structure Migration
-overview: "Complete the in-progress monorepo restructure for the ui, framework, cad and puzzle technologies: the code already physically sits in the new top-level folders, so this migration renames package scopes to match folders (folder = technology = scope) and rewires all stale tooling paths. semio and coda are deferred."
+overview: "Complete the in-progress monorepo restructure for the ui, framework, cad and puzzle technologies: the code already physically sits in the new top-level folders, so this migration renames package scopes to match folders (folder = technology = scope) and rewires all stale tooling paths. compose and coda are deferred."
 todos:
   - id: ticket-ui
     content: "Open ticket; rename ui technology: @elements/ui->@ui/react, @elements/styling->@ui/styling (+ Nx @ui/styling-tokens). Fix ui/react and ui/styling package.json name/repository.directory/deps and project.json cwd. Update intra-package imports."
@@ -27,7 +27,7 @@ isProject: false
 
 ## Context
 
-The new top-level technology folders already exist and hold the real code, but every wiring layer still points at the old `elements/lib/*` and `spatial/js` paths, and package scopes are inconsistent. This migration makes folder = technology = scope and rewires tooling. Per decision, `semio` and `coda` are out of scope and will be left with dangling `@elements/*` imports (acceptable: "ok to break for now").
+The new top-level technology folders already exist and hold the real code, but every wiring layer still points at the old `elements/lib/*` and `spatial/js` paths, and package scopes are inconsistent. This migration makes folder = technology = scope and rewires tooling. Per decision, `compose` and `coda` are out of scope and will be left with dangling `@elements/*` imports (acceptable: "ok to break for now").
 
 Work happens inside repo MCP tickets under the `AI-optimized Repo` goal (folder/structure cleanup), one ticket per technology plus a consolidating root-rewire ticket.
 
@@ -67,7 +67,7 @@ Per-technology renames (ui, framework, puzzle, cad) are largely independent and 
 
 ## Known breakage (accepted, deferred)
 
-- `semio` (`@semio/sketchpad` imports `@elements/ui`, `@elements/framework-react`, `@elements/board`, `@elements/scene`) and `coda` (`@coda/desktop` imports `@elements/ui`) will have dangling imports. Their workspace entries stay; fixing their import specifiers is deferred to the future semio/coda migration ticket.
+- `compose` (`@compose/sketchpad` imports `@elements/ui`, `@elements/framework-react`, `@elements/board`, `@elements/scene`) and `coda` (`@coda/desktop` imports `@elements/ui`) will have dangling imports. Their workspace entries stay; fixing their import specifiers is deferred to the future compose/coda migration ticket.
 
 ## Target dependency graph
 

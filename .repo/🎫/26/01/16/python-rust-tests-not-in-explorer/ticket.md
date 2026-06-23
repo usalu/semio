@@ -58,7 +58,7 @@ One profile for WASM development, another for testing with native target.
 ### Python Test Discovery
 
 **Test Files Found:**
-- `py/semio/semio.test.py`
+- `py/compose/compose.test.py`
 - `py/engine/engine.test.py`
 
 **Configuration:**
@@ -72,10 +72,10 @@ The virtual environment `.venv` does not exist. The Python interpreter path conf
 ### Rust Test Discovery
 
 **Test Files Found:**
-- `rs/semio/semio.rs` contains 15 `#[test]` functions in a `#[cfg(test)]` module
+- `rs/compose/compose.rs` contains 15 `#[test]` functions in a `#[cfg(test)]` module
 
 **Configuration:**
-- `rust-analyzer.linkedProjects: ["rs/semio/Cargo.toml"]`
+- `rust-analyzer.linkedProjects: ["rs/compose/Cargo.toml"]`
 - `rust-analyzer.cargo.target: "wasm32-unknown-unknown"`
 
 **Root Cause:**
@@ -117,7 +117,7 @@ User reported tests still not appearing after initial investigation.
    - Added `test` dependency group with pytest, pytest-cov, deepdiff
    - Added `[tool.pytest.ini_options]` section with:
      - `python_files = ["test_*.py", "*_test.py", "*.test.py"]`
-     - `testpaths = ["py/semio", "py/engine"]`
+     - `testpaths = ["py/compose", "py/engine"]`
      - `addopts = "--import-mode=importlib"` (critical for `*.test.py` naming convention)
 
 4. **Installed missing system library for PySide6:**
@@ -131,7 +131,7 @@ User reported tests still not appearing after initial investigation.
 ### Results
 
 Python tests now discoverable:
-- 8 tests from `py/semio/semio.test.py`
+- 8 tests from `py/compose/compose.test.py`
 - 42 tests from `py/engine/engine.test.py`
 - Total: 50 tests collected
 
@@ -187,7 +187,7 @@ Python and Rust tests were not appearing in the VS Code test explorer.
 1. Removed `"rust-analyzer.cargo.target": "wasm32-unknown-unknown"` from `.vscode/settings.json`
 
 ## Result
-- 50 Python tests now discoverable (8 from semio, 42 from engine)
+- 50 Python tests now discoverable (8 from compose, 42 from engine)
 - Rust tests should be discoverable after rust-analyzer restart (Reload Window)
 
 ## Files Modified

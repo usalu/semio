@@ -20,7 +20,7 @@
           "conversation_id": "5c65ae6d-717c-4a63-9c93-5e4f48cee0ee",
           "generation_id": "5c65ae6d-717c-4a63-9c93-5e4f48cee0ee",
           "model": "tab",
-          "file_path": "\\workspaces\\semio\\repo\\postgres\\schema.sql",
+          "file_path": "\\workspaces\\compose\\repo\\postgres\\schema.sql",
           "content": "",
           "hook_event_name": "beforeTabFileRead",
           "cursor_version": "2.6.22",

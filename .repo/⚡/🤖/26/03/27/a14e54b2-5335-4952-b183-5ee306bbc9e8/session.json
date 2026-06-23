@@ -26,7 +26,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 200,
-            "filePath": "/workspaces/semio/semio/algorithms/.storybook/stories/Move.stories.tsx",
+            "filePath": "/workspaces/semio/compose/algorithms/.storybook/stories/Move.stories.tsx",
             "startLine": 1
           },
           "tool_use_id": "toolu_vrtx_01TPSvmuU55uPWQDtbS1Wyck__vscode-1774623237722",
@@ -54,7 +54,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 200,
-            "filePath": "/workspaces/semio/semio/algorithms/.storybook/stories/Drag.stories.tsx",
+            "filePath": "/workspaces/semio/compose/algorithms/.storybook/stories/Drag.stories.tsx",
             "startLine": 1
           },
           "tool_use_id": "toolu_vrtx_01WPXH2c18Pt4tV8GkDoqQN6__vscode-1774623237718",
@@ -82,7 +82,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 200,
-            "filePath": "/workspaces/semio/semio/algorithms/.storybook/stories/Delete.stories.tsx",
+            "filePath": "/workspaces/semio/compose/algorithms/.storybook/stories/Delete.stories.tsx",
             "startLine": 1
           },
           "tool_use_id": "toolu_vrtx_01JGjaqw1cgrTKjTXUAEUZbj__vscode-1774623237719",
@@ -110,7 +110,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 200,
-            "filePath": "/workspaces/semio/semio/algorithms/.storybook/stories/Flatten.stories.tsx",
+            "filePath": "/workspaces/semio/compose/algorithms/.storybook/stories/Flatten.stories.tsx",
             "startLine": 1
           },
           "tool_use_id": "toolu_vrtx_01Pt3EoqrgUqRbSUehSiYWXi__vscode-1774623237720",
@@ -138,7 +138,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 200,
-            "filePath": "/workspaces/semio/semio/algorithms/.storybook/stories/Cluster.stories.tsx",
+            "filePath": "/workspaces/semio/compose/algorithms/.storybook/stories/Cluster.stories.tsx",
             "startLine": 1
           },
           "tool_use_id": "toolu_vrtx_014fqE5uyujcxQucAkcQYBjB__vscode-1774623237721",
@@ -166,7 +166,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 200,
-            "filePath": "/workspaces/semio/semio/algorithms/.storybook/stories/Drag.stories.tsx",
+            "filePath": "/workspaces/semio/compose/algorithms/.storybook/stories/Drag.stories.tsx",
             "startLine": 1
           },
           "tool_use_id": "toolu_vrtx_01WPXH2c18Pt4tV8GkDoqQN6__vscode-1774623237718",
@@ -194,7 +194,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 200,
-            "filePath": "/workspaces/semio/semio/algorithms/.storybook/stories/Delete.stories.tsx",
+            "filePath": "/workspaces/semio/compose/algorithms/.storybook/stories/Delete.stories.tsx",
             "startLine": 1
           },
           "tool_response": "",
@@ -223,7 +223,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 200,
-            "filePath": "/workspaces/semio/semio/algorithms/.storybook/stories/Move.stories.tsx",
+            "filePath": "/workspaces/semio/compose/algorithms/.storybook/stories/Move.stories.tsx",
             "startLine": 1
           },
           "tool_response": "",
@@ -252,7 +252,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 200,
-            "filePath": "/workspaces/semio/semio/algorithms/.storybook/stories/Delete.stories.tsx",
+            "filePath": "/workspaces/semio/compose/algorithms/.storybook/stories/Delete.stories.tsx",
             "startLine": 1
           },
           "tool_response": "",
@@ -281,7 +281,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 200,
-            "filePath": "/workspaces/semio/semio/algorithms/.storybook/stories/Flatten.stories.tsx",
+            "filePath": "/workspaces/semio/compose/algorithms/.storybook/stories/Flatten.stories.tsx",
             "startLine": 1
           },
           "tool_response": "",
@@ -310,7 +310,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 200,
-            "filePath": "/workspaces/semio/semio/algorithms/.storybook/stories/Cluster.stories.tsx",
+            "filePath": "/workspaces/semio/compose/algorithms/.storybook/stories/Cluster.stories.tsx",
             "startLine": 1
           },
           "tool_response": "",
@@ -339,7 +339,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 200,
-            "filePath": "/workspaces/semio/semio/algorithms/.storybook/stories/Drag.stories.tsx",
+            "filePath": "/workspaces/semio/compose/algorithms/.storybook/stories/Drag.stories.tsx",
             "startLine": 1
           },
           "tool_response": "",
@@ -368,7 +368,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 200,
-            "filePath": "/workspaces/semio/semio/algorithms/.storybook/stories/Move.stories.tsx",
+            "filePath": "/workspaces/semio/compose/algorithms/.storybook/stories/Move.stories.tsx",
             "startLine": 1
           },
           "tool_response": "",
@@ -397,7 +397,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 200,
-            "filePath": "/workspaces/semio/semio/algorithms/.storybook/stories/Flatten.stories.tsx",
+            "filePath": "/workspaces/semio/compose/algorithms/.storybook/stories/Flatten.stories.tsx",
             "startLine": 1
           },
           "tool_response": "",
@@ -426,7 +426,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 200,
-            "filePath": "/workspaces/semio/semio/algorithms/.storybook/stories/Cluster.stories.tsx",
+            "filePath": "/workspaces/semio/compose/algorithms/.storybook/stories/Cluster.stories.tsx",
             "startLine": 1
           },
           "tool_response": "",
@@ -455,7 +455,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 200,
-            "filePath": "/workspaces/semio/semio/algorithms/.storybook/stories/Drag.stories.tsx",
+            "filePath": "/workspaces/semio/compose/algorithms/.storybook/stories/Drag.stories.tsx",
             "startLine": 1
           },
           "tool_response": "",
@@ -1167,7 +1167,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115-1/GitHub.copilot-chat/transcripts/a14e54b2-5335-4952-b183-5ee306bbc9e8.jsonl",
           "tool_name": "file_search",
           "tool_input": {
-            "query": "**/semio/algorithms/.storybook/main.*",
+            "query": "**/compose/algorithms/.storybook/main.*",
             "maxResults": 20
           },
           "tool_use_id": "toolu_vrtx_01SEHDMMmeQBSQTJQN8MjqjB__vscode-1774623237729",
@@ -1194,7 +1194,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115-1/GitHub.copilot-chat/transcripts/a14e54b2-5335-4952-b183-5ee306bbc9e8.jsonl",
           "tool_name": "file_search",
           "tool_input": {
-            "query": "**/semio/algorithms/.storybook/main.*",
+            "query": "**/compose/algorithms/.storybook/main.*",
             "maxResults": 20
           },
           "tool_use_id": "toolu_vrtx_01SEHDMMmeQBSQTJQN8MjqjB__vscode-1774623237729",
@@ -1221,7 +1221,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115-1/GitHub.copilot-chat/transcripts/a14e54b2-5335-4952-b183-5ee306bbc9e8.jsonl",
           "tool_name": "file_search",
           "tool_input": {
-            "query": "**/semio/algorithms/.storybook/main.*",
+            "query": "**/compose/algorithms/.storybook/main.*",
             "maxResults": 20
           },
           "tool_response": "",
@@ -1249,7 +1249,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115-1/GitHub.copilot-chat/transcripts/a14e54b2-5335-4952-b183-5ee306bbc9e8.jsonl",
           "tool_name": "file_search",
           "tool_input": {
-            "query": "**/semio/algorithms/.storybook/main.*",
+            "query": "**/compose/algorithms/.storybook/main.*",
             "maxResults": 20
           },
           "tool_response": "",
@@ -1277,7 +1277,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115-1/GitHub.copilot-chat/transcripts/a14e54b2-5335-4952-b183-5ee306bbc9e8.jsonl",
           "tool_name": "file_search",
           "tool_input": {
-            "query": "**/semio/algorithms/.storybook/preview.*",
+            "query": "**/compose/algorithms/.storybook/preview.*",
             "maxResults": 20
           },
           "tool_use_id": "toolu_vrtx_015Ukfz6jRBHacGzv8opbShr__vscode-1774623237731",
@@ -1305,7 +1305,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 100,
-            "filePath": "/workspaces/semio/semio/algorithms/.storybook/main.ts",
+            "filePath": "/workspaces/semio/compose/algorithms/.storybook/main.ts",
             "startLine": 1
           },
           "tool_use_id": "toolu_vrtx_019PGMCmzuC1whPLZNLpCBup__vscode-1774623237730",
@@ -1332,7 +1332,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115-1/GitHub.copilot-chat/transcripts/a14e54b2-5335-4952-b183-5ee306bbc9e8.jsonl",
           "tool_name": "file_search",
           "tool_input": {
-            "query": "**/semio/algorithms/.storybook/preview.*",
+            "query": "**/compose/algorithms/.storybook/preview.*",
             "maxResults": 20
           },
           "tool_use_id": "toolu_vrtx_015Ukfz6jRBHacGzv8opbShr__vscode-1774623237731",
@@ -1360,7 +1360,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 100,
-            "filePath": "/workspaces/semio/semio/algorithms/.storybook/main.ts",
+            "filePath": "/workspaces/semio/compose/algorithms/.storybook/main.ts",
             "startLine": 1
           },
           "tool_use_id": "toolu_vrtx_019PGMCmzuC1whPLZNLpCBup__vscode-1774623237730",
@@ -1387,7 +1387,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115-1/GitHub.copilot-chat/transcripts/a14e54b2-5335-4952-b183-5ee306bbc9e8.jsonl",
           "tool_name": "file_search",
           "tool_input": {
-            "query": "**/semio/algorithms/.storybook/preview.*",
+            "query": "**/compose/algorithms/.storybook/preview.*",
             "maxResults": 20
           },
           "tool_response": "",
@@ -1416,7 +1416,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 100,
-            "filePath": "/workspaces/semio/semio/algorithms/.storybook/main.ts",
+            "filePath": "/workspaces/semio/compose/algorithms/.storybook/main.ts",
             "startLine": 1
           },
           "tool_response": "",
@@ -1444,7 +1444,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115-1/GitHub.copilot-chat/transcripts/a14e54b2-5335-4952-b183-5ee306bbc9e8.jsonl",
           "tool_name": "file_search",
           "tool_input": {
-            "query": "**/semio/algorithms/.storybook/preview.*",
+            "query": "**/compose/algorithms/.storybook/preview.*",
             "maxResults": 20
           },
           "tool_response": "",
@@ -1473,7 +1473,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 100,
-            "filePath": "/workspaces/semio/semio/algorithms/.storybook/main.ts",
+            "filePath": "/workspaces/semio/compose/algorithms/.storybook/main.ts",
             "startLine": 1
           },
           "tool_response": "",
@@ -1502,7 +1502,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 40,
-            "filePath": "/workspaces/semio/semio/algorithms/.storybook/preview.ts",
+            "filePath": "/workspaces/semio/compose/algorithms/.storybook/preview.ts",
             "startLine": 1
           },
           "tool_use_id": "toolu_vrtx_01EXEnVdq2gadHA5ZXnJ7HwS__vscode-1774623237732",
@@ -1530,7 +1530,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 40,
-            "filePath": "/workspaces/semio/semio/algorithms/.storybook/preview.ts",
+            "filePath": "/workspaces/semio/compose/algorithms/.storybook/preview.ts",
             "startLine": 1
           },
           "tool_use_id": "toolu_vrtx_01EXEnVdq2gadHA5ZXnJ7HwS__vscode-1774623237732",
@@ -1558,7 +1558,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 40,
-            "filePath": "/workspaces/semio/semio/algorithms/.storybook/preview.ts",
+            "filePath": "/workspaces/semio/compose/algorithms/.storybook/preview.ts",
             "startLine": 1
           },
           "tool_response": "",
@@ -1587,7 +1587,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 40,
-            "filePath": "/workspaces/semio/semio/algorithms/.storybook/preview.ts",
+            "filePath": "/workspaces/semio/compose/algorithms/.storybook/preview.ts",
             "startLine": 1
           },
           "tool_response": "",
@@ -1616,7 +1616,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 80,
-            "filePath": "/workspaces/semio/semio/algorithms/.storybook/preview.ts",
+            "filePath": "/workspaces/semio/compose/algorithms/.storybook/preview.ts",
             "startLine": 40
           },
           "tool_use_id": "toolu_vrtx_0154Uwfx9CeCB52xHHsV94dL__vscode-1774623237733",
@@ -1644,7 +1644,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 80,
-            "filePath": "/workspaces/semio/semio/algorithms/.storybook/preview.ts",
+            "filePath": "/workspaces/semio/compose/algorithms/.storybook/preview.ts",
             "startLine": 40
           },
           "tool_use_id": "toolu_vrtx_0154Uwfx9CeCB52xHHsV94dL__vscode-1774623237733",
@@ -1672,7 +1672,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 80,
-            "filePath": "/workspaces/semio/semio/algorithms/.storybook/preview.ts",
+            "filePath": "/workspaces/semio/compose/algorithms/.storybook/preview.ts",
             "startLine": 40
           },
           "tool_response": "",
@@ -1701,7 +1701,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 80,
-            "filePath": "/workspaces/semio/semio/algorithms/.storybook/preview.ts",
+            "filePath": "/workspaces/semio/compose/algorithms/.storybook/preview.ts",
             "startLine": 40
           },
           "tool_response": "",
@@ -1982,7 +1982,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 30,
-            "filePath": "/workspaces/semio/semio/ui/globals.css",
+            "filePath": "/workspaces/semio/compose/ui/globals.css",
             "startLine": 1
           },
           "tool_use_id": "toolu_vrtx_01Die7xDmgsD5WoNg2NwpY1Z__vscode-1774623237736",
@@ -2038,7 +2038,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 30,
-            "filePath": "/workspaces/semio/semio/ui/globals.css",
+            "filePath": "/workspaces/semio/compose/ui/globals.css",
             "startLine": 1
           },
           "tool_use_id": "toolu_vrtx_01Die7xDmgsD5WoNg2NwpY1Z__vscode-1774623237736",
@@ -2095,7 +2095,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 30,
-            "filePath": "/workspaces/semio/semio/ui/globals.css",
+            "filePath": "/workspaces/semio/compose/ui/globals.css",
             "startLine": 1
           },
           "tool_response": "",
@@ -2153,7 +2153,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 30,
-            "filePath": "/workspaces/semio/semio/ui/globals.css",
+            "filePath": "/workspaces/semio/compose/ui/globals.css",
             "startLine": 1
           },
           "tool_response": "",
@@ -2181,7 +2181,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115-1/GitHub.copilot-chat/transcripts/a14e54b2-5335-4952-b183-5ee306bbc9e8.jsonl",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "cd /workspaces/semio \u0026\u0026 npx nx dev @semio/algorithms 2\u003e\u00261 \u0026\nsleep 15\necho \"=== Storybook started ===\"",
+            "command": "cd /workspaces/semio \u0026\u0026 npx nx dev @compose/algorithms 2\u003e\u00261 \u0026\nsleep 15\necho \"=== Storybook started ===\"",
             "explanation": "Start the algorithm storybook to check for errors",
             "goal": "Start storybook",
             "isBackground": true,
@@ -2211,7 +2211,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115-1/GitHub.copilot-chat/transcripts/a14e54b2-5335-4952-b183-5ee306bbc9e8.jsonl",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "cd /workspaces/semio \u0026\u0026 npx nx dev @semio/algorithms 2\u003e\u00261 \u0026\nsleep 15\necho \"=== Storybook started ===\"",
+            "command": "cd /workspaces/semio \u0026\u0026 npx nx dev @compose/algorithms 2\u003e\u00261 \u0026\nsleep 15\necho \"=== Storybook started ===\"",
             "explanation": "Start the algorithm storybook to check for errors",
             "goal": "Start storybook",
             "isBackground": true,
@@ -2241,13 +2241,13 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115-1/GitHub.copilot-chat/transcripts/a14e54b2-5335-4952-b183-5ee306bbc9e8.jsonl",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "cd /workspaces/semio \u0026\u0026 npx nx dev @semio/algorithms 2\u003e\u00261 \u0026\nsleep 15\necho \"=== Storybook started ===\"",
+            "command": "cd /workspaces/semio \u0026\u0026 npx nx dev @compose/algorithms 2\u003e\u00261 \u0026\nsleep 15\necho \"=== Storybook started ===\"",
             "explanation": "Start the algorithm storybook to check for errors",
             "goal": "Start storybook",
             "isBackground": true,
             "timeout": 30000
           },
-          "tool_response": "Command is running in terminal with ID=cb078ab7-c1e8-444a-83ea-bb58a3c99b9b\n The command became idle with output:\nThe terminal output does not show any errors. It indicates that the command `npx nx dev @semio/algorithms` was executed in the background, and there are no error messages present. Therefore, the result is:\n\nundefined",
+          "tool_response": "Command is running in terminal with ID=cb078ab7-c1e8-444a-83ea-bb58a3c99b9b\n The command became idle with output:\nThe terminal output does not show any errors. It indicates that the command `npx nx dev @compose/algorithms` was executed in the background, and there are no error messages present. Therefore, the result is:\n\nundefined",
           "tool_use_id": "toolu_vrtx_01KL3SDhdChNJZT3KDa5B7pq__vscode-1774623237738",
           "cwd": "/workspaces/semio"
         }
@@ -2272,13 +2272,13 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115-1/GitHub.copilot-chat/transcripts/a14e54b2-5335-4952-b183-5ee306bbc9e8.jsonl",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "cd /workspaces/semio \u0026\u0026 npx nx dev @semio/algorithms 2\u003e\u00261 \u0026\nsleep 15\necho \"=== Storybook started ===\"",
+            "command": "cd /workspaces/semio \u0026\u0026 npx nx dev @compose/algorithms 2\u003e\u00261 \u0026\nsleep 15\necho \"=== Storybook started ===\"",
             "explanation": "Start the algorithm storybook to check for errors",
             "goal": "Start storybook",
             "isBackground": true,
             "timeout": 30000
           },
-          "tool_response": "Command is running in terminal with ID=cb078ab7-c1e8-444a-83ea-bb58a3c99b9b\n The command became idle with output:\nThe terminal output does not show any errors. It indicates that the command `npx nx dev @semio/algorithms` was executed in the background, and there are no error messages present. Therefore, the result is:\n\nundefined",
+          "tool_response": "Command is running in terminal with ID=cb078ab7-c1e8-444a-83ea-bb58a3c99b9b\n The command became idle with output:\nThe terminal output does not show any errors. It indicates that the command `npx nx dev @compose/algorithms` was executed in the background, and there are no error messages present. Therefore, the result is:\n\nundefined",
           "tool_use_id": "toolu_vrtx_01KL3SDhdChNJZT3KDa5B7pq__vscode-1774623237738",
           "cwd": "/workspaces/semio"
         }
@@ -2357,7 +2357,7 @@
           "tool_input": {
             "id": "cb078ab7-c1e8-444a-83ea-bb58a3c99b9b"
           },
-          "tool_response": "Output of terminal cb078ab7-c1e8-444a-83ea-bb58a3c99b9b:\nvscode ➜ /workspaces/semio (ueli/latest) $  cd /workspaces/semio \u0026\u0026 npx nx dev @semio/algorithms 2\u003e\u00261 \u0026\n[1] 282464\nvscode ➜ /workspaces/semio (ueli/latest) $ sleep 15\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+          "tool_response": "Output of terminal cb078ab7-c1e8-444a-83ea-bb58a3c99b9b:\nvscode ➜ /workspaces/semio (ueli/latest) $  cd /workspaces/semio \u0026\u0026 npx nx dev @compose/algorithms 2\u003e\u00261 \u0026\n[1] 282464\nvscode ➜ /workspaces/semio (ueli/latest) $ sleep 15\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
           "tool_use_id": "toolu_vrtx_01Bnnzycs3KdnEHdoaAkWBdL__vscode-1774623237739",
           "cwd": "/workspaces/semio"
         }
@@ -2384,7 +2384,7 @@
           "tool_input": {
             "id": "cb078ab7-c1e8-444a-83ea-bb58a3c99b9b"
           },
-          "tool_response": "Output of terminal cb078ab7-c1e8-444a-83ea-bb58a3c99b9b:\nvscode ➜ /workspaces/semio (ueli/latest) $  cd /workspaces/semio \u0026\u0026 npx nx dev @semio/algorithms 2\u003e\u00261 \u0026\n[1] 282464\nvscode ➜ /workspaces/semio (ueli/latest) $ sleep 15\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+          "tool_response": "Output of terminal cb078ab7-c1e8-444a-83ea-bb58a3c99b9b:\nvscode ➜ /workspaces/semio (ueli/latest) $  cd /workspaces/semio \u0026\u0026 npx nx dev @compose/algorithms 2\u003e\u00261 \u0026\n[1] 282464\nvscode ➜ /workspaces/semio (ueli/latest) $ sleep 15\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
           "tool_use_id": "toolu_vrtx_01Bnnzycs3KdnEHdoaAkWBdL__vscode-1774623237739",
           "cwd": "/workspaces/semio"
         }
@@ -2585,7 +2585,7 @@
           "tool_input": {
             "id": "cb078ab7-c1e8-444a-83ea-bb58a3c99b9b"
           },
-          "tool_response": "Output of terminal cb078ab7-c1e8-444a-83ea-bb58a3c99b9b:\nvscode ➜ /workspaces/semio (ueli/latest) $  cd /workspaces/semio \u0026\u0026 npx nx dev @semio/algorithms 2\u003e\u00261 \u0026\n[1] 282464\nvscode ➜ /workspaces/semio (ueli/latest) $ sleep 15\n\n[1]+  Stopped                 cd /workspaces/semio \u0026\u0026 npx nx dev @semio/algorithms 2\u003e\u00261\nvscode ➜ /workspaces/semio (ueli/latest) $ echo \"=== Storybook started ===\"\n=== Storybook started ===\nvscode ➜ /workspaces/semio (ueli/latest) $ \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+          "tool_response": "Output of terminal cb078ab7-c1e8-444a-83ea-bb58a3c99b9b:\nvscode ➜ /workspaces/semio (ueli/latest) $  cd /workspaces/semio \u0026\u0026 npx nx dev @compose/algorithms 2\u003e\u00261 \u0026\n[1] 282464\nvscode ➜ /workspaces/semio (ueli/latest) $ sleep 15\n\n[1]+  Stopped                 cd /workspaces/semio \u0026\u0026 npx nx dev @compose/algorithms 2\u003e\u00261\nvscode ➜ /workspaces/semio (ueli/latest) $ echo \"=== Storybook started ===\"\n=== Storybook started ===\nvscode ➜ /workspaces/semio (ueli/latest) $ \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
           "tool_use_id": "toolu_vrtx_013VQsjGfs9eQuCkXNhSScDe__vscode-1774623237741",
           "cwd": "/workspaces/semio"
         }
@@ -2612,7 +2612,7 @@
           "tool_input": {
             "id": "cb078ab7-c1e8-444a-83ea-bb58a3c99b9b"
           },
-          "tool_response": "Output of terminal cb078ab7-c1e8-444a-83ea-bb58a3c99b9b:\nvscode ➜ /workspaces/semio (ueli/latest) $  cd /workspaces/semio \u0026\u0026 npx nx dev @semio/algorithms 2\u003e\u00261 \u0026\n[1] 282464\nvscode ➜ /workspaces/semio (ueli/latest) $ sleep 15\n\n[1]+  Stopped                 cd /workspaces/semio \u0026\u0026 npx nx dev @semio/algorithms 2\u003e\u00261\nvscode ➜ /workspaces/semio (ueli/latest) $ echo \"=== Storybook started ===\"\n=== Storybook started ===\nvscode ➜ /workspaces/semio (ueli/latest) $ \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+          "tool_response": "Output of terminal cb078ab7-c1e8-444a-83ea-bb58a3c99b9b:\nvscode ➜ /workspaces/semio (ueli/latest) $  cd /workspaces/semio \u0026\u0026 npx nx dev @compose/algorithms 2\u003e\u00261 \u0026\n[1] 282464\nvscode ➜ /workspaces/semio (ueli/latest) $ sleep 15\n\n[1]+  Stopped                 cd /workspaces/semio \u0026\u0026 npx nx dev @compose/algorithms 2\u003e\u00261\nvscode ➜ /workspaces/semio (ueli/latest) $ echo \"=== Storybook started ===\"\n=== Storybook started ===\nvscode ➜ /workspaces/semio (ueli/latest) $ \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
           "tool_use_id": "toolu_vrtx_013VQsjGfs9eQuCkXNhSScDe__vscode-1774623237741",
           "cwd": "/workspaces/semio"
         }
@@ -2637,7 +2637,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115-1/GitHub.copilot-chat/transcripts/a14e54b2-5335-4952-b183-5ee306bbc9e8.jsonl",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "cd /workspaces/semio \u0026\u0026 npx nx dev @semio/algorithms 2\u003e\u00261",
+            "command": "cd /workspaces/semio \u0026\u0026 npx nx dev @compose/algorithms 2\u003e\u00261",
             "explanation": "Start the algorithm storybook as a background process",
             "goal": "Start algorithm storybook",
             "isBackground": true,
@@ -2667,7 +2667,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115-1/GitHub.copilot-chat/transcripts/a14e54b2-5335-4952-b183-5ee306bbc9e8.jsonl",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "cd /workspaces/semio \u0026\u0026 npx nx dev @semio/algorithms 2\u003e\u00261",
+            "command": "cd /workspaces/semio \u0026\u0026 npx nx dev @compose/algorithms 2\u003e\u00261",
             "explanation": "Start the algorithm storybook as a background process",
             "goal": "Start algorithm storybook",
             "isBackground": true,
@@ -2697,13 +2697,13 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115-1/GitHub.copilot-chat/transcripts/a14e54b2-5335-4952-b183-5ee306bbc9e8.jsonl",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "cd /workspaces/semio \u0026\u0026 npx nx dev @semio/algorithms 2\u003e\u00261",
+            "command": "cd /workspaces/semio \u0026\u0026 npx nx dev @compose/algorithms 2\u003e\u00261",
             "explanation": "Start the algorithm storybook as a background process",
             "goal": "Start algorithm storybook",
             "isBackground": true,
             "timeout": 0
           },
-          "tool_response": "Command is running in terminal with ID=c73e07d1-e051-4151-b1c8-fb5300e94bbb\n The command became idle with output:\nThe terminal output indicates that there were errors during the execution of the command. Here are the errors:\n\n```\nnpm error Lifecycle script `dev` failed with error:\nnpm error code 255\nnpm error path /workspaces/semio/semio/algorithms\nnpm error workspace @semio/algorithms@0.1.0\nnpm error location /workspaces/semio/semio/algorithms\nnpm error command failed\nnpm error command sh -c storybook dev -p 6007 --exact-port --host 0.0.0.0 --no-open --debug\n```",
+          "tool_response": "Command is running in terminal with ID=c73e07d1-e051-4151-b1c8-fb5300e94bbb\n The command became idle with output:\nThe terminal output indicates that there were errors during the execution of the command. Here are the errors:\n\n```\nnpm error Lifecycle script `dev` failed with error:\nnpm error code 255\nnpm error path /workspaces/semio/compose/algorithms\nnpm error workspace @compose/algorithms@0.1.0\nnpm error location /workspaces/semio/compose/algorithms\nnpm error command failed\nnpm error command sh -c storybook dev -p 6007 --exact-port --host 0.0.0.0 --no-open --debug\n```",
           "tool_use_id": "toolu_vrtx_019cmnsEvrvxRdYwrXtnpnQE__vscode-1774623237742",
           "cwd": "/workspaces/semio"
         }
@@ -2728,13 +2728,13 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115-1/GitHub.copilot-chat/transcripts/a14e54b2-5335-4952-b183-5ee306bbc9e8.jsonl",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "cd /workspaces/semio \u0026\u0026 npx nx dev @semio/algorithms 2\u003e\u00261",
+            "command": "cd /workspaces/semio \u0026\u0026 npx nx dev @compose/algorithms 2\u003e\u00261",
             "explanation": "Start the algorithm storybook as a background process",
             "goal": "Start algorithm storybook",
             "isBackground": true,
             "timeout": 0
           },
-          "tool_response": "Command is running in terminal with ID=c73e07d1-e051-4151-b1c8-fb5300e94bbb\n The command became idle with output:\nThe terminal output indicates that there were errors during the execution of the command. Here are the errors:\n\n```\nnpm error Lifecycle script `dev` failed with error:\nnpm error code 255\nnpm error path /workspaces/semio/semio/algorithms\nnpm error workspace @semio/algorithms@0.1.0\nnpm error location /workspaces/semio/semio/algorithms\nnpm error command failed\nnpm error command sh -c storybook dev -p 6007 --exact-port --host 0.0.0.0 --no-open --debug\n```",
+          "tool_response": "Command is running in terminal with ID=c73e07d1-e051-4151-b1c8-fb5300e94bbb\n The command became idle with output:\nThe terminal output indicates that there were errors during the execution of the command. Here are the errors:\n\n```\nnpm error Lifecycle script `dev` failed with error:\nnpm error code 255\nnpm error path /workspaces/semio/compose/algorithms\nnpm error workspace @compose/algorithms@0.1.0\nnpm error location /workspaces/semio/compose/algorithms\nnpm error command failed\nnpm error command sh -c storybook dev -p 6007 --exact-port --host 0.0.0.0 --no-open --debug\n```",
           "tool_use_id": "toolu_vrtx_019cmnsEvrvxRdYwrXtnpnQE__vscode-1774623237742",
           "cwd": "/workspaces/semio"
         }
@@ -2813,7 +2813,7 @@
           "tool_input": {
             "id": "c73e07d1-e051-4151-b1c8-fb5300e94bbb"
           },
-          "tool_response": "Output of terminal c73e07d1-e051-4151-b1c8-fb5300e94bbb:\nvscode ➜ /workspaces/semio (ueli/latest) $  cd /workspaces/semio \u0026\u0026 npx nx dev @semio/algorithms 2\u003e\u00261\n\n\u003e @semio/algorithms@0.1.0 dev\n\u003e storybook dev -p 6007 --exact-port --host 0.0.0.0 --no-open --debug\n\n\n┌  storybook v10.3.1\nnpm error Lifecycle script `dev` failed with error:\nnpm error code 255\nnpm error path /workspaces/semio/semio/algorithms\nnpm error workspace @semio/algorithms@0.1.0\nnpm error location /workspaces/semio/semio/algorithms\nnpm error command failed\nnpm error command sh -c storybook dev -p 6007 --exact-port --host 0.0.0.0 --no-open --debug\nvscode ➜ /workspaces/semio (ueli/latest) $ \n\n\n\n\n\n\n\n\n\n\n\n\n",
+          "tool_response": "Output of terminal c73e07d1-e051-4151-b1c8-fb5300e94bbb:\nvscode ➜ /workspaces/semio (ueli/latest) $  cd /workspaces/semio \u0026\u0026 npx nx dev @compose/algorithms 2\u003e\u00261\n\n\u003e @compose/algorithms@0.1.0 dev\n\u003e storybook dev -p 6007 --exact-port --host 0.0.0.0 --no-open --debug\n\n\n┌  storybook v10.3.1\nnpm error Lifecycle script `dev` failed with error:\nnpm error code 255\nnpm error path /workspaces/semio/compose/algorithms\nnpm error workspace @compose/algorithms@0.1.0\nnpm error location /workspaces/semio/compose/algorithms\nnpm error command failed\nnpm error command sh -c storybook dev -p 6007 --exact-port --host 0.0.0.0 --no-open --debug\nvscode ➜ /workspaces/semio (ueli/latest) $ \n\n\n\n\n\n\n\n\n\n\n\n\n",
           "tool_use_id": "toolu_vrtx_01VMB7UWBgWFwcDyGLHRsD5L__vscode-1774623237743",
           "cwd": "/workspaces/semio"
         }
@@ -2840,7 +2840,7 @@
           "tool_input": {
             "id": "c73e07d1-e051-4151-b1c8-fb5300e94bbb"
           },
-          "tool_response": "Output of terminal c73e07d1-e051-4151-b1c8-fb5300e94bbb:\nvscode ➜ /workspaces/semio (ueli/latest) $  cd /workspaces/semio \u0026\u0026 npx nx dev @semio/algorithms 2\u003e\u00261\n\n\u003e @semio/algorithms@0.1.0 dev\n\u003e storybook dev -p 6007 --exact-port --host 0.0.0.0 --no-open --debug\n\n\n┌  storybook v10.3.1\nnpm error Lifecycle script `dev` failed with error:\nnpm error code 255\nnpm error path /workspaces/semio/semio/algorithms\nnpm error workspace @semio/algorithms@0.1.0\nnpm error location /workspaces/semio/semio/algorithms\nnpm error command failed\nnpm error command sh -c storybook dev -p 6007 --exact-port --host 0.0.0.0 --no-open --debug\nvscode ➜ /workspaces/semio (ueli/latest) $ \n\n\n\n\n\n\n\n\n\n\n\n\n",
+          "tool_response": "Output of terminal c73e07d1-e051-4151-b1c8-fb5300e94bbb:\nvscode ➜ /workspaces/semio (ueli/latest) $  cd /workspaces/semio \u0026\u0026 npx nx dev @compose/algorithms 2\u003e\u00261\n\n\u003e @compose/algorithms@0.1.0 dev\n\u003e storybook dev -p 6007 --exact-port --host 0.0.0.0 --no-open --debug\n\n\n┌  storybook v10.3.1\nnpm error Lifecycle script `dev` failed with error:\nnpm error code 255\nnpm error path /workspaces/semio/compose/algorithms\nnpm error workspace @compose/algorithms@0.1.0\nnpm error location /workspaces/semio/compose/algorithms\nnpm error command failed\nnpm error command sh -c storybook dev -p 6007 --exact-port --host 0.0.0.0 --no-open --debug\nvscode ➜ /workspaces/semio (ueli/latest) $ \n\n\n\n\n\n\n\n\n\n\n\n\n",
           "tool_use_id": "toolu_vrtx_01VMB7UWBgWFwcDyGLHRsD5L__vscode-1774623237743",
           "cwd": "/workspaces/semio"
         }
@@ -3109,7 +3109,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115-1/GitHub.copilot-chat/transcripts/a14e54b2-5335-4952-b183-5ee306bbc9e8.jsonl",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "cd /workspaces/semio/semio/algorithms \u0026\u0026 npx storybook dev -p 6007 --no-open 2\u003e\u00261 | head -100",
+            "command": "cd /workspaces/semio/compose/algorithms \u0026\u0026 npx storybook dev -p 6007 --no-open 2\u003e\u00261 | head -100",
             "explanation": "Start storybook directly to see full error output",
             "goal": "Start storybook with full error output",
             "isBackground": false,
@@ -3139,7 +3139,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115-1/GitHub.copilot-chat/transcripts/a14e54b2-5335-4952-b183-5ee306bbc9e8.jsonl",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "cd /workspaces/semio/semio/algorithms \u0026\u0026 npx storybook dev -p 6007 --no-open 2\u003e\u00261 | head -100",
+            "command": "cd /workspaces/semio/compose/algorithms \u0026\u0026 npx storybook dev -p 6007 --no-open 2\u003e\u00261 | head -100",
             "explanation": "Start storybook directly to see full error output",
             "goal": "Start storybook with full error output",
             "isBackground": false,
@@ -3169,13 +3169,13 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115-1/GitHub.copilot-chat/transcripts/a14e54b2-5335-4952-b183-5ee306bbc9e8.jsonl",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "cd /workspaces/semio/semio/algorithms \u0026\u0026 npx storybook dev -p 6007 --no-open 2\u003e\u00261 | head -100",
+            "command": "cd /workspaces/semio/compose/algorithms \u0026\u0026 npx storybook dev -p 6007 --no-open 2\u003e\u00261 | head -100",
             "explanation": "Start storybook directly to see full error output",
             "goal": "Start storybook with full error output",
             "isBackground": false,
             "timeout": 60000
           },
-          "tool_response": "Note: This terminal execution was moved to the background using the ID 4aaca2c9-11ac-4f26-8ca5-7cc9bf9206ea\nNote: Command timed out after 60000ms. Output collected so far is shown below and the command may still be running in terminal ID 4aaca2c9-11ac-4f26-8ca5-7cc9bf9206ea.\n\nvscode ➜ /workspaces/semio (ueli/latest) $  cd /workspaces/semio/semio/algorithms \u0026\u0026 npx storybook dev -p 6007 --no-open 2\u003e\u00261 | head -100\n\n┌  storybook v10.3.1\n│\n●  Starting...\n│ ╭────────────────────────────────────────────────────────────────────────────╮\n│ │   Storybook ready!                                                         │\n│ │                                                                            │\n│ │   - Local:                http://localhost:6007/                           │\n│ │   - On your network:      http://172.17.0.2:6007/                          │\n│ │                                                                            │\n│ │                                                                            │\n│ │   A new version (10.3.3) is available!                                     │\n│ │                                                                            │\n│ │   Upgrade now: npx storybook@latest upgrade                                │\n│ │                                                                            │\n│ │   Read full changelog:                                                     │\n│ │   https://github.com/storybookjs/storybook/blob/main/CHANGELOG.md          │\n│ ╰────────────────────────────────────────────────────────────────────────────╯\n│\n●  168 ms for manager and 795 ms for preview\n\n\n\n",
+          "tool_response": "Note: This terminal execution was moved to the background using the ID 4aaca2c9-11ac-4f26-8ca5-7cc9bf9206ea\nNote: Command timed out after 60000ms. Output collected so far is shown below and the command may still be running in terminal ID 4aaca2c9-11ac-4f26-8ca5-7cc9bf9206ea.\n\nvscode ➜ /workspaces/semio (ueli/latest) $  cd /workspaces/semio/compose/algorithms \u0026\u0026 npx storybook dev -p 6007 --no-open 2\u003e\u00261 | head -100\n\n┌  storybook v10.3.1\n│\n●  Starting...\n│ ╭────────────────────────────────────────────────────────────────────────────╮\n│ │   Storybook ready!                                                         │\n│ │                                                                            │\n│ │   - Local:                http://localhost:6007/                           │\n│ │   - On your network:      http://172.17.0.2:6007/                          │\n│ │                                                                            │\n│ │                                                                            │\n│ │   A new version (10.3.3) is available!                                     │\n│ │                                                                            │\n│ │   Upgrade now: npx storybook@latest upgrade                                │\n│ │                                                                            │\n│ │   Read full changelog:                                                     │\n│ │   https://github.com/storybookjs/storybook/blob/main/CHANGELOG.md          │\n│ ╰────────────────────────────────────────────────────────────────────────────╯\n│\n●  168 ms for manager and 795 ms for preview\n\n\n\n",
           "tool_use_id": "toolu_vrtx_0156LQkeUBmQ6JfqU15VHq23__vscode-1774623237746",
           "cwd": "/workspaces/semio"
         }
@@ -3200,13 +3200,13 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115-1/GitHub.copilot-chat/transcripts/a14e54b2-5335-4952-b183-5ee306bbc9e8.jsonl",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "cd /workspaces/semio/semio/algorithms \u0026\u0026 npx storybook dev -p 6007 --no-open 2\u003e\u00261 | head -100",
+            "command": "cd /workspaces/semio/compose/algorithms \u0026\u0026 npx storybook dev -p 6007 --no-open 2\u003e\u00261 | head -100",
             "explanation": "Start storybook directly to see full error output",
             "goal": "Start storybook with full error output",
             "isBackground": false,
             "timeout": 60000
           },
-          "tool_response": "Note: This terminal execution was moved to the background using the ID 4aaca2c9-11ac-4f26-8ca5-7cc9bf9206ea\nNote: Command timed out after 60000ms. Output collected so far is shown below and the command may still be running in terminal ID 4aaca2c9-11ac-4f26-8ca5-7cc9bf9206ea.\n\nvscode ➜ /workspaces/semio (ueli/latest) $  cd /workspaces/semio/semio/algorithms \u0026\u0026 npx storybook dev -p 6007 --no-open 2\u003e\u00261 | head -100\n\n┌  storybook v10.3.1\n│\n●  Starting...\n│ ╭────────────────────────────────────────────────────────────────────────────╮\n│ │   Storybook ready!                                                         │\n│ │                                                                            │\n│ │   - Local:                http://localhost:6007/                           │\n│ │   - On your network:      http://172.17.0.2:6007/                          │\n│ │                                                                            │\n│ │                                                                            │\n│ │   A new version (10.3.3) is available!                                     │\n│ │                                                                            │\n│ │   Upgrade now: npx storybook@latest upgrade                                │\n│ │                                                                            │\n│ │   Read full changelog:                                                     │\n│ │   https://github.com/storybookjs/storybook/blob/main/CHANGELOG.md          │\n│ ╰────────────────────────────────────────────────────────────────────────────╯\n│\n●  168 ms for manager and 795 ms for preview\n\n\n\n",
+          "tool_response": "Note: This terminal execution was moved to the background using the ID 4aaca2c9-11ac-4f26-8ca5-7cc9bf9206ea\nNote: Command timed out after 60000ms. Output collected so far is shown below and the command may still be running in terminal ID 4aaca2c9-11ac-4f26-8ca5-7cc9bf9206ea.\n\nvscode ➜ /workspaces/semio (ueli/latest) $  cd /workspaces/semio/compose/algorithms \u0026\u0026 npx storybook dev -p 6007 --no-open 2\u003e\u00261 | head -100\n\n┌  storybook v10.3.1\n│\n●  Starting...\n│ ╭────────────────────────────────────────────────────────────────────────────╮\n│ │   Storybook ready!                                                         │\n│ │                                                                            │\n│ │   - Local:                http://localhost:6007/                           │\n│ │   - On your network:      http://172.17.0.2:6007/                          │\n│ │                                                                            │\n│ │                                                                            │\n│ │   A new version (10.3.3) is available!                                     │\n│ │                                                                            │\n│ │   Upgrade now: npx storybook@latest upgrade                                │\n│ │                                                                            │\n│ │   Read full changelog:                                                     │\n│ │   https://github.com/storybookjs/storybook/blob/main/CHANGELOG.md          │\n│ ╰────────────────────────────────────────────────────────────────────────────╯\n│\n●  168 ms for manager and 795 ms for preview\n\n\n\n",
           "tool_use_id": "toolu_vrtx_0156LQkeUBmQ6JfqU15VHq23__vscode-1774623237746",
           "cwd": "/workspaces/semio"
         }
@@ -3482,7 +3482,7 @@
           "tool_name": "fetch_webpage",
           "tool_input": {
             "urls": [
-              "http://localhost:6007/iframe.html?viewMode=story\u0026id=semio-algorithms-drag--default"
+              "http://localhost:6007/iframe.html?viewMode=story\u0026id=compose-algorithms-drag--default"
             ],
             "query": "errors render content"
           },
@@ -3511,7 +3511,7 @@
           "tool_name": "fetch_webpage",
           "tool_input": {
             "urls": [
-              "http://localhost:6007/iframe.html?viewMode=story\u0026id=semio-algorithms-drag--default"
+              "http://localhost:6007/iframe.html?viewMode=story\u0026id=compose-algorithms-drag--default"
             ],
             "query": "errors render content"
           },
@@ -3540,7 +3540,7 @@
           "tool_name": "fetch_webpage",
           "tool_input": {
             "urls": [
-              "http://localhost:6007/iframe.html?viewMode=story\u0026id=semio-algorithms-drag--default"
+              "http://localhost:6007/iframe.html?viewMode=story\u0026id=compose-algorithms-drag--default"
             ],
             "query": "errors render content"
           },
@@ -3570,7 +3570,7 @@
           "tool_name": "fetch_webpage",
           "tool_input": {
             "urls": [
-              "http://localhost:6007/iframe.html?viewMode=story\u0026id=semio-algorithms-drag--default"
+              "http://localhost:6007/iframe.html?viewMode=story\u0026id=compose-algorithms-drag--default"
             ],
             "query": "errors render content"
           },
@@ -3601,10 +3601,10 @@
           "tool_input": {
             "query": "errors render content",
             "urls": [
-              "http://localhost:6007/iframe.html?viewMode=story\u0026id=semio-algorithms-delete--default",
-              "http://localhost:6007/iframe.html?viewMode=story\u0026id=semio-algorithms-flatten--default",
-              "http://localhost:6007/iframe.html?viewMode=story\u0026id=semio-algorithms-cluster--default",
-              "http://localhost:6007/iframe.html?viewMode=story\u0026id=semio-algorithms-move--default"
+              "http://localhost:6007/iframe.html?viewMode=story\u0026id=compose-algorithms-delete--default",
+              "http://localhost:6007/iframe.html?viewMode=story\u0026id=compose-algorithms-flatten--default",
+              "http://localhost:6007/iframe.html?viewMode=story\u0026id=compose-algorithms-cluster--default",
+              "http://localhost:6007/iframe.html?viewMode=story\u0026id=compose-algorithms-move--default"
             ]
           },
           "tool_use_id": "toolu_vrtx_01SZUcix4Qcm127k6VCsyiRu__vscode-1774623237749",
@@ -3633,10 +3633,10 @@
           "tool_input": {
             "query": "errors render content",
             "urls": [
-              "http://localhost:6007/iframe.html?viewMode=story\u0026id=semio-algorithms-delete--default",
-              "http://localhost:6007/iframe.html?viewMode=story\u0026id=semio-algorithms-flatten--default",
-              "http://localhost:6007/iframe.html?viewMode=story\u0026id=semio-algorithms-cluster--default",
-              "http://localhost:6007/iframe.html?viewMode=story\u0026id=semio-algorithms-move--default"
+              "http://localhost:6007/iframe.html?viewMode=story\u0026id=compose-algorithms-delete--default",
+              "http://localhost:6007/iframe.html?viewMode=story\u0026id=compose-algorithms-flatten--default",
+              "http://localhost:6007/iframe.html?viewMode=story\u0026id=compose-algorithms-cluster--default",
+              "http://localhost:6007/iframe.html?viewMode=story\u0026id=compose-algorithms-move--default"
             ]
           },
           "tool_use_id": "toolu_vrtx_01SZUcix4Qcm127k6VCsyiRu__vscode-1774623237749",

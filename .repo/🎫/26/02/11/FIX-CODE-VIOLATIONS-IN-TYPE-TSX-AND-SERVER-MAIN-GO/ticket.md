@@ -6,12 +6,12 @@ goal: AI-OPTIMIZED-REPO/SINGLE-FILE-REPO/CONSISTENT-SECTIONS
 
 ## Summary
 
-Fixed all 163 code breachs across repo/server/main.go and semio/js/sketchpad/Type.tsx by adding section summaries, definition summaries, and spec comments with RFC2119 keywords.
+Fixed all 163 code breachs across repo/server/main.go and compose/js/sketchpad/Type.tsx by adding section summaries, definition summaries, and spec comments with RFC2119 keywords.
 
 ## Changes
 
 - repo/server/main.go: Added 16 section summaries, 26 type summaries, ~50 function summaries, and spec comments for exported functions.
-- semio/js/sketchpad/Type.tsx: Added 15 section summaries, 9 interface summaries, 2 enum summaries, 1 type alias summary, 30 exported function summaries with requirements, and 18 exported const summaries.
+- compose/js/sketchpad/Type.tsx: Added 15 section summaries, 9 interface summaries, 2 enum summaries, 1 type alias summary, 30 exported function summaries with requirements, and 18 exported const summaries.
 
 ## Log
 
@@ -38,7 +38,7 @@ Fixed all 163 code breachs across repo/server/main.go and semio/js/sketchpad/Typ
 - Add definition summary comments for 26 exported types
 - Add definition summary + spec comments for 7 exported functions/methods
 
-### File 2: semio/js/sketchpad/Type.tsx (91 breachs)
+### File 2: compose/js/sketchpad/Type.tsx (91 breachs)
 
 - Add section summary comments after 15 content #region markers (with MUST keyword)
 - Add definition summary comments for 64 exported definitions

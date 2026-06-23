@@ -1,6 +1,6 @@
 {
   "id": "b2620833-6cd4-4c5f-bf94-75eb7f25abbc",
-  "uri": "semiorepo://s/b2620833-6cd4-4c5f-bf94-75eb7f25abbc",
+  "uri": "composerepo://s/b2620833-6cd4-4c5f-bf94-75eb7f25abbc",
   "contributor": "🧑‍💻ueli",
   "client": "copilot-chat",
   "second": "2026-03-14T17:18:45Z",
@@ -14,7 +14,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 2200,
-            "filePath": "/workspaces/semio/semio/sketchpad/sketchpad/Sketchpad.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/sketchpad/Sketchpad.tsx",
             "startLine": 1993
           },
           "tool_response": "",
@@ -33,38 +33,38 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻sketchpad✂️ycamera",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad✂️ycamera",
             "loc": 7
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻sketchpad✂️ycameraval",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad✂️ycameraval",
             "loc": 6
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻sketchpad✂️ylocation",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad✂️ylocation",
             "loc": 7
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻sketchpad✂️ylocationval",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad✂️ylocationval",
             "loc": 6
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🛠️ycamerastore",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad🛠️ycamerastore",
             "loc": 57
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🛠️ylocationstore",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad🛠️ylocationstore",
             "loc": 43
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🛠️yplanestore",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad🛠️yplanestore",
             "loc": 53
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio🖱️sketchpad🗃️sketchpad💻sketchpad📌1993📌2200"
+          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌1993📌2200"
         ],
         "second": "🎆26🌙03☀️14⏰17⌚18⏱️45",
         "session": "⚪b26208336cd44c5fbf9475eb7f25abbc"
@@ -82,7 +82,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 2000,
-            "filePath": "/workspaces/semio/semio/sketchpad/sketchpad/Sketchpad.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/sketchpad/Sketchpad.tsx",
             "startLine": 1646
           },
           "tool_response": "",
@@ -101,62 +101,62 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻sketchpad✂️yplane",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad✂️yplane",
             "loc": 7
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻sketchpad✂️yplaneval",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad✂️yplaneval",
             "loc": 6
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻sketchpad✂️ypoint",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad✂️ypoint",
             "loc": 7
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻sketchpad✂️ypointval",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad✂️ypointval",
             "loc": 6
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻sketchpad✂️yvec",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad✂️yvec",
             "loc": 5
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻sketchpad✂️yvector",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad✂️yvector",
             "loc": 5
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻sketchpad✂️yvectorval",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad✂️yvectorval",
             "loc": 6
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻sketchpad✂️yvecval",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad✂️yvecval",
             "loc": 9
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🛠️ycoordstore",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad🛠️ycoordstore",
             "loc": 53
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🛠️yplanestore",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad🛠️yplanestore",
             "loc": 8
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🛠️ypointstore",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad🛠️ypointstore",
             "loc": 66
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🛠️yvecstore",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad🛠️yvecstore",
             "loc": 56
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🛠️yvectorstore",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad🛠️yvectorstore",
             "loc": 66
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio🖱️sketchpad🗃️sketchpad💻sketchpad📌1646📌2000"
+          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌1646📌2000"
         ],
         "second": "🎆26🌙03☀️14⏰17⌚18⏱️55",
         "session": "⚪b26208336cd44c5fbf9475eb7f25abbc"
@@ -174,7 +174,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 2120,
-            "filePath": "/workspaces/semio/semio/sketchpad/sketchpad/Sketchpad.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/sketchpad/Sketchpad.tsx",
             "startLine": 1993
           },
           "tool_use_id": "toolu_01V3FTfZRu6DthJZXp9Hfo1W__vscode-1773492851521",
@@ -193,26 +193,26 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻sketchpad✂️ycamera",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad✂️ycamera",
             "loc": 7
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻sketchpad✂️ycameraval",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad✂️ycameraval",
             "loc": 6
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🛠️ycamerastore",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad🛠️ycamerastore",
             "loc": 46
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🛠️yplanestore",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad🛠️yplanestore",
             "loc": 53
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio🖱️sketchpad🗃️sketchpad💻sketchpad📌1993📌2120"
+          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌1993📌2120"
         ],
         "second": "🎆26🌙03☀️14⏰17⌚19⏱️02",
         "session": "⚪b26208336cd44c5fbf9475eb7f25abbc"
@@ -230,7 +230,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 2120,
-            "filePath": "/workspaces/semio/semio/sketchpad/sketchpad/Sketchpad.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/sketchpad/Sketchpad.tsx",
             "startLine": 1993
           },
           "tool_response": "",
@@ -249,26 +249,26 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻sketchpad✂️ycamera",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad✂️ycamera",
             "loc": 7
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻sketchpad✂️ycameraval",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad✂️ycameraval",
             "loc": 6
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🛠️ycamerastore",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad🛠️ycamerastore",
             "loc": 46
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🛠️yplanestore",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad🛠️yplanestore",
             "loc": 53
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio🖱️sketchpad🗃️sketchpad💻sketchpad📌1993📌2120"
+          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌1993📌2120"
         ],
         "second": "🎆26🌙03☀️14⏰17⌚19⏱️22",
         "session": "⚪b26208336cd44c5fbf9475eb7f25abbc"

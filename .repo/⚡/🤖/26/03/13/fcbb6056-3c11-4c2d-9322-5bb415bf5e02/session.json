@@ -1,17 +1,17 @@
 {
   "id": "fcbb6056-3c11-4c2d-9322-5bb415bf5e02",
-  "uri": "semiorepo://s/fcbb6056-3c11-4c2d-9322-5bb415bf5e02",
+  "uri": "composerepo://s/fcbb6056-3c11-4c2d-9322-5bb415bf5e02",
   "checkpoint": "35d98e0a276242f4c63c9eacb0f1cd76c444ca2c",
   "contributor": "🧑‍💻ueli",
   "client": "claude-code",
   "second": "2026-03-13T23:58:19Z",
-  "transcript": "/home/vscode/.claude/projects/-workspaces-semio/fcbb6056-3c11-4c2d-9322-5bb415bf5e02.jsonl",
+  "transcript": "/home/vscode/.claude/projects/-workspaces-compose/fcbb6056-3c11-4c2d-9322-5bb415bf5e02.jsonl",
   "events": [
     {
       "native": {
         "event": {
           "session_id": "fcbb6056-3c11-4c2d-9322-5bb415bf5e02",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/fcbb6056-3c11-4c2d-9322-5bb415bf5e02.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/fcbb6056-3c11-4c2d-9322-5bb415bf5e02.jsonl",
           "cwd": "/workspaces/semio",
           "hook_event_name": "SessionStart",
           "source": "startup"
@@ -25,7 +25,7 @@
         "parent": "",
         "second": "🎆26🌙03☀️13⏰23⌚58⏱️19",
         "session": "⚪fcbb60563c114c2d93225bb415bf5e02",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/fcbb6056-3c11-4c2d-9322-5bb415bf5e02.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/fcbb6056-3c11-4c2d-9322-5bb415bf5e02.jsonl"
       },
       "response": {
         "allowed": true

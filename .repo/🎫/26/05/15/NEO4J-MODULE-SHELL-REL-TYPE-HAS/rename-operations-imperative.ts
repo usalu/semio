@@ -6,7 +6,7 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 const REPO = join(import.meta.dir, "..", "..", "..", "..", "..", "..");
-const goldenPath = join(REPO, "semio", "client", "schema", "graphql", "schema.golden.graphql");
+const goldenPath = join(REPO, "compose", "client", "schema", "graphql", "schema.golden.graphql");
 
 /** @emoji 🧭 Past-participle operation stem → imperative stem (PascalCase prefix swap). */
 export function imperativeOperationStem(past: string): string {
@@ -107,9 +107,9 @@ function loadPairsFromLog(logPath: string): { from: string; to: string }[] {
 }
 
 const extraSyncPaths = [
-  join(REPO, "semio", "client", "schema", "graphql", "schema.graphql"),
-  join(REPO, "semio", "client", "lib", "js", "index.ts"),
-  join(REPO, "semio", "client", "lib", "rs", "lib.rs"),
+  join(REPO, "compose", "client", "schema", "graphql", "schema.graphql"),
+  join(REPO, "compose", "client", "lib", "js", "index.ts"),
+  join(REPO, "compose", "client", "lib", "rs", "lib.rs"),
 ];
 
 function main(): void {

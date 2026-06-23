@@ -1,6 +1,6 @@
 import fs from "node:fs";
 
-const idx = fs.readFileSync("semio/js/index.ts", "utf8");
+const idx = fs.readFileSync("compose/js/index.ts", "utf8");
 const head = idx.split("export namespace WasmGraph")[0] ?? idx;
 const existing = new Set();
 for (const re of [/^\s*export type (\w+)/gm, /^\s*export interface (\w+)/gm, /^\s*export class (\w+)/gm]) {
@@ -25,5 +25,5 @@ const i = idx.indexOf(marker);
 if (i < 0) throw new Error("marker");
 const i2 = i + marker.length + 1;
 const out = idx.slice(0, i2) + "\n" + ins + idx.slice(i2);
-fs.writeFileSync("semio/js/index.ts", out, "utf8");
+fs.writeFileSync("compose/js/index.ts", out, "utf8");
 console.log("inserted type aliases", lines.length);

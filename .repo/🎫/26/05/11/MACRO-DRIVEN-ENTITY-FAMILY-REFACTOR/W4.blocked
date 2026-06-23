@@ -2,6 +2,6 @@ W4 blocked by coordinator gate (2026-05-11).
 
 Gate conditions (both required):
 1. Sentinel file `W0.complete` present in ticket folder — NOT FOUND (glob repo: 0 matches).
-2. Green `cargo check` in `semio/rs` — FAILED (exit code 101, 76+ errors; sample: unresolved `ReadVersion`/`WriteVersion` in vcs import at lib.rs:5463, missing `frozen` at :5040, missing `KitReadPointInput` at :5290, `Graph` missing `drafts`/`op_history`/`parent_root_for_active_draft`, wrong method names vs `materialized_kit_at_point` / `unsaved_change_connection_for_main_line`).
+2. Green `cargo check` in `compose/rs` — FAILED (exit code 101, 76+ errors; sample: unresolved `ReadVersion`/`WriteVersion` in vcs import at lib.rs:5463, missing `frozen` at :5040, missing `KitReadPointInput` at :5290, `Graph` missing `drafts`/`op_history`/`parent_root_for_active_draft`, wrong method names vs `materialized_kit_at_point` / `unsaved_change_connection_for_main_line`).
 
 No edits under `//#region 📦 kit` for Design/Piece/Side/Connection/Clump were applied (scope withheld until gate opens).

@@ -1,17 +1,17 @@
 {
   "id": "6907512b-a15d-4a4c-88bd-8176283a86f3",
-  "uri": "semiorepo://s/6907512b-a15d-4a4c-88bd-8176283a86f3",
+  "uri": "composerepo://s/6907512b-a15d-4a4c-88bd-8176283a86f3",
   "checkpoint": "35d98e0a276242f4c63c9eacb0f1cd76c444ca2c",
   "contributor": "🧑‍💻ueli",
   "client": "claude-code",
   "second": "2026-03-13T23:58:19Z",
-  "transcript": "/home/vscode/.claude/projects/-workspaces-semio/6907512b-a15d-4a4c-88bd-8176283a86f3.jsonl",
+  "transcript": "/home/vscode/.claude/projects/-workspaces-compose/6907512b-a15d-4a4c-88bd-8176283a86f3.jsonl",
   "events": [
     {
       "native": {
         "event": {
           "session_id": "6907512b-a15d-4a4c-88bd-8176283a86f3",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/6907512b-a15d-4a4c-88bd-8176283a86f3.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/6907512b-a15d-4a4c-88bd-8176283a86f3.jsonl",
           "cwd": "/workspaces/semio",
           "hook_event_name": "SessionStart",
           "source": "startup"
@@ -25,7 +25,7 @@
         "parent": "",
         "second": "🎆26🌙03☀️13⏰23⌚58⏱️19",
         "session": "⚪6907512ba15d4a4c88bd8176283a86f3",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/6907512b-a15d-4a4c-88bd-8176283a86f3.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/6907512b-a15d-4a4c-88bd-8176283a86f3.jsonl"
       },
       "response": {
         "allowed": true
@@ -35,11 +35,11 @@
       "native": {
         "event": {
           "session_id": "6907512b-a15d-4a4c-88bd-8176283a86f3",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/6907512b-a15d-4a4c-88bd-8176283a86f3.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/6907512b-a15d-4a4c-88bd-8176283a86f3.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "UserPromptSubmit",
-          "prompt": "semio engine:\nDisentangle sqlalchemy from pydantic and dont use orm. Translate diff into sql instead. Refactor everything and use proper typing instead of dicts."
+          "prompt": "compose engine:\nDisentangle sqlalchemy from pydantic and dont use orm. Translate diff into sql instead. Refactor everything and use proper typing instead of dicts."
         }
       },
       "event": {
@@ -48,10 +48,10 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.prompt.submitting",
         "parent": "",
-        "prompt": "semio engine:\nDisentangle sqlalchemy from pydantic and dont use orm. Translate diff into sql instead. Refactor everything and use proper typing instead of dicts.",
+        "prompt": "compose engine:\nDisentangle sqlalchemy from pydantic and dont use orm. Translate diff into sql instead. Refactor everything and use proper typing instead of dicts.",
         "second": "🎆26🌙03☀️13⏰23⌚59⏱️29",
         "session": "⚪6907512ba15d4a4c88bd8176283a86f3",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/6907512b-a15d-4a4c-88bd-8176283a86f3.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/6907512b-a15d-4a4c-88bd-8176283a86f3.jsonl"
       },
       "response": {
         "allowed": true
@@ -61,7 +61,7 @@
       "native": {
         "event": {
           "session_id": "6907512b-a15d-4a4c-88bd-8176283a86f3",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/6907512b-a15d-4a4c-88bd-8176283a86f3.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/6907512b-a15d-4a4c-88bd-8176283a86f3.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PreToolUse",
@@ -86,7 +86,7 @@
         "parent": "",
         "second": "🎆26🌙03☀️13⏰23⌚59⏱️53",
         "session": "⚪6907512ba15d4a4c88bd8176283a86f3",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/6907512b-a15d-4a4c-88bd-8176283a86f3.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/6907512b-a15d-4a4c-88bd-8176283a86f3.jsonl"
       },
       "response": {
         "allowed": true

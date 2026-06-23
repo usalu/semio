@@ -3,7 +3,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { globSync } from "node:fs";
 import { join } from "node:path";
 
-const root = "c:/git/semio/spatial/assets/extension/builtin/interaction";
+const root = "c:/git/compose/spatial/assets/extension/builtin/interaction";
 const files = globSync(join(root, "**/*.json").replace(/\\/g, "/"));
 
 for (const file of files) {

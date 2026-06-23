@@ -6,10 +6,10 @@
       "args": ["script.ts", "dev", "mcp", "stdio", "client"],
       "disabled": false
     },
-    "neo4j-semio": {
+    "neo4j-compose": {
       "type": "stdio",
       "command": "bun",
-      "args": ["script.ts", "dev", "mcp", "neo4j", "semio"],
+      "args": ["script.ts", "dev", "mcp", "neo4j", "compose"],
       "disabled": false
     },
     "neo4j-elements": {

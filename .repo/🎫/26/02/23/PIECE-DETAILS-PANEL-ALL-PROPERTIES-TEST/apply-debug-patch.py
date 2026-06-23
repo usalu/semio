@@ -1,9 +1,9 @@
-filepath = '/workspaces/semio/semio/js/sketchpad.test.ts'
+filepath = '/workspaces/semio/compose/js/sketchpad.test.ts'
 with open(filepath, 'r') as f:
     content = f.read()
 
 old_text = '''        const childPieceGuid = await page.evaluate(() => {
-          const actor = (window as any).__SEMIO_ACTOR__;
+          const actor = (window as any).__COMPOSE_ACTOR__;
           if (!actor) return null;
           const snapshot = actor.getSnapshot();
           const path = window.location.pathname;
@@ -22,7 +22,7 @@ old_text = '''        const childPieceGuid = await page.evaluate(() => {
         });'''
 
 new_text = '''        const childPieceGuid = await page.evaluate(() => {
-          const actor = (window as any).__SEMIO_ACTOR__;
+          const actor = (window as any).__COMPOSE_ACTOR__;
           if (!actor) return null;
           const snapshot = actor.getSnapshot();
           const path = window.location.pathname;

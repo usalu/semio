@@ -4,8 +4,8 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 const repoRoot = join(import.meta.dir, "../../../../../..");
-const srcRoot = join(repoRoot, "semio/fixtures/kit/dev/metabolism/wip/initialKit");
-const dstRoot = join(repoRoot, "semio/fixtures/stores/metabolism/wip/initialKit");
+const srcRoot = join(repoRoot, "compose/fixtures/kit/dev/metabolism/wip/initialKit");
+const dstRoot = join(repoRoot, "compose/fixtures/stores/metabolism/wip/initialKit");
 
 const HASH_STUB = "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262";
 
@@ -31,10 +31,10 @@ function slugify(name: string): string {
 
 function typeFileName(type: Record<string, unknown>, used: Set<string>): string {
 	const base = slugify(String(type.name ?? type.id ?? "type"));
-	let candidate = `${base}.type.semio.json`;
+	let candidate = `${base}.type.compose.json`;
 	let n = 2;
 	while (used.has(candidate)) {
-		candidate = `${base}-${n}.type.semio.json`;
+		candidate = `${base}-${n}.type.compose.json`;
 		n += 1;
 	}
 	used.add(candidate);
@@ -43,10 +43,10 @@ function typeFileName(type: Record<string, unknown>, used: Set<string>): string 
 
 function designFileName(design: Record<string, unknown>, used: Set<string>): string {
 	const base = slugify(String(design.name ?? design.id ?? "design"));
-	let candidate = `${base}.design.semio.json`;
+	let candidate = `${base}.design.compose.json`;
 	let n = 2;
 	while (used.has(candidate)) {
-		candidate = `${base}-${n}.design.semio.json`;
+		candidate = `${base}-${n}.design.compose.json`;
 		n += 1;
 	}
 	used.add(candidate);
@@ -86,7 +86,7 @@ function shallowEntity(row: Record<string, unknown>, keys: Set<string>): Record<
 	return out;
 }
 
-const kit = JSON.parse(readFileSync(join(srcRoot, "kit.semio.json"), "utf8")) as Record<string, unknown>;
+const kit = JSON.parse(readFileSync(join(srcRoot, "kit.compose.json"), "utf8")) as Record<string, unknown>;
 mkdirSync(join(dstRoot, "types"), { recursive: true });
 mkdirSync(join(dstRoot, "designs"), { recursive: true });
 
@@ -134,9 +134,9 @@ kit.typologies = wrapItems(rebuiltTopologies);
 delete kit.types;
 delete kit.designs;
 
-writeFileSync(join(dstRoot, "kit.semio.json"), `${JSON.stringify(kit, null, 4)}\n`);
-writeFileSync(join(dstRoot, "index.semio.json"), `${JSON.stringify({ types: typeIndex, designs: designIndex }, null, 2)}\n`);
+writeFileSync(join(dstRoot, "kit.compose.json"), `${JSON.stringify(kit, null, 4)}\n`);
+writeFileSync(join(dstRoot, "index.compose.json"), `${JSON.stringify({ types: typeIndex, designs: designIndex }, null, 2)}\n`);
 
-const shellMiB = readFileSync(join(dstRoot, "kit.semio.json")).length / 1024 / 1024;
+const shellMiB = readFileSync(join(dstRoot, "kit.compose.json")).length / 1024 / 1024;
 console.log(`[split] wrote ${dstRoot}`);
 console.log(`[split] types ${typeIndex.length} designs ${designIndex.length} shell ${shellMiB.toFixed(2)} MiB`);

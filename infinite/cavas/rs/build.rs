@@ -16,7 +16,7 @@ fn repo_ui_assets(manifest_dir: &Path) -> PathBuf {
 }
 
 fn metabolism_icons_dir(manifest_dir: &Path) -> PathBuf {
-    manifest_dir.join("../../../semio/client/example/metabolism/icon")
+    manifest_dir.join("../../../compose/client/example/metabolism/icon")
 }
 
 fn main() {

@@ -1,7 +1,7 @@
 import re
 from pathlib import Path
 
-p = Path("semio/graphql/target.schema.graphql")
+p = Path("compose/graphql/target.schema.graphql")
 text = p.read_text(encoding="utf-8")
 pairs = [
     ("VectorModification", "Vector", "VectorDiff"),

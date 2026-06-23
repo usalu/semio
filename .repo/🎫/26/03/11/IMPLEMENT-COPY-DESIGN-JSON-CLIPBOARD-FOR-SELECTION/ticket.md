@@ -10,12 +10,12 @@ Verified Design diagram Cmd/Ctrl+C handler copies Design JSON ({pieces, connecti
 
 ## Changes
 
-- `semio/js/sketchpad/Kit.tsx`:
+- `compose/js/sketchpad/Kit.tsx`:
   - Added `hasAnySelection(selection)` utility to check if any dimension of KitAppSelection has items.
   - Added `buildSelectionKit(kit, selection)` function that creates a filtered Kit JSON subset from selection with transitive dependency resolution.
   - Added keyboard handler in `KitDiagramInner` for Cmd/Ctrl+C that copies selection-filtered Kit JSON or full kit JSON.
   - Made diagram wrapper div focusable with auto-focus.
-- `semio/js/sketchpad/Design.tsx`:
+- `compose/js/sketchpad/Design.tsx`:
   - **REVISED**: `handleDiagramKeyDown` Cmd/Ctrl+C handler now builds a `{ pieces, connections }` payload from the active design data.
   - No selection → copies all pieces + all connections.
   - Selection → copies selected pieces + connections where both connected and connecting pieces are in the selected set, plus explicitly selected connections.
@@ -29,7 +29,7 @@ Verified Design diagram Cmd/Ctrl+C handler copies Design JSON ({pieces, connecti
 - Opened new ticket under goal `SKETCHPAD-IMPROVEMENTS`.
 - Read Kit.tsx: KitAppSelection interface, KitDiagramInner component, selection hooks, diagram rendering.
 - Read Sketchpad.tsx: `copyJsonToClipboard` command handler, KitStore.snapshot() returning Kit object.
-- Read semio.ts: KitSchema matching kit_metabolism.json top-level structure (guid, name, types, designs, ports, tags, concepts, files, folders, authors, qualities, etc.)
+- Read compose.ts: KitSchema matching kit_metabolism.json top-level structure (guid, name, types, designs, ports, tags, concepts, files, folders, authors, qualities, etc.)
 - Verified kit_metabolism.json top-level keys match Kit schema.
 - Implemented `buildSelectionKit` with transitive dependency resolution.
 - Implemented Cmd/Ctrl+C keyboard handler in Kit diagram.

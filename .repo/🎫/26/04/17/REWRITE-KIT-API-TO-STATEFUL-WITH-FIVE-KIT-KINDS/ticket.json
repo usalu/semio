@@ -1,7 +1,7 @@
 {
   "title": "Rewrite Kit API to Stateful With Five Kit Kinds",
   "status": "closed",
-  "description": "Rewrite everything from functional style to stateful style programming to avoid expensive memory copies. Implement five kit kinds: DevKit (synchronized json file), LocalKit (synchronized folder with .semio/kit.db), TransportKit (static json string), ArchiveKit (static zipped local kit), RemoteKit (synchronized websocket to semio/hub). All synchronized kits must have the same API, support import/export of static kits, and all CRUDs must use exclusively diffs. Implement for every programming language (TypeScript, Python, Go, Rust, C#/.NET).",
+  "description": "Rewrite everything from functional style to stateful style programming to avoid expensive memory copies. Implement five kit kinds: DevKit (synchronized json file), LocalKit (synchronized folder with .compose/kit.db), TransportKit (static json string), ArchiveKit (static zipped local kit), RemoteKit (synchronized websocket to compose/hub). All synchronized kits must have the same API, support import/export of static kits, and all CRUDs must use exclusively diffs. Implement for every programming language (TypeScript, Python, Go, Rust, C#/.NET).",
   "summary": "Bulk close",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1352"

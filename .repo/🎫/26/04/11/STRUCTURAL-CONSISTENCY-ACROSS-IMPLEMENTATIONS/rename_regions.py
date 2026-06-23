@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Rename all region markers to canonical emojis/names across semio implementations."""
+"""Rename all region markers to canonical emojis/names across compose implementations."""
 
 import re
 import os
@@ -18,7 +18,7 @@ CANONICAL = {
     "namespace": ("\U0001f3e0", "Namespace"),
     "expressions": ("\u2744\ufe0f", "Expressions"),
     "entitying": ("\U0001f513", "Entitying"),
-    "semiovalidation": ("\u2728", "SemioValidation"),
+    "composevalidation": ("\u2728", "ComposeValidation"),
     "modeling": ("\U0001f3b2", "Modeling"),
     "primitives": ("\U0001f43b", "Primitives"),
     "graphql": ("\U0001f3ac", "Graphql"),
@@ -148,7 +148,7 @@ CANONICAL = {
     "temporarykit": ("\U0001f524", "TemporaryKit"),
     "kitimporter": ("\U0001f4e6", "KitImporter"),
     "kitexporter": ("\U0001fa81", "KitExporter"),
-    "semiodiff": ("\u2744\ufe0f", "SemioDiff"),
+    "composediff": ("\u2744\ufe0f", "ComposeDiff"),
     "file tree utilities": ("\U0001f54c", "File Tree Utilities"),
     "kitstore": ("\U0001f3f0", "KitStore"),
     "inmemorykitstore": ("\U0001f5a5\ufe0f", "InMemoryKitStore"),
@@ -374,7 +374,7 @@ CANONICAL_ORDER = [
     "Exceptions",
     "Expressions",
     "Entitying",
-    "SemioValidation",
+    "ComposeValidation",
     "Modeling",
     # Entity IDs
     "Entity IDs",
@@ -446,7 +446,7 @@ CANONICAL_ORDER = [
     "KitImporter",
     "KitExporter",
     "Kit Diff Validation",
-    "SemioDiff",
+    "ComposeDiff",
     "KitStore",
     "File Tree Utilities",
     "InMemoryKitStore",
@@ -637,17 +637,17 @@ def reorder_file(filepath):
 
 if __name__ == "__main__":
     base = os.path.dirname(os.path.abspath(__file__))
-    while not os.path.exists(os.path.join(base, "semio")):
+    while not os.path.exists(os.path.join(base, "compose")):
         parent = os.path.dirname(base)
         if parent == base:
             break
         base = parent
 
     files = [
-        os.path.join(base, "semio", "go", "main.go"),
-        os.path.join(base, "semio", "js", "index.ts"),
-        os.path.join(base, "semio", "py", "main.py"),
-        os.path.join(base, "semio", "net", "Semio", "Semio.cs"),
+        os.path.join(base, "compose", "go", "main.go"),
+        os.path.join(base, "compose", "js", "index.ts"),
+        os.path.join(base, "compose", "py", "main.py"),
+        os.path.join(base, "compose", "net", "Compose", "Compose.cs"),
     ]
 
     mode = "rename"

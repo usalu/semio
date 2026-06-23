@@ -19,7 +19,7 @@
 
 - Refactored `sketchpadMachine` to store `SketchpadState` in XState context (`context.sketchpad`) and removed the Y.js `yjsSync` actor and `Y_UPDATE` events.
 - Updated `SketchpadStore` to proxy Sketchpad state through the XState actor, and to apply `SketchpadDiff` via `actor.send({ type: "CHANGE", diff })` instead of mutating `ySketchpad`.
-- Added local persistence for Sketchpad UI state via `localStorage` key `semio.sketchpad.state.<id>` and merged it into the actor initialization.
+- Added local persistence for Sketchpad UI state via `localStorage` key `compose.sketchpad.state.<id>` and merged it into the actor initialization.
 - Updated `README.md` and `AGENTS.md` to document the current Sketchpad state ownership and persistence mechanisms.
 
 ## Changes

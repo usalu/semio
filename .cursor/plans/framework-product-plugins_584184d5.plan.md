@@ -197,9 +197,9 @@ Lifecycles (section #19):
 
 Out of scope here: `elements/lib/react/*` play hosts still import a couple of framework symbols; they get a small symbol-rename pass so the test/build matrix stays green (e.g. `Workbench` import -> `ProductRuntime`, `WorkbenchApp` -> `AppRuntime`). No behavioural change.
 
-## 7. Sketchpad / semio impact
+## 7. Sketchpad / compose impact
 
-Out of scope for this ticket. `semio/client/lib/sketchpad/js/index.ts` does not import framework symbols directly (verified - sketchpad has its own `DesignApp`/`KitApp` type names that are unrelated to the framework's `WorkbenchApp`). A follow-up ticket `SKETCHPAD-ON-FRAMEWORK-PRODUCT` will define `sketchpadProduct: ProductDefinition` and migrate Home/Kit/Design.
+Out of scope for this ticket. `compose/client/lib/sketchpad/js/index.ts` does not import framework symbols directly (verified - sketchpad has its own `DesignApp`/`KitApp` type names that are unrelated to the framework's `WorkbenchApp`). A follow-up ticket `SKETCHPAD-ON-FRAMEWORK-PRODUCT` will define `sketchpadProduct: ProductDefinition` and migrate Home/Kit/Design.
 
 ## 8. Tests (extend existing `#region 🧪Tests` in `core/index.ts`)
 

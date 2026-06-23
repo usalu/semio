@@ -10,9 +10,9 @@
     "elements/core/index.ts",
     "elements/core/script.ts",
     "elements/core/vitest.config.ts",
-    "semio/client/lib/sketchpad/react/index.tsx",
-    "semio/client/lib/sketchpad/react/package.json",
-    "semio/client/lib/sketchpad/react/vite.config.ts",
-    "semio/client/lib/sketchpad/play/index.tsx"
+    "compose/client/lib/sketchpad/react/index.tsx",
+    "compose/client/lib/sketchpad/react/package.json",
+    "compose/client/lib/sketchpad/react/vite.config.ts",
+    "compose/client/lib/sketchpad/play/index.tsx"
   ]
 }

@@ -1,6 +1,6 @@
 {
   "id": "059a56b0-b7f5-460f-aa89-36204d51b98d",
-  "uri": "semiorepo://s/059a56b0-b7f5-460f-aa89-36204d51b98d",
+  "uri": "composerepo://s/059a56b0-b7f5-460f-aa89-36204d51b98d",
   "contributor": "🧑‍💻ueli",
   "client": "cursor-chat",
   "second": "2026-03-12T11:25:42Z",
@@ -14,7 +14,7 @@
           "tool_name": "Grep",
           "tool_input": {
             "pattern": "^export (const|function|class|interface|type)",
-            "file_path": "/workspaces/semio/semio/js/sketchpad/elements.tsx",
+            "file_path": "/workspaces/semio/compose/js/sketchpad/elements.tsx",
             "output_mode": "content"
           },
           "tool_output": "{\"pattern\":\"^export (const|function|class|interface|type)\",\"success\":true}",
@@ -35,14 +35,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚js🗃️sketchpad💻elements"
+            "id": "👤compose📚js🗃️sketchpad💻elements"
           }
         ],
         "kind": "agent.tool.search.ended",
         "llm": "composer-1.5",
         "parent": "",
         "ranges": [
-          "👤semio📚js🗃️sketchpad💻elements📌1📌8421"
+          "👤compose📚js🗃️sketchpad💻elements📌1📌8421"
         ],
         "second": "🎆26🌙03☀️12⏰11⌚25⏱️42",
         "session": "⚪059a56b0b7f5460faa8936204d51b98d"
@@ -57,8 +57,8 @@
           "conversation_id": "059a56b0-b7f5-460f-aa89-36204d51b98d",
           "generation_id": "27a958db-338a-4316-864c-fc99fec5c242",
           "model": "composer-1.5",
-          "content": "// #region Header\n\n// js/semio/sketchpad/elements.tsx\n\n// 2025 Ueli Saluz \u003cueli@semio-tech.com\u003e\n\n// This program is free software: you can redistribute it and/or modify\n// it under the terms of the GNU Affero General Public License as\n// published by the Free Software Foundation, either version 3 of the\n// License, or (at your option) any later version.\n// This program is distributed in the hope that it will be useful,\n// but WITHOUT ANY WARRANTY; without even the implied warranty of\n// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n// GNU Affero General Public License for more details.\n// You should have received a copy of the GNU Affero General Public License\n// along with this program.  If not, see \u003chttps://www.gnu.org/licenses/\u003e.\n\n// #endregion Header\n\n// #region Imports\n\nimport { closestCenter, DndContext, DragEndEvent, PointerSensor, useDraggable, useDroppable, useSensor, useSensors } from \"@dnd-kit/core\";\nimport { SortableContext, useSortable, verticalListSortingStrategy } from \"@dnd-kit/sortable\";\nimport { CSS } from \"@dnd-kit/utilities\";\nimport * as AccordionPrimitive from \"@radix-ui/react-accordion\";\nimport * as AvatarPrimitive from \"@radix-ui/react-avatar\";\nimport * as CollapsiblePrimitive from \"@radix-ui/react-collapsible\";\nimport * as DialogPrimitive from \"@radix-ui/react-dialog\";\nimport * as DropdownMenuPrimitive from \"@radix-ui/react-dropdown-menu\";\nimport * as HoverCardPrimitive from \"@radix-ui/react-hover-card\";\nimport * as PopoverPrimitive from \"@radix-ui/react-popover\";\nimport * as ScrollAreaPrimitive from \"@radix-ui/react-scroll-area\";\nimport * as SelectPrimitive from \"@radix-ui/react-select\";\nimport * as SliderPrimitive from \"@radix-ui/react-slider\";\nimport { Slot } from \"@radix-ui/react-slot\";\nimport * as TabsPrimitive from \"@radix-ui/react-tabs\";\nimport * as TogglePrimitive from \"@radix-ui/react-toggle\";\nimport * as ToggleGroupPrimitive from \"@radix-ui/react-toggle-group\";\nimport * as TooltipPrimitive from \"@radix-ui/react-tooltip\";\nimport { Edges, GizmoHelper, GizmoViewport, Grid, OrbitControls, useGLTF } from \"@react-three/drei\";\nimport { Canvas as ThreeCanvas, ThreeEvent, useFrame, useThree } from \"@react-three/fiber\";\nimport {\n  AddIcon,\n  AlertCircleIcon,\n  BookIcon,\n  CameraIcon,\n  CheckIcon,\n  CheckIconAlt,\n  ChevronDownIcon,\n  ChevronDownIconAlt,\n  ChevronLeftIcon,\n  ChevronRightIcon,\n  ChevronsUpDownIcon,\n  CloseIcon,\n  CloseIconAlt,\n  DocumentIcon,\n  ExternalLinkIcon,\n  FolderIcon,\n  GripVerticalIcon,\n  InfoIcon,\n  LightbulbIcon,\n  LucideIcon,\n  Maximize2Icon,\n  Minimize2Icon,\n  RemoveIcon,\n  SearchIcon,\n  TriangleAlertIcon,\n  TutorialIcon,\n} from \"@semio/assets\";\nimport type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, OnSelectionChangeParams, ReactFlowInstance } from \"@xyflow/react\";\nimport {\n  applyNodeChanges,\n  Background,\n  BackgroundVariant,\n  BaseEdge,\n  ConnectionMode,\n  getBezierPath,\n  Handle,\n  MiniMap,\n  Position,\n  ReactFlow,\n  ReactFlowProvider,\n  SelectionMode,\n  useInternalNode,\n  useReactFlow,\n  useStoreApi,\n  ViewportPortal,\n} from \"@xyflow/react\";\nimport \"@xyflow/react/dist/style.css\";\nimport { cva, type VariantProps } from \"class-variance-authority\";\nimport { Command as CommandPrimitive } from \"cmdk\";\nimport { forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY, Simulation, SimulationLinkDatum, SimulationNodeDatum } from \"d3-force\";\nimport * as dagre from \"dagre\";\nimport * as React from \"react\";\nimport { createPortal } from \"react-dom\";\nimport { useTranslation } from \"react-i18next\";\nimport * as ResizablePrimitive from \"react-resizable-panels\";\nimport { Link, useNavigate } from \"react-router\";\nimport * as THREE from \"three\";\nimport { Expertise, setExpertiseProvider, useLabel } from \"../i18n\";\nimport { Camera, cn, Plane, Point, Vector } from \"../semio\";\n\n// #endregion Imports\n\n// #region Section Specificity\n\n// [👤semio📚js🗃️sketchpad💻elementstsx🔖sectionspecificity](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/SECTION-SPECIFICITY)\n// Enum defining priority levels for section content ownership.\n// Consumers MUST use these constants for section precedence.\n\n/**\n * Priority enum for section content ownership across apps.\n *\n *  * [👤semio📚js🗃️sketchpad💻elements🔖sectionspecificity🛠️sectionspecificity](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Section%20Specificity/d/i/SectionSpecificity)\n **/\nexport enum SectionSpecificity {\n  SKETCHPAD = 0,\n  KIT = 10,\n  QUALITY = 20,\n  TYPE = 20,",
-          "file_path": "/workspaces/semio/semio/js/sketchpad/elements.tsx",
+          "content": "// #region Header\n\n// js/compose/sketchpad/elements.tsx\n\n// 2025 Ueli Saluz \u003cueli@semio-tech.com\u003e\n\n// This program is free software: you can redistribute it and/or modify\n// it under the terms of the GNU Affero General Public License as\n// published by the Free Software Foundation, either version 3 of the\n// License, or (at your option) any later version.\n// This program is distributed in the hope that it will be useful,\n// but WITHOUT ANY WARRANTY; without even the implied warranty of\n// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n// GNU Affero General Public License for more details.\n// You should have received a copy of the GNU Affero General Public License\n// along with this program.  If not, see \u003chttps://www.gnu.org/licenses/\u003e.\n\n// #endregion Header\n\n// #region Imports\n\nimport { closestCenter, DndContext, DragEndEvent, PointerSensor, useDraggable, useDroppable, useSensor, useSensors } from \"@dnd-kit/core\";\nimport { SortableContext, useSortable, verticalListSortingStrategy } from \"@dnd-kit/sortable\";\nimport { CSS } from \"@dnd-kit/utilities\";\nimport * as AccordionPrimitive from \"@radix-ui/react-accordion\";\nimport * as AvatarPrimitive from \"@radix-ui/react-avatar\";\nimport * as CollapsiblePrimitive from \"@radix-ui/react-collapsible\";\nimport * as DialogPrimitive from \"@radix-ui/react-dialog\";\nimport * as DropdownMenuPrimitive from \"@radix-ui/react-dropdown-menu\";\nimport * as HoverCardPrimitive from \"@radix-ui/react-hover-card\";\nimport * as PopoverPrimitive from \"@radix-ui/react-popover\";\nimport * as ScrollAreaPrimitive from \"@radix-ui/react-scroll-area\";\nimport * as SelectPrimitive from \"@radix-ui/react-select\";\nimport * as SliderPrimitive from \"@radix-ui/react-slider\";\nimport { Slot } from \"@radix-ui/react-slot\";\nimport * as TabsPrimitive from \"@radix-ui/react-tabs\";\nimport * as TogglePrimitive from \"@radix-ui/react-toggle\";\nimport * as ToggleGroupPrimitive from \"@radix-ui/react-toggle-group\";\nimport * as TooltipPrimitive from \"@radix-ui/react-tooltip\";\nimport { Edges, GizmoHelper, GizmoViewport, Grid, OrbitControls, useGLTF } from \"@react-three/drei\";\nimport { Canvas as ThreeCanvas, ThreeEvent, useFrame, useThree } from \"@react-three/fiber\";\nimport {\n  AddIcon,\n  AlertCircleIcon,\n  BookIcon,\n  CameraIcon,\n  CheckIcon,\n  CheckIconAlt,\n  ChevronDownIcon,\n  ChevronDownIconAlt,\n  ChevronLeftIcon,\n  ChevronRightIcon,\n  ChevronsUpDownIcon,\n  CloseIcon,\n  CloseIconAlt,\n  DocumentIcon,\n  ExternalLinkIcon,\n  FolderIcon,\n  GripVerticalIcon,\n  InfoIcon,\n  LightbulbIcon,\n  LucideIcon,\n  Maximize2Icon,\n  Minimize2Icon,\n  RemoveIcon,\n  SearchIcon,\n  TriangleAlertIcon,\n  TutorialIcon,\n} from \"@compose/assets\";\nimport type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, OnSelectionChangeParams, ReactFlowInstance } from \"@xyflow/react\";\nimport {\n  applyNodeChanges,\n  Background,\n  BackgroundVariant,\n  BaseEdge,\n  ConnectionMode,\n  getBezierPath,\n  Handle,\n  MiniMap,\n  Position,\n  ReactFlow,\n  ReactFlowProvider,\n  SelectionMode,\n  useInternalNode,\n  useReactFlow,\n  useStoreApi,\n  ViewportPortal,\n} from \"@xyflow/react\";\nimport \"@xyflow/react/dist/style.css\";\nimport { cva, type VariantProps } from \"class-variance-authority\";\nimport { Command as CommandPrimitive } from \"cmdk\";\nimport { forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY, Simulation, SimulationLinkDatum, SimulationNodeDatum } from \"d3-force\";\nimport * as dagre from \"dagre\";\nimport * as React from \"react\";\nimport { createPortal } from \"react-dom\";\nimport { useTranslation } from \"react-i18next\";\nimport * as ResizablePrimitive from \"react-resizable-panels\";\nimport { Link, useNavigate } from \"react-router\";\nimport * as THREE from \"three\";\nimport { Expertise, setExpertiseProvider, useLabel } from \"../i18n\";\nimport { Camera, cn, Plane, Point, Vector } from \"../compose\";\n\n// #endregion Imports\n\n// #region Section Specificity\n\n// [👤compose📚js🗃️sketchpad💻elementstsx🔖sectionspecificity](composerepo://section/COMPOSE/JS/SKETCHPAD/ELEMENTS.TSX/SECTION-SPECIFICITY)\n// Enum defining priority levels for section content ownership.\n// Consumers MUST use these constants for section precedence.\n\n/**\n * Priority enum for section content ownership across apps.\n *\n *  * [👤compose📚js🗃️sketchpad💻elements🔖sectionspecificity🛠️sectionspecificity](composerepo://p/u/compose/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Section%20Specificity/d/i/SectionSpecificity)\n **/\nexport enum SectionSpecificity {\n  SKETCHPAD = 0,\n  KIT = 10,\n  QUALITY = 20,\n  TYPE = 20,",
+          "file_path": "/workspaces/semio/compose/js/sketchpad/elements.tsx",
           "attachments": [],
           "hook_event_name": "beforeReadFile",
           "cursor_version": "2.6.18",
@@ -75,14 +75,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚js🗃️sketchpad💻elements"
+            "id": "👤compose📚js🗃️sketchpad💻elements"
           }
         ],
         "kind": "agent.tool.search.starting",
         "llm": "composer-1.5",
         "parent": "",
         "ranges": [
-          "👤semio📚js🗃️sketchpad💻elements📌1📌8421"
+          "👤compose📚js🗃️sketchpad💻elements📌1📌8421"
         ],
         "second": "🎆26🌙03☀️12⏰11⌚25⏱️44",
         "session": "⚪059a56b0b7f5460faa8936204d51b98d"
@@ -130,9 +130,9 @@
           "model": "composer-1.5",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/workspaces/semio/semio/js/sketchpad/elements.tsx"
+            "file_path": "/workspaces/semio/compose/js/sketchpad/elements.tsx"
           },
-          "tool_output": "{\"file_path\":\"/workspaces/semio/semio/js/sketchpad/elements.tsx\",\"content_length\":4568}",
+          "tool_output": "{\"file_path\":\"/workspaces/semio/compose/js/sketchpad/elements.tsx\",\"content_length\":4568}",
           "duration": 1488.442,
           "tool_use_id": "tool_66ad6c2d-6ade-4a4d-b19d-57197a01e91",
           "hook_event_name": "postToolUse",
@@ -150,14 +150,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚js🗃️sketchpad💻elements"
+            "id": "👤compose📚js🗃️sketchpad💻elements"
           }
         ],
         "kind": "agent.tool.search.ended",
         "llm": "composer-1.5",
         "parent": "",
         "ranges": [
-          "👤semio📚js🗃️sketchpad💻elements📌1📌8421"
+          "👤compose📚js🗃️sketchpad💻elements📌1📌8421"
         ],
         "second": "🎆26🌙03☀️12⏰11⌚26⏱️13",
         "session": "⚪059a56b0b7f5460faa8936204d51b98d"

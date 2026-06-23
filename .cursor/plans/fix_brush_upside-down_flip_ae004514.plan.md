@@ -35,7 +35,7 @@ const qThree = new Quaternion().setFromUnitVectors(new Vector3(...localDir), new
 
 `THREE.Quaternion.setFromUnitVectors(vFrom, vTo)` has the same singularity as Rhino `Transform.Rotation`: when `vFrom` and `vTo` are anti-parallel (here when `localDir == targetDir`, since `desiredWorldDir = -targetDir`), there are infinitely many perpendicular axes and three.js picks one arbitrarily (`Y`/`X`). In this file's CAD frame Z is up, so that arbitrary horizontal axis flips the object upside down.
 
-This is the exact case already solved on the C# side in `ComputeChildPlane` ([semio/client/ui/gh/Semio.Grasshopper/Semio.Grasshopper.cs](semio/client/ui/gh/Semio.Grasshopper/Semio.Grasshopper.cs) lines 305-320): when directions are parallel, flip 180 deg about `ZAxis` if the direction is flat on XY, else about `cross(ZAxis, dir)`.
+This is the exact case already solved on the C# side in `ComputeChildPlane` ([compose/client/ui/gh/Compose.Grasshopper/Compose.Grasshopper.cs](compose/client/ui/gh/Compose.Grasshopper/Compose.Grasshopper.cs) lines 305-320): when directions are parallel, flip 180 deg about `ZAxis` if the direction is flat on XY, else about `cross(ZAxis, dir)`.
 
 ## Change
 

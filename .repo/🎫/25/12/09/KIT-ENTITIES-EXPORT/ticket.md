@@ -15,7 +15,7 @@
 # Changes
 
 - Added a local Metabolism kit import, the general collection exports, and the Nakagin Capsule Tower helper in `assets/index.ts`.
-- Expanded the `semio/assets` section in `README.md` with a Kits subsection that enumerates the shared exports.
+- Expanded the `compose/assets` section in `README.md` with a Kits subsection that enumerates the shared exports.
 - Noted the new export surface in `AGENTS.md` so the file structure and asset guidance mention the kit tooling surface.
 
 ## Changes

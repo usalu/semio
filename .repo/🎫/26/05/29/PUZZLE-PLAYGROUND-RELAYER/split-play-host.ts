@@ -2,7 +2,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-const root = "c:/git/semio";
+const root = "c:/git/compose";
 
 function splitReact(dim: "2d" | "3d" | "5d", marker: string): void {
 	const reactIndex = join(root, `puzzle/${dim}/react/index.tsx`);

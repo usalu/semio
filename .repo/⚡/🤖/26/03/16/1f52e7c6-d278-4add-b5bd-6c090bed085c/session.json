@@ -1,6 +1,6 @@
 {
   "id": "1f52e7c6-d278-4add-b5bd-6c090bed085c",
-  "uri": "semiorepo://session/1f52e7c6-d278-4add-b5bd-6c090bed085c",
+  "uri": "composerepo://session/1f52e7c6-d278-4add-b5bd-6c090bed085c",
   "client": "cursor-chat",
   "second": "2026-03-16T14:16:15Z",
   "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",

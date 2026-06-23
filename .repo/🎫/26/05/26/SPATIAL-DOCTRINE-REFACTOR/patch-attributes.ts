@@ -2,7 +2,7 @@
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-const dir = "c:/git/semio/spatial/assets/extension/builtin/attribute";
+const dir = "c:/git/compose/spatial/assets/extension/builtin/attribute";
 for (const name of readdirSync(dir)) {
 	if (!name.endsWith(".json")) continue;
 	const file = join(dir, name);

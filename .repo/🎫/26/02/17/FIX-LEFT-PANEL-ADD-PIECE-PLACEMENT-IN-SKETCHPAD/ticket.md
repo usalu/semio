@@ -10,11 +10,11 @@ Fixed Design workbench + actions to place type/design as pieces and extended Des
 
 ## Changes
 
-- Rewired Design workbench row actions in `semio/js/sketchpad/Design.tsx`:
+- Rewired Design workbench row actions in `compose/js/sketchpad/Design.tsx`:
 - Type row primary `+` now adds a type piece to active design.
 - Design row primary `+` now adds a design piece to active design (except same-family disabled cases).
 - Child creation remains available as a secondary action per row.
-- Extended Design e2e in `semio/js/sketchpad.test.ts`:
+- Extended Design e2e in `compose/js/sketchpad.test.ts`:
 - Opens left sidepanel when needed.
 - Clicks new type add-piece action.
 - Verifies diagram node count increases.
@@ -29,7 +29,7 @@ Fixed Design workbench + actions to place type/design as pieces and extended Des
 - `Piece count after type + click: before=180, after=181`
 - Full suite run hit pre-existing environment/test instability:
 - initial run lost local server after first test (`ERR_CONNECTION_REFUSED` on later tests).
-- focused Design run timed out at existing filter-toggle step waiting for `semio.sketchpad.app.design.toolbar.showPieces`.
+- focused Design run timed out at existing filter-toggle step waiting for `compose.sketchpad.app.design.toolbar.showPieces`.
 
 ## Todos
 

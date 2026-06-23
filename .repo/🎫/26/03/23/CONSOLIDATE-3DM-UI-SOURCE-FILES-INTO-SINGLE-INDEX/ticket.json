@@ -2,7 +2,7 @@
   "title": "Consolidate 3dm UI Source Files Into Single Index",
   "emoji": "🧹",
   "status": "closed",
-  "description": "Consolidate all ts and tsx files in semio/3dm/ui/src (bridge.ts, RhinoPanel.tsx, index.tsx) into a single index.tsx file. Remove the separate files afterwards.",
+  "description": "Consolidate all ts and tsx files in compose/3dm/ui/src (bridge.ts, RhinoPanel.tsx, index.tsx) into a single index.tsx file. Remove the separate files afterwards.",
   "summary": "Consolidated all three source files (bridge.ts, RhinoPanel.tsx, index.tsx) into a single index.tsx with proper region markers. Updated all repo URIs from per-file paths to index.tsx paths. Deleted bridge.ts and RhinoPanel.tsx. The index.html entry point still references ./src/index.tsx so no changes needed there.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1039"

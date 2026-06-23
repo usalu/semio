@@ -17,7 +17,7 @@ Fixed breachs not showing as VS Code diagnostics. Two root causes fixed: (1) Dat
 
 ## Log
 
-- Ran `./repo/cli/cli --json analyze semio` to see actual CLI output format: `{"analyze":{"metrics":{...},"breachs":[...]}}`
+- Ran `./repo/cli/cli --json analyze compose` to see actual CLI output format: `{"analyze":{"metrics":{...},"breachs":[...]}}`
 - Identified data path mismatch: code expected `result.data.breachs` but data is at `result.data.analyze.breachs`
 - Identified missing event handlers for file open/save/change
 - Applied both fixes

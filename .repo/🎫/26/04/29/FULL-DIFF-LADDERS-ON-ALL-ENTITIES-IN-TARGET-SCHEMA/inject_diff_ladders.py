@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-🔖 Injects per-entity Modification→DiffsConnection ladders into semio/graphql/target.schema.graphql
+🔖 Injects per-entity Modification→DiffsConnection ladders into compose/graphql/target.schema.graphql
 and merges global unions (Modification, DiffOwned, DiffsOwned, aggregates).
 
 Temporary generator kept under the ticket folder per repo rules.
@@ -12,7 +12,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[6]
-SCHEMA = ROOT / "semio" / "graphql" / "target.schema.graphql"
+SCHEMA = ROOT / "compose" / "graphql" / "target.schema.graphql"
 
 # 🔖 Mirrors existing PlaneDiffsOwner concrete roots (Operation implementations omitted — unions stay object-only).
 DIFFS_OWNER_BODY = """  | AttributeDiff

@@ -1,6 +1,6 @@
 {
   "id": "c99c15e8-82fa-454c-8fc3-ced32d76d8d9",
-  "uri": "semiorepo://s/c99c15e8-82fa-454c-8fc3-ced32d76d8d9",
+  "uri": "composerepo://s/c99c15e8-82fa-454c-8fc3-ced32d76d8d9",
   "contributor": "🧑‍💻ueli",
   "client": "windsurf-chat",
   "second": "2026-03-10T23:58:00Z",
@@ -13,7 +13,7 @@
           "timestamp": "2026-03-10T23:57:59.592656516Z",
           "execution_id": "99f62dcb-1ad3-4db4-9af9-311c7a5755e5",
           "tool_info": {
-            "user_prompt": "semio gh:\nAll change components are in the third exposure section of the data group"
+            "user_prompt": "compose gh:\nAll change components are in the third exposure section of the data group"
           }
         }
       },
@@ -148,7 +148,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "query": "grasshopper exposure change components data group third exposure semio gh"
+              "query": "grasshopper exposure change components data group third exposure compose gh"
             },
             "mcp_tool_name": "search"
           }
@@ -177,7 +177,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "query": "grasshopper exposure change components data group third exposure semio gh"
+              "query": "grasshopper exposure change components data group third exposure compose gh"
             },
             "mcp_tool_name": "search"
           }

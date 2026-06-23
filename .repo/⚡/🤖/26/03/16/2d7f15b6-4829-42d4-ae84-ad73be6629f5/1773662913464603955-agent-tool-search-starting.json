@@ -17,7 +17,7 @@
       "tool_name": "read_file",
       "tool_input": {
         "endLine": 4300,
-        "filePath": "/workspaces/semio/semio/sketchpad/sketchpad.test.ts",
+        "filePath": "/workspaces/semio/compose/sketchpad/sketchpad.test.ts",
         "startLine": 4136
       },
       "tool_use_id": "toolu_bdrk_01MXjGL8VDjxLubg8FB4gk1g__vscode-1773658270483",

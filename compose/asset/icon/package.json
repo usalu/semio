@@ -1,0 +1,15 @@
+{
+  "name": "@compose/icon",
+  "version": "1.0.0",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "compose/asset/icon",
+  "projectType": "library",
+  "devDependencies": {
+    "@compose/logo": "*"
+  },
+  "author": {
+    "name": "Ueli Saluz",
+    "email": "ueli@semio-tech.com",
+    "url": "https://github.com/usalu"
+  }
+}

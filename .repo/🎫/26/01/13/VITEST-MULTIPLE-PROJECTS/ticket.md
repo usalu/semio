@@ -35,7 +35,7 @@ Consider using a projects configuration to group your configs or increase the li
 | File | Import Source | Has `test` Block | Purpose |
 |------|--------------|------------------|---------|
 | `vitest.config.ts` | `vitest/config` | Yes | Root repo tests (`repo.tests.ts`) |
-| `js/semio/vite.config.ts` | `vitest/config` | Yes | Semio library tests (`semio.test.ts`) |
+| `js/compose/vite.config.ts` | `vitest/config` | Yes | Compose library tests (`compose.test.ts`) |
 | `js/play/vite.config.ts` | `vite` | No | Playground dev server |
 | `js/vscode/vite.config.ts` | `vite` | No | VS Code extension build |
 | `js/sketchpad/vite.config.ts` | `vite` | No | Sketchpad dev server |
@@ -46,7 +46,7 @@ Consider using a projects configuration to group your configs or increase the li
 The Vitest VS Code extension scans for both `vitest.config.*` and `vite.config.*` files because Vitest can be configured within Vite configs. It found **6 config files** but only **2 actually contain test configuration**:
 
 1. **Root `vitest.config.ts`** - Tests repo-level functionality
-2. **`js/semio/vite.config.ts`** - Tests the core semio library
+2. **`js/compose/vite.config.ts`** - Tests the core compose library
 
 The other 4 files (`js/play`, `js/vscode`, `js/sketchpad`, `js/temp`) are pure Vite configs for building/dev serving without any test configuration.
 
@@ -85,7 +85,7 @@ import { defineWorkspace } from 'vitest/config'
 
 export default defineWorkspace([
   'vitest.config.ts',
-  'js/semio/vite.config.ts',
+  'js/compose/vite.config.ts',
 ])
 ```
 
@@ -108,7 +108,7 @@ Add to `.vscode/settings.json`:
 {
   "vitest.include": [
     "vitest.config.ts",
-    "js/semio/vite.config.ts"
+    "js/compose/vite.config.ts"
   ]
 }
 ```
@@ -161,7 +161,7 @@ The VS Code Vitest extension found 6 config files (`vitest.config.*` and `vite.c
 ## Root Cause
 The extension scans for all Vite/Vitest configs. Only 2 actually contain test configuration:
 - `vitest.config.ts` (root)
-- `js/semio/vite.config.ts`
+- `js/compose/vite.config.ts`
 
 The other 4 (`js/play`, `js/vscode`, `js/sketchpad`, `js/temp`) are pure Vite build configs without tests.
 
@@ -173,7 +173,7 @@ import { defineWorkspace } from 'vitest/config'
 
 export default defineWorkspace([
   'vitest.config.ts',
-  'js/semio/vite.config.ts',
+  'js/compose/vite.config.ts',
 ])
 ```
 

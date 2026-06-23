@@ -74,15 +74,15 @@ Ensure diagram diff updates when dragging a node that has children and deeper de
 - [ ] Close ticket with changed files
 
 ### Changes 2026-03-11
-- Updated `semio/js/sketchpad/Design.tsx` drag stop persistence to write center diffs for dragged descendants and descendants-of-descendants using `savedDescendantOffsets`.
+- Updated `compose/js/sketchpad/Design.tsx` drag stop persistence to write center diffs for dragged descendants and descendants-of-descendants using `savedDescendantOffsets`.
 - Switched final piece update collection to a keyed map to prevent duplicate writes per piece.
 - Expanded `dragPiecesInDesign` input in drag stop from selected-only pieces to selected + dragged subtree IDs so connection diff updates are computed for the full moved subtree.
-- Extended existing drag propagation assertions in `semio/js/sketchpad.test.ts` to require non-zero persisted center deltas for parent, child, and grandchild.
+- Extended existing drag propagation assertions in `compose/js/sketchpad.test.ts` to require non-zero persisted center deltas for parent, child, and grandchild.
 
 ### Validation 2026-03-11
-- `pnpm -C semio/js test:e2e sketchpad.test.ts --grep "Drag propagation"` failed: `playwright: not found`.
-- `pnpm -C semio/js exec playwright test sketchpad.test.ts --grep "Drag propagation"` failed: `Command "playwright" not found`.
-- `pnpm -C semio/js test:unit` failed: `vitest: not found`.
+- `pnpm -C compose/js test:e2e sketchpad.test.ts --grep "Drag propagation"` failed: `playwright: not found`.
+- `pnpm -C compose/js exec playwright test sketchpad.test.ts --grep "Drag propagation"` failed: `Command "playwright" not found`.
+- `pnpm -C compose/js test:unit` failed: `vitest: not found`.
 
 ### Todos Update
 - [x] Inspect current drag-stop logic

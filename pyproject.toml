@@ -1,7 +1,7 @@
 [project]
 name = "monorepo"
 version = "0.1.0"
-description = "🐍 semio monorepo Python workspace"
+description = "🐍 compose monorepo Python workspace"
 readme = "README.md"
 requires-python = ">=3.14,<3.15"
 license = "AGPL-3.0-or-later"
@@ -9,7 +9,7 @@ authors = [{ name = "Ueli Saluz", email = "ueli@semio-tech.com" }]
 dependencies = []
 
 [tool.uv.workspace]
-members = ["semio/py", "semio/engine"]
+members = ["compose/py", "compose/engine"]
 
 [dependency-groups]
 dev = [
@@ -34,7 +34,7 @@ test = [
 
 [tool.pytest.ini_options]
 python_files = ["**/engine/main.py", "**/py/main.py", "test_*.py", "*_test.py", "*.test.py"]
-testpaths = ["semio/py", "semio/engine"]
+testpaths = ["compose/py", "compose/engine"]
 addopts = "--import-mode=importlib"
 
 [tool.ruff.lint.per-file-ignores]

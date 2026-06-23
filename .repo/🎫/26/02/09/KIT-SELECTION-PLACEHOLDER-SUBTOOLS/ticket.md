@@ -6,7 +6,7 @@
 - [x] Update developer documentation in `README.md` and `AGENTS.md`.
 
 ## Changes
-- Added `kitToolbarSelectionSubTools` in `js/semio/sketchpad/Kit.tsx` with five Selection sub-tool entries: `select`, `hand`, `additive`, `subtractive`, `intersect`.
+- Added `kitToolbarSelectionSubTools` in `js/compose/sketchpad/Kit.tsx` with five Selection sub-tool entries: `select`, `hand`, `additive`, `subtractive`, `intersect`.
 - Replaced single Selection toolbar registration with iterative registrations across the five sub-tool section ids.
 - Updated toolbar cleanup to remove all five Selection sub-tool section ids.
 - Documented Kit Selection dropdown placeholder sub-tools in `README.md` (`# 📦 Bundles`, Sketchpad toolbar tooltree).
@@ -31,7 +31,7 @@ Implement a reusable selection composition mechanism that supports `additive`, `
 - Selection behavior + state contracts in shared app/plugin layer.
 - Toolbar mode wiring for all apps.
 - Event pipeline integration (click, marquee/lasso, keyboard modifiers).
-- Shared tests in existing `semio/js/sketchpad.test.ts` only.
+- Shared tests in existing `compose/js/sketchpad.test.ts` only.
 - Documentation/spec updates in existing READMEs and relevant file-level specs.
 
 ### Architecture Decisions
@@ -80,7 +80,7 @@ Implement a reusable selection composition mechanism that supports `additive`, `
   - `intersect` => clears selection.
 
 5. Tests (Existing File Only)
-- Extend `semio/js/sketchpad.test.ts` with a dedicated selection composition region that covers one unit (selection composition) using multiple tests:
+- Extend `compose/js/sketchpad.test.ts` with a dedicated selection composition region that covers one unit (selection composition) using multiple tests:
   - Pure composition function tests for all four modes.
   - Mode override tests (toolbar mode + modifier combinations).
   - Cross-app parity tests asserting Design/Kit/Type apply identical composition outputs for equivalent previous/incoming ID sets.
@@ -88,8 +88,8 @@ Implement a reusable selection composition mechanism that supports `additive`, `
 
 6. Specs/Docs Update
 - Update existing relevant `README.md` specs sections:
-  - Root and `semio/js/README.md` selection mechanism spec.
-  - `semio/js/sketchpad/README.md` app/plugin integration spec.
+  - Root and `compose/js/README.md` selection mechanism spec.
+  - `compose/js/sketchpad/README.md` app/plugin integration spec.
 - Update file-level specs/docstrings in touched selection-related files to define:
   - Canonical mode semantics.
   - Order guarantees.

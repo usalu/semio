@@ -16,7 +16,7 @@ import { requireAuth, isAuthError } from "@/lib";
 import { publishEvent } from "@/lib";
 import { buildScopesForFile } from "@/lib";
 
-const REPO_ROOT = process.env.SEMIO_SERVER_REPO_ROOT || process.cwd();
+const REPO_ROOT = process.env.COMPOSE_SERVER_REPO_ROOT || process.cwd();
 
 const IndexFileSchema = z.object({
   action: z.literal("index-file"),

@@ -12,7 +12,7 @@
     "WeakEntities"
   ],
   "js": {
-    "file": "semio/js/index.ts",
+    "file": "compose/js/index.ts",
     "wireParsers": "🧬Entity/🧩WireParsers — shared parseAttributeConnectionUnder for tag/concept/quality/representation attributes edges",
     "readOnlyEntities": ["Author", "Representation", "Family", "FileEntity", "FolderEntity", "LayerEntity", "GroupEntity", "StatEntity", "PropEntity"],
     "representation": {
@@ -27,12 +27,12 @@
     }
   },
   "react": {
-    "file": "semio/react/index.tsx",
+    "file": "compose/react/index.tsx",
     "regions": ["✍️Author", "💎Quality", "🏷️Tag", "💡Concept", "🎨Representation"],
     "contextsAdded": ["RepresentationEntityContextProvider", "useRepresentationEntity"],
     "readOnlyHooks": "Author and Representation export only bindFieldToReact-based reads (no bindOpToReact for those entities)"
   },
   "verify": {
-    "tsc": "npx tsc -p semio/js/tsconfig.json --noEmit && npx tsc -p semio/react/tsconfig.json --noEmit (cwd semio/js and semio/react respectively)"
+    "tsc": "npx tsc -p compose/js/tsconfig.json --noEmit && npx tsc -p compose/react/tsconfig.json --noEmit (cwd compose/js and compose/react respectively)"
   }
 }

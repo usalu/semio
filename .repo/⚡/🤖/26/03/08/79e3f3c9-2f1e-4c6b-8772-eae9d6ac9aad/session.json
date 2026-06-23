@@ -1,6 +1,6 @@
 {
   "id": "79e3f3c9-2f1e-4c6b-8772-eae9d6ac9aad",
-  "uri": "semiorepo://s/79e3f3c9-2f1e-4c6b-8772-eae9d6ac9aad",
+  "uri": "composerepo://s/79e3f3c9-2f1e-4c6b-8772-eae9d6ac9aad",
   "contributor": "🧑‍💻ueli",
   "client": "copilot-chat",
   "second": "2026-03-08T19:01:04Z",
@@ -14,7 +14,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/js/semio.ts",
+            "includePattern": "**/compose/js/compose.ts",
             "isRegexp": true,
             "query": "buildFilePath|buildFolderPath"
           },
@@ -50,7 +50,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 10650,
-            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "filePath": "/workspaces/semio/compose/js/compose.ts",
             "startLine": 10540
           },
           "tool_response": "",
@@ -69,18 +69,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚js💻semio🪨kitsqliteschema",
+            "id": "👤compose📚js💻compose🪨kitsqliteschema",
             "loc": 4
           },
           {
-            "id": "👤semio📚js💻semio🪨kittosqlite",
+            "id": "👤compose📚js💻compose🪨kittosqlite",
             "loc": 107
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚js💻semio📌10540📌10650"
+          "👤compose📚js💻compose📌10540📌10650"
         ],
         "second": "🎆26🌙03☀️08⏰19⌚01⏱️08",
         "session": "⚪79e3f3c92f1e4c6b8772eae9d6ac9aad"
@@ -97,7 +97,7 @@
           "session_id": "79e3f3c9-2f1e-4c6b-8772-eae9d6ac9aad",
           "tool_name": "file_search",
           "tool_input": {
-            "query": "**/semio/js/**/*.test.ts",
+            "query": "**/compose/js/**/*.test.ts",
             "maxResults": 20
           },
           "tool_use_id": "toolu_01QFSnYZKXegh8qArR5PfDVa__vscode-1772913892423",
@@ -132,7 +132,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 8950,
-            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "filePath": "/workspaces/semio/compose/js/compose.ts",
             "startLine": 8820
           },
           "tool_use_id": "toolu_015nBSqZFVrFvjHRG9MbJyzL__vscode-1772913892424",
@@ -151,14 +151,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚js💻semio🛠️arekitsequal",
+            "id": "👤compose📚js💻compose🛠️arekitsequal",
             "loc": 131
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚js💻semio📌8820📌8950"
+          "👤compose📚js💻compose📌8820📌8950"
         ],
         "second": "🎆26🌙03☀️08⏰19⌚01⏱️10",
         "session": "⚪79e3f3c92f1e4c6b8772eae9d6ac9aad"
@@ -175,7 +175,7 @@
           "session_id": "79e3f3c9-2f1e-4c6b-8772-eae9d6ac9aad",
           "tool_name": "file_search",
           "tool_input": {
-            "query": "**/semio/js/**/*.test.ts",
+            "query": "**/compose/js/**/*.test.ts",
             "maxResults": 20
           },
           "tool_response": "",
@@ -210,7 +210,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 8950,
-            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "filePath": "/workspaces/semio/compose/js/compose.ts",
             "startLine": 8820
           },
           "tool_response": "",
@@ -229,14 +229,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚js💻semio🛠️arekitsequal",
+            "id": "👤compose📚js💻compose🛠️arekitsequal",
             "loc": 131
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚js💻semio📌8820📌8950"
+          "👤compose📚js💻compose📌8820📌8950"
         ],
         "second": "🎆26🌙03☀️08⏰19⌚01⏱️20",
         "session": "⚪79e3f3c92f1e4c6b8772eae9d6ac9aad"
@@ -254,7 +254,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 200,
-            "filePath": "/workspaces/semio/semio/js/semio.test.ts",
+            "filePath": "/workspaces/semio/compose/js/compose.test.ts",
             "startLine": 1
           },
           "tool_use_id": "toolu_01A3TgUpRkgvhRYDwjcTuCpe__vscode-1772913892425",
@@ -273,26 +273,26 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚js🥼semiotest🛠️centersequal",
+            "id": "👤compose📚js🥼composetest🛠️centersequal",
             "loc": 1
           },
           {
-            "id": "👤semio📚js🥼semiotest🛠️finddesign",
+            "id": "👤compose📚js🥼composetest🛠️finddesign",
             "loc": 11
           },
           {
-            "id": "👤semio📚js🥼semiotest🛠️planesequal",
+            "id": "👤compose📚js🥼composetest🛠️planesequal",
             "loc": 15
           },
           {
-            "id": "👤semio📚js🥼semiotest🪨tolerance",
+            "id": "👤compose📚js🥼composetest🪨tolerance",
             "loc": 2
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚js🥼semiotest📌1📌200"
+          "👤compose📚js🥼composetest📌1📌200"
         ],
         "second": "🎆26🌙03☀️08⏰19⌚01⏱️22",
         "session": "⚪79e3f3c92f1e4c6b8772eae9d6ac9aad"
@@ -310,7 +310,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 200,
-            "filePath": "/workspaces/semio/semio/js/semio.test.ts",
+            "filePath": "/workspaces/semio/compose/js/compose.test.ts",
             "startLine": 1
           },
           "tool_response": "",
@@ -329,26 +329,26 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚js🥼semiotest🛠️centersequal",
+            "id": "👤compose📚js🥼composetest🛠️centersequal",
             "loc": 1
           },
           {
-            "id": "👤semio📚js🥼semiotest🛠️finddesign",
+            "id": "👤compose📚js🥼composetest🛠️finddesign",
             "loc": 11
           },
           {
-            "id": "👤semio📚js🥼semiotest🛠️planesequal",
+            "id": "👤compose📚js🥼composetest🛠️planesequal",
             "loc": 15
           },
           {
-            "id": "👤semio📚js🥼semiotest🪨tolerance",
+            "id": "👤compose📚js🥼composetest🪨tolerance",
             "loc": 2
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚js🥼semiotest📌1📌200"
+          "👤compose📚js🥼composetest📌1📌200"
         ],
         "second": "🎆26🌙03☀️08⏰19⌚01⏱️32",
         "session": "⚪79e3f3c92f1e4c6b8772eae9d6ac9aad"
@@ -366,7 +366,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 8950,
-            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "filePath": "/workspaces/semio/compose/js/compose.ts",
             "startLine": 8950
           },
           "tool_use_id": "toolu_01NMbGyrDE9jNMToRhCX9ehG__vscode-1772913892426",
@@ -385,14 +385,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚js💻semio🛠️arekitsequal",
+            "id": "👤compose📚js💻compose🛠️arekitsequal",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚js💻semio📌8950"
+          "👤compose📚js💻compose📌8950"
         ],
         "second": "🎆26🌙03☀️08⏰19⌚01⏱️34",
         "session": "⚪79e3f3c92f1e4c6b8772eae9d6ac9aad"
@@ -410,7 +410,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 8950,
-            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "filePath": "/workspaces/semio/compose/js/compose.ts",
             "startLine": 8950
           },
           "tool_response": "",
@@ -429,14 +429,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚js💻semio🛠️arekitsequal",
+            "id": "👤compose📚js💻compose🛠️arekitsequal",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚js💻semio📌8950"
+          "👤compose📚js💻compose📌8950"
         ],
         "second": "🎆26🌙03☀️08⏰19⌚01⏱️44",
         "session": "⚪79e3f3c92f1e4c6b8772eae9d6ac9aad"
@@ -454,7 +454,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 9050,
-            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "filePath": "/workspaces/semio/compose/js/compose.ts",
             "startLine": 8950
           },
           "tool_use_id": "toolu_01RyFZEf8jQR8Fu7YTcVJa4B__vscode-1772913892427",
@@ -473,14 +473,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚js💻semio🛠️arekitsequal",
+            "id": "👤compose📚js💻compose🛠️arekitsequal",
             "loc": 101
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚js💻semio📌8950📌9050"
+          "👤compose📚js💻compose📌8950📌9050"
         ],
         "second": "🎆26🌙03☀️08⏰19⌚01⏱️48",
         "session": "⚪79e3f3c92f1e4c6b8772eae9d6ac9aad"
@@ -498,7 +498,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 9050,
-            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "filePath": "/workspaces/semio/compose/js/compose.ts",
             "startLine": 8950
           },
           "tool_response": "",
@@ -517,14 +517,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚js💻semio🛠️arekitsequal",
+            "id": "👤compose📚js💻compose🛠️arekitsequal",
             "loc": 101
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚js💻semio📌8950📌9050"
+          "👤compose📚js💻compose📌8950📌9050"
         ],
         "second": "🎆26🌙03☀️08⏰19⌚01⏱️58",
         "session": "⚪79e3f3c92f1e4c6b8772eae9d6ac9aad"
@@ -542,7 +542,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 9150,
-            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "filePath": "/workspaces/semio/compose/js/compose.ts",
             "startLine": 9050
           },
           "tool_use_id": "toolu_0155YQTTDHFWTxDDenvvtUpq__vscode-1772913892428",
@@ -561,18 +561,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚js💻semio🛠️arekitdiffsequal",
+            "id": "👤compose📚js💻compose🛠️arekitdiffsequal",
             "loc": 35
           },
           {
-            "id": "👤semio📚js💻semio🛠️arekitsequal",
+            "id": "👤compose📚js💻compose🛠️arekitsequal",
             "loc": 58
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚js💻semio📌9050📌9150"
+          "👤compose📚js💻compose📌9050📌9150"
         ],
         "second": "🎆26🌙03☀️08⏰19⌚02⏱️00",
         "session": "⚪79e3f3c92f1e4c6b8772eae9d6ac9aad"
@@ -590,7 +590,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 9150,
-            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "filePath": "/workspaces/semio/compose/js/compose.ts",
             "startLine": 9050
           },
           "tool_response": "",
@@ -609,18 +609,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚js💻semio🛠️arekitdiffsequal",
+            "id": "👤compose📚js💻compose🛠️arekitdiffsequal",
             "loc": 35
           },
           {
-            "id": "👤semio📚js💻semio🛠️arekitsequal",
+            "id": "👤compose📚js💻compose🛠️arekitsequal",
             "loc": 58
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚js💻semio📌9050📌9150"
+          "👤compose📚js💻compose📌9050📌9150"
         ],
         "second": "🎆26🌙03☀️08⏰19⌚02⏱️10",
         "session": "⚪79e3f3c92f1e4c6b8772eae9d6ac9aad"
@@ -638,7 +638,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 10100,
-            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "filePath": "/workspaces/semio/compose/js/compose.ts",
             "startLine": 9680
           },
           "tool_use_id": "toolu_01MSGTeHchHsnT3pXS8wRNrk__vscode-1772913892429",
@@ -657,18 +657,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚js💻semio🪨sqlitetokit",
+            "id": "👤compose📚js💻compose🪨sqlitetokit",
             "loc": 413
           },
           {
-            "id": "👤semio📚js💻semio🪨toarray",
+            "id": "👤compose📚js💻compose🪨toarray",
             "loc": 3
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚js💻semio📌9680📌10100"
+          "👤compose📚js💻compose📌9680📌10100"
         ],
         "second": "🎆26🌙03☀️08⏰19⌚02⏱️13",
         "session": "⚪79e3f3c92f1e4c6b8772eae9d6ac9aad"
@@ -686,7 +686,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 10100,
-            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "filePath": "/workspaces/semio/compose/js/compose.ts",
             "startLine": 9680
           },
           "tool_response": "",
@@ -705,18 +705,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚js💻semio🪨sqlitetokit",
+            "id": "👤compose📚js💻compose🪨sqlitetokit",
             "loc": 413
           },
           {
-            "id": "👤semio📚js💻semio🪨toarray",
+            "id": "👤compose📚js💻compose🪨toarray",
             "loc": 3
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚js💻semio📌9680📌10100"
+          "👤compose📚js💻compose📌9680📌10100"
         ],
         "second": "🎆26🌙03☀️08⏰19⌚02⏱️25",
         "session": "⚪79e3f3c92f1e4c6b8772eae9d6ac9aad"
@@ -734,7 +734,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 10600,
-            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "filePath": "/workspaces/semio/compose/js/compose.ts",
             "startLine": 10543
           },
           "tool_use_id": "toolu_014JL7HCUn72NkqgeGLNC8GK__vscode-1772913892430",
@@ -753,18 +753,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚js💻semio🪨kitsqliteschema",
+            "id": "👤compose📚js💻compose🪨kitsqliteschema",
             "loc": 1
           },
           {
-            "id": "👤semio📚js💻semio🪨kittosqlite",
+            "id": "👤compose📚js💻compose🪨kittosqlite",
             "loc": 57
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚js💻semio📌10543📌10600"
+          "👤compose📚js💻compose📌10543📌10600"
         ],
         "second": "🎆26🌙03☀️08⏰19⌚02⏱️27",
         "session": "⚪79e3f3c92f1e4c6b8772eae9d6ac9aad"
@@ -782,7 +782,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 10600,
-            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "filePath": "/workspaces/semio/compose/js/compose.ts",
             "startLine": 10543
           },
           "tool_response": "",
@@ -801,18 +801,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚js💻semio🪨kitsqliteschema",
+            "id": "👤compose📚js💻compose🪨kitsqliteschema",
             "loc": 1
           },
           {
-            "id": "👤semio📚js💻semio🪨kittosqlite",
+            "id": "👤compose📚js💻compose🪨kittosqlite",
             "loc": 57
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚js💻semio📌10543📌10600"
+          "👤compose📚js💻compose📌10543📌10600"
         ],
         "second": "🎆26🌙03☀️08⏰19⌚02⏱️39",
         "session": "⚪79e3f3c92f1e4c6b8772eae9d6ac9aad"
@@ -830,7 +830,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 10750,
-            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "filePath": "/workspaces/semio/compose/js/compose.ts",
             "startLine": 10600
           },
           "tool_use_id": "toolu_01UKHbf1yFY9hYq3ixenj2UJ__vscode-1772913892431",
@@ -849,14 +849,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚js💻semio🪨kittosqlite",
+            "id": "👤compose📚js💻compose🪨kittosqlite",
             "loc": 151
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚js💻semio📌10600📌10750"
+          "👤compose📚js💻compose📌10600📌10750"
         ],
         "second": "🎆26🌙03☀️08⏰19⌚02⏱️42",
         "session": "⚪79e3f3c92f1e4c6b8772eae9d6ac9aad"
@@ -874,7 +874,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 10750,
-            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "filePath": "/workspaces/semio/compose/js/compose.ts",
             "startLine": 10600
           },
           "tool_response": "",
@@ -893,14 +893,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚js💻semio🪨kittosqlite",
+            "id": "👤compose📚js💻compose🪨kittosqlite",
             "loc": 151
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚js💻semio📌10600📌10750"
+          "👤compose📚js💻compose📌10600📌10750"
         ],
         "second": "🎆26🌙03☀️08⏰19⌚02⏱️52",
         "session": "⚪79e3f3c92f1e4c6b8772eae9d6ac9aad"
@@ -918,7 +918,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 10850,
-            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "filePath": "/workspaces/semio/compose/js/compose.ts",
             "startLine": 10750
           },
           "tool_use_id": "toolu_01GfNVDTgKuiq2VkK7rnuLzi__vscode-1772913892432",
@@ -937,14 +937,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚js💻semio🪨kittosqlite",
+            "id": "👤compose📚js💻compose🪨kittosqlite",
             "loc": 101
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚js💻semio📌10750📌10850"
+          "👤compose📚js💻compose📌10750📌10850"
         ],
         "second": "🎆26🌙03☀️08⏰19⌚02⏱️54",
         "session": "⚪79e3f3c92f1e4c6b8772eae9d6ac9aad"
@@ -962,7 +962,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 10850,
-            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "filePath": "/workspaces/semio/compose/js/compose.ts",
             "startLine": 10750
           },
           "tool_response": "",
@@ -981,14 +981,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚js💻semio🪨kittosqlite",
+            "id": "👤compose📚js💻compose🪨kittosqlite",
             "loc": 101
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚js💻semio📌10750📌10850"
+          "👤compose📚js💻compose📌10750📌10850"
         ],
         "second": "🎆26🌙03☀️08⏰19⌚03⏱️05",
         "session": "⚪79e3f3c92f1e4c6b8772eae9d6ac9aad"
@@ -1006,7 +1006,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 10950,
-            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "filePath": "/workspaces/semio/compose/js/compose.ts",
             "startLine": 10850
           },
           "tool_use_id": "toolu_017a9e5fra3H2tvwo3w1DF9m__vscode-1772913892433",
@@ -1025,30 +1025,30 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚js💻semio✂️domainlocation",
+            "id": "👤compose📚js💻compose✂️domainlocation",
             "loc": 5
           },
           {
-            "id": "👤semio📚js💻semio✂️entitykind",
+            "id": "👤compose📚js💻compose✂️entitykind",
             "loc": 7
           },
           {
-            "id": "👤semio📚js💻semio✂️fix",
+            "id": "👤compose📚js💻compose✂️fix",
             "loc": 3
           },
           {
-            "id": "👤semio📚js💻semio✂️problem",
+            "id": "👤compose📚js💻compose✂️problem",
             "loc": 7
           },
           {
-            "id": "👤semio📚js💻semio🪨kittosqlite",
+            "id": "👤compose📚js💻compose🪨kittosqlite",
             "loc": 50
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚js💻semio📌10850📌10950"
+          "👤compose📚js💻compose📌10850📌10950"
         ],
         "second": "🎆26🌙03☀️08⏰19⌚03⏱️08",
         "session": "⚪79e3f3c92f1e4c6b8772eae9d6ac9aad"
@@ -1066,7 +1066,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 10950,
-            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "filePath": "/workspaces/semio/compose/js/compose.ts",
             "startLine": 10850
           },
           "tool_response": "",
@@ -1085,30 +1085,30 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚js💻semio✂️domainlocation",
+            "id": "👤compose📚js💻compose✂️domainlocation",
             "loc": 5
           },
           {
-            "id": "👤semio📚js💻semio✂️entitykind",
+            "id": "👤compose📚js💻compose✂️entitykind",
             "loc": 7
           },
           {
-            "id": "👤semio📚js💻semio✂️fix",
+            "id": "👤compose📚js💻compose✂️fix",
             "loc": 3
           },
           {
-            "id": "👤semio📚js💻semio✂️problem",
+            "id": "👤compose📚js💻compose✂️problem",
             "loc": 7
           },
           {
-            "id": "👤semio📚js💻semio🪨kittosqlite",
+            "id": "👤compose📚js💻compose🪨kittosqlite",
             "loc": 50
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚js💻semio📌10850📌10950"
+          "👤compose📚js💻compose📌10850📌10950"
         ],
         "second": "🎆26🌙03☀️08⏰19⌚03⏱️18",
         "session": "⚪79e3f3c92f1e4c6b8772eae9d6ac9aad"
@@ -1126,7 +1126,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 250,
-            "filePath": "/workspaces/semio/semio/js/semio.test.ts",
+            "filePath": "/workspaces/semio/compose/js/compose.test.ts",
             "startLine": 200
           },
           "tool_use_id": "toolu_01Uy827Qur4yC9cksFN6uSHj__vscode-1772913892434",
@@ -1146,7 +1146,7 @@
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚js🥼semiotest📌200📌250"
+          "👤compose📚js🥼composetest📌200📌250"
         ],
         "second": "🎆26🌙03☀️08⏰19⌚03⏱️20",
         "session": "⚪79e3f3c92f1e4c6b8772eae9d6ac9aad"
@@ -1164,7 +1164,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 299,
-            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "filePath": "/workspaces/semio/compose/js/compose.ts",
             "startLine": 2370
           },
           "tool_use_id": "toolu_01UXz2yVn5PCtJFN9sLzP9tz__vscode-1772913892435",
@@ -1184,7 +1184,7 @@
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚js💻semio📌2370📌299"
+          "👤compose📚js💻compose📌2370📌299"
         ],
         "second": "🎆26🌙03☀️08⏰19⌚03⏱️20",
         "session": "⚪79e3f3c92f1e4c6b8772eae9d6ac9aad"
@@ -1202,7 +1202,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 250,
-            "filePath": "/workspaces/semio/semio/js/semio.test.ts",
+            "filePath": "/workspaces/semio/compose/js/compose.test.ts",
             "startLine": 200
           },
           "tool_response": "",
@@ -1222,7 +1222,7 @@
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚js🥼semiotest📌200📌250"
+          "👤compose📚js🥼composetest📌200📌250"
         ],
         "second": "🎆26🌙03☀️08⏰19⌚03⏱️27",
         "session": "⚪79e3f3c92f1e4c6b8772eae9d6ac9aad"

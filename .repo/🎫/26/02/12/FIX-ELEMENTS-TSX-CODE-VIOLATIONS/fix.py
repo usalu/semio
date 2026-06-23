@@ -1,7 +1,7 @@
 import re
 from collections import defaultdict
 
-FILE = "/workspaces/semio/semio/js/sketchpad/elements.tsx"
+FILE = "/workspaces/semio/compose/js/sketchpad/elements.tsx"
 
 with open(FILE, "r") as f:
     lines = f.readlines()

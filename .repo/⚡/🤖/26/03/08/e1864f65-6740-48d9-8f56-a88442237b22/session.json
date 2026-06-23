@@ -1,6 +1,6 @@
 {
   "id": "e1864f65-6740-48d9-8f56-a88442237b22",
-  "uri": "semiorepo://s/e1864f65-6740-48d9-8f56-a88442237b22",
+  "uri": "composerepo://s/e1864f65-6740-48d9-8f56-a88442237b22",
   "contributor": "🧑‍💻ueli",
   "client": "copilot-chat",
   "second": "2026-03-08T20:03:03Z",
@@ -13,7 +13,7 @@
           "session_id": "e1864f65-6740-48d9-8f56-a88442237b22",
           "tool_name": "list_dir",
           "tool_input": {
-            "path": "/workspaces/semio/semio/net/Semio.Tests"
+            "path": "/workspaces/semio/compose/net/Compose.Tests"
           },
           "tool_response": "",
           "tool_use_id": "toolu_01XJs7GT8qSPJzVpxcztJ1es__vscode-1772913892596",
@@ -46,7 +46,7 @@
           "session_id": "e1864f65-6740-48d9-8f56-a88442237b22",
           "tool_name": "list_dir",
           "tool_input": {
-            "path": "/workspaces/semio/semio/net/Semio"
+            "path": "/workspaces/semio/compose/net/Compose"
           },
           "tool_response": "",
           "tool_use_id": "toolu_01JQbTt4MXydrSzp5xBa8eRt__vscode-1772913892595",
@@ -79,7 +79,7 @@
           "session_id": "e1864f65-6740-48d9-8f56-a88442237b22",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/net/Semio.Tests/Tests.cs",
+            "filePath": "/workspaces/semio/compose/net/Compose.Tests/Tests.cs",
             "startLine": 1,
             "endLine": 300
           },
@@ -100,7 +100,7 @@
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚net🛅semiotests💻tests📌1📌300"
+          "👤compose📚net🛅composetests💻tests📌1📌300"
         ],
         "second": "🎆26🌙03☀️08⏰20⌚03⏱️06",
         "session": "⚪e1864f65674048d98f56a88442237b22"
@@ -117,7 +117,7 @@
           "session_id": "e1864f65-6740-48d9-8f56-a88442237b22",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/net/Semio/Semio.cs",
+            "filePath": "/workspaces/semio/compose/net/Compose/Compose.cs",
             "startLine": 1,
             "endLine": 500
           },
@@ -137,14 +137,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚net🛅semio💻semio🛠️symbol",
+            "id": "👤compose📚net🛅compose💻compose🛠️symbol",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚net🛅semio💻semio📌1📌500"
+          "👤compose📚net🛅compose💻compose📌1📌500"
         ],
         "second": "🎆26🌙03☀️08⏰20⌚03⏱️06",
         "session": "⚪e1864f65674048d98f56a88442237b22"
@@ -161,7 +161,7 @@
           "session_id": "e1864f65-6740-48d9-8f56-a88442237b22",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/net/Semio.Tests/Tests.cs",
+            "filePath": "/workspaces/semio/compose/net/Compose.Tests/Tests.cs",
             "startLine": 1,
             "endLine": 300
           },
@@ -182,7 +182,7 @@
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚net🛅semiotests💻tests📌1📌300"
+          "👤compose📚net🛅composetests💻tests📌1📌300"
         ],
         "second": "🎆26🌙03☀️08⏰20⌚03⏱️12",
         "session": "⚪e1864f65674048d98f56a88442237b22"
@@ -199,7 +199,7 @@
           "session_id": "e1864f65-6740-48d9-8f56-a88442237b22",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/net/Semio/Semio.cs",
+            "filePath": "/workspaces/semio/compose/net/Compose/Compose.cs",
             "startLine": 1,
             "endLine": 500
           },
@@ -219,14 +219,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚net🛅semio💻semio🛠️symbol",
+            "id": "👤compose📚net🛅compose💻compose🛠️symbol",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚net🛅semio💻semio📌1📌500"
+          "👤compose📚net🛅compose💻compose📌1📌500"
         ],
         "second": "🎆26🌙03☀️08⏰20⌚03⏱️13",
         "session": "⚪e1864f65674048d98f56a88442237b22"
@@ -246,7 +246,7 @@
             "maxResults": 20,
             "query": "KitImporter|KitExporter|ImportFromZip|ExportToZip",
             "isRegexp": true,
-            "includePattern": "**/semio/net/**/*.cs"
+            "includePattern": "**/compose/net/**/*.cs"
           },
           "tool_use_id": "toolu_01BQkFtQ4xbnmAqVwm5Q1Yft__vscode-1772913892599",
           "cwd": "/workspaces/semio"
@@ -282,7 +282,7 @@
             "maxResults": 20,
             "query": "public (class|record) File|public (class|record) Folder|public (class|record) Kit",
             "isRegexp": true,
-            "includePattern": "**/semio/net/**/*.cs"
+            "includePattern": "**/compose/net/**/*.cs"
           },
           "tool_use_id": "toolu_016JZDY2cKfD8zsC9jExk5Mh__vscode-1772913892600",
           "cwd": "/workspaces/semio"
@@ -318,7 +318,7 @@
             "maxResults": 20,
             "query": "KitImporter|KitExporter|ImportFromZip|ExportToZip",
             "isRegexp": true,
-            "includePattern": "**/semio/net/**/*.cs"
+            "includePattern": "**/compose/net/**/*.cs"
           },
           "tool_response": "",
           "tool_use_id": "toolu_01BQkFtQ4xbnmAqVwm5Q1Yft__vscode-1772913892599",
@@ -354,7 +354,7 @@
             "maxResults": 20,
             "query": "public (class|record) File|public (class|record) Folder|public (class|record) Kit",
             "isRegexp": true,
-            "includePattern": "**/semio/net/**/*.cs"
+            "includePattern": "**/compose/net/**/*.cs"
           },
           "tool_response": "",
           "tool_use_id": "toolu_016JZDY2cKfD8zsC9jExk5Mh__vscode-1772913892600",
@@ -387,7 +387,7 @@
           "session_id": "e1864f65-6740-48d9-8f56-a88442237b22",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/net/Semio/Semio.cs",
+            "filePath": "/workspaces/semio/compose/net/Compose/Compose.cs",
             "startLine": 8271,
             "endLine": 8330
           },
@@ -408,7 +408,7 @@
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚net🛅semio💻semio📌8271📌8330"
+          "👤compose📚net🛅compose💻compose📌8271📌8330"
         ],
         "second": "🎆26🌙03☀️08⏰20⌚03⏱️27",
         "session": "⚪e1864f65674048d98f56a88442237b22"
@@ -425,7 +425,7 @@
           "session_id": "e1864f65-6740-48d9-8f56-a88442237b22",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/net/Semio/Semio.cs",
+            "filePath": "/workspaces/semio/compose/net/Compose/Compose.cs",
             "startLine": 2502,
             "endLine": 2545
           },
@@ -446,7 +446,7 @@
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚net🛅semio💻semio📌2502📌2545"
+          "👤compose📚net🛅compose💻compose📌2502📌2545"
         ],
         "second": "🎆26🌙03☀️08⏰20⌚03⏱️28",
         "session": "⚪e1864f65674048d98f56a88442237b22"
@@ -463,7 +463,7 @@
           "session_id": "e1864f65-6740-48d9-8f56-a88442237b22",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/net/Semio/Semio.cs",
+            "filePath": "/workspaces/semio/compose/net/Compose/Compose.cs",
             "startLine": 5810,
             "endLine": 5860
           },
@@ -484,7 +484,7 @@
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚net🛅semio💻semio📌5810📌5860"
+          "👤compose📚net🛅compose💻compose📌5810📌5860"
         ],
         "second": "🎆26🌙03☀️08⏰20⌚03⏱️28",
         "session": "⚪e1864f65674048d98f56a88442237b22"
@@ -501,7 +501,7 @@
           "session_id": "e1864f65-6740-48d9-8f56-a88442237b22",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/net/Semio/Semio.cs",
+            "filePath": "/workspaces/semio/compose/net/Compose/Compose.cs",
             "startLine": 2402,
             "endLine": 2431
           },
@@ -522,7 +522,7 @@
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚net🛅semio💻semio📌2402📌2431"
+          "👤compose📚net🛅compose💻compose📌2402📌2431"
         ],
         "second": "🎆26🌙03☀️08⏰20⌚03⏱️35",
         "session": "⚪e1864f65674048d98f56a88442237b22"
@@ -539,7 +539,7 @@
           "session_id": "e1864f65-6740-48d9-8f56-a88442237b22",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/net/Semio/Semio.cs",
+            "filePath": "/workspaces/semio/compose/net/Compose/Compose.cs",
             "startLine": 2502,
             "endLine": 2545
           },
@@ -560,7 +560,7 @@
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚net🛅semio💻semio📌2502📌2545"
+          "👤compose📚net🛅compose💻compose📌2502📌2545"
         ],
         "second": "🎆26🌙03☀️08⏰20⌚03⏱️39",
         "session": "⚪e1864f65674048d98f56a88442237b22"
@@ -577,7 +577,7 @@
           "session_id": "e1864f65-6740-48d9-8f56-a88442237b22",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/net/Semio/Semio.cs",
+            "filePath": "/workspaces/semio/compose/net/Compose/Compose.cs",
             "startLine": 5810,
             "endLine": 5860
           },
@@ -598,7 +598,7 @@
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚net🛅semio💻semio📌5810📌5860"
+          "👤compose📚net🛅compose💻compose📌5810📌5860"
         ],
         "second": "🎆26🌙03☀️08⏰20⌚03⏱️39",
         "session": "⚪e1864f65674048d98f56a88442237b22"
@@ -616,7 +616,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/net/**/*.cs",
+            "includePattern": "**/compose/net/**/*.cs",
             "isRegexp": true,
             "query": "ZipRoundtrip"
           },
@@ -652,7 +652,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 8284,
-            "filePath": "/workspaces/semio/semio/net/Semio/Semio.cs",
+            "filePath": "/workspaces/semio/compose/net/Compose/Compose.cs",
             "startLine": 8271
           },
           "tool_use_id": "toolu_01DCWp2jVkmYaoiixtbVPwj6__vscode-1772913892605",
@@ -672,7 +672,7 @@
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚net🛅semio💻semio📌8271📌8284"
+          "👤compose📚net🛅compose💻compose📌8271📌8284"
         ],
         "second": "🎆26🌙03☀️08⏰20⌚03⏱️42",
         "session": "⚪e1864f65674048d98f56a88442237b22"
@@ -690,7 +690,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/net/**/*.cs",
+            "includePattern": "**/compose/net/**/*.cs",
             "isRegexp": true,
             "query": "ZipRoundtrip"
           },
@@ -726,7 +726,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 8284,
-            "filePath": "/workspaces/semio/semio/net/Semio/Semio.cs",
+            "filePath": "/workspaces/semio/compose/net/Compose/Compose.cs",
             "startLine": 8271
           },
           "tool_response": "",
@@ -746,7 +746,7 @@
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚net🛅semio💻semio📌8271📌8284"
+          "👤compose📚net🛅compose💻compose📌8271📌8284"
         ],
         "second": "🎆26🌙03☀️08⏰20⌚03⏱️52",
         "session": "⚪e1864f65674048d98f56a88442237b22"
@@ -764,7 +764,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 8270,
-            "filePath": "/workspaces/semio/semio/net/Semio/Semio.cs",
+            "filePath": "/workspaces/semio/compose/net/Compose/Compose.cs",
             "startLine": 7989
           },
           "tool_use_id": "toolu_01BErgQadQf9LASiA4Ryuv2n__vscode-1772913892607",
@@ -784,7 +784,7 @@
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚net🛅semio💻semio📌7989📌8270"
+          "👤compose📚net🛅compose💻compose📌7989📌8270"
         ],
         "second": "🎆26🌙03☀️08⏰20⌚03⏱️56",
         "session": "⚪e1864f65674048d98f56a88442237b22"
@@ -802,7 +802,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 8270,
-            "filePath": "/workspaces/semio/semio/net/Semio/Semio.cs",
+            "filePath": "/workspaces/semio/compose/net/Compose/Compose.cs",
             "startLine": 7989
           },
           "tool_response": "",
@@ -822,7 +822,7 @@
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚net🛅semio💻semio📌7989📌8270"
+          "👤compose📚net🛅compose💻compose📌7989📌8270"
         ],
         "second": "🎆26🌙03☀️08⏰20⌚04⏱️07",
         "session": "⚪e1864f65674048d98f56a88442237b22"
@@ -840,7 +840,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/net/**/*.cs",
+            "includePattern": "**/compose/net/**/*.cs",
             "isRegexp": true,
             "query": "path|folder.*.path|BuildPath|GetPath"
           },
@@ -876,7 +876,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/net/**/*.cs",
+            "includePattern": "**/compose/net/**/*.cs",
             "isRegexp": true,
             "query": "path|folder.*.path|BuildPath|GetPath"
           },
@@ -912,7 +912,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/net/Semio/Semio.cs",
+            "includePattern": "**/compose/net/Compose/Compose.cs",
             "isRegexp": true,
             "query": "Serialize|Deserialize"
           },
@@ -948,7 +948,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/net/Semio/Semio.cs",
+            "includePattern": "**/compose/net/Compose/Compose.cs",
             "isRegexp": true,
             "query": "Serialize|Deserialize"
           },
@@ -984,7 +984,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 311,
-            "filePath": "/workspaces/semio/semio/net/Semio/Semio.cs",
+            "filePath": "/workspaces/semio/compose/net/Compose/Compose.cs",
             "startLine": 275
           },
           "tool_use_id": "toolu_01UMNqAxrt6fBc2mvpU54JMr__vscode-1772913892610",
@@ -1004,7 +1004,7 @@
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚net🛅semio💻semio📌275📌311"
+          "👤compose📚net🛅compose💻compose📌275📌311"
         ],
         "second": "🎆26🌙03☀️08⏰20⌚04⏱️33",
         "session": "⚪e1864f65674048d98f56a88442237b22"
@@ -1022,7 +1022,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 311,
-            "filePath": "/workspaces/semio/semio/net/Semio/Semio.cs",
+            "filePath": "/workspaces/semio/compose/net/Compose/Compose.cs",
             "startLine": 275
           },
           "tool_response": "",
@@ -1042,7 +1042,7 @@
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚net🛅semio💻semio📌275📌311"
+          "👤compose📚net🛅compose💻compose📌275📌311"
         ],
         "second": "🎆26🌙03☀️08⏰20⌚04⏱️43",
         "session": "⚪e1864f65674048d98f56a88442237b22"
@@ -1060,7 +1060,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/net/**/*.cs",
+            "includePattern": "**/compose/net/**/*.cs",
             "isRegexp": true,
             "query": "class KitSqlite"
           },
@@ -1096,7 +1096,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/net/**/*.cs",
+            "includePattern": "**/compose/net/**/*.cs",
             "isRegexp": true,
             "query": "class KitSqlite"
           },
@@ -1132,7 +1132,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 6550,
-            "filePath": "/workspaces/semio/semio/net/Semio/Semio.cs",
+            "filePath": "/workspaces/semio/compose/net/Compose/Compose.cs",
             "startLine": 6461
           },
           "tool_use_id": "toolu_018rTews3nwAGLsZZd2GBXg3__vscode-1772913892612",
@@ -1152,7 +1152,7 @@
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚net🛅semio💻semio📌6461📌6550"
+          "👤compose📚net🛅compose💻compose📌6461📌6550"
         ],
         "second": "🎆26🌙03☀️08⏰20⌚04⏱️56",
         "session": "⚪e1864f65674048d98f56a88442237b22"
@@ -1170,7 +1170,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 6550,
-            "filePath": "/workspaces/semio/semio/net/Semio/Semio.cs",
+            "filePath": "/workspaces/semio/compose/net/Compose/Compose.cs",
             "startLine": 6461
           },
           "tool_response": "",
@@ -1190,7 +1190,7 @@
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚net🛅semio💻semio📌6461📌6550"
+          "👤compose📚net🛅compose💻compose📌6461📌6550"
         ],
         "second": "🎆26🌙03☀️08⏰20⌚05⏱️07",
         "session": "⚪e1864f65674048d98f56a88442237b22"
@@ -1208,7 +1208,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 6750,
-            "filePath": "/workspaces/semio/semio/net/Semio/Semio.cs",
+            "filePath": "/workspaces/semio/compose/net/Compose/Compose.cs",
             "startLine": 6550
           },
           "tool_use_id": "toolu_01EQ47aizefD992oLjbLvLc2__vscode-1772913892613",
@@ -1228,7 +1228,7 @@
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚net🛅semio💻semio📌6550📌6750"
+          "👤compose📚net🛅compose💻compose📌6550📌6750"
         ],
         "second": "🎆26🌙03☀️08⏰20⌚05⏱️09",
         "session": "⚪e1864f65674048d98f56a88442237b22"
@@ -1246,7 +1246,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 6750,
-            "filePath": "/workspaces/semio/semio/net/Semio/Semio.cs",
+            "filePath": "/workspaces/semio/compose/net/Compose/Compose.cs",
             "startLine": 6550
           },
           "tool_response": "",
@@ -1266,7 +1266,7 @@
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚net🛅semio💻semio📌6550📌6750"
+          "👤compose📚net🛅compose💻compose📌6550📌6750"
         ],
         "second": "🎆26🌙03☀️08⏰20⌚05⏱️19",
         "session": "⚪e1864f65674048d98f56a88442237b22"
@@ -1284,7 +1284,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/net/Semio/Semio.cs",
+            "includePattern": "**/compose/net/Compose/Compose.cs",
             "isRegexp": true,
             "query": "SaveKit|public static void SaveKit"
           },
@@ -1320,7 +1320,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/net/Semio/Semio.cs",
+            "includePattern": "**/compose/net/Compose/Compose.cs",
             "isRegexp": true,
             "query": "SaveKit|public static void SaveKit"
           },
@@ -1356,7 +1356,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 7270,
-            "filePath": "/workspaces/semio/semio/net/Semio/Semio.cs",
+            "filePath": "/workspaces/semio/compose/net/Compose/Compose.cs",
             "startLine": 7245
           },
           "tool_use_id": "toolu_01BtPhjgQSN5SNKf8PTPJQEm__vscode-1772913892615",
@@ -1376,7 +1376,7 @@
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚net🛅semio💻semio📌7245📌7270"
+          "👤compose📚net🛅compose💻compose📌7245📌7270"
         ],
         "second": "🎆26🌙03☀️08⏰20⌚05⏱️33",
         "session": "⚪e1864f65674048d98f56a88442237b22"
@@ -1394,7 +1394,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 7270,
-            "filePath": "/workspaces/semio/semio/net/Semio/Semio.cs",
+            "filePath": "/workspaces/semio/compose/net/Compose/Compose.cs",
             "startLine": 7245
           },
           "tool_response": "",
@@ -1414,7 +1414,7 @@
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚net🛅semio💻semio📌7245📌7270"
+          "👤compose📚net🛅compose💻compose📌7245📌7270"
         ],
         "second": "🎆26🌙03☀️08⏰20⌚05⏱️44",
         "session": "⚪e1864f65674048d98f56a88442237b22"
@@ -1432,7 +1432,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/net/Semio/Semio.cs",
+            "includePattern": "**/compose/net/Compose/Compose.cs",
             "isRegexp": true,
             "query": "GetPath|BuildPath|folder.*path|path.*folder"
           },
@@ -1468,7 +1468,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/net/Semio/Semio.cs",
+            "includePattern": "**/compose/net/Compose/Compose.cs",
             "isRegexp": true,
             "query": "GetPath|BuildPath|folder.*path|path.*folder"
           },
@@ -1504,7 +1504,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 8283,
-            "filePath": "/workspaces/semio/semio/net/Semio/Semio.cs",
+            "filePath": "/workspaces/semio/compose/net/Compose/Compose.cs",
             "startLine": 8271
           },
           "tool_use_id": "toolu_01955mr7T4otvM4jj2bbbUuD__vscode-1772913892617",
@@ -1524,7 +1524,7 @@
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚net🛅semio💻semio📌8271📌8283"
+          "👤compose📚net🛅compose💻compose📌8271📌8283"
         ],
         "second": "🎆26🌙03☀️08⏰20⌚06⏱️01",
         "session": "⚪e1864f65674048d98f56a88442237b22"
@@ -1542,7 +1542,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 8283,
-            "filePath": "/workspaces/semio/semio/net/Semio/Semio.cs",
+            "filePath": "/workspaces/semio/compose/net/Compose/Compose.cs",
             "startLine": 8271
           },
           "tool_response": "",
@@ -1562,7 +1562,7 @@
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚net🛅semio💻semio📌8271📌8283"
+          "👤compose📚net🛅compose💻compose📌8271📌8283"
         ],
         "second": "🎆26🌙03☀️08⏰20⌚06⏱️12",
         "session": "⚪e1864f65674048d98f56a88442237b22"
@@ -1580,7 +1580,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 8283,
-            "filePath": "/workspaces/semio/semio/net/Semio/Semio.cs",
+            "filePath": "/workspaces/semio/compose/net/Compose/Compose.cs",
             "startLine": 8275
           },
           "tool_use_id": "toolu_018gBz1chnQEScmDe6CzKNMf__vscode-1772913892618",
@@ -1600,7 +1600,7 @@
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚net🛅semio💻semio📌8275📌8283"
+          "👤compose📚net🛅compose💻compose📌8275📌8283"
         ],
         "second": "🎆26🌙03☀️08⏰20⌚06⏱️14",
         "session": "⚪e1864f65674048d98f56a88442237b22"
@@ -1618,7 +1618,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 8283,
-            "filePath": "/workspaces/semio/semio/net/Semio/Semio.cs",
+            "filePath": "/workspaces/semio/compose/net/Compose/Compose.cs",
             "startLine": 8275
           },
           "tool_response": "",
@@ -1638,7 +1638,7 @@
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚net🛅semio💻semio📌8275📌8283"
+          "👤compose📚net🛅compose💻compose📌8275📌8283"
         ],
         "second": "🎆26🌙03☀️08⏰20⌚06⏱️25",
         "session": "⚪e1864f65674048d98f56a88442237b22"
@@ -1656,7 +1656,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 8285,
-            "filePath": "/workspaces/semio/semio/net/Semio/Semio.cs",
+            "filePath": "/workspaces/semio/compose/net/Compose/Compose.cs",
             "startLine": 8268
           },
           "tool_use_id": "toolu_01EkASxFnnA1Bswzxa1ep1Zt__vscode-1772913892619",
@@ -1676,7 +1676,7 @@
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚net🛅semio💻semio📌8268📌8285"
+          "👤compose📚net🛅compose💻compose📌8268📌8285"
         ],
         "second": "🎆26🌙03☀️08⏰20⌚06⏱️28",
         "session": "⚪e1864f65674048d98f56a88442237b22"
@@ -1694,7 +1694,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 8285,
-            "filePath": "/workspaces/semio/semio/net/Semio/Semio.cs",
+            "filePath": "/workspaces/semio/compose/net/Compose/Compose.cs",
             "startLine": 8268
           },
           "tool_response": "",
@@ -1714,7 +1714,7 @@
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚net🛅semio💻semio📌8268📌8285"
+          "👤compose📚net🛅compose💻compose📌8268📌8285"
         ],
         "second": "🎆26🌙03☀️08⏰20⌚06⏱️39",
         "session": "⚪e1864f65674048d98f56a88442237b22"

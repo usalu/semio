@@ -34,7 +34,7 @@ for (let i = 0; i < 10; i++) {
 }
 await page.waitForTimeout(3000);
 await page.evaluate(() => { window.__LT.tasks = []; window.__LT.markers.push({ name: "START", t: performance.now() }); });
-const toggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.leftSidePanel"]');
+const toggle = page.locator('[id="compose.sketchpad.navbar.panelToggle.leftSidePanel"]');
 if (await toggle.isVisible().catch(() => false)) {
   const leftOpen = await page.locator('[data-panel="leftSidePanel"]').isVisible().catch(() => false);
   if (leftOpen) { await toggle.click(); await page.waitForTimeout(500); }

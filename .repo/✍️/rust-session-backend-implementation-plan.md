@@ -2,7 +2,7 @@
 
 ## 1. Goal
 
-Build a single Rust backend service that hosts collaborative session state for a kit-shaped domain with strongly typed relational persistence, deterministic conflict handling, support for cyclic references, and persisted semio/presentational state.
+Build a single Rust backend service that hosts collaborative session state for a kit-shaped domain with strongly typed relational persistence, deterministic conflict handling, support for cyclic references, and persisted compose/presentational state.
 
 The service has these non-negotiable properties:
 
@@ -13,7 +13,7 @@ The service has these non-negotiable properties:
 - no JSON blobs for canonical state or diffs
 - explicit relational modeling with foreign keys, enums, check constraints, and typed history
 - tombstone-based deletion in the write path
-- semio/presentational data persisted as first-class entities
+- compose/presentational data persisted as first-class entities
 - clean support for historical artifact views for **Type** and **Design** at these lookback points:
   - `1min`
   - `5min`
@@ -38,7 +38,7 @@ The service is a single deployable process with four internal parts, all impleme
 
 1. HTTP/WebSocket API
 2. Session directory and session actors
-3. Domain and semio command application
+3. Domain and compose command application
 4. PostgreSQL persistence and historical reads
 
 The core runtime shape is:
@@ -49,7 +49,7 @@ frontend -> HTTP/WS -> SessionDirectory -> SessionActor(session_id) -> PostgreSQ
 
 For each active session, exactly one in-process actor owns mutation ordering. That actor:
 
-- receives domain and semio commands
+- receives domain and compose commands
 - validates them against the current session state
 - resolves conflicts deterministically
 - persists accepted changes in one SQL transaction
@@ -178,8 +178,8 @@ enum PropertyKey {
     PieceScale,
     GroupMembership,
     ConnectionEndpoints,
-    SemioCursor,
-    SemioLook,
+    ComposeCursor,
+    ComposeLook,
 }
 ```
 
@@ -196,7 +196,7 @@ This registry drives:
 
 The consistency boundary is the **session**.
 
-All canonical domain data and all semio data are scoped by `session_id`.
+All canonical domain data and all compose data are scoped by `session_id`.
 
 Each active session actor owns an in-memory state shaped roughly like this:
 
@@ -204,7 +204,7 @@ Each active session actor owns an in-memory state shaped roughly like this:
 struct SessionState {
     session_id: SessionId,
     domain_version: i64,
-    semio_version: i64,
+    compose_version: i64,
     kit: KitState,
     types: BTreeMap<TypeId, TypeState>,
     designs: BTreeMap<DesignId, DesignState>,
@@ -213,7 +213,7 @@ struct SessionState {
     groups: BTreeMap<GroupId, GroupState>,
     connections: BTreeMap<ConnectionId, ConnectionState>,
     props: BTreeMap<PropId, PropState>,
-    semio_people: BTreeMap<(PersonId, String), SemioPersonState>,
+    compose_people: BTreeMap<(PersonId, String), ComposePersonState>,
 }
 ```
 
@@ -230,10 +230,10 @@ Everything lives under that schema:
 - runtime tables
 - domain tables
 - historical/version tables
-- semio tables
+- compose tables
 - enums
 
-There are no separate SQL schemas such as `runtime`, `core`, `history`, or `semio`.
+There are no separate SQL schemas such as `runtime`, `core`, `history`, or `compose`.
 
 To keep the schema readable, use table naming prefixes:
 
@@ -243,7 +243,7 @@ To keep the schema readable, use table naming prefixes:
 - `design_*`
 - `piece_*`
 - `group_*`
-- `semio_*`
+- `compose_*`
 
 Example DDL style:
 
@@ -307,7 +307,7 @@ Columns:
 - `session_id uuid primary key`
 - `kit_id uuid not null`
 - `domain_version bigint not null default 0`
-- `semio_version bigint not null default 0`
+- `compose_version bigint not null default 0`
 - `status text not null`
 - `writer_instance_id uuid null`
 - `writer_lease_expires_at timestamptz null`
@@ -328,9 +328,9 @@ Columns:
 - `request_id uuid not null`
 - `command_kind text not null`
 - `base_domain_version bigint null`
-- `base_semio_version bigint null`
+- `base_compose_version bigint null`
 - `accepted_domain_version bigint null`
-- `accepted_semio_version bigint null`
+- `accepted_compose_version bigint null`
 - `actor_person_id uuid not null`
 - `received_at timestamptz not null`
 - `applied_at timestamptz null`
@@ -666,15 +666,15 @@ No extra table is needed.
 
 ---
 
-## 10. Semio / presentational persistence
+## 10. Compose / presentational persistence
 
-Semio state is persisted as first-class relational entities in the same `app` schema.
+Compose state is persisted as first-class relational entities in the same `app` schema.
 
-Semio data is not part of canonical artifact history and must not advance the domain version. It uses its own monotonic `semio_version` per session.
+Compose data is not part of canonical artifact history and must not advance the domain version. It uses its own monotonic `compose_version` per session.
 
 ### 10.1 Tables
 
-### `app.semio_person`
+### `app.compose_person`
 
 - `session_id uuid not null`
 - `person_id uuid not null`
@@ -686,7 +686,7 @@ Semio data is not part of canonical artifact history and must not advance the do
 - `expires_at timestamptz not null`
 - primary key `(session_id, person_id, frontend_id)`
 
-### `app.semio_cursor`
+### `app.compose_cursor`
 
 - `session_id`
 - `person_id`
@@ -694,11 +694,11 @@ Semio data is not part of canonical artifact history and must not advance the do
 - `coord_x double precision not null`
 - `coord_y double precision not null`
 - `coord_z double precision null`
-- `semio_version bigint not null`
+- `compose_version bigint not null`
 - `updated_at timestamptz not null`
 - primary key `(session_id, person_id, frontend_id)`
 
-### `app.semio_look`
+### `app.compose_look`
 
 - `session_id`
 - `person_id`
@@ -706,24 +706,24 @@ Semio data is not part of canonical artifact history and must not advance the do
 - `camera_pos_x`, `camera_pos_y`, `camera_pos_z`
 - `camera_forward_x`, `camera_forward_y`, `camera_forward_z`
 - `camera_up_x`, `camera_up_y`, `camera_up_z`
-- `semio_version bigint not null`
+- `compose_version bigint not null`
 - `updated_at timestamptz not null`
 - primary key `(session_id, person_id, frontend_id)`
 
-### `app.semio_selection_piece`
+### `app.compose_selection_piece`
 
 - `session_id`
 - `person_id`
 - `frontend_id`
 - `piece_id`
-- `semio_version bigint not null`
+- `compose_version bigint not null`
 - primary key `(session_id, person_id, frontend_id, piece_id)`
 
-Additional semio tables can be added for hovered entity, active tool, drag state, viewport, and panel focus using the same pattern.
+Additional compose tables can be added for hovered entity, active tool, drag state, viewport, and panel focus using the same pattern.
 
-### 10.2 Semio behavior
+### 10.2 Compose behavior
 
-Semio writes are:
+Compose writes are:
 
 - persisted
 - streamable
@@ -731,7 +731,7 @@ Semio writes are:
 - expiry-aware
 - excluded from canonical domain conflict logic
 
-Semio update coalescing is allowed inside the actor for high-frequency updates such as cursor movement.
+Compose update coalescing is allowed inside the actor for high-frequency updates such as cursor movement.
 
 ---
 
@@ -785,12 +785,12 @@ struct DomainBatch {
 
 A single batch can create a design, create multiple pieces, attach them to groups, and connect them in one actor turn and one SQL transaction.
 
-### 11.3 Semio commands
+### 11.3 Compose commands
 
 Examples:
 
 ```rust
-enum SemioCommand {
+enum ComposeCommand {
     UpsertPresence(UpsertPresence),
     SetCursor(SetCursor),
     SetLook(SetLook),
@@ -799,7 +799,7 @@ enum SemioCommand {
 }
 ```
 
-Semio commands carry `base_semio_version` rather than `base_domain_version`.
+Compose commands carry `base_compose_version` rather than `base_domain_version`.
 
 ---
 
@@ -830,7 +830,7 @@ Keep the policy set small and explicit:
 - `ReferenceMustExistAndBeActive`
 - `ReferenceMayBecomeNull`
 - `TombstoneAwareReject`
-- `SemioLastWriterWins`
+- `ComposeLastWriterWins`
 
 Recommended defaults:
 
@@ -838,7 +838,7 @@ Recommended defaults:
 - free-form description fields: `LastWriterWins`
 - piece type references: `ReferenceMustExistAndBeActive`
 - group membership ordering: `ReplaceOrderedMembership`
-- semio cursor/look: `SemioLastWriterWins`
+- compose cursor/look: `ComposeLastWriterWins`
 
 ### 12.3 Property clock update
 
@@ -959,12 +959,12 @@ Keep the transport surface minimal and explicit.
 - `POST /sessions`
 - `POST /sessions/{session_id}/attach`
 - `POST /sessions/{session_id}/commands/domain`
-- `POST /sessions/{session_id}/commands/semio`
+- `POST /sessions/{session_id}/commands/compose`
 
 ### 15.2 Read endpoints
 
 - `GET /sessions/{session_id}/snapshot`
-- `GET /sessions/{session_id}/events?after_domain_version=...&after_semio_version=...`
+- `GET /sessions/{session_id}/events?after_domain_version=...&after_compose_version=...`
 - `GET /sessions/{session_id}/artifacts/types/{type_id}`
 - `GET /sessions/{session_id}/artifacts/types/{type_id}?at=1d`
 - `GET /sessions/{session_id}/artifacts/designs/{design_id}`
@@ -991,17 +991,17 @@ This makes the historical view explicit and debuggable.
 
 ### 16.1 Current snapshot
 
-A current snapshot loads all current domain and semio rows:
+A current snapshot loads all current domain and compose rows:
 
 - domain rows where `valid_to_version is null`
-- semio rows keyed by current primary keys and not expired
+- compose rows keyed by current primary keys and not expired
 
 ### 16.2 Event catch-up
 
 For reconnect support, provide:
 
 - domain catch-up using `app.domain_commit` and rows changed after the client’s `after_domain_version`
-- semio catch-up using current semio rows newer than `after_semio_version`
+- compose catch-up using current compose rows newer than `after_compose_version`
 
 The implementation does not need a separate broker for correctness.
 
@@ -1116,7 +1116,7 @@ Test:
 - stale base version rejection
 - serialized command ordering
 - current snapshot after restart
-- semio coalescing under load
+- compose coalescing under load
 
 ---
 
@@ -1142,10 +1142,10 @@ Test:
 - implement conflict policy registry
 - implement transactional temporal writes
 
-### Phase 4: semio
+### Phase 4: compose
 
-- add `semio_person`, `semio_cursor`, `semio_look`, and `semio_selection_piece`
-- add semio versioning and coalescing
+- add `compose_person`, `compose_cursor`, `compose_look`, and `compose_selection_piece`
+- add compose versioning and coalescing
 - add WebSocket push
 
 ### Phase 5: historical artifacts
@@ -1176,7 +1176,7 @@ The key design choices are:
 - temporal domain tables with `valid_from_version` / `valid_to_version`
 - tombstone deletes
 - compile-time property conflict registry
-- persisted semio entities with a separate `semio_version`
+- persisted compose entities with a separate `compose_version`
 - historical Type and Design artifact reconstruction through `as_of_version` queries resolved from `domain_commit`
 
 This design is intentionally conservative in moving parts and ambitious in correctness. It avoids distributed-systems overshoot, keeps the current-state model strongly typed, preserves deterministic conflict handling, supports cyclic dependencies cleanly, and makes historical artifact viewing a native capability rather than an afterthought.

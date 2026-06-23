@@ -3,7 +3,7 @@
   "emoji": "🔧",
   "status": "closed",
   "description": "Fix Incomplete useDesignAppField Function in Sketchpad",
-  "summary": "Fixed incomplete useDesignAppField function that was missing its return statement and closing brace (causing export-at-top-level parse error), removed stray defaultLayout line, and added missing LayoutNode/LayoutStack/LayoutRow/LayoutColumn type aliases plus layoutNodeToGoldenLayoutConfig export to @semio/ui.",
+  "summary": "Fixed incomplete useDesignAppField function that was missing its return statement and closing brace (causing export-at-top-level parse error), removed stray defaultLayout line, and added missing LayoutNode/LayoutStack/LayoutRow/LayoutColumn type aliases plus layoutNodeToGoldenLayoutConfig export to @compose/ui.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1084"
   },

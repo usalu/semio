@@ -1,6 +1,6 @@
 # Repo MCP `ticket_close` payload
 
-From `mcps/project-0-semio-repo/tools/ticket_close.json`:
+From `mcps/project-0-compose-repo/tools/ticket_close.json`:
 
 - **`summary`** (string, **required**): closing summary text.
 - **`files`** (array of strings, optional): paths created/updated/removed during the ticket (repo-relative or as you store in `ticket.json`).

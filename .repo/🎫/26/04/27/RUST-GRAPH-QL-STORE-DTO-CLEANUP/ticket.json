@@ -3,7 +3,7 @@
   "emoji": "🎫",
   "status": "closed",
   "description": "Kit session/graph/store refactor: remove per-client kit_session; drafts on KitAlternative and the_kit_draft; Query.session + Mutation.session tree; KitReadScope without sessionId; persistence + JS/React/sketchpad + connector color consolidation.",
-  "summary": "Removed Rust GraphQL DTO tier suffixes: *FullDto→*Full, *MetadataDto→*Metadata, *ShallowDto→*Shallow, *IdDto→*Ref; renamed to_*_dto helpers; ChangeKit replaceKitFromFull wire key; schema hygiene forbids old suffixes; regenerated semio/graphql/schema.graphql; JS kept Kit*Dto client types, updated replaceKitFromFull; storybook commandSchema + semioWasm path fixes; py import payload key.",
+  "summary": "Removed Rust GraphQL DTO tier suffixes: *FullDto→*Full, *MetadataDto→*Metadata, *ShallowDto→*Shallow, *IdDto→*Ref; renamed to_*_dto helpers; ChangeKit replaceKitFromFull wire key; schema hygiene forbids old suffixes; regenerated compose/graphql/schema.graphql; JS kept Kit*Dto client types, updated replaceKitFromFull; storybook commandSchema + composeWasm path fixes; py import payload key.",
   "github": {},
   "goal": "🎯r2603",
   "sessions": [

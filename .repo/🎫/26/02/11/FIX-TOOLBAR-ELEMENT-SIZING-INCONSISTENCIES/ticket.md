@@ -90,7 +90,7 @@ This way:
 
 ## Changes
 
-- `semio/js/sketchpad/elements.tsx` (line 2606): Changed Toggle action container from `w-small h-small` (fixed 1.0rem) to `aspect-square h-full` (relative sizing that fills parent content height)
+- `compose/js/sketchpad/elements.tsx` (line 2606): Changed Toggle action container from `w-small h-small` (fixed 1.0rem) to `aspect-square h-full` (relative sizing that fills parent content height)
 
 ## Log
 

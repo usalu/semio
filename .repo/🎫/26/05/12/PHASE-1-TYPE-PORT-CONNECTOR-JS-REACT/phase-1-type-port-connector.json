@@ -77,15 +77,15 @@
     "useChangeConnectorIcon"
   ],
   "supportingChange": {
-    "note": "semio/js 🎒Kit gained readId, readIcon, readImage, readTypeIds, readDesignIds, readAuthorIds, readQualityIds, readTagIds, readConceptIds so semio/react 🪝HooksKit kit field hooks typecheck.",
-    "files": ["semio/js/index.ts"]
+    "note": "compose/js 🎒Kit gained readId, readIcon, readImage, readTypeIds, readDesignIds, readAuthorIds, readQualityIds, readTagIds, readConceptIds so compose/react 🪝HooksKit kit field hooks typecheck.",
+    "files": ["compose/js/index.ts"]
   },
   "schemaNotes": [
     "Type SDL in target.schema.graphql lists connectors/representations/attributes but not a top-level ports list; bulk port listing is via TypeOperationInput navigation.",
-    "Port wire aligns with semio/graphql/schema.graphql (code, label, order plus RichStrongEntity name/description/icon)."
+    "Port wire aligns with compose/graphql/schema.graphql (code, label, order plus RichStrongEntity name/description/icon)."
   ],
   "verification": {
-    "commands": ["cd semio/js && bunx tsc --noEmit", "cd semio/react && bunx tsc --noEmit"],
+    "commands": ["cd compose/js && bunx tsc --noEmit", "cd compose/react && bunx tsc --noEmit"],
     "exitCode": 0
   }
 }

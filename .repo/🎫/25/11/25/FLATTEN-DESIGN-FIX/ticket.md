@@ -9,4 +9,4 @@
 ## Summary
 # Summary
 
-Fix flatten design implementation in semio.ts
+Fix flatten design implementation in compose.ts

@@ -28,11 +28,11 @@
             "maxResults": 20,
             "query": "Kit as KitPlain|Kit.ensure\\(kit as KitPlain\\)",
             "isRegexp": true,
-            "includePattern": "**/semio/algorithms/.storybook/stories/Delete.stories.tsx"
+            "includePattern": "**/compose/algorithms/.storybook/stories/Delete.stories.tsx"
           },
           "tool_response": "",
           "tool_use_id": "call_aTeVS0HKO7gWNUzxQGEdTJIY__vscode-1776809756655",
-          "cwd": "c:\\git\\semio"
+          "cwd": "c:\\git\\compose"
         }
       },
       "response": {}
@@ -58,11 +58,11 @@
             "maxResults": 20,
             "query": "findReplaceableTypesInDesignsForPiecesInDesignOp|KitRuntime|allPorts",
             "isRegexp": true,
-            "includePattern": "**/semio/algorithms/.storybook/stories/FindReplaceableTypesInDesigns.stories.tsx"
+            "includePattern": "**/compose/algorithms/.storybook/stories/FindReplaceableTypesInDesigns.stories.tsx"
           },
           "tool_response": "",
           "tool_use_id": "call_5NNBwrcn4J3zouKKG3VaNDkR__vscode-1776809756654",
-          "cwd": "c:\\git\\semio"
+          "cwd": "c:\\git\\compose"
         }
       },
       "response": {}
@@ -88,11 +88,11 @@
             "maxResults": 20,
             "query": "Kit as KitPlain|Kit.ensure\\(kit as KitPlain\\)",
             "isRegexp": true,
-            "includePattern": "**/semio/algorithms/.storybook/stories/Delete.stories.tsx"
+            "includePattern": "**/compose/algorithms/.storybook/stories/Delete.stories.tsx"
           },
           "tool_response": "",
           "tool_use_id": "call_aTeVS0HKO7gWNUzxQGEdTJIY__vscode-1776809756655",
-          "cwd": "c:\\git\\semio"
+          "cwd": "c:\\git\\compose"
         }
       },
       "response": {}
@@ -114,7 +114,7 @@
           "session_id": "30e74bb3-5f18-4792-b77b-8aa66bec62d8",
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\30e74bb3-5f18-4792-b77b-8aa66bec62d8.jsonl",
           "stop_hook_active": false,
-          "cwd": "c:\\git\\semio"
+          "cwd": "c:\\git\\compose"
         }
       },
       "response": {}
@@ -136,7 +136,7 @@
           "session_id": "30e74bb3-5f18-4792-b77b-8aa66bec62d8",
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\30e74bb3-5f18-4792-b77b-8aa66bec62d8.jsonl",
           "stop_hook_active": false,
-          "cwd": "c:\\git\\semio"
+          "cwd": "c:\\git\\compose"
         }
       },
       "response": {}

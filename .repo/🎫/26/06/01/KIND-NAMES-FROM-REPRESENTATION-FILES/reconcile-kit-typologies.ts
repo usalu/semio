@@ -269,14 +269,14 @@ function walkJsonFiles(dir: string, out: string[] = []): string[] {
   for (const ent of readdirSync(dir, { withFileTypes: true })) {
     const p = join(dir, ent.name);
     if (ent.isDirectory()) walkJsonFiles(p, out);
-    else if (ent.name.endsWith(".semio.json")) out.push(p);
+    else if (ent.name.endsWith(".compose.json")) out.push(p);
   }
   return out;
 }
 
-const SKIP_FIXTURES = new Set(["architect.harness.kit.semio.json"]);
+const SKIP_FIXTURES = new Set(["architect.harness.kit.compose.json"]);
 
-const targets = walkJsonFiles(join(import.meta.dir, "../../../../../../semio/fixtures"));
+const targets = walkJsonFiles(join(import.meta.dir, "../../../../../../compose/fixtures"));
 let changed = 0;
 for (const path of targets) {
   if (SKIP_FIXTURES.has(path.split("/").pop() ?? "")) continue;
@@ -301,10 +301,10 @@ for (const path of targets) {
 }
 console.log(`[DEBUG] reconciled ${changed} kit documents`);
 
-const typeFilesDir = join(import.meta.dir, "../../../../../../semio/fixtures/kit/dev/metabolism");
+const typeFilesDir = join(import.meta.dir, "../../../../../../compose/fixtures/kit/dev/metabolism");
 let typeFilesChanged = 0;
 for (const path of walkJsonFiles(typeFilesDir)) {
-  if (!path.endsWith(".type.semio.json")) continue;
+  if (!path.endsWith(".type.compose.json")) continue;
   let row: Record<string, unknown>;
   try {
     row = JSON.parse(readFileSync(path, "utf8")) as Record<string, unknown>;

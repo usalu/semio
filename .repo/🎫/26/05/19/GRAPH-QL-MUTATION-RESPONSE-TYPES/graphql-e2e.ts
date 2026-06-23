@@ -2,8 +2,8 @@
  * @emoji 🧪 Node E2E: openSessionInMemory → installProjection → mutations (no Vitest).
  * Run: `bun .repo/🎫/26/05/19/GRAPH-QL-MUTATION-RESPONSE-TYPES/graphql-e2e.ts`
  */
-delete process.env.SEMIO_JS_RUN_EMBEDDED_TESTS;
-delete process.env.SEMIO_REACT_RUN_EMBEDDED_TESTS;
+delete process.env.COMPOSE_JS_RUN_EMBEDDED_TESTS;
+delete process.env.COMPOSE_REACT_RUN_EMBEDDED_TESTS;
 delete process.env.VITEST;
 
 import { resolve } from "node:path";
@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
 
 const here = fileURLToPath(new URL(".", import.meta.url));
 const repoRoot = resolve(here, "../../../../../..");
-const { openSessionInMemory } = await import(resolve(repoRoot, "semio/client/lib/js/index.ts"));
+const { openSessionInMemory } = await import(resolve(repoRoot, "compose/client/lib/js/index.ts"));
 
 const minimalKit = {
   id: "kit-e2e-node",

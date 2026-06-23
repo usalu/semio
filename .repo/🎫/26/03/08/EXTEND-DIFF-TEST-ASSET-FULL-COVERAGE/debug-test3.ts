@@ -6,9 +6,9 @@ import {
   KitDiff,
   TypesDiff,
   DesignsDiff,
-} from "/workspaces/semio/semio/js/semio";
+} from "/workspaces/semio/compose/js/compose";
 
-const ASSETS = "/workspaces/semio/semio/assets/semio";
+const ASSETS = "/workspaces/semio/compose/assets/compose";
 const kitRaw = JSON.parse(readFileSync(`${ASSETS}/kit_metabolism.json`, "utf-8"));
 const kitOriginal = { ...kitRaw, designs: (kitRaw.designs ?? []).filter((d: any) => !d.parent) };
 const kitDiffed = JSON.parse(readFileSync(`${ASSETS}/kit_metabolism_diffed.json`, "utf-8"));

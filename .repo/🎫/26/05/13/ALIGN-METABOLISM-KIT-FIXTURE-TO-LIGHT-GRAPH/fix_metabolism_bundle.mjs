@@ -1,6 +1,6 @@
 /**
- * One-shot: align `semio/assets/fixtures/metabolism.kit.semio.json` bundle graph shell
- * with `metabolism.kit.light.semio.json` (wip key order, no drafts, theKit present,
+ * One-shot: align `compose/assets/fixtures/metabolism.kit.compose.json` bundle graph shell
+ * with `metabolism.kit.light.compose.json` (wip key order, no drafts, theKit present,
  * no checkpoint frozenRoot; authoritative/stage keep minimal graph heads + theKit, not drafts).
  */
 import fs from "fs";
@@ -16,10 +16,10 @@ const root = path.resolve(
   "..",
   "..",
   "..",
-  "semio",
+  "compose",
   "assets",
   "fixtures",
-  "metabolism.kit.semio.json",
+  "metabolism.kit.compose.json",
 );
 const raw = fs.readFileSync(root, "utf8");
 const doc = JSON.parse(raw);

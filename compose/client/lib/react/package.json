@@ -1,0 +1,20 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "@compose/react",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "🧩 Minimal stub so workspace installs resolve; replace with real `@compose/react` bundle when restored.",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "dependencies": {
+    "@compose/js": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

@@ -1,4 +1,4 @@
-# W1 gate: W0.complete + cargo check (semio/rs). Default max 4h = 320 * 45s.
+# W1 gate: W0.complete + cargo check (compose/rs). Default max 4h = 320 * 45s.
 param([int]$MaxIter = 320)
 $ticket = Split-Path -Parent $MyInvocation.MyCommand.Path
 $maxIter = $MaxIter
@@ -8,7 +8,7 @@ for ($iter = 1; $iter -le $maxIter; $iter++) {
     $w0 = Test-Path $w0path
     "$(Get-Date -Format o) iter=$iter/$maxIter W0.complete=$w0" | Out-File -Append $pollLog
     if ($w0) {
-        Push-Location 'c:\git\semio\semio\rs'
+        Push-Location 'c:\git\compose\compose\rs'
         cargo check *> (Join-Path $ticket 'W1.gate-cargo.log') 2>&1
         $code = $LASTEXITCODE
         Pop-Location

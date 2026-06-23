@@ -22,7 +22,7 @@
           "session_id": "4e439057-4322-4ed7-a52b-8c4e2aa6f533",
           "tool_name": "list_dir",
           "tool_input": {
-            "path": "/workspaces/semio/semio/ui"
+            "path": "/workspaces/semio/compose/ui"
           },
           "tool_use_id": "toolu_bdrk_01YLFn1VaMjZ6jwj11F98rT8__vscode-1774234583601",
           "cwd": "/workspaces/semio"
@@ -46,7 +46,7 @@
           "session_id": "4e439057-4322-4ed7-a52b-8c4e2aa6f533",
           "tool_name": "list_dir",
           "tool_input": {
-            "path": "/workspaces/semio/semio/ui"
+            "path": "/workspaces/semio/compose/ui"
           },
           "tool_response": "",
           "tool_use_id": "toolu_bdrk_01YLFn1VaMjZ6jwj11F98rT8__vscode-1774234583601",

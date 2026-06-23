@@ -24,7 +24,7 @@
 [DEBUG] First piece after migration - has type: False
 
 # Original data HAS types
-git show HEAD~30:assets/semio/kit_metabolism.json
+git show HEAD~30:assets/compose/kit_metabolism.json
 # Shows: pieces[0].type = {name: "Base", variant: ""}
 
 # After migration: pieces[0].type = null
@@ -54,9 +54,9 @@ git show HEAD~30:assets/semio/kit_metabolism.json
 
 ### Key Files
 
-- `scripts/migrate-semio-json.ps1`: Migration script
-- `js/semio/semio.test.ts`: Flatten tests
-- `assets/semio/kit_metabolism.json`: Main kit file
+- `scripts/migrate-compose-json.ps1`: Migration script
+- `js/compose/compose.test.ts`: Flatten tests
+- `assets/compose/kit_metabolism.json`: Main kit file
 
 ### User Requirements
 

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // #region 🔖Devcontainer
 {
-  "name": "semio",
+  "name": "compose",
   "dockerComposeFile": "docker-compose.yml",
-  "service": "semio",
+  "service": "compose",
   "features": {
     "ghcr.io/balazs23/devcontainers-features/nx:1": {},
     "ghcr.io/devcontainers/features/go:1": {
@@ -106,7 +106,7 @@
     "DEVCONTAINER": "true",
     "DOTNET_CLI_TELEMETRY_OPTOUT": "1",
     "PLAYWRIGHT_BROWSERS_PATH": "/workspaces/semio/node_modules/.cache/ms-playwright",
-    "SEMIO_GITKRAKEN_WORKSPACE_NAME": "semio",
+    "SEMIO_GITKRAKEN_WORKSPACE_NAME": "compose",
     "SEMIO_GITKRAKEN_AUTO_START": "false",
     "SEMIO_F3D_AUTO_START": "true",
     "SEMIO_POST_ATTACH_SKIP_EXTENSION_INSTALL": "",
@@ -119,18 +119,18 @@
     "NEO4J_URI": "bolt://localhost:7687",
     "NEO4J_USERNAME": "neo4j",
     "NEO4J_PASSWORD": "password",
-    "NEO4J_DATABASE": "semio",
+    "NEO4J_DATABASE": "compose",
     "NEO4J_TELEMETRY": "false",
     "NEO4J_EXTRA_GRAPH_DATABASES": "",
     "NEO4J_EXTRA_GRAPH_DATABASE": ""
   },
   "remoteEnv": {
     "PLAYWRIGHT_BROWSERS_PATH": "/workspaces/semio/node_modules/.cache/ms-playwright",
-    "SSH_AUTH_SOCK": "/home/vscode/.ssh/semio-ssh-agent.sock",
+    "SSH_AUTH_SOCK": "/home/vscode/.ssh/compose-ssh-agent.sock",
     "NEO4J_URI": "bolt://localhost:7687",
     "NEO4J_USERNAME": "neo4j",
     "NEO4J_PASSWORD": "password",
-    "NEO4J_DATABASE": "semio",
+    "NEO4J_DATABASE": "compose",
     "NEO4J_TELEMETRY": "false",
     "NEO4J_EXTRA_GRAPH_DATABASES": "",
     "NEO4J_EXTRA_GRAPH_DATABASE": ""
@@ -204,7 +204,7 @@
         "sqltools.connections": [
           {
             "name": "metabolism",
-            "database": "./example/metabolism/.semio/kit.db",
+            "database": "./example/metabolism/.compose/kit.db",
             "driver": "SQLite",
             "previewLimit": 50
           }
@@ -219,7 +219,7 @@
         "[svg]": {
           "editor.defaultFormatter": "jock.svg"
         },
-        "rust-analyzer.linkedProjects": ["semio/rs/Cargo.toml"],
+        "rust-analyzer.linkedProjects": ["compose/rs/Cargo.toml"],
         "terminal.integrated.defaultProfile.linux": "bash",
         "github.copilot.chat.commitMessageGeneration.instructions": [
           {

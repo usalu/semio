@@ -9,7 +9,7 @@ goal: R26-02/UPDATED-SKETCHPAD
 Unified toolbar button/toggle spacing by: (1) changing ToggleGroupItem from gap-0+ml-single to gap-single for icon-text gap consistency with ButtonGroupItem, (2) upgrading horizontal padding from p-single to py-single px-double for both ToggleGroupItem and ButtonGroupItem when text is present, giving buttons enough breathing room. No new TS errors introduced.
 ## Changes
 
-- `semio/js/sketchpad/elements.tsx`: Unified spacing mechanism between ToggleGroupItem and ButtonGroupItem
+- `compose/js/sketchpad/elements.tsx`: Unified spacing mechanism between ToggleGroupItem and ButtonGroupItem
 
 ## Log
 

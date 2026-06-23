@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync } from "node:fs";
 
-const path = "c:/git/semio/semio/client/lib/rs/lib.rs";
+const path = "c:/git/compose/compose/client/lib/rs/lib.rs";
 const lines = readFileSync(path, "utf8").split(/\r?\n/);
 
 function extractFirstNamesBlock(startLine, macroName) {

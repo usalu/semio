@@ -38,18 +38,18 @@ Research only — no implementation.
 
 | File | Role |
 |---|---|
-| `semio/js/sketchpad/shared.ts` | Types: `PanelKind.TOOLBAR`, `PanelSection.toolbarGroup`, `PanelVisibility.toolbar`, `PanelSizes.toolbarHeight`, `PanelSections.toolbar` |
-| `semio/js/sketchpad/elements.tsx` | UI components: `Toggle`, `ToggleGroup`, `ToggleGroupItem`, `Action`, `ActionGroup`, `ActionGroupItem`, `ActionDropdown`, `Button`, `ButtonGroup`, `ButtonGroupItem`, `ButtonCycle`, `Layout` (with `toolbar` prop) |
-| `semio/js/sketchpad/Sketchpad.tsx` | Toolbar rendering logic: `ToolbarScopeWrapper`, `LayoutWrapper` toolbar zone composition, group toggling, subtool selection, `getToolbarGroupIcon()` |
-| `semio/js/sketchpad/Home.tsx` | `HomeToolbarFilters` (filter toggles), `HomeToolbarCreate` (create actions), registers toolbar sections |
-| `semio/js/sketchpad/Kit.tsx` | `KitToolbarFilters` (artifact kind toggles), `KitToolbarCreate` (artifact create buttons), registers toolbar sections |
-| `semio/js/sketchpad/Type.tsx` | Registers selection + connector toolbar sections |
-| `semio/js/sketchpad/Quality.tsx` | Registers view + actions toolbar sections |
-| `semio/js/sketchpad/Feedback.tsx` | `FeedbackToolbar` (send button), registers toolbar section |
-| `semio/js/sketchpad/Docs.tsx` | Registers toolbar sections (if any) |
-| `semio/js/sketchpad/README.md` | Specs documentation for toolbar |
-| `semio/js/globals.css` | Design tokens and custom utilities |
-| `semio/js/theme.css` | Color scheme tokens |
+| `compose/js/sketchpad/shared.ts` | Types: `PanelKind.TOOLBAR`, `PanelSection.toolbarGroup`, `PanelVisibility.toolbar`, `PanelSizes.toolbarHeight`, `PanelSections.toolbar` |
+| `compose/js/sketchpad/elements.tsx` | UI components: `Toggle`, `ToggleGroup`, `ToggleGroupItem`, `Action`, `ActionGroup`, `ActionGroupItem`, `ActionDropdown`, `Button`, `ButtonGroup`, `ButtonGroupItem`, `ButtonCycle`, `Layout` (with `toolbar` prop) |
+| `compose/js/sketchpad/Sketchpad.tsx` | Toolbar rendering logic: `ToolbarScopeWrapper`, `LayoutWrapper` toolbar zone composition, group toggling, subtool selection, `getToolbarGroupIcon()` |
+| `compose/js/sketchpad/Home.tsx` | `HomeToolbarFilters` (filter toggles), `HomeToolbarCreate` (create actions), registers toolbar sections |
+| `compose/js/sketchpad/Kit.tsx` | `KitToolbarFilters` (artifact kind toggles), `KitToolbarCreate` (artifact create buttons), registers toolbar sections |
+| `compose/js/sketchpad/Type.tsx` | Registers selection + connector toolbar sections |
+| `compose/js/sketchpad/Quality.tsx` | Registers view + actions toolbar sections |
+| `compose/js/sketchpad/Feedback.tsx` | `FeedbackToolbar` (send button), registers toolbar section |
+| `compose/js/sketchpad/Docs.tsx` | Registers toolbar sections (if any) |
+| `compose/js/sketchpad/README.md` | Specs documentation for toolbar |
+| `compose/js/globals.css` | Design tokens and custom utilities |
+| `compose/js/theme.css` | Color scheme tokens |
 
 ## 2. Shared Types/Interfaces (shared.ts)
 
@@ -143,7 +143,7 @@ The toolbar has two zones arranged around a vertical seam at 50% width:
 
 #### Outer container
 ```tsx
-<div role="toolbar" id="semio.sketchpad.toolbar"
+<div role="toolbar" id="compose.sketchpad.toolbar"
      className="absolute bottom-1.5 left-0 right-0 h-[40px] pointer-events-none px-2">
 ```
 - Fixed height: **40px**
@@ -151,13 +151,13 @@ The toolbar has two zones arranged around a vertical seam at 50% width:
 
 #### Seam container
 ```tsx
-<div id="semio.sketchpad.toolbar.seam"
+<div id="compose.sketchpad.toolbar.seam"
      className="absolute left-1/2 top-0 h-full w-0 -translate-x-1/2">
 ```
 
 #### Tools Zone (right side)
 ```tsx
-<div id="semio.sketchpad.toolbar.zone.tools"
+<div id="compose.sketchpad.toolbar.zone.tools"
      className="absolute right-[4px] top-0 h-full max-w-[calc(50vw-1rem)] pointer-events-auto">
   <LevelProvider level="panel">
     <div className="bg-panel flex h-full shrink-0 items-center gap-single border rounded-md px-single shadow-sm overflow-hidden">
@@ -174,7 +174,7 @@ The toolbar has two zones arranged around a vertical seam at 50% width:
 
 #### Settings Zone (left side) — only when a group is active
 ```tsx
-<div id="semio.sketchpad.toolbar.zone.settings"
+<div id="compose.sketchpad.toolbar.zone.settings"
      className="absolute left-[4px] top-0 h-full max-w-[calc(50vw-1rem)] pointer-events-auto">
   <LevelProvider level="panel">
     <div className="bg-panel flex h-full flex-nowrap items-center gap-single border rounded-md px-single shadow-sm overflow-hidden min-w-0">
@@ -320,11 +320,11 @@ Each app uses `addSection("toolbar", { ... })` in its setup effect and `removeSe
 
 ```typescript
 addSection("toolbar", {
-  id: "semio.sketchpad.app.home.toolbar.filters",
+  id: "compose.sketchpad.app.home.toolbar.filters",
   specificity: SectionSpecificity.DESIGN,
   toolbarGroup: {
     id: "filter",
-    labelId: "semio.sketchpad.toolbar.parent.filter",
+    labelId: "compose.sketchpad.toolbar.parent.filter",
     order: 0,
   },
   content: <HomeToolbarFilters />,

@@ -11,8 +11,8 @@ page.on("console", (msg) => {
 });
 
 await page.addInitScript(() => {
-  (window as any).__SEMIO_PERFORMANCE__ = { longTaskSupported: false, longTasks: [] };
-  const store = (window as any).__SEMIO_PERFORMANCE__;
+  (window as any).__COMPOSE_PERFORMANCE__ = { longTaskSupported: false, longTasks: [] };
+  const store = (window as any).__COMPOSE_PERFORMANCE__;
   const obs = (window as any).PerformanceObserver;
   if (!obs || !(obs.supportedEntryTypes ?? []).includes("longtask")) return;
   store.longTaskSupported = true;
@@ -25,7 +25,7 @@ await page.goto("http://127.0.0.1:5173/", { waitUntil: "networkidle" });
 console.log("Page loaded");
 
 const fileInput = page.locator('input[type="file"]');
-await fileInput.setInputFiles("/workspaces/semio/semio/assets/semio/metabolism.zip");
+await fileInput.setInputFiles("/workspaces/semio/compose/assets/compose/metabolism.zip");
 await page.waitForTimeout(3000);
 await page.getByText("Metabolism").waitFor({ timeout: 30000 });
 const row = page.locator('[data-row-id^="kit-"]').first();
@@ -50,10 +50,10 @@ console.log(`Nodes: ${nodeCount}`);
 
 await page.waitForTimeout(3000);
 
-const patched = await page.evaluate(() => (window as any).__SEMIO_ZUSTAND_PATCHED__);
+const patched = await page.evaluate(() => (window as any).__COMPOSE_ZUSTAND_PATCHED__);
 console.log(`Zustand patched: ${patched}`);
 
-await page.evaluate(() => { (window as any).__SEMIO_PERFORMANCE__.longTasks = []; });
+await page.evaluate(() => { (window as any).__COMPOSE_PERFORMANCE__.longTasks = []; });
 
 const pane = page.locator("#diagram .react-flow__pane").first();
 const box = await pane.boundingBox();
@@ -65,7 +65,7 @@ await page.mouse.wheel(0, -600);
 await page.waitForTimeout(500);
 
 const afterZoomTasks = await page.evaluate(() => {
-  const s = (window as any).__SEMIO_PERFORMANCE__;
+  const s = (window as any).__COMPOSE_PERFORMANCE__;
   return s.longTasks.map((t: any) => t.duration);
 });
 console.log(`After zoom in: ${afterZoomTasks.length} long tasks, max ${afterZoomTasks.length ? Math.max(...afterZoomTasks).toFixed(0) : 0}ms`);
@@ -76,13 +76,13 @@ await page.mouse.wheel(0, 600);
 await page.waitForTimeout(500);
 
 const afterZoomOutTasks = await page.evaluate(() => {
-  const s = (window as any).__SEMIO_PERFORMANCE__;
+  const s = (window as any).__COMPOSE_PERFORMANCE__;
   return s.longTasks.map((t: any) => t.duration);
 
 });
 console.log(`After zoom out: ${afterZoomOutTasks.length} long tasks, max ${afterZoomOutTasks.length ? Math.max(...afterZoomOutTasks).toFixed(0) : 0}ms`);
 
-await page.evaluate(() => { (window as any).__SEMIO_PERFORMANCE__.longTasks = []; });
+await page.evaluate(() => { (window as any).__COMPOSE_PERFORMANCE__.longTasks = []; });
 
 const firstNode = page.locator("#diagram .react-flow__node").first();
 const nb = await firstNode.boundingBox();
@@ -99,7 +99,7 @@ await page.mouse.down();
 await page.waitForTimeout(50);
 
 const postMousedownTasks = await page.evaluate(() => {
-  const s = (window as any).__SEMIO_PERFORMANCE__;
+  const s = (window as any).__COMPOSE_PERFORMANCE__;
   const tasks = [...s.longTasks];
   s.longTasks = [];
   return tasks.map((t: any) => ({ duration: t.duration, startTime: t.startTime }));
@@ -114,7 +114,7 @@ await page.mouse.move(sx + 100, sy, { steps: 20 });
 await page.waitForTimeout(100);
 
 const postDragTasks = await page.evaluate(() => {
-  const s = (window as any).__SEMIO_PERFORMANCE__;
+  const s = (window as any).__COMPOSE_PERFORMANCE__;
   const tasks = [...s.longTasks];
   s.longTasks = [];
   return tasks.map((t: any) => ({ duration: t.duration, startTime: t.startTime }));
@@ -129,7 +129,7 @@ await page.mouse.up();
 await page.waitForTimeout(200);
 
 const postUpTasks = await page.evaluate(() => {
-  const s = (window as any).__SEMIO_PERFORMANCE__;
+  const s = (window as any).__COMPOSE_PERFORMANCE__;
   const tasks = [...s.longTasks];
   s.longTasks = [];
   return tasks.map((t: any) => ({ duration: t.duration, startTime: t.startTime }));
@@ -141,7 +141,7 @@ for (const t of postUpTasks) {
 
 await page.waitForTimeout(1000);
 const lateTasks = await page.evaluate(() => {
-  const s = (window as any).__SEMIO_PERFORMANCE__;
+  const s = (window as any).__COMPOSE_PERFORMANCE__;
   const tasks = [...s.longTasks];
   s.longTasks = [];
   return tasks.map((t: any) => ({ duration: t.duration, startTime: t.startTime }));

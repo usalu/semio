@@ -6,14 +6,14 @@
     "kind": "agent.tool.test.starting",
     "second": "2026-03-16T13:47:30Z",
     "session": "9c9573bc-7742-46ae-9c04-b0ebf0657575",
-    "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
+    "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
   },
   "native": {
     "event": {
       "conversation_id": "9c9573bc-7742-46ae-9c04-b0ebf0657575",
       "generation_id": "c421f306-6a0e-4fcd-b949-f3f75020b8ab",
       "model": "default",
-      "command": "cd /workspaces/semio/semio \u0026\u0026 uv run pytest -q semio/py/semio.test.py -k \"nakagin_capsule_tower_gltf_returns_insights\" 2\u003e\u00261",
+      "command": "cd /workspaces/semio/compose \u0026\u0026 uv run pytest -q compose/py/compose.test.py -k \"nakagin_capsule_tower_gltf_returns_insights\" 2\u003e\u00261",
       "cwd": "",
       "sandbox": false,
       "hook_event_name": "beforeShellExecution",
@@ -22,7 +22,7 @@
         "/workspaces/semio"
       ],
       "user_email": "ueli.saluz@posteo.de",
-      "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
+      "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
     }
   },
   "response": {}

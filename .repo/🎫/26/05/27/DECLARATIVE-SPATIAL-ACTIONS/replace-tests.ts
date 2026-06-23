@@ -115,7 +115,7 @@ const NEW_TESTS = `if (import.meta.vitest) {
 }
 `;
 
-const path = "c:/git/semio/spatial/js/renderer-r3f/index.tsx";
+const path = "c:/git/compose/spatial/js/renderer-r3f/index.tsx";
 const lines = readFileSync(path, "utf8").split(/\r?\n/);
 const start = lines.findIndex((l) => l.startsWith("if (import.meta.vitest)"));
 if (start < 0) throw new Error("vitest block not found");

@@ -5,7 +5,7 @@
 
 ## App Hierarchy
 
-The semio Sketchpad application has a hierarchical structure where child apps inherit and extend functionality from their parent apps:
+The compose Sketchpad application has a hierarchical structure where child apps inherit and extend functionality from their parent apps:
 
 ```
 Sketchpad (root)
@@ -85,7 +85,7 @@ Panels from the same kind have different sections ordered from most specific (to
 
 Each panel section has the following properties:
 
-- `id`: Unique identifier (e.g., "semio.sketchpad.app.home.settings")
+- `id`: Unique identifier (e.g., "compose.sketchpad.app.home.settings")
 - `specificity`: Number indicating hierarchy level (higher = more specific)
 - `order`: Number for ordering within same specificity level
 - `content`: React component or function returning the section content
@@ -125,7 +125,7 @@ useEffect(() => {
 
   // Add app-specific settings (most specific)
   addSection("settings", {
-    id: "semio.sketchpad.app.yourapp.settings",
+    id: "compose.sketchpad.app.yourapp.settings",
     specificity: 30,  // Adjust based on app level
     order: 0,
     content: () => <YourAppSettings />,
@@ -133,15 +133,15 @@ useEffect(() => {
 
   // Add inherited settings (less specific)
   addSection("settings", {
-    id: "semio.sketchpad.settings",
+    id: "compose.sketchpad.settings",
     specificity: 0,
     order: 0,
     content: () => <SketchpadSettings />,
   });
 
   return () => {
-    removeSection("settings", "semio.sketchpad.app.yourapp.settings");
-    removeSection("settings", "semio.sketchpad.settings");
+    removeSection("settings", "compose.sketchpad.app.yourapp.settings");
+    removeSection("settings", "compose.sketchpad.settings");
   };
 }, [appType, addSection, removeSection]);
 ```
@@ -164,23 +164,23 @@ test("Home app shows correct settings sections in order", async ({ page }) => {
   const sections = await getSettingsSections(page);
 
   // Verify sections exist
-  expect(sections).toContain("semio.sketchpad.app.home.settings");
-  expect(sections).toContain("semio.sketchpad.settings");
+  expect(sections).toContain("compose.sketchpad.app.home.settings");
+  expect(sections).toContain("compose.sketchpad.settings");
 
   // Verify order
-  const homeIndex = sections.indexOf("semio.sketchpad.app.home.settings");
-  const sketchpadIndex = sections.indexOf("semio.sketchpad.settings");
+  const homeIndex = sections.indexOf("compose.sketchpad.app.home.settings");
+  const sketchpadIndex = sections.indexOf("compose.sketchpad.settings");
   expect(homeIndex).toBeLessThan(sketchpadIndex);
 });
 ```
 
 ## Files Modified
 
-- `js/semio/sketchpad/Home.tsx`: Added Home and Sketchpad settings sections
-- `js/semio/sketchpad/Kit.tsx`: Added Kit and Sketchpad settings sections
-- `js/semio/sketchpad/Design.tsx`: Added Design, Kit, and Sketchpad settings sections
-- `js/semio/sketchpad/Type.tsx`: Added Type, Kit, and Sketchpad settings sections
-- `js/semio/sketchpad.test.ts`: Added comprehensive tests for settings panel hierarchy
+- `js/compose/sketchpad/Home.tsx`: Added Home and Sketchpad settings sections
+- `js/compose/sketchpad/Kit.tsx`: Added Kit and Sketchpad settings sections
+- `js/compose/sketchpad/Design.tsx`: Added Design, Kit, and Sketchpad settings sections
+- `js/compose/sketchpad/Type.tsx`: Added Type, Kit, and Sketchpad settings sections
+- `js/compose/sketchpad.test.ts`: Added comprehensive tests for settings panel hierarchy
 
 ## Changes
 

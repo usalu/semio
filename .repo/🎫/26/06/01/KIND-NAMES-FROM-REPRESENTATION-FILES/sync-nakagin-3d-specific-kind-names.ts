@@ -20,8 +20,8 @@ function puzzle3dPreferSpecificMetabolismKindName(kindName: string, availableKin
   }
   return name;
 }
-const typesDir = join(repoRoot, "semio/fixtures/kit/dev/metabolism/wip/initialKit/types");
-const designPath = join(repoRoot, "semio/fixtures/kit/dev/metabolism/wip/initialKit/designs/nakagin-capsule-tower.design.semio.json");
+const typesDir = join(repoRoot, "compose/fixtures/kit/dev/metabolism/wip/initialKit/types");
+const designPath = join(repoRoot, "compose/fixtures/kit/dev/metabolism/wip/initialKit/designs/nakagin-capsule-tower.design.compose.json");
 const fixture2dPath = join(repoRoot, "puzzle/2d/fixture/nakagin-capsule-tower.2d.json");
 const fixture3dPath = join(repoRoot, "puzzle/3d/fixture/nakagin-capsule-tower.3d.json");
 
@@ -49,7 +49,7 @@ const meshByKindName = new Map<string, string>();
 const availableKindNames = new Set<string>();
 
 for (const fileName of readdirSync(typesDir)) {
-  if (!fileName.endsWith(".type.semio.json")) continue;
+  if (!fileName.endsWith(".type.compose.json")) continue;
   const row = JSON.parse(readFileSync(join(typesDir, fileName), "utf8")) as Record<string, unknown>;
   const id = String(row.id ?? "");
   const name = String(row.name ?? "").trim();
@@ -76,7 +76,7 @@ const paletteNames = new Set<string>();
 for (const row of itemsOf((fixture2d.meta as { kindCatalogs?: { nodes?: unknown[] } } | undefined)?.kindCatalogs?.nodes)) {
   if (!row || typeof row !== "object") continue;
   const name = String((row as { name?: string }).name ?? "").trim();
-  if (name === "" || name.startsWith("semio.")) continue;
+  if (name === "" || name.startsWith("compose.")) continue;
   paletteNames.add(name);
 }
 

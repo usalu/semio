@@ -98,7 +98,7 @@ index 000000000..f8511de38
 +    <meta charset="UTF-8">
 +    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 +    <title>Flow</title>
-+  <style type="text/css" data-vite-dev-id="/Users/ueli/Documents/semio/node_modules/@xyflow/react/dist/style.css">/* this gets exported as style.css and can be used for the default theming */
++  <style type="text/css" data-vite-dev-id="/Users/ueli/Documents/compose/node_modules/@xyflow/react/dist/style.css">/* this gets exported as style.css and can be used for the default theming */
 +/* these are the necessary styles for React/Svelte Flow, they get used by base.css and style.css */
 +.react-flow {
 +  direction: ltr;
@@ -722,7 +722,7 @@ index 000000000..f8511de38
 +.react-flow__edge-text {
 +  fill: var(--xy-edge-label-color, var(--xy-edge-label-color-default));
 +}
-+</style><style type="text/css" data-vite-dev-id="/Users/ueli/Documents/semio/flow/play/globals.css">/*! tailwindcss v4.3.0 | MIT License | https://tailwindcss.com */
++</style><style type="text/css" data-vite-dev-id="/Users/ueli/Documents/compose/flow/play/globals.css">/*! tailwindcss v4.3.0 | MIT License | https://tailwindcss.com */
 +@layer theme, base, components, utilities;
 +@layer theme {
 +  :root, :host {
@@ -2581,10 +2581,10 @@ index 9d1beb889..91510f03f 100644
  modernc.org/strutil v1.2.1 h1:UneZBkQA+DX2Rp35KcM69cSsNES9ly8mQWD71HKlOA0=
  modernc.org/strutil v1.2.1/go.mod h1:EHkiggD70koQxjVdSBM3JKM7k6L0FbGE5eymy9i3B9A=
  modernc.org/token v1.1.0 h1:Xl7Ap9dKaEs5kLoOQeQmPWevfnk/DM5qcLcYlA8ys6Y=
-diff --git a/semio/client/lib/go/go.mod b/semio/client/lib/go/go.mod
+diff --git a/compose/client/lib/go/go.mod b/compose/client/lib/go/go.mod
 index b6f1fd2e0..a70a80d9b 100644
---- a/semio/client/lib/go/go.mod
-+++ b/semio/client/lib/go/go.mod
+--- a/compose/client/lib/go/go.mod
++++ b/compose/client/lib/go/go.mod
 @@ -4,7 +4,7 @@ go 1.25.0
  
  require gonum.org/v1/gonum v0.17.0
@@ -2603,10 +2603,10 @@ index b6f1fd2e0..a70a80d9b 100644
  	modernc.org/mathutil v1.7.1 // indirect
  	modernc.org/memory v1.11.0 // indirect
  )
-diff --git a/semio/client/lib/go/go.sum b/semio/client/lib/go/go.sum
+diff --git a/compose/client/lib/go/go.sum b/compose/client/lib/go/go.sum
 index ad67be3e3..e87c4af87 100644
---- a/semio/client/lib/go/go.sum
-+++ b/semio/client/lib/go/go.sum
+--- a/compose/client/lib/go/go.sum
++++ b/compose/client/lib/go/go.sum
 @@ -14,8 +14,7 @@ github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec h1:W09IVJc94
  github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec/go.mod h1:qqbHyh8v60DhA7CoWK5oRCqLrMHRGoxYCSS9EjAz6Eo=
  golang.org/x/mod v0.33.0 h1:tHFzIWbBifEmbwtGz65eaWyGiGZatSrT9prnU8DbVL8=

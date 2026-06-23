@@ -59,13 +59,13 @@ Changed approach to validate existing infrastructure:
 ## Future Options for True Drag Testing
 
 1. **Keyboard Sensor**: Add `KeyboardSensor` to dnd-kit config - Playwright can simulate keyboard events reliably
-2. **Expose Command API**: Create a test-only command like `semio.designApp.testCreatePiece` bypassing drag
+2. **Expose Command API**: Create a test-only command like `compose.designApp.testCreatePiece` bypassing drag
 3. **E2E with Real Browser Interaction**: Use tools like Puppeteer with CDP for native event injection
 4. **Mock DndContext**: In test environment, mock the drag handlers directly
 
 ## Files Modified
 
-- `js/semio/sketchpad.test.ts`: Added "Design Drag and Drop" test at line 999
+- `js/compose/sketchpad.test.ts`: Added "Design Drag and Drop" test at line 999
   - Validates workbench panel shows 118 draggable type avatars
   - Verifies avatars have `aria-roledescription="draggable"` attribute
   - Validates existing piece plane properties (origin.z=0, xAxis=1,0,0, yAxis=0,1,0)

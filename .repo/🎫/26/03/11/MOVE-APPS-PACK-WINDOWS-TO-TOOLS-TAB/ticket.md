@@ -10,15 +10,15 @@ Moved Design windows section from workbench to tools tab and extended existing D
 
 ## Changes
 
-- Updated `semio/js/sketchpad/Design.tsx` panel registration:
-  - Kept `semio.sketchpad.app.kit.pieces` in `workbench`.
-  - Moved `semio.sketchpad.app.design.windows` to `tools`.
-  - Updated cleanup to `removeSection("tools", "semio.sketchpad.app.design.windows")`.
-- Extended `semio/js/sketchpad.test.ts` inside the existing `Design` test:
-  - Asserted workbench tab contains `semio.sketchpad.app.kit.pieces`.
-  - Asserted workbench tab does not contain `semio.sketchpad.app.design.windows`.
-  - Asserted tools tab contains `semio.sketchpad.app.design.windows`.
-  - Asserted tools tab does not contain `semio.sketchpad.app.kit.pieces`.
+- Updated `compose/js/sketchpad/Design.tsx` panel registration:
+  - Kept `compose.sketchpad.app.kit.pieces` in `workbench`.
+  - Moved `compose.sketchpad.app.design.windows` to `tools`.
+  - Updated cleanup to `removeSection("tools", "compose.sketchpad.app.design.windows")`.
+- Extended `compose/js/sketchpad.test.ts` inside the existing `Design` test:
+  - Asserted workbench tab contains `compose.sketchpad.app.kit.pieces`.
+  - Asserted workbench tab does not contain `compose.sketchpad.app.design.windows`.
+  - Asserted tools tab contains `compose.sketchpad.app.design.windows`.
+  - Asserted tools tab does not contain `compose.sketchpad.app.kit.pieces`.
   - Returned to workbench tab before existing drag assertions.
 
 ## Log
@@ -29,7 +29,7 @@ Moved Design windows section from workbench to tools tab and extended existing D
 - Applied the panel section move and extended existing test coverage.
 - Ran Playwright slice without dev server first; failed due to `ERR_CONNECTION_REFUSED` on `http://127.0.0.1:5173`.
 - Started sketchpad dev server via `npm run dev:js:js:sketchpad`.
-- Re-ran `npx playwright test semio/js/sketchpad.test.ts -g "Design|Panels"`.
+- Re-ran `npx playwright test compose/js/sketchpad.test.ts -g "Design|Panels"`.
 - Observed new section-location assertions pass in logs:
   - `[Design] Workbench tab has pieces section: true`
   - `[Design] Workbench tab has windows section: false`

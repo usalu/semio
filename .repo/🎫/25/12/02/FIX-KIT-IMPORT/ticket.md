@@ -18,7 +18,7 @@ Playwright test for Design app was timing out when importing the metabolism kit.
 
 # Changes
 
-## semio.ts
+## compose.ts
 
 - Added `safeExecResult` helper that checks if table exists before querying
 - Used `safeExecResult` for the `tag` table query which may not exist in older kits

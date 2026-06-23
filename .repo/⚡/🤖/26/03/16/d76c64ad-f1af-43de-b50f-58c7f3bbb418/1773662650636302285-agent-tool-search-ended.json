@@ -16,7 +16,7 @@
       "tool_input": {
         "maxResults": 20,
         "includeIgnoredFiles": true,
-        "includePattern": "**/semio/sketchpad/**/*.ts",
+        "includePattern": "**/compose/sketchpad/**/*.ts",
         "isRegexp": true,
         "query": "export.*createDesignSelectionSelector|function createDesignSelectionSelector"
       },

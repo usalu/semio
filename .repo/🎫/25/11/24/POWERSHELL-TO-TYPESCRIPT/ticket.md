@@ -51,9 +51,9 @@ Created `scripts/utils.ts` with reusable utilities:
 
 #### .NET Build Scripts
 
-- `net/Semio/build.ts` (created new)
-- `net/Semio.Grasshopper/build.ps1` → `net/Semio.Grasshopper/build.ts`
-- `net/Semio.Grasshopper/build-value-lists.ps1` → `net/Semio.Grasshopper/build-value-lists.ts`
+- `net/Compose/build.ts` (created new)
+- `net/Compose.Grasshopper/build.ps1` → `net/Compose.Grasshopper/build.ts`
+- `net/Compose.Grasshopper/build-value-lists.ps1` → `net/Compose.Grasshopper/build-value-lists.ts`
 
 #### Yak Scripts
 
@@ -78,10 +78,10 @@ Updated all workspace packages to use `tsx` instead of `powershell`:
   - `build`: `powershell ... build.ps1` → `tsx ./build.ts`
   - `test`: `powershell ... test.ps1` → `tsx ./test.ts`
 
-- `net/Semio/package.json`:
+- `net/Compose/package.json`:
   - `build`: `powershell ... build.ps1` → `tsx ./build.ts`
 
-- `net/Semio.Grasshopper/package.json`:
+- `net/Compose.Grasshopper/package.json`:
   - `build`: `powershell ... build.ps1` → `tsx ./build.ts`
 
 - `yak/package.json`:

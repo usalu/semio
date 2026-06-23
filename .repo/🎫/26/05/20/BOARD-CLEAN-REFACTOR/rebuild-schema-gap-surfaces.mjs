@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync } from "node:fs";
 
-const path = "c:/git/semio/semio/client/lib/rs/lib.rs";
+const path = "c:/git/compose/compose/client/lib/rs/lib.rs";
 const src = readFileSync(path, "utf8");
 const modStart = src.indexOf("pub mod schema_gap_surfaces");
 if (modStart < 0) {
@@ -22,7 +22,7 @@ const parseNames = (macroName) => {
   return [...m[1].matchAll(/^\s+([A-Za-z][A-Za-z0-9]*),?$/gm)].map((x) => x[1]);
 };
 
-const headPath = "c:/git/semio/.repo/🎫/26/05/19/GRAPH-QL-MUTATION-RESPONSE-TYPES/lib-head.rs";
+const headPath = "c:/git/compose/.repo/🎫/26/05/19/GRAPH-QL-MUTATION-RESPONSE-TYPES/lib-head.rs";
 const head = readFileSync(headPath, "utf8");
 const headMod = head.indexOf("pub mod schema_gap_surfaces");
 const headRegionStart = head.lastIndexOf("//#region", headMod);

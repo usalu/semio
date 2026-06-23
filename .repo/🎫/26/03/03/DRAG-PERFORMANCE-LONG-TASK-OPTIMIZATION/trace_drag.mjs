@@ -1,11 +1,11 @@
 import { chromium } from "playwright";
-const zipPath = "/workspaces/semio/semio/assets/semio/metabolism.zip";
+const zipPath = "/workspaces/semio/compose/assets/compose/metabolism.zip";
 const browser = await chromium.launch({ headless: true, args: ["--no-sandbox", "--disable-gpu"] });
 const ctx = await browser.newContext();
 const page = await ctx.newPage();
 await page.goto("http://127.0.0.1:5173/", { waitUntil: "domcontentloaded" });
 await page.waitForTimeout(2000);
-const fileInput = page.locator('[id="semio.sketchpad.app.home.importKit"]');
+const fileInput = page.locator('[id="compose.sketchpad.app.home.importKit"]');
 await fileInput.waitFor({ state: "attached", timeout: 10000 });
 const [fc] = await Promise.all([page.waitForEvent("filechooser", { timeout: 5000 }).catch(() => null), fileInput.dispatchEvent("click")]);
 if (fc) await fc.setFiles(zipPath);
@@ -44,7 +44,7 @@ for (let i = 0; i < 10; i++) {
 await page.waitForTimeout(3000);
 console.log("nodes:", await nodes.count());
 // Close panel
-const toggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.leftSidePanel"]');
+const toggle = page.locator('[id="compose.sketchpad.navbar.panelToggle.leftSidePanel"]');
 if (await toggle.isVisible().catch(() => false)) {
   if (
     await page

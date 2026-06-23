@@ -6,7 +6,7 @@
     "kind": "agent.prompt.submitting",
     "second": "2026-03-16T14:41:07Z",
     "session": "9c9573bc-7742-46ae-9c04-b0ebf0657575",
-    "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
+    "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
   },
   "native": {
     "event": {
@@ -26,7 +26,7 @@
         "/workspaces/semio"
       ],
       "user_email": "ueli.saluz@posteo.de",
-      "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
+      "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
     }
   },
   "response": {}

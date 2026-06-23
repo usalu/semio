@@ -10,8 +10,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - project: "@semio/play"
-            dist: semio/client/lib/sketchpad/play/dist
+          - project: "@compose/play"
+            dist: compose/client/lib/sketchpad/play/dist
           - project: "@cad/js/renderer"
             dist: cad/js/renderer/play/dist
           - project: "@puzzle/2d/play"

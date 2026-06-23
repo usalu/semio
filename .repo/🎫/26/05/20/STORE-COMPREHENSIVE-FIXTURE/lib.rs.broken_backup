@@ -1,4 +1,4 @@
-//! 🦀 semio rust control plane — in-memory Arc-reference architecture (code-first GraphQL).
+//! 🦀 compose rust control plane — in-memory Arc-reference architecture (code-first GraphQL).
 
 #![allow(clippy::new_without_default)]
 #![allow(clippy::too_many_arguments)]
@@ -474,7 +474,7 @@ pub mod id {
         }
     }
 
-    /// @emoji 🆔 Wire name `ID` matches relay + [`semio/client/schema/graphql/schema.golden.graphql`](../../../schema/graphql/schema.golden.graphql) `scalar`/Node ids.
+    /// @emoji 🆔 Wire name `ID` matches relay + [`compose/client/schema/graphql/schema.golden.graphql`](../../../schema/graphql/schema.golden.graphql) `scalar`/Node ids.
     #[Scalar(name = "ID")]
     impl ScalarType for Id {
         fn parse(value: Value) -> InputValueResult<Self> {
@@ -550,14 +550,14 @@ pub mod error {
 
     #[derive(Clone, Debug, Default, Error)]
     #[error("{kind}: {message}")]
-    pub struct SemioError {
+    pub struct ComposeError {
         pub kind: String,
         pub message: String,
         pub request_id: Option<String>,
     }
 
     #[Object(name = "Error")]
-    impl SemioError {
+    impl ComposeError {
         async fn id(&self) -> crate::id::Id {
             crate::id::Id(crate::hash::h(&[self.kind.as_str(), self.message.as_str()]))
         }
@@ -584,7 +584,7 @@ pub mod error {
     }
 
 
-    impl SemioError {
+    impl ComposeError {
         pub fn invalid<S: Into<String>>(msg: S) -> Self {
             Self { kind: "Invalid".to_string(), message: msg.into(), request_id: None }
         }
@@ -597,7 +597,7 @@ pub mod error {
         }
     }
 
-    pub type Result<T> = std::result::Result<T, SemioError>;
+    pub type Result<T> = std::result::Result<T, ComposeError>;
 }
 
 //#endregion 🚨 error
@@ -1808,10 +1808,10 @@ pub mod meta {
     }
 
     /// @emoji 🪪 Rebuild optional GraphQL attribute entities using the ids already recorded in operation scope.
-    pub fn attributes_from_inputs_with_ids(inp: Option<Vec<AttributeInput>>, ids: &[Id]) -> Result<Vec<Attribute>, crate::error::SemioError> {
+    pub fn attributes_from_inputs_with_ids(inp: Option<Vec<AttributeInput>>, ids: &[Id]) -> Result<Vec<Attribute>, crate::error::ComposeError> {
         let attrs = inp.unwrap_or_default();
         if attrs.len() != ids.len() {
-            return Err(crate::error::SemioError::invalid(format!("attribute id count mismatch: expected {}, got {}", attrs.len(), ids.len())));
+            return Err(crate::error::ComposeError::invalid(format!("attribute id count mismatch: expected {}, got {}", attrs.len(), ids.len())));
         }
         Ok(attrs.into_iter().zip(ids.iter().cloned()).map(|(attr, id)| attr.into_attribute_with_id(id)).collect())
     }
@@ -3262,12 +3262,12 @@ pub mod kit {
             }
 
             /// @emoji 🗑 Remove a piece from this design's ordered list and external-id index.
-            pub async fn delete_piece_by_external_id(&self, piece_id: &Id) -> Result<(), crate::error::SemioError> {
+            pub async fn delete_piece_by_external_id(&self, piece_id: &Id) -> Result<(), crate::error::ComposeError> {
                 let mut pieces = self.pieces.write().await;
                 let start_len = pieces.len();
                 pieces.retain(|piece| &piece.id != piece_id);
                 if pieces.len() == start_len {
-                    return Err(crate::error::SemioError::not_found("Piece", piece_id.as_str()));
+                    return Err(crate::error::ComposeError::not_found("Piece", piece_id.as_str()));
                 }
                 self.piece_weak_by_external_id.write().await.remove(piece_id);
                 Ok(())
@@ -3719,7 +3719,7 @@ pub mod kit {
         pub quality_by_id: RwLock<HashMap<Id, Arc<Quality>>>,
         /// @emoji 🔢 Monotonic counter bumped by every GraphQL graph mutation (test / backbone observability).
         pub touch_epoch: RwLock<u64>,
-        /// 🧭 Optional client-facing kit id from WASM/JSON hydration (`@semio/js` DTO `id`); when None, fall back to internally minted [`Kit::id`].
+        /// 🧭 Optional client-facing kit id from WASM/JSON hydration (`@compose/js` DTO `id`); when None, fall back to internally minted [`Kit::id`].
         pub snapshot_external_kit_id: RwLock<Option<Id>>,
     }
 
@@ -3791,7 +3791,7 @@ pub mod kit {
         }
 
         /// @emoji 📦 Single mutation entry: walks canonical [`crate::operation::CanonicalKitDiff`] from [`crate::operation::Operation::to_diff`].
-        pub async fn apply_diff(self: &Arc<Self>, diff: &crate::operation::KitDiff) -> Result<(), crate::error::SemioError> {
+        pub async fn apply_diff(self: &Arc<Self>, diff: &crate::operation::KitDiff) -> Result<(), crate::error::ComposeError> {
             let d = &diff.0;
             if let Some(s) = &d.name {
                 *self.name.write().await = s.clone();
@@ -3837,24 +3837,24 @@ pub mod kit {
             }
             if let Some(v) = &d.files {
                 if *v {
-                    return Err(crate::error::SemioError::invalid("kit diff `files` subtree apply not implemented"));
+                    return Err(crate::error::ComposeError::invalid("kit diff `files` subtree apply not implemented"));
                 }
             }
             if let Some(v) = &d.folders {
                 if *v {
-                    return Err(crate::error::SemioError::invalid("kit diff `folders` subtree apply not implemented"));
+                    return Err(crate::error::ComposeError::invalid("kit diff `folders` subtree apply not implemented"));
                 }
             }
             if let Some(v) = &d.authors {
                 if *v {
-                    return Err(crate::error::SemioError::invalid("kit diff `authors` subtree apply not implemented"));
+                    return Err(crate::error::ComposeError::invalid("kit diff `authors` subtree apply not implemented"));
                 }
             }
             self.bump_touch_epoch().await;
             Ok(())
         }
 
-        async fn apply_types_collection_diff(self: &Arc<Self>, t: &crate::operation::TypesCollectionDiff) -> Result<(), crate::error::SemioError> {
+        async fn apply_types_collection_diff(self: &Arc<Self>, t: &crate::operation::TypesCollectionDiff) -> Result<(), crate::error::ComposeError> {
             for r in &t.removed {
                 let id = r.id.clone();
                 let mut tys = self.types.write().await;
@@ -3885,12 +3885,12 @@ pub mod kit {
                 }
             }
             if !t.added.is_empty() {
-                return Err(crate::error::SemioError::invalid("kit diff `types.added` apply not implemented"));
+                return Err(crate::error::ComposeError::invalid("kit diff `types.added` apply not implemented"));
             }
             Ok(())
         }
 
-        async fn apply_designs_collection_diff(self: &Arc<Self>, d: &crate::operation::DesignsCollectionDiff) -> Result<(), crate::error::SemioError> {
+        async fn apply_designs_collection_diff(self: &Arc<Self>, d: &crate::operation::DesignsCollectionDiff) -> Result<(), crate::error::ComposeError> {
             for r in &d.removed {
                 let id = r.id.clone();
                 let mut ds = self.designs.write().await;
@@ -3919,7 +3919,7 @@ pub mod kit {
                 if let Some(pc) = &diff.pieces {
                     for pr in &pc.removed {
                         let piece_id = pr.id.clone();
-                        let design = self.design_by_external_id(&design_id).await.ok_or_else(|| crate::error::SemioError::not_found("Design", design_id.as_str()))?;
+                        let design = self.design_by_external_id(&design_id).await.ok_or_else(|| crate::error::ComposeError::not_found("Design", design_id.as_str()))?;
                         design.delete_piece_by_external_id(&piece_id).await?;
                     }
                     for added_piece in &pc.added {
@@ -3931,12 +3931,12 @@ pub mod kit {
                 }
             }
             if !d.added.is_empty() {
-                return Err(crate::error::SemioError::invalid("kit diff `designs.added` apply not implemented"));
+                return Err(crate::error::ComposeError::invalid("kit diff `designs.added` apply not implemented"));
             }
             Ok(())
         }
 
-        async fn apply_design_piece_added(self: &Arc<Self>, design_id: &Id, entity: &crate::operation::PieceAdded) -> Result<(), crate::error::SemioError> {
+        async fn apply_design_piece_added(self: &Arc<Self>, design_id: &Id, entity: &crate::operation::PieceAdded) -> Result<(), crate::error::ComposeError> {
             let piece_id = entity.id.clone();
             let blueprint_id = entity.blueprint_id.clone();
             let position = entity.pose;
@@ -3952,10 +3952,10 @@ pub mod kit {
             Ok(())
         }
 
-        async fn apply_design_piece_patch(self: &Arc<Self>, design_id: &Id, piece_id: &Id, pdiff: &crate::operation::PiecePatch) -> Result<(), crate::error::SemioError> {
+        async fn apply_design_piece_patch(self: &Arc<Self>, design_id: &Id, piece_id: &Id, pdiff: &crate::operation::PiecePatch) -> Result<(), crate::error::ComposeError> {
             use crate::geom::entity::Position as GeomPosition;
-            let design = self.design_by_external_id(design_id).await.ok_or_else(|| crate::error::SemioError::not_found("Design", design_id.as_str()))?;
-            let piece = design.piece_by_external_id(piece_id).await.ok_or_else(|| crate::error::SemioError::not_found("Piece", piece_id.as_str()))?;
+            let design = self.design_by_external_id(design_id).await.ok_or_else(|| crate::error::ComposeError::not_found("Design", design_id.as_str()))?;
+            let piece = design.piece_by_external_id(piece_id).await.ok_or_else(|| crate::error::ComposeError::not_found("Piece", piece_id.as_str()))?;
             if pdiff.fix_piece {
                 *piece.connection_kind.write().await = Some(crate::kit::design::piece::PieceConnectionKind::Fixed);
                 return Ok(());
@@ -3991,12 +3991,12 @@ pub mod kit {
             Ok(())
         }
 
-        async fn apply_tags_collection_diff(self: &Arc<Self>, t: &crate::operation::TagsCollectionDiff) -> Result<(), crate::error::SemioError> {
+        async fn apply_tags_collection_diff(self: &Arc<Self>, t: &crate::operation::TagsCollectionDiff) -> Result<(), crate::error::ComposeError> {
             for r in &t.removed {
                 self.delete_tag_by_id(&r.id).await?;
             }
             for m in &t.modified {
-                let tag = self.find_tag(&m.tag.id).await.ok_or_else(|| crate::error::SemioError::not_found("Tag", m.tag.id.as_str()))?;
+                let tag = self.find_tag(&m.tag.id).await.ok_or_else(|| crate::error::ComposeError::not_found("Tag", m.tag.id.as_str()))?;
                 if let Some(s) = &m.diff.name {
                     *tag.name.write().await = s.clone();
                 }
@@ -4013,12 +4013,12 @@ pub mod kit {
             Ok(())
         }
 
-        async fn apply_concepts_collection_diff(self: &Arc<Self>, c: &crate::operation::ConceptsCollectionDiff) -> Result<(), crate::error::SemioError> {
+        async fn apply_concepts_collection_diff(self: &Arc<Self>, c: &crate::operation::ConceptsCollectionDiff) -> Result<(), crate::error::ComposeError> {
             for r in &c.removed {
                 self.delete_concept_by_id(&r.id).await?;
             }
             for m in &c.modified {
-                let concept = self.find_concept(&m.concept.id).await.ok_or_else(|| crate::error::SemioError::not_found("Concept", m.concept.id.as_str()))?;
+                let concept = self.find_concept(&m.concept.id).await.ok_or_else(|| crate::error::ComposeError::not_found("Concept", m.concept.id.as_str()))?;
                 if let Some(s) = &m.diff.name {
                     *concept.name.write().await = s.clone();
                 }
@@ -4035,12 +4035,12 @@ pub mod kit {
             Ok(())
         }
 
-        async fn apply_qualities_collection_diff(self: &Arc<Self>, q: &crate::operation::QualitiesCollectionDiff) -> Result<(), crate::error::SemioError> {
+        async fn apply_qualities_collection_diff(self: &Arc<Self>, q: &crate::operation::QualitiesCollectionDiff) -> Result<(), crate::error::ComposeError> {
             for r in &q.removed {
                 self.delete_quality_by_id(&r.id).await?;
             }
             for m in &q.modified {
-                let quality = self.find_quality(&m.quality.id).await.ok_or_else(|| crate::error::SemioError::not_found("Quality", m.quality.id.as_str()))?;
+                let quality = self.find_quality(&m.quality.id).await.ok_or_else(|| crate::error::ComposeError::not_found("Quality", m.quality.id.as_str()))?;
                 if m.diff.description.is_some() {
                     *quality.description.write().await = m.diff.description.clone();
                 }
@@ -4067,7 +4067,7 @@ pub mod kit {
         }
 
         /// @emoji 🪪 Inlined tag creation for [`Kit::apply_diff`] (no public mutator surface).
-        async fn apply_create_tag_scoped(self: &Arc<Self>, owner_id: &Id, tag_id: &Id, attribute_ids: &[Id], input: crate::meta::TagInput) -> Result<(), crate::error::SemioError> {
+        async fn apply_create_tag_scoped(self: &Arc<Self>, owner_id: &Id, tag_id: &Id, attribute_ids: &[Id], input: crate::meta::TagInput) -> Result<(), crate::error::ComposeError> {
             let slot = self.resolve_tag_owner_slot(owner_id).await?;
             let attrs = crate::meta::attributes_from_inputs_with_ids(input.attributes.clone(), attribute_ids)?;
             let tag = crate::meta::Tag::new_with_id(slot, tag_id.clone(), input.name, input.description, input.icon, input.order, attrs);
@@ -4094,7 +4094,7 @@ pub mod kit {
             Ok(())
         }
 
-        async fn apply_create_concept_scoped(self: &Arc<Self>, owner_id: &Id, concept_id: &Id, attribute_ids: &[Id], input: crate::meta::ConceptInput) -> Result<(), crate::error::SemioError> {
+        async fn apply_create_concept_scoped(self: &Arc<Self>, owner_id: &Id, concept_id: &Id, attribute_ids: &[Id], input: crate::meta::ConceptInput) -> Result<(), crate::error::ComposeError> {
             let slot = self.resolve_concept_owner_slot(owner_id).await?;
             let attrs = crate::meta::attributes_from_inputs_with_ids(input.attributes.clone(), attribute_ids)?;
             let c = crate::meta::Concept::new_with_id(slot, concept_id.clone(), input.name, input.description, input.icon, input.order, attrs);
@@ -4118,10 +4118,10 @@ pub mod kit {
             Ok(())
         }
 
-        async fn apply_create_quality_scoped(self: &Arc<Self>, owner_id: &Id, quality_id: &Id, attribute_ids: &[Id], benchmark_ids: &[Id], input: crate::meta::QualityInput) -> Result<(), crate::error::SemioError> {
+        async fn apply_create_quality_scoped(self: &Arc<Self>, owner_id: &Id, quality_id: &Id, attribute_ids: &[Id], benchmark_ids: &[Id], input: crate::meta::QualityInput) -> Result<(), crate::error::ComposeError> {
             let slot = self.resolve_quality_owner_slot(owner_id).await?;
             if !benchmark_ids.is_empty() {
-                return Err(crate::error::SemioError::invalid("quality benchmark ids are not supported yet"));
+                return Err(crate::error::ComposeError::invalid("quality benchmark ids are not supported yet"));
             }
             let attrs = crate::meta::attributes_from_inputs_with_ids(input.attributes.clone(), attribute_ids)?;
             let q = crate::meta::Quality::new_with_id(slot, quality_id.clone(), input.key, input.value, input.unit, input.definition, input.description, input.icon, Vec::new(), attrs);
@@ -4218,7 +4218,7 @@ pub mod kit {
         }
 
         /// @emoji 🪢 Resolve SDL `TagInput` owner (`Kit` root id, `Type` id, or `Representation` id).
-        pub async fn resolve_tag_owner_slot(self: &Arc<Self>, owner_id: &Id) -> Result<crate::gql::interfaces::KitGraphParentWeak, crate::error::SemioError> {
+        pub async fn resolve_tag_owner_slot(self: &Arc<Self>, owner_id: &Id) -> Result<crate::gql::interfaces::KitGraphParentWeak, crate::error::ComposeError> {
             let kid = self.workspace_kit_id().await;
             if owner_id == &kid || owner_id == &self.id {
                 return Ok(crate::gql::interfaces::KitGraphParentWeak::Kit(Arc::downgrade(self)));
@@ -4229,11 +4229,11 @@ pub mod kit {
             if let Some(rep) = self.find_representation(owner_id).await {
                 return Ok(crate::gql::interfaces::KitGraphParentWeak::Representation(Arc::downgrade(&rep)));
             }
-            Err(crate::error::SemioError::not_found("TagOwner", owner_id.as_str()))
+            Err(crate::error::ComposeError::not_found("TagOwner", owner_id.as_str()))
         }
 
         /// @emoji 🪢 Resolve SDL `ConceptInput` owner (`Kit` or `Type`).
-        pub async fn resolve_concept_owner_slot(self: &Arc<Self>, owner_id: &Id) -> Result<crate::gql::interfaces::KitGraphParentWeak, crate::error::SemioError> {
+        pub async fn resolve_concept_owner_slot(self: &Arc<Self>, owner_id: &Id) -> Result<crate::gql::interfaces::KitGraphParentWeak, crate::error::ComposeError> {
             let kid = self.workspace_kit_id().await;
             if owner_id == &kid || owner_id == &self.id {
                 return Ok(crate::gql::interfaces::KitGraphParentWeak::Kit(Arc::downgrade(self)));
@@ -4241,11 +4241,11 @@ pub mod kit {
             if let Some(ty) = self.type_by_external_id(owner_id).await {
                 return Ok(crate::gql::interfaces::KitGraphParentWeak::Type(Arc::downgrade(&ty)));
             }
-            Err(crate::error::SemioError::not_found("ConceptOwner", owner_id.as_str()))
+            Err(crate::error::ComposeError::not_found("ConceptOwner", owner_id.as_str()))
         }
 
         /// @emoji 🪢 Resolve SDL `QualityInput` owner (kit/type/representation/connector/design).
-        pub async fn resolve_quality_owner_slot(self: &Arc<Self>, owner_id: &Id) -> Result<crate::gql::interfaces::KitGraphParentWeak, crate::error::SemioError> {
+        pub async fn resolve_quality_owner_slot(self: &Arc<Self>, owner_id: &Id) -> Result<crate::gql::interfaces::KitGraphParentWeak, crate::error::ComposeError> {
             let kid = self.workspace_kit_id().await;
             if owner_id == &kid || owner_id == &self.id {
                 return Ok(crate::gql::interfaces::KitGraphParentWeak::Kit(Arc::downgrade(self)));
@@ -4262,11 +4262,11 @@ pub mod kit {
             if let Some(des) = self.design_by_external_id(owner_id).await {
                 return Ok(crate::gql::interfaces::KitGraphParentWeak::Design(Arc::downgrade(&des)));
             }
-            Err(crate::error::SemioError::not_found("QualityOwner", owner_id.as_str()))
+            Err(crate::error::ComposeError::not_found("QualityOwner", owner_id.as_str()))
         }
 
         /// @emoji ➕ Create [`Tag`], register globally, append to owner collection.
-        pub async fn create_and_register_tag(self: &Arc<Self>, owner_id: &Id, input: crate::meta::TagInput) -> Result<Arc<Tag>, crate::error::SemioError> {
+        pub async fn create_and_register_tag(self: &Arc<Self>, owner_id: &Id, input: crate::meta::TagInput) -> Result<Arc<Tag>, crate::error::ComposeError> {
             let attribute_count = input.attributes.as_ref().map(|items| items.len()).unwrap_or_default();
             let tag_id = Id::new().await;
             let mut attribute_ids = Vec::with_capacity(attribute_count);
@@ -4277,7 +4277,7 @@ pub mod kit {
         }
 
         /// @emoji 🪪 Create [`Tag`] from a normalized operation scope carrying every referenced id.
-        pub async fn create_and_register_tag_with_scope(self: &Arc<Self>, owner_id: &Id, tag_id: &Id, attribute_ids: &[Id], input: crate::meta::TagInput) -> Result<Arc<Tag>, crate::error::SemioError> {
+        pub async fn create_and_register_tag_with_scope(self: &Arc<Self>, owner_id: &Id, tag_id: &Id, attribute_ids: &[Id], input: crate::meta::TagInput) -> Result<Arc<Tag>, crate::error::ComposeError> {
             let slot = self.resolve_tag_owner_slot(owner_id).await?;
             let attrs = crate::meta::attributes_from_inputs_with_ids(input.attributes.clone(), attribute_ids)?;
             let tag = Tag::new_with_id(slot, tag_id.clone(), input.name, input.description, input.icon, input.order, attrs);
@@ -4305,8 +4305,8 @@ pub mod kit {
         }
 
         /// @emoji 🗑 Remove a tag from its owner vec + id map.
-        pub async fn delete_tag_by_id(self: &Arc<Self>, tag_id: &Id) -> Result<(), crate::error::SemioError> {
-            let tag = self.find_tag(tag_id).await.ok_or_else(|| crate::error::SemioError::not_found("Tag", tag_id.as_str()))?;
+        pub async fn delete_tag_by_id(self: &Arc<Self>, tag_id: &Id) -> Result<(), crate::error::ComposeError> {
+            let tag = self.find_tag(tag_id).await.ok_or_else(|| crate::error::ComposeError::not_found("Tag", tag_id.as_str()))?;
             match &*tag.owner.read().await {
                 crate::gql::interfaces::KitGraphParentWeak::Kit(w) => {
                     if let Some(k) = w.upgrade() {
@@ -4331,7 +4331,7 @@ pub mod kit {
         }
 
         /// @emoji ➕ Create [`Concept`] under kit or type.
-        pub async fn create_and_register_concept(self: &Arc<Self>, owner_id: &Id, input: crate::meta::ConceptInput) -> Result<Arc<Concept>, crate::error::SemioError> {
+        pub async fn create_and_register_concept(self: &Arc<Self>, owner_id: &Id, input: crate::meta::ConceptInput) -> Result<Arc<Concept>, crate::error::ComposeError> {
             let attribute_count = input.attributes.as_ref().map(|items| items.len()).unwrap_or_default();
             let concept_id = Id::new().await;
             let mut attribute_ids = Vec::with_capacity(attribute_count);
@@ -4342,7 +4342,7 @@ pub mod kit {
         }
 
         /// @emoji 🪪 Create [`Concept`] from a normalized operation scope carrying every referenced id.
-        pub async fn create_and_register_concept_with_scope(self: &Arc<Self>, owner_id: &Id, concept_id: &Id, attribute_ids: &[Id], input: crate::meta::ConceptInput) -> Result<Arc<Concept>, crate::error::SemioError> {
+        pub async fn create_and_register_concept_with_scope(self: &Arc<Self>, owner_id: &Id, concept_id: &Id, attribute_ids: &[Id], input: crate::meta::ConceptInput) -> Result<Arc<Concept>, crate::error::ComposeError> {
             let slot = self.resolve_concept_owner_slot(owner_id).await?;
             let attrs = crate::meta::attributes_from_inputs_with_ids(input.attributes.clone(), attribute_ids)?;
             let c = Concept::new_with_id(slot, concept_id.clone(), input.name, input.description, input.icon, input.order, attrs);
@@ -4367,8 +4367,8 @@ pub mod kit {
         }
 
         /// @emoji 🗑 Remove a concept from its owner vec + id map.
-        pub async fn delete_concept_by_id(self: &Arc<Self>, concept_id: &Id) -> Result<(), crate::error::SemioError> {
-            let concept = self.find_concept(concept_id).await.ok_or_else(|| crate::error::SemioError::not_found("Concept", concept_id.as_str()))?;
+        pub async fn delete_concept_by_id(self: &Arc<Self>, concept_id: &Id) -> Result<(), crate::error::ComposeError> {
+            let concept = self.find_concept(concept_id).await.ok_or_else(|| crate::error::ComposeError::not_found("Concept", concept_id.as_str()))?;
             match &*concept.owner.read().await {
                 crate::gql::interfaces::KitGraphParentWeak::Kit(w) => {
                     if let Some(k) = w.upgrade() {
@@ -4390,7 +4390,7 @@ pub mod kit {
         }
 
         /// @emoji ➕ Create [`Quality`] under resolved owner (kit/type/representation/connector/design).
-        pub async fn create_and_register_quality(self: &Arc<Self>, owner_id: &Id, input: crate::meta::QualityInput) -> Result<Arc<Quality>, crate::error::SemioError> {
+        pub async fn create_and_register_quality(self: &Arc<Self>, owner_id: &Id, input: crate::meta::QualityInput) -> Result<Arc<Quality>, crate::error::ComposeError> {
             let attribute_count = input.attributes.as_ref().map(|items| items.len()).unwrap_or_default();
             let quality_id = Id::new().await;
             let mut attribute_ids = Vec::with_capacity(attribute_count);
@@ -4401,10 +4401,10 @@ pub mod kit {
         }
 
         /// @emoji 🪪 Create [`Quality`] from a normalized operation scope carrying every referenced id.
-        pub async fn create_and_register_quality_with_scope(self: &Arc<Self>, owner_id: &Id, quality_id: &Id, attribute_ids: &[Id], benchmark_ids: &[Id], input: crate::meta::QualityInput) -> Result<Arc<Quality>, crate::error::SemioError> {
+        pub async fn create_and_register_quality_with_scope(self: &Arc<Self>, owner_id: &Id, quality_id: &Id, attribute_ids: &[Id], benchmark_ids: &[Id], input: crate::meta::QualityInput) -> Result<Arc<Quality>, crate::error::ComposeError> {
             let slot = self.resolve_quality_owner_slot(owner_id).await?;
             if !benchmark_ids.is_empty() {
-                return Err(crate::error::SemioError::invalid("quality benchmark ids are not supported yet"));
+                return Err(crate::error::ComposeError::invalid("quality benchmark ids are not supported yet"));
             }
             let attrs = crate::meta::attributes_from_inputs_with_ids(input.attributes.clone(), attribute_ids)?;
             let q = Quality::new_with_id(slot, quality_id.clone(), input.key, input.value, input.unit, input.definition, input.description, input.icon, Vec::new(), attrs);
@@ -4441,8 +4441,8 @@ pub mod kit {
         }
 
         /// @emoji 🗑 Remove a quality from its owner vec + id map.
-        pub async fn delete_quality_by_id(self: &Arc<Self>, quality_id: &Id) -> Result<(), crate::error::SemioError> {
-            let quality = self.find_quality(quality_id).await.ok_or_else(|| crate::error::SemioError::not_found("Quality", quality_id.as_str()))?;
+        pub async fn delete_quality_by_id(self: &Arc<Self>, quality_id: &Id) -> Result<(), crate::error::ComposeError> {
+            let quality = self.find_quality(quality_id).await.ok_or_else(|| crate::error::ComposeError::not_found("Quality", quality_id.as_str()))?;
             match &*quality.owner.read().await {
                 crate::gql::interfaces::KitGraphParentWeak::Kit(w) => {
                     if let Some(k) = w.upgrade() {
@@ -4791,7 +4791,7 @@ pub mod vcs {
     use async_graphql::{Context, InputObject, Object};
     use async_lock::RwLock;
 
-    use crate::error::SemioError;
+    use crate::error::ComposeError;
     use crate::hash::{h, merkle_node_str};
     use crate::id::Id;
     use crate::kit::Kit;
@@ -5651,16 +5651,16 @@ pub mod vcs {
         }
 
         /// @emoji 📝 Append one forward operation plus backward operations onto the open [`Edit`]'s tail [`Change`], bumping the workspace cache epoch.
-        pub async fn record_operation_in_open_transaction(self: &Arc<Self>, workspace_id: &Id, edit_id: &Id, forward: crate::operation::Operation, backwards: Vec<crate::operation::Operation>) -> Result<(), SemioError> {
+        pub async fn record_operation_in_open_transaction(self: &Arc<Self>, workspace_id: &Id, edit_id: &Id, forward: crate::operation::Operation, backwards: Vec<crate::operation::Operation>) -> Result<(), ComposeError> {
             let ws = self.resolve_workspace_id(workspace_id).await;
             let tx = if ws == self.id {
                 let _ = self.ensure_the_kit_unsaved_edit(edit_id).await;
-                self.the_kit_unsaved_edits.read().await.iter().find(|t| &t.id == edit_id).cloned().ok_or_else(|| SemioError::not_found("Edit", edit_id.as_str()))?
+                self.the_kit_unsaved_edits.read().await.iter().find(|t| &t.id == edit_id).cloned().ok_or_else(|| ComposeError::not_found("Edit", edit_id.as_str()))?
             } else if let Some(alt) = self.workspace_alternative(&ws).await {
                 let _ = alt.ensure_unsaved_edit(edit_id).await;
-                alt.unsaved_edits.read().await.iter().find(|t| &t.id == edit_id).cloned().ok_or_else(|| SemioError::not_found("Edit", edit_id.as_str()))?
+                alt.unsaved_edits.read().await.iter().find(|t| &t.id == edit_id).cloned().ok_or_else(|| ComposeError::not_found("Edit", edit_id.as_str()))?
             } else {
-                return Err(SemioError::not_found("Workspace", workspace_id.as_str()));
+                return Err(ComposeError::not_found("Workspace", workspace_id.as_str()));
             };
             let change = {
                 let mut chs = tx.changes.write().await;
@@ -5727,24 +5727,24 @@ pub mod vcs {
         }
 
         /// @emoji 🌱 Fork a new named [`Alternative`](../../../schema/graphql/schema.golden.graphql) from [`TheKit`](../../../schema/graphql/schema.golden.graphql) or another alternative's tip [`Checkpoint`](../../../schema/graphql/schema.golden.graphql).
-        pub async fn create_alternative_from_tip(self: &Arc<Self>, name: String, source_alternative_id: Option<&Id>) -> Result<Id, SemioError> {
+        pub async fn create_alternative_from_tip(self: &Arc<Self>, name: String, source_alternative_id: Option<&Id>) -> Result<Id, ComposeError> {
             let name = name.trim().to_string();
             if name.is_empty() {
-                return Err(SemioError::invalid("alternative name required"));
+                return Err(ComposeError::invalid("alternative name required"));
             }
 
             self.ensure_default_checkpoint_for_the_kit().await;
 
             let parent_cp = match source_alternative_id {
-                None => self.the_kit_parent_checkpoint.read().await.upgrade().ok_or_else(|| SemioError::invalid("theKit workspace has no parent checkpoint"))?,
+                None => self.the_kit_parent_checkpoint.read().await.upgrade().ok_or_else(|| ComposeError::invalid("theKit workspace has no parent checkpoint"))?,
                 Some(aid) => {
                     let alt = {
                         let alts = self.alternatives.read().await;
-                        alts.iter().find(|a| &a.id == aid).ok_or_else(|| SemioError::not_found("Alternative", aid.as_str()))?.clone()
+                        alts.iter().find(|a| &a.id == aid).ok_or_else(|| ComposeError::not_found("Alternative", aid.as_str()))?.clone()
                     };
                     let parent_from_alt = {
                         let start_guard = alt.start.read().await;
-                        start_guard.upgrade().ok_or_else(|| SemioError::invalid("alternative has no start checkpoint"))?
+                        start_guard.upgrade().ok_or_else(|| ComposeError::invalid("alternative has no start checkpoint"))?
                     };
                     parent_from_alt
                 }
@@ -5792,11 +5792,11 @@ pub mod vcs {
         }
 
         /// @emoji ✅ Commit an unsaved [`Edit`]: move it from `unsavedChanges` to `savedChanges` on that [`Workspace`](../../../schema/graphql/schema.golden.graphql).
-        pub async fn commit_transaction(self: &Arc<Self>, workspace_id: &Id, edit_id: &Id) -> Result<(), SemioError> {
+        pub async fn commit_transaction(self: &Arc<Self>, workspace_id: &Id, edit_id: &Id) -> Result<(), ComposeError> {
             if self.workspace_is_the_kit(workspace_id).await {
                 let tx = {
                     let mut txs = self.the_kit_unsaved_edits.write().await;
-                    let pos = txs.iter().position(|t| &t.id == edit_id).ok_or_else(|| SemioError::not_found("Edit", edit_id.as_str()))?;
+                    let pos = txs.iter().position(|t| &t.id == edit_id).ok_or_else(|| ComposeError::not_found("Edit", edit_id.as_str()))?;
                     txs.remove(pos)
                 };
                 self.the_kit_saved_edits.write().await.push(tx);
@@ -5808,10 +5808,10 @@ pub mod vcs {
                 }
                 return Ok(());
             }
-            let alt = self.workspace_alternative(workspace_id).await.ok_or_else(|| SemioError::not_found("Workspace", workspace_id.as_str()))?;
+            let alt = self.workspace_alternative(workspace_id).await.ok_or_else(|| ComposeError::not_found("Workspace", workspace_id.as_str()))?;
             let tx = {
                 let mut txs = alt.unsaved_edits.write().await;
-                let pos = txs.iter().position(|t| &t.id == edit_id).ok_or_else(|| SemioError::not_found("Edit", edit_id.as_str()))?;
+                let pos = txs.iter().position(|t| &t.id == edit_id).ok_or_else(|| ComposeError::not_found("Edit", edit_id.as_str()))?;
                 txs.remove(pos)
             };
             alt.saved_edits.write().await.push(tx);
@@ -5825,11 +5825,11 @@ pub mod vcs {
         }
 
         /// @emoji ⛔ Drop an unsaved [`Edit`] from `unsavedChanges` on that [`Workspace`](../../../schema/graphql/schema.golden.graphql).
-        pub async fn abort_transaction(self: &Arc<Self>, workspace_id: &Id, edit_id: &Id) -> Result<(), SemioError> {
+        pub async fn abort_transaction(self: &Arc<Self>, workspace_id: &Id, edit_id: &Id) -> Result<(), ComposeError> {
             if self.workspace_is_the_kit(workspace_id).await {
                 {
                     let mut txs = self.the_kit_unsaved_edits.write().await;
-                    let pos = txs.iter().position(|t| &t.id == edit_id).ok_or_else(|| SemioError::not_found("Edit", edit_id.as_str()))?;
+                    let pos = txs.iter().position(|t| &t.id == edit_id).ok_or_else(|| ComposeError::not_found("Edit", edit_id.as_str()))?;
                     txs.remove(pos);
                 }
                 let open = self.the_kit_open_edit.read().await.upgrade();
@@ -5842,10 +5842,10 @@ pub mod vcs {
                 self.invalidate_materialized_cache().await;
                 return Ok(());
             }
-            let alt = self.workspace_alternative(workspace_id).await.ok_or_else(|| SemioError::not_found("Workspace", workspace_id.as_str()))?;
+            let alt = self.workspace_alternative(workspace_id).await.ok_or_else(|| ComposeError::not_found("Workspace", workspace_id.as_str()))?;
             {
                 let mut txs = alt.unsaved_edits.write().await;
-                let pos = txs.iter().position(|t| &t.id == edit_id).ok_or_else(|| SemioError::not_found("Edit", edit_id.as_str()))?;
+                let pos = txs.iter().position(|t| &t.id == edit_id).ok_or_else(|| ComposeError::not_found("Edit", edit_id.as_str()))?;
                 txs.remove(pos);
             }
             let open = alt.open_edit.read().await.upgrade();
@@ -5860,7 +5860,7 @@ pub mod vcs {
         }
 
         /// @emoji 📦 Golden `Checkpoint.kit` / `KitReadPointInput.checkpointId` — WIP parent checkpoint resolves like `TheKit.kit`; alternative tip like `Alternative.kit`; otherwise graph `initialKit` until per-checkpoint edit slices exist.
-        pub async fn materialized_kit_for_checkpoint_id(self: &Arc<Self>, checkpoint_id: &Id) -> Result<Arc<Kit>, SemioError> {
+        pub async fn materialized_kit_for_checkpoint_id(self: &Arc<Self>, checkpoint_id: &Id) -> Result<Arc<Kit>, ComposeError> {
             let mut found = false;
             for c in self.checkpoints.read().await.iter() {
                 if &c.id == checkpoint_id {
@@ -5883,7 +5883,7 @@ pub mod vcs {
                 }
             }
             if !found {
-                return Err(SemioError::not_found("Checkpoint", checkpoint_id.as_str()));
+                return Err(ComposeError::not_found("Checkpoint", checkpoint_id.as_str()));
             }
             if self.the_kit_parent_checkpoint.read().await.upgrade().as_ref().map(|p| &p.id) == Some(checkpoint_id) {
                 return Ok(self.materialized_head_kit().await);
@@ -5900,7 +5900,7 @@ pub mod vcs {
         }
 
         /// @emoji 📍 Materialized [`Kit`] at a [`KitReadPointInput`] anchor ([`TheKit`](../../../schema/graphql/schema.golden.graphql), [`Checkpoint`](../../../schema/graphql/schema.golden.graphql), [`Alternative`](../../../schema/graphql/schema.golden.graphql)).
-        pub async fn materialized_kit_at_point(self: &Arc<Self>, p: KitReadPointInput) -> Result<Arc<Kit>, SemioError> {
+        pub async fn materialized_kit_at_point(self: &Arc<Self>, p: KitReadPointInput) -> Result<Arc<Kit>, ComposeError> {
             if p.the_kit == Some(true) {
                 return Ok(self.materialized_head_kit().await);
             }
@@ -5910,7 +5910,7 @@ pub mod vcs {
             }
             if let Some(aid) = p.alternative_id.clone() {
                 let alts = self.alternatives.read().await;
-                let alt = alts.iter().find(|a| a.id == aid).cloned().ok_or_else(|| SemioError::not_found("Alternative", aid.as_str()))?;
+                let alt = alts.iter().find(|a| a.id == aid).cloned().ok_or_else(|| ComposeError::not_found("Alternative", aid.as_str()))?;
                 return Ok(self.materialized_kit_for_workspace(&alt.id).await);
             }
             if let Some(did) = p.workspace_id.clone() {
@@ -5930,7 +5930,7 @@ pub mod vcs {
             position: crate::geom::PositionInput,
             name: Option<String>,
             description: Option<String>,
-        ) -> Result<(Arc<crate::kit::design::piece::Piece>,), SemioError> {
+        ) -> Result<(Arc<crate::kit::design::piece::Piece>,), ComposeError> {
             let piece_id = Id::new().await;
             let forward = crate::operation::Operation::CreateFixedPiece {
                 scope: crate::operation::Scope::CreateFixedPiece { design_id: design_id.clone(), piece_id: piece_id.clone(), blueprint_id, attribute_ids: Vec::new() },
@@ -5940,12 +5940,12 @@ pub mod vcs {
             let backwards = forward.to_backwards(&before).await?;
             self.record_operation_in_open_transaction(&workspace_id, &edit_id, forward, backwards).await?;
             let after = self.materialized_kit_for_workspace(&workspace_id).await;
-            let piece = after.design_by_external_id(&design_id).await.ok_or_else(|| SemioError::not_found("Design", design_id.as_str()))?.piece_by_external_id(&piece_id).await.ok_or_else(|| SemioError::not_found("Piece", piece_id.as_str()))?;
+            let piece = after.design_by_external_id(&design_id).await.ok_or_else(|| ComposeError::not_found("Design", design_id.as_str()))?.piece_by_external_id(&piece_id).await.ok_or_else(|| ComposeError::not_found("Piece", piece_id.as_str()))?;
             Ok((piece,))
         }
 
         /// 🛰️ WIP bootstrap: hydrate [`Graph::mutable_kit`] from initial kit projection JSON via [`crate::kit_backbone::graph_new_overlay_from_initial_projection_json`].
-        pub async fn new_overlay_from_initial_kit_projection_json(json: serde_json::Value) -> Result<Arc<Self>, SemioError> {
+        pub async fn new_overlay_from_initial_kit_projection_json(json: serde_json::Value) -> Result<Arc<Self>, ComposeError> {
             crate::kit_backbone::graph_new_overlay_from_initial_projection_json(json).await
         }
 
@@ -6435,7 +6435,7 @@ pub mod operation {
 
     use async_graphql::{Interface, Object, Union};
 
-    use crate::error::SemioError;
+    use crate::error::ComposeError;
     use crate::geom::{OffsetInput, PositionInput};
     use crate::hash::h;
     use crate::id::Id;
@@ -6454,7 +6454,7 @@ pub mod operation {
         pub id: Id,
     }
 
-    /// @emoji 📦 Sparse `tags` triple (`metabolism.kit.diff.semio.json`).
+    /// @emoji 📦 Sparse `tags` triple (`metabolism.kit.diff.compose.json`).
     #[derive(Clone, Debug, Default, PartialEq)]
     pub struct TagsCollectionDiff {
         pub removed: Vec<IdRef>,
@@ -6966,26 +6966,26 @@ pub mod operation {
         }
 
         /// Pure: read pre-state and produce a structural diff without mutating the kit.
-        pub async fn to_diff(&self, kit: &Arc<crate::kit::Kit>) -> Result<KitDiff, SemioError> {
+        pub async fn to_diff(&self, kit: &Arc<crate::kit::Kit>) -> Result<KitDiff, ComposeError> {
             match self {
                 Operation::RenameKit { scope, input } => {
                     let Scope::Kit = scope else {
-                        return Err(SemioError::invalid("renameKit expects Scope::Kit"));
+                        return Err(ComposeError::invalid("renameKit expects Scope::Kit"));
                     };
                     let Input::Name { name } = input else {
-                        return Err(SemioError::invalid("renameKit expects Input::Name"));
+                        return Err(ComposeError::invalid("renameKit expects Input::Name"));
                     };
                     if name.chars().count() > 256 {
-                        return Err(SemioError::invalid(format!("Kit name too long: {} > 256", name.chars().count())));
+                        return Err(ComposeError::invalid(format!("Kit name too long: {} > 256", name.chars().count())));
                     }
                     Ok(KitDiff(CanonicalKitDiff { name: Some(name.clone()), ..Default::default() }))
                 }
                 Operation::ChangeDescription { scope, input } => {
                     let Scope::Entity { entity_id } = scope else {
-                        return Err(SemioError::invalid("changeDescription expects Scope::Entity"));
+                        return Err(ComposeError::invalid("changeDescription expects Scope::Entity"));
                     };
                     let Input::Description { description } = input else {
-                        return Err(SemioError::invalid("changeDescription expects Input::Description"));
+                        return Err(ComposeError::invalid("changeDescription expects Input::Description"));
                     };
                     entity_description(kit, entity_id).await?;
                     let kid = kit.workspace_kit_id().await;
@@ -7031,14 +7031,14 @@ pub mod operation {
                             ..Default::default()
                         }));
                     }
-                    Err(SemioError::not_found("DescriptionEntity", entity_id.as_str()))
+                    Err(ComposeError::not_found("DescriptionEntity", entity_id.as_str()))
                 }
                 Operation::ChangeIcon { scope, input } => {
                     let Scope::Entity { entity_id } = scope else {
-                        return Err(SemioError::invalid("changeIcon expects Scope::Entity"));
+                        return Err(ComposeError::invalid("changeIcon expects Scope::Entity"));
                     };
                     let Input::Icon { icon } = input else {
-                        return Err(SemioError::invalid("changeIcon expects Input::Icon"));
+                        return Err(ComposeError::invalid("changeIcon expects Input::Icon"));
                     };
                     entity_icon(kit, entity_id).await?;
                     let kid = kit.workspace_kit_id().await;
@@ -7078,14 +7078,14 @@ pub mod operation {
                             ..Default::default()
                         }));
                     }
-                    Err(SemioError::not_found("IconEntity", entity_id.as_str()))
+                    Err(ComposeError::not_found("IconEntity", entity_id.as_str()))
                 }
                 Operation::ChangeImage { scope, input } => {
                     let Scope::Entity { entity_id } = scope else {
-                        return Err(SemioError::invalid("changeImage expects Scope::Entity"));
+                        return Err(ComposeError::invalid("changeImage expects Scope::Entity"));
                     };
                     let Input::Image { image } = input else {
-                        return Err(SemioError::invalid("changeImage expects Input::Image"));
+                        return Err(ComposeError::invalid("changeImage expects Input::Image"));
                     };
                     entity_image(kit, entity_id).await?;
                     let kid = kit.workspace_kit_id().await;
@@ -7107,18 +7107,18 @@ pub mod operation {
                             ..Default::default()
                         }));
                     }
-                    Err(SemioError::not_found("ImageEntity", entity_id.as_str()))
+                    Err(ComposeError::not_found("ImageEntity", entity_id.as_str()))
                 }
                 Operation::CreateTag { scope, input } => {
                     let Scope::CreateTag { owner_id, tag_id, attribute_ids } = scope else {
-                        return Err(SemioError::invalid("createTag expects Scope::CreateTag"));
+                        return Err(ComposeError::invalid("createTag expects Scope::CreateTag"));
                     };
                     let Input::Tag { tag } = input else {
-                        return Err(SemioError::invalid("createTag expects Input::Tag"));
+                        return Err(ComposeError::invalid("createTag expects Input::Tag"));
                     };
                     kit.resolve_tag_owner_slot(owner_id).await?;
                     if kit.find_tag(tag_id).await.is_some() {
-                        return Err(SemioError::invalid(format!("Tag already exists: {}", tag_id.as_str())));
+                        return Err(ComposeError::invalid(format!("Tag already exists: {}", tag_id.as_str())));
                     }
                     validate_attribute_ids(tag.attributes.as_ref().map(|items| items.len()).unwrap_or_default(), attribute_ids)?;
                     Ok(KitDiff(CanonicalKitDiff {
@@ -7128,19 +7128,19 @@ pub mod operation {
                 }
                 Operation::CreateTags { scope, input } => {
                     let Scope::CreateTags { owner_id, tag_ids, attribute_ids } = scope else {
-                        return Err(SemioError::invalid("createTags expects Scope::CreateTags"));
+                        return Err(ComposeError::invalid("createTags expects Scope::CreateTags"));
                     };
                     let Input::Tags { tags } = input else {
-                        return Err(SemioError::invalid("createTags expects Input::Tags"));
+                        return Err(ComposeError::invalid("createTags expects Input::Tags"));
                     };
                     if tag_ids.len() != tags.len() || attribute_ids.len() != tags.len() {
-                        return Err(SemioError::invalid("createTags scope length mismatch"));
+                        return Err(ComposeError::invalid("createTags scope length mismatch"));
                     }
                     kit.resolve_tag_owner_slot(owner_id).await?;
                     let mut added = Vec::new();
                     for (index, tag) in tags.iter().enumerate() {
                         if kit.find_tag(&tag_ids[index]).await.is_some() {
-                            return Err(SemioError::invalid(format!("Tag already exists: {}", tag_ids[index].as_str())));
+                            return Err(ComposeError::invalid(format!("Tag already exists: {}", tag_ids[index].as_str())));
                         }
                         validate_attribute_ids(tag.attributes.as_ref().map(|items| items.len()).unwrap_or_default(), &attribute_ids[index])?;
                         added.push(TagAdded { owner_id: owner_id.clone(), id: tag_ids[index].clone(), attribute_ids: attribute_ids[index].clone(), tag: tag.clone() });
@@ -7149,14 +7149,14 @@ pub mod operation {
                 }
                 Operation::DeleteTag { scope, .. } => {
                     let Scope::Tag { tag_id } = scope else {
-                        return Err(SemioError::invalid("deleteTag expects Scope::Tag"));
+                        return Err(ComposeError::invalid("deleteTag expects Scope::Tag"));
                     };
                     ensure_tag(kit, tag_id).await?;
                     Ok(KitDiff(CanonicalKitDiff { tags: Some(TagsCollectionDiff { removed: vec![IdRef { id: tag_id.clone() }], ..Default::default() }), ..Default::default() }))
                 }
                 Operation::DeleteTags { scope, .. } => {
                     let Scope::Tags { tag_ids } = scope else {
-                        return Err(SemioError::invalid("deleteTags expects Scope::Tags"));
+                        return Err(ComposeError::invalid("deleteTags expects Scope::Tags"));
                     };
                     let mut removed = Vec::new();
                     for tag_id in tag_ids {
@@ -7167,10 +7167,10 @@ pub mod operation {
                 }
                 Operation::RenameTag { scope, input } => {
                     let Scope::Tag { tag_id } = scope else {
-                        return Err(SemioError::invalid("renameTag expects Scope::Tag"));
+                        return Err(ComposeError::invalid("renameTag expects Scope::Tag"));
                     };
                     let Input::Name { name } = input else {
-                        return Err(SemioError::invalid("renameTag expects Input::Name"));
+                        return Err(ComposeError::invalid("renameTag expects Input::Name"));
                     };
                     ensure_tag(kit, tag_id).await?;
                     Ok(KitDiff(CanonicalKitDiff {
@@ -7180,14 +7180,14 @@ pub mod operation {
                 }
                 Operation::CreateConcept { scope, input } => {
                     let Scope::CreateConcept { owner_id, concept_id, attribute_ids } = scope else {
-                        return Err(SemioError::invalid("createConcept expects Scope::CreateConcept"));
+                        return Err(ComposeError::invalid("createConcept expects Scope::CreateConcept"));
                     };
                     let Input::Concept { concept } = input else {
-                        return Err(SemioError::invalid("createConcept expects Input::Concept"));
+                        return Err(ComposeError::invalid("createConcept expects Input::Concept"));
                     };
                     kit.resolve_concept_owner_slot(owner_id).await?;
                     if kit.find_concept(concept_id).await.is_some() {
-                        return Err(SemioError::invalid(format!("Concept already exists: {}", concept_id.as_str())));
+                        return Err(ComposeError::invalid(format!("Concept already exists: {}", concept_id.as_str())));
                     }
                     validate_attribute_ids(concept.attributes.as_ref().map(|items| items.len()).unwrap_or_default(), attribute_ids)?;
                     Ok(KitDiff(CanonicalKitDiff {
@@ -7197,25 +7197,25 @@ pub mod operation {
                 }
                 Operation::DeleteConcept { scope, .. } => {
                     let Scope::Concept { concept_id } = scope else {
-                        return Err(SemioError::invalid("deleteConcept expects Scope::Concept"));
+                        return Err(ComposeError::invalid("deleteConcept expects Scope::Concept"));
                     };
                     ensure_concept(kit, concept_id).await?;
                     Ok(KitDiff(CanonicalKitDiff { concepts: Some(ConceptsCollectionDiff { removed: vec![IdRef { id: concept_id.clone() }], ..Default::default() }), ..Default::default() }))
                 }
                 Operation::CreateQuality { scope, input } => {
                     let Scope::CreateQuality { owner_id, quality_id, attribute_ids, benchmark_ids } = scope else {
-                        return Err(SemioError::invalid("createQuality expects Scope::CreateQuality"));
+                        return Err(ComposeError::invalid("createQuality expects Scope::CreateQuality"));
                     };
                     let Input::Quality { quality } = input else {
-                        return Err(SemioError::invalid("createQuality expects Input::Quality"));
+                        return Err(ComposeError::invalid("createQuality expects Input::Quality"));
                     };
                     kit.resolve_quality_owner_slot(owner_id).await?;
                     if kit.find_quality(quality_id).await.is_some() {
-                        return Err(SemioError::invalid(format!("Quality already exists: {}", quality_id.as_str())));
+                        return Err(ComposeError::invalid(format!("Quality already exists: {}", quality_id.as_str())));
                     }
                     validate_attribute_ids(quality.attributes.as_ref().map(|items| items.len()).unwrap_or_default(), attribute_ids)?;
                     if !benchmark_ids.is_empty() {
-                        return Err(SemioError::invalid("quality benchmark ids are not supported yet"));
+                        return Err(ComposeError::invalid("quality benchmark ids are not supported yet"));
                     }
                     Ok(KitDiff(CanonicalKitDiff {
                         qualities: Some(QualitiesCollectionDiff {
@@ -7227,20 +7227,20 @@ pub mod operation {
                 }
                 Operation::DeleteQuality { scope, .. } => {
                     let Scope::Quality { quality_id } = scope else {
-                        return Err(SemioError::invalid("deleteQuality expects Scope::Quality"));
+                        return Err(ComposeError::invalid("deleteQuality expects Scope::Quality"));
                     };
                     ensure_quality(kit, quality_id).await?;
                     Ok(KitDiff(CanonicalKitDiff { qualities: Some(QualitiesCollectionDiff { removed: vec![IdRef { id: quality_id.clone() }], ..Default::default() }), ..Default::default() }))
                 }
                 Operation::CreateFixedPiece { scope, input } => {
                     let Scope::CreateFixedPiece { design_id, piece_id, blueprint_id, attribute_ids } = scope else {
-                        return Err(SemioError::invalid("createFixedPiece expects Scope::CreateFixedPiece"));
+                        return Err(ComposeError::invalid("createFixedPiece expects Scope::CreateFixedPiece"));
                     };
                     let Input::FixedPiece { position, name, description } = input else {
-                        return Err(SemioError::invalid("createFixedPiece expects Input::FixedPiece"));
+                        return Err(ComposeError::invalid("createFixedPiece expects Input::FixedPiece"));
                     };
                     if !attribute_ids.is_empty() {
-                        return Err(SemioError::invalid("piece attribute ids are not supported yet"));
+                        return Err(ComposeError::invalid("piece attribute ids are not supported yet"));
                     }
                     Ok(KitDiff(CanonicalKitDiff {
                         designs: Some(DesignsCollectionDiff {
@@ -7262,7 +7262,7 @@ pub mod operation {
                 }
                 Operation::DeletePieceInDesign { scope, .. } => {
                     let Scope::PieceInDesign { design_id, piece_id } = scope else {
-                        return Err(SemioError::invalid("deletePieceInDesign expects Scope::PieceInDesign"));
+                        return Err(ComposeError::invalid("deletePieceInDesign expects Scope::PieceInDesign"));
                     };
                     ensure_piece(kit, design_id, piece_id).await?;
                     Ok(KitDiff(CanonicalKitDiff {
@@ -7278,10 +7278,10 @@ pub mod operation {
                 }
                 Operation::DragPieceInDesign { scope, input } => {
                     let Scope::PieceInDesign { design_id, piece_id } = scope else {
-                        return Err(SemioError::invalid("dragPieceInDesign expects Scope::PieceInDesign"));
+                        return Err(ComposeError::invalid("dragPieceInDesign expects Scope::PieceInDesign"));
                     };
                     let Input::Offset { offset } = input else {
-                        return Err(SemioError::invalid("dragPieceInDesign expects Input::Offset"));
+                        return Err(ComposeError::invalid("dragPieceInDesign expects Input::Offset"));
                     };
                     ensure_piece(kit, design_id, piece_id).await?;
                     Ok(KitDiff(CanonicalKitDiff {
@@ -7300,10 +7300,10 @@ pub mod operation {
                 }
                 Operation::DragPiecesInDesign { scope, input } => {
                     let Scope::PiecesInDesign { design_id, piece_ids } = scope else {
-                        return Err(SemioError::invalid("dragPiecesInDesign expects Scope::PiecesInDesign"));
+                        return Err(ComposeError::invalid("dragPiecesInDesign expects Scope::PiecesInDesign"));
                     };
                     let Input::Offset { offset } = input else {
-                        return Err(SemioError::invalid("dragPiecesInDesign expects Input::Offset"));
+                        return Err(ComposeError::invalid("dragPiecesInDesign expects Input::Offset"));
                     };
                     let mut modified = Vec::new();
                     for piece_id in piece_ids {
@@ -7320,7 +7320,7 @@ pub mod operation {
                 }
                 Operation::FixPieceInDesign { scope, .. } => {
                     let Scope::PieceInDesign { design_id, piece_id } = scope else {
-                        return Err(SemioError::invalid("fixPieceInDesign expects Scope::PieceInDesign"));
+                        return Err(ComposeError::invalid("fixPieceInDesign expects Scope::PieceInDesign"));
                     };
                     ensure_piece(kit, design_id, piece_id).await?;
                     Ok(KitDiff(CanonicalKitDiff {
@@ -7341,42 +7341,42 @@ pub mod operation {
         }
 
         /// Pure: read pre-state and return the ordered list of backward operations.
-        pub async fn to_backwards(&self, kit: &Arc<crate::kit::Kit>) -> Result<Vec<Operation>, SemioError> {
+        pub async fn to_backwards(&self, kit: &Arc<crate::kit::Kit>) -> Result<Vec<Operation>, ComposeError> {
             match self {
                 Operation::RenameKit { .. } => Ok(vec![Operation::RenameKit { scope: Scope::Kit, input: Input::Name { name: kit.name.read().await.clone() } }]),
                 Operation::ChangeDescription { scope, .. } => {
                     let Scope::Entity { entity_id } = scope else {
-                        return Err(SemioError::invalid("changeDescription expects Scope::Entity"));
+                        return Err(ComposeError::invalid("changeDescription expects Scope::Entity"));
                     };
                     Ok(vec![Operation::ChangeDescription { scope: Scope::Entity { entity_id: entity_id.clone() }, input: Input::Description { description: entity_description(kit, entity_id).await? } }])
                 }
                 Operation::ChangeIcon { scope, .. } => {
                     let Scope::Entity { entity_id } = scope else {
-                        return Err(SemioError::invalid("changeIcon expects Scope::Entity"));
+                        return Err(ComposeError::invalid("changeIcon expects Scope::Entity"));
                     };
                     Ok(vec![Operation::ChangeIcon { scope: Scope::Entity { entity_id: entity_id.clone() }, input: Input::Icon { icon: entity_icon(kit, entity_id).await? } }])
                 }
                 Operation::ChangeImage { scope, .. } => {
                     let Scope::Entity { entity_id } = scope else {
-                        return Err(SemioError::invalid("changeImage expects Scope::Entity"));
+                        return Err(ComposeError::invalid("changeImage expects Scope::Entity"));
                     };
                     Ok(vec![Operation::ChangeImage { scope: Scope::Entity { entity_id: entity_id.clone() }, input: Input::Image { image: entity_image(kit, entity_id).await? } }])
                 }
                 Operation::CreateTag { scope, .. } => {
                     let Scope::CreateTag { tag_id, .. } = scope else {
-                        return Err(SemioError::invalid("createTag expects Scope::CreateTag"));
+                        return Err(ComposeError::invalid("createTag expects Scope::CreateTag"));
                     };
                     Ok(vec![Operation::DeleteTag { scope: Scope::Tag { tag_id: tag_id.clone() }, input: Input::None }])
                 }
                 Operation::CreateTags { scope, .. } => {
                     let Scope::CreateTags { tag_ids, .. } = scope else {
-                        return Err(SemioError::invalid("createTags expects Scope::CreateTags"));
+                        return Err(ComposeError::invalid("createTags expects Scope::CreateTags"));
                     };
                     Ok(vec![Operation::DeleteTags { scope: Scope::Tags { tag_ids: tag_ids.clone() }, input: Input::None }])
                 }
                 Operation::DeleteTag { scope, .. } => {
                     let Scope::Tag { tag_id } = scope else {
-                        return Err(SemioError::invalid("deleteTag expects Scope::Tag"));
+                        return Err(ComposeError::invalid("deleteTag expects Scope::Tag"));
                     };
                     let tag = ensure_tag(kit, tag_id).await?;
                     let owner_id = tag_owner_id(kit, &tag).await?;
@@ -7388,7 +7388,7 @@ pub mod operation {
                 }
                 Operation::DeleteTags { scope, .. } => {
                     let Scope::Tags { tag_ids } = scope else {
-                        return Err(SemioError::invalid("deleteTags expects Scope::Tags"));
+                        return Err(ComposeError::invalid("deleteTags expects Scope::Tags"));
                     };
                     let mut tags = Vec::new();
                     let mut out_tag_ids = Vec::new();
@@ -7399,7 +7399,7 @@ pub mod operation {
                         let current_owner_id = tag_owner_id(kit, &tag).await?;
                         if let Some(existing_owner_id) = &owner_id {
                             if existing_owner_id != &current_owner_id {
-                                return Err(SemioError::invalid("deleteTags backwards requires a single owner id"));
+                                return Err(ComposeError::invalid("deleteTags backwards requires a single owner id"));
                             }
                         } else {
                             owner_id = Some(current_owner_id);
@@ -7413,7 +7413,7 @@ pub mod operation {
                 }
                 Operation::RenameTag { scope, .. } => {
                     let Scope::Tag { tag_id } = scope else {
-                        return Err(SemioError::invalid("renameTag expects Scope::Tag"));
+                        return Err(ComposeError::invalid("renameTag expects Scope::Tag"));
                     };
                     let tag = ensure_tag(kit, tag_id).await?;
                     let name = {
@@ -7425,13 +7425,13 @@ pub mod operation {
                 }
                 Operation::CreateConcept { scope, .. } => {
                     let Scope::CreateConcept { concept_id, .. } = scope else {
-                        return Err(SemioError::invalid("createConcept expects Scope::CreateConcept"));
+                        return Err(ComposeError::invalid("createConcept expects Scope::CreateConcept"));
                     };
                     Ok(vec![Operation::DeleteConcept { scope: Scope::Concept { concept_id: concept_id.clone() }, input: Input::None }])
                 }
                 Operation::DeleteConcept { scope, .. } => {
                     let Scope::Concept { concept_id } = scope else {
-                        return Err(SemioError::invalid("deleteConcept expects Scope::Concept"));
+                        return Err(ComposeError::invalid("deleteConcept expects Scope::Concept"));
                     };
                     let concept = ensure_concept(kit, concept_id).await?;
                     let owner_id = concept_owner_id(kit, &concept).await?;
@@ -7443,20 +7443,20 @@ pub mod operation {
                 }
                 Operation::CreateQuality { scope, .. } => {
                     let Scope::CreateQuality { quality_id, .. } = scope else {
-                        return Err(SemioError::invalid("createQuality expects Scope::CreateQuality"));
+                        return Err(ComposeError::invalid("createQuality expects Scope::CreateQuality"));
                     };
                     Ok(vec![Operation::DeleteQuality { scope: Scope::Quality { quality_id: quality_id.clone() }, input: Input::None }])
                 }
                 Operation::DeleteQuality { scope, .. } => {
                     let Scope::Quality { quality_id } = scope else {
-                        return Err(SemioError::invalid("deleteQuality expects Scope::Quality"));
+                        return Err(ComposeError::invalid("deleteQuality expects Scope::Quality"));
                     };
                     let quality = ensure_quality(kit, quality_id).await?;
                     let owner_id = quality_owner_id(kit, &quality).await?;
                     let attributes = quality.attributes.read().await.clone();
                     let benchmarks = quality.benchmarks.read().await.clone();
                     if !benchmarks.is_empty() {
-                        return Err(SemioError::invalid("deleteQuality backwards does not support benchmarks yet"));
+                        return Err(ComposeError::invalid("deleteQuality backwards does not support benchmarks yet"));
                     }
                     Ok(vec![Operation::CreateQuality {
                         scope: Scope::CreateQuality { owner_id, quality_id: quality.id.clone(), attribute_ids: attributes.iter().map(|attribute| attribute.id.clone()).collect(), benchmark_ids: Vec::new() },
@@ -7465,13 +7465,13 @@ pub mod operation {
                 }
                 Operation::CreateFixedPiece { scope, .. } => {
                     let Scope::CreateFixedPiece { design_id, piece_id, .. } = scope else {
-                        return Err(SemioError::invalid("createFixedPiece expects Scope::CreateFixedPiece"));
+                        return Err(ComposeError::invalid("createFixedPiece expects Scope::CreateFixedPiece"));
                     };
                     Ok(vec![Operation::DeletePieceInDesign { scope: Scope::PieceInDesign { design_id: design_id.clone(), piece_id: piece_id.clone() }, input: Input::None }])
                 }
                 Operation::DeletePieceInDesign { scope, .. } => {
                     let Scope::PieceInDesign { design_id, piece_id } = scope else {
-                        return Err(SemioError::invalid("deletePieceInDesign expects Scope::PieceInDesign"));
+                        return Err(ComposeError::invalid("deletePieceInDesign expects Scope::PieceInDesign"));
                     };
                     let piece = ensure_piece(kit, design_id, piece_id).await?;
                     let piece_id = piece.id.clone();
@@ -7497,25 +7497,25 @@ pub mod operation {
                 }
                 Operation::DragPieceInDesign { scope, input } => {
                     let Input::Offset { offset } = input else {
-                        return Err(SemioError::invalid("dragPieceInDesign expects Input::Offset"));
+                        return Err(ComposeError::invalid("dragPieceInDesign expects Input::Offset"));
                     };
                     let Scope::PieceInDesign { design_id, piece_id } = scope else {
-                        return Err(SemioError::invalid("dragPieceInDesign expects Scope::PieceInDesign"));
+                        return Err(ComposeError::invalid("dragPieceInDesign expects Scope::PieceInDesign"));
                     };
                     Ok(vec![Operation::DragPieceInDesign { scope: Scope::PieceInDesign { design_id: design_id.clone(), piece_id: piece_id.clone() }, input: Input::Offset { offset: OffsetInput { u: -offset.u, v: -offset.v } } }])
                 }
                 Operation::DragPiecesInDesign { scope, input } => {
                     let Input::Offset { offset } = input else {
-                        return Err(SemioError::invalid("dragPiecesInDesign expects Input::Offset"));
+                        return Err(ComposeError::invalid("dragPiecesInDesign expects Input::Offset"));
                     };
                     let Scope::PiecesInDesign { design_id, piece_ids } = scope else {
-                        return Err(SemioError::invalid("dragPiecesInDesign expects Scope::PiecesInDesign"));
+                        return Err(ComposeError::invalid("dragPiecesInDesign expects Scope::PiecesInDesign"));
                     };
                     Ok(vec![Operation::DragPiecesInDesign { scope: Scope::PiecesInDesign { design_id: design_id.clone(), piece_ids: piece_ids.clone() }, input: Input::Offset { offset: OffsetInput { u: -offset.u, v: -offset.v } } }])
                 }
                 Operation::FixPieceInDesign { scope, .. } => {
                     let Scope::PieceInDesign { design_id, piece_id } = scope else {
-                        return Err(SemioError::invalid("fixPieceInDesign expects Scope::PieceInDesign"));
+                        return Err(ComposeError::invalid("fixPieceInDesign expects Scope::PieceInDesign"));
                     };
                     let piece = ensure_piece(kit, design_id, piece_id).await?;
                     let connection_kind = {
@@ -7525,38 +7525,38 @@ pub mod operation {
                     drop(piece);
                     match connection_kind {
                         Some(crate::kit::design::piece::PieceConnectionKind::Fixed) => Ok(Vec::new()),
-                        _ => Err(SemioError::invalid("fixPieceInDesign backwards is unsupported for non-fixed pre-state")),
+                        _ => Err(ComposeError::invalid("fixPieceInDesign backwards is unsupported for non-fixed pre-state")),
                     }
                 }
             }
         }
     }
 
-    fn validate_attribute_ids(expected: usize, actual: &[Id]) -> Result<(), SemioError> {
+    fn validate_attribute_ids(expected: usize, actual: &[Id]) -> Result<(), ComposeError> {
         if expected != actual.len() {
-            return Err(SemioError::invalid(format!("attribute id count mismatch: expected {}, got {}", expected, actual.len())));
+            return Err(ComposeError::invalid(format!("attribute id count mismatch: expected {}, got {}", expected, actual.len())));
         }
         Ok(())
     }
 
-    async fn ensure_tag(kit: &Arc<crate::kit::Kit>, tag_id: &Id) -> Result<Arc<crate::meta::Tag>, SemioError> {
-        kit.find_tag(tag_id).await.ok_or_else(|| SemioError::not_found("Tag", tag_id.as_str()))
+    async fn ensure_tag(kit: &Arc<crate::kit::Kit>, tag_id: &Id) -> Result<Arc<crate::meta::Tag>, ComposeError> {
+        kit.find_tag(tag_id).await.ok_or_else(|| ComposeError::not_found("Tag", tag_id.as_str()))
     }
 
-    async fn ensure_concept(kit: &Arc<crate::kit::Kit>, concept_id: &Id) -> Result<Arc<crate::meta::Concept>, SemioError> {
-        kit.find_concept(concept_id).await.ok_or_else(|| SemioError::not_found("Concept", concept_id.as_str()))
+    async fn ensure_concept(kit: &Arc<crate::kit::Kit>, concept_id: &Id) -> Result<Arc<crate::meta::Concept>, ComposeError> {
+        kit.find_concept(concept_id).await.ok_or_else(|| ComposeError::not_found("Concept", concept_id.as_str()))
     }
 
-    async fn ensure_quality(kit: &Arc<crate::kit::Kit>, quality_id: &Id) -> Result<Arc<crate::meta::Quality>, SemioError> {
-        kit.find_quality(quality_id).await.ok_or_else(|| SemioError::not_found("Quality", quality_id.as_str()))
+    async fn ensure_quality(kit: &Arc<crate::kit::Kit>, quality_id: &Id) -> Result<Arc<crate::meta::Quality>, ComposeError> {
+        kit.find_quality(quality_id).await.ok_or_else(|| ComposeError::not_found("Quality", quality_id.as_str()))
     }
 
-    async fn ensure_piece(kit: &Arc<crate::kit::Kit>, design_id: &Id, piece_id: &Id) -> Result<Arc<crate::kit::design::piece::Piece>, SemioError> {
-        let design = kit.design_by_external_id(design_id).await.ok_or_else(|| SemioError::not_found("Design", design_id.as_str()))?;
-        design.piece_by_external_id(piece_id).await.ok_or_else(|| SemioError::not_found("Piece", piece_id.as_str()))
+    async fn ensure_piece(kit: &Arc<crate::kit::Kit>, design_id: &Id, piece_id: &Id) -> Result<Arc<crate::kit::design::piece::Piece>, ComposeError> {
+        let design = kit.design_by_external_id(design_id).await.ok_or_else(|| ComposeError::not_found("Design", design_id.as_str()))?;
+        design.piece_by_external_id(piece_id).await.ok_or_else(|| ComposeError::not_found("Piece", piece_id.as_str()))
     }
 
-    async fn entity_description(kit: &Arc<crate::kit::Kit>, entity_id: &Id) -> Result<Option<String>, SemioError> {
+    async fn entity_description(kit: &Arc<crate::kit::Kit>, entity_id: &Id) -> Result<Option<String>, ComposeError> {
         let kid = kit.workspace_kit_id().await;
         if entity_id == &kid || entity_id == &kit.id {
             return Ok(kit.description.read().await.clone());
@@ -7576,10 +7576,10 @@ pub mod operation {
         if let Some(design) = kit.design_by_external_id(entity_id).await {
             return Ok(design.description.read().await.clone());
         }
-        Err(SemioError::not_found("DescriptionEntity", entity_id.as_str()))
+        Err(ComposeError::not_found("DescriptionEntity", entity_id.as_str()))
     }
 
-    async fn entity_icon(kit: &Arc<crate::kit::Kit>, entity_id: &Id) -> Result<Option<String>, SemioError> {
+    async fn entity_icon(kit: &Arc<crate::kit::Kit>, entity_id: &Id) -> Result<Option<String>, ComposeError> {
         let kid = kit.workspace_kit_id().await;
         if entity_id == &kid || entity_id == &kit.id {
             return Ok(kit.icon.read().await.clone());
@@ -7599,10 +7599,10 @@ pub mod operation {
         if let Some(design) = kit.design_by_external_id(entity_id).await {
             return Ok(design.icon.read().await.clone());
         }
-        Err(SemioError::not_found("IconEntity", entity_id.as_str()))
+        Err(ComposeError::not_found("IconEntity", entity_id.as_str()))
     }
 
-    async fn entity_image(kit: &Arc<crate::kit::Kit>, entity_id: &Id) -> Result<Option<String>, SemioError> {
+    async fn entity_image(kit: &Arc<crate::kit::Kit>, entity_id: &Id) -> Result<Option<String>, ComposeError> {
         let kid = kit.workspace_kit_id().await;
         if entity_id == &kid || entity_id == &kit.id {
             return Ok(kit.image.read().await.clone());
@@ -7613,18 +7613,18 @@ pub mod operation {
         if let Some(design) = kit.design_by_external_id(entity_id).await {
             return Ok(design.image.read().await.clone());
         }
-        Err(SemioError::not_found("ImageEntity", entity_id.as_str()))
+        Err(ComposeError::not_found("ImageEntity", entity_id.as_str()))
     }
 
-    pub(crate) async fn tag_owner_id(kit: &Arc<crate::kit::Kit>, tag: &Arc<crate::meta::Tag>) -> Result<Id, SemioError> {
+    pub(crate) async fn tag_owner_id(kit: &Arc<crate::kit::Kit>, tag: &Arc<crate::meta::Tag>) -> Result<Id, ComposeError> {
         tag.owner.read().await.resolve_workspace_owner_id(kit).await
     }
 
-    pub(crate) async fn concept_owner_id(kit: &Arc<crate::kit::Kit>, concept: &Arc<crate::meta::Concept>) -> Result<Id, SemioError> {
+    pub(crate) async fn concept_owner_id(kit: &Arc<crate::kit::Kit>, concept: &Arc<crate::meta::Concept>) -> Result<Id, ComposeError> {
         concept.owner.read().await.resolve_workspace_owner_id(kit).await
     }
 
-    pub(crate) async fn quality_owner_id(kit: &Arc<crate::kit::Kit>, quality: &Arc<crate::meta::Quality>) -> Result<Id, SemioError> {
+    pub(crate) async fn quality_owner_id(kit: &Arc<crate::kit::Kit>, quality: &Arc<crate::meta::Quality>) -> Result<Id, ComposeError> {
         quality.owner.read().await.resolve_workspace_owner_id(kit).await
     }
 
@@ -7763,7 +7763,7 @@ pub mod operation {
 
     //#endregion 🧾 inputs
 
-    /// @emoji 🗄️ Backbone materialization: dev JSON file, local `.semio/` SQLite+blobs, or remote hub (reserved).
+    /// @emoji 🗄️ Backbone materialization: dev JSON file, local `.compose/` SQLite+blobs, or remote hub (reserved).
     #[derive(Clone, Copy, Debug, Eq, PartialEq, async_graphql::Enum)]
     #[graphql(name = "BackboneKind")]
     pub enum BackboneKind {
@@ -7777,7 +7777,7 @@ pub mod operation {
 
     impl BackboneKind {
         /// @emoji 🗺️ Parse `dev://`, `local://`, `remote://`, or legacy `file://` (dev file path).
-        pub fn from_uri(raw: &str) -> Result<(Self, String), crate::error::SemioError> {
+        pub fn from_uri(raw: &str) -> Result<(Self, String), crate::error::ComposeError> {
             let u = raw.trim();
             if let Some(rest) = u.strip_prefix("file://") {
                 return Ok((Self::Dev, rest.trim().to_string()));
@@ -7791,7 +7791,7 @@ pub mod operation {
             if let Some(rest) = u.strip_prefix("remote://") {
                 return Ok((Self::Remote, rest.trim().to_string()));
             }
-            Err(crate::error::SemioError::invalid("backbone uri must start with dev://, local://, remote://, or file://"))
+            Err(crate::error::ComposeError::invalid("backbone uri must start with dev://, local://, remote://, or file://"))
         }
     }
     //#endregion 🧭 graph workspace + backbone store kind (readable/writable selectors)
@@ -7811,7 +7811,7 @@ pub mod operation {
     //#endregion 📜  operation record (kit bundle / operation log contract)
 
     //#region 📦 diff
-    /// 📜 Ephemeral operation-side payload (id + summary) for [`CreatedFixedPiece`] / siblings — **not** the geometric `interface Diff` from `semio/client/schema/graphql/schema.golden.graphql` (`VectorDiff`, `PositionDiff`, …).
+    /// 📜 Ephemeral operation-side payload (id + summary) for [`CreatedFixedPiece`] / siblings — **not** the geometric `interface Diff` from `compose/client/schema/graphql/schema.golden.graphql` (`VectorDiff`, `PositionDiff`, …).
     #[derive(Clone, Debug, Default)]
     pub struct Diff {
         pub id: Id,
@@ -8177,7 +8177,7 @@ pub mod operation {
     pub struct CommandResponse {
         pub id: Id,
         pub ok: bool,
-        pub errors: Option<crate::error::SemioError>,
+        pub errors: Option<crate::error::ComposeError>,
         pub result: Option<ResultInterface>,
     }
 
@@ -8192,13 +8192,13 @@ pub mod operation {
             Self::ok_id(request_id).await
         }
 
-        pub async fn fail(err: crate::error::SemioError) -> Self {
+        pub async fn fail(err: crate::error::ComposeError) -> Self {
             let id = Id::new().await;
             Self { id, ok: false, errors: Some(err), result: None }
         }
 
         pub async fn fail_msg(message: impl Into<String>) -> Self {
-            Self::fail(crate::error::SemioError::invalid(message)).await
+            Self::fail(crate::error::ComposeError::invalid(message)).await
         }
 
         pub async fn stub_ok() -> Self {
@@ -8224,7 +8224,7 @@ pub mod operation {
         async fn ok(&self) -> bool {
             self.ok
         }
-        async fn errors(&self) -> Option<crate::error::SemioError> {
+        async fn errors(&self) -> Option<crate::error::ComposeError> {
             self.errors.clone()
         }
         async fn result(&self) -> Option<ResultInterface> {
@@ -8241,7 +8241,7 @@ pub mod operation {
         field(name = "owner", ty = "Option<crate::gql::interfaces::EntityInterface>"),
         field(name = "owns", ty = "Option<crate::gql::interfaces::EntityConnectionInterface>"),
         field(name = "ok", ty = "bool"),
-        field(name = "errors", ty = "Option<crate::error::SemioError>"),
+        field(name = "errors", ty = "Option<crate::error::ComposeError>"),
         field(name = "result", ty = "Option<crate::operation::ResultInterface>")
     )]
     pub enum ResponseInterface {
@@ -8368,7 +8368,7 @@ pub mod kit_graph_engine {
     use std::collections::BTreeMap;
     use std::sync::Arc;
 
-    use crate::error::SemioError;
+    use crate::error::ComposeError;
     use crate::hash::h;
     use crate::id::Id;
     use crate::kit;
@@ -8424,7 +8424,7 @@ pub mod kit_graph_engine {
     }
 
     /// @emoji 🧩 Record one forward [`Operation`] (plus backwards) on `graph` and return deterministic projection metadata.
-    pub async fn apply_kit_operation(graph: &Arc<Graph>, workspace_id: &Id, transaction_id: &Id, operation: Operation) -> Result<AppliedOperation, SemioError> {
+    pub async fn apply_kit_operation(graph: &Arc<Graph>, workspace_id: &Id, transaction_id: &Id, operation: Operation) -> Result<AppliedOperation, ComposeError> {
         let ws = graph.resolve_workspace_id(workspace_id).await;
         let op_kind = operation.kind();
         let payload_digest = operation.stable_payload_digest();
@@ -8457,7 +8457,7 @@ pub mod kit_graph_engine {
 //#region 🗄️ kit backbone persistence (native)
 
 pub mod kit_backbone {
-    //! @emoji 🗄️ Dev JSON + local `.semio/` kit backbones: atomic single-file writes, multi-db SQLite + blobs dir, replay via [`kit_graph_engine::apply_kit_operation`].
+    //! @emoji 🗄️ Dev JSON + local `.compose/` kit backbones: atomic single-file writes, multi-db SQLite + blobs dir, replay via [`kit_graph_engine::apply_kit_operation`].
     //! 🌐 The bundle wire format (`DevBackboneBundleDoc` + DTOs + `from_graph` / `hydrate_into_graph`) is wasm-compatible —
     //! sketchpad's WASM runtime serializes / hydrates the metabolism-shaped JSON directly. The SQLite + filesystem-IO parts
     //! (atomic writes, `DevJsonAttached`, `LocalAttached`) are native-only and gated below.
@@ -8470,13 +8470,13 @@ pub mod kit_backbone {
     #[cfg(not(target_arch = "wasm32"))]
     use rusqlite::Connection;
 
-    use crate::error::SemioError;
+    use crate::error::ComposeError;
     use crate::id::Id;
     use crate::vcs::Graph;
 
     //#region 🧾 wire format
 
-    /// @emoji 🪪 On-disk schema marker stamped at the bundle root; matches `semio/assets/semio/metabolism.new.kit.semio.json`.
+    /// @emoji 🪪 On-disk schema marker stamped at the bundle root; matches `compose/assets/compose/metabolism.new.kit.compose.json`.
     pub const KIT_STORE_BUNDLE_SCHEMA: &str = "🎆26🌙06⬆️1";
 
     /// @emoji 🧾 Blake3 hex (empty-input digest) used on the wire until per-entity merkle is filled.
@@ -8484,7 +8484,7 @@ pub mod kit_backbone {
     /// @emoji 🧾 ISO timestamp used when a checkpoint has no persisted time yet.
     pub const KIT_BUNDLE_CHECKPOINT_TIMESTAMP_STUB: &str = "2020-01-01T00:00:00.000Z";
 
-    /// @emoji 📎 Resolve kit snapshot collection slices whether serialized as a legacy JSON array or a `{ hash, items }` block (`metabolism.new.kit.semio.json`).
+    /// @emoji 📎 Resolve kit snapshot collection slices whether serialized as a legacy JSON array or a `{ hash, items }` block (`metabolism.new.kit.compose.json`).
     pub(crate) fn json_array_or_block_items_ref(v: &serde_json::Value) -> Option<&Vec<serde_json::Value>> {
         match v {
             serde_json::Value::Array(a) => Some(a),
@@ -8515,7 +8515,7 @@ pub mod kit_backbone {
     }
 
     //#region 🔖 dev_backbone_canonical_kit_diff_wire_json
-    /// @emoji 📦 Serializes [`crate::operation::CanonicalKitDiff`] for `kitDiff` on persisted operation steps (sparse object; aligns with `metabolism.kit.diff.semio.json` collection keys).
+    /// @emoji 📦 Serializes [`crate::operation::CanonicalKitDiff`] for `kitDiff` on persisted operation steps (sparse object; aligns with `metabolism.kit.diff.compose.json` collection keys).
     pub(crate) fn canonical_kit_diff_to_wire_json(d: &crate::operation::CanonicalKitDiff) -> serde_json::Value {
         use serde_json::{Map, Value};
         let mut root = Map::new();
@@ -8968,26 +8968,26 @@ pub mod kit_backbone {
         crate::id::Id::from(s)
     }
 
-    pub(crate) fn position_input_from_json(v: &serde_json::Value) -> Result<crate::geom::PositionInput, SemioError> {
-        let f2 = |o: &serde_json::Map<String, serde_json::Value>, a: &str, b: &str| -> Result<(f64, f64), SemioError> {
-            let u = o.get(a).and_then(|x| x.as_f64()).ok_or_else(|| SemioError::invalid("position field"))?;
-            let v = o.get(b).and_then(|x| x.as_f64()).ok_or_else(|| SemioError::invalid("position field"))?;
+    pub(crate) fn position_input_from_json(v: &serde_json::Value) -> Result<crate::geom::PositionInput, ComposeError> {
+        let f2 = |o: &serde_json::Map<String, serde_json::Value>, a: &str, b: &str| -> Result<(f64, f64), ComposeError> {
+            let u = o.get(a).and_then(|x| x.as_f64()).ok_or_else(|| ComposeError::invalid("position field"))?;
+            let v = o.get(b).and_then(|x| x.as_f64()).ok_or_else(|| ComposeError::invalid("position field"))?;
             Ok((u, v))
         };
-        let f3 = |o: &serde_json::Map<String, serde_json::Value>| -> Result<(f64, f64, f64), SemioError> {
-            let x = o.get("x").and_then(|x| x.as_f64()).ok_or_else(|| SemioError::invalid("position field"))?;
-            let y = o.get("y").and_then(|x| x.as_f64()).ok_or_else(|| SemioError::invalid("position field"))?;
-            let z = o.get("z").and_then(|x| x.as_f64()).ok_or_else(|| SemioError::invalid("position field"))?;
+        let f3 = |o: &serde_json::Map<String, serde_json::Value>| -> Result<(f64, f64, f64), ComposeError> {
+            let x = o.get("x").and_then(|x| x.as_f64()).ok_or_else(|| ComposeError::invalid("position field"))?;
+            let y = o.get("y").and_then(|x| x.as_f64()).ok_or_else(|| ComposeError::invalid("position field"))?;
+            let z = o.get("z").and_then(|x| x.as_f64()).ok_or_else(|| ComposeError::invalid("position field"))?;
             Ok((x, y, z))
         };
-        let center_o = v.get("center").and_then(|x| x.as_object()).ok_or_else(|| SemioError::invalid("position.center"))?;
+        let center_o = v.get("center").and_then(|x| x.as_object()).ok_or_else(|| ComposeError::invalid("position.center"))?;
         let (u, vv) = f2(center_o, "u", "v")?;
-        let plane_o = v.get("plane").and_then(|x| x.as_object()).ok_or_else(|| SemioError::invalid("position.plane"))?;
-        let origin = plane_o.get("origin").and_then(|x| x.as_object()).ok_or_else(|| SemioError::invalid("plane.origin"))?;
+        let plane_o = v.get("plane").and_then(|x| x.as_object()).ok_or_else(|| ComposeError::invalid("position.plane"))?;
+        let origin = plane_o.get("origin").and_then(|x| x.as_object()).ok_or_else(|| ComposeError::invalid("plane.origin"))?;
         let (ox, oy, oz) = f3(origin)?;
-        let xa = plane_o.get("xAxis").or_else(|| plane_o.get("x_axis")).and_then(|x| x.as_object()).ok_or_else(|| SemioError::invalid("plane.xAxis"))?;
+        let xa = plane_o.get("xAxis").or_else(|| plane_o.get("x_axis")).and_then(|x| x.as_object()).ok_or_else(|| ComposeError::invalid("plane.xAxis"))?;
         let (xx, xy, xz) = f3(xa)?;
-        let ya = plane_o.get("yAxis").or_else(|| plane_o.get("y_axis")).and_then(|x| x.as_object()).ok_or_else(|| SemioError::invalid("plane.yAxis"))?;
+        let ya = plane_o.get("yAxis").or_else(|| plane_o.get("y_axis")).and_then(|x| x.as_object()).ok_or_else(|| ComposeError::invalid("plane.yAxis"))?;
         let (yx, yy, yz) = f3(ya)?;
         Ok(crate::geom::PositionInput {
             center: crate::geom::CoordinateInput { u, v: vv },
@@ -8995,36 +8995,36 @@ pub mod kit_backbone {
         })
     }
 
-    fn kit_scope_from_json(v: &serde_json::Value) -> Result<crate::operation::Scope, SemioError> {
+    fn kit_scope_from_json(v: &serde_json::Value) -> Result<crate::operation::Scope, ComposeError> {
         use crate::operation::Scope;
         if let Some(s) = v.as_str() {
             if s == "Kit" {
                 return Ok(Scope::Kit);
             }
         }
-        let o = v.as_object().ok_or_else(|| SemioError::invalid("scope object"))?;
-        let (k, inner) = o.iter().next().ok_or_else(|| SemioError::invalid("empty scope"))?;
-        let m = inner.as_object().ok_or_else(|| SemioError::invalid("scope inner"))?;
+        let o = v.as_object().ok_or_else(|| ComposeError::invalid("scope object"))?;
+        let (k, inner) = o.iter().next().ok_or_else(|| ComposeError::invalid("empty scope"))?;
+        let m = inner.as_object().ok_or_else(|| ComposeError::invalid("scope inner"))?;
         Ok(match k.as_str() {
-            "Entity" => Scope::Entity { entity_id: id_from_str(m.get("entity_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("entity_id"))?) },
-            "Tag" => Scope::Tag { tag_id: id_from_str(m.get("tag_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("tag_id"))?) },
+            "Entity" => Scope::Entity { entity_id: id_from_str(m.get("entity_id").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("entity_id"))?) },
+            "Tag" => Scope::Tag { tag_id: id_from_str(m.get("tag_id").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("tag_id"))?) },
             "Tags" => {
-                let arr = m.get("tag_ids").and_then(|x| x.as_array()).ok_or_else(|| SemioError::invalid("tag_ids"))?;
+                let arr = m.get("tag_ids").and_then(|x| x.as_array()).ok_or_else(|| ComposeError::invalid("tag_ids"))?;
                 let mut tag_ids = Vec::with_capacity(arr.len());
                 for x in arr {
-                    tag_ids.push(id_from_str(x.as_str().ok_or_else(|| SemioError::invalid("tag id"))?));
+                    tag_ids.push(id_from_str(x.as_str().ok_or_else(|| ComposeError::invalid("tag id"))?));
                 }
                 Scope::Tags { tag_ids }
             }
-            "Concept" => Scope::Concept { concept_id: id_from_str(m.get("concept_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("concept_id"))?) },
-            "Quality" => Scope::Quality { quality_id: id_from_str(m.get("quality_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("quality_id"))?) },
+            "Concept" => Scope::Concept { concept_id: id_from_str(m.get("concept_id").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("concept_id"))?) },
+            "Quality" => Scope::Quality { quality_id: id_from_str(m.get("quality_id").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("quality_id"))?) },
             "CreateTag" => Scope::CreateTag {
-                owner_id: id_from_str(m.get("owner_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("owner_id"))?),
-                tag_id: id_from_str(m.get("tag_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("tag_id"))?),
+                owner_id: id_from_str(m.get("owner_id").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("owner_id"))?),
+                tag_id: id_from_str(m.get("tag_id").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("tag_id"))?),
                 attribute_ids: m.get("attribute_ids").and_then(|x| x.as_array()).map(|a| a.iter().map(|x| id_from_str(x.as_str().unwrap_or(""))).collect()).unwrap_or_default(),
             },
             "CreateTags" => Scope::CreateTags {
-                owner_id: id_from_str(m.get("owner_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("owner_id"))?),
+                owner_id: id_from_str(m.get("owner_id").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("owner_id"))?),
                 tag_ids: m.get("tag_ids").and_then(|x| x.as_array()).map(|a| a.iter().map(|x| id_from_str(x.as_str().unwrap_or(""))).collect()).unwrap_or_default(),
                 attribute_ids: m
                     .get("attribute_ids")
@@ -9033,36 +9033,36 @@ pub mod kit_backbone {
                     .unwrap_or_default(),
             },
             "CreateConcept" => Scope::CreateConcept {
-                owner_id: id_from_str(m.get("owner_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("owner_id"))?),
-                concept_id: id_from_str(m.get("concept_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("concept_id"))?),
+                owner_id: id_from_str(m.get("owner_id").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("owner_id"))?),
+                concept_id: id_from_str(m.get("concept_id").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("concept_id"))?),
                 attribute_ids: m.get("attribute_ids").and_then(|x| x.as_array()).map(|a| a.iter().map(|x| id_from_str(x.as_str().unwrap_or(""))).collect()).unwrap_or_default(),
             },
             "CreateQuality" => Scope::CreateQuality {
-                owner_id: id_from_str(m.get("owner_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("owner_id"))?),
-                quality_id: id_from_str(m.get("quality_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("quality_id"))?),
+                owner_id: id_from_str(m.get("owner_id").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("owner_id"))?),
+                quality_id: id_from_str(m.get("quality_id").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("quality_id"))?),
                 attribute_ids: m.get("attribute_ids").and_then(|x| x.as_array()).map(|a| a.iter().map(|x| id_from_str(x.as_str().unwrap_or(""))).collect()).unwrap_or_default(),
                 benchmark_ids: m.get("benchmark_ids").and_then(|x| x.as_array()).map(|a| a.iter().map(|x| id_from_str(x.as_str().unwrap_or(""))).collect()).unwrap_or_default(),
             },
             "CreateFixedPiece" => Scope::CreateFixedPiece {
-                design_id: id_from_str(m.get("design_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("design_id"))?),
-                piece_id: id_from_str(m.get("piece_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("piece_id"))?),
-                blueprint_id: id_from_str(m.get("blueprint_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("blueprint_id"))?),
+                design_id: id_from_str(m.get("design_id").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("design_id"))?),
+                piece_id: id_from_str(m.get("piece_id").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("piece_id"))?),
+                blueprint_id: id_from_str(m.get("blueprint_id").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("blueprint_id"))?),
                 attribute_ids: m.get("attribute_ids").and_then(|x| x.as_array()).map(|a| a.iter().map(|x| id_from_str(x.as_str().unwrap_or(""))).collect()).unwrap_or_default(),
             },
             "PieceInDesign" => Scope::PieceInDesign {
-                design_id: id_from_str(m.get("design_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("design_id"))?),
-                piece_id: id_from_str(m.get("piece_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("piece_id"))?),
+                design_id: id_from_str(m.get("design_id").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("design_id"))?),
+                piece_id: id_from_str(m.get("piece_id").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("piece_id"))?),
             },
             "PiecesInDesign" => Scope::PiecesInDesign {
-                design_id: id_from_str(m.get("design_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("design_id"))?),
+                design_id: id_from_str(m.get("design_id").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("design_id"))?),
                 piece_ids: m.get("piece_ids").and_then(|x| x.as_array()).map(|a| a.iter().map(|x| id_from_str(x.as_str().unwrap_or(""))).collect()).unwrap_or_default(),
             },
-            other => return Err(SemioError::invalid(format!("unknown scope `{other}`"))),
+            other => return Err(ComposeError::invalid(format!("unknown scope `{other}`"))),
         })
     }
 
-    fn attribute_input_from_json(v: &serde_json::Value) -> Result<crate::meta::AttributeInput, SemioError> {
-        let m = v.as_object().ok_or_else(|| SemioError::invalid("AttributeInput"))?;
+    fn attribute_input_from_json(v: &serde_json::Value) -> Result<crate::meta::AttributeInput, ComposeError> {
+        let m = v.as_object().ok_or_else(|| ComposeError::invalid("AttributeInput"))?;
         Ok(crate::meta::AttributeInput {
             key: m.get("key").and_then(|x| x.as_str()).unwrap_or("").to_string(),
             value: m.get("value").and_then(|x| x.as_str()).map(|s| s.to_string()),
@@ -9070,34 +9070,34 @@ pub mod kit_backbone {
         })
     }
 
-    fn kit_input_from_json(v: &serde_json::Value) -> Result<crate::operation::Input, SemioError> {
+    fn kit_input_from_json(v: &serde_json::Value) -> Result<crate::operation::Input, ComposeError> {
         use crate::operation::Input;
         if let Some(s) = v.as_str() {
             if s == "None" {
                 return Ok(Input::None);
             }
         }
-        let o = v.as_object().ok_or_else(|| SemioError::invalid("input object"))?;
-        let (k, inner) = o.iter().next().ok_or_else(|| SemioError::invalid("empty input"))?;
+        let o = v.as_object().ok_or_else(|| ComposeError::invalid("input object"))?;
+        let (k, inner) = o.iter().next().ok_or_else(|| ComposeError::invalid("empty input"))?;
         Ok(match k.as_str() {
             "Name" => {
-                let m = inner.as_object().ok_or_else(|| SemioError::invalid("Name"))?;
+                let m = inner.as_object().ok_or_else(|| ComposeError::invalid("Name"))?;
                 Input::Name { name: m.get("name").and_then(|x| x.as_str()).unwrap_or("").to_string() }
             }
             "Description" => {
-                let m = inner.as_object().ok_or_else(|| SemioError::invalid("Description"))?;
+                let m = inner.as_object().ok_or_else(|| ComposeError::invalid("Description"))?;
                 Input::Description { description: m.get("description").and_then(|x| x.as_str()).map(|s| s.to_string()) }
             }
             "Icon" => {
-                let m = inner.as_object().ok_or_else(|| SemioError::invalid("Icon"))?;
+                let m = inner.as_object().ok_or_else(|| ComposeError::invalid("Icon"))?;
                 Input::Icon { icon: m.get("icon").and_then(|x| x.as_str()).map(|s| s.to_string()) }
             }
             "Image" => {
-                let m = inner.as_object().ok_or_else(|| SemioError::invalid("Image"))?;
+                let m = inner.as_object().ok_or_else(|| ComposeError::invalid("Image"))?;
                 Input::Image { image: m.get("image").and_then(|x| x.as_str()).map(|s| s.to_string()) }
             }
             "Tag" => {
-                let m = inner.get("tag").and_then(|x| x.as_object()).ok_or_else(|| SemioError::invalid("tag"))?;
+                let m = inner.get("tag").and_then(|x| x.as_object()).ok_or_else(|| ComposeError::invalid("tag"))?;
                 let attrs = m.get("attributes").and_then(|x| x.as_array()).map(|a| a.iter().map(attribute_input_from_json).collect::<Result<Vec<_>, _>>()).transpose()?;
                 Input::Tag {
                     tag: crate::meta::TagInput {
@@ -9110,10 +9110,10 @@ pub mod kit_backbone {
                 }
             }
             "Tags" => {
-                let arr = inner.get("tags").and_then(|x| x.as_array()).ok_or_else(|| SemioError::invalid("tags"))?;
+                let arr = inner.get("tags").and_then(|x| x.as_array()).ok_or_else(|| ComposeError::invalid("tags"))?;
                 let mut tags = Vec::new();
                 for t in arr {
-                    let m = t.as_object().ok_or_else(|| SemioError::invalid("tag entity"))?;
+                    let m = t.as_object().ok_or_else(|| ComposeError::invalid("tag entity"))?;
                     let attrs = m.get("attributes").and_then(|x| x.as_array()).map(|a| a.iter().map(attribute_input_from_json).collect::<Result<Vec<_>, _>>()).transpose()?;
                     tags.push(crate::meta::TagInput {
                         name: m.get("name").and_then(|x| x.as_str()).unwrap_or("").to_string(),
@@ -9126,7 +9126,7 @@ pub mod kit_backbone {
                 Input::Tags { tags }
             }
             "Concept" => {
-                let m = inner.get("concept").and_then(|x| x.as_object()).ok_or_else(|| SemioError::invalid("concept"))?;
+                let m = inner.get("concept").and_then(|x| x.as_object()).ok_or_else(|| ComposeError::invalid("concept"))?;
                 let attrs = m.get("attributes").and_then(|x| x.as_array()).map(|a| a.iter().map(attribute_input_from_json).collect::<Result<Vec<_>, _>>()).transpose()?;
                 Input::Concept {
                     concept: crate::meta::ConceptInput {
@@ -9139,7 +9139,7 @@ pub mod kit_backbone {
                 }
             }
             "Quality" => {
-                let m = inner.get("quality").and_then(|x| x.as_object()).ok_or_else(|| SemioError::invalid("quality"))?;
+                let m = inner.get("quality").and_then(|x| x.as_object()).ok_or_else(|| ComposeError::invalid("quality"))?;
                 let attrs = m.get("attributes").and_then(|x| x.as_array()).map(|a| a.iter().map(attribute_input_from_json).collect::<Result<Vec<_>, _>>()).transpose()?;
                 Input::Quality {
                     quality: crate::meta::QualityInput {
@@ -9154,25 +9154,25 @@ pub mod kit_backbone {
                 }
             }
             "FixedPiece" => {
-                let m = inner.as_object().ok_or_else(|| SemioError::invalid("FixedPiece"))?;
-                let position = position_input_from_json(m.get("position").ok_or_else(|| SemioError::invalid("position"))?)?;
+                let m = inner.as_object().ok_or_else(|| ComposeError::invalid("FixedPiece"))?;
+                let position = position_input_from_json(m.get("position").ok_or_else(|| ComposeError::invalid("position"))?)?;
                 Input::FixedPiece { position, name: m.get("name").and_then(|x| x.as_str()).map(|s| s.to_string()), description: m.get("description").and_then(|x| x.as_str()).map(|s| s.to_string()) }
             }
             "Offset" => {
-                let m = inner.get("offset").and_then(|x| x.as_object()).ok_or_else(|| SemioError::invalid("offset"))?;
+                let m = inner.get("offset").and_then(|x| x.as_object()).ok_or_else(|| ComposeError::invalid("offset"))?;
                 Input::Offset { offset: crate::geom::OffsetInput { u: m.get("u").and_then(|x| x.as_f64()).unwrap_or(0.0), v: m.get("v").and_then(|x| x.as_f64()).unwrap_or(0.0) } }
             }
-            other => return Err(SemioError::invalid(format!("unknown input `{other}`"))),
+            other => return Err(ComposeError::invalid(format!("unknown input `{other}`"))),
         })
     }
 
-    pub(crate) fn kit_operation_from_step_json(v: &serde_json::Value) -> Result<crate::operation::Operation, SemioError> {
+    pub(crate) fn kit_operation_from_step_json(v: &serde_json::Value) -> Result<crate::operation::Operation, ComposeError> {
         use crate::operation::Operation;
-        let o = v.as_object().ok_or_else(|| SemioError::invalid("kit operation"))?;
-        let (k, inner) = o.iter().next().ok_or_else(|| SemioError::invalid("empty kit operation"))?;
-        let body = inner.as_object().ok_or_else(|| SemioError::invalid("kit operation body"))?;
-        let scope = kit_scope_from_json(body.get("scope").ok_or_else(|| SemioError::invalid("scope"))?)?;
-        let input = kit_input_from_json(body.get("input").ok_or_else(|| SemioError::invalid("input"))?)?;
+        let o = v.as_object().ok_or_else(|| ComposeError::invalid("kit operation"))?;
+        let (k, inner) = o.iter().next().ok_or_else(|| ComposeError::invalid("empty kit operation"))?;
+        let body = inner.as_object().ok_or_else(|| ComposeError::invalid("kit operation body"))?;
+        let scope = kit_scope_from_json(body.get("scope").ok_or_else(|| ComposeError::invalid("scope"))?)?;
+        let input = kit_input_from_json(body.get("input").ok_or_else(|| ComposeError::invalid("input"))?)?;
         Ok(match k.as_str() {
             "RenameKit" => Operation::RenameKit { scope, input },
             "ChangeDescription" => Operation::ChangeDescription { scope, input },
@@ -9192,14 +9192,14 @@ pub mod kit_backbone {
             "DragPieceInDesign" => Operation::DragPieceInDesign { scope, input },
             "DragPiecesInDesign" => Operation::DragPiecesInDesign { scope, input },
             "FixPieceInDesign" => Operation::FixPieceInDesign { scope, input },
-            other => return Err(SemioError::invalid(format!("unknown kit operation `{other}`"))),
+            other => return Err(ComposeError::invalid(format!("unknown kit operation `{other}`"))),
         })
     }
 
-    async fn legacy_created_fixed_piece_to_kit_op(input: &serde_json::Value) -> Result<crate::operation::Operation, SemioError> {
-        let design_id = id_from_str(input.get("designId").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("designId"))?);
-        let blueprint_id = id_from_str(input.get("blueprintId").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("blueprintId"))?);
-        let position = position_input_from_json(input.get("position").ok_or_else(|| SemioError::invalid("position"))?)?;
+    async fn legacy_created_fixed_piece_to_kit_op(input: &serde_json::Value) -> Result<crate::operation::Operation, ComposeError> {
+        let design_id = id_from_str(input.get("designId").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("designId"))?);
+        let blueprint_id = id_from_str(input.get("blueprintId").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("blueprintId"))?);
+        let position = position_input_from_json(input.get("position").ok_or_else(|| ComposeError::invalid("position"))?)?;
         let name = input.get("name").and_then(|x| x.as_str()).map(|s| s.to_string());
         let description = input.get("description").and_then(|x| x.as_str()).map(|s| s.to_string());
         let piece_id = crate::id::Id::new().await;
@@ -9209,7 +9209,7 @@ pub mod kit_backbone {
         })
     }
 
-    pub(crate) async fn kit_operation_from_stored(kind: &str, input: &serde_json::Value) -> Result<crate::operation::Operation, SemioError> {
+    pub(crate) async fn kit_operation_from_stored(kind: &str, input: &serde_json::Value) -> Result<crate::operation::Operation, ComposeError> {
         if kind == "createdFixedPiece" {
             return legacy_created_fixed_piece_to_kit_op(input).await;
         }
@@ -9320,7 +9320,7 @@ pub mod kit_backbone {
         serde_json::Value::Object(root)
     }
 
-    pub(crate) async fn hydrate_kit_from_initial_projection_value(kit: &std::sync::Arc<crate::kit::Kit>, json: &serde_json::Value) -> Result<(), crate::error::SemioError> {
+    pub(crate) async fn hydrate_kit_from_initial_projection_value(kit: &std::sync::Arc<crate::kit::Kit>, json: &serde_json::Value) -> Result<(), crate::error::ComposeError> {
         if let Some(n) = json.get("name").and_then(|v| v.as_str()) {
             *kit.name.write().await = n.to_string();
         }
@@ -9399,7 +9399,7 @@ pub mod kit_backbone {
     }
 
     /// @emoji 🪢 Hydrates [`crate::kit::design::Design`] pieces from one `designs[]` entity (`pieces` block or array).
-    pub(crate) async fn hydrate_design_pieces_from_snapshot_value(des: &std::sync::Arc<crate::kit::design::Design>, kit: &std::sync::Arc<crate::kit::Kit>, d_json: &serde_json::Value) -> Result<(), crate::error::SemioError> {
+    pub(crate) async fn hydrate_design_pieces_from_snapshot_value(des: &std::sync::Arc<crate::kit::design::Design>, kit: &std::sync::Arc<crate::kit::Kit>, d_json: &serde_json::Value) -> Result<(), crate::error::ComposeError> {
         use std::collections::HashMap;
         {
             let mut pcs = des.pieces.write().await;
@@ -9409,15 +9409,15 @@ pub mod kit_backbone {
         let plist = d_json.get("pieces").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned().unwrap_or_default();
         let owner_des = std::sync::Arc::downgrade(des);
         for pj in plist {
-            let pid = pj.get("id").and_then(|x| x.as_str()).ok_or_else(|| crate::error::SemioError::invalid("design piece missing id"))?;
+            let pid = pj.get("id").and_then(|x| x.as_str()).ok_or_else(|| crate::error::ComposeError::invalid("design piece missing id"))?;
             let type_id_raw = match pj.get("type") {
                 Some(serde_json::Value::String(s)) => s.as_str(),
-                Some(serde_json::Value::Object(map)) => map.get("id").and_then(|x| x.as_str()).ok_or_else(|| crate::error::SemioError::invalid("design piece type object missing id"))?,
+                Some(serde_json::Value::Object(map)) => map.get("id").and_then(|x| x.as_str()).ok_or_else(|| crate::error::ComposeError::invalid("design piece type object missing id"))?,
                 _ => {
-                    return Err(crate::error::SemioError::invalid("design piece missing type (string id or { id })"));
+                    return Err(crate::error::ComposeError::invalid("design piece missing type (string id or { id })"));
                 }
             };
-            let ty = kit.types.read().await.iter().find(|t| t.id.as_str() == type_id_raw).cloned().ok_or_else(|| crate::error::SemioError::not_found("Type", type_id_raw))?;
+            let ty = kit.types.read().await.iter().find(|t| t.id.as_str() == type_id_raw).cloned().ok_or_else(|| crate::error::ComposeError::not_found("Type", type_id_raw))?;
             let pose = pj.get("pose");
             let plane_val = pj.get("plane").cloned().or_else(|| pose.and_then(|p| p.get("plane")).cloned()).unwrap_or_else(|| serde_json::json!({}));
             let center_val = pj.get("center").cloned().or_else(|| pose.and_then(|p| p.get("center")).cloned()).unwrap_or_else(|| serde_json::json!({"u":0.0,"v":0.0}));
@@ -9435,7 +9435,7 @@ pub mod kit_backbone {
         Ok(())
     }
 
-    pub async fn graph_new_overlay_from_initial_projection_json(json: serde_json::Value) -> Result<std::sync::Arc<crate::vcs::Graph>, crate::error::SemioError> {
+    pub async fn graph_new_overlay_from_initial_projection_json(json: serde_json::Value) -> Result<std::sync::Arc<crate::vcs::Graph>, crate::error::ComposeError> {
         let g = crate::vcs::Graph::new().await;
         {
             let mut slot = g.mutable_kit.write().await;
@@ -9477,7 +9477,7 @@ pub mod kit_backbone {
         pub hash: String,
     }
 
-    /// @emoji 📦 Top-level on-disk kit store bundle (mirrors `metabolism.new.kit.semio.json`: `schema / wip / authoritative / stage / conflicts / blobs`; each graph snapshot holds kit seed JSON under `initialKit`).
+    /// @emoji 📦 Top-level on-disk kit store bundle (mirrors `metabolism.new.kit.compose.json`: `schema / wip / authoritative / stage / conflicts / blobs`; each graph snapshot holds kit seed JSON under `initialKit`).
     #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
     pub struct DevBackboneBundleDoc {
         pub schema: String,
@@ -9876,10 +9876,10 @@ pub mod kit_backbone {
         //#endregion 📦 bundle file blobs (content-addressed outside kit projection JSON)
 
         /// @emoji 🩻 Hydrate the live graph from a previously-persisted bundle JSON and keep version changes available for  replay.
-        pub async fn hydrate_into_graph(graph: &std::sync::Arc<crate::vcs::Graph>, json: &str) -> Result<Self, SemioError> {
-            let bundle: Self = serde_json::from_str(json).map_err(|e| SemioError::invalid(format!("bundle parse: {e}")))?;
+        pub async fn hydrate_into_graph(graph: &std::sync::Arc<crate::vcs::Graph>, json: &str) -> Result<Self, ComposeError> {
+            let bundle: Self = serde_json::from_str(json).map_err(|e| ComposeError::invalid(format!("bundle parse: {e}")))?;
             if bundle.schema != KIT_STORE_BUNDLE_SCHEMA {
-                return Err(SemioError::invalid(format!("bundle schema mismatch: {} != {}", bundle.schema, KIT_STORE_BUNDLE_SCHEMA)));
+                return Err(ComposeError::invalid(format!("bundle schema mismatch: {} != {}", bundle.schema, KIT_STORE_BUNDLE_SCHEMA)));
             }
             let mut wip_initial_kit_json = bundle.wip.initial_kit.clone();
             Self::merge_bundle_file_blobs_into_kit_json(&mut wip_initial_kit_json, &bundle.blobs.items);
@@ -9976,7 +9976,7 @@ pub mod kit_backbone {
         }
     }
 
-    /// @emoji 📜 Internal value type used by replay + the SQLite local-`.semio/` path; not part of the on-disk dev-json wire format.
+    /// @emoji 📜 Internal value type used by replay + the SQLite local-`.compose/` path; not part of the on-disk dev-json wire format.
     #[derive(Clone, Debug)]
     pub struct StoredOperation {
         pub workspace_id: String,
@@ -9994,28 +9994,28 @@ pub mod kit_backbone {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn filesystem_path_from_uri(uri: &str) -> Result<PathBuf, SemioError> {
+    pub fn filesystem_path_from_uri(uri: &str) -> Result<PathBuf, ComposeError> {
         let u = uri.trim();
         let p = if let Some(r) = u.strip_prefix("file://") { r } else { u };
         if p.is_empty() {
-            return Err(SemioError::invalid("empty backbone connectionUri"));
+            return Err(ComposeError::invalid("empty backbone connectionUri"));
         }
         Ok(PathBuf::from(p))
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    fn resolve_local_semio_root(project_or_dot_semio: &Path) -> PathBuf {
-        if project_or_dot_semio.file_name().and_then(|s| s.to_str()) == Some(".semio") {
-            project_or_dot_semio.to_path_buf()
+    fn resolve_local_compose_root(project_or_dot_compose: &Path) -> PathBuf {
+        if project_or_dot_compose.file_name().and_then(|s| s.to_str()) == Some(".compose") {
+            project_or_dot_compose.to_path_buf()
         } else {
-            project_or_dot_semio.join(".semio")
+            project_or_dot_compose.join(".compose")
         }
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    fn init_local_dot_semio_layout(semio_root: &Path) -> Result<(), SemioError> {
-        std::fs::create_dir_all(semio_root).map_err(|e| SemioError::invalid(format!("create .semio root: {e}")))?;
-        std::fs::create_dir_all(semio_root.join("blobs")).map_err(|e| SemioError::invalid(format!("create blobs dir: {e}")))?;
+    fn init_local_dot_compose_layout(compose_root: &Path) -> Result<(), ComposeError> {
+        std::fs::create_dir_all(compose_root).map_err(|e| ComposeError::invalid(format!("create .compose root: {e}")))?;
+        std::fs::create_dir_all(compose_root.join("blobs")).map_err(|e| ComposeError::invalid(format!("create blobs dir: {e}")))?;
         let ddl = r#"
 CREATE TABLE IF NOT EXISTS _operation_log (
   seq INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -10030,67 +10030,67 @@ CREATE TABLE IF NOT EXISTS conflict_init_slot (
 );
 "#;
         for name in ["wip.db", "staged.db", "authoritative.db", "conflicts.db"] {
-            let db = semio_root.join(name);
-            let conn = Connection::open(&db).map_err(|e| SemioError::invalid(format!("open {name}: {e}")))?;
-            conn.execute_batch(ddl).map_err(|e| SemioError::invalid(format!("init {name}: {e}")))?;
-            ensure_operation_log_kit_diff_json_column(&conn).map_err(|e| SemioError::invalid(format!("migrate {name}: {e}")))?;
+            let db = compose_root.join(name);
+            let conn = Connection::open(&db).map_err(|e| ComposeError::invalid(format!("open {name}: {e}")))?;
+            conn.execute_batch(ddl).map_err(|e| ComposeError::invalid(format!("init {name}: {e}")))?;
+            ensure_operation_log_kit_diff_json_column(&conn).map_err(|e| ComposeError::invalid(format!("migrate {name}: {e}")))?;
         }
         Ok(())
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    fn ensure_operation_log_kit_diff_json_column(conn: &Connection) -> Result<(), SemioError> {
-        let mut stmt = conn.prepare("PRAGMA table_info(_operation_log)").map_err(|e| SemioError::invalid(format!("pragma: {e}")))?;
+    fn ensure_operation_log_kit_diff_json_column(conn: &Connection) -> Result<(), ComposeError> {
+        let mut stmt = conn.prepare("PRAGMA table_info(_operation_log)").map_err(|e| ComposeError::invalid(format!("pragma: {e}")))?;
         let mut has = false;
-        let mut entities = stmt.query([]).map_err(|e| SemioError::invalid(format!("pragma query: {e}")))?;
-        while let Some(entity) = entities.next().map_err(|e| SemioError::invalid(format!("pragma entity: {e}")))? {
-            let name: String = entity.get(1).map_err(|e| SemioError::invalid(format!("pragma name: {e}")))?;
+        let mut entities = stmt.query([]).map_err(|e| ComposeError::invalid(format!("pragma query: {e}")))?;
+        while let Some(entity) = entities.next().map_err(|e| ComposeError::invalid(format!("pragma entity: {e}")))? {
+            let name: String = entity.get(1).map_err(|e| ComposeError::invalid(format!("pragma name: {e}")))?;
             if name == "kit_diff_json" {
                 has = true;
                 break;
             }
         }
         if !has {
-            conn.execute("ALTER TABLE _operation_log ADD COLUMN kit_diff_json TEXT", []).map_err(|e| SemioError::invalid(format!("alter add kit_diff_json: {e}")))?;
+            conn.execute("ALTER TABLE _operation_log ADD COLUMN kit_diff_json TEXT", []).map_err(|e| ComposeError::invalid(format!("alter add kit_diff_json: {e}")))?;
         }
         Ok(())
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    fn db_file_for_child(semio_root: &Path, child_label: &'static str) -> Result<PathBuf, SemioError> {
+    fn db_file_for_child(compose_root: &Path, child_label: &'static str) -> Result<PathBuf, ComposeError> {
         let name = match child_label {
             "wip" => "wip.db",
             "auth" => "authoritative.db",
-            other => return Err(SemioError::invalid(format!("unknown child label `{other}` for local backbone"))),
+            other => return Err(ComposeError::invalid(format!("unknown child label `{other}` for local backbone"))),
         };
-        Ok(semio_root.join(name))
+        Ok(compose_root.join(name))
     }
     //#endregion 🧭 paths + uri
 
     //#region ✍️ atomic json (native only)
     #[cfg(not(target_arch = "wasm32"))]
-    fn atomic_write_bundle(path: &Path, doc: &DevBackboneBundleDoc) -> Result<(), SemioError> {
-        let parent = path.parent().ok_or_else(|| SemioError::invalid("kit-store bundle path has no parent directory"))?;
-        std::fs::create_dir_all(parent).map_err(|e| SemioError::invalid(format!("create kit-store bundle parent: {e}")))?;
-        let tmp = path.with_extension("tmp.semio-write");
-        let body = serde_json::to_string_pretty(doc).map_err(|e| SemioError::invalid(e.to_string()))?;
-        std::fs::write(&tmp, body).map_err(|e| SemioError::invalid(format!("write temp kit-store bundle: {e}")))?;
-        std::fs::rename(&tmp, path).map_err(|e| SemioError::invalid(format!("rename kit-store bundle: {e}")))?;
+    fn atomic_write_bundle(path: &Path, doc: &DevBackboneBundleDoc) -> Result<(), ComposeError> {
+        let parent = path.parent().ok_or_else(|| ComposeError::invalid("kit-store bundle path has no parent directory"))?;
+        std::fs::create_dir_all(parent).map_err(|e| ComposeError::invalid(format!("create kit-store bundle parent: {e}")))?;
+        let tmp = path.with_extension("tmp.compose-write");
+        let body = serde_json::to_string_pretty(doc).map_err(|e| ComposeError::invalid(e.to_string()))?;
+        std::fs::write(&tmp, body).map_err(|e| ComposeError::invalid(format!("write temp kit-store bundle: {e}")))?;
+        std::fs::rename(&tmp, path).map_err(|e| ComposeError::invalid(format!("rename kit-store bundle: {e}")))?;
         Ok(())
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    fn read_or_init_bundle(path: &Path) -> Result<DevBackboneBundleDoc, SemioError> {
+    fn read_or_init_bundle(path: &Path) -> Result<DevBackboneBundleDoc, ComposeError> {
         if !path.exists() {
             return Ok(DevBackboneBundleDoc::template());
         }
-        let s = std::fs::read_to_string(path).map_err(|e| SemioError::invalid(format!("read kit-store bundle: {e}")))?;
-        serde_json::from_str(&s).map_err(|e| SemioError::invalid(format!("parse kit-store bundle: {e}")))
+        let s = std::fs::read_to_string(path).map_err(|e| ComposeError::invalid(format!("read kit-store bundle: {e}")))?;
+        serde_json::from_str(&s).map_err(|e| ComposeError::invalid(format!("parse kit-store bundle: {e}")))
     }
     //#endregion ✍️ atomic json
 
     //#region 🔁 replay
-    pub async fn replay_stored_operations(graph: &Arc<Graph>, operations: &[StoredOperation]) -> Result<(), SemioError> {
+    pub async fn replay_stored_operations(graph: &Arc<Graph>, operations: &[StoredOperation]) -> Result<(), ComposeError> {
         graph.mutable_kit.read().await.clear_piece_projections_for_backbone_replay().await;
         for operation in operations {
             let workspace_id = Id::from(operation.workspace_id.as_str());
@@ -10112,12 +10112,12 @@ CREATE TABLE IF NOT EXISTS conflict_init_slot (
     #[cfg(not(target_arch = "wasm32"))]
     impl DevBackboneAttached {
         /// @emoji 📥 Read the on-disk bundle (or fresh template if file is absent).
-        pub fn read_bundle(&self) -> Result<DevBackboneBundleDoc, SemioError> {
+        pub fn read_bundle(&self) -> Result<DevBackboneBundleDoc, ComposeError> {
             read_or_init_bundle(&self.path)
         }
 
         /// @emoji ➕ Append a forward  operation step into the targeted unsaved version change and atomically rewrite the bundle.
-        pub fn append_operation(&mut self, workspace_id: &Id, transaction_id: &Id, kind: &str, input: &serde_json::Value, kit_diff: Option<&serde_json::Value>) -> Result<(), SemioError> {
+        pub fn append_operation(&mut self, workspace_id: &Id, transaction_id: &Id, kind: &str, input: &serde_json::Value, kit_diff: Option<&serde_json::Value>) -> Result<(), ComposeError> {
             let mut doc = self.read_bundle()?;
             let _ = workspace_id;
             doc.append_unsaved_edit_with_origin(transaction_id.as_str(), None, kind, input.clone(), kit_diff.cloned());
@@ -10127,40 +10127,40 @@ CREATE TABLE IF NOT EXISTS conflict_init_slot (
 
     #[cfg(not(target_arch = "wasm32"))]
     pub struct LocalBackboneAttached {
-        _semio_root: PathBuf,
+        _compose_root: PathBuf,
         db_path: PathBuf,
         connection_uri_normalized: String,
     }
 
     #[cfg(not(target_arch = "wasm32"))]
     impl LocalBackboneAttached {
-        pub fn append_operation(&mut self, workspace_id: &Id, transaction_id: &Id, kind: &str, input: &serde_json::Value, kit_diff: Option<&serde_json::Value>) -> Result<(), SemioError> {
-            let conn = Connection::open(&self.db_path).map_err(|e| SemioError::invalid(format!("sqlite append: {e}")))?;
+        pub fn append_operation(&mut self, workspace_id: &Id, transaction_id: &Id, kind: &str, input: &serde_json::Value, kit_diff: Option<&serde_json::Value>) -> Result<(), ComposeError> {
+            let conn = Connection::open(&self.db_path).map_err(|e| ComposeError::invalid(format!("sqlite append: {e}")))?;
             ensure_operation_log_kit_diff_json_column(&conn)?;
-            let input_json = serde_json::to_string(input).map_err(|e| SemioError::invalid(e.to_string()))?;
+            let input_json = serde_json::to_string(input).map_err(|e| ComposeError::invalid(e.to_string()))?;
             let kit_json = match kit_diff {
-                Some(v) => Some(serde_json::to_string(v).map_err(|e| SemioError::invalid(e.to_string()))?),
+                Some(v) => Some(serde_json::to_string(v).map_err(|e| ComposeError::invalid(e.to_string()))?),
                 None => None,
             };
             conn.execute("INSERT INTO _operation_log (draft_id, transaction_id, kind, input_json, kit_diff_json) VALUES (?1, ?2, ?3, ?4, ?5)", rusqlite::params![workspace_id.as_str(), transaction_id.as_str(), kind, input_json, kit_json])
-                .map_err(|e| SemioError::invalid(format!("sqlite insert: {e}")))?;
+                .map_err(|e| ComposeError::invalid(format!("sqlite insert: {e}")))?;
             Ok(())
         }
 
-        fn load_operations(&self) -> Result<Vec<StoredOperation>, SemioError> {
-            let conn = Connection::open(&self.db_path).map_err(|e| SemioError::invalid(format!("sqlite read: {e}")))?;
+        fn load_operations(&self) -> Result<Vec<StoredOperation>, ComposeError> {
+            let conn = Connection::open(&self.db_path).map_err(|e| ComposeError::invalid(format!("sqlite read: {e}")))?;
             ensure_operation_log_kit_diff_json_column(&conn)?;
-            let mut stmt = conn.prepare("SELECT draft_id, transaction_id, kind, input_json, kit_diff_json FROM _operation_log ORDER BY seq ASC").map_err(|e| SemioError::invalid(format!("sqlite prepare: {e}")))?;
-            let mut entities = stmt.query([]).map_err(|e| SemioError::invalid(format!("sqlite query: {e}")))?;
+            let mut stmt = conn.prepare("SELECT draft_id, transaction_id, kind, input_json, kit_diff_json FROM _operation_log ORDER BY seq ASC").map_err(|e| ComposeError::invalid(format!("sqlite prepare: {e}")))?;
+            let mut entities = stmt.query([]).map_err(|e| ComposeError::invalid(format!("sqlite query: {e}")))?;
             let mut out = Vec::new();
-            while let Some(entity) = entities.next().map_err(|e| SemioError::invalid(format!("sqlite entity: {e}")))? {
-                let draft_id_col: String = entity.get(0).map_err(|e| SemioError::invalid(format!("sqlite col: {e}")))?;
-                let transaction_id: String = entity.get(1).map_err(|e| SemioError::invalid(format!("sqlite col: {e}")))?;
-                let kind: String = entity.get(2).map_err(|e| SemioError::invalid(format!("sqlite col: {e}")))?;
-                let input_json: String = entity.get(3).map_err(|e| SemioError::invalid(format!("sqlite col: {e}")))?;
-                let input: serde_json::Value = serde_json::from_str(&input_json).map_err(|e| SemioError::invalid(e.to_string()))?;
+            while let Some(entity) = entities.next().map_err(|e| ComposeError::invalid(format!("sqlite entity: {e}")))? {
+                let draft_id_col: String = entity.get(0).map_err(|e| ComposeError::invalid(format!("sqlite col: {e}")))?;
+                let transaction_id: String = entity.get(1).map_err(|e| ComposeError::invalid(format!("sqlite col: {e}")))?;
+                let kind: String = entity.get(2).map_err(|e| ComposeError::invalid(format!("sqlite col: {e}")))?;
+                let input_json: String = entity.get(3).map_err(|e| ComposeError::invalid(format!("sqlite col: {e}")))?;
+                let input: serde_json::Value = serde_json::from_str(&input_json).map_err(|e| ComposeError::invalid(e.to_string()))?;
                 let kit_diff: Option<serde_json::Value> = match entity.get::<_, Option<String>>(4) {
-                    Ok(Some(s)) if !s.is_empty() => Some(serde_json::from_str(&s).map_err(|e| SemioError::invalid(e.to_string()))?),
+                    Ok(Some(s)) if !s.is_empty() => Some(serde_json::from_str(&s).map_err(|e| ComposeError::invalid(e.to_string()))?),
                     _ => None,
                 };
                 out.push(StoredOperation { workspace_id: draft_id_col, transaction_id, kind, input, kit_diff });
@@ -10177,27 +10177,27 @@ CREATE TABLE IF NOT EXISTS conflict_init_slot (
 
     #[cfg(not(target_arch = "wasm32"))]
     impl AttachedBackbone {
-        pub async fn mount_and_replay(connection_uri: &str, child_label: &'static str, graph: &Arc<Graph>) -> Result<Self, SemioError> {
+        pub async fn mount_and_replay(connection_uri: &str, child_label: &'static str, graph: &Arc<Graph>) -> Result<Self, ComposeError> {
             let norm = normalize_connection_uri(connection_uri);
             let (bone_kind, remainder) = crate::operation::BackboneKind::from_uri(&norm)?;
             let path = filesystem_path_from_uri(remainder.trim())?;
             let mut this = match bone_kind {
                 crate::operation::BackboneKind::Dev => Self::Dev(DevBackboneAttached { path, connection_uri_normalized: norm }),
                 crate::operation::BackboneKind::Local => {
-                    let semio_root = resolve_local_semio_root(&path);
-                    init_local_dot_semio_layout(&semio_root)?;
-                    let db_path = db_file_for_child(&semio_root, child_label)?;
-                    Self::Local(LocalBackboneAttached { _semio_root: semio_root, db_path, connection_uri_normalized: norm })
+                    let compose_root = resolve_local_compose_root(&path);
+                    init_local_dot_compose_layout(&compose_root)?;
+                    let db_path = db_file_for_child(&compose_root, child_label)?;
+                    Self::Local(LocalBackboneAttached { _compose_root: compose_root, db_path, connection_uri_normalized: norm })
                 }
                 crate::operation::BackboneKind::Remote => {
-                    return Err(SemioError::invalid("remote backbone attach is not implemented yet"));
+                    return Err(ComposeError::invalid("remote backbone attach is not implemented yet"));
                 }
             };
             this.replay_into_graph(graph).await?;
             Ok(this)
         }
 
-        pub async fn replay_into_graph(&mut self, graph: &Arc<Graph>) -> Result<(), SemioError> {
+        pub async fn replay_into_graph(&mut self, graph: &Arc<Graph>) -> Result<(), ComposeError> {
             let operations: Vec<StoredOperation> = match self {
                 AttachedBackbone::Dev(d) => d.read_bundle()?.wip_operations(),
                 AttachedBackbone::Local(l) => l.load_operations()?,
@@ -10205,7 +10205,7 @@ CREATE TABLE IF NOT EXISTS conflict_init_slot (
             replay_stored_operations(graph, &operations).await
         }
 
-        pub fn append_operation(&mut self, workspace_id: &Id, transaction_id: &Id, kind: &str, input: &serde_json::Value, kit_diff: Option<&serde_json::Value>) -> Result<(), SemioError> {
+        pub fn append_operation(&mut self, workspace_id: &Id, transaction_id: &Id, kind: &str, input: &serde_json::Value, kit_diff: Option<&serde_json::Value>) -> Result<(), ComposeError> {
             match self {
                 AttachedBackbone::Dev(d) => d.append_operation(workspace_id, transaction_id, kind, input, kit_diff),
                 AttachedBackbone::Local(l) => l.append_operation(workspace_id, transaction_id, kind, input, kit_diff),
@@ -10221,20 +10221,20 @@ CREATE TABLE IF NOT EXISTS conflict_init_slot (
     }
     //#endregion 🧩 attached variants
 
-    /// @emoji 📑 US-001 golden JSON: top-level `operations` array, or legacy key `ops` (see `kit-store.golden.ops.semio.json`).
-    pub fn golden_operation_records_ref(src: &serde_json::Value) -> Result<&Vec<serde_json::Value>, SemioError> {
-        src.get("operations").and_then(|v| v.as_array()).or_else(|| src.get("ops").and_then(|v| v.as_array())).ok_or_else(|| SemioError::invalid("golden operations missing `operations` or `ops` array"))
+    /// @emoji 📑 US-001 golden JSON: top-level `operations` array, or legacy key `ops` (see `kit-store.golden.ops.compose.json`).
+    pub fn golden_operation_records_ref(src: &serde_json::Value) -> Result<&Vec<serde_json::Value>, ComposeError> {
+        src.get("operations").and_then(|v| v.as_array()).or_else(|| src.get("ops").and_then(|v| v.as_array())).ok_or_else(|| ComposeError::invalid("golden operations missing `operations` or `ops` array"))
     }
 
-    /// @emoji 🧪 Build [`StoredOperation`] entities from `kit-store.golden.ops.semio.json` (US-001 fixture) for persistence tests.
-    pub fn stored_operations_from_golden_operations_json(src: &serde_json::Value) -> Result<Vec<StoredOperation>, SemioError> {
-        let workspace_id = src["draftId"].as_str().ok_or_else(|| SemioError::invalid("golden operations missing draftId"))?.to_string();
-        let transaction_id = src["transactionId"].as_str().ok_or_else(|| SemioError::invalid("golden operations missing transactionId"))?.to_string();
+    /// @emoji 🧪 Build [`StoredOperation`] entities from `kit-store.golden.ops.compose.json` (US-001 fixture) for persistence tests.
+    pub fn stored_operations_from_golden_operations_json(src: &serde_json::Value) -> Result<Vec<StoredOperation>, ComposeError> {
+        let workspace_id = src["draftId"].as_str().ok_or_else(|| ComposeError::invalid("golden operations missing draftId"))?.to_string();
+        let transaction_id = src["transactionId"].as_str().ok_or_else(|| ComposeError::invalid("golden operations missing transactionId"))?.to_string();
         let arr = golden_operation_records_ref(src)?;
         let mut out = Vec::new();
         for rec in arr {
-            let kind = rec["kind"].as_str().ok_or_else(|| SemioError::invalid("operation.kind"))?;
-            let input = rec.get("input").cloned().ok_or_else(|| SemioError::invalid("operation.input"))?;
+            let kind = rec["kind"].as_str().ok_or_else(|| ComposeError::invalid("operation.kind"))?;
+            let input = rec.get("input").cloned().ok_or_else(|| ComposeError::invalid("operation.input"))?;
             let kit_diff = rec.get("kitDiff").cloned();
             out.push(StoredOperation { workspace_id: workspace_id.clone(), transaction_id: transaction_id.clone(), kind: kind.to_string(), input, kit_diff });
         }
@@ -10253,7 +10253,7 @@ pub mod event {
     use async_broadcast::{InactiveReceiver, Receiver, Sender};
     use async_lock::Mutex as AsyncMutex;
 
-    use crate::error::SemioError;
+    use crate::error::ComposeError;
     use crate::operation;
 
     /// 🌐 Broadcast envelope for every observable thing the control plane emits.
@@ -10261,7 +10261,7 @@ pub mod event {
     pub enum Event {
         CommandSucceeded(operation::CommandReceipt),
         OperationSucceeded(operation::OperationKind),
-        OperationFailed(SemioError),
+        OperationFailed(ComposeError),
         CreatedFixedPiece(Arc<operation::CreatedFixedPiece>),
         FixedPiece(Arc<operation::FixedPiece>),
         DraggedPiece(Arc<operation::DraggedPiece>),
@@ -10357,7 +10357,7 @@ pub mod worker {
     use async_channel::{Receiver, Sender};
     use async_lock::RwLock;
 
-    use crate::error::SemioError;
+    use crate::error::ComposeError;
     use crate::event::{Event, EventBus};
     use crate::id::Id;
     use crate::operation::{Command, CommandReceipt, CreatedFixedPiece, CreatedFixedPieceInput, Diff, Input, Operation, OperationInterface, RenamedKit, RenamedKitInput as OperationRenamedKitInput, Scope};
@@ -10382,7 +10382,7 @@ pub mod worker {
             }
         }
 
-        pub async fn mount(&self, graph: &Arc<Graph>, child_label: &'static str, uri: &str) -> Result<(), SemioError> {
+        pub async fn mount(&self, graph: &Arc<Graph>, child_label: &'static str, uri: &str) -> Result<(), ComposeError> {
             #[cfg(not(target_arch = "wasm32"))]
             {
                 let bone = crate::kit_backbone::AttachedBackbone::mount_and_replay(uri, child_label, graph).await?;
@@ -10392,18 +10392,18 @@ pub mod worker {
             #[cfg(target_arch = "wasm32")]
             {
                 let _ = (graph, child_label, uri);
-                Err(SemioError::invalid("Attachable kit backbones use native disk (atomic JSON / SQLite); drive them from native hosts over GraphQL IPC instead of WASM."))
+                Err(ComposeError::invalid("Attachable kit backbones use native disk (atomic JSON / SQLite); drive them from native hosts over GraphQL IPC instead of WASM."))
             }
         }
 
-        pub async fn detach_matching(&self, uri: &str) -> Result<(), SemioError> {
+        pub async fn detach_matching(&self, uri: &str) -> Result<(), ComposeError> {
             #[cfg(not(target_arch = "wasm32"))]
             {
                 let norm = crate::kit_backbone::normalize_connection_uri(uri);
                 let mut guard = self.slot.write().await;
                 match &*guard {
                     Some(current) if current.normalized_connection_uri() != norm => {
-                        return Err(SemioError::invalid("`connectionUri` did not match the attached backbone; detach aborted to avoid confusing persistence drift."));
+                        return Err(ComposeError::invalid("`connectionUri` did not match the attached backbone; detach aborted to avoid confusing persistence drift."));
                     }
                     _ => {}
                 }
@@ -10417,7 +10417,7 @@ pub mod worker {
             }
         }
 
-        pub async fn record_kit_operation_if_attached(&self, workspace_id: &Id, transaction_id: &Id, operation: &crate::operation::Operation, kit_diff_wire: Option<serde_json::Value>) -> Result<(), SemioError> {
+        pub async fn record_kit_operation_if_attached(&self, workspace_id: &Id, transaction_id: &Id, operation: &crate::operation::Operation, kit_diff_wire: Option<serde_json::Value>) -> Result<(), ComposeError> {
             #[cfg(not(target_arch = "wasm32"))]
             {
                 let mut guard = self.slot.write().await;
@@ -10496,8 +10496,8 @@ pub mod worker {
             })
         }
 
-        /// 🛰️ WASM/host bootstrap: hydrate WIP [`Graph`] from `@semio/js` kit JSON snapshot; authoritative line stays mint-empty.
-        pub async fn spawn_wip_overlay_from_initial_kit_projection_json(json: serde_json::Value) -> Result<Arc<Self>, crate::error::SemioError> {
+        /// 🛰️ WASM/host bootstrap: hydrate WIP [`Graph`] from `@compose/js` kit JSON snapshot; authoritative line stays mint-empty.
+        pub async fn spawn_wip_overlay_from_initial_kit_projection_json(json: serde_json::Value) -> Result<Arc<Self>, crate::error::ComposeError> {
             let bus = EventBus::new(1024);
 
             let wip_graph = Graph::new_overlay_from_initial_kit_projection_json(json).await?;
@@ -10530,10 +10530,10 @@ pub mod worker {
         }
 
         /// @emoji 🛰️ `POST /install` bootstrap: full `DevBackboneBundleDoc` JSON (schema `KIT_STORE_BUNDLE_SCHEMA`) or bare `initialKit` projection (same contract as wasm `bootstrap_runtime_from_json_value`).
-        pub async fn spawn_from_install_json_value(json: serde_json::Value) -> Result<Arc<Self>, crate::error::SemioError> {
+        pub async fn spawn_from_install_json_value(json: serde_json::Value) -> Result<Arc<Self>, crate::error::ComposeError> {
             if json.get("schema").and_then(|s| s.as_str()) == Some(crate::kit_backbone::KIT_STORE_BUNDLE_SCHEMA) {
                 let rt = ParentStore::spawn().await;
-                let s = serde_json::to_string(&json).map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                let s = serde_json::to_string(&json).map_err(|e| crate::error::ComposeError::invalid(e.to_string()))?;
                 crate::kit_backbone::DevBackboneBundleDoc::hydrate_into_graph(&rt.wip_graph, &s).await?;
                 Ok(rt)
             } else {
@@ -10625,7 +10625,7 @@ pub mod worker {
             }
         }
 
-        pub async fn apply(&self, cmd: Command) -> Result<(), SemioError> {
+        pub async fn apply(&self, cmd: Command) -> Result<(), ComposeError> {
             match cmd {
                 Command::ApplyOperation { request_id, workspace_id, transaction_id, operation } => self.apply_kit_operation(request_id, workspace_id, transaction_id, operation).await,
                 Command::BackboneAttach { connection_uri, .. } => self.backbone.mount(&self.graph, self.label, &connection_uri).await,
@@ -10633,7 +10633,7 @@ pub mod worker {
             }
         }
 
-        async fn apply_kit_operation(&self, request_id: Id, workspace_id: Id, transaction_id: Id, operation: Operation) -> Result<(), SemioError> {
+        async fn apply_kit_operation(&self, request_id: Id, workspace_id: Id, transaction_id: Id, operation: Operation) -> Result<(), ComposeError> {
             let graph = self.graph.clone();
             let ws = graph.resolve_workspace_id(&workspace_id).await;
             let before_kit = graph.materialized_kit_for_workspace(&ws).await;
@@ -10645,12 +10645,12 @@ pub mod worker {
             self.backbone.record_kit_operation_if_attached(&workspace_id, &transaction_id, &operation, Some(kit_wire)).await?;
             let after_kit = graph.materialized_kit_for_workspace(&ws).await;
 
-            let tx_edit = graph.workspace_saved_and_unsaved_edits(&ws).await.and_then(|(s, u)| s.into_iter().chain(u).find(|t| t.id == transaction_id)).ok_or_else(|| SemioError::not_found("Edit", transaction_id.as_str()))?;
+            let tx_edit = graph.workspace_saved_and_unsaved_edits(&ws).await.and_then(|(s, u)| s.into_iter().chain(u).find(|t| t.id == transaction_id)).ok_or_else(|| ComposeError::not_found("Edit", transaction_id.as_str()))?;
 
             match &operation {
                 Operation::RenameKit { input, .. } => {
                     let Input::Name { name } = input else {
-                        return Err(SemioError::invalid("renameKit expects Input::Name"));
+                        return Err(ComposeError::invalid("renameKit expects Input::Name"));
                     };
                     let diff = Diff {
                         id: Id::new().await,
@@ -10665,13 +10665,13 @@ pub mod worker {
                 Operation::CreateFixedPiece { scope, input } => {
                     let persisted = operation.clone();
                     let Scope::CreateFixedPiece { design_id, piece_id, blueprint_id, .. } = scope else {
-                        return Err(SemioError::invalid("createFixedPiece expects Scope::CreateFixedPiece"));
+                        return Err(ComposeError::invalid("createFixedPiece expects Scope::CreateFixedPiece"));
                     };
                     let Input::FixedPiece { position, name, description } = input else {
-                        return Err(SemioError::invalid("createFixedPiece expects Input::FixedPiece"));
+                        return Err(ComposeError::invalid("createFixedPiece expects Input::FixedPiece"));
                     };
-                    let design = after_kit.design_by_external_id(design_id).await.ok_or_else(|| SemioError::not_found("Design", design_id.as_str()))?;
-                    let piece = design.piece_by_external_id(piece_id).await.ok_or_else(|| SemioError::not_found("Piece", piece_id.as_str()))?;
+                    let design = after_kit.design_by_external_id(design_id).await.ok_or_else(|| ComposeError::not_found("Design", design_id.as_str()))?;
+                    let piece = design.piece_by_external_id(piece_id).await.ok_or_else(|| ComposeError::not_found("Piece", piece_id.as_str()))?;
                     let payload_digest = persisted.stable_payload_digest();
                     let fp_before = crate::kit_graph_engine::projection_fingerprint_for_kit(before_kit.as_ref()).await;
                     let fp_after = crate::kit_graph_engine::projection_fingerprint_for_kit(after_kit.as_ref()).await;
@@ -10855,15 +10855,15 @@ pub mod gql {
             }
 
             /// @emoji 🪪 Resolve owning [`crate::id::Id`] for normalized kit operations (`Kit` uses workspace kit id).
-            pub async fn resolve_workspace_owner_id(&self, kit: &Arc<crate::kit::Kit>) -> Result<crate::id::Id, crate::error::SemioError> {
-                use crate::error::SemioError;
+            pub async fn resolve_workspace_owner_id(&self, kit: &Arc<crate::kit::Kit>) -> Result<crate::id::Id, crate::error::ComposeError> {
+                use crate::error::ComposeError;
                 match self {
-                    Self::Unset => Err(SemioError::invalid("Entity owner unset")),
+                    Self::Unset => Err(ComposeError::invalid("Entity owner unset")),
                     Self::Kit(_) => Ok(kit.workspace_kit_id().await),
-                    Self::Type(w) => w.upgrade().map(|v| v.id.clone()).ok_or_else(|| SemioError::invalid("Entity owner dropped")),
-                    Self::Representation(w) => w.upgrade().map(|v| v.id.clone()).ok_or_else(|| SemioError::invalid("Entity owner dropped")),
-                    Self::Connector(w) => w.upgrade().map(|v| v.id.clone()).ok_or_else(|| SemioError::invalid("Entity owner dropped")),
-                    Self::Design(w) => w.upgrade().map(|v| v.id.clone()).ok_or_else(|| SemioError::invalid("Entity owner dropped")),
+                    Self::Type(w) => w.upgrade().map(|v| v.id.clone()).ok_or_else(|| ComposeError::invalid("Entity owner dropped")),
+                    Self::Representation(w) => w.upgrade().map(|v| v.id.clone()).ok_or_else(|| ComposeError::invalid("Entity owner dropped")),
+                    Self::Connector(w) => w.upgrade().map(|v| v.id.clone()).ok_or_else(|| ComposeError::invalid("Entity owner dropped")),
+                    Self::Design(w) => w.upgrade().map(|v| v.id.clone()).ok_or_else(|| ComposeError::invalid("Entity owner dropped")),
                 }
             }
         }
@@ -13962,7 +13962,7 @@ pub mod gql {
             .register_output_type::<crate::operation::ResultInterface>()
             .register_output_type::<crate::operation::IdResult>()
             .register_output_type::<crate::operation::CommandResponse>()
-            .register_output_type::<crate::error::SemioError>()
+            .register_output_type::<crate::error::ComposeError>()
             .register_output_type::<crate::gql::interfaces::WeakEntityInterface>()
             .register_output_type::<crate::gql::interfaces::GqlEmptyDiff>()
             .register_output_type::<crate::gql::interfaces::EmptyModification>()
@@ -14201,13 +14201,13 @@ pub mod gql {
 
     //#region 🌐native_http_graphql
     /// @emoji 🌐 Parses a GraphQL-over-HTTP JSON body (`query`, optional `variables`, optional `operationName`) into an async-graphql [`Request`].
-    pub fn graphql_request_from_json_str(body: &str) -> Result<async_graphql::Request, crate::error::SemioError> {
+    pub fn graphql_request_from_json_str(body: &str) -> Result<async_graphql::Request, crate::error::ComposeError> {
         use async_graphql::Variables;
-        let v: serde_json::Value = serde_json::from_str(body).map_err(|e| crate::error::SemioError::invalid(format!("graphql json: {e}")))?;
+        let v: serde_json::Value = serde_json::from_str(body).map_err(|e| crate::error::ComposeError::invalid(format!("graphql json: {e}")))?;
         let query = v
             .get("query")
             .and_then(|x| x.as_str())
-            .ok_or_else(|| crate::error::SemioError::invalid("graphql json: missing query"))?
+            .ok_or_else(|| crate::error::ComposeError::invalid("graphql json: missing query"))?
             .to_string();
         let mut req = async_graphql::Request::new(query);
         if let Some(vars) = v.get("variables") {
@@ -14246,21 +14246,21 @@ pub mod wasm_bridge {
     use crate::gql::{build_schema_for, AppSchema};
     use crate::worker::ParentStore;
 
-    async fn fetch_text_url(url: &str) -> Result<String, crate::error::SemioError> {
-        let win = web_sys::window().ok_or_else(|| crate::error::SemioError::invalid("no window"))?;
-        let resp_val = JsFuture::from(win.fetch_with_str(url)).await.map_err(|e| crate::error::SemioError::invalid(format!("fetch: {e:?}")))?;
-        let resp: Response = resp_val.dyn_into().map_err(|_| crate::error::SemioError::invalid("bad response"))?;
+    async fn fetch_text_url(url: &str) -> Result<String, crate::error::ComposeError> {
+        let win = web_sys::window().ok_or_else(|| crate::error::ComposeError::invalid("no window"))?;
+        let resp_val = JsFuture::from(win.fetch_with_str(url)).await.map_err(|e| crate::error::ComposeError::invalid(format!("fetch: {e:?}")))?;
+        let resp: Response = resp_val.dyn_into().map_err(|_| crate::error::ComposeError::invalid("bad response"))?;
         if !resp.ok() {
-            return Err(crate::error::SemioError::invalid(format!("http {}", resp.status())));
+            return Err(crate::error::ComposeError::invalid(format!("http {}", resp.status())));
         }
-        let text = JsFuture::from(resp.text().map_err(|e| crate::error::SemioError::invalid(format!("text(): {e:?}")))?).await.map_err(|e| crate::error::SemioError::invalid(format!("text await: {e:?}")))?;
+        let text = JsFuture::from(resp.text().map_err(|e| crate::error::ComposeError::invalid(format!("text(): {e:?}")))?).await.map_err(|e| crate::error::ComposeError::invalid(format!("text await: {e:?}")))?;
         Ok(text.as_string().unwrap_or_default())
     }
 
-    async fn bootstrap_runtime_from_json_value(v: serde_json::Value) -> Result<Arc<ParentStore>, crate::error::SemioError> {
+    async fn bootstrap_runtime_from_json_value(v: serde_json::Value) -> Result<Arc<ParentStore>, crate::error::ComposeError> {
         if v.get("schema").and_then(|s| s.as_str()) == Some(crate::kit_backbone::KIT_STORE_BUNDLE_SCHEMA) {
             let rt = ParentStore::spawn().await;
-            let s = serde_json::to_string(&v).map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+            let s = serde_json::to_string(&v).map_err(|e| crate::error::ComposeError::invalid(e.to_string()))?;
             crate::kit_backbone::DevBackboneBundleDoc::hydrate_into_graph(&rt.wip_graph, &s).await?;
             Ok(rt)
         } else {
@@ -14268,24 +14268,24 @@ pub mod wasm_bridge {
         }
     }
 
-    async fn bootstrap_runtime_from_open_uri(uri: &str) -> Result<Arc<ParentStore>, crate::error::SemioError> {
+    async fn bootstrap_runtime_from_open_uri(uri: &str) -> Result<Arc<ParentStore>, crate::error::ComposeError> {
         let u = uri.trim();
         if u.is_empty() || u == "dev://empty" {
             return Ok(ParentStore::spawn().await);
         }
         if let Some(b64) = u.strip_prefix("dev+json:") {
-            let bytes = base64::engine::general_purpose::STANDARD.decode(b64.trim()).map_err(|e| crate::error::SemioError::invalid(format!("base64: {e}")))?;
-            let v: serde_json::Value = serde_json::from_slice(&bytes).map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+            let bytes = base64::engine::general_purpose::STANDARD.decode(b64.trim()).map_err(|e| crate::error::ComposeError::invalid(format!("base64: {e}")))?;
+            let v: serde_json::Value = serde_json::from_slice(&bytes).map_err(|e| crate::error::ComposeError::invalid(e.to_string()))?;
             return bootstrap_runtime_from_json_value(v).await;
         }
         let (_k, tail) = crate::operation::BackboneKind::from_uri(u)?;
         let tail = tail.trim();
         if tail.starts_with("http://") || tail.starts_with("https://") || tail.starts_with("blob:") {
             let txt = fetch_text_url(tail).await?;
-            let v: serde_json::Value = serde_json::from_str(&txt).map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+            let v: serde_json::Value = serde_json::from_str(&txt).map_err(|e| crate::error::ComposeError::invalid(e.to_string()))?;
             return bootstrap_runtime_from_json_value(v).await;
         }
-        Err(crate::error::SemioError::invalid("KitStoreHandle.create: use dev://empty, dev+json:<standard-base64>, or dev://<http(s)|blob-url> returning kit or bundle JSON"))
+        Err(crate::error::ComposeError::invalid("KitStoreHandle.create: use dev://empty, dev+json:<standard-base64>, or dev://<http(s)|blob-url> returning kit or bundle JSON"))
     }
 
     fn graphql_execute_request_from_str(s: &str) -> Result<Request, JsValue> {
@@ -14328,7 +14328,7 @@ pub mod wasm_bridge {
         })
     }
 
-    /// 🌐 Stateful GraphQL façade for `@semio/js` embedded worker + inline WASM.
+    /// 🌐 Stateful GraphQL façade for `@compose/js` embedded worker + inline WASM.
     #[wasm_bindgen]
     pub struct KitStoreHandle {
         rt: Arc<ParentStore>,
@@ -14410,7 +14410,7 @@ pub mod wasm_bridge {
 
 //#region 📋 kit_store_comprehensive_e2e
 
-/// @emoji 📋 In-process runner for `kit-store.comprehensive.semio.json` (native hosts + semio-store E2E).
+/// @emoji 📋 In-process runner for `kit-store.comprehensive.compose.json` (native hosts + compose-store E2E).
 #[cfg(not(target_arch = "wasm32"))]
 pub mod kit_store_comprehensive_e2e {
     use std::path::Path;
@@ -14422,11 +14422,11 @@ pub mod kit_store_comprehensive_e2e {
     use crate::gql::{build_schema_for, AppSchema};
 
 
-    /// @emoji 📎 US-001 replay fixtures (`kit-store.golden.*`) under `semio/assets/semio/`.
+    /// @emoji 📎 US-001 replay fixtures (`kit-store.golden.*`) under `compose/assets/compose/`.
     pub fn kit_store_golden_fixture_paths() -> Option<(PathBuf, PathBuf)> {
-        let base = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../assets/semio");
-        let ops = base.join("kit-store.golden.ops.semio.json");
-        let exp = base.join("kit-store.golden.expected.semio.json");
+        let base = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../assets/compose");
+        let ops = base.join("kit-store.golden.ops.compose.json");
+        let exp = base.join("kit-store.golden.expected.compose.json");
         if ops.is_file() && exp.is_file() {
             Some((ops, exp))
         } else {
@@ -14434,9 +14434,9 @@ pub mod kit_store_comprehensive_e2e {
         }
     }
 
-/// @emoji 📋 Full store scenario catalog (`kit-store.comprehensive.semio.json`) under `semio/assets/semio/`.
+/// @emoji 📋 Full store scenario catalog (`kit-store.comprehensive.compose.json`) under `compose/assets/compose/`.
     pub fn kit_store_comprehensive_fixture_path() -> Option<PathBuf> {
-        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../assets/semio/kit-store.comprehensive.semio.json");
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../assets/compose/kit-store.comprehensive.compose.json");
         if path.is_file() {
             Some(path)
         } else {
@@ -14593,7 +14593,7 @@ pub mod kit_store_comprehensive_e2e {
     }
 
     pub fn kit_store_validate_comprehensive_fixture(fixture: &serde_json::Value) {
-        assert_eq!(fixture["kind"].as_str(), Some("semio.kit_store.comprehensive"));
+        assert_eq!(fixture["kind"].as_str(), Some("compose.kit_store.comprehensive"));
         assert!(fixture["schema"].as_str().is_some(), "schema");
         assert!(fixture["storeId"].as_str().is_some(), "storeId");
         let steps = fixture["steps"].as_array().expect("steps array");
@@ -14633,7 +14633,7 @@ pub mod kit_store_comprehensive_e2e {
                 let fp = crate::kit_graph_engine::projection_fingerprint_for_kit(kit_arc.as_ref()).await;
                 assert_eq!(fp, exp_fp, "devJson backbone fingerprint");
             }
-            "localDotSemio" => {
+            "localDotCompose" => {
                 let dir = tempfile::tempdir().expect("temp dir");
                 let proj_root = dir.path().join("workspace");
                 std::fs::create_dir_all(&proj_root).expect("mkdir workspace");
@@ -14641,7 +14641,7 @@ pub mod kit_store_comprehensive_e2e {
                 let uri_local = format!("local://{}", proj_canon.display());
                 let norm = crate::kit_backbone::normalize_connection_uri(&uri_local);
                 let g_bootstrap = crate::vcs::Graph::new().await;
-                let _bones = crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, "wip", &g_bootstrap).await.expect("bootstrap .semio layout");
+                let _bones = crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, "wip", &g_bootstrap).await.expect("bootstrap .compose layout");
                 let g2 = crate::vcs::Graph::new().await;
                 let legacy_workspace = ops_json["draftId"].as_str().expect("draftId");
                 let graph_workspace = g2.id.as_str().to_string();
@@ -14651,7 +14651,7 @@ pub mod kit_store_comprehensive_e2e {
                         op.workspace_id = graph_workspace.clone();
                     }
                 }
-                let db_path = proj_canon.join(".semio").join("wip.db");
+                let db_path = proj_canon.join(".compose").join("wip.db");
                 let conn = rusqlite::Connection::open(&db_path).expect("open wip.db");
                 for operation in &stored {
                     let input_json = serde_json::to_string(&operation.input).expect("input json");
@@ -14665,7 +14665,7 @@ pub mod kit_store_comprehensive_e2e {
                 crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, "wip", &g2).await.expect("replay wip.db");
                 let kit_arc = g2.materialized_kit_for_workspace(&g2.id).await;
                 let fp = crate::kit_graph_engine::projection_fingerprint_for_kit(kit_arc.as_ref()).await;
-                assert_eq!(fp, exp_fp, "localDotSemio backbone fingerprint");
+                assert_eq!(fp, exp_fp, "localDotCompose backbone fingerprint");
             }
             other => panic!("unknown backbone kind in comprehensive fixture: {other}"),
         }
@@ -14786,11 +14786,11 @@ mod tests {
         out
     }
 
-    /// @emoji 📎 US-001 replay fixtures (`kit-store.golden.*`) live under `semio/assets/semio/` when present in the checkout.
+    /// @emoji 📎 US-001 replay fixtures (`kit-store.golden.*`) live under `compose/assets/compose/` when present in the checkout.
     fn kit_store_golden_fixture_paths() -> Option<(PathBuf, PathBuf)> {
-        let base = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../assets/semio");
-        let ops = base.join("kit-store.golden.ops.semio.json");
-        let exp = base.join("kit-store.golden.expected.semio.json");
+        let base = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../assets/compose");
+        let ops = base.join("kit-store.golden.ops.compose.json");
+        let exp = base.join("kit-store.golden.expected.compose.json");
         if ops.is_file() && exp.is_file() {
             Some((ops, exp))
         } else {
@@ -14804,7 +14804,7 @@ mod tests {
     #[test]
     fn kit_store_comprehensive_fixture_contract_is_valid() {
         let Some(path) = kit_store_comprehensive_fixture_path() else {
-            eprintln!("[DEBUG] skip kit_store_comprehensive_fixture_contract_is_valid: missing kit-store.comprehensive.semio.json");
+            eprintln!("[DEBUG] skip kit_store_comprehensive_fixture_contract_is_valid: missing kit-store.comprehensive.compose.json");
             return;
         };
         let fixture: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path).expect("read comprehensive fixture")).expect("parse comprehensive fixture");
@@ -14827,7 +14827,7 @@ mod tests {
     fn kit_store_comprehensive_fixture_all_scenarios() {
         block_on(async {
             let Some(path) = kit_store_comprehensive_fixture_path() else {
-                eprintln!("[DEBUG] skip kit_store_comprehensive_fixture_all_scenarios: missing kit-store.comprehensive.semio.json");
+                eprintln!("[DEBUG] skip kit_store_comprehensive_fixture_all_scenarios: missing kit-store.comprehensive.compose.json");
                 return;
             };
             let fixture: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path).expect("read comprehensive fixture")).expect("parse comprehensive fixture");
@@ -14835,7 +14835,7 @@ mod tests {
         });
     }
 
-    /// @emoji 📜 `gql::sdl()` is code-first; set `SEMIO_GOLDEN_STRICT=1` to assert every golden `type`/`interface`/`union`/`input`/`enum`/`scalar` exists in generated SDL (structural superset).
+    /// @emoji 📜 `gql::sdl()` is code-first; set `COMPOSE_GOLDEN_STRICT=1` to assert every golden `type`/`interface`/`union`/`input`/`enum`/`scalar` exists in generated SDL (structural superset).
     #[test]
     fn schema_matches_target_graphql_file() {
         let from_fn = block_on(crate::gql::sdl());
@@ -14847,7 +14847,7 @@ mod tests {
         let golden_keys = collect_schema_decl_keys(GOLDEN);
         let gen_keys = collect_schema_decl_keys(&from_fn);
         let missing: Vec<_> = golden_keys.difference(&gen_keys).cloned().collect();
-        if std::env::var("SEMIO_GOLDEN_STRICT").ok().as_deref() == Some("1") {
+        if std::env::var("COMPOSE_GOLDEN_STRICT").ok().as_deref() == Some("1") {
             assert!(
                 missing.is_empty(),
                 "generated SDL must structurally cover golden (missing {} top-level declarations). Sample: {:?}",
@@ -14856,7 +14856,7 @@ mod tests {
             );
         } else if !missing.is_empty() {
             eprintln!(
-                "[DEBUG] golden structural gap: {} top-level declarations missing from gql::sdl() (export SEMIO_GOLDEN_STRICT=1 to fail tests on this)",
+                "[DEBUG] golden structural gap: {} top-level declarations missing from gql::sdl() (export COMPOSE_GOLDEN_STRICT=1 to fail tests on this)",
                 missing.len()
             );
         }
@@ -14947,11 +14947,11 @@ mod tests {
         "{ store { authoritative { theKit { kit { designs { edges { node { pieces { edges { node { id } } } } } } } } } } }"
     }
 
-    /// 📤 Writes the executable schema's SDL to `SEMIO_GRAPHQL_SCHEMA_OUT`; run via `npx nx build semio/graphql`.
+    /// 📤 Writes the executable schema's SDL to `COMPOSE_GRAPHQL_SCHEMA_OUT`; run via `npx nx build compose/graphql`.
     #[test]
-    #[ignore = "writes the generated SDL to SEMIO_GRAPHQL_SCHEMA_OUT"]
-    fn export_semio_graphql_schema_file() {
-        let out = std::env::var("SEMIO_GRAPHQL_SCHEMA_OUT").expect("SEMIO_GRAPHQL_SCHEMA_OUT");
+    #[ignore = "writes the generated SDL to COMPOSE_GRAPHQL_SCHEMA_OUT"]
+    fn export_compose_graphql_schema_file() {
+        let out = std::env::var("COMPOSE_GRAPHQL_SCHEMA_OUT").expect("COMPOSE_GRAPHQL_SCHEMA_OUT");
         let path = std::path::PathBuf::from(out);
         if let Some(parent) = path.parent() {
             std::fs::create_dir_all(parent).expect("create schema output parent");
@@ -15446,7 +15446,7 @@ mod tests {
     fn kit_store_golden_operations_replay_matches_expected_invariants() {
         block_on(async {
             let Some((path_ops, path_exp)) = kit_store_golden_fixture_paths() else {
-                eprintln!("[DEBUG] skip kit_store_golden_operations_replay_matches_expected_invariants: missing semio/assets/semio/kit-store.golden.*.json");
+                eprintln!("[DEBUG] skip kit_store_golden_operations_replay_matches_expected_invariants: missing compose/assets/compose/kit-store.golden.*.json");
                 return;
             };
             let ops_json: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read kit-store.golden.ops")).expect("parse operations");
@@ -15497,7 +15497,7 @@ mod tests {
             }
 
             let fp = stable_projection_fingerprint(&g.materialized_kit_for_workspace(&workspace_id).await).await;
-            let exp_fp = exp["projectionFingerprint"].as_str().expect("projectionFingerprint in kit-store.golden.expected.semio.json");
+            let exp_fp = exp["projectionFingerprint"].as_str().expect("projectionFingerprint in kit-store.golden.expected.compose.json");
             assert_eq!(fp, exp_fp, "projectionFingerprint");
         });
     }
@@ -15507,7 +15507,7 @@ mod tests {
     fn kit_store_golden_operations_via_kit_graph_engine_match_fingerprint() {
         block_on(async {
             let Some((path_ops, path_exp)) = kit_store_golden_fixture_paths() else {
-                eprintln!("[DEBUG] skip kit_store_golden_operations_via_kit_graph_engine_match_fingerprint: missing semio/assets/semio/kit-store.golden.*.json");
+                eprintln!("[DEBUG] skip kit_store_golden_operations_via_kit_graph_engine_match_fingerprint: missing compose/assets/compose/kit-store.golden.*.json");
                 return;
             };
             let ops_json: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read kit-store.golden.ops")).expect("parse operations");
@@ -15537,7 +15537,7 @@ mod tests {
     fn dev_json_backbone_persisted_operations_replay_matches_us001_projection_fingerprint() {
         block_on(async {
             let Some((path_ops, path_exp)) = kit_store_golden_fixture_paths() else {
-                eprintln!("[DEBUG] skip dev_json_backbone_persisted_operations_replay_matches_us001_projection_fingerprint: missing semio/assets/semio/kit-store.golden.*.json");
+                eprintln!("[DEBUG] skip dev_json_backbone_persisted_operations_replay_matches_us001_projection_fingerprint: missing compose/assets/compose/kit-store.golden.*.json");
                 return;
             };
             let dir = tempfile::tempdir().expect("temp dir");
@@ -15571,10 +15571,10 @@ mod tests {
 
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
-    fn local_semio_sqlite_backbone_persisted_operations_replay_matches_us001_projection_fingerprint() {
+    fn local_compose_sqlite_backbone_persisted_operations_replay_matches_us001_projection_fingerprint() {
         block_on(async {
             let Some((path_ops, path_exp)) = kit_store_golden_fixture_paths() else {
-                eprintln!("[DEBUG] skip local_semio_sqlite_backbone_persisted_operations_replay_matches_us001_projection_fingerprint: missing semio/assets/semio/kit-store.golden.*.json");
+                eprintln!("[DEBUG] skip local_compose_sqlite_backbone_persisted_operations_replay_matches_us001_projection_fingerprint: missing compose/assets/compose/kit-store.golden.*.json");
                 return;
             };
             let dir = tempfile::tempdir().expect("temp dir");
@@ -15588,7 +15588,7 @@ mod tests {
             let exp: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_exp).expect("read expected")).expect("parse golden expected");
 
             let g_bootstrap = crate::vcs::Graph::new().await;
-            let _bones = crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, "wip", &g_bootstrap).await.expect("bootstrap .semio layout");
+            let _bones = crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, "wip", &g_bootstrap).await.expect("bootstrap .compose layout");
 
             let g2 = crate::vcs::Graph::new().await;
             let legacy_workspace = golden_ops["draftId"].as_str().expect("draftId");
@@ -15600,7 +15600,7 @@ mod tests {
                 }
             }
 
-            let db_path = proj_canon.join(".semio").join("wip.db");
+            let db_path = proj_canon.join(".compose").join("wip.db");
             let conn = rusqlite::Connection::open(&db_path).expect("open wip.db");
             for operation in &stored {
                 let input_json = serde_json::to_string(&operation.input).expect("input json");
@@ -15617,24 +15617,24 @@ mod tests {
             let workspace_id = g2.id.clone();
             let fp = stable_projection_fingerprint(&g2.materialized_kit_for_workspace(&workspace_id).await).await;
             let exp_fp = exp["projectionFingerprint"].as_str().expect("projectionFingerprint");
-            assert_eq!(fp, exp_fp, "local .semio backbone replay must match US-001 golden fingerprint");
+            assert_eq!(fp, exp_fp, "local .compose backbone replay must match US-001 golden fingerprint");
         });
     }
 
     #[test]
     fn kit_store_bundle_metabolism_new_has_contract_shape() {
-        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../assets/fixtures/metabolism.new.kit.semio.json");
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../assets/fixtures/metabolism.new.kit.compose.json");
         let v: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path).expect("read metabolism.new bundle")).expect("parse");
         for k in ["schema", "wip", "authoritative", "stage", "conflicts", "blobs"] {
-            assert!(v.get(k).is_some(), "metabolism.new.kit.semio.json missing `{k}`");
+            assert!(v.get(k).is_some(), "metabolism.new.kit.compose.json missing `{k}`");
         }
-        assert_eq!(v.get("schema").and_then(|s| s.as_str()), Some(crate::kit_backbone::KIT_STORE_BUNDLE_SCHEMA), "metabolism.new.kit.semio.json schema marker drift");
+        assert_eq!(v.get("schema").and_then(|s| s.as_str()), Some(crate::kit_backbone::KIT_STORE_BUNDLE_SCHEMA), "metabolism.new.kit.compose.json schema marker drift");
     }
 
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn metabolism_light_fixture_kinds_for_types_and_ports() {
-        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../assets/fixtures/metabolism.kit.light.semio.json");
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../assets/fixtures/metabolism.kit.light.compose.json");
         let v: serde_json::Value =
             serde_json::from_str(&std::fs::read_to_string(&path).expect("read metabolism.kit.light")).expect("parse json");
         let kit = v["wip"]["initialKit"].as_object().expect("wip.initialKit object");
@@ -15643,8 +15643,8 @@ mod tests {
         for t in types_arr {
             let id = t["id"].as_str().expect("type id");
             let nk = t["nodeKind"].as_str().expect("type.nodeKind");
-            let exp = format!("semio.metabolism.light.node.{id}");
-            assert_eq!(nk, exp.as_str(), "nodeKind must follow semio.metabolism.light.node.<typeId>");
+            let exp = format!("compose.metabolism.light.node.{id}");
+            assert_eq!(nk, exp.as_str(), "nodeKind must follow compose.metabolism.light.node.<typeId>");
         }
         let fam_arr =
             crate::kit_backbone::json_array_or_block_items_ref(kit.get("families").expect("families")).expect("families list");
@@ -15658,7 +15658,7 @@ mod tests {
                 port_rows += 1;
                 let id = p["id"].as_str().expect("port id");
                 let hk = p["handleKind"].as_str().expect("port.handleKind");
-                let exp = format!("semio.metabolism.light.handle.{id}");
+                let exp = format!("compose.metabolism.light.handle.{id}");
                 assert_eq!(hk, exp.as_str());
             }
         }
@@ -15672,7 +15672,7 @@ mod tests {
                     let Some(port) = c.get("port") else { continue };
                     let Some(pid) = port["id"].as_str() else { continue };
                     let hk = port["handleKind"].as_str().expect("connector.port.handleKind");
-                    let exp = format!("semio.metabolism.light.handle.{pid}");
+                    let exp = format!("compose.metabolism.light.handle.{pid}");
                     assert_eq!(hk, exp.as_str());
                 }
             }
@@ -15919,10 +15919,10 @@ mod tests {
         });
     }
 
-    /// @emoji 📦 `metabolism.kit.diff.semio.json` parses as JSON and exposes expected top-level contract keys (typed [`crate::operation::CanonicalKitDiff`] lives on the GraphQL control plane only).
+    /// @emoji 📦 `metabolism.kit.diff.compose.json` parses as JSON and exposes expected top-level contract keys (typed [`crate::operation::CanonicalKitDiff`] lives on the GraphQL control plane only).
     #[test]
     fn canonical_kit_diff_metabolism_fixture_has_contract_keys() {
-        const FIXTURE: &str = include_str!("../../../assets/fixtures/metabolism.kit.diff.semio.json");
+        const FIXTURE: &str = include_str!("../../../assets/fixtures/metabolism.kit.diff.compose.json");
         let raw: serde_json::Value = serde_json::from_str(FIXTURE).expect("fixture parses as JSON");
         assert_eq!(raw.get("name").and_then(|v| v.as_str()), Some("Metabolism Modified"));
         assert!(raw.get("types").is_some(), "fixture must include types collection");

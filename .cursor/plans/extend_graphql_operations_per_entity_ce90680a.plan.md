@@ -1,6 +1,6 @@
 ---
 name: Extend GraphQL Operations Per Entity
-overview: Extend `semio/graphql/target.schema.graphql` so every entity region (Tag, Concept, Port, Quality, Type, Connector, Design, Piece, Kit) carries its own `#region Operations` sub-region with strongly-typed input + operation types for the full action list, plus per-entity operation unions and updated global unions/mutations/subscriptions.
+overview: Extend `compose/graphql/target.schema.graphql` so every entity region (Tag, Concept, Port, Quality, Type, Connector, Design, Piece, Kit) carries its own `#region Operations` sub-region with strongly-typed input + operation types for the full action list, plus per-entity operation unions and updated global unions/mutations/subscriptions.
 todos:
   - id: field-ext
     content: Add description/icon fields to Tag, Concept, Port, Quality, Connector entities and their Modifications
@@ -56,15 +56,15 @@ isProject: false
 
 The action list references fields that don't yet exist on a few entities. Add them (data + computed `Modification` fields) before wiring update operations:
 
-- `Tag` ([target.schema.graphql:2272](semio/graphql/target.schema.graphql:2272)): add `description: String`, `icon: String`. Mirror in `TagModification` with `removeDescription`/`removeIcon`.
-- `Concept` ([target.schema.graphql:2392](semio/graphql/target.schema.graphql:2392)): add `icon: String` (description already present). Mirror in `ConceptModification`.
-- `Port` ([target.schema.graphql:2639](semio/graphql/target.schema.graphql:2639)): add `description: String`, `icon: String`. Mirror in `PortModification`.
-- `Quality` ([target.schema.graphql:2139](semio/graphql/target.schema.graphql:2139)): add `icon: String` (description already present). Mirror in `QualityModification`.
-- `Connector` ([target.schema.graphql:2761](semio/graphql/target.schema.graphql:2761)): add `icon: String`. Mirror in `ConnectorModification`.
+- `Tag` ([target.schema.graphql:2272](compose/graphql/target.schema.graphql:2272)): add `description: String`, `icon: String`. Mirror in `TagModification` with `removeDescription`/`removeIcon`.
+- `Concept` ([target.schema.graphql:2392](compose/graphql/target.schema.graphql:2392)): add `icon: String` (description already present). Mirror in `ConceptModification`.
+- `Port` ([target.schema.graphql:2639](compose/graphql/target.schema.graphql:2639)): add `description: String`, `icon: String`. Mirror in `PortModification`.
+- `Quality` ([target.schema.graphql:2139](compose/graphql/target.schema.graphql:2139)): add `icon: String` (description already present). Mirror in `QualityModification`.
+- `Connector` ([target.schema.graphql:2761](compose/graphql/target.schema.graphql:2761)): add `icon: String`. Mirror in `ConnectorModification`.
 
 ## Per-entity Operations to add
 
-Each list below becomes a fresh `#region Operations` subregion at the bottom of the entity's region (mirroring the existing `#region Operations` inside `Piece` at [target.schema.graphql:3692](semio/graphql/target.schema.graphql:3692)).
+Each list below becomes a fresh `#region Operations` subregion at the bottom of the entity's region (mirroring the existing `#region Operations` inside `Piece` at [target.schema.graphql:3692](compose/graphql/target.schema.graphql:3692)).
 
 ### Tag (inside `#region Tag`)
 - `CreatedTagInput { kitOwnerId: ID, typeOwnerId: ID, representationOwnerId: ID, name: String!, description: String, icon: String, order: Int }` → `CreatedTag` (`tag: Tag!`).
@@ -100,14 +100,14 @@ Same shape: `CreatedQuality`, `CreatedQualities`, `RenamedQuality`, `UpdatedQual
 - `UpdatedConnectorDescriptionInTypeInput`, `UpdatedConnectorIconInTypeInput` → matching ops.
 - `RemovedConnectorFromTypeInput`, `RemovedConnectorsFromTypeInput` → matching ops.
 - `union ConnectorOperation = AddedConnectorToType | AddedConnectorsToType | RenamedConnectorInType | UpdatedConnectorDescriptionInType | UpdatedConnectorIconInType | RemovedConnectorFromType | RemovedConnectorsFromType`.
-- Note: a new `input ConnectorInput { code: String!, description: String, icon: String, portId: ID }` is added near `AttributeInput` ([target.schema.graphql:1065](semio/graphql/target.schema.graphql:1065)).
+- Note: a new `input ConnectorInput { code: String!, description: String, icon: String, portId: ID }` is added near `AttributeInput` ([target.schema.graphql:1065](compose/graphql/target.schema.graphql:1065)).
 
 ### Design (inside `#region Design`, replaces the orphaned ops emitted today only at kit level)
 - `CreatedDesign`, `CreatedDesigns`, `DeletedDesign`, `DeletedDesigns`, `FlattenedDesign` (`FlattenedDesignInput { designId: ID! }`).
 - `AddedAttributeToDesign`, `AddedAttributesToDesign`, `RemovedAttributeFromDesign`, `RemovedAttributesFromDesign`.
 - `union DesignOperation`.
 
-### Piece (inside the existing `#region Operations` at [target.schema.graphql:3692](semio/graphql/target.schema.graphql:3692))
+### Piece (inside the existing `#region Operations` at [target.schema.graphql:3692](compose/graphql/target.schema.graphql:3692))
 
 Keep the three existing ones (`CreatedFixedPiece`, `FixedPiece`, `DraggedPiece`) and add:
 
@@ -124,19 +124,19 @@ Keep the three existing ones (`CreatedFixedPiece`, `FixedPiece`, `DraggedPiece`)
 - `union PieceOperation = …` listing all the above.
 - The two read-only commands from the list (`READ_PIECE_FROM_DESIGN`, `GET_ALTERNATIVE_PIECE_KIND_FOR_PIECE_IN_DESIGN`) do **not** fit the `Operation` interface (which requires `diff: Diff!`); they become **Query fields**: `pieceInDesign(designId: ID!, pieceId: ID!): Piece` and `alternativePieceKind(designId: ID!, pieceId: ID!): Blueprint`.
 
-### Kit (extend the existing `#region Operations` at [target.schema.graphql:4238](semio/graphql/target.schema.graphql:4238))
+### Kit (extend the existing `#region Operations` at [target.schema.graphql:4238](compose/graphql/target.schema.graphql:4238))
 Keep `RenamedKit`, `ChangedDescription`. Add `union KitOperation = RenamedKit` and a roll-up `union DescriptionChangeOperation = ChangedDescription` (or fold `ChangedDescription` into the per-entity update ops above and remove it — but per the workspace rule "do not remove functionality" we keep `ChangedDescription` and instead reference it from the relevant per-entity unions where appropriate).
 
 ## Global / cross-cutting unions
 
-- Extend `union Input` ([target.schema.graphql:1210](semio/graphql/target.schema.graphql:1210)) with every new `<Op>Input`.
-- Extend `union ChangeOwned` ([target.schema.graphql:4290](semio/graphql/target.schema.graphql:4290)) with every new operation type.
-- Extend each `<X>DiffsOwner` line (e.g. [2355](semio/graphql/target.schema.graphql:2355), [2477](semio/graphql/target.schema.graphql:2477), [2724](semio/graphql/target.schema.graphql:2724), [2848](semio/graphql/target.schema.graphql:2848), [2969](semio/graphql/target.schema.graphql:2969), [3122](semio/graphql/target.schema.graphql:3122), [3542](semio/graphql/target.schema.graphql:3542), [3662](semio/graphql/target.schema.graphql:3662), [4038](semio/graphql/target.schema.graphql:4038)) with the new operation names that own diffs (every new op owns its diff).
-- Extend `union DiffOwner` ([target.schema.graphql:5880](semio/graphql/target.schema.graphql:5880)) and `union DiffsOwner` ([target.schema.graphql:5922](semio/graphql/target.schema.graphql:5922)) with every new op.
-- Extend `union OwnerEntity` ([target.schema.graphql:5506](semio/graphql/target.schema.graphql:5506)) with every new op.
+- Extend `union Input` ([target.schema.graphql:1210](compose/graphql/target.schema.graphql:1210)) with every new `<Op>Input`.
+- Extend `union ChangeOwned` ([target.schema.graphql:4290](compose/graphql/target.schema.graphql:4290)) with every new operation type.
+- Extend each `<X>DiffsOwner` line (e.g. [2355](compose/graphql/target.schema.graphql:2355), [2477](compose/graphql/target.schema.graphql:2477), [2724](compose/graphql/target.schema.graphql:2724), [2848](compose/graphql/target.schema.graphql:2848), [2969](compose/graphql/target.schema.graphql:2969), [3122](compose/graphql/target.schema.graphql:3122), [3542](compose/graphql/target.schema.graphql:3542), [3662](compose/graphql/target.schema.graphql:3662), [4038](compose/graphql/target.schema.graphql:4038)) with the new operation names that own diffs (every new op owns its diff).
+- Extend `union DiffOwner` ([target.schema.graphql:5880](compose/graphql/target.schema.graphql:5880)) and `union DiffsOwner` ([target.schema.graphql:5922](compose/graphql/target.schema.graphql:5922)) with every new op.
+- Extend `union OwnerEntity` ([target.schema.graphql:5506](compose/graphql/target.schema.graphql:5506)) with every new op.
 - Add a top-level `union Operation = …` (rename current `interface Operation`? No — keep the interface, add a sibling `union AnyOperation = TagOperation | ConceptOperation | PortOperation | QualityOperation | TypeOperation | ConnectorOperation | DesignOperation | PieceOperation | KitOperation`). This is the "specific" composite the request asks for.
 
-## `Mutation` and `Subscription` updates ([target.schema.graphql:5995](semio/graphql/target.schema.graphql:5995), [6002](semio/graphql/target.schema.graphql:6002))
+## `Mutation` and `Subscription` updates ([target.schema.graphql:5995](compose/graphql/target.schema.graphql:5995), [6002](compose/graphql/target.schema.graphql:6002))
 
 - Add one mutation per new operation type (`createTag`, `createTags`, `renameTag`, …) returning the operation `ID!` and taking `draftId, transactionId, …` like the existing four mutations.
 - Add one subscription per operation type (`tagCreated: CreatedTag!`, …). Group by entity for readability.

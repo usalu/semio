@@ -2,7 +2,7 @@
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 
-const root = "c:/git/semio";
+const root = "c:/git/compose";
 
 function extract2d(): void {
 	const indexPath = join(root, "puzzle/2d/react/index.tsx");

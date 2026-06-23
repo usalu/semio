@@ -41,7 +41,7 @@
           "timestamp": "2026-03-25T01:26:18.165Z",
           "hook_event_name": "UserPromptSubmit",
           "session_id": "a0d3bdef-8da3-4b21-a985-f4b755fd59e4",
-          "prompt": "Thoroughly explore the semio engine MCP server. I need to understand:\n\n1. The full structure of the `semio/engine/` directory - what files exist, especially Python files\n2. The content of the main MCP server file (likely coda.py or similar) - I need to see ALL MCP tool definitions, session state management, FastMCP setup, etc.\n3. The pyproject.toml for engine dependencies\n\nFocus on:\n- How FastMCP is configured\n- What session state variables exist (_mcp_session_*)\n- All existing tool definitions\n- How the server handles kit/design/type state\n- Any existing app/widget/iframe related code\n\nReturn the complete content of the MCP server Python file(s) and the directory listing.",
+          "prompt": "Thoroughly explore the compose engine MCP server. I need to understand:\n\n1. The full structure of the `compose/engine/` directory - what files exist, especially Python files\n2. The content of the main MCP server file (likely coda.py or similar) - I need to see ALL MCP tool definitions, session state management, FastMCP setup, etc.\n3. The pyproject.toml for engine dependencies\n\nFocus on:\n- How FastMCP is configured\n- What session state variables exist (_mcp_session_*)\n- All existing tool definitions\n- How the server handles kit/design/type state\n- Any existing app/widget/iframe related code\n\nReturn the complete content of the MCP server Python file(s) and the directory listing.",
           "cwd": "/workspaces/semio"
         }
       },
@@ -63,7 +63,7 @@
           "session_id": "a0d3bdef-8da3-4b21-a985-f4b755fd59e4",
           "tool_name": "list_dir",
           "tool_input": {
-            "path": "/workspaces/semio/semio/engine"
+            "path": "/workspaces/semio/compose/engine"
           },
           "tool_use_id": "toolu_bdrk_01TkbggzAxKpBL6Liwqwwi7M__vscode-1774398922938",
           "cwd": "/workspaces/semio"
@@ -87,7 +87,7 @@
           "session_id": "a0d3bdef-8da3-4b21-a985-f4b755fd59e4",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/engine/pyproject.toml",
+            "filePath": "/workspaces/semio/compose/engine/pyproject.toml",
             "startLine": 1,
             "endLine": 100
           },
@@ -113,7 +113,7 @@
           "session_id": "a0d3bdef-8da3-4b21-a985-f4b755fd59e4",
           "tool_name": "list_dir",
           "tool_input": {
-            "path": "/workspaces/semio/semio/engine"
+            "path": "/workspaces/semio/compose/engine"
           },
           "tool_response": "",
           "tool_use_id": "toolu_bdrk_01TkbggzAxKpBL6Liwqwwi7M__vscode-1774398922938",
@@ -138,7 +138,7 @@
           "session_id": "a0d3bdef-8da3-4b21-a985-f4b755fd59e4",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/engine/pyproject.toml",
+            "filePath": "/workspaces/semio/compose/engine/pyproject.toml",
             "startLine": 1,
             "endLine": 100
           },
@@ -166,7 +166,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 500,
-            "filePath": "/workspaces/semio/semio/engine/main.py",
+            "filePath": "/workspaces/semio/compose/engine/main.py",
             "startLine": 1
           },
           "tool_use_id": "toolu_bdrk_01UinaiZpgvqPDJk9aLmcB9W__vscode-1774398922940",
@@ -192,7 +192,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 500,
-            "filePath": "/workspaces/semio/semio/engine/main.py",
+            "filePath": "/workspaces/semio/compose/engine/main.py",
             "startLine": 1
           },
           "tool_response": "",
@@ -219,7 +219,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 1000,
-            "filePath": "/workspaces/semio/semio/engine/main.py",
+            "filePath": "/workspaces/semio/compose/engine/main.py",
             "startLine": 500
           },
           "tool_use_id": "toolu_bdrk_01FXSt4EHju6U3eAzxC6JuvK__vscode-1774398922941",
@@ -245,7 +245,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 1000,
-            "filePath": "/workspaces/semio/semio/engine/main.py",
+            "filePath": "/workspaces/semio/compose/engine/main.py",
             "startLine": 500
           },
           "tool_response": "",
@@ -272,7 +272,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 1500,
-            "filePath": "/workspaces/semio/semio/engine/main.py",
+            "filePath": "/workspaces/semio/compose/engine/main.py",
             "startLine": 1000
           },
           "tool_use_id": "toolu_bdrk_012yxX3F7vAUP7s7viuKQ9CN__vscode-1774398922942",
@@ -298,7 +298,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 1500,
-            "filePath": "/workspaces/semio/semio/engine/main.py",
+            "filePath": "/workspaces/semio/compose/engine/main.py",
             "startLine": 1000
           },
           "tool_response": "",
@@ -325,7 +325,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 2000,
-            "filePath": "/workspaces/semio/semio/engine/main.py",
+            "filePath": "/workspaces/semio/compose/engine/main.py",
             "startLine": 1500
           },
           "tool_use_id": "toolu_bdrk_01172ktXiPKi2ZuckKPQpEjR__vscode-1774398922943",
@@ -351,7 +351,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 2000,
-            "filePath": "/workspaces/semio/semio/engine/main.py",
+            "filePath": "/workspaces/semio/compose/engine/main.py",
             "startLine": 1500
           },
           "tool_response": "",
@@ -378,7 +378,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 2500,
-            "filePath": "/workspaces/semio/semio/engine/main.py",
+            "filePath": "/workspaces/semio/compose/engine/main.py",
             "startLine": 2000
           },
           "tool_use_id": "toolu_bdrk_01JcFGKBieUDQqxmuWEzECsX__vscode-1774398922944",
@@ -404,7 +404,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 2500,
-            "filePath": "/workspaces/semio/semio/engine/main.py",
+            "filePath": "/workspaces/semio/compose/engine/main.py",
             "startLine": 2000
           },
           "tool_response": "",
@@ -431,7 +431,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 3000,
-            "filePath": "/workspaces/semio/semio/engine/main.py",
+            "filePath": "/workspaces/semio/compose/engine/main.py",
             "startLine": 2500
           },
           "tool_use_id": "toolu_bdrk_01274VN1tpZGf3oNK58Wu2Lv__vscode-1774398922945",
@@ -457,7 +457,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 3000,
-            "filePath": "/workspaces/semio/semio/engine/main.py",
+            "filePath": "/workspaces/semio/compose/engine/main.py",
             "startLine": 2500
           },
           "tool_response": "",
@@ -484,7 +484,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 3500,
-            "filePath": "/workspaces/semio/semio/engine/main.py",
+            "filePath": "/workspaces/semio/compose/engine/main.py",
             "startLine": 3000
           },
           "tool_use_id": "toolu_bdrk_01NboovDUUDt1hobHF31GGjn__vscode-1774398922946",
@@ -510,7 +510,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 3500,
-            "filePath": "/workspaces/semio/semio/engine/main.py",
+            "filePath": "/workspaces/semio/compose/engine/main.py",
             "startLine": 3000
           },
           "tool_response": "",

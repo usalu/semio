@@ -27,7 +27,7 @@ isProject: false
 
 ### Why
 
-The new mutation tree in [semio/graphql/target.schema.graphql](semio/graphql/target.schema.graphql) has every kit-changing operation reachable only via `session.draft(id).transaction(id).kit.…(id)`. The current `type Subscription` is still flat (95 sibling fields like `renamedTag`, `addedAttributeToPiece`) and has subscriptions for plural creates that the mutation API no longer exposes (`createdTags`, `addedAttributesToTag`, `addedChildPiecesWithParentConnections`, …). Per the user, the global feeds (`commandSucceeded`, `operationSucceeded`, `operationFailed`, `error`) are dropped — every leaf already returns a concrete operation result type that encodes its outcome.
+The new mutation tree in [compose/graphql/target.schema.graphql](compose/graphql/target.schema.graphql) has every kit-changing operation reachable only via `session.draft(id).transaction(id).kit.…(id)`. The current `type Subscription` is still flat (95 sibling fields like `renamedTag`, `addedAttributeToPiece`) and has subscriptions for plural creates that the mutation API no longer exposes (`createdTags`, `addedAttributesToTag`, `addedChildPiecesWithParentConnections`, …). Per the user, the global feeds (`commandSucceeded`, `operationSucceeded`, `operationFailed`, `error`) are dropped — every leaf already returns a concrete operation result type that encodes its outcome.
 
 ### Shape of the tree (mirror of the mutation)
 
@@ -59,7 +59,7 @@ flowchart TB
 - Owns events use `<entity><verb>` in past tense: `createTag` → `tagCreated`, `deleteTag` → `tagDeleted`, `deleteTags` → `tagsDeleted`, `addConnector` → `connectorAdded`, `addFixedPiece` → `fixedPieceAdded`, `addChildPieceWithParentConnection` → `childPieceWithParentConnectionAdded`, `deletePiecesAndConnections` → `piecesAndConnectionsDeleted`.
 - Attribute events: `addAttribute` → `attributeAdded`, `removeAttribute` → `attributeRemoved`, `removeAttributes` → `attributesRemoved`.
 
-### Edits in [semio/graphql/target.schema.graphql](semio/graphql/target.schema.graphql)
+### Edits in [compose/graphql/target.schema.graphql](compose/graphql/target.schema.graphql)
 
 Replace the entire `type Subscription { … }` block (currently lines 6383–6501) with:
 
@@ -118,8 +118,8 @@ The new form lets clients narrow to one specific draft / transaction / design / 
 
 ### Verification
 
-- `node -e "buildSchema(read('semio/graphql/target.schema.graphql'))"` → `parse OK` and `build OK`.
-- `rg "^type \w+ScopedSubscriptionInput\b" semio/graphql/target.schema.graphql` → 11 types (Session, Draft, Transaction, Kit, Tag, Concept, Quality, Type, Port, Connector, Design, Piece, Pieces minus the four pure-event scopes — adjust count after writing).
-- `rg "^  (createdTags|createdConcepts|createdQualities|createdTypes|createdPorts|addedConnectors|createdDesigns|addedAttributesTo|addedChildPiecesWith|addedHangingChildPiecesWith)" semio/graphql/target.schema.graphql` → 0 matches.
+- `node -e "buildSchema(read('compose/graphql/target.schema.graphql'))"` → `parse OK` and `build OK`.
+- `rg "^type \w+ScopedSubscriptionInput\b" compose/graphql/target.schema.graphql` → 11 types (Session, Draft, Transaction, Kit, Tag, Concept, Quality, Type, Port, Connector, Design, Piece, Pieces minus the four pure-event scopes — adjust count after writing).
+- `rg "^  (createdTags|createdConcepts|createdQualities|createdTypes|createdPorts|addedConnectors|createdDesigns|addedAttributesTo|addedChildPiecesWith|addedHangingChildPiecesWith)" compose/graphql/target.schema.graphql` → 0 matches.
 - Every leaf field on every `*ScopedSubscriptionInput` returns a `Created*!`/`Renamed*!`/`Updated*!`/`Added*!`/`Removed*!`/`Deleted*!`/`Dragged*!`/`Moved*!`/`Fixed*!`/`Changed*!`/`Flattened*!`/`Started*!`/`Ended*!` concrete `Operation` type (no unions, no abstract types).
 - Update [.repo/🎫/26/05/10/GRAPHQL-TARGET-MUTATION-CLEANUP/ticket.md](.repo/🎫/26/05/10/GRAPHQL-TARGET-MUTATION-CLEANUP/ticket.md) with a new problem entry (#9) and corresponding change/verification entries.

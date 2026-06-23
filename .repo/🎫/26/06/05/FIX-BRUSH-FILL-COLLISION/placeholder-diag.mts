@@ -13,14 +13,14 @@ import {
   updateWorldMatrixChain,
   type KindCatalogBundle,
   type KindCompatEntry,
-} from "/Users/ueli/Documents/semio/puzzle/3d/react/index.tsx";
+} from "/Users/ueli/Documents/compose/puzzle/3d/react/index.tsx";
 
-const fixtureJson = JSON.parse(readFileSync("/Users/ueli/Documents/semio/puzzle/3d/fixture/concrete-forest.3d.json", "utf8"));
+const fixtureJson = JSON.parse(readFileSync("/Users/ueli/Documents/compose/puzzle/3d/fixture/concrete-forest.3d.json", "utf8"));
 const f = parseFixtureV1(fixtureJson)!;
 const catalogs = fixtureJson.meta.kindCatalogs as KindCatalogBundle;
 const compat = fixtureJson.meta.kindCompatibility as KindCompatEntry[];
 const loader = new GLTFLoader();
-const meshDir = "/Users/ueli/Documents/semio/semio/fixtures/kit/folder/abbau-aufbau";
+const meshDir = "/Users/ueli/Documents/compose/compose/fixtures/kit/folder/abbau-aufbau";
 function loadGlb(name: string): Promise<Group> {
   const bytes = readFileSync(resolve(meshDir, name));
   const buf = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);

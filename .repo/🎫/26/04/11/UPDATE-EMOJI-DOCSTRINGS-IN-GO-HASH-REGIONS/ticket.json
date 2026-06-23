@@ -2,7 +2,7 @@
   "title": "Update Emoji Docstrings in Go Hash Regions",
   "status": "closed",
   "description": "Update Emoji Docstrings in Go Hash Regions",
-  "summary": "Replaced 23 emoji+description docstrings in Hash Value Types and Hash Entities regions of semio/go/main.go. Build and all tests pass.",
+  "summary": "Replaced 23 emoji+description docstrings in Hash Value Types and Hash Entities regions of compose/go/main.go. Build and all tests pass.",
   "goal": "🎯r2603",
   "sessions": [
     "⚪76c086d7d86a4b5ea862eb2bc62026ac"

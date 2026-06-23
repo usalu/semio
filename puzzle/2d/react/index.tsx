@@ -2787,7 +2787,7 @@ export function puzzle2dRectangleHandleAngleFromCadPoint(x: number, y: number): 
   return Math.atan2(-x, -y);
 }
 
-/** @emoji 🔌 Kit type connector row (semio connector: ring `t`, optional CAD point, port handle kind). */
+/** @emoji 🔌 Kit type connector row (compose connector: ring `t`, optional CAD point, port handle kind). */
 export interface KitConnectorCadRow {
   readonly point?: { readonly x: number; readonly y: number; readonly z: number };
   readonly direction?: { readonly x: number; readonly y: number; readonly z: number };
@@ -2795,7 +2795,7 @@ export interface KitConnectorCadRow {
   readonly t?: number;
 }
 
-/** @emoji ⭕ Normalizes semio connector {@link Ring} `t` into `[0, 1)`. */
+/** @emoji ⭕ Normalizes compose connector {@link Ring} `t` into `[0, 1)`. */
 export function puzzle2dNormalizeRingT(t: number): number {
   return ((t % 1) + 1) % 1;
 }
@@ -2811,7 +2811,7 @@ export type Puzzle2dNodeKindHandlesFromKitConnectorsOptions = {
   readonly prototype?: Puzzle2dNodeKindHandleAnglePrototype;
 };
 
-/** @emoji 🧲 Builds {@link NodeKind.handles} from kit connectors; prefers semio ring `t` over CAD point. */
+/** @emoji 🧲 Builds {@link NodeKind.handles} from kit connectors; prefers compose ring `t` over CAD point. */
 export function puzzle2dNodeKindHandleAnglePrototype(
   prototype?: Puzzle2dNodeKindHandleAnglePrototype,
 ): { height: number; radius: number; shape: "circle"; width: number; x: number; y: number } {
@@ -3994,10 +3994,10 @@ export function puzzle2dIconKindForBrushNodeKind(fixture: Puzzle2dFixtureV1, cat
 }
 
 function puzzle2dCatalogNameLooksLikeI18nKey(name: string): boolean {
-  return /^semio\.(sketchpad|metabolism)\./.test(name.trim());
+  return /^compose\.(sketchpad|metabolism)\./.test(name.trim());
 }
 
-/** @emoji 🏷️ Resolves a kind-catalog row `name` for a stable kind id (never returns raw semio i18n keys). */
+/** @emoji 🏷️ Resolves a kind-catalog row `name` for a stable kind id (never returns raw compose i18n keys). */
 export function puzzle2dKindCatalogRowName(kindId: string, rows: readonly { readonly id: string; readonly name: string }[] | undefined): string {
   const id = kindId.trim();
   if (id === "") {
@@ -10155,12 +10155,12 @@ if (puzzle2dVitest) {
         camera: { x: 0, y: 0, zoom: 1 },
         edges: [],
         nodes: [
-          { handles: [{ angle: 0, id: "c:h" }], id: "c", nodeKind: "semio.kit.node.a", radius: 4, x: 0, y: 0 },
+          { handles: [{ angle: 0, id: "c:h" }], id: "c", nodeKind: "compose.kit.node.a", radius: 4, x: 0, y: 0 },
           {
             handles: [{ angle: 1, id: "r:h" }],
             height: 8,
             id: "r",
-            nodeKind: "semio.kit.node.b",
+            nodeKind: "compose.kit.node.b",
             shape: "rectangle",
             width: 6,
             x: 1,
@@ -10169,8 +10169,8 @@ if (puzzle2dVitest) {
         ],
         schema: "puzzle.2d.fixture/v1",
       });
-      expect(parsed?.nodes[0]).toMatchObject({ id: "c", nodeKind: "semio.kit.node.a" });
-      expect(parsed?.nodes[1]).toMatchObject({ id: "r", nodeKind: "semio.kit.node.b" });
+      expect(parsed?.nodes[0]).toMatchObject({ id: "c", nodeKind: "compose.kit.node.a" });
+      expect(parsed?.nodes[1]).toMatchObject({ id: "r", nodeKind: "compose.kit.node.b" });
     });
 
     it("parses node-kind handle templates from fixture meta.kindCatalogs", () => {
@@ -10179,15 +10179,15 @@ if (puzzle2dVitest) {
           kindCatalogs: {
             nodes: [
               {
-                id: "semio.kit.node.capsule",
+                id: "compose.kit.node.capsule",
                 name: "Capsule",
-                handles: [{ angle: 0.805, radius: 3, handleKind: "semio.kit.handle.door" }],
+                handles: [{ angle: 0.805, radius: 3, handleKind: "compose.kit.handle.door" }],
               },
             ],
           },
         },
       });
-      expect(catalogs?.nodes?.[0]?.handles).toEqual([{ angle: 0.805, radius: 3, handleKind: "semio.kit.handle.door" }]);
+      expect(catalogs?.nodes?.[0]?.handles).toEqual([{ angle: 0.805, radius: 3, handleKind: "compose.kit.handle.door" }]);
     });
 
     it("parses edge kinds from fixture meta.kindCatalogs", () => {
@@ -10210,8 +10210,8 @@ if (puzzle2dVitest) {
     });
 
     it("puzzle2dFixtureHandlesFromNodeKind maps templates to fixture handles", () => {
-      const handles = puzzle2dFixtureHandlesFromNodeKind("n1", [{ angle: 1.2, radius: 3, handleKind: "semio.kit.handle.a" }]);
-      expect(handles).toEqual([{ angle: 1.2, handleKind: "semio.kit.handle.a", id: "n1:h0", radius: 3 }]);
+      const handles = puzzle2dFixtureHandlesFromNodeKind("n1", [{ angle: 1.2, radius: 3, handleKind: "compose.kit.handle.a" }]);
+      expect(handles).toEqual([{ angle: 1.2, handleKind: "compose.kit.handle.a", id: "n1:h0", radius: 3 }]);
     });
 
     it("applyBrushPlacementToFixture is idempotent when the same brush ids are already in the fixture", () => {
@@ -10611,7 +10611,7 @@ if (puzzle2dVitest) {
       renderer.dispose();
     });
 
-    it("puzzle2dNodeKindHandlesFromKitConnectors maps semio ring t to distinct perimeter angles", () => {
+    it("puzzle2dNodeKindHandlesFromKitConnectors maps compose ring t to distinct perimeter angles", () => {
       const handleKind = "core rectangular bottom";
       const handles = puzzle2dNodeKindHandlesFromKitConnectors(
         [
@@ -10631,7 +10631,7 @@ if (puzzle2dVitest) {
     });
 
     it("puzzle2dNodeKindHandlesFromKitConnectors falls back to CAD point when ring t is absent", () => {
-      const handleKind = "semio.kit.handle.core-rect-bottom";
+      const handleKind = "compose.kit.handle.core-rect-bottom";
       const handles = puzzle2dNodeKindHandlesFromKitConnectors([
         { point: { x: -7.5, y: -7.7, z: 7.5 }, port: { handleKind } },
         { point: { x: -18.6, y: -7.7, z: 7.5 }, port: { handleKind } },
@@ -10643,22 +10643,22 @@ if (puzzle2dVitest) {
     it("mergeKindCatalogBundleByRowId overlays rows by id", () => {
       const merged = mergeKindCatalogBundleByRowId(DEFAULT_KIND_CATALOG_BUNDLE, {
         handles: [{ color: "#ff0000", defaultWireKind: BUILTIN_LINK_WIRE_KIND, id: BUILTIN_PORT_HANDLE_KIND, name: "Patched" }],
-        nodes: [{ id: "semio.metabolism.light.node.x", name: "Capsule" }],
+        nodes: [{ id: "compose.metabolism.light.node.x", name: "Capsule" }],
       });
       expect(merged.handles?.find((h) => h.id === BUILTIN_PORT_HANDLE_KIND)?.name).toBe("Patched");
       expect(merged.handles?.find((h) => h.id === BUILTIN_PORT_HANDLE_KIND)?.color).toBe("#ff0000");
-      expect(merged.nodes?.some((n) => n.id === "semio.metabolism.light.node.x")).toBe(true);
+      expect(merged.nodes?.some((n) => n.id === "compose.metabolism.light.node.x")).toBe(true);
     });
 
     it("puzzle2dFixtureNodeDisplayLabel prefers caption over kind name and never shows instance id", () => {
       const catalogs: KindCatalogBundle = {
-        nodes: [{ id: "semio.metabolism.light.node.k", name: "Capsule" }],
-        handles: [{ color: "#888", defaultWireKind: BUILTIN_LINK_WIRE_KIND, id: "semio.metabolism.light.handle.h", name: "door east" }],
+        nodes: [{ id: "compose.metabolism.light.node.k", name: "Capsule" }],
+        handles: [{ color: "#888", defaultWireKind: BUILTIN_LINK_WIRE_KIND, id: "compose.metabolism.light.handle.h", name: "door east" }],
       };
       const node = {
-        handles: [{ angle: 0, handleKind: "semio.metabolism.light.handle.h", id: "piece:link" }],
+        handles: [{ angle: 0, handleKind: "compose.metabolism.light.handle.h", id: "piece:link" }],
         id: "01890804-66f2-4544-98f0-b6f0c0615492",
-        nodeKind: "semio.metabolism.light.node.k",
+        nodeKind: "compose.metabolism.light.node.k",
         radius: 10,
         shape: "circle" as const,
         text: "cs_sl1_d0_t_f4_b_c1",
@@ -10667,7 +10667,7 @@ if (puzzle2dVitest) {
       };
       expect(puzzle2dFixtureNodeDisplayLabel(node, catalogs)).toBe("cs_sl1_d0_t_f4_b_c1");
       expect(puzzle2dFixtureNodeDisplayDescription(node, catalogs)).toBe("Capsule");
-      expect(puzzle2dKindCatalogRowName("semio.sketchpad.app.kit.defaultTypeName", catalogs.nodes)).toBe("Item");
+      expect(puzzle2dKindCatalogRowName("compose.sketchpad.app.kit.defaultTypeName", catalogs.nodes)).toBe("Item");
       expect(puzzle2dFixtureHandleDisplayLabel(node.handles[0]!, catalogs)).toBe("door east");
     });
 

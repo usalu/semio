@@ -68,7 +68,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "semio/semio/semio/js",
+              "path": "compose/compose/compose/js",
               "lines": {
                 "added": 149,
                 "removed": 0
@@ -88,7 +88,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "💻semio/js/dev.ts",
+              "path": "💻compose/js/dev.ts",
               "lines": {
                 "added": 169,
                 "removed": 33
@@ -97,7 +97,7 @@
           ],
           "added": [
             {
-              "path": "🧪semio/js/semio.test.ts",
+              "path": "🧪compose/js/compose.test.ts",
               "lines": {
                 "added": 313,
                 "removed": 0
@@ -110,7 +110,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "💻semio/js/dev.ts#Dev",
+              "path": "💻compose/js/dev.ts#Dev",
               "lines": {
                 "added": 169,
                 "removed": 33
@@ -122,14 +122,14 @@
         "definitions": {
           "deleted": [
             {
-              "path": "💻semio/js/dev.ts#Dev§storybook",
+              "path": "💻compose/js/dev.ts#Dev§storybook",
               "lines": {
                 "added": 0,
                 "removed": 4
               }
             },
             {
-              "path": "💻semio/js/dev.ts#Dev§vite",
+              "path": "💻compose/js/dev.ts#Dev§vite",
               "lines": {
                 "added": 0,
                 "removed": 4
@@ -139,91 +139,91 @@
           "renamed": [],
           "modified": [
             {
-              "path": "💻semio/js/dev.ts#Dev§STORYBOOK_ADDRESS",
+              "path": "💻compose/js/dev.ts#Dev§STORYBOOK_ADDRESS",
               "lines": {
                 "added": 15,
                 "removed": 15
               }
             },
             {
-              "path": "💻semio/js/dev.ts#Dev§STORYBOOK_LISTEN_NUMBER",
+              "path": "💻compose/js/dev.ts#Dev§STORYBOOK_LISTEN_NUMBER",
               "lines": {
                 "added": 14,
                 "removed": 15
               }
             },
             {
-              "path": "💻semio/js/dev.ts#Dev§isWindows",
+              "path": "💻compose/js/dev.ts#Dev§isWindows",
               "lines": {
                 "added": 13,
                 "removed": 13
               }
             },
             {
-              "path": "💻semio/js/dev.ts#Dev§npmCmd",
+              "path": "💻compose/js/dev.ts#Dev§npmCmd",
               "lines": {
                 "added": 12,
                 "removed": 13
               }
             },
             {
-              "path": "💻semio/js/dev.ts#Dev§isStorybookIndexPayload",
+              "path": "💻compose/js/dev.ts#Dev§isStorybookIndexPayload",
               "lines": {
                 "added": 3,
                 "removed": 3
               }
             },
             {
-              "path": "💻semio/js/dev.ts#Dev§readLaunchKind",
+              "path": "💻compose/js/dev.ts#Dev§readLaunchKind",
               "lines": {
                 "added": 3,
                 "removed": 3
               }
             },
             {
-              "path": "💻semio/js/dev.ts#Dev§spawnScript",
+              "path": "💻compose/js/dev.ts#Dev§spawnScript",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/dev.ts#Dev§bindChildSignals",
+              "path": "💻compose/js/dev.ts#Dev§bindChildSignals",
               "lines": {
                 "added": 11,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/dev.ts#Dev§isEntrypoint",
+              "path": "💻compose/js/dev.ts#Dev§isEntrypoint",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/dev.ts#Dev§isWindows",
+              "path": "💻compose/js/dev.ts#Dev§isWindows",
               "lines": {
                 "added": 0,
                 "removed": 9
               }
             },
             {
-              "path": "💻semio/js/dev.ts#Dev§npmCmd",
+              "path": "💻compose/js/dev.ts#Dev§npmCmd",
               "lines": {
                 "added": 0,
                 "removed": 6
               }
             },
             {
-              "path": "💻semio/js/dev.ts#Dev§vite",
+              "path": "💻compose/js/dev.ts#Dev§vite",
               "lines": {
                 "added": 0,
                 "removed": 4
               }
             },
             {
-              "path": "💻semio/js/dev.ts#Dev§storybook",
+              "path": "💻compose/js/dev.ts#Dev§storybook",
               "lines": {
                 "added": 0,
                 "removed": 4
@@ -232,49 +232,49 @@
           ],
           "added": [
             {
-              "path": "💻semio/js/dev.ts#Dev§STORYBOOK_ADDRESS",
+              "path": "💻compose/js/dev.ts#Dev§STORYBOOK_ADDRESS",
               "lines": {
                 "added": 18,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/dev.ts#Dev§bindChildSignals",
+              "path": "💻compose/js/dev.ts#Dev§bindChildSignals",
               "lines": {
                 "added": 11,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/dev.ts#Dev§isEntrypoint",
+              "path": "💻compose/js/dev.ts#Dev§isEntrypoint",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/dev.ts#Dev§isStorybookIndexPayload",
+              "path": "💻compose/js/dev.ts#Dev§isStorybookIndexPayload",
               "lines": {
                 "added": 3,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/dev.ts#Dev§readLaunchKind",
+              "path": "💻compose/js/dev.ts#Dev§readLaunchKind",
               "lines": {
                 "added": 3,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/dev.ts#Dev§spawnScript",
+              "path": "💻compose/js/dev.ts#Dev§spawnScript",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/dev.ts#Dev§STORYBOOK_LISTEN_NUMBER",
+              "path": "💻compose/js/dev.ts#Dev§STORYBOOK_LISTEN_NUMBER",
               "lines": {
                 "added": 17,
                 "removed": 0

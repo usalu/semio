@@ -37,7 +37,7 @@ Kit diff tests were failing in TypeScript and Python because:
 - Updated `applyKitDiffDict()` to apply qualities and authors diffs
 - Updated `inverseKitDiffDict()` to inverse qualities and authors diffs
 
-## assets/semio/
+## assets/compose/
 
 - Regenerated diff_kit_metabolism.json
 - Regenerated diff_kit_metabolism_inverted.json

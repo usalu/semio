@@ -1,6 +1,6 @@
 {
   "id": "b20103a1-2556-4047-b792-916578a4998b",
-  "uri": "semiorepo://s/b20103a1-2556-4047-b792-916578a4998b",
+  "uri": "composerepo://s/b20103a1-2556-4047-b792-916578a4998b",
   "contributor": "🧑‍💻ueli",
   "client": "windsurf-chat",
   "second": "2026-03-10T20:03:09Z",
@@ -13,7 +13,7 @@
           "timestamp": "2026-03-10T20:03:08.948210589Z",
           "execution_id": "c3cc53f0-7f9e-4d73-9194-489c48165e9f",
           "tool_info": {
-            "user_prompt": "repo:\nIntroduce for every repo mcp tool call an event (either called over the mcp server or over the cli in the terminal)\n\nagent.search.starting\nagent.ticket.open.starting\netc\n\n{\n  \"native\": {\n    \"event\": {\n      \"session_id\": \"d632004e-4a01-49a2-a7e6-df2e7fcad233\",\n      \"transcript_path\": \"/home/vscode/.claude/projects/-workspaces-semio/d632004e-4a01-49a2-a7e6-df2e7fcad233.jsonl\",\n      \"cwd\": \"/workspaces/semio\",\n      \"permission_mode\": \"bypassPermissions\",\n      \"hook_event_name\": \"PreToolUse\",\n      \"tool_name\": \"mcp__repo__search\",\n      \"tool_input\": {\n        \"query\": \"contributors\"\n      },\n      \"tool_use_id\": \"toolu_01NoAGNcLZkGQuEDd7MoVxyp\"\n    }\n  },\n  \"event\": {\n    \"checkpoint\": \"🔀41db5caa7e18b3d93d53069b0dbc5cd1953a41b3\",\n    \"client\": \"claude-code\",\n    \"contributor\": \"🧑‍💻ueli\",\n    \"input\": {\n      \"query\": \"contributors\"\n    },\n    \"kind\": \"agent.tool.starting\",\n    \"name\": \"mcp__repo__search\",\n    \"second\": \"🎆26🌙03☀️02⏰12⌚07⏱️05\",\n    \"session\": \"⚪d632004e4a0149a2a7e6df2e7fcad233\",\n    \"transcript\": \"/home/vscode/.claude/projects/-workspaces-semio/d632004e-4a01-49a2-a7e6-df2e7fcad233.jsonl\"\n  },\n  \"response\": {\n    \"allowed\": true\n  }\n}"
+            "user_prompt": "repo:\nIntroduce for every repo mcp tool call an event (either called over the mcp server or over the cli in the terminal)\n\nagent.search.starting\nagent.ticket.open.starting\netc\n\n{\n  \"native\": {\n    \"event\": {\n      \"session_id\": \"d632004e-4a01-49a2-a7e6-df2e7fcad233\",\n      \"transcript_path\": \"/home/vscode/.claude/projects/-workspaces-compose/d632004e-4a01-49a2-a7e6-df2e7fcad233.jsonl\",\n      \"cwd\": \"/workspaces/semio\",\n      \"permission_mode\": \"bypassPermissions\",\n      \"hook_event_name\": \"PreToolUse\",\n      \"tool_name\": \"mcp__repo__search\",\n      \"tool_input\": {\n        \"query\": \"contributors\"\n      },\n      \"tool_use_id\": \"toolu_01NoAGNcLZkGQuEDd7MoVxyp\"\n    }\n  },\n  \"event\": {\n    \"checkpoint\": \"🔀41db5caa7e18b3d93d53069b0dbc5cd1953a41b3\",\n    \"client\": \"claude-code\",\n    \"contributor\": \"🧑‍💻ueli\",\n    \"input\": {\n      \"query\": \"contributors\"\n    },\n    \"kind\": \"agent.tool.starting\",\n    \"name\": \"mcp__repo__search\",\n    \"second\": \"🎆26🌙03☀️02⏰12⌚07⏱️05\",\n    \"session\": \"⚪d632004e4a0149a2a7e6df2e7fcad233\",\n    \"transcript\": \"/home/vscode/.claude/projects/-workspaces-compose/d632004e-4a01-49a2-a7e6-df2e7fcad233.jsonl\"\n  },\n  \"response\": {\n    \"allowed\": true\n  }\n}"
           }
         }
       },
@@ -372,13 +372,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🧰semiorepo⌨️cli💻main"
+            "id": "🧰composerepo⌨️cli💻main"
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🧰semiorepo⌨️cli💻main📌1📌47428"
+          "🧰composerepo⌨️cli💻main📌1📌47428"
         ],
         "second": "🎆26🌙03☀️10⏰20⌚06⏱️11",
         "session": "⚪b20103a125564047b792916578a4998b"
@@ -405,13 +405,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🧰semiorepo⌨️cli💻main"
+            "id": "🧰composerepo⌨️cli💻main"
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🧰semiorepo⌨️cli💻main📌1📌47428"
+          "🧰composerepo⌨️cli💻main📌1📌47428"
         ],
         "second": "🎆26🌙03☀️10⏰20⌚06⏱️12",
         "session": "⚪b20103a125564047b792916578a4998b"
@@ -438,13 +438,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🧰semiorepo⌨️cli💻main"
+            "id": "🧰composerepo⌨️cli💻main"
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🧰semiorepo⌨️cli💻main📌1📌47428"
+          "🧰composerepo⌨️cli💻main📌1📌47428"
         ],
         "second": "🎆26🌙03☀️10⏰20⌚06⏱️19",
         "session": "⚪b20103a125564047b792916578a4998b"
@@ -471,13 +471,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🧰semiorepo⌨️cli💻main"
+            "id": "🧰composerepo⌨️cli💻main"
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🧰semiorepo⌨️cli💻main📌1📌47428"
+          "🧰composerepo⌨️cli💻main📌1📌47428"
         ],
         "second": "🎆26🌙03☀️10⏰20⌚06⏱️23",
         "session": "⚪b20103a125564047b792916578a4998b"
@@ -504,13 +504,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🧰semiorepo⌨️cli💻main"
+            "id": "🧰composerepo⌨️cli💻main"
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🧰semiorepo⌨️cli💻main📌1📌47428"
+          "🧰composerepo⌨️cli💻main📌1📌47428"
         ],
         "second": "🎆26🌙03☀️10⏰20⌚06⏱️56",
         "session": "⚪b20103a125564047b792916578a4998b"
@@ -537,13 +537,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🧰semiorepo⌨️cli🥼maintest"
+            "id": "🧰composerepo⌨️cli🥼maintest"
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🧰semiorepo⌨️cli🥼maintest📌1📌21881"
+          "🧰composerepo⌨️cli🥼maintest📌1📌21881"
         ],
         "second": "🎆26🌙03☀️10⏰20⌚06⏱️56",
         "session": "⚪b20103a125564047b792916578a4998b"
@@ -570,13 +570,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🧰semiorepo⌨️cli💻main"
+            "id": "🧰composerepo⌨️cli💻main"
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🧰semiorepo⌨️cli💻main📌1📌47428"
+          "🧰composerepo⌨️cli💻main📌1📌47428"
         ],
         "second": "🎆26🌙03☀️10⏰20⌚07⏱️03",
         "session": "⚪b20103a125564047b792916578a4998b"
@@ -603,13 +603,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🧰semiorepo⌨️cli🥼maintest"
+            "id": "🧰composerepo⌨️cli🥼maintest"
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🧰semiorepo⌨️cli🥼maintest📌1📌21881"
+          "🧰composerepo⌨️cli🥼maintest📌1📌21881"
         ],
         "second": "🎆26🌙03☀️10⏰20⌚07⏱️08",
         "session": "⚪b20103a125564047b792916578a4998b"
@@ -636,13 +636,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🧰semiorepo⌨️cli🥼maintest"
+            "id": "🧰composerepo⌨️cli🥼maintest"
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🧰semiorepo⌨️cli🥼maintest📌1📌21881"
+          "🧰composerepo⌨️cli🥼maintest📌1📌21881"
         ],
         "second": "🎆26🌙03☀️10⏰20⌚07⏱️35",
         "session": "⚪b20103a125564047b792916578a4998b"
@@ -669,13 +669,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🧰semiorepo⌨️cli🥼maintest"
+            "id": "🧰composerepo⌨️cli🥼maintest"
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🧰semiorepo⌨️cli🥼maintest📌1📌21881"
+          "🧰composerepo⌨️cli🥼maintest📌1📌21881"
         ],
         "second": "🎆26🌙03☀️10⏰20⌚07⏱️45",
         "session": "⚪b20103a125564047b792916578a4998b"
@@ -694,8 +694,8 @@
           "tool_info": {
             "edits": [
               {
-                "old_string": "// logRepoOperationHook writes a derived repo-specific log entry when a repo\n// MCP tool or CLI command is detected in the hook context.\n// logRepoOperationHook MUST perform the logRepoOperationHook operation.\n// [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖hooks🛠️logrepooperationhook](semiorepo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/logRepoOperationHook)\nfunc logRepoOperationHook(hctx HookContext, result HookResult, logDir string, now time.Time, sessionID string) {",
-                "new_string": "// logRepoOperationHook writes a derived agent operation log entry when a repo\n// MCP tool or CLI command is detected in the hook context.\n// logRepoOperationHook MUST perform the logRepoOperationHook operation.\n// [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖hooks🛠️logrepooperationhook](semiorepo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/logRepoOperationHook)\nfunc logRepoOperationHook(hctx HookContext, result HookResult, logDir string, now time.Time, sessionID string) {"
+                "old_string": "// logRepoOperationHook writes a derived repo-specific log entry when a repo\n// MCP tool or CLI command is detected in the hook context.\n// logRepoOperationHook MUST perform the logRepoOperationHook operation.\n// [🧰composerepo⌨️cli💻main🔖types🔖cli🔖hooks🛠️logrepooperationhook](composerepo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/logRepoOperationHook)\nfunc logRepoOperationHook(hctx HookContext, result HookResult, logDir string, now time.Time, sessionID string) {",
+                "new_string": "// logRepoOperationHook writes a derived agent operation log entry when a repo\n// MCP tool or CLI command is detected in the hook context.\n// logRepoOperationHook MUST perform the logRepoOperationHook operation.\n// [🧰composerepo⌨️cli💻main🔖types🔖cli🔖hooks🛠️logrepooperationhook](composerepo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/logRepoOperationHook)\nfunc logRepoOperationHook(hctx HookContext, result HookResult, logDir string, now time.Time, sessionID string) {"
               },
               {
                 "old_string": "\tkind := \"repo.\" + op + suffix",
@@ -729,8 +729,8 @@
           "tool_info": {
             "edits": [
               {
-                "old_string": "// logRepoOperationHook writes a derived repo-specific log entry when a repo\n// MCP tool or CLI command is detected in the hook context.\n// logRepoOperationHook MUST perform the logRepoOperationHook operation.\n// [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖hooks🛠️logrepooperationhook](semiorepo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/logRepoOperationHook)\nfunc logRepoOperationHook(hctx HookContext, result HookResult, logDir string, now time.Time, sessionID string) {",
-                "new_string": "// logRepoOperationHook writes a derived agent operation log entry when a repo\n// MCP tool or CLI command is detected in the hook context.\n// logRepoOperationHook MUST perform the logRepoOperationHook operation.\n// [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖hooks🛠️logrepooperationhook](semiorepo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/logRepoOperationHook)\nfunc logRepoOperationHook(hctx HookContext, result HookResult, logDir string, now time.Time, sessionID string) {"
+                "old_string": "// logRepoOperationHook writes a derived repo-specific log entry when a repo\n// MCP tool or CLI command is detected in the hook context.\n// logRepoOperationHook MUST perform the logRepoOperationHook operation.\n// [🧰composerepo⌨️cli💻main🔖types🔖cli🔖hooks🛠️logrepooperationhook](composerepo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/logRepoOperationHook)\nfunc logRepoOperationHook(hctx HookContext, result HookResult, logDir string, now time.Time, sessionID string) {",
+                "new_string": "// logRepoOperationHook writes a derived agent operation log entry when a repo\n// MCP tool or CLI command is detected in the hook context.\n// logRepoOperationHook MUST perform the logRepoOperationHook operation.\n// [🧰composerepo⌨️cli💻main🔖types🔖cli🔖hooks🛠️logrepooperationhook](composerepo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/logRepoOperationHook)\nfunc logRepoOperationHook(hctx HookContext, result HookResult, logDir string, now time.Time, sessionID string) {"
               },
               {
                 "old_string": "\tkind := \"repo.\" + op + suffix",
@@ -866,7 +866,7 @@
         "client": "windsurf-chat",
         "contributor": "🧑‍💻ueli",
         "files": [
-          "🧰semiorepo⌨️cli🥼maintest"
+          "🧰composerepo⌨️cli🥼maintest"
         ],
         "kind": "agent.tool.test.starting",
         "parent": "",

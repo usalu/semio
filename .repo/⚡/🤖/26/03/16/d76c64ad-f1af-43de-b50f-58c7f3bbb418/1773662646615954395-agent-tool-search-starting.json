@@ -15,7 +15,7 @@
       "tool_name": "grep_search",
       "tool_input": {
         "maxResults": 20,
-        "includePattern": "**/semio/sketchpad/sketchpad/Sketchpad.ts",
+        "includePattern": "**/compose/sketchpad/sketchpad/Sketchpad.ts",
         "isRegexp": true,
         "query": "createDesignSelectionSelector"
       },

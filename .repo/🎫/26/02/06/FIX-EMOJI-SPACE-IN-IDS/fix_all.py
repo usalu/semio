@@ -3,7 +3,7 @@ import os
 import re
 
 root = "/workspaces/semio"
-scopes = ["semio", "coda", "repo"]
+scopes = ["compose", "coda", "repo"]
 
 # 1. Fix package.json files
 for dirpath, dirnames, filenames in os.walk(root):
@@ -18,7 +18,7 @@ for dirpath, dirnames, filenames in os.walk(root):
             # Use regex to find name and dependency keys
             # and only prefix them with @ if they start with a scope and contain /
             # Or if they are exactly the scope name and it's a known scope?
-            # Actually, per root package.json, they are all like semio/js etc.
+            # Actually, per root package.json, they are all like compose/js etc.
 
             data = json.loads(content)
             changed = False
@@ -62,8 +62,8 @@ import_regex = re.compile(r"path_patterns")  # placeholder
 
 
 def fix_imports(content):
-    # Regex to match imports: from "semio/..." or from 'semio/...'
-    # Also match dynamic imports: import("semio/...")
+    # Regex to match imports: from "compose/..." or from 'compose/...'
+    # Also match dynamic imports: import("compose/...")
     new_content = content
     for scope in scopes:
         # Match "scope/..." but not "@scope/..." or "./scope/..."
@@ -90,8 +90,8 @@ for dirpath, dirnames, filenames in os.walk(root):
                 # If we only replace strings that START with scope/ or have "scope/
                 # it might be too broad.
 
-                # However, many imports are like: import ... from "semio/js/shared"
-                # If we find "semio/ and it's at the start of the string value.
+                # However, many imports are like: import ... from "compose/js/shared"
+                # If we find "compose/ and it's at the start of the string value.
 
                 new_content = fix_imports(content)
 

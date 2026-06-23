@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Add double-precision matrix helpers for Jacobian computation."""
 
-SEMIO_CS = r"C:\git\semio\semio\net\Semio\Semio.cs"
+COMPOSE_CS = r"C:\git\compose\compose\net\Compose\Compose.cs"
 
 # The double-precision helpers to insert before ChildConnectorOriginWorld
 DOUBLE_HELPERS = """    private static double DegreesToRadiansD(double deg) => deg * Math.PI / 180.0;
@@ -260,8 +260,8 @@ NEW_CONN_BASIS = """    private static void ConnectionPlacementTranslationBasis(
         NormalizeD(raiseDir);
     }"""
 
-print(f"Reading {SEMIO_CS}")
-with open(SEMIO_CS, "r", encoding="utf-8") as f:
+print(f"Reading {COMPOSE_CS}")
+with open(COMPOSE_CS, "r", encoding="utf-8") as f:
     content = f.read()
 
 # Step 1: Insert double helpers before ChildConnectorOriginWorld
@@ -289,13 +289,13 @@ content = content[:idx2] + NEW_CONN_BASIS + content[idx2 + len(OLD_CONN_BASIS) :
 print("Updated ConnectionPlacementTranslationBasis to double precision")
 
 # Write
-with open(SEMIO_CS, "w", encoding="utf-8") as f:
+with open(COMPOSE_CS, "w", encoding="utf-8") as f:
     f.write(content)
 
 print("SUCCESS: Added double-precision helpers")
 
 # Verify
-with open(SEMIO_CS, "r", encoding="utf-8") as f:
+with open(COMPOSE_CS, "r", encoding="utf-8") as f:
     verify = f.read()
 
 checks = [

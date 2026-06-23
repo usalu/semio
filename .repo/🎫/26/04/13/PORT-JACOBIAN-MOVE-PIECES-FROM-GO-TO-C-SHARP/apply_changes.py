@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
-"""Apply Jacobian MovePiecesInDesign changes to Semio.cs on disk."""
+"""Apply Jacobian MovePiecesInDesign changes to Compose.cs on disk."""
 
 import os
 
-SEMIO_CS = r"C:\git\semio\semio\net\Semio\Semio.cs"
+COMPOSE_CS = r"C:\git\compose\compose\net\Compose\Compose.cs"
 _unused = os.path.join(
     os.path.dirname(__file__),
     "..",
     "..",
     "..",
     "..",
-    "semio",
+    "compose",
     "net",
-    "Semio",
-    "Semio.cs",
+    "Compose",
+    "Compose.cs",
 )
-SEMIO_CS = os.path.abspath(SEMIO_CS)
+COMPOSE_CS = os.path.abspath(COMPOSE_CS)
 
 OLD_METHOD = """    public static DesignDiff MovePiecesInDesign(Design design, Design pieces, MoveVector vector)
     {
@@ -447,8 +447,8 @@ NEW_CODE = """    private static double[] MoveTranslationWorld(Plane plane, Move
         return diff;
     }"""
 
-print(f"Reading {SEMIO_CS}")
-with open(SEMIO_CS, "r", encoding="utf-8") as f:
+print(f"Reading {COMPOSE_CS}")
+with open(COMPOSE_CS, "r", encoding="utf-8") as f:
     content = f.read()
 
 idx = content.find(OLD_METHOD)
@@ -459,7 +459,7 @@ if idx == -1:
 print(f"Found old method at character offset {idx}")
 new_content = content[:idx] + NEW_CODE + content[idx + len(OLD_METHOD) :]
 
-with open(SEMIO_CS, "w", encoding="utf-8") as f:
+with open(COMPOSE_CS, "w", encoding="utf-8") as f:
     f.write(new_content)
 
 print("SUCCESS: Replaced old MovePiecesInDesign with Jacobian-based version")
@@ -467,7 +467,7 @@ print(f"Old method: {len(OLD_METHOD)} chars")
 print(f"New code: {len(NEW_CODE)} chars")
 
 # Verify
-with open(SEMIO_CS, "r", encoding="utf-8") as f:
+with open(COMPOSE_CS, "r", encoding="utf-8") as f:
     verify = f.read()
 if "MovePiecesInDesign(Kit kit" in verify and "NormalizeD" in verify:
     print("VERIFIED: New code is on disk")

@@ -7,7 +7,7 @@ import {
   type FixtureV1,
   type KindCatalogBundle,
   type KindCompatEntry,
-} from "/Users/ueli/Documents/semio/puzzle/3d/react/index.tsx";
+} from "/Users/ueli/Documents/compose/puzzle/3d/react/index.tsx";
 
 const brushCatalogs: KindCatalogBundle = {
   objects: [

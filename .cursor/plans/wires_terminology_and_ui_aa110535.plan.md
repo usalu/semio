@@ -158,7 +158,7 @@ Optional canvas edge labels at detail LOD (later slice): mid-curve “Owns” ba
 ## Out of scope (explicit)
 
 - Renaming puzzle 2d public types (`Node`, `Edge`, `WireKind`) globally.
-- Semio kit → fixture codegen changes beyond ensuring `identityKind` ids stay stable.
+- Compose kit → fixture codegen changes beyond ensuring `identityKind` ids stay stable.
 - Arrowheads / edge routing styles per kind (follow-up if dash/color insufficient).
 
 ## Key files

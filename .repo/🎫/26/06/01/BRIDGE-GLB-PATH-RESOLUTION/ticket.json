@@ -2,7 +2,7 @@
   "title": "Bridge Glb Path Resolution",
   "emoji": "🌉",
   "status": "closed",
-  "description": "Fix places where bridge.glb and other metabolism representation files resolve to wrong paths (stale assets/semio/metabolism vs fixtures/kit/dev/metabolism/representations).",
+  "description": "Fix places where bridge.glb and other metabolism representation files resolve to wrong paths (stale assets/compose/metabolism vs fixtures/kit/dev/metabolism/representations).",
   "summary": "Puzzle 3d play loads nakagin-capsule-tower.3d.json; Bridge kind and three Bridge scene objects explicitly used /meshes/placeholder.glb (771KB box), not bridge.glb (368KB). Updated fixture catalog + objects to /meshes/bridge.glb; Vite play already serves fixtures via puzzle3dMeshesVitePlugin. Added play test.",
   "goal": "🎯r2602🎯runningsketchpad",
   "sessions": [

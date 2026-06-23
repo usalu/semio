@@ -2,7 +2,7 @@
   "title": "Fix Sketchpad Playwright Tests Compliance",
   "emoji": "🔧",
   "status": "closed",
-  "description": "Get all semio sketchpad Playwright tests complying without removing functionality from the tests. Fix any compilation or runtime failures.",
+  "description": "Get all compose sketchpad Playwright tests complying without removing functionality from the tests. Fix any compilation or runtime failures.",
   "summary": "All 6 sketchpad Playwright tests pass without any changes needed: Home (2.9m), Kit (42.1s), Type (57.8s), Design (2.0m), Docs (10.8s), Feedback (23.4s). Total 7.2 minutes, 6 passed, 0 failed. No functionality removed.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1006"

@@ -19,11 +19,11 @@ Task: Extend/fix tests for Type app and Design app to verify:
 
 # Changes
 
-## `js/semio/sketchpad.test.ts`
+## `js/compose/sketchpad.test.ts`
 
 ### Fixed `initType` function
 
-- Changed types toggle locator to `button[id="semio.sketchpad.app.kit.kitApp.showTypes"]` for more specific selection
+- Changed types toggle locator to `button[id="compose.sketchpad.app.kit.kitApp.showTypes"]` for more specific selection
 
 ### Fixed `initDesign` function
 

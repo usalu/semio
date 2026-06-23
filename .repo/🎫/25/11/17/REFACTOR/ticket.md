@@ -225,12 +225,12 @@ But scope providers are defined inconsistently:
 **Changes:**
 
 ```typescript
-// OLD: js/semio/sketchpad/apps/home/App.tsx
+// OLD: js/compose/sketchpad/apps/home/App.tsx
 export class HomeStore {
   // Custom implementation
 }
 
-// NEW: js/semio/sketchpad/apps/home/App.tsx
+// NEW: js/compose/sketchpad/apps/home/App.tsx
 export class HomeStore extends AppStore<HomeState, HomeDiff, HomeSelectionDiff, HomeEdit, HomeCommandContext, HomeCommandResult> {
   // Inherit transaction, undo/redo, selection from AppStore
 }
@@ -481,7 +481,7 @@ if (typeof window !== "undefined" && (window as any).__KIT_APP_MODULE_CACHE__) {
 **Solution:** Centralize in App.tsx:
 
 ```typescript
-// js/semio/sketchpad/App.tsx
+// js/compose/sketchpad/App.tsx
 
 // #region 🔖Module Cache
 const MODULE_CACHE = {
@@ -567,7 +567,7 @@ export const use[App]Scope = () => useContext([App]ScopeContext);
 // #region 🔖Commands
 
 export const [app]Commands = {
-  "semio.[app].command": async (
+  "compose.[app].command": async (
     context: [App]CommandContext,
     ...args: any[]
   ): Promise<[App]CommandResult> => {
@@ -584,7 +584,7 @@ export const [app]Commands = {
 ```typescript
 // home/App.tsx
 export const homeCommands = {
-  "semio.home.selectKit": async (context: HomeCommandContext, kitId: Guid): Promise<HomeCommandResult> => {
+  "compose.home.selectKit": async (context: HomeCommandContext, kitId: Guid): Promise<HomeCommandResult> => {
     return {
       diff: {
         selection: {
@@ -614,7 +614,7 @@ export const config: AppConfig = {
     {
       key: "details",
       icon: Info,
-      tooltip: { labelKey: "semio.sketchpad.navbar.panelToggle.details.show" },
+      tooltip: { labelKey: "compose.sketchpad.navbar.panelToggle.details.show" },
       position: PanelPosition.RIGHT,
       group: "right",
       isGroupable: true
@@ -711,7 +711,7 @@ Add new section to AGENTS.md:
 ```markdown
 ### App Structure Standards
 
-All apps in `js/semio/sketchpad/apps/*/App.tsx` MUST follow this structure:
+All apps in `js/compose/sketchpad/apps/*/App.tsx` MUST follow this structure:
 
 1. **Region Order:** Header → Imports → Types → Store → Commands → Components → App → Config
 2. **Store Base Class:** MUST extend either `AppStore` or `KitDiffAppStore` (no custom base classes)
@@ -1166,7 +1166,7 @@ import { DragEndEvent, ... } from "@dnd-kit/core";
 import { BarChart3, ... } from "lucide-react";
 import { ... } from "../../App";
 import { ... } from "../../elements";
-import { ... } from "../../../semio";
+import { ... } from "../../../compose";
 // #endregion 🔖Imports
 
 // #region 🔖Types
@@ -1199,7 +1199,7 @@ export function useDesignApp<T>(...): T | DesignAppState | null { ... }
 
 // #region 🔖Commands
 export const designCommands = {
-  "semio.designApp.selectPiece": async (context, pieceId) => { ... },
+  "compose.designApp.selectPiece": async (context, pieceId) => { ... },
   // ... more commands
 };
 // #endregion 🔖Commands

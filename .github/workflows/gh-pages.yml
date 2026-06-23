@@ -26,11 +26,11 @@ jobs:
       - name: Install and build docs site
         run: |
           bun install --frozen-lockfile
-          bun nx run @semio/docs:build
+          bun nx run @compose/docs:build
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: semio/sites/docs/dist
+          path: compose/sites/docs/dist
 
   deploy:
     needs: build

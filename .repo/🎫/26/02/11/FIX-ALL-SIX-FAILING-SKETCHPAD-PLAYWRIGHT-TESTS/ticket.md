@@ -8,7 +8,7 @@ goal: fix-e2e-tests
 
 All 6 sketchpad playwright tests pass. Fixed: (1) CSS import path in globals.css, (2) toolbar auto-expand in Sketchpad.tsx, (3) role=treeitem on TreeItem/SortableTreeItem in elements.tsx, (4) HUD panel pieces section in Design.tsx using usePieces() in App scope, (5) Feedback.tsx bypassed LayoutCanvas and fixed duplicate import.
 ## Changes
-- `globals.css`: Fixed @import path from `"semio/js/theme.css"` to `"./theme.css"`
+- `globals.css`: Fixed @import path from `"compose/js/theme.css"` to `"./theme.css"`
 - `Sketchpad.tsx`: Added useEffect to auto-expand first available toolbar group
 - `elements.tsx`: Added `role="treeitem"` to TreeItem and SortableTreeItem components
 - `Design.tsx`: Added `usePieces()` hook in App function, registered "hud" section with pieces as TreeItems (using data closure, not nested component with scope-dependent hooks)

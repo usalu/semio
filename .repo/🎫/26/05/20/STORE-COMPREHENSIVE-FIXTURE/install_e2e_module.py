@@ -1,17 +1,17 @@
 """Insert kit_store_comprehensive_e2e module and slim tests mod."""
 from pathlib import Path
 
-lib = Path(r"c:\git\semio\semio\client\lib\rs\lib.rs")
+lib = Path(r"c:\git\compose\compose\client\lib\rs\lib.rs")
 text = lib.read_text(encoding="utf-8")
 raw = Path(__file__).with_name("comprehensive_tests_snippet.rs").read_text(encoding="utf-8")
 snippet = raw.split("    #[test]")[0].strip()
 
 golden_paths = '''
-    /// @emoji 📎 US-001 replay fixtures (`kit-store.golden.*`) under `semio/assets/semio/`.
+    /// @emoji 📎 US-001 replay fixtures (`kit-store.golden.*`) under `compose/assets/compose/`.
     pub fn kit_store_golden_fixture_paths() -> Option<(PathBuf, PathBuf)> {
-        let base = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../assets/semio");
-        let ops = base.join("kit-store.golden.ops.semio.json");
-        let exp = base.join("kit-store.golden.expected.semio.json");
+        let base = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../assets/compose");
+        let ops = base.join("kit-store.golden.ops.compose.json");
+        let exp = base.join("kit-store.golden.expected.compose.json");
         if ops.is_file() && exp.is_file() {
             Some((ops, exp))
         } else {
@@ -39,7 +39,7 @@ body = body.replace(
 
 mod = f"""//#region 📋 kit_store_comprehensive_e2e
 
-/// @emoji 📋 In-process runner for `kit-store.comprehensive.semio.json` (native hosts + semio-store E2E).
+/// @emoji 📋 In-process runner for `kit-store.comprehensive.compose.json` (native hosts + compose-store E2E).
 #[cfg(not(target_arch = "wasm32"))]
 pub mod kit_store_comprehensive_e2e {{
     use std::path::Path;
@@ -93,7 +93,7 @@ replacement = """    use crate::kit_store_comprehensive_e2e::kit_store_comprehen
     #[test]
     fn kit_store_comprehensive_fixture_contract_is_valid() {
         let Some(path) = kit_store_comprehensive_fixture_path() else {
-            eprintln!("[DEBUG] skip kit_store_comprehensive_fixture_contract_is_valid: missing kit-store.comprehensive.semio.json");
+            eprintln!("[DEBUG] skip kit_store_comprehensive_fixture_contract_is_valid: missing kit-store.comprehensive.compose.json");
             return;
         };
         let fixture: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path).expect("read comprehensive fixture")).expect("parse comprehensive fixture");
@@ -116,7 +116,7 @@ replacement = """    use crate::kit_store_comprehensive_e2e::kit_store_comprehen
     fn kit_store_comprehensive_fixture_all_scenarios() {
         block_on(async {
             let Some(path) = kit_store_comprehensive_fixture_path() else {
-                eprintln!("[DEBUG] skip kit_store_comprehensive_fixture_all_scenarios: missing kit-store.comprehensive.semio.json");
+                eprintln!("[DEBUG] skip kit_store_comprehensive_fixture_all_scenarios: missing kit-store.comprehensive.compose.json");
                 return;
             };
             let fixture: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path).expect("read comprehensive fixture")).expect("parse comprehensive fixture");

@@ -1,7 +1,7 @@
 from pathlib import Path
 import re
 
-path = Path("semio/graphql/target.schema.graphql")
+path = Path("compose/graphql/target.schema.graphql")
 text = path.read_text(encoding="utf-8")
 lines = text.splitlines(True)
 out = []

@@ -1,4 +1,4 @@
-# Static Gql Schema Semio Rs
+# Static Gql Schema Compose Rs
 
 ## Done
 
@@ -12,7 +12,7 @@
 
 ## Files
 
-- `semio/rs/lib.rs`
+- `compose/rs/lib.rs`
 
 ## Validation
 

@@ -1,4 +1,4 @@
-"""🔠Rename `Coord`/`coord` to `Coordinate`/`coordinate` across semio source files.
+"""🔠Rename `Coord`/`coord` to `Coordinate`/`coordinate` across compose source files.
 
 Uses negative lookahead `(?!i)` to skip already-renamed `Coordinate*` tokens.
 Skips historical folders (.repo/⚡, .repo/🎫 other than this ticket, .cursor, node_modules, target, __pycache__, dist, build).
@@ -11,7 +11,7 @@ import re
 import sys
 from pathlib import Path
 
-REPO_ROOT = Path(r"c:/git/semio").resolve()
+REPO_ROOT = Path(r"c:/git/compose").resolve()
 TICKET_DIR = REPO_ROOT / ".repo" / "🎫" / "26" / "04" / "22" / "RENAME-COORD-TO-COORDINATE"
 
 # File extensions to process
@@ -30,7 +30,7 @@ SKIP_SEGMENTS = {
 }
 
 # Only rename within these top-level roots (plus the ticket itself)
-INCLUDE_ROOTS = {"semio"}
+INCLUDE_ROOTS = {"compose"}
 
 # Skip other tickets & cursor plans but keep THIS ticket
 def is_skipped(path: Path) -> bool:

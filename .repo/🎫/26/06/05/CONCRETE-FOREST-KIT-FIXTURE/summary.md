@@ -2,9 +2,9 @@
 
 ## Summary
 
-Authored the abbau-aufbau semio dev kit with typology **Concrete Forest** (2 types, 4 mutually-compatible ports, 7 connectors each, glb+3dm representations).
+Authored the abbau-aufbau compose dev kit with typology **Concrete Forest** (2 types, 4 mutually-compatible ports, 7 connectors each, glb+3dm representations).
 
-Added puzzle 3d fixture `concrete-forest.3d.json`, wired it as the default play fixture, and generalized `/meshes/` serving to include `semio/fixtures/kit/folder/abbau-aufbau`.
+Added puzzle 3d fixture `concrete-forest.3d.json`, wired it as the default play fixture, and generalized `/meshes/` serving to include `compose/fixtures/kit/folder/abbau-aufbau`.
 
 ## Fix (puzzle 3d infinite render loop)
 
@@ -24,10 +24,10 @@ Changes in `puzzle/3d/react/index.tsx`:
 
 ## Files
 
-- `semio/fixtures/kit/dev/abbau-aufbau/wip/initialKit/kit.semio.json`
-- `semio/fixtures/kit/dev/abbau-aufbau/wip/initialKit/index.semio.json`
-- `semio/fixtures/kit/dev/abbau-aufbau/wip/initialKit/types/hexagonal-cut-concrete-forest-left.type.semio.json`
-- `semio/fixtures/kit/dev/abbau-aufbau/wip/initialKit/types/hexagonal-cut-concrete-forest-right.type.semio.json`
+- `compose/fixtures/kit/dev/abbau-aufbau/wip/initialKit/kit.compose.json`
+- `compose/fixtures/kit/dev/abbau-aufbau/wip/initialKit/index.compose.json`
+- `compose/fixtures/kit/dev/abbau-aufbau/wip/initialKit/types/hexagonal-cut-concrete-forest-left.type.compose.json`
+- `compose/fixtures/kit/dev/abbau-aufbau/wip/initialKit/types/hexagonal-cut-concrete-forest-right.type.compose.json`
 - `puzzle/3d/fixture/concrete-forest.3d.json`
 - `puzzle/3d/play/index.ts`
 - `ui/styling/vite-elements-assets.ts`
@@ -35,5 +35,5 @@ Changes in `puzzle/3d/react/index.tsx`:
 
 ## Removed
 
-- `semio/fixtures/kit/dev/abbau-aufbau/wip/initialKit/types/hexagonal-cut-concrete-forest-left.json`
-- `semio/fixtures/kit/dev/abbau-aufbau/wip/initialKit/types/hexagonal-cut-concrete-forest-right.json`
+- `compose/fixtures/kit/dev/abbau-aufbau/wip/initialKit/types/hexagonal-cut-concrete-forest-left.json`
+- `compose/fixtures/kit/dev/abbau-aufbau/wip/initialKit/types/hexagonal-cut-concrete-forest-right.json`

@@ -16,7 +16,7 @@ import tseslint from "typescript-eslint";
 // #endregion 🔌Adapters
 
 // #region 🗄️Configuration
-// ESLint flat configuration for the semio JS package.
+// ESLint flat configuration for the compose JS package.
 // Configuration MUST export a valid ESLint flat config array.
 
 // Default ESLint flat configuration export with no custom rules.

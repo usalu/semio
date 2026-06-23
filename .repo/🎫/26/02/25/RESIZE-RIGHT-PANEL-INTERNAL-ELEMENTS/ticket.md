@@ -80,18 +80,18 @@ Aligned all right-panel inputs to one shared vertical guide by neutralizing nest
 - Read right panel and side panel implementation details.
 - Reworked implementation to avoid new sizing parameters.
 - Applied right-panel sizing through existing `className` parameter.
-- Ran `npx tsc --noEmit` in `semio/js`; command fails on pre-existing `PanelSection.content` typing errors in `Design.tsx`, `Docs.tsx`, `Quality.tsx` unrelated to this ticket.
+- Ran `npx tsc --noEmit` in `compose/js`; command fails on pre-existing `PanelSection.content` typing errors in `Design.tsx`, `Docs.tsx`, `Quality.tsx` unrelated to this ticket.
 - Reopened ticket to extend sizing scope to tree list items, fonts, inputs, and buttons with existing settings only.
 - Updated `rightSidePanelElementSizingClassName` to use existing utility tokens and slot selectors; removed hardcoded icon pixel size.
 - Reopened again to continue; repo `tree` CLI command did not return in this shell session (timeout/hanging), proceeded with known file paths from prior ticket context.
 - Replaced broad right-panel tree selector with explicit `data-slot` hooks in tree components and token-based right-panel selectors.
 - Compared old detail panel build values (`Design.Details.tsx.old`) against current side panel wiring and adjusted only existing hooks/props to match old density and resize envelope.
-- Re-ran `npx tsc --noEmit` in `semio/js`; command still fails on pre-existing `PanelSection.content` typing errors in `Design.tsx`, `Docs.tsx`, and `Quality.tsx` (no new errors from this patch).
+- Re-ran `npx tsc --noEmit` in `compose/js`; command still fails on pre-existing `PanelSection.content` typing errors in `Design.tsx`, `Docs.tsx`, and `Quality.tsx` (no new errors from this patch).
 - Reopened and applied inspector reference restyle constraints without changing element ordering.
 - Introduced slot-level hooks for property rows, slider internals, and stepper internals to support strict relational alignment in a scoped manner.
 - Enforced right panel layout tokens through the existing `rightSidePanelElementSizingClassName` with selector-based overrides.
 - Updated connection section slider wrappers to row-grid layout so labels and controls keep fixed guides independent of label length.
-- Ran `npx tsc --noEmit` in `semio/js`; same pre-existing type errors remain in `Design.tsx`, `Docs.tsx`, and `Quality.tsx`.
+- Ran `npx tsc --noEmit` in `compose/js`; same pre-existing type errors remain in `Design.tsx`, `Docs.tsx`, and `Quality.tsx`.
 - Reopened ticket to reset panel colors on request.
 - Removed only hardcoded color classes from `rightSidePanelElementSizingClassName`; kept geometry and alignment selectors.
 - Reopened ticket to align all window inputs on one vertical line.

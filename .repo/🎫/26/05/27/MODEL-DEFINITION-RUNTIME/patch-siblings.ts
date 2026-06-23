@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-const rendererPath = "c:/git/semio/spatial/js/renderer-r3f/index.tsx";
+const rendererPath = "c:/git/compose/spatial/js/renderer-r3f/index.tsx";
 let r = await Bun.file(rendererPath).text();
 r = r.replace(/\tExtensionViewService,\n/g, "");
 r = r.replace(/\tlistExtensionViews,\n/g, "");
@@ -73,14 +73,14 @@ r = r.replace(
 r = r.replaceAll("ExtensionViewService.forKernel", "(() => null) as unknown as typeof null");
 await Bun.write(rendererPath, r);
 
-const playPath = "c:/git/semio/spatial/js/renderer-r3f/play/main.tsx";
+const playPath = "c:/git/compose/spatial/js/renderer-r3f/play/main.tsx";
 let p = await Bun.file(playPath).text();
 p = p.replace(/\tExtensionViewService,\n/g, "");
 p = p.replace(/readonly views: ExtensionViewService;\n/, "");
 p = p.replace(/const views = useMemo\(\(\) => ExtensionViewService\.forKernel\(kernel as unknown as import\("@spatial\/js-core"\)\.SpatialKernel\), \[kernel\]\);/, "const views = null;");
 await Bun.write(playPath, p);
 
-for (const file of ["c:/git/semio/spatial/js/kernel-brepjs/index.ts", "c:/git/semio/spatial/js/query/index.ts", "c:/git/semio/spatial/js/machine-stately/index.ts"]) {
+for (const file of ["c:/git/compose/spatial/js/kernel-brepjs/index.ts", "c:/git/compose/spatial/js/query/index.ts", "c:/git/compose/spatial/js/machine-stately/index.ts"]) {
   let s = await Bun.file(file).text();
   s = s.replace(/\tExtensionViewService,\n/g, "");
   s = s.replace(/\ttype ExtensionViewService,\n/g, "");

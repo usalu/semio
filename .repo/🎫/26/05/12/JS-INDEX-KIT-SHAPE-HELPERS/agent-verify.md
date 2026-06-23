@@ -1,4 +1,4 @@
 # Verify
 
-- `npx tsc -p semio/js/tsconfig.json --noEmit` — pass
-- `npx nx run @semio/js:test` — pass (11 tests)
+- `npx tsc -p compose/js/tsconfig.json --noEmit` — pass
+- `npx nx run @compose/js:test` — pass (11 tests)

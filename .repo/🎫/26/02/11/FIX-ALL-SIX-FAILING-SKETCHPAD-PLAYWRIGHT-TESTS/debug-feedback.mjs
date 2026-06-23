@@ -16,7 +16,7 @@ const items = await page.evaluate(() => document.querySelectorAll('.lm_item_cont
 console.log('GL item containers:', items);
 
 const formCount = await page.evaluate(() => {
-  return document.querySelectorAll('[id="semio.sketchpad.app.feedback.form.kind"]').length;
+  return document.querySelectorAll('[id="compose.sketchpad.app.feedback.form.kind"]').length;
 });
 console.log('form.kind elements:', formCount);
 

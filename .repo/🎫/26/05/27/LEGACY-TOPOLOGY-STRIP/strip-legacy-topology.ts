@@ -1,7 +1,7 @@
 /** @emoji 🧹 Strip cellComplex/cluster/shell picks; fix cell→solid rename damage in spatial packages. */
 import { readFileSync, writeFileSync } from "node:fs";
 
-const core = "c:/git/semio/spatial/js/core/index.ts";
+const core = "c:/git/compose/spatial/js/core/index.ts";
 let text = readFileSync(core, "utf8");
 
 text = text.replace(
@@ -142,14 +142,14 @@ text = text.replace(
 writeFileSync(core, text);
 
 const fixtureFiles = [
-	"c:/git/semio/spatial/fixtures/simple.spatial.json",
-	"c:/git/semio/spatial/fixtures/spatial.spatial.json",
-	"c:/git/semio/spatial/fixtures/small-building.model.json",
-	"c:/git/semio/spatial/fixtures/tall-building.model.json",
-	"c:/git/semio/spatial/fixtures/large-building.model.json",
-	"c:/git/semio/spatial/fixtures/geometry.json",
-	"c:/git/semio/spatial/fixtures/geometry-loom.json",
-	"c:/git/semio/spatial/fixtures/geometry-routes.json",
+	"c:/git/compose/spatial/fixtures/simple.spatial.json",
+	"c:/git/compose/spatial/fixtures/spatial.spatial.json",
+	"c:/git/compose/spatial/fixtures/small-building.model.json",
+	"c:/git/compose/spatial/fixtures/tall-building.model.json",
+	"c:/git/compose/spatial/fixtures/large-building.model.json",
+	"c:/git/compose/spatial/fixtures/geometry.json",
+	"c:/git/compose/spatial/fixtures/geometry-loom.json",
+	"c:/git/compose/spatial/fixtures/geometry-routes.json",
 ];
 for (const f of fixtureFiles) {
 	let j = readFileSync(f, "utf8");
@@ -160,7 +160,7 @@ for (const f of fixtureFiles) {
 	writeFileSync(f, j);
 }
 
-const schema = "c:/git/semio/spatial/schema/json/model.json";
+const schema = "c:/git/compose/spatial/schema/json/model.json";
 let schemaText = readFileSync(schema, "utf8");
 schemaText = schemaText.replace(
 	/"required": \["anchors", "vertices", "edges", "wires", "faces", "shells", "cells", "cellComplexes", "clusters"\]/,
@@ -175,7 +175,7 @@ schemaText = schemaText.replace(/"cell"/g, '"solid"');
 schemaText = schemaText.replace(/Cell/g, "Solid");
 writeFileSync(schema, schemaText);
 
-const interactionSchema = "c:/git/semio/spatial/schema/json/interaction.json";
+const interactionSchema = "c:/git/compose/spatial/schema/json/interaction.json";
 let is = readFileSync(interactionSchema, "utf8");
 is = is.replace(
 	/"enum": \[[\s\S]*?"anchor"\s*\]/,

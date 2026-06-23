@@ -1,0 +1,14 @@
+{
+  "name": "@compose/query",
+  "version": "0.1.0",
+  "description": "semio · query language (Rust/WASM + native)",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "compose/client/lib/query",
+  "projectType": "library",
+  "author": {
+    "name": "Ueli Saluz",
+    "email": "ueli@semio-tech.com",
+    "url": "https://github.com/usalu"
+  },
+  "bundleKind": "library"
+}

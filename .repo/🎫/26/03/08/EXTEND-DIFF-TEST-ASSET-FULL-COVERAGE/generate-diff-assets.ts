@@ -14,9 +14,9 @@ import {
   areKitDiffsEqual,
   areKitsEqual,
   Kit,
-} from "/workspaces/semio/semio/js/semio";
+} from "/workspaces/semio/compose/js/compose";
 
-const ASSETS_DIR = "/workspaces/semio/semio/assets/semio";
+const ASSETS_DIR = "/workspaces/semio/compose/assets/compose";
 
 const kitRaw: Kit = JSON.parse(
   readFileSync(join(ASSETS_DIR, "kit_metabolism.json"), "utf-8")
@@ -468,7 +468,7 @@ const authors = kitAfter.authors!;
 const authorToUpdate = authors.find((a: any) => a.guid === "e3d5369e-b103-42a8-960a-7960c75f0f88") as any;
 if (authorToUpdate) {
   authorToUpdate.name = "Ueli Saluz Modified";
-  authorToUpdate.email = "modified@semio-tech.org";
+  authorToUpdate.email = "modified@compose-tech.org";
   // attributes: skipped (original is undefined)
 }
 

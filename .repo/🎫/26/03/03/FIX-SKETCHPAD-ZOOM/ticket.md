@@ -8,12 +8,12 @@ goal: SKETCHPAD-IMPROVEMENTS
 
 Added a wrapper-level wheel zoom fallback for the embedded design diagram and revalidated zoom plus fullscreen remount retention with focused Playwright coverage.
 ## Changes
-- `semio/js/sketchpad/Design.tsx`: Persist `diagramScale` alongside `diagramCenter` when viewport movement ends.
-- `semio/js/sketchpad/Design.tsx`: Persist viewport state from live React Flow move events and keep center-reset actions aligned with zoom state.
-- `semio/js/sketchpad/elements.tsx`: Forward React Flow `onMove` viewport updates through the shared `Diagram` wrapper.
-- `semio/js/sketchpad/elements.tsx`: Add a wheel-capture zoom fallback on the diagram wrapper so embedded design panels zoom even when the internal React Flow wheel handler does not.
-- `semio/js/sketchpad.test.ts`: Extend the existing Playwright coverage with a regression test that verifies wheel zoom updates persisted Design app scale state.
-- `semio/js/sketchpad.test.ts`: Reworked the zoom regression to verify the user-facing behavior that zoom survives the existing diagram fullscreen toggle.
+- `compose/js/sketchpad/Design.tsx`: Persist `diagramScale` alongside `diagramCenter` when viewport movement ends.
+- `compose/js/sketchpad/Design.tsx`: Persist viewport state from live React Flow move events and keep center-reset actions aligned with zoom state.
+- `compose/js/sketchpad/elements.tsx`: Forward React Flow `onMove` viewport updates through the shared `Diagram` wrapper.
+- `compose/js/sketchpad/elements.tsx`: Add a wheel-capture zoom fallback on the diagram wrapper so embedded design panels zoom even when the internal React Flow wheel handler does not.
+- `compose/js/sketchpad.test.ts`: Extend the existing Playwright coverage with a regression test that verifies wheel zoom updates persisted Design app scale state.
+- `compose/js/sketchpad.test.ts`: Reworked the zoom regression to verify the user-facing behavior that zoom survives the existing diagram fullscreen toggle.
 
 ## Log
 - Confirmed the Design diagram already restores `savedDiagramScale` on mount, but never writes updated zoom back after user interaction.
@@ -32,6 +32,6 @@ Added a wrapper-level wheel zoom fallback for the embedded design diagram and re
 - [x] Close the ticket with the touched files.
 
 ## Plan
-- Update the existing viewport move-end persistence path in `semio/js/sketchpad/Design.tsx` to save both center and scale from the active React Flow viewport.
-- Add a focused design-app regression in `semio/js/sketchpad.test.ts` that zooms the diagram and asserts the stored Design app `diagramScale` tracks the viewport scale.
+- Update the existing viewport move-end persistence path in `compose/js/sketchpad/Design.tsx` to save both center and scale from the active React Flow viewport.
+- Add a focused design-app regression in `compose/js/sketchpad.test.ts` that zooms the diagram and asserts the stored Design app `diagramScale` tracks the viewport scale.
 - Execute the focused Playwright test and record the result before closing the ticket.

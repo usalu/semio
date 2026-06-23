@@ -3,7 +3,7 @@
 ## Todos
 # Previously
 
-The C# schema in Semio.cs was out of date compared to the TypeScript semio.ts. Several entity reference types (IDs) were stored as strings in C# but as objects with `{ guid: string }` in TypeScript.
+The C# schema in Compose.cs was out of date compared to the TypeScript compose.ts. Several entity reference types (IDs) were stored as strings in C# but as objects with `{ guid: string }` in TypeScript.
 
 # Plan
 
@@ -22,7 +22,7 @@ The C# schema in Semio.cs was out of date compared to the TypeScript semio.ts. S
 
 # Changes
 
-## Semio.cs
+## Compose.cs
 
 - **QualityId**: Changed from `Key` (string) to `Guid` (string)
 - **QualityDiff**: Added `Guid` property
@@ -47,7 +47,7 @@ The C# schema in Semio.cs was out of date compared to the TypeScript semio.ts. S
 - **Kit.Concepts**: Changed from `List<string>` to `List<Concept>`
 - **KitDiff.Concepts**: Changed from `List<Concept>?` to `ConceptsDiff?`
 
-## Semio.Grasshopper.cs
+## Compose.Grasshopper.cs
 
 - **QualityIdGoo**: Updated to use `Guid` instead of `Key`
 - **PropGoo**: Updated to use `Quality.Guid` instead of `Key`
@@ -63,4 +63,4 @@ The C# schema in Semio.cs was out of date compared to the TypeScript semio.ts. S
 ## Summary
 # Summary
 
-Sync C# schema with TypeScript semio.ts
+Sync C# schema with TypeScript compose.ts

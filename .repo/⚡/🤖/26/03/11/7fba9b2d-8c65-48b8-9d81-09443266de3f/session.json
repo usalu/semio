@@ -5,13 +5,13 @@
   "contributor": "🧑‍💻ueli",
   "client": "claude-code",
   "second": "2026-03-11T11:43:41Z",
-  "transcript": "/home/vscode/.claude/projects/-workspaces-semio/7fba9b2d-8c65-48b8-9d81-09443266de3f.jsonl",
+  "transcript": "/home/vscode/.claude/projects/-workspaces-compose/7fba9b2d-8c65-48b8-9d81-09443266de3f.jsonl",
   "events": [
     {
       "native": {
         "event": {
           "session_id": "7fba9b2d-8c65-48b8-9d81-09443266de3f",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/7fba9b2d-8c65-48b8-9d81-09443266de3f.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/7fba9b2d-8c65-48b8-9d81-09443266de3f.jsonl",
           "cwd": "/workspaces/semio",
           "hook_event_name": "SessionStart",
           "source": "startup"
@@ -25,7 +25,7 @@
         "parent": "",
         "second": "🎆26🌙03☀️11⏰11⌚43⏱️41",
         "session": "⚪7fba9b2d8c6548b89d8109443266de3f",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/7fba9b2d-8c65-48b8-9d81-09443266de3f.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/7fba9b2d-8c65-48b8-9d81-09443266de3f.jsonl"
       },
       "response": {
         "allowed": true
@@ -35,7 +35,7 @@
       "native": {
         "event": {
           "session_id": "7fba9b2d-8c65-48b8-9d81-09443266de3f",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/7fba9b2d-8c65-48b8-9d81-09443266de3f.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/7fba9b2d-8c65-48b8-9d81-09443266de3f.jsonl",
           "cwd": "/workspaces/semio",
           "hook_event_name": "SessionEnd",
           "reason": "other"
@@ -49,7 +49,7 @@
         "parent": "",
         "second": "🎆26🌙03☀️11⏰11⌚43⏱️48",
         "session": "⚪7fba9b2d8c6548b89d8109443266de3f",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/7fba9b2d-8c65-48b8-9d81-09443266de3f.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/7fba9b2d-8c65-48b8-9d81-09443266de3f.jsonl"
       },
       "response": {
         "allowed": true

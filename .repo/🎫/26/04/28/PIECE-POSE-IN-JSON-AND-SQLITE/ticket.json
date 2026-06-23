@@ -2,8 +2,8 @@
   "title": "Piece Pose In Json And Sqlite",
   "emoji": "📐",
   "status": "closed",
-  "description": "Pieces in semio assets JSON and SQLite must use pose { center, plane } instead of top-level plane/center on piece objects. Update all semio/assets/semio JSON fixtures, semio/sqlite/schema.sql (and Rust sqlite I/O SCHEMA_VERSION), JS/GraphQL if needed, and close with ticket_close listing touched files.",
-  "summary": "Pieces use nested pose { plane, center } in kit JSON and DTOs; SQLite stores pose_plane_* / pose_center_* (Rust schema + I/O). Follow-up: Python _parse_piece_from_sqlite now reads Rust column names, emits pose (not top-level plane/center), maps design_ref_id and hidden/locked, fixes duplicate id key. Engine test helper reads piece.pose. Regenerated semio/graphql/schema.graphql (nx build semio/graphql) so SDL matches Rust. cargo test --lib: 128 passed, 1 ignored.",
+  "description": "Pieces in compose assets JSON and SQLite must use pose { center, plane } instead of top-level plane/center on piece objects. Update all compose/assets/compose JSON fixtures, compose/sqlite/schema.sql (and Rust sqlite I/O SCHEMA_VERSION), JS/GraphQL if needed, and close with ticket_close listing touched files.",
+  "summary": "Pieces use nested pose { plane, center } in kit JSON and DTOs; SQLite stores pose_plane_* / pose_center_* (Rust schema + I/O). Follow-up: Python _parse_piece_from_sqlite now reads Rust column names, emits pose (not top-level plane/center), maps design_ref_id and hidden/locked, fixes duplicate id key. Engine test helper reads piece.pose. Regenerated compose/graphql/schema.graphql (nx build compose/graphql) so SDL matches Rust. cargo test --lib: 128 passed, 1 ignored.",
   "goal": "🎯r2603",
   "sessions": [
     "⚪dc8836a5c3854d098bd236589f39bc2d"

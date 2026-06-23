@@ -5,7 +5,7 @@
   "second": "2026-05-06T20:26:05Z",
   "checkpoint": "175b49570db1f9c049b365276a2309df21df4e86",
   "contributor": "unknown",
-  "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/092da57c-9aa9-4c27-9fd2-0d8c75df48d6/092da57c-9aa9-4c27-9fd2-0d8c75df48d6.jsonl",
+  "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/092da57c-9aa9-4c27-9fd2-0d8c75df48d6/092da57c-9aa9-4c27-9fd2-0d8c75df48d6.jsonl",
   "events": [
     {
       "event": {
@@ -42,7 +42,7 @@
         "kind": "agent.ended",
         "second": "2026-05-06T20:26:25Z",
         "session": "092da57c-9aa9-4c27-9fd2-0d8c75df48d6",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/092da57c-9aa9-4c27-9fd2-0d8c75df48d6/092da57c-9aa9-4c27-9fd2-0d8c75df48d6.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/092da57c-9aa9-4c27-9fd2-0d8c75df48d6/092da57c-9aa9-4c27-9fd2-0d8c75df48d6.jsonl"
       },
       "native": {
         "event": {
@@ -60,7 +60,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/092da57c-9aa9-4c27-9fd2-0d8c75df48d6/092da57c-9aa9-4c27-9fd2-0d8c75df48d6.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/092da57c-9aa9-4c27-9fd2-0d8c75df48d6/092da57c-9aa9-4c27-9fd2-0d8c75df48d6.jsonl"
         }
       },
       "response": {}

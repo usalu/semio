@@ -2,7 +2,7 @@
   "title": "Remove Row Terminology From Client Lib",
   "emoji": "🧹",
   "status": "open",
-  "description": "Rename *Row operation DTOs and local variables in semio/client/lib (rs, js) to align with schema.golden.graphql vocabulary; eliminate SQL-style row naming. Update comments. Run tests.",
+  "description": "Rename *Row operation DTOs and local variables in compose/client/lib (rs, js) to align with schema.golden.graphql vocabulary; eliminate SQL-style row naming. Update comments. Run tests.",
   "goal": "🎯r2602🎯updateddocs🎯updateddevdocs🎯updatedagentsmd",
   "sessions": [
     "⚪d7d47600d31b404fabc081c08f4dfbcb"

@@ -14,7 +14,7 @@
       "session_id": "2a39a043-95b0-4799-9962-b925b33477cf",
       "tool_name": "file_search",
       "tool_input": {
-        "query": "**/semio/sketchpad/sketchpad/Home.tsx",
+        "query": "**/compose/sketchpad/sketchpad/Home.tsx",
         "maxResults": 20
       },
       "tool_use_id": "toolu_01HqKzvRuJp4SoCYKEZsQDVN__vscode-1773658270520",

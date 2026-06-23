@@ -32,7 +32,7 @@ In the sketchpad **Kit** app, the VFS rows (File System window) and the wires id
 The two panels rebuild on different triggers and with different data readiness:
 
 - VFS table rebuilds on every controller `emit()`, including when an async child load finishes.
-- Wires only rebuild via `syncKitWiresTopology`, which is invoked synchronously from `run()` right after a VFS command (`semio/client/lib/sketchpad/js/index.ts` around line 14799).
+- Wires only rebuild via `syncKitWiresTopology`, which is invoked synchronously from `run()` right after a VFS command (`compose/client/lib/sketchpad/js/index.ts` around line 14799).
 
 When a typology is expanded:
 
@@ -65,7 +65,7 @@ Make the wires sync await **all currently-expanded branches** (not just root) be
 
 ### 1. Rework `prepareKitWiresVfsForTopology`
 
-In [semio/client/lib/sketchpad/js/index.ts](semio/client/lib/sketchpad/js/index.ts) (~lines 14290-14305), await root children plus every id in `expandedStore(scope)` via `ensureChildrenLoadedAsync` (which already de-dupes concurrent per-parent loads internally), e.g. `await Promise.all([rootId, ...expandedIds].map(id => this.ensureChildrenLoadedAsync(id, scope)))`. Remove the root-only `kitWiresVfsPreparePromises` memoization so each sync reflects the live expansion set; correctness/dedup is preserved by `ensureChildrenLoadedAsync`. Update the docstring.
+In [compose/client/lib/sketchpad/js/index.ts](compose/client/lib/sketchpad/js/index.ts) (~lines 14290-14305), await root children plus every id in `expandedStore(scope)` via `ensureChildrenLoadedAsync` (which already de-dupes concurrent per-parent loads internally), e.g. `await Promise.all([rootId, ...expandedIds].map(id => this.ensureChildrenLoadedAsync(id, scope)))`. Remove the root-only `kitWiresVfsPreparePromises` memoization so each sync reflects the live expansion set; correctness/dedup is preserved by `ensureChildrenLoadedAsync`. Update the docstring.
 
 ### 2. Remove the now-unused memo plumbing
 
@@ -78,7 +78,7 @@ In [semio/client/lib/sketchpad/js/index.ts](semio/client/lib/sketchpad/js/index.
 
 ### 4. Extend tests (no new test files)
 
-In the embedded vitest `describe("SketchpadShellController topology", ...)` block in [semio/client/lib/sketchpad/js/index.ts](semio/client/lib/sketchpad/js/index.ts) (~line 16831), add a case using an `InMemorySemioKitStore` with `typologies: [{ id, name, types: [...], designs: [...] }]`: navigate, `syncVirtualFileSystemRoute`, expand the typology, run the wires sync, await a tick, then assert the topology store's flat `identities` include the typology's type and design `nodeId`s and that they equal the VFS `visibleVirtualFileSystemNodes` ids. This guards the regression (existing wires tests only use flat root-level types).
+In the embedded vitest `describe("SketchpadShellController topology", ...)` block in [compose/client/lib/sketchpad/js/index.ts](compose/client/lib/sketchpad/js/index.ts) (~line 16831), add a case using an `InMemoryComposeKitStore` with `typologies: [{ id, name, types: [...], designs: [...] }]`: navigate, `syncVirtualFileSystemRoute`, expand the typology, run the wires sync, await a tick, then assert the topology store's flat `identities` include the typology's type and design `nodeId`s and that they equal the VFS `visibleVirtualFileSystemNodes` ids. This guards the regression (existing wires tests only use flat root-level types).
 
 ## Workflow
 
@@ -87,5 +87,5 @@ In the embedded vitest `describe("SketchpadShellController topology", ...)` bloc
 
 ## Notes
 
-- All edits stay within the `semio` technology (sketchpad js + the shared framework VFS controller is only read, not changed). No changes to `elements`/`coda`/`mit-bestand`.
+- All edits stay within the `compose` technology (sketchpad js + the shared framework VFS controller is only read, not changed). No changes to `elements`/`coda`/`mit-bestand`.
 

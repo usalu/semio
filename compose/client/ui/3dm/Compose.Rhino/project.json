@@ -1,0 +1,30 @@
+{
+  "name": "@compose/rhino",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "compose/client/ui/3dm/Compose.Rhino",
+        "command": "dotnet build",
+        "forwardAllArgs": true
+      }
+    },
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "compose/client/ui/3dm/Compose.Rhino",
+        "command": "dotnet build",
+        "forwardAllArgs": true
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "compose/client/ui/3dm/Compose.Rhino",
+        "command": "dotnet test ../Compose.Rhino.Tests/Compose.Rhino.Tests.csproj",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

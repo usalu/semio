@@ -1,6 +1,6 @@
 {
   "id": "1e99ea29-8fda-441a-9ebe-e9b940d3f47d",
-  "uri": "semiorepo://s/1e99ea29-8fda-441a-9ebe-e9b940d3f47d",
+  "uri": "composerepo://s/1e99ea29-8fda-441a-9ebe-e9b940d3f47d",
   "contributor": "🧑‍💻ueli",
   "client": "cursor-chat",
   "second": "2026-03-13T12:39:16Z",
@@ -11,7 +11,7 @@
           "conversation_id": "1e99ea29-8fda-441a-9ebe-e9b940d3f47d",
           "generation_id": "1e99ea29-8fda-441a-9ebe-e9b940d3f47d",
           "model": "tab",
-          "file_path": "\\workspaces\\semio\\coda\\programming\\AGENTS.md",
+          "file_path": "\\workspaces\\compose\\coda\\programming\\AGENTS.md",
           "content": "# 🧾 Specification\n\n## 🕸️ Systems\n\n### Project, Program,  Space,\n\n## 🛠️ Mechanisms\n\n## 📛 Concepts\n\n### Project\n\n### Pro\n\n### Program\n",
           "hook_event_name": "beforeTabFileRead",
           "cursor_version": "2.6.18",
@@ -30,7 +30,7 @@
         "llm": "tab",
         "parent": "",
         "ranges": [
-          "🛅🗃️workspaces🗃️semio🗃️semiocoda🗃️programming📃agents📌1"
+          "🛅🗃️workspaces🗃️compose🗃️composecoda🗃️programming📃agents📌1"
         ],
         "second": "🎆26🌙03☀️13⏰12⌚39⏱️16",
         "session": "⚪1e99ea298fda441a9ebee9b940d3f47d"

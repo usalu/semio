@@ -1,0 +1,12 @@
+{
+  "cases": [
+    {
+      "name": "nakagin_capsule_tower_third_tambour_and_first_small_tower_connection",
+      "kit": "kit/dev/metabolism/wip/initialKit/kit.compose.json",
+      "designName": "Nakagin Capsule Tower",
+      "selectionAsset": "nakagin-capsule-tower.deleted.selection.compose.json",
+      "expectedDiffAsset": "nakagin-capsule-tower.deleted.design.diff.compose.json",
+      "designFamilies": []
+    }
+  ]
+}

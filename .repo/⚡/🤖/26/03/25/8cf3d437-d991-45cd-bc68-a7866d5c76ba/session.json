@@ -41,7 +41,7 @@
           "timestamp": "2026-03-25T01:28:00.181Z",
           "hook_event_name": "UserPromptSubmit",
           "session_id": "8cf3d437-d991-45cd-bc68-a7866d5c76ba",
-          "prompt": "Thoroughly explore the semio UI components. I need:\n\n1. The complete directory listing of `semio/js/` - all files and folders\n2. The full content of the main semio UI module that has the components SemioDiagram, SemioScene, SemioDesign, PieceSelection, and related types/interfaces\n3. Look in `semio/js/src/` or similar for files containing these component definitions\n4. Also check `semio/ui/` for any UI components\n5. Check the package.json in `semio/js/` for the build configuration and entry points\n\nI need to understand:\n- Where these React components are defined (exact file paths)\n- Their full Props interfaces\n- The SelectionState type/interface\n- How PieceSelection works\n- How the components handle controlled vs uncontrolled state\n- Any existing iframe/embed/app related code\n\nReturn exact file paths and the complete code of each relevant component.",
+          "prompt": "Thoroughly explore the compose UI components. I need:\n\n1. The complete directory listing of `compose/js/` - all files and folders\n2. The full content of the main compose UI module that has the components ComposeDiagram, ComposeScene, ComposeDesign, PieceSelection, and related types/interfaces\n3. Look in `compose/js/src/` or similar for files containing these component definitions\n4. Also check `compose/ui/` for any UI components\n5. Check the package.json in `compose/js/` for the build configuration and entry points\n\nI need to understand:\n- Where these React components are defined (exact file paths)\n- Their full Props interfaces\n- The SelectionState type/interface\n- How PieceSelection works\n- How the components handle controlled vs uncontrolled state\n- Any existing iframe/embed/app related code\n\nReturn exact file paths and the complete code of each relevant component.",
           "cwd": "/workspaces/semio"
         }
       },
@@ -63,7 +63,7 @@
           "session_id": "8cf3d437-d991-45cd-bc68-a7866d5c76ba",
           "tool_name": "list_dir",
           "tool_input": {
-            "path": "/workspaces/semio/semio/js"
+            "path": "/workspaces/semio/compose/js"
           },
           "tool_use_id": "toolu_bdrk_01Gz3iWp8mcNfVLx9d8Tm3bf__vscode-1774398922949",
           "cwd": "/workspaces/semio"
@@ -88,9 +88,9 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "query": "SemioDiagram|SemioScene|SemioDesign|PieceSelection",
+            "query": "ComposeDiagram|ComposeScene|ComposeDesign|PieceSelection",
             "isRegexp": true,
-            "includePattern": "**/semio/js/**/*.{ts,tsx}"
+            "includePattern": "**/compose/js/**/*.{ts,tsx}"
           },
           "tool_use_id": "toolu_bdrk_012wti4Vc72jaZRXKL29f4Ay__vscode-1774398922951",
           "cwd": "/workspaces/semio"
@@ -114,7 +114,7 @@
           "session_id": "8cf3d437-d991-45cd-bc68-a7866d5c76ba",
           "tool_name": "list_dir",
           "tool_input": {
-            "path": "/workspaces/semio/semio/js"
+            "path": "/workspaces/semio/compose/js"
           },
           "tool_response": "",
           "tool_use_id": "toolu_bdrk_01Gz3iWp8mcNfVLx9d8Tm3bf__vscode-1774398922949",
@@ -139,7 +139,7 @@
           "session_id": "8cf3d437-d991-45cd-bc68-a7866d5c76ba",
           "tool_name": "list_dir",
           "tool_input": {
-            "path": "/workspaces/semio/semio/ui"
+            "path": "/workspaces/semio/compose/ui"
           },
           "tool_response": "",
           "tool_use_id": "toolu_bdrk_01JxMPZtTh7DYfQP4fVpQ7FV__vscode-1774398922950",
@@ -165,9 +165,9 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "query": "SemioDiagram|SemioScene|SemioDesign|PieceSelection",
+            "query": "ComposeDiagram|ComposeScene|ComposeDesign|PieceSelection",
             "isRegexp": true,
-            "includePattern": "**/semio/js/**/*.{ts,tsx}"
+            "includePattern": "**/compose/js/**/*.{ts,tsx}"
           },
           "tool_response": "",
           "tool_use_id": "toolu_bdrk_012wti4Vc72jaZRXKL29f4Ay__vscode-1774398922951",
@@ -192,7 +192,7 @@
           "session_id": "8cf3d437-d991-45cd-bc68-a7866d5c76ba",
           "tool_name": "list_dir",
           "tool_input": {
-            "path": "/workspaces/semio/semio/js"
+            "path": "/workspaces/semio/compose/js"
           },
           "tool_use_id": "toolu_bdrk_01MoRaiLFgnTKgTqaNPFKoxi__vscode-1774398922952",
           "cwd": "/workspaces/semio"
@@ -216,7 +216,7 @@
           "session_id": "8cf3d437-d991-45cd-bc68-a7866d5c76ba",
           "tool_name": "file_search",
           "tool_input": {
-            "query": "**/semio/js/**/SemioDiagram.tsx",
+            "query": "**/compose/js/**/ComposeDiagram.tsx",
             "maxResults": 20
           },
           "tool_use_id": "toolu_bdrk_01TP6JVjiS49PsAqLE4DEGhW__vscode-1774398922954",
@@ -241,7 +241,7 @@
           "session_id": "8cf3d437-d991-45cd-bc68-a7866d5c76ba",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/js/package.json",
+            "filePath": "/workspaces/semio/compose/js/package.json",
             "startLine": 1,
             "endLine": 50
           },
@@ -267,7 +267,7 @@
           "session_id": "8cf3d437-d991-45cd-bc68-a7866d5c76ba",
           "tool_name": "list_dir",
           "tool_input": {
-            "path": "/workspaces/semio/semio/js"
+            "path": "/workspaces/semio/compose/js"
           },
           "tool_response": "",
           "tool_use_id": "toolu_bdrk_01MoRaiLFgnTKgTqaNPFKoxi__vscode-1774398922952",
@@ -292,7 +292,7 @@
           "session_id": "8cf3d437-d991-45cd-bc68-a7866d5c76ba",
           "tool_name": "file_search",
           "tool_input": {
-            "query": "**/semio/js/**/SemioDiagram.tsx",
+            "query": "**/compose/js/**/ComposeDiagram.tsx",
             "maxResults": 20
           },
           "tool_response": "",
@@ -318,7 +318,7 @@
           "session_id": "8cf3d437-d991-45cd-bc68-a7866d5c76ba",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/js/package.json",
+            "filePath": "/workspaces/semio/compose/js/package.json",
             "startLine": 1,
             "endLine": 50
           },
@@ -345,7 +345,7 @@
           "session_id": "8cf3d437-d991-45cd-bc68-a7866d5c76ba",
           "tool_name": "file_search",
           "tool_input": {
-            "query": "**/semio/ui/**/SemioDiagram",
+            "query": "**/compose/ui/**/ComposeDiagram",
             "maxResults": 20
           },
           "tool_use_id": "toolu_bdrk_01Tt4C3f82AzhSEPEpV7i5za__vscode-1774398922956",
@@ -370,7 +370,7 @@
           "session_id": "8cf3d437-d991-45cd-bc68-a7866d5c76ba",
           "tool_name": "file_search",
           "tool_input": {
-            "query": "**/elements/ui/**/SemioDiagram",
+            "query": "**/elements/ui/**/ComposeDiagram",
             "maxResults": 20
           },
           "tool_use_id": "toolu_bdrk_016AUrBRSaqbPvsyu12jh7Zk__vscode-1774398922957",
@@ -395,7 +395,7 @@
           "session_id": "8cf3d437-d991-45cd-bc68-a7866d5c76ba",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 1,
             "endLine": 100
           },
@@ -421,7 +421,7 @@
           "session_id": "8cf3d437-d991-45cd-bc68-a7866d5c76ba",
           "tool_name": "file_search",
           "tool_input": {
-            "query": "**/elements/ui/**/SemioDiagram",
+            "query": "**/elements/ui/**/ComposeDiagram",
             "maxResults": 20
           },
           "tool_response": "",
@@ -447,7 +447,7 @@
           "session_id": "8cf3d437-d991-45cd-bc68-a7866d5c76ba",
           "tool_name": "file_search",
           "tool_input": {
-            "query": "**/semio/ui/**/SemioDiagram",
+            "query": "**/compose/ui/**/ComposeDiagram",
             "maxResults": 20
           },
           "tool_response": "",
@@ -473,7 +473,7 @@
           "session_id": "8cf3d437-d991-45cd-bc68-a7866d5c76ba",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 1,
             "endLine": 100
           },
@@ -576,7 +576,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 50,
-            "query": "SemioDiagram|SemioScene|SemioDesign|PieceSelection",
+            "query": "ComposeDiagram|ComposeScene|ComposeDesign|PieceSelection",
             "isRegexp": true
           },
           "tool_response": "",
@@ -629,7 +629,7 @@
           "session_id": "8cf3d437-d991-45cd-bc68-a7866d5c76ba",
           "tool_name": "file_search",
           "tool_input": {
-            "query": "**/semio/ui/**/*.tsx",
+            "query": "**/compose/ui/**/*.tsx",
             "maxResults": 20
           },
           "tool_use_id": "toolu_bdrk_01QBxXYusxqjLk2FA9TZkB43__vscode-1774398922962",
@@ -655,7 +655,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 100,
-            "filePath": "/workspaces/semio/semio/ui/package.json",
+            "filePath": "/workspaces/semio/compose/ui/package.json",
             "startLine": 1
           },
           "tool_use_id": "toolu_bdrk_01RBav9jXzeSP9EwzHjNSE6d__vscode-1774398922961",
@@ -680,7 +680,7 @@
           "session_id": "8cf3d437-d991-45cd-bc68-a7866d5c76ba",
           "tool_name": "file_search",
           "tool_input": {
-            "query": "**/semio/ui/**/*.tsx",
+            "query": "**/compose/ui/**/*.tsx",
             "maxResults": 20
           },
           "tool_response": "",
@@ -707,7 +707,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 100,
-            "filePath": "/workspaces/semio/semio/ui/package.json",
+            "filePath": "/workspaces/semio/compose/ui/package.json",
             "startLine": 1
           },
           "tool_response": "",
@@ -734,7 +734,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 300,
-            "filePath": "/workspaces/semio/semio/ui/index.tsx",
+            "filePath": "/workspaces/semio/compose/ui/index.tsx",
             "startLine": 1
           },
           "tool_use_id": "toolu_bdrk_019yXVwnf6gzB7AcX5onjtZ7__vscode-1774398922964",
@@ -760,7 +760,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 100,
-            "filePath": "/workspaces/semio/semio/ui/.storybook/stories/Design.stories.tsx",
+            "filePath": "/workspaces/semio/compose/ui/.storybook/stories/Design.stories.tsx",
             "startLine": 1
           },
           "tool_use_id": "toolu_bdrk_014r3AVBG86MqkfSLkcm8cb1__vscode-1774398922966",
@@ -786,7 +786,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 300,
-            "filePath": "/workspaces/semio/semio/ui/index.tsx",
+            "filePath": "/workspaces/semio/compose/ui/index.tsx",
             "startLine": 1
           },
           "tool_response": "",
@@ -813,7 +813,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 100,
-            "filePath": "/workspaces/semio/semio/ui/.storybook/stories/Diagram.stories.tsx",
+            "filePath": "/workspaces/semio/compose/ui/.storybook/stories/Diagram.stories.tsx",
             "startLine": 1
           },
           "tool_response": "",
@@ -840,7 +840,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 100,
-            "filePath": "/workspaces/semio/semio/ui/.storybook/stories/Design.stories.tsx",
+            "filePath": "/workspaces/semio/compose/ui/.storybook/stories/Design.stories.tsx",
             "startLine": 1
           },
           "tool_response": "",
@@ -867,7 +867,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 600,
-            "filePath": "/workspaces/semio/semio/ui/index.tsx",
+            "filePath": "/workspaces/semio/compose/ui/index.tsx",
             "startLine": 300
           },
           "tool_use_id": "toolu_bdrk_01AjwoqfXYUECsXiApBjmQjh__vscode-1774398922967",
@@ -893,7 +893,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 900,
-            "filePath": "/workspaces/semio/semio/ui/index.tsx",
+            "filePath": "/workspaces/semio/compose/ui/index.tsx",
             "startLine": 600
           },
           "tool_use_id": "toolu_bdrk_01QfoBw322Vj2C4WnGbU9LKS__vscode-1774398922968",
@@ -919,7 +919,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 600,
-            "filePath": "/workspaces/semio/semio/ui/index.tsx",
+            "filePath": "/workspaces/semio/compose/ui/index.tsx",
             "startLine": 300
           },
           "tool_response": "",
@@ -946,7 +946,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 1200,
-            "filePath": "/workspaces/semio/semio/ui/index.tsx",
+            "filePath": "/workspaces/semio/compose/ui/index.tsx",
             "startLine": 900
           },
           "tool_use_id": "toolu_bdrk_014dGSGbFt386w2yfuhAZbCY__vscode-1774398922969",
@@ -972,7 +972,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 1400,
-            "filePath": "/workspaces/semio/semio/ui/index.tsx",
+            "filePath": "/workspaces/semio/compose/ui/index.tsx",
             "startLine": 1200
           },
           "tool_use_id": "toolu_bdrk_01PMm4N7FKt8HNKWpigv1i2y__vscode-1774398922970",
@@ -998,7 +998,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 1200,
-            "filePath": "/workspaces/semio/semio/ui/index.tsx",
+            "filePath": "/workspaces/semio/compose/ui/index.tsx",
             "startLine": 900
           },
           "tool_response": "",
@@ -1025,7 +1025,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 1400,
-            "filePath": "/workspaces/semio/semio/ui/index.tsx",
+            "filePath": "/workspaces/semio/compose/ui/index.tsx",
             "startLine": 1200
           },
           "tool_response": "",
@@ -1052,7 +1052,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 1700,
-            "filePath": "/workspaces/semio/semio/ui/index.tsx",
+            "filePath": "/workspaces/semio/compose/ui/index.tsx",
             "startLine": 1600
           },
           "tool_use_id": "toolu_bdrk_01Pwth7KrFTbicUtBrMNk8uU__vscode-1774398922972",
@@ -1078,7 +1078,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 1700,
-            "filePath": "/workspaces/semio/semio/ui/index.tsx",
+            "filePath": "/workspaces/semio/compose/ui/index.tsx",
             "startLine": 1600
           },
           "tool_response": "",
@@ -1105,7 +1105,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 100,
-            "filePath": "/workspaces/semio/semio/ui/README.md",
+            "filePath": "/workspaces/semio/compose/ui/README.md",
             "startLine": 1
           },
           "tool_use_id": "toolu_bdrk_01GR3tUuz9MC4JJVPmdKGgoG__vscode-1774398922974",
@@ -1131,7 +1131,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 150,
-            "filePath": "/workspaces/semio/semio/ui/.storybook/stories/Scene.stories.tsx",
+            "filePath": "/workspaces/semio/compose/ui/.storybook/stories/Scene.stories.tsx",
             "startLine": 1
           },
           "tool_response": "",
@@ -1211,7 +1211,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/**",
+            "includePattern": "**/compose/**",
             "isRegexp": true,
             "query": "embed|iframe"
           },
@@ -1238,7 +1238,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/ui/**",
+            "includePattern": "**/compose/ui/**",
             "isRegexp": true,
             "query": "iframe|compatible"
           },
@@ -1266,7 +1266,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/**",
+            "includePattern": "**/compose/**",
             "isRegexp": true,
             "query": "embed|iframe"
           },

@@ -1,11 +1,11 @@
 /**
- * Renames the *second* `export function useX` in semio/react/index.tsx when the name collides,
+ * Renames the *second* `export function useX` in compose/react/index.tsx when the name collides,
  * using suffix `KitHostBinding` (schema / host-store lane vs CQRS hooks earlier in the file).
  */
 import fs from "node:fs";
 import path from "node:path";
 
-const target = path.join(process.cwd(), "semio/react/index.tsx");
+const target = path.join(process.cwd(), "compose/react/index.tsx");
 const src = fs.readFileSync(target, "utf8");
 const lines = src.split(/\n/);
 

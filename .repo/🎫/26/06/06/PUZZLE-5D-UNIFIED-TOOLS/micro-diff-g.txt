@@ -106,7 +106,7 @@ index cb3814169..fcd8d3935 100644
 @@ -167,7 +167,7 @@ const VirtualFileSystemDemo = ({ initialExpanded }: { readonly initialExpanded:
  
  export const Collapsed: Story = {
-   args: { schema: semioKitSchema, rows: [] },
+   args: { schema: composeKitSchema, rows: [] },
 -  render: () => <VirtualFileSystemDemo initialExpanded={["root-demo"]} />,
 +  render: () => <VirtualFileSystemDemo initialExpanded={[]} />,
  };
@@ -1598,10 +1598,10 @@ index 50cf41c46..932654d0f 100644
    describe("applyBrushPlacementToModel", () => {
      const brushHostModel = (): V1 => ({
        schema: "puzzle.5d/v1",
-diff --git a/semio/client/lib/sketchpad/js/index.ts b/semio/client/lib/sketchpad/js/index.ts
+diff --git a/compose/client/lib/sketchpad/js/index.ts b/compose/client/lib/sketchpad/js/index.ts
 index c39b33c18..d481fa044 100644
---- a/semio/client/lib/sketchpad/js/index.ts
-+++ b/semio/client/lib/sketchpad/js/index.ts
+--- a/compose/client/lib/sketchpad/js/index.ts
++++ b/compose/client/lib/sketchpad/js/index.ts
 @@ -13732,8 +13732,7 @@ class SketchpadAppVirtualFileSystem extends SketchpadRoutedComponent<VirtualFile
  		}
  		if (this.vfsAppId === SKETCHPAD_HOME_APP_ID) {
@@ -1631,7 +1631,7 @@ index c39b33c18..d481fa044 100644
  					this.ensureChildrenLoaded(payload.nodeId, homeScope);
  				}
 @@ -16375,7 +16374,7 @@ if (import.meta.vitest) {
- 			ctrl.registerKitStore(kitId, new InMemorySemioKitStore({ id: kitId, name: "Selected Kit" } as Kit), { kind: "fixture" });
+ 			ctrl.registerKitStore(kitId, new InMemoryComposeKitStore({ id: kitId, name: "Selected Kit" } as Kit), { kind: "fixture" });
  			ctrl.navigateTo("/");
  			platform.uri = "/";
 -			ctrl.updateHome({ ...sketchpadEmptyHomeUiState(), selectedKitIds: [kitId], expandedRowIds: ["sketchpad-home"] });
@@ -1647,11 +1647,11 @@ index c39b33c18..d481fa044 100644
  			const snap = ctrl.buildVirtualFileSystemModel(scope);
  			expect(snap.rows.map((row) => row.id)).toContain("kit:k-home");
  			expect(snap.rows.find((row) => row.id === "kit:k-home")?.name).toBe("Demo Kit");
-diff --git a/semio/fixtures/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest-left-bim.stp b/semio/fixtures/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest-left-bim.stp
+diff --git a/compose/fixtures/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest-left-bim.stp b/compose/fixtures/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest-left-bim.stp
 new file mode 100644
 index 000000000..bf69da958
 --- /dev/null
-+++ b/semio/fixtures/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest-left-bim.stp
++++ b/compose/fixtures/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest-left-bim.stp
 @@ -0,0 +1,3430 @@
 +ISO-10303-21;
 +HEADER;
@@ -5083,6 +5083,6 @@ index 000000000..bf69da958
 +#3043=CARTESIAN_POINT('',(0.,0.,0.));
 +ENDSEC;
 +END-ISO-10303-21;
-diff --git a/semio/fixtures/kit/folder/abbau-aufbau/stockwerk.3dm b/semio/fixtures/kit/folder/abbau-aufbau/stockwerk.3dm
+diff --git a/compose/fixtures/kit/folder/abbau-aufbau/stockwerk.3dm b/compose/fixtures/kit/folder/abbau-aufbau/stockwerk.3dm
 index 5ca183716..475119c11 100644
-Binary files a/semio/fixtures/kit/folder/abbau-aufbau/stockwerk.3dm and b/semio/fixtures/kit/folder/abbau-aufbau/stockwerk.3dm differ
+Binary files a/compose/fixtures/kit/folder/abbau-aufbau/stockwerk.3dm and b/compose/fixtures/kit/folder/abbau-aufbau/stockwerk.3dm differ

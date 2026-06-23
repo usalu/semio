@@ -132,4 +132,4 @@ Set `logging.session = true` to enable session-file logging for debugging or coo
 - [postgres](postgres/README.md) – PostgreSQL schema and configuration
 - [server](server/README.md) – MCP Server and backend services for repo tooling
 - [sqlite](sqlite/README.md) – SQLite schema and helpers
-- [vscode](vscode/README.md) – Visual Studio Code extension for semio
+- [vscode](vscode/README.md) – Visual Studio Code extension for compose

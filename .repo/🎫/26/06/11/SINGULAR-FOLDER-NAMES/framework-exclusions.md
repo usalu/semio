@@ -16,4 +16,4 @@ These paths are owned by external tools and MUST NOT be renamed during singular-
 - `coda/.agent/skills` — Coda agent skills
 - `node_modules/**` — third-party package paths (e.g. `three/examples`, `lucide-static/icons`)
 
-Project-owned folders (semio/asset, semio/fixture, ui/asset/icon, …) remain singular.
+Project-owned folders (compose/asset, compose/fixture, ui/asset/icon, …) remain singular.

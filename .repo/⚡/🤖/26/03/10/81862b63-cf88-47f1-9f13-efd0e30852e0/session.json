@@ -1,6 +1,6 @@
 {
   "id": "81862b63-cf88-47f1-9f13-efd0e30852e0",
-  "uri": "semiorepo://s/81862b63-cf88-47f1-9f13-efd0e30852e0",
+  "uri": "composerepo://s/81862b63-cf88-47f1-9f13-efd0e30852e0",
   "contributor": "🧑‍💻ueli",
   "client": "copilot-chat",
   "second": "2026-03-10T23:40:51Z",
@@ -13,7 +13,7 @@
           "session_id": "81862b63-cf88-47f1-9f13-efd0e30852e0",
           "tool_name": "list_dir",
           "tool_input": {
-            "path": "/workspaces/semio/semio/net/Semio"
+            "path": "/workspaces/semio/compose/net/Compose"
           },
           "tool_use_id": "toolu_013MAQVyrjBbCHypRnKbssYy__vscode-1773054464891",
           "cwd": "/workspaces/semio"
@@ -46,7 +46,7 @@
           "session_id": "81862b63-cf88-47f1-9f13-efd0e30852e0",
           "tool_name": "list_dir",
           "tool_input": {
-            "path": "/workspaces/semio/semio/net/Semio.Tests"
+            "path": "/workspaces/semio/compose/net/Compose.Tests"
           },
           "tool_use_id": "toolu_01NRJ6th6fpc9em4HsayhTcK__vscode-1773054464892",
           "cwd": "/workspaces/semio"
@@ -79,7 +79,7 @@
           "session_id": "81862b63-cf88-47f1-9f13-efd0e30852e0",
           "tool_name": "list_dir",
           "tool_input": {
-            "path": "/workspaces/semio/semio/net/Semio.Benchmark"
+            "path": "/workspaces/semio/compose/net/Compose.Benchmark"
           },
           "tool_use_id": "toolu_01DFMbjNQPKt58MG8Ks11kJA__vscode-1773054464893",
           "cwd": "/workspaces/semio"
@@ -112,7 +112,7 @@
           "session_id": "81862b63-cf88-47f1-9f13-efd0e30852e0",
           "tool_name": "list_dir",
           "tool_input": {
-            "path": "/workspaces/semio/semio/gh/Semio.Grasshopper"
+            "path": "/workspaces/semio/compose/gh/Compose.Grasshopper"
           },
           "tool_response": "",
           "tool_use_id": "toolu_01DLFAh322Zg94DDca4CJTpS__vscode-1773054464889",
@@ -145,7 +145,7 @@
           "session_id": "81862b63-cf88-47f1-9f13-efd0e30852e0",
           "tool_name": "list_dir",
           "tool_input": {
-            "path": "/workspaces/semio/semio/gh/Semio.Grasshopper.Tests"
+            "path": "/workspaces/semio/compose/gh/Compose.Grasshopper.Tests"
           },
           "tool_response": "",
           "tool_use_id": "toolu_01TmP6yM9hxXnqkf3jcAv3Mu__vscode-1773054464890",
@@ -178,7 +178,7 @@
           "session_id": "81862b63-cf88-47f1-9f13-efd0e30852e0",
           "tool_name": "list_dir",
           "tool_input": {
-            "path": "/workspaces/semio/semio/net/Semio.Tests"
+            "path": "/workspaces/semio/compose/net/Compose.Tests"
           },
           "tool_response": "",
           "tool_use_id": "toolu_01NRJ6th6fpc9em4HsayhTcK__vscode-1773054464892",
@@ -211,7 +211,7 @@
           "session_id": "81862b63-cf88-47f1-9f13-efd0e30852e0",
           "tool_name": "list_dir",
           "tool_input": {
-            "path": "/workspaces/semio/semio/net/Semio.Benchmark"
+            "path": "/workspaces/semio/compose/net/Compose.Benchmark"
           },
           "tool_response": "",
           "tool_use_id": "toolu_01DFMbjNQPKt58MG8Ks11kJA__vscode-1773054464893",
@@ -244,7 +244,7 @@
           "session_id": "81862b63-cf88-47f1-9f13-efd0e30852e0",
           "tool_name": "list_dir",
           "tool_input": {
-            "path": "/workspaces/semio/semio/net/Semio"
+            "path": "/workspaces/semio/compose/net/Compose"
           },
           "tool_response": "",
           "tool_use_id": "toolu_013MAQVyrjBbCHypRnKbssYy__vscode-1773054464891",
@@ -277,7 +277,7 @@
           "session_id": "81862b63-cf88-47f1-9f13-efd0e30852e0",
           "tool_name": "list_dir",
           "tool_input": {
-            "path": "/workspaces/semio/semio/gh/Semio.Grasshopper/Properties"
+            "path": "/workspaces/semio/compose/gh/Compose.Grasshopper/Properties"
           },
           "tool_use_id": "toolu_01BfR9Gw6M7hqPLKnDGWpiDa__vscode-1773054464894",
           "cwd": "/workspaces/semio"
@@ -310,7 +310,7 @@
           "session_id": "81862b63-cf88-47f1-9f13-efd0e30852e0",
           "tool_name": "list_dir",
           "tool_input": {
-            "path": "/workspaces/semio/semio/gh/Semio.Grasshopper/UserObjects"
+            "path": "/workspaces/semio/compose/gh/Compose.Grasshopper/UserObjects"
           },
           "tool_use_id": "toolu_018d39P37sUVX61DabKYkQMk__vscode-1773054464895",
           "cwd": "/workspaces/semio"
@@ -343,7 +343,7 @@
           "session_id": "81862b63-cf88-47f1-9f13-efd0e30852e0",
           "tool_name": "list_dir",
           "tool_input": {
-            "path": "/workspaces/semio/semio/gh/Semio.Grasshopper/yak"
+            "path": "/workspaces/semio/compose/gh/Compose.Grasshopper/yak"
           },
           "tool_use_id": "toolu_01RiksE2E2KdaHWnJ93CJDzL__vscode-1773054464896",
           "cwd": "/workspaces/semio"
@@ -376,7 +376,7 @@
           "session_id": "81862b63-cf88-47f1-9f13-efd0e30852e0",
           "tool_name": "list_dir",
           "tool_input": {
-            "path": "/workspaces/semio/semio/gh/Semio.Grasshopper/UserObjects"
+            "path": "/workspaces/semio/compose/gh/Compose.Grasshopper/UserObjects"
           },
           "tool_response": "",
           "tool_use_id": "toolu_018d39P37sUVX61DabKYkQMk__vscode-1773054464895",
@@ -409,7 +409,7 @@
           "session_id": "81862b63-cf88-47f1-9f13-efd0e30852e0",
           "tool_name": "list_dir",
           "tool_input": {
-            "path": "/workspaces/semio/semio/gh/Semio.Grasshopper/Properties"
+            "path": "/workspaces/semio/compose/gh/Compose.Grasshopper/Properties"
           },
           "tool_response": "",
           "tool_use_id": "toolu_01BfR9Gw6M7hqPLKnDGWpiDa__vscode-1773054464894",
@@ -442,7 +442,7 @@
           "session_id": "81862b63-cf88-47f1-9f13-efd0e30852e0",
           "tool_name": "list_dir",
           "tool_input": {
-            "path": "/workspaces/semio/semio/gh/Semio.Grasshopper/yak"
+            "path": "/workspaces/semio/compose/gh/Compose.Grasshopper/yak"
           },
           "tool_response": "",
           "tool_use_id": "toolu_01RiksE2E2KdaHWnJ93CJDzL__vscode-1773054464896",
@@ -475,7 +475,7 @@
           "session_id": "81862b63-cf88-47f1-9f13-efd0e30852e0",
           "tool_name": "list_dir",
           "tool_input": {
-            "path": "/workspaces/semio/semio/gh/Semio.Grasshopper/UserObjects/github"
+            "path": "/workspaces/semio/compose/gh/Compose.Grasshopper/UserObjects/github"
           },
           "tool_use_id": "toolu_01LzELy7YW7ssrWVcSZp1WaC__vscode-1773054464897",
           "cwd": "/workspaces/semio"
@@ -508,7 +508,7 @@
           "session_id": "81862b63-cf88-47f1-9f13-efd0e30852e0",
           "tool_name": "list_dir",
           "tool_input": {
-            "path": "/workspaces/semio/semio/gh/Semio.Grasshopper/UserObjects/gitlab"
+            "path": "/workspaces/semio/compose/gh/Compose.Grasshopper/UserObjects/gitlab"
           },
           "tool_use_id": "toolu_01TeAsZq5hv62HCnPYWEJmm3__vscode-1773054464898",
           "cwd": "/workspaces/semio"
@@ -541,7 +541,7 @@
           "session_id": "81862b63-cf88-47f1-9f13-efd0e30852e0",
           "tool_name": "list_dir",
           "tool_input": {
-            "path": "/workspaces/semio/semio/gh/Semio.Grasshopper/UserObjects/semio"
+            "path": "/workspaces/semio/compose/gh/Compose.Grasshopper/UserObjects/compose"
           },
           "tool_use_id": "toolu_01UM6wTR5cFniEbcze9R7C3B__vscode-1773054464899",
           "cwd": "/workspaces/semio"
@@ -574,7 +574,7 @@
           "session_id": "81862b63-cf88-47f1-9f13-efd0e30852e0",
           "tool_name": "list_dir",
           "tool_input": {
-            "path": "/workspaces/semio/semio/gh/Semio.Grasshopper/UserObjects/wasp"
+            "path": "/workspaces/semio/compose/gh/Compose.Grasshopper/UserObjects/wasp"
           },
           "tool_use_id": "toolu_01GbSrPn8NVNjiheTYhnCwXX__vscode-1773054464900",
           "cwd": "/workspaces/semio"
@@ -607,7 +607,7 @@
           "session_id": "81862b63-cf88-47f1-9f13-efd0e30852e0",
           "tool_name": "list_dir",
           "tool_input": {
-            "path": "/workspaces/semio/semio/gh/Semio.Grasshopper/yak/dist"
+            "path": "/workspaces/semio/compose/gh/Compose.Grasshopper/yak/dist"
           },
           "tool_use_id": "toolu_01XHD4LbTPdYdKun6mMtexKo__vscode-1773054464901",
           "cwd": "/workspaces/semio"
@@ -640,7 +640,7 @@
           "session_id": "81862b63-cf88-47f1-9f13-efd0e30852e0",
           "tool_name": "list_dir",
           "tool_input": {
-            "path": "/workspaces/semio/semio/gh/Semio.Grasshopper/UserObjects/github"
+            "path": "/workspaces/semio/compose/gh/Compose.Grasshopper/UserObjects/github"
           },
           "tool_response": "",
           "tool_use_id": "toolu_01LzELy7YW7ssrWVcSZp1WaC__vscode-1773054464897",
@@ -673,7 +673,7 @@
           "session_id": "81862b63-cf88-47f1-9f13-efd0e30852e0",
           "tool_name": "list_dir",
           "tool_input": {
-            "path": "/workspaces/semio/semio/gh/Semio.Grasshopper/UserObjects/gitlab"
+            "path": "/workspaces/semio/compose/gh/Compose.Grasshopper/UserObjects/gitlab"
           },
           "tool_response": "",
           "tool_use_id": "toolu_01TeAsZq5hv62HCnPYWEJmm3__vscode-1773054464898",
@@ -706,7 +706,7 @@
           "session_id": "81862b63-cf88-47f1-9f13-efd0e30852e0",
           "tool_name": "list_dir",
           "tool_input": {
-            "path": "/workspaces/semio/semio/gh/Semio.Grasshopper/UserObjects/semio"
+            "path": "/workspaces/semio/compose/gh/Compose.Grasshopper/UserObjects/compose"
           },
           "tool_response": "",
           "tool_use_id": "toolu_01UM6wTR5cFniEbcze9R7C3B__vscode-1773054464899",
@@ -739,7 +739,7 @@
           "session_id": "81862b63-cf88-47f1-9f13-efd0e30852e0",
           "tool_name": "list_dir",
           "tool_input": {
-            "path": "/workspaces/semio/semio/gh/Semio.Grasshopper/UserObjects/wasp"
+            "path": "/workspaces/semio/compose/gh/Compose.Grasshopper/UserObjects/wasp"
           },
           "tool_response": "",
           "tool_use_id": "toolu_01GbSrPn8NVNjiheTYhnCwXX__vscode-1773054464900",
@@ -772,7 +772,7 @@
           "session_id": "81862b63-cf88-47f1-9f13-efd0e30852e0",
           "tool_name": "list_dir",
           "tool_input": {
-            "path": "/workspaces/semio/semio/gh/Semio.Grasshopper/yak/dist"
+            "path": "/workspaces/semio/compose/gh/Compose.Grasshopper/yak/dist"
           },
           "tool_response": "",
           "tool_use_id": "toolu_01XHD4LbTPdYdKun6mMtexKo__vscode-1773054464901",

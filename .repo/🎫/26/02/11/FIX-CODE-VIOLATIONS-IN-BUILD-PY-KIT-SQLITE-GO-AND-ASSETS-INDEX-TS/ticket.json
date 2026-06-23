@@ -2,7 +2,7 @@
   "title": "Fix Code Breachs in Build Py Kit Sqlite Go and Assets Index Ts",
   "emoji": "🔧",
   "status": "closed",
-  "description": "Fix all code breachs in semio/assets/grasshopper/build.py (8), semio/go/kit_sqlite.go (8), and semio/assets/index.ts (18) by adding missing summary and spec comments for definitions and sections.",
+  "description": "Fix all code breachs in compose/assets/grasshopper/build.py (8), compose/go/kit_sqlite.go (8), and compose/assets/index.ts (18) by adding missing summary and spec comments for definitions and sections.",
   "summary": "Added missing summary and spec comments for all definitions across 3 files: build.py (4 functions + 4 module vars), kit_sqlite.go (9 functions), index.ts (25+ exports/consts + 1 section wrapper). All definition-level summary comments added with RFC2119 spec comments on behavioral definitions.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/520"

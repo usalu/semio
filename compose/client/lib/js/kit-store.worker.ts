@@ -1,0 +1,78 @@
+//#region 🧲Header
+// 2025-2026 Ueli Saluz <ueli@semio-tech.com>
+// GNU LGPL-3.0 or later — GraphQL WASM worker: JSON `execute` / `subscribe` only (no JS-side DTO marshaling).
+// Bundled by Vite so `@compose/rs-wasm` resolves; Blob workers cannot import bare specifiers.
+//#endregion 🧲Header
+
+/// <reference lib="webworker" />
+
+/** @emoji 🧪 Empty in-memory WASM store URI (worker must not import full `@compose/js` index). */
+const RS_WASM_EMPTY_STORE_URI = "dev://empty" as const;
+
+//#region 🧷WasmHandle
+type WasmKitHandle = {
+  execute: (body: string) => Promise<string>;
+  subscribe: (body: string, onEvent: (eventJson: string) => void) => Promise<void>;
+};
+
+let handle: WasmKitHandle | null = null;
+//#endregion 🧷WasmHandle
+
+//#region 📤Wire
+function post(out: unknown): void {
+  self.postMessage(JSON.stringify(out));
+}
+//#endregion 📤Wire
+
+//#region 🧵OnMessage
+self.onmessage = async (ev: MessageEvent<string>) => {
+  let msg: {
+    op?: string;
+    uri?: string;
+    body?: string;
+    reqId?: string;
+  };
+  try {
+    msg = JSON.parse(ev.data) as typeof msg;
+  } catch {
+    post({ op: "error", message: "invalid worker message json" });
+    return;
+  }
+  try {
+    if (msg.op === "init") {
+      const mod = await import("@compose/rs-wasm");
+      if (typeof mod.default === "function") await mod.default();
+      if (typeof mod.boot === "function") mod.boot();
+      const uri = typeof msg.uri === "string" ? msg.uri : "";
+      if (uri !== RS_WASM_EMPTY_STORE_URI) {
+        post({ op: "error", message: `worker init: only ${RS_WASM_EMPTY_STORE_URI} is allowed` });
+        return;
+      }
+      const created = (mod as { KitStoreHandle: { create: (uri: string) => WasmKitHandle | Promise<WasmKitHandle> } }).KitStoreHandle.create(uri);
+      handle = created instanceof Promise ? await created : created;
+      post({ op: "ready" });
+      return;
+    }
+    if (!handle) {
+      post({ op: "error", reqId: "op" in msg && msg.op !== "init" ? msg.reqId : undefined, message: "worker not initialized" });
+      return;
+    }
+    if (msg.op === "execute") {
+      const json = await handle.execute(msg.body as string);
+      post({ op: "result", reqId: msg.reqId, json: String(json) });
+      post({ op: "done", reqId: msg.reqId });
+      return;
+    }
+    if (msg.op === "subscribe") {
+      await handle.subscribe(msg.body as string, (eventJson: string) => {
+        post({ op: "event", reqId: msg.reqId, json: String(eventJson) });
+      });
+      post({ op: "done", reqId: msg.reqId });
+      return;
+    }
+    post({ op: "error", message: `unrecognized op ${msg.op ?? ""}` });
+  } catch (e) {
+    post({ op: "error", reqId: msg.reqId, message: String(e) });
+  }
+};
+//#endregion 🧵OnMessage

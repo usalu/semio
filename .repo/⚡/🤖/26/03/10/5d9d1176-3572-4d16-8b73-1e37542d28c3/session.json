@@ -1,6 +1,6 @@
 {
   "id": "5d9d1176-3572-4d16-8b73-1e37542d28c3",
-  "uri": "semiorepo://s/5d9d1176-3572-4d16-8b73-1e37542d28c3",
+  "uri": "composerepo://s/5d9d1176-3572-4d16-8b73-1e37542d28c3",
   "contributor": "🧑‍💻ueli",
   "client": "windsurf-chat",
   "second": "2026-03-10T19:52:01Z",
@@ -131,13 +131,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🧰semiorepo⌨️cli💻main"
+            "id": "🧰composerepo⌨️cli💻main"
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🧰semiorepo⌨️cli💻main📌1📌47433"
+          "🧰composerepo⌨️cli💻main📌1📌47433"
         ],
         "second": "🎆26🌙03☀️10⏰19⌚53⏱️32",
         "session": "⚪5d9d117635724d168b731e37542d28c3"
@@ -164,13 +164,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🧰semiorepo⌨️cli💻main"
+            "id": "🧰composerepo⌨️cli💻main"
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🧰semiorepo⌨️cli💻main📌1📌47433"
+          "🧰composerepo⌨️cli💻main📌1📌47433"
         ],
         "second": "🎆26🌙03☀️10⏰19⌚53⏱️42",
         "session": "⚪5d9d117635724d168b731e37542d28c3"
@@ -346,13 +346,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🧰semiorepo⌨️cli💻main"
+            "id": "🧰composerepo⌨️cli💻main"
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🧰semiorepo⌨️cli💻main📌1📌47428"
+          "🧰composerepo⌨️cli💻main📌1📌47428"
         ],
         "second": "🎆26🌙03☀️10⏰19⌚55⏱️24",
         "session": "⚪5d9d117635724d168b731e37542d28c3"
@@ -379,13 +379,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🧰semiorepo⌨️cli💻main"
+            "id": "🧰composerepo⌨️cli💻main"
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🧰semiorepo⌨️cli💻main📌1📌47428"
+          "🧰composerepo⌨️cli💻main📌1📌47428"
         ],
         "second": "🎆26🌙03☀️10⏰19⌚55⏱️35",
         "session": "⚪5d9d117635724d168b731e37542d28c3"
@@ -412,13 +412,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🧰semiorepo⌨️cli💻main"
+            "id": "🧰composerepo⌨️cli💻main"
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🧰semiorepo⌨️cli💻main📌1📌47428"
+          "🧰composerepo⌨️cli💻main📌1📌47428"
         ],
         "second": "🎆26🌙03☀️10⏰19⌚55⏱️51",
         "session": "⚪5d9d117635724d168b731e37542d28c3"
@@ -445,13 +445,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🧰semiorepo⌨️cli💻main"
+            "id": "🧰composerepo⌨️cli💻main"
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🧰semiorepo⌨️cli💻main📌1📌47428"
+          "🧰composerepo⌨️cli💻main📌1📌47428"
         ],
         "second": "🎆26🌙03☀️10⏰19⌚56⏱️02",
         "session": "⚪5d9d117635724d168b731e37542d28c3"

@@ -2,7 +2,7 @@
   "title": "Rebuild Mcp App Dist Html",
   "emoji": "🔌",
   "status": "closed",
-  "description": "The dist/mcp-app.html in semio/engine/dist/ is stale (built 2026-03-30). It is missing all recent UI changes including: surface/mode routing in McpDesignViewer (show-design → SemioDesign split, show-scene → SemioScene 3D only), mcpFlattenDesignForSemioSurface, mergeRichestDesignFromCandidates priority logic, and splitLayout=\"always\". As a result both start_working_in_design and show_scene show only the 2D diagram. Rebuild dist/mcp-app.html by running `npm run build:mcp-app` in semio/engine/.",
+  "description": "The dist/mcp-app.html in compose/engine/dist/ is stale (built 2026-03-30). It is missing all recent UI changes including: surface/mode routing in McpDesignViewer (show-design → ComposeDesign split, show-scene → ComposeScene 3D only), mcpFlattenDesignForComposeSurface, mergeRichestDesignFromCandidates priority logic, and splitLayout=\"always\". As a result both start_working_in_design and show_scene show only the 2D diagram. Rebuild dist/mcp-app.html by running `npm run build:mcp-app` in compose/engine/.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1229"
   },

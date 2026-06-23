@@ -22,7 +22,7 @@ Fixed piece dragging by closing left side panel overlay. Fixed Radix slider inte
 - ReactFlow nodes have draggable:true, nodesDraggable:true passed to ReactFlow
 - panOnDrag=[1,2] (middle/right click for panning), selectionOnDrag=true (left click on pane for lasso)
 - Root cause: left side panel (position:absolute) overlays diagram nodes, intercepting mouse events
-- Fix: close left panel via semio.sketchpad.navbar.panelToggle.leftSidePanel toggle
+- Fix: close left panel via compose.sketchpad.navbar.panelToggle.leftSidePanel toggle
 - Drag confirmed working: nodeMovedInViewport=true, dx=90, dy=45
 - Slider `.fill()` hangs on hidden Radix range input → changed to dblclick edit mode
 - Slider locator broken: slider-value is sibling of SliderPrimitive.Root, not descendant

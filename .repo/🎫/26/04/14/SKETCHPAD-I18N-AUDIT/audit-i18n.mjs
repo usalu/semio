@@ -1,7 +1,7 @@
 import fs from "fs";
 
-const uiPath = "c:/git/semio/elements/ui/index.tsx";
-const sketchPath = "c:/git/semio/semio/sketchpad/index.tsx";
+const uiPath = "c:/git/compose/elements/ui/index.tsx";
+const sketchPath = "c:/git/compose/compose/sketchpad/index.tsx";
 
 const s = fs.readFileSync(uiPath, "utf8");
 const startMarker = "en: {\n    translation: JSON.parse(String.raw`";
@@ -33,10 +33,10 @@ const sketch = fs.readFileSync(sketchPath, "utf8");
 const keys = new Set();
 
 for (const re of [
-  /useLabel\("(semio\.sketchpad[^"]+)"/g,
-  /t\("(semio\.sketchpad[^"]+)"/g,
-  /useLabel\("(semio\.file[^"]+)"/g,
-  /useLabel\("(semio\.folder[^"]+)"/g,
+  /useLabel\("(compose\.sketchpad[^"]+)"/g,
+  /t\("(compose\.sketchpad[^"]+)"/g,
+  /useLabel\("(compose\.file[^"]+)"/g,
+  /useLabel\("(compose\.folder[^"]+)"/g,
 ]) {
   let m;
   while ((m = re.exec(sketch))) keys.add(m[1]);

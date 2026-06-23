@@ -1,6 +1,6 @@
 {
   "id": "bc25b5c9-8370-4f68-ac53-4856a1dbb6c5",
-  "uri": "semiorepo://s/bc25b5c9-8370-4f68-ac53-4856a1dbb6c5",
+  "uri": "composerepo://s/bc25b5c9-8370-4f68-ac53-4856a1dbb6c5",
   "checkpoint": "5c0ab8b008efbe1510e11efe66a0fd119419a013",
   "contributor": "🧑‍💻ueli",
   "client": "copilot-chat",
@@ -42,7 +42,7 @@
           "timestamp": "2026-03-10T00:26:12.204Z",
           "hook_event_name": "UserPromptSubmit",
           "session_id": "bc25b5c9-8370-4f68-ac53-4856a1dbb6c5",
-          "prompt": "Search the file /workspaces/semio/semio/net/Semio/Semio.cs for the `AreKitsEqual` function. I need to see:\n1. The complete AreKitsEqual function implementation\n2. Whether it compares Files (and File.Mime specifically)\n3. Whether it compares nested connector points within types\n4. How it compares all list types (types, designs, files, tags, concepts, ports, etc.)\n\nRead the complete AreKitsEqual function from the file. Based on prior context, it starts around line 9519. Read enough to capture the entire function.\n\nReturn:\n- The exact line range of AreKitsEqual\n- Whether File comparison includes Mime field\n- Whether Type comparison includes nested Connectors comparison, and whether that connector comparison handles float fields with tolerance\n- Any list comparisons that are missing or incomplete",
+          "prompt": "Search the file /workspaces/semio/compose/net/Compose/Compose.cs for the `AreKitsEqual` function. I need to see:\n1. The complete AreKitsEqual function implementation\n2. Whether it compares Files (and File.Mime specifically)\n3. Whether it compares nested connector points within types\n4. How it compares all list types (types, designs, files, tags, concepts, ports, etc.)\n\nRead the complete AreKitsEqual function from the file. Based on prior context, it starts around line 9519. Read enough to capture the entire function.\n\nReturn:\n- The exact line range of AreKitsEqual\n- Whether File comparison includes Mime field\n- Whether Type comparison includes nested Connectors comparison, and whether that connector comparison handles float fields with tolerance\n- Any list comparisons that are missing or incomplete",
           "cwd": "/workspaces/semio"
         },
         "response": {
@@ -58,7 +58,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.prompt.submitting",
         "parent": "",
-        "prompt": "Search the file /workspaces/semio/semio/net/Semio/Semio.cs for the `AreKitsEqual` function. I need to see:\n1. The complete AreKitsEqual function implementation\n2. Whether it compares Files (and File.Mime specifically)\n3. Whether it compares nested connector points within types\n4. How it compares all list types (types, designs, files, tags, concepts, ports, etc.)\n\nRead the complete AreKitsEqual function from the file. Based on prior context, it starts around line 9519. Read enough to capture the entire function.\n\nReturn:\n- The exact line range of AreKitsEqual\n- Whether File comparison includes Mime field\n- Whether Type comparison includes nested Connectors comparison, and whether that connector comparison handles float fields with tolerance\n- Any list comparisons that are missing or incomplete",
+        "prompt": "Search the file /workspaces/semio/compose/net/Compose/Compose.cs for the `AreKitsEqual` function. I need to see:\n1. The complete AreKitsEqual function implementation\n2. Whether it compares Files (and File.Mime specifically)\n3. Whether it compares nested connector points within types\n4. How it compares all list types (types, designs, files, tags, concepts, ports, etc.)\n\nRead the complete AreKitsEqual function from the file. Based on prior context, it starts around line 9519. Read enough to capture the entire function.\n\nReturn:\n- The exact line range of AreKitsEqual\n- Whether File comparison includes Mime field\n- Whether Type comparison includes nested Connectors comparison, and whether that connector comparison handles float fields with tolerance\n- Any list comparisons that are missing or incomplete",
         "second": "🎆26🌙03☀️10⏰00⌚26⏱️12",
         "session": "⚪bc25b5c983704f68ac534856a1dbb6c5"
       },
@@ -74,7 +74,7 @@
           "session_id": "bc25b5c9-8370-4f68-ac53-4856a1dbb6c5",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/net/Semio/Semio.cs",
+            "filePath": "/workspaces/semio/compose/net/Compose/Compose.cs",
             "startLine": 9519,
             "endLine": 9750
           },
@@ -95,7 +95,7 @@
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚net🛅semio💻semio📌9519📌9750"
+          "👤compose📚net🛅compose💻compose📌9519📌9750"
         ],
         "second": "🎆26🌙03☀️10⏰00⌚26⏱️28",
         "session": "⚪bc25b5c983704f68ac534856a1dbb6c5"
@@ -112,7 +112,7 @@
           "session_id": "bc25b5c9-8370-4f68-ac53-4856a1dbb6c5",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/net/Semio/Semio.cs",
+            "filePath": "/workspaces/semio/compose/net/Compose/Compose.cs",
             "startLine": 9519,
             "endLine": 9750
           },
@@ -133,7 +133,7 @@
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚net🛅semio💻semio📌9519📌9750"
+          "👤compose📚net🛅compose💻compose📌9519📌9750"
         ],
         "second": "🎆26🌙03☀️10⏰00⌚26⏱️40",
         "session": "⚪bc25b5c983704f68ac534856a1dbb6c5"
@@ -151,7 +151,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 9950,
-            "filePath": "/workspaces/semio/semio/net/Semio/Semio.cs",
+            "filePath": "/workspaces/semio/compose/net/Compose/Compose.cs",
             "startLine": 9750
           },
           "tool_use_id": "toolu_bdrk_01S4ysi5yVXmLpn8RnvFVj5a__vscode-1773054463901",
@@ -171,7 +171,7 @@
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚net🛅semio💻semio📌9750📌9950"
+          "👤compose📚net🛅compose💻compose📌9750📌9950"
         ],
         "second": "🎆26🌙03☀️10⏰00⌚26⏱️45",
         "session": "⚪bc25b5c983704f68ac534856a1dbb6c5"
@@ -189,7 +189,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 9950,
-            "filePath": "/workspaces/semio/semio/net/Semio/Semio.cs",
+            "filePath": "/workspaces/semio/compose/net/Compose/Compose.cs",
             "startLine": 9750
           },
           "tool_response": "",
@@ -209,7 +209,7 @@
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚net🛅semio💻semio📌9750📌9950"
+          "👤compose📚net🛅compose💻compose📌9750📌9950"
         ],
         "second": "🎆26🌙03☀️10⏰00⌚26⏱️56",
         "session": "⚪bc25b5c983704f68ac534856a1dbb6c5"
@@ -228,7 +228,7 @@
           "tool_input": {
             "maxResults": 20,
             "query": "public static bool AreKitsEqual",
-            "includePattern": "**/semio/net/Semio/Semio.cs",
+            "includePattern": "**/compose/net/Compose/Compose.cs",
             "isRegexp": false
           },
           "tool_use_id": "toolu_bdrk_01R1kzoBSY1JEv5og3bWwRKy__vscode-1773054463902",
@@ -264,7 +264,7 @@
           "tool_input": {
             "maxResults": 20,
             "query": "public static bool AreKitsEqual",
-            "includePattern": "**/semio/net/Semio/Semio.cs",
+            "includePattern": "**/compose/net/Compose/Compose.cs",
             "isRegexp": false
           },
           "tool_response": "",
@@ -299,7 +299,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 9520,
-            "filePath": "/workspaces/semio/semio/net/Semio/Semio.cs",
+            "filePath": "/workspaces/semio/compose/net/Compose/Compose.cs",
             "startLine": 9512
           },
           "tool_use_id": "toolu_bdrk_0196Ga8LZ3ZifYzUFDXJmzU2__vscode-1773054463903",
@@ -319,7 +319,7 @@
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚net🛅semio💻semio📌9512📌9520"
+          "👤compose📚net🛅compose💻compose📌9512📌9520"
         ],
         "second": "🎆26🌙03☀️10⏰00⌚27⏱️16",
         "session": "⚪bc25b5c983704f68ac534856a1dbb6c5"
@@ -337,7 +337,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 9520,
-            "filePath": "/workspaces/semio/semio/net/Semio/Semio.cs",
+            "filePath": "/workspaces/semio/compose/net/Compose/Compose.cs",
             "startLine": 9512
           },
           "tool_response": "",
@@ -357,7 +357,7 @@
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚net🛅semio💻semio📌9512📌9520"
+          "👤compose📚net🛅compose💻compose📌9512📌9520"
         ],
         "second": "🎆26🌙03☀️10⏰00⌚27⏱️27",
         "session": "⚪bc25b5c983704f68ac534856a1dbb6c5"

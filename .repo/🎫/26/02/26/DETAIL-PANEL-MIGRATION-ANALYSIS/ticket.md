@@ -1,5 +1,5 @@
 ---
-goal: SEMIO
+goal: COMPOSE
 ---
 
 # Ticket

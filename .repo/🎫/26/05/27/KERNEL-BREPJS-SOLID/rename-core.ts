@@ -1,7 +1,7 @@
 /** @emoji 🔄 cell→solid rename for spatial/js/core/index.ts only. */
 import { readFileSync, writeFileSync } from "node:fs";
 
-const file = "c:/git/semio/spatial/js/core/index.ts";
+const file = "c:/git/compose/spatial/js/core/index.ts";
 let text = readFileSync(file, "utf8");
 
 const pairs: [string, string][] = [

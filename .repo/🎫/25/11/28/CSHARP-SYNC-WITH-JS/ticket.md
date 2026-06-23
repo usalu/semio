@@ -8,12 +8,12 @@ C# codebase was out of date with JS schema. Key issues:
 - `Type.Parent` and `Design.Parent` were `string?` but JSON uses `{ guid: "..." }` objects
 - `Connection.X/Y` should be `U/V` (lowercase, nullable float)
 - `Connector.CompatiblePorts` was obsolete (only valid on `Port` class)
-- JS unit tests in `semio.test.ts` use fixtures from `assets/semio/` folder
+- JS unit tests in `compose.test.ts` use fixtures from `assets/compose/` folder
 
 # Plan
 
-1. ✅ Analyze JS test structure in `js/semio/semio.test.ts`
-2. ✅ Identify JSON fixtures in `assets/semio/`
+1. ✅ Analyze JS test structure in `js/compose/compose.test.ts`
+2. ✅ Identify JSON fixtures in `assets/compose/`
 3. ✅ Fix C# schema: Parent fields → TypeId?/DesignId?
 4. ✅ Fix Connection/ConnectionDiff: X/Y → U/V (float?)
 5. ✅ Remove obsolete CompatiblePorts from Connector/ConnectorDiff
@@ -24,7 +24,7 @@ C# codebase was out of date with JS schema. Key issues:
 
 # Changes
 
-## `net/Semio/Semio.cs`
+## `net/Compose/Compose.cs`
 
 - Changed `Type.Parent` from `string?` to `TypeId?`
 - Changed `TypeDiff.Parent` from `string?` to `TypeId?`
@@ -36,16 +36,16 @@ C# codebase was out of date with JS schema. Key issues:
 - Removed `CompatiblePorts` property from `ConnectorDiff` class
 - Added `HashCode` polyfill struct (conditional compilation for NET48)
 
-## `net/Semio/Semio.csproj`
+## `net/Compose/Compose.csproj`
 
 - Added `<DefineConstants Condition="'$(TargetFramework)' == 'net48'">$(DefineConstants);NET48</DefineConstants>`
 
-## `net/Semio.Tests/Tests.cs`
+## `net/Compose.Tests/Tests.cs`
 
-- Complete rewrite with 14 tests matching JS semio.test.ts structure:
+- Complete rewrite with 14 tests matching JS compose.test.ts structure:
   - `KitTests`: DeserializeKitMetabolism, SerializeKitMetabolism, DiffKitMetabolism, ValidateKitInvalid
   - `FlattenDesignTests`: 10 tests for Nakagin variants and Capsule Dream designs
-- Uses JSON fixtures from `assets/semio/` folder
+- Uses JSON fixtures from `assets/compose/` folder
 
 ## Test Results
 

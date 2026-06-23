@@ -17,8 +17,8 @@ async function main() {
   });
 
   await page.addInitScript(() => {
-    (window as any).__SEMIO_PERFORMANCE__ = { longTaskSupported: false, longTasks: [] };
-    const store = (window as any).__SEMIO_PERFORMANCE__;
+    (window as any).__COMPOSE_PERFORMANCE__ = { longTaskSupported: false, longTasks: [] };
+    const store = (window as any).__COMPOSE_PERFORMANCE__;
     const obs = (window as any).PerformanceObserver;
     if (!obs || !(obs.supportedEntryTypes ?? []).includes('longtask')) return;
     store.longTaskSupported = true;
@@ -32,8 +32,8 @@ async function main() {
   await page.waitForTimeout(2000);
 
   console.log('[DIAG] Step 2: Import kit...');
-  const zipPath = path.resolve('/workspaces/semio/semio/assets/semio/metabolism.zip');
-  const fileInput = page.locator('[id="semio.sketchpad.app.home.importKit"]');
+  const zipPath = path.resolve('/workspaces/semio/compose/assets/compose/metabolism.zip');
+  const fileInput = page.locator('[id="compose.sketchpad.app.home.importKit"]');
   await fileInput.waitFor({ state: 'attached', timeout: 10000 });
   await fileInput.setInputFiles(zipPath);
   await fileInput.evaluate((el: any) => { el.dispatchEvent(new Event('change', { bubbles: true })); });
@@ -78,14 +78,14 @@ async function main() {
   await page.waitForTimeout(5000);
 
   // Close left panel
-  const leftToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.leftSidePanel"]');
+  const leftToggle = page.locator('[id="compose.sketchpad.navbar.panelToggle.leftSidePanel"]');
   if (await leftToggle.isVisible().catch(() => false)) {
     const leftOpen = await page.locator('[data-panel="leftSidePanel"]').isVisible().catch(() => false);
     if (leftOpen) { await leftToggle.click(); await page.waitForTimeout(500); }
   }
 
   // Clear long tasks and browser logs
-  await page.evaluate(() => { (window as any).__SEMIO_PERFORMANCE__.longTasks = []; });
+  await page.evaluate(() => { (window as any).__COMPOSE_PERFORMANCE__.longTasks = []; });
   browserLogs.length = 0;
 
   console.log('[DIAG] === STARTING MEASUREMENT ===');
@@ -131,7 +131,7 @@ async function main() {
 
   // Read long tasks immediately
   const result = await page.evaluate(() => {
-    const store = (window as any).__SEMIO_PERFORMANCE__;
+    const store = (window as any).__COMPOSE_PERFORMANCE__;
     return store.longTasks as Array<{duration: number, startTime: number}>;
   });
 
@@ -152,7 +152,7 @@ async function main() {
 
   // Wait 5 seconds for post-drag tasks
   await page.waitForTimeout(5000);
-  const laterResult = await page.evaluate(() => (window as any).__SEMIO_PERFORMANCE__.longTasks);
+  const laterResult = await page.evaluate(() => (window as any).__COMPOSE_PERFORMANCE__.longTasks);
   const newTasks = laterResult.filter((t: any) => !result.find((r: any) => r.startTime === t.startTime && r.duration === t.duration));
   if (newTasks.length > 0) {
     console.log(`\n[DIAG] === POST-DRAG TASKS (after 5s wait): ${newTasks.length} ===`);

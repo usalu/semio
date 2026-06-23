@@ -1,10 +1,10 @@
 {
   "id": "e5004efa-532b-41b5-ab8d-586a85a17791",
-  "uri": "semiorepo://s/e5004efa-532b-41b5-ab8d-586a85a17791",
+  "uri": "composerepo://s/e5004efa-532b-41b5-ab8d-586a85a17791",
   "contributor": "🧑‍💻ueli",
   "client": "cursor-chat",
   "second": "2026-03-14T15:50:22Z",
-  "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/e5004efa-532b-41b5-ab8d-586a85a17791/e5004efa-532b-41b5-ab8d-586a85a17791.jsonl",
+  "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/e5004efa-532b-41b5-ab8d-586a85a17791/e5004efa-532b-41b5-ab8d-586a85a17791.jsonl",
   "events": [
     {
       "native": {
@@ -20,7 +20,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/e5004efa-532b-41b5-ab8d-586a85a17791/e5004efa-532b-41b5-ab8d-586a85a17791.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/e5004efa-532b-41b5-ab8d-586a85a17791/e5004efa-532b-41b5-ab8d-586a85a17791.jsonl"
         }
       },
       "event": {
@@ -32,7 +32,7 @@
         "parent": "",
         "second": "🎆26🌙03☀️14⏰15⌚50⏱️22",
         "session": "⚪e5004efa532b41b5ab8d586a85a17791",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/e5004efa-532b-41b5-ab8d-586a85a17791/e5004efa-532b-41b5-ab8d-586a85a17791.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/e5004efa-532b-41b5-ab8d-586a85a17791/e5004efa-532b-41b5-ab8d-586a85a17791.jsonl"
       },
       "response": {
         "allowed": true
@@ -46,9 +46,9 @@
           "model": "composer-1.5",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/workspaces/semio/semio/net/Semio/Semio.cs"
+            "file_path": "/workspaces/semio/compose/net/Compose/Compose.cs"
           },
-          "tool_output": "{\"file_path\":\"/workspaces/semio/semio/net/Semio/Semio.cs\",\"content_length\":4074}",
+          "tool_output": "{\"file_path\":\"/workspaces/semio/compose/net/Compose/Compose.cs\",\"content_length\":4074}",
           "duration": 2146.159,
           "tool_use_id": "tool_ca889f87-2dbc-404e-92a6-21e82bf1d61",
           "hook_event_name": "postToolUse",
@@ -57,7 +57,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/e5004efa-532b-41b5-ab8d-586a85a17791/e5004efa-532b-41b5-ab8d-586a85a17791.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/e5004efa-532b-41b5-ab8d-586a85a17791/e5004efa-532b-41b5-ab8d-586a85a17791.jsonl"
         }
       },
       "event": {
@@ -66,18 +66,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚net🛅semio💻semio"
+            "id": "👤compose📚net🛅compose💻compose"
           }
         ],
         "kind": "agent.tool.search.ended",
         "llm": "composer-1.5",
         "parent": "",
         "ranges": [
-          "👤semio📚net🛅semio💻semio📌1📌11263"
+          "👤compose📚net🛅compose💻compose📌1📌11263"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚50⏱️22",
         "session": "⚪e5004efa532b41b5ab8d586a85a17791",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/e5004efa-532b-41b5-ab8d-586a85a17791/e5004efa-532b-41b5-ab8d-586a85a17791.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/e5004efa-532b-41b5-ab8d-586a85a17791/e5004efa-532b-41b5-ab8d-586a85a17791.jsonl"
       },
       "response": {
         "allowed": true

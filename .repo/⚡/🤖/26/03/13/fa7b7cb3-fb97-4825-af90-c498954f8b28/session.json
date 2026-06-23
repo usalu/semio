@@ -1,17 +1,17 @@
 {
   "id": "fa7b7cb3-fb97-4825-af90-c498954f8b28",
-  "uri": "semiorepo://s/fa7b7cb3-fb97-4825-af90-c498954f8b28",
+  "uri": "composerepo://s/fa7b7cb3-fb97-4825-af90-c498954f8b28",
   "checkpoint": "b246a0ee16a521dcd1034a05b47033ddfcd3916b",
   "contributor": "🧑‍💻ueli",
   "client": "claude-code",
   "second": "2026-03-13T10:22:46Z",
-  "transcript": "/home/vscode/.claude/projects/-workspaces-semio/fa7b7cb3-fb97-4825-af90-c498954f8b28.jsonl",
+  "transcript": "/home/vscode/.claude/projects/-workspaces-compose/fa7b7cb3-fb97-4825-af90-c498954f8b28.jsonl",
   "events": [
     {
       "native": {
         "event": {
           "session_id": "fa7b7cb3-fb97-4825-af90-c498954f8b28",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/fa7b7cb3-fb97-4825-af90-c498954f8b28.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/fa7b7cb3-fb97-4825-af90-c498954f8b28.jsonl",
           "cwd": "/workspaces/semio",
           "hook_event_name": "SessionStart",
           "source": "startup"
@@ -25,7 +25,7 @@
         "parent": "",
         "second": "🎆26🌙03☀️13⏰10⌚22⏱️46",
         "session": "⚪fa7b7cb3fb974825af90c498954f8b28",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/fa7b7cb3-fb97-4825-af90-c498954f8b28.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/fa7b7cb3-fb97-4825-af90-c498954f8b28.jsonl"
       },
       "response": {
         "allowed": true

@@ -1,7 +1,7 @@
 
-    /// @emoji 📋 Full store scenario catalog (`kit-store.comprehensive.semio.json`) under `semio/assets/semio/`.
+    /// @emoji 📋 Full store scenario catalog (`kit-store.comprehensive.compose.json`) under `compose/assets/compose/`.
     fn kit_store_comprehensive_fixture_path() -> Option<PathBuf> {
-        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../assets/semio/kit-store.comprehensive.semio.json");
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../assets/compose/kit-store.comprehensive.compose.json");
         if path.is_file() {
             Some(path)
         } else {
@@ -157,7 +157,7 @@
     }
 
     fn kit_store_validate_comprehensive_fixture(fixture: &serde_json::Value) {
-        assert_eq!(fixture["kind"].as_str(), Some("semio.kit_store.comprehensive"));
+        assert_eq!(fixture["kind"].as_str(), Some("compose.kit_store.comprehensive"));
         assert!(fixture["schema"].as_str().is_some(), "schema");
         assert!(fixture["storeId"].as_str().is_some(), "storeId");
         let steps = fixture["steps"].as_array().expect("steps array");
@@ -196,7 +196,7 @@
                 let fp = stable_projection_fingerprint(&g.materialized_kit_for_workspace(&g.id).await).await;
                 assert_eq!(fp, exp_fp, "devJson backbone fingerprint");
             }
-            "localDotSemio" => {
+            "localDotCompose" => {
                 let dir = tempfile::tempdir().expect("temp dir");
                 let proj_root = dir.path().join("workspace");
                 std::fs::create_dir_all(&proj_root).expect("mkdir workspace");
@@ -204,7 +204,7 @@
                 let uri_local = format!("local://{}", proj_canon.display());
                 let norm = crate::kit_backbone::normalize_connection_uri(&uri_local);
                 let g_bootstrap = crate::vcs::Graph::new().await;
-                let _bones = crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, "wip", &g_bootstrap).await.expect("bootstrap .semio layout");
+                let _bones = crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, "wip", &g_bootstrap).await.expect("bootstrap .compose layout");
                 let g2 = crate::vcs::Graph::new().await;
                 let legacy_workspace = ops_json["draftId"].as_str().expect("draftId");
                 let graph_workspace = g2.id.as_str().to_string();
@@ -214,7 +214,7 @@
                         op.workspace_id = graph_workspace.clone();
                     }
                 }
-                let db_path = proj_canon.join(".semio").join("wip.db");
+                let db_path = proj_canon.join(".compose").join("wip.db");
                 let conn = rusqlite::Connection::open(&db_path).expect("open wip.db");
                 for operation in &stored {
                     let input_json = serde_json::to_string(&operation.input).expect("input json");
@@ -227,7 +227,7 @@
                 drop(conn);
                 crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, "wip", &g2).await.expect("replay wip.db");
                 let fp = stable_projection_fingerprint(&g2.materialized_kit_for_workspace(&g2.id).await).await;
-                assert_eq!(fp, exp_fp, "localDotSemio backbone fingerprint");
+                assert_eq!(fp, exp_fp, "localDotCompose backbone fingerprint");
             }
             other => panic!("unknown backbone kind in comprehensive fixture: {other}"),
         }
@@ -279,7 +279,7 @@
     #[test]
     fn kit_store_comprehensive_fixture_contract_is_valid() {
         let Some(path) = kit_store_comprehensive_fixture_path() else {
-            eprintln!("[DEBUG] skip kit_store_comprehensive_fixture_contract_is_valid: missing kit-store.comprehensive.semio.json");
+            eprintln!("[DEBUG] skip kit_store_comprehensive_fixture_contract_is_valid: missing kit-store.comprehensive.compose.json");
             return;
         };
         let fixture: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path).expect("read comprehensive fixture")).expect("parse comprehensive fixture");
@@ -311,7 +311,7 @@
     fn kit_store_comprehensive_fixture_all_scenarios() {
         block_on(async {
             let Some(path) = kit_store_comprehensive_fixture_path() else {
-                eprintln!("[DEBUG] skip kit_store_comprehensive_fixture_all_scenarios: missing kit-store.comprehensive.semio.json");
+                eprintln!("[DEBUG] skip kit_store_comprehensive_fixture_all_scenarios: missing kit-store.comprehensive.compose.json");
                 return;
             };
             let fixture: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path).expect("read comprehensive fixture")).expect("parse comprehensive fixture");

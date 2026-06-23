@@ -12,11 +12,11 @@ After each successful `KitStore.operation()` (including `renameKit`), call `inva
 
 ## Files
 
-- `semio/js/index.ts`
+- `compose/js/index.ts`
 
 ## Verification
 
-- `cd semio/js && npm test` → **30 passed** (2026-05-09).
+- `cd compose/js && npm test` → **30 passed** (2026-05-09).
 
 ## Status
 

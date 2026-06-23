@@ -30,12 +30,12 @@ Found the extension code structure:
 
 - `analyzeFile()` calls `runRepoCommandJson` with analyze command
 - `updateFileDiagnostics()` sets diagnostics on the collection
-- Both kitDiagnosticCollection and repoDiagnosticCollection use same source name "semio"
+- Both kitDiagnosticCollection and repoDiagnosticCollection use same source name "compose"
 - Potential issue: Two collections with same name might cause conflicts
 
 ### Root Cause Found
 
-Tested `./repo/cli/cli --json analyze "js/semio/semio.ts"` - returns breachs correctly.
+Tested `./repo/cli/cli --json analyze "js/compose/compose.ts"` - returns breachs correctly.
 The issue is in `extractRepoResult()` function:
 
 - RepoEvent type expects `data` field
@@ -53,4 +53,4 @@ The issue is in `extractRepoResult()` function:
 
 ## Summary
 
-Fixed VSCode extension diagnostics display by correcting event parsing in extension.ts. The root cause was that the extractRepoResult() function was looking for event.data but the repo binary outputs event.result. Updated the RepoEvent type to include the result field and modified extractRepoResult() to check event.result first before falling back to event.data. Added 7 comprehensive unit tests covering all edge cases. Verified fix works correctly with standalone test. Breachs from files like semio.ts will now properly display as diagnostics in VSCode.
+Fixed VSCode extension diagnostics display by correcting event parsing in extension.ts. The root cause was that the extractRepoResult() function was looking for event.data but the repo binary outputs event.result. Updated the RepoEvent type to include the result field and modified extractRepoResult() to check event.result first before falling back to event.data. Added 7 comprehensive unit tests covering all edge cases. Verified fix works correctly with standalone test. Breachs from files like compose.ts will now properly display as diagnostics in VSCode.

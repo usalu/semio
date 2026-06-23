@@ -1,0 +1,131 @@
+{
+  "name": "compose",
+  "description": "Interacts with the compose monorepo.",
+  "prompt": "file://../../AGENTS.md",
+  "mcpServers": {
+    "repo": {
+      "command": "bun",
+      "args": [
+        "./script.ts",
+        "dev",
+        "mcp",
+        "stdio",
+        "kiro"
+      ]
+    }
+  },
+  "tools": [
+    "*"
+  ],
+  "allowedTools": [
+    "read",
+    "write",
+    "shell",
+    "@repo"
+  ],
+  "toolsSettings": {
+    "shell": {
+      "allowedCommands": [
+        "npm *",
+        "npx *",
+        "node *",
+        "go *",
+        "cargo *",
+        "rustc *",
+        "python *",
+        "python3 *",
+        "uv *",
+        "pip *",
+        "pip3 *",
+        "ruff *",
+        "dotnet *",
+        "git *",
+        "gh *",
+        "find *",
+        "grep *",
+        "cat *",
+        "ls *",
+        "tree *",
+        "mkdir *",
+        "cp *",
+        "mv *",
+        "rm *",
+        "touch *",
+        "head *",
+        "tail *",
+        "wc *",
+        "sort *",
+        "uniq *",
+        "sed *",
+        "awk *",
+        "curl *",
+        "wget *",
+        "tar *",
+        "zip *",
+        "unzip *",
+        "echo *",
+        "pwd",
+        "which *",
+        "env",
+        "printenv *",
+        "date *",
+        "diff *",
+        "patch *",
+        "xargs *",
+        "cd *",
+        "pushd *",
+        "popd *",
+        "prettier *",
+        "eslint *",
+        "vitest *",
+        "playwright *",
+        "pytest *"
+      ],
+      "deniedCommands": [
+        "git push --force*",
+        "git reset --hard*"
+      ]
+    },
+    "write": {
+      "allowedPaths": [
+        "**"
+      ]
+    }
+  },
+  "resources": [
+    "file://../../AGENTS.md",
+    "file://../../CLAUDE.md",
+    "file://../../GEMINI.md"
+  ],
+  // Agent hooks disabled while logging is off — re-enable by uncommenting entries below.
+  "hooks": {},
+  // "hooks": {
+  //   "agentSpawn": [
+  //     {
+  //       "command": "bun ./script.ts dev mcp stdio kiro hook agentSpawn"
+  //     }
+  //   ],
+  //   "userPromptSubmit": [
+  //     {
+  //       "command": "bun ./script.ts dev mcp stdio kiro hook userPromptSubmit"
+  //     }
+  //   ],
+  //   "preToolUse": [
+  //     {
+  //       "command": "bun ./script.ts dev mcp stdio kiro hook preToolUse"
+  //     }
+  //   ],
+  //   "postToolUse": [
+  //     {
+  //       "command": "bun ./script.ts dev mcp stdio kiro hook postToolUse"
+  //     }
+  //   ],
+  //   "stop": [
+  //     {
+  //       "command": "bun ./script.ts dev mcp stdio kiro hook stop"
+  //     }
+  //   ]
+  // },
+  "includeMcpJson": true,
+  "welcomeMessage": "Ready to work on the compose monorepo."
+}

@@ -16,7 +16,7 @@ async function main() {
   });
   console.log("Diagram HTML:", diagramHtml);
   const storeState = await page.evaluate(() => {
-    const store = (window as any).__SEMIO_STORE__;
+    const store = (window as any).__COMPOSE_STORE__;
     if (!store) return "NO STORE";
     const kitGuids = Array.from((store as any).kits?.keys() ?? []) as string[];
     if (kitGuids.length === 0) return "NO KITS";
@@ -28,7 +28,7 @@ async function main() {
   });
   console.log("Store state:", JSON.stringify(storeState));
   const scopeState = await page.evaluate(() => {
-    const actor = (window as any).__SEMIO_ACTOR__;
+    const actor = (window as any).__COMPOSE_ACTOR__;
     if (!actor) return "NO ACTOR";
     const snapshot = actor.getSnapshot();
     return { hasContext: !!snapshot?.context, designApps: Object.keys(snapshot?.context?.designApps || {}).length };

@@ -2,7 +2,7 @@
 import json
 from pathlib import Path
 
-lib = Path(r"c:\git\semio\semio\client\lib\rs\lib.rs")
+lib = Path(r"c:\git\compose\compose\client\lib\rs\lib.rs")
 text = lib.read_text(encoding="utf-8")
 ticket = Path(__file__).parent
 prefix = (ticket / "gap_mod_prefix.rs").read_text(encoding="utf-8")

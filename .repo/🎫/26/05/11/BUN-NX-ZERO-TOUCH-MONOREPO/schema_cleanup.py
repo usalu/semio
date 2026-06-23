@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Schema Inconsistency Cleanup — semio/graphql/target.schema.graphql"""
+"""Schema Inconsistency Cleanup — compose/graphql/target.schema.graphql"""
 from __future__ import annotations
 
 import re
@@ -9,14 +9,14 @@ from pathlib import Path
 def repo_root() -> Path:
     p = Path(__file__).resolve().parent
     for _ in range(12):
-        cand = p / "semio" / "graphql" / "target.schema.graphql"
+        cand = p / "compose" / "graphql" / "target.schema.graphql"
         if cand.is_file():
             return p
         p = p.parent
     raise SystemExit("Could not locate repo root")
 
 
-SCHEMA = repo_root() / "semio" / "graphql" / "target.schema.graphql"
+SCHEMA = repo_root() / "compose" / "graphql" / "target.schema.graphql"
 
 CANON_MODS_OWNS_TAIL = (
     "PlaneModification | PositionModification | AttributeModification | "

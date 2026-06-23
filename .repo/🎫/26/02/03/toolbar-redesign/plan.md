@@ -1,9 +1,9 @@
 # Plan
 
 ## 1. Analysis
-- Analyze `js/semio/sketchpad/Sketchpad.tsx` to understand current toolbar rendering.
+- Analyze `js/compose/sketchpad/Sketchpad.tsx` to understand current toolbar rendering.
 - Analyze how apps register toolbar sections (panels).
-- Analyze `js/semio/sketchpad/Home.tsx`, `Kit.tsx`, `Design.tsx`, `Type.tsx` to see how they currently use the toolbar/tools.
+- Analyze `js/compose/sketchpad/Home.tsx`, `Kit.tsx`, `Design.tsx`, `Type.tsx` to see how they currently use the toolbar/tools.
 
 ## 2. Refactoring `Sketchpad.tsx` Toolbar Rendering
 - Remove the existing `Toolbar` component or refactor it completely to match the "center-split" requirement.

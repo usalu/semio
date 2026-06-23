@@ -13,9 +13,9 @@ Restored connection translation controls to steppers in the sketchpad detail pan
 
 ## Log
 - Reopened the existing detail-panel migration ticket for the connection translation control regression
-- Verified the current implementation in `semio/js/sketchpad/Design.tsx` still renders `gap`, `shift`, and `rise` with `Slider`
-- Verified the old implementation in `semio/js/sketchpad/Design.Details.tsx.old` renders `Gap`, `Shift`, and `Rise` with `Stepper`
-- Reviewed the current `Stepper` implementation in `semio/js/sketchpad/elements.tsx` to confirm it supports numeric editing and labels by id
+- Verified the current implementation in `compose/js/sketchpad/Design.tsx` still renders `gap`, `shift`, and `rise` with `Slider`
+- Verified the old implementation in `compose/js/sketchpad/Design.Details.tsx.old` renders `Gap`, `Shift`, and `Rise` with `Stepper`
+- Reviewed the current `Stepper` implementation in `compose/js/sketchpad/elements.tsx` to confirm it supports numeric editing and labels by id
 - Updated the existing Playwright sketchpad coverage to validate the translation controls as steppers instead of sliders
 - Added a default `baseURL` in `sketchpad.test.ts` because the repo does not have a tracked Playwright config and `page.goto("/")` otherwise fails locally
 - Started the sketchpad dev server and reran `npx playwright test sketchpad.test.ts --grep "Design" --timeout 240000 --workers=1 --max-failures=1 --reporter=list` with `PLAYWRIGHT_BASE_URL=http://127.0.0.1:5175`

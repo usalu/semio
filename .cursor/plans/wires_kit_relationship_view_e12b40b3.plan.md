@@ -72,8 +72,8 @@ Edge resolution rule (generalized from the design/type example): a transitive re
 
 ## Key files
 
-- [semio/client/lib/sketchpad/js/index.ts](semio/client/lib/sketchpad/js/index.ts): manifest, window body, the fixture builder, sync triggers, VFS access.
-- [semio/client/lib/js/index.ts](semio/client/lib/js/index.ts): relationship APIs already exist (`referencesTypes`/`referencesTypesTransitive` at ~3342/3363, `blueprint`/`isType`/`isDesign` at ~4067-4076); add a small batched relationship-fetch helper if needed.
+- [compose/client/lib/sketchpad/js/index.ts](compose/client/lib/sketchpad/js/index.ts): manifest, window body, the fixture builder, sync triggers, VFS access.
+- [compose/client/lib/js/index.ts](compose/client/lib/js/index.ts): relationship APIs already exist (`referencesTypes`/`referencesTypesTransitive` at ~3342/3363, `blueprint`/`isType`/`isDesign` at ~4067-4076); add a small batched relationship-fetch helper if needed.
 - [reasoning/mindmap/wires/react/index.ts](reasoning/mindmap/wires/react/index.ts): reuse `WiresFixtureV1`, `wiresFixtureBoard`, `relationshipKindToEdgeKindId`, kind catalogs.
 - [framework/product/platform/core/index.ts](framework/product/platform/core/index.ts): VFS controller; add a method to enumerate currently-visible nodes for a scope.
 
@@ -89,7 +89,7 @@ Edge resolution rule (generalized from the design/type example): a transitive re
 
 - Add `visibleVirtualFileSystemNodes(scope): readonly VirtualFileSystemNodeRecord[]` to `VirtualFileSystemController` reusing the same data as `buildVirtualFileSystemModel` (root + expanded `childrenByScope`). The sketchpad shell exposes the kit-scope visible set + each node's `parentId`/`fileNodeKindId`.
 
-### 3. Reference data from Rust (sketchpad + @semio/js)
+### 3. Reference data from Rust (sketchpad + @compose/js)
 
 - Add an async relationship fetch in the shell keyed by visible node ids, using the existing JS store methods: per visible design call `referencesTypesTransitive()`/`referencesDesignsTransitive()`; per visible piece call `blueprint()`. Cache results per kit, invalidated alongside `invalidateKitVirtualFileSystem` (~14078).
 

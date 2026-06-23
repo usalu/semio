@@ -1,6 +1,6 @@
 import fs from "node:fs";
 
-const devPath = "c:/git/semio/elements/client/lib/board/node_modules/react-reconciler/cjs/react-reconciler.development.js";
+const devPath = "c:/git/compose/elements/client/lib/board/node_modules/react-reconciler/cjs/react-reconciler.development.js";
 const s = fs.readFileSync(devPath, "utf8");
 const re = /([a-zA-Z0-9$]+) = \$\$\$config\.([a-zA-Z0-9]+)/g;
 const keys = new Set();

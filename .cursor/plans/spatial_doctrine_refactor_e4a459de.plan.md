@@ -164,5 +164,5 @@ After Phase 1 schemas are merged, fan out to four `generalPurpose` subagents wor
 
 ## Out of scope
 
-- No changes to `./elements`, `./semio`, `./coda`, `./reuse` per the no-cross-tech rule.
+- No changes to `./elements`, `./compose`, `./coda`, `./reuse` per the no-cross-tech rule.
 - No backwards compatibility shims, no deprecation aliases (per workspace rules — greenfield repo).

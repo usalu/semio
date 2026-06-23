@@ -2,8 +2,8 @@
   "title": "Sketchpad Kit Hook Refactor",
   "emoji": "🎫",
   "status": "closed",
-  "description": "Implement kit data path: sketchpad only semio/react hooks; react only semio/js stores; js only KitStoreHandle.execute to Rust; all kit mutations semantic commands; no sketchpad manual diff/patch.",
-  "summary": "Sketchpad uses only @semio/react for kit I/O; registry context notifies consumers on open/close; useOpenKitShallows/useRegistry* hooks; attachSketchpadKitReadShell + patchQuality + runKitStoreHandleExecute in js; removed kit shallow cache; re-exports asKitInstance/importKitToPlain.",
+  "description": "Implement kit data path: sketchpad only compose/react hooks; react only compose/js stores; js only KitStoreHandle.execute to Rust; all kit mutations semantic commands; no sketchpad manual diff/patch.",
+  "summary": "Sketchpad uses only @compose/react for kit I/O; registry context notifies consumers on open/close; useOpenKitShallows/useRegistry* hooks; attachSketchpadKitReadShell + patchQuality + runKitStoreHandleExecute in js; removed kit shallow cache; re-exports asKitInstance/importKitToPlain.",
   "goal": "🎯r2602🎯runningsketchpad",
   "sessions": [
     "⚪0b07c4f2e68e4c56815bf7286d72d866"

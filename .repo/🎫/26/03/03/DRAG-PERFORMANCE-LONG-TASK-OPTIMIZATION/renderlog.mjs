@@ -1,7 +1,7 @@
 import { chromium } from 'playwright';
 import path from 'node:path';
 const BASE_URL = process.env.PLAYWRIGHT_BASE_URL || 'http://127.0.0.1:5173';
-const ZIP_PATH = path.resolve('/workspaces/semio/semio/assets/semio/metabolism.zip');
+const ZIP_PATH = path.resolve('/workspaces/semio/compose/assets/compose/metabolism.zip');
 async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 (async () => {
   const browser = await chromium.launch({ headless: true });
@@ -14,7 +14,7 @@ async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
   await page.goto(BASE_URL);
   await page.waitForLoadState('domcontentloaded');
   await sleep(2000);
-  const fileInput = page.locator('[id="semio.sketchpad.app.home.importKit"]');
+  const fileInput = page.locator('[id="compose.sketchpad.app.home.importKit"]');
   await fileInput.waitFor({ state: 'attached', timeout: 10000 });
   const [fc] = await Promise.all([page.waitForEvent('filechooser', { timeout: 5000 }).catch(() => null), fileInput.dispatchEvent('click')]);
   if (fc) await fc.setFiles(ZIP_PATH); else await fileInput.setInputFiles(ZIP_PATH);

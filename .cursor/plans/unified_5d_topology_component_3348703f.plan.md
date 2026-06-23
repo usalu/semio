@@ -84,7 +84,7 @@ flowchart TB
 ### Phase 4 - Consumers, fixtures, plays, tests
 
 - Replace `TopologyBoardSurfaceHost`/`TopologySceneSurfaceHost` in [framework/playground/renderer/react/index.tsx](framework/playground/renderer/react/index.tsx):1246-1316 with `<FiveD>` + a shared `TopologyStore`; the 5d play ([puzzle/5d/play/index.ts](puzzle/5d/play/index.ts)) keeps two windows (one `mode="flat"`, one `mode="spatial"`) over the same store to validate cross-instance gestures.
-- Sketchpad: rewrite `useDesignTopologyAdapter` + `DesignTopologyBoardWindow`/`DesignTopologySceneWindow` ([semio/client/lib/sketchpad/js/index.ts](semio/client/lib/sketchpad/js/index.ts):~34564-35034) to build the unified model from design data once into a shared store; both windows render `<FiveD>`. Kit diagram uses `<FiveD mode="flat">`.
+- Sketchpad: rewrite `useDesignTopologyAdapter` + `DesignTopologyBoardWindow`/`DesignTopologySceneWindow` ([compose/client/lib/sketchpad/js/index.ts](compose/client/lib/sketchpad/js/index.ts):~34564-35034) to build the unified model from design data once into a shared store; both windows render `<FiveD>`. Kit diagram uses `<FiveD mode="flat">`.
 - Fixtures: make a single canonical `puzzle/5d/play/fixture/nakagin-capsule-tower.topology.json` in the new `puzzle.5d.topology/v1` schema (parts/anchors/bonds with flat+spatial aspects). Refactor `parseBoardFixtureV1`/`parseFixtureV1` usage in the 2d/3d plays to project from the unified fixture so it is the single source of truth.
 - Update e2e specs ([puzzle/5d/play/e2e/topology.spec.ts](puzzle/5d/play/e2e/topology.spec.ts), 2d/3d specs) to cover: edit-in-flat updates spatial and vice versa; indirect connect started in flat previews in spatial and is terminated in spatial.
 - Remove the old dual-surface exports (`TopologyBoardPane`, `TopologyScenePane`, `buildTopologyDualSurfaceBindings`, mirror helpers) - no backwards-compat/legacy per repo rules.
@@ -96,6 +96,6 @@ Large (multi-hour) effort; after Phase 0 contract is fixed, run Phases 1/2/3 by 
 
 ### Notes / decisions
 
-- Mode values `"flat" | "spatial"` chosen as neutral (not "2d"/"3d", not semio-forbidden terms). Component named `FiveD`.
+- Mode values `"flat" | "spatial"` chosen as neutral (not "2d"/"3d", not compose-forbidden terms). Component named `FiveD`.
 - Per-surface camera and layout (flat x,y vs spatial transform) are independent presentation aspects of the same Part and both persist in the model; only topology/kinds/selection/gestures sync conceptually.
 

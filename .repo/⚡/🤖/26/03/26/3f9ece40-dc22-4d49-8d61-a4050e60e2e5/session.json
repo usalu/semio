@@ -5,7 +5,7 @@
   "second": "2026-03-26T16:28:47Z",
   "checkpoint": "a642c79c41ca7b9a9a628ac90f2c03c9e1e7f137",
   "contributor": "unknown",
-  "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl",
+  "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl",
   "events": [
     {
       "event": {
@@ -49,7 +49,7 @@
           "conversation_id": "3f9ece40-dc22-4d49-8d61-a4050e60e2e5",
           "generation_id": "9eef6029-9d76-44f2-856c-f7d82105503e",
           "model": "default",
-          "prompt": "There should be a new semio ui component for vector which lets you select or display a 3d vector. Make sure to implement partial/full controlled/uncontrolled mode and partial/full select (only designs, only types, only ports, etc) same contraint as for all semio ui components.",
+          "prompt": "There should be a new compose ui component for vector which lets you select or display a 3d vector. Make sure to implement partial/full controlled/uncontrolled mode and partial/full select (only designs, only types, only ports, etc) same contraint as for all compose ui components.",
           "attachments": [
             {
               "type": "rule",
@@ -85,7 +85,7 @@
           "tool_input": {
             "pattern": "",
             "file_path": "/workspaces/semio",
-            "glob": "**/semio/ui/**/*.tsx",
+            "glob": "**/compose/ui/**/*.tsx",
             "output_mode": "files_with_matches"
           },
           "tool_use_id": "call_E9injyVmCzS73xBNHhxUk4i4\nfc_051730be1c6caef50169c55ec7fc488193a048ccd9fe282fa3",
@@ -117,7 +117,7 @@
           "tool_name": "Grep",
           "tool_input": {
             "pattern": "controlled|uncontrolled|select|designs|ports|types",
-            "file_path": "/workspaces/semio/semio/ui",
+            "file_path": "/workspaces/semio/compose/ui",
             "output_mode": "files_with_matches"
           },
           "tool_use_id": "call_d0aPSD0RYqwjP7v14XmTaGZ5\nfc_051730be1c6caef50169c55ec7fc5c8193b682de3c2988c602",
@@ -150,7 +150,7 @@
           "tool_input": {
             "pattern": "",
             "file_path": "/workspaces/semio",
-            "glob": "**/semio/ui/**/*.tsx",
+            "glob": "**/compose/ui/**/*.tsx",
             "output_mode": "files_with_matches"
           },
           "tool_output": "{\"pattern\":\"\",\"success\":true}",
@@ -184,7 +184,7 @@
           "tool_name": "Grep",
           "tool_input": {
             "pattern": "controlled|uncontrolled|select|designs|ports|types",
-            "file_path": "/workspaces/semio/semio/ui",
+            "file_path": "/workspaces/semio/compose/ui",
             "output_mode": "files_with_matches"
           },
           "tool_output": "{\"pattern\":\"controlled|uncontrolled|select|designs|ports|types\",\"success\":true}",
@@ -209,7 +209,7 @@
         "kind": "agent.file.read.starting",
         "second": "2026-03-26T16:29:01Z",
         "session": "3f9ece40-dc22-4d49-8d61-a4050e60e2e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
       },
       "native": {
         "event": {
@@ -219,7 +219,7 @@
           "tool_name": "Grep",
           "tool_input": {
             "pattern": "export (const|function) [A-Z][A-Za-z0-9_]*",
-            "file_path": "/workspaces/semio/semio/ui/index.tsx",
+            "file_path": "/workspaces/semio/compose/ui/index.tsx",
             "output_mode": "content"
           },
           "tool_use_id": "call_TjjO2CPJKrcXuJMxE3N3B3mW\nfc_051730be1c6caef50169c55ecb8e888193b3ec0ed56f79c4da",
@@ -229,7 +229,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
         }
       },
       "response": {}
@@ -242,7 +242,7 @@
         "kind": "agent.file.read.starting",
         "second": "2026-03-26T16:29:01Z",
         "session": "3f9ece40-dc22-4d49-8d61-a4050e60e2e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
       },
       "native": {
         "event": {
@@ -252,7 +252,7 @@
           "tool_name": "Grep",
           "tool_input": {
             "pattern": "Vec|Vector",
-            "file_path": "/workspaces/semio/semio/ui/index.tsx",
+            "file_path": "/workspaces/semio/compose/ui/index.tsx",
             "output_mode": "content"
           },
           "tool_use_id": "call_YC43fkFiTEMjKQmXNjxZalFL\nfc_051730be1c6caef50169c55ecb8e948193b6db6682d80759b3",
@@ -262,7 +262,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
         }
       },
       "response": {}
@@ -275,7 +275,7 @@
         "kind": "agent.file.read.starting",
         "second": "2026-03-26T16:29:01Z",
         "session": "3f9ece40-dc22-4d49-8d61-a4050e60e2e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
       },
       "native": {
         "event": {
@@ -284,7 +284,7 @@
           "model": "default",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/workspaces/semio/semio/ui/.storybook/stories/Vec.stories.tsx"
+            "file_path": "/workspaces/semio/compose/ui/.storybook/stories/Vec.stories.tsx"
           },
           "tool_use_id": "call_U7HrMkj1e3ZTID5Ey3RU0Wjw\nfc_051730be1c6caef50169c55ecb8e9c81939dadf71109a8d7ca",
           "hook_event_name": "preToolUse",
@@ -293,7 +293,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
         }
       },
       "response": {}
@@ -306,7 +306,7 @@
         "kind": "agent.file.read.ended",
         "second": "2026-03-26T16:29:01Z",
         "session": "3f9ece40-dc22-4d49-8d61-a4050e60e2e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
       },
       "native": {
         "event": {
@@ -316,7 +316,7 @@
           "tool_name": "Grep",
           "tool_input": {
             "pattern": "export (const|function) [A-Z][A-Za-z0-9_]*",
-            "file_path": "/workspaces/semio/semio/ui/index.tsx",
+            "file_path": "/workspaces/semio/compose/ui/index.tsx",
             "output_mode": "content"
           },
           "tool_output": "{\"pattern\":\"export (const|function) [A-Z][A-Za-z0-9_]*\",\"success\":true}",
@@ -328,7 +328,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
         }
       },
       "response": {}
@@ -341,7 +341,7 @@
         "kind": "agent.file.read.ended",
         "second": "2026-03-26T16:29:01Z",
         "session": "3f9ece40-dc22-4d49-8d61-a4050e60e2e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
       },
       "native": {
         "event": {
@@ -351,7 +351,7 @@
           "tool_name": "Grep",
           "tool_input": {
             "pattern": "Vec|Vector",
-            "file_path": "/workspaces/semio/semio/ui/index.tsx",
+            "file_path": "/workspaces/semio/compose/ui/index.tsx",
             "output_mode": "content"
           },
           "tool_output": "{\"pattern\":\"Vec|Vector\",\"success\":true}",
@@ -363,7 +363,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
         }
       },
       "response": {}
@@ -376,15 +376,15 @@
         "kind": "agent.file.read.starting",
         "second": "2026-03-26T16:29:01Z",
         "session": "3f9ece40-dc22-4d49-8d61-a4050e60e2e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
       },
       "native": {
         "event": {
           "conversation_id": "3f9ece40-dc22-4d49-8d61-a4050e60e2e5",
           "generation_id": "9eef6029-9d76-44f2-856c-f7d82105503e",
           "model": "default",
-          "content": "// #region 🔖Header\n// 💻 semio/ui/.storybook/stories/Vec.stories.tsx\n// Specs: One component per stories file with default and domain-variant stories.\n// Summary: Showcases the Vec 2D vector input with draggable handle, axes, and origin.\n// 2026 Ueli Saluz \u003cueli@semio-tech.com\u003e\n// #endregion 🔖Header\n\nimport type { Meta, StoryObj } from \"@storybook/react\";\nimport { Vec, type VecValue } from \"@semio/ui\";\nimport { useState } from \"react\";\n\n// #region 🔖Vec\nconst meta = {\n  title: \"semio/Vec\",\n  component: Vec,\n  parameters: {\n    layout: \"centered\",\n  },\n  tags: [\"autodocs\"],\n} satisfies Meta\u003ctypeof Vec\u003e;\n\nexport default meta;\n\ntype Story = StoryObj\u003ctypeof meta\u003e;\n\nconst defaultArgs = {\n  id: \"vec-default\",\n  vec: { u: 0.3, v: 0.5 } as VecValue,\n  minU: -1,\n  maxU: 1,\n  minV: -1,\n  maxV: 1,\n  showAxes: true,\n  showOrigin: true,\n  size: 120,\n  onVecChange: () =\u003e {},\n  className: \"\",\n};\n\nexport const Default: Story = {\n  args: defaultArgs,\n  render: (args) =\u003e {\n    const [vec, setVec] = useState(args.vec);\n    return (\n      \u003cdiv className=\"flex flex-col items-center gap-2\"\u003e\n        \u003cVec {...args} vec={vec} onVecChange={setVec} /\u003e\n        \u003cspan className=\"text-xs text-muted-foreground\"\u003e\n          u: {vec.u.toFixed(2)}, v: {vec.v.toFixed(2)}\n        \u003c/span\u003e\n      \u003c/div\u003e\n    );\n  },\n};\n\nexport const NoAxes: Story = {\n  args: { ...defaultArgs, id: \"vec-no-axes\", showAxes: false },\n  render: (args) =\u003e {\n    const [vec, setVec] = useState(args.vec);\n    return \u003cVec {...args} vec={vec} onVecChange={setVec} /\u003e;\n  },\n};\n\nexport const NoOrigin: Story = {\n  args: { ...defaultArgs, id: \"vec-no-origin\", showOrigin: false },\n  render: (args) =\u003e {\n    const [vec, setVec] = useState(args.vec);\n    return \u003cVec {...args} vec={vec} onVecChange={setVec} /\u003e;\n  },\n};\n\nexport const PositiveDomain: Story = {\n  args: { ...defaultArgs, id: \"vec-positive-domain\", minU: 0, maxU: 10, minV: 0, maxV: 10, vec: { u: 5, v: 5 } },\n  render: (args) =\u003e {\n    const [vec, setVec] = useState(args.vec);\n    return (\n      \u003cdiv className=\"flex flex-col items-center gap-2\"\u003e\n        \u003cVec {...args} vec={vec} onVecChange={setVec} /\u003e\n        \u003cspan className=\"text-xs text-muted-foreground\"\u003e\n          u: {vec.u.toFixed(1)}, v: {vec.v.toFixed(1)}\n        \u003c/span\u003e\n      \u003c/div\u003e\n    );\n  },\n};\n\nexport const Large: Story = {\n  args: { ...defaultArgs, id: \"vec-large\", size: 200 },\n  render: (args) =\u003e {\n    const [vec, setVec] = useState(args.vec);\n    return \u003cVec {...args} vec={vec} onVecChange={setVec} /\u003e;\n  },\n};\n\n// #endregion 🔖Vec\n",
-          "file_path": "/workspaces/semio/semio/ui/.storybook/stories/Vec.stories.tsx",
+          "content": "// #region 🔖Header\n// 💻 compose/ui/.storybook/stories/Vec.stories.tsx\n// Specs: One component per stories file with default and domain-variant stories.\n// Summary: Showcases the Vec 2D vector input with draggable handle, axes, and origin.\n// 2026 Ueli Saluz \u003cueli@semio-tech.com\u003e\n// #endregion 🔖Header\n\nimport type { Meta, StoryObj } from \"@storybook/react\";\nimport { Vec, type VecValue } from \"@compose/ui\";\nimport { useState } from \"react\";\n\n// #region 🔖Vec\nconst meta = {\n  title: \"compose/Vec\",\n  component: Vec,\n  parameters: {\n    layout: \"centered\",\n  },\n  tags: [\"autodocs\"],\n} satisfies Meta\u003ctypeof Vec\u003e;\n\nexport default meta;\n\ntype Story = StoryObj\u003ctypeof meta\u003e;\n\nconst defaultArgs = {\n  id: \"vec-default\",\n  vec: { u: 0.3, v: 0.5 } as VecValue,\n  minU: -1,\n  maxU: 1,\n  minV: -1,\n  maxV: 1,\n  showAxes: true,\n  showOrigin: true,\n  size: 120,\n  onVecChange: () =\u003e {},\n  className: \"\",\n};\n\nexport const Default: Story = {\n  args: defaultArgs,\n  render: (args) =\u003e {\n    const [vec, setVec] = useState(args.vec);\n    return (\n      \u003cdiv className=\"flex flex-col items-center gap-2\"\u003e\n        \u003cVec {...args} vec={vec} onVecChange={setVec} /\u003e\n        \u003cspan className=\"text-xs text-muted-foreground\"\u003e\n          u: {vec.u.toFixed(2)}, v: {vec.v.toFixed(2)}\n        \u003c/span\u003e\n      \u003c/div\u003e\n    );\n  },\n};\n\nexport const NoAxes: Story = {\n  args: { ...defaultArgs, id: \"vec-no-axes\", showAxes: false },\n  render: (args) =\u003e {\n    const [vec, setVec] = useState(args.vec);\n    return \u003cVec {...args} vec={vec} onVecChange={setVec} /\u003e;\n  },\n};\n\nexport const NoOrigin: Story = {\n  args: { ...defaultArgs, id: \"vec-no-origin\", showOrigin: false },\n  render: (args) =\u003e {\n    const [vec, setVec] = useState(args.vec);\n    return \u003cVec {...args} vec={vec} onVecChange={setVec} /\u003e;\n  },\n};\n\nexport const PositiveDomain: Story = {\n  args: { ...defaultArgs, id: \"vec-positive-domain\", minU: 0, maxU: 10, minV: 0, maxV: 10, vec: { u: 5, v: 5 } },\n  render: (args) =\u003e {\n    const [vec, setVec] = useState(args.vec);\n    return (\n      \u003cdiv className=\"flex flex-col items-center gap-2\"\u003e\n        \u003cVec {...args} vec={vec} onVecChange={setVec} /\u003e\n        \u003cspan className=\"text-xs text-muted-foreground\"\u003e\n          u: {vec.u.toFixed(1)}, v: {vec.v.toFixed(1)}\n        \u003c/span\u003e\n      \u003c/div\u003e\n    );\n  },\n};\n\nexport const Large: Story = {\n  args: { ...defaultArgs, id: \"vec-large\", size: 200 },\n  render: (args) =\u003e {\n    const [vec, setVec] = useState(args.vec);\n    return \u003cVec {...args} vec={vec} onVecChange={setVec} /\u003e;\n  },\n};\n\n// #endregion 🔖Vec\n",
+          "file_path": "/workspaces/semio/compose/ui/.storybook/stories/Vec.stories.tsx",
           "attachments": [],
           "hook_event_name": "beforeReadFile",
           "cursor_version": "2.6.21",
@@ -392,7 +392,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
         }
       },
       "response": {}
@@ -405,7 +405,7 @@
         "kind": "agent.file.read.ended",
         "second": "2026-03-26T16:29:01Z",
         "session": "3f9ece40-dc22-4d49-8d61-a4050e60e2e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
       },
       "native": {
         "event": {
@@ -414,9 +414,9 @@
           "model": "default",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/workspaces/semio/semio/ui/.storybook/stories/Vec.stories.tsx"
+            "file_path": "/workspaces/semio/compose/ui/.storybook/stories/Vec.stories.tsx"
           },
-          "tool_output": "{\"file_path\":\"/workspaces/semio/semio/ui/.storybook/stories/Vec.stories.tsx\",\"content_length\":2523}",
+          "tool_output": "{\"file_path\":\"/workspaces/semio/compose/ui/.storybook/stories/Vec.stories.tsx\",\"content_length\":2523}",
           "duration": 20.654,
           "tool_use_id": "call_U7HrMkj1e3ZTID5Ey3RU0Wjw\nfc_051730be1c6caef50169c55ecb8e9c81939dadf71109a8d7ca",
           "hook_event_name": "postToolUse",
@@ -425,7 +425,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
         }
       },
       "response": {}
@@ -438,7 +438,7 @@
         "kind": "agent.file.read.starting",
         "second": "2026-03-26T16:29:04Z",
         "session": "3f9ece40-dc22-4d49-8d61-a4050e60e2e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
       },
       "native": {
         "event": {
@@ -448,7 +448,7 @@
           "tool_name": "Grep",
           "tool_input": {
             "pattern": "interface .*SelectionProps|defaultSelection|onSelectionChange|selection\\?",
-            "file_path": "/workspaces/semio/semio/ui/index.tsx",
+            "file_path": "/workspaces/semio/compose/ui/index.tsx",
             "output_mode": "content"
           },
           "tool_use_id": "call_hi4wt9gjZFdO7aOxnVxyFxzQ\nfc_051730be1c6caef50169c55ecf1a0881938a1d0ac66fcf3104",
@@ -458,7 +458,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
         }
       },
       "response": {}
@@ -471,7 +471,7 @@
         "kind": "agent.file.read.ended",
         "second": "2026-03-26T16:29:05Z",
         "session": "3f9ece40-dc22-4d49-8d61-a4050e60e2e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
       },
       "native": {
         "event": {
@@ -481,7 +481,7 @@
           "tool_name": "Grep",
           "tool_input": {
             "pattern": "interface .*SelectionProps|defaultSelection|onSelectionChange|selection\\?",
-            "file_path": "/workspaces/semio/semio/ui/index.tsx",
+            "file_path": "/workspaces/semio/compose/ui/index.tsx",
             "output_mode": "content"
           },
           "tool_output": "{\"pattern\":\"interface .*SelectionProps|defaultSelection|onSelectionChange|selection\\\\?\",\"success\":true}",
@@ -493,7 +493,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
         }
       },
       "response": {}
@@ -506,18 +506,18 @@
         "kind": "agent.tool.code.edit.ended",
         "second": "2026-03-26T16:29:59Z",
         "session": "3f9ece40-dc22-4d49-8d61-a4050e60e2e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
       },
       "native": {
         "event": {
           "conversation_id": "3f9ece40-dc22-4d49-8d61-a4050e60e2e5",
           "generation_id": "9eef6029-9d76-44f2-856c-f7d82105503e",
           "model": "default",
-          "file_path": "/workspaces/semio/semio/ui/index.tsx",
+          "file_path": "/workspaces/semio/compose/ui/index.tsx",
           "edits": [
             {
               "old_string": "",
-              "new_string": "// #region 🔖Vec3\n\n// Specs: Semio 3D vector component supporting display/select modes with partial/full\n// controlled/uncontrolled behavior. Supports per-axis enable flags for partial selection.\n// Summary: 3D vector editor/viewer with full-vector and per-axis controllable state.\n\nexport interface Vec3Value {\n  u: number;\n  v: number;\n  w: number;\n}\n\nexport interface Vec3Props {\n  id: string;\n\n  vec?: Vec3Value;\n  defaultVec?: Vec3Value;\n  onVecChange?: (vec: Vec3Value) =\u003e void;\n\n  u?: number;\n  defaultU?: number;\n  onUChange?: (u: number) =\u003e void;\n\n  v?: number;\n  defaultV?: number;\n  onVChange?: (v: number) =\u003e void;\n\n  w?: number;\n  defaultW?: number;\n  onWChange?: (w: number) =\u003e void;\n\n  selectionEnabled?: boolean;\n  uSelectionEnabled?: boolean;\n  vSelectionEnabled?: boolean;\n  wSelectionEnabled?: boolean;\n\n  displayEnabled?: boolean;\n  uDisplayEnabled?: boolean;\n  vDisplayEnabled?: boolean;\n  wDisplayEnabled?: boolean;\n\n  minU?: number;\n  maxU?: number;\n  minV?: number;\n  maxV?: number;\n  minW?: number;\n  maxW?: number;\n  step?: number;\n  className?: string;\n}\n\nconst normalizeVec3 = (vec?: Vec3Value): Vec3Value =\u003e ({\n  u: vec?.u ?? 0,\n  v: vec?.v ?? 0,\n  w: vec?.w ?? 0,\n});\n\nconst clampVec3Axis = (value: number, min: number, max: number): number =\u003e Math.min(max, Math.max(min, value));\n\nexport const Vec3: React.FC\u003cVec3Props\u003e = ({\n  id,\n  vec,\n  defaultVec,\n  onVecChange,\n  u,\n  defaultU,\n  onUChange,\n  v,\n  defaultV,\n  onVChange,\n  w,\n  defaultW,\n  onWChange,\n  selectionEnabled = true,\n  uSelectionEnabled = true,\n  vSelectionEnabled = true,\n  wSelectionEnabled = true,\n  displayEnabled = true,\n  uDisplayEnabled = true,\n  vDisplayEnabled = true,\n  wDisplayEnabled = true,\n  minU = -1,\n  maxU = 1,\n  minV = -1,\n  maxV = 1,\n  minW = -1,\n  maxW = 1,\n  step = 0.1,\n  className = \"\",\n}) =\u003e {\n  const [resolvedVec, setResolvedVec] = useInteractiveControllableValue\u003cVec3Value\u003e(vec, normalizeVec3(defaultVec), onVecChange);\n\n  const hasUPartialControl = u !== undefined || defaultU !== undefined || onUChange !== undefined;\n  const hasVPartialControl = v !== undefined || defaultV !== undefined || onVChange !== undefined;\n  const hasWPartialControl = w !== undefined || defaultW !== undefined || onWChange !== undefined;\n\n  const [resolvedU, setResolvedU] = useInteractiveControllableValue\u003cnumber\u003e(u, defaultU ?? resolvedVec.u, onUChange);\n  const [resolvedV, setResolvedV] = useInteractiveControllableValue\u003cnumber\u003e(v, defaultV ?? resolvedVec.v, onVChange);\n  const [resolvedW, setResolvedW] = useInteractiveControllableValue\u003cnumber\u003e(w, defaultW ?? resolvedVec.w, onWChange);\n\n  const currentVec: Vec3Value = {\n    u: hasUPartialControl ? resolvedU : resolvedVec.u,\n    v: hasVPartialControl ? resolvedV : resolvedVec.v,\n    w: hasWPartialControl ? resolvedW : resolvedVec.w,\n  };\n\n  const updateAxis = React.useCallback(\n    (axis: \"u\" | \"v\" | \"w\", rawValue: number) =\u003e {\n      const parsedValue = Number.isFinite(rawValue) ? rawValue : 0;\n      const clampedValue =\n        axis === \"u\" ? clampVec3Axis(parsedValue, minU, maxU) : axis === \"v\" ? clampVec3Axis(parsedValue, minV, maxV) : clampVec3Axis(parsedValue, minW, maxW);\n      const nextVec: Vec3Value = { ...currentVec, [axis]: clampedValue };\n\n      if (axis === \"u\" \u0026\u0026 hasUPartialControl) setResolvedU(clampedValue);\n      if (axis === \"v\" \u0026\u0026 hasVPartialControl) setResolvedV(clampedValue);\n      if (axis === \"w\" \u0026\u0026 hasWPartialControl) setResolvedW(clampedValue);\n\n      setResolvedVec(nextVec);\n    },\n    [currentVec, hasUPartialControl, hasVPartialControl, hasWPartialControl, maxU, maxV, maxW, minU, minV, minW, setResolvedU, setResolvedV, setResolvedVec, setResolvedW],\n  );\n\n  const renderAxisRow = (\n    axis: \"u\" | \"v\" | \"w\",\n    label: string,\n    value: number,\n    min: number,\n    max: number,\n    axisDisplayEnabled: boolean,\n    axisSelectionEnabled: boolean,\n  ) =\u003e {\n    if (!axisDisplayEnabled) return null;\n    const canSelect = selectionEnabled \u0026\u0026 axisSelectionEnabled;\n\n    return (\n      \u003cdiv key={axis} className=\"grid grid-cols-[24px_1fr_88px] items-center gap-2\"\u003e\n        \u003clabel htmlFor={`${id}-${axis}`} className=\"text-xs font-semibold uppercase text-muted-foreground\"\u003e\n          {label}\n        \u003c/label\u003e\n        {canSelect ? (\n          \u003cinput\n            id={`${id}-${axis}`}\n            type=\"range\"\n            min={min}\n            max={max}\n            step={step}\n            value={value}\n            onChange={(event) =\u003e updateAxis(axis, Number(event.target.value))}\n          /\u003e\n        ) : (\n          \u003cdiv className=\"h-2 rounded-full bg-muted/60\" /\u003e\n        )}\n        \u003cinput\n          type=\"number\"\n          min={min}\n          max={max}\n          step={step}\n          value={value}\n          readOnly={!canSelect}\n          onChange={canSelect ? (event) =\u003e updateAxis(axis, Number(event.target.value)) : undefined}\n          className=\"w-full rounded-md border border-input bg-background px-2 py-1 text-right text-sm font-mono\"\n        /\u003e\n      \u003c/div\u003e\n    );\n  };\n\n  if (!displayEnabled) return null;\n\n  return (\n    \u003cdiv id={id} data-slot=\"vec3\" className={`flex flex-col gap-2 ${className}`}\u003e\n      {renderAxisRow(\"u\", \"U\", currentVec.u, minU, maxU, uDisplayEnabled, uSelectionEnabled)}\n      {renderAxisRow(\"v\", \"V\", currentVec.v, minV, maxV, vDisplayEnabled, vSelectionEnabled)}\n      {renderAxisRow(\"w\", \"W\", currentVec.w, minW, maxW, wDisplayEnabled, wSelectionEnabled)}\n    \u003c/div\u003e\n  );\n};\n\n// #endregion 🔖Vec3\n"
+              "new_string": "// #region 🔖Vec3\n\n// Specs: Compose 3D vector component supporting display/select modes with partial/full\n// controlled/uncontrolled behavior. Supports per-axis enable flags for partial selection.\n// Summary: 3D vector editor/viewer with full-vector and per-axis controllable state.\n\nexport interface Vec3Value {\n  u: number;\n  v: number;\n  w: number;\n}\n\nexport interface Vec3Props {\n  id: string;\n\n  vec?: Vec3Value;\n  defaultVec?: Vec3Value;\n  onVecChange?: (vec: Vec3Value) =\u003e void;\n\n  u?: number;\n  defaultU?: number;\n  onUChange?: (u: number) =\u003e void;\n\n  v?: number;\n  defaultV?: number;\n  onVChange?: (v: number) =\u003e void;\n\n  w?: number;\n  defaultW?: number;\n  onWChange?: (w: number) =\u003e void;\n\n  selectionEnabled?: boolean;\n  uSelectionEnabled?: boolean;\n  vSelectionEnabled?: boolean;\n  wSelectionEnabled?: boolean;\n\n  displayEnabled?: boolean;\n  uDisplayEnabled?: boolean;\n  vDisplayEnabled?: boolean;\n  wDisplayEnabled?: boolean;\n\n  minU?: number;\n  maxU?: number;\n  minV?: number;\n  maxV?: number;\n  minW?: number;\n  maxW?: number;\n  step?: number;\n  className?: string;\n}\n\nconst normalizeVec3 = (vec?: Vec3Value): Vec3Value =\u003e ({\n  u: vec?.u ?? 0,\n  v: vec?.v ?? 0,\n  w: vec?.w ?? 0,\n});\n\nconst clampVec3Axis = (value: number, min: number, max: number): number =\u003e Math.min(max, Math.max(min, value));\n\nexport const Vec3: React.FC\u003cVec3Props\u003e = ({\n  id,\n  vec,\n  defaultVec,\n  onVecChange,\n  u,\n  defaultU,\n  onUChange,\n  v,\n  defaultV,\n  onVChange,\n  w,\n  defaultW,\n  onWChange,\n  selectionEnabled = true,\n  uSelectionEnabled = true,\n  vSelectionEnabled = true,\n  wSelectionEnabled = true,\n  displayEnabled = true,\n  uDisplayEnabled = true,\n  vDisplayEnabled = true,\n  wDisplayEnabled = true,\n  minU = -1,\n  maxU = 1,\n  minV = -1,\n  maxV = 1,\n  minW = -1,\n  maxW = 1,\n  step = 0.1,\n  className = \"\",\n}) =\u003e {\n  const [resolvedVec, setResolvedVec] = useInteractiveControllableValue\u003cVec3Value\u003e(vec, normalizeVec3(defaultVec), onVecChange);\n\n  const hasUPartialControl = u !== undefined || defaultU !== undefined || onUChange !== undefined;\n  const hasVPartialControl = v !== undefined || defaultV !== undefined || onVChange !== undefined;\n  const hasWPartialControl = w !== undefined || defaultW !== undefined || onWChange !== undefined;\n\n  const [resolvedU, setResolvedU] = useInteractiveControllableValue\u003cnumber\u003e(u, defaultU ?? resolvedVec.u, onUChange);\n  const [resolvedV, setResolvedV] = useInteractiveControllableValue\u003cnumber\u003e(v, defaultV ?? resolvedVec.v, onVChange);\n  const [resolvedW, setResolvedW] = useInteractiveControllableValue\u003cnumber\u003e(w, defaultW ?? resolvedVec.w, onWChange);\n\n  const currentVec: Vec3Value = {\n    u: hasUPartialControl ? resolvedU : resolvedVec.u,\n    v: hasVPartialControl ? resolvedV : resolvedVec.v,\n    w: hasWPartialControl ? resolvedW : resolvedVec.w,\n  };\n\n  const updateAxis = React.useCallback(\n    (axis: \"u\" | \"v\" | \"w\", rawValue: number) =\u003e {\n      const parsedValue = Number.isFinite(rawValue) ? rawValue : 0;\n      const clampedValue =\n        axis === \"u\" ? clampVec3Axis(parsedValue, minU, maxU) : axis === \"v\" ? clampVec3Axis(parsedValue, minV, maxV) : clampVec3Axis(parsedValue, minW, maxW);\n      const nextVec: Vec3Value = { ...currentVec, [axis]: clampedValue };\n\n      if (axis === \"u\" \u0026\u0026 hasUPartialControl) setResolvedU(clampedValue);\n      if (axis === \"v\" \u0026\u0026 hasVPartialControl) setResolvedV(clampedValue);\n      if (axis === \"w\" \u0026\u0026 hasWPartialControl) setResolvedW(clampedValue);\n\n      setResolvedVec(nextVec);\n    },\n    [currentVec, hasUPartialControl, hasVPartialControl, hasWPartialControl, maxU, maxV, maxW, minU, minV, minW, setResolvedU, setResolvedV, setResolvedVec, setResolvedW],\n  );\n\n  const renderAxisRow = (\n    axis: \"u\" | \"v\" | \"w\",\n    label: string,\n    value: number,\n    min: number,\n    max: number,\n    axisDisplayEnabled: boolean,\n    axisSelectionEnabled: boolean,\n  ) =\u003e {\n    if (!axisDisplayEnabled) return null;\n    const canSelect = selectionEnabled \u0026\u0026 axisSelectionEnabled;\n\n    return (\n      \u003cdiv key={axis} className=\"grid grid-cols-[24px_1fr_88px] items-center gap-2\"\u003e\n        \u003clabel htmlFor={`${id}-${axis}`} className=\"text-xs font-semibold uppercase text-muted-foreground\"\u003e\n          {label}\n        \u003c/label\u003e\n        {canSelect ? (\n          \u003cinput\n            id={`${id}-${axis}`}\n            type=\"range\"\n            min={min}\n            max={max}\n            step={step}\n            value={value}\n            onChange={(event) =\u003e updateAxis(axis, Number(event.target.value))}\n          /\u003e\n        ) : (\n          \u003cdiv className=\"h-2 rounded-full bg-muted/60\" /\u003e\n        )}\n        \u003cinput\n          type=\"number\"\n          min={min}\n          max={max}\n          step={step}\n          value={value}\n          readOnly={!canSelect}\n          onChange={canSelect ? (event) =\u003e updateAxis(axis, Number(event.target.value)) : undefined}\n          className=\"w-full rounded-md border border-input bg-background px-2 py-1 text-right text-sm font-mono\"\n        /\u003e\n      \u003c/div\u003e\n    );\n  };\n\n  if (!displayEnabled) return null;\n\n  return (\n    \u003cdiv id={id} data-slot=\"vec3\" className={`flex flex-col gap-2 ${className}`}\u003e\n      {renderAxisRow(\"u\", \"U\", currentVec.u, minU, maxU, uDisplayEnabled, uSelectionEnabled)}\n      {renderAxisRow(\"v\", \"V\", currentVec.v, minV, maxV, vDisplayEnabled, vSelectionEnabled)}\n      {renderAxisRow(\"w\", \"W\", currentVec.w, minW, maxW, wDisplayEnabled, wSelectionEnabled)}\n    \u003c/div\u003e\n  );\n};\n\n// #endregion 🔖Vec3\n"
             }
           ],
           "hook_event_name": "afterFileEdit",
@@ -526,7 +526,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
         }
       },
       "response": {}
@@ -539,7 +539,7 @@
         "kind": "agent.file.read.starting",
         "second": "2026-03-26T16:30:08Z",
         "session": "3f9ece40-dc22-4d49-8d61-a4050e60e2e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
       },
       "native": {
         "event": {
@@ -548,7 +548,7 @@
           "model": "default",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/workspaces/semio/semio/ui/.storybook/stories/Vec3.stories.tsx"
+            "file_path": "/workspaces/semio/compose/ui/.storybook/stories/Vec3.stories.tsx"
           },
           "tool_use_id": "call_YljQOea1k51z2uJrcaw9HCcC\nctc_051730be1c6caef50169c55f0717ec8193aabf7d59be50a0ac",
           "hook_event_name": "preToolUse",
@@ -557,7 +557,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
         }
       },
       "response": {}
@@ -570,7 +570,7 @@
         "kind": "agent.file.read.ended",
         "second": "2026-03-26T16:30:08Z",
         "session": "3f9ece40-dc22-4d49-8d61-a4050e60e2e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
       },
       "native": {
         "event": {
@@ -579,9 +579,9 @@
           "model": "default",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/workspaces/semio/semio/ui/.storybook/stories/Vec3.stories.tsx"
+            "file_path": "/workspaces/semio/compose/ui/.storybook/stories/Vec3.stories.tsx"
           },
-          "error_message": "File not found: /workspaces/semio/semio/ui/.storybook/stories/Vec3.stories.tsx",
+          "error_message": "File not found: /workspaces/semio/compose/ui/.storybook/stories/Vec3.stories.tsx",
           "failure_type": "error",
           "duration": 2.468,
           "tool_use_id": "call_YljQOea1k51z2uJrcaw9HCcC\nctc_051730be1c6caef50169c55f0717ec8193aabf7d59be50a0ac",
@@ -592,7 +592,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
         }
       },
       "response": {}
@@ -605,7 +605,7 @@
         "kind": "agent.tool.code.edit.starting",
         "second": "2026-03-26T16:30:08Z",
         "session": "3f9ece40-dc22-4d49-8d61-a4050e60e2e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
       },
       "native": {
         "event": {
@@ -614,8 +614,8 @@
           "model": "default",
           "tool_name": "Write",
           "tool_input": {
-            "file_path": "/workspaces/semio/semio/ui/.storybook/stories/Vec3.stories.tsx",
-            "content": "// #region 🔖Header\n// 💻 semio/ui/.storybook/stories/Vec3.stories.tsx\n// Specs: One component per stories file with default and constrained-variant stories.\n// Summary: Showcases Vec3 with full/partial controlled and display/select constrained modes.\n// 2026 Ueli Saluz \u003cueli@semio-tech.com\u003e\n// #endregion 🔖Header\n\nimport type { Meta, StoryObj } from \"@storybook/react\";\nimport { Vec3, type Vec3Value } from \"@semio/ui\";\nimport { useState } from \"react\";\n\nconst meta = {\n  title: \"semio/Vec3\",\n  component: Vec3,\n  parameters: {\n    layout: \"centered\",\n  },\n  tags: [\"autodocs\"],\n} satisfies Meta\u003ctypeof Vec3\u003e;\n\nexport default meta;\n\ntype Story = StoryObj\u003ctypeof meta\u003e;\n\nconst defaultValue: Vec3Value = { u: 0.2, v: -0.4, w: 0.7 };\n\nexport const FullControlled: Story = {\n  args: {\n    id: \"vec3-full-controlled\",\n    minU: -1,\n    maxU: 1,\n    minV: -1,\n    maxV: 1,\n    minW: -1,\n    maxW: 1,\n    step: 0.01,\n  },\n  render: (args) =\u003e {\n    const [vec, setVec] = useState\u003cVec3Value\u003e(defaultValue);\n    return (\n      \u003cdiv className=\"flex min-w-96 flex-col gap-2\"\u003e\n        \u003cVec3 {...args} vec={vec} onVecChange={setVec} /\u003e\n        \u003cdiv className=\"text-xs text-muted-foreground\"\u003e\n          u: {vec.u.toFixed(2)} | v: {vec.v.toFixed(2)} | w: {vec.w.toFixed(2)}\n        \u003c/div\u003e\n      \u003c/div\u003e\n    );\n  },\n};\n\nexport const FullUncontrolled: Story = {\n  args: {\n    id: \"vec3-full-uncontrolled\",\n    defaultVec: defaultValue,\n    minU: -10,\n    maxU: 10,\n    minV: -10,\n    maxV: 10,\n    minW: -10,\n    maxW: 10,\n    step: 0.1,\n  },\n};\n\nexport const PartialAxisControl: Story = {\n  args: {\n    id: \"vec3-partial-axis-control\",\n    defaultVec: { u: 0, v: 0, w: 0 },\n    u: 0.5,\n    minU: -1,\n    maxU: 1,\n    minV: -2,\n    maxV: 2,\n    minW: -2,\n    maxW: 2,\n  },\n  render: (args) =\u003e {\n    const [u, setU] = useState(0.5);\n    return (\n      \u003cdiv className=\"flex min-w-96 flex-col gap-2\"\u003e\n        \u003cVec3 {...args} u={u} onUChange={setU} /\u003e\n        \u003cdiv className=\"text-xs text-muted-foreground\"\u003eu is controlled externally: {u.toFixed(2)}\u003c/div\u003e\n      \u003c/div\u003e\n    );\n  },\n};\n\nexport const PartialSelectionAndDisplay: Story = {\n  args: {\n    id: \"vec3-partial-selection-display\",\n    defaultVec: { u: 0.5, v: -0.25, w: 0.9 },\n    uSelectionEnabled: true,\n    vSelectionEnabled: false,\n    wSelectionEnabled: false,\n    uDisplayEnabled: true,\n    vDisplayEnabled: true,\n    wDisplayEnabled: false,\n  },\n};\n"
+            "file_path": "/workspaces/semio/compose/ui/.storybook/stories/Vec3.stories.tsx",
+            "content": "// #region 🔖Header\n// 💻 compose/ui/.storybook/stories/Vec3.stories.tsx\n// Specs: One component per stories file with default and constrained-variant stories.\n// Summary: Showcases Vec3 with full/partial controlled and display/select constrained modes.\n// 2026 Ueli Saluz \u003cueli@semio-tech.com\u003e\n// #endregion 🔖Header\n\nimport type { Meta, StoryObj } from \"@storybook/react\";\nimport { Vec3, type Vec3Value } from \"@compose/ui\";\nimport { useState } from \"react\";\n\nconst meta = {\n  title: \"compose/Vec3\",\n  component: Vec3,\n  parameters: {\n    layout: \"centered\",\n  },\n  tags: [\"autodocs\"],\n} satisfies Meta\u003ctypeof Vec3\u003e;\n\nexport default meta;\n\ntype Story = StoryObj\u003ctypeof meta\u003e;\n\nconst defaultValue: Vec3Value = { u: 0.2, v: -0.4, w: 0.7 };\n\nexport const FullControlled: Story = {\n  args: {\n    id: \"vec3-full-controlled\",\n    minU: -1,\n    maxU: 1,\n    minV: -1,\n    maxV: 1,\n    minW: -1,\n    maxW: 1,\n    step: 0.01,\n  },\n  render: (args) =\u003e {\n    const [vec, setVec] = useState\u003cVec3Value\u003e(defaultValue);\n    return (\n      \u003cdiv className=\"flex min-w-96 flex-col gap-2\"\u003e\n        \u003cVec3 {...args} vec={vec} onVecChange={setVec} /\u003e\n        \u003cdiv className=\"text-xs text-muted-foreground\"\u003e\n          u: {vec.u.toFixed(2)} | v: {vec.v.toFixed(2)} | w: {vec.w.toFixed(2)}\n        \u003c/div\u003e\n      \u003c/div\u003e\n    );\n  },\n};\n\nexport const FullUncontrolled: Story = {\n  args: {\n    id: \"vec3-full-uncontrolled\",\n    defaultVec: defaultValue,\n    minU: -10,\n    maxU: 10,\n    minV: -10,\n    maxV: 10,\n    minW: -10,\n    maxW: 10,\n    step: 0.1,\n  },\n};\n\nexport const PartialAxisControl: Story = {\n  args: {\n    id: \"vec3-partial-axis-control\",\n    defaultVec: { u: 0, v: 0, w: 0 },\n    u: 0.5,\n    minU: -1,\n    maxU: 1,\n    minV: -2,\n    maxV: 2,\n    minW: -2,\n    maxW: 2,\n  },\n  render: (args) =\u003e {\n    const [u, setU] = useState(0.5);\n    return (\n      \u003cdiv className=\"flex min-w-96 flex-col gap-2\"\u003e\n        \u003cVec3 {...args} u={u} onUChange={setU} /\u003e\n        \u003cdiv className=\"text-xs text-muted-foreground\"\u003eu is controlled externally: {u.toFixed(2)}\u003c/div\u003e\n      \u003c/div\u003e\n    );\n  },\n};\n\nexport const PartialSelectionAndDisplay: Story = {\n  args: {\n    id: \"vec3-partial-selection-display\",\n    defaultVec: { u: 0.5, v: -0.25, w: 0.9 },\n    uSelectionEnabled: true,\n    vSelectionEnabled: false,\n    wSelectionEnabled: false,\n    uDisplayEnabled: true,\n    vDisplayEnabled: true,\n    wDisplayEnabled: false,\n  },\n};\n"
           },
           "tool_use_id": "call_YljQOea1k51z2uJrcaw9HCcC\nctc_051730be1c6caef50169c55f0717ec8193aabf7d59be50a0ac",
           "hook_event_name": "preToolUse",
@@ -624,7 +624,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
         }
       },
       "response": {}
@@ -637,18 +637,18 @@
         "kind": "agent.tool.code.edit.ended",
         "second": "2026-03-26T16:30:09Z",
         "session": "3f9ece40-dc22-4d49-8d61-a4050e60e2e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
       },
       "native": {
         "event": {
           "conversation_id": "3f9ece40-dc22-4d49-8d61-a4050e60e2e5",
           "generation_id": "9eef6029-9d76-44f2-856c-f7d82105503e",
           "model": "default",
-          "file_path": "/workspaces/semio/semio/ui/.storybook/stories/Vec3.stories.tsx",
+          "file_path": "/workspaces/semio/compose/ui/.storybook/stories/Vec3.stories.tsx",
           "edits": [
             {
               "old_string": "",
-              "new_string": "// #region 🔖Header\n// 💻 semio/ui/.storybook/stories/Vec3.stories.tsx\n// Specs: One component per stories file with default and constrained-variant stories.\n// Summary: Showcases Vec3 with full/partial controlled and display/select constrained modes.\n// 2026 Ueli Saluz \u003cueli@semio-tech.com\u003e\n// #endregion 🔖Header\n\nimport type { Meta, StoryObj } from \"@storybook/react\";\nimport { Vec3, type Vec3Value } from \"@semio/ui\";\nimport { useState } from \"react\";\n\nconst meta = {\n  title: \"semio/Vec3\",\n  component: Vec3,\n  parameters: {\n    layout: \"centered\",\n  },\n  tags: [\"autodocs\"],\n} satisfies Meta\u003ctypeof Vec3\u003e;\n\nexport default meta;\n\ntype Story = StoryObj\u003ctypeof meta\u003e;\n\nconst defaultValue: Vec3Value = { u: 0.2, v: -0.4, w: 0.7 };\n\nexport const FullControlled: Story = {\n  args: {\n    id: \"vec3-full-controlled\",\n    minU: -1,\n    maxU: 1,\n    minV: -1,\n    maxV: 1,\n    minW: -1,\n    maxW: 1,\n    step: 0.01,\n  },\n  render: (args) =\u003e {\n    const [vec, setVec] = useState\u003cVec3Value\u003e(defaultValue);\n    return (\n      \u003cdiv className=\"flex min-w-96 flex-col gap-2\"\u003e\n        \u003cVec3 {...args} vec={vec} onVecChange={setVec} /\u003e\n        \u003cdiv className=\"text-xs text-muted-foreground\"\u003e\n          u: {vec.u.toFixed(2)} | v: {vec.v.toFixed(2)} | w: {vec.w.toFixed(2)}\n        \u003c/div\u003e\n      \u003c/div\u003e\n    );\n  },\n};\n\nexport const FullUncontrolled: Story = {\n  args: {\n    id: \"vec3-full-uncontrolled\",\n    defaultVec: defaultValue,\n    minU: -10,\n    maxU: 10,\n    minV: -10,\n    maxV: 10,\n    minW: -10,\n    maxW: 10,\n    step: 0.1,\n  },\n};\n\nexport const PartialAxisControl: Story = {\n  args: {\n    id: \"vec3-partial-axis-control\",\n    defaultVec: { u: 0, v: 0, w: 0 },\n    u: 0.5,\n    minU: -1,\n    maxU: 1,\n    minV: -2,\n    maxV: 2,\n    minW: -2,\n    maxW: 2,\n  },\n  render: (args) =\u003e {\n    const [u, setU] = useState(0.5);\n    return (\n      \u003cdiv className=\"flex min-w-96 flex-col gap-2\"\u003e\n        \u003cVec3 {...args} u={u} onUChange={setU} /\u003e\n        \u003cdiv className=\"text-xs text-muted-foreground\"\u003eu is controlled externally: {u.toFixed(2)}\u003c/div\u003e\n      \u003c/div\u003e\n    );\n  },\n};\n\nexport const PartialSelectionAndDisplay: Story = {\n  args: {\n    id: \"vec3-partial-selection-display\",\n    defaultVec: { u: 0.5, v: -0.25, w: 0.9 },\n    uSelectionEnabled: true,\n    vSelectionEnabled: false,\n    wSelectionEnabled: false,\n    uDisplayEnabled: true,\n    vDisplayEnabled: true,\n    wDisplayEnabled: false,\n  },\n};\n"
+              "new_string": "// #region 🔖Header\n// 💻 compose/ui/.storybook/stories/Vec3.stories.tsx\n// Specs: One component per stories file with default and constrained-variant stories.\n// Summary: Showcases Vec3 with full/partial controlled and display/select constrained modes.\n// 2026 Ueli Saluz \u003cueli@semio-tech.com\u003e\n// #endregion 🔖Header\n\nimport type { Meta, StoryObj } from \"@storybook/react\";\nimport { Vec3, type Vec3Value } from \"@compose/ui\";\nimport { useState } from \"react\";\n\nconst meta = {\n  title: \"compose/Vec3\",\n  component: Vec3,\n  parameters: {\n    layout: \"centered\",\n  },\n  tags: [\"autodocs\"],\n} satisfies Meta\u003ctypeof Vec3\u003e;\n\nexport default meta;\n\ntype Story = StoryObj\u003ctypeof meta\u003e;\n\nconst defaultValue: Vec3Value = { u: 0.2, v: -0.4, w: 0.7 };\n\nexport const FullControlled: Story = {\n  args: {\n    id: \"vec3-full-controlled\",\n    minU: -1,\n    maxU: 1,\n    minV: -1,\n    maxV: 1,\n    minW: -1,\n    maxW: 1,\n    step: 0.01,\n  },\n  render: (args) =\u003e {\n    const [vec, setVec] = useState\u003cVec3Value\u003e(defaultValue);\n    return (\n      \u003cdiv className=\"flex min-w-96 flex-col gap-2\"\u003e\n        \u003cVec3 {...args} vec={vec} onVecChange={setVec} /\u003e\n        \u003cdiv className=\"text-xs text-muted-foreground\"\u003e\n          u: {vec.u.toFixed(2)} | v: {vec.v.toFixed(2)} | w: {vec.w.toFixed(2)}\n        \u003c/div\u003e\n      \u003c/div\u003e\n    );\n  },\n};\n\nexport const FullUncontrolled: Story = {\n  args: {\n    id: \"vec3-full-uncontrolled\",\n    defaultVec: defaultValue,\n    minU: -10,\n    maxU: 10,\n    minV: -10,\n    maxV: 10,\n    minW: -10,\n    maxW: 10,\n    step: 0.1,\n  },\n};\n\nexport const PartialAxisControl: Story = {\n  args: {\n    id: \"vec3-partial-axis-control\",\n    defaultVec: { u: 0, v: 0, w: 0 },\n    u: 0.5,\n    minU: -1,\n    maxU: 1,\n    minV: -2,\n    maxV: 2,\n    minW: -2,\n    maxW: 2,\n  },\n  render: (args) =\u003e {\n    const [u, setU] = useState(0.5);\n    return (\n      \u003cdiv className=\"flex min-w-96 flex-col gap-2\"\u003e\n        \u003cVec3 {...args} u={u} onUChange={setU} /\u003e\n        \u003cdiv className=\"text-xs text-muted-foreground\"\u003eu is controlled externally: {u.toFixed(2)}\u003c/div\u003e\n      \u003c/div\u003e\n    );\n  },\n};\n\nexport const PartialSelectionAndDisplay: Story = {\n  args: {\n    id: \"vec3-partial-selection-display\",\n    defaultVec: { u: 0.5, v: -0.25, w: 0.9 },\n    uSelectionEnabled: true,\n    vSelectionEnabled: false,\n    wSelectionEnabled: false,\n    uDisplayEnabled: true,\n    vDisplayEnabled: true,\n    wDisplayEnabled: false,\n  },\n};\n"
             }
           ],
           "hook_event_name": "afterFileEdit",
@@ -657,7 +657,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
         }
       },
       "response": {}
@@ -670,7 +670,7 @@
         "kind": "agent.tool.code.edit.ended",
         "second": "2026-03-26T16:30:09Z",
         "session": "3f9ece40-dc22-4d49-8d61-a4050e60e2e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
       },
       "native": {
         "event": {
@@ -679,10 +679,10 @@
           "model": "default",
           "tool_name": "Write",
           "tool_input": {
-            "file_path": "/workspaces/semio/semio/ui/.storybook/stories/Vec3.stories.tsx",
-            "content": "// #region 🔖Header\n// 💻 semio/ui/.storybook/stories/Vec3.stories.tsx\n// Specs: One component per stories file with default and constrained-variant stories.\n// Summary: Showcases Vec3 with full/partial controlled and display/select constrained modes.\n// 2026 Ueli Saluz \u003cueli@semio-tech.com\u003e\n// #endregion 🔖Header\n\nimport type { Meta, StoryObj } from \"@storybook/react\";\nimport { Vec3, type Vec3Value } from \"@semio/ui\";\nimport { useState } from \"react\";\n\nconst meta = {\n  title: \"semio/Vec3\",\n  component: Vec3,\n  parameters: {\n    layout: \"centered\",\n  },\n  tags: [\"autodocs\"],\n} satisfies Meta\u003ctypeof Vec3\u003e;\n\nexport default meta;\n\ntype Story = StoryObj\u003ctypeof meta\u003e;\n\nconst defaultValue: Vec3Value = { u: 0.2, v: -0.4, w: 0.7 };\n\nexport const FullControlled: Story = {\n  args: {\n    id: \"vec3-full-controlled\",\n    minU: -1,\n    maxU: 1,\n    minV: -1,\n    maxV: 1,\n    minW: -1,\n    maxW: 1,\n    step: 0.01,\n  },\n  render: (args) =\u003e {\n    const [vec, setVec] = useState\u003cVec3Value\u003e(defaultValue);\n    return (\n      \u003cdiv className=\"flex min-w-96 flex-col gap-2\"\u003e\n        \u003cVec3 {...args} vec={vec} onVecChange={setVec} /\u003e\n        \u003cdiv className=\"text-xs text-muted-foreground\"\u003e\n          u: {vec.u.toFixed(2)} | v: {vec.v.toFixed(2)} | w: {vec.w.toFixed(2)}\n        \u003c/div\u003e\n      \u003c/div\u003e\n    );\n  },\n};\n\nexport const FullUncontrolled: Story = {\n  args: {\n    id: \"vec3-full-uncontrolled\",\n    defaultVec: defaultValue,\n    minU: -10,\n    maxU: 10,\n    minV: -10,\n    maxV: 10,\n    minW: -10,\n    maxW: 10,\n    step: 0.1,\n  },\n};\n\nexport const PartialAxisControl: Story = {\n  args: {\n    id: \"vec3-partial-axis-control\",\n    defaultVec: { u: 0, v: 0, w: 0 },\n    u: 0.5,\n    minU: -1,\n    maxU: 1,\n    minV: -2,\n    maxV: 2,\n    minW: -2,\n    maxW: 2,\n  },\n  render: (args) =\u003e {\n    const [u, setU] = useState(0.5);\n    return (\n      \u003cdiv className=\"flex min-w-96 flex-col gap-2\"\u003e\n        \u003cVec3 {...args} u={u} onUChange={setU} /\u003e\n        \u003cdiv className=\"text-xs text-muted-foreground\"\u003eu is controlled externally: {u.toFixed(2)}\u003c/div\u003e\n      \u003c/div\u003e\n    );\n  },\n};\n\nexport const PartialSelectionAndDisplay: Story = {\n  args: {\n    id: \"vec3-partial-selection-display\",\n    defaultVec: { u: 0.5, v: -0.25, w: 0.9 },\n    uSelectionEnabled: true,\n    vSelectionEnabled: false,\n    wSelectionEnabled: false,\n    uDisplayEnabled: true,\n    vDisplayEnabled: true,\n    wDisplayEnabled: false,\n  },\n};\n"
+            "file_path": "/workspaces/semio/compose/ui/.storybook/stories/Vec3.stories.tsx",
+            "content": "// #region 🔖Header\n// 💻 compose/ui/.storybook/stories/Vec3.stories.tsx\n// Specs: One component per stories file with default and constrained-variant stories.\n// Summary: Showcases Vec3 with full/partial controlled and display/select constrained modes.\n// 2026 Ueli Saluz \u003cueli@semio-tech.com\u003e\n// #endregion 🔖Header\n\nimport type { Meta, StoryObj } from \"@storybook/react\";\nimport { Vec3, type Vec3Value } from \"@compose/ui\";\nimport { useState } from \"react\";\n\nconst meta = {\n  title: \"compose/Vec3\",\n  component: Vec3,\n  parameters: {\n    layout: \"centered\",\n  },\n  tags: [\"autodocs\"],\n} satisfies Meta\u003ctypeof Vec3\u003e;\n\nexport default meta;\n\ntype Story = StoryObj\u003ctypeof meta\u003e;\n\nconst defaultValue: Vec3Value = { u: 0.2, v: -0.4, w: 0.7 };\n\nexport const FullControlled: Story = {\n  args: {\n    id: \"vec3-full-controlled\",\n    minU: -1,\n    maxU: 1,\n    minV: -1,\n    maxV: 1,\n    minW: -1,\n    maxW: 1,\n    step: 0.01,\n  },\n  render: (args) =\u003e {\n    const [vec, setVec] = useState\u003cVec3Value\u003e(defaultValue);\n    return (\n      \u003cdiv className=\"flex min-w-96 flex-col gap-2\"\u003e\n        \u003cVec3 {...args} vec={vec} onVecChange={setVec} /\u003e\n        \u003cdiv className=\"text-xs text-muted-foreground\"\u003e\n          u: {vec.u.toFixed(2)} | v: {vec.v.toFixed(2)} | w: {vec.w.toFixed(2)}\n        \u003c/div\u003e\n      \u003c/div\u003e\n    );\n  },\n};\n\nexport const FullUncontrolled: Story = {\n  args: {\n    id: \"vec3-full-uncontrolled\",\n    defaultVec: defaultValue,\n    minU: -10,\n    maxU: 10,\n    minV: -10,\n    maxV: 10,\n    minW: -10,\n    maxW: 10,\n    step: 0.1,\n  },\n};\n\nexport const PartialAxisControl: Story = {\n  args: {\n    id: \"vec3-partial-axis-control\",\n    defaultVec: { u: 0, v: 0, w: 0 },\n    u: 0.5,\n    minU: -1,\n    maxU: 1,\n    minV: -2,\n    maxV: 2,\n    minW: -2,\n    maxW: 2,\n  },\n  render: (args) =\u003e {\n    const [u, setU] = useState(0.5);\n    return (\n      \u003cdiv className=\"flex min-w-96 flex-col gap-2\"\u003e\n        \u003cVec3 {...args} u={u} onUChange={setU} /\u003e\n        \u003cdiv className=\"text-xs text-muted-foreground\"\u003eu is controlled externally: {u.toFixed(2)}\u003c/div\u003e\n      \u003c/div\u003e\n    );\n  },\n};\n\nexport const PartialSelectionAndDisplay: Story = {\n  args: {\n    id: \"vec3-partial-selection-display\",\n    defaultVec: { u: 0.5, v: -0.25, w: 0.9 },\n    uSelectionEnabled: true,\n    vSelectionEnabled: false,\n    wSelectionEnabled: false,\n    uDisplayEnabled: true,\n    vDisplayEnabled: true,\n    wDisplayEnabled: false,\n  },\n};\n"
           },
-          "tool_output": "{\"file_path\":\"/workspaces/semio/semio/ui/.storybook/stories/Vec3.stories.tsx\",\"success\":true}",
+          "tool_output": "{\"file_path\":\"/workspaces/semio/compose/ui/.storybook/stories/Vec3.stories.tsx\",\"success\":true}",
           "duration": 215.033,
           "tool_use_id": "call_YljQOea1k51z2uJrcaw9HCcC\nctc_051730be1c6caef50169c55f0717ec8193aabf7d59be50a0ac",
           "hook_event_name": "postToolUse",
@@ -691,7 +691,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
         }
       },
       "response": {}
@@ -704,21 +704,21 @@
         "kind": "agent.ended",
         "second": "2026-03-26T16:30:23Z",
         "session": "3f9ece40-dc22-4d49-8d61-a4050e60e2e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
       },
       "native": {
         "event": {
           "conversation_id": "3f9ece40-dc22-4d49-8d61-a4050e60e2e5",
           "generation_id": "9eef6029-9d76-44f2-856c-f7d82105503e",
           "model": "default",
-          "text": "Implemented a new Semio UI `Vec3` component that supports selecting and/or displaying a 3D vector with the same controllable-state constraints used across Semio UI components.\n\n### What I changed\n\n- Added `Vec3` to `semio/ui/index.tsx`\n- Added Storybook stories in `semio/ui/.storybook/stories/Vec3.stories.tsx`\n\n### `Vec3` capabilities\n\n- **Full controlled mode**\n  - `vec` + `onVecChange`\n- **Full uncontrolled mode**\n  - `defaultVec`\n- **Partial controlled mode (per axis)**\n  - `u` / `onUChange`, `v` / `onVChange`, `w` / `onWChange`\n  - Can mix controlled and uncontrolled axes\n- **Partial/full select constraints**\n  - Global: `selectionEnabled`\n  - Per-axis: `uSelectionEnabled`, `vSelectionEnabled`, `wSelectionEnabled`\n- **Partial/full display constraints**\n  - Global: `displayEnabled`\n  - Per-axis: `uDisplayEnabled`, `vDisplayEnabled`, `wDisplayEnabled`\n- **Domain constraints**\n  - `minU/maxU`, `minV/maxV`, `minW/maxW`, `step`\n  - Values are clamped to bounds\n\n### Stories added\n\n- `FullControlled`\n- `FullUncontrolled`\n- `PartialAxisControl`\n- `PartialSelectionAndDisplay`\n\nNo linter errors were introduced in the edited files.\n\n",
+          "text": "Implemented a new Compose UI `Vec3` component that supports selecting and/or displaying a 3D vector with the same controllable-state constraints used across Compose UI components.\n\n### What I changed\n\n- Added `Vec3` to `compose/ui/index.tsx`\n- Added Storybook stories in `compose/ui/.storybook/stories/Vec3.stories.tsx`\n\n### `Vec3` capabilities\n\n- **Full controlled mode**\n  - `vec` + `onVecChange`\n- **Full uncontrolled mode**\n  - `defaultVec`\n- **Partial controlled mode (per axis)**\n  - `u` / `onUChange`, `v` / `onVChange`, `w` / `onWChange`\n  - Can mix controlled and uncontrolled axes\n- **Partial/full select constraints**\n  - Global: `selectionEnabled`\n  - Per-axis: `uSelectionEnabled`, `vSelectionEnabled`, `wSelectionEnabled`\n- **Partial/full display constraints**\n  - Global: `displayEnabled`\n  - Per-axis: `uDisplayEnabled`, `vDisplayEnabled`, `wDisplayEnabled`\n- **Domain constraints**\n  - `minU/maxU`, `minV/maxV`, `minW/maxW`, `step`\n  - Values are clamped to bounds\n\n### Stories added\n\n- `FullControlled`\n- `FullUncontrolled`\n- `PartialAxisControl`\n- `PartialSelectionAndDisplay`\n\nNo linter errors were introduced in the edited files.\n\n",
           "hook_event_name": "afterAgentResponse",
           "cursor_version": "2.6.21",
           "workspace_roots": [
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
         }
       },
       "response": {}
@@ -731,7 +731,7 @@
         "kind": "agent.ended",
         "second": "2026-03-26T16:30:23Z",
         "session": "3f9ece40-dc22-4d49-8d61-a4050e60e2e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
       },
       "native": {
         "event": {
@@ -746,7 +746,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
         }
       },
       "response": {}

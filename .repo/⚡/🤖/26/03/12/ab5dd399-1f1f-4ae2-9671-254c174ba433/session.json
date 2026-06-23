@@ -1,6 +1,6 @@
 {
   "id": "ab5dd399-1f1f-4ae2-9671-254c174ba433",
-  "uri": "semiorepo://s/ab5dd399-1f1f-4ae2-9671-254c174ba433",
+  "uri": "composerepo://s/ab5dd399-1f1f-4ae2-9671-254c174ba433",
   "contributor": "🧑‍💻ueli",
   "client": "windsurf-chat",
   "second": "2026-03-12T21:20:34Z",
@@ -23,13 +23,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🧰semiorepo⌨️cli💻main"
+            "id": "🧰composerepo⌨️cli💻main"
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🧰semiorepo⌨️cli💻main📌1📌47421"
+          "🧰composerepo⌨️cli💻main📌1📌47421"
         ],
         "second": "🎆26🌙03☀️12⏰21⌚20⏱️34",
         "session": "⚪ab5dd3991f1f4ae29671254c174ba433"
@@ -56,13 +56,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🧰semiorepo⌨️cli💻main"
+            "id": "🧰composerepo⌨️cli💻main"
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🧰semiorepo⌨️cli💻main📌1📌47421"
+          "🧰composerepo⌨️cli💻main📌1📌47421"
         ],
         "second": "🎆26🌙03☀️12⏰21⌚21⏱️13",
         "session": "⚪ab5dd3991f1f4ae29671254c174ba433"
@@ -89,13 +89,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🧰semiorepo⌨️cli💻main"
+            "id": "🧰composerepo⌨️cli💻main"
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🧰semiorepo⌨️cli💻main📌1📌47421"
+          "🧰composerepo⌨️cli💻main📌1📌47421"
         ],
         "second": "🎆26🌙03☀️12⏰21⌚21⏱️22",
         "session": "⚪ab5dd3991f1f4ae29671254c174ba433"
@@ -122,14 +122,14 @@
         "client": "windsurf-chat",
         "contributor": "🧑‍💻ueli",
         "files": [
-          "🧰semiorepo⌨️cli🥼maintest"
+          "🧰composerepo⌨️cli🥼maintest"
         ],
         "kind": "agent.tool.test.starting",
         "parent": "",
         "second": "🎆26🌙03☀️12⏰21⌚22⏱️04",
         "session": "⚪ab5dd3991f1f4ae29671254c174ba433",
         "tests": [
-          "🧰semiorepo⌨️cli🥼maintest🧪testclie2eticketlifecyclesyntaxesnomanagement"
+          "🧰composerepo⌨️cli🥼maintest🧪testclie2eticketlifecyclesyntaxesnomanagement"
         ]
       },
       "response": {

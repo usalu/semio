@@ -1553,7 +1553,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio"
+name = "compose"
 version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
@@ -1578,10 +1578,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio_algorithms_native_bridge"
+name = "compose_algorithms_native_bridge"
 version = "0.1.0"
 dependencies = [
- "semio",
+ "compose",
  "serde",
  "serde_json",
 ]

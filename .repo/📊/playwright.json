@@ -1,7 +1,7 @@
 {
   "config": {
-    "configFile": "C:\\git\\semio.tech\\semio\\js\\js\\playwright.config.ts",
-    "rootDir": "C:/git/semio.tech/semio/js/semio",
+    "configFile": "C:\\git\\compose.tech\\compose\\js\\js\\playwright.config.ts",
+    "rootDir": "C:/git/compose.tech/compose/js/compose",
     "forbidOnly": false,
     "fullyParallel": true,
     "globalSetup": null,
@@ -33,7 +33,7 @@
     "quiet": false,
     "projects": [
       {
-        "outputDir": "C:/git/semio.tech/semio/js/semio/test-results",
+        "outputDir": "C:/git/compose.tech/compose/js/compose/test-results",
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
@@ -41,7 +41,7 @@
         },
         "id": "chromium",
         "name": "chromium",
-        "testDir": "C:/git/semio.tech/semio/js/semio",
+        "testDir": "C:/git/compose.tech/compose/js/compose",
         "testIgnore": [],
         "testMatch": [
           "**/sketchpad.test.ts"
@@ -95,7 +95,7 @@
                       "errors": [],
                       "stdout": [
                         {
-                          "text": "[TEST] Setting input files: C:\\git\\semio.tech\\semio\\assets\\semio\\metabolism.zip\n"
+                          "text": "[TEST] Setting input files: C:\\git\\compose.tech\\compose\\assets\\compose\\metabolism.zip\n"
                         },
                         {
                           "text": "[TEST] File set via file chooser\n"

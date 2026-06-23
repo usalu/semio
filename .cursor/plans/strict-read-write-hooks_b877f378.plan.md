@@ -1,18 +1,18 @@
 ---
 name: strict-read-write-hooks
-overview: Promote every read on KitStoreClient to a StoreField and every write to a StoreCommand, then collapse all React hooks to one-line wrappers around useStoreField / useStoreCommand. Operations finalize the open transaction (applied=true on success, applied=false on failure); saving (draft -> checkpoint) is a separate workspace command. Delete every legacy abstraction (HookTriad, HookRead, useDraft, useOptimistic, schema-state generators, writeKitStoreClientSchemaField, kitReadonlyTriad, useSemioReadSnap, SketchpadTriadInputRow / SketchpadTriadToggleRow). Reads and writes never share a hook surface; nothing in the new surface uses a "Row" suffix.
+overview: Promote every read on KitStoreClient to a StoreField and every write to a StoreCommand, then collapse all React hooks to one-line wrappers around useStoreField / useStoreCommand. Operations finalize the open transaction (applied=true on success, applied=false on failure); saving (draft -> checkpoint) is a separate workspace command. Delete every legacy abstraction (HookTriad, HookRead, useDraft, useOptimistic, schema-state generators, writeKitStoreClientSchemaField, kitReadonlyTriad, useComposeReadSnap, SketchpadTriadInputRow / SketchpadTriadToggleRow). Reads and writes never share a hook surface; nothing in the new surface uses a "Row" suffix.
 todos:
   - id: ticket_open
     content: Open MCP ticket 'Strict Read Write Hooks' under .repo/🎫/26/05/08/strict-read-write-hooks/
     status: in_progress
   - id: phase1_storefields_storecommands
-    content: "semio/js: rename SCHEMA_HOOK_IDLE_STATUS/SCHEMA_HOOK_READONLY_STATUS/USE_KIT_NAME_PENDING_STATUS to WRITE_STATUS_IDLE/WRITE_STATUS_READONLY/WRITE_STATUS_PENDING; rebuild StoreField (no public set; values pushed via constructor source callback); rebuild StoreCommand status using same source pattern (no kit/schema constants in the generic class); add KitStore.query<T>(body, parse, initial) read helper + KitStore.operation<TArgs>(name, vars, body, toVars) transactional kit-modifying helper (one per SDL OperationKind variant: RenameKit, DraggedPiece, AddedType, ...) + KitStore.command<TArgs>(...) non-transactional helper for workspace writes (attachBackbone, syncNow, importKit, ...); wire operationSucceeded -> correlator + invalidations.next() and operationFailed -> correlator; delete OperationRouter, seedFieldsFromDto, dispatchCorrelationEnvelope typed-kind branch, kitRenamed subscription, fieldCache; privatize submitChangeKitCommands and fetchFullKit; extend embedded tests"
+    content: "compose/js: rename SCHEMA_HOOK_IDLE_STATUS/SCHEMA_HOOK_READONLY_STATUS/USE_KIT_NAME_PENDING_STATUS to WRITE_STATUS_IDLE/WRITE_STATUS_READONLY/WRITE_STATUS_PENDING; rebuild StoreField (no public set; values pushed via constructor source callback); rebuild StoreCommand status using same source pattern (no kit/schema constants in the generic class); add KitStore.query<T>(body, parse, initial) read helper + KitStore.operation<TArgs>(name, vars, body, toVars) transactional kit-modifying helper (one per SDL OperationKind variant: RenameKit, DraggedPiece, AddedType, ...) + KitStore.command<TArgs>(...) non-transactional helper for workspace writes (attachBackbone, syncNow, importKit, ...); wire operationSucceeded -> correlator + invalidations.next() and operationFailed -> correlator; delete OperationRouter, seedFieldsFromDto, dispatchCorrelationEnvelope typed-kind branch, kitRenamed subscription, fieldCache; privatize submitChangeKitCommands and fetchFullKit; extend embedded tests"
     status: pending
   - id: phase2_react_hooks
-    content: "semio/react: rewrite every read hook as useStoreField (static) or useGraphqlField (parameterized, disposes per dep change) and every write hook as useStoreCommand; delete HookTriad/HookRead/useDraft/useOptimistic/useSchemaObjectState/useSchemaFieldState + auto-generated wrappers/useSemioReadSnap/useKitSync/useWriteQueue/useSetErrors; update embedded tests"
+    content: "compose/react: rewrite every read hook as useStoreField (static) or useGraphqlField (parameterized, disposes per dep change) and every write hook as useStoreCommand; delete HookTriad/HookRead/useDraft/useOptimistic/useSchemaObjectState/useSchemaFieldState + auto-generated wrappers/useComposeReadSnap/useKitSync/useWriteQueue/useSetErrors; update embedded tests"
     status: pending
   - id: phase3_sketchpad
-    content: "semio/sketchpad: introduce SketchpadInput / SketchpadToggle (no Row suffix anywhere) with separated value+status+onCommit; migrate every consumer (kit/type/design/folder/file panels, footer, navbar) to SDL-backed StoreCommand or WRITE_STATUS_READONLY; drop SketchpadTriadInputRow/SketchpadTriadToggleRow and HookTriad import"
+    content: "compose/sketchpad: introduce SketchpadInput / SketchpadToggle (no Row suffix anywhere) with separated value+status+onCommit; migrate every consumer (kit/type/design/folder/file panels, footer, navbar) to SDL-backed StoreCommand or WRITE_STATUS_READONLY; drop SketchpadTriadInputRow/SketchpadTriadToggleRow and HookTriad import"
     status: pending
   - id: phase4_validate_close
     content: Run depcruise:layers, tsc --noEmit (js/react/sketchpad), js + react vitest, ripgrep audit for legacy symbols, manual sketchpad smoke; update ticket.md and close
@@ -40,7 +40,7 @@ Operations are a strict subset of commands. The `operation<TScope, TInput>` help
 
 ```mermaid
 graph LR
-  subgraph SemioJs["semio/js KitStore"]
+  subgraph ComposeJs["compose/js KitStore"]
     Q["query<T>(body, parse, initial)<br/>-> StoreField<T>"]
     OP["operation<TScope, TInput>(name, scopeType, inputType)<br/>-> StoreCommand<{scope, input}><br/>(transactional, kit-modifying)"]
     CMD["command<TArgs>(name, vars, body, toVars)<br/>-> StoreCommand<TArgs><br/>(non-transactional)"]
@@ -55,7 +55,7 @@ graph LR
     OS --> INVS
     OF["operationFailed"] --> CORR
   end
-  subgraph SemioReact["semio/react hooks"]
+  subgraph ComposeReact["compose/react hooks"]
     USF["useStoreField(field): T"]
     USC["useStoreCommand(cmd): [run, WriteStatus]"]
     UGF["useGraphqlField(make, deps): T"]
@@ -69,7 +69,7 @@ graph LR
   Q --> UGF
   OP --> USC
   CMD --> USC
-  subgraph Sketchpad["semio/sketchpad"]
+  subgraph Sketchpad["compose/sketchpad"]
     Bind["SketchpadInput / SketchpadToggle<br/>{ value, status, onCommit }"]
     Bind --> R
     Bind --> W
@@ -84,7 +84,7 @@ The new contract is:
 - A write hook returns `[run, WriteStatus]`: `useRenameType(): [(args) => Promise<SetResult>, WriteStatus]`. No value.
 - Read + write of the same field are two separate hooks the consumer composes.
 
-## Primitives ([semio/js/index.ts](semio/js/index.ts))
+## Primitives ([compose/js/index.ts](compose/js/index.ts))
 
 The primitives are domain-agnostic. Nothing in here mentions kit, kit name, schema hooks, or any other consumer concept.
 
@@ -164,25 +164,25 @@ export function useStoreCommand<TArgs>(
 
 ## Scope of deletion
 
-In [semio/js/index.ts](semio/js/index.ts):
+In [compose/js/index.ts](compose/js/index.ts):
 
 - Public `KitStoreClient.submitChangeKitCommands` and `KitStoreClient.fetchFullKit` move to `private` on `WasmKitStoreClient` / `FallbackKitClient` (only the StoreCommand executors call them).
 - Delete `writeKitStoreClientSchemaField`, `kitStoreClientAddChildByKind`, `kitStoreClientRemoveChildByKind`, `submitChangeKitCommandsToClient` and the standalone `kitChangeDesign{Piece,Connection}` shorthands once their hook callers move to commands. Keep `ChangeKitCommand` builders that the new commands need internally.
 
-In [semio/react/index.tsx](semio/react/index.tsx):
+In [compose/react/index.tsx](compose/react/index.tsx):
 
 - Delete types `HookTriad<T>`, `HookRead<T>`, helper `kitReadonlyTriad`.
-- Delete hooks `useDraft`, `useOptimistic`, `useSemioReadSnap`, `useSemioStoreSelector`, `useSchemaObjectState`, `useSchemaFieldState` and every auto-generated `use<Schema><Field>` (Actor / User / Agent / Coordinate / Point / Vector / Plane / Camera / Attribute / Author / Concept / Tag / Quality / Prop / Stat / Group / Layer / Type / Design / Piece / Connection / Kit / SessionActorInput / Folder / File / etc).
+- Delete hooks `useDraft`, `useOptimistic`, `useComposeReadSnap`, `useComposeStoreSelector`, `useSchemaObjectState`, `useSchemaFieldState` and every auto-generated `use<Schema><Field>` (Actor / User / Agent / Coordinate / Point / Vector / Plane / Camera / Attribute / Author / Concept / Tag / Quality / Prop / Stat / Group / Layer / Type / Design / Piece / Connection / Kit / SessionActorInput / Folder / File / etc).
 - Delete `useWriteQueue`, `useKitSync` (replaced by per-command `WriteStatus` aggregation if needed).
 - Replace every read-with-`HookTriad`/`HookRead` hook with a value-only read.
 - Replace every write hook that uses `useState<WriteStatus>` ad-hoc with `useStoreCommand(client.<command>)`.
 
-In [semio/sketchpad/index.tsx](semio/sketchpad/index.tsx):
+In [compose/sketchpad/index.tsx](compose/sketchpad/index.tsx):
 
 - Delete `SketchpadTriadInputRow`, `SketchpadTriadToggleRow` and replace with `SketchpadInput({ value, status, onCommit, ... })` and `SketchpadToggle({ value, status, onCommit })` that take separated read/write inputs. No "Row" suffix anywhere; rows are rendered by `TreeRow` internally and the binding component just wires `StoreField` + `StoreCommand` to a single widget.
 - Update every call site (kit / type / design / folder / file detail panels and footer/navbar status). Every `const [v, set, st] = useXxx()` becomes `const v = useReadXxx(); const [run, st] = useWriteXxx();`.
 
-## Phase 1 - KitStore + client surface ([semio/js/index.ts](semio/js/index.ts))
+## Phase 1 - KitStore + client surface ([compose/js/index.ts](compose/js/index.ts))
 
 Two helpers replace every read/write-specific method in `KitStore` and remove all seeding / typed-event filtering.
 
@@ -191,7 +191,7 @@ Two helpers replace every read/write-specific method in `KitStore` and remove al
 `StoreField` has no `set`; the `query<T>` helper only feeds values via the `push` closure handed to the field's constructor. `operation<TArgs>` is the only place draft / transaction / correlator code exists. `command<TArgs>` is the escape hatch for non-transactional GraphQL mutations (no kit modification, no draft/tx).
 
 ```ts
-// semio/js/index.ts -- inside KitStore.
+// compose/js/index.ts -- inside KitStore.
 import { Subject } from "rxjs";
 
 private readonly invalidations = new Subject<void>();
@@ -291,7 +291,7 @@ private startCorrelationSubscriptions(): void {
 Every read field is one line. `parse` returns the typed `T` directly (no `JsonObject` leaks out of `KitStore`).
 
 ```ts
-// semio/js/index.ts -- KitStore constructor.
+// compose/js/index.ts -- KitStore constructor.
 readonly kitName     = this.query<string>          ("wip { theKit { name } }",                    (d) => String((d as KitNameQuery).wip?.theKit?.name ?? ""), "");
 // canUndo / canRedo: only added when the SDL exposes them; not in current schema, so the read field is omitted and the legacy useCanUndo / useCanRedo hooks are deleted.
 readonly typesIds    = this.query<readonly string[]>("wip { theKit { types { edges { node { id } } } } }",
@@ -337,7 +337,7 @@ typeName(typeId: string): StoreField<string> {
 One declaration per SDL `Mutation` field. Every operation has the *same* shape: `<name>(scope: <Op>Scope!, input: <Op>Input!): Id!`. The helper takes `(fieldName, scopeTypeName, inputTypeName)` and the TS type params declare the user-facing scope (no draft/tx -- those are auto-supplied) and input.
 
 ```ts
-// semio/js/index.ts -- KitStore constructor.
+// compose/js/index.ts -- KitStore constructor.
 readonly renameKit             = this.operation<{},                                                { name: string }>                                  ("renameKit",             "RenameKitScope",             "RenameKitInput");
 readonly changeDescription     = this.operation<{ entityId: string },                              { description: string }>                           ("changeDescription",     "ChangeDescriptionScope",     "ChangeDescriptionInput");
 readonly addFixedPieceToDesign = this.operation<{ designId: string },                              { blueprintId: string; position: PositionInput }>  ("addFixedPieceToDesign", "AddFixedPieceToDesignScope", "AddFixedPieceToDesignInput");
@@ -361,7 +361,7 @@ The `command<TArgs>` helper exists for workspace-level writes (save draft -> che
 
 The `operation<TScope, TInput>` helper is the only place `openDraft` / `openTransaction` / `finalizeTransaction` / `correlator.await` ever appear. `command<TArgs>` is a flat GraphQL mutation with no draft or transaction lifecycle. Saving (turning the current draft into a checkpoint) is a separate `command<TArgs>` -- never triggered implicitly inside an operation.
 
-The complete `StoreCommand` surface (operations only -- one per `Mutation` field in [semio/graphql/schema.graphql](semio/graphql/schema.graphql); each `TArgs` is the uniform `{ scope, input }`):
+The complete `StoreCommand` surface (operations only -- one per `Mutation` field in [compose/graphql/schema.graphql](compose/graphql/schema.graphql); each `TArgs` is the uniform `{ scope, input }`):
 
 ```ts
 client.renameKit             : StoreCommand<{ scope: {};                                                input: { name: string } }>;
@@ -384,7 +384,7 @@ client.createQuality         : StoreCommand<{ scope: { ownerId: string };       
 ### `KitStoreClient` interface delta
 
 ```ts
-// BEFORE -- semio/js/index.ts
+// BEFORE -- compose/js/index.ts
 export interface KitStoreClient {
   readonly kitName: StoreField<string>;
   readonly renameKit: StoreCommand<string>;
@@ -433,25 +433,25 @@ export interface KitStoreClient {
 
 `fetchFullKit` and `submitChangeKitCommands` become `private` on `WasmKitStoreClient` / `KitStore`. Nothing on the public surface bypasses the `query` / `operation` / `command` helpers. There are no generic `update<Entity>` shapes; every write is a specific named SDL operation with the uniform `{ scope, input }` shape.
 
-Embedded tests in [semio/js/index.ts](semio/js/index.ts) get one new `describe` per family asserting that:
+Embedded tests in [compose/js/index.ts](compose/js/index.ts) get one new `describe` per family asserting that:
 
 - Every static read field returns the same value as a hand-rolled GraphQL query against the same body.
 - Each operation `StoreCommand` resolves with `{ ok: true }` after a `requestId` arrives on `operationSucceeded`, and the broadcast `invalidations.next()` makes dependent read fields refetch.
 - A failing operation surfaces `{ ok: false, error }` and `status.kind === "error"` with `lastError` populated.
 - A parameterized read field disposes its `invalidations` subscription on `dispose()`.
 
-## Phase 2 - React hook layer ([semio/react/index.tsx](semio/react/index.tsx))
+## Phase 2 - React hook layer ([compose/react/index.tsx](compose/react/index.tsx))
 
 - Keep `useStoreField`, `useStoreCommand`, `useKitName`, `useRenameKit` as primitives.
 - Add `useGraphqlField<T>(make, deps): T` for parameterized reads. The hook memoizes the `StoreField` over `deps` and **disposes** it on dep change / unmount (no caching anywhere else).
 - Delete bulk schema generators (`useActor`*, `useUser`*, ..., `useKitTags`, `useKitVersion`, `useKitId`, `useKitHash` -- all `useSchemaFieldState` / `useSchemaObjectState` callers).
 - Keep `useWriteIndicator(status)` as the only `WriteStatus` UI helper; reads no longer carry status.
-- Delete `useDraft`, `useOptimistic`, `useSemioReadSnap`, `useSemioStoreSelector`, `useKitSync`, `useWriteQueue`, `useSetErrors` (subsumed by per-command `WriteStatus.lastError`).
+- Delete `useDraft`, `useOptimistic`, `useComposeReadSnap`, `useComposeStoreSelector`, `useKitSync`, `useWriteQueue`, `useSetErrors` (subsumed by per-command `WriteStatus.lastError`).
 
 ### `useGraphqlField` (new helper)
 
 ```tsx
-// semio/react/index.tsx
+// compose/react/index.tsx
 export function useGraphqlField<T>(make: () => StoreField<T>, deps: React.DependencyList): T {
   const field = React.useMemo(make, deps);
   React.useEffect(() => () => field.dispose(), [field]);
@@ -469,7 +469,7 @@ export function useTypesIds(explicitKitId?: string): HookTriad<readonly string[]
   const scopeKey = useKitDataScopeKey();
   const readScope = useKitDataScope();
   // ~30 lines of subscribe + getSnapshot + ad-hoc WriteStatus + setter
-  const snap = useSemioReadSnap(subscribe, getSnap, getSnap);
+  const snap = useComposeReadSnap(subscribe, getSnap, getSnap);
   const status: WriteStatus = /* ... */;
   return [snap.data as readonly string[], setter, status] as const;
 }
@@ -566,12 +566,12 @@ it("StoreField has no public set / mutation surface", () => {
 });
 ```
 
-## Phase 3 - Sketchpad migration ([semio/sketchpad/index.tsx](semio/sketchpad/index.tsx))
+## Phase 3 - Sketchpad migration ([compose/sketchpad/index.tsx](compose/sketchpad/index.tsx))
 
 ### New row primitives
 
 ```tsx
-// semio/sketchpad/index.tsx -- replaces SketchpadTriadInputRow / SketchpadTriadToggleRow.
+// compose/sketchpad/index.tsx -- replaces SketchpadTriadInputRow / SketchpadTriadToggleRow.
 // "Row" is gone from every name; the binding component is just a value+status+onCommit widget.
 function SketchpadInput<T = string>(props: {
   id: string;
@@ -640,7 +640,7 @@ function KitSectionForm() {
   const [renameKit, status] = useRenameKit();                // write: [run, WriteStatus]
   return (
     <SketchpadInput
-      id="semio.sketchpad.app.kit.panel.details.section.kit.name"
+      id="compose.sketchpad.app.kit.panel.details.section.kit.name"
       value={name}
       status={status}
       onCommit={(next) => renameKit({ scope: {}, input: { name: next } })}
@@ -665,7 +665,7 @@ function TypeSection({ id }: { id: string }) {
   const [changeDescription, status] = useStoreCommand(client.changeDescription);
   return (
     <SketchpadInput
-      id="semio.sketchpad.app.type.panel.details.section.type.description"
+      id="compose.sketchpad.app.type.panel.details.section.type.description"
       value={description}
       status={status}
       onCommit={(next) => changeDescription({ scope: { entityId: id }, input: { description: next } })}
@@ -683,7 +683,7 @@ function TypeIcon({ id }: { id: string }) {
   const icon = useGraphqlField(() => client.typeIcon(id), [client, id]);
   return (
     <SketchpadInput
-      id="semio.sketchpad.app.type.panel.details.section.type.icon"
+      id="compose.sketchpad.app.type.panel.details.section.type.icon"
       value={icon}
       status={WRITE_STATUS_READONLY}
       onCommit={async () => ({ ok: false, error: { kind: "Readonly", message: "icon edits not yet supported by SDL" } })}
@@ -710,15 +710,15 @@ if (ks0) doStuff(ks0);
 ## Phase 4 - validation
 
 - `npm run depcruise:layers` (root).
-- `npx tsc --noEmit` in [semio/js](semio/js), [semio/react](semio/react), [semio/sketchpad](semio/sketchpad).
-- `npm test` in [semio/js](semio/js) and [semio/react](semio/react).
-- `rg "HookTriad|HookRead|useDraft|useOptimistic|useSchemaObjectState|useSchemaFieldState|writeKitStoreClientSchemaField|kitReadonlyTriad|useSemioReadSnap|SketchpadTriadInputRow|SketchpadTriadToggleRow|SketchpadFieldRow|SketchpadToggleFieldRow|submitChangeKitCommands\b|OperationRouter|OperationEvent|seedFieldsFromDto|dispatchCorrelationEnvelope|fieldCache|cachedField|commitTransaction|abortTransaction" semio` returns zero matches (legacy primitives + Row-suffixed bindings + commit/abort vocabulary all gone).
-- `rg "StoreField[^>]*\\.set\\(|\\.kitName\\.set\\(|\\.status\\.set\\(" semio` returns zero matches (no public mutator on `StoreField`).
-- `rg "SCHEMA_HOOK_IDLE_STATUS|SCHEMA_HOOK_READONLY_STATUS|USE_KIT_NAME_PENDING_STATUS" semio` returns zero matches (consumer-specific names removed from the generic primitives).
-- `rg "\\bupdateType\\b|\\bupdateDesign\\b|\\bupdateAuthor\\b|\\bupdateQuality\\b|\\bupdatePort\\b|\\bupdateTag\\b|\\bupdateFile\\b|\\bupdateFolder\\b|\\bcreateType\\b|\\bdeleteType\\b|\\bcreateDesign\\b|\\bdeleteDesign\\b|\\bcreatePort\\b|\\bdeletePort\\b|\\bdeleteConnection\\b|\\bflattenDesign\\b|\\bexpandDesign\\b|\\bchangePieceType\\b|\\bmoveToFolder\\b|\\bmoveKitArtifactToFolder\\b|\\buseUndo\\b|\\buseRedo\\b" semio/js semio/react semio/sketchpad` returns zero matches (every generic / non-SDL operation removed).
-- `rg "\\$draftId|\\$transactionId|\\$entityId|\\$designId|\\$pieceId|\\$tagId|\\$ownerId" semio/js/index.ts` returns zero matches inside `KitStore` operation declarations (every operation must use the uniform `$scope`/`$input` variables; per-id GraphQL variables are only allowed inside the `operation<TScope, TInput>` helper body).
-- `rg "operation<\\{[^}]*draftId" semio/js/index.ts` returns zero matches (no operation declares `draftId` / `transactionId` in its user-facing TArgs -- those ids belong inside the helper, not the public command).
-- The `KitStoreClient` operation list matches `Mutation` field names in [semio/graphql/schema.graphql](semio/graphql/schema.graphql) one-for-one and every operation's `Args` member has the shape `{ scope: ...; input: ... }` (sanity check via `rg "type Mutation" -A 30 semio/graphql/schema.graphql` and visual diff against the interface).
+- `npx tsc --noEmit` in [compose/js](compose/js), [compose/react](compose/react), [compose/sketchpad](compose/sketchpad).
+- `npm test` in [compose/js](compose/js) and [compose/react](compose/react).
+- `rg "HookTriad|HookRead|useDraft|useOptimistic|useSchemaObjectState|useSchemaFieldState|writeKitStoreClientSchemaField|kitReadonlyTriad|useComposeReadSnap|SketchpadTriadInputRow|SketchpadTriadToggleRow|SketchpadFieldRow|SketchpadToggleFieldRow|submitChangeKitCommands\b|OperationRouter|OperationEvent|seedFieldsFromDto|dispatchCorrelationEnvelope|fieldCache|cachedField|commitTransaction|abortTransaction" compose` returns zero matches (legacy primitives + Row-suffixed bindings + commit/abort vocabulary all gone).
+- `rg "StoreField[^>]*\\.set\\(|\\.kitName\\.set\\(|\\.status\\.set\\(" compose` returns zero matches (no public mutator on `StoreField`).
+- `rg "SCHEMA_HOOK_IDLE_STATUS|SCHEMA_HOOK_READONLY_STATUS|USE_KIT_NAME_PENDING_STATUS" compose` returns zero matches (consumer-specific names removed from the generic primitives).
+- `rg "\\bupdateType\\b|\\bupdateDesign\\b|\\bupdateAuthor\\b|\\bupdateQuality\\b|\\bupdatePort\\b|\\bupdateTag\\b|\\bupdateFile\\b|\\bupdateFolder\\b|\\bcreateType\\b|\\bdeleteType\\b|\\bcreateDesign\\b|\\bdeleteDesign\\b|\\bcreatePort\\b|\\bdeletePort\\b|\\bdeleteConnection\\b|\\bflattenDesign\\b|\\bexpandDesign\\b|\\bchangePieceType\\b|\\bmoveToFolder\\b|\\bmoveKitArtifactToFolder\\b|\\buseUndo\\b|\\buseRedo\\b" compose/js compose/react compose/sketchpad` returns zero matches (every generic / non-SDL operation removed).
+- `rg "\\$draftId|\\$transactionId|\\$entityId|\\$designId|\\$pieceId|\\$tagId|\\$ownerId" compose/js/index.ts` returns zero matches inside `KitStore` operation declarations (every operation must use the uniform `$scope`/`$input` variables; per-id GraphQL variables are only allowed inside the `operation<TScope, TInput>` helper body).
+- `rg "operation<\\{[^}]*draftId" compose/js/index.ts` returns zero matches (no operation declares `draftId` / `transactionId` in its user-facing TArgs -- those ids belong inside the helper, not the public command).
+- The `KitStoreClient` operation list matches `Mutation` field names in [compose/graphql/schema.graphql](compose/graphql/schema.graphql) one-for-one and every operation's `Args` member has the shape `{ scope: ...; input: ... }` (sanity check via `rg "type Mutation" -A 30 compose/graphql/schema.graphql` and visual diff against the interface).
 - Manual sketchpad smoke run: type a kit name, observe spinner -> success; rename a type; drag pieces; undo / redo.
 
 ## Delivery

@@ -1,0 +1,3 @@
+[DEBUG] compose engine MCP: uv --directory compose/engine run main.py --mcp-stdio
+[DEBUG] After fixes: process logs "Starting engine" and waits on stdio (timeout 12s OK).
+[DEBUG] pytest compose/py compose/engine: 246 passed.

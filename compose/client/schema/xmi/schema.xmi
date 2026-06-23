@@ -1,0 +1,1509 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xmi:XMI xmlns:uml="http://www.omg.org/spec/UML/20161101" xmlns:xmi="http://www.omg.org/spec/XMI/20131001" xmi:version="20131001">
+  <uml:Representation xmi:id="representation_compose" name="Compose" visibility="public">
+    <ownedComment xmi:id="comment_representation_scope" body="Conceptual UML/XMI representation for the compose domain. Primary source: compose specification in AGENTS.md; explicit field limits and validation rules were folded in from the Python, Go, and C# implementations. This file encodes the compose conceptual schema plus OCL invariants for the constraints that fit naturally in UML/XMI. It is not intended to be a byte-for-byte export of any single runtime implementation."/>
+    <packagedElement xmi:type="uml:Package" xmi:id="pkg_primitives" name="PrimitiveTypes">
+      <packagedElement xmi:type="uml:PrimitiveType" xmi:id="pt_String" name="String"/>
+      <packagedElement xmi:type="uml:PrimitiveType" xmi:id="pt_Integer" name="Integer"/>
+      <packagedElement xmi:type="uml:PrimitiveType" xmi:id="pt_Real" name="Real"/>
+      <packagedElement xmi:type="uml:PrimitiveType" xmi:id="pt_Boolean" name="Boolean"/>
+      <packagedElement xmi:type="uml:PrimitiveType" xmi:id="pt_DateTime" name="DateTime"/>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Package" xmi:id="pkg_geometry" name="Geometry">
+      <packagedElement xmi:type="uml:DataType" xmi:id="dt_Coordinate" name="Coordinate">
+        <ownedAttribute xmi:type="uml:Property" xmi:id="dt_Coordinate_u" name="u" type="pt_Real">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="dt_Coordinate_u_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="dt_Coordinate_u_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="dt_Coordinate_v" name="v" type="pt_Real">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="dt_Coordinate_v_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="dt_Coordinate_v_upper" value="1"/>
+        </ownedAttribute>
+      </packagedElement>
+      <packagedElement xmi:type="uml:DataType" xmi:id="dt_Point" name="Point">
+        <ownedAttribute xmi:type="uml:Property" xmi:id="dt_Point_x" name="x" type="pt_Real">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="dt_Point_x_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="dt_Point_x_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="dt_Point_y" name="y" type="pt_Real">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="dt_Point_y_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="dt_Point_y_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="dt_Point_z" name="z" type="pt_Real">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="dt_Point_z_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="dt_Point_z_upper" value="1"/>
+        </ownedAttribute>
+      </packagedElement>
+      <packagedElement xmi:type="uml:DataType" xmi:id="dt_Vector" name="Vector">
+        <ownedAttribute xmi:type="uml:Property" xmi:id="dt_Vector_x" name="x" type="pt_Real">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="dt_Vector_x_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="dt_Vector_x_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="dt_Vector_y" name="y" type="pt_Real">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="dt_Vector_y_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="dt_Vector_y_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="dt_Vector_z" name="z" type="pt_Real">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="dt_Vector_z_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="dt_Vector_z_upper" value="1"/>
+        </ownedAttribute>
+      </packagedElement>
+      <packagedElement xmi:type="uml:DataType" xmi:id="dt_Plane" name="Plane">
+        <ownedAttribute xmi:type="uml:Property" xmi:id="dt_Plane_origin" name="origin" type="dt_Point">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="dt_Plane_origin_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="dt_Plane_origin_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="dt_Plane_xAxis" name="xAxis" type="dt_Vector">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="dt_Plane_xAxis_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="dt_Plane_xAxis_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="dt_Plane_yAxis" name="yAxis" type="dt_Vector">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="dt_Plane_yAxis_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="dt_Plane_yAxis_upper" value="1"/>
+        </ownedAttribute>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="dt_Plane_AxesNonZero" name="AxesNonZero">
+          <constrainedElement xmi:idref="dt_Plane"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="dt_Plane_AxesNonZero_spec">
+            <language>OCL</language>
+            <body>let xl : Real = self.xAxis.x*self.xAxis.x + self.xAxis.y*self.xAxis.y + self.xAxis.z*self.xAxis.z in
+let yl : Real = self.yAxis.x*self.yAxis.x + self.yAxis.y*self.yAxis.y + self.yAxis.z*self.yAxis.z in
+xl &gt; 0.0 and yl &gt; 0.0</body>
+          </specification>
+        </ownedRule>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="dt_Plane_AxesNotCollinear" name="AxesNotCollinear">
+          <constrainedElement xmi:idref="dt_Plane"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="dt_Plane_AxesNotCollinear_spec">
+            <language>OCL</language>
+            <body>let cx : Real = self.xAxis.y*self.yAxis.z - self.xAxis.z*self.yAxis.y in
+let cy : Real = self.xAxis.z*self.yAxis.x - self.xAxis.x*self.yAxis.z in
+let cz : Real = self.xAxis.x*self.yAxis.y - self.xAxis.y*self.yAxis.x in
+(cx*cx + cy*cy + cz*cz) &gt; 0.0</body>
+          </specification>
+        </ownedRule>
+      </packagedElement>
+      <packagedElement xmi:type="uml:DataType" xmi:id="dt_Location" name="Location">
+        <ownedAttribute xmi:type="uml:Property" xmi:id="dt_Location_longitude" name="longitude" type="pt_Real">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="dt_Location_longitude_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="dt_Location_longitude_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="dt_Location_latitude" name="latitude" type="pt_Real">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="dt_Location_latitude_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="dt_Location_latitude_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="dt_Location_altitude" name="altitude" type="pt_Real">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="dt_Location_altitude_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="dt_Location_altitude_upper" value="1"/>
+        </ownedAttribute>
+      </packagedElement>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Package" xmi:id="pkg_core" name="Core">
+      <packagedElement xmi:type="uml:Enumeration" xmi:id="enum_QualityKind" name="QualityKind">
+        <ownedLiteral xmi:type="uml:EnumerationLiteral" xmi:id="enum_QualityKind_General" name="General"/>
+        <ownedLiteral xmi:type="uml:EnumerationLiteral" xmi:id="enum_QualityKind_Design" name="Design"/>
+        <ownedLiteral xmi:type="uml:EnumerationLiteral" xmi:id="enum_QualityKind_Type" name="Type"/>
+        <ownedLiteral xmi:type="uml:EnumerationLiteral" xmi:id="enum_QualityKind_Piece" name="Piece"/>
+        <ownedLiteral xmi:type="uml:EnumerationLiteral" xmi:id="enum_QualityKind_Connection" name="Connection"/>
+        <ownedLiteral xmi:type="uml:EnumerationLiteral" xmi:id="enum_QualityKind_Connector" name="Connector"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Attribute" name="Attribute">
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Attribute_id" name="id" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Attribute_id_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Attribute_id_upper" value="1"/>
+          <ownedComment xmi:id="cls_Attribute_id_comment" body="Runtime/persistence ID; implementations typically cap this at 128 chars.">
+            <annotatedElement xmi:idref="cls_Attribute_id"/>
+          </ownedComment>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Attribute_key" name="key" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Attribute_key_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Attribute_key_upper" value="1"/>
+          <ownedComment xmi:id="cls_Attribute_key_comment" body="Kebab/dot style metadata key.">
+            <annotatedElement xmi:idref="cls_Attribute_key"/>
+          </ownedComment>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Attribute_value" name="value" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Attribute_value_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Attribute_value_upper" value="1"/>
+          <ownedComment xmi:id="cls_Attribute_value_comment" body="Optional; semantic absence means boolean true.">
+            <annotatedElement xmi:idref="cls_Attribute_value"/>
+          </ownedComment>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Attribute_unit" name="unit" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Attribute_unit_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Attribute_unit_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Attribute_definition" name="definition" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Attribute_definition_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Attribute_definition_upper" value="1"/>
+        </ownedAttribute>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Tag" name="Tag">
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Tag_id" name="id" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Tag_id_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Tag_id_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Tag_name" name="name" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Tag_name_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Tag_name_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Tag_description" name="description" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Tag_description_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Tag_description_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Tag_icon" name="icon" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Tag_icon_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Tag_icon_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Tag_attributes" name="attributes" type="cls_Attribute" aggregation="composite" isOrdered="true">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Tag_attributes_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Tag_attributes_upper" value="*"/>
+        </ownedAttribute>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Concept" name="Concept">
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Concept_id" name="id" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Concept_id_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Concept_id_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Concept_name" name="name" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Concept_name_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Concept_name_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Concept_description" name="description" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Concept_description_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Concept_description_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Concept_icon" name="icon" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Concept_icon_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Concept_icon_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Concept_attributes" name="attributes" type="cls_Attribute" aggregation="composite" isOrdered="true">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Concept_attributes_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Concept_attributes_upper" value="*"/>
+        </ownedAttribute>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Author" name="Author">
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Author_id" name="id" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Author_id_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Author_id_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Author_name" name="name" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Author_name_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Author_name_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Author_email" name="email" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Author_email_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Author_email_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Author_attributes" name="attributes" type="cls_Attribute" aggregation="composite" isOrdered="true">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Author_attributes_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Author_attributes_upper" value="*"/>
+        </ownedAttribute>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Folder" name="Folder">
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Folder_id" name="id" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Folder_id_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Folder_id_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Folder_name" name="name" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Folder_name_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Folder_name_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Folder_description" name="description" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Folder_description_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Folder_description_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Folder_parent" name="parent" type="cls_Folder">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Folder_parent_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Folder_parent_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Folder_kit" name="kit" type="cls_Kit">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Folder_kit_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Folder_kit_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Folder_attributes" name="attributes" type="cls_Attribute" aggregation="composite" isOrdered="true">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Folder_attributes_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Folder_attributes_upper" value="*"/>
+        </ownedAttribute>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Folder_ParentInSameKit" name="ParentInSameKit">
+          <constrainedElement xmi:idref="cls_Folder"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Folder_ParentInSameKit_spec">
+            <language>OCL</language>
+            <body>self.parent.oclIsUndefined() or self.parent.kit = self.kit</body>
+          </specification>
+        </ownedRule>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Folder_NotSelfParent" name="NotSelfParent">
+          <constrainedElement xmi:idref="cls_Folder"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Folder_NotSelfParent_spec">
+            <language>OCL</language>
+            <body>self.parent.oclIsUndefined() or self.parent &lt;&gt; self</body>
+          </specification>
+        </ownedRule>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Folder_AcyclicParentChain" name="AcyclicParentChain">
+          <constrainedElement xmi:idref="cls_Folder"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Folder_AcyclicParentChain_spec">
+            <language>OCL</language>
+            <body>self.parent.oclIsUndefined() or self.parent-&gt;closure(parent)-&gt;excludes(self)</body>
+          </specification>
+        </ownedRule>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Folder_SiblingNameUnique" name="SiblingNameUnique">
+          <constrainedElement xmi:idref="cls_Folder"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Folder_SiblingNameUnique_spec">
+            <language>OCL</language>
+            <body>self.kit.folders-&gt;select(f | f.parent = self.parent)-&gt;isUnique(name)</body>
+          </specification>
+        </ownedRule>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_File" name="File">
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_File_id" name="id" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_File_id_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_File_id_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_File_name" name="name" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_File_name_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_File_name_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_File_path" name="path" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_File_path_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_File_path_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_File_remoteUrl" name="remoteUrl" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_File_remoteUrl_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_File_remoteUrl_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_File_description" name="description" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_File_description_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_File_description_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_File_folder" name="folder" type="cls_Folder">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_File_folder_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_File_folder_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_File_kit" name="kit" type="cls_Kit">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_File_kit_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_File_kit_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_File_attributes" name="attributes" type="cls_Attribute" aggregation="composite" isOrdered="true">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_File_attributes_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_File_attributes_upper" value="*"/>
+        </ownedAttribute>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_File_FolderInSameKit" name="FolderInSameKit">
+          <constrainedElement xmi:idref="cls_File"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_File_FolderInSameKit_spec">
+            <language>OCL</language>
+            <body>self.folder.oclIsUndefined() or self.folder.kit = self.kit</body>
+          </specification>
+        </ownedRule>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_File_FileNameUniqueInKit" name="FileNameUniqueInKit">
+          <constrainedElement xmi:idref="cls_File"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_File_FileNameUniqueInKit_spec">
+            <language>OCL</language>
+            <body>self.kit.files-&gt;isUnique(name)</body>
+          </specification>
+        </ownedRule>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Benchmark" name="Benchmark">
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Benchmark_id" name="id" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Benchmark_id_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Benchmark_id_upper" value="1"/>
+          <ownedComment xmi:id="cls_Benchmark_id_comment" body="Optional in the conceptual representation.">
+            <annotatedElement xmi:idref="cls_Benchmark_id"/>
+          </ownedComment>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Benchmark_name" name="name" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Benchmark_name_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Benchmark_name_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Benchmark_icon" name="icon" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Benchmark_icon_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Benchmark_icon_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Benchmark_min" name="min" type="pt_Real">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Benchmark_min_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Benchmark_min_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Benchmark_minExcluded" name="minExcluded" type="pt_Boolean">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Benchmark_minExcluded_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Benchmark_minExcluded_upper" value="1"/>
+          <defaultValue xmi:type="uml:LiteralBoolean" xmi:id="cls_Benchmark_minExcluded_default" value="false"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Benchmark_max" name="max" type="pt_Real">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Benchmark_max_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Benchmark_max_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Benchmark_maxExcluded" name="maxExcluded" type="pt_Boolean">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Benchmark_maxExcluded_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Benchmark_maxExcluded_upper" value="1"/>
+          <defaultValue xmi:type="uml:LiteralBoolean" xmi:id="cls_Benchmark_maxExcluded_default" value="false"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Benchmark_definition" name="definition" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Benchmark_definition_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Benchmark_definition_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Benchmark_qualityOwner" name="qualityOwner" type="cls_Quality">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Benchmark_qualityOwner_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Benchmark_qualityOwner_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Benchmark_attributes" name="attributes" type="cls_Attribute" aggregation="composite" isOrdered="true">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Benchmark_attributes_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Benchmark_attributes_upper" value="*"/>
+        </ownedAttribute>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Benchmark_RangeConsistent" name="RangeConsistent">
+          <constrainedElement xmi:idref="cls_Benchmark"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Benchmark_RangeConsistent_spec">
+            <language>OCL</language>
+            <body>self.min.oclIsUndefined() or self.max.oclIsUndefined() or self.min &lt; self.max or (self.min = self.max and not (self.minExcluded or self.maxExcluded))</body>
+          </specification>
+        </ownedRule>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Quality" name="Quality">
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Quality_id" name="id" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Quality_id_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Quality_id_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Quality_key" name="key" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Quality_key_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Quality_key_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Quality_name" name="name" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Quality_name_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Quality_name_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Quality_description" name="description" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Quality_description_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Quality_description_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Quality_uri" name="uri" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Quality_uri_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Quality_uri_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Quality_kind" name="kind" type="enum_QualityKind">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Quality_kind_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Quality_kind_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Quality_canScale" name="canScale" type="pt_Boolean">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Quality_canScale_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Quality_canScale_upper" value="1"/>
+          <defaultValue xmi:type="uml:LiteralBoolean" xmi:id="cls_Quality_canScale_default" value="false"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Quality_defaultSiUnit" name="defaultSiUnit" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Quality_defaultSiUnit_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Quality_defaultSiUnit_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Quality_defaultImperialUnit" name="defaultImperialUnit" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Quality_defaultImperialUnit_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Quality_defaultImperialUnit_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Quality_min" name="min" type="pt_Real">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Quality_min_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Quality_min_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Quality_minExcluded" name="minExcluded" type="pt_Boolean">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Quality_minExcluded_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Quality_minExcluded_upper" value="1"/>
+          <defaultValue xmi:type="uml:LiteralBoolean" xmi:id="cls_Quality_minExcluded_default" value="true"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Quality_max" name="max" type="pt_Real">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Quality_max_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Quality_max_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Quality_maxExcluded" name="maxExcluded" type="pt_Boolean">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Quality_maxExcluded_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Quality_maxExcluded_upper" value="1"/>
+          <defaultValue xmi:type="uml:LiteralBoolean" xmi:id="cls_Quality_maxExcluded_default" value="true"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Quality_defaultValue" name="defaultValue" type="pt_Real">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Quality_defaultValue_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Quality_defaultValue_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Quality_formula" name="formula" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Quality_formula_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Quality_formula_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Quality_kit" name="kit" type="cls_Kit">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Quality_kit_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Quality_kit_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Quality_benchmarks" name="benchmarks" type="cls_Benchmark" aggregation="composite" isOrdered="true">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Quality_benchmarks_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Quality_benchmarks_upper" value="*"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Quality_attributes" name="attributes" type="cls_Attribute" aggregation="composite" isOrdered="true">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Quality_attributes_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Quality_attributes_upper" value="*"/>
+        </ownedAttribute>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Quality_RangeConsistent" name="RangeConsistent">
+          <constrainedElement xmi:idref="cls_Quality"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Quality_RangeConsistent_spec">
+            <language>OCL</language>
+            <body>self.min.oclIsUndefined() or self.max.oclIsUndefined() or self.min &lt; self.max or (self.min = self.max and not (self.minExcluded or self.maxExcluded))</body>
+          </specification>
+        </ownedRule>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Quality_QualityNameUniqueInKit" name="QualityNameUniqueInKit">
+          <constrainedElement xmi:idref="cls_Quality"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Quality_QualityNameUniqueInKit_spec">
+            <language>OCL</language>
+            <body>self.kit.qualities-&gt;isUnique(name)</body>
+          </specification>
+        </ownedRule>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Port" name="Port">
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Port_id" name="id" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Port_id_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Port_id_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Port_name" name="name" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Port_name_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Port_name_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Port_description" name="description" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Port_description_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Port_description_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Port_icon" name="icon" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Port_icon_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Port_icon_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Port_kit" name="kit" type="cls_Kit">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Port_kit_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Port_kit_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Port_maxChildren" name="maxChildren" type="pt_Integer">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Port_maxChildren_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Port_maxChildren_upper" value="1"/>
+          <defaultValue xmi:type="uml:LiteralInteger" xmi:id="cls_Port_maxChildren_default" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Port_attributes" name="attributes" type="cls_Attribute" aggregation="composite" isOrdered="true">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Port_attributes_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Port_attributes_upper" value="*"/>
+        </ownedAttribute>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Port_PortNameUniqueInKit" name="PortNameUniqueInKit">
+          <constrainedElement xmi:idref="cls_Port"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Port_PortNameUniqueInKit_spec">
+            <language>OCL</language>
+            <body>self.kit.families.ports-&gt;flatten()-&gt;isUnique(name)</body>
+          </specification>
+        </ownedRule>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Prop" name="Prop">
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Prop_id" name="id" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Prop_id_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Prop_id_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Prop_qualityKey" name="qualityKey" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Prop_qualityKey_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Prop_qualityKey_upper" value="1"/>
+          <ownedComment xmi:id="cls_Prop_qualityKey_comment" body="Key of a Quality defined in the owning kit.">
+            <annotatedElement xmi:idref="cls_Prop_qualityKey"/>
+          </ownedComment>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Prop_value" name="value" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Prop_value_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Prop_value_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Prop_unit" name="unit" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Prop_unit_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Prop_unit_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Prop_attributes" name="attributes" type="cls_Attribute" aggregation="composite" isOrdered="true">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Prop_attributes_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Prop_attributes_upper" value="*"/>
+        </ownedAttribute>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Representation" name="Representation">
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Representation_id" name="id" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Representation_id_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Representation_id_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Representation_name" name="name" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Representation_name_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Representation_name_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Representation_description" name="description" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Representation_description_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Representation_description_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Representation_file" name="file" type="cls_File">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Representation_file_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Representation_file_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Representation_tags" name="tags" type="cls_Tag" isOrdered="true">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Representation_tags_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Representation_tags_upper" value="*"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Representation_typeOwner" name="typeOwner" type="cls_Type">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Representation_typeOwner_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Representation_typeOwner_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Representation_attributes" name="attributes" type="cls_Attribute" aggregation="composite" isOrdered="true">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Representation_attributes_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Representation_attributes_upper" value="*"/>
+        </ownedAttribute>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Representation_FileBelongsToOwningKit" name="FileBelongsToOwningKit">
+          <constrainedElement xmi:idref="cls_Representation"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Representation_FileBelongsToOwningKit_spec">
+            <language>OCL</language>
+            <body>self.file.kit = self.typeOwner.kit</body>
+          </specification>
+        </ownedRule>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Representation_TagsBelongToOwningKit" name="TagsBelongToOwningKit">
+          <constrainedElement xmi:idref="cls_Representation"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Representation_TagsBelongToOwningKit_spec">
+            <language>OCL</language>
+            <body>self.tags-&gt;forAll(t | self.typeOwner.kit.tags-&gt;includes(t))</body>
+          </specification>
+        </ownedRule>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Connector" name="Connector">
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Connector_id" name="id" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connector_id_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connector_id_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Connector_id" name="id" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connector_id_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connector_id_upper" value="1"/>
+          <ownedComment xmi:id="cls_Connector_id_comment" body="External connector id; implementations typically cap this at 128 chars.">
+            <annotatedElement xmi:idref="cls_Connector_id"/>
+          </ownedComment>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Connector_name" name="name" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connector_name_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connector_name_upper" value="1"/>
+          <ownedComment xmi:id="cls_Connector_name_comment" body="Optional display name; some runtimes validate uniqueness by name.">
+            <annotatedElement xmi:idref="cls_Connector_name"/>
+          </ownedComment>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Connector_description" name="description" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connector_description_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connector_description_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Connector_isMandatory" name="isMandatory" type="pt_Boolean">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connector_isMandatory_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connector_isMandatory_upper" value="1"/>
+          <defaultValue xmi:type="uml:LiteralBoolean" xmi:id="cls_Connector_isMandatory_default" value="false"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Connector_maxChildren" name="maxChildren" type="pt_Integer">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connector_maxChildren_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connector_maxChildren_upper" value="1"/>
+          <defaultValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connector_maxChildren_default" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Connector_t" name="t" type="pt_Real">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connector_t_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connector_t_upper" value="1"/>
+          <defaultValue xmi:type="uml:LiteralReal" xmi:id="cls_Connector_t_default" value="0"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Connector_point" name="point" type="dt_Point">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connector_point_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connector_point_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Connector_direction" name="direction" type="dt_Vector">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connector_direction_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connector_direction_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Connector_port" name="port" type="cls_Port">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connector_port_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connector_port_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Connector_compatiblePorts" name="compatiblePorts" type="cls_Port" isOrdered="true">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connector_compatiblePorts_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Connector_compatiblePorts_upper" value="*"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Connector_typeOwner" name="typeOwner" type="cls_Type">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connector_typeOwner_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connector_typeOwner_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Connector_props" name="props" type="cls_Prop" aggregation="composite" isOrdered="true">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connector_props_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Connector_props_upper" value="*"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Connector_attributes" name="attributes" type="cls_Attribute" aggregation="composite" isOrdered="true">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connector_attributes_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Connector_attributes_upper" value="*"/>
+        </ownedAttribute>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Connector_TRange" name="TRange">
+          <constrainedElement xmi:idref="cls_Connector"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Connector_TRange_spec">
+            <language>OCL</language>
+            <body>self.t &gt;= 0.0 and self.t &lt; 1.0</body>
+          </specification>
+        </ownedRule>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Connector_DirectionNonZero" name="DirectionNonZero">
+          <constrainedElement xmi:idref="cls_Connector"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Connector_DirectionNonZero_spec">
+            <language>OCL</language>
+            <body>(self.direction.x*self.direction.x + self.direction.y*self.direction.y + self.direction.z*self.direction.z) &gt; 0.0</body>
+          </specification>
+        </ownedRule>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Connector_PortBelongsToOwningKit" name="PortBelongsToOwningKit">
+          <constrainedElement xmi:idref="cls_Connector"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Connector_PortBelongsToOwningKit_spec">
+            <language>OCL</language>
+            <body>self.port.oclIsUndefined() or self.typeOwner.kit.families.ports-&gt;flatten()-&gt;includes(self.port)</body>
+          </specification>
+        </ownedRule>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Connector_CompatiblePortsBelongToOwningKit" name="CompatiblePortsBelongToOwningKit">
+          <constrainedElement xmi:idref="cls_Connector"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Connector_CompatiblePortsBelongToOwningKit_spec">
+            <language>OCL</language>
+            <body>self.compatiblePorts-&gt;forAll(p | self.typeOwner.kit.families.ports-&gt;flatten()-&gt;includes(p))</body>
+          </specification>
+        </ownedRule>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Connector_CompatiblePortsDistinct" name="CompatiblePortsDistinct">
+          <constrainedElement xmi:idref="cls_Connector"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Connector_CompatiblePortsDistinct_spec">
+            <language>OCL</language>
+            <body>self.compatiblePorts-&gt;isUnique(id)</body>
+          </specification>
+        </ownedRule>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Type" name="Type">
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Type_id" name="id" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Type_id_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Type_id_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Type_name" name="name" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Type_name_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Type_name_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Type_variant" name="variant" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Type_variant_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Type_variant_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Type_isAbstract" name="isAbstract" type="pt_Boolean">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Type_isAbstract_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Type_isAbstract_upper" value="1"/>
+          <defaultValue xmi:type="uml:LiteralBoolean" xmi:id="cls_Type_isAbstract_default" value="false"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Type_parent" name="parent" type="cls_Type">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Type_parent_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Type_parent_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Type_isVirtual" name="isVirtual" type="pt_Boolean">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Type_isVirtual_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Type_isVirtual_upper" value="1"/>
+          <defaultValue xmi:type="uml:LiteralBoolean" xmi:id="cls_Type_isVirtual_default" value="false"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Type_canScale" name="canScale" type="pt_Boolean">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Type_canScale_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Type_canScale_upper" value="1"/>
+          <defaultValue xmi:type="uml:LiteralBoolean" xmi:id="cls_Type_canScale_default" value="true"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Type_canMirror" name="canMirror" type="pt_Boolean">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Type_canMirror_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Type_canMirror_upper" value="1"/>
+          <defaultValue xmi:type="uml:LiteralBoolean" xmi:id="cls_Type_canMirror_default" value="true"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Type_unit" name="unit" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Type_unit_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Type_unit_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Type_availableCount" name="availableCount" type="pt_Real">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Type_availableCount_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Type_availableCount_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Type_location" name="location" type="dt_Location">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Type_location_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Type_location_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Type_icon" name="icon" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Type_icon_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Type_icon_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Type_image" name="image" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Type_image_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Type_image_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Type_description" name="description" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Type_description_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Type_description_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Type_createdAt" name="createdAt" type="pt_DateTime">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Type_createdAt_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Type_createdAt_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Type_updatedAt" name="updatedAt" type="pt_DateTime">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Type_updatedAt_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Type_updatedAt_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Type_folder" name="folder" type="cls_Folder">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Type_folder_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Type_folder_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Type_kit" name="kit" type="cls_Kit">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Type_kit_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Type_kit_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Type_authors" name="authors" type="cls_Author" isOrdered="true">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Type_authors_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Type_authors_upper" value="*"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Type_concepts" name="concepts" type="cls_Concept" isOrdered="true">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Type_concepts_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Type_concepts_upper" value="*"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Type_representations" name="representations" type="cls_Representation" aggregation="composite" isOrdered="true">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Type_representations_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Type_representations_upper" value="*"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Type_connectors" name="connectors" type="cls_Connector" aggregation="composite" isOrdered="true">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Type_connectors_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Type_connectors_upper" value="*"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Type_props" name="props" type="cls_Prop" aggregation="composite" isOrdered="true">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Type_props_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Type_props_upper" value="*"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Type_attributes" name="attributes" type="cls_Attribute" aggregation="composite" isOrdered="true">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Type_attributes_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Type_attributes_upper" value="*"/>
+        </ownedAttribute>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Type_RepresentationNamesUnique" name="RepresentationNamesUnique">
+          <constrainedElement xmi:idref="cls_Type"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Type_RepresentationNamesUnique_spec">
+            <language>OCL</language>
+            <body>self.representations-&gt;select(not name.oclIsUndefined() and name &lt;&gt; "")-&gt;isUnique(name)</body>
+          </specification>
+        </ownedRule>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Type_AvailableCountNonNegative" name="AvailableCountNonNegative">
+          <constrainedElement xmi:idref="cls_Type"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Type_AvailableCountNonNegative_spec">
+            <language>OCL</language>
+            <body>self.availableCount.oclIsUndefined() or self.availableCount &gt;= 0.0</body>
+          </specification>
+        </ownedRule>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Type_FolderInKit" name="FolderInKit">
+          <constrainedElement xmi:idref="cls_Type"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Type_FolderInKit_spec">
+            <language>OCL</language>
+            <body>self.folder.oclIsUndefined() or self.folder.kit = self.kit</body>
+          </specification>
+        </ownedRule>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Type_AuthorsInKit" name="AuthorsInKit">
+          <constrainedElement xmi:idref="cls_Type"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Type_AuthorsInKit_spec">
+            <language>OCL</language>
+            <body>self.authors-&gt;forAll(a | self.kit.authors-&gt;includes(a))</body>
+          </specification>
+        </ownedRule>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Type_ConceptsInKit" name="ConceptsInKit">
+          <constrainedElement xmi:idref="cls_Type"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Type_ConceptsInKit_spec">
+            <language>OCL</language>
+            <body>self.concepts-&gt;forAll(c | self.kit.concepts-&gt;includes(c))</body>
+          </specification>
+        </ownedRule>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Type_SiblingNameUnique" name="SiblingNameUnique">
+          <constrainedElement xmi:idref="cls_Type"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Type_SiblingNameUnique_spec">
+            <language>OCL</language>
+            <body>self.kit.types-&gt;select(t | t.parent = self.parent)-&gt;isUnique(name)</body>
+          </specification>
+        </ownedRule>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Type_ConnectorIdsUnique" name="ConnectorIdsUnique">
+          <constrainedElement xmi:idref="cls_Type"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Type_ConnectorIdsUnique_spec">
+            <language>OCL</language>
+            <body>self.connectors-&gt;isUnique(id)</body>
+          </specification>
+        </ownedRule>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Type_ConnectorLabelsUniqueWhenPresent" name="ConnectorLabelsUniqueWhenPresent">
+          <constrainedElement xmi:idref="cls_Type"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Type_ConnectorLabelsUniqueWhenPresent_spec">
+            <language>OCL</language>
+            <body>self.connectors-&gt;select(not name.oclIsUndefined() and name &lt;&gt; "")-&gt;isUnique(name)</body>
+          </specification>
+        </ownedRule>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Type_ParentInSameKit" name="ParentInSameKit">
+          <constrainedElement xmi:idref="cls_Type"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Type_ParentInSameKit_spec">
+            <language>OCL</language>
+            <body>self.parent.oclIsUndefined() or self.parent.kit = self.kit</body>
+          </specification>
+        </ownedRule>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Type_NotSelfParent" name="NotSelfParent">
+          <constrainedElement xmi:idref="cls_Type"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Type_NotSelfParent_spec">
+            <language>OCL</language>
+            <body>self.parent.oclIsUndefined() or self.parent &lt;&gt; self</body>
+          </specification>
+        </ownedRule>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Type_AcyclicParentChain" name="AcyclicParentChain">
+          <constrainedElement xmi:idref="cls_Type"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Type_AcyclicParentChain_spec">
+            <language>OCL</language>
+            <body>self.parent.oclIsUndefined() or self.parent-&gt;closure(parent)-&gt;excludes(self)</body>
+          </specification>
+        </ownedRule>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Layer" name="Layer">
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Layer_id" name="id" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Layer_id_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Layer_id_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Layer_path" name="path" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Layer_path_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Layer_path_upper" value="1"/>
+          <ownedComment xmi:id="cls_Layer_path_comment" body="Specification uses path; some current runtimes expose this as name.">
+            <annotatedElement xmi:idref="cls_Layer_path"/>
+          </ownedComment>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Layer_isHidden" name="isHidden" type="pt_Boolean">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Layer_isHidden_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Layer_isHidden_upper" value="1"/>
+          <defaultValue xmi:type="uml:LiteralBoolean" xmi:id="cls_Layer_isHidden_default" value="false"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Layer_isLocked" name="isLocked" type="pt_Boolean">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Layer_isLocked_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Layer_isLocked_upper" value="1"/>
+          <defaultValue xmi:type="uml:LiteralBoolean" xmi:id="cls_Layer_isLocked_default" value="false"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Layer_color" name="color" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Layer_color_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Layer_color_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Layer_description" name="description" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Layer_description_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Layer_description_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Layer_designOwner" name="designOwner" type="cls_Design">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Layer_designOwner_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Layer_designOwner_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Layer_attributes" name="attributes" type="cls_Attribute" aggregation="composite" isOrdered="true">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Layer_attributes_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Layer_attributes_upper" value="*"/>
+        </ownedAttribute>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Layer_PathNotBlank" name="PathNotBlank">
+          <constrainedElement xmi:idref="cls_Layer"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Layer_PathNotBlank_spec">
+            <language>OCL</language>
+            <body>self.path.size() &gt; 0</body>
+          </specification>
+        </ownedRule>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Layer_UniquePathWithinDesign" name="UniquePathWithinDesign">
+          <constrainedElement xmi:idref="cls_Layer"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Layer_UniquePathWithinDesign_spec">
+            <language>OCL</language>
+            <body>self.designOwner.layers-&gt;isUnique(path)</body>
+          </specification>
+        </ownedRule>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Group" name="Group">
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Group_id" name="id" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Group_id_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Group_id_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Group_name" name="name" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Group_name_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Group_name_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Group_color" name="color" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Group_color_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Group_color_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Group_description" name="description" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Group_description_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Group_description_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Group_designOwner" name="designOwner" type="cls_Design">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Group_designOwner_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Group_designOwner_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Group_pieces" name="pieces" type="cls_Piece" isOrdered="true">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Group_pieces_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Group_pieces_upper" value="*"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Group_attributes" name="attributes" type="cls_Attribute" aggregation="composite" isOrdered="true">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Group_attributes_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Group_attributes_upper" value="*"/>
+        </ownedAttribute>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Group_PiecesBelongToSameDesign" name="PiecesBelongToSameDesign">
+          <constrainedElement xmi:idref="cls_Group"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Group_PiecesBelongToSameDesign_spec">
+            <language>OCL</language>
+            <body>self.pieces-&gt;forAll(p | p.designOwner = self.designOwner)</body>
+          </specification>
+        </ownedRule>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Piece" name="Piece">
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Piece_id" name="id" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Piece_id_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Piece_id_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Piece_id" name="id" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Piece_id_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Piece_id_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Piece_name" name="name" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Piece_name_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Piece_name_upper" value="1"/>
+          <ownedComment xmi:id="cls_Piece_name_comment" body="Optional display name; some runtimes validate uniqueness by name.">
+            <annotatedElement xmi:idref="cls_Piece_name"/>
+          </ownedComment>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Piece_typeRef" name="typeRef" type="cls_Type">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Piece_typeRef_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Piece_typeRef_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Piece_designRef" name="designRef" type="cls_Design">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Piece_designRef_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Piece_designRef_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Piece_plane" name="plane" type="dt_Plane">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Piece_plane_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Piece_plane_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Piece_center" name="center" type="dt_Coordinate">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Piece_center_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Piece_center_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Piece_scale" name="scale" type="pt_Real">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Piece_scale_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Piece_scale_upper" value="1"/>
+          <defaultValue xmi:type="uml:LiteralReal" xmi:id="cls_Piece_scale_default" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Piece_mirrorPlane" name="mirrorPlane" type="dt_Plane">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Piece_mirrorPlane_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Piece_mirrorPlane_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Piece_isHidden" name="isHidden" type="pt_Boolean">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Piece_isHidden_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Piece_isHidden_upper" value="1"/>
+          <defaultValue xmi:type="uml:LiteralBoolean" xmi:id="cls_Piece_isHidden_default" value="false"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Piece_isLocked" name="isLocked" type="pt_Boolean">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Piece_isLocked_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Piece_isLocked_upper" value="1"/>
+          <defaultValue xmi:type="uml:LiteralBoolean" xmi:id="cls_Piece_isLocked_default" value="false"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Piece_color" name="color" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Piece_color_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Piece_color_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Piece_description" name="description" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Piece_description_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Piece_description_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Piece_designOwner" name="designOwner" type="cls_Design">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Piece_designOwner_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Piece_designOwner_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Piece_props" name="props" type="cls_Prop" aggregation="composite" isOrdered="true">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Piece_props_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Piece_props_upper" value="*"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Piece_attributes" name="attributes" type="cls_Attribute" aggregation="composite" isOrdered="true">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Piece_attributes_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Piece_attributes_upper" value="*"/>
+        </ownedAttribute>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Piece_ExactlyOneReferenceKind" name="ExactlyOneReferenceKind">
+          <constrainedElement xmi:idref="cls_Piece"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Piece_ExactlyOneReferenceKind_spec">
+            <language>OCL</language>
+            <body>(self.typeRef.oclIsUndefined() and not self.designRef.oclIsUndefined()) or (not self.typeRef.oclIsUndefined() and self.designRef.oclIsUndefined())</body>
+          </specification>
+        </ownedRule>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Piece_ScalePositive" name="ScalePositive">
+          <constrainedElement xmi:idref="cls_Piece"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Piece_ScalePositive_spec">
+            <language>OCL</language>
+            <body>self.scale &gt; 0.0</body>
+          </specification>
+        </ownedRule>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Side" name="Side">
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Side_piece" name="piece" type="cls_Piece">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Side_piece_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Side_piece_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Side_designPiece" name="designPiece" type="cls_Piece">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Side_designPiece_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Side_designPiece_upper" value="1"/>
+          <ownedComment xmi:id="cls_Side_designPiece_comment" body="Optional nested piece reference inside a referenced design piece.">
+            <annotatedElement xmi:idref="cls_Side_designPiece"/>
+          </ownedComment>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Side_connector" name="connector" type="cls_Connector">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Side_connector_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Side_connector_upper" value="1"/>
+        </ownedAttribute>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Connection" name="Connection">
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Connection_id" name="id" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connection_id_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connection_id_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Connection_connected" name="connected" type="cls_Side" aggregation="composite">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connection_connected_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connection_connected_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Connection_connecting" name="connecting" type="cls_Side" aggregation="composite">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connection_connecting_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connection_connecting_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Connection_gap" name="gap" type="pt_Real">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connection_gap_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connection_gap_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Connection_shift" name="shift" type="pt_Real">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connection_shift_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connection_shift_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Connection_rise" name="rise" type="pt_Real">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connection_rise_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connection_rise_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Connection_rotation" name="rotation" type="pt_Real">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connection_rotation_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connection_rotation_upper" value="1"/>
+          <defaultValue xmi:type="uml:LiteralReal" xmi:id="cls_Connection_rotation_default" value="0"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Connection_turn" name="turn" type="pt_Real">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connection_turn_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connection_turn_upper" value="1"/>
+          <defaultValue xmi:type="uml:LiteralReal" xmi:id="cls_Connection_turn_default" value="0"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Connection_tilt" name="tilt" type="pt_Real">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connection_tilt_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connection_tilt_upper" value="1"/>
+          <defaultValue xmi:type="uml:LiteralReal" xmi:id="cls_Connection_tilt_default" value="0"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Connection_u" name="u" type="pt_Real">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connection_u_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connection_u_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Connection_v" name="v" type="pt_Real">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connection_v_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connection_v_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Connection_description" name="description" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connection_description_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connection_description_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Connection_designOwner" name="designOwner" type="cls_Design">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connection_designOwner_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connection_designOwner_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Connection_attributes" name="attributes" type="cls_Attribute" aggregation="composite" isOrdered="true">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connection_attributes_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Connection_attributes_upper" value="*"/>
+        </ownedAttribute>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Connection_AngleRanges" name="AngleRanges">
+          <constrainedElement xmi:idref="cls_Connection"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Connection_AngleRanges_spec">
+            <language>OCL</language>
+            <body>self.rotation &gt;= 0.0 and self.rotation &lt; 360.0 and self.turn &gt;= 0.0 and self.turn &lt; 360.0 and self.tilt &gt;= 0.0 and self.tilt &lt; 360.0</body>
+          </specification>
+        </ownedRule>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Connection_SidesBelongToOwningDesign" name="SidesBelongToOwningDesign">
+          <constrainedElement xmi:idref="cls_Connection"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Connection_SidesBelongToOwningDesign_spec">
+            <language>OCL</language>
+            <body>self.connected.piece.designOwner = self.designOwner and self.connecting.piece.designOwner = self.designOwner</body>
+          </specification>
+        </ownedRule>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Connection_ConnectedConnectorOwnedByPieceType" name="ConnectedConnectorOwnedByPieceType">
+          <constrainedElement xmi:idref="cls_Connection"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Connection_ConnectedConnectorOwnedByPieceType_spec">
+            <language>OCL</language>
+            <body>self.connected.piece.typeRef.oclIsUndefined() or self.connected.connector.typeOwner = self.connected.piece.typeRef</body>
+          </specification>
+        </ownedRule>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Connection_ConnectingConnectorOwnedByPieceType" name="ConnectingConnectorOwnedByPieceType">
+          <constrainedElement xmi:idref="cls_Connection"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Connection_ConnectingConnectorOwnedByPieceType_spec">
+            <language>OCL</language>
+            <body>self.connecting.piece.typeRef.oclIsUndefined() or self.connecting.connector.typeOwner = self.connecting.piece.typeRef</body>
+          </specification>
+        </ownedRule>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Stat" name="Stat">
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Stat_id" name="id" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Stat_id_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Stat_id_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Stat_qualityKey" name="qualityKey" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Stat_qualityKey_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Stat_qualityKey_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Stat_unit" name="unit" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Stat_unit_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Stat_unit_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Stat_min" name="min" type="pt_Real">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Stat_min_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Stat_min_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Stat_minExcluded" name="minExcluded" type="pt_Boolean">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Stat_minExcluded_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Stat_minExcluded_upper" value="1"/>
+          <defaultValue xmi:type="uml:LiteralBoolean" xmi:id="cls_Stat_minExcluded_default" value="false"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Stat_max" name="max" type="pt_Real">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Stat_max_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Stat_max_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Stat_maxExcluded" name="maxExcluded" type="pt_Boolean">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Stat_maxExcluded_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Stat_maxExcluded_upper" value="1"/>
+          <defaultValue xmi:type="uml:LiteralBoolean" xmi:id="cls_Stat_maxExcluded_default" value="false"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Stat_designOwner" name="designOwner" type="cls_Design">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Stat_designOwner_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Stat_designOwner_upper" value="1"/>
+        </ownedAttribute>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Stat_RangeConsistent" name="RangeConsistent">
+          <constrainedElement xmi:idref="cls_Stat"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Stat_RangeConsistent_spec">
+            <language>OCL</language>
+            <body>self.min.oclIsUndefined() or self.max.oclIsUndefined() or self.min &lt; self.max or (self.min = self.max and not (self.minExcluded or self.maxExcluded))</body>
+          </specification>
+        </ownedRule>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Design" name="Design">
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Design_id" name="id" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Design_id_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Design_id_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Design_name" name="name" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Design_name_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Design_name_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Design_variant" name="variant" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Design_variant_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Design_variant_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Design_view" name="view" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Design_view_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Design_view_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Design_parent" name="parent" type="cls_Design">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Design_parent_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Design_parent_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Design_isAbstract" name="isAbstract" type="pt_Boolean">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Design_isAbstract_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Design_isAbstract_upper" value="1"/>
+          <defaultValue xmi:type="uml:LiteralBoolean" xmi:id="cls_Design_isAbstract_default" value="false"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Design_canScale" name="canScale" type="pt_Boolean">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Design_canScale_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Design_canScale_upper" value="1"/>
+          <defaultValue xmi:type="uml:LiteralBoolean" xmi:id="cls_Design_canScale_default" value="true"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Design_canMirror" name="canMirror" type="pt_Boolean">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Design_canMirror_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Design_canMirror_upper" value="1"/>
+          <defaultValue xmi:type="uml:LiteralBoolean" xmi:id="cls_Design_canMirror_default" value="true"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Design_unit" name="unit" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Design_unit_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Design_unit_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Design_location" name="location" type="dt_Location">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Design_location_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Design_location_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Design_icon" name="icon" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Design_icon_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Design_icon_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Design_image" name="image" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Design_image_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Design_image_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Design_description" name="description" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Design_description_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Design_description_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Design_createdAt" name="createdAt" type="pt_DateTime">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Design_createdAt_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Design_createdAt_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Design_updatedAt" name="updatedAt" type="pt_DateTime">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Design_updatedAt_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Design_updatedAt_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Design_folder" name="folder" type="cls_Folder">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Design_folder_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Design_folder_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Design_activeLayer" name="activeLayer" type="cls_Layer">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Design_activeLayer_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Design_activeLayer_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Design_kit" name="kit" type="cls_Kit">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Design_kit_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Design_kit_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Design_authors" name="authors" type="cls_Author" isOrdered="true">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Design_authors_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Design_authors_upper" value="*"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Design_concepts" name="concepts" type="cls_Concept" isOrdered="true">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Design_concepts_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Design_concepts_upper" value="*"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Design_pieces" name="pieces" type="cls_Piece" aggregation="composite" isOrdered="true">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Design_pieces_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Design_pieces_upper" value="*"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Design_connections" name="connections" type="cls_Connection" aggregation="composite" isOrdered="true">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Design_connections_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Design_connections_upper" value="*"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Design_stats" name="stats" type="cls_Stat" aggregation="composite" isOrdered="true">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Design_stats_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Design_stats_upper" value="*"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Design_props" name="props" type="cls_Prop" aggregation="composite" isOrdered="true">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Design_props_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Design_props_upper" value="*"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Design_layers" name="layers" type="cls_Layer" aggregation="composite" isOrdered="true">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Design_layers_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Design_layers_upper" value="*"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Design_groups" name="groups" type="cls_Group" aggregation="composite" isOrdered="true">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Design_groups_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Design_groups_upper" value="*"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Design_attributes" name="attributes" type="cls_Attribute" aggregation="composite" isOrdered="true">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Design_attributes_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Design_attributes_upper" value="*"/>
+        </ownedAttribute>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Design_FolderInKit" name="FolderInKit">
+          <constrainedElement xmi:idref="cls_Design"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Design_FolderInKit_spec">
+            <language>OCL</language>
+            <body>self.folder.oclIsUndefined() or self.folder.kit = self.kit</body>
+          </specification>
+        </ownedRule>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Design_ActiveLayerInDesign" name="ActiveLayerInDesign">
+          <constrainedElement xmi:idref="cls_Design"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Design_ActiveLayerInDesign_spec">
+            <language>OCL</language>
+            <body>self.activeLayer.oclIsUndefined() or self.layers-&gt;includes(self.activeLayer)</body>
+          </specification>
+        </ownedRule>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Design_AuthorsInKit" name="AuthorsInKit">
+          <constrainedElement xmi:idref="cls_Design"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Design_AuthorsInKit_spec">
+            <language>OCL</language>
+            <body>self.authors-&gt;forAll(a | self.kit.authors-&gt;includes(a))</body>
+          </specification>
+        </ownedRule>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Design_ConceptsInKit" name="ConceptsInKit">
+          <constrainedElement xmi:idref="cls_Design"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Design_ConceptsInKit_spec">
+            <language>OCL</language>
+            <body>self.concepts-&gt;forAll(c | self.kit.concepts-&gt;includes(c))</body>
+          </specification>
+        </ownedRule>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Design_SiblingNameUnique" name="SiblingNameUnique">
+          <constrainedElement xmi:idref="cls_Design"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Design_SiblingNameUnique_spec">
+            <language>OCL</language>
+            <body>self.kit.designs-&gt;select(d | d.parent = self.parent)-&gt;isUnique(name)</body>
+          </specification>
+        </ownedRule>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Design_ParentInSameKit" name="ParentInSameKit">
+          <constrainedElement xmi:idref="cls_Design"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Design_ParentInSameKit_spec">
+            <language>OCL</language>
+            <body>self.parent.oclIsUndefined() or self.parent.kit = self.kit</body>
+          </specification>
+        </ownedRule>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Design_NotSelfParent" name="NotSelfParent">
+          <constrainedElement xmi:idref="cls_Design"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Design_NotSelfParent_spec">
+            <language>OCL</language>
+            <body>self.parent.oclIsUndefined() or self.parent &lt;&gt; self</body>
+          </specification>
+        </ownedRule>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Design_AcyclicParentChain" name="AcyclicParentChain">
+          <constrainedElement xmi:idref="cls_Design"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Design_AcyclicParentChain_spec">
+            <language>OCL</language>
+            <body>self.parent.oclIsUndefined() or self.parent-&gt;closure(parent)-&gt;excludes(self)</body>
+          </specification>
+        </ownedRule>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Design_PieceIdsUnique" name="PieceIdsUnique">
+          <constrainedElement xmi:idref="cls_Design"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Design_PieceIdsUnique_spec">
+            <language>OCL</language>
+            <body>self.pieces-&gt;isUnique(id)</body>
+          </specification>
+        </ownedRule>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Design_PieceNamesUniqueWhenPresent" name="PieceNamesUniqueWhenPresent">
+          <constrainedElement xmi:idref="cls_Design"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Design_PieceNamesUniqueWhenPresent_spec">
+            <language>OCL</language>
+            <body>self.pieces-&gt;select(not name.oclIsUndefined() and name &lt;&gt; "")-&gt;isUnique(name)</body>
+          </specification>
+        </ownedRule>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Design_GroupPiecesContained" name="GroupPiecesContained">
+          <constrainedElement xmi:idref="cls_Design"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Design_GroupPiecesContained_spec">
+            <language>OCL</language>
+            <body>self.groups-&gt;forAll(g | g.pieces-&gt;forAll(p | self.pieces-&gt;includes(p)))</body>
+          </specification>
+        </ownedRule>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Design_ConnectionsReferenceContainedPieces" name="ConnectionsReferenceContainedPieces">
+          <constrainedElement xmi:idref="cls_Design"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Design_ConnectionsReferenceContainedPieces_spec">
+            <language>OCL</language>
+            <body>self.connections-&gt;forAll(c | self.pieces-&gt;includes(c.connected.piece) and self.pieces-&gt;includes(c.connecting.piece))</body>
+          </specification>
+        </ownedRule>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Design_EveryPieceFixedOrLinked" name="EveryPieceFixedOrLinked">
+          <constrainedElement xmi:idref="cls_Design"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Design_EveryPieceFixedOrLinked_spec">
+            <language>OCL</language>
+            <body>self.pieces-&gt;forAll(p | (not p.plane.oclIsUndefined()) xor self.connections-&gt;exists(c | c.connected.piece = p or c.connecting.piece = p))</body>
+          </specification>
+        </ownedRule>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Design_NoSameFamilyDesignPieces" name="NoSameFamilyDesignPieces">
+          <constrainedElement xmi:idref="cls_Design"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Design_NoSameFamilyDesignPieces_spec">
+            <language>OCL</language>
+            <body>self.pieces-&gt;select(not designRef.oclIsUndefined())-&gt;forAll(p |
+  Set{self}-&gt;closure(parent)-&gt;intersection(Set{p.designRef}-&gt;closure(parent))-&gt;isEmpty()
+)</body>
+          </specification>
+        </ownedRule>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Kit" name="Kit">
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Kit_id" name="id" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Kit_id_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Kit_id_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Kit_uri" name="uri" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Kit_uri_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Kit_uri_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Kit_name" name="name" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Kit_name_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Kit_name_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Kit_version" name="version" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Kit_version_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Kit_version_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Kit_remoteUrl" name="remoteUrl" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Kit_remoteUrl_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Kit_remoteUrl_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Kit_homepageUrl" name="homepageUrl" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Kit_homepageUrl_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Kit_homepageUrl_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Kit_license" name="license" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Kit_license_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Kit_license_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Kit_icon" name="icon" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Kit_icon_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Kit_icon_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Kit_image" name="image" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Kit_image_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Kit_image_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Kit_preview" name="preview" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Kit_preview_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Kit_preview_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Kit_description" name="description" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Kit_description_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Kit_description_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Kit_createdAt" name="createdAt" type="pt_DateTime">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Kit_createdAt_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Kit_createdAt_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Kit_updatedAt" name="updatedAt" type="pt_DateTime">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Kit_updatedAt_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Kit_updatedAt_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Kit_tags" name="tags" type="cls_Tag" aggregation="composite" isOrdered="true">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Kit_tags_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Kit_tags_upper" value="*"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Kit_concepts" name="concepts" type="cls_Concept" aggregation="composite" isOrdered="true">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Kit_concepts_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Kit_concepts_upper" value="*"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Kit_authors" name="authors" type="cls_Author" aggregation="composite" isOrdered="true">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Kit_authors_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Kit_authors_upper" value="*"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Kit_folders" name="folders" type="cls_Folder" aggregation="composite" isOrdered="true">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Kit_folders_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Kit_folders_upper" value="*"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Kit_files" name="files" type="cls_File" aggregation="composite" isOrdered="true">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Kit_files_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Kit_files_upper" value="*"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Kit_ports" name="ports" type="cls_Port" aggregation="composite" isOrdered="true">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Kit_ports_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Kit_ports_upper" value="*"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Kit_qualities" name="qualities" type="cls_Quality" aggregation="composite" isOrdered="true">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Kit_qualities_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Kit_qualities_upper" value="*"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Kit_types" name="types" type="cls_Type" aggregation="composite" isOrdered="true">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Kit_types_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Kit_types_upper" value="*"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Kit_designs" name="designs" type="cls_Design" aggregation="composite" isOrdered="true">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Kit_designs_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Kit_designs_upper" value="*"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Kit_attributes" name="attributes" type="cls_Attribute" aggregation="composite" isOrdered="true">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Kit_attributes_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Kit_attributes_upper" value="*"/>
+        </ownedAttribute>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Kit_UriNotBlank" name="UriNotBlank">
+          <constrainedElement xmi:idref="cls_Kit"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Kit_UriNotBlank_spec">
+            <language>OCL</language>
+            <body>self.uri.size() &gt; 0</body>
+          </specification>
+        </ownedRule>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Kit_NameNotBlank" name="NameNotBlank">
+          <constrainedElement xmi:idref="cls_Kit"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Kit_NameNotBlank_spec">
+            <language>OCL</language>
+            <body>self.name.size() &gt; 0</body>
+          </specification>
+        </ownedRule>
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Kit_UniqueIdsInValidationScope" name="UniqueIdsInValidationScope">
+          <constrainedElement xmi:idref="cls_Kit"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Kit_UniqueIdsInValidationScope_spec">
+            <language>OCL</language>
+            <body>let gs : Bag(String) =
+  Bag{self.id}
+    -&gt;union(self.types-&gt;collect(t | t.id))
+    -&gt;union(self.types-&gt;collect(t | t.representations-&gt;collect(m | m.id))-&gt;flatten())
+    -&gt;union(self.types-&gt;collect(t | t.connectors-&gt;collect(c | c.id))-&gt;flatten())
+    -&gt;union(self.designs-&gt;collect(d | d.id))
+    -&gt;union(self.designs-&gt;collect(d | d.pieces-&gt;collect(p | p.id))-&gt;flatten())
+    -&gt;union(self.designs-&gt;collect(d | d.connections-&gt;collect(c | c.id))-&gt;flatten())
+    -&gt;union(self.designs-&gt;collect(d | d.stats-&gt;collect(s | s.id))-&gt;flatten())
+    -&gt;union(self.qualities-&gt;collect(q | q.id))
+    -&gt;union(self.files-&gt;collect(f | f.id))
+    -&gt;union(self.folders-&gt;collect(f | f.id))
+    -&gt;union(self.ports-&gt;collect(p | p.id))
+in gs-&gt;asSet()-&gt;size() = gs-&gt;size()</body>
+          </specification>
+        </ownedRule>
+      </packagedElement>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Package" xmi:id="pkg_notes" name="Notes">
+      <packagedElement xmi:type="uml:Comment" xmi:id="note_compatibility" body="Connector compatibility in compose is one-sided: it is enough for one connector to list the other connector's port as compatible. This XMI stores the underlying Port references but leaves the dynamic compatibility predicate to consuming tools."/>
+      <packagedElement xmi:type="uml:Comment" xmi:id="note_hierarchy" body="Design hierarchy, fixed/linked placement, shortest-distance root levels, and breadth-first parent selection are defined semantically in the specification. They are derivable operations and are documented here rather than representationed as executable behavior in XMI."/>
+      <packagedElement xmi:type="uml:Comment" xmi:id="note_lengths" body="String length limits come primarily from the Python implementation: NAME 64, ID 128, URL 1024, URI 2048, DESCRIPTION 512, FORMULA 4096. UML/XMI does not have a portable built-in maxLength facet on primitive String, so these limits are captured in comments and OCL where practical."/>
+    </packagedElement>
+  </uml:Representation>
+</xmi:XMI>

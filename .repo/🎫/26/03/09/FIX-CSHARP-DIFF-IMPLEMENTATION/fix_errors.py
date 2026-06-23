@@ -1,6 +1,6 @@
 import re
 
-filepath = '/workspaces/semio/semio/net/Semio/Semio.cs'
+filepath = '/workspaces/semio/compose/net/Compose/Compose.cs'
 with open(filepath, 'r') as f:
     lines = f.readlines()
 

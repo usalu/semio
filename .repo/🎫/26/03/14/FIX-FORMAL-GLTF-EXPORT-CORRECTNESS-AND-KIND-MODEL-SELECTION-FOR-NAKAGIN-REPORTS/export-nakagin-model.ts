@@ -1,10 +1,10 @@
 #!/usr/bin/env tsx
 
 // #region 🔖Header
-// Export Nakagin Capsule Tower Design Model to Semio Assets
+// Export Nakagin Capsule Tower Design Model to Compose Assets
 // 
 // This script extracts the Nakagin Capsule Tower design from the Metabolism kit
-// and exports it as a model asset to the semio assets folder.
+// and exports it as a model asset to the compose assets folder.
 // #endregion 🔖Header
 
 import { readFileSync, writeFileSync } from 'fs';
@@ -36,7 +36,7 @@ interface DesignModel {
  */
 function extractNakaginCapsuleTowerDesign(): DesignModel | null {
   try {
-    const kitPath = '/workspaces/semio/semio/assets/semio/kit_metabolism.json';
+    const kitPath = '/workspaces/semio/compose/assets/compose/kit_metabolism.json';
     const kitData = JSON.parse(readFileSync(kitPath, 'utf8'));
 
     const nakaginDesigns = kitData.designs?.filter((design: any) => design.name === "Nakagin Capsule Tower") || [];
@@ -110,7 +110,7 @@ function main(): void {
   const model = designToModel(design);
 
   // Define output path
-  const outputPath = '/workspaces/semio/semio/assets/models/nakagin-capsule-tower.json';
+  const outputPath = '/workspaces/semio/compose/assets/models/nakagin-capsule-tower.json';
 
   // Export the model
   exportModelToAssets(model, outputPath);

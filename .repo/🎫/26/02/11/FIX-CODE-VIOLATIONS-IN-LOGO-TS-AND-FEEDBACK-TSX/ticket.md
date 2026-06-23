@@ -10,7 +10,7 @@ Fixed all breachs: logo.ts 72→0 (added Imports/Types/Logo Generation sections 
 
 ## Changes
 
-### semio/assets/logo/logo.ts (72 breachs fixed)
+### compose/assets/logo/logo.ts (72 breachs fixed)
 
 - Moved `// #region 🔖Header` before shebang to fix orphan-block-1
 - Fixed file ID emoji from 📜 to 💻
@@ -20,7 +20,7 @@ Fixed all breachs: logo.ts 72→0 (added Imports/Types/Logo Generation sections 
 - Added 3 sub-sections (`Parse SVG`, `Generate Keyframe Sequence`, `Create Animated SVG`) with MUST spec comments and summaries for the exported functions
 - All 72 orphan definition breachs resolved by wrapping in section regions
 
-### semio/js/sketchpad/Feedback.tsx (13 breachs fixed)
+### compose/js/sketchpad/Feedback.tsx (13 breachs fixed)
 
 - Added MUST-keyword summaries after all 7 section region markers (Imports, Feedback App Plugin Registration, Triadic Hooks, Form, App, Config, Global Footer Item)
 - Added summary + MUST spec comments before 5 exported hook functions (useFeedbackFormData, useFeedbackIsSubmitting, useFeedbackIsSubmitted, useFeedbackError, useFeedbackReset)

@@ -1,6 +1,6 @@
 {
   "id": "c99c15e8-82fa-454c-8fc3-ced32d76d8d9",
-  "uri": "semiorepo://s/c99c15e8-82fa-454c-8fc3-ced32d76d8d9",
+  "uri": "composerepo://s/c99c15e8-82fa-454c-8fc3-ced32d76d8d9",
   "contributor": "🧑‍💻ueli",
   "client": "windsurf-chat",
   "second": "2026-03-11T00:00:13Z",
@@ -38,7 +38,7 @@
           "timestamp": "2026-03-11T00:00:48.089463248Z",
           "execution_id": "99f62dcb-1ad3-4db4-9af9-311c7a5755e5",
           "tool_info": {
-            "command_line": "./repo/cli/cli hook code.reading windsurf-chat --file \"/workspaces/semio/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs\"",
+            "command_line": "./repo/cli/cli hook code.reading windsurf-chat --file \"/workspaces/semio/compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs\"",
             "cwd": "/workspaces/semio"
           }
         }
@@ -46,7 +46,7 @@
       "event": {
         "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
         "client": "windsurf-chat",
-        "command": "./repo/cli/cli hook code.reading windsurf-chat --file \"/workspaces/semio/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs\"",
+        "command": "./repo/cli/cli hook code.reading windsurf-chat --file \"/workspaces/semio/compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs\"",
         "contributor": "🧑‍💻ueli",
         "kind": "repo.hook.code.reading.starting",
         "parent": "",
@@ -65,7 +65,7 @@
           "timestamp": "2026-03-11T00:00:48.089463248Z",
           "execution_id": "99f62dcb-1ad3-4db4-9af9-311c7a5755e5",
           "tool_info": {
-            "command_line": "./repo/cli/cli hook code.reading windsurf-chat --file \"/workspaces/semio/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs\"",
+            "command_line": "./repo/cli/cli hook code.reading windsurf-chat --file \"/workspaces/semio/compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs\"",
             "cwd": "/workspaces/semio"
           }
         }
@@ -73,7 +73,7 @@
       "event": {
         "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
         "client": "windsurf-chat",
-        "command": "./repo/cli/cli hook code.reading windsurf-chat --file \"/workspaces/semio/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs\"",
+        "command": "./repo/cli/cli hook code.reading windsurf-chat --file \"/workspaces/semio/compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs\"",
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.terminal.starting",
         "parent": "",
@@ -146,7 +146,7 @@
           "timestamp": "2026-03-11T00:01:53.285074641Z",
           "execution_id": "99f62dcb-1ad3-4db4-9af9-311c7a5755e5",
           "tool_info": {
-            "command_line": "./repo/cli/cli hook agent.tool.search.starting windsurf-chat --tool-name \"grep_search\" --tool-args \"Semio.Grasshopper.cs exposure mapping\"",
+            "command_line": "./repo/cli/cli hook agent.tool.search.starting windsurf-chat --tool-name \"grep_search\" --tool-args \"Compose.Grasshopper.cs exposure mapping\"",
             "cwd": "/workspaces/semio"
           }
         }
@@ -154,7 +154,7 @@
       "event": {
         "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
         "client": "windsurf-chat",
-        "command": "./repo/cli/cli hook agent.tool.search.starting windsurf-chat --tool-name \"grep_search\" --tool-args \"Semio.Grasshopper.cs exposure mapping\"",
+        "command": "./repo/cli/cli hook agent.tool.search.starting windsurf-chat --tool-name \"grep_search\" --tool-args \"Compose.Grasshopper.cs exposure mapping\"",
         "contributor": "🧑‍💻ueli",
         "kind": "repo.hook.agent.tool.search.starting.starting",
         "parent": "",
@@ -173,7 +173,7 @@
           "timestamp": "2026-03-11T00:01:53.285074641Z",
           "execution_id": "99f62dcb-1ad3-4db4-9af9-311c7a5755e5",
           "tool_info": {
-            "command_line": "./repo/cli/cli hook agent.tool.search.starting windsurf-chat --tool-name \"grep_search\" --tool-args \"Semio.Grasshopper.cs exposure mapping\"",
+            "command_line": "./repo/cli/cli hook agent.tool.search.starting windsurf-chat --tool-name \"grep_search\" --tool-args \"Compose.Grasshopper.cs exposure mapping\"",
             "cwd": "/workspaces/semio"
           }
         }
@@ -181,7 +181,7 @@
       "event": {
         "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
         "client": "windsurf-chat",
-        "command": "./repo/cli/cli hook agent.tool.search.starting windsurf-chat --tool-name \"grep_search\" --tool-args \"Semio.Grasshopper.cs exposure mapping\"",
+        "command": "./repo/cli/cli hook agent.tool.search.starting windsurf-chat --tool-name \"grep_search\" --tool-args \"Compose.Grasshopper.cs exposure mapping\"",
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.terminal.starting",
         "parent": "",
@@ -200,7 +200,7 @@
           "timestamp": "2026-03-11T00:02:24.298127978Z",
           "execution_id": "99f62dcb-1ad3-4db4-9af9-311c7a5755e5",
           "tool_info": {
-            "command_line": "./repo/cli/cli hook agent.tool.search.starting windsurf-chat --tool-name \"grep_search\" --tool-args \"GH_Exposure occurrences in Semio.Grasshopper.cs\"",
+            "command_line": "./repo/cli/cli hook agent.tool.search.starting windsurf-chat --tool-name \"grep_search\" --tool-args \"GH_Exposure occurrences in Compose.Grasshopper.cs\"",
             "cwd": "/workspaces/semio"
           }
         }
@@ -208,7 +208,7 @@
       "event": {
         "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
         "client": "windsurf-chat",
-        "command": "./repo/cli/cli hook agent.tool.search.starting windsurf-chat --tool-name \"grep_search\" --tool-args \"GH_Exposure occurrences in Semio.Grasshopper.cs\"",
+        "command": "./repo/cli/cli hook agent.tool.search.starting windsurf-chat --tool-name \"grep_search\" --tool-args \"GH_Exposure occurrences in Compose.Grasshopper.cs\"",
         "contributor": "🧑‍💻ueli",
         "kind": "repo.hook.agent.tool.search.starting.starting",
         "parent": "",
@@ -227,7 +227,7 @@
           "timestamp": "2026-03-11T00:02:24.298127978Z",
           "execution_id": "99f62dcb-1ad3-4db4-9af9-311c7a5755e5",
           "tool_info": {
-            "command_line": "./repo/cli/cli hook agent.tool.search.starting windsurf-chat --tool-name \"grep_search\" --tool-args \"GH_Exposure occurrences in Semio.Grasshopper.cs\"",
+            "command_line": "./repo/cli/cli hook agent.tool.search.starting windsurf-chat --tool-name \"grep_search\" --tool-args \"GH_Exposure occurrences in Compose.Grasshopper.cs\"",
             "cwd": "/workspaces/semio"
           }
         }
@@ -235,7 +235,7 @@
       "event": {
         "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
         "client": "windsurf-chat",
-        "command": "./repo/cli/cli hook agent.tool.search.starting windsurf-chat --tool-name \"grep_search\" --tool-args \"GH_Exposure occurrences in Semio.Grasshopper.cs\"",
+        "command": "./repo/cli/cli hook agent.tool.search.starting windsurf-chat --tool-name \"grep_search\" --tool-args \"GH_Exposure occurrences in Compose.Grasshopper.cs\"",
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.terminal.starting",
         "parent": "",
@@ -254,7 +254,7 @@
           "timestamp": "2026-03-11T00:02:51.959215736Z",
           "execution_id": "99f62dcb-1ad3-4db4-9af9-311c7a5755e5",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs"
+            "file_path": "/workspaces/semio/compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs"
           }
         }
       },
@@ -264,13 +264,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper"
+            "id": "👤compose📚gh🛅composegrasshopper💻composegrasshopper"
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚gh🛅semiograsshopper💻semiograsshopper📌1📌11030"
+          "👤compose📚gh🛅composegrasshopper💻composegrasshopper📌1📌11030"
         ],
         "second": "🎆26🌙03☀️11⏰00⌚02⏱️52",
         "session": "⚪c99c15e882fa454c8fc3ced32d76d8d9"
@@ -287,7 +287,7 @@
           "timestamp": "2026-03-11T00:03:02.519995227Z",
           "execution_id": "99f62dcb-1ad3-4db4-9af9-311c7a5755e5",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs"
+            "file_path": "/workspaces/semio/compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs"
           }
         }
       },
@@ -297,13 +297,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper"
+            "id": "👤compose📚gh🛅composegrasshopper💻composegrasshopper"
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚gh🛅semiograsshopper💻semiograsshopper📌1📌11030"
+          "👤compose📚gh🛅composegrasshopper💻composegrasshopper📌1📌11030"
         ],
         "second": "🎆26🌙03☀️11⏰00⌚03⏱️03",
         "session": "⚪c99c15e882fa454c8fc3ced32d76d8d9"
@@ -320,7 +320,7 @@
           "timestamp": "2026-03-11T00:03:23.744977224Z",
           "execution_id": "99f62dcb-1ad3-4db4-9af9-311c7a5755e5",
           "tool_info": {
-            "command_line": "./repo/cli/cli hook agent.tool.starting windsurf-chat --tool-name \"mcp0_search\" --tool-args \"find existing ticket for semio gh change exposure\"",
+            "command_line": "./repo/cli/cli hook agent.tool.starting windsurf-chat --tool-name \"mcp0_search\" --tool-args \"find existing ticket for compose gh change exposure\"",
             "cwd": "/workspaces/semio"
           }
         }
@@ -328,7 +328,7 @@
       "event": {
         "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
         "client": "windsurf-chat",
-        "command": "./repo/cli/cli hook agent.tool.starting windsurf-chat --tool-name \"mcp0_search\" --tool-args \"find existing ticket for semio gh change exposure\"",
+        "command": "./repo/cli/cli hook agent.tool.starting windsurf-chat --tool-name \"mcp0_search\" --tool-args \"find existing ticket for compose gh change exposure\"",
         "contributor": "🧑‍💻ueli",
         "kind": "repo.hook.agent.tool.starting.starting",
         "parent": "",
@@ -347,7 +347,7 @@
           "timestamp": "2026-03-11T00:03:23.744977224Z",
           "execution_id": "99f62dcb-1ad3-4db4-9af9-311c7a5755e5",
           "tool_info": {
-            "command_line": "./repo/cli/cli hook agent.tool.starting windsurf-chat --tool-name \"mcp0_search\" --tool-args \"find existing ticket for semio gh change exposure\"",
+            "command_line": "./repo/cli/cli hook agent.tool.starting windsurf-chat --tool-name \"mcp0_search\" --tool-args \"find existing ticket for compose gh change exposure\"",
             "cwd": "/workspaces/semio"
           }
         }
@@ -355,7 +355,7 @@
       "event": {
         "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
         "client": "windsurf-chat",
-        "command": "./repo/cli/cli hook agent.tool.starting windsurf-chat --tool-name \"mcp0_search\" --tool-args \"find existing ticket for semio gh change exposure\"",
+        "command": "./repo/cli/cli hook agent.tool.starting windsurf-chat --tool-name \"mcp0_search\" --tool-args \"find existing ticket for compose gh change exposure\"",
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.terminal.starting",
         "parent": "",
@@ -428,7 +428,7 @@
           "timestamp": "2026-03-11T00:05:03.150274631Z",
           "execution_id": "99f62dcb-1ad3-4db4-9af9-311c7a5755e5",
           "tool_info": {
-            "command_line": "./repo/cli/cli hook pre_mcp_tool_use windsurf-chat --tool-name \"find_by_name\" --tool-args \"Semio.Grasshopper files\"",
+            "command_line": "./repo/cli/cli hook pre_mcp_tool_use windsurf-chat --tool-name \"find_by_name\" --tool-args \"Compose.Grasshopper files\"",
             "cwd": "/workspaces/semio"
           }
         }
@@ -436,7 +436,7 @@
       "event": {
         "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
         "client": "windsurf-chat",
-        "command": "./repo/cli/cli hook pre_mcp_tool_use windsurf-chat --tool-name \"find_by_name\" --tool-args \"Semio.Grasshopper files\"",
+        "command": "./repo/cli/cli hook pre_mcp_tool_use windsurf-chat --tool-name \"find_by_name\" --tool-args \"Compose.Grasshopper files\"",
         "contributor": "🧑‍💻ueli",
         "kind": "repo.hook.pre_mcp_tool_use.starting",
         "parent": "",
@@ -455,7 +455,7 @@
           "timestamp": "2026-03-11T00:05:03.150274631Z",
           "execution_id": "99f62dcb-1ad3-4db4-9af9-311c7a5755e5",
           "tool_info": {
-            "command_line": "./repo/cli/cli hook pre_mcp_tool_use windsurf-chat --tool-name \"find_by_name\" --tool-args \"Semio.Grasshopper files\"",
+            "command_line": "./repo/cli/cli hook pre_mcp_tool_use windsurf-chat --tool-name \"find_by_name\" --tool-args \"Compose.Grasshopper files\"",
             "cwd": "/workspaces/semio"
           }
         }
@@ -463,7 +463,7 @@
       "event": {
         "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
         "client": "windsurf-chat",
-        "command": "./repo/cli/cli hook pre_mcp_tool_use windsurf-chat --tool-name \"find_by_name\" --tool-args \"Semio.Grasshopper files\"",
+        "command": "./repo/cli/cli hook pre_mcp_tool_use windsurf-chat --tool-name \"find_by_name\" --tool-args \"Compose.Grasshopper files\"",
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.terminal.starting",
         "parent": "",
@@ -590,7 +590,7 @@
           "timestamp": "2026-03-11T00:07:03.27438616Z",
           "execution_id": "99f62dcb-1ad3-4db4-9af9-311c7a5755e5",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs"
+            "file_path": "/workspaces/semio/compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs"
           }
         }
       },
@@ -600,13 +600,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper"
+            "id": "👤compose📚gh🛅composegrasshopper💻composegrasshopper"
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚gh🛅semiograsshopper💻semiograsshopper📌1📌11030"
+          "👤compose📚gh🛅composegrasshopper💻composegrasshopper📌1📌11030"
         ],
         "second": "🎆26🌙03☀️11⏰00⌚07⏱️03",
         "session": "⚪c99c15e882fa454c8fc3ced32d76d8d9"
@@ -623,7 +623,7 @@
           "timestamp": "2026-03-11T00:07:15.280963803Z",
           "execution_id": "99f62dcb-1ad3-4db4-9af9-311c7a5755e5",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs"
+            "file_path": "/workspaces/semio/compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs"
           }
         }
       },
@@ -633,13 +633,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper"
+            "id": "👤compose📚gh🛅composegrasshopper💻composegrasshopper"
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚gh🛅semiograsshopper💻semiograsshopper📌1📌11030"
+          "👤compose📚gh🛅composegrasshopper💻composegrasshopper📌1📌11030"
         ],
         "second": "🎆26🌙03☀️11⏰00⌚07⏱️15",
         "session": "⚪c99c15e882fa454c8fc3ced32d76d8d9"
@@ -656,7 +656,7 @@
           "timestamp": "2026-03-11T00:07:51.096327434Z",
           "execution_id": "99f62dcb-1ad3-4db4-9af9-311c7a5755e5",
           "tool_info": {
-            "response": "*Rules used for this response:*\n- (Always On) Triggered Rule: AGENTS.md\n- (Global) Triggered Rule: global_rules.md\n\n*User accepted the command `./repo/cli/cli hook agent.starting windsurf-chat`*\n\n*User accepted the command `./repo/cli/cli hook prompt.submit windsurf-chat`*\n\n*User accepted the command `./repo/cli/cli hook tool.calling windsurf-chat --tool-name \"update_plan\" --tool-args \"set initial plan for gh exposure reordering\"`*\n\n*Updated todo list*\n\n*Running MCP tool*\n\n*Found code context*\n\n*User accepted the command `./repo/cli/cli hook code.reading windsurf-chat --file \"/workspaces/semio/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs\"`*\n\n*Grep searched codebase*\n\n*User accepted the command `./repo/cli/cli hook --help`*\n\n*User accepted the command `./repo/cli/cli hook agent.tool.search.starting windsurf-chat --tool-name \"grep_search\" --tool-args \"Semio.Grasshopper.cs exposure mapping\"`*\n\n*User accepted the command `./repo/cli/cli hook agent.tool.search.starting windsurf-chat --tool-name \"grep_search\" --tool-args \"GH_Exposure occurrences in Semio.Grasshopper.cs\"`*\n\n*Grep searched codebase*\n\n*Viewed file:///workspaces/semio/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs*\n\n*User accepted the command `./repo/cli/cli hook agent.tool.starting windsurf-chat --tool-name \"mcp0_search\" --tool-args \"find existing ticket for semio gh change exposure\"`*\n\n*Grep searched codebase*\n\n*User accepted the command `./repo/cli/cli hook agent.tool.search.starting windsurf-chat --tool-name \"grep_search\" --tool-args \"find ScriptingComponent base category and exposure\"`*\n\n*Grep searched codebase*\n\n*User accepted the command `./repo/cli/cli hook pre_mcp_tool_use windsurf-chat --tool-name \"find_by_name\" --tool-args \"Semio.Grasshopper files\"`*\n\n*Searched filesystem*\n\n*User accepted the command `./repo/cli/cli hook agent.tool.search.starting windsurf-chat --tool-name \"grep_search\" --tool-args \"change component exposure audit\"`*\n\n*User accepted the command `./repo/cli/cli hook agent.tool.search.starting windsurf-chat --tool-name \"grep_search\" --tool-args \"change-related classes and exposure declarations\"`*\n\n*Grep searched codebase*\n\n*Grep searched codebase*\n\n*Viewed file:///workspaces/semio/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs*\n\n*Updated todo list*\n\n### Planner Response\n\nConfirmed — this is **already implemented** in `semio gh`, so no code change was needed.\n\n- All `*ChangeComponent` classes inherit from `ChangeComponent\u003c...\u003e` (e.g. @semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#9015-9361).\n- That base class is in the **Data** group via its constructor subcategory argument `\"Data\"`: @semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#1661-1661.\n- Its exposure is set to **tertiary** (third exposure section): @semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#1667-1667.\n\nSo all change components are already in the third exposure section of the Data group."
+            "response": "*Rules used for this response:*\n- (Always On) Triggered Rule: AGENTS.md\n- (Global) Triggered Rule: global_rules.md\n\n*User accepted the command `./repo/cli/cli hook agent.starting windsurf-chat`*\n\n*User accepted the command `./repo/cli/cli hook prompt.submit windsurf-chat`*\n\n*User accepted the command `./repo/cli/cli hook tool.calling windsurf-chat --tool-name \"update_plan\" --tool-args \"set initial plan for gh exposure reordering\"`*\n\n*Updated todo list*\n\n*Running MCP tool*\n\n*Found code context*\n\n*User accepted the command `./repo/cli/cli hook code.reading windsurf-chat --file \"/workspaces/semio/compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs\"`*\n\n*Grep searched codebase*\n\n*User accepted the command `./repo/cli/cli hook --help`*\n\n*User accepted the command `./repo/cli/cli hook agent.tool.search.starting windsurf-chat --tool-name \"grep_search\" --tool-args \"Compose.Grasshopper.cs exposure mapping\"`*\n\n*User accepted the command `./repo/cli/cli hook agent.tool.search.starting windsurf-chat --tool-name \"grep_search\" --tool-args \"GH_Exposure occurrences in Compose.Grasshopper.cs\"`*\n\n*Grep searched codebase*\n\n*Viewed file:///workspaces/semio/compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs*\n\n*User accepted the command `./repo/cli/cli hook agent.tool.starting windsurf-chat --tool-name \"mcp0_search\" --tool-args \"find existing ticket for compose gh change exposure\"`*\n\n*Grep searched codebase*\n\n*User accepted the command `./repo/cli/cli hook agent.tool.search.starting windsurf-chat --tool-name \"grep_search\" --tool-args \"find ScriptingComponent base category and exposure\"`*\n\n*Grep searched codebase*\n\n*User accepted the command `./repo/cli/cli hook pre_mcp_tool_use windsurf-chat --tool-name \"find_by_name\" --tool-args \"Compose.Grasshopper files\"`*\n\n*Searched filesystem*\n\n*User accepted the command `./repo/cli/cli hook agent.tool.search.starting windsurf-chat --tool-name \"grep_search\" --tool-args \"change component exposure audit\"`*\n\n*User accepted the command `./repo/cli/cli hook agent.tool.search.starting windsurf-chat --tool-name \"grep_search\" --tool-args \"change-related classes and exposure declarations\"`*\n\n*Grep searched codebase*\n\n*Grep searched codebase*\n\n*Viewed file:///workspaces/semio/compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs*\n\n*Updated todo list*\n\n### Planner Response\n\nConfirmed — this is **already implemented** in `compose gh`, so no code change was needed.\n\n- All `*ChangeComponent` classes inherit from `ChangeComponent\u003c...\u003e` (e.g. @compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs#9015-9361).\n- That base class is in the **Data** group via its constructor subcategory argument `\"Data\"`: @compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs#1661-1661.\n- Its exposure is set to **tertiary** (third exposure section): @compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs#1667-1667.\n\nSo all change components are already in the third exposure section of the Data group."
           }
         }
       },

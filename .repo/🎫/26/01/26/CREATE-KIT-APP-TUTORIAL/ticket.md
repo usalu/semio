@@ -1,7 +1,7 @@
 # Ticket
 
 ## 🤖 Prompt
-Create a comprehensive, detailed "User Manual" style tutorial for `js/semio/sketchpad/Kit.tsx`. Focus on architecture, internals, and provide a line-by-line commented version of the source code for beginners.
+Create a comprehensive, detailed "User Manual" style tutorial for `js/compose/sketchpad/Kit.tsx`. Focus on architecture, internals, and provide a line-by-line commented version of the source code for beginners.
 
 ## Todos
 - [/] Write Plan

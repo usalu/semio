@@ -2,8 +2,8 @@
   "title": "Fix VSCode Extension Diagnostics Display",
   "emoji": "🔧",
   "status": "closed",
-  "description": "The breachs don't show in the vscode extension as diagnostics. Make sure breachs show up for files like semio.ts. Test and fix until breachs are properly displayed as diagnostics everywhere.",
-  "summary": "Fixed VSCode extension diagnostics display by correcting event parsing in extension.ts. The root cause was that the extractRepoResult() function was looking for event.data but the repo binary outputs event.result. Updated the RepoEvent type to include the result field and modified extractRepoResult() to check event.result first before falling back to event.data. Added 7 comprehensive unit tests covering all edge cases. Verified fix works correctly with standalone test. Breachs from files like semio.ts will now properly display as diagnostics in VSCode.",
+  "description": "The breachs don't show in the vscode extension as diagnostics. Make sure breachs show up for files like compose.ts. Test and fix until breachs are properly displayed as diagnostics everywhere.",
+  "summary": "Fixed VSCode extension diagnostics display by correcting event parsing in extension.ts. The root cause was that the extractRepoResult() function was looking for event.data but the repo binary outputs event.result. Updated the RepoEvent type to include the result field and modified extractRepoResult() to check event.result first before falling back to event.data. Added 7 comprehensive unit tests covering all edge cases. Verified fix works correctly with standalone test. Breachs from files like compose.ts will now properly display as diagnostics in VSCode.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/257"
   },

@@ -1,6 +1,6 @@
 {
   "id": "9e62bf25-3c01-4ecf-bcb6-034b71e903bd",
-  "uri": "semiorepo://s/9e62bf25-3c01-4ecf-bcb6-034b71e903bd",
+  "uri": "composerepo://s/9e62bf25-3c01-4ecf-bcb6-034b71e903bd",
   "contributor": "🧑‍💻ueli",
   "client": "copilot-chat",
   "second": "2026-03-14T19:46:26Z",

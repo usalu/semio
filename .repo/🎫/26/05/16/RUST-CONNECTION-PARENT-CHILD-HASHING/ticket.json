@@ -2,8 +2,8 @@
   "title": "Rust Connection Parent Child Hashing",
   "emoji": "🦀",
   "status": "closed",
-  "description": "Align semio client Rust Side and Connection compute_hash with strict parent/child semantics and structured hashing (Side: piece+connector+designPiece; Connection: optional sorted attributes merkle, parent/child side digests, description when non-empty, numeric fields). Add format_number_for_hash helper in hash module.",
-  "summary": "Rust semio client: added hash::format_number_for_hash; Side::compute_hash now encodes optional connector + designPiece + piece like strict kit sides; Connection::compute_hash folds sorted attribute merkle (when non-empty), parent/child side digests, optional description, then gap/id/rise/rotation/shift/tilt/turn/u/v with canonical number strings. Added unit tests for number formatting, connection hash stability, and kept relay merkle guard. Local cargo check still blocked by pre-existing lzma-rust2 vs crc crate mismatch in the workspace.",
+  "description": "Align compose client Rust Side and Connection compute_hash with strict parent/child semantics and structured hashing (Side: piece+connector+designPiece; Connection: optional sorted attributes merkle, parent/child side digests, description when non-empty, numeric fields). Add format_number_for_hash helper in hash module.",
+  "summary": "Rust compose client: added hash::format_number_for_hash; Side::compute_hash now encodes optional connector + designPiece + piece like strict kit sides; Connection::compute_hash folds sorted attribute merkle (when non-empty), parent/child side digests, optional description, then gap/id/rise/rotation/shift/tilt/turn/u/v with canonical number strings. Added unit tests for number formatting, connection hash stability, and kept relay merkle guard. Local cargo check still blocked by pre-existing lzma-rust2 vs crc crate mismatch in the workspace.",
   "goal": "🎯r2602",
   "sessions": [
     "⚪c40e7f641c4c494da70b013281c9aabd"

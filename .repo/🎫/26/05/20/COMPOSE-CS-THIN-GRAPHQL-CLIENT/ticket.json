@@ -1,0 +1,20 @@
+{
+  "title": "Compose Cs Thin Graphql Client",
+  "emoji": "🎫",
+  "status": "closed",
+  "description": "Refactor compose/cs (client/lib/net/Compose) to use compose/rs store as thin client via GraphQL, same pattern as compose/js.",
+  "summary": "Cleaned store client surface: extracted graphql-kit-selection.ts and StoreGraphqlSelection.cs (shared withResponseSelection logic), removed KitStoreSession legacy wrapper, FindKitCommandResponse for scoped mutations, WipKit selection constants. Tests green: compose/js 10, C# Store 9+8.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1462"
+  },
+  "goal": "🎯r2603🎯runningnet",
+  "sessions": [
+    "⚪e7e9fc88b15d43d1b963a6acb71eb914",
+    "⚪3771c37e6ed44942b25b389ca746a7d2",
+    "⚪2eaf935f83924c7dbdf348ce9eb33f05",
+    "⚪c07f2ac9ed2649cf8dd678457658a526",
+    "⚪b91e032170d34a1f8d91e9b3fc1cbae6",
+    "⚪243274bd4b3b453494e0727862fb7318",
+    "⚪fac06d08d41a4a06a65cb5bdad7ed792"
+  ]
+}

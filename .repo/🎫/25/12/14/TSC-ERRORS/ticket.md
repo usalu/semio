@@ -4,7 +4,7 @@
 
 # Previously
 
-- The repo-wide TypeScript check (`npx tsx hooks/typescript.ts`) failed due to an empty root `tsconfig.json`, plus downstream type errors in `semio/js` and `semio/desktop`.
+- The repo-wide TypeScript check (`npx tsx hooks/typescript.ts`) failed due to an empty root `tsconfig.json`, plus downstream type errors in `compose/js` and `compose/desktop`.
 - TypeScript did not include `.storybook` files by default (dot-directory), so story typing drift was not caught by the repo-wide check.
 
 # Plan

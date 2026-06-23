@@ -14,7 +14,7 @@
       "timestamp": "2026-03-16T12:57:35.061800123Z",
       "execution_id": "3ee1800b-6997-42bd-8952-238edfea93b7",
       "tool_info": {
-        "file_path": "/workspaces/semio/semio/engine/package.json"
+        "file_path": "/workspaces/semio/compose/engine/package.json"
       }
     }
   },

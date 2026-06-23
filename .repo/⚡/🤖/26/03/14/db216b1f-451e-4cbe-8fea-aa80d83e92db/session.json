@@ -1,6 +1,6 @@
 {
   "id": "db216b1f-451e-4cbe-8fea-aa80d83e92db",
-  "uri": "semiorepo://s/db216b1f-451e-4cbe-8fea-aa80d83e92db",
+  "uri": "composerepo://s/db216b1f-451e-4cbe-8fea-aa80d83e92db",
   "contributor": "🧑‍💻ueli",
   "client": "windsurf-chat",
   "second": "2026-03-14T20:09:17Z",
@@ -422,7 +422,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "query": "REFACTOR CODA DESKTOP SEMIO ELEMENTS UI SYSTEM ticket"
+              "query": "REFACTOR CODA DESKTOP COMPOSE ELEMENTS UI SYSTEM ticket"
             },
             "mcp_tool_name": "search"
           }
@@ -449,10 +449,10 @@
           "timestamp": "2026-03-14T20:16:50.9410181Z",
           "execution_id": "47520446-4ebc-4780-ae32-d0b09d29a6d3",
           "tool_info": {
-            "mcp_result": "- [🎯Goals](semiorepo://gs)\n  - [🎯🎯sketchpadimprovements🎫refactorcodadesktoptouseelementsuisystem](semiorepo://y/26/m/03/d/14/tk/REFACTOR-CODA-DESKTOP-TO-USE-elements-UI-SYSTEM) - `Refactor Coda Desktop To Use Elements UI System` - `open` - `opened a long while ago` - `Refactor coda desktop renderer and styles so UI uses elements design system exclusively, removing app-specific colors/styling tokens and replacing with elements tokens/components.`\n",
+            "mcp_result": "- [🎯Goals](composerepo://gs)\n  - [🎯🎯sketchpadimprovements🎫refactorcodadesktoptouseelementsuisystem](composerepo://y/26/m/03/d/14/tk/REFACTOR-CODA-DESKTOP-TO-USE-elements-UI-SYSTEM) - `Refactor Coda Desktop To Use Elements UI System` - `open` - `opened a long while ago` - `Refactor coda desktop renderer and styles so UI uses elements design system exclusively, removing app-specific colors/styling tokens and replacing with elements tokens/components.`\n",
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "query": "REFACTOR CODA DESKTOP SEMIO ELEMENTS UI SYSTEM ticket"
+              "query": "REFACTOR CODA DESKTOP COMPOSE ELEMENTS UI SYSTEM ticket"
             },
             "mcp_tool_name": "search"
           }
@@ -551,7 +551,7 @@
           "timestamp": "2026-03-14T20:18:46.509155927Z",
           "execution_id": "47520446-4ebc-4780-ae32-d0b09d29a6d3",
           "tool_info": {
-            "mcp_result": "[🎫refactorcodadesktoptouseelementsuisystem](semiorepo://y/00/m/00/d/00/tk/REFACTOR-CODA-DESKTOP-TO-USE-elements-UI-SYSTEM) - `closed` - `closed now`\n",
+            "mcp_result": "[🎫refactorcodadesktoptouseelementsuisystem](composerepo://y/00/m/00/d/00/tk/REFACTOR-CODA-DESKTOP-TO-USE-elements-UI-SYSTEM) - `closed` - `closed now`\n",
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
               "files": [

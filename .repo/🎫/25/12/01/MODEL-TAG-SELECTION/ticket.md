@@ -7,14 +7,14 @@ The design and type apps were rendering placeholder geometry (boxes) instead of 
 
 # Plan
 
-1. Add validation policy for 3D file extensions in semio.ts
+1. Add validation policy for 3D file extensions in compose.ts
 2. Add footer component for tag selection in Type app
 3. Add footer component for tag selection in Design app
 4. Update documentation
 
 # Changes
 
-## semio.ts
+## compose.ts
 
 - Added `SUPPORTED_3D_EXTENSIONS` constant with all common 3D file formats supported by Three.js loaders (gltf, glb, fbx, obj, dae, stl, etc.)
 - Added `isSupportedModelExtension(filename)` helper function

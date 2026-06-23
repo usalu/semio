@@ -1,9 +1,9 @@
-filepath = '/workspaces/semio/semio/js/sketchpad.test.ts'
+filepath = '/workspaces/semio/compose/js/sketchpad.test.ts'
 with open(filepath, 'r') as f:
     content = f.read()
 
 old_text = '''        const childPieceResult = await page.evaluate(() => {
-          const actor = (window as any).__SEMIO_ACTOR__;
+          const actor = (window as any).__COMPOSE_ACTOR__;
           if (!actor) return { guid: null, debug: "no-actor" };
           const snapshot = actor.getSnapshot();
           const path = window.location.pathname;
@@ -30,7 +30,7 @@ old_text = '''        const childPieceResult = await page.evaluate(() => {
         console.log("[Design] Child piece search result:", JSON.stringify(childPieceResult));'''
 
 new_text = '''        const childPieceGuid = await page.evaluate(() => {
-          const store = (window as any).__SEMIO_STORE__;
+          const store = (window as any).__COMPOSE_STORE__;
           if (!store) return null;
           const kitGuids = Array.from((store as any).kits?.keys() ?? []) as string[];
           if (kitGuids.length === 0) return null;
@@ -55,7 +55,7 @@ if old_text in content:
     content = content.replace(old_text, new_text, 1)
     with open(filepath, 'w') as f:
         f.write(content)
-    print("SUCCESS: Fixed child piece search to use __SEMIO_STORE__")
+    print("SUCCESS: Fixed child piece search to use __COMPOSE_STORE__")
 else:
     print("ERROR: old text not found")
     idx = content.find('childPieceResult')

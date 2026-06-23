@@ -17,34 +17,34 @@ The launch.json was updated to only include valid targets. However, some package
 | repo/go           | ✓   | ✓    | ✓     | ✓           | -       | -                                                                |
 | repo/server       | ✓   | ✓    | ✓     | ✓           | -       | -                                                                |
 | repo (vscode)     | ✓   | ✓    | ✓     | ✓           | -       | publish:vsix                                                     |
-| semio/go          | -   | ✓    | ✓     | ✓           | -       | -                                                                |
-| semio/rs          | -   | ✓    | ✓     | ✓           | -       | -                                                                |
-| semio/py          | -   | ✓    | ✓     | ✓           | -       | -                                                                |
-| semio/engine      | ✓   | ✓    | ✓     | ✓           | -       | -                                                                |
-| semio/js          | ✓   | ✓    | ✓     | ✓           | -       | dev:storybook, dev:sketchpad, test:unit, test:e2e, test:coverage |
-| semio/docs        | ✓   | -    | ✓     | ✓           | ✓       | -                                                                |
-| semio/play        | ✓   | -    | ✓     | ✓           | ✓       | -                                                                |
-| semio/desktop     | ✓   | -    | ✓     | ✓           | ✓       | -                                                                |
-| semio/net         | -   | ✓    | ✓     | ✓           | -       | -                                                                |
-| semio/grasshopper | -   | ✓    | ✓     | ✓           | -       | -                                                                |
-| semio/assets      | -   | -    | -     | ✓           | -       | -                                                                |
-| semio/logo        | ✓   | -    | ✓     | **MISSING** | -       | animate                                                          |
-| semio/icons       | -   | -    | ✓     | **MISSING** | -       | -                                                                |
-| semio/yak         | -   | -    | ✓     | **MISSING** | ✓       | -                                                                |
+| compose/go          | -   | ✓    | ✓     | ✓           | -       | -                                                                |
+| compose/rs          | -   | ✓    | ✓     | ✓           | -       | -                                                                |
+| compose/py          | -   | ✓    | ✓     | ✓           | -       | -                                                                |
+| compose/engine      | ✓   | ✓    | ✓     | ✓           | -       | -                                                                |
+| compose/js          | ✓   | ✓    | ✓     | ✓           | -       | dev:storybook, dev:sketchpad, test:unit, test:e2e, test:coverage |
+| compose/docs        | ✓   | -    | ✓     | ✓           | ✓       | -                                                                |
+| compose/play        | ✓   | -    | ✓     | ✓           | ✓       | -                                                                |
+| compose/desktop     | ✓   | -    | ✓     | ✓           | ✓       | -                                                                |
+| compose/net         | -   | ✓    | ✓     | ✓           | -       | -                                                                |
+| compose/grasshopper | -   | ✓    | ✓     | ✓           | -       | -                                                                |
+| compose/assets      | -   | -    | -     | ✓           | -       | -                                                                |
+| compose/logo        | ✓   | -    | ✓     | **MISSING** | -       | animate                                                          |
+| compose/icons       | -   | -    | ✓     | **MISSING** | -       | -                                                                |
+| compose/yak         | -   | -    | ✓     | **MISSING** | ✓       | -                                                                |
 
 ## Scripts to Add
 
-1. **semio/logo** - Add `"preflight": "tsc --noEmit"` (uses TypeScript via tsx)
-2. **semio/icons** - Add `"preflight": "echo \"No preflight checks configured for icons\""` (placeholder, no TypeScript)
-3. **semio/yak** - Add `"preflight": "tsc --noEmit"` (uses TypeScript via tsx)
+1. **compose/logo** - Add `"preflight": "tsc --noEmit"` (uses TypeScript via tsx)
+2. **compose/icons** - Add `"preflight": "echo \"No preflight checks configured for icons\""` (placeholder, no TypeScript)
+3. **compose/yak** - Add `"preflight": "tsc --noEmit"` (uses TypeScript via tsx)
 
 ## Launch configs to add
 
 After adding preflight scripts, add corresponding launch configs for:
 
-- semio/logo preflight
-- semio/icons preflight
-- semio/yak preflight
+- compose/logo preflight
+- compose/icons preflight
+- compose/yak preflight
 
 ## Files to Update
 

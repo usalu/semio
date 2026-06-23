@@ -11,8 +11,8 @@ Refactored VSCode extension sideview to consolidate into Monorepo and Filter sec
 ## Changes
 
 - Updated `package.json` to:
-  - Remove `semio.todos` and `semio.sections` views.
-  - Register `semio.monorepo` and `semio.filter` views in `repo` container.
+  - Remove `compose.todos` and `compose.sections` views.
+  - Register `compose.monorepo` and `compose.filter` views in `repo` container.
   - Update activation events.
 - Created `queries.ts` to centralize all GraphQL queries and fix codegen issues.
 - Updated `codegen.ts` to point to `queries.ts`.
@@ -36,7 +36,7 @@ Refactored VSCode extension sideview to consolidate into Monorepo and Filter sec
   - Test the new `MonorepoTreeDataProvider` and `FilterTreeDataProvider`.
   - Fix TypeScript errors and type mismatches.
   - Remove tests for deleted views.
-- Updated `tsconfig.json` with path mappings for `semio/js` and `semio/assets`.
+- Updated `tsconfig.json` with path mappings for `compose/js` and `compose/assets`.
 
 ## Log
 

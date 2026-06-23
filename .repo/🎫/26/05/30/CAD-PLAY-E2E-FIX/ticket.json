@@ -4,7 +4,7 @@
   "status": "closed",
   "description": "Fix CAD play not running: resolve puzzle/3d/react export mismatches blocking Vite build.",
   "summary": "Fixed CAD play Vite build and runtime: aligned puzzle/3d/react export names in playground renderer, puzzle/3d/play, and puzzle/5d/play; restored corrupted puzzle/5d/react/index.tsx from HEAD with correct 3d imports; implemented missing applyTransformationFallback in cad/js/core for typology-list transformations. Verified bun nx @cad/js/renderer:build, 342 core tests, and Playwright smoke (root mounted, 4 canvases, no console errors).",
-  "goal": "🎯semio",
+  "goal": "🎯compose",
   "sessions": [
     "⚪0fe475e14b2849feac0bdebb06acbb56"
   ]

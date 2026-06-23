@@ -10,7 +10,7 @@
 //    • Renames `EntityConnectionInterface` → `EntityConnection` (the union of that name is gone).
 
 const fs = require('fs');
-const path = 'C:/git/semio/semio/graphql/target.schema.graphql';
+const path = 'C:/git/compose/compose/graphql/target.schema.graphql';
 
 const src = fs.readFileSync(path, 'utf8');
 const lines = src.split(/\r?\n/);

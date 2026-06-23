@@ -1,7 +1,7 @@
 // #region Header
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 // Specs: Vite single-file MCP App bundle for coda (@ui/react + ext-apps).
-// Summary: Mirrors semio/engine/vite.mcp-app.config.ts with @ui/react and meshopt noop.
+// Summary: Mirrors compose/engine/vite.mcp-app.config.ts with @ui/react and meshopt noop.
 // #endregion Header
 
 // #region 🔌Adapters
@@ -48,7 +48,7 @@ export default MeshoptDecoder;
   };
 }
 
-const STUBBED_PREFIXES = ["@semio/asset", "sql.js", "jszip", "dagre", "fuse.js", "golden-layout"];
+const STUBBED_PREFIXES = ["@compose/asset", "sql.js", "jszip", "dagre", "fuse.js", "golden-layout"];
 
 function stubHeavyDepsPlugin(): Plugin {
   return {
@@ -63,10 +63,10 @@ function stubHeavyDepsPlugin(): Plugin {
           return { id: "\0stub:" + source, syntheticNamedExports: true };
         }
       }
-      if (source === "i18next") return path.resolve(__dirname, "../../semio/engine/stubs/i18next.js");
+      if (source === "i18next") return path.resolve(__dirname, "../../compose/engine/stubs/i18next.js");
       if (source === "i18next-browser-languagedetector") return { id: "\0stub:" + source, syntheticNamedExports: true };
-      if (source === "react-i18next") return path.resolve(__dirname, "../../semio/engine/stubs/react-i18next.js");
-      if (source === "react-router-dom") return path.resolve(__dirname, "../../semio/engine/stubs/react-router-dom.js");
+      if (source === "react-i18next") return path.resolve(__dirname, "../../compose/engine/stubs/react-i18next.js");
+      if (source === "react-router-dom") return path.resolve(__dirname, "../../compose/engine/stubs/react-router-dom.js");
       return null;
     },
     load(id) {

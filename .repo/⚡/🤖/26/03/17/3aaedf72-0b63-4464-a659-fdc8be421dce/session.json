@@ -1,11 +1,11 @@
 {
   "id": "3aaedf72-0b63-4464-a659-fdc8be421dce",
-  "uri": "semiorepo://session/3aaedf72-0b63-4464-a659-fdc8be421dce",
+  "uri": "composerepo://session/3aaedf72-0b63-4464-a659-fdc8be421dce",
   "client": "claude-code",
   "second": "2026-03-17T10:37:42Z",
   "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
   "contributor": "unknown",
-  "transcript": "/home/vscode/.claude/projects/-workspaces-semio/3aaedf72-0b63-4464-a659-fdc8be421dce.jsonl",
+  "transcript": "/home/vscode/.claude/projects/-workspaces-compose/3aaedf72-0b63-4464-a659-fdc8be421dce.jsonl",
   "events": [
     {
       "event": {
@@ -15,12 +15,12 @@
         "kind": "agent.started",
         "second": "2026-03-17T10:37:42Z",
         "session": "3aaedf72-0b63-4464-a659-fdc8be421dce",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/3aaedf72-0b63-4464-a659-fdc8be421dce.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/3aaedf72-0b63-4464-a659-fdc8be421dce.jsonl"
       },
       "native": {
         "event": {
           "session_id": "3aaedf72-0b63-4464-a659-fdc8be421dce",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/3aaedf72-0b63-4464-a659-fdc8be421dce.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/3aaedf72-0b63-4464-a659-fdc8be421dce.jsonl",
           "cwd": "/workspaces/semio",
           "hook_event_name": "SessionStart",
           "source": "startup"
@@ -36,12 +36,12 @@
         "kind": "agent.ended",
         "second": "2026-03-17T10:38:05Z",
         "session": "3aaedf72-0b63-4464-a659-fdc8be421dce",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/3aaedf72-0b63-4464-a659-fdc8be421dce.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/3aaedf72-0b63-4464-a659-fdc8be421dce.jsonl"
       },
       "native": {
         "event": {
           "session_id": "3aaedf72-0b63-4464-a659-fdc8be421dce",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/3aaedf72-0b63-4464-a659-fdc8be421dce.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/3aaedf72-0b63-4464-a659-fdc8be421dce.jsonl",
           "cwd": "/workspaces/semio",
           "hook_event_name": "SessionEnd",
           "reason": "other"

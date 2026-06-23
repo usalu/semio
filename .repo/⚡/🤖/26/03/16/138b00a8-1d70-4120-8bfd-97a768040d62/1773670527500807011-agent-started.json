@@ -6,12 +6,12 @@
     "kind": "agent.started",
     "second": "2026-03-16T14:15:26Z",
     "session": "138b00a8-1d70-4120-8bfd-97a768040d62",
-    "transcript": "/home/vscode/.claude/projects/-workspaces-semio/138b00a8-1d70-4120-8bfd-97a768040d62.jsonl"
+    "transcript": "/home/vscode/.claude/projects/-workspaces-compose/138b00a8-1d70-4120-8bfd-97a768040d62.jsonl"
   },
   "native": {
     "event": {
       "session_id": "138b00a8-1d70-4120-8bfd-97a768040d62",
-      "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/138b00a8-1d70-4120-8bfd-97a768040d62.jsonl",
+      "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/138b00a8-1d70-4120-8bfd-97a768040d62.jsonl",
       "cwd": "/workspaces/semio",
       "hook_event_name": "SessionStart",
       "source": "startup"

@@ -3,7 +3,7 @@ import difflib
 import re
 from pathlib import Path
 
-path = Path(r"c:/git/semio/semio/graphql/target.schema.graphql")
+path = Path(r"c:/git/compose/compose/graphql/target.schema.graphql")
 text = path.read_text(encoding="utf-8")
 lines = text.splitlines()
 
@@ -120,7 +120,7 @@ for tag, i1, i2, j1, j2 in matcher.get_opcodes():
     patch_lines.extend(line.rstrip('\n') for line in post)
     patch_lines.append('')
 patch_lines.append('*** End Patch')
-patch_path = Path(r"c:/git/semio/.repo/🎫/26/05/11/NORMALIZE-TARGET-SCHEMA-INTERFACE-FIELD-GROUPS/target-schema-interface-groups.patch")
+patch_path = Path(r"c:/git/compose/.repo/🎫/26/05/11/NORMALIZE-TARGET-SCHEMA-INTERFACE-FIELD-GROUPS/target-schema-interface-groups.patch")
 patch_path.write_text('\n'.join(patch_lines), encoding='utf-8')
 print(f'Wrote patch to {patch_path}')
 print(f'Old lines: {len(lines)} New lines: {len(new_lines)}')

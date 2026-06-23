@@ -1,30 +1,30 @@
 ---
 name: refactor kit name reads
-overview: "Introduce a clean, extendable kit-store mechanism in `semio/js` (`StoreField<T>`, `StoreCommand<TArgs>`, `RequestCorrelator`, `OperationRouter`, `mutateWithRequestId`) so any kit-store-backed value/command is a one-block declaration. Apply it first to the kit name: split the React surface into `useKitName(): string` + `useRenameKit(): [(name) => Promise<SetResult>, WriteStatus]` (both reduce to one-liners over generic `useStoreField` / `useStoreCommand` hooks), remove the kit-name triad mechanism entirely from sketchpad, keep Promise-based reads cacheless via GraphQL into rs, and feed sync mirrors only from the rs output event stream."
+overview: "Introduce a clean, extendable kit-store mechanism in `compose/js` (`StoreField<T>`, `StoreCommand<TArgs>`, `RequestCorrelator`, `OperationRouter`, `mutateWithRequestId`) so any kit-store-backed value/command is a one-block declaration. Apply it first to the kit name: split the React surface into `useKitName(): string` + `useRenameKit(): [(name) => Promise<SetResult>, WriteStatus]` (both reduce to one-liners over generic `useStoreField` / `useStoreCommand` hooks), remove the kit-name triad mechanism entirely from sketchpad, keep Promise-based reads cacheless via GraphQL into rs, and feed sync mirrors only from the rs output event stream."
 todos:
   - id: ticket_open
     content: Open MCP ticket 'Refactor Kit Name Reads And Split Rename Hook' under appropriate goal.
     status: cancelled
   - id: move_writestatus
-    content: Move WriteStatus + SetError + SetResult + helpers (SCHEMA_HOOK_IDLE_STATUS, SCHEMA_HOOK_READONLY_STATUS, USE_KIT_NAME_PENDING_STATUS, writeStatusEquivalent) from semio/react/index.tsx into semio/js/index.ts and re-export.
+    content: Move WriteStatus + SetError + SetResult + helpers (SCHEMA_HOOK_IDLE_STATUS, SCHEMA_HOOK_READONLY_STATUS, USE_KIT_NAME_PENDING_STATUS, writeStatusEquivalent) from compose/react/index.tsx into compose/js/index.ts and re-export.
     status: pending
   - id: generic_primitives
-    content: In semio/js/index.ts add StoreField<T>, StoreCommand<TArgs>, RequestCorrelator, OperationRouter, mutateWithRequestId helper, and a single startEventStreamLoop pumping operationSucceeded + operationFailed into router/correlator.
+    content: In compose/js/index.ts add StoreField<T>, StoreCommand<TArgs>, RequestCorrelator, OperationRouter, mutateWithRequestId helper, and a single startEventStreamLoop pumping operationSucceeded + operationFailed into router/correlator.
     status: pending
   - id: kitstore_refactor
-    content: In semio/js/index.ts drop renameStatus$/KitRenameStatus/KitRenameResult/renameResolvers/renamePendingEvents/dispatchKitRenameSubscription/startRenameSubscriptionLoop/seedLiveKitNameFromDto; declare kitName=StoreField<string>, renameKit=StoreCommand<string>; wireKitName() via OperationRouter; add cacheless readKitName(); seedFieldsFromDto() at open(); dispose disposes fields/commands/correlator.
+    content: In compose/js/index.ts drop renameStatus$/KitRenameStatus/KitRenameResult/renameResolvers/renamePendingEvents/dispatchKitRenameSubscription/startRenameSubscriptionLoop/seedLiveKitNameFromDto; declare kitName=StoreField<string>, renameKit=StoreCommand<string>; wireKitName() via OperationRouter; add cacheless readKitName(); seedFieldsFromDto() at open(); dispose disposes fields/commands/correlator.
     status: completed
   - id: split_hooks
-    content: In semio/react/index.tsx add generic useStoreField/useStoreCommand and useKitStore() helper; export useKitName=useStoreField(ks.kitName) and useRenameKit=useStoreCommand(ks.renameKit); drop runtime.store / schemaTriad fallbacks and switch to throwing useKitRuntime().
+    content: In compose/react/index.tsx add generic useStoreField/useStoreCommand and useKitStore() helper; export useKitName=useStoreField(ks.kitName) and useRenameKit=useStoreCommand(ks.renameKit); drop runtime.store / schemaTriad fallbacks and switch to throwing useKitRuntime().
     status: pending
   - id: test_mocks
     content: Update createTestKitClient stubs (lines ~17285 and ~17707) and rewrite the two affected tests against the split API.
     status: completed
   - id: sketchpad_kitform
-    content: In semio/sketchpad/index.tsx KitSectionForm import useRenameKit, drop the SketchpadTriadInputRow usage for the kit name, and inline the input row consuming kitName + renameKit + renameKitStatus directly (no triad).
+    content: In compose/sketchpad/index.tsx KitSectionForm import useRenameKit, drop the SketchpadTriadInputRow usage for the kit name, and inline the input row consuming kitName + renameKit + renameKitStatus directly (no triad).
     status: pending
   - id: validate
-    content: Run depcruise:layers, type-check, semio/react vitest, sketchpad rename smoke (spinner, error, success, long-name, timeout).
+    content: Run depcruise:layers, type-check, compose/react vitest, sketchpad rename smoke (spinner, error, success, long-name, timeout).
     status: completed
   - id: ticket_close
     content: Close the MCP ticket with summary of files touched.
@@ -36,21 +36,21 @@ isProject: false
 
 - Split the React surface in two: `useKitName(): string` (read hook) and `useRenameKit(): readonly [(name: string) => Promise<SetResult>, WriteStatus]` (write hook). No triads.
 - All Promise-based reads of the name go through GraphQL into rs each time, with internal request-id tracking only used to correlate responses on the rs output event stream — no Promise read ever consults a local store.
-- `semio/js` `KitStore` exposes two independent `useSyncExternalStore`-compatible pairs — one for the kit name, one for the rename status — both backed by rxjs `BehaviorSubject`s internally and fed exclusively by the rs `kitRenamed` / `operationFailed` event stream and the rename setter.
+- `compose/js` `KitStore` exposes two independent `useSyncExternalStore`-compatible pairs — one for the kit name, one for the rename status — both backed by rxjs `BehaviorSubject`s internally and fed exclusively by the rs `kitRenamed` / `operationFailed` event stream and the rename setter.
 - Each hook MUST use exactly one `useSyncExternalStore` call and contain zero mechanism.
 - All current functionality (rename request, timeouts, validation errors, UI spinner / error display, sketchpad `KitSectionForm`) stays intact.
 
 ## Non-goals
 
-- No changes to `semio/rs` (per the user's "extend_existing_query" answer).
+- No changes to `compose/rs` (per the user's "extend_existing_query" answer).
 - No changes to the GraphQL schema.
 - Other entity stores (`DesignStore`, etc.) and other `useKit*` hooks are untouched.
 
 ## Affected files
 
-- [semio/js/index.ts](semio/js/index.ts) — `KitStore` rename / kit-name surface (~lines 1547–1916), plus moving `WriteStatus` helpers in from react.
-- [semio/react/index.tsx](semio/react/index.tsx) — split `useKitName` (~lines 8938–9032) into `useKitName` + new `useRenameKit`; update test mocks at ~17285–17289 and ~17707–17710; rewrite the two affected tests.
-- [semio/sketchpad/index.tsx](semio/sketchpad/index.tsx) — `KitSectionForm` (~line 15775) imports both `useKitName` + `useRenameKit` (drop the `useKitName` triad usage), inlines the kit name input row directly without `SketchpadTriadInputRow`; add `useRenameKit` + `useWriteIndicator` (already imported) to the import block.
+- [compose/js/index.ts](compose/js/index.ts) — `KitStore` rename / kit-name surface (~lines 1547–1916), plus moving `WriteStatus` helpers in from react.
+- [compose/react/index.tsx](compose/react/index.tsx) — split `useKitName` (~lines 8938–9032) into `useKitName` + new `useRenameKit`; update test mocks at ~17285–17289 and ~17707–17710; rewrite the two affected tests.
+- [compose/sketchpad/index.tsx](compose/sketchpad/index.tsx) — `KitSectionForm` (~line 15775) imports both `useKitName` + `useRenameKit` (drop the `useKitName` triad usage), inlines the kit name input row directly without `SketchpadTriadInputRow`; add `useRenameKit` + `useWriteIndicator` (already imported) to the import block.
 
 ## Design
 
@@ -58,7 +58,7 @@ isProject: false
 
 The previous draft per-fielded everything (`kitName$`, `subscribeKitName`, `getKitNameSnapshot`, `renameKitStatus$`, `subscribeRenameKitStatus`, `getRenameKitStatusSnapshot`, `renameKit`, `dispatchRenameMutation`, `publishRenameKitError`, `lastRenameKitError`, `renameResolvers`, `renamePendingEvents`, `dispatchKitRenameSubscription`, `startRenameSubscriptionLoop`, ...). Adding a 2nd field (description, icon, image, homepage, license, release, ...) would duplicate every one of those.
 
-Replace with three small generic primitives in `semio/js/index.ts`. Each new field/command then needs ≤ 10 lines.
+Replace with three small generic primitives in `compose/js/index.ts`. Each new field/command then needs ≤ 10 lines.
 
 ### Generic primitives
 
@@ -154,9 +154,9 @@ export class OperationRouter {
 //#endregion
 ```
 
-### `WriteStatus` types (moved from `semio/react`)
+### `WriteStatus` types (moved from `compose/react`)
 
-`SetError`, `SetResult`, `WriteStatus`, `SCHEMA_HOOK_IDLE_STATUS`, `SCHEMA_HOOK_READONLY_STATUS`, `USE_KIT_NAME_PENDING_STATUS`, `writeStatusEquivalent` — defined exactly once in `semio/js/index.ts`, re-exported from `@semio/js`, consumed from `@semio/react`.
+`SetError`, `SetResult`, `WriteStatus`, `SCHEMA_HOOK_IDLE_STATUS`, `SCHEMA_HOOK_READONLY_STATUS`, `USE_KIT_NAME_PENDING_STATUS`, `writeStatusEquivalent` — defined exactly once in `compose/js/index.ts`, re-exported from `@compose/js`, consumed from `@compose/react`.
 
 ### `KitStore` glue (one-time)
 
@@ -264,7 +264,7 @@ For any `StoreField` / `StoreCommand` declared on `KitStore`:
 
 ### React hooks (also generic)
 
-In `semio/react/index.tsx`:
+In `compose/react/index.tsx`:
 
 ```typescript
 export function useStoreField<T>(field: StoreField<T>): T {
@@ -320,7 +320,7 @@ async dispose(): Promise<void> {
 }
 ```
 
-### `KitStore` (semio/js) — narrative summary
+### `KitStore` (compose/js) — narrative summary
 
 The full design and target code are in the **"Smell-free, extendable mechanism"** section above. In short:
 
@@ -328,10 +328,10 @@ The full design and target code are in the **"Smell-free, extendable mechanism"*
 - A single `RequestCorrelator` owns request-id ↔ Promise tracking for every command on the store. A single `OperationRouter` demuxes the rs operation event stream into typed listeners.
 - A single `mutateWithRequestId` helper does the open-tx → mutation → correlator-await → finalize/abort dance for every command on the store.
 - A single `startEventStreamLoop` subscribes once to `operationSucceeded` + `operationFailed` and pumps every event into the router + correlator.
-- All `WriteStatus` types move from `semio/react` into `semio/js` so `StoreCommand.status` returns a render-ready value.
+- All `WriteStatus` types move from `compose/react` into `compose/js` so `StoreCommand.status` returns a render-ready value.
 - The kit name surface is just a one-block declaration: `kitName: StoreField<string>`, `renameKit: StoreCommand<string>`, `wireKitName()`, and a tiny `readKitName()` for cacheless Promise reads. Adding kit description, icon, image, homepage, license, release, etc. follows the exact same shape — no new mechanism per field.
 
-### `useKitName` + `useRenameKit` (semio/react) — both extremely lean, both one-liners
+### `useKitName` + `useRenameKit` (compose/react) — both extremely lean, both one-liners
 
 ```typescript
 export function useStoreField<T>(field: StoreField<T>): T {
@@ -357,7 +357,7 @@ export const useRenameKit = () => useStoreCommand(useKitStore().renameKit);
 - `idValue` parameter is dropped on both (KitStore is already kit-scoped).
 - Adding hooks for new fields (description, icon, ...) is one line each: `export const useKitDescription = () => useStoreField(useKitStore().kitDescription);`.
 
-### `KitSectionForm` (semio/sketchpad) — no triad anywhere on the kit-name path
+### `KitSectionForm` (compose/sketchpad) — no triad anywhere on the kit-name path
 
 The kit name field MUST NOT go through `SketchpadTriadInputRow`. The triad mechanism is removed entirely from the kit-name code path. Other Kit fields (release, description, icon, image, homepage, license) keep using `SketchpadTriadInputRow` because their hooks still return triads — only the kit name is split.
 
@@ -374,7 +374,7 @@ const { spinning, error, disabled } = useWriteIndicator(renameKitStatus);
       <div className="min-w-0 flex-1">
         <Input
           lazy
-          id="semio.sketchpad.app.kit.panel.details.section.kit.name"
+          id="compose.sketchpad.app.kit.panel.details.section.kit.name"
           value={kitName}
           readOnly={disabled}
           onLazyChange={disabled ? undefined : (v) => void renameKit(v)}
@@ -392,7 +392,7 @@ This duplicates the row chrome from `SketchpadTriadInputRow` once for the kit na
 
 ### Tests / mocks
 
-The test stubs at [semio/react/index.tsx](semio/react/index.tsx) lines ~17285–17289 and ~17707–17710 are simplified the same way as the production code: just construct a real `StoreField<string>` and `StoreCommand<string>` inside `createTestKitClient`, no bespoke `subscribeKitName` / `getKitNameSnapshot` / `subscribeRenameStatus` / `getRenameStatusSnapshot` shims.
+The test stubs at [compose/react/index.tsx](compose/react/index.tsx) lines ~17285–17289 and ~17707–17710 are simplified the same way as the production code: just construct a real `StoreField<string>` and `StoreCommand<string>` inside `createTestKitClient`, no bespoke `subscribeKitName` / `getKitNameSnapshot` / `subscribeRenameStatus` / `getRenameStatusSnapshot` shims.
 
 - Replace the four kit-name stubs with:
 
@@ -411,8 +411,8 @@ The test stubs at [semio/react/index.tsx](semio/react/index.tsx) lines ~17285–
 ## Validation
 
 - `npm run depcruise:layers` at repo root (no new cross-bundle imports).
-- Type-check: `npm run build` / `tsc --noEmit` in `semio/js` and `semio/react`.
-- Unit tests in `semio/react` (`useKitName rejects empty required name`, `kitName` test from `semio/js` `index.ts` line ~7522).
+- Type-check: `npm run build` / `tsc --noEmit` in `compose/js` and `compose/react`.
+- Unit tests in `compose/react` (`useKitName rejects empty required name`, `kitName` test from `compose/js` `index.ts` line ~7522).
 - Manual check of sketchpad rename flow: verify spinner appears while rename is in flight, error displays for too-long names, name updates everywhere after success.
 
 ## Ticketing (per workspace AGENTS.md rule)

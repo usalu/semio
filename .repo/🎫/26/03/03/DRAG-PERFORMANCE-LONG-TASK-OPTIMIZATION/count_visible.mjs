@@ -1,13 +1,13 @@
 import { chromium } from "playwright";
 import path from "path";
 import { fileURLToPath } from "url";
-const zipPath = path.resolve("/workspaces/semio/semio/assets/semio/metabolism.zip");
+const zipPath = path.resolve("/workspaces/semio/compose/assets/compose/metabolism.zip");
 const browser = await chromium.launch({ headless: true, args: ["--no-sandbox","--disable-gpu"] });
 const page = await browser.newPage();
 // initHome
 await page.goto("http://127.0.0.1:5173/", { waitUntil: "domcontentloaded" });
 await page.waitForTimeout(2000);
-const fileInput = page.locator('[id="semio.sketchpad.app.home.importKit"]');
+const fileInput = page.locator('[id="compose.sketchpad.app.home.importKit"]');
 await fileInput.waitFor({ state: "attached", timeout: 10000 });
 const [fileChooser] = await Promise.all([
   page.waitForEvent("filechooser", { timeout: 5000 }).catch(() => null),

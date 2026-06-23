@@ -24,7 +24,7 @@ Created `fix-ports-in-kit.ps1` script to convert all single-object connectors to
 
 ### 2. Enhanced Connector Lookup with Fallback
 
-Modified `getConnector()` function in `semio.ts`:
+Modified `getConnector()` function in `compose.ts`:
 
 - When no connector GUID specified → returns first available connector
 - When connector GUID specified but not found in hierarchy → falls back to first connector
@@ -42,11 +42,11 @@ Created script to regenerate all expected flat designs with current flattening l
 
 ## Files Modified
 
-- `c:\git\semio.tech\semio\js\semio\semio.ts` - Enhanced `getConnector()` with fallback logic
-- `c:\git\semio.tech\semio\scripts\fix-ports-in-kit.ps1` - New script to fix connector arrays
-- `c:\git\semio.tech\semio\scripts\assemble-kit.ps1` - Added connector array conversion
-- `c:\git\semio.tech\semio\assets\semio\kit_metabolism.json` - Fixed connectors, restored from git
-- `c:\git\semio.tech\semio\assets\semio\design_*_flat.json` - All regenerated
+- `c:\git\compose.tech\compose\js\compose\compose.ts` - Enhanced `getConnector()` with fallback logic
+- `c:\git\compose.tech\compose\scripts\fix-ports-in-kit.ps1` - New script to fix connector arrays
+- `c:\git\compose.tech\compose\scripts\assemble-kit.ps1` - Added connector array conversion
+- `c:\git\compose.tech\compose\assets\compose\kit_metabolism.json` - Fixed connectors, restored from git
+- `c:\git\compose.tech\compose\assets\compose\design_*_flat.json` - All regenerated
 
 ## Test Results
 

@@ -1,0 +1,14 @@
+{
+  "title": "Remove compose/js Dependency on compose/sketchpad",
+  "emoji": "🗑️",
+  "status": "closed",
+  "description": "Ensure `compose/js` has zero dependencies (package or code) on `compose/sketchpad`. Refactor cleanly: move shared contracts/utilities to a neutral package/location, update imports/build config, and keep everything building/tests passing. No backwards compatibility required.",
+  "summary": "Duplicate ticket; no code changes made here. Continuing in 26/03/14/EXTRACT-SKETCHPAD-BUNDLE-FROM-COMPOSE-JS.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1099"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪2aee20880cd14aa0852efab9a0f6a761"
+  ]
+}

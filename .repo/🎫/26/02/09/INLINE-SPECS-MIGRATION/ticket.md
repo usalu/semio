@@ -29,12 +29,12 @@ Migrated requirements from AGENTS.md into distributed .bundle.md/.folder.md file
 
 ### New spec files
 
-- semio/.bundle.md - Domain model requirements
+- compose/.bundle.md - Domain model requirements
 - repo/cli/.bundle.md - Repo CLI requirements
 - repo/vscode/.bundle.md - VS Code Extension requirements
-- semio/engine/.bundle.md - Engine requirements
+- compose/engine/.bundle.md - Engine requirements
 - .devcontainer/.folder.md - Devcontainer requirements
-- semio/js/sketchpad/.folder.md - Sketchpad UI requirements
+- compose/js/sketchpad/.folder.md - Sketchpad UI requirements
 
 ### AGENTS.md
 

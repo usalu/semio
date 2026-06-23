@@ -20,13 +20,13 @@ import {
   type KindCatalogBundle,
   type KindCompatEntry,
   type BrushSceneCollisionSource,
-} from "/Users/ueli/Documents/semio/puzzle/3d/react/index.tsx";
+} from "/Users/ueli/Documents/compose/puzzle/3d/react/index.tsx";
 import { Group, Mesh, BoxGeometry } from "three";
 
-const repo = "/Users/ueli/Documents/semio";
+const repo = "/Users/ueli/Documents/compose";
 const loader = new GLTFLoader();
 function loadGlb(name: string) {
-  const bytes = readFileSync(resolve(repo, "semio/fixtures/kit/folder/abbau-aufbau", name));
+  const bytes = readFileSync(resolve(repo, "compose/fixtures/kit/folder/abbau-aufbau", name));
   const buf = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
   return new Promise<Group>((res, rej) => loader.parse(buf, "", (g) => res(g.scene), rej));
 }

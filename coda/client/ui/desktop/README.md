@@ -19,7 +19,7 @@ Electron desktop shell for visualizing and interacting with coda (ACC design ass
 
 # Specs
 
-- MUST mirror semio desktop architecture (Electron Forge, Vite, React, Tailwind).
+- MUST mirror compose desktop architecture (Electron Forge, Vite, React, Tailwind).
 - MUST communicate with coda MCP server via HTTP (streamable-http on 127.0.0.1:8080).
 - MUST visualize project, runs, iterations, report, breachs, measures, targets, platforms.
 - MUST allow invoking coda tools: start_run, start_iteration, translate, validate, save_translation, save_report, fix.

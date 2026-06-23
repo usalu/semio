@@ -27,7 +27,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "semio/semio/semio/js",
+              "path": "compose/compose/compose/js",
               "lines": {
                 "added": 22,
                 "removed": 0
@@ -47,7 +47,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "🧪semio/js/sketchpad.test.ts",
+              "path": "🧪compose/js/sketchpad.test.ts",
               "lines": {
                 "added": 30,
                 "removed": 8
@@ -61,7 +61,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "🧪semio/js/sketchpad.test.ts#Diagram Node Drag",
+              "path": "🧪compose/js/sketchpad.test.ts#Diagram Node Drag",
               "lines": {
                 "added": 8,
                 "removed": 8

@@ -2,8 +2,8 @@
   "title": "Statically Typed Rust Event System",
   "emoji": "🎫",
   "status": "closed",
-  "description": "semio/rs: Achieve a statically typed event system with the cleanest safe solution. Remove stringly typed event fields, model event cascades through typed hierarchical event scopes, extend the existing Rust test section only, and verify tests pass.",
-  "summary": "Refactored semio/rs events to use a nested enum tree with typed field enums such as KitEvent::Design { event: DesignEvent::Connection { event: ConnectionEvent::FieldChanged(ConnectionField::Gap) } }. Removed EventField/EventPath/string-backed field logic, routed design-owned piece and connection mutations through parent-scoped events so cascades emit root, parent, child, and leaf events, updated existing Rust tests to assert typed cascades, verified no old string or flat event patterns remain, and verified cargo check plus the full Rust test suite pass.",
+  "description": "compose/rs: Achieve a statically typed event system with the cleanest safe solution. Remove stringly typed event fields, model event cascades through typed hierarchical event scopes, extend the existing Rust test section only, and verify tests pass.",
+  "summary": "Refactored compose/rs events to use a nested enum tree with typed field enums such as KitEvent::Design { event: DesignEvent::Connection { event: ConnectionEvent::FieldChanged(ConnectionField::Gap) } }. Removed EventField/EventPath/string-backed field logic, routed design-owned piece and connection mutations through parent-scoped events so cascades emit root, parent, child, and leaf events, updated existing Rust tests to assert typed cascades, verified no old string or flat event patterns remain, and verified cargo check plus the full Rust test suite pass.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1373"
   },

@@ -1,6 +1,6 @@
 from pathlib import Path
 
-p = Path(r"c:\git\semio\semio\client\lib\rs\lib.rs")
+p = Path(r"c:\git\compose\compose\client\lib\rs\lib.rs")
 text = p.read_text(encoding="utf-8")
 
 orphan_start = text.index("    macro_rules! __gap_surface_family_names_orphan_delete_marker {")

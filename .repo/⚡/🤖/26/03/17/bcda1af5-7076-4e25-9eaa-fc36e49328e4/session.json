@@ -1,6 +1,6 @@
 {
   "id": "bcda1af5-7076-4e25-9eaa-fc36e49328e4",
-  "uri": "semiorepo://session/bcda1af5-7076-4e25-9eaa-fc36e49328e4",
+  "uri": "composerepo://session/bcda1af5-7076-4e25-9eaa-fc36e49328e4",
   "client": "copilot-chat",
   "second": "2026-03-17T19:33:56Z",
   "checkpoint": "fcab99680d4c062ed14b3d60102881b83154cc08",
@@ -23,7 +23,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 18950,
-            "filePath": "/workspaces/semio/semio/sketchpad/sketchpad/Sketchpad.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/sketchpad/Sketchpad.tsx",
             "startLine": 18880
           },
           "tool_use_id": "toolu_bdrk_01A6yeVxLhfnupe78pxJA5Wi__vscode-1773763870996",
@@ -49,7 +49,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 18950,
-            "filePath": "/workspaces/semio/semio/sketchpad/sketchpad/Sketchpad.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/sketchpad/Sketchpad.tsx",
             "startLine": 18880
           },
           "tool_response": "",
@@ -130,7 +130,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/sketchpad/Sketchpad.tsx",
+            "includePattern": "**/compose/sketchpad/sketchpad/Sketchpad.tsx",
             "isRegexp": false,
             "query": "import.*from.*yjs"
           },
@@ -158,7 +158,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/sketchpad/Sketchpad.tsx",
+            "includePattern": "**/compose/sketchpad/sketchpad/Sketchpad.tsx",
             "isRegexp": false,
             "query": "import.*Y.*from",
             "includeIgnoredFiles": true
@@ -186,7 +186,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/sketchpad/Sketchpad.tsx",
+            "includePattern": "**/compose/sketchpad/sketchpad/Sketchpad.tsx",
             "isRegexp": false,
             "query": "IndexeddbPersistence"
           },
@@ -213,7 +213,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 300,
-            "filePath": "/workspaces/semio/semio/sketchpad/sketchpad/Sketchpad.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/sketchpad/Sketchpad.tsx",
             "startLine": 1
           },
           "tool_use_id": "toolu_bdrk_01Dd4e6MuABoQXbUjGmeXqyo__vscode-1773763871001",
@@ -239,7 +239,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 300,
-            "filePath": "/workspaces/semio/semio/sketchpad/sketchpad/Sketchpad.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/sketchpad/Sketchpad.tsx",
             "startLine": 1
           },
           "tool_response": "",
@@ -266,7 +266,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/sketchpad/Sketchpad.tsx",
+            "includePattern": "**/compose/sketchpad/sketchpad/Sketchpad.tsx",
             "isRegexp": false,
             "query": "IndexeddbPersistence"
           },
@@ -294,7 +294,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/sketchpad/Sketchpad.tsx",
+            "includePattern": "**/compose/sketchpad/sketchpad/Sketchpad.tsx",
             "isRegexp": false,
             "query": "import.*Y.*from",
             "includeIgnoredFiles": true
@@ -323,7 +323,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/js/semio.ts",
+            "includePattern": "**/compose/js/compose.ts",
             "isRegexp": true,
             "query": "^export.*interface Kit|^export.*type Kit"
           },
@@ -350,7 +350,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 500,
-            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "filePath": "/workspaces/semio/compose/js/compose.ts",
             "startLine": 3000
           },
           "tool_use_id": "toolu_bdrk_01NkmLS1gd4udgz36N31GTaq__vscode-1773763871004",
@@ -376,7 +376,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 500,
-            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "filePath": "/workspaces/semio/compose/js/compose.ts",
             "startLine": 3000
           },
           "tool_response": "",
@@ -403,7 +403,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/js/semio.ts",
+            "includePattern": "**/compose/js/compose.ts",
             "isRegexp": true,
             "query": "^export.*interface Kit|^export.*type Kit"
           },

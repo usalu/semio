@@ -1,7 +1,7 @@
 {
   "title": "Fix Ring Row Tree Header Alignment in Sketchpad Details",
   "status": "closed",
-  "description": "Fix the Ring row in semio/sketchpad Details panel to follow shared TreeItem header structure: correct label alignment, action placement, gutter/chevron spacing, no drift into value column. Apply generically at shared Details panel tree layout level.",
+  "description": "Fix the Ring row in compose/sketchpad Details panel to follow shared TreeItem header structure: correct label alignment, action placement, gutter/chevron spacing, no drift into value column. Apply generically at shared Details panel tree layout level.",
   "summary": "Added a shared Label fallback for tree-group headers so missing translations still render a visible title from the id token (e.g. `...connectors.ring` -\u003e `Ring`). This fixes the missing Ring header name while keeping the previously implemented shared tree-header alignment. Updated the ring tree-header test to use the plural id and validate `Ring` renders. Verified with `npm test --workspace elements/ui` (33 tests passing).",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1286"

@@ -14,7 +14,7 @@
       "session_id": "ec3b9d84-d497-4d7e-a8b8-3c1cb967ae5e",
       "tool_name": "read_file",
       "tool_input": {
-        "filePath": "/workspaces/semio/semio/sketchpad/sketchpad/shared.ts",
+        "filePath": "/workspaces/semio/compose/sketchpad/sketchpad/shared.ts",
         "startLine": 3050,
         "endLine": 3150
       },

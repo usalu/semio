@@ -1,6 +1,6 @@
 {
   "id": "28bde36d-5209-4c90-bad6-c5de6a42b70f",
-  "uri": "semiorepo://s/28bde36d-5209-4c90-bad6-c5de6a42b70f",
+  "uri": "composerepo://s/28bde36d-5209-4c90-bad6-c5de6a42b70f",
   "contributor": "🧑‍💻ueli",
   "client": "copilot-chat",
   "second": "2026-03-07T23:47:03Z",
@@ -14,7 +14,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 150,
-            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "filePath": "/workspaces/semio/compose/js/compose.ts",
             "startLine": 2395
           },
           "tool_response": "",
@@ -34,7 +34,7 @@
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚js💻semio📌2395📌150"
+          "👤compose📚js💻compose📌2395📌150"
         ],
         "second": "🎆26🌙03☀️07⏰23⌚47⏱️03",
         "session": "⚪28bde36d52094c90bad6c5de6a42b70f"
@@ -52,7 +52,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 100,
-            "filePath": "/workspaces/semio/semio/net/Semio/Semio.cs",
+            "filePath": "/workspaces/semio/compose/net/Compose/Compose.cs",
             "startLine": 2398
           },
           "tool_response": "",
@@ -72,7 +72,7 @@
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚net🛅semio💻semio📌2398📌100"
+          "👤compose📚net🛅compose💻compose📌2398📌100"
         ],
         "second": "🎆26🌙03☀️07⏰23⌚47⏱️03",
         "session": "⚪28bde36d52094c90bad6c5de6a42b70f"
@@ -118,7 +118,7 @@
           "session_id": "28bde36d-5209-4c90-bad6-c5de6a42b70f",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/net/Semio/Semio.cs",
+            "filePath": "/workspaces/semio/compose/net/Compose/Compose.cs",
             "startLine": 2450,
             "endLine": 2550
           },
@@ -139,7 +139,7 @@
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚net🛅semio💻semio📌2450📌2550"
+          "👤compose📚net🛅compose💻compose📌2450📌2550"
         ],
         "second": "🎆26🌙03☀️07⏰23⌚48⏱️47",
         "session": "⚪28bde36d52094c90bad6c5de6a42b70f"
@@ -156,7 +156,7 @@
           "session_id": "28bde36d-5209-4c90-bad6-c5de6a42b70f",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/net/Semio/Semio.cs",
+            "filePath": "/workspaces/semio/compose/net/Compose/Compose.cs",
             "startLine": 2450,
             "endLine": 2550
           },
@@ -177,7 +177,7 @@
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚net🛅semio💻semio📌2450📌2550"
+          "👤compose📚net🛅compose💻compose📌2450📌2550"
         ],
         "second": "🎆26🌙03☀️07⏰23⌚48⏱️58",
         "session": "⚪28bde36d52094c90bad6c5de6a42b70f"
@@ -195,7 +195,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 2450,
-            "filePath": "/workspaces/semio/semio/net/Semio/Semio.cs",
+            "filePath": "/workspaces/semio/compose/net/Compose/Compose.cs",
             "startLine": 2398
           },
           "tool_use_id": "toolu_01CSBR4pTxAWLd9CCegTNaHV__vscode-1772913891574",
@@ -215,7 +215,7 @@
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚net🛅semio💻semio📌2398📌2450"
+          "👤compose📚net🛅compose💻compose📌2398📌2450"
         ],
         "second": "🎆26🌙03☀️07⏰23⌚49⏱️01",
         "session": "⚪28bde36d52094c90bad6c5de6a42b70f"
@@ -233,7 +233,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 2450,
-            "filePath": "/workspaces/semio/semio/net/Semio/Semio.cs",
+            "filePath": "/workspaces/semio/compose/net/Compose/Compose.cs",
             "startLine": 2398
           },
           "tool_response": "",
@@ -253,7 +253,7 @@
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚net🛅semio💻semio📌2398📌2450"
+          "👤compose📚net🛅compose💻compose📌2398📌2450"
         ],
         "second": "🎆26🌙03☀️07⏰23⌚49⏱️11",
         "session": "⚪28bde36d52094c90bad6c5de6a42b70f"

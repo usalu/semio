@@ -1,11 +1,11 @@
-"""Fail if legacy GraphQL/kit patterns reappear in semio client sources."""
+"""Fail if legacy GraphQL/kit patterns reappear in compose client sources."""
 import re
 from pathlib import Path
 
 def _repo_root() -> Path:
     here = Path(__file__).resolve()
     for parent in here.parents:
-        if (parent / "semio" / "client" / "lib" / "rs" / "lib.rs").is_file():
+        if (parent / "compose" / "client" / "lib" / "rs" / "lib.rs").is_file():
             return parent
     raise RuntimeError("repo root not found from check-consistency.py")
 
@@ -28,7 +28,7 @@ def read(rel: str) -> str:
 
 errors: list[str] = []
 
-lib_rs = ROOT / "semio/client/lib/rs/lib.rs"
+lib_rs = ROOT / "compose/client/lib/rs/lib.rs"
 if not lib_rs.is_file():
     errors.append(f"missing file: {lib_rs}")
 else:
@@ -46,35 +46,35 @@ else:
     if has_ops_fallback_in_lib_rs(text):
         errors.append("lib.rs: ops fallback (.get(\"ops\") outside absence asserts)")
 
-golden_ops = ROOT / "semio/assets/semio/kit-store.golden.ops.semio.json"
+golden_ops = ROOT / "compose/assets/compose/kit-store.golden.ops.compose.json"
 if not golden_ops.is_file():
     errors.append(f"missing file: {golden_ops}")
 else:
     golden_text = golden_ops.read_text(encoding="utf-8")
     if '"ops":' in golden_text:
-        errors.append("kit-store.golden.ops.semio.json: ops key")
+        errors.append("kit-store.golden.ops.compose.json: ops key")
     if '"createdFixedPiece"' in golden_text:
-        errors.append("kit-store.golden.ops.semio.json: createdFixedPiece kind")
+        errors.append("kit-store.golden.ops.compose.json: createdFixedPiece kind")
 
-js_index = ROOT / "semio/client/lib/js/index.ts"
+js_index = ROOT / "compose/client/lib/js/index.ts"
 if js_index.is_file():
     js_text = js_index.read_text(encoding="utf-8")
     for label, needle in [
         ("openJson", "openJson"),
-        ("semioJsonBootstrapUri", "semioJsonBootstrapUri"),
+        ("composeJsonBootstrapUri", "composeJsonBootstrapUri"),
         ("backboneBootstrapUriForStoreOpen", "backboneBootstrapUriForStoreOpen"),
     ]:
         if needle in js_text:
             errors.append(f"index.ts: {label}")
 
-algorithms = ROOT / "semio/dev/algorithms/index.ts"
+algorithms = ROOT / "compose/dev/algorithms/index.ts"
 if algorithms.is_file():
     algo_text = algorithms.read_text(encoding="utf-8")
     if "openSession(JSON.stringify" in algo_text:
         errors.append("algorithms/index.ts: openSession(JSON.stringify bootstrap)")
 
-schema_golden = ROOT / "semio/client/schema/graphql/schema.golden.graphql"
-schema_graphql = ROOT / "semio/client/schema/graphql/schema.graphql"
+schema_golden = ROOT / "compose/client/schema/graphql/schema.golden.graphql"
+schema_graphql = ROOT / "compose/client/schema/graphql/schema.graphql"
 if schema_golden.is_file() and schema_graphql.is_file():
     for field in ("installProjection",):
         g = schema_golden.read_text(encoding="utf-8")
@@ -89,7 +89,7 @@ ALLOWED_KIT_STORE_CREATE_ARGS = {
     "uri",
     "RS_WASM_EMPTY_STORE_URI)",
 }
-for scan_root in (ROOT / "semio", ROOT / ".storybook"):
+for scan_root in (ROOT / "compose", ROOT / ".storybook"):
     if not scan_root.is_dir():
         continue
     for path in scan_root.rglob("*.ts"):

@@ -1,6 +1,6 @@
 {
   "id": "a1ab0da2-0dc9-42f4-b17d-f003a653afd3",
-  "uri": "semiorepo://s/a1ab0da2-0dc9-42f4-b17d-f003a653afd3",
+  "uri": "composerepo://s/a1ab0da2-0dc9-42f4-b17d-f003a653afd3",
   "contributor": "🧑‍💻ueli",
   "client": "windsurf-chat",
   "second": "2026-03-13T13:25:20Z",
@@ -13,7 +13,7 @@
           "timestamp": "2026-03-13T13:25:18.554740731Z",
           "execution_id": "28aa5ab2-ddc5-4c7d-b916-e02994e4c466",
           "tool_info": {
-            "user_prompt": "semio engine mcp:\nRemove all mcp tools but the start*, finish*, transaction*, sum_qu* one."
+            "user_prompt": "compose engine mcp:\nRemove all mcp tools but the start*, finish*, transaction*, sum_qu* one."
           }
         }
       },
@@ -40,7 +40,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "query": "semio engine mcp tools start finish transaction sum_qu"
+              "query": "compose engine mcp tools start finish transaction sum_qu"
             },
             "mcp_tool_name": "search"
           }
@@ -67,10 +67,10 @@
           "timestamp": "2026-03-13T13:27:35.39248715Z",
           "execution_id": "28aa5ab2-ddc5-4c7d-b916-e02994e4c466",
           "tool_info": {
-            "mcp_result": "- [🎯Goals](semiorepo://gs)\n  - [🎯🎯sketchpadimprovements🎫refactorenginemcptoolsurfaceandaddtransactions](semiorepo://y/26/m/03/d/13/tk/REFACTOR-ENGINE-MCP-TOOL-SURFACE-AND-ADD-TRANSACTIONS) - `Refactor Engine MCP Tool Surface and Add Transactions` - `closed` - `a long while ago` - `Restricted engine MCP tool surface to allowed prefixes (start*, finish*, sum_qu*, finalize*, abort*) and implemented session-scoped single active transaction with rollback stack of kit forward/backward diffs via start_transaction/finalize_transaction/abort_transaction. Added MCP tests for surface and transaction lifecycle/rollback.`\n",
+            "mcp_result": "- [🎯Goals](composerepo://gs)\n  - [🎯🎯sketchpadimprovements🎫refactorenginemcptoolsurfaceandaddtransactions](composerepo://y/26/m/03/d/13/tk/REFACTOR-ENGINE-MCP-TOOL-SURFACE-AND-ADD-TRANSACTIONS) - `Refactor Engine MCP Tool Surface and Add Transactions` - `closed` - `a long while ago` - `Restricted engine MCP tool surface to allowed prefixes (start*, finish*, sum_qu*, finalize*, abort*) and implemented session-scoped single active transaction with rollback stack of kit forward/backward diffs via start_transaction/finalize_transaction/abort_transaction. Added MCP tests for surface and transaction lifecycle/rollback.`\n",
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "query": "semio engine mcp tools start finish transaction sum_qu"
+              "query": "compose engine mcp tools start finish transaction sum_qu"
             },
             "mcp_tool_name": "search"
           }
@@ -127,7 +127,7 @@
               "client": "windsurf-chat",
               "llm": "gpt-5-2-codex",
               "path": "2026/03/13/REFACTOR-ENGINE-MCP-TOOL-SURFACE-AND-ADD-TRANSACTIONS",
-              "prompt": "Adjust semio engine MCP tool exposure to keep only tools with prefixes start*, finish*, transaction*, and sum_qu*; remove any other exposed tools.",
+              "prompt": "Adjust compose engine MCP tool exposure to keep only tools with prefixes start*, finish*, transaction*, and sum_qu*; remove any other exposed tools.",
               "title": "Restrict Engine MCP Tools to Approved Prefixes"
             },
             "mcp_tool_name": "ticket_reopen"
@@ -155,7 +155,7 @@
           "timestamp": "2026-03-13T13:29:21.865362368Z",
           "execution_id": "28aa5ab2-ddc5-4c7d-b916-e02994e4c466",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio"
+            "file_path": "/workspaces/semio/compose"
           }
         }
       },
@@ -180,7 +180,7 @@
           "timestamp": "2026-03-13T13:30:00.593942533Z",
           "execution_id": "28aa5ab2-ddc5-4c7d-b916-e02994e4c466",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio"
+            "file_path": "/workspaces/semio/compose"
           }
         }
       },
@@ -255,7 +255,7 @@
           "timestamp": "2026-03-13T13:30:59.54871738Z",
           "execution_id": "28aa5ab2-ddc5-4c7d-b916-e02994e4c466",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/engine/engine.py"
+            "file_path": "/workspaces/semio/compose/engine/engine.py"
           }
         }
       },
@@ -265,13 +265,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚engine💻engine"
+            "id": "👤compose📚engine💻engine"
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚engine💻engine📌1📌2878"
+          "👤compose📚engine💻engine📌1📌2878"
         ],
         "second": "🎆26🌙03☀️13⏰13⌚31⏱️00",
         "session": "⚪a1ab0da20dc942f4b17df003a653afd3"
@@ -288,7 +288,7 @@
           "timestamp": "2026-03-13T13:30:59.58033838Z",
           "execution_id": "28aa5ab2-ddc5-4c7d-b916-e02994e4c466",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/engine/engine.test.py"
+            "file_path": "/workspaces/semio/compose/engine/engine.test.py"
           }
         }
       },
@@ -298,13 +298,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚engine🥼enginetest"
+            "id": "👤compose📚engine🥼enginetest"
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚engine🥼enginetest📌1📌1450"
+          "👤compose📚engine🥼enginetest📌1📌1450"
         ],
         "second": "🎆26🌙03☀️13⏰13⌚31⏱️00",
         "session": "⚪a1ab0da20dc942f4b17df003a653afd3"
@@ -321,7 +321,7 @@
           "timestamp": "2026-03-13T13:31:08.741164292Z",
           "execution_id": "28aa5ab2-ddc5-4c7d-b916-e02994e4c466",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/engine/engine.py"
+            "file_path": "/workspaces/semio/compose/engine/engine.py"
           }
         }
       },
@@ -331,13 +331,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚engine💻engine"
+            "id": "👤compose📚engine💻engine"
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚engine💻engine📌1📌2878"
+          "👤compose📚engine💻engine📌1📌2878"
         ],
         "second": "🎆26🌙03☀️13⏰13⌚31⏱️09",
         "session": "⚪a1ab0da20dc942f4b17df003a653afd3"
@@ -359,7 +359,7 @@
               "client": "windsurf-chat",
               "llm": "gpt-5-2-codex",
               "no_github": true,
-              "prompt": "Keep only MCP tools whose names start with start_, finish_, transaction_, or sum_qu in semio/engine/engine.py and align tests accordingly.",
+              "prompt": "Keep only MCP tools whose names start with start_, finish_, transaction_, or sum_qu in compose/engine/engine.py and align tests accordingly.",
               "title": "Restrict Engine MCP Tool Surface Prefixes"
             },
             "mcp_tool_name": "ticket_open"
@@ -387,7 +387,7 @@
           "timestamp": "2026-03-13T13:32:12.902498489Z",
           "execution_id": "28aa5ab2-ddc5-4c7d-b916-e02994e4c466",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/engine/engine.test.py"
+            "file_path": "/workspaces/semio/compose/engine/engine.test.py"
           }
         }
       },
@@ -397,13 +397,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚engine🥼enginetest"
+            "id": "👤compose📚engine🥼enginetest"
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚engine🥼enginetest📌1📌1450"
+          "👤compose📚engine🥼enginetest📌1📌1450"
         ],
         "second": "🎆26🌙03☀️13⏰13⌚32⏱️14",
         "session": "⚪a1ab0da20dc942f4b17df003a653afd3"
@@ -420,7 +420,7 @@
           "timestamp": "2026-03-13T13:32:36.349569102Z",
           "execution_id": "28aa5ab2-ddc5-4c7d-b916-e02994e4c466",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/engine/engine.test.py"
+            "file_path": "/workspaces/semio/compose/engine/engine.test.py"
           }
         }
       },
@@ -430,13 +430,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚engine🥼enginetest"
+            "id": "👤compose📚engine🥼enginetest"
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚engine🥼enginetest📌1📌1450"
+          "👤compose📚engine🥼enginetest📌1📌1450"
         ],
         "second": "🎆26🌙03☀️13⏰13⌚32⏱️37",
         "session": "⚪a1ab0da20dc942f4b17df003a653afd3"
@@ -459,7 +459,7 @@
                 "new_string": "def _prune_mcp_tool_surface():\n    \"\"\"Keep only MCP tools matching the allowed naming surface.\"\"\"\n    allowed_prefixes = (\"start_\", \"finish_\", \"transaction_\", \"sum_qu\")\n    for tool in list(mcp._tool_manager.list_tools()):\n        if tool.name.startswith(allowed_prefixes):\n            continue\n        mcp.remove_tool(tool.name)"
               }
             ],
-            "file_path": "/workspaces/semio/semio/engine/engine.py"
+            "file_path": "/workspaces/semio/compose/engine/engine.py"
           }
         }
       },
@@ -490,7 +490,7 @@
                 "new_string": "    def test_mcp_tool_surface_keeps_only_allowed_prefixes(self):\n        names = [tool.name for tool in engine.mcp._tool_manager.list_tools()]\n        allowed_prefixes = (\"start_\", \"finish_\", \"transaction_\", \"sum_qu\")\n        assert names\n        assert all(name.startswith(allowed_prefixes) for name in names)"
               }
             ],
-            "file_path": "/workspaces/semio/semio/engine/engine.test.py"
+            "file_path": "/workspaces/semio/compose/engine/engine.test.py"
           }
         }
       },
@@ -515,7 +515,7 @@
           "timestamp": "2026-03-13T13:33:55.621734027Z",
           "execution_id": "28aa5ab2-ddc5-4c7d-b916-e02994e4c466",
           "tool_info": {
-            "command_line": "python -m pytest semio/engine/engine.test.py -k \"mcp_tool_surface_keeps_only_allowed_prefixes or start_transaction_rejects_nested_transaction or finalize_transaction_removes_active_transaction or abort_transaction_unwinds_recorded_kit_changes or abort_transaction_without_active_transaction_returns_error\"",
+            "command_line": "python -m pytest compose/engine/engine.test.py -k \"mcp_tool_surface_keeps_only_allowed_prefixes or start_transaction_rejects_nested_transaction or finalize_transaction_removes_active_transaction or abort_transaction_unwinds_recorded_kit_changes or abort_transaction_without_active_transaction_returns_error\"",
             "cwd": "/workspaces/semio"
           }
         }
@@ -525,7 +525,7 @@
         "client": "windsurf-chat",
         "contributor": "🧑‍💻ueli",
         "files": [
-          "👤semio📚engine🥼enginetest"
+          "👤compose📚engine🥼enginetest"
         ],
         "kind": "agent.tool.test.starting",
         "parent": "",
@@ -553,7 +553,7 @@
               "goal": "SKETCHPAD-IMPROVEMENTS",
               "llm": "gpt-5-2-codex",
               "no_github": true,
-              "prompt": "Update semio engine MCP surface so only tools matching start*, finish*, transaction*, and sum_qu* remain exposed; align tests and validate.",
+              "prompt": "Update compose engine MCP surface so only tools matching start*, finish*, transaction*, and sum_qu* remain exposed; align tests and validate.",
               "title": "Restrict Engine MCP Tools to Approved Prefixes"
             },
             "mcp_tool_name": "ticket_open"
@@ -581,14 +581,14 @@
           "timestamp": "2026-03-13T13:34:52.008484708Z",
           "execution_id": "28aa5ab2-ddc5-4c7d-b916-e02994e4c466",
           "tool_info": {
-            "mcp_result": "[🎫restrictenginemcptoolstoapprovedprefixes](semiorepo://y/26/m/03/d/13/tk/RESTRICT-ENGINE-MCP-TOOLS-TO-APPROVED-PREFIXES) - `open`\n",
+            "mcp_result": "[🎫restrictenginemcptoolstoapprovedprefixes](composerepo://y/26/m/03/d/13/tk/RESTRICT-ENGINE-MCP-TOOLS-TO-APPROVED-PREFIXES) - `open`\n",
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
               "client": "windsurf-chat",
               "goal": "SKETCHPAD-IMPROVEMENTS",
               "llm": "gpt-5-2-codex",
               "no_github": true,
-              "prompt": "Update semio engine MCP surface so only tools matching start*, finish*, transaction*, and sum_qu* remain exposed; align tests and validate.",
+              "prompt": "Update compose engine MCP surface so only tools matching start*, finish*, transaction*, and sum_qu* remain exposed; align tests and validate.",
               "title": "Restrict Engine MCP Tools to Approved Prefixes"
             },
             "mcp_tool_name": "ticket_open"
@@ -617,7 +617,7 @@
           "execution_id": "28aa5ab2-ddc5-4c7d-b916-e02994e4c466",
           "tool_info": {
             "command_line": "python -m pytest engine.test.py -k \"mcp_tool_surface_keeps_only_allowed_prefixes or start_transaction_rejects_nested_transaction or finalize_transaction_removes_active_transaction or abort_transaction_unwinds_recorded_kit_changes or abort_transaction_without_active_transaction_returns_error\"",
-            "cwd": "/workspaces/semio/semio/engine"
+            "cwd": "/workspaces/semio/compose/engine"
           }
         }
       },
@@ -626,7 +626,7 @@
         "client": "windsurf-chat",
         "contributor": "🧑‍💻ueli",
         "files": [
-          "👤semio📚engine🥼enginetest"
+          "👤compose📚engine🥼enginetest"
         ],
         "kind": "agent.tool.test.starting",
         "parent": "",
@@ -648,7 +648,7 @@
           "timestamp": "2026-03-13T13:35:35.637049371Z",
           "execution_id": "28aa5ab2-ddc5-4c7d-b916-e02994e4c466",
           "tool_info": {
-            "command_line": "PYTHONPATH=/workspaces/semio python -m pytest semio/engine/engine.test.py -k \"mcp_tool_surface_keeps_only_allowed_prefixes or start_transaction_rejects_nested_transaction or finalize_transaction_removes_active_transaction or abort_transaction_unwinds_recorded_kit_changes or abort_transaction_without_active_transaction_returns_error\"",
+            "command_line": "PYTHONPATH=/workspaces/semio python -m pytest compose/engine/engine.test.py -k \"mcp_tool_surface_keeps_only_allowed_prefixes or start_transaction_rejects_nested_transaction or finalize_transaction_removes_active_transaction or abort_transaction_unwinds_recorded_kit_changes or abort_transaction_without_active_transaction_returns_error\"",
             "cwd": "/workspaces/semio"
           }
         }
@@ -656,7 +656,7 @@
       "event": {
         "checkpoint": "🔀23ded79aa1516d89a72e21e6258cd22bbf7df88b",
         "client": "windsurf-chat",
-        "command": "PYTHONPATH=/workspaces/semio python -m pytest semio/engine/engine.test.py -k \"mcp_tool_surface_keeps_only_allowed_prefixes or start_transaction_rejects_nested_transaction or finalize_transaction_removes_active_transaction or abort_transaction_unwinds_recorded_kit_changes or abort_transaction_without_active_transaction_returns_error\"",
+        "command": "PYTHONPATH=/workspaces/semio python -m pytest compose/engine/engine.test.py -k \"mcp_tool_surface_keeps_only_allowed_prefixes or start_transaction_rejects_nested_transaction or finalize_transaction_removes_active_transaction or abort_transaction_unwinds_recorded_kit_changes or abort_transaction_without_active_transaction_returns_error\"",
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.terminal.starting",
         "parent": "",
@@ -676,7 +676,7 @@
           "execution_id": "28aa5ab2-ddc5-4c7d-b916-e02994e4c466",
           "tool_info": {
             "command_line": "PYTHONPATH=/workspaces/semio python -m pytest engine.test.py -k \"mcp_tool_surface_keeps_only_allowed_prefixes or start_transaction_rejects_nested_transaction or finalize_transaction_removes_active_transaction or abort_transaction_unwinds_recorded_kit_changes or abort_transaction_without_active_transaction_returns_error\"",
-            "cwd": "/workspaces/semio/semio/engine"
+            "cwd": "/workspaces/semio/compose/engine"
           }
         }
       },
@@ -705,8 +705,8 @@
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
               "files": [
-                "/workspaces/semio/semio/engine/engine.py",
-                "/workspaces/semio/semio/engine/engine.test.py"
+                "/workspaces/semio/compose/engine/engine.py",
+                "/workspaces/semio/compose/engine/engine.test.py"
               ],
               "no_github": true,
               "path": "2026/03/13/RESTRICT-ENGINE-MCP-TOOLS-TO-APPROVED-PREFIXES",
@@ -762,7 +762,7 @@
           "timestamp": "2026-03-13T13:37:43.749510792Z",
           "execution_id": "87cb1436-ab1e-49e1-a602-bc935aef585e",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/engine/engine.py"
+            "file_path": "/workspaces/semio/compose/engine/engine.py"
           }
         }
       },
@@ -772,13 +772,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚engine💻engine"
+            "id": "👤compose📚engine💻engine"
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚engine💻engine📌1📌2878"
+          "👤compose📚engine💻engine📌1📌2878"
         ],
         "second": "🎆26🌙03☀️13⏰13⌚37⏱️46",
         "session": "⚪a1ab0da20dc942f4b17df003a653afd3"
@@ -795,7 +795,7 @@
           "timestamp": "2026-03-13T13:38:06.270065401Z",
           "execution_id": "87cb1436-ab1e-49e1-a602-bc935aef585e",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/engine/engine.py"
+            "file_path": "/workspaces/semio/compose/engine/engine.py"
           }
         }
       },
@@ -805,13 +805,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚engine💻engine"
+            "id": "👤compose📚engine💻engine"
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚engine💻engine📌1📌2878"
+          "👤compose📚engine💻engine📌1📌2878"
         ],
         "second": "🎆26🌙03☀️13⏰13⌚38⏱️06",
         "session": "⚪a1ab0da20dc942f4b17df003a653afd3"
@@ -986,7 +986,7 @@
                 "new_string": "# endregion Mcp"
               }
             ],
-            "file_path": "/workspaces/semio/semio/engine/engine.py"
+            "file_path": "/workspaces/semio/compose/engine/engine.py"
           }
         }
       },
@@ -1169,7 +1169,7 @@
                 "new_string": "# endregion Mcp"
               }
             ],
-            "file_path": "/workspaces/semio/semio/engine/engine.py"
+            "file_path": "/workspaces/semio/compose/engine/engine.py"
           }
         }
       },
@@ -1194,7 +1194,7 @@
           "timestamp": "2026-03-13T13:40:04.073299178Z",
           "execution_id": "87cb1436-ab1e-49e1-a602-bc935aef585e",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/engine/engine.test.py"
+            "file_path": "/workspaces/semio/compose/engine/engine.test.py"
           }
         }
       },
@@ -1204,13 +1204,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚engine🥼enginetest"
+            "id": "👤compose📚engine🥼enginetest"
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚engine🥼enginetest📌1📌1450"
+          "👤compose📚engine🥼enginetest📌1📌1450"
         ],
         "second": "🎆26🌙03☀️13⏰13⌚40⏱️04",
         "session": "⚪a1ab0da20dc942f4b17df003a653afd3"
@@ -1227,7 +1227,7 @@
           "timestamp": "2026-03-13T13:40:18.221699049Z",
           "execution_id": "87cb1436-ab1e-49e1-a602-bc935aef585e",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/engine/engine.test.py"
+            "file_path": "/workspaces/semio/compose/engine/engine.test.py"
           }
         }
       },
@@ -1237,13 +1237,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚engine🥼enginetest"
+            "id": "👤compose📚engine🥼enginetest"
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚engine🥼enginetest📌1📌1450"
+          "👤compose📚engine🥼enginetest📌1📌1450"
         ],
         "second": "🎆26🌙03☀️13⏰13⌚40⏱️18",
         "session": "⚪a1ab0da20dc942f4b17df003a653afd3"
@@ -1260,7 +1260,7 @@
           "timestamp": "2026-03-13T13:40:53.214115054Z",
           "execution_id": "87cb1436-ab1e-49e1-a602-bc935aef585e",
           "tool_info": {
-            "command_line": "PYTHONPATH=/workspaces/semio/semio/py:/workspaces/semio python - \u003c\u003c'PY'\nimport importlib.util\nspec = importlib.util.spec_from_file_location('engine_module','/workspaces/semio/semio/engine/engine.py')\nmod = importlib.util.module_from_spec(spec)\nspec.loader.exec_module(mod)\nprint('\\n'.join(sorted(t.name for t in mod.mcp._tool_manager.list_tools())))\nPY",
+            "command_line": "PYTHONPATH=/workspaces/semio/compose/py:/workspaces/semio python - \u003c\u003c'PY'\nimport importlib.util\nspec = importlib.util.spec_from_file_location('engine_module','/workspaces/semio/compose/engine/engine.py')\nmod = importlib.util.module_from_spec(spec)\nspec.loader.exec_module(mod)\nprint('\\n'.join(sorted(t.name for t in mod.mcp._tool_manager.list_tools())))\nPY",
             "cwd": "/workspaces/semio"
           }
         }
@@ -1268,7 +1268,7 @@
       "event": {
         "checkpoint": "🔀23ded79aa1516d89a72e21e6258cd22bbf7df88b",
         "client": "windsurf-chat",
-        "command": "PYTHONPATH=/workspaces/semio/semio/py:/workspaces/semio python - \u003c\u003c'PY'\nimport importlib.util\nspec = importlib.util.spec_from_file_location('engine_module','/workspaces/semio/semio/engine/engine.py')\nmod = importlib.util.module_from_spec(spec)\nspec.loader.exec_module(mod)\nprint('\\n'.join(sorted(t.name for t in mod.mcp._tool_manager.list_tools())))\nPY",
+        "command": "PYTHONPATH=/workspaces/semio/compose/py:/workspaces/semio python - \u003c\u003c'PY'\nimport importlib.util\nspec = importlib.util.spec_from_file_location('engine_module','/workspaces/semio/compose/engine/engine.py')\nmod = importlib.util.module_from_spec(spec)\nspec.loader.exec_module(mod)\nprint('\\n'.join(sorted(t.name for t in mod.mcp._tool_manager.list_tools())))\nPY",
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.terminal.starting",
         "parent": "",
@@ -1316,7 +1316,7 @@
           "timestamp": "2026-03-13T13:41:57.165012083Z",
           "execution_id": "87cb1436-ab1e-49e1-a602-bc935aef585e",
           "tool_info": {
-            "mcp_result": "- [🎯Goals](semiorepo://gs)\n  - [🎯🎯sketchpadimprovements🎫restrictenginemcptoolstoapprovedprefixes](semiorepo://y/26/m/03/d/13/tk/RESTRICT-ENGINE-MCP-TOOLS-TO-APPROVED-PREFIXES) - `Restrict Engine MCP Tools to Approved Prefixes` - `open` - `opened a long while ago` - `Update semio engine MCP surface so only tools matching start*, finish*, transaction*, and sum_qu* remain exposed; align tests and validate.`\n",
+            "mcp_result": "- [🎯Goals](composerepo://gs)\n  - [🎯🎯sketchpadimprovements🎫restrictenginemcptoolstoapprovedprefixes](composerepo://y/26/m/03/d/13/tk/RESTRICT-ENGINE-MCP-TOOLS-TO-APPROVED-PREFIXES) - `Restrict Engine MCP Tools to Approved Prefixes` - `open` - `opened a long while ago` - `Update compose engine MCP surface so only tools matching start*, finish*, transaction*, and sum_qu* remain exposed; align tests and validate.`\n",
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
               "query": "restrict engine mcp tools to approved prefixes ticket"
@@ -1352,7 +1352,7 @@
                 "new_string": "    def test_mcp_tool_surface_keeps_only_allowed_prefixes(self):\n        names = sorted(tool.name for tool in engine.mcp._tool_manager.list_tools())\n        assert names == [\n            \"finish_working_in_design\",\n            \"finish_working_in_kit\",\n            \"finish_working_in_type\",\n            \"start_transaction\",\n            \"start_working_in_design\",\n            \"start_working_in_local_kit\",\n            \"start_working_in_remote_kit\",\n            \"start_working_in_type\",\n            \"sum_quality_in_design\",\n            \"transaction_abort\",\n            \"transaction_finalize\",\n        ]"
               }
             ],
-            "file_path": "/workspaces/semio/semio/engine/engine.test.py"
+            "file_path": "/workspaces/semio/compose/engine/engine.test.py"
           }
         }
       },
@@ -1383,7 +1383,7 @@
                 "new_string": "    def test_mcp_tool_surface_keeps_only_allowed_prefixes(self):\n        names = sorted(tool.name for tool in engine.mcp._tool_manager.list_tools())\n        assert names == [\n            \"finish_working_in_design\",\n            \"finish_working_in_kit\",\n            \"finish_working_in_type\",\n            \"start_transaction\",\n            \"start_working_in_design\",\n            \"start_working_in_local_kit\",\n            \"start_working_in_remote_kit\",\n            \"start_working_in_type\",\n            \"sum_quality_in_design\",\n            \"transaction_abort\",\n            \"transaction_finalize\",\n        ]"
               }
             ],
-            "file_path": "/workspaces/semio/semio/engine/engine.test.py"
+            "file_path": "/workspaces/semio/compose/engine/engine.test.py"
           }
         }
       },
@@ -1408,15 +1408,15 @@
           "timestamp": "2026-03-13T13:43:11.252864774Z",
           "execution_id": "87cb1436-ab1e-49e1-a602-bc935aef585e",
           "tool_info": {
-            "command_line": "PYTHONPATH=/workspaces/semio/semio/py:/workspaces/semio python -m pytest engine.test.py -k \"mcp_tool_surface_keeps_only_allowed_prefixes\"",
-            "cwd": "/workspaces/semio/semio/engine"
+            "command_line": "PYTHONPATH=/workspaces/semio/compose/py:/workspaces/semio python -m pytest engine.test.py -k \"mcp_tool_surface_keeps_only_allowed_prefixes\"",
+            "cwd": "/workspaces/semio/compose/engine"
           }
         }
       },
       "event": {
         "checkpoint": "🔀23ded79aa1516d89a72e21e6258cd22bbf7df88b",
         "client": "windsurf-chat",
-        "command": "PYTHONPATH=/workspaces/semio/semio/py:/workspaces/semio python -m pytest engine.test.py -k \"mcp_tool_surface_keeps_only_allowed_prefixes\"",
+        "command": "PYTHONPATH=/workspaces/semio/compose/py:/workspaces/semio python -m pytest engine.test.py -k \"mcp_tool_surface_keeps_only_allowed_prefixes\"",
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.terminal.starting",
         "parent": "",
@@ -1438,8 +1438,8 @@
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
               "files": [
-                "/workspaces/semio/semio/engine/engine.py",
-                "/workspaces/semio/semio/engine/engine.test.py"
+                "/workspaces/semio/compose/engine/engine.py",
+                "/workspaces/semio/compose/engine/engine.test.py"
               ],
               "no_github": true,
               "path": "y/26/m/03/d/13/tk/RESTRICT-ENGINE-MCP-TOOLS-TO-APPROVED-PREFIXES",
@@ -1473,8 +1473,8 @@
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
               "files": [
-                "/workspaces/semio/semio/engine/engine.py",
-                "/workspaces/semio/semio/engine/engine.test.py"
+                "/workspaces/semio/compose/engine/engine.py",
+                "/workspaces/semio/compose/engine/engine.test.py"
               ],
               "no_github": true,
               "path": "2026/03/13/restrictenginemcptoolstoapprovedprefixes",
@@ -1592,7 +1592,7 @@
           "timestamp": "2026-03-13T13:45:21.942615607Z",
           "execution_id": "87cb1436-ab1e-49e1-a602-bc935aef585e",
           "tool_info": {
-            "mcp_result": "- [🎯Goals](semiorepo://gs)\n  - [🎯🎯sketchpadimprovements🎫restrictenginemcptoolstoapprovedprefixes](semiorepo://y/26/m/03/d/13/tk/RESTRICT-ENGINE-MCP-TOOLS-TO-APPROVED-PREFIXES) - `Restrict Engine MCP Tools to Approved Prefixes` - `open` - `opened a long while ago` - `Update semio engine MCP surface so only tools matching start*, finish*, transaction*, and sum_qu* remain exposed; align tests and validate.`\n",
+            "mcp_result": "- [🎯Goals](composerepo://gs)\n  - [🎯🎯sketchpadimprovements🎫restrictenginemcptoolstoapprovedprefixes](composerepo://y/26/m/03/d/13/tk/RESTRICT-ENGINE-MCP-TOOLS-TO-APPROVED-PREFIXES) - `Restrict Engine MCP Tools to Approved Prefixes` - `open` - `opened a long while ago` - `Update compose engine MCP surface so only tools matching start*, finish*, transaction*, and sum_qu* remain exposed; align tests and validate.`\n",
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
               "query": "restrictenginemcptoolstoapprovedprefixes"
@@ -1625,11 +1625,11 @@
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
               "files": [
-                "/workspaces/semio/semio/engine/engine.py",
-                "/workspaces/semio/semio/engine/engine.test.py"
+                "/workspaces/semio/compose/engine/engine.py",
+                "/workspaces/semio/compose/engine/engine.test.py"
               ],
               "no_github": true,
-              "path": "semiorepo://y/26/m/03/d/13/tk/RESTRICT-ENGINE-MCP-TOOLS-TO-APPROVED-PREFIXES",
+              "path": "composerepo://y/26/m/03/d/13/tk/RESTRICT-ENGINE-MCP-TOOLS-TO-APPROVED-PREFIXES",
               "summary": "Cleaned engine MCP source registrations to expose only approved prefixes (start*, finish*, transaction*, sum_qu*), removed runtime pruning, and tightened MCP surface assertion test to exact exported names. Validated with targeted pytest for MCP surface."
             },
             "mcp_tool_name": "ticket_close"
@@ -1660,8 +1660,8 @@
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
               "files": [
-                "/workspaces/semio/semio/engine/engine.py",
-                "/workspaces/semio/semio/engine/engine.test.py"
+                "/workspaces/semio/compose/engine/engine.py",
+                "/workspaces/semio/compose/engine/engine.test.py"
               ],
               "no_github": true,
               "summary": "Cleaned engine MCP source registrations to expose only approved prefixes (start*, finish*, transaction*, sum_qu*), removed runtime pruning, and tightened MCP surface assertion test to exact exported names. Validated with targeted pytest for MCP surface."
@@ -1691,7 +1691,7 @@
           "timestamp": "2026-03-13T13:46:20.053214394Z",
           "execution_id": "87cb1436-ab1e-49e1-a602-bc935aef585e",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/engine/engine.py"
+            "file_path": "/workspaces/semio/compose/engine/engine.py"
           }
         }
       },
@@ -1701,13 +1701,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚engine💻engine"
+            "id": "👤compose📚engine💻engine"
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚engine💻engine📌1📌2842"
+          "👤compose📚engine💻engine📌1📌2842"
         ],
         "second": "🎆26🌙03☀️13⏰13⌚46⏱️20",
         "session": "⚪a1ab0da20dc942f4b17df003a653afd3"
@@ -1724,7 +1724,7 @@
           "timestamp": "2026-03-13T13:46:20.086008629Z",
           "execution_id": "87cb1436-ab1e-49e1-a602-bc935aef585e",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/engine/engine.test.py"
+            "file_path": "/workspaces/semio/compose/engine/engine.test.py"
           }
         }
       },
@@ -1734,13 +1734,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚engine🥼enginetest"
+            "id": "👤compose📚engine🥼enginetest"
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚engine🥼enginetest📌1📌1460"
+          "👤compose📚engine🥼enginetest📌1📌1460"
         ],
         "second": "🎆26🌙03☀️13⏰13⌚46⏱️20",
         "session": "⚪a1ab0da20dc942f4b17df003a653afd3"
@@ -1757,7 +1757,7 @@
           "timestamp": "2026-03-13T13:46:26.170960518Z",
           "execution_id": "87cb1436-ab1e-49e1-a602-bc935aef585e",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/engine/engine.py"
+            "file_path": "/workspaces/semio/compose/engine/engine.py"
           }
         }
       },
@@ -1767,13 +1767,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚engine💻engine"
+            "id": "👤compose📚engine💻engine"
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚engine💻engine📌1📌2842"
+          "👤compose📚engine💻engine📌1📌2842"
         ],
         "second": "🎆26🌙03☀️13⏰13⌚46⏱️26",
         "session": "⚪a1ab0da20dc942f4b17df003a653afd3"
@@ -1790,7 +1790,7 @@
           "timestamp": "2026-03-13T13:46:31.553213455Z",
           "execution_id": "87cb1436-ab1e-49e1-a602-bc935aef585e",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/engine/engine.test.py"
+            "file_path": "/workspaces/semio/compose/engine/engine.test.py"
           }
         }
       },
@@ -1800,13 +1800,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚engine🥼enginetest"
+            "id": "👤compose📚engine🥼enginetest"
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚engine🥼enginetest📌1📌1460"
+          "👤compose📚engine🥼enginetest📌1📌1460"
         ],
         "second": "🎆26🌙03☀️13⏰13⌚46⏱️32",
         "session": "⚪a1ab0da20dc942f4b17df003a653afd3"
@@ -1823,7 +1823,7 @@
           "timestamp": "2026-03-13T13:47:06.600252457Z",
           "execution_id": "87cb1436-ab1e-49e1-a602-bc935aef585e",
           "tool_info": {
-            "response": "*Rules used for this response:*\n- (Always On) Triggered Rule: AGENTS.md\n\n*Updated todo list*\n\n*Grep searched codebase*\n\n*Grep searched codebase*\n\n*Grep searched codebase*\n\n*Grep searched codebase*\n\n*Viewed file:///workspaces/semio/semio/engine/engine.py*\n\n*Grep searched codebase*\n\n*Edited relevant file*\n\n*Grep searched codebase*\n\n*Searched filesystem*\n\n*Viewed file:///workspaces/semio/semio/engine/engine.test.py*\n\n*Grep searched codebase*\n\n*User accepted the command `PYTHONPATH=/workspaces/semio/semio/py:/workspaces/semio python - \u003c\u003c'PY'\nimport importlib.util\nspec = importlib.util.spec_from_file_location('engine_module','/workspaces/semio/semio/engine/engine.py')\nmod = importlib.util.module_from_spec(spec)\nspec.loader.exec_module(mod)\nprint('\\n'.join(sorted(t.name for t in mod.mcp._tool_manager.list_tools())))\nPY`*\n\n*Running MCP tool*\n\n*Grep searched codebase*\n\n*Edited relevant file*\n\n*User accepted the command `PYTHONPATH=/workspaces/semio/semio/py:/workspaces/semio python -m pytest engine.test.py -k \"mcp_tool_surface_keeps_only_allowed_prefixes\"`*\n\n*Updated todo list*\n\n*Running MCP tool*\n\n*Running MCP tool*\n\n*Running MCP tool*\n\n*Running MCP tool*\n\n*Running MCP tool*\n\n*Running MCP tool*\n\n*Viewed file:///workspaces/semio/semio/engine/engine.py*\n\n*Viewed file:///workspaces/semio/semio/engine/engine.py*\n\n*Viewed file:///workspaces/semio/semio/engine/engine.test.py*\n\n*Searched filesystem*\n\n### Planner Response\n\nDone — this is now **source-level clean**, not runtime masking.\n\n### What I changed\n\n1. **Removed MCP registration from disallowed tools at definition level**\n   - I removed `@mcp.tool()` from non-approved functions (auth helpers, diff/analysis helpers, read helpers, clustering helpers, etc.), so they remain callable internally/tests but are no longer exposed as MCP tools.\n   - Kept MCP registration only for allowed prefixes:\n     - `start_*`\n     - `finish_*`\n     - `transaction_*`\n     - `sum_qu*`\n\n2. **Replaced finalize/abort MCP exposure with `transaction_*` wrappers**\n   - Kept internal functions [finalize_transaction](file:///workspaces/semio/semio/engine/engine.py:2562:0-2573:32) / [abort_transaction](file:///workspaces/semio/semio/engine/engine.py:2576:0-2592:32) undecorated.\n   - Exposed MCP tools:\n     - [transaction_finalize](file:///workspaces/semio/semio/engine/engine.py:2595:0-2598:36)\n     - [transaction_abort](file:///workspaces/semio/semio/engine/engine.py:2601:0-2604:33)\n   - See @semio/engine/engine.py#2596-2605\n\n3. **Removed runtime pruning/masking**\n   - Deleted [_prune_mcp_tool_surface()](file:///workspaces/semio/semio/engine/engine.py:2645:0-2651:34) and its invocation entirely.\n   - MCP surface is now clean by registration only.\n   - End of MCP section now directly transitions to engine bootstrapping: @semio/engine/engine.py#2622-2629\n\n4. **Tightened test to exact MCP tool list**\n   - [test_mcp_tool_surface_keeps_only_allowed_prefixes](file:///workspaces/semio/semio/engine/engine.test.py:220:4-224:71) now asserts exact exported MCP tools (not just prefix-based).\n   - See @semio/engine/engine.test.py#221-235\n\n### Resulting exposed MCP tools\nVerified tool names are exactly:\n- [finish_working_in_design](file:///workspaces/semio/semio/engine/engine.py:2474:0-2484:32)\n- [finish_working_in_kit](file:///workspaces/semio/semio/engine/engine.py:2562:0-2576:32)\n- [finish_working_in_type](file:///workspaces/semio/semio/engine/engine.py:2515:0-2525:32)\n- [start_transaction](file:///workspaces/semio/semio/engine/engine.py:2545:0-2559:32)\n- [start_working_in_design](file:///workspaces/semio/semio/engine/engine.py:2446:0-2461:32)\n- [start_working_in_local_kit](file:///workspaces/semio/semio/engine/engine.py:2049:0-2065:32)\n- [start_working_in_remote_kit](file:///workspaces/semio/semio/engine/engine.py:2068:0-2084:32)\n- [start_working_in_type](file:///workspaces/semio/semio/engine/engine.py:2487:0-2502:32)\n- [sum_quality_in_design](file:///workspaces/semio/semio/engine/engine.py:2607:0-2618:32)\n- [transaction_abort](file:///workspaces/semio/semio/engine/engine.py:2601:0-2604:33)\n- [transaction_finalize](file:///workspaces/semio/semio/engine/engine.py:2595:0-2598:36)\n\n### Validation run\n- Ran:\n  `PYTHONPATH=/workspaces/semio/semio/py:/workspaces/semio python -m pytest engine.test.py -k \"mcp_tool_surface_keeps_only_allowed_prefixes\"`\n- Result: **1 passed**.\n\n(Everything requested is now enforced in source, not via post-registration filtering.)"
+            "response": "*Rules used for this response:*\n- (Always On) Triggered Rule: AGENTS.md\n\n*Updated todo list*\n\n*Grep searched codebase*\n\n*Grep searched codebase*\n\n*Grep searched codebase*\n\n*Grep searched codebase*\n\n*Viewed file:///workspaces/semio/compose/engine/engine.py*\n\n*Grep searched codebase*\n\n*Edited relevant file*\n\n*Grep searched codebase*\n\n*Searched filesystem*\n\n*Viewed file:///workspaces/semio/compose/engine/engine.test.py*\n\n*Grep searched codebase*\n\n*User accepted the command `PYTHONPATH=/workspaces/semio/compose/py:/workspaces/semio python - \u003c\u003c'PY'\nimport importlib.util\nspec = importlib.util.spec_from_file_location('engine_module','/workspaces/semio/compose/engine/engine.py')\nmod = importlib.util.module_from_spec(spec)\nspec.loader.exec_module(mod)\nprint('\\n'.join(sorted(t.name for t in mod.mcp._tool_manager.list_tools())))\nPY`*\n\n*Running MCP tool*\n\n*Grep searched codebase*\n\n*Edited relevant file*\n\n*User accepted the command `PYTHONPATH=/workspaces/semio/compose/py:/workspaces/semio python -m pytest engine.test.py -k \"mcp_tool_surface_keeps_only_allowed_prefixes\"`*\n\n*Updated todo list*\n\n*Running MCP tool*\n\n*Running MCP tool*\n\n*Running MCP tool*\n\n*Running MCP tool*\n\n*Running MCP tool*\n\n*Running MCP tool*\n\n*Viewed file:///workspaces/semio/compose/engine/engine.py*\n\n*Viewed file:///workspaces/semio/compose/engine/engine.py*\n\n*Viewed file:///workspaces/semio/compose/engine/engine.test.py*\n\n*Searched filesystem*\n\n### Planner Response\n\nDone — this is now **source-level clean**, not runtime masking.\n\n### What I changed\n\n1. **Removed MCP registration from disallowed tools at definition level**\n   - I removed `@mcp.tool()` from non-approved functions (auth helpers, diff/analysis helpers, read helpers, clustering helpers, etc.), so they remain callable internally/tests but are no longer exposed as MCP tools.\n   - Kept MCP registration only for allowed prefixes:\n     - `start_*`\n     - `finish_*`\n     - `transaction_*`\n     - `sum_qu*`\n\n2. **Replaced finalize/abort MCP exposure with `transaction_*` wrappers**\n   - Kept internal functions [finalize_transaction](file:///workspaces/semio/compose/engine/engine.py:2562:0-2573:32) / [abort_transaction](file:///workspaces/semio/compose/engine/engine.py:2576:0-2592:32) undecorated.\n   - Exposed MCP tools:\n     - [transaction_finalize](file:///workspaces/semio/compose/engine/engine.py:2595:0-2598:36)\n     - [transaction_abort](file:///workspaces/semio/compose/engine/engine.py:2601:0-2604:33)\n   - See @compose/engine/engine.py#2596-2605\n\n3. **Removed runtime pruning/masking**\n   - Deleted [_prune_mcp_tool_surface()](file:///workspaces/semio/compose/engine/engine.py:2645:0-2651:34) and its invocation entirely.\n   - MCP surface is now clean by registration only.\n   - End of MCP section now directly transitions to engine bootstrapping: @compose/engine/engine.py#2622-2629\n\n4. **Tightened test to exact MCP tool list**\n   - [test_mcp_tool_surface_keeps_only_allowed_prefixes](file:///workspaces/semio/compose/engine/engine.test.py:220:4-224:71) now asserts exact exported MCP tools (not just prefix-based).\n   - See @compose/engine/engine.test.py#221-235\n\n### Resulting exposed MCP tools\nVerified tool names are exactly:\n- [finish_working_in_design](file:///workspaces/semio/compose/engine/engine.py:2474:0-2484:32)\n- [finish_working_in_kit](file:///workspaces/semio/compose/engine/engine.py:2562:0-2576:32)\n- [finish_working_in_type](file:///workspaces/semio/compose/engine/engine.py:2515:0-2525:32)\n- [start_transaction](file:///workspaces/semio/compose/engine/engine.py:2545:0-2559:32)\n- [start_working_in_design](file:///workspaces/semio/compose/engine/engine.py:2446:0-2461:32)\n- [start_working_in_local_kit](file:///workspaces/semio/compose/engine/engine.py:2049:0-2065:32)\n- [start_working_in_remote_kit](file:///workspaces/semio/compose/engine/engine.py:2068:0-2084:32)\n- [start_working_in_type](file:///workspaces/semio/compose/engine/engine.py:2487:0-2502:32)\n- [sum_quality_in_design](file:///workspaces/semio/compose/engine/engine.py:2607:0-2618:32)\n- [transaction_abort](file:///workspaces/semio/compose/engine/engine.py:2601:0-2604:33)\n- [transaction_finalize](file:///workspaces/semio/compose/engine/engine.py:2595:0-2598:36)\n\n### Validation run\n- Ran:\n  `PYTHONPATH=/workspaces/semio/compose/py:/workspaces/semio python -m pytest engine.test.py -k \"mcp_tool_surface_keeps_only_allowed_prefixes\"`\n- Result: **1 passed**.\n\n(Everything requested is now enforced in source, not via post-registration filtering.)"
           }
         }
       },

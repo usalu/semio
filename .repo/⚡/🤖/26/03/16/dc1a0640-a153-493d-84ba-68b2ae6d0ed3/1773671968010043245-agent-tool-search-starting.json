@@ -19,7 +19,7 @@
         "maxResults": 20,
         "query": "y stepper|yStepper|testYValue|yStepperInput",
         "isRegexp": true,
-        "includePattern": "**/semio/sketchpad/sketchpad.test.ts"
+        "includePattern": "**/compose/sketchpad/sketchpad.test.ts"
       },
       "tool_use_id": "toolu_bdrk_0149f7XTW5HMw1i3e1Ksk4zA__vscode-1773671759750",
       "cwd": "/workspaces/semio"

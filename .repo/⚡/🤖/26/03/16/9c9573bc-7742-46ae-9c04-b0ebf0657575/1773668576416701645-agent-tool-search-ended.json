@@ -6,7 +6,7 @@
     "kind": "agent.file.read.ended",
     "second": "2026-03-16T13:42:56Z",
     "session": "9c9573bc-7742-46ae-9c04-b0ebf0657575",
-    "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
+    "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
   },
   "native": {
     "event": {
@@ -15,9 +15,9 @@
       "model": "default",
       "tool_name": "Read",
       "tool_input": {
-        "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-repo/resources/goals.json"
+        "file_path": "/home/vscode/.cursor/projects/workspaces-compose/mcps/project-0-repo/resources/goals.json"
       },
-      "error_message": "File not found: /home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-repo/resources/goals.json",
+      "error_message": "File not found: /home/vscode/.cursor/projects/workspaces-compose/mcps/project-0-repo/resources/goals.json",
       "failure_type": "error",
       "duration": 1.725,
       "tool_use_id": "call_R9HVFlQEs7FS5MBNftlxzhna\nfc_07029c2b3907fcc90169b808de6728819a806ea7baec39ab51",
@@ -28,7 +28,7 @@
         "/workspaces/semio"
       ],
       "user_email": "ueli.saluz@posteo.de",
-      "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
+      "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
     }
   },
   "response": {}

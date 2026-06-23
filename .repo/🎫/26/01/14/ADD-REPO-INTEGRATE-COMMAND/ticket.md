@@ -12,7 +12,7 @@ Add a new command to `repo` called `integrate <source> <target-section-name> <ta
 2. [x] Add `section integrate` command to CLI in `./repo/cli/main.go`.
 3. [x] Expose `integrate` tool in MCP in `./repo/cli/main.go`.
 4. [x] Add `integrate` mutation to `graphql/repo/schema.graphql`.
-5. [x] Register VS Code command `semio.sectionIntegrate` in `js/vscode/package.json`.
+5. [x] Register VS Code command `compose.sectionIntegrate` in `js/vscode/package.json`.
 6. [x] Implement VS Code command logic in `js/vscode/extension.ts`.
 7. [x] Update `AGENTS.md` and `README.md` documentation.
 8. [x] Verify implementation with test runs (CLI and VS Code integration).
@@ -37,8 +37,8 @@ Add a new command to `repo` called `integrate <source> <target-section-name> <ta
 - Reopened ticket due to missing integration in GraphQL and VS Code.
 - Patched ticket JSON to fix Range field type mismatch (int vs object).
 - Added `integrate` mutation to `graphql/repo/schema.graphql`.
-- Registered `semio.sectionIntegrate` command in `js/vscode/package.json`.
-- Implemented `semio.sectionIntegrate` logic and `integrateViaGraphQL` helper in `js/vscode/extension.ts`.
+- Registered `compose.sectionIntegrate` command in `js/vscode/package.json`.
+- Implemented `compose.sectionIntegrate` logic and `integrateViaGraphQL` helper in `js/vscode/extension.ts`.
 - Verified `section integrate` command via CLI, including nested section integration.
 - Finalized summary.md and prepared to close ticket.
 
@@ -74,7 +74,7 @@ I have implemented the `integrate` command for the `repo` tool. This command all
 
 ### VS Code Extension
 
-- Registered `semio.sectionIntegrate` command in `package.json`.
+- Registered `compose.sectionIntegrate` command in `package.json`.
 - Implemented `sectionIntegrate` command handler in `extension.ts` using GraphQL mutation.
 - Added file picking and input prompts for integration parameters.
 

@@ -28,11 +28,11 @@
             "maxResults": 100,
             "query": "materializedKitName|materialized|materializeAt|wip.theKit|target-schema|Target-schema",
             "isRegexp": true,
-            "includePattern": "**/semio/sketchpad/index.tsx"
+            "includePattern": "**/compose/sketchpad/index.tsx"
           },
           "tool_response": "",
           "tool_use_id": "call_319bnVw7yW0Q6QsUzO0t2rPP__vscode-1778443899230",
-          "cwd": "c:\\git\\semio"
+          "cwd": "c:\\git\\compose"
         }
       },
       "response": {}
@@ -58,11 +58,11 @@
             "maxResults": 100,
             "query": "materializedKitStoreField|materializedLiveJsonForReadPoint|materializeAt|materialized|wip.theKit|target-schema|Target-schema",
             "isRegexp": true,
-            "includePattern": "**/semio/react/index.tsx"
+            "includePattern": "**/compose/react/index.tsx"
           },
           "tool_response": "",
           "tool_use_id": "call_BJn007vMgFsC9JYdQ8ulAC23__vscode-1778443899229",
-          "cwd": "c:\\git\\semio"
+          "cwd": "c:\\git\\compose"
         }
       },
       "response": {}
@@ -88,11 +88,11 @@
             "maxResults": 100,
             "query": "materializedKitName|materialized|materializeAt|wip.theKit|target-schema|Target-schema",
             "isRegexp": true,
-            "includePattern": "**/semio/sketchpad/index.tsx"
+            "includePattern": "**/compose/sketchpad/index.tsx"
           },
           "tool_response": "",
           "tool_use_id": "call_319bnVw7yW0Q6QsUzO0t2rPP__vscode-1778443899230",
-          "cwd": "c:\\git\\semio"
+          "cwd": "c:\\git\\compose"
         }
       },
       "response": {}
@@ -118,11 +118,11 @@
             "maxResults": 100,
             "query": "materializedKitStoreField|materializedLiveJsonForReadPoint|materializeAt|materialized|wip.theKit|target-schema|Target-schema",
             "isRegexp": true,
-            "includePattern": "**/semio/react/index.tsx"
+            "includePattern": "**/compose/react/index.tsx"
           },
           "tool_response": "",
           "tool_use_id": "call_BJn007vMgFsC9JYdQ8ulAC23__vscode-1778443899229",
-          "cwd": "c:\\git\\semio"
+          "cwd": "c:\\git\\compose"
         }
       },
       "response": {}
@@ -146,15 +146,15 @@
           "tool_name": "get_errors",
           "tool_input": {
             "filePaths": [
-              "c:\\git\\semio\\semio\\js\\index.ts",
-              "c:\\git\\semio\\semio\\react\\index.tsx",
-              "c:\\git\\semio\\semio\\sketchpad\\index.tsx",
-              "c:\\git\\semio\\semio\\algorithms\\.storybook\\stories\\kit-store\\SnapshotViewer.tsx",
-              "c:\\git\\semio\\semio\\algorithms\\.storybook\\stories\\kit-store\\HistoryControls.tsx"
+              "c:\\git\\compose\\compose\\js\\index.ts",
+              "c:\\git\\compose\\compose\\react\\index.tsx",
+              "c:\\git\\compose\\compose\\sketchpad\\index.tsx",
+              "c:\\git\\compose\\compose\\algorithms\\.storybook\\stories\\kit-store\\SnapshotViewer.tsx",
+              "c:\\git\\compose\\compose\\algorithms\\.storybook\\stories\\kit-store\\HistoryControls.tsx"
             ]
           },
           "tool_use_id": "call_SyeoasZXPx89aDC4HdS0E71p__vscode-1778443899235",
-          "cwd": "c:\\git\\semio"
+          "cwd": "c:\\git\\compose"
         }
       },
       "response": {}
@@ -178,15 +178,15 @@
           "tool_name": "get_errors",
           "tool_input": {
             "filePaths": [
-              "c:\\git\\semio\\semio\\js\\index.ts",
-              "c:\\git\\semio\\semio\\react\\index.tsx",
-              "c:\\git\\semio\\semio\\sketchpad\\index.tsx",
-              "c:\\git\\semio\\semio\\algorithms\\.storybook\\stories\\kit-store\\SnapshotViewer.tsx",
-              "c:\\git\\semio\\semio\\algorithms\\.storybook\\stories\\kit-store\\HistoryControls.tsx"
+              "c:\\git\\compose\\compose\\js\\index.ts",
+              "c:\\git\\compose\\compose\\react\\index.tsx",
+              "c:\\git\\compose\\compose\\sketchpad\\index.tsx",
+              "c:\\git\\compose\\compose\\algorithms\\.storybook\\stories\\kit-store\\SnapshotViewer.tsx",
+              "c:\\git\\compose\\compose\\algorithms\\.storybook\\stories\\kit-store\\HistoryControls.tsx"
             ]
           },
           "tool_use_id": "call_SyeoasZXPx89aDC4HdS0E71p__vscode-1778443899235",
-          "cwd": "c:\\git\\semio"
+          "cwd": "c:\\git\\compose"
         }
       },
       "response": {}
@@ -210,16 +210,16 @@
           "tool_name": "get_errors",
           "tool_input": {
             "filePaths": [
-              "c:\\git\\semio\\semio\\js\\index.ts",
-              "c:\\git\\semio\\semio\\react\\index.tsx",
-              "c:\\git\\semio\\semio\\sketchpad\\index.tsx",
-              "c:\\git\\semio\\semio\\algorithms\\.storybook\\stories\\kit-store\\SnapshotViewer.tsx",
-              "c:\\git\\semio\\semio\\algorithms\\.storybook\\stories\\kit-store\\HistoryControls.tsx"
+              "c:\\git\\compose\\compose\\js\\index.ts",
+              "c:\\git\\compose\\compose\\react\\index.tsx",
+              "c:\\git\\compose\\compose\\sketchpad\\index.tsx",
+              "c:\\git\\compose\\compose\\algorithms\\.storybook\\stories\\kit-store\\SnapshotViewer.tsx",
+              "c:\\git\\compose\\compose\\algorithms\\.storybook\\stories\\kit-store\\HistoryControls.tsx"
             ]
           },
           "tool_response": "",
           "tool_use_id": "call_SyeoasZXPx89aDC4HdS0E71p__vscode-1778443899235",
-          "cwd": "c:\\git\\semio"
+          "cwd": "c:\\git\\compose"
         }
       },
       "response": {}
@@ -243,16 +243,16 @@
           "tool_name": "get_errors",
           "tool_input": {
             "filePaths": [
-              "c:\\git\\semio\\semio\\js\\index.ts",
-              "c:\\git\\semio\\semio\\react\\index.tsx",
-              "c:\\git\\semio\\semio\\sketchpad\\index.tsx",
-              "c:\\git\\semio\\semio\\algorithms\\.storybook\\stories\\kit-store\\SnapshotViewer.tsx",
-              "c:\\git\\semio\\semio\\algorithms\\.storybook\\stories\\kit-store\\HistoryControls.tsx"
+              "c:\\git\\compose\\compose\\js\\index.ts",
+              "c:\\git\\compose\\compose\\react\\index.tsx",
+              "c:\\git\\compose\\compose\\sketchpad\\index.tsx",
+              "c:\\git\\compose\\compose\\algorithms\\.storybook\\stories\\kit-store\\SnapshotViewer.tsx",
+              "c:\\git\\compose\\compose\\algorithms\\.storybook\\stories\\kit-store\\HistoryControls.tsx"
             ]
           },
           "tool_response": "",
           "tool_use_id": "call_SyeoasZXPx89aDC4HdS0E71p__vscode-1778443899235",
-          "cwd": "c:\\git\\semio"
+          "cwd": "c:\\git\\compose"
         }
       },
       "response": {}
@@ -275,14 +275,14 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\b46f93f0-ab1d-45ed-871a-5a1fef90abe3.jsonl",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "bunx tsc -p semio/react/tsconfig.json --noEmit --pretty false",
-            "explanation": "Run the semio/react TypeScript compile check after updating hook call sites.",
-            "goal": "Validate semio/react types",
+            "command": "bunx tsc -p compose/react/tsconfig.json --noEmit --pretty false",
+            "explanation": "Run the compose/react TypeScript compile check after updating hook call sites.",
+            "goal": "Validate compose/react types",
             "mode": "sync",
             "timeout": 600000
           },
           "tool_use_id": "call_1qV2SzjVRqUQEwSUOthzc1yd__vscode-1778443899234",
-          "cwd": "c:\\git\\semio"
+          "cwd": "c:\\git\\compose"
         }
       },
       "response": {}
@@ -305,14 +305,14 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\b46f93f0-ab1d-45ed-871a-5a1fef90abe3.jsonl",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "bunx tsc -p semio/react/tsconfig.json --noEmit --pretty false",
-            "explanation": "Run the semio/react TypeScript compile check after updating hook call sites.",
-            "goal": "Validate semio/react types",
+            "command": "bunx tsc -p compose/react/tsconfig.json --noEmit --pretty false",
+            "explanation": "Run the compose/react TypeScript compile check after updating hook call sites.",
+            "goal": "Validate compose/react types",
             "mode": "sync",
             "timeout": 600000
           },
           "tool_use_id": "call_1qV2SzjVRqUQEwSUOthzc1yd__vscode-1778443899234",
-          "cwd": "c:\\git\\semio"
+          "cwd": "c:\\git\\compose"
         }
       },
       "response": {}
@@ -335,15 +335,15 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\b46f93f0-ab1d-45ed-871a-5a1fef90abe3.jsonl",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "bunx tsc -p semio/react/tsconfig.json --noEmit --pretty false",
-            "explanation": "Run the semio/react TypeScript compile check after updating hook call sites.",
-            "goal": "Validate semio/react types",
+            "command": "bunx tsc -p compose/react/tsconfig.json --noEmit --pretty false",
+            "explanation": "Run the compose/react TypeScript compile check after updating hook call sites.",
+            "goal": "Validate compose/react types",
             "mode": "sync",
             "timeout": 600000
           },
           "tool_response": "\n\nCommand produced no output",
           "tool_use_id": "call_1qV2SzjVRqUQEwSUOthzc1yd__vscode-1778443899234",
-          "cwd": "c:\\git\\semio"
+          "cwd": "c:\\git\\compose"
         }
       },
       "response": {}
@@ -366,15 +366,15 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\b46f93f0-ab1d-45ed-871a-5a1fef90abe3.jsonl",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "bunx tsc -p semio/react/tsconfig.json --noEmit --pretty false",
-            "explanation": "Run the semio/react TypeScript compile check after updating hook call sites.",
-            "goal": "Validate semio/react types",
+            "command": "bunx tsc -p compose/react/tsconfig.json --noEmit --pretty false",
+            "explanation": "Run the compose/react TypeScript compile check after updating hook call sites.",
+            "goal": "Validate compose/react types",
             "mode": "sync",
             "timeout": 600000
           },
           "tool_response": "\n\nCommand produced no output",
           "tool_use_id": "call_1qV2SzjVRqUQEwSUOthzc1yd__vscode-1778443899234",
-          "cwd": "c:\\git\\semio"
+          "cwd": "c:\\git\\compose"
         }
       },
       "response": {}
@@ -396,7 +396,7 @@
           "session_id": "b46f93f0-ab1d-45ed-871a-5a1fef90abe3",
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\b46f93f0-ab1d-45ed-871a-5a1fef90abe3.jsonl",
           "stop_hook_active": false,
-          "cwd": "c:\\git\\semio"
+          "cwd": "c:\\git\\compose"
         }
       },
       "response": {}
@@ -418,7 +418,7 @@
           "session_id": "b46f93f0-ab1d-45ed-871a-5a1fef90abe3",
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\b46f93f0-ab1d-45ed-871a-5a1fef90abe3.jsonl",
           "stop_hook_active": false,
-          "cwd": "c:\\git\\semio"
+          "cwd": "c:\\git\\compose"
         }
       },
       "response": {}

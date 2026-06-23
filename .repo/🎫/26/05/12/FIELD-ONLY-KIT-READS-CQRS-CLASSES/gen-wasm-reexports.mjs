@@ -1,5 +1,5 @@
 import fs from "node:fs";
-const s = fs.readFileSync("semio/js/kit-wasm-store.ts", "utf8");
+const s = fs.readFileSync("compose/js/kit-wasm-store.ts", "utf8");
 const names = [];
 for (const re of [/^export (async )?function (\w+)/gm, /^export const (\w+)/gm, /^export class (\w+)/gm]) {
   let m;

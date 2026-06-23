@@ -3,7 +3,7 @@ process.env.NODE_OPTIONS = process.env.NODE_OPTIONS = `${process.env.NODE_OPTION
 import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
-  testDir: "/workspaces/semio/semio/sketchpad",
+  testDir: "/workspaces/semio/compose/sketchpad",
   testMatch: ["**/index.tsx"],
   fullyParallel: false,
   timeout: 300000,

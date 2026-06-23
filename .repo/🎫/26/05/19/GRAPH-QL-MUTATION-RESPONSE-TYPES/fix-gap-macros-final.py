@@ -2,7 +2,7 @@
 import re
 from pathlib import Path
 
-lib = Path(r"c:\git\semio\semio\client\lib\rs\lib.rs")
+lib = Path(r"c:\git\compose\compose\client\lib\rs\lib.rs")
 text = lib.read_text(encoding="utf-8")
 
 fam_m = re.search(

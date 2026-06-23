@@ -15,9 +15,9 @@ import {
   type KindCatalogBundle,
   type KindCompatEntry,
   updateWorldMatrixChain,
-} from "/Users/ueli/Documents/semio/puzzle/3d/react/index.tsx";
+} from "/Users/ueli/Documents/compose/puzzle/3d/react/index.tsx";
 
-const repoRoot = "/Users/ueli/Documents/semio";
+const repoRoot = "/Users/ueli/Documents/compose";
 
 function parseKindCatalogs(meta: Record<string, unknown> | undefined): KindCatalogBundle | undefined {
   const raw = meta?.kindCatalogs;
@@ -29,7 +29,7 @@ function parseKindCompatibility(meta: Record<string, unknown> | undefined): read
   const raw = meta?.kindCompatibility;
   return Array.isArray(raw) ? (raw as KindCompatEntry[]) : [];
 }
-const meshDir = resolve(repoRoot, "semio/fixtures/kit/folder/abbau-aufbau");
+const meshDir = resolve(repoRoot, "compose/fixtures/kit/folder/abbau-aufbau");
 const fixtureJson = JSON.parse(
   readFileSync(resolve(repoRoot, "puzzle/3d/fixture/concrete-forest.3d.json"), "utf8"),
 );

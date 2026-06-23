@@ -1,6 +1,6 @@
 // #region 🧲Header
 
-// 🥼︎ semio/js/.storybook/story/elements/aggregation/Tree.stories.tsx
+// 🥼︎ compose/js/.storybook/story/elements/aggregation/Tree.stories.tsx
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -302,13 +302,13 @@ const DragAndDropTreeDemo = () => {
           },
         ]}
         dragAndDropController={{
-          getDragData: ({ sourceItem }) => ({ "application/vnd.semio.story.tree-item": sourceItem.id }),
+          getDragData: ({ sourceItem }) => ({ "application/vnd.compose.story.tree-item": sourceItem.id }),
           handleDrop: ({ target, targetKind, data }) => {
             if (targetKind !== "section" || target.id !== "tree.story.selection") {
               return;
             }
 
-            const itemId = data["application/vnd.semio.story.tree-item"];
+            const itemId = data["application/vnd.compose.story.tree-item"];
             const sourceItem = paletteItems.find((item) => item.id === itemId);
 
             if (!sourceItem) {

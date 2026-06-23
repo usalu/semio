@@ -5,7 +5,7 @@
   "second": "2026-03-22T22:23:03Z",
   "checkpoint": "83589326813fc70605d52b2a8ef10910163ade12",
   "contributor": "unknown",
-  "transcript": "/home/vscode/.claude/projects/-workspaces-semio/517b9888-5a58-4f05-9e34-19f5941a7ed5.jsonl",
+  "transcript": "/home/vscode/.claude/projects/-workspaces-compose/517b9888-5a58-4f05-9e34-19f5941a7ed5.jsonl",
   "events": [
     {
       "event": {
@@ -15,12 +15,12 @@
         "kind": "agent.started",
         "second": "2026-03-22T22:23:03Z",
         "session": "517b9888-5a58-4f05-9e34-19f5941a7ed5",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/517b9888-5a58-4f05-9e34-19f5941a7ed5.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/517b9888-5a58-4f05-9e34-19f5941a7ed5.jsonl"
       },
       "native": {
         "event": {
           "session_id": "517b9888-5a58-4f05-9e34-19f5941a7ed5",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/517b9888-5a58-4f05-9e34-19f5941a7ed5.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/517b9888-5a58-4f05-9e34-19f5941a7ed5.jsonl",
           "cwd": "/workspaces/semio",
           "hook_event_name": "SessionStart",
           "source": "startup"
@@ -36,12 +36,12 @@
         "kind": "agent.ended",
         "second": "2026-03-22T22:23:05Z",
         "session": "517b9888-5a58-4f05-9e34-19f5941a7ed5",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/517b9888-5a58-4f05-9e34-19f5941a7ed5.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/517b9888-5a58-4f05-9e34-19f5941a7ed5.jsonl"
       },
       "native": {
         "event": {
           "session_id": "517b9888-5a58-4f05-9e34-19f5941a7ed5",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/517b9888-5a58-4f05-9e34-19f5941a7ed5.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/517b9888-5a58-4f05-9e34-19f5941a7ed5.jsonl",
           "cwd": "/workspaces/semio",
           "hook_event_name": "SessionEnd",
           "reason": "other"

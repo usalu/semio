@@ -6,14 +6,14 @@
     "kind": "agent.prompt.submitting",
     "second": "2026-03-16T13:56:25Z",
     "session": "9c9573bc-7742-46ae-9c04-b0ebf0657575",
-    "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
+    "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
   },
   "native": {
     "event": {
       "conversation_id": "9c9573bc-7742-46ae-9c04-b0ebf0657575",
       "generation_id": "baef3b5c-2278-40dd-aa76-14114941dcb0",
       "model": "default",
-      "prompt": "Align all of them.\nMake sure that all kpi that have geometrical information report in semio coordinate system (semio x=glb x, semio y = glb -x, semio z = glb y). Dont use arrays with implicit coordinate system but use the semio data types: points, plane, vector, xAxis, etc",
+      "prompt": "Align all of them.\nMake sure that all kpi that have geometrical information report in compose coordinate system (compose x=glb x, compose y = glb -x, compose z = glb y). Dont use arrays with implicit coordinate system but use the compose data types: points, plane, vector, xAxis, etc",
       "attachments": [
         {
           "type": "rule",
@@ -26,7 +26,7 @@
         "/workspaces/semio"
       ],
       "user_email": "ueli.saluz@posteo.de",
-      "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
+      "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
     }
   },
   "response": {}

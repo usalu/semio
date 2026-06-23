@@ -1,7 +1,7 @@
-# Agent verify (cursor) — `semio/rs/lib.rs` macro + build
+# Agent verify (cursor) — `compose/rs/lib.rs` macro + build
 
-- `cargo check` (semio/rs): ok
-- `cargo test` (semio/rs): 36 passed, 1 ignored; `schema_matches_target_graphql_file` ok after skipping empty SDL fragments in `gql::sdl()`.
+- `cargo check` (compose/rs): ok
+- `cargo test` (compose/rs): 36 passed, 1 ignored; `schema_matches_target_graphql_file` ok after skipping empty SDL fragments in `gql::sdl()`.
 
 ## Macro / roster
 

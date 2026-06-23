@@ -74,7 +74,7 @@ Signed-off-by: Name <email@example.com>
 - From **current** `diff` output only; precise; not path-only (`Update foo.ts` forbidden).
 - **Cover every staged area (required):** one bullet minimum per area present in the diff. Areas the script checks:
   - **`.cursor/plans/`** — Cursor plans are **high impact**; summarize what the plan decides or enables (read the diff, not the filename alone).
-  - **`framework/` / `puzzle/` / `semio/` / `cad/` / `ui/` / …** — product/runtime behavior.
+  - **`framework/` / `puzzle/` / `compose/` / `cad/` / `ui/` / …** — product/runtime behavior.
   - **`repo/`** — hooks, CLI, MCP, micro-commit, tooling.
   - **`.agents/`** — skills/rules (except pure `SKILL.md` tweaks bundled with larger work—still mention the skill change if it is part of the story).
   - **`.devcontainer/`** — environment/bootstrap.

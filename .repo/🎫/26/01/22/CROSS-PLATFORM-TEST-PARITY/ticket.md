@@ -4,7 +4,7 @@
 # Plan: Cross Platform Test Parity
 
 ## Objective
-Make all semio tests pass identically across TypeScript, Python, C#, Go, and Rust implementations.
+Make all compose tests pass identically across TypeScript, Python, C#, Go, and Rust implementations.
 
 ## Current Status
 - TypeScript: 10/10 pass ✅

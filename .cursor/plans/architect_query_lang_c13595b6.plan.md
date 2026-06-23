@@ -1,6 +1,6 @@
 ---
 name: architect query lang
-overview: Build a wasm-compatible Rust library `architect` at `semio/client/lib/query/lib.rs` that parses a Cypher-inspired query language, plans it against a hand-crafted typesafe mirror of the semio GraphQL schema, and executes it end-to-end through an injected async GraphQL transport — driving multi-roundtrip queries, mutations and subscriptions.
+overview: Build a wasm-compatible Rust library `architect` at `compose/client/lib/query/lib.rs` that parses a Cypher-inspired query language, plans it against a hand-crafted typesafe mirror of the compose GraphQL schema, and executes it end-to-end through an injected async GraphQL transport — driving multi-roundtrip queries, mutations and subscriptions.
 todos:
   - id: scaffold
     content: "Scaffold crate: Cargo.toml, project.json, package.json, README, region skeleton in lib.rs; wire root script.ts/package.json/launch.json query block"
@@ -9,7 +9,7 @@ todos:
     content: Implement nom-based lexer + recursive-descent parser for MATCH/WITH/UNWIND/CALL/RETURN with patterns, prop-maps, expressions; mirror spatial construct grammar
     status: completed
   - id: schema-mirror
-    content: Hand-craft typesafe schema mirror (Label, Predicate, Edge table, Mutation CALL targets, Subscription CALL targets) from semio schema.graphql
+    content: Hand-craft typesafe schema mirror (Label, Predicate, Edge table, Mutation CALL targets, Subscription CALL targets) from compose schema.graphql
     status: completed
   - id: planner
     content: "Build planner: anchor selection, GraphQL document generation per MATCH, cross-step joins on shared variables, CALL -> mutation/subscription steps, WHERE/UNWIND/RETURN lowered to in-memory ops"
@@ -26,21 +26,21 @@ todos:
 isProject: false
 ---
 
-# Architect — Cypher-inspired query language for semio
+# Architect — Cypher-inspired query language for compose
 
 ## 1. What "architect" is
 
-A small Cypher-flavoured surface compiled and executed by a Rust crate. The grammar is a strict subset of the spatial `construct` language (see [spatial/js/query/index.ts](spatial/js/query/index.ts)) plus first-class `CALL` for every semio mutation/subscription.
+A small Cypher-flavoured surface compiled and executed by a Rust crate. The grammar is a strict subset of the spatial `construct` language (see [spatial/js/query/index.ts](spatial/js/query/index.ts)) plus first-class `CALL` for every compose mutation/subscription.
 
 Supported clauses (one statement = sequence of clauses, evaluated top-to-bottom):
 
-- `MATCH` pattern-list `[WHERE expr]` — traversal over the semio graph
+- `MATCH` pattern-list `[WHERE expr]` — traversal over the compose graph
 - `WITH` projection-list `[WHERE expr]` — re-bind variables, filter
 - `UNWIND` expr `AS` ident — fan out a list
 - `CALL` qualified.ident `(` object-literal `)` `[YIELD ...]` — mutation or subscription
 - `RETURN` projection-list `[ORDER BY expr] [LIMIT n]`
 
-Patterns use a tiny fixed predicate vocabulary that mirrors the semio entity graph:
+Patterns use a tiny fixed predicate vocabulary that mirrors the compose entity graph:
 
 - `HAS` — ownership/containment (e.g. `Type -[:HAS]-> Connector`, `Design -[:HAS]-> Connection`)
 - `IS` — identity / blueprint resolution (`Blueprint -[:IS]-> Type`, `Connector -[:IS]-> Port`)
@@ -48,17 +48,17 @@ Patterns use a tiny fixed predicate vocabulary that mirrors the semio entity gra
 - `OWNS` — generic `owner`/`owns` edge from the GraphQL `Entity` interface
 - Directionality `->` / `<-` / `--` is respected; relation prop-maps (e.g. `{parent: true}`) act as edge-side filters
 
-Node labels are exactly the semio GraphQL types: `Kit`, `Design`, `Piece`, `Blueprint`, `Type`, `Port`, `Connector`, `Connection`, `Side`, `Quality`, `Author`, `Tag`, `Concept`, `Prop`, `Attribute`, `Representation`, `Layer`, `Group`, etc.
+Node labels are exactly the compose GraphQL types: `Kit`, `Design`, `Piece`, `Blueprint`, `Type`, `Port`, `Connector`, `Connection`, `Side`, `Quality`, `Author`, `Tag`, `Concept`, `Prop`, `Attribute`, `Representation`, `Layer`, `Group`, etc.
 
 ## 2. Where it lives
 
-- New crate root: [semio/client/lib/query/lib.rs](semio/client/lib/query/lib.rs) (currently empty file).
+- New crate root: [compose/client/lib/query/lib.rs](compose/client/lib/query/lib.rs) (currently empty file).
 - New sibling files (kept in the same `query/` directory, organised with `mod` blocks inside a single `lib.rs` per repo rules; only `lib.rs` is the source-of-truth Rust file):
   - `Cargo.toml`
-  - `project.json` (calls into a new top-level `script.ts` `query <subcommand>` to mirror the rs bundle pattern, see [semio/client/lib/rs/project.json](semio/client/lib/rs/project.json))
+  - `project.json` (calls into a new top-level `script.ts` `query <subcommand>` to mirror the rs bundle pattern, see [compose/client/lib/rs/project.json](compose/client/lib/rs/project.json))
   - `package.json` (so it shows up as an nx project)
   - `README.md`
-- Internal layout uses `mod` regions inside `lib.rs` per the repo's "regions in a single file" rule (mirrors how [semio/client/lib/rs/lib.rs](semio/client/lib/rs/lib.rs) is structured):
+- Internal layout uses `mod` regions inside `lib.rs` per the repo's "regions in a single file" rule (mirrors how [compose/client/lib/rs/lib.rs](compose/client/lib/rs/lib.rs) is structured):
 
 ```rust
 //#region 🔖Lexer
@@ -74,7 +74,7 @@ Node labels are exactly the semio GraphQL types: `Kit`, `Design`, `Piece`, `Blue
 
 ## 3. Crate setup
 
-`Cargo.toml` mirrors [semio/client/lib/rs/Cargo.toml](semio/client/lib/rs/Cargo.toml) (cdylib + rlib, wasm-bindgen target deps). Dependencies (lean):
+`Cargo.toml` mirrors [compose/client/lib/rs/Cargo.toml](compose/client/lib/rs/Cargo.toml) (cdylib + rlib, wasm-bindgen target deps). Dependencies (lean):
 
 - `serde`, `serde_json`, `thiserror`, `futures-util`, `async-trait` (or hand-rolled `Future`-returning trait for wasm-safe object safety)
 - `nom` for the lexer/parser (single, small, wasm-clean)
@@ -116,13 +116,13 @@ const EDGES: &[Edge] = &[
            edge_props: &[("parent", EdgeProp::ParentFlag(false))] },
     Edge { from: Design,     pred: Has, dir: Out, to: Connection,
            graphql_field: "connections", cardinality: Many,   edge_props: &[] },
-    // ...generated by hand from semio/client/schema/graphql/schema.graphql Query/Mutation/Subscription roots
+    // ...generated by hand from compose/client/schema/graphql/schema.graphql Query/Mutation/Subscription roots
 ];
 ```
 
 The planner asks the table for `(from_label, predicate, edge_props, direction, to_label)` and gets back exactly one `Edge`, or a deterministic ambiguity error. This is the entire "type system" — no runtime introspection.
 
-`CALL` targets get their own typed mirror of `Mutation.session.*` and `Subscription.*` per [schema.graphql lines 3233 and 5007](semio/client/schema/graphql/schema.graphql), e.g. `CALL session.attribute.added({...})` resolves to the matching nested mutation field with statically-known input shape.
+`CALL` targets get their own typed mirror of `Mutation.session.*` and `Subscription.*` per [schema.graphql lines 3233 and 5007](compose/client/schema/graphql/schema.graphql), e.g. `CALL session.attribute.added({...})` resolves to the matching nested mutation field with statically-known input shape.
 
 ## 5. Parser
 
@@ -169,7 +169,7 @@ pub trait Transport {
 }
 ```
 
-The native side ships a no-op stub `HttpTransport` behind a feature flag (only for tests). The WASM side ships a `JsTransport` that takes a `js_sys::Function` callback and a subscription factory — the host (the existing `KitStoreHandle` / `rs-wasm-transport` in [semio/client/lib/js/rs-wasm-transport.ts](semio/client/lib/js/rs-wasm-transport.ts)) provides them.
+The native side ships a no-op stub `HttpTransport` behind a feature flag (only for tests). The WASM side ships a `JsTransport` that takes a `js_sys::Function` callback and a subscription factory — the host (the existing `KitStoreHandle` / `rs-wasm-transport` in [compose/client/lib/js/rs-wasm-transport.ts](compose/client/lib/js/rs-wasm-transport.ts)) provides them.
 
 `Executor::run(plan, transport)` returns `Result<QueryResult, ArchitectError>` for queries/mutations, and `Result<impl Stream<Item=QueryResult>, _>` for subscriptions.
 
@@ -218,6 +218,6 @@ flowchart LR
 
 ## 11. Out of scope (explicit)
 
-- No introspection, no schema-fetch, no codegen of the schema mirror — the mirror is a single hand-curated table that lives next to the planner and is kept consistent with [semio/client/schema/graphql/schema.graphql](semio/client/schema/graphql/schema.graphql) by the developer touching either file.
-- No execution caching, no kit-graph awareness in this crate — that lives in [semio/client/lib/rs/lib.rs](semio/client/lib/rs/lib.rs). Architect only emits and runs GraphQL.
+- No introspection, no schema-fetch, no codegen of the schema mirror — the mirror is a single hand-curated table that lives next to the planner and is kept consistent with [compose/client/schema/graphql/schema.graphql](compose/client/schema/graphql/schema.graphql) by the developer touching either file.
+- No execution caching, no kit-graph awareness in this crate — that lives in [compose/client/lib/rs/lib.rs](compose/client/lib/rs/lib.rs). Architect only emits and runs GraphQL.
 - No JS-side mirror of the parser; the JS host calls `architect_run` via wasm.

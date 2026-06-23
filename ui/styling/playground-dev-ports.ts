@@ -5,7 +5,7 @@
 //#region 🔖PlaygroundDevPorts
 export type PlaygroundHostKind =
 	| "storybook"
-	| "semio"
+	| "compose"
 	| "puzzle-2d"
 	| "puzzle-3d"
 	| "puzzle-5d"
@@ -27,7 +27,7 @@ type PlaygroundPortSpec = {
 /** Dev ports 6012–6020 are puzzle/graph/cad plays; 6040+ are map/presentation; test ports sit in 6027–6052. */
 export const PLAYGROUND_PORTS: Record<PlaygroundHostKind, PlaygroundPortSpec> = {
 	storybook: { dev: 6010, env: "STORYBOOK_PORT" },
-	semio: { dev: 4000, env: "SEMIO_PLAY_PORT" },
+	compose: { dev: 4000, env: "COMPOSE_PLAY_PORT" },
 	"puzzle-2d": { dev: 6012, test: 6027, env: "PUZZLE_2D_PLAY_PORT" },
 	"puzzle-3d": { dev: 6013, test: 6028, env: "PUZZLE_3D_PLAY_PORT" },
 	"puzzle-5d": { dev: 6014, test: 6035, env: "PUZZLE_5D_PLAY_PORT" },
@@ -77,9 +77,9 @@ export function allPlaygroundReservedPorts(): ReadonlySet<number> {
 	return ports;
 }
 
-/** @emoji 🌐 Subset used by iframe static-site embed URLs (`semio`, `cad`, puzzle dims). */
+/** @emoji 🌐 Subset used by iframe static-site embed URLs (`compose`, `cad`, puzzle dims). */
 export const PLAYGROUND_EMBED_SITE_DEV_PORTS = {
-	semio: playgroundDevPortString("semio"),
+	compose: playgroundDevPortString("compose"),
 	cad: playgroundDevPortString("cad"),
 	"2d": playgroundDevPortString("puzzle-2d"),
 	"3d": playgroundDevPortString("puzzle-3d"),

@@ -17,4 +17,4 @@ Fixed kit app wires diagram identities falling behind the virtual file system wh
 
 ## Files
 
-- `semio/client/lib/sketchpad/js/index.ts`
+- `compose/client/lib/sketchpad/js/index.ts`

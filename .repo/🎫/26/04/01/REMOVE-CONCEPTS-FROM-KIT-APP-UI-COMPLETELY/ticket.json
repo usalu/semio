@@ -3,7 +3,7 @@
   "emoji": "🗑️",
   "status": "closed",
   "description": "Remove all remaining concept visibility from the Kit app UI: ConceptSection in detail panel, concepts count in diagram test totalArtifacts, selectedConceptsClick in test selection count, and concepts field in kitData evaluation. Concepts must never be visible, selectable, or counted in any Kit app UI surface.",
-  "summary": "Removed all remaining concept UI from the Kit app in semio/sketchpad/index.tsx. 4 edits: (1) Removed ConceptSection, SingleConceptSection, and MultipleConceptsSection components from the detail panel. (2) Updated Details section comment to remove 'concept'. (3) Removed selectedConceptsClick from diagram node click selection test. (4) Removed concepts field from kitData evaluation and totalArtifacts calculation. Internal concept infrastructure preserved. All 134 unit tests pass.",
+  "summary": "Removed all remaining concept UI from the Kit app in compose/sketchpad/index.tsx. 4 edits: (1) Removed ConceptSection, SingleConceptSection, and MultipleConceptsSection components from the detail panel. (2) Updated Details section comment to remove 'concept'. (3) Removed selectedConceptsClick from diagram node click selection test. (4) Removed concepts field from kitData evaluation and totalArtifacts calculation. Internal concept infrastructure preserved. All 134 unit tests pass.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1237"
   },

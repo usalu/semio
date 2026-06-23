@@ -22,37 +22,37 @@
       },
       {
         "id": "US-002",
-        "title": "Finalize semio/graphql Contract For Kits, Changes, Diffs, Connections, Operations, And Backbone Lifecycle",
+        "title": "Finalize compose/graphql Contract For Kits, Changes, Diffs, Connections, Operations, And Backbone Lifecycle",
         "status": "completed",
         "completedInSession": true
       },
       {
         "id": "US-003",
-        "title": "Implement semio/rs Core Kit Graph Engine (Async, Pointer-Internal, Multi-State)",
+        "title": "Implement compose/rs Core Kit Graph Engine (Async, Pointer-Internal, Multi-State)",
         "status": "completed",
         "completedInSession": true
       },
       {
         "id": "US-004",
-        "title": "Implement Attachable Backbones — Dev JSON And Local .semio/ Multi-DB + Blobs",
+        "title": "Implement Attachable Backbones — Dev JSON And Local .compose/ Multi-DB + Blobs",
         "status": "completed",
         "completedInSession": true
       },
       {
         "id": "US-005",
-        "title": "Implement GraphQL Target In semio/rs Matching semio/graphql/schema.graphql",
+        "title": "Implement GraphQL Target In compose/rs Matching compose/graphql/schema.graphql",
         "status": "completed",
         "completedInSession": true
       },
       {
         "id": "US-006",
-        "title": "Rebuild semio/js Facade Over semio/rs Using RxJS Without JS-Layer Kit Caching",
+        "title": "Rebuild compose/js Facade Over compose/rs Using RxJS Without JS-Layer Kit Caching",
         "status": "completed",
         "completedInSession": true
       },
       {
         "id": "US-007",
-        "title": "Rebuild semio/react Hooks Over semio/js With useSyncExternalStore Kit Subscriptions And Tuple Hooks",
+        "title": "Rebuild compose/react Hooks Over compose/js With useSyncExternalStore Kit Subscriptions And Tuple Hooks",
         "status": "completed",
         "completedInSession": true
       },
@@ -79,7 +79,7 @@
       "iteration": 2,
       "status": "completed",
       "taskId": "US-002",
-      "taskTitle": "Finalize semio/graphql Contract For Kits, Changes, Diffs, Connections, Operations, And Backbone Lifecycle",
+      "taskTitle": "Finalize compose/graphql Contract For Kits, Changes, Diffs, Connections, Operations, And Backbone Lifecycle",
       "taskCompleted": true,
       "durationMs": 455430,
       "startedAt": "2026-05-06T21:19:34.107Z",
@@ -89,7 +89,7 @@
       "iteration": 3,
       "status": "completed",
       "taskId": "US-003",
-      "taskTitle": "Implement semio/rs Core Kit Graph Engine (Async, Pointer-Internal, Multi-State)",
+      "taskTitle": "Implement compose/rs Core Kit Graph Engine (Async, Pointer-Internal, Multi-State)",
       "taskCompleted": true,
       "durationMs": 415866,
       "startedAt": "2026-05-06T21:27:11.487Z",
@@ -99,7 +99,7 @@
       "iteration": 4,
       "status": "completed",
       "taskId": "US-004",
-      "taskTitle": "Implement Attachable Backbones — Dev JSON And Local .semio/ Multi-DB + Blobs",
+      "taskTitle": "Implement Attachable Backbones — Dev JSON And Local .compose/ Multi-DB + Blobs",
       "taskCompleted": true,
       "durationMs": 626357,
       "startedAt": "2026-05-06T21:34:09.319Z",
@@ -109,7 +109,7 @@
       "iteration": 5,
       "status": "completed",
       "taskId": "US-005",
-      "taskTitle": "Implement GraphQL Target In semio/rs Matching semio/graphql/schema.graphql",
+      "taskTitle": "Implement GraphQL Target In compose/rs Matching compose/graphql/schema.graphql",
       "taskCompleted": true,
       "durationMs": 189242,
       "startedAt": "2026-05-06T21:44:37.508Z",
@@ -119,7 +119,7 @@
       "iteration": 6,
       "status": "completed",
       "taskId": "US-006",
-      "taskTitle": "Rebuild semio/js Facade Over semio/rs Using RxJS Without JS-Layer Kit Caching",
+      "taskTitle": "Rebuild compose/js Facade Over compose/rs Using RxJS Without JS-Layer Kit Caching",
       "taskCompleted": true,
       "durationMs": 1325649,
       "startedAt": "2026-05-06T21:47:48.670Z",
@@ -129,7 +129,7 @@
       "iteration": 7,
       "status": "completed",
       "taskId": "US-007",
-      "taskTitle": "Rebuild semio/react Hooks Over semio/js With useSyncExternalStore Kit Subscriptions And Tuple Hooks",
+      "taskTitle": "Rebuild compose/react Hooks Over compose/js With useSyncExternalStore Kit Subscriptions And Tuple Hooks",
       "taskCompleted": true,
       "durationMs": 279162,
       "startedAt": "2026-05-06T22:09:56.208Z",

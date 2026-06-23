@@ -1,0 +1,27 @@
+{
+  "name": "@compose/js",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["@compose/rs:build"],
+      "options": {
+        "cwd": "compose/client/lib/js",
+        "command": "bunx tsc --noEmit",
+        "forwardAllArgs": true
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["@compose/rs:build"],
+      "options": {
+        "cwd": "compose/client/lib/js",
+        "command": "bunx vitest run --config vite.config.ts",
+        "forwardAllArgs": true,
+        "env": {
+          "COMPOSE_JS_RUN_EMBEDDED_TESTS": "1"
+        }
+      }
+    }
+  }
+}

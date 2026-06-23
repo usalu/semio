@@ -9,10 +9,10 @@ goal: SKETCHPAD-IMPROVEMENTS
 Implemented connection details panel tree structure: converted Gap/Shift/Rise from Stepper to Slider, renamed Connector to Port labels, renamed U/V to X Offset/Y Offset in Diagram, updated both en/de translations, updated e2e test assertions. 0 TS errors, 13/13 unit tests pass.
 ## Changes
 
-- `semio/js/sketchpad/Design.tsx`: SingleConnectionInfo renamed connectingConnectorId → connectingPortId, connectedConnectorId → connectedPortId; SingleConnectionFields converted gap/shift/rise from Stepper to Slider with labels; renamed u/v steppers to x/y; same changes in ConnectionsSectionForm bulk editing section
-- `semio/js/sketchpad/locales/en.json`: connectingConnectorId → connectingPortId ("Connecting Port"), connectedConnectorId → connectedPortId ("Connected Port"), u → "X Offset", v → "Y Offset"
-- `semio/js/sketchpad/locales/de.json`: connectingConnectorId → connectingPortId ("Verbindender Anschluss"), connectedConnectorId → connectedPortId ("Verbundener Anschluss"), u → "X-Versatz", v → "Y-Versatz"
-- `semio/js/sketchpad.test.ts`: Updated e2e test assertions from connectingConnectorId → connectingPortId, connectedConnectorId → connectedPortId, u → x, v → y
+- `compose/js/sketchpad/Design.tsx`: SingleConnectionInfo renamed connectingConnectorId → connectingPortId, connectedConnectorId → connectedPortId; SingleConnectionFields converted gap/shift/rise from Stepper to Slider with labels; renamed u/v steppers to x/y; same changes in ConnectionsSectionForm bulk editing section
+- `compose/js/sketchpad/locales/en.json`: connectingConnectorId → connectingPortId ("Connecting Port"), connectedConnectorId → connectedPortId ("Connected Port"), u → "X Offset", v → "Y Offset"
+- `compose/js/sketchpad/locales/de.json`: connectingConnectorId → connectingPortId ("Verbindender Anschluss"), connectedConnectorId → connectedPortId ("Verbundener Anschluss"), u → "X-Versatz", v → "Y-Versatz"
+- `compose/js/sketchpad.test.ts`: Updated e2e test assertions from connectingConnectorId → connectingPortId, connectedConnectorId → connectedPortId, u → x, v → y
 
 ## Log
 

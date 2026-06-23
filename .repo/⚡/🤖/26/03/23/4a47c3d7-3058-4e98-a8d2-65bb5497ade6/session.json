@@ -5,7 +5,7 @@
   "second": "2026-03-23T04:44:05Z",
   "checkpoint": "83589326813fc70605d52b2a8ef10910163ade12",
   "contributor": "unknown",
-  "transcript": "/home/vscode/.claude/projects/-workspaces-semio/4a47c3d7-3058-4e98-a8d2-65bb5497ade6.jsonl",
+  "transcript": "/home/vscode/.claude/projects/-workspaces-compose/4a47c3d7-3058-4e98-a8d2-65bb5497ade6.jsonl",
   "events": [
     {
       "event": {
@@ -15,12 +15,12 @@
         "kind": "agent.started",
         "second": "2026-03-23T04:44:05Z",
         "session": "4a47c3d7-3058-4e98-a8d2-65bb5497ade6",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/4a47c3d7-3058-4e98-a8d2-65bb5497ade6.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/4a47c3d7-3058-4e98-a8d2-65bb5497ade6.jsonl"
       },
       "native": {
         "event": {
           "session_id": "4a47c3d7-3058-4e98-a8d2-65bb5497ade6",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/4a47c3d7-3058-4e98-a8d2-65bb5497ade6.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/4a47c3d7-3058-4e98-a8d2-65bb5497ade6.jsonl",
           "cwd": "/workspaces/semio",
           "hook_event_name": "SessionStart",
           "source": "resume"

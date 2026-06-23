@@ -3,21 +3,21 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
 VisualStudioVersion = 18.3.11520.95
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Semio", "semio\client\lib\net\Semio\Semio.csproj", "{D9AC6CCA-E96A-4F2F-BFD3-C6472FC414EF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Compose", "compose\client\lib\net\Compose\Compose.csproj", "{D9AC6CCA-E96A-4F2F-BFD3-C6472FC414EF}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Semio.Grasshopper", "semio\client\ui\gh\Semio.Grasshopper\Semio.Grasshopper.csproj", "{E7BD8355-59D3-42FC-8FFB-9DE37DFC4597}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Compose.Grasshopper", "compose\client\ui\gh\Compose.Grasshopper\Compose.Grasshopper.csproj", "{E7BD8355-59D3-42FC-8FFB-9DE37DFC4597}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Semio.Tests", "semio\client\lib\net\Semio.Tests\Semio.Tests.csproj", "{8DEA59D0-EF55-46F2-A68F-226C98F5AF90}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Compose.Tests", "compose\client\lib\net\Compose.Tests\Compose.Tests.csproj", "{8DEA59D0-EF55-46F2-A68F-226C98F5AF90}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Semio.Grasshopper.Tests", "semio\client\ui\gh\Semio.Grasshopper.Tests\Semio.Grasshopper.Tests.csproj", "{9735D68F-06FF-4A3D-B48E-C867B5F2F214}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Compose.Grasshopper.Tests", "compose\client\ui\gh\Compose.Grasshopper.Tests\Compose.Grasshopper.Tests.csproj", "{9735D68F-06FF-4A3D-B48E-C867B5F2F214}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Semio.Benchmark", "semio\client\lib\net\Semio.Benchmark\Semio.Benchmark.csproj", "{692F4D4D-A4E2-3EBA-2FA1-A732E4C01141}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Compose.Benchmark", "compose\client\lib\net\Compose.Benchmark\Compose.Benchmark.csproj", "{692F4D4D-A4E2-3EBA-2FA1-A732E4C01141}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Semio.Rhino", "semio\client\ui\3dm\Semio.Rhino\Semio.Rhino.csproj", "{B1C2D3E4-F5A6-7890-BCDE-FA1234567890}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Compose.Rhino", "compose\client\ui\3dm\Compose.Rhino\Compose.Rhino.csproj", "{B1C2D3E4-F5A6-7890-BCDE-FA1234567890}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Semio.Rhino.Tests", "semio\client\ui\3dm\Semio.Rhino.Tests\Semio.Rhino.Tests.csproj", "{C2D3E4F5-A6B7-8901-CDEF-AB2345678901}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Compose.Rhino.Tests", "compose\client\ui\3dm\Compose.Rhino.Tests\Compose.Rhino.Tests.csproj", "{C2D3E4F5-A6B7-8901-CDEF-AB2345678901}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Semio Client", "Semio Client", "{0DEAB020-39F9-532E-810A-46C64D072758}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Compose Client", "Compose Client", "{0DEAB020-39F9-532E-810A-46C64D072758}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "client", "client", "{1CD9D207-DE17-3179-E5C3-87A04EB8A244}"
 EndProject
@@ -25,7 +25,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "lib", "lib", "{1F6DF4CD-A26
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net", "net", "{E9E1C7C8-AC8F-1C53-82B8-E9B42A5F9418}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elements.Styling", "semio\client\lib\net\Elements.Styling\Elements.Styling.csproj", "{909197EE-7F17-4D96-BD30-91B33D66C415}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elements.Styling", "compose\client\lib\net\Elements.Styling\Elements.Styling.csproj", "{909197EE-7F17-4D96-BD30-91B33D66C415}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

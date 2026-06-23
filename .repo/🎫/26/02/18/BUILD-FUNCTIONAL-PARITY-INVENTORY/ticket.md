@@ -105,33 +105,33 @@ preflight publish   = nx run-many -t build → nx run-many -t publish
 
 ### 2.1 npm Workspaces (root `package.json` → `workspaces`)
 
-1. `semio/assets/logo` → `@semio/logo`
-2. `semio/assets/icons` → `@semio/icons`
-3. `semio/assets` → `@semio/assets`
-4. `semio/py` → `@semio/py`
-5. `semio/engine` → `@semio/engine`
-6. `semio/js` → `@semio/js`
-7. `semio/docs` → `@semio/docs`
-8. `semio/play` → `@semio/play`
-9. `semio/desktop` → `@semio/desktop`
+1. `compose/assets/logo` → `@compose/logo`
+2. `compose/assets/icons` → `@compose/icons`
+3. `compose/assets` → `@compose/assets`
+4. `compose/py` → `@compose/py`
+5. `compose/engine` → `@compose/engine`
+6. `compose/js` → `@compose/js`
+7. `compose/docs` → `@compose/docs`
+8. `compose/play` → `@compose/play`
+9. `compose/desktop` → `@compose/desktop`
 10. `repo/vscode` → `repo`
-11. `semio/net/Semio` → `@semio/net`
-12. `semio/grasshopper/Semio.Grasshopper` → _(no package.json)_
-13. `semio/go` → `@semio/go`
+11. `compose/net/Compose` → `@compose/net`
+12. `compose/grasshopper/Compose.Grasshopper` → _(no package.json)_
+13. `compose/go` → `@compose/go`
 14. `repo/cli` → `@repo/cli`
 15. `repo/server` → `@repo/server`
-16. `semio/rs` → `@semio/rs`
-17. `semio/grasshopper/Semio.Grasshopper/yak` → _(no package.json)_
-18. `semio/sqlite` → `@semio/sqlite`
+16. `compose/rs` → `@compose/rs`
+17. `compose/grasshopper/Compose.Grasshopper/yak` → _(no package.json)_
+18. `compose/sqlite` → `@compose/sqlite`
 19. `repo/sqlite` → `@repo/sqlite`
 20. `coda/engine` → `@coda/engine`
-21. `semio/sketchpad` → `@semio/sketchpad`
+21. `compose/sketchpad` → `@compose/sketchpad`
 
 ### 2.2 Additional Nx Auto-detected Projects (no npm workspace entry)
 
 - `.coda` (coda/examples)
 - `repo/graphql`
-- `semio/graphql`
+- `compose/graphql`
 - `jsonschema`
 - `liveblocks`
 - `openapi`
@@ -143,7 +143,7 @@ preflight publish   = nx run-many -t build → nx run-many -t publish
 
 ### 3.1 TypeScript/JavaScript Workspaces
 
-#### `@semio/logo` (semio/assets/logo)
+#### `@compose/logo` (compose/assets/logo)
 
 | Script      | Command             | Behavior                       |
 | ----------- | ------------------- | ------------------------------ |
@@ -154,16 +154,16 @@ preflight publish   = nx run-many -t build → nx run-many -t publish
 **Dependencies:** `jsdom`
 **Dev deps:** `@types/jsdom`, `@types/node`, `tsx`
 
-#### `@semio/icons` (semio/assets/icons)
+#### `@compose/icons` (compose/assets/icons)
 
 | Script      | Command                                             | Behavior          |
 | ----------- | --------------------------------------------------- | ----------------- |
 | `build`     | `echo 'icons build not yet migrated to TypeScript'` | No-op placeholder |
 | `preflight` | `echo "No preflight checks configured for icons"`   | No-op             |
 
-**Dev deps:** `@semio/logo` (internal)
+**Dev deps:** `@compose/logo` (internal)
 
-#### `@semio/assets` (semio/assets)
+#### `@compose/assets` (compose/assets)
 
 | Script      | Command                                            | Behavior |
 | ----------- | -------------------------------------------------- | -------- |
@@ -171,7 +171,7 @@ preflight publish   = nx run-many -t build → nx run-many -t publish
 
 **Dependencies:** `lucide-react`
 
-#### `@semio/js` (semio/js) — **Core UI library**
+#### `@compose/js` (compose/js) — **Core UI library**
 
 | Script          | Command                                                  | Behavior                      |
 | --------------- | -------------------------------------------------------- | ----------------------------- |
@@ -187,9 +187,9 @@ preflight publish   = nx run-many -t build → nx run-many -t publish
 | `postinstall`   | Copy `sql-wasm.wasm` to `public/`                        | WASM file setup               |
 
 **Key dependencies:** `react`, `react-dom`, `@xyflow/react`, `@react-three/fiber`, `@react-three/drei`, `three`, `xstate`, `yjs`, `sql.js`, `zod`, `i18next`, `golden-layout`, `motion`, `@dnd-kit/*`, `@radix-ui/*`, `cmdk`, `cytoscape`, `d3-force`, `dagre`, `fuse.js`, `jszip`, `mathjax`, `react-router`, `rehype-*`, `remark-*`, `uuid`
-**Dev deps:** `@semio/assets`, `storybook`, `vite`, `vitest`, `@playwright/test`, `tailwindcss`, `postcss`, `eslint`, `prettier`, `tsx`, `typescript`
+**Dev deps:** `@compose/assets`, `storybook`, `vite`, `vitest`, `@playwright/test`, `tailwindcss`, `postcss`, `eslint`, `prettier`, `tsx`, `typescript`
 
-#### `@semio/docs` (semio/docs)
+#### `@compose/docs` (compose/docs)
 
 | Script      | Command                                 | Behavior          |
 | ----------- | --------------------------------------- | ----------------- |
@@ -198,9 +198,9 @@ preflight publish   = nx run-many -t build → nx run-many -t publish
 | `publish`   | `vite build && npm publish`             | Build + publish   |
 | `preflight` | `echo "No preflight checks configured"` | No-op             |
 
-**Dependencies:** `@semio/js`
+**Dependencies:** `@compose/js`
 
-#### `@semio/play` (semio/play)
+#### `@compose/play` (compose/play)
 
 | Script      | Command                                 | Behavior              |
 | ----------- | --------------------------------------- | --------------------- |
@@ -209,9 +209,9 @@ preflight publish   = nx run-many -t build → nx run-many -t publish
 | `publish`   | `vite build && npm publish`             | Build + publish       |
 | `preflight` | `echo "No preflight checks configured"` | No-op                 |
 
-**Dependencies:** `@semio/js`
+**Dependencies:** `@compose/js`
 
-#### `@semio/sketchpad` (semio/sketchpad)
+#### `@compose/sketchpad` (compose/sketchpad)
 
 | Script        | Command                                 | Behavior             |
 | ------------- | --------------------------------------- | -------------------- |
@@ -221,9 +221,9 @@ preflight publish   = nx run-many -t build → nx run-many -t publish
 | `preflight`   | `echo "No preflight checks configured"` | No-op                |
 | `postinstall` | Copy `sql-wasm.wasm` to `public/`       | WASM file setup      |
 
-**Dependencies:** `@semio/js`
+**Dependencies:** `@compose/js`
 
-#### `@semio/desktop` (semio/desktop)
+#### `@compose/desktop` (compose/desktop)
 
 | Script      | Command                                 | Behavior             |
 | ----------- | --------------------------------------- | -------------------- |
@@ -232,7 +232,7 @@ preflight publish   = nx run-many -t build → nx run-many -t publish
 | `publish`   | `electron-forge publish`                | Publish release      |
 | `preflight` | `echo "No preflight checks configured"` | No-op                |
 
-**Dependencies:** `@semio/js`, `@electron/fuses`, `electron-squirrel-startup`
+**Dependencies:** `@compose/js`, `@electron/fuses`, `electron-squirrel-startup`
 **Dev deps:** `electron`, `@electron-forge/*` makers/plugins
 
 #### `repo` (repo/vscode) — VS Code Extension
@@ -246,11 +246,11 @@ preflight publish   = nx run-many -t build → nx run-many -t publish
 | `preflight`         | `tsc --noEmit`                                          | Type-check                    |
 | `vscode:prepublish` | `npm run build`                                         | Pre-publish hook              |
 
-**Dev deps:** `@semio/js`, `@vscode/vsce`, `@vscode/test-cli`, `@vscode/test-electron`, `vite`, `typescript`, `jsonc-parser`
+**Dev deps:** `@compose/js`, `@vscode/vsce`, `@vscode/test-cli`, `@vscode/test-electron`, `vite`, `typescript`, `jsonc-parser`
 
 ### 3.2 Python Workspaces
 
-#### `@semio/py` (semio/py)
+#### `@compose/py` (compose/py)
 
 | Script      | Command                               | Behavior             |
 | ----------- | ------------------------------------- | -------------------- |
@@ -260,7 +260,7 @@ preflight publish   = nx run-many -t build → nx run-many -t publish
 
 **Python deps:** `pydantic`, `numpy`, `networkx`, `python-dotenv`, `fastapi`, `graphene`, `graphene-pydantic`, `graphene-sqlalchemy`, `loguru`, `pytransform3d`, `sqlalchemy`, `sqlmodel`
 
-#### `@semio/engine` (semio/engine)
+#### `@compose/engine` (compose/engine)
 
 | Script      | Command                               | Behavior                                                 |
 | ----------- | ------------------------------------- | -------------------------------------------------------- |
@@ -269,8 +269,8 @@ preflight publish   = nx run-many -t build → nx run-many -t publish
 | `test`      | `tsx ./test.ts`                       | TypeScript test runner                                   |
 | `preflight` | `ruff format . && ruff check --fix .` | Format + lint                                            |
 
-**Python deps:** `semio` (workspace), `fastapi[standard]`, `graphene`, `lark`, `networkx`, `numpy`, `openai`, `pint`, `pydantic`, `pyside6`, `pytransform3d`, `sqlalchemy`, `sqlmodel`, `uvicorn`, `mcp[cli]` and more
-**Dev deps (npm):** `@semio/assets`
+**Python deps:** `compose` (workspace), `fastapi[standard]`, `graphene`, `lark`, `networkx`, `numpy`, `openai`, `pint`, `pydantic`, `pyside6`, `pytransform3d`, `sqlalchemy`, `sqlmodel`, `uvicorn`, `mcp[cli]` and more
+**Dev deps (npm):** `@compose/assets`
 
 #### `@coda/engine` (coda/engine)
 
@@ -280,24 +280,24 @@ preflight publish   = nx run-many -t build → nx run-many -t publish
 | `preflight` | `ruff format . && ruff check --fix .` | Format + lint |
 
 **Nx targets:** `update` → `@nxlv/python:update`, `lock` → `@nxlv/python:lock`
-**Dev deps (npm):** `@semio/assets`
+**Dev deps (npm):** `@compose/assets`
 
 #### Python Workspace Root (`pyproject.toml`)
 
-- `uv workspace members`: `semio/py`, `semio/engine`
+- `uv workspace members`: `compose/py`, `compose/engine`
 - Dev dependency groups: `jupyter`, `notebook`, `ipykernel`, `ruff`, `black`, `debugpy`, `pandas`, `numpy`, `matplotlib`, `seaborn`, `scipy`, `scikit-learn`
 - Test dependency group: `pytest`, `pytest-cov`, `deepdiff`
-- Test paths: `semio/py`, `semio/engine`
-- `conftest.py` at root: patches `sys.path` for `semio` and `engine` modules
+- Test paths: `compose/py`, `compose/engine`
+- `conftest.py` at root: patches `sys.path` for `compose` and `engine` modules
 
 ### 3.3 Go Workspaces
 
 #### Go Workspace Root (`go.work`)
 
 - Go 1.24.0
-- Members: `repo/cli`, `repo/server`, `semio/go`
+- Members: `repo/cli`, `repo/server`, `compose/go`
 
-#### `@semio/go` (semio/go)
+#### `@compose/go` (compose/go)
 
 | Script      | Command            | Behavior              |
 | ----------- | ------------------ | --------------------- |
@@ -305,7 +305,7 @@ preflight publish   = nx run-many -t build → nx run-many -t publish
 | `test`      | `go test -v ./...` | Run Go tests          |
 | `preflight` | `go vet ./...`     | Go vet                |
 
-**Module:** `github.com/usalu/semio/go/semio`
+**Module:** `github.com/usalu/semio/go/compose`
 **Key dep:** `gonum.org/v1/gonum`
 
 #### `@repo/cli` (repo/cli)
@@ -336,10 +336,10 @@ preflight publish   = nx run-many -t build → nx run-many -t publish
 
 #### Rust Workspace Root (`Cargo.toml`)
 
-- Members: `semio/rs`
+- Members: `compose/rs`
 - Resolver: 2
 
-#### `@semio/rs` (semio/rs)
+#### `@compose/rs` (compose/rs)
 
 | Script      | Command                             | Behavior            |
 | ----------- | ----------------------------------- | ------------------- |
@@ -347,12 +347,12 @@ preflight publish   = nx run-many -t build → nx run-many -t publish
 | `test`      | `cargo test`                        | Run Rust tests      |
 | `preflight` | `cargo fmt --check && cargo clippy` | Format check + lint |
 
-**Crate:** `semio` v0.1.0, edition 2021
+**Crate:** `compose` v0.1.0, edition 2021
 **Lib type:** `cdylib` + `rlib` (supports WASM + native)
 **Core deps:** `serde`, `serde_json`, `thiserror`, `uuid`, `nalgebra`
 **WASM deps:** `wasm-bindgen`, `js-sys`, `web-sys`, `serde-wasm-bindgen`, `getrandom`
 **Native deps:** `rusqlite` (bundled), `chrono`, `zip`, `tempfile`, `walkdir`
-**Bin:** `semio-benchmark`
+**Bin:** `compose-benchmark`
 
 ### 3.5 .NET Workspace
 
@@ -362,27 +362,27 @@ preflight publish   = nx run-many -t build → nx run-many -t publish
 
 | Project                   | Target Frameworks | Key Dependencies                                                                                     |
 | ------------------------- | ----------------- | ---------------------------------------------------------------------------------------------------- |
-| `Semio`                   | net8.0; net48     | FluentValidation, Humanizer, Newtonsoft.Json, QuikGraph, Refit, Svg, UnitsNet, Microsoft.Data.Sqlite |
-| `Semio.Grasshopper`       | net7.0; net48     | Grasshopper (Rhino), System.Drawing.Common → references `Semio`                                      |
-| `Semio.Tests`             | net8.0; net48     | xunit, Microsoft.NET.Test.Sdk → references `Semio`                                                   |
-| `Semio.Grasshopper.Tests` | net7.0; net48     | xunit → references `Semio.Grasshopper` + `Semio`                                                     |
-| `Semio.Benchmark`         | net8.0            | Newtonsoft.Json → references `Semio`                                                                 |
+| `Compose`                   | net8.0; net48     | FluentValidation, Humanizer, Newtonsoft.Json, QuikGraph, Refit, Svg, UnitsNet, Microsoft.Data.Sqlite |
+| `Compose.Grasshopper`       | net7.0; net48     | Grasshopper (Rhino), System.Drawing.Common → references `Compose`                                      |
+| `Compose.Tests`             | net8.0; net48     | xunit, Microsoft.NET.Test.Sdk → references `Compose`                                                   |
+| `Compose.Grasshopper.Tests` | net7.0; net48     | xunit → references `Compose.Grasshopper` + `Compose`                                                     |
+| `Compose.Benchmark`         | net8.0            | Newtonsoft.Json → references `Compose`                                                                 |
 
-#### `@semio/net` (semio/net/Semio) — npm wrapper
+#### `@compose/net` (compose/net/Compose) — npm wrapper
 
 | Script      | Command                                         | Behavior                         |
 | ----------- | ----------------------------------------------- | -------------------------------- |
 | `build`     | `tsx ./build.ts`                                | TypeScript build script for .NET |
-| `test`      | `dotnet test ../Semio.Tests/Semio.Tests.csproj` | Run xunit tests                  |
+| `test`      | `dotnet test ../Compose.Tests/Compose.Tests.csproj` | Run xunit tests                  |
 | `preflight` | `dotnet build`                                  | Build .NET solution              |
 
-**Dev deps:** `@semio/assets`
+**Dev deps:** `@compose/assets`
 
 ### 3.6 Schema-only Workspaces (no scripts)
 
 | Workspace      | Name            | Type   |
 | -------------- | --------------- | ------ |
-| `semio/sqlite` | `@semio/sqlite` | schema |
+| `compose/sqlite` | `@compose/sqlite` | schema |
 | `repo/sqlite`  | `@repo/sqlite`  | schema |
 
 ## 4. Dependency Graph
@@ -390,27 +390,27 @@ preflight publish   = nx run-many -t build → nx run-many -t publish
 ### 4.1 Internal npm Dependency Chain
 
 ```
-@semio/logo ← @semio/icons
-@semio/logo, @semio/icons ← @semio/assets
-@semio/assets ← @semio/js
-@semio/assets ← @semio/engine (devDep)
-@semio/assets ← @semio/net (devDep)
-@semio/assets ← @coda/engine (devDep)
-@semio/js ← @semio/docs
-@semio/js ← @semio/play
-@semio/js ← @semio/sketchpad
-@semio/js ← @semio/desktop
-@semio/js ← repo (vscode ext, devDep)
+@compose/logo ← @compose/icons
+@compose/logo, @compose/icons ← @compose/assets
+@compose/assets ← @compose/js
+@compose/assets ← @compose/engine (devDep)
+@compose/assets ← @compose/net (devDep)
+@compose/assets ← @coda/engine (devDep)
+@compose/js ← @compose/docs
+@compose/js ← @compose/play
+@compose/js ← @compose/sketchpad
+@compose/js ← @compose/desktop
+@compose/js ← repo (vscode ext, devDep)
 ```
 
 ### 4.2 Cross-Language Dependencies
 
 ```
-semio/py → semio/engine (Python workspace dep via uv)
-semio/net/Semio → semio/gh/Semio.Grasshopper (.NET ProjectReference)
-semio/net/Semio → semio/net/Semio.Tests (.NET ProjectReference)
-semio/net/Semio → semio/net/Semio.Benchmark (.NET ProjectReference)
-semio/gh/Semio.Grasshopper → semio/gh/Semio.Grasshopper.Tests (.NET ProjectReference)
+compose/py → compose/engine (Python workspace dep via uv)
+compose/net/Compose → compose/gh/Compose.Grasshopper (.NET ProjectReference)
+compose/net/Compose → compose/net/Compose.Tests (.NET ProjectReference)
+compose/net/Compose → compose/net/Compose.Benchmark (.NET ProjectReference)
+compose/gh/Compose.Grasshopper → compose/gh/Compose.Grasshopper.Tests (.NET ProjectReference)
 repo/go → repo/cli (Go module require)
 ```
 
@@ -418,45 +418,45 @@ repo/go → repo/cli (Go module require)
 
 Since `build.dependsOn = ["^build"]`, build order is topologically sorted:
 
-1. `@semio/logo` → 2. `@semio/icons` → 3. `@semio/assets` → 4. `@semio/js` → 5. `@semio/docs`, `@semio/play`, `@semio/sketchpad`, `@semio/desktop`, `repo`
+1. `@compose/logo` → 2. `@compose/icons` → 3. `@compose/assets` → 4. `@compose/js` → 5. `@compose/docs`, `@compose/play`, `@compose/sketchpad`, `@compose/desktop`, `repo`
 
 Other chains build independently in parallel:
 
-- `@semio/py` → `@semio/engine`
-- `@semio/go`, `@repo/cli`, `@repo/server` (Go)
-- `@semio/rs` (Rust)
-- `@semio/net` (C#/.NET)
+- `@compose/py` → `@compose/engine`
+- `@compose/go`, `@repo/cli`, `@repo/server` (Go)
+- `@compose/rs` (Rust)
+- `@compose/net` (C#/.NET)
 
 ## 5. Test Infrastructure
 
 ### 5.1 Vitest (root `vitest.config.ts`)
 
-- Test projects: `./semio/js/vite.config.ts`
-- Only `@semio/js` is registered for Vitest unit tests
+- Test projects: `./compose/js/vite.config.ts`
+- Only `@compose/js` is registered for Vitest unit tests
 
 ### 5.2 Playwright
 
-- E2E tests via `@semio/js` → `playwright test`
-- Config: `semio/js/playwright.config.ts`
+- E2E tests via `@compose/js` → `playwright test`
+- Config: `compose/js/playwright.config.ts`
 
 ### 5.3 pytest (root `pyproject.toml`)
 
-- Test paths: `semio/py`, `semio/engine`
+- Test paths: `compose/py`, `compose/engine`
 - Pattern: `test_*.py`, `*_test.py`, `*.test.py`
 - Import mode: `importlib`
 - Coverage via `pytest-cov`
 
 ### 5.4 Go tests
 
-- `go test -v ./...` in `semio/go`, `repo/cli`, `repo/server`
+- `go test -v ./...` in `compose/go`, `repo/cli`, `repo/server`
 
 ### 5.5 Rust tests
 
-- `cargo test` in `semio/rs`
+- `cargo test` in `compose/rs`
 
 ### 5.6 .NET tests (xunit)
 
-- `dotnet test` for `Semio.Tests` and `Semio.Grasshopper.Tests`
+- `dotnet test` for `Compose.Tests` and `Compose.Grasshopper.Tests`
 
 ## 6. Dev Modes
 
@@ -466,35 +466,35 @@ Other chains build independently in parallel:
 | `repo/cli dev`           | `go run`                 | No         | —        |
 | `repo/server dev`        | `go run main.go`         | No         | —        |
 | `repo/vscode dev`        | `vite build --watch`     | Yes        | —        |
-| `semio/engine dev`       | `uv run engine.py`       | Yes        | —        |
-| `semio/js dev`           | `tsx dev.ts`             | Yes        | —        |
-| `semio/js dev:storybook` | `storybook dev -p 6006`  | Yes        | 6006     |
-| `semio/js dev:sketchpad` | `vite --port 5173`       | Yes        | 5173     |
-| `semio/docs dev`         | `vite --port 4321`       | Yes        | 4321     |
-| `semio/play dev`         | `vite --port 4000`       | Yes        | 4000     |
-| `semio/desktop dev`      | `electron-forge start`   | No         | —        |
-| `semio/logo dev`         | `tsx watch logo.ts`      | No         | —        |
+| `compose/engine dev`       | `uv run engine.py`       | Yes        | —        |
+| `compose/js dev`           | `tsx dev.ts`             | Yes        | —        |
+| `compose/js dev:storybook` | `storybook dev -p 6006`  | Yes        | 6006     |
+| `compose/js dev:sketchpad` | `vite --port 5173`       | Yes        | 5173     |
+| `compose/docs dev`         | `vite --port 4321`       | Yes        | 4321     |
+| `compose/play dev`         | `vite --port 4000`       | Yes        | 4000     |
+| `compose/desktop dev`      | `electron-forge start`   | No         | —        |
+| `compose/logo dev`         | `tsx watch logo.ts`      | No         | —        |
 
 ## 7. Preflight Behaviors per Workspace
 
 | Workspace          | Preflight Command                     | Effect                    |
 | ------------------ | ------------------------------------- | ------------------------- |
-| `@semio/logo`      | `tsc --noEmit`                        | TypeScript type-check     |
-| `@semio/icons`     | `echo` (no-op)                        | —                         |
-| `@semio/assets`    | `echo` (no-op)                        | —                         |
-| `@semio/py`        | `ruff format . && ruff check --fix .` | Python format + lint      |
-| `@semio/engine`    | `ruff format . && ruff check --fix .` | Python format + lint      |
-| `@semio/js`        | `prettier --write . && tsc --noEmit`  | JS format + TS type-check |
-| `@semio/docs`      | `echo` (no-op)                        | —                         |
-| `@semio/play`      | `echo` (no-op)                        | —                         |
-| `@semio/sketchpad` | `echo` (no-op)                        | —                         |
-| `@semio/desktop`   | `echo` (no-op)                        | —                         |
+| `@compose/logo`      | `tsc --noEmit`                        | TypeScript type-check     |
+| `@compose/icons`     | `echo` (no-op)                        | —                         |
+| `@compose/assets`    | `echo` (no-op)                        | —                         |
+| `@compose/py`        | `ruff format . && ruff check --fix .` | Python format + lint      |
+| `@compose/engine`    | `ruff format . && ruff check --fix .` | Python format + lint      |
+| `@compose/js`        | `prettier --write . && tsc --noEmit`  | JS format + TS type-check |
+| `@compose/docs`      | `echo` (no-op)                        | —                         |
+| `@compose/play`      | `echo` (no-op)                        | —                         |
+| `@compose/sketchpad` | `echo` (no-op)                        | —                         |
+| `@compose/desktop`   | `echo` (no-op)                        | —                         |
 | `repo` (vscode)    | `tsc --noEmit`                        | TypeScript type-check     |
-| `@semio/net`       | `dotnet build`                        | .NET build                |
-| `@semio/go`        | `go vet ./...`                        | Go vet                    |
+| `@compose/net`       | `dotnet build`                        | .NET build                |
+| `@compose/go`        | `go vet ./...`                        | Go vet                    |
 | `@repo/cli`        | `go vet ./...`                        | Go vet                    |
 | `@repo/server`     | `go vet ./...`                        | Go vet                    |
-| `@semio/rs`        | `cargo fmt --check && cargo clippy`   | Rust format check + lint  |
+| `@compose/rs`        | `cargo fmt --check && cargo clippy`   | Rust format check + lint  |
 | `@coda/engine`     | `ruff format . && ruff check --fix .` | Python format + lint      |
 
 ## 8. Update Mechanism
@@ -516,14 +516,14 @@ Supports `--dry-run` (default) and `--apply` flags. Reads constraints from depen
 3. **Python ≥ 3.14** (root pyproject.toml)
 4. **Go 1.24.0** (go.work)
 5. **Rust edition 2021** (Cargo.toml)
-6. **.NET multi-target:** net8.0/net48 (Semio), net7.0/net48 (Grasshopper)
-7. **WASM support:** `@semio/rs` builds as `cdylib` for WASM target; `sql.js` WASM file copied via postinstall in `@semio/js` and `@semio/sketchpad`
+6. **.NET multi-target:** net8.0/net48 (Compose), net7.0/net48 (Grasshopper)
+7. **WASM support:** `@compose/rs` builds as `cdylib` for WASM target; `sql.js` WASM file copied via postinstall in `@compose/js` and `@compose/sketchpad`
 8. **TypeScript strict mode** enabled globally; `noEmit: true` (type-check only, Vite handles bundling)
 9. **Nx caching** enabled for all targets except `dev`
 10. **Root `overrides`:** `diff: ^8.0.3`, `tmp: ^0.2.5` (forced versions across all workspaces)
 11. **Root `devDependencies` hoisted:** `nx`, `typescript`, `vitest`, `tsx`, `react`, `react-dom`, `@types/react`, `@types/node`, `lint-staged`, `esbuild`
 12. **Pre-commit hook:** Runs full `npm run preflight` (fix → analyze) via global git hooks
-13. **Two workspaces lack package.json:** `semio/grasshopper/Semio.Grasshopper`, `semio/grasshopper/Semio.Grasshopper/yak` — these are managed purely via .NET/csproj
-14. **`@semio/js` has 3 dev modes:** `dev` (main orchestrator), `dev:storybook`, `dev:sketchpad`
-15. **Hierarchical VS Code task naming** follows pattern `project/bundle target` (e.g., `semio/js build`, `repo/cli test`)
+13. **Two workspaces lack package.json:** `compose/grasshopper/Compose.Grasshopper`, `compose/grasshopper/Compose.Grasshopper/yak` — these are managed purely via .NET/csproj
+14. **`@compose/js` has 3 dev modes:** `dev` (main orchestrator), `dev:storybook`, `dev:sketchpad`
+15. **Hierarchical VS Code task naming** follows pattern `project/bundle target` (e.g., `compose/js build`, `repo/cli test`)
 16. **Root-level `dev:js:js:storybook` and `dev:js:js:sketchpad`** expose multi-dev-mode scripts with colon separators

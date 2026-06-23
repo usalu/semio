@@ -9,7 +9,7 @@ goal: SKETCHPAD-IMPROVEMENTS
 Filtered .chat and .settings tabs from the rightSidePanel detail panel in Sketchpad.tsx. The hasRightTabs check, both rightSidePanel auto-select effects, and the tab list in the render all exclude tabs whose id ends with .chat or .settings. Navbar-triggered chat/settings panels continue to source their content from rightSidePanelTabs as before — no app-file changes needed.
 ## Changes
 
-- `semio/js/sketchpad/Sketchpad.tsx`: filtered `.chat` and `.settings` tabs out of the detail panel (rightSidePanel), the `hasRightTabs` navbar toggle check, and the two rightSidePanel auto-select effects. Navbar-triggered chat/settings panels still source their content from `rightSidePanelTabs` as before.
+- `compose/js/sketchpad/Sketchpad.tsx`: filtered `.chat` and `.settings` tabs out of the detail panel (rightSidePanel), the `hasRightTabs` navbar toggle check, and the two rightSidePanel auto-select effects. Navbar-triggered chat/settings panels still source their content from `rightSidePanelTabs` as before.
 
 ## Log
 

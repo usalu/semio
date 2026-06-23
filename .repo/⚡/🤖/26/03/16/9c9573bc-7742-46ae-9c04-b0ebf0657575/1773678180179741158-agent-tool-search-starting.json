@@ -6,7 +6,7 @@
     "kind": "agent.file.read.starting",
     "second": "2026-03-16T16:23:00Z",
     "session": "9c9573bc-7742-46ae-9c04-b0ebf0657575",
-    "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
+    "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
   },
   "native": {
     "event": {
@@ -16,7 +16,7 @@
       "tool_name": "Grep",
       "tool_input": {
         "pattern": "class Point\\(|x:|y:|z:",
-        "file_path": "/workspaces/semio/semio/py/semio.py"
+        "file_path": "/workspaces/semio/compose/py/compose.py"
       },
       "tool_use_id": "tool_ceea62a8-ca2d-4cf3-85cd-7eeae860920",
       "hook_event_name": "preToolUse",
@@ -25,7 +25,7 @@
         "/workspaces/semio"
       ],
       "user_email": "ueli.saluz@posteo.de",
-      "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
+      "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
     }
   },
   "response": {}

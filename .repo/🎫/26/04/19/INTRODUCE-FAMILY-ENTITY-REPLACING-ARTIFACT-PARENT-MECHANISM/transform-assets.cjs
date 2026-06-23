@@ -1,6 +1,6 @@
 const fs = require("fs");
 const path = require("path");
-const dir = "semio/assets/semio";
+const dir = "compose/assets/compose";
 
 function buildFamilyMap(entities) {
   if (!entities || !Array.isArray(entities)) return new Map();

@@ -2,8 +2,8 @@
   "title": "Hydrate Shallow Kit Designs And Richest Mcp Design Payload",
   "emoji": "🔌",
   "status": "closed",
-  "description": "Shallow kit lists designs without pieces; load sibling *.design.semio.json by guid. UI: merge richest design from MCP candidates and score by piece count.",
-  "summary": "Engine: _hydrate_design_from_kit_disk_if_shallow loads sibling *.design.semio.json when session design has no pieces; when multiple files share the same guid (e.g. meta vs shallow), pick the one with the most pieces. _get_session_design replaces session with hydrated dict. UI: mcpDesignRichness + mergeRichestDesignFromCandidates + score weights so full design wins over truncated structuredContent. Tests: engine shallow-kit Nakagin, vitest merge. Rebuilt dist/mcp-app.html.",
+  "description": "Shallow kit lists designs without pieces; load sibling *.design.compose.json by guid. UI: merge richest design from MCP candidates and score by piece count.",
+  "summary": "Engine: _hydrate_design_from_kit_disk_if_shallow loads sibling *.design.compose.json when session design has no pieces; when multiple files share the same guid (e.g. meta vs shallow), pick the one with the most pieces. _get_session_design replaces session with hydrated dict. UI: mcpDesignRichness + mergeRichestDesignFromCandidates + score weights so full design wins over truncated structuredContent. Tests: engine shallow-kit Nakagin, vitest merge. Rebuilt dist/mcp-app.html.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1154"
   },

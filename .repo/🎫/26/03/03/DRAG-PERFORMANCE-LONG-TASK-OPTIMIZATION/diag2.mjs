@@ -2,7 +2,7 @@ import { chromium } from "playwright";
 import path from "path";
 import { fileURLToPath } from "url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const zipPath = "/workspaces/semio/semio/assets/semio/metabolism.zip";
+const zipPath = "/workspaces/semio/compose/assets/compose/metabolism.zip";
 const browser = await chromium.launch({ headless: true, args: ["--no-sandbox", "--disable-gpu"] });
 const page = await browser.newPage();
 const debugLogs = [];
@@ -13,8 +13,8 @@ page.on('console', msg => {
   if (txt.includes('[DEBUG]')) debugLogs.push({ t: Date.now(), type: msg.type(), txt: txt.slice(0, 400) });
 });
 await page.addInitScript(() => {
-  (window).__SEMIO_PERFORMANCE__ = { longTaskSupported: false, longTasks: [] };
-  const store = (window).__SEMIO_PERFORMANCE__;
+  (window).__COMPOSE_PERFORMANCE__ = { longTaskSupported: false, longTasks: [] };
+  const store = (window).__COMPOSE_PERFORMANCE__;
   const oc = (window).PerformanceObserver;
   const types = oc?.supportedEntryTypes ?? [];
   if (!oc || !types.includes("longtask")) return;
@@ -27,7 +27,7 @@ await page.addInitScript(() => {
 });
 await page.goto("http://127.0.0.1:5173/", { waitUntil: "domcontentloaded" });
 await page.waitForTimeout(2000);
-const fileInput = page.locator('[id="semio.sketchpad.app.home.importKit"]');
+const fileInput = page.locator('[id="compose.sketchpad.app.home.importKit"]');
 await fileInput.waitFor({ state: "attached", timeout: 10000 });
 const [fileChooser] = await Promise.all([page.waitForEvent("filechooser", { timeout: 5000 }).catch(() => null), fileInput.dispatchEvent("click")]);
 if (fileChooser) { await fileChooser.setFiles(zipPath); } else { await fileInput.setInputFiles(zipPath); await fileInput.evaluate(el => el.dispatchEvent(new Event("change", { bubbles: true }))); }
@@ -56,13 +56,13 @@ for (let i = 0; i < 10; i++) { await page.waitForTimeout(2000); if (await nodes.
 await page.waitForTimeout(3000);
 console.log("nodes:", await nodes.count());
 // Close panel
-const toggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.leftSidePanel"]');
+const toggle = page.locator('[id="compose.sketchpad.navbar.panelToggle.leftSidePanel"]');
 if (await toggle.isVisible().catch(() => false)) {
   const leftOpen = await page.locator('[data-panel="leftSidePanel"]').isVisible().catch(() => false);
   if (leftOpen) { await toggle.click(); await page.waitForTimeout(500); }
 }
 // Clear long tasks & debug logs
-await page.evaluate(() => { (window).__SEMIO_PERFORMANCE__.longTasks = []; });
+await page.evaluate(() => { (window).__COMPOSE_PERFORMANCE__.longTasks = []; });
 debugLogs.length = 0;
 pieceNodeRenderCount = 0;
 // Zoom
@@ -75,8 +75,8 @@ await page.waitForTimeout(500);
 await page.mouse.wheel(0, 600);
 await page.waitForTimeout(500);
 // Clear again after zoom
-await page.evaluate(() => { (window).__SEMIO_PERFORMANCE__.longTasks = []; });
-await page.evaluate(() => { if ((window).__SEMIO_DEBUG__) (window).__SEMIO_DEBUG__.pieceNodeRenders = 0; });
+await page.evaluate(() => { (window).__COMPOSE_PERFORMANCE__.longTasks = []; });
+await page.evaluate(() => { if ((window).__COMPOSE_DEBUG__) (window).__COMPOSE_DEBUG__.pieceNodeRenders = 0; });
 debugLogs.length = 0;
 pieceNodeRenderCount = 0;
 // Drag
@@ -91,7 +91,7 @@ await page.waitForTimeout(50);
 await page.mouse.move(sx + 100, sy, { steps: 20 });
 await page.mouse.up();
 await page.waitForTimeout(6000);
-const longTasks = await page.evaluate(() => (window).__SEMIO_PERFORMANCE__.longTasks);
+const longTasks = await page.evaluate(() => (window).__COMPOSE_PERFORMANCE__.longTasks);
 const maxLT = longTasks.length > 0 ? Math.max(...longTasks.map(e => e.duration)) : 0;
 console.log(`\n=== Long tasks: ${longTasks.length}, max: ${maxLT.toFixed(1)}ms ===`);
 for (const lt of longTasks.slice(0, 10)) { console.log(`  start: ${lt.startTime.toFixed(1)}ms, dur: ${lt.duration.toFixed(1)}ms`); }
@@ -100,7 +100,7 @@ console.log(`\n=== Debug logs during drag (${debugLogs.length}) ===`);
 for (const log of debugLogs.slice(0, 30)) { console.log(`  +${log.t - t0}ms [${log.type}]: ${log.txt}`); }
 if (debugLogs.length > 30) console.log(`  ... and ${debugLogs.length - 30} more`);
 console.log(`\n=== PieceNode renders during drag (from console): ${pieceNodeRenderCount} ===`);
-const debugCounters = await page.evaluate(() => (window).__SEMIO_DEBUG__ ?? {});
+const debugCounters = await page.evaluate(() => (window).__COMPOSE_DEBUG__ ?? {});
 console.log(`=== PieceNode renders during drag (from counter): ${debugCounters.pieceNodeRenders ?? 'N/A'} ===`);
 // Sort long tasks by duration and show top 5
 const sortedByDur = longTasks.slice().sort((a, b) => b.duration - a.duration).slice(0, 5);

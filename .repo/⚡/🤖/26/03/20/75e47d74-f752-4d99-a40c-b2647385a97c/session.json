@@ -48,7 +48,7 @@
           "session_id": "75e47d74-f752-4d99-a40c-b2647385a97c",
           "tool_name": "file_search",
           "tool_input": {
-            "query": "**/semio/desktop/main.ts",
+            "query": "**/compose/desktop/main.ts",
             "maxResults": 20
           },
           "tool_response": "",
@@ -74,7 +74,7 @@
           "session_id": "75e47d74-f752-4d99-a40c-b2647385a97c",
           "tool_name": "file_search",
           "tool_input": {
-            "query": "**/semio.ts",
+            "query": "**/compose.ts",
             "maxResults": 20
           },
           "tool_response": "",
@@ -100,7 +100,7 @@
           "session_id": "75e47d74-f752-4d99-a40c-b2647385a97c",
           "tool_name": "file_search",
           "tool_input": {
-            "query": "**/semio/desktop/renderer.tsx",
+            "query": "**/compose/desktop/renderer.tsx",
             "maxResults": 20
           },
           "tool_response": "",
@@ -232,7 +232,7 @@
           "session_id": "75e47d74-f752-4d99-a40c-b2647385a97c",
           "tool_name": "file_search",
           "tool_input": {
-            "query": "**/semio/vscode/package.json",
+            "query": "**/compose/vscode/package.json",
             "maxResults": 20
           },
           "tool_use_id": "toolu_bdrk_01RdXadLH1RXwuTxqB1tPKRQ__vscode-1774036198683",
@@ -283,7 +283,7 @@
           "session_id": "75e47d74-f752-4d99-a40c-b2647385a97c",
           "tool_name": "file_search",
           "tool_input": {
-            "query": "**/semio/desktop/package.json",
+            "query": "**/compose/desktop/package.json",
             "maxResults": 20
           },
           "tool_response": "",
@@ -309,7 +309,7 @@
           "session_id": "75e47d74-f752-4d99-a40c-b2647385a97c",
           "tool_name": "file_search",
           "tool_input": {
-            "query": "**/semio/sketchpad/package.json",
+            "query": "**/compose/sketchpad/package.json",
             "maxResults": 20
           },
           "tool_response": "",
@@ -335,7 +335,7 @@
           "session_id": "75e47d74-f752-4d99-a40c-b2647385a97c",
           "tool_name": "file_search",
           "tool_input": {
-            "query": "**/semio/js/package.json",
+            "query": "**/compose/js/package.json",
             "maxResults": 20
           },
           "tool_response": "",
@@ -361,7 +361,7 @@
           "session_id": "75e47d74-f752-4d99-a40c-b2647385a97c",
           "tool_name": "file_search",
           "tool_input": {
-            "query": "**/semio/vscode/extension.ts",
+            "query": "**/compose/vscode/extension.ts",
             "maxResults": 20
           },
           "tool_response": "",
@@ -387,7 +387,7 @@
           "session_id": "75e47d74-f752-4d99-a40c-b2647385a97c",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/studio/studio.ts",
+            "filePath": "/workspaces/semio/compose/studio/studio.ts",
             "startLine": 1,
             "endLine": 500
           },
@@ -413,7 +413,7 @@
           "session_id": "75e47d74-f752-4d99-a40c-b2647385a97c",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/vscode/extension.ts",
+            "filePath": "/workspaces/semio/compose/vscode/extension.ts",
             "startLine": 1,
             "endLine": 200
           },
@@ -439,7 +439,7 @@
           "session_id": "75e47d74-f752-4d99-a40c-b2647385a97c",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "filePath": "/workspaces/semio/compose/js/compose.ts",
             "startLine": 1,
             "endLine": 300
           },
@@ -465,7 +465,7 @@
           "session_id": "75e47d74-f752-4d99-a40c-b2647385a97c",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/vscode/extension.ts",
+            "filePath": "/workspaces/semio/compose/vscode/extension.ts",
             "startLine": 1,
             "endLine": 200
           },
@@ -492,7 +492,7 @@
           "session_id": "75e47d74-f752-4d99-a40c-b2647385a97c",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/sketchpad/sketchpad/Sketchpad.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/sketchpad/Sketchpad.tsx",
             "startLine": 1,
             "endLine": 300
           },
@@ -519,7 +519,7 @@
           "session_id": "75e47d74-f752-4d99-a40c-b2647385a97c",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "filePath": "/workspaces/semio/compose/js/compose.ts",
             "startLine": 1,
             "endLine": 300
           },
@@ -547,7 +547,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 100,
-            "filePath": "/workspaces/semio/semio/studio/package.json",
+            "filePath": "/workspaces/semio/compose/studio/package.json",
             "startLine": 1
           },
           "tool_use_id": "toolu_bdrk_015NpMBTJGhReuyFXmubkr97__vscode-1774036198692",
@@ -573,7 +573,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 100,
-            "filePath": "/workspaces/semio/semio/desktop/package.json",
+            "filePath": "/workspaces/semio/compose/desktop/package.json",
             "startLine": 1
           },
           "tool_use_id": "toolu_bdrk_01RHoyNJA8xmitXdYUTeEhUH__vscode-1774036198694",
@@ -599,7 +599,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 900,
-            "filePath": "/workspaces/semio/semio/studio/studio.ts",
+            "filePath": "/workspaces/semio/compose/studio/studio.ts",
             "startLine": 500
           },
           "tool_use_id": "toolu_bdrk_01EejbmWPT2NCZqaZq4EUsDw__vscode-1774036198696",
@@ -625,7 +625,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 100,
-            "filePath": "/workspaces/semio/semio/studio/package.json",
+            "filePath": "/workspaces/semio/compose/studio/package.json",
             "startLine": 1
           },
           "tool_response": "",
@@ -652,7 +652,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 100,
-            "filePath": "/workspaces/semio/semio/sketchpad/package.json",
+            "filePath": "/workspaces/semio/compose/sketchpad/package.json",
             "startLine": 1
           },
           "tool_response": "",
@@ -679,7 +679,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 100,
-            "filePath": "/workspaces/semio/semio/vscode/package.json",
+            "filePath": "/workspaces/semio/compose/vscode/package.json",
             "startLine": 1
           },
           "tool_response": "",
@@ -706,7 +706,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 900,
-            "filePath": "/workspaces/semio/semio/studio/studio.ts",
+            "filePath": "/workspaces/semio/compose/studio/studio.ts",
             "startLine": 500
           },
           "tool_response": "",
@@ -784,7 +784,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 800,
-            "filePath": "/workspaces/semio/semio/sketchpad/sketchpad/Sketchpad.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/sketchpad/Sketchpad.tsx",
             "startLine": 300
           },
           "tool_use_id": "toolu_bdrk_018RecjkPfCnPykUgctcxHUe__vscode-1774036198697",
@@ -810,7 +810,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 800,
-            "filePath": "/workspaces/semio/semio/sketchpad/sketchpad/Sketchpad.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/sketchpad/Sketchpad.tsx",
             "startLine": 300
           },
           "tool_response": "",

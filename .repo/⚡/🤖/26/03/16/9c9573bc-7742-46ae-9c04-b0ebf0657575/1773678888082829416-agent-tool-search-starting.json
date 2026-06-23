@@ -6,7 +6,7 @@
     "kind": "agent.file.read.starting",
     "second": "2026-03-16T16:34:47Z",
     "session": "9c9573bc-7742-46ae-9c04-b0ebf0657575",
-    "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
+    "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
   },
   "native": {
     "event": {
@@ -16,7 +16,7 @@
       "tool_name": "Grep",
       "tool_input": {
         "pattern": "getGeometricInsightsForModel|GeometricInsights",
-        "file_path": "/workspaces/semio/semio/js/semio.ts"
+        "file_path": "/workspaces/semio/compose/js/compose.ts"
       },
       "tool_use_id": "tool_3b4459fc-2b21-42b4-a658-723211eac52",
       "hook_event_name": "preToolUse",
@@ -25,7 +25,7 @@
         "/workspaces/semio"
       ],
       "user_email": "ueli.saluz@posteo.de",
-      "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
+      "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
     }
   },
   "response": {}

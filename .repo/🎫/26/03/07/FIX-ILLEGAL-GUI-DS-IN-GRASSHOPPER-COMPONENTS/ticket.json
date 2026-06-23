@@ -2,7 +2,7 @@
   "title": "Fix Illegal GUIDs in Grasshopper Components",
   "emoji": "🔧",
   "status": "closed",
-  "description": "Replace illegal GUIDs (containing non-hexadecimal characters like 'G') with proper generated GUIDs in Semio.Grasshopper.cs. The error occurs at line 6624 in ApplyKitDiffComponent.get_ComponentGuid() with GUID \"B8F4C762-692F-4696-9EBD-243G21CE98GD\".",
+  "description": "Replace illegal GUIDs (containing non-hexadecimal characters like 'G') with proper generated GUIDs in Compose.Grasshopper.cs. The error occurs at line 6624 in ApplyKitDiffComponent.get_ComponentGuid() with GUID \"B8F4C762-692F-4696-9EBD-243G21CE98GD\".",
   "summary": "Replaced the illegal GUID \"B8F4C762-692F-4696-9EBD-243G21CE98GD\" (containing non-hex 'G' characters) in ApplyKitDiffComponent with a proper generated GUID \"B7104D9E-E2BD-4FBE-9D04-A4527B978AEE\". No other illegal GUIDs were found in the file.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/790"

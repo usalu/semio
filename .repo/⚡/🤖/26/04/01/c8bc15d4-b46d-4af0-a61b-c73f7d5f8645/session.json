@@ -20,7 +20,7 @@
           "conversation_id": "c8bc15d4-b46d-4af0-a61b-c73f7d5f8645",
           "generation_id": "c8bc15d4-b46d-4af0-a61b-c73f7d5f8645",
           "model": "tab",
-          "file_path": "\\workspaces\\semio\\.repo\\💬\\ueli.md",
+          "file_path": "\\workspaces\\compose\\.repo\\💬\\ueli.md",
           "edits": [
             {
               "old_string": "This is a very reasonable setup for a small team and a single Linux server.\n\n2. Database access\n\nPostgreSQL\nnode-postgres (pg) as the driver\nDrizzle ORM for schema/types/migrations\n",

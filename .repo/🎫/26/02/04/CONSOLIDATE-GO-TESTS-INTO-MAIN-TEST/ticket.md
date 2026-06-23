@@ -18,7 +18,7 @@ Consolidated repo-tooling Go tests into repo/cli/main_test.go, removed redundant
 - Relaxed `update` command assertion to avoid expecting JSONL done events from non-streaming operational commands.
 - Verified `go test ./...` passes in `repo/cli`.
 - Verified `go test` at repo root must target modules listed in `go.work` (e.g. `./repo/cli/...`).
-- Noted `semio/go` tests currently fail due missing `assets/semio/*` fixtures; this is unrelated to the repo-tooling test consolidation.
+- Noted `compose/go` tests currently fail due missing `assets/compose/*` fixtures; this is unrelated to the repo-tooling test consolidation.
 
 ## Todos
 

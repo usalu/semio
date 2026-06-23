@@ -8,13 +8,13 @@ goal: R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS/RUNNING-DESIGN-APP
 
 Expanded Design node hit testing from stroke-only to full-node clicks and revalidated the focused Design suite.
 ## Changes
-- Updated `semio/js/sketchpad/Design.tsx` so Design diagram nodes render an explicit invisible circular hit target matching the node body, allowing center clicks to select the node while preserving the visible ring styling.
-- Extended `semio/js/sketchpad.test.ts` inside the existing `Design` flow to detect visible Design-node renderers and assert center-click selection when one is available, while keeping the existing node-center selection regression active for visible diagram nodes.
+- Updated `compose/js/sketchpad/Design.tsx` so Design diagram nodes render an explicit invisible circular hit target matching the node body, allowing center clicks to select the node while preserving the visible ring styling.
+- Extended `compose/js/sketchpad.test.ts` inside the existing `Design` flow to detect visible Design-node renderers and assert center-click selection when one is available, while keeping the existing node-center selection regression active for visible diagram nodes.
 - Inspecting the existing `Design` Playwright flow and Design selection handlers to extend coverage for selection synchronization and mode behavior without adding a new test file.
-- Extended the existing `Design` Playwright flow in `semio/js/sketchpad.test.ts` with new selection helpers and assertions for default replace behavior, shared-selection synchronization, empty-canvas deselection, additive mode, subtractive mode, and rectangular selection.
+- Extended the existing `Design` Playwright flow in `compose/js/sketchpad.test.ts` with new selection helpers and assertions for default replace behavior, shared-selection synchronization, empty-canvas deselection, additive mode, subtractive mode, and rectangular selection.
 - Refactored the existing `Design` Playwright flow to replace a flaky connection-deletion keyboard dependency with deterministic direct store mutations so the test can progress into the selection section.
 - Refactored the existing flat geometry assertion to tolerate the two intentional connection mutations performed earlier in the same `Design` flow.
-- Refactored the existing multi-connection batch-edit assertions to use deterministic `semio.kit.updateDesign` updates instead of brittle DOM editing against slider controls, so the full `Design` flow remains stable after the selection assertions.
+- Refactored the existing multi-connection batch-edit assertions to use deterministic `compose.kit.updateDesign` updates instead of brittle DOM editing against slider controls, so the full `Design` flow remains stable after the selection assertions.
 
 ## Log
 - Reopened the ticket for the follow-up request to make Design node selection use the full visible node hit area instead of stroke-only clicks.
@@ -23,13 +23,13 @@ Expanded Design node hit testing from stroke-only to full-node clicks and revali
 - Ran the focused Design Playwright suite twice after the change; both runs passed and the current Metabolism scenario did not expose a visible SVG-backed Design node in the viewport, so the fallback node-center regression remained the active assertion path in this asset.
 - Opened ticket via `repo ticket open` for the Design selection coverage request.
 - Reused the current Design-app goal because the archived February ticket cannot be reopened through the current CLI (`ticket.json` is missing).
-- Located the existing `Design` Playwright flow in `semio/js/sketchpad.test.ts` and the current diagram/scene selection handlers in `semio/js/sketchpad/Design.tsx`.
+- Located the existing `Design` Playwright flow in `compose/js/sketchpad.test.ts` and the current diagram/scene selection handlers in `compose/js/sketchpad/Design.tsx`.
 - Validation reruns now progress through the pre-existing connection-deletion and geometry sections.
 - Current validation blocker: the new selection assertions reach the first real UI step, but the second candidate node can be outside the viewport, so the helper must choose visible diagram nodes before clicking.
 - Updated the selection helper plan to choose only currently visible diagram nodes and click by screen coordinates at the node center.
 - Reached a later pre-existing failure in the multi-connection detail test because the batch-edit assertions treated slider controls as text inputs.
 - Replaced the flaky slider-edit path with deterministic store-backed bulk updates and reran the focused `Design` suite successfully.
-- Final verification command: `cd semio/js && npx playwright test sketchpad.test.ts --grep "Design" --grep-invert "Design Drag Performance|Design Utility Tabs Stay Removed" --timeout 240000 --workers=1 --max-failures=1 --reporter=list`
+- Final verification command: `cd compose/js && npx playwright test sketchpad.test.ts --grep "Design" --grep-invert "Design Drag Performance|Design Utility Tabs Stay Removed" --timeout 240000 --workers=1 --max-failures=1 --reporter=list`
 - Final verification result: `1 passed (5.5m)` on 2026-03-03.
 
 ## Todos

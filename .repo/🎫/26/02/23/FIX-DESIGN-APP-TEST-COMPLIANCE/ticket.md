@@ -10,7 +10,7 @@ Fixed 2 TS compilation errors caused by invalid `id_` property in Piece object l
 
 ## Changes
 
-- `semio/js/sketchpad/Design.tsx`: Removed invalid `id_` property from 4 piece creation sites in drag-drop handlers (diagram drop, workbench drop, scene drop)
+- `compose/js/sketchpad/Design.tsx`: Removed invalid `id_` property from 4 piece creation sites in drag-drop handlers (diagram drop, workbench drop, scene drop)
 
 ## Log
 

@@ -2,10 +2,10 @@
 import { readFileSync, writeFileSync } from "node:fs";
 
 const files = [
-	"c:/git/semio/spatial/js/query/index.ts",
-	"c:/git/semio/spatial/js/renderer-r3f/index.tsx",
-	"c:/git/semio/spatial/js/renderer-r3f/play/main.tsx",
-	"c:/git/semio/spatial/js/machine-stately/index.ts",
+	"c:/git/compose/spatial/js/query/index.ts",
+	"c:/git/compose/spatial/js/renderer-r3f/index.tsx",
+	"c:/git/compose/spatial/js/renderer-r3f/play/main.tsx",
+	"c:/git/compose/spatial/js/machine-stately/index.ts",
 ];
 
 const pairs: [string, string][] = [
@@ -56,14 +56,14 @@ for (const file of files) {
 }
 
 const fixtureGlob = [
-	"c:/git/semio/spatial/fixtures/simple.spatial.json",
-	"c:/git/semio/spatial/fixtures/spatial.spatial.json",
-	"c:/git/semio/spatial/fixtures/small-building.model.json",
-	"c:/git/semio/spatial/fixtures/tall-building.model.json",
-	"c:/git/semio/spatial/fixtures/large-building.model.json",
-	"c:/git/semio/spatial/fixtures/geometry.json",
-	"c:/git/semio/spatial/fixtures/geometry-loom.json",
-	"c:/git/semio/spatial/fixtures/geometry-routes.json",
+	"c:/git/compose/spatial/fixtures/simple.spatial.json",
+	"c:/git/compose/spatial/fixtures/spatial.spatial.json",
+	"c:/git/compose/spatial/fixtures/small-building.model.json",
+	"c:/git/compose/spatial/fixtures/tall-building.model.json",
+	"c:/git/compose/spatial/fixtures/large-building.model.json",
+	"c:/git/compose/spatial/fixtures/geometry.json",
+	"c:/git/compose/spatial/fixtures/geometry-loom.json",
+	"c:/git/compose/spatial/fixtures/geometry-routes.json",
 ];
 for (const f of fixtureGlob) {
 	let j = readFileSync(f, "utf8");

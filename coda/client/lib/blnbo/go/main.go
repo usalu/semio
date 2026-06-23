@@ -15,7 +15,7 @@ import (
 )
 
 // #region 🗄️Translation
-// Translation input from semio-to-blnbo translator.
+// Translation input from compose-to-blnbo translator.
 
 type Translation struct {
 	TargetID   string              `json:"target_id"`

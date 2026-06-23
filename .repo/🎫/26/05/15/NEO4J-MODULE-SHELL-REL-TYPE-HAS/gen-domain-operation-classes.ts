@@ -1,14 +1,14 @@
 #!/usr/bin/env bun
 /**
- * @emoji 🧩 Splices concrete `Operation` commands from `schema.golden.graphql` into `semio/client/schema/semio/schema.yaml` (camelCase keys, `implements: [*operation]`, empty `fields`); emits Neo4j `Command` merge/reparent/rename + `Data` argument kit from golden `*Input` types (imperative command names only).
+ * @emoji 🧩 Splices concrete `Operation` commands from `schema.golden.graphql` into `compose/client/schema/compose/schema.yaml` (camelCase keys, `implements: [*operation]`, empty `fields`); emits Neo4j `Command` merge/reparent/rename + `Data` argument kit from golden `*Input` types (imperative command names only).
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import { spawnSync } from "node:child_process";
 
 const REPO = join(import.meta.dir, "..", "..", "..", "..", "..", "..");
-const goldenPath = join(REPO, "semio", "client", "schema", "graphql", "schema.golden.graphql");
-const schemaPath = join(REPO, "semio", "client", "schema", "semio", "schema.yaml");
+const goldenPath = join(REPO, "compose", "client", "schema", "graphql", "schema.golden.graphql");
+const schemaPath = join(REPO, "compose", "client", "schema", "compose", "schema.yaml");
 const goldenRepoRel = relative(REPO, goldenPath).replaceAll("\\", "/");
 
 function toYamlKey(pascal: string): string {

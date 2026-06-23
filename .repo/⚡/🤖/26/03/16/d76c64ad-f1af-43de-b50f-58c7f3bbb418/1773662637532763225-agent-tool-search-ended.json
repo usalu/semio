@@ -15,7 +15,7 @@
       "tool_name": "grep_search",
       "tool_input": {
         "maxResults": 20,
-        "includePattern": "**/semio/sketchpad/sketchpad/Design.tsx",
+        "includePattern": "**/compose/sketchpad/sketchpad/Design.tsx",
         "isRegexp": true,
         "query": "\u003cReactFlow|\\[nodes,|setNodes|edges,|setEdges"
       },

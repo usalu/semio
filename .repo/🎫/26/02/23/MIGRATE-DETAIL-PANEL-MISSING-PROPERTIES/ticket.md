@@ -9,10 +9,10 @@ goal: R26-02/RUNNING-SKETCHPAD
 Completed full migration of old build detail panel features. Phase 1: piece name/description/scale/color/attributes, connection description, connector name/t. Phase 2: piece count and connection count metadata, Editing N connections message, nested connection field grouping (Plane>Translation/Orientation, Diagram). Phase 3: Connecting/Connected TreeItem grouping in SingleConnectionInfo, German translations for connector fields. All i18n in en+de. TypeScript 0 errors, 13/13 tests pass.
 ## Changes
 
-- `semio/js/sketchpad/Design.tsx`: Added piece name/description/scale/color/attributes fields to PiecesSectionForm. Added connection description to SingleConnectionFields and ConnectionsSectionForm (bulk). Added connector name and t fields to ConnectorSectionForm. Added piece count and connection count metadata to DesignSectionForm. Added "Editing N connections simultaneously" message to bulk connection editing. Restructured connection fields (gap/shift/rise, rotation/turn/tilt, u/v) into nested TreeItem groups (Plane > Translation, Plane > Orientation, Diagram). Wrapped SingleConnectionInfo connecting/connected fields under "Connecting" and "Connected" TreeItem groups.
-- `semio/js/sketchpad/Sketchpad.tsx`: Added `useConnectionDescription` hook following existing connection hook pattern.
-- `semio/js/sketchpad/locales/en.json`: Added i18n keys for piece (name, namePlaceholder, description, descriptionPlaceholder, scale, color, colorPlaceholder, attributes, attribute), connection (description, descriptionPlaceholder, multipleEditing, plane, translation, orientation, diagram, connecting, connected), connector (name, t), design metadata (pieceCount, connectionCount).
-- `semio/js/sketchpad/locales/de.json`: Added German translations for all new keys including connecting/connected group labels and connector field labels.
+- `compose/js/sketchpad/Design.tsx`: Added piece name/description/scale/color/attributes fields to PiecesSectionForm. Added connection description to SingleConnectionFields and ConnectionsSectionForm (bulk). Added connector name and t fields to ConnectorSectionForm. Added piece count and connection count metadata to DesignSectionForm. Added "Editing N connections simultaneously" message to bulk connection editing. Restructured connection fields (gap/shift/rise, rotation/turn/tilt, u/v) into nested TreeItem groups (Plane > Translation, Plane > Orientation, Diagram). Wrapped SingleConnectionInfo connecting/connected fields under "Connecting" and "Connected" TreeItem groups.
+- `compose/js/sketchpad/Sketchpad.tsx`: Added `useConnectionDescription` hook following existing connection hook pattern.
+- `compose/js/sketchpad/locales/en.json`: Added i18n keys for piece (name, namePlaceholder, description, descriptionPlaceholder, scale, color, colorPlaceholder, attributes, attribute), connection (description, descriptionPlaceholder, multipleEditing, plane, translation, orientation, diagram, connecting, connected), connector (name, t), design metadata (pieceCount, connectionCount).
+- `compose/js/sketchpad/locales/de.json`: Added German translations for all new keys including connecting/connected group labels and connector field labels.
 
 ## Log
 
@@ -40,8 +40,8 @@ Phase 2:
 Phase 3:
 - Old build had connecting/connected fields grouped under "Connecting" and "Connected" TreeItem labels
 - New build had them flat in SingleConnectionInfo — visual difference from old build
-- Wrapped connecting fields (PieceId, ConnectorId, DesignPieceId) under TreeItem with id "semio.sketchpad.app.design.panel.details.section.connection.connecting"
-- Wrapped connected fields under TreeItem with id "semio.sketchpad.app.design.panel.details.section.connection.connected"
+- Wrapped connecting fields (PieceId, ConnectorId, DesignPieceId) under TreeItem with id "compose.sketchpad.app.design.panel.details.section.connection.connecting"
+- Wrapped connected fields under TreeItem with id "compose.sketchpad.app.design.panel.details.section.connection.connected"
 - Added i18n keys for "connecting" and "connected" group labels in en.json and de.json
 - Translated remaining untranslated de.json connector field labels (Connecting Connector, Connecting Design Piece, Connected Connector, Connected Design Piece)
 - TypeScript compilation passes with zero errors

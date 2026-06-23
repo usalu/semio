@@ -2,11 +2,11 @@ from pathlib import Path
 import subprocess
 import re
 
-repo = Path(r"c:\git\semio")
-lib = repo / "semio/client/lib/rs/lib.rs"
+repo = Path(r"c:\git\compose")
+lib = repo / "compose/client/lib/rs/lib.rs"
 text = lib.read_text(encoding="utf-8")
 head = subprocess.check_output(
-    ["git", "-C", str(repo), "show", "HEAD:semio/client/lib/rs/lib.rs"],
+    ["git", "-C", str(repo), "show", "HEAD:compose/client/lib/rs/lib.rs"],
 ).decode("utf-8")
 
 start_marker = "//#region 🩹 schema_gap_surfaces"

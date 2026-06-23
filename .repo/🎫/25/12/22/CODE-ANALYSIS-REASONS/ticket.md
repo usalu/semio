@@ -15,7 +15,7 @@
 
 - Added reason/solution fields to code analysis issues and populated defaults plus import/terminology specifics.
 - Documented reason/solution metadata in README and AGENTS.
-- Made reason/solution text specific to semio documentation structure and import boundaries.
+- Made reason/solution text specific to compose documentation structure and import boundaries.
 
 ## Changes
 

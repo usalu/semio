@@ -16,7 +16,7 @@ const repoRoot = join(stylingRoot, "..", "..");
 /** @emoji 📁 Canonical `ui/asset` directory (fonts, cursors, …). */
 export const ELEMENTS_ASSETS_ROOT = join(stylingRoot, "..", "asset");
 const elementsAssetsRoot = ELEMENTS_ASSETS_ROOT;
-const semioNetPaletteDir = join(repoRoot, "semio", "client", "lib", "net", "Elements.Styling", "Generated");
+const composeNetPaletteDir = join(repoRoot, "compose", "client", "lib", "net", "Elements.Styling", "Generated");
 
 const GOOGLE_FONTS_UA =
 	"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
@@ -508,7 +508,7 @@ export function generateStylingArtifacts(): void {
 	mkdirSync(generatedDir, { recursive: true });
 	mkdirSync(jsGeneratedDir, { recursive: true });
 	mkdirSync(netPaletteDir, { recursive: true });
-	mkdirSync(semioNetPaletteDir, { recursive: true });
+	mkdirSync(composeNetPaletteDir, { recursive: true });
 	mkdirSync(rustGeneratedDir, { recursive: true });
 	mkdirSync(pyGeneratedDir, { recursive: true });
 	const fonts = emitPaletteFonts(tokens);
@@ -520,7 +520,7 @@ export function generateStylingArtifacts(): void {
 	writeFileSync(join(jsGeneratedDir, "tokens.generated.ts"), emitTypeScriptTokens(tokens, resolvedThemes), "utf8");
 	const cs = emitCSharp(tokens);
 	writeFileSync(join(netPaletteDir, "Palette.g.cs"), cs, "utf8");
-	writeFileSync(join(semioNetPaletteDir, "Palette.g.cs"), cs, "utf8");
+	writeFileSync(join(composeNetPaletteDir, "Palette.g.cs"), cs, "utf8");
 	writeFileSync(join(rustGeneratedDir, "generated.rs"), emitRust(tokens, resolvedThemes), "utf8");
 	writeFileSync(join(pyGeneratedDir, "generated.py"), emitPython(tokens, resolvedThemes), "utf8");
 }

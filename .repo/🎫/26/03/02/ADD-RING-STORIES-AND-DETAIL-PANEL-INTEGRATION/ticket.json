@@ -27,7 +27,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "semio/semio/semio/js",
+              "path": "compose/compose/compose/js",
               "lines": {
                 "added": 0,
                 "removed": 81
@@ -47,7 +47,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "💻semio/js/sketchpad/Type.tsx",
+              "path": "💻compose/js/sketchpad/Type.tsx",
               "lines": {
                 "added": 161,
                 "removed": 242
@@ -61,35 +61,35 @@
           "renamed": [],
           "modified": [
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#App",
+              "path": "💻compose/js/sketchpad/Type.tsx#App",
               "lines": {
                 "added": 28,
                 "removed": 38
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Imports",
+              "path": "💻compose/js/sketchpad/Type.tsx#Imports",
               "lines": {
                 "added": 4,
                 "removed": 2
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Internal State Management",
+              "path": "💻compose/js/sketchpad/Type.tsx#Internal State Management",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Panels#Right#Details",
+              "path": "💻compose/js/sketchpad/Type.tsx#Panels#Right#Details",
               "lines": {
                 "added": 119,
                 "removed": 180
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Panels#Right#Settings",
+              "path": "💻compose/js/sketchpad/Type.tsx#Panels#Right#Settings",
               "lines": {
                 "added": 10,
                 "removed": 20
@@ -98,28 +98,28 @@
           ],
           "added": [
             {
-              "path": "semio/js/.storybook/stories/elements/input/Orb.stories.tsx#Header",
+              "path": "compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Header",
               "lines": {
                 "added": 18,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb",
+              "path": "compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb",
               "lines": {
                 "added": 89,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/.storybook/stories/elements/input/Ring.stories.tsx#Header",
+              "path": "compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Header",
               "lines": {
                 "added": 18,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring",
+              "path": "compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring",
               "lines": {
                 "added": 113,
                 "removed": 0
@@ -132,210 +132,210 @@
           "renamed": [],
           "modified": [
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#App#Filters§TypeKindToggles",
+              "path": "💻compose/js/sketchpad/Type.tsx#App#Filters§TypeKindToggles",
               "lines": {
                 "added": 0,
                 "removed": 10
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#App#Filters§createTypeFilterStore",
+              "path": "💻compose/js/sketchpad/Type.tsx#App#Filters§createTypeFilterStore",
               "lines": {
                 "added": 0,
                 "removed": 11
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#App#Filters§typeFilterStore",
+              "path": "💻compose/js/sketchpad/Type.tsx#App#Filters§typeFilterStore",
               "lines": {
                 "added": 0,
                 "removed": 14
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#App#Filters§useTypeFilters",
+              "path": "💻compose/js/sketchpad/Type.tsx#App#Filters§useTypeFilters",
               "lines": {
                 "added": 0,
                 "removed": 12
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#App§App",
+              "path": "💻compose/js/sketchpad/Type.tsx#App§App",
               "lines": {
                 "added": 28,
                 "removed": 11
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#App§App",
+              "path": "💻compose/js/sketchpad/Type.tsx#App§App",
               "lines": {
                 "added": 0,
                 "removed": 38
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Imports§KitSectionLazy",
+              "path": "💻compose/js/sketchpad/Type.tsx#Imports§KitSectionLazy",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Internal State Management§TypeAppWindowKind",
+              "path": "💻compose/js/sketchpad/Type.tsx#Internal State Management§TypeAppWindowKind",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Internal State Management§TypeAppWindowKind",
+              "path": "💻compose/js/sketchpad/Type.tsx#Internal State Management§TypeAppWindowKind",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Panels#Right#Details§AttributesSection",
+              "path": "💻compose/js/sketchpad/Type.tsx#Panels#Right#Details§AttributesSection",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Panels#Right#Details§AttributesSectionForm",
+              "path": "💻compose/js/sketchpad/Type.tsx#Panels#Right#Details§AttributesSectionForm",
               "lines": {
                 "added": 0,
                 "removed": 12
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Panels#Right#Details§AttributesSectionForm",
+              "path": "💻compose/js/sketchpad/Type.tsx#Panels#Right#Details§AttributesSectionForm",
               "lines": {
                 "added": 6,
                 "removed": 8
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Panels#Right#Details§AuthorsSectionForm",
+              "path": "💻compose/js/sketchpad/Type.tsx#Panels#Right#Details§AuthorsSectionForm",
               "lines": {
                 "added": 4,
                 "removed": 6
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Panels#Right#Details§AuthorsSectionForm",
+              "path": "💻compose/js/sketchpad/Type.tsx#Panels#Right#Details§AuthorsSectionForm",
               "lines": {
                 "added": 0,
                 "removed": 8
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Panels#Right#Details§ConnectorSectionForm",
+              "path": "💻compose/js/sketchpad/Type.tsx#Panels#Right#Details§ConnectorSectionForm",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Panels#Right#Details§ConnectorsListSection",
+              "path": "💻compose/js/sketchpad/Type.tsx#Panels#Right#Details§ConnectorsListSection",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Panels#Right#Details§ConnectorsListSectionForm",
+              "path": "💻compose/js/sketchpad/Type.tsx#Panels#Right#Details§ConnectorsListSectionForm",
               "lines": {
                 "added": 0,
                 "removed": 40
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Panels#Right#Details§ConnectorsListSectionForm",
+              "path": "💻compose/js/sketchpad/Type.tsx#Panels#Right#Details§ConnectorsListSectionForm",
               "lines": {
                 "added": 49,
                 "removed": 39
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Panels#Right#Details§ConnectorsMultipleSection",
+              "path": "💻compose/js/sketchpad/Type.tsx#Panels#Right#Details§ConnectorsMultipleSection",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Panels#Right#Details§ModelsSection",
+              "path": "💻compose/js/sketchpad/Type.tsx#Panels#Right#Details§ModelsSection",
               "lines": {
                 "added": 0,
                 "removed": 3
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Panels#Right#Details§ModelsSectionForm",
+              "path": "💻compose/js/sketchpad/Type.tsx#Panels#Right#Details§ModelsSectionForm",
               "lines": {
                 "added": 6,
                 "removed": 10
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Panels#Right#Details§ModelsSectionForm",
+              "path": "💻compose/js/sketchpad/Type.tsx#Panels#Right#Details§ModelsSectionForm",
               "lines": {
                 "added": 0,
                 "removed": 12
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Panels#Right#Details§TypeDetailsForm",
+              "path": "💻compose/js/sketchpad/Type.tsx#Panels#Right#Details§TypeDetailsForm",
               "lines": {
                 "added": 0,
                 "removed": 28
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Panels#Right#Details§TypeDetailsForm",
+              "path": "💻compose/js/sketchpad/Type.tsx#Panels#Right#Details§TypeDetailsForm",
               "lines": {
                 "added": 14,
                 "removed": 21
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Panels#Right#Settings§TypeSettingsContent",
+              "path": "💻compose/js/sketchpad/Type.tsx#Panels#Right#Settings§TypeSettingsContent",
               "lines": {
                 "added": 10,
                 "removed": 17
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Panels#Right#Settings§TypeSettingsContent",
+              "path": "💻compose/js/sketchpad/Type.tsx#Panels#Right#Settings§TypeSettingsContent",
               "lines": {
                 "added": 0,
                 "removed": 20
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Tools§SelectionAdditiveTool",
+              "path": "💻compose/js/sketchpad/Type.tsx#Tools§SelectionAdditiveTool",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Tools§SelectionNormalTool",
+              "path": "💻compose/js/sketchpad/Type.tsx#Tools§SelectionNormalTool",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx§TypeAppTools",
+              "path": "💻compose/js/sketchpad/Type.tsx§TypeAppTools",
               "lines": {
                 "added": 28,
                 "removed": 11
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx§TypeAppTools",
+              "path": "💻compose/js/sketchpad/Type.tsx§TypeAppTools",
               "lines": {
                 "added": 0,
                 "removed": 38
@@ -344,182 +344,182 @@
           ],
           "added": [
             {
-              "path": "🧪semio/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Base",
+              "path": "🧪compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Base",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Default",
+              "path": "🧪compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Default",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Disabled",
+              "path": "🧪compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Disabled",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Hovered",
+              "path": "🧪compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Hovered",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§OrbInRing",
+              "path": "🧪compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§OrbInRing",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Overlay",
+              "path": "🧪compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Overlay",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Panel",
+              "path": "🧪compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Panel",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Selected",
+              "path": "🧪compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Selected",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Story",
+              "path": "🧪compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Story",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Temporary",
+              "path": "🧪compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Temporary",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Window",
+              "path": "🧪compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Window",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§createLevelRender",
+              "path": "🧪compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§createLevelRender",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§defaultArgs",
+              "path": "🧪compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§defaultArgs",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§meta",
+              "path": "🧪compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§meta",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§Base",
+              "path": "🧪compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§Base",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§Default",
+              "path": "🧪compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§Default",
               "lines": {
                 "added": 23,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§Overlay",
+              "path": "🧪compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§Overlay",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§Panel",
+              "path": "🧪compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§Panel",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§RingDemo",
+              "path": "🧪compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§RingDemo",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§Story",
+              "path": "🧪compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§Story",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§Temporary",
+              "path": "🧪compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§Temporary",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§Window",
+              "path": "🧪compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§Window",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§createLevelRender",
+              "path": "🧪compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§createLevelRender",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§defaultArgs",
+              "path": "🧪compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§defaultArgs",
               "lines": {
                 "added": 11,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§defaultOrbs",
+              "path": "🧪compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§defaultOrbs",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§meta",
+              "path": "🧪compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§meta",
               "lines": {
                 "added": 8,
                 "removed": 0
@@ -546,7 +546,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "semio/semio/semio/js",
+              "path": "compose/compose/compose/js",
               "lines": {
                 "added": 0,
                 "removed": 93
@@ -566,7 +566,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "💻semio/js/sketchpad/Type.tsx",
+              "path": "💻compose/js/sketchpad/Type.tsx",
               "lines": {
                 "added": 168,
                 "removed": 261
@@ -580,35 +580,35 @@
           "renamed": [],
           "modified": [
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#App",
+              "path": "💻compose/js/sketchpad/Type.tsx#App",
               "lines": {
                 "added": 28,
                 "removed": 38
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Imports",
+              "path": "💻compose/js/sketchpad/Type.tsx#Imports",
               "lines": {
                 "added": 4,
                 "removed": 2
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Internal State Management",
+              "path": "💻compose/js/sketchpad/Type.tsx#Internal State Management",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Panels#Right#Details",
+              "path": "💻compose/js/sketchpad/Type.tsx#Panels#Right#Details",
               "lines": {
                 "added": 126,
                 "removed": 199
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Panels#Right#Settings",
+              "path": "💻compose/js/sketchpad/Type.tsx#Panels#Right#Settings",
               "lines": {
                 "added": 10,
                 "removed": 20
@@ -617,28 +617,28 @@
           ],
           "added": [
             {
-              "path": "semio/js/.storybook/stories/elements/input/Orb.stories.tsx#Header",
+              "path": "compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Header",
               "lines": {
                 "added": 18,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb",
+              "path": "compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb",
               "lines": {
                 "added": 89,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/.storybook/stories/elements/input/Ring.stories.tsx#Header",
+              "path": "compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Header",
               "lines": {
                 "added": 18,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring",
+              "path": "compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring",
               "lines": {
                 "added": 113,
                 "removed": 0
@@ -651,231 +651,231 @@
           "renamed": [],
           "modified": [
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#App#Filters§TypeFilterKind",
+              "path": "💻compose/js/sketchpad/Type.tsx#App#Filters§TypeFilterKind",
               "lines": {
                 "added": 0,
                 "removed": 6
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#App#Filters§TypeFilterState",
+              "path": "💻compose/js/sketchpad/Type.tsx#App#Filters§TypeFilterState",
               "lines": {
                 "added": 0,
                 "removed": 4
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#App#Filters§TypeKindToggles",
+              "path": "💻compose/js/sketchpad/Type.tsx#App#Filters§TypeKindToggles",
               "lines": {
                 "added": 0,
                 "removed": 22
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#App#Filters§typeFilterStore",
+              "path": "💻compose/js/sketchpad/Type.tsx#App#Filters§typeFilterStore",
               "lines": {
                 "added": 0,
                 "removed": 26
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#App#Filters§useTypeFilters",
+              "path": "💻compose/js/sketchpad/Type.tsx#App#Filters§useTypeFilters",
               "lines": {
                 "added": 0,
                 "removed": 24
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#App§App",
+              "path": "💻compose/js/sketchpad/Type.tsx#App§App",
               "lines": {
                 "added": 28,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#App§App",
+              "path": "💻compose/js/sketchpad/Type.tsx#App§App",
               "lines": {
                 "added": 0,
                 "removed": 38
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Imports§KitSectionLazy",
+              "path": "💻compose/js/sketchpad/Type.tsx#Imports§KitSectionLazy",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Internal State Management§TypeAppWindowKind",
+              "path": "💻compose/js/sketchpad/Type.tsx#Internal State Management§TypeAppWindowKind",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Internal State Management§TypeAppWindowKind",
+              "path": "💻compose/js/sketchpad/Type.tsx#Internal State Management§TypeAppWindowKind",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Panels#Right#Details§AttributesSection",
+              "path": "💻compose/js/sketchpad/Type.tsx#Panels#Right#Details§AttributesSection",
               "lines": {
                 "added": 0,
                 "removed": 4
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Panels#Right#Details§AttributesSectionForm",
+              "path": "💻compose/js/sketchpad/Type.tsx#Panels#Right#Details§AttributesSectionForm",
               "lines": {
                 "added": 0,
                 "removed": 12
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Panels#Right#Details§AttributesSectionForm",
+              "path": "💻compose/js/sketchpad/Type.tsx#Panels#Right#Details§AttributesSectionForm",
               "lines": {
                 "added": 6,
                 "removed": 6
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Panels#Right#Details§AuthorsSectionForm",
+              "path": "💻compose/js/sketchpad/Type.tsx#Panels#Right#Details§AuthorsSectionForm",
               "lines": {
                 "added": 0,
                 "removed": 8
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Panels#Right#Details§AuthorsSectionForm",
+              "path": "💻compose/js/sketchpad/Type.tsx#Panels#Right#Details§AuthorsSectionForm",
               "lines": {
                 "added": 4,
                 "removed": 4
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Panels#Right#Details§ConnectorSectionForm",
+              "path": "💻compose/js/sketchpad/Type.tsx#Panels#Right#Details§ConnectorSectionForm",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Panels#Right#Details§ConnectorsListSection",
+              "path": "💻compose/js/sketchpad/Type.tsx#Panels#Right#Details§ConnectorsListSection",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Panels#Right#Details§ConnectorsListSectionForm",
+              "path": "💻compose/js/sketchpad/Type.tsx#Panels#Right#Details§ConnectorsListSectionForm",
               "lines": {
                 "added": 47,
                 "removed": 49
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Panels#Right#Details§ConnectorsListSectionForm",
+              "path": "💻compose/js/sketchpad/Type.tsx#Panels#Right#Details§ConnectorsListSectionForm",
               "lines": {
                 "added": 0,
                 "removed": 51
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Panels#Right#Details§ConnectorsMultipleSection",
+              "path": "💻compose/js/sketchpad/Type.tsx#Panels#Right#Details§ConnectorsMultipleSection",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Panels#Right#Details§ModelsSection",
+              "path": "💻compose/js/sketchpad/Type.tsx#Panels#Right#Details§ModelsSection",
               "lines": {
                 "added": 0,
                 "removed": 3
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Panels#Right#Details§ModelsSectionForm",
+              "path": "💻compose/js/sketchpad/Type.tsx#Panels#Right#Details§ModelsSectionForm",
               "lines": {
                 "added": 0,
                 "removed": 12
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Panels#Right#Details§ModelsSectionForm",
+              "path": "💻compose/js/sketchpad/Type.tsx#Panels#Right#Details§ModelsSectionForm",
               "lines": {
                 "added": 6,
                 "removed": 10
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Panels#Right#Details§TypeDetailsForm",
+              "path": "💻compose/js/sketchpad/Type.tsx#Panels#Right#Details§TypeDetailsForm",
               "lines": {
                 "added": 0,
                 "removed": 28
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Panels#Right#Details§TypeDetailsForm",
+              "path": "💻compose/js/sketchpad/Type.tsx#Panels#Right#Details§TypeDetailsForm",
               "lines": {
                 "added": 14,
                 "removed": 21
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Panels#Right#Settings§TypeSettingsContent",
+              "path": "💻compose/js/sketchpad/Type.tsx#Panels#Right#Settings§TypeSettingsContent",
               "lines": {
                 "added": 10,
                 "removed": 19
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Panels#Right#Settings§TypeSettingsContent",
+              "path": "💻compose/js/sketchpad/Type.tsx#Panels#Right#Settings§TypeSettingsContent",
               "lines": {
                 "added": 0,
                 "removed": 20
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Tools§ConnectorTool",
+              "path": "💻compose/js/sketchpad/Type.tsx#Tools§ConnectorTool",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Tools§ConnectorToolContent",
+              "path": "💻compose/js/sketchpad/Type.tsx#Tools§ConnectorToolContent",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Tools§SelectionAdditiveTool",
+              "path": "💻compose/js/sketchpad/Type.tsx#Tools§SelectionAdditiveTool",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx#Tools§SelectionSubtractiveTool",
+              "path": "💻compose/js/sketchpad/Type.tsx#Tools§SelectionSubtractiveTool",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx§TypeAppTools",
+              "path": "💻compose/js/sketchpad/Type.tsx§TypeAppTools",
               "lines": {
                 "added": 28,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Type.tsx§TypeAppTools",
+              "path": "💻compose/js/sketchpad/Type.tsx§TypeAppTools",
               "lines": {
                 "added": 0,
                 "removed": 38
@@ -884,182 +884,182 @@
           ],
           "added": [
             {
-              "path": "🧪semio/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Base",
+              "path": "🧪compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Base",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Default",
+              "path": "🧪compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Default",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Disabled",
+              "path": "🧪compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Disabled",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Hovered",
+              "path": "🧪compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Hovered",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§OrbInRing",
+              "path": "🧪compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§OrbInRing",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Overlay",
+              "path": "🧪compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Overlay",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Panel",
+              "path": "🧪compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Panel",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Selected",
+              "path": "🧪compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Selected",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Story",
+              "path": "🧪compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Story",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Temporary",
+              "path": "🧪compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Temporary",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Window",
+              "path": "🧪compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Window",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§createLevelRender",
+              "path": "🧪compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§createLevelRender",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§defaultArgs",
+              "path": "🧪compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§defaultArgs",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§meta",
+              "path": "🧪compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§meta",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§Base",
+              "path": "🧪compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§Base",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§Default",
+              "path": "🧪compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§Default",
               "lines": {
                 "added": 23,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§Overlay",
+              "path": "🧪compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§Overlay",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§Panel",
+              "path": "🧪compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§Panel",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§RingDemo",
+              "path": "🧪compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§RingDemo",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§Story",
+              "path": "🧪compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§Story",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§Temporary",
+              "path": "🧪compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§Temporary",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§Window",
+              "path": "🧪compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§Window",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§createLevelRender",
+              "path": "🧪compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§createLevelRender",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§defaultArgs",
+              "path": "🧪compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§defaultArgs",
               "lines": {
                 "added": 11,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§defaultOrbs",
+              "path": "🧪compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§defaultOrbs",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§meta",
+              "path": "🧪compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§meta",
               "lines": {
                 "added": 8,
                 "removed": 0

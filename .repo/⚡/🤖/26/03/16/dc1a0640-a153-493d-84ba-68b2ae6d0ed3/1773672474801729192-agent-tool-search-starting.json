@@ -17,7 +17,7 @@
       "tool_name": "grep_search",
       "tool_input": {
         "maxResults": 20,
-        "includePattern": "**/semio/sketchpad/**/playwright*",
+        "includePattern": "**/compose/sketchpad/**/playwright*",
         "isRegexp": true,
         "query": "webServer|baseURL|5173"
       },

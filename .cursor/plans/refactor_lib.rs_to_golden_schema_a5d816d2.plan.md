@@ -1,6 +1,6 @@
 ---
 name: refactor lib.rs to golden schema
-overview: Rewrite [semio/client/lib/rs/lib.rs](semio/client/lib/rs/lib.rs) so every GraphQL type in [semio/schema/graphql/schema.golden.graphql](semio/schema/graphql/schema.golden.graphql) (985 declarations) maps to exactly one Rust definition, generated through a small macro DSL, while preserving and rewiring the existing runtime (kit_backbone, worker, event bus, kit_graph_engine, wasm_bridge) against the new struct names with full resolver logic.
+overview: Rewrite [compose/client/lib/rs/lib.rs](compose/client/lib/rs/lib.rs) so every GraphQL type in [compose/schema/graphql/schema.golden.graphql](compose/schema/graphql/schema.golden.graphql) (985 declarations) maps to exactly one Rust definition, generated through a small macro DSL, while preserving and rewiring the existing runtime (kit_backbone, worker, event bus, kit_graph_engine, wasm_bridge) against the new struct names with full resolver logic.
 todos:
   - id: phase0-ticket
     content: Open umbrella ticket; archive current lib.rs runtime to ticket folder; gut lib.rs to scalars + macro DSL + empty regions
@@ -39,7 +39,7 @@ todos:
     content: Phase 11 — Port kit_graph_engine/kit_backbone/worker/event/wasm_bridge runtime onto the new struct names with full resolver logic
     status: pending
   - id: phase12-strict-gate
-    content: Phase 12 — Flip SEMIO_GOLDEN_STRICT=1; fix every drift; run cargo test, schema export, nx build; close ticket
+    content: Phase 12 — Flip COMPOSE_GOLDEN_STRICT=1; fix every drift; run cargo test, schema export, nx build; close ticket
     status: pending
 isProject: false
 ---
@@ -48,7 +48,7 @@ isProject: false
 
 ## Goal
 
-Every declaration in [semio/schema/graphql/schema.golden.graphql](semio/schema/graphql/schema.golden.graphql) (985 declarations) gets exactly one Rust definition in [semio/client/lib/rs/lib.rs](semio/client/lib/rs/lib.rs):
+Every declaration in [compose/schema/graphql/schema.golden.graphql](compose/schema/graphql/schema.golden.graphql) (985 declarations) gets exactly one Rust definition in [compose/client/lib/rs/lib.rs](compose/client/lib/rs/lib.rs):
 
 - GraphQL `type` -> Rust `struct` with `#[Object]` or `#[derive(SimpleObject)]`
 - GraphQL `interface` -> Rust enum with `#[derive(Interface)]`
@@ -59,7 +59,7 @@ Every declaration in [semio/schema/graphql/schema.golden.graphql](semio/schema/g
 
 The existing runtime (`kit_backbone`, `worker`, `event`, `kit_graph_engine`, `wasm_bridge`) is preserved and rewired to the new types with full resolver logic ported. Every Rust identifier (type names, field names via `#[graphql(name)]`) MUST match the GraphQL identifiers; non-GraphQL terms are forbidden in the public surface.
 
-The test `schema_matches_target_graphql_file` (currently soft-warning) becomes the hard gate; the run is finished only when `cargo test -p semio --lib` passes with `SEMIO_GOLDEN_STRICT=1`.
+The test `schema_matches_target_graphql_file` (currently soft-warning) becomes the hard gate; the run is finished only when `cargo test -p compose --lib` passes with `COMPOSE_GOLDEN_STRICT=1`.
 
 ## Macro DSL (single source of truth)
 
@@ -87,7 +87,7 @@ flowchart LR
   Bare["entity_bare!(Name)"] --> BareN[Name]
 ```
 
-### Ladder catalog (verified against [schema.golden.graphql](semio/schema/graphql/schema.golden.graphql))
+### Ladder catalog (verified against [schema.golden.graphql](compose/schema/graphql/schema.golden.graphql))
 
 - **Full 12-ladder (30 entities, 360 types):**
   - Geom (7): `Vector`, `Point`, `Coordinate`, `Offset`, `Plane`, `Position`, `Location`
@@ -175,7 +175,7 @@ Each phase is a `ticket_open`/`ticket_close` cycle on its own ticket. Phases are
 - Phase 9 — Store + Backbones + Providers: Store, FileBackbone, WebsocketBackbone, RemoteProvider (lite 3-ladder), **LocalProvider (bare — no Edge/Connection)**, plus every Command type (lite 3-ladder).
 - Phase 10 — Query/Mutation/Subscription: wire `node`, `entity`, `session`, `Mutation.session`, `Subscription.session`, `Subscription.operation` to runtime.
 - Phase 11 — Runtime port: rewire `kit_graph_engine`, `kit_backbone`, `worker`, `event`, `wasm_bridge` to the new struct names. Preserve every behaviour; rename internal symbols where they collide with GraphQL names.
-- Phase 12 — Strict golden gate: enable `SEMIO_GOLDEN_STRICT=1` test. Fix every remaining drift. Run `cargo test -p semio --lib` and `bun scripts/export-schema.ts`. Confirm `bun nx run semio:build` succeeds.
+- Phase 12 — Strict golden gate: enable `COMPOSE_GOLDEN_STRICT=1` test. Fix every remaining drift. Run `cargo test -p compose --lib` and `bun scripts/export-schema.ts`. Confirm `bun nx run compose:build` succeeds.
 
 ## Naming rules (must)
 
@@ -189,9 +189,9 @@ Each phase is a `ticket_open`/`ticket_close` cycle on its own ticket. Phases are
 
 ## Validation
 
-- `cargo test -p semio --lib --features SEMIO_GOLDEN_STRICT` (or env var) — passes.
-- `bun scripts/export-schema.ts` — produces `semio/schema/graphql/schema.graphql` byte-equal modulo whitespace to `schema.golden.graphql`.
-- `bun nx run semio/client:build` and `:test` — green.
-- `rg -n "FixMe|TODO|todo!\\(|unimplemented!\\(|placeholder" semio/client/lib/rs/lib.rs` — empty.
-- The catalog count check: generated SDL contains exactly the 985 declarations enumerated in `c:/git/semio/.repo/all_type_names.txt`, no more, no less.
+- `cargo test -p compose --lib --features COMPOSE_GOLDEN_STRICT` (or env var) — passes.
+- `bun scripts/export-schema.ts` — produces `compose/schema/graphql/schema.graphql` byte-equal modulo whitespace to `schema.golden.graphql`.
+- `bun nx run compose/client:build` and `:test` — green.
+- `rg -n "FixMe|TODO|todo!\\(|unimplemented!\\(|placeholder" compose/client/lib/rs/lib.rs` — empty.
+- The catalog count check: generated SDL contains exactly the 985 declarations enumerated in `c:/git/compose/.repo/all_type_names.txt`, no more, no less.
 

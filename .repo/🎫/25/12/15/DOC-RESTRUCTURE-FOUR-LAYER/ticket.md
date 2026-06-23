@@ -23,8 +23,8 @@ The documentation was structured with:
 Replaced folder tree structure (lines 1109-1399) with flat `## PATH/` headers:
 
 - Added: `## hooks/`, `## reports/`, `## assets/`, `## engineering/`, `## examples/`, `## graphql/`, `## jsonschema/`, `## log/`, `## scripts/`, `## sql/sqlite/`
-- Changed: `## js` → `## js/`, `## js/semio` → `## js/semio/`, `## net` → `## net/`
-- Fixed file paths: `## net/Semio.cs` → `## net/Semio/Semio.cs`, `## Semio.Grasshopper.cs` → `## net/Semio.Grasshopper/Semio.Grasshopper.cs`
+- Changed: `## js` → `## js/`, `## js/compose` → `## js/compose/`, `## net` → `## net/`
+- Fixed file paths: `## net/Compose.cs` → `## net/Compose/Compose.cs`, `## Compose.Grasshopper.cs` → `## net/Compose.Grasshopper/Compose.Grasshopper.cs`
 
 ## Added missing folder sections
 
@@ -46,7 +46,7 @@ Added documentation for previously undocumented folders:
 Moved framework-specific implementation details from SRS to Codebase:
 
 - Model tag selection: Removed `TypeAppFooter`, `DesignAppFooter`, `selectBestModel` references from Model section
-- Added implementation details to `## js/semio/` section
+- Added implementation details to `## js/compose/` section
 
 ## Changes
 

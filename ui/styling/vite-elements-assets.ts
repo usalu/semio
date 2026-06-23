@@ -137,10 +137,10 @@ function createUiAssetsMiddleware(assetsRoot: string): Connect.NextHandleFunctio
 export function puzzle3dKitMeshRoots(repoRoot: string): { readonly meshRoots: readonly string[]; readonly placeholderMesh: string } {
   return {
     meshRoots: [
-      resolve(repoRoot, "semio/fixture/kit/folder/metabolism/representations"),
-      resolve(repoRoot, "semio/fixture/kit/folder/abbau-aufbau"),
+      resolve(repoRoot, "compose/fixture/kit/folder/metabolism/representations"),
+      resolve(repoRoot, "compose/fixture/kit/folder/abbau-aufbau"),
     ],
-    placeholderMesh: resolve(repoRoot, "semio/asset/mesh/placeholder.glb"),
+    placeholderMesh: resolve(repoRoot, "compose/asset/mesh/placeholder.glb"),
   };
 }
 
@@ -490,7 +490,7 @@ export const PLAYGROUND_SCENE_HOST_DEDUPE = ["@react-three/fiber", "@react-three
 
 //#region 🔖MapTileCache
 /** @emoji 🗺 Compliant User-Agent for OSM / MapLibre demotiles in map play. */
-export const GIS_MAP_TILE_USER_AGENT = "SemioGisMapPlay/0.1 (+https://github.com/usalu/semio; dev playground)";
+export const GIS_MAP_TILE_USER_AGENT = "ComposeGisMapPlay/0.1 (+https://github.com/usalu/semio; dev playground)";
 
 /** @emoji 🗺 Default dev prefetch bounds (Switzerland) for GIS map play. */
 export const GIS_MAP_DEFAULT_PREFETCH_BOUNDS = {

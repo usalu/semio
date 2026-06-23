@@ -56,8 +56,8 @@ def main():
     
     # Process specific files that we know have issues
     files_to_fix = [
-        "semio/py/main.py",
-        "semio/engine/main.py",
+        "compose/py/main.py",
+        "compose/engine/main.py",
         "coda/engine/coda.py"
     ]
     

@@ -3,7 +3,7 @@
   "emoji": "🔧",
   "status": "closed",
   "description": "Update session.json format from {uuid, client, llm, started_at, transcript, first_event} to {id, uri, contributor, client, second, transcript}. Update SessionMeta struct, writeSessionMeta, logHook construction, ExtractSessionSecond, and related tests.",
-  "summary": "Updated SessionMeta struct fields from {uuid, started_at, first_event} to {id, uri, contributor, second}. Updated logHook to populate new fields using GetArtifactURI and contributorGithubToSemioID. Fixed ExtractSessionSecond to read meta.Second. Added Summary field to TreeNode. Updated test to verify new session.json format.",
+  "summary": "Updated SessionMeta struct fields from {uuid, started_at, first_event} to {id, uri, contributor, second}. Updated logHook to populate new fields using GetArtifactURI and contributorGithubToComposeID. Fixed ExtractSessionSecond to read meta.Second. Added Summary field to TreeNode. Updated test to verify new session.json format.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/741"
   },

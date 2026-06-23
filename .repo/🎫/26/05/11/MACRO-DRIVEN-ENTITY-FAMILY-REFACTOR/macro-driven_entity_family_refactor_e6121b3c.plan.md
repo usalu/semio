@@ -3,13 +3,13 @@ name: Macro-Driven Entity Family Refactor
 overview: Replace ~7,000 lines of hand-rolled GraphQL schema and ~3,000 lines of repetitive Rust shell code with a single `entity_family!` macro per entity that emits the full 12-type ladder (entity + Edge/Connection + Diff/DiffEdge/DiffConnection + Modification/ModificationEdge/ModificationConnection + Modifications/ModificationsEdge/ModificationsConnection) as real Rust types with hashing, owner unions, Object impls, and SDL fragments. Make `gql::sdl()` truly code-first and regenerate `target.schema.graphql` as a golden. Fix all schema inconsistencies along the way.
 todos:
   - id: bootstrap
-    content: "Coordinator: read `repo://goals`, open ticket via repo MCP `ticket_open`, snapshot baseline `cargo check`, inject `//#region 🧬 entity_dsl` and `//#region 🤖 W1`..`//#region 🤖 W8` markers into [semio/rs/lib.rs](semio/rs/lib.rs)."
+    content: "Coordinator: read `repo://goals`, open ticket via repo MCP `ticket_open`, snapshot baseline `cargo check`, inject `//#region 🧬 entity_dsl` and `//#region 🤖 W1`..`//#region 🤖 W8` markers into [compose/rs/lib.rs](compose/rs/lib.rs)."
     status: completed
   - id: w0-foundation
     content: "W0 (serial, ~60 min): fill `entity_dsl` region with all macros from blueprints §1-§14 + `__autoresolved_owner!` covering every entity in the roster; rewrite `gql::sdl()` per §14; delete legacy `simple_conn_*` / `entity_full_family!` / `entity_relay!` / `entity_diffs!` / `entity_owner!`."
     status: pending
   - id: w1-geometry
-    content: "W1 (parallel wave 2, ~45 min): convert geometry entities (Vector/Point/Coordinate/Offset/Plane/Position/Location/Place) to `entity_family!` + `entity_input!`; delete hand-written `*Node` structs in `pub mod geom::entity` AND the iface-mod `#[Object]` impls (`6273:6457:semio/rs/lib.rs`)."
+    content: "W1 (parallel wave 2, ~45 min): convert geometry entities (Vector/Point/Coordinate/Offset/Plane/Position/Location/Place) to `entity_family!` + `entity_input!`; delete hand-written `*Node` structs in `pub mod geom::entity` AND the iface-mod `#[Object]` impls (`6273:6457:compose/rs/lib.rs`)."
     status: pending
   - id: w2-meta
     content: "W2 (parallel wave 2, ~60 min): convert meta entities (Attribute/Author/File/Folder/Prop/Benchmark/Quality/Tag/Concept/Stat/Layer/Group/Family) to `entity_family!` + `entity_input!`; collapse `Tag`/`Concept`/`Quality` Object impls and all `compute_entity_hash` impls."
@@ -30,10 +30,10 @@ todos:
     content: "W7 (serial wave 3, ~90 min, depends on W1-W6): apply `kit_operation_enum!` / `scope_enum!` / `input_enum!` to derive the central `KitOperation`/`OperationKind`/`OperationIface`/`Scope`/`Input` enums; convert every operation (CreatedDesign, RenamedKit, MovedPiece/MovedPieces, AddedAttributeTo*, RemovedAttributeFrom*, Deleted*, FixedPiece/FixedPieces, FlattenedDesign, AddedChildPieceWithParentConnection*, …) to `operation_family!` blocks; replace hand-written per-op `apply_to(kit)` skeletons."
     status: pending
   - id: w8-command-navs
-    content: "W8 (serial wave 4, ~45 min, depends on W7): replace every `*OperationNav` struct + `#[Object]` block (`9499:9700:semio/rs/lib.rs` and `Tag`/`Concept`/`Quality`/`Type`/`Port`/`Connector`/`Design`/`Piece`/`Pieces` navs) with `command_nav!` invocations."
+    content: "W8 (serial wave 4, ~45 min, depends on W7): replace every `*OperationNav` struct + `#[Object]` block (`9499:9700:compose/rs/lib.rs` and `Tag`/`Concept`/`Quality`/`Type`/`Port`/`Connector`/`Design`/`Piece`/`Pieces` navs) with `command_nav!` invocations."
     status: pending
   - id: integrate
-    content: "Integrator (coordinator, ~30 min): write the bottom-of-file `register_entities! { ... }` and `register_operations! { ... }` rosters, apply schema fixes that aren't derivable from individual entity declarations, regenerate [semio/graphql/target.schema.graphql](semio/graphql/target.schema.graphql) via `cargo test export_semio_graphql_schema_file -- --ignored`."
+    content: "Integrator (coordinator, ~30 min): write the bottom-of-file `register_entities! { ... }` and `register_operations! { ... }` rosters, apply schema fixes that aren't derivable from individual entity declarations, regenerate [compose/graphql/target.schema.graphql](compose/graphql/target.schema.graphql) via `cargo test export_compose_graphql_schema_file -- --ignored`."
     status: in_progress
   - id: sweep
     content: "Coordinator (~30 min): run full `cargo test` (37 tests); fix any field-name/resolver regressions; verify `schema_matches_target_graphql_file` passes the real round-trip; verify WASM build (`cargo check --target wasm32-unknown-unknown`); run global grep guardrails."
@@ -48,7 +48,7 @@ isProject: false
 
 ## Direction (confirmed)
 
-- **Code-first**: a single `entity_family!` macro per entity emits Rust types AND a static SDL fragment string. `crate::gql::sdl()` concatenates collected fragments with the executable schema's Query/Mutation/Subscription. `semio/graphql/target.schema.graphql` becomes a regenerated golden file.
+- **Code-first**: a single `entity_family!` macro per entity emits Rust types AND a static SDL fragment string. `crate::gql::sdl()` concatenates collected fragments with the executable schema's Query/Mutation/Subscription. `compose/graphql/target.schema.graphql` becomes a regenerated golden file.
 - **Full family scope**: 12-type ladder per entity as real Rust types backed by macros, plus owner-slot enums, owner unions, and `#[Object]` shells. Operations get a sibling `operation_family!` macro.
 
 ## Architecture
@@ -89,7 +89,7 @@ flowchart TD
     OwnerUnions --> SDLReg
 
     SDLReg --> SdlFn["gql::sdl()"]
-    SdlFn --> Golden["semio/graphql/target.schema.graphql (regenerated golden)"]
+    SdlFn --> Golden["compose/graphql/target.schema.graphql (regenerated golden)"]
     SdlFn --> Test["schema_matches_target_graphql_file (real round-trip)"]
 ```
 
@@ -97,9 +97,9 @@ flowchart TD
 
 ## Key files
 
-- [semio/rs/lib.rs](semio/rs/lib.rs) — single source for all macros and entities (workspace rule: keep code in existing files)
-- [semio/graphql/target.schema.graphql](semio/graphql/target.schema.graphql) — regenerated golden after refactor
-- [semio/rs/Cargo.toml](semio/rs/Cargo.toml) — already has `paste = "1.0"`; we'll lean on `paste::paste!` for ident concatenation. No new deps needed.
+- [compose/rs/lib.rs](compose/rs/lib.rs) — single source for all macros and entities (workspace rule: keep code in existing files)
+- [compose/graphql/target.schema.graphql](compose/graphql/target.schema.graphql) — regenerated golden after refactor
+- [compose/rs/Cargo.toml](compose/rs/Cargo.toml) — already has `paste = "1.0"`; we'll lean on `paste::paste!` for ident concatenation. No new deps needed.
 
 ## Macro surface — what gets derived
 
@@ -110,7 +110,7 @@ What the macros derive (per category):
 - **Schema / SDL**: type definitions, edge types, connection types, diff types, modification types, modifications collection types, interface implementations, owner/owned unions, input objects, scalars header.
 - **Rust types**: entity structs, owner-slot enums, owner unions, edge structs, connection structs, diff structs, modification structs, modifications structs, input structs, default impls, debug impls.
 - **Constructors**: `new(..) -> Arc<Self>`, `new_with_id(..) -> Arc<Self>`, `from_rows(..) -> Self` for connections.
-- **Hashing**: `compute_hash()` (async, walks RwLocks), `compute_entity_hash()` (sync DTO leaves), connection hash via `merkle_collection`, diff/modification hash via `merkle_node_str` with sorted children. All hash tags follow `semio:<region>:<TypeName>` strictly via the macro.
+- **Hashing**: `compute_hash()` (async, walks RwLocks), `compute_entity_hash()` (sync DTO leaves), connection hash via `merkle_collection`, diff/modification hash via `merkle_node_str` with sorted children. All hash tags follow `compose:<region>:<TypeName>` strictly via the macro.
 - **Object impls**: `id`, `hash`, `owner`, `owner_entity`, `owned_entities`, plus one typed accessor per owner variant (`kitOwner`, `typeOwner`, ...), plus one resolver per data field (clones `RwLock` value), plus one resolver per child collection (returns relay `XConnection`).
 - **Operations**: `KitOperation` enum + variants, `OperationKind` parallel enum, `OperationIface` union, per-op `Scope` and `Input` enum arms, per-op `to_diff()` and `apply_to(kit)` skeletons, GraphQL Operation entity (`CreatedTag`, `RenamedKit`, ...) + its `XInput` companion + Edge/Connection.
 - **Mutation nav**: the `KitOperationNav` / `TagOperationNav` / `ConceptOperationNav` / ... structs that today repeat the same `change_id` + `Object` plumbing become a single `command_nav!` macro per artifact.
@@ -120,7 +120,7 @@ What the macros derive (per category):
 
 ## Macro surface — code blueprints
 
-Everything below lives in a new `//#region 🧬 entity_dsl` section of [semio/rs/lib.rs](semio/rs/lib.rs).
+Everything below lives in a new `//#region 🧬 entity_dsl` section of [compose/rs/lib.rs](compose/rs/lib.rs).
 
 ### 1. SDL fragment registry (no new deps)
 
@@ -389,7 +389,7 @@ entity_family! {
     owners: [Position, PositionDiff],
     owns:   [],
     fields: { u: f64 @data, v: f64 @data },
-    hash_tag: "semio:geom:Coordinate",
+    hash_tag: "compose:geom:Coordinate",
 }
 ```
 
@@ -416,7 +416,7 @@ impl Coordinate {
     pub async fn new(owner: CoordinateOwnerSlot, u: f64, v: f64) -> Arc<Self> { /* … */ }
     pub fn new_with_id(owner: CoordinateOwnerSlot, id: Id, u: f64, v: f64) -> Arc<Self> { /* … */ }
     pub async fn compute_hash(&self) -> String {
-        let own = vec!["semio:geom:Coordinate".into(), self.id.0.clone(),
+        let own = vec!["compose:geom:Coordinate".into(), self.id.0.clone(),
                        format!("{:.9}", *self.u.read().await),
                        format!("{:.9}", *self.v.read().await)];
         crate::hash::merkle_node_str(&own.iter().map(String::as_str).collect::<Vec<_>>(), Vec::new())
@@ -617,7 +617,7 @@ impl TagConnection {
 }
 ```
 
-`__entity_diff!(Tag, "semio:meta:Tag", { name: String @data, order: Option<i32> @data, attributes: Vec<Attribute> @children(AttributeConnection) });` produces:
+`__entity_diff!(Tag, "compose:meta:Tag", { name: String @data, order: Option<i32> @data, attributes: Vec<Attribute> @children(AttributeConnection) });` produces:
 
 ```rust
 pub struct TagDiff {
@@ -627,13 +627,13 @@ pub struct TagDiff {
     pub attributes:  Option<AttributeConnection>,
 }
 #[ComplexObject] impl TagDiff {
-    pub async fn hash(&self) -> String { /* merkle leaf "semio:meta:Tag:Diff" + id */ }
+    pub async fn hash(&self) -> String { /* merkle leaf "compose:meta:Tag:Diff" + id */ }
     /* + ownerEntity / ownedEntities */
 }
 __simple_relay!(TagDiffEdge, TagDiffConnection, TagDiff);
 ```
 
-`__entity_modification!(Tag, "semio:meta:Tag");` produces:
+`__entity_modification!(Tag, "compose:meta:Tag");` produces:
 
 ```rust
 pub struct TagModification { pub id: Id, pub before: Arc<Tag>, pub diff: Arc<TagDiff>, pub after: Arc<Tag> }
@@ -641,7 +641,7 @@ pub struct TagModification { pub id: Id, pub before: Arc<Tag>, pub diff: Arc<Tag
 __simple_relay!(TagModificationEdge, TagModificationConnection, TagModification);
 ```
 
-`__entity_modifications!(Tag, "semio:meta:Tag");` produces:
+`__entity_modifications!(Tag, "compose:meta:Tag");` produces:
 
 ```rust
 pub struct TagModifications {
@@ -1081,7 +1081,7 @@ operation_family! {
     owns: [RenamedTagInput],
     input: { new_name: String @data },
     output: { tag: std::sync::Arc<Tag> @entity },
-    hash_tag: "semio:op:RenamedTag",
+    hash_tag: "compose:op:RenamedTag",
 }
 ```
 
@@ -1090,7 +1090,7 @@ expands to:
 ```rust
 pub struct RenamedTagInput { pub id: Id, pub hash: String, pub new_name: String }
 impl RenamedTagInput {
-    pub fn compute_hash(&self) -> String { merkle_node_str(&["semio:op:RenamedTag:Input", self.id.0.as_str()], vec![]) }
+    pub fn compute_hash(&self) -> String { merkle_node_str(&["compose:op:RenamedTag:Input", self.id.0.as_str()], vec![]) }
 }
 impl HasSdlFragment for RenamedTagInput {
     const SDL_FRAGMENT: &str = "type RenamedTagInput implements Input { … new_name: String! }";
@@ -1116,7 +1116,7 @@ A no-input op (`output` only) keeps the same shape but skips the `XInput` struct
 ```rust
 operation_family! {
     name: DeletedTag, scope_kind: Tag, owns: [], output: { },
-    hash_tag: "semio:op:DeletedTag",
+    hash_tag: "compose:op:DeletedTag",
 }
 ```
 
@@ -1250,7 +1250,7 @@ pub enum Input {
 
 ### 8. Mutation command nav: `command_nav!`
 
-Today every artifact has its own hand-rolled `XOperationNav` struct + `#[Object]` impl with the same change-id routing pattern (`9626:9700:semio/rs/lib.rs` shows `KitOperationNav`, with similar blocks for `TagOperationNav`, `ConceptOperationNav`, etc.). Replace with:
+Today every artifact has its own hand-rolled `XOperationNav` struct + `#[Object]` impl with the same change-id routing pattern (`9626:9700:compose/rs/lib.rs` shows `KitOperationNav`, with similar blocks for `TagOperationNav`, `ConceptOperationNav`, etc.). Replace with:
 
 ```rust
 /// 🎛️ Generate `XOperationNav` (struct + Object impl) for one artifact.
@@ -1444,7 +1444,7 @@ pub fn empty_owned_entity_connection() -> Arc<OwnedEntityConnection> { OwnedEnti
 pub fn owner_entity_arc(e: OwnerEntity) -> Arc<OwnerEntity> { Arc::new(e) }
 ```
 
-The full roster (~40 entities) yields a single 40-arm union, eliminating today's drift between `iface::OwnerEntity` (`6128:6151:semio/rs/lib.rs`) and the actual live entities.
+The full roster (~40 entities) yields a single 40-arm union, eliminating today's drift between `iface::OwnerEntity` (`6128:6151:compose/rs/lib.rs`) and the actual live entities.
 
 ### 10. Interface enums
 
@@ -1526,7 +1526,7 @@ pub enum EntityConnectionIface { Vector(VectorConnection), Tag(TagConnection), K
 
 ### 11. Inputs: `entity_input!`
 
-GraphQL input objects (`TagInput`, `ConceptInput`, `QualityInput`, `LayerInput`, ...) today are hand-rolled at `1117:1153:semio/rs/lib.rs`. Derive them from the entity field list:
+GraphQL input objects (`TagInput`, `ConceptInput`, `QualityInput`, `LayerInput`, ...) today are hand-rolled at `1117:1153:compose/rs/lib.rs`. Derive them from the entity field list:
 
 ```rust
 /// 🧾 Generate `XInput` (async-graphql InputObject) and `into_X` / `into_X_with_id`
@@ -1732,11 +1732,11 @@ relay_collection! {
 }
 ```
 
-The first replaces the hand-written `OperationEdge` / `OperationConnection` at `844:868:semio/rs/lib.rs`; the second replaces the hand-written shells in `iface` mod (`6163:6181:semio/rs/lib.rs`).
+The first replaces the hand-written `OperationEdge` / `OperationConnection` at `844:868:compose/rs/lib.rs`; the second replaces the hand-written shells in `iface` mod (`6163:6181:compose/rs/lib.rs`).
 
 ### 14. Real `gql::sdl()`
 
-Replace `10386:10410:semio/rs/lib.rs`:
+Replace `10386:10410:compose/rs/lib.rs`:
 
 ```rust
 /// 📜 Canonical SDL = static header + interface fragments + entity fragments
@@ -1753,8 +1753,8 @@ pub async fn sdl() -> String {
 }
 
 const SDL_HEADER: &str = "\
-# Custom semio merkle-tree extension of the relay specs
-# Regenerated by `cargo test export_semio_graphql_schema_file -- --ignored`.
+# Custom compose merkle-tree extension of the relay specs
+# Regenerated by `cargo test export_compose_graphql_schema_file -- --ignored`.
 scalar Timestamp
 scalar Json
 ";
@@ -1782,7 +1782,7 @@ entity_family! {
         order:       Option<i32>     @data,
         attributes:  Vec<Attribute>  @children(AttributeConnection),
     },
-    hash_tag: "semio:meta:Tag",
+    hash_tag: "compose:meta:Tag",
 }
 
 entity_input! { name: Tag, fields: { /* same as above minus id */ } }
@@ -1798,7 +1798,7 @@ entity_family! {
     owners: [Plane, PlaneDiff],
     owns:   [],
     fields: { x: f64 @data, y: f64 @data, z: f64 @data },
-    hash_tag: "semio:geom:Vector",
+    hash_tag: "compose:geom:Vector",
 }
 ```
 
@@ -1816,7 +1816,7 @@ entity_family! {
         x_axis: std::sync::Arc<Vector> @entity,
         y_axis: std::sync::Arc<Vector> @entity,
     },
-    hash_tag: "semio:geom:Plane",
+    hash_tag: "compose:geom:Plane",
 }
 ```
 
@@ -1836,7 +1836,7 @@ entity_family! {
         changes:    Vec<std::sync::Arc<Change>>           @children(ChangeConnection),
         ancestors:  Vec<std::sync::Arc<Checkpoint>>       @children(CheckpointConnection),
     },
-    hash_tag: "semio:vcs:Checkpoint",
+    hash_tag: "compose:vcs:Checkpoint",
 }
 ```
 
@@ -1849,7 +1849,7 @@ operation_family! {
     owns: [CreatedTagInput, Tag],
     input: { tag: TagInput @data },
     output: { tag: std::sync::Arc<Tag> @entity },
-    hash_tag: "semio:op:CreatedTag",
+    hash_tag: "compose:op:CreatedTag",
 }
 
 operation_family! {
@@ -1858,7 +1858,7 @@ operation_family! {
     owns: [RenamedKitInput],
     input: { new_name: String @data },
     output: { kit: std::sync::Arc<Kit> @entity },
-    hash_tag: "semio:op:RenamedKit",
+    hash_tag: "compose:op:RenamedKit",
 }
 
 operation_family! {                       // no input — output references existing scope
@@ -1866,7 +1866,7 @@ operation_family! {                       // no input — output references exis
     scope_kind: Tag,
     owns: [],
     output: { },
-    hash_tag: "semio:op:DeletedTag",
+    hash_tag: "compose:op:DeletedTag",
 }
 
 operation_family! {                       // batch op — input carries ids
@@ -1875,7 +1875,7 @@ operation_family! {                       // batch op — input carries ids
     owns: [MovedPiecesInput],
     input: { piece_ids: Vec<Id> @ids, new_positions: Vec<Position> @data },
     output: { },
-    hash_tag: "semio:op:MovedPieces",
+    hash_tag: "compose:op:MovedPieces",
 }
 ```
 
@@ -1986,7 +1986,7 @@ type TagModificationsConnection implements EntityConnection {
 
 ### 19. Test glue
 
-Replace `10583:10588:semio/rs/lib.rs`:
+Replace `10583:10588:compose/rs/lib.rs`:
 
 ```rust
 /// 📜 Generated SDL must round-trip against the on-disk golden.
@@ -1997,13 +1997,13 @@ fn schema_matches_target_graphql_file() {
     assert_eq!(
         crate::gql::normalize_target_sdl(disk),
         crate::gql::normalize_target_sdl(&from_fn),
-        "Run `cargo test export_semio_graphql_schema_file -- --ignored` to update the golden.",
+        "Run `cargo test export_compose_graphql_schema_file -- --ignored` to update the golden.",
     );
 }
 
 #[test]
 #[ignore = "writes the generated SDL to ../graphql/target.schema.graphql"]
-fn export_semio_graphql_schema_file() {
+fn export_compose_graphql_schema_file() {
     let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../graphql/target.schema.graphql");
     std::fs::write(path, block_on(crate::gql::sdl())).expect("write golden");
@@ -2014,14 +2014,14 @@ fn export_semio_graphql_schema_file() {
 
 ### Phase 1 — Foundations (single agent, must come first)
 
-1. Carve out `//#region 🧬 entity_dsl` in [semio/rs/lib.rs](semio/rs/lib.rs) with all macros from blueprints sections 1-14.
+1. Carve out `//#region 🧬 entity_dsl` in [compose/rs/lib.rs](compose/rs/lib.rs) with all macros from blueprints sections 1-14.
 2. Delete `simple_conn_sync!`, `simple_conn_entity!`, `entity_full_family!`, `entity_relay!`, `entity_diffs!`, `entity_owner!` — no shims, no backwards compat (workspace rule).
 3. Wire `sdl_registry::all_fragments()` and rewrite `gql::sdl()` as code-first concat (blueprint §14). Delete the fake `include_str!` indirection.
 4. Stand up the `__owner_ty!` resolver macro and the `entity_owner_unions!` / `entity_interface_enums!` mega-union generators.
 
 ### Phase 2 — Geometry + meta entities (parallel subagents)
 
-- Batch A — geometry: `Vector`, `Point`, `Coordinate`, `Offset`, `Plane`, `Position`, `Location`, `Place` via `entity_family!` + `entity_input!`. Removes the hand-rolled `*Node` structs in `pub mod geom::entity` AND all `#[Object]` impls in `pub mod iface` (`6273:6457:semio/rs/lib.rs`).
+- Batch A — geometry: `Vector`, `Point`, `Coordinate`, `Offset`, `Plane`, `Position`, `Location`, `Place` via `entity_family!` + `entity_input!`. Removes the hand-rolled `*Node` structs in `pub mod geom::entity` AND all `#[Object]` impls in `pub mod iface` (`6273:6457:compose/rs/lib.rs`).
 - Batch B — meta: `Attribute`, `Author`, `File`, `Folder`, `Prop`, `Benchmark`, `Quality`, `Tag`, `Concept`, `Stat`, `Layer`, `Group`, `Family` via `entity_family!` + `entity_input!`. Collapses `Tag`/`Concept`/`Quality` `#[Object]` blocks (~250 lines each) plus all `compute_entity_hash` impls in `pub mod meta`.
 
 ### Phase 3 — Kit graph entities (parallel subagents)
@@ -2042,13 +2042,13 @@ fn export_semio_graphql_schema_file() {
 
 ### Phase 6 — Mutation command nav (single agent)
 
-- Replace every `*OperationNav` struct and `#[Object]` block (`9499:9700:semio/rs/lib.rs` for `SessionCommandNav`/`VersionCommandNav`/`UnsavedChangeNav`/`KitOperationNav`/`TagOperationNav` and downstream) with `command_nav!` invocations from blueprint §17.
+- Replace every `*OperationNav` struct and `#[Object]` block (`9499:9700:compose/rs/lib.rs` for `SessionCommandNav`/`VersionCommandNav`/`UnsavedChangeNav`/`KitOperationNav`/`TagOperationNav` and downstream) with `command_nav!` invocations from blueprint §17.
 - Keep the SDL field names exact (`tag(id:)`, `deleteTag(id:)`, etc.) via per-method `#[graphql(name = …)]` overrides accepted by the macro.
 
 ### Phase 7 — Schema cleanup and golden regeneration
 
 - Apply schema fixes from the "Schema fixes" section purely by adjusting the entity / operation declarations + roster. The macros emit the corrected SDL.
-- Run `cargo test export_semio_graphql_schema_file -- --ignored` once to regenerate [semio/graphql/target.schema.graphql](semio/graphql/target.schema.graphql).
+- Run `cargo test export_compose_graphql_schema_file -- --ignored` once to regenerate [compose/graphql/target.schema.graphql](compose/graphql/target.schema.graphql).
 
 ### Phase 8 — Test sweep + cleanup
 
@@ -2063,7 +2063,7 @@ fn export_semio_graphql_schema_file() {
 
 ## Parallel execution plan
 
-Workspace rule: simultaneous editing of [semio/rs/lib.rs](semio/rs/lib.rs) is expected and explicitly allowed. The refactor splits across **one coordinator + up to 8 generalist subagents** working in parallel on disjoint regions of the same file. Each region is delimited by `//#region 🆔` markers so subagents never collide on the same byte range.
+Workspace rule: simultaneous editing of [compose/rs/lib.rs](compose/rs/lib.rs) is expected and explicitly allowed. The refactor splits across **one coordinator + up to 8 generalist subagents** working in parallel on disjoint regions of the same file. Each region is delimited by `//#region 🆔` markers so subagents never collide on the same byte range.
 
 ### Worker DAG
 
@@ -2109,7 +2109,7 @@ flowchart TD
 
 ### Worker manifest
 
-| ID | Role | Region in [semio/rs/lib.rs](semio/rs/lib.rs) | Wave | Depends on | Est. budget |
+| ID | Role | Region in [compose/rs/lib.rs](compose/rs/lib.rs) | Wave | Depends on | Est. budget |
 |---|---|---|---|---|---|
 | W0 | Foundation | new `//#region 🧬 entity_dsl` (top of file, after `pub mod hash`) | 1 | bootstrap | 60 min |
 | W1 | Geometry  | `pub mod geom` (`150:510`) + iface-mod geom Object impls (`6273:6457`) | 2 | W0 | 45 min |
@@ -2143,7 +2143,7 @@ You are W<id>, a senior Rust generalist. Read the plan at
 `.cursor/plans/macro-driven_entity_family_refactor_e6121b3c.plan.md` end-to-end before starting.
 
 Scope (yours, do not touch anything outside):
-  - File: semio/rs/lib.rs
+  - File: compose/rs/lib.rs
   - Region: <line range or `//#region` name>
   - Entities to convert: <comma-separated list>
 
@@ -2156,14 +2156,14 @@ Required deliverables:
      macro now emits.
   3. Touch nothing outside your region. Do not modify `register_entities!` or
      `register_operations!` — the integrator owns those.
-  4. After your edits, run from semio/rs/:
+  4. After your edits, run from compose/rs/:
         cargo check --message-format=short 2>&1 | tee .repo/<ticket-id>/W<id>.check.log
      The file MUST compile (warnings allowed, errors not). If a downstream entity in
      another worker's region is referenced and not yet macroized, use the existing
      hand-rolled type path for now (it stays valid until that worker lands).
   5. Run the grep guardrails for your region only and paste the output:
         rg -n 'pub struct \w+(Edge|Connection)|impl Default for|fn compute_(entity_)?hash' \
-           semio/rs/lib.rs --line-number > .repo/<ticket-id>/W<id>.grep.log
+           compose/rs/lib.rs --line-number > .repo/<ticket-id>/W<id>.grep.log
      The file should show ZERO hits in your region after your work.
 
 Context to load:
@@ -2189,7 +2189,7 @@ When done, return:
 1. **Bootstrap (coordinator, serial).**
    - Open a single ticket via repo MCP `ticket_open` titled "Macro-Driven Entity Family Refactor".
    - Read `repo://goals` and link to the closest goal.
-   - Inject the empty `//#region 🧬 entity_dsl` and `//#region 🤖 W1`..`//#region 🤖 W8` markers into [semio/rs/lib.rs](semio/rs/lib.rs) so subagents have unambiguous landing zones.
+   - Inject the empty `//#region 🧬 entity_dsl` and `//#region 🤖 W1`..`//#region 🤖 W8` markers into [compose/rs/lib.rs](compose/rs/lib.rs) so subagents have unambiguous landing zones.
    - Snapshot `cargo check` output as the baseline at `.repo/<ticket-id>/baseline.check.log`.
 
 2. **Foundation wave (W0, serial, ~60 min).**
@@ -2217,7 +2217,7 @@ When done, return:
 6. **Integration (coordinator, serial, ~30 min).**
    - Coordinator writes the bottom-of-file `register_entities! { ... }` and `register_operations! { ... }` rosters listing every name that landed.
    - Coordinator applies any cross-cutting schema fixes that are not derivable from individual entity declarations (e.g. interface comment normalization, `FixedPiecesInput` symmetry).
-   - Coordinator runs `cargo test export_semio_graphql_schema_file -- --ignored` to regenerate [semio/graphql/target.schema.graphql](semio/graphql/target.schema.graphql).
+   - Coordinator runs `cargo test export_compose_graphql_schema_file -- --ignored` to regenerate [compose/graphql/target.schema.graphql](compose/graphql/target.schema.graphql).
 
 7. **Sweep (coordinator, serial, ~30 min).**
    - Coordinator runs full `cargo test` (37 tests).
@@ -2263,7 +2263,7 @@ If two workers' edits accidentally land on overlapping byte ranges (despite the 
 
 Hard duplicates (delete the second copy):
 
-- `ClumpEdge` / `ClumpConnection` duplicated at lines 7293-7305 vs 7308-7320 in [semio/graphql/target.schema.graphql](semio/graphql/target.schema.graphql)
+- `ClumpEdge` / `ClumpConnection` duplicated at lines 7293-7305 vs 7308-7320 in [compose/graphql/target.schema.graphql](compose/graphql/target.schema.graphql)
 - `TheKitEdge` / `TheKitConnection` duplicated at 8025-8037 vs 8040-8052; also misplaced under `#region Alternatives` instead of `#region TheKit`
 
 Missing operation ladders (the macro will generate them uniformly):
@@ -2315,24 +2315,24 @@ Per workspace rule, before any code change:
 
 ## Estimated impact
 
-Per-area Rust LOC delta in [semio/rs/lib.rs](semio/rs/lib.rs):
+Per-area Rust LOC delta in [compose/rs/lib.rs](compose/rs/lib.rs):
 
-- Hand-rolled Edge/Connection structs (`531:910:semio/rs/lib.rs`): −~400, replaced by 1 `__entity_relay!` per entity (auto-emitted inside `entity_family!`).
+- Hand-rolled Edge/Connection structs (`531:910:compose/rs/lib.rs`): −~400, replaced by 1 `__entity_relay!` per entity (auto-emitted inside `entity_family!`).
 - Hand-rolled `compute_*hash` impls (~~30 occurrences across `pub mod geom`, `pub mod meta`, `pub mod kit`, `pub mod vcs`): −~~600, replaced by `__entity_field_to_hash!` dispatch from one `compute_hash` per macro.
 - Hand-rolled `#[Object]` shells (geometry `iface` block + `Tag`/`Concept`/`Quality` + others): −~1,200, replaced by the `Object` impl emitted by `entity_family!`.
 - Hand-rolled `Default` impls for entities: −~150, no per-entity Default needed.
 - Hand-rolled GraphQL `InputObject` types (`TagInput`/`ConceptInput`/`QualityInput`/`AttributeInput`): −~80, replaced by `entity_input!`.
 - Hand-rolled owner enums + `Default` + `XOwnerUnion` (`TagOwnerSlot`/`ConceptOwnerSlot`/`QualityOwnerSlot` + N more): −~200, all emitted by `entity_family!`.
-- Hand-rolled `iface::OwnerEntity` + `iface::OwnedEntity` + `OwnedEntityConnection` (`6128:6196:semio/rs/lib.rs`): −~70, replaced by `entity_owner_unions!`.
-- Hand-rolled `gql::interfaces` enums (`9395:9444:semio/rs/lib.rs`): −~50, replaced by `entity_interface_enums!` (and grown to cover all 14 SDL interfaces, not just 3).
+- Hand-rolled `iface::OwnerEntity` + `iface::OwnedEntity` + `OwnedEntityConnection` (`6128:6196:compose/rs/lib.rs`): −~70, replaced by `entity_owner_unions!`.
+- Hand-rolled `gql::interfaces` enums (`9395:9444:compose/rs/lib.rs`): −~50, replaced by `entity_interface_enums!` (and grown to cover all 14 SDL interfaces, not just 3).
 - Hand-rolled `KitOperation`/`OperationKind`/`OperationIface`/`Scope`/`Input` enums and concrete operation structs in `pub mod operation`: −~1,000, replaced by `kit_operation_enum!` + `scope_enum!` + `input_enum!` + ~50 `operation_family!` calls.
-- Hand-rolled `*OperationNav` structs + `#[Object]` blocks (`9499:9700:semio/rs/lib.rs` and downstream `Tag`/`Concept`/`Quality`/`Type`/`Port`/`Connector`/`Design`/`Piece`/`Pieces` navs): −~700, replaced by ~10 `command_nav!` calls.
+- Hand-rolled `*OperationNav` structs + `#[Object]` blocks (`9499:9700:compose/rs/lib.rs` and downstream `Tag`/`Concept`/`Quality`/`Type`/`Port`/`Connector`/`Design`/`Piece`/`Pieces` navs): −~700, replaced by ~10 `command_nav!` calls.
 
 Macro definitions added: ~1,200 lines under `//#region 🧬 entity_dsl` (one-time cost).
 
-Net delta: **roughly −3,000 lines** in [semio/rs/lib.rs](semio/rs/lib.rs), with strict uniformity across every entity / operation / command nav.
+Net delta: **roughly −3,000 lines** in [compose/rs/lib.rs](compose/rs/lib.rs), with strict uniformity across every entity / operation / command nav.
 
-Schema delta in [semio/graphql/target.schema.graphql](semio/graphql/target.schema.graphql): regeneration is mechanical; total size stays in the ~7K-line range but every byte is derived from one Rust declaration, so duplicates and drift become impossible.
+Schema delta in [compose/graphql/target.schema.graphql](compose/graphql/target.schema.graphql): regeneration is mechanical; total size stays in the ~7K-line range but every byte is derived from one Rust declaration, so duplicates and drift become impossible.
 
 Wall-clock delta from parallelism:
 

@@ -26,7 +26,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": false,
             "query": "kindGroups"
           },
@@ -55,7 +55,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "KitDiagramNodeKind ="
           },
@@ -84,7 +84,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "type ArtifactKind ="
           },
@@ -113,7 +113,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": false,
             "query": "row.concepts.map"
           },
@@ -142,7 +142,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "KitDiagramNodeKind ="
           },
@@ -171,7 +171,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": false,
             "query": "kindGroups"
           },
@@ -200,7 +200,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "type ArtifactKind ="
           },
@@ -230,7 +230,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "KitDiagramNodeKind ="
           },
@@ -260,7 +260,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": false,
             "query": "kindGroups"
           },
@@ -290,7 +290,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "type ArtifactKind ="
           },
@@ -320,7 +320,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": false,
             "query": "row.concepts.map"
           },
@@ -350,7 +350,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "KitDiagramNodeKind ="
           },
@@ -380,7 +380,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": false,
             "query": "kindGroups"
           },
@@ -410,7 +410,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": false,
             "query": "row.concepts.map"
           },
@@ -440,7 +440,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": false,
             "query": "showConcepts"
           },
@@ -469,7 +469,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "concepts.*concepts\\.length \u003e 0"
           },
@@ -498,7 +498,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": false,
             "query": "toggleConcept(concept)"
           },
@@ -527,7 +527,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": false,
             "query": "showConcepts"
           },
@@ -556,7 +556,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "concepts.*concepts\\.length \u003e 0"
           },
@@ -585,7 +585,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": false,
             "query": "toggleConcept(concept)"
           },
@@ -614,7 +614,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "concepts.*concepts\\.length \u003e 0"
           },
@@ -644,7 +644,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": false,
             "query": "toggleConcept(concept)"
           },
@@ -674,7 +674,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": false,
             "query": "showConcepts"
           },
@@ -704,7 +704,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": false,
             "query": "toggleConcept(concept)"
           },
@@ -734,7 +734,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "concepts.*concepts\\.length \u003e 0"
           },
@@ -764,7 +764,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": false,
             "query": "showConcepts"
           },
@@ -794,7 +794,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "selectedConcepts\\.length \u003e 0|selectedConcepts\\.includes|row\\.concept"
           },
@@ -823,7 +823,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "selectedConcepts\\.length \u003e 0|selectedConcepts\\.includes|row\\.concept"
           },
@@ -852,7 +852,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "selectedConcepts\\.length \u003e 0|selectedConcepts\\.includes|row\\.concept"
           },
@@ -882,7 +882,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "selectedConcepts\\.length \u003e 0|selectedConcepts\\.includes|row\\.concept"
           },
@@ -912,7 +912,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 11810,
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 11785
           },
           "tool_use_id": "toolu_bdrk_01FoHa4iGCGm539bBG1be9LE__vscode-1775022550603",
@@ -940,7 +940,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 11810,
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 11785
           },
           "tool_use_id": "toolu_bdrk_01FoHa4iGCGm539bBG1be9LE__vscode-1775022550603",
@@ -968,7 +968,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 11810,
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 11785
           },
           "tool_response": "",
@@ -997,7 +997,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 11810,
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 11785
           },
           "tool_response": "",
@@ -1026,7 +1026,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "buildSelectionKit"
           },
@@ -1055,7 +1055,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "defaultConceptName"
           },
@@ -1084,7 +1084,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "hasAnySelection"
           },
@@ -1113,7 +1113,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "buildSelectionKit"
           },
@@ -1142,7 +1142,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "defaultConceptName"
           },
@@ -1171,7 +1171,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "hasAnySelection"
           },
@@ -1200,7 +1200,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "buildSelectionKit"
           },
@@ -1230,7 +1230,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "hasAnySelection"
           },
@@ -1260,7 +1260,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "defaultConceptName"
           },
@@ -1290,7 +1290,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "buildSelectionKit"
           },
@@ -1320,7 +1320,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "hasAnySelection"
           },
@@ -1350,7 +1350,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "defaultConceptName"
           },
@@ -1380,7 +1380,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 15870,
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 15854
           },
           "tool_use_id": "toolu_bdrk_01PReLGbq5v2LPYEBkrsWUVJ__vscode-1775022550607",
@@ -1408,7 +1408,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 15870,
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 15854
           },
           "tool_use_id": "toolu_bdrk_01PReLGbq5v2LPYEBkrsWUVJ__vscode-1775022550607",
@@ -1436,7 +1436,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 15870,
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 15854
           },
           "tool_response": "",
@@ -1465,7 +1465,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 15870,
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 15854
           },
           "tool_response": "",
@@ -1494,7 +1494,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 15920,
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 15870
           },
           "tool_use_id": "toolu_bdrk_01HYkpUEWgcX5xjqhaxWgCE1__vscode-1775022550608",
@@ -1522,7 +1522,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 15920,
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 15870
           },
           "tool_use_id": "toolu_bdrk_01HYkpUEWgcX5xjqhaxWgCE1__vscode-1775022550608",
@@ -1550,7 +1550,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 15920,
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 15870
           },
           "tool_response": "",
@@ -1579,7 +1579,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 15920,
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 15870
           },
           "tool_response": "",
@@ -1608,7 +1608,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 15930,
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 15915
           },
           "tool_use_id": "toolu_bdrk_01GY7cNkAzgTXKyUZ8WnBQ4g__vscode-1775022550609",
@@ -1636,7 +1636,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 15930,
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 15915
           },
           "tool_use_id": "toolu_bdrk_01GY7cNkAzgTXKyUZ8WnBQ4g__vscode-1775022550609",
@@ -1664,7 +1664,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 15930,
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 15915
           },
           "tool_response": "",
@@ -1693,7 +1693,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 15930,
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 15915
           },
           "tool_response": "",
@@ -1722,7 +1722,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "concepts\\?: string\\[\\]"
           },
@@ -1751,7 +1751,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "concepts\\?: string\\[\\]"
           },
@@ -1780,7 +1780,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "concepts\\?: string\\[\\]"
           },
@@ -1810,7 +1810,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "concepts\\?: string\\[\\]"
           },
@@ -1840,7 +1840,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 15810,
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 15740
           },
           "tool_use_id": "toolu_bdrk_0159Q9rXe5psJAzTS8gw7mef__vscode-1775022550611",
@@ -1868,7 +1868,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 15810,
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 15740
           },
           "tool_use_id": "toolu_bdrk_0159Q9rXe5psJAzTS8gw7mef__vscode-1775022550611",
@@ -1896,7 +1896,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 15810,
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 15740
           },
           "tool_response": "",
@@ -1925,7 +1925,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 15810,
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 15740
           },
           "tool_response": "",
@@ -1954,7 +1954,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 15405,
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 15395
           },
           "tool_use_id": "toolu_bdrk_01UZysHLVx286snuzGfA43F1__vscode-1775022550612",
@@ -1982,7 +1982,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 15405,
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 15395
           },
           "tool_use_id": "toolu_bdrk_01UZysHLVx286snuzGfA43F1__vscode-1775022550612",
@@ -2010,7 +2010,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 15405,
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 15395
           },
           "tool_response": "",
@@ -2039,7 +2039,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 15405,
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 15395
           },
           "tool_response": "",
@@ -2220,57 +2220,57 @@
             "explanation": "Remove all concept references from Kit app UI: useKitAppSelectAll, hasAnySelection, buildSelectionKit, KitDiagramNode interface, buildKitDiagramData items/node data, defaultConceptName hooks",
             "replacements": [
               {
-                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
-                "oldString": "      const types = kit.types?.map((t: Type) =\u003e t.guid);\n      const designs = kit.designs?.map((d: Design) =\u003e d.guid);\n      const qualities = kit.qualities?.map((q: Quality) =\u003e q.name);\n      const ports = kit.ports?.map((p: Port) =\u003e p.guid);\n      const concepts = kit.concepts?.map((c: Concept) =\u003e c.guid);\n      const files = kit.files?.map((f: SemioFile) =\u003e f.name);\n      const folders = kit.folders?.map((f: Folder) =\u003e f.guid);\n      const authors = kit.authors?.map((a: Author) =\u003e a.name);\n\n      if (types \u0026\u0026 types.length \u003e 0) allSelection.types = types;\n      if (designs \u0026\u0026 designs.length \u003e 0) allSelection.designs = designs;\n      if (qualities \u0026\u0026 qualities.length \u003e 0) allSelection.qualities = qualities;\n      if (ports \u0026\u0026 ports.length \u003e 0) allSelection.ports = ports;\n      if (concepts \u0026\u0026 concepts.length \u003e 0) allSelection.concepts = concepts;\n      if (files \u0026\u0026 files.length \u003e 0) allSelection.files = files;\n      if (folders \u0026\u0026 folders.length \u003e 0) allSelection.folders = folders;\n      if (authors \u0026\u0026 authors.length \u003e 0) allSelection.authors = authors;",
-                "newString": "      const types = kit.types?.map((t: Type) =\u003e t.guid);\n      const designs = kit.designs?.map((d: Design) =\u003e d.guid);\n      const qualities = kit.qualities?.map((q: Quality) =\u003e q.name);\n      const ports = kit.ports?.map((p: Port) =\u003e p.guid);\n      const files = kit.files?.map((f: SemioFile) =\u003e f.name);\n      const folders = kit.folders?.map((f: Folder) =\u003e f.guid);\n      const authors = kit.authors?.map((a: Author) =\u003e a.name);\n\n      if (types \u0026\u0026 types.length \u003e 0) allSelection.types = types;\n      if (designs \u0026\u0026 designs.length \u003e 0) allSelection.designs = designs;\n      if (qualities \u0026\u0026 qualities.length \u003e 0) allSelection.qualities = qualities;\n      if (ports \u0026\u0026 ports.length \u003e 0) allSelection.ports = ports;\n      if (files \u0026\u0026 files.length \u003e 0) allSelection.files = files;\n      if (folders \u0026\u0026 folders.length \u003e 0) allSelection.folders = folders;\n      if (authors \u0026\u0026 authors.length \u003e 0) allSelection.authors = authors;"
+                "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
+                "oldString": "      const types = kit.types?.map((t: Type) =\u003e t.guid);\n      const designs = kit.designs?.map((d: Design) =\u003e d.guid);\n      const qualities = kit.qualities?.map((q: Quality) =\u003e q.name);\n      const ports = kit.ports?.map((p: Port) =\u003e p.guid);\n      const concepts = kit.concepts?.map((c: Concept) =\u003e c.guid);\n      const files = kit.files?.map((f: ComposeFile) =\u003e f.name);\n      const folders = kit.folders?.map((f: Folder) =\u003e f.guid);\n      const authors = kit.authors?.map((a: Author) =\u003e a.name);\n\n      if (types \u0026\u0026 types.length \u003e 0) allSelection.types = types;\n      if (designs \u0026\u0026 designs.length \u003e 0) allSelection.designs = designs;\n      if (qualities \u0026\u0026 qualities.length \u003e 0) allSelection.qualities = qualities;\n      if (ports \u0026\u0026 ports.length \u003e 0) allSelection.ports = ports;\n      if (concepts \u0026\u0026 concepts.length \u003e 0) allSelection.concepts = concepts;\n      if (files \u0026\u0026 files.length \u003e 0) allSelection.files = files;\n      if (folders \u0026\u0026 folders.length \u003e 0) allSelection.folders = folders;\n      if (authors \u0026\u0026 authors.length \u003e 0) allSelection.authors = authors;",
+                "newString": "      const types = kit.types?.map((t: Type) =\u003e t.guid);\n      const designs = kit.designs?.map((d: Design) =\u003e d.guid);\n      const qualities = kit.qualities?.map((q: Quality) =\u003e q.name);\n      const ports = kit.ports?.map((p: Port) =\u003e p.guid);\n      const files = kit.files?.map((f: ComposeFile) =\u003e f.name);\n      const folders = kit.folders?.map((f: Folder) =\u003e f.guid);\n      const authors = kit.authors?.map((a: Author) =\u003e a.name);\n\n      if (types \u0026\u0026 types.length \u003e 0) allSelection.types = types;\n      if (designs \u0026\u0026 designs.length \u003e 0) allSelection.designs = designs;\n      if (qualities \u0026\u0026 qualities.length \u003e 0) allSelection.qualities = qualities;\n      if (ports \u0026\u0026 ports.length \u003e 0) allSelection.ports = ports;\n      if (files \u0026\u0026 files.length \u003e 0) allSelection.files = files;\n      if (folders \u0026\u0026 folders.length \u003e 0) allSelection.folders = folders;\n      if (authors \u0026\u0026 authors.length \u003e 0) allSelection.authors = authors;"
               },
               {
-                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
-                "oldString": "  const defaultConceptName = useLabel(\"semio.sketchpad.app.concept.defaultName\");\n  const defaultFolderName = useLabel(\"semio.sketchpad.app.folder.defaultName\");\n",
-                "newString": "  const defaultFolderName = useLabel(\"semio.sketchpad.app.folder.defaultName\");\n"
+                "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
+                "oldString": "  const defaultConceptName = useLabel(\"compose.sketchpad.app.concept.defaultName\");\n  const defaultFolderName = useLabel(\"compose.sketchpad.app.folder.defaultName\");\n",
+                "newString": "  const defaultFolderName = useLabel(\"compose.sketchpad.app.folder.defaultName\");\n"
               },
               {
-                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
                 "oldString": "  (selection.concepts?.length ?? 0) \u003e 0 ||\n  (selection.files?.length ?? 0) \u003e 0 ||",
                 "newString": "  (selection.files?.length ?? 0) \u003e 0 ||"
               },
               {
-                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
                 "oldString": "  const selectedConceptGuids = new Set(selection.concepts ?? []);\n  const selectedFileIds = new Set(selection.files ?? []);",
                 "newString": "  const selectedFileIds = new Set(selection.files ?? []);"
               },
               {
-                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
                 "oldString": "  const concepts = (kit.concepts ?? []).filter((c) =\u003e selectedConceptGuids.has(c.guid));\n  const files = (kit.files ?? []).filter((f) =\u003e selectedFileIds.has(f.guid));",
                 "newString": "  const files = (kit.files ?? []).filter((f) =\u003e selectedFileIds.has(f.guid));"
               },
               {
-                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
                 "oldString": "    tags,\n    concepts,\n    files,",
                 "newString": "    tags,\n    files,"
               },
               {
-                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
                 "oldString": "  concepts?: string[];\n}\n\n/**",
                 "newString": "}\n\n/**"
               },
               {
-                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
                 "oldString": "    let items: Array\u003c{ guid: string; name: string; icon?: any; parentGuid?: string; concepts?: string[] }\u003e = [];",
                 "newString": "    let items: Array\u003c{ guid: string; name: string; icon?: any; parentGuid?: string }\u003e = [];"
               },
               {
-                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
                 "oldString": "          guid: t.guid,\n          name: t.name,\n          icon: t.icon,\n          parentGuid: t.parent?.guid,\n          concepts: (t.concepts ?? []).map((c: any) =\u003e (typeof c === \"string\" ? c : c?.guid)).filter((guid): guid is string =\u003e Boolean(guid)),",
                 "newString": "          guid: t.guid,\n          name: t.name,\n          icon: t.icon,\n          parentGuid: t.parent?.guid,"
               },
               {
-                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
                 "oldString": "          guid: d.guid,\n          name: d.name,\n          icon: d.icon,\n          parentGuid: d.parent?.guid,\n          concepts: (d.concepts ?? []).map((c: any) =\u003e (typeof c === \"string\" ? c : c?.guid)).filter((guid): guid is string =\u003e Boolean(guid)),",
                 "newString": "          guid: d.guid,\n          name: d.name,\n          icon: d.icon,\n          parentGuid: d.parent?.guid,"
               },
               {
-                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
                 "oldString": "          guid: item.guid,\n          name: item.name,\n          kind,\n          icon: item.icon,\n          parentGuid: item.parentGuid,\n          concepts: item.concepts,",
                 "newString": "          guid: item.guid,\n          name: item.name,\n          kind,\n          icon: item.icon,\n          parentGuid: item.parentGuid,"
               }
@@ -2303,57 +2303,57 @@
             "explanation": "Remove all concept references from Kit app UI: useKitAppSelectAll, hasAnySelection, buildSelectionKit, KitDiagramNode interface, buildKitDiagramData items/node data, defaultConceptName hooks",
             "replacements": [
               {
-                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
-                "oldString": "      const types = kit.types?.map((t: Type) =\u003e t.guid);\n      const designs = kit.designs?.map((d: Design) =\u003e d.guid);\n      const qualities = kit.qualities?.map((q: Quality) =\u003e q.name);\n      const ports = kit.ports?.map((p: Port) =\u003e p.guid);\n      const concepts = kit.concepts?.map((c: Concept) =\u003e c.guid);\n      const files = kit.files?.map((f: SemioFile) =\u003e f.name);\n      const folders = kit.folders?.map((f: Folder) =\u003e f.guid);\n      const authors = kit.authors?.map((a: Author) =\u003e a.name);\n\n      if (types \u0026\u0026 types.length \u003e 0) allSelection.types = types;\n      if (designs \u0026\u0026 designs.length \u003e 0) allSelection.designs = designs;\n      if (qualities \u0026\u0026 qualities.length \u003e 0) allSelection.qualities = qualities;\n      if (ports \u0026\u0026 ports.length \u003e 0) allSelection.ports = ports;\n      if (concepts \u0026\u0026 concepts.length \u003e 0) allSelection.concepts = concepts;\n      if (files \u0026\u0026 files.length \u003e 0) allSelection.files = files;\n      if (folders \u0026\u0026 folders.length \u003e 0) allSelection.folders = folders;\n      if (authors \u0026\u0026 authors.length \u003e 0) allSelection.authors = authors;",
-                "newString": "      const types = kit.types?.map((t: Type) =\u003e t.guid);\n      const designs = kit.designs?.map((d: Design) =\u003e d.guid);\n      const qualities = kit.qualities?.map((q: Quality) =\u003e q.name);\n      const ports = kit.ports?.map((p: Port) =\u003e p.guid);\n      const files = kit.files?.map((f: SemioFile) =\u003e f.name);\n      const folders = kit.folders?.map((f: Folder) =\u003e f.guid);\n      const authors = kit.authors?.map((a: Author) =\u003e a.name);\n\n      if (types \u0026\u0026 types.length \u003e 0) allSelection.types = types;\n      if (designs \u0026\u0026 designs.length \u003e 0) allSelection.designs = designs;\n      if (qualities \u0026\u0026 qualities.length \u003e 0) allSelection.qualities = qualities;\n      if (ports \u0026\u0026 ports.length \u003e 0) allSelection.ports = ports;\n      if (files \u0026\u0026 files.length \u003e 0) allSelection.files = files;\n      if (folders \u0026\u0026 folders.length \u003e 0) allSelection.folders = folders;\n      if (authors \u0026\u0026 authors.length \u003e 0) allSelection.authors = authors;"
+                "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
+                "oldString": "      const types = kit.types?.map((t: Type) =\u003e t.guid);\n      const designs = kit.designs?.map((d: Design) =\u003e d.guid);\n      const qualities = kit.qualities?.map((q: Quality) =\u003e q.name);\n      const ports = kit.ports?.map((p: Port) =\u003e p.guid);\n      const concepts = kit.concepts?.map((c: Concept) =\u003e c.guid);\n      const files = kit.files?.map((f: ComposeFile) =\u003e f.name);\n      const folders = kit.folders?.map((f: Folder) =\u003e f.guid);\n      const authors = kit.authors?.map((a: Author) =\u003e a.name);\n\n      if (types \u0026\u0026 types.length \u003e 0) allSelection.types = types;\n      if (designs \u0026\u0026 designs.length \u003e 0) allSelection.designs = designs;\n      if (qualities \u0026\u0026 qualities.length \u003e 0) allSelection.qualities = qualities;\n      if (ports \u0026\u0026 ports.length \u003e 0) allSelection.ports = ports;\n      if (concepts \u0026\u0026 concepts.length \u003e 0) allSelection.concepts = concepts;\n      if (files \u0026\u0026 files.length \u003e 0) allSelection.files = files;\n      if (folders \u0026\u0026 folders.length \u003e 0) allSelection.folders = folders;\n      if (authors \u0026\u0026 authors.length \u003e 0) allSelection.authors = authors;",
+                "newString": "      const types = kit.types?.map((t: Type) =\u003e t.guid);\n      const designs = kit.designs?.map((d: Design) =\u003e d.guid);\n      const qualities = kit.qualities?.map((q: Quality) =\u003e q.name);\n      const ports = kit.ports?.map((p: Port) =\u003e p.guid);\n      const files = kit.files?.map((f: ComposeFile) =\u003e f.name);\n      const folders = kit.folders?.map((f: Folder) =\u003e f.guid);\n      const authors = kit.authors?.map((a: Author) =\u003e a.name);\n\n      if (types \u0026\u0026 types.length \u003e 0) allSelection.types = types;\n      if (designs \u0026\u0026 designs.length \u003e 0) allSelection.designs = designs;\n      if (qualities \u0026\u0026 qualities.length \u003e 0) allSelection.qualities = qualities;\n      if (ports \u0026\u0026 ports.length \u003e 0) allSelection.ports = ports;\n      if (files \u0026\u0026 files.length \u003e 0) allSelection.files = files;\n      if (folders \u0026\u0026 folders.length \u003e 0) allSelection.folders = folders;\n      if (authors \u0026\u0026 authors.length \u003e 0) allSelection.authors = authors;"
               },
               {
-                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
-                "oldString": "  const defaultConceptName = useLabel(\"semio.sketchpad.app.concept.defaultName\");\n  const defaultFolderName = useLabel(\"semio.sketchpad.app.folder.defaultName\");\n",
-                "newString": "  const defaultFolderName = useLabel(\"semio.sketchpad.app.folder.defaultName\");\n"
+                "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
+                "oldString": "  const defaultConceptName = useLabel(\"compose.sketchpad.app.concept.defaultName\");\n  const defaultFolderName = useLabel(\"compose.sketchpad.app.folder.defaultName\");\n",
+                "newString": "  const defaultFolderName = useLabel(\"compose.sketchpad.app.folder.defaultName\");\n"
               },
               {
-                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
                 "oldString": "  (selection.concepts?.length ?? 0) \u003e 0 ||\n  (selection.files?.length ?? 0) \u003e 0 ||",
                 "newString": "  (selection.files?.length ?? 0) \u003e 0 ||"
               },
               {
-                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
                 "oldString": "  const selectedConceptGuids = new Set(selection.concepts ?? []);\n  const selectedFileIds = new Set(selection.files ?? []);",
                 "newString": "  const selectedFileIds = new Set(selection.files ?? []);"
               },
               {
-                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
                 "oldString": "  const concepts = (kit.concepts ?? []).filter((c) =\u003e selectedConceptGuids.has(c.guid));\n  const files = (kit.files ?? []).filter((f) =\u003e selectedFileIds.has(f.guid));",
                 "newString": "  const files = (kit.files ?? []).filter((f) =\u003e selectedFileIds.has(f.guid));"
               },
               {
-                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
                 "oldString": "    tags,\n    concepts,\n    files,",
                 "newString": "    tags,\n    files,"
               },
               {
-                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
                 "oldString": "  concepts?: string[];\n}\n\n/**",
                 "newString": "}\n\n/**"
               },
               {
-                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
                 "oldString": "    let items: Array\u003c{ guid: string; name: string; icon?: any; parentGuid?: string; concepts?: string[] }\u003e = [];",
                 "newString": "    let items: Array\u003c{ guid: string; name: string; icon?: any; parentGuid?: string }\u003e = [];"
               },
               {
-                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
                 "oldString": "          guid: t.guid,\n          name: t.name,\n          icon: t.icon,\n          parentGuid: t.parent?.guid,\n          concepts: (t.concepts ?? []).map((c: any) =\u003e (typeof c === \"string\" ? c : c?.guid)).filter((guid): guid is string =\u003e Boolean(guid)),",
                 "newString": "          guid: t.guid,\n          name: t.name,\n          icon: t.icon,\n          parentGuid: t.parent?.guid,"
               },
               {
-                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
                 "oldString": "          guid: d.guid,\n          name: d.name,\n          icon: d.icon,\n          parentGuid: d.parent?.guid,\n          concepts: (d.concepts ?? []).map((c: any) =\u003e (typeof c === \"string\" ? c : c?.guid)).filter((guid): guid is string =\u003e Boolean(guid)),",
                 "newString": "          guid: d.guid,\n          name: d.name,\n          icon: d.icon,\n          parentGuid: d.parent?.guid,"
               },
               {
-                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
                 "oldString": "          guid: item.guid,\n          name: item.name,\n          kind,\n          icon: item.icon,\n          parentGuid: item.parentGuid,\n          concepts: item.concepts,",
                 "newString": "          guid: item.guid,\n          name: item.name,\n          kind,\n          icon: item.icon,\n          parentGuid: item.parentGuid,"
               }
@@ -2386,57 +2386,57 @@
             "explanation": "Remove all concept references from Kit app UI: useKitAppSelectAll, hasAnySelection, buildSelectionKit, KitDiagramNode interface, buildKitDiagramData items/node data, defaultConceptName hooks",
             "replacements": [
               {
-                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
-                "oldString": "      const types = kit.types?.map((t: Type) =\u003e t.guid);\n      const designs = kit.designs?.map((d: Design) =\u003e d.guid);\n      const qualities = kit.qualities?.map((q: Quality) =\u003e q.name);\n      const ports = kit.ports?.map((p: Port) =\u003e p.guid);\n      const concepts = kit.concepts?.map((c: Concept) =\u003e c.guid);\n      const files = kit.files?.map((f: SemioFile) =\u003e f.name);\n      const folders = kit.folders?.map((f: Folder) =\u003e f.guid);\n      const authors = kit.authors?.map((a: Author) =\u003e a.name);\n\n      if (types \u0026\u0026 types.length \u003e 0) allSelection.types = types;\n      if (designs \u0026\u0026 designs.length \u003e 0) allSelection.designs = designs;\n      if (qualities \u0026\u0026 qualities.length \u003e 0) allSelection.qualities = qualities;\n      if (ports \u0026\u0026 ports.length \u003e 0) allSelection.ports = ports;\n      if (concepts \u0026\u0026 concepts.length \u003e 0) allSelection.concepts = concepts;\n      if (files \u0026\u0026 files.length \u003e 0) allSelection.files = files;\n      if (folders \u0026\u0026 folders.length \u003e 0) allSelection.folders = folders;\n      if (authors \u0026\u0026 authors.length \u003e 0) allSelection.authors = authors;",
-                "newString": "      const types = kit.types?.map((t: Type) =\u003e t.guid);\n      const designs = kit.designs?.map((d: Design) =\u003e d.guid);\n      const qualities = kit.qualities?.map((q: Quality) =\u003e q.name);\n      const ports = kit.ports?.map((p: Port) =\u003e p.guid);\n      const files = kit.files?.map((f: SemioFile) =\u003e f.name);\n      const folders = kit.folders?.map((f: Folder) =\u003e f.guid);\n      const authors = kit.authors?.map((a: Author) =\u003e a.name);\n\n      if (types \u0026\u0026 types.length \u003e 0) allSelection.types = types;\n      if (designs \u0026\u0026 designs.length \u003e 0) allSelection.designs = designs;\n      if (qualities \u0026\u0026 qualities.length \u003e 0) allSelection.qualities = qualities;\n      if (ports \u0026\u0026 ports.length \u003e 0) allSelection.ports = ports;\n      if (files \u0026\u0026 files.length \u003e 0) allSelection.files = files;\n      if (folders \u0026\u0026 folders.length \u003e 0) allSelection.folders = folders;\n      if (authors \u0026\u0026 authors.length \u003e 0) allSelection.authors = authors;"
+                "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
+                "oldString": "      const types = kit.types?.map((t: Type) =\u003e t.guid);\n      const designs = kit.designs?.map((d: Design) =\u003e d.guid);\n      const qualities = kit.qualities?.map((q: Quality) =\u003e q.name);\n      const ports = kit.ports?.map((p: Port) =\u003e p.guid);\n      const concepts = kit.concepts?.map((c: Concept) =\u003e c.guid);\n      const files = kit.files?.map((f: ComposeFile) =\u003e f.name);\n      const folders = kit.folders?.map((f: Folder) =\u003e f.guid);\n      const authors = kit.authors?.map((a: Author) =\u003e a.name);\n\n      if (types \u0026\u0026 types.length \u003e 0) allSelection.types = types;\n      if (designs \u0026\u0026 designs.length \u003e 0) allSelection.designs = designs;\n      if (qualities \u0026\u0026 qualities.length \u003e 0) allSelection.qualities = qualities;\n      if (ports \u0026\u0026 ports.length \u003e 0) allSelection.ports = ports;\n      if (concepts \u0026\u0026 concepts.length \u003e 0) allSelection.concepts = concepts;\n      if (files \u0026\u0026 files.length \u003e 0) allSelection.files = files;\n      if (folders \u0026\u0026 folders.length \u003e 0) allSelection.folders = folders;\n      if (authors \u0026\u0026 authors.length \u003e 0) allSelection.authors = authors;",
+                "newString": "      const types = kit.types?.map((t: Type) =\u003e t.guid);\n      const designs = kit.designs?.map((d: Design) =\u003e d.guid);\n      const qualities = kit.qualities?.map((q: Quality) =\u003e q.name);\n      const ports = kit.ports?.map((p: Port) =\u003e p.guid);\n      const files = kit.files?.map((f: ComposeFile) =\u003e f.name);\n      const folders = kit.folders?.map((f: Folder) =\u003e f.guid);\n      const authors = kit.authors?.map((a: Author) =\u003e a.name);\n\n      if (types \u0026\u0026 types.length \u003e 0) allSelection.types = types;\n      if (designs \u0026\u0026 designs.length \u003e 0) allSelection.designs = designs;\n      if (qualities \u0026\u0026 qualities.length \u003e 0) allSelection.qualities = qualities;\n      if (ports \u0026\u0026 ports.length \u003e 0) allSelection.ports = ports;\n      if (files \u0026\u0026 files.length \u003e 0) allSelection.files = files;\n      if (folders \u0026\u0026 folders.length \u003e 0) allSelection.folders = folders;\n      if (authors \u0026\u0026 authors.length \u003e 0) allSelection.authors = authors;"
               },
               {
-                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
-                "oldString": "  const defaultConceptName = useLabel(\"semio.sketchpad.app.concept.defaultName\");\n  const defaultFolderName = useLabel(\"semio.sketchpad.app.folder.defaultName\");\n",
-                "newString": "  const defaultFolderName = useLabel(\"semio.sketchpad.app.folder.defaultName\");\n"
+                "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
+                "oldString": "  const defaultConceptName = useLabel(\"compose.sketchpad.app.concept.defaultName\");\n  const defaultFolderName = useLabel(\"compose.sketchpad.app.folder.defaultName\");\n",
+                "newString": "  const defaultFolderName = useLabel(\"compose.sketchpad.app.folder.defaultName\");\n"
               },
               {
-                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
                 "oldString": "  (selection.concepts?.length ?? 0) \u003e 0 ||\n  (selection.files?.length ?? 0) \u003e 0 ||",
                 "newString": "  (selection.files?.length ?? 0) \u003e 0 ||"
               },
               {
-                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
                 "oldString": "  const selectedConceptGuids = new Set(selection.concepts ?? []);\n  const selectedFileIds = new Set(selection.files ?? []);",
                 "newString": "  const selectedFileIds = new Set(selection.files ?? []);"
               },
               {
-                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
                 "oldString": "  const concepts = (kit.concepts ?? []).filter((c) =\u003e selectedConceptGuids.has(c.guid));\n  const files = (kit.files ?? []).filter((f) =\u003e selectedFileIds.has(f.guid));",
                 "newString": "  const files = (kit.files ?? []).filter((f) =\u003e selectedFileIds.has(f.guid));"
               },
               {
-                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
                 "oldString": "    tags,\n    concepts,\n    files,",
                 "newString": "    tags,\n    files,"
               },
               {
-                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
                 "oldString": "  concepts?: string[];\n}\n\n/**",
                 "newString": "}\n\n/**"
               },
               {
-                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
                 "oldString": "    let items: Array\u003c{ guid: string; name: string; icon?: any; parentGuid?: string; concepts?: string[] }\u003e = [];",
                 "newString": "    let items: Array\u003c{ guid: string; name: string; icon?: any; parentGuid?: string }\u003e = [];"
               },
               {
-                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
                 "oldString": "          guid: t.guid,\n          name: t.name,\n          icon: t.icon,\n          parentGuid: t.parent?.guid,\n          concepts: (t.concepts ?? []).map((c: any) =\u003e (typeof c === \"string\" ? c : c?.guid)).filter((guid): guid is string =\u003e Boolean(guid)),",
                 "newString": "          guid: t.guid,\n          name: t.name,\n          icon: t.icon,\n          parentGuid: t.parent?.guid,"
               },
               {
-                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
                 "oldString": "          guid: d.guid,\n          name: d.name,\n          icon: d.icon,\n          parentGuid: d.parent?.guid,\n          concepts: (d.concepts ?? []).map((c: any) =\u003e (typeof c === \"string\" ? c : c?.guid)).filter((guid): guid is string =\u003e Boolean(guid)),",
                 "newString": "          guid: d.guid,\n          name: d.name,\n          icon: d.icon,\n          parentGuid: d.parent?.guid,"
               },
               {
-                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
                 "oldString": "          guid: item.guid,\n          name: item.name,\n          kind,\n          icon: item.icon,\n          parentGuid: item.parentGuid,\n          concepts: item.concepts,",
                 "newString": "          guid: item.guid,\n          name: item.name,\n          kind,\n          icon: item.icon,\n          parentGuid: item.parentGuid,"
               }
@@ -2470,57 +2470,57 @@
             "explanation": "Remove all concept references from Kit app UI: useKitAppSelectAll, hasAnySelection, buildSelectionKit, KitDiagramNode interface, buildKitDiagramData items/node data, defaultConceptName hooks",
             "replacements": [
               {
-                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
-                "oldString": "      const types = kit.types?.map((t: Type) =\u003e t.guid);\n      const designs = kit.designs?.map((d: Design) =\u003e d.guid);\n      const qualities = kit.qualities?.map((q: Quality) =\u003e q.name);\n      const ports = kit.ports?.map((p: Port) =\u003e p.guid);\n      const concepts = kit.concepts?.map((c: Concept) =\u003e c.guid);\n      const files = kit.files?.map((f: SemioFile) =\u003e f.name);\n      const folders = kit.folders?.map((f: Folder) =\u003e f.guid);\n      const authors = kit.authors?.map((a: Author) =\u003e a.name);\n\n      if (types \u0026\u0026 types.length \u003e 0) allSelection.types = types;\n      if (designs \u0026\u0026 designs.length \u003e 0) allSelection.designs = designs;\n      if (qualities \u0026\u0026 qualities.length \u003e 0) allSelection.qualities = qualities;\n      if (ports \u0026\u0026 ports.length \u003e 0) allSelection.ports = ports;\n      if (concepts \u0026\u0026 concepts.length \u003e 0) allSelection.concepts = concepts;\n      if (files \u0026\u0026 files.length \u003e 0) allSelection.files = files;\n      if (folders \u0026\u0026 folders.length \u003e 0) allSelection.folders = folders;\n      if (authors \u0026\u0026 authors.length \u003e 0) allSelection.authors = authors;",
-                "newString": "      const types = kit.types?.map((t: Type) =\u003e t.guid);\n      const designs = kit.designs?.map((d: Design) =\u003e d.guid);\n      const qualities = kit.qualities?.map((q: Quality) =\u003e q.name);\n      const ports = kit.ports?.map((p: Port) =\u003e p.guid);\n      const files = kit.files?.map((f: SemioFile) =\u003e f.name);\n      const folders = kit.folders?.map((f: Folder) =\u003e f.guid);\n      const authors = kit.authors?.map((a: Author) =\u003e a.name);\n\n      if (types \u0026\u0026 types.length \u003e 0) allSelection.types = types;\n      if (designs \u0026\u0026 designs.length \u003e 0) allSelection.designs = designs;\n      if (qualities \u0026\u0026 qualities.length \u003e 0) allSelection.qualities = qualities;\n      if (ports \u0026\u0026 ports.length \u003e 0) allSelection.ports = ports;\n      if (files \u0026\u0026 files.length \u003e 0) allSelection.files = files;\n      if (folders \u0026\u0026 folders.length \u003e 0) allSelection.folders = folders;\n      if (authors \u0026\u0026 authors.length \u003e 0) allSelection.authors = authors;"
+                "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
+                "oldString": "      const types = kit.types?.map((t: Type) =\u003e t.guid);\n      const designs = kit.designs?.map((d: Design) =\u003e d.guid);\n      const qualities = kit.qualities?.map((q: Quality) =\u003e q.name);\n      const ports = kit.ports?.map((p: Port) =\u003e p.guid);\n      const concepts = kit.concepts?.map((c: Concept) =\u003e c.guid);\n      const files = kit.files?.map((f: ComposeFile) =\u003e f.name);\n      const folders = kit.folders?.map((f: Folder) =\u003e f.guid);\n      const authors = kit.authors?.map((a: Author) =\u003e a.name);\n\n      if (types \u0026\u0026 types.length \u003e 0) allSelection.types = types;\n      if (designs \u0026\u0026 designs.length \u003e 0) allSelection.designs = designs;\n      if (qualities \u0026\u0026 qualities.length \u003e 0) allSelection.qualities = qualities;\n      if (ports \u0026\u0026 ports.length \u003e 0) allSelection.ports = ports;\n      if (concepts \u0026\u0026 concepts.length \u003e 0) allSelection.concepts = concepts;\n      if (files \u0026\u0026 files.length \u003e 0) allSelection.files = files;\n      if (folders \u0026\u0026 folders.length \u003e 0) allSelection.folders = folders;\n      if (authors \u0026\u0026 authors.length \u003e 0) allSelection.authors = authors;",
+                "newString": "      const types = kit.types?.map((t: Type) =\u003e t.guid);\n      const designs = kit.designs?.map((d: Design) =\u003e d.guid);\n      const qualities = kit.qualities?.map((q: Quality) =\u003e q.name);\n      const ports = kit.ports?.map((p: Port) =\u003e p.guid);\n      const files = kit.files?.map((f: ComposeFile) =\u003e f.name);\n      const folders = kit.folders?.map((f: Folder) =\u003e f.guid);\n      const authors = kit.authors?.map((a: Author) =\u003e a.name);\n\n      if (types \u0026\u0026 types.length \u003e 0) allSelection.types = types;\n      if (designs \u0026\u0026 designs.length \u003e 0) allSelection.designs = designs;\n      if (qualities \u0026\u0026 qualities.length \u003e 0) allSelection.qualities = qualities;\n      if (ports \u0026\u0026 ports.length \u003e 0) allSelection.ports = ports;\n      if (files \u0026\u0026 files.length \u003e 0) allSelection.files = files;\n      if (folders \u0026\u0026 folders.length \u003e 0) allSelection.folders = folders;\n      if (authors \u0026\u0026 authors.length \u003e 0) allSelection.authors = authors;"
               },
               {
-                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
-                "oldString": "  const defaultConceptName = useLabel(\"semio.sketchpad.app.concept.defaultName\");\n  const defaultFolderName = useLabel(\"semio.sketchpad.app.folder.defaultName\");\n",
-                "newString": "  const defaultFolderName = useLabel(\"semio.sketchpad.app.folder.defaultName\");\n"
+                "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
+                "oldString": "  const defaultConceptName = useLabel(\"compose.sketchpad.app.concept.defaultName\");\n  const defaultFolderName = useLabel(\"compose.sketchpad.app.folder.defaultName\");\n",
+                "newString": "  const defaultFolderName = useLabel(\"compose.sketchpad.app.folder.defaultName\");\n"
               },
               {
-                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
                 "oldString": "  (selection.concepts?.length ?? 0) \u003e 0 ||\n  (selection.files?.length ?? 0) \u003e 0 ||",
                 "newString": "  (selection.files?.length ?? 0) \u003e 0 ||"
               },
               {
-                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
                 "oldString": "  const selectedConceptGuids = new Set(selection.concepts ?? []);\n  const selectedFileIds = new Set(selection.files ?? []);",
                 "newString": "  const selectedFileIds = new Set(selection.files ?? []);"
               },
               {
-                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
                 "oldString": "  const concepts = (kit.concepts ?? []).filter((c) =\u003e selectedConceptGuids.has(c.guid));\n  const files = (kit.files ?? []).filter((f) =\u003e selectedFileIds.has(f.guid));",
                 "newString": "  const files = (kit.files ?? []).filter((f) =\u003e selectedFileIds.has(f.guid));"
               },
               {
-                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
                 "oldString": "    tags,\n    concepts,\n    files,",
                 "newString": "    tags,\n    files,"
               },
               {
-                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
                 "oldString": "  concepts?: string[];\n}\n\n/**",
                 "newString": "}\n\n/**"
               },
               {
-                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
                 "oldString": "    let items: Array\u003c{ guid: string; name: string; icon?: any; parentGuid?: string; concepts?: string[] }\u003e = [];",
                 "newString": "    let items: Array\u003c{ guid: string; name: string; icon?: any; parentGuid?: string }\u003e = [];"
               },
               {
-                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
                 "oldString": "          guid: t.guid,\n          name: t.name,\n          icon: t.icon,\n          parentGuid: t.parent?.guid,\n          concepts: (t.concepts ?? []).map((c: any) =\u003e (typeof c === \"string\" ? c : c?.guid)).filter((guid): guid is string =\u003e Boolean(guid)),",
                 "newString": "          guid: t.guid,\n          name: t.name,\n          icon: t.icon,\n          parentGuid: t.parent?.guid,"
               },
               {
-                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
                 "oldString": "          guid: d.guid,\n          name: d.name,\n          icon: d.icon,\n          parentGuid: d.parent?.guid,\n          concepts: (d.concepts ?? []).map((c: any) =\u003e (typeof c === \"string\" ? c : c?.guid)).filter((guid): guid is string =\u003e Boolean(guid)),",
                 "newString": "          guid: d.guid,\n          name: d.name,\n          icon: d.icon,\n          parentGuid: d.parent?.guid,"
               },
               {
-                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
                 "oldString": "          guid: item.guid,\n          name: item.name,\n          kind,\n          icon: item.icon,\n          parentGuid: item.parentGuid,\n          concepts: item.concepts,",
                 "newString": "          guid: item.guid,\n          name: item.name,\n          kind,\n          icon: item.icon,\n          parentGuid: item.parentGuid,"
               }
@@ -2552,7 +2552,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 13320,
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 13308
           },
           "tool_use_id": "toolu_bdrk_01E2B7VjmFzqTDZBubftm8VY__vscode-1775022550615",
@@ -2580,7 +2580,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 13320,
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 13308
           },
           "tool_use_id": "toolu_bdrk_01E2B7VjmFzqTDZBubftm8VY__vscode-1775022550615",
@@ -2608,7 +2608,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 13320,
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 13308
           },
           "tool_response": "",
@@ -2637,7 +2637,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 13320,
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 13308
           },
           "tool_response": "",
@@ -2665,9 +2665,9 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/d95799ce-559d-4fe6-ada9-3b950a2613bf.jsonl",
           "tool_name": "replace_string_in_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
-            "newString": "  const defaultPortName = useLabel(\"semio.sketchpad.app.port.defaultName\");\n  const kitLoadingLabel = useLabel(\"semio.sketchpad.app.kit.loading\");",
-            "oldString": "  const defaultPortName = useLabel(\"semio.sketchpad.app.port.defaultName\");\n  const defaultConceptName = useLabel(\"semio.sketchpad.app.concept.defaultName\");\n  const kitLoadingLabel = useLabel(\"semio.sketchpad.app.kit.loading\");"
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
+            "newString": "  const defaultPortName = useLabel(\"compose.sketchpad.app.port.defaultName\");\n  const kitLoadingLabel = useLabel(\"compose.sketchpad.app.kit.loading\");",
+            "oldString": "  const defaultPortName = useLabel(\"compose.sketchpad.app.port.defaultName\");\n  const defaultConceptName = useLabel(\"compose.sketchpad.app.concept.defaultName\");\n  const kitLoadingLabel = useLabel(\"compose.sketchpad.app.kit.loading\");"
           },
           "tool_use_id": "toolu_bdrk_01FQq4PadbMs93D8BNQidJDA__vscode-1775022550616",
           "cwd": "/workspaces/semio"
@@ -2693,9 +2693,9 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/d95799ce-559d-4fe6-ada9-3b950a2613bf.jsonl",
           "tool_name": "replace_string_in_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
-            "newString": "  const defaultPortName = useLabel(\"semio.sketchpad.app.port.defaultName\");\n  const kitLoadingLabel = useLabel(\"semio.sketchpad.app.kit.loading\");",
-            "oldString": "  const defaultPortName = useLabel(\"semio.sketchpad.app.port.defaultName\");\n  const defaultConceptName = useLabel(\"semio.sketchpad.app.concept.defaultName\");\n  const kitLoadingLabel = useLabel(\"semio.sketchpad.app.kit.loading\");"
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
+            "newString": "  const defaultPortName = useLabel(\"compose.sketchpad.app.port.defaultName\");\n  const kitLoadingLabel = useLabel(\"compose.sketchpad.app.kit.loading\");",
+            "oldString": "  const defaultPortName = useLabel(\"compose.sketchpad.app.port.defaultName\");\n  const defaultConceptName = useLabel(\"compose.sketchpad.app.concept.defaultName\");\n  const kitLoadingLabel = useLabel(\"compose.sketchpad.app.kit.loading\");"
           },
           "tool_use_id": "toolu_bdrk_01FQq4PadbMs93D8BNQidJDA__vscode-1775022550616",
           "cwd": "/workspaces/semio"
@@ -2721,9 +2721,9 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/d95799ce-559d-4fe6-ada9-3b950a2613bf.jsonl",
           "tool_name": "replace_string_in_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
-            "newString": "  const defaultPortName = useLabel(\"semio.sketchpad.app.port.defaultName\");\n  const kitLoadingLabel = useLabel(\"semio.sketchpad.app.kit.loading\");",
-            "oldString": "  const defaultPortName = useLabel(\"semio.sketchpad.app.port.defaultName\");\n  const defaultConceptName = useLabel(\"semio.sketchpad.app.concept.defaultName\");\n  const kitLoadingLabel = useLabel(\"semio.sketchpad.app.kit.loading\");"
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
+            "newString": "  const defaultPortName = useLabel(\"compose.sketchpad.app.port.defaultName\");\n  const kitLoadingLabel = useLabel(\"compose.sketchpad.app.kit.loading\");",
+            "oldString": "  const defaultPortName = useLabel(\"compose.sketchpad.app.port.defaultName\");\n  const defaultConceptName = useLabel(\"compose.sketchpad.app.concept.defaultName\");\n  const kitLoadingLabel = useLabel(\"compose.sketchpad.app.kit.loading\");"
           },
           "tool_response": "",
           "tool_use_id": "toolu_bdrk_01FQq4PadbMs93D8BNQidJDA__vscode-1775022550616",
@@ -2751,7 +2751,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 15405,
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 15395
           },
           "tool_use_id": "toolu_bdrk_0194Th7xdp5n2QfTFionpXCy__vscode-1775022550617",
@@ -2779,7 +2779,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 15405,
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 15395
           },
           "tool_use_id": "toolu_bdrk_0194Th7xdp5n2QfTFionpXCy__vscode-1775022550617",
@@ -2807,7 +2807,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 15405,
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 15395
           },
           "tool_response": "",
@@ -2836,7 +2836,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 15405,
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 15395
           },
           "tool_response": "",
@@ -2864,9 +2864,9 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/d95799ce-559d-4fe6-ada9-3b950a2613bf.jsonl",
           "tool_name": "replace_string_in_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
-            "newString": "  const defaultPortName = useLabel(\"semio.sketchpad.app.port.defaultName\");\n  const kitLoadingLabel = useLabel(\"semio.sketchpad.app.kit.loading\");",
-            "oldString": "  const defaultPortName = useLabel(\"semio.sketchpad.app.port.defaultName\");\n  const defaultConceptName = useLabel(\"semio.sketchpad.app.concept.defaultName\");\n  const kitLoadingLabel = useLabel(\"semio.sketchpad.app.kit.loading\");"
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
+            "newString": "  const defaultPortName = useLabel(\"compose.sketchpad.app.port.defaultName\");\n  const kitLoadingLabel = useLabel(\"compose.sketchpad.app.kit.loading\");",
+            "oldString": "  const defaultPortName = useLabel(\"compose.sketchpad.app.port.defaultName\");\n  const defaultConceptName = useLabel(\"compose.sketchpad.app.concept.defaultName\");\n  const kitLoadingLabel = useLabel(\"compose.sketchpad.app.kit.loading\");"
           },
           "tool_response": "",
           "tool_use_id": "toolu_bdrk_01FQq4PadbMs93D8BNQidJDA__vscode-1775022550616",
@@ -2893,9 +2893,9 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/d95799ce-559d-4fe6-ada9-3b950a2613bf.jsonl",
           "tool_name": "replace_string_in_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
-            "newString": "  kind: KitDiagramNodeKind;\n  icon?: string | React.ReactNode;\n  parentGuid?: string;\n}\n\n/**\n * [🏘️semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖diagram✂️kitdiagramedge](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/KitDiagramEdge)",
-            "oldString": "  kind: KitDiagramNodeKind;\n  icon?: string | React.ReactNode;\n  parentGuid?: string;\n  concepts?: string[];\n}\n\n/**\n * [🏘️semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖diagram✂️kitdiagramedge](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/KitDiagramEdge)"
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
+            "newString": "  kind: KitDiagramNodeKind;\n  icon?: string | React.ReactNode;\n  parentGuid?: string;\n}\n\n/**\n * [🏘️compose📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖diagram✂️kitdiagramedge](composerepo://p/u/compose/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/KitDiagramEdge)",
+            "oldString": "  kind: KitDiagramNodeKind;\n  icon?: string | React.ReactNode;\n  parentGuid?: string;\n  concepts?: string[];\n}\n\n/**\n * [🏘️compose📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖diagram✂️kitdiagramedge](composerepo://p/u/compose/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/KitDiagramEdge)"
           },
           "tool_use_id": "toolu_bdrk_01WY9eUR2RzNgysqKHw5ArzE__vscode-1775022550618",
           "cwd": "/workspaces/semio"
@@ -2921,9 +2921,9 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/d95799ce-559d-4fe6-ada9-3b950a2613bf.jsonl",
           "tool_name": "replace_string_in_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
-            "newString": "  kind: KitDiagramNodeKind;\n  icon?: string | React.ReactNode;\n  parentGuid?: string;\n}\n\n/**\n * [🏘️semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖diagram✂️kitdiagramedge](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/KitDiagramEdge)",
-            "oldString": "  kind: KitDiagramNodeKind;\n  icon?: string | React.ReactNode;\n  parentGuid?: string;\n  concepts?: string[];\n}\n\n/**\n * [🏘️semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖diagram✂️kitdiagramedge](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/KitDiagramEdge)"
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
+            "newString": "  kind: KitDiagramNodeKind;\n  icon?: string | React.ReactNode;\n  parentGuid?: string;\n}\n\n/**\n * [🏘️compose📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖diagram✂️kitdiagramedge](composerepo://p/u/compose/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/KitDiagramEdge)",
+            "oldString": "  kind: KitDiagramNodeKind;\n  icon?: string | React.ReactNode;\n  parentGuid?: string;\n  concepts?: string[];\n}\n\n/**\n * [🏘️compose📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖diagram✂️kitdiagramedge](composerepo://p/u/compose/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/KitDiagramEdge)"
           },
           "tool_use_id": "toolu_bdrk_01WY9eUR2RzNgysqKHw5ArzE__vscode-1775022550618",
           "cwd": "/workspaces/semio"
@@ -2949,9 +2949,9 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/d95799ce-559d-4fe6-ada9-3b950a2613bf.jsonl",
           "tool_name": "replace_string_in_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
-            "newString": "  kind: KitDiagramNodeKind;\n  icon?: string | React.ReactNode;\n  parentGuid?: string;\n}\n\n/**\n * [🏘️semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖diagram✂️kitdiagramedge](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/KitDiagramEdge)",
-            "oldString": "  kind: KitDiagramNodeKind;\n  icon?: string | React.ReactNode;\n  parentGuid?: string;\n  concepts?: string[];\n}\n\n/**\n * [🏘️semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖diagram✂️kitdiagramedge](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/KitDiagramEdge)"
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
+            "newString": "  kind: KitDiagramNodeKind;\n  icon?: string | React.ReactNode;\n  parentGuid?: string;\n}\n\n/**\n * [🏘️compose📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖diagram✂️kitdiagramedge](composerepo://p/u/compose/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/KitDiagramEdge)",
+            "oldString": "  kind: KitDiagramNodeKind;\n  icon?: string | React.ReactNode;\n  parentGuid?: string;\n  concepts?: string[];\n}\n\n/**\n * [🏘️compose📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖diagram✂️kitdiagramedge](composerepo://p/u/compose/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/KitDiagramEdge)"
           },
           "tool_response": "",
           "tool_use_id": "toolu_bdrk_01WY9eUR2RzNgysqKHw5ArzE__vscode-1775022550618",
@@ -2978,9 +2978,9 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/d95799ce-559d-4fe6-ada9-3b950a2613bf.jsonl",
           "tool_name": "replace_string_in_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
-            "newString": "  kind: KitDiagramNodeKind;\n  icon?: string | React.ReactNode;\n  parentGuid?: string;\n}\n\n/**\n * [🏘️semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖diagram✂️kitdiagramedge](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/KitDiagramEdge)",
-            "oldString": "  kind: KitDiagramNodeKind;\n  icon?: string | React.ReactNode;\n  parentGuid?: string;\n  concepts?: string[];\n}\n\n/**\n * [🏘️semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖diagram✂️kitdiagramedge](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/KitDiagramEdge)"
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
+            "newString": "  kind: KitDiagramNodeKind;\n  icon?: string | React.ReactNode;\n  parentGuid?: string;\n}\n\n/**\n * [🏘️compose📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖diagram✂️kitdiagramedge](composerepo://p/u/compose/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/KitDiagramEdge)",
+            "oldString": "  kind: KitDiagramNodeKind;\n  icon?: string | React.ReactNode;\n  parentGuid?: string;\n  concepts?: string[];\n}\n\n/**\n * [🏘️compose📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖diagram✂️kitdiagramedge](composerepo://p/u/compose/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/KitDiagramEdge)"
           },
           "tool_response": "",
           "tool_use_id": "toolu_bdrk_01WY9eUR2RzNgysqKHw5ArzE__vscode-1775022550618",
@@ -3008,7 +3008,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": false,
             "query": "selectedConceptGuids"
           },
@@ -3037,7 +3037,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": false,
             "query": "item.concepts"
           },
@@ -3066,7 +3066,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": false,
             "query": "defaultConceptName"
           },
@@ -3095,7 +3095,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": false,
             "query": "selectedConceptGuids"
           },
@@ -3124,7 +3124,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": false,
             "query": "item.concepts"
           },
@@ -3153,7 +3153,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": false,
             "query": "defaultConceptName"
           },
@@ -3182,7 +3182,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": false,
             "query": "selectedConceptGuids"
           },
@@ -3212,7 +3212,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": false,
             "query": "item.concepts"
           },
@@ -3242,7 +3242,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": false,
             "query": "defaultConceptName"
           },
@@ -3272,7 +3272,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": false,
             "query": "item.concepts"
           },
@@ -3302,7 +3302,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": false,
             "query": "selectedConceptGuids"
           },
@@ -3332,7 +3332,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": false,
             "query": "defaultConceptName"
           },
@@ -3362,7 +3362,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": false,
             "query": "row.concepts.map"
           },
@@ -3391,7 +3391,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "concepts\\?: string\\[\\]"
           },
@@ -3420,7 +3420,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": false,
             "query": "allSelection.concepts"
           },
@@ -3449,7 +3449,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": false,
             "query": "row.concepts.map"
           },
@@ -3478,7 +3478,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "concepts\\?: string\\[\\]"
           },
@@ -3507,7 +3507,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": false,
             "query": "allSelection.concepts"
           },
@@ -3536,7 +3536,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "concepts\\?: string\\[\\]"
           },
@@ -3566,7 +3566,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": false,
             "query": "row.concepts.map"
           },
@@ -3596,7 +3596,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "concepts\\?: string\\[\\]"
           },
@@ -3626,7 +3626,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": false,
             "query": "allSelection.concepts"
           },
@@ -3656,7 +3656,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": false,
             "query": "row.concepts.map"
           },
@@ -3686,7 +3686,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": false,
             "query": "allSelection.concepts"
           },
@@ -3865,7 +3865,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/d95799ce-559d-4fe6-ada9-3b950a2613bf.jsonl",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "cd /workspaces/semio/semio/sketchpad \u0026\u0026 npx vite build 2\u003e\u00261 | tail -10",
+            "command": "cd /workspaces/semio/compose/sketchpad \u0026\u0026 npx vite build 2\u003e\u00261 | tail -10",
             "explanation": "Build sketchpad to verify compilation",
             "goal": "Verify build",
             "isBackground": false,
@@ -3895,7 +3895,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/d95799ce-559d-4fe6-ada9-3b950a2613bf.jsonl",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "cd /workspaces/semio/semio/sketchpad \u0026\u0026 npx vite build 2\u003e\u00261 | tail -10",
+            "command": "cd /workspaces/semio/compose/sketchpad \u0026\u0026 npx vite build 2\u003e\u00261 | tail -10",
             "explanation": "Build sketchpad to verify compilation",
             "goal": "Verify build",
             "isBackground": false,
@@ -3925,13 +3925,13 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/d95799ce-559d-4fe6-ada9-3b950a2613bf.jsonl",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "cd /workspaces/semio/semio/sketchpad \u0026\u0026 npx vite build 2\u003e\u00261 | tail -10",
+            "command": "cd /workspaces/semio/compose/sketchpad \u0026\u0026 npx vite build 2\u003e\u00261 | tail -10",
             "explanation": "Build sketchpad to verify compilation",
             "goal": "Verify build",
             "isBackground": false,
             "timeout": 120000
           },
-          "tool_response": "[plugin vite:resolve] Module \"node:fs\" has been externalized for browser compatibility, imported by \"/workspaces/semio/semio/js/index.ts\". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.\n[plugin vite:resolve] Module \"node:fs\" has been externalized for browser compatibility, imported by \"/workspaces/semio/semio/js/index.ts\". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.\n[plugin vite:resolve] Module \"node:child_process\" has been externalized for browser compatibility, imported by \"/workspaces/semio/semio/js/index.ts\". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.\n[plugin vite:resolve] Module \"node:fs\" has been externalized for browser compatibility, imported by \"/workspaces/semio/semio/js/index.ts\". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.\n[plugin vite:resolve] Module \"node:fs\" has been externalized for browser compatibility, imported by \"/workspaces/semio/semio/js/index.ts\". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.\n[plugin vite:resolve] Module \"crypto\" has been externalized for browser compatibility, imported by \"/workspaces/semio/node_modules/sql.js/dist/sql-wasm.js\". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.\n[plugin vite:resolve] Module \"node:module\" has been externalized for browser compatibility, imported by \"/workspaces/semio/node_modules/vite/dist/node/module-runner.js\". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.\n✓ 4039 modules transformed.\nrendering chunks...\nKilled",
+          "tool_response": "[plugin vite:resolve] Module \"node:fs\" has been externalized for browser compatibility, imported by \"/workspaces/semio/compose/js/index.ts\". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.\n[plugin vite:resolve] Module \"node:fs\" has been externalized for browser compatibility, imported by \"/workspaces/semio/compose/js/index.ts\". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.\n[plugin vite:resolve] Module \"node:child_process\" has been externalized for browser compatibility, imported by \"/workspaces/semio/compose/js/index.ts\". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.\n[plugin vite:resolve] Module \"node:fs\" has been externalized for browser compatibility, imported by \"/workspaces/semio/compose/js/index.ts\". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.\n[plugin vite:resolve] Module \"node:fs\" has been externalized for browser compatibility, imported by \"/workspaces/semio/compose/js/index.ts\". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.\n[plugin vite:resolve] Module \"crypto\" has been externalized for browser compatibility, imported by \"/workspaces/semio/node_modules/sql.js/dist/sql-wasm.js\". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.\n[plugin vite:resolve] Module \"node:module\" has been externalized for browser compatibility, imported by \"/workspaces/semio/node_modules/vite/dist/node/module-runner.js\". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.\n✓ 4039 modules transformed.\nrendering chunks...\nKilled",
           "tool_use_id": "toolu_bdrk_01RpTM1BVDLNj1PUHji583ks__vscode-1775022550626",
           "cwd": "/workspaces/semio"
         }
@@ -3956,13 +3956,13 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/d95799ce-559d-4fe6-ada9-3b950a2613bf.jsonl",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "cd /workspaces/semio/semio/sketchpad \u0026\u0026 npx vite build 2\u003e\u00261 | tail -10",
+            "command": "cd /workspaces/semio/compose/sketchpad \u0026\u0026 npx vite build 2\u003e\u00261 | tail -10",
             "explanation": "Build sketchpad to verify compilation",
             "goal": "Verify build",
             "isBackground": false,
             "timeout": 120000
           },
-          "tool_response": "[plugin vite:resolve] Module \"node:fs\" has been externalized for browser compatibility, imported by \"/workspaces/semio/semio/js/index.ts\". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.\n[plugin vite:resolve] Module \"node:fs\" has been externalized for browser compatibility, imported by \"/workspaces/semio/semio/js/index.ts\". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.\n[plugin vite:resolve] Module \"node:child_process\" has been externalized for browser compatibility, imported by \"/workspaces/semio/semio/js/index.ts\". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.\n[plugin vite:resolve] Module \"node:fs\" has been externalized for browser compatibility, imported by \"/workspaces/semio/semio/js/index.ts\". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.\n[plugin vite:resolve] Module \"node:fs\" has been externalized for browser compatibility, imported by \"/workspaces/semio/semio/js/index.ts\". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.\n[plugin vite:resolve] Module \"crypto\" has been externalized for browser compatibility, imported by \"/workspaces/semio/node_modules/sql.js/dist/sql-wasm.js\". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.\n[plugin vite:resolve] Module \"node:module\" has been externalized for browser compatibility, imported by \"/workspaces/semio/node_modules/vite/dist/node/module-runner.js\". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.\n✓ 4039 modules transformed.\nrendering chunks...\nKilled",
+          "tool_response": "[plugin vite:resolve] Module \"node:fs\" has been externalized for browser compatibility, imported by \"/workspaces/semio/compose/js/index.ts\". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.\n[plugin vite:resolve] Module \"node:fs\" has been externalized for browser compatibility, imported by \"/workspaces/semio/compose/js/index.ts\". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.\n[plugin vite:resolve] Module \"node:child_process\" has been externalized for browser compatibility, imported by \"/workspaces/semio/compose/js/index.ts\". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.\n[plugin vite:resolve] Module \"node:fs\" has been externalized for browser compatibility, imported by \"/workspaces/semio/compose/js/index.ts\". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.\n[plugin vite:resolve] Module \"node:fs\" has been externalized for browser compatibility, imported by \"/workspaces/semio/compose/js/index.ts\". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.\n[plugin vite:resolve] Module \"crypto\" has been externalized for browser compatibility, imported by \"/workspaces/semio/node_modules/sql.js/dist/sql-wasm.js\". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.\n[plugin vite:resolve] Module \"node:module\" has been externalized for browser compatibility, imported by \"/workspaces/semio/node_modules/vite/dist/node/module-runner.js\". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.\n✓ 4039 modules transformed.\nrendering chunks...\nKilled",
           "tool_use_id": "toolu_bdrk_01RpTM1BVDLNj1PUHji583ks__vscode-1775022550626",
           "cwd": "/workspaces/semio"
         }
@@ -4053,7 +4053,7 @@
             "isBackground": false,
             "timeout": 300000
           },
-          "tool_response": "\nstderr | index.ts \u003e ExportDesignModel \u003e exports identical Nakagin scene graph across implementations and writes reports\nMissing optional extension, \"KHR_materials_transmission\".\nMissing optional extension, \"KHR_materials_clearcoat\".\nMissing optional extension, \"KHR_materials_ior\".\nMissing optional extension, \"KHR_materials_specular\".\nMissing optional extension, \"KHR_materials_emissive_strength\".\nMissing optional extension, \"KHR_texture_transform\".\n\n ✓  semio  index.ts (134 tests) 59905ms\n       ✓ Kit + Change.Forward = DiffedKit \u0026 DiffedKit + Change.Backward = Kit  536ms\n       ✓ Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat  825ms\n       ✓ Json -\u003e Memory -\u003e Json, Json -\u003e Zip, Zip -\u003e Json  11000ms\n     ✓ exports identical Nakagin scene graph across implementations and writes reports  34778ms\n     ✓ hashKit produces a 64-char lowercase hex string  1800ms\n     ✓ hashKit is deterministic (same input produces same output)  3355ms\n     ✓ different kits produce different hashes  3527ms\n     ✓ hashKit of metabolism kit matches expected hash  1629ms\n     ✓ hashKitDiff produces different hashes for different diffs  304ms\n\n Test Files  1 passed (1)\n      Tests  134 passed (134)\n   Start at  06:12:33\n   Duration  74.47s (transform 5.67s, setup 0ms, import 14.40s, tests 59.90s, environment 0ms)",
+          "tool_response": "\nstderr | index.ts \u003e ExportDesignModel \u003e exports identical Nakagin scene graph across implementations and writes reports\nMissing optional extension, \"KHR_materials_transmission\".\nMissing optional extension, \"KHR_materials_clearcoat\".\nMissing optional extension, \"KHR_materials_ior\".\nMissing optional extension, \"KHR_materials_specular\".\nMissing optional extension, \"KHR_materials_emissive_strength\".\nMissing optional extension, \"KHR_texture_transform\".\n\n ✓  compose  index.ts (134 tests) 59905ms\n       ✓ Kit + Change.Forward = DiffedKit \u0026 DiffedKit + Change.Backward = Kit  536ms\n       ✓ Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat  825ms\n       ✓ Json -\u003e Memory -\u003e Json, Json -\u003e Zip, Zip -\u003e Json  11000ms\n     ✓ exports identical Nakagin scene graph across implementations and writes reports  34778ms\n     ✓ hashKit produces a 64-char lowercase hex string  1800ms\n     ✓ hashKit is deterministic (same input produces same output)  3355ms\n     ✓ different kits produce different hashes  3527ms\n     ✓ hashKit of metabolism kit matches expected hash  1629ms\n     ✓ hashKitDiff produces different hashes for different diffs  304ms\n\n Test Files  1 passed (1)\n      Tests  134 passed (134)\n   Start at  06:12:33\n   Duration  74.47s (transform 5.67s, setup 0ms, import 14.40s, tests 59.90s, environment 0ms)",
           "tool_use_id": "toolu_bdrk_019xS5itf3uKXtshE6iTVrPL__vscode-1775022550627",
           "cwd": "/workspaces/semio"
         }
@@ -4084,7 +4084,7 @@
             "isBackground": false,
             "timeout": 300000
           },
-          "tool_response": "\nstderr | index.ts \u003e ExportDesignModel \u003e exports identical Nakagin scene graph across implementations and writes reports\nMissing optional extension, \"KHR_materials_transmission\".\nMissing optional extension, \"KHR_materials_clearcoat\".\nMissing optional extension, \"KHR_materials_ior\".\nMissing optional extension, \"KHR_materials_specular\".\nMissing optional extension, \"KHR_materials_emissive_strength\".\nMissing optional extension, \"KHR_texture_transform\".\n\n ✓  semio  index.ts (134 tests) 59905ms\n       ✓ Kit + Change.Forward = DiffedKit \u0026 DiffedKit + Change.Backward = Kit  536ms\n       ✓ Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat  825ms\n       ✓ Json -\u003e Memory -\u003e Json, Json -\u003e Zip, Zip -\u003e Json  11000ms\n     ✓ exports identical Nakagin scene graph across implementations and writes reports  34778ms\n     ✓ hashKit produces a 64-char lowercase hex string  1800ms\n     ✓ hashKit is deterministic (same input produces same output)  3355ms\n     ✓ different kits produce different hashes  3527ms\n     ✓ hashKit of metabolism kit matches expected hash  1629ms\n     ✓ hashKitDiff produces different hashes for different diffs  304ms\n\n Test Files  1 passed (1)\n      Tests  134 passed (134)\n   Start at  06:12:33\n   Duration  74.47s (transform 5.67s, setup 0ms, import 14.40s, tests 59.90s, environment 0ms)",
+          "tool_response": "\nstderr | index.ts \u003e ExportDesignModel \u003e exports identical Nakagin scene graph across implementations and writes reports\nMissing optional extension, \"KHR_materials_transmission\".\nMissing optional extension, \"KHR_materials_clearcoat\".\nMissing optional extension, \"KHR_materials_ior\".\nMissing optional extension, \"KHR_materials_specular\".\nMissing optional extension, \"KHR_materials_emissive_strength\".\nMissing optional extension, \"KHR_texture_transform\".\n\n ✓  compose  index.ts (134 tests) 59905ms\n       ✓ Kit + Change.Forward = DiffedKit \u0026 DiffedKit + Change.Backward = Kit  536ms\n       ✓ Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat  825ms\n       ✓ Json -\u003e Memory -\u003e Json, Json -\u003e Zip, Zip -\u003e Json  11000ms\n     ✓ exports identical Nakagin scene graph across implementations and writes reports  34778ms\n     ✓ hashKit produces a 64-char lowercase hex string  1800ms\n     ✓ hashKit is deterministic (same input produces same output)  3355ms\n     ✓ different kits produce different hashes  3527ms\n     ✓ hashKit of metabolism kit matches expected hash  1629ms\n     ✓ hashKitDiff produces different hashes for different diffs  304ms\n\n Test Files  1 passed (1)\n      Tests  134 passed (134)\n   Start at  06:12:33\n   Duration  74.47s (transform 5.67s, setup 0ms, import 14.40s, tests 59.90s, environment 0ms)",
           "tool_use_id": "toolu_bdrk_019xS5itf3uKXtshE6iTVrPL__vscode-1775022550627",
           "cwd": "/workspaces/semio"
         }
@@ -4260,9 +4260,9 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "files": [
-              "semio/sketchpad/index.tsx"
+              "compose/sketchpad/index.tsx"
             ],
-            "summary": "Re-applied all concept-hiding changes after code was discarded. 13 edits in semio/sketchpad/index.tsx: (1) useKitAppSelectAll - removed concepts from select-all action. (2) Two defaultConceptName useLabel hooks removed. (3) hasAnySelection - removed concepts check. (4) buildSelectionKit - removed selectedConceptGuids, concepts filtering, and concepts from returned kit. (5) KitDiagramNode interface - removed concepts field. (6) buildKitDiagramData items type - removed concepts from array type. (7-8) Type and design items - removed concepts mapping. (9) Diagram node data - removed concepts from data object. All 134 tests pass.",
+            "summary": "Re-applied all concept-hiding changes after code was discarded. 13 edits in compose/sketchpad/index.tsx: (1) useKitAppSelectAll - removed concepts from select-all action. (2) Two defaultConceptName useLabel hooks removed. (3) hasAnySelection - removed concepts check. (4) buildSelectionKit - removed selectedConceptGuids, concepts filtering, and concepts from returned kit. (5) KitDiagramNode interface - removed concepts field. (6) buildKitDiagramData items type - removed concepts from array type. (7-8) Type and design items - removed concepts mapping. (9) Diagram node data - removed concepts from data object. All 134 tests pass.",
             "ticketId": "26/04/01/HIDE-CONCEPTS-FROM-SKETCHPAD-KIT-APP-UI"
           },
           "tool_use_id": "toolu_bdrk_012UbCNJKPGGyRDwBU2b5yQU__vscode-1775022550629",
@@ -4290,9 +4290,9 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "files": [
-              "semio/sketchpad/index.tsx"
+              "compose/sketchpad/index.tsx"
             ],
-            "summary": "Re-applied all concept-hiding changes after code was discarded. 13 edits in semio/sketchpad/index.tsx: (1) useKitAppSelectAll - removed concepts from select-all action. (2) Two defaultConceptName useLabel hooks removed. (3) hasAnySelection - removed concepts check. (4) buildSelectionKit - removed selectedConceptGuids, concepts filtering, and concepts from returned kit. (5) KitDiagramNode interface - removed concepts field. (6) buildKitDiagramData items type - removed concepts from array type. (7-8) Type and design items - removed concepts mapping. (9) Diagram node data - removed concepts from data object. All 134 tests pass.",
+            "summary": "Re-applied all concept-hiding changes after code was discarded. 13 edits in compose/sketchpad/index.tsx: (1) useKitAppSelectAll - removed concepts from select-all action. (2) Two defaultConceptName useLabel hooks removed. (3) hasAnySelection - removed concepts check. (4) buildSelectionKit - removed selectedConceptGuids, concepts filtering, and concepts from returned kit. (5) KitDiagramNode interface - removed concepts field. (6) buildKitDiagramData items type - removed concepts from array type. (7-8) Type and design items - removed concepts mapping. (9) Diagram node data - removed concepts from data object. All 134 tests pass.",
             "ticketId": "26/04/01/HIDE-CONCEPTS-FROM-SKETCHPAD-KIT-APP-UI"
           },
           "tool_use_id": "toolu_bdrk_012UbCNJKPGGyRDwBU2b5yQU__vscode-1775022550629",
@@ -4540,10 +4540,10 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "files": [
-              "semio/sketchpad/index.tsx"
+              "compose/sketchpad/index.tsx"
             ],
             "path": "26/04/01/HIDE-CONCEPTS-FROM-SKETCHPAD-KIT-APP-UI",
-            "summary": "Re-applied all concept-hiding changes after code was discarded. 13 edits in semio/sketchpad/index.tsx: (1) useKitAppSelectAll - removed concepts from select-all action. (2) Two defaultConceptName useLabel hooks removed. (3) hasAnySelection - removed concepts check. (4) buildSelectionKit - removed selectedConceptGuids, concepts filtering, and concepts from returned kit. (5) KitDiagramNode interface - removed concepts field. (6) buildKitDiagramData items type - removed concepts from array type. (7-8) Type and design items - removed concepts mapping. (9) Diagram node data - removed concepts from data object. All 134 tests pass."
+            "summary": "Re-applied all concept-hiding changes after code was discarded. 13 edits in compose/sketchpad/index.tsx: (1) useKitAppSelectAll - removed concepts from select-all action. (2) Two defaultConceptName useLabel hooks removed. (3) hasAnySelection - removed concepts check. (4) buildSelectionKit - removed selectedConceptGuids, concepts filtering, and concepts from returned kit. (5) KitDiagramNode interface - removed concepts field. (6) buildKitDiagramData items type - removed concepts from array type. (7-8) Type and design items - removed concepts mapping. (9) Diagram node data - removed concepts from data object. All 134 tests pass."
           },
           "tool_use_id": "toolu_bdrk_01Q2mdd8ZqLb5CF1ggcApZqq__vscode-1775022550632",
           "cwd": "/workspaces/semio"
@@ -4570,10 +4570,10 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "files": [
-              "semio/sketchpad/index.tsx"
+              "compose/sketchpad/index.tsx"
             ],
             "path": "26/04/01/HIDE-CONCEPTS-FROM-SKETCHPAD-KIT-APP-UI",
-            "summary": "Re-applied all concept-hiding changes after code was discarded. 13 edits in semio/sketchpad/index.tsx: (1) useKitAppSelectAll - removed concepts from select-all action. (2) Two defaultConceptName useLabel hooks removed. (3) hasAnySelection - removed concepts check. (4) buildSelectionKit - removed selectedConceptGuids, concepts filtering, and concepts from returned kit. (5) KitDiagramNode interface - removed concepts field. (6) buildKitDiagramData items type - removed concepts from array type. (7-8) Type and design items - removed concepts mapping. (9) Diagram node data - removed concepts from data object. All 134 tests pass."
+            "summary": "Re-applied all concept-hiding changes after code was discarded. 13 edits in compose/sketchpad/index.tsx: (1) useKitAppSelectAll - removed concepts from select-all action. (2) Two defaultConceptName useLabel hooks removed. (3) hasAnySelection - removed concepts check. (4) buildSelectionKit - removed selectedConceptGuids, concepts filtering, and concepts from returned kit. (5) KitDiagramNode interface - removed concepts field. (6) buildKitDiagramData items type - removed concepts from array type. (7-8) Type and design items - removed concepts mapping. (9) Diagram node data - removed concepts from data object. All 134 tests pass."
           },
           "tool_use_id": "toolu_bdrk_01Q2mdd8ZqLb5CF1ggcApZqq__vscode-1775022550632",
           "cwd": "/workspaces/semio"
@@ -4600,10 +4600,10 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "files": [
-              "semio/sketchpad/index.tsx"
+              "compose/sketchpad/index.tsx"
             ],
             "path": "26/04/01/HIDE-CONCEPTS-FROM-SKETCHPAD-KIT-APP-UI",
-            "summary": "Re-applied all concept-hiding changes after code was discarded. 13 edits in semio/sketchpad/index.tsx: (1) useKitAppSelectAll - removed concepts from select-all action. (2) Two defaultConceptName useLabel hooks removed. (3) hasAnySelection - removed concepts check. (4) buildSelectionKit - removed selectedConceptGuids, concepts filtering, and concepts from returned kit. (5) KitDiagramNode interface - removed concepts field. (6) buildKitDiagramData items type - removed concepts from array type. (7-8) Type and design items - removed concepts mapping. (9) Diagram node data - removed concepts from data object. All 134 tests pass."
+            "summary": "Re-applied all concept-hiding changes after code was discarded. 13 edits in compose/sketchpad/index.tsx: (1) useKitAppSelectAll - removed concepts from select-all action. (2) Two defaultConceptName useLabel hooks removed. (3) hasAnySelection - removed concepts check. (4) buildSelectionKit - removed selectedConceptGuids, concepts filtering, and concepts from returned kit. (5) KitDiagramNode interface - removed concepts field. (6) buildKitDiagramData items type - removed concepts from array type. (7-8) Type and design items - removed concepts mapping. (9) Diagram node data - removed concepts from data object. All 134 tests pass."
           },
           "tool_response": "[🎫hideconceptsfromsketchpadkitappui](repo://ticket/🎫hideconceptsfromsketchpadkitappui) - `closed` - `closed now`\n",
           "tool_use_id": "toolu_bdrk_01Q2mdd8ZqLb5CF1ggcApZqq__vscode-1775022550632",
@@ -4631,10 +4631,10 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "files": [
-              "semio/sketchpad/index.tsx"
+              "compose/sketchpad/index.tsx"
             ],
             "path": "26/04/01/HIDE-CONCEPTS-FROM-SKETCHPAD-KIT-APP-UI",
-            "summary": "Re-applied all concept-hiding changes after code was discarded. 13 edits in semio/sketchpad/index.tsx: (1) useKitAppSelectAll - removed concepts from select-all action. (2) Two defaultConceptName useLabel hooks removed. (3) hasAnySelection - removed concepts check. (4) buildSelectionKit - removed selectedConceptGuids, concepts filtering, and concepts from returned kit. (5) KitDiagramNode interface - removed concepts field. (6) buildKitDiagramData items type - removed concepts from array type. (7-8) Type and design items - removed concepts mapping. (9) Diagram node data - removed concepts from data object. All 134 tests pass."
+            "summary": "Re-applied all concept-hiding changes after code was discarded. 13 edits in compose/sketchpad/index.tsx: (1) useKitAppSelectAll - removed concepts from select-all action. (2) Two defaultConceptName useLabel hooks removed. (3) hasAnySelection - removed concepts check. (4) buildSelectionKit - removed selectedConceptGuids, concepts filtering, and concepts from returned kit. (5) KitDiagramNode interface - removed concepts field. (6) buildKitDiagramData items type - removed concepts from array type. (7-8) Type and design items - removed concepts mapping. (9) Diagram node data - removed concepts from data object. All 134 tests pass."
           },
           "tool_response": "[🎫hideconceptsfromsketchpadkitappui](repo://ticket/🎫hideconceptsfromsketchpadkitappui) - `closed` - `closed now`\n",
           "tool_use_id": "toolu_bdrk_01Q2mdd8ZqLb5CF1ggcApZqq__vscode-1775022550632",

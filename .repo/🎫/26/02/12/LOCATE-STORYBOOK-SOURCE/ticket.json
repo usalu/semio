@@ -2,7 +2,7 @@
   "title": "Locate Storybook Source",
   "status": "closed",
   "prompt": "The user is asking for the location of the Storybook implementation in the repository.",
-  "summary": "Storybook is programmed in the 'semio/js/.storybook' folder. Its configuration is in 'main.ts' and 'preview.ts', and the component stories are located in the 'stories' subfolder.",
+  "summary": "Storybook is programmed in the 'compose/js/.storybook' folder. Its configuration is in 'main.ts' and 'preview.ts', and the component stories are located in the 'stories' subfolder.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/544"
   },

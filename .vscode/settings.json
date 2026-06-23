@@ -73,7 +73,7 @@
   "python.analysis.typeCheckingMode": "off",
   "python.testing.pytestEnabled": true,
   "python.testing.unittestEnabled": false,
-  "python.testing.pytestArgs": ["--rootdir=${workspaceFolder}", "semio/py", "semio/engine"],
+  "python.testing.pytestArgs": ["--rootdir=${workspaceFolder}", "compose/py", "compose/engine"],
   "python.testing.cwd": "${workspaceFolder}",
   "python.testing.autoTestDiscoverOnSaveEnabled": true,
   "python.analysis.languageServerMode": "full",
@@ -81,7 +81,7 @@
   "sqltools.connections": [
     {
       "name": "metabolism",
-      "database": "./example/metabolism/.semio/kit.db",
+      "database": "./example/metabolism/.compose/kit.db",
       "driver": "SQLite",
       "previewLimit": 50
     }
@@ -96,7 +96,7 @@
   "[svg]": {
     "editor.defaultFormatter": "jock.svg"
   },
-  "rust-analyzer.linkedProjects": ["semio/rs/Cargo.toml"],
+  "rust-analyzer.linkedProjects": ["compose/rs/Cargo.toml"],
   "rust-analyzer.testExplorer": true,
   "terminal.integrated.defaultProfile.linux": "bash",
   "github.copilot.chat.commitMessageGeneration.instructions": [

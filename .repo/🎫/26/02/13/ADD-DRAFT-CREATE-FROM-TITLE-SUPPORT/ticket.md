@@ -11,8 +11,8 @@ Changed draft creation to accept a title (consistent with tickets/goals) instead
 ## Changes
 
 - `repo/cli/main.go`: Renamed `DraftCreateInput.Slug` → `Title`, updated `CreateDraft` signature (`id` → `title`), CLI command (`create [slug]` → `create [title]`), MCP tool param (`slug` → `title`), GraphQL input type field, mutation resolver, and `ToolDraftCreate` param
-- `repo/vscode/extension.ts`: Added `semio.draftCreate` (input box for title) and `semio.draftDelete` (inline action on draft tree items) commands
-- `repo/vscode/package.json`: Registered `semio.draftCreate` and `semio.draftDelete` commands with icons and inline menu entries
+- `repo/vscode/extension.ts`: Added `compose.draftCreate` (input box for title) and `compose.draftDelete` (inline action on draft tree items) commands
+- `repo/vscode/package.json`: Registered `compose.draftCreate` and `compose.draftDelete` commands with icons and inline menu entries
 
 ## Log
 
@@ -29,8 +29,8 @@ Changed draft creation to accept a title (consistent with tickets/goals) instead
 - [x] Update GraphQL input type: slug → title
 - [x] Update GraphQL mutation resolver
 - [x] Update ToolDraftCreate and callers
-- [x] Add semio.draftCreate command to VSCode
-- [x] Add semio.draftDelete command to VSCode
+- [x] Add compose.draftCreate command to VSCode
+- [x] Add compose.draftDelete command to VSCode
 
 ## Plan
 
@@ -47,4 +47,4 @@ Draft creation accepts a raw `slug` parameter while all other entities (tickets,
 5. **GraphQL input type**: `slug` field → `title` field
 6. **GraphQL mutation resolver**: Read `title` instead of `slug`
 7. **`ToolDraftCreate`**: Rename param from `slug` → `title`
-8. **VSCode extension**: Add `semio.draftCreate` and `semio.draftDelete` commands
+8. **VSCode extension**: Add `compose.draftCreate` and `compose.draftDelete` commands

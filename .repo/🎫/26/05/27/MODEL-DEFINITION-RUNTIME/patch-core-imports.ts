@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-const path = "c:/git/semio/spatial/js/core/index.ts";
+const path = "c:/git/compose/spatial/js/core/index.ts";
 const replacement = `// #region 📥ModelDefinitionAssets
 import geometryLoomFixtureJson from "../../fixtures/geometry-loom.json";
 import geometryRoutesFixtureJson from "../../fixtures/geometry-routes.json";

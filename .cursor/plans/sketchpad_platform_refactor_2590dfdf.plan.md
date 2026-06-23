@@ -18,7 +18,7 @@ todos:
     content: Replace ensureSketchpadDeclarativeShell/manifest/body/surface registration with buildSketchpadPlatform() returning new Platform({...}); render via PlatformView; update boot + Sketchpad export.
     status: completed
   - id: sketchpad-slice
-    content: "Migrate the vertical slice cleanly: home table (table), kit table (table), kit diagram (puzzle2d) with kit-state data adapters via @semio/react."
+    content: "Migrate the vertical slice cleanly: home table (table), kit table (table), kit diagram (puzzle2d) with kit-state data adapters via @compose/react."
     status: completed
   - id: sketchpad-rest
     content: Re-wire remaining apps (design/type/quality/doc/feedback) onto puzzle5d/cad/panel with thin adapters so they keep working; mark deep rewrites as follow-up tickets.
@@ -47,7 +47,7 @@ isProject: false
 
 ```mermaid
 flowchart TB
-  subgraph sketchpad ["semio/sketchpad (thin index.ts)"]
+  subgraph sketchpad ["compose/sketchpad (thin index.ts)"]
     def["new Platform(PlatformDefinition)"]
     adapters["per-surface data adapters (kit state -> component props)"]
   end
@@ -96,20 +96,20 @@ flowchart TB
   - `registerSurfaceBinding(surfaceId, adapter)` where the host supplies a data/props adapter (plain data in, component props out) keyed by `surfaceId`. This is the renderer-agnostic seam a future Svelte renderer reuses with the same core + its own component map.
 - Rename `ProductView` -> `PlatformView` and update `UiRenderer` (1587) to instantiate `componentRenderers[node.componentKind]` with adapter output; update `mountReactApp` references.
 
-## C. sketchpad rewrite ([semio/client/lib/sketchpad/js/index.ts](semio/client/lib/sketchpad/js/index.ts))
+## C. sketchpad rewrite ([compose/client/lib/sketchpad/js/index.ts](compose/client/lib/sketchpad/js/index.ts))
 - Replace `ensureSketchpadDeclarativeShell()` + `buildSketchpadExtensionManifest()` + `registerSketchpadDeclarativeBodies()` + `registerSketchpadUiSurfaceHosts()` (~22081-22420) with a single `buildSketchpadPlatform(): Platform` returning `new Platform({...})` whose apps reference component kinds:
   - home: `home-main` -> `table`
   - kit: `table` -> `table`, `diagram` -> `puzzle2d`
   - design: `scene`/`diagram` -> `puzzle5d`; type -> `cad`; docs/feedback/quality -> `panel`/existing.
-- Migrate the slice cleanly: home table, kit table, kit diagram. Implement `registerSurfaceBinding` adapters that read kit state (via `@semio/react`) and return `table`/`puzzle2d` props. Kit diagram is re-wired from today's FiveD-flat onto the `puzzle2d` component per the chosen mapping.
+- Migrate the slice cleanly: home table, kit table, kit diagram. Implement `registerSurfaceBinding` adapters that read kit state (via `@compose/react`) and return `table`/`puzzle2d` props. Kit diagram is re-wired from today's FiveD-flat onto the `puzzle2d` component per the chosen mapping.
 - Keep remaining apps (design/type/quality/doc/feedback) functional by binding them to `puzzle5d`/`cad`/`panel` with thin adapters wrapping their current React implementations; deeper clean-rewrite of those deferred to follow-up tickets.
 - Render via `<PlatformView platform={...} />`. Update boot path and `Sketchpad` export. Reorganize regions so the file stays a single clean `index.ts`.
 
 ## D. consumers + build fixes
-- [semio/client/ui/desktop/renderer.tsx](semio/client/ui/desktop/renderer.tsx): update app-config registration (note: `qualityConfig` is referenced but not exported — fix to match real exports).
-- [semio/client/ui/vscode/webview.tsx](semio/client/ui/vscode/webview.tsx): update `ensureSketchpadDeclarativeShell` import to the new Platform entry.
-- [semio/client/lib/sketchpad/js/package.json](semio/client/lib/sketchpad/js/package.json): fix `exports` (`./index.tsx` -> `./index.ts`).
-- [semio/client/lib/sketchpad/js/project.json](semio/client/lib/sketchpad/js/project.json): fix `cwd` `semio/client/lib/sketchpad/react` -> `.../js` in setup/dev/test targets.
+- [compose/client/ui/desktop/renderer.tsx](compose/client/ui/desktop/renderer.tsx): update app-config registration (note: `qualityConfig` is referenced but not exported — fix to match real exports).
+- [compose/client/ui/vscode/webview.tsx](compose/client/ui/vscode/webview.tsx): update `ensureSketchpadDeclarativeShell` import to the new Platform entry.
+- [compose/client/lib/sketchpad/js/package.json](compose/client/lib/sketchpad/js/package.json): fix `exports` (`./index.tsx` -> `./index.ts`).
+- [compose/client/lib/sketchpad/js/project.json](compose/client/lib/sketchpad/js/project.json): fix `cwd` `compose/client/lib/sketchpad/react` -> `.../js` in setup/dev/test targets.
 - Grep the repo for any other `ProductRuntime`/`ProductView`/`board`/`scene3d` references and update.
 
 ## E. tests + ticket

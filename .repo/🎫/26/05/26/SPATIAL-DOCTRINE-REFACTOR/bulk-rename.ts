@@ -2,7 +2,7 @@
 import { readdirSync, readFileSync, writeFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 
-const root = "c:/git/semio/spatial/js";
+const root = "c:/git/compose/spatial/js";
 const pairs: [string, string][] = [
 	["TopologyGraphJson", "ModelJson"],
 	["TopologyGraph", "Model"],

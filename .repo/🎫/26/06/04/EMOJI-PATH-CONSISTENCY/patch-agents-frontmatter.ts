@@ -4,7 +4,7 @@ import { join } from "node:path";
 const root = join(import.meta.dir, "../../../../../../");
 
 const technologyEmoji: Record<string, string> = {
-  semio: "🏘️",
+  compose: "🏘️",
   ui: "🖱️",
   framework: "🥅",
   cad: "📐",
@@ -18,7 +18,7 @@ const technologyEmoji: Record<string, string> = {
 };
 
 const areaPath: Record<string, string> = {
-  "semio/client/lib/sketchpad/js": "🏘️semio✍️sketchpad",
+  "compose/client/lib/sketchpad/js": "🏘️compose✍️sketchpad",
   "ui/react": "🖱️ui⚛️react",
   "gis/map": "🌐gis📍map",
   "gis/terrain": "🌐gis⛰️terrain",
@@ -35,8 +35,8 @@ const areaPath: Record<string, string> = {
 };
 
 const bundleEmojiFix: Record<string, string> = {
-  "semio/client/lib/sketchpad/js": "✍️",
-  "semio/client/ui/vscode": "🖱️",
+  "compose/client/lib/sketchpad/js": "✍️",
+  "compose/client/ui/vscode": "🖱️",
 };
 
 const subBundleEmoji: Record<string, { name: string; emoji: string }> = {

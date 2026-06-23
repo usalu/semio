@@ -3,7 +3,7 @@
 //    Run from repo root: `node .repo/🎫/26/05/10/GRAPHQL-TARGET-MUTATION-CLEANUP/strip_specific_owner_fields.js`.
 
 const fs = require('fs');
-const path = 'C:/git/semio/semio/graphql/target.schema.graphql';
+const path = 'C:/git/compose/compose/graphql/target.schema.graphql';
 
 const src = fs.readFileSync(path, 'utf8');
 const lines = src.split(/\r?\n/);

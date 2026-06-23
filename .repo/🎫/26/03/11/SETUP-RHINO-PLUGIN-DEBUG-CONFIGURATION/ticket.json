@@ -2,7 +2,7 @@
   "title": "Setup Rhino Plugin Debug Configuration",
   "emoji": "⚙️",
   "status": "closed",
-  "description": "Add VSCode debug configuration (tasks.json build task + launch.json dev config) for the semio/3dm Rhino plugin. The setup should use the coreclr debugger, launch Rhino.exe with RHINO_PACKAGE_DIRS pointing to the build output, and use a preLaunchTask to build first. Also add a dev script to the package.json.",
+  "description": "Add VSCode debug configuration (tasks.json build task + launch.json dev config) for the compose/3dm Rhino plugin. The setup should use the coreclr debugger, launch Rhino.exe with RHINO_PACKAGE_DIRS pointing to the build output, and use a preLaunchTask to build first. Also add a dev script to the package.json.",
   "summary": "Changed TargetFramework to net8.0-windows so Visual Studio uses Managed (CoreCLR) debugger matching Rhino 8 runtime. Updated launchSettings.json plugin path accordingly.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/831"

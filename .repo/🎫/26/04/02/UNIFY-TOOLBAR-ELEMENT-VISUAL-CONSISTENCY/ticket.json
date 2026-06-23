@@ -3,7 +3,7 @@
   "emoji": "🔧",
   "status": "closed",
   "description": "Analyze and fix all visual inconsistencies across toolbar elements in the sketchpad. Key issues: 1) Icon sizes differ between groups (some use size-tiny, others rely on addIconSize default size-small), 2) Some toolbar content uses ToolbarGroup wrapper while others use raw divs with different gap/padding, 3) getToolbarGroupIcon uses hardcoded size={16} instead of design tokens, 4) Mixed use of Button vs Toggle without consistent sizing.",
-  "summary": "Restored shared-layout bounding-size interpolation for the sketchpad toolbar settings area without reintroducing sizing regressions by animating only the inner w-fit settings content wrapper. The right-half settings band remains stable, so Filter/Create no longer collapses or shifts. Verified: npx tsc --noEmit --project semio/sketchpad/tsconfig.json and npm test --workspace elements/ui.",
+  "summary": "Restored shared-layout bounding-size interpolation for the sketchpad toolbar settings area without reintroducing sizing regressions by animating only the inner w-fit settings content wrapper. The right-half settings band remains stable, so Filter/Create no longer collapses or shifts. Verified: npx tsc --noEmit --project compose/sketchpad/tsconfig.json and npm test --workspace elements/ui.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1262"
   },

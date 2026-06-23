@@ -3,7 +3,7 @@
   "emoji": "🔌",
   "status": "closed",
   "description": "Hydrate design JSON from parent of folder kit path; duplicate full JSON in EmbeddedResource; parse each content block; sync session design without downgrading piece count.",
-  "summary": "Fixed SemioKit design previews so kit-backed designs are flattened before rendering in SemioDesign, matching semio/ui/Design for Nakagin Capsule Tower instead of showing only the fixed/root piece. Updated the MCP kit viewer path to pass a blob-stripped full kit alongside kitArtifacts so previews can resolve full design geometry. Extended existing semio/ui and semio/engine tests to cover Nakagin preview flattening and full kit payload availability. Verified @semio/ui test, @semio/engine test, and rebuilt the engine MCP app bundle.",
+  "summary": "Fixed ComposeKit design previews so kit-backed designs are flattened before rendering in ComposeDesign, matching compose/ui/Design for Nakagin Capsule Tower instead of showing only the fixed/root piece. Updated the MCP kit viewer path to pass a blob-stripped full kit alongside kitArtifacts so previews can resolve full design geometry. Extended existing compose/ui and compose/engine tests to cover Nakagin preview flattening and full kit payload availability. Verified @compose/ui test, @compose/engine test, and rebuilt the engine MCP app bundle.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1156"
   },

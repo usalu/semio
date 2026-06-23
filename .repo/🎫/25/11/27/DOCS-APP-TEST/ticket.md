@@ -7,7 +7,7 @@ No prior work on docs app E2E tests.
 
 # Plan
 
-1. Create E2E tests for the docs app in `js/semio/sketchpad.test.ts`
+1. Create E2E tests for the docs app in `js/compose/sketchpad.test.ts`
 2. Test content loading (page title, description, cards)
 3. Test workbench panel shows all documentation sections
 4. Test workbench panel shows pages within sections
@@ -16,12 +16,12 @@ No prior work on docs app E2E tests.
 
 # Changes
 
-## `js/semio/sketchpad.test.ts`
+## `js/compose/sketchpad.test.ts`
 
 Added `test.describe("Docs")` block with 5 new tests:
 
 1. **Content Loads** - Verifies docs index page loads with:
-   - "Welcome to Semio" h1 heading
+   - "Welcome to Compose" h1 heading
    - Description text "Design Information Modeling for Architecture"
    - Card headings ("Just want to toy around", "More into research")
 
@@ -33,7 +33,7 @@ Added `test.describe("Docs")` block with 5 new tests:
 
 4. **Details Panel Shows Page Section** - Navigates to sketchpad manual page and verifies:
    - Page headings are visible (Apps h1, Home/Kit/Design h2)
-   - Details panel opens and shows Page section button (id: `semio.sketchpad.app.docs.page`)
+   - Details panel opens and shows Page section button (id: `compose.sketchpad.app.docs.page`)
 
 5. **Navigation Works Between Pages** - Tests page navigation:
    - Clicks next button (Intro)

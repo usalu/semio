@@ -13,7 +13,7 @@ Summary:
 
 Files:
 
-- `js/semio/sketchpad/Design.tsx`
+- `js/compose/sketchpad/Design.tsx`
 - `README.md`
 - `AGENTS.md`
 
@@ -55,10 +55,10 @@ index cfac1531..68b4ee97 100644
  ### Ticket UX
 
 @@ -2572,6 +2584,7 @@ Sketchpad UI elements resolve transactions via React context (not props):
- - `js/semio/sketchpad/elements.tsx` defines `TransactionProvider` and `useTransaction()`.
- - `js/semio/sketchpad/elements.tsx` `Geometry` treats `color` as the base (non-interactive) color and uses selection/hover theme colors for the rendered material/edges when `selected`/`hovered` are true.
- - `js/semio/sketchpad/Design.tsx` diagram piece nodes use non-inset rings (`ring-*`, not `ring-inset`) so rings remain visible on `Avatar` nodes with full-size `AvatarFallback` backgrounds.
-+- `js/semio/sketchpad/Design.tsx` details panel piece edits route through `updatePiece`/`updatePieces` transactions, parse legacy design variant strings, and apply fix actions via `fixPiecesInDesign`.
+ - `js/compose/sketchpad/elements.tsx` defines `TransactionProvider` and `useTransaction()`.
+ - `js/compose/sketchpad/elements.tsx` `Geometry` treats `color` as the base (non-interactive) color and uses selection/hover theme colors for the rendered material/edges when `selected`/`hovered` are true.
+ - `js/compose/sketchpad/Design.tsx` diagram piece nodes use non-inset rings (`ring-*`, not `ring-inset`) so rings remain visible on `Avatar` nodes with full-size `AvatarFallback` backgrounds.
++- `js/compose/sketchpad/Design.tsx` details panel piece edits route through `updatePiece`/`updatePieces` transactions, parse legacy design variant strings, and apply fix actions via `fixPiecesInDesign`.
  - Elements such as `Input`, `Textarea`, `Select`, `Slider`, `Stepper`, `Combobox`, and `ActionDropdown` call `useTransaction()` internally and do not accept a `transaction` prop.
  - Apps are responsible for scoping transactions by wrapping their UI subtree with `TransactionProvider` using the appropriate transaction hook (per-app or kit-level), so all descendant elements participate consistently.
 
@@ -81,10 +81,10 @@ index 3b2a37eb..cffdc466 100644
  ## 🧭 Kit Diagram Simulation Sync [↑](#-bundles-)
 
  The Kit diagram keeps D3 in charge of layout while React Flow handles rendering and interaction.
-diff --git a/js/semio/sketchpad/Design.tsx b/js/semio/sketchpad/Design.tsx
+diff --git a/js/compose/sketchpad/Design.tsx b/js/compose/sketchpad/Design.tsx
 index e36ed200..b8e9687a 100644
---- a/js/semio/sketchpad/Design.tsx
-+++ b/js/semio/sketchpad/Design.tsx
+--- a/js/compose/sketchpad/Design.tsx
++++ b/js/compose/sketchpad/Design.tsx
 @@ -101,6 +101,7 @@ import {
    findModel,
    findPieceInDesign,
@@ -401,11 +401,11 @@ index e36ed200..b8e9687a 100644
 @@ -3780,7 +4023,7 @@ const PiecesSectionForm: FC = () => {
            <TreeContent>
              <div className="flex flex-col gap-single">
-               <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.design.piece.connectedPieceInfo")}</p>
--              <Button id="semio.sketchpad.app.design.piece.fixPiece">
-+              <Button id="semio.sketchpad.app.design.piece.fixPiece" onClick={fixPieces}>
+               <p className="text-sm text-muted-foreground">{useLabel("compose.sketchpad.app.design.piece.connectedPieceInfo")}</p>
+-              <Button id="compose.sketchpad.app.design.piece.fixPiece">
++              <Button id="compose.sketchpad.app.design.piece.fixPiece" onClick={fixPieces}>
                  <DisconnectIcon className="size-tiny" />
-                 {useLabel("semio.sketchpad.app.design.piece.fixPiece")}
+                 {useLabel("compose.sketchpad.app.design.piece.fixPiece")}
                </Button>
 ```
 
@@ -420,10 +420,10 @@ Summary:
 
 Files:
 
-- `js/semio/sketchpad/Design.tsx`
-- `js/semio/sketchpad/Sketchpad.tsx`
-- `js/semio/semio.ts`
-- `js/semio/semio.test.ts`
+- `js/compose/sketchpad/Design.tsx`
+- `js/compose/sketchpad/Sketchpad.tsx`
+- `js/compose/compose.ts`
+- `js/compose/compose.test.ts`
 - `README.md`
 - `AGENTS.md`
 
@@ -434,10 +434,10 @@ Tests:
 Patch:
 
 ```diff
-diff --git a/js/semio/sketchpad/Design.tsx b/js/semio/sketchpad/Design.tsx
+diff --git a/js/compose/sketchpad/Design.tsx b/js/compose/sketchpad/Design.tsx
 index b8e9687a..5dd842b1 100644
---- a/js/semio/sketchpad/Design.tsx
-+++ b/js/semio/sketchpad/Design.tsx
+--- a/js/compose/sketchpad/Design.tsx
++++ b/js/compose/sketchpad/Design.tsx
 @@ -93,7 +93,9 @@ import {
    Connection,
    Connector,
@@ -465,12 +465,12 @@ index b8e9687a..5dd842b1 100644
 +  replaceClusterWithDesign,
    selectBestModel,
    TOLERANCE,
-   toSemioRotation,
+   toComposeRotation,
 @@ -896,6 +902,118 @@ export const commands: Record<string, (context: DesignAppCommandContext, ...args
        },
      };
    },
-+  "semio.designApp.clusterPieces": (context: DesignAppCommandContext, pieceGuids: Guid[]): DesignAppCommandResult => {
++  "compose.designApp.clusterPieces": (context: DesignAppCommandContext, pieceGuids: Guid[]): DesignAppCommandResult => {
 +    if (!pieceGuids || pieceGuids.length === 0) {
 +      return {};
 +    }
@@ -511,7 +511,7 @@ index b8e9687a..5dd842b1 100644
 +      },
 +    };
 +  },
-+  "semio.designApp.expandDesign": (context: DesignAppCommandContext, designGuid: Guid): DesignAppCommandResult => {
++  "compose.designApp.expandDesign": (context: DesignAppCommandContext, designGuid: Guid): DesignAppCommandResult => {
 +    if (!designGuid) {
 +      return {};
 +    }
@@ -592,7 +592,7 @@ index b8e9687a..5dd842b1 100644
 +  const getOrigin = useOrigin();
 +  const action = useMemo(() => {
 +    if (!store) return undefined;
-+    return (pieceGuids: Guid[]) => store.execute("semio.designApp.clusterPieces", getOrigin(), pieceGuids);
++    return (pieceGuids: Guid[]) => store.execute("compose.designApp.clusterPieces", getOrigin(), pieceGuids);
 +  }, [store, getOrigin]);
 +  return [action, !!store];
 +}
@@ -602,7 +602,7 @@ index b8e9687a..5dd842b1 100644
 +  const getOrigin = useOrigin();
 +  const action = useMemo(() => {
 +    if (!store) return undefined;
-+    return (designGuid: Guid) => store.execute("semio.designApp.expandDesign", getOrigin(), designGuid);
++    return (designGuid: Guid) => store.execute("compose.designApp.expandDesign", getOrigin(), designGuid);
 +  }, [store, getOrigin]);
 +  return [action, !!store];
 +}
@@ -622,21 +622,21 @@ index b8e9687a..5dd842b1 100644
            >
              <div className="absolute inset-0 border-2 border-dashed border-accent/50 rounded-md" style={{ pointerEvents: "none" }} />
              <div className="absolute -top-10 -right-2 pointer-events-auto">
--              <Button id="semio.sketchpad.app.design.diagram.expandMenu.expand" className="px-3 py-single text-sm" onClick={() => onExpand(designName)}>
-+              <Button id="semio.sketchpad.app.design.diagram.expandMenu.expand" className="px-3 py-single text-sm" onClick={() => designGuid && onExpand(designGuid)}>
+-              <Button id="compose.sketchpad.app.design.diagram.expandMenu.expand" className="px-3 py-single text-sm" onClick={() => onExpand(designName)}>
++              <Button id="compose.sketchpad.app.design.diagram.expandMenu.expand" className="px-3 py-single text-sm" onClick={() => designGuid && onExpand(designGuid)}>
                  Expand
                </Button>
              </div>
 @@ -5153,40 +5533,42 @@ const connectionToEdge = (
 
-   if (SemioConnection.connecting.designPiece && allConnections) {
-     const designPieceId = SemioConnection.connecting.designPiece;
+   if (ComposeConnection.connecting.designPiece && allConnections) {
+     const designPieceId = ComposeConnection.connecting.designPiece;
 +    const designPieceGuid = designPieceId.guid;
      sourcePieceId = designPieceId;
 
      const externalConnections = allConnections.filter((conn) => {
--      const connectedToDesign = conn.connected.designPiece === SemioConnection.connecting.designPiece;
--      const connectingToDesign = conn.connecting.designPiece === SemioConnection.connecting.designPiece;
+-      const connectedToDesign = conn.connected.designPiece === ComposeConnection.connecting.designPiece;
+-      const connectingToDesign = conn.connecting.designPiece === ComposeConnection.connecting.designPiece;
 +      const connectedToDesign = conn.connected.designPiece?.guid === designPieceGuid;
 +      const connectingToDesign = conn.connecting.designPiece?.guid === designPieceGuid;
        return connectedToDesign || connectingToDesign;
@@ -644,26 +644,26 @@ index b8e9687a..5dd842b1 100644
 
      const connectorIndex = externalConnections.findIndex(
        (conn) =>
--        conn.connected.piece === SemioConnection.connected.piece &&
--        conn.connecting.piece === SemioConnection.connecting.piece &&
--        conn.connected.connector === SemioConnection.connected.connector &&
--        conn.connecting.connector === SemioConnection.connecting.connector,
-+        conn.connected.piece.guid === SemioConnection.connected.piece.guid &&
-+        conn.connecting.piece.guid === SemioConnection.connecting.piece.guid &&
-+        conn.connected.connector?.guid === SemioConnection.connected.connector?.guid &&
-+        conn.connecting.connector?.guid === SemioConnection.connecting.connector?.guid,
+-        conn.connected.piece === ComposeConnection.connected.piece &&
+-        conn.connecting.piece === ComposeConnection.connecting.piece &&
+-        conn.connected.connector === ComposeConnection.connected.connector &&
+-        conn.connecting.connector === ComposeConnection.connecting.connector,
++        conn.connected.piece.guid === ComposeConnection.connected.piece.guid &&
++        conn.connecting.piece.guid === ComposeConnection.connecting.piece.guid &&
++        conn.connected.connector?.guid === ComposeConnection.connected.connector?.guid &&
++        conn.connecting.connector?.guid === ComposeConnection.connecting.connector?.guid,
      );
      sourcePortId = connectorIndex >= 0 ? { guid: `connector-${connectorIndex}` } : { guid: "connector-0" };
    }
 
-   if (SemioConnection.connected.designPiece && allConnections) {
-     const designPieceId = SemioConnection.connected.designPiece;
+   if (ComposeConnection.connected.designPiece && allConnections) {
+     const designPieceId = ComposeConnection.connected.designPiece;
 +    const designPieceGuid = designPieceId.guid;
      targetPieceId = designPieceId;
 
      const externalConnections = allConnections.filter((conn) => {
--      const connectedToDesign = conn.connected.designPiece === SemioConnection.connected.designPiece;
--      const connectingToDesign = conn.connecting.designPiece === SemioConnection.connected.designPiece;
+-      const connectedToDesign = conn.connected.designPiece === ComposeConnection.connected.designPiece;
+-      const connectingToDesign = conn.connecting.designPiece === ComposeConnection.connected.designPiece;
 +      const connectedToDesign = conn.connected.designPiece?.guid === designPieceGuid;
 +      const connectingToDesign = conn.connecting.designPiece?.guid === designPieceGuid;
        return connectedToDesign || connectingToDesign;
@@ -671,14 +671,14 @@ index b8e9687a..5dd842b1 100644
 
      const connectorIndex = externalConnections.findIndex(
        (conn) =>
--        conn.connected.piece === SemioConnection.connected.piece &&
--        conn.connecting.piece === SemioConnection.connecting.piece &&
--        conn.connected.connector === SemioConnection.connected.connector &&
--        conn.connecting.connector === SemioConnection.connecting.connector,
-+        conn.connected.piece.guid === SemioConnection.connected.piece.guid &&
-+        conn.connecting.piece.guid === SemioConnection.connecting.piece.guid &&
-+        conn.connected.connector?.guid === SemioConnection.connected.connector?.guid &&
-+        conn.connecting.connector?.guid === SemioConnection.connecting.connector?.guid,
+-        conn.connected.piece === ComposeConnection.connected.piece &&
+-        conn.connecting.piece === ComposeConnection.connecting.piece &&
+-        conn.connected.connector === ComposeConnection.connected.connector &&
+-        conn.connecting.connector === ComposeConnection.connecting.connector,
++        conn.connected.piece.guid === ComposeConnection.connected.piece.guid &&
++        conn.connecting.piece.guid === ComposeConnection.connecting.piece.guid &&
++        conn.connected.connector?.guid === ComposeConnection.connected.connector?.guid &&
++        conn.connecting.connector?.guid === ComposeConnection.connecting.connector?.guid,
      );
      targetConnectorId = connectorIndex >= 0 ? { guid: `connector-${connectorIndex}` } : { guid: "connector-0" };
    }
@@ -719,10 +719,10 @@ index b8e9687a..5dd842b1 100644
 +    [expandDesign, transaction],
 +  );
 
-diff --git a/js/semio/sketchpad/Sketchpad.tsx b/js/semio/sketchpad/Sketchpad.tsx
+diff --git a/js/compose/sketchpad/Sketchpad.tsx b/js/compose/sketchpad/Sketchpad.tsx
 index a310f2fe..30ce66d3 100644
---- a/js/semio/sketchpad/Sketchpad.tsx
-+++ b/js/semio/sketchpad/Sketchpad.tsx
+--- a/js/compose/sketchpad/Sketchpad.tsx
++++ b/js/compose/sketchpad/Sketchpad.tsx
 @@ -5511,11 +5511,11 @@ export function useExplodeableDesignNodes(nodes: any[], selection: any) {
    return useMemo(() => {
      return nodes.filter((node) => {
@@ -739,10 +739,10 @@ index a310f2fe..30ce66d3 100644
        return true;
      });
    }, [nodes, selection.pieces, kitDesigns]);
-diff --git a/js/semio/semio.ts b/js/semio/semio.ts
+diff --git a/js/compose/compose.ts b/js/compose/compose.ts
 index 02fb4926..1641f505 100644
---- a/js/semio/semio.ts
-+++ b/js/semio/semio.ts
+--- a/js/compose/compose.ts
++++ b/js/compose/compose.ts
 @@ -3692,7 +3692,7 @@ export const replaceClusterWithDesign = (originalDesign: Design, clusterPieceIds
          ...connection,
          connected: {
@@ -780,10 +780,10 @@ index 02fb4926..1641f505 100644
        designGuid: designIdString,
        type: "connected",
        externalConnections,
-diff --git a/js/semio/semio.test.ts b/js/semio/semio.test.ts
+diff --git a/js/compose/compose.test.ts b/js/compose/compose.test.ts
 index 7ab6d3cd..914c955d 100644
---- a/js/semio/semio.test.ts
-+++ b/js/semio/semio.test.ts
+--- a/js/compose/compose.test.ts
++++ b/js/compose/compose.test.ts
 @@ -27,15 +27,18 @@ import {
    areKitDiffsEqual,
    areKitsEqual,
@@ -882,18 +882,18 @@ index 68b4ee97..de57011d 100644
  - Compatibility-family grouping merges explicitly compatible ports; ports without compatibility edges keep their own deterministic identity color.
 +- `Design.tsx` routes cluster/expand actions through design app commands and maps clustered-design edges using `designPiece` GUIDs with deterministic connector indices.
 
- ## js/semio/sketchpad/portColor.ts
+ ## js/compose/sketchpad/portColor.ts
 @@
  - Exports deterministic port tone resolution keyed by compatibility-family grouping, connector-port guid extraction helpers, and compatibility-state classification for selected-versus-target port interactions.
 +
-+## js/semio/semio.ts
++## js/compose/compose.ts
 +
 +- Cluster helpers create nested designs, rewrite external connections with `designPiece` GUID markers, and expose included-design metadata keyed by design GUIDs.
 ```
 
 ## Log
 
-- Implemented Details panel handlers and fix action wiring in `js/semio/sketchpad/Design.tsx` with transaction-backed updates, design-piece parsing, and fixPieces flow.
+- Implemented Details panel handlers and fix action wiring in `js/compose/sketchpad/Design.tsx` with transaction-backed updates, design-piece parsing, and fixPieces flow.
 - Updated docs for Design Details Editing in `README.md` and `AGENTS.md`.
 - Implemented cluster/expand commands, design-piece edge mapping parity, and designPiece GUID alignment; added tests and documentation for clustering behavior.
 

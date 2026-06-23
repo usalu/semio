@@ -1,21 +1,21 @@
 ---
 name: graphql kit control
-overview: Migrate the kit store control plane in `semio/rs` and `semio/js` so GraphQL is the only runtime boundary for reads, mutations, and event streams, replacing enum-command dispatch and direct WASM mutation helpers instead of layering on top of them.
+overview: Migrate the kit store control plane in `compose/rs` and `compose/js` so GraphQL is the only runtime boundary for reads, mutations, and event streams, replacing enum-command dispatch and direct WASM mutation helpers instead of layering on top of them.
 todos:
  - id: map-coverage
    content: Map every existing `KitStoreCommand`, direct WASM helper, and JS client method to its replacement GraphQL query, mutation, or subscription field.
    status: completed
  - id: rust-schema
-   content: Refactor `semio/rs/lib.rs` so existing stores expose GraphQL objects directly and mutations no longer dispatch through `KitStoreCommand`.
+   content: Refactor `compose/rs/lib.rs` so existing stores expose GraphQL objects directly and mutations no longer dispatch through `KitStoreCommand`.
    status: in_progress
  - id: actor-bus
    content: Implement the inbound mutation queue and outbound subscription stream as separate async channels with boot/handle lifecycle wiring.
    status: in_progress
  - id: js-client
-   content: Rewrite `semio/js/index.ts` client and worker paths so GraphQL `execute` is the only kit-store boundary.
+   content: Rewrite `compose/js/index.ts` client and worker paths so GraphQL `execute` is the only kit-store boundary.
    status: in_progress
  - id: schema-align
-   content: Update `semio/graphql/schema.graphql` to match the new runtime schema and remove selector/id command-plane fields.
+   content: Update `compose/graphql/schema.graphql` to match the new runtime schema and remove selector/id command-plane fields.
    status: pending
  - id: tests
    content: Extend existing Rust and JS test blocks, then run the relevant Rust, WASM, JS, and type-check commands.
@@ -33,8 +33,8 @@ isProject: false
 | **JS reads**         | In progress (major slice) | `KitStoreClient.executeRead`, worker `executeRead`, catalog getters use typed read batches via GraphQL `execute` — not ad-hoc `kitGraphqlKit*Shallow` on that path.                 |
 | **JS writes / VCS**  | Not done                  | `executeChangeKitCommands`, field patches, `kitGraphqlExecuteStoreCommand` tagged JSON, and direct WASM helpers remain the active write path.                                       |
 | **Rust GraphQL**     | Not done                  | `GraphWork::KitStoreCommand` / `run_kit_store` still in use; `KitStoreNode` and id-based resolvers not removed.                                                                     |
-| **Schema artifacts** | Not done                  | `semio/graphql/schema.graphql` (control-plane style with `kitStore(input: …)`) still diverges from the WASM-embedded `query { kitStore { … } }` surface.                            |
-| **Tests**            | In progress               | Embedded Vitest; `npx tsc --noEmit` in `semio/js` passes. Some Vitest cases still fail for unrelated issues (Nakagin, python/sqlmodel, etc.).                                       |
+| **Schema artifacts** | Not done                  | `compose/graphql/schema.graphql` (control-plane style with `kitStore(input: …)`) still diverges from the WASM-embedded `query { kitStore { … } }` surface.                            |
+| **Tests**            | In progress               | Embedded Vitest; `npx tsc --noEmit` in `compose/js` passes. Some Vitest cases still fail for unrelated issues (Nakagin, python/sqlmodel, etc.).                                       |
 
 **What “finished plan” means here:** the migration is a multi-sprint program; this document is the single source of truth for target shape, sequencing, and honest progress. The checklist below is the definition of done for the _whole_ program (not all completed yet).
 
@@ -46,10 +46,10 @@ isProject: false
 
 The current split is not aligned with the requested architecture:
 
-- Rust WASM GraphQL lives in [`semio/rs/lib.rs`](semio/rs/lib.rs) under `kit_graphql`, but mutations still enqueue `GraphWork::KitStoreCommand` and execute the old `KitStoreCommand` enum.
-- Native Rust `kit_store::KitStore` in [`semio/rs/lib.rs`](semio/rs/lib.rs) is still the backbone/coordinator control plane and exposes `execute(KitStoreCommand)`.
-- JS `KitStoreClient` in [`semio/js/index.ts`](semio/js/index.ts) already has a streaming `kitGraphql().execute(...)`, but writes still call direct WASM helpers like `executeChangeKitCommands`, and VCS/backbone calls still use tagged command JSON via `kitGraphqlExecuteStoreCommand`.
-- The checked-in schema [`semio/graphql/schema.graphql`](semio/graphql/schema.graphql) still exposes selector/id shapes that do not match the “pointers only, resolve in memory” directive.
+- Rust WASM GraphQL lives in [`compose/rs/lib.rs`](compose/rs/lib.rs) under `kit_graphql`, but mutations still enqueue `GraphWork::KitStoreCommand` and execute the old `KitStoreCommand` enum.
+- Native Rust `kit_store::KitStore` in [`compose/rs/lib.rs`](compose/rs/lib.rs) is still the backbone/coordinator control plane and exposes `execute(KitStoreCommand)`.
+- JS `KitStoreClient` in [`compose/js/index.ts`](compose/js/index.ts) already has a streaming `kitGraphql().execute(...)`, but writes still call direct WASM helpers like `executeChangeKitCommands`, and VCS/backbone calls still use tagged command JSON via `kitGraphqlExecuteStoreCommand`.
+- The checked-in schema [`compose/graphql/schema.graphql`](compose/graphql/schema.graphql) still exposes selector/id shapes that do not match the “pointers only, resolve in memory” directive.
 
 The implementation should make GraphQL the control plane, not a transport for the old enum API.
 
@@ -57,7 +57,7 @@ The implementation should make GraphQL the control plane, not a transport for th
 
 1. Convert the Rust schema from WASM-only to the canonical kit-store schema used by both WASM and native paths.
    - Keep the single `execute(request_json, on_message)` WASM boundary on `KitStoreHandle`.
-   - Move the schema builder and root `Query` / `Mutation` / `Subscription` out from `#[cfg(target_arch = "wasm32")]` where needed so native `kit_store::KitStore` can also execute GraphQL internally or expose it to semio-store.
+   - Move the schema builder and root `Query` / `Mutation` / `Subscription` out from `#[cfg(target_arch = "wasm32")]` where needed so native `kit_store::KitStore` can also execute GraphQL internally or expose it to compose-store.
 
 2. Replace enum-command mutation dispatch with typed GraphQL mutation resolvers.
    - Remove `GraphWork::KitStoreCommand` and `run_kit_store(...)` from the active GraphQL path.
@@ -105,14 +105,14 @@ The implementation should make GraphQL the control plane, not a transport for th
    - Start the subscription once after `boot()` and route outbound store events through the existing listener map.
 
 5. Align schema artifacts.
-   - Update [`semio/graphql/schema.graphql`](semio/graphql/schema.graphql) to the actual runtime schema: `Query` for live reads, `Mutation` for queued updates, `Subscription` for outbound events.
+   - Update [`compose/graphql/schema.graphql`](compose/graphql/schema.graphql) to the actual runtime schema: `Query` for live reads, `Mutation` for queued updates, `Subscription` for outbound events.
    - Remove old selector/id inputs and enum-command-oriented fields.
    - Keep any persisted DTO id fields only where the GraphQL object is exposing serialized data, not as lookup arguments.
 
 ## Validation Plan
 
-- Extend existing Rust tests in [`semio/rs/lib.rs`](semio/rs/lib.rs); do not add new test files.
-- Extend embedded JS/Vitest tests in [`semio/js/index.ts`](semio/js/index.ts); do not add new test files.
+- Extend existing Rust tests in [`compose/rs/lib.rs`](compose/rs/lib.rs); do not add new test files.
+- Extend embedded JS/Vitest tests in [`compose/js/index.ts`](compose/js/index.ts); do not add new test files.
 - Cover at least:
   - GraphQL query reads live in-memory stores without command enums.
   - GraphQL mutations enqueue work and emit outbound subscription events.

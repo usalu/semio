@@ -3,7 +3,7 @@
   "emoji": "🗄️",
   "status": "closed",
   "description": "Make Neo4j run zero-touch in the devcontainer and expose Bolt/HTTP so native Neo4j Desktop can connect remotely to the devcontainer.",
-  "summary": "Implemented a single-container Neo4j devcontainer setup. Neo4j 5 Community, APOC Core, and APOC Extended are installed into the semio image, started by post-start.sh inside the semio container, persisted as APOC replayable Cypher under .repo/🛂/*.cypher, and published from semio on localhost Bolt/HTTP ports. Updated env defaults, MCP wrapper, docs, and removed sidecar/forwarder/raw-store assumptions. Normalized Docker names so the active container and image are both semio, removed obsolete devcontainer/neo4j/postgres artifacts and Neo4j volumes, and validated Compose has only semio, Neo4j starts inside semio, host Bolt/HTTP reachability, cypher-shell query execution, APOC runFile/query export availability, and mcp-neo4j-cypher startup.",
+  "summary": "Implemented a single-container Neo4j devcontainer setup. Neo4j 5 Community, APOC Core, and APOC Extended are installed into the compose image, started by post-start.sh inside the compose container, persisted as APOC replayable Cypher under .repo/🛂/*.cypher, and published from compose on localhost Bolt/HTTP ports. Updated env defaults, MCP wrapper, docs, and removed sidecar/forwarder/raw-store assumptions. Normalized Docker names so the active container and image are both compose, removed obsolete devcontainer/neo4j/postgres artifacts and Neo4j volumes, and validated Compose has only compose, Neo4j starts inside compose, host Bolt/HTTP reachability, cypher-shell query execution, APOC runFile/query export availability, and mcp-neo4j-cypher startup.",
   "files": [
     ".mcp.json",
     ".devcontainer/README.md",
@@ -14,7 +14,7 @@
     ".devcontainer/post-attach.sh",
     ".devcontainer/post-create.sh",
     ".devcontainer/post-start.sh",
-    ".devcontainer/semio-entrypoint.sh",
+    ".devcontainer/compose-entrypoint.sh",
     ".mcp.json",
     ".vscode/mcp.json",
     ".cursor/mcp.json",
@@ -32,7 +32,7 @@
     ".repo/🛂/coda.cypher",
     ".repo/🛂/elements.cypher",
     ".repo/🛂/reuse.cypher",
-    ".repo/🛂/semio.cypher",
+    ".repo/🛂/compose.cypher",
     ".repo/🎫/26/05/14/NEO4J-DEVCONTAINER-SETUP/README.md",
     ".repo/🎫/26/05/14/NEO4J-DEVCONTAINER-SETUP/ticket.json"
   ],

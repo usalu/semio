@@ -51,7 +51,7 @@ Add a valid command to the task. Since the task has a TODO comment indicating th
 ### Follow-up: Remove Windows legacy configs
 
 - User requested removal of all Windows-specific legacy configurations (exe, powershell, etc.)
-- Only Windows dev environment is Semio.Grasshopper
+- Only Windows dev environment is Compose.Grasshopper
 - Removing the entire "kill dev" task as it was a Windows-only placeholder
 - The task was never properly implemented and is not needed for the current dev environment
 
@@ -69,10 +69,10 @@ Found Windows legacy configs:
 4. `assets/logo/package.json` - PowerShell build script
 5. `assets/icons/package.json` - PowerShell build script
 
-**Legitimate Windows-only (Semio.Grasshopper - keep):**
+**Legitimate Windows-only (Compose.Grasshopper - keep):**
 
-- `net/Semio.Grasshopper/` - All .exe references for Rhino/Grasshopper
-- `net/Semio/build.ts` - MSBuild.exe for .NET builds
+- `net/Compose.Grasshopper/` - All .exe references for Rhino/Grasshopper
+- `net/Compose/build.ts` - MSBuild.exe for .NET builds
 - `yak/` folder - Yak.exe for Rhino package management
 - `py/engine/post-build.ts` - .exe references for cross-platform distribution
 
@@ -106,7 +106,7 @@ Found Windows legacy configs:
 
 ## Solution
 
-Removed all Windows legacy configurations since the only Windows dev environment is Semio.Grasshopper.
+Removed all Windows legacy configurations since the only Windows dev environment is Compose.Grasshopper.
 
 ## Files Modified
 
@@ -123,8 +123,8 @@ Removed all Windows legacy configurations since the only Windows dev environment
 - `prompts/ueli.md` - Updated Windows paths to Linux paths
 - `js/vscode/extension.test.ts` - Made repo binary path detection cross-platform
 
-## Not Modified (Legitimate Windows-only for Semio.Grasshopper)
+## Not Modified (Legitimate Windows-only for Compose.Grasshopper)
 
-- `net/Semio.Grasshopper/` - Rhino/Grasshopper paths
-- `net/Semio/build.ts` - MSBuild.exe for .NET builds
+- `net/Compose.Grasshopper/` - Rhino/Grasshopper paths
+- `net/Compose/build.ts` - MSBuild.exe for .NET builds
 - `yak/` folder - Yak.exe for Rhino package management

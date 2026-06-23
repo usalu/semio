@@ -2,7 +2,7 @@
 import { readFileSync, writeFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 
-const root = "c:/git/semio/spatial/js";
+const root = "c:/git/compose/spatial/js";
 
 function walk(dir: string, out: string[] = []): string[] {
 	for (const name of readdirSync(dir)) {

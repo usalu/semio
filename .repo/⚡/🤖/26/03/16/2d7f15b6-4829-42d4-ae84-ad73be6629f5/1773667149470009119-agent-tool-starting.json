@@ -18,7 +18,7 @@
       "tool_input": {
         "agentName": "Explore",
         "description": "Find importKit element in Home",
-        "prompt": "Search the semio/sketchpad directory for the string \"importKit\" or \"import\" related to file input on the Home page. I need to find:\n\n1. In the Home.tsx component (under semio/sketchpad/sketchpad/), search for elements with IDs containing \"import\" or \"importKit\" or \"home.import\"\n2. Any file input elements on the Home page\n3. The current mechanism for importing kits on the Home page\n\nLook in:\n- semio/sketchpad/sketchpad/Home.tsx\n- semio/sketchpad/sketchpad/Sketchpad.tsx\n\nReturn exact file paths, line numbers, and the relevant JSX/element IDs for the import functionality."
+        "prompt": "Search the compose/sketchpad directory for the string \"importKit\" or \"import\" related to file input on the Home page. I need to find:\n\n1. In the Home.tsx component (under compose/sketchpad/sketchpad/), search for elements with IDs containing \"import\" or \"importKit\" or \"home.import\"\n2. Any file input elements on the Home page\n3. The current mechanism for importing kits on the Home page\n\nLook in:\n- compose/sketchpad/sketchpad/Home.tsx\n- compose/sketchpad/sketchpad/Sketchpad.tsx\n\nReturn exact file paths, line numbers, and the relevant JSX/element IDs for the import functionality."
       },
       "tool_use_id": "toolu_bdrk_01XBtj39sAXJeyhJxUyjV4ua__vscode-1773658270516",
       "cwd": "/workspaces/semio"

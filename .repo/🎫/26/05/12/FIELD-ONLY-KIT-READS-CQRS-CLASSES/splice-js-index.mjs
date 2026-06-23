@@ -1,6 +1,6 @@
 import fs from "node:fs";
 
-const idx = fs.readFileSync("semio/js/index.ts", "utf8");
+const idx = fs.readFileSync("compose/js/index.ts", "utf8");
 const chunk = fs.readFileSync(
   ".repo/🎫/26/05/12/FIELD-ONLY-KIT-READS-CQRS-CLASSES/merged-wasm-chunk.txt",
   "utf8",
@@ -14,5 +14,5 @@ const i1e = i1 + endMark.length;
 const head = idx.slice(0, i0).trimEnd();
 const tail = idx.slice(i1e);
 const out = `${head}\n\n${chunk}\n${tail}`;
-fs.writeFileSync("semio/js/index.ts", out, "utf8");
-console.log("written semio/js/index.ts bytes", out.length);
+fs.writeFileSync("compose/js/index.ts", out, "utf8");
+console.log("written compose/js/index.ts bytes", out.length);

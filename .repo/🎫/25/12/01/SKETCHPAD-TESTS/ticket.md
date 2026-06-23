@@ -40,7 +40,7 @@ Sketchpad tests had 10 failing tests out of 16:
 ## ToolGroup (Sketchpad.tsx)
 
 - Removed `id` from dropdown items array so Toggle uses the tool-level ID
-- Toggle button now has `semio.sketchpad.tool.selection` instead of `semio.sketchpad.tool.selection-normal`
+- Toggle button now has `compose.sketchpad.tool.selection` instead of `compose.sketchpad.tool.selection-normal`
 
 ## Final Test Status (8 passed, 8 failed out of 16) - Session 2
 

@@ -8,10 +8,10 @@ const DOOR_CAPSULE_WEST = "019ab243-21f4-73df-8cb4-4f2766b68b25";
 const DOOR_TAMBOUR_EAST = "019ab243-21f4-73df-8cb4-50266f6860b8";
 const DOOR_TAMBOUR_WEST = "019ab243-21f4-73df-8cb4-57263e420e70";
 
-const HANDLE_CAPSULE_EAST = `semio.metabolism.light.handle.${DOOR_CAPSULE_EAST}`;
-const HANDLE_CAPSULE_WEST = `semio.metabolism.light.handle.${DOOR_CAPSULE_WEST}`;
-const HANDLE_TAMBOUR_EAST = `semio.metabolism.light.handle.${DOOR_TAMBOUR_EAST}`;
-const HANDLE_TAMBOUR_WEST = `semio.metabolism.light.handle.${DOOR_TAMBOUR_WEST}`;
+const HANDLE_CAPSULE_EAST = `compose.metabolism.light.handle.${DOOR_CAPSULE_EAST}`;
+const HANDLE_CAPSULE_WEST = `compose.metabolism.light.handle.${DOOR_CAPSULE_WEST}`;
+const HANDLE_TAMBOUR_EAST = `compose.metabolism.light.handle.${DOOR_TAMBOUR_EAST}`;
+const HANDLE_TAMBOUR_WEST = `compose.metabolism.light.handle.${DOOR_TAMBOUR_WEST}`;
 
 function itemsOf(block: unknown): { id?: string }[] {
   if (Array.isArray(block)) return block as { id?: string }[];
@@ -110,13 +110,13 @@ function walkJsonFiles(dir: string, out: string[] = []): string[] {
   for (const ent of readdirSync(dir, { withFileTypes: true })) {
     const p = join(dir, ent.name);
     if (ent.isDirectory()) walkJsonFiles(p, out);
-    else if (ent.name.endsWith(".json") || ent.name.endsWith(".semio.json")) out.push(p);
+    else if (ent.name.endsWith(".json") || ent.name.endsWith(".compose.json")) out.push(p);
   }
   return out;
 }
 
 const roots = [
-  join(import.meta.dir, "../../../../../../semio/fixtures"),
+  join(import.meta.dir, "../../../../../../compose/fixtures"),
   join(import.meta.dir, "../../../../../../puzzle/3d/fixture"),
   join(import.meta.dir, "../../../../../../puzzle/2d/fixture"),
   join(import.meta.dir, "../../../../../../.storybook/fixtures"),

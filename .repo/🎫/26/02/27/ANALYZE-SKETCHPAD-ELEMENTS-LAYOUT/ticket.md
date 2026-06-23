@@ -39,7 +39,7 @@ Completed detailed layout analysis of 10 components in elements.tsx: Label, Tree
 
 # DETAILED COMPONENT LAYOUT REPORT
 
-Source: `semio/js/sketchpad/elements.tsx` (6992 lines)
+Source: `compose/js/sketchpad/elements.tsx` (6992 lines)
 
 ---
 

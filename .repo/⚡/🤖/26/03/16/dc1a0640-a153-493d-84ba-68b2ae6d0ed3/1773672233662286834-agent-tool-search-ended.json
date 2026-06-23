@@ -17,7 +17,7 @@
       "tool_name": "grep_search",
       "tool_input": {
         "maxResults": 20,
-        "includePattern": "**/semio/sketchpad/sketchpad.test.ts",
+        "includePattern": "**/compose/sketchpad/sketchpad.test.ts",
         "isRegexp": true,
         "query": "UI Multi Piece Selection|ensureSelectedPiecesAfterUiAttempt"
       },

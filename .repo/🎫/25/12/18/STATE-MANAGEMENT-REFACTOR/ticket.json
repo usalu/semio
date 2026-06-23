@@ -1,7 +1,7 @@
 {
-  "title": "Refactor js/semio state management to triadic hooks pattern",
+  "title": "Refactor js/compose state management to triadic hooks pattern",
   "emoji": "♻️",
   "status": "closed",
-  "description": "Analyze js/semio codebase for state management inconsistencies and refactor to triadic hooks pattern",
+  "description": "Analyze js/compose codebase for state management inconsistencies and refactor to triadic hooks pattern",
   "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps"
 }

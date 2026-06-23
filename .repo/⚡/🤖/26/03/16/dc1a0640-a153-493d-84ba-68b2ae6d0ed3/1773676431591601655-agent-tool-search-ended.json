@@ -17,7 +17,7 @@
       "tool_name": "grep_search",
       "tool_input": {
         "maxResults": 20,
-        "includePattern": "**/semio/sketchpad/sketchpad/Sketchpad.tsx",
+        "includePattern": "**/compose/sketchpad/sketchpad/Sketchpad.tsx",
         "isRegexp": true,
         "query": "designStores|appStores|_apps|_designStore"
       },

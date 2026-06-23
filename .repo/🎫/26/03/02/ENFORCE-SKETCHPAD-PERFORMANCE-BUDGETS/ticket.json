@@ -24,7 +24,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "semio/semio/semio/js",
+              "path": "compose/compose/compose/js",
               "lines": {
                 "added": 597,
                 "removed": 0
@@ -44,7 +44,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "🧪semio/js/sketchpad.test.ts",
+              "path": "🧪compose/js/sketchpad.test.ts",
               "lines": {
                 "added": 625,
                 "removed": 28
@@ -58,70 +58,70 @@
           "renamed": [],
           "modified": [
             {
-              "path": "🧪semio/js/sketchpad.test.ts#Design Selection State#UI Multi Piece Selection",
+              "path": "🧪compose/js/sketchpad.test.ts#Design Selection State#UI Multi Piece Selection",
               "lines": {
                 "added": 109,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/sketchpad.test.ts#Home Panel Combinations",
+              "path": "🧪compose/js/sketchpad.test.ts#Home Panel Combinations",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/sketchpad.test.ts#Kit Panel Combinations",
+              "path": "🧪compose/js/sketchpad.test.ts#Kit Panel Combinations",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/sketchpad.test.ts#Design Panel Combinations",
+              "path": "🧪compose/js/sketchpad.test.ts#Design Panel Combinations",
               "lines": {
                 "added": 7,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/sketchpad.test.ts#Multiple Connections Detail Panel",
+              "path": "🧪compose/js/sketchpad.test.ts#Multiple Connections Detail Panel",
               "lines": {
                 "added": 21,
                 "removed": 22
               }
             },
             {
-              "path": "🧪semio/js/sketchpad.test.ts#Type Panel Combinations",
+              "path": "🧪compose/js/sketchpad.test.ts#Type Panel Combinations",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/sketchpad.test.ts#Design Drag Performance",
+              "path": "🧪compose/js/sketchpad.test.ts#Design Drag Performance",
               "lines": {
                 "added": 60,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/sketchpad.test.ts#Kit Zip Entry Filtering",
+              "path": "🧪compose/js/sketchpad.test.ts#Kit Zip Entry Filtering",
               "lines": {
                 "added": 38,
                 "removed": 6
               }
             },
             {
-              "path": "🧪semio/js/sketchpad.test.ts#Connection Delete",
+              "path": "🧪compose/js/sketchpad.test.ts#Connection Delete",
               "lines": {
                 "added": 219,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/sketchpad.test.ts#Design Selection State",
+              "path": "🧪compose/js/sketchpad.test.ts#Design Selection State",
               "lines": {
                 "added": 1,
                 "removed": 0
@@ -130,21 +130,21 @@
           ],
           "added": [
             {
-              "path": "semio/js/sketchpad.test.ts#Design Drag Performance",
+              "path": "compose/js/sketchpad.test.ts#Design Drag Performance",
               "lines": {
                 "added": 60,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad.test.ts#Design Selection State#UI Multi Piece Selection",
+              "path": "compose/js/sketchpad.test.ts#Design Selection State#UI Multi Piece Selection",
               "lines": {
                 "added": 109,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad.test.ts#Connection Delete",
+              "path": "compose/js/sketchpad.test.ts#Connection Delete",
               "lines": {
                 "added": 219,
                 "removed": 0

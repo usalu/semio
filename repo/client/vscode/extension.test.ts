@@ -11,7 +11,7 @@ import * as assert from "assert";
 import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
-import { getSketchpadDistCandidatePaths, isLikelyKitJsonFilePath, resolveSketchpadDistPath } from "../../semio/vscode/extension";
+import { getSketchpadDistCandidatePaths, isLikelyKitJsonFilePath, resolveSketchpadDistPath } from "../../compose/vscode/extension";
 import {
   buildCliTreeArgs,
   buildEntityEmojiPattern,
@@ -42,53 +42,53 @@ import {
 
 // 🔒#region 🎞️Constants
 const EXPECTED_COMMANDS = [
-  "semio.analyze",
-  "semio.analyzeFile",
-  "semio.autofix",
-  "semio.autofixFile",
-  "semio.policyList",
-  "semio.ticketOpen",
-  "semio.ticketList",
-  "semio.ticketClose",
-  "semio.ticketRead",
-  "semio.ticketOpen",
-  "semio.technologyList",
-  "semio.contributorAdd",
-  "semio.contributorList",
-  "semio.contributorRemove",
-  "semio.sectionTree",
-  "semio.definitionList",
-  "semio.folderTree",
-  "semio.folderCreate",
-  "semio.folderMove",
-  "semio.folderDelete",
-  "semio.folderList",
-  "semio.fileCreate",
-  "semio.fileMove",
-  "semio.fileDelete",
-  "semio.fileList",
-  "semio.fileTree",
-  "semio.sectionCreate",
-  "semio.sectionMove",
-  "semio.sectionDelete",
-  "semio.sectionIntegrate",
-  "semio.sectionList",
-  "semio.definitionTree",
-  "semio.technologyTree",
-  "semio.policyCheck",
-  "semio.refreshDiagnostics",
-  "semio.autofixBreach",
-  "semio.copyId",
-  "semio.mailto",
-  "semio.openLink",
-  "semio.refreshMonorepo",
-  "semio.refreshCodebase",
-  "semio.copyCheckpointSha",
-  "semio.openCheckpointInGitHub",
-  "semio.ticketReopen",
-  "semio.refreshItem",
-  "semio.navigate",
-  "semio.navigateTo",
+  "compose.analyze",
+  "compose.analyzeFile",
+  "compose.autofix",
+  "compose.autofixFile",
+  "compose.policyList",
+  "compose.ticketOpen",
+  "compose.ticketList",
+  "compose.ticketClose",
+  "compose.ticketRead",
+  "compose.ticketOpen",
+  "compose.technologyList",
+  "compose.contributorAdd",
+  "compose.contributorList",
+  "compose.contributorRemove",
+  "compose.sectionTree",
+  "compose.definitionList",
+  "compose.folderTree",
+  "compose.folderCreate",
+  "compose.folderMove",
+  "compose.folderDelete",
+  "compose.folderList",
+  "compose.fileCreate",
+  "compose.fileMove",
+  "compose.fileDelete",
+  "compose.fileList",
+  "compose.fileTree",
+  "compose.sectionCreate",
+  "compose.sectionMove",
+  "compose.sectionDelete",
+  "compose.sectionIntegrate",
+  "compose.sectionList",
+  "compose.definitionTree",
+  "compose.technologyTree",
+  "compose.policyCheck",
+  "compose.refreshDiagnostics",
+  "compose.autofixBreach",
+  "compose.copyId",
+  "compose.mailto",
+  "compose.openLink",
+  "compose.refreshMonorepo",
+  "compose.refreshCodebase",
+  "compose.copyCheckpointSha",
+  "compose.openCheckpointInGitHub",
+  "compose.ticketReopen",
+  "compose.refreshItem",
+  "compose.navigate",
+  "compose.navigateTo",
 ];
 const EXPECTED_CONSTRAINTS = [
   "guid-unique",
@@ -103,7 +103,7 @@ const EXPECTED_CONSTRAINTS = [
   "model-name-unique",
   "layer-path-unique",
 ];
-const EXPECTED_VIEWS = ["semio.monorepo", "semio.filter"];
+const EXPECTED_VIEWS = ["compose.monorepo", "compose.filter"];
 
 // #endregion 🎞️Constants
 
@@ -113,7 +113,7 @@ function getWorkspaceRoot(): string {
 }
 
 function getFixturePath(relativePath: string): string {
-  return path.join(getWorkspaceRoot(), "semio", "assets", relativePath);
+  return path.join(getWorkspaceRoot(), "compose", "assets", relativePath);
 }
 
 async function openWorkspaceDocument(...relativePaths: string[]): Promise<vscode.TextDocument> {
@@ -144,7 +144,7 @@ async function openFixture(relativePath: string): Promise<vscode.TextDocument> {
 
 async function waitForDiagnostics(uri: vscode.Uri, timeout = 5000): Promise<vscode.Diagnostic[]> {
   await new Promise((resolve) => setTimeout(resolve, timeout));
-  return vscode.languages.getDiagnostics(uri).filter((d) => d.source === "semio");
+  return vscode.languages.getDiagnostics(uri).filter((d) => d.source === "compose");
 }
 
 function isDefinitionEntityId(id: string): boolean {
@@ -274,7 +274,7 @@ async function collectNativeDefinitionScopes(document: vscode.TextDocument): Pro
 async function getAnalyzeLensIds(document: vscode.TextDocument): Promise<string[]> {
   const lenses = await getCodeLenses(document);
   const ids = lenses
-    .filter((lens) => lens.command?.command === "semio.analyze")
+    .filter((lens) => lens.command?.command === "compose.analyze")
     .map((lens) => String(lens.command?.arguments?.[0] ?? ""))
     .filter((id) => id.length > 0);
 
@@ -292,7 +292,7 @@ async function getCodeLenses(document: vscode.TextDocument): Promise<vscode.Code
 // #region 🖇️Extension Activation
 suiteSetup(async function () {
   this.timeout(30000);
-  await openFixture("semio/metabolism/wip/initialKit/kit.semio.json");
+  await openFixture("compose/metabolism/wip/initialKit/kit.compose.json");
   await new Promise((resolve) => setTimeout(resolve, 2000));
 });
 
@@ -389,13 +389,13 @@ suite("Kit Validation Test Suite", function () {
   this.timeout(15000);
 
   test("Valid kit file produces no diagnostics", async function () {
-    const document = await openFixture("semio/metabolism/wip/initialKit/kit.semio.json");
+    const document = await openFixture("compose/metabolism/wip/initialKit/kit.compose.json");
     const diagnostics = await waitForDiagnostics(document.uri);
     assert.strictEqual(diagnostics.length, 0, "Valid kit should have no validation errors");
   });
 
   test("Invalid kit file triggers all expected constraint breachs", async function () {
-    const document = await openFixture("semio/invalid.kit.semio.json");
+    const document = await openFixture("compose/invalid.kit.compose.json");
     const diagnostics = await waitForDiagnostics(document.uri);
     if (diagnostics.length === 0) {
       console.log("Skipping: validation may be disabled due to bundling issues");
@@ -414,21 +414,21 @@ suite("Kit Validation Test Suite", function () {
   });
 
   test("Diagnostics have correct source and severity", async function () {
-    const document = await openFixture("semio/invalid.kit.semio.json");
+    const document = await openFixture("compose/invalid.kit.compose.json");
     const diagnostics = await waitForDiagnostics(document.uri);
     if (diagnostics.length === 0) {
       console.log("Skipping: validation may be disabled due to bundling issues");
       return;
     }
     diagnostics.forEach((diag) => {
-      assert.strictEqual(diag.source, "semio", "Source should be 'semio'");
+      assert.strictEqual(diag.source, "compose", "Source should be 'compose'");
       const validSeverities = [vscode.DiagnosticSeverity.Error, vscode.DiagnosticSeverity.Warning, vscode.DiagnosticSeverity.Information];
       assert.ok(validSeverities.includes(diag.severity), `Invalid severity: ${diag.severity}`);
     });
   });
 
   test("Quick fixes are available for kit diagnostics", async function () {
-    const document = await openFixture("semio/invalid.kit.semio.json");
+    const document = await openFixture("compose/invalid.kit.compose.json");
     const diagnostics = await waitForDiagnostics(document.uri);
     if (diagnostics.length === 0) {
       console.log("Skipping: validation may be disabled due to bundling issues");
@@ -442,7 +442,7 @@ suite("Kit Validation Test Suite", function () {
   });
 
   test("Quick fix workspace edit contains valid text edits", async function () {
-    const document = await openFixture("semio/invalid.kit.semio.json");
+    const document = await openFixture("compose/invalid.kit.compose.json");
     const diagnostics = await waitForDiagnostics(document.uri);
     if (diagnostics.length === 0) {
       console.log("Skipping: validation may be disabled due to bundling issues");
@@ -543,11 +543,11 @@ suite("Repo Diagnostics Test Suite", function () {
 suite("Refresh Diagnostics Test Suite", function () {
   this.timeout(15000);
 
-  test("semio.refreshDiagnostics updates all open documents", async function () {
-    const document = await openFixture("semio/invalid.kit.semio.json");
-    await vscode.commands.executeCommand("semio.refreshDiagnostics");
+  test("compose.refreshDiagnostics updates all open documents", async function () {
+    const document = await openFixture("compose/invalid.kit.compose.json");
+    await vscode.commands.executeCommand("compose.refreshDiagnostics");
     await new Promise((resolve) => setTimeout(resolve, 3000));
-    const diagnostics = vscode.languages.getDiagnostics(document.uri).filter((d) => d.source === "semio");
+    const diagnostics = vscode.languages.getDiagnostics(document.uri).filter((d) => d.source === "compose");
     if (diagnostics.length === 0) {
       console.log("Skipping: validation may be disabled due to bundling issues");
       return;
@@ -580,85 +580,85 @@ suite("Sidebar View Test Suite", function () {
   });
 
   test("Monorepo view can be focused", async function () {
-    await vscode.commands.executeCommand("semio.monorepo.focus");
+    await vscode.commands.executeCommand("compose.monorepo.focus");
   });
 
   test("Filter view can be focused", async function () {
-    await vscode.commands.executeCommand("semio.filter.focus");
+    await vscode.commands.executeCommand("compose.filter.focus");
   });
 
   test("Refresh codebase command is available", async function () {
     const commands = await vscode.commands.getCommands(true);
-    assert.ok(commands.includes("semio.refreshCodebase"), "refreshCodebase command should be registered");
+    assert.ok(commands.includes("compose.refreshCodebase"), "refreshCodebase command should be registered");
   });
 
   test("Toggle filter command is available", async function () {
     const commands = await vscode.commands.getCommands(true);
-    assert.ok(commands.includes("semio.filter.toggle"), "semio.filter.toggle command should be registered");
+    assert.ok(commands.includes("compose.filter.toggle"), "compose.filter.toggle command should be registered");
   });
 
   test("Copy ID command is available", async function () {
     const commands = await vscode.commands.getCommands(true);
-    assert.ok(commands.includes("semio.copyId"), "copyId command should be registered");
+    assert.ok(commands.includes("compose.copyId"), "copyId command should be registered");
   });
 
   test("Mailto command is available", async function () {
     const commands = await vscode.commands.getCommands(true);
-    assert.ok(commands.includes("semio.mailto"), "mailto command should be registered");
+    assert.ok(commands.includes("compose.mailto"), "mailto command should be registered");
   });
 
   test("Open link command is available", async function () {
     const commands = await vscode.commands.getCommands(true);
-    assert.ok(commands.includes("semio.openLink"), "openLink command should be registered");
+    assert.ok(commands.includes("compose.openLink"), "openLink command should be registered");
   });
 
   test("Refresh monorepo command is available", async function () {
     const commands = await vscode.commands.getCommands(true);
-    assert.ok(commands.includes("semio.refreshMonorepo"), "refreshMonorepo command should be registered");
+    assert.ok(commands.includes("compose.refreshMonorepo"), "refreshMonorepo command should be registered");
   });
 
   test("Copy checkpoint SHA command is available", async function () {
     const commands = await vscode.commands.getCommands(true);
-    assert.ok(commands.includes("semio.copyCheckpointSha"), "copyCheckpointSha command should be registered");
+    assert.ok(commands.includes("compose.copyCheckpointSha"), "copyCheckpointSha command should be registered");
   });
 
   test("Open checkpoint in GitHub command is available", async function () {
     const commands = await vscode.commands.getCommands(true);
-    assert.ok(commands.includes("semio.openCheckpointInGitHub"), "openCheckpointInGitHub command should be registered");
+    assert.ok(commands.includes("compose.openCheckpointInGitHub"), "openCheckpointInGitHub command should be registered");
   });
 
   test("Ticket reopen command is available", async function () {
     const commands = await vscode.commands.getCommands(true);
-    assert.ok(commands.includes("semio.ticketReopen"), "ticketReopen command should be registered");
+    assert.ok(commands.includes("compose.ticketReopen"), "ticketReopen command should be registered");
   });
 
   test("Refresh item command is available", async function () {
     const commands = await vscode.commands.getCommands(true);
-    assert.ok(commands.includes("semio.refreshItem"), "refreshItem command should be registered");
+    assert.ok(commands.includes("compose.refreshItem"), "refreshItem command should be registered");
   });
 
   test("New filter toggle commands are available", async function () {
     const commands = await vscode.commands.getCommands(true);
     const newFilterCommands = [
-      "semio.filter.toggle.technology.user",
-      "semio.filter.toggle.technology.infrastructure",
-      "semio.filter.toggle.technology.research",
-      "semio.filter.toggle.file.code",
-      "semio.filter.toggle.file.script",
-      "semio.filter.toggle.file.config",
-      "semio.filter.toggle.file.lab",
-      "semio.filter.toggle.file.docs",
-      "semio.filter.toggle.file.resource",
-      "semio.filter.toggle.file.license",
-      "semio.filter.toggle.goal.open",
-      "semio.filter.toggle.goal.closed",
-      "semio.filter.toggle.bundle.schema",
-      "semio.filter.toggle.policy.none",
-      "semio.filter.toggle.policy.all",
-      "semio.filter.toggle.contributor.none",
-      "semio.filter.toggle.contributor.all",
-      "semio.filter.toggle.checkpoint.none",
-      "semio.filter.toggle.checkpoint.all",
+      "compose.filter.toggle.technology.user",
+      "compose.filter.toggle.technology.infrastructure",
+      "compose.filter.toggle.technology.research",
+      "compose.filter.toggle.file.code",
+      "compose.filter.toggle.file.script",
+      "compose.filter.toggle.file.config",
+      "compose.filter.toggle.file.lab",
+      "compose.filter.toggle.file.docs",
+      "compose.filter.toggle.file.resource",
+      "compose.filter.toggle.file.license",
+      "compose.filter.toggle.goal.open",
+      "compose.filter.toggle.goal.closed",
+      "compose.filter.toggle.bundle.schema",
+      "compose.filter.toggle.policy.none",
+      "compose.filter.toggle.policy.all",
+      "compose.filter.toggle.contributor.none",
+      "compose.filter.toggle.contributor.all",
+      "compose.filter.toggle.checkpoint.none",
+      "compose.filter.toggle.checkpoint.all",
     ];
     const missing = newFilterCommands.filter((cmd) => !commands.includes(cmd));
     assert.strictEqual(missing.length, 0, `Missing new filter commands: ${missing.join(", ")}`);
@@ -679,52 +679,52 @@ suite("Sections View Test Suite", function () {
     }
     const packageJSON = extension.packageJSON;
     const views = packageJSON.contributes.views["explorer"] || packageJSON.contributes.views["repo"];
-    const sectionView = views.find((v: any) => v.id === "semio.sections");
-    assert.ok(sectionView, "semio.sections view should be registered");
+    const sectionView = views.find((v: any) => v.id === "compose.sections");
+    assert.ok(sectionView, "compose.sections view should be registered");
   });
 
   test("Sections view can be focused", async function () {
-    await vscode.commands.executeCommand("semio.sections.focus");
+    await vscode.commands.executeCommand("compose.sections.focus");
   });
 
   test("sectionTree command is available", async function () {
     const commands = await vscode.commands.getCommands(true);
-    assert.ok(commands.includes("semio.sectionTree"), "sectionTree command should be registered");
+    assert.ok(commands.includes("compose.sectionTree"), "sectionTree command should be registered");
   });
 
   test("sectionList command is available", async function () {
     const commands = await vscode.commands.getCommands(true);
-    assert.ok(commands.includes("semio.sectionList"), "sectionList command should be registered");
+    assert.ok(commands.includes("compose.sectionList"), "sectionList command should be registered");
   });
 
   test("sectionCreate command is available", async function () {
     const commands = await vscode.commands.getCommands(true);
-    assert.ok(commands.includes("semio.sectionCreate"), "sectionCreate command should be registered");
+    assert.ok(commands.includes("compose.sectionCreate"), "sectionCreate command should be registered");
   });
 
   test("sectionMove command is available", async function () {
     const commands = await vscode.commands.getCommands(true);
-    assert.ok(commands.includes("semio.sectionMove"), "sectionMove command should be registered");
+    assert.ok(commands.includes("compose.sectionMove"), "sectionMove command should be registered");
   });
 
   test("sectionDelete command is available", async function () {
     const commands = await vscode.commands.getCommands(true);
-    assert.ok(commands.includes("semio.sectionDelete"), "sectionDelete command should be registered");
+    assert.ok(commands.includes("compose.sectionDelete"), "sectionDelete command should be registered");
   });
 
   test("sectionOpen command is available", async function () {
     const commands = await vscode.commands.getCommands(true);
-    assert.ok(commands.includes("semio.sectionOpen"), "sectionOpen command should be registered");
+    assert.ok(commands.includes("compose.sectionOpen"), "sectionOpen command should be registered");
   });
 
   test("sectionRename command is available", async function () {
     const commands = await vscode.commands.getCommands(true);
-    assert.ok(commands.includes("semio.sectionRename"), "sectionRename command should be registered");
+    assert.ok(commands.includes("compose.sectionRename"), "sectionRename command should be registered");
   });
 
   test("sectionIntegrate command is available", async function () {
     const commands = await vscode.commands.getCommands(true);
-    assert.ok(commands.includes("semio.sectionIntegrate"), "sectionIntegrate command should be registered");
+    assert.ok(commands.includes("compose.sectionIntegrate"), "sectionIntegrate command should be registered");
   });
 
   test("Sections tree view refreshes on file change", async function () {
@@ -735,7 +735,7 @@ suite("Sections View Test Suite", function () {
       await vscode.workspace.openTextDocument(vscode.Uri.file(existing));
     }
     await new Promise((resolve) => setTimeout(resolve, 1000));
-    await vscode.commands.executeCommand("semio.sections.focus");
+    await vscode.commands.executeCommand("compose.sections.focus");
     await new Promise((resolve) => setTimeout(resolve, 500));
     assert.ok(true, "Sections tree view should refresh without error");
   });
@@ -1076,8 +1076,8 @@ suite("treeNodeDisplayLabel Test Suite", () => {
   });
 
   test("File node uses emoji prefix plus Label", () => {
-    const node: TreeNodeData = { Kind: "file", ID: "💻semio/go/semio.go", Label: "semio.go", URI: "" };
-    assert.strictEqual(treeNodeDisplayLabel(node), "💻semio.go");
+    const node: TreeNodeData = { Kind: "file", ID: "💻compose/go/compose.go", Label: "compose.go", URI: "" };
+    assert.strictEqual(treeNodeDisplayLabel(node), "💻compose.go");
   });
 
   test("Goal node includes status icon", () => {
@@ -1257,7 +1257,7 @@ suite("slugify Test Suite", () => {
   });
 
   test("Converts file path to slug", () => {
-    assert.strictEqual(slugify("semio/js/semio.ts"), "SEMIO-JS-SEMIO-TS");
+    assert.strictEqual(slugify("compose/js/compose.ts"), "COMPOSE-JS-COMPOSE-TS");
   });
 
   test("Handles already slugified text", () => {
@@ -1304,10 +1304,10 @@ suite("parseUri Test Suite", () => {
   });
 
   test("Parses technology URI", () => {
-    const result = parseUri("repo://technology/semio");
+    const result = parseUri("repo://technology/compose");
     assert.ok(result);
     assert.strictEqual(result!.type, "technology");
-    assert.strictEqual(result!.path, "semio");
+    assert.strictEqual(result!.path, "compose");
   });
 
   test("Parses bundles collection URI (no path)", () => {
@@ -1318,66 +1318,66 @@ suite("parseUri Test Suite", () => {
   });
 
   test("Parses bundle URI", () => {
-    const result = parseUri("repo://bundle/semio-js");
+    const result = parseUri("repo://bundle/compose-js");
     assert.ok(result);
     assert.strictEqual(result!.type, "bundle");
-    assert.strictEqual(result!.path, "semio-js");
+    assert.strictEqual(result!.path, "compose-js");
   });
 
   test("Parses folders collection URI with parent path", () => {
-    const result = parseUri("repo://folders/semio/js");
+    const result = parseUri("repo://folders/compose/js");
     assert.ok(result);
     assert.strictEqual(result!.type, "folders");
-    assert.strictEqual(result!.path, "semio/js");
+    assert.strictEqual(result!.path, "compose/js");
   });
 
   test("Parses folder URI with deep path", () => {
-    const result = parseUri("repo://folder/semio/js/sketchpad/page/getting-started");
+    const result = parseUri("repo://folder/compose/js/sketchpad/page/getting-started");
     assert.ok(result);
     assert.strictEqual(result!.type, "folder");
-    assert.strictEqual(result!.path, "semio/js/sketchpad/page/getting-started");
+    assert.strictEqual(result!.path, "compose/js/sketchpad/page/getting-started");
   });
 
   test("Parses files collection URI with folder path", () => {
-    const result = parseUri("repo://files/semio/js");
+    const result = parseUri("repo://files/compose/js");
     assert.ok(result);
     assert.strictEqual(result!.type, "files");
-    assert.strictEqual(result!.path, "semio/js");
+    assert.strictEqual(result!.path, "compose/js");
   });
 
   test("Parses file URI with path", () => {
-    const result = parseUri("repo://file/semio/js/semio.ts");
+    const result = parseUri("repo://file/compose/js/compose.ts");
     assert.ok(result);
     assert.strictEqual(result!.type, "file");
-    assert.strictEqual(result!.path, "semio/js/semio.ts");
+    assert.strictEqual(result!.path, "compose/js/compose.ts");
   });
 
   test("Parses sections collection URI with file path", () => {
-    const result = parseUri("repo://sections/semio/js/semio.ts");
+    const result = parseUri("repo://sections/compose/js/compose.ts");
     assert.ok(result);
     assert.strictEqual(result!.type, "sections");
-    assert.strictEqual(result!.path, "semio/js/semio.ts");
+    assert.strictEqual(result!.path, "compose/js/compose.ts");
   });
 
   test("Parses section URI with file and section path", () => {
-    const result = parseUri("repo://section/semio/js/sketchpad/design.tsx/state-management/design-store");
+    const result = parseUri("repo://section/compose/js/sketchpad/design.tsx/state-management/design-store");
     assert.ok(result);
     assert.strictEqual(result!.type, "section");
-    assert.strictEqual(result!.path, "semio/js/sketchpad/Design.tsx/STATE-MANAGEMENT/DESIGN-STORE");
+    assert.strictEqual(result!.path, "compose/js/sketchpad/Design.tsx/STATE-MANAGEMENT/DESIGN-STORE");
   });
 
   test("Parses definitions collection URI", () => {
-    const result = parseUri("repo://definitions/semio/js/semio.ts");
+    const result = parseUri("repo://definitions/compose/js/compose.ts");
     assert.ok(result);
     assert.strictEqual(result!.type, "definitions");
-    assert.strictEqual(result!.path, "semio/js/semio.ts");
+    assert.strictEqual(result!.path, "compose/js/compose.ts");
   });
 
   test("Parses definition URI", () => {
-    const result = parseUri("repo://definition/semio/js/semio.ts/validate-kit");
+    const result = parseUri("repo://definition/compose/js/compose.ts/validate-kit");
     assert.ok(result);
     assert.strictEqual(result!.type, "definition");
-    assert.strictEqual(result!.path, "semio/js/semio.ts/VALIDATE-KIT");
+    assert.strictEqual(result!.path, "compose/js/compose.ts/VALIDATE-KIT");
   });
 
   test("Parses tickets collection URI (no path)", () => {
@@ -1506,14 +1506,14 @@ suite("parseUri Test Suite", () => {
 suite("Navigation Commands Test Suite", function () {
   this.timeout(15000);
 
-  test("semio.navigate command is available", async function () {
+  test("compose.navigate command is available", async function () {
     const commands = await vscode.commands.getCommands(true);
-    assert.ok(commands.includes("semio.navigate"), "navigate command should be registered");
+    assert.ok(commands.includes("compose.navigate"), "navigate command should be registered");
   });
 
-  test("semio.navigateTo command is available", async function () {
+  test("compose.navigateTo command is available", async function () {
     const commands = await vscode.commands.getCommands(true);
-    assert.ok(commands.includes("semio.navigateTo"), "navigateTo command should be registered");
+    assert.ok(commands.includes("compose.navigateTo"), "navigateTo command should be registered");
   });
 
   test("invalidateTreeNodeCache does not throw", () => {
@@ -1521,111 +1521,111 @@ suite("Navigation Commands Test Suite", function () {
     assert.ok(true);
   });
 
-  test("semio.navigate handles empty target gracefully", async function () {
-    await vscode.commands.executeCommand("semio.navigate", "");
+  test("compose.navigate handles empty target gracefully", async function () {
+    await vscode.commands.executeCommand("compose.navigate", "");
     assert.ok(true, "Should not throw on empty target");
   });
 
-  test("semio.navigate handles undefined target gracefully", async function () {
-    await vscode.commands.executeCommand("semio.navigate", undefined);
+  test("compose.navigate handles undefined target gracefully", async function () {
+    await vscode.commands.executeCommand("compose.navigate", undefined);
     assert.ok(true, "Should not throw on undefined target");
   });
 
-  test("semio.navigate handles unknown URI type gracefully", async function () {
-    await vscode.commands.executeCommand("semio.navigate", "repo://unknown/something");
+  test("compose.navigate handles unknown URI type gracefully", async function () {
+    await vscode.commands.executeCommand("compose.navigate", "repo://unknown/something");
     assert.ok(true, "Should not throw on unknown URI type");
   });
 
-  test("semio.navigate handles repo URI gracefully", async function () {
-    await vscode.commands.executeCommand("semio.navigate", "repo://repo");
+  test("compose.navigate handles repo URI gracefully", async function () {
+    await vscode.commands.executeCommand("compose.navigate", "repo://repo");
     assert.ok(true, "Should not throw on repo URI");
   });
 
-  test("semio.navigate handles collection URIs gracefully", async function () {
+  test("compose.navigate handles collection URIs gracefully", async function () {
     const collections = ["cb", "technologies", "bundles", "folders", "files", "sections", "definitions", "tickets", "goals", "drafts", "todos", "policies", "statutes", "contributors", "checkpoints"];
     for (const collection of collections) {
-      await vscode.commands.executeCommand("semio.navigate", `repo://${collection}`);
+      await vscode.commands.executeCommand("compose.navigate", `repo://${collection}`);
     }
     assert.ok(true, "Should not throw on collection URIs");
   });
 
-  test("semio.navigate handles folder URI with real path", async function () {
-    await vscode.commands.executeCommand("semio.navigate", "repo://folder/semio/js");
+  test("compose.navigate handles folder URI with real path", async function () {
+    await vscode.commands.executeCommand("compose.navigate", "repo://folder/compose/js");
     assert.ok(true, "Should not throw on folder URI");
   });
 
-  test("semio.navigate handles file URI with real path", async function () {
-    await vscode.commands.executeCommand("semio.navigate", "repo://file/package.json");
+  test("compose.navigate handles file URI with real path", async function () {
+    await vscode.commands.executeCommand("compose.navigate", "repo://file/package.json");
     assert.ok(true, "Should not throw on file URI");
   });
 
-  test("semio.navigate handles nonexistent folder URI gracefully", async function () {
-    await vscode.commands.executeCommand("semio.navigate", "repo://folder/nonexistent/path");
+  test("compose.navigate handles nonexistent folder URI gracefully", async function () {
+    await vscode.commands.executeCommand("compose.navigate", "repo://folder/nonexistent/path");
     assert.ok(true, "Should not throw on nonexistent folder URI");
   });
 
-  test("semio.navigate handles nonexistent file URI gracefully", async function () {
-    await vscode.commands.executeCommand("semio.navigate", "repo://file/nonexistent/path.ts");
+  test("compose.navigate handles nonexistent file URI gracefully", async function () {
+    await vscode.commands.executeCommand("compose.navigate", "repo://file/nonexistent/path.ts");
     assert.ok(true, "Should not throw on nonexistent file URI");
   });
 
-  test("semio.navigate handles ticket URI gracefully", async function () {
-    await vscode.commands.executeCommand("semio.navigate", "repo://ticket/2099/01/01/nonexistent");
+  test("compose.navigate handles ticket URI gracefully", async function () {
+    await vscode.commands.executeCommand("compose.navigate", "repo://ticket/2099/01/01/nonexistent");
     assert.ok(true, "Should not throw on nonexistent ticket URI");
   });
 
-  test("semio.navigate handles goal URI gracefully", async function () {
-    await vscode.commands.executeCommand("semio.navigate", "repo://goal/nonexistent-goal");
+  test("compose.navigate handles goal URI gracefully", async function () {
+    await vscode.commands.executeCommand("compose.navigate", "repo://goal/nonexistent-goal");
     assert.ok(true, "Should not throw on nonexistent goal URI");
   });
 
-  test("semio.navigate handles draft URI gracefully", async function () {
-    await vscode.commands.executeCommand("semio.navigate", "repo://draft/nonexistent");
+  test("compose.navigate handles draft URI gracefully", async function () {
+    await vscode.commands.executeCommand("compose.navigate", "repo://draft/nonexistent");
     assert.ok(true, "Should not throw on nonexistent draft URI");
   });
 
-  test("semio.navigate handles todo URI gracefully", async function () {
-    await vscode.commands.executeCommand("semio.navigate", "repo://todo/nonexistent");
+  test("compose.navigate handles todo URI gracefully", async function () {
+    await vscode.commands.executeCommand("compose.navigate", "repo://todo/nonexistent");
     assert.ok(true, "Should not throw on nonexistent todo URI");
   });
 
-  test("semio.navigate handles policy URI gracefully", async function () {
-    await vscode.commands.executeCommand("semio.navigate", "repo://policy/code");
+  test("compose.navigate handles policy URI gracefully", async function () {
+    await vscode.commands.executeCommand("compose.navigate", "repo://policy/code");
     assert.ok(true, "Should not throw on policy URI");
   });
 
-  test("semio.navigate handles statute URI gracefully", async function () {
-    await vscode.commands.executeCommand("semio.navigate", "repo://statute/code/header/missing-region");
+  test("compose.navigate handles statute URI gracefully", async function () {
+    await vscode.commands.executeCommand("compose.navigate", "repo://statute/code/header/missing-region");
     assert.ok(true, "Should not throw on statute URI");
   });
 
-  test("semio.navigate handles contributor URI gracefully", async function () {
-    await vscode.commands.executeCommand("semio.navigate", "repo://contributor/usalu");
+  test("compose.navigate handles contributor URI gracefully", async function () {
+    await vscode.commands.executeCommand("compose.navigate", "repo://contributor/usalu");
     assert.ok(true, "Should not throw on contributor URI");
   });
 
-  test("semio.navigate handles checkpoint URI gracefully", async function () {
-    await vscode.commands.executeCommand("semio.navigate", "repo://checkpoint/abc123");
+  test("compose.navigate handles checkpoint URI gracefully", async function () {
+    await vscode.commands.executeCommand("compose.navigate", "repo://checkpoint/abc123");
     assert.ok(true, "Should not throw on checkpoint URI");
   });
 
-  test("semio.navigate handles section URI gracefully", async function () {
-    await vscode.commands.executeCommand("semio.navigate", "repo://section/semio/js/semio.ts/header");
+  test("compose.navigate handles section URI gracefully", async function () {
+    await vscode.commands.executeCommand("compose.navigate", "repo://section/compose/js/compose.ts/header");
     assert.ok(true, "Should not throw on section URI");
   });
 
-  test("semio.navigate handles definition URI gracefully", async function () {
-    await vscode.commands.executeCommand("semio.navigate", "repo://definition/semio/js/semio.ts/validate-kit");
+  test("compose.navigate handles definition URI gracefully", async function () {
+    await vscode.commands.executeCommand("compose.navigate", "repo://definition/compose/js/compose.ts/validate-kit");
     assert.ok(true, "Should not throw on definition URI");
   });
 
-  test("semio.navigate handles technology URI gracefully", async function () {
-    await vscode.commands.executeCommand("semio.navigate", "repo://technology/semio");
+  test("compose.navigate handles technology URI gracefully", async function () {
+    await vscode.commands.executeCommand("compose.navigate", "repo://technology/compose");
     assert.ok(true, "Should not throw on technology URI");
   });
 
-  test("semio.navigate handles bundle URI gracefully", async function () {
-    await vscode.commands.executeCommand("semio.navigate", "repo://bundle/semio-js");
+  test("compose.navigate handles bundle URI gracefully", async function () {
+    await vscode.commands.executeCommand("compose.navigate", "repo://bundle/compose-js");
     assert.ok(true, "Should not throw on bundle URI");
   });
 });
@@ -1761,19 +1761,19 @@ suite("Entity ID Regex Matching Test Suite", () => {
 
   test("matches bare user technology ID (👤)", () => {
     const regex = buildEntityIdRegex();
-    const text = "Main technology: 🏘️semio📚js";
+    const text = "Main technology: 🏘️compose📚js";
     const matches = [...text.matchAll(regex)];
     assert.strictEqual(matches.length, 1, "should match one ID");
-    assert.strictEqual(matches[0][3], "🏘️semio📚js");
+    assert.strictEqual(matches[0][3], "🏘️compose📚js");
   });
 
   test("matches markdown link with user technology ID", () => {
     const regex = buildEntityIdRegex();
-    const text = "[🏘️semio📚js💻semiots](repo://p/u/semio/b/l/js/f/semio.ts)";
+    const text = "[🏘️compose📚js💻composets](repo://p/u/compose/b/l/js/f/compose.ts)";
     const matches = [...text.matchAll(regex)];
     assert.strictEqual(matches.length, 1, "should match one markdown link");
-    assert.strictEqual(matches[0][1], "🏘️semio📚js💻semiots");
-    assert.strictEqual(matches[0][2], "repo://p/u/semio/b/l/js/f/semio.ts");
+    assert.strictEqual(matches[0][1], "🏘️compose📚js💻composets");
+    assert.strictEqual(matches[0][2], "repo://p/u/compose/b/l/js/f/compose.ts");
   });
 
   test("matches goal ID (🎯)", () => {
@@ -1817,15 +1817,15 @@ suite("Entity ID Regex Matching Test Suite", () => {
 
   test("matches full nested entity ID", () => {
     const regex = buildEntityIdRegex();
-    const text = "Full: 🏘️semio📚js🗃️sketchpad💻designtsx🔖statemanagement🛠️createstore";
+    const text = "Full: 🏘️compose📚js🗃️sketchpad💻designtsx🔖statemanagement🛠️createstore";
     const matches = [...text.matchAll(regex)];
     assert.strictEqual(matches.length, 1, "should match one full ID");
-    assert.strictEqual(matches[0][3], "🏘️semio📚js🗃️sketchpad💻designtsx🔖statemanagement🛠️createstore");
+    assert.strictEqual(matches[0][3], "🏘️compose📚js🗃️sketchpad💻designtsx🔖statemanagement🛠️createstore");
   });
 
   test("matches multiple IDs in same text", () => {
     const regex = buildEntityIdRegex();
-    const text = "Compare 🧰repo⌨️client with 🏘️semio📚js and 🎯goalname";
+    const text = "Compare 🧰repo⌨️client with 🏘️compose📚js and 🎯goalname";
     const matches = [...text.matchAll(regex)];
     assert.strictEqual(matches.length, 3, "should match three IDs");
   });
@@ -1886,24 +1886,24 @@ suite("Entity ID Regex Matching Test Suite", () => {
 suite("CodeLens Behavior Test Suite", function () {
   this.timeout(15000);
 
-  test("semio.summarize command is not registered", async function () {
+  test("compose.summarize command is not registered", async function () {
     const commands = await vscode.commands.getCommands(true);
-    assert.ok(!commands.includes("semio.summarize"), "summarize command should not be registered");
+    assert.ok(!commands.includes("compose.summarize"), "summarize command should not be registered");
   });
 
-  test("semio.navigate command is registered", async function () {
+  test("compose.navigate command is registered", async function () {
     const commands = await vscode.commands.getCommands(true);
-    assert.ok(commands.includes("semio.navigate"), "navigate command should be registered");
+    assert.ok(commands.includes("compose.navigate"), "navigate command should be registered");
   });
 
-  test("semio.analyze does not throw on unknown ID", async function () {
-    await vscode.commands.executeCommand("semio.analyze", "🧰unknownentity");
+  test("compose.analyze does not throw on unknown ID", async function () {
+    await vscode.commands.executeCommand("compose.analyze", "🧰unknownentity");
     assert.ok(true, "should not throw on unknown entity");
   });
 
-  test("semio.analyze command is registered", async function () {
+  test("compose.analyze command is registered", async function () {
     const commands = await vscode.commands.getCommands(true);
-    assert.ok(commands.includes("semio.analyze"), "analyze command should be registered");
+    assert.ok(commands.includes("compose.analyze"), "analyze command should be registered");
   });
 
   test("Analyze CodeLens covers every definition entity in TypeScript and Go files", async function () {
@@ -1932,7 +1932,7 @@ suite("CodeLens Behavior Test Suite", function () {
 
   test("Entity CodeLenses do not expose summarize commands", async function () {
     const document = await openWorkspaceDocument("repo/vscode/extension.ts");
-    const summarizeLenses = (await getCodeLenses(document)).filter((lens) => lens.command?.command === "semio.summarize");
+    const summarizeLenses = (await getCodeLenses(document)).filter((lens) => lens.command?.command === "compose.summarize");
     assert.deepStrictEqual(summarizeLenses, [], "summarize CodeLenses should be fully replaced by analyze");
   });
 
@@ -1961,18 +1961,18 @@ suite("CodeLens Behavior Test Suite", function () {
   });
 });
 
-suite("Semio VS Code Kit Editor Test Suite", () => {
-  test("Kit file detection matches semio kit naming conventions", () => {
-    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/semio/asset/semio/metabolism.kit.json"), true);
-    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/semio/asset/semio/metabolism/wip/initialKit/kit.semio.json"), true);
-    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/semio/asset/semio/kit-metabolism.json"), true);
-    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/semio/asset/semio/metabolism.kit.embedded.semio.json"), true);
-    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/semio/jsonschema/kit.json"), false);
-    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/semio/asset/semio/metabolism.kit.diff.semio.json"), false);
+suite("Compose VS Code Kit Editor Test Suite", () => {
+  test("Kit file detection matches compose kit naming conventions", () => {
+    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/compose/asset/compose/metabolism.kit.json"), true);
+    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/compose/asset/compose/metabolism/wip/initialKit/kit.compose.json"), true);
+    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/compose/asset/compose/kit-metabolism.json"), true);
+    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/compose/asset/compose/metabolism.kit.embedded.compose.json"), true);
+    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/compose/jsonschema/kit.json"), false);
+    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/compose/asset/compose/metabolism.kit.diff.compose.json"), false);
   });
 
   test("Sketchpad dist resolution prefers bundled assets and falls back to workspace sketchpad dist", () => {
-    const fixtureRoot = fs.mkdtempSync(path.join(getWorkspaceRoot(), ".tmp-semio-vscode-"));
+    const fixtureRoot = fs.mkdtempSync(path.join(getWorkspaceRoot(), ".tmp-compose-vscode-"));
     const extensionPath = path.join(fixtureRoot, "extension");
     const bundledDistPath = path.join(extensionPath, "sketchpad-dist");
     const workspaceDistPath = path.join(fixtureRoot, "sketchpad", "dist");

@@ -27,13 +27,13 @@ todos:
     content: "Python main.py + engine main.py: Typology model, owner, parse/serialize, helpers, tests"
     status: completed
   - id: client-net
-    content: "C# Semio.cs + Tests: Typology class, Kit.Typologies, owner, export snapshots"
+    content: "C# Compose.cs + Tests: Typology class, Kit.Typologies, owner, export snapshots"
     status: completed
   - id: client-ts
     content: "TS js/index.ts (+ react, query): Typology class, Kit.typologies, computed types/designs, Folder.typologies"
     status: completed
   - id: client-rb
-    content: "Ruby semio.rb: mirror Typology"
+    content: "Ruby compose.rb: mirror Typology"
     status: completed
   - id: sketchpad
     content: Sketchpad VFS node kind + readers + kit-tree nesting under typologies; storybook command schema; embedded tests
@@ -69,59 +69,59 @@ Note: `AGENTS.md` files (which contain the math/rank spec for `Kit = (T_K, D_K, 
 
 ## 1. Rust authority (source of truth)
 
-`semio/client/lib/rs/lib.rs`:
+`compose/client/lib/rs/lib.rs`:
 - Add a `Typology` entity (mirror the `Family` macro shell at lines ~1450-1485): `id, name, description, icon, folder_id, owner_kit`, plus owned `types`/`designs` weak-id maps.
 - `Type` (~3183) and `Design` (~4006): replace `owner_kit: Weak<Kit>` with `owner_typology: Weak<Typology>`; resolver `owner` returns the typology.
 - `Kit` (~4734): remove stored `types`/`designs` vecs+maps; add `typologies: Vec<Arc<Typology>>` + id map. Add resolvers `typologies()`, `typology(id)`; make `types()`/`designs()` computed by flattening typologies. Keep `families` store and `snapshot_families_projection`.
 - Diff/modification ladder: add `TypologyDiff`/`TypologyModification`/`TypologiesCollectionDiff` and wire into `KitDiff` (mirror the `Family*` diff machinery and `apply_families_collection_diff` at ~4897-5006, ~8049-8089). Type/design move-between-typology must update ownership.
 - VFS: register typologies under kit root and folders (mirror family VFS at ~2465, ~13418). Hydration/round-trip: ensure typology placement + ownership persist.
-- Re-export GraphQL SDL via `cargo test export_semio_graphql_schema_file` (driven by `semio/client/schema/graphql/script.ts`).
+- Re-export GraphQL SDL via `cargo test export_compose_graphql_schema_file` (driven by `compose/client/schema/graphql/script.ts`).
 
 ## 2. GraphQL contracts
 
-- `semio/client/schema/graphql/schema.golden.graphql`: add `#region Typology` (type, `TypologyConnection/Edge`, diff ladder) mirroring `Family` (~1626-1747). On `Kit`: add `typologies`/`typology(id)`; keep `types`/`designs` as computed. On `Typology`: `types`, `designs`. On `Folder`: `typologies`. `Type`/`Design` `owner` -> `Typology`.
-- `semio/client/schema/graphql/schema.graphql`: regenerated from Rust (do not hand-edit beyond what Rust emits).
+- `compose/client/schema/graphql/schema.golden.graphql`: add `#region Typology` (type, `TypologyConnection/Edge`, diff ladder) mirroring `Family` (~1626-1747). On `Kit`: add `typologies`/`typology(id)`; keep `types`/`designs` as computed. On `Typology`: `types`, `designs`. On `Folder`: `typologies`. `Type`/`Design` `owner` -> `Typology`.
+- `compose/client/schema/graphql/schema.graphql`: regenerated from Rust (do not hand-edit beyond what Rust emits).
 
 ## 3. JSON Schema / OpenAPI
 
-- `semio/client/schema/json/kit.json`: add `Typology` + `TypologyId` defs and `typologies[]`; remove top-level `types`/`designs` from the stored kit shape (they become computed). Keep `Family`.
-- `semio/client/schema/json/type.json` & `design.json`: add owning `typology` reference field; keep `families`.
-- `semio/client/schema/json/{type,design}-context*.json`: mirror.
-- `semio/client/schema/openapi/schema.json`: add `Typology`, `TypologyId`, `TypologyInput`, `typologies` on Kit; adjust Type/Design owner.
+- `compose/client/schema/json/kit.json`: add `Typology` + `TypologyId` defs and `typologies[]`; remove top-level `types`/`designs` from the stored kit shape (they become computed). Keep `Family`.
+- `compose/client/schema/json/type.json` & `design.json`: add owning `typology` reference field; keep `families`.
+- `compose/client/schema/json/{type,design}-context*.json`: mirror.
+- `compose/client/schema/openapi/schema.json`: add `Typology`, `TypologyId`, `TypologyInput`, `typologies` on Kit; adjust Type/Design owner.
 
 ## 4. Persistence (SQL)
 
-- `semio/client/schema/sqlite/schema.sql`: add `typology` table (kit_id FK, like `family` at ~77-86). Replace `type.kit_id`/`design.kit_id` with `typology_id` FK (+ indexes). Keep `family`, `type_family`, `design_family`, `port_compatible_family`. Update `sqlite/AGENTS.md`? (AGENTS.md is read-only - skip; the .sql is the source of truth.)
-- `semio/server/hub/postgres/schema.sql`: add `core.typology`; point `core.type`/`core.design` ownership at typology. Keep `core.family`, `core.type_family`, `core.design_family`.
+- `compose/client/schema/sqlite/schema.sql`: add `typology` table (kit_id FK, like `family` at ~77-86). Replace `type.kit_id`/`design.kit_id` with `typology_id` FK (+ indexes). Keep `family`, `type_family`, `design_family`, `port_compatible_family`. Update `sqlite/AGENTS.md`? (AGENTS.md is read-only - skip; the .sql is the source of truth.)
+- `compose/server/hub/postgres/schema.sql`: add `core.typology`; point `core.type`/`core.design` ownership at typology. Keep `core.family`, `core.type_family`, `core.design_family`.
 - `repo/server/schema/postgres/schema.sql`: add typology snapshot tables analogous to `kit_snapshot_*` kind/family tables (~275-501).
 
 ## 5. Conceptual schema
 
-- `semio/client/schema/semio/schema.yaml`: add `typology` anchor (implements artifact, owns `types`/`designs`); `kit` owns `typologies` + `families`; remove direct `types`/`designs` from kit fields (now via typology).
+- `compose/client/schema/compose/schema.yaml`: add `typology` anchor (implements artifact, owns `types`/`designs`); `kit` owns `typologies` + `families`; remove direct `types`/`designs` from kit fields (now via typology).
 
 ## 6. Language clients (parallelizable - one generalist each)
 
-- Go `semio/client/lib/go/main.go` (+ `kit_graph.go`, `main_test.go`): add `Typology`/`TypologyId` (mirror `Family` region ~879-961), `Kit.Typologies`, `Type/Design.TypologyId` owner; hashing (`HashTypology`, kit hash), diff algebra, SQLite read/write (`INSERT INTO typology`, type/design owner). Keep `Families`.
-- Python `semio/client/lib/py/main.py`: add `Typology` model + `Kit.typologies`; `Type`/`Design` get owning `typology`; keep `families` fields/helpers. Update parse/serialize and family-helper regions. `semio/client/bin/engine/main.py`: typology-aware tools + tests.
-- C# `semio/client/lib/net/Semio/Semio.cs` (+ `Semio.Tests`): add `Typology` class, `Kit.Typologies`, `Type/Design` owner typology; cross-language export snapshots.
-- TS `semio/client/lib/js/index.ts`: add `class Typology extends Entity`, `Kit.typologies()/typology(id)`, `Typology.types()/designs()`, `Folder.typologies()`; keep computed `Kit.types()/designs()`. React `semio/client/lib/react` + `query`: hooks/selectors for typologies.
-- Ruby `semio/client/lib/rb/semio.rb`: mirror.
+- Go `compose/client/lib/go/main.go` (+ `kit_graph.go`, `main_test.go`): add `Typology`/`TypologyId` (mirror `Family` region ~879-961), `Kit.Typologies`, `Type/Design.TypologyId` owner; hashing (`HashTypology`, kit hash), diff algebra, SQLite read/write (`INSERT INTO typology`, type/design owner). Keep `Families`.
+- Python `compose/client/lib/py/main.py`: add `Typology` model + `Kit.typologies`; `Type`/`Design` get owning `typology`; keep `families` fields/helpers. Update parse/serialize and family-helper regions. `compose/client/bin/engine/main.py`: typology-aware tools + tests.
+- C# `compose/client/lib/net/Compose/Compose.cs` (+ `Compose.Tests`): add `Typology` class, `Kit.Typologies`, `Type/Design` owner typology; cross-language export snapshots.
+- TS `compose/client/lib/js/index.ts`: add `class Typology extends Entity`, `Kit.typologies()/typology(id)`, `Typology.types()/designs()`, `Folder.typologies()`; keep computed `Kit.types()/designs()`. React `compose/client/lib/react` + `query`: hooks/selectors for typologies.
+- Ruby `compose/client/lib/rb/compose.rb`: mirror.
 
 ## 7. Sketchpad / UI
 
-- `semio/client/lib/sketchpad/js/index.ts`: register `Typology` VFS node kind (mirror `family` model at ~12240), readers for typology rows; keep family/port hydration. Update kit-tree to nest types/designs under typologies. Extend embedded tests.
-- `.storybook/semio/algorithm/kit-store/commandSchema.ts`: add typology read commands.
+- `compose/client/lib/sketchpad/js/index.ts`: register `Typology` VFS node kind (mirror `family` model at ~12240), readers for typology rows; keep family/port hydration. Update kit-tree to nest types/designs under typologies. Extend embedded tests.
+- `.storybook/compose/algorithm/kit-store/commandSchema.ts`: add typology read commands.
 
 ## 8. Fixtures, assets, tooling
 
 - Add `typologies[]` to kit fixtures and assign every type/design an owning typology:
-  - `semio/fixture/*.kit.semio.json` (metabolism, synthetic, architect, invalid handling) and the dev kit tree `semio/fixture/kit/dev/metabolism/wip/initialKit/**` (~45+ type/design files): metabolism maps to `base, capsule, tambour, capital, bridge, tower`.
-  - `semio/asset/semio/metabolism/**` and `semio/asset/index.ts` (add `MetabolismKitTypologies*` lookups next to `MetabolismKitFamilies*`).
-- `semio/fixture/script.ts`: typology-aware iteration if needed.
+  - `compose/fixture/*.kit.compose.json` (metabolism, synthetic, architect, invalid handling) and the dev kit tree `compose/fixture/kit/dev/metabolism/wip/initialKit/**` (~45+ type/design files): metabolism maps to `base, capsule, tambour, capital, bridge, tower`.
+  - `compose/asset/compose/metabolism/**` and `compose/asset/index.ts` (add `MetabolismKitTypologies*` lookups next to `MetabolismKitFamilies*`).
+- `compose/fixture/script.ts`: typology-aware iteration if needed.
 
 ## 9. Grasshopper / engine
 
-- `semio/asset/grasshopper/components.json`: add Typology params/components where Kit exposes types/designs; keep connector `family` param.
+- `compose/asset/grasshopper/components.json`: add Typology params/components where Kit exposes types/designs; keep connector `family` param.
 
 ## 10. Validation
 

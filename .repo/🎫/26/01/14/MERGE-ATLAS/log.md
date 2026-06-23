@@ -4,20 +4,20 @@
 
 ### User Request Clarified
 User wants to:
-1. Combine `.old` (generic explanations) with new file (semio examples)
-2. Explain general concepts FIRST, then semio examples
+1. Combine `.old` (generic explanations) with new file (compose examples)
+2. Explain general concepts FIRST, then compose examples
 3. Simplify language for non-developers while keeping technical terms
 4. Always comment code to relate it to the main concept
-5. This should be an intro to programming specifically using semio as the example guide
+5. This should be an intro to programming specifically using compose as the example guide
 
 ### Analysis
 - Old file: 9335 lines - has clear generic explanations
-- New file: 14483 lines - has semio code examples but needs better integration
+- New file: 14483 lines - has compose code examples but needs better integration
 
 ### Working Section-by-Section
 Will enhance each section by:
 1. Keeping the generic explanation first (from old file if better)
-2. Then showing semio example with detailed comments
+2. Then showing compose example with detailed comments
 3. Simplifying language while maintaining technical accuracy
 4. Adding more inline code comments
 

@@ -2,8 +2,8 @@
   "title": "Fix Missing Location Items in Sketchpad Detail Panel",
   "emoji": "🔧",
   "status": "closed",
-  "description": "Fix the sketchpad design detail panel so the Location property shows all expected nested tree items, including longitude and latitude. Patch the existing rendering path in semio/sketchpad/index.tsx, extend existing tests in place, verify with targeted checks, and keep the detail tree structure consistent.",
-  "summary": "Fixed the sketchpad design detail panel Location section so the longitude and latitude steppers render through the shared labeled property-row path by adding showLabel to both rows in semio/sketchpad/index.tsx. Extended the existing inline Design Playwright assertions in the same file to require the Location section plus labeled longitude/latitude rows in the right details panel. Verification limits: the sketchpad Playwright workspace command still fails before loading inline tests with an existing CSS-loader/No tests found issue, and vite build for semio/sketchpad was killed by the environment after chunk rendering.",
+  "description": "Fix the sketchpad design detail panel so the Location property shows all expected nested tree items, including longitude and latitude. Patch the existing rendering path in compose/sketchpad/index.tsx, extend existing tests in place, verify with targeted checks, and keep the detail tree structure consistent.",
+  "summary": "Fixed the sketchpad design detail panel Location section so the longitude and latitude steppers render through the shared labeled property-row path by adding showLabel to both rows in compose/sketchpad/index.tsx. Extended the existing inline Design Playwright assertions in the same file to require the Location section plus labeled longitude/latitude rows in the right details panel. Verification limits: the sketchpad Playwright workspace command still fails before loading inline tests with an existing CSS-loader/No tests found issue, and vite build for compose/sketchpad was killed by the environment after chunk rendering.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1190"
   },

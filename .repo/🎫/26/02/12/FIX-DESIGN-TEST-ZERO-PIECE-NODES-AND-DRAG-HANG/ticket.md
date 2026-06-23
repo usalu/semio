@@ -14,8 +14,8 @@ Three bugs fixed to make the Design Playwright test pass:
 3. **KitStore dirty flag not propagated** (Sketchpad.tsx): `DesignStore.markDirty()` only set `this.dirty = true` on itself, NOT propagating to parent `KitStore`. After `PieceStore.change()` updated the CRDT, `KitStore.snapshot()` still returned cached stale data. **Fix**: Added `this.parent.markDirty()` to `DesignStore.markDirty()`.
 
 ## Changes
-- `semio/js/sketchpad/Sketchpad.tsx`: Extracted `PanelTabSectionItem` component (line ~15274). Added `this.parent.markDirty()` to `DesignStore.markDirty()` (line ~4948).
-- `semio/js/sketchpad/Design.tsx`: Changed `onNodeDragStop` fallback from `else if (node && currentSelection?.pieces?.length)` to `else { ... }` with proper pieceId computation (line ~7005). Fixed `useDesignAppUpdatePieces` PieceId mapping (line ~2112).
+- `compose/js/sketchpad/Sketchpad.tsx`: Extracted `PanelTabSectionItem` component (line ~15274). Added `this.parent.markDirty()` to `DesignStore.markDirty()` (line ~4948).
+- `compose/js/sketchpad/Design.tsx`: Changed `onNodeDragStop` fallback from `else if (node && currentSelection?.pieces?.length)` to `else { ... }` with proper pieceId computation (line ~7005). Fixed `useDesignAppUpdatePieces` PieceId mapping (line ~2112).
 
 ## Log
 - Diagnosed hook order violation via browser error capture: "React has detected a change in the order of Hooks"

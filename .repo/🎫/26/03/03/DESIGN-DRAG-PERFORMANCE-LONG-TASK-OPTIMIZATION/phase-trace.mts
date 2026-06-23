@@ -3,8 +3,8 @@ import path from "path";
 const browser = await chromium.launch({ headless: true, args: ['--no-sandbox'] });
 const page = await browser.newPage();
 await page.addInitScript(() => {
-  (window as any).__SEMIO_PERFORMANCE__ = { longTaskSupported: false, longTasks: [] };
-  const store = (window as any).__SEMIO_PERFORMANCE__;
+  (window as any).__COMPOSE_PERFORMANCE__ = { longTaskSupported: false, longTasks: [] };
+  const store = (window as any).__COMPOSE_PERFORMANCE__;
   const oc = (window as any).PerformanceObserver;
   const sek = oc?.supportedEntryTypes ?? [];
   if (!oc || !sek.includes("longtask")) return;
@@ -22,8 +22,8 @@ await page.addInitScript(() => {
 await page.goto("http://127.0.0.1:5173/");
 await page.waitForLoadState("domcontentloaded");
 await page.waitForTimeout(2000);
-const zipPath = path.resolve(process.cwd(), "semio/assets/semio/metabolism.zip");
-const fileInput = page.locator('[id="semio.sketchpad.app.home.importKit"]');
+const zipPath = path.resolve(process.cwd(), "compose/assets/compose/metabolism.zip");
+const fileInput = page.locator('[id="compose.sketchpad.app.home.importKit"]');
 await fileInput.waitFor({ state: 'attached', timeout: 10000 });
 const [fc] = await Promise.all([
   page.waitForEvent("filechooser", { timeout: 5000 }).catch(() => null),
@@ -45,7 +45,7 @@ if (nakaginRowId) {
 }
 await page.waitForLoadState("networkidle");
 await page.waitForTimeout(10000);
-const leftPanelToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.leftSidePanel"]');
+const leftPanelToggle = page.locator('[id="compose.sketchpad.navbar.panelToggle.leftSidePanel"]');
 if (await leftPanelToggle.isVisible().catch(() => false)) {
   const leftPanelOpen = await page.locator('[data-panel="leftSidePanel"]').isVisible().catch(() => false);
   if (leftPanelOpen) { await leftPanelToggle.click(); await page.waitForTimeout(500); }
@@ -53,7 +53,7 @@ if (await leftPanelToggle.isVisible().catch(() => false)) {
 await page.waitForTimeout(3000);
 // Stabilize
 await page.evaluate(() => {
-  const store = (window as any).__SEMIO_PERFORMANCE__;
+  const store = (window as any).__COMPOSE_PERFORMANCE__;
   store.longTasks = [];
   (window as any).__phases = [];
 });
@@ -101,7 +101,7 @@ for (let i = 0; i < 50; i++) {
 await page.evaluate(() => (window as any).__markPhase("READ_TASKS"));
 // Read tasks and phases
 const result = await page.evaluate(() => {
-  const store = (window as any).__SEMIO_PERFORMANCE__;
+  const store = (window as any).__COMPOSE_PERFORMANCE__;
   const phases = (window as any).__phases as { name: string; time: number }[];
   const tasks = (store?.longTasks ?? []) as { duration: number; startTime: number }[];
   return { phases, tasks };

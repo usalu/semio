@@ -46,7 +46,7 @@ Multiple Connections: # section
 ```
 
 ### Current Implementation Analysis
-The implementation exists in `/workspaces/semio/semio/js/sketchpad/Design.tsx`:
+The implementation exists in `/workspaces/semio/compose/js/sketchpad/Design.tsx`:
 - `ConnectionsSectionForm` component (lines 5812-5950) handles both single and multiple connections
 - For multiple connections, it shows:
   - Description field

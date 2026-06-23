@@ -3,6 +3,6 @@
   "emoji": "🧊",
   "status": "closed",
   "description": "Kit wires drag eventually crashed the 3D canvas: /meshes/capsule-with-balcony_slash.glb returned Vite HTML 404 because puzzle3dKitMeshRoots pointed at removed dev/metabolism/representations.",
-  "summary": "Point puzzle3dKitMeshRoots at semio/fixtures/kit/folder/metabolism/representations and folder/abbau-aufbau. Add sketchpad mesh URL test. Remove stray puzzle2d hover debug log.",
+  "summary": "Point puzzle3dKitMeshRoots at compose/fixtures/kit/folder/metabolism/representations and folder/abbau-aufbau. Add sketchpad mesh URL test. Remove stray puzzle2d hover debug log.",
   "goal": "🎯r2602/🎯runningsketchpad"
 }

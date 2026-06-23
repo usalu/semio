@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Script to remove all comments with the pattern "* MUST perform the * operation"
-from source code files in the semio repository.
+from source code files in the compose repository.
 """
 
 import os

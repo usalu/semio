@@ -17,18 +17,18 @@ repo.tsx CLI was fully implemented in a previous session with analyze, fix, tick
 
 Added 12 commands to contributes.commands:
 
-- semio.analyze - Analyze Codebase
-- semio.analyzeFile - Analyze Current File
-- semio.fix - Fix Codebase Problems
-- semio.fixFile - Fix Current File Problems
-- semio.policyList - List Policies
-- semio.ticketNew - Create New Ticket
-- semio.ticketList - List Tickets
-- semio.projectList - List Bundles
-- semio.regionTree - Show Region Tree
-- semio.definitionList - List Definitions
-- semio.folderTree - Show Folder Tree
-- semio.refreshDiagnostics - Refresh Diagnostics
+- compose.analyze - Analyze Codebase
+- compose.analyzeFile - Analyze Current File
+- compose.fix - Fix Codebase Problems
+- compose.fixFile - Fix Current File Problems
+- compose.policyList - List Policies
+- compose.ticketNew - Create New Ticket
+- compose.ticketList - List Tickets
+- compose.projectList - List Bundles
+- compose.regionTree - Show Region Tree
+- compose.definitionList - List Definitions
+- compose.folderTree - Show Folder Tree
+- compose.refreshDiagnostics - Refresh Diagnostics
 
 Added activation events for typescript, javascript, and workspaceContains:\*\*/repo.tsx
 
@@ -41,13 +41,13 @@ Reorganized into regions:
 - Types: Added Problem and AnalyzeReport interfaces
 - Utilities: Added getWorkspaceRoot(), getRepoTsxPath()
 - Repo Diagnostics: Added loadAnalyzeReport(), extractFilePathFromScope(), updateRepoDiagnostics(), watchAnalyzeReport()
-- Kit Validation: Renamed DIAGNOSTIC_SOURCE to DIAGNOSTIC_SOURCE_KIT, extracted validateKitDocument(), renamed class to SemioKitCodeActionProvider
+- Kit Validation: Renamed DIAGNOSTIC_SOURCE to DIAGNOSTIC_SOURCE_KIT, extracted validateKitDocument(), renamed class to ComposeKitCodeActionProvider
 - Commands: Added registerCommands() with all 12 command handlers
 - Activation: Refactored to initialize both kit and repo diagnostics
 
 ## js/vscode/extension.test.ts
 
-Updated diagnostic source filter from "semio" to "semio-kit" to match renamed constant
+Updated diagnostic source filter from "compose" to "compose-kit" to match renamed constant
 
 ## Changes
 

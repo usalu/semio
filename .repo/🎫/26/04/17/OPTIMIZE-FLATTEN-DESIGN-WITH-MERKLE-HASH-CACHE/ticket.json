@@ -1,23 +1,23 @@
 {
   "title": "Optimize Flatten Design With Merkle Hash Cache",
   "status": "closed",
-  "description": "Introduce a merkle-tree based hashed optimization for flattenDesign that makes incremental recomputation possible. Plane and center must have their own merkle hash per piece so only the parts whose relevant inputs changed are recomputed. Hashes MUST NOT change when unrelated fields (e.g., color, description, non-placement attributes, unrelated pieces/connections) change. Implement the same design for all programming languages (py, js/ts, rs, go, .NET) and add identical tests across all implementations that read inputs and expected outputs from shared asset files under semio/assets/semio/.",
-  "summary": "Added a per-piece plane/center Merkle hash API plus cached flatten wrapper across all five languages, byte-identical via the shared HashWriter/formatNumberForHash serialization. Each piece gets `{planeHash, centerHash}`: roots hash from their own guid + plane/center fields, chained pieces hash from the parent hash + connector geometry (parent/child ports, normal/t axes, rotation/tilt/gap/shift for planes; u/v for centers). Roots for each connected component are selected as the first piece in design.pieces order with both plane and center set, falling back to the lexicographically smallest guid. `flattenDesignCached(kit, designGuid, cache)` computes fresh hashes, reuses cached plane/center for pieces whose hash matches, and falls back to flattenDesign output otherwise. Added shared asset `semio/assets/semio/flatten-merkle.cases.semio.json` with 11 mutation cases (description stability, root plane origin change cascades to all planeHashes, root center.u cascades to all centerHashes, connection gap/rotation/tilt/shift/u/v affect only downstream hashes of the expected axis) and a `parity` block with reference hashes for two Nakagin Capsule Tower pieces. Three identical tests per language (shared-asset mutation cases, cross-language parity reference hashes, cached flatten reuses values) all pass: Python 3/3, TypeScript 3/3, Rust 3/3 (+74 lib tests), Go 13 merkle subtests + existing flatten, .NET 8 Flatten tests on net8.0 and net48. Parity hashes 7dc5b737`…`c2e1 planeHash=ad8a923756fe`…`d7958ba6 centerHash=334c87ee`…`c0ad0 and 5f0266bc`…`b952 planeHash=8abc6a80`…`8f952b centerHash=8ed02a0f`…`ce95d verified byte-for-byte across all five implementations.",
+  "description": "Introduce a merkle-tree based hashed optimization for flattenDesign that makes incremental recomputation possible. Plane and center must have their own merkle hash per piece so only the parts whose relevant inputs changed are recomputed. Hashes MUST NOT change when unrelated fields (e.g., color, description, non-placement attributes, unrelated pieces/connections) change. Implement the same design for all programming languages (py, js/ts, rs, go, .NET) and add identical tests across all implementations that read inputs and expected outputs from shared asset files under compose/assets/compose/.",
+  "summary": "Added a per-piece plane/center Merkle hash API plus cached flatten wrapper across all five languages, byte-identical via the shared HashWriter/formatNumberForHash serialization. Each piece gets `{planeHash, centerHash}`: roots hash from their own guid + plane/center fields, chained pieces hash from the parent hash + connector geometry (parent/child ports, normal/t axes, rotation/tilt/gap/shift for planes; u/v for centers). Roots for each connected component are selected as the first piece in design.pieces order with both plane and center set, falling back to the lexicographically smallest guid. `flattenDesignCached(kit, designGuid, cache)` computes fresh hashes, reuses cached plane/center for pieces whose hash matches, and falls back to flattenDesign output otherwise. Added shared asset `compose/assets/compose/flatten-merkle.cases.compose.json` with 11 mutation cases (description stability, root plane origin change cascades to all planeHashes, root center.u cascades to all centerHashes, connection gap/rotation/tilt/shift/u/v affect only downstream hashes of the expected axis) and a `parity` block with reference hashes for two Nakagin Capsule Tower pieces. Three identical tests per language (shared-asset mutation cases, cross-language parity reference hashes, cached flatten reuses values) all pass: Python 3/3, TypeScript 3/3, Rust 3/3 (+74 lib tests), Go 13 merkle subtests + existing flatten, .NET 8 Flatten tests on net8.0 and net48. Parity hashes 7dc5b737`…`c2e1 planeHash=ad8a923756fe`…`d7958ba6 centerHash=334c87ee`…`c0ad0 and 5f0266bc`…`b952 planeHash=8abc6a80`…`8f952b centerHash=8ed02a0f`…`ce95d verified byte-for-byte across all five implementations.",
   "goal": "🎯aioptimizedrepo",
   "files": {
     "created": [
-      "semio/assets/semio/flatten-merkle.cases.semio.json",
+      "compose/assets/compose/flatten-merkle.cases.compose.json",
       ".repo/🎫/26/04/17/OPTIMIZE-FLATTEN-DESIGN-WITH-MERKLE-HASH-CACHE/important.md"
     ],
     "updated": [
-      "semio/assets/index.ts",
-      "semio/py/main.py",
-      "semio/js/index.ts",
-      "semio/rs/lib.rs",
-      "semio/go/main.go",
-      "semio/go/main_test.go",
-      "semio/net/Semio/Semio.cs",
-      "semio/net/Semio.Tests/Tests.cs"
+      "compose/assets/index.ts",
+      "compose/py/main.py",
+      "compose/js/index.ts",
+      "compose/rs/lib.rs",
+      "compose/go/main.go",
+      "compose/go/main_test.go",
+      "compose/net/Compose/Compose.cs",
+      "compose/net/Compose.Tests/Tests.cs"
     ]
   }
 }

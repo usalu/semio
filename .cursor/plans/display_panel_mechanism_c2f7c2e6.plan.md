@@ -61,7 +61,7 @@ Add a general "Display" left panel with two tabs: **Windows** (window kinds + dr
 ## 2. `@ui/react` `Mode` canvas (`ui/react/index.tsx`)
 - Extend `ModeProps` (line 15703) with `onLayoutChange?(layout: WindowLayoutNode)` and `onTemplateDrop?(payload, target)`.
 - In `Mode` (line 16597): call `onLayoutChange` whenever `setLayoutState` mutates from user docking/closing/resizing (drag-dock, `closeWindow`, axis resize).
-- Add external-drop handling in the existing drop-zone logic (`refreshDropZone`/drop handlers near 16699+): accept a new MIME `application/x-semio-window-template`; on drop, compute the target stack/side and invoke `onTemplateDrop` (the shell inserts the new window). This reuses the existing `ModeDropZone` machinery already built for internal window dragging.
+- Add external-drop handling in the existing drop-zone logic (`refreshDropZone`/drop handlers near 16699+): accept a new MIME `application/x-compose-window-template`; on drop, compute the target stack/side and invoke `onTemplateDrop` (the shell inserts the new window). This reuses the existing `ModeDropZone` machinery already built for internal window dragging.
 - `ModeWindowDescriptor` already keyed by `id`; ensure dynamic instance ids render via the existing `windowsById` map.
 
 ## 3. Shared shell canvas (`framework/product/platform/renderer/react/index.tsx`)
@@ -75,7 +75,7 @@ Add a general "Display" left panel with two tabs: **Windows** (window kinds + dr
 
 ## 4. DisplayPanel component (`framework/product/platform/renderer/react/index.tsx`, new region)
 A single React component rendered as the `content` of a `SidePanelTabConfig` section (same pattern as the puzzle inspector panel), with two internal tabs using existing `@ui/react` primitives:
-- **Windows tab**: list `activeMode.windowKinds`; under each kind list its `templates` as draggable rows. Each row sets `dataTransfer` MIME `application/x-semio-window-template` with `{ windowKindId, templateId }` (mirrors the existing tree palette drag mechanism, `dragData` at `ui/react/index.tsx:7859`).
+- **Windows tab**: list `activeMode.windowKinds`; under each kind list its `templates` as draggable rows. Each row sets `dataTransfer` MIME `application/x-compose-window-template` with `{ windowKindId, templateId }` (mirrors the existing tree palette drag mechanism, `dragData` at `ui/react/index.tsx:7859`).
 - **Layout tab**: list builtin + user `NamedLayout`s; click applies (replace arrangement); a "Save current layout" action snapshots the live layout into the `NamedLayoutStore`; user layouts get a delete affordance.
 - Reads window kinds/layouts and the apply/save callbacks from a small `DisplayContext` provided by `ShellModeCanvas`/`ProductShell`.
 
@@ -84,7 +84,7 @@ A single React component rendered as the `content` of a `SidePanelTabConfig` sec
 - Add `display` to `PANEL_KIND_ICON` (platform renderer ~2389) e.g. `"layout-grid"` (freed from old `windows`).
 
 ## 6. Persistence adapter
-- Add a `localStorage`-backed `StoragePort` implementation in the renderer layer (platform renderer already uses `localStorage` at ~3797), wired into `NamedLayoutStore` keyed `semio.display.layouts.${appId}`. Core stays browser-API-free.
+- Add a `localStorage`-backed `StoragePort` implementation in the renderer layer (platform renderer already uses `localStorage` at ~3797), wired into `NamedLayoutStore` keyed `compose.display.layouts.${appId}`. Core stays browser-API-free.
 
 ## 7. i18n (`ui/react/index.tsx`)
 - Replace the `panelToggle.windows` entries (lines ~1349, ~1660) with `panelToggle.display`; add Display tab labels ("Windows", "Layout") and actions ("Save layout", "Delete layout"). Update the test at ~19545 if it asserts the old key.
@@ -94,7 +94,7 @@ A single React component rendered as the `content` of a `SidePanelTabConfig` sec
 - **puzzle/2d** (`puzzle/2d/play/index.ts`) and **reasoning/mindmap/wires** (`reasoning/mindmap/wires/play/index.ts`): add a couple of templates per pane/kind and one builtin named layout to prove generality.
 
 ## 9. Migrate legacy `windows` reference
-- `semio/client/lib/sketchpad/js/index.ts:14386` registers `panel: "windows"`; repoint it to `display` (its windows-list panel is semantically the new Display) so the shared `PanelKind` change keeps the build green.
+- `compose/client/lib/sketchpad/js/index.ts:14386` registers `panel: "windows"`; repoint it to `display` (its windows-list panel is semantically the new Display) so the shared `PanelKind` change keeps the build green.
 
 ## 10. Tests + run config
 - Extend existing test files only (no new files): `framework/core` tests for `WindowTemplate`/`NamedLayout`/`PanelKind`/store; `ui/react` tests for `Mode` `onLayoutChange`/template-drop and panel-toggle label; renderer tests for DisplayPanel drag payload + apply/save.

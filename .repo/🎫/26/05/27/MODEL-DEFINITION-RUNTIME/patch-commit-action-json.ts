@@ -3,7 +3,7 @@
 import { readdirSync, readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 
-const root = "c:/git/semio/spatial/assets/modelDefinition";
+const root = "c:/git/compose/spatial/assets/modelDefinition";
 const norm = (p: string) => p.replace(/\\/g, "/");
 
 const actionIds = new Set<string>();

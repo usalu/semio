@@ -35,7 +35,7 @@
 }
 
 .fullscreen #navbar,
-.fullscreen #semio\.sketchpad\.navbar,
+.fullscreen #compose\.sketchpad\.navbar,
 .fullscreen [data-slot="navbar"] {
   position: relative;
   transform: translateY(0);
@@ -45,8 +45,8 @@
 
 .fullscreen #navbar:hover,
 .fullscreen #navbar:focus-within,
-.fullscreen #semio\.sketchpad\.navbar:hover,
-.fullscreen #semio\.sketchpad\.navbar:focus-within,
+.fullscreen #compose\.sketchpad\.navbar:hover,
+.fullscreen #compose\.sketchpad\.navbar:focus-within,
 .fullscreen [data-slot="navbar"]:hover,
 .fullscreen [data-slot="navbar"]:focus-within {
   transform: translateY(0);
@@ -65,7 +65,7 @@
 }
 
 .fullscreen:has(#navbar:hover) #navbar,
-.fullscreen:has(#semio\.sketchpad\.navbar:hover) #semio\.sketchpad\.navbar,
+.fullscreen:has(#compose\.sketchpad\.navbar:hover) #compose\.sketchpad\.navbar,
 .fullscreen:has([data-slot="navbar"]:hover) [data-slot="navbar"],
 .fullscreen:has(#footer:hover) #footer {
   transform: translateY(0);
@@ -73,7 +73,7 @@
 
 @media (pointer: coarse) {
   .fullscreen #navbar,
-  .fullscreen #semio\.sketchpad\.navbar,
+  .fullscreen #compose\.sketchpad\.navbar,
   .fullscreen [data-slot="navbar"],
   .fullscreen #footer {
     transition: none;

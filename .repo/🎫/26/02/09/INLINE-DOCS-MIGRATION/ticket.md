@@ -14,8 +14,8 @@ Migrated all doc content from centralized AGENTS.md Codebase section and README.
 - Created 15 new bundle README.md files with # Summary, # Docs, # 💯Requirements sections
 - Added BreachCodeDocsMissingReadme constant, metadata, and Kinds list entry
 - Implemented docsPolicy function checking for missing README.md, Summary, and Requirements
-- Migrated README.md Bundles content (Code Hygiene, Repo Tooling, Ticket System, etc.) to repo/cli/README.md, .devcontainer/README.md, repo/vscode/README.md, semio/js/README.md
-- Migrated README.md Ecosystems content to semio/js/README.md, semio/net/README.md, semio/py/README.md
+- Migrated README.md Bundles content (Code Hygiene, Repo Tooling, Ticket System, etc.) to repo/cli/README.md, .devcontainer/README.md, repo/vscode/README.md, compose/js/README.md
+- Migrated README.md Ecosystems content to compose/js/README.md, compose/net/README.md, compose/py/README.md
 - Replaced AGENTS.md Codebase section (~2380 lines) with compact README.md references (~80 lines)
 - Replaced README.md Ecosystems+Bundles sections (~856 lines) with reference table (~33 lines)
 - Updated AGENTS.md SRS section references from .bundle.md/.folder.md to README.md

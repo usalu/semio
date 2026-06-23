@@ -1,12 +1,12 @@
 import re
 
-FILE = "/workspaces/semio/semio/js/sketchpad/shared.ts"
+FILE = "/workspaces/semio/compose/js/sketchpad/shared.ts"
 
 with open(FILE, "r") as f:
     lines = f.readlines()
 
 section_summaries = {
-    "Imports": "// MUST import XState, Y.js, and semio core types for shared sketchpad infrastructure.",
+    "Imports": "// MUST import XState, Y.js, and compose core types for shared sketchpad infrastructure.",
     "YPath Types": "// MUST define path segment and path types for navigating Y.js document structures.",
     "Granular Hook Types": "// MUST define hook result tuples and field abstractions for granular reactive state access.",
     "Standard Empty Constants": "// MUST provide frozen singleton constants for empty collections and default panel visibility.",

@@ -34,7 +34,7 @@ Pass `unstable_useTransitions={false}` to both `BrowserRouter` and `MemoryRouter
 
 ## Changes
 
-- `semio/js/sketchpad/Sketchpad.tsx`: Add `unstable_useTransitions={false}` to BrowserRouter and MemoryRouter
+- `compose/js/sketchpad/Sketchpad.tsx`: Add `unstable_useTransitions={false}` to BrowserRouter and MemoryRouter
 
 ## Log
 

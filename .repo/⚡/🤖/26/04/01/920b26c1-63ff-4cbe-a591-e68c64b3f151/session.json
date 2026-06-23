@@ -26,7 +26,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "duplicate|Duplicate"
           },
@@ -56,7 +56,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "generateUniqueName"
           },
@@ -86,7 +86,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "function guid|const guid|export.*guid"
           },
@@ -116,7 +116,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "duplicate|Duplicate"
           },
@@ -146,7 +146,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "generateUniqueName"
           },
@@ -176,7 +176,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "TypeId|KindId"
           },
@@ -206,7 +206,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "function guid|const guid|export.*guid"
           },
@@ -235,7 +235,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/920b26c1-63ff-4cbe-a591-e68c64b3f151.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 53140,
             "endLine": 53300
           },
@@ -263,7 +263,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/920b26c1-63ff-4cbe-a591-e68c64b3f151.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 1,
             "endLine": 100
           },
@@ -291,7 +291,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/920b26c1-63ff-4cbe-a591-e68c64b3f151.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 39130,
             "endLine": 39200
           },
@@ -319,7 +319,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/920b26c1-63ff-4cbe-a591-e68c64b3f151.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 53140,
             "endLine": 53300
           },
@@ -347,7 +347,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/920b26c1-63ff-4cbe-a591-e68c64b3f151.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 1,
             "endLine": 100
           },
@@ -375,7 +375,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/920b26c1-63ff-4cbe-a591-e68c64b3f151.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 39130,
             "endLine": 39200
           },
@@ -403,7 +403,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/920b26c1-63ff-4cbe-a591-e68c64b3f151.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 53140,
             "endLine": 53300
           },
@@ -432,7 +432,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/920b26c1-63ff-4cbe-a591-e68c64b3f151.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 1,
             "endLine": 100
           },
@@ -461,7 +461,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/920b26c1-63ff-4cbe-a591-e68c64b3f151.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 39130,
             "endLine": 39200
           },
@@ -490,7 +490,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/920b26c1-63ff-4cbe-a591-e68c64b3f151.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 53140,
             "endLine": 53300
           },
@@ -519,7 +519,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/920b26c1-63ff-4cbe-a591-e68c64b3f151.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 1,
             "endLine": 100
           },
@@ -548,7 +548,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/920b26c1-63ff-4cbe-a591-e68c64b3f151.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 39130,
             "endLine": 39200
           },
@@ -578,7 +578,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "duplicateType|cloneType|deepClone"
           },
@@ -607,7 +607,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "addTypeAfter"
           },
@@ -636,7 +636,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "duplicateType|cloneType|deepClone"
           },
@@ -665,7 +665,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "addTypeAfter"
           },
@@ -694,7 +694,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "duplicateType|cloneType|deepClone"
           },
@@ -724,7 +724,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "addTypeAfter"
           },
@@ -754,7 +754,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "duplicateType|cloneType|deepClone"
           },
@@ -784,7 +784,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "addTypeAfter"
           },
@@ -814,7 +814,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 12800,
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 12740
           },
           "tool_use_id": "toolu_bdrk_01NdDeHta1Hd8kzvAW2qWqkQ__vscode-1775022551671",
@@ -842,7 +842,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 12800,
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 12740
           },
           "tool_use_id": "toolu_bdrk_01NdDeHta1Hd8kzvAW2qWqkQ__vscode-1775022551671",
@@ -870,7 +870,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 12800,
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 12740
           },
           "tool_response": "",
@@ -899,7 +899,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 12800,
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 12740
           },
           "tool_response": "",
@@ -928,7 +928,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/js/**/*.ts",
+            "includePattern": "**/compose/js/**/*.ts",
             "isRegexp": true,
             "query": "export.*interface Type |export.*type Type =|Type.*=.*z\\.(object|intersection)"
           },
@@ -957,7 +957,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/js/**/*.ts",
+            "includePattern": "**/compose/js/**/*.ts",
             "isRegexp": true,
             "query": "export.*interface Type |export.*type Type =|Type.*=.*z\\.(object|intersection)"
           },
@@ -986,7 +986,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/js/**/*.ts",
+            "includePattern": "**/compose/js/**/*.ts",
             "isRegexp": true,
             "query": "export.*interface Type |export.*type Type =|Type.*=.*z\\.(object|intersection)"
           },
@@ -1016,7 +1016,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/js/**/*.ts",
+            "includePattern": "**/compose/js/**/*.ts",
             "isRegexp": true,
             "query": "export.*interface Type |export.*type Type =|Type.*=.*z\\.(object|intersection)"
           },
@@ -1046,7 +1046,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 4510,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 4474
           },
           "tool_use_id": "toolu_bdrk_011yZGUfgcns6nxRAXeLC8cq__vscode-1775022551673",
@@ -1074,7 +1074,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 4510,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 4474
           },
           "tool_use_id": "toolu_bdrk_011yZGUfgcns6nxRAXeLC8cq__vscode-1775022551673",
@@ -1102,7 +1102,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 4510,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 4474
           },
           "tool_response": "",
@@ -1131,7 +1131,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 4510,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 4474
           },
           "tool_response": "",
@@ -1160,7 +1160,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/js/index.ts",
+            "includePattern": "**/compose/js/index.ts",
             "isRegexp": true,
             "query": "ConnectorSchema = z\\.|PropSchema = z\\.|ModelSchema = z\\.|AttributeSchema = z\\."
           },
@@ -1189,7 +1189,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/js/index.ts",
+            "includePattern": "**/compose/js/index.ts",
             "isRegexp": true,
             "query": "ConnectorSchema = z\\.|PropSchema = z\\.|ModelSchema = z\\.|AttributeSchema = z\\."
           },
@@ -1218,7 +1218,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/js/index.ts",
+            "includePattern": "**/compose/js/index.ts",
             "isRegexp": true,
             "query": "ConnectorSchema = z\\.|PropSchema = z\\.|ModelSchema = z\\.|AttributeSchema = z\\."
           },
@@ -1248,7 +1248,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/js/index.ts",
+            "includePattern": "**/compose/js/index.ts",
             "isRegexp": true,
             "query": "ConnectorSchema = z\\.|PropSchema = z\\.|ModelSchema = z\\.|AttributeSchema = z\\."
           },
@@ -1278,7 +1278,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 3140,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 3107
           },
           "tool_use_id": "toolu_bdrk_01RKgQxLwef5kN4Z8cRj53ja__vscode-1775022551676",
@@ -1306,7 +1306,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 4280,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 4230
           },
           "tool_use_id": "toolu_bdrk_017XMCLn6CFoDboLujQP6vXd__vscode-1775022551678",
@@ -1334,7 +1334,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 880,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 855
           },
           "tool_use_id": "toolu_bdrk_01JucMoj6FUobZTTGg1nb2Ug__vscode-1775022551675",
@@ -1362,7 +1362,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 3920,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 3880
           },
           "tool_use_id": "toolu_bdrk_014JR2eF8XH6tpc5ebD5xCzD__vscode-1775022551677",
@@ -1390,7 +1390,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 4280,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 4230
           },
           "tool_use_id": "toolu_bdrk_017XMCLn6CFoDboLujQP6vXd__vscode-1775022551678",
@@ -1418,7 +1418,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 3140,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 3107
           },
           "tool_use_id": "toolu_bdrk_01RKgQxLwef5kN4Z8cRj53ja__vscode-1775022551676",
@@ -1446,7 +1446,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 880,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 855
           },
           "tool_use_id": "toolu_bdrk_01JucMoj6FUobZTTGg1nb2Ug__vscode-1775022551675",
@@ -1474,7 +1474,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 3920,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 3880
           },
           "tool_response": "",
@@ -1503,7 +1503,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 4280,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 4230
           },
           "tool_response": "",
@@ -1532,7 +1532,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 3140,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 3107
           },
           "tool_response": "",
@@ -1561,7 +1561,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 880,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 855
           },
           "tool_response": "",
@@ -1590,7 +1590,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 3920,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 3880
           },
           "tool_response": "",
@@ -1619,7 +1619,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 4280,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 4230
           },
           "tool_response": "",
@@ -1648,7 +1648,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 3140,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 3107
           },
           "tool_response": "",
@@ -1677,7 +1677,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 880,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 855
           },
           "tool_response": "",
@@ -1706,7 +1706,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/js/index.ts",
+            "includePattern": "**/compose/js/index.ts",
             "isRegexp": true,
             "query": "export function generateUniqueName|export const generateUniqueName"
           },
@@ -1735,7 +1735,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/js/index.ts",
+            "includePattern": "**/compose/js/index.ts",
             "isRegexp": true,
             "query": "export function guid|export const guid"
           },
@@ -1764,7 +1764,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/js/index.ts",
+            "includePattern": "**/compose/js/index.ts",
             "isRegexp": true,
             "query": "export function generateUniqueName|export const generateUniqueName"
           },
@@ -1793,7 +1793,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/js/index.ts",
+            "includePattern": "**/compose/js/index.ts",
             "isRegexp": true,
             "query": "export function guid|export const guid"
           },
@@ -1822,7 +1822,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/js/index.ts",
+            "includePattern": "**/compose/js/index.ts",
             "isRegexp": true,
             "query": "export function generateUniqueName|export const generateUniqueName"
           },
@@ -1852,7 +1852,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/js/index.ts",
+            "includePattern": "**/compose/js/index.ts",
             "isRegexp": true,
             "query": "export function guid|export const guid"
           },
@@ -1882,7 +1882,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/js/index.ts",
+            "includePattern": "**/compose/js/index.ts",
             "isRegexp": true,
             "query": "export function generateUniqueName|export const generateUniqueName"
           },
@@ -1912,7 +1912,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/js/index.ts",
+            "includePattern": "**/compose/js/index.ts",
             "isRegexp": true,
             "query": "export function guid|export const guid"
           },
@@ -1942,7 +1942,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 210,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 178
           },
           "tool_use_id": "toolu_bdrk_01BUP3ZQCq1oDkWY7mgggn9U__vscode-1775022551681",
@@ -1970,7 +1970,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 210,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 178
           },
           "tool_use_id": "toolu_bdrk_01BUP3ZQCq1oDkWY7mgggn9U__vscode-1775022551681",
@@ -1998,7 +1998,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 210,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 178
           },
           "tool_response": "",
@@ -2027,7 +2027,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 210,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 178
           },
           "tool_response": "",
@@ -2283,7 +2283,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/920b26c1-63ff-4cbe-a591-e68c64b3f151.jsonl",
           "tool_name": "file_search",
           "tool_input": {
-            "query": "**/semio/js/**/*.spec.ts",
+            "query": "**/compose/js/**/*.spec.ts",
             "maxResults": 20
           },
           "tool_use_id": "toolu_bdrk_01CysmTSu4ByeH3gtoqfco41__vscode-1775022551685",
@@ -2338,7 +2338,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/920b26c1-63ff-4cbe-a591-e68c64b3f151.jsonl",
           "tool_name": "file_search",
           "tool_input": {
-            "query": "**/semio/js/**/*.spec.ts",
+            "query": "**/compose/js/**/*.spec.ts",
             "maxResults": 20
           },
           "tool_use_id": "toolu_bdrk_01CysmTSu4ByeH3gtoqfco41__vscode-1775022551685",
@@ -2422,7 +2422,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/920b26c1-63ff-4cbe-a591-e68c64b3f151.jsonl",
           "tool_name": "file_search",
           "tool_input": {
-            "query": "**/semio/js/**/*.spec.ts",
+            "query": "**/compose/js/**/*.spec.ts",
             "maxResults": 20
           },
           "tool_response": "",
@@ -2479,7 +2479,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/920b26c1-63ff-4cbe-a591-e68c64b3f151.jsonl",
           "tool_name": "file_search",
           "tool_input": {
-            "query": "**/semio/js/**/*.spec.ts",
+            "query": "**/compose/js/**/*.spec.ts",
             "maxResults": 20
           },
           "tool_response": "",
@@ -2507,7 +2507,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/920b26c1-63ff-4cbe-a591-e68c64b3f151.jsonl",
           "tool_name": "file_search",
           "tool_input": {
-            "query": "**/semio/js/vite.config.ts",
+            "query": "**/compose/js/vite.config.ts",
             "maxResults": 20
           },
           "tool_use_id": "toolu_bdrk_01Wh6Jw2eGTVSeAu7Ddog4M2__vscode-1775022551687",
@@ -2534,7 +2534,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/920b26c1-63ff-4cbe-a591-e68c64b3f151.jsonl",
           "tool_name": "file_search",
           "tool_input": {
-            "query": "**/semio/js/**/*.test.*",
+            "query": "**/compose/js/**/*.test.*",
             "maxResults": 20
           },
           "tool_use_id": "toolu_bdrk_019V8CFMpBmWzhSpacR1aiD9__vscode-1775022551686",
@@ -2561,7 +2561,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/920b26c1-63ff-4cbe-a591-e68c64b3f151.jsonl",
           "tool_name": "file_search",
           "tool_input": {
-            "query": "**/semio/js/vite.config.ts",
+            "query": "**/compose/js/vite.config.ts",
             "maxResults": 20
           },
           "tool_use_id": "toolu_bdrk_01Wh6Jw2eGTVSeAu7Ddog4M2__vscode-1775022551687",
@@ -2588,7 +2588,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/920b26c1-63ff-4cbe-a591-e68c64b3f151.jsonl",
           "tool_name": "file_search",
           "tool_input": {
-            "query": "**/semio/js/**/*.test.*",
+            "query": "**/compose/js/**/*.test.*",
             "maxResults": 20
           },
           "tool_use_id": "toolu_bdrk_019V8CFMpBmWzhSpacR1aiD9__vscode-1775022551686",
@@ -2615,7 +2615,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/920b26c1-63ff-4cbe-a591-e68c64b3f151.jsonl",
           "tool_name": "file_search",
           "tool_input": {
-            "query": "**/semio/js/vite.config.ts",
+            "query": "**/compose/js/vite.config.ts",
             "maxResults": 20
           },
           "tool_response": "",
@@ -2643,7 +2643,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/920b26c1-63ff-4cbe-a591-e68c64b3f151.jsonl",
           "tool_name": "file_search",
           "tool_input": {
-            "query": "**/semio/js/**/*.test.*",
+            "query": "**/compose/js/**/*.test.*",
             "maxResults": 20
           },
           "tool_response": "",
@@ -2671,7 +2671,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/920b26c1-63ff-4cbe-a591-e68c64b3f151.jsonl",
           "tool_name": "file_search",
           "tool_input": {
-            "query": "**/semio/js/vite.config.ts",
+            "query": "**/compose/js/vite.config.ts",
             "maxResults": 20
           },
           "tool_response": "",
@@ -2699,7 +2699,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/920b26c1-63ff-4cbe-a591-e68c64b3f151.jsonl",
           "tool_name": "file_search",
           "tool_input": {
-            "query": "**/semio/js/**/*.test.*",
+            "query": "**/compose/js/**/*.test.*",
             "maxResults": 20
           },
           "tool_response": "",
@@ -2727,7 +2727,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/920b26c1-63ff-4cbe-a591-e68c64b3f151.jsonl",
           "tool_name": "list_dir",
           "tool_input": {
-            "path": "/workspaces/semio/semio/js"
+            "path": "/workspaces/semio/compose/js"
           },
           "tool_use_id": "toolu_bdrk_012vKwLD3azsedog4djKaPeU__vscode-1775022551689",
           "cwd": "/workspaces/semio"
@@ -2754,7 +2754,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 50,
-            "filePath": "/workspaces/semio/semio/js/vite.config.ts",
+            "filePath": "/workspaces/semio/compose/js/vite.config.ts",
             "startLine": 1
           },
           "tool_use_id": "toolu_bdrk_017rvXFAs4DN2toDFmkf5dWi__vscode-1775022551688",
@@ -2781,7 +2781,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/920b26c1-63ff-4cbe-a591-e68c64b3f151.jsonl",
           "tool_name": "list_dir",
           "tool_input": {
-            "path": "/workspaces/semio/semio/js"
+            "path": "/workspaces/semio/compose/js"
           },
           "tool_use_id": "toolu_bdrk_012vKwLD3azsedog4djKaPeU__vscode-1775022551689",
           "cwd": "/workspaces/semio"
@@ -2808,7 +2808,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 50,
-            "filePath": "/workspaces/semio/semio/js/vite.config.ts",
+            "filePath": "/workspaces/semio/compose/js/vite.config.ts",
             "startLine": 1
           },
           "tool_use_id": "toolu_bdrk_017rvXFAs4DN2toDFmkf5dWi__vscode-1775022551688",
@@ -2835,7 +2835,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/920b26c1-63ff-4cbe-a591-e68c64b3f151.jsonl",
           "tool_name": "list_dir",
           "tool_input": {
-            "path": "/workspaces/semio/semio/js"
+            "path": "/workspaces/semio/compose/js"
           },
           "tool_response": "",
           "tool_use_id": "toolu_bdrk_012vKwLD3azsedog4djKaPeU__vscode-1775022551689",
@@ -2863,7 +2863,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 50,
-            "filePath": "/workspaces/semio/semio/js/vite.config.ts",
+            "filePath": "/workspaces/semio/compose/js/vite.config.ts",
             "startLine": 1
           },
           "tool_response": "",
@@ -2891,7 +2891,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/920b26c1-63ff-4cbe-a591-e68c64b3f151.jsonl",
           "tool_name": "list_dir",
           "tool_input": {
-            "path": "/workspaces/semio/semio/js"
+            "path": "/workspaces/semio/compose/js"
           },
           "tool_response": "",
           "tool_use_id": "toolu_bdrk_012vKwLD3azsedog4djKaPeU__vscode-1775022551689",
@@ -2919,7 +2919,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 50,
-            "filePath": "/workspaces/semio/semio/js/vite.config.ts",
+            "filePath": "/workspaces/semio/compose/js/vite.config.ts",
             "startLine": 1
           },
           "tool_response": "",
@@ -2948,7 +2948,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/js/index.ts",
+            "includePattern": "**/compose/js/index.ts",
             "isRegexp": true,
             "query": "describe\\(|test\\(|it\\("
           },
@@ -2977,7 +2977,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/js/index.ts",
+            "includePattern": "**/compose/js/index.ts",
             "isRegexp": true,
             "query": "describe\\(|test\\(|it\\("
           },
@@ -3006,7 +3006,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/js/index.ts",
+            "includePattern": "**/compose/js/index.ts",
             "isRegexp": true,
             "query": "describe\\(|test\\(|it\\("
           },
@@ -3036,7 +3036,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/js/index.ts",
+            "includePattern": "**/compose/js/index.ts",
             "isRegexp": true,
             "query": "describe\\(|test\\(|it\\("
           },
@@ -3066,7 +3066,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/js/index.ts",
+            "includePattern": "**/compose/js/index.ts",
             "isRegexp": true,
             "query": "^(describe|test|it)\\(|import.*vitest|from.*vitest"
           },
@@ -3095,7 +3095,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/js/index.ts",
+            "includePattern": "**/compose/js/index.ts",
             "isRegexp": true,
             "query": "^(describe|test|it)\\(|import.*vitest|from.*vitest"
           },
@@ -3124,7 +3124,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/js/index.ts",
+            "includePattern": "**/compose/js/index.ts",
             "isRegexp": true,
             "query": "^(describe|test|it)\\(|import.*vitest|from.*vitest"
           },
@@ -3154,7 +3154,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/js/index.ts",
+            "includePattern": "**/compose/js/index.ts",
             "isRegexp": true,
             "query": "^(describe|test|it)\\(|import.*vitest|from.*vitest"
           },
@@ -3183,7 +3183,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/920b26c1-63ff-4cbe-a591-e68c64b3f151.jsonl",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "wc -l /workspaces/semio/semio/js/index.ts",
+            "command": "wc -l /workspaces/semio/compose/js/index.ts",
             "explanation": "Check line count of js/index.ts",
             "goal": "Understand file size",
             "isBackground": false,
@@ -3213,7 +3213,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/920b26c1-63ff-4cbe-a591-e68c64b3f151.jsonl",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "wc -l /workspaces/semio/semio/js/index.ts",
+            "command": "wc -l /workspaces/semio/compose/js/index.ts",
             "explanation": "Check line count of js/index.ts",
             "goal": "Understand file size",
             "isBackground": false,
@@ -3243,13 +3243,13 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/920b26c1-63ff-4cbe-a591-e68c64b3f151.jsonl",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "wc -l /workspaces/semio/semio/js/index.ts",
+            "command": "wc -l /workspaces/semio/compose/js/index.ts",
             "explanation": "Check line count of js/index.ts",
             "goal": "Understand file size",
             "isBackground": false,
             "timeout": 5000
           },
-          "tool_response": "17322 /workspaces/semio/semio/js/index.ts",
+          "tool_response": "17322 /workspaces/semio/compose/js/index.ts",
           "tool_use_id": "toolu_bdrk_01JKLpiA9KnZqtqYMy2nex6w__vscode-1775022551692",
           "cwd": "/workspaces/semio"
         }
@@ -3274,13 +3274,13 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/920b26c1-63ff-4cbe-a591-e68c64b3f151.jsonl",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "wc -l /workspaces/semio/semio/js/index.ts",
+            "command": "wc -l /workspaces/semio/compose/js/index.ts",
             "explanation": "Check line count of js/index.ts",
             "goal": "Understand file size",
             "isBackground": false,
             "timeout": 5000
           },
-          "tool_response": "17322 /workspaces/semio/semio/js/index.ts",
+          "tool_response": "17322 /workspaces/semio/compose/js/index.ts",
           "tool_use_id": "toolu_bdrk_01JKLpiA9KnZqtqYMy2nex6w__vscode-1775022551692",
           "cwd": "/workspaces/semio"
         }
@@ -3306,7 +3306,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 15020,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 14920
           },
           "tool_use_id": "toolu_bdrk_015KRUZd7M9CzTrdBc8j92qw__vscode-1775022551693",
@@ -3334,7 +3334,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 15020,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 14920
           },
           "tool_use_id": "toolu_bdrk_015KRUZd7M9CzTrdBc8j92qw__vscode-1775022551693",
@@ -3362,7 +3362,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 15020,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 14920
           },
           "tool_response": "",
@@ -3391,7 +3391,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 15020,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 14920
           },
           "tool_response": "",
@@ -3420,7 +3420,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 17322,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 17290
           },
           "tool_use_id": "toolu_bdrk_014WiyqHJyshecABTnm9nBpx__vscode-1775022551694",
@@ -3448,7 +3448,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 17322,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 17290
           },
           "tool_use_id": "toolu_bdrk_014WiyqHJyshecABTnm9nBpx__vscode-1775022551694",
@@ -3476,7 +3476,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 17322,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 17290
           },
           "tool_response": "",
@@ -3505,7 +3505,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 17322,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 17290
           },
           "tool_response": "",
@@ -3534,7 +3534,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/js/index.ts",
+            "includePattern": "**/compose/js/index.ts",
             "isRegexp": true,
             "query": "duplicateType|cloneType|deepCloneType"
           },
@@ -3563,7 +3563,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/js/index.ts",
+            "includePattern": "**/compose/js/index.ts",
             "isRegexp": true,
             "query": "duplicateType|cloneType|deepCloneType"
           },
@@ -3592,7 +3592,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/js/index.ts",
+            "includePattern": "**/compose/js/index.ts",
             "isRegexp": true,
             "query": "duplicateType|cloneType|deepCloneType"
           },
@@ -3622,7 +3622,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/js/index.ts",
+            "includePattern": "**/compose/js/index.ts",
             "isRegexp": true,
             "query": "duplicateType|cloneType|deepCloneType"
           },
@@ -3652,7 +3652,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 50,
-            "includePattern": "**/semio/js/index.ts",
+            "includePattern": "**/compose/js/index.ts",
             "isRegexp": true,
             "query": "describe\\("
           },
@@ -3681,7 +3681,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 50,
-            "includePattern": "**/semio/js/index.ts",
+            "includePattern": "**/compose/js/index.ts",
             "isRegexp": true,
             "query": "describe\\("
           },
@@ -3710,7 +3710,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 50,
-            "includePattern": "**/semio/js/index.ts",
+            "includePattern": "**/compose/js/index.ts",
             "isRegexp": true,
             "query": "describe\\("
           },
@@ -3740,7 +3740,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 50,
-            "includePattern": "**/semio/js/index.ts",
+            "includePattern": "**/compose/js/index.ts",
             "isRegexp": true,
             "query": "describe\\("
           },
@@ -3770,7 +3770,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 30,
-            "includePattern": "**/semio/js/index.ts",
+            "includePattern": "**/compose/js/index.ts",
             "isRegexp": true,
             "query": "#region.*Type|#endregion.*Type"
           },
@@ -3799,7 +3799,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 30,
-            "includePattern": "**/semio/js/index.ts",
+            "includePattern": "**/compose/js/index.ts",
             "isRegexp": true,
             "query": "#region.*Type|#endregion.*Type"
           },
@@ -3828,7 +3828,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 30,
-            "includePattern": "**/semio/js/index.ts",
+            "includePattern": "**/compose/js/index.ts",
             "isRegexp": true,
             "query": "#region.*Type|#endregion.*Type"
           },
@@ -3858,7 +3858,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 30,
-            "includePattern": "**/semio/js/index.ts",
+            "includePattern": "**/compose/js/index.ts",
             "isRegexp": true,
             "query": "#region.*Type|#endregion.*Type"
           },
@@ -3888,7 +3888,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 40,
-            "includePattern": "**/semio/js/index.ts",
+            "includePattern": "**/compose/js/index.ts",
             "isRegexp": true,
             "query": "#region 🔖Kit|#endregion 🔖Kit"
           },
@@ -3917,7 +3917,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 40,
-            "includePattern": "**/semio/js/index.ts",
+            "includePattern": "**/compose/js/index.ts",
             "isRegexp": true,
             "query": "#region 🔖Kit|#endregion 🔖Kit"
           },
@@ -3946,7 +3946,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 40,
-            "includePattern": "**/semio/js/index.ts",
+            "includePattern": "**/compose/js/index.ts",
             "isRegexp": true,
             "query": "#region 🔖Kit|#endregion 🔖Kit"
           },
@@ -3976,7 +3976,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 40,
-            "includePattern": "**/semio/js/index.ts",
+            "includePattern": "**/compose/js/index.ts",
             "isRegexp": true,
             "query": "#region 🔖Kit|#endregion 🔖Kit"
           },
@@ -4006,7 +4006,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 14930,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 14900
           },
           "tool_use_id": "toolu_bdrk_01KyHJZWbxhVFL42Yjz1Qz4a__vscode-1775022551699",
@@ -4034,7 +4034,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 14930,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 14900
           },
           "tool_use_id": "toolu_bdrk_01KyHJZWbxhVFL42Yjz1Qz4a__vscode-1775022551699",
@@ -4062,7 +4062,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 14930,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 14900
           },
           "tool_response": "",
@@ -4091,7 +4091,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 14930,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 14900
           },
           "tool_response": "",
@@ -4120,7 +4120,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/js/index.ts",
+            "includePattern": "**/compose/js/index.ts",
             "isRegexp": true,
             "query": "export function|export const.*=.*\\("
           },
@@ -4149,7 +4149,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/js/index.ts",
+            "includePattern": "**/compose/js/index.ts",
             "isRegexp": true,
             "query": "export function|export const.*=.*\\("
           },
@@ -4178,7 +4178,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/js/index.ts",
+            "includePattern": "**/compose/js/index.ts",
             "isRegexp": true,
             "query": "export function|export const.*=.*\\("
           },
@@ -4208,7 +4208,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/js/index.ts",
+            "includePattern": "**/compose/js/index.ts",
             "isRegexp": true,
             "query": "export function|export const.*=.*\\("
           },
@@ -4238,7 +4238,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 4720,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 4700
           },
           "tool_use_id": "toolu_bdrk_015sYRLFpT3L3PCDfbLJhF6T__vscode-1775022551701",
@@ -4266,7 +4266,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 4720,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 4700
           },
           "tool_use_id": "toolu_bdrk_015sYRLFpT3L3PCDfbLJhF6T__vscode-1775022551701",
@@ -4294,7 +4294,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 4720,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 4700
           },
           "tool_response": "",
@@ -4323,7 +4323,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 4720,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 4700
           },
           "tool_response": "",
@@ -4352,7 +4352,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/js/index.ts",
+            "includePattern": "**/compose/js/index.ts",
             "isRegexp": true,
             "query": "export const findTypeInKit"
           },
@@ -4381,7 +4381,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/js/index.ts",
+            "includePattern": "**/compose/js/index.ts",
             "isRegexp": true,
             "query": "export const findTypeInKit"
           },
@@ -4410,7 +4410,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/js/index.ts",
+            "includePattern": "**/compose/js/index.ts",
             "isRegexp": true,
             "query": "export const findTypeInKit"
           },
@@ -4440,7 +4440,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/js/index.ts",
+            "includePattern": "**/compose/js/index.ts",
             "isRegexp": true,
             "query": "export const findTypeInKit"
           },
@@ -4470,7 +4470,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 8140,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 8125
           },
           "tool_use_id": "toolu_bdrk_018wB2SozWH4zQNDaGVvMtoC__vscode-1775022551703",
@@ -4498,7 +4498,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 8140,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 8125
           },
           "tool_use_id": "toolu_bdrk_018wB2SozWH4zQNDaGVvMtoC__vscode-1775022551703",
@@ -4526,7 +4526,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 8140,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 8125
           },
           "tool_response": "",
@@ -4555,7 +4555,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 8140,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 8125
           },
           "tool_response": "",
@@ -4584,7 +4584,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 8490,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 8418
           },
           "tool_use_id": "toolu_bdrk_01HUXPGqaF3r7hmtQAbnEnWG__vscode-1775022551704",
@@ -4612,7 +4612,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 8490,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 8418
           },
           "tool_use_id": "toolu_bdrk_01HUXPGqaF3r7hmtQAbnEnWG__vscode-1775022551704",
@@ -4640,7 +4640,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 8490,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 8418
           },
           "tool_response": "",
@@ -4669,7 +4669,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 8490,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 8418
           },
           "tool_response": "",
@@ -4698,7 +4698,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 17050,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 17014
           },
           "tool_use_id": "toolu_bdrk_01VNMZtfHUW2bxU7xnWGLNEG__vscode-1775022551705",
@@ -4726,7 +4726,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 17050,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 17014
           },
           "tool_use_id": "toolu_bdrk_01VNMZtfHUW2bxU7xnWGLNEG__vscode-1775022551705",
@@ -4754,7 +4754,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 17050,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 17014
           },
           "tool_response": "",
@@ -4783,7 +4783,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 17050,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 17014
           },
           "tool_response": "",
@@ -4812,7 +4812,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 17080,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 17050
           },
           "tool_use_id": "toolu_bdrk_014wwGL7KjnNPgNzcnFTeM62__vscode-1775022551706",
@@ -4840,7 +4840,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 17080,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 17050
           },
           "tool_use_id": "toolu_bdrk_014wwGL7KjnNPgNzcnFTeM62__vscode-1775022551706",
@@ -4868,7 +4868,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 17080,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 17050
           },
           "tool_response": "",
@@ -4897,7 +4897,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 17080,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 17050
           },
           "tool_response": "",
@@ -4926,7 +4926,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 17140,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 17080
           },
           "tool_use_id": "toolu_bdrk_01Fi35n69xtwJoVu5bh2TsPh__vscode-1775022551707",
@@ -4954,7 +4954,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 17140,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 17080
           },
           "tool_use_id": "toolu_bdrk_01Fi35n69xtwJoVu5bh2TsPh__vscode-1775022551707",
@@ -4982,7 +4982,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 17140,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 17080
           },
           "tool_response": "",
@@ -5011,7 +5011,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 17140,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 17080
           },
           "tool_response": "",
@@ -5040,7 +5040,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/js/index.ts",
+            "includePattern": "**/compose/js/index.ts",
             "isRegexp": true,
             "query": "#endregion 🔖Tests"
           },
@@ -5069,7 +5069,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/js/index.ts",
+            "includePattern": "**/compose/js/index.ts",
             "isRegexp": true,
             "query": "#endregion 🔖Tests"
           },
@@ -5098,7 +5098,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/js/index.ts",
+            "includePattern": "**/compose/js/index.ts",
             "isRegexp": true,
             "query": "#endregion 🔖Tests"
           },
@@ -5128,7 +5128,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/js/index.ts",
+            "includePattern": "**/compose/js/index.ts",
             "isRegexp": true,
             "query": "#endregion 🔖Tests"
           },
@@ -5158,7 +5158,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 17225,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 17210
           },
           "tool_use_id": "toolu_bdrk_01GPUwUTGjRcidogAyF9YZd1__vscode-1775022551709",
@@ -5186,7 +5186,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 17225,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 17210
           },
           "tool_use_id": "toolu_bdrk_01GPUwUTGjRcidogAyF9YZd1__vscode-1775022551709",
@@ -5214,7 +5214,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 17225,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 17210
           },
           "tool_response": "",
@@ -5243,7 +5243,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 17225,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 17210
           },
           "tool_response": "",
@@ -5272,7 +5272,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 39160,
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 39100
           },
           "tool_use_id": "toolu_bdrk_01NSJkB52hMFLR6dTb8W7s3B__vscode-1775022551710",
@@ -5300,7 +5300,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 39160,
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 39100
           },
           "tool_use_id": "toolu_bdrk_01NSJkB52hMFLR6dTb8W7s3B__vscode-1775022551710",
@@ -5328,7 +5328,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 39160,
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 39100
           },
           "tool_response": "",
@@ -5357,7 +5357,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 39160,
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 39100
           },
           "tool_response": "",
@@ -5386,7 +5386,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "TypeTreeItem.*FC|const TypeTreeItem"
           },
@@ -5415,7 +5415,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "TypeTreeItem.*FC|const TypeTreeItem"
           },
@@ -5444,7 +5444,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "TypeTreeItem.*FC|const TypeTreeItem"
           },
@@ -5474,7 +5474,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "TypeTreeItem.*FC|const TypeTreeItem"
           },
@@ -5504,7 +5504,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 39100,
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 39060
           },
           "tool_use_id": "toolu_bdrk_016rEDpVAti5F2EBeXEiumNi__vscode-1775022551712",
@@ -5532,7 +5532,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 39100,
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 39060
           },
           "tool_use_id": "toolu_bdrk_016rEDpVAti5F2EBeXEiumNi__vscode-1775022551712",
@@ -5560,7 +5560,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 39100,
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 39060
           },
           "tool_response": "",
@@ -5589,7 +5589,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 39100,
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 39060
           },
           "tool_response": "",
@@ -5618,7 +5618,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "\u003cTypeTreeItem"
           },
@@ -5647,7 +5647,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "\u003cTypeTreeItem"
           },
@@ -5676,7 +5676,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "\u003cTypeTreeItem"
           },
@@ -5706,7 +5706,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "\u003cTypeTreeItem"
           },
@@ -5736,7 +5736,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 38970,
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 38930
           },
           "tool_use_id": "toolu_bdrk_012WQpYyMNGg5Nsr2sA1HLJX__vscode-1775022551714",
@@ -5764,7 +5764,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 38970,
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 38930
           },
           "tool_use_id": "toolu_bdrk_012WQpYyMNGg5Nsr2sA1HLJX__vscode-1775022551714",
@@ -5792,7 +5792,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 38970,
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 38930
           },
           "tool_response": "",
@@ -5821,7 +5821,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 38970,
-            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/index.tsx",
             "startLine": 38930
           },
           "tool_response": "",
@@ -5850,7 +5850,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "const workbenchTypes"
           },
@@ -5879,7 +5879,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "const workbenchTypes"
           },
@@ -5908,7 +5908,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "const workbenchTypes"
           },
@@ -5938,7 +5938,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "const workbenchTypes"
           },
@@ -6232,7 +6232,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "__vitest_worker__|await import\\(\"vitest\"\\)|from \"vitest\""
           },
@@ -6261,7 +6261,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "__vitest_worker__|await import\\(\"vitest\"\\)|from \"vitest\""
           },
@@ -6289,7 +6289,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/920b26c1-63ff-4cbe-a591-e68c64b3f151.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/sketchpad/vite.config.ts",
+            "filePath": "/workspaces/semio/compose/sketchpad/vite.config.ts",
             "startLine": 1,
             "endLine": 80
           },
@@ -6319,7 +6319,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "__vitest_worker__|await import\\(\"vitest\"\\)|from \"vitest\""
           },
@@ -6348,7 +6348,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/920b26c1-63ff-4cbe-a591-e68c64b3f151.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/sketchpad/vite.config.ts",
+            "filePath": "/workspaces/semio/compose/sketchpad/vite.config.ts",
             "startLine": 1,
             "endLine": 80
           },
@@ -6378,7 +6378,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/index.tsx",
+            "includePattern": "**/compose/sketchpad/index.tsx",
             "isRegexp": true,
             "query": "__vitest_worker__|await import\\(\"vitest\"\\)|from \"vitest\""
           },

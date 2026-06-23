@@ -10,15 +10,15 @@ Placed Kit zip-entry assertions into existing sketchpad test structure using sha
 
 ## Changes
 
-- `semio/js/sketchpad/Kit.tsx`
+- `compose/js/sketchpad/Kit.tsx`
 - Added zip-path-backed filtering inputs using `useFileUrls()`.
 - Normalized imported path extraction from `KitStore.fileUrls` keys.
 - Filtered `kit.files` and `kit.folders` by imported zip path existence before `buildFileTree`/`flattenFileTree`.
 - Added folder visibility gating to rows with zip-backed file descendants.
 - Updated dependency tracking to avoid stale `Map`-identity memoization.
-- `semio/js/sketchpad/Sketchpad.tsx`
+- `compose/js/sketchpad/Sketchpad.tsx`
 - Updated `KitStore.storeFileBlobs` to call `updated()` after storing blobs, ensuring observers re-render when file-url maps populate.
-- `semio/js/sketchpad.test.ts`
+- `compose/js/sketchpad.test.ts`
 - Extended existing `Kit` playwright test with zip-entry filtering coverage for file rows, metadata-only file hiding, and preserved table interactions (kind filter toggles, expand/collapse, folder selection).
 - Refactored the new Kit zip-entry assertions into helper functions (`createKitZipFixture`, `applyKitKindFilter`, `setKitKindTogglePressed`) and grouped runtime assertions under `// #region 🔖Kit Zip Entry Filtering` to match existing test organization.
 
@@ -26,14 +26,14 @@ Placed Kit zip-entry assertions into existing sketchpad test structure using sha
 
 - Gathered repo context via `./repo/cli/cli tree kit`.
 - Opened ticket under `SKETCHPAD-IMPROVEMENTS`.
-- Traced `importKit` (`semio/js/semio.ts`) and zip-file storage (`KitStore.fileUrls` in `Sketchpad.tsx`).
+- Traced `importKit` (`compose/js/compose.ts`) and zip-file storage (`KitStore.fileUrls` in `Sketchpad.tsx`).
 - Implemented row filtering in `Kit.tsx` using imported zip file map keys.
-- Added test coverage in existing `semio/js/sketchpad.test.ts`.
-- Ran `cd semio/js && npx playwright test sketchpad.test.ts --grep "Kit" --reporter=line`.
+- Added test coverage in existing `compose/js/sketchpad.test.ts`.
+- Ran `cd compose/js && npx playwright test sketchpad.test.ts --grep "Kit" --reporter=line`.
 - Result: pass (`1 passed`).
 - Reopened ticket for follow-up request to place the test in existing structure.
 - Refactored structure in `sketchpad.test.ts` without changing test scope, then reran:
-- `cd semio/js && npx playwright test sketchpad.test.ts --grep "Kit" --reporter=line` -> pass (`1 passed`).
+- `cd compose/js && npx playwright test sketchpad.test.ts --grep "Kit" --reporter=line` -> pass (`1 passed`).
 
 ## Todos
 

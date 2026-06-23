@@ -1,8 +1,8 @@
 {
   "title": "Diagram Further Zoom Out",
   "status": "closed",
-  "description": "Lower SemioDiagram MIN_DIAGRAM_ZOOM (or equivalent) so users can zoom out further; keep wheel/double-click behavior consistent.",
-  "summary": "SemioDiagram: MIN_DIAGRAM_ZOOM lowered from 1 to 0.15 so wheel zoom and fit-to-bounds can zoom out further (~6.7× vs 1× floor). Comment documents meaning. Vitest 232 pass.",
+  "description": "Lower ComposeDiagram MIN_DIAGRAM_ZOOM (or equivalent) so users can zoom out further; keep wheel/double-click behavior consistent.",
+  "summary": "ComposeDiagram: MIN_DIAGRAM_ZOOM lowered from 1 to 0.15 so wheel zoom and fit-to-bounds can zoom out further (~6.7× vs 1× floor). Comment documents meaning. Vitest 232 pass.",
   "goal": "🎯uipolish",
   "sessions": [
     "⚪c80d6854607846eb8b9de60d9d83bee2"

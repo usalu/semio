@@ -1,7 +1,7 @@
 import re
 from pathlib import Path
 
-p = Path(r"c:\git\semio\semio\client\lib\rs\lib.rs")
+p = Path(r"c:\git\compose\compose\client\lib\rs\lib.rs")
 text = p.read_text(encoding="utf-8")
 
 start = text.index("    macro_rules! gap_surface_families_from_names {")

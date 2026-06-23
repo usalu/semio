@@ -8,9 +8,9 @@ VSIX_PATH="repo/vscode/repo.vsix"
 EXTENSION_PUBLISHER=""
 EXTENSION_NAME=""
 EXTENSION_ID=""
-INSTALL_LOCK_FILE="/tmp/semio-post-attach-extension-install.lock"
+INSTALL_LOCK_FILE="/tmp/compose-post-attach-extension-install.lock"
 WSL_ERROR="Command is only available in WSL or inside a Visual Studio Code terminal."
-GITKRAKEN_WORKSPACE_NAME="${SEMIO_GITKRAKEN_WORKSPACE_NAME:-semio}"
+GITKRAKEN_WORKSPACE_NAME="${SEMIO_GITKRAKEN_WORKSPACE_NAME:-compose}"
 SKIP_EXTENSION_INSTALL="${SEMIO_POST_ATTACH_SKIP_EXTENSION_INSTALL:-}"
 SKIP_TOOL_INSTALL="${SEMIO_POST_ATTACH_SKIP_TOOL_INSTALL:-}"
 
@@ -411,7 +411,7 @@ if [ "${#IDE_CLIS[@]}" -gt 0 ]; then
       done
     fi
     if [ -n "$needs_rebuild" ]; then
-      echo "🔨 Building semio VSCode extension..."
+      echo "🔨 Building compose VSCode extension..."
       if (bun nx run repo:build && bun nx run repo:build-vsix); then
         echo "✅ Extension build completed."
       else

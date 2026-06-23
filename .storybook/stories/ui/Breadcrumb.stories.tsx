@@ -1,6 +1,6 @@
 // #region 🧲Header
 
-// 🥼︎ semio/js/.storybook/story/elements/navigation/Breadcrumb.stories.tsx
+// 🥼︎ compose/js/.storybook/story/elements/navigation/Breadcrumb.stories.tsx
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -128,7 +128,7 @@ export const PageNavigationDefault: Story = {
   render: () => (
     <MemoryRouter>
       <div className="w-[600px]">
-        <PageNavigation prev={{ path: "getting-started", title: "Getting Started", section: "Basics" }} next={{ path: "tutorials/hello-semio", title: "Hello Semio", section: "Tutorials" }} />
+        <PageNavigation prev={{ path: "getting-started", title: "Getting Started", section: "Basics" }} next={{ path: "tutorials/hello-compose", title: "Hello Compose", section: "Tutorials" }} />
       </div>
     </MemoryRouter>
   ),

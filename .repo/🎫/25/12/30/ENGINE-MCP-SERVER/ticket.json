@@ -2,8 +2,8 @@
   "title": "ENGINE-MCP-SERVER",
   "emoji": "🖥️",
   "status": "closed",
-  "description": "The engine should be a running graphql server, rest endpoint and mcp server (use the official python mcp sdk). Get it running and test that it works. semio.ts is the single source of truth for the engine. All CRUD operations from semio.ts should be exposed as tools in the mcp server.",
-  "summary": "Normalized semio MCP launch to absolute uv executable and absolute engine directory for remote host reliability; corrected stale VSCode semio/engine debug path; validated no os error 2 on startup.",
+  "description": "The engine should be a running graphql server, rest endpoint and mcp server (use the official python mcp sdk). Get it running and test that it works. compose.ts is the single source of truth for the engine. All CRUD operations from compose.ts should be exposed as tools in the mcp server.",
+  "summary": "Normalized compose MCP launch to absolute uv executable and absolute engine directory for remote host reliability; corrected stale VSCode compose/engine debug path; validated no os error 2 on startup.",
   "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomcp",
   "sessions": [
     "🔀60dfe07aee2143680c0313abaff78931f318b398⚪019ce0b9f50b7000af1a0ad7b936c61a"

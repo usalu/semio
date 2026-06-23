@@ -1,6 +1,6 @@
 {
   "id": "8ff55660-172f-46cc-baac-a93310c1d688",
-  "uri": "semiorepo://s/8ff55660-172f-46cc-baac-a93310c1d688",
+  "uri": "composerepo://s/8ff55660-172f-46cc-baac-a93310c1d688",
   "contributor": "🧑‍💻ueli",
   "client": "windsurf-chat",
   "second": "2026-03-14T00:13:00Z",
@@ -77,7 +77,7 @@
           "timestamp": "2026-03-14T00:14:14.984109985Z",
           "execution_id": "beda0d5b-44c2-4cba-bc8c-0ff05d3d6455",
           "tool_info": {
-            "mcp_result": "- [🎯Goals](semiorepo://gs)\n  - [🎯testgoaljsonlifecycletest1773348901476808286](semiorepo://g/TEST-GOAL-JSON-LIFECYCLE-TEST-1773348901476808286) - `Test Goal json LifecycleTest 1773348901476808286` - `open` - `Test Goal Description`\n    - [🎯testgoaljsonlifecycletest1773348901476808286🎫implementcodapropertykindsystem](semiorepo://y/26/m/03/d/14/tk/IMPLEMENT-CODA-PROPERTY-KIND-SYSTEM) - `Implement Coda Property Kind System` - `open` - `opened a long while ago` - `Implement coda property system with property kinds number/object/array/level/category and kind-specific measure kinds (number: increase/decrease, level: raise/lower, etc). Update runtime resources and config so properties expose their measure kinds.`\n",
+            "mcp_result": "- [🎯Goals](composerepo://gs)\n  - [🎯testgoaljsonlifecycletest1773348901476808286](composerepo://g/TEST-GOAL-JSON-LIFECYCLE-TEST-1773348901476808286) - `Test Goal json LifecycleTest 1773348901476808286` - `open` - `Test Goal Description`\n    - [🎯testgoaljsonlifecycletest1773348901476808286🎫implementcodapropertykindsystem](composerepo://y/26/m/03/d/14/tk/IMPLEMENT-CODA-PROPERTY-KIND-SYSTEM) - `Implement Coda Property Kind System` - `open` - `opened a long while ago` - `Implement coda property system with property kinds number/object/array/level/category and kind-specific measure kinds (number: increase/decrease, level: raise/lower, etc). Update runtime resources and config so properties expose their measure kinds.`\n",
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
               "query": "implementcodapropertykindsystem"
@@ -142,7 +142,7 @@
           "timestamp": "2026-03-14T00:15:23.695407458Z",
           "execution_id": "beda0d5b-44c2-4cba-bc8c-0ff05d3d6455",
           "tool_info": {
-            "mcp_result": "[🎫implementcodapropertykindsystem](semiorepo://y/00/m/00/d/00/tk/IMPLEMENT-CODA-PROPERTY-KIND-SYSTEM) - `closed` - `closed now`\n",
+            "mcp_result": "[🎫implementcodapropertykindsystem](composerepo://y/00/m/00/d/00/tk/IMPLEMENT-CODA-PROPERTY-KIND-SYSTEM) - `closed` - `closed now`\n",
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
               "files": [

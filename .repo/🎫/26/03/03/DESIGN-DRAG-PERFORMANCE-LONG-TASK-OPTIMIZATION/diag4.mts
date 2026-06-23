@@ -12,8 +12,8 @@ page.on("console", (msg) => {
 });
 
 await page.addInitScript(() => {
-  (window as any).__SEMIO_PERFORMANCE__ = { longTaskSupported: false, longTasks: [] };
-  const store = (window as any).__SEMIO_PERFORMANCE__;
+  (window as any).__COMPOSE_PERFORMANCE__ = { longTaskSupported: false, longTasks: [] };
+  const store = (window as any).__COMPOSE_PERFORMANCE__;
   const obs = (window as any).PerformanceObserver;
   if (!obs || !(obs.supportedEntryTypes ?? []).includes("longtask")) return;
   store.longTaskSupported = true;
@@ -26,7 +26,7 @@ await page.goto("http://127.0.0.1:5173/", { waitUntil: "networkidle" });
 console.log("Page loaded, uploading kit...");
 
 const fileInput = page.locator('input[type="file"]');
-await fileInput.setInputFiles("/workspaces/semio/semio/assets/semio/metabolism.zip");
+await fileInput.setInputFiles("/workspaces/semio/compose/assets/compose/metabolism.zip");
 await page.waitForTimeout(5000);
 await page.getByText("Metabolism").waitFor({ timeout: 30000 });
 console.log("Kit uploaded");
@@ -70,12 +70,12 @@ console.log(`URL after design nav: ${page.url()}`);
 const nodeCount = await page.locator("#diagram .react-flow__node").count();
 console.log(`Nodes: ${nodeCount}`);
 
-const patched = await page.evaluate(() => (window as any).__SEMIO_ZUSTAND_PATCHED__);
+const patched = await page.evaluate(() => (window as any).__COMPOSE_ZUSTAND_PATCHED__);
 console.log(`Zustand patched: ${patched}`);
 
 await page.waitForTimeout(5000);
 
-await page.evaluate(() => { (window as any).__SEMIO_PERFORMANCE__.longTasks = []; });
+await page.evaluate(() => { (window as any).__COMPOSE_PERFORMANCE__.longTasks = []; });
 
 const diagramBox = await page.locator("#diagram .react-flow__pane").first().boundingBox();
 if (!diagramBox) { console.log("No diagram pane"); await browser.close(); process.exit(1); }
@@ -88,7 +88,7 @@ await page.mouse.wheel(0, 600);
 await page.waitForTimeout(500);
 
 let tasks = await page.evaluate(() => {
-  const s = (window as any).__SEMIO_PERFORMANCE__;
+  const s = (window as any).__COMPOSE_PERFORMANCE__;
   const t = [...s.longTasks];
   s.longTasks = [];
   return t;
@@ -113,7 +113,7 @@ await page.waitForTimeout(100);
 const profileMousedown = await cdp.send("Profiler.stop");
 
 tasks = await page.evaluate(() => {
-  const s = (window as any).__SEMIO_PERFORMANCE__;
+  const s = (window as any).__COMPOSE_PERFORMANCE__;
   const t = [...s.longTasks];
   s.longTasks = [];
   return t;
@@ -142,7 +142,7 @@ const profileDrag = await cdp.send("Profiler.stop");
 await page.mouse.up();
 
 tasks = await page.evaluate(() => {
-  const s = (window as any).__SEMIO_PERFORMANCE__;
+  const s = (window as any).__COMPOSE_PERFORMANCE__;
   const t = [...s.longTasks];
   s.longTasks = [];
   return t;
@@ -165,7 +165,7 @@ for (const [fn, hits] of sortedDrag) {
 
 await page.waitForTimeout(1000);
 tasks = await page.evaluate(() => {
-  const s = (window as any).__SEMIO_PERFORMANCE__;
+  const s = (window as any).__COMPOSE_PERFORMANCE__;
   const t = [...s.longTasks];
   s.longTasks = [];
   return t;

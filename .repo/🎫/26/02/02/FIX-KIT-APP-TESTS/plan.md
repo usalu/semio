@@ -8,7 +8,7 @@ The Kit App tests are failing with two primary issues:
 ## Goals
 1. Fix `ReferenceError` in `test-selection-tools-simple.spec.ts`.
 2. Fix browser launch issues in `selection-tools.spec.ts` and ensure tests can run in the devcontainer environment.
-3. Ensure all tests in `js/semio/playwright/kit/` pass.
+3. Ensure all tests in `js/compose/playwright/kit/` pass.
 
 ## Steps
 1. **Fix `ReferenceError`**:

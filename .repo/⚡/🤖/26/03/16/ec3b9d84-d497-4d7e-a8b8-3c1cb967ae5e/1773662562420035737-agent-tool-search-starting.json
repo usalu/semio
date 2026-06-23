@@ -17,7 +17,7 @@
         "maxResults": 30,
         "query": "createMachine|xstate.*machine",
         "isRegexp": true,
-        "includePattern": "**/semio/sketchpad/**"
+        "includePattern": "**/compose/sketchpad/**"
       },
       "tool_use_id": "toolu_01XoFBJQPjzxVkdHNKD23E7r__vscode-1773658270445",
       "cwd": "/workspaces/semio"

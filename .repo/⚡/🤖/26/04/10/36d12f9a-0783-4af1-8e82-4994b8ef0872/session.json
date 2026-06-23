@@ -5,7 +5,7 @@
   "second": "2026-04-10T21:59:10Z",
   "checkpoint": "eee170e398063d95faa0b93a5ac4515bb8297cf0",
   "contributor": "unknown",
-  "transcript": "C:\\Users\\Ueli\\.claude\\projects\\c--git-semio\\36d12f9a-0783-4af1-8e82-4994b8ef0872.jsonl",
+  "transcript": "C:\\Users\\Ueli\\.claude\\projects\\c--git-compose\\36d12f9a-0783-4af1-8e82-4994b8ef0872.jsonl",
   "events": [
     {
       "event": {
@@ -15,18 +15,18 @@
         "kind": "agent.tool.code.edit.starting",
         "second": "2026-04-10T21:59:10Z",
         "session": "36d12f9a-0783-4af1-8e82-4994b8ef0872",
-        "transcript": "C:\\Users\\Ueli\\.claude\\projects\\c--git-semio\\36d12f9a-0783-4af1-8e82-4994b8ef0872.jsonl"
+        "transcript": "C:\\Users\\Ueli\\.claude\\projects\\c--git-compose\\36d12f9a-0783-4af1-8e82-4994b8ef0872.jsonl"
       },
       "native": {
         "event": {
           "session_id": "36d12f9a-0783-4af1-8e82-4994b8ef0872",
-          "transcript_path": "C:\\Users\\Ueli\\.claude\\projects\\c--git-semio\\36d12f9a-0783-4af1-8e82-4994b8ef0872.jsonl",
-          "cwd": "C:\\git\\semio",
+          "transcript_path": "C:\\Users\\Ueli\\.claude\\projects\\c--git-compose\\36d12f9a-0783-4af1-8e82-4994b8ef0872.jsonl",
+          "cwd": "C:\\git\\compose",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PermissionRequest",
           "tool_name": "Edit",
           "tool_input": {
-            "file_path": "c:\\git\\semio\\.vscode\\launch.json",
+            "file_path": "c:\\git\\compose\\.vscode\\launch.json",
             "old_string": "      \"env\": {\n        \"HOST\": \"0.0.0.0\",\n        \"CLIENT_PORT\": \"6274\",\n        \"SERVER_PORT\": \"6277\"\n      },",
             "new_string": "      \"env\": {\n        \"CLIENT_PORT\": \"6274\",\n        \"SERVER_PORT\": \"6277\"\n      },",
             "replace_all": false
@@ -44,20 +44,20 @@
         "kind": "agent.tool.code.edit.starting",
         "second": "2026-04-10T22:02:10Z",
         "session": "36d12f9a-0783-4af1-8e82-4994b8ef0872",
-        "transcript": "C:\\Users\\Ueli\\.claude\\projects\\c--git-semio\\36d12f9a-0783-4af1-8e82-4994b8ef0872.jsonl"
+        "transcript": "C:\\Users\\Ueli\\.claude\\projects\\c--git-compose\\36d12f9a-0783-4af1-8e82-4994b8ef0872.jsonl"
       },
       "native": {
         "event": {
           "session_id": "36d12f9a-0783-4af1-8e82-4994b8ef0872",
-          "transcript_path": "C:\\Users\\Ueli\\.claude\\projects\\c--git-semio\\36d12f9a-0783-4af1-8e82-4994b8ef0872.jsonl",
-          "cwd": "C:\\git\\semio",
+          "transcript_path": "C:\\Users\\Ueli\\.claude\\projects\\c--git-compose\\36d12f9a-0783-4af1-8e82-4994b8ef0872.jsonl",
+          "cwd": "C:\\git\\compose",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PermissionRequest",
           "tool_name": "Edit",
           "tool_input": {
-            "file_path": "c:\\git\\semio\\.vscode\\launch.json",
-            "old_string": "      \"env\": {\n        \"DATABASE_URL\": \"postgres://semio:semio@localhost:5432/semio\",\n        \"RUST_LOG\": \"info\",\n        \"HOST\": \"0.0.0.0\",\n        \"PORT\": \"8080\"\n      },",
-            "new_string": "      \"env\": {\n        \"DATABASE_URL\": \"postgres://semio:semio@localhost:5432/semio\",\n        \"RUST_LOG\": \"info\",\n        \"PORT\": \"8080\"\n      },",
+            "file_path": "c:\\git\\compose\\.vscode\\launch.json",
+            "old_string": "      \"env\": {\n        \"DATABASE_URL\": \"postgres://compose:compose@localhost:5432/compose\",\n        \"RUST_LOG\": \"info\",\n        \"HOST\": \"0.0.0.0\",\n        \"PORT\": \"8080\"\n      },",
+            "new_string": "      \"env\": {\n        \"DATABASE_URL\": \"postgres://compose:compose@localhost:5432/compose\",\n        \"RUST_LOG\": \"info\",\n        \"PORT\": \"8080\"\n      },",
             "replace_all": false
           },
           "permission_suggestions": []

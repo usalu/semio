@@ -3,8 +3,8 @@
 @source "../ui/react";
 @source "./";
 @source "./stories";
-@source "../semio/client/lib/js";
-@source "../semio/dev/algorithm";
+@source "../compose/client/lib/js";
+@source "../compose/dev/algorithm";
 @source "../framework/product/playground/renderer/react";
 @source "../puzzle/2d/react";
 @source "../puzzle/3d/react";

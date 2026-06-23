@@ -2,8 +2,8 @@
   "title": "Scene Nakagin Bake Uses Flat Piece Planes",
   "emoji": "📐",
   "status": "closed",
-  "description": "Derive each scene object origin+orientation from semio flat piece planes matched by piece id to board nodes; use planeBasisToThreeJs; regenerate nakagin scene fixture; wire bake into elements scene script.ts.",
-  "summary": "Scene nakagin bake matches board node ids to semio design piece planes (pose.plane, plane field, semio.plane attribute JSON), converts with planeBasisToThreeJs, and falls back to horizontal paper plane through board (x,y) when no authoring plane exists. Added coordsPlane.ts, semioDesignPlane.ts, nakaginSceneBake.ts; script bake nakagin + Nx target; regenerated nakagin scene fixture. Optional elements.scene.flat-planes/v1 file overrides when present. WASM kit merge for automated plane dump failed openSession (plane.origin); ticket dump-flat-planes.mts left for follow-up.",
+  "description": "Derive each scene object origin+orientation from compose flat piece planes matched by piece id to board nodes; use planeBasisToThreeJs; regenerate nakagin scene fixture; wire bake into elements scene script.ts.",
+  "summary": "Scene nakagin bake matches board node ids to compose design piece planes (pose.plane, plane field, compose.plane attribute JSON), converts with planeBasisToThreeJs, and falls back to horizontal paper plane through board (x,y) when no authoring plane exists. Added coordsPlane.ts, composeDesignPlane.ts, nakaginSceneBake.ts; script bake nakagin + Nx target; regenerated nakagin scene fixture. Optional elements.scene.flat-planes/v1 file overrides when present. WASM kit merge for automated plane dump failed openSession (plane.origin); ticket dump-flat-planes.mts left for follow-up.",
   "goal": "🎯r2602",
   "sessions": [
     "⚪22e559702b9343ea99d9ff1c289be39e"

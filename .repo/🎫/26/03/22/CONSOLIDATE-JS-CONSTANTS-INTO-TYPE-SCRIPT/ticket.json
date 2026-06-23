@@ -2,7 +2,7 @@
   "title": "Consolidate JS Constants Into TypeScript",
   "emoji": "🧹",
   "status": "closed",
-  "description": "Consolidate semio/js/constants.json into index.ts by removing the JSON file and defining constants directly in TypeScript. This will eliminate the external dependency and simplify the codebase structure.",
+  "description": "Consolidate compose/js/constants.json into index.ts by removing the JSON file and defining constants directly in TypeScript. This will eliminate the external dependency and simplify the codebase structure.",
   "summary": "Successfully consolidated constants.json into index.ts by removing the external JSON dependency and defining constants directly in TypeScript. Updated index.ts to remove the JSON import and replaced CONSTANTS.icon.width and CONSTANTS.tolerance references with literal values (50 and 1e-5 respectively). Removed constants.json file and updated tsconfig.json to exclude the deleted file. All changes maintain the same API and functionality while simplifying the codebase structure.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1028"

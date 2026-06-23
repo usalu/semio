@@ -13,7 +13,7 @@ const { chromium } = require("playwright");
 
   // Upload metabolism kit
   const fs = require("fs");
-  const kitPath = "/workspaces/semio/semio/sketchpad/public/metabolism.zip";
+  const kitPath = "/workspaces/semio/compose/sketchpad/public/metabolism.zip";
   if (!fs.existsSync(kitPath)) {
     console.log("[DEBUG] Kit file not found, trying to find it");
     const { execSync } = require("child_process");
@@ -51,7 +51,7 @@ const { chromium } = require("playwright");
   }
 
   // Now check for the filter toolbar group
-  const filterGroup = page.locator('[id="semio.sketchpad.toolbar.group.filter"]');
+  const filterGroup = page.locator('[id="compose.sketchpad.toolbar.group.filter"]');
   const filterGroupCount = await filterGroup.count();
   console.log("[DEBUG] Filter group toggle count:", filterGroupCount);
 
@@ -61,14 +61,14 @@ const { chromium } = require("playwright");
     await page.waitForTimeout(1000);
 
     // Check settings zone
-    const settingsZone = page.locator('[id="semio.sketchpad.toolbar.zone.settings"]');
+    const settingsZone = page.locator('[id="compose.sketchpad.toolbar.zone.settings"]');
     const settingsCount = await settingsZone.count();
     console.log("[DEBUG] Settings zone visible:", settingsCount);
 
     // Check for individual filter toggles
-    const pieceToggle = page.locator('[id="semio.sketchpad.app.design.toolbar.showPieces"]');
-    const connToggle = page.locator('[id="semio.sketchpad.app.design.toolbar.showConnections"]');
-    const portToggle = page.locator('[id="semio.sketchpad.app.design.toolbar.showPorts"]');
+    const pieceToggle = page.locator('[id="compose.sketchpad.app.design.toolbar.showPieces"]');
+    const connToggle = page.locator('[id="compose.sketchpad.app.design.toolbar.showConnections"]');
+    const portToggle = page.locator('[id="compose.sketchpad.app.design.toolbar.showPorts"]');
 
     const pCount = await pieceToggle.count();
     const cCount = await connToggle.count();

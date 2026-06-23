@@ -1,8 +1,8 @@
-"""Strip legacy surfaces from semio/client/lib/rs/lib.rs and golden ops fixture."""
+"""Strip legacy surfaces from compose/client/lib/rs/lib.rs and golden ops fixture."""
 import re
 from pathlib import Path
 
-lib = Path(r"c:\git\semio\semio\client\lib\rs\lib.rs")
+lib = Path(r"c:\git\compose\compose\client\lib\rs\lib.rs")
 lines = lib.read_text(encoding="utf-8").splitlines(keepends=True)
 
 
@@ -26,13 +26,13 @@ text = text.replace(
     "return legacy_created_fixed_piece_to_kit_op(input).await;",
     "return stored_create_fixed_piece_operation(input).await;",
 )
-old_stored = """    pub(crate) async fn kit_operation_from_stored(kind: &str, input: &serde_json::Value) -> Result<crate::operation::Operation, SemioError> {
+old_stored = """    pub(crate) async fn kit_operation_from_stored(kind: &str, input: &serde_json::Value) -> Result<crate::operation::Operation, ComposeError> {
         if kind == "createdFixedPiece" {
             return legacy_created_fixed_piece_to_kit_op(input).await;
         }
         kit_operation_from_step_json(input)
     }"""
-new_stored = """    pub(crate) async fn kit_operation_from_stored(kind: &str, input: &serde_json::Value) -> Result<crate::operation::Operation, SemioError> {
+new_stored = """    pub(crate) async fn kit_operation_from_stored(kind: &str, input: &serde_json::Value) -> Result<crate::operation::Operation, ComposeError> {
         match kind {
             "createFixedPiece" => stored_create_fixed_piece_operation(input).await,
             _ => kit_operation_from_step_json(input),
@@ -42,12 +42,12 @@ if old_stored not in text:
     raise SystemExit("kit_operation_from_stored block not found")
 text = text.replace(old_stored, new_stored)
 text = text.replace(
-    "    /// @emoji 📑 US-001 golden JSON: top-level `operations` array, or legacy key `ops` (see `kit-store.golden.ops.semio.json`).\n    pub fn golden_operation_records_ref",
+    "    /// @emoji 📑 US-001 golden JSON: top-level `operations` array, or legacy key `ops` (see `kit-store.golden.ops.compose.json`).\n    pub fn golden_operation_records_ref",
     "    /// @emoji 📑 US-001 golden JSON: top-level `operations` array.\n    pub fn golden_operation_records_ref",
 )
 text = text.replace(
-    'src.get("operations").and_then(|v| v.as_array()).or_else(|| src.get("ops").and_then(|v| v.as_array())).ok_or_else(|| SemioError::invalid("golden operations missing `operations` or `ops` array"))',
-    'src.get("operations").and_then(|v| v.as_array()).ok_or_else(|| SemioError::invalid("golden operations missing `operations` array"))',
+    'src.get("operations").and_then(|v| v.as_array()).or_else(|| src.get("ops").and_then(|v| v.as_array())).ok_or_else(|| ComposeError::invalid("golden operations missing `operations` or `ops` array"))',
+    'src.get("operations").and_then(|v| v.as_array()).ok_or_else(|| ComposeError::invalid("golden operations missing `operations` array"))',
 )
 text = re.sub(
     r"\n        pub async fn stub_ok\(\) -> Self \{[^}]+\}\n",
@@ -71,7 +71,7 @@ text = text.replace('.expect("operations|ops")', '.expect("operations")')
 lib.write_text(text, encoding="utf-8", newline="\n")
 print("lib.rs updated")
 
-golden = Path(r"c:\git\semio\semio\assets\semio\kit-store.golden.ops.semio.json")
+golden = Path(r"c:\git\compose\compose\assets\compose\kit-store.golden.ops.compose.json")
 g = golden.read_text(encoding="utf-8")
 g = g.replace('"ops":', '"operations":')
 g = g.replace('"kind": "createdFixedPiece"', '"kind": "createFixedPiece"')

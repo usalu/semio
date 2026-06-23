@@ -1,0 +1,22 @@
+{
+  "name": "@compose/store",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "compose/client/bin/store",
+        "command": "cargo build --release -p semio-store",
+        "forwardAllArgs": true
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "compose/client/bin/store",
+        "command": "cargo test -p semio-store",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

@@ -10,7 +10,7 @@ Restored cross-root filter synchronization lost during concurrent edits. Added g
 
 ## Changes
 
-- `semio/js/sketchpad/Design.tsx`: Added global singleton filter store (globalThis + useSyncExternalStore), wrapped DiagramWindow/SceneWindow with DesignFilterProvider, changed diagram filtering from hidden:true to array removal, synced toolbar toggles to shared store
+- `compose/js/sketchpad/Design.tsx`: Added global singleton filter store (globalThis + useSyncExternalStore), wrapped DiagramWindow/SceneWindow with DesignFilterProvider, changed diagram filtering from hidden:true to array removal, synced toolbar toggles to shared store
 
 ## Log
 

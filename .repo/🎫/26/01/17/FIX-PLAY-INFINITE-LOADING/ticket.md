@@ -6,7 +6,7 @@
 
 ## Problem
 
-The window at http://localhost:4000/ is infinitely loading when running `npx nx dev semio/play`.
+The window at http://localhost:4000/ is infinitely loading when running `npx nx dev compose/play`.
 
 ## Investigation Steps
 

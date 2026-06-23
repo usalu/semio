@@ -10,7 +10,7 @@ Comprehensive gap analysis of the detail panel comparing old build (Design.Detai
 
 ## Plan
 
-1. Read all Zod schemas in semio.ts for canonical property definitions
+1. Read all Zod schemas in compose.ts for canonical property definitions
 2. Read old Design.Details.tsx.old (1352 lines) completely
 3. Read new Design.tsx detail panel sections (L4128-5710)
 4. Compare old vs new vs schema for every entity type
@@ -30,7 +30,7 @@ Comprehensive gap analysis of the detail panel comparing old build (Design.Detai
 
 ### 1. DESIGN SECTION
 
-#### Schema Properties (Design in semio.ts L5823-7098)
+#### Schema Properties (Design in compose.ts L5823-7098)
 `guid, name, parent, isAbstract, folder, pieces[], connections[], stats[], props[], layers[], activeLayer, groups[], canScale, canMirror, unit, location, authors[], concepts[], icon, image, description, attributes[], createdAt, updatedAt`
 
 #### Old Build (Design.Details.tsx.old L35-412)
@@ -76,7 +76,7 @@ The new build has feature parity with the old build. Piece count/connection coun
 
 ### 2. PIECE SECTION
 
-#### Schema Properties (Piece in semio.ts L4889-5175)
+#### Schema Properties (Piece in compose.ts L4889-5175)
 `guid, name, type (TypeId), design (DesignId), plane (Plane), center (Coord {u,v}), scale, mirrorPlane, isHidden, isLocked, color, description, props[], attributes[]`
 
 #### Old Build (Design.Details.tsx.old L414-1032)
@@ -144,7 +144,7 @@ The new build has full parity with the old build and adds plane xAxis/yAxis edit
 
 ### 3. CONNECTION SECTION
 
-#### Schema Properties (Connection in semio.ts L5456-5690)
+#### Schema Properties (Connection in compose.ts L5456-5690)
 `guid, connected (Side), connecting (Side), gap, shift, rise, rotation, turn, tilt, u, v, description, attributes[]`
 
 Where Side = `{ piece (PieceId), designPiece (PieceId?), connector (ConnectorId?) }`
@@ -205,8 +205,8 @@ All old properties are present. Schema properties NOT shown in EITHER old or new
 ### 4. CONNECTOR (PORT) SECTION
 
 #### Schema Properties
-**Connector** (semio.ts L4265-4484): `guid, name, t, point (Point), direction (Vector), description, port (PortId?), mandatory, props[], attributes[]`
-**Port** (semio.ts L2961-3219): `guid, name, description, icon, compatiblePorts[], attributes[]`
+**Connector** (compose.ts L4265-4484): `guid, name, t, point (Point), direction (Vector), description, port (PortId?), mandatory, props[], attributes[]`
+**Port** (compose.ts L2961-3219): `guid, name, description, icon, compatiblePorts[], attributes[]`
 
 #### Old Build (Design.Details.tsx.old L1236-1287) — called "PortSection"
 | Property | Rendered | Editable | Notes |
@@ -291,7 +291,7 @@ No code changes — this is a research/analysis ticket.
 
 ## Log
 
-- Read all Zod schemas in semio.ts for Kit, Design, Type, Piece, Connection, Connector, Port, and supporting types
+- Read all Zod schemas in compose.ts for Kit, Design, Type, Piece, Connection, Connector, Port, and supporting types
 - Read complete old Design.Details.tsx.old (1352 lines, 4 sections)
 - Read complete new Design.tsx detail panel (L4128-5710, 4 sections)
 - Performed property-by-property comparison for all 4 entity sections

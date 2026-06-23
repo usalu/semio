@@ -6,12 +6,12 @@
     "kind": "agent.file.read.ended",
     "second": "2026-03-16T14:40:24Z",
     "session": "d930e4c2-9b45-490a-9301-30ba1a727ba3",
-    "transcript": "/home/vscode/.claude/projects/-workspaces-semio/d930e4c2-9b45-490a-9301-30ba1a727ba3.jsonl"
+    "transcript": "/home/vscode/.claude/projects/-workspaces-compose/d930e4c2-9b45-490a-9301-30ba1a727ba3.jsonl"
   },
   "native": {
     "event": {
       "session_id": "d930e4c2-9b45-490a-9301-30ba1a727ba3",
-      "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/d930e4c2-9b45-490a-9301-30ba1a727ba3.jsonl",
+      "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/d930e4c2-9b45-490a-9301-30ba1a727ba3.jsonl",
       "cwd": "/workspaces/semio",
       "permission_mode": "bypassPermissions",
       "hook_event_name": "PostToolUse",

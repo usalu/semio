@@ -424,7 +424,7 @@ export interface ObjectKindVortexTemplate {
   readonly radius?: number;
 }
 
-/** @emoji 🔌 Kit type connector row (semio ring `t`, optional CAD point, port handle kind) for catalog extraction. */
+/** @emoji 🔌 Kit type connector row (compose ring `t`, optional CAD point, port handle kind) for catalog extraction. */
 export interface KitConnectorCadRow {
   readonly point?: { readonly x: number; readonly y: number; readonly z: number };
   readonly direction?: { readonly x: number; readonly y: number; readonly z: number };
@@ -14531,10 +14531,10 @@ if (import.meta.vitest) {
     });
     it("concrete forest first brush iteration on every seed b-* vortex yields all beam connectors", async () => {
       const concreteForestFixture = (await import("../fixture/concrete-forest.3d.json")).default as FixtureV1;
-      const leftType = (await import("../../../semio/fixture/kit/dev/abbau-aufbau/wip/initialKit/type/hexagonal-cut-concrete-forest-left.type.semio.json")).default as {
+      const leftType = (await import("../../../compose/fixture/kit/dev/abbau-aufbau/wip/initialKit/type/hexagonal-cut-concrete-forest-left.type.compose.json")).default as {
         connectors: { items: readonly { name: string; point: { x: number; y: number; z: number } }[] };
       };
-      const rightType = (await import("../../../semio/fixture/kit/dev/abbau-aufbau/wip/initialKit/type/hexagonal-cut-concrete-forest-right.type.semio.json")).default as {
+      const rightType = (await import("../../../compose/fixture/kit/dev/abbau-aufbau/wip/initialKit/type/hexagonal-cut-concrete-forest-right.type.compose.json")).default as {
         connectors: { items: readonly { name: string; point: { x: number; y: number; z: number } }[] };
       };
       const expectedBeamConnectors = [
@@ -14565,7 +14565,7 @@ if (import.meta.vitest) {
       const { fileURLToPath } = await import("node:url");
       const { GLTFLoader } = await import("three/addons/loaders/GLTFLoader.js");
       const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "../../..");
-      const meshDir = join(repoRoot, "semio/fixture/kit/folder/abbau-aufbau");
+      const meshDir = join(repoRoot, "compose/fixture/kit/folder/abbau-aufbau");
       const loader = new GLTFLoader();
       const loadGlb = (name: string): Promise<Group> =>
         new Promise((resolveGlb, reject) => {
@@ -14654,10 +14654,10 @@ if (import.meta.vitest) {
     }, 120_000);
     it("wasm concrete forest brush agrees with mesh-bvh on real geometry beam connector set", async () => {
       const concreteForestFixture = (await import("../fixture/concrete-forest.3d.json")).default as FixtureV1;
-      const leftType = (await import("../../../semio/fixture/kit/dev/abbau-aufbau/wip/initialKit/type/hexagonal-cut-concrete-forest-left.type.semio.json")).default as {
+      const leftType = (await import("../../../compose/fixture/kit/dev/abbau-aufbau/wip/initialKit/type/hexagonal-cut-concrete-forest-left.type.compose.json")).default as {
         connectors: { items: readonly { name: string }[] };
       };
-      const rightType = (await import("../../../semio/fixture/kit/dev/abbau-aufbau/wip/initialKit/type/hexagonal-cut-concrete-forest-right.type.semio.json")).default as {
+      const rightType = (await import("../../../compose/fixture/kit/dev/abbau-aufbau/wip/initialKit/type/hexagonal-cut-concrete-forest-right.type.compose.json")).default as {
         connectors: { items: readonly { name: string }[] };
       };
       const connectorNamesByKind: Record<string, readonly string[]> = {
@@ -14680,7 +14680,7 @@ if (import.meta.vitest) {
       const leftUrl = "/mesh/hexagonal-cut-concrete-forest-left.glb";
       const rightUrl = "/mesh/hexagonal-cut-concrete-forest-right.glb";
       const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "../../..");
-      const meshDir = join(repoRoot, "semio/fixture/kit/folder/abbau-aufbau");
+      const meshDir = join(repoRoot, "compose/fixture/kit/folder/abbau-aufbau");
       const loader = new GLTFLoader();
       const loadGlb = (name: string): Promise<Group> =>
         new Promise((resolveGlb, reject) => {

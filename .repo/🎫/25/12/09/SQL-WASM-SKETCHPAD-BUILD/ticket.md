@@ -15,14 +15,14 @@ The error did not appear in `vite preview`.
 # Plan
 
 1. Investigate how sql.js WASM loading is configured
-2. Compare what files exist in `js/semio/public` vs `js/sketchpad/public`
+2. Compare what files exist in `js/compose/public` vs `js/sketchpad/public`
 3. Verify dist output after build
 
 # Changes
 
 ## Root Cause
 
-The `sql.js` library requires a `sql-wasm.wasm` file to be available at runtime. The `semio/js` package had a `postinstall` script that copied this file to `js/semio/public/sql-wasm.wasm`, but `semio/sketchpad` had its own `public` folder without the wasm file.
+The `sql.js` library requires a `sql-wasm.wasm` file to be available at runtime. The `compose/js` package had a `postinstall` script that copied this file to `js/compose/public/sql-wasm.wasm`, but `compose/sketchpad` had its own `public` folder without the wasm file.
 
 During Vite build, only files from the app's own `public` folder are copied to `dist`, so the wasm file was missing in production.
 

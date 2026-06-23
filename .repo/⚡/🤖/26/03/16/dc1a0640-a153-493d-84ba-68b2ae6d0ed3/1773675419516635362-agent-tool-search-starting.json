@@ -16,7 +16,7 @@
       "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/dc1a0640-a153-493d-84ba-68b2ae6d0ed3.jsonl",
       "tool_name": "run_in_terminal",
       "tool_input": {
-        "command": "cd /workspaces/semio/semio/sketchpad \u0026\u0026 npx playwright test --grep \"Design\" --reporter=line 2\u003e\u00261 | tail -50",
+        "command": "cd /workspaces/semio/compose/sketchpad \u0026\u0026 npx playwright test --grep \"Design\" --reporter=line 2\u003e\u00261 | tail -50",
         "explanation": "Run Design test with triple-click + type approach and debugging for y-stepper",
         "goal": "Debug y-stepper interaction",
         "isBackground": false,

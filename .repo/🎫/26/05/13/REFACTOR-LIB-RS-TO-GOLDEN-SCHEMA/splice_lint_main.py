@@ -1,7 +1,7 @@
 # Temporary splice helper for repo/client/cli/main.go (lint-script migration).
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[6]  # .../semio
+ROOT = Path(__file__).resolve().parents[6]  # .../compose
 MAIN = ROOT / "repo" / "client" / "cli" / "main.go"
 
 
@@ -47,7 +47,7 @@ func CheckPoliciesWithContext(ctx *PolicyContext, policyIDs []string) ([]Breach,
 """
     text = text[:c_start] + stub + text[c_end:]
 
-    # 3) Remove headerPolicy … semioPolicy block (keep #endregion 🧊Policies)
+    # 3) Remove headerPolicy … composePolicy block (keep #endregion 🧊Policies)
     start = text.index("// 🟩headerPolicy holds the data fields for a headerPolicy record.")
     end = text.index("// #endregion 🧊Policies", start)
     text = text[:start] + "\n" + text[end:]

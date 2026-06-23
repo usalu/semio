@@ -17,7 +17,7 @@
         "maxResults": 20,
         "query": "connection\\.x|connection\\.y|stepper",
         "isRegexp": true,
-        "includePattern": "**/semio/sketchpad/**"
+        "includePattern": "**/compose/sketchpad/**"
       },
       "tool_response": "",
       "tool_use_id": "toolu_bdrk_013gPGaeG5eFxiA88TgCZF8T__vscode-1773658270556",

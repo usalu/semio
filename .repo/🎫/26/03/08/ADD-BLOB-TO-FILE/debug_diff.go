@@ -7,18 +7,18 @@ import (
 	"fmt"
 	"os"
 
-	semio "github.com/usalu/semio/go/semio"
+	compose "github.com/usalu/semio/go/compose"
 )
 
 func main() {
-	assetsDir := "semio/assets/semio/"
+	assetsDir := "compose/assets/compose/"
 
 	origData, _ := os.ReadFile(assetsDir + "kit_metabolism.json")
-	var orig semio.Kit
+	var orig compose.Kit
 	json.Unmarshal(origData, &orig)
 
 	diffedData, _ := os.ReadFile(assetsDir + "kit_metabolism_diffed.json")
-	var diffed semio.Kit
+	var diffed compose.Kit
 	json.Unmarshal(diffedData, &diffed)
 
 	designGuid := "37ba7ec4-9023-4be7-9ab6-e0ebc80007f8"
@@ -26,8 +26,8 @@ func main() {
 
 	fmt.Printf("Before filter - orig designs: %d, diffed designs: %d\n", len(orig.Designs), len(diffed.Designs))
 
-	orig.Designs = semio.FilterDesignsWithoutParent(orig.Designs)
-	diffed.Designs = semio.FilterDesignsWithoutParent(diffed.Designs)
+	orig.Designs = compose.FilterDesignsWithoutParent(orig.Designs)
+	diffed.Designs = compose.FilterDesignsWithoutParent(diffed.Designs)
 
 	fmt.Printf("After filter - orig designs: %d, diffed designs: %d\n", len(orig.Designs), len(diffed.Designs))
 
@@ -54,7 +54,7 @@ func main() {
 	}
 
 	// Compute diff directly
-	diff := semio.GetKitDiff(orig, diffed)
+	diff := compose.GetKitDiff(orig, diffed)
 	if diff.Designs != nil {
 		for _, u := range diff.Designs.Updated {
 			if u.Design.Guid == designGuid {

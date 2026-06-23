@@ -2,8 +2,8 @@
   "title": "Move Shared Shadcn Setup To Elements Ui",
   "emoji": "📦",
   "status": "closed",
-  "description": "Move shadcn configuration and shared ownership from semio/sketchpad into elements/ui so UI packages consume a single general setup. Update affected workspace configuration and references, validate commands/configs, and keep changes in existing files where possible.",
-  "summary": "Moved the canonical shadcn setup into elements/ui, exported the shared tailwindConfig from @elements/ui, exposed components.json from the shared package, redirected sketchpad's legacy shadcn config to generate into elements/ui, and validated both elements/ui and semio/sketchpad with TypeScript.",
+  "description": "Move shadcn configuration and shared ownership from compose/sketchpad into elements/ui so UI packages consume a single general setup. Update affected workspace configuration and references, validate commands/configs, and keep changes in existing files where possible.",
+  "summary": "Moved the canonical shadcn setup into elements/ui, exported the shared tailwindConfig from @elements/ui, exposed components.json from the shared package, redirected sketchpad's legacy shadcn config to generate into elements/ui, and validated both elements/ui and compose/sketchpad with TypeScript.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/982"
   },

@@ -280,7 +280,7 @@
   [gap] (5 lines)
   [  9] ­ƒöôEntitying (60 lines)
   [gap] (5 lines)
-  [ 10] Ô£¿SemioValidation (279 lines)
+  [ 10] Ô£¿ComposeValidation (279 lines)
   [gap] (177 lines)
   [ 13] ­ƒÆÄAttribute (127 lines)
   [gap] (5 lines)
@@ -363,7 +363,7 @@
   [gap] (5 lines)
   [ 78] ­ƒ¬üKitExporter (12 lines)
   [gap] (5 lines)
-  [ 81] ÔØä´©ÅSemioDiff (2332 lines)
+  [ 81] ÔØä´©ÅComposeDiff (2332 lines)
 
 === RS (16425 lines) ===
   [gap] (3 lines)

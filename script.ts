@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * 🧭 Monorepo command router: `bun ./script.ts <verb> [segments…]` (e.g. `script.ts dev`, `script.ts dev mcp`, `script.ts generate neo4j semio`).
+ * 🧭 Monorepo command router: `bun ./script.ts <verb> [segments…]` (e.g. `script.ts dev`, `script.ts dev mcp`, `script.ts generate neo4j compose`).
  */
 import { spawn, spawnSync } from "node:child_process";
 import {
@@ -33,7 +33,7 @@ export { Script };
 export class NativeOsScript extends Script {
   run(segments: string[]): void {
     const cmd = segments[0] ?? "setup";
-    const env = { ...process.env, SEMIO_REPO_ROOT: this.root };
+    const env = { ...process.env, COMPOSE_REPO_ROOT: this.root };
     if (process.platform === "win32") {
       const ps1 = join(NATIVE_BOOTSTRAP_DIR, "script.ps1");
       if (!existsSync(ps1)) {
@@ -265,7 +265,7 @@ export class DevScript extends Script {
       this.runMcp(segments.slice(1));
       return;
     }
-    runCmd("bun", ["nx", "run", "@semio/desktop:dev"], { cwd: this.root });
+    runCmd("bun", ["nx", "run", "@compose/desktop:dev"], { cwd: this.root });
   }
 
   private parseStorybookSegments(segments: string[]): { scope: string; args: string[] } {
@@ -348,7 +348,7 @@ export class DevScript extends Script {
   private runMcp(segments: string[]): void {
     const a = segments[0];
     if (a === "engine") {
-      runCmd("bun", [join(this.root, "semio", "client", "bin", "engine", "script.ts"), "dev", "mcp"], { cwd: this.root });
+      runCmd("bun", [join(this.root, "compose", "client", "bin", "engine", "script.ts"), "dev", "mcp"], { cwd: this.root });
       return;
     }
     if (a === "neo4j") {
@@ -375,7 +375,7 @@ export class DevScript extends Script {
   private runMcpNeo4j(neoSegments: string[]): void {
     const { nameParts, passthrough } = partitionNeo4jGraphCliArgv(neoSegments);
     const hasName = nameParts.length > 0;
-    const graphDatabase = hasName ? joinNeo4jGraphDatabaseName(nameParts) : process.env.NEO4J_DATABASE || "semio";
+    const graphDatabase = hasName ? joinNeo4jGraphDatabaseName(nameParts) : process.env.NEO4J_DATABASE || "compose";
     const args = [...passthrough];
     if (hasName && !args.includes("--namespace")) args.push("--namespace", graphDatabase);
     const r = spawnSync("uvx", ["mcp-neo4j-cypher", ...args], {
@@ -474,7 +474,7 @@ export class LintScript extends Script {
       return;
     }
     runCmd("bun", ["nx", "run-many", "-t", "lint", "--all", "--exclude", "workspace"], { cwd: this.root });
-    runCmd("bunx", ["dependency-cruiser@16", "semio/client/lib/js", "semio/client/lib/react", "semio/client/lib/sketchpad", "--config", ".dependency-cruiser.cjs", "--output-type", "err"], { cwd: this.root, shell: true });
+    runCmd("bunx", ["dependency-cruiser@16", "compose/client/lib/js", "compose/client/lib/react", "compose/client/lib/sketchpad", "--config", ".dependency-cruiser.cjs", "--output-type", "err"], { cwd: this.root, shell: true });
   }
 }
 //#endregion 🔖LintScript
@@ -506,8 +506,8 @@ export class TestScript extends Script {
       this.runRepoGoTest("./repo/client/cli", ["-run", "Mcp|MCP|mcp", ...segments.slice(1)]);
       return;
     }
-    runCmd("bun", ["nx", "run-many", "-t", "build", "-p", "@semio/js", "@semio/react"], { cwd: this.root });
-    runCmd("bun", ["nx", "run", "semio/graphql:build"], { cwd: this.root });
+    runCmd("bun", ["nx", "run-many", "-t", "build", "-p", "@compose/js", "@compose/react"], { cwd: this.root });
+    runCmd("bun", ["nx", "run", "compose/graphql:build"], { cwd: this.root });
     runCmd("bun", ["nx", "run-many", "-t", "test", "--all", "--exclude", "workspace"], { cwd: this.root });
     runCmd("bun", ["nx", "run", "workspace:test-storybook"], { cwd: this.root });
   }
@@ -584,10 +584,10 @@ export class BuildScript extends Script {
   run(segments: string[]): void {
     const slice = segments[0];
     const single: Record<string, string> = {
-      "3dm": "@semio/3dm-ui:build",
-      assets: "@semio/asset:build",
-      desktop: "@semio/desktop:build",
-      engine: "@semio/engine:build",
+      "3dm": "@compose/3dm-ui:build",
+      assets: "@compose/asset:build",
+      desktop: "@compose/desktop:build",
+      engine: "@compose/engine:build",
       storybook: "workspace:build-storybook",
       "coda-desktop": "@coda/desktop:build",
       "repo-cli": "@repo/client:build",
@@ -605,7 +605,7 @@ export class BuildScript extends Script {
       return;
     }
     if (slice === "sites") {
-      runCmd("bun", ["nx", "run-many", "-t", "build", "-p", "@semio/play", "@semio/docs"], { cwd: this.root });
+      runCmd("bun", ["nx", "run-many", "-t", "build", "-p", "@compose/play", "@compose/docs"], { cwd: this.root });
       return;
     }
     const target = single[slice];
@@ -773,10 +773,10 @@ export class PublishScript extends Script {
   run(segments: string[]): void {
     const slice = segments[0];
     const map: Record<string, string> = {
-      desktop: "@semio/desktop:publish",
-      play: "@semio/play:publish",
-      sketchpad: "@semio/sketchpad:publish",
-      docs: "@semio/docs:publish",
+      desktop: "@compose/desktop:publish",
+      play: "@compose/play:publish",
+      sketchpad: "@compose/sketchpad:publish",
+      docs: "@compose/docs:publish",
       "coda-desktop": "@coda/desktop:publish",
     };
     if (!slice) {
@@ -797,7 +797,7 @@ export class PublishScript extends Script {
 export class QueryScript extends Script {
   run(segments: string[]): void {
     const sub = segments[0] ?? "test";
-    const queryDir = join(this.root, "semio/client/lib/query");
+    const queryDir = join(this.root, "compose/client/lib/query");
     if (sub === "build") {
       runCmd(bun, [join(queryDir, "script.ts"), "build"], { cwd: this.root });
       return;
@@ -823,7 +823,7 @@ export class PurgeScript extends Script {
       console.error("[purge] usage: bun ./script.ts purge neo4j");
       process.exit(1);
     }
-    const database = process.env.NEO4J_DATABASE || "semio";
+    const database = process.env.NEO4J_DATABASE || "compose";
     const uri = process.env.NEO4J_URI || "bolt://localhost:7687";
     const user = process.env.NEO4J_USERNAME || "neo4j";
     const password = process.env.NEO4J_PASSWORD || "password";

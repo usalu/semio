@@ -27,7 +27,7 @@ This is a single-component change in [procedural/react/index.tsx](procedural/rea
 
 `ProceduralPreview` ([procedural/react/index.tsx](procedural/react/index.tsx), ~line 867) is the minimal stack:
 
-```882:905:/Users/ueli/Documents/semio/procedural/react/index.tsx
+```882:905:/Users/ueli/Documents/compose/procedural/react/index.tsx
 	return (
 		<div className={className ?? "relative h-full w-full bg-zinc-900"}>
 			<WorldCanvas frameloop="demand" cameraPosition={[8, 8, 6]} background="#18181b">

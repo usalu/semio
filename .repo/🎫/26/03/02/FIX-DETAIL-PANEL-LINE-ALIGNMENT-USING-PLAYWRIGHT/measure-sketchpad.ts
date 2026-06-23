@@ -5,8 +5,8 @@ async function measure() {
   await page.goto("http://localhost:5173/");
   await page.waitForLoadState("domcontentloaded");
   await page.waitForTimeout(3000);
-  const zipPath = "/workspaces/semio/semio/assets/semio/metabolism.zip";
-  const fileInput = page.locator('[id="semio.sketchpad.app.home.importKit"]');
+  const zipPath = "/workspaces/semio/compose/assets/compose/metabolism.zip";
+  const fileInput = page.locator('[id="compose.sketchpad.app.home.importKit"]');
   await fileInput.waitFor({ state: "attached", timeout: 10000 });
   const [fileChooser] = await Promise.all([
     page.waitForEvent("filechooser", { timeout: 5000 }).catch(() => null),
@@ -30,7 +30,7 @@ async function measure() {
   console.log("[DEBUG] Before panel toggle: sections=" + sectionCount + " items=" + itemCount);
   if (sectionCount === 0 && itemCount === 0) {
     console.log("[DEBUG] Trying to look for right panel toggle...");
-    const rightToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.rightSidePanel"]');
+    const rightToggle = page.locator('[id="compose.sketchpad.navbar.panelToggle.rightSidePanel"]');
     const toggleExists = await rightToggle.count();
     console.log("[DEBUG] Right panel toggle count:", toggleExists);
     if (toggleExists > 0) {

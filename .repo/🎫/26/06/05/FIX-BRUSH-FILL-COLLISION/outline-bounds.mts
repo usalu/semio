@@ -6,10 +6,10 @@ import {
   brushPreviewMeshFrameGroup,
   styledMeshTemplate,
   updateWorldMatrixChain,
-} from "/Users/ueli/Documents/semio/puzzle/3d/react/index.tsx";
+} from "/Users/ueli/Documents/compose/puzzle/3d/react/index.tsx";
 
 const loader = new GLTFLoader();
-const meshDir = "/Users/ueli/Documents/semio/semio/fixtures/kit/folder/abbau-aufbau";
+const meshDir = "/Users/ueli/Documents/compose/compose/fixtures/kit/folder/abbau-aufbau";
 const bytes = readFileSync(resolve(meshDir, "hexagonal-cut-concrete-forest-left.glb"));
 const buf = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
 const gltf = await new Promise<any>((res, rej) => loader.parse(buf, "", res, rej));

@@ -16,7 +16,7 @@
       "tool_input": {
         "maxResults": 20,
         "includeIgnoredFiles": true,
-        "includePattern": "**/semio/sketchpad/sketchpad/shared.ts",
+        "includePattern": "**/compose/sketchpad/sketchpad/shared.ts",
         "isRegexp": true,
         "query": "selection|select|compose"
       },

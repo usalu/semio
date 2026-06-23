@@ -1,9 +1,0 @@
-{
-  "title": "Refactor Semio React to Composable Schema-Aligned Contexts",
-  "status": "open",
-  "summary": "Fixed @semio/react index.tsx TS: Side/PiecesOperation imports, Kit vs Store vs Session op binds, backbone hooks (LocalProvider attach, detach/sync store APIs, backboneStatus via session), useGraph store.wip/authoritative, ReactNode props, PiecesOperation(session,…,storeId), session.bus subscriptions, removed Store#setReadPoint/initialReadPoint. Vitest self-path resolution for non-file import.meta.url. Verified: bun nx run @semio/react:build, @semio/react:test.",
-  "goal": "🎯r2602/🎯runningsketchpad",
-  "sessions": [
-    "⚪987bb9b33cae4a7a8c92765e0c7a1c6c"
-  ]
-}

@@ -1,4 +1,4 @@
-"""One-off: wrap piece-level plane+center into pose { plane, center } in semio JSON assets."""
+"""One-off: wrap piece-level plane+center into pose { plane, center } in compose JSON assets."""
 from __future__ import annotations
 
 import json
@@ -37,12 +37,12 @@ def main() -> int:
     here = Path(__file__).resolve()
     root: Path | None = None
     for anc in here.parents:
-        cand = anc / "semio" / "assets" / "semio"
+        cand = anc / "compose" / "assets" / "compose"
         if cand.is_dir():
             root = cand
             break
     if root is None:
-        print("could not find semio/assets/semio from", here, file=sys.stderr)
+        print("could not find compose/assets/compose from", here, file=sys.stderr)
         return 1
     for path in sorted(root.rglob("*.json")):
         text = path.read_text(encoding="utf-8")

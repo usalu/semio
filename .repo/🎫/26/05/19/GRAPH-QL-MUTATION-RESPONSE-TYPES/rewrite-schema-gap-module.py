@@ -2,8 +2,8 @@
 import re
 from pathlib import Path
 
-lib = Path(r"c:\git\semio\semio\client\lib\rs\lib.rs")
-head = Path(r"c:\git\semio\.repo\🎫\26\05\19\GRAPH-QL-MUTATION-RESPONSE-TYPES\lib-head.rs")
+lib = Path(r"c:\git\compose\compose\client\lib\rs\lib.rs")
+head = Path(r"c:\git\compose\.repo\🎫\26\05\19\GRAPH-QL-MUTATION-RESPONSE-TYPES\lib-head.rs")
 text = lib.read_text(encoding="utf-8")
 head_text = head.read_text(encoding="utf-8")
 
@@ -161,7 +161,7 @@ tail = f"""
 """
 
 new_region = "//#region schema_gap_surfaces\n\n" + helpers + tail + "\n//#endregion schema_gap_surfaces\n"
-out = Path(r"c:\git\semio\.repo\🎫\26\05\19\GRAPH-QL-MUTATION-RESPONSE-TYPES\schema_gap_surfaces-patch.rs")
+out = Path(r"c:\git\compose\.repo\🎫\26\05\19\GRAPH-QL-MUTATION-RESPONSE-TYPES\schema_gap_surfaces-patch.rs")
 out.write_text(new_region, encoding="utf-8")
 merged = text[:start] + new_region + text[end:]
 lib.write_text(merged, encoding="utf-8", newline="\n")

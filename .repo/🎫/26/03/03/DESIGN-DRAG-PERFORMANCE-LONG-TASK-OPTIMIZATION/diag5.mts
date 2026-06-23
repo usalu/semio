@@ -6,8 +6,8 @@ const context = await browser.newContext({ viewport: { width: 1280, height: 720 
 const page = await context.newPage();
 
 await page.addInitScript(() => {
-  (window as any).__SEMIO_PERFORMANCE__ = { longTaskSupported: false, longTasks: [] };
-  const store = (window as any).__SEMIO_PERFORMANCE__;
+  (window as any).__COMPOSE_PERFORMANCE__ = { longTaskSupported: false, longTasks: [] };
+  const store = (window as any).__COMPOSE_PERFORMANCE__;
   const obs = (window as any).PerformanceObserver;
   if (!obs || !(obs.supportedEntryTypes ?? []).includes("longtask")) return;
   store.longTaskSupported = true;
@@ -20,8 +20,8 @@ await page.goto("http://127.0.0.1:5173/");
 await page.waitForLoadState("domcontentloaded");
 await page.waitForTimeout(2000);
 
-const zipPath = path.resolve("/workspaces/semio/semio/assets/semio/metabolism.zip");
-const fileInput = page.locator('[id="semio.sketchpad.app.home.importKit"]');
+const zipPath = path.resolve("/workspaces/semio/compose/assets/compose/metabolism.zip");
+const fileInput = page.locator('[id="compose.sketchpad.app.home.importKit"]');
 await fileInput.waitFor({ state: "attached", timeout: 10000 });
 
 const [fileChooser] = await Promise.all([
@@ -59,13 +59,13 @@ if (nodeCount === 0) { console.log("ERROR: No nodes"); await browser.close(); pr
 
 await page.waitForTimeout(5000);
 
-const leftPanelToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.leftSidePanel"]');
+const leftPanelToggle = page.locator('[id="compose.sketchpad.navbar.panelToggle.leftSidePanel"]');
 if (await leftPanelToggle.isVisible().catch(() => false)) {
   const leftPanelOpen = await page.locator('[data-panel="leftSidePanel"]').isVisible().catch(() => false);
   if (leftPanelOpen) { await leftPanelToggle.click(); await page.waitForTimeout(500); }
 }
 
-await page.evaluate(() => { (window as any).__SEMIO_PERFORMANCE__.longTasks = []; });
+await page.evaluate(() => { (window as any).__COMPOSE_PERFORMANCE__.longTasks = []; });
 
 const diagramBox = await page.locator("#diagram .react-flow__pane").first().boundingBox();
 if (!diagramBox) { console.log("No pane"); await browser.close(); process.exit(1); }
@@ -76,7 +76,7 @@ await page.mouse.wheel(0, -600);
 await page.waitForTimeout(500);
 
 let tasks: any[] = await page.evaluate(() => {
-  const s = (window as any).__SEMIO_PERFORMANCE__;
+  const s = (window as any).__COMPOSE_PERFORMANCE__;
   const t = [...s.longTasks]; s.longTasks = [];
   return t.map((e: any) => ({ duration: e.duration, startTime: e.startTime }));
 });
@@ -88,7 +88,7 @@ await page.mouse.wheel(0, 600);
 await page.waitForTimeout(500);
 
 tasks = await page.evaluate(() => {
-  const s = (window as any).__SEMIO_PERFORMANCE__;
+  const s = (window as any).__COMPOSE_PERFORMANCE__;
   const t = [...s.longTasks]; s.longTasks = [];
   return t.map((e: any) => ({ duration: e.duration, startTime: e.startTime }));
 });
@@ -105,7 +105,7 @@ await page.mouse.down();
 await page.waitForTimeout(100);
 
 tasks = await page.evaluate(() => {
-  const s = (window as any).__SEMIO_PERFORMANCE__;
+  const s = (window as any).__COMPOSE_PERFORMANCE__;
   const t = [...s.longTasks]; s.longTasks = [];
   return t.map((e: any) => ({ duration: e.duration, startTime: e.startTime }));
 });
@@ -117,7 +117,7 @@ await page.mouse.move(nb.x + nb.width / 2 + 100, nb.y + nb.height / 2, { steps: 
 await page.waitForTimeout(100);
 
 tasks = await page.evaluate(() => {
-  const s = (window as any).__SEMIO_PERFORMANCE__;
+  const s = (window as any).__COMPOSE_PERFORMANCE__;
   const t = [...s.longTasks]; s.longTasks = [];
   return t.map((e: any) => ({ duration: e.duration, startTime: e.startTime }));
 });
@@ -129,7 +129,7 @@ await page.mouse.up();
 await page.waitForTimeout(200);
 
 tasks = await page.evaluate(() => {
-  const s = (window as any).__SEMIO_PERFORMANCE__;
+  const s = (window as any).__COMPOSE_PERFORMANCE__;
   const t = [...s.longTasks]; s.longTasks = [];
   return t.map((e: any) => ({ duration: e.duration, startTime: e.startTime }));
 });
@@ -139,7 +139,7 @@ for (const t of tasks) console.log(`    ${t.duration.toFixed(0)}ms @ ${t.startTi
 console.log("\n=== SETTLE 1s ===");
 await page.waitForTimeout(1000);
 tasks = await page.evaluate(() => {
-  const s = (window as any).__SEMIO_PERFORMANCE__;
+  const s = (window as any).__COMPOSE_PERFORMANCE__;
   const t = [...s.longTasks]; s.longTasks = [];
   return t.map((e: any) => ({ duration: e.duration, startTime: e.startTime }));
 });

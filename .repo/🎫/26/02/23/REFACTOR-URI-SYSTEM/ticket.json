@@ -2,7 +2,7 @@
   "title": "Refactor Uri System",
   "emoji": "♻️",
   "status": "closed",
-  "description": "Refactor the entire URI system in repo to use the new hierarchical URI scheme (semiorepo://p/u/semio/b/l/js etc.) instead of the old flat scheme (semiorepo://project/semio etc.). Update both GetArtifactURI and GetArtifactID, all GetURI methods on entity types, and all related tests.",
+  "description": "Refactor the entire URI system in repo to use the new hierarchical URI scheme (composerepo://p/u/compose/b/l/js etc.) instead of the old flat scheme (composerepo://project/compose etc.). Update both GetArtifactURI and GetArtifactID, all GetURI methods on entity types, and all related tests.",
   "summary": "Completed URI system refactoring",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/678"

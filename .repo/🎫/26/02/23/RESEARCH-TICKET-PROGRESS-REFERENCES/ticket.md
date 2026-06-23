@@ -466,7 +466,7 @@ NOTE: `ToolTicketProgress` is referenced but NEVER DEFINED as a function anywher
 **Lines 1805-1814** — in command registration:
 
 ```typescript
-// L1805: register("semio.navigateToFile", async (filePath: string) => {
+// L1805: register("compose.navigateToFile", async (filePath: string) => {
 // L1808:   const abs = path.isAbsolute(filePath) ? filePath : path.join(root, filePath);
 ```
 
@@ -482,7 +482,7 @@ NOTE: `ToolTicketProgress` is referenced but NEVER DEFINED as a function anywher
 
 #### `resolveTicketPath` usage in ticketOpen command (lines 1862-1863)
 
-**Lines 1862-1863** — in `semio.ticketOpen` command:
+**Lines 1862-1863** — in `compose.ticketOpen` command:
 
 ```typescript
 // L1862: const t = { year, month, day, slug, filePath: undefined as string | undefined };

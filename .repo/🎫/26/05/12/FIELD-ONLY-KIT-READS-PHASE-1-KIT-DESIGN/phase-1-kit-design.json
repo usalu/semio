@@ -1,7 +1,7 @@
 {
   "completed": "2026-05-12",
-  "scope": ["semio/js/index.ts regions 🎒Kit + 🏭Factories mirrors", "semio/react/index.tsx 🪝KitFieldBind/KitOpBind, 🪝HooksKit, 🪝HooksDesign, 🎭Contexts"],
-  "schemaRefs": ["semio/graphql/target.schema.graphql KitOperationInput", "DesignOperationInput", "type Kit", "type Design"],
+  "scope": ["compose/js/index.ts regions 🎒Kit + 🏭Factories mirrors", "compose/react/index.tsx 🪝KitFieldBind/KitOpBind, 🪝HooksKit, 🪝HooksDesign, 🎭Contexts"],
+  "schemaRefs": ["compose/graphql/target.schema.graphql KitOperationInput", "DesignOperationInput", "type Kit", "type Design"],
   "js": {
     "Kit": [
       "KitFieldReadSpec + fieldRead/subscribeField/onRenamed/onDescriptionChanged",
@@ -26,7 +26,7 @@
     "note": "rs Subscription.event_to_json currently maps a small subset; design name has no dedicated kind yet."
   },
   "verification": {
-    "tscJs": "npx tsc -p semio/js",
-    "tscReact": "npx tsc -p semio/react"
+    "tscJs": "npx tsc -p compose/js",
+    "tscReact": "npx tsc -p compose/react"
   }
 }

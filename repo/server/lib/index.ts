@@ -16,7 +16,7 @@ import PgBoss from "pg-boss";
 // 🗄️Database configuration from environment variables.
 const DATABASE_URL =
   process.env.DATABASE_URL ||
-  "postgresql://semio:semio@localhost:5432/semio_repo";
+  "postgresql://compose:compose@localhost:5432/compose_repo";
 
 let pool: Pool | null = null;
 

@@ -1,6 +1,6 @@
 {
   "id": "3c9178c1-cf97-4527-95d8-2a1c37ebab90",
-  "uri": "semiorepo://s/3c9178c1-cf97-4527-95d8-2a1c37ebab90",
+  "uri": "composerepo://s/3c9178c1-cf97-4527-95d8-2a1c37ebab90",
   "contributor": "🧑‍💻ueli",
   "client": "windsurf-chat",
   "second": "2026-03-10T19:33:39Z",
@@ -13,8 +13,8 @@
           "timestamp": "2026-03-10T19:33:39.32555504Z",
           "execution_id": "c5c36350-a15b-4e46-96ce-d1c77fd17908",
           "tool_info": {
-            "command_line": "npm test -- semio.test.ts",
-            "cwd": "/workspaces/semio/semio/js"
+            "command_line": "npm test -- compose.test.ts",
+            "cwd": "/workspaces/semio/compose/js"
           }
         }
       },
@@ -23,7 +23,7 @@
         "client": "windsurf-chat",
         "contributor": "🧑‍💻ueli",
         "files": [
-          "🥼semiotest"
+          "🥼composetest"
         ],
         "kind": "agent.tool.test.starting",
         "parent": "",
@@ -43,7 +43,7 @@
           "execution_id": "c5c36350-a15b-4e46-96ce-d1c77fd17908",
           "tool_info": {
             "command_line": "cargo test",
-            "cwd": "/workspaces/semio/semio/rs"
+            "cwd": "/workspaces/semio/compose/rs"
           }
         }
       },
@@ -52,7 +52,7 @@
         "client": "windsurf-chat",
         "contributor": "🧑‍💻ueli",
         "files": [
-          "👤semio📚rs🥼semiobenchmark"
+          "👤compose📚rs🥼composebenchmark"
         ],
         "kind": "agent.tool.test.starting",
         "parent": "",
@@ -75,7 +75,7 @@
           "execution_id": "c5c36350-a15b-4e46-96ce-d1c77fd17908",
           "tool_info": {
             "command_line": "dotnet test --framework net8.0 --list-tests -v minimal",
-            "cwd": "/workspaces/semio/semio/net/Semio.Tests"
+            "cwd": "/workspaces/semio/compose/net/Compose.Tests"
           }
         }
       },
@@ -104,7 +104,7 @@
           "execution_id": "c5c36350-a15b-4e46-96ce-d1c77fd17908",
           "tool_info": {
             "command_line": "go test ./... -run TestChange -count=1",
-            "cwd": "/workspaces/semio/semio/go"
+            "cwd": "/workspaces/semio/compose/go"
           }
         }
       },
@@ -113,14 +113,14 @@
         "client": "windsurf-chat",
         "contributor": "🧑‍💻ueli",
         "files": [
-          "👤semio📚go🥼semiotest"
+          "👤compose📚go🥼composetest"
         ],
         "kind": "agent.tool.test.starting",
         "parent": "",
         "second": "🎆26🌙03☀️10⏰19⌚34⏱️54",
         "session": "⚪3c9178c1cf97452795d82a1c37ebab90",
         "tests": [
-          "👤semio📚go🥼semiotest🧪testchange"
+          "👤compose📚go🥼composetest🧪testchange"
         ]
       },
       "response": {
@@ -135,7 +135,7 @@
           "timestamp": "2026-03-10T19:35:15.666656123Z",
           "execution_id": "c5c36350-a15b-4e46-96ce-d1c77fd17908",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/net/Semio.Tests/Tests.cs"
+            "file_path": "/workspaces/semio/compose/net/Compose.Tests/Tests.cs"
           }
         }
       },
@@ -145,13 +145,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚net🛅semiotests💻tests"
+            "id": "👤compose📚net🛅composetests💻tests"
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚net🛅semiotests💻tests📌1📌281"
+          "👤compose📚net🛅composetests💻tests📌1📌281"
         ],
         "second": "🎆26🌙03☀️10⏰19⌚35⏱️16",
         "session": "⚪3c9178c1cf97452795d82a1c37ebab90"
@@ -168,7 +168,7 @@
           "timestamp": "2026-03-10T19:35:26.800704613Z",
           "execution_id": "c5c36350-a15b-4e46-96ce-d1c77fd17908",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/net/Semio.Tests/Tests.cs"
+            "file_path": "/workspaces/semio/compose/net/Compose.Tests/Tests.cs"
           }
         }
       },
@@ -178,13 +178,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚net🛅semiotests💻tests"
+            "id": "👤compose📚net🛅composetests💻tests"
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚net🛅semiotests💻tests📌1📌281"
+          "👤compose📚net🛅composetests💻tests📌1📌281"
         ],
         "second": "🎆26🌙03☀️10⏰19⌚35⏱️27",
         "session": "⚪3c9178c1cf97452795d82a1c37ebab90"
@@ -201,7 +201,7 @@
           "timestamp": "2026-03-10T19:35:57.721447362Z",
           "execution_id": "c5c36350-a15b-4e46-96ce-d1c77fd17908",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/rs/semio.rs"
+            "file_path": "/workspaces/semio/compose/rs/compose.rs"
           }
         }
       },
@@ -211,13 +211,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚rs💻semio"
+            "id": "👤compose📚rs💻compose"
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚rs💻semio📌1📌5880"
+          "👤compose📚rs💻compose📌1📌5880"
         ],
         "second": "🎆26🌙03☀️10⏰19⌚35⏱️58",
         "session": "⚪3c9178c1cf97452795d82a1c37ebab90"
@@ -234,7 +234,7 @@
           "timestamp": "2026-03-10T19:35:57.759853926Z",
           "execution_id": "c5c36350-a15b-4e46-96ce-d1c77fd17908",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/net/Semio.Tests/Tests.cs"
+            "file_path": "/workspaces/semio/compose/net/Compose.Tests/Tests.cs"
           }
         }
       },
@@ -244,13 +244,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚net🛅semiotests💻tests"
+            "id": "👤compose📚net🛅composetests💻tests"
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚net🛅semiotests💻tests📌1📌281"
+          "👤compose📚net🛅composetests💻tests📌1📌281"
         ],
         "second": "🎆26🌙03☀️10⏰19⌚35⏱️58",
         "session": "⚪3c9178c1cf97452795d82a1c37ebab90"
@@ -267,7 +267,7 @@
           "timestamp": "2026-03-10T19:36:07.160504632Z",
           "execution_id": "c5c36350-a15b-4e46-96ce-d1c77fd17908",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/net/Semio.Tests/Tests.cs"
+            "file_path": "/workspaces/semio/compose/net/Compose.Tests/Tests.cs"
           }
         }
       },
@@ -277,13 +277,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚net🛅semiotests💻tests"
+            "id": "👤compose📚net🛅composetests💻tests"
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚net🛅semiotests💻tests📌1📌281"
+          "👤compose📚net🛅composetests💻tests📌1📌281"
         ],
         "second": "🎆26🌙03☀️10⏰19⌚36⏱️07",
         "session": "⚪3c9178c1cf97452795d82a1c37ebab90"
@@ -306,7 +306,7 @@
                 "new_string": "    pub fn build_file_path(kit: \u0026Kit, file: \u0026File) -\u003e String {\n        if let Some(folder) = \u0026file.folder {\n            let folder_path = build_folder_path(kit, \u0026folder.guid);\n            if folder_path.is_empty() {\n                return file.name.clone();\n            }\n            return format!(\"{}/{}\", folder_path, file.name);\n        }\n        file.name.clone()\n    }"
               }
             ],
-            "file_path": "/workspaces/semio/semio/rs/semio.rs"
+            "file_path": "/workspaces/semio/compose/rs/compose.rs"
           }
         }
       },
@@ -337,7 +337,7 @@
                 "new_string": "    pub fn build_file_path(kit: \u0026Kit, file: \u0026File) -\u003e String {\n        if let Some(folder) = \u0026file.folder {\n            let folder_path = build_folder_path(kit, \u0026folder.guid);\n            if folder_path.is_empty() {\n                return file.name.clone();\n            }\n            return format!(\"{}/{}\", folder_path, file.name);\n        }\n        file.name.clone()\n    }"
               }
             ],
-            "file_path": "/workspaces/semio/semio/rs/semio.rs"
+            "file_path": "/workspaces/semio/compose/rs/compose.rs"
           }
         }
       },
@@ -364,11 +364,11 @@
           "tool_info": {
             "edits": [
               {
-                "old_string": "    public class Diff\n    {\n        [Fact]\n        public void Metabolism_Kit_Diff_DiffedKit_InverseDiff_Kit()\n        {\n            var kitOriginal = Tests.LoadAsset\u003cKit\u003e(\"kit_metabolism.json\");\n            kitOriginal.Designs = kitOriginal.Designs?.Where(d =\u003e d.Parent == null).ToList();\n\n            var kitDiff = Tests.LoadAsset\u003cKitDiff\u003e(\"diff_kit_metabolism.json\");\n            var kitDiffInverted = Tests.LoadAsset\u003cKitDiff\u003e(\"diff_kit_metabolism_inverted.json\");\n            var kitDiffed = Tests.LoadAsset\u003cKit\u003e(\"kit_metabolism_diffed.json\");\n\n            var computedDiff = SemioDiff.GetKitDiff(kitOriginal, kitDiffed);\n            Assert.True(SemioDiff.AreKitDiffsEqual(computedDiff, kitDiff), \"GetKitDiff: computed diff doesn't match expected diff\");\n\n            var computedInverseDiff = SemioDiff.InverseKitDiff(kitOriginal, kitDiff);\n            Assert.True(SemioDiff.AreKitDiffsEqual(computedInverseDiff, kitDiffInverted), \"InverseKitDiff: computed inverse diff doesn't match expected inverse diff\");\n\n            var appliedForward = SemioDiff.ApplyKitDiff(kitOriginal, kitDiff);\n            Assert.True(SemioDiff.AreKitsEqual(appliedForward, kitDiffed), \"ApplyKitDiff forward: applied kit doesn't match expected diffed kit\");\n\n            var appliedInverse = SemioDiff.ApplyKitDiff(kitDiffed, kitDiffInverted);\n            Assert.True(SemioDiff.AreKitsEqual(appliedInverse, kitOriginal), \"ApplyKitDiff inverse: applied inverse kit doesn't match original kit\");\n        }\n    }",
-                "new_string": "    public class Change\n    {\n        [Fact]\n        public void Metabolism_Kit_Change_Forward_Backward_Inverse_Behavior()\n        {\n            var kitOriginal = Tests.LoadAsset\u003cKit\u003e(\"kit_metabolism.json\");\n            kitOriginal.Designs = kitOriginal.Designs?.Where(d =\u003e d.Parent == null).ToList();\n\n            var kitDiff = Tests.LoadAsset\u003cKitDiff\u003e(\"diff_kit_metabolism.json\");\n            var kitDiffInverted = Tests.LoadAsset\u003cKitDiff\u003e(\"diff_kit_metabolism_inverted.json\");\n            var kitDiffed = Tests.LoadAsset\u003cKit\u003e(\"kit_metabolism_diffed.json\");\n\n            var change = SemioDiff.GetKitChange(kitOriginal, kitDiffed);\n            Assert.True(SemioDiff.AreKitDiffsEqual(change.Forward, kitDiff), \"GetKitChange: forward diff doesn't match expected diff\");\n\n            Assert.True(SemioDiff.AreKitDiffsEqual(change.Backward, kitDiffInverted), \"GetKitChange: backward diff doesn't match expected inverse diff\");\n\n            var appliedForward = SemioDiff.ApplyKitDiff(kitOriginal, change.Forward);\n            Assert.True(SemioDiff.AreKitsEqual(appliedForward, kitDiffed), \"ApplyKitDiff forward: applied kit doesn't match expected diffed kit\");\n\n            var appliedInverse = SemioDiff.ApplyKitDiff(kitDiffed, change.Backward);\n            Assert.True(SemioDiff.AreKitsEqual(appliedInverse, kitOriginal), \"ApplyKitDiff inverse: applied inverse kit doesn't match original kit\");\n        }\n    }"
+                "old_string": "    public class Diff\n    {\n        [Fact]\n        public void Metabolism_Kit_Diff_DiffedKit_InverseDiff_Kit()\n        {\n            var kitOriginal = Tests.LoadAsset\u003cKit\u003e(\"kit_metabolism.json\");\n            kitOriginal.Designs = kitOriginal.Designs?.Where(d =\u003e d.Parent == null).ToList();\n\n            var kitDiff = Tests.LoadAsset\u003cKitDiff\u003e(\"diff_kit_metabolism.json\");\n            var kitDiffInverted = Tests.LoadAsset\u003cKitDiff\u003e(\"diff_kit_metabolism_inverted.json\");\n            var kitDiffed = Tests.LoadAsset\u003cKit\u003e(\"kit_metabolism_diffed.json\");\n\n            var computedDiff = ComposeDiff.GetKitDiff(kitOriginal, kitDiffed);\n            Assert.True(ComposeDiff.AreKitDiffsEqual(computedDiff, kitDiff), \"GetKitDiff: computed diff doesn't match expected diff\");\n\n            var computedInverseDiff = ComposeDiff.InverseKitDiff(kitOriginal, kitDiff);\n            Assert.True(ComposeDiff.AreKitDiffsEqual(computedInverseDiff, kitDiffInverted), \"InverseKitDiff: computed inverse diff doesn't match expected inverse diff\");\n\n            var appliedForward = ComposeDiff.ApplyKitDiff(kitOriginal, kitDiff);\n            Assert.True(ComposeDiff.AreKitsEqual(appliedForward, kitDiffed), \"ApplyKitDiff forward: applied kit doesn't match expected diffed kit\");\n\n            var appliedInverse = ComposeDiff.ApplyKitDiff(kitDiffed, kitDiffInverted);\n            Assert.True(ComposeDiff.AreKitsEqual(appliedInverse, kitOriginal), \"ApplyKitDiff inverse: applied inverse kit doesn't match original kit\");\n        }\n    }",
+                "new_string": "    public class Change\n    {\n        [Fact]\n        public void Metabolism_Kit_Change_Forward_Backward_Inverse_Behavior()\n        {\n            var kitOriginal = Tests.LoadAsset\u003cKit\u003e(\"kit_metabolism.json\");\n            kitOriginal.Designs = kitOriginal.Designs?.Where(d =\u003e d.Parent == null).ToList();\n\n            var kitDiff = Tests.LoadAsset\u003cKitDiff\u003e(\"diff_kit_metabolism.json\");\n            var kitDiffInverted = Tests.LoadAsset\u003cKitDiff\u003e(\"diff_kit_metabolism_inverted.json\");\n            var kitDiffed = Tests.LoadAsset\u003cKit\u003e(\"kit_metabolism_diffed.json\");\n\n            var change = ComposeDiff.GetKitChange(kitOriginal, kitDiffed);\n            Assert.True(ComposeDiff.AreKitDiffsEqual(change.Forward, kitDiff), \"GetKitChange: forward diff doesn't match expected diff\");\n\n            Assert.True(ComposeDiff.AreKitDiffsEqual(change.Backward, kitDiffInverted), \"GetKitChange: backward diff doesn't match expected inverse diff\");\n\n            var appliedForward = ComposeDiff.ApplyKitDiff(kitOriginal, change.Forward);\n            Assert.True(ComposeDiff.AreKitsEqual(appliedForward, kitDiffed), \"ApplyKitDiff forward: applied kit doesn't match expected diffed kit\");\n\n            var appliedInverse = ComposeDiff.ApplyKitDiff(kitDiffed, change.Backward);\n            Assert.True(ComposeDiff.AreKitsEqual(appliedInverse, kitOriginal), \"ApplyKitDiff inverse: applied inverse kit doesn't match original kit\");\n        }\n    }"
               }
             ],
-            "file_path": "/workspaces/semio/semio/net/Semio.Tests/Tests.cs"
+            "file_path": "/workspaces/semio/compose/net/Compose.Tests/Tests.cs"
           }
         }
       },
@@ -395,11 +395,11 @@
           "tool_info": {
             "edits": [
               {
-                "old_string": "    public class Diff\n    {\n        [Fact]\n        public void Metabolism_Kit_Diff_DiffedKit_InverseDiff_Kit()\n        {\n            var kitOriginal = Tests.LoadAsset\u003cKit\u003e(\"kit_metabolism.json\");\n            kitOriginal.Designs = kitOriginal.Designs?.Where(d =\u003e d.Parent == null).ToList();\n\n            var kitDiff = Tests.LoadAsset\u003cKitDiff\u003e(\"diff_kit_metabolism.json\");\n            var kitDiffInverted = Tests.LoadAsset\u003cKitDiff\u003e(\"diff_kit_metabolism_inverted.json\");\n            var kitDiffed = Tests.LoadAsset\u003cKit\u003e(\"kit_metabolism_diffed.json\");\n\n            var computedDiff = SemioDiff.GetKitDiff(kitOriginal, kitDiffed);\n            Assert.True(SemioDiff.AreKitDiffsEqual(computedDiff, kitDiff), \"GetKitDiff: computed diff doesn't match expected diff\");\n\n            var computedInverseDiff = SemioDiff.InverseKitDiff(kitOriginal, kitDiff);\n            Assert.True(SemioDiff.AreKitDiffsEqual(computedInverseDiff, kitDiffInverted), \"InverseKitDiff: computed inverse diff doesn't match expected inverse diff\");\n\n            var appliedForward = SemioDiff.ApplyKitDiff(kitOriginal, kitDiff);\n            Assert.True(SemioDiff.AreKitsEqual(appliedForward, kitDiffed), \"ApplyKitDiff forward: applied kit doesn't match expected diffed kit\");\n\n            var appliedInverse = SemioDiff.ApplyKitDiff(kitDiffed, kitDiffInverted);\n            Assert.True(SemioDiff.AreKitsEqual(appliedInverse, kitOriginal), \"ApplyKitDiff inverse: applied inverse kit doesn't match original kit\");\n        }\n    }",
-                "new_string": "    public class Change\n    {\n        [Fact]\n        public void Metabolism_Kit_Change_Forward_Backward_Inverse_Behavior()\n        {\n            var kitOriginal = Tests.LoadAsset\u003cKit\u003e(\"kit_metabolism.json\");\n            kitOriginal.Designs = kitOriginal.Designs?.Where(d =\u003e d.Parent == null).ToList();\n\n            var kitDiff = Tests.LoadAsset\u003cKitDiff\u003e(\"diff_kit_metabolism.json\");\n            var kitDiffInverted = Tests.LoadAsset\u003cKitDiff\u003e(\"diff_kit_metabolism_inverted.json\");\n            var kitDiffed = Tests.LoadAsset\u003cKit\u003e(\"kit_metabolism_diffed.json\");\n\n            var change = SemioDiff.GetKitChange(kitOriginal, kitDiffed);\n            Assert.True(SemioDiff.AreKitDiffsEqual(change.Forward, kitDiff), \"GetKitChange: forward diff doesn't match expected diff\");\n\n            Assert.True(SemioDiff.AreKitDiffsEqual(change.Backward, kitDiffInverted), \"GetKitChange: backward diff doesn't match expected inverse diff\");\n\n            var appliedForward = SemioDiff.ApplyKitDiff(kitOriginal, change.Forward);\n            Assert.True(SemioDiff.AreKitsEqual(appliedForward, kitDiffed), \"ApplyKitDiff forward: applied kit doesn't match expected diffed kit\");\n\n            var appliedInverse = SemioDiff.ApplyKitDiff(kitDiffed, change.Backward);\n            Assert.True(SemioDiff.AreKitsEqual(appliedInverse, kitOriginal), \"ApplyKitDiff inverse: applied inverse kit doesn't match original kit\");\n        }\n    }"
+                "old_string": "    public class Diff\n    {\n        [Fact]\n        public void Metabolism_Kit_Diff_DiffedKit_InverseDiff_Kit()\n        {\n            var kitOriginal = Tests.LoadAsset\u003cKit\u003e(\"kit_metabolism.json\");\n            kitOriginal.Designs = kitOriginal.Designs?.Where(d =\u003e d.Parent == null).ToList();\n\n            var kitDiff = Tests.LoadAsset\u003cKitDiff\u003e(\"diff_kit_metabolism.json\");\n            var kitDiffInverted = Tests.LoadAsset\u003cKitDiff\u003e(\"diff_kit_metabolism_inverted.json\");\n            var kitDiffed = Tests.LoadAsset\u003cKit\u003e(\"kit_metabolism_diffed.json\");\n\n            var computedDiff = ComposeDiff.GetKitDiff(kitOriginal, kitDiffed);\n            Assert.True(ComposeDiff.AreKitDiffsEqual(computedDiff, kitDiff), \"GetKitDiff: computed diff doesn't match expected diff\");\n\n            var computedInverseDiff = ComposeDiff.InverseKitDiff(kitOriginal, kitDiff);\n            Assert.True(ComposeDiff.AreKitDiffsEqual(computedInverseDiff, kitDiffInverted), \"InverseKitDiff: computed inverse diff doesn't match expected inverse diff\");\n\n            var appliedForward = ComposeDiff.ApplyKitDiff(kitOriginal, kitDiff);\n            Assert.True(ComposeDiff.AreKitsEqual(appliedForward, kitDiffed), \"ApplyKitDiff forward: applied kit doesn't match expected diffed kit\");\n\n            var appliedInverse = ComposeDiff.ApplyKitDiff(kitDiffed, kitDiffInverted);\n            Assert.True(ComposeDiff.AreKitsEqual(appliedInverse, kitOriginal), \"ApplyKitDiff inverse: applied inverse kit doesn't match original kit\");\n        }\n    }",
+                "new_string": "    public class Change\n    {\n        [Fact]\n        public void Metabolism_Kit_Change_Forward_Backward_Inverse_Behavior()\n        {\n            var kitOriginal = Tests.LoadAsset\u003cKit\u003e(\"kit_metabolism.json\");\n            kitOriginal.Designs = kitOriginal.Designs?.Where(d =\u003e d.Parent == null).ToList();\n\n            var kitDiff = Tests.LoadAsset\u003cKitDiff\u003e(\"diff_kit_metabolism.json\");\n            var kitDiffInverted = Tests.LoadAsset\u003cKitDiff\u003e(\"diff_kit_metabolism_inverted.json\");\n            var kitDiffed = Tests.LoadAsset\u003cKit\u003e(\"kit_metabolism_diffed.json\");\n\n            var change = ComposeDiff.GetKitChange(kitOriginal, kitDiffed);\n            Assert.True(ComposeDiff.AreKitDiffsEqual(change.Forward, kitDiff), \"GetKitChange: forward diff doesn't match expected diff\");\n\n            Assert.True(ComposeDiff.AreKitDiffsEqual(change.Backward, kitDiffInverted), \"GetKitChange: backward diff doesn't match expected inverse diff\");\n\n            var appliedForward = ComposeDiff.ApplyKitDiff(kitOriginal, change.Forward);\n            Assert.True(ComposeDiff.AreKitsEqual(appliedForward, kitDiffed), \"ApplyKitDiff forward: applied kit doesn't match expected diffed kit\");\n\n            var appliedInverse = ComposeDiff.ApplyKitDiff(kitDiffed, change.Backward);\n            Assert.True(ComposeDiff.AreKitsEqual(appliedInverse, kitOriginal), \"ApplyKitDiff inverse: applied inverse kit doesn't match original kit\");\n        }\n    }"
               }
             ],
-            "file_path": "/workspaces/semio/semio/net/Semio.Tests/Tests.cs"
+            "file_path": "/workspaces/semio/compose/net/Compose.Tests/Tests.cs"
           }
         }
       },
@@ -425,7 +425,7 @@
           "execution_id": "c5c36350-a15b-4e46-96ce-d1c77fd17908",
           "tool_info": {
             "command_line": "dotnet test --framework net8.0 --filter \"FullyQualifiedName~Change\" -v minimal",
-            "cwd": "/workspaces/semio/semio/net/Semio.Tests"
+            "cwd": "/workspaces/semio/compose/net/Compose.Tests"
           }
         }
       },
@@ -454,7 +454,7 @@
           "execution_id": "c5c36350-a15b-4e46-96ce-d1c77fd17908",
           "tool_info": {
             "command_line": "go test ./... -run TestChange -count=1",
-            "cwd": "/workspaces/semio/semio/go"
+            "cwd": "/workspaces/semio/compose/go"
           }
         }
       },
@@ -463,14 +463,14 @@
         "client": "windsurf-chat",
         "contributor": "🧑‍💻ueli",
         "files": [
-          "👤semio📚go🥼semiotest"
+          "👤compose📚go🥼composetest"
         ],
         "kind": "agent.tool.test.starting",
         "parent": "",
         "second": "🎆26🌙03☀️10⏰19⌚37⏱️39",
         "session": "⚪3c9178c1cf97452795d82a1c37ebab90",
         "tests": [
-          "👤semio📚go🥼semiotest🧪testchange"
+          "👤compose📚go🥼composetest🧪testchange"
         ]
       },
       "response": {
@@ -486,7 +486,7 @@
           "execution_id": "c5c36350-a15b-4e46-96ce-d1c77fd17908",
           "tool_info": {
             "command_line": "cargo test change::metabolism::kit_change_forward_backward_inverse_behavior -- --exact",
-            "cwd": "/workspaces/semio/semio/rs"
+            "cwd": "/workspaces/semio/compose/rs"
           }
         }
       },
@@ -495,7 +495,7 @@
         "client": "windsurf-chat",
         "contributor": "🧑‍💻ueli",
         "files": [
-          "👤semio📚rs🥼semiobenchmark"
+          "👤compose📚rs🥼composebenchmark"
         ],
         "kind": "agent.tool.test.starting",
         "parent": "",
@@ -517,8 +517,8 @@
           "timestamp": "2026-03-10T19:38:07.501388024Z",
           "execution_id": "c5c36350-a15b-4e46-96ce-d1c77fd17908",
           "tool_info": {
-            "command_line": "npm test -- semio.test.ts",
-            "cwd": "/workspaces/semio/semio/js"
+            "command_line": "npm test -- compose.test.ts",
+            "cwd": "/workspaces/semio/compose/js"
           }
         }
       },
@@ -527,7 +527,7 @@
         "client": "windsurf-chat",
         "contributor": "🧑‍💻ueli",
         "files": [
-          "🥼semiotest"
+          "🥼composetest"
         ],
         "kind": "agent.tool.test.starting",
         "parent": "",
@@ -552,7 +552,7 @@
                 "new_string": "    pub fn build_file_path(kit: \u0026Kit, file: \u0026File) -\u003e String {\n        match \u0026file.folder {\n            Some(folder) =\u003e {\n                let folder_path = build_folder_path(kit, \u0026folder.guid);\n                if folder_path.is_empty() {\n                    file.name.clone()\n                } else {\n                    format!(\"{}/{}\", folder_path, file.name)\n                }\n            }\n            None =\u003e file.name.clone(),\n        }\n    }"
               }
             ],
-            "file_path": "/workspaces/semio/semio/rs/semio.rs"
+            "file_path": "/workspaces/semio/compose/rs/compose.rs"
           }
         }
       },
@@ -583,7 +583,7 @@
                 "new_string": "    pub fn build_file_path(kit: \u0026Kit, file: \u0026File) -\u003e String {\n        match \u0026file.folder {\n            Some(folder) =\u003e {\n                let folder_path = build_folder_path(kit, \u0026folder.guid);\n                if folder_path.is_empty() {\n                    file.name.clone()\n                } else {\n                    format!(\"{}/{}\", folder_path, file.name)\n                }\n            }\n            None =\u003e file.name.clone(),\n        }\n    }"
               }
             ],
-            "file_path": "/workspaces/semio/semio/rs/semio.rs"
+            "file_path": "/workspaces/semio/compose/rs/compose.rs"
           }
         }
       },
@@ -609,7 +609,7 @@
           "execution_id": "c5c36350-a15b-4e46-96ce-d1c77fd17908",
           "tool_info": {
             "command_line": "dotnet test --framework net8.0 --filter \"FullyQualifiedName~Change\" -v minimal",
-            "cwd": "/workspaces/semio/semio/net/Semio.Tests"
+            "cwd": "/workspaces/semio/compose/net/Compose.Tests"
           }
         }
       },
@@ -638,7 +638,7 @@
           "execution_id": "c5c36350-a15b-4e46-96ce-d1c77fd17908",
           "tool_info": {
             "command_line": "cargo test change::metabolism::kit_change_forward_backward_inverse_behavior -- --exact",
-            "cwd": "/workspaces/semio/semio/rs"
+            "cwd": "/workspaces/semio/compose/rs"
           }
         }
       },
@@ -647,7 +647,7 @@
         "client": "windsurf-chat",
         "contributor": "🧑‍💻ueli",
         "files": [
-          "👤semio📚rs🥼semiobenchmark"
+          "👤compose📚rs🥼composebenchmark"
         ],
         "kind": "agent.tool.test.starting",
         "parent": "",
@@ -670,7 +670,7 @@
           "execution_id": "c5c36350-a15b-4e46-96ce-d1c77fd17908",
           "tool_info": {
             "command_line": "go test ./... -run TestChange -count=1",
-            "cwd": "/workspaces/semio/semio/go"
+            "cwd": "/workspaces/semio/compose/go"
           }
         }
       },
@@ -679,14 +679,14 @@
         "client": "windsurf-chat",
         "contributor": "🧑‍💻ueli",
         "files": [
-          "👤semio📚go🥼semiotest"
+          "👤compose📚go🥼composetest"
         ],
         "kind": "agent.tool.test.starting",
         "parent": "",
         "second": "🎆26🌙03☀️10⏰19⌚39⏱️42",
         "session": "⚪3c9178c1cf97452795d82a1c37ebab90",
         "tests": [
-          "👤semio📚go🥼semiotest🧪testchange"
+          "👤compose📚go🥼composetest🧪testchange"
         ]
       },
       "response": {
@@ -701,7 +701,7 @@
           "timestamp": "2026-03-10T19:40:20.232099398Z",
           "execution_id": "c5c36350-a15b-4e46-96ce-d1c77fd17908",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/go"
+            "file_path": "/workspaces/semio/compose/go"
           }
         }
       },
@@ -726,7 +726,7 @@
           "timestamp": "2026-03-10T19:40:20.220209146Z",
           "execution_id": "c5c36350-a15b-4e46-96ce-d1c77fd17908",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/rs/semio.rs"
+            "file_path": "/workspaces/semio/compose/rs/compose.rs"
           }
         }
       },
@@ -736,13 +736,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚rs💻semio"
+            "id": "👤compose📚rs💻compose"
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚rs💻semio📌1📌5880"
+          "👤compose📚rs💻compose📌1📌5880"
         ],
         "second": "🎆26🌙03☀️10⏰19⌚40⏱️20",
         "session": "⚪3c9178c1cf97452795d82a1c37ebab90"
@@ -759,7 +759,7 @@
           "timestamp": "2026-03-10T19:40:31.083756601Z",
           "execution_id": "c5c36350-a15b-4e46-96ce-d1c77fd17908",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/go"
+            "file_path": "/workspaces/semio/compose/go"
           }
         }
       },
@@ -784,7 +784,7 @@
           "timestamp": "2026-03-10T19:40:31.476918829Z",
           "execution_id": "c5c36350-a15b-4e46-96ce-d1c77fd17908",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/rs/semio.rs"
+            "file_path": "/workspaces/semio/compose/rs/compose.rs"
           }
         }
       },
@@ -794,13 +794,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚rs💻semio"
+            "id": "👤compose📚rs💻compose"
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚rs💻semio📌1📌5880"
+          "👤compose📚rs💻compose📌1📌5880"
         ],
         "second": "🎆26🌙03☀️10⏰19⌚40⏱️32",
         "session": "⚪3c9178c1cf97452795d82a1c37ebab90"
@@ -823,7 +823,7 @@
                 "new_string": "    pub fn build_file_path(kit: \u0026Kit, file: \u0026File) -\u003e String {\n        if let Some(folder) = \u0026file.folder {\n            let folder_path = build_folder_path(kit, \u0026folder.guid);\n            if folder_path.is_empty() {\n                return file.name.clone();\n            }\n            return format!(\"{}/{}\", folder_path, file.name);\n        }\n        file.name.clone()\n    }"
               }
             ],
-            "file_path": "/workspaces/semio/semio/rs/semio.rs"
+            "file_path": "/workspaces/semio/compose/rs/compose.rs"
           }
         }
       },
@@ -854,7 +854,7 @@
                 "new_string": "    pub fn build_file_path(kit: \u0026Kit, file: \u0026File) -\u003e String {\n        if let Some(folder) = \u0026file.folder {\n            let folder_path = build_folder_path(kit, \u0026folder.guid);\n            if folder_path.is_empty() {\n                return file.name.clone();\n            }\n            return format!(\"{}/{}\", folder_path, file.name);\n        }\n        file.name.clone()\n    }"
               }
             ],
-            "file_path": "/workspaces/semio/semio/rs/semio.rs"
+            "file_path": "/workspaces/semio/compose/rs/compose.rs"
           }
         }
       },
@@ -880,7 +880,7 @@
           "execution_id": "c5c36350-a15b-4e46-96ce-d1c77fd17908",
           "tool_info": {
             "command_line": "dotnet test --framework net8.0 --filter \"FullyQualifiedName~Change\" -v minimal",
-            "cwd": "/workspaces/semio/semio/net/Semio.Tests"
+            "cwd": "/workspaces/semio/compose/net/Compose.Tests"
           }
         }
       },
@@ -909,7 +909,7 @@
           "execution_id": "c5c36350-a15b-4e46-96ce-d1c77fd17908",
           "tool_info": {
             "command_line": "go test . -run TestChange -count=1",
-            "cwd": "/workspaces/semio/semio/go"
+            "cwd": "/workspaces/semio/compose/go"
           }
         }
       },
@@ -918,14 +918,14 @@
         "client": "windsurf-chat",
         "contributor": "🧑‍💻ueli",
         "files": [
-          "👤semio📚go🥼semiotest"
+          "👤compose📚go🥼composetest"
         ],
         "kind": "agent.tool.test.starting",
         "parent": "",
         "second": "🎆26🌙03☀️10⏰19⌚41⏱️39",
         "session": "⚪3c9178c1cf97452795d82a1c37ebab90",
         "tests": [
-          "👤semio📚go🥼semiotest🧪testchange"
+          "👤compose📚go🥼composetest🧪testchange"
         ]
       },
       "response": {
@@ -940,8 +940,8 @@
           "timestamp": "2026-03-10T19:41:37.887795276Z",
           "execution_id": "c5c36350-a15b-4e46-96ce-d1c77fd17908",
           "tool_info": {
-            "command_line": "npm test -- semio.test.ts",
-            "cwd": "/workspaces/semio/semio/js"
+            "command_line": "npm test -- compose.test.ts",
+            "cwd": "/workspaces/semio/compose/js"
           }
         }
       },
@@ -950,7 +950,7 @@
         "client": "windsurf-chat",
         "contributor": "🧑‍💻ueli",
         "files": [
-          "🥼semiotest"
+          "🥼composetest"
         ],
         "kind": "agent.tool.test.starting",
         "parent": "",
@@ -970,7 +970,7 @@
           "execution_id": "c5c36350-a15b-4e46-96ce-d1c77fd17908",
           "tool_info": {
             "command_line": "cargo test change::metabolism::kit_change_forward_backward_inverse_behavior -- --exact",
-            "cwd": "/workspaces/semio/semio/rs"
+            "cwd": "/workspaces/semio/compose/rs"
           }
         }
       },
@@ -979,7 +979,7 @@
         "client": "windsurf-chat",
         "contributor": "🧑‍💻ueli",
         "files": [
-          "👤semio📚rs🥼semiobenchmark"
+          "👤compose📚rs🥼composebenchmark"
         ],
         "kind": "agent.tool.test.starting",
         "parent": "",

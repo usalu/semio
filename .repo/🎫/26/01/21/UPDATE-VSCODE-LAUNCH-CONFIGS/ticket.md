@@ -17,23 +17,23 @@ Update VSCode launch.json and tasks.json with:
 
 | Package               | Name              |
 | --------------------- | ----------------- |
-| go/semio              | semio/go          |
+| go/compose              | compose/go          |
 | ./repo/cli            | repo/go           |
 | go/server             | repo/server       |
-| rs/semio              | semio/rs          |
-| py/semio              | semio/py          |
-| py/engine             | semio/engine      |
-| js/semio              | semio/js          |
-| js/docs               | semio/docs        |
-| js/play               | semio/play        |
-| js/desktop            | semio/desktop     |
+| rs/compose              | compose/rs          |
+| py/compose              | compose/py          |
+| py/engine             | compose/engine      |
+| js/compose              | compose/js          |
+| js/docs               | compose/docs        |
+| js/play               | compose/play        |
+| js/desktop            | compose/desktop     |
 | js/vscode             | repo/vscode       |
-| net/Semio             | semio/net         |
-| net/Semio.Grasshopper | semio/grasshopper |
-| assets                | semio/assets      |
-| assets/logo           | semio/logo        |
-| assets/icons          | semio/icons       |
-| yak                   | semio/yak         |
+| net/Compose             | compose/net         |
+| net/Compose.Grasshopper | compose/grasshopper |
+| assets                | compose/assets      |
+| assets/logo           | compose/logo        |
+| assets/icons          | compose/icons       |
+| yak                   | compose/yak         |
 
 ## New Naming Convention
 
@@ -43,8 +43,8 @@ Examples:
 
 - `repo/go build`
 - `repo/vscode dev`
-- `semio/js dev:storybook`
-- `semio/js test:coverage`
+- `compose/js dev:storybook`
+- `compose/js test:coverage`
 
 ## Ordering
 
@@ -54,7 +54,7 @@ Examples:
 ## Cleanup
 
 - Remove all mcp references (go/mcp doesn't exist)
-- Add go/server and rs/semio configurations
+- Add go/server and rs/compose configurations
 
 ## Changes
 
@@ -71,7 +71,7 @@ Analyzed existing launch.json (465 lines) and tasks.json (1153 lines) to underst
 - Old naming convention: `dev js`, `build go repo`, etc.
 - No unified ordering
 - References to non-existent `go/mcp`
-- Missing configurations for `go/server` and `rs/semio`
+- Missing configurations for `go/server` and `rs/compose`
 - Missing test:unit, test:e2e, test:coverage for packages that support them
 
 ## Implementation
@@ -80,7 +80,7 @@ Analyzed existing launch.json (465 lines) and tasks.json (1153 lines) to underst
 
 Changed from `verb subject` to `@scope/package verb`:
 
-- `dev js js storybook` → `semio/js dev:storybook`
+- `dev js js storybook` → `compose/js dev:storybook`
 - `build go repo` → `repo/go build`
 - `dev vscode` → `repo/vscode dev`
 
@@ -95,20 +95,20 @@ Changed from `verb subject` to `@scope/package verb`:
 - repo/go (dev, test, build, preflight)
 - repo/server (dev, test, build, preflight) - NEW
 - repo/vscode (dev, test, build, preflight, publish:vsix)
-- semio/go (test, build, preflight)
-- semio/rs (test, build, preflight) - NEW
-- semio/py (test, build, preflight)
-- semio/engine (dev, test, build, preflight)
-- semio/js (dev, dev:storybook, dev:sketchpad, test, test:unit, test:e2e, test:coverage, build, preflight)
-- semio/docs (dev, build, preflight)
-- semio/play (dev, build, preflight)
-- semio/desktop (dev, build, preflight)
-- semio/net (test, build, preflight)
-- semio/grasshopper (test, build, preflight)
-- semio/assets (build, preflight)
-- semio/logo (dev, build)
-- semio/icons (build)
-- semio/yak (build)
+- compose/go (test, build, preflight)
+- compose/rs (test, build, preflight) - NEW
+- compose/py (test, build, preflight)
+- compose/engine (dev, test, build, preflight)
+- compose/js (dev, dev:storybook, dev:sketchpad, test, test:unit, test:e2e, test:coverage, build, preflight)
+- compose/docs (dev, build, preflight)
+- compose/play (dev, build, preflight)
+- compose/desktop (dev, build, preflight)
+- compose/net (test, build, preflight)
+- compose/grasshopper (test, build, preflight)
+- compose/assets (build, preflight)
+- compose/logo (dev, build)
+- compose/icons (build)
+- compose/yak (build)
 
 ### Removed
 
@@ -133,7 +133,7 @@ Rewrote VSCode launch.json and tasks.json with unified naming convention and lif
 
 Format: `@scope/package script`
 
-- `dev js js storybook` → `semio/js dev:storybook`
+- `dev js js storybook` → `compose/js dev:storybook`
 - `build go repo` → `repo/go build`
 - `test vscode` → `repo/vscode test`
 
@@ -150,7 +150,7 @@ dev → test → test:unit → test:e2e → test:coverage → build → prefligh
 ### New Packages Added
 
 - repo/server (go/server)
-- semio/rs (rs/semio)
+- compose/rs (rs/compose)
 
 ### Removed
 

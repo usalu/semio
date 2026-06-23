@@ -1,6 +1,6 @@
 cff-version: 1.2.0
-title: "semio"
-message: "You can cite semio like this:"
+title: "compose"
+message: "You can cite compose like this:"
 type: software
 authors:
   - family-names: "Saluz"
@@ -19,13 +19,13 @@ authors:
 version: "r25.07-1"
 doi: 10.5281/zenodo.8419156
 identifiers:
-  - description: This references semio (all versions) in general.
+  - description: This references compose (all versions) in general.
     type: doi
     value: 10.5281/zenodo.8419156
-  - description: This references semio (version r25.07-1) in particular.
+  - description: This references compose (version r25.07-1) in particular.
     type: doi
     value: 10.5281/zenodo.15800140
-  - description: This references semio (version r24.12-1) in particular.
+  - description: This references compose (version r24.12-1) in particular.
     type: doi
     value: 10.5281/zenodo.8419156
 date-released: 2025-08-10

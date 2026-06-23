@@ -2,8 +2,8 @@
   "title": "Fix Rhino 8 Panel Registration Like Speckle Connectors",
   "emoji": "🔧",
   "status": "closed",
-  "description": "The semio 3dm plugin starts Rhino but no side panel appears. Fix panel registration for Rhino 8 using WpfElementHost approach like Speckle.",
-  "summary": "Fixed Rhino 8 plugin not showing panel or command. Root causes: (1) Missing [assembly: Guid] attribute - Rhino needs this to identify the plugin. Added AssemblyAttributes region with Guid, PlugInDescription attributes (Address, Email, Organization, WebSite, Icon) matching Speckle pattern. (2) Launch settings used RHINO_PLUGIN_PATH env var instead of commandLineArgs - changed to pass .rhp path with /netfx flag like Speckle. (3) Missing embedded icon resource - copied semio_32x32.ico and embedded it. Removed non-existent Resources.resx/Designer.cs references. (4) Panel registration now uses PanelType.System and loads icon from embedded resources. All 13 tests pass.",
+  "description": "The compose 3dm plugin starts Rhino but no side panel appears. Fix panel registration for Rhino 8 using WpfElementHost approach like Speckle.",
+  "summary": "Fixed Rhino 8 plugin not showing panel or command. Root causes: (1) Missing [assembly: Guid] attribute - Rhino needs this to identify the plugin. Added AssemblyAttributes region with Guid, PlugInDescription attributes (Address, Email, Organization, WebSite, Icon) matching Speckle pattern. (2) Launch settings used RHINO_PLUGIN_PATH env var instead of commandLineArgs - changed to pass .rhp path with /netfx flag like Speckle. (3) Missing embedded icon resource - copied compose_32x32.ico and embedded it. Removed non-existent Resources.resx/Designer.cs references. (4) Panel registration now uses PanelType.System and loads icon from embedded resources. All 13 tests pass.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/832"
   },

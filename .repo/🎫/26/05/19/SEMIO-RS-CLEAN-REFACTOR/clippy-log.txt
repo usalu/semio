@@ -1,2 +1,0 @@
-    Checking semio v0.1.0 (C:\git\semio\semio\client\lib\rs)
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1m 25s

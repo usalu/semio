@@ -55,7 +55,7 @@ async function initDesign(page: Page) {
   await page.waitForLoadState("networkidle");
   const fileInput = page.locator('input[type="file"]');
   if (await fileInput.count() > 0) {
-    await fileInput.setInputFiles("/workspaces/semio/semio/assets/semio/metabolism.zip");
+    await fileInput.setInputFiles("/workspaces/semio/compose/assets/compose/metabolism.zip");
     await page.waitForTimeout(3000);
   }
   const kitLink = page.locator('a[href*="/kits/"]').first();

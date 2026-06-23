@@ -8,7 +8,7 @@
 - [x] Update ticket summary and close with touched files.
 
 ## Changes
-- Updated `js/semio/sketchpad/Kit.tsx` to explicitly enable diagram selection/focus on the `Diagram` component:
+- Updated `js/compose/sketchpad/Kit.tsx` to explicitly enable diagram selection/focus on the `Diagram` component:
   - `elementsSelectable={true}`
   - `nodesFocusable={true}`
   - `edgesFocusable={true}`
@@ -18,8 +18,8 @@
 - Prompt: "fix"
 - Found regression in current workspace state: Kit diagram `Diagram` call no longer had `elementsSelectable` flags, so diagram clicks/lasso could not drive shared selection.
 - Re-applied the selection flags in `Kit.tsx`.
-- Ran validation: `npx nx test @semio/js --skipNxCache` (pass).
+- Ran validation: `npx nx test @compose/js --skipNxCache` (pass).
 
 ## Summary
 
-Restored Kit diagram-window selection by re-enabling React Flow element selection/focus flags on the Diagram in js/semio/sketchpad/Kit.tsx, so direct diagram interactions again update shared Kit selection state.
+Restored Kit diagram-window selection by re-enabling React Flow element selection/focus flags on the Diagram in js/compose/sketchpad/Kit.tsx, so direct diagram interactions again update shared Kit selection state.

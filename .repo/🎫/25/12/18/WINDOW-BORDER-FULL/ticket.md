@@ -14,8 +14,8 @@
 
 # Changes
 
-- Updated `js/semio/globals.css` so GoldenLayout stack windows render the frame as an inset stroke (via inset shadow) instead of an outer border.
-- Adjusted `js/semio/globals.css` to render the inset stroke via a `::after` overlay frame after the shadow-based frame was not visible.
+- Updated `js/compose/globals.css` so GoldenLayout stack windows render the frame as an inset stroke (via inset shadow) instead of an outer border.
+- Adjusted `js/compose/globals.css` to render the inset stroke via a `::after` overlay frame after the shadow-based frame was not visible.
 - Fixed a broken `.lm_item.lm_stack` CSS block (missing closing brace) and consolidated the GoldenLayout stack frame to a single `::after` inset stroke implementation.
 - Restored GoldenLayout chrome and content backgrounds to use the window/base background tokens (instead of `transparent`) while keeping the inset stack frame.
 

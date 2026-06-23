@@ -1,6 +1,6 @@
 {
   "id": "unknown",
-  "uri": "semiorepo://s/unknown",
+  "uri": "composerepo://s/unknown",
   "contributor": "🧑‍💻ueli",
   "client": "copilot-chat",
   "second": "2026-03-08T17:53:36Z",
@@ -10,7 +10,7 @@
         "event": {
           "tool_name": "read_file",
           "tool_input": {
-            "file_path": "/workspaces/semio/semio/go/semio.go",
+            "file_path": "/workspaces/semio/compose/go/compose.go",
             "start_line": 620,
             "end_line": 650
           }
@@ -28,1250 +28,1250 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio✂️attribute",
+            "id": "👤compose📚go💻compose✂️attribute",
             "loc": 6
           },
           {
-            "id": "👤semio📚go💻semio✂️attributediff",
+            "id": "👤compose📚go💻compose✂️attributediff",
             "loc": 5
           },
           {
-            "id": "👤semio📚go💻semio✂️attributeid",
+            "id": "👤compose📚go💻compose✂️attributeid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️attributesdiff",
+            "id": "👤compose📚go💻compose✂️attributesdiff",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio✂️author",
+            "id": "👤compose📚go💻compose✂️author",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio✂️authordiff",
+            "id": "👤compose📚go💻compose✂️authordiff",
             "loc": 5
           },
           {
-            "id": "👤semio📚go💻semio✂️authorid",
+            "id": "👤compose📚go💻compose✂️authorid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️authorsdiff",
+            "id": "👤compose📚go💻compose✂️authorsdiff",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio✂️benchmark",
+            "id": "👤compose📚go💻compose✂️benchmark",
             "loc": 11
           },
           {
-            "id": "👤semio📚go💻semio✂️benchmarkdiff",
+            "id": "👤compose📚go💻compose✂️benchmarkdiff",
             "loc": 10
           },
           {
-            "id": "👤semio📚go💻semio✂️benchmarkid",
+            "id": "👤compose📚go💻compose✂️benchmarkid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️benchmarksdiff",
+            "id": "👤compose📚go💻compose✂️benchmarksdiff",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio✂️camera",
+            "id": "👤compose📚go💻compose✂️camera",
             "loc": 5
           },
           {
-            "id": "👤semio📚go💻semio✂️cameradiff",
+            "id": "👤compose📚go💻compose✂️cameradiff",
             "loc": 5
           },
           {
-            "id": "👤semio📚go💻semio✂️concept",
+            "id": "👤compose📚go💻compose✂️concept",
             "loc": 9
           },
           {
-            "id": "👤semio📚go💻semio✂️conceptdiff",
+            "id": "👤compose📚go💻compose✂️conceptdiff",
             "loc": 7
           },
           {
-            "id": "👤semio📚go💻semio✂️conceptid",
+            "id": "👤compose📚go💻compose✂️conceptid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️conceptsdiff",
+            "id": "👤compose📚go💻compose✂️conceptsdiff",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio✂️connection",
+            "id": "👤compose📚go💻compose✂️connection",
             "loc": 15
           },
           {
-            "id": "👤semio📚go💻semio✂️connectiondiff",
+            "id": "👤compose📚go💻compose✂️connectiondiff",
             "loc": 14
           },
           {
-            "id": "👤semio📚go💻semio✂️connectionid",
+            "id": "👤compose📚go💻compose✂️connectionid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️connectionsdiff",
+            "id": "👤compose📚go💻compose✂️connectionsdiff",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio✂️connector",
+            "id": "👤compose📚go💻compose✂️connector",
             "loc": 12
           },
           {
-            "id": "👤semio📚go💻semio✂️connectordiff",
+            "id": "👤compose📚go💻compose✂️connectordiff",
             "loc": 11
           },
           {
-            "id": "👤semio📚go💻semio✂️connectorid",
+            "id": "👤compose📚go💻compose✂️connectorid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️connectorsdiff",
+            "id": "👤compose📚go💻compose✂️connectorsdiff",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio✂️constraint",
+            "id": "👤compose📚go💻compose✂️constraint",
             "loc": 5
           },
           {
-            "id": "👤semio📚go💻semio✂️coord",
+            "id": "👤compose📚go💻compose✂️coord",
             "loc": 4
           },
           {
-            "id": "👤semio📚go💻semio✂️coorddiff",
+            "id": "👤compose📚go💻compose✂️coorddiff",
             "loc": 4
           },
           {
-            "id": "👤semio📚go💻semio✂️design",
+            "id": "👤compose📚go💻compose✂️design",
             "loc": 27
           },
           {
-            "id": "👤semio📚go💻semio✂️designdiff",
+            "id": "👤compose📚go💻compose✂️designdiff",
             "loc": 24
           },
           {
-            "id": "👤semio📚go💻semio✂️designid",
+            "id": "👤compose📚go💻compose✂️designid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️designsdiff",
+            "id": "👤compose📚go💻compose✂️designsdiff",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio✂️domainlocation",
+            "id": "👤compose📚go💻compose✂️domainlocation",
             "loc": 5
           },
           {
-            "id": "👤semio📚go💻semio✂️file",
+            "id": "👤compose📚go💻compose✂️file",
             "loc": 14
           },
           {
-            "id": "👤semio📚go💻semio✂️filediff",
+            "id": "👤compose📚go💻compose✂️filediff",
             "loc": 11
           },
           {
-            "id": "👤semio📚go💻semio✂️fileid",
+            "id": "👤compose📚go💻compose✂️fileid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️filesdiff",
+            "id": "👤compose📚go💻compose✂️filesdiff",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio✂️fix",
+            "id": "👤compose📚go💻compose✂️fix",
             "loc": 4
           },
           {
-            "id": "👤semio📚go💻semio✂️folder",
+            "id": "👤compose📚go💻compose✂️folder",
             "loc": 9
           },
           {
-            "id": "👤semio📚go💻semio✂️folderdiff",
+            "id": "👤compose📚go💻compose✂️folderdiff",
             "loc": 6
           },
           {
-            "id": "👤semio📚go💻semio✂️folderid",
+            "id": "👤compose📚go💻compose✂️folderid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️foldersdiff",
+            "id": "👤compose📚go💻compose✂️foldersdiff",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio✂️group",
+            "id": "👤compose📚go💻compose✂️group",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio✂️groupdiff",
+            "id": "👤compose📚go💻compose✂️groupdiff",
             "loc": 7
           },
           {
-            "id": "👤semio📚go💻semio✂️groupid",
+            "id": "👤compose📚go💻compose✂️groupid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️groupsdiff",
+            "id": "👤compose📚go💻compose✂️groupsdiff",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio✂️kit",
+            "id": "👤compose📚go💻compose✂️kit",
             "loc": 24
           },
           {
-            "id": "👤semio📚go💻semio✂️kitdiff",
+            "id": "👤compose📚go💻compose✂️kitdiff",
             "loc": 22
           },
           {
-            "id": "👤semio📚go💻semio✂️kitid",
+            "id": "👤compose📚go💻compose✂️kitid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️kitsdiff",
+            "id": "👤compose📚go💻compose✂️kitsdiff",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio✂️layer",
+            "id": "👤compose📚go💻compose✂️layer",
             "loc": 9
           },
           {
-            "id": "👤semio📚go💻semio✂️layerdiff",
+            "id": "👤compose📚go💻compose✂️layerdiff",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio✂️layerid",
+            "id": "👤compose📚go💻compose✂️layerid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️layersdiff",
+            "id": "👤compose📚go💻compose✂️layersdiff",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio✂️location",
+            "id": "👤compose📚go💻compose✂️location",
             "loc": 7
           },
           {
-            "id": "👤semio📚go💻semio✂️locationdiff",
+            "id": "👤compose📚go💻compose✂️locationdiff",
             "loc": 6
           },
           {
-            "id": "👤semio📚go💻semio✂️locationid",
+            "id": "👤compose📚go💻compose✂️locationid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️model",
+            "id": "👤compose📚go💻compose✂️model",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio✂️modeldiff",
+            "id": "👤compose📚go💻compose✂️modeldiff",
             "loc": 7
           },
           {
-            "id": "👤semio📚go💻semio✂️modelid",
+            "id": "👤compose📚go💻compose✂️modelid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️modelsdiff",
+            "id": "👤compose📚go💻compose✂️modelsdiff",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio✂️piece",
+            "id": "👤compose📚go💻compose✂️piece",
             "loc": 16
           },
           {
-            "id": "👤semio📚go💻semio✂️piecediff",
+            "id": "👤compose📚go💻compose✂️piecediff",
             "loc": 15
           },
           {
-            "id": "👤semio📚go💻semio✂️pieceid",
+            "id": "👤compose📚go💻compose✂️pieceid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️piecenode",
+            "id": "👤compose📚go💻compose✂️piecenode",
             "loc": 4
           },
           {
-            "id": "👤semio📚go💻semio✂️piecesdiff",
+            "id": "👤compose📚go💻compose✂️piecesdiff",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio✂️plane",
+            "id": "👤compose📚go💻compose✂️plane",
             "loc": 5
           },
           {
-            "id": "👤semio📚go💻semio✂️planediff",
+            "id": "👤compose📚go💻compose✂️planediff",
             "loc": 5
           },
           {
-            "id": "👤semio📚go💻semio✂️point",
+            "id": "👤compose📚go💻compose✂️point",
             "loc": 5
           },
           {
-            "id": "👤semio📚go💻semio✂️pointdiff",
+            "id": "👤compose📚go💻compose✂️pointdiff",
             "loc": 5
           },
           {
-            "id": "👤semio📚go💻semio✂️port",
+            "id": "👤compose📚go💻compose✂️port",
             "loc": 10
           },
           {
-            "id": "👤semio📚go💻semio✂️portdiff",
+            "id": "👤compose📚go💻compose✂️portdiff",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio✂️portid",
+            "id": "👤compose📚go💻compose✂️portid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️portsdiff",
+            "id": "👤compose📚go💻compose✂️portsdiff",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio✂️problem",
+            "id": "👤compose📚go💻compose✂️problem",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio✂️problemserialized",
+            "id": "👤compose📚go💻compose✂️problemserialized",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio✂️prop",
+            "id": "👤compose📚go💻compose✂️prop",
             "loc": 7
           },
           {
-            "id": "👤semio📚go💻semio✂️propdiff",
+            "id": "👤compose📚go💻compose✂️propdiff",
             "loc": 6
           },
           {
-            "id": "👤semio📚go💻semio✂️propid",
+            "id": "👤compose📚go💻compose✂️propid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️propsdiff",
+            "id": "👤compose📚go💻compose✂️propsdiff",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio✂️qualitiesdiff",
+            "id": "👤compose📚go💻compose✂️qualitiesdiff",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio✂️quality",
+            "id": "👤compose📚go💻compose✂️quality",
             "loc": 20
           },
           {
-            "id": "👤semio📚go💻semio✂️qualitydiff",
+            "id": "👤compose📚go💻compose✂️qualitydiff",
             "loc": 17
           },
           {
-            "id": "👤semio📚go💻semio✂️qualityid",
+            "id": "👤compose📚go💻compose✂️qualityid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️qualitykind",
+            "id": "👤compose📚go💻compose✂️qualitykind",
             "loc": 13
           },
           {
-            "id": "👤semio📚go💻semio✂️semioentitykind",
+            "id": "👤compose📚go💻compose✂️composeentitykind",
             "loc": 26
           },
           {
-            "id": "👤semio📚go💻semio✂️severity",
+            "id": "👤compose📚go💻compose✂️severity",
             "loc": 9
           },
           {
-            "id": "👤semio📚go💻semio✂️side",
+            "id": "👤compose📚go💻compose✂️side",
             "loc": 5
           },
           {
-            "id": "👤semio📚go💻semio✂️sidediff",
+            "id": "👤compose📚go💻compose✂️sidediff",
             "loc": 5
           },
           {
-            "id": "👤semio📚go💻semio✂️sideid",
+            "id": "👤compose📚go💻compose✂️sideid",
             "loc": 5
           },
           {
-            "id": "👤semio📚go💻semio✂️stat",
+            "id": "👤compose📚go💻compose✂️stat",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio✂️statdiff",
+            "id": "👤compose📚go💻compose✂️statdiff",
             "loc": 7
           },
           {
-            "id": "👤semio📚go💻semio✂️statid",
+            "id": "👤compose📚go💻compose✂️statid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️statsdiff",
+            "id": "👤compose📚go💻compose✂️statsdiff",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio✂️tag",
+            "id": "👤compose📚go💻compose✂️tag",
             "loc": 9
           },
           {
-            "id": "👤semio📚go💻semio✂️tagdiff",
+            "id": "👤compose📚go💻compose✂️tagdiff",
             "loc": 7
           },
           {
-            "id": "👤semio📚go💻semio✂️tagid",
+            "id": "👤compose📚go💻compose✂️tagid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️tagsdiff",
+            "id": "👤compose📚go💻compose✂️tagsdiff",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio✂️typediff",
+            "id": "👤compose📚go💻compose✂️typediff",
             "loc": 20
           },
           {
-            "id": "👤semio📚go💻semio✂️typeid",
+            "id": "👤compose📚go💻compose✂️typeid",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️typesdiff",
+            "id": "👤compose📚go💻compose✂️typesdiff",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio✂️validationcontext",
+            "id": "👤compose📚go💻compose✂️validationcontext",
             "loc": 11
           },
           {
-            "id": "👤semio📚go💻semio✂️validationresult",
+            "id": "👤compose📚go💻compose✂️validationresult",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️validationresultserialized",
+            "id": "👤compose📚go💻compose✂️validationresultserialized",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio✂️vec",
+            "id": "👤compose📚go💻compose✂️vec",
             "loc": 4
           },
           {
-            "id": "👤semio📚go💻semio✂️vector",
+            "id": "👤compose📚go💻compose✂️vector",
             "loc": 5
           },
           {
-            "id": "👤semio📚go💻semio✂️vectordiff",
+            "id": "👤compose📚go💻compose✂️vectordiff",
             "loc": 5
           },
           {
-            "id": "👤semio📚go💻semio🛠️addconcepttokit",
+            "id": "👤compose📚go💻compose🛠️addconcepttokit",
             "loc": 7
           },
           {
-            "id": "👤semio📚go💻semio🛠️adddesigntokit",
+            "id": "👤compose📚go💻compose🛠️adddesigntokit",
             "loc": 7
           },
           {
-            "id": "👤semio📚go💻semio🛠️addfiletokit",
+            "id": "👤compose📚go💻compose🛠️addfiletokit",
             "loc": 7
           },
           {
-            "id": "👤semio📚go💻semio🛠️addporttokit",
+            "id": "👤compose📚go💻compose🛠️addporttokit",
             "loc": 7
           },
           {
-            "id": "👤semio📚go💻semio🛠️addtagtokit",
+            "id": "👤compose📚go💻compose🛠️addtagtokit",
             "loc": 7
           },
           {
-            "id": "👤semio📚go💻semio🛠️addtypetokit",
+            "id": "👤compose📚go💻compose🛠️addtypetokit",
             "loc": 7
           },
           {
-            "id": "👤semio📚go💻semio🛠️applyattributesdiff",
+            "id": "👤compose📚go💻compose🛠️applyattributesdiff",
             "loc": 14
           },
           {
-            "id": "👤semio📚go💻semio🛠️applyauthordiff",
+            "id": "👤compose📚go💻compose🛠️applyauthordiff",
             "loc": 10
           },
           {
-            "id": "👤semio📚go💻semio🛠️applyauthorsdiff",
+            "id": "👤compose📚go💻compose🛠️applyauthorsdiff",
             "loc": 23
           },
           {
-            "id": "👤semio📚go💻semio🛠️applyconceptdiff",
+            "id": "👤compose📚go💻compose🛠️applyconceptdiff",
             "loc": 10
           },
           {
-            "id": "👤semio📚go💻semio🛠️applyconceptsdiff",
+            "id": "👤compose📚go💻compose🛠️applyconceptsdiff",
             "loc": 23
           },
           {
-            "id": "👤semio📚go💻semio🛠️applyconnectiondiff",
+            "id": "👤compose📚go💻compose🛠️applyconnectiondiff",
             "loc": 22
           },
           {
-            "id": "👤semio📚go💻semio🛠️applyconnectionsdiff",
+            "id": "👤compose📚go💻compose🛠️applyconnectionsdiff",
             "loc": 23
           },
           {
-            "id": "👤semio📚go💻semio🛠️applyconnectordiff",
+            "id": "👤compose📚go💻compose🛠️applyconnectordiff",
             "loc": 32
           },
           {
-            "id": "👤semio📚go💻semio🛠️applyconnectorsdiff",
+            "id": "👤compose📚go💻compose🛠️applyconnectorsdiff",
             "loc": 23
           },
           {
-            "id": "👤semio📚go💻semio🛠️applydesigndiff",
+            "id": "👤compose📚go💻compose🛠️applydesigndiff",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio🛠️applydesigndiff",
+            "id": "👤compose📚go💻compose🛠️applydesigndiff",
             "loc": 16
           },
           {
-            "id": "👤semio📚go💻semio🛠️applydesignsdiff",
+            "id": "👤compose📚go💻compose🛠️applydesignsdiff",
             "loc": 23
           },
           {
-            "id": "👤semio📚go💻semio🛠️applyfilediff",
+            "id": "👤compose📚go💻compose🛠️applyfilediff",
             "loc": 31
           },
           {
-            "id": "👤semio📚go💻semio🛠️applyfilesdiff",
+            "id": "👤compose📚go💻compose🛠️applyfilesdiff",
             "loc": 23
           },
           {
-            "id": "👤semio📚go💻semio🛠️applyfolderdiff",
+            "id": "👤compose📚go💻compose🛠️applyfolderdiff",
             "loc": 7
           },
           {
-            "id": "👤semio📚go💻semio🛠️applyfoldersdiff",
+            "id": "👤compose📚go💻compose🛠️applyfoldersdiff",
             "loc": 23
           },
           {
-            "id": "👤semio📚go💻semio🛠️applykitdiff",
+            "id": "👤compose📚go💻compose🛠️applykitdiff",
             "loc": 58
           },
           {
-            "id": "👤semio📚go💻semio🛠️applymatrix4tovec3",
+            "id": "👤compose📚go💻compose🛠️applymatrix4tovec3",
             "loc": 7
           },
           {
-            "id": "👤semio📚go💻semio🛠️applymodeldiff",
+            "id": "👤compose📚go💻compose🛠️applymodeldiff",
             "loc": 10
           },
           {
-            "id": "👤semio📚go💻semio🛠️applymodelsdiff",
+            "id": "👤compose📚go💻compose🛠️applymodelsdiff",
             "loc": 23
           },
           {
-            "id": "👤semio📚go💻semio🛠️applypiecediff",
+            "id": "👤compose📚go💻compose🛠️applypiecediff",
             "loc": 62
           },
           {
-            "id": "👤semio📚go💻semio🛠️applypiecesdiff",
+            "id": "👤compose📚go💻compose🛠️applypiecesdiff",
             "loc": 23
           },
           {
-            "id": "👤semio📚go💻semio🛠️applyportdiff",
+            "id": "👤compose📚go💻compose🛠️applyportdiff",
             "loc": 10
           },
           {
-            "id": "👤semio📚go💻semio🛠️applyportsdiff",
+            "id": "👤compose📚go💻compose🛠️applyportsdiff",
             "loc": 23
           },
           {
-            "id": "👤semio📚go💻semio🛠️applytagdiff",
+            "id": "👤compose📚go💻compose🛠️applytagdiff",
             "loc": 10
           },
           {
-            "id": "👤semio📚go💻semio🛠️applytagsdiff",
+            "id": "👤compose📚go💻compose🛠️applytagsdiff",
             "loc": 23
           },
           {
-            "id": "👤semio📚go💻semio🛠️applytypediff",
+            "id": "👤compose📚go💻compose🛠️applytypediff",
             "loc": 22
           },
           {
-            "id": "👤semio📚go💻semio🛠️applytypesdiff",
+            "id": "👤compose📚go💻compose🛠️applytypesdiff",
             "loc": 23
           },
           {
-            "id": "👤semio📚go💻semio🛠️areauthorsdiffsequal",
+            "id": "👤compose📚go💻compose🛠️areauthorsdiffsequal",
             "loc": 33
           },
           {
-            "id": "👤semio📚go💻semio🛠️areauthorsequal",
+            "id": "👤compose📚go💻compose🛠️areauthorsequal",
             "loc": 9
           },
           {
-            "id": "👤semio📚go💻semio🛠️areconceptsdiffsequal",
+            "id": "👤compose📚go💻compose🛠️areconceptsdiffsequal",
             "loc": 33
           },
           {
-            "id": "👤semio📚go💻semio🛠️areconceptsequal",
+            "id": "👤compose📚go💻compose🛠️areconceptsequal",
             "loc": 9
           },
           {
-            "id": "👤semio📚go💻semio🛠️areconnectionsequal",
+            "id": "👤compose📚go💻compose🛠️areconnectionsequal",
             "loc": 15
           },
           {
-            "id": "👤semio📚go💻semio🛠️areconnectorsequal",
+            "id": "👤compose📚go💻compose🛠️areconnectorsequal",
             "loc": 15
           },
           {
-            "id": "👤semio📚go💻semio🛠️aredesignsdiffsequal",
+            "id": "👤compose📚go💻compose🛠️aredesignsdiffsequal",
             "loc": 33
           },
           {
-            "id": "👤semio📚go💻semio🛠️aredesignsequal",
+            "id": "👤compose📚go💻compose🛠️aredesignsequal",
             "loc": 45
           },
           {
-            "id": "👤semio📚go💻semio🛠️arefilesdiffsequal",
+            "id": "👤compose📚go💻compose🛠️arefilesdiffsequal",
             "loc": 33
           },
           {
-            "id": "👤semio📚go💻semio🛠️arefilesequal",
+            "id": "👤compose📚go💻compose🛠️arefilesequal",
             "loc": 15
           },
           {
-            "id": "👤semio📚go💻semio🛠️arefolderidsequal",
+            "id": "👤compose📚go💻compose🛠️arefolderidsequal",
             "loc": 9
           },
           {
-            "id": "👤semio📚go💻semio🛠️arefoldersdiffsequal",
+            "id": "👤compose📚go💻compose🛠️arefoldersdiffsequal",
             "loc": 33
           },
           {
-            "id": "👤semio📚go💻semio🛠️arefoldersequal",
+            "id": "👤compose📚go💻compose🛠️arefoldersequal",
             "loc": 6
           },
           {
-            "id": "👤semio📚go💻semio🛠️arekitdiffsequal",
+            "id": "👤compose📚go💻compose🛠️arekitdiffsequal",
             "loc": 45
           },
           {
-            "id": "👤semio📚go💻semio🛠️arekitsequal",
+            "id": "👤compose📚go💻compose🛠️arekitsequal",
             "loc": 171
           },
           {
-            "id": "👤semio📚go💻semio🛠️aremodelsequal",
+            "id": "👤compose📚go💻compose🛠️aremodelsequal",
             "loc": 9
           },
           {
-            "id": "👤semio📚go💻semio🛠️arepiecesequal",
+            "id": "👤compose📚go💻compose🛠️arepiecesequal",
             "loc": 18
           },
           {
-            "id": "👤semio📚go💻semio🛠️areportsdiffsequal",
+            "id": "👤compose📚go💻compose🛠️areportsdiffsequal",
             "loc": 33
           },
           {
-            "id": "👤semio📚go💻semio🛠️areportsequal",
+            "id": "👤compose📚go💻compose🛠️areportsequal",
             "loc": 9
           },
           {
-            "id": "👤semio📚go💻semio🛠️aretagsdiffsequal",
+            "id": "👤compose📚go💻compose🛠️aretagsdiffsequal",
             "loc": 33
           },
           {
-            "id": "👤semio📚go💻semio🛠️aretagsequal",
+            "id": "👤compose📚go💻compose🛠️aretagsequal",
             "loc": 9
           },
           {
-            "id": "👤semio📚go💻semio🛠️aretypesdiffsequal",
+            "id": "👤compose📚go💻compose🛠️aretypesdiffsequal",
             "loc": 33
           },
           {
-            "id": "👤semio📚go💻semio🛠️aretypesequal",
+            "id": "👤compose📚go💻compose🛠️aretypesequal",
             "loc": 45
           },
           {
-            "id": "👤semio📚go💻semio🛠️arevalidationresultsequal",
+            "id": "👤compose📚go💻compose🛠️arevalidationresultsequal",
             "loc": 28
           },
           {
-            "id": "👤semio📚go💻semio🛠️buildvalidationcontext",
+            "id": "👤compose📚go💻compose🛠️buildvalidationcontext",
             "loc": 31
           },
           {
-            "id": "👤semio📚go💻semio🛠️computechildplane",
+            "id": "👤compose📚go💻compose🛠️computechildplane",
             "loc": 74
           },
           {
-            "id": "👤semio📚go💻semio🛠️connectornameuniquenessconstraint",
+            "id": "👤compose📚go💻compose🛠️connectornameuniquenessconstraint",
             "loc": 64
           },
           {
-            "id": "👤semio📚go💻semio🛠️cross",
+            "id": "👤compose📚go💻compose🛠️cross",
             "loc": 7
           },
           {
-            "id": "👤semio📚go💻semio🛠️deepequal",
+            "id": "👤compose📚go💻compose🛠️deepequal",
             "loc": 1
           },
           {
-            "id": "👤semio📚go💻semio🛠️degtorad",
+            "id": "👤compose📚go💻compose🛠️degtorad",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio🛠️deserializekit",
+            "id": "👤compose📚go💻compose🛠️deserializekit",
             "loc": 5
           },
           {
-            "id": "👤semio📚go💻semio🛠️deserializekitdiff",
+            "id": "👤compose📚go💻compose🛠️deserializekitdiff",
             "loc": 5
           },
           {
-            "id": "👤semio📚go💻semio🛠️designnameuniquenessconstraint",
+            "id": "👤compose📚go💻compose🛠️designnameuniquenessconstraint",
             "loc": 53
           },
           {
-            "id": "👤semio📚go💻semio🛠️dot",
+            "id": "👤compose📚go💻compose🛠️dot",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio🛠️filenameuniquenessconstraint",
+            "id": "👤compose📚go💻compose🛠️filenameuniquenessconstraint",
             "loc": 43
           },
           {
-            "id": "👤semio📚go💻semio🛠️filterdesignswithoutparent",
+            "id": "👤compose📚go💻compose🛠️filterdesignswithoutparent",
             "loc": 9
           },
           {
-            "id": "👤semio📚go💻semio🛠️findauthorinkit",
+            "id": "👤compose📚go💻compose🛠️findauthorinkit",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio🛠️findconceptinkit",
+            "id": "👤compose📚go💻compose🛠️findconceptinkit",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio🛠️findconnectionindesign",
+            "id": "👤compose📚go💻compose🛠️findconnectionindesign",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio🛠️findconnectorintype",
+            "id": "👤compose📚go💻compose🛠️findconnectorintype",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio🛠️finddesigninkit",
+            "id": "👤compose📚go💻compose🛠️finddesigninkit",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio🛠️findfileinkit",
+            "id": "👤compose📚go💻compose🛠️findfileinkit",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio🛠️findfolderinkit",
+            "id": "👤compose📚go💻compose🛠️findfolderinkit",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio🛠️findpieceindesign",
+            "id": "👤compose📚go💻compose🛠️findpieceindesign",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio🛠️findportinkit",
+            "id": "👤compose📚go💻compose🛠️findportinkit",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio🛠️findqualityinkit",
+            "id": "👤compose📚go💻compose🛠️findqualityinkit",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio🛠️findtaginkit",
+            "id": "👤compose📚go💻compose🛠️findtaginkit",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio🛠️findtypeinkit",
+            "id": "👤compose📚go💻compose🛠️findtypeinkit",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio🛠️flattendesign",
+            "id": "👤compose📚go💻compose🛠️flattendesign",
             "loc": 190
           },
           {
-            "id": "👤semio📚go💻semio🛠️foldernameuniquenessconstraint",
+            "id": "👤compose📚go💻compose🛠️foldernameuniquenessconstraint",
             "loc": 53
           },
           {
-            "id": "👤semio📚go💻semio🛠️generateuniquename",
+            "id": "👤compose📚go💻compose🛠️generateuniquename",
             "loc": 12
           },
           {
-            "id": "👤semio📚go💻semio🛠️getattributesdiff",
+            "id": "👤compose📚go💻compose🛠️getattributesdiff",
             "loc": 22
           },
           {
-            "id": "👤semio📚go💻semio🛠️getauthordiff",
+            "id": "👤compose📚go💻compose🛠️getauthordiff",
             "loc": 10
           },
           {
-            "id": "👤semio📚go💻semio🛠️getauthorsdiff",
+            "id": "👤compose📚go💻compose🛠️getauthorsdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️getconceptdiff",
+            "id": "👤compose📚go💻compose🛠️getconceptdiff",
             "loc": 10
           },
           {
-            "id": "👤semio📚go💻semio🛠️getconceptsdiff",
+            "id": "👤compose📚go💻compose🛠️getconceptsdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️getconnectionsdiff",
+            "id": "👤compose📚go💻compose🛠️getconnectionsdiff",
             "loc": 22
           },
           {
-            "id": "👤semio📚go💻semio🛠️getconnector",
+            "id": "👤compose📚go💻compose🛠️getconnector",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️getconnectorsdiff",
+            "id": "👤compose📚go💻compose🛠️getconnectorsdiff",
             "loc": 22
           },
           {
-            "id": "👤semio📚go💻semio🛠️getdesigndiff",
+            "id": "👤compose📚go💻compose🛠️getdesigndiff",
             "loc": 20
           },
           {
-            "id": "👤semio📚go💻semio🛠️getdesignsdiff",
+            "id": "👤compose📚go💻compose🛠️getdesignsdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️getfilediff",
+            "id": "👤compose📚go💻compose🛠️getfilediff",
             "loc": 32
           },
           {
-            "id": "👤semio📚go💻semio🛠️getfilesdiff",
+            "id": "👤compose📚go💻compose🛠️getfilesdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️getfolderdiff",
+            "id": "👤compose📚go💻compose🛠️getfolderdiff",
             "loc": 7
           },
           {
-            "id": "👤semio📚go💻semio🛠️getfoldersdiff",
+            "id": "👤compose📚go💻compose🛠️getfoldersdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️getkitdiff",
+            "id": "👤compose📚go💻compose🛠️getkitdiff",
             "loc": 67
           },
           {
-            "id": "👤semio📚go💻semio🛠️getmodelsdiff",
+            "id": "👤compose📚go💻compose🛠️getmodelsdiff",
             "loc": 22
           },
           {
-            "id": "👤semio📚go💻semio🛠️getpiecesdiff",
+            "id": "👤compose📚go💻compose🛠️getpiecesdiff",
             "loc": 22
           },
           {
-            "id": "👤semio📚go💻semio🛠️getportdiff",
+            "id": "👤compose📚go💻compose🛠️getportdiff",
             "loc": 10
           },
           {
-            "id": "👤semio📚go💻semio🛠️getportsdiff",
+            "id": "👤compose📚go💻compose🛠️getportsdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️gettagdiff",
+            "id": "👤compose📚go💻compose🛠️gettagdiff",
             "loc": 10
           },
           {
-            "id": "👤semio📚go💻semio🛠️gettagsdiff",
+            "id": "👤compose📚go💻compose🛠️gettagsdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️gettypediff",
+            "id": "👤compose📚go💻compose🛠️gettypediff",
             "loc": 18
           },
           {
-            "id": "👤semio📚go💻semio🛠️gettypesdiff",
+            "id": "👤compose📚go💻compose🛠️gettypesdiff",
             "loc": 30
           },
           {
-            "id": "👤semio📚go💻semio🛠️guid",
+            "id": "👤compose📚go💻compose🛠️guid",
             "loc": 5
           },
           {
-            "id": "👤semio📚go💻semio🛠️guiduniquenessconstraint",
+            "id": "👤compose📚go💻compose🛠️guiduniquenessconstraint",
             "loc": 53
           },
           {
-            "id": "👤semio📚go💻semio🛠️haserrors",
+            "id": "👤compose📚go💻compose🛠️haserrors",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio🛠️hasfield",
+            "id": "👤compose📚go💻compose🛠️hasfield",
             "loc": 6
           },
           {
-            "id": "👤semio📚go💻semio🛠️hasfield",
+            "id": "👤compose📚go💻compose🛠️hasfield",
             "loc": 6
           },
           {
-            "id": "👤semio📚go💻semio🛠️hasfield",
+            "id": "👤compose📚go💻compose🛠️hasfield",
             "loc": 6
           },
           {
-            "id": "👤semio📚go💻semio🛠️hasfield",
+            "id": "👤compose📚go💻compose🛠️hasfield",
             "loc": 6
           },
           {
-            "id": "👤semio📚go💻semio🛠️inverseattributesdiff",
+            "id": "👤compose📚go💻compose🛠️inverseattributesdiff",
             "loc": 15
           },
           {
-            "id": "👤semio📚go💻semio🛠️inverseauthordiff",
+            "id": "👤compose📚go💻compose🛠️inverseauthordiff",
             "loc": 10
           },
           {
-            "id": "👤semio📚go💻semio🛠️inverseauthorsdiff",
+            "id": "👤compose📚go💻compose🛠️inverseauthorsdiff",
             "loc": 27
           },
           {
-            "id": "👤semio📚go💻semio🛠️inverseconceptdiff",
+            "id": "👤compose📚go💻compose🛠️inverseconceptdiff",
             "loc": 10
           },
           {
-            "id": "👤semio📚go💻semio🛠️inverseconceptsdiff",
+            "id": "👤compose📚go💻compose🛠️inverseconceptsdiff",
             "loc": 27
           },
           {
-            "id": "👤semio📚go💻semio🛠️inverseconnectionsdiff",
+            "id": "👤compose📚go💻compose🛠️inverseconnectionsdiff",
             "loc": 15
           },
           {
-            "id": "👤semio📚go💻semio🛠️inverseconnectorsdiff",
+            "id": "👤compose📚go💻compose🛠️inverseconnectorsdiff",
             "loc": 15
           },
           {
-            "id": "👤semio📚go💻semio🛠️inversedesigndiff",
+            "id": "👤compose📚go💻compose🛠️inversedesigndiff",
             "loc": 18
           },
           {
-            "id": "👤semio📚go💻semio🛠️inversedesignsdiff",
+            "id": "👤compose📚go💻compose🛠️inversedesignsdiff",
             "loc": 27
           },
           {
-            "id": "👤semio📚go💻semio🛠️inversefilediff",
+            "id": "👤compose📚go💻compose🛠️inversefilediff",
             "loc": 32
           },
           {
-            "id": "👤semio📚go💻semio🛠️inversefilesdiff",
+            "id": "👤compose📚go💻compose🛠️inversefilesdiff",
             "loc": 27
           },
           {
-            "id": "👤semio📚go💻semio🛠️inversefolderdiff",
+            "id": "👤compose📚go💻compose🛠️inversefolderdiff",
             "loc": 7
           },
           {
-            "id": "👤semio📚go💻semio🛠️inversefoldersdiff",
+            "id": "👤compose📚go💻compose🛠️inversefoldersdiff",
             "loc": 27
           },
           {
-            "id": "👤semio📚go💻semio🛠️inversekitdiff",
+            "id": "👤compose📚go💻compose🛠️inversekitdiff",
             "loc": 67
           },
           {
-            "id": "👤semio📚go💻semio🛠️inversemodelsdiff",
+            "id": "👤compose📚go💻compose🛠️inversemodelsdiff",
             "loc": 15
           },
           {
-            "id": "👤semio📚go💻semio🛠️inversepiecesdiff",
+            "id": "👤compose📚go💻compose🛠️inversepiecesdiff",
             "loc": 15
           },
           {
-            "id": "👤semio📚go💻semio🛠️inverseportdiff",
+            "id": "👤compose📚go💻compose🛠️inverseportdiff",
             "loc": 10
           },
           {
-            "id": "👤semio📚go💻semio🛠️inverseportsdiff",
+            "id": "👤compose📚go💻compose🛠️inverseportsdiff",
             "loc": 27
           },
           {
-            "id": "👤semio📚go💻semio🛠️inversetagdiff",
+            "id": "👤compose📚go💻compose🛠️inversetagdiff",
             "loc": 10
           },
           {
-            "id": "👤semio📚go💻semio🛠️inversetagsdiff",
+            "id": "👤compose📚go💻compose🛠️inversetagsdiff",
             "loc": 27
           },
           {
-            "id": "👤semio📚go💻semio🛠️inversetypediff",
+            "id": "👤compose📚go💻compose🛠️inversetypediff",
             "loc": 18
           },
           {
-            "id": "👤semio📚go💻semio🛠️inversetypesdiff",
+            "id": "👤compose📚go💻compose🛠️inversetypesdiff",
             "loc": 27
           },
           {
-            "id": "👤semio📚go💻semio🛠️isattributesdiffempty",
+            "id": "👤compose📚go💻compose🛠️isattributesdiffempty",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio🛠️isauthordiffempty",
+            "id": "👤compose📚go💻compose🛠️isauthordiffempty",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio🛠️isconceptdiffempty",
+            "id": "👤compose📚go💻compose🛠️isconceptdiffempty",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio🛠️isdesigndiffempty",
+            "id": "👤compose📚go💻compose🛠️isdesigndiffempty",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio🛠️isfilediffempty",
+            "id": "👤compose📚go💻compose🛠️isfilediffempty",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio🛠️isfolderdiffempty",
+            "id": "👤compose📚go💻compose🛠️isfolderdiffempty",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio🛠️isportdiffempty",
+            "id": "👤compose📚go💻compose🛠️isportdiffempty",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio🛠️istagdiffempty",
+            "id": "👤compose📚go💻compose🛠️istagdiffempty",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio🛠️istypediffempty",
+            "id": "👤compose📚go💻compose🛠️istypediffempty",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio🛠️layerpathuniquenessconstraint",
+            "id": "👤compose📚go💻compose🛠️layerpathuniquenessconstraint",
             "loc": 49
           },
           {
-            "id": "👤semio📚go💻semio🛠️makefix",
+            "id": "👤compose📚go💻compose🛠️makefix",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio🛠️makerotationaxis",
+            "id": "👤compose📚go💻compose🛠️makerotationaxis",
             "loc": 12
           },
           {
-            "id": "👤semio📚go💻semio🛠️maketranslation",
+            "id": "👤compose📚go💻compose🛠️maketranslation",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio🛠️matrixtoplane",
+            "id": "👤compose📚go💻compose🛠️matrixtoplane",
             "loc": 7
           },
           {
-            "id": "👤semio📚go💻semio🛠️modelnameuniquenessconstraint",
+            "id": "👤compose📚go💻compose🛠️modelnameuniquenessconstraint",
             "loc": 65
           },
           {
-            "id": "👤semio📚go💻semio🛠️multiplymatrices",
+            "id": "👤compose📚go💻compose🛠️multiplymatrices",
             "loc": 5
           },
           {
-            "id": "👤semio📚go💻semio🛠️newauthor",
+            "id": "👤compose📚go💻compose🛠️newauthor",
             "loc": 9
           },
           {
-            "id": "👤semio📚go💻semio🛠️newconcept",
+            "id": "👤compose📚go💻compose🛠️newconcept",
             "loc": 9
           },
           {
-            "id": "👤semio📚go💻semio🛠️newconnection",
+            "id": "👤compose📚go💻compose🛠️newconnection",
             "loc": 7
           },
           {
-            "id": "👤semio📚go💻semio🛠️newconnector",
+            "id": "👤compose📚go💻compose🛠️newconnector",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio🛠️newdesign",
+            "id": "👤compose📚go💻compose🛠️newdesign",
             "loc": 9
           },
           {
-            "id": "👤semio📚go💻semio🛠️newfile",
+            "id": "👤compose📚go💻compose🛠️newfile",
             "loc": 9
           },
           {
-            "id": "👤semio📚go💻semio🛠️newfolder",
+            "id": "👤compose📚go💻compose🛠️newfolder",
             "loc": 9
           },
           {
-            "id": "👤semio📚go💻semio🛠️newkit",
+            "id": "👤compose📚go💻compose🛠️newkit",
             "loc": 10
           },
           {
-            "id": "👤semio📚go💻semio🛠️newpiece",
+            "id": "👤compose📚go💻compose🛠️newpiece",
             "loc": 5
           },
           {
-            "id": "👤semio📚go💻semio🛠️newport",
+            "id": "👤compose📚go💻compose🛠️newport",
             "loc": 9
           },
           {
-            "id": "👤semio📚go💻semio🛠️newquality",
+            "id": "👤compose📚go💻compose🛠️newquality",
             "loc": 10
           },
           {
-            "id": "👤semio📚go💻semio🛠️newtag",
+            "id": "👤compose📚go💻compose🛠️newtag",
             "loc": 9
           },
           {
-            "id": "👤semio📚go💻semio🛠️newtype",
+            "id": "👤compose📚go💻compose🛠️newtype",
             "loc": 9
           },
           {
-            "id": "👤semio📚go💻semio🛠️normalize",
+            "id": "👤compose📚go💻compose🛠️normalize",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio🛠️normalize",
+            "id": "👤compose📚go💻compose🛠️normalize",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio🛠️normalizeint64",
+            "id": "👤compose📚go💻compose🛠️normalizeint64",
             "loc": 6
           },
           {
-            "id": "👤semio📚go💻semio🛠️normalizestr",
+            "id": "👤compose📚go💻compose🛠️normalizestr",
             "loc": 6
           },
           {
-            "id": "👤semio📚go💻semio🛠️piecenameuniquenessconstraint",
+            "id": "👤compose📚go💻compose🛠️piecenameuniquenessconstraint",
             "loc": 60
           },
           {
-            "id": "👤semio📚go💻semio🛠️planesequalapprox",
+            "id": "👤compose📚go💻compose🛠️planesequalapprox",
             "loc": 12
           },
           {
-            "id": "👤semio📚go💻semio🛠️planetomatrix",
+            "id": "👤compose📚go💻compose🛠️planetomatrix",
             "loc": 13
           },
           {
-            "id": "👤semio📚go💻semio🛠️portnameuniquenessconstraint",
+            "id": "👤compose📚go💻compose🛠️portnameuniquenessconstraint",
             "loc": 43
           },
           {
-            "id": "👤semio📚go💻semio🛠️qualitynameuniquenessconstraint",
+            "id": "👤compose📚go💻compose🛠️qualitynameuniquenessconstraint",
             "loc": 43
           },
           {
-            "id": "👤semio📚go💻semio🛠️quaternionfromaxisangle",
+            "id": "👤compose📚go💻compose🛠️quaternionfromaxisangle",
             "loc": 5
           },
           {
-            "id": "👤semio📚go💻semio🛠️quaternionfromunitvectors",
+            "id": "👤compose📚go💻compose🛠️quaternionfromunitvectors",
             "loc": 16
           },
           {
-            "id": "👤semio📚go💻semio🛠️quaterniontomatrix",
+            "id": "👤compose📚go💻compose🛠️quaterniontomatrix",
             "loc": 13
           },
           {
-            "id": "👤semio📚go💻semio🛠️removeconceptfromkit",
+            "id": "👤compose📚go💻compose🛠️removeconceptfromkit",
             "loc": 7
           },
           {
-            "id": "👤semio📚go💻semio🛠️removedesignfromkit",
+            "id": "👤compose📚go💻compose🛠️removedesignfromkit",
             "loc": 7
           },
           {
-            "id": "👤semio📚go💻semio🛠️removefilefromkit",
+            "id": "👤compose📚go💻compose🛠️removefilefromkit",
             "loc": 7
           },
           {
-            "id": "👤semio📚go💻semio🛠️removeportfromkit",
+            "id": "👤compose📚go💻compose🛠️removeportfromkit",
             "loc": 7
           },
           {
-            "id": "👤semio📚go💻semio🛠️removetagfromkit",
+            "id": "👤compose📚go💻compose🛠️removetagfromkit",
             "loc": 7
           },
           {
-            "id": "👤semio📚go💻semio🛠️removetypefromkit",
+            "id": "👤compose📚go💻compose🛠️removetypefromkit",
             "loc": 7
           },
           {
-            "id": "👤semio📚go💻semio🛠️round",
+            "id": "👤compose📚go💻compose🛠️round",
             "loc": 7
           },
           {
-            "id": "👤semio📚go💻semio🛠️roundfloat",
+            "id": "👤compose📚go💻compose🛠️roundfloat",
             "loc": 4
           },
           {
-            "id": "👤semio📚go💻semio🛠️roundplane",
+            "id": "👤compose📚go💻compose🛠️roundplane",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio🛠️serializekit",
+            "id": "👤compose📚go💻compose🛠️serializekit",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio🛠️serializekitdiff",
+            "id": "👤compose📚go💻compose🛠️serializekitdiff",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio🛠️tovalidationresult",
+            "id": "👤compose📚go💻compose🛠️tovalidationresult",
             "loc": 18
           },
           {
-            "id": "👤semio📚go💻semio🛠️type",
+            "id": "👤compose📚go💻compose🛠️type",
             "loc": 22
           },
           {
-            "id": "👤semio📚go💻semio🛠️typenameuniquenessconstraint",
+            "id": "👤compose📚go💻compose🛠️typenameuniquenessconstraint",
             "loc": 53
           },
           {
-            "id": "👤semio📚go💻semio🛠️unmarshaljson",
+            "id": "👤compose📚go💻compose🛠️unmarshaljson",
             "loc": 17
           },
           {
-            "id": "👤semio📚go💻semio🛠️unmarshaljson",
+            "id": "👤compose📚go💻compose🛠️unmarshaljson",
             "loc": 17
           },
           {
-            "id": "👤semio📚go💻semio🛠️unmarshaljson",
+            "id": "👤compose📚go💻compose🛠️unmarshaljson",
             "loc": 17
           },
           {
-            "id": "👤semio📚go💻semio🛠️unmarshaljson",
+            "id": "👤compose📚go💻compose🛠️unmarshaljson",
             "loc": 17
           },
           {
-            "id": "👤semio📚go💻semio🛠️updateguideverywhere",
+            "id": "👤compose📚go💻compose🛠️updateguideverywhere",
             "loc": 91
           },
           {
-            "id": "👤semio📚go💻semio🛠️validatekit",
+            "id": "👤compose📚go💻compose🛠️validatekit",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio🛠️validatekitwithconstraints",
+            "id": "👤compose📚go💻compose🛠️validatekitwithconstraints",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio🛠️veclength",
+            "id": "👤compose📚go💻compose🛠️veclength",
             "loc": 3
           },
           {
-            "id": "👤semio📚go💻semio🪨assetspath",
+            "id": "👤compose📚go💻compose🪨assetspath",
             "loc": 11
           },
           {
-            "id": "👤semio📚go💻semio🪨defaultconstraints",
+            "id": "👤compose📚go💻compose🪨defaultconstraints",
             "loc": 13
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌1📌6182"
+          "👤compose📚go💻compose📌1📌6182"
         ],
         "second": "🎆26🌙03☀️08⏰17⌚53⏱️36"
       },

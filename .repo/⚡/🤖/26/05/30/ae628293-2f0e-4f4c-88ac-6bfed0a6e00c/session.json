@@ -26,7 +26,7 @@
           "hook_event_name": "sessionStart",
           "cursor_version": "3.6.21",
           "workspace_roots": [
-            "/Users/ueli/Documents/semio"
+            "/Users/ueli/Documents/compose"
           ],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
           "transcript_path": null
@@ -54,7 +54,7 @@
           "hook_event_name": "afterAgentThought",
           "cursor_version": "3.6.21",
           "workspace_roots": [
-            "/Users/ueli/Documents/semio"
+            "/Users/ueli/Documents/compose"
           ],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
           "transcript_path": null
@@ -82,7 +82,7 @@
           "hook_event_name": "stop",
           "cursor_version": "3.6.21",
           "workspace_roots": [
-            "/Users/ueli/Documents/semio"
+            "/Users/ueli/Documents/compose"
           ],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
           "transcript_path": null

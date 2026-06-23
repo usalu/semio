@@ -10,8 +10,8 @@ await page.goto("http://127.0.0.1:5173/");
 await page.waitForLoadState("domcontentloaded");
 await page.waitForTimeout(2000);
 
-const zipPath = path.resolve("/workspaces/semio/semio/assets/semio/metabolism.zip");
-const fileInput = page.locator('[id="semio.sketchpad.app.home.importKit"]');
+const zipPath = path.resolve("/workspaces/semio/compose/assets/compose/metabolism.zip");
+const fileInput = page.locator('[id="compose.sketchpad.app.home.importKit"]');
 await fileInput.waitFor({ state: "attached", timeout: 10000 });
 const [fileChooser] = await Promise.all([
   page.waitForEvent("filechooser", { timeout: 5000 }).catch(() => null),
@@ -41,7 +41,7 @@ await page.waitForTimeout(10000);
 const nodeCount = await page.locator("#diagram .react-flow__node").count();
 console.log(`Nodes: ${nodeCount}`);
 
-const leftPanelToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.leftSidePanel"]');
+const leftPanelToggle = page.locator('[id="compose.sketchpad.navbar.panelToggle.leftSidePanel"]');
 if (await leftPanelToggle.isVisible().catch(() => false)) {
   const open = await page.locator('[data-panel="leftSidePanel"]').isVisible().catch(() => false);
   if (open) { await leftPanelToggle.click(); await page.waitForTimeout(500); }

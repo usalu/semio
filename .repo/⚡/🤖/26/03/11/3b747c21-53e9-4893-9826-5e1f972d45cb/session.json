@@ -1,6 +1,6 @@
 {
   "id": "3b747c21-53e9-4893-9826-5e1f972d45cb",
-  "uri": "semiorepo://s/3b747c21-53e9-4893-9826-5e1f972d45cb",
+  "uri": "composerepo://s/3b747c21-53e9-4893-9826-5e1f972d45cb",
   "contributor": "🧑‍💻ueli",
   "client": "copilot-chat",
   "second": "2026-03-11T13:58:05Z",
@@ -14,7 +14,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 1000,
-            "filePath": "/workspaces/semio/semio/engine/engine.py",
+            "filePath": "/workspaces/semio/compose/engine/engine.py",
             "startLine": 1
           },
           "tool_response": "",
@@ -33,90 +33,90 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚engine💻engine🛠️cache",
+            "id": "👤compose📚engine💻engine🛠️cache",
             "loc": 39
           },
           {
-            "id": "👤semio📚engine💻engine🛠️cachedir",
+            "id": "👤compose📚engine💻engine🛠️cachedir",
             "loc": 10
           },
           {
-            "id": "👤semio📚engine💻engine🛠️commandkind",
+            "id": "👤compose📚engine💻engine🛠️commandkind",
             "loc": 12
           },
           {
-            "id": "👤semio📚engine💻engine🛠️databasestore",
+            "id": "👤compose📚engine💻engine🛠️databasestore",
             "loc": 254
           },
           {
-            "id": "👤semio📚engine💻engine🛠️decodedesign",
+            "id": "👤compose📚engine💻engine🛠️decodedesign",
             "loc": 49
           },
           {
-            "id": "👤semio📚engine💻engine🛠️delete",
+            "id": "👤compose📚engine💻engine🛠️delete",
             "loc": 9
           },
           {
-            "id": "👤semio📚engine💻engine🛠️encodeforprompt",
+            "id": "👤compose📚engine💻engine🛠️encodeforprompt",
             "loc": 8
           },
           {
-            "id": "👤semio📚engine💻engine🛠️encodetype",
+            "id": "👤compose📚engine💻engine🛠️encodetype",
             "loc": 14
           },
           {
-            "id": "👤semio📚engine💻engine🛠️get",
+            "id": "👤compose📚engine💻engine🛠️get",
             "loc": 9
           },
           {
-            "id": "👤semio📚engine💻engine🛠️healdesign",
+            "id": "👤compose📚engine💻engine🛠️healdesign",
             "loc": 70
           },
           {
-            "id": "👤semio📚engine💻engine🛠️operationbuilder",
+            "id": "👤compose📚engine💻engine🛠️operationbuilder",
             "loc": 36
           },
           {
-            "id": "👤semio📚engine💻engine🛠️postgresstore",
+            "id": "👤compose📚engine💻engine🛠️postgresstore",
             "loc": 16
           },
           {
-            "id": "👤semio📚engine💻engine🛠️put",
+            "id": "👤compose📚engine💻engine🛠️put",
             "loc": 9
           },
           {
-            "id": "👤semio📚engine💻engine🛠️replacedefault",
+            "id": "👤compose📚engine💻engine🛠️replacedefault",
             "loc": 10
           },
           {
-            "id": "👤semio📚engine💻engine🛠️sqlitestore",
+            "id": "👤compose📚engine💻engine🛠️sqlitestore",
             "loc": 47
           },
           {
-            "id": "👤semio📚engine💻engine🛠️sslmode",
+            "id": "👤compose📚engine💻engine🛠️sslmode",
             "loc": 14
           },
           {
-            "id": "👤semio📚engine💻engine🛠️store",
+            "id": "👤compose📚engine💻engine🛠️store",
             "loc": 52
           },
           {
-            "id": "👤semio📚engine💻engine🛠️storeandoperationfromcode",
+            "id": "👤compose📚engine💻engine🛠️storeandoperationfromcode",
             "loc": 11
           },
           {
-            "id": "👤semio📚engine💻engine🛠️storefactory",
+            "id": "👤compose📚engine💻engine🛠️storefactory",
             "loc": 17
           },
           {
-            "id": "👤semio📚engine💻engine🛠️storekind",
+            "id": "👤compose📚engine💻engine🛠️storekind",
             "loc": 11
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚engine💻engine📌1📌1000"
+          "👤compose📚engine💻engine📌1📌1000"
         ],
         "second": "🎆26🌙03☀️11⏰13⌚58⏱️05",
         "session": "⚪3b747c2153e9489398265e1f972d45cb"
@@ -134,7 +134,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 500,
-            "filePath": "/workspaces/semio/semio/engine/generate-schemas.ts",
+            "filePath": "/workspaces/semio/compose/engine/generate-schemas.ts",
             "startLine": 1
           },
           "tool_use_id": "toolu_01Y4Yure6dJAAcNtWKY6rxfn__vscode-1773233523334",
@@ -153,13 +153,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚engine💻generateschemas"
+            "id": "👤compose📚engine💻generateschemas"
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚engine💻generateschemas📌1📌500"
+          "👤compose📚engine💻generateschemas📌1📌500"
         ],
         "second": "🎆26🌙03☀️11⏰13⌚58⏱️09",
         "session": "⚪3b747c2153e9489398265e1f972d45cb"
@@ -177,7 +177,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 500,
-            "filePath": "/workspaces/semio/semio/engine/test.ts",
+            "filePath": "/workspaces/semio/compose/engine/test.ts",
             "startLine": 1
           },
           "tool_use_id": "toolu_013Mo2eWxak8k4WpFto3F21X__vscode-1773233523336",
@@ -196,13 +196,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚engine🥼test"
+            "id": "👤compose📚engine🥼test"
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚engine🥼test📌1📌500"
+          "👤compose📚engine🥼test📌1📌500"
         ],
         "second": "🎆26🌙03☀️11⏰13⌚58⏱️09",
         "session": "⚪3b747c2153e9489398265e1f972d45cb"
@@ -220,7 +220,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 500,
-            "filePath": "/workspaces/semio/semio/engine/sqliteschema.ts",
+            "filePath": "/workspaces/semio/compose/engine/sqliteschema.ts",
             "startLine": 1
           },
           "tool_response": "",
@@ -239,13 +239,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚engine💻sqliteschema"
+            "id": "👤compose📚engine💻sqliteschema"
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚engine💻sqliteschema📌1📌500"
+          "👤compose📚engine💻sqliteschema📌1📌500"
         ],
         "second": "🎆26🌙03☀️11⏰13⌚58⏱️29",
         "session": "⚪3b747c2153e9489398265e1f972d45cb"
@@ -263,7 +263,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 500,
-            "filePath": "/workspaces/semio/semio/engine/test.ts",
+            "filePath": "/workspaces/semio/compose/engine/test.ts",
             "startLine": 1
           },
           "tool_response": "",
@@ -282,13 +282,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚engine🥼test"
+            "id": "👤compose📚engine🥼test"
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚engine🥼test📌1📌500"
+          "👤compose📚engine🥼test📌1📌500"
         ],
         "second": "🎆26🌙03☀️11⏰13⌚58⏱️46",
         "session": "⚪3b747c2153e9489398265e1f972d45cb"
@@ -306,7 +306,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 3000,
-            "filePath": "/workspaces/semio/semio/engine/engine.py",
+            "filePath": "/workspaces/semio/compose/engine/engine.py",
             "startLine": 1000
           },
           "tool_use_id": "toolu_019HHKaGvtUgS7EfebZHHcuW__vscode-1773233523337",
@@ -325,13 +325,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚engine💻engine"
+            "id": "👤compose📚engine💻engine"
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚engine💻engine📌1000📌3000"
+          "👤compose📚engine💻engine📌1000📌3000"
         ],
         "second": "🎆26🌙03☀️11⏰13⌚58⏱️53",
         "session": "⚪3b747c2153e9489398265e1f972d45cb"
@@ -349,7 +349,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 3000,
-            "filePath": "/workspaces/semio/semio/engine/engine.py",
+            "filePath": "/workspaces/semio/compose/engine/engine.py",
             "startLine": 1000
           },
           "tool_response": "",
@@ -368,13 +368,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚engine💻engine"
+            "id": "👤compose📚engine💻engine"
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚engine💻engine📌1000📌3000"
+          "👤compose📚engine💻engine📌1000📌3000"
         ],
         "second": "🎆26🌙03☀️11⏰13⌚59⏱️07",
         "session": "⚪3b747c2153e9489398265e1f972d45cb"
@@ -392,8 +392,8 @@
           "tool_name": "memory",
           "tool_input": {
             "command": "create",
-            "path": "/memories/session/semio-engine-complete-exploration.md",
-            "file_text": "# Complete semio/engine Directory Exploration\n\n## Directory Structure\n```\nsemio/engine/\n├── engine.py                 # Main engine module (3000+ lines)\n├── engine.test.py            # Unit tests with pytest\n├── build.ts                  # TypeScript build script (PyInstaller bundling)\n├── post-build.ts             # Post-build script (artifact relocation)\n├── generate-schemas.ts       # Schema generation from Python models\n├── sqliteschema.ts           # SQLite schema export utility\n├── test.ts                   # Test runner (poetry + pytest)\n├── package.json              # Node.js metadata \u0026 npm scripts\n├── pyproject.toml            # Python project config (uv, pytest, coverage)\n├── README.md                 # Project documentation\n├── LICENSE.md                # GNU AGPL-3.0-or-later\n├── __pycache__/              # Python cache\n├── .pytest_cache/            # Pytest cache\n└── .ruff_cache/              # Ruff formatter cache\n```\n\n## Project Configuration\n\n### package.json (v1.0.0)\n- Name: `@semio/engine`\n- Type: application\n- Scripts:\n  - `dev`: `uv run engine.py`\n  - `build`: `tsx ./build.ts`\n  - `test`: `tsx ./test.ts`\n  - `preflight`: `ruff format . \u0026\u0026 ruff check --fix .`\n- Dependencies: @semio/assets\n- Bundle Kind: library\n\n### pyproject.toml (v4.4.0)\n- Name: semio-engine\n- Description: Shared fat client for all desktop apps in semio\n- Python: \u003e= 3.14\n- License: AGPL-3.0-or-later\n\n**Key Dependencies:**\n- fastapi, uvicorn, starlette\n- graphene, graphene-pydantic, graphene-sqlalchemy\n- sqlalchemy, sqlmodel (ORM)\n- pydantic (validation)\n- pyside6 (GUI)\n- openai (AI predictions)\n- mcp[cli] (Model Context Protocol)\n- jinja2, lark (templates, parsing)\n- loguru (logging)\n- networkx, numpy, pytransform3d (geometry)\n- python-dotenv, requests\n\n**Scripts:**\n- `run = \"engine:run\"`\n- `dev = \"engine:dev\"`\n\n## Complete Code Structure\n\n### 1. IMPORTS SECTION\nAll dependencies imported with sys.path adjustment for semio package.\nExhaustive imports from semio module: Kit, Design, Type, Piece, Connection, Attributes, Validators, etc.\n\n### 2. STORE SECTION (Data Access Layer)\n**Grammar Definition:**\n- Code grammar for routing: `code: (ENCODED_STRING)? (\"/\" (design | type))?`\n- Parser: Lark-based parser for kit/design/type operations\n\n**OperationBuilder (Lark Transformer):**\n- Transforms parse trees into operation dicts\n- Methods: code(), design(), type()\n- Handles encoding/decoding of URIs and identifiers\n\n**Enums:**\n- `StoreKind`: DATABASE, REST, GRAPHQL\n- `CommandKind`: QUERY, PUT, UPDATE, DELETE\n- `SSLMode`: DISABLE, ALLOW, PREFER, REQUIRE, VERIFY_CA, VERIFY_FULL\n\n**Store (ABC):**\n- Abstract base class with execute(), initialize(), get(), put(), update(), delete()\n- execute() dispatches based on CommandKind\n\n**DatabaseStore (ABC extends Store):**\n- SQLAlchemy engine + session managers\n- Cached property for session\n- initialized() check\n- get(), put(), update(), delete() abstract methods for subclasses\n\n**SqliteStore (extends DatabaseStore):**\n- fromUri() classmethod for construction\n- initialize() creates .semio folder and kit.db\n- Handles kit creation, updates with change tracking\n- Type updates preserve connector relationships\n- postDeleteKit() terminates process on kit deletion\n\n**PostgresStore (extends DatabaseStore):**\n- TODO: Not yet implemented\n\n**Global Functions:**\n- cacheDir(): Local cache directory for remote URIs\n- cache(): Download and extract remote kit .zip files\n- StoreFactory(): Factory with LRU cache for store instances\n- storeAndOperationFromCode(): Parse code to store + operation\n- get(), put(), delete(): High-level store operations\n\n### 3. ASSISTANT SECTION (AI Design Prediction)\n**Utility Functions:**\n- encodeForPrompt(): Sanitize strings for prompts\n- replaceDefault(): Substitute empty values\n- encodeType(): Encode TypeContext for prompts\n\n**Design Healing:**\n- healDesign(): Repair designs with missing variants using Levenshtein distance\n- Uses difflib for fuzzy matching\n\n**OpenAI Integration:**\n- openaiClient initialization (error-safe)\n- systemPrompt: Detailed constraints for kit-of-parts design\n- designGenerationPromptTemplate: Jinja2 template for rendering types\n- designResponseFormat: JSON schema for gpt-4o structured output\n\n**AI Models:**\n- decodeDesign(): Transform raw AI response → DesignPrediction\n- predictDesign(): Main AI function calling gpt-4o with structured output\n\n### 4. GRAPHQL SECTION\n**Type Mapping (GRAPHQLTYPES dict):**\n- Maps Python type strings → Graphene types\n- Handles nullable, lists, custom semio types\n- Prefix variations: `__main__`, `__mp_main__`, `engine`, direct names\n\n**Root Types:**\n- Query: node (RelayNode), kit(uri) resolver\n- Mutation: createKit(kit)\n\n**graphqlSchema:** graphene.Schema(query=Query, mutation=Mutation)\n\n### 5. REST SECTION (FastAPI)\n**Endpoints:**\n```\nGET  /kits/{encodedKitUri}                           # Retrieve kit\nPUT  /kits/{encodedKitUri}                           # Create kit\nDELETE /kits/{encodedKitUri}                         # Delete kit\nPUT  /kits/{.../types/{encodedTypeId}               # Create/update type\nDELETE /kits/{.../types/{encodedTypeId}             # Delete type\nPUT  /kits/{.../designs/{encodedDesignId}           # Create/update design\nDELETE /kits/{.../designs/{encodedDesignId}         # Delete design\nGET  /assistant/predictDesign                       # AI prediction\nPOST /prepare/kit                                    # Validate kit\n```\n\n**JSON Schema Generators:**\n- ContextGenerateJsonSchema: Strips \"Context\" suffix\n- OutputGenerateJsonSchema: Strips \"Output\" suffix\n- PredictionGenerateJsonSchema: Strips \"Prediction\" suffix\n\n**Custom OpenAPI:**\n- Adds /api prefix to all paths\n- Cleans type names (removes Output suffix)\n\n### 6. MCP SECTION (Model Context Protocol Tools)\n**Server**: `FastMCP(\"semio\", stateless_http=True, json_response=True)`\n\n**Tools (12 total):**\n- Kit operations: get_kit(), put_kit(), mcp_delete_kit()\n- Type operations: get_type_from_kit(), put_type_in_kit(), delete_type_from_kit()\n- Design operations: get_design_from_kit(), put_design_in_kit(), delete_design_from_kit()\n- Validation: validate_kit()\n- Utilities: flatten_design(), get_kit_diff(), apply_kit_diff(), inverse_kit_diff()\n\n### 7. ENGINE SECTION (Server Lifecycle)\n**Lifespan Management:**\n- engineLifespan(): Async context manager for MCP session\n\n**Application Structure:**\n```python\nengine = Starlette(lifespan=engineLifespan)\nengine.mount(\"/api\", rest)           # FastAPI\nengine.mount(\"/graphql\", GraphQLApp) # Graphene\nengine.mount(\"/mcp\", mcp)            # FastMCP\n```\n\n**Key Functions:**\n- generateSchemas(): Exports OpenAPI, JSON schema, SQLite schema, GraphQL schema\n- start_engine(): Starts uvicorn server (localhost:8000)\n- restart_engine(): Terminates and restarts engine process\n- run(): Main entry point with argparse for --debug, --dev, --mcp-stdio flags\n- preDev(): Hook before dev mode\n- dev(): Dev mode entry point\n\n**GUI (PySide6):**\n- System tray icon\n- Context menu (Restart, Quit)\n- Engine process management\n\n## Test Suite (engine.test.py)\n\n**Test Classes:**\n1. TestEncoding: encode/decode roundtrips\n2. TestOperationBuilder: Parse kit/type/design operations\n3. TestSqliteStore: Store factory, caching, initialization\n4. TestStoreKind/CommandKind: Enum value validation\n5. TestRestApi: 404 error handling\n6. TestGraphQL: Schema and query existence\n7. TestMcp: All MCP tools (10+ tests)\n8. TestCache: Directory encoding, error handling\n9. TestSSLMode: Enum values\n10. TestErrors: Error class messages\n11. TestAssistant: Prompt encoding, type encoding, templates\n12. TestEngineConfiguration: App existence\n13. TestIntegration: Store + code parsing\n\n**Fixtures:**\n- kitMetabolismJson (loaded from assets)\n- minimalKitJson\n- tempKitPath (temp directory)\n- restClient (Starlette TestClient)\n- graphqlClient (GraphQL endpoint client)\n\n## Build Scripts\n\n### build.ts\n- Syncs uv dependencies if .venv missing\n- Runs generate-schemas.ts\n- Cleans build/dist directories\n- Invokes PyInstaller with metadata/icons\n- Optionally runs post-build.ts\n- Creates executable: dist/semio-engine/semio-engine.exe\n\n### post-build.ts\n- Relocates PyInstaller output to Grasshopper bin folder\n- Moves executable and _internal dependencies\n- Path: ../../net/Semio.Grasshopper/bin/Debug/net48/\n\n### generate-schemas.ts\n- Calls Python function: `engine:generateSchemas()`\n- Exports schemas during build\n\n### test.ts\n- Runs pytest with coverage: `poetry run pytest --cov`\n\n## Key Design Patterns\n\n1. **Code Grammar-based Routing**: Parse string paths to operations\n2. **Store Factory Pattern**: URI → appropriate store type\n3. **Async Context Managers**: MCP session lifecycle\n4. **Pydantic JSON Schema**: Schema generation with custom generators\n5. **Multi-interface**: REST + GraphQL + MCP for different clients\n6. **AI Integration**: Structured outputs from gpt-4o\n7. **Type Healing**: Fuzzy matching for design repair\n8. **SQLAlchemy ORM**: Relationship preservation on updates\n\n## Special Features\n\n- **Dev Mode**: Debugps-based remote debugging on port 5678\n- **MCP Stdio**: Pure stdio MCP server mode (--mcp-stdio)\n- **Caching**: Remote kit downloads cached locally\n- **Hot Reload**: System tray Restart action\n- **Type Variants**: Support for type name~variant~view identifiers\n- **Design Healing**: AI designs auto-repaired with fuzzy matching\n"
+            "path": "/memories/session/compose-engine-complete-exploration.md",
+            "file_text": "# Complete compose/engine Directory Exploration\n\n## Directory Structure\n```\ncompose/engine/\n├── engine.py                 # Main engine module (3000+ lines)\n├── engine.test.py            # Unit tests with pytest\n├── build.ts                  # TypeScript build script (PyInstaller bundling)\n├── post-build.ts             # Post-build script (artifact relocation)\n├── generate-schemas.ts       # Schema generation from Python models\n├── sqliteschema.ts           # SQLite schema export utility\n├── test.ts                   # Test runner (poetry + pytest)\n├── package.json              # Node.js metadata \u0026 npm scripts\n├── pyproject.toml            # Python project config (uv, pytest, coverage)\n├── README.md                 # Project documentation\n├── LICENSE.md                # GNU AGPL-3.0-or-later\n├── __pycache__/              # Python cache\n├── .pytest_cache/            # Pytest cache\n└── .ruff_cache/              # Ruff formatter cache\n```\n\n## Project Configuration\n\n### package.json (v1.0.0)\n- Name: `@compose/engine`\n- Type: application\n- Scripts:\n  - `dev`: `uv run engine.py`\n  - `build`: `tsx ./build.ts`\n  - `test`: `tsx ./test.ts`\n  - `preflight`: `ruff format . \u0026\u0026 ruff check --fix .`\n- Dependencies: @compose/assets\n- Bundle Kind: library\n\n### pyproject.toml (v4.4.0)\n- Name: compose-engine\n- Description: Shared fat client for all desktop apps in compose\n- Python: \u003e= 3.14\n- License: AGPL-3.0-or-later\n\n**Key Dependencies:**\n- fastapi, uvicorn, starlette\n- graphene, graphene-pydantic, graphene-sqlalchemy\n- sqlalchemy, sqlmodel (ORM)\n- pydantic (validation)\n- pyside6 (GUI)\n- openai (AI predictions)\n- mcp[cli] (Model Context Protocol)\n- jinja2, lark (templates, parsing)\n- loguru (logging)\n- networkx, numpy, pytransform3d (geometry)\n- python-dotenv, requests\n\n**Scripts:**\n- `run = \"engine:run\"`\n- `dev = \"engine:dev\"`\n\n## Complete Code Structure\n\n### 1. IMPORTS SECTION\nAll dependencies imported with sys.path adjustment for compose package.\nExhaustive imports from compose module: Kit, Design, Type, Piece, Connection, Attributes, Validators, etc.\n\n### 2. STORE SECTION (Data Access Layer)\n**Grammar Definition:**\n- Code grammar for routing: `code: (ENCODED_STRING)? (\"/\" (design | type))?`\n- Parser: Lark-based parser for kit/design/type operations\n\n**OperationBuilder (Lark Transformer):**\n- Transforms parse trees into operation dicts\n- Methods: code(), design(), type()\n- Handles encoding/decoding of URIs and identifiers\n\n**Enums:**\n- `StoreKind`: DATABASE, REST, GRAPHQL\n- `CommandKind`: QUERY, PUT, UPDATE, DELETE\n- `SSLMode`: DISABLE, ALLOW, PREFER, REQUIRE, VERIFY_CA, VERIFY_FULL\n\n**Store (ABC):**\n- Abstract base class with execute(), initialize(), get(), put(), update(), delete()\n- execute() dispatches based on CommandKind\n\n**DatabaseStore (ABC extends Store):**\n- SQLAlchemy engine + session managers\n- Cached property for session\n- initialized() check\n- get(), put(), update(), delete() abstract methods for subclasses\n\n**SqliteStore (extends DatabaseStore):**\n- fromUri() classmethod for construction\n- initialize() creates .compose folder and kit.db\n- Handles kit creation, updates with change tracking\n- Type updates preserve connector relationships\n- postDeleteKit() terminates process on kit deletion\n\n**PostgresStore (extends DatabaseStore):**\n- TODO: Not yet implemented\n\n**Global Functions:**\n- cacheDir(): Local cache directory for remote URIs\n- cache(): Download and extract remote kit .zip files\n- StoreFactory(): Factory with LRU cache for store instances\n- storeAndOperationFromCode(): Parse code to store + operation\n- get(), put(), delete(): High-level store operations\n\n### 3. ASSISTANT SECTION (AI Design Prediction)\n**Utility Functions:**\n- encodeForPrompt(): Sanitize strings for prompts\n- replaceDefault(): Substitute empty values\n- encodeType(): Encode TypeContext for prompts\n\n**Design Healing:**\n- healDesign(): Repair designs with missing variants using Levenshtein distance\n- Uses difflib for fuzzy matching\n\n**OpenAI Integration:**\n- openaiClient initialization (error-safe)\n- systemPrompt: Detailed constraints for kit-of-parts design\n- designGenerationPromptTemplate: Jinja2 template for rendering types\n- designResponseFormat: JSON schema for gpt-4o structured output\n\n**AI Models:**\n- decodeDesign(): Transform raw AI response → DesignPrediction\n- predictDesign(): Main AI function calling gpt-4o with structured output\n\n### 4. GRAPHQL SECTION\n**Type Mapping (GRAPHQLTYPES dict):**\n- Maps Python type strings → Graphene types\n- Handles nullable, lists, custom compose types\n- Prefix variations: `__main__`, `__mp_main__`, `engine`, direct names\n\n**Root Types:**\n- Query: node (RelayNode), kit(uri) resolver\n- Mutation: createKit(kit)\n\n**graphqlSchema:** graphene.Schema(query=Query, mutation=Mutation)\n\n### 5. REST SECTION (FastAPI)\n**Endpoints:**\n```\nGET  /kits/{encodedKitUri}                           # Retrieve kit\nPUT  /kits/{encodedKitUri}                           # Create kit\nDELETE /kits/{encodedKitUri}                         # Delete kit\nPUT  /kits/{.../types/{encodedTypeId}               # Create/update type\nDELETE /kits/{.../types/{encodedTypeId}             # Delete type\nPUT  /kits/{.../designs/{encodedDesignId}           # Create/update design\nDELETE /kits/{.../designs/{encodedDesignId}         # Delete design\nGET  /assistant/predictDesign                       # AI prediction\nPOST /prepare/kit                                    # Validate kit\n```\n\n**JSON Schema Generators:**\n- ContextGenerateJsonSchema: Strips \"Context\" suffix\n- OutputGenerateJsonSchema: Strips \"Output\" suffix\n- PredictionGenerateJsonSchema: Strips \"Prediction\" suffix\n\n**Custom OpenAPI:**\n- Adds /api prefix to all paths\n- Cleans type names (removes Output suffix)\n\n### 6. MCP SECTION (Model Context Protocol Tools)\n**Server**: `FastMCP(\"compose\", stateless_http=True, json_response=True)`\n\n**Tools (12 total):**\n- Kit operations: get_kit(), put_kit(), mcp_delete_kit()\n- Type operations: get_type_from_kit(), put_type_in_kit(), delete_type_from_kit()\n- Design operations: get_design_from_kit(), put_design_in_kit(), delete_design_from_kit()\n- Validation: validate_kit()\n- Utilities: flatten_design(), get_kit_diff(), apply_kit_diff(), inverse_kit_diff()\n\n### 7. ENGINE SECTION (Server Lifecycle)\n**Lifespan Management:**\n- engineLifespan(): Async context manager for MCP session\n\n**Application Structure:**\n```python\nengine = Starlette(lifespan=engineLifespan)\nengine.mount(\"/api\", rest)           # FastAPI\nengine.mount(\"/graphql\", GraphQLApp) # Graphene\nengine.mount(\"/mcp\", mcp)            # FastMCP\n```\n\n**Key Functions:**\n- generateSchemas(): Exports OpenAPI, JSON schema, SQLite schema, GraphQL schema\n- start_engine(): Starts uvicorn server (localhost:8000)\n- restart_engine(): Terminates and restarts engine process\n- run(): Main entry point with argparse for --debug, --dev, --mcp-stdio flags\n- preDev(): Hook before dev mode\n- dev(): Dev mode entry point\n\n**GUI (PySide6):**\n- System tray icon\n- Context menu (Restart, Quit)\n- Engine process management\n\n## Test Suite (engine.test.py)\n\n**Test Classes:**\n1. TestEncoding: encode/decode roundtrips\n2. TestOperationBuilder: Parse kit/type/design operations\n3. TestSqliteStore: Store factory, caching, initialization\n4. TestStoreKind/CommandKind: Enum value validation\n5. TestRestApi: 404 error handling\n6. TestGraphQL: Schema and query existence\n7. TestMcp: All MCP tools (10+ tests)\n8. TestCache: Directory encoding, error handling\n9. TestSSLMode: Enum values\n10. TestErrors: Error class messages\n11. TestAssistant: Prompt encoding, type encoding, templates\n12. TestEngineConfiguration: App existence\n13. TestIntegration: Store + code parsing\n\n**Fixtures:**\n- kitMetabolismJson (loaded from assets)\n- minimalKitJson\n- tempKitPath (temp directory)\n- restClient (Starlette TestClient)\n- graphqlClient (GraphQL endpoint client)\n\n## Build Scripts\n\n### build.ts\n- Syncs uv dependencies if .venv missing\n- Runs generate-schemas.ts\n- Cleans build/dist directories\n- Invokes PyInstaller with metadata/icons\n- Optionally runs post-build.ts\n- Creates executable: dist/compose-engine/compose-engine.exe\n\n### post-build.ts\n- Relocates PyInstaller output to Grasshopper bin folder\n- Moves executable and _internal dependencies\n- Path: ../../net/Compose.Grasshopper/bin/Debug/net48/\n\n### generate-schemas.ts\n- Calls Python function: `engine:generateSchemas()`\n- Exports schemas during build\n\n### test.ts\n- Runs pytest with coverage: `poetry run pytest --cov`\n\n## Key Design Patterns\n\n1. **Code Grammar-based Routing**: Parse string paths to operations\n2. **Store Factory Pattern**: URI → appropriate store type\n3. **Async Context Managers**: MCP session lifecycle\n4. **Pydantic JSON Schema**: Schema generation with custom generators\n5. **Multi-interface**: REST + GraphQL + MCP for different clients\n6. **AI Integration**: Structured outputs from gpt-4o\n7. **Type Healing**: Fuzzy matching for design repair\n8. **SQLAlchemy ORM**: Relationship preservation on updates\n\n## Special Features\n\n- **Dev Mode**: Debugps-based remote debugging on port 5678\n- **MCP Stdio**: Pure stdio MCP server mode (--mcp-stdio)\n- **Caching**: Remote kit downloads cached locally\n- **Hot Reload**: System tray Restart action\n- **Type Variants**: Support for type name~variant~view identifiers\n- **Design Healing**: AI designs auto-repaired with fuzzy matching\n"
           },
           "tool_use_id": "toolu_01MtzUCfkdRsXW5S3Mv9uaZj__vscode-1773233523338",
           "cwd": "/workspaces/semio"
@@ -428,10 +428,10 @@
           "tool_name": "memory",
           "tool_input": {
             "command": "create",
-            "path": "/memories/session/semio-engine-complete-exploration.md",
-            "file_text": "# Complete semio/engine Directory Exploration\n\n## Directory Structure\n```\nsemio/engine/\n├── engine.py                 # Main engine module (3000+ lines)\n├── engine.test.py            # Unit tests with pytest\n├── build.ts                  # TypeScript build script (PyInstaller bundling)\n├── post-build.ts             # Post-build script (artifact relocation)\n├── generate-schemas.ts       # Schema generation from Python models\n├── sqliteschema.ts           # SQLite schema export utility\n├── test.ts                   # Test runner (poetry + pytest)\n├── package.json              # Node.js metadata \u0026 npm scripts\n├── pyproject.toml            # Python project config (uv, pytest, coverage)\n├── README.md                 # Project documentation\n├── LICENSE.md                # GNU AGPL-3.0-or-later\n├── __pycache__/              # Python cache\n├── .pytest_cache/            # Pytest cache\n└── .ruff_cache/              # Ruff formatter cache\n```\n\n## Project Configuration\n\n### package.json (v1.0.0)\n- Name: `@semio/engine`\n- Type: application\n- Scripts:\n  - `dev`: `uv run engine.py`\n  - `build`: `tsx ./build.ts`\n  - `test`: `tsx ./test.ts`\n  - `preflight`: `ruff format . \u0026\u0026 ruff check --fix .`\n- Dependencies: @semio/assets\n- Bundle Kind: library\n\n### pyproject.toml (v4.4.0)\n- Name: semio-engine\n- Description: Shared fat client for all desktop apps in semio\n- Python: \u003e= 3.14\n- License: AGPL-3.0-or-later\n\n**Key Dependencies:**\n- fastapi, uvicorn, starlette\n- graphene, graphene-pydantic, graphene-sqlalchemy\n- sqlalchemy, sqlmodel (ORM)\n- pydantic (validation)\n- pyside6 (GUI)\n- openai (AI predictions)\n- mcp[cli] (Model Context Protocol)\n- jinja2, lark (templates, parsing)\n- loguru (logging)\n- networkx, numpy, pytransform3d (geometry)\n- python-dotenv, requests\n\n**Scripts:**\n- `run = \"engine:run\"`\n- `dev = \"engine:dev\"`\n\n## Complete Code Structure\n\n### 1. IMPORTS SECTION\nAll dependencies imported with sys.path adjustment for semio package.\nExhaustive imports from semio module: Kit, Design, Type, Piece, Connection, Attributes, Validators, etc.\n\n### 2. STORE SECTION (Data Access Layer)\n**Grammar Definition:**\n- Code grammar for routing: `code: (ENCODED_STRING)? (\"/\" (design | type))?`\n- Parser: Lark-based parser for kit/design/type operations\n\n**OperationBuilder (Lark Transformer):**\n- Transforms parse trees into operation dicts\n- Methods: code(), design(), type()\n- Handles encoding/decoding of URIs and identifiers\n\n**Enums:**\n- `StoreKind`: DATABASE, REST, GRAPHQL\n- `CommandKind`: QUERY, PUT, UPDATE, DELETE\n- `SSLMode`: DISABLE, ALLOW, PREFER, REQUIRE, VERIFY_CA, VERIFY_FULL\n\n**Store (ABC):**\n- Abstract base class with execute(), initialize(), get(), put(), update(), delete()\n- execute() dispatches based on CommandKind\n\n**DatabaseStore (ABC extends Store):**\n- SQLAlchemy engine + session managers\n- Cached property for session\n- initialized() check\n- get(), put(), update(), delete() abstract methods for subclasses\n\n**SqliteStore (extends DatabaseStore):**\n- fromUri() classmethod for construction\n- initialize() creates .semio folder and kit.db\n- Handles kit creation, updates with change tracking\n- Type updates preserve connector relationships\n- postDeleteKit() terminates process on kit deletion\n\n**PostgresStore (extends DatabaseStore):**\n- TODO: Not yet implemented\n\n**Global Functions:**\n- cacheDir(): Local cache directory for remote URIs\n- cache(): Download and extract remote kit .zip files\n- StoreFactory(): Factory with LRU cache for store instances\n- storeAndOperationFromCode(): Parse code to store + operation\n- get(), put(), delete(): High-level store operations\n\n### 3. ASSISTANT SECTION (AI Design Prediction)\n**Utility Functions:**\n- encodeForPrompt(): Sanitize strings for prompts\n- replaceDefault(): Substitute empty values\n- encodeType(): Encode TypeContext for prompts\n\n**Design Healing:**\n- healDesign(): Repair designs with missing variants using Levenshtein distance\n- Uses difflib for fuzzy matching\n\n**OpenAI Integration:**\n- openaiClient initialization (error-safe)\n- systemPrompt: Detailed constraints for kit-of-parts design\n- designGenerationPromptTemplate: Jinja2 template for rendering types\n- designResponseFormat: JSON schema for gpt-4o structured output\n\n**AI Models:**\n- decodeDesign(): Transform raw AI response → DesignPrediction\n- predictDesign(): Main AI function calling gpt-4o with structured output\n\n### 4. GRAPHQL SECTION\n**Type Mapping (GRAPHQLTYPES dict):**\n- Maps Python type strings → Graphene types\n- Handles nullable, lists, custom semio types\n- Prefix variations: `__main__`, `__mp_main__`, `engine`, direct names\n\n**Root Types:**\n- Query: node (RelayNode), kit(uri) resolver\n- Mutation: createKit(kit)\n\n**graphqlSchema:** graphene.Schema(query=Query, mutation=Mutation)\n\n### 5. REST SECTION (FastAPI)\n**Endpoints:**\n```\nGET  /kits/{encodedKitUri}                           # Retrieve kit\nPUT  /kits/{encodedKitUri}                           # Create kit\nDELETE /kits/{encodedKitUri}                         # Delete kit\nPUT  /kits/{.../types/{encodedTypeId}               # Create/update type\nDELETE /kits/{.../types/{encodedTypeId}             # Delete type\nPUT  /kits/{.../designs/{encodedDesignId}           # Create/update design\nDELETE /kits/{.../designs/{encodedDesignId}         # Delete design\nGET  /assistant/predictDesign                       # AI prediction\nPOST /prepare/kit                                    # Validate kit\n```\n\n**JSON Schema Generators:**\n- ContextGenerateJsonSchema: Strips \"Context\" suffix\n- OutputGenerateJsonSchema: Strips \"Output\" suffix\n- PredictionGenerateJsonSchema: Strips \"Prediction\" suffix\n\n**Custom OpenAPI:**\n- Adds /api prefix to all paths\n- Cleans type names (removes Output suffix)\n\n### 6. MCP SECTION (Model Context Protocol Tools)\n**Server**: `FastMCP(\"semio\", stateless_http=True, json_response=True)`\n\n**Tools (12 total):**\n- Kit operations: get_kit(), put_kit(), mcp_delete_kit()\n- Type operations: get_type_from_kit(), put_type_in_kit(), delete_type_from_kit()\n- Design operations: get_design_from_kit(), put_design_in_kit(), delete_design_from_kit()\n- Validation: validate_kit()\n- Utilities: flatten_design(), get_kit_diff(), apply_kit_diff(), inverse_kit_diff()\n\n### 7. ENGINE SECTION (Server Lifecycle)\n**Lifespan Management:**\n- engineLifespan(): Async context manager for MCP session\n\n**Application Structure:**\n```python\nengine = Starlette(lifespan=engineLifespan)\nengine.mount(\"/api\", rest)           # FastAPI\nengine.mount(\"/graphql\", GraphQLApp) # Graphene\nengine.mount(\"/mcp\", mcp)            # FastMCP\n```\n\n**Key Functions:**\n- generateSchemas(): Exports OpenAPI, JSON schema, SQLite schema, GraphQL schema\n- start_engine(): Starts uvicorn server (localhost:8000)\n- restart_engine(): Terminates and restarts engine process\n- run(): Main entry point with argparse for --debug, --dev, --mcp-stdio flags\n- preDev(): Hook before dev mode\n- dev(): Dev mode entry point\n\n**GUI (PySide6):**\n- System tray icon\n- Context menu (Restart, Quit)\n- Engine process management\n\n## Test Suite (engine.test.py)\n\n**Test Classes:**\n1. TestEncoding: encode/decode roundtrips\n2. TestOperationBuilder: Parse kit/type/design operations\n3. TestSqliteStore: Store factory, caching, initialization\n4. TestStoreKind/CommandKind: Enum value validation\n5. TestRestApi: 404 error handling\n6. TestGraphQL: Schema and query existence\n7. TestMcp: All MCP tools (10+ tests)\n8. TestCache: Directory encoding, error handling\n9. TestSSLMode: Enum values\n10. TestErrors: Error class messages\n11. TestAssistant: Prompt encoding, type encoding, templates\n12. TestEngineConfiguration: App existence\n13. TestIntegration: Store + code parsing\n\n**Fixtures:**\n- kitMetabolismJson (loaded from assets)\n- minimalKitJson\n- tempKitPath (temp directory)\n- restClient (Starlette TestClient)\n- graphqlClient (GraphQL endpoint client)\n\n## Build Scripts\n\n### build.ts\n- Syncs uv dependencies if .venv missing\n- Runs generate-schemas.ts\n- Cleans build/dist directories\n- Invokes PyInstaller with metadata/icons\n- Optionally runs post-build.ts\n- Creates executable: dist/semio-engine/semio-engine.exe\n\n### post-build.ts\n- Relocates PyInstaller output to Grasshopper bin folder\n- Moves executable and _internal dependencies\n- Path: ../../net/Semio.Grasshopper/bin/Debug/net48/\n\n### generate-schemas.ts\n- Calls Python function: `engine:generateSchemas()`\n- Exports schemas during build\n\n### test.ts\n- Runs pytest with coverage: `poetry run pytest --cov`\n\n## Key Design Patterns\n\n1. **Code Grammar-based Routing**: Parse string paths to operations\n2. **Store Factory Pattern**: URI → appropriate store type\n3. **Async Context Managers**: MCP session lifecycle\n4. **Pydantic JSON Schema**: Schema generation with custom generators\n5. **Multi-interface**: REST + GraphQL + MCP for different clients\n6. **AI Integration**: Structured outputs from gpt-4o\n7. **Type Healing**: Fuzzy matching for design repair\n8. **SQLAlchemy ORM**: Relationship preservation on updates\n\n## Special Features\n\n- **Dev Mode**: Debugps-based remote debugging on port 5678\n- **MCP Stdio**: Pure stdio MCP server mode (--mcp-stdio)\n- **Caching**: Remote kit downloads cached locally\n- **Hot Reload**: System tray Restart action\n- **Type Variants**: Support for type name~variant~view identifiers\n- **Design Healing**: AI designs auto-repaired with fuzzy matching\n"
+            "path": "/memories/session/compose-engine-complete-exploration.md",
+            "file_text": "# Complete compose/engine Directory Exploration\n\n## Directory Structure\n```\ncompose/engine/\n├── engine.py                 # Main engine module (3000+ lines)\n├── engine.test.py            # Unit tests with pytest\n├── build.ts                  # TypeScript build script (PyInstaller bundling)\n├── post-build.ts             # Post-build script (artifact relocation)\n├── generate-schemas.ts       # Schema generation from Python models\n├── sqliteschema.ts           # SQLite schema export utility\n├── test.ts                   # Test runner (poetry + pytest)\n├── package.json              # Node.js metadata \u0026 npm scripts\n├── pyproject.toml            # Python project config (uv, pytest, coverage)\n├── README.md                 # Project documentation\n├── LICENSE.md                # GNU AGPL-3.0-or-later\n├── __pycache__/              # Python cache\n├── .pytest_cache/            # Pytest cache\n└── .ruff_cache/              # Ruff formatter cache\n```\n\n## Project Configuration\n\n### package.json (v1.0.0)\n- Name: `@compose/engine`\n- Type: application\n- Scripts:\n  - `dev`: `uv run engine.py`\n  - `build`: `tsx ./build.ts`\n  - `test`: `tsx ./test.ts`\n  - `preflight`: `ruff format . \u0026\u0026 ruff check --fix .`\n- Dependencies: @compose/assets\n- Bundle Kind: library\n\n### pyproject.toml (v4.4.0)\n- Name: compose-engine\n- Description: Shared fat client for all desktop apps in compose\n- Python: \u003e= 3.14\n- License: AGPL-3.0-or-later\n\n**Key Dependencies:**\n- fastapi, uvicorn, starlette\n- graphene, graphene-pydantic, graphene-sqlalchemy\n- sqlalchemy, sqlmodel (ORM)\n- pydantic (validation)\n- pyside6 (GUI)\n- openai (AI predictions)\n- mcp[cli] (Model Context Protocol)\n- jinja2, lark (templates, parsing)\n- loguru (logging)\n- networkx, numpy, pytransform3d (geometry)\n- python-dotenv, requests\n\n**Scripts:**\n- `run = \"engine:run\"`\n- `dev = \"engine:dev\"`\n\n## Complete Code Structure\n\n### 1. IMPORTS SECTION\nAll dependencies imported with sys.path adjustment for compose package.\nExhaustive imports from compose module: Kit, Design, Type, Piece, Connection, Attributes, Validators, etc.\n\n### 2. STORE SECTION (Data Access Layer)\n**Grammar Definition:**\n- Code grammar for routing: `code: (ENCODED_STRING)? (\"/\" (design | type))?`\n- Parser: Lark-based parser for kit/design/type operations\n\n**OperationBuilder (Lark Transformer):**\n- Transforms parse trees into operation dicts\n- Methods: code(), design(), type()\n- Handles encoding/decoding of URIs and identifiers\n\n**Enums:**\n- `StoreKind`: DATABASE, REST, GRAPHQL\n- `CommandKind`: QUERY, PUT, UPDATE, DELETE\n- `SSLMode`: DISABLE, ALLOW, PREFER, REQUIRE, VERIFY_CA, VERIFY_FULL\n\n**Store (ABC):**\n- Abstract base class with execute(), initialize(), get(), put(), update(), delete()\n- execute() dispatches based on CommandKind\n\n**DatabaseStore (ABC extends Store):**\n- SQLAlchemy engine + session managers\n- Cached property for session\n- initialized() check\n- get(), put(), update(), delete() abstract methods for subclasses\n\n**SqliteStore (extends DatabaseStore):**\n- fromUri() classmethod for construction\n- initialize() creates .compose folder and kit.db\n- Handles kit creation, updates with change tracking\n- Type updates preserve connector relationships\n- postDeleteKit() terminates process on kit deletion\n\n**PostgresStore (extends DatabaseStore):**\n- TODO: Not yet implemented\n\n**Global Functions:**\n- cacheDir(): Local cache directory for remote URIs\n- cache(): Download and extract remote kit .zip files\n- StoreFactory(): Factory with LRU cache for store instances\n- storeAndOperationFromCode(): Parse code to store + operation\n- get(), put(), delete(): High-level store operations\n\n### 3. ASSISTANT SECTION (AI Design Prediction)\n**Utility Functions:**\n- encodeForPrompt(): Sanitize strings for prompts\n- replaceDefault(): Substitute empty values\n- encodeType(): Encode TypeContext for prompts\n\n**Design Healing:**\n- healDesign(): Repair designs with missing variants using Levenshtein distance\n- Uses difflib for fuzzy matching\n\n**OpenAI Integration:**\n- openaiClient initialization (error-safe)\n- systemPrompt: Detailed constraints for kit-of-parts design\n- designGenerationPromptTemplate: Jinja2 template for rendering types\n- designResponseFormat: JSON schema for gpt-4o structured output\n\n**AI Models:**\n- decodeDesign(): Transform raw AI response → DesignPrediction\n- predictDesign(): Main AI function calling gpt-4o with structured output\n\n### 4. GRAPHQL SECTION\n**Type Mapping (GRAPHQLTYPES dict):**\n- Maps Python type strings → Graphene types\n- Handles nullable, lists, custom compose types\n- Prefix variations: `__main__`, `__mp_main__`, `engine`, direct names\n\n**Root Types:**\n- Query: node (RelayNode), kit(uri) resolver\n- Mutation: createKit(kit)\n\n**graphqlSchema:** graphene.Schema(query=Query, mutation=Mutation)\n\n### 5. REST SECTION (FastAPI)\n**Endpoints:**\n```\nGET  /kits/{encodedKitUri}                           # Retrieve kit\nPUT  /kits/{encodedKitUri}                           # Create kit\nDELETE /kits/{encodedKitUri}                         # Delete kit\nPUT  /kits/{.../types/{encodedTypeId}               # Create/update type\nDELETE /kits/{.../types/{encodedTypeId}             # Delete type\nPUT  /kits/{.../designs/{encodedDesignId}           # Create/update design\nDELETE /kits/{.../designs/{encodedDesignId}         # Delete design\nGET  /assistant/predictDesign                       # AI prediction\nPOST /prepare/kit                                    # Validate kit\n```\n\n**JSON Schema Generators:**\n- ContextGenerateJsonSchema: Strips \"Context\" suffix\n- OutputGenerateJsonSchema: Strips \"Output\" suffix\n- PredictionGenerateJsonSchema: Strips \"Prediction\" suffix\n\n**Custom OpenAPI:**\n- Adds /api prefix to all paths\n- Cleans type names (removes Output suffix)\n\n### 6. MCP SECTION (Model Context Protocol Tools)\n**Server**: `FastMCP(\"compose\", stateless_http=True, json_response=True)`\n\n**Tools (12 total):**\n- Kit operations: get_kit(), put_kit(), mcp_delete_kit()\n- Type operations: get_type_from_kit(), put_type_in_kit(), delete_type_from_kit()\n- Design operations: get_design_from_kit(), put_design_in_kit(), delete_design_from_kit()\n- Validation: validate_kit()\n- Utilities: flatten_design(), get_kit_diff(), apply_kit_diff(), inverse_kit_diff()\n\n### 7. ENGINE SECTION (Server Lifecycle)\n**Lifespan Management:**\n- engineLifespan(): Async context manager for MCP session\n\n**Application Structure:**\n```python\nengine = Starlette(lifespan=engineLifespan)\nengine.mount(\"/api\", rest)           # FastAPI\nengine.mount(\"/graphql\", GraphQLApp) # Graphene\nengine.mount(\"/mcp\", mcp)            # FastMCP\n```\n\n**Key Functions:**\n- generateSchemas(): Exports OpenAPI, JSON schema, SQLite schema, GraphQL schema\n- start_engine(): Starts uvicorn server (localhost:8000)\n- restart_engine(): Terminates and restarts engine process\n- run(): Main entry point with argparse for --debug, --dev, --mcp-stdio flags\n- preDev(): Hook before dev mode\n- dev(): Dev mode entry point\n\n**GUI (PySide6):**\n- System tray icon\n- Context menu (Restart, Quit)\n- Engine process management\n\n## Test Suite (engine.test.py)\n\n**Test Classes:**\n1. TestEncoding: encode/decode roundtrips\n2. TestOperationBuilder: Parse kit/type/design operations\n3. TestSqliteStore: Store factory, caching, initialization\n4. TestStoreKind/CommandKind: Enum value validation\n5. TestRestApi: 404 error handling\n6. TestGraphQL: Schema and query existence\n7. TestMcp: All MCP tools (10+ tests)\n8. TestCache: Directory encoding, error handling\n9. TestSSLMode: Enum values\n10. TestErrors: Error class messages\n11. TestAssistant: Prompt encoding, type encoding, templates\n12. TestEngineConfiguration: App existence\n13. TestIntegration: Store + code parsing\n\n**Fixtures:**\n- kitMetabolismJson (loaded from assets)\n- minimalKitJson\n- tempKitPath (temp directory)\n- restClient (Starlette TestClient)\n- graphqlClient (GraphQL endpoint client)\n\n## Build Scripts\n\n### build.ts\n- Syncs uv dependencies if .venv missing\n- Runs generate-schemas.ts\n- Cleans build/dist directories\n- Invokes PyInstaller with metadata/icons\n- Optionally runs post-build.ts\n- Creates executable: dist/compose-engine/compose-engine.exe\n\n### post-build.ts\n- Relocates PyInstaller output to Grasshopper bin folder\n- Moves executable and _internal dependencies\n- Path: ../../net/Compose.Grasshopper/bin/Debug/net48/\n\n### generate-schemas.ts\n- Calls Python function: `engine:generateSchemas()`\n- Exports schemas during build\n\n### test.ts\n- Runs pytest with coverage: `poetry run pytest --cov`\n\n## Key Design Patterns\n\n1. **Code Grammar-based Routing**: Parse string paths to operations\n2. **Store Factory Pattern**: URI → appropriate store type\n3. **Async Context Managers**: MCP session lifecycle\n4. **Pydantic JSON Schema**: Schema generation with custom generators\n5. **Multi-interface**: REST + GraphQL + MCP for different clients\n6. **AI Integration**: Structured outputs from gpt-4o\n7. **Type Healing**: Fuzzy matching for design repair\n8. **SQLAlchemy ORM**: Relationship preservation on updates\n\n## Special Features\n\n- **Dev Mode**: Debugps-based remote debugging on port 5678\n- **MCP Stdio**: Pure stdio MCP server mode (--mcp-stdio)\n- **Caching**: Remote kit downloads cached locally\n- **Hot Reload**: System tray Restart action\n- **Type Variants**: Support for type name~variant~view identifiers\n- **Design Healing**: AI designs auto-repaired with fuzzy matching\n"
           },
-          "tool_response": "File created successfully at: /memories/session/semio-engine-complete-exploration.md",
+          "tool_response": "File created successfully at: /memories/session/compose-engine-complete-exploration.md",
           "tool_use_id": "toolu_01MtzUCfkdRsXW5S3Mv9uaZj__vscode-1773233523338",
           "cwd": "/workspaces/semio"
         },

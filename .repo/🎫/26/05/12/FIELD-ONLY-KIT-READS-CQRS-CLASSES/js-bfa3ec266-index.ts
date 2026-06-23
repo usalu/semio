@@ -1,10 +1,10 @@
 // #region ­ƒº▓Header
 // 2025-2026 Ueli Saluz <ueli@semio-tech.com>
-// GNU LGPL-3.0 or later ÔÇö semio/js: stateless {@link Kit} + GraphQL transport (WASM worker or inline); no client-side kit cache.
+// GNU LGPL-3.0 or later ÔÇö compose/js: stateless {@link Kit} + GraphQL transport (WASM worker or inline); no client-side kit cache.
 // #endregion ­ƒº▓Header
 
 //#region ­ƒîÉTransport
-/** @emoji ­ƒºÁ Bundled worker ÔÇö Vite resolves `@semio/rs-wasm`; Blob workers cannot import bare specifiers. */
+/** @emoji ­ƒºÁ Bundled worker ÔÇö Vite resolves `@compose/rs-wasm`; Blob workers cannot import bare specifiers. */
 export function createKitStoreWorker(): Worker {
   return new Worker(new URL("./kit-store.worker.ts", import.meta.url), { type: "module" });
 }
@@ -378,15 +378,15 @@ function gqlOkFromEnvelope(env: KitGraphqlResponseEnvelope<JsonValue>): SetResul
 
 type KitGraphqlHandle = { execute(requestJson: string): Promise<string> };
 
-async function __readSemioWasmBytesFromMonorepoCandidates(): Promise<Uint8Array | undefined> {
+async function __readComposeWasmBytesFromMonorepoCandidates(): Promise<Uint8Array | undefined> {
   try {
     const fs = await import("node:fs/promises");
     const path = await import("node:path");
     const url = await import("node:url");
     const here = path.dirname(url.fileURLToPath(import.meta.url));
     const candidates = [
-      path.resolve(here, "../../rs/pkg/semio_bg.wasm"),
-      path.resolve(here, "../../../semio/rs/pkg/semio_bg.wasm"),
+      path.resolve(here, "../../rs/pkg/compose_bg.wasm"),
+      path.resolve(here, "../../../compose/rs/pkg/compose_bg.wasm"),
     ];
     for (const p of candidates) {
       try {
@@ -590,7 +590,7 @@ export class Kit {
 
   static async open(seed: KitBootstrapJson, opts?: KitOpenOptions): Promise<Kit> {
     const timeoutMs = opts?.timeoutMs ?? 60_000;
-    const wasmSpecifier = opts?.wasmSpecifier ?? (globalThis as { __SEMIO_WASM_SPECIFIER__?: string }).__SEMIO_WASM_SPECIFIER__ ?? "@semio/rs-wasm";
+    const wasmSpecifier = opts?.wasmSpecifier ?? (globalThis as { __COMPOSE_WASM_SPECIFIER__?: string }).__COMPOSE_WASM_SPECIFIER__ ?? "@compose/rs-wasm";
     const dto: KitBootstrapJson = JSON.parse(JSON.stringify(seed)) as KitBootstrapJson;
     const preferInlineWasmInVitest = (() => {
       try {
@@ -602,7 +602,7 @@ export class Kit {
       return typeof process !== "undefined" && !!process.env && "VITEST" in process.env;
     })();
 
-    const wasmBytesPre = await __readSemioWasmBytesFromMonorepoCandidates();
+    const wasmBytesPre = await __readComposeWasmBytesFromMonorepoCandidates();
     const useDedicatedWorker = typeof Worker !== "undefined" && !preferInlineWasmInVitest && wasmBytesPre == null;
 
     if (useDedicatedWorker) {
@@ -615,7 +615,7 @@ export class Kit {
         void k.startSubscriptionLoop();
         return k;
       } catch (workerErr) {
-        console.warn("[semio/js] WASM worker init failed; falling back to inline WASM", workerErr);
+        console.warn("[compose/js] WASM worker init failed; falling back to inline WASM", workerErr);
         try {
           wt.dispose();
         } catch {
@@ -624,12 +624,12 @@ export class Kit {
       }
     }
 
-    let mod: typeof import("@semio/rs-wasm");
+    let mod: typeof import("@compose/rs-wasm");
     try {
-      mod = wasmSpecifier === "@semio/rs-wasm" ? await import("@semio/rs-wasm") : await import(/* @vite-ignore */ wasmSpecifier);
+      mod = wasmSpecifier === "@compose/rs-wasm" ? await import("@compose/rs-wasm") : await import(/* @vite-ignore */ wasmSpecifier);
     } catch (e) {
       const base = e instanceof Error ? e.message : String(e);
-      throw new Error(`Failed to load @semio/rs-wasm (inline path): ${base}`);
+      throw new Error(`Failed to load @compose/rs-wasm (inline path): ${base}`);
     }
     if (typeof mod.default === "function") {
       if (wasmBytesPre) await mod.default({ module_or_path: wasmBytesPre });
@@ -1742,8 +1742,8 @@ export async function openKit(seed: KitBootstrapJson, opts?: KitOpenOptions): Pr
 //#endregion ­ƒÜÇPublicAPI
 
 //#region ­ƒº¬Tests
-if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") {
-  describe("semio/js field-only kit", () => {
+if (typeof process !== "undefined" && !!process.env && process.env["COMPOSE_JS_RUN_EMBEDDED_TESTS"] === "1") {
+  describe("compose/js field-only kit", () => {
     it("source has no banned cache/sync substrings", async () => {
       const fs = await import("node:fs");
       const url = await import("node:url");

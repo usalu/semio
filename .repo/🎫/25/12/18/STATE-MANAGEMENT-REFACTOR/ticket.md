@@ -3,7 +3,7 @@
 ## Todos
 # Previously
 
-Analysis of js/semio/sketchpad state management revealed:
+Analysis of js/compose/sketchpad state management revealed:
 
 ## Correct Pattern (Type.tsx, Design.tsx, Kit.tsx, Quality.tsx)
 
@@ -104,4 +104,4 @@ Analysis of js/semio/sketchpad state management revealed:
 ## Summary
 # Summary
 
-Refactor js/semio state management to triadic hooks pattern
+Refactor js/compose state management to triadic hooks pattern

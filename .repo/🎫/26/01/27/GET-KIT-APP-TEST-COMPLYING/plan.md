@@ -2,7 +2,7 @@
 
 ## Problem Analysis
 
-The Kit test in `js/semio/sketchpad.test.ts` is failing because:
+The Kit test in `js/compose/sketchpad.test.ts` is failing because:
 
 1. **Loading State Not Handled**: The test waits for text "Loading" to disappear, but the loading state uses a `<Spinner>` component, not text. So the wait never properly waits for kit loading to finish.
 

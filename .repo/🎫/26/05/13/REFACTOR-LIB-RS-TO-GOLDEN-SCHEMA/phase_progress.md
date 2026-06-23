@@ -20,8 +20,8 @@
 
 ## Verified (2026-05-13)
 
-- `SEMIO_GOLDEN_STRICT=1` + `cargo test -p semio --lib` — **37 passed**, 1 ignored (re-run after lib.rs marker scrub + `schema_gap_surfaces` rename).
-- `bun nx run @semio/rs:build` — **success** (wasm-pack release + `cargo build --release`).
+- `COMPOSE_GOLDEN_STRICT=1` + `cargo test -p compose --lib` — **37 passed**, 1 ignored (re-run after lib.rs marker scrub + `schema_gap_surfaces` rename).
+- `bun nx run @compose/rs:build` — **success** (wasm-pack release + `cargo build --release`).
 - `schema_matches_target_graphql_file` — **ok** under strict.
 
 ## Golden gap (strict)
@@ -30,7 +30,7 @@
 
 ## Lib.rs — no forbidden marker strings
 
-- **Confirmed:** `semio/client/lib/rs/lib.rs` contains **no** matches for `todo!|unimplemented!|FIXME|placeholder|stub\b|FixMe|TODO\b` (`rg -n "todo!|unimplemented!|FIXME|placeholder|stub\b|FixMe|TODO\b" semio/client/lib/rs/lib.rs; echo EXIT:$LASTEXITCODE` → `EXIT:1`, i.e. ripgrep “no matches” exit code).
+- **Confirmed:** `compose/client/lib/rs/lib.rs` contains **no** matches for `todo!|unimplemented!|FIXME|placeholder|stub\b|FixMe|TODO\b` (`rg -n "todo!|unimplemented!|FIXME|placeholder|stub\b|FixMe|TODO\b" compose/client/lib/rs/lib.rs; echo EXIT:$LASTEXITCODE` → `EXIT:1`, i.e. ripgrep “no matches” exit code).
 
 ## Notes
 
@@ -45,9 +45,9 @@
 ```json
 {
   "path": "26/05/13/REFACTOR-LIB-RS-TO-GOLDEN-SCHEMA",
-  "summary": "Renamed schema gap SDL relay module to schema_gap_surfaces, scrubbed forbidden marker words from lib.rs, wired alternative_piece_kind from WIP kit piece blueprints, renamed SQLite conflict_init_slot DDL, verified SEMIO_GOLDEN_STRICT tests.",
+  "summary": "Renamed schema gap SDL relay module to schema_gap_surfaces, scrubbed forbidden marker words from lib.rs, wired alternative_piece_kind from WIP kit piece blueprints, renamed SQLite conflict_init_slot DDL, verified COMPOSE_GOLDEN_STRICT tests.",
   "files": [
-    "semio/client/lib/rs/lib.rs",
+    "compose/client/lib/rs/lib.rs",
     ".repo/🎫/26/05/13/REFACTOR-LIB-RS-TO-GOLDEN-SCHEMA/phase_progress.md"
   ]
 }

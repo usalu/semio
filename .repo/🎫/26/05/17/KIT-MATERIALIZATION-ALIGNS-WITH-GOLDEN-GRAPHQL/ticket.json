@@ -2,8 +2,8 @@
   "title": "Kit Materialization Aligns With Golden Graphql",
   "emoji": "📦",
   "status": "closed",
-  "description": "Fix semio/client/lib/rs so kit materialization matches semio/client/schema/graphql/schema.golden.graphql (Workspace.kit, Checkpoint.kit, TheKit, materialization replay). Run rs tests.",
-  "summary": "Aligned Checkpoint.kit and KitReadPointInput checkpoint reads with golden GraphQL: added Graph::materialized_kit_for_checkpoint_id so the wip parent checkpoint (and alternative tip checkpoints) expose the same replayed kit as TheKit.kit / Alternative.kit; historical checkpoints still resolve to initialKit until checkpoint-scoped changes exist. Extended kit_store_bundle_serialize_hydrate_round_trip_via_graphql assertions. cargo test in semio/client/lib/rs: 40 passed.",
+  "description": "Fix compose/client/lib/rs so kit materialization matches compose/client/schema/graphql/schema.golden.graphql (Workspace.kit, Checkpoint.kit, TheKit, materialization replay). Run rs tests.",
+  "summary": "Aligned Checkpoint.kit and KitReadPointInput checkpoint reads with golden GraphQL: added Graph::materialized_kit_for_checkpoint_id so the wip parent checkpoint (and alternative tip checkpoints) expose the same replayed kit as TheKit.kit / Alternative.kit; historical checkpoints still resolve to initialKit until checkpoint-scoped changes exist. Extended kit_store_bundle_serialize_hydrate_round_trip_via_graphql assertions. cargo test in compose/client/lib/rs: 40 passed.",
   "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
   "sessions": [
     "⚪8edad828ad9b456da681fd36ec8128fd"

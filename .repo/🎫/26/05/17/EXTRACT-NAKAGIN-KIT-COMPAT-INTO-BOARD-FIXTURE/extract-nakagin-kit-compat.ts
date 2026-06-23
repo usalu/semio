@@ -1,5 +1,5 @@
 // #region 🧲Header
-// 💻 Temporary ticket script: read `semio/assets/fixtures/metabolism.kit.semio.json` Nakagin family `ports` + `compatiblePorts`, emit `BoardKindCompatEntry[]` as `semio.metabolism.light.handle.<portId>` pairs (`specificity: handle`, `bidirectional: true`), deduped. Optional `--write-board` merges into `.storybook/fixtures/nakagin-capsule-tower.board.json` under `meta.kindCompatibility` for manual diff review.
+// 💻 Temporary ticket script: read `compose/assets/fixtures/metabolism.kit.compose.json` Nakagin family `ports` + `compatiblePorts`, emit `BoardKindCompatEntry[]` as `compose.metabolism.light.handle.<portId>` pairs (`specificity: handle`, `bidirectional: true`), deduped. Optional `--write-board` merges into `.storybook/fixtures/nakagin-capsule-tower.board.json` under `meta.kindCompatibility` for manual diff review.
 // #endregion 🧲Header
 
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
@@ -11,7 +11,7 @@ const __dir = dirname(fileURLToPath(import.meta.url));
 function findRepoRoot(startDir: string): string {
 	let d = startDir;
 	for (let i = 0; i < 20; i++) {
-		const candidate = join(d, "semio", "assets", "fixtures", "metabolism.kit.semio.json");
+		const candidate = join(d, "compose", "assets", "fixtures", "metabolism.kit.compose.json");
 		if (existsSync(candidate)) {
 			return d;
 		}
@@ -25,13 +25,13 @@ function findRepoRoot(startDir: string): string {
 }
 
 const repoRoot = findRepoRoot(__dir);
-const kitPath = join(repoRoot, "semio/assets/fixtures/metabolism.kit.semio.json");
+const kitPath = join(repoRoot, "compose/assets/fixtures/metabolism.kit.compose.json");
 const outExtracted = join(__dir, "kind-compatibility.extracted.json");
 const boardPath = join(repoRoot, ".storybook/fixtures/nakagin-capsule-tower.board.json");
 
 /** @emoji 🔗 Matches handle kind ids used on the Nakagin board fixture (same port UUIDs as light kit). */
 function handleKindForPortId(portId: string): string {
-	return `semio.metabolism.light.handle.${portId}`;
+	return `compose.metabolism.light.handle.${portId}`;
 }
 
 type KitPort = { compatiblePorts?: { items?: { id: string }[] }; id: string };

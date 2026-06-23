@@ -17,7 +17,7 @@
         "maxResults": 50,
         "query": "SET_SELECTION|SELECT_PIECE|DESELECT_PIECE",
         "isRegexp": true,
-        "includePattern": "**/semio/sketchpad/**"
+        "includePattern": "**/compose/sketchpad/**"
       },
       "tool_use_id": "toolu_012X2gutvq25cH3GwF5vX5gC__vscode-1773658270443",
       "cwd": "/workspaces/semio"

@@ -35,14 +35,14 @@ The i18n validation script (`scripts/i18n.ts`) was reporting 290 errors and 237 
   - Skip warnings for short values (<=2 chars)
   - Skip warnings for camelCase patterns
   - Skip warnings for placeholder patterns (e.g., tag1, ...)
-  - Skip warnings for keys outside semio.sketchpad namespace
+  - Skip warnings for keys outside compose.sketchpad namespace
   - Accept either `.label` or `.label.normal` for UI element validation
 
-## `js/semio/sketchpad/locales/en.json`
+## `js/compose/sketchpad/locales/en.json`
 
 - Added 360+ missing translation entries generated from UI element IDs
 
-## `js/semio/sketchpad/locales/de.json`
+## `js/compose/sketchpad/locales/de.json`
 
 - Added 430+ German translations synchronized from English
 - Properly translated common terms using the German dictionary

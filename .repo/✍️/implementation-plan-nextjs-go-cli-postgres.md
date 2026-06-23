@@ -189,7 +189,7 @@ Large ticket close payloads should be stored as:
 Recommendation for first deployment:
 
 - keep structured metadata in PostgreSQL,
-- keep uploaded bundle files / tarballs / extracted snapshots under `/srv/semio/blob` mounted into the container,
+- keep uploaded bundle files / tarballs / extracted snapshots under `/srv/compose/blob` mounted into the container,
 - store checksum, path, size, MIME type, and retention metadata in PostgreSQL.
 
 ---
@@ -987,7 +987,7 @@ Optional later:
 - `APP_BASE_URL`
 - `DISCORD_BOT_TOKEN` or webhook secrets
 - `DISCORD_DEFAULT_GUILD_ID`
-- `UPLOAD_BLOB_ROOT=/srv/semio/blob`
+- `UPLOAD_BLOB_ROOT=/srv/compose/blob`
 - `CLI_TOKEN_SIGNING_SECRET`
 - `ENCRYPTION_KEY`
 - `PG_BOSS_SCHEMA=pgboss`

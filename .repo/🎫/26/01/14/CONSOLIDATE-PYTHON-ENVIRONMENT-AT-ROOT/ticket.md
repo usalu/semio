@@ -9,12 +9,12 @@ Consolidate the Python environment for the entire monorepo into a single `.venv`
 
 1. **Initialize Root Python Workspace**
    - Create `pyproject.toml` at the repo root.
-   - Define `uv` workspace with `py/semio` and `py/engine` as members.
+   - Define `uv` workspace with `py/compose` and `py/engine` as members.
    - Add `jupyter`, `notebook`, and `ipykernel` to a root `dev` dependency group.
    - Move shared dev tools (`ruff`, `black`, `debugpy`) to the root workspace if appropriate, or keep them as is if `uv` handles it efficiently.
 
 2. **Adjust Subproject Configurations**
-   - Update `py/semio/pyproject.toml` and `py/engine/pyproject.toml` to ensure compatibility with the root workspace.
+   - Update `py/compose/pyproject.toml` and `py/engine/pyproject.toml` to ensure compatibility with the root workspace.
    - Standardize `requires-python` where possible or ensure the root satisfies all.
 
 3. **Configure VS Code**
@@ -22,7 +22,7 @@ Consolidate the Python environment for the entire monorepo into a single `.venv`
 
 4. **Environment Setup**
    - Run `uv sync` from the repo root to generate the unified `.venv`.
-   - Remove local `.venv` directories in `py/semio` and `py/engine` if they exist.
+   - Remove local `.venv` directories in `py/compose` and `py/engine` if they exist.
 
 5. **Update Documentation**
    - Update `AGENTS.md` and `README.md` to reflect the new Python environment structure.
@@ -30,7 +30,7 @@ Consolidate the Python environment for the entire monorepo into a single `.venv`
 
 6. **Verification**
    - Verify that `jupyter` is available.
-   - Verify that `py/semio` can be imported in `py/engine` when running from the root environment.
+   - Verify that `py/compose` can be imported in `py/engine` when running from the root environment.
    - Run tests for both subprojects using the root environment.
 
 ## Changes
@@ -54,14 +54,14 @@ The Python environment for the entire monorepo has been consolidated into a sing
 ## Changes
 
 ### Environment Management
-- Created a root `pyproject.toml` defining a `uv` workspace with `py/semio` and `py/engine` as members.
+- Created a root `pyproject.toml` defining a `uv` workspace with `py/compose` and `py/engine` as members.
 - Centralized shared development tools (`ruff`, `black`, `debugpy`, `pre-commit`) at the repository root.
 - Added `jupyter`, `notebook`, and `ipykernel` as development dependencies at the root.
 - Updated `dependabot.yml` to include the workspace root and all Python packages.
 
 ### Subproject Updates
-- Refactored `py/semio/pyproject.toml` and `py/engine/pyproject.toml` to remove redundant dev dependencies and use root workspace tools.
-- Added `semio` as a workspace dependency to `py/engine`.
+- Refactored `py/compose/pyproject.toml` and `py/engine/pyproject.toml` to remove redundant dev dependencies and use root workspace tools.
+- Added `compose` as a workspace dependency to `py/engine`.
 - Updated `py/engine/generate-schemas.ts` and `py/engine/build.ts` to use `uv run` for cross-platform execution within the workspace.
 
 ### Configuration & Tooling
@@ -70,5 +70,5 @@ The Python environment for the entire monorepo has been consolidated into a sing
 - Updated `AGENTS.md` and `README.md` documentation to reflect the centralized environment.
 
 ### Cleanup
-- Removed local `.venv` directories in `py/semio` and `py/engine`.
+- Removed local `.venv` directories in `py/compose` and `py/engine`.
 - Verified `jupyter` and inter-package imports work correctly via `uv run`.

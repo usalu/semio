@@ -1,6 +1,6 @@
 {
   "id": "cfeac2a3-dfe3-4973-bd86-424aedf54f30",
-  "uri": "semiorepo://s/cfeac2a3-dfe3-4973-bd86-424aedf54f30",
+  "uri": "composerepo://s/cfeac2a3-dfe3-4973-bd86-424aedf54f30",
   "contributor": "🧑‍💻ueli",
   "client": "windsurf-chat",
   "second": "2026-03-10T19:29:04Z",
@@ -231,13 +231,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🧰semiorepo⌨️cli🥼maintest"
+            "id": "🧰composerepo⌨️cli🥼maintest"
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🧰semiorepo⌨️cli🥼maintest📌1📌21881"
+          "🧰composerepo⌨️cli🥼maintest📌1📌21881"
         ],
         "second": "🎆26🌙03☀️10⏰19⌚31⏱️50",
         "session": "⚪cfeac2a3dfe34973bd86424aedf54f30"
@@ -264,13 +264,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🧰semiorepo⌨️cli🥼maintest"
+            "id": "🧰composerepo⌨️cli🥼maintest"
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🧰semiorepo⌨️cli🥼maintest📌1📌21881"
+          "🧰composerepo⌨️cli🥼maintest📌1📌21881"
         ],
         "second": "🎆26🌙03☀️10⏰19⌚31⏱️57",
         "session": "⚪cfeac2a3dfe34973bd86424aedf54f30"
@@ -297,13 +297,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🧰semiorepo⌨️cli💻main"
+            "id": "🧰composerepo⌨️cli💻main"
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🧰semiorepo⌨️cli💻main📌1📌47433"
+          "🧰composerepo⌨️cli💻main📌1📌47433"
         ],
         "second": "🎆26🌙03☀️10⏰19⌚31⏱️57",
         "session": "⚪cfeac2a3dfe34973bd86424aedf54f30"

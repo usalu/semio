@@ -2,7 +2,7 @@
 import re
 from pathlib import Path
 
-p = Path("semio/client/lib/rs/lib.rs")
+p = Path("compose/client/lib/rs/lib.rs")
 text = p.read_text(encoding="utf-8")
 
 

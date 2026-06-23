@@ -49,7 +49,7 @@ How would you architect this?
 
 ---
 
-## 🏘️semio
+## 🏘️compose
 
 ###
 
@@ -79,7 +79,7 @@ First idea:
 - authoritative is exactly the one of the backbone
 - stage is the attempt to merge changes of wip into authoritative
 - synchronization between three graphs exclusively happens over changes (forwards and backwards operations)
-- local backbone (folder with .semio folder with four sqlite files: wip.db, stage.db, authoritative.db, conflicts.db and file blobs are globally stored under blobs/BLOBHASH.EXT)
+- local backbone (folder with .compose folder with four sqlite files: wip.db, stage.db, authoritative.db, conflicts.db and file blobs are globally stored under blobs/BLOBHASH.EXT)
 - dev backbone (everything embedded in one json file)
 
 Non-goals:
@@ -88,17 +88,17 @@ Non-goals:
 - No general Json as part of graphql or rust - just hardcoded and typesafe buissness logic
 - dont change the target grapqhl schema structurally, only extend it
 
-How would you implement/refactor/rewrite semio/rs/lib.rs for this?
+How would you implement/refactor/rewrite compose/rs/lib.rs for this?
 
-#schema.graphql #semio/rs #metabolism.kit.semio.json
+#schema.graphql #compose/rs #metabolism.kit.compose.json
 
 ---
 
 We have different backbones:
 
 - dev backbone (complete embedded json file)
-- local backbone (.semio/kit.db sqlite file for all data excluding files and .semio/blobs/BLOBHASH.EXT for files.)
-- remote backbone (stub for bidirectional connection to semio/hub)
+- local backbone (.compose/kit.db sqlite file for all data excluding files and .compose/blobs/BLOBHASH.EXT for files.)
+- remote backbone (stub for bidirectional connection to compose/hub)
   We have three in-memory kit graphs:
 - wip (current)
 - merged (testbed for applying changes from wip to authorative)
@@ -171,11 +171,11 @@ We have a diagram that have nodes (circles) with handles around (small circle) a
 It should be imperative wasm rust tiling-based rust gpu-based ts-bindings declarative-react canvas-based rendering.
 
 1. rs
-   Use https://github.com/linebender/vello Implement it in @semio/lib/diagram/rs/lib.rs
+   Use https://github.com/linebender/vello Implement it in @compose/lib/diagram/rs/lib.rs
 2. js
-   typscript native bindings to rs. imperative like https://github.com/mrdoob/three.js/ Implement in @semio/lib/diagram/js/index.ts
+   typscript native bindings to rs. imperative like https://github.com/mrdoob/three.js/ Implement in @compose/lib/diagram/js/index.ts
 3. react
-   declarative react bindings to js. same architecture as https://github.com/pmndrs/react-three-fiber ontop of three.js. Implement in @semio/lib/diagram/react/index.tsx
+   declarative react bindings to js. same architecture as https://github.com/pmndrs/react-three-fiber ontop of three.js. Implement in @compose/lib/diagram/react/index.tsx
 
 How would you architect this?
 
@@ -278,7 +278,7 @@ Setup everything with bun and nx
 
 ---
 
-The monorepo needs to work both in devcontainer but also native. Currently we are native. Complete the install powershell script that installs and sets up everything that would overthise be available in devcontainer. Both setups need to be 100% zero-touch config and work out-of-the-box. Update every framework to use the latest available stable versions (git, python, node, rust, go, etc). There are some exceptions e.g. net 8 is needed for semio grasshopper, remove net 7
+The monorepo needs to work both in devcontainer but also native. Currently we are native. Complete the install powershell script that installs and sets up everything that would overthise be available in devcontainer. Both setups need to be 100% zero-touch config and work out-of-the-box. Update every framework to use the latest available stable versions (git, python, node, rust, go, etc). There are some exceptions e.g. net 8 is needed for compose grasshopper, remove net 7
 Make sure everything runs, builds, tests, etc on all platforms.
 
 Extend the monorepo to be multi-platform.
@@ -288,7 +288,7 @@ You currently have a fresh Windows repo that you can test. All dev and build com
 
 - sketchpad/desktop
 - coda/desktop
-- Semio.Grasshopper
+- Compose.Grasshopper
   You MUST adjust all configs and test everything for the complete monorepo (all programming languages etc).
   You MUST fix all bugs.
   You MUST extend the host machine if something is missing.
@@ -307,10 +307,10 @@ Every single entity MUST have a unique emoji among the siblings inside the same 
 
 ```
 // #region 🎩Header
-// semio/ui/index.tsx
+// compose/ui/index.tsx
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
-// 🖱️Shared semio ui components.
+// 🖱️Shared compose ui components.
 // #endregion 🎩Header
 ```
 
@@ -397,7 +397,7 @@ Signed-off-by: Ueli Saluz <ueli@semio-tech.com>
 
 Remove all tasks.json and integrate it directly into launch.json
 
-elements ui and semio ui MUST NOT have any dependency to sketchpad. Further make sure that all test dependencies etc are not bundled in the build. Same for tests assets such as semio asset metabolism.
+elements ui and compose ui MUST NOT have any dependency to sketchpad. Further make sure that all test dependencies etc are not bundled in the build. Same for tests assets such as compose asset metabolism.
 
 Something in the repo is spuriously stashing.
 It creates messages that have partially the commit sha and the commit message e.g. `5a1a2ef1e 16`
@@ -795,12 +795,12 @@ accept text for each node
 ---
 
 Add drag and drop functionality.
-Implement play elements/client/lib/board/play/index.html for board where you use the UI component from elements same as semio/dev/algorithms . Have three windows (2 columns half half and second column split in to horizontal rows). Load the .storybook/fixtures/nakagin-capsule-tower.board.json for all three windows with different zoom level, cameras and selection.
+Implement play elements/client/lib/board/play/index.html for board where you use the UI component from elements same as compose/dev/algorithms . Have three windows (2 columns half half and second column split in to horizontal rows). Load the .storybook/fixtures/nakagin-capsule-tower.board.json for all three windows with different zoom level, cameras and selection.
 Add dev command.
 
 ---
 
-Create a test asset (no semio depency) which is just a board json and add a story to board and an end-to-end test in playwright. .storybook/fixtures/nakagin-capsule-tower.board.json . Map the center pieces and connections from the flat nakagin capsule tower semio/assets/fixtures/metabolism.kit.semio.json . The board coordinate system is in screen coordinates and the semio is cad coordinate system (x to the right, y to front, z up)
+Create a test asset (no compose depency) which is just a board json and add a story to board and an end-to-end test in playwright. .storybook/fixtures/nakagin-capsule-tower.board.json . Map the center pieces and connections from the flat nakagin capsule tower compose/assets/fixtures/metabolism.kit.compose.json . The board coordinate system is in screen coordinates and the compose is cad coordinate system (x to the right, y to front, z up)
 
 ---
 
@@ -933,7 +933,7 @@ Render both in play inside two different window kinds.
 
 ---
 
-## 🏘️semio
+## 🏘️compose
 
 ###
 
@@ -950,7 +950,7 @@ TODO: Introduce activity to kit
 TODO: Introduce version to artifacts (design,type,shape)
 TODO: Introduce Design/Interpolate algorithm.
 
-semio:
+compose:
 
 ---
 
@@ -966,19 +966,19 @@ has* e.g. design hasPieces, kit hasPiecesTransitive
 
 Make sure dev sketchpad works end-to-end.
 
-semio/graphql:
+compose/graphql:
 
 - You MUST NOT introduce any new type, interface, union, input.
 
-semio/js:
+compose/js:
 
 - You MUST NOT introduce any new class, method, interface.
 
-semio/react:
+compose/react:
 
 - You MUST NOT introduce any new hook, context.
 
-semio/sketchpad:
+compose/sketchpad:
 
 - You MUST NOT introduce any new hook, context.
 
@@ -987,40 +987,40 @@ semio/sketchpad:
 Somehow the term "row", Row, Rows slipped into the code.
 If two classes exist for the same this is a code smell.
 For every entity there is exactly one class, one hook, etc
-There must be no other terms like used in [schema.golden.graphql](semio/schema/graphql/schema.golden.graphql) .
-Check [lib.rs](semio/client/lib/rs/lib.rs) , [index.ts](semio/client/lib/js/index.ts) , [index.tsx](semio/client/lib/react/index.tsx)
+There must be no other terms like used in [schema.golden.graphql](compose/schema/graphql/schema.golden.graphql) .
+Check [lib.rs](compose/client/lib/rs/lib.rs) , [index.ts](compose/client/lib/js/index.ts) , [index.tsx](compose/client/lib/react/index.tsx)
 
 ---
 
-semio/graphql, semio/rs, semio/js, semio/react, semio/sketchpad:
+compose/graphql, compose/rs, compose/js, compose/react, compose/sketchpad:
 We are in the middle of state managment refactor.
 Achieve the following first example of the new architecture:
 
 - Running sketchpad
-- When editing the name of the kit in kit app inside the details panel input then hook [kitName, renameKit, status] = useKitName() from semio/react is called. renameKit calls the KitStore class method rename(). The rename method sends a graphql request to semio/rs which returns a request id. Then as soon as the renamedKit subscription emits a response with the reuquest id the store updates the status of that request. The rename can be successful, pending, failed due to multiple reasons. One example is when it is too long. The sketchpad input for name should have a spinner on loading and show the error message on error. The whole time it is non-blocking. All the data is always kept on semio/rs and semio/js just rexports its using internally rxjs. semio/react uses useSyncExternalStore.
+- When editing the name of the kit in kit app inside the details panel input then hook [kitName, renameKit, status] = useKitName() from compose/react is called. renameKit calls the KitStore class method rename(). The rename method sends a graphql request to compose/rs which returns a request id. Then as soon as the renamedKit subscription emits a response with the reuquest id the store updates the status of that request. The rename can be successful, pending, failed due to multiple reasons. One example is when it is too long. The sketchpad input for name should have a spinner on loading and show the error message on error. The whole time it is non-blocking. All the data is always kept on compose/rs and compose/js just rexports its using internally rxjs. compose/react uses useSyncExternalStore.
 
 ---
 
-semio/rs, semio/js, semio/react:
+compose/rs, compose/js, compose/react:
 All kit data that is being modified over commands MUST always be scoped within a transaction which is scoped within a draft which is scoped whithin `the kit` or an alternative (always the latest checkpoint of `the kit` or an alternative)
 e.g. in react there MUST be Scopes for everything. Depending in which scope all CRUDs are executed different.
-Make sure that semio/rs wip - graphql- semio/js stores and semio/react are refactored accordingly.
+Make sure that compose/rs wip - graphql- compose/js stores and compose/react are refactored accordingly.
 
 ---
 
-semio/rs, semio/js, semio/react:
+compose/rs, compose/js, compose/react:
 All kit data that is being read MUST either for `the kit`, a checkpoint, an alternative, a draft or a transaction.
 e.g. in react there MUST be Scopes for everything. Depending in which scope all CRUDs are executed different.
-Make sure that semio/rs wip - graphql- semio/js stores and semio/react are refactored accordingly.
+Make sure that compose/rs wip - graphql- compose/js stores and compose/react are refactored accordingly.
 
 ---
 
 The following strict layers MUST be achieved:
-semio/rs <-graphql- semio/js <-store- semio/react <-hooks/components- semio/sketchpad
+compose/rs <-graphql- compose/js <-store- compose/react <-hooks/components- compose/sketchpad
 
 Every layer MUST only know about the layer above implementation details.
 
-semio/rs:
+compose/rs:
 
 - All domain logic MUST be exclusively here
 - All caching MUST be exlclusively here
@@ -1032,31 +1032,31 @@ semio/rs:
 - Every kit change command MUST define a function that returns for concrete input parameters a kit diff.
 - Every kit change command MUST define a function that returns for a list of kit change commands with specific input paramters that performs the inverse of the command.
 
-semio/rs <-graphql- semio/js
+compose/rs <-graphql- compose/js
 
 - Birdirectional actor model
 
-semio/js:
+compose/js:
 
-- Thin client to semio/rs
+- Thin client to compose/rs
 - Exposes Store classes with 100% typesafe methods, subscription callbacks, etc
 
-semio/react
+compose/react
 
-- Thin client to semio/js
+- Thin client to compose/js
 - Exports typed kit reads hooks with `useSyncExternalStore` that uses the subscriptions from the store
 - Exports types kit mutations with `useCallback`
 
-semio/sketchpad:
+compose/sketchpad:
 
-- Only uses semio/react for kit reads and mutations
+- Only uses compose/react for kit reads and mutations
 - Local selection
 
 ---
 
-semio/rs, semio/js, semio/react:
-Make sure that semio/js exposes clean Stores with events etc.
-semio/react MUST be typesafe and just export all mutations with `useCallback`, all state with `useSyncExternalStore`
+compose/rs, compose/js, compose/react:
+Make sure that compose/js exposes clean Stores with events etc.
+compose/react MUST be typesafe and just export all mutations with `useCallback`, all state with `useSyncExternalStore`
 There MUST be complete parity between commands, events, stores, classes, hooks, etc
 
 Currently everything uses mostly functional style programming.
@@ -1071,10 +1071,10 @@ Rewrite everything to be stateful in order to avoid expensive copy of memory.
 There are five different kind of kits:
 
 - DevKit (a synchronized json file)
-- LocalKit (a synchronized folder with a .semio/kit.db with files and folders)
+- LocalKit (a synchronized folder with a .compose/kit.db with files and folders)
 - TransportKit (a static json string)
 - ArchiveKit (a static zipped local kit)
-- RemoteKit (a synchronized websocket connection to a semio/hub which uses postgres for kit data and buckets for files)
+- RemoteKit (a synchronized websocket connection to a compose/hub which uses postgres for kit data and buckets for files)
 
 There MUST be an in-memory `Kit` class which has everything. It is non-blocking, non-parallel.
 A `Kit` can optionally have an optional synchronized `Backbone` (LocalKitBackbone, DevKitBackbone, RemoteKitBackbone).
@@ -1082,8 +1082,8 @@ A `Backbone` is a unified API where `changed(change:KitChange)` is a callback th
 All CRUDs happen centrally `change(diff:KitDiff)`. Every change computes the inverse `KitDiff` and bundles it to a `KitChange` from the current state and the diff. Then the diff is applied instantly, and when a backbone is present, it is queued to be applied in the backbone (non-blocking).
 When the backbone is changing (e.g. by other process, user, ai, etc) then it is applied to in-memory kit.
 Before a `KitDiff` is applied to the kit, it is validated. The validation has access to the kit and the diff and produces errors, warnings and infos. If an error is present, then the in-memory kit is immutable until the conflict is resolved. If strict mode is enabled, then warnings also need conflict resolution.
-Clients of the class `Kit` (such as front-end or backend code) have no access to directly call `change(diff:KitDiff)` but they MUST use the tested functions that semio provides (e.g. piece.delete() which automatically deletes itself but also fixes then child pieces and deletes all stale connections - currently algorithm deletePiecesAndConnectionInDesign)
-You MUST migrate all semio functions into methods of the according classes.
+Clients of the class `Kit` (such as front-end or backend code) have no access to directly call `change(diff:KitDiff)` but they MUST use the tested functions that compose provides (e.g. piece.delete() which automatically deletes itself but also fixes then child pieces and deletes all stale connections - currently algorithm deletePiecesAndConnectionInDesign)
+You MUST migrate all compose functions into methods of the according classes.
 Add transaction support. A kit can not just have one active transaction but multiple at the same time. A transaction can be started, aborted or finalized. Use a transaction stack of `KitChange`. A transaction has undo/redo support. When a transaction is finalized all changes are squashed into a single change and added ontop of the history stack. When aborted then all backward diffs from all changes are squashed and the backward diff is applied to effectively revert the forward diffs.
 Add history stack with undo/redo of finalized transactions.
 Inbuilt maximum optimization (e.g. hashing for computing fixed planes and centers)
@@ -1126,11 +1126,11 @@ The implementations are structurally not consistent.
 - All functions MUST have same naming and same order in the source code.
   Refactor everything.
 
-All semio functions are Operations which return a Result [(change and warnings and infos) or errors]. E.g. flatten design when no piece is a fixed piece, it selects the first piece but this is not recommended and a there should be warning that every clump (connected pieces) should have a fixed piece, etc. Same for other functions. Info is just information about decisions that were taken during the algorithms.
+All compose functions are Operations which return a Result [(change and warnings and infos) or errors]. E.g. flatten design when no piece is a fixed piece, it selects the first piece but this is not recommended and a there should be warning that every clump (connected pieces) should have a fixed piece, etc. Same for other functions. Info is just information about decisions that were taken during the algorithms.
 
 ---
 
-semio:
+compose:
 Introduce a function to `validateKitDiff(kit:Kit, diff:KitDiff, heal: bool)` that checks if a diff is valid and optionally attempts to fix it. Return a result with errors and warnings.
 An error is something that is not valid and applying the diff wont work.
 A warning is something that is not ideal but still valid and can be accepted with a justification.
@@ -1142,7 +1142,7 @@ You MUST implement a test asset, a test and for all programming languages (ts, p
 
 ---
 
-semio:
+compose:
 
 ```graphql
 type Docks {
@@ -1161,13 +1161,13 @@ type Docks {
 
 Extend port to optionally have a maxChildren (integer) which defaults to 1. Add the same to the connector of types. When both are set, the more specific wins (type connector is more specific than port). When maxChildren is set, no more connections can be connected. Extend all tests, assets, implementations, etc for all programming languages, schema, specs, docs, etc
 
-In the codebase the schema is not yet always aligned. E.g. ports are sometimes confused with connectors. e.g. semio ui and engine mcp show metabolism has 120 ports but that is not true. Whenever a kit is serialized it must always have the Kit schema.
+In the codebase the schema is not yet always aligned. E.g. ports are sometimes confused with connectors. e.g. compose ui and engine mcp show metabolism has 120 ports but that is not true. Whenever a kit is serialized it must always have the Kit schema.
 
-There is an error with drag. The descendants of other dragged pieces are not ignored properly. E.g. in semio/algorithms/Drag `b0` is dragged but all the descendants of `b0` are also dragged (with piece diffs).
+There is an error with drag. The descendants of other dragged pieces are not ignored properly. E.g. in compose/algorithms/Drag `b0` is dragged but all the descendants of `b0` are also dragged (with piece diffs).
 
 ---
 
-semio: Design Pieces
+compose: Design Pieces
 
 ---
 
@@ -1185,20 +1185,20 @@ A clusterPiecesInDesign is a shape invariant operation (all piece planes after f
 
 ---
 
-- The target design is not correct it MUST be different from the source design. `nakagin-capsule-tower.paste.design.semio.json` which is just the second storey (flat tambour at different location with all capsules)
+- The target design is not correct it MUST be different from the source design. `nakagin-capsule-tower.paste.design.compose.json` which is just the second storey (flat tambour at different location with all capsules)
 - Not 2 stories but one story with two design with diff outputs: WithoutCoord and WithCoord. The target design is missing as input window (currently nothing can be selected but will be extended in the future.)
 
 ---
 
-- The test case is missing `nakagin-capsule-tower.paste.design.semio.json` which is just the second storey (flat tambour at different location with all capsules)
+- The test case is missing `nakagin-capsule-tower.paste.design.compose.json` which is just the second storey (flat tambour at different location with all capsules)
 - The story is wrong. Make sure to add coord input. The output is only the diff display of the target. Dont add diff and output just diff. Call it `WithoutCoord`. The selections is wrong. Take the one that we described.
-- Add another output with diff can call it `WithCood`. Create a new `nakagin-capsule-tower.paste.with-coord.design.diff.semio.json` along with it and extend all tests
+- Add another output with diff can call it `WithCood`. Create a new `nakagin-capsule-tower.paste.with-coord.design.diff.compose.json` along with it and extend all tests
 - You missed some programming languages
 - The connections where both pieces are not external MUST NOT change, not even u and v. Only when pieces are matched then u,v changes when coord is given.
 
 ---
 
-semio: Extend designs with copy and paste functionality.
+compose: Extend designs with copy and paste functionality.
 
 ---
 
@@ -1257,8 +1257,8 @@ A bounding rectangle is the smallest rectangle (u,v domains) that can contain th
 - add every selected fixed pieces
 - add every internal connected pieces
 - add every internal connection
-- add every selected parent-piece-exclusive parent-connection-inclusive piece with additional attributes: `semio.center` with the flat center of the piece and `semio.plane` with the flat plane of the piece.
-- add every orphaned connection, add every selected parent-exlusive child-inclusive connection, add every selected parent-inclusive child-exclusive connection. Add all involved external pieces with additional attributes on the external pieces: `semio.piece.origin` set to `"external"`.
+- add every selected parent-piece-exclusive parent-connection-inclusive piece with additional attributes: `compose.center` with the flat center of the piece and `compose.plane` with the flat plane of the piece.
+- add every orphaned connection, add every selected parent-exlusive child-inclusive connection, add every selected parent-inclusive child-exclusive connection. Add all involved external pieces with additional attributes on the external pieces: `compose.piece.origin` set to `"external"`.
 
 ---
 
@@ -1267,11 +1267,11 @@ A bounding rectangle is the smallest rectangle (u,v domains) that can contain th
 - add every internal piece
 - add fixed pieces with their connections
 
-- add every internal fixed piece with anchor-remapped center and non-remapped existing plane and the additional attributes: `semio.original.center` with the non-remapped flat center.
-- add every selected parent-connection-inclusive parent-piece-exclusive piece with additional attributes: anchor-remapped flat center `semio.center`, non-remapped flat center `semio.original.center` and non-remapped flat plane `semio.plane` as json (not directly as center and plane because it is connected). Add the external parent piece with additional attributes: `semio.piece.origin` set to `"external"`.
+- add every internal fixed piece with anchor-remapped center and non-remapped existing plane and the additional attributes: `compose.original.center` with the non-remapped flat center.
+- add every selected parent-connection-inclusive parent-piece-exclusive piece with additional attributes: anchor-remapped flat center `compose.center`, non-remapped flat center `compose.original.center` and non-remapped flat plane `compose.plane` as json (not directly as center and plane because it is connected). Add the external parent piece with additional attributes: `compose.piece.origin` set to `"external"`.
 - add every internal connection
-- add every orphaned connection. Add both external pieces with additional attributes on the external pieces: `semio.piece.origin` set to `"external"`.
-- add every selected parent-inclusive child-exclusive connection. Add the external child piece with additional attributes on the external piece: `semio.piece.origin` set to `"external"`.
+- add every orphaned connection. Add both external pieces with additional attributes on the external pieces: `compose.piece.origin` set to `"external"`.
+- add every selected parent-inclusive child-exclusive connection. Add the external child piece with additional attributes on the external piece: `compose.piece.origin` set to `"external"`.
 - make sure that external pieces are only added once.
 
 ---
@@ -1290,7 +1290,7 @@ designWithDiff MUST:
 - Delted pieces and connections are not removed from the design. They are only marked as deleted.
 - For new pieces and connections, add them to the design.
 
-Add a test Design/WithDiff and a new asset `nakagin-capsule-tower.with-diff.design.semio.json` which applies the `nakagin-capsule-tower.diff.design.semio.json` diff.
+Add a test Design/WithDiff and a new asset `nakagin-capsule-tower.with-diff.design.compose.json` which applies the `nakagin-capsule-tower.diff.design.compose.json` diff.
 
 You MUST implement it for every programming language. All tests MUST pass.
 
@@ -1314,14 +1314,14 @@ You MUST refactor/extend it everywhere.
 
 Refactor all existing code to use this.
 Create a test-case where you delete the third tambour of the large tower and the first connection from the tambour of the small tower with two assets:
-`nakagin-capsule-tower.deleted.design.diff.semio.json`
-`nakagin-capsule-tower.deleted.selection.semio.json`
+`nakagin-capsule-tower.deleted.design.diff.compose.json`
+`nakagin-capsule-tower.deleted.selection.compose.json`
 You MUST implement this for all programming languages.
 Add a Design/Delete
 
 Extend pieces metadata with the path that was during flatten (all pieces from root until the piece). You MUST implement it for all programming languages
 
-Create a new asset called `nakgin-capsule-tower.diff.design.semio.json`
+Create a new asset called `nakgin-capsule-tower.diff.design.compose.json`
 The diff should should
 
 - Remove the last storey (tambour + capsules) from the larger tower.
@@ -1331,13 +1331,13 @@ The diff should should
 - Replace one capsule with a bridge in the fifth storey (same is in the other floors)
   Integrate it into the metabolism kit diffs and stories.
 
-There should be a new semio ui component for vector which lets you select or display a 3d vector. Make sure to implement partial/full controlled/uncontrolled mode and partial/full select (only designs, only types, only ports, etc) same contraint as for all semio ui components.
+There should be a new compose ui component for vector which lets you select or display a 3d vector. Make sure to implement partial/full controlled/uncontrolled mode and partial/full select (only designs, only types, only ports, etc) same contraint as for all compose ui components.
 
-There should be a new semio ui component for kit which lets you select kit artifacts (designs, types, ports). Make sure to implement partial/full controlled/uncontrolled mode and partial/full select (only designs, only types, only ports, etc) same contraint as for all semio ui components. The component works with shallow kit.
-In semio engine mcp: When calling start working in kit then call that app with that component.
+There should be a new compose ui component for kit which lets you select kit artifacts (designs, types, ports). Make sure to implement partial/full controlled/uncontrolled mode and partial/full select (only designs, only types, only ports, etc) same contraint as for all compose ui components. The component works with shallow kit.
+In compose engine mcp: When calling start working in kit then call that app with that component.
 
-Make sure the semio engine mcp app works correctly with semio ui.
-Currently when invoking show_design after calling start_working_in_local_kit(workspaces/semio/semio/assets/semio/metabolism) and start_working_in_design(9a890dd4-0a9c-48ac-920a-9e62666465ef) the ui hangs and is not rendering the diagram
+Make sure the compose engine mcp app works correctly with compose ui.
+Currently when invoking show_design after calling start_working_in_local_kit(workspaces/compose/compose/assets/compose/metabolism) and start_working_in_design(9a890dd4-0a9c-48ac-920a-9e62666465ef) the ui hangs and is not rendering the diagram
 You MUST follow all official guidelines.
 https://modelcontextprotocol.io/extensions/apps/overview
 You MUST use the official react package:
@@ -1346,7 +1346,7 @@ https://apps.extensions.modelcontextprotocol.io/api/modules/_modelcontextprotoco
 There are exactly five kind of kits:
 
 - FileKit (JSON)
-- FolderKit (local folder with files and .semio/kit.db sqlite file)
+- FolderKit (local folder with files and .compose/kit.db sqlite file)
 - ArchiveKit (zip file of FolderKit)
 - RemoteKit (url)
 - TemporaryKit (InMemory)
@@ -1356,7 +1356,7 @@ You MUST refactor everything to support exactly those kits and nothing else.
 You MUST implement it for all programming languages.
 You MUST test every kind of kit Kit/File, KitFolder, Kit/Archive, Kit/Remote, Kit/Temporary.
 Make sure that all programming languages have a *Meta and *Shallow same as they have a _Diff equivalent. A shallow is the same as the normal but for all child collections it only has the Meta information. E.g. A shallow kit has only meta and types meta, designs meta, etc. All meta only has all non-heavy properties (e.g. no file blobs) and no child collections.
-You MUST implement it everywhere. Extend the semio assets with metabolism.shallow.kit.semio.json, nakagin-capsule-tower.shallow.design.semio.json, tambour.shallow.type.semio.json.
+You MUST implement it everywhere. Extend the compose assets with metabolism.shallow.kit.compose.json, nakagin-capsule-tower.shallow.design.compose.json, tambour.shallow.type.compose.json.
 You MUST extend all tests with Kit/Shallow, Design/Shallow, TypeShallow
 Same for meta. All languages, all assets with .meta and all tests with _/Meta
 
@@ -1370,15 +1370,15 @@ A result has a diff, meta
 e.g.
 FlattenDesign is an operation.
 
-semio:
-semio:
+compose:
+compose:
 Extend the nakagin capsule tower design with a tower layer that has an attribute "ifc.type":"IfcBuilding". The tower layer has a sublayer for each storey with the number. Add attribute "ifc.type": "IfcBuildingStorey" to each storey layer.
 Extend the ifc export to export IfcProject -> IfcSite -> IfcBuilding -> IfcBuildingStorey. For each type create IfcBuildingElementProxyType and for each piece create IfcBuildingElementProxy with local placement. Add the model representation of the type to the proxy type.
 Make sure everything works and is tested and doesnt break existing tests.
 P
 Introduce change
 
-Currently all functions in semio return diffs. Extend all of them to return a change. This way everything gets undo/redo compatible.
+Currently all functions in compose return diffs. Extend all of them to return a change. This way everything gets undo/redo compatible.
 You MUST implement it for every programming language.
 
 File blobs should not be pure base encoded strings, but common data encoded with uri etc. You MUST update all programming languages.
@@ -1388,7 +1388,7 @@ There are KitChange, DesignChange, etc
 You MUST introduce it to every programming language for every entity.
 Rewrite the existing Diff test as a single change test with all the assertions (include diff to foward, inverse to backward).
 
-Extend the semio diff test asset. It MUST include every single feature exactly once in a kit diff (currently, only a tiny subset is used). All diff tests for all programming languages MUST pass. You MUST fix everything and all implementations MUST be functionally equivalent.
+Extend the compose diff test asset. It MUST include every single feature exactly once in a kit diff (currently, only a tiny subset is used). All diff tests for all programming languages MUST pass. You MUST fix everything and all implementations MUST be functionally equivalent.
 
 Extend file with `blob` data property that contains the basencoded datastring.
 This change is necessary to guarantee that `.json` kits can be equivalent to `.zip`.
@@ -1396,8 +1396,8 @@ Simplify the `Roundtrip` test to a single test to assert for
 `JSON->Memory->JSON`
 `JSON->ZIP`
 `ZIP->JSON`
-Use in semio assets `metabolism.json` and `metabolism.zip`. They MUST be identical.
-The semio.db MUST not contain information about files and folders because it is derived from the root folder.
+Use in compose assets `metabolism.json` and `metabolism.zip`. They MUST be identical.
+The compose.db MUST not contain information about files and folders because it is derived from the root folder.
 You MUST implement and test for all programming languages.
 All test MUST pass.
 There MUST be only one schema, no migrations or legacy api support.
@@ -1416,7 +1416,7 @@ Refactor everything. Dont leave any legacy.
 
 ---
 
-The main class of semio/js is Session. not Store, Not graph, not kit, etc
+The main class of compose/js is Session. not Store, Not graph, not kit, etc
 
 There is no active store.
 There is one session.
@@ -1428,15 +1428,15 @@ All logic, caching, reads and writes over commands happens exclusively over grap
 
 Local backbone uses the computer.
 File backbone is a single embedded json file.
-Folder backbone is single folder with .semio folder along with sqlite files (wip.db, stage.db, authoratitive.db, conflicts.db)
+Folder backbone is single folder with .compose folder along with sqlite files (wip.db, stage.db, authoratitive.db, conflicts.db)
 There is a two way communication actor model between store and backbone.
 E.g. if the json file or the sqlite files are updated by other processes or the remote kit changes and an event is sent to the websocket backbone, then the changes must be reflected.
 
 ---
 
-semio:
+compose:
 The schema in the repo is not yet consistent.
-semio has been extended by version-control.
+compose has been extended by version-control.
 Everything that previously was `kit` is now `kit snapshot`.
 The metabolism asset also shows the new snapshot format.
 
@@ -1486,15 +1486,15 @@ You MUST refactor/extend/update everything (implementation, assets, tests, docs)
 
 ### 📚ui
 
-semio ui:
+compose ui:
 
-When a designWithDiff is shown then the pieces should keep their old center and planes and only be colored as updated. Either the mistake is ui or semio. Make sure to fix it in the correct location.
+When a designWithDiff is shown then the pieces should keep their old center and planes and only be colored as updated. Either the mistake is ui or compose. Make sure to fix it in the correct location.
 
-The Kit component should use all other components to display. E.g. a design should use semio/ui/Design, type semio/ui/Type, etc
+The Kit component should use all other components to display. E.g. a design should use compose/ui/Design, type compose/ui/Type, etc
 There should be buttons for navigation in front ov the navbar.
 When double clicking on a piece (scene or diagram) navigate to the respective design or type, etc.
 
-semio ui diagram:
+compose ui diagram:
 
 The diff is not displayed correctly.
 
@@ -1509,12 +1509,12 @@ Design:
 The scene diff shows a lot deleted pieces which are not deleted.
 Only modified pieces are different to diagram. The difference is that child pieces of modified connections are are also displayed as modified because connections are otherwise invisible in the scene.
 
-semio ui storybook:
-Use nakagin-capsule-tower from the semio assets metabolism as example for all designs. Make sure the depedency doesnt leak into the final build and is only dev only.
+compose ui storybook:
+Use nakagin-capsule-tower from the compose assets metabolism as example for all designs. Make sure the depedency doesnt leak into the final build and is only dev only.
 
 Refactor everything cleanly.
 
-- semio ui MUST use general ui elements/configs from elements/ui
+- compose ui MUST use general ui elements/configs from elements/ui
 - All stories MUST have same naming patterns etc (First story is always Default which has the maximum of features with minimal setup)
 - All components MUST use the minimal data possible (e.g. Diagram only needs design, Scene only needs filtered kit with only one model and file per type etc,)
 - All stories MUST work. e.g. Kit is not working
@@ -1533,13 +1533,13 @@ Extend the diagram component:
 Create a Diagram component that shows a minimal diagram of the design that can be displayed e.g. in a mini map.
 Use small filled circles for pieces and clean lines for connections (circles on top of lines, lines go center to center). Use flattenDesign for absolute placements. Fit the Diagram to the size to the div container. Add story for for Nakagin Capsule Tower to storybook.
 
-Create a new bundle semio/ui that holds reusable ui components. Make sure that all general ui dependencies such as react, tailwind, etc are defined there. Create a storybook for it. Refactor sketchpad and algorithms to use the ui package.
+Create a new bundle compose/ui that holds reusable ui components. Make sure that all general ui dependencies such as react, tailwind, etc are defined there. Create a storybook for it. Refactor sketchpad and algorithms to use the ui package.
 
 ### 🧮algorithms
 
-semio algorithms:
+compose algorithms:
 
-Remove all native adapters. The new architecture uses semio/rs as single-source of truth and just rexports it with semio/js, semio/react, semio/ui
+Remove all native adapters. The new architecture uses compose/rs as single-source of truth and just rexports it with compose/js, compose/react, compose/ui
 
 When starting session then draft then transaction and then sending multiple kit changes, then transaction undo should revert the last kit change. When refreshing the live snapshot it still shows the new value and doesnt revert.
 
@@ -1637,27 +1637,27 @@ Add PieceSelection which is a Diagram component that only works for selecting pi
 
 ### ⌨️engine
 
-semio engine:
+compose engine:
 The engine is used to interact with local kits (path) and remote kits (server with accounts and auth). It only runs on clients. All functionality
 MUST work for both kind of kits. Extend the engine with a way to authenticate with servers and refactor everything to work with this two modes. Test everything.
 
 #### 🤖mcp
 
-semio engine mcp:
+compose engine mcp:
 
-The styling from the apps is largely different to the one in semio/ui. It MUST be identical and not have any debug code etc. There are a lot of mismatches. It MUST be 100% identical to semio/ui with no modifications. e.g. the colors of the gizmo, not all models show lines. A lot of things are displayed with light foreground on light background (e.g. text of kit app or pieces in diagram)
+The styling from the apps is largely different to the one in compose/ui. It MUST be identical and not have any debug code etc. There are a lot of mismatches. It MUST be 100% identical to compose/ui with no modifications. e.g. the colors of the gizmo, not all models show lines. A lot of things are displayed with light foreground on light background (e.g. text of kit app or pieces in diagram)
 
-The current mcp app is centered around designs. But it should be general for semio. Refactor everything, so that kit, design, design-diagram, design-scene all a
+The current mcp app is centered around designs. But it should be general for compose. Refactor everything, so that kit, design, design-diagram, design-scene all a
 re equal.
 
-All apps MUST use semio/ui. Use clean architecture, no stubs etc
+All apps MUST use compose/ui. Use clean architecture, no stubs etc
 
 This should not happen:
 {
-"error": "Kit not found at path: /workspaces/semio/semio/assets/metabolism"
+"error": "Kit not found at path: /workspaces/semio/compose/assets/metabolism"
 }
 
-semio engine mcp:
+compose engine mcp:
 Make sure that all return values from mcp commands never return full entities but always shallow entities.
 
 Remove all mcp tools but the start*, finish*, sum_qu\* one.
@@ -1665,7 +1665,7 @@ Introduce a transaction mechanism that is stateful session-scoped. There can be 
 
 ### 🟨js
 
-semio/js:
+compose/js:
 
 ---
 
@@ -1676,14 +1676,14 @@ Follow @target.schema.graphql
 
 ---
 
-There MUST NOT be any kit state or caching in semio/js.
-The only state tracked in semio/js are request ids to match the events (some of them are responses to the requests).
-Every read MUST be directly forwarded to semio/rs.
-The complete communication between semio/js and semio/rs MUST be with completly typed graphql.
+There MUST NOT be any kit state or caching in compose/js.
+The only state tracked in compose/js are request ids to match the events (some of them are responses to the requests).
+Every read MUST be directly forwarded to compose/rs.
+The complete communication between compose/js and compose/rs MUST be with completly typed graphql.
 
 ---
 
-Get rid all \*Wire duplicates and rename all data types to Dto same as semio/rs.
+Get rid all \*Wire duplicates and rename all data types to Dto same as compose/rs.
 e.g. KitIdWire and KitId are both the same KitIdDto
 Make all Dtos read-only.
 Same for all others.
@@ -1693,12 +1693,12 @@ Same for all others.
 Refactor everything to have 100% acurate types.
 Record<> MUST NOT remain.
 unknown MUST NOT remain.
-Extend semio/rs which produces semio/graphql if necessary (both are unfinished and not clean)
+Extend compose/rs which produces compose/graphql if necessary (both are unfinished and not clean)
 
 ---
 
 Refactor the store, graphql, event, change code to be more consistent and more integrated.
-Align it perfectly with semio/rs
+Align it perfectly with compose/rs
 Get rid of smelly old code.
 
 ---
@@ -1706,12 +1706,12 @@ Get rid of smelly old code.
 Every single Event MUST be 100% semantic and typed.
 Every event has the kit change (forward kit change commands and inverse kit change commands)
 e.g. RenamedDesignEvent, DraggedFlatCenterPieceEvent
-Adjust semio/rs if necessary (it is not clean yet). You can use the generated semio/graphql to gain insights.
+Adjust compose/rs if necessary (it is not clean yet). You can use the generated compose/graphql to gain insights.
 
 ---
 
 Everything MUST be 100% typesafe. No Record, no strings, no json.
-Extend semio/rs with semio/graphql if necessary.
+Extend compose/rs with compose/graphql if necessary.
 
 ---
 
@@ -1724,7 +1724,7 @@ Just \*Dtos (input, id, full, metadata, etc).
 Every store MUST be 100% typesafe.
 The store MUST NOT leak commands and only export clean stores with methods and subscriptions for events.
 There MUST be a subscription method for every single event that exists with proper types.
-Extens semio/rs which produces semio/graphql if necessary.
+Extens compose/rs which produces compose/graphql if necessary.
 
 ---
 
@@ -1779,11 +1779,11 @@ export interface KitStoreClient {
 
 ### 🦀rs
 
-semio/rs:
+compose/rs:
 
 ---
 
-The target graphql has significantly changed. Make sure to refactor to exactly yield this schema and refactor downstream semio/js, semio/react, semio/sketchpad.
+The target graphql has significantly changed. Make sure to refactor to exactly yield this schema and refactor downstream compose/js, compose/react, compose/sketchpad.
 
 ---
 
@@ -1792,8 +1792,8 @@ Pieces MUST not have plane and center directly but have optional pose {center, p
 ---
 
 Remove all FullDto, MetdataDto, ShallowDto from the implementation.
-Leave in semio/js the Dtos as grapqhl queries.
-Just remove it from semio/rs and hence from semio/graphql.
+Leave in compose/js the Dtos as grapqhl queries.
+Just remove it from compose/rs and hence from compose/graphql.
 
 ---
 
@@ -1807,12 +1807,12 @@ Remove `coloredConnectors: [KitColoredConnectorDto!]!` completly from KitStore a
 Previously it was a pure function that needed the complete kit.
 Now it MUST be object-oriented and cached (and only update when the depencies change).
 The color is derived from the port and the compatible ports from the connector.
-Also remove it downstrean and adjust all callers of this function, such as semio/js, semio/react, semio/sketchpad, semio/algorithms, semio/ui
+Also remove it downstrean and adjust all callers of this function, such as compose/js, compose/react, compose/sketchpad, compose/algorithms, compose/ui
 
 ---
 
 Remove `piecePlacement: [PiecePlacementMetadataDto!]!` completly from DesignStore and instead add `parentPiece:Piece`, `depth:Int` and `path:[Piece!]!` to PieceStore.
-Also remove it downstrean and adjust all callers of this function, such as semio/js, semio/react, semio/sketchpad, semio/algorithms, semio/ui
+Also remove it downstrean and adjust all callers of this function, such as compose/js, compose/react, compose/sketchpad, compose/algorithms, compose/ui
 
 ---
 
@@ -1858,7 +1858,7 @@ e.g. ClusterDesignChange yiels a KitChange, not a DesignChange
 
 ---
 
-Check semio/grapql and you will see that it is not clean.
+Check compose/grapql and you will see that it is not clean.
 Refactor it.
 There MUST be no disitinction between Live, normal Stores, Gql, etc
 Every read MUST happen within a scope.
@@ -1866,7 +1866,7 @@ Undo/Redo is only defined on draft level and transaction level.
 
 ---
 
-semio/rs and semio/js:
+compose/rs and compose/js:
 
 Refactor the kit store to have exclusively graphql as control plane. You MUST NOT add it ontop but change everything. You MUST NOT use ids but only use pointers. Directly resolve in-memory. Don't add a new struct and directly add #[Object] to the existing stores. The old enum-based control plane MUST NOT be there afterwards. Only graphql query for reads, graphql mutation for updates and graphql subscribtions for events.
 
@@ -1933,9 +1933,9 @@ e.g. Here some snippets.
     }
 ```
 
-You MUST fully implement all commands and have everything statically types. Use the same api for downstream clients (such as semio/js, semio/react, semio/algorithms)
+You MUST fully implement all commands and have everything statically types. Use the same api for downstream clients (such as compose/js, compose/react, compose/algorithms)
 
-semio is greenfield.Dont keep any smelly legacy api or backwards compatiblity. All code, assets, tests, docs MUST be 100% aligned.
+compose is greenfield.Dont keep any smelly legacy api or backwards compatiblity. All code, assets, tests, docs MUST be 100% aligned.
 
 ---
 
@@ -2205,7 +2205,7 @@ pub enum KitStoreCommand {
 
 Introduce pose to pieces. Pose is a container for plane and center (same as side is a container for piece, connector and designPiece). Make sure that center and plane are still independantly updatable and when e.g. center is updating no event for plane update is fired and vice versa. The parent of course updates (pose updated, piece updated, kit updated still fires.)
 Make sure alternatives() is a piece method and returns all types and designs that the piece can be replaced with. The alternatives MUST NOT create an invalid design (because of connectors that are not replaceable with compatible ones, etc). There are already descriptions about this algorithm.
-Make sure semio/algorithms runs, the tests are complete, etc.
+Make sure compose/algorithms runs, the tests are complete, etc.
 
 Make sure drag (invalidates center cache of child pieces), move (invalidates plane cache of child pieces), fix (takes flat pose, removes the parent connection, sets pose to children and removes the child connections) are piece methods.
 
@@ -2279,7 +2279,7 @@ type Connection {
 
 Do the same for other mod. All functions MUST be refactored and split apart into oo methods.
 
-Refactor semio/rs to be object-oriented and performant instead of pure functions.
+Refactor compose/rs to be object-oriented and performant instead of pure functions.
 Requirements:
 
 - Never pass ids, just instance pointers
@@ -2288,17 +2288,17 @@ Requirements:
 
 ### 🏪store
 
-semio/store:
+compose/store:
 
-The code is outdated and semio/rs now uses graphql. Expose a graphql api instead of json rpc.
+The code is outdated and compose/rs now uses graphql. Expose a graphql api instead of json rpc.
 Add a dev command that start graphiql to launch.json
 
-Create a new rust binary (new bundle) that imports from semio/rs crate and exposes the store as a server (for non-rust and non-wasm libraries). It should work with stdio and json rpc. Same as mcp servers work. One running process as sidecar.
-Then make sure that semio/py and semio/cs use the rust store.@semio/store/bin.rs
+Create a new rust binary (new bundle) that imports from compose/rs crate and exposes the store as a server (for non-rust and non-wasm libraries). It should work with stdio and json rpc. Same as mcp servers work. One running process as sidecar.
+Then make sure that compose/py and compose/cs use the rust store.@compose/store/bin.rs
 
 ### ⭕graphql
 
-semio/graphql:
+compose/graphql:
 
 ---
 
@@ -2392,21 +2392,21 @@ Here a starting point:
 
 ---
 
-The schema is outdated and doesnt match from semio/rs. Update it to match exactly the property shape, naming, etc.
+The schema is outdated and doesnt match from compose/rs. Update it to match exactly the property shape, naming, etc.
 e.g. interactions dont exists anymore.
 
 Finish the schema. Complete all commands, etc. Take sketchpad as a reference. The complete store will use the api in the future for all ui state managment. Add all links and computed data such as a hash to every type. Etc. Dont alter the design. Dont be generic and name things the most semantic you can.
 
 ### 💾sqlite
 
-semio/sqlite:
+compose/sqlite:
 
 The schema is not clean. Dont use any json. Use only normalized tables. The schema MUST match with
 
 ### 🐘postgres
 
-semio/postgres:
-Extend the sql schema to match the new version-control-features (parts are already implemeted in semio/rs)
+compose/postgres:
+Extend the sql schema to match the new version-control-features (parts are already implemeted in compose/rs)
 here some specs:
 
 - `kit store` is a complete in-memory graph and offers the api to do everything.
@@ -2433,7 +2433,7 @@ Update the rest to match metabolism json
 
 ### ⚛️react
 
-semio/react:
+compose/react:
 
 ---
 
@@ -2448,7 +2448,7 @@ The context hooks are not clean.
 No legacy or duplicated hooks. No Has Context.
 No id as part of hook name.
 No IdContext.
-No type from semio/js needed.
+No type from compose/js needed.
 No FieldReadState wrapper etc.
 
 The rules are simple:
@@ -2464,12 +2464,12 @@ useRenameDesign(id?:ID): readonly [(newName: string) => void , OperationStatus]
 ---
 
 Refactor the hooks and scopes to be more consistent and more integrated with store, graphql, event, change code.
-Align it perfectly with semio/rs and semio/js.
+Align it perfectly with compose/rs and compose/js.
 Get rid of smelly old code.
 
 ---
 
-Create a react library that exports all semio hooks.
+Create a react library that exports all compose hooks.
 
 Work with providers.
 
@@ -2502,7 +2502,7 @@ useChildConnectionsIds():ConnectionId[]
 
 ### ✏️sketchpad
 
-semio/sketchpad:
+compose/sketchpad:
 
 ---
 
@@ -2526,17 +2526,17 @@ useRenameDesign(id?:ID): readonly [(newName: string) => void , OperationStatus]
 
 ---
 
-semio/sketchpad is totally outdated.
+compose/sketchpad is totally outdated.
 Refactor @file:index.tsx to exclusively use hook for fields and context providers following the react plan @file:refactor-react-composable-contexts_ec8b0106.plan.md
 Everything must follow @file:schema.golden.graphql schema
 You MUST NOT introduce any compatibility hooks or generated approach. Just manually replacing the old hooks with the new ones.
 
 ---
 
-Alternatives have been introduced to semio. All changes are either made inside `the kit` (draft on the last checkpoint) or inside an alternative (draft on the last checkpoint).
-Add to semio/react context for switching between `the kit` and alternatives.
+Alternatives have been introduced to compose. All changes are either made inside `the kit` (draft on the last checkpoint) or inside an alternative (draft on the last checkpoint).
+Add to compose/react context for switching between `the kit` and alternatives.
 Inside all kit editing apps add on the left of the footer a dropdown for choosing an alternative. If no alternative is selected then work in on `the kit`.
-Dont forget that all kit state is only inside semio/rs.
+Dont forget that all kit state is only inside compose/rs.
 
 ---
 
@@ -2568,33 +2568,33 @@ Requirements:
 
 - No functionality is removed from sketchpad
 - No functionality is removed from the sketchpad tests
-- Session, Drafts, Transaction live in semio/rs
-- Only kit hook imports from semio/react
-- semio/react only rexports plain stores from semio/js
-- No domain logic or caching (only semio/rs caches and has business logic)
+- Session, Drafts, Transaction live in compose/rs
+- Only kit hook imports from compose/react
+- compose/react only rexports plain stores from compose/js
+- No domain logic or caching (only compose/rs caches and has business logic)
 
 ---
 
 Remove all stores for kit data completly.
-Only import semio/react hooks for kit data.
+Only import compose/react hooks for kit data.
 Requirements:
 
-- No domain logic and caching in semio/js, semio/react, semio/ui, semio/sketchpad. Domain logic and caching MUST be in semio/rs.
-- semio/js wraps semio/rs into a nice store and uses #[wasm_bindgen(js_name = execute)]
-- semio/ract exports the store as clean components. No direct interaction with command-style of semio/rs
-- No kit hook definitions, no kit stores and no kit state management regarding in semio/sketchpad.
-- No direction execution of commands in semio/react. No command semantics.
-- No diff based mutation in semio/js, semio/react, semio/sketchpad. Mutations are only over commands.
-- You MUST use `useSyncExternalStore` in semio/react which updates when semio/rs sends the exact event. You MUST NOT do any filtering/computation/caching in semio/react and you MUST NOT use `useMemo`.
-- You MUST export single hooks for everything in semio/react.
+- No domain logic and caching in compose/js, compose/react, compose/ui, compose/sketchpad. Domain logic and caching MUST be in compose/rs.
+- compose/js wraps compose/rs into a nice store and uses #[wasm_bindgen(js_name = execute)]
+- compose/ract exports the store as clean components. No direct interaction with command-style of compose/rs
+- No kit hook definitions, no kit stores and no kit state management regarding in compose/sketchpad.
+- No direction execution of commands in compose/react. No command semantics.
+- No diff based mutation in compose/js, compose/react, compose/sketchpad. Mutations are only over commands.
+- You MUST use `useSyncExternalStore` in compose/react which updates when compose/rs sends the exact event. You MUST NOT do any filtering/computation/caching in compose/react and you MUST NOT use `useMemo`.
+- You MUST export single hooks for everything in compose/react.
 
 e.g.
-semio/rs uses impl PieceStore uses `self.computed_flat_plane()`
-semio/rs exports `ReadPieceCommand::ReadPieceFlatPlaneCommand => ReadPieceCommandOutput::ReadPieceFlatPlaneCommand`
-semio/js uses directly the ReadPieceFlatPlaneCommand command from semio/rs
-semio/js exports `class PieceStore` with `flatPlane()`
-semio/react exports usePieceFlatPlane and PieceContext
-semio/sketchpad uses `[plane,planeStatus] = usePieceFlatPlane()` within a <PieceScope>
+compose/rs uses impl PieceStore uses `self.computed_flat_plane()`
+compose/rs exports `ReadPieceCommand::ReadPieceFlatPlaneCommand => ReadPieceCommandOutput::ReadPieceFlatPlaneCommand`
+compose/js uses directly the ReadPieceFlatPlaneCommand command from compose/rs
+compose/js exports `class PieceStore` with `flatPlane()`
+compose/react exports usePieceFlatPlane and PieceContext
+compose/sketchpad uses `[plane,planeStatus] = usePieceFlatPlane()` within a <PieceScope>
 
 useTypesIds()
 useTypesMetadata()
@@ -2604,18 +2604,18 @@ useDeleteType()
 
 This pattern MUST be used for everything.
 
-semio is a greenfield project. Dont keep any legacy api or backwards compatibility. All code, assets, tests, docs MUST be 100% aligned.
+compose is a greenfield project. Dont keep any legacy api or backwards compatibility. All code, assets, tests, docs MUST be 100% aligned.
 
 ---
 
 Recently a big architectural change was started:
-We have rust store implementation with wasm `semio/rs`, and a `semio/js` adapter which uses the rust web worker, `semio/react` library which reexports `semio/js` the store functionality for react (hooks, context, etc), a general and hook consumer client `semio/sketchpad`
+We have rust store implementation with wasm `compose/rs`, and a `compose/js` adapter which uses the rust web worker, `compose/react` library which reexports `compose/js` the store functionality for react (hooks, context, etc), a general and hook consumer client `compose/sketchpad`
 
 Requirements:
 
-- No kit hooks in semio/sketchpad.
-- Kit hooks come exclusively from semio/react.
-- No domain logic in semio/sketchpad, semio/js, semio/react. All domain logic is only in semio/rs.
+- No kit hooks in compose/sketchpad.
+- Kit hooks come exclusively from compose/react.
+- No domain logic in compose/sketchpad, compose/js, compose/react. All domain logic is only in compose/rs.
 - No schema differences, all code, assets, tests, etc MUST 100% match, no legacy api or backwards compatibility.
 - Dont remove any functionality from sketchpad tests
 
@@ -2652,52 +2652,52 @@ Fix the sketchpad state management so that:
   e.g. When dragging then the diff is not displayed. Make sure there is no extra illegal internal state such as inside diagram with reactflow, etc
 
 Home MUST have create, open, filter for exactly these kits:
-File kit (\*.kit.semio.json file)
-Folder kit (folder with .semio/kit.db sqlite file)
-Remote kit (from semio/server)
+File kit (\*.kit.compose.json file)
+Folder kit (folder with .compose/kit.db sqlite file)
+Remote kit (from compose/server)
 Temporary kit (in-memory)
 Add Export - Archive tool which exports the current kit as an archive kit
 
 The Open functionality to open synchronized kits doesnt work correctly.  
-In semio/desktop e.g.
-File kit (based on semio\assets\semio\metabolism.kit.semio.json):
+In compose/desktop e.g.
+File kit (based on compose\assets\compose\metabolism.kit.compose.json):
 
 - Opens the the kit
 - Doesnt show 3d models (e.g. type app just shows connectors without mesh)
 
 - Doesnt synchronize changes to the json file (e.g. adding a type, dragging a piece, etc)
   Folder kit:
-- Doesnt open the kit (e.g. semio\assets\semio\metabolism) and instead creates a new one.
+- Doesnt open the kit (e.g. compose\assets\compose\metabolism) and instead creates a new one.
 - Needs to also synchronize changes.
   Remote kit:
-- Needs to work in conjunction with semio/servery
-  Make sure that everything is tests end-to-end. Extend semio if necessary.
+- Needs to work in conjunction with compose/servery
+  Make sure that everything is tests end-to-end. Extend compose if necessary.
 
 Add Open functionality to open synchronized kits.
-Check the different folder kinds. Some are only available in native environments such as semio/desktop.
+Check the different folder kinds. Some are only available in native environments such as compose/desktop.
 E.g.
 file kit opens a file picker
 folder kit opens a folder picker
-remote kit asks for an url that then connects to a semio/server
+remote kit asks for an url that then connects to a compose/server
 .
-Make sure that everything is tests end-to-end. Extend semio if necessary.
+Make sure that everything is tests end-to-end. Extend compose if necessary.
 
 Yjs-based logic and implementation needs to dissapear completly. You need to generalize the api. Right now, you mostly renamed Y to R. You MUST NOT rename but structurally refactor. You MUST NOT use the Array and Map based primitivies from Yjs as abstraction. Those are yjs internal impelemntation details. Central is that a kit can be synchronized. The what is important not the how (using primitive maps and arrays such as yjs for kit and s3 for file, using just a single json for everything including blobled files, or using a sqlite for kit and actual files for files)
 The term `yjs` should not appear anywhere in Sketchpad after the refactor.
 This is a huge refactor. Plan it well and be through.
 
-You missed almost everything. You MUST create new bundles `semio/studio`, Get rid of the `yjs`import and code in `semio/sketchpad` and `semio/js`. All the kit providers should be in studio.ts.
-The semio vscode bundle MUST be a seperate extension and MUST NOT be in repo. Those are huge tasks that you need to delegate to subagents.
+You missed almost everything. You MUST create new bundles `compose/studio`, Get rid of the `yjs`import and code in `compose/sketchpad` and `compose/js`. All the kit providers should be in studio.ts.
+The compose vscode bundle MUST be a seperate extension and MUST NOT be in repo. Those are huge tasks that you need to delegate to subagents.
 
-Abstract the Kit Store completly. Create a new semio bundle called studio that has the yjs kit provider. Pass it as a root prop to <Sketchpad kitStore>. Remove the yjs dependency completly from sketchpad.
-Create two more store: File store that synchronizes a kit to a json file and Folder store that synchronizes a kit to a folder with a .semio folder with sqlite database (same as python engine).
-Create a semio vscode bundle that is sketchpad and opens when a json kit file is opened and edits the file.
+Abstract the Kit Store completly. Create a new compose bundle called studio that has the yjs kit provider. Pass it as a root prop to <Sketchpad kitStore>. Remove the yjs dependency completly from sketchpad.
+Create two more store: File store that synchronizes a kit to a json file and Folder store that synchronizes a kit to a folder with a .compose folder with sqlite database (same as python engine).
+Create a compose vscode bundle that is sketchpad and opens when a json kit file is opened and edits the file.
 
 ### ⭕diagram
 
 ### 🖥️desktop
 
-semio desktop:
+compose desktop:
 
 The sketchpad is not rendering the window controls.
 All desktop functionality MUST be implemented in sketchpad and is passed over a desktop prop. If desktop prop is not passed, then sketchpad knows it is not running in desktop mode.
@@ -2709,18 +2709,18 @@ Add sharable links for kit, design and type. Options should be read-only
 
 ### 🦏3dm
 
-Create semio/3dm bundle with one npm package `ui` and one .NET package `rhp`.
-The purpose of the ui is display a tree view from sketchpad in the side panel. It should use semio js and on buttons call the native rhino ui.
+Create compose/3dm bundle with one npm package `ui` and one .NET package `rhp`.
+The purpose of the ui is display a tree view from sketchpad in the side panel. It should use compose js and on buttons call the native rhino ui.
 It should have an action to import kits and one to import models directly into the action document.
 When importing a model use the layers:
-semio
+compose
 KITNAME
 Types
 TYPENAME
 Models
 REPRESENTATIONTAGS
 
-Rhino Tree of semio for sidepanel:
+Rhino Tree of compose for sidepanel:
 Kits # Import
 KIT
 Types
@@ -2733,21 +2733,21 @@ Use the react_rhino_connector plan as reference and https://github.com/specklesy
 
 ### 🦗gh
 
-semio net and gh:
+compose net and gh:
 Add a new component: Design to Blocks
 Input: Kit, DesignId, Tags
 Output: Block Instance
 It creates for each Piece a Block Instance.
 The Block Definition is either the model
 
-semio gh:
+compose gh:
 Add new component: Preview Design
 Inputs: Kit, DesignId, Tags
 For previewing it imports the files of the models (selected based on the tags), uses flatten design for the planes and
 
 Add a new component Group to Model Object that does the reverse of Model Object to Group
 
-In semio changes were introduced. Add a param and passthrough component for every change entity (kit, design, etc)
+In compose changes were introduced. Add a param and passthrough component for every change entity (kit, design, etc)
 
 Refactor all dynamic code that is not type safe to be explicit and make errors compile time detectable.
 e.g. 1. Solution exception:No overload for method 'ApplyDiff' takes 1 arguments
@@ -2770,7 +2770,7 @@ All params of all components MUST have native data type equivalence. E.g. all da
 
 The passthrough components MUST show all available information. A lot of params are missing.
 
-Disentangle semio grasshopper from the engine. The CRUDs should happen in Semio.cs. Grasshopper is only a thin user interface layer. The modification of local static sqlite kits should be implemented for kit diffs. Use the same commands as in semio.ts
+Disentangle compose grasshopper from the engine. The CRUDs should happen in Compose.cs. Grasshopper is only a thin user interface layer. The modification of local static sqlite kits should be implemented for kit diffs. Use the same commands as in compose.ts
 
 ## 📐cad
 
@@ -2902,7 +2902,7 @@ Add all different actions that exists and that are needed for the interaction.
 ---
 
 Introduce a new cypher inspired query language called "construct". It must be cypher inspired.
-Implement the efficient engine in c:\git\semio\spatial\js\query\index.ts . Use chevrotain for ast.
+Implement the efficient engine in c:\git\compose\spatial\js\query\index.ts . Use chevrotain for ast.
 Extend the core, the kernel, etc to be able to resolve them.
 Follow the architecture from.repo/✍️/construct.md
 
@@ -3062,29 +3062,29 @@ Every integration includes:
 - native ticket integration
 - native agent hook integration
 
-semio/cursor/main.go
+compose/cursor/main.go
 Add an optional plan id to ticket open and ticket reopen.
 On ticket close move the file to the ticket folder.
 e.g. the plan `.cursor/plans/kit_store_backbone_generalization_fe75d494.plan.md` has the id `fe75d494`
 
-semio/kiro/main.go
+compose/kiro/main.go
 Add an optional spec id to ticket open and ticket reopen.
 On ticket close move all files and folders from the spec folder to the ticket folder
-e.g. the spec `.kiro\specs\semio-js-thin-client-refactor\**` has the id `semio-js-thin-client-refactor`
+e.g. the spec `.kiro\specs\compose-js-thin-client-refactor\**` has the id `compose-js-thin-client-refactor`
 
 For the others research where the memory files are tracked and then use the same mechanism as the others. This differs per operating system because the files are not part of the repository.
 
-semio/copilot/main.go
+compose/copilot/main.go
 Add an optional plan id to ticket open and ticket reopen.
 On ticket close move the plan file from the local Copilot memory folder to the ticket folder.
 e.g. the plan `~/.copilot/projects/<project-name>/memory/<id>.md` (macOS/Linux) or `%USERPROFILE%\.copilot\projects\<project-name>\memory\<id>.md` (Windows) has the id `<id>`
 
-semio/claude/main.go
+compose/claude/main.go
 Add an optional plan id to ticket open and ticket reopen.
 On ticket close move the plan file from the local Claude plans folder to the ticket folder.
 e.g. the plan `~/.claude/plans/<id>.md` (macOS/Linux) or `%USERPROFILE%\.claude\plans\<id>.md` (Windows) has the id `<id>`
 
-semio/codex/main.go
+compose/codex/main.go
 Add an optional plan id to ticket open and ticket reopen.
 On ticket close move the plan file from the local Codex memory folder to the ticket folder.
 e.g. the plan `~/.codex/memory/<project-name>/<id>.md` (macOS/Linux) or `%USERPROFILE%\.codex\memory\<project-name>\<id>.md` (Windows) has the id `<id>`
@@ -3197,7 +3197,7 @@ Extend the ticket open command to take bundles.
 
 repo cli:
 When creating a ticket I get wrong id with date of 0s. The existing tests should catch this.
-[🎫0000/00/00/LOCAL-CACHE-AND-QUERY-FOR-SEMIO-REPO-CLI?OPEN](repo://ticket/0000/00/00/LOCAL-CACHE-AND-QUERY-FOR-SEMIO-REPO-CLI) - `OPEN`
+[🎫0000/00/00/LOCAL-CACHE-AND-QUERY-FOR-COMPOSE-REPO-CLI?OPEN](repo://ticket/0000/00/00/LOCAL-CACHE-AND-QUERY-FOR-COMPOSE-REPO-CLI) - `OPEN`
 
 Make sure to extend the tests to check that the index is working correctly and `tree <query>` is returning different related resources. Make sure the cache is not just for the complete repo but granular per project, folder, file, etc. E.g. when a file is changing then the index for the file, folder the file is in, bundle the file is in, project the fhe file is in should be updated.
 
@@ -3370,7 +3370,7 @@ Here some commands:
 
 All uris should resolve to the correct entity. E.g. clicking on a uri in the vscode extension should navigate to the correct resource. Same as when using `repo: Navigate to` command with an id or uri.
 e.g. I get:
-2026-02-10 01:43:46.391 [error] [Window] Error: Unable to resolve resource repo://folder/semio/js/sketchpad/pages/getting-started
+2026-02-10 01:43:46.391 [error] [Window] Error: Unable to resolve resource repo://folder/compose/js/sketchpad/pages/getting-started
 at ResourceModelCollection.r (vscode-file://vscode-app/c:/Users/Ueli/AppData/Local/Programs/Windsurf/resources/app/out/vs/workbench/workbench.desktop.main.js:1609:23731)
 at ResourceModelCollection.r (vscode-file://vscode-app/c:/Users/Ueli/AppData/Local/Programs/Windsurf/resources/app/out/vs/workbench/workbench.desktop.main.js:1609:23717)
 at async $Jd.acquire (vscode-file://vscode-app/c:/Users/Ueli/AppData/Local/Programs/Windsurf/resources/app/out/vs/workbench/workbench.desktop.main.js:27:3734)
@@ -3397,10 +3397,10 @@ e.g. in typescript:
 // #region 🔖Constants
 
 /**
- * [🔖semio/js/semio.ts#Constants](repo://section/semio/js/semio.ts/CONSTANTS)
+ * [🔖compose/js/compose.ts#Constants](repo://section/compose/js/compose.ts/CONSTANTS)
  * Standard icon width in pixels.
  *Global constants MUST define shared numeric parameters.
- * [🪨semio/js/semio.ts#Constants§ICON_WIDTH](repo://definition/semio/js/semio.ts/CONSTANTS/ICON-WIDTH)
+ * [🪨compose/js/compose.ts#Constants§ICON_WIDTH](repo://definition/compose/js/compose.ts/CONSTANTS/ICON-WIDTH)
  **/
 export const ICON_WIDTH = CONSTANTS.icon.width;
 ```
@@ -3409,8 +3409,8 @@ should be:
 
 ```ts
 // #region 🔖Constants
-// [🔖semio/js/semio.ts#Constants](repo://section/semio/js/semio.ts/CONSTANTS)
-// Global constants of semio.
+// [🔖compose/js/compose.ts#Constants](repo://section/compose/js/compose.ts/CONSTANTS)
+// Global constants of compose.
 // Constants MUST be shared and be synchronized between the different users that work on the same kit.
 // TODO: Add Quotas for all list entities.
 // All lists MUST have a quota for the maximum number of entities.
@@ -3422,7 +3422,7 @@ should be:
  * TODO: Generalize Icon Width to be not be pixel hardcoded
  * Make it a global constant that can be used for all diagrams.
  * TODO: Implement IconWidth
- * [🪨semio/js/semio.ts#Constants§ICON_WIDTH](repo://definition/semio/js/semio.ts/CONSTANTS/ICON-WIDTH)
+ * [🪨compose/js/compose.ts#Constants§ICON_WIDTH](repo://definition/compose/js/compose.ts/CONSTANTS/ICON-WIDTH)
  **/
 export const ICON_WIDTH = CONSTANTS.icon.width;
 ```
@@ -3434,7 +3434,7 @@ e.g.
 
 ```ts
 // Yjs-backed kit store managing the complete kit data structure with all entities.
-// [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Kit§KitStore](repo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/KIT/KITSTORE)
+// [🛠️compose/js/sketchpad/Sketchpad.tsx#Store#Kit§KitStore](repo://definition/compose/js/sketchpad/Sketchpad.tsx/STORE/KIT/KITSTORE)
 export class KitStore {
   …
 }
@@ -3454,7 +3454,7 @@ CRUD operations as methods for the entity.
  * The KitStore is initialized with a Y.Doc that must be initialized and configured by the caller (different yjs hosts have different provider factories).
  * For every compositional entity that is part of a kit there must be a corresponding substore that manages a Y.Map for the entity state and repexposes
  * The FileStore works outside of yjs and uses e.g. S3 storage for file access. It needs a different provider factory and integration and only the metadata layer is managed within yjs.
- *  * [🛠️semio/js/sketchpad/Design.tsx#State Managment#Store§KitStore](repo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX#STATE-MANAGMENT#STORE#KIT-STORE)
+ *  * [🛠️compose/js/sketchpad/Design.tsx#State Managment#Store§KitStore](repo://definition/COMPOSE/JS/SKETCHPAD/DESIGN.TSX#STATE-MANAGMENT#STORE#KIT-STORE)
 **/
 export class KitStore {
   …
@@ -3613,7 +3613,7 @@ e.g.
 // TODO: Implement Flash Connect
 // When a port of a piece is selected then it should be highlighted and as soon as the second poirt is selected then a connection should be created between the two pieces for the given ports.
 // TODO: Implement Layer Panel Tab
-// [💻semio/js/sketchpad/Design.tsx](repo://file/SEMIO/JS/SKETCHPAD/DESIGN.TSX)
+// [💻compose/js/sketchpad/Design.tsx](repo://file/COMPOSE/JS/SKETCHPAD/DESIGN.TSX)
 // 2025-2026 Ueli Saluz <ueli@semio-tech.com>
 // 2026 KinanSarak <kinan@semio-tech.com>
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
@@ -3623,7 +3623,7 @@ e.g.
 // #endregion 🔖Header
 
 // #region 🔖State Managment
-// [🔖semio/js/sketchpad/Design.tsx#State Managment#Store](repo://section/SEMIO/JS/SKETCHPAD/DESIGN.TSX#STATE-MANAGMENT#STORE)
+// [🔖compose/js/sketchpad/Design.tsx#State Managment#Store](repo://section/COMPOSE/JS/SKETCHPAD/DESIGN.TSX#STATE-MANAGMENT#STORE)
 // There MUST be two mechnasism for state which interact together: local and shared.
 
 /**
@@ -3634,7 +3634,7 @@ e.g.
  * The QualityStore should contain the quality data and maintain links to the types and designs. Links are not managed within yjs hence a manual garbage collection is needed to remove links to deleted entities.
  * TODO: Implement FileStore
  * The FileStore works outside of yjs and uses e.g. S3 storage for file access. It needs a different provider factory and integration and only the metadata layer is managed within yjs.
- * [🛠️semio/js/sketchpad/Design.tsx#State Managment#Store§KitStore](repo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX#STATE-MANAGMENT#STORE#KIT-STORE)
+ * [🛠️compose/js/sketchpad/Design.tsx#State Managment#Store§KitStore](repo://definition/COMPOSE/JS/SKETCHPAD/DESIGN.TSX#STATE-MANAGMENT#STORE#KIT-STORE)
  * The KitStore is initialized with a Y.Doc that must be initialized and configured by the caller (different yjs hosts have different provider factories).
  * For every compositional entity that is part of a kit there must be a corresponding substore that manages a Y.Map for the entity state and repexposes CRUD operations as methods for the entity.
 **/
@@ -3645,7 +3645,7 @@ export class KitStore {
 The ids and uris in repo are not consistent.
 E.g. every single id and uri that comes out of `./repo/cli/cli tree` should resolve.
 E.g. every file has the id on the header. It should be tested that all ids actually resolve (to the correct entity). Extend the policy and statute with autofixes to automatically replace it with the correct id.
-e.g. "💻 semio/js/index.ts" contains a space after the emoji which it shouldnt.
+e.g. "💻 compose/js/index.ts" contains a space after the emoji which it shouldnt.
 
 All items returned from the cli (either tree or list) should always be on a single line and all properties should be separated by `-` and wrapped in backticks. e.g. this shouldnt be possible:
 
@@ -3663,7 +3663,7 @@ Also fixed a pre-existing test bug in nogithub_test.go where ReopenTicket was ca
 The repo vscode extension is not clean. All buisness logic should be in the cli. The vscode extension should only be a ui for the cli. Refactor everything to just use the cli.
 E.g. the file emojis of the ids dont match the one kind and it either shows the general 📄 which it should never show because all files have a specific kind or emojis like 🐍 which dont exist.
 The search should not be on client side but use the tree with search from the cli.
-The copied ids are all wrong e.g. `semio/js/sketchpad/Design.tsx§useDesignAppInitialize` should be `🛠️semio/js/sketchpad/Design.tsx#State Managment#Design App Plugin Registration§useDesignAppInitialize` or `📚📚semio/rb` should be `📚semio/rb`
+The copied ids are all wrong e.g. `compose/js/sketchpad/Design.tsx§useDesignAppInitialize` should be `🛠️compose/js/sketchpad/Design.tsx#State Managment#Design App Plugin Registration§useDesignAppInitialize` or `📚📚compose/rb` should be `📚compose/rb`
 
 Make sure the statute id/uri work correctly and the ids are interpreted as trees and not flat list of ids.
 Currently we have `:` separated paths e.g. "code:header:missing-region"
@@ -3940,13 +3940,13 @@ Further get the `integrate`/`extract`/`<kind> move` commands working properly.
 All commands should automatically adjust the dev docs (`AGENTS.md` rename/move the sections under `# Codebase`. Ignore `README.md` for now.)
 
 ```bash
-$ ./repo/cli/cli move "💻semio/js/sketchpad/Design.tsx" "💻semio/js/sketchpad/apps/Design.tsx"
-$ ./repo/cli/cli move "💻semio/js/sketchpad/store.tsx" "🔖semio/js/sketchpad/Sketchpad.tsx#STATE-MANAGMENT#STORE"
-$ ./repo/cli/cli move "🔖semio/js/sketchpad/Sketchpad.tsx#STATE-MANAGMENT#STORE" "💻semio/js/sketchpad/store.tsx"
-$ ./repo/cli/cli integrate "💻semio/js/sketchpad/store.tsx" "🔖semio/js/sketchpad/Sketchpad.tsx#STATE-MANAGMENT#STORE"
-$ ./repo/cli/cli integrate --file ./semio/js/sketchpad/store.tsx --target-file "./semio/js/sketchpad/Sketchpad.tsx" --target-section "Store"  --parent-section "State Managment"
-$ ./repo/cli/cli extract "🔖semio/js/sketchpad/Sketchpad.tsx#STATE-MANAGMENT#STORE" "💻semio/js/sketchpad/store.tsx"
-$ ./repo/cli/cli extract --file ./semio/js/sketchpad/Sketchpad.tsx --section "Store" --parent-section "State Managment" --target-file "./semio/js/sketchpad/store.tsx"
+$ ./repo/cli/cli move "💻compose/js/sketchpad/Design.tsx" "💻compose/js/sketchpad/apps/Design.tsx"
+$ ./repo/cli/cli move "💻compose/js/sketchpad/store.tsx" "🔖compose/js/sketchpad/Sketchpad.tsx#STATE-MANAGMENT#STORE"
+$ ./repo/cli/cli move "🔖compose/js/sketchpad/Sketchpad.tsx#STATE-MANAGMENT#STORE" "💻compose/js/sketchpad/store.tsx"
+$ ./repo/cli/cli integrate "💻compose/js/sketchpad/store.tsx" "🔖compose/js/sketchpad/Sketchpad.tsx#STATE-MANAGMENT#STORE"
+$ ./repo/cli/cli integrate --file ./compose/js/sketchpad/store.tsx --target-file "./compose/js/sketchpad/Sketchpad.tsx" --target-section "Store"  --parent-section "State Managment"
+$ ./repo/cli/cli extract "🔖compose/js/sketchpad/Sketchpad.tsx#STATE-MANAGMENT#STORE" "💻compose/js/sketchpad/store.tsx"
+$ ./repo/cli/cli extract --file ./compose/js/sketchpad/Sketchpad.tsx --section "Store" --parent-section "State Managment" --target-file "./compose/js/sketchpad/store.tsx"
 ```
 
 Introduce a new command: `search <query>` that gathers all the information from the repo regarding the given query. It lists all the resources that fuzzy match the query.
@@ -4064,7 +4064,7 @@ $ ./repo/cli/cli file list
 
 - [⚙️︎📄.codex/config.toml](repo://file/📄.codex/config.toml)
 - [📄︎📄.devcontainer/post-attach.sh](repo://file/📄.devcontainer/post-attach.sh)
-- [💻📄semio/py/semio.py](repo://file/📄semio/py/semio.py)
+- [💻📄compose/py/compose.py](repo://file/📄compose/py/compose.py)
 
 ```
 should be
@@ -4074,7 +4074,7 @@ $ ./repo/cli/cli file list
 
 - [⚙️️.codex/config.toml](repo://file/.codex/config.toml)
 - [📜.devcontainer/post-attach.sh](repo://file/.devcontainer/post-attach.sh)
-- [💻semio/py/semio.py](repo://file/semio/py/semio.py)
+- [💻compose/py/compose.py](repo://file/compose/py/compose.py)
 
 ```
 
@@ -4106,7 +4106,7 @@ $ ./repo/cli/cli folder list
 
 etc for all commands.
 
-The ids in semio dont have a spaces (e.g. between first emoji and rest). Some code still has it wrong e.g. semio go cli. Fix it everywhere.
+The ids in compose dont have a spaces (e.g. between first emoji and rest). Some code still has it wrong e.g. compose go cli. Fix it everywhere.
 
 repo vscode:
 The menu items on the filter are not consistent. Dont use codeicons. Dont use text. Just use the emoji and show as tooltip what the filter does. Dont show the static emoji text.
@@ -4162,7 +4162,7 @@ repo cli:
 The policy/statute/breach/fix mechanism is not yet complete. Every language should define primitive functionality that all policies can use. E.g. todos should be ignored by the comment fix. Currently it works for typescript but not for other languages such as python or c#. This shouldn't be possible.
 
 Somehow the fix mechanism removes a region that it shouldnt. This shouldnt happen. There is something wrong.
-semio/js/\*\*.tsx
+compose/js/\*\*.tsx
 //#region 🔖Action Hooks
 //#endregion 🔖Action Hooks
 
@@ -4194,7 +4194,7 @@ $ ./repo/cli/cli bundle list
 $ ./repo/cli/cli bundle list
 - [📚︎ coda/examples](repo://bundle/coda/examples) - coda/examples
 - [📚︎ coda/engine](repo://bundle/coda/engine) - coda/engine
-- [📚︎ semio/examples](repo://bundle/semio/examples) - semio/examples
+- [📚︎ compose/examples](repo://bundle/compose/examples) - compose/examples
 ```
 
 should be:
@@ -4203,14 +4203,14 @@ should be:
 $ ./repo/cli/cli bundle list
 - [📔coda/examples](repo://bundle/coda/examples) - coda/examples
 - [⌨️️coda/engine](repo://bundle/coda/engine) - coda/engine
-- [📚semio/examples](repo://bundle/semio/examples) - semio/examples
+- [📚compose/examples](repo://bundle/compose/examples) - compose/examples
 ```
 
 All --json commands should return just pure data, no extra wrapping. If an error occurs, return it to stderr.
 All commands must be tested with semantically wrong arguments.
 
 Definitions in repo are just top-level. They start on a newline and declaration/statements inside, dont count as definition.
-E.g. in python in semio.py **str** is wrongly being identified as definition
+E.g. in python in compose.py **str** is wrongly being identified as definition
 
 Make sure that the repo vscode extension is always first uninstalled to never have any stale extension.
 
@@ -4232,7 +4232,7 @@ Migrate to the new system once but dont keep any backwards compatibility or lega
 
 Make goal a required field when creating a ticket. Update code and docs.
 
-Create a new command: `sync github` that syncs the local repo artifacts with the remote github artifacts. E.g. when a ticket is closes but the github issue is not closed, then close the github issue. Or when a ticket is assigned to a goal then make sure the goal issue is assigned with the milestone of goal. Check that all labels starting with `@` correspond to the list of projects and bundles (e.g. `coda`, `semio`, `repo`, `semio/js`, `repo/cli`, etc.). Remove the non corresponding labels (from deleted projects and bundles).
+Create a new command: `sync github` that syncs the local repo artifacts with the remote github artifacts. E.g. when a ticket is closes but the github issue is not closed, then close the github issue. Or when a ticket is assigned to a goal then make sure the goal issue is assigned with the milestone of goal. Check that all labels starting with `@` correspond to the list of projects and bundles (e.g. `coda`, `compose`, `repo`, `compose/js`, `repo/cli`, etc.). Remove the non corresponding labels (from deleted projects and bundles).
 
 repo vscode extension:
 The current project tree view looks like this:
@@ -4240,9 +4240,9 @@ The current project tree view looks like this:
 ```
 ├─ 🏗️️Projects
 │ ├─ 📦coda
-│ ├─ 📦semio
-│ │ ├─ 🏪semio/gh
-│ │ ├─ 🏪semio/js
+│ ├─ 📦compose
+│ │ ├─ 🏪compose/gh
+│ │ ├─ 🏪compose/js
 │ │ │ ├─ 📁sketchpad
 │ │ │ │ ├─ 📄Design.tsx
 │ │ │ │ │ ├─ 🔖State Managment
@@ -4257,7 +4257,7 @@ but it should look like this:
 ```
 ├─ Projects
 │ ├─ 🔬coda
-│ ├─ 🏘️semio
+│ ├─ 🏘️compose
 │ │ ├─ 🖱️️gh
 │ │ ├─ 📚js
 │ │ │ ├─ 📁sketchpad
@@ -4288,7 +4288,7 @@ The current project tree view looks like this:
 ```
 ├─ Projects
 │ ├─ coda
-│ ├─ semio
+│ ├─ compose
 │ │ ├─ gh
 │ │ ├─ js
 │ │ │ ├─ sketchpad
@@ -4304,7 +4304,7 @@ but it should look something like this, always using the <kind> emoji before the
 ```
 ├─ Projects
 │ ├─ 🔬coda
-│ ├─ 🏘️semio
+│ ├─ 🏘️compose
 │ │ ├─ 🖱️️gh
 │ │ ├─ 📚js
 │ │ │ ├─ 📁sketchpad
@@ -4350,10 +4350,10 @@ Header (lines 1-20)
 
 ```bash
 ./repo/cli/cli definition list
-✂️semio/js/sketchpad/Type.tsx§TypeAppFooter - TypeAppFooter - :3284-3361
-🛠️semio/js/sketchpad/Type.tsx§config - config - :3367-3397
-🪨semio/js/sketchpad/elements.tsx§SectionSpecificity - SectionSpecificity - :92-100
-✂️semio/js/sketchpad/elements.tsx§InteractionCommands - InteractionCommands - :106-108
+✂️compose/js/sketchpad/Type.tsx§TypeAppFooter - TypeAppFooter - :3284-3361
+🛠️compose/js/sketchpad/Type.tsx§config - config - :3367-3397
+🪨compose/js/sketchpad/elements.tsx§SectionSpecificity - SectionSpecificity - :92-100
+✂️compose/js/sketchpad/elements.tsx§InteractionCommands - InteractionCommands - :106-108
 ```
 
 ```bash
@@ -4365,12 +4365,12 @@ Header (lines 1-20)
 ```bash
 ./repo/cli/cli project list
 🔬coda
-🏘️semio
+🏘️compose
 🧰repo
 ```
 
 ```bash
-./repo/cli/cli section list semio/js/semio.ts
+./repo/cli/cli section list compose/js/compose.ts
 Header (lines 1-20)
 Design (lines 2956-3923)
 Kit (lines 3925-7742)
@@ -4629,7 +4629,7 @@ Use proper nested bullet lists for the markdown output on tree commands
       - [<id>](#<id>): <title> - <date> - <description>
     - [<id>](#<id>): <title> - <date> - <description>
   - [<id>](#<id>): <title> - <date> - <description>
-- [🛠️semio/js/sketchpad/Design.tsx#State Management#Store§DesignStore](repo://section/semio/js/sketchpad/Design.tsx/STATE-MANAGEMENT/DESIGN-STORE): Design Store - The store class that manages the state of the design
+- [🛠️compose/js/sketchpad/Design.tsx#State Management#Store§DesignStore](repo://section/compose/js/sketchpad/Design.tsx/STATE-MANAGEMENT/DESIGN-STORE): Design Store - The store class that manages the state of the design
 ```
 
 For default human output use ASCII tree view for all tree commands. It doesnt need to be explicit with symbols but you can use colors for them. e.g. blue for open tickets/goals, green for closed tickets/goals
@@ -4827,7 +4827,7 @@ The repo cli binary should be extended/refactored/changed:
 The `repo/cli` binary is not yet completly updated to the new repo layout. E.g. the id and uri system is not yet completly updated.
 Analyze in detail what is missing and what need to updated. Dont forget to update the dev-docs (AGENTS.md and README.md).
 e.g. all project commands such as project list, project tree, project create, project delete, project update, etc are not yet implemented.
-Further bundles are no longer a one-to-one mapping to native packages such as `package.json`, `go.mod`, `pyproject.toml`, `Cargo.toml`, `*.csproj`, etc but instead a bundle can have multiple native packages e.g. `semio/net` has `Semio/Semio.csproj`, `Semio.Tests.csproj` and `Semio.Benchmark.csproj`.
+Further bundles are no longer a one-to-one mapping to native packages such as `package.json`, `go.mod`, `pyproject.toml`, `Cargo.toml`, `*.csproj`, etc but instead a bundle can have multiple native packages e.g. `compose/net` has `Compose/Compose.csproj`, `Compose.Tests.csproj` and `Compose.Benchmark.csproj`.
 The codebase tree view in the `repo/vscode` extension does not yet have the projects tree items on root level
 
 The complete monorepo was restructured. A new repo concept was introduced: projects. A project is a collection of bundles.
@@ -4835,7 +4835,7 @@ By design every framework that is used just has one global version. E.g. just on
 All frameworks used accross different bundles should be the same version (e.g. react, pydantic, etc.)
 Every ecosystem is now defined at the root (nx.json, package.json, go.work, Monorepo.sln, pyproject.toml, Cargo.toml, etc.). If you need a name then call it monorepo.
 The new repo layout is:
-├─ @PROJECTNAME # currently `semio`, `repo` and `coda`
+├─ @PROJECTNAME # currently `compose`, `repo` and `coda`
 │ ├─ BUNDLENAME # e.g. `js`, `go`, `py`, `grasshopper`, `net`, `graphql`, `sqlite`, etc
 ├─ WORKSPACEFILE # e.g. `nx.json`, `package.json`, `go.work`, `Monorepo.sln`, `pyproject.toml`, `Cargo.toml`, etc
 
@@ -4862,17 +4862,17 @@ The ids of sections and defintions are not correct.
 
 In the source code definition and section ids are also not correct
 
-section: `{{(parent-file-id|parent-section-id)?}}{{flat-section-name}}`, parent: section | file, e.g. `🏘️semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store` for `Store` section with parent section `State Managment`
-definition: `{{<section-id>}}<kind>{{flat-definition-name}}`, parent: section, <kind> - 🛠️:implementation, ✂️:interface, 🪨:constant e.g. `🏘️semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🛠️createsketchpadstore` for `createSketchpadStore`
+section: `{{(parent-file-id|parent-section-id)?}}{{flat-section-name}}`, parent: section | file, e.g. `🏘️compose📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store` for `Store` section with parent section `State Managment`
+definition: `{{<section-id>}}<kind>{{flat-definition-name}}`, parent: section, <kind> - 🛠️:implementation, ✂️:interface, 🪨:constant e.g. `🏘️compose📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🛠️createsketchpadstore` for `createSketchpadStore`
 
 e.g. `🧰repo⌨️cli💻maingo#GraphQL Types#GraphQL Input Types§TicketCloseInput` or `🛠️repo/cli/main.go#GraphQL Types#GraphQL Input Types§TicketCloseInput` should be only `🧰repo⌨️cli💻maingo🔖graphqltypes🔖graphqlinputtypes✂️ticketcloseInput`
 go types are not currectly identified as ✂️
 
-file: `{{(parent-root-id|parent-project-id|parent-bundle-id|parent-folder-id)?}}<kind>{{flat-file-name-with-extension*}}`, parent: folder | bundle | project | root, <kind> - 💻:code, 🥼:test, 📜:script, 📃:docs, ⚙️️:config, 💾:asset, ⚖️:license, e.g. `🏘️semio📚js🗃️sketchpad💻designtsx` for `semio/js/sketchpad/Design.tsx` `🛅devcontainer⚙️️devcontainerjson` for `.devcontainer/devcontainer.json`
+file: `{{(parent-root-id|parent-project-id|parent-bundle-id|parent-folder-id)?}}<kind>{{flat-file-name-with-extension*}}`, parent: folder | bundle | project | root, <kind> - 💻:code, 🥼:test, 📜:script, 📃:docs, ⚙️️:config, 💾:asset, ⚖️:license, e.g. `🏘️compose📚js🗃️sketchpad💻designtsx` for `compose/js/sketchpad/Design.tsx` `🛅devcontainer⚙️️devcontainerjson` for `.devcontainer/devcontainer.json`
 
 The id of the projects contain an @ they shouldnt. The tests check for the correct ids.
 
-- [🏘️semio](repo://project/@SEMIO)
+- [🏘️compose](repo://project/@COMPOSE)
 
 tpl
 
@@ -4895,7 +4895,7 @@ repo: "repo:/"
 bundles: "repo://bundles"
 bundle: "repo://bundles/{id}"
 folders: "repo://folders/{path*}"
-folder: "repo://folders/{path*}" # exception: root folders are under "repo/repo" e.g. "repo/repo/js" is the folder for the bundle "semio/js"
+folder: "repo://folders/{path*}" # exception: root folders are under "repo/repo" e.g. "repo/repo/js" is the folder for the bundle "compose/js"
 file: "repo://{bundle-id}/{path*}" # exception: root files are under "repo/repo" e.g. "repo/repo/.devcontainer/devcontainer.json"
 section: "repo://{bundle-id}/{file-path*}#{path*}"
 definition: "repo://{bundle-id}#{section-path*}§{path*}"
@@ -4909,8 +4909,8 @@ commit: "repo://commits/{sha}"
 The cli should
 `./repo/cli/cli repo`
 `./repo/cli/cli bundle list`
-`./repo/cli/cli bundle create <id> <folder>?` e.g. `./repo/cli/cli bundle create semio/js js/semio`
-`./repo/cli/cli bundle update <id> --id <new-id>? --folder <new-folder>?` e.g. `./repo/cli/cli bundle update semio/js --id semio/javascript --folder js/javascript`
+`./repo/cli/cli bundle create <id> <folder>?` e.g. `./repo/cli/cli bundle create compose/js js/compose`
+`./repo/cli/cli bundle update <id> --id <new-id>? --folder <new-folder>?` e.g. `./repo/cli/cli bundle update compose/js --id compose/javascript --folder js/javascript`
 `./repo/cli/cli bundle <id>`
 
 Create a new design assistant fast mcp server called `coda` (Constrained Design Assistant) together with github copilot agents.
@@ -4939,7 +4939,7 @@ Extend the bundle, folder, file, section, definition with metrics:
 
 Expand bundle, folder, definition to have a kind property. Those kinds cant simply be derived from the names but need general knowledge and repository knowledge.
 
-Introduce bundle kinds for all bundles: library (e.g. `semio/js`, `semio/go`, `semio/py`, `semio/rust`, …), schema (e.g. `semio/sqlite`, `semio/graphql`, `semio/json-schema`, …), binary (`repo/cli`, `repo/server`, …), client (`repo/vscode`, `semio/grasshopper`, `semio/desktop`, …), site (`semio/play`, …), assets (`semio/icons`, …). Make sure that it is described inside the `package.json` and not hardcoded in the repo binary. Use different codeicons in the vscode extension for the different kinds for the tree items.
+Introduce bundle kinds for all bundles: library (e.g. `compose/js`, `compose/go`, `compose/py`, `compose/rust`, …), schema (e.g. `compose/sqlite`, `compose/graphql`, `compose/json-schema`, …), binary (`repo/cli`, `repo/server`, …), client (`repo/vscode`, `compose/grasshopper`, `compose/desktop`, …), site (`compose/play`, …), assets (`compose/icons`, …). Make sure that it is described inside the `package.json` and not hardcoded in the repo binary. Use different codeicons in the vscode extension for the different kinds for the tree items.
 
 Introduce folder kinds: organization (not necessary e.g. `js`, `go`, `py`, `rs`, …), required (e.g. bundles must be inside a folder because they have config files with reserved names, …)
 
@@ -5005,7 +5005,7 @@ Whenever a title of a goal or ticket is changed, also change the folder name of 
 - definition tree items should have different icon to section
 - In typescript: Definition are only toplevel. They always start on a newline. E.g. a const inside a function is not considered as a definition.
 
-The breachs dont show in the vscode extension as diagnostics. Make sure to test this and fix it until you get breachs showing up. e.g. semio.ts has breachs but they dont show up.
+The breachs dont show in the vscode extension as diagnostics. Make sure to test this and fix it until you get breachs showing up. e.g. compose.ts has breachs but they dont show up.
 
 The `ticket.json` and `goal.json` should change:
 
@@ -5153,7 +5153,7 @@ Change the positional arguments from `<llm> <client>` to `<client> <llm?>` for a
 
 Ticket reopen needs to have client flag either positional or over `--client <client>` or `--<client>`.
 
-Some commands show semio: and some show repo: prefix in vscode. The output panel of vscode logs also shows semio instead of repo. All should be repo.
+Some commands show compose: and some show repo: prefix in vscode. The output panel of vscode logs also shows compose instead of repo. All should be repo.
 
 Add a new command: timeline that prints a timeline of the commits, goals tickets, bundles, folders, files.
 
@@ -5239,11 +5239,11 @@ Or I can see repo/cli/cli.exe file
 Make sure that the repo binary and vscode work like this:
 The codebase consists of only of bundles. The bundles consist of folders and files. The files consist of sections. Sections can contain other sections. Sections can contain definitions. Definitions can contain other definitions.
 Folders and files which are not part of a bundle are part of the `repo/repo` bundle.
-Every folder has the id `BUNDLE/RELATIVEPATHINSIDEBUNDLE` e.g. `repo/repo/.devcontainer`, `semio/js/sketchpad`, etc.
-Every file has the id `BUNDLE/RELATIVEPATHINSIDEBUNDLE/FILENAME` e.g. `repo/repo/README.md`, `semio/js/sketchpad/Design.tsx`, etc.
+Every folder has the id `BUNDLE/RELATIVEPATHINSIDEBUNDLE` e.g. `repo/repo/.devcontainer`, `compose/js/sketchpad`, etc.
+Every file has the id `BUNDLE/RELATIVEPATHINSIDEBUNDLE/FILENAME` e.g. `repo/repo/README.md`, `compose/js/sketchpad/Design.tsx`, etc.
 Every ticket has the id `repo/tickets/YYYY/MM/DD/SLUG` e.g. `repo/tickets/2024/01/01/SOME-TASK`.
-Every section has the id `BUNDLE/RELATIVEPATHINSIDEBUNDLE/FILENAME#SECTIONNAME#SUBSECTIONNAME` e.g. `semio/js/sketchpad/Design.tsx#State Managment#Store`, etc.
-Every definition has the id `BUNDLE/RELATIVEPATHINSIDEBUNDLE/FILENAME#SECTIONNAME#SUBSECTIONNAM§DEFINITIONNAME§SUBDEFINITIONNAME` e.g. `semio/js/sketchpad/Design.tsx#State Managment#Store$KitStore§addDesign`, etc.
+Every section has the id `BUNDLE/RELATIVEPATHINSIDEBUNDLE/FILENAME#SECTIONNAME#SUBSECTIONNAME` e.g. `compose/js/sketchpad/Design.tsx#State Managment#Store`, etc.
+Every definition has the id `BUNDLE/RELATIVEPATHINSIDEBUNDLE/FILENAME#SECTIONNAME#SUBSECTIONNAM§DEFINITIONNAME§SUBDEFINITIONNAME` e.g. `compose/js/sketchpad/Design.tsx#State Managment#Store$KitStore§addDesign`, etc.
 
 The vscode extension is outdated and should be refactored.
 It should not fetch all tree information at once. Make sure that e.g. the codebase tree is first fetching bundles, then fetching when expanded incrementally fetching folders, then files, then sections, then definitions. Always when the tree is unfolded fetch all the children of the current node.
@@ -5284,8 +5284,8 @@ Reorder from specific first to general last. Consider the development lifecycle 
 Use a new style:
 repo/cli build
 repo/vscode build
-semio/js dev
-semio/js build:storybook
+compose/js dev
+compose/js build:storybook
 …
 dev
 …
@@ -5294,7 +5294,7 @@ publish
 
 Currently every ticket tracks one codebase diff. Make sure that every interaction has its own `"diff":{…}` and remove it from the ticket level.
 
-Fix all semio tests for javascript, python, go, rust. Dont alter the tests and work on the implementations.
+Fix all compose tests for javascript, python, go, rust. Dont alter the tests and work on the implementations.
 
 Continue ticket to fix vscode extension:
 
@@ -5311,31 +5311,31 @@ Continue repo binary changes ticket:
 
 The ticket close currently adds file information. It should turn fully semantic codebase diff and not only document file changes but also track bundles, folders, files, sections and definitions. Turn the file array from ticket.json into a diff dictionary for bundles, folders, files, sections and definitions. Every single one of them has deleted, renamed, modified, added. For this purpose add reports/codebase.json that exports the codebase (all bundles, folders, files, sections and definitions). When you run repo anaylze without any arguments, it should produce the codebase report. Based on the codebase.json and the git diffs you can derive the semantic diffs (e.g. check if the the section name changed, definition name changed, a folder was moved, etc). Aggregate the line metrics for all of them (some have only + and some only - and some both with different meaning). Remvove general information from files array (e.g. section ranges) and only leave the semantic diffs.
 Change the list of `# ✍️ Changes` for the github issue based on this templates:
-Deleted `.storybook` folder inside `semio/js` bundle with total lines removed: 📁<del>semio/js/.storybook</del> -13483
-Renamed `js` folder to `semio` inside `semio/js` bundle with total lines from old `js` folder and total lines in `semio` new folder: 📁semio/js/<del>js</del>semio -1455 +1455
-Added `sketchpad` folder inside `semio/js` bundle with total lines: 📂semio/js/sketchpad +1673
-Deleted file with the lines from the previous file: 📄<del>js/semio/sketchpad/Quality.tsx</del> -2312
-Renamed file with the lines from the previous file and the lines from the new file 📄semio/js/sketchpad/<del>Attribute.tsx</del>Property.tsx +2565 -2312
-Modified file with lines added and removed: 📝semio/js/sketchpad/Design.tsx -12 +250
-Added file with the lines: 📄semio/js/sketchpad/Prop.tsx +4125
-Added section with the lines: 📑semio/js/sketchpad/Design.tsx#State Managment#Hooks +478
-Modified section with the lines added and removed: 🔖semio/js/sketchpad/Design.tsx#State Managment#Hooks -192 +478
-Renamed section with lines from previous section and lines in the new section: 🔖semio/js/sketchpad/Design.tsx#State Managment#<del>React Hooks</del>Hooks -64 +494
-Deleted section with lines deleted: 🔖semio/js/sketchpad/Design.tsx<del>#State Managment#React Hooks</del> -793
-Added definition with lines: 🏷️semio/js/semio.ts#Diffs§KitDiff +42
-Renamed definition with lines: 🏷️semio/js/semio.ts#KitDiff<del>erence</del> -53 +69
-Modified definition with lines: 🏷️semio/js/semio.ts#KitDiff -41 +64
-Deleted definition with lines: 🏷️semio/js/semio.ts<del>#KitDiff</del> -59
-📁~~semio/js/.storybook~~ -13483
-📁semio/js/~~js~~semio -1455 +1455
-📂semio/js/sketchpad +1673
-📄~~semio/js/sketchpad/Quality.tsx~~ -2312
-📝semio/js/sketchpad/Design.tsx -12 +250
-📄semio/js/sketchpad/Prop.tsx +4125
-📑semio/js/sketchpad/Design.tsx#State Managment#Hooks +478
-🔖semio/js/sketchpad/Design.tsx#State Managment#Hooks -192 +478
-🔖semio/js/sketchpad/Design.tsx#State Managment#All ~~React Hooks~~Hooks -64 +494
-🔖semio/js/sketchpad/Design.tsx~~#State Managment#React Hooks~~ -793
+Deleted `.storybook` folder inside `compose/js` bundle with total lines removed: 📁<del>compose/js/.storybook</del> -13483
+Renamed `js` folder to `compose` inside `compose/js` bundle with total lines from old `js` folder and total lines in `compose` new folder: 📁compose/js/<del>js</del>compose -1455 +1455
+Added `sketchpad` folder inside `compose/js` bundle with total lines: 📂compose/js/sketchpad +1673
+Deleted file with the lines from the previous file: 📄<del>js/compose/sketchpad/Quality.tsx</del> -2312
+Renamed file with the lines from the previous file and the lines from the new file 📄compose/js/sketchpad/<del>Attribute.tsx</del>Property.tsx +2565 -2312
+Modified file with lines added and removed: 📝compose/js/sketchpad/Design.tsx -12 +250
+Added file with the lines: 📄compose/js/sketchpad/Prop.tsx +4125
+Added section with the lines: 📑compose/js/sketchpad/Design.tsx#State Managment#Hooks +478
+Modified section with the lines added and removed: 🔖compose/js/sketchpad/Design.tsx#State Managment#Hooks -192 +478
+Renamed section with lines from previous section and lines in the new section: 🔖compose/js/sketchpad/Design.tsx#State Managment#<del>React Hooks</del>Hooks -64 +494
+Deleted section with lines deleted: 🔖compose/js/sketchpad/Design.tsx<del>#State Managment#React Hooks</del> -793
+Added definition with lines: 🏷️compose/js/compose.ts#Diffs§KitDiff +42
+Renamed definition with lines: 🏷️compose/js/compose.ts#KitDiff<del>erence</del> -53 +69
+Modified definition with lines: 🏷️compose/js/compose.ts#KitDiff -41 +64
+Deleted definition with lines: 🏷️compose/js/compose.ts<del>#KitDiff</del> -59
+📁~~compose/js/.storybook~~ -13483
+📁compose/js/~~js~~compose -1455 +1455
+📂compose/js/sketchpad +1673
+📄~~compose/js/sketchpad/Quality.tsx~~ -2312
+📝compose/js/sketchpad/Design.tsx -12 +250
+📄compose/js/sketchpad/Prop.tsx +4125
+📑compose/js/sketchpad/Design.tsx#State Managment#Hooks +478
+🔖compose/js/sketchpad/Design.tsx#State Managment#Hooks -192 +478
+🔖compose/js/sketchpad/Design.tsx#State Managment#All ~~React Hooks~~Hooks -64 +494
+🔖compose/js/sketchpad/Design.tsx~~#State Managment#React Hooks~~ -793
 
 The repo vscode extension is not showing in vscode despite:
 
@@ -5424,7 +5424,7 @@ e.g.
 {
  "modified": [
   {
-   "path": "js/semio/sketchpad/Sketchpad.tsx",
+   "path": "js/compose/sketchpad/Sketchpad.tsx",
    "status": "modified",
    "sections": [
     {
@@ -5496,7 +5496,7 @@ Change/refactor/extend the vscode extension. It is not packaging because it stil
 Change/refactor/extend the ticket mechanism, update repo binary and vscode extension:
 
 - The vscode extension is not packacking because it still has some outdated code. Check ./repo/cli/main.go for single-source-of-truth.
-- The title of the ticket should be a title (if it is a slug or caps then throw an error). Extend the test. e.g. fix-vscode-types-version-mismatch or ENSURE-SEMIO-REPO-MCP-WORKS-ALLIDES should throw an error.
+- The title of the ticket should be a title (if it is a slug or caps then throw an error). Extend the test. e.g. fix-vscode-types-version-mismatch or ENSURE-COMPOSE-REPO-MCP-WORKS-ALLIDES should throw an error.
 - Currently the ticket close creates two comments. Merge them into one comment and separating them with `# ✍️ Changes`
 
 ```md
@@ -5507,8 +5507,8 @@ Change/refactor/extend the ticket mechanism, update repo binary and vscode exten
 # ✍️ Changes
 
 ➖js/js/.storybook/config.ts -482
-✏️js/semio/sketchpad/Design.tsx +250 -12
-➕js/semio/sketchpad/Prop.tsx +4125
+✏️js/compose/sketchpad/Design.tsx +250 -12
+➕js/compose/sketchpad/Prop.tsx +4125
 ```
 
 Make sure the line metrics are added to deleted (lines of the file), modified (added and removed lines of the file), added (lines of the file).
@@ -5517,13 +5517,13 @@ Change/refactor/extend the ticket mechanism, update repo binary and vscode exten
 
 - Extend ticket open with a manadary enum: client (copilot-chat, antigravity, cursor, claude-code, codex, droid)
 - Extend AGENTS.md ticket instruction to 1. include all enums (llms, client)
-- The derived github labels are not working properly. Every involved bundle (`semio/js`,`semio/py`,`semio/net`,`semio/go`,`semio/play`,`semio/grasshopper`,`semio/yak`,`semio/assets`,`repo/vscode`, …) is added as a label. If a file inside a bundle, the bundle is added. If a file outside a the repo label `repo` is added.
+- The derived github labels are not working properly. Every involved bundle (`compose/js`,`compose/py`,`compose/net`,`compose/go`,`compose/play`,`compose/grasshopper`,`compose/yak`,`compose/assets`,`repo/vscode`, …) is added as a label. If a file inside a bundle, the bundle is added. If a file outside a the repo label `repo` is added.
 - The final comment should have line metrics such as:
 
 ```md
 ➖js/js/.storybook/config.ts -482
-✏️js/semio/sketchpad/Design.tsx +250 -12
-➕js/semio/sketchpad/Prop.tsx +4125
+✏️js/compose/sketchpad/Design.tsx +250 -12
+➕js/compose/sketchpad/Prop.tsx +4125
 ```
 
 - Make sure the vscode extension complies and is properly attatched on the devcontainer.
@@ -5554,19 +5554,19 @@ Ticket close should:
 
 ```md
 ➖js/js/.storybook/config.ts -482
-✏️js/semio/sketchpad/Design.tsx +250 -12
-➕js/semio/sketchpad/Prop.tsx +4125
+✏️js/compose/sketchpad/Design.tsx +250 -12
+➕js/compose/sketchpad/Prop.tsx +4125
 ```
 
-Dont ask in between, just finish the task. Edit files in workspaces/semio workspace. No active workspace is needed. Just keep on.
+Dont ask in between, just finish the task. Edit files in workspaces/compose workspace. No active workspace is needed. Just keep on.
 
 ```md
 📁~~js/js/.storybook~~ -13483
-📁js/~~js~~semio
-📂js/semio/sketchpad
-📄~~js/semio/sketchpad/Attribute.tsx~~ -2312
-📝js/semio/sketchpad/Design.tsx +250 -12
-📄js/semio/sketchpad/Prop.tsx +4125
+📁js/~~js~~compose
+📂js/compose/sketchpad
+📄~~js/compose/sketchpad/Attribute.tsx~~ -2312
+📝js/compose/sketchpad/Design.tsx +250 -12
+📄js/compose/sketchpad/Prop.tsx +4125
 ```
 
 Labels in github
@@ -5594,7 +5594,7 @@ Change the ticket.json schema from
 ```json
 "files": [
     {
-      "path": "rs/semio/Cargo.toml",
+      "path": "rs/compose/Cargo.toml",
       "status": "",
       "sections": [
         {
@@ -5650,7 +5650,7 @@ to
   ],
   "modified": [
       {
-        "path": "rs/semio/Cargo.toml",
+        "path": "rs/compose/Cargo.toml",
         "sections": [
           {
             "path": "bin",
@@ -5688,10 +5688,10 @@ to
 
 The vscode extension should be automatically installed by the devcontainer. Currently I have to call `Developer: Install Extension From Location..."
 
-The general monorepo runs in devcontainer. There is one exception which is Semio.Grasshopper which runs native in Windows.
+The general monorepo runs in devcontainer. There is one exception which is Compose.Grasshopper which runs native in Windows.
 
-All semio tests should be identical accross all implementations (Typescript, Python, C#, Go, Rust). Remove all other tests and refactor/extend for all test suites to be identical in functionality and naming. Use the semio.ts tests as blueprint.
-Those are the tests and no other tests should exist for semio files:
+All compose tests should be identical accross all implementations (Typescript, Python, C#, Go, Rust). Remove all other tests and refactor/extend for all test suites to be identical in functionality and naming. Use the compose.ts tests as blueprint.
+Those are the tests and no other tests should exist for compose files:
 Roundtrip/Json/Metabolism # Kit -> Json -> Kit
 Roundtrip/Zip/Metabolism # Zip -> Kit -> Zip -> Kit
 Flatten/Nakagin Capsule Tower # Kit -> Flatten -> Diff -> Apply = Flat
@@ -5702,11 +5702,11 @@ Flatten/Capsule Dream # Kit -> Flatten -> Diff -> Apply = Flat
 Diff/Metabolism # Kit + Diff = DiffedKit & DiffedKit + InvertedDiff = Kit
 Validation/Invalid # Invalid Kit -> Validate = Invalid Report
 Validation/Metabolism # Metabolism Kit -> Validate = Empty report
-semio_test.gosemio.go semio.pysemio.test.py semio.rs semio.test.tssemio.ts @Semio.cs@Tests.cs
+compose_test.gocompose.go compose.pycompose.test.py compose.rs compose.test.tscompose.ts @Compose.cs@Tests.cs
 
 When opening a ticket the llm should be more forgiving. e.g. opus-4-5-20251101 or Claude Opus 4.5 should also automatically work. Slugify and check for prefixes. Some legacy code still uses model as concept. Replace model with llm everywhere.
 
-Dont ask in between, just finish the task. Edit files in workspaces/semio workspace. No active workspace is needed. Just keep on.
+Dont ask in between, just finish the task. Edit files in workspaces/compose workspace. No active workspace is needed. Just keep on.
 
 The sketchpad navbar should show panel toggles for left, middle and right panels. Make sure all app tests are checking the panels (toggeling and check for tree sections and tree items).
 
@@ -5718,7 +5718,7 @@ The vscode extension is not working properly.
 - It is not showing codebase tree items
 - it is not showing ticket tree items
 - It is not showing contributors
-  Ignore that no active workspace is loaded. Searching files and editing works. Dont ask in between, just finish the task. Edit files in workspaces/semio
+  Ignore that no active workspace is loaded. Searching files and editing works. Dont ask in between, just finish the task. Edit files in workspaces/compose
 
 Add wasm to go, rust and c#. Extend the benchmark with three more scenarios, Typescript + Rust, Typescript + Go, Typescript + C#.
 Get all tests, benchmarks and implementations running. Extend/Refactor/Change/Complete/Improve whatever is necessary.
@@ -5737,41 +5737,41 @@ Add pandas and other data science libraries to dev dependencies of the main .ven
 
 Make sure all implementations, tests and benchmarks are 100% functionally equivalent. Make sure there are nol empty cells in benchmark.csv. Extend/Change/Refactor whatever is necessary.
 All benchmarks only measure function execution time.
-@main.gosemio.gosemio_test.go semio.test.tssemio.ts@benchmark.ts @Semio.cs@Program.cs@Tests.cs @benchmark.pysemio.pysemio.test.py @benchmark.rssemio.rs @benchmark.ts@benchmark.csv
+@main.gocompose.gocompose_test.go compose.test.tscompose.ts@benchmark.ts @Compose.cs@Program.cs@Tests.cs @benchmark.pycompose.pycompose.test.py @benchmark.rscompose.rs @benchmark.ts@benchmark.csv
 
-The Roundtrip/Metabolism test should check for Zip -> Memory -> Zip roundtrip. Use assets/semio/metabolism.zip. Complete/Refactor/Extend/Change the implementations, tests and benchmarks until all code is 100% functionally equivalent.
-@main.gosemio.gosemio_test.go semio.tssemio.test.ts@benchmark.ts @Semio.cs@Program.cs@Tests.cs @benchmark.rssemio.rs semio.test.pysemio.py@benchmark.py
+The Roundtrip/Metabolism test should check for Zip -> Memory -> Zip roundtrip. Use assets/compose/metabolism.zip. Complete/Refactor/Extend/Change the implementations, tests and benchmarks until all code is 100% functionally equivalent.
+@main.gocompose.gocompose_test.go compose.tscompose.test.ts@benchmark.ts @Compose.cs@Program.cs@Tests.cs @benchmark.rscompose.rs compose.test.pycompose.py@benchmark.py
 
 The benchmark files are currently not tidy. This is the goal:
 ├─ py
-│ └─ semio
-│ │ ├─ semio.py
-│ │ ├─ semio.test.py
-│ │ ├─ semio.benchmark.py
+│ └─ compose
+│ │ ├─ compose.py
+│ │ ├─ compose.test.py
+│ │ ├─ compose.benchmark.py
 ├─ go
-│ └─ semio
-│ │ ├─ semio.go
-│ │ ├─ semio_test.go
-│ │ ├─ semio_benchmark.go
+│ └─ compose
+│ │ ├─ compose.go
+│ │ ├─ compose_test.go
+│ │ ├─ compose_benchmark.go
 ├─ js
-│ └─ semio
-│ │ ├─ semio.ts
-│ │ ├─ semio.test.ts
-│ │ ├─ semio.benchmark.ts
+│ └─ compose
+│ │ ├─ compose.ts
+│ │ ├─ compose.test.ts
+│ │ ├─ compose.benchmark.ts
 ├─ rs
-│ └─ semio
-│ │ ├─ semio.rs
-│ │ ├─ semio.benchmark.rs
+│ └─ compose
+│ │ ├─ compose.rs
+│ │ ├─ compose.benchmark.rs
 ├─ net
-│ └─ Semio
-│ │ ├─ Semio.cs
-│ │ └─ Semio.csproj
-│ └─ Semio.Tests
+│ └─ Compose
+│ │ ├─ Compose.cs
+│ │ └─ Compose.csproj
+│ └─ Compose.Tests
 │ │ ├─ Tests.cs
-│ │ └─ Semio.Tests.csproj
-│ └─ Semio.Benchmark
+│ │ └─ Compose.Tests.csproj
+│ └─ Compose.Benchmark
 │ │ ├─ Program.cs
-│ │ └─ Semio.Benchmark.csproj
+│ │ └─ Compose.Benchmark.csproj
 ├─ reports
 │ └─ benchmark.csv
 
@@ -5786,16 +5786,16 @@ go/mcp/main.go
 ./repo/cli/cli.go
 js/vscode/extension.ts
 
-Currently we have a code-first approach where semio.py generates the graphql schema, the sqlite schema and the jsonschema.
+Currently we have a code-first approach where compose.py generates the graphql schema, the sqlite schema and the jsonschema.
 Change to a schema-first approach where the schemas are manually created/updated and the code is implementing the contract.
-Remove the orm from semio.py and
+Remove the orm from compose.py and
 
 should no longer
 
 A new repo discord bot should be created.
 The repo cli should send a message to a discord bot when a ticket is closed.
 
-Currently all plane operations are performed by Rhino in Semio.Grasshopper. Make Semio.cs independent of Rhino like semio.ts, semio.go, semio.rs, semio.py. It should comply with the same tests.
+Currently all plane operations are performed by Rhino in Compose.Grasshopper. Make Compose.cs independent of Rhino like compose.ts, compose.go, compose.rs, compose.py. It should comply with the same tests.
 
 Ticket ranges should just be ranges of lines with ints. No character, no column, etc.
 Instead of:
@@ -5815,8 +5815,8 @@ work with:
 "end": 80
 },
 
-- The Diff/Metabolism test should be added (and benchmarked). See `assets/semio/`. It should use the metabolism kit and apply the diff to it, check that the result is the diffed metabolism kit and then apply the inverted diff to the diffed metabolism kit and check that the result is the original metabolism kit. All benchmarks simply do the operations without checking the results in between.
-- The Flatten Algorithm in C# should be part of Semio.cs and no longer depend on Rhino (move it out from benchmark).
+- The Diff/Metabolism test should be added (and benchmarked). See `assets/compose/`. It should use the metabolism kit and apply the diff to it, check that the result is the diffed metabolism kit and then apply the inverted diff to the diffed metabolism kit and check that the result is the original metabolism kit. All benchmarks simply do the operations without checking the results in between.
+- The Flatten Algorithm in C# should be part of Compose.cs and no longer depend on Rhino (move it out from benchmark).
 - The benchmark.csv should be this structure with test and languages as columns and benchmarks as rows:
 
 All tests should be identical accross all implementations (Typescript, Python, C#, Go, Rust). Remove all other tests and refactor/extend for all test suites to be identical.
@@ -5834,11 +5834,11 @@ Diff/Metabolism,,,,,,
 Validation/Invalid Kit,,,,,,
 Validation/Metabolism,,,,,,
 
-The complete monorepo should share one .venv at the root (not in py/ but repo root). There should be additional dev-dependencies such as jupyter notebooks. Uv should be used everywhere. Vscode etc should set the default interpreter. Make sure py/semio (library) and py/engine (executable) are using the global .venv.
+The complete monorepo should share one .venv at the root (not in py/ but repo root). There should be additional dev-dependencies such as jupyter notebooks. Uv should be used everywhere. Vscode etc should set the default interpreter. Make sure py/compose (library) and py/engine (executable) are using the global .venv.
 
-Finish semio.py and engine.py. semio.py should have the same functionality as semio.ts, semio.go, semio.rs, Semio.cs.
+Finish compose.py and engine.py. compose.py should have the same functionality as compose.ts, compose.go, compose.rs, Compose.cs.
 
-Create a standalone package for semio and extract all non engine related code from it. semio.py should have the same functionality as semio.ts, semio.go, semio.rs, Semio.cs
+Create a standalone package for compose and extract all non engine related code from it. compose.py should have the same functionality as compose.ts, compose.go, compose.rs, Compose.cs
 
 Currently the monorepo is being developed on Windows machines. The whole repo, all scripts, the vscode extension, all compilers, linters, formatters, etc should be migrated to one devcontainer.
 
@@ -5862,7 +5862,7 @@ e.g. `integrate go/mcp/main.go Mcp ./repo/cli/cli.go Cli`
 
 - Range should not be Position but int as in the original code.
 - Sections of the current file are not being shown.
-- The codebase tree should not show semio as root tree item but directly show all the bundles.
+- The codebase tree should not show compose as root tree item but directly show all the bundles.
 - The files are not showing sections as children. The sections should show the definitions as children.
 - All tree items should be lazily loaded
 
@@ -5904,19 +5904,19 @@ has 7 hunks that affect only the definitions: ["CreateTicket", "ComputeTicketFil
 
 The file metrics when a ticket is closes somehow always counts removed lines of 0 even when it removed lines. E.g. ./repo/cli/cli.go Utils GetGitAuthorGithub has added 13 and removed 0 although it added 14 lines and removed 8 lines accross 2 hunks.
 
-- All the local semio/BUNDLE dependencies are still affected. e.g. semio/logo is turning "^1.0.0" instead of the original "\*"
+- All the local compose/BUNDLE dependencies are still affected. e.g. compose/logo is turning "^1.0.0" instead of the original "\*"
 - cargo only updates the Cargo.lock file and not the Cargo.toml
-- Semio.csproj should not update System.Collections.Immutable and FluentValidation
+- Compose.csproj should not update System.Collections.Immutable and FluentValidation
 - uv is only updating the lock file and not the pyproject.toml file
 
 The update script should update all dependencies from the complete monorep. All package.json (npm), pyproject.toml (uv), Cargo.toml (cargo), go.mod (go), .csproj (c#) should be updated and not just the lock files.
-There should be a mechanism to make sure to prevent individual dependencies from being updated. E.g. Semio.Grasshopper should not update Grasshopper, System.Drawing.Common, System.Resources.Extensions
-All local packages such as semio/js should not remove the "\*" from the dependency of other packages when running npm upgrade -S
+There should be a mechanism to make sure to prevent individual dependencies from being updated. E.g. Compose.Grasshopper should not update Grasshopper, System.Drawing.Common, System.Resources.Extensions
+All local packages such as compose/js should not remove the "\*" from the dependency of other packages when running npm upgrade -S
 
 Add a codelens for all autofixable breachs that triggers the fix for exactly this breach in this line range.
 
 Add a dev flag to engine to run in dev mode
-C:\git\semio.tech\semio\py\engine\engine.py
+C:\git\compose.tech\compose\py\engine\engine.py
 
 The ticket mechanism still has some issues.
 
@@ -5950,7 +5950,7 @@ Ticket schema:
 - Introduce interactions array. Each interaction has a prompt, llm, author, date and commit. When a ticket is opened then the first interaction is added. Ticket close doesnt create a new interaction. When the ticket is reopened then a new interaction is added. It needs to be closed first before it can be reopened.
   Metrics:
 - The region metrics should exclude the metrics from the child regions.
-- Definitions in semio are only top level. A section can contain different definitions. A definition cant contain sections. E.g. `result` in ./repo/cli/cli.go should not be counted as a definition. A definition always starts on a new line with func, def, class, interface, type, enum, etc.
+- Definitions in compose are only top level. A section can contain different definitions. A definition cant contain sections. E.g. `result` in ./repo/cli/cli.go should not be counted as a definition. A definition always starts on a new line with func, def, class, interface, type, enum, etc.
   Api:
   Make sure the commands have this api:
   `./repo/cli/cli ticket open <title> <prompt> <llm>`
@@ -5979,12 +5979,12 @@ Toml, Yaml, Sql, Graphql
 Rust, ruby are missing as language.
 Use regions and modules for sections.
 
-Port 100% of the semio.ts file and semio.test.ts into semio.rs. Follow the plan for the single file layout.
+Port 100% of the compose.ts file and compose.test.ts into compose.rs. Follow the plan for the single file layout.
 
-Adjust the refactor plan to the following file layout. Make sure the tests are identical to the semio.test.ts.
+Adjust the refactor plan to the following file layout. Make sure the tests are identical to the compose.test.ts.
 ├─ rs
-│ └─ semio
-│ │ ├─ semio.rs
+│ └─ compose
+│ │ ├─ compose.rs
 │ │ └─ Cargo.toml
 
 The backend should be migrated to
@@ -5993,7 +5993,7 @@ Currently repo offers a graphql api and the metrics are computed on the fly. Ins
 
 All metrics should be
 
-All temporary scripts used to created in temp/ but now all temporary data should be part of the ticket folder of the active ticket. Update C:\git\semio.tech\semio\AGENTS.md C:\git\semio.tech\semio\README.md
+All temporary scripts used to created in temp/ but now all temporary data should be part of the ticket folder of the active ticket. Update C:\git\compose.tech\compose\AGENTS.md C:\git\compose.tech\compose\README.md
 
 Add a vscode
 
@@ -6004,12 +6004,12 @@ Add a vscode
 - Tickets should not have summary and prompt. Just prompt.
 - The llm input string from ticket open or ticket checkpoint should be the slug (not uppercase) of the string.
 - The checkpoint state
-- Definitions in semio are only top level. A section can contain different definitions. A definition cant contain sections. Currently definitions are not identified by the languages. A definition can only be affected once in a section (not appear multiple times in the secion metrics).
+- Definitions in compose are only top level. A section can contain different definitions. A definition cant contain sections. Currently definitions are not identified by the languages. A definition can only be affected once in a section (not appear multiple times in the secion metrics).
 - Compare the files for more differences and refactor/extend/change everything necessary to get the desired ticket.json schema without changing the graphql schema.
 
 Every node should be tested for non-empty collection. Fix/Refactor/Extend everything that is not working.
-@/c:/git/semio.tech/semio/repo/cli/cli_test.go
-@/c:/git/semio.tech/semio/graphql/repo/queries/Nodes.graphql
+@/c:/git/compose.tech/compose/repo/cli/cli_test.go
+@/c:/git/compose.tech/compose/graphql/repo/queries/Nodes.graphql
 
 The current packages that
 
@@ -6021,19 +6021,19 @@ preflight
 test
 build
 
-semio/engine:dev
-semio/engine:preflight
-semio/engine:test
-semio/engine:build
-semio/engine:publish
+compose/engine:dev
+compose/engine:preflight
+compose/engine:test
+compose/engine:build
+compose/engine:publish
 
-semio/js:dev
-semio/js:dev:storybook
-semio/js:dev:sketchpad
-semio/js:preflight
-semio/js:test
-semio/js:build
-semio/js:publish
+compose/js:dev
+compose/js:dev:storybook
+compose/js:dev:sketchpad
+compose/js:preflight
+compose/js:test
+compose/js:build
+compose/js:publish
 
 preflight:analyze
 preflight:fix
@@ -6052,18 +6052,18 @@ The vscode extension is outdated. It uses duplicate interfaces with GqlXxx and X
 Remove the slug from the ticket files
 
 Every node must have a globally unique id. Currently they are inconsistent. Refactor them like this:
-semio is the repo
-semio/repo/FOLDER/ANOTHERFOLDER is a folder outside of a bundle
-semio/repo/BUNDLE/FOLDER/FILE is a file outside of a bundle
-semio/BUNDLE is a bundle
-semio/BUNDLE/OPTIONALFOLDER/FILE is a file
-semio/BUNDLE/OPTIONALFOLDER/FILE#SECTION#SUBSECTION is a section
-semio/BUNDLE/OPTIONALFOLDER/FILE#SECTION#SUBSECTION§DEFINITION is a definition
-semio/contributors/usalu is a contributor
-semio/tickets/YYYY/MM/DD/TICKETSLUG is a ticket
-semio/policies/POLICYNAME is a policy
-semio/policies/POLICYNAME/breachs/VIOLATIONKIND is a statute
-semio/breachs/OPTIONALFOLDER/FILE#SECTION/DEFINITION is a breach
+compose is the repo
+compose/repo/FOLDER/ANOTHERFOLDER is a folder outside of a bundle
+compose/repo/BUNDLE/FOLDER/FILE is a file outside of a bundle
+compose/BUNDLE is a bundle
+compose/BUNDLE/OPTIONALFOLDER/FILE is a file
+compose/BUNDLE/OPTIONALFOLDER/FILE#SECTION#SUBSECTION is a section
+compose/BUNDLE/OPTIONALFOLDER/FILE#SECTION#SUBSECTION§DEFINITION is a definition
+compose/contributors/usalu is a contributor
+compose/tickets/YYYY/MM/DD/TICKETSLUG is a ticket
+compose/policies/POLICYNAME is a policy
+compose/policies/POLICYNAME/breachs/VIOLATIONKIND is a statute
+compose/breachs/OPTIONALFOLDER/FILE#SECTION/DEFINITION is a breach
 
 The ticket mechanism changed. The docs are outdated. Analyze the implementation and adjust the docs.
 
@@ -6143,7 +6143,7 @@ Write a temporary script to migrate all existing tickets to the new folder struc
 
 Extend the vscode extension to show the codebase tree in the sideview under the search section.
 ├─ Codebase
-│ └─ semio # NAVIGATETOREPO
+│ └─ compose # NAVIGATETOREPO
 │ │ └─ FOLDEROUTSIDEBUNDLE # NAVIGATETOFOLDER
 │ │ │ └─ FILEOUTSIDEBUNDLE # NAVIGATETOFILE
 │ └─ BUNDLE # NAVIGATETOBUNDLE
@@ -6157,9 +6157,9 @@ When calling repo then return everything in a json object. Make sure everything 
 {
 "codebase": {
 "bundles":[{
-"id": "semio/js",
+"id": "compose/js",
 "folder": "js",
-"uri": "file://c:/git/semio.tech/semio/js",
+"uri": "file://c:/git/compose.tech/compose/js",
 "contributors": ["https://github.com/usalu"],
 "tickets": ["2026/01/05/CONTRIBUTOR-DERIVED"],
 "metrics": {
@@ -6172,17 +6172,17 @@ When calling repo then return everything in a json object. Make sure everything 
 }
 }],
 "folders": [{
-"path": "js/semio",
-"uri": "file://c:/git/semio.tech/semio/js/semio",
+"path": "js/compose",
+"uri": "file://c:/git/compose.tech/compose/js/compose",
 "metrics": {
 "files": 5,
 "lines": 5000,
 "breachs": 10,
 }}]
 "files:[{
-"id": "semio/js.ts",
-"path": "js/semio/semio.ts",
-"uri": "file://c:/git/semio.tech/semio/js/semio/semio.ts",
+"id": "compose/js.ts",
+"path": "js/compose/compose.ts",
+"uri": "file://c:/git/compose.tech/compose/js/compose/compose.ts",
 "metrics": {
 "sections": 10,
 "definitions": 100,
@@ -6197,9 +6197,9 @@ When calling repo then return everything in a json object. Make sure everything 
       }]
     }],
     "sections": [{
-      "id": "semio/js.ts#Kit",
-      "path": "js/semio/semio.ts#Kit",
-      "uri": "file://c:/git/semio.tech/semio/js/semio/semio.ts#Kit",
+      "id": "compose/js.ts#Kit",
+      "path": "js/compose/compose.ts#Kit",
+      "uri": "file://c:/git/compose.tech/compose/js/compose/compose.ts#Kit",
       "metrics": {
         "definitions": 10,
         "lines": 500,
@@ -6207,9 +6207,9 @@ When calling repo then return everything in a json object. Make sure everything 
       }
     }],
     "definitions": [{
-      "id": "semio/js.ts#KitDiff",
-      "path": "js/semio/semio.ts#KitDiff",
-      "uri": "file://c:/git/semio.tech/semio/js/semio/semio.ts#KitDiff",
+      "id": "compose/js.ts#KitDiff",
+      "path": "js/compose/compose.ts#KitDiff",
+      "uri": "file://c:/git/compose.tech/compose/js/compose/compose.ts#KitDiff",
       "metrics": {
         "definitions": 3,
         "lines": 100,
@@ -6218,12 +6218,12 @@ When calling repo then return everything in a json object. Make sure everything 
     }],
     "contributors": [{
       "id": "usalu",
-      "uri": "file://c:/git/semio.tech/semio/contributors/usalu",
+      "uri": "file://c:/git/compose.tech/compose/contributors/usalu",
       "path": "contributors/usalu/contributor.json",
       "name": "Ueli Saluz",
       "icons": {
-        "avatar": "file://c:/git/semio.tech/semio/contributors/usalu/avatar.png",
-        "avatar-round-90x90": "file://c:/git/semio.tech/semio/contributors/usalu/avatar-round-90x90.png",
+        "avatar": "file://c:/git/compose.tech/compose/contributors/usalu/avatar.png",
+        "avatar-round-90x90": "file://c:/git/compose.tech/compose/contributors/usalu/avatar-round-90x90.png",
         "github": "https://github.com/usalu.png",
       }
       "emails": ["ueli@semio-tech.com"],
@@ -6232,7 +6232,7 @@ When calling repo then return everything in a json object. Make sure everything 
       },
       "contributions": {
         "bundles": [{
-          "id": "semio/js",
+          "id": "compose/js",
           "metrics": {
             "folders": {
               "added": 1,
@@ -6251,7 +6251,7 @@ When calling repo then return everything in a json object. Make sure everything 
           }
         }],
         "folders": [{
-          "id": "semio/js",
+          "id": "compose/js",
           "metrics": {
             "files": {
               "added": 10,
@@ -6265,7 +6265,7 @@ When calling repo then return everything in a json object. Make sure everything 
           }
         }],
         "files": [{
-          "id": "semio/js.ts",
+          "id": "compose/js.ts",
           "metrics": {
             "lines": {
               "added": 100,
@@ -6274,7 +6274,7 @@ When calling repo then return everything in a json object. Make sure everything 
           }
         }],
         "sections": [{
-          "id": "semio/js.ts#Kit",
+          "id": "compose/js.ts#Kit",
           "metrics": {
             "lines": {
               "added": 100,
@@ -6283,7 +6283,7 @@ When calling repo then return everything in a json object. Make sure everything 
           }
         }],
         "definitions": [{
-          "id": "semio/js.ts#Kit§KitDiff",
+          "id": "compose/js.ts#Kit§KitDiff",
           "metrics": {
             "lines": {
               "added": 100,
@@ -6306,7 +6306,7 @@ When calling repo then return everything in a json object. Make sure everything 
     "tickets": [{
       "id": "2026/01/05/CONTRIBUTOR-DERIVED",
       "path": "tickets/2026/01/05/CONTRIBUTOR-DERIVED.md",
-      "uri": "file://c:/git/semio.tech/semio/tickets/2026/01/05/CONTRIBUTOR-DERIVED.md",
+      "uri": "file://c:/git/compose.tech/compose/tickets/2026/01/05/CONTRIBUTOR-DERIVED.md",
       "date: {
         "created": "2026-01-05T14:05:02Z",
         "finished": "2026-01-05T14:10:21Z",
@@ -6320,7 +6320,7 @@ When calling repo then return everything in a json object. Make sure everything 
       "model": "gpt-5-2",
       "author": "usalu",
       "bundles": [{
-        "id": "semio/js",
+        "id": "compose/js",
         "metrics": {
           "folders": {
             "added": 1,
@@ -6373,7 +6373,7 @@ When calling repo then return everything in a json object. Make sure everything 
         }
       }],
       "files": [{
-        "id": "semio/js.ts",
+        "id": "compose/js.ts",
         "metrics": {
          "sections": {
             "added": 1,
@@ -6392,7 +6392,7 @@ When calling repo then return everything in a json object. Make sure everything 
         }
       }],
       "sections": [{
-        "id": "semio/js.ts#Kit",
+        "id": "compose/js.ts#Kit",
         "metrics": {
           "definitions": {
             "added": 1,
@@ -6406,7 +6406,7 @@ When calling repo then return everything in a json object. Make sure everything 
         }
       }],
       "definitions": [{
-        "id": "semio/js.ts#KitDiff",
+        "id": "compose/js.ts#KitDiff",
         "metrics": {
           "lines":{
             "added": 100,
@@ -6418,7 +6418,7 @@ When calling repo then return everything in a json object. Make sure everything 
     "policies": [{
       "id": "code:header:missing-filepath",
       "name": "Missing Filepath",
-      "scopes": ["semio/js/sketchpad/**/*.[ts|tsx]"],
+      "scopes": ["compose/js/sketchpad/**/*.[ts|tsx]"],
       "breachs":[{
         "kind": "code:header:missing-filepath",
         "priority": "low",
@@ -6427,16 +6427,16 @@ When calling repo then return everything in a json object. Make sure everything 
       }]
     }],
     "breachs": [{
-      "id": "code:header:missing-filepath#|js|semio/js.ts#1",
+      "id": "code:header:missing-filepath#|js|compose/js.ts#1",
       "folders": [{
         "id": "js",
         "path": "js",
-        "uri": "folder://c:/git/semio.tech/semio/js"
+        "uri": "folder://c:/git/compose.tech/compose/js"
       }],
       "files": [{
-        "id": "semio/js.ts",
-        "path": "js/semio/semio.ts",
-        "uri": "file://c:/git/semio.tech/semio/js/semio/semio.ts",
+        "id": "compose/js.ts",
+        "path": "js/compose/compose.ts",
+        "uri": "file://c:/git/compose.tech/compose/js/compose/compose.ts",
         "range":{
           "start":{
             "line":100,
@@ -6454,7 +6454,7 @@ When calling repo then return everything in a json object. Make sure everything 
       "solution": "Add the filepath to the header region.",
     }],
     "tree":{
-      "semio":{
+      "compose":{
         "kind": "repo",
         "js":{
           "kind": "folder",
@@ -6462,15 +6462,15 @@ When calling repo then return everything in a json object. Make sure everything 
             "kind": "file",
           }
         }
-        "semio/js":{
+        "compose/js":{
           "kind": "bundle",
-          "semio/js.ts":{
+          "compose/js.ts":{
             "kind": "file",
-            "semio/js.ts#Entities": {
+            "compose/js.ts#Entities": {
               "kind": "section",
-              "semio/js.ts#Entities#Kit":{
+              "compose/js.ts#Entities#Kit":{
                 "kind": "section",
-                "semio/js.ts#Entities#Kit§KitDiff": {
+                "compose/js.ts#Entities#Kit§KitDiff": {
                   "kind": "definition",
                 }
               }
@@ -6485,7 +6485,7 @@ When calling repo then return everything in a json object. Make sure everything 
 vs
 ~~{
 "codebase": {
-"semio": {
+"compose": {
 "kind": "repo",
 "js": {
 "kind": "bundle",
@@ -6497,7 +6497,7 @@ vs
 },
 "js": {
 "kind": "folder",
-"semio.ts": {
+"compose.ts": {
 "kind": "file",
 "Kit": {
 "kind": "section",
@@ -6534,14 +6534,14 @@ Generalize the move command to accept source scope and target scope. Some operat
 Again the bundles are missing. Make sure that all bundles (nx projects) are correctly identified and the the folders are properly computed (removed the parent folders of the projects):
 Currently it shows:
 ├─ codebase
-│ └─ semio
+│ └─ compose
 │ │ ├─ FOLDER
 │ │ │ │ └─ FILE
 │ │ │ │ │ └─ SECTION
 │ │ │ │ │ │ └─ DEFINITION
 But it should show:
 ├─ codebase
-│ └─ semio
+│ └─ compose
 │ │ └─ FOLDEROUTSIDEBUNDLE
 │ │ │ └─ FILEOUTSIDEBUNDLE
 │ └─ BUNDLE
@@ -6553,17 +6553,17 @@ But it should show:
 
 There are some issues:
 
-- All bundles are missing (e.g. semio/js, semio/net, semio/desktop, semio/engine, semio/play, semio/docs, semio/assets, …)
+- All bundles are missing (e.g. compose/js, compose/net, compose/desktop, compose/engine, compose/play, compose/docs, compose/assets, …)
 - The folders inside the bundles are missing
   Currently it shows:
   ├─ codebase
-  │ └─ semio
+  │ └─ compose
   │ │ ├─ FILE
   │ │ │ │ └─ SECTION
   │ │ │ │ │ └─ DEFINITION
   but instead it should show:
   ├─ codebase
-  │ └─ semio
+  │ └─ compose
   │ │ └─ FOLDEROUTSIDEBUNDLE
   │ │ │ └─ FILEOUTSIDEBUNDLE
   │ └─ BUNDLE
@@ -6575,24 +6575,24 @@ There are some issues:
 
 There are some issues:
 
-- There should be all the bundles after codebase (semio, semio/js, semio/net, semio/desktop, semio/engine, semio/play, semio/docs, semio/assets, …)
+- There should be all the bundles after codebase (compose, compose/js, compose/net, compose/desktop, compose/engine, compose/play, compose/docs, compose/assets, …)
 - The folders should only be shown when part of the bundles
 - The definitions should be children of the sections.
   Currently it shows:
   ├─ codebase
-  │ └─ semio
+  │ └─ compose
   │ │ ├─ preflight.ts
   │ │ ├─ js
   │ │ │ └─ js
-  │ │ │ │ └─ semio.ts
+  │ │ │ │ └─ compose.ts
   │ │ │ │ │ ├─ Attribute
   │ │ │ │ │ └─ Attribute
   but instead it should show:
   ├─ codebase
-  │ └─ semio
+  │ └─ compose
   │ │ └─ FILEATROOT
-  │ └─ semio/js
-  │ │ └─ semio.ts
+  │ └─ compose/js
+  │ │ └─ compose.ts
   │ │ │ └─ Attribute
   │ │ │ │ └─ AttributeDiff
 
@@ -6622,27 +6622,27 @@ All code must be within sections.
 The vscode extionsion problem diagnostic show
 MESSAGE - SOURCE([VALUE](TARGET))
 currently:
-POLICYNAME - semio(PATHTOVIOLATION)
+POLICYNAME - compose(PATHTOVIOLATION)
 such as
-section - semio([code](/c:/git/semio.tech/semio/repo/cli/main.go#L630))
+section - compose([code](/c:/git/compose.tech/compose/repo/cli/main.go#L630))
 instead should show more detailed information:
 VIOLATIONMESSAGE - POLICYNAME(VIOLATIONKINDNAME[PATHTOVIOLATIONDEFINITION])
 
 {
-"resource": "/c:/git/semio.tech/semio/repo/cli/main.go",
-"owner": "semio1",
+"resource": "/c:/git/compose.tech/compose/repo/cli/main.go",
+"owner": "compose1",
 "code": {
 "value": "code",
 "target": {
 "$mid": 1,
-"path": "/c:/git/semio.tech/semio/repo/cli/main.go",
+"path": "/c:/git/compose.tech/compose/repo/cli/main.go",
 "scheme": "file",
 "fragment": "L580"
 }
 },
 "severity": 4,
 "message": "section",
-"source": "semio",
+"source": "compose",
 "startLineNumber": 580,
 "startColumn": 1,
 "endLineNumber": 580,
@@ -6653,20 +6653,20 @@ VIOLATIONMESSAGE - POLICYNAME(VIOLATIONKINDNAME[PATHTOVIOLATIONDEFINITION])
 should become
 
 {
-"resource": "/c:/git/semio.tech/semio/repo/cli/main.go",
-"owner": "semio1",
+"resource": "/c:/git/compose.tech/compose/repo/cli/main.go",
+"owner": "compose1",
 "code": {
 "value": "missing-end-name",
 "target": {
 "$mid": 1,
-"path": "/c:/git/semio.tech/semio/repo/cli/main.go",
+"path": "/c:/git/compose.tech/compose/repo/cli/main.go",
 "scheme": "file",
 "fragment": "L580"
 }
 },
 "severity": 4,
 "message": "Missing end name for section \"Types\"",
-"source": "semio",
+"source": "compose",
 "startLineNumber": 580,
 "startColumn": 1,
 "endLineNumber": 580,
@@ -6675,7 +6675,7 @@ should become
 }
 
 [{
-"resource": "/c:/git/semio.tech/semio/repo/cli/main.go",
+"resource": "/c:/git/compose.tech/compose/repo/cli/main.go",
 "owner": "_generated_diagnostic_collection_name_#4",
 "code": {
 "value": "default",
@@ -6702,8 +6702,8 @@ should become
 Dont allow lines to be stored at repo, bundle, folder or file level. Every line need to be at section level. Definitions are the names of the functions, classes, variables, etc. that were affected by the changes inside the section.
 Refactor the current hardcoded switch statements to use a new approach where languages define how to identify sections, definitions, etc.
 
-The general scope mechanism should now always be @REPO[semio]/BUNDLE[js|go|net|desktop|engine|assistant|play|docs|assets|…]/FOLDER[js/semio|net/Semio|…]/FILE[Semio.cs|main.go|…]/SECTION[State Management|…]/DEFINITION[createMachine|…] and only right part cans be omitted but not parts on the left.
-E.g. "js/semio/sketchpad/Sketchpad.tsx" becomes "semio/js/sketchpad/Sketchpad.tsx"
+The general scope mechanism should now always be @REPO[compose]/BUNDLE[js|go|net|desktop|engine|assistant|play|docs|assets|…]/FOLDER[js/compose|net/Compose|…]/FILE[Compose.cs|main.go|…]/SECTION[State Management|…]/DEFINITION[createMachine|…] and only right part cans be omitted but not parts on the left.
+E.g. "js/compose/sketchpad/Sketchpad.tsx" becomes "compose/js/sketchpad/Sketchpad.tsx"
 
 The contribution of every interaction should be stored with full scope hierarchy. Add an ignore flag to ticket and interations (e.g. formatting tickets or itations should be ignored)
 ignore: false
@@ -6718,9 +6718,9 @@ interactions:
   commit: "393dfeadd9c012eb01d37dad9cd10065832c6c1c"
   ignore: false
   bundles:
-  "semio/js":
+  "compose/js":
   files:
-  "js/semio/sketchpad/Sketchpad.tsx":
+  "js/compose/sketchpad/Sketchpad.tsx":
   sections:
   "State Management":
   definitions: ["createMachine"]
@@ -6733,7 +6733,7 @@ When clicking on the section it should navigate to it. There should be rename, c
 
 The section should not be part of repo sideview but part of the vscode built-in solution explorer.
 
-Make sure when breachs are reported as problems that the uri pointing to the actual file and not some virtual/diff/outside-workspace file is used. Currently all diagnostics are pointing to read-only editors with the correct content. Make sure semio scopes are properly translated to vscode uris.
+Make sure when breachs are reported as problems that the uri pointing to the actual file and not some virtual/diff/outside-workspace file is used. Currently all diagnostics are pointing to read-only editors with the correct content. Make sure compose scopes are properly translated to vscode uris.
 
 All mcp tools should throw when having wrong arguments.
 [main.go](go/mcp/main.go)
@@ -6781,16 +6781,16 @@ e.g. the files are not correct file paths.
 
 Clicking buttons such as finish ticket, reopen ticket, run command is currently calling a terminal command instead of just silently executing the command and showing a notification once done.
 
-Still opens read-only editor. It also shows issues that dont exist: e.g. semio.go and semio_test.go dont exist but go/semio/main.go does exist.
+Still opens read-only editor. It also shows issues that dont exist: e.g. compose.go and compose_test.go dont exist but go/compose/main.go does exist.
 
 Add an extra section to solution explorer in the vscode extension: Sections
 It should show all sections for the current active file.
 
 Turn required mcp array files parameters on create ticket and interaction start into optional parameters but add the description to be required. They are actually required but there is currently a bug in vscode aborts requests on required array parameters.
 
-On ticket creation or interaction start all files that are part of the ticket need to be associated to the ticket. When an interaction is finished then the lines are automatically calculated for those files from git. Currently it adds all the files from git which is wrong. Only the ones that are part of the interaction should be considered. See example: @/c:/git/semio.tech/semio/tickets/2026/01/05/VSCODE-DIAGNOSTIC-READONLY.md
+On ticket creation or interaction start all files that are part of the ticket need to be associated to the ticket. When an interaction is finished then the lines are automatically calculated for those files from git. Currently it adds all the files from git which is wrong. Only the ones that are part of the interaction should be considered. See example: @/c:/git/compose.tech/compose/tickets/2026/01/05/VSCODE-DIAGNOSTIC-READONLY.md
 
-When clicking on the semio breach diagnostics in vscode then it opens only read-only preview of the file instead of opening the file where it can be edited.
+When clicking on the compose breach diagnostics in vscode then it opens only read-only preview of the file instead of opening the file where it can be edited.
 
 Still, it adds all files and lines to interaction but it shouldnt. It should filter only the files that the ticket is working on. Clean teh tickets from today.
 
@@ -6804,7 +6804,7 @@ The fixes in vscode are not showing the description of the fix as label.
 Add interaction status (started, ended). Compute lines for the files that were part of the interaction using git.
 
 As soon as the vscode github copilot starts ticket open mcp the chat stops and I get:
-Failed to validate tool mcp_semio_ticket_open: Error: tool parameters array type must have items.
+Failed to validate tool mcp_compose_ticket_open: Error: tool parameters array type must have items.
 
 When clicking on breachs under problems in vscode it only opens the file preview and not the tab of the file. Pressing ctrl+s then doesnt work. Fix it.
 
@@ -6846,7 +6846,7 @@ E.g. WorkspaceEdit shouldnt
 Fixing files should be less than 100ms. Currently in vscode:
 
 - Individual breachs are not fixable alone
-- When executing a complete file fix it show: Failed to fix breach: Error: Command failed: ./bin/repo fix js/semio/playwright.config.ts
+- When executing a complete file fix it show: Failed to fix breach: Error: Command failed: ./bin/repo fix js/compose/playwright.config.ts
 
 When pressing close or reopen on ticket tree item in vscode it opens a command instead of just reopening or closing the ticket was clicked onto.
 
@@ -6885,9 +6885,9 @@ Remove status emoji from ticket
 Add commit tree item
 Just show description on ticket tree item hover
 
-./bin/repo analyze net/Semio.Grasshopper/Semio.Grasshopper.cs
+./bin/repo analyze net/Compose.Grasshopper/Compose.Grasshopper.cs
 
-./bin/repo analyze net/Semio.Tests/Tests.cs
+./bin/repo analyze net/Compose.Tests/Tests.cs
 should not take more than 100ms. Analyze why it takes so long and refactor to make it performant. In general only policies where the scope includes the target scope should run.
 
 Remove all caching mechanism with .repo folder. The analyze command should be called for every open file and rerunwhen saving a file. Make sure that the go binary is ignoring files that are gitignored. Make sure the analyze command is only running policies that have scopes which include the file. Make sure the analysis is performant and less than 100ms per file. When running analyze without a scope it should produce: reports/breachs.json with all breachs.
@@ -6918,7 +6918,7 @@ When loading header statutes under policies it takes very long to load them. Don
 
 The vscode extension should not contain any repo or business logic. It is only a ui for the repo binary. As such dont mirror the arguments for the
 
-Use the semio output for logging everything in the vscode extension.
+Use the compose output for logging everything in the vscode extension.
 
 No, you mixed policies (and breachs) with constraints (and problems). Policies only affect the repo. Constrains only affect kits. They are not the same thing.
 Refactor the complete extension to exclusively use the repo binary. The vscode extension is just a ui and not buissness or repo logic is part of it.
@@ -6936,7 +6936,7 @@ The policy navigation should be to the go function (e.g. func headerPolicy for h
 Clicking on the the command should not call the command but open the command function same as policies
 The contributor icon should be the round avatar.
 
-Update AGENTS.md to only use createFile and createFolder over semio mcp.
+Update AGENTS.md to only use createFile and createFolder over compose mcp.
 
 Create a ticket for SKETCHPAD-REFACTOR from existing plan
 
@@ -6985,7 +6985,7 @@ vscode extension:
 
 Creating a new ticket over vscode extension doesnt work.
 
-Create a detailed refactor plan markdown document for everything related to Semio.cs and Semio.Grasshopper.cs. In particular get rid of the attribute system which uses reflection. Just replace it with plain validation. Remove all metadata (such as icon, symbol, description, etc) and only add it on the ui in Grasshopper. Dont plan to modify the files (such as creating new ones). It is only about the code. Analyze everything excactly from top to bottom.
+Create a detailed refactor plan markdown document for everything related to Compose.cs and Compose.Grasshopper.cs. In particular get rid of the attribute system which uses reflection. Just replace it with plain validation. Remove all metadata (such as icon, symbol, description, etc) and only add it on the ui in Grasshopper. Dont plan to modify the files (such as creating new ones). It is only about the code. Analyze everything excactly from top to bottom.
 
 Create a detailed refactor plan markdown document for everything related to sketchpad. Dont plan to modify the files (such as creating new ones). It is only about the code. Analyze everything excactly from top to bottom.
 
@@ -7018,18 +7018,18 @@ vscode extension:
   },
   "contributions": {
   "bundles": [
-  "semio/js",
-  "semio/net",
-  "semio/desktop",
-  "semio/engine",
-  "semio/assistant",
-  "semio/play",
-  "semio/docs",
-  "semio/assets"
+  "compose/js",
+  "compose/net",
+  "compose/desktop",
+  "compose/engine",
+  "compose/assistant",
+  "compose/play",
+  "compose/docs",
+  "compose/assets"
   ],
   "files": [
-  "js/semio/sketchpad/Sketchpad.tsx",
-  "js/semio/semio/engine/engine.py",
+  "js/compose/sketchpad/Sketchpad.tsx",
+  "js/compose/compose/engine/engine.py",
   ]
   }
   }
@@ -7043,12 +7043,12 @@ The vscode commands should not ask for the same input such as year, month, day, 
 
 Remove all json modes from all tools. Instead use a new analyze mechanism. Use the .repo folder for caching the results. Make sure that analyzing individual scopes doesnt is possible and not blocked by single file read/write. The vscode extension should update on file save of open files and when opening a file the analyze command should be run.
 
-All tests should be identical (validation, import/export, flatten). Extend the go test. Then finish the go library to comply the tests. Add libraries (like gonum) to implement thissing features. Do whatever is necessary. Use semio.ts as the single source of truth.
-semio_test.gosemio.go semio.tssemio.test.ts @Tests.cs
+All tests should be identical (validation, import/export, flatten). Extend the go test. Then finish the go library to comply the tests. Add libraries (like gonum) to implement thissing features. Do whatever is necessary. Use compose.ts as the single source of truth.
+compose_test.gocompose.go compose.tscompose.test.ts @Tests.cs
 
-The repo.tsx should be completly independant of the old script. Everything should be rewritten with go. Use semio.ts as blueprint for semio/main.go
+The repo.tsx should be completly independant of the old script. Everything should be rewritten with go. Use compose.ts as blueprint for compose/main.go
 
-The engine should be a running graphql server, rest endpoint and mcp server (use the official python mcp sdk). Get it running and test that it works. semio.ts is the single source of truth for the engine. All CRUD operations from semio.ts should be exposed as tools in the mcp server.
+The engine should be a running graphql server, rest endpoint and mcp server (use the official python mcp sdk). Get it running and test that it works. compose.ts is the single source of truth for the engine. All CRUD operations from compose.ts should be exposed as tools in the mcp server.
 
 The repo script should be refactored. The architecture should be simplified.
 The repo module should only expose commands. Tools etc should all become non-interactive commands. Remove interactive, dry-run or json mode.
@@ -7076,14 +7076,14 @@ Hooks are go functions that produce actions. They receive a codebase context and
 {
 "tool": "file.create",
 "args": {
-"scope":"js/semio/sketchpad/Quality.tsx",
+"scope":"js/compose/sketchpad/Quality.tsx",
 "content":"import { Quality } from './Quality';"
 }
 },
 {
 "tool": "text.replace",
 "args": {
-"scope": "js/semio/sketchpad/Sketchpad.tsx#State Managment",
+"scope": "js/compose/sketchpad/Sketchpad.tsx#State Managment",
 "regex": "(?<![xXpPeEmMsSoOwW])port(?!ion)(?!al)",
 "replace": "connector"
 }
@@ -7119,7 +7119,7 @@ vscode extension:
 Every linter message should be one line and never have new lines or repeat the file path
 The code should should not be the id but the statute
 [{
-"resource": "/c:/git/semio.tech/semio/assets/repo/some/folder/file_invalid.tsx",
+"resource": "/c:/git/compose.tech/compose/assets/repo/some/folder/file_invalid.tsx",
 "owner": "repo",
 "code": "header:missing-section-1767006050632-xwe287",
 "severity": 4,
@@ -7144,8 +7144,8 @@ is running analyze on the complete repo and not just on the scope
 
 The vscode extension previouly used reports/policies.json for linting. Instead when opening a file or when saving a file the repo analyze command with the file as scope with json output and display them as linter with suggest fix when autofixable and call the repo fix command for the specific breach with the file as scope when autofixable.
 
-@/c:/git/semio.tech/semio/assets/repo/some/folder/file_invalid.tsx
-@/c:/git/semio.tech/semio/assets/semio/kit_invalid.json
+@/c:/git/compose.tech/compose/assets/repo/some/folder/file_invalid.tsx
+@/c:/git/compose.tech/compose/assets/compose/kit_invalid.json
 arent producing any problems with fixing suggestions in vscode
 
 The current repo script has as terms: repo, bundle, folder, file, region, definition. Region should be renamed to section. In code files sections use regions but e.g. in markdown files section use headers. All section commands should support aswell markdown files (mdx with frontmatter, etc)
@@ -7195,11 +7195,11 @@ definition list [--scope=<scope>] List definitions in a file
 definition tree [--scope=<scope>] Show definition structure
 tool <name> [args...] Run a tool (e.g., i18n,update-metabolism)
 Scope syntax:
-((semio)|(semio/PROJECTPATTERN))?(FOLDERPATTERN)?(FILEPATTERN)?(REGIONPATTERN)?(DEFINITIONPATTERN)?
-semio Repo scope
-semio/js Bundle scope
-js/semio/sketchpad/ Folder scope
-js/semio/sketchpad/App.tsx File scope
+((compose)|(compose/PROJECTPATTERN))?(FOLDERPATTERN)?(FILEPATTERN)?(REGIONPATTERN)?(DEFINITIONPATTERN)?
+compose Repo scope
+compose/js Bundle scope
+js/compose/sketchpad/ Folder scope
+js/compose/sketchpad/App.tsx File scope
 file.tsx#Region Region scope
 file.tsx§Function Definition scope
 
@@ -7207,7 +7207,7 @@ file.tsx§Function Definition scope
 
 Adjust all implementation and get all tests running.
 
-Change the repo analyze api not not accept a scope flag but after the command name all arguments are interpreted as scope array. e.g. `repo analyze js/semio/semio.ts semio/desktop net/*.* py`
+Change the repo analyze api not not accept a scope flag but after the command name all arguments are interpreted as scope array. e.g. `repo analyze js/compose/compose.ts compose/desktop net/*.* py`
 
 Remove severity from all policies and breachs.
 
@@ -7285,54 +7285,54 @@ A policy is checked whenever the scope changes.
 Scopes have native glob support.
 Examples:
 
-- "semio" is repo scope.
+- "compose" is repo scope.
 - "js" is a folder scope.
-- "semio/js" is a bundle scope.
-- "js/semio/sketchpad/Sketchpad.tsx" is a file scope.
-- "js/semio/sketchpad/Sketchpad.tsx#Header" is a region scope.
-- "js/semio/sketchpad/Sketchpad.tsx#State Managment#Store" is a sub-region scope.
-- "js/semio/sketchpad/Sketchpad.tsx§Sketchpad" is a definition scope.
+- "compose/js" is a bundle scope.
+- "js/compose/sketchpad/Sketchpad.tsx" is a file scope.
+- "js/compose/sketchpad/Sketchpad.tsx#Header" is a region scope.
+- "js/compose/sketchpad/Sketchpad.tsx#State Managment#Store" is a sub-region scope.
+- "js/compose/sketchpad/Sketchpad.tsx§Sketchpad" is a definition scope.
   Policies are typescript functions that produce different kind of breachs. Policies can provide an autofix for every kind of breach. The fix script autofixes all autofixable breachs.
   Breach have a summary, kind, priority (high, medium, low), autofixable flag and a solution text.
   E.g. Policy
 - Name: "Header Region"
-  Id: "semio.policy.header-region"
+  Id: "compose.policy.header-region"
   Scopes: ["**/*.(ts|tsx|py|cs)"]
   Reason: "All source code must have a header region with a filepath, contributor and license."
   Breachs: [
   {
-  Kind: "semio.breach.header-region.missing-filepath",
+  Kind: "compose.breach.header-region.missing-filepath",
   Priority: "low",
   Autofixable: true,
   }
   ]
   Here some example breachs that could be produced by the policy:
   Breachs: Header Region policy can produce the following breachs:
-- Summary: "Missing filepath in the header region of `js/semio/sketchpad/Sketchpad.tsx`."
-  Kind: "semio.breach.header-region.missing-filepath"
-  Scopes: ["js/semio/sketchpad/Sketchpad.tsx"]
+- Summary: "Missing filepath in the header region of `js/compose/sketchpad/Sketchpad.tsx`."
+  Kind: "compose.breach.header-region.missing-filepath"
+  Scopes: ["js/compose/sketchpad/Sketchpad.tsx"]
   Priority: "low"
   Autofixable: true
   Solution: "Add the filepath to the header region."
-- Summary: "Wrong filepath in the header region in `js/semio/sketchpad/Sketchpad.tsx`."
-  Kind: "semio.breach.header-region.wrong-filepath"
-  Scopes: ["js/semio/sketchpad/Sketchpad.tsx"]
+- Summary: "Wrong filepath in the header region in `js/compose/sketchpad/Sketchpad.tsx`."
+  Kind: "compose.breach.header-region.wrong-filepath"
+  Scopes: ["js/compose/sketchpad/Sketchpad.tsx"]
   Priority: "low"
   Autofixable: true
   Solution: "Update the filepath in the header region to the actual filepath of the file."
-- Summary: "js/semio/sketchpad/Sketchpad.tsx is missing a contributor in the header region."
-  Kind: "semio.breach.header-region.missing-contributor"
-  Scopes: ["js/semio/sketchpad/Sketchpad.tsx"]
+- Summary: "js/compose/sketchpad/Sketchpad.tsx is missing a contributor in the header region."
+  Kind: "compose.breach.header-region.missing-contributor"
+  Scopes: ["js/compose/sketchpad/Sketchpad.tsx"]
   Priority: "low"
   Autofixable: true
   Solution: "Add the contributor to the header region."
-- Summary: "js/semio/sketchpad/Sketchpad.tsx is missing a license in the header region."
-  Kind: "semio.breach.header-region.missing-license"
+- Summary: "js/compose/sketchpad/Sketchpad.tsx is missing a license in the header region."
+  Kind: "compose.breach.header-region.missing-license"
   Priority: "low"
   Autofixable: true
   Solution: "Add the license to the header region."
 
-Every policy has an id e.g. "semio.policy.header-format.missing-filepath"
+Every policy has an id e.g. "compose.policy.header-format.missing-filepath"
 E.g. repo-wide policy:
 
 - Undocumented Code
@@ -7347,12 +7347,12 @@ Policies are always documented in the dev-docs (README.md and AGENTS.md). They a
 Extend the code.ts hook to that all AGENTS.md headers under # Codebase meaning ## PATH are actual files and folders, all have the proper prefix (📁 or 📄), are sorted alphabetically and none appear twice. Create breachs for all individual breachs.
 
 Make the reasons and solutions specific to the codebase and the files. Read the devs docs to understand the reasons.
-E.g. when explaining why comments are removed, explain that code is never documented and instead everything is documented multiple times in the devdocs. 1. Under `# 🛍️ Products` in README.md where it is described from user perspective [architects, designers, engineers, …] (framework-agnostic, no implementation references, etc) 2. Under `# 📦 Components` in README.md where it is described from junior-developer perspective (mechanism explanation and reasoning behind the decision, how theory links to implementation, etc). 3. Under `# Software Requirements Specification` in AGENTS.md where it is described from human-interface-designer perspective (concise technical terms without explanation, framework-agnostic, no implementation references). There are two sections: `# Business Logic` and `# UI/UX`. 4. Under `# Codebase` in AGENTS.md where it is described from senior-developer perspective (framework-mechanisms, consice technical terms without explanation, implementation details, etc). The section has the same header structure as the files and folders. All files and folders are flat with `## PATH` e.g. `## js/semio/sketchpad/` or `## net/Semio.cs`
+E.g. when explaining why comments are removed, explain that code is never documented and instead everything is documented multiple times in the devdocs. 1. Under `# 🛍️ Products` in README.md where it is described from user perspective [architects, designers, engineers, …] (framework-agnostic, no implementation references, etc) 2. Under `# 📦 Components` in README.md where it is described from junior-developer perspective (mechanism explanation and reasoning behind the decision, how theory links to implementation, etc). 3. Under `# Software Requirements Specification` in AGENTS.md where it is described from human-interface-designer perspective (concise technical terms without explanation, framework-agnostic, no implementation references). There are two sections: `# Business Logic` and `# UI/UX`. 4. Under `# Codebase` in AGENTS.md where it is described from senior-developer perspective (framework-mechanisms, consice technical terms without explanation, implementation details, etc). The section has the same header structure as the files and folders. All files and folders are flat with `## PATH` e.g. `## js/compose/sketchpad/` or `## net/Compose.cs`
 The purpose of the dev docs is to understand the codebase. NEVER add reasoning or process related (such as what changed, why, how, … - this is part of the log) to the dev docs.
 
 Extend the code analysis hook. Make sure that every breach has a reason text field and a solution text field. E.g. A solution for duplicate paths is to merge them or remove one if one is clearly outdated.
 More examples for a reason for forbidden imports:
-elements.tsx is a general-purpose ui library and should not import anything from sketchpad or any app. It is the only file that can import third party libraries and reexpose them as components. All other files in the js/semio folder should be self-contained and dependency free from any other library outside of the js/semio folder.
+elements.tsx is a general-purpose ui library and should not import anything from sketchpad or any app. It is the only file that can import third party libraries and reexpose them as components. All other files in the js/compose folder should be self-contained and dependency free from any other library outside of the js/compose folder.
 Sketchpad.tsx offers scaffolding to apps but is independent of app internals. Importing from app files violates the open/closed principle. Adding an app should not require modifying Sketchpad.tsx and just mean to add a file. Removing an app should not require modifying Sketchpad.tsx and just mean to remove a file.
 Provide reasons and solutions to all code breachs.
 
@@ -7405,7 +7405,7 @@ Make sure that the headers of all files follow a specific scheme. Adjust analyze
   e.g.
   // #region 🔖Header
 
-// FILEPATH/FILENAME.EXTENSION e.g. js/semio/sketchpad/Sketchpad.tsx
+// FILEPATH/FILENAME.EXTENSION e.g. js/compose/sketchpad/Sketchpad.tsx
 
 // CONTRIBUTIONYEARS CONTRIBUTOR e.g. 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -7427,10 +7427,10 @@ Make sure that the headers of all files follow a specific scheme. Adjust analyze
 The log.ts script should be extended with an flag plan that takes a markdown file path and adds it directly to the plan section of the ticket.
 
 Extend the code.ts hook to find more breachs. Add two more statutes: forbidden imports and forbidden terminology. Forbidden imports checks if imports are structurally forbidden. Forbidden terminology checks if specific terminology is used somewhere where it shouldnt be allowed e.g. when domain-specific terminology is used in general-purpose files.
-Here some policies for js/semio:
+Here some policies for js/compose:
 
-- elements.tsx are pure reusable ui elements library that are indepedent of semio. They should not import anything from sketchpad or any app or contain any semio domain-specific terminology (kit, design, type, connector, connection, docs, feedback). elements.tsx is the only file that can import third party libraries and reexpose them as components. All other files in the js/semio folder should be self-contained and dependency free from any other library outside of the js/semio folder.
-- Sketchpad.tsx and the other app files (Home.tsx, Kit.tsx, Design.tsx, Type.tsx, Quality.tsx, Docs.tsx, Feedback.tsx) should follow the open/closed principle. Sketchpad.tsx should only import from elements.tsx, semio.ts, shared.ts. The apps should only import from Sketchpad.tsx, elements.tsx, semio.ts, shared.ts.
+- elements.tsx are pure reusable ui elements library that are indepedent of compose. They should not import anything from sketchpad or any app or contain any compose domain-specific terminology (kit, design, type, connector, connection, docs, feedback). elements.tsx is the only file that can import third party libraries and reexpose them as components. All other files in the js/compose folder should be self-contained and dependency free from any other library outside of the js/compose folder.
+- Sketchpad.tsx and the other app files (Home.tsx, Kit.tsx, Design.tsx, Type.tsx, Quality.tsx, Docs.tsx, Feedback.tsx) should follow the open/closed principle. Sketchpad.tsx should only import from elements.tsx, compose.ts, shared.ts. The apps should only import from Sketchpad.tsx, elements.tsx, compose.ts, shared.ts.
   If the file is deleted then sketchpad should work, if a new file is added, the new app should work. The hook should scan for all static and dynamic imports that violate the above policies.
 
 ### ⌨️client
@@ -7485,7 +7485,7 @@ repo/cli/cli project list
 
 - [👤pycache](repo://p/u/__pycache__)
 - [🔬coda](repo://p/r/coda)
-- [🏘️semio](repo://p/u/semio)
+- [🏘️compose](repo://p/u/compose)
 - [🧰repo](repo://p/i/repo)
 
 TODO: introduce proper events for repo specific tool calls.
@@ -7763,9 +7763,9 @@ repo vscode:
 Add 2 code lenses `Summarize` and `Open` for every id in source code files. such as e.g.:
 `## 🧰repo⌨️cli💻maingo`
 `// 🧰repo⌨️cli💻maingo`
-`// [🧰repo⌨️cli💻maingo](repo://project/semio/bundle/js/folder/sketchpad/file/Design.tsx)`
+`// [🧰repo⌨️cli💻maingo](repo://project/compose/bundle/js/folder/sketchpad/file/Design.tsx)`
 etc.
-Show semio icon gutter on the same line of the id.
+Show compose icon gutter on the same line of the id.
 `Summarize` should call the `summarize` command with the id.
 `Open` should navigate to the entity in the editor.
 Make sure that navigation to uris is working.
@@ -8523,8 +8523,8 @@ should be
 // #endregion 🔖Header
 
 All searching patterns with line numbers should be displayed like this:
- `semio/js/sketchpad/Design.tsx#L532` for lines
- `semio/js/sketchpad/Design.tsx#L532-L771` for ranges
+ `compose/js/sketchpad/Design.tsx#L532` for lines
+ `compose/js/sketchpad/Design.tsx#L532-L771` for ranges
  here some wrong displays:
  ```json
 {
@@ -8656,7 +8656,7 @@ Extend the cli by a general project requirements, docs and todo generation syste
 ```bash
 ./repo/cli/cli project <project-name> generate <kind>
 
-./repo/cli/cli project semio generate requirements
+./repo/cli/cli project compose generate requirements
 ./repo/cli/cli project repo generate docs
 ./repo/cli/cli project coda generate todos
 ```
@@ -8789,14 +8789,14 @@ e.g `./repo/cli/cli mermaid loc-by-projects-bundles-folders-files` should be som
 ```mermaid
 treemap-beta
 "Lines of Code (k)"
-    "🏘️semio"
+    "🏘️compose"
       "📚js"
         "🗃️skethcpad"
           "💻designtsx"
             "🔖statemanagment"
               "🔖store": 40
             "🔖designtsx": 80
-        "💻semio.ts": 30
+        "💻compose.ts": 30
       "📚sketchpad": 80
     "🧰repo"
       "⌨️cli": 30
@@ -8813,7 +8813,7 @@ treemap-beta
       "📚js"
         "🗃️skethcpad"
           "💻Design.tsx": 80
-        "💻semio.ts": 30
+        "💻compose.ts": 30
       "📚sketchpad": 80
     "🧰repo"
       "⌨️cli": 30
@@ -8825,7 +8825,7 @@ treemap-beta
 
 repo:
 The id system has some problems. Recently special root project and root bundle was introduced. There are only meant for orphan folders and files.
-e.g. 🏘️semio🏪assets🌱root🗃️repo🗃️some🗃️folder💻filefixabletsx🔖missingend should be `🏘️semio🏪assets🗃️some🗃️folder💻filefixabletsx🔖missingend`
+e.g. 🏘️compose🏪assets🌱root🗃️repo🗃️some🗃️folder💻filefixabletsx🔖missingend should be `🏘️compose🏪assets🗃️some🗃️folder💻filefixabletsx🔖missingend`
 
 ---
 
@@ -8909,32 +8909,32 @@ projects: `repo://projects` e.g. `repo://projects`
 project: `repo://project/{{project-id}}` e.g. `repo://project/repo`
 bundles: `repo://bundles/{{project-id}}` e.g. `repo://bundles/repo`
 bundle: `repo://bundle/{{project-id}}/{{bundle-code}}` e.g. `repo://bundle/repo/cli`
-folders: `repo://folders/{{uri-encoded-parent-path?*}}` e.g. `repo://folders/semio/js`
-folder: `repo://folder/{{uri-encoded-path*}}` e.g. `repo://folder/semio/js/sketchpad`
-files: `repo://files/{{uri-encoded-parent-path?*}}` e.g. `repo://files/semio/js/sketchpad`
-file: `repo://file/{{uri-encoded-file-path*}}` e.g. `repo://file/semio/js/sketchpad/design.tsx`
-lines: `repo://lines/{{uri-encoded-file-path*}}` e.g. `repo://lines/semio/js/sketchpad/design.tsx`
-line: `repo://line/{{uri-encoded-file-path*}}/{{linenumber}}` e.g. `repo://line/semio/js/sketchpad/design.tsx/3872`
-ranges: `repo://ranges/{{uri-encoded-file-path*}}` e.g. `repo://ranges/semio/js/sketchpad/design.tsx`
-range: `repo://range/{{uri-encoded-file-path*}}/{{start-linenumber}}/{{end-linenumber}}` e.g. `repo://range/semio/js/sketchpad/design.tsx/3872/3875`
-sections: `repo://sections/{{uri-encoded-file-path*}}` e.g. `repo://sections/semio/js/sketchpad/design.tsx`
-section: `repo://section/{{uri-encoded-section-path*}}` e.g. `repo://section/semio/js/sketchpad/design.tsx/State%20Management/Design%20Store`
-definitions: `repo://definitions/{{uri-encoded-parent-section-path*}}` e.g. `repo://definitions/semio/js/sketchpad/design.tsx/State%20Management/Design%20Store`
-definition: `repo://definition/{{uri-encoded-definition-path*}}` e.g. `repo://definition/semio/js/sketchpad/design.tsx/State%20Management/Design%20Store/createSketchpadStore`
+folders: `repo://folders/{{uri-encoded-parent-path?*}}` e.g. `repo://folders/compose/js`
+folder: `repo://folder/{{uri-encoded-path*}}` e.g. `repo://folder/compose/js/sketchpad`
+files: `repo://files/{{uri-encoded-parent-path?*}}` e.g. `repo://files/compose/js/sketchpad`
+file: `repo://file/{{uri-encoded-file-path*}}` e.g. `repo://file/compose/js/sketchpad/design.tsx`
+lines: `repo://lines/{{uri-encoded-file-path*}}` e.g. `repo://lines/compose/js/sketchpad/design.tsx`
+line: `repo://line/{{uri-encoded-file-path*}}/{{linenumber}}` e.g. `repo://line/compose/js/sketchpad/design.tsx/3872`
+ranges: `repo://ranges/{{uri-encoded-file-path*}}` e.g. `repo://ranges/compose/js/sketchpad/design.tsx`
+range: `repo://range/{{uri-encoded-file-path*}}/{{start-linenumber}}/{{end-linenumber}}` e.g. `repo://range/compose/js/sketchpad/design.tsx/3872/3875`
+sections: `repo://sections/{{uri-encoded-file-path*}}` e.g. `repo://sections/compose/js/sketchpad/design.tsx`
+section: `repo://section/{{uri-encoded-section-path*}}` e.g. `repo://section/compose/js/sketchpad/design.tsx/State%20Management/Design%20Store`
+definitions: `repo://definitions/{{uri-encoded-parent-section-path*}}` e.g. `repo://definitions/compose/js/sketchpad/design.tsx/State%20Management/Design%20Store`
+definition: `repo://definition/{{uri-encoded-definition-path*}}` e.g. `repo://definition/compose/js/sketchpad/design.tsx/State%20Management/Design%20Store/createSketchpadStore`
 goals: `repo://goals/{{uri-encoded-parent-goal-path?*}}` e.g. `repo://goals/r26.02-1`
 goal: `repo://goal/{{uri-encoded-goal-path*}}` e.g. `repo://goal/r26.02-1/Running%20Sketchpad`
 tickets: `repo://tickets/{{uri-encoded-parent-scope?*}}` e.g. `repo://tickets/r26.02-1/Running%20Sketchpad`
 ticket: `repo://ticket/{{uri-encoded-ticket-path*}}` e.g. `repo://ticket/r26.02-1/Running%20Sketchpad/Introduce%20Key%20Guid%20Uri%20Mechanism`
 drafts: `repo://drafts/{{uri-encoded-parent-resource-uri?*}}` e.g. `repo://drafts/repo%3A%2F%2Fbundle%2Frepo%2Fcli`
 draft: `repo://draft/{{uri-encoded-parent-resource-uri*}}/{{uri-encoded-draft-title*}}` e.g. `repo://draft/repo%3A%2F%2Fbundle%2Frepo%2Fcli/New%20Architecture`
-todos: `repo://todos/{{uri-encoded-parent-resource-uri?*}}` e.g. `repo://todos/repo%3A%2F%2Fdefinition%2Fsemio%2Fjs%2Fsketchpad%2Fdesign.tsx%2FState%2520Management%2FDesign%2520Store%2FcreateSketchpadStore`
-todo: `repo://todo/{{uri-encoded-parent-resource-uri*}}/{{uri-encoded-todo-title*}}` e.g. `repo://todo/repo%3A%2F%2Fdefinition%2Fsemio%2Fjs%2Fsketchpad%2Fdesign.tsx%2FState%2520Management%2FDesign%2520Store%2FcreateSketchpadStore/Introduce%20Proper%20Sync%20Mechanism`
+todos: `repo://todos/{{uri-encoded-parent-resource-uri?*}}` e.g. `repo://todos/repo%3A%2F%2Fdefinition%2Fcompose%2Fjs%2Fsketchpad%2Fdesign.tsx%2FState%2520Management%2FDesign%2520Store%2FcreateSketchpadStore`
+todo: `repo://todo/{{uri-encoded-parent-resource-uri*}}/{{uri-encoded-todo-title*}}` e.g. `repo://todo/repo%3A%2F%2Fdefinition%2Fcompose%2Fjs%2Fsketchpad%2Fdesign.tsx%2FState%2520Management%2FDesign%2520Store%2FcreateSketchpadStore/Introduce%20Proper%20Sync%20Mechanism`
 policies: `repo://policies/{{uri-encoded-parent-resource-or-kind?*}}` e.g. `repo://policies/code`
 policy: `repo://policy/{{uri-encoded-parent-resource-or-kind?*}}/{{uri-encoded-policy-name*}}` e.g. `repo://policy/code/Godfiles`
 statutes: `repo://statutes/{{uri-encoded-policy-path?*}}` e.g. `repo://statutes/code/Godfiles`
 statute: `repo://statute/{{uri-encoded-policy-path*}}/{{uri-encoded-statute-name*}}` e.g. `repo://statute/code/Godfiles/Max%20Lines%20Per%20File`
 breaches: `repo://breaches/{{uri-encoded-policy-path?*}}` e.g. `repo://breaches/code/Godfiles`
-breach: `repo://breach/{{uri-encoded-policy-path*}}/affects/{{uri-encoded-affected-resource-uri*}}/at/{{uri-encoded-location-uri*}}/when/{{uri-encoded-second-path*}}` e.g. `repo://breach/code/Godfiles/affects/repo%3A%2F%2Ffile%2Fsemio%2Fjs%2Fsketchpad%2Fdesign-store.ts/at/repo%3A%2F%2Frange%2Fsemio%2Fjs%2Fsketchpad%2Fdesign-store.ts%2F3872-3875/when/repo%3A%2F%2Fsecond%2F26%2F02%2F14%2F19%2F07%2F12`
+breach: `repo://breach/{{uri-encoded-policy-path*}}/affects/{{uri-encoded-affected-resource-uri*}}/at/{{uri-encoded-location-uri*}}/when/{{uri-encoded-second-path*}}` e.g. `repo://breach/code/Godfiles/affects/repo%3A%2F%2Ffile%2Fcompose%2Fjs%2Fsketchpad%2Fdesign-store.ts/at/repo%3A%2F%2Frange%2Fcompose%2Fjs%2Fsketchpad%2Fdesign-store.ts%2F3872-3875/when/repo%3A%2F%2Fsecond%2F26%2F02%2F14%2F19%2F07%2F12`
 contributors: `repo://contributors` e.g. `repo://contributors`
 contributor: `repo://contributor/{{uri-encoded-contributor-name*}}` e.g. `repo://contributor/usalu`
 commits: `repo://commits` e.g. `repo://commits`
@@ -9418,22 +9418,22 @@ Steps:
 - 🧾 Normalize historical ticket status metadata
 - ♻️ Add reuse research knowledge base with prompts, taxonomy pages, and seed entities
 🎆26🌙04☀️19
-- 👪 Introduce Family as first-class entity across Semio languages and assets
+- 👪 Introduce Family as first-class entity across Compose languages and assets
 - 🧹 Remove parent fields from Type and Design entities
 - 🔄 Regenerate metabolism kit diffs after family migration
 - 🎯 Add goals MCP resource and refresh agent instructions
 🎆26🌙04☀️18
-- 🧱 Refactor Semio TypeScript kit object model
+- 🧱 Refactor Compose TypeScript kit object model
 🎆26🌙04☀️17
 - 🧰 Refactor Kit APIs to stateful OO flow across TypeScript, Go, Rust, Python, and .NET
 - 🧩 Reimplement kit diffs as JSON Patch on JSON kits
 - 🧪 Externalize shared fixtures and align cross-language test parity
 - 🧮 Add Merkle hash cache contract and fixtures for flattenDesign
 - 🧭 Add kit graph support and generated class documentation
-- 🏠 Rename Semio server to Semio Hub
+- 🏠 Rename Compose server to Compose Hub
 - 🕹️ Centralize Sketchpad state, logging, and store dispatch flow
 - ⚡ Fix Sketchpad drag, delete story, metabolism import, and flatten cache regressions
-- 📊 Add Semio benchmark coverage and VS Code launch support
+- 📊 Add Compose benchmark coverage and VS Code launch support
 🎆26🌙04☀️16
 - 🛡️ Add admin dashboard and Kubernetes cluster deployment
 - 🔁 Enforce transactions and fix diff display flow
@@ -9442,7 +9442,7 @@ Steps:
 - 🌐 Fix Play site deployed asset loading
 - 📦 Separate Sketchpad runtime assets and remove bundled runtime artifacts
 - 🧭 Reorder Sketchpad toolbar groups
-- 🧹 Strip Semio, Coda, and Playwright MCP entries from agent configs
+- 🧹 Strip Compose, Coda, and Playwright MCP entries from agent configs
 🎆26🌙04☀️15
 - 🧭 Update repo CLI filtering, tests, and VS Code icon assets
 - 🛠️ Adjust devcontainer, MCP, Kiro, Cursor, and Windsurf agent configs
@@ -9500,7 +9500,7 @@ coda:
 
 coda desktop and coda mcp need to work together. desktop needs to update whenever something is happening in the mcp server and show every single event along with all possible information. Introduce an event system for that purpose. Furhter coda desktop needs to be useable without the mcp server. All calls where agents produce output offer the possiblity to manually pass in the output (e.g the result from translate or validate)
 
-coda py is currently only an mcp server. Extend the program to be either a sidecar binary for electron or an mcp server. In both cases, make it stateful, to remember the current project, iteration etc. The mcp tool calls should be similar to the semio engine mcp such as start_working_on_project, start_run, start_iteration, start_translation, etc
+coda py is currently only an mcp server. Extend the program to be either a sidecar binary for electron or an mcp server. In both cases, make it stateful, to remember the current project, iteration etc. The mcp tool calls should be similar to the compose engine mcp such as start_working_on_project, start_run, start_iteration, start_translation, etc
 Follow:
 Electron main starts helper on app launch or first use
 Communicate via structured JSON messages over stdio
@@ -9570,14 +9570,14 @@ The window background color of all windows is still according base. Make sure to
 
 The diagram component should be generalized to be used for all diagrams (kit app, design app, quality app, etc).
 The layout is controlled over a diagram coordinate system (1 unit is equal to the diameter of the a circular nodes.)
-Everything is rexported in semio coordinate system (onNodeDrag, onNavigate, etc)
+Everything is rexported in compose coordinate system (onNodeDrag, onNavigate, etc)
 A node can either be circular with an icon or square with a text label.
 Handles are dots on the edges of the node controlled by a parameter from 0 to 1. 9 and 1 is 12'clock position and it increases clockwise.
 elements.tsx should be the only file to import "@xyflow/react";
 Make a refactor plan for Design.tsx, Kit.tsx and Quality.tsx to move to the new diagram component.
 @Design.tsx@elements.tsx@Quality.tsx@Kit.tsx
 
-Analyze the js/semio codebase for state managment inconsistencies (hooks, context providers, state machine, commands, etc).
+Analyze the js/compose codebase for state managment inconsistencies (hooks, context providers, state machine, commands, etc).
 Remember that every component should have a triadic hook: [STATE,SETSTATE,CANSETSTATE]=useSELECTOR()
 Every component should only use the state write state and never use the commands directly. Only the machine is allowed to use the commands.
 Use fine grained subscriptions for all kit states.
@@ -9745,7 +9745,7 @@ Migrate all existing logs to new schema.
 
 Make sure that comments in config files and comments between header region are ignored in comment analysis and removal. TODOs should also be ignored. <reference types... in typescript files should also be ignored. In python regions are classified as comments but they shouldnt.
 Extend the fix script to automatically add license headers when they are missing. They all follow the same structure. Use Ueli Saluz as default.
-Ignore all package READMEs such as net/Semio/README.md
+Ignore all package READMEs such as net/Compose/README.md
 
 - Table window is empty.
 - All nodes should just be circle as all other nodes of the other diagrams with the icon of the artifact.
@@ -9779,7 +9779,7 @@ Every feature, decision should be undocumented/uncommented in the code and docum
 2. Under components in README.md where it is described from junior-developer perspective (mechanism explanation and reasoning behind the decision, how theory links to implementation, etc).
 3. Under Software Requirements Specification in AGENTS.md where it is described from human-interface-designer perspective (concise technical terms without explanation, framework-agnostic, no implementation references).
 4. Under Codebase in AGENTS.md where it is described from senior-developer perspective (framework-mechanisms, consice technical terms without explanation, implementation details, etc).
-   The AGENTS.md `# Codebase` section has the same header structure as the files and folders. All files and folders are flat with `## PATH` e.g. `## js/semio/sketchpad/` or `## net/Semio.cs`
+   The AGENTS.md `# Codebase` section has the same header structure as the files and folders. All files and folders are flat with `## PATH` e.g. `## js/compose/sketchpad/` or `## net/Compose.cs`
    The README.md structure is more human friendly according ecosystem and components.
    Migrate all existing docs and code to the new structure. Update outdated docs.
    Example
@@ -9790,8 +9790,8 @@ Every feature, decision should be undocumented/uncommented in the code and docum
 
 ## ✏️ sketchpad [↑](#%EF%B8%8F-products-)
 
-[sketchpad](#%EF%B8%8F-sketchpad-) is a simple-to-use, accessible and browser-based user interface for semio🖱️️
-It is the digital pencil for sketching plans and digital scalpel for building models in semio ✍️
+[sketchpad](#%EF%B8%8F-sketchpad-) is a simple-to-use, accessible and browser-based user interface for compose🖱️️
+It is the digital pencil for sketching plans and digital scalpel for building models in compose ✍️
 ![sketchpad demo](/assets/images/sketchpad-demo.gif)
 ```
 
@@ -9800,7 +9800,7 @@ It is the digital pencil for sketching plans and digital scalpel for building mo
 ```markdown
 # 🛍️ Products [↑](#-overview)
 
-## 🟨 [semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-components-)
+## 🟨 [compose/js](https://github.com/usalu/semio/tree/main/js/compose) [↑](#-components-)
 
 <details>
 <summary><strong>📚 Resources:</strong></summary>
@@ -9864,7 +9864,7 @@ It is the digital pencil for sketching plans and digital scalpel for building mo
 <summary><strong>📼 Videos:</strong></summary>
 - [React State Managment](https://www.youtube.com/watch?v=-bEzt5ISACA)
 </details>
-The core which is shared in the [semio JavaScript ecosystem](#-javascript-) 🥜
+The core which is shared in the [compose JavaScript ecosystem](#-javascript-) 🥜
 ```
 
 3. Human-Port-Design
@@ -9901,11 +9901,11 @@ canvas (filter band, concept strip, table)
 
 ## js
 
-## js/semio
+## js/compose
 
-## js/semio/sketchpad
+## js/compose/sketchpad
 
-## js/semio/sketchpad/Sketchpad.tsx
+## js/compose/sketchpad/Sketchpad.tsx
 
 ### State managment
 
@@ -9949,7 +9949,7 @@ has hardcoded german translations (should only use locales files)
 has mjs and ts file
 is falsely classifying a lot of keys as unused
 
-The development section should be extended by a section connector numbers (not semio connectors but "regular" connector). There should be an overview table of all connectors used for dev commands (such as storybook, sketchpad, play) or final packages (such as engine that has a variable connector number according release numer r25.02-1->2507). The new connector for sketchpad should be 3000 and for play 4000.
+The development section should be extended by a section connector numbers (not compose connectors but "regular" connector). There should be an overview table of all connectors used for dev commands (such as storybook, sketchpad, play) or final packages (such as engine that has a variable connector number according release numer r25.02-1->2507). The new connector for sketchpad should be 3000 and for play 4000.
 
 Add a new policy that whenever a new file is created, deleted or moved, it should update the file and folder structure in the dev docs (AGENTS.md and README.md)
 
@@ -10018,7 +10018,7 @@ The preflight mechanism should be broken down into
 
 Table rows should have the same height as the footer bar (same as height of e.g. action + 1 unit spacing top and bottom)
 
-semio.sketchpad.app.design.properties details section is empty. Extend the design test to check for the name input to be a tree item.
+compose.sketchpad.app.design.properties details section is empty. Extend the design test to check for the name input to be a tree item.
 
 transaction={{
               start: () => transaction?.start(),
@@ -10077,9 +10077,9 @@ Here is a draft for a machine with more states:
 useSyncDeep, useSyncField, useSyncNestedArrayItemMembership, useSyncSelectionItemMembership,
 
 All imported geometry (such as imported models) are displayed with their original materials. All meshes should instead have plaster material and anything 2d like lines or points should have plaster-edge material.
-@js/semio/globals.css
-@js/semio/sketchpad/elements.tsx
-@js/semio/sketchpad/Design.tsx
+@js/compose/globals.css
+@js/compose/sketchpad/elements.tsx
+@js/compose/sketchpad/Design.tsx
 
 Previously all SETSTATE used to have origin as first argument. The new sketchpad works with OriginProvider/Context and useOrigin(). The implementation of the triadic hook then fetches the origina and adds it to the command as first argument.
 Make sure that every component that has an id is also providing it to all the children and children to their children, etc.
@@ -10175,7 +10175,7 @@ Find comments between code
 
 Take a very close look at how to overcome the hover issues. With larger kits it becomes unusable depsite it only being design app state.
 
-semio and threejs have different coordinate systems.
+compose and threejs have different coordinate systems.
 connectors in type app are not displayed correctly.
 geometry with plane (such as as pieces is not correctly rendered).
 pieces should be displayed at the flat planes (the flat
@@ -10193,7 +10193,7 @@ Migrate Cylindric Capital to be a child of Capital
 Migrate Cyclindric Tambour to be a child of Tambour
 
 Not all Model ENTITY components have the right inputs/outputs (e.g. diff and diffs components have nothing). Some entities are missing entirely (such as folders, concepts, tags, ports, etc). Every Entity (exception weak entities such as side) has as first three params: ENTITIY?, Vd?, Gd
-Check the semio.ts schema throughly.
+Check the compose.ts schema throughly.
 Model ENTITYId components are no longer required because every entity has a guid. Keep The ENITITYId Params with casts, etc.
 Almost all Params are missing
 
@@ -10208,22 +10208,22 @@ Fix/adjust/refactor whatever is necessary in the implementation (dont simplify o
 The design app works very smooth for small kits.
 @sketchpad.test.ts @Sketchpad.tsx @Type.tsx @shared.ts
 
-The python tests are massively incomplete compared to the semio.tests.ts. They need to check the same functionality. Never shortcut. Use the same test structure. Additionally there are two more engine tests: rest and graphql. Both tests have the same scheme: the first assertion uses the metabolism kit json to create it and then reads it. They must be 100% identical. The second assertion creates the metabolism kit, then sends the kit diff to update it and then reads from the kit. The result must be 100% identical to diffed kit.
+The python tests are massively incomplete compared to the compose.tests.ts. They need to check the same functionality. Never shortcut. Use the same test structure. Additionally there are two more engine tests: rest and graphql. Both tests have the same scheme: the first assertion uses the metabolism kit json to create it and then reads it. They must be 100% identical. The second assertion creates the metabolism kit, then sends the kit diff to update it and then reads from the kit. The result must be 100% identical to diffed kit.
 Finish when all tests are setup and the implementation complies to it. Refactor whatever is necessary to comply to the tests. No test simplification or shortcuts allowed.
-semio.ts semio.test.ts @engine.py @engine.test.py @kit_metabolism.json @kit_metabolism_diffed.json @diff_kit_metabolism.json
+compose.ts compose.test.ts @engine.py @engine.test.py @kit_metabolism.json @kit_metabolism_diffed.json @diff_kit_metabolism.json
 
 The validation mechanism must work identical on all implementations (typescript, pyton and c#). The serialization must be identical. For this purpose there should be a new Validation test that is added everywhere. validation.json must be the output from all impementation. From there on different uis exist that use the validation mechanism (such as vscode extension). Make sure that Validation tests comply and refactor/extend whatever is necessary.
-@validation.json @kit_invalid.json semio.ts semio.test.ts @extension.ts @Semio.cs @Semio.Grasshopper.cs @Tests.cs @engine.py @engine.test.py
+@validation.json @kit_invalid.json compose.ts compose.test.ts @extension.ts @Compose.cs @Compose.Grasshopper.cs @Tests.cs @engine.py @engine.test.py
 
-The schema from C# and Grasshopper are out of date compared to semio.ts. The test suite from C# matches the typescript one. Make sure that the C# implementation makes the tests pass again.
+The schema from C# and Grasshopper are out of date compared to compose.ts. The test suite from C# matches the typescript one. Make sure that the C# implementation makes the tests pass again.
 "Nakagin Capsule Tower"
 "Nakagin Capsule Tower", "Slanted"
 "Nakagin Capsule Tower", "Twisted"
 "Nakagin Capsule Tower", "Dancing"
 "Capsule Dream"
 
-The python codebase should be split up into two packages: semio and semio-engine
-semio has all the domain logic and engine
+The python codebase should be split up into two packages: compose and compose-engine
+compose has all the domain logic and engine
 Make sure to exclusively use uv and not poetry.
 The test should be consolidated into the following test suites:
 Diffs
@@ -10242,15 +10242,15 @@ All the performance issues come guaranteed from overfetching. The app is really 
 In the ui system of sketchpad every ui element has an id. All dom elements receive this id. Ids are globally unique and must also be unique for the dom. If a component has multiple wrappers then only add the id to the dom element that is interacted with.
 Plenty of components are missing ids.
 Analyze the codebase, make a plan, fix all implementations and add missing documentation.
-E.g. the workbench panel should have "semio.sketchpad.app.design.panel.workbench"
-the pieces div should be "semio.sketchpad.app.design.panel.workbench.pieces"
+E.g. the workbench panel should have "compose.sketchpad.app.design.panel.workbench"
+the pieces div should be "compose.sketchpad.app.design.panel.workbench.pieces"
 the types div should be
-"semio.sketchpad.app.design.panel.workbench.pieces.types"
+"compose.sketchpad.app.design.panel.workbench.pieces.types"
 
-Currently the Grasshopper components are tied with reflection to the Semio.cs schema. This means that it breaks on schema changes. In Grasshopper the input/output structure should never change. The new Grasshopper Implementation will support opening different versions of Semio.cs by renaming old Components and marking them as obsolete and always update the logic to work with the newest buissness logic.
+Currently the Grasshopper components are tied with reflection to the Compose.cs schema. This means that it breaks on schema changes. In Grasshopper the input/output structure should never change. The new Grasshopper Implementation will support opening different versions of Compose.cs by renaming old Components and marking them as obsolete and always update the logic to work with the newest buissness logic.
 For this purpose reflection should disappear and input/output should be hardcoded.
 All Meta section with reflection should be deleted.
-Refactor the complete Semio.Grasshopper.cs Plugin and finish once it compiles again.
+Refactor the complete Compose.Grasshopper.cs Plugin and finish once it compiles again.
 
 The store is still massively overfetching and overrendering. Optimize the state managment.
 Every single information fetched from the store should be directly subscribed to the yjs map/array. When only depending on some items of a collection, it should not update when another item of the collection changes.
@@ -10287,7 +10287,7 @@ Components should never use general hooks (such as useKit) and then filter local
 Every change in state works over commands. Commands have no side effects and only the store is applying the diffs.
 
 Schema change: Add mime to files.
-Write a migration script that migrates the kit_metablism.json to be semio.ts conformant. E.g. currently files have path name but they should have name + folder + mime
+Write a migration script that migrates the kit_metablism.json to be compose.ts conformant. E.g. currently files have path name but they should have name + folder + mime
 
 Extend/fix the tests:
 You removed plenty of functionality which you should not do. E.g. drag and drop of pieces into diagram and scene. 5 times for diagram and 5 times for scene in the middle and near each corner of the winow. See old code.
@@ -10313,7 +10313,7 @@ Change home, kit, design and type tests. They should not work on new kit/design/
 Add explicit mime field to files
 
 Finish:
-Write a migration script for kit_metabolism.json.old to kit_metabolism.json that extract the models for each type (formerly called representations - along with tags, etc). Analyze the new schema in semio.ts. After executing the migration script as long as it is wrong, use git checkout on the kit_metabolism.json file to restore it. Finish once all mising information from the old kit is migrated.
+Write a migration script for kit_metabolism.json.old to kit_metabolism.json that extract the models for each type (formerly called representations - along with tags, etc). Analyze the new schema in compose.ts. After executing the migration script as long as it is wrong, use git checkout on the kit_metabolism.json file to restore it. Finish once all mising information from the old kit is migrated.
 
 There are schema changes:
 Tags should become kit entites (with guid, name, description, attributes, etc)
@@ -10365,9 +10365,9 @@ Or whenever a kit/design/type/quality/etc or docs page is not found display disp
 
 Refactor all the state managment and command execution of the apps (home app, kit app, design app, type app).
 
-The python codebase is out of date and incomplete compared to js. Migrate all unit tests from semio.ts. Use pytransforms3d for spatial maths and networkx for graphs. Setup the tests and extend/change/refactor the codebase until it complies to it. Then also add CRUD tests for the rest and graphql endpoint. Everything inside test_engine.py
+The python codebase is out of date and incomplete compared to js. Migrate all unit tests from compose.ts. Use pytransforms3d for spatial maths and networkx for graphs. Setup the tests and extend/change/refactor the codebase until it complies to it. Then also add CRUD tests for the rest and graphql endpoint. Everything inside test_engine.py
 
-The C# Codebase is out of date compared to js. Get the unit tests from semio.ts working. Use the same fixtures from semio assets.
+The C# Codebase is out of date compared to js. Get the unit tests from compose.ts working. Use the same fixtures from compose assets.
 
 The drag and drop test
 
@@ -10387,7 +10387,7 @@ Dropping 4 pieces near corner in scene have all wrong planes. No hover happens.
 Dropping piece after panning (holding left mouse and moving) and zooming (mousewheel) diagram leads to wrong centers.
 Dont forget that every piece must be immediately hovered afterwards. This only happens if the center or plane are correct.
 
-Create a test for drag and drop that drops the kit assets/semio/metabolism.zip into canvas. After this check that every type and design are present and imported. Check for the tambour connectors that they are all present and have correct values. Check for nakagin capsule tower design that all pieces are present. Make sure there is no .semio folder imported. Check that all folders/subfolders/files etc are present.
+Create a test for drag and drop that drops the kit assets/compose/metabolism.zip into canvas. After this check that every type and design are present and imported. Check for the tambour connectors that they are all present and have correct values. Check for nakagin capsule tower design that all pieces are present. Make sure there is no .compose folder imported. Check that all folders/subfolders/files etc are present.
 
 Extend/refactor and adjust until test is implemented and code fixed:
 Extend the test to not only drop into the middle but also near all four corners. Every time the hover needs to happen to check if the plane or center is correct. Repeat the process after panning and zooming in the diagram and scene. This time only drop somewhere in the middle.
@@ -10411,9 +10411,9 @@ Use playwright mcp.
 Panels indivudual
 
 The home app should support drag and drop of zip files and create and import the kit.
-Both home and kit app shouldnt import the .semio folder and only import from it. If the kit cant be loaded then everything should fail.
+Both home and kit app shouldnt import the .compose folder and only import from it. If the kit cant be loaded then everything should fail.
 
-Add a script export-metabolism.ts and make it callable in vscode und run/debug. It should take the kit_metabolism.json semio asset and a subset of files from examples/metabolism (all files from the representations and all files from the icons folder) and export it to metabolism.zip in the semio asset folder. semio.tests.ts already uses this feature.
+Add a script export-metabolism.ts and make it callable in vscode und run/debug. It should take the kit_metabolism.json compose asset and a subset of files from examples/metabolism (all files from the representations and all files from the icons folder) and export it to metabolism.zip in the compose asset folder. compose.tests.ts already uses this feature.
 
 Add a test to docs and fix: The dropdowns > in the navbar in docs pages dont show any options. Show all child pages of the parent.
 
@@ -10472,7 +10472,7 @@ Policies:
 There is a neested seeding according app hierarchy. Seed include only the bear minimum to get the subtests working.
 sketchpad -> kit -> design | type | quality)
 sketchpad -> docs
-Only use id locators e.g. `page.locator('\\\[id="semio.sketchpad.navbar.back"]')`
+Only use id locators e.g. `page.locator('\\\[id="compose.sketchpad.navbar.back"]')`
 Never use browser API directly because sketchpad also runs in different context such as desktop through electron. Use only sketchpad ui elements.
 
 vscode:
@@ -10524,12 +10524,12 @@ There should be strip items. Strip items are scrollable areas.
 The strip component is just a strip group with one item.
 Every strip item is separated with a vertcial border. All
 
-When a zip file is dropped onto kit app, check if the folder has a .semio file which means that it is a kit. Then import the kit. If it doesnt have the .semio folder then just import the files.
+When a zip file is dropped onto kit app, check if the folder has a .compose file which means that it is a kit. Then import the kit. If it doesnt have the .compose folder then just import the files.
 
 Fix i18n script:
 
 Some ids are not detected such as:
-semio.sketchpad.navbar.fullscreen
+compose.sketchpad.navbar.fullscreen
 
 Not all actions have description tooltips (such as dropdon toggles e.g. sort toggles of table headers) which should be detected.
 All tooltips and manuals are missing.
@@ -10543,11 +10543,11 @@ The test should take metabolism, metabolism diff, inverted metabolism diff and d
 Write a script that uses
 
 PLAN and IMPLEMENT
-Import and Export of kits. Move the import/export code from kit command to semio.ts.
+Import and Export of kits. Move the import/export code from kit command to compose.ts.
 Import should receive an url and fetch it from there (extract the .zip, etc)
 Export should receive a kit and files and return an in-memory zipped file.
-Create a test that exports the metabolism kit from the json and pure zip files (zip the folder examples/metabolism without the .semio folder), then exports it (as zip) and then import it again. Check that the original kit and files match to the one after the roundtrip.
-Finish when the test succeeds. Make sure to check the new schema in semio.ts.
+Create a test that exports the metabolism kit from the json and pure zip files (zip the folder examples/metabolism without the .compose folder), then exports it (as zip) and then import it again. Check that the original kit and files match to the one after the roundtrip.
+Finish when the test succeeds. Make sure to check the new schema in compose.ts.
 
 Currently there are no Implement a test that tests
 
@@ -10565,8 +10565,8 @@ E.g. details panel: kit details, design details, selection details
 
 All manual and tutorials are missing now
 Further this misses:
-semio.sketchpad.app.design.windows
-semio.sketchpad.app.home.createTemporary
+compose.sketchpad.app.design.windows
+compose.sketchpad.app.home.createTemporary
 
 When hovering over the options from the dropdown panel toggle in navbar the description tooltip of the toggle shows and not of the options. The options description tooltip should be left.
 
@@ -10582,14 +10582,14 @@ The guid of the types match but the guid of the designs are not aligned.
 The connector guid for connections are missing. The connector guid must match and exist on the type of the piece.
 
 Fix the i18n script because it is missing e.g.
-semio.sketchpad.navbar.breadcrumb.temporary.hotkey
+compose.sketchpad.navbar.breadcrumb.temporary.hotkey
 then I18N
 
 HOME > TEMPORARYKITKIND > KITNAME > KITVERSION > DESIGNKIND > DESIGNNAME > CHILDDESIGNNAME > CHILDCHILDDESIGNNAME >
 
 The > of DESIGNNAME > CHILDDESIGNNAME is not showing anything and the > in CHILDCHILDDESIGNNAME > is showing the options of DESIGNNAME > CHILDDESIGNNAME instead of showing all children and Create child of CHILDCHILDDESIGNNAME
 
-inish migration of assets. No need to be general. It only needs to work for the semio/assets folder two commits ago.
+inish migration of assets. No need to be general. It only needs to work for the compose/assets folder two commits ago.
 
 In kit app:
 HOME > TEMPORARY > KITNAME > KITVERSION >
@@ -10643,7 +10643,7 @@ All options from there on should be moved up one item.
 The old system used Type -> Variant or Design -> Variant -> View. The new system just uses parents. The variant or the view name is just the name of the child type or design. When a type or a design has no default view or variant but has children in the old schema then create a new abstract type or design in the new schema.
 The new capsule hierarchy is like this: Capsule [abstract] -> (Box [abstract] | Ellipsoid [abstract] | Trapezoid [abstract] | Balcony [abstract]) -> ( / | \ | p | q | s | z | L | J )
 The new tambour hierarchy is like this: Tambour [default] -> First Storey | Last Storey | Single Storey
-Restore only the semio assets from 3 commits ago. Run the migration until you succesfully migrated. Restore the semio assets as many times as necessary.
+Restore only the compose assets from 3 commits ago. Run the migration until you succesfully migrated. Restore the compose assets as many times as necessary.
 
 The breadcrumb api should be refactored. Only two components should remain: Breadcrumb and BreadcrumbItem
 Breadcrumb has a prop called items.
@@ -10675,11 +10675,11 @@ and after the refactor like this:
 { "types": [ { "guid": ... } ], "designs: [ { "pieces": [ { "type": { "guid": "GUID1" } } ] } ] }
 ```
 
-The i18n.ps1 script doesnt catch all errors. E.g. semio.sketchpad.navbar.breadcrumb.temporary is still displayed as key. Fix script. Then run it and solve all i18n. E.g. there are a lot of leftovers of unused keys that shouldnt existst.
+The i18n.ps1 script doesnt catch all errors. E.g. compose.sketchpad.navbar.breadcrumb.temporary is still displayed as key. Fix script. Then run it and solve all i18n. E.g. there are a lot of leftovers of unused keys that shouldnt existst.
 
 AUTOMATE
 UI elements have ids. Those ids are used to render label, tooltips, assign hotkeys, link to tutorials and manuals, etc. All locales must be complete. Write a script to automatically to create a summary of incomplete or wrong id/i18n setups. Understand how the existing i18n system is setup.
-Assumptions: ui element ids always start with "semio.sketchpad."
+Assumptions: ui element ids always start with "compose.sketchpad."
 
 kit app:
 HOME > TEMPORARY > KITNAME > KITVERSION > DESIGN > DESIGNNAME > CHILDDESIGNNAME >
@@ -10777,15 +10777,15 @@ Actions should have small size with and icon prop where the icon is automaticall
 
 Update README and AGENTS with console logging based problem solving.
 
-Update README naming and AGENTS policies with the notice to never use `type` and instead always use `kind` to not be confused with the native type in semio. E.g. ArtifactType is ArtifactKind, WindowType is WindowKind, etc
+Update README naming and AGENTS policies with the notice to never use `type` and instead always use `kind` to not be confused with the native type in compose. E.g. ArtifactType is ArtifactKind, WindowType is WindowKind, etc
 
 There should be a general panel kind enum (workbench, details, chat, settings, hud, stats, params, etc). Then there should be a general config (e.g. workbench is left, details, chat, settings are right, and so on). Icons and all other things are derived from that.
 
-Update README.md and AGENTS.md policies for semio/js that the code runs in different environments (different browsers and even on electron, mobile/desktop/tablet). Hence everything that is platform specific needs to be generalized and provided as a prop to Sketchpad.
+Update README.md and AGENTS.md policies for compose/js that the code runs in different environments (different browsers and even on electron, mobile/desktop/tablet). Hence everything that is platform specific needs to be generalized and provided as a prop to Sketchpad.
 
 Most icons are not semantic yet. E.g. Box is used for Scene, Wrench for Workbench, etc. Those are just leftovers of the temporary lucide icons. All icons should exactly describe what they are.
 
-The icon system should be generalized and futureproofed. Currently placeholder icons are used everywhere. From now on Icons are imported drom semio/assets. semio/assets internally uses placeholder from lucide but exports them semantically. Ever ui element that uses an Icon should use a semantic icon. E.g. home app uses Clock for TemporaryKit, etc. In the end of the refactor no import from lucide should remain in semio/js.
+The icon system should be generalized and futureproofed. Currently placeholder icons are used everywhere. From now on Icons are imported drom compose/assets. compose/assets internally uses placeholder from lucide but exports them semantically. Ever ui element that uses an Icon should use a semantic icon. E.g. home app uses Clock for TemporaryKit, etc. In the end of the refactor no import from lucide should remain in compose/js.
 
 label should also be derived from id
 
@@ -11106,7 +11106,7 @@ Not all ui elements are conistently styled:
 - Hotkeys 1,2, …,9, 0 dont work
 
 - Extend and refactor all ui elements in sketchpad.
-  Every ui element has an id. e.g. <Sketchpad kind="semio">, Design: <App id="design">, <Details id="panel.details">, etc and then from this a complete id such as "semio.sketchpad.app.design.details
+  Every ui element has an id. e.g. <Sketchpad kind="compose">, Design: <App id="design">, <Details id="panel.details">, etc and then from this a complete id such as "compose.sketchpad.app.design.details
 
 - Recordings of sketchpad should be introduced
 
@@ -11152,7 +11152,7 @@ tooltip formatting breach: Manual, Tutorial and Hotkey are all optional. It shou
 - Make sure that after dragging the file into the kit app the files appear as rows. According the path they should nested.
 
 - A lot of keys are not consistent. Make sure that all keys follow the explicit structure:
-  e.g. "semio.sketchpad.app.design.panel.details.section.design.name" for the name of the design section of the details of the design app in sketchpad.
+  e.g. "compose.sketchpad.app.design.panel.details.section.design.name" for the name of the design section of the details of the design app in sketchpad.
   Check all ui elements. Currently a lot mismatch.
 - E.g. tooltips for all toggles dont work
 
@@ -11163,13 +11163,13 @@ tooltip formatting breach: Manual, Tutorial and Hotkey are all optional. It shou
 
 - Assigning label, tooltips (label, manual, tutorial) currently happens in code directly. It should be refactored that every ui element receives an i18n string key id prop and everything is moved into the locales json files (even the paths)
   e.g.
-  <Stepper i18n="semio.type.panel.details.connector.direction.y" >
+  <Stepper i18n="compose.type.panel.details.connector.direction.y" >
 
-"semio.type.panel.details.connector.direction.y.label": "Y",
-"semio.type.panel.details.connector.direction.y.description": "Y coord(inate)",
-"semio.type.panel.details.connector.direction.y.description.beginner": "Y diagram coord(inate) of center of the piece.",
-"semio.type.panel.details.connector.direction.y.manual": "semio/design/diagram/coord#y",
-"semio.type.panel.details.connector.direction.y.tutorial": "metabolism/thinking-about-the-diagram",
+"compose.type.panel.details.connector.direction.y.label": "Y",
+"compose.type.panel.details.connector.direction.y.description": "Y coord(inate)",
+"compose.type.panel.details.connector.direction.y.description.beginner": "Y diagram coord(inate) of center of the piece.",
+"compose.type.panel.details.connector.direction.y.manual": "compose/design/diagram/coord#y",
+"compose.type.panel.details.connector.direction.y.tutorial": "metabolism/thinking-about-the-diagram",
 
 - All ui elements in details should show a hover effect and a tooltip with a short description of what the field is about, manual and tutorial path. const { t } = useTranslation(); shouldnt exist afterwards.
 
@@ -11212,7 +11212,7 @@ tooltip formatting breach: Manual, Tutorial and Hotkey are all optional. It shou
 
 - Generalize the
 
-- Refactor the js/semio code base to be closed for modification and open for extension. This means that adding new features should just be adding files and folders and not having to edit existing ones.
+- Refactor the js/compose code base to be closed for modification and open for extension. This means that adding new features should just be adding files and folders and not having to edit existing ones.
   E.g. Adding a new editor should just be adding a new folder under editors; Adding a new tool should just be adding a new file under tools; Adding a new panel should just be adding a new file to the panels folder.
 
 - The toggle group should receive a new variant: tree
@@ -11250,7 +11250,7 @@ tooltip formatting breach: Manual, Tutorial and Hotkey are all optional. It shou
 
 design editor scene:
 
-- Generalize transform to model (e.g. design editor scene piece should be model) of the general scene. Every model can have a plane (semio). Models can be transformable in which case they show gumball transform controls. There should only be one transform gumball for all selected models (in the average plane) and transforming should affect all of the models at the same time.
+- Generalize transform to model (e.g. design editor scene piece should be model) of the general scene. Every model can have a plane (compose). Models can be transformable in which case they show gumball transform controls. There should only be one transform gumball for all selected models (in the average plane) and transforming should affect all of the models at the same time.
 
 - Details should always change according to the selection.
   When nothing is selected then show general details inside a section called like the editor. All props are nested tree items. E.g. in type editor the section is called Type.
@@ -11287,7 +11287,7 @@ design editor scene:
 Still
 
 - No details are showing in quality editor
-- In workbench workbench should be a second section with qualities. Use the dot separated key to create groupings e.g. semio.area.floor should be in semio/area as avatar
+- In workbench workbench should be a second section with qualities. Use the dot separated key to create groupings e.g. compose.area.floor should be in compose/area as avatar
 - Latex formula is never rendering in quality editor
   Further
 - Tree sections should never be nested. A tree just has tree sections at the top level. For further nesting use tree items e.g. quality editor should just have two sections: functions and qualities.
@@ -11332,15 +11332,15 @@ This task was started:
   The exisitng functions are numeric, branching, data structures, etc
   Every function defines a way to calculate it based on the operands and a way to render itself in latex.
   Formulas: Function names start with a capital, quality keys are lowercase with dots, variables start with $ and lowercase, units are first class citizens e.g.
-  If ( StartsWith ( Name ( $semio.design "Nakagin" ) ) '20 m' '23 m' )
-  If ( Smaller ( semio.floor-area.usable '100 m²' ) Divide ( usalu.area.first '3' ) $semio.design.connections )
+  If ( StartsWith ( Name ( $compose.design "Nakagin" ) ) '20 m' '23 m' )
+  If ( Smaller ( compose.floor-area.usable '100 m²' ) Divide ( usalu.area.first '3' ) $compose.design.connections )
   InList ( '100 cm' List ( '1 m' '200 mm' )
   HasKey ( '100 cm' Dictionary ( KeyValuePair ( Key ( '1 m' ) Value ( "One meter." ) )
   or another snippet:
   {
     "qualities": [
     {
-    "key": "semio.area.floor.gross",
+    "key": "compose.area.floor.gross",
     "name": "Gross Floor Area",
     "locales": {
     "de": "Brutto-Grundfläche"
@@ -11349,11 +11349,11 @@ This task was started:
     "si": "m²",
     "imperial": "ft²",
     "symbol": "A*{gfa}",
-    "formula": "Add ( semio.area.floor.gross.net semio.area.floor.gross.construction )",
+    "formula": "Add ( compose.area.floor.gross.net compose.area.floor.gross.construction )",
     "format": "#,##0.##"
     },
     {
-    "key": "semio.area.floor.gross.net",
+    "key": "compose.area.floor.gross.net",
     "name": "Net Floor Area",
     "locales": {
     "de": "Netto-Raumfläche"
@@ -11362,11 +11362,11 @@ This task was started:
     "si": "m²",
     "imperial": "ft²",
     "symbol": "A*{nfa}",
-    "formula": "Add ( semio.area.floor.gross.net.usable semio.area.floor.gross.net.technical semio.area.floor.gross.net.circulation )",
+    "formula": "Add ( compose.area.floor.gross.net.usable compose.area.floor.gross.net.technical compose.area.floor.gross.net.circulation )",
     "format": "#,##0.##"
     },
     {
-    "key": "semio.area.floor.gross.net.usable",
+    "key": "compose.area.floor.gross.net.usable",
     "name": "Usable Floor Area",
     "locales": {
     "de": "Nutzungsfläche"
@@ -11375,7 +11375,7 @@ This task was started:
     "si": "m²",
     "imperial": "ft²",
     "symbol": "A\_{usbl}",
-    "formula": "Add ( semio.area.floor.gross.net.usable.living-staying semio.area.floor.gross.net.usable.office-work semio.area.floor.gross.net.usable.production-experiments semio.area.floor.gross.net.usable.storage-distribution-sales semio.area.floor.gross.net.usable.education-culture semio.area.floor.gross.net.usable.healing-care semio.area.floor.gross.net.usable.other )",
+    "formula": "Add ( compose.area.floor.gross.net.usable.living-staying compose.area.floor.gross.net.usable.office-work compose.area.floor.gross.net.usable.production-experiments compose.area.floor.gross.net.usable.storage-distribution-sales compose.area.floor.gross.net.usable.education-culture compose.area.floor.gross.net.usable.healing-care compose.area.floor.gross.net.usable.other )",
     "format": "#,##0.##"
     },
   }
@@ -11412,7 +11412,7 @@ Make sure to add tooltips for all toggles for normal, extensive, different langu
 The tool mechanism should be generalized.
 Every editor has tools and always one can be active.
 A new panel type is introduced called tools. Normally (not on mobile where there is only one panel group) it is part of left panel group.
-Every tool has an id e.g. "semio.typeEditor.connector", a name e.g. "Connector", a description e.g. "Create a connector on the surface of geometry with the normal direction of the surface." and an icon.
+Every tool has an id e.g. "compose.typeEditor.connector", a name e.g. "Connector", a description e.g. "Create a connector on the surface of geometry with the normal direction of the surface." and an icon.
 Tools from the
 
 When clicking in the empty threejs canvas then deselect everything
@@ -11445,9 +11445,9 @@ When a new kit is created it should create the default version and not 1.0.0
 When toggeling temporary kit in Home I get:
 
 The code base is inconsistent and not as general as it could be. A lot of utility is spread and repeated.
-All domain logic should be in semio.ts
+All domain logic should be in compose.ts
 All state should be in store.tsx - kits have their own (later cloud) synced yjs document; sketchpad has its own local state (optionally persisted when provided with an id)
-Everything that is reusable should be exported by index.ts and imports should be from "semio/js" unless the they are only internal then they should be pathbased imported.
+Everything that is reusable should be exported by index.ts and imports should be from "compose/js" unless the they are only internal then they should be pathbased imported.
 All react hooks should start with use and be named as concise as possible.
 
 The protoype is finished. Now it is time to cleanup and refactor.
@@ -11510,7 +11510,7 @@ Dont create a separate TransactionalInput but add a lazy flag that when given on
 The command mechanism is not yet (properly) implemented. There are 3 kinds of commands:
 
 sketchpad: only access to sktechpad state. no access to kits.
-kit: Only domain logic, nothing ui related. Only access to the entire kit and the fileUrls which are files loaded in memory by a path (e.g. representation/capsule.glb) and an url (result from URL.createObjectURL(blob)). Returns KitDiff and Files (Not semio files). When files are returned then check if the path already exists in memory and replace existing if so. Make sure no memory leaks.
+kit: Only domain logic, nothing ui related. Only access to the entire kit and the fileUrls which are files loaded in memory by a path (e.g. representation/capsule.glb) and an url (result from URL.createObjectURL(blob)). Returns KitDiff and Files (Not compose files). When files are returned then check if the path already exists in memory and replace existing if so. Make sure no memory leaks.
 design editor: Access to kit and design editor. Returns KitDiff and DesignEditorDiff. Transaction mechanism. Stores two stacks of edits. One for the current transaction, one for the past transactions. Undo/redo acts during a transaction on the curent stack and outside of a transaction on the past. If a transaction is finalized then the edit is pushed on the past stack.
 
 The Tooltip levels should be generalized to Mode: Beginner, Normal, Expert. Same behaviour but in the future more than tooltip will be derived from it.
@@ -11854,7 +11854,7 @@ Store holds data for any component.
 EditorStore holds data for any editor. Every editor has transaction support with undo/redo (two stacks: one for current transaction which is merged once it is finsished; one for previous finalized transactions). Every edit is always diff and inverted diff to enable both way undo/redo.
 A KitDiffEditorStore edit has a kit diff along with editor specific diff.
 
-Add transform controls to selected pieces (set the plane after a transform). Make sure to consider that the threejs coordinate system is not equal to the semio coordinate system.
+Add transform controls to selected pieces (set the plane after a transform). Make sure to consider that the threejs coordinate system is not equal to the compose coordinate system.
 
 Double click on avatars in design editor workbench should navigate to the editors. Double click on Tree items should navigate to the kit editor with the correct parameters.
 
@@ -11867,13 +11867,13 @@ Somehow setIsMobile and syncNavigation are called too often.
 setIsMobile should be called when the width changes.
 syncNavigation should be called on navigation events.
 E.g. When I click create kit action in home then I get:
-store.tsx:1162 Executing (special) command: "semio.sketchpad.createKit"
-store.tsx:1195 Executing command: "semio.sketchpad.setIsMobile"
-store.tsx:1195 Executing command: "semio.sketchpad.setIsMobile"
-store.tsx:1195 Executing command: "semio.sketchpad.setIsMobile"
-store.tsx:1195 Executing command: "semio.sketchpad.syncNavigation"
-store.tsx:1195 Executing command: "semio.sketchpad.setIsMobile"
-store.tsx:1195 Executing command: "semio.sketchpad.setIsMobile"
-store.tsx:1195 Executing command: "semio.sketchpad.syncNavigation"
+store.tsx:1162 Executing (special) command: "compose.sketchpad.createKit"
+store.tsx:1195 Executing command: "compose.sketchpad.setIsMobile"
+store.tsx:1195 Executing command: "compose.sketchpad.setIsMobile"
+store.tsx:1195 Executing command: "compose.sketchpad.setIsMobile"
+store.tsx:1195 Executing command: "compose.sketchpad.syncNavigation"
+store.tsx:1195 Executing command: "compose.sketchpad.setIsMobile"
+store.tsx:1195 Executing command: "compose.sketchpad.setIsMobile"
+store.tsx:1195 Executing command: "compose.sketchpad.syncNavigation"
 setIsMobile shouldnt be there.
 syncNavigation should only be called once.

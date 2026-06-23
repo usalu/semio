@@ -2,10 +2,10 @@
 import { readFileSync, writeFileSync } from "node:fs";
 
 const files = [
-	"c:/git/semio/spatial/js/query/index.ts",
-	"c:/git/semio/spatial/js/renderer-r3f/index.tsx",
-	"c:/git/semio/spatial/js/renderer-r3f/play/main.tsx",
-	"c:/git/semio/spatial/js/machine-stately/index.ts",
+	"c:/git/compose/spatial/js/query/index.ts",
+	"c:/git/compose/spatial/js/renderer-r3f/index.tsx",
+	"c:/git/compose/spatial/js/renderer-r3f/play/main.tsx",
+	"c:/git/compose/spatial/js/machine-stately/index.ts",
 ];
 
 const pairs: [string, string][] = [

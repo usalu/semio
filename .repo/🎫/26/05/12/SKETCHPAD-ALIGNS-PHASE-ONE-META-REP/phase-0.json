@@ -2,8 +2,8 @@
   "date": "2026-05-12",
   "planId": "09fc9816",
   "sources": [
-    "semio/graphql/target.schema.graphql",
-    "semio/rs/lib.rs (KitStoreHandle wasm_bridge)"
+    "compose/graphql/target.schema.graphql",
+    "compose/rs/lib.rs (KitStoreHandle wasm_bridge)"
   ],
   "entityRegionMap": {
     "Kit": "🧱Classes/🎒Kit",

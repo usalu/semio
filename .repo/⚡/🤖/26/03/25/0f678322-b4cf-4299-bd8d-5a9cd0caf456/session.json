@@ -45,7 +45,7 @@
           "hook_event_name": "UserPromptSubmit",
           "session_id": "0f678322-b4cf-4299-bd8d-5a9cd0caf456",
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/0f678322-b4cf-4299-bd8d-5a9cd0caf456.jsonl",
-          "prompt": "Use semio mcp and open metabolism. Show me the design #show_design and then #select_pieces Let me select pieces in Nakagin Capsule Tower Design. Dont do any manual file search only with mcp.",
+          "prompt": "Use compose mcp and open metabolism. Show me the design #show_design and then #select_pieces Let me select pieces in Nakagin Capsule Tower Design. Dont do any manual file search only with mcp.",
           "cwd": "/workspaces/semio"
         }
       },
@@ -162,7 +162,7 @@
           "hook_event_name": "PreToolUse",
           "session_id": "0f678322-b4cf-4299-bd8d-5a9cd0caf456",
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/0f678322-b4cf-4299-bd8d-5a9cd0caf456.jsonl",
-          "tool_name": "mcp_semio_show_design",
+          "tool_name": "mcp_compose_show_design",
           "tool_input": {},
           "tool_use_id": "call_02rPy9ThDBTWQONno1RBbUfg__vscode-1774398922719",
           "cwd": "/workspaces/semio"
@@ -186,7 +186,7 @@
           "hook_event_name": "PostToolUse",
           "session_id": "0f678322-b4cf-4299-bd8d-5a9cd0caf456",
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/0f678322-b4cf-4299-bd8d-5a9cd0caf456.jsonl",
-          "tool_name": "mcp_semio_show_design",
+          "tool_name": "mcp_compose_show_design",
           "tool_input": {},
           "tool_response": "Call start_working_in_local_kit(path) or start_working_in_remote_kit(serverUrl, kitUri) first to set the kit for this session.",
           "tool_use_id": "call_02rPy9ThDBTWQONno1RBbUfg__vscode-1774398922719",

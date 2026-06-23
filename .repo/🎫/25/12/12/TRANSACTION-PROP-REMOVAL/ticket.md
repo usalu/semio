@@ -7,15 +7,15 @@ Sketchpad UI elements accepted an optional `transaction` prop that could overrid
 
 # Plan
 
-- Remove `transaction` props from `js/semio/sketchpad/elements.tsx` components.
+- Remove `transaction` props from `js/compose/sketchpad/elements.tsx` components.
 - Make elements always resolve transactions via `useTransaction()` (context only).
 - Move transaction wiring to app roots via `TransactionProvider` so all descendant elements participate.
 
 # Changes
 
-- `js/semio/sketchpad/elements.tsx`: removed `transaction` prop surface area and the prop-vs-context resolver; elements now read transactions exclusively via `useTransaction()`.
-- `js/semio/sketchpad/Kit.tsx`: wrapped the Kit app UI in a `TransactionProvider` using `useKitAppTransaction()`; removed all `transaction={...}` usages on inputs/textarea.
-- `js/semio/sketchpad/Type.tsx`: wrapped the Type app UI in a `TransactionProvider` using `useKitTransaction()`; removed all `transaction={...}` usages on sliders/steppers.
+- `js/compose/sketchpad/elements.tsx`: removed `transaction` prop surface area and the prop-vs-context resolver; elements now read transactions exclusively via `useTransaction()`.
+- `js/compose/sketchpad/Kit.tsx`: wrapped the Kit app UI in a `TransactionProvider` using `useKitAppTransaction()`; removed all `transaction={...}` usages on inputs/textarea.
+- `js/compose/sketchpad/Type.tsx`: wrapped the Type app UI in a `TransactionProvider` using `useKitTransaction()`; removed all `transaction={...}` usages on sliders/steppers.
 
 ## Changes
 

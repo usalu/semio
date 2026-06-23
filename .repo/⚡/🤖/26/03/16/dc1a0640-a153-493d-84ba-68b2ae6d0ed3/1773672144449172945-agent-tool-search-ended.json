@@ -17,7 +17,7 @@
       "tool_name": "grep_search",
       "tool_input": {
         "maxResults": 20,
-        "includePattern": "**/semio/sketchpad/**",
+        "includePattern": "**/compose/sketchpad/**",
         "isRegexp": true,
         "query": "connection\\.x|connection\\.y|Stepper.*connection"
       },

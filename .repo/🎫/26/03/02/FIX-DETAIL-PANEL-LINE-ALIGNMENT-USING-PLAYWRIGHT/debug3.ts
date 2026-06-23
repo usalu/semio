@@ -117,7 +117,7 @@ async function main() {
   await skPage.waitForTimeout(5000);
 
   // Load metabolism kit
-  const kitPath = path.resolve("/workspaces/semio/semio/assets/semio/kit_metabolism.zip");
+  const kitPath = path.resolve("/workspaces/semio/compose/assets/compose/kit_metabolism.zip");
   const [fileChooser] = await Promise.all([
     skPage.waitForEvent('filechooser', { timeout: 10000 }).catch(() => null),
     skPage.locator('role=button').filter({ hasText: /open|load|import/i }).first().click({ timeout: 5000 }).catch(() => null)

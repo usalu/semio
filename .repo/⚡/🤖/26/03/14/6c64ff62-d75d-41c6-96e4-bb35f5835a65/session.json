@@ -1,10 +1,10 @@
 {
   "id": "6c64ff62-d75d-41c6-96e4-bb35f5835a65",
-  "uri": "semiorepo://s/6c64ff62-d75d-41c6-96e4-bb35f5835a65",
+  "uri": "composerepo://s/6c64ff62-d75d-41c6-96e4-bb35f5835a65",
   "contributor": "🧑‍💻ueli",
   "client": "cursor-chat",
   "second": "2026-03-14T20:45:43Z",
-  "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl",
+  "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl",
   "events": [
     {
       "native": {
@@ -46,7 +46,7 @@
           "tool_name": "Grep",
           "tool_input": {
             "pattern": "",
-            "file_path": "/workspaces/semio/semio/py",
+            "file_path": "/workspaces/semio/compose/py",
             "glob": "**/setup.py",
             "output_mode": "files_with_matches"
           },
@@ -83,7 +83,7 @@
           "tool_name": "Grep",
           "tool_input": {
             "pattern": "export_design_model|EXPORT_MODEL_FORMATS|#region|#endregion",
-            "file_path": "/workspaces/semio/semio/py/semio.py"
+            "file_path": "/workspaces/semio/compose/py/compose.py"
           },
           "tool_use_id": "tool_9abb3c47-9d5c-429c-95f0-40633d828c3",
           "hook_event_name": "preToolUse",
@@ -101,14 +101,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚py💻semio"
+            "id": "👤compose📚py💻compose"
           }
         ],
         "kind": "agent.tool.search.starting",
         "llm": "composer-1.5",
         "parent": "",
         "ranges": [
-          "👤semio📚py💻semio📌1📌11418"
+          "👤compose📚py💻compose📌1📌11418"
         ],
         "second": "🎆26🌙03☀️14⏰20⌚45⏱️43",
         "session": "⚪6c64ff62d75d41c696e4bb35f5835a65"
@@ -126,7 +126,7 @@
           "tool_name": "Grep",
           "tool_input": {
             "pattern": "",
-            "file_path": "/workspaces/semio/semio/py",
+            "file_path": "/workspaces/semio/compose/py",
             "glob": "**/requirements*.txt",
             "output_mode": "files_with_matches"
           },
@@ -139,7 +139,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
         }
       },
       "event": {
@@ -151,7 +151,7 @@
         "parent": "",
         "second": "🎆26🌙03☀️14⏰20⌚46⏱️11",
         "session": "⚪6c64ff62d75d41c696e4bb35f5835a65",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
       },
       "response": {
         "allowed": true
@@ -166,7 +166,7 @@
           "tool_name": "Grep",
           "tool_input": {
             "pattern": "export_design_model|EXPORT_MODEL_FORMATS|#region|#endregion",
-            "file_path": "/workspaces/semio/semio/py/semio.py"
+            "file_path": "/workspaces/semio/compose/py/compose.py"
           },
           "tool_output": "{\"pattern\":\"export_design_model|EXPORT_MODEL_FORMATS|#region|#endregion\",\"success\":true}",
           "duration": 43.923,
@@ -177,7 +177,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
         }
       },
       "event": {
@@ -186,18 +186,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚py💻semio"
+            "id": "👤compose📚py💻compose"
           }
         ],
         "kind": "agent.tool.search.ended",
         "llm": "composer-1.5",
         "parent": "",
         "ranges": [
-          "👤semio📚py💻semio📌1📌11418"
+          "👤compose📚py💻compose📌1📌11418"
         ],
         "second": "🎆26🌙03☀️14⏰20⌚46⏱️12",
         "session": "⚪6c64ff62d75d41c696e4bb35f5835a65",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
       },
       "response": {
         "allowed": true
@@ -212,7 +212,7 @@
           "tool_name": "Grep",
           "tool_input": {
             "pattern": "",
-            "file_path": "/workspaces/semio/semio/py",
+            "file_path": "/workspaces/semio/compose/py",
             "glob": "**/setup.py",
             "output_mode": "files_with_matches"
           },
@@ -225,7 +225,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
         }
       },
       "event": {
@@ -237,7 +237,7 @@
         "parent": "",
         "second": "🎆26🌙03☀️14⏰20⌚46⏱️15",
         "session": "⚪6c64ff62d75d41c696e4bb35f5835a65",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
       },
       "response": {
         "allowed": true
@@ -257,7 +257,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
         }
       },
       "event": {
@@ -269,7 +269,7 @@
         "parent": "",
         "second": "🎆26🌙03☀️14⏰20⌚46⏱️39",
         "session": "⚪6c64ff62d75d41c696e4bb35f5835a65",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
       },
       "response": {
         "allowed": true
@@ -283,9 +283,9 @@
           "model": "composer-1.5",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/workspaces/semio/semio/py/pyproject.toml"
+            "file_path": "/workspaces/semio/compose/py/pyproject.toml"
           },
-          "tool_output": "{\"file_path\":\"/workspaces/semio/semio/py/pyproject.toml\",\"content_length\":1230}",
+          "tool_output": "{\"file_path\":\"/workspaces/semio/compose/py/pyproject.toml\",\"content_length\":1230}",
           "duration": 27.118,
           "tool_use_id": "tool_f1de1114-d01f-46f8-a224-fe146c80c43",
           "hook_event_name": "postToolUse",
@@ -294,7 +294,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
         }
       },
       "event": {
@@ -303,18 +303,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚py⚙️pyproject"
+            "id": "👤compose📚py⚙️pyproject"
           }
         ],
         "kind": "agent.tool.search.ended",
         "llm": "composer-1.5",
         "parent": "",
         "ranges": [
-          "👤semio📚py⚙️pyproject📌1📌55"
+          "👤compose📚py⚙️pyproject📌1📌55"
         ],
         "second": "🎆26🌙03☀️14⏰20⌚46⏱️37",
         "session": "⚪6c64ff62d75d41c696e4bb35f5835a65",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
       },
       "response": {
         "allowed": true
@@ -329,7 +329,7 @@
           "tool_name": "Grep",
           "tool_input": {
             "pattern": "#region|#endregion",
-            "file_path": "/workspaces/semio/semio/py/semio.py"
+            "file_path": "/workspaces/semio/compose/py/compose.py"
           },
           "tool_use_id": "tool_c111e989-97ae-4206-825a-d409e798e59",
           "hook_event_name": "preToolUse",
@@ -338,7 +338,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
         }
       },
       "event": {
@@ -347,18 +347,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚py💻semio"
+            "id": "👤compose📚py💻compose"
           }
         ],
         "kind": "agent.tool.search.starting",
         "llm": "composer-1.5",
         "parent": "",
         "ranges": [
-          "👤semio📚py💻semio📌1📌11418"
+          "👤compose📚py💻compose📌1📌11418"
         ],
         "second": "🎆26🌙03☀️14⏰20⌚46⏱️39",
         "session": "⚪6c64ff62d75d41c696e4bb35f5835a65",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
       },
       "response": {
         "allowed": true
@@ -378,7 +378,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
         }
       },
       "event": {
@@ -390,7 +390,7 @@
         "parent": "",
         "second": "🎆26🌙03☀️14⏰20⌚47⏱️18",
         "session": "⚪6c64ff62d75d41c696e4bb35f5835a65",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
       },
       "response": {
         "allowed": true
@@ -405,7 +405,7 @@
           "tool_name": "Grep",
           "tool_input": {
             "pattern": "#region|#endregion",
-            "file_path": "/workspaces/semio/semio/py/semio.py"
+            "file_path": "/workspaces/semio/compose/py/compose.py"
           },
           "tool_output": "{\"pattern\":\"#region|#endregion\",\"success\":true}",
           "duration": 41.382,
@@ -416,7 +416,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
         }
       },
       "event": {
@@ -425,18 +425,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚py💻semio"
+            "id": "👤compose📚py💻compose"
           }
         ],
         "kind": "agent.tool.search.ended",
         "llm": "composer-1.5",
         "parent": "",
         "ranges": [
-          "👤semio📚py💻semio📌1📌11418"
+          "👤compose📚py💻compose📌1📌11418"
         ],
         "second": "🎆26🌙03☀️14⏰20⌚47⏱️17",
         "session": "⚪6c64ff62d75d41c696e4bb35f5835a65",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
       },
       "response": {
         "allowed": true
@@ -451,7 +451,7 @@
           "tool_name": "Grep",
           "tool_input": {
             "pattern": "region Kit Model Export|endregion Kit Model Export",
-            "file_path": "/workspaces/semio/semio/py/semio.py"
+            "file_path": "/workspaces/semio/compose/py/compose.py"
           },
           "tool_use_id": "tool_3b0b42b5-d033-45f9-892c-24ce587144b",
           "hook_event_name": "preToolUse",
@@ -460,7 +460,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
         }
       },
       "event": {
@@ -469,18 +469,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚py💻semio"
+            "id": "👤compose📚py💻compose"
           }
         ],
         "kind": "agent.tool.search.starting",
         "llm": "composer-1.5",
         "parent": "",
         "ranges": [
-          "👤semio📚py💻semio📌1📌11418"
+          "👤compose📚py💻compose📌1📌11418"
         ],
         "second": "🎆26🌙03☀️14⏰20⌚47⏱️18",
         "session": "⚪6c64ff62d75d41c696e4bb35f5835a65",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
       },
       "response": {
         "allowed": true
@@ -500,7 +500,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
         }
       },
       "event": {
@@ -512,7 +512,7 @@
         "parent": "",
         "second": "🎆26🌙03☀️14⏰20⌚47⏱️51",
         "session": "⚪6c64ff62d75d41c696e4bb35f5835a65",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
       },
       "response": {
         "allowed": true
@@ -527,7 +527,7 @@
           "tool_name": "Grep",
           "tool_input": {
             "pattern": "region Kit Model Export|endregion Kit Model Export",
-            "file_path": "/workspaces/semio/semio/py/semio.py"
+            "file_path": "/workspaces/semio/compose/py/compose.py"
           },
           "tool_output": "{\"pattern\":\"region Kit Model Export|endregion Kit Model Export\",\"success\":true}",
           "duration": 37.728,
@@ -538,7 +538,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
         }
       },
       "event": {
@@ -547,18 +547,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚py💻semio"
+            "id": "👤compose📚py💻compose"
           }
         ],
         "kind": "agent.tool.search.ended",
         "llm": "composer-1.5",
         "parent": "",
         "ranges": [
-          "👤semio📚py💻semio📌1📌11418"
+          "👤compose📚py💻compose📌1📌11418"
         ],
         "second": "🎆26🌙03☀️14⏰20⌚47⏱️50",
         "session": "⚪6c64ff62d75d41c696e4bb35f5835a65",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
       },
       "response": {
         "allowed": true
@@ -573,7 +573,7 @@
           "tool_name": "Grep",
           "tool_input": {
             "pattern": "^def ",
-            "file_path": "/workspaces/semio/semio/py/semio.py",
+            "file_path": "/workspaces/semio/compose/py/compose.py",
             "output_mode": "content"
           },
           "tool_use_id": "tool_d128f4e6-a39a-4508-913c-0045448f1a0",
@@ -583,7 +583,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
         }
       },
       "event": {
@@ -592,18 +592,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚py💻semio"
+            "id": "👤compose📚py💻compose"
           }
         ],
         "kind": "agent.tool.search.starting",
         "llm": "composer-1.5",
         "parent": "",
         "ranges": [
-          "👤semio📚py💻semio📌1📌11418"
+          "👤compose📚py💻compose📌1📌11418"
         ],
         "second": "🎆26🌙03☀️14⏰20⌚47⏱️51",
         "session": "⚪6c64ff62d75d41c696e4bb35f5835a65",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
       },
       "response": {
         "allowed": true
@@ -618,7 +618,7 @@
           "tool_name": "Grep",
           "tool_input": {
             "pattern": "^def ",
-            "file_path": "/workspaces/semio/semio/py/semio.py",
+            "file_path": "/workspaces/semio/compose/py/compose.py",
             "output_mode": "content"
           },
           "tool_output": "{\"pattern\":\"^def \",\"success\":true}",
@@ -630,7 +630,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
         }
       },
       "event": {
@@ -639,18 +639,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚py💻semio"
+            "id": "👤compose📚py💻compose"
           }
         ],
         "kind": "agent.tool.search.ended",
         "llm": "composer-1.5",
         "parent": "",
         "ranges": [
-          "👤semio📚py💻semio📌1📌11418"
+          "👤compose📚py💻compose📌1📌11418"
         ],
         "second": "🎆26🌙03☀️14⏰20⌚48⏱️18",
         "session": "⚪6c64ff62d75d41c696e4bb35f5835a65",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
       },
       "response": {
         "allowed": true
@@ -670,7 +670,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
         }
       },
       "event": {
@@ -682,7 +682,7 @@
         "parent": "",
         "second": "🎆26🌙03☀️14⏰20⌚48⏱️19",
         "session": "⚪6c64ff62d75d41c696e4bb35f5835a65",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
       },
       "response": {
         "allowed": true
@@ -702,7 +702,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
         }
       },
       "event": {
@@ -714,7 +714,7 @@
         "parent": "",
         "second": "🎆26🌙03☀️14⏰20⌚48⏱️23",
         "session": "⚪6c64ff62d75d41c696e4bb35f5835a65",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
       },
       "response": {
         "allowed": true
@@ -738,7 +738,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
         }
       },
       "event": {
@@ -750,7 +750,7 @@
         "parent": "",
         "second": "🎆26🌙03☀️14⏰20⌚48⏱️23",
         "session": "⚪6c64ff62d75d41c696e4bb35f5835a65",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
       },
       "response": {
         "allowed": true
@@ -776,7 +776,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
         }
       },
       "event": {
@@ -788,7 +788,7 @@
         "parent": "",
         "second": "🎆26🌙03☀️14⏰20⌚48⏱️23",
         "session": "⚪6c64ff62d75d41c696e4bb35f5835a65",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
       },
       "response": {
         "allowed": true
@@ -814,7 +814,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
         }
       },
       "event": {
@@ -826,7 +826,7 @@
         "parent": "",
         "second": "🎆26🌙03☀️14⏰20⌚48⏱️23",
         "session": "⚪6c64ff62d75d41c696e4bb35f5835a65",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
       },
       "response": {
         "allowed": true
@@ -852,7 +852,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
         }
       },
       "event": {
@@ -864,7 +864,7 @@
         "parent": "",
         "second": "🎆26🌙03☀️14⏰20⌚48⏱️47",
         "session": "⚪6c64ff62d75d41c696e4bb35f5835a65",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
       },
       "response": {
         "allowed": true
@@ -892,7 +892,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
         }
       },
       "event": {
@@ -904,7 +904,7 @@
         "parent": "",
         "second": "🎆26🌙03☀️14⏰20⌚48⏱️53",
         "session": "⚪6c64ff62d75d41c696e4bb35f5835a65",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
       },
       "response": {
         "allowed": true
@@ -932,7 +932,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
         }
       },
       "event": {
@@ -944,7 +944,7 @@
         "parent": "",
         "second": "🎆26🌙03☀️14⏰20⌚48⏱️53",
         "session": "⚪6c64ff62d75d41c696e4bb35f5835a65",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
       },
       "response": {
         "allowed": true
@@ -964,7 +964,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
         }
       },
       "event": {
@@ -976,7 +976,7 @@
         "parent": "",
         "second": "🎆26🌙03☀️14⏰20⌚48⏱️54",
         "session": "⚪6c64ff62d75d41c696e4bb35f5835a65",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/6c64ff62-d75d-41c6-96e4-bb35f5835a65/6c64ff62-d75d-41c6-96e4-bb35f5835a65.jsonl"
       },
       "response": {
         "allowed": true

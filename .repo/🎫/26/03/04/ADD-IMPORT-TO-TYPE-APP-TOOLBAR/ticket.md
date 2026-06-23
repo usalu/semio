@@ -20,13 +20,13 @@ Added the Type app toolbar model import action and extended the existing Type Pl
 - Verified the Type app toolbar currently exposes filter, selection, and create groups, but no file import action.
 - Added a hidden multi-file input plus toolbar action in the Type app create controls.
 - Extended the existing Type Playwright test with a model import assertion using `placeholder.glb`.
-- `playwright test` could not discover `semio/js/sketchpad.test.ts` in this repo layout and returned `No tests found`.
+- `playwright test` could not discover `compose/js/sketchpad.test.ts` in this repo layout and returned `No tests found`.
 - `npx tsc --noEmit --pretty false` failed on pre-existing `sketchpad.test.ts` errors at lines 3387, 3400, 5226, 5228, and 5280.
 
 ## Todos
 
-- Implement the toolbar import action in `semio/js/sketchpad/Type.tsx`. Done.
-- Extend `semio/js/sketchpad.test.ts` to validate the new import control. Done.
+- Implement the toolbar import action in `compose/js/sketchpad/Type.tsx`. Done.
+- Extend `compose/js/sketchpad.test.ts` to validate the new import control. Done.
 - Run the targeted Type Playwright test. Blocked by Playwright discovery in the current repo layout.
 
 ## Plan

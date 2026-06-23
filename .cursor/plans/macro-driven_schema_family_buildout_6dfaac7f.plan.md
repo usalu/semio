@@ -1,6 +1,6 @@
 ---
 name: Macro-Driven Schema Family Buildout
-overview: Implement the full system described by `semio/schema/graphql/schema.golden.graphql` as real Rust types via async-graphql code-first derivation. Macros emit Rust structs, `#[Object]` / `SimpleObject` / `Interface` / `Union` / `InputObject` impls only — never SDL strings. `gql::sdl()` stays a thin wrapper around `Schema::sdl()`; the SDL is a pure byproduct of the typed surface that async-graphql produces from the registered output types.
+overview: Implement the full system described by `compose/schema/graphql/schema.golden.graphql` as real Rust types via async-graphql code-first derivation. Macros emit Rust structs, `#[Object]` / `SimpleObject` / `Interface` / `Union` / `InputObject` impls only — never SDL strings. `gql::sdl()` stays a thin wrapper around `Schema::sdl()`; the SDL is a pure byproduct of the typed surface that async-graphql produces from the registered output types.
 todos:
   - id: reopen-ticket
     content: Reopen ticket 2026/05/11/MACRO-DRIVEN-ENTITY-FAMILY-REFACTOR via repo MCP ticket_reopen
@@ -45,7 +45,7 @@ todos:
     content: Regenerate schema.graphql via build.script.ts and diff against golden until every golden `^type|^interface|^union|^input|^scalar|^enum` declaration is present in the generated schema
     status: pending
   - id: test-sweep
-    content: Run cargo test -p semio + wasm32 cargo check; rewrite schema_matches_target_graphql_file to parse both schemas with apollo-parser/async-graphql-parser and assert that every type/interface/field in golden is structurally present in the generated schema
+    content: Run cargo test -p compose + wasm32 cargo check; rewrite schema_matches_target_graphql_file to parse both schemas with apollo-parser/async-graphql-parser and assert that every type/interface/field in golden is structurally present in the generated schema
     status: pending
   - id: close-ticket
     content: Close ticket via repo MCP ticket_close with summary of converted entities/operations and schema diff stats
@@ -58,7 +58,7 @@ isProject: false
 The goal is **not** to reproduce the golden SDL string. The goal is to **implement the system the golden SDL specifies** as real Rust types.
 
 - Pure code-first via async-graphql. `gql::sdl()` keeps its current body — `build_schema().await.sdl()` — and the resulting SDL is whatever async-graphql produces from the typed surface. Nothing is hand-written as string.
-- Every type in `[semio/schema/graphql/schema.golden.graphql](semio/schema/graphql/schema.golden.graphql)` becomes a real Rust struct/enum derived through `#[Object]`, `#[derive(SimpleObject)]`, `#[derive(InputObject)]`, `#[derive(async_graphql::Interface)]`, or `#[derive(async_graphql::Union)]`.
+- Every type in `[compose/schema/graphql/schema.golden.graphql](compose/schema/graphql/schema.golden.graphql)` becomes a real Rust struct/enum derived through `#[Object]`, `#[derive(SimpleObject)]`, `#[derive(InputObject)]`, `#[derive(async_graphql::Interface)]`, or `#[derive(async_graphql::Union)]`.
 - Every interface (`Entity`, `WeakEntity`, `StrongEntity`, `RichStrongEntity`, `Artifact`, `Document`, `Event`, `Workspace`, `Backbone`, `Provider`, `Input`, `Diff`, `Modification`, `Operation`, `BackboneCommand`, `ProviderCommand`, `EntityEdge`, `EntityConnection`, `Node`) is an `async_graphql::Interface` enum auto-populated from the entity / operation / command roster.
 - Every owner / owned union (`AttributeOwner`, `Blueprint`, `ChangeOwner`, …) is an `async_graphql::Union` enum auto-grown from the same roster.
 - Macros emit Rust types only. There is no `SDL_FRAGMENT` constant, no `__sdl_*` macro, no `SDL_HEADER` string, no `extract_root_types`. `sdl_registry::HasSdlFragment` and the matching infrastructure get deleted.
@@ -88,8 +88,8 @@ The May 13 update introduced a runtime / hosting layer that the previous lib.rs 
 
 ## Background
 
-- Current state: `[semio/client/lib/rs/lib.rs](semio/client/lib/rs/lib.rs)` exposes a thin `entity_family!` (`SimpleObject` + `compute_entity_hash`) and an empty `register_entities!` that emits empty `SDL_FRAGMENT` constants. `sdl_registry::all_fragments` is a no-op tail in `gql::sdl()`. Hand-written entity structs / `#[Object]` impls live across ~9k lines of `lib.rs`. No `XDiff` / `XModification` / `XModifications` / per-operation `XInput` types exist (`rg "struct (Vector|Tag|Piece)Diff"` matches zero).
-- Goal: `[semio/schema/graphql/schema.golden.graphql](semio/schema/graphql/schema.golden.graphql)` declares 963 types/interfaces/unions/inputs vs current 200 (805 missing). Per-entity 12-type ladder + per-operation 6-type ladder + 14 interfaces + several owner unions.
+- Current state: `[compose/client/lib/rs/lib.rs](compose/client/lib/rs/lib.rs)` exposes a thin `entity_family!` (`SimpleObject` + `compute_entity_hash`) and an empty `register_entities!` that emits empty `SDL_FRAGMENT` constants. `sdl_registry::all_fragments` is a no-op tail in `gql::sdl()`. Hand-written entity structs / `#[Object]` impls live across ~9k lines of `lib.rs`. No `XDiff` / `XModification` / `XModifications` / per-operation `XInput` types exist (`rg "struct (Vector|Tag|Piece)Diff"` matches zero).
+- Goal: `[compose/schema/graphql/schema.golden.graphql](compose/schema/graphql/schema.golden.graphql)` declares 963 types/interfaces/unions/inputs vs current 200 (805 missing). Per-entity 12-type ladder + per-operation 6-type ladder + 14 interfaces + several owner unions.
 - Match strictness: structural superset (every golden top-level declaration name present in the generated schema, with matching field set). Comments / regions / declaration ordering are not part of the spec — async-graphql's emitter chooses.
 - Existing ticket: `[.repo/🎫/26/05/11/MACRO-DRIVEN-ENTITY-FAMILY-REFACTOR/](.repo/🎫/26/05/11/MACRO-DRIVEN-ENTITY-FAMILY-REFACTOR/)`. W0/W2 marked complete but `entity_family!` is still the thin shell — W0 must be redone with the code-first direction.
 
@@ -131,7 +131,7 @@ flowchart TD
 
 ## Decisions
 
-- Single source file: every macro and every invocation lives in `[semio/client/lib/rs/lib.rs](semio/client/lib/rs/lib.rs)` (workspace rule). Region markers `//#region 🧬 entity_dsl`, `//#region 🤖 W1` … `//#region 🤖 W8` partition the file so subagents edit non-overlapping ranges.
+- Single source file: every macro and every invocation lives in `[compose/client/lib/rs/lib.rs](compose/client/lib/rs/lib.rs)` (workspace rule). Region markers `//#region 🧬 entity_dsl`, `//#region 🤖 W1` … `//#region 🤖 W8` partition the file so subagents edit non-overlapping ranges.
 - Macros emit Rust types only — `#[derive(SimpleObject)]`, `#[Object]`, `#[derive(InputObject)]`, `#[derive(async_graphql::Interface)]`, `#[derive(async_graphql::Union)]`. No string SDL anywhere.
 - `gql::sdl()` stays `build_schema().await.sdl()`. The SDL emitted by async-graphql is the byproduct.
 - `register_entities!` becomes the source of truth that auto-grows the Interface / Union enums covering every entity. `register_operations!` does the same for the Operation interface and Scope/Input enum families.
@@ -140,10 +140,10 @@ flowchart TD
 
 ## Coordinator (this agent) — phase 1 setup
 
-Acceptance: `cargo check -p semio` green, macro foundation usable by W1-W6 subagents, `Schema::sdl()` already emits the full ladder for at least Vector + Tag (one weak + one rich entity).
+Acceptance: `cargo check -p compose` green, macro foundation usable by W1-W6 subagents, `Schema::sdl()` already emits the full ladder for at least Vector + Tag (one weak + one rich entity).
 
 - Reopen the ticket via repo MCP: `ticket_reopen` with id `2026/05/11/MACRO-DRIVEN-ENTITY-FAMILY-REFACTOR`.
-- Purge string-SDL infrastructure in `[semio/client/lib/rs/lib.rs](semio/client/lib/rs/lib.rs)`:
+- Purge string-SDL infrastructure in `[compose/client/lib/rs/lib.rs](compose/client/lib/rs/lib.rs)`:
   - Delete `pub mod sdl_registry { … }` (lines 9-23).
   - Delete the empty-fragment `register_entities!` / `register_operations!` macros (lines 26-54) — they get rewritten to drive Interface/Union derivation, not fragment collection.
   - Delete any `push_all_fragments` / `push_operation_fragments` / `all_fragments` references throughout the file (mostly inside `gql::sdl`).
@@ -168,8 +168,8 @@ Each subagent gets the same prompt template, a different region marker, and an e
 
 - Edit only `//#region 🤖 W<N>` and the immediate adjacent code that becomes dead after macro adoption (within that region).
 - Do not edit `//#region 🧬 entity_dsl` or other workers' regions.
-- For each entity in scope: emit one `entity_family! { name: X, kind: <weak|artifact|document|event|workspace>, owners: [...], owns: [...], fields: { ... }, hash_tag: "semio:<region>:X" }` block + one `entity_input! { name: X, fields: { ... } }` block. The macros derive every Rust type and resolver. Delete the matching legacy struct, `#[Object]` impl, hand-written `XEdge`/`XConnection`, and `compute_hash` block.
-- Run `cargo check -p semio` before finishing; report compile errors.
+- For each entity in scope: emit one `entity_family! { name: X, kind: <weak|artifact|document|event|workspace>, owners: [...], owns: [...], fields: { ... }, hash_tag: "compose:<region>:X" }` block + one `entity_input! { name: X, fields: { ... } }` block. The macros derive every Rust type and resolver. Delete the matching legacy struct, `#[Object]` impl, hand-written `XEdge`/`XConnection`, and `compute_hash` block.
+- Run `cargo check -p compose` before finishing; report compile errors.
 
 W-package contents (entities and their golden `kind`):
 
@@ -182,7 +182,7 @@ W-package contents (entities and their golden `kind`):
 
 Subagent prompt skeleton:
 
-> Reopen ticket `2026/05/11/MACRO-DRIVEN-ENTITY-FAMILY-REFACTOR`. Edit only `//#region 🤖 W<N>` in `[semio/client/lib/rs/lib.rs](semio/client/lib/rs/lib.rs)`. For each entity `<entities>`, emit one `entity_family! { … }` and one `entity_input! { … }` invocation. The fields and `kind:` MUST match the entity's declaration in `[semio/schema/graphql/schema.golden.graphql](semio/schema/graphql/schema.golden.graphql)` (look up `type X implements …`). Use the canonical Vector/Tag examples in `//#region 🧬 entity_dsl` as templates. Delete the legacy hand-written struct, `#[Object]` impl, hand-written Edge/Connection, and compute_hash for that entity in the same region. Run `cargo check --manifest-path semio/client/lib/rs/Cargo.toml -p semio` and fix compile errors. Do not edit other workers' regions or the entity_dsl region. NEVER emit GraphQL SDL as a string. Return the converted entity list + cargo check result.
+> Reopen ticket `2026/05/11/MACRO-DRIVEN-ENTITY-FAMILY-REFACTOR`. Edit only `//#region 🤖 W<N>` in `[compose/client/lib/rs/lib.rs](compose/client/lib/rs/lib.rs)`. For each entity `<entities>`, emit one `entity_family! { … }` and one `entity_input! { … }` invocation. The fields and `kind:` MUST match the entity's declaration in `[compose/schema/graphql/schema.golden.graphql](compose/schema/graphql/schema.golden.graphql)` (look up `type X implements …`). Use the canonical Vector/Tag examples in `//#region 🧬 entity_dsl` as templates. Delete the legacy hand-written struct, `#[Object]` impl, hand-written Edge/Connection, and compute_hash for that entity in the same region. Run `cargo check --manifest-path compose/client/lib/rs/Cargo.toml -p compose` and fix compile errors. Do not edit other workers' regions or the entity_dsl region. NEVER emit GraphQL SDL as a string. Return the converted entity list + cargo check result.
 
 ## Subagent dispatch — wave 3 (sequential after W1-W6)
 
@@ -190,13 +190,13 @@ W7 operations — depends on every entity already being macro-driven so `Scope::
 
 - Apply `kit_operation_enum!`, `scope_enum!`, `input_enum!` to derive `KitOperation` / `OperationKind` / `OperationIface` / `Scope` / `Input`. The `OperationIface` derive emits `interface Operation` automatically. Delete the hand-written `operation::*` enum/struct trio.
 - For every operation in `register_operations! { … }`, emit one `operation_family! { … }` block. Each emits `XInput` (when input non-empty), `X`, `XEdge`, `XConnection`, `XInputEdge`, `XInputConnection` plus an `apply_to(kit)` skeleton (default `Ok(())`; real apply logic stays in `Kit::apply_diff`).
-- Delete the duplicate hand-written operation `Object` impls at lines 7179-7430+ in `[semio/client/lib/rs/lib.rs](semio/client/lib/rs/lib.rs)`.
+- Delete the duplicate hand-written operation `Object` impls at lines 7179-7430+ in `[compose/client/lib/rs/lib.rs](compose/client/lib/rs/lib.rs)`.
 
 ## Subagent dispatch — wave 4 (sequential after W7)
 
 W8 command navs — depends on per-op enums existing. Tasks:
 
-- In `//#region 🤖 W8`, replace the hand-written `KitOperationNav` / `TagOperationNav` / `ConceptOperationNav` / `QualityOperationNav` / `PortOperationNav` / `TypeOperationNav` / `ConnectorOperationNav` / `DesignOperationNav` / `PieceOperationNav` / `PiecesOperationNav` (lines 9499-9700+ in `[semio/client/lib/rs/lib.rs](semio/client/lib/rs/lib.rs)`) with `command_nav! { … }` invocations driven by the operation roster.
+- In `//#region 🤖 W8`, replace the hand-written `KitOperationNav` / `TagOperationNav` / `ConceptOperationNav` / `QualityOperationNav` / `PortOperationNav` / `TypeOperationNav` / `ConnectorOperationNav` / `DesignOperationNav` / `PieceOperationNav` / `PiecesOperationNav` (lines 9499-9700+ in `[compose/client/lib/rs/lib.rs](compose/client/lib/rs/lib.rs)`) with `command_nav! { … }` invocations driven by the operation roster.
 
 ## Subagent dispatch — wave 5 (sequential after W8)
 
@@ -225,7 +225,7 @@ W9 runtime mechanisms — covers the May-13 hosting layer additions. One subagen
 - Rewire `Mutation`: replace existing `Mutation::session` body with `async fn session(&self) -> SessionCommand` returning a `SessionCommand` instance. Delete the legacy `SessionCommandNav` / `StoreCommandNav` / `BackboneCommandNav` / `VersionCommandNav` / `UnsavedChangeCommandNav` hand-written structs once equivalents exist via `command_family!`.
 - Rewire `Subscription`: ensure `session: Session!` and `operation: Operation!` resolvers exist (drop legacy `events`/`commands` subscriptions if they aren't in golden).
 - Verify the runtime backbone routing: existing `kit_backbone::DevBackboneBundleDoc` etc. continue to feed `FileBackbone` (dev JSON) and `WebsocketBackbone` (remote sync) — the macro emits the GraphQL surface; existing host code stays as-is, only its public types are replaced.
-- Run `cargo check -p semio` + `cargo test -p semio` (specifically `schema_matches_target_graphql_file` once strengthened in the integrate wave).
+- Run `cargo check -p compose` + `cargo test -p compose` (specifically `schema_matches_target_graphql_file` once strengthened in the integrate wave).
 
 ## Integrator (coordinator) — wave 6
 
@@ -235,17 +235,17 @@ W9 runtime mechanisms — covers the May-13 hosting layer additions. One subagen
   - `KitOperation` / `OperationKind` / `OperationIface` / `Scope` / `Input` operation enums.
 - Specialty unions (`AttributeOwner`, `Blueprint`, `ChangeOwner`, `QualityOwner`, `PieceOwner`, `ConnectionOwner`, `PortOwner`, `RepresentationOwner`, plus the new owner unions implied by the host layer like `BackboneOwner = Store`, `ProviderOwner = Store`, `SessionOwner = Graph`) are emitted as real `#[derive(async_graphql::Union)]` enums in the same `entity_dsl` region (one declaration per golden union); their variants are listed once and referenced wherever an entity's `owners:` slot needs them.
 - `register_output_type` sweep in `gql::build_schema_sync_for`: every macro-emitted concrete type must be reachable from `Query` / `Mutation` / `Subscription` OR explicitly registered (`SchemaBuilder::register_output_type::<XDiff>()`, `::<XModification>()`, `::<XModifications>()`, `::<XInput>()`, `::<FileBackbone>()`, `::<WebsocketBackbone>()`, `::<LocalProvider>()`, `::<RemoteProvider>()`, `::<Store>()`, `::<Version>()`, `::<*Command>()`, …) so async-graphql includes it in `Schema::sdl()`. Generate the registration list from the same roster (a `register_output_types!` macro emitted alongside `register_entities!`/`register_commands!`).
-- Regenerate `[semio/schema/graphql/schema.graphql](semio/schema/graphql/schema.graphql)` via `bun run semio/schema/graphql/build.script.ts` (which runs `cargo test export_semio_graphql_schema_file -- --ignored --nocapture`).
-- Diff against `[semio/schema/graphql/schema.golden.graphql](semio/schema/graphql/schema.golden.graphql)` using `Compare-Object` on `^type|^interface|^union|^input|^scalar|^enum` lines. Iterate (add missing entities, missing operations, missing register_output_type calls) until missing-types count is 0.
-- Run full `cargo test -p semio --manifest-path semio/client/lib/rs/Cargo.toml`. Rewrite `schema_matches_target_graphql_file` (currently just asserts non-empty SDL) to:
+- Regenerate `[compose/schema/graphql/schema.graphql](compose/schema/graphql/schema.graphql)` via `bun run compose/schema/graphql/build.script.ts` (which runs `cargo test export_compose_graphql_schema_file -- --ignored --nocapture`).
+- Diff against `[compose/schema/graphql/schema.golden.graphql](compose/schema/graphql/schema.golden.graphql)` using `Compare-Object` on `^type|^interface|^union|^input|^scalar|^enum` lines. Iterate (add missing entities, missing operations, missing register_output_type calls) until missing-types count is 0.
+- Run full `cargo test -p compose --manifest-path compose/client/lib/rs/Cargo.toml`. Rewrite `schema_matches_target_graphql_file` (currently just asserts non-empty SDL) to:
   - Parse both the generated schema and the golden via `async_graphql_parser` (or `apollo-parser` if needed).
   - For every top-level declaration in golden (`type` / `interface` / `union` / `input` / `enum` / `scalar`), assert the generated schema contains a declaration of the same kind and name.
   - For every `type X implements Y { fields }` in golden, assert generated `X` declares the same field set with compatible nullability.
-- Verify WASM build: `cargo check -p semio --manifest-path semio/client/lib/rs/Cargo.toml --target wasm32-unknown-unknown`.
+- Verify WASM build: `cargo check -p compose --manifest-path compose/client/lib/rs/Cargo.toml --target wasm32-unknown-unknown`.
 - Close the ticket via repo MCP `ticket_close` with summary listing the converted entities/operations and the schema diff stats.
 
 ## Out of scope (follow-up tickets)
 
 - Inline `# data` / `# computed` / `# reference` field comments and `#region` markers in the generated SDL string (async-graphql's emitter doesn't produce them).
 - Declaration ordering parity with golden (async-graphql emits in registration order; cosmetic).
-- Updates to `[semio/schema/graphql/schema.graphql](semio/schema/graphql/schema.graphql)` consumers (TS clients via codegen) once the ladder lands.
+- Updates to `[compose/schema/graphql/schema.graphql](compose/schema/graphql/schema.graphql)` consumers (TS clients via codegen) once the ladder lands.

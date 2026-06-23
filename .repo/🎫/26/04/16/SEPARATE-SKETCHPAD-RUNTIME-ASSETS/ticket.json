@@ -1,8 +1,8 @@
 {
   "title": "Separate Sketchpad Runtime Assets",
   "status": "closed",
-  "description": "Fix semio sketchpad build/runtime asset coupling: when building, metabolism.zip appears in assets, but semio/js and semio/sketchpad must be runtime-independent from all test/example assets. Refactor existing build/package/test configuration and extend existing tests without adding new test files.",
-  "summary": "Separated sketchpad browser runtime builds from embedded test/benchmark assets. Added compile-time Vite flags for sketchpad, desktop, and VS Code webview builds; gated embedded semio/js and sketchpad test/benchmark blocks behind explicit Node test flags; restricted sketchpad dev asset middleware to runtime asset directories; updated sketchpad test script and loader hook so the existing embedded Playwright test still runs. Verified sketchpad production build no longer emits metabolism.zip or kit fixture chunks, and ran the focused Playwright config test successfully. semio/js tsc build still fails on existing sketchpad type errors unrelated to this change.",
+  "description": "Fix compose sketchpad build/runtime asset coupling: when building, metabolism.zip appears in assets, but compose/js and compose/sketchpad must be runtime-independent from all test/example assets. Refactor existing build/package/test configuration and extend existing tests without adding new test files.",
+  "summary": "Separated sketchpad browser runtime builds from embedded test/benchmark assets. Added compile-time Vite flags for sketchpad, desktop, and VS Code webview builds; gated embedded compose/js and sketchpad test/benchmark blocks behind explicit Node test flags; restricted sketchpad dev asset middleware to runtime asset directories; updated sketchpad test script and loader hook so the existing embedded Playwright test still runs. Verified sketchpad production build no longer emits metabolism.zip or kit fixture chunks, and ran the focused Playwright config test successfully. compose/js tsc build still fails on existing sketchpad type errors unrelated to this change.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1335"
   },

@@ -9,8 +9,8 @@ goal: SKETCHPAD-IMPROVEMENTS
 Fixed second filter regression by restoring cross-root shared filter synchronization and strict off-state diagram filtering in Design app. Re-verified with passing Design Playwright test.
 ## Changes
 
-- `semio/js/sketchpad/Design.tsx`: Fixed `toggleFilter()` to clear all filter params when all 3 kinds are re-enabled
-- `semio/js/sketchpad.test.ts`: Fixed HUD panel toggle assertions, improved drag test, added filter coverage, fixed Panels test timeout
+- `compose/js/sketchpad/Design.tsx`: Fixed `toggleFilter()` to clear all filter params when all 3 kinds are re-enabled
+- `compose/js/sketchpad.test.ts`: Fixed HUD panel toggle assertions, improved drag test, added filter coverage, fixed Panels test timeout
 
 ## Log
 
@@ -47,7 +47,7 @@ Reopened to complete filter runtime verification for the Design app and extend e
 
 1. Validate current Design filter runtime behavior in diagram/model views.
 2. Fix Design filter behavior where runtime visibility does not track toggles.
-3. Extend `semio/js/sketchpad.test.ts` filter checks to assert actual visible elements in diagram/model.
+3. Extend `compose/js/sketchpad.test.ts` filter checks to assert actual visible elements in diagram/model.
 4. Re-run Design Playwright scope and confirm pass.
 
 ### Todos
@@ -91,7 +91,7 @@ Current branch state regressed filter synchronization in `Design.tsx`; disabled 
 
 ### Changes
 
-- Re-introduced shared Design filter infrastructure in `semio/js/sketchpad/Design.tsx`:
+- Re-introduced shared Design filter infrastructure in `compose/js/sketchpad/Design.tsx`:
   - global singleton filter store on `globalThis`
   - `useSyncExternalStore` subscription in `DesignFilterProvider`
   - URL-to-store and toolbar toggle-to-store synchronization
@@ -129,12 +129,12 @@ Fixed remaining mismatch where UI filter off-state did not consistently drive vi
 
 ### Changes
 
-- `semio/js/sketchpad/Design.tsx`
+- `compose/js/sketchpad/Design.tsx`
   - Added global singleton filter store on `globalThis` and `useSyncExternalStore` subscription.
   - Synced toolbar URL filters to shared state and propagated updates to all Design roots.
   - Wrapped `DiagramWindow` and `SceneWindow` with `DesignFilterProvider`.
   - Changed diagram filtering to remove nodes/edges from render arrays when off (instead of hidden flags), and tied edges visibility to pieces+connections.
-- `semio/js/sketchpad.test.ts`
+- `compose/js/sketchpad.test.ts`
   - Scoped diagram locator to `#diagram .react-flow`.
   - Added assertion that edges are also hidden when pieces are toggled off.
 

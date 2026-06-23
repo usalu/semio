@@ -21,6 +21,6 @@ Call `setNodes()` with an updater function inside the descendant handling sectio
 - [ ] Close ticket
 
 ## Changes
-- `semio/js/sketchpad/Design.tsx`: Add `setNodes()` call in onNodeDrag descendant handling
+- `compose/js/sketchpad/Design.tsx`: Add `setNodes()` call in onNodeDrag descendant handling
 
 ## Summary

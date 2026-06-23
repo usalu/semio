@@ -1,6 +1,6 @@
 // #region 🧲Header
 // 2025-2026 Ueli Saluz <ueli@semio-tech.com>
-// GNU LGPL-3.0 or later — semio/js: `KitStore` + opaque dto batches to `semio/rs` WASM (read shapes are not re-exported).
+// GNU LGPL-3.0 or later — compose/js: `KitStore` + opaque dto batches to `compose/rs` WASM (read shapes are not re-exported).
 // #endregion 🧲Header
 
 // #region 📥Imports
@@ -10,7 +10,7 @@ import { z } from "zod";
 
 // #region 🧵InlineWorker
 
-/** @emoji 🧵 Bundled worker chunk — Vite resolves `@semio/rs-wasm`; Blob workers cannot import bare specifiers. */
+/** @emoji 🧵 Bundled worker chunk — Vite resolves `@compose/rs-wasm`; Blob workers cannot import bare specifiers. */
 function createKitStoreWorker(): Worker {
   return new Worker(new URL("./kit-store.worker.ts", import.meta.url), { type: "module" });
 }
@@ -31,7 +31,7 @@ export type SetResult = { ok: true; requestId?: KitCommandRequestId } | { ok: fa
 export type KitCommandLifecyclePhase = "accepted" | "succeeded" | "failed";
 
 /**
- * @emoji 🧾 `KitChangeKind` on the dto (camelCase from `semio/rs`), plus any `other` label inside `other`.
+ * @emoji 🧾 `KitChangeKind` on the dto (camelCase from `compose/rs`), plus any `other` label inside `other`.
  */
 export type KitChangeKind =
   | "inferred"
@@ -49,7 +49,7 @@ export type KitChangeKind =
   | "unifyCheckpoints"
   | "markRelease"
   | { readonly other: string }
-  | (string & { readonly _semioExt?: 1 });
+  | (string & { readonly _composeExt?: 1 });
 
 /** @emoji 🧾 GraphQL `KitChangeSemanticKind` enum (SCREAMING_SNAKE); pair with {@linkcode KitChangeKind} via {@linkcode kitChangeSemanticKindToGraphQl}. */
 export type KitChangeSemanticKindGql =
@@ -127,7 +127,7 @@ type KitGraphqlResponseEnvelope<TData> = Readonly<{
  * @emoji 🧾 Tags accepted on `KitStore` control-plane nested `Mutation.session` mappers and {@link WasmKitStoreClient} routing.
  * @public
  */
-export const SEMIO_KIT_STORE_CONTROL_COMMAND_KINDS = {
+export const COMPOSE_KIT_STORE_CONTROL_COMMAND_KINDS = {
   changeKitCommands: 1,
   changeKitWithInverse: 1,
   undo: 1,
@@ -151,19 +151,19 @@ export const SEMIO_KIT_STORE_CONTROL_COMMAND_KINDS = {
   resolveConflict: 1,
   syncNow: 1,
 } as const;
-export type SemioKitStoreControlCommandName = keyof typeof SEMIO_KIT_STORE_CONTROL_COMMAND_KINDS;
+export type ComposeKitStoreControlCommandName = keyof typeof COMPOSE_KIT_STORE_CONTROL_COMMAND_KINDS;
 
 export type KitCommandLifecycleEvent = {
-  semioKitCommand: {
+  composeKitCommand: {
     requestId: KitCommandRequestId;
-    commandKind: SemioKitStoreControlCommandName | (string & { readonly _semioStoreControlLabel?: 1 });
+    commandKind: ComposeKitStoreControlCommandName | (string & { readonly _composeStoreControlLabel?: 1 });
     phase: KitCommandLifecyclePhase;
     result?: KitJsonTreeDto;
     error?: SetError;
   };
 };
 
-/** @emoji 🧭 Backbone / conflict dto shapes (serde-tagged, matches `kit_backbone_dto` in `semio/rs`). */
+/** @emoji 🧭 Backbone / conflict dto shapes (serde-tagged, matches `kit_backbone_dto` in `compose/rs`). */
 export type BackboneConfig = { readonly Memory: null } | { readonly Dev: { readonly path: string } } | { readonly Local: { readonly folder: string } } | { readonly Remote: { readonly url: string; readonly sessionId: string } };
 export type BackboneStatusDto = {
   readonly attached: boolean;
@@ -171,7 +171,7 @@ export type BackboneStatusDto = {
   readonly backboneTip?: string | null;
   readonly pendingWipCheckpoints: number;
 };
-/** @emoji 🧾 GraphQL `ConflictResolutionBatchInput` (matches `semio/graphql/schema.graphql`). */
+/** @emoji 🧾 GraphQL `ConflictResolutionBatchInput` (matches `compose/graphql/schema.graphql`). */
 export type ConflictResolution = "DROP_WIP" | "FORCE_OVERWRITE_BACKBONE";
 export type KitCheckpointDto = KitJsonObjectDto;
 export type KitConflict = {
@@ -182,7 +182,7 @@ export type KitConflict = {
   createdAt: string;
 };
 
-/** @emoji 🧾 One read command in a `KitStore.read` batch (matches `semio/rs` read kit dto, serde camelCase). */
+/** @emoji 🧾 One read command in a `KitStore.read` batch (matches `compose/rs` read kit dto, serde camelCase). */
 export type ReadPieceCommand = { readonly readPieceFlatPlaneCommand: null } | { readonly readPieceFlatCenterCommand: null } | { readonly readPieceParentConnectionFullCommand: null };
 
 export type ReadDesignCommand =
@@ -268,7 +268,7 @@ export type ChangeId = string;
 export type KitWriteScope = { readonly changeId: ChangeId };
 
 /**
- * @emoji 🧾 VCS helpers aligned with `SessionCommandInput` / `VersionCommandInput` (`semio/graphql/target.schema.graphql`).
+ * @emoji 🧾 VCS helpers aligned with `SessionCommandInput` / `VersionCommandInput` (`compose/graphql/target.schema.graphql`).
  * @public
  */
 export interface ChangeLifecycle {
@@ -400,7 +400,7 @@ export type ReadDesignCommandOutput =
   | { readonly readDesignReplaceableCatalogCommand: { readonly types: readonly KitIdDto[]; readonly designs: readonly KitIdDto[] } }
   | { readonly readDesignIncludedDesignIdsCommand: { readonly designIds: readonly string[] } };
 
-/** @emoji 🧾 One command’s read output object (per-command payload shape from `semio/rs` GraphQL). */
+/** @emoji 🧾 One command’s read output object (per-command payload shape from `compose/rs` GraphQL). */
 export type ReadKitCommandOutput =
   | { readonly readKitFullCommand: { readonly full: KitFullDto } }
   | { readonly readKitShallowCommand: { readonly types: readonly TypeShallow[]; readonly designs: readonly DesignShallow[] } }
@@ -605,7 +605,7 @@ function isJsonObjectNode(v: JsonValue | KitJsonTreeDto | null | undefined): v i
   return v != null && typeof v === "object" && !Array.isArray(v);
 }
 
-/** @emoji 🧾 GraphQL `ConflictBatchRecord` row (matches `semio/graphql/schema.graphql`). */
+/** @emoji 🧾 GraphQL `ConflictBatchRecord` row (matches `compose/graphql/schema.graphql`). */
 export type ConflictBatchRecord = Readonly<{
   id: string;
   backboneTip?: string | null;
@@ -626,7 +626,7 @@ export type KitStoreBatchResultRow = Readonly<{
   backbone?: { attached: boolean; kind?: string | null; tip?: string | null } | null;
 }>;
 
-/** @emoji 🧾 Forward + inverse command atoms on the subscription bus (`KitChange` from `semio/rs`). */
+/** @emoji 🧾 Forward + inverse command atoms on the subscription bus (`KitChange` from `compose/rs`). */
 export type KitChange = Readonly<{
   readonly forward: readonly ChangeKitCommand[];
   readonly inverse: readonly ChangeKitCommand[];
@@ -635,7 +635,7 @@ export type KitChange = Readonly<{
   readonly time?: string | null;
 }>;
 
-/** @emoji 🧾 Payload for {@link KitEvent} `renamedDesign` (camelCase from `semio/rs`). */
+/** @emoji 🧾 Payload for {@link KitEvent} `renamedDesign` (camelCase from `compose/rs`). */
 export type RenamedDesignKitEvent = Readonly<{ readonly designId: string; readonly change: KitChange }>;
 /** @emoji 🧾 Payload for {@link KitEvent} `renamedType`. */
 export type RenamedTypeKitEvent = Readonly<{ readonly typeId: string; readonly change: KitChange }>;
@@ -690,7 +690,7 @@ export type ChangedTypeCommandsKitEvent = Readonly<{ readonly typeId: string; re
 /** @emoji 🧾 Payload for {@link KitEvent} `changedKit` (fallback classified change). */
 export type ChangedKitEvent = Readonly<{ readonly change: KitChange }>;
 
-/** @emoji 🧾 Classified kit mutation row: exactly one variant key plus payload (same dto as `semio/rs` `KitEvent`). */
+/** @emoji 🧾 Classified kit mutation row: exactly one variant key plus payload (same dto as `compose/rs` `KitEvent`). */
 export type KitClassifiedMutationEvent = Readonly<
   | { readonly renamedDesign: RenamedDesignKitEvent }
   | { readonly renamedType: RenamedTypeKitEvent }
@@ -1638,10 +1638,10 @@ function __stripTopLevelJsonNulls(row: JsonObject | KitJsonObjectDto): JsonObjec
 
 /** @emoji 🧾 JSON, `KitJsonTreeDto`, or typed bus {@link KitEvent} in subscription and lifecycle helpers. */
 
-/** @emoji 🧾 Narrows subscription payloads to semio kit command lifecycle rows. */
+/** @emoji 🧾 Narrows subscription payloads to compose kit command lifecycle rows. */
 export function isKitCommandLifecycleEvent(event: unknown): event is KitCommandLifecycleEvent {
   if (event == null || typeof event !== "object" || Array.isArray(event)) return false;
-  const c = (event as KitJsonObjectDto)["semioKitCommand"];
+  const c = (event as KitJsonObjectDto)["composeKitCommand"];
   if (c == null || typeof c !== "object" || Array.isArray(c)) return false;
   const v = c as JsonObject;
   return typeof v["requestId"] === "string" && typeof v["commandKind"] === "string" && typeof v["phase"] === "string";
@@ -1671,10 +1671,10 @@ export function normalizeKitEventFromSubscription(raw: unknown): KitEvent | unde
   if (typeof raw0 === "string") return undefined;
   if (typeof raw0 !== "object" || Array.isArray(raw0)) return undefined;
   const top = raw0 as JsonObject;
-  const lifecycleWrapper: KitJsonTreeDto = top["semioKitCommand"] !== undefined ? raw0 : top["SemioKitCommand"] !== undefined ? { semioKitCommand: top["SemioKitCommand"] as KitJsonTreeDto } : raw0;
+  const lifecycleWrapper: KitJsonTreeDto = top["composeKitCommand"] !== undefined ? raw0 : top["ComposeKitCommand"] !== undefined ? { composeKitCommand: top["ComposeKitCommand"] as KitJsonTreeDto } : raw0;
   const w = isJsonObjectNode(lifecycleWrapper) ? lifecycleWrapper : null;
-  const command = w?.["semioKitCommand"];
-  if (isKitCommandLifecycleEvent({ semioKitCommand: command } as KitEvent)) {
+  const command = w?.["composeKitCommand"];
+  if (isKitCommandLifecycleEvent({ composeKitCommand: command } as KitEvent)) {
     if (command == null || typeof command !== "object" || Array.isArray(command)) return undefined;
     const value = command as JsonObject;
     const requestIdRaw = value["requestId"];
@@ -1682,7 +1682,7 @@ export function normalizeKitEventFromSubscription(raw: unknown): KitEvent | unde
     const errRaw = value["error"];
     const error = errRaw != null && typeof errRaw === "object" && !Array.isArray(errRaw) ? normalizeRustSetError(errRaw as JsonValue) : undefined;
     return {
-      semioKitCommand: {
+      composeKitCommand: {
         requestId: requestIdRaw,
         commandKind: value["commandKind"] as string,
         phase: value["phase"] as KitCommandLifecyclePhase,
@@ -1769,7 +1769,7 @@ class WorkerStringTransport {
     this.worker = worker;
   }
 
-  /** @emoji 🧵 Resolves on `ready`; rejects fast on worker-thread `error` (e.g. `@semio/rs-wasm` not resolvable from Blob worker) instead of waiting the full timeout. */
+  /** @emoji 🧵 Resolves on `ready`; rejects fast on worker-thread `error` (e.g. `@compose/rs-wasm` not resolvable from Blob worker) instead of waiting the full timeout. */
   init(dto: KitFullDto): Promise<void> {
     return new Promise((resolve, reject) => {
       const t = setTimeout(() => {
@@ -1873,25 +1873,25 @@ class WorkerStringTransport {
 
 // #region 📦KitStore
 
-/** @internal Resolves `semio_bg.wasm` for Node / Vitest when `import.meta.url` is not adjacent to `semio/rs/pkg` (e.g. bundled `semio/react` tests). */
-async function __readSemioWasmBytesFromMonorepoCandidates(): Promise<Uint8Array | undefined> {
+/** @internal Resolves `compose_bg.wasm` for Node / Vitest when `import.meta.url` is not adjacent to `compose/rs/pkg` (e.g. bundled `compose/react` tests). */
+async function __readComposeWasmBytesFromMonorepoCandidates(): Promise<Uint8Array | undefined> {
   try {
     const fs = await import("node:fs/promises");
     const path = await import("node:path");
-    const envPath = typeof process !== "undefined" && process.env ? (process.env["SEMIO_WASM_BG_PATH"] ?? process.env["SEMIO_RS_WASM_PATH"]) : undefined;
+    const envPath = typeof process !== "undefined" && process.env ? (process.env["COMPOSE_WASM_BG_PATH"] ?? process.env["COMPOSE_RS_WASM_PATH"]) : undefined;
     const candidates: string[] = [];
     if (typeof envPath === "string" && envPath.trim().length) candidates.push(envPath.trim());
     try {
       const { fileURLToPath } = await import("node:url");
-      candidates.push(fileURLToPath(new URL("../rs/pkg/semio_bg.wasm", import.meta.url)));
+      candidates.push(fileURLToPath(new URL("../rs/pkg/compose_bg.wasm", import.meta.url)));
     } catch {
-      /* Vitest may bundle this module with a synthetic `import.meta.url` that is not beside `semio/rs/pkg`. */
+      /* Vitest may bundle this module with a synthetic `import.meta.url` that is not beside `compose/rs/pkg`. */
     }
     if (typeof process !== "undefined" && typeof process.cwd === "function") {
       let dir = process.cwd();
       for (let i = 0; i < 16; i++) {
-        candidates.push(path.join(dir, "semio", "rs", "pkg", "semio_bg.wasm"));
-        candidates.push(path.join(dir, "rs", "pkg", "semio_bg.wasm"));
+        candidates.push(path.join(dir, "compose", "rs", "pkg", "compose_bg.wasm"));
+        candidates.push(path.join(dir, "rs", "pkg", "compose_bg.wasm"));
         const parent = path.dirname(dir);
         if (parent === dir) break;
         dir = parent;
@@ -1910,10 +1910,10 @@ async function __readSemioWasmBytesFromMonorepoCandidates(): Promise<Uint8Array 
   return undefined;
 }
 
-/** @emoji 🔗 Smoke query: `Query.wip` + `Graph.theKit` (`semio/graphql/target.schema.graphql`). */
+/** @emoji 🔗 Smoke query: `Query.wip` + `Graph.theKit` (`compose/graphql/target.schema.graphql`). */
 export const KIT_SESSION_QUERY_ENTRY = `query { wip { id theKit { id } } }` as const;
 
-/** @emoji 🔗 Multiplexed kit stream: `Subscription.event: Json!` (`semio/graphql/target.schema.graphql`). */
+/** @emoji 🔗 Multiplexed kit stream: `Subscription.event: Json!` (`compose/graphql/target.schema.graphql`). */
 export const KIT_EVENT_STREAM_SUBSCRIPTION = `subscription { event }` as const;
 
 /** @emoji 🧾 Envelope kinds inside {@link KIT_EVENT_STREAM_SUBSCRIPTION} (Worker D contract). */
@@ -2085,7 +2085,7 @@ export class RequestCorrelator {
 export type RenameKitCommandArgs = { readonly scope: Record<string, never>; readonly input: { readonly name: string } };
 
 /**
- * @emoji 🌐 Single kit control plane: GraphQL strings over one dedicated `Worker` running `semio/rs` WASM (`KitStoreHandle`).
+ * @emoji 🌐 Single kit control plane: GraphQL strings over one dedicated `Worker` running `compose/rs` WASM (`KitStoreHandle`).
  */
 export class KitStore {
   private readonly timeoutMs: number;
@@ -2167,13 +2167,13 @@ export class KitStore {
           if (isTheKitReadPoint(point)) {
             const varHeader = extraDecl ? (`${extraDecl}` as const) : "";
             const headerPart = varHeader ? `(${varHeader})` : "";
-            query = `query SemioMatKit${headerPart} { wip { theKit { kit { ${spec.innerOnKit} } } } }`;
+            query = `query ComposeMatKit${headerPart} { wip { theKit { kit { ${spec.innerOnKit} } } } }`;
             variables = { ...(spec.extraVariables ?? {}) } as GraphQlVariables;
           } else {
             const varHeader = extraDecl ? (`${extraDecl}` as const) : "";
             const headerPart = varHeader ? `(${varHeader})` : "";
             const selected = kitSessionWipStoreSelect(point, spec.innerOnKit);
-            query = extraDecl ? selected.query.replace("query KitSessionWipStore", `query SemioMatKit${headerPart}`) : selected.query.replace("query KitSessionWipStore", "query SemioMatKit");
+            query = extraDecl ? selected.query.replace("query KitSessionWipStore", `query ComposeMatKit${headerPart}`) : selected.query.replace("query KitSessionWipStore", "query ComposeMatKit");
             variables = { ...selected.variables, ...(spec.extraVariables ?? {}) } as GraphQlVariables;
           }
           const data = kitGraphqlData(await this.gqlRun({ query, variables })) as JsonValue;
@@ -2193,7 +2193,7 @@ export class KitStore {
 
   static async open(initialKit: KitFullDto, opts?: KitStoreOpenOptions): Promise<KitStore> {
     const timeoutMs = opts?.timeoutMs ?? 60_000;
-    const wasmSpecifier = opts?.wasmSpecifier ?? (globalThis as { __SEMIO_WASM_SPECIFIER__?: string }).__SEMIO_WASM_SPECIFIER__ ?? "@semio/rs-wasm";
+    const wasmSpecifier = opts?.wasmSpecifier ?? (globalThis as { __COMPOSE_WASM_SPECIFIER__?: string }).__COMPOSE_WASM_SPECIFIER__ ?? "@compose/rs-wasm";
     const dto = JSON.parse(JSON.stringify(initialKit)) as KitFullDto;
     /** Vitest may expose `Worker` (e.g. jsdom); blob worker still `fetch`es `.wasm` — prefer inline init when Vitest is active. */
     const preferInlineWasmInVitest = (() => {
@@ -2206,7 +2206,7 @@ export class KitStore {
       return typeof process !== "undefined" && !!process.env && "VITEST" in process.env;
     })();
 
-    const wasmBytesPre = await __readSemioWasmBytesFromMonorepoCandidates();
+    const wasmBytesPre = await __readComposeWasmBytesFromMonorepoCandidates();
     const useDedicatedWorker = typeof Worker !== "undefined" && !preferInlineWasmInVitest && wasmBytesPre == null;
 
     if (useDedicatedWorker) {
@@ -2219,8 +2219,8 @@ export class KitStore {
         void ks.startSubscriptionLoop();
         return ks;
       } catch (workerErr) {
-        /** @emoji 🧵 Blob worker can't resolve `@semio/rs-wasm` bare specifier → fall back to inline WASM on the main thread (still real rust authority). */
-        console.warn("[semio/js] dedicated WASM worker init failed; falling back to inline main-thread WASM", workerErr);
+        /** @emoji 🧵 Blob worker can't resolve `@compose/rs-wasm` bare specifier → fall back to inline WASM on the main thread (still real rust authority). */
+        console.warn("[compose/js] dedicated WASM worker init failed; falling back to inline main-thread WASM", workerErr);
         try {
           wt.dispose();
         } catch {
@@ -2229,16 +2229,16 @@ export class KitStore {
       }
     }
 
-    let mod: typeof import("@semio/rs-wasm");
+    let mod: typeof import("@compose/rs-wasm");
     try {
-      mod = wasmSpecifier === "@semio/rs-wasm" ? await import("@semio/rs-wasm") : await import(/* @vite-ignore */ wasmSpecifier);
+      mod = wasmSpecifier === "@compose/rs-wasm" ? await import("@compose/rs-wasm") : await import(/* @vite-ignore */ wasmSpecifier);
     } catch (e) {
       const base = e instanceof Error ? e.message : String(e);
       const net = /Failed to fetch|fetch|ERR_CONNECTION_REFUSED|LOAD_FAILED|network/i.test(base);
       const hint = net
-        ? " The Vite dev server may have stopped (restore with `npm run dev` in semio/sketchpad, then hard-refresh)."
+        ? " The Vite dev server may have stopped (restore with `npm run dev` in compose/sketchpad, then hard-refresh)."
         : "";
-      throw new Error(`Failed to load @semio/rs-wasm (inline path): ${base}.${hint}`);
+      throw new Error(`Failed to load @compose/rs-wasm (inline path): ${base}.${hint}`);
     }
     if (typeof mod.default === "function") {
       if (wasmBytesPre) await mod.default({ module_or_path: wasmBytesPre });
@@ -2323,11 +2323,11 @@ export class KitStore {
     );
   }
 
-  /** @emoji 📣 Kit command lifecycle scalar rows (`semioKitCommand` / `SemioKitCommand`). */
-  subscribeSemioKitCommandLifecycle(handler: (row: KitCommandLifecycleEvent["semioKitCommand"]) => void): Unsubscribe {
+  /** @emoji 📣 Kit command lifecycle scalar rows (`composeKitCommand` / `ComposeKitCommand`). */
+  subscribeComposeKitCommandLifecycle(handler: (row: KitCommandLifecycleEvent["composeKitCommand"]) => void): Unsubscribe {
     return this.subscribeFiltered(
       (ev) => isKitCommandLifecycleEvent(ev),
-      (ev) => handler((ev as KitCommandLifecycleEvent).semioKitCommand),
+      (ev) => handler((ev as KitCommandLifecycleEvent).composeKitCommand),
     );
   }
 
@@ -2522,7 +2522,7 @@ export class KitStore {
     if (j == null || typeof j !== "object" || Array.isArray(j)) {
       throw new Error("kitGraphql: fullSnapshot missing or not an object for the given read scope");
     }
-    return semioCoerceKitFullDtoFromJson(j as KitJsonTreeDto);
+    return composeCoerceKitFullDtoFromJson(j as KitJsonTreeDto);
   }
 
   /** @emoji 🧾 Main-line live kit DTO from `Query.wip.theKit.kit` (`fullSnapshot` / materialized JSON). */
@@ -2547,13 +2547,13 @@ export class KitStore {
     return { wip } as JsonObject;
   }
 
-  /** @emoji 🧾 Undo stack is owned by `semio/rs` edit log; JS does not read a draft cursor on the target schema. */
+  /** @emoji 🧾 Undo stack is owned by `compose/rs` edit log; JS does not read a draft cursor on the target schema. */
   async canUndo(): Promise<boolean> {
     void (await this.vcsState());
     return false;
   }
 
-  /** @emoji 🧾 Redo stack is owned by `semio/rs` edit log; JS does not read a draft cursor on the target schema. */
+  /** @emoji 🧾 Redo stack is owned by `compose/rs` edit log; JS does not read a draft cursor on the target schema. */
   async canRedo(): Promise<boolean> {
     void (await this.vcsState());
     return false;
@@ -2949,7 +2949,7 @@ export class KitStore {
   }
 
   /**
-   * @emoji 🧭 Read-only flatten map rows for one design (`semio/rs` `flatten_map`), for algorithm / MCP tooling.
+   * @emoji 🧭 Read-only flatten map rows for one design (`compose/rs` `flatten_map`), for algorithm / MCP tooling.
    */
   async readDesignFlattenMap(scope: KitReadPoint, designId: string): Promise<readonly DesignFlattenMapEntryDto[]> {
     const data = await this.gqlRunSessionWipStore(scope, `design(id: $id) { flattenMap }`, { id: designId });
@@ -3011,18 +3011,18 @@ export class KitStore {
       const designRows = kitGraphqlJsonToReadonlyArray((row.designs as KitJsonTreeDto | undefined) ?? []);
       return {
         readKitShallowCommand: {
-          types: semioParseTypeShallowArrayJson(typesRows as KitJsonTreeDto[]),
-          designs: semioParseDesignShallowArrayJson(designRows as KitJsonTreeDto[]),
+          types: composeParseTypeShallowArrayJson(typesRows as KitJsonTreeDto[]),
+          designs: composeParseDesignShallowArrayJson(designRows as KitJsonTreeDto[]),
         },
       };
     }
     if ("readKitTypeIdsCommand" in c && c.readKitTypeIdsCommand === null) {
       const row = await this.gqlKitReadOnlyScope(scope, kitGqlKitTypesRelay("id"));
-      return { readKitTypeIdsCommand: { typeIds: semioParseKitIdDtoArray(row.types as KitJsonTreeDto | string) } };
+      return { readKitTypeIdsCommand: { typeIds: composeParseKitIdDtoArray(row.types as KitJsonTreeDto | string) } };
     }
     if ("readKitDesignIdsCommand" in c && c.readKitDesignIdsCommand === null) {
       const row = await this.gqlKitReadOnlyScope(scope, kitGqlKitDesignsRelay("id"));
-      return { readKitDesignIdsCommand: { designIds: semioParseKitIdDtoArray(row.designs as KitJsonTreeDto | string) } };
+      return { readKitDesignIdsCommand: { designIds: composeParseKitIdDtoArray(row.designs as KitJsonTreeDto | string) } };
     }
     if ("readKitTypesMetadataCommand" in c && c.readKitTypesMetadataCommand === null) {
       const row = await this.gqlKitReadOnlyScope(scope, kitGqlKitTypesRelay(KIT_GQL_TYPE_METADATA_FIELDS));
@@ -3053,7 +3053,7 @@ export class KitStore {
       const rows = kitGraphqlJsonToReadonlyArray((row.types as KitJsonTreeDto | undefined) ?? []);
       return {
         readKitTypesShallowCommand: {
-          types: semioParseTypeShallowArrayJson(rows as KitJsonTreeDto[]),
+          types: composeParseTypeShallowArrayJson(rows as KitJsonTreeDto[]),
         },
       };
     }
@@ -3062,7 +3062,7 @@ export class KitStore {
       const rows = kitGraphqlJsonToReadonlyArray((row.designs as KitJsonTreeDto | undefined) ?? []);
       return {
         readKitDesignsShallowCommand: {
-          designs: semioParseDesignShallowArrayJson(rows as KitJsonTreeDto[]),
+          designs: composeParseDesignShallowArrayJson(rows as KitJsonTreeDto[]),
         },
       };
     }
@@ -3071,13 +3071,13 @@ export class KitStore {
       const authors = kitGraphqlJsonToReadonlyArray((row.authors as KitJsonTreeDto | undefined) ?? []);
       return {
         readKitAuthorsShallowCommand: {
-          authors: semioParseAuthorMetadataArrayJson(authors as KitJsonTreeDto[]),
+          authors: composeParseAuthorMetadataArrayJson(authors as KitJsonTreeDto[]),
         },
       };
     }
     if ("readKitMetadataCommand" in c && c.readKitMetadataCommand === null) {
       const row = await this.gqlKitReadOnlyScope(scope, "id name description icon image preview remote homepage license uri created updated version hash");
-      return { readKitMetadataCommand: { metadata: semioParseKitMetadataJson(row as KitJsonTreeDto) } };
+      return { readKitMetadataCommand: { metadata: composeParseKitMetadataJson(row as KitJsonTreeDto) } };
     }
     if ("readKitDesignCommands" in c && c.readKitDesignCommands) {
       const { id, commands } = c.readKitDesignCommands;
@@ -3141,7 +3141,7 @@ export class KitStore {
       const piece = (gqlDataSessionWipKitStore(d, scope)?.["design"] as JsonObject | undefined)?.["piece"] as JsonObject | undefined;
       const fp = piece?.["flatPosition"] as JsonObject | undefined;
       return {
-        readPieceFlatPlaneCommand: { flatPlane: semioParsePlaneNullableJson(fp?.["plane"] as KitJsonTreeDto) },
+        readPieceFlatPlaneCommand: { flatPlane: composeParsePlaneNullableJson(fp?.["plane"] as KitJsonTreeDto) },
       };
     }
     if ("readPieceFlatCenterCommand" in cmd && cmd.readPieceFlatCenterCommand === null) {
@@ -3150,7 +3150,7 @@ export class KitStore {
       const fp = piece?.["flatPosition"] as JsonObject | undefined;
       return {
         readPieceFlatCenterCommand: {
-          flatCenter: semioParseCoordinateNullableJson(fp?.["center"] as KitJsonTreeDto),
+          flatCenter: composeParseCoordinateNullableJson(fp?.["center"] as KitJsonTreeDto),
         },
       };
     }
@@ -3159,7 +3159,7 @@ export class KitStore {
       const piece = (gqlDataSessionWipKitStore(d, scope)?.["design"] as JsonObject | undefined)?.["piece"] as JsonObject | undefined;
       return {
         readPieceParentConnectionFullCommand: {
-          connection: semioParseConnectionNullableJson(piece?.["parentConnection"] as KitJsonTreeDto),
+          connection: composeParseConnectionNullableJson(piece?.["parentConnection"] as KitJsonTreeDto),
         },
       };
     }
@@ -3172,7 +3172,7 @@ export class KitStore {
       const d = await this.gqlRunSessionWipStore(scope, `type(id: $id) { bestRepresentation(tagIds: $tags) }`, { id: typeId, tags: [...tags] });
       return {
         readTypeBestRepresentationCommand: {
-          representation: semioParseRepresentationNullableJson((gqlDataSessionWipKitStore(d, scope)?.["type"] as JsonObject | undefined)?.["bestRepresentation"] as KitJsonTreeDto),
+          representation: composeParseRepresentationNullableJson((gqlDataSessionWipKitStore(d, scope)?.["type"] as JsonObject | undefined)?.["bestRepresentation"] as KitJsonTreeDto),
         },
       };
     }
@@ -3191,7 +3191,7 @@ export class KitStore {
       const fp = p["flatPosition"] as JsonObject | undefined;
       return { ...p, flatPlane: fp?.["plane"], flatCenter: fp?.["center"] };
     });
-    return semioParsePiecePlacementMapJson(normalized);
+    return composeParsePiecePlacementMapJson(normalized);
   }
 
   async getPieces(scope: KitReadPoint, designId: string): Promise<readonly PieceDto[]> {
@@ -3546,7 +3546,7 @@ export type KitCommandResult = JsonObject;
 type KitTypedChangeKitCommandsBatch = { readonly kind: "changeKitCommands"; readonly commands: readonly ChangeKitCommand[] };
 
 /** @emoji 🧾 Typed `changeKitCommands` batch facade for React (opaque to string command routers). */
-export type SemioKitCommandFacade = { runMutation(cmd: KitTypedChangeKitCommandsBatch): Promise<SetResult> };
+export type ComposeKitCommandFacade = { runMutation(cmd: KitTypedChangeKitCommandsBatch): Promise<SetResult> };
 
 export type KitStoreReadSnap = { readonly version: number; readonly data: unknown; readonly pending: number };
 
@@ -3555,10 +3555,10 @@ export type KitShallowListKind = "designs" | "types" | "authors";
 export type KitViewCatalogKey = "typeIds" | "typesMetadata" | "designIds" | "designsMetadata";
 
 /** @emoji 🧾 Minimal async bridge for pulling authoritative kit JSON into a {@link KitHostStore}. */
-export type SemioKitBridge = { fetchFullKit(): Promise<KitFullDto> };
+export type ComposeKitBridge = { fetchFullKit(): Promise<KitFullDto> };
 
 /** @emoji 🧾 Browser / test kit RPC surface used by React hooks (wraps {@link KitStore}). */
-export type KitStoreClient = SemioKitBridge & {
+export type KitStoreClient = ComposeKitBridge & {
   /** @emoji 🧾 Scoped read point (see {@link WasmKitStoreClient#kitReadPoint} / {@link getKitClientReadPoint}). */
   readonly kitReadPoint: KitReadPoint;
   getKitWriteScope(): KitWriteScope | null;
@@ -3823,7 +3823,7 @@ class LiveType {
 // #endregion 📦LiveKitRoot
 
 // #region 🪜LiveReadHub
-/** @emoji 🧾 Live-read snapshot hub: {@link getSemioKitLiveReadStore} in 🪜SemioKitLiveReadHub (after {@link WasmKitStoreClient} / {@link kitStoreFromKitStoreClient}). */
+/** @emoji 🧾 Live-read snapshot hub: {@link getComposeKitLiveReadStore} in 🪜ComposeKitLiveReadHub (after {@link WasmKitStoreClient} / {@link kitStoreFromKitStoreClient}). */
 // #endregion 🪜LiveReadHub
 
 // #region 🧰EventFilters
@@ -3902,7 +3902,7 @@ export class WasmKitStoreClient implements KitStoreClient {
     return this.ks;
   }
 
-  /** @emoji 🧾 Authoritative full kit from `semio/rs` via GraphQL (no local DTO cache). */
+  /** @emoji 🧾 Authoritative full kit from `compose/rs` via GraphQL (no local DTO cache). */
   fetchFullKit(): Promise<KitFullDto> {
     return this.ks.readKitSnapshotForReadPoint(this.kitReadPoint);
   }
@@ -4141,16 +4141,16 @@ export function kitStoreFromKitStoreClient(client: KitStoreClient): KitStore | n
   return probe.internalKs?.() ?? null;
 }
 
-// #region 🪜SemioKitLiveReadHub
+// #region 🪜ComposeKitLiveReadHub
 
-/** 🧾 Default {@link SemioKitLiveReadStore#getSnapshot} when a key has not polled yet (stable identity for consumers). */
-const SEMIO_KIT_LIVE_READ_EMPTY: KitStoreReadSnap = Object.freeze({
+/** 🧾 Default {@link ComposeKitLiveReadStore#getSnapshot} when a key has not polled yet (stable identity for consumers). */
+const COMPOSE_KIT_LIVE_READ_EMPTY: KitStoreReadSnap = Object.freeze({
   version: 0,
   data: Object.freeze([]) as readonly unknown[],
   pending: 0,
 }) as KitStoreReadSnap;
 
-const SEMIO_KIT_DESIGN_READ_EMPTY_META: KitStoreReadSnap = Object.freeze({
+const COMPOSE_KIT_DESIGN_READ_EMPTY_META: KitStoreReadSnap = Object.freeze({
   version: 0,
   data: Object.freeze({}) as unknown,
   pending: 0,
@@ -4158,9 +4158,9 @@ const SEMIO_KIT_DESIGN_READ_EMPTY_META: KitStoreReadSnap = Object.freeze({
 
 /**
  * @emoji 🧾 Hub for async GraphQL-backed kit reads: {@link KitStoreClient} subscription fan-out, per-key
- * {@link KitStoreReadSnap}, and invalidation predicates — {@link useSyncExternalStore} wires in `@semio/react`.
+ * {@link KitStoreReadSnap}, and invalidation predicates — {@link useSyncExternalStore} wires in `@compose/react`.
  */
-export class SemioKitLiveReadStore {
+export class ComposeKitLiveReadStore {
   private readonly snap = new Map<string, KitStoreReadSnap>();
   private readonly regs: Array<{
     key: string;
@@ -4189,11 +4189,11 @@ export class SemioKitLiveReadStore {
   }
 
   getSnapshot(key: string): KitStoreReadSnap {
-    return this.snap.get(key) ?? SEMIO_KIT_LIVE_READ_EMPTY;
+    return this.snap.get(key) ?? COMPOSE_KIT_LIVE_READ_EMPTY;
   }
 
   private async poll(r: { key: string; fetch: () => Promise<unknown>; onChange: () => void }): Promise<void> {
-    const cur = this.snap.get(r.key) ?? SEMIO_KIT_LIVE_READ_EMPTY;
+    const cur = this.snap.get(r.key) ?? COMPOSE_KIT_LIVE_READ_EMPTY;
     this.snap.set(r.key, { version: cur.version, data: cur.data, pending: cur.pending + 1 });
     r.onChange();
     try {
@@ -4214,12 +4214,12 @@ export class SemioKitLiveReadStore {
   }
 }
 
-const liveReadHubs = new WeakMap<KitStoreClient, SemioKitLiveReadStore>();
+const liveReadHubs = new WeakMap<KitStoreClient, ComposeKitLiveReadStore>();
 
-export function getSemioKitLiveReadStore(c: KitStoreClient): SemioKitLiveReadStore {
+export function getComposeKitLiveReadStore(c: KitStoreClient): ComposeKitLiveReadStore {
   let h = liveReadHubs.get(c);
   if (!h) {
-    h = new SemioKitLiveReadStore(c);
+    h = new ComposeKitLiveReadStore(c);
     liveReadHubs.set(c, h);
   }
   return h;
@@ -4247,10 +4247,10 @@ async function fetchViewCatalogSnapshot(client: KitStoreClient, key: KitViewCata
 }
 
 /** @emoji 🧾 View-catalog reads via async {@link KitStore}. */
-export class SemioKitViewStore {
-  private readonly hub: SemioKitLiveReadStore;
+export class ComposeKitViewStore {
+  private readonly hub: ComposeKitLiveReadStore;
   constructor(private readonly client: KitStoreClient) {
-    this.hub = getSemioKitLiveReadStore(client);
+    this.hub = getComposeKitLiveReadStore(client);
   }
 
   subscribe(_key: KitViewCatalogKey, onChange: () => void): () => void {
@@ -4273,12 +4273,12 @@ export class SemioKitViewStore {
   }
 }
 
-const viewStores = new WeakMap<KitStoreClient, SemioKitViewStore>();
+const viewStores = new WeakMap<KitStoreClient, ComposeKitViewStore>();
 
-export function getSemioKitViewStore(c: KitStoreClient): SemioKitViewStore {
+export function getComposeKitViewStore(c: KitStoreClient): ComposeKitViewStore {
   let v = viewStores.get(c);
   if (!v) {
-    v = new SemioKitViewStore(c);
+    v = new ComposeKitViewStore(c);
     viewStores.set(c, v);
   }
   return v;
@@ -4289,11 +4289,11 @@ function designReadKey(designId: string, field: KitDesignReadKind): string {
 }
 
 /** @emoji 🧾 Per-design list/metadata reads on {@link KitStoreClient}. */
-export class SemioKitDesignReadStore {
-  private readonly hub: SemioKitLiveReadStore;
+export class ComposeKitDesignReadStore {
+  private readonly hub: ComposeKitLiveReadStore;
 
   constructor(private readonly client: KitStoreClient) {
-    this.hub = getSemioKitLiveReadStore(client);
+    this.hub = getComposeKitLiveReadStore(client);
   }
 
   subscribe(designId: string, field: KitDesignReadKind, onChange: () => void): () => void {
@@ -4320,18 +4320,18 @@ export class SemioKitDesignReadStore {
   getSnapshot(designId: string, field: KitDesignReadKind): KitStoreReadSnap {
     const s = this.hub.getSnapshot(designReadKey(designId, field));
     if (field === "metadata" && s.version === 0 && s.pending === 0 && Array.isArray(s.data) && s.data.length === 0) {
-      return SEMIO_KIT_DESIGN_READ_EMPTY_META;
+      return COMPOSE_KIT_DESIGN_READ_EMPTY_META;
     }
     return s;
   }
 }
 
-const designStores = new WeakMap<KitStoreClient, SemioKitDesignReadStore>();
+const designStores = new WeakMap<KitStoreClient, ComposeKitDesignReadStore>();
 
-export function getSemioKitDesignReadStore(c: KitStoreClient): SemioKitDesignReadStore {
+export function getComposeKitDesignReadStore(c: KitStoreClient): ComposeKitDesignReadStore {
   let d = designStores.get(c);
   if (!d) {
-    d = new SemioKitDesignReadStore(c);
+    d = new ComposeKitDesignReadStore(c);
     designStores.set(c, d);
   }
   return d;
@@ -4342,10 +4342,10 @@ function shallowListKey(kind: KitShallowListKind): string {
 }
 
 /** @emoji 🧾 Shallow entity lists (designs / kinds / authors). */
-export class SemioKitShallowListReadStore {
-  private readonly hub: SemioKitLiveReadStore;
+export class ComposeKitShallowListReadStore {
+  private readonly hub: ComposeKitLiveReadStore;
   constructor(private readonly client: KitStoreClient) {
-    this.hub = getSemioKitLiveReadStore(client);
+    this.hub = getComposeKitLiveReadStore(client);
   }
 
   subscribe(kind: KitShallowListKind, onChange: () => void): () => void {
@@ -4367,18 +4367,18 @@ export class SemioKitShallowListReadStore {
   }
 }
 
-const shallowStores = new WeakMap<KitStoreClient, SemioKitShallowListReadStore>();
+const shallowStores = new WeakMap<KitStoreClient, ComposeKitShallowListReadStore>();
 
-export function getSemioKitShallowListReadStore(c: KitStoreClient): SemioKitShallowListReadStore {
+export function getComposeKitShallowListReadStore(c: KitStoreClient): ComposeKitShallowListReadStore {
   let s = shallowStores.get(c);
   if (!s) {
-    s = new SemioKitShallowListReadStore(c);
+    s = new ComposeKitShallowListReadStore(c);
     shallowStores.set(c, s);
   }
   return s;
 }
 
-// #endregion 🪜SemioKitLiveReadHub
+// #endregion 🪜ComposeKitLiveReadHub
 
 export async function createKitStoreClient(opts: { initialKit: KitFullDto; readPoint?: KitReadPoint }): Promise<KitStoreClient> {
   const ks = await KitStore.open(opts.initialKit);
@@ -4387,9 +4387,9 @@ export async function createKitStoreClient(opts: { initialKit: KitFullDto; readP
   return c;
 }
 
-const facades = new WeakMap<KitStoreClient, SemioKitCommandFacade>();
+const facades = new WeakMap<KitStoreClient, ComposeKitCommandFacade>();
 
-export function acquireSemioKitCommandFacade(client: KitStoreClient): SemioKitCommandFacade {
+export function acquireComposeKitCommandFacade(client: KitStoreClient): ComposeKitCommandFacade {
   let f = facades.get(client);
   if (!f) {
     f = {
@@ -4403,7 +4403,7 @@ export function acquireSemioKitCommandFacade(client: KitStoreClient): SemioKitCo
   return f;
 }
 
-export function releaseSemioKitCommandFacade(client: KitStoreClient): void {
+export function releaseComposeKitCommandFacade(client: KitStoreClient): void {
   facades.delete(client);
 }
 
@@ -4554,7 +4554,7 @@ export const TOLERANCE = 1e-5;
 // #endregion Constants
 
 // #region Utilities
-// Removed: toArray, SeededRandom, Generator, round, jaccard, deepEqual, arraysEqual — domain logic moved to semio/rs (Requirements 1.3, 3.5)
+// Removed: toArray, SeededRandom, Generator, round, jaccard, deepEqual, arraysEqual — domain logic moved to compose/rs (Requirements 1.3, 3.5)
 
 /**
  * Zod schema for DiffStatus validation.
@@ -4776,7 +4776,7 @@ export class Plane implements PlaneDto {
   static deserialize(json: string): Plane {
     return new Plane(PlaneSchema.parse(JSON.parse(json)));
   }
-  // Removed: averageWith, average, rounded — geometry computation moved to semio/rs (Requirement 1.14)
+  // Removed: averageWith, average, rounded — geometry computation moved to compose/rs (Requirement 1.14)
 }
 export const PlaneDiffSchema = PlaneSchema.omit({ origin: true, xAxis: true, yAxis: true }).extend({ origin: PointDiffSchema, xAxis: VectorDiffSchema, yAxis: VectorDiffSchema }).partial();
 export type PlaneDiff = ReadonlyDto<z.infer<typeof PlaneDiffSchema>>;
@@ -5478,7 +5478,7 @@ export const RepresentationsDiffSchema = z.object({
   added: z.array(z.any()).optional(),
 });
 export type RepresentationsDiff = ReadonlyDto<z.infer<typeof RepresentationsDiffSchema>>;
-// Removed: selectBestRepresentation, filterRepresentationsByTagIds, getAvailableTagIdsForRepresentations, getAllTagIdsFromRepresentations, findRepresentation, areSameRepresentation, SUPPORTED_3D_EXTENSIONS, isSupportedRepresentationExtension, validateRepresentationFile, RepresentationFileValidation — representation selection logic moved to semio/rs (Requirement 1.3)
+// Removed: selectBestRepresentation, filterRepresentationsByTagIds, getAvailableTagIdsForRepresentations, getAllTagIdsFromRepresentations, findRepresentation, areSameRepresentation, SUPPORTED_3D_EXTENSIONS, isSupportedRepresentationExtension, validateRepresentationFile, RepresentationFileValidation — representation selection logic moved to compose/rs (Requirement 1.3)
 // #endregion Representation
 
 // #region Connector
@@ -5548,7 +5548,7 @@ export const ConnectorDiffSchema = ConnectorSchema.partial()
 export type ConnectorDiff = ReadonlyDto<z.infer<typeof ConnectorDiffSchema>>;
 export const ConnectorsDiffSchema = z.object({ removed: z.array(ConnectorIdSchema).optional(), updated: z.array(z.object({ connector: ConnectorIdSchema, diff: ConnectorDiffSchema })).optional(), added: z.array(z.any()).optional() });
 export type ConnectorsDiff = ReadonlyDto<z.infer<typeof ConnectorsDiffSchema>>;
-// Removed: areConnectorsCompatible, unifyConnectorPortsAndCompatiblePortsForTypes, findConnector, findConnectorInType — connector compatibility moved to semio/rs (Requirement 1.5)
+// Removed: areConnectorsCompatible, unifyConnectorPortsAndCompatiblePortsForTypes, findConnector, findConnectorInType — connector compatibility moved to compose/rs (Requirement 1.5)
 // #endregion Connector
 
 // #region Type
@@ -5635,7 +5635,7 @@ export class Type {
   static areSameId(a: TypeIdDto, b: TypeIdDto): boolean {
     return a.id === b.id;
   }
-  /** @emoji 🖼️ Picks a representation for scene rendering (`@semio/ui`); first match until WASM metadata is dtod. */
+  /** @emoji 🖼️ Picks a representation for scene rendering (`@compose/ui`); first match until WASM metadata is dtod. */
   static pickBestRepresentation(representations: readonly Representation[], _tagIds: readonly string[]): Representation | undefined {
     void _tagIds;
     return representations[0];
@@ -5803,7 +5803,7 @@ export class Piece {
     return this.type ? { id: this.type.id } : undefined;
   }
 
-  /** @emoji 🧭 Flat plane DTO for UI (structural truth in `semio/rs` reads). */
+  /** @emoji 🧭 Flat plane DTO for UI (structural truth in `compose/rs` reads). */
   flatPlane(): unknown {
     return this.plane ? this.plane.toDto() : undefined;
   }
@@ -5826,7 +5826,7 @@ export const PieceDiffSchema = PieceSchema.partial().omit({ plane: true, props: 
 export type PieceDiff = ReadonlyDto<z.infer<typeof PieceDiffSchema>>;
 export const PiecesDiffSchema = z.object({ removed: z.array(PieceIdSchema).optional(), updated: z.array(z.object({ piece: PieceIdSchema, diff: PieceDiffSchema })).optional(), added: z.array(z.any()).optional() });
 export type PiecesDiff = ReadonlyDto<z.infer<typeof PiecesDiffSchema>>;
-// Removed: isFixedPiece, findPiece, findPieceConnections, findConnectorForPieceInConnection, getPieceRepresentationFileIds, getPieceRepresentationUrls, resolvePieceTypeForFlatten — domain logic moved to semio/rs
+// Removed: isFixedPiece, findPiece, findPieceConnections, findConnectorForPieceInConnection, getPieceRepresentationFileIds, getPieceRepresentationUrls, resolvePieceTypeForFlatten — domain logic moved to compose/rs
 // #endregion Piece
 
 // #region Group
@@ -6204,7 +6204,7 @@ export class Design {
     return [];
   }
 
-  /** @emoji 🧾 Legacy alias for diagram consumers (`@semio/ui`). */
+  /** @emoji 🧾 Legacy alias for diagram consumers (`@compose/ui`). */
   getConnections(): Connection[] {
     return [...(this._connections ?? [])];
   }
@@ -6315,7 +6315,7 @@ export const DesignShallowSchema = DesignSchema.omit({ pieces: true, connections
   attributes: z.array(AttributeMetadataDtoSchema).optional(),
 });
 export type DesignShallow = ReadonlyDto<z.infer<typeof DesignShallowSchema>>;
-// Removed: addPieceToDesignDiff, setPieceInDesignDiff, removePieceFromDesignDiff, addPiecesToDesignDiff, setPiecesInDesignDiff, removePiecesFromDesignDiff, addConnectionToDesignDiff, setConnectionInDesignDiff, removeConnectionFromDesignDiff, addConnectionsToDesignDiff, setConnectionsInDesignDiff, removeConnectionsFromDesignDiff, mergeDesigns, orientDesign, duplicateDesignDiffForIsolation — design-diff builder functions moved to semio/rs (Requirement 3.7)
+// Removed: addPieceToDesignDiff, setPieceInDesignDiff, removePieceFromDesignDiff, addPiecesToDesignDiff, setPiecesInDesignDiff, removePiecesFromDesignDiff, addConnectionToDesignDiff, setConnectionInDesignDiff, removeConnectionFromDesignDiff, addConnectionsToDesignDiff, setConnectionsInDesignDiff, removeConnectionsFromDesignDiff, mergeDesigns, orientDesign, duplicateDesignDiffForIsolation — design-diff builder functions moved to compose/rs (Requirement 3.7)
 // #endregion Design
 
 // #region 🧾KitStoreClientChildCommands
@@ -6461,11 +6461,11 @@ export const KitFullDtoSchema = z.object({
 });
 export type KitFullDto = ReadonlyDto<z.infer<typeof KitFullDtoSchema>>;
 
-function semioCoerceKitFullDtoFromJson(v: KitJsonTreeDto | KitFullDto): KitFullDto {
+function composeCoerceKitFullDtoFromJson(v: KitJsonTreeDto | KitFullDto): KitFullDto {
   return KitFullDtoSchema.parse(v);
 }
 
-function semioParseTypeShallowArrayJson(v: KitJsonTreeDto | string | undefined | null): readonly TypeShallow[] {
+function composeParseTypeShallowArrayJson(v: KitJsonTreeDto | string | undefined | null): readonly TypeShallow[] {
   const xs = kitGraphqlJsonToReadonlyArray(v).map((row) => {
     if (row == null || typeof row !== "object" || Array.isArray(row)) return row;
     const r0 = __stripTopLevelJsonNulls(__normalizeTypeOrDesignMetadataRow(row as JsonObject)) as JsonObject;
@@ -6482,7 +6482,7 @@ function semioParseTypeShallowArrayJson(v: KitJsonTreeDto | string | undefined |
   return r.success ? r.data : [];
 }
 
-function semioParseDesignShallowArrayJson(v: KitJsonTreeDto | string | undefined | null): readonly DesignShallow[] {
+function composeParseDesignShallowArrayJson(v: KitJsonTreeDto | string | undefined | null): readonly DesignShallow[] {
   const xs = kitGraphqlJsonToReadonlyArray(v).map((row) => {
     if (row == null || typeof row !== "object" || Array.isArray(row)) return row;
     const r0 = __stripTopLevelJsonNulls(__normalizeTypeOrDesignMetadataRow(row as JsonObject)) as JsonObject;
@@ -6499,7 +6499,7 @@ function semioParseDesignShallowArrayJson(v: KitJsonTreeDto | string | undefined
   return r.success ? r.data : [];
 }
 
-function semioParseKitIdDtoArray(v: KitJsonTreeDto | string | undefined | null): readonly KitIdDto[] {
+function composeParseKitIdDtoArray(v: KitJsonTreeDto | string | undefined | null): readonly KitIdDto[] {
   const xs = kitGraphqlJsonToReadonlyArray(v);
   const out: KitIdDto[] = [];
   for (const x of xs) {
@@ -6509,29 +6509,29 @@ function semioParseKitIdDtoArray(v: KitJsonTreeDto | string | undefined | null):
   return out;
 }
 
-function semioParseTypeMetadataArrayJson(v: KitJsonTreeDto | string | undefined | null): readonly TypeMetadataDto[] {
+function composeParseTypeMetadataArrayJson(v: KitJsonTreeDto | string | undefined | null): readonly TypeMetadataDto[] {
   const xs = kitGraphqlJsonToReadonlyArray(v).map((row) => (row && typeof row === "object" && !Array.isArray(row) ? __stripTopLevelJsonNulls(__normalizeTypeOrDesignMetadataRow(row as JsonObject)) : row));
   const r = z.array(TypeMetadataDtoSchema).safeParse(xs);
   return r.success ? r.data : [];
 }
 
-function semioParseDesignMetadataArrayJson(v: KitJsonTreeDto | string | undefined | null): readonly DesignMetadataDto[] {
+function composeParseDesignMetadataArrayJson(v: KitJsonTreeDto | string | undefined | null): readonly DesignMetadataDto[] {
   const xs = kitGraphqlJsonToReadonlyArray(v).map((row) => (row && typeof row === "object" && !Array.isArray(row) ? __stripTopLevelJsonNulls(__normalizeTypeOrDesignMetadataRow(row as JsonObject)) : row));
   const r = z.array(DesignMetadataDtoSchema).safeParse(xs);
   return r.success ? r.data : [];
 }
 
-function semioParseAuthorMetadataArrayJson(v: KitJsonTreeDto | string | undefined | null): readonly AuthorMetadataDto[] {
+function composeParseAuthorMetadataArrayJson(v: KitJsonTreeDto | string | undefined | null): readonly AuthorMetadataDto[] {
   const r = z.array(AuthorMetadataDtoSchema).safeParse(kitGraphqlJsonToReadonlyArray(v));
   return r.success ? r.data : [];
 }
 
-function semioParseKitMetadataJson(v: KitJsonTreeDto | undefined | null): KitMetadataDto | null {
+function composeParseKitMetadataJson(v: KitJsonTreeDto | undefined | null): KitMetadataDto | null {
   if (v == null || typeof v !== "object" || Array.isArray(v)) return null;
   return v as KitMetadataDto;
 }
 
-function semioParseColoredConnectorRowsJson(v: KitJsonTreeDto | readonly KitJsonTreeDto[] | undefined | null): readonly KitColoredConnectorRowDto[] {
+function composeParseColoredConnectorRowsJson(v: KitJsonTreeDto | readonly KitJsonTreeDto[] | undefined | null): readonly KitColoredConnectorRowDto[] {
   if (Array.isArray(v)) {
     const out: KitColoredConnectorRowDto[] = [];
     for (const row of v) {
@@ -6549,12 +6549,12 @@ function semioParseColoredConnectorRowsJson(v: KitJsonTreeDto | readonly KitJson
   return [];
 }
 
-function semioParsePieceDtoArrayJson(v: KitJsonTreeDto | string | undefined | null): readonly PieceDto[] {
+function composeParsePieceDtoArrayJson(v: KitJsonTreeDto | string | undefined | null): readonly PieceDto[] {
   const r = z.array(PieceSchema).safeParse(kitGraphqlJsonToReadonlyArray(v));
   return r.success ? r.data : [];
 }
 
-function semioParseConnectionDtoArrayJson(v: KitJsonTreeDto | string | undefined | null): readonly ConnectionDto[] {
+function composeParseConnectionDtoArrayJson(v: KitJsonTreeDto | string | undefined | null): readonly ConnectionDto[] {
   const r = z.array(ConnectionSchema).safeParse(kitGraphqlJsonToReadonlyArray(v));
   return r.success ? r.data : [];
 }
@@ -6578,12 +6578,12 @@ const pieceStoreHierarchyPieceGqlZod = z.object({
   flatCenter: CoordinateSchema,
 });
 
-function semioParseDesignIncludedDesignArrayJson(v: KitJsonTreeDto | readonly KitJsonTreeDto[] | undefined | null): readonly IncludedDesignInfoDto[] {
+function composeParseDesignIncludedDesignArrayJson(v: KitJsonTreeDto | readonly KitJsonTreeDto[] | undefined | null): readonly IncludedDesignInfoDto[] {
   const r = z.array(includedDesignInfoJsonZod).safeParse(Array.isArray(v) ? v : kitGraphqlJsonToReadonlyArray(v));
   return r.success ? (r.data as readonly IncludedDesignInfoDto[]) : [];
 }
 
-function semioParsePiecePlacementMapJson(pieces: readonly unknown[] | undefined | null): ReadonlyMap<string, PiecePlacementRowDto> {
+function composeParsePiecePlacementMapJson(pieces: readonly unknown[] | undefined | null): ReadonlyMap<string, PiecePlacementRowDto> {
   const m = new Map<string, PiecePlacementRowDto>();
   if (!Array.isArray(pieces)) return m;
   for (const r of pieces) {
@@ -6605,22 +6605,22 @@ function semioParsePiecePlacementMapJson(pieces: readonly unknown[] | undefined 
   return m;
 }
 
-function semioParsePlaneNullableJson(v: KitJsonTreeDto | undefined | null): PlaneDto | null {
+function composeParsePlaneNullableJson(v: KitJsonTreeDto | undefined | null): PlaneDto | null {
   const p = PlaneSchema.safeParse(v);
   return p.success ? p.data : null;
 }
 
-function semioParseCoordinateNullableJson(v: KitJsonTreeDto | undefined | null): CoordinateDto | null {
+function composeParseCoordinateNullableJson(v: KitJsonTreeDto | undefined | null): CoordinateDto | null {
   const p = CoordinateSchema.safeParse(v);
   return p.success ? p.data : null;
 }
 
-function semioParseConnectionNullableJson(v: KitJsonTreeDto | undefined | null): ConnectionDto | null {
+function composeParseConnectionNullableJson(v: KitJsonTreeDto | undefined | null): ConnectionDto | null {
   const p = ConnectionSchema.safeParse(v);
   return p.success ? p.data : null;
 }
 
-function semioParseRepresentationNullableJson(v: KitJsonTreeDto | undefined | null): RepresentationDto | null {
+function composeParseRepresentationNullableJson(v: KitJsonTreeDto | undefined | null): RepresentationDto | null {
   const p = RepresentationSchema.safeParse(v);
   return p.success ? p.data : null;
 }
@@ -6807,7 +6807,7 @@ export class Kit {
   }
 
   /**
-   * @emoji 🧭 Sync flatten preview for MCP / `@semio/ui` (identity plane fallback until async WASM is threaded here).
+   * @emoji 🧭 Sync flatten preview for MCP / `@compose/ui` (identity plane fallback until async WASM is threaded here).
    */
   flattenDesignCachedOp(designId: string, _prev?: { [pieceId: string]: FlatMerkleCacheEntry }): { result: DesignOperationResult; cache: { [pieceId: string]: FlatMerkleCacheEntry } } {
     void _prev;
@@ -6860,7 +6860,7 @@ export function asKitInstance(input: KitLike): Kit {
  *  metabolism-shaped JSON file end-to-end: on first call we hydrate rs from the file's bytes (if any) and
  *  bootstrap the seed checkpoint + unsaved change; after every change we ask rs to serialize the bundle and atomically
  *  write it back through the host adapter. The file therefore always mirrors `wip.initialKit` + version changes / edits
- *  state and looks like `semio/assets/semio/metabolism.new.kit.semio.json`. */
+ *  state and looks like `compose/assets/compose/metabolism.new.kit.compose.json`. */
 const KIT_BUNDLE_BOOTSTRAPPED = new WeakSet<KitHostStore>();
 export async function applyKitClientSnapshotToLocalStore(kitClient: KitStoreClient, store: KitHostStore): Promise<void> {
   const ks = kitStoreFromKitStoreClient(kitClient);
@@ -6905,7 +6905,7 @@ export type KitSyncSnapshot = { status: string; dirty: boolean; readonly: boolea
 export const DEFAULT_KIT_SYNC: Readonly<KitSyncSnapshot> = Object.freeze({ status: "idle", dirty: false, readonly: false, lastSyncedAt: null, error: null });
 export type KitStoreSnapshot = { kit: Kit; sync: KitSyncSnapshot };
 export type KitHostStore = { getSnapshot(): KitStoreSnapshot; subscribe(onChange: () => void): () => void; replace(kit: Kit): void };
-/** @emoji 🧾 Alias for hosts that still import `KitHostStoreSnapshot` from `@semio/js`. */
+/** @emoji 🧾 Alias for hosts that still import `KitHostStoreSnapshot` from `@compose/js`. */
 export type KitHostStoreSnapshot = KitStoreSnapshot;
 /** @emoji 🧾 Plain DTO aliases for React/schema bridges (same as `*Dto` types). */
 export type DesignPlain = DesignDto;
@@ -6918,7 +6918,7 @@ export type CoordinatePlain = CoordinateDto;
 export class InMemoryKitStore implements KitHostStore {
   private listeners = new Set<() => void>();
   private _kit: Kit;
-  /** @internal Used by `inferPersistenceFromInit` in @semio/react. */
+  /** @internal Used by `inferPersistenceFromInit` in @compose/react. */
   readonly name = "InMemoryKitStore";
   constructor(seed: KitLike) {
     this._kit = seed instanceof Kit ? seed : Kit.fromDto(seed as KitFullDto);
@@ -6944,8 +6944,8 @@ export class InMemoryKitStore implements KitHostStore {
   }
 }
 
-// NOTE 🚧 The on-disk kit-store bundle format (see `semio/assets/semio/metabolism.new.kit.semio.json`)
-// is owned exclusively by `semio/rs`. JS host stores MUST NOT parse, validate, generate, or
+// NOTE 🚧 The on-disk kit-store bundle format (see `compose/assets/compose/metabolism.new.kit.compose.json`)
+// is owned exclusively by `compose/rs`. JS host stores MUST NOT parse, validate, generate, or
 // reshape that file format. The JS file/folder host stores below are transient bridges that
 // will be replaced once Rust drives the dev-json backbone end-to-end through a host adapter.
 // Until then they keep a flat in-memory DTO snapshot for React without speaking the bundle.
@@ -6966,7 +6966,7 @@ export type KitFolderAdapter = {
 
 /** @emoji 🧭 Marker interface for host stores that want the kit client to push the rs-produced bundle bytes
  *  back to disk. Implementations decide *how* to write (file vs. folder vs. webview postMessage). The bytes
- *  themselves are produced exclusively by `semio/rs` (`KitStore.serializeKitStoreBundleJson`); JS treats
+ *  themselves are produced exclusively by `compose/rs` (`KitStore.serializeKitStoreBundleJson`); JS treats
  *  them as opaque. */
 export interface KitBundlePersisting {
   /** @emoji 📥 Bytes the host read off the backing file at mount time (empty string if the file is new / empty). */
@@ -7097,7 +7097,7 @@ export type SessionKitStoreConfig = { serverUrl: string; sessionId?: string; kit
 export async function createSessionKitStore(config: SessionKitStoreConfig) {
   const t = new Date().toISOString();
   const store = new InMemoryKitStore(asKitInstance({ id: id(), name: config.kitName ?? "Remote", createdAt: t, updatedAt: t, remote: config.serverUrl }));
-  (store as InMemoryKitStore & { __semioSessionConfig?: SessionKitStoreConfig }).__semioSessionConfig = config;
+  (store as InMemoryKitStore & { __composeSessionConfig?: SessionKitStoreConfig }).__composeSessionConfig = config;
   return store;
 }
 // #endregion KitHostStores
@@ -7281,31 +7281,31 @@ export type KitDiff = ReadonlyDto<z.infer<typeof KitDiffSchema>>;
 
 // #region KitImportHelpers
 /** @emoji 🧾 Recursively turns `{ items: [...] }` / Relay `{ edges: [{ node }] }` containers into plain JSON arrays for Zod DTO parsing. */
-function semioDenormalizeBundleValue(v: unknown): unknown {
+function composeDenormalizeBundleValue(v: unknown): unknown {
   if (v == null || typeof v !== "object") return v;
-  if (Array.isArray(v)) return v.map(semioDenormalizeBundleValue);
+  if (Array.isArray(v)) return v.map(composeDenormalizeBundleValue);
   const o = v as JsonObject;
   if (Array.isArray(o.items)) {
-    return (o.items as unknown[]).map(semioDenormalizeBundleValue);
+    return (o.items as unknown[]).map(composeDenormalizeBundleValue);
   }
   if (Array.isArray(o.edges)) {
     const out: unknown[] = [];
     for (const e of o.edges) {
       if (e != null && typeof e === "object" && !Array.isArray(e) && "node" in e) {
-        out.push(semioDenormalizeBundleValue((e as JsonObject).node));
+        out.push(composeDenormalizeBundleValue((e as JsonObject).node));
       }
     }
     return out;
   }
   const out: { [key: string]: JsonValue } = {};
   for (const [k, val] of Object.entries(o)) {
-    out[k] = semioDenormalizeBundleValue(val) as JsonValue;
+    out[k] = composeDenormalizeBundleValue(val) as JsonValue;
   }
   return out;
 }
 
-/** @emoji 🧾 Lifts `*.kit.semio.json` envelope (`initialKit` / `wip.initialKit`) and flattens bundle `items` lists to {@link KitFullDto}. */
-export function decodeKitSemioEnvelopeToFullDtoFromValue(v: unknown): KitFullDto {
+/** @emoji 🧾 Lifts `*.kit.compose.json` envelope (`initialKit` / `wip.initialKit`) and flattens bundle `items` lists to {@link KitFullDto}. */
+export function decodeKitComposeEnvelopeToFullDtoFromValue(v: unknown): KitFullDto {
   let inner: unknown = v;
   if (inner && typeof inner === "object" && !Array.isArray(inner)) {
     const top = inner as JsonObject;
@@ -7316,20 +7316,20 @@ export function decodeKitSemioEnvelopeToFullDtoFromValue(v: unknown): KitFullDto
       if (wr != null && typeof wr === "object" && !Array.isArray(wr)) inner = wr;
     }
   }
-  const flat = semioDenormalizeBundleValue(inner);
+  const flat = composeDenormalizeBundleValue(inner);
   return KitFullDtoSchema.parse(flat as KitJsonTreeDto);
 }
 
-/** @emoji 🧾 Decode UTF-8 kit JSON bytes (flat or `*.kit.semio.json` envelope) to {@link KitFullDto}. */
-export function decodeKitSemioEnvelopeBytesToFullDto(buf: ArrayBuffer | Uint8Array): KitFullDto {
+/** @emoji 🧾 Decode UTF-8 kit JSON bytes (flat or `*.kit.compose.json` envelope) to {@link KitFullDto}. */
+export function decodeKitComposeEnvelopeBytesToFullDto(buf: ArrayBuffer | Uint8Array): KitFullDto {
   const u8 = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
   const text = new TextDecoder().decode(u8);
-  return decodeKitSemioEnvelopeToFullDtoFromValue(JSON.parse(text));
+  return decodeKitComposeEnvelopeToFullDtoFromValue(JSON.parse(text));
 }
 
-/** @emoji 🧾 Decode kit bytes as a flat `KitFullDto` (accepts plain kit JSON or semio bundle envelope with `initialKit` / relay `items`). */
+/** @emoji 🧾 Decode kit bytes as a flat `KitFullDto` (accepts plain kit JSON or compose bundle envelope with `initialKit` / relay `items`). */
 export function importKitToDto(buf: ArrayBuffer | Uint8Array): KitFullDto {
-  return decodeKitSemioEnvelopeBytesToFullDto(buf);
+  return decodeKitComposeEnvelopeBytesToFullDto(buf);
 }
 // #endregion KitImportHelpers
 
@@ -7553,7 +7553,7 @@ function __coerceTypeMetadataGqlRow(row: JsonObject): JsonObject {
   return out;
 }
 
-/** @emoji 🧭 Per-kind kit handle (semio domain kind, not TS typeof). */
+/** @emoji 🧭 Per-kind kit handle (compose domain kind, not TS typeof). */
 export class TypeStore {
   private _version = 0;
   constructor(
@@ -7903,11 +7903,11 @@ export class FolderStore {
 if (
   typeof process !== "undefined" &&
   !!process.env &&
-  process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1"
+  process.env["COMPOSE_JS_RUN_EMBEDDED_TESTS"] === "1"
 ) {
   const { describe, it, expect } = await import("vitest");
 
-  describe("semio-js KitStore", () => {
+  describe("compose-js KitStore", () => {
     it("KIT_SCOPED_FULL_DTO_QUERY matches wip.theKit { kit { fullSnapshot } }", () => {
       expect(KIT_SCOPED_FULL_DTO_QUERY).toContain("wip { theKit { kit { fullSnapshot");
     });
@@ -8099,7 +8099,7 @@ if (
       expect(n).toBeGreaterThanOrEqual(0);
     });
 
-    it("subscribeFiltered and subscribeSemioKitCommandLifecycle return Unsubscribe (RxJS internal; no events$ on KitStore)", async () => {
+    it("subscribeFiltered and subscribeComposeKitCommandLifecycle return Unsubscribe (RxJS internal; no events$ on KitStore)", async () => {
       const minimalKit: KitFullDto = {
         id: "sub-filter-kit",
         name: "Sf",
@@ -8112,7 +8112,7 @@ if (
       const offFiltered = ks.subscribeFiltered(() => false, () => {
         /* noop */
       });
-      const offLifecycle = ks.subscribeSemioKitCommandLifecycle(() => {
+      const offLifecycle = ks.subscribeComposeKitCommandLifecycle(() => {
         /* noop */
       });
       expect(typeof offFiltered).toBe("function");
@@ -8231,14 +8231,14 @@ if (
     });
   });
 
-  describe("semio-js GraphQL dto contract", () => {
+  describe("compose-js GraphQL dto contract", () => {
     it("KIT_SESSION_QUERY_ENTRY and KIT_EVENT_STREAM_SUBSCRIPTION align with target.schema.graphql", async () => {
       const { readFileSync } = await import("node:fs");
       const { resolve, dirname } = await import("node:path");
       const { fileURLToPath } = await import("node:url");
       let sdl = "";
       const here = dirname(fileURLToPath(import.meta.url));
-      for (const p of [resolve(here, "../graphql/target.schema.graphql"), resolve(process.cwd(), "semio/graphql/target.schema.graphql")]) {
+      for (const p of [resolve(here, "../graphql/target.schema.graphql"), resolve(process.cwd(), "compose/graphql/target.schema.graphql")]) {
         try {
           sdl = readFileSync(p, "utf8");
           if (sdl.length > 100) break;
@@ -8260,14 +8260,14 @@ if (
     });
   });
 
-  describe("semio kit-store fixtures (US-001)", () => {
+  describe("compose kit-store fixtures (US-001)", () => {
     it("golden ops + expected invariants parse and match op count", async () => {
       const { readFileSync } = await import("node:fs");
       const { resolve, dirname } = await import("node:path");
       const { fileURLToPath } = await import("node:url");
       const here = dirname(fileURLToPath(import.meta.url));
-      const opsPath = resolve(here, "../assets/semio/kit-store.golden.ops.semio.json");
-      const expPath = resolve(here, "../assets/semio/kit-store.golden.expected.semio.json");
+      const opsPath = resolve(here, "../assets/compose/kit-store.golden.ops.compose.json");
+      const expPath = resolve(here, "../assets/compose/kit-store.golden.expected.compose.json");
       const ops = JSON.parse(readFileSync(opsPath, "utf8")) as { ops: unknown[] };
       const exp = JSON.parse(readFileSync(expPath, "utf8")) as { invariants: { totalPieces: number }; projectionFingerprint: string };
       expect(ops.ops.length).toBe(exp.invariants.totalPieces);
@@ -8275,12 +8275,12 @@ if (
     });
 
     it("metabolism.new kit bundle has metabolism on-disk shape (Rust-owned)", async () => {
-      // 🚧 The on-disk bundle format is owned by `semio/rs` — JS only verifies the metabolism shape exists on the asset.
+      // 🚧 The on-disk bundle format is owned by `compose/rs` — JS only verifies the metabolism shape exists on the asset.
       const { readFileSync } = await import("node:fs");
       const { resolve, dirname } = await import("node:path");
       const { fileURLToPath } = await import("node:url");
       const here = dirname(fileURLToPath(import.meta.url));
-      const b = JSON.parse(readFileSync(resolve(here, "../assets/semio/metabolism.new.kit.semio.json"), "utf8")) as {
+      const b = JSON.parse(readFileSync(resolve(here, "../assets/compose/metabolism.new.kit.compose.json"), "utf8")) as {
         schema: string;
         wip: { id: string; initialKit?: unknown; theKit?: { savedChanges?: { items: unknown[] }; unsavedChanges?: { items: unknown[] } }; checkpoints?: { items: unknown[] } };
         authoritative: { id: string };
@@ -8298,23 +8298,23 @@ if (
 
     it("dev JSON backbone wire shape documents semanticOpLog + persistence hints (US-004)", async () => {
       const backboneDoc = {
-        kind: "semio.kit_backbone.dev_json",
+        kind: "compose.kit_backbone.dev_json",
         schema: "2026-05-06",
         connectionUri: "file:///tmp/example.dev-kit.json",
         persistence: {
           atomic_rewrite:
-            "Serialize full JSON to sibling path ending in .tmp.semio-write, fsync, then rename(2) over the canonical file.",
+            "Serialize full JSON to sibling path ending in .tmp.compose-write, fsync, then rename(2) over the canonical file.",
           crash_safety: "Readers only observe the last renamed complete document; orphaned temp tails are harmless.",
         },
         semanticOpLog: [] as { changeId: string; kind: string; input: Record<string, unknown> }[],
       };
-      expect(backboneDoc.kind).toBe("semio.kit_backbone.dev_json");
+      expect(backboneDoc.kind).toBe("compose.kit_backbone.dev_json");
       expect(backboneDoc.persistence.atomic_rewrite.includes("rename")).toBe(true);
       expect(Array.isArray(backboneDoc.semanticOpLog)).toBe(true);
     });
   });
 
-  describe("semio-js kit event entity filters", () => {
+  describe("compose-js kit event entity filters", () => {
     it("kitEventTouchesDesignStrict matches nested Design payload", () => {
       const ev = { Design: { design_id: "d1", event: { Piece: { piece_id: "p1", event: "Changed" } } } } as KitEvent;
       expect(kitEventTouchesDesignStrict(ev, "d1")).toBe(true);
@@ -8344,7 +8344,7 @@ if (
     });
   });
 
-  describe("semio-js entity stores", () => {
+  describe("compose-js entity stores", () => {
     describe("wasm KitStoreHandle · entity stores", () => {
     it("TypeStore metadata and shallow read paths resolve", async () => {
       const minimalKit: KitFullDto = {
@@ -8367,7 +8367,7 @@ if (
     });
   });
 
-  describe("semio-js kit store dto helpers", () => {
+  describe("compose-js kit store dto helpers", () => {
     it("piecePatchToChangeCommands maps plane and type ref", () => {
       const cmds = piecePatchToChangeCommands({ plane: { x: 1 }, type: { id: "t1" } });
       expect(cmds.length).toBe(2);
@@ -8404,8 +8404,8 @@ if (
       expect(last?.length).toBe(1);
     });
 
-    it("decodeKitSemioEnvelopeToFullDtoFromValue unwraps initialKit and flattens bundle items", () => {
-      const dto = decodeKitSemioEnvelopeToFullDtoFromValue({
+    it("decodeKitComposeEnvelopeToFullDtoFromValue unwraps initialKit and flattens bundle items", () => {
+      const dto = decodeKitComposeEnvelopeToFullDtoFromValue({
         schema: "s",
         initialKit: {
           id: "kit-1",

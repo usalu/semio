@@ -3,7 +3,7 @@
 import { existsSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
 
-const root = "/Users/ueli/Documents/semio";
+const root = "/Users/ueli/Documents/compose";
 
 const PLURAL_TO_SINGULAR: Record<string, string> = {
 	agents: "agent",
@@ -107,8 +107,8 @@ const TEXT_EXTENSIONS = new Set([
 ]);
 
 const TEXT_REPLACEMENTS: [string, string][] = [
-	["@semio/assets", "@semio/asset"],
-	["@semio/fixtures", "@semio/fixture"],
+	["@compose/assets", "@compose/asset"],
+	["@compose/fixtures", "@compose/fixture"],
 	["@puzzle/assets", "@puzzle/asset"],
 	["@ui/assets", "@ui/asset"],
 	['"bundleKind": "assets"', '"bundleKind": "asset"'],
@@ -161,8 +161,8 @@ const TEXT_REPLACEMENTS: [string, string][] = [
 	["/plans/", "/plan/"],
 	["/skills/", "/skill/"],
 	["/meshes/", "/mesh/"],
-	["semio/fixtures", "semio/fixture"],
-	["semio/assets", "semio/asset"],
+	["compose/fixtures", "compose/fixture"],
+	["compose/assets", "compose/asset"],
 	["puzzle/assets", "puzzle/asset"],
 	["cad/assets", "cad/asset"],
 	["ui/assets", "ui/asset"],
@@ -171,8 +171,8 @@ const TEXT_REPLACEMENTS: [string, string][] = [
 	[".storybook/fixtures", ".storybook/fixture"],
 	[".storybook/stories", ".storybook/story"],
 	["workspace:ui/assets", "workspace:ui/asset"],
-	["workspace:semio/assets", "workspace:semio/asset"],
-	["workspace:semio/fixtures", "workspace:semio/fixture"],
+	["workspace:compose/assets", "workspace:compose/asset"],
+	["workspace:compose/fixtures", "workspace:compose/fixture"],
 	["workspace:puzzle/assets", "workspace:puzzle/asset"],
 ];
 

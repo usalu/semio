@@ -8,7 +8,7 @@
 
 Right now you kind of have **two state systems in parallel**:
 
-- A big Yjs-backed `SketchpadStore` + `HomeStore`/`KitAppStore`/`DesignAppStore`/`TypeAppStore` etc. (commands like `semio.designApp.selectAll` that directly mutate Yjs).
+- A big Yjs-backed `SketchpadStore` + `HomeStore`/`KitAppStore`/`DesignAppStore`/`TypeAppStore` etc. (commands like `compose.designApp.selectAll` that directly mutate Yjs).
 - A new unified **`sketchpadMachine`** that already knows about `DesignAppState`, `TypeAppState`, etc. and is created in `createSketchpadActor` / `SketchpadScopeProvider`.
 
 Plus some ad-hoc glue like `DesignAppSyncComponent` that “mirrors” Yjs → XState via `DESIGN.INIT` and `DESIGN.SYNC` events.
@@ -96,7 +96,7 @@ interface SketchpadContext {
 
 (You mostly have this already in `SketchpadContext`, just ensure **root UI fields are actually kept there**, not only in Yjs.)
 
-- For every root “command” you currently execute on `SketchpadStore` (e.g. `semio.sketchpad.setTheme`), add a **typed event**:
+- For every root “command” you currently execute on `SketchpadStore` (e.g. `compose.sketchpad.setTheme`), add a **typed event**:
 
 ```ts
 type SketchpadEvent = { type: "SET_THEME"; theme: Theme } | { type: "SET_LAYOUT"; layout: Layout } | { type: "SET_EXPERTISE"; expertise: Expertise } | { type: "NAVIGATE"; path: string } | { type: "NAVIGATE_BACK" } | { type: "NAVIGATE_FORWARD" };
@@ -142,7 +142,7 @@ So the **UI is now coupled to the state machine**, not to Yjs / `SketchpadStore`
 Right now each app has:
 
 - A Yjs-backed store (`HomeStore`, `KitAppStore`, `DesignAppStore`, `TypeAppStore`).
-- Commands like `semio.designApp.hoverPiece`, `semio.kitApp.selectDesign`, etc., that directly mutate Yjs and then you mirror that into XState in a somewhat bespoke way (e.g. `DesignAppSyncComponent`).
+- Commands like `compose.designApp.hoverPiece`, `compose.kitApp.selectDesign`, etc., that directly mutate Yjs and then you mirror that into XState in a somewhat bespoke way (e.g. `DesignAppSyncComponent`).
 
 You already have _parallel_ lean `DesignAppState`, `TypeAppState`, etc. inside `machines.ts` with default creators like `createDefaultDesignAppState()`, `createDefaultTypeAppState()`.
 
@@ -170,7 +170,7 @@ Most of your commands in `Design.tsx` return a `diff` + optional `kitDiff`.
 Example:
 
 ```ts
-"semio.designApp.selectAll": ctx => ({
+"compose.designApp.selectAll": ctx => ({
   diff: {
     selection: {
       pieces: { added: allPieceGuids },
@@ -235,7 +235,7 @@ That way **all Yjs → XState syncing is centralized** inside the machine, not s
 
 ## 3. Phase 3 – Redesign the public “commands” API around XState events
 
-Right now most of your UI helpers call `store.execute("semio.sketchpad.*", ...)` etc.
+Right now most of your UI helpers call `store.execute("compose.sketchpad.*", ...)` etc.
 
 Introduce a clean, typed XState-centric command layer:
 
@@ -258,8 +258,8 @@ export function useSketchpadCommands() {
 
 Then gradually:
 
-- Replace `store.execute("semio.sketchpad.X", ...)` calls with `actor.send(...)`.
-- Provide a **transition adapter** so legacy code can still call `store.execute("semio.*")`, but internally it just sends the right events.
+- Replace `store.execute("compose.sketchpad.X", ...)` calls with `actor.send(...)`.
+- Provide a **transition adapter** so legacy code can still call `store.execute("compose.*")`, but internally it just sends the right events.
 
 Eventually you can remove the string-based command registry on `AppStore` and keep pure TS event types instead.
 
@@ -316,7 +316,7 @@ Right now Design app state lives in three places:
 
 1. **Yjs-backed `DesignAppStore`**
    - Holds `selection`, `hover`, `fullscreenWindow`, `panelVisibility`, `camera`, `diagramCenter`, `diagramScale`, `focusedPieceGuid`, model tags, presence, transactions, etc.
-   - Exposes `execute("semio.designApp.*")` which:
+   - Exposes `execute("compose.designApp.*")` which:
      - Builds a `DesignAppCommandContext`.
      - Runs a command from `designAppCommands`.
      - Applies `result.diff` to its own Yjs state.
@@ -452,7 +452,7 @@ This ensures **all design UI state mutations are representable in the state mach
 
 ## 3. Introduce a “Design command” action in XState
 
-Today, Design commands are run via `DesignAppStore.execute("semio.designApp.*")`.
+Today, Design commands are run via `DesignAppStore.execute("compose.designApp.*")`.
 
 We want:
 
@@ -635,7 +635,7 @@ Once that’s done, **React is reading only from XState** for Design app UI stat
 Find all places where you call Design commands via the store, e.g.:
 
 ```ts
-store.execute("semio.designApp.hoverPiece", origin, pieceGuid);
+store.execute("compose.designApp.hoverPiece", origin, pieceGuid);
 store.change({ selection: { pieces: { added: [guid] } } });
 // etc
 ```
@@ -764,14 +764,14 @@ From your code:
 - **Yjs-backed `TypeAppStore`** in `Type.tsx`
   - Holds `fullscreenWindow`, `panelVisibility`, `activeTool`, `selection`, `hover`, `presence`, `others`, `camera`, `focusedConnectorGuid`, `selectedModelGuid`, `selectedModelTags`, `windowLayout`, etc.
   - Initializes defaults in the constructor (toolbar always visible, clearing corrupt `windowLayout`, etc.).
-  - Runs commands (`semio.typeApp.*`) via `registerCommand` and applies `TypeDiff` + `TypeAppDiff`.
+  - Runs commands (`compose.typeApp.*`) via `registerCommand` and applies `TypeDiff` + `TypeAppDiff`.
 
 - **React hooks** are all Yjs-based:
   - `useTypeApp`, `useTypeAppSelection`, `useTypeAppPanelVisibility`, `useTypeAppOthers`, `useTypeAppCamera`, `useTypeAppFocusedConnectorGuid`, `useTypeAppHover`, `useTypeAppSelectedModelGuid`, `useTypeAppSelectedModelTags`, etc.
   - These use `useTypeAppStore` + `useSyncDeep` / `useSyncField`.
 
 - **Command hook**:
-  - `useTypeAppCommands` calls `store.execute("semio.typeApp.*")` or `store.change(...)` directly.
+  - `useTypeAppCommands` calls `store.execute("compose.typeApp.*")` or `store.change(...)` directly.
 
 In `machines.ts` you already have:
 
@@ -1091,7 +1091,7 @@ At this point, **all Type UI reads go through XState**, not the Yjs store.
 
 Right now `useTypeAppCommands` does a mix of:
 
-- `store.execute("semio.typeApp.*")` (commands defined in `commands` object).
+- `store.execute("compose.typeApp.*")` (commands defined in `commands` object).
 - `store.change({ ... })` for local UI bits (panel visibility, camera, activeTool, selection, hover, selectedModelGuid).
 
 We want:

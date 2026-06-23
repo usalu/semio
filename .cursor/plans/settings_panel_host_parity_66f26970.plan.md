@@ -18,7 +18,7 @@ todos:
     content: Add activeRightPanelKind switching + settings navbar toggle after details + SettingsHost wiring in playground renderer
     status: completed
   - id: sketchpad
-    content: Register panel:settings tabs + settings toggle label in the ./semio sketchpad navbar
+    content: Register panel:settings tabs + settings toggle label in the ./compose sketchpad navbar
     status: completed
   - id: apps
     content: Audit framework apps and move app-level option controls under panel:settings
@@ -40,7 +40,7 @@ isProject: false
 - Give `settings` the SAME mechanism as `display`: a framework-provided host + framework panel tabs + navbar toggle, instead of being app-driven only.
 - The toggle sits right after `details` — already true since `RIGHT_PANEL_KINDS = ["details", "settings", "chat"]`, so no reordering.
 - Migrate app/chrome-level options (mode, expertise, compact — NOT window/layout, which stay in `display`) into the settings panel.
-- Scope: everything — platform shell, playground shell, and the `./semio` sketchpad navbar.
+- Scope: everything — platform shell, playground shell, and the `./compose` sketchpad navbar.
 
 ## How the display mechanism works today (the template to mirror)
 
@@ -92,9 +92,9 @@ flowchart LR
 - Add a `ui.panelToggle.settings` `Toggle` in the hard-coded navbar group immediately after the `details` toggle (~L1131-1137), and wrap with `<SettingsHostContext.Provider>` + pass `onSettingsHostReady`.
 - Expose `settingsHost` from the playground shell hook alongside `detailsTabs`/`footerItems` (~L933-1040).
 
-### 5. Sketchpad navbar (`./semio`) — [semio/client/lib/sketchpad/js/index.ts](semio/client/lib/sketchpad/js/index.ts)
+### 5. Sketchpad navbar (`./compose`) — [compose/client/lib/sketchpad/js/index.ts](compose/client/lib/sketchpad/js/index.ts)
 
-- Add `{ panel: "settings", ... }` to `sketchpadKitPanelTabs`/`sketchpadHomePanelTabs` (~~L14917-14930) so the settings toggle appears, and add the `semio.sketchpad.navbar.panelToggle.settings` label in both translation blocks (~~L510, L5559). The shared `ui.panelToggle.* -> semio.sketchpad.navbar.panelToggle.*` resolver (~L10242) already routes it.
+- Add `{ panel: "settings", ... }` to `sketchpadKitPanelTabs`/`sketchpadHomePanelTabs` (~~L14917-14930) so the settings toggle appears, and add the `compose.sketchpad.navbar.panelToggle.settings` label in both translation blocks (~~L510, L5559). The shared `ui.panelToggle.* -> compose.sketchpad.navbar.panelToggle.*` resolver (~L10242) already routes it.
 
 ### 6. App-level options migration
 
@@ -113,5 +113,5 @@ flowchart LR
 
 - Migrated chrome options = mode, expertise, compact. Window/layout stay in `display`.
 - Single framework `settings` tab (`general`) holding the migrated controls, extensible later; apps still add their own `panel: "settings"` tabs.
-- Including the `./semio` sketchpad is intended (per "everything").
+- Including the `./compose` sketchpad is intended (per "everything").
 

@@ -3,7 +3,7 @@
 ## Todos
 # Previously
 
-- TypeScript has `validateSemioKit()` returning `ValidationResult` with `issues: Problem[]`
+- TypeScript has `validateComposeKit()` returning `ValidationResult` with `issues: Problem[]`
 - Python has `validateKitDict()` returning `ValidationResult` with `issues: list[Problem]`
 - C# has per-model `Validate()` returning `(bool, List<string>)` - different format, needs new implementation
 - TypeScript has `fixes` with `KitDiff`, Python and C# don't have fixes
@@ -22,7 +22,7 @@
 
 # Changes
 
-## TypeScript (js/semio/semio.ts)
+## TypeScript (js/compose/compose.ts)
 
 - Added `ValidationFix`, `Problem`, `ValidationResult` interfaces
 - Added `toValidationResult()` to convert full result to serializable format (includes fixes)
@@ -31,7 +31,7 @@
 - Added `areKitDiffsEqualIgnoringNewGuids()` for GUID-normalized diff comparison
 - Fixed layer-path-unique constraint to include `entityGuid`
 
-## TypeScript Test (js/semio/semio.test.ts)
+## TypeScript Test (js/compose/compose.test.ts)
 
 - Consolidated to single test: `Validation matches expected output`
 - Test checks valid kit has no errors AND invalid kit matches validation.json
@@ -50,21 +50,21 @@
 
 - Consolidated to single test: `test_validationMatchesExpectedOutput`
 
-## C# (net/Semio/Semio.cs)
+## C# (net/Compose/Compose.cs)
 
-- Added `SemioValidationFix` class with `Title` and `Diff`
+- Added `ComposeValidationFix` class with `Title` and `Diff`
 - Updated `Problem` to include `Fixes` list
 - Added `ValidationResult.Parse()` to handle fixes from JSON
 - Updated `ValidationResult.AreEqual()` to skip fix comparison (pending fix generation)
 - Updated `Layer` class to match TypeScript schema (added `Guid`, `Path`, `IsHidden`, `IsLocked`, `Attributes`)
 
-## C# Test (net/Semio.Tests/Tests.cs)
+## C# Test (net/Compose.Tests/Tests.cs)
 
 - Consolidated to single test: `Validation_MatchesExpectedOutput`
 
 ## Assets
 
-- Generated `assets/semio/validation.json` with expected validation output including fixes
+- Generated `assets/compose/validation.json` with expected validation output including fixes
 - Added `InvalidKitValidation` export in `assets/index.ts`
 
 ## Scripts

@@ -3,7 +3,7 @@
   "emoji": "➕",
   "status": "closed",
   "description": "Add Analyze Code Lens on top of every definition to run analyze command and show markdown output.",
-  "summary": "Added Analyze Code Lens on top of every definition and implemented semio.analyze command to show markdown output. Also fixed several preexisting TS syntax errors in extension.ts and semio.ts.",
+  "summary": "Added Analyze Code Lens on top of every definition and implemented compose.analyze command to show markdown output. Also fixed several preexisting TS syntax errors in extension.ts and compose.ts.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/901"
   },

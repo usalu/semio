@@ -10,17 +10,17 @@ Create a comprehensive update script (`update.ts`) that updates all dependencies
 
 ## Package Managers Detected
 
-1. **npm (package.json)**: Root + workspaces (js/semio, js/docs, js/play, js/desktop, js/vscode, etc.)
+1. **npm (package.json)**: Root + workspaces (js/compose, js/docs, js/play, js/desktop, js/vscode, etc.)
 2. **uv (pyproject.toml)**: py/engine
-3. **cargo (Cargo.toml)**: rs/semio
-4. **go (go.mod)**: go/cli, go/mcp, ./repo/cli, go/semio
-5. **C# (.csproj)**: net/Semio, net/Semio.Grasshopper, net/Semio.Tests, net/Semio.Grasshopper.Tests
+3. **cargo (Cargo.toml)**: rs/compose
+4. **go (go.mod)**: go/cli, go/mcp, ./repo/cli, go/compose
+5. **C# (.csproj)**: net/Compose, net/Compose.Grasshopper, net/Compose.Tests, net/Compose.Grasshopper.Tests
 
 ## 💯Requirements
 
 1. Update dependencies in manifest files (not just lock files)
 2. Support excluding specific packages from updates (pinned dependencies)
-3. Preserve local workspace references (e.g., `"semio/js": "*"`)
+3. Preserve local workspace references (e.g., `"compose/js": "*"`)
 4. Preserve local Go module replace directives
 
 ## Implementation
@@ -32,7 +32,7 @@ Define excluded dependencies per project:
 ```json
 {
  "exclude": {
-  "net/Semio.Grasshopper/Semio.Grasshopper.csproj": ["Grasshopper", "System.Drawing.Common", "System.Resources.Extensions"]
+  "net/Compose.Grasshopper/Compose.Grasshopper.csproj": ["Grasshopper", "System.Drawing.Common", "System.Resources.Extensions"]
  },
  "preserveLocalVersions": {
   "npm": ["*"],
@@ -68,7 +68,7 @@ Script structure:
 After running npm update:
 
 - Scan all package.json files in workspaces
-- Restore `"*"` versions for local packages like `semio/js`, `semio/assets`
+- Restore `"*"` versions for local packages like `compose/js`, `compose/assets`
 
 ## Files to Create/Modify
 
@@ -85,7 +85,7 @@ npm run update
         ├─> npm update -S (root)
         ├─> Restore "*" versions in workspaces
         ├─> cd py/engine && uv lock --upgrade
-        ├─> cd rs/semio && cargo update
+        ├─> cd rs/compose && cargo update
         ├─> For each go.mod: go get -u && go mod tidy
         └─> For each .csproj: dotnet outdated --upgrade (skip excluded)
 ```
@@ -109,16 +109,16 @@ npm run update
 
 Explored the monorepo structure and identified all package managers in use:
 
-- **npm**: Root package.json with workspaces at js/semio, js/docs, js/play, js/desktop, js/vscode, assets/logo, assets/icons, assets, py/engine, net/Semio, net/Semio.Grasshopper, go/semio, ./repo/cli, go/mcp, yak
+- **npm**: Root package.json with workspaces at js/compose, js/docs, js/play, js/desktop, js/vscode, assets/logo, assets/icons, assets, py/engine, net/Compose, net/Compose.Grasshopper, go/compose, ./repo/cli, go/mcp, yak
 - **uv (Python)**: py/engine/pyproject.toml
-- **cargo (Rust)**: rs/semio/Cargo.toml
-- **go**: go/cli/go.mod, go/mcp/go.mod, ./repo/cli/go.mod, go/semio/go.mod
-- **C# (.csproj)**: net/Semio/Semio.csproj, net/Semio.Grasshopper/Semio.Grasshopper.csproj, net/Semio.Tests/Semio.Tests.csproj, net/Semio.Grasshopper.Tests/Semio.Grasshopper.Tests.csproj
+- **cargo (Rust)**: rs/compose/Cargo.toml
+- **go**: go/cli/go.mod, go/mcp/go.mod, ./repo/cli/go.mod, go/compose/go.mod
+- **C# (.csproj)**: net/Compose/Compose.csproj, net/Compose.Grasshopper/Compose.Grasshopper.csproj, net/Compose.Tests/Compose.Tests.csproj, net/Compose.Grasshopper.Tests/Compose.Grasshopper.Tests.csproj
 
 ### Key Findings
 
-1. Local npm packages use `"*"` for workspace dependencies (e.g., `"semio/js": "*"` in js/docs)
-2. Semio.Grasshopper has pinned dependencies: Grasshopper, System.Drawing.Common, System.Resources.Extensions
+1. Local npm packages use `"*"` for workspace dependencies (e.g., `"compose/js": "*"` in js/docs)
+2. Compose.Grasshopper has pinned dependencies: Grasshopper, System.Drawing.Common, System.Resources.Extensions
 3. Go modules use `replace` directives for local packages
 
 ### Implementation v1
@@ -127,19 +127,19 @@ Created initial version with basic support for all package managers.
 
 ### Issues Found After Testing v1
 
-1. **Local semio/\* packages affected**: Hardcoded package list missed packages like `semio/logo`
+1. **Local compose/\* packages affected**: Hardcoded package list missed packages like `compose/logo`
 2. **Cargo only updates lock file**: `cargo update` doesn't update Cargo.toml versions
-3. **Semio.csproj exclusions missing**: FluentValidation and System.Collections.Immutable needed exclusion
+3. **Compose.csproj exclusions missing**: FluentValidation and System.Collections.Immutable needed exclusion
 4. **uv only updates lock file**: `uv lock --upgrade` doesn't update pyproject.toml
 
 ### Fixes Applied v2
 
 1. **Dynamic workspace detection**: Now reads all workspace package.json files to detect names automatically
-   - Detected 15 packages: semio/logo, semio/icons, semio/assets, semio/engine, semio/js, semio/net, semio/grasshopper, etc.
+   - Detected 15 packages: compose/logo, compose/icons, compose/assets, compose/engine, compose/js, compose/net, compose/grasshopper, etc.
 
 2. **Cargo.toml direct updates**: Added parser for Cargo.toml that fetches latest versions from crates.io API and updates the file directly
 
-3. **Added Semio.csproj exclusions**: FluentValidation, System.Collections.Immutable added to exclude list
+3. **Added Compose.csproj exclusions**: FluentValidation, System.Collections.Immutable added to exclude list
 
 4. **pyproject.toml direct updates**: Added parser that fetches latest versions from PyPI API and updates the file directly
 
@@ -158,11 +158,11 @@ Created initial version with basic support for all package managers.
 **NPM** - All 15 workspace packages detected:
 
 ```
-  Detected 15 workspace packages: semio/logo, semio/icons, semio/assets, semio/engine, semio/js, semio/docs, semio/play, semio/desktop, repo/vscode, semio/net, semio/grasshopper, semio/go, repo/go, repo/mcp, semio/yak
+  Detected 15 workspace packages: compose/logo, compose/icons, compose/assets, compose/engine, compose/js, compose/docs, compose/play, compose/desktop, repo/vscode, compose/net, compose/grasshopper, compose/go, repo/go, repo/mcp, compose/yak
   Will preserve local package versions:
-    assets/icons/package.json: devDependencies.semio/logo = "*"
-    net/Semio.Grasshopper/package.json: devDependencies.semio/net = "*"
-    yak/package.json: devDependencies.semio/grasshopper = "*"
+    assets/icons/package.json: devDependencies.compose/logo = "*"
+    net/Compose.Grasshopper/package.json: devDependencies.compose/net = "*"
+    yak/package.json: devDependencies.compose/grasshopper = "*"
 ```
 
 **Cargo.toml** - Successfully updated:
@@ -206,8 +206,8 @@ Created a comprehensive dependency update system for the monorepo that handles a
    - Updates pyproject.toml versions directly (not just lock file)
    - Updates Cargo.toml versions directly (not just lock file)
 5. **Excluded packages**:
-   - Semio.csproj: FluentValidation, System.Collections.Immutable
-   - Semio.Grasshopper: Grasshopper, System.Drawing.Common, System.Resources.Extensions
+   - Compose.csproj: FluentValidation, System.Collections.Immutable
+   - Compose.Grasshopper: Grasshopper, System.Drawing.Common, System.Resources.Extensions
 6. **Rollback on failure**: If `uv lock` or `cargo update` fails, the manifest file is restored to original
 7. **Dry-run mode**: Test what would be updated without making changes
 8. **Target-specific updates**: Update only specific package managers

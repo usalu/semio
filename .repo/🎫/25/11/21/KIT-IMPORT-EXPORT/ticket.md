@@ -6,12 +6,12 @@
 
 ## Plan
 
-### 1. Move Import/Export Logic to semio.ts
+### 1. Move Import/Export Logic to compose.ts
 
 Extract the import/export logic from kit commands and make it reusable:
 
 - `importKit(url: string): Promise<{ kit: Kit, files: Map<string, Blob> }>` - Fetch, unzip, parse kit.db, return kit and files
-- `exportKit(kit: Kit, files: Map<string, Blob>): Promise<Blob>` - Create .semio/kit.db, zip everything, return blob
+- `exportKit(kit: Kit, files: Map<string, Blob>): Promise<Blob>` - Create .compose/kit.db, zip everything, return blob
 
 ### 2. Implementation Details
 
@@ -19,7 +19,7 @@ Extract the import/export logic from kit commands and make it reusable:
 
 1. Fetch the URL (could be remote HTTP or local file://)
 2. Unzip the archive
-3. Read `.semio/kit.db` SQLite file
+3. Read `.compose/kit.db` SQLite file
 4. Parse SQLite schema to Kit JSON structure
 5. Collect all files (paths relative to zip root)
 6. Return `{ kit, files }`
@@ -27,17 +27,17 @@ Extract the import/export logic from kit commands and make it reusable:
 #### Export
 
 1. Convert Kit JSON to SQLite schema
-2. Create `.semio/kit.db` in memory
+2. Create `.compose/kit.db` in memory
 3. Add all files to zip
-4. Add `.semio/kit.db` to zip
+4. Add `.compose/kit.db` to zip
 5. Return zip as Blob
 
 ### 3. Test Strategy
 
 Use `examples/metabolism` as test case:
 
-1. Load metabolism kit JSON from `semio/assets`
-2. Load pure files from `examples/metabolism` folder (excluding `.semio`)
+1. Load metabolism kit JSON from `compose/assets`
+2. Load pure files from `examples/metabolism` folder (excluding `.compose`)
 3. Export to zip blob
 4. Import from zip blob
 5. Verify:
@@ -53,7 +53,7 @@ Use `examples/metabolism` as test case:
 
 ### 5. Implementation Steps
 
-1. Add import/export functions to semio.ts ✓
+1. Add import/export functions to compose.ts ✓
 2. Create SQLite ↔ JSON converters ✓
 3. Implement zip handling ✓
 4. Create comprehensive test ✓

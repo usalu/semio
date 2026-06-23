@@ -5,7 +5,7 @@
   "second": "2026-03-20T19:20:03Z",
   "checkpoint": "2914ddd11b4227651d81ebae3eccf890c15620b0",
   "contributor": "unknown",
-  "transcript": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
+  "transcript": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
   "events": [
     {
       "event": {
@@ -15,12 +15,12 @@
         "kind": "agent.started",
         "second": "2026-03-20T19:20:03Z",
         "session": "0feb744b-4b73-4278-81d6-325e624d8189",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
       },
       "native": {
         "event": {
           "session_id": "0feb744b-4b73-4278-81d6-325e624d8189",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
           "cwd": "/workspaces/semio",
           "hook_event_name": "SessionStart",
           "source": "startup"
@@ -36,16 +36,16 @@
         "kind": "agent.prompt.submitting",
         "second": "2026-03-20T19:20:54Z",
         "session": "0feb744b-4b73-4278-81d6-325e624d8189",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
       },
       "native": {
         "event": {
           "session_id": "0feb744b-4b73-4278-81d6-325e624d8189",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "UserPromptSubmit",
-          "prompt": "semio algorithms storybook:\nWhen loading an algorithm story it infinitely hangs. It should load the proper elements/ui/UI component."
+          "prompt": "compose algorithms storybook:\nWhen loading an algorithm story it infinitely hangs. It should load the proper elements/ui/UI component."
         }
       },
       "response": {}
@@ -58,12 +58,12 @@
         "kind": "agent.tool.starting",
         "second": "2026-03-20T19:21:00Z",
         "session": "0feb744b-4b73-4278-81d6-325e624d8189",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
       },
       "native": {
         "event": {
           "session_id": "0feb744b-4b73-4278-81d6-325e624d8189",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PreToolUse",
@@ -85,12 +85,12 @@
         "kind": "agent.tool.ended",
         "second": "2026-03-20T19:21:32Z",
         "session": "0feb744b-4b73-4278-81d6-325e624d8189",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
       },
       "native": {
         "event": {
           "session_id": "0feb744b-4b73-4278-81d6-325e624d8189",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PostToolUse",
@@ -121,12 +121,12 @@
         "kind": "agent.tool.starting",
         "second": "2026-03-20T19:22:41Z",
         "session": "0feb744b-4b73-4278-81d6-325e624d8189",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
       },
       "native": {
         "event": {
           "session_id": "0feb744b-4b73-4278-81d6-325e624d8189",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PreToolUse",
@@ -157,12 +157,12 @@
         "kind": "agent.tool.ended",
         "second": "2026-03-20T19:22:50Z",
         "session": "0feb744b-4b73-4278-81d6-325e624d8189",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
       },
       "native": {
         "event": {
           "session_id": "0feb744b-4b73-4278-81d6-325e624d8189",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PostToolUse",
@@ -199,12 +199,12 @@
         "kind": "agent.tool.starting",
         "second": "2026-03-20T19:22:50Z",
         "session": "0feb744b-4b73-4278-81d6-325e624d8189",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
       },
       "native": {
         "event": {
           "session_id": "0feb744b-4b73-4278-81d6-325e624d8189",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PreToolUse",
@@ -239,12 +239,12 @@
         "kind": "agent.tool.ended",
         "second": "2026-03-20T19:22:51Z",
         "session": "0feb744b-4b73-4278-81d6-325e624d8189",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
       },
       "native": {
         "event": {
           "session_id": "0feb744b-4b73-4278-81d6-325e624d8189",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PostToolUseFailure",
@@ -281,12 +281,12 @@
         "kind": "agent.tool.starting",
         "second": "2026-03-20T19:22:54Z",
         "session": "0feb744b-4b73-4278-81d6-325e624d8189",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
       },
       "native": {
         "event": {
           "session_id": "0feb744b-4b73-4278-81d6-325e624d8189",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PreToolUse",
@@ -317,12 +317,12 @@
         "kind": "agent.tool.ended",
         "second": "2026-03-20T19:22:59Z",
         "session": "0feb744b-4b73-4278-81d6-325e624d8189",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
       },
       "native": {
         "event": {
           "session_id": "0feb744b-4b73-4278-81d6-325e624d8189",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PostToolUse",
@@ -330,7 +330,7 @@
           "tool_input": {
             "query": "algorithm storybook story"
           },
-          "tool_response": "Error: result (76,501 characters) exceeds maximum allowed tokens. Output has been saved to /home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189/tool-results/mcp-repo-search-1774034578890.txt.\nFormat: JSON array with schema: [{type: string, text: string}]\nUse offset and limit parameters to read specific portions of the file, search within it for specific content, and jq to make structured queries.\nREQUIREMENTS FOR SUMMARIZATION/ANALYSIS/REVIEW:\n- You MUST read the content from the file at /home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189/tool-results/mcp-repo-search-1774034578890.txt in sequential chunks until 100% of the content has been read.\n- If you receive truncation warnings when reading the file, reduce the chunk size until you have read 100% of the content without truncation.\n- Before producing ANY summary or analysis, you MUST explicitly describe what portion of the content you have read. ***If you did not read the entire content, you MUST explicitly state this.***\n",
+          "tool_response": "Error: result (76,501 characters) exceeds maximum allowed tokens. Output has been saved to /home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189/tool-results/mcp-repo-search-1774034578890.txt.\nFormat: JSON array with schema: [{type: string, text: string}]\nUse offset and limit parameters to read specific portions of the file, search within it for specific content, and jq to make structured queries.\nREQUIREMENTS FOR SUMMARIZATION/ANALYSIS/REVIEW:\n- You MUST read the content from the file at /home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189/tool-results/mcp-repo-search-1774034578890.txt in sequential chunks until 100% of the content has been read.\n- If you receive truncation warnings when reading the file, reduce the chunk size until you have read 100% of the content without truncation.\n- Before producing ANY summary or analysis, you MUST explicitly describe what portion of the content you have read. ***If you did not read the entire content, you MUST explicitly state this.***\n",
           "tool_use_id": "toolu_01JVuKw17MzZM4qGWQzsc7un"
         }
       },
@@ -354,12 +354,12 @@
         "kind": "agent.tool.starting",
         "second": "2026-03-20T19:22:59Z",
         "session": "0feb744b-4b73-4278-81d6-325e624d8189",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
       },
       "native": {
         "event": {
           "session_id": "0feb744b-4b73-4278-81d6-325e624d8189",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PreToolUse",
@@ -390,12 +390,12 @@
         "kind": "agent.tool.ended",
         "second": "2026-03-20T19:23:02Z",
         "session": "0feb744b-4b73-4278-81d6-325e624d8189",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
       },
       "native": {
         "event": {
           "session_id": "0feb744b-4b73-4278-81d6-325e624d8189",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PostToolUse",
@@ -403,7 +403,7 @@
           "tool_input": {
             "query": "goals"
           },
-          "tool_response": "Error: result (313,068 characters) exceeds maximum allowed tokens. Output has been saved to /home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189/tool-results/mcp-repo-search-1774034582778.txt.\nFormat: JSON array with schema: [{type: string, text: string}]\nUse offset and limit parameters to read specific portions of the file, search within it for specific content, and jq to make structured queries.\nREQUIREMENTS FOR SUMMARIZATION/ANALYSIS/REVIEW:\n- You MUST read the content from the file at /home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189/tool-results/mcp-repo-search-1774034582778.txt in sequential chunks until 100% of the content has been read.\n- If you receive truncation warnings when reading the file, reduce the chunk size until you have read 100% of the content without truncation.\n- Before producing ANY summary or analysis, you MUST explicitly describe what portion of the content you have read. ***If you did not read the entire content, you MUST explicitly state this.***\n",
+          "tool_response": "Error: result (313,068 characters) exceeds maximum allowed tokens. Output has been saved to /home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189/tool-results/mcp-repo-search-1774034582778.txt.\nFormat: JSON array with schema: [{type: string, text: string}]\nUse offset and limit parameters to read specific portions of the file, search within it for specific content, and jq to make structured queries.\nREQUIREMENTS FOR SUMMARIZATION/ANALYSIS/REVIEW:\n- You MUST read the content from the file at /home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189/tool-results/mcp-repo-search-1774034582778.txt in sequential chunks until 100% of the content has been read.\n- If you receive truncation warnings when reading the file, reduce the chunk size until you have read 100% of the content without truncation.\n- Before producing ANY summary or analysis, you MUST explicitly describe what portion of the content you have read. ***If you did not read the entire content, you MUST explicitly state this.***\n",
           "tool_use_id": "toolu_01EfZTMzb4Xm8sQEQQPEqYwX"
         }
       },
@@ -427,18 +427,18 @@
         "kind": "agent.file.read.starting",
         "second": "2026-03-20T19:23:06Z",
         "session": "0feb744b-4b73-4278-81d6-325e624d8189",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
       },
       "native": {
         "event": {
           "session_id": "0feb744b-4b73-4278-81d6-325e624d8189",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PreToolUse",
           "tool_name": "Bash",
           "tool_input": {
-            "command": "grep -r \"algorithm\" /home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189/tool-results/mcp-repo-search-1774034578890.txt | head -30",
+            "command": "grep -r \"algorithm\" /home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189/tool-results/mcp-repo-search-1774034578890.txt | head -30",
             "description": "Search for algorithm references in search results"
           },
           "tool_use_id": "toolu_015Yfq6sUL52PwoaDDcyPfag"
@@ -454,18 +454,18 @@
         "kind": "agent.file.read.starting",
         "second": "2026-03-20T19:23:18Z",
         "session": "0feb744b-4b73-4278-81d6-325e624d8189",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
       },
       "native": {
         "event": {
           "session_id": "0feb744b-4b73-4278-81d6-325e624d8189",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PreToolUse",
           "tool_name": "Bash",
           "tool_input": {
-            "command": "grep -r \"goal\" /home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189/tool-results/mcp-repo-search-1774034582778.txt | grep -i \"slug\\|id\\|GOAL\" | head -20",
+            "command": "grep -r \"goal\" /home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189/tool-results/mcp-repo-search-1774034582778.txt | grep -i \"slug\\|id\\|GOAL\" | head -20",
             "description": "Find goal IDs from search results"
           },
           "tool_use_id": "toolu_01Uhgc4NucxjGb5y9WMnb7qo"
@@ -481,27 +481,27 @@
         "kind": "agent.file.read.ended",
         "second": "2026-03-20T19:23:20Z",
         "session": "0feb744b-4b73-4278-81d6-325e624d8189",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
       },
       "native": {
         "event": {
           "session_id": "0feb744b-4b73-4278-81d6-325e624d8189",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PostToolUse",
           "tool_name": "Bash",
           "tool_input": {
-            "command": "grep -r \"algorithm\" /home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189/tool-results/mcp-repo-search-1774034578890.txt | head -30",
+            "command": "grep -r \"algorithm\" /home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189/tool-results/mcp-repo-search-1774034578890.txt | head -30",
             "description": "Search for algorithm references in search results"
           },
           "tool_response": {
-            "stdout": "    \"text\": \"- [�️Codebase](repo://cb)\\n  - [🗃️coda](repo://fd/org/coda)\\n    - [🗃️coda🗃️blnbo](repo://fd/org/blnbo)\\n      - [🗃️coda🗃️blnbo🛅go](repo://fd/req/go)\\n        - [🗃️coda🗃️blnbo🛅go💻main](repo://p/r/coda/b/l/blnbo/fd/req/go/f/main.go)\\n          - [🗃️coda🗃️blnbo🛅go💻main🔖header](repo://f/./s/) - `:1-8`\\n        - [🗃️coda🗃️blnbo🛅go🥼maintest](repo://p/r/coda/b/l/blnbo/fd/req/go/f/main_test.go)\\n          - [🗃️coda🗃️blnbo🛅go🥼maintest🔖header](repo://f/./s/) - `:1-6`\\n    - [🗃️coda🛅desktop](repo://fd/req/desktop)\\n      - [🗃️coda🛅desktop⚙️forgeconfig](repo://p/r/coda/b/u/desktop/f/forge.config.ts)\\n        - [🗃️coda🛅desktop⚙️forgeconfig🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️coda🛅desktop💻forgeenvd](repo://p/r/coda/b/u/desktop/f/forge.env.d.ts)\\n        - [🗃️coda🛅desktop💻forgeenvd🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️coda🛅desktop💻main](repo://p/r/coda/b/u/desktop/f/main.ts)\\n        - [🗃️coda🛅desktop💻main🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️coda🛅desktop⚙️postcssconfig](repo://p/r/coda/b/u/desktop/f/postcss.config.ts)\\n        - [🗃️coda🛅desktop⚙️postcssconfig🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️coda🛅desktop💻preload](repo://p/r/coda/b/u/desktop/f/preload.ts)\\n        - [🗃️coda🛅desktop💻preload🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️coda🛅desktop💻renderer](repo://p/r/coda/b/u/desktop/f/renderer.tsx)\\n        - [🗃️coda🛅desktop💻renderer🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️coda🛅desktop⚙️tailwindconfig](repo://p/r/coda/b/u/desktop/f/tailwind.config.ts)\\n        - [🗃️coda🛅desktop⚙️tailwindconfig🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️coda🛅desktop⚙️vitemainconfig](repo://p/r/coda/b/u/desktop/f/vite.main.config.ts)\\n        - [🗃️coda🛅desktop⚙️vitemainconfig🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️coda🛅desktop⚙️vitepreloadconfig](repo://p/r/coda/b/u/desktop/f/vite.preload.config.ts)\\n        - [🗃️coda🛅desktop⚙️vitepreloadconfig🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️coda🛅desktop⚙️viterendererconfig](repo://p/r/coda/b/u/desktop/f/vite.renderer.config.ts)\\n        - [🗃️coda🛅desktop⚙️viterendererconfig🔖header](repo://f/./s/) - `:1-21`\\n    - [🗃️coda🛅engine](repo://fd/req/engine)\\n      - [🗃️coda🛅engine💻coda](repo://p/r/coda/b/l/engine/f/coda.py)\\n        - [🗃️coda🛅engine💻coda🔖header](repo://f/./s/) - `:1-17`\\n    - [🗃️coda🗃️programming](repo://fd/org/programming)\\n      - [🗃️coda🗃️programming🛅go](repo://fd/req/go)\\n        - [🗃️coda🗃️programming🛅go💻main](repo://p/r/coda/b/l/programming/fd/req/go/f/main.go)\\n          - [🗃️coda🗃️programming🛅go💻main🔖header](repo://f/./s/) - `:1-8`\\n        - [🗃️coda🗃️programming🛅go🥼maintest](repo://p/r/coda/b/l/programming/fd/req/go/f/main_test.go)\\n          - [🗃️coda🗃️programming🛅go🥼maintest🔖header](repo://f/./s/) - `:1-6`\\n  - [🧩elements](repo://fd/org/elements)\\n    - [🧩elements🛅ui](repo://fd/req/ui)\\n      - [🧩elements🛅ui🛅storybook](repo://fd/req/.storybook)\\n        - [🧩elements🛅ui🛅storybook🗃️stories](repo://fd/org/stories)\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼accordionstories](repo://f/Accordion.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼accordionstories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼actiongroupstories](repo://f/ActionGroup.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼actiongroupstories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼avatarstories](repo://f/Avatar.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼avatarstories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼bandstories](repo://f/Band.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼bandstories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼breadcrumbstories](repo://f/Breadcrumb.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼breadcrumbstories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼buttonstories](repo://f/Button.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼buttonstories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼buttongroupstories](repo://f/ButtonGroup.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼buttongroupstories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼canvasstories](repo://f/Canvas.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼canvasstories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼cardstories](repo://f/Card.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼cardstories🔖header](repo://f/./s/) - `:1-12`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼collapsiblestories](repo://f/Collapsible.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼collapsiblestories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼comboboxstories](repo://f/Combobox.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼comboboxstories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼commandstories](repo://f/Command.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼commandstories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼diagramstories](repo://f/Diagram.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼diagramstories🔖header](repo://f/./s/) - `:1-12`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼diagramnodestories](repo://f/DiagramNode.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼diagramnodestories🔖header](repo://f/./s/) - `:1-12`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼dialogstories](repo://f/Dialog.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼dialogstories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼footerstories](repo://f/Footer.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼footerstories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼hovercardstories](repo://f/HoverCard.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼hovercardstories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼iconsstories](repo://f/Icons.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼iconsstories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼inputstories](repo://f/Input.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼inputstories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼layoutstories](repo://f/Layout.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼layoutstories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼navbarstories](repo://f/Navbar.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼navbarstories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼ontologytreestories](repo://f/OntologyTree.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼ontologytreestories🔖header](repo://f/./s/) - `:1-19`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼orbstories](repo://f/Orb.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼orbstories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼pagestories](repo://f/Page.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼pagestories🔖header](repo://f/./s/) - `:1-12`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼pagenavigationstories](repo://f/PageNavigation.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼pagenavigationstories🔖header](repo://f/./s/) - `:1-12`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼panelstories](repo://f/Panel.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼panelstories🔖header](repo://f/./s/) - `:1-12`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼popoverstories](repo://f/Popover.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼popoverstories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼resizablestories](repo://f/Resizable.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼resizablestories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼ringstories](repo://f/Ring.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼ringstories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼scrollablestories](repo://f/Scrollable.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼scrollablestories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼selectstories](repo://f/Select.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼selectstories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼sliderstories](repo://f/Slider.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼sliderstories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼stepperstories](repo://f/Stepper.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼stepperstories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼stepsstories](repo://f/Steps.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼stepsstories🔖header](repo://f/./s/) - `:1-12`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼stripstories](repo://f/Strip.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼stripstories🔖header](repo://f/./s/) - `:1-12`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼tablestories](repo://f/Table.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼tablestories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼tabsstories](repo://f/Tabs.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼tabsstories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼textareastories](repo://f/Textarea.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼textareastories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼togglestories](repo://f/Toggle.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼togglestories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼togglegroupstories](repo://f/ToggleGroup.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼togglegroupstories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼toolbarstories](repo://f/Toolbar.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼toolbarstories🔖header](repo://f/./s/) - `:1-12`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼tooltipstories](repo://f/Tooltip.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼tooltipstories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼treestories](repo://f/Tree.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼treestories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼uistories](repo://f/UI.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼uistories🔖header](repo://f/./s/) - `:1-12`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼validationtreestories](repo://f/ValidationTree.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼validationtreestories🔖header](repo://f/./s/) - `:1-19`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼windowstories](repo://f/Window.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼windowstories🔖header](repo://f/./s/) - `:1-12`\\n        - [🧩elements🛅ui🛅storybook💻main](repo://f/main.ts)\\n          - [🧩elements🛅ui🛅storybook💻main🔖header](repo://f/./s/) - `:1-18`\\n        - [🧩elements🛅ui🛅storybook💻preview](repo://f/preview.ts)\\n          - [🧩elements🛅ui🛅storybook💻preview🔖header](repo://f/./s/) - `:1-18`\\n        - [🧩elements🛅ui🛅storybook💻vitestsetup](repo://f/vitest.setup.ts)\\n          - [🧩elements🛅ui🛅storybook💻vitestsetup🔖header](repo://f/./s/) - `:1-18`\\n        - [🧩elements🛅ui🛅storybook💻withlevel](repo://f/withLevel.tsx)\\n          - [🧩elements🛅ui🛅storybook💻withlevel🔖header](repo://f/./s/) - `:1-18`\\n        - [🧩elements🛅ui🛅storybook💻withtheme](repo://f/withTheme.tsx)\\n          - [🧩elements🛅ui🛅storybook💻withtheme🔖header](repo://f/./s/) - `:1-18`\\n      - [🧩elements🛅ui💻elements](repo://f/elements.tsx)\\n        - [🧩elements🛅ui💻elements🔖header](repo://f/./s/) - `:1-18`\\n      - [🧩elements🛅ui⚙️eslintconfig](repo://f/eslint.config.ts)\\n        - [🧩elements🛅ui⚙️eslintconfig🔖header](repo://f/./s/) - `:1-19`\\n      - [🧩elements🛅ui💻index](repo://f/index.ts)\\n        - [🧩elements🛅ui💻index🔖header](repo://f/./s/) - `:1-20`\\n      - [🧩elements🛅ui⚙️postcssconfig](repo://f/postcss.config.ts)\\n        - [🧩elements🛅ui⚙️postcssconfig🔖header](repo://f/./s/) - `:1-19`\\n      - [🧩elements🛅ui⚙️tailwindconfig](repo://f/tailwind.config.ts)\\n        - [🧩elements🛅ui⚙️tailwindconfig🔖header](repo://f/./s/) - `:1-19`\\n  - [🗃️repo](repo://fd/org/repo)\\n    - [🗃️repo🛅cli](repo://fd/req/cli)\\n      - [🗃️repo🛅cli💻main](repo://p/i/repo/b/b/cli/f/main.go)\\n        - [🗃️repo🛅cli💻main🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️repo🛅cli🥼maintest](repo://p/i/repo/b/b/cli/f/main_test.go)\\n        - [🗃️repo🛅cli🥼maintest🔖header](repo://f/./s/) - `:1-17`\\n    - [🗃️repo🛅go](repo://fd/req/go)\\n      - [🗃️repo🛅go💻emit](repo://p/i/repo/b/l/go/f/emit.go)\\n        - [🗃️repo🛅go💻emit🔖header](repo://f/./s/) - `:1-23`\\n          - [🗃️repo🛅go💻emit🔖header🔖license](repo://f/./s/) - `:6-21`\\n      - [🗃️repo🛅go💻events](repo://p/i/repo/b/l/go/f/events.go)\\n        - [🗃️repo🛅go💻events🔖header](repo://f/./s/) - `:1-23`\\n          - [🗃️repo🛅go💻events🔖header🔖license](repo://f/./s/) - `:6-21`\\n    - [🗃️repo🗃️graphql](repo://fd/org/graphql)\\n      - [🗃️repo🗃️graphql💻schema](repo://p/i/repo/b/s/graphql/f/schema.graphql)\\n        - [🗃️repo🗃️graphql💻schema🔖header](repo://f/./s/) - `:1-27`\\n          - [🗃️repo🗃️graphql💻schema🔖header🔖license](repo://f/./s/) - `:7-22`\\n          - [🗃️repo🗃️graphql💻schema🔖header🔖requirements](repo://f/./s/) - `:24-25`\\n    - [🗃️repo🛅server](repo://fd/req/server)\\n      - [🗃️repo🛅server💻main](repo://p/i/repo/b/b/server/f/main.go)\\n        - [🗃️repo🛅server💻main🔖header](repo://f/./s/) - `:1-19`\\n    - [🗃️repo🛅sqlite](repo://fd/req/sqlite)\\n      - [🗃️repo🛅sqlite💻checkpoint](repo://p/i/repo/b/s/sqlite/f/checkpoint.sql)\\n        - [🗃️repo🛅sqlite💻checkpoint🔖header](repo://f/./s/) - `:1-28`\\n          - [🗃️repo🛅sqlite💻checkpoint🔖header🔖license](repo://f/./s/) - `:7-23`\\n          - [🗃️repo🛅sqlite💻checkpoint🔖header🔖requirements](repo://f/./s/) - `:25-26`\\n      - [🗃️repo🛅sqlite💻schema](repo://p/i/repo/b/s/sqlite/f/schema.sql)\\n        - [🗃️repo🛅sqlite💻schema🔖header](repo://f/./s/) - `:1-16`\\n          - [🗃️repo🛅sqlite💻schema🔖header🔖license](repo://f/./s/) - `:4-15`\\n    - [🗃️repo🛅vscode](repo://fd/req/vscode)\\n      - [🗃️repo🛅vscode💻codegen](repo://p/i/repo/b/u/vscode/f/codegen.ts)\\n        - [🗃️repo🛅vscode💻codegen🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️repo🛅vscode⚙️eslintconfig](repo://p/i/repo/b/u/vscode/f/eslint.config.ts)\\n        - [🗃️repo🛅vscode⚙️eslintconfig🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️repo🛅vscode🥼extensiontest](repo://p/i/repo/b/u/vscode/f/extension.test.ts)\\n        - [🗃️repo🛅vscode🥼extensiontest🔖header](repo://f/./s/) - `:1-17`\\n      - [🗃️repo🛅vscode💻extension](repo://p/i/repo/b/u/vscode/f/extension.ts)\\n        - [🗃️repo🛅vscode💻extension🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️repo🛅vscode💻queries](repo://p/i/repo/b/u/vscode/f/queries.ts)\\n        - [🗃️repo🛅vscode💻queries🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️repo🛅vscode⚙️viteconfig](repo://p/i/repo/b/u/vscode/f/vite.config.ts)\\n        - [🗃️repo🛅vscode⚙️viteconfig🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️repo🛅vscode⚙️vitetestconfig](repo://p/i/repo/b/u/vscode/f/vite.test.config.ts)\\n        - [🗃️repo🛅vscode⚙️vitetestconfig🔖header](repo://f/./s/) - `:1-19`\\n  - [🗃️semio](repo://fd/org/semio)\\n    - [🗃️semio🗃️3dm](repo://fd/org/3dm)\\n      - [🗃️semio🗃️3dm🛅semiorhino](repo://fd/req/Semio.Rhino)\\n        - [🗃️semio🗃️3dm🛅semiorhino💻semiorhino](repo://p/u/semio/b/l/3dm/fd/req/Semio.Rhino/f/Semio.Rhino.cs)\\n          - [🗃️semio🗃️3dm🛅semiorhino💻semiorhino🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️semio🗃️3dm🛅semiorhinotests](repo://fd/req/Semio.Rhino.Tests)\\n        - [🗃️semio🗃️3dm🛅semiorhinotests💻tests](repo://p/u/semio/b/l/3dm/fd/req/Semio.Rhino.Tests/f/Tests.cs)\\n          - [🗃️semio🗃️3dm🛅semiorhinotests💻tests🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️semio🗃️3dm🛅ui](repo://fd/req/ui)\\n        - [🗃️semio🗃️3dm🛅ui🗃️src](repo://fd/org/src)\\n          - [🗃️semio🗃️3dm🛅ui🗃️src💻rhinopanel](repo://p/u/semio/b/l/3dm/fd/req/ui/fd/org/src/f/RhinoPanel.tsx)\\n            - [🗃️semio🗃️3dm🛅ui🗃️src💻rhinopanel🔖header](repo://f/./s/) - `:1-19`\\n          - [🗃️semio🗃️3dm🛅ui🗃️src💻bridge](repo://p/u/semio/b/l/3dm/fd/req/ui/fd/org/src/f/bridge.ts)\\n            - [🗃️semio🗃️3dm🛅ui🗃️src💻bridge🔖header](repo://f/./s/) - `:1-19`\\n          - [🗃️semio🗃️3dm🛅ui🗃️src💻index](repo://p/u/semio/b/l/3dm/fd/req/ui/fd/org/src/f/index.tsx)\\n            - [🗃️semio🗃️3dm🛅ui🗃️src💻index🔖header](repo://f/./s/) - `:1-19`\\n        - [🗃️semio🗃️3dm🛅ui⚙️viteconfig](repo://p/u/semio/b/l/3dm/fd/req/ui/f/vite.config.ts)\\n          - [🗃️semio🗃️3dm🛅ui⚙️viteconfig🔖header](repo://f/./s/) - `:1-19`\\n    - [🗃️semio🛅algorithms](repo://fd/req/algorithms)\\n      - [🗃️semio🛅algorithms🛅storybook](repo://fd/req/.storybook)\\n        - [🗃️semio🛅algorithms🛅storybook🗃️stories](repo://fd/org/stories)\\n          - [🗃️semio🛅algorithms🛅storybook🗃️stories🥼clusterstories](repo://p/u/semio/b/u/algorithms/fd/req/.storybook/fd/org/stories/f/Cluster.stories.tsx)\\n            - [🗃️semio🛅algorithms🛅storybook🗃️stories🥼clusterstories🔖header](repo://f/./s/) - `:1-6`\\n          - [🗃️semio🛅algorithms🛅storybook🗃️stories🥼deletestories](repo://p/u/semio/b/u/algorithms/fd/req/.storybook/fd/org/stories/f/Delete.stories.tsx)\\n            - [🗃️semio🛅algorithms🛅storybook🗃️stories🥼deletestories🔖header](repo://f/./s/) - `:1-6`\\n          - [🗃️semio🛅algorithms🛅storybook🗃️stories🥼dragstories](repo://p/u/semio/b/u/algorithms/fd/req/.storybook/fd/org/stories/f/Drag.stories.tsx)\\n            - [🗃️semio🛅algorithms🛅storybook🗃️stories🥼dragstories🔖header](repo://f/./s/) - `:1-6`\\n          - [🗃️semio🛅algorithms🛅storybook🗃️stories🥼flattenstories](repo://p/u/semio/b/u/algorithms/fd/req/.storybook/fd/org/stories/f/Flatten.stories.tsx)\\n            - [🗃️semio🛅algorithms🛅storybook🗃️stories🥼flattenstories🔖header](repo://f/./s/) - `:1-6`\\n          - [🗃️semio🛅algorithms🛅storybook🗃️stories🥼movestories](repo://p/u/semio/b/u/algorithms/fd/req/.storybook/fd/org/stories/f/Move.stories.tsx)\\n            - [🗃️semio🛅algorithms🛅storybook🗃️stories🥼movestories🔖header](repo://f/./s/) - `:1-6`\\n        - [🗃️semio🛅algorithms🛅storybook💻main](repo://p/u/semio/b/u/algorithms/fd/req/.storybook/f/main.ts)\\n          - [🗃️semio🛅algorithms🛅storybook💻main🔖header](repo://f/./s/) - `:1-6`\\n        - [🗃️semio🛅algorithms🛅storybook💻preview](repo://p/u/semio/b/u/algorithms/fd/req/.storybook/f/preview.ts)\\n          - [🗃️semio🛅algorithms🛅storybook💻preview🔖header](repo://f/./s/) - `:1-6`\\n        - [🗃️semio🛅algorithms🛅storybook💻withlanguage](repo://p/u/semio/b/u/algorithms/fd/req/.storybook/f/withLanguage.tsx)\\n          - [🗃️semio🛅algorithms🛅storybook💻withlanguage🔖header](repo://f/./s/) - `:1-6`\\n        - [🗃️semio🛅algorithms🛅storybook💻withlevel](repo://p/u/semio/b/u/algorithms/fd/req/.storybook/f/withLevel.tsx)\\n          - [🗃️semio🛅algorithms🛅storybook💻withlevel🔖header](repo://f/./s/) - `:1-6`\\n        - [🗃️semio🛅algorithms🛅storybook💻withtheme](repo://p/u/semio/b/u/algorithms/fd/req/.storybook/f/withTheme.tsx)\\n          - [🗃️semio🛅algorithms🛅storybook💻withtheme🔖header](repo://f/./s/) - `:1-6`\\n      - [🗃️semio🛅algorithms⚙️eslintconfig](repo://p/u/semio/b/u/algorithms/f/eslint.config.ts)\\n        - [🗃️semio🛅algorithms⚙️eslintconfig🔖header](repo://f/./s/) - `:1-6`\\n      - [🗃️semio🛅algorithms💻index](repo://p/u/semio/b/u/algorithms/f/index.ts)\\n        - [🗃️semio🛅algorithms💻index🔖header](repo://f/./s/) - `:1-6`\\n    - [🗃️semio🛅assets](repo://fd/req/assets)\\n      - [🗃️semio🛅assets🗃️grasshopper](repo://fd/org/grasshopper)\\n        - [🗃️semio🛅assets🗃️grasshopper💻build](repo://p/u/semio/b/a/assets/fd/org/grasshopper/f/build.py)\\n          - [🗃️semio🛅assets🗃️grasshopper💻build🔖header](repo://f/./s/) - `:2-18`\\n      - [🗃️semio🛅assets🛅logo](repo://fd/req/logo)\\n        - [🗃️semio🛅assets🛅logo💻logo](repo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts)\\n          - [🗃️semio🛅assets🛅logo💻logo🔖header](repo://f/./s/) - `:1-21`\\n      - [🗃️semio🛅assets💻icons](repo://p/u/semio/b/a/assets/f/icons.ts)\\n        - [🗃️semio🛅assets💻icons🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️semio🛅assets💻index](repo://p/u/semio/b/a/assets/f/index.ts)\\n        - [🗃️semio🛅assets💻index🔖header](repo://f/./s/) - `:1-19`\\n    - [🗃️semio🛅desktop](repo://fd/req/desktop)\\n      - [🗃️semio🛅desktop⚙️forgeconfig](repo://p/u/semio/b/u/desktop/f/forge.config.ts)\\n        - [🗃️semio🛅desktop⚙️forgeconfig🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️semio🛅desktop💻forgeenvd](repo://p/u/semio/b/u/desktop/f/forge.env.d.ts)\\n        - [🗃️semio🛅desktop💻forgeenvd🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️semio🛅desktop💻main](repo://p/u/semio/b/u/desktop/f/main.ts)\\n        - [🗃️semio🛅desktop💻main🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️semio🛅desktop⚙️postcssconfig](repo://p/u/semio/b/u/desktop/f/postcss.config.ts)\\n        - [🗃️semio🛅desktop⚙️postcssconfig🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️semio🛅desktop💻preload](repo://p/u/semio/b/u/desktop/f/preload.ts)\\n        - [🗃️semio🛅desktop💻preload🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️semio🛅desktop💻renderer](repo://p/u/semio/b/u/desktop/f/renderer.tsx)\\n        - [🗃️semio🛅desktop💻renderer🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️semio🛅desktop⚙️tailwindconfig](repo://p/u/semio/b/u/desktop/f/tailwind.config.ts)\\n        - [🗃️semio🛅desktop⚙️tailwindconfig🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️semio🛅desktop⚙️vitemainconfig](repo://p/u/semio/b/u/desktop/f/vite.main.config.ts)\\n        - [🗃️semio🛅desktop⚙️vitemainconfig🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️semio🛅desktop⚙️vitepreloadconfig](repo://p/u/semio/b/u/desktop/f/vite.preload.config.ts)\\n        - [🗃️semio🛅desktop⚙️vitepreloadconfig🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️semio🛅desktop⚙️viterendererconfig](repo://p/u/semio/b/u/desktop/f/vite.renderer.config.ts)\\n        - [🗃️semio🛅desktop⚙️viterendererconfig🔖header](repo://f/./s/) - `:1-19`\\n    - [🗃️semio🛅engine](repo://fd/req/engine)\\n      - [🗃️semio🛅engine💻build](repo://p/u/semio/b/l/engine/f/build.ts)\\n        - [🗃️semio🛅engine💻build🔖header](repo://f/./s/) - `:2-20`\\n      - [🗃️semio🛅engine💻engine](repo://p/u/semio/b/l/engine/f/engine.py)\\n        - [🗃️semio🛅engine💻engine🔖header](repo://f/./s/) - `:1-17`\\n      - [🗃️semio🛅engine🥼enginetest](repo://p/u/semio/b/l/engine/f/engine.test.py)\\n        - [🗃️semio🛅engine🥼enginetest🔖header](repo://f/./s/) - `:1-17`\\n      - [🗃️semio🛅engine💻generateschemas](repo://p/u/semio/b/l/engine/f/generate-schemas.ts)\\n        - [🗃️semio🛅engine💻generateschemas🔖header](repo://f/./s/) - `:2-20`\\n      - [🗃️semio🛅engine💻postbuild](repo://p/u/semio/b/l/engine/f/post-build.ts)\\n        - [🗃️semio🛅engine💻postbuild🔖header](repo://f/./s/) - `:2-20`\\n      - [🗃️semio🛅engine💻sqliteschema](repo://p/u/semio/b/l/engine/f/sqliteschema.ts)\\n        - [🗃️semio🛅engine💻sqliteschema🔖header](repo://f/./s/) - `:2-20`\\n      - [🗃️semio🛅engine🥼test](repo://p/u/semio/b/l/engine/f/test.ts)\\n        - [🗃️semio🛅engine🥼test🔖header](repo://f/./s/) - `:2-18`\\n    - [🗃️semio🗃️gh](repo://fd/org/gh)\\n      - [🗃️semio🗃️gh🛅semiograsshopper](repo://fd/req/Semio.Grasshopper)\\n        - [🗃️semio🗃️gh🛅semiograsshopper🗃️yak](repo://fd/org/yak)\\n          - [🗃️semio🗃️gh🛅semiograsshopper🗃️yak💻build](repo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/build.ts)\\n            - [🗃️semio🗃️gh🛅semiograsshopper🗃️yak💻build🔖header](repo://f/./s/) - `:2-20`\\n          - [🗃️semio🗃️gh🛅semiograsshopper🗃️yak💻login](repo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/login.ts)\\n            - [🗃️semio🗃️gh🛅semiograsshopper🗃️yak💻login🔖header](repo://f/./s/) - `:2-20`\\n          - [🗃️semio🗃️gh🛅semiograsshopper🗃️yak💻publish](repo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/publish.ts)\\n            - [🗃️semio🗃️gh🛅semiograsshopper🗃️yak💻publish🔖header](repo://f/./s/) - `:2-20`\\n          - [🗃️semio🗃️gh🛅semiograsshopper🗃️yak💻testpush](repo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/test-push.ts)\\n            - [🗃️semio🗃️gh🛅semiograsshopper🗃️yak💻testpush🔖header](repo://f/./s/) - `:2-20`\\n          - [🗃️semio🗃️gh🛅semiograsshopper🗃️yak💻testsearch](repo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/test-search.ts)\\n            - [🗃️semio🗃️gh🛅semiograsshopper🗃️y",
+            "stdout": "    \"text\": \"- [�️Codebase](repo://cb)\\n  - [🗃️coda](repo://fd/org/coda)\\n    - [🗃️coda🗃️blnbo](repo://fd/org/blnbo)\\n      - [🗃️coda🗃️blnbo🛅go](repo://fd/req/go)\\n        - [🗃️coda🗃️blnbo🛅go💻main](repo://p/r/coda/b/l/blnbo/fd/req/go/f/main.go)\\n          - [🗃️coda🗃️blnbo🛅go💻main🔖header](repo://f/./s/) - `:1-8`\\n        - [🗃️coda🗃️blnbo🛅go🥼maintest](repo://p/r/coda/b/l/blnbo/fd/req/go/f/main_test.go)\\n          - [🗃️coda🗃️blnbo🛅go🥼maintest🔖header](repo://f/./s/) - `:1-6`\\n    - [🗃️coda🛅desktop](repo://fd/req/desktop)\\n      - [🗃️coda🛅desktop⚙️forgeconfig](repo://p/r/coda/b/u/desktop/f/forge.config.ts)\\n        - [🗃️coda🛅desktop⚙️forgeconfig🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️coda🛅desktop💻forgeenvd](repo://p/r/coda/b/u/desktop/f/forge.env.d.ts)\\n        - [🗃️coda🛅desktop💻forgeenvd🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️coda🛅desktop💻main](repo://p/r/coda/b/u/desktop/f/main.ts)\\n        - [🗃️coda🛅desktop💻main🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️coda🛅desktop⚙️postcssconfig](repo://p/r/coda/b/u/desktop/f/postcss.config.ts)\\n        - [🗃️coda🛅desktop⚙️postcssconfig🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️coda🛅desktop💻preload](repo://p/r/coda/b/u/desktop/f/preload.ts)\\n        - [🗃️coda🛅desktop💻preload🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️coda🛅desktop💻renderer](repo://p/r/coda/b/u/desktop/f/renderer.tsx)\\n        - [🗃️coda🛅desktop💻renderer🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️coda🛅desktop⚙️tailwindconfig](repo://p/r/coda/b/u/desktop/f/tailwind.config.ts)\\n        - [🗃️coda🛅desktop⚙️tailwindconfig🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️coda🛅desktop⚙️vitemainconfig](repo://p/r/coda/b/u/desktop/f/vite.main.config.ts)\\n        - [🗃️coda🛅desktop⚙️vitemainconfig🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️coda🛅desktop⚙️vitepreloadconfig](repo://p/r/coda/b/u/desktop/f/vite.preload.config.ts)\\n        - [🗃️coda🛅desktop⚙️vitepreloadconfig🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️coda🛅desktop⚙️viterendererconfig](repo://p/r/coda/b/u/desktop/f/vite.renderer.config.ts)\\n        - [🗃️coda🛅desktop⚙️viterendererconfig🔖header](repo://f/./s/) - `:1-21`\\n    - [🗃️coda🛅engine](repo://fd/req/engine)\\n      - [🗃️coda🛅engine💻coda](repo://p/r/coda/b/l/engine/f/coda.py)\\n        - [🗃️coda🛅engine💻coda🔖header](repo://f/./s/) - `:1-17`\\n    - [🗃️coda🗃️programming](repo://fd/org/programming)\\n      - [🗃️coda🗃️programming🛅go](repo://fd/req/go)\\n        - [🗃️coda🗃️programming🛅go💻main](repo://p/r/coda/b/l/programming/fd/req/go/f/main.go)\\n          - [🗃️coda🗃️programming🛅go💻main🔖header](repo://f/./s/) - `:1-8`\\n        - [🗃️coda🗃️programming🛅go🥼maintest](repo://p/r/coda/b/l/programming/fd/req/go/f/main_test.go)\\n          - [🗃️coda🗃️programming🛅go🥼maintest🔖header](repo://f/./s/) - `:1-6`\\n  - [🧩elements](repo://fd/org/elements)\\n    - [🧩elements🛅ui](repo://fd/req/ui)\\n      - [🧩elements🛅ui🛅storybook](repo://fd/req/.storybook)\\n        - [🧩elements🛅ui🛅storybook🗃️stories](repo://fd/org/stories)\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼accordionstories](repo://f/Accordion.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼accordionstories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼actiongroupstories](repo://f/ActionGroup.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼actiongroupstories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼avatarstories](repo://f/Avatar.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼avatarstories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼bandstories](repo://f/Band.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼bandstories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼breadcrumbstories](repo://f/Breadcrumb.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼breadcrumbstories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼buttonstories](repo://f/Button.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼buttonstories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼buttongroupstories](repo://f/ButtonGroup.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼buttongroupstories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼canvasstories](repo://f/Canvas.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼canvasstories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼cardstories](repo://f/Card.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼cardstories🔖header](repo://f/./s/) - `:1-12`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼collapsiblestories](repo://f/Collapsible.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼collapsiblestories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼comboboxstories](repo://f/Combobox.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼comboboxstories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼commandstories](repo://f/Command.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼commandstories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼diagramstories](repo://f/Diagram.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼diagramstories🔖header](repo://f/./s/) - `:1-12`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼diagramnodestories](repo://f/DiagramNode.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼diagramnodestories🔖header](repo://f/./s/) - `:1-12`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼dialogstories](repo://f/Dialog.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼dialogstories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼footerstories](repo://f/Footer.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼footerstories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼hovercardstories](repo://f/HoverCard.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼hovercardstories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼iconsstories](repo://f/Icons.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼iconsstories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼inputstories](repo://f/Input.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼inputstories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼layoutstories](repo://f/Layout.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼layoutstories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼navbarstories](repo://f/Navbar.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼navbarstories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼ontologytreestories](repo://f/OntologyTree.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼ontologytreestories🔖header](repo://f/./s/) - `:1-19`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼orbstories](repo://f/Orb.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼orbstories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼pagestories](repo://f/Page.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼pagestories🔖header](repo://f/./s/) - `:1-12`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼pagenavigationstories](repo://f/PageNavigation.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼pagenavigationstories🔖header](repo://f/./s/) - `:1-12`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼panelstories](repo://f/Panel.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼panelstories🔖header](repo://f/./s/) - `:1-12`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼popoverstories](repo://f/Popover.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼popoverstories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼resizablestories](repo://f/Resizable.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼resizablestories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼ringstories](repo://f/Ring.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼ringstories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼scrollablestories](repo://f/Scrollable.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼scrollablestories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼selectstories](repo://f/Select.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼selectstories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼sliderstories](repo://f/Slider.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼sliderstories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼stepperstories](repo://f/Stepper.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼stepperstories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼stepsstories](repo://f/Steps.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼stepsstories🔖header](repo://f/./s/) - `:1-12`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼stripstories](repo://f/Strip.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼stripstories🔖header](repo://f/./s/) - `:1-12`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼tablestories](repo://f/Table.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼tablestories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼tabsstories](repo://f/Tabs.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼tabsstories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼textareastories](repo://f/Textarea.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼textareastories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼togglestories](repo://f/Toggle.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼togglestories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼togglegroupstories](repo://f/ToggleGroup.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼togglegroupstories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼toolbarstories](repo://f/Toolbar.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼toolbarstories🔖header](repo://f/./s/) - `:1-12`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼tooltipstories](repo://f/Tooltip.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼tooltipstories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼treestories](repo://f/Tree.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼treestories🔖header](repo://f/./s/) - `:1-18`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼uistories](repo://f/UI.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼uistories🔖header](repo://f/./s/) - `:1-12`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼validationtreestories](repo://f/ValidationTree.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼validationtreestories🔖header](repo://f/./s/) - `:1-19`\\n          - [🧩elements🛅ui🛅storybook🗃️stories🥼windowstories](repo://f/Window.stories.tsx)\\n            - [🧩elements🛅ui🛅storybook🗃️stories🥼windowstories🔖header](repo://f/./s/) - `:1-12`\\n        - [🧩elements🛅ui🛅storybook💻main](repo://f/main.ts)\\n          - [🧩elements🛅ui🛅storybook💻main🔖header](repo://f/./s/) - `:1-18`\\n        - [🧩elements🛅ui🛅storybook💻preview](repo://f/preview.ts)\\n          - [🧩elements🛅ui🛅storybook💻preview🔖header](repo://f/./s/) - `:1-18`\\n        - [🧩elements🛅ui🛅storybook💻vitestsetup](repo://f/vitest.setup.ts)\\n          - [🧩elements🛅ui🛅storybook💻vitestsetup🔖header](repo://f/./s/) - `:1-18`\\n        - [🧩elements🛅ui🛅storybook💻withlevel](repo://f/withLevel.tsx)\\n          - [🧩elements🛅ui🛅storybook💻withlevel🔖header](repo://f/./s/) - `:1-18`\\n        - [🧩elements🛅ui🛅storybook💻withtheme](repo://f/withTheme.tsx)\\n          - [🧩elements🛅ui🛅storybook💻withtheme🔖header](repo://f/./s/) - `:1-18`\\n      - [🧩elements🛅ui💻elements](repo://f/elements.tsx)\\n        - [🧩elements🛅ui💻elements🔖header](repo://f/./s/) - `:1-18`\\n      - [🧩elements🛅ui⚙️eslintconfig](repo://f/eslint.config.ts)\\n        - [🧩elements🛅ui⚙️eslintconfig🔖header](repo://f/./s/) - `:1-19`\\n      - [🧩elements🛅ui💻index](repo://f/index.ts)\\n        - [🧩elements🛅ui💻index🔖header](repo://f/./s/) - `:1-20`\\n      - [🧩elements🛅ui⚙️postcssconfig](repo://f/postcss.config.ts)\\n        - [🧩elements🛅ui⚙️postcssconfig🔖header](repo://f/./s/) - `:1-19`\\n      - [🧩elements🛅ui⚙️tailwindconfig](repo://f/tailwind.config.ts)\\n        - [🧩elements🛅ui⚙️tailwindconfig🔖header](repo://f/./s/) - `:1-19`\\n  - [🗃️repo](repo://fd/org/repo)\\n    - [🗃️repo🛅cli](repo://fd/req/cli)\\n      - [🗃️repo🛅cli💻main](repo://p/i/repo/b/b/cli/f/main.go)\\n        - [🗃️repo🛅cli💻main🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️repo🛅cli🥼maintest](repo://p/i/repo/b/b/cli/f/main_test.go)\\n        - [🗃️repo🛅cli🥼maintest🔖header](repo://f/./s/) - `:1-17`\\n    - [🗃️repo🛅go](repo://fd/req/go)\\n      - [🗃️repo🛅go💻emit](repo://p/i/repo/b/l/go/f/emit.go)\\n        - [🗃️repo🛅go💻emit🔖header](repo://f/./s/) - `:1-23`\\n          - [🗃️repo🛅go💻emit🔖header🔖license](repo://f/./s/) - `:6-21`\\n      - [🗃️repo🛅go💻events](repo://p/i/repo/b/l/go/f/events.go)\\n        - [🗃️repo🛅go💻events🔖header](repo://f/./s/) - `:1-23`\\n          - [🗃️repo🛅go💻events🔖header🔖license](repo://f/./s/) - `:6-21`\\n    - [🗃️repo🗃️graphql](repo://fd/org/graphql)\\n      - [🗃️repo🗃️graphql💻schema](repo://p/i/repo/b/s/graphql/f/schema.graphql)\\n        - [🗃️repo🗃️graphql💻schema🔖header](repo://f/./s/) - `:1-27`\\n          - [🗃️repo🗃️graphql💻schema🔖header🔖license](repo://f/./s/) - `:7-22`\\n          - [🗃️repo🗃️graphql💻schema🔖header🔖requirements](repo://f/./s/) - `:24-25`\\n    - [🗃️repo🛅server](repo://fd/req/server)\\n      - [🗃️repo🛅server💻main](repo://p/i/repo/b/b/server/f/main.go)\\n        - [🗃️repo🛅server💻main🔖header](repo://f/./s/) - `:1-19`\\n    - [🗃️repo🛅sqlite](repo://fd/req/sqlite)\\n      - [🗃️repo🛅sqlite💻checkpoint](repo://p/i/repo/b/s/sqlite/f/checkpoint.sql)\\n        - [🗃️repo🛅sqlite💻checkpoint🔖header](repo://f/./s/) - `:1-28`\\n          - [🗃️repo🛅sqlite💻checkpoint🔖header🔖license](repo://f/./s/) - `:7-23`\\n          - [🗃️repo🛅sqlite💻checkpoint🔖header🔖requirements](repo://f/./s/) - `:25-26`\\n      - [🗃️repo🛅sqlite💻schema](repo://p/i/repo/b/s/sqlite/f/schema.sql)\\n        - [🗃️repo🛅sqlite💻schema🔖header](repo://f/./s/) - `:1-16`\\n          - [🗃️repo🛅sqlite💻schema🔖header🔖license](repo://f/./s/) - `:4-15`\\n    - [🗃️repo🛅vscode](repo://fd/req/vscode)\\n      - [🗃️repo🛅vscode💻codegen](repo://p/i/repo/b/u/vscode/f/codegen.ts)\\n        - [🗃️repo🛅vscode💻codegen🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️repo🛅vscode⚙️eslintconfig](repo://p/i/repo/b/u/vscode/f/eslint.config.ts)\\n        - [🗃️repo🛅vscode⚙️eslintconfig🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️repo🛅vscode🥼extensiontest](repo://p/i/repo/b/u/vscode/f/extension.test.ts)\\n        - [🗃️repo🛅vscode🥼extensiontest🔖header](repo://f/./s/) - `:1-17`\\n      - [🗃️repo🛅vscode💻extension](repo://p/i/repo/b/u/vscode/f/extension.ts)\\n        - [🗃️repo🛅vscode💻extension🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️repo🛅vscode💻queries](repo://p/i/repo/b/u/vscode/f/queries.ts)\\n        - [🗃️repo🛅vscode💻queries🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️repo🛅vscode⚙️viteconfig](repo://p/i/repo/b/u/vscode/f/vite.config.ts)\\n        - [🗃️repo🛅vscode⚙️viteconfig🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️repo🛅vscode⚙️vitetestconfig](repo://p/i/repo/b/u/vscode/f/vite.test.config.ts)\\n        - [🗃️repo🛅vscode⚙️vitetestconfig🔖header](repo://f/./s/) - `:1-19`\\n  - [🗃️compose](repo://fd/org/compose)\\n    - [🗃️compose🗃️3dm](repo://fd/org/3dm)\\n      - [🗃️compose🗃️3dm🛅composerhino](repo://fd/req/Compose.Rhino)\\n        - [🗃️compose🗃️3dm🛅composerhino💻composerhino](repo://p/u/compose/b/l/3dm/fd/req/Compose.Rhino/f/Compose.Rhino.cs)\\n          - [🗃️compose🗃️3dm🛅composerhino💻composerhino🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️compose🗃️3dm🛅composerhinotests](repo://fd/req/Compose.Rhino.Tests)\\n        - [🗃️compose🗃️3dm🛅composerhinotests💻tests](repo://p/u/compose/b/l/3dm/fd/req/Compose.Rhino.Tests/f/Tests.cs)\\n          - [🗃️compose🗃️3dm🛅composerhinotests💻tests🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️compose🗃️3dm🛅ui](repo://fd/req/ui)\\n        - [🗃️compose🗃️3dm🛅ui🗃️src](repo://fd/org/src)\\n          - [🗃️compose🗃️3dm🛅ui🗃️src💻rhinopanel](repo://p/u/compose/b/l/3dm/fd/req/ui/fd/org/src/f/RhinoPanel.tsx)\\n            - [🗃️compose🗃️3dm🛅ui🗃️src💻rhinopanel🔖header](repo://f/./s/) - `:1-19`\\n          - [🗃️compose🗃️3dm🛅ui🗃️src💻bridge](repo://p/u/compose/b/l/3dm/fd/req/ui/fd/org/src/f/bridge.ts)\\n            - [🗃️compose🗃️3dm🛅ui🗃️src💻bridge🔖header](repo://f/./s/) - `:1-19`\\n          - [🗃️compose🗃️3dm🛅ui🗃️src💻index](repo://p/u/compose/b/l/3dm/fd/req/ui/fd/org/src/f/index.tsx)\\n            - [🗃️compose🗃️3dm🛅ui🗃️src💻index🔖header](repo://f/./s/) - `:1-19`\\n        - [🗃️compose🗃️3dm🛅ui⚙️viteconfig](repo://p/u/compose/b/l/3dm/fd/req/ui/f/vite.config.ts)\\n          - [🗃️compose🗃️3dm🛅ui⚙️viteconfig🔖header](repo://f/./s/) - `:1-19`\\n    - [🗃️compose🛅algorithms](repo://fd/req/algorithms)\\n      - [🗃️compose🛅algorithms🛅storybook](repo://fd/req/.storybook)\\n        - [🗃️compose🛅algorithms🛅storybook🗃️stories](repo://fd/org/stories)\\n          - [🗃️compose🛅algorithms🛅storybook🗃️stories🥼clusterstories](repo://p/u/compose/b/u/algorithms/fd/req/.storybook/fd/org/stories/f/Cluster.stories.tsx)\\n            - [🗃️compose🛅algorithms🛅storybook🗃️stories🥼clusterstories🔖header](repo://f/./s/) - `:1-6`\\n          - [🗃️compose🛅algorithms🛅storybook🗃️stories🥼deletestories](repo://p/u/compose/b/u/algorithms/fd/req/.storybook/fd/org/stories/f/Delete.stories.tsx)\\n            - [🗃️compose🛅algorithms🛅storybook🗃️stories🥼deletestories🔖header](repo://f/./s/) - `:1-6`\\n          - [🗃️compose🛅algorithms🛅storybook🗃️stories🥼dragstories](repo://p/u/compose/b/u/algorithms/fd/req/.storybook/fd/org/stories/f/Drag.stories.tsx)\\n            - [🗃️compose🛅algorithms🛅storybook🗃️stories🥼dragstories🔖header](repo://f/./s/) - `:1-6`\\n          - [🗃️compose🛅algorithms🛅storybook🗃️stories🥼flattenstories](repo://p/u/compose/b/u/algorithms/fd/req/.storybook/fd/org/stories/f/Flatten.stories.tsx)\\n            - [🗃️compose🛅algorithms🛅storybook🗃️stories🥼flattenstories🔖header](repo://f/./s/) - `:1-6`\\n          - [🗃️compose🛅algorithms🛅storybook🗃️stories🥼movestories](repo://p/u/compose/b/u/algorithms/fd/req/.storybook/fd/org/stories/f/Move.stories.tsx)\\n            - [🗃️compose🛅algorithms🛅storybook🗃️stories🥼movestories🔖header](repo://f/./s/) - `:1-6`\\n        - [🗃️compose🛅algorithms🛅storybook💻main](repo://p/u/compose/b/u/algorithms/fd/req/.storybook/f/main.ts)\\n          - [🗃️compose🛅algorithms🛅storybook💻main🔖header](repo://f/./s/) - `:1-6`\\n        - [🗃️compose🛅algorithms🛅storybook💻preview](repo://p/u/compose/b/u/algorithms/fd/req/.storybook/f/preview.ts)\\n          - [🗃️compose🛅algorithms🛅storybook💻preview🔖header](repo://f/./s/) - `:1-6`\\n        - [🗃️compose🛅algorithms🛅storybook💻withlanguage](repo://p/u/compose/b/u/algorithms/fd/req/.storybook/f/withLanguage.tsx)\\n          - [🗃️compose🛅algorithms🛅storybook💻withlanguage🔖header](repo://f/./s/) - `:1-6`\\n        - [🗃️compose🛅algorithms🛅storybook💻withlevel](repo://p/u/compose/b/u/algorithms/fd/req/.storybook/f/withLevel.tsx)\\n          - [🗃️compose🛅algorithms🛅storybook💻withlevel🔖header](repo://f/./s/) - `:1-6`\\n        - [🗃️compose🛅algorithms🛅storybook💻withtheme](repo://p/u/compose/b/u/algorithms/fd/req/.storybook/f/withTheme.tsx)\\n          - [🗃️compose🛅algorithms🛅storybook💻withtheme🔖header](repo://f/./s/) - `:1-6`\\n      - [🗃️compose🛅algorithms⚙️eslintconfig](repo://p/u/compose/b/u/algorithms/f/eslint.config.ts)\\n        - [🗃️compose🛅algorithms⚙️eslintconfig🔖header](repo://f/./s/) - `:1-6`\\n      - [🗃️compose🛅algorithms💻index](repo://p/u/compose/b/u/algorithms/f/index.ts)\\n        - [🗃️compose🛅algorithms💻index🔖header](repo://f/./s/) - `:1-6`\\n    - [🗃️compose🛅assets](repo://fd/req/assets)\\n      - [🗃️compose🛅assets🗃️grasshopper](repo://fd/org/grasshopper)\\n        - [🗃️compose🛅assets🗃️grasshopper💻build](repo://p/u/compose/b/a/assets/fd/org/grasshopper/f/build.py)\\n          - [🗃️compose🛅assets🗃️grasshopper💻build🔖header](repo://f/./s/) - `:2-18`\\n      - [🗃️compose🛅assets🛅logo](repo://fd/req/logo)\\n        - [🗃️compose🛅assets🛅logo💻logo](repo://p/u/compose/b/a/assets/fd/req/logo/f/logo.ts)\\n          - [🗃️compose🛅assets🛅logo💻logo🔖header](repo://f/./s/) - `:1-21`\\n      - [🗃️compose🛅assets💻icons](repo://p/u/compose/b/a/assets/f/icons.ts)\\n        - [🗃️compose🛅assets💻icons🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️compose🛅assets💻index](repo://p/u/compose/b/a/assets/f/index.ts)\\n        - [🗃️compose🛅assets💻index🔖header](repo://f/./s/) - `:1-19`\\n    - [🗃️compose🛅desktop](repo://fd/req/desktop)\\n      - [🗃️compose🛅desktop⚙️forgeconfig](repo://p/u/compose/b/u/desktop/f/forge.config.ts)\\n        - [🗃️compose🛅desktop⚙️forgeconfig🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️compose🛅desktop💻forgeenvd](repo://p/u/compose/b/u/desktop/f/forge.env.d.ts)\\n        - [🗃️compose🛅desktop💻forgeenvd🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️compose🛅desktop💻main](repo://p/u/compose/b/u/desktop/f/main.ts)\\n        - [🗃️compose🛅desktop💻main🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️compose🛅desktop⚙️postcssconfig](repo://p/u/compose/b/u/desktop/f/postcss.config.ts)\\n        - [🗃️compose🛅desktop⚙️postcssconfig🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️compose🛅desktop💻preload](repo://p/u/compose/b/u/desktop/f/preload.ts)\\n        - [🗃️compose🛅desktop💻preload🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️compose🛅desktop💻renderer](repo://p/u/compose/b/u/desktop/f/renderer.tsx)\\n        - [🗃️compose🛅desktop💻renderer🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️compose🛅desktop⚙️tailwindconfig](repo://p/u/compose/b/u/desktop/f/tailwind.config.ts)\\n        - [🗃️compose🛅desktop⚙️tailwindconfig🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️compose🛅desktop⚙️vitemainconfig](repo://p/u/compose/b/u/desktop/f/vite.main.config.ts)\\n        - [🗃️compose🛅desktop⚙️vitemainconfig🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️compose🛅desktop⚙️vitepreloadconfig](repo://p/u/compose/b/u/desktop/f/vite.preload.config.ts)\\n        - [🗃️compose🛅desktop⚙️vitepreloadconfig🔖header](repo://f/./s/) - `:1-19`\\n      - [🗃️compose🛅desktop⚙️viterendererconfig](repo://p/u/compose/b/u/desktop/f/vite.renderer.config.ts)\\n        - [🗃️compose🛅desktop⚙️viterendererconfig🔖header](repo://f/./s/) - `:1-19`\\n    - [🗃️compose🛅engine](repo://fd/req/engine)\\n      - [🗃️compose🛅engine💻build](repo://p/u/compose/b/l/engine/f/build.ts)\\n        - [🗃️compose🛅engine💻build🔖header](repo://f/./s/) - `:2-20`\\n      - [🗃️compose🛅engine💻engine](repo://p/u/compose/b/l/engine/f/engine.py)\\n        - [🗃️compose🛅engine💻engine🔖header](repo://f/./s/) - `:1-17`\\n      - [🗃️compose🛅engine🥼enginetest](repo://p/u/compose/b/l/engine/f/engine.test.py)\\n        - [🗃️compose🛅engine🥼enginetest🔖header](repo://f/./s/) - `:1-17`\\n      - [🗃️compose🛅engine💻generateschemas](repo://p/u/compose/b/l/engine/f/generate-schemas.ts)\\n        - [🗃️compose🛅engine💻generateschemas🔖header](repo://f/./s/) - `:2-20`\\n      - [🗃️compose🛅engine💻postbuild](repo://p/u/compose/b/l/engine/f/post-build.ts)\\n        - [🗃️compose🛅engine💻postbuild🔖header](repo://f/./s/) - `:2-20`\\n      - [🗃️compose🛅engine💻sqliteschema](repo://p/u/compose/b/l/engine/f/sqliteschema.ts)\\n        - [🗃️compose🛅engine💻sqliteschema🔖header](repo://f/./s/) - `:2-20`\\n      - [🗃️compose🛅engine🥼test](repo://p/u/compose/b/l/engine/f/test.ts)\\n        - [🗃️compose🛅engine🥼test🔖header](repo://f/./s/) - `:2-18`\\n    - [🗃️compose🗃️gh](repo://fd/org/gh)\\n      - [🗃️compose🗃️gh🛅composegrasshopper](repo://fd/req/Compose.Grasshopper)\\n        - [🗃️compose🗃️gh🛅composegrasshopper🗃️yak](repo://fd/org/yak)\\n          - [🗃️compose🗃️gh🛅composegrasshopper🗃️yak💻build](repo://p/u/compose/b/l/gh/fd/req/Compose.Grasshopper/fd/org/yak/f/build.ts)\\n            - [🗃️compose🗃️gh🛅composegrasshopper🗃️yak💻build🔖header](repo://f/./s/) - `:2-20`\\n          - [🗃️compose🗃️gh🛅composegrasshopper🗃️yak💻login](repo://p/u/compose/b/l/gh/fd/req/Compose.Grasshopper/fd/org/yak/f/login.ts)\\n            - [🗃️compose🗃️gh🛅composegrasshopper🗃️yak💻login🔖header](repo://f/./s/) - `:2-20`\\n          - [🗃️compose🗃️gh🛅composegrasshopper🗃️yak💻publish](repo://p/u/compose/b/l/gh/fd/req/Compose.Grasshopper/fd/org/yak/f/publish.ts)\\n            - [🗃️compose🗃️gh🛅composegrasshopper🗃️yak💻publish🔖header](repo://f/./s/) - `:2-20`\\n          - [🗃️compose🗃️gh🛅composegrasshopper🗃️yak💻testpush](repo://p/u/compose/b/l/gh/fd/req/Compose.Grasshopper/fd/org/yak/f/test-push.ts)\\n            - [🗃️compose🗃️gh🛅composegrasshopper🗃️yak💻testpush🔖header](repo://f/./s/) - `:2-20`\\n          - [🗃️compose🗃️gh🛅composegrasshopper🗃️yak💻testsearch](repo://p/u/compose/b/l/gh/fd/req/Compose.Grasshopper/fd/org/yak/f/test-search.ts)\\n            - [🗃️compose🗃️gh🛅composegrasshopper🗃️y",
             "stderr": "",
             "interrupted": false,
             "isImage": false,
             "noOutputExpected": false,
-            "persistedOutputPath": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189/tool-results/bmo6r3eiz.txt",
+            "persistedOutputPath": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189/tool-results/bmo6r3eiz.txt",
             "persistedOutputSize": 86234
           },
           "tool_use_id": "toolu_015Yfq6sUL52PwoaDDcyPfag"
@@ -517,18 +517,18 @@
         "kind": "agent.file.read.ended",
         "second": "2026-03-20T19:23:20Z",
         "session": "0feb744b-4b73-4278-81d6-325e624d8189",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
       },
       "native": {
         "event": {
           "session_id": "0feb744b-4b73-4278-81d6-325e624d8189",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PostToolUse",
           "tool_name": "Bash",
           "tool_input": {
-            "command": "grep -r \"goal\" /home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189/tool-results/mcp-repo-search-1774034582778.txt | grep -i \"slug\\|id\\|GOAL\" | head -20",
+            "command": "grep -r \"goal\" /home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189/tool-results/mcp-repo-search-1774034582778.txt | grep -i \"slug\\|id\\|GOAL\" | head -20",
             "description": "Find goal IDs from search results"
           },
           "tool_response": {
@@ -537,7 +537,7 @@
             "interrupted": false,
             "isImage": false,
             "noOutputExpected": false,
-            "persistedOutputPath": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189/tool-results/b7p8wdyep.txt",
+            "persistedOutputPath": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189/tool-results/b7p8wdyep.txt",
             "persistedOutputSize": 323363
           },
           "tool_use_id": "toolu_01Uhgc4NucxjGb5y9WMnb7qo"
@@ -553,18 +553,18 @@
         "kind": "agent.file.read.starting",
         "second": "2026-03-20T19:23:24Z",
         "session": "0feb744b-4b73-4278-81d6-325e624d8189",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
       },
       "native": {
         "event": {
           "session_id": "0feb744b-4b73-4278-81d6-325e624d8189",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PreToolUse",
           "tool_name": "Bash",
           "tool_input": {
-            "command": "grep -i \"goal\" /home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189/tool-results/mcp-repo-search-1774034582778.txt | grep -oP '\"🎯[^\"]*\"' | head -20",
+            "command": "grep -i \"goal\" /home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189/tool-results/mcp-repo-search-1774034582778.txt | grep -oP '\"🎯[^\"]*\"' | head -20",
             "description": "Extract goal entries"
           },
           "tool_use_id": "toolu_01Bk4JwnBNcQbvWtGjcPKjou"
@@ -580,18 +580,18 @@
         "kind": "agent.file.read.ended",
         "second": "2026-03-20T19:23:24Z",
         "session": "0feb744b-4b73-4278-81d6-325e624d8189",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
       },
       "native": {
         "event": {
           "session_id": "0feb744b-4b73-4278-81d6-325e624d8189",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PostToolUse",
           "tool_name": "Bash",
           "tool_input": {
-            "command": "grep -i \"goal\" /home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189/tool-results/mcp-repo-search-1774034582778.txt | grep -oP '\"🎯[^\"]*\"' | head -20",
+            "command": "grep -i \"goal\" /home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189/tool-results/mcp-repo-search-1774034582778.txt | grep -oP '\"🎯[^\"]*\"' | head -20",
             "description": "Extract goal entries"
           },
           "tool_response": {
@@ -614,12 +614,12 @@
         "kind": "agent.tool.starting",
         "second": "2026-03-20T19:23:24Z",
         "session": "0feb744b-4b73-4278-81d6-325e624d8189",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
       },
       "native": {
         "event": {
           "session_id": "0feb744b-4b73-4278-81d6-325e624d8189",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PreToolUse",
@@ -640,12 +640,12 @@
         "kind": "agent.tool.ended",
         "second": "2026-03-20T19:23:25Z",
         "session": "0feb744b-4b73-4278-81d6-325e624d8189",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
       },
       "native": {
         "event": {
           "session_id": "0feb744b-4b73-4278-81d6-325e624d8189",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PostToolUse",
@@ -714,13 +714,13 @@
               "/workspaces/semio/elements/ui/.storybook/stories/UI.stories.tsx",
               "/workspaces/semio/elements/ui/.storybook/stories/Tree.stories.tsx",
               "/workspaces/semio/elements/ui/.storybook/stories/Window.stories.tsx",
-              "/workspaces/semio/semio/ui/.storybook/stories/Vec.stories.tsx",
-              "/workspaces/semio/semio/ui/.storybook/stories/Diagram.stories.tsx",
-              "/workspaces/semio/semio/algorithms/.storybook/stories/Flatten.stories.tsx",
-              "/workspaces/semio/semio/algorithms/.storybook/stories/Cluster.stories.tsx",
-              "/workspaces/semio/semio/algorithms/.storybook/stories/Drag.stories.tsx",
-              "/workspaces/semio/semio/algorithms/.storybook/stories/Move.stories.tsx",
-              "/workspaces/semio/semio/algorithms/.storybook/stories/Delete.stories.tsx"
+              "/workspaces/semio/compose/ui/.storybook/stories/Vec.stories.tsx",
+              "/workspaces/semio/compose/ui/.storybook/stories/Diagram.stories.tsx",
+              "/workspaces/semio/compose/algorithms/.storybook/stories/Flatten.stories.tsx",
+              "/workspaces/semio/compose/algorithms/.storybook/stories/Cluster.stories.tsx",
+              "/workspaces/semio/compose/algorithms/.storybook/stories/Drag.stories.tsx",
+              "/workspaces/semio/compose/algorithms/.storybook/stories/Move.stories.tsx",
+              "/workspaces/semio/compose/algorithms/.storybook/stories/Delete.stories.tsx"
             ],
             "durationMs": 695,
             "numFiles": 66,
@@ -739,12 +739,12 @@
         "kind": "agent.file.read.starting",
         "second": "2026-03-20T19:23:29Z",
         "session": "0feb744b-4b73-4278-81d6-325e624d8189",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
       },
       "native": {
         "event": {
           "session_id": "0feb744b-4b73-4278-81d6-325e624d8189",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PreToolUse",
@@ -766,12 +766,12 @@
         "kind": "agent.file.read.ended",
         "second": "2026-03-20T19:23:30Z",
         "session": "0feb744b-4b73-4278-81d6-325e624d8189",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
       },
       "native": {
         "event": {
           "session_id": "0feb744b-4b73-4278-81d6-325e624d8189",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PostToolUse",
@@ -800,18 +800,18 @@
         "kind": "agent.file.read.starting",
         "second": "2026-03-20T19:23:30Z",
         "session": "0feb744b-4b73-4278-81d6-325e624d8189",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
       },
       "native": {
         "event": {
           "session_id": "0feb744b-4b73-4278-81d6-325e624d8189",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PreToolUse",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/workspaces/semio/semio/algorithms/.storybook/stories/Flatten.stories.tsx"
+            "file_path": "/workspaces/semio/compose/algorithms/.storybook/stories/Flatten.stories.tsx"
           },
           "tool_use_id": "toolu_01N5X3Km9vAbs6gmBaWGKk3i"
         }
@@ -826,24 +826,24 @@
         "kind": "agent.file.read.ended",
         "second": "2026-03-20T19:23:31Z",
         "session": "0feb744b-4b73-4278-81d6-325e624d8189",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
       },
       "native": {
         "event": {
           "session_id": "0feb744b-4b73-4278-81d6-325e624d8189",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PostToolUse",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/workspaces/semio/semio/algorithms/.storybook/stories/Flatten.stories.tsx"
+            "file_path": "/workspaces/semio/compose/algorithms/.storybook/stories/Flatten.stories.tsx"
           },
           "tool_response": {
             "type": "text",
             "file": {
-              "filePath": "/workspaces/semio/semio/algorithms/.storybook/stories/Flatten.stories.tsx",
-              "content": "// #region 🔖Header\n// 💻 semio/algorithms/.storybook/stories/Flatten.stories.tsx\n// Specs: IPO (Input/Process/Output) story with GoldenLayout for Design Flatten.\n// Summary: Shows base design, flatten design diff, and flattened output design.\n// 2026 Ueli Saluz \u003cueli@semio-tech.com\u003e\n// #endregion 🔖Header\n\nimport type { Meta, StoryObj } from \"@storybook/react\";\nimport * as React from \"react\";\n\nimport { Diagram, UI, type BreadcrumbItemData, Section, Card } from \"@semio/ui\";\nimport { applyDesignDiff, findDesignInKit, flattenDesign, type Design, type DesignDiff, type Kit } from \"@semio/js\";\nimport { AlgorithmLanguage, useAlgorithmLanguage } from \"../withLanguage\";\n\nimport metabolismKit from \"../../../assets/semio/kit_metabolism.json\";\n\nconst nakaginCapsuleTowerDesignGuid = \"9a890dd4-0a9c-48ac-920a-9e62666465ef\";\n\ntype IpoState = {\n  language: AlgorithmLanguage;\n  kit: Kit;\n  baseDesign: Design;\n  designDiff?: DesignDiff;\n  outputKit: Kit;\n  outputDesign: Design;\n  error?: string;\n};\n\nconst IpoContext = React.createContext\u003cIpoState | null\u003e(null);\n\nfunction useIpoState(): IpoState {\n  const ctx = React.useContext(IpoContext);\n  if (!ctx) throw new Error(\"Flatten IPO stories must be wrapped in IpoContext\");\n  return ctx;\n}\n\nfunction createIpoWindowConfig(windowIds: {\n  description: string;\n  requirements: string;\n  inputs: string;\n  diffs: string;\n  outputs: string;\n  descriptionTitle: string;\n  requirementsTitle: string;\n  inputsTitle: string;\n  diffsTitle: string;\n  outputsTitle: string;\n}): { windowConfig: any; defaultLayout: any } {\n  const defaultLayout = {\n    root: {\n      type: \"column\",\n      content: [\n        {\n          type: \"row\",\n          size: 25,\n          content: [\n            {\n              type: \"stack\",\n              size: 33.33,\n              content: [{ type: \"component\", componentName: windowIds.description, title: windowIds.descriptionTitle, componentState: {} }],\n            },\n            {\n              type: \"stack\",\n              size: 66.67,\n              content: [{ type: \"component\", componentName: windowIds.requirements, title: windowIds.requirementsTitle, componentState: {} }],\n            },\n          ],\n        },\n        {\n          type: \"row\",\n          size: 75,\n          content: [\n            {\n              type: \"stack\",\n              size: 33.33,\n              content: [{ type: \"component\", componentName: windowIds.inputs, title: windowIds.inputsTitle, componentState: {} }],\n            },\n            {\n              type: \"stack\",\n              size: 33.33,\n              content: [{ type: \"component\", componentName: windowIds.diffs, title: windowIds.diffsTitle, componentState: {} }],\n            },\n            {\n              type: \"stack\",\n              size: 33.33,\n              content: [{ type: \"component\", componentName: windowIds.outputs, title: windowIds.outputsTitle, componentState: {} }],\n            },\n          ],\n        },\n      ],\n    },\n  };\n\n  return { windowConfig: undefined, defaultLayout };\n}\n\nconst meta = {\n  title: \"semio-algorithms/Design/Flatten\",\n  parameters: {\n    layout: \"padded\",\n  },\n  tags: [\"autodocs\"],\n} satisfies Meta;\n\nexport default meta;\n\ntype Story = StoryObj\u003ctypeof meta\u003e;\n\nconst IPO_BREADCRUMB: BreadcrumbItemData[] = [{ content: \"Design\" }, { content: \"Flatten\" }];\n\nconst descriptionText = \"Flatten turns a nested Design hierarchy into a flat representation, making connections and piece planes easier to reason about.\";\n\nconst requirementsText = [\n  \"Input: Design (Nakagin Capsule Tower)\",\n  \"Process: flatten nested Design pieces and update planes/centers\",\n  \"Output: flattened Design\",\n  \"Language: selected implementation language (calculation uses available in-browser adapter)\",\n];\n\nfunction DescriptionPane() {\n  const { language } = useIpoState();\n  return (\n    \u003cdiv className=\"h-full flex flex-col\"\u003e\n      \u003cSection title=\"Description\"\u003e\n        \u003cdiv className=\"space-y-2\"\u003e\n          \u003cp className=\"text-sm text-muted-foreground\"\u003e{descriptionText}\u003c/p\u003e\n          \u003cCard className=\"p-2\"\u003e\n            \u003cdiv className=\"text-xs text-muted-foreground\"\u003eImplementation\u003c/div\u003e\n            \u003cdiv className=\"font-mono text-sm\"\u003e{language}\u003c/div\u003e\n          \u003c/Card\u003e\n        \u003c/div\u003e\n      \u003c/Section\u003e\n    \u003c/div\u003e\n  );\n}\n\nfunction RequirementsPane() {\n  return (\n    \u003cdiv className=\"h-full flex flex-col\"\u003e\n      \u003cSection title=\"Requirements\"\u003e\n        \u003cdiv className=\"space-y-2 text-sm\"\u003e\n          {requirementsText.map((line, idx) =\u003e (\n            \u003cdiv key={idx} className=\"font-mono text-xs\"\u003e\n              - {line}\n            \u003c/div\u003e\n          ))}\n        \u003c/div\u003e\n      \u003c/Section\u003e\n    \u003c/div\u003e\n  );\n}\n\nfunction InputsPane() {\n  const { kit, baseDesign } = useIpoState();\n  return (\n    \u003cdiv className=\"h-full flex flex-col gap-2\"\u003e\n      \u003cSection title=\"Input\"\u003e\n        \u003cdiv className=\"h-96 w-full rounded-md border border-element bg-card overflow-hidden\"\u003e\n          \u003cDiagram kit={kit} designGuid={baseDesign.guid} selectionEnabled={false} diffEnabled={false} /\u003e\n        \u003c/div\u003e\n      \u003c/Section\u003e\n    \u003c/div\u003e\n  );\n}\n\nfunction DiffsPane() {\n  const { kit, baseDesign, designDiff, error } = useIpoState();\n  return (\n    \u003cdiv className=\"h-full flex flex-col gap-2\"\u003e\n      \u003cSection title=\"Diff\"\u003e\n        {error ? (\n          \u003cdiv className=\"p-2 text-sm text-destructive font-mono\"\u003e{error}\u003c/div\u003e\n        ) : (\n          \u003cdiv className=\"h-96 w-full rounded-md border border-element bg-card overflow-hidden\"\u003e\n            \u003cDiagram kit={kit} designGuid={baseDesign.guid} designDiff={designDiff} diffEnabled={true} selectionEnabled={false} /\u003e\n          \u003c/div\u003e\n        )}\n      \u003c/Section\u003e\n    \u003c/div\u003e\n  );\n}\n\nfunction OutputsPane() {\n  const { outputKit, outputDesign } = useIpoState();\n  return (\n    \u003cdiv className=\"h-full flex flex-col gap-2\"\u003e\n      \u003cSection title=\"Output\"\u003e\n        \u003cdiv className=\"h-96 w-full rounded-md border border-element bg-card overflow-hidden\"\u003e\n          \u003cDiagram kit={outputKit} designGuid={outputDesign.guid} diffEnabled={false} selectionEnabled={false} /\u003e\n        \u003c/div\u003e\n      \u003c/Section\u003e\n    \u003c/div\u003e\n  );\n}\n\nconst defaultWindowIds = {\n  description: \"ipo-flatten-description\",\n  requirements: \"ipo-flatten-requirements\",\n  inputs: \"ipo-flatten-inputs\",\n  diffs: \"ipo-flatten-diffs\",\n  outputs: \"ipo-flatten-outputs\",\n  descriptionTitle: \"Description\",\n  requirementsTitle: \"Requirements\",\n  inputsTitle: \"Inputs\",\n  diffsTitle: \"Diffs\",\n  outputsTitle: \"Outputs\",\n};\n\nfunction IpoFrame() {\n  const language = useAlgorithmLanguage();\n  const kit = metabolismKit as unknown as Kit;\n\n  const baseDesign = React.useMemo(() =\u003e {\n    return findDesignInKit(kit, nakaginCapsuleTowerDesignGuid) as Design;\n  }, [kit]);\n\n  const [outputKit, outputDesign, designDiff, error] = React.useMemo(() =\u003e {\n    try {\n      const change =\n        language === AlgorithmLanguage.RUST\n          ? flattenDesign(kit, nakaginCapsuleTowerDesignGuid)\n          : language === AlgorithmLanguage.PYTHON\n            ? flattenDesign(kit, nakaginCapsuleTowerDesignGuid)\n            : language === AlgorithmLanguage.GO\n              ? flattenDesign(kit, nakaginCapsuleTowerDesignGuid)\n              : flattenDesign(kit, nakaginCapsuleTowerDesignGuid);\n\n      const diff = change.forward as DesignDiff;\n      const outDesign = applyDesignDiff(baseDesign, diff);\n      const nextKit: Kit = {\n        ...kit,\n        designs: (kit.designs ?? []).map((d) =\u003e (d.guid === outDesign.guid ? outDesign : d)),\n      };\n      return [nextKit, outDesign, diff, undefined] as const;\n    } catch (e: any) {\n      return [kit, baseDesign, undefined, String(e?.message ?? e)] as const;\n    }\n  }, [baseDesign, kit, language]);\n\n  const windowConfig: any = React.useMemo(() =\u003e {\n    const { description, requirements, inputs, diffs, outputs } = defaultWindowIds;\n    return {\n      windowKinds: [\n        { id: description, label: \"Description\", component: DescriptionPane },\n        { id: requirements, label: \"Requirements\", component: RequirementsPane },\n        { id: inputs, label: \"Inputs\", component: InputsPane },\n        { id: diffs, label: \"Diffs\", component: DiffsPane },\n        { id: outputs, label: \"Outputs\", component: OutputsPane },\n      ],\n      defaultLayout: createIpoWindowConfig({\n        ...defaultWindowIds,\n      }).defaultLayout,\n    };\n  }, []);\n\n  const state: IpoState = {\n    language,\n    kit,\n    baseDesign,\n    designDiff,\n    outputKit,\n    outputDesign,\n    error,\n  };\n\n  const apps = [\n    {\n      id: \"ipo-flatten\",\n      label: \"Flatten\",\n      windowConfig,\n    },\n  ] as any;\n\n  return (\n    \u003cIpoContext.Provider value={state}\u003e\n      \u003cdiv className=\"h-[720px] w-full\"\u003e\n        \u003cUI apps={apps} breadcrumbItems={IPO_BREADCRUMB} defaultAppId={apps[0]!.id} /\u003e\n      \u003c/div\u003e\n    \u003c/IpoContext.Provider\u003e\n  );\n}\n\nexport const Default: Story = {\n  render: () =\u003e \u003cIpoFrame /\u003e,\n};\n",
+              "filePath": "/workspaces/semio/compose/algorithms/.storybook/stories/Flatten.stories.tsx",
+              "content": "// #region 🔖Header\n// 💻 compose/algorithms/.storybook/stories/Flatten.stories.tsx\n// Specs: IPO (Input/Process/Output) story with GoldenLayout for Design Flatten.\n// Summary: Shows base design, flatten design diff, and flattened output design.\n// 2026 Ueli Saluz \u003cueli@semio-tech.com\u003e\n// #endregion 🔖Header\n\nimport type { Meta, StoryObj } from \"@storybook/react\";\nimport * as React from \"react\";\n\nimport { Diagram, UI, type BreadcrumbItemData, Section, Card } from \"@compose/ui\";\nimport { applyDesignDiff, findDesignInKit, flattenDesign, type Design, type DesignDiff, type Kit } from \"@compose/js\";\nimport { AlgorithmLanguage, useAlgorithmLanguage } from \"../withLanguage\";\n\nimport metabolismKit from \"../../../assets/compose/kit_metabolism.json\";\n\nconst nakaginCapsuleTowerDesignGuid = \"9a890dd4-0a9c-48ac-920a-9e62666465ef\";\n\ntype IpoState = {\n  language: AlgorithmLanguage;\n  kit: Kit;\n  baseDesign: Design;\n  designDiff?: DesignDiff;\n  outputKit: Kit;\n  outputDesign: Design;\n  error?: string;\n};\n\nconst IpoContext = React.createContext\u003cIpoState | null\u003e(null);\n\nfunction useIpoState(): IpoState {\n  const ctx = React.useContext(IpoContext);\n  if (!ctx) throw new Error(\"Flatten IPO stories must be wrapped in IpoContext\");\n  return ctx;\n}\n\nfunction createIpoWindowConfig(windowIds: {\n  description: string;\n  requirements: string;\n  inputs: string;\n  diffs: string;\n  outputs: string;\n  descriptionTitle: string;\n  requirementsTitle: string;\n  inputsTitle: string;\n  diffsTitle: string;\n  outputsTitle: string;\n}): { windowConfig: any; defaultLayout: any } {\n  const defaultLayout = {\n    root: {\n      type: \"column\",\n      content: [\n        {\n          type: \"row\",\n          size: 25,\n          content: [\n            {\n              type: \"stack\",\n              size: 33.33,\n              content: [{ type: \"component\", componentName: windowIds.description, title: windowIds.descriptionTitle, componentState: {} }],\n            },\n            {\n              type: \"stack\",\n              size: 66.67,\n              content: [{ type: \"component\", componentName: windowIds.requirements, title: windowIds.requirementsTitle, componentState: {} }],\n            },\n          ],\n        },\n        {\n          type: \"row\",\n          size: 75,\n          content: [\n            {\n              type: \"stack\",\n              size: 33.33,\n              content: [{ type: \"component\", componentName: windowIds.inputs, title: windowIds.inputsTitle, componentState: {} }],\n            },\n            {\n              type: \"stack\",\n              size: 33.33,\n              content: [{ type: \"component\", componentName: windowIds.diffs, title: windowIds.diffsTitle, componentState: {} }],\n            },\n            {\n              type: \"stack\",\n              size: 33.33,\n              content: [{ type: \"component\", componentName: windowIds.outputs, title: windowIds.outputsTitle, componentState: {} }],\n            },\n          ],\n        },\n      ],\n    },\n  };\n\n  return { windowConfig: undefined, defaultLayout };\n}\n\nconst meta = {\n  title: \"compose-algorithms/Design/Flatten\",\n  parameters: {\n    layout: \"padded\",\n  },\n  tags: [\"autodocs\"],\n} satisfies Meta;\n\nexport default meta;\n\ntype Story = StoryObj\u003ctypeof meta\u003e;\n\nconst IPO_BREADCRUMB: BreadcrumbItemData[] = [{ content: \"Design\" }, { content: \"Flatten\" }];\n\nconst descriptionText = \"Flatten turns a nested Design hierarchy into a flat representation, making connections and piece planes easier to reason about.\";\n\nconst requirementsText = [\n  \"Input: Design (Nakagin Capsule Tower)\",\n  \"Process: flatten nested Design pieces and update planes/centers\",\n  \"Output: flattened Design\",\n  \"Language: selected implementation language (calculation uses available in-browser adapter)\",\n];\n\nfunction DescriptionPane() {\n  const { language } = useIpoState();\n  return (\n    \u003cdiv className=\"h-full flex flex-col\"\u003e\n      \u003cSection title=\"Description\"\u003e\n        \u003cdiv className=\"space-y-2\"\u003e\n          \u003cp className=\"text-sm text-muted-foreground\"\u003e{descriptionText}\u003c/p\u003e\n          \u003cCard className=\"p-2\"\u003e\n            \u003cdiv className=\"text-xs text-muted-foreground\"\u003eImplementation\u003c/div\u003e\n            \u003cdiv className=\"font-mono text-sm\"\u003e{language}\u003c/div\u003e\n          \u003c/Card\u003e\n        \u003c/div\u003e\n      \u003c/Section\u003e\n    \u003c/div\u003e\n  );\n}\n\nfunction RequirementsPane() {\n  return (\n    \u003cdiv className=\"h-full flex flex-col\"\u003e\n      \u003cSection title=\"Requirements\"\u003e\n        \u003cdiv className=\"space-y-2 text-sm\"\u003e\n          {requirementsText.map((line, idx) =\u003e (\n            \u003cdiv key={idx} className=\"font-mono text-xs\"\u003e\n              - {line}\n            \u003c/div\u003e\n          ))}\n        \u003c/div\u003e\n      \u003c/Section\u003e\n    \u003c/div\u003e\n  );\n}\n\nfunction InputsPane() {\n  const { kit, baseDesign } = useIpoState();\n  return (\n    \u003cdiv className=\"h-full flex flex-col gap-2\"\u003e\n      \u003cSection title=\"Input\"\u003e\n        \u003cdiv className=\"h-96 w-full rounded-md border border-element bg-card overflow-hidden\"\u003e\n          \u003cDiagram kit={kit} designGuid={baseDesign.guid} selectionEnabled={false} diffEnabled={false} /\u003e\n        \u003c/div\u003e\n      \u003c/Section\u003e\n    \u003c/div\u003e\n  );\n}\n\nfunction DiffsPane() {\n  const { kit, baseDesign, designDiff, error } = useIpoState();\n  return (\n    \u003cdiv className=\"h-full flex flex-col gap-2\"\u003e\n      \u003cSection title=\"Diff\"\u003e\n        {error ? (\n          \u003cdiv className=\"p-2 text-sm text-destructive font-mono\"\u003e{error}\u003c/div\u003e\n        ) : (\n          \u003cdiv className=\"h-96 w-full rounded-md border border-element bg-card overflow-hidden\"\u003e\n            \u003cDiagram kit={kit} designGuid={baseDesign.guid} designDiff={designDiff} diffEnabled={true} selectionEnabled={false} /\u003e\n          \u003c/div\u003e\n        )}\n      \u003c/Section\u003e\n    \u003c/div\u003e\n  );\n}\n\nfunction OutputsPane() {\n  const { outputKit, outputDesign } = useIpoState();\n  return (\n    \u003cdiv className=\"h-full flex flex-col gap-2\"\u003e\n      \u003cSection title=\"Output\"\u003e\n        \u003cdiv className=\"h-96 w-full rounded-md border border-element bg-card overflow-hidden\"\u003e\n          \u003cDiagram kit={outputKit} designGuid={outputDesign.guid} diffEnabled={false} selectionEnabled={false} /\u003e\n        \u003c/div\u003e\n      \u003c/Section\u003e\n    \u003c/div\u003e\n  );\n}\n\nconst defaultWindowIds = {\n  description: \"ipo-flatten-description\",\n  requirements: \"ipo-flatten-requirements\",\n  inputs: \"ipo-flatten-inputs\",\n  diffs: \"ipo-flatten-diffs\",\n  outputs: \"ipo-flatten-outputs\",\n  descriptionTitle: \"Description\",\n  requirementsTitle: \"Requirements\",\n  inputsTitle: \"Inputs\",\n  diffsTitle: \"Diffs\",\n  outputsTitle: \"Outputs\",\n};\n\nfunction IpoFrame() {\n  const language = useAlgorithmLanguage();\n  const kit = metabolismKit as unknown as Kit;\n\n  const baseDesign = React.useMemo(() =\u003e {\n    return findDesignInKit(kit, nakaginCapsuleTowerDesignGuid) as Design;\n  }, [kit]);\n\n  const [outputKit, outputDesign, designDiff, error] = React.useMemo(() =\u003e {\n    try {\n      const change =\n        language === AlgorithmLanguage.RUST\n          ? flattenDesign(kit, nakaginCapsuleTowerDesignGuid)\n          : language === AlgorithmLanguage.PYTHON\n            ? flattenDesign(kit, nakaginCapsuleTowerDesignGuid)\n            : language === AlgorithmLanguage.GO\n              ? flattenDesign(kit, nakaginCapsuleTowerDesignGuid)\n              : flattenDesign(kit, nakaginCapsuleTowerDesignGuid);\n\n      const diff = change.forward as DesignDiff;\n      const outDesign = applyDesignDiff(baseDesign, diff);\n      const nextKit: Kit = {\n        ...kit,\n        designs: (kit.designs ?? []).map((d) =\u003e (d.guid === outDesign.guid ? outDesign : d)),\n      };\n      return [nextKit, outDesign, diff, undefined] as const;\n    } catch (e: any) {\n      return [kit, baseDesign, undefined, String(e?.message ?? e)] as const;\n    }\n  }, [baseDesign, kit, language]);\n\n  const windowConfig: any = React.useMemo(() =\u003e {\n    const { description, requirements, inputs, diffs, outputs } = defaultWindowIds;\n    return {\n      windowKinds: [\n        { id: description, label: \"Description\", component: DescriptionPane },\n        { id: requirements, label: \"Requirements\", component: RequirementsPane },\n        { id: inputs, label: \"Inputs\", component: InputsPane },\n        { id: diffs, label: \"Diffs\", component: DiffsPane },\n        { id: outputs, label: \"Outputs\", component: OutputsPane },\n      ],\n      defaultLayout: createIpoWindowConfig({\n        ...defaultWindowIds,\n      }).defaultLayout,\n    };\n  }, []);\n\n  const state: IpoState = {\n    language,\n    kit,\n    baseDesign,\n    designDiff,\n    outputKit,\n    outputDesign,\n    error,\n  };\n\n  const apps = [\n    {\n      id: \"ipo-flatten\",\n      label: \"Flatten\",\n      windowConfig,\n    },\n  ] as any;\n\n  return (\n    \u003cIpoContext.Provider value={state}\u003e\n      \u003cdiv className=\"h-[720px] w-full\"\u003e\n        \u003cUI apps={apps} breadcrumbItems={IPO_BREADCRUMB} defaultAppId={apps[0]!.id} /\u003e\n      \u003c/div\u003e\n    \u003c/IpoContext.Provider\u003e\n  );\n}\n\nexport const Default: Story = {\n  render: () =\u003e \u003cIpoFrame /\u003e,\n};\n",
               "numLines": 286,
               "startLine": 1,
               "totalLines": 286
@@ -862,24 +862,24 @@
         "kind": "agent.file.read.ended",
         "second": "2026-03-20T19:23:31Z",
         "session": "0feb744b-4b73-4278-81d6-325e624d8189",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
       },
       "native": {
         "event": {
           "session_id": "0feb744b-4b73-4278-81d6-325e624d8189",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PostToolUse",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/workspaces/semio/semio/algorithms/.storybook/stories/Cluster.stories.tsx"
+            "file_path": "/workspaces/semio/compose/algorithms/.storybook/stories/Cluster.stories.tsx"
           },
           "tool_response": {
             "type": "text",
             "file": {
-              "filePath": "/workspaces/semio/semio/algorithms/.storybook/stories/Cluster.stories.tsx",
-              "content": "// #region 🔖Header\n// 💻 semio/algorithms/.storybook/stories/Cluster.stories.tsx\n// Specs: IPO (Input/Process/Output) story with GoldenLayout for Design Cluster.\n// Summary: Shows base design, clustered diff, and clustered output design.\n// 2026 Ueli Saluz \u003cueli@semio-tech.com\u003e\n// #endregion 🔖Header\n\nimport type { Meta, StoryObj } from \"@storybook/react\";\nimport * as React from \"react\";\n\nimport { Diagram, PieceSelection, UI, type BreadcrumbItemData, Section, Card } from \"@semio/ui\";\nimport { applyDesignDiff, createClusteredDesign, findDesignInKit, replaceClusterWithDesign, type Design, type DesignDiff, type Kit } from \"@semio/js\";\nimport { AlgorithmLanguage, useAlgorithmLanguage } from \"../withLanguage\";\n\nimport metabolismKit from \"../../../assets/semio/kit_metabolism.json\";\n\nconst nakaginCapsuleTowerDesignGuid = \"9a890dd4-0a9c-48ac-920a-9e62666465ef\";\n\ntype IpoState = {\n  language: AlgorithmLanguage;\n  kit: Kit;\n  baseDesign: Design;\n  selectedPieceGuids: string[];\n  designDiff?: DesignDiff;\n  diffKit: Kit;\n  outputKit: Kit;\n  outputDesign: Design;\n  error?: string;\n  setSelectedPieceGuids: (next: string[]) =\u003e void;\n};\n\nconst IpoContext = React.createContext\u003cIpoState | null\u003e(null);\n\nfunction useIpoState(): IpoState {\n  const ctx = React.useContext(IpoContext);\n  if (!ctx) throw new Error(\"Cluster IPO stories must be wrapped in IpoContext\");\n  return ctx;\n}\n\nfunction createIpoDefaultLayout(windowIds: {\n  description: string;\n  requirements: string;\n  inputs: string;\n  diffs: string;\n  outputs: string;\n  descriptionTitle: string;\n  requirementsTitle: string;\n  inputsTitle: string;\n  diffsTitle: string;\n  outputsTitle: string;\n}): any {\n  return {\n    root: {\n      type: \"column\",\n      content: [\n        {\n          type: \"row\",\n          size: 25,\n          content: [\n            {\n              type: \"stack\",\n              size: 33.33,\n              content: [{ type: \"component\", componentName: windowIds.description, title: windowIds.descriptionTitle, componentState: {} }],\n            },\n            {\n              type: \"stack\",\n              size: 66.67,\n              content: [{ type: \"component\", componentName: windowIds.requirements, title: windowIds.requirementsTitle, componentState: {} }],\n            },\n          ],\n        },\n        {\n          type: \"row\",\n          size: 75,\n          content: [\n            {\n              type: \"stack\",\n              size: 33.33,\n              content: [{ type: \"component\", componentName: windowIds.inputs, title: windowIds.inputsTitle, componentState: {} }],\n            },\n            {\n              type: \"stack\",\n              size: 33.33,\n              content: [{ type: \"component\", componentName: windowIds.diffs, title: windowIds.diffsTitle, componentState: {} }],\n            },\n            {\n              type: \"stack\",\n              size: 33.33,\n              content: [{ type: \"component\", componentName: windowIds.outputs, title: windowIds.outputsTitle, componentState: {} }],\n            },\n          ],\n        },\n      ],\n    },\n  };\n}\n\nconst meta = {\n  title: \"semio-algorithms/Design/Cluster\",\n  parameters: {\n    layout: \"padded\",\n  },\n  tags: [\"autodocs\"],\n} satisfies Meta;\n\nexport default meta;\n\ntype Story = StoryObj\u003ctypeof meta\u003e;\n\nconst IPO_BREADCRUMB: BreadcrumbItemData[] = [{ content: \"Design\" }, { content: \"Cluster\" }];\n\nconst descriptionText = \"Cluster groups selected connected pieces into a new nested Design, replacing the original pieces.\";\n\nconst requirementsText = [\n  \"Input: Design and PieceSelection (pieces to cluster)\",\n  \"Process: create a clustered Design and replace selected pieces with a Design reference\",\n  \"Output: Design with clustered reference (and updated external connections)\",\n  \"Language: selected implementation language (calculation uses available in-browser adapter)\",\n];\n\nfunction DescriptionPane() {\n  const { language } = useIpoState();\n  return (\n    \u003cdiv className=\"h-full flex flex-col\"\u003e\n      \u003cSection title=\"Description\"\u003e\n        \u003cdiv className=\"space-y-2\"\u003e\n          \u003cp className=\"text-sm text-muted-foreground\"\u003e{descriptionText}\u003c/p\u003e\n          \u003cCard className=\"p-2\"\u003e\n            \u003cdiv className=\"text-xs text-muted-foreground\"\u003eImplementation\u003c/div\u003e\n            \u003cdiv className=\"font-mono text-sm\"\u003e{language}\u003c/div\u003e\n          \u003c/Card\u003e\n        \u003c/div\u003e\n      \u003c/Section\u003e\n    \u003c/div\u003e\n  );\n}\n\nfunction RequirementsPane() {\n  const { selectedPieceGuids, error } = useIpoState();\n  return (\n    \u003cdiv className=\"h-full flex flex-col\"\u003e\n      \u003cSection title=\"Requirements\"\u003e\n        \u003cdiv className=\"space-y-2 text-sm\"\u003e\n          {requirementsText.map((line, idx) =\u003e (\n            \u003cdiv key={idx} className=\"font-mono text-xs\"\u003e\n              - {line}\n            \u003c/div\u003e\n          ))}\n          \u003cdiv className=\"pt-1 text-xs font-mono\"\u003e\n            Selected pieces: \u003cspan className={selectedPieceGuids.length \u003e= 2 ? \"text-foreground\" : \"text-muted-foreground\"}\u003e{selectedPieceGuids.length}\u003c/span\u003e\n          \u003c/div\u003e\n          {error \u0026\u0026 \u003cdiv className=\"p-2 text-xs text-destructive font-mono rounded-md bg-destructive/5 border border-destructive/20\"\u003e{error}\u003c/div\u003e}\n        \u003c/div\u003e\n      \u003c/Section\u003e\n    \u003c/div\u003e\n  );\n}\n\nfunction InputsPane() {\n  const { kit, baseDesign, selectedPieceGuids, setSelectedPieceGuids } = useIpoState();\n\n  return (\n    \u003cdiv className=\"h-full flex flex-col gap-2\"\u003e\n      \u003cSection title=\"Input\"\u003e\n        \u003cdiv className=\"h-96 w-full rounded-md border border-element bg-card overflow-hidden\"\u003e\n          \u003cPieceSelection\n            kit={kit}\n            designGuid={baseDesign.guid}\n            selection={{ pieceGuids: selectedPieceGuids }}\n            onSelectionChange={(next) =\u003e setSelectedPieceGuids(next.pieceGuids ?? [])}\n            selectionEnabled={true}\n            diffEnabled={false}\n            panEnabled={false}\n            zoomEnabled={true}\n          /\u003e\n        \u003c/div\u003e\n      \u003c/Section\u003e\n    \u003c/div\u003e\n  );\n}\n\nfunction DiffsPane() {\n  const { diffKit, baseDesign, designDiff, error } = useIpoState();\n  return (\n    \u003cdiv className=\"h-full flex flex-col gap-2\"\u003e\n      \u003cSection title=\"Diff\"\u003e\n        {error ? (\n          \u003cdiv className=\"p-2 text-sm text-destructive font-mono\"\u003e{error}\u003c/div\u003e\n        ) : (\n          \u003cdiv className=\"h-96 w-full rounded-md border border-element bg-card overflow-hidden\"\u003e\n            \u003cDiagram kit={diffKit} designGuid={baseDesign.guid} designDiff={designDiff} diffEnabled={true} selectionEnabled={false} /\u003e\n          \u003c/div\u003e\n        )}\n      \u003c/Section\u003e\n    \u003c/div\u003e\n  );\n}\n\nfunction OutputsPane() {\n  const { outputKit, outputDesign } = useIpoState();\n  return (\n    \u003cdiv className=\"h-full flex flex-col gap-2\"\u003e\n      \u003cSection title=\"Output\"\u003e\n        \u003cdiv className=\"h-96 w-full rounded-md border border-element bg-card overflow-hidden\"\u003e\n          \u003cDiagram kit={outputKit} designGuid={outputDesign.guid} diffEnabled={false} selectionEnabled={false} /\u003e\n        \u003c/div\u003e\n      \u003c/Section\u003e\n    \u003c/div\u003e\n  );\n}\n\nconst defaultWindowIds = {\n  description: \"ipo-cluster-description\",\n  requirements: \"ipo-cluster-requirements\",\n  inputs: \"ipo-cluster-inputs\",\n  diffs: \"ipo-cluster-diffs\",\n  outputs: \"ipo-cluster-outputs\",\n  descriptionTitle: \"Description\",\n  requirementsTitle: \"Requirements\",\n  inputsTitle: \"Inputs\",\n  diffsTitle: \"Diffs\",\n  outputsTitle: \"Outputs\",\n};\n\nfunction IpoFrame() {\n  const language = useAlgorithmLanguage();\n  const kit = metabolismKit as unknown as Kit;\n\n  const baseDesign = React.useMemo(() =\u003e findDesignInKit(kit, nakaginCapsuleTowerDesignGuid) as Design, [kit]);\n\n  const [selectedPieceGuids, setSelectedPieceGuids] = React.useState\u003cstring[]\u003e([]);\n\n  React.useEffect(() =\u003e {\n    if (selectedPieceGuids.length \u003e 0) return;\n    const defaultPieces = (baseDesign.pieces ?? []).slice(0, 3).map((p) =\u003e p.guid);\n    setSelectedPieceGuids(defaultPieces);\n  }, [baseDesign.pieces, selectedPieceGuids.length]);\n\n  const { designDiff, diffKit, outputKit, outputDesign, error } = React.useMemo(() =\u003e {\n    if (selectedPieceGuids.length \u003c 2) {\n      return {\n        designDiff: undefined,\n        diffKit: kit,\n        outputKit: kit,\n        outputDesign: baseDesign,\n        error: \"Select at least 2 pieces to cluster.\",\n      };\n    }\n\n    try {\n      const clusteredName = `Clustered design (${selectedPieceGuids.length} pieces)`;\n      const { clusteredDesign, externalConnections } = createClusteredDesign(baseDesign, selectedPieceGuids, clusteredName);\n      const change = replaceClusterWithDesign(baseDesign, selectedPieceGuids, clusteredDesign, externalConnections);\n      const nextDesignDiff = change.forward as DesignDiff;\n      const outDesign = applyDesignDiff(baseDesign, nextDesignDiff);\n\n      const designs = kit.designs ?? [];\n      const diffDesigns = [...designs, clusteredDesign];\n      const diffNextKit: Kit = { ...kit, designs: diffDesigns };\n\n      const outputDesigns = designs.map((d) =\u003e (d.guid === outDesign.guid ? outDesign : d));\n      outputDesigns.push(clusteredDesign);\n      const outputNextKit: Kit = { ...kit, designs: outputDesigns };\n\n      return {\n        designDiff: nextDesignDiff,\n        diffKit: diffNextKit,\n        outputKit: outputNextKit,\n        outputDesign: outDesign,\n        error: undefined,\n      };\n    } catch (e: any) {\n      return {\n        designDiff: undefined,\n        diffKit: kit,\n        outputKit: kit,\n        outputDesign: baseDesign,\n        error: String(e?.message ?? e),\n      };\n    }\n  }, [baseDesign, kit, selectedPieceGuids]);\n\n  const state: IpoState = {\n    language,\n    kit,\n    baseDesign,\n    selectedPieceGuids,\n    designDiff,\n    diffKit,\n    outputKit,\n    outputDesign,\n    error,\n    setSelectedPieceGuids,\n  };\n\n  const windowConfig: any = React.useMemo(() =\u003e {\n    const { description, requirements, inputs, diffs, outputs } = defaultWindowIds;\n    return {\n      windowKinds: [\n        { id: description, label: \"Description\", component: DescriptionPane },\n        { id: requirements, label: \"Requirements\", component: RequirementsPane },\n        { id: inputs, label: \"Inputs\", component: InputsPane },\n        { id: diffs, label: \"Diffs\", component: DiffsPane },\n        { id: outputs, label: \"Outputs\", component: OutputsPane },\n      ],\n      defaultLayout: createIpoDefaultLayout({\n        ...defaultWindowIds,\n      }),\n    };\n  }, []);\n\n  const apps = [\n    {\n      id: \"ipo-cluster\",\n      label: \"Cluster\",\n      windowConfig,\n    },\n  ] as any;\n\n  return (\n    \u003cIpoContext.Provider value={state}\u003e\n      \u003cdiv className=\"h-[720px] w-full\"\u003e\n        \u003cUI apps={apps} breadcrumbItems={IPO_BREADCRUMB} defaultAppId={apps[0]!.id} /\u003e\n      \u003c/div\u003e\n    \u003c/IpoContext.Provider\u003e\n  );\n}\n\nexport const Default: Story = {\n  render: () =\u003e \u003cIpoFrame /\u003e,\n};\n",
+              "filePath": "/workspaces/semio/compose/algorithms/.storybook/stories/Cluster.stories.tsx",
+              "content": "// #region 🔖Header\n// 💻 compose/algorithms/.storybook/stories/Cluster.stories.tsx\n// Specs: IPO (Input/Process/Output) story with GoldenLayout for Design Cluster.\n// Summary: Shows base design, clustered diff, and clustered output design.\n// 2026 Ueli Saluz \u003cueli@semio-tech.com\u003e\n// #endregion 🔖Header\n\nimport type { Meta, StoryObj } from \"@storybook/react\";\nimport * as React from \"react\";\n\nimport { Diagram, PieceSelection, UI, type BreadcrumbItemData, Section, Card } from \"@compose/ui\";\nimport { applyDesignDiff, createClusteredDesign, findDesignInKit, replaceClusterWithDesign, type Design, type DesignDiff, type Kit } from \"@compose/js\";\nimport { AlgorithmLanguage, useAlgorithmLanguage } from \"../withLanguage\";\n\nimport metabolismKit from \"../../../assets/compose/kit_metabolism.json\";\n\nconst nakaginCapsuleTowerDesignGuid = \"9a890dd4-0a9c-48ac-920a-9e62666465ef\";\n\ntype IpoState = {\n  language: AlgorithmLanguage;\n  kit: Kit;\n  baseDesign: Design;\n  selectedPieceGuids: string[];\n  designDiff?: DesignDiff;\n  diffKit: Kit;\n  outputKit: Kit;\n  outputDesign: Design;\n  error?: string;\n  setSelectedPieceGuids: (next: string[]) =\u003e void;\n};\n\nconst IpoContext = React.createContext\u003cIpoState | null\u003e(null);\n\nfunction useIpoState(): IpoState {\n  const ctx = React.useContext(IpoContext);\n  if (!ctx) throw new Error(\"Cluster IPO stories must be wrapped in IpoContext\");\n  return ctx;\n}\n\nfunction createIpoDefaultLayout(windowIds: {\n  description: string;\n  requirements: string;\n  inputs: string;\n  diffs: string;\n  outputs: string;\n  descriptionTitle: string;\n  requirementsTitle: string;\n  inputsTitle: string;\n  diffsTitle: string;\n  outputsTitle: string;\n}): any {\n  return {\n    root: {\n      type: \"column\",\n      content: [\n        {\n          type: \"row\",\n          size: 25,\n          content: [\n            {\n              type: \"stack\",\n              size: 33.33,\n              content: [{ type: \"component\", componentName: windowIds.description, title: windowIds.descriptionTitle, componentState: {} }],\n            },\n            {\n              type: \"stack\",\n              size: 66.67,\n              content: [{ type: \"component\", componentName: windowIds.requirements, title: windowIds.requirementsTitle, componentState: {} }],\n            },\n          ],\n        },\n        {\n          type: \"row\",\n          size: 75,\n          content: [\n            {\n              type: \"stack\",\n              size: 33.33,\n              content: [{ type: \"component\", componentName: windowIds.inputs, title: windowIds.inputsTitle, componentState: {} }],\n            },\n            {\n              type: \"stack\",\n              size: 33.33,\n              content: [{ type: \"component\", componentName: windowIds.diffs, title: windowIds.diffsTitle, componentState: {} }],\n            },\n            {\n              type: \"stack\",\n              size: 33.33,\n              content: [{ type: \"component\", componentName: windowIds.outputs, title: windowIds.outputsTitle, componentState: {} }],\n            },\n          ],\n        },\n      ],\n    },\n  };\n}\n\nconst meta = {\n  title: \"compose-algorithms/Design/Cluster\",\n  parameters: {\n    layout: \"padded\",\n  },\n  tags: [\"autodocs\"],\n} satisfies Meta;\n\nexport default meta;\n\ntype Story = StoryObj\u003ctypeof meta\u003e;\n\nconst IPO_BREADCRUMB: BreadcrumbItemData[] = [{ content: \"Design\" }, { content: \"Cluster\" }];\n\nconst descriptionText = \"Cluster groups selected connected pieces into a new nested Design, replacing the original pieces.\";\n\nconst requirementsText = [\n  \"Input: Design and PieceSelection (pieces to cluster)\",\n  \"Process: create a clustered Design and replace selected pieces with a Design reference\",\n  \"Output: Design with clustered reference (and updated external connections)\",\n  \"Language: selected implementation language (calculation uses available in-browser adapter)\",\n];\n\nfunction DescriptionPane() {\n  const { language } = useIpoState();\n  return (\n    \u003cdiv className=\"h-full flex flex-col\"\u003e\n      \u003cSection title=\"Description\"\u003e\n        \u003cdiv className=\"space-y-2\"\u003e\n          \u003cp className=\"text-sm text-muted-foreground\"\u003e{descriptionText}\u003c/p\u003e\n          \u003cCard className=\"p-2\"\u003e\n            \u003cdiv className=\"text-xs text-muted-foreground\"\u003eImplementation\u003c/div\u003e\n            \u003cdiv className=\"font-mono text-sm\"\u003e{language}\u003c/div\u003e\n          \u003c/Card\u003e\n        \u003c/div\u003e\n      \u003c/Section\u003e\n    \u003c/div\u003e\n  );\n}\n\nfunction RequirementsPane() {\n  const { selectedPieceGuids, error } = useIpoState();\n  return (\n    \u003cdiv className=\"h-full flex flex-col\"\u003e\n      \u003cSection title=\"Requirements\"\u003e\n        \u003cdiv className=\"space-y-2 text-sm\"\u003e\n          {requirementsText.map((line, idx) =\u003e (\n            \u003cdiv key={idx} className=\"font-mono text-xs\"\u003e\n              - {line}\n            \u003c/div\u003e\n          ))}\n          \u003cdiv className=\"pt-1 text-xs font-mono\"\u003e\n            Selected pieces: \u003cspan className={selectedPieceGuids.length \u003e= 2 ? \"text-foreground\" : \"text-muted-foreground\"}\u003e{selectedPieceGuids.length}\u003c/span\u003e\n          \u003c/div\u003e\n          {error \u0026\u0026 \u003cdiv className=\"p-2 text-xs text-destructive font-mono rounded-md bg-destructive/5 border border-destructive/20\"\u003e{error}\u003c/div\u003e}\n        \u003c/div\u003e\n      \u003c/Section\u003e\n    \u003c/div\u003e\n  );\n}\n\nfunction InputsPane() {\n  const { kit, baseDesign, selectedPieceGuids, setSelectedPieceGuids } = useIpoState();\n\n  return (\n    \u003cdiv className=\"h-full flex flex-col gap-2\"\u003e\n      \u003cSection title=\"Input\"\u003e\n        \u003cdiv className=\"h-96 w-full rounded-md border border-element bg-card overflow-hidden\"\u003e\n          \u003cPieceSelection\n            kit={kit}\n            designGuid={baseDesign.guid}\n            selection={{ pieceGuids: selectedPieceGuids }}\n            onSelectionChange={(next) =\u003e setSelectedPieceGuids(next.pieceGuids ?? [])}\n            selectionEnabled={true}\n            diffEnabled={false}\n            panEnabled={false}\n            zoomEnabled={true}\n          /\u003e\n        \u003c/div\u003e\n      \u003c/Section\u003e\n    \u003c/div\u003e\n  );\n}\n\nfunction DiffsPane() {\n  const { diffKit, baseDesign, designDiff, error } = useIpoState();\n  return (\n    \u003cdiv className=\"h-full flex flex-col gap-2\"\u003e\n      \u003cSection title=\"Diff\"\u003e\n        {error ? (\n          \u003cdiv className=\"p-2 text-sm text-destructive font-mono\"\u003e{error}\u003c/div\u003e\n        ) : (\n          \u003cdiv className=\"h-96 w-full rounded-md border border-element bg-card overflow-hidden\"\u003e\n            \u003cDiagram kit={diffKit} designGuid={baseDesign.guid} designDiff={designDiff} diffEnabled={true} selectionEnabled={false} /\u003e\n          \u003c/div\u003e\n        )}\n      \u003c/Section\u003e\n    \u003c/div\u003e\n  );\n}\n\nfunction OutputsPane() {\n  const { outputKit, outputDesign } = useIpoState();\n  return (\n    \u003cdiv className=\"h-full flex flex-col gap-2\"\u003e\n      \u003cSection title=\"Output\"\u003e\n        \u003cdiv className=\"h-96 w-full rounded-md border border-element bg-card overflow-hidden\"\u003e\n          \u003cDiagram kit={outputKit} designGuid={outputDesign.guid} diffEnabled={false} selectionEnabled={false} /\u003e\n        \u003c/div\u003e\n      \u003c/Section\u003e\n    \u003c/div\u003e\n  );\n}\n\nconst defaultWindowIds = {\n  description: \"ipo-cluster-description\",\n  requirements: \"ipo-cluster-requirements\",\n  inputs: \"ipo-cluster-inputs\",\n  diffs: \"ipo-cluster-diffs\",\n  outputs: \"ipo-cluster-outputs\",\n  descriptionTitle: \"Description\",\n  requirementsTitle: \"Requirements\",\n  inputsTitle: \"Inputs\",\n  diffsTitle: \"Diffs\",\n  outputsTitle: \"Outputs\",\n};\n\nfunction IpoFrame() {\n  const language = useAlgorithmLanguage();\n  const kit = metabolismKit as unknown as Kit;\n\n  const baseDesign = React.useMemo(() =\u003e findDesignInKit(kit, nakaginCapsuleTowerDesignGuid) as Design, [kit]);\n\n  const [selectedPieceGuids, setSelectedPieceGuids] = React.useState\u003cstring[]\u003e([]);\n\n  React.useEffect(() =\u003e {\n    if (selectedPieceGuids.length \u003e 0) return;\n    const defaultPieces = (baseDesign.pieces ?? []).slice(0, 3).map((p) =\u003e p.guid);\n    setSelectedPieceGuids(defaultPieces);\n  }, [baseDesign.pieces, selectedPieceGuids.length]);\n\n  const { designDiff, diffKit, outputKit, outputDesign, error } = React.useMemo(() =\u003e {\n    if (selectedPieceGuids.length \u003c 2) {\n      return {\n        designDiff: undefined,\n        diffKit: kit,\n        outputKit: kit,\n        outputDesign: baseDesign,\n        error: \"Select at least 2 pieces to cluster.\",\n      };\n    }\n\n    try {\n      const clusteredName = `Clustered design (${selectedPieceGuids.length} pieces)`;\n      const { clusteredDesign, externalConnections } = createClusteredDesign(baseDesign, selectedPieceGuids, clusteredName);\n      const change = replaceClusterWithDesign(baseDesign, selectedPieceGuids, clusteredDesign, externalConnections);\n      const nextDesignDiff = change.forward as DesignDiff;\n      const outDesign = applyDesignDiff(baseDesign, nextDesignDiff);\n\n      const designs = kit.designs ?? [];\n      const diffDesigns = [...designs, clusteredDesign];\n      const diffNextKit: Kit = { ...kit, designs: diffDesigns };\n\n      const outputDesigns = designs.map((d) =\u003e (d.guid === outDesign.guid ? outDesign : d));\n      outputDesigns.push(clusteredDesign);\n      const outputNextKit: Kit = { ...kit, designs: outputDesigns };\n\n      return {\n        designDiff: nextDesignDiff,\n        diffKit: diffNextKit,\n        outputKit: outputNextKit,\n        outputDesign: outDesign,\n        error: undefined,\n      };\n    } catch (e: any) {\n      return {\n        designDiff: undefined,\n        diffKit: kit,\n        outputKit: kit,\n        outputDesign: baseDesign,\n        error: String(e?.message ?? e),\n      };\n    }\n  }, [baseDesign, kit, selectedPieceGuids]);\n\n  const state: IpoState = {\n    language,\n    kit,\n    baseDesign,\n    selectedPieceGuids,\n    designDiff,\n    diffKit,\n    outputKit,\n    outputDesign,\n    error,\n    setSelectedPieceGuids,\n  };\n\n  const windowConfig: any = React.useMemo(() =\u003e {\n    const { description, requirements, inputs, diffs, outputs } = defaultWindowIds;\n    return {\n      windowKinds: [\n        { id: description, label: \"Description\", component: DescriptionPane },\n        { id: requirements, label: \"Requirements\", component: RequirementsPane },\n        { id: inputs, label: \"Inputs\", component: InputsPane },\n        { id: diffs, label: \"Diffs\", component: DiffsPane },\n        { id: outputs, label: \"Outputs\", component: OutputsPane },\n      ],\n      defaultLayout: createIpoDefaultLayout({\n        ...defaultWindowIds,\n      }),\n    };\n  }, []);\n\n  const apps = [\n    {\n      id: \"ipo-cluster\",\n      label: \"Cluster\",\n      windowConfig,\n    },\n  ] as any;\n\n  return (\n    \u003cIpoContext.Provider value={state}\u003e\n      \u003cdiv className=\"h-[720px] w-full\"\u003e\n        \u003cUI apps={apps} breadcrumbItems={IPO_BREADCRUMB} defaultAppId={apps[0]!.id} /\u003e\n      \u003c/div\u003e\n    \u003c/IpoContext.Provider\u003e\n  );\n}\n\nexport const Default: Story = {\n  render: () =\u003e \u003cIpoFrame /\u003e,\n};\n",
               "numLines": 332,
               "startLine": 1,
               "totalLines": 332
@@ -898,12 +898,12 @@
         "kind": "agent.file.read.starting",
         "second": "2026-03-20T19:23:35Z",
         "session": "0feb744b-4b73-4278-81d6-325e624d8189",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
       },
       "native": {
         "event": {
           "session_id": "0feb744b-4b73-4278-81d6-325e624d8189",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PreToolUse",
@@ -926,12 +926,12 @@
         "kind": "agent.file.read.ended",
         "second": "2026-03-20T19:23:36Z",
         "session": "0feb744b-4b73-4278-81d6-325e624d8189",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
       },
       "native": {
         "event": {
           "session_id": "0feb744b-4b73-4278-81d6-325e624d8189",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PostToolUse",
@@ -961,12 +961,12 @@
         "kind": "agent.file.read.starting",
         "second": "2026-03-20T19:23:36Z",
         "session": "0feb744b-4b73-4278-81d6-325e624d8189",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
       },
       "native": {
         "event": {
           "session_id": "0feb744b-4b73-4278-81d6-325e624d8189",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PreToolUse",
@@ -987,12 +987,12 @@
         "kind": "agent.file.read.ended",
         "second": "2026-03-20T19:23:36Z",
         "session": "0feb744b-4b73-4278-81d6-325e624d8189",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
       },
       "native": {
         "event": {
           "session_id": "0feb744b-4b73-4278-81d6-325e624d8189",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PostToolUse",
@@ -1023,18 +1023,18 @@
         "kind": "agent.file.read.starting",
         "second": "2026-03-20T19:23:37Z",
         "session": "0feb744b-4b73-4278-81d6-325e624d8189",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
       },
       "native": {
         "event": {
           "session_id": "0feb744b-4b73-4278-81d6-325e624d8189",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PreToolUse",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/workspaces/semio/semio/algorithms/.storybook/stories/Drag.stories.tsx"
+            "file_path": "/workspaces/semio/compose/algorithms/.storybook/stories/Drag.stories.tsx"
           },
           "tool_use_id": "toolu_0121WdU1tkHoELep49hBJXQ3"
         }
@@ -1049,24 +1049,24 @@
         "kind": "agent.file.read.ended",
         "second": "2026-03-20T19:23:37Z",
         "session": "0feb744b-4b73-4278-81d6-325e624d8189",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
       },
       "native": {
         "event": {
           "session_id": "0feb744b-4b73-4278-81d6-325e624d8189",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PostToolUse",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/workspaces/semio/semio/algorithms/.storybook/stories/Drag.stories.tsx"
+            "file_path": "/workspaces/semio/compose/algorithms/.storybook/stories/Drag.stories.tsx"
           },
           "tool_response": {
             "type": "text",
             "file": {
-              "filePath": "/workspaces/semio/semio/algorithms/.storybook/stories/Drag.stories.tsx",
-              "content": "// #region 🔖Header\n// 💻 semio/algorithms/.storybook/stories/Drag.stories.tsx\n// Specs: IPO (Input/Process/Output) story with GoldenLayout for Design Drag.\n// Summary: Shows selected pieces, drag diff, and dragged output design.\n// 2026 Ueli Saluz \u003cueli@semio-tech.com\u003e\n// #endregion 🔖Header\n\nimport type { Meta, StoryObj } from \"@storybook/react\";\nimport * as React from \"react\";\n\nimport { Diagram, PieceSelection, UI, type BreadcrumbItemData, Section, Card } from \"@semio/ui\";\nimport { applyDesignDiff, dragPiecesInDesign, findDesignInKit, type Design, type DesignDiff, type Kit } from \"@semio/js\";\nimport { AlgorithmLanguage, useAlgorithmLanguage } from \"../withLanguage\";\n\nimport metabolismKit from \"../../../assets/semio/kit_metabolism.json\";\n\nconst nakaginCapsuleTowerDesignGuid = \"9a890dd4-0a9c-48ac-920a-9e62666465ef\";\n\ntype Vec2 = { u: number; v: number };\n\ntype IpoState = {\n  language: AlgorithmLanguage;\n  kit: Kit;\n  baseDesign: Design;\n  selectedPieceGuids: string[];\n  vec: Vec2;\n  designDiff?: DesignDiff;\n  outputKit: Kit;\n  outputDesign: Design;\n  error?: string;\n  setSelectedPieceGuids: (next: string[]) =\u003e void;\n  setVec: (next: Vec2) =\u003e void;\n};\n\nconst IpoContext = React.createContext\u003cIpoState | null\u003e(null);\n\nfunction useIpoState(): IpoState {\n  const ctx = React.useContext(IpoContext);\n  if (!ctx) throw new Error(\"Drag IPO stories must be wrapped in IpoContext\");\n  return ctx;\n}\n\nfunction createIpoDefaultLayout(windowIds: {\n  description: string;\n  requirements: string;\n  inputs: string;\n  diffs: string;\n  outputs: string;\n  descriptionTitle: string;\n  requirementsTitle: string;\n  inputsTitle: string;\n  diffsTitle: string;\n  outputsTitle: string;\n}): any {\n  return {\n    root: {\n      type: \"column\",\n      content: [\n        {\n          type: \"row\",\n          size: 25,\n          content: [\n            {\n              type: \"stack\",\n              size: 33.33,\n              content: [{ type: \"component\", componentName: windowIds.description, title: windowIds.descriptionTitle, componentState: {} }],\n            },\n            {\n              type: \"stack\",\n              size: 66.67,\n              content: [{ type: \"component\", componentName: windowIds.requirements, title: windowIds.requirementsTitle, componentState: {} }],\n            },\n          ],\n        },\n        {\n          type: \"row\",\n          size: 75,\n          content: [\n            {\n              type: \"stack\",\n              size: 33.33,\n              content: [{ type: \"component\", componentName: windowIds.inputs, title: windowIds.inputsTitle, componentState: {} }],\n            },\n            {\n              type: \"stack\",\n              size: 33.33,\n              content: [{ type: \"component\", componentName: windowIds.diffs, title: windowIds.diffsTitle, componentState: {} }],\n            },\n            {\n              type: \"stack\",\n              size: 33.33,\n              content: [{ type: \"component\", componentName: windowIds.outputs, title: windowIds.outputsTitle, componentState: {} }],\n            },\n          ],\n        },\n      ],\n    },\n  };\n}\n\nconst meta = {\n  title: \"semio-algorithms/Design/Drag\",\n  parameters: {\n    layout: \"padded\",\n  },\n  tags: [\"autodocs\"],\n} satisfies Meta;\n\nexport default meta;\n\ntype Story = StoryObj\u003ctypeof meta\u003e;\n\nconst IPO_BREADCRUMB: BreadcrumbItemData[] = [{ content: \"Design\" }, { content: \"Drag\" }];\n\nconst descriptionText = \"Drag offsets the selected connected pieces by a vector, updating piece centers and adjusting orphaned connection offsets.\";\n\nconst requirementsText = [\n  \"Input: Vec (u,v) and PieceSelection (pieces to drag)\",\n  \"Process: compute a DesignDiff from the selected pieces and apply it to produce output\",\n  \"Output: design where the computed drag diff is applied\",\n  \"Language: selected implementation language (calculation uses available in-browser adapter)\",\n];\n\nfunction DescriptionPane() {\n  const { language } = useIpoState();\n  return (\n    \u003cdiv className=\"h-full flex flex-col\"\u003e\n      \u003cSection title=\"Description\"\u003e\n        \u003cdiv className=\"space-y-2\"\u003e\n          \u003cp className=\"text-sm text-muted-foreground\"\u003e{descriptionText}\u003c/p\u003e\n          \u003cCard className=\"p-2\"\u003e\n            \u003cdiv className=\"text-xs text-muted-foreground\"\u003eImplementation\u003c/div\u003e\n            \u003cdiv className=\"font-mono text-sm\"\u003e{language}\u003c/div\u003e\n          \u003c/Card\u003e\n        \u003c/div\u003e\n      \u003c/Section\u003e\n    \u003c/div\u003e\n  );\n}\n\nfunction RequirementsPane() {\n  const { vec, selectedPieceGuids, error } = useIpoState();\n  return (\n    \u003cdiv className=\"h-full flex flex-col\"\u003e\n      \u003cSection title=\"Requirements\"\u003e\n        \u003cdiv className=\"space-y-2 text-sm\"\u003e\n          {requirementsText.map((line, idx) =\u003e (\n            \u003cdiv key={idx} className=\"font-mono text-xs\"\u003e\n              - {line}\n            \u003c/div\u003e\n          ))}\n          \u003cdiv className=\"pt-1 text-xs font-mono\"\u003e\n            Vec: {vec.u.toFixed(2)}, {vec.v.toFixed(2)}\n          \u003c/div\u003e\n          \u003cdiv className=\"text-xs font-mono\"\u003e\n            Selected pieces: \u003cspan className={selectedPieceGuids.length \u003e 0 ? \"text-foreground\" : \"text-muted-foreground\"}\u003e{selectedPieceGuids.length}\u003c/span\u003e\n          \u003c/div\u003e\n          {error \u0026\u0026 \u003cdiv className=\"p-2 text-xs text-destructive font-mono rounded-md bg-destructive/5 border border-destructive/20\"\u003e{error}\u003c/div\u003e}\n        \u003c/div\u003e\n      \u003c/Section\u003e\n    \u003c/div\u003e\n  );\n}\n\nfunction InputsPane() {\n  const { kit, baseDesign, selectedPieceGuids, setSelectedPieceGuids, vec, setVec } = useIpoState();\n\n  return (\n    \u003cdiv className=\"h-full flex flex-col gap-2\"\u003e\n      \u003cSection title=\"Input\"\u003e\n        \u003cdiv className=\"space-y-2 p-2\"\u003e\n          \u003cdiv className=\"flex items-center justify-between gap-2\"\u003e\n            \u003cdiv className=\"text-xs font-mono text-muted-foreground\"\u003eu\u003c/div\u003e\n            \u003cinput className=\"w-28 rounded-md border border-element bg-background px-2 py-1 text-sm font-mono\" type=\"number\" step=\"0.1\" value={vec.u} onChange={(e) =\u003e setVec({ ...vec, u: Number(e.target.value) })} /\u003e\n          \u003c/div\u003e\n          \u003cdiv className=\"flex items-center justify-between gap-2\"\u003e\n            \u003cdiv className=\"text-xs font-mono text-muted-foreground\"\u003ev\u003c/div\u003e\n            \u003cinput className=\"w-28 rounded-md border border-element bg-background px-2 py-1 text-sm font-mono\" type=\"number\" step=\"0.1\" value={vec.v} onChange={(e) =\u003e setVec({ ...vec, v: Number(e.target.value) })} /\u003e\n          \u003c/div\u003e\n        \u003c/div\u003e\n        \u003cdiv className=\"h-72 w-full rounded-md border border-element bg-card overflow-hidden\"\u003e\n          \u003cPieceSelection\n            kit={kit}\n            designGuid={baseDesign.guid}\n            selection={{ pieceGuids: selectedPieceGuids }}\n            onSelectionChange={(next) =\u003e setSelectedPieceGuids(next.pieceGuids ?? [])}\n            selectionEnabled={true}\n            diffEnabled={false}\n            panEnabled={false}\n            zoomEnabled={true}\n          /\u003e\n        \u003c/div\u003e\n      \u003c/Section\u003e\n    \u003c/div\u003e\n  );\n}\n\nfunction DiffsPane() {\n  const { kit, baseDesign, designDiff, error } = useIpoState();\n  return (\n    \u003cdiv className=\"h-full flex flex-col gap-2\"\u003e\n      \u003cSection title=\"Diff\"\u003e\n        {error ? (\n          \u003cdiv className=\"p-2 text-sm text-destructive font-mono\"\u003e{error}\u003c/div\u003e\n        ) : (\n          \u003cdiv className=\"h-96 w-full rounded-md border border-element bg-card overflow-hidden\"\u003e\n            \u003cDiagram kit={kit} designGuid={baseDesign.guid} designDiff={designDiff} diffEnabled={true} selectionEnabled={false} /\u003e\n          \u003c/div\u003e\n        )}\n      \u003c/Section\u003e\n    \u003c/div\u003e\n  );\n}\n\nfunction OutputsPane() {\n  const { outputKit, outputDesign } = useIpoState();\n  return (\n    \u003cdiv className=\"h-full flex flex-col gap-2\"\u003e\n      \u003cSection title=\"Output\"\u003e\n        \u003cdiv className=\"h-96 w-full rounded-md border border-element bg-card overflow-hidden\"\u003e\n          \u003cDiagram kit={outputKit} designGuid={outputDesign.guid} diffEnabled={false} selectionEnabled={false} /\u003e\n        \u003c/div\u003e\n      \u003c/Section\u003e\n    \u003c/div\u003e\n  );\n}\n\nconst defaultWindowIds = {\n  description: \"ipo-drag-description\",\n  requirements: \"ipo-drag-requirements\",\n  inputs: \"ipo-drag-inputs\",\n  diffs: \"ipo-drag-diffs\",\n  outputs: \"ipo-drag-outputs\",\n  descriptionTitle: \"Description\",\n  requirementsTitle: \"Requirements\",\n  inputsTitle: \"Inputs\",\n  diffsTitle: \"Diffs\",\n  outputsTitle: \"Outputs\",\n};\n\nfunction normalizeDragDiffForDiagram(baseDesign: Design, dragDiff: DesignDiff): DesignDiff {\n  // dragPiecesInDesign encodes piece center updates as a delta (offset.u/offset.v),\n  // but Diagram's applyDesignDiff expects piece center to be an absolute center.\n  const basePieces = baseDesign.pieces ?? [];\n  const updatedPieces = dragDiff.pieces?.updated as any[] | undefined;\n  if (!updatedPieces || updatedPieces.length === 0) return dragDiff;\n\n  const nextUpdated = updatedPieces.map((u) =\u003e {\n    const pieceGuid = u.piece?.guid;\n    const basePiece = basePieces.find((p) =\u003e p.guid === pieceGuid);\n    const deltaCenter = u.diff?.center;\n    if (!basePiece?.center || !deltaCenter || typeof deltaCenter.u !== \"number\" || typeof deltaCenter.v !== \"number\") return u;\n    return {\n      ...u,\n      diff: {\n        ...u.diff,\n        center: {\n          u: (basePiece.center.u ?? 0) + deltaCenter.u,\n          v: (basePiece.center.v ?? 0) + deltaCenter.v,\n        },\n      },\n    };\n  });\n\n  return {\n    ...dragDiff,\n    pieces: {\n      ...dragDiff.pieces,\n      updated: nextUpdated,\n    },\n  };\n}\n\nfunction IpoFrame() {\n  const language = useAlgorithmLanguage();\n  const kit = metabolismKit as unknown as Kit;\n  const baseDesign = React.useMemo(() =\u003e findDesignInKit(kit, nakaginCapsuleTowerDesignGuid) as Design, [kit]);\n\n  const [selectedPieceGuids, setSelectedPieceGuids] = React.useState\u003cstring[]\u003e([]);\n  const [vec, setVec] = React.useState\u003cVec2\u003e({ u: 1, v: -2 });\n\n  React.useEffect(() =\u003e {\n    if (selectedPieceGuids.length \u003e 0) return;\n    const defaultPieces = (baseDesign.pieces ?? []).slice(0, 3).map((p) =\u003e p.guid);\n    setSelectedPieceGuids(defaultPieces);\n  }, [baseDesign, selectedPieceGuids.length]);\n\n  const { designDiff, outputKit, outputDesign, error } = React.useMemo(() =\u003e {\n    try {\n      if (selectedPieceGuids.length === 0) {\n        return { designDiff: undefined, outputKit: kit, outputDesign: baseDesign, error: undefined };\n      }\n\n      const piecesDesign = { guid: \"\", name: \"\", pieces: selectedPieceGuids.map((g) =\u003e ({ guid: g })) } as Design;\n      const rawDiff = dragPiecesInDesign(baseDesign, piecesDesign, { u: vec.u, v: vec.v });\n      const normalized = normalizeDragDiffForDiagram(baseDesign, rawDiff);\n\n      const outDesign = applyDesignDiff(baseDesign, normalized);\n      const nextKit: Kit = {\n        ...kit,\n        designs: (kit.designs ?? []).map((d) =\u003e (d.guid === outDesign.guid ? outDesign : d)),\n      };\n\n      return { designDiff: normalized, outputKit: nextKit, outputDesign: outDesign, error: undefined };\n    } catch (e: any) {\n      return { designDiff: undefined, outputKit: kit, outputDesign: baseDesign, error: String(e?.message ?? e) };\n    }\n  }, [baseDesign, kit, selectedPieceGuids, vec.u, vec.v]);\n\n  const state: IpoState = {\n    language,\n    kit,\n    baseDesign,\n    selectedPieceGuids,\n    vec,\n    designDiff,\n    outputKit,\n    outputDesign,\n    error,\n    setSelectedPieceGuids,\n    setVec,\n  };\n\n  const windowConfig: any = React.useMemo(() =\u003e {\n    return {\n      windowKinds: [\n        { id: defaultWindowIds.description, label: \"Description\", component: DescriptionPane },\n        { id: defaultWindowIds.requirements, label: \"Requirements\", component: RequirementsPane },\n        { id: defaultWindowIds.inputs, label: \"Inputs\", component: InputsPane },\n        { id: defaultWindowIds.diffs, label: \"Diffs\", component: DiffsPane },\n        { id: defaultWindowIds.outputs, label: \"Outputs\", component: OutputsPane },\n      ],\n      defaultLayout: createIpoDefaultLayout({ ...defaultWindowIds }),\n    };\n  }, []);\n\n  const apps = [\n    {\n      id: \"ipo-drag\",\n      label: \"Drag\",\n      windowConfig,\n    },\n  ] as any;\n\n  return (\n    \u003cIpoContext.Provider value={state}\u003e\n      \u003cdiv className=\"h-[720px] w-full\"\u003e\n        \u003cUI apps={apps} breadcrumbItems={IPO_BREADCRUMB} defaultAppId={apps[0]!.id} /\u003e\n      \u003c/div\u003e\n    \u003c/IpoContext.Provider\u003e\n  );\n}\n\nexport const Default: Story = {\n  render: () =\u003e \u003cIpoFrame /\u003e,\n};\n",
+              "filePath": "/workspaces/semio/compose/algorithms/.storybook/stories/Drag.stories.tsx",
+              "content": "// #region 🔖Header\n// 💻 compose/algorithms/.storybook/stories/Drag.stories.tsx\n// Specs: IPO (Input/Process/Output) story with GoldenLayout for Design Drag.\n// Summary: Shows selected pieces, drag diff, and dragged output design.\n// 2026 Ueli Saluz \u003cueli@semio-tech.com\u003e\n// #endregion 🔖Header\n\nimport type { Meta, StoryObj } from \"@storybook/react\";\nimport * as React from \"react\";\n\nimport { Diagram, PieceSelection, UI, type BreadcrumbItemData, Section, Card } from \"@compose/ui\";\nimport { applyDesignDiff, dragPiecesInDesign, findDesignInKit, type Design, type DesignDiff, type Kit } from \"@compose/js\";\nimport { AlgorithmLanguage, useAlgorithmLanguage } from \"../withLanguage\";\n\nimport metabolismKit from \"../../../assets/compose/kit_metabolism.json\";\n\nconst nakaginCapsuleTowerDesignGuid = \"9a890dd4-0a9c-48ac-920a-9e62666465ef\";\n\ntype Vec2 = { u: number; v: number };\n\ntype IpoState = {\n  language: AlgorithmLanguage;\n  kit: Kit;\n  baseDesign: Design;\n  selectedPieceGuids: string[];\n  vec: Vec2;\n  designDiff?: DesignDiff;\n  outputKit: Kit;\n  outputDesign: Design;\n  error?: string;\n  setSelectedPieceGuids: (next: string[]) =\u003e void;\n  setVec: (next: Vec2) =\u003e void;\n};\n\nconst IpoContext = React.createContext\u003cIpoState | null\u003e(null);\n\nfunction useIpoState(): IpoState {\n  const ctx = React.useContext(IpoContext);\n  if (!ctx) throw new Error(\"Drag IPO stories must be wrapped in IpoContext\");\n  return ctx;\n}\n\nfunction createIpoDefaultLayout(windowIds: {\n  description: string;\n  requirements: string;\n  inputs: string;\n  diffs: string;\n  outputs: string;\n  descriptionTitle: string;\n  requirementsTitle: string;\n  inputsTitle: string;\n  diffsTitle: string;\n  outputsTitle: string;\n}): any {\n  return {\n    root: {\n      type: \"column\",\n      content: [\n        {\n          type: \"row\",\n          size: 25,\n          content: [\n            {\n              type: \"stack\",\n              size: 33.33,\n              content: [{ type: \"component\", componentName: windowIds.description, title: windowIds.descriptionTitle, componentState: {} }],\n            },\n            {\n              type: \"stack\",\n              size: 66.67,\n              content: [{ type: \"component\", componentName: windowIds.requirements, title: windowIds.requirementsTitle, componentState: {} }],\n            },\n          ],\n        },\n        {\n          type: \"row\",\n          size: 75,\n          content: [\n            {\n              type: \"stack\",\n              size: 33.33,\n              content: [{ type: \"component\", componentName: windowIds.inputs, title: windowIds.inputsTitle, componentState: {} }],\n            },\n            {\n              type: \"stack\",\n              size: 33.33,\n              content: [{ type: \"component\", componentName: windowIds.diffs, title: windowIds.diffsTitle, componentState: {} }],\n            },\n            {\n              type: \"stack\",\n              size: 33.33,\n              content: [{ type: \"component\", componentName: windowIds.outputs, title: windowIds.outputsTitle, componentState: {} }],\n            },\n          ],\n        },\n      ],\n    },\n  };\n}\n\nconst meta = {\n  title: \"compose-algorithms/Design/Drag\",\n  parameters: {\n    layout: \"padded\",\n  },\n  tags: [\"autodocs\"],\n} satisfies Meta;\n\nexport default meta;\n\ntype Story = StoryObj\u003ctypeof meta\u003e;\n\nconst IPO_BREADCRUMB: BreadcrumbItemData[] = [{ content: \"Design\" }, { content: \"Drag\" }];\n\nconst descriptionText = \"Drag offsets the selected connected pieces by a vector, updating piece centers and adjusting orphaned connection offsets.\";\n\nconst requirementsText = [\n  \"Input: Vec (u,v) and PieceSelection (pieces to drag)\",\n  \"Process: compute a DesignDiff from the selected pieces and apply it to produce output\",\n  \"Output: design where the computed drag diff is applied\",\n  \"Language: selected implementation language (calculation uses available in-browser adapter)\",\n];\n\nfunction DescriptionPane() {\n  const { language } = useIpoState();\n  return (\n    \u003cdiv className=\"h-full flex flex-col\"\u003e\n      \u003cSection title=\"Description\"\u003e\n        \u003cdiv className=\"space-y-2\"\u003e\n          \u003cp className=\"text-sm text-muted-foreground\"\u003e{descriptionText}\u003c/p\u003e\n          \u003cCard className=\"p-2\"\u003e\n            \u003cdiv className=\"text-xs text-muted-foreground\"\u003eImplementation\u003c/div\u003e\n            \u003cdiv className=\"font-mono text-sm\"\u003e{language}\u003c/div\u003e\n          \u003c/Card\u003e\n        \u003c/div\u003e\n      \u003c/Section\u003e\n    \u003c/div\u003e\n  );\n}\n\nfunction RequirementsPane() {\n  const { vec, selectedPieceGuids, error } = useIpoState();\n  return (\n    \u003cdiv className=\"h-full flex flex-col\"\u003e\n      \u003cSection title=\"Requirements\"\u003e\n        \u003cdiv className=\"space-y-2 text-sm\"\u003e\n          {requirementsText.map((line, idx) =\u003e (\n            \u003cdiv key={idx} className=\"font-mono text-xs\"\u003e\n              - {line}\n            \u003c/div\u003e\n          ))}\n          \u003cdiv className=\"pt-1 text-xs font-mono\"\u003e\n            Vec: {vec.u.toFixed(2)}, {vec.v.toFixed(2)}\n          \u003c/div\u003e\n          \u003cdiv className=\"text-xs font-mono\"\u003e\n            Selected pieces: \u003cspan className={selectedPieceGuids.length \u003e 0 ? \"text-foreground\" : \"text-muted-foreground\"}\u003e{selectedPieceGuids.length}\u003c/span\u003e\n          \u003c/div\u003e\n          {error \u0026\u0026 \u003cdiv className=\"p-2 text-xs text-destructive font-mono rounded-md bg-destructive/5 border border-destructive/20\"\u003e{error}\u003c/div\u003e}\n        \u003c/div\u003e\n      \u003c/Section\u003e\n    \u003c/div\u003e\n  );\n}\n\nfunction InputsPane() {\n  const { kit, baseDesign, selectedPieceGuids, setSelectedPieceGuids, vec, setVec } = useIpoState();\n\n  return (\n    \u003cdiv className=\"h-full flex flex-col gap-2\"\u003e\n      \u003cSection title=\"Input\"\u003e\n        \u003cdiv className=\"space-y-2 p-2\"\u003e\n          \u003cdiv className=\"flex items-center justify-between gap-2\"\u003e\n            \u003cdiv className=\"text-xs font-mono text-muted-foreground\"\u003eu\u003c/div\u003e\n            \u003cinput className=\"w-28 rounded-md border border-element bg-background px-2 py-1 text-sm font-mono\" type=\"number\" step=\"0.1\" value={vec.u} onChange={(e) =\u003e setVec({ ...vec, u: Number(e.target.value) })} /\u003e\n          \u003c/div\u003e\n          \u003cdiv className=\"flex items-center justify-between gap-2\"\u003e\n            \u003cdiv className=\"text-xs font-mono text-muted-foreground\"\u003ev\u003c/div\u003e\n            \u003cinput className=\"w-28 rounded-md border border-element bg-background px-2 py-1 text-sm font-mono\" type=\"number\" step=\"0.1\" value={vec.v} onChange={(e) =\u003e setVec({ ...vec, v: Number(e.target.value) })} /\u003e\n          \u003c/div\u003e\n        \u003c/div\u003e\n        \u003cdiv className=\"h-72 w-full rounded-md border border-element bg-card overflow-hidden\"\u003e\n          \u003cPieceSelection\n            kit={kit}\n            designGuid={baseDesign.guid}\n            selection={{ pieceGuids: selectedPieceGuids }}\n            onSelectionChange={(next) =\u003e setSelectedPieceGuids(next.pieceGuids ?? [])}\n            selectionEnabled={true}\n            diffEnabled={false}\n            panEnabled={false}\n            zoomEnabled={true}\n          /\u003e\n        \u003c/div\u003e\n      \u003c/Section\u003e\n    \u003c/div\u003e\n  );\n}\n\nfunction DiffsPane() {\n  const { kit, baseDesign, designDiff, error } = useIpoState();\n  return (\n    \u003cdiv className=\"h-full flex flex-col gap-2\"\u003e\n      \u003cSection title=\"Diff\"\u003e\n        {error ? (\n          \u003cdiv className=\"p-2 text-sm text-destructive font-mono\"\u003e{error}\u003c/div\u003e\n        ) : (\n          \u003cdiv className=\"h-96 w-full rounded-md border border-element bg-card overflow-hidden\"\u003e\n            \u003cDiagram kit={kit} designGuid={baseDesign.guid} designDiff={designDiff} diffEnabled={true} selectionEnabled={false} /\u003e\n          \u003c/div\u003e\n        )}\n      \u003c/Section\u003e\n    \u003c/div\u003e\n  );\n}\n\nfunction OutputsPane() {\n  const { outputKit, outputDesign } = useIpoState();\n  return (\n    \u003cdiv className=\"h-full flex flex-col gap-2\"\u003e\n      \u003cSection title=\"Output\"\u003e\n        \u003cdiv className=\"h-96 w-full rounded-md border border-element bg-card overflow-hidden\"\u003e\n          \u003cDiagram kit={outputKit} designGuid={outputDesign.guid} diffEnabled={false} selectionEnabled={false} /\u003e\n        \u003c/div\u003e\n      \u003c/Section\u003e\n    \u003c/div\u003e\n  );\n}\n\nconst defaultWindowIds = {\n  description: \"ipo-drag-description\",\n  requirements: \"ipo-drag-requirements\",\n  inputs: \"ipo-drag-inputs\",\n  diffs: \"ipo-drag-diffs\",\n  outputs: \"ipo-drag-outputs\",\n  descriptionTitle: \"Description\",\n  requirementsTitle: \"Requirements\",\n  inputsTitle: \"Inputs\",\n  diffsTitle: \"Diffs\",\n  outputsTitle: \"Outputs\",\n};\n\nfunction normalizeDragDiffForDiagram(baseDesign: Design, dragDiff: DesignDiff): DesignDiff {\n  // dragPiecesInDesign encodes piece center updates as a delta (offset.u/offset.v),\n  // but Diagram's applyDesignDiff expects piece center to be an absolute center.\n  const basePieces = baseDesign.pieces ?? [];\n  const updatedPieces = dragDiff.pieces?.updated as any[] | undefined;\n  if (!updatedPieces || updatedPieces.length === 0) return dragDiff;\n\n  const nextUpdated = updatedPieces.map((u) =\u003e {\n    const pieceGuid = u.piece?.guid;\n    const basePiece = basePieces.find((p) =\u003e p.guid === pieceGuid);\n    const deltaCenter = u.diff?.center;\n    if (!basePiece?.center || !deltaCenter || typeof deltaCenter.u !== \"number\" || typeof deltaCenter.v !== \"number\") return u;\n    return {\n      ...u,\n      diff: {\n        ...u.diff,\n        center: {\n          u: (basePiece.center.u ?? 0) + deltaCenter.u,\n          v: (basePiece.center.v ?? 0) + deltaCenter.v,\n        },\n      },\n    };\n  });\n\n  return {\n    ...dragDiff,\n    pieces: {\n      ...dragDiff.pieces,\n      updated: nextUpdated,\n    },\n  };\n}\n\nfunction IpoFrame() {\n  const language = useAlgorithmLanguage();\n  const kit = metabolismKit as unknown as Kit;\n  const baseDesign = React.useMemo(() =\u003e findDesignInKit(kit, nakaginCapsuleTowerDesignGuid) as Design, [kit]);\n\n  const [selectedPieceGuids, setSelectedPieceGuids] = React.useState\u003cstring[]\u003e([]);\n  const [vec, setVec] = React.useState\u003cVec2\u003e({ u: 1, v: -2 });\n\n  React.useEffect(() =\u003e {\n    if (selectedPieceGuids.length \u003e 0) return;\n    const defaultPieces = (baseDesign.pieces ?? []).slice(0, 3).map((p) =\u003e p.guid);\n    setSelectedPieceGuids(defaultPieces);\n  }, [baseDesign, selectedPieceGuids.length]);\n\n  const { designDiff, outputKit, outputDesign, error } = React.useMemo(() =\u003e {\n    try {\n      if (selectedPieceGuids.length === 0) {\n        return { designDiff: undefined, outputKit: kit, outputDesign: baseDesign, error: undefined };\n      }\n\n      const piecesDesign = { guid: \"\", name: \"\", pieces: selectedPieceGuids.map((g) =\u003e ({ guid: g })) } as Design;\n      const rawDiff = dragPiecesInDesign(baseDesign, piecesDesign, { u: vec.u, v: vec.v });\n      const normalized = normalizeDragDiffForDiagram(baseDesign, rawDiff);\n\n      const outDesign = applyDesignDiff(baseDesign, normalized);\n      const nextKit: Kit = {\n        ...kit,\n        designs: (kit.designs ?? []).map((d) =\u003e (d.guid === outDesign.guid ? outDesign : d)),\n      };\n\n      return { designDiff: normalized, outputKit: nextKit, outputDesign: outDesign, error: undefined };\n    } catch (e: any) {\n      return { designDiff: undefined, outputKit: kit, outputDesign: baseDesign, error: String(e?.message ?? e) };\n    }\n  }, [baseDesign, kit, selectedPieceGuids, vec.u, vec.v]);\n\n  const state: IpoState = {\n    language,\n    kit,\n    baseDesign,\n    selectedPieceGuids,\n    vec,\n    designDiff,\n    outputKit,\n    outputDesign,\n    error,\n    setSelectedPieceGuids,\n    setVec,\n  };\n\n  const windowConfig: any = React.useMemo(() =\u003e {\n    return {\n      windowKinds: [\n        { id: defaultWindowIds.description, label: \"Description\", component: DescriptionPane },\n        { id: defaultWindowIds.requirements, label: \"Requirements\", component: RequirementsPane },\n        { id: defaultWindowIds.inputs, label: \"Inputs\", component: InputsPane },\n        { id: defaultWindowIds.diffs, label: \"Diffs\", component: DiffsPane },\n        { id: defaultWindowIds.outputs, label: \"Outputs\", component: OutputsPane },\n      ],\n      defaultLayout: createIpoDefaultLayout({ ...defaultWindowIds }),\n    };\n  }, []);\n\n  const apps = [\n    {\n      id: \"ipo-drag\",\n      label: \"Drag\",\n      windowConfig,\n    },\n  ] as any;\n\n  return (\n    \u003cIpoContext.Provider value={state}\u003e\n      \u003cdiv className=\"h-[720px] w-full\"\u003e\n        \u003cUI apps={apps} breadcrumbItems={IPO_BREADCRUMB} defaultAppId={apps[0]!.id} /\u003e\n      \u003c/div\u003e\n    \u003c/IpoContext.Provider\u003e\n  );\n}\n\nexport const Default: Story = {\n  render: () =\u003e \u003cIpoFrame /\u003e,\n};\n",
               "numLines": 357,
               "startLine": 1,
               "totalLines": 357
@@ -1085,12 +1085,12 @@
         "kind": "agent.file.read.starting",
         "second": "2026-03-20T19:23:43Z",
         "session": "0feb744b-4b73-4278-81d6-325e624d8189",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
       },
       "native": {
         "event": {
           "session_id": "0feb744b-4b73-4278-81d6-325e624d8189",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PreToolUse",
@@ -1113,12 +1113,12 @@
         "kind": "agent.file.read.ended",
         "second": "2026-03-20T19:23:43Z",
         "session": "0feb744b-4b73-4278-81d6-325e624d8189",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
       },
       "native": {
         "event": {
           "session_id": "0feb744b-4b73-4278-81d6-325e624d8189",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PostToolUse",
@@ -1151,18 +1151,18 @@
         "kind": "agent.file.read.starting",
         "second": "2026-03-20T19:23:43Z",
         "session": "0feb744b-4b73-4278-81d6-325e624d8189",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
       },
       "native": {
         "event": {
           "session_id": "0feb744b-4b73-4278-81d6-325e624d8189",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PreToolUse",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/workspaces/semio/semio/algorithms/.storybook/main.ts"
+            "file_path": "/workspaces/semio/compose/algorithms/.storybook/main.ts"
           },
           "tool_use_id": "toolu_01KfyjfrU1uo37BF5YJkHPnw"
         }
@@ -1177,18 +1177,18 @@
         "kind": "agent.file.read.starting",
         "second": "2026-03-20T19:23:44Z",
         "session": "0feb744b-4b73-4278-81d6-325e624d8189",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
       },
       "native": {
         "event": {
           "session_id": "0feb744b-4b73-4278-81d6-325e624d8189",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PreToolUse",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/workspaces/semio/semio/algorithms/.storybook/preview.tsx"
+            "file_path": "/workspaces/semio/compose/algorithms/.storybook/preview.tsx"
           },
           "tool_use_id": "toolu_01QkdeD1zojpKF7rjbzt7V4q"
         }
@@ -1203,24 +1203,24 @@
         "kind": "agent.file.read.ended",
         "second": "2026-03-20T19:23:44Z",
         "session": "0feb744b-4b73-4278-81d6-325e624d8189",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
       },
       "native": {
         "event": {
           "session_id": "0feb744b-4b73-4278-81d6-325e624d8189",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PostToolUse",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/workspaces/semio/semio/algorithms/.storybook/main.ts"
+            "file_path": "/workspaces/semio/compose/algorithms/.storybook/main.ts"
           },
           "tool_response": {
             "type": "text",
             "file": {
-              "filePath": "/workspaces/semio/semio/algorithms/.storybook/main.ts",
-              "content": "// #region 🔖Header\n// 💻 semio/algorithms/.storybook/main.ts\n// Specs: Keep Storybook wiring aligned with .elements/ui.\n// Summary: Configures Storybook for the algorithms bundle.\n// 2026 Ueli Saluz \u003cueli@semio-tech.com\u003e\n// #endregion 🔖Header\n\nimport type { StorybookConfig } from \"@storybook/react-vite\";\nimport { createRequire } from \"node:module\";\nimport { fileURLToPath } from \"node:url\";\nimport { dirname, join, resolve } from \"path\";\nimport rehypeAutolinkHeadings from \"rehype-autolink-headings\";\nimport rehypeSlug from \"rehype-slug\";\nimport remarkFrontmatter from \"remark-frontmatter\";\nimport remarkGfm from \"remark-gfm\";\nimport remarkMdxFrontmatter from \"remark-mdx-frontmatter\";\n\nconst require = createRequire(import.meta.url);\nconst __filename = fileURLToPath(import.meta.url);\nconst __dirname = dirname(__filename);\n\nfunction getAbsolutePath(value: string): string {\n  try {\n    return dirname(require.resolve(join(value, \"package.json\")));\n  } catch {\n    return dirname(require.resolve(join(\"../../../elements/ui/node_modules\", value, \"package.json\")));\n  }\n}\n\nconst config: StorybookConfig = {\n  stories: [\"./stories/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)\"],\n  addons: [getAbsolutePath(\"@storybook/addon-vitest\"), getAbsolutePath(\"@storybook/addon-docs\")],\n  framework: {\n    name: getAbsolutePath(\"@storybook/react-vite\"),\n    options: {},\n  },\n  docs: {},\n  typescript: {\n    reactDocgen: \"react-docgen-typescript\",\n  },\n  core: {\n    disableTelemetry: true,\n  },\n  async viteFinal(config) {\n    config.resolve = config.resolve || {};\n    config.resolve.alias = {\n      ...(config.resolve.alias || {}),\n      \"@semio/ui\": resolve(__dirname, \"../../ui\"),\n      \"@elements/ui\": resolve(__dirname, \"../../../elements/ui\"),\n      \"@semio/algorithms\": resolve(__dirname, \"..\"),\n    };\n\n    config.plugins = config.plugins || [];\n    const indicesToRemove: number[] = [];\n    for (let i = 0; i \u003c config.plugins.length; i++) {\n      const plugin: any = config.plugins[i];\n      if (plugin === \"@mdx-js/rollup\" || (plugin \u0026\u0026 typeof plugin === \"object\" \u0026\u0026 plugin.name === \"@mdx-js/rollup\")) {\n        indicesToRemove.push(i);\n        continue;\n      }\n      if (plugin instanceof Promise) {\n        try {\n          const resolved: any = await plugin;\n          if (resolved \u0026\u0026 typeof resolved === \"object\" \u0026\u0026 resolved.name === \"storybook:mdx-plugin\") {\n            indicesToRemove.push(i);\n          }\n        } catch (e) {}\n      }\n    }\n    for (let i = indicesToRemove.length - 1; i \u003e= 0; i--) {\n      config.plugins.splice(indicesToRemove[i], 1);\n    }\n\n    const mdx = await import(\"@mdx-js/rollup\");\n    config.plugins.push(\n      mdx.default({\n        remarkPlugins: [remarkGfm, remarkFrontmatter, remarkMdxFrontmatter],\n        rehypePlugins: [rehypeSlug, rehypeAutolinkHeadings],\n      }),\n    );\n\n    config.mode = \"development\";\n    config.define = {\n      ...config.define,\n      \"process.env.NODE_ENV\": JSON.stringify(\"development\"),\n    };\n\n    return config;\n  },\n};\n\nexport default config;\n",
+              "filePath": "/workspaces/semio/compose/algorithms/.storybook/main.ts",
+              "content": "// #region 🔖Header\n// 💻 compose/algorithms/.storybook/main.ts\n// Specs: Keep Storybook wiring aligned with .elements/ui.\n// Summary: Configures Storybook for the algorithms bundle.\n// 2026 Ueli Saluz \u003cueli@semio-tech.com\u003e\n// #endregion 🔖Header\n\nimport type { StorybookConfig } from \"@storybook/react-vite\";\nimport { createRequire } from \"node:module\";\nimport { fileURLToPath } from \"node:url\";\nimport { dirname, join, resolve } from \"path\";\nimport rehypeAutolinkHeadings from \"rehype-autolink-headings\";\nimport rehypeSlug from \"rehype-slug\";\nimport remarkFrontmatter from \"remark-frontmatter\";\nimport remarkGfm from \"remark-gfm\";\nimport remarkMdxFrontmatter from \"remark-mdx-frontmatter\";\n\nconst require = createRequire(import.meta.url);\nconst __filename = fileURLToPath(import.meta.url);\nconst __dirname = dirname(__filename);\n\nfunction getAbsolutePath(value: string): string {\n  try {\n    return dirname(require.resolve(join(value, \"package.json\")));\n  } catch {\n    return dirname(require.resolve(join(\"../../../elements/ui/node_modules\", value, \"package.json\")));\n  }\n}\n\nconst config: StorybookConfig = {\n  stories: [\"./stories/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)\"],\n  addons: [getAbsolutePath(\"@storybook/addon-vitest\"), getAbsolutePath(\"@storybook/addon-docs\")],\n  framework: {\n    name: getAbsolutePath(\"@storybook/react-vite\"),\n    options: {},\n  },\n  docs: {},\n  typescript: {\n    reactDocgen: \"react-docgen-typescript\",\n  },\n  core: {\n    disableTelemetry: true,\n  },\n  async viteFinal(config) {\n    config.resolve = config.resolve || {};\n    config.resolve.alias = {\n      ...(config.resolve.alias || {}),\n      \"@compose/ui\": resolve(__dirname, \"../../ui\"),\n      \"@elements/ui\": resolve(__dirname, \"../../../elements/ui\"),\n      \"@compose/algorithms\": resolve(__dirname, \"..\"),\n    };\n\n    config.plugins = config.plugins || [];\n    const indicesToRemove: number[] = [];\n    for (let i = 0; i \u003c config.plugins.length; i++) {\n      const plugin: any = config.plugins[i];\n      if (plugin === \"@mdx-js/rollup\" || (plugin \u0026\u0026 typeof plugin === \"object\" \u0026\u0026 plugin.name === \"@mdx-js/rollup\")) {\n        indicesToRemove.push(i);\n        continue;\n      }\n      if (plugin instanceof Promise) {\n        try {\n          const resolved: any = await plugin;\n          if (resolved \u0026\u0026 typeof resolved === \"object\" \u0026\u0026 resolved.name === \"storybook:mdx-plugin\") {\n            indicesToRemove.push(i);\n          }\n        } catch (e) {}\n      }\n    }\n    for (let i = indicesToRemove.length - 1; i \u003e= 0; i--) {\n      config.plugins.splice(indicesToRemove[i], 1);\n    }\n\n    const mdx = await import(\"@mdx-js/rollup\");\n    config.plugins.push(\n      mdx.default({\n        remarkPlugins: [remarkGfm, remarkFrontmatter, remarkMdxFrontmatter],\n        rehypePlugins: [rehypeSlug, rehypeAutolinkHeadings],\n      }),\n    );\n\n    config.mode = \"development\";\n    config.define = {\n      ...config.define,\n      \"process.env.NODE_ENV\": JSON.stringify(\"development\"),\n    };\n\n    return config;\n  },\n};\n\nexport default config;\n",
               "numLines": 93,
               "startLine": 1,
               "totalLines": 93
@@ -1239,18 +1239,18 @@
         "kind": "agent.file.read.ended",
         "second": "2026-03-20T19:23:44Z",
         "session": "0feb744b-4b73-4278-81d6-325e624d8189",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
       },
       "native": {
         "event": {
           "session_id": "0feb744b-4b73-4278-81d6-325e624d8189",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PostToolUseFailure",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/workspaces/semio/semio/algorithms/.storybook/preview.tsx"
+            "file_path": "/workspaces/semio/compose/algorithms/.storybook/preview.tsx"
           },
           "tool_use_id": "toolu_01QkdeD1zojpKF7rjbzt7V4q",
           "error": "File does not exist. Note: your current working directory is /workspaces/semio. Did you mean preview.ts?",
@@ -1267,18 +1267,18 @@
         "kind": "agent.file.read.starting",
         "second": "2026-03-20T19:23:51Z",
         "session": "0feb744b-4b73-4278-81d6-325e624d8189",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
       },
       "native": {
         "event": {
           "session_id": "0feb744b-4b73-4278-81d6-325e624d8189",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PreToolUse",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/workspaces/semio/semio/algorithms/.storybook/preview.ts"
+            "file_path": "/workspaces/semio/compose/algorithms/.storybook/preview.ts"
           },
           "tool_use_id": "toolu_01ATDuMuZPX4kAdyyH4z4RYr"
         }
@@ -1293,24 +1293,24 @@
         "kind": "agent.file.read.ended",
         "second": "2026-03-20T19:23:51Z",
         "session": "0feb744b-4b73-4278-81d6-325e624d8189",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
       },
       "native": {
         "event": {
           "session_id": "0feb744b-4b73-4278-81d6-325e624d8189",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PostToolUse",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/workspaces/semio/semio/algorithms/.storybook/preview.ts"
+            "file_path": "/workspaces/semio/compose/algorithms/.storybook/preview.ts"
           },
           "tool_response": {
             "type": "text",
             "file": {
-              "filePath": "/workspaces/semio/semio/algorithms/.storybook/preview.ts",
-              "content": "// #region 🔖Header\n// 💻 semio/algorithms/.storybook/preview.ts\n// Specs: Match .elements/ui Storybook globals and decorators.\n// Summary: Defines global Storybook preview parameters for algorithms.\n// 2026 Ueli Saluz \u003cueli@semio-tech.com\u003e\n// #endregion 🔖Header\n\nimport type { Preview } from \"@storybook/react-vite\";\nimport { withLevel } from \"./withLevel\";\nimport { withTheme } from \"./withTheme\";\nimport { AlgorithmLanguage, withLanguage } from \"./withLanguage\";\n\nimport \"../../ui/globals.css\";\n\nenum Theme {\n  SYSTEM = \"system\",\n  LIGHT = \"light\",\n  DARK = \"dark\",\n}\n\nconst preview: Preview = {\n  parameters: {\n    controls: {\n      matchers: {\n        color: /(background|color)$/i,\n        date: /Date$/i,\n      },\n    },\n  },\n  globalTypes: {\n    theme: {\n      description: \"Global theme for components\",\n      toolbar: {\n        title: \"Theme\",\n        icon: \"circlehollow\",\n        items: [\n          { value: Theme.SYSTEM, title: \"System\", icon: \"browser\" },\n          { value: Theme.LIGHT, title: \"Light\", icon: \"sun\" },\n          { value: Theme.DARK, title: \"Dark\", icon: \"moon\" },\n        ],\n        dynamicTitle: true,\n      },\n    },\n    language: {\n      description: \"Global implementation language for algorithm execution\",\n      toolbar: {\n        title: \"Language\",\n        icon: \"circlehollow\",\n        items: [\n          { value: AlgorithmLanguage.TS, title: \"TypeScript\", icon: \"code\" },\n          { value: AlgorithmLanguage.PYTHON, title: \"Python\", icon: \"python\" },\n          { value: AlgorithmLanguage.RUST, title: \"Rust\", icon: \"code-fork\" },\n          { value: AlgorithmLanguage.GO, title: \"Go\", icon: \"terminal\" },\n        ],\n        dynamicTitle: true,\n      },\n    },\n  },\n  initialGlobals: {\n    theme: Theme.SYSTEM,\n    language: AlgorithmLanguage.TS,\n  },\n  decorators: [withLevel, withLanguage, withTheme],\n  tags: [\"autodocs\"],\n};\n\nexport default preview;\n",
+              "filePath": "/workspaces/semio/compose/algorithms/.storybook/preview.ts",
+              "content": "// #region 🔖Header\n// 💻 compose/algorithms/.storybook/preview.ts\n// Specs: Match .elements/ui Storybook globals and decorators.\n// Summary: Defines global Storybook preview parameters for algorithms.\n// 2026 Ueli Saluz \u003cueli@semio-tech.com\u003e\n// #endregion 🔖Header\n\nimport type { Preview } from \"@storybook/react-vite\";\nimport { withLevel } from \"./withLevel\";\nimport { withTheme } from \"./withTheme\";\nimport { AlgorithmLanguage, withLanguage } from \"./withLanguage\";\n\nimport \"../../ui/globals.css\";\n\nenum Theme {\n  SYSTEM = \"system\",\n  LIGHT = \"light\",\n  DARK = \"dark\",\n}\n\nconst preview: Preview = {\n  parameters: {\n    controls: {\n      matchers: {\n        color: /(background|color)$/i,\n        date: /Date$/i,\n      },\n    },\n  },\n  globalTypes: {\n    theme: {\n      description: \"Global theme for components\",\n      toolbar: {\n        title: \"Theme\",\n        icon: \"circlehollow\",\n        items: [\n          { value: Theme.SYSTEM, title: \"System\", icon: \"browser\" },\n          { value: Theme.LIGHT, title: \"Light\", icon: \"sun\" },\n          { value: Theme.DARK, title: \"Dark\", icon: \"moon\" },\n        ],\n        dynamicTitle: true,\n      },\n    },\n    language: {\n      description: \"Global implementation language for algorithm execution\",\n      toolbar: {\n        title: \"Language\",\n        icon: \"circlehollow\",\n        items: [\n          { value: AlgorithmLanguage.TS, title: \"TypeScript\", icon: \"code\" },\n          { value: AlgorithmLanguage.PYTHON, title: \"Python\", icon: \"python\" },\n          { value: AlgorithmLanguage.RUST, title: \"Rust\", icon: \"code-fork\" },\n          { value: AlgorithmLanguage.GO, title: \"Go\", icon: \"terminal\" },\n        ],\n        dynamicTitle: true,\n      },\n    },\n  },\n  initialGlobals: {\n    theme: Theme.SYSTEM,\n    language: AlgorithmLanguage.TS,\n  },\n  decorators: [withLevel, withLanguage, withTheme],\n  tags: [\"autodocs\"],\n};\n\nexport default preview;\n",
               "numLines": 68,
               "startLine": 1,
               "totalLines": 68
@@ -1329,12 +1329,12 @@
         "kind": "agent.file.read.starting",
         "second": "2026-03-20T19:23:52Z",
         "session": "0feb744b-4b73-4278-81d6-325e624d8189",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
       },
       "native": {
         "event": {
           "session_id": "0feb744b-4b73-4278-81d6-325e624d8189",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PreToolUse",
@@ -1358,12 +1358,12 @@
         "kind": "agent.file.read.ended",
         "second": "2026-03-20T19:23:52Z",
         "session": "0feb744b-4b73-4278-81d6-325e624d8189",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
       },
       "native": {
         "event": {
           "session_id": "0feb744b-4b73-4278-81d6-325e624d8189",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PostToolUse",
@@ -1395,12 +1395,12 @@
         "kind": "agent.file.read.starting",
         "second": "2026-03-20T19:23:57Z",
         "session": "0feb744b-4b73-4278-81d6-325e624d8189",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
       },
       "native": {
         "event": {
           "session_id": "0feb744b-4b73-4278-81d6-325e624d8189",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PreToolUse",
@@ -1423,12 +1423,12 @@
         "kind": "agent.file.read.ended",
         "second": "2026-03-20T19:23:57Z",
         "session": "0feb744b-4b73-4278-81d6-325e624d8189",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
       },
       "native": {
         "event": {
           "session_id": "0feb744b-4b73-4278-81d6-325e624d8189",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PostToolUse",
@@ -1461,12 +1461,12 @@
         "kind": "agent.file.read.starting",
         "second": "2026-03-20T19:24:01Z",
         "session": "0feb744b-4b73-4278-81d6-325e624d8189",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
       },
       "native": {
         "event": {
           "session_id": "0feb744b-4b73-4278-81d6-325e624d8189",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PreToolUse",
@@ -1489,12 +1489,12 @@
         "kind": "agent.file.read.ended",
         "second": "2026-03-20T19:24:01Z",
         "session": "0feb744b-4b73-4278-81d6-325e624d8189",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
       },
       "native": {
         "event": {
           "session_id": "0feb744b-4b73-4278-81d6-325e624d8189",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PostToolUse",
@@ -1527,12 +1527,12 @@
         "kind": "agent.file.read.starting",
         "second": "2026-03-20T19:24:05Z",
         "session": "0feb744b-4b73-4278-81d6-325e624d8189",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
       },
       "native": {
         "event": {
           "session_id": "0feb744b-4b73-4278-81d6-325e624d8189",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PreToolUse",
@@ -1555,12 +1555,12 @@
         "kind": "agent.file.read.ended",
         "second": "2026-03-20T19:24:05Z",
         "session": "0feb744b-4b73-4278-81d6-325e624d8189",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
       },
       "native": {
         "event": {
           "session_id": "0feb744b-4b73-4278-81d6-325e624d8189",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PostToolUse",
@@ -1593,12 +1593,12 @@
         "kind": "agent.file.read.starting",
         "second": "2026-03-20T19:24:10Z",
         "session": "0feb744b-4b73-4278-81d6-325e624d8189",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
       },
       "native": {
         "event": {
           "session_id": "0feb744b-4b73-4278-81d6-325e624d8189",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PreToolUse",
@@ -1621,12 +1621,12 @@
         "kind": "agent.file.read.ended",
         "second": "2026-03-20T19:24:10Z",
         "session": "0feb744b-4b73-4278-81d6-325e624d8189",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
       },
       "native": {
         "event": {
           "session_id": "0feb744b-4b73-4278-81d6-325e624d8189",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PostToolUse",
@@ -1659,18 +1659,18 @@
         "kind": "agent.file.read.starting",
         "second": "2026-03-20T19:24:15Z",
         "session": "0feb744b-4b73-4278-81d6-325e624d8189",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
       },
       "native": {
         "event": {
           "session_id": "0feb744b-4b73-4278-81d6-325e624d8189",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PreToolUse",
           "tool_name": "Bash",
           "tool_input": {
-            "command": "cd /workspaces/semio/semio/algorithms \u0026\u0026 ls package.json .storybook/",
+            "command": "cd /workspaces/semio/compose/algorithms \u0026\u0026 ls package.json .storybook/",
             "description": "Check algorithm storybook files"
           },
           "tool_use_id": "toolu_014wZeYvFG8PVEHTZpxEzKfg"
@@ -1686,12 +1686,12 @@
         "kind": "agent.started",
         "second": "2026-03-20T19:51:05Z",
         "session": "0feb744b-4b73-4278-81d6-325e624d8189",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl"
       },
       "native": {
         "event": {
           "session_id": "0feb744b-4b73-4278-81d6-325e624d8189",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/0feb744b-4b73-4278-81d6-325e624d8189.jsonl",
           "cwd": "/workspaces/semio",
           "hook_event_name": "SessionStart",
           "source": "resume"

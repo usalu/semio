@@ -31,13 +31,13 @@ Restore all missing sketchpad workbench functionalities. The migration from dire
 
 ## Changes
 
-- `semio/js/sketchpad/Design.tsx`: Added `leftSidePanel: true` to panelVisibility in constructor, createDefaultState, and INIT event
-- `semio/js/sketchpad/Type.tsx`: Restored `PanelKind.WORKBENCH` to getPanels, updated panelVisibility in createDefaultState and INIT
-- `semio/js/sketchpad/Quality.tsx`: Updated panelVisibility in constructor and createDefaultState
-- `semio/js/sketchpad/Docs.tsx`: Updated panelVisibility in constructor and createDefaultState
-- `semio/js/sketchpad/Kit.tsx`: Updated panelVisibility in createDefaultState and useKitApp default, fixed Y.js getter to read all panelVisibility fields
-- `semio/js/sketchpad/Sketchpad.tsx`: Updated defaultPanelVisibility to include side panel flags
-- `semio/js/sketchpad/shared.ts`: Updated EMPTY_PANEL_VISIBILITY to include side panel flags
+- `compose/js/sketchpad/Design.tsx`: Added `leftSidePanel: true` to panelVisibility in constructor, createDefaultState, and INIT event
+- `compose/js/sketchpad/Type.tsx`: Restored `PanelKind.WORKBENCH` to getPanels, updated panelVisibility in createDefaultState and INIT
+- `compose/js/sketchpad/Quality.tsx`: Updated panelVisibility in constructor and createDefaultState
+- `compose/js/sketchpad/Docs.tsx`: Updated panelVisibility in constructor and createDefaultState
+- `compose/js/sketchpad/Kit.tsx`: Updated panelVisibility in createDefaultState and useKitApp default, fixed Y.js getter to read all panelVisibility fields
+- `compose/js/sketchpad/Sketchpad.tsx`: Updated defaultPanelVisibility to include side panel flags
+- `compose/js/sketchpad/shared.ts`: Updated EMPTY_PANEL_VISIBILITY to include side panel flags
 
 ## Summary
 

@@ -5,8 +5,8 @@ set -e
 WORKSPACE="${containerWorkspaceFolder:-/workspaces/semio}"
 SSH_SIGNING_KEY="${HOME}/.ssh/id_ed25519_signing"
 SSH_SIGNING_PUBLIC_KEY="${SSH_SIGNING_KEY}.pub"
-SSH_AGENT_SOCKET="${HOME}/.ssh/semio-ssh-agent.sock"
-SSH_AGENT_ENV="${HOME}/.ssh/semio-ssh-agent.env"
+SSH_AGENT_SOCKET="${HOME}/.ssh/compose-ssh-agent.sock"
+SSH_AGENT_ENV="${HOME}/.ssh/compose-ssh-agent.env"
 #region 🔖EmojiFonts
 configure_emoji_fonts() {
   sudo mkdir -p /etc/fonts
@@ -100,12 +100,12 @@ configure_emoji_fonts
 #endregion 🔖EmojiFonts
 #region 🔖Neo4jEnv
 configure_neo4j_compose_env() {
-  local profile_script="/etc/profile.d/99-semio-neo4j-mcp.sh"
+  local profile_script="/etc/profile.d/99-compose-neo4j-mcp.sh"
   sudo tee "$profile_script" >/dev/null <<'NEO4JPROFILE'
 export NEO4J_URI=bolt://localhost:7687
 export NEO4J_USERNAME=neo4j
 export NEO4J_PASSWORD=password
-export NEO4J_DATABASE=semio
+export NEO4J_DATABASE=compose
 export NEO4J_TELEMETRY=false
 NEO4JPROFILE
   sudo chmod 0644 "$profile_script" || true
@@ -115,35 +115,35 @@ NEO4JPROFILE
     cat >>"$bashrc" <<'BASHRC'
 
 #region 🔌Neo4jMcp
-if [ -f /etc/profile.d/99-semio-neo4j-mcp.sh ]; then
+if [ -f /etc/profile.d/99-compose-neo4j-mcp.sh ]; then
   # shellcheck source=/dev/null
-  . /etc/profile.d/99-semio-neo4j-mcp.sh
+  . /etc/profile.d/99-compose-neo4j-mcp.sh
 fi
 #endregion 🔌Neo4jMcp
 BASHRC
   fi
-  if [ -f /etc/profile.d/99-semio-neo4j-mcp.sh ]; then
+  if [ -f /etc/profile.d/99-compose-neo4j-mcp.sh ]; then
     # shellcheck source=/dev/null
-    . /etc/profile.d/99-semio-neo4j-mcp.sh
+    . /etc/profile.d/99-compose-neo4j-mcp.sh
   fi
-  echo "✅ Neo4j MCP env (bolt://localhost:7687 in the semio devcontainer) installed for login shells and this session."
+  echo "✅ Neo4j MCP env (bolt://localhost:7687 in the compose devcontainer) installed for login shells and this session."
 }
 
 configure_neo4j_compose_env
 #endregion 🔖Neo4jEnv
 #region 🗄️Neo4jService
-migrate_neo4j_community_graph_semio() {
+migrate_neo4j_community_graph_compose() {
   local databases="/var/lib/neo4j/data/databases"
   if [ ! -d "$databases" ]; then
     return 0
   fi
-  if [ -d "${databases}/semio" ]; then
+  if [ -d "${databases}/compose" ]; then
     return 0
   fi
   if [ ! -d "${databases}/neo4j" ]; then
     return 0
   fi
-  echo "🧾 Neo4j Community: clearing /var/lib/neo4j/data so the sole standard database is named semio (replacing legacy neo4j)."
+  echo "🧾 Neo4j Community: clearing /var/lib/neo4j/data so the sole standard database is named compose (replacing legacy neo4j)."
   sudo neo4j stop >/dev/null 2>&1 || true
   sudo rm -rf /var/lib/neo4j/data/*
 }
@@ -154,7 +154,7 @@ configure_neo4j_server() {
     return 1
   fi
 
-  migrate_neo4j_community_graph_semio
+  migrate_neo4j_community_graph_compose
 
   local conf="/etc/neo4j/neo4j.conf"
   sudo mkdir -p /var/lib/neo4j/data /var/log/neo4j /var/run/neo4j
@@ -177,7 +177,7 @@ configure_neo4j_server() {
   set_neo4j_conf_value "server.directories.import" "/workspaces/semio"
   set_neo4j_conf_value "dbms.security.procedures.allowlist" "apoc.*"
   set_neo4j_conf_value "dbms.security.procedures.unrestricted" "apoc.*"
-  set_neo4j_conf_value "initial.dbms.default_database" "semio"
+  set_neo4j_conf_value "initial.dbms.default_database" "compose"
 
   sudo tee /etc/neo4j/apoc.conf >/dev/null <<'APOCCONF'
 apoc.export.file.enabled=true
@@ -196,9 +196,9 @@ start_neo4j_server() {
     return 0
   fi
 
-  sudo neo4j start >/tmp/semio-neo4j-start.log 2>&1 || {
+  sudo neo4j start >/tmp/compose-neo4j-start.log 2>&1 || {
     echo "⚠️ Neo4j failed to start. Last startup log lines:"
-    tail -40 /tmp/semio-neo4j-start.log || true
+    tail -40 /tmp/compose-neo4j-start.log || true
     return 1
   }
 }
@@ -217,7 +217,7 @@ wait_for_neo4j_bolt() {
 }
 
 if configure_neo4j_server && start_neo4j_server && wait_for_neo4j_bolt; then
-  echo "✅ Neo4j is running inside the semio devcontainer at bolt://localhost:7687."
+  echo "✅ Neo4j is running inside the compose devcontainer at bolt://localhost:7687."
 else
   echo "⚠️ Neo4j was not reachable at bolt://localhost:7687 during post-start."
 fi
@@ -236,7 +236,7 @@ extra_neo4j_graph_names_from_env() {
 }
 
 ensure_neo4j_schema_files() {
-  local technologies=("semio" "elements" "coda" "reuse")
+  local technologies=("compose" "elements" "coda" "reuse")
   local ex
   while IFS= read -r ex; do
     [ -n "$ex" ] && technologies+=("$ex")
@@ -261,7 +261,7 @@ neo4j_schema_cypher_uri() {
 }
 
 reload_neo4j_from_repo_cypher() {
-  local graph_db="${NEO4J_DATABASE:-semio}"
+  local graph_db="${NEO4J_DATABASE:-compose}"
   if ! command -v cypher-shell >/dev/null 2>&1; then
     return 0
   fi
@@ -281,7 +281,7 @@ reload_neo4j_from_repo_cypher() {
     return 0
   }
   local imported=0
-  local technologies=("semio" "elements" "coda" "reuse")
+  local technologies=("compose" "elements" "coda" "reuse")
   local ex
   while IFS= read -r ex; do
     [ -n "$ex" ] && technologies+=("$ex")
@@ -356,17 +356,17 @@ echo "✅ Marked workspace + submodules as safe.directory for git."
 #region 🔐GitSshSigning
 ensure_shell_loads_ssh_agent() {
   local bashrc="${HOME}/.bashrc"
-  local marker="#region 🔐SemioSshAgent"
+  local marker="#region 🔐ComposeSshAgent"
   if [ -f "$bashrc" ] && grep -Fq "$marker" "$bashrc"; then
     return 0
   fi
   cat >>"$bashrc" <<'SHELLRC'
 
-#region 🔐SemioSshAgent
-if [ -f "$HOME/.ssh/semio-ssh-agent.env" ]; then
-  . "$HOME/.ssh/semio-ssh-agent.env" >/dev/null 2>&1 || true
+#region 🔐ComposeSshAgent
+if [ -f "$HOME/.ssh/compose-ssh-agent.env" ]; then
+  . "$HOME/.ssh/compose-ssh-agent.env" >/dev/null 2>&1 || true
 fi
-#endregion 🔐SemioSshAgent
+#endregion 🔐ComposeSshAgent
 SHELLRC
 }
 

@@ -1,0 +1,14 @@
+{
+  "title": "Compose Store Graphql Api",
+  "emoji": "🌐",
+  "status": "closed",
+  "description": "Replace compose-store JSON-RPC with GraphQL over HTTP, wire native KitStore for backbone commands, add GraphiQL dev config in launch.json.",
+  "summary": "Consolidated compose-store into a single Rust source file: moved the Axum GraphQL sidecar implementation and all HTTP tests into compose/store/bin.rs, removed compose/store/jsonrpc.rs and compose/store/tests/rpc.rs, and updated compose/store/AGENTS.md to reference the single-file structure. Verified cargo test -p compose-store with ticket-local CARGO_TARGET_DIR: 4 passed, 0 failed; cargo emitted existing compose library warnings and one incremental cleanup access warning after the passing run.",
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪637b18ef72e14230bff47bba9f3e37e0",
+    "⚪8f78b82356844e96b23e71caf4fcc6cc",
+    "⚪5d106e0da1dd40f4aeedd51a3226813f",
+    "⚪85c684bf7a18468ba4f02b341fd04c51"
+  ]
+}

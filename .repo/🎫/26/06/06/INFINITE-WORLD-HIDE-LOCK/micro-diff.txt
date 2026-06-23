@@ -409,7 +409,7 @@ index 000000000..92f38d256
 +  "emoji": "🧊",
 +  "status": "closed",
 +  "description": "Kit wires drag eventually crashed the 3D canvas: /meshes/capsule-with-balcony_slash.glb returned Vite HTML 404 because puzzle3dKitMeshRoots pointed at removed dev/metabolism/representations.",
-+  "summary": "Point puzzle3dKitMeshRoots at semio/fixtures/kit/folder/metabolism/representations and folder/abbau-aufbau. Add sketchpad mesh URL test. Remove stray puzzle2d hover debug log.",
++  "summary": "Point puzzle3dKitMeshRoots at compose/fixtures/kit/folder/metabolism/representations and folder/abbau-aufbau. Add sketchpad mesh URL test. Remove stray puzzle2d hover debug log.",
 +  "goal": "🎯r2602/🎯runningsketchpad"
 +}
 diff --git a/cad/assets/modelDefinition/aec.building.energy/typology/ExternalWall/typology.json b/cad/assets/modelDefinition/aec.building.energy/typology/ExternalWall/typology.json
@@ -4160,7 +4160,7 @@ index 14b2d16fa..7ce41ba30 100644
 +			expect(model.vertices[v0]!.position).toEqual([2, 3, 4]);
 +		});
 +
- 		const semioStepFixtures = [
+ 		const composeStepFixtures = [
  			{
  				name: "hexagonal-cut-concrete-forest-left",
 @@ -3753,6 +3822,8 @@ if (import.meta.vitest) {
@@ -8042,7 +8042,7 @@ index 40f745f05..f126abbd0 100644
 -    it("concrete forest brush suggestions for seed b-p1-t-t1-c3-l are all beam connectors including self", async () => {
 +    it("concrete forest first brush iteration on every seed b-* vortex yields all beam connectors", async () => {
        const concreteForestFixture = (await import("../fixture/concrete-forest.3d.json")).default as FixtureV1;
-       const leftType = (await import("../../../semio/fixtures/kit/dev/abbau-aufbau/wip/initialKit/types/hexagonal-cut-concrete-forest-left.type.semio.json")).default as {
+       const leftType = (await import("../../../compose/fixtures/kit/dev/abbau-aufbau/wip/initialKit/types/hexagonal-cut-concrete-forest-left.type.compose.json")).default as {
          connectors: { items: readonly { name: string; point: { x: number; y: number; z: number } }[] };
 @@ -12648,39 +12901,63 @@ if (import.meta.vitest) {
            expect(kitConnectors[index]).toBe(connector.name);
@@ -8132,7 +8132,7 @@ index 40f745f05..f126abbd0 100644
 +    }, 120_000);
      it("wasm concrete forest brush agrees with mesh-bvh on real geometry beam connector set", async () => {
        const concreteForestFixture = (await import("../fixture/concrete-forest.3d.json")).default as FixtureV1;
-       const leftType = (await import("../../../semio/fixtures/kit/dev/abbau-aufbau/wip/initialKit/types/hexagonal-cut-concrete-forest-left.type.semio.json")).default as {
+       const leftType = (await import("../../../compose/fixtures/kit/dev/abbau-aufbau/wip/initialKit/types/hexagonal-cut-concrete-forest-left.type.compose.json")).default as {
 @@ -12732,38 +13009,46 @@ if (import.meta.vitest) {
            seed: 42,
          }),
@@ -8247,34 +8247,34 @@ index 668f89d06..09db18fda 100644
      if rules.is_empty() {
          return true;
      }
-diff --git a/semio/client/lib/js/index.ts b/semio/client/lib/js/index.ts
+diff --git a/compose/client/lib/js/index.ts b/compose/client/lib/js/index.ts
 index b783e2b08..d8126456a 100644
---- a/semio/client/lib/js/index.ts
-+++ b/semio/client/lib/js/index.ts
-@@ -1582,8 +1582,22 @@ type SemioRelayVfsBranchSpec = {
+--- a/compose/client/lib/js/index.ts
++++ b/compose/client/lib/js/index.ts
+@@ -1582,8 +1582,22 @@ type ComposeRelayVfsBranchSpec = {
    readonly nameFrom: (node: JsonObject) => string;
    readonly hasChildren?: (node: JsonObject) => boolean;
-   readonly mapChild?: (child: SemioFileSystemChildRef, node: JsonObject) => SemioFileSystemChildRef;
+   readonly mapChild?: (child: ComposeFileSystemChildRef, node: JsonObject) => ComposeFileSystemChildRef;
 +  readonly skipNode?: (node: JsonObject) => boolean;
  };
  
 +/** @emoji 📄 Speckle-style representation blob basename (`e5267da44d`). */
-+function semioLooksLikeSpeckleRepresentationBlobName(name: string): boolean {
++function composeLooksLikeSpeckleRepresentationBlobName(name: string): boolean {
 +  return name.length === 10 && /^[0-9a-f]+$/i.test(name);
 +}
 +
 +/** @emoji 📄 True when a loose kit-root file is a representation backing blob, not a browsable VFS asset. */
-+function semioKitRootFileHiddenFromVfs(node: JsonObject): boolean {
++function composeKitRootFileHiddenFromVfs(node: JsonObject): boolean {
 +  const name = String(node["name"] ?? "");
-+  if (semioLooksLikeSpeckleRepresentationBlobName(name)) return true;
++  if (composeLooksLikeSpeckleRepresentationBlobName(name)) return true;
 +  const url = String(node["url"] ?? node["remote"] ?? "");
 +  return url.includes("/representations/");
 +}
 +
- function semioRelayVfsChildrenFromFrag(frag: JsonObject | null | undefined, branches: readonly SemioRelayVfsBranchSpec[]): readonly SemioFileSystemChildRef[] {
-   const out: SemioFileSystemChildRef[] = [];
+ function composeRelayVfsChildrenFromFrag(frag: JsonObject | null | undefined, branches: readonly ComposeRelayVfsBranchSpec[]): readonly ComposeFileSystemChildRef[] {
+   const out: ComposeFileSystemChildRef[] = [];
    for (const branch of branches) {
-@@ -1592,6 +1606,7 @@ function semioRelayVfsChildrenFromFrag(frag: JsonObject | null | undefined, bran
+@@ -1592,6 +1606,7 @@ function composeRelayVfsChildrenFromFrag(frag: JsonObject | null | undefined, bran
      for (const edge of edges) {
        const node = (edge as JsonObject)?.["node"] as JsonObject | undefined;
        if (!node) continue;
@@ -8282,15 +8282,15 @@ index b783e2b08..d8126456a 100644
        const id = String(node["id"] ?? "");
        if (!id) continue;
        const name = branch.nameFrom(node);
-@@ -1695,6 +1710,7 @@ function semioParseRelayVfsChildren(parent: SemioFileSystemParentRef, frag: Json
+@@ -1695,6 +1710,7 @@ function composeParseRelayVfsChildren(parent: ComposeFileSystemParentRef, frag: Json
            kind: "FILE",
            nameFrom: (node) => String(node["name"] ?? node["description"] ?? node["id"] ?? ""),
            hasChildren: () => false,
-+          skipNode: semioKitRootFileHiddenFromVfs,
++          skipNode: composeKitRootFileHiddenFromVfs,
          },
        ]);
      case "TYPOLOGY": {
-@@ -5373,6 +5389,8 @@ if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN
+@@ -5373,6 +5389,8 @@ if (typeof process !== "undefined" && !!process.env && process.env["COMPOSE_JS_RUN
            30_000,
          );
          expect(kitRoot.some((row) => row.kind === "FILE" && row.name === "base.glb")).toBe(false);
@@ -8299,10 +8299,10 @@ index b783e2b08..d8126456a 100644
          expect(kitRoot.some((row) => row.kind === "FOLDER" && row.name === "representations")).toBe(true);
          const repFolder = kitRoot.find((row) => row.kind === "FOLDER" && row.id === representationsFolderId);
          expect(repFolder).toBeDefined();
-diff --git a/semio/client/lib/rs/lib.rs b/semio/client/lib/rs/lib.rs
+diff --git a/compose/client/lib/rs/lib.rs b/compose/client/lib/rs/lib.rs
 index d05fcd3b5..1f1d1a3b5 100644
---- a/semio/client/lib/rs/lib.rs
-+++ b/semio/client/lib/rs/lib.rs
+--- a/compose/client/lib/rs/lib.rs
++++ b/compose/client/lib/rs/lib.rs
 @@ -6244,6 +6244,54 @@ pub mod kit {
              out
          }
@@ -8507,10 +8507,10 @@ index d05fcd3b5..1f1d1a3b5 100644
          });
      }
  
-diff --git a/semio/client/lib/sketchpad/js/index.ts b/semio/client/lib/sketchpad/js/index.ts
+diff --git a/compose/client/lib/sketchpad/js/index.ts b/compose/client/lib/sketchpad/js/index.ts
 index 09da65e8a..c39b33c18 100644
---- a/semio/client/lib/sketchpad/js/index.ts
-+++ b/semio/client/lib/sketchpad/js/index.ts
+--- a/compose/client/lib/sketchpad/js/index.ts
++++ b/compose/client/lib/sketchpad/js/index.ts
 @@ -11113,6 +11113,7 @@ export async function sketchpadKitDtoFromJsStore(jsStore: JsKitStore): Promise<K
  	};
  	const filesById = new Map<string, Record<string, unknown>>();
@@ -9153,11 +9153,11 @@ index 92dfd9037..98245ba7d 100644
  export function puzzle3dKitMeshRoots(repoRoot: string): { readonly meshRoots: readonly string[]; readonly placeholderMesh: string } {
    return {
      meshRoots: [
--      resolve(repoRoot, "semio/fixtures/kit/dev/metabolism/representations"),
-+      resolve(repoRoot, "semio/fixtures/kit/folder/metabolism/representations"),
-       resolve(repoRoot, "semio/fixtures/kit/folder/abbau-aufbau"),
+-      resolve(repoRoot, "compose/fixtures/kit/dev/metabolism/representations"),
++      resolve(repoRoot, "compose/fixtures/kit/folder/metabolism/representations"),
+       resolve(repoRoot, "compose/fixtures/kit/folder/abbau-aufbau"),
      ],
-     placeholderMesh: resolve(repoRoot, "semio/assets/mesh/placeholder.glb"),
+     placeholderMesh: resolve(repoRoot, "compose/assets/mesh/placeholder.glb"),
 @@ -790,6 +790,7 @@ if (import.meta.vitest) {
      it("points at metabolism and abbau-aufbau kit glbs plus shared placeholder", () => {
        const { meshRoots, placeholderMesh } = puzzle3dKitMeshRoots(repoRoot);

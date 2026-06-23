@@ -8,10 +8,10 @@ goal: SKETCHPAD-IMPROVEMENTS
 
 Bulk close
 ## Changes
-- Added locale labels for `semio.sketchpad.app.design.properties` and `semio.sketchpad.app.kit.properties`.
+- Added locale labels for `compose.sketchpad.app.design.properties` and `compose.sketchpad.app.kit.properties`.
 - Extended the existing sketchpad Playwright coverage to assert the rendered section headers.
 - Ran the targeted Design Playwright flow with the sketchpad dev server.
-- Added locale labels for `semio.sketchpad.app.type.properties` and `semio.sketchpad.app.type.connector.properties`.
+- Added locale labels for `compose.sketchpad.app.type.properties` and `compose.sketchpad.app.type.connector.properties`.
 - Extended the existing sketchpad Playwright coverage to assert the Type detail panel section headers.
 
 ## Log
@@ -29,6 +29,6 @@ Bulk close
 - Run the targeted Type Playwright coverage.
 
 ## Plan
-- Add `properties` labels under the existing `semio.sketchpad.app.design` and `semio.sketchpad.app.kit` locale trees.
+- Add `properties` labels under the existing `compose.sketchpad.app.design` and `compose.sketchpad.app.kit` locale trees.
 - Assert those labels are visible in the design detail panel test, since that panel renders both sections.
 - Validate with the targeted Playwright run.

@@ -3,12 +3,12 @@ import importlib.util
 import subprocess
 from pathlib import Path
 
-root = Path(r"c:\git\semio")
-lib = root / "semio" / "client" / "lib" / "rs" / "lib.rs"
+root = Path(r"c:\git\compose")
+lib = root / "compose" / "client" / "lib" / "rs" / "lib.rs"
 ticket = Path(__file__).parent
 
 head = subprocess.check_output(
-    ["git", "-C", str(root), "show", "HEAD:semio/client/lib/rs/lib.rs"],
+    ["git", "-C", str(root), "show", "HEAD:compose/client/lib/rs/lib.rs"],
     text=True,
     encoding="utf-8",
 )

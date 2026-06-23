@@ -36,7 +36,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "💻semio/js/sketchpad/elements.tsx",
+              "path": "💻compose/js/sketchpad/elements.tsx",
               "lines": {
                 "added": 4,
                 "removed": 4
@@ -50,21 +50,21 @@
           "renamed": [],
           "modified": [
             {
-              "path": "💻semio/js/sketchpad/elements.tsx#Input Components#ActionGroup",
+              "path": "💻compose/js/sketchpad/elements.tsx#Input Components#ActionGroup",
               "lines": {
                 "added": 2,
                 "removed": 2
               }
             },
             {
-              "path": "💻semio/js/sketchpad/elements.tsx#Input Components#ToggleGroup",
+              "path": "💻compose/js/sketchpad/elements.tsx#Input Components#ToggleGroup",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "💻semio/js/sketchpad/elements.tsx#Input Components",
+              "path": "💻compose/js/sketchpad/elements.tsx#Input Components",
               "lines": {
                 "added": 1,
                 "removed": 1
@@ -110,7 +110,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "💻semio/js/sketchpad/elements.tsx",
+              "path": "💻compose/js/sketchpad/elements.tsx",
               "lines": {
                 "added": 4,
                 "removed": 4
@@ -124,21 +124,21 @@
           "renamed": [],
           "modified": [
             {
-              "path": "💻semio/js/sketchpad/elements.tsx#Input Components",
+              "path": "💻compose/js/sketchpad/elements.tsx#Input Components",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "💻semio/js/sketchpad/elements.tsx#Input Components#ActionGroup",
+              "path": "💻compose/js/sketchpad/elements.tsx#Input Components#ActionGroup",
               "lines": {
                 "added": 2,
                 "removed": 2
               }
             },
             {
-              "path": "💻semio/js/sketchpad/elements.tsx#Input Components#ToggleGroup",
+              "path": "💻compose/js/sketchpad/elements.tsx#Input Components#ToggleGroup",
               "lines": {
                 "added": 1,
                 "removed": 1

@@ -1,6 +1,6 @@
 {
   "id": "c2267d23-c4d1-4c64-963f-e89cb5b293f8",
-  "uri": "semiorepo://s/c2267d23-c4d1-4c64-963f-e89cb5b293f8",
+  "uri": "composerepo://s/c2267d23-c4d1-4c64-963f-e89cb5b293f8",
   "contributor": "🧑‍💻ueli",
   "client": "copilot-chat",
   "second": "2026-03-14T18:43:07Z",
@@ -14,7 +14,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/sketchpad/Kit.tsx",
+            "includePattern": "**/compose/sketchpad/sketchpad/Kit.tsx",
             "isRegexp": true,
             "query": "createFlowDiagram|renderKitDiagram|nodesDiagram"
           },
@@ -50,7 +50,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/sketchpad/Kit.tsx",
+            "includePattern": "**/compose/sketchpad/sketchpad/Kit.tsx",
             "isRegexp": true,
             "query": "diagramNodes|diagramEdges|createNode"
           },
@@ -86,7 +86,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/sketchpad/Kit.tsx",
+            "includePattern": "**/compose/sketchpad/sketchpad/Kit.tsx",
             "isRegexp": true,
             "query": "useMemo.*nodes|const.*node.*="
           },
@@ -122,7 +122,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/sketchpad/Kit.tsx",
+            "includePattern": "**/compose/sketchpad/sketchpad/Kit.tsx",
             "isRegexp": true,
             "query": "diagramNodes|diagramEdges|createNode"
           },
@@ -158,7 +158,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 7550,
-            "filePath": "/workspaces/semio/semio/sketchpad/sketchpad/Kit.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/sketchpad/Kit.tsx",
             "startLine": 7349
           },
           "tool_use_id": "toolu_01512Tu28L6KjywLVvz8pWhK__vscode-1773492851685",
@@ -177,22 +177,22 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻kit🛠️buildkitdiagramdata",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻kit🛠️buildkitdiagramdata",
             "loc": 1
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻kit🛠️buildselectionkit",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻kit🛠️buildselectionkit",
             "loc": 62
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻kit🛠️hasanyselection",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻kit🛠️hasanyselection",
             "loc": 11
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio🖱️sketchpad🗃️sketchpad💻kit📌7349📌7550"
+          "👤compose🖱️sketchpad🗃️sketchpad💻kit📌7349📌7550"
         ],
         "second": "🎆26🌙03☀️14⏰18⌚43⏱️19",
         "session": "⚪c2267d23c4d14c64963fe89cb5b293f8"
@@ -210,7 +210,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 7550,
-            "filePath": "/workspaces/semio/semio/sketchpad/sketchpad/Kit.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/sketchpad/Kit.tsx",
             "startLine": 7349
           },
           "tool_response": "",
@@ -229,22 +229,22 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻kit🛠️buildkitdiagramdata",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻kit🛠️buildkitdiagramdata",
             "loc": 1
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻kit🛠️buildselectionkit",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻kit🛠️buildselectionkit",
             "loc": 62
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻kit🛠️hasanyselection",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻kit🛠️hasanyselection",
             "loc": 11
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio🖱️sketchpad🗃️sketchpad💻kit📌7349📌7550"
+          "👤compose🖱️sketchpad🗃️sketchpad💻kit📌7349📌7550"
         ],
         "second": "🎆26🌙03☀️14⏰18⌚43⏱️26",
         "session": "⚪c2267d23c4d14c64963fe89cb5b293f8"
@@ -262,7 +262,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 7240,
-            "filePath": "/workspaces/semio/semio/sketchpad/sketchpad/Kit.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/sketchpad/Kit.tsx",
             "startLine": 7108
           },
           "tool_response": "",
@@ -281,62 +281,62 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻kit🛠️floatingedge",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻kit🛠️floatingedge",
             "loc": 1
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻kit🛠️iskitdiagramnodekind",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻kit🛠️iskitdiagramnodekind",
             "loc": 8
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻kit🛠️resolvediagramedgeanchors",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻kit🛠️resolvediagramedgeanchors",
             "loc": 20
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻kit🛠️resolvediagramnodeframe",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻kit🛠️resolvediagramnodeframe",
             "loc": 1
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻kit🛠️resolvediagramnodekind",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻kit🛠️resolvediagramnodekind",
             "loc": 7
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻kit🛠️resolvediagramnodeposition",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻kit🛠️resolvediagramnodeposition",
             "loc": 1
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻kit🛠️toreactflowposition",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻kit🛠️toreactflowposition",
             "loc": 6
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻kit🪨edgestyle",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻kit🪨edgestyle",
             "loc": 4
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻kit🪨kitdiagramdebug",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻kit🪨kitdiagramdebug",
             "loc": 5
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻kit🪨kitdiagramdebugintervalms",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻kit🪨kitdiagramdebugintervalms",
             "loc": 6
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻kit🪨kitdiagramfallbackkind",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻kit🪨kitdiagramfallbackkind",
             "loc": 5
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻kit🪨kitdiagramproximityconnectdistance",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻kit🪨kitdiagramproximityconnectdistance",
             "loc": 8
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻kit🪨kitnodetypes",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻kit🪨kitnodetypes",
             "loc": 3
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio🖱️sketchpad🗃️sketchpad💻kit📌7108📌7240"
+          "👤compose🖱️sketchpad🗃️sketchpad💻kit📌7108📌7240"
         ],
         "second": "🎆26🌙03☀️14⏰18⌚43⏱️26",
         "session": "⚪c2267d23c4d14c64963fe89cb5b293f8"
@@ -354,7 +354,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/sketchpad/Kit.tsx",
+            "includePattern": "**/compose/sketchpad/sketchpad/Kit.tsx",
             "isRegexp": true,
             "query": "type KitDiagramNode|interface KitDiagramNode|KitDiagramNodeKind"
           },
@@ -390,7 +390,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/sketchpad/Kit.tsx",
+            "includePattern": "**/compose/sketchpad/sketchpad/Kit.tsx",
             "isRegexp": true,
             "query": "type KitDiagramNode|interface KitDiagramNode|KitDiagramNodeKind"
           },
@@ -426,7 +426,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 7020,
-            "filePath": "/workspaces/semio/semio/sketchpad/sketchpad/Kit.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/sketchpad/Kit.tsx",
             "startLine": 6990
           },
           "tool_use_id": "toolu_01WJx6EwYa1pcUPk9ntomo4L__vscode-1773492851688",
@@ -445,18 +445,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻kit✂️kitdiagramedge",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻kit✂️kitdiagramedge",
             "loc": 6
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻kit✂️kitdiagramnode",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻kit✂️kitdiagramnode",
             "loc": 8
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio🖱️sketchpad🗃️sketchpad💻kit📌6990📌7020"
+          "👤compose🖱️sketchpad🗃️sketchpad💻kit📌6990📌7020"
         ],
         "second": "🎆26🌙03☀️14⏰18⌚43⏱️43",
         "session": "⚪c2267d23c4d14c64963fe89cb5b293f8"
@@ -474,7 +474,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 7020,
-            "filePath": "/workspaces/semio/semio/sketchpad/sketchpad/Kit.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/sketchpad/Kit.tsx",
             "startLine": 6990
           },
           "tool_response": "",
@@ -493,18 +493,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻kit✂️kitdiagramedge",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻kit✂️kitdiagramedge",
             "loc": 6
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻kit✂️kitdiagramnode",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻kit✂️kitdiagramnode",
             "loc": 8
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio🖱️sketchpad🗃️sketchpad💻kit📌6990📌7020"
+          "👤compose🖱️sketchpad🗃️sketchpad💻kit📌6990📌7020"
         ],
         "second": "🎆26🌙03☀️14⏰18⌚43⏱️53",
         "session": "⚪c2267d23c4d14c64963fe89cb5b293f8"
@@ -522,7 +522,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/**",
+            "includePattern": "**/compose/sketchpad/**",
             "isRegexp": true,
             "query": "export.*type KitDiagramNodeKind"
           },
@@ -558,7 +558,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/**",
+            "includePattern": "**/compose/sketchpad/**",
             "isRegexp": true,
             "query": "export.*type KitDiagramNodeKind"
           },

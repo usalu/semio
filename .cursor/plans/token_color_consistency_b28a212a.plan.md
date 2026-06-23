@@ -38,7 +38,7 @@ isProject: false
 
 `ui/styling/tokens.json` is the single source of truth (40 `--color-*` tokens + semantic vars in `js/ui.css`). But many places bypass it:
 
-- WIRES fixtures/catalogs use Tailwind hex (`#64748b`, `#0ea5e9`, `#a855f7`, `#22c55e`) in [reasoning/mindmap/wires/fixture/metabolism.wires.json](reasoning/mindmap/wires/fixture/metabolism.wires.json) and [semio/client/lib/sketchpad/js/index.ts](semio/client/lib/sketchpad/js/index.ts) (`SKETCHPAD_KIT_WIRES_KIND_CATALOGS`).
+- WIRES fixtures/catalogs use Tailwind hex (`#64748b`, `#0ea5e9`, `#a855f7`, `#22c55e`) in [reasoning/mindmap/wires/fixture/metabolism.wires.json](reasoning/mindmap/wires/fixture/metabolism.wires.json) and [compose/client/lib/sketchpad/js/index.ts](compose/client/lib/sketchpad/js/index.ts) (`SKETCHPAD_KIT_WIRES_KIND_CATALOGS`).
 - Each renderer reimplements its own CSS-var resolver + inline hex fallback table: `puzzle2dProbeCssComputed` ([puzzle/2d/react/index.tsx](puzzle/2d/react/index.tsx)), `probeCssComputed`/`cssColorForThree` ([puzzle/3d/react/index.tsx](puzzle/3d/react/index.tsx) and [infinite/world/r3f/index.tsx](infinite/world/r3f/index.tsx)), `readSpatialCssColor` ([cad/js/renderer/index.tsx](cad/js/renderer/index.tsx)), `getComputedColor`/`getComputedColorForGltf` ([ui/react/index.tsx](ui/react/index.tsx)).
 - Off-palette hex in gizmo (`GUMBALL_AXIS_COLORS` `#ef4444/#22c55e/#3b82f6`), CAD (`SPATIAL_SCENE_COLOR_FALLBACK` gold/gray), 3D rubber band `0xf472b6`, grids `0xb8c4d0/0x6a7a8a`, puzzle default handle `#94a3b8`.
 
@@ -67,7 +67,7 @@ One shared resolver in `@ui/styling/js`, fed by a generated TS token map, normal
 
 ### 4. Migrate fixtures/catalogs to token references
 - [reasoning/mindmap/wires/fixture/metabolism.wires.json](reasoning/mindmap/wires/fixture/metabolism.wires.json): relationship kinds owns->`var(--color-muted-foreground)`, is->`var(--color-secondary)`, references->`var(--color-tertiary)`, has->`var(--color-success)`; identity ramp -> grayscale token vars (`gray-800..gray`).
-- [semio/client/lib/sketchpad/js/index.ts](semio/client/lib/sketchpad/js/index.ts) `SKETCHPAD_KIT_WIRES_KIND_CATALOGS`: map all 13 identity kinds + 4 relationship kinds to existing token vars (accents + grayscale ramp). Mapping chosen to keep the 4 relationship kinds visually distinct; identity kinds spread across the ramp.
+- [compose/client/lib/sketchpad/js/index.ts](compose/client/lib/sketchpad/js/index.ts) `SKETCHPAD_KIT_WIRES_KIND_CATALOGS`: map all 13 identity kinds + 4 relationship kinds to existing token vars (accents + grayscale ramp). Mapping chosen to keep the 4 relationship kinds visually distinct; identity kinds spread across the ramp.
 - [reasoning/mindmap/react/index.tsx](reasoning/mindmap/react/index.tsx) `#fff` test data -> token ref.
 
 Note: no new tokens are added (per chosen "resolve" mechanism); `references` (was purple) maps to `tertiary` since the palette has no purple. Distinctness for catalogs that exceed the palette's distinct hues is handled by reusing the grayscale ramp plus shape/pattern differentiation already present.

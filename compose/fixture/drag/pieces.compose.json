@@ -1,0 +1,147 @@
+{
+  "pieces": [
+    {
+      "id": "e2faf536-dbe0-49e2-97b2-965e57acd512",
+      "name": "b0",
+      "type": {
+        "id": "277768b5-9220-4312-bf0d-ab82d9fb6a73"
+      },
+      "isHidden": false,
+      "isLocked": false,
+      "description": "",
+      "qualities": [
+        {
+          "name": "compose.diffStatus",
+          "value": "unchanged"
+        }
+      ],
+      "pose": {
+        "plane": {
+          "origin": {
+            "x": 7.500000000000001,
+            "y": 7.700000000000001,
+            "z": -7.500000000000001
+          },
+          "xAxis": {
+            "x": 1,
+            "y": 0,
+            "z": 0
+          },
+          "yAxis": {
+            "x": 0,
+            "y": 1,
+            "z": 0
+          }
+        },
+        "center": {
+          "u": 4.82491,
+          "v": 0.18330000000000002
+        }
+      }
+    },
+    {
+      "id": "ed7b6b3c-02d5-4ed6-ae51-f9cbec92cb83",
+      "name": "ci_bs_b0_c0",
+      "type": {
+        "id": "cb25017e-5505-4677-a71e-cccbc7a5be7d"
+      },
+      "isHidden": false,
+      "isLocked": false,
+      "description": "",
+      "qualities": [
+        {
+          "name": "compose.diffStatus",
+          "value": "unchanged"
+        }
+      ]
+    },
+    {
+      "id": "a7a6c527-0e89-4922-b6c1-2af6fb64ae29",
+      "name": "t_fs_b0_c1",
+      "type": {
+        "id": "5b3e2b28-e331-420b-83bd-9a8c05ac2918"
+      },
+      "isHidden": false,
+      "isLocked": false,
+      "description": "",
+      "qualities": [
+        {
+          "name": "compose.diffStatus",
+          "value": "unchanged"
+        }
+      ]
+    },
+    {
+      "id": "3910be91-289e-493b-9f4c-7ef4ac75603e",
+      "name": "b1",
+      "type": {
+        "id": "277768b5-9220-4312-bf0d-ab82d9fb6a73"
+      },
+      "isHidden": false,
+      "isLocked": false,
+      "description": "",
+      "qualities": [
+        {
+          "name": "compose.diffStatus",
+          "value": "unchanged"
+        }
+      ],
+      "pose": {
+        "plane": {
+          "origin": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "xAxis": {
+            "x": 1,
+            "y": 0,
+            "z": 0
+          },
+          "yAxis": {
+            "x": 0,
+            "y": 1,
+            "z": 0
+          }
+        },
+        "center": {
+          "u": 12.745473939343363,
+          "v": 0.037757142777375796
+        }
+      }
+    },
+    {
+      "id": "b6aff18a-820b-4629-a401-4c8e2ed0e01a",
+      "name": "t_fs_b2_c0",
+      "type": {
+        "id": "5b3e2b28-e331-420b-83bd-9a8c05ac2918"
+      },
+      "isHidden": false,
+      "isLocked": false,
+      "description": "",
+      "qualities": [
+        {
+          "name": "compose.diffStatus",
+          "value": "unchanged"
+        }
+      ]
+    },
+    {
+      "id": "c52879d5-d5dc-47da-a37b-b97a5889756e",
+      "name": "t_f0_b0_c0",
+      "type": {
+        "id": "2a6bb3e8-4adb-44a3-bc87-3314b77b40f7"
+      },
+      "isHidden": false,
+      "isLocked": false,
+      "description": "",
+      "qualities": [
+        {
+          "name": "compose.diffStatus",
+          "value": "unchanged"
+        }
+      ]
+    }
+  ],
+  "connections": []
+}

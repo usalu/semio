@@ -20,16 +20,16 @@ console.log("[DIAG] Page loaded, URL:", page.url());
 await page.waitForTimeout(3000);
 
 // Check if store is available
-const storeAvailable = await page.evaluate(() => !!window.__SEMIO_STORE__);
+const storeAvailable = await page.evaluate(() => !!window.__COMPOSE_STORE__);
 console.log("[DIAG] Store available:", storeAvailable);
 
-const navigateAvailable = await page.evaluate(() => !!window.__SEMIO_NAVIGATE__);
+const navigateAvailable = await page.evaluate(() => !!window.__COMPOSE_NAVIGATE__);
 console.log("[DIAG] Navigate available:", navigateAvailable);
 
 // Load kit fixture
 console.log("[DIAG] Loading metabolism kit...");
 const kitLoaded = await page.evaluate(async () => {
-  const store = window.__SEMIO_STORE__;
+  const store = window.__COMPOSE_STORE__;
   if (!store) return { error: "no store" };
 
   // Check existing kits
@@ -40,10 +40,10 @@ const kitLoaded = await page.evaluate(async () => {
 
   try {
     // Try to fetch the kit asset
-    const resp = await fetch("/assets/semio/metabolism.kit.semio.json");
+    const resp = await fetch("/assets/compose/metabolism.kit.compose.json");
     if (!resp.ok) return { error: `fetch failed: ${resp.status}` };
     const kit = await resp.json();
-    await store.execute("semio.sketchpad.createKit", "semio.sketchpad.diag", kit, false, false);
+    await store.execute("compose.sketchpad.createKit", "compose.sketchpad.diag", kit, false, false);
 
     // Wait for it to appear
     for (let i = 0; i < 20; i++) {
@@ -86,14 +86,14 @@ const kitGuid = kitLoaded.entries?.[0]?.kitGuid || kitLoaded.entries?.[0]?.key;
 console.log("[DIAG] Navigating to kit:", kitGuid);
 
 await page.evaluate((kg) => {
-  window.__SEMIO_NAVIGATE__(`/kits/${kg}`);
+  window.__COMPOSE_NAVIGATE__(`/kits/${kg}`);
 }, kitGuid);
 await page.waitForTimeout(3000);
 console.log("[DIAG] Kit URL:", page.url());
 
 // Check if designs are visible in the table
 const designs = await page.evaluate(() => {
-  const store = window.__SEMIO_STORE__;
+  const store = window.__COMPOSE_STORE__;
   if (!store) return [];
   const kitGuids = Array.from(store.kits?.keys() ?? []);
   if (kitGuids.length === 0) return [];

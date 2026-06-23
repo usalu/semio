@@ -4,7 +4,7 @@
 // graph: reuse | database: reuse | generated: 2026-05-16T11:48:43.950Z
 //
 :begin
-CREATE FULLTEXT INDEX semio_name_fulltext FOR (n:Class|Constraint|Data|Computation|Reference|Interface|Module|Scalar|Enum) ON EACH [n.`name`];
+CREATE FULLTEXT INDEX compose_name_fulltext FOR (n:Class|Constraint|Data|Computation|Reference|Interface|Module|Scalar|Enum) ON EACH [n.`name`];
 CREATE RANGE INDEX IF NOT EXISTS FOR (n:Computation) ON (n.name);
 CREATE RANGE INDEX IF NOT EXISTS FOR (n:Data) ON (n.name);
 CREATE RANGE INDEX IF NOT EXISTS FOR (n:Reference) ON (n.name);

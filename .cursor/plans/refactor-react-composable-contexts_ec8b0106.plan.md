@@ -1,12 +1,12 @@
 ---
 name: refactor-react-composable-contexts
-overview: Rewrite `semio/client/lib/react/index.tsx` as a sealed, schema-aligned context tree where every context carries only `{ id }`, every entity hook returns `EntityReadState` (no `semio/js` class leaks), every hook accepts at most one optional `id` argument — strictly that hook's own entity id — and all reads / commands are exposed exclusively as hooks. Parent scope is always from composed contexts, never extra optional ids on hooks.
+overview: Rewrite `compose/client/lib/react/index.tsx` as a sealed, schema-aligned context tree where every context carries only `{ id }`, every entity hook returns `EntityReadState` (no `compose/js` class leaks), every hook accepts at most one optional `id` argument — strictly that hook's own entity id — and all reads / commands are exposed exclusively as hooks. Parent scope is always from composed contexts, never extra optional ids on hooks.
 todos:
   - id: open-ticket
-    content: "Open ticket under 🎯runningsketchpad goal: 'Refactor Semio React to Composable Schema-Aligned Contexts'."
+    content: "Open ticket under 🎯runningsketchpad goal: 'Refactor Compose React to Composable Schema-Aligned Contexts'."
     status: completed
   - id: types-region
-    content: "Add 🧬Types region: re-export only plain data types (Attribute, Benchmark, Coordinate, Plane, Point, Vector, Position, Offset, Place, Side, PositionInput, OffsetInput, SetResult, SetError, GraphRootKind, PieceBlueprint, ConnectionSide, KitReadPoint, …). NO semio/js entity classes are re-exported. Define a single `EntityReadState = FieldReadState<Readonly<{ id: string }>>` — same shape as FieldReadState<T> (value/loading/error/refresh) carrying the resolved `{ id }`. Used by every entity hook return; no per-entity aliases. Keep FieldReadState<T> and OperationStatus."
+    content: "Add 🧬Types region: re-export only plain data types (Attribute, Benchmark, Coordinate, Plane, Point, Vector, Position, Offset, Place, Side, PositionInput, OffsetInput, SetResult, SetError, GraphRootKind, PieceBlueprint, ConnectionSide, KitReadPoint, …). NO compose/js entity classes are re-exported. Define a single `EntityReadState = FieldReadState<Readonly<{ id: string }>>` — same shape as FieldReadState<T> (value/loading/error/refresh) carrying the resolved `{ id }`. Used by every entity hook return; no per-entity aliases. Keep FieldReadState<T> and OperationStatus."
     status: completed
   - id: ids-region
     content: "Add 🪪Ids region: one typed `Readonly<{ id: string }>` context per schema entity. Session is the only context whose value carries the JS Session reference (transport handle for internal use only — never returned by any exported hook). Add `PiecesBatchContext` with `{ pieceIds: readonly string[] }` (not a GraphQL entity id list on hooks — lives in context only)."
@@ -18,7 +18,7 @@ todos:
     content: "Add 🪝EntityHooks region: one `useX(id?: string): EntityReadState` per strong entity. At most one optional argument — **that entity's id only** (e.g. `useConnection(id?)`, never `designId`). If `id` is passed, it overrides only that entity's context id; parent entities are still resolved from composed contexts. If omitted, read the matching XContext; missing context with no arg throws. Weak-entity hooks (`usePosition`, `useFlatPosition`, `usePlane`, `useOrigin`) take **no** optional id — they resolve only through `PieceContext` + marker contexts."
     status: pending
   - id: field-hooks
-    content: "Add 🪝FieldHooks region: one `useX<Field>(id?: string): FieldReadState<T>` per (entity, field) pair across every entity in the schema — the optional `id` is **only** that field's owning entity id (same rule as entity hooks). Implementation lives in a private `useEntityField` helper which (a) resolves the JS entity from that single optional id + parent contexts, (b) subscribes to that entity's `on<Field>Changed` callback in semio/js, (c) falls back to a mount-time async read + bus-tick refetch when no field-level callback exists yet. The hook return is `{ value, loading, error, refresh }` — no JS class instance leaks."
+    content: "Add 🪝FieldHooks region: one `useX<Field>(id?: string): FieldReadState<T>` per (entity, field) pair across every entity in the schema — the optional `id` is **only** that field's owning entity id (same rule as entity hooks). Implementation lives in a private `useEntityField` helper which (a) resolves the JS entity from that single optional id + parent contexts, (b) subscribes to that entity's `on<Field>Changed` callback in compose/js, (c) falls back to a mount-time async read + bus-tick refetch when no field-level callback exists yet. The hook return is `{ value, loading, error, refresh }` — no JS class instance leaks."
     status: pending
   - id: operation-hooks
     content: "Add 🪝OperationHooks region: one `useX<Op>(id?: string): readonly [(args) => Promise<SetResult>, OperationStatus]` per (entity, mutation) pair — the optional `id` is **only** the receiver entity's id (e.g. `useRenameDesign(id?)` for Design, `useDragPiece(id?)` for Piece). Batch `PiecesOperations` flows use `PiecesBatchContextProvider` with `{ pieceIds: readonly string[] }` under `DesignContext` (no extra hook params for design or piece list). Implementation lives in a private `useEntityOperation` helper; the consumer never sees the JS class."
@@ -30,10 +30,10 @@ todos:
     content: "Delete: ShellHost block (ActiveKitTab*, KitWasmMountProvider, KitWasmHostContext, KitAlternativeSelection*, useKitAlternatives, SketchpadKitStoreFactory, SketchpadKitKindAvailability), context-row helpers (useDesignContextRow, useHasDesignContext, useResolvedDesign, useResolvedType, usePieceContextRead, useTypeContextRead, useQualityContextRead), selection-helper providers (PieceUnderActiveDesignProvider, ConnectionUnderActiveDesignProvider), legacy aggregate bundles (useDesigns, useTypes, usePieces), and the public bindFieldToReact / bindDefinedFieldToReact / bindKitFieldToReact / bindStoreFieldToReact / bindOperationToReact / bindStoreOperationToReact / bindPiecesOperationsOperationToReact exports. They become private internal helpers (useEntityField / useEntityOperation) — never exported."
     status: completed
   - id: seal-js
-    content: "Audit exports: ensure no semio/js entity class (Kit, Store, Graph, TheKit, Alternative, Session, Design, Type, Piece, Connection, Port, Connector, Representation, Quality, Tag, Concept, Author, Backbone, Provider, LocalProvider, RemoteProvider, Family, File, Folder, Layer, Group, Stat, Prop, Edit, Checkpoint, Change, Conflict, PiecesOperations) is re-exported from semio/react. Add a vitest banned-substring test that fails if any are."
+    content: "Audit exports: ensure no compose/js entity class (Kit, Store, Graph, TheKit, Alternative, Session, Design, Type, Piece, Connection, Port, Connector, Representation, Quality, Tag, Concept, Author, Backbone, Provider, LocalProvider, RemoteProvider, Family, File, Folder, Layer, Group, Stat, Prop, Edit, Checkpoint, Change, Conflict, PiecesOperations) is re-exported from compose/react. Add a vitest banned-substring test that fails if any are."
     status: pending
   - id: vitest
-    content: "Update the 🧪Vitest region: (a) banned substrings extended to include `bindFieldToReact`, `bindOperationToReact`, `useSyncExternalStore`, plus a check that the public export list contains zero semio/js entity class names; (b) lightweight render test asserting `useDesign()` resolves `value.id` matching `DesignContextProvider` id (no class leak)."
+    content: "Update the 🧪Vitest region: (a) banned substrings extended to include `bindFieldToReact`, `bindOperationToReact`, `useSyncExternalStore`, plus a check that the public export list contains zero compose/js entity class names; (b) lightweight render test asserting `useDesign()` resolves `value.id` matching `DesignContextProvider` id (no class leak)."
     status: completed
   - id: verify
     content: Run the package's lint + typecheck + vitest until green.
@@ -46,26 +46,26 @@ isProject: false
 
 ## Goal
 
-Rewrite [semio/client/lib/react/index.tsx](semio/client/lib/react/index.tsx) so that it is the **only** way React consumers touch semio data. The file:
+Rewrite [compose/client/lib/react/index.tsx](compose/client/lib/react/index.tsx) so that it is the **only** way React consumers touch compose data. The file:
 
 - mirrors `schema.golden.graphql` entity tree 1:1,
 - exposes one context per entity carrying only `{ id }`,
 - exposes one `useX(id?: string)` per strong entity (at most one optional argument — **that entity's id only**; parents come from context),
 - exposes one hook per field (`useDesignName`, `usePiecePosition`, …) and one hook per mutation (`useRenameDesign`, `useMovePiece`, …), each with the same rule: optional `id` is only the owning/receiver entity,
-- **never** leaks a `semio/js` class to consumers (no `Kit`, `Design`, `Piece`, `Position`, `Plane` *instance methods* on the React surface — only the plain value types pass through).
+- **never** leaks a `compose/js` class to consumers (no `Kit`, `Design`, `Piece`, `Position`, `Plane` *instance methods* on the React surface — only the plain value types pass through).
 
 ## Sealed surface
 
 ```mermaid
 graph LR
-  Consumer[App / sketchpad / storybook] --> ReactLib[semio/react]
-  ReactLib --> JsLib[semio/js]
+  Consumer[App / sketchpad / storybook] --> ReactLib[compose/react]
+  ReactLib --> JsLib[compose/js]
   Consumer -.->|forbidden| JsLib
 ```
 
 
 
-Consumers import **only** `@semio/react`. semio/js is an implementation detail.
+Consumers import **only** `@compose/react`. compose/js is an implementation detail.
 
 ## Context tree (mirrors schema)
 
@@ -114,7 +114,7 @@ graph TD
 
 
 
-The three graph-tier contexts (`WipContext`, `StageContext`, `AuthoritativeContext`) are mutually exclusive siblings under `StoreContext` — exactly one is mounted at a time. The two workspace-tier contexts (`TheKitContext`, `AlternativeContext`) are mutually exclusive siblings under whichever graph tier is mounted. The three backbone-tier contexts (`FileBackboneContext`, `FolderBackboneContext`, `WebsocketBackboneContext`) are mutually exclusive siblings under whichever provider tier is mounted — `FileBackboneContext` and `FolderBackboneContext` are legal children of `LocalProviderContext`; `WebsocketBackboneContext` is the legal child of `RemoteProviderContext`. Internally each resolves to the matching `semio/js` graph / workspace / backbone handle (`store.wip()`, `store.stage()`, `store.authoritative()`; `graph.theKit()`, `graph.alternative(id)`; `localProvider.fileBackbone(id)`, `localProvider.folderBackbone(id)`, `remoteProvider.websocketBackbone(id)`).
+The three graph-tier contexts (`WipContext`, `StageContext`, `AuthoritativeContext`) are mutually exclusive siblings under `StoreContext` — exactly one is mounted at a time. The two workspace-tier contexts (`TheKitContext`, `AlternativeContext`) are mutually exclusive siblings under whichever graph tier is mounted. The three backbone-tier contexts (`FileBackboneContext`, `FolderBackboneContext`, `WebsocketBackboneContext`) are mutually exclusive siblings under whichever provider tier is mounted — `FileBackboneContext` and `FolderBackboneContext` are legal children of `LocalProviderContext`; `WebsocketBackboneContext` is the legal child of `RemoteProviderContext`. Internally each resolves to the matching `compose/js` graph / workspace / backbone handle (`store.wip()`, `store.stage()`, `store.authoritative()`; `graph.theKit()`, `graph.alternative(id)`; `localProvider.fileBackbone(id)`, `localProvider.folderBackbone(id)`, `remoteProvider.websocketBackbone(id)`).
 
 `PiecesBatchContext` is optional under `DesignContext` — it carries `{ pieceIds: readonly string[] }` so `useDragPieces` / `useMovePieces` / `useFixPieces` / `useChangePiecesBlueprint` need **no** hook parameters beyond the mutation args (design scope comes from `DesignContext`).
 
@@ -265,7 +265,7 @@ import {
   OriginContextProvider,
   useOrigin,
   type EntityReadState,
-} from "@semio/react";
+} from "@compose/react";
 
 function App({ session, storeId, kitId, designId, pieceId }: { session: Session; storeId: string; kitId: string; designId: string; pieceId: string }) {
   return (
@@ -361,12 +361,12 @@ function PieceRow() {
 }
 ```
 
-In every example above the consumer never imports anything from `@semio/js` — the only handles in scope are `EntityReadState` rows, `FieldReadState` reads, and operation tuples.
+In every example above the consumer never imports anything from `@compose/js` — the only handles in scope are `EntityReadState` rows, `FieldReadState` reads, and operation tuples.
 
 ## Private internals (NOT exported)
 
 - `useJsSession(): Session` — reads the SessionContext; only callable inside this file.
-- `useEntityField<E, T>(getEntity: () => E | null, read: (e: E) => Promise<T>, eventKind?: string): FieldReadState<T>` — the only place that touches semio/js entity instance methods. Subscribes to the entity's `on<Field>Changed` callback when available; otherwise falls back to bus-kind tick + refetch.
+- `useEntityField<E, T>(getEntity: () => E | null, read: (e: E) => Promise<T>, eventKind?: string): FieldReadState<T>` — the only place that touches compose/js entity instance methods. Subscribes to the entity's `on<Field>Changed` callback when available; otherwise falls back to bus-kind tick + refetch.
 - `useEntityOperation<E, A>(getEntity: () => E | null, impl: (e: E, ...args: A) => Promise<SetResult>): [run, OperationStatus]` — same constraint.
 - Per-entity resolver helpers (`resolveStore`, `resolveDesign`, `resolvePiece`, …) which compose **one** optional `id` for the target entity → context chain → JS handle (never multiple optional parent ids on the public hook surface).
 
@@ -377,18 +377,18 @@ In every example above the consumer never imports anything from `@semio/js` — 
 - ShellHost block: `ActiveKitTab*`, `KitWasmMountProvider`, `KitWasmHostContext`, `useKitWasmHost`, `KitAlternativeSelectionProvider`, `useKitAlternativeSelection`, `useKitAlternatives`, `SketchpadKitStoreFactory`, `SketchpadKitKindAvailability` — sketchpad host concerns, removed.
 - Context-row helpers (`useDesignContextRow`, `useHasDesignContext`, `useResolvedDesign`, `useResolvedType`, `usePieceContextRead`, `useTypeContextRead`, `useQualityContextRead`) and selection-helper providers (`PieceUnderActiveDesignProvider`, `ConnectionUnderActiveDesignProvider`) — superseded by the unified id-arg pattern.
 - Bundle hooks `useDesigns`/`useTypes`/`usePieces` returning `{ designs }`/`{ types }`/`Piece[]` — replaced by `useKitDesigns`/`useKitTypes`/`useDesignPieces` returning `FieldReadState<readonly IdRow[]>`.
-- Re-exports of semio/js **entity** classes (`Kit`, `Store`, `Graph`, `TheKit`, `Session`, `Design`, `Type`, `Piece`, `Connection`, `Port`, `Connector`, `Representation`, `Quality`, `Tag`, `Concept`, `Author`, `Backbone`, `Family`, `File`, `Folder`, `Layer`, `Group`, `Stat`, `Prop`, `Edit`, `Checkpoint`, `Change`, `Conflict`, `Alternative`, `PiecesOperations`, `EventBus`, `Store`, `createKitStoreWorker`, `openStore`, `theKitReadPoint`, `kitReadPointKey`, `defineField`, `defineFields`, `defineOperation`, `defineOperations`, `KIT_EVENT_STREAM_SUBSCRIPTION`). Of these, the only re-exports that survive are plain data classes/types: `Attribute`, `Benchmark`, `Coordinate`, `Plane`, `Point`, `Vector`, `Position`, `Offset`, `Place`, `Side`, plus the input/result types listed under "Public types".
+- Re-exports of compose/js **entity** classes (`Kit`, `Store`, `Graph`, `TheKit`, `Session`, `Design`, `Type`, `Piece`, `Connection`, `Port`, `Connector`, `Representation`, `Quality`, `Tag`, `Concept`, `Author`, `Backbone`, `Family`, `File`, `Folder`, `Layer`, `Group`, `Stat`, `Prop`, `Edit`, `Checkpoint`, `Change`, `Conflict`, `Alternative`, `PiecesOperations`, `EventBus`, `Store`, `createKitStoreWorker`, `openStore`, `theKitReadPoint`, `kitReadPointKey`, `defineField`, `defineFields`, `defineOperation`, `defineOperations`, `KIT_EVENT_STREAM_SUBSCRIPTION`). Of these, the only re-exports that survive are plain data classes/types: `Attribute`, `Benchmark`, `Coordinate`, `Plane`, `Point`, `Vector`, `Position`, `Offset`, `Place`, `Side`, plus the input/result types listed under "Public types".
 
 ## Acceptance
 
-- No `semio/js` entity class is reachable from `@semio/react` (tested via banned-substring check on the file's export list).
+- No `compose/js` entity class is reachable from `@compose/react` (tested via banned-substring check on the file's export list).
 - Every entity in the schema has a context, a provider, a `useX(id?)` hook, plus the matching field + operation hooks.
 - Every hook accepts at most **one** optional `id` — always **that hook's own entity id**; parent scope is **only** from context (plus `PiecesBatchContext` for batch piece ops). Without `id`, hooks read the matching `XContext`.
-- `bun nx run @semio/react:lint` + `tsc --noEmit` on `semio/react` pass in isolation.
+- `bun nx run @compose/react:lint` + `tsc --noEmit` on `compose/react` pass in isolation.
 - Embedded Vitest banned-substring scan and the new "no JS entity class exported" scan pass.
 
 ## Out of scope (follow-up tickets)
 
-- Adding `on<Field>Changed` callbacks for every field on every `semio/js` entity class (only `Design.onDescriptionChanged` exists today). Until then the private `useEntityField` keeps the existing bus-tick refetch fallback.
-- Migrating `semio/client/lib/sketchpad/index.tsx`, storybook stories, `client/ui/desktop`, `client/ui/3dm`, `client/ui/vscode`, `site/play` off the deleted shell-host helpers and onto the new context tree — explicitly out of scope per the confirmed `react-only` choice.
+- Adding `on<Field>Changed` callbacks for every field on every `compose/js` entity class (only `Design.onDescriptionChanged` exists today). Until then the private `useEntityField` keeps the existing bus-tick refetch fallback.
+- Migrating `compose/client/lib/sketchpad/index.tsx`, storybook stories, `client/ui/desktop`, `client/ui/3dm`, `client/ui/vscode`, `site/play` off the deleted shell-host helpers and onto the new context tree — explicitly out of scope per the confirmed `react-only` choice.
 

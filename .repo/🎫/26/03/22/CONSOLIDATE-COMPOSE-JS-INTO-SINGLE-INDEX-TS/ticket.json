@@ -1,0 +1,15 @@
+{
+  "title": "Consolidate Compose Js Into Single Index Ts",
+  "emoji": "🧹",
+  "status": "closed",
+  "description": "Consolidate compose.ts, tests.ts, benchmarks.ts all into index.ts. Vitest must run. Benchmarks must not be part of regular exported code.",
+  "summary": "Consolidated remaining compose/js split sources into the root index entry: inlined the dedicated WASM worker source, merged the former kitWasmBridge exports into index.ts, removed the separate subpath and worker files, and updated compose/react imports/AGENTS guidance to use @compose/js directly. Verified @compose/js and @compose/react builds and embedded tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1015"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪757ef6162d454fc1868f157ccf871552",
+    "⚪46c3b7b95aa2439993d698e29f6afaab"
+  ]
+}

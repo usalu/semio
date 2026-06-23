@@ -18,7 +18,7 @@ Successfully implemented complete kit import/export functionality with 100% data
 
 2. **importKit(url: string): Promise<{kit: Kit, files: Map<string, Blob>}>**
    - Fetches .zip archive from URL
-   - Extracts .semio/kit.db SQLite database
+   - Extracts .compose/kit.db SQLite database
    - Reconstructs Kit JSON and files map
    - Returns complete kit data
 
@@ -32,7 +32,7 @@ Successfully implemented complete kit import/export functionality with 100% data
 
 Complete GUID-based schema (22 tables) embedded in `kitToSqlite()`:
 
-- `semio`, `kit` - Core metadata
+- `compose`, `kit` - Core metadata
 - `quality`, `benchmark` - Quality system
 - `port`, `port_compatibility` - Connector compatibility
 - `folder`, `file`, `author` - Assets and attribution
@@ -72,9 +72,9 @@ Comprehensive roundtrip test:
 
 ## Files Modified
 
-- `js/semio/semio.ts` - Core implementation (~900 lines added/modified)
-- `js/semio/semio.test.ts` - Roundtrip test
-- `js/semio/index.ts` - Export public API
+- `js/compose/compose.ts` - Core implementation (~900 lines added/modified)
+- `js/compose/compose.test.ts` - Roundtrip test
+- `js/compose/index.ts` - Export public API
 
 ## Technical Notes
 

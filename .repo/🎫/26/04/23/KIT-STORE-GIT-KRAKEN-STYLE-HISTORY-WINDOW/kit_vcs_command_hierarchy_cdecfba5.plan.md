@@ -1,6 +1,6 @@
 ---
 name: kit vcs command hierarchy
-overview: Replace the current `pub mod history` / `pub mod session` / `pub mod kit_command` layer in [semio/rs/src/lib.rs](semio/rs/src/lib.rs) with a fully structured command hierarchy (ReadKitCommand / ChangeKitCommand / TransactionCommand / KitDraftCommand / SessionCommand / KitCheckpointCommand / KitAlternativeCommand / KitStoreCommand), make `KitStore` the single owner of initial + checkpoint tree + alternatives + sessions + drafts + transactions, and update the WASM surface to dispatch through `KitStoreCommand`.
+overview: Replace the current `pub mod history` / `pub mod session` / `pub mod kit_command` layer in [compose/rs/src/lib.rs](compose/rs/src/lib.rs) with a fully structured command hierarchy (ReadKitCommand / ChangeKitCommand / TransactionCommand / KitDraftCommand / SessionCommand / KitCheckpointCommand / KitAlternativeCommand / KitStoreCommand), make `KitStore` the single owner of initial + checkpoint tree + alternatives + sessions + drafts + transactions, and update the WASM surface to dispatch through `KitStoreCommand`.
 todos:
  - id: reuse_diff_change
    content: Keep `pub mod kit_diff` and `pub mod kit_change`; add `KitChangeKind` on `KitChange`; delete `pub mod kit_operation`.
@@ -33,7 +33,7 @@ todos:
    content: Extend `KitStore` to own `initial`, `checkpoints`, `alternatives`, `the_kit_head`, `sessions`. Implement `execute(KitStoreCommand)` as the single dispatch entry point. Remove `KitHistory`, `KitGraphSession`, `kit_command::*`.
    status: completed
  - id: wasm
-   content: Add `KitStoreHandle::execute(JsValue) -> JsValue` in `pub mod wasm`; keep legacy `undo`/`redo`/`applyDesignDiff`/`toFullDto` shims that internally build a `KitStoreCommand` tree so `semio/js`/`semio/react` keep compiling.
+   content: Add `KitStoreHandle::execute(JsValue) -> JsValue` in `pub mod wasm`; keep legacy `undo`/`redo`/`applyDesignDiff`/`toFullDto` shims that internally build a `KitStoreCommand` tree so `compose/js`/`compose/react` keep compiling.
    status: completed
  - id: tests
    content: "Rewrite `mod tests` history/session cases for the new API: session+draft creation, transaction undo/redo, draft undo across transactions, finalize-to-checkpoint, alternative create/extend/share/unify, release caching, KitStoreCommand JSON round-trip, read-command nested result shape."
@@ -62,7 +62,7 @@ isProject: false
 
 ## Module layout (inline `pub mod X {...}` in lib.rs, matching current convention)
 
-Add / replace these modules between `pub mod diff` ([lib.rs:3808](semio/rs/src/lib.rs)) and the existing `pub mod error` ([lib.rs:5408](semio/rs/src/lib.rs)):
+Add / replace these modules between `pub mod diff` ([lib.rs:3808](compose/rs/src/lib.rs)) and the existing `pub mod error` ([lib.rs:5408](compose/rs/src/lib.rs)):
 
 - `pub mod kit_diff` - **kept**.
 - `pub mod kit_change` - **kept**, add `pub kind: KitChangeKind` (replaces `KitOperationKind`), author/time already present.
@@ -120,7 +120,7 @@ Undo/redo:
 - `TransactionCommand::Finalize` seals the transaction (state = Finalized, no more changes accepted); the transaction is kept on the draft's stack for draft-level undo.
 - `TransactionCommand::Abort` rolls back all changes then removes the transaction entirely.
 - `KitDraftCommand::Undo { count }` pops finalized transactions, applies their composite `backward` to the live graph, pushes onto `redo_transactions`.
-- `KitDraftCommand::FinalizeToKitCheckpoint { message }` requires no open transaction; creates a new `KitCheckpoint` with parent = draft.parent, hash via existing `HashWriter` on `(parent_id, new_id, changes_json)` (same technique as [lib.rs:5362](semio/rs/src/lib.rs)), advances either `the_kit_head` or the target `KitAlternative.checkpoints`, then removes the draft from the session.
+- `KitDraftCommand::FinalizeToKitCheckpoint { message }` requires no open transaction; creates a new `KitCheckpoint` with parent = draft.parent, hash via existing `HashWriter` on `(parent_id, new_id, changes_json)` (same technique as [lib.rs:5362](compose/rs/src/lib.rs)), advances either `the_kit_head` or the target `KitAlternative.checkpoints`, then removes the draft from the session.
 
 Read commands: executed against a `KitReadView` that's either the live graph (when running inside a session/draft/transaction) or a materialized snapshot (when running at `KitStoreCommand::ReadKitCommands` level or `KitCheckpointCommand::ReadKitCommands` / `KitAlternativeCommand::ReadKitCommands`). Each `ReadXCommand::Everything{}` returns `*FullDto`; `::Name{}` returns `String`; nested read children return nested results. Results are typed, no serde round-trip at the Rust layer.
 
@@ -134,9 +134,9 @@ Release:
 
 - `KitCheckpointCommand::MarkAsRelease { }` sets `release = Some(mk)` where `mk = MaterializedKit::from_checkpoints(&initial, &path_to_checkpoint, computed: Some(snapshot))`; persisted in-tree.
 
-## WASM surface ([lib.rs:17467](semio/rs/src/lib.rs))
+## WASM surface ([lib.rs:17467](compose/rs/src/lib.rs))
 
-Keep `KitStoreHandle`; replace ad-hoc RPC methods with a single `#[wasm_bindgen(js_name=execute)]` that takes `JsValue` (serde-decoded `KitStoreCommand`) and returns `JsValue` (serde-encoded `KitStoreCommandResult`). Keep a few legacy shims for the current JS surface (`undo`, `redo`, `applyDesignDiff`, `toFullDto`) as thin wrappers that build the equivalent `KitStoreCommand` tree under the hood, so `semio/js` and `semio/react` keep compiling. A follow-up ticket migrates them fully.
+Keep `KitStoreHandle`; replace ad-hoc RPC methods with a single `#[wasm_bindgen(js_name=execute)]` that takes `JsValue` (serde-decoded `KitStoreCommand`) and returns `JsValue` (serde-encoded `KitStoreCommandResult`). Keep a few legacy shims for the current JS surface (`undo`, `redo`, `applyDesignDiff`, `toFullDto`) as thin wrappers that build the equivalent `KitStoreCommand` tree under the hood, so `compose/js` and `compose/react` keep compiling. A follow-up ticket migrates them fully.
 
 ## JSON shape
 
@@ -155,16 +155,16 @@ The top-level WASM endpoint accepts either a single command or `Vec<KitStoreComm
 
 ## Delete list (confirmed scope: full replacement)
 
-- `pub mod history` ([lib.rs:5073](semio/rs/src/lib.rs)): `KitHistory`, `KitCheckpoint` (old shape), `KitHistoryFullDto`, `MaterializedKit` (moved into `checkpoint` mod in new shape).
-- `pub mod kit_operation` ([lib.rs:4746](semio/rs/src/lib.rs)): `KitOperation`, `KitOperationKind`.
-- `pub mod kit_command` ([lib.rs:4778](semio/rs/src/lib.rs)): `KitCommand`, `BuiltinKitCommand`, `ApplyDesignDiffRpc`, `ApplyKitDiffRpc`, `AddChildRpc`, `RemoveChildRpc`.
-- `pub mod session` (old) ([lib.rs:13109](semio/rs/src/lib.rs)): `KitGraphSession` entirely (incl. `commit(DesignChange)` shim, `undo_depth`, `redo_depth`, `last_change`).
+- `pub mod history` ([lib.rs:5073](compose/rs/src/lib.rs)): `KitHistory`, `KitCheckpoint` (old shape), `KitHistoryFullDto`, `MaterializedKit` (moved into `checkpoint` mod in new shape).
+- `pub mod kit_operation` ([lib.rs:4746](compose/rs/src/lib.rs)): `KitOperation`, `KitOperationKind`.
+- `pub mod kit_command` ([lib.rs:4778](compose/rs/src/lib.rs)): `KitCommand`, `BuiltinKitCommand`, `ApplyDesignDiffRpc`, `ApplyKitDiffRpc`, `AddChildRpc`, `RemoveChildRpc`.
+- `pub mod session` (old) ([lib.rs:13109](compose/rs/src/lib.rs)): `KitGraphSession` entirely (incl. `commit(DesignChange)` shim, `undo_depth`, `redo_depth`, `last_change`).
 - Low-level undo stacks on `KitStore` (`undo_past`/`undo_future`/`with_undo`/`begin_tx`/`commit_tx`): replaced by transaction-level change stack; remove once all callers migrated to `Transaction` (can stay for an iteration, marked `#[deprecated]`).
 - Tests: `mod history_tests` removed; `mod tests` entries referencing `KitHistory` / `KitGraphSession` rewritten to the new API.
 
 ## Tests
 
-Under `#[cfg(test)] mod tests` at the bottom of [semio/rs/src/lib.rs](semio/rs/src/lib.rs):
+Under `#[cfg(test)] mod tests` at the bottom of [compose/rs/src/lib.rs](compose/rs/src/lib.rs):
 
 - `store_execute_new_session_and_draft` - `NewSession` -> `NewDraft` at `the_kit_head` -> read everything returns current `the_kit` dto.
 - `transaction_change_undo_redo` - change piece name, `Undo`, read returns old name, `Redo` returns new, `Finalize`.

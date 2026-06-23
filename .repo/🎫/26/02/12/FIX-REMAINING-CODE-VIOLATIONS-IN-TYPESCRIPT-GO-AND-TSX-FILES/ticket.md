@@ -12,22 +12,22 @@ Fixed 41 code breachs across 17 files: added shebang skip to orphan detection in
 
 1. **repo/cli/main.go**: Added shebang skip in orphan detection (line 1 `#!` lines are now excluded like they are in ScanComments).
 2. **14 TypeScript files**: Added section summary comments after `//#region 🔖SectionName` markers:
-   - `semio/engine/build.ts` - Build section summary
-   - `semio/engine/generate-schemas.ts` - Schema Generation section summary
-   - `semio/engine/post-build.ts` - Post Build section summary
-   - `semio/engine/sqliteschema.ts` - Schema Export section summary
-   - `semio/gh/Semio.Grasshopper/build-value-lists.ts` - Value List Generation section summary
-   - `semio/gh/Semio.Grasshopper/build.ts` - Build section summary
-   - `semio/gh/Semio.Grasshopper/yak/build.ts` - Build section summary
-   - `semio/gh/Semio.Grasshopper/yak/login.ts` - Login section summary
-   - `semio/gh/Semio.Grasshopper/yak/publish.ts` - Publish section summary
-   - `semio/gh/Semio.Grasshopper/yak/test-push.ts` - Test Push section summary
-   - `semio/gh/Semio.Grasshopper/yak/unyank.ts` - Unyank section summary
-   - `semio/gh/Semio.Grasshopper/yak/yank.ts` - Yank section summary
-   - `semio/jsonschema/build.ts` - Schema Export section summary
-   - `semio/net/Semio/build.ts` - Build section summary
-3. **semio/go/kit_sqlite.go**: Wrapped all code after header in `// #region 🔖SQLite Kit Operations` / `// #endregion 🔖SQLite Kit Operations` section with summary.
-4. **semio/js/sketchpad/Type.tsx**: Removed inline comment `// Default export of the TypeApp component.` before `export default TypeApp;`.
+   - `compose/engine/build.ts` - Build section summary
+   - `compose/engine/generate-schemas.ts` - Schema Generation section summary
+   - `compose/engine/post-build.ts` - Post Build section summary
+   - `compose/engine/sqliteschema.ts` - Schema Export section summary
+   - `compose/gh/Compose.Grasshopper/build-value-lists.ts` - Value List Generation section summary
+   - `compose/gh/Compose.Grasshopper/build.ts` - Build section summary
+   - `compose/gh/Compose.Grasshopper/yak/build.ts` - Build section summary
+   - `compose/gh/Compose.Grasshopper/yak/login.ts` - Login section summary
+   - `compose/gh/Compose.Grasshopper/yak/publish.ts` - Publish section summary
+   - `compose/gh/Compose.Grasshopper/yak/test-push.ts` - Test Push section summary
+   - `compose/gh/Compose.Grasshopper/yak/unyank.ts` - Unyank section summary
+   - `compose/gh/Compose.Grasshopper/yak/yank.ts` - Yank section summary
+   - `compose/jsonschema/build.ts` - Schema Export section summary
+   - `compose/net/Compose/build.ts` - Build section summary
+3. **compose/go/kit_sqlite.go**: Wrapped all code after header in `// #region 🔖SQLite Kit Operations` / `// #endregion 🔖SQLite Kit Operations` section with summary.
+4. **compose/js/sketchpad/Type.tsx**: Removed inline comment `// Default export of the TypeApp component.` before `export default TypeApp;`.
 
 ## Log
 

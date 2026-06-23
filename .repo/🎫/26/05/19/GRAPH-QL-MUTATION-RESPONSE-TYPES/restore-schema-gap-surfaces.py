@@ -2,8 +2,8 @@
 import re
 from pathlib import Path
 
-lib = Path(r"c:\git\semio\semio\client\lib\rs\lib.rs")
-head = Path(r"c:\git\semio\.repo\🎫\26\05\19\GRAPH-QL-MUTATION-RESPONSE-TYPES\lib-head.rs")
+lib = Path(r"c:\git\compose\compose\client\lib\rs\lib.rs")
+head = Path(r"c:\git\compose\.repo\🎫\26\05\19\GRAPH-QL-MUTATION-RESPONSE-TYPES\lib-head.rs")
 text = lib.read_text(encoding="utf-8")
 head_text = head.read_text(encoding="utf-8")
 

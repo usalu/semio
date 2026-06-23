@@ -3,7 +3,7 @@
 import { readdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 
-const root = "c:/git/semio/spatial/assets/modelDefinition";
+const root = "c:/git/compose/spatial/assets/modelDefinition";
 
 function walk(dir: string, onFile: (path: string) => void): void {
 	for (const entry of readdirSync(dir, { withFileTypes: true })) {

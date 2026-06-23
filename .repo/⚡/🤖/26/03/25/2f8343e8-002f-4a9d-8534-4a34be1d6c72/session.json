@@ -5,7 +5,7 @@
   "second": "2026-03-25T00:30:44Z",
   "checkpoint": "76680d50c923c4d12e68c10859c5b2898c30b64c",
   "contributor": "unknown",
-  "transcript": "/home/vscode/.claude/projects/-workspaces-semio/2f8343e8-002f-4a9d-8534-4a34be1d6c72.jsonl",
+  "transcript": "/home/vscode/.claude/projects/-workspaces-compose/2f8343e8-002f-4a9d-8534-4a34be1d6c72.jsonl",
   "events": [
     {
       "event": {
@@ -15,12 +15,12 @@
         "kind": "agent.ended",
         "second": "2026-03-25T00:30:44Z",
         "session": "2f8343e8-002f-4a9d-8534-4a34be1d6c72",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/2f8343e8-002f-4a9d-8534-4a34be1d6c72.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/2f8343e8-002f-4a9d-8534-4a34be1d6c72.jsonl"
       },
       "native": {
         "event": {
           "session_id": "2f8343e8-002f-4a9d-8534-4a34be1d6c72",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/2f8343e8-002f-4a9d-8534-4a34be1d6c72.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/2f8343e8-002f-4a9d-8534-4a34be1d6c72.jsonl",
           "cwd": "/workspaces/semio",
           "hook_event_name": "SessionEnd",
           "reason": "other"
@@ -36,12 +36,12 @@
         "kind": "agent.started",
         "second": "2026-03-25T01:39:53Z",
         "session": "2f8343e8-002f-4a9d-8534-4a34be1d6c72",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/2f8343e8-002f-4a9d-8534-4a34be1d6c72.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/2f8343e8-002f-4a9d-8534-4a34be1d6c72.jsonl"
       },
       "native": {
         "event": {
           "session_id": "2f8343e8-002f-4a9d-8534-4a34be1d6c72",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/2f8343e8-002f-4a9d-8534-4a34be1d6c72.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/2f8343e8-002f-4a9d-8534-4a34be1d6c72.jsonl",
           "cwd": "/workspaces/semio",
           "hook_event_name": "SessionStart",
           "source": "resume"

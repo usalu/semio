@@ -25,7 +25,7 @@
             "maxResults": 20,
             "query": "input.*type.*file|file.*input",
             "isRegexp": true,
-            "includePattern": "**/semio/sketchpad/sketchpad/**"
+            "includePattern": "**/compose/sketchpad/sketchpad/**"
           },
           "tool_use_id": "toolu_01SpzV4gB69Rcv2BMy3ySNK2__vscode-1773658270519",
           "cwd": "/workspaces/semio"
@@ -49,7 +49,7 @@
           "session_id": "2a39a043-95b0-4799-9962-b925b33477cf",
           "tool_name": "file_search",
           "tool_input": {
-            "query": "**/semio/sketchpad/sketchpad/Home.tsx",
+            "query": "**/compose/sketchpad/sketchpad/Home.tsx",
             "maxResults": 20
           },
           "tool_use_id": "toolu_01HqKzvRuJp4SoCYKEZsQDVN__vscode-1773658270520",
@@ -77,7 +77,7 @@
             "maxResults": 20,
             "query": "input.*type.*file|file.*input",
             "isRegexp": true,
-            "includePattern": "**/semio/sketchpad/sketchpad/**"
+            "includePattern": "**/compose/sketchpad/sketchpad/**"
           },
           "tool_response": "",
           "tool_use_id": "toolu_01SpzV4gB69Rcv2BMy3ySNK2__vscode-1773658270519",
@@ -105,7 +105,7 @@
             "maxResults": 20,
             "query": "home\\.import|import.*home",
             "isRegexp": true,
-            "includePattern": "**/semio/sketchpad/sketchpad/**"
+            "includePattern": "**/compose/sketchpad/sketchpad/**"
           },
           "tool_response": "",
           "tool_use_id": "toolu_014hoAoA7mPtBY8AvGNA9wsN__vscode-1773658270518",
@@ -133,7 +133,7 @@
             "maxResults": 50,
             "query": "importKit|import.*Kit",
             "isRegexp": true,
-            "includePattern": "**/semio/sketchpad/sketchpad/**"
+            "includePattern": "**/compose/sketchpad/sketchpad/**"
           },
           "tool_response": "",
           "tool_use_id": "toolu_01NJMKgKXjA2ectiq3fjpsFB__vscode-1773658270517",
@@ -158,7 +158,7 @@
           "session_id": "2a39a043-95b0-4799-9962-b925b33477cf",
           "tool_name": "file_search",
           "tool_input": {
-            "query": "**/semio/sketchpad/sketchpad/Home.tsx",
+            "query": "**/compose/sketchpad/sketchpad/Home.tsx",
             "maxResults": 20
           },
           "tool_response": "",
@@ -184,7 +184,7 @@
           "session_id": "2a39a043-95b0-4799-9962-b925b33477cf",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/sketchpad/sketchpad/Home.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/sketchpad/Home.tsx",
             "startLine": 46,
             "endLine": 46
           },
@@ -210,7 +210,7 @@
           "session_id": "2a39a043-95b0-4799-9962-b925b33477cf",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/sketchpad/sketchpad/Home.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/sketchpad/Home.tsx",
             "startLine": 620,
             "endLine": 670
           },
@@ -236,7 +236,7 @@
           "session_id": "2a39a043-95b0-4799-9962-b925b33477cf",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/sketchpad/sketchpad/Home.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/sketchpad/Home.tsx",
             "startLine": 553,
             "endLine": 620
           },
@@ -262,7 +262,7 @@
           "session_id": "2a39a043-95b0-4799-9962-b925b33477cf",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/sketchpad/sketchpad/Home.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/sketchpad/Home.tsx",
             "startLine": 46,
             "endLine": 46
           },
@@ -289,7 +289,7 @@
           "session_id": "2a39a043-95b0-4799-9962-b925b33477cf",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/sketchpad/sketchpad/Home.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/sketchpad/Home.tsx",
             "startLine": 620,
             "endLine": 670
           },
@@ -316,7 +316,7 @@
           "session_id": "2a39a043-95b0-4799-9962-b925b33477cf",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/sketchpad/sketchpad/Home.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/sketchpad/Home.tsx",
             "startLine": 553,
             "endLine": 620
           },

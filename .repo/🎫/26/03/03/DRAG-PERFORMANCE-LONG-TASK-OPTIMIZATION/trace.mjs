@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const BASE_URL = process.env.PLAYWRIGHT_BASE_URL || 'http://127.0.0.1:5173';
-const ZIP_PATH = path.resolve('/workspaces/semio/semio/assets/semio/metabolism.zip');
+const ZIP_PATH = path.resolve('/workspaces/semio/compose/assets/compose/metabolism.zip');
 
 async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
@@ -15,8 +15,8 @@ async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
   
   // Install PerformanceObserver (same as test)
   await page.addInitScript(() => {
-    window.__SEMIO_PERFORMANCE__ = { longTaskSupported: false, longTasks: [] };
-    const store = window.__SEMIO_PERFORMANCE__;
+    window.__COMPOSE_PERFORMANCE__ = { longTaskSupported: false, longTasks: [] };
+    const store = window.__COMPOSE_PERFORMANCE__;
     const obs = window.PerformanceObserver;
     if (!obs || !(obs.supportedEntryTypes || []).includes('longtask')) return;
     store.longTaskSupported = true;
@@ -31,7 +31,7 @@ async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
   await sleep(2000);
   
   // Upload zip (same as initHome)
-  const fileInput = page.locator('[id="semio.sketchpad.app.home.importKit"]');
+  const fileInput = page.locator('[id="compose.sketchpad.app.home.importKit"]');
   await fileInput.waitFor({ state: 'attached', timeout: 10000 });
   
   const [fileChooser] = await Promise.all([
@@ -91,7 +91,7 @@ async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
   console.log(`Nodes: ${await nodes.count()}`);
   
   // Close left panel
-  const leftPanelToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.leftSidePanel"]');
+  const leftPanelToggle = page.locator('[id="compose.sketchpad.navbar.panelToggle.leftSidePanel"]');
   if (await leftPanelToggle.isVisible().catch(() => false)) {
     const leftPanelOpen = await page.locator('[data-panel="leftSidePanel"]').isVisible().catch(() => false);
     if (leftPanelOpen) {
@@ -101,7 +101,7 @@ async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
   }
   
   // CLEAR long tasks
-  await page.evaluate(() => { window.__SEMIO_PERFORMANCE__.longTasks = []; });
+  await page.evaluate(() => { window.__COMPOSE_PERFORMANCE__.longTasks = []; });
   
   // Use CDP to capture a performance profile  
   const cdp = await page.context().newCDPSession(page);
@@ -151,7 +151,7 @@ async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
     return entries.map(e => ({ name: e.name, time: e.startTime }));
   });
   
-  const longTasks = await page.evaluate(() => window.__SEMIO_PERFORMANCE__.longTasks);
+  const longTasks = await page.evaluate(() => window.__COMPOSE_PERFORMANCE__.longTasks);
   const renderCount = await page.evaluate(() => window.__DEBUG_PIECE_RENDER_COUNT__ || 0);
   
   console.log('\n=== PERFORMANCE MARKS ===');

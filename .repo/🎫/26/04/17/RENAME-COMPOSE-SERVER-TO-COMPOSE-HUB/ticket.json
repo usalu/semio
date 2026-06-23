@@ -1,0 +1,13 @@
+{
+  "title": "Rename Compose Server to Compose Hub",
+  "status": "closed",
+  "description": "Rename the compose server technology/module to compose hub across the compose/ codebase. The hub directory already exists (Cargo.toml, bin.rs, compose.yml, k8s.yaml); the old compose/server directory is empty. Update all references (paths, identifiers, comments, configs) in compose/ to use \"hub\" instead of \"server\" where they refer to the compose server subsystem. Do not touch repo/ (different technology). Remove the stale empty compose/server directory at the end.",
+  "summary": "Renamed the compose server subsystem to compose hub across the compose/ technology. Cargo package & binary renamed from \"compose-session\" to \"compose-hub\" (compose/hub/Cargo.toml). Compose (compose/hub/compose.yml): service key session→hub, working_dir /workspace/compose/server→/workspace/compose/hub, DB name compose_session→compose_hub, RUST_LOG filter compose_session→compose_hub, region 🔖Session→🔖Hub. K8s (compose/hub/k8s.yaml): namespace, all metadata names, selectors, labels, image, env and log filters renamed session/compose-session→hub/compose-hub; SessionService/SessionDeployment regions renamed to HubService/HubDeployment; ingress backend session→hub. bin.rs (compose/hub/bin.rs): admin summary comment, startup log tag, default EnvFilter and default DATABASE_URL all compose_session/compose-session→compose_hub/compose-hub. .vscode/launch.json: launcher name 🛠️dev🏘️compose📚server→🛠️dev🏘️compose📚hub and `cargo run -p compose-session`→`cargo run -p compose-hub`. User-facing strings and specs in compose/sketchpad/index.tsx, compose/engine/main.py, compose/js/index.ts, compose/desktop/renderer.tsx, compose/DOCS.md: \"compose server\" / \"compose/server\" / \"compose-session\" → \"compose hub\" / \"compose/hub\" / \"compose-hub\". Removed the now-empty compose/server directory. repo/ (different technology; COMPOSE_SERVER_* env vars and repo/server belong to the repo server) was intentionally not touched.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1349"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪2240ccd43be04ca6b378c86c16d966cf"
+  ]
+}

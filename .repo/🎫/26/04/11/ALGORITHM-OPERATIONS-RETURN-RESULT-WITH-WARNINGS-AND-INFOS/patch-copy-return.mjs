@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, "../../../../../");
-const p = path.join(root, "semio/js/index.ts");
+const p = path.join(root, "compose/js/index.ts");
 let s = fs.readFileSync(p, "utf8");
 const old = `  return { guid: "", name: "", pieces: copyPieces, connections: copyConnections };
 };`;

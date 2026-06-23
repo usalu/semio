@@ -16,7 +16,7 @@
       "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/dc1a0640-a153-493d-84ba-68b2ae6d0ed3.jsonl",
       "tool_name": "run_in_terminal",
       "tool_input": {
-        "command": "ls -la /workspaces/semio/test-results/ 2\u003e/dev/null \u0026\u0026 find /workspaces/semio/test-results -name \"*.txt\" -newer /workspaces/semio/semio/sketchpad/sketchpad.test.ts -exec tail -50 {} \\; 2\u003e/dev/null || echo \"No test results yet\"",
+        "command": "ls -la /workspaces/semio/test-results/ 2\u003e/dev/null \u0026\u0026 find /workspaces/semio/test-results -name \"*.txt\" -newer /workspaces/semio/compose/sketchpad/sketchpad.test.ts -exec tail -50 {} \\; 2\u003e/dev/null || echo \"No test results yet\"",
         "explanation": "Check test results directory for any output",
         "goal": "Find test output",
         "isBackground": false,

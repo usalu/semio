@@ -1,6 +1,6 @@
 {
   "id": "d4898699-7684-4bf4-beec-3c527cd8612d",
-  "uri": "semiorepo://s/d4898699-7684-4bf4-beec-3c527cd8612d",
+  "uri": "composerepo://s/d4898699-7684-4bf4-beec-3c527cd8612d",
   "contributor": "🧑‍💻ueli",
   "client": "copilot-chat",
   "second": "2026-03-14T15:09:29Z",
@@ -14,7 +14,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 50,
-            "filePath": "/workspaces/semio/semio/js/sketchpad.test.ts",
+            "filePath": "/workspaces/semio/compose/js/sketchpad.test.ts",
             "startLine": 1
           },
           "tool_use_id": "toolu_01VmGHnBVzvnnCFnpH3FNjQ6__vscode-1773492851280",
@@ -33,46 +33,46 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚js🥼sketchpadtest✂️center",
+            "id": "👤compose📚js🥼sketchpadtest✂️center",
             "loc": 2
           },
           {
-            "id": "👤semio📚js🥼sketchpadtest✂️plane",
+            "id": "👤compose📚js🥼sketchpadtest✂️plane",
             "loc": 5
           },
           {
-            "id": "👤semio📚js🥼sketchpadtest🪨designs",
+            "id": "👤compose📚js🥼sketchpadtest🪨designs",
             "loc": 1
           },
           {
-            "id": "👤semio📚js🥼sketchpadtest🪨dirname",
+            "id": "👤compose📚js🥼sketchpadtest🪨dirname",
             "loc": 2
           },
           {
-            "id": "👤semio📚js🥼sketchpadtest🪨filename",
+            "id": "👤compose📚js🥼sketchpadtest🪨filename",
             "loc": 1
           },
           {
-            "id": "👤semio📚js🥼sketchpadtest🪨metabolismkitnakagincapsuletowerflatpieces",
+            "id": "👤compose📚js🥼sketchpadtest🪨metabolismkitnakagincapsuletowerflatpieces",
             "loc": 6
           },
           {
-            "id": "👤semio📚js🥼sketchpadtest🪨nakagincapsuletowerdesign",
+            "id": "👤compose📚js🥼sketchpadtest🪨nakagincapsuletowerdesign",
             "loc": 1
           },
           {
-            "id": "👤semio📚js🥼sketchpadtest🪨nakagincapsuletowerflatdesign",
+            "id": "👤compose📚js🥼sketchpadtest🪨nakagincapsuletowerflatdesign",
             "loc": 1
           },
           {
-            "id": "👤semio📚js🥼sketchpadtest🪨tolerance",
+            "id": "👤compose📚js🥼sketchpadtest🪨tolerance",
             "loc": 2
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚js🥼sketchpadtest📌1📌50"
+          "👤compose📚js🥼sketchpadtest📌1📌50"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚09⏱️29",
         "session": "⚪d489869976844bf4beec3c527cd8612d"
@@ -90,7 +90,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 5482,
-            "filePath": "/workspaces/semio/semio/js/sketchpad.test.ts",
+            "filePath": "/workspaces/semio/compose/js/sketchpad.test.ts",
             "startLine": 5470
           },
           "tool_use_id": "toolu_01A7pCSvFDGMhpWiTkMazfXs__vscode-1773492851284",
@@ -110,7 +110,7 @@
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚js🥼sketchpadtest📌5470📌5482"
+          "👤compose📚js🥼sketchpadtest📌5470📌5482"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚09⏱️30",
         "session": "⚪d489869976844bf4beec3c527cd8612d"
@@ -128,7 +128,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 1050,
-            "filePath": "/workspaces/semio/semio/js/sketchpad.test.ts",
+            "filePath": "/workspaces/semio/compose/js/sketchpad.test.ts",
             "startLine": 1000
           },
           "tool_response": "",
@@ -148,7 +148,7 @@
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚js🥼sketchpadtest📌1000📌1050"
+          "👤compose📚js🥼sketchpadtest📌1000📌1050"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚09⏱️49",
         "session": "⚪d489869976844bf4beec3c527cd8612d"
@@ -166,7 +166,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 2194,
-            "filePath": "/workspaces/semio/semio/js/sketchpad.test.ts",
+            "filePath": "/workspaces/semio/compose/js/sketchpad.test.ts",
             "startLine": 2180
           },
           "tool_response": "",
@@ -186,7 +186,7 @@
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚js🥼sketchpadtest📌2180📌2194"
+          "👤compose📚js🥼sketchpadtest📌2180📌2194"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚09⏱️49",
         "session": "⚪d489869976844bf4beec3c527cd8612d"
@@ -204,7 +204,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 1020,
-            "filePath": "/workspaces/semio/semio/js/sketchpad.test.ts",
+            "filePath": "/workspaces/semio/compose/js/sketchpad.test.ts",
             "startLine": 1010
           },
           "tool_response": "",
@@ -224,7 +224,7 @@
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚js🥼sketchpadtest📌1010📌1020"
+          "👤compose📚js🥼sketchpadtest📌1010📌1020"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚09⏱️50",
         "session": "⚪d489869976844bf4beec3c527cd8612d"
@@ -242,7 +242,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 50,
-            "filePath": "/workspaces/semio/semio/js/sketchpad.test.ts",
+            "filePath": "/workspaces/semio/compose/js/sketchpad.test.ts",
             "startLine": 1
           },
           "tool_response": "",
@@ -261,46 +261,46 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚js🥼sketchpadtest✂️center",
+            "id": "👤compose📚js🥼sketchpadtest✂️center",
             "loc": 2
           },
           {
-            "id": "👤semio📚js🥼sketchpadtest✂️plane",
+            "id": "👤compose📚js🥼sketchpadtest✂️plane",
             "loc": 5
           },
           {
-            "id": "👤semio📚js🥼sketchpadtest🪨designs",
+            "id": "👤compose📚js🥼sketchpadtest🪨designs",
             "loc": 1
           },
           {
-            "id": "👤semio📚js🥼sketchpadtest🪨dirname",
+            "id": "👤compose📚js🥼sketchpadtest🪨dirname",
             "loc": 2
           },
           {
-            "id": "👤semio📚js🥼sketchpadtest🪨filename",
+            "id": "👤compose📚js🥼sketchpadtest🪨filename",
             "loc": 1
           },
           {
-            "id": "👤semio📚js🥼sketchpadtest🪨metabolismkitnakagincapsuletowerflatpieces",
+            "id": "👤compose📚js🥼sketchpadtest🪨metabolismkitnakagincapsuletowerflatpieces",
             "loc": 6
           },
           {
-            "id": "👤semio📚js🥼sketchpadtest🪨nakagincapsuletowerdesign",
+            "id": "👤compose📚js🥼sketchpadtest🪨nakagincapsuletowerdesign",
             "loc": 1
           },
           {
-            "id": "👤semio📚js🥼sketchpadtest🪨nakagincapsuletowerflatdesign",
+            "id": "👤compose📚js🥼sketchpadtest🪨nakagincapsuletowerflatdesign",
             "loc": 1
           },
           {
-            "id": "👤semio📚js🥼sketchpadtest🪨tolerance",
+            "id": "👤compose📚js🥼sketchpadtest🪨tolerance",
             "loc": 2
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚js🥼sketchpadtest📌1📌50"
+          "👤compose📚js🥼sketchpadtest📌1📌50"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚09⏱️51",
         "session": "⚪d489869976844bf4beec3c527cd8612d"
@@ -318,7 +318,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 5482,
-            "filePath": "/workspaces/semio/semio/js/sketchpad.test.ts",
+            "filePath": "/workspaces/semio/compose/js/sketchpad.test.ts",
             "startLine": 5470
           },
           "tool_response": "",
@@ -338,7 +338,7 @@
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚js🥼sketchpadtest📌5470📌5482"
+          "👤compose📚js🥼sketchpadtest📌5470📌5482"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚10⏱️04",
         "session": "⚪d489869976844bf4beec3c527cd8612d"
@@ -356,7 +356,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 1450,
-            "filePath": "/workspaces/semio/semio/js/sketchpad.test.ts",
+            "filePath": "/workspaces/semio/compose/js/sketchpad.test.ts",
             "startLine": 1390
           },
           "tool_use_id": "toolu_01BJuWYxw27jRhUJUzgWaMgD__vscode-1773492851286",
@@ -376,7 +376,7 @@
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚js🥼sketchpadtest📌1390📌1450"
+          "👤compose📚js🥼sketchpadtest📌1390📌1450"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚10⏱️10",
         "session": "⚪d489869976844bf4beec3c527cd8612d"
@@ -394,7 +394,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 1084,
-            "filePath": "/workspaces/semio/semio/js/sketchpad.test.ts",
+            "filePath": "/workspaces/semio/compose/js/sketchpad.test.ts",
             "startLine": 1000
           },
           "tool_use_id": "toolu_015EgipemoaSpbMa5sPA6aTf__vscode-1773492851285",
@@ -414,7 +414,7 @@
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚js🥼sketchpadtest📌1000📌1084"
+          "👤compose📚js🥼sketchpadtest📌1000📌1084"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚10⏱️10",
         "session": "⚪d489869976844bf4beec3c527cd8612d"
@@ -432,7 +432,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 2250,
-            "filePath": "/workspaces/semio/semio/js/sketchpad.test.ts",
+            "filePath": "/workspaces/semio/compose/js/sketchpad.test.ts",
             "startLine": 2100
           },
           "tool_use_id": "toolu_0184eapsr9sTJfhD2Qqe51Ug__vscode-1773492851288",
@@ -452,7 +452,7 @@
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚js🥼sketchpadtest📌2100📌2250"
+          "👤compose📚js🥼sketchpadtest📌2100📌2250"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚10⏱️10",
         "session": "⚪d489869976844bf4beec3c527cd8612d"
@@ -470,7 +470,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 1900,
-            "filePath": "/workspaces/semio/semio/js/sketchpad.test.ts",
+            "filePath": "/workspaces/semio/compose/js/sketchpad.test.ts",
             "startLine": 1800
           },
           "tool_use_id": "toolu_012LnkfLWY3jZEtTNFz1WRJf__vscode-1773492851287",
@@ -490,7 +490,7 @@
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚js🥼sketchpadtest📌1800📌1900"
+          "👤compose📚js🥼sketchpadtest📌1800📌1900"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚10⏱️10",
         "session": "⚪d489869976844bf4beec3c527cd8612d"
@@ -508,7 +508,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 4600,
-            "filePath": "/workspaces/semio/semio/js/sketchpad.test.ts",
+            "filePath": "/workspaces/semio/compose/js/sketchpad.test.ts",
             "startLine": 4460
           },
           "tool_use_id": "toolu_0178yhvAesbcNvECqjE1uoVD__vscode-1773492851289",
@@ -528,7 +528,7 @@
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚js🥼sketchpadtest📌4460📌4600"
+          "👤compose📚js🥼sketchpadtest📌4460📌4600"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚10⏱️11",
         "session": "⚪d489869976844bf4beec3c527cd8612d"
@@ -546,7 +546,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 1450,
-            "filePath": "/workspaces/semio/semio/js/sketchpad.test.ts",
+            "filePath": "/workspaces/semio/compose/js/sketchpad.test.ts",
             "startLine": 1390
           },
           "tool_response": "",
@@ -566,7 +566,7 @@
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚js🥼sketchpadtest📌1390📌1450"
+          "👤compose📚js🥼sketchpadtest📌1390📌1450"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚10⏱️25",
         "session": "⚪d489869976844bf4beec3c527cd8612d"
@@ -584,7 +584,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 2250,
-            "filePath": "/workspaces/semio/semio/js/sketchpad.test.ts",
+            "filePath": "/workspaces/semio/compose/js/sketchpad.test.ts",
             "startLine": 2100
           },
           "tool_response": "",
@@ -604,7 +604,7 @@
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚js🥼sketchpadtest📌2100📌2250"
+          "👤compose📚js🥼sketchpadtest📌2100📌2250"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚10⏱️26",
         "session": "⚪d489869976844bf4beec3c527cd8612d"
@@ -622,7 +622,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 1900,
-            "filePath": "/workspaces/semio/semio/js/sketchpad.test.ts",
+            "filePath": "/workspaces/semio/compose/js/sketchpad.test.ts",
             "startLine": 1800
           },
           "tool_response": "",
@@ -642,7 +642,7 @@
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚js🥼sketchpadtest📌1800📌1900"
+          "👤compose📚js🥼sketchpadtest📌1800📌1900"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚10⏱️26",
         "session": "⚪d489869976844bf4beec3c527cd8612d"
@@ -660,7 +660,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 4600,
-            "filePath": "/workspaces/semio/semio/js/sketchpad.test.ts",
+            "filePath": "/workspaces/semio/compose/js/sketchpad.test.ts",
             "startLine": 4460
           },
           "tool_response": "",
@@ -680,7 +680,7 @@
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚js🥼sketchpadtest📌4460📌4600"
+          "👤compose📚js🥼sketchpadtest📌4460📌4600"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚10⏱️35",
         "session": "⚪d489869976844bf4beec3c527cd8612d"
@@ -698,7 +698,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 5500,
-            "filePath": "/workspaces/semio/semio/js/sketchpad.test.ts",
+            "filePath": "/workspaces/semio/compose/js/sketchpad.test.ts",
             "startLine": 5320
           },
           "tool_use_id": "toolu_012dsxaVC1FwJYfFgADeFdAk__vscode-1773492851290",
@@ -718,7 +718,7 @@
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚js🥼sketchpadtest📌5320📌5500"
+          "👤compose📚js🥼sketchpadtest📌5320📌5500"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚10⏱️37",
         "session": "⚪d489869976844bf4beec3c527cd8612d"
@@ -736,7 +736,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 5500,
-            "filePath": "/workspaces/semio/semio/js/sketchpad.test.ts",
+            "filePath": "/workspaces/semio/compose/js/sketchpad.test.ts",
             "startLine": 5320
           },
           "tool_response": "",
@@ -756,7 +756,7 @@
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚js🥼sketchpadtest📌5320📌5500"
+          "👤compose📚js🥼sketchpadtest📌5320📌5500"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚10⏱️49",
         "session": "⚪d489869976844bf4beec3c527cd8612d"
@@ -774,7 +774,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 5550,
-            "filePath": "/workspaces/semio/semio/js/sketchpad.test.ts",
+            "filePath": "/workspaces/semio/compose/js/sketchpad.test.ts",
             "startLine": 5470
           },
           "tool_response": "",
@@ -794,7 +794,7 @@
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚js🥼sketchpadtest📌5470📌5550"
+          "👤compose📚js🥼sketchpadtest📌5470📌5550"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚10⏱️49",
         "session": "⚪d489869976844bf4beec3c527cd8612d"

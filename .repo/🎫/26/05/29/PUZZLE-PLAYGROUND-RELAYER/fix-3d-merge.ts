@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 import { readFileSync, writeFileSync } from "node:fs";
 
-const path = "c:/git/semio/puzzle/3d/react/index.tsx";
+const path = "c:/git/compose/puzzle/3d/react/index.tsx";
 let c = readFileSync(path, "utf8");
 const start = c.indexOf("/** @emoji 🛝 Scene play React host");
 const anchorPlay = '} from "./index.ts";\n\n';

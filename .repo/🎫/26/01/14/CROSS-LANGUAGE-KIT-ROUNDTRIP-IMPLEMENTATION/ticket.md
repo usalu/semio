@@ -51,15 +51,15 @@
 - Implemented `loadTypes`, `loadDesigns`, `loadPieces`, `loadConnections`, `loadConnectors`, `loadModels`
 - Implemented `KitFromSqlite` - loads Kit from SQLite database
 - Implemented `KitToSqlite` - saves Kit to SQLite database with schema
-- Implemented `KitFromZip` - extracts zip and loads Kit from .semio/kit.db
-- Implemented `KitToZip` - creates zip with .semio/kit.db and files
+- Implemented `KitFromZip` - extracts zip and loads Kit from .compose/kit.db
+- Implemented `KitToZip` - creates zip with .compose/kit.db and files
 - Fixed boolean handling (sql.NullBool instead of int)
 - Test `TestKitZipRoundtrip` passes: loaded Metabolism kit with 49 types, 10 designs, 321 files
 
 ### JS/TS Verification
 
-- `importKit` and `exportKit` functions already exist in semio.ts
-- Added Zip roundtrip test to semio.test.ts
+- `importKit` and `exportKit` functions already exist in compose.ts
+- Added Zip roundtrip test to compose.test.ts
 - Test "Zip -> Kit -> Zip -> Kit (roundtrip)" passes (11427ms)
 
 ### Deferred
@@ -75,23 +75,23 @@
 
 ### Go Implementation
 
-- Created `go/semio/kit_sqlite.go` with full SQLite/Zip roundtrip support
+- Created `go/compose/kit_sqlite.go` with full SQLite/Zip roundtrip support
 - `KitFromSqlite` - loads Kit from SQLite database
 - `KitToSqlite` - saves Kit to SQLite database
-- `KitFromZip` - extracts zip and loads Kit from .semio/kit.db
-- `KitToZip` - creates zip with .semio/kit.db and files
+- `KitFromZip` - extracts zip and loads Kit from .compose/kit.db
+- `KitToZip` - creates zip with .compose/kit.db and files
 - Helper functions: `loadTypes`, `loadDesigns`, `loadPieces`, `loadConnections`, `loadConnectors`, `loadModels`
 - Test `TestKitZipRoundtrip` passes: loaded Metabolism kit with 49 types, 10 designs, 321 files
 
 ### JS/TS Verification
 
-- Verified existing `importKit` and `exportKit` functions in semio.ts
-- Added Zip roundtrip test to semio.test.ts
+- Verified existing `importKit` and `exportKit` functions in compose.ts
+- Added Zip roundtrip test to compose.test.ts
 - Test "Zip -> Kit -> Zip -> Kit (roundtrip)" passes (11427ms)
 
 ### Python Dependencies
 
-- Added missing dependencies to py/semio/pyproject.toml (python-dotenv, fastapi, graphene, etc.)
+- Added missing dependencies to py/compose/pyproject.toml (python-dotenv, fastapi, graphene, etc.)
 
 ## Blocked
 
@@ -109,9 +109,9 @@
 
 ## Files Modified
 
-- `go/semio/kit_sqlite.go` - created
-- `go/semio/semio_test.go` - updated
-- `js/semio/semio.test.ts` - updated
-- `py/semio/pyproject.toml` - updated
-- `py/semio/semio.py` - updated (Session fixes)
-- `py/semio/semio.test.py` - updated
+- `go/compose/kit_sqlite.go` - created
+- `go/compose/compose_test.go` - updated
+- `js/compose/compose.test.ts` - updated
+- `py/compose/pyproject.toml` - updated
+- `py/compose/compose.py` - updated (Session fixes)
+- `py/compose/compose.test.py` - updated

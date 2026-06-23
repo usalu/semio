@@ -1,4 +1,4 @@
-filepath = '/workspaces/semio/semio/js/sketchpad.test.ts'
+filepath = '/workspaces/semio/compose/js/sketchpad.test.ts'
 with open(filepath, 'r') as f:
     content = f.read()
 

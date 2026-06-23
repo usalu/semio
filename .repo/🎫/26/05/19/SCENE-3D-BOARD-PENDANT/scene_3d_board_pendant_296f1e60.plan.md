@@ -1,6 +1,6 @@
 ---
 name: scene 3d board pendant
-overview: "Build `@elements/scene` as the 3D counterpart of `@elements/board`: R3F-based React component with the same kinds, compatibility and connect mechanisms (Indirect / Connect / Proximity), swappable glb meshes, central object pool, chunking for infinite worlds, and relocate (Translate/Rotate/Scale) instead of drag. Ship a Nakagin play site at JSON parity with the board fixture by consuming checked-in `nakagin-capsule-tower.scene.json` (origins and quaternions already in three.js Y-up space). Semio is not a dependency of `@elements/scene`: a one-off bake script (ticket folder only, optional `@semio/js` there) generates that JSON once from repo fixture files; the scene library, play site, and tests never import semio."
+overview: "Build `@elements/scene` as the 3D counterpart of `@elements/board`: R3F-based React component with the same kinds, compatibility and connect mechanisms (Indirect / Connect / Proximity), swappable glb meshes, central object pool, chunking for infinite worlds, and relocate (Translate/Rotate/Scale) instead of drag. Ship a Nakagin play site at JSON parity with the board fixture by consuming checked-in `nakagin-capsule-tower.scene.json` (origins and quaternions already in three.js Y-up space). Compose is not a dependency of `@elements/scene`: a one-off bake script (ticket folder only, optional `@compose/js` there) generates that JSON once from repo fixture files; the scene library, play site, and tests never import compose."
 todos:
   - id: bootstrap
     content: Create scene package.json, project.json, script.ts (dev/build/test only), vite.config.ts, index.html
@@ -15,10 +15,10 @@ todos:
     content: Implement Selection + Relocate (Translate/Rotate/Scale) + Connect/Indirect/Proximity compat checks against kindCatalogs
     status: completed
   - id: coords
-    content: No semio-named helpers in scene; fixture stores final three.js origin/quaternion. Optional tiny pure `planeBasisToThreeJs` in scene only if unit tests need shared math without JSON (neutral naming, no semio types)
+    content: No compose-named helpers in scene; fixture stores final three.js origin/quaternion. Optional tiny pure `planeBasisToThreeJs` in scene only if unit tests need shared math without JSON (neutral naming, no compose types)
     status: completed
   - id: bake
-    content: One-off script in active ticket folder (not under elements/scene) reads shallow design + kit JSON from repo paths, may use @semio/js flatten once, writes nakagin-capsule-tower.scene.json; run manually then commit JSON
+    content: One-off script in active ticket folder (not under elements/scene) reads shallow design + kit JSON from repo paths, may use @compose/js flatten once, writes nakagin-capsule-tower.scene.json; run manually then commit JSON
     status: completed
   - id: play
     content: Build play site with @elements/ui shell, fixture shelf, selection inspector, relocate-mode toolbar
@@ -66,7 +66,7 @@ Compatibility/connect rules reuse the board catalog format verbatim (`source`/`t
 
 - [elements/client/lib/scene/script.ts](elements/client/lib/scene/script.ts) modeled on board's `script.ts` (no cargo/wasm step): `dev` → vite, `build` → vite build, `test` → vitest + playwright. **No `bake-*` subcommands** — fixture generation is not part of this package's surface.
 
-- [elements/client/lib/scene/fixtures/meshes/](elements/client/lib/scene/fixtures/meshes/) — optional empty placeholder; play `vite.config.ts` aliases `/meshes/*` to repo `semio/assets/fixtures/metabolism/representations/*.glb` via `server.fs.allow` (static files only, no semio JavaScript).
+- [elements/client/lib/scene/fixtures/meshes/](elements/client/lib/scene/fixtures/meshes/) — optional empty placeholder; play `vite.config.ts` aliases `/meshes/*` to repo `compose/assets/fixtures/metabolism/representations/*.glb` via `server.fs.allow` (static files only, no compose JavaScript).
 
 ## Coordinate system (fixture authoring only, not scene runtime)
 
@@ -90,11 +90,11 @@ Checked-in `nakagin-capsule-tower.scene.json` stores `origin` and `orientation` 
 
 Keys, ids, kindCatalogs and tie wiring are 1:1 with `nakagin-capsule-tower.board.json` so the same Nakagin compat catalog drives both surfaces.
 
-## Strict isolation from semio
+## Strict isolation from compose
 
-`@elements/scene` (runtime + play site + tests + `script.ts`) has **zero** semio dependency: no `@semio/*` in [elements/client/lib/scene/package.json](elements/client/lib/scene/package.json), no imports from `@semio/*` or `semio/` TypeScript modules anywhere under `elements/client/lib/scene/`.
+`@elements/scene` (runtime + play site + tests + `script.ts`) has **zero** compose dependency: no `@compose/*` in [elements/client/lib/scene/package.json](elements/client/lib/scene/package.json), no imports from `@compose/*` or `compose/` TypeScript modules anywhere under `elements/client/lib/scene/`.
 
-- Play site only `import`s checked-in JSON and loads glbs by URL; `vite.config.ts` `server.fs.allow` may include the repo path to `semio/assets/.../representations/` **for static `.glb` files only** (not for executing semio code).
+- Play site only `import`s checked-in JSON and loads glbs by URL; `vite.config.ts` `server.fs.allow` may include the repo path to `compose/assets/.../representations/` **for static `.glb` files only** (not for executing compose code).
 
 ## One-time Nakagin fixture bake (ticket folder only, outside `elements/scene`)
 
@@ -102,8 +102,8 @@ Authoring `nakagin-capsule-tower.scene.json` is **not** implemented inside `@ele
 
 That script may:
 
-1. `readFileSync` shallow design + light kit JSON from `semio/assets/fixtures/...` (plain paths, no `@elements/scene` import required).
-2. `import { flattenDesign } from "@semio/js"` (or equivalent single entry the monorepo already resolves for one-off dev runs) to flatten pieces and connector geometry.
+1. `readFileSync` shallow design + light kit JSON from `compose/assets/fixtures/...` (plain paths, no `@elements/scene` import required).
+2. `import { flattenDesign } from "@compose/js"` (or equivalent single entry the monorepo already resolves for one-off dev runs) to flatten pieces and connector geometry.
 3. Apply authoring-basis → three.js conversion locally inside the script (inline functions, ~15 lines of `three` math, or `import` from `three` only).
 4. `readFileSync` `.storybook/fixtures/nakagin-capsule-tower.board.json` and copy `kindCatalogs` + `edges` into the scene fixture for id parity.
 5. `writeFileSync` → [elements/client/lib/scene/fixtures/nakagin-capsule-tower.scene.json](elements/client/lib/scene/fixtures/nakagin-capsule-tower.scene.json).
@@ -279,7 +279,7 @@ useGLTF.preload = useGLTF.preload ?? (() => {});             // satisfies tree-s
 
 ### Coordinate conversion (not in `@elements/scene`)
 
-Plane → three.js basis conversion lives **only** in the ticket `bake-nakagin-scene.mts` as private inline helpers (or `import` from `three` there). Do not export `semio*` or `SemioPlane` from [elements/client/lib/scene/react/index.tsx](elements/client/lib/scene/react/index.tsx).
+Plane → three.js basis conversion lives **only** in the ticket `bake-nakagin-scene.mts` as private inline helpers (or `import` from `three` there). Do not export `compose*` or `ComposePlane` from [elements/client/lib/scene/react/index.tsx](elements/client/lib/scene/react/index.tsx).
 
 ### Relocate + connect (replaces drag)
 
@@ -373,7 +373,7 @@ export const encodeSceneFixtureForDragV1 = (f: SceneFixtureV1) => JSON.stringify
 
 ### Ticket-only bake script blueprint (`.repo/🎫/.../bake-nakagin-scene.mts`)
 
-Not part of `@elements/scene`. May use `@semio/js` and `three` here only. Writes into `elements/client/lib/scene/fixtures/` as the single allowed cross-folder write from the ticket.
+Not part of `@elements/scene`. May use `@compose/js` and `three` here only. Writes into `elements/client/lib/scene/fixtures/` as the single allowed cross-folder write from the ticket.
 
 ```ts
 #!/usr/bin/env bun
@@ -381,7 +381,7 @@ Not part of `@elements/scene`. May use `@semio/js` and `three` here only. Writes
 import { readFileSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import { Matrix4, Quaternion, Vector3 } from "three";
-import { flattenDesign } from "@semio/js";
+import { flattenDesign } from "@compose/js";
 
 const repoRoot = join(import.meta.dir, "../../../../.."); // adjust depth to repo root
 const repo = (p: string) => join(repoRoot, p);
@@ -396,8 +396,8 @@ const planeToThree = (plane: { origin: any; xAxis: any; yAxis: any }) => {
   return { origin: o, orientation: [q.x, q.y, q.z, q.w] as const };
 };
 
-const design = JSON.parse(readFileSync(repo("semio/assets/fixtures/nakagin-capsule-tower.shallow.design.semio.json"), "utf8"));
-const kit = JSON.parse(readFileSync(repo("semio/assets/fixtures/metabolism.kit.light.semio.json"), "utf8"));
+const design = JSON.parse(readFileSync(repo("compose/assets/fixtures/nakagin-capsule-tower.shallow.design.compose.json"), "utf8"));
+const kit = JSON.parse(readFileSync(repo("compose/assets/fixtures/metabolism.kit.light.compose.json"), "utf8"));
 const board = JSON.parse(readFileSync(repo(".storybook/fixtures/nakagin-capsule-tower.board.json"), "utf8"));
 const flat = flattenDesign(design, kit);
 
@@ -411,14 +411,14 @@ const objects = flat.pieces.map((p: any) => {
   const { origin, orientation } = planeToThree(p.pose.plane);
   return {
     id: p.id,
-    objectKind: `semio.metabolism.light.node.${p.type.id}`,
+    objectKind: `compose.metabolism.light.node.${p.type.id}`,
     label: p.name,
     meshUrl: meshUrl(p.type.id),
     origin,
     orientation,
     vortices: p.type.connectors.map((c: any) => ({
       id: `${p.id}:${c.id}`,
-      vortexKind: `semio.metabolism.light.handle.${c.id}`,
+      vortexKind: `compose.metabolism.light.handle.${c.id}`,
       position: authoringPointToThree(c.point),
       direction: authoringPointToThree(c.direction),
       radius: 0.3,
@@ -470,7 +470,7 @@ const App = () => {
 1. `ticket_open` "Extend Elements With Scene 3D" under the most appropriate goal (read `repo://goals` first).
 2. Wire `package.json` workspace entry + nx project graph; run `bun install`.
 3. Implement scene runtime in `react/index.tsx` (regions: Kinds, Scene, Object, Vortex, Magnet, Tie, Attraction, Pool, Chunking, Selection, Relocate, Fixture).
-4. Add ticket-only `bake-nakagin-scene.mts`, run once with `bun`, commit `nakagin-capsule-tower.scene.json` (scene package never references semio).
+4. Add ticket-only `bake-nakagin-scene.mts`, run once with `bun`, commit `nakagin-capsule-tower.scene.json` (scene package never references compose).
 5. Implement play site reusing the `@elements/ui` `UI` shell, toolbar, fixture shelf.
 6. Cargo/wasm not needed; ensure `script.ts test` runs vitest + playwright green.
 7. `ticket_close` with file list.

@@ -9,7 +9,7 @@
 ### 2026-01-27
 
 - Diagnosed missing lines in Kit Diagram. The `buildKitDiagramData` function was not generating edges for the `folder` property of non-File artifacts (Types, Designs, Qualities).
-- Implemented a fix in `js/semio/sketchpad/Kit.tsx`:
+- Implemented a fix in `js/compose/sketchpad/Kit.tsx`:
   - Updated `buildKitDiagramData` to map `folderGuid` for `Type`, `Design`, and `Quality`.
   - Added edge generation logic for these entities.
 - Added temporary debug styling (thick red lines) to `FloatingEdge` to verify the presence of edges.

@@ -2,7 +2,7 @@
 
 ## Summary
 
-Generic tree-path hover highlight for the semio/sketchpad tree system. When any tree element is hovered — row header, content, input/control, or actions — the full ancestor path highlights from that element up to the root, including the terminal branch segment at the hovered depth.
+Generic tree-path hover highlight for the compose/sketchpad tree system. When any tree element is hovered — row header, content, input/control, or actions — the full ancestor path highlights from that element up to the root, including the terminal branch segment at the hovered depth.
 
 ## Changes
 

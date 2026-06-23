@@ -123,4 +123,4 @@ In `spatial/js/renderer-r3f/index.tsx` `🧪Tests` region: smoke test that `useR
 
 - Persisting the modification history across sessions.
 - Cross-document branching / named history snapshots.
-- Touching `coda` / `elements` / `semio` (per `AGENTS.md` no-tech-mixing rule).
+- Touching `coda` / `elements` / `compose` (per `AGENTS.md` no-tech-mixing rule).

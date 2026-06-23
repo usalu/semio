@@ -1,6 +1,6 @@
 {
   "id": "6bc3b8a6-f2a8-4e1f-995e-a031fe8f1efe",
-  "uri": "semiorepo://s/6bc3b8a6-f2a8-4e1f-995e-a031fe8f1efe",
+  "uri": "composerepo://s/6bc3b8a6-f2a8-4e1f-995e-a031fe8f1efe",
   "contributor": "🧑‍💻ueli",
   "client": "claude-code",
   "second": "2026-03-12T09:44:06Z",
@@ -11,7 +11,7 @@
           "conversation_id": "6bc3b8a6-f2a8-4e1f-995e-a031fe8f1efe",
           "generation_id": "4f2ff2d6-cd79-407b-b0e0-93dce0fb50d0",
           "model": "composer-1.5",
-          "prompt": "semio engine:\nThe mcp server should be statefull for each session and all tool calls should be \nStart with set_local_kit(path).\nFor this session maintain an open sqlalchemy connection for that local kit.\nFrom there on every mcp tool call must be scoped to that kit.\ne.g.\nset_local_kit(path:Guid)\nsum_quality_in_design(design:Guid,quality Guid).\nMake sure sum_quality_in_design works for\n@semio/assets/semio/metabolism for Nakagin Capsule Tower for effective floor area within an mcp session",
+          "prompt": "compose engine:\nThe mcp server should be statefull for each session and all tool calls should be \nStart with set_local_kit(path).\nFor this session maintain an open sqlalchemy connection for that local kit.\nFrom there on every mcp tool call must be scoped to that kit.\ne.g.\nset_local_kit(path:Guid)\nsum_quality_in_design(design:Guid,quality Guid).\nMake sure sum_quality_in_design works for\n@compose/assets/compose/metabolism for Nakagin Capsule Tower for effective floor area within an mcp session",
           "attachments": [
             {
               "type": "rule",
@@ -38,7 +38,7 @@
         "kind": "agent.prompt.submitting",
         "llm": "composer-1.5",
         "parent": "",
-        "prompt": "semio engine:\nThe mcp server should be statefull for each session and all tool calls should be \nStart with set_local_kit(path).\nFor this session maintain an open sqlalchemy connection for that local kit.\nFrom there on every mcp tool call must be scoped to that kit.\ne.g.\nset_local_kit(path:Guid)\nsum_quality_in_design(design:Guid,quality Guid).\nMake sure sum_quality_in_design works for\n@semio/assets/semio/metabolism for Nakagin Capsule Tower for effective floor area within an mcp session",
+        "prompt": "compose engine:\nThe mcp server should be statefull for each session and all tool calls should be \nStart with set_local_kit(path).\nFor this session maintain an open sqlalchemy connection for that local kit.\nFrom there on every mcp tool call must be scoped to that kit.\ne.g.\nset_local_kit(path:Guid)\nsum_quality_in_design(design:Guid,quality Guid).\nMake sure sum_quality_in_design works for\n@compose/assets/compose/metabolism for Nakagin Capsule Tower for effective floor area within an mcp session",
         "second": "🎆26🌙03☀️12⏰09⌚44⏱️06",
         "session": "⚪6bc3b8a6f2a84e1f995ea031fe8f1efe"
       },

@@ -9,7 +9,7 @@ Implement connection details panel in sketchpad design app showing connecting/co
 
 ## Plan
 1. Read current Design.tsx Details panel implementation
-2. Read Connection data model from semio.ts and Sketchpad.tsx
+2. Read Connection data model from compose.ts and Sketchpad.tsx
 3. Implement connection details tree structure:
    - Connecting (piece id, port id)
    - Connected (piece id, port id)

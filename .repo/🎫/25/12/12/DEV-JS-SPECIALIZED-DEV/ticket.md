@@ -4,7 +4,7 @@
 
 # Previously
 
-# `semio/js` runs both Vite and Storybook from a single `dev` entrypoint (`js/semio/dev.ts`).
+# `compose/js` runs both Vite and Storybook from a single `dev` entrypoint (`js/compose/dev.ts`).
 
 # Root and VS Code configs lacked dedicated entrypoints for running just one of these when working in parallel.
 
@@ -18,7 +18,7 @@
 
 # Changes
 
-# Added `dev:storybook` and `dev:sketchpad` to `js/semio/package.json` and refactored `js/semio/dev.ts` to reuse them.
+# Added `dev:storybook` and `dev:sketchpad` to `js/compose/package.json` and refactored `js/compose/dev.ts` to reuse them.
 
 # Added root shortcuts `dev:storybook` and `dev:sketchpad` and matching `.vscode` tasks/launch configs.
 
@@ -32,4 +32,4 @@
 
 # Summary
 
-Split semio/js dev scripts
+Split compose/js dev scripts

@@ -9,9 +9,9 @@ goal: SKETCHPAD-IMPROVEMENTS
 Revalidated the restored Type toolbar tool-sync fix and confirmed the matching Type Playwright coverage passes against a live sketchpad dev server.
 ## Changes
 
-- `semio/js/sketchpad/Type.tsx`: selecting the type-app selection toolbar group now forces `selection-normal` when the current tool is not a selection mode, and the create toolbar group now forces `connector` while it is active.
-- `semio/js/sketchpad.test.ts`: extended the existing `Type` Playwright flow to assert the type-app `activeTool` switches to `selection-normal` for the selection group and `connector` for the create group.
-- Restored the `semio/js/sketchpad/Type.tsx` runtime logic after it disappeared while the Playwright assertions remained in place.
+- `compose/js/sketchpad/Type.tsx`: selecting the type-app selection toolbar group now forces `selection-normal` when the current tool is not a selection mode, and the create toolbar group now forces `connector` while it is active.
+- `compose/js/sketchpad.test.ts`: extended the existing `Type` Playwright flow to assert the type-app `activeTool` switches to `selection-normal` for the selection group and `connector` for the create group.
+- Restored the `compose/js/sketchpad/Type.tsx` runtime logic after it disappeared while the Playwright assertions remained in place.
 
 ## Log
 

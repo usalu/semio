@@ -12,11 +12,11 @@ Implement dragPiecesInDesign function across all programming languages (JS/TS, P
 ## Plan
 1. Read existing code in all languages to understand Design/DesignDiff/Piece structures
 2. Read asset files (design.json, pieces.json, offset.json, diff_design.json, diff_design_free.json) for test data
-3. Implement dragPiecesInDesign in JS/TS (semio.ts)
-4. Implement dragPiecesInDesign in Python (semio.py)
-5. Implement dragPiecesInDesign in Go (semio.go)
-6. Implement dragPiecesInDesign in Rust (semio.rs)
-7. Implement dragPiecesInDesign in C# (Semio.cs / Semio.Grasshopper.cs)
+3. Implement dragPiecesInDesign in JS/TS (compose.ts)
+4. Implement dragPiecesInDesign in Python (compose.py)
+5. Implement dragPiecesInDesign in Go (compose.go)
+6. Implement dragPiecesInDesign in Rust (compose.rs)
+7. Implement dragPiecesInDesign in C# (Compose.cs / Compose.Grasshopper.cs)
 8. Add tests for each language using asset data
 9. Update sketchpad Design.tsx to use dragPiecesInDesign for node dragging
 10. Run all tests and validate
@@ -38,23 +38,23 @@ Implement dragPiecesInDesign function across all programming languages (JS/TS, P
 - [x] Run all tests
 
 ## Changes
-- semio/assets/index.ts: Added drag asset exports (DragDesign, DragPieces, DragOffset, DragDiffDesign, DragDiffDesignFree)
-- semio/assets/semio/drag/diff_design_free.json: Fixed empty file → `{}`
-- semio/js/semio.ts: Added `dragPiecesInDesign(design, pieces, offset): DesignDiff` before `#endregion Design`
-- semio/js/semio.test.ts: Added Drag test describe block with test for design diff
-- semio/go/semio.go: Added `DragPiecesInDesign` function before `#endregion Flatten Design`
-- semio/go/semio_test.go: Added `TestDrag` between TestFlatten and TestDiff
-- semio/py/semio.py: Added `dragPiecesInDesignDict` after `flattenDesignDict`
-- semio/engine/engine.py: Added `drag_pieces_in_design` MCP tool + import
-- semio/engine/engine.test.py: Fixed ASSETS_DIR path, added drag test
-- semio/rs/semio.rs: Added `drag_pieces_in_design` function + drag test module
-- semio/net/Semio/Semio.cs: Added `Design.DragPiecesInDesign` static method
-- semio/net/Semio.Tests/Tests.cs: Added `Drag` test class with xUnit Fact
-- semio/js/sketchpad/Design.tsx: Imported `dragPiecesInDesign`, added `dragStartPositionRef`, refactored `onNodeDragStop` to use `dragPiecesInDesign` for piece and connection diff computation
+- compose/assets/index.ts: Added drag asset exports (DragDesign, DragPieces, DragOffset, DragDiffDesign, DragDiffDesignFree)
+- compose/assets/compose/drag/diff_design_free.json: Fixed empty file → `{}`
+- compose/js/compose.ts: Added `dragPiecesInDesign(design, pieces, offset): DesignDiff` before `#endregion Design`
+- compose/js/compose.test.ts: Added Drag test describe block with test for design diff
+- compose/go/compose.go: Added `DragPiecesInDesign` function before `#endregion Flatten Design`
+- compose/go/compose_test.go: Added `TestDrag` between TestFlatten and TestDiff
+- compose/py/compose.py: Added `dragPiecesInDesignDict` after `flattenDesignDict`
+- compose/engine/engine.py: Added `drag_pieces_in_design` MCP tool + import
+- compose/engine/engine.test.py: Fixed ASSETS_DIR path, added drag test
+- compose/rs/compose.rs: Added `drag_pieces_in_design` function + drag test module
+- compose/net/Compose/Compose.cs: Added `Design.DragPiecesInDesign` static method
+- compose/net/Compose.Tests/Tests.cs: Added `Drag` test class with xUnit Fact
+- compose/js/sketchpad/Design.tsx: Imported `dragPiecesInDesign`, added `dragStartPositionRef`, refactored `onNodeDragStop` to use `dragPiecesInDesign` for piece and connection diff computation
 
 ## Findings
 
-### Type Definitions in semio/js/semio.ts
+### Type Definitions in compose/js/compose.ts
 
 #### Coord (center type) — Line 1259
 ```typescript

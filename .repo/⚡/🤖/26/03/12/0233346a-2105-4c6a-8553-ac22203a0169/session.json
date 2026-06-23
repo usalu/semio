@@ -1,6 +1,6 @@
 {
   "id": "0233346a-2105-4c6a-8553-ac22203a0169",
-  "uri": "semiorepo://s/0233346a-2105-4c6a-8553-ac22203a0169",
+  "uri": "composerepo://s/0233346a-2105-4c6a-8553-ac22203a0169",
   "contributor": "🧑‍💻ueli",
   "client": "windsurf-chat",
   "second": "2026-03-12T11:17:16Z",
@@ -13,7 +13,7 @@
           "timestamp": "2026-03-12T11:17:15.13196875Z",
           "execution_id": "be8c46d4-c7ab-46ce-8978-24ff415fd0ad",
           "tool_info": {
-            "user_prompt": "coda desktop:\nCreate an electron ui similar to semio desktop for visualizing and interacting with coda.\nIt MUST be complete."
+            "user_prompt": "coda desktop:\nCreate an electron ui similar to compose desktop for visualizing and interacting with coda.\nIt MUST be complete."
           }
         }
       },

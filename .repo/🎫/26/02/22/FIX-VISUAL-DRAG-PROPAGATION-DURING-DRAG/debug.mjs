@@ -5,7 +5,7 @@ import fs from 'fs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const logFile = path.join(__dirname, 'debug.log');
-const zipPath = '/workspaces/semio/semio/assets/semio/metabolism.zip';
+const zipPath = '/workspaces/semio/compose/assets/compose/metabolism.zip';
 
 function log(msg) {
   const line = `${new Date().toISOString()} ${msg}\n`;
@@ -34,7 +34,7 @@ await page.waitForLoadState('domcontentloaded');
 await page.waitForTimeout(3000);
 
 log('--- Importing zip ---');
-const fileInput = page.locator('[id="semio.sketchpad.app.home.importKit"]');
+const fileInput = page.locator('[id="compose.sketchpad.app.home.importKit"]');
 await fileInput.waitFor({ state: 'attached', timeout: 10000 });
 await fileInput.setInputFiles(zipPath);
 await page.waitForTimeout(2000);
@@ -93,13 +93,13 @@ const debugState = await page.evaluate(() => ({
 log('DEBUG STATE:', JSON.stringify(debugState, null, 2));
 
 log('--- Opening right panel ---');
-const rightToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.rightSidePanel"]').first();
+const rightToggle = page.locator('[id="compose.sketchpad.navbar.panelToggle.rightSidePanel"]').first();
 if (await rightToggle.isVisible({ timeout: 3000 }).catch(() => false)) {
   await rightToggle.click();
   await page.waitForTimeout(1000);
 }
 
-const detailsTab = page.locator('[id="semio.sketchpad.navbar.panelToggle.details.show"]').first();
+const detailsTab = page.locator('[id="compose.sketchpad.navbar.panelToggle.details.show"]').first();
 if (await detailsTab.isVisible({ timeout: 3000 }).catch(() => false)) {
   await detailsTab.click();
   await page.waitForTimeout(1000);
@@ -114,13 +114,13 @@ const debugState2 = await page.evaluate(() => ({
 }));
 log('DEBUG STATE AFTER:', JSON.stringify(debugState2, null, 2));
 
-const designNameExists = await page.evaluate(() => !!document.querySelector('[id="semio.sketchpad.app.design.panel.details.section.design.name"]'));
+const designNameExists = await page.evaluate(() => !!document.querySelector('[id="compose.sketchpad.app.design.panel.details.section.design.name"]'));
 log('Design name input exists:', designNameExists);
 
 const rightPanelInfo = await page.evaluate(() => {
   const rp = document.querySelector('[data-panel="rightSidePanel"]');
   if (!rp) return 'no rightSidePanel found';
-  const ids = Array.from(rp.querySelectorAll('[id]')).map(el => el.id).filter(id => id.includes('semio'));
+  const ids = Array.from(rp.querySelectorAll('[id]')).map(el => el.id).filter(id => id.includes('compose'));
   const sectionButtons = Array.from(rp.querySelectorAll('[role="button"]')).map(el => el.id || el.textContent?.slice(0, 40));
   return { ids: ids.slice(0, 30), sectionButtons: sectionButtons.slice(0, 20) };
 });

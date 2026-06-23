@@ -13,12 +13,12 @@
 
 ### Modified Files
 
-1. **js/semio/sketchpad/Kit.tsx**
+1. **js/compose/sketchpad/Kit.tsx**
    - Updated `KitArtifactNode` to use explicit px dimensions for node container (`width: ${NODE_WIDTH}px`, `height: ${NODE_HEIGHT}px`)
    - Changed TableAvatar className from `size-full` to `!w-full !h-full` for better CSS specificity
    - Added inline style prop to TableAvatar with explicit dimensions matching NODE_WIDTH/NODE_HEIGHT (100px)
 
-2. **js/semio/sketchpad/elements.tsx**
+2. **js/compose/sketchpad/elements.tsx**
    - Added `style?: React.CSSProperties` to `TableAvatarProps` interface
    - Updated `TableAvatar` component to accept and forward style prop to Avatar component
 

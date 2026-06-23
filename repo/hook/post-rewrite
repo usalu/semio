@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-semio_micro_commit_seed_empty_gk() {
+compose_micro_commit_seed_empty_gk() {
   GIT_DIR=$(git rev-parse --git-dir 2>/dev/null) || return 0
   GK_TEMPLATE="$GIT_DIR/gkcommittemplate.txt"
   if [ -d "$GIT_DIR" ]; then
@@ -11,16 +11,16 @@ semio_micro_commit_seed_empty_gk() {
   : >"$GK_TEMPLATE" 2>/dev/null || true
   git config --local commit.template "$GK_TEMPLATE" 2>/dev/null || true
 }
-semio_micro_commit_wipe() {
+compose_micro_commit_wipe() {
   GIT_DIR=$(git rev-parse --git-dir 2>/dev/null) || return 0
-  semio_micro_commit_seed_empty_gk
+  compose_micro_commit_seed_empty_gk
   for msg in COMMIT_EDITMSG MERGE_MSG SQUASH_MSG; do
     if [ -f "$GIT_DIR/$msg" ]; then
       : >"$GIT_DIR/$msg" 2>/dev/null || true
     fi
   done
   if [ -d "$GIT_DIR" ]; then
-    for f in "$GIT_DIR"/semio-micro-commit-*; do
+    for f in "$GIT_DIR"/compose-micro-commit-*; do
       [ -e "$f" ] || continue
       rm -f "$f" 2>/dev/null || true
     done
@@ -29,14 +29,14 @@ semio_micro_commit_wipe() {
 ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
 cd "$ROOT" || exit 0
 GIT_DIR=$(git rev-parse --git-dir 2>/dev/null) || exit 0
-semio_resolve_bun() {
+compose_resolve_bun() {
   ROOT="$1"
-  if [ -n "$SEMIO_BUN" ] && [ -x "$SEMIO_BUN" ]; then
-    echo "$SEMIO_BUN"
+  if [ -n "$COMPOSE_BUN" ] && [ -x "$COMPOSE_BUN" ]; then
+    echo "$COMPOSE_BUN"
     return
   fi
-  if [ -f "$ROOT/.repo/semio-micro-commit-bun" ]; then
-    B=$(head -n 1 "$ROOT/.repo/semio-micro-commit-bun" | tr -d '\r')
+  if [ -f "$ROOT/.repo/compose-micro-commit-bun" ]; then
+    B=$(head -n 1 "$ROOT/.repo/compose-micro-commit-bun" | tr -d '\r')
     if [ -n "$B" ] && [ -x "$B" ]; then
       echo "$B"
       return
@@ -75,7 +75,7 @@ semio_resolve_bun() {
     echo "$B"
   fi
 }
-BUN=$(semio_resolve_bun "$ROOT")
+BUN=$(compose_resolve_bun "$ROOT")
 [ -n "$BUN" ] && "$BUN" ./script.ts micro-commit reset 2>/dev/null || true
-semio_micro_commit_wipe
+compose_micro_commit_wipe
 exit 0

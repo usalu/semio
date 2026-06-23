@@ -1,6 +1,6 @@
 ---
 name: Kit virtual file system
-overview: Add a unified, constrained FileSystemNode abstraction (computed parent/children/path) across the GraphQL contract, the Rust store, and the semio/js client, with folder membership and reparenting wired through the existing kit operation/command mechanism.
+overview: Add a unified, constrained FileSystemNode abstraction (computed parent/children/path) across the GraphQL contract, the Rust store, and the compose/js client, with folder membership and reparenting wired through the existing kit operation/command mechanism.
 todos:
   - id: ticket
     content: Open repo MCP ticket, read repo://goals and associate with the best goal
@@ -21,7 +21,7 @@ todos:
     content: Regenerate schema.graphql and make schema_matches_target_graphql_file pass (golden strict)
     status: completed
   - id: js-read
-    content: Add shared FileSystem field roster to semio/js and install on the 8 classes (+ new Family class); finish Folder navigation and add Kit.folders / Store.folder
+    content: Add shared FileSystem field roster to compose/js and install on the 8 classes (+ new Family class); finish Folder navigation and add Kit.folders / Store.folder
     status: completed
   - id: js-write
     content: Add createFolder/moveToFolder to KIT_OPERATIONS with declare signatures and change subscriptions
@@ -69,7 +69,7 @@ graph TD
 
 ## Layer 1 - GraphQL contract
 
-Files: [schema.golden.graphql](semio/client/schema/graphql/schema.golden.graphql) (authoritative contract), regenerate [schema.graphql](semio/client/schema/graphql/schema.graphql).
+Files: [schema.golden.graphql](compose/client/schema/graphql/schema.golden.graphql) (authoritative contract), regenerate [schema.graphql](compose/client/schema/graphql/schema.graphql).
 
 - Add a `#region FileSystem` with:
   - `interface FileSystemNode implements Entity & Node` carrying the entity tail (`id`, `hash`, `owner`, `owns`) plus computed: `fileSystemParent: FileSystemNode`, `fileSystemChildren: FileSystemNodeConnection!`, `fileSystemChild(id: ID!): FileSystemNode`, `fileSystemPath: String!`, `fileSystemName: String!`, `isFileSystemRoot: Boolean!`, `fileSystemKind: FileSystemNodeKind!`.
@@ -80,7 +80,7 @@ Files: [schema.golden.graphql](semio/client/schema/graphql/schema.golden.graphql
 
 ## Layer 2 - Rust store (code-first source of truth)
 
-File: [lib.rs](semio/client/lib/rs/lib.rs) (single monolith; schema is generated from this).
+File: [lib.rs](compose/client/lib/rs/lib.rs) (single monolith; schema is generated from this).
 
 - Folder membership storage (in `pub mod meta` / `pub mod kit`):
   - Give `Folder` (l.2113) the missing `name`/`icon` and an optional parent-folder id; give `File` (l.2071) an optional folder id; add an optional folder id to `Design` (l.3472) and `Type` (l.2725); add a minimal `Family` model with optional folder id.
@@ -91,11 +91,11 @@ File: [lib.rs](semio/client/lib/rs/lib.rs) (single monolith; schema is generated
 - Writes through existing mechanism:
   - Add `Operation::CreateFolder` and `Operation::MoveToFolder` variants with their `Scope`/`Input`, `to_diff`/`to_backwards`, applied to the live `KitGraph` via the documented `apply_kit_diff` / `apply_kit_state` path (no bespoke pathway).
   - Add `createFolder` / `moveToFolder` resolvers on the kit command object (next to `create_design`, l.14228) dispatching `Command::ApplyOperation` via `dispatch_wip_wait`.
-- Regenerate and validate: run the export test `export_semio_graphql_schema_file` (via the graphql bundle build) and ensure `schema_matches_target_graphql_file` passes (golden strict).
+- Regenerate and validate: run the export test `export_compose_graphql_schema_file` (via the graphql bundle build) and ensure `schema_matches_target_graphql_file` passes (golden strict).
 
-## Layer 3 - semio/js thin client
+## Layer 3 - compose/js thin client
 
-File: [index.ts](semio/client/lib/js/index.ts) (single monolith; declarative `*_FIELDS` rosters + prototype install).
+File: [index.ts](compose/client/lib/js/index.ts) (single monolith; declarative `*_FIELDS` rosters + prototype install).
 
 - Add a shared FileSystem field roster (selections: `fileSystemParent { id fileSystemKind }`, `fileSystemChildren { edges { node { id fileSystemKind } } }`, `fileSystemPath`, `fileSystemName`, `isFileSystemRoot`, `fileSystemKind`) and install it on `Kit`, `Folder`, `File`, `Design`, `Type`, `Piece`, `Connection`, and a new `Family` class. `fileSystemKind` drives construction of the correct entity subclass for parent/children.
 - Finish the currently-stubbed `Folder` navigation (`subFolders`/`files`/`types`/`designs`) and add `Kit.folders` to `KIT_FIELDS`; add `Store.folder(id)`.
@@ -103,11 +103,11 @@ File: [index.ts](semio/client/lib/js/index.ts) (single monolith; declarative `*_
 
 ## Out of scope
 
-`@semio/react` is currently a stub (`export {}`); no functional react work required. Sketchpad consumes `@semio/js` directly today, so no extra wiring needed for this change.
+`@compose/react` is currently a stub (`export {}`); no functional react work required. Sketchpad consumes `@compose/js` directly today, so no extra wiring needed for this change.
 
 ## Validation
 
 - Extend the existing Rust tests (`#region Tests` in `lib.rs`) to cover: VFS resolvers per kind, root vs folder placement, design children = pieces+connections, connection children empty, piece parent = design, and the `createFolder`/`moveToFolder` operations (forward + backward diff). Confirm the schema-match test.
-- Extend the embedded vitest in `index.ts` (gated by `SEMIO_JS_RUN_EMBEDDED_TESTS=1`) to create a folder, move a design into it, and assert the projection end-to-end.
+- Extend the embedded vitest in `index.ts` (gated by `COMPOSE_JS_RUN_EMBEDDED_TESTS=1`) to create a folder, move a design into it, and assert the projection end-to-end.
 - Work inside a repo MCP ticket (open, associate with the most appropriate goal from `repo://goals`, close with a summary of touched files).
 

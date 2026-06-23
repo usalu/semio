@@ -5,20 +5,20 @@ todos:
   - id: policy
     content: Add `dependency-boundary` policy + per-language statutes to .repo/📊/policies.json and implement import-boundary detection in repo/lib/js linter and Go CLI analyze (using language plugin extractImports)
     status: completed
-  - id: rust-semio
-    content: Wrap third-party deps in the Rust `semio` crate (nalgebra, rusqlite, ureq, zip, async-graphql, wasm web-sys/js-sys) behind traits + adapter regions
+  - id: rust-compose
+    content: Wrap third-party deps in the Rust `compose` crate (nalgebra, rusqlite, ureq, zip, async-graphql, wasm web-sys/js-sys) behind traits + adapter regions
     status: completed
   - id: transport
-    content: Normalize the GraphQL/transport boundary end-to-end across Rust architect, @semio/js, .NET StoreClient, and Python store wire onto explicit ports
+    content: Normalize the GraphQL/transport boundary end-to-end across Rust architect, @compose/js, .NET StoreClient, and Python store wire onto explicit ports
     status: completed
   - id: ui-react-3d
     content: Port @ui/react (Radix, R3F/three, XYFlow, dnd-kit, xstate, i18next, motion, cmdk, fuse.js) and shared three/R3F usage in puzzle scene/topology and cad renderer behind interfaces + adapters
     status: completed
   - id: dotnet
-    content: Wrap Semio.cs third-party deps (Newtonsoft.Json, FluentValidation, QuikGraph, SharpGLTF, Svg, Refit) behind C# interfaces + adapters
+    content: Wrap Compose.cs third-party deps (Newtonsoft.Json, FluentValidation, QuikGraph, SharpGLTF, Svg, Refit) behind C# interfaces + adapters
     status: completed
   - id: python
-    content: Wrap Python deps in semio py + engine (sqlalchemy/sqlmodel, ifcopenshell, trimesh, graphene, pydantic, networkx) and coda assistant (rdflib, owlready2, fastmcp, starlette/uvicorn) behind Protocols + adapters
+    content: Wrap Python deps in compose py + engine (sqlalchemy/sqlmodel, ifcopenshell, trimesh, graphene, pydantic, networkx) and coda assistant (rdflib, owlready2, fastmcp, starlette/uvicorn) behind Protocols + adapters
     status: completed
   - id: go
     content: Wrap repo/client/cli deps (cobra, bleve, graphql-go, mcp-go, sqlite, yaml.v3, sprig) and coordinator deps behind Go interfaces + adapters
@@ -39,7 +39,7 @@ No first-party source touches a third-party library directly. Each external depe
 
 - **Port**: a first-party interface describing the capability the package needs (not the library's API surface). Maps to repo definition kind `interface`.
 - **Adapter**: the only code allowed to `import`/`use`/`require` the third-party package; implements the port. Maps to definition kind `implementation`.
-- **Location**: one adapter unit per dependency, named for the dependency, isolated in its own region/file so the import boundary is greppable (mirrors the existing `//#region 🌐Transport` boundary in [semio/client/lib/js](semio/client/lib/js) where `@semio/rs-wasm` is only imported inside `rs-wasm-transport.ts`).
+- **Location**: one adapter unit per dependency, named for the dependency, isolated in its own region/file so the import boundary is greppable (mirrors the existing `//#region 🌐Transport` boundary in [compose/client/lib/js](compose/client/lib/js) where `@compose/rs-wasm` is only imported inside `rs-wasm-transport.ts`).
 - **Wiring**: composition happens at the package entry/bootstrap (constructor injection / provider), never deep in domain logic.
 - **Naming**: follow repo rules — use `kind` not `type`, titleized names, emoji-prefixed docstrings, organize with `#region`/subregions in the existing god-files rather than new files where the codebase already concentrates code.
 
@@ -55,16 +55,16 @@ flowchart LR
 
 ## Existing anchors to use as templates
 
-- Rust: `Transport` trait in [semio/client/lib/query](semio/client/lib/query) (`MemoryTransport`/`JsTransport`/`SemioTransport`).
+- Rust: `Transport` trait in [compose/client/lib/query](compose/client/lib/query) (`MemoryTransport`/`JsTransport`/`ComposeTransport`).
 - TS: `SpatialKernel`/`StateEngine` ports in [cad/js/core](cad/js/core) with `BrepjsKernel` and `StatelyStateEngine` adapters; `@framework/platform/core` core is already dependency-free.
 - Go: `GraphQLExecutor`/`VersionControlProvider`/`SandboxProvider`/`EditorProvider` interfaces in [repo/client/cli](repo/client/cli).
 
 ## Per-language mechanics
 
-- **TypeScript/JS**: port = `interface`/type; adapter = module that imports the lib; inject via factory params. Strongest offenders: `@ui/react` (Radix x14, R3F/three, XYFlow, dnd-kit, xstate, i18next, motion, cmdk, fuse.js), `@puzzle/scene`+`@puzzle/topology` (three/R3F), `@cad/js-query` (chevrotain), `@cad/js-kernel-brepjs` (brepjs/OCC), `@semio/sketchpad` (three/fflate).
-- **Rust**: port = trait; adapter = struct in a `//#region` that owns the `use`. Offenders in `semio` crate: `nalgebra`, `rusqlite`, `ureq`, `zip`, `async-graphql`, wasm `web-sys`/`js-sys`; `puzzle_board` (`vello`/`typst`) is already behind the wasm boundary.
-- **.NET/C#**: port = `interface`; adapter = class. Offenders in [semio/client/lib/net/Semio](semio/client/lib/net/Semio): `Newtonsoft.Json`, `FluentValidation`, `QuikGraph`, `SharpGLTF`, `Svg`, `Refit` (already partly behind `IApi`). Host SDKs (`RhinoCommon`, `Grasshopper`, `WebView2`) wrapped last.
-- **Python**: port = `typing.Protocol`/ABC; adapter = concrete module. Offenders in [semio/client/lib/py](semio/client/lib/py) and engine: `sqlalchemy`/`sqlmodel`, `ifcopenshell`, `trimesh`, `graphene`, `pydantic`, `networkx`; coda assistant: `rdflib`, `owlready2`, `fastmcp`, `starlette`/`uvicorn`.
+- **TypeScript/JS**: port = `interface`/type; adapter = module that imports the lib; inject via factory params. Strongest offenders: `@ui/react` (Radix x14, R3F/three, XYFlow, dnd-kit, xstate, i18next, motion, cmdk, fuse.js), `@puzzle/scene`+`@puzzle/topology` (three/R3F), `@cad/js-query` (chevrotain), `@cad/js-kernel-brepjs` (brepjs/OCC), `@compose/sketchpad` (three/fflate).
+- **Rust**: port = trait; adapter = struct in a `//#region` that owns the `use`. Offenders in `compose` crate: `nalgebra`, `rusqlite`, `ureq`, `zip`, `async-graphql`, wasm `web-sys`/`js-sys`; `puzzle_board` (`vello`/`typst`) is already behind the wasm boundary.
+- **.NET/C#**: port = `interface`; adapter = class. Offenders in [compose/client/lib/net/Compose](compose/client/lib/net/Compose): `Newtonsoft.Json`, `FluentValidation`, `QuikGraph`, `SharpGLTF`, `Svg`, `Refit` (already partly behind `IApi`). Host SDKs (`RhinoCommon`, `Grasshopper`, `WebView2`) wrapped last.
+- **Python**: port = `typing.Protocol`/ABC; adapter = concrete module. Offenders in [compose/client/lib/py](compose/client/lib/py) and engine: `sqlalchemy`/`sqlmodel`, `ifcopenshell`, `trimesh`, `graphene`, `pydantic`, `networkx`; coda assistant: `rdflib`, `owlready2`, `fastmcp`, `starlette`/`uvicorn`.
 - **Go**: port = `interface`; adapter = struct. Offenders in [repo/client/cli](repo/client/cli): `cobra`, `bleve`, `graphql-go`, `mcp-go`, `modernc.org/sqlite`, `yaml.v3`, `sprig`; coordinator (`pg`/`pg-boss`/`jose`/`next`).
 
 ## Enforcement (the durable part)
@@ -78,11 +78,11 @@ Add a repo policy `dependency-boundary` to [.repo/📊/policies.json](.repo/📊
 ## Rollout phases (by blast radius)
 
 1. Land the policy + linter statute (TS first, then Go/Rust/C#/Python) so new violations are caught immediately while migration proceeds.
-2. Rust `semio` crate (largest single source of truth).
+2. Rust `compose` crate (largest single source of truth).
 3. GraphQL/transport surface end-to-end (already half-ported).
 4. `@ui/react` and shared 3D (three/R3F) port.
-5. .NET `Semio.cs`.
-6. Python `main.py` (semio) + coda assistant.
+5. .NET `Compose.cs`.
+6. Python `main.py` (compose) + coda assistant.
 7. Go `repo/client/cli`.
 8. Host-specific adapters (Rhino/Grasshopper/Electron/WebView2/Next coordinator).
 

@@ -24,7 +24,7 @@ Problem: React Flow's `ViewportPortal` component creates a wrapper div with clas
 
 ## 1. Fixed ViewportPortal pointer-events issue
 
-**File:** `js/semio/globals.css`
+**File:** `js/compose/globals.css`
 
 Added CSS policy to disable pointer events on React Flow's viewport portal container:
 
@@ -39,7 +39,7 @@ This allows pointer events to pass through the viewport portal and reach the pie
 
 ## 2. Added Playwright test for piece hover and selection
 
-**File:** `js/semio/sketchpad.test.ts`
+**File:** `js/compose/sketchpad.test.ts`
 
 Added comprehensive test that:
 

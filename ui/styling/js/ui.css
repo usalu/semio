@@ -4,7 +4,7 @@
 @plugin "@tailwindcss/typography";
 
 #navbar,
-#semio\.sketchpad\.navbar,
+#compose\.sketchpad\.navbar,
 [data-slot="navbar"] {
   position: relative !important;
   z-index: var(--z-base) !important;
@@ -18,13 +18,13 @@
 #navbar input,
 #navbar select,
 #navbar textarea,
-#semio\.sketchpad\.navbar button,
-#semio\.sketchpad\.navbar [role="button"],
-#semio\.sketchpad\.navbar a,
-#semio\.sketchpad\.navbar [role="link"],
-#semio\.sketchpad\.navbar input,
-#semio\.sketchpad\.navbar select,
-#semio\.sketchpad\.navbar textarea,
+#compose\.sketchpad\.navbar button,
+#compose\.sketchpad\.navbar [role="button"],
+#compose\.sketchpad\.navbar a,
+#compose\.sketchpad\.navbar [role="link"],
+#compose\.sketchpad\.navbar input,
+#compose\.sketchpad\.navbar select,
+#compose\.sketchpad\.navbar textarea,
 [data-slot="navbar"] button,
 [data-slot="navbar"] [role="button"],
 [data-slot="navbar"] a,
@@ -37,7 +37,7 @@
 }
 
 #navbar,
-#semio\.sketchpad\.navbar,
+#compose\.sketchpad\.navbar,
 [data-slot="navbar"] {
   -webkit-app-region: drag !important;
 }

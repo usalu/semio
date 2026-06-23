@@ -15,11 +15,11 @@ Fixed 4 failing tests (Python/CSharp/Rust section identification + Rust definiti
 - `repo/cli/main.go`: Added `.rs` to all code policy scope patterns (`**/*.{ts,tsx,py,cs,go}` → `**/*.{ts,tsx,py,cs,go,rs}`).
 - `repo/cli/main.go`: Updated `Slugify` to split camelCase boundaries (`doWork` → `DO-WORK`, `HTMLParser` → `HTML-PARSER`).
 - `repo/cli/main_test.go`: Updated `TestSectionCommands` Python/CSharp `contentFmt` to use new section formats. Updated `TestDefinitionIdValueToUriPath` expected values for camelCase slugification.
-- `semio/assets/repo/some/folder/file_fixed.tsx`: Added section identification for Types/Components and definition identification for FixedComponent.
-- `semio/assets/repo/some/folder/file_fixed.py`: Added section identification for Functions and definition identification for fixed_function.
-- `semio/assets/repo/some/folder/file_fixed.go`: Added section identification for Package/Functions and definition identification for FixedValue.
-- `semio/assets/repo/some/folder/file_fixed.cs`: Added section identification for Classes and definition identification for FixedClass.
-- `semio/assets/repo/some/folder/file_fixable_expected.tsx`: Added expected section identification autofix lines for SectionOne/SectionTwo/SectionThree.
+- `compose/assets/repo/some/folder/file_fixed.tsx`: Added section identification for Types/Components and definition identification for FixedComponent.
+- `compose/assets/repo/some/folder/file_fixed.py`: Added section identification for Functions and definition identification for fixed_function.
+- `compose/assets/repo/some/folder/file_fixed.go`: Added section identification for Package/Functions and definition identification for FixedValue.
+- `compose/assets/repo/some/folder/file_fixed.cs`: Added section identification for Classes and definition identification for FixedClass.
+- `compose/assets/repo/some/folder/file_fixable_expected.tsx`: Added expected section identification autofix lines for SectionOne/SectionTwo/SectionThree.
 
 ## Log
 

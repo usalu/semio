@@ -15,22 +15,22 @@
 - Expanded the plan into a full implementation blueprint with detailed inventory, canonical interaction behavior, filtering architecture, layout contract, phased execution, and measurable acceptance metrics.
 - Updated `README.md` (`# 📦 Bundles`) with the canonical Sketchpad toolbar tooltree mechanism and cross-app mapping.
 - Updated `AGENTS.md` SRS (`## UI/UX -> Toolbar`) and `# Codebase` documentation for the toolbar tooltree taxonomy, interaction contract, and app registration model.
-- Implemented `toolbarGroup` metadata on `PanelSection` in `js/semio/sketchpad/shared.ts`.
-- Refactored `js/semio/sketchpad/Sketchpad.tsx` toolbar rendering to group sections by parent (`selection`, `filter`, `create`, `view`, `actions`) and render an active parent branch.
+- Implemented `toolbarGroup` metadata on `PanelSection` in `js/compose/sketchpad/shared.ts`.
+- Refactored `js/compose/sketchpad/Sketchpad.tsx` toolbar rendering to group sections by parent (`selection`, `filter`, `create`, `view`, `actions`) and render an active parent branch.
 - Migrated toolbar registrations in `Home.tsx`, `Kit.tsx`, `Design.tsx`, `Type.tsx`, and `Feedback.tsx` to include `toolbarGroup` metadata.
 - Removed persistent `[DEBUG]` toolbar/selection logs from the touched kit toolbar registration and selection sections.
-- Added toolbar parent label keys in `js/semio/sketchpad/locales/en.json` and `js/semio/sketchpad/locales/de.json`.
+- Added toolbar parent label keys in `js/compose/sketchpad/locales/en.json` and `js/compose/sketchpad/locales/de.json`.
 - Updated `README.md` and `AGENTS.md` with implementation-level details for grouped toolbar metadata and renderer behavior.
 - Added a new implementation plan in `plan.md` for kit diagram shape strategies (circle, rectangle, triangle, long rectangle) and nearest snap-point edge connection.
-- Added kit diagram geometry + shape strategy engine in `js/semio/sketchpad/kitSelectionHelpers.ts` with strategy contract, node-kind registry, frame/vector utilities, snap-point generation, nearest-anchor resolution, and proximity anchor lookup.
-- Migrated `js/semio/sketchpad/Kit.tsx` diagram rendering/routing to strategy-driven geometry:
+- Added kit diagram geometry + shape strategy engine in `js/compose/sketchpad/kitSelectionHelpers.ts` with strategy contract, node-kind registry, frame/vector utilities, snap-point generation, nearest-anchor resolution, and proximity anchor lookup.
+- Migrated `js/compose/sketchpad/Kit.tsx` diagram rendering/routing to strategy-driven geometry:
   - node frames and avatar clipping by strategy payload,
   - static floating edge endpoints resolved by snap-point pairs,
   - connection preview lines resolved by the same anchor engine with proximity snap targeting,
   - node construction dimensions keyed by strategy frame.
-- Added deterministic geometry unit coverage in `js/semio/semio.test.ts` for strategy mapping, snap-point coordinates, anchor-pair resolution, and proximity anchor resolution.
-- Updated `js/semio/diagram-alignment.test.ts` to the same shape/snap-point contract for diagram geometry expectations.
-- Updated `js/semio/playwright/kit/diagram-alignment.spec.ts` with shape-aware endpoint assertions and drag-cycle checks (skip-safe when no diagram fixtures exist in the test environment).
+- Added deterministic geometry unit coverage in `js/compose/compose.test.ts` for strategy mapping, snap-point coordinates, anchor-pair resolution, and proximity anchor resolution.
+- Updated `js/compose/diagram-alignment.test.ts` to the same shape/snap-point contract for diagram geometry expectations.
+- Updated `js/compose/playwright/kit/diagram-alignment.spec.ts` with shape-aware endpoint assertions and drag-cycle checks (skip-safe when no diagram fixtures exist in the test environment).
 - Updated `README.md` (`# 📦 Bundles`) and `AGENTS.md` (`Business Logic -> Diagrams`, `UI/UX -> Sketchpad -> Kit Editor`, `# Codebase`) with strategy registry and snap-point routing ownership.
 
 ## Log
@@ -136,7 +136,7 @@ Create a plan to change the visual look of Kit editor diagram nodes and edges so
 Implement the 10-step shape strategy and snap-point migration plan (geometry engine, registry, visuals, static/preview/proximity routing, tests, docs, and incremental delivery).
 
 ### Response Implementation (Completed)
-1. Implemented the shape strategy contract and registry in `js/semio/sketchpad/kitSelectionHelpers.ts`:
+1. Implemented the shape strategy contract and registry in `js/compose/sketchpad/kitSelectionHelpers.ts`:
    - deterministic strategy ids (`circle`, `rectangle`, `triangle`, `long-rectangle`),
    - per-strategy frame dimensions and render payloads,
    - snap-point generation APIs,
@@ -152,14 +152,14 @@ Implement the 10-step shape strategy and snap-point migration plan (geometry eng
 6. Integrated proximity connect targeting by measuring pointer distance to strategy snap points instead of center/radius assumptions.
 7. Added strategy-agnostic geometry helpers (frame normalization, vectors, side inference, local-to-absolute conversion, anchor pair selection) in `kitSelectionHelpers.ts`.
 8. Added/updated tests:
-   - unit assertions in `js/semio/semio.test.ts` for strategy snap-point coordinates and anchor/proximity resolution,
-   - alignment contract assertions in `js/semio/diagram-alignment.test.ts`,
-   - Playwright endpoint alignment checks in `js/semio/playwright/kit/diagram-alignment.spec.ts`.
+   - unit assertions in `js/compose/compose.test.ts` for strategy snap-point coordinates and anchor/proximity resolution,
+   - alignment contract assertions in `js/compose/diagram-alignment.test.ts`,
+   - Playwright endpoint alignment checks in `js/compose/playwright/kit/diagram-alignment.spec.ts`.
 9. Updated docs:
    - `README.md` (`# 📦 Bundles`) with shape strategy and snap-point routing mechanism,
    - `AGENTS.md` SRS (`Business Logic -> Diagrams`, `UI/UX -> Sketchpad -> Kit Editor`) and `# Codebase` ownership bullets.
 10. Validation run:
-    - `npm run test` in `js/semio` -> passed (`semio.test.ts`, 13 tests),
+    - `npm run test` in `js/compose` -> passed (`compose.test.ts`, 13 tests),
     - `npx playwright test playwright/kit/diagram-alignment.spec.ts --project=firefox` -> passes with 3 skip-safe tests in the current empty-fixture environment.
 
 ## Summary

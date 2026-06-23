@@ -24,7 +24,7 @@ todos:
     content: Thread tab titles via windowKind.label in framework + playground ShellModeCanvas and convertFrameworkLayoutNodeToShellLayout.
     status: completed
   - id: sketchpad-restore
-    content: Restore golden-layout dependency + base CSS/.lm_ overrides (recovered from commit 8d5dba003) for the still-Golden-Layout sketchpad/semio surface broken by the prior removal.
+    content: Restore golden-layout dependency + base CSS/.lm_ overrides (recovered from commit 8d5dba003) for the still-Golden-Layout sketchpad/compose surface broken by the prior removal.
     status: completed
   - id: tests-stories
     content: Extend core inline vitest (tabs visibility, close+collapse, split/remove utils, maximize); update Mode stories (tab stacks, drag-dock, maximize); run vitest + build Storybook.
@@ -74,11 +74,11 @@ The existing tree types already mirror Golden Layout (`row`/`column`/`stack`/`wi
 
 - [elements/lib/framework/renderer/react/index.tsx](elements/lib/framework/renderer/react/index.tsx) and [elements/lib/playground/react/index.tsx](elements/lib/playground/react/index.tsx): in each `ShellModeCanvas`, set `title: windowKind.label` on each `ModeWindowDescriptor` and propagate layout-node `title` in `convertFrameworkLayoutNodeToShellLayout`. No other renderer change needed; `Mode` now owns drag/close/maximize internally.
 
-## Sketchpad regression remediation (semio surface I broke)
+## Sketchpad regression remediation (compose surface I broke)
 
-The prior removal deleted the `golden-layout` dependency and its CSS, but [semio/client/lib/sketchpad/js/index.ts](semio/client/lib/sketchpad/js/index.ts) `LayoutCanvas` still uses Golden Layout (`import("golden-layout")`, `.lm_popout`/`.lm_maximise`/`.lm_close`, 7+ usages). Restore, using `git show 8d5dba003^:<file>` to recover exact removed content:
-- Re-add the `golden-layout` dependency to the package(s) the sketchpad/semio surface needs (recovered from the commit diff).
-- Restore the Golden Layout base CSS import + `.lm_*` overrides in [elements/lib/styling/js/elements.css](elements/lib/styling/js/elements.css) (only the `.touch .lm_*` rules survive today). This keeps the separate semio sketchpad working; elements no longer uses Golden Layout.
+The prior removal deleted the `golden-layout` dependency and its CSS, but [compose/client/lib/sketchpad/js/index.ts](compose/client/lib/sketchpad/js/index.ts) `LayoutCanvas` still uses Golden Layout (`import("golden-layout")`, `.lm_popout`/`.lm_maximise`/`.lm_close`, 7+ usages). Restore, using `git show 8d5dba003^:<file>` to recover exact removed content:
+- Re-add the `golden-layout` dependency to the package(s) the sketchpad/compose surface needs (recovered from the commit diff).
+- Restore the Golden Layout base CSS import + `.lm_*` overrides in [elements/lib/styling/js/elements.css](elements/lib/styling/js/elements.css) (only the `.touch .lm_*` rules survive today). This keeps the separate compose sketchpad working; elements no longer uses Golden Layout.
 
 ## Tests, stories, verification
 

@@ -2,7 +2,7 @@
   "title": "Newline After Owns Fields in Schema",
   "emoji": "📐",
   "status": "closed",
-  "description": "Insert blank line after each owns field and OwnsEntityConnection union in semio/graphql/target.schema.graphql",
+  "description": "Insert blank line after each owns field and OwnsEntityConnection union in compose/graphql/target.schema.graphql",
   "summary": "Inserted an empty line after each indented owns: field, commented # owns: lines in StrongEntity stub, and after union OwnsEntityConnection = before variant list; skipped where next line was already blank. SDL parses; parses_target_schema passes.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1398"

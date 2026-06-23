@@ -6,7 +6,7 @@
 
 ## Problem
 
-The semio VSCode extension (`js/vscode/`) should be automatically installed when the devcontainer starts. Currently, users have to manually install it using "Developer: Install Extension From Location...".
+The compose VSCode extension (`js/vscode/`) should be automatically installed when the devcontainer starts. Currently, users have to manually install it using "Developer: Install Extension From Location...".
 
 The current approach in `post-create.sh` uses:
 
@@ -56,7 +56,7 @@ Reviewed the devcontainer setup:
 Current extension installation in `post-create.sh` (lines 40-45):
 
 ```bash
-echo "Building and installing semio VSCode extension..."
+echo "Building and installing compose VSCode extension..."
 cd js/vscode
 npm run build
 npm run package

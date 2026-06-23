@@ -30,7 +30,7 @@ Document everything below.
 
 ## 1. Test Specification
 
-- **Test**: `Design Drag Performance` in `semio/js/sketchpad.test.ts:5389`
+- **Test**: `Design Drag Performance` in `compose/js/sketchpad.test.ts:5389`
 - **Design Under Test**: Nakagin Capsule Tower — 180 pieces/nodes, 179 connections/edges
 - **Budgets** (as of March 4, 2026):
   - `initialRenderBudgetMs = 45000` (initial render including kit import + navigation)
@@ -155,7 +155,7 @@ User mousemove → PieceNodeComponent.handleMouseEnter
 
 ### 5.4 PlainAppStore Command Path (Different from XState Events)
 
-- `store.execute("semio.designApp.hoverPiece", origin, guid)` → calls `designAppCommands["semio.designApp.hoverPiece"]` → returns `{ diff: { hover: { pieces: [guid] } } }` → `store.change(result.diff)` → `store.notify()`
+- `store.execute("compose.designApp.hoverPiece", origin, guid)` → calls `designAppCommands["compose.designApp.hoverPiece"]` → returns `{ diff: { hover: { pieces: [guid] } } }` → `store.change(result.diff)` → `store.notify()`
 - This path DOES notify PlainAppStore subscribers, but it's the OLD command path, NOT used by the current `useDesignAppCommands` which sends XState events directly
 
 ### 5.5 React Flow Controlled Mode
@@ -187,8 +187,8 @@ User mousemove → PieceNodeComponent.handleMouseEnter
 
 ```bash
 # Kill Vite + clear cache + restart (REQUIRED for fresh code)
-lsof -ti:5173 | xargs -r kill -9; sleep 1; rm -rf semio/js/node_modules/.vite/deps
-cd semio/js && npx vite --host 127.0.0.1 --port 5173 &
+lsof -ti:5173 | xargs -r kill -9; sleep 1; rm -rf compose/js/node_modules/.vite/deps
+cd compose/js && npx vite --host 127.0.0.1 --port 5173 &
 
 # Wait for Vite then run test-equiv
 sleep 10 && npx tsx .repo/tickets/2026/03/03/DESIGN-DRAG-PERFORMANCE-LONG-TASK-OPTIMIZATION/test-equiv.mts
@@ -247,8 +247,8 @@ npx tsx .repo/tickets/2026/03/03/DESIGN-DRAG-PERFORMANCE-LONG-TASK-OPTIMIZATION/
 
 | File                               | Changes                                                                                                                                                                                                              |
 | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `semio/js/sketchpad/shared.ts`     | DerivedNode version counter, version reset in subscribe cleanup and dispose()                                                                                                                                        |
-| `semio/js/sketchpad/Sketchpad.tsx` | kitShallows version counter, useDerived getSnapshot version optimization                                                                                                                                             |
-| `semio/js/sketchpad/elements.tsx`  | Zustand no-op patch, transform suppression, Three.js frameloop="demand", SceneFrameControl pause/resume, Orb dragging prop, Ring localT + rAF throttle                                                               |
-| `semio/js/sketchpad/Design.tsx`    | PieceRenderData subscription store, syncPieceRenderData, hover deferral setTimeout(0), XState actor subscription, helperLines display:none, pointer-events CSS, edge suppress recompute, Three.js pause in drag/zoom |
-| `semio/js/sketchpad.test.ts`       | Design Drag Performance test with explicit budgets                                                                                                                                                                   |
+| `compose/js/sketchpad/shared.ts`     | DerivedNode version counter, version reset in subscribe cleanup and dispose()                                                                                                                                        |
+| `compose/js/sketchpad/Sketchpad.tsx` | kitShallows version counter, useDerived getSnapshot version optimization                                                                                                                                             |
+| `compose/js/sketchpad/elements.tsx`  | Zustand no-op patch, transform suppression, Three.js frameloop="demand", SceneFrameControl pause/resume, Orb dragging prop, Ring localT + rAF throttle                                                               |
+| `compose/js/sketchpad/Design.tsx`    | PieceRenderData subscription store, syncPieceRenderData, hover deferral setTimeout(0), XState actor subscription, helperLines display:none, pointer-events CSS, edge suppress recompute, Three.js pause in drag/zoom |
+| `compose/js/sketchpad.test.ts`       | Design Drag Performance test with explicit budgets                                                                                                                                                                   |

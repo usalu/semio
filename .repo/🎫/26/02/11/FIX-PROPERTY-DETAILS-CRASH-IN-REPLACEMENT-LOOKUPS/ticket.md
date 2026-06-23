@@ -14,7 +14,7 @@ Bulk close
 
 - Compare old and current selection-to-details flows (`Design.Details.tsx.old`, `Design.Diagram.tsx.old`, `Design.Model.tsx.old`, `Desing.tsx.old`, `Design.tsx`, `Sketchpad.tsx`) and isolate non-canonical routing paths.
 - Refactor details routing to use validated known ids only for piece/connection sections.
-- Extend existing `semio/js/sketchpad.test.ts` `Design` flow to assert no-selection design details and fallback absence for valid piece selections.
+- Extend existing `compose/js/sketchpad.test.ts` `Design` flow to assert no-selection design details and fallback absence for valid piece selections.
 - Run `tsc`, unit tests, and available e2e flow.
 
 ### Todo
@@ -27,14 +27,14 @@ Bulk close
 
 ### Changes
 
-- Updated `semio/js/sketchpad/Design.tsx`:
+- Updated `compose/js/sketchpad/Design.tsx`:
   - Introduced shared `GUID_PATTERN` and tightened `resolveSelectionEntryGuid` to return only GUID-like values (or extracted GUIDs from node/wrapped shapes), not arbitrary strings.
   - In details-section routing effect, added known-connection validation:
     - build `knownConnectionGuids` from current `design.connections`.
     - resolve selected connections only when GUIDs match known connection ids or structured connection ids match existing connections.
     - derive `hasConnections` from resolved connection count, preventing empty/invalid connection-section routing.
   - Reused resolved connection list for section rendering to keep section selection deterministic under partial/invalid payloads.
-- Updated `semio/js/sketchpad.test.ts` (existing file only):
+- Updated `compose/js/sketchpad.test.ts` (existing file only):
   - Added no-selection assertions in `Design` test:
     - design name field is visible in right details panel.
     - `No valid pieces found in selection.` is absent.
@@ -43,18 +43,18 @@ Bulk close
 
 ### Verification
 
-- `npx tsc --noEmit -p semio/js/tsconfig.json` passed.
-- `npm run test` in `semio/js` passed (`semio.test.ts`, 13 tests).
-- `npm run test:e2e` in `semio/js` did not complete in this environment (hung without emitted output).
+- `npx tsc --noEmit -p compose/js/tsconfig.json` passed.
+- `npm run test` in `compose/js` passed (`compose.test.ts`, 13 tests).
+- `npm run test:e2e` in `compose/js` did not complete in this environment (hung without emitted output).
 - Existing approved e2e command was executed:
-  - `/bin/bash -lc "cd semio/js && npx playwright test sketchpad.test.ts --grep \"Design\" --timeout 240000 --workers=1 --max-failures=1 --reporter=list > /tmp/semio-design-playwright.log 2>&1; echo EXIT:$?; tail -n 200 /tmp/semio-design-playwright.log"`
+  - `/bin/bash -lc "cd compose/js && npx playwright test sketchpad.test.ts --grep \"Design\" --timeout 240000 --workers=1 --max-failures=1 --reporter=list > /tmp/compose-design-playwright.log 2>&1; echo EXIT:$?; tail -n 200 /tmp/compose-design-playwright.log"`
   - Command output included: `Error: Process from config.webServer was not able to start. Exit code: 1`.
 
 ## Continuation 2026-02-23
 
 ### Changes
 
-- Updated `semio/js/sketchpad/Design.tsx`:
+- Updated `compose/js/sketchpad/Design.tsx`:
   - Restored non-UUID fallback in `resolveSelectionEntryGuid` while keeping connection routing constrained by known connection ids.
   - Prevented non-lasso empty `onSelectionChange` events from clearing current selection.
   - Stopped event propagation in `onNodeClick` and `onEdgeClick` to avoid pane-level deselect clearing immediate selections.
@@ -62,23 +62,23 @@ Bulk close
   - Removed `useIsInDesignScope` hard gate in `DesignSection`/`PiecesSection` to avoid null section content from scope-only checks.
   - Added temporary `[DEBUG] [DesignSectionForm]` warning when design scope is unavailable.
   - Wrapped design-details section renderers with both `KitScopeProvider` and `DesignScopeProvider`.
-- Updated `semio/js/sketchpad/Sketchpad.tsx`:
+- Updated `compose/js/sketchpad/Sketchpad.tsx`:
   - Wrapped panel tab content in `ToolbarScopeWrapper`.
   - Wrapped layout component in `ToolbarScopeWrapper` to guarantee route-derived scope availability for side-panel content.
-- Updated `semio/js/sketchpad.test.ts` existing `Design` test:
+- Updated `compose/js/sketchpad.test.ts` existing `Design` test:
   - Added explicit no-selection assertion block.
   - Added deterministic selection-shape application via actor for `guid`, `nodeId`, `nestedObject`, and `wrappedString`.
   - Added assertions that valid selections render piece details and hide fallback message.
 - Updated unrelated blocking compile regressions discovered during verification:
-  - `semio/js/sketchpad/Type.tsx`: added missing `useSyncExternalStore` import.
-  - `semio/js/sketchpad/Docs.tsx`: cast `addSection("workbench" as any, ...)` where current shared `PanelKey` contract excludes `"workbench"`.
-  - `semio/js/sketchpad/shared.ts`: removed duplicate `getNextPanelVisibilityFromToggle` declaration introduced during this continuation.
+  - `compose/js/sketchpad/Type.tsx`: added missing `useSyncExternalStore` import.
+  - `compose/js/sketchpad/Docs.tsx`: cast `addSection("workbench" as any, ...)` where current shared `PanelKey` contract excludes `"workbench"`.
+  - `compose/js/sketchpad/shared.ts`: removed duplicate `getNextPanelVisibilityFromToggle` declaration introduced during this continuation.
 
 ### Verification
 
-- `npx tsc --noEmit -p semio/js/tsconfig.json` passed (latest run).
-- `npm run test` in `semio/js` passed (`13/13`).
-- `npx playwright test sketchpad.test.ts --grep "Design" --workers=1 --max-failures=1 --reporter=list` in `semio/js` still fails on:
+- `npx tsc --noEmit -p compose/js/tsconfig.json` passed (latest run).
+- `npm run test` in `compose/js` passed (`13/13`).
+- `npx playwright test sketchpad.test.ts --grep "Design" --workers=1 --max-failures=1 --reporter=list` in `compose/js` still fails on:
   - `No-selection details visible` assertion.
   - Runtime evidence repeatedly shows right panel only rendering section header buttons (`3 buttons, 0 inputs, 0 tree items`) and no design field input in that state.
 
@@ -90,11 +90,11 @@ Bulk close
 
 ### Changes
 
-- Updated `semio/js/sketchpad/Design.tsx`:
+- Updated `compose/js/sketchpad/Design.tsx`:
   - Added `resolveSelectionEntryGuidByKnownIds` to resolve ids by matching selection payload content against known selectable piece ids.
   - Applied known-id resolution in `PiecesSectionForm` selected piece extraction.
   - Applied known-id resolution in details section routing piece detection.
-- Updated `semio/js/sketchpad.test.ts` existing `Design` test:
+- Updated `compose/js/sketchpad.test.ts` existing `Design` test:
   - Added third selection payload regression variant: wrapped string format (`selected-piece:<guid>:active`).
   - Asserted piece details still render and fallback message is not shown.
 
@@ -102,7 +102,7 @@ Bulk close
 
 ### Changes
 
-- Updated `semio/js/sketchpad/Design.tsx`:
+- Updated `compose/js/sketchpad/Design.tsx`:
   - Fixed `resolveSelectionEntryGuidByKnownIds` to return only known ids (no longer returns arbitrary unresolved strings).
   - Added raw payload fallback extraction in `PiecesSectionForm`:
     - when parsed valid selection ids are empty, derive selected ids by matching known piece ids against serialized selection payload.
@@ -110,8 +110,8 @@ Bulk close
 
 ### Verification
 
-- `npx tsc --noEmit -p tsconfig.json` in `semio/js` passed.
-- `npm run test` in `semio/js` passed (`semio.test.ts`, 13 tests).
+- `npx tsc --noEmit -p tsconfig.json` in `compose/js` passed.
+- `npm run test` in `compose/js` passed (`compose.test.ts`, 13 tests).
 
 ### Todo
 
@@ -121,8 +121,8 @@ Bulk close
 
 ### Verification
 
-- `npx tsc --noEmit -p tsconfig.json` in `semio/js` passed.
-- `npm run test` in `semio/js` passed (`semio.test.ts`, 13 tests).
+- `npx tsc --noEmit -p tsconfig.json` in `compose/js` passed.
+- `npm run test` in `compose/js` passed (`compose.test.ts`, 13 tests).
 
 ### Todo
 
@@ -135,21 +135,21 @@ Bulk close
 
 ### Changes
 
-- Updated `semio/js/sketchpad.test.ts` in existing `Design` test:
+- Updated `compose/js/sketchpad.test.ts` in existing `Design` test:
   - Added assertions for alternate selection payload shapes:
     - node-id format: `piece-<index>-<guid>`
     - nested object format: `{ data: { piece: { guid } } }`
   - For each shape, details panel must show piece properties and must not show `No valid pieces found in selection.`
-- Updated `semio/js/sketchpad/Design.tsx`:
+- Updated `compose/js/sketchpad/Design.tsx`:
   - Extended `resolveSelectionEntryGuid` with GUID-pattern extraction from arbitrary strings.
   - Added direct design snapshot fallback in `PiecesSectionForm` so unknown hook-resolved entries can still resolve to real selected pieces.
-- Updated `semio/js/sketchpad/Sketchpad.tsx`:
+- Updated `compose/js/sketchpad/Sketchpad.tsx`:
   - Extended `usePiecesFromIds` candidate extraction with GUID-pattern matching in raw ids.
 
 ### Verification
 
-- `npx tsc --noEmit -p tsconfig.json` in `semio/js` passed.
-- `npm run test` in `semio/js` passed (`semio.test.ts`, 13 tests).
+- `npx tsc --noEmit -p tsconfig.json` in `compose/js` passed.
+- `npm run test` in `compose/js` passed (`compose.test.ts`, 13 tests).
 - Playwright execution attempted for `Design` test with grep; this environment did not provide reliable e2e completion output due webServer bind/startup constraints.
 
 ### Todo
@@ -163,22 +163,22 @@ Bulk close
 
 ### Changes
 
-- Updated `semio/js/sketchpad/Design.tsx`:
+- Updated `compose/js/sketchpad/Design.tsx`:
   - Added deep nested GUID extraction fallback in `resolveSelectionEntryGuid`.
   - Filtered details piece resolution to valid selected ids present in current design pieces/included-design entries.
   - Updated details routing selection checks to treat only known piece ids as piece selections.
-- Updated `semio/js/sketchpad/Sketchpad.tsx`:
+- Updated `compose/js/sketchpad/Sketchpad.tsx`:
   - Extended `usePiecesFromIds` id candidate extraction with recursive nested-object scanning and GUID pattern detection.
 
 ### Verification
 
-- `npx tsc --noEmit -p tsconfig.json` in `semio/js` passed.
+- `npx tsc --noEmit -p tsconfig.json` in `compose/js` passed.
 
 ## Selection Resolution Fix 2026-02-22
 
 ### Changes
 
-- Updated `semio/js/sketchpad/Design.tsx`:
+- Updated `compose/js/sketchpad/Design.tsx`:
   - Added `resolveSelectionEntryGuid` to normalize selection entries from multiple shapes:
     - plain guid strings
     - reactflow-like node ids (`piece-<index>-<guid>`, `connection-<index>-<guid>`)
@@ -186,15 +186,15 @@ Bulk close
     - nested `{ piece: { guid } }` and `{ data: { piece: { guid } } }`
   - Switched piece and connection extraction in details section routing and piece form selection resolution to use the normalized resolver.
   - Switched diagram selection-sync and model selection-set derivation to use normalized ids for stable cross-view behavior.
-- Updated `semio/js/sketchpad/Sketchpad.tsx`:
+- Updated `compose/js/sketchpad/Sketchpad.tsx`:
   - Extended `usePiecesFromIds` with robust id candidate resolution, including node-id parsing and nested selection-object shapes.
   - Kept fallback behavior for unknown ids.
 - Kept panel topology and panel position unchanged.
 
 ### Verification
 
-- `npx tsc --noEmit -p tsconfig.json` in `semio/js` passed.
-- `npm run test` in `semio/js` passed (`semio.test.ts`, 13 tests).
+- `npx tsc --noEmit -p tsconfig.json` in `compose/js` passed.
+- `npm run test` in `compose/js` passed (`compose.test.ts`, 13 tests).
 
 ### Todo
 
@@ -207,7 +207,7 @@ Bulk close
 
 ### Changes
 
-- Updated `semio/js/sketchpad/Sketchpad.tsx` in `useReplacableTypes`:
+- Updated `compose/js/sketchpad/Sketchpad.tsx` in `useReplacableTypes`:
   - Build a minimal `kit` with both `types` and current `design` (`designs: [design]`) so `findReplacableTypesFor*` does not throw on missing design.
   - Normalize incoming selected ids (`string`, `{guid}`, `{id_}`) and filter to ids that exist in current `pieces`.
   - Return `[]` when no valid piece ids resolve.
@@ -216,8 +216,8 @@ Bulk close
 
 ### Verification
 
-- `npx tsc --noEmit -p tsconfig.json` in `semio/js` passed.
-- `npm run test` in `semio/js` passed (`semio.test.ts`, 13 tests).
+- `npx tsc --noEmit -p tsconfig.json` in `compose/js` passed.
+- `npm run test` in `compose/js` passed (`compose.test.ts`, 13 tests).
 
 ### Todo
 
@@ -230,7 +230,7 @@ Bulk close
 
 ### Changes
 
-- Updated `semio/js/sketchpad/Design.tsx` details section registration to wrap selected-item sections in `DesignScopeProvider`:
+- Updated `compose/js/sketchpad/Design.tsx` details section registration to wrap selected-item sections in `DesignScopeProvider`:
   - connector properties section
   - piece properties section
   - connection properties section
@@ -238,8 +238,8 @@ Bulk close
 
 ### Verification
 
-- `npx tsc --noEmit -p tsconfig.json` in `semio/js` passed.
-- `npm run test` in `semio/js` passed (`semio.test.ts`, 13 tests).
+- `npx tsc --noEmit -p tsconfig.json` in `compose/js` passed.
+- `npm run test` in `compose/js` passed (`compose.test.ts`, 13 tests).
 
 ### Todo
 
@@ -252,16 +252,16 @@ Bulk close
 
 ### Changes
 
-- Updated `semio/js/sketchpad/Sketchpad.tsx` `usePiecesFromIds` to resolve piece ids from `string`, `{guid}`, and `{id_}` entries.
-- Updated `semio/js/sketchpad/Design.tsx` `PiecesSectionForm` to normalize `selection.pieces` into canonical guid ids before resolving piece records.
-- Updated `semio/js/sketchpad/Design.tsx` selected connector resolution to accept both `selection.connector` and `selection.connectors[0]`.
-- Updated `semio/js/sketchpad/Design.tsx` details-section routing effect to normalize piece/connection ids and resolve connections from both guid and object-id selection entries.
+- Updated `compose/js/sketchpad/Sketchpad.tsx` `usePiecesFromIds` to resolve piece ids from `string`, `{guid}`, and `{id_}` entries.
+- Updated `compose/js/sketchpad/Design.tsx` `PiecesSectionForm` to normalize `selection.pieces` into canonical guid ids before resolving piece records.
+- Updated `compose/js/sketchpad/Design.tsx` selected connector resolution to accept both `selection.connector` and `selection.connectors[0]`.
+- Updated `compose/js/sketchpad/Design.tsx` details-section routing effect to normalize piece/connection ids and resolve connections from both guid and object-id selection entries.
 - Kept panel topology unchanged: no new panels and no panel location changes.
 
 ### Verification
 
-- `npx tsc --noEmit -p tsconfig.json` in `semio/js` passed.
-- `npm run test` in `semio/js` passed (`semio.test.ts`, 13 tests).
+- `npx tsc --noEmit -p tsconfig.json` in `compose/js` passed.
+- `npm run test` in `compose/js` passed (`compose.test.ts`, 13 tests).
 
 ### Todo
 
@@ -351,8 +351,8 @@ Bulk close
 
 ### Objective
 
-- Extract what the old Property Panel does and why (`semio/js/sketchpad/Design.Details.tsx.old`, `semio/js/sketchpad/Design.Diagram.tsx.old`, `semio/js/sketchpad/Design.Model.tsx.old`, `semio/js/sketchpad/Desing.tsx.old`).
-- Translate that intent into the current app architecture (`semio/js/sketchpad/Design.tsx`, `semio/js/sketchpad/Sketchpad.tsx`, `semio/js/sketchpad/elements.tsx`, `semio/js/sketchpad/shared.ts`).
+- Extract what the old Property Panel does and why (`compose/js/sketchpad/Design.Details.tsx.old`, `compose/js/sketchpad/Design.Diagram.tsx.old`, `compose/js/sketchpad/Design.Model.tsx.old`, `compose/js/sketchpad/Desing.tsx.old`).
+- Translate that intent into the current app architecture (`compose/js/sketchpad/Design.tsx`, `compose/js/sketchpad/Sketchpad.tsx`, `compose/js/sketchpad/elements.tsx`, `compose/js/sketchpad/shared.ts`).
 
 ### Purpose And Responsibilities
 
@@ -486,15 +486,15 @@ Bulk close
   - `./repo/cli/cli ticket list`
   - `./repo/cli/cli ticket reopen 2026/02/11/MAP-EDITOR-INSPECTOR-DETAILS-ARCHITECTURE "..."`
 - Files inspected:
-  - `semio/js/sketchpad/Design.Details.tsx.old`
-  - `semio/js/sketchpad/Design.Diagram.tsx.old`
-  - `semio/js/sketchpad/Design.Model.tsx.old`
-  - `semio/js/sketchpad/Desing.tsx.old`
-  - `semio/js/sketchpad/Design.tsx`
-  - `semio/js/sketchpad/Sketchpad.tsx`
-  - `semio/js/sketchpad/elements.tsx`
-  - `semio/js/sketchpad/shared.ts`
-  - `semio/js/README.md`
+  - `compose/js/sketchpad/Design.Details.tsx.old`
+  - `compose/js/sketchpad/Design.Diagram.tsx.old`
+  - `compose/js/sketchpad/Design.Model.tsx.old`
+  - `compose/js/sketchpad/Desing.tsx.old`
+  - `compose/js/sketchpad/Design.tsx`
+  - `compose/js/sketchpad/Sketchpad.tsx`
+  - `compose/js/sketchpad/elements.tsx`
+  - `compose/js/sketchpad/shared.ts`
+  - `compose/js/README.md`
 
 ### Todo
 
@@ -507,41 +507,41 @@ Bulk close
 
 ## Changes
 
-- Updated `semio/js/sketchpad/Design.tsx` `PiecesSectionForm` to use real metadata (`usePiecesMetadataMap`) instead of an empty map so parent-connection derivation works for selected pieces and included design pieces.
-- Updated `semio/js/sketchpad/Design.tsx` `PiecesSectionForm` to restore old invalid-selection fallback behavior (`No valid pieces found in selection.`) when selected ids resolve to unknown placeholders.
-- Updated `semio/js/sketchpad/Design.tsx` piece type resolution and mixed-value derivation to support both string and object (`{guid}` / `{name,variant}`) type shapes for parity with old panel behavior.
-- Updated `semio/js/sketchpad/Design.tsx` piece detail visibility logic to match old intent (`hasCenter`/`hasPlane` now activate when any selected piece has values, not only when all do).
-- Updated `semio/js/sketchpad/Design.tsx` `ConnectionsSectionForm` to restore multi-selection bulk editing for connection numeric/orientation fields (gap/shift/rise/rotation/turn/tilt/u/v) with transaction wrapping and batch update command path.
-- Updated `semio/js/sketchpad/Design.tsx` to normalize connector selection shape, route Details sections through normalized connector selection, clear connector selection when piece/connection selection changes, and start drag transactions at drag start.
-- Updated drag cancel cleanup in `semio/js/sketchpad/Design.tsx` to clear drag helper state on escape abort.
-- Updated `semio/js/sketchpad/Sketchpad.tsx` plain store transactions to persist baseline snapshots, commit one history entry only when state changed, and restore baseline state on abort.
-- Updated `semio/js/sketchpad/elements.tsx` slider/stepper pointer lifecycle so pointerup finalizes and pointercancel aborts reliably.
-- Updated `semio/js/sketchpad/README.md` specs with connector-selection normalization and drag/transaction lifecycle requirements.
-- Updated `semio/js/sketchpad/Design.tsx` with canonical selection normalization (`pieces`/`connections` always arrays), port-selection exclusivity, consistent deselect-all shape, pane-click clear wiring, and dev-only runtime selection guards (`[DEBUG]` diagnostics).
-- Updated `semio/js/sketchpad/README.md` specs with explicit selection invariants and mixed inspector routing expectations.
-- Updated `semio/js/sketchpad/Design.tsx` mixed-selection details routing so piece+connection mixed selection renders warning-only instead of conflicting piece/connection editors.
-- Updated `semio/js/sketchpad/Design.tsx` replacement dropdown mechanics to normalize piece type resolution (`string` and `{guid}`), compute design replacement options for both direct and included design pieces, constrain design replacement matching to computed replacement option pools, and guard against empty option regressions in dev mode.
-- Updated `semio/js/sketchpad/README.md` specs with replacement dropdown invariants for normalized identifiers and design-reference-safe updates.
-- Updated `semio/js/sketchpad/Design.tsx` with minimal stability guardrails: type-safe id/selector helpers for selection and entity checks, dev-only impossible-state assertions, debug logging toggles for selection/transaction channels, and invalid-id write guards for piece/connection update actions.
-- Updated `semio/js/sketchpad/README.md` specs with debug-toggle and invalid-write guardrail requirements.
-- Updated `semio/js/sketchpad/Design.tsx` to fix a maximum update depth loop by restoring a stable selection selector factory (`createDesignSelectionSelector`) in `useDesignAppSelectionField` and moving read-time normalization/guards to memoized `useDesignAppSelection`.
-- Updated `semio/js/sketchpad/Design.tsx` diagram `onSelectionChange` synchronization to normalize/de-duplicate selection ids and compare set-membership before calling `setSelection`, preventing feedback-loop churn and UI freeze while selecting.
-- Updated `semio/js/sketchpad/README.md` specs with selection synchronization normalization requirement.
-- Updated `semio/js/sketchpad/Design.tsx` `useDesignAppSelection` setter with semantic-equality no-op guard (pieces/connections set comparison + primary connector comparison) to prevent redundant selection dispatch storms that can still freeze the UI under repeated selection events.
-- Updated `semio/js/sketchpad/README.md` specs with selection-setter equivalence no-op requirement.
+- Updated `compose/js/sketchpad/Design.tsx` `PiecesSectionForm` to use real metadata (`usePiecesMetadataMap`) instead of an empty map so parent-connection derivation works for selected pieces and included design pieces.
+- Updated `compose/js/sketchpad/Design.tsx` `PiecesSectionForm` to restore old invalid-selection fallback behavior (`No valid pieces found in selection.`) when selected ids resolve to unknown placeholders.
+- Updated `compose/js/sketchpad/Design.tsx` piece type resolution and mixed-value derivation to support both string and object (`{guid}` / `{name,variant}`) type shapes for parity with old panel behavior.
+- Updated `compose/js/sketchpad/Design.tsx` piece detail visibility logic to match old intent (`hasCenter`/`hasPlane` now activate when any selected piece has values, not only when all do).
+- Updated `compose/js/sketchpad/Design.tsx` `ConnectionsSectionForm` to restore multi-selection bulk editing for connection numeric/orientation fields (gap/shift/rise/rotation/turn/tilt/u/v) with transaction wrapping and batch update command path.
+- Updated `compose/js/sketchpad/Design.tsx` to normalize connector selection shape, route Details sections through normalized connector selection, clear connector selection when piece/connection selection changes, and start drag transactions at drag start.
+- Updated drag cancel cleanup in `compose/js/sketchpad/Design.tsx` to clear drag helper state on escape abort.
+- Updated `compose/js/sketchpad/Sketchpad.tsx` plain store transactions to persist baseline snapshots, commit one history entry only when state changed, and restore baseline state on abort.
+- Updated `compose/js/sketchpad/elements.tsx` slider/stepper pointer lifecycle so pointerup finalizes and pointercancel aborts reliably.
+- Updated `compose/js/sketchpad/README.md` specs with connector-selection normalization and drag/transaction lifecycle requirements.
+- Updated `compose/js/sketchpad/Design.tsx` with canonical selection normalization (`pieces`/`connections` always arrays), port-selection exclusivity, consistent deselect-all shape, pane-click clear wiring, and dev-only runtime selection guards (`[DEBUG]` diagnostics).
+- Updated `compose/js/sketchpad/README.md` specs with explicit selection invariants and mixed inspector routing expectations.
+- Updated `compose/js/sketchpad/Design.tsx` mixed-selection details routing so piece+connection mixed selection renders warning-only instead of conflicting piece/connection editors.
+- Updated `compose/js/sketchpad/Design.tsx` replacement dropdown mechanics to normalize piece type resolution (`string` and `{guid}`), compute design replacement options for both direct and included design pieces, constrain design replacement matching to computed replacement option pools, and guard against empty option regressions in dev mode.
+- Updated `compose/js/sketchpad/README.md` specs with replacement dropdown invariants for normalized identifiers and design-reference-safe updates.
+- Updated `compose/js/sketchpad/Design.tsx` with minimal stability guardrails: type-safe id/selector helpers for selection and entity checks, dev-only impossible-state assertions, debug logging toggles for selection/transaction channels, and invalid-id write guards for piece/connection update actions.
+- Updated `compose/js/sketchpad/README.md` specs with debug-toggle and invalid-write guardrail requirements.
+- Updated `compose/js/sketchpad/Design.tsx` to fix a maximum update depth loop by restoring a stable selection selector factory (`createDesignSelectionSelector`) in `useDesignAppSelectionField` and moving read-time normalization/guards to memoized `useDesignAppSelection`.
+- Updated `compose/js/sketchpad/Design.tsx` diagram `onSelectionChange` synchronization to normalize/de-duplicate selection ids and compare set-membership before calling `setSelection`, preventing feedback-loop churn and UI freeze while selecting.
+- Updated `compose/js/sketchpad/README.md` specs with selection synchronization normalization requirement.
+- Updated `compose/js/sketchpad/Design.tsx` `useDesignAppSelection` setter with semantic-equality no-op guard (pieces/connections set comparison + primary connector comparison) to prevent redundant selection dispatch storms that can still freeze the UI under repeated selection events.
+- Updated `compose/js/sketchpad/README.md` specs with selection-setter equivalence no-op requirement.
 
 ## Log
 
 - Reopened ticket `2026/02/11/MIGRATE-PROPERTY-PANEL-FUNCTIONALITY-IN-CURRENT-BUILD`.
 - Compared old details behavior (`Design.Details.tsx.old`) against current `Design.tsx` section forms and identified parity regressions limited to content behavior (no panel layout changes required).
 - Implemented migration directly in existing details section components (`PiecesSectionForm`, `ConnectionsSectionForm`) without introducing new panels or changing panel positions.
-- Verified with `npm run test` in `semio/js`: passed (`semio.test.ts`, 13 tests).
+- Verified with `npm run test` in `compose/js`: passed (`compose.test.ts`, 13 tests).
 - Ran repo discovery with `./repo/cli/cli tree "editor inspector details"`.
 - Opened ticket `2026/02/11/MAP-EDITOR-INSPECTOR-DETAILS-ARCHITECTURE`.
 - Traced:
-  - Selection state shape and update paths in `semio/js/sketchpad/Sketchpad.tsx`, `semio/js/sketchpad/Design.tsx`, `semio/js/sketchpad/shared.ts`.
-  - Design/document model storage and mutation pipeline in `semio/js/sketchpad/Sketchpad.tsx` (`KitStore` + `DesignStore` + `kitCommands`).
-  - Details panel composition and layout sizing flow in `semio/js/sketchpad/Sketchpad.tsx` and `semio/js/sketchpad/elements.tsx`.
+  - Selection state shape and update paths in `compose/js/sketchpad/Sketchpad.tsx`, `compose/js/sketchpad/Design.tsx`, `compose/js/sketchpad/shared.ts`.
+  - Design/document model storage and mutation pipeline in `compose/js/sketchpad/Sketchpad.tsx` (`KitStore` + `DesignStore` + `kitCommands`).
+  - Details panel composition and layout sizing flow in `compose/js/sketchpad/Sketchpad.tsx` and `compose/js/sketchpad/elements.tsx`.
 - Key finding:
   - Design selection for ports/connectors is inconsistent:
     - `Sketchpad.tsx` type: `selection.connectors?: Array<{piece, connector}>`
@@ -565,14 +565,14 @@ Bulk close
 - Verification:
   - `npm run test:e2e -- sketchpad.test.ts --grep "Design"` failed because Playwright `config.webServer` could not start in this environment.
   - `npx tsc --noEmit -p tsconfig.json` reports existing unrelated type errors in `Feedback.tsx`, `Sketchpad.tsx`, `Type.tsx`, and `elements.tsx`; no remaining type errors from modified `Design.tsx` lines.
-  - `npm run test -- sketchpad.test.ts` in `semio/js` failed with `No test files found` because current Vitest include is `semio.test.ts`.
-  - `npm run test` in `semio/js` passed (`semio.test.ts`, 11 tests).
-  - Re-ran `npm run test` in `semio/js` after mixed-selection routing patch; still passed (`semio.test.ts`, 11 tests).
-  - Re-ran `npm run test` in `semio/js` after replacement-dropdown parity patch; still passed (`semio.test.ts`, 11 tests).
-  - Re-ran `npm run test` in `semio/js` after guardrail pass; still passed (`semio.test.ts`, 11 tests).
-  - Re-ran `npm run test` in `semio/js` after selection-selector stabilization fix; still passed (`semio.test.ts`, 11 tests).
-  - Re-ran `npm run test` in `semio/js` after selection synchronization loop guard patch; still passed (`semio.test.ts`, 11 tests).
-  - Re-ran `npm run test` in `semio/js` after selection setter no-op guard patch; still passed (`semio.test.ts`, 11 tests).
+  - `npm run test -- sketchpad.test.ts` in `compose/js` failed with `No test files found` because current Vitest include is `compose.test.ts`.
+  - `npm run test` in `compose/js` passed (`compose.test.ts`, 11 tests).
+  - Re-ran `npm run test` in `compose/js` after mixed-selection routing patch; still passed (`compose.test.ts`, 11 tests).
+  - Re-ran `npm run test` in `compose/js` after replacement-dropdown parity patch; still passed (`compose.test.ts`, 11 tests).
+  - Re-ran `npm run test` in `compose/js` after guardrail pass; still passed (`compose.test.ts`, 11 tests).
+  - Re-ran `npm run test` in `compose/js` after selection-selector stabilization fix; still passed (`compose.test.ts`, 11 tests).
+  - Re-ran `npm run test` in `compose/js` after selection synchronization loop guard patch; still passed (`compose.test.ts`, 11 tests).
+  - Re-ran `npm run test` in `compose/js` after selection setter no-op guard patch; still passed (`compose.test.ts`, 11 tests).
 
 ## Todos
 
@@ -598,7 +598,7 @@ Bulk close
 - `Editor/Inspector/Details` architecture map:
   - `UI interaction (diagram/tree/details)` -> dispatches app events and/or store commands.
   - `XState actor context (Sketchpad machine)` -> owns app-scoped UI state (`selection`, `hover`, `panelVisibility`, `activeTool`, `fullscreen`, etc).
-  - `DesignApp store (PlainKitDiffAppStore)` -> executes `semio.designApp.*` commands, computes selection diff inverse, records edits during active transaction.
+  - `DesignApp store (PlainKitDiffAppStore)` -> executes `compose.designApp.*` commands, computes selection diff inverse, records edits during active transaction.
   - `KitStore/DesignStore (Yjs-backed data model)` -> applies `KitDiff`/`DesignDiff` to canonical kit/design entities (`types`, `designs`, `pieces`, `connections`, `ports`, etc).
   - `PanelSectionProvider + side panel tabs` -> composes details sections from app plugins and renders them into right side panel tabs.
   - `Layout (elements.tsx SidePanel)` -> handles drag resize and calls `onSizeChange`; persisted via `sketchpad.panelSizes`.
@@ -614,8 +614,8 @@ Bulk close
 - Document/design model map:
   - Canonical model lives in `KitStore`/`DesignStore` in `Sketchpad.tsx` (Yjs maps/arrays + snapshot caches).
   - All model mutation happens through command->diff->change:
-    - UI calls `store.execute("semio.designApp.*")` or `kitStore.execute("semio.kit.*")`.
-    - `semio.designApp.*` commands in `Design.tsx` return `kitDiff` + optional selection diff.
+    - UI calls `store.execute("compose.designApp.*")` or `kitStore.execute("compose.kit.*")`.
+    - `compose.designApp.*` commands in `Design.tsx` return `kitDiff` + optional selection diff.
     - Store applies:
       - `DesignStore.change(diff)` for app-local fields.
       - `KitStore.change(kitDiff)` for document mutations.
@@ -631,15 +631,15 @@ Bulk close
   - Resize execution path:
     - `elements.tsx` `SidePanel` drag handle -> `onSizeChange(size)`.
     - `LayoutWrapper` forwards to `sketchpadCommands.setPanelSize(..., "rightSidePanelWidth", size)`.
-    - `setPanelSize` writes via `semio.sketchpad.setState` -> `panelSizes` diff in sketchpad state (persisted in Yjs/local storage).
+    - `setPanelSize` writes via `compose.sketchpad.setState` -> `panelSizes` diff in sketchpad state (persisted in Yjs/local storage).
   - `detailsWidth` remains in types/defaults for backward shape compatibility but appears unused by current right-side panel layout.
 - Key files to edit when implementing parity:
-  - `semio/js/sketchpad/Design.tsx`
-  - `semio/js/sketchpad/Sketchpad.tsx`
-  - `semio/js/sketchpad/shared.ts`
-  - `semio/js/sketchpad/elements.tsx`
-  - `semio/js/sketchpad/Kit.tsx` (if cross-app inspector behavior alignment is required)
-  - `semio/js/sketchpad/Type.tsx` (if connector/port inspector behavior needs shared primitives)
+  - `compose/js/sketchpad/Design.tsx`
+  - `compose/js/sketchpad/Sketchpad.tsx`
+  - `compose/js/sketchpad/shared.ts`
+  - `compose/js/sketchpad/elements.tsx`
+  - `compose/js/sketchpad/Kit.tsx` (if cross-app inspector behavior alignment is required)
+  - `compose/js/sketchpad/Type.tsx` (if connector/port inspector behavior needs shared primitives)
 - Missing primitives checklist before porting old behavior:
   - Canonical selection schema for design connectors/ports (single `connector` vs array `connectors`) with one source of truth.
   - Selection normalizer and adapter at app boundary so details/diagram/workbench all consume identical selection shape.
@@ -656,7 +656,7 @@ Bulk close
 1. Port/connector selection -> Details section:
    1. Open a design and ensure right side panel is visible on Details tab.
    2. Click a piece connector/port handle in the canvas.
-   3. Verify connector details section appears (id prefix `semio.sketchpad.app.type.connector.properties`).
+   3. Verify connector details section appears (id prefix `compose.sketchpad.app.type.connector.properties`).
    4. Click a different connector; verify details switches to the new connector.
    5. Click connector again to deselect; verify connector section disappears and design section remains.
 2. Drag transaction + escape/undo grouping:
@@ -684,52 +684,52 @@ Bulk close
 
 1. Connector details not showing or stale:
    - Selection shape mismatch: details branch checks `selection.connector` while other paths use `selection.connectors`.
-     - `semio/js/sketchpad/Design.tsx:8050-8052`
-     - `semio/js/sketchpad/Design.tsx:8081-8082`
-     - `semio/js/sketchpad/Sketchpad.tsx:7741-7744`
+     - `compose/js/sketchpad/Design.tsx:8050-8052`
+     - `compose/js/sketchpad/Design.tsx:8081-8082`
+     - `compose/js/sketchpad/Sketchpad.tsx:7741-7744`
    - Action hook writes singular connector while command facade writes connectors array.
-     - `semio/js/sketchpad/Design.tsx:1870-1876`
-     - `semio/js/sketchpad/Design.tsx:2285-2292`
+     - `compose/js/sketchpad/Design.tsx:1870-1876`
+     - `compose/js/sketchpad/Design.tsx:2285-2292`
    - Two `DesignAppSelection` definitions diverge between files.
-     - `semio/js/sketchpad/Design.tsx:229-234`
-     - `semio/js/sketchpad/Sketchpad.tsx:7741-7744`
+     - `compose/js/sketchpad/Design.tsx:229-234`
+     - `compose/js/sketchpad/Sketchpad.tsx:7741-7744`
 2. Drag escape/undo grouping regressions:
    - Drag starts no transaction, but escape calls abort; abort is ineffective without active transaction.
-     - `semio/js/sketchpad/Design.tsx:6331-6359`
-     - `semio/js/sketchpad/Design.tsx:6147-6151`
+     - `compose/js/sketchpad/Design.tsx:6331-6359`
+     - `compose/js/sketchpad/Design.tsx:6147-6151`
    - Connection mutations can occur during drag before drop finalization.
-     - `semio/js/sketchpad/Design.tsx:6942-6944`
+     - `compose/js/sketchpad/Design.tsx:6942-6944`
    - Transaction only started at drag stop, not drag start.
-     - `semio/js/sketchpad/Design.tsx:6969-6995`
-     - old baseline started at drag start: `js/semio/sketchpad/Design.Diagram.tsx.old:897`
+     - `compose/js/sketchpad/Design.tsx:6969-6995`
+     - old baseline started at drag start: `js/compose/sketchpad/Design.Diagram.tsx.old:897`
 3. Multi-select common values/replacement edge regressions:
    - Common type/variant resolution assumes `piece.type` string for lookups while other logic uses object-with-guid branches.
-     - `semio/js/sketchpad/Design.tsx:3964-3970`
-     - `semio/js/sketchpad/Design.tsx:4029-4030`
+     - `compose/js/sketchpad/Design.tsx:3964-3970`
+     - `compose/js/sketchpad/Design.tsx:4029-4030`
    - Replacement candidate filtering is single-piece centric for design replacement (`availableDesigns` only in single mode).
-     - `semio/js/sketchpad/Design.tsx:4025-4027`
+     - `compose/js/sketchpad/Design.tsx:4025-4027`
    - Mixed selection path can short-circuit on `hasMixedTypes`, which may hide expected bulk edit controls.
-     - `semio/js/sketchpad/Design.tsx:3597-3599`
-     - `semio/js/sketchpad/Design.tsx:4059-4065`
+     - `compose/js/sketchpad/Design.tsx:3597-3599`
+     - `compose/js/sketchpad/Design.tsx:4059-4065`
 4. Resize behavior drift:
    - Width ownership moved from details-local state to global right side panel state.
-     - old: `js/semio/sketchpad/Desing.tsx.old:70`, `js/semio/sketchpad/Design.Details.tsx.old:1287-1303`
-     - new: `semio/js/sketchpad/Sketchpad.tsx:15850-15857`
+     - old: `js/compose/sketchpad/Desing.tsx.old:70`, `js/compose/sketchpad/Design.Details.tsx.old:1287-1303`
+     - new: `compose/js/sketchpad/Sketchpad.tsx:15850-15857`
    - Current side panel resize uses mouse events only with strict min/max gate; no pointer capture/touch path.
-     - `semio/js/sketchpad/elements.tsx:4439-4463`
-     - `semio/js/sketchpad/elements.tsx:4452-4454`
+     - `compose/js/sketchpad/elements.tsx:4439-4463`
+     - `compose/js/sketchpad/elements.tsx:4452-4454`
 
 ### First Files/Hooks to Inspect
 
-1. `semio/js/sketchpad/Design.tsx`
+1. `compose/js/sketchpad/Design.tsx`
    - Details section mount effect and selection branch (`8050`, `8081`), port selection hooks (`1870+`), drag lifecycle (`6331+`, `6969+`, `6147+`).
-2. `semio/js/sketchpad/Sketchpad.tsx`
+2. `compose/js/sketchpad/Sketchpad.tsx`
    - Canonical `DesignAppSelection` type (`7741+`) and store transaction semantics (`896+`, `1108+`).
-3. `semio/js/sketchpad/elements.tsx`
+3. `compose/js/sketchpad/elements.tsx`
    - Transaction-aware controls (`Combobox` around `1559+`) and sidepanel resize implementation (`4418+`).
-4. `semio/js/sketchpad/shared.ts`
+4. `compose/js/sketchpad/shared.ts`
    - `SET_SELECTION` replacement semantics (`1871+`) and generic transaction handler utilities (`2176+`) to rule out competing transaction paths.
-5. `js/semio/sketchpad/Design.Diagram.tsx.old` and `js/semio/sketchpad/Design.Details.tsx.old`
+5. `js/compose/sketchpad/Design.Diagram.tsx.old` and `js/compose/sketchpad/Design.Details.tsx.old`
    - Baseline behavior for drag transaction boundaries and details connector/piece/connection routing.
 
 ### Missing Invariants To Enforce During Debugging
@@ -751,7 +751,7 @@ Bulk close
 
 ### Changes
 
-- Updated `semio/js/sketchpad/Sketchpad.tsx`:
+- Updated `compose/js/sketchpad/Sketchpad.tsx`:
   - Hardened `useReplacableTypes` and `useReplacableDesigns` against transient missing-scope/missing-design states:
     - use deep kit snapshot,
     - validate scoped design exists,
@@ -759,28 +759,28 @@ Bulk close
   - Added right-side details tab activation guard on panel open to prefer details tab in normal right-panel mode.
   - Updated `AppRegistry.getAppForPath` to prefer most specific route (more route segments first), then order.
   - Updated `loadAppConfigs` to explicit app-module imports for deterministic registration.
-- Updated `semio/js/sketchpad/Design.tsx`:
+- Updated `compose/js/sketchpad/Design.tsx`:
   - Hardened piece/design/type lookups in details forms with safe fallbacks.
   - Switched piece form kit access to deep kit snapshots.
   - Removed closure-gated section content wrappers returning `null` from stale state in details registration callbacks.
   - Added multiple runtime fallbacks for resolving current design in `DesignSectionForm` (scope + URL + kit lists).
   - Added temporary debug probes (`__DEBUG_*`) while tracing unresolved rendering path.
-- Updated `semio/js/site.tsx`:
+- Updated `compose/js/site.tsx`:
   - Switched sketchpad import to local source (`./sketchpad/Sketchpad`) and explicitly registered app configs in entrypoint.
-- Updated `semio/js/sketchpad.test.ts`:
+- Updated `compose/js/sketchpad.test.ts`:
   - Added temporary debug reads for `__DEBUG_DESIGN_SECTION__`, `__DEBUG_EFFECT_TOP__`, `__DEBUG_PANEL_STATE__`, `__DEBUG_APP_RENDER__`, and `__DEBUG_DESIGN_MODULE_LOADED__` during failing no-selection assertion.
 
 ### Verification
 
-- `npx tsc --noEmit -p semio/js/tsconfig.json` passed.
-- `npm run test` in `semio/js` passed (`13/13`).
+- `npx tsc --noEmit -p compose/js/tsconfig.json` passed.
+- `npm run test` in `compose/js` passed (`13/13`).
 - `npx playwright test sketchpad.test.ts --grep "Design" --timeout 240000 --workers=1 --max-failures=1 --reporter=list` still fails on no-selection design-details visibility.
 
 ### Blocking Findings
 
 - Right panel still shows only section headers (no input fields) at no-selection state in Design flow.
-- Runtime debug probes set in `semio/js/sketchpad/Design.tsx` remain `undefined` in Playwright (`__DEBUG_DESIGN_MODULE_LOADED__`, `__DEBUG_APP_RENDER__`, `__DEBUG_EFFECT_TOP__`, `__DEBUG_PANEL_STATE__`), indicating current test runtime path is not executing those probes.
-- Because of this mismatch, the no-selection design details input (`semio.sketchpad.app.design.panel.details.section.design.name`) remains absent at assertion time.
+- Runtime debug probes set in `compose/js/sketchpad/Design.tsx` remain `undefined` in Playwright (`__DEBUG_DESIGN_MODULE_LOADED__`, `__DEBUG_APP_RENDER__`, `__DEBUG_EFFECT_TOP__`, `__DEBUG_PANEL_STATE__`), indicating current test runtime path is not executing those probes.
+- Because of this mismatch, the no-selection design details input (`compose.sketchpad.app.design.panel.details.section.design.name`) remains absent at assertion time.
 
 ### Status
 

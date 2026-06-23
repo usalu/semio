@@ -50,7 +50,7 @@
 - Updated GraphQL query mappings (2 locations)
 - Updated TicketItem children loop
 - Updated SIDEBAR_COMMANDS: ticketProgress -> ticketCheckpoint
-- Updated command registration: semio.ticketProgress -> semio.ticketCheckpoint
+- Updated command registration: compose.ticketProgress -> compose.ticketCheckpoint
 - Command now prompts for files instead of prompt text
 
 ## VSCode Extension Tests (js/vscode/extension.test.ts)

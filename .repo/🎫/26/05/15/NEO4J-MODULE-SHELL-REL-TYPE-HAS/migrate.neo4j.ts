@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * 🧩 Runs ticket migrations.cypher via cypher-shell; copies batch to .repo/cache for Windows -f paths. NEO4J_DATABASE defaults to semio; live schema export is `bun ./script.ts generate`, not this ticket.
+ * 🧩 Runs ticket migrations.cypher via cypher-shell; copies batch to .repo/cache for Windows -f paths. NEO4J_DATABASE defaults to compose; live schema export is `bun ./script.ts generate`, not this ticket.
  */
 import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -11,7 +11,7 @@ import { runKitFieldDeclaredIsRepair } from "./kit-field-declared-is.ts";
 //#region 🧭Constants
 const TICKET_DIR = import.meta.dir;
 const NEO4J_VERSION = "5.26.26";
-const DATABASE = process.env.NEO4J_DATABASE || "semio";
+const DATABASE = process.env.NEO4J_DATABASE || "compose";
 const MIGRATIONS_CYPHER = join(TICKET_DIR, "migrations.cypher");
 //#endregion 🧭Constants
 

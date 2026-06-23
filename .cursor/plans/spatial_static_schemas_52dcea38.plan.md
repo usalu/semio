@@ -217,6 +217,6 @@ In every schema file:
 
 - `spatial.factory/v1` vs `spatial.command/v1` schema-id duality (will keep both ids; only the shape changes).
 - `spatial/net/*` (only `AGENTS.md` present).
-- Cross-tech surfaces (`elements`, `coda`, `semio`).
+- Cross-tech surfaces (`elements`, `coda`, `compose`).
 
 After the user confirms, work proceeds inside a ticket under `.repo/🎫/26/05/24/<slug>` with all intermediate logs and the fixture migration script kept there. Three delegated generalists in parallel are appropriate: (A) schemas + Expr + tests, (B) topology arrays + fixture migration + diff, (C) machine/display/commit/context restructure + downstream renderer & xstate adapter.

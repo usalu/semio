@@ -55,11 +55,11 @@ Requirements:
 
 Ran tests - all 5 tests failing with:
 
-- Home test: `semio.sketchpad.app.home.importKit` input element not found
+- Home test: `compose.sketchpad.app.home.importKit` input element not found
 - Kit test: Same issue (tries to init via Home)
 - Type test: Same issue (tries to init via Home -> Kit)
 - Design test: Same issue (tries to init via Home -> Kit -> Design)
-- Docs test: "Welcome to Semio" heading not found
+- Docs test: "Welcome to Compose" heading not found
 
 Common issue: The Home app is not rendering properly.
 
@@ -127,7 +127,7 @@ Added manual registration of all app configs since they're not in the auto-disco
 
 ### Fixed Build Errors
 
-1. **docs/tsconfig.json**: Changed extends from `semio/js/tsconfig.json` to `../semio/tsconfig.json`
+1. **docs/tsconfig.json**: Changed extends from `compose/js/tsconfig.json` to `../compose/tsconfig.json`
 2. **js/package.json**: Added `"./globals.css": "./globals.css"` to exports
 
 ## Test Status

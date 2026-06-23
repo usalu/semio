@@ -4,9 +4,9 @@ args = ["script.ts", "dev", "mcp", "stdio", "codex"]
 enabled = true
 cwd = "."
 
-[mcp_servers.neo4j-semio]
+[mcp_servers.neo4j-compose]
 command = "bun"
-args = ["script.ts", "dev", "mcp", "neo4j", "semio"]
+args = ["script.ts", "dev", "mcp", "neo4j", "compose"]
 enabled = true
 cwd = "."
 

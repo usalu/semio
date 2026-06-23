@@ -1,7 +1,7 @@
 {
   "id": "2026/05/06/attachable-backbones-us-004",
-  "title": "Implement Attachable Backbones — Dev JSON And Local Dot Semio",
+  "title": "Implement Attachable Backbones — Dev JSON And Local Dot Compose",
   "story": "US-004",
   "status": "closed",
-  "summary": "Native kit_backbone (atomic JSON + .semio multi-db SQLite + blobs dir), Worker backbone slot attach/detach/record-on-createFixedPiece, Kit clear_piece_projections before replay; golden-derived RS + JS fixtures; kit-store.contract attachableBackbones docs."
+  "summary": "Native kit_backbone (atomic JSON + .compose multi-db SQLite + blobs dir), Worker backbone slot attach/detach/record-on-createFixedPiece, Kit clear_piece_projections before replay; golden-derived RS + JS fixtures; kit-store.contract attachableBackbones docs."
 }

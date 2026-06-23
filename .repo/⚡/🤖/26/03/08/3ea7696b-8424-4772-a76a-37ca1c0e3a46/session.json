@@ -42,7 +42,7 @@
           "timestamp": "2026-03-08T00:54:13.042Z",
           "hook_event_name": "UserPromptSubmit",
           "session_id": "3ea7696b-8424-4772-a76a-37ca1c0e3a46",
-          "prompt": "Quick exploration: Read the first 100 lines and last 50 lines of semio/assets/semio/kit_metabolism.json to understand its structure, particularly how files and folders are represented. Also find the exact line numbers where \"files\" and \"folders\" arrays start.\n\nAlso check: What files exist inside the metabolism.zip? Check for any references to \"blob\" or \"base64\" anywhere in the codebase with a grep search.\n\nAlso read the semio/sqlite/schema.sql file completely.\n\nReturn the complete schema.sql content, the files/folders sections from kit_metabolism.json, and any blob/base64 references found.",
+          "prompt": "Quick exploration: Read the first 100 lines and last 50 lines of compose/assets/compose/kit_metabolism.json to understand its structure, particularly how files and folders are represented. Also find the exact line numbers where \"files\" and \"folders\" arrays start.\n\nAlso check: What files exist inside the metabolism.zip? Check for any references to \"blob\" or \"base64\" anywhere in the codebase with a grep search.\n\nAlso read the compose/sqlite/schema.sql file completely.\n\nReturn the complete schema.sql content, the files/folders sections from kit_metabolism.json, and any blob/base64 references found.",
           "cwd": "/workspaces/semio"
         },
         "response": {
@@ -58,7 +58,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.prompt.submitting",
         "parent": "",
-        "prompt": "Quick exploration: Read the first 100 lines and last 50 lines of semio/assets/semio/kit_metabolism.json to understand its structure, particularly how files and folders are represented. Also find the exact line numbers where \"files\" and \"folders\" arrays start.\n\nAlso check: What files exist inside the metabolism.zip? Check for any references to \"blob\" or \"base64\" anywhere in the codebase with a grep search.\n\nAlso read the semio/sqlite/schema.sql file completely.\n\nReturn the complete schema.sql content, the files/folders sections from kit_metabolism.json, and any blob/base64 references found.",
+        "prompt": "Quick exploration: Read the first 100 lines and last 50 lines of compose/assets/compose/kit_metabolism.json to understand its structure, particularly how files and folders are represented. Also find the exact line numbers where \"files\" and \"folders\" arrays start.\n\nAlso check: What files exist inside the metabolism.zip? Check for any references to \"blob\" or \"base64\" anywhere in the codebase with a grep search.\n\nAlso read the compose/sqlite/schema.sql file completely.\n\nReturn the complete schema.sql content, the files/folders sections from kit_metabolism.json, and any blob/base64 references found.",
         "second": "🎆26🌙03☀️08⏰00⌚54⏱️13",
         "session": "⚪3ea7696b84244772a76a37ca1c0e3a46"
       },
@@ -143,7 +143,7 @@
           "session_id": "3ea7696b-8424-4772-a76a-37ca1c0e3a46",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/sqlite/schema.sql",
+            "filePath": "/workspaces/semio/compose/sqlite/schema.sql",
             "startLine": 1,
             "endLine": 10000
           },
@@ -163,126 +163,126 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️attribute",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️attribute",
             "loc": 1
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️author",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️author",
             "loc": 11
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️benchmark",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️benchmark",
             "loc": 14
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️concept",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️concept",
             "loc": 10
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️connection",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️connection",
             "loc": 27
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️connector",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️connector",
             "loc": 20
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️design",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️design",
             "loc": 27
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️designauthor",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️designauthor",
             "loc": 9
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️designconcept",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️designconcept",
             "loc": 8
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️designprop",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️designprop",
             "loc": 10
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️file",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️file",
             "loc": 16
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️folder",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️folder",
             "loc": 12
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️grouppiece",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️grouppiece",
             "loc": 8
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️kit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️kit",
             "loc": 16
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️layer",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️layer",
             "loc": 12
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️model",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️model",
             "loc": 11
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️modeltag",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️modeltag",
             "loc": 8
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️piece",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️piece",
             "loc": 37
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️pieceprop",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️pieceprop",
             "loc": 18
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️port",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️port",
             "loc": 10
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️portcompatibility",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️portcompatibility",
             "loc": 8
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️prop",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️prop",
             "loc": 11
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️quality",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️quality",
             "loc": 20
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️semio",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️compose",
             "loc": 7
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️stat",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️stat",
             "loc": 14
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️tag",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️tag",
             "loc": 10
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️type",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️type",
             "loc": 22
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️typeauthor",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️typeauthor",
             "loc": 9
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️typeconcept",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️typeconcept",
             "loc": 8
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio🛂sqlite💻schema📌1📌10000"
+          "👤compose🛂sqlite💻schema📌1📌10000"
         ],
         "second": "🎆26🌙03☀️08⏰00⌚54⏱️30",
         "session": "⚪3ea7696b84244772a76a37ca1c0e3a46"
@@ -299,7 +299,7 @@
           "session_id": "3ea7696b-8424-4772-a76a-37ca1c0e3a46",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/assets/semio/kit_metabolism.json",
+            "filePath": "/workspaces/semio/compose/assets/compose/kit_metabolism.json",
             "startLine": 1,
             "endLine": 100
           },
@@ -320,7 +320,7 @@
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio🏪assets🗃️semio⚙️kitmetabolism📌1📌100"
+          "👤compose🏪assets🗃️compose⚙️kitmetabolism📌1📌100"
         ],
         "second": "🎆26🌙03☀️08⏰00⌚54⏱️30",
         "session": "⚪3ea7696b84244772a76a37ca1c0e3a46"
@@ -371,7 +371,7 @@
           "session_id": "3ea7696b-8424-4772-a76a-37ca1c0e3a46",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/sqlite/schema.sql",
+            "filePath": "/workspaces/semio/compose/sqlite/schema.sql",
             "startLine": 1,
             "endLine": 10000
           },
@@ -391,126 +391,126 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️attribute",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️attribute",
             "loc": 1
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️author",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️author",
             "loc": 11
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️benchmark",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️benchmark",
             "loc": 14
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️concept",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️concept",
             "loc": 10
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️connection",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️connection",
             "loc": 27
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️connector",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️connector",
             "loc": 20
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️design",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️design",
             "loc": 27
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️designauthor",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️designauthor",
             "loc": 9
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️designconcept",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️designconcept",
             "loc": 8
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️designprop",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️designprop",
             "loc": 10
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️file",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️file",
             "loc": 16
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️folder",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️folder",
             "loc": 12
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️grouppiece",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️grouppiece",
             "loc": 8
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️kit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️kit",
             "loc": 16
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️layer",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️layer",
             "loc": 12
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️model",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️model",
             "loc": 11
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️modeltag",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️modeltag",
             "loc": 8
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️piece",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️piece",
             "loc": 37
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️pieceprop",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️pieceprop",
             "loc": 18
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️port",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️port",
             "loc": 10
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️portcompatibility",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️portcompatibility",
             "loc": 8
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️prop",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️prop",
             "loc": 11
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️quality",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️quality",
             "loc": 20
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️semio",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️compose",
             "loc": 7
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️stat",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️stat",
             "loc": 14
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️tag",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️tag",
             "loc": 10
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️type",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️type",
             "loc": 22
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️typeauthor",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️typeauthor",
             "loc": 9
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️sqlite💻schema🛠️typeconcept",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️sqlite💻schema🛠️typeconcept",
             "loc": 8
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio🛂sqlite💻schema📌1📌10000"
+          "👤compose🛂sqlite💻schema📌1📌10000"
         ],
         "second": "🎆26🌙03☀️08⏰00⌚54⏱️48",
         "session": "⚪3ea7696b84244772a76a37ca1c0e3a46"
@@ -562,7 +562,7 @@
           "session_id": "3ea7696b-8424-4772-a76a-37ca1c0e3a46",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/assets/semio/kit_metabolism.json",
+            "filePath": "/workspaces/semio/compose/assets/compose/kit_metabolism.json",
             "startLine": 1,
             "endLine": 100
           },
@@ -583,7 +583,7 @@
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio🏪assets🗃️semio⚙️kitmetabolism📌1📌100"
+          "👤compose🏪assets🗃️compose⚙️kitmetabolism📌1📌100"
         ],
         "second": "🎆26🌙03☀️08⏰00⌚55⏱️19",
         "session": "⚪3ea7696b84244772a76a37ca1c0e3a46"
@@ -603,7 +603,7 @@
             "maxResults": 20,
             "isRegexp": true,
             "query": "\"files\"|\"folders\"",
-            "includePattern": "**/semio/assets/semio/kit_metabolism.json"
+            "includePattern": "**/compose/assets/compose/kit_metabolism.json"
           },
           "tool_use_id": "toolu_01RmUf9EeAseca68HPTKVVgY__vscode-1772913891718",
           "cwd": "/workspaces/semio"
@@ -638,7 +638,7 @@
           "tool_input": {
             "startLine": 1,
             "endLine": 5000,
-            "filePath": "/workspaces/semio/semio/assets/semio/kit_metabolism.json"
+            "filePath": "/workspaces/semio/compose/assets/compose/kit_metabolism.json"
           },
           "tool_use_id": "toolu_01CS4hnFRMGNNxCbQy9tMtpB__vscode-1772913891717",
           "cwd": "/workspaces/semio"
@@ -657,7 +657,7 @@
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio🏪assets🗃️semio⚙️kitmetabolism📌1📌5000"
+          "👤compose🏪assets🗃️compose⚙️kitmetabolism📌1📌5000"
         ],
         "second": "🎆26🌙03☀️08⏰00⌚55⏱️24",
         "session": "⚪3ea7696b84244772a76a37ca1c0e3a46"
@@ -677,7 +677,7 @@
             "maxResults": 20,
             "isRegexp": true,
             "query": "\"files\"|\"folders\"",
-            "includePattern": "**/semio/assets/semio/kit_metabolism.json"
+            "includePattern": "**/compose/assets/compose/kit_metabolism.json"
           },
           "tool_response": "",
           "tool_use_id": "toolu_01RmUf9EeAseca68HPTKVVgY__vscode-1772913891718",
@@ -712,7 +712,7 @@
           "tool_input": {
             "startLine": 1,
             "endLine": 5000,
-            "filePath": "/workspaces/semio/semio/assets/semio/kit_metabolism.json"
+            "filePath": "/workspaces/semio/compose/assets/compose/kit_metabolism.json"
           },
           "tool_response": "",
           "tool_use_id": "toolu_01CS4hnFRMGNNxCbQy9tMtpB__vscode-1772913891717",
@@ -731,7 +731,7 @@
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio🏪assets🗃️semio⚙️kitmetabolism📌1📌5000"
+          "👤compose🏪assets🗃️compose⚙️kitmetabolism📌1📌5000"
         ],
         "second": "🎆26🌙03☀️08⏰00⌚55⏱️57",
         "session": "⚪3ea7696b84244772a76a37ca1c0e3a46"
@@ -748,7 +748,7 @@
           "session_id": "3ea7696b-8424-4772-a76a-37ca1c0e3a46",
           "tool_name": "list_dir",
           "tool_input": {
-            "path": "/workspaces/semio/semio/assets/semio"
+            "path": "/workspaces/semio/compose/assets/compose"
           },
           "tool_use_id": "toolu_011Y5AP7fVjiw8HCzr6hgxT4__vscode-1772913891721",
           "cwd": "/workspaces/semio"
@@ -782,7 +782,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 292350,
-            "filePath": "/workspaces/semio/semio/assets/semio/kit_metabolism.json",
+            "filePath": "/workspaces/semio/compose/assets/compose/kit_metabolism.json",
             "startLine": 290055
           },
           "tool_use_id": "toolu_01LKeWdf7yHSarAD7hhyhW61__vscode-1772913891719",
@@ -802,7 +802,7 @@
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio🏪assets🗃️semio⚙️kitmetabolism📌290055📌292350"
+          "👤compose🏪assets🗃️compose⚙️kitmetabolism📌290055📌292350"
         ],
         "second": "🎆26🌙03☀️08⏰00⌚56⏱️04",
         "session": "⚪3ea7696b84244772a76a37ca1c0e3a46"
@@ -819,7 +819,7 @@
           "session_id": "3ea7696b-8424-4772-a76a-37ca1c0e3a46",
           "tool_name": "list_dir",
           "tool_input": {
-            "path": "/workspaces/semio/semio/assets/semio"
+            "path": "/workspaces/semio/compose/assets/compose"
           },
           "tool_response": "",
           "tool_use_id": "toolu_011Y5AP7fVjiw8HCzr6hgxT4__vscode-1772913891721",
@@ -882,7 +882,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 292350,
-            "filePath": "/workspaces/semio/semio/assets/semio/kit_metabolism.json",
+            "filePath": "/workspaces/semio/compose/assets/compose/kit_metabolism.json",
             "startLine": 290055
           },
           "tool_response": "",
@@ -902,7 +902,7 @@
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio🏪assets🗃️semio⚙️kitmetabolism📌290055📌292350"
+          "👤compose🏪assets🗃️compose⚙️kitmetabolism📌290055📌292350"
         ],
         "second": "🎆26🌙03☀️08⏰00⌚56⏱️56",
         "session": "⚪3ea7696b84244772a76a37ca1c0e3a46"
@@ -920,7 +920,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 292360,
-            "filePath": "/workspaces/semio/semio/assets/semio/kit_metabolism.json",
+            "filePath": "/workspaces/semio/compose/assets/compose/kit_metabolism.json",
             "startLine": 290055
           },
           "tool_response": "",
@@ -940,7 +940,7 @@
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio🏪assets🗃️semio⚙️kitmetabolism📌290055📌292360"
+          "👤compose🏪assets🗃️compose⚙️kitmetabolism📌290055📌292360"
         ],
         "second": "🎆26🌙03☀️08⏰00⌚56⏱️56",
         "session": "⚪3ea7696b84244772a76a37ca1c0e3a46"

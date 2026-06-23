@@ -21,22 +21,22 @@
 - **Action**: Searched for missing `version` fields in `package.json` files.
 - **Action**: Added `"version": "1.0.0"` to the following files:
   - [yak/package.json](yak/package.json)
-  - [go/semio/package.json](go/semio/package.json)
+  - [go/compose/package.json](go/compose/package.json)
   - [./repo/cli/package.json](./repo/cli/package.json)
   - [go/mcp/package.json](go/mcp/package.json)
-  - [net/Semio/package.json](net/Semio/package.json)
-  - [net/Semio.Grasshopper/package.json](net/Semio.Grasshopper/package.json)
+  - [net/Compose/package.json](net/Compose/package.json)
+  - [net/Compose.Grasshopper/package.json](net/Compose.Grasshopper/package.json)
   - [assets/logo/package.json](assets/logo/package.json)
   - [assets/icons/package.json](assets/icons/package.json)
   - [py/engine/package.json](py/engine/package.json)
   - [assets/images/package.json](assets/images/package.json)
   - [go/cli/package.json](go/cli/package.json)
 - **Action**: Deleted corrupted lockfiles:
-  - `d:\semio\package-lock.json`
-  - `d:\semio\js\vscode\package-lock.json`
+  - `d:\compose\package-lock.json`
+  - `d:\compose\js\vscode\package-lock.json`
 - **Correction**: Encountered `ERESOLVE` due to `@vitest/coverage-v8` version mismatch (V4 resolved instead of V3).
 - **Action**: Updated `@vitest/coverage-v8` to `^3.0.8` in:
-  - [js/semio/package.json](js/semio/package.json)
+  - [js/compose/package.json](js/compose/package.json)
   - [js/desktop/package.json](js/desktop/package.json)
 - **Verification**: Ran `npm install` successfully.
 

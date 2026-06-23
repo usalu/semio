@@ -2,10 +2,10 @@
   "ticket": "2026/05/12/PHASE-1-PIECE-CONNECTION-FIELD-READS",
   "scope": "Phase 1 — Piece, PiecesOperations, Connection only (field-only kit reads + PieceOperationInput / PiecesOperationInput mutations)",
   "schemaRefs": {
-    "pieceOperationInput": "semio/graphql/target.schema.graphql#PieceOperationInput",
-    "piecesOperationInput": "semio/graphql/target.schema.graphql#PiecesOperationInput",
-    "pieceType": "semio/graphql/target.schema.graphql#Piece",
-    "connectionType": "semio/graphql/target.schema.graphql#Connection"
+    "pieceOperationInput": "compose/graphql/target.schema.graphql#PieceOperationInput",
+    "piecesOperationInput": "compose/graphql/target.schema.graphql#PiecesOperationInput",
+    "pieceType": "compose/graphql/target.schema.graphql#Piece",
+    "connectionType": "compose/graphql/target.schema.graphql#Connection"
   },
   "js": {
     "regions": ["🧩Piece", "🪢PiecesOperations", "⛓️Connection"],
@@ -59,9 +59,9 @@
     ],
     "newExportedTypes": ["PieceBlueprintWire", "ConnectionSideWire"],
     "ancillaryFixForTsc": {
-      "file": "semio/js/index.ts",
+      "file": "compose/js/index.ts",
       "region": "🔘Port",
-      "note": "React already exposed usePortCode/usePortLabel/…; Port gained matching read* methods so `npx tsc -p semio/react` succeeds."
+      "note": "React already exposed usePortCode/usePortLabel/…; Port gained matching read* methods so `npx tsc -p compose/react` succeeds."
     }
   },
   "react": {
@@ -124,11 +124,11 @@
   },
   "verification": {
     "tsc": [
-      "npx tsc --noEmit -p semio/js/tsconfig.json",
-      "npx tsc --noEmit -p semio/react/tsconfig.json"
+      "npx tsc --noEmit -p compose/js/tsconfig.json",
+      "npx tsc --noEmit -p compose/react/tsconfig.json"
     ],
     "tscExitCode": 0,
-    "vitestReact": "semio/react — `npx vitest run` (1 test, passed)",
-    "embeddedJsTests": "semio/js — guarded by SEMIO_JS_RUN_EMBEDDED_TESTS=1; added Piece.readName + Connection.readConnected stub tests (not executed in default vitest run for index.ts)"
+    "vitestReact": "compose/react — `npx vitest run` (1 test, passed)",
+    "embeddedJsTests": "compose/js — guarded by COMPOSE_JS_RUN_EMBEDDED_TESTS=1; added Piece.readName + Connection.readConnected stub tests (not executed in default vitest run for index.ts)"
   }
 }

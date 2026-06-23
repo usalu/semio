@@ -9,7 +9,7 @@ goal: SKETCHPAD-IMPROVEMENTS
 Restyled detail panel layout to match reference screenshot. Modified Label (grid layout 96px+1fr, 8px gap, 24px height), TreeContent (3px padding), TreeSection (20px height, 6px gap, font-semibold), TreeItem/SortableTreeItem (6px gap), Stepper (100px fixed), Slider (22px height, 8px gap), SidePanel (10px padding), and migrated SingleConnectionFields/ConnectionsSectionForm to Slider showLabel. All 9 specification requirements met. Visual verification complete. Tests: 5 passed, 2 pre-existing E2E failures unrelated to changes.
 ## Changes
 
-### `/workspaces/semio/semio/js/sketchpad/elements.tsx`
+### `/workspaces/semio/compose/js/sketchpad/elements.tsx`
 - **Label component** (~line 843): Changed from flex layout to CSS grid with `gridTemplateColumns: "96px 1fr"`, `gap: "8px"`, `minHeight: "24px"`. Removed `px-tiny` padding from label. Added `h-[22px]` to label element.
 - **TreeContent component** (~line 3761): Changed `py-single` to inline `paddingTop: "3px", paddingBottom: "3px"` for tighter vertical spacing.
 - **TreeSection component** (~lines 3863, 3926): Changed `gap-single py-single` to `gap-[6px]`, added inline `height: "20px", marginBottom: "6px"`, added `font-semibold` to tree-label.
@@ -19,7 +19,7 @@ Restyled detail panel layout to match reference screenshot. Modified Label (grid
 - **Slider component** (~line 2471): Changed slider-row from `h-medium` to `h-[22px]`, `gap-x-single` to `gap-x-[8px]`.
 - **SidePanel content** (~line 5121): Changed `p-single` to `p-[10px]`.
 
-### `/workspaces/semio/semio/js/sketchpad/Design.tsx`
+### `/workspaces/semio/compose/js/sketchpad/Design.tsx`
 - **SingleConnectionFields component** (~lines 5730-5794): Replaced 6 instances of manual `<div className="flex flex-col gap-single"><label>...</label><Slider .../></div>` wrappers with `<Slider ... showLabel />` directly, aligning slider rows to the Label grid pattern.
 - **ConnectionsSectionForm component** (~lines 5870-5930): Applied same replacement for 6 bulk-edit slider rows (commonGap, commonShift, commonRise, commonRotation, commonTurn, commonTilt).
 

@@ -3,7 +3,7 @@
 ## Todos
 # Previously
 
-The Grasshopper components in `Semio.Grasshopper.cs` were missing several entity types (Folder, Tag, Concept, Port) and the Layer entity used outdated schema (Name instead of Path/Guid).
+The Grasshopper components in `Compose.Grasshopper.cs` were missing several entity types (Folder, Tag, Concept, Port) and the Layer entity used outdated schema (Name instead of Path/Guid).
 
 # Plan
 
@@ -16,7 +16,7 @@ The Grasshopper components in `Semio.Grasshopper.cs` were missing several entity
 
 # Changes
 
-## Semio.Grasshopper.cs
+## Compose.Grasshopper.cs
 
 ### New Entity Regions Added
 
@@ -37,4 +37,4 @@ The Grasshopper components in `Semio.Grasshopper.cs` were missing several entity
 ## Summary
 # Summary
 
-Fix Grasshopper entity components to match semio.ts schema
+Fix Grasshopper entity components to match compose.ts schema

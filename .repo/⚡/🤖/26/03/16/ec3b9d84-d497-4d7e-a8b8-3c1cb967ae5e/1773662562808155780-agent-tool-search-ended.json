@@ -14,7 +14,7 @@
       "session_id": "ec3b9d84-d497-4d7e-a8b8-3c1cb967ae5e",
       "tool_name": "file_search",
       "tool_input": {
-        "query": "**/semio/sketchpad/**/*.ts*",
+        "query": "**/compose/sketchpad/**/*.ts*",
         "maxResults": 30
       },
       "tool_response": "",

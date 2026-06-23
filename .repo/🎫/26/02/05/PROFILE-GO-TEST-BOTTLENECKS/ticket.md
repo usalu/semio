@@ -10,7 +10,7 @@ Profiled per-test runtimes in repo/cli, identified dominant bottlenecks (tree/ma
 
 ## Changes
 
-- Measured module-level test runtimes for `semio/go` and `repo/cli`.
+- Measured module-level test runtimes for `compose/go` and `repo/cli`.
 - Ran each `Test*` in `repo/cli` individually via compiled test binary and ranked by elapsed time.
 - Identified top bottlenecks:
   - `TestTreeCommands` ~33.0s
@@ -26,7 +26,7 @@ Profiled per-test runtimes in repo/cli, identified dominant bottlenecks (tree/ma
   - `TestPolicyBreachListCommand` ~9.1s
 - Confirmed isolated total across 70 tests is ~241.3s.
 - Confirmed a slow-only shard (top heavy tests) runs in ~184.5s.
-- Found `semio/go` tests fail quickly due missing fixtures (`../../assets/semio/*.json|*.zip`) in this workspace.
+- Found `compose/go` tests fail quickly due missing fixtures (`../../assets/compose/*.json|*.zip`) in this workspace.
 - Documented the execution strategy in `README.md` and `AGENTS.md`.
 
 ## Log
@@ -35,11 +35,11 @@ Profiled per-test runtimes in repo/cli, identified dominant bottlenecks (tree/ma
 - Opened ticket `2026/02/05/PROFILE-GO-TEST-BOTTLENECKS`.
 - Attempted ticket reopen on follow-up prompt; command returned `ticket is already open`.
 - Enumerated Go modules and test files.
-- Timed `go test ./...` in `semio/go` and `repo/cli`.
+- Timed `go test ./...` in `compose/go` and `repo/cli`.
 - Generated full test list with `go test -list .`.
 - Built test binary once with `go test -c`.
-- Executed each test individually with `/tmp/semio-test-prof/repo_go.test -test.run '^TestName$'`.
-- Sorted elapsed timings from `/tmp/semio-test-prof/per_test.tsv`.
+- Executed each test individually with `/tmp/compose-test-prof/repo_go.test -test.run '^TestName$'`.
+- Sorted elapsed timings from `/tmp/compose-test-prof/per_test.tsv`.
 - Ran a focused slow-test shard with `go test -run 'Test(...)' -count=1`.
 - Inspected slow test implementations in `repo/cli/main_test.go`.
 

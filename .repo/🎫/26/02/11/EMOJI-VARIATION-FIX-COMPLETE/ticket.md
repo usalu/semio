@@ -30,13 +30,13 @@ Complete emoji variation fix: emojiText preserves VS16 for text-default emojis, 
 4. **`TestFixtureBreachsByLanguage`**: Fixed clean file check to only assert on file-level breachs (line > 0), ignoring folder-level docs breachs.
 5. **`TestFixHeaderWithShebang`**: Already fixed (Logf for expected breachs, correct script emoji).
 
-### semio/assets/repo/some/folder/ (fixtures)
+### compose/assets/repo/some/folder/ (fixtures)
 
 - Restored all fixture files (file.cs, file.py, file.tsx, file_empty_region.tsx, file_fixable.tsx, file_fixable_expected.tsx, file_invalid.cs, file_invalid.go, file_invalid.tsx) to their original state after `fix` command had modified them.
 
 ## Log
 
-1. Found 7 cycling inline comment breachs in semio/js/sketchpad/\* files
+1. Found 7 cycling inline comment breachs in compose/js/sketchpad/\* files
 2. Root cause: `ScanComments` used `strings.HasPrefix(trimmed, "// #region")` which didn't match `//#region` (no space)
 3. Fixed by using `PolicySectionStartMatch`/`PolicySectionEndMatch` regex methods
 4. Fix command now converges to 0 on first run

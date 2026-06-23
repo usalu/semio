@@ -14,7 +14,7 @@
       "session_id": "2a39a043-95b0-4799-9962-b925b33477cf",
       "tool_name": "read_file",
       "tool_input": {
-        "filePath": "/workspaces/semio/semio/sketchpad/sketchpad/Home.tsx",
+        "filePath": "/workspaces/semio/compose/sketchpad/sketchpad/Home.tsx",
         "startLine": 620,
         "endLine": 670
       },

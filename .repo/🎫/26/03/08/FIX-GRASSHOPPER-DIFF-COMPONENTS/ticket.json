@@ -2,7 +2,7 @@
   "title": "Fix Grasshopper Diff Components",
   "emoji": "🔧",
   "status": "closed",
-  "description": "The python script didn't correctly modify Semio.Grasshopper.cs for Diff components. Need to patch them",
+  "description": "The python script didn't correctly modify Compose.Grasshopper.cs for Diff components. Need to patch them",
   "summary": "Properly patched Grasshopper components to include parameter definitions for Diffs",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/804"

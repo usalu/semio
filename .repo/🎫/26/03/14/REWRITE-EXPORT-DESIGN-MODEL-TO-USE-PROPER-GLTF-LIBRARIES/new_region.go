@@ -1,7 +1,7 @@
 // #region 🔖ExportDesignModel/Helpers
 
 // exportPlaneToGltfMatrix converts a Plane to a column-major 4x4 matrix for gltf.Node.Matrix.
-// [🏘️semio📚go💻semio🔖exportdesignmodel🛠️exportplanetogltfmatrix](repo://p/u/semio/b/l/go/f/semio.go/s/Export%20Design%20Model/d/i/exportPlaneToGltfMatrix)
+// [🏘️compose📚go💻compose🔖exportdesignmodel🛠️exportplanetogltfmatrix](repo://p/u/compose/b/l/go/f/compose.go/s/Export%20Design%20Model/d/i/exportPlaneToGltfMatrix)
 func exportPlaneToGltfMatrix(plane Plane) [16]float64 {
 	ox, oy, oz := plane.Origin.X, plane.Origin.Y, plane.Origin.Z
 	xx, xy, xz := plane.XAxis.X, plane.XAxis.Y, plane.XAxis.Z
@@ -34,7 +34,7 @@ func exportPlaneToGltfMatrix(plane Plane) [16]float64 {
 }
 
 // exportDenseToGltfMatrix converts a gonum mat.Dense (row-major) to column-major glTF matrix.
-// [🏘️semio📚go💻semio🔖exportdesignmodel🛠️exportdensetogltfmatrix](repo://p/u/semio/b/l/go/f/semio.go/s/Export%20Design%20Model/d/i/exportDenseToGltfMatrix)
+// [🏘️compose📚go💻compose🔖exportdesignmodel🛠️exportdensetogltfmatrix](repo://p/u/compose/b/l/go/f/compose.go/s/Export%20Design%20Model/d/i/exportDenseToGltfMatrix)
 func exportDenseToGltfMatrix(m *mat.Dense) [16]float64 {
 	return [16]float64{
 		m.At(0, 0), m.At(1, 0), m.At(2, 0), m.At(3, 0),
@@ -45,7 +45,7 @@ func exportDenseToGltfMatrix(m *mat.Dense) [16]float64 {
 }
 
 // exportDecodeBlobToBytes strips a data URI prefix and base64 decodes the blob content.
-// [🏘️semio📚go💻semio🔖exportdesignmodel🛠️exportdecodeblobtobytes](repo://p/u/semio/b/l/go/f/semio.go/s/Export%20Design%20Model/d/i/exportDecodeBlobToBytes)
+// [🏘️compose📚go💻compose🔖exportdesignmodel🛠️exportdecodeblobtobytes](repo://p/u/compose/b/l/go/f/compose.go/s/Export%20Design%20Model/d/i/exportDecodeBlobToBytes)
 func exportDecodeBlobToBytes(blob string) ([]byte, error) {
 	if idx := strings.Index(blob, ","); idx >= 0 {
 		blob = blob[idx+1:]
@@ -61,7 +61,7 @@ func exportDecodeBlobToBytes(blob string) ([]byte, error) {
 }
 
 // exportCreateBox generates a unit box placeholder mesh in the gltf document and returns the mesh index.
-// [🏘️semio📚go💻semio🔖exportdesignmodel🛠️exportcreatebox](repo://p/u/semio/b/l/go/f/semio.go/s/Export%20Design%20Model/d/i/exportCreateBox)
+// [🏘️compose📚go💻compose🔖exportdesignmodel🛠️exportcreatebox](repo://p/u/compose/b/l/go/f/compose.go/s/Export%20Design%20Model/d/i/exportCreateBox)
 func exportCreateBox(doc *gltf.Document) int {
 	positions := [][3]float32{
 		{-0.5, -0.5, -0.5}, {0.5, -0.5, -0.5}, {0.5, 0.5, -0.5}, {-0.5, 0.5, -0.5},
@@ -90,7 +90,7 @@ func exportCreateBox(doc *gltf.Document) int {
 
 // exportCopyMeshFromGLB decodes a GLB and copies the first mesh's geometry into the target document.
 // Returns the mesh index.
-// [🏘️semio📚go💻semio🔖exportdesignmodel🛠️exportcopymeshfromglb](repo://p/u/semio/b/l/go/f/semio.go/s/Export%20Design%20Model/d/i/exportCopyMeshFromGLB)
+// [🏘️compose📚go💻compose🔖exportdesignmodel🛠️exportcopymeshfromglb](repo://p/u/compose/b/l/go/f/compose.go/s/Export%20Design%20Model/d/i/exportCopyMeshFromGLB)
 func exportCopyMeshFromGLB(doc *gltf.Document, glbData []byte, meshName string) (int, error) {
 	srcDoc := new(gltf.Document)
 	if err := gltf.NewDecoder(bytes.NewReader(glbData)).Decode(srcDoc); err != nil {
@@ -147,7 +147,7 @@ func exportCopyMeshFromGLB(doc *gltf.Document, glbData []byte, meshName string) 
 }
 
 // exportFindModelForKind finds the best matching model for a type given tag filters.
-// [🏘️semio📚go💻semio🔖exportdesignmodel🛠️exportfindmodelforkind](repo://p/u/semio/b/l/go/f/semio.go/s/Export%20Design%20Model/d/i/exportFindModelForKind)
+// [🏘️compose📚go💻compose🔖exportdesignmodel🛠️exportfindmodelforkind](repo://p/u/compose/b/l/go/f/compose.go/s/Export%20Design%20Model/d/i/exportFindModelForKind)
 func exportFindModelForKind(typ *Type, tags []string, tagsDict map[string]*Tag) *Model {
 	if len(typ.Models) == 0 {
 		return nil
@@ -185,7 +185,7 @@ func exportFindModelForKind(typ *Type, tags []string, tagsDict map[string]*Tag) 
 // #endregion 🔖ExportDesignModel/Helpers
 
 // ExportDesignModel exports the 3D model of a design to GLB or glTF format.
-// [🏘️semio📚go💻semio🔖exportdesignmodel🛠️exportdesignmodel](repo://p/u/semio/b/l/go/f/semio.go/s/Export%20Design%20Model/d/i/ExportDesignModel)
+// [🏘️compose📚go💻compose🔖exportdesignmodel🛠️exportdesignmodel](repo://p/u/compose/b/l/go/f/compose.go/s/Export%20Design%20Model/d/i/ExportDesignModel)
 func ExportDesignModel(kit *Kit, designGuid string, format string, tags []string, options map[string]interface{}) ([]byte, error) {
 	if _, ok := ExportModelFormats[format]; !ok {
 		return nil, fmt.Errorf("unsupported format: %s", format)
@@ -323,7 +323,7 @@ func ExportDesignModel(kit *Kit, designGuid string, format string, tags []string
 
 	// #region 🔖ExportDesignModel/BuildGLTF
 	doc := gltf.NewDocument()
-	doc.Asset.Generator = "semio"
+	doc.Asset.Generator = "compose"
 
 	usedTypes := make(map[string]bool)
 	for _, piece := range design.Pieces {

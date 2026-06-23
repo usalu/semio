@@ -5,17 +5,17 @@ extension.ts(659,10): error TS7053: Element implicitly has an 'any' type because
   Property 'sectionsEmpty' does not exist on type '{ sectionsEmpty: string; sectionsNoActiveFile: string; sectionsRenamePrompt: string; sectionsCreateChildPrompt: string; sectionsDeleteConfirm: string; } | { sectionsRenamePrompt: string; sectionsCreateChildPrompt: string; sectionsDeleteConfirm: string; }'.
 extension.ts(761,57): error TS2366: Function lacks ending return statement and return type does not include 'undefined'.
 extension.ts(1302,46): error TS2304: Cannot find name 'rest'.
-../../semio/js/semio.ts(10727,21): error TS2345: Argument of type 'Float32Array<ArrayBufferLike>' is not assignable to parameter of type 'TypedArray | null'.
+../../compose/js/compose.ts(10727,21): error TS2345: Argument of type 'Float32Array<ArrayBufferLike>' is not assignable to parameter of type 'TypedArray | null'.
   Type 'Float32Array<ArrayBufferLike>' is not assignable to type 'Float32Array<ArrayBuffer>'.
     Type 'ArrayBufferLike' is not assignable to type 'ArrayBuffer'.
       Type 'SharedArrayBuffer' is not assignable to type 'ArrayBuffer'.
         Types of property '[Symbol.toStringTag]' are incompatible.
           Type '"SharedArrayBuffer"' is not assignable to type '"ArrayBuffer"'.
-../../semio/js/semio.ts(10739,23): error TS2345: Argument of type 'Uint16Array<ArrayBufferLike>' is not assignable to parameter of type 'TypedArray | null'.
+../../compose/js/compose.ts(10739,23): error TS2345: Argument of type 'Uint16Array<ArrayBufferLike>' is not assignable to parameter of type 'TypedArray | null'.
   Type 'Uint16Array<ArrayBufferLike>' is not assignable to type 'Uint16Array<ArrayBuffer>'.
     Type 'ArrayBufferLike' is not assignable to type 'ArrayBuffer'.
       Type 'SharedArrayBuffer' is not assignable to type 'ArrayBuffer'.
         Types of property '[Symbol.toStringTag]' are incompatible.
           Type '"SharedArrayBuffer"' is not assignable to type '"ArrayBuffer"'.
-../../semio/js/semio.ts(10995,20): error TS2345: Argument of type 'number[]' is not assignable to parameter of type 'mat4'.
+../../compose/js/compose.ts(10995,20): error TS2345: Argument of type 'number[]' is not assignable to parameter of type 'mat4'.
   Target requires 16 element(s) but source may have fewer.

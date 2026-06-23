@@ -2,7 +2,7 @@
   "title": "Kit Virtual File System UI",
   "emoji": "📁",
   "status": "closed",
-  "description": "Add unified FileSystemNode interface with computed parent/children/path across GraphQL golden schema, Rust store, and semio/js. Wire folder membership storage and createFolder/moveToFolder via existing kit operation mechanism.",
+  "description": "Add unified FileSystemNode interface with computed parent/children/path across GraphQL golden schema, Rust store, and compose/js. Wire folder membership storage and createFolder/moveToFolder via existing kit operation mechanism.",
   "summary": "Removed legacy sketchpad table/home command paths (toggleTableRowSelection, home table model builder, deprecated surface aliases). Home and kit apps use VirtualFileSystem only (kit window kind vfs). SketchpadShellController overrides selectedRows and runVirtualFileSystemCommand so home expand/selection stay in URL query state (expandedRowIds, selectedKitIds with kit: row ids). Dropped deprecated AppProps alias from platform renderer. E2E test names updated. All sketchpad (49), platform core (11), and platform renderer (19) tests pass.",
   "goal": "🎯r2602/🎯runningsketchpad",
   "plan": {

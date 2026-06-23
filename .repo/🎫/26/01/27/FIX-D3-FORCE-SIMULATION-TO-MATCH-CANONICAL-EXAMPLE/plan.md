@@ -50,4 +50,4 @@ Since React Flow provides its own drag handlers (not D3's drag behavior), we nee
    - Clear tracking ref
 
 ## Files to Change
-- `/workspaces/semio/js/semio/sketchpad/Kit.tsx` - Update drag handlers to match canonical pattern
+- `/workspaces/semio/js/compose/sketchpad/Kit.tsx` - Update drag handlers to match canonical pattern

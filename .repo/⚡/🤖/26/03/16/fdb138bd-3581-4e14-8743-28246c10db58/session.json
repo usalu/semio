@@ -1,6 +1,6 @@
 {
   "id": "fdb138bd-3581-4e14-8743-28246c10db58",
-  "uri": "semiorepo://session/fdb138bd-3581-4e14-8743-28246c10db58",
+  "uri": "composerepo://session/fdb138bd-3581-4e14-8743-28246c10db58",
   "client": "copilot-chat",
   "second": "2026-03-16T13:59:57Z",
   "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",

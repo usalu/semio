@@ -67,7 +67,7 @@
           "hook_event_name": "UserPromptSubmit",
           "session_id": "6ab29e42-64cc-4a23-858d-9bc2443f73c9",
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/6ab29e42-64cc-4a23-858d-9bc2443f73c9.jsonl",
-          "prompt": "The skill name 'roll-dice' should match the folder name 'semio-to-ifc'.",
+          "prompt": "The skill name 'roll-dice' should match the folder name 'compose-to-ifc'.",
           "cwd": "/workspaces/semio"
         }
       },
@@ -89,7 +89,7 @@
           "hook_event_name": "UserPromptSubmit",
           "session_id": "6ab29e42-64cc-4a23-858d-9bc2443f73c9",
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/6ab29e42-64cc-4a23-858d-9bc2443f73c9.jsonl",
-          "prompt": "The skill name 'roll-dice' should match the folder name 'semio-to-ifc'.",
+          "prompt": "The skill name 'roll-dice' should match the folder name 'compose-to-ifc'.",
           "cwd": "/workspaces/semio"
         }
       },

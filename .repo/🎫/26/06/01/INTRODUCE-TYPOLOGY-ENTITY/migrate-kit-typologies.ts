@@ -75,15 +75,15 @@ function walkJsonFiles(dir: string, out: string[] = []): string[] {
   for (const ent of readdirSync(dir, { withFileTypes: true })) {
     const p = join(dir, ent.name);
     if (ent.isDirectory()) walkJsonFiles(p, out);
-    else if (ent.name.endsWith(".semio.json")) out.push(p);
+    else if (ent.name.endsWith(".compose.json")) out.push(p);
   }
   return out;
 }
 
 const targets = [
-  ...walkJsonFiles(join(ROOT, "semio/fixtures")),
+  ...walkJsonFiles(join(ROOT, "compose/fixtures")),
 ];
-const metabolismAssets = join(ROOT, "semio/assets/semio/metabolism");
+const metabolismAssets = join(ROOT, "compose/assets/compose/metabolism");
 try {
   targets.push(...walkJsonFiles(metabolismAssets));
 } catch {

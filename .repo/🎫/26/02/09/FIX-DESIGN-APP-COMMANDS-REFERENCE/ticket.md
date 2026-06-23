@@ -9,11 +9,11 @@
 
 ## Changes
 
-- Updated `js/semio/sketchpad/Design.tsx` hotkey panel-toggle callback to invoke `togglePanel` from `useDesignAppTogglePanel()`.
+- Updated `js/compose/sketchpad/Design.tsx` hotkey panel-toggle callback to invoke `togglePanel` from `useDesignAppTogglePanel()`.
 - Updated `README.md` under `### Sketchpad` / `#### Sketchpad toolbar tooltree` with the direct Design panel-hotkey action binding requirement.
 - Updated `AGENTS.md`:
   - `# Software Requirements Specification` → `## UI/UX` → `#### Design Editor` with panel-hotkey command-container constraint.
-  - `# Codebase` with `#### Design app panel hotkeys` implementation note for `js/semio/sketchpad/Design.tsx`.
+  - `# Codebase` with `#### Design app panel hotkeys` implementation note for `js/compose/sketchpad/Design.tsx`.
 
 ## Log
 
@@ -22,8 +22,8 @@
 - Confirmed `useDesignAppTogglePanel()` already provides `togglePanel` in the same component scope.
 - Rewired callback to call `togglePanel?.(panelKey)` and updated `useCallback` dependency list.
 - Attempted targeted Playwright run via:
-  - `pnpm -C js/semio test:e2e playwright/sketchpad/toolbar.spec.ts`
-  - `pnpm -C js/semio exec playwright test playwright/sketchpad/toolbar.spec.ts`
+  - `pnpm -C js/compose test:e2e playwright/sketchpad/toolbar.spec.ts`
+  - `pnpm -C js/compose exec playwright test playwright/sketchpad/toolbar.spec.ts`
 - Verification is currently blocked because `playwright` executable is unavailable in this environment.
 
 ## Summary

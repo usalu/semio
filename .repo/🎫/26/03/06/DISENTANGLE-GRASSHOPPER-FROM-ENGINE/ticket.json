@@ -2,7 +2,7 @@
   "title": "Disentangle Grasshopper From Engine",
   "emoji": "🏭",
   "status": "closed",
-  "description": "Refactor Semio.Grasshopper to be a thin UI layer. Move CRUD operations to Semio.cs with direct SQLite kit manipulation using diff-based operations matching semio.ts patterns. Remove engine HTTP dependency from Grasshopper. Implement KitSqlite class in Semio.cs for local static SQLite kit operations.",
+  "description": "Refactor Compose.Grasshopper to be a thin UI layer. Move CRUD operations to Compose.cs with direct SQLite kit manipulation using diff-based operations matching compose.ts patterns. Remove engine HTTP dependency from Grasshopper. Implement KitSqlite class in Compose.cs for local static SQLite kit operations.",
   "summary": "Fixed remaining KitSqlite issues: Type.IsAbstract null default false for NOT NULL column, Piece.IsHidden/IsLocked null default false, Design.IsAbstract/CanScale/CanMirror nullable DBNull handling, disabled FK enforcement during SaveKit due to schema FK mismatch on attribute.connector_guid. All 11 tests pass including new Sqlite roundtrip test.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/789"

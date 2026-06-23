@@ -38,12 +38,12 @@ const frameworkPlaygroundReactDir = resolve(repoRootPath, "framework/product/pla
 const puzzle2dReactDir = resolve(repoRootPath, "puzzle/2d/react");
 const puzzle3dReactDir = resolve(repoRootPath, "puzzle/3d/react");
 const puzzle5dReactDir = resolve(repoRootPath, "puzzle/5d/react");
-const semioJsDir = resolve(repoRootPath, "semio/client/lib/js");
-const semioRsWasmEntryPath = resolve(repoRootPath, "semio/client/lib/rs/pkg/semio.js");
-const semioAssetsDir = resolve(repoRootPath, "semio/asset");
-const semioFixturesDir = resolve(repoRootPath, "semio/fixture");
+const composeJsDir = resolve(repoRootPath, "compose/client/lib/js");
+const composeRsWasmEntryPath = resolve(repoRootPath, "compose/client/lib/rs/pkg/compose.js");
+const composeAssetsDir = resolve(repoRootPath, "compose/asset");
+const composeFixturesDir = resolve(repoRootPath, "compose/fixture");
 const puzzleAssetsDir = resolve(repoRootPath, "puzzle/asset");
-const semioAlgorithmsEntryPath = resolve(repoRootPath, "semio/dev/algorithm/index.ts");
+const composeAlgorithmsEntryPath = resolve(repoRootPath, "compose/dev/algorithm/index.ts");
 const uiAssetsRootPath = resolve(repoRootPath, "ui/asset");
 
 function toVitePath(value: string): string {
@@ -64,7 +64,7 @@ function storybookScopeMatches(prefix: string): boolean {
 	return storybookScope === prefix || storybookScope.startsWith(`${prefix}/`);
 }
 
-/** @emoji 🎯 Active storybook slice for ui / puzzle / semio stacks. */
+/** @emoji 🎯 Active storybook slice for ui / puzzle / compose stacks. */
 function storybookSliceActive(prefix: string): boolean {
 	if (storybookScope) return storybookScopeMatches(prefix);
 	if (productionSliceBuild) return productionStorySlices.includes(prefix);
@@ -83,7 +83,7 @@ function buildStoryGlobs(): string[] {
 
 const loadUiStack = storybookSliceActive("ui");
 const loadPuzzleStack = storybookSliceActive("puzzle");
-const loadSemioStack = storybookSliceActive("semio");
+const loadComposeStack = storybookSliceActive("compose");
 
 function buildStorybookAliases(): Record<string, string> {
 	const alias: Record<string, string> = {};
@@ -100,15 +100,15 @@ function buildStorybookAliases(): Record<string, string> {
 		alias["@elements/ui/globals.css"] = toVitePath(resolve(uiReactDir, "globals.css"));
 		alias["@coda/desktop/renderer"] = toVitePath(resolve(repoRootPath, "coda/client/ui/desktop/renderer.tsx"));
 	}
-	if (loadSemioStack) {
-		alias["@semio/ui"] = toVitePath(uiReactDir);
-		alias["@semio/ui/globals.css"] = toVitePath(resolve(uiReactDir, "globals.css"));
-		alias["@semio/react"] = toVitePath(semioJsDir);
-		alias["@semio/js"] = toVitePath(semioJsDir);
-		alias["@semio/rs-wasm"] = toVitePath(semioRsWasmEntryPath);
-		alias["@semio/asset"] = toVitePath(semioAssetsDir);
-		alias["@semio/fixture"] = toVitePath(semioFixturesDir);
-		alias["@semio/algorithm"] = toVitePath(semioAlgorithmsEntryPath);
+	if (loadComposeStack) {
+		alias["@compose/ui"] = toVitePath(uiReactDir);
+		alias["@compose/ui/globals.css"] = toVitePath(resolve(uiReactDir, "globals.css"));
+		alias["@compose/react"] = toVitePath(composeJsDir);
+		alias["@compose/js"] = toVitePath(composeJsDir);
+		alias["@compose/rs-wasm"] = toVitePath(composeRsWasmEntryPath);
+		alias["@compose/asset"] = toVitePath(composeAssetsDir);
+		alias["@compose/fixture"] = toVitePath(composeFixturesDir);
+		alias["@compose/algorithm"] = toVitePath(composeAlgorithmsEntryPath);
 		alias["@ui/react"] = toVitePath(uiReactDir);
 		alias["@ui/styling"] = toVitePath(uiStylingDir);
 	}
@@ -117,10 +117,10 @@ function buildStorybookAliases(): Record<string, string> {
 
 function buildScopeWatchIgnores(): string[] {
 	if (!storybookScope) return [];
-	if ((loadUiStack || loadPuzzleStack) && !loadSemioStack) {
-		return ["**/semio/**", "**/coda/**", "**/cad/**", "**/reuse/**", "**/mit-bestand/**"];
+	if ((loadUiStack || loadPuzzleStack) && !loadComposeStack) {
+		return ["**/compose/**", "**/coda/**", "**/cad/**", "**/reuse/**", "**/mit-bestand/**"];
 	}
-	if (loadSemioStack && !loadUiStack && !loadPuzzleStack) {
+	if (loadComposeStack && !loadUiStack && !loadPuzzleStack) {
 		return ["**/coda/**", "**/cad/**", "**/reuse/**", "**/mit-bestand/**"];
 	}
 	return [];
@@ -234,11 +234,11 @@ const config: StorybookConfig = {
 			"@puzzle/2d/react",
 			"@infinite/cavas/react-renderer",
 		]);
-		if (loadSemioStack) {
-			optimizeExclude.add("@semio/ui");
-			optimizeExclude.add("@semio/react");
-			optimizeExclude.add("@semio/js");
-			optimizeExclude.add("@semio/asset");
+		if (loadComposeStack) {
+			optimizeExclude.add("@compose/ui");
+			optimizeExclude.add("@compose/react");
+			optimizeExclude.add("@compose/js");
+			optimizeExclude.add("@compose/asset");
 		}
 		config.optimizeDeps.exclude = Array.from(optimizeExclude);
 		config.optimizeDeps.esbuildOptions = {
@@ -255,7 +255,7 @@ const config: StorybookConfig = {
 				__STORYBOOK_SCOPE__: JSON.stringify(storybookScope),
 				__STORYBOOK_LOAD_UI__: JSON.stringify(loadUiStack),
 				__STORYBOOK_LOAD_PUZZLE__: JSON.stringify(loadPuzzleStack),
-				__STORYBOOK_LOAD_SEMIO__: JSON.stringify(loadSemioStack),
+				__STORYBOOK_LOAD_COMPOSE__: JSON.stringify(loadComposeStack),
 			};
 		} else {
 			config.mode = "production";
@@ -265,7 +265,7 @@ const config: StorybookConfig = {
 				__STORYBOOK_SCOPE__: JSON.stringify(storybookScope),
 				__STORYBOOK_LOAD_UI__: JSON.stringify(loadUiStack),
 				__STORYBOOK_LOAD_PUZZLE__: JSON.stringify(loadPuzzleStack),
-				__STORYBOOK_LOAD_SEMIO__: JSON.stringify(loadSemioStack),
+				__STORYBOOK_LOAD_COMPOSE__: JSON.stringify(loadComposeStack),
 			};
 		}
 		config.worker = {

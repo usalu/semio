@@ -16,7 +16,7 @@
       "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2d7f15b6-4829-42d4-ae84-ad73be6629f5.jsonl",
       "tool_name": "run_in_terminal",
       "tool_input": {
-        "command": "cd /workspaces/semio/semio/sketchpad \u0026\u0026 npx playwright test --grep \"Design\" --timeout 120000 \u0026\u003e/tmp/design-test2.log; echo \"EXIT: $?\" \u003e\u003e /tmp/design-test2.log",
+        "command": "cd /workspaces/semio/compose/sketchpad \u0026\u0026 npx playwright test --grep \"Design\" --timeout 120000 \u0026\u003e/tmp/design-test2.log; echo \"EXIT: $?\" \u003e\u003e /tmp/design-test2.log",
         "explanation": "Run the Design test with y-stepper fix",
         "goal": "Verify y-stepper fix",
         "isBackground": true,

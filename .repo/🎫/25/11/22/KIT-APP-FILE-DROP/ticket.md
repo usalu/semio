@@ -7,7 +7,7 @@
 
 When a zip file is dropped onto the kit app, we need to:
 
-1. Check if it contains a `.semio` folder (indicating it's a kit)
+1. Check if it contains a `.compose` folder (indicating it's a kit)
 2. If it's a kit: Import the entire kit
 3. If it's not a kit: Import just the files into the current kit
 
@@ -15,8 +15,8 @@ When a zip file is dropped onto the kit app, we need to:
 
 ### 2.1. Current State
 
-- Kit app exists in `js/semio/sketchpad/apps/kit/App.tsx`
-- Kit import functionality exists via `semio.kit.import` command
+- Kit app exists in `js/compose/sketchpad/apps/kit/App.tsx`
+- Kit import functionality exists via `compose.kit.import` command
 - File import functionality exists via file operations
 - Need to add drop zone handling to kit app canvas
 
@@ -28,46 +28,46 @@ When a zip file is dropped onto the kit app, we need to:
    - Extract and inspect zip contents
 
 2. **Inspect zip contents** ✅
-   - Check for `.semio` folder in root
+   - Check for `.compose` folder in root
    - Determine if it's a kit or just files
 
 3. **Execute appropriate import** ✅
-   - If `.semio` folder exists: Call `semio.kit.import` with the kit data
-   - If no `.semio` folder: Call file import commands for individual files
+   - If `.compose` folder exists: Call `compose.kit.import` with the kit data
+   - If no `.compose` folder: Call file import commands for individual files
 
 ## 3. Implementation Summary
 
 ### 3.1. Changes Made
 
-1. **Added JSZip import** (`js/semio/sketchpad/apps/kit/App.tsx`)
+1. **Added JSZip import** (`js/compose/sketchpad/apps/kit/App.tsx`)
    - Imported JSZip library for zip file handling
 
-2. **Created KitDropZone component** (`js/semio/sketchpad/apps/kit/App.tsx`)
+2. **Created KitDropZone component** (`js/compose/sketchpad/apps/kit/App.tsx`)
    - Handles drag over, drag leave, and drop events
    - Detects when zip files are being dragged
    - Shows visual feedback during drag
-   - Inspects dropped zip files for `.semio/kit.db`
+   - Inspects dropped zip files for `.compose/kit.db`
    - Routes to appropriate import logic based on contents
 
-3. **Wrapped App canvas with KitDropZone** (`js/semio/sketchpad/apps/kit/App.tsx`)
+3. **Wrapped App canvas with KitDropZone** (`js/compose/sketchpad/apps/kit/App.tsx`)
    - All kit app content is now wrapped in the drop zone
 
-4. **Added i18n translations** (`js/semio/sketchpad/locales/en.json`, `js/semio/sketchpad/locales/de.json`)
-   - `semio.sketchpad.app.kit.dropzone.label`
-   - `semio.sketchpad.app.kit.dropzone.description`
+4. **Added i18n translations** (`js/compose/sketchpad/locales/en.json`, `js/compose/sketchpad/locales/de.json`)
+   - `compose.sketchpad.app.kit.dropzone.label`
+   - `compose.sketchpad.app.kit.dropzone.description`
 
 ### 3.2. How It Works
 
 1. User drags a `.zip` file over the kit app
 2. Drop zone activates and shows visual feedback
 3. User drops the file
-4. System reads the zip file and checks for `.semio/kit.db`
-5. **If kit detected** (has `.semio/kit.db`):
-   - Calls `semio.kit.import` command with the zip's ArrayBuffer
+4. System reads the zip file and checks for `.compose/kit.db`
+5. **If kit detected** (has `.compose/kit.db`):
+   - Calls `compose.kit.import` command with the zip's ArrayBuffer
    - Entire kit is imported (types, designs, files, etc.)
-6. **If not a kit** (no `.semio/kit.db`):
+6. **If not a kit** (no `.compose/kit.db`):
    - Extracts all files from the zip
-   - Calls `semio.kit.addFile` for each file
+   - Calls `compose.kit.addFile` for each file
    - Files are added to the current kit
 
 ### 3.3. Visual Feedback
@@ -77,19 +77,19 @@ When dragging a zip file over the kit app:
 - Overlay appears with semi-transparent background
 - Document icon displayed
 - Label: "Drop zip file to import"
-- Description: "Kits with .semio folder will be imported, others will be added as files"
+- Description: "Kits with .compose folder will be imported, others will be added as files"
 
 ## 4. Files Modified
 
-1. ✅ `js/semio/sketchpad/apps/kit/App.tsx`
+1. ✅ `js/compose/sketchpad/apps/kit/App.tsx`
    - Added JSZip import
    - Added KitDropZone component
    - Wrapped canvas with drop zone
 
-2. ✅ `js/semio/sketchpad/locales/en.json`
+2. ✅ `js/compose/sketchpad/locales/en.json`
    - Added dropzone labels and descriptions
 
-3. ✅ `js/semio/sketchpad/locales/de.json`
+3. ✅ `js/compose/sketchpad/locales/de.json`
    - Added German translations for dropzone
 
 ## 5. Testing Notes
@@ -97,9 +97,9 @@ When dragging a zip file over the kit app:
 To test this feature:
 
 1. Navigate to a kit in the kit app
-2. Drag a `.semio.zip` kit file (with `.semio` folder) onto the canvas
+2. Drag a `.compose.zip` kit file (with `.compose` folder) onto the canvas
    - Should import the entire kit
-3. Drag a regular `.zip` file (without `.semio` folder) onto the canvas
+3. Drag a regular `.zip` file (without `.compose` folder) onto the canvas
    - Should add all files to the current kit
 4. Drag non-zip files
    - Should not trigger the drop zone

@@ -22,7 +22,7 @@
           "timestamp": "2026-03-20T22:48:57.31627747Z",
           "execution_id": "f42755d8-a170-4d9d-8645-fc115f9eeb3f",
           "tool_info": {
-            "user_prompt": "semio vscode launch json dev doesnt work"
+            "user_prompt": "compose vscode launch json dev doesnt work"
           }
         }
       },
@@ -176,7 +176,7 @@
           "timestamp": "2026-03-20T22:49:04.175762279Z",
           "execution_id": "f42755d8-a170-4d9d-8645-fc115f9eeb3f",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/vscode/package.json"
+            "file_path": "/workspaces/semio/compose/vscode/package.json"
           }
         }
       },
@@ -198,7 +198,7 @@
           "timestamp": "2026-03-20T22:49:04.248723999Z",
           "execution_id": "f42755d8-a170-4d9d-8645-fc115f9eeb3f",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/vscode/README.md"
+            "file_path": "/workspaces/semio/compose/vscode/README.md"
           }
         }
       },
@@ -220,7 +220,7 @@
           "timestamp": "2026-03-20T22:49:04.273461995Z",
           "execution_id": "f42755d8-a170-4d9d-8645-fc115f9eeb3f",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/vscode/package.json"
+            "file_path": "/workspaces/semio/compose/vscode/package.json"
           }
         }
       },
@@ -242,7 +242,7 @@
           "timestamp": "2026-03-20T22:49:04.358892014Z",
           "execution_id": "f42755d8-a170-4d9d-8645-fc115f9eeb3f",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/vscode/README.md"
+            "file_path": "/workspaces/semio/compose/vscode/README.md"
           }
         }
       },
@@ -377,7 +377,7 @@
           "timestamp": "2026-03-20T22:49:12.190794292Z",
           "execution_id": "f42755d8-a170-4d9d-8645-fc115f9eeb3f",
           "tool_info": {
-            "command_line": "npx nx show project @semio/vscode",
+            "command_line": "npx nx show project @compose/vscode",
             "cwd": "/workspaces/semio"
           }
         }

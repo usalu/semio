@@ -1,7 +1,7 @@
 """Move kit_store_comprehensive_e2e from inside worker to crate root after wasm_bridge."""
 from pathlib import Path
 
-lib = Path(r"c:\git\semio\semio\client\lib\rs\lib.rs")
+lib = Path(r"c:\git\compose\compose\client\lib\rs\lib.rs")
 text = lib.read_text(encoding="utf-8")
 start = text.index("kit_store_comprehensive_e2e")
 start = text.rindex("//#region", 0, start)

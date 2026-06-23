@@ -4,7 +4,7 @@
 # Plan: Move Dev Dependencies to devDependencies
 
 ## Objective
-Move development-only packages from `dependencies` to `devDependencies` in `js/semio/package.json`.
+Move development-only packages from `dependencies` to `devDependencies` in `js/compose/package.json`.
 
 ## Packages to Move
 The following packages are development-only and should be in `devDependencies`:
@@ -36,7 +36,7 @@ The following packages are development-only and should be in `devDependencies`:
 
 ### Task: Move dev dependencies to devDependencies
 
-Analyzed `js/semio/package.json` and identified 4 packages in `dependencies` that should be in `devDependencies`:
+Analyzed `js/compose/package.json` and identified 4 packages in `dependencies` that should be in `devDependencies`:
 
 1. **Type definitions** (only needed for TypeScript compilation):
    - `@types/d3-force`: "^3.0.10"
@@ -55,13 +55,13 @@ Analyzed `js/semio/package.json` and identified 4 packages in `dependencies` tha
    - `postcss-nesting` placed after `postcss-load-config`
 
 ### Result
-- File: `js/semio/package.json` updated successfully
+- File: `js/compose/package.json` updated successfully
 - All 4 dev dependencies moved to their correct section
 
 ## Summary
 # Summary
 
-Moved 4 development-only packages from `dependencies` to `devDependencies` in `js/semio/package.json`:
+Moved 4 development-only packages from `dependencies` to `devDependencies` in `js/compose/package.json`:
 
 - `@types/d3-force` - TypeScript type definitions
 - `@types/dagre` - TypeScript type definitions

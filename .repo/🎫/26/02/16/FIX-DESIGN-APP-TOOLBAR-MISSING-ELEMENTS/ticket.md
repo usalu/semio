@@ -1,5 +1,5 @@
 ---
-goal: SEMIO-JS-SKETCHPAD
+goal: COMPOSE-JS-SKETCHPAD
 ---
 
 # Ticket

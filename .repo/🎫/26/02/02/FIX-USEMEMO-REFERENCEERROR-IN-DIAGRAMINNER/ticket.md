@@ -5,7 +5,7 @@
 - [x] Audit sketchpad app files
 
 ## Changes
-- Modified [js/semio/sketchpad/elements.tsx](js/semio/sketchpad/elements.tsx) to prefix `useMemo` with `React.`.
+- Modified [js/compose/sketchpad/elements.tsx](js/compose/sketchpad/elements.tsx) to prefix `useMemo` with `React.`.
 
 ## Log
 - Identified missing `React.` prefix for `useMemo` in `elements.tsx`.

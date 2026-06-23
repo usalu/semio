@@ -5,7 +5,7 @@
   "second": "2026-03-30T12:47:01Z",
   "checkpoint": "226f93bc17a158819095dcb4dc8730ade866f849",
   "contributor": "unknown",
-  "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl",
+  "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl",
   "events": [
     {
       "event": {
@@ -15,15 +15,15 @@
         "kind": "agent.file.read.starting",
         "second": "2026-03-30T12:47:01Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
           "conversation_id": "eba0c856-1297-471c-9af7-2ee0e818329c",
           "generation_id": "09b85c15-d03c-43e6-bdc3-ae7821612187",
           "model": "default",
-          "content": "// #region 🔖Header\n// 💻 semio/algorithms/.storybook/stories/Move.stories.tsx\n// Specs: Uses the AlgorithmApp shell with VEC_INPUT, PIECES_SELECTION_INPUT, DESIGN_DIFF_OUTPUT, DESIGN_OUTPUT windows.\n// Summary: Move story using nativeFlattenDesign with the Storybook language toolbar.\n// 2026 Ueli Saluz \u003cueli@semio-tech.com\u003e\n// #endregion 🔖Header\n\nimport type { DesignChange } from \"@semio/js\";\nimport { applyDesignDiff } from \"@semio/js\";\nimport type { Meta, StoryObj } from \"@storybook/react\";\nimport * as React from \"react\";\n\nimport { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef } from \"../../index\";\nimport { nativeFlattenDesign, type NativeAlgorithmLanguage } from \"../../nativeAlgorithmAdapter\";\nimport { useAlgorithmLanguage } from \"../withLanguage\";\n\nimport metabolismKit from \"../../../assets/semio/metabolism.kit.semio.json\";\n\nconst nakaginCapsuleTowerDesignGuid = \"9a890dd4-0a9c-48ac-920a-9e62666465ef\";\nconst rawDesign = (metabolismKit.designs ?? []).find((d: any) =\u003e d.guid === nakaginCapsuleTowerDesignGuid) as any;\n\nconst WINDOWS: AlgorithmWindowDef[] = [\n  { id: \"move-vec\", kind: WindowKind.VEC_INPUT, label: \"Vec\" },\n  { id: \"move-input\", kind: WindowKind.PIECES_SELECTION_INPUT, label: \"Input\" },\n  { id: \"move-diff\", kind: WindowKind.DESIGN_DIFF_OUTPUT, label: \"Diff\" },\n  { id: \"move-output\", kind: WindowKind.SCENE, label: \"Output\" },\n];\n\nfunction MoveFrame() {\n  const language = useAlgorithmLanguage() as NativeAlgorithmLanguage;\n  const kit = metabolismKit as any;\n  const [flattenChange, setFlattenChange] = React.useState\u003cDesignChange | null\u003e(null);\n  const [baseDesign, setBaseDesign] = React.useState\u003cany | null\u003e(null);\n  const [selectedPieceGuids, setSelectedPieceGuids] = React.useState\u003cstring[]\u003e([]);\n  const [vec, setVec] = React.useState({ u: 1, v: -2 });\n\n  React.useEffect(() =\u003e {\n    let cancelled = false;\n    void (async () =\u003e {\n      const fc = await nativeFlattenDesign(kit, rawDesign.guid, language);\n      if (cancelled) return;\n      setFlattenChange(fc);\n      const bd = applyDesignDiff(rawDesign, fc.forward) as any;\n      setBaseDesign(bd);\n      setSelectedPieceGuids((bd?.pieces ?? []).slice(0, 3).map((piece: any) =\u003e piece.guid));\n    })();\n    return () =\u003e {\n      cancelled = true;\n    };\n  }, [kit, language]);\n\n  const designDiff = React.useMemo(() =\u003e (selectedPieceGuids.length \u003e 0 ? { pieces: { updated: selectedPieceGuids.map((guid) =\u003e ({ piece: { guid }, diff: { center: { ...vec } } })) } } : undefined), [selectedPieceGuids, vec]);\n\n  const outputDesign = React.useMemo(() =\u003e (designDiff \u0026\u0026 baseDesign ? applyDesignDiff(baseDesign, designDiff) : (baseDesign ?? rawDesign)), [designDiff, baseDesign]);\n\n  const context: AlgorithmContextValue = React.useMemo(\n    () =\u003e ({\n      kit,\n      design: baseDesign ?? rawDesign,\n      vec,\n      onVecChange: setVec,\n      vecMin: { u: -10, v: -10 },\n      vecMax: { u: 10, v: 10 },\n      selectedPieceGuids,\n      onSelectedPieceGuidsChange: setSelectedPieceGuids,\n      designDiff,\n      outputDesign,\n      error: !flattenChange || !baseDesign ? `Loading move preview (${language})…` : selectedPieceGuids.length === 0 ? \"Select at least one piece to move.\" : undefined,\n    }),\n    [kit, baseDesign, selectedPieceGuids, vec, designDiff, outputDesign, flattenChange, language],\n  );\n\n  return \u003cAlgorithmApp id=\"move\" label=\"Move\" windows={WINDOWS} context={context} className=\"h-full w-full\" /\u003e;\n}\n\nconst meta = {\n  title: \"semio-algorithms/Move\",\n  parameters: { layout: \"fullscreen\" },\n  tags: [\"autodocs\"],\n} satisfies Meta;\n\nexport default meta;\n\ntype Story = StoryObj\u003ctypeof meta\u003e;\n\nexport const Default: Story = { render: () =\u003e \u003cMoveFrame /\u003e };\n",
-          "file_path": "/workspaces/semio/semio/algorithms/.storybook/stories/Move.stories.tsx",
+          "content": "// #region 🔖Header\n// 💻 compose/algorithms/.storybook/stories/Move.stories.tsx\n// Specs: Uses the AlgorithmApp shell with VEC_INPUT, PIECES_SELECTION_INPUT, DESIGN_DIFF_OUTPUT, DESIGN_OUTPUT windows.\n// Summary: Move story using nativeFlattenDesign with the Storybook language toolbar.\n// 2026 Ueli Saluz \u003cueli@semio-tech.com\u003e\n// #endregion 🔖Header\n\nimport type { DesignChange } from \"@compose/js\";\nimport { applyDesignDiff } from \"@compose/js\";\nimport type { Meta, StoryObj } from \"@storybook/react\";\nimport * as React from \"react\";\n\nimport { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef } from \"../../index\";\nimport { nativeFlattenDesign, type NativeAlgorithmLanguage } from \"../../nativeAlgorithmAdapter\";\nimport { useAlgorithmLanguage } from \"../withLanguage\";\n\nimport metabolismKit from \"../../../assets/compose/metabolism.kit.compose.json\";\n\nconst nakaginCapsuleTowerDesignGuid = \"9a890dd4-0a9c-48ac-920a-9e62666465ef\";\nconst rawDesign = (metabolismKit.designs ?? []).find((d: any) =\u003e d.guid === nakaginCapsuleTowerDesignGuid) as any;\n\nconst WINDOWS: AlgorithmWindowDef[] = [\n  { id: \"move-vec\", kind: WindowKind.VEC_INPUT, label: \"Vec\" },\n  { id: \"move-input\", kind: WindowKind.PIECES_SELECTION_INPUT, label: \"Input\" },\n  { id: \"move-diff\", kind: WindowKind.DESIGN_DIFF_OUTPUT, label: \"Diff\" },\n  { id: \"move-output\", kind: WindowKind.SCENE, label: \"Output\" },\n];\n\nfunction MoveFrame() {\n  const language = useAlgorithmLanguage() as NativeAlgorithmLanguage;\n  const kit = metabolismKit as any;\n  const [flattenChange, setFlattenChange] = React.useState\u003cDesignChange | null\u003e(null);\n  const [baseDesign, setBaseDesign] = React.useState\u003cany | null\u003e(null);\n  const [selectedPieceGuids, setSelectedPieceGuids] = React.useState\u003cstring[]\u003e([]);\n  const [vec, setVec] = React.useState({ u: 1, v: -2 });\n\n  React.useEffect(() =\u003e {\n    let cancelled = false;\n    void (async () =\u003e {\n      const fc = await nativeFlattenDesign(kit, rawDesign.guid, language);\n      if (cancelled) return;\n      setFlattenChange(fc);\n      const bd = applyDesignDiff(rawDesign, fc.forward) as any;\n      setBaseDesign(bd);\n      setSelectedPieceGuids((bd?.pieces ?? []).slice(0, 3).map((piece: any) =\u003e piece.guid));\n    })();\n    return () =\u003e {\n      cancelled = true;\n    };\n  }, [kit, language]);\n\n  const designDiff = React.useMemo(() =\u003e (selectedPieceGuids.length \u003e 0 ? { pieces: { updated: selectedPieceGuids.map((guid) =\u003e ({ piece: { guid }, diff: { center: { ...vec } } })) } } : undefined), [selectedPieceGuids, vec]);\n\n  const outputDesign = React.useMemo(() =\u003e (designDiff \u0026\u0026 baseDesign ? applyDesignDiff(baseDesign, designDiff) : (baseDesign ?? rawDesign)), [designDiff, baseDesign]);\n\n  const context: AlgorithmContextValue = React.useMemo(\n    () =\u003e ({\n      kit,\n      design: baseDesign ?? rawDesign,\n      vec,\n      onVecChange: setVec,\n      vecMin: { u: -10, v: -10 },\n      vecMax: { u: 10, v: 10 },\n      selectedPieceGuids,\n      onSelectedPieceGuidsChange: setSelectedPieceGuids,\n      designDiff,\n      outputDesign,\n      error: !flattenChange || !baseDesign ? `Loading move preview (${language})…` : selectedPieceGuids.length === 0 ? \"Select at least one piece to move.\" : undefined,\n    }),\n    [kit, baseDesign, selectedPieceGuids, vec, designDiff, outputDesign, flattenChange, language],\n  );\n\n  return \u003cAlgorithmApp id=\"move\" label=\"Move\" windows={WINDOWS} context={context} className=\"h-full w-full\" /\u003e;\n}\n\nconst meta = {\n  title: \"compose-algorithms/Move\",\n  parameters: { layout: \"fullscreen\" },\n  tags: [\"autodocs\"],\n} satisfies Meta;\n\nexport default meta;\n\ntype Story = StoryObj\u003ctypeof meta\u003e;\n\nexport const Default: Story = { render: () =\u003e \u003cMoveFrame /\u003e };\n",
+          "file_path": "/workspaces/semio/compose/algorithms/.storybook/stories/Move.stories.tsx",
           "attachments": [],
           "hook_event_name": "beforeReadFile",
           "cursor_version": "2.6.22",
@@ -31,7 +31,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}
@@ -44,15 +44,15 @@
         "kind": "agent.file.read.starting",
         "second": "2026-03-30T12:47:01Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
           "conversation_id": "eba0c856-1297-471c-9af7-2ee0e818329c",
           "generation_id": "09b85c15-d03c-43e6-bdc3-ae7821612187",
           "model": "default",
-          "content": "// #region 🔖Header\n// 💻 semio/algorithms/.storybook/stories/Cluster.stories.tsx\n// Specs: Uses the AlgorithmApp shell with PIECES_SELECTION_INPUT, DESIGN_DIFF_OUTPUT, DESIGN_OUTPUT windows.\n// Summary: Cluster story using nativeFlattenDesign with the Storybook language toolbar.\n// 2026 Ueli Saluz \u003cueli@semio-tech.com\u003e\n// #endregion 🔖Header\n\nimport type { DesignChange } from \"@semio/js\";\nimport { applyDesignDiff } from \"@semio/js\";\nimport type { Meta, StoryObj } from \"@storybook/react\";\nimport * as React from \"react\";\n\nimport { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef } from \"../../index\";\nimport { nativeFlattenDesign, type NativeAlgorithmLanguage } from \"../../nativeAlgorithmAdapter\";\nimport { useAlgorithmLanguage } from \"../withLanguage\";\n\nimport metabolismKit from \"../../../assets/semio/metabolism.kit.semio.json\";\n\nconst nakaginCapsuleTowerDesignGuid = \"9a890dd4-0a9c-48ac-920a-9e62666465ef\";\nconst rawDesign = (metabolismKit.designs ?? []).find((d: any) =\u003e d.guid === nakaginCapsuleTowerDesignGuid) as any;\n\nconst WINDOWS: AlgorithmWindowDef[] = [\n  { id: \"cluster-input\", kind: WindowKind.PIECES_SELECTION_INPUT, label: \"Input\" },\n  { id: \"cluster-diff\", kind: WindowKind.DESIGN_DIFF_OUTPUT, label: \"Diff\" },\n  { id: \"cluster-output\", kind: WindowKind.DESIGN_OUTPUT, label: \"Output\" },\n];\n\nfunction ClusterFrame() {\n  const language = useAlgorithmLanguage() as NativeAlgorithmLanguage;\n  const kit = metabolismKit as any;\n  const [flattenChange, setFlattenChange] = React.useState\u003cDesignChange | null\u003e(null);\n  const [baseDesign, setBaseDesign] = React.useState\u003cany | null\u003e(null);\n  const [selectedPieceGuids, setSelectedPieceGuids] = React.useState\u003cstring[]\u003e([]);\n\n  React.useEffect(() =\u003e {\n    let cancelled = false;\n    void (async () =\u003e {\n      const fc = await nativeFlattenDesign(kit, rawDesign.guid, language);\n      if (cancelled) return;\n      setFlattenChange(fc);\n      const bd = applyDesignDiff(rawDesign, fc.forward) as any;\n      setBaseDesign(bd);\n      setSelectedPieceGuids((bd?.pieces ?? []).slice(0, 3).map((piece: any) =\u003e piece.guid));\n    })();\n    return () =\u003e {\n      cancelled = true;\n    };\n  }, [kit, language]);\n\n  const designDiff = React.useMemo(\n    () =\u003e\n      selectedPieceGuids.length \u003c 2\n        ? undefined\n        : {\n            pieces: {\n              added: [{ guid: `cluster-${selectedPieceGuids.length}`, name: `Clustered (${selectedPieceGuids.length} pieces)` }],\n              updated: selectedPieceGuids.map((guid) =\u003e ({ piece: { guid }, diff: {} })),\n            },\n          },\n    [selectedPieceGuids],\n  );\n\n  const context: AlgorithmContextValue = React.useMemo(\n    () =\u003e ({\n      kit,\n      design: baseDesign ?? rawDesign,\n      selectedPieceGuids,\n      onSelectedPieceGuidsChange: setSelectedPieceGuids,\n      designDiff,\n      diffDesign: baseDesign ?? rawDesign,\n      outputDesign: baseDesign ?? rawDesign,\n      error: !flattenChange || !baseDesign ? `Loading cluster preview (${language})…` : selectedPieceGuids.length \u003c 2 ? \"Select at least 2 pieces to cluster.\" : undefined,\n    }),\n    [kit, baseDesign, selectedPieceGuids, designDiff, flattenChange, language],\n  );\n\n  return \u003cAlgorithmApp id=\"cluster\" label=\"Cluster\" windows={WINDOWS} context={context} className=\"h-full w-full\" /\u003e;\n}\n\nconst meta = {\n  title: \"semio-algorithms/Cluster\",\n  parameters: { layout: \"fullscreen\" },\n  tags: [\"autodocs\"],\n} satisfies Meta;\n\nexport default meta;\n\ntype Story = StoryObj\u003ctypeof meta\u003e;\n\nexport const Default: Story = { render: () =\u003e \u003cClusterFrame /\u003e };\n",
-          "file_path": "/workspaces/semio/semio/algorithms/.storybook/stories/Cluster.stories.tsx",
+          "content": "// #region 🔖Header\n// 💻 compose/algorithms/.storybook/stories/Cluster.stories.tsx\n// Specs: Uses the AlgorithmApp shell with PIECES_SELECTION_INPUT, DESIGN_DIFF_OUTPUT, DESIGN_OUTPUT windows.\n// Summary: Cluster story using nativeFlattenDesign with the Storybook language toolbar.\n// 2026 Ueli Saluz \u003cueli@semio-tech.com\u003e\n// #endregion 🔖Header\n\nimport type { DesignChange } from \"@compose/js\";\nimport { applyDesignDiff } from \"@compose/js\";\nimport type { Meta, StoryObj } from \"@storybook/react\";\nimport * as React from \"react\";\n\nimport { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef } from \"../../index\";\nimport { nativeFlattenDesign, type NativeAlgorithmLanguage } from \"../../nativeAlgorithmAdapter\";\nimport { useAlgorithmLanguage } from \"../withLanguage\";\n\nimport metabolismKit from \"../../../assets/compose/metabolism.kit.compose.json\";\n\nconst nakaginCapsuleTowerDesignGuid = \"9a890dd4-0a9c-48ac-920a-9e62666465ef\";\nconst rawDesign = (metabolismKit.designs ?? []).find((d: any) =\u003e d.guid === nakaginCapsuleTowerDesignGuid) as any;\n\nconst WINDOWS: AlgorithmWindowDef[] = [\n  { id: \"cluster-input\", kind: WindowKind.PIECES_SELECTION_INPUT, label: \"Input\" },\n  { id: \"cluster-diff\", kind: WindowKind.DESIGN_DIFF_OUTPUT, label: \"Diff\" },\n  { id: \"cluster-output\", kind: WindowKind.DESIGN_OUTPUT, label: \"Output\" },\n];\n\nfunction ClusterFrame() {\n  const language = useAlgorithmLanguage() as NativeAlgorithmLanguage;\n  const kit = metabolismKit as any;\n  const [flattenChange, setFlattenChange] = React.useState\u003cDesignChange | null\u003e(null);\n  const [baseDesign, setBaseDesign] = React.useState\u003cany | null\u003e(null);\n  const [selectedPieceGuids, setSelectedPieceGuids] = React.useState\u003cstring[]\u003e([]);\n\n  React.useEffect(() =\u003e {\n    let cancelled = false;\n    void (async () =\u003e {\n      const fc = await nativeFlattenDesign(kit, rawDesign.guid, language);\n      if (cancelled) return;\n      setFlattenChange(fc);\n      const bd = applyDesignDiff(rawDesign, fc.forward) as any;\n      setBaseDesign(bd);\n      setSelectedPieceGuids((bd?.pieces ?? []).slice(0, 3).map((piece: any) =\u003e piece.guid));\n    })();\n    return () =\u003e {\n      cancelled = true;\n    };\n  }, [kit, language]);\n\n  const designDiff = React.useMemo(\n    () =\u003e\n      selectedPieceGuids.length \u003c 2\n        ? undefined\n        : {\n            pieces: {\n              added: [{ guid: `cluster-${selectedPieceGuids.length}`, name: `Clustered (${selectedPieceGuids.length} pieces)` }],\n              updated: selectedPieceGuids.map((guid) =\u003e ({ piece: { guid }, diff: {} })),\n            },\n          },\n    [selectedPieceGuids],\n  );\n\n  const context: AlgorithmContextValue = React.useMemo(\n    () =\u003e ({\n      kit,\n      design: baseDesign ?? rawDesign,\n      selectedPieceGuids,\n      onSelectedPieceGuidsChange: setSelectedPieceGuids,\n      designDiff,\n      diffDesign: baseDesign ?? rawDesign,\n      outputDesign: baseDesign ?? rawDesign,\n      error: !flattenChange || !baseDesign ? `Loading cluster preview (${language})…` : selectedPieceGuids.length \u003c 2 ? \"Select at least 2 pieces to cluster.\" : undefined,\n    }),\n    [kit, baseDesign, selectedPieceGuids, designDiff, flattenChange, language],\n  );\n\n  return \u003cAlgorithmApp id=\"cluster\" label=\"Cluster\" windows={WINDOWS} context={context} className=\"h-full w-full\" /\u003e;\n}\n\nconst meta = {\n  title: \"compose-algorithms/Cluster\",\n  parameters: { layout: \"fullscreen\" },\n  tags: [\"autodocs\"],\n} satisfies Meta;\n\nexport default meta;\n\ntype Story = StoryObj\u003ctypeof meta\u003e;\n\nexport const Default: Story = { render: () =\u003e \u003cClusterFrame /\u003e };\n",
+          "file_path": "/workspaces/semio/compose/algorithms/.storybook/stories/Cluster.stories.tsx",
           "attachments": [],
           "hook_event_name": "beforeReadFile",
           "cursor_version": "2.6.22",
@@ -60,7 +60,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}
@@ -73,15 +73,15 @@
         "kind": "agent.file.read.starting",
         "second": "2026-03-30T12:47:01Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
           "conversation_id": "eba0c856-1297-471c-9af7-2ee0e818329c",
           "generation_id": "09b85c15-d03c-43e6-bdc3-ae7821612187",
           "model": "default",
-          "content": "// #region 🔖Header\n// 💻 semio/algorithms/.storybook/stories/Drag.stories.tsx\n// Specs: Uses the AlgorithmApp shell with VEC_INPUT, PIECES_SELECTION_INPUT, DESIGN_DIFF_OUTPUT, DESIGN_OUTPUT windows.\n// Summary: Drag story using nativeFlattenDesign and nativeDragPieces with the Storybook language toolbar.\n// 2026 Ueli Saluz \u003cueli@semio-tech.com\u003e\n// #endregion 🔖Header\n\nimport type { DesignChange, DesignDiff } from \"@semio/js\";\nimport { applyDesignDiff } from \"@semio/js\";\nimport type { Meta, StoryObj } from \"@storybook/react\";\nimport * as React from \"react\";\n\nimport { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef } from \"../../index\";\nimport { nativeDragPieces, nativeFlattenDesign, type NativeAlgorithmLanguage } from \"../../nativeAlgorithmAdapter\";\nimport { useAlgorithmLanguage } from \"../withLanguage\";\n\nimport metabolismKit from \"../../../assets/semio/metabolism.kit.semio.json\";\n\nconst nakaginCapsuleTowerDesignGuid = \"9a890dd4-0a9c-48ac-920a-9e62666465ef\";\nconst rawDesign = (metabolismKit.designs ?? []).find((d: any) =\u003e d.guid === nakaginCapsuleTowerDesignGuid) as any;\n\nconst WINDOWS: AlgorithmWindowDef[] = [\n  { id: \"drag-vec\", kind: WindowKind.VEC_INPUT, label: \"Vec\" },\n  { id: \"drag-input\", kind: WindowKind.PIECES_SELECTION_INPUT, label: \"Input\" },\n  { id: \"drag-diff\", kind: WindowKind.DESIGN_DIFF_OUTPUT, label: \"Diff\" },\n  { id: \"drag-output\", kind: WindowKind.DESIGN_OUTPUT, label: \"Output\" },\n];\n\nfunction DragFrame() {\n  const language = useAlgorithmLanguage() as NativeAlgorithmLanguage;\n  const kit = metabolismKit as any;\n  const [flattenChange, setFlattenChange] = React.useState\u003cDesignChange | null\u003e(null);\n  const [baseDesign, setBaseDesign] = React.useState\u003cany | null\u003e(null);\n  const [selectedPieceGuids, setSelectedPieceGuids] = React.useState\u003cstring[]\u003e([]);\n  const [vec, setVec] = React.useState({ u: 1, v: -2 });\n  const [designDiff, setDesignDiff] = React.useState\u003cDesignDiff | undefined\u003e(undefined);\n\n  React.useEffect(() =\u003e {\n    let cancelled = false;\n    void (async () =\u003e {\n      const fc = await nativeFlattenDesign(kit, rawDesign.guid, language);\n      if (cancelled) return;\n      setFlattenChange(fc);\n      const bd = applyDesignDiff(rawDesign, fc.forward) as any;\n      setBaseDesign(bd);\n      setSelectedPieceGuids((bd?.pieces ?? []).slice(0, 3).map((piece: any) =\u003e piece.guid));\n    })();\n    return () =\u003e {\n      cancelled = true;\n    };\n  }, [kit, language]);\n\n  React.useEffect(() =\u003e {\n    if (!baseDesign) return;\n    let cancelled = false;\n    void (async () =\u003e {\n      if (selectedPieceGuids.length === 0) {\n        if (!cancelled) setDesignDiff(undefined);\n        return;\n      }\n      const diff = await nativeDragPieces(baseDesign, selectedPieceGuids, vec, language);\n      if (!cancelled) setDesignDiff(diff);\n    })();\n    return () =\u003e {\n      cancelled = true;\n    };\n  }, [baseDesign, selectedPieceGuids, vec, language]);\n\n  const outputDesign = React.useMemo(() =\u003e (designDiff \u0026\u0026 baseDesign ? applyDesignDiff(baseDesign, designDiff) : (baseDesign ?? rawDesign)), [designDiff, baseDesign]);\n\n  const context: AlgorithmContextValue = React.useMemo(\n    () =\u003e ({\n      kit,\n      design: baseDesign ?? rawDesign,\n      vec,\n      onVecChange: setVec,\n      vecMin: { u: -10, v: -10 },\n      vecMax: { u: 10, v: 10 },\n      selectedPieceGuids,\n      onSelectedPieceGuidsChange: setSelectedPieceGuids,\n      designDiff,\n      outputDesign,\n      error: !flattenChange || !baseDesign ? `Loading drag preview (${language})…` : selectedPieceGuids.length === 0 ? \"Select at least one piece to drag.\" : undefined,\n    }),\n    [kit, baseDesign, selectedPieceGuids, vec, designDiff, outputDesign, flattenChange, language],\n  );\n\n  return \u003cAlgorithmApp id=\"drag\" label=\"Drag\" windows={WINDOWS} context={context} className=\"h-full w-full\" /\u003e;\n}\n\nconst meta = {\n  title: \"semio-algorithms/Drag\",\n  parameters: { layout: \"fullscreen\" },\n  tags: [\"autodocs\"],\n} satisfies Meta;\n\nexport default meta;\n\ntype Story = StoryObj\u003ctypeof meta\u003e;\n\nexport const Default: Story = { render: () =\u003e \u003cDragFrame /\u003e };\n",
-          "file_path": "/workspaces/semio/semio/algorithms/.storybook/stories/Drag.stories.tsx",
+          "content": "// #region 🔖Header\n// 💻 compose/algorithms/.storybook/stories/Drag.stories.tsx\n// Specs: Uses the AlgorithmApp shell with VEC_INPUT, PIECES_SELECTION_INPUT, DESIGN_DIFF_OUTPUT, DESIGN_OUTPUT windows.\n// Summary: Drag story using nativeFlattenDesign and nativeDragPieces with the Storybook language toolbar.\n// 2026 Ueli Saluz \u003cueli@semio-tech.com\u003e\n// #endregion 🔖Header\n\nimport type { DesignChange, DesignDiff } from \"@compose/js\";\nimport { applyDesignDiff } from \"@compose/js\";\nimport type { Meta, StoryObj } from \"@storybook/react\";\nimport * as React from \"react\";\n\nimport { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef } from \"../../index\";\nimport { nativeDragPieces, nativeFlattenDesign, type NativeAlgorithmLanguage } from \"../../nativeAlgorithmAdapter\";\nimport { useAlgorithmLanguage } from \"../withLanguage\";\n\nimport metabolismKit from \"../../../assets/compose/metabolism.kit.compose.json\";\n\nconst nakaginCapsuleTowerDesignGuid = \"9a890dd4-0a9c-48ac-920a-9e62666465ef\";\nconst rawDesign = (metabolismKit.designs ?? []).find((d: any) =\u003e d.guid === nakaginCapsuleTowerDesignGuid) as any;\n\nconst WINDOWS: AlgorithmWindowDef[] = [\n  { id: \"drag-vec\", kind: WindowKind.VEC_INPUT, label: \"Vec\" },\n  { id: \"drag-input\", kind: WindowKind.PIECES_SELECTION_INPUT, label: \"Input\" },\n  { id: \"drag-diff\", kind: WindowKind.DESIGN_DIFF_OUTPUT, label: \"Diff\" },\n  { id: \"drag-output\", kind: WindowKind.DESIGN_OUTPUT, label: \"Output\" },\n];\n\nfunction DragFrame() {\n  const language = useAlgorithmLanguage() as NativeAlgorithmLanguage;\n  const kit = metabolismKit as any;\n  const [flattenChange, setFlattenChange] = React.useState\u003cDesignChange | null\u003e(null);\n  const [baseDesign, setBaseDesign] = React.useState\u003cany | null\u003e(null);\n  const [selectedPieceGuids, setSelectedPieceGuids] = React.useState\u003cstring[]\u003e([]);\n  const [vec, setVec] = React.useState({ u: 1, v: -2 });\n  const [designDiff, setDesignDiff] = React.useState\u003cDesignDiff | undefined\u003e(undefined);\n\n  React.useEffect(() =\u003e {\n    let cancelled = false;\n    void (async () =\u003e {\n      const fc = await nativeFlattenDesign(kit, rawDesign.guid, language);\n      if (cancelled) return;\n      setFlattenChange(fc);\n      const bd = applyDesignDiff(rawDesign, fc.forward) as any;\n      setBaseDesign(bd);\n      setSelectedPieceGuids((bd?.pieces ?? []).slice(0, 3).map((piece: any) =\u003e piece.guid));\n    })();\n    return () =\u003e {\n      cancelled = true;\n    };\n  }, [kit, language]);\n\n  React.useEffect(() =\u003e {\n    if (!baseDesign) return;\n    let cancelled = false;\n    void (async () =\u003e {\n      if (selectedPieceGuids.length === 0) {\n        if (!cancelled) setDesignDiff(undefined);\n        return;\n      }\n      const diff = await nativeDragPieces(baseDesign, selectedPieceGuids, vec, language);\n      if (!cancelled) setDesignDiff(diff);\n    })();\n    return () =\u003e {\n      cancelled = true;\n    };\n  }, [baseDesign, selectedPieceGuids, vec, language]);\n\n  const outputDesign = React.useMemo(() =\u003e (designDiff \u0026\u0026 baseDesign ? applyDesignDiff(baseDesign, designDiff) : (baseDesign ?? rawDesign)), [designDiff, baseDesign]);\n\n  const context: AlgorithmContextValue = React.useMemo(\n    () =\u003e ({\n      kit,\n      design: baseDesign ?? rawDesign,\n      vec,\n      onVecChange: setVec,\n      vecMin: { u: -10, v: -10 },\n      vecMax: { u: 10, v: 10 },\n      selectedPieceGuids,\n      onSelectedPieceGuidsChange: setSelectedPieceGuids,\n      designDiff,\n      outputDesign,\n      error: !flattenChange || !baseDesign ? `Loading drag preview (${language})…` : selectedPieceGuids.length === 0 ? \"Select at least one piece to drag.\" : undefined,\n    }),\n    [kit, baseDesign, selectedPieceGuids, vec, designDiff, outputDesign, flattenChange, language],\n  );\n\n  return \u003cAlgorithmApp id=\"drag\" label=\"Drag\" windows={WINDOWS} context={context} className=\"h-full w-full\" /\u003e;\n}\n\nconst meta = {\n  title: \"compose-algorithms/Drag\",\n  parameters: { layout: \"fullscreen\" },\n  tags: [\"autodocs\"],\n} satisfies Meta;\n\nexport default meta;\n\ntype Story = StoryObj\u003ctypeof meta\u003e;\n\nexport const Default: Story = { render: () =\u003e \u003cDragFrame /\u003e };\n",
+          "file_path": "/workspaces/semio/compose/algorithms/.storybook/stories/Drag.stories.tsx",
           "attachments": [],
           "hook_event_name": "beforeReadFile",
           "cursor_version": "2.6.22",
@@ -89,7 +89,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}
@@ -102,7 +102,7 @@
         "kind": "agent.file.read.ended",
         "second": "2026-03-30T12:47:02Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
@@ -111,9 +111,9 @@
           "model": "default",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/workspaces/semio/semio/algorithms/.storybook/stories/Flatten.stories.tsx"
+            "file_path": "/workspaces/semio/compose/algorithms/.storybook/stories/Flatten.stories.tsx"
           },
-          "tool_output": "{\"file_path\":\"/workspaces/semio/semio/algorithms/.storybook/stories/Flatten.stories.tsx\",\"content_length\":2650}",
+          "tool_output": "{\"file_path\":\"/workspaces/semio/compose/algorithms/.storybook/stories/Flatten.stories.tsx\",\"content_length\":2650}",
           "duration": 537.271,
           "tool_use_id": "call_eNYIplvLEkq2vERPO8Gbx2Ly\nfc_01a601a2e9024902261475d7d14bd0ce44fe8fc35bb219269ccfea6fb026c",
           "hook_event_name": "postToolUse",
@@ -122,7 +122,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}
@@ -135,7 +135,7 @@
         "kind": "agent.file.read.ended",
         "second": "2026-03-30T12:47:02Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
@@ -144,9 +144,9 @@
           "model": "default",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/workspaces/semio/semio/algorithms/.storybook/stories/Move.stories.tsx"
+            "file_path": "/workspaces/semio/compose/algorithms/.storybook/stories/Move.stories.tsx"
           },
-          "tool_output": "{\"file_path\":\"/workspaces/semio/semio/algorithms/.storybook/stories/Move.stories.tsx\",\"content_length\":3693}",
+          "tool_output": "{\"file_path\":\"/workspaces/semio/compose/algorithms/.storybook/stories/Move.stories.tsx\",\"content_length\":3693}",
           "duration": 538.922,
           "tool_use_id": "call_YTxeCjrvwKoUu0i3z3RmmFbU\nfc_01a601a2e959e91f5e8d2acabad372471eb3a77878110077d198cfc727f87",
           "hook_event_name": "postToolUse",
@@ -155,7 +155,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}
@@ -168,7 +168,7 @@
         "kind": "agent.file.read.ended",
         "second": "2026-03-30T12:47:02Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
@@ -177,9 +177,9 @@
           "model": "default",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/workspaces/semio/semio/algorithms/.storybook/stories/Cluster.stories.tsx"
+            "file_path": "/workspaces/semio/compose/algorithms/.storybook/stories/Cluster.stories.tsx"
           },
-          "tool_output": "{\"file_path\":\"/workspaces/semio/semio/algorithms/.storybook/stories/Cluster.stories.tsx\",\"content_length\":3566}",
+          "tool_output": "{\"file_path\":\"/workspaces/semio/compose/algorithms/.storybook/stories/Cluster.stories.tsx\",\"content_length\":3566}",
           "duration": 545.786,
           "tool_use_id": "call_uR8j3UO743AcoAfpfdFK8zKs\nfc_01a601a2e9f9d07e79bba47bfd870fbb9334163b8ca658e347b3bfbd8e4f2",
           "hook_event_name": "postToolUse",
@@ -188,7 +188,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}
@@ -201,7 +201,7 @@
         "kind": "agent.file.read.ended",
         "second": "2026-03-30T12:47:02Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
@@ -210,9 +210,9 @@
           "model": "default",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/workspaces/semio/semio/algorithms/.storybook/stories/Drag.stories.tsx"
+            "file_path": "/workspaces/semio/compose/algorithms/.storybook/stories/Drag.stories.tsx"
           },
-          "tool_output": "{\"file_path\":\"/workspaces/semio/semio/algorithms/.storybook/stories/Drag.stories.tsx\",\"content_length\":4087}",
+          "tool_output": "{\"file_path\":\"/workspaces/semio/compose/algorithms/.storybook/stories/Drag.stories.tsx\",\"content_length\":4087}",
           "duration": 552.792,
           "tool_use_id": "call_8WzKUTaFyZGfKu2AcxoxxXTg\nfc_01a601a2e93a6a928b1e61834cd5438e3ed950b3b3d3624cf22c3823db51d",
           "hook_event_name": "postToolUse",
@@ -221,7 +221,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}
@@ -234,7 +234,7 @@
         "kind": "agent.thinking.ended",
         "second": "2026-03-30T12:47:12Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
@@ -249,7 +249,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}
@@ -262,7 +262,7 @@
         "kind": "agent.tool.code.edit.starting",
         "second": "2026-03-30T12:47:14Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
@@ -271,8 +271,8 @@
           "model": "default",
           "tool_name": "Write",
           "tool_input": {
-            "file_path": "/workspaces/semio/semio/algorithms/.storybook/stories/Delete.stories.tsx",
-            "content": "// #region 🔖Header\n// 💻 semio/algorithms/.storybook/stories/Delete.stories.tsx\n// Specs: Uses the AlgorithmApp shell with PIECES_SELECTION_INPUT, DESIGN_DIFF_OUTPUT, DESIGN_OUTPUT windows.\n// Summary: Delete story using nativeFlattenDesign/nativeDeletePieces with the Storybook language toolbar.\n// 2026 Ueli Saluz \u003cueli@semio-tech.com\u003e\n// #endregion 🔖Header\n\nimport type { DesignChange } from \"@semio/js\";\nimport { applyDesignDiff } from \"@semio/js\";\nimport type { Meta, StoryObj } from \"@storybook/react\";\nimport * as React from \"react\";\n\nimport { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef } from \"../../index\";\nimport { nativeDeletePieces, nativeFlattenDesign, type NativeAlgorithmLanguage } from \"../../nativeAlgorithmAdapter\";\nimport { useAlgorithmLanguage } from \"../withLanguage\";\n\nimport metabolismKit from \"../../../assets/semio/metabolism.kit.semio.json\";\n\nconst nakaginCapsuleTowerDesignGuid = \"9a890dd4-0a9c-48ac-920a-9e62666465ef\";\nconst rawDesign = (metabolismKit.designs ?? []).find((d: any) =\u003e d.guid === nakaginCapsuleTowerDesignGuid) as any;\n\nconst WINDOWS: AlgorithmWindowDef[] = [\n  { id: \"delete-input\", kind: WindowKind.PIECES_SELECTION_INPUT, label: \"Input\" },\n  { id: \"delete-diff\", kind: WindowKind.DESIGN_DIFF_OUTPUT, label: \"Diff\" },\n  { id: \"delete-output\", kind: WindowKind.DESIGN_OUTPUT, label: \"Output\" },\n];\n\nfunction DeleteFrame() {\n  const language = useAlgorithmLanguage() as NativeAlgorithmLanguage;\n  const kit = metabolismKit as any;\n  const [flattenChange, setFlattenChange] = React.useState\u003cDesignChange | null\u003e(null);\n  const [baseDesign, setBaseDesign] = React.useState\u003cany | null\u003e(null);\n  const [selectedPieceGuids, setSelectedPieceGuids] = React.useState\u003cstring[]\u003e([]);\n  const [designDiff, setDesignDiff] = React.useState\u003cany | undefined\u003e(undefined);\n\n  React.useEffect(() =\u003e {\n    let cancelled = false;\n    // Clear stale preview state immediately on language change to avoid rendering an old diff/output.\n    setFlattenChange(null);\n    setBaseDesign(null);\n    setSelectedPieceGuids([]);\n    setDesignDiff(undefined);\n    void (async () =\u003e {\n      const fc = await nativeFlattenDesign(kit, rawDesign.guid, language);\n      if (cancelled) return;\n      setFlattenChange(fc);\n      const bd = applyDesignDiff(rawDesign, fc.forward) as any;\n      setBaseDesign(bd);\n      setSelectedPieceGuids((bd?.pieces ?? []).slice(0, 3).map((piece: any) =\u003e piece.guid));\n    })();\n    return () =\u003e {\n      cancelled = true;\n    };\n  }, [kit, language]);\n\n  React.useEffect(() =\u003e {\n    if (!baseDesign) return;\n    let cancelled = false;\n    void (async () =\u003e {\n      if (selectedPieceGuids.length === 0) {\n        if (!cancelled) setDesignDiff(undefined);\n        return;\n      }\n      // Invalidate stale output while recomputing.\n      setDesignDiff(undefined);\n      const diff = await nativeDeletePieces(kit, baseDesign, selectedPieceGuids, [], language);\n      if (!cancelled) setDesignDiff(diff);\n    })();\n    return () =\u003e {\n      cancelled = true;\n    };\n  }, [kit, baseDesign, selectedPieceGuids, language]);\n\n  const outputDesign = React.useMemo(() =\u003e (designDiff \u0026\u0026 baseDesign ? applyDesignDiff(baseDesign, designDiff) : (baseDesign ?? rawDesign)), [designDiff, baseDesign]);\n\n  const context: AlgorithmContextValue = React.useMemo(\n    () =\u003e ({\n      kit,\n      design: baseDesign ?? rawDesign,\n      selectedPieceGuids,\n      onSelectedPieceGuidsChange: setSelectedPieceGuids,\n      designDiff,\n      outputDesign,\n      error:\n        !flattenChange || !baseDesign\n          ? `Loading delete preview (${language})…`\n          : selectedPieceGuids.length === 0\n            ? \"Select at least one piece to delete.\"\n            : !designDiff\n              ? `Loading delete result (${language})…`\n              : undefined,\n    }),\n    [kit, baseDesign, selectedPieceGuids, designDiff, outputDesign, flattenChange, language],\n  );\n\n  return \u003cAlgorithmApp id=\"delete\" label=\"Delete\" windows={WINDOWS} context={context} className=\"h-full w-full\" /\u003e;\n}\n\nconst meta = {\n  title: \"semio-algorithms/Delete\",\n  parameters: { layout: \"fullscreen\" },\n  tags: [\"autodocs\"],\n} satisfies Meta;\n\nexport default meta;\n\ntype Story = StoryObj\u003ctypeof meta\u003e;\n\nexport const Default: Story = { render: () =\u003e \u003cDeleteFrame /\u003e };\n"
+            "file_path": "/workspaces/semio/compose/algorithms/.storybook/stories/Delete.stories.tsx",
+            "content": "// #region 🔖Header\n// 💻 compose/algorithms/.storybook/stories/Delete.stories.tsx\n// Specs: Uses the AlgorithmApp shell with PIECES_SELECTION_INPUT, DESIGN_DIFF_OUTPUT, DESIGN_OUTPUT windows.\n// Summary: Delete story using nativeFlattenDesign/nativeDeletePieces with the Storybook language toolbar.\n// 2026 Ueli Saluz \u003cueli@semio-tech.com\u003e\n// #endregion 🔖Header\n\nimport type { DesignChange } from \"@compose/js\";\nimport { applyDesignDiff } from \"@compose/js\";\nimport type { Meta, StoryObj } from \"@storybook/react\";\nimport * as React from \"react\";\n\nimport { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef } from \"../../index\";\nimport { nativeDeletePieces, nativeFlattenDesign, type NativeAlgorithmLanguage } from \"../../nativeAlgorithmAdapter\";\nimport { useAlgorithmLanguage } from \"../withLanguage\";\n\nimport metabolismKit from \"../../../assets/compose/metabolism.kit.compose.json\";\n\nconst nakaginCapsuleTowerDesignGuid = \"9a890dd4-0a9c-48ac-920a-9e62666465ef\";\nconst rawDesign = (metabolismKit.designs ?? []).find((d: any) =\u003e d.guid === nakaginCapsuleTowerDesignGuid) as any;\n\nconst WINDOWS: AlgorithmWindowDef[] = [\n  { id: \"delete-input\", kind: WindowKind.PIECES_SELECTION_INPUT, label: \"Input\" },\n  { id: \"delete-diff\", kind: WindowKind.DESIGN_DIFF_OUTPUT, label: \"Diff\" },\n  { id: \"delete-output\", kind: WindowKind.DESIGN_OUTPUT, label: \"Output\" },\n];\n\nfunction DeleteFrame() {\n  const language = useAlgorithmLanguage() as NativeAlgorithmLanguage;\n  const kit = metabolismKit as any;\n  const [flattenChange, setFlattenChange] = React.useState\u003cDesignChange | null\u003e(null);\n  const [baseDesign, setBaseDesign] = React.useState\u003cany | null\u003e(null);\n  const [selectedPieceGuids, setSelectedPieceGuids] = React.useState\u003cstring[]\u003e([]);\n  const [designDiff, setDesignDiff] = React.useState\u003cany | undefined\u003e(undefined);\n\n  React.useEffect(() =\u003e {\n    let cancelled = false;\n    // Clear stale preview state immediately on language change to avoid rendering an old diff/output.\n    setFlattenChange(null);\n    setBaseDesign(null);\n    setSelectedPieceGuids([]);\n    setDesignDiff(undefined);\n    void (async () =\u003e {\n      const fc = await nativeFlattenDesign(kit, rawDesign.guid, language);\n      if (cancelled) return;\n      setFlattenChange(fc);\n      const bd = applyDesignDiff(rawDesign, fc.forward) as any;\n      setBaseDesign(bd);\n      setSelectedPieceGuids((bd?.pieces ?? []).slice(0, 3).map((piece: any) =\u003e piece.guid));\n    })();\n    return () =\u003e {\n      cancelled = true;\n    };\n  }, [kit, language]);\n\n  React.useEffect(() =\u003e {\n    if (!baseDesign) return;\n    let cancelled = false;\n    void (async () =\u003e {\n      if (selectedPieceGuids.length === 0) {\n        if (!cancelled) setDesignDiff(undefined);\n        return;\n      }\n      // Invalidate stale output while recomputing.\n      setDesignDiff(undefined);\n      const diff = await nativeDeletePieces(kit, baseDesign, selectedPieceGuids, [], language);\n      if (!cancelled) setDesignDiff(diff);\n    })();\n    return () =\u003e {\n      cancelled = true;\n    };\n  }, [kit, baseDesign, selectedPieceGuids, language]);\n\n  const outputDesign = React.useMemo(() =\u003e (designDiff \u0026\u0026 baseDesign ? applyDesignDiff(baseDesign, designDiff) : (baseDesign ?? rawDesign)), [designDiff, baseDesign]);\n\n  const context: AlgorithmContextValue = React.useMemo(\n    () =\u003e ({\n      kit,\n      design: baseDesign ?? rawDesign,\n      selectedPieceGuids,\n      onSelectedPieceGuidsChange: setSelectedPieceGuids,\n      designDiff,\n      outputDesign,\n      error:\n        !flattenChange || !baseDesign\n          ? `Loading delete preview (${language})…`\n          : selectedPieceGuids.length === 0\n            ? \"Select at least one piece to delete.\"\n            : !designDiff\n              ? `Loading delete result (${language})…`\n              : undefined,\n    }),\n    [kit, baseDesign, selectedPieceGuids, designDiff, outputDesign, flattenChange, language],\n  );\n\n  return \u003cAlgorithmApp id=\"delete\" label=\"Delete\" windows={WINDOWS} context={context} className=\"h-full w-full\" /\u003e;\n}\n\nconst meta = {\n  title: \"compose-algorithms/Delete\",\n  parameters: { layout: \"fullscreen\" },\n  tags: [\"autodocs\"],\n} satisfies Meta;\n\nexport default meta;\n\ntype Story = StoryObj\u003ctypeof meta\u003e;\n\nexport const Default: Story = { render: () =\u003e \u003cDeleteFrame /\u003e };\n"
           },
           "tool_use_id": "call_SXoylIDiFhISPPyoEOu2lFSd\nctc_023c5c985a9b54a50169ca70cfce688196806a063eba1642e3",
           "hook_event_name": "preToolUse",
@@ -281,7 +281,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}
@@ -294,14 +294,14 @@
         "kind": "agent.tool.code.edit.ended",
         "second": "2026-03-30T12:47:15Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
           "conversation_id": "eba0c856-1297-471c-9af7-2ee0e818329c",
           "generation_id": "09b85c15-d03c-43e6-bdc3-ae7821612187",
           "model": "default",
-          "file_path": "/workspaces/semio/semio/algorithms/.storybook/stories/Delete.stories.tsx",
+          "file_path": "/workspaces/semio/compose/algorithms/.storybook/stories/Delete.stories.tsx",
           "edits": [
             {
               "old_string": "",
@@ -318,7 +318,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}
@@ -331,7 +331,7 @@
         "kind": "agent.tool.code.edit.ended",
         "second": "2026-03-30T12:47:15Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
@@ -340,10 +340,10 @@
           "model": "default",
           "tool_name": "Write",
           "tool_input": {
-            "file_path": "/workspaces/semio/semio/algorithms/.storybook/stories/Delete.stories.tsx",
-            "content": "// #region 🔖Header\n// 💻 semio/algorithms/.storybook/stories/Delete.stories.tsx\n// Specs: Uses the AlgorithmApp shell with PIECES_SELECTION_INPUT, DESIGN_DIFF_OUTPUT, DESIGN_OUTPUT windows.\n// Summary: Delete story using nativeFlattenDesign/nativeDeletePieces with the Storybook language toolbar.\n// 2026 Ueli Saluz \u003cueli@semio-tech.com\u003e\n// #endregion 🔖Header\n\nimport type { DesignChange } from \"@semio/js\";\nimport { applyDesignDiff } from \"@semio/js\";\nimport type { Meta, StoryObj } from \"@storybook/react\";\nimport * as React from \"react\";\n\nimport { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef } from \"../../index\";\nimport { nativeDeletePieces, nativeFlattenDesign, type NativeAlgorithmLanguage } from \"../../nativeAlgorithmAdapter\";\nimport { useAlgorithmLanguage } from \"../withLanguage\";\n\nimport metabolismKit from \"../../../assets/semio/metabolism.kit.semio.json\";\n\nconst nakaginCapsuleTowerDesignGuid = \"9a890dd4-0a9c-48ac-920a-9e62666465ef\";\nconst rawDesign = (metabolismKit.designs ?? []).find((d: any) =\u003e d.guid === nakaginCapsuleTowerDesignGuid) as any;\n\nconst WINDOWS: AlgorithmWindowDef[] = [\n  { id: \"delete-input\", kind: WindowKind.PIECES_SELECTION_INPUT, label: \"Input\" },\n  { id: \"delete-diff\", kind: WindowKind.DESIGN_DIFF_OUTPUT, label: \"Diff\" },\n  { id: \"delete-output\", kind: WindowKind.DESIGN_OUTPUT, label: \"Output\" },\n];\n\nfunction DeleteFrame() {\n  const language = useAlgorithmLanguage() as NativeAlgorithmLanguage;\n  const kit = metabolismKit as any;\n  const [flattenChange, setFlattenChange] = React.useState\u003cDesignChange | null\u003e(null);\n  const [baseDesign, setBaseDesign] = React.useState\u003cany | null\u003e(null);\n  const [selectedPieceGuids, setSelectedPieceGuids] = React.useState\u003cstring[]\u003e([]);\n  const [designDiff, setDesignDiff] = React.useState\u003cany | undefined\u003e(undefined);\n\n  React.useEffect(() =\u003e {\n    let cancelled = false;\n    // Clear stale preview state immediately on language change to avoid rendering an old diff/output.\n    setFlattenChange(null);\n    setBaseDesign(null);\n    setSelectedPieceGuids([]);\n    setDesignDiff(undefined);\n    void (async () =\u003e {\n      const fc = await nativeFlattenDesign(kit, rawDesign.guid, language);\n      if (cancelled) return;\n      setFlattenChange(fc);\n      const bd = applyDesignDiff(rawDesign, fc.forward) as any;\n      setBaseDesign(bd);\n      setSelectedPieceGuids((bd?.pieces ?? []).slice(0, 3).map((piece: any) =\u003e piece.guid));\n    })();\n    return () =\u003e {\n      cancelled = true;\n    };\n  }, [kit, language]);\n\n  React.useEffect(() =\u003e {\n    if (!baseDesign) return;\n    let cancelled = false;\n    void (async () =\u003e {\n      if (selectedPieceGuids.length === 0) {\n        if (!cancelled) setDesignDiff(undefined);\n        return;\n      }\n      // Invalidate stale output while recomputing.\n      setDesignDiff(undefined);\n      const diff = await nativeDeletePieces(kit, baseDesign, selectedPieceGuids, [], language);\n      if (!cancelled) setDesignDiff(diff);\n    })();\n    return () =\u003e {\n      cancelled = true;\n    };\n  }, [kit, baseDesign, selectedPieceGuids, language]);\n\n  const outputDesign = React.useMemo(() =\u003e (designDiff \u0026\u0026 baseDesign ? applyDesignDiff(baseDesign, designDiff) : (baseDesign ?? rawDesign)), [designDiff, baseDesign]);\n\n  const context: AlgorithmContextValue = React.useMemo(\n    () =\u003e ({\n      kit,\n      design: baseDesign ?? rawDesign,\n      selectedPieceGuids,\n      onSelectedPieceGuidsChange: setSelectedPieceGuids,\n      designDiff,\n      outputDesign,\n      error:\n        !flattenChange || !baseDesign\n          ? `Loading delete preview (${language})…`\n          : selectedPieceGuids.length === 0\n            ? \"Select at least one piece to delete.\"\n            : !designDiff\n              ? `Loading delete result (${language})…`\n              : undefined,\n    }),\n    [kit, baseDesign, selectedPieceGuids, designDiff, outputDesign, flattenChange, language],\n  );\n\n  return \u003cAlgorithmApp id=\"delete\" label=\"Delete\" windows={WINDOWS} context={context} className=\"h-full w-full\" /\u003e;\n}\n\nconst meta = {\n  title: \"semio-algorithms/Delete\",\n  parameters: { layout: \"fullscreen\" },\n  tags: [\"autodocs\"],\n} satisfies Meta;\n\nexport default meta;\n\ntype Story = StoryObj\u003ctypeof meta\u003e;\n\nexport const Default: Story = { render: () =\u003e \u003cDeleteFrame /\u003e };\n"
+            "file_path": "/workspaces/semio/compose/algorithms/.storybook/stories/Delete.stories.tsx",
+            "content": "// #region 🔖Header\n// 💻 compose/algorithms/.storybook/stories/Delete.stories.tsx\n// Specs: Uses the AlgorithmApp shell with PIECES_SELECTION_INPUT, DESIGN_DIFF_OUTPUT, DESIGN_OUTPUT windows.\n// Summary: Delete story using nativeFlattenDesign/nativeDeletePieces with the Storybook language toolbar.\n// 2026 Ueli Saluz \u003cueli@semio-tech.com\u003e\n// #endregion 🔖Header\n\nimport type { DesignChange } from \"@compose/js\";\nimport { applyDesignDiff } from \"@compose/js\";\nimport type { Meta, StoryObj } from \"@storybook/react\";\nimport * as React from \"react\";\n\nimport { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef } from \"../../index\";\nimport { nativeDeletePieces, nativeFlattenDesign, type NativeAlgorithmLanguage } from \"../../nativeAlgorithmAdapter\";\nimport { useAlgorithmLanguage } from \"../withLanguage\";\n\nimport metabolismKit from \"../../../assets/compose/metabolism.kit.compose.json\";\n\nconst nakaginCapsuleTowerDesignGuid = \"9a890dd4-0a9c-48ac-920a-9e62666465ef\";\nconst rawDesign = (metabolismKit.designs ?? []).find((d: any) =\u003e d.guid === nakaginCapsuleTowerDesignGuid) as any;\n\nconst WINDOWS: AlgorithmWindowDef[] = [\n  { id: \"delete-input\", kind: WindowKind.PIECES_SELECTION_INPUT, label: \"Input\" },\n  { id: \"delete-diff\", kind: WindowKind.DESIGN_DIFF_OUTPUT, label: \"Diff\" },\n  { id: \"delete-output\", kind: WindowKind.DESIGN_OUTPUT, label: \"Output\" },\n];\n\nfunction DeleteFrame() {\n  const language = useAlgorithmLanguage() as NativeAlgorithmLanguage;\n  const kit = metabolismKit as any;\n  const [flattenChange, setFlattenChange] = React.useState\u003cDesignChange | null\u003e(null);\n  const [baseDesign, setBaseDesign] = React.useState\u003cany | null\u003e(null);\n  const [selectedPieceGuids, setSelectedPieceGuids] = React.useState\u003cstring[]\u003e([]);\n  const [designDiff, setDesignDiff] = React.useState\u003cany | undefined\u003e(undefined);\n\n  React.useEffect(() =\u003e {\n    let cancelled = false;\n    // Clear stale preview state immediately on language change to avoid rendering an old diff/output.\n    setFlattenChange(null);\n    setBaseDesign(null);\n    setSelectedPieceGuids([]);\n    setDesignDiff(undefined);\n    void (async () =\u003e {\n      const fc = await nativeFlattenDesign(kit, rawDesign.guid, language);\n      if (cancelled) return;\n      setFlattenChange(fc);\n      const bd = applyDesignDiff(rawDesign, fc.forward) as any;\n      setBaseDesign(bd);\n      setSelectedPieceGuids((bd?.pieces ?? []).slice(0, 3).map((piece: any) =\u003e piece.guid));\n    })();\n    return () =\u003e {\n      cancelled = true;\n    };\n  }, [kit, language]);\n\n  React.useEffect(() =\u003e {\n    if (!baseDesign) return;\n    let cancelled = false;\n    void (async () =\u003e {\n      if (selectedPieceGuids.length === 0) {\n        if (!cancelled) setDesignDiff(undefined);\n        return;\n      }\n      // Invalidate stale output while recomputing.\n      setDesignDiff(undefined);\n      const diff = await nativeDeletePieces(kit, baseDesign, selectedPieceGuids, [], language);\n      if (!cancelled) setDesignDiff(diff);\n    })();\n    return () =\u003e {\n      cancelled = true;\n    };\n  }, [kit, baseDesign, selectedPieceGuids, language]);\n\n  const outputDesign = React.useMemo(() =\u003e (designDiff \u0026\u0026 baseDesign ? applyDesignDiff(baseDesign, designDiff) : (baseDesign ?? rawDesign)), [designDiff, baseDesign]);\n\n  const context: AlgorithmContextValue = React.useMemo(\n    () =\u003e ({\n      kit,\n      design: baseDesign ?? rawDesign,\n      selectedPieceGuids,\n      onSelectedPieceGuidsChange: setSelectedPieceGuids,\n      designDiff,\n      outputDesign,\n      error:\n        !flattenChange || !baseDesign\n          ? `Loading delete preview (${language})…`\n          : selectedPieceGuids.length === 0\n            ? \"Select at least one piece to delete.\"\n            : !designDiff\n              ? `Loading delete result (${language})…`\n              : undefined,\n    }),\n    [kit, baseDesign, selectedPieceGuids, designDiff, outputDesign, flattenChange, language],\n  );\n\n  return \u003cAlgorithmApp id=\"delete\" label=\"Delete\" windows={WINDOWS} context={context} className=\"h-full w-full\" /\u003e;\n}\n\nconst meta = {\n  title: \"compose-algorithms/Delete\",\n  parameters: { layout: \"fullscreen\" },\n  tags: [\"autodocs\"],\n} satisfies Meta;\n\nexport default meta;\n\ntype Story = StoryObj\u003ctypeof meta\u003e;\n\nexport const Default: Story = { render: () =\u003e \u003cDeleteFrame /\u003e };\n"
           },
-          "tool_output": "{\"file_path\":\"/workspaces/semio/semio/algorithms/.storybook/stories/Delete.stories.tsx\",\"success\":true}",
+          "tool_output": "{\"file_path\":\"/workspaces/semio/compose/algorithms/.storybook/stories/Delete.stories.tsx\",\"success\":true}",
           "duration": 187.317,
           "tool_use_id": "call_SXoylIDiFhISPPyoEOu2lFSd\nctc_023c5c985a9b54a50169ca70cfce688196806a063eba1642e3",
           "hook_event_name": "postToolUse",
@@ -352,7 +352,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}
@@ -365,7 +365,7 @@
         "kind": "agent.file.read.starting",
         "second": "2026-03-30T12:47:24Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
@@ -374,7 +374,7 @@
           "model": "default",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/workspaces/semio/semio/algorithms/.storybook/stories/Drag.stories.tsx"
+            "file_path": "/workspaces/semio/compose/algorithms/.storybook/stories/Drag.stories.tsx"
           },
           "tool_use_id": "call_cFF3C8WQSEIVFd2FFpEH2tLz\nctc_023c5c985a9b54a50169ca70d58434819695cb1d7ddb90e0e7",
           "hook_event_name": "preToolUse",
@@ -383,7 +383,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}
@@ -396,15 +396,15 @@
         "kind": "agent.file.read.starting",
         "second": "2026-03-30T12:47:24Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
           "conversation_id": "eba0c856-1297-471c-9af7-2ee0e818329c",
           "generation_id": "09b85c15-d03c-43e6-bdc3-ae7821612187",
           "model": "default",
-          "content": "// #region 🔖Header\n// 💻 semio/algorithms/.storybook/stories/Drag.stories.tsx\n// Specs: Uses the AlgorithmApp shell with VEC_INPUT, PIECES_SELECTION_INPUT, DESIGN_DIFF_OUTPUT, DESIGN_OUTPUT windows.\n// Summary: Drag story using nativeFlattenDesign and nativeDragPieces with the Storybook language toolbar.\n// 2026 Ueli Saluz \u003cueli@semio-tech.com\u003e\n// #endregion 🔖Header\n\nimport type { DesignChange, DesignDiff } from \"@semio/js\";\nimport { applyDesignDiff } from \"@semio/js\";\nimport type { Meta, StoryObj } from \"@storybook/react\";\nimport * as React from \"react\";\n\nimport { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef } from \"../../index\";\nimport { nativeDragPieces, nativeFlattenDesign, type NativeAlgorithmLanguage } from \"../../nativeAlgorithmAdapter\";\nimport { useAlgorithmLanguage } from \"../withLanguage\";\n\nimport metabolismKit from \"../../../assets/semio/metabolism.kit.semio.json\";\n\nconst nakaginCapsuleTowerDesignGuid = \"9a890dd4-0a9c-48ac-920a-9e62666465ef\";\nconst rawDesign = (metabolismKit.designs ?? []).find((d: any) =\u003e d.guid === nakaginCapsuleTowerDesignGuid) as any;\n\nconst WINDOWS: AlgorithmWindowDef[] = [\n  { id: \"drag-vec\", kind: WindowKind.VEC_INPUT, label: \"Vec\" },\n  { id: \"drag-input\", kind: WindowKind.PIECES_SELECTION_INPUT, label: \"Input\" },\n  { id: \"drag-diff\", kind: WindowKind.DESIGN_DIFF_OUTPUT, label: \"Diff\" },\n  { id: \"drag-output\", kind: WindowKind.DESIGN_OUTPUT, label: \"Output\" },\n];\n\nfunction DragFrame() {\n  const language = useAlgorithmLanguage() as NativeAlgorithmLanguage;\n  const kit = metabolismKit as any;\n  const [flattenChange, setFlattenChange] = React.useState\u003cDesignChange | null\u003e(null);\n  const [baseDesign, setBaseDesign] = React.useState\u003cany | null\u003e(null);\n  const [selectedPieceGuids, setSelectedPieceGuids] = React.useState\u003cstring[]\u003e([]);\n  const [vec, setVec] = React.useState({ u: 1, v: -2 });\n  const [designDiff, setDesignDiff] = React.useState\u003cDesignDiff | undefined\u003e(undefined);\n\n  React.useEffect(() =\u003e {\n    let cancelled = false;\n    void (async () =\u003e {\n      const fc = await nativeFlattenDesign(kit, rawDesign.guid, language);\n      if (cancelled) return;\n      setFlattenChange(fc);\n      const bd = applyDesignDiff(rawDesign, fc.forward) as any;\n      setBaseDesign(bd);\n      setSelectedPieceGuids((bd?.pieces ?? []).slice(0, 3).map((piece: any) =\u003e piece.guid));\n    })();\n    return () =\u003e {\n      cancelled = true;\n    };\n  }, [kit, language]);\n\n  React.useEffect(() =\u003e {\n    if (!baseDesign) return;\n    let cancelled = false;\n    void (async () =\u003e {\n      if (selectedPieceGuids.length === 0) {\n        if (!cancelled) setDesignDiff(undefined);\n        return;\n      }\n      const diff = await nativeDragPieces(baseDesign, selectedPieceGuids, vec, language);\n      if (!cancelled) setDesignDiff(diff);\n    })();\n    return () =\u003e {\n      cancelled = true;\n    };\n  }, [baseDesign, selectedPieceGuids, vec, language]);\n\n  const outputDesign = React.useMemo(() =\u003e (designDiff \u0026\u0026 baseDesign ? applyDesignDiff(baseDesign, designDiff) : (baseDesign ?? rawDesign)), [designDiff, baseDesign]);\n\n  const context: AlgorithmContextValue = React.useMemo(\n    () =\u003e ({\n      kit,\n      design: baseDesign ?? rawDesign,\n      vec,\n      onVecChange: setVec,\n      vecMin: { u: -10, v: -10 },\n      vecMax: { u: 10, v: 10 },\n      selectedPieceGuids,\n      onSelectedPieceGuidsChange: setSelectedPieceGuids,\n      designDiff,\n      outputDesign,\n      error: !flattenChange || !baseDesign ? `Loading drag preview (${language})…` : selectedPieceGuids.length === 0 ? \"Select at least one piece to drag.\" : undefined,\n    }),\n    [kit, baseDesign, selectedPieceGuids, vec, designDiff, outputDesign, flattenChange, language],\n  );\n\n  return \u003cAlgorithmApp id=\"drag\" label=\"Drag\" windows={WINDOWS} context={context} className=\"h-full w-full\" /\u003e;\n}\n\nconst meta = {\n  title: \"semio-algorithms/Drag\",\n  parameters: { layout: \"fullscreen\" },\n  tags: [\"autodocs\"],\n} satisfies Meta;\n\nexport default meta;\n\ntype Story = StoryObj\u003ctypeof meta\u003e;\n\nexport const Default: Story = { render: () =\u003e \u003cDragFrame /\u003e };\n",
-          "file_path": "/workspaces/semio/semio/algorithms/.storybook/stories/Drag.stories.tsx",
+          "content": "// #region 🔖Header\n// 💻 compose/algorithms/.storybook/stories/Drag.stories.tsx\n// Specs: Uses the AlgorithmApp shell with VEC_INPUT, PIECES_SELECTION_INPUT, DESIGN_DIFF_OUTPUT, DESIGN_OUTPUT windows.\n// Summary: Drag story using nativeFlattenDesign and nativeDragPieces with the Storybook language toolbar.\n// 2026 Ueli Saluz \u003cueli@semio-tech.com\u003e\n// #endregion 🔖Header\n\nimport type { DesignChange, DesignDiff } from \"@compose/js\";\nimport { applyDesignDiff } from \"@compose/js\";\nimport type { Meta, StoryObj } from \"@storybook/react\";\nimport * as React from \"react\";\n\nimport { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef } from \"../../index\";\nimport { nativeDragPieces, nativeFlattenDesign, type NativeAlgorithmLanguage } from \"../../nativeAlgorithmAdapter\";\nimport { useAlgorithmLanguage } from \"../withLanguage\";\n\nimport metabolismKit from \"../../../assets/compose/metabolism.kit.compose.json\";\n\nconst nakaginCapsuleTowerDesignGuid = \"9a890dd4-0a9c-48ac-920a-9e62666465ef\";\nconst rawDesign = (metabolismKit.designs ?? []).find((d: any) =\u003e d.guid === nakaginCapsuleTowerDesignGuid) as any;\n\nconst WINDOWS: AlgorithmWindowDef[] = [\n  { id: \"drag-vec\", kind: WindowKind.VEC_INPUT, label: \"Vec\" },\n  { id: \"drag-input\", kind: WindowKind.PIECES_SELECTION_INPUT, label: \"Input\" },\n  { id: \"drag-diff\", kind: WindowKind.DESIGN_DIFF_OUTPUT, label: \"Diff\" },\n  { id: \"drag-output\", kind: WindowKind.DESIGN_OUTPUT, label: \"Output\" },\n];\n\nfunction DragFrame() {\n  const language = useAlgorithmLanguage() as NativeAlgorithmLanguage;\n  const kit = metabolismKit as any;\n  const [flattenChange, setFlattenChange] = React.useState\u003cDesignChange | null\u003e(null);\n  const [baseDesign, setBaseDesign] = React.useState\u003cany | null\u003e(null);\n  const [selectedPieceGuids, setSelectedPieceGuids] = React.useState\u003cstring[]\u003e([]);\n  const [vec, setVec] = React.useState({ u: 1, v: -2 });\n  const [designDiff, setDesignDiff] = React.useState\u003cDesignDiff | undefined\u003e(undefined);\n\n  React.useEffect(() =\u003e {\n    let cancelled = false;\n    void (async () =\u003e {\n      const fc = await nativeFlattenDesign(kit, rawDesign.guid, language);\n      if (cancelled) return;\n      setFlattenChange(fc);\n      const bd = applyDesignDiff(rawDesign, fc.forward) as any;\n      setBaseDesign(bd);\n      setSelectedPieceGuids((bd?.pieces ?? []).slice(0, 3).map((piece: any) =\u003e piece.guid));\n    })();\n    return () =\u003e {\n      cancelled = true;\n    };\n  }, [kit, language]);\n\n  React.useEffect(() =\u003e {\n    if (!baseDesign) return;\n    let cancelled = false;\n    void (async () =\u003e {\n      if (selectedPieceGuids.length === 0) {\n        if (!cancelled) setDesignDiff(undefined);\n        return;\n      }\n      const diff = await nativeDragPieces(baseDesign, selectedPieceGuids, vec, language);\n      if (!cancelled) setDesignDiff(diff);\n    })();\n    return () =\u003e {\n      cancelled = true;\n    };\n  }, [baseDesign, selectedPieceGuids, vec, language]);\n\n  const outputDesign = React.useMemo(() =\u003e (designDiff \u0026\u0026 baseDesign ? applyDesignDiff(baseDesign, designDiff) : (baseDesign ?? rawDesign)), [designDiff, baseDesign]);\n\n  const context: AlgorithmContextValue = React.useMemo(\n    () =\u003e ({\n      kit,\n      design: baseDesign ?? rawDesign,\n      vec,\n      onVecChange: setVec,\n      vecMin: { u: -10, v: -10 },\n      vecMax: { u: 10, v: 10 },\n      selectedPieceGuids,\n      onSelectedPieceGuidsChange: setSelectedPieceGuids,\n      designDiff,\n      outputDesign,\n      error: !flattenChange || !baseDesign ? `Loading drag preview (${language})…` : selectedPieceGuids.length === 0 ? \"Select at least one piece to drag.\" : undefined,\n    }),\n    [kit, baseDesign, selectedPieceGuids, vec, designDiff, outputDesign, flattenChange, language],\n  );\n\n  return \u003cAlgorithmApp id=\"drag\" label=\"Drag\" windows={WINDOWS} context={context} className=\"h-full w-full\" /\u003e;\n}\n\nconst meta = {\n  title: \"compose-algorithms/Drag\",\n  parameters: { layout: \"fullscreen\" },\n  tags: [\"autodocs\"],\n} satisfies Meta;\n\nexport default meta;\n\ntype Story = StoryObj\u003ctypeof meta\u003e;\n\nexport const Default: Story = { render: () =\u003e \u003cDragFrame /\u003e };\n",
+          "file_path": "/workspaces/semio/compose/algorithms/.storybook/stories/Drag.stories.tsx",
           "attachments": [],
           "hook_event_name": "beforeReadFile",
           "cursor_version": "2.6.22",
@@ -412,7 +412,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}
@@ -425,7 +425,7 @@
         "kind": "agent.file.read.ended",
         "second": "2026-03-30T12:47:24Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
@@ -434,9 +434,9 @@
           "model": "default",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/workspaces/semio/semio/algorithms/.storybook/stories/Drag.stories.tsx"
+            "file_path": "/workspaces/semio/compose/algorithms/.storybook/stories/Drag.stories.tsx"
           },
-          "tool_output": "{\"file_path\":\"/workspaces/semio/semio/algorithms/.storybook/stories/Drag.stories.tsx\",\"content_length\":4087}",
+          "tool_output": "{\"file_path\":\"/workspaces/semio/compose/algorithms/.storybook/stories/Drag.stories.tsx\",\"content_length\":4087}",
           "duration": 17.458,
           "tool_use_id": "call_cFF3C8WQSEIVFd2FFpEH2tLz\nctc_023c5c985a9b54a50169ca70d58434819695cb1d7ddb90e0e7",
           "hook_event_name": "postToolUse",
@@ -445,7 +445,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}
@@ -458,7 +458,7 @@
         "kind": "agent.tool.code.edit.starting",
         "second": "2026-03-30T12:47:24Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
@@ -467,8 +467,8 @@
           "model": "default",
           "tool_name": "Write",
           "tool_input": {
-            "file_path": "/workspaces/semio/semio/algorithms/.storybook/stories/Drag.stories.tsx",
-            "content": "// #region 🔖Header\n// 💻 semio/algorithms/.storybook/stories/Drag.stories.tsx\n// Specs: Uses the AlgorithmApp shell with VEC_INPUT, PIECES_SELECTION_INPUT, DESIGN_DIFF_OUTPUT, DESIGN_OUTPUT windows.\n// Summary: Drag story using nativeFlattenDesign and nativeDragPieces with the Storybook language toolbar.\n// 2026 Ueli Saluz \u003cueli@semio-tech.com\u003e\n// #endregion 🔖Header\n\nimport type { DesignChange, DesignDiff } from \"@semio/js\";\nimport { applyDesignDiff } from \"@semio/js\";\nimport type { Meta, StoryObj } from \"@storybook/react\";\nimport * as React from \"react\";\n\nimport { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef } from \"../../index\";\nimport { nativeDragPieces, nativeFlattenDesign, type NativeAlgorithmLanguage } from \"../../nativeAlgorithmAdapter\";\nimport { useAlgorithmLanguage } from \"../withLanguage\";\n\nimport metabolismKit from \"../../../assets/semio/metabolism.kit.semio.json\";\n\nconst nakaginCapsuleTowerDesignGuid = \"9a890dd4-0a9c-48ac-920a-9e62666465ef\";\nconst rawDesign = (metabolismKit.designs ?? []).find((d: any) =\u003e d.guid === nakaginCapsuleTowerDesignGuid) as any;\n\nconst WINDOWS: AlgorithmWindowDef[] = [\n  { id: \"drag-vec\", kind: WindowKind.VEC_INPUT, label: \"Vec\" },\n  { id: \"drag-input\", kind: WindowKind.PIECES_SELECTION_INPUT, label: \"Input\" },\n  { id: \"drag-diff\", kind: WindowKind.DESIGN_DIFF_OUTPUT, label: \"Diff\" },\n  { id: \"drag-output\", kind: WindowKind.DESIGN_OUTPUT, label: \"Output\" },\n];\n\nfunction DragFrame() {\n  const language = useAlgorithmLanguage() as NativeAlgorithmLanguage;\n  const kit = metabolismKit as any;\n  const [flattenChange, setFlattenChange] = React.useState\u003cDesignChange | null\u003e(null);\n  const [baseDesign, setBaseDesign] = React.useState\u003cany | null\u003e(null);\n  const [selectedPieceGuids, setSelectedPieceGuids] = React.useState\u003cstring[]\u003e([]);\n  const [vec, setVec] = React.useState({ u: 1, v: -2 });\n  const [designDiff, setDesignDiff] = React.useState\u003cDesignDiff | undefined\u003e(undefined);\n\n  React.useEffect(() =\u003e {\n    let cancelled = false;\n    // Clear stale preview state immediately on language change to avoid rendering an old diff/output.\n    setFlattenChange(null);\n    setBaseDesign(null);\n    setSelectedPieceGuids([]);\n    setDesignDiff(undefined);\n    void (async () =\u003e {\n      const fc = await nativeFlattenDesign(kit, rawDesign.guid, language);\n      if (cancelled) return;\n      setFlattenChange(fc);\n      const bd = applyDesignDiff(rawDesign, fc.forward) as any;\n      setBaseDesign(bd);\n      setSelectedPieceGuids((bd?.pieces ?? []).slice(0, 3).map((piece: any) =\u003e piece.guid));\n    })();\n    return () =\u003e {\n      cancelled = true;\n    };\n  }, [kit, language]);\n\n  React.useEffect(() =\u003e {\n    if (!baseDesign) return;\n    let cancelled = false;\n    void (async () =\u003e {\n      if (selectedPieceGuids.length === 0) {\n        if (!cancelled) setDesignDiff(undefined);\n        return;\n      }\n      // Invalidate stale output while recomputing.\n      setDesignDiff(undefined);\n      const diff = await nativeDragPieces(baseDesign, selectedPieceGuids, vec, language);\n      if (!cancelled) setDesignDiff(diff);\n    })();\n    return () =\u003e {\n      cancelled = true;\n    };\n  }, [baseDesign, selectedPieceGuids, vec, language]);\n\n  const outputDesign = React.useMemo(() =\u003e (designDiff \u0026\u0026 baseDesign ? applyDesignDiff(baseDesign, designDiff) : (baseDesign ?? rawDesign)), [designDiff, baseDesign]);\n\n  const context: AlgorithmContextValue = React.useMemo(\n    () =\u003e ({\n      kit,\n      design: baseDesign ?? rawDesign,\n      vec,\n      onVecChange: setVec,\n      vecMin: { u: -10, v: -10 },\n      vecMax: { u: 10, v: 10 },\n      selectedPieceGuids,\n      onSelectedPieceGuidsChange: setSelectedPieceGuids,\n      designDiff,\n      outputDesign,\n      error:\n        !flattenChange || !baseDesign\n          ? `Loading drag preview (${language})…`\n          : selectedPieceGuids.length === 0\n            ? \"Select at least one piece to drag.\"\n            : !designDiff\n              ? `Loading drag result (${language})…`\n              : undefined,\n    }),\n    [kit, baseDesign, selectedPieceGuids, vec, designDiff, outputDesign, flattenChange, language],\n  );\n\n  return \u003cAlgorithmApp id=\"drag\" label=\"Drag\" windows={WINDOWS} context={context} className=\"h-full w-full\" /\u003e;\n}\n\nconst meta = {\n  title: \"semio-algorithms/Drag\",\n  parameters: { layout: \"fullscreen\" },\n  tags: [\"autodocs\"],\n} satisfies Meta;\n\nexport default meta;\n\ntype Story = StoryObj\u003ctypeof meta\u003e;\n\nexport const Default: Story = { render: () =\u003e \u003cDragFrame /\u003e };\n"
+            "file_path": "/workspaces/semio/compose/algorithms/.storybook/stories/Drag.stories.tsx",
+            "content": "// #region 🔖Header\n// 💻 compose/algorithms/.storybook/stories/Drag.stories.tsx\n// Specs: Uses the AlgorithmApp shell with VEC_INPUT, PIECES_SELECTION_INPUT, DESIGN_DIFF_OUTPUT, DESIGN_OUTPUT windows.\n// Summary: Drag story using nativeFlattenDesign and nativeDragPieces with the Storybook language toolbar.\n// 2026 Ueli Saluz \u003cueli@semio-tech.com\u003e\n// #endregion 🔖Header\n\nimport type { DesignChange, DesignDiff } from \"@compose/js\";\nimport { applyDesignDiff } from \"@compose/js\";\nimport type { Meta, StoryObj } from \"@storybook/react\";\nimport * as React from \"react\";\n\nimport { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef } from \"../../index\";\nimport { nativeDragPieces, nativeFlattenDesign, type NativeAlgorithmLanguage } from \"../../nativeAlgorithmAdapter\";\nimport { useAlgorithmLanguage } from \"../withLanguage\";\n\nimport metabolismKit from \"../../../assets/compose/metabolism.kit.compose.json\";\n\nconst nakaginCapsuleTowerDesignGuid = \"9a890dd4-0a9c-48ac-920a-9e62666465ef\";\nconst rawDesign = (metabolismKit.designs ?? []).find((d: any) =\u003e d.guid === nakaginCapsuleTowerDesignGuid) as any;\n\nconst WINDOWS: AlgorithmWindowDef[] = [\n  { id: \"drag-vec\", kind: WindowKind.VEC_INPUT, label: \"Vec\" },\n  { id: \"drag-input\", kind: WindowKind.PIECES_SELECTION_INPUT, label: \"Input\" },\n  { id: \"drag-diff\", kind: WindowKind.DESIGN_DIFF_OUTPUT, label: \"Diff\" },\n  { id: \"drag-output\", kind: WindowKind.DESIGN_OUTPUT, label: \"Output\" },\n];\n\nfunction DragFrame() {\n  const language = useAlgorithmLanguage() as NativeAlgorithmLanguage;\n  const kit = metabolismKit as any;\n  const [flattenChange, setFlattenChange] = React.useState\u003cDesignChange | null\u003e(null);\n  const [baseDesign, setBaseDesign] = React.useState\u003cany | null\u003e(null);\n  const [selectedPieceGuids, setSelectedPieceGuids] = React.useState\u003cstring[]\u003e([]);\n  const [vec, setVec] = React.useState({ u: 1, v: -2 });\n  const [designDiff, setDesignDiff] = React.useState\u003cDesignDiff | undefined\u003e(undefined);\n\n  React.useEffect(() =\u003e {\n    let cancelled = false;\n    // Clear stale preview state immediately on language change to avoid rendering an old diff/output.\n    setFlattenChange(null);\n    setBaseDesign(null);\n    setSelectedPieceGuids([]);\n    setDesignDiff(undefined);\n    void (async () =\u003e {\n      const fc = await nativeFlattenDesign(kit, rawDesign.guid, language);\n      if (cancelled) return;\n      setFlattenChange(fc);\n      const bd = applyDesignDiff(rawDesign, fc.forward) as any;\n      setBaseDesign(bd);\n      setSelectedPieceGuids((bd?.pieces ?? []).slice(0, 3).map((piece: any) =\u003e piece.guid));\n    })();\n    return () =\u003e {\n      cancelled = true;\n    };\n  }, [kit, language]);\n\n  React.useEffect(() =\u003e {\n    if (!baseDesign) return;\n    let cancelled = false;\n    void (async () =\u003e {\n      if (selectedPieceGuids.length === 0) {\n        if (!cancelled) setDesignDiff(undefined);\n        return;\n      }\n      // Invalidate stale output while recomputing.\n      setDesignDiff(undefined);\n      const diff = await nativeDragPieces(baseDesign, selectedPieceGuids, vec, language);\n      if (!cancelled) setDesignDiff(diff);\n    })();\n    return () =\u003e {\n      cancelled = true;\n    };\n  }, [baseDesign, selectedPieceGuids, vec, language]);\n\n  const outputDesign = React.useMemo(() =\u003e (designDiff \u0026\u0026 baseDesign ? applyDesignDiff(baseDesign, designDiff) : (baseDesign ?? rawDesign)), [designDiff, baseDesign]);\n\n  const context: AlgorithmContextValue = React.useMemo(\n    () =\u003e ({\n      kit,\n      design: baseDesign ?? rawDesign,\n      vec,\n      onVecChange: setVec,\n      vecMin: { u: -10, v: -10 },\n      vecMax: { u: 10, v: 10 },\n      selectedPieceGuids,\n      onSelectedPieceGuidsChange: setSelectedPieceGuids,\n      designDiff,\n      outputDesign,\n      error:\n        !flattenChange || !baseDesign\n          ? `Loading drag preview (${language})…`\n          : selectedPieceGuids.length === 0\n            ? \"Select at least one piece to drag.\"\n            : !designDiff\n              ? `Loading drag result (${language})…`\n              : undefined,\n    }),\n    [kit, baseDesign, selectedPieceGuids, vec, designDiff, outputDesign, flattenChange, language],\n  );\n\n  return \u003cAlgorithmApp id=\"drag\" label=\"Drag\" windows={WINDOWS} context={context} className=\"h-full w-full\" /\u003e;\n}\n\nconst meta = {\n  title: \"compose-algorithms/Drag\",\n  parameters: { layout: \"fullscreen\" },\n  tags: [\"autodocs\"],\n} satisfies Meta;\n\nexport default meta;\n\ntype Story = StoryObj\u003ctypeof meta\u003e;\n\nexport const Default: Story = { render: () =\u003e \u003cDragFrame /\u003e };\n"
           },
           "tool_use_id": "call_cFF3C8WQSEIVFd2FFpEH2tLz\nctc_023c5c985a9b54a50169ca70d58434819695cb1d7ddb90e0e7",
           "hook_event_name": "preToolUse",
@@ -477,7 +477,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}
@@ -490,14 +490,14 @@
         "kind": "agent.tool.code.edit.ended",
         "second": "2026-03-30T12:47:25Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
           "conversation_id": "eba0c856-1297-471c-9af7-2ee0e818329c",
           "generation_id": "09b85c15-d03c-43e6-bdc3-ae7821612187",
           "model": "default",
-          "file_path": "/workspaces/semio/semio/algorithms/.storybook/stories/Drag.stories.tsx",
+          "file_path": "/workspaces/semio/compose/algorithms/.storybook/stories/Drag.stories.tsx",
           "edits": [
             {
               "old_string": "",
@@ -518,7 +518,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}
@@ -531,7 +531,7 @@
         "kind": "agent.tool.code.edit.ended",
         "second": "2026-03-30T12:47:25Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
@@ -540,10 +540,10 @@
           "model": "default",
           "tool_name": "Write",
           "tool_input": {
-            "file_path": "/workspaces/semio/semio/algorithms/.storybook/stories/Drag.stories.tsx",
-            "content": "// #region 🔖Header\n// 💻 semio/algorithms/.storybook/stories/Drag.stories.tsx\n// Specs: Uses the AlgorithmApp shell with VEC_INPUT, PIECES_SELECTION_INPUT, DESIGN_DIFF_OUTPUT, DESIGN_OUTPUT windows.\n// Summary: Drag story using nativeFlattenDesign and nativeDragPieces with the Storybook language toolbar.\n// 2026 Ueli Saluz \u003cueli@semio-tech.com\u003e\n// #endregion 🔖Header\n\nimport type { DesignChange, DesignDiff } from \"@semio/js\";\nimport { applyDesignDiff } from \"@semio/js\";\nimport type { Meta, StoryObj } from \"@storybook/react\";\nimport * as React from \"react\";\n\nimport { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef } from \"../../index\";\nimport { nativeDragPieces, nativeFlattenDesign, type NativeAlgorithmLanguage } from \"../../nativeAlgorithmAdapter\";\nimport { useAlgorithmLanguage } from \"../withLanguage\";\n\nimport metabolismKit from \"../../../assets/semio/metabolism.kit.semio.json\";\n\nconst nakaginCapsuleTowerDesignGuid = \"9a890dd4-0a9c-48ac-920a-9e62666465ef\";\nconst rawDesign = (metabolismKit.designs ?? []).find((d: any) =\u003e d.guid === nakaginCapsuleTowerDesignGuid) as any;\n\nconst WINDOWS: AlgorithmWindowDef[] = [\n  { id: \"drag-vec\", kind: WindowKind.VEC_INPUT, label: \"Vec\" },\n  { id: \"drag-input\", kind: WindowKind.PIECES_SELECTION_INPUT, label: \"Input\" },\n  { id: \"drag-diff\", kind: WindowKind.DESIGN_DIFF_OUTPUT, label: \"Diff\" },\n  { id: \"drag-output\", kind: WindowKind.DESIGN_OUTPUT, label: \"Output\" },\n];\n\nfunction DragFrame() {\n  const language = useAlgorithmLanguage() as NativeAlgorithmLanguage;\n  const kit = metabolismKit as any;\n  const [flattenChange, setFlattenChange] = React.useState\u003cDesignChange | null\u003e(null);\n  const [baseDesign, setBaseDesign] = React.useState\u003cany | null\u003e(null);\n  const [selectedPieceGuids, setSelectedPieceGuids] = React.useState\u003cstring[]\u003e([]);\n  const [vec, setVec] = React.useState({ u: 1, v: -2 });\n  const [designDiff, setDesignDiff] = React.useState\u003cDesignDiff | undefined\u003e(undefined);\n\n  React.useEffect(() =\u003e {\n    let cancelled = false;\n    // Clear stale preview state immediately on language change to avoid rendering an old diff/output.\n    setFlattenChange(null);\n    setBaseDesign(null);\n    setSelectedPieceGuids([]);\n    setDesignDiff(undefined);\n    void (async () =\u003e {\n      const fc = await nativeFlattenDesign(kit, rawDesign.guid, language);\n      if (cancelled) return;\n      setFlattenChange(fc);\n      const bd = applyDesignDiff(rawDesign, fc.forward) as any;\n      setBaseDesign(bd);\n      setSelectedPieceGuids((bd?.pieces ?? []).slice(0, 3).map((piece: any) =\u003e piece.guid));\n    })();\n    return () =\u003e {\n      cancelled = true;\n    };\n  }, [kit, language]);\n\n  React.useEffect(() =\u003e {\n    if (!baseDesign) return;\n    let cancelled = false;\n    void (async () =\u003e {\n      if (selectedPieceGuids.length === 0) {\n        if (!cancelled) setDesignDiff(undefined);\n        return;\n      }\n      // Invalidate stale output while recomputing.\n      setDesignDiff(undefined);\n      const diff = await nativeDragPieces(baseDesign, selectedPieceGuids, vec, language);\n      if (!cancelled) setDesignDiff(diff);\n    })();\n    return () =\u003e {\n      cancelled = true;\n    };\n  }, [baseDesign, selectedPieceGuids, vec, language]);\n\n  const outputDesign = React.useMemo(() =\u003e (designDiff \u0026\u0026 baseDesign ? applyDesignDiff(baseDesign, designDiff) : (baseDesign ?? rawDesign)), [designDiff, baseDesign]);\n\n  const context: AlgorithmContextValue = React.useMemo(\n    () =\u003e ({\n      kit,\n      design: baseDesign ?? rawDesign,\n      vec,\n      onVecChange: setVec,\n      vecMin: { u: -10, v: -10 },\n      vecMax: { u: 10, v: 10 },\n      selectedPieceGuids,\n      onSelectedPieceGuidsChange: setSelectedPieceGuids,\n      designDiff,\n      outputDesign,\n      error:\n        !flattenChange || !baseDesign\n          ? `Loading drag preview (${language})…`\n          : selectedPieceGuids.length === 0\n            ? \"Select at least one piece to drag.\"\n            : !designDiff\n              ? `Loading drag result (${language})…`\n              : undefined,\n    }),\n    [kit, baseDesign, selectedPieceGuids, vec, designDiff, outputDesign, flattenChange, language],\n  );\n\n  return \u003cAlgorithmApp id=\"drag\" label=\"Drag\" windows={WINDOWS} context={context} className=\"h-full w-full\" /\u003e;\n}\n\nconst meta = {\n  title: \"semio-algorithms/Drag\",\n  parameters: { layout: \"fullscreen\" },\n  tags: [\"autodocs\"],\n} satisfies Meta;\n\nexport default meta;\n\ntype Story = StoryObj\u003ctypeof meta\u003e;\n\nexport const Default: Story = { render: () =\u003e \u003cDragFrame /\u003e };\n"
+            "file_path": "/workspaces/semio/compose/algorithms/.storybook/stories/Drag.stories.tsx",
+            "content": "// #region 🔖Header\n// 💻 compose/algorithms/.storybook/stories/Drag.stories.tsx\n// Specs: Uses the AlgorithmApp shell with VEC_INPUT, PIECES_SELECTION_INPUT, DESIGN_DIFF_OUTPUT, DESIGN_OUTPUT windows.\n// Summary: Drag story using nativeFlattenDesign and nativeDragPieces with the Storybook language toolbar.\n// 2026 Ueli Saluz \u003cueli@semio-tech.com\u003e\n// #endregion 🔖Header\n\nimport type { DesignChange, DesignDiff } from \"@compose/js\";\nimport { applyDesignDiff } from \"@compose/js\";\nimport type { Meta, StoryObj } from \"@storybook/react\";\nimport * as React from \"react\";\n\nimport { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef } from \"../../index\";\nimport { nativeDragPieces, nativeFlattenDesign, type NativeAlgorithmLanguage } from \"../../nativeAlgorithmAdapter\";\nimport { useAlgorithmLanguage } from \"../withLanguage\";\n\nimport metabolismKit from \"../../../assets/compose/metabolism.kit.compose.json\";\n\nconst nakaginCapsuleTowerDesignGuid = \"9a890dd4-0a9c-48ac-920a-9e62666465ef\";\nconst rawDesign = (metabolismKit.designs ?? []).find((d: any) =\u003e d.guid === nakaginCapsuleTowerDesignGuid) as any;\n\nconst WINDOWS: AlgorithmWindowDef[] = [\n  { id: \"drag-vec\", kind: WindowKind.VEC_INPUT, label: \"Vec\" },\n  { id: \"drag-input\", kind: WindowKind.PIECES_SELECTION_INPUT, label: \"Input\" },\n  { id: \"drag-diff\", kind: WindowKind.DESIGN_DIFF_OUTPUT, label: \"Diff\" },\n  { id: \"drag-output\", kind: WindowKind.DESIGN_OUTPUT, label: \"Output\" },\n];\n\nfunction DragFrame() {\n  const language = useAlgorithmLanguage() as NativeAlgorithmLanguage;\n  const kit = metabolismKit as any;\n  const [flattenChange, setFlattenChange] = React.useState\u003cDesignChange | null\u003e(null);\n  const [baseDesign, setBaseDesign] = React.useState\u003cany | null\u003e(null);\n  const [selectedPieceGuids, setSelectedPieceGuids] = React.useState\u003cstring[]\u003e([]);\n  const [vec, setVec] = React.useState({ u: 1, v: -2 });\n  const [designDiff, setDesignDiff] = React.useState\u003cDesignDiff | undefined\u003e(undefined);\n\n  React.useEffect(() =\u003e {\n    let cancelled = false;\n    // Clear stale preview state immediately on language change to avoid rendering an old diff/output.\n    setFlattenChange(null);\n    setBaseDesign(null);\n    setSelectedPieceGuids([]);\n    setDesignDiff(undefined);\n    void (async () =\u003e {\n      const fc = await nativeFlattenDesign(kit, rawDesign.guid, language);\n      if (cancelled) return;\n      setFlattenChange(fc);\n      const bd = applyDesignDiff(rawDesign, fc.forward) as any;\n      setBaseDesign(bd);\n      setSelectedPieceGuids((bd?.pieces ?? []).slice(0, 3).map((piece: any) =\u003e piece.guid));\n    })();\n    return () =\u003e {\n      cancelled = true;\n    };\n  }, [kit, language]);\n\n  React.useEffect(() =\u003e {\n    if (!baseDesign) return;\n    let cancelled = false;\n    void (async () =\u003e {\n      if (selectedPieceGuids.length === 0) {\n        if (!cancelled) setDesignDiff(undefined);\n        return;\n      }\n      // Invalidate stale output while recomputing.\n      setDesignDiff(undefined);\n      const diff = await nativeDragPieces(baseDesign, selectedPieceGuids, vec, language);\n      if (!cancelled) setDesignDiff(diff);\n    })();\n    return () =\u003e {\n      cancelled = true;\n    };\n  }, [baseDesign, selectedPieceGuids, vec, language]);\n\n  const outputDesign = React.useMemo(() =\u003e (designDiff \u0026\u0026 baseDesign ? applyDesignDiff(baseDesign, designDiff) : (baseDesign ?? rawDesign)), [designDiff, baseDesign]);\n\n  const context: AlgorithmContextValue = React.useMemo(\n    () =\u003e ({\n      kit,\n      design: baseDesign ?? rawDesign,\n      vec,\n      onVecChange: setVec,\n      vecMin: { u: -10, v: -10 },\n      vecMax: { u: 10, v: 10 },\n      selectedPieceGuids,\n      onSelectedPieceGuidsChange: setSelectedPieceGuids,\n      designDiff,\n      outputDesign,\n      error:\n        !flattenChange || !baseDesign\n          ? `Loading drag preview (${language})…`\n          : selectedPieceGuids.length === 0\n            ? \"Select at least one piece to drag.\"\n            : !designDiff\n              ? `Loading drag result (${language})…`\n              : undefined,\n    }),\n    [kit, baseDesign, selectedPieceGuids, vec, designDiff, outputDesign, flattenChange, language],\n  );\n\n  return \u003cAlgorithmApp id=\"drag\" label=\"Drag\" windows={WINDOWS} context={context} className=\"h-full w-full\" /\u003e;\n}\n\nconst meta = {\n  title: \"compose-algorithms/Drag\",\n  parameters: { layout: \"fullscreen\" },\n  tags: [\"autodocs\"],\n} satisfies Meta;\n\nexport default meta;\n\ntype Story = StoryObj\u003ctypeof meta\u003e;\n\nexport const Default: Story = { render: () =\u003e \u003cDragFrame /\u003e };\n"
           },
-          "tool_output": "{\"file_path\":\"/workspaces/semio/semio/algorithms/.storybook/stories/Drag.stories.tsx\",\"success\":true}",
+          "tool_output": "{\"file_path\":\"/workspaces/semio/compose/algorithms/.storybook/stories/Drag.stories.tsx\",\"success\":true}",
           "duration": 201.612,
           "tool_use_id": "call_cFF3C8WQSEIVFd2FFpEH2tLz\nctc_023c5c985a9b54a50169ca70d58434819695cb1d7ddb90e0e7",
           "hook_event_name": "postToolUse",
@@ -552,7 +552,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}
@@ -565,7 +565,7 @@
         "kind": "agent.compacting",
         "second": "2026-03-30T12:47:31Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
@@ -585,7 +585,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}
@@ -598,21 +598,21 @@
         "kind": "agent.ended",
         "second": "2026-03-30T12:47:36Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
           "conversation_id": "eba0c856-1297-471c-9af7-2ee0e818329c",
           "generation_id": "09b85c15-d03c-43e6-bdc3-ae7821612187",
           "model": "default",
-          "text": "### ✅ Fixed: no stale outputs while inputs change\n\nI updated the async Storybook frames so **changing inputs immediately invalidates the previous result** and shows a **Loading…** state until the new result arrives:\n\n- **`semio/algorithms/.storybook/stories/Delete.stories.tsx`**\n  - On selection change: clears `designDiff` immediately, then recomputes.\n  - UI now shows **“Loading delete result (…)…”** instead of rendering an old diff/output.\n\n- **`semio/algorithms/.storybook/stories/Drag.stories.tsx`**\n  - On language change: clears `flattenChange`, `baseDesign`, `selectedPieceGuids`, `designDiff` immediately.\n  - On selection/vec change: clears `designDiff` immediately, then recomputes.\n  - UI now shows **“Loading drag result (…)…”** instead of stale diff/output.\n\nNo lints introduced.",
+          "text": "### ✅ Fixed: no stale outputs while inputs change\n\nI updated the async Storybook frames so **changing inputs immediately invalidates the previous result** and shows a **Loading…** state until the new result arrives:\n\n- **`compose/algorithms/.storybook/stories/Delete.stories.tsx`**\n  - On selection change: clears `designDiff` immediately, then recomputes.\n  - UI now shows **“Loading delete result (…)…”** instead of rendering an old diff/output.\n\n- **`compose/algorithms/.storybook/stories/Drag.stories.tsx`**\n  - On language change: clears `flattenChange`, `baseDesign`, `selectedPieceGuids`, `designDiff` immediately.\n  - On selection/vec change: clears `designDiff` immediately, then recomputes.\n  - UI now shows **“Loading drag result (…)…”** instead of stale diff/output.\n\nNo lints introduced.",
           "hook_event_name": "afterAgentResponse",
           "cursor_version": "2.6.22",
           "workspace_roots": [
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}
@@ -625,7 +625,7 @@
         "kind": "agent.ended",
         "second": "2026-03-30T12:47:37Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
@@ -640,7 +640,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}
@@ -653,7 +653,7 @@
         "kind": "agent.prompt.submitting",
         "second": "2026-03-30T12:48:42Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
@@ -673,7 +673,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}
@@ -686,13 +686,13 @@
         "kind": "agent.thinking.ended",
         "second": "2026-03-30T12:48:54Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
           "conversation_id": "eba0c856-1297-471c-9af7-2ee0e818329c",
           "generation_id": "57e594c2-30e2-4bf8-a8bb-80205e9b056b",
-          "text": "**Debugging design output issues**\n\nI need to ensure that `outputDesign` doesn't display stale data when `designDiff` is undefined or loading. In Delete/Drag actions, we clear `designDiff`, but `AlgorithmApp` might still render `outputDesign` that's outdated. It might make sense to set `outputDesign` to `baseDesign` or `rawDesign` during loading. Actually, if `designDiff` is set to undefined, the recomputed `outputDesign` becomes `baseDesign`. But the user says the design still shows incorrect data, so perhaps `baseDesign` itself is stale when non-language inputs change?\n**Adjusting output design context**\n\nI need to adjust the context: when loading and there's no `designDiff` but the selection is non-empty, should I set `outputDesign` to `baseDesign`? That seems to be the current setup. Maybe they actually want `outputDesign` to be null to trigger a loading view? It's essential to check how `AlgorithmApp` is rendering, particularly in `semio/algorithms/index.tsx` or within the `AlgorithmApp` component itself. I'll inspect that to be sure.",
+          "text": "**Debugging design output issues**\n\nI need to ensure that `outputDesign` doesn't display stale data when `designDiff` is undefined or loading. In Delete/Drag actions, we clear `designDiff`, but `AlgorithmApp` might still render `outputDesign` that's outdated. It might make sense to set `outputDesign` to `baseDesign` or `rawDesign` during loading. Actually, if `designDiff` is set to undefined, the recomputed `outputDesign` becomes `baseDesign`. But the user says the design still shows incorrect data, so perhaps `baseDesign` itself is stale when non-language inputs change?\n**Adjusting output design context**\n\nI need to adjust the context: when loading and there's no `designDiff` but the selection is non-empty, should I set `outputDesign` to `baseDesign`? That seems to be the current setup. Maybe they actually want `outputDesign` to be null to trigger a loading view? It's essential to check how `AlgorithmApp` is rendering, particularly in `compose/algorithms/index.tsx` or within the `AlgorithmApp` component itself. I'll inspect that to be sure.",
           "duration_ms": 4394,
           "model": "default",
           "hook_event_name": "afterAgentThought",
@@ -701,7 +701,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}
@@ -714,7 +714,7 @@
         "kind": "agent.file.read.starting",
         "second": "2026-03-30T12:48:55Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
@@ -724,7 +724,7 @@
           "tool_name": "Grep",
           "tool_input": {
             "pattern": "function AlgorithmApp|export function AlgorithmApp",
-            "file_path": "/workspaces/semio/semio/algorithms",
+            "file_path": "/workspaces/semio/compose/algorithms",
             "output_mode": "content"
           },
           "tool_use_id": "call_bGbQD26bh2bIA0Zmc50HZbxN\nfc_014ff790430bf8efc7116c1519e76714b2782e5ea72ccbbe827cc966ee7d0",
@@ -734,7 +734,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}
@@ -747,7 +747,7 @@
         "kind": "agent.file.read.starting",
         "second": "2026-03-30T12:48:55Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
@@ -757,7 +757,7 @@
           "tool_name": "Grep",
           "tool_input": {
             "pattern": "outputDesign",
-            "file_path": "/workspaces/semio/semio/algorithms",
+            "file_path": "/workspaces/semio/compose/algorithms",
             "output_mode": "content"
           },
           "tool_use_id": "call_en6gJmNKMqfB9uoPwttAiZVe\nfc_014ff79043ab9585a15a5e932c53fb17268fd81df6a431c131b5ee7e738f1",
@@ -767,7 +767,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}
@@ -780,7 +780,7 @@
         "kind": "agent.file.read.starting",
         "second": "2026-03-30T12:48:55Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
@@ -789,7 +789,7 @@
           "model": "default",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/workspaces/semio/semio/algorithms/index.tsx"
+            "file_path": "/workspaces/semio/compose/algorithms/index.tsx"
           },
           "tool_use_id": "call_u8Qn5bC3RSVO02nzjHPS3Qvm\nfc_014ff79043917389c8e0b0951029fd76b7ee833fc4c038c5f596814eed0b3",
           "hook_event_name": "preToolUse",
@@ -798,7 +798,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}
@@ -811,7 +811,7 @@
         "kind": "agent.file.read.ended",
         "second": "2026-03-30T12:48:55Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
@@ -820,9 +820,9 @@
           "model": "default",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/workspaces/semio/semio/algorithms/index.tsx"
+            "file_path": "/workspaces/semio/compose/algorithms/index.tsx"
           },
-          "error_message": "File not found: /workspaces/semio/semio/algorithms/index.tsx",
+          "error_message": "File not found: /workspaces/semio/compose/algorithms/index.tsx",
           "failure_type": "error",
           "duration": 2.244,
           "tool_use_id": "call_u8Qn5bC3RSVO02nzjHPS3Qvm\nfc_014ff79043917389c8e0b0951029fd76b7ee833fc4c038c5f596814eed0b3",
@@ -833,7 +833,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}
@@ -846,7 +846,7 @@
         "kind": "agent.file.read.ended",
         "second": "2026-03-30T12:48:55Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
@@ -856,7 +856,7 @@
           "tool_name": "Grep",
           "tool_input": {
             "pattern": "function AlgorithmApp|export function AlgorithmApp",
-            "file_path": "/workspaces/semio/semio/algorithms",
+            "file_path": "/workspaces/semio/compose/algorithms",
             "output_mode": "content"
           },
           "tool_output": "{\"pattern\":\"function AlgorithmApp|export function AlgorithmApp\",\"success\":true}",
@@ -868,7 +868,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}
@@ -881,7 +881,7 @@
         "kind": "agent.file.read.ended",
         "second": "2026-03-30T12:48:55Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
@@ -891,7 +891,7 @@
           "tool_name": "Grep",
           "tool_input": {
             "pattern": "outputDesign",
-            "file_path": "/workspaces/semio/semio/algorithms",
+            "file_path": "/workspaces/semio/compose/algorithms",
             "output_mode": "content"
           },
           "tool_output": "{\"pattern\":\"outputDesign\",\"success\":true}",
@@ -903,7 +903,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}
@@ -916,7 +916,7 @@
         "kind": "agent.file.read.starting",
         "second": "2026-03-30T12:48:59Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
@@ -926,7 +926,7 @@
           "tool_name": "Grep",
           "tool_input": {
             "pattern": "",
-            "glob": "**/semio/algorithms/index.*",
+            "glob": "**/compose/algorithms/index.*",
             "output_mode": "files_with_matches"
           },
           "tool_use_id": "call_ddmd4ULLqGOVRy51H9Mx3G5P\nfc_019c8e7d681e874661a3c16efad1180bea458e02668ff57c554aff9a60461",
@@ -936,7 +936,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}
@@ -949,7 +949,7 @@
         "kind": "agent.file.read.ended",
         "second": "2026-03-30T12:48:59Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
@@ -959,7 +959,7 @@
           "tool_name": "Grep",
           "tool_input": {
             "pattern": "",
-            "glob": "**/semio/algorithms/index.*",
+            "glob": "**/compose/algorithms/index.*",
             "output_mode": "files_with_matches"
           },
           "tool_output": "{\"pattern\":\"\",\"success\":true}",
@@ -971,7 +971,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}
@@ -984,7 +984,7 @@
         "kind": "agent.file.read.starting",
         "second": "2026-03-30T12:49:02Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
@@ -993,7 +993,7 @@
           "model": "default",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/workspaces/semio/semio/algorithms/index.ts"
+            "file_path": "/workspaces/semio/compose/algorithms/index.ts"
           },
           "tool_use_id": "call_cPb7BWta913P9rbP0eI9x3uI\nfc_016b708ac71b2dea7754fa41f9f6ff1573d0a5635a390c8838d2c53f6a12b",
           "hook_event_name": "preToolUse",
@@ -1002,7 +1002,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}
@@ -1015,15 +1015,15 @@
         "kind": "agent.file.read.starting",
         "second": "2026-03-30T12:49:02Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
           "conversation_id": "eba0c856-1297-471c-9af7-2ee0e818329c",
           "generation_id": "57e594c2-30e2-4bf8-a8bb-80205e9b056b",
           "model": "default",
-          "content": "// #region 🔖Header\n// 💻 semio/algorithms/index.ts\n// Specs: Re-exports AlgorithmApp, native algorithm REST adapter helpers, and window kinds for Storybook.\n// Summary: Algorithm bundle entry re-exporting AlgorithmApp from @semio/ui and nativeAlgorithmAdapter.\n// 2026 Ueli Saluz \u003cueli@semio-tech.com\u003e\n// #endregion 🔖Header\n\nexport { AlgorithmApp, WindowKind, createIpoAlgorithmLayout, useAlgorithm, type AlgorithmAppProps, type AlgorithmContextValue, type AlgorithmWindowDef, type VecValue } from \"@semio/ui\";\nexport { nativeDeletePieces, nativeDragPieces, nativeFlattenDesign, type NativeAlgorithmExecutePayload, type NativeAlgorithmLanguage, type NativeAlgorithmOperation } from \"./nativeAlgorithmAdapter\";\n\n",
-          "file_path": "/workspaces/semio/semio/algorithms/index.ts",
+          "content": "// #region 🔖Header\n// 💻 compose/algorithms/index.ts\n// Specs: Re-exports AlgorithmApp, native algorithm REST adapter helpers, and window kinds for Storybook.\n// Summary: Algorithm bundle entry re-exporting AlgorithmApp from @compose/ui and nativeAlgorithmAdapter.\n// 2026 Ueli Saluz \u003cueli@semio-tech.com\u003e\n// #endregion 🔖Header\n\nexport { AlgorithmApp, WindowKind, createIpoAlgorithmLayout, useAlgorithm, type AlgorithmAppProps, type AlgorithmContextValue, type AlgorithmWindowDef, type VecValue } from \"@compose/ui\";\nexport { nativeDeletePieces, nativeDragPieces, nativeFlattenDesign, type NativeAlgorithmExecutePayload, type NativeAlgorithmLanguage, type NativeAlgorithmOperation } from \"./nativeAlgorithmAdapter\";\n\n",
+          "file_path": "/workspaces/semio/compose/algorithms/index.ts",
           "attachments": [],
           "hook_event_name": "beforeReadFile",
           "cursor_version": "2.6.22",
@@ -1031,7 +1031,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}
@@ -1044,7 +1044,7 @@
         "kind": "agent.file.read.ended",
         "second": "2026-03-30T12:49:03Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
@@ -1053,9 +1053,9 @@
           "model": "default",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/workspaces/semio/semio/algorithms/index.ts"
+            "file_path": "/workspaces/semio/compose/algorithms/index.ts"
           },
-          "tool_output": "{\"file_path\":\"/workspaces/semio/semio/algorithms/index.ts\",\"content_length\":713}",
+          "tool_output": "{\"file_path\":\"/workspaces/semio/compose/algorithms/index.ts\",\"content_length\":713}",
           "duration": 9.76,
           "tool_use_id": "call_cPb7BWta913P9rbP0eI9x3uI\nfc_016b708ac71b2dea7754fa41f9f6ff1573d0a5635a390c8838d2c53f6a12b",
           "hook_event_name": "postToolUse",
@@ -1064,7 +1064,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}
@@ -1077,7 +1077,7 @@
         "kind": "agent.file.read.starting",
         "second": "2026-03-30T12:49:06Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
@@ -1087,7 +1087,7 @@
           "tool_name": "Grep",
           "tool_input": {
             "pattern": "export function AlgorithmApp|function AlgorithmApp",
-            "file_path": "/workspaces/semio/semio/ui",
+            "file_path": "/workspaces/semio/compose/ui",
             "output_mode": "files_with_matches"
           },
           "tool_use_id": "call_n9bdCxvXOscknf1pdHvbFjDR\nfc_01532bf698dff9c1b080020019e613979da436838bf3fec961712091f8ecb",
@@ -1097,7 +1097,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}
@@ -1110,7 +1110,7 @@
         "kind": "agent.file.read.starting",
         "second": "2026-03-30T12:49:06Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
@@ -1120,7 +1120,7 @@
           "tool_name": "Grep",
           "tool_input": {
             "pattern": "outputDesign",
-            "file_path": "/workspaces/semio/semio/ui",
+            "file_path": "/workspaces/semio/compose/ui",
             "output_mode": "content"
           },
           "tool_use_id": "call_P1yIVabsC967JLsyNxlJgJRI\nfc_01532bf698de4f2f2b3aa94bd43855e0c34d547fd9fc824b2cd4c8d373645",
@@ -1130,7 +1130,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}
@@ -1143,7 +1143,7 @@
         "kind": "agent.file.read.starting",
         "second": "2026-03-30T12:49:06Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
@@ -1153,7 +1153,7 @@
           "tool_name": "Grep",
           "tool_input": {
             "pattern": "",
-            "glob": "**/semio/ui/**/*Algorithm*.*",
+            "glob": "**/compose/ui/**/*Algorithm*.*",
             "output_mode": "files_with_matches"
           },
           "tool_use_id": "call_o2up38j1FIZGtNw0pLecxUlJ\nfc_01532bf6987a8cced6e35e154582b407841309d411447a3e0c4898ff078b4",
@@ -1163,7 +1163,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}
@@ -1176,7 +1176,7 @@
         "kind": "agent.file.read.ended",
         "second": "2026-03-30T12:49:06Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
@@ -1186,7 +1186,7 @@
           "tool_name": "Grep",
           "tool_input": {
             "pattern": "export function AlgorithmApp|function AlgorithmApp",
-            "file_path": "/workspaces/semio/semio/ui",
+            "file_path": "/workspaces/semio/compose/ui",
             "output_mode": "files_with_matches"
           },
           "tool_output": "{\"pattern\":\"export function AlgorithmApp|function AlgorithmApp\",\"success\":true}",
@@ -1198,7 +1198,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}
@@ -1211,7 +1211,7 @@
         "kind": "agent.file.read.ended",
         "second": "2026-03-30T12:49:06Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
@@ -1221,7 +1221,7 @@
           "tool_name": "Grep",
           "tool_input": {
             "pattern": "outputDesign",
-            "file_path": "/workspaces/semio/semio/ui",
+            "file_path": "/workspaces/semio/compose/ui",
             "output_mode": "content"
           },
           "tool_output": "{\"pattern\":\"outputDesign\",\"success\":true}",
@@ -1233,7 +1233,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}
@@ -1246,7 +1246,7 @@
         "kind": "agent.file.read.ended",
         "second": "2026-03-30T12:49:06Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
@@ -1256,7 +1256,7 @@
           "tool_name": "Grep",
           "tool_input": {
             "pattern": "",
-            "glob": "**/semio/ui/**/*Algorithm*.*",
+            "glob": "**/compose/ui/**/*Algorithm*.*",
             "output_mode": "files_with_matches"
           },
           "tool_output": "{\"pattern\":\"\",\"success\":true}",
@@ -1268,7 +1268,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}
@@ -1281,7 +1281,7 @@
         "kind": "agent.thinking.ended",
         "second": "2026-03-30T12:49:20Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
@@ -1296,7 +1296,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}
@@ -1309,14 +1309,14 @@
         "kind": "agent.tool.code.edit.ended",
         "second": "2026-03-30T12:49:25Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
           "conversation_id": "eba0c856-1297-471c-9af7-2ee0e818329c",
           "generation_id": "57e594c2-30e2-4bf8-a8bb-80205e9b056b",
           "model": "default",
-          "file_path": "/workspaces/semio/semio/ui/index.tsx",
+          "file_path": "/workspaces/semio/compose/ui/index.tsx",
           "edits": [
             {
               "old_string": "const renderAlgorithmDiffWindow = (component: React.ReactElement, context: AlgorithmContextValue): React.ReactElement =\u003e {",
@@ -1345,7 +1345,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}
@@ -1358,21 +1358,21 @@
         "kind": "agent.ended",
         "second": "2026-03-30T12:49:32Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
           "conversation_id": "eba0c856-1297-471c-9af7-2ee0e818329c",
           "generation_id": "57e594c2-30e2-4bf8-a8bb-80205e9b056b",
           "model": "default",
-          "text": "### ✅ Output windows now show loading too\n\nThe output panels weren’t using the “loading” message at all — only the **Diff** window was. I fixed that in `semio/ui/index.tsx` by making **DesignDiffOutput, DesignOutput, and Scene** windows all render a status overlay whenever `context.error` is set.\n\n- **Changed**: `renderAlgorithmDiffWindow` → generalized `renderAlgorithmStatusWindow`\n- **Applied to**:\n  - `WindowKind.DESIGN_DIFF_OUTPUT`\n  - `WindowKind.DESIGN_OUTPUT`\n  - `WindowKind.SCENE`\n- **Tone**:\n  - “Loading …” / “Select …” → muted (not destructive)\n  - other messages → destructive\n\nSo when your stories set `error: \"Loading …\"` while recomputing, **both diff and design outputs stop rendering stale designs and show the loading state** instead.",
+          "text": "### ✅ Output windows now show loading too\n\nThe output panels weren’t using the “loading” message at all — only the **Diff** window was. I fixed that in `compose/ui/index.tsx` by making **DesignDiffOutput, DesignOutput, and Scene** windows all render a status overlay whenever `context.error` is set.\n\n- **Changed**: `renderAlgorithmDiffWindow` → generalized `renderAlgorithmStatusWindow`\n- **Applied to**:\n  - `WindowKind.DESIGN_DIFF_OUTPUT`\n  - `WindowKind.DESIGN_OUTPUT`\n  - `WindowKind.SCENE`\n- **Tone**:\n  - “Loading …” / “Select …” → muted (not destructive)\n  - other messages → destructive\n\nSo when your stories set `error: \"Loading …\"` while recomputing, **both diff and design outputs stop rendering stale designs and show the loading state** instead.",
           "hook_event_name": "afterAgentResponse",
           "cursor_version": "2.6.22",
           "workspace_roots": [
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}
@@ -1385,7 +1385,7 @@
         "kind": "agent.ended",
         "second": "2026-03-30T12:49:34Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
@@ -1400,7 +1400,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}
@@ -1413,7 +1413,7 @@
         "kind": "agent.prompt.submitting",
         "second": "2026-03-30T12:51:06Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
@@ -1433,7 +1433,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}
@@ -1446,7 +1446,7 @@
         "kind": "agent.thinking.ended",
         "second": "2026-03-30T12:51:17Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
@@ -1461,7 +1461,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}
@@ -1474,7 +1474,7 @@
         "kind": "agent.tool.code.edit.starting",
         "second": "2026-03-30T12:51:19Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
@@ -1483,8 +1483,8 @@
           "model": "default",
           "tool_name": "Write",
           "tool_input": {
-            "file_path": "/workspaces/semio/semio/algorithms/.storybook/stories/Drag.stories.tsx",
-            "content": "// #region 🔖Header\n// 💻 semio/algorithms/.storybook/stories/Drag.stories.tsx\n// Specs: Uses the AlgorithmApp shell with VEC_INPUT, PIECES_SELECTION_INPUT, DESIGN_DIFF_OUTPUT, DESIGN_OUTPUT windows.\n// Summary: Drag story using nativeFlattenDesign and nativeDragPieces with the Storybook language toolbar.\n// 2026 Ueli Saluz \u003cueli@semio-tech.com\u003e\n// #endregion 🔖Header\n\nimport type { DesignChange, DesignDiff } from \"@semio/js\";\nimport { applyDesignDiff } from \"@semio/js\";\nimport type { Meta, StoryObj } from \"@storybook/react\";\nimport * as React from \"react\";\n\nimport { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef } from \"../../index\";\nimport { nativeDragPieces, nativeFlattenDesign, type NativeAlgorithmLanguage } from \"../../nativeAlgorithmAdapter\";\nimport { useAlgorithmLanguage } from \"../withLanguage\";\n\nimport metabolismKit from \"../../../assets/semio/metabolism.kit.semio.json\";\n\nconst nakaginCapsuleTowerDesignGuid = \"9a890dd4-0a9c-48ac-920a-9e62666465ef\";\nconst rawDesign = (metabolismKit.designs ?? []).find((d: any) =\u003e d.guid === nakaginCapsuleTowerDesignGuid) as any;\n\nconst WINDOWS: AlgorithmWindowDef[] = [\n  { id: \"drag-vec\", kind: WindowKind.VEC_INPUT, label: \"Vec\" },\n  { id: \"drag-input\", kind: WindowKind.PIECES_SELECTION_INPUT, label: \"Input\" },\n  { id: \"drag-diff\", kind: WindowKind.DESIGN_DIFF_OUTPUT, label: \"Diff\" },\n  { id: \"drag-output\", kind: WindowKind.DESIGN_OUTPUT, label: \"Output\" },\n];\n\nfunction DragFrame() {\n  const language = useAlgorithmLanguage() as NativeAlgorithmLanguage;\n  const kit = metabolismKit as any;\n  const [flattenChange, setFlattenChange] = React.useState\u003cDesignChange | null\u003e(null);\n  const [baseDesign, setBaseDesign] = React.useState\u003cany | null\u003e(null);\n  const [selectedPieceGuids, setSelectedPieceGuids] = React.useState\u003cstring[]\u003e([]);\n  const [vec, setVec] = React.useState({ u: 1, v: -2 });\n  const [designDiff, setDesignDiff] = React.useState\u003cDesignDiff | undefined\u003e(undefined);\n\n  React.useEffect(() =\u003e {\n    let cancelled = false;\n    // Clear stale preview state immediately on language change to avoid rendering an old diff/output.\n    // Keep user inputs (selection, vec) stable so different languages can be compared easily.\n    setFlattenChange(null);\n    setBaseDesign(null);\n    setDesignDiff(undefined);\n    void (async () =\u003e {\n      const fc = await nativeFlattenDesign(kit, rawDesign.guid, language);\n      if (cancelled) return;\n      setFlattenChange(fc);\n      const bd = applyDesignDiff(rawDesign, fc.forward) as any;\n      setBaseDesign(bd);\n      setSelectedPieceGuids((prev) =\u003e {\n        const pieceGuids = new Set\u003cstring\u003e((bd?.pieces ?? []).map((p: any) =\u003e p.guid));\n        const filtered = prev.filter((g) =\u003e pieceGuids.has(g));\n        if (filtered.length \u003e 0) return filtered;\n        return (bd?.pieces ?? []).slice(0, 3).map((piece: any) =\u003e piece.guid);\n      });\n    })();\n    return () =\u003e {\n      cancelled = true;\n    };\n  }, [kit, language]);\n\n  React.useEffect(() =\u003e {\n    if (!baseDesign) return;\n    let cancelled = false;\n    void (async () =\u003e {\n      if (selectedPieceGuids.length === 0) {\n        if (!cancelled) setDesignDiff(undefined);\n        return;\n      }\n      // Invalidate stale output while recomputing.\n      setDesignDiff(undefined);\n      const diff = await nativeDragPieces(baseDesign, selectedPieceGuids, vec, language);\n      if (!cancelled) setDesignDiff(diff);\n    })();\n    return () =\u003e {\n      cancelled = true;\n    };\n  }, [baseDesign, selectedPieceGuids, vec, language]);\n\n  const outputDesign = React.useMemo(() =\u003e (designDiff \u0026\u0026 baseDesign ? applyDesignDiff(baseDesign, designDiff) : (baseDesign ?? rawDesign)), [designDiff, baseDesign]);\n\n  const context: AlgorithmContextValue = React.useMemo(\n    () =\u003e ({\n      kit,\n      design: baseDesign ?? rawDesign,\n      vec,\n      onVecChange: setVec,\n      vecMin: { u: -10, v: -10 },\n      vecMax: { u: 10, v: 10 },\n      selectedPieceGuids,\n      onSelectedPieceGuidsChange: setSelectedPieceGuids,\n      designDiff,\n      outputDesign,\n      error: !flattenChange || !baseDesign ? `Loading drag preview (${language})…` : selectedPieceGuids.length === 0 ? \"Select at least one piece to drag.\" : !designDiff ? `Loading drag result (${language})…` : undefined,\n    }),\n    [kit, baseDesign, selectedPieceGuids, vec, designDiff, outputDesign, flattenChange, language],\n  );\n\n  return \u003cAlgorithmApp id=\"drag\" label=\"Drag\" windows={WINDOWS} context={context} className=\"h-full w-full\" /\u003e;\n}\n\nconst meta = {\n  title: \"semio-algorithms/Drag\",\n  parameters: { layout: \"fullscreen\" },\n  tags: [\"autodocs\"],\n} satisfies Meta;\n\nexport default meta;\n\ntype Story = StoryObj\u003ctypeof meta\u003e;\n\nexport const Default: Story = { render: () =\u003e \u003cDragFrame /\u003e };\n"
+            "file_path": "/workspaces/semio/compose/algorithms/.storybook/stories/Drag.stories.tsx",
+            "content": "// #region 🔖Header\n// 💻 compose/algorithms/.storybook/stories/Drag.stories.tsx\n// Specs: Uses the AlgorithmApp shell with VEC_INPUT, PIECES_SELECTION_INPUT, DESIGN_DIFF_OUTPUT, DESIGN_OUTPUT windows.\n// Summary: Drag story using nativeFlattenDesign and nativeDragPieces with the Storybook language toolbar.\n// 2026 Ueli Saluz \u003cueli@semio-tech.com\u003e\n// #endregion 🔖Header\n\nimport type { DesignChange, DesignDiff } from \"@compose/js\";\nimport { applyDesignDiff } from \"@compose/js\";\nimport type { Meta, StoryObj } from \"@storybook/react\";\nimport * as React from \"react\";\n\nimport { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef } from \"../../index\";\nimport { nativeDragPieces, nativeFlattenDesign, type NativeAlgorithmLanguage } from \"../../nativeAlgorithmAdapter\";\nimport { useAlgorithmLanguage } from \"../withLanguage\";\n\nimport metabolismKit from \"../../../assets/compose/metabolism.kit.compose.json\";\n\nconst nakaginCapsuleTowerDesignGuid = \"9a890dd4-0a9c-48ac-920a-9e62666465ef\";\nconst rawDesign = (metabolismKit.designs ?? []).find((d: any) =\u003e d.guid === nakaginCapsuleTowerDesignGuid) as any;\n\nconst WINDOWS: AlgorithmWindowDef[] = [\n  { id: \"drag-vec\", kind: WindowKind.VEC_INPUT, label: \"Vec\" },\n  { id: \"drag-input\", kind: WindowKind.PIECES_SELECTION_INPUT, label: \"Input\" },\n  { id: \"drag-diff\", kind: WindowKind.DESIGN_DIFF_OUTPUT, label: \"Diff\" },\n  { id: \"drag-output\", kind: WindowKind.DESIGN_OUTPUT, label: \"Output\" },\n];\n\nfunction DragFrame() {\n  const language = useAlgorithmLanguage() as NativeAlgorithmLanguage;\n  const kit = metabolismKit as any;\n  const [flattenChange, setFlattenChange] = React.useState\u003cDesignChange | null\u003e(null);\n  const [baseDesign, setBaseDesign] = React.useState\u003cany | null\u003e(null);\n  const [selectedPieceGuids, setSelectedPieceGuids] = React.useState\u003cstring[]\u003e([]);\n  const [vec, setVec] = React.useState({ u: 1, v: -2 });\n  const [designDiff, setDesignDiff] = React.useState\u003cDesignDiff | undefined\u003e(undefined);\n\n  React.useEffect(() =\u003e {\n    let cancelled = false;\n    // Clear stale preview state immediately on language change to avoid rendering an old diff/output.\n    // Keep user inputs (selection, vec) stable so different languages can be compared easily.\n    setFlattenChange(null);\n    setBaseDesign(null);\n    setDesignDiff(undefined);\n    void (async () =\u003e {\n      const fc = await nativeFlattenDesign(kit, rawDesign.guid, language);\n      if (cancelled) return;\n      setFlattenChange(fc);\n      const bd = applyDesignDiff(rawDesign, fc.forward) as any;\n      setBaseDesign(bd);\n      setSelectedPieceGuids((prev) =\u003e {\n        const pieceGuids = new Set\u003cstring\u003e((bd?.pieces ?? []).map((p: any) =\u003e p.guid));\n        const filtered = prev.filter((g) =\u003e pieceGuids.has(g));\n        if (filtered.length \u003e 0) return filtered;\n        return (bd?.pieces ?? []).slice(0, 3).map((piece: any) =\u003e piece.guid);\n      });\n    })();\n    return () =\u003e {\n      cancelled = true;\n    };\n  }, [kit, language]);\n\n  React.useEffect(() =\u003e {\n    if (!baseDesign) return;\n    let cancelled = false;\n    void (async () =\u003e {\n      if (selectedPieceGuids.length === 0) {\n        if (!cancelled) setDesignDiff(undefined);\n        return;\n      }\n      // Invalidate stale output while recomputing.\n      setDesignDiff(undefined);\n      const diff = await nativeDragPieces(baseDesign, selectedPieceGuids, vec, language);\n      if (!cancelled) setDesignDiff(diff);\n    })();\n    return () =\u003e {\n      cancelled = true;\n    };\n  }, [baseDesign, selectedPieceGuids, vec, language]);\n\n  const outputDesign = React.useMemo(() =\u003e (designDiff \u0026\u0026 baseDesign ? applyDesignDiff(baseDesign, designDiff) : (baseDesign ?? rawDesign)), [designDiff, baseDesign]);\n\n  const context: AlgorithmContextValue = React.useMemo(\n    () =\u003e ({\n      kit,\n      design: baseDesign ?? rawDesign,\n      vec,\n      onVecChange: setVec,\n      vecMin: { u: -10, v: -10 },\n      vecMax: { u: 10, v: 10 },\n      selectedPieceGuids,\n      onSelectedPieceGuidsChange: setSelectedPieceGuids,\n      designDiff,\n      outputDesign,\n      error: !flattenChange || !baseDesign ? `Loading drag preview (${language})…` : selectedPieceGuids.length === 0 ? \"Select at least one piece to drag.\" : !designDiff ? `Loading drag result (${language})…` : undefined,\n    }),\n    [kit, baseDesign, selectedPieceGuids, vec, designDiff, outputDesign, flattenChange, language],\n  );\n\n  return \u003cAlgorithmApp id=\"drag\" label=\"Drag\" windows={WINDOWS} context={context} className=\"h-full w-full\" /\u003e;\n}\n\nconst meta = {\n  title: \"compose-algorithms/Drag\",\n  parameters: { layout: \"fullscreen\" },\n  tags: [\"autodocs\"],\n} satisfies Meta;\n\nexport default meta;\n\ntype Story = StoryObj\u003ctypeof meta\u003e;\n\nexport const Default: Story = { render: () =\u003e \u003cDragFrame /\u003e };\n"
           },
           "tool_use_id": "call_yzA1jE2l3QqRvasr1obVg98F\nctc_0975a6e996722da70169ca71c4a08081978d7a783752e1441a",
           "hook_event_name": "preToolUse",
@@ -1493,7 +1493,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}
@@ -1506,14 +1506,14 @@
         "kind": "agent.tool.code.edit.ended",
         "second": "2026-03-30T12:51:20Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
           "conversation_id": "eba0c856-1297-471c-9af7-2ee0e818329c",
           "generation_id": "878a11f5-1ca4-4466-9c30-81d64018fbde",
           "model": "default",
-          "file_path": "/workspaces/semio/semio/algorithms/.storybook/stories/Drag.stories.tsx",
+          "file_path": "/workspaces/semio/compose/algorithms/.storybook/stories/Drag.stories.tsx",
           "edits": [
             {
               "old_string": "",
@@ -1534,7 +1534,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}
@@ -1547,7 +1547,7 @@
         "kind": "agent.tool.code.edit.ended",
         "second": "2026-03-30T12:51:20Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
@@ -1556,10 +1556,10 @@
           "model": "default",
           "tool_name": "Write",
           "tool_input": {
-            "file_path": "/workspaces/semio/semio/algorithms/.storybook/stories/Drag.stories.tsx",
-            "content": "// #region 🔖Header\n// 💻 semio/algorithms/.storybook/stories/Drag.stories.tsx\n// Specs: Uses the AlgorithmApp shell with VEC_INPUT, PIECES_SELECTION_INPUT, DESIGN_DIFF_OUTPUT, DESIGN_OUTPUT windows.\n// Summary: Drag story using nativeFlattenDesign and nativeDragPieces with the Storybook language toolbar.\n// 2026 Ueli Saluz \u003cueli@semio-tech.com\u003e\n// #endregion 🔖Header\n\nimport type { DesignChange, DesignDiff } from \"@semio/js\";\nimport { applyDesignDiff } from \"@semio/js\";\nimport type { Meta, StoryObj } from \"@storybook/react\";\nimport * as React from \"react\";\n\nimport { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef } from \"../../index\";\nimport { nativeDragPieces, nativeFlattenDesign, type NativeAlgorithmLanguage } from \"../../nativeAlgorithmAdapter\";\nimport { useAlgorithmLanguage } from \"../withLanguage\";\n\nimport metabolismKit from \"../../../assets/semio/metabolism.kit.semio.json\";\n\nconst nakaginCapsuleTowerDesignGuid = \"9a890dd4-0a9c-48ac-920a-9e62666465ef\";\nconst rawDesign = (metabolismKit.designs ?? []).find((d: any) =\u003e d.guid === nakaginCapsuleTowerDesignGuid) as any;\n\nconst WINDOWS: AlgorithmWindowDef[] = [\n  { id: \"drag-vec\", kind: WindowKind.VEC_INPUT, label: \"Vec\" },\n  { id: \"drag-input\", kind: WindowKind.PIECES_SELECTION_INPUT, label: \"Input\" },\n  { id: \"drag-diff\", kind: WindowKind.DESIGN_DIFF_OUTPUT, label: \"Diff\" },\n  { id: \"drag-output\", kind: WindowKind.DESIGN_OUTPUT, label: \"Output\" },\n];\n\nfunction DragFrame() {\n  const language = useAlgorithmLanguage() as NativeAlgorithmLanguage;\n  const kit = metabolismKit as any;\n  const [flattenChange, setFlattenChange] = React.useState\u003cDesignChange | null\u003e(null);\n  const [baseDesign, setBaseDesign] = React.useState\u003cany | null\u003e(null);\n  const [selectedPieceGuids, setSelectedPieceGuids] = React.useState\u003cstring[]\u003e([]);\n  const [vec, setVec] = React.useState({ u: 1, v: -2 });\n  const [designDiff, setDesignDiff] = React.useState\u003cDesignDiff | undefined\u003e(undefined);\n\n  React.useEffect(() =\u003e {\n    let cancelled = false;\n    // Clear stale preview state immediately on language change to avoid rendering an old diff/output.\n    // Keep user inputs (selection, vec) stable so different languages can be compared easily.\n    setFlattenChange(null);\n    setBaseDesign(null);\n    setDesignDiff(undefined);\n    void (async () =\u003e {\n      const fc = await nativeFlattenDesign(kit, rawDesign.guid, language);\n      if (cancelled) return;\n      setFlattenChange(fc);\n      const bd = applyDesignDiff(rawDesign, fc.forward) as any;\n      setBaseDesign(bd);\n      setSelectedPieceGuids((prev) =\u003e {\n        const pieceGuids = new Set\u003cstring\u003e((bd?.pieces ?? []).map((p: any) =\u003e p.guid));\n        const filtered = prev.filter((g) =\u003e pieceGuids.has(g));\n        if (filtered.length \u003e 0) return filtered;\n        return (bd?.pieces ?? []).slice(0, 3).map((piece: any) =\u003e piece.guid);\n      });\n    })();\n    return () =\u003e {\n      cancelled = true;\n    };\n  }, [kit, language]);\n\n  React.useEffect(() =\u003e {\n    if (!baseDesign) return;\n    let cancelled = false;\n    void (async () =\u003e {\n      if (selectedPieceGuids.length === 0) {\n        if (!cancelled) setDesignDiff(undefined);\n        return;\n      }\n      // Invalidate stale output while recomputing.\n      setDesignDiff(undefined);\n      const diff = await nativeDragPieces(baseDesign, selectedPieceGuids, vec, language);\n      if (!cancelled) setDesignDiff(diff);\n    })();\n    return () =\u003e {\n      cancelled = true;\n    };\n  }, [baseDesign, selectedPieceGuids, vec, language]);\n\n  const outputDesign = React.useMemo(() =\u003e (designDiff \u0026\u0026 baseDesign ? applyDesignDiff(baseDesign, designDiff) : (baseDesign ?? rawDesign)), [designDiff, baseDesign]);\n\n  const context: AlgorithmContextValue = React.useMemo(\n    () =\u003e ({\n      kit,\n      design: baseDesign ?? rawDesign,\n      vec,\n      onVecChange: setVec,\n      vecMin: { u: -10, v: -10 },\n      vecMax: { u: 10, v: 10 },\n      selectedPieceGuids,\n      onSelectedPieceGuidsChange: setSelectedPieceGuids,\n      designDiff,\n      outputDesign,\n      error: !flattenChange || !baseDesign ? `Loading drag preview (${language})…` : selectedPieceGuids.length === 0 ? \"Select at least one piece to drag.\" : !designDiff ? `Loading drag result (${language})…` : undefined,\n    }),\n    [kit, baseDesign, selectedPieceGuids, vec, designDiff, outputDesign, flattenChange, language],\n  );\n\n  return \u003cAlgorithmApp id=\"drag\" label=\"Drag\" windows={WINDOWS} context={context} className=\"h-full w-full\" /\u003e;\n}\n\nconst meta = {\n  title: \"semio-algorithms/Drag\",\n  parameters: { layout: \"fullscreen\" },\n  tags: [\"autodocs\"],\n} satisfies Meta;\n\nexport default meta;\n\ntype Story = StoryObj\u003ctypeof meta\u003e;\n\nexport const Default: Story = { render: () =\u003e \u003cDragFrame /\u003e };\n"
+            "file_path": "/workspaces/semio/compose/algorithms/.storybook/stories/Drag.stories.tsx",
+            "content": "// #region 🔖Header\n// 💻 compose/algorithms/.storybook/stories/Drag.stories.tsx\n// Specs: Uses the AlgorithmApp shell with VEC_INPUT, PIECES_SELECTION_INPUT, DESIGN_DIFF_OUTPUT, DESIGN_OUTPUT windows.\n// Summary: Drag story using nativeFlattenDesign and nativeDragPieces with the Storybook language toolbar.\n// 2026 Ueli Saluz \u003cueli@semio-tech.com\u003e\n// #endregion 🔖Header\n\nimport type { DesignChange, DesignDiff } from \"@compose/js\";\nimport { applyDesignDiff } from \"@compose/js\";\nimport type { Meta, StoryObj } from \"@storybook/react\";\nimport * as React from \"react\";\n\nimport { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef } from \"../../index\";\nimport { nativeDragPieces, nativeFlattenDesign, type NativeAlgorithmLanguage } from \"../../nativeAlgorithmAdapter\";\nimport { useAlgorithmLanguage } from \"../withLanguage\";\n\nimport metabolismKit from \"../../../assets/compose/metabolism.kit.compose.json\";\n\nconst nakaginCapsuleTowerDesignGuid = \"9a890dd4-0a9c-48ac-920a-9e62666465ef\";\nconst rawDesign = (metabolismKit.designs ?? []).find((d: any) =\u003e d.guid === nakaginCapsuleTowerDesignGuid) as any;\n\nconst WINDOWS: AlgorithmWindowDef[] = [\n  { id: \"drag-vec\", kind: WindowKind.VEC_INPUT, label: \"Vec\" },\n  { id: \"drag-input\", kind: WindowKind.PIECES_SELECTION_INPUT, label: \"Input\" },\n  { id: \"drag-diff\", kind: WindowKind.DESIGN_DIFF_OUTPUT, label: \"Diff\" },\n  { id: \"drag-output\", kind: WindowKind.DESIGN_OUTPUT, label: \"Output\" },\n];\n\nfunction DragFrame() {\n  const language = useAlgorithmLanguage() as NativeAlgorithmLanguage;\n  const kit = metabolismKit as any;\n  const [flattenChange, setFlattenChange] = React.useState\u003cDesignChange | null\u003e(null);\n  const [baseDesign, setBaseDesign] = React.useState\u003cany | null\u003e(null);\n  const [selectedPieceGuids, setSelectedPieceGuids] = React.useState\u003cstring[]\u003e([]);\n  const [vec, setVec] = React.useState({ u: 1, v: -2 });\n  const [designDiff, setDesignDiff] = React.useState\u003cDesignDiff | undefined\u003e(undefined);\n\n  React.useEffect(() =\u003e {\n    let cancelled = false;\n    // Clear stale preview state immediately on language change to avoid rendering an old diff/output.\n    // Keep user inputs (selection, vec) stable so different languages can be compared easily.\n    setFlattenChange(null);\n    setBaseDesign(null);\n    setDesignDiff(undefined);\n    void (async () =\u003e {\n      const fc = await nativeFlattenDesign(kit, rawDesign.guid, language);\n      if (cancelled) return;\n      setFlattenChange(fc);\n      const bd = applyDesignDiff(rawDesign, fc.forward) as any;\n      setBaseDesign(bd);\n      setSelectedPieceGuids((prev) =\u003e {\n        const pieceGuids = new Set\u003cstring\u003e((bd?.pieces ?? []).map((p: any) =\u003e p.guid));\n        const filtered = prev.filter((g) =\u003e pieceGuids.has(g));\n        if (filtered.length \u003e 0) return filtered;\n        return (bd?.pieces ?? []).slice(0, 3).map((piece: any) =\u003e piece.guid);\n      });\n    })();\n    return () =\u003e {\n      cancelled = true;\n    };\n  }, [kit, language]);\n\n  React.useEffect(() =\u003e {\n    if (!baseDesign) return;\n    let cancelled = false;\n    void (async () =\u003e {\n      if (selectedPieceGuids.length === 0) {\n        if (!cancelled) setDesignDiff(undefined);\n        return;\n      }\n      // Invalidate stale output while recomputing.\n      setDesignDiff(undefined);\n      const diff = await nativeDragPieces(baseDesign, selectedPieceGuids, vec, language);\n      if (!cancelled) setDesignDiff(diff);\n    })();\n    return () =\u003e {\n      cancelled = true;\n    };\n  }, [baseDesign, selectedPieceGuids, vec, language]);\n\n  const outputDesign = React.useMemo(() =\u003e (designDiff \u0026\u0026 baseDesign ? applyDesignDiff(baseDesign, designDiff) : (baseDesign ?? rawDesign)), [designDiff, baseDesign]);\n\n  const context: AlgorithmContextValue = React.useMemo(\n    () =\u003e ({\n      kit,\n      design: baseDesign ?? rawDesign,\n      vec,\n      onVecChange: setVec,\n      vecMin: { u: -10, v: -10 },\n      vecMax: { u: 10, v: 10 },\n      selectedPieceGuids,\n      onSelectedPieceGuidsChange: setSelectedPieceGuids,\n      designDiff,\n      outputDesign,\n      error: !flattenChange || !baseDesign ? `Loading drag preview (${language})…` : selectedPieceGuids.length === 0 ? \"Select at least one piece to drag.\" : !designDiff ? `Loading drag result (${language})…` : undefined,\n    }),\n    [kit, baseDesign, selectedPieceGuids, vec, designDiff, outputDesign, flattenChange, language],\n  );\n\n  return \u003cAlgorithmApp id=\"drag\" label=\"Drag\" windows={WINDOWS} context={context} className=\"h-full w-full\" /\u003e;\n}\n\nconst meta = {\n  title: \"compose-algorithms/Drag\",\n  parameters: { layout: \"fullscreen\" },\n  tags: [\"autodocs\"],\n} satisfies Meta;\n\nexport default meta;\n\ntype Story = StoryObj\u003ctypeof meta\u003e;\n\nexport const Default: Story = { render: () =\u003e \u003cDragFrame /\u003e };\n"
           },
-          "tool_output": "{\"file_path\":\"/workspaces/semio/semio/algorithms/.storybook/stories/Drag.stories.tsx\",\"success\":true}",
+          "tool_output": "{\"file_path\":\"/workspaces/semio/compose/algorithms/.storybook/stories/Drag.stories.tsx\",\"success\":true}",
           "duration": 208.576,
           "tool_use_id": "call_yzA1jE2l3QqRvasr1obVg98F\nctc_0975a6e996722da70169ca71c4a08081978d7a783752e1441a",
           "hook_event_name": "postToolUse",
@@ -1568,7 +1568,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}
@@ -1581,7 +1581,7 @@
         "kind": "agent.tool.code.edit.starting",
         "second": "2026-03-30T12:51:24Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
@@ -1590,8 +1590,8 @@
           "model": "default",
           "tool_name": "Write",
           "tool_input": {
-            "file_path": "/workspaces/semio/semio/algorithms/.storybook/stories/Delete.stories.tsx",
-            "content": "// #region 🔖Header\n// 💻 semio/algorithms/.storybook/stories/Delete.stories.tsx\n// Specs: Uses the AlgorithmApp shell with PIECES_SELECTION_INPUT, DESIGN_DIFF_OUTPUT, DESIGN_OUTPUT windows.\n// Summary: Delete story using nativeFlattenDesign/nativeDeletePieces with the Storybook language toolbar.\n// 2026 Ueli Saluz \u003cueli@semio-tech.com\u003e\n// #endregion 🔖Header\n\nimport type { DesignChange } from \"@semio/js\";\nimport { applyDesignDiff } from \"@semio/js\";\nimport type { Meta, StoryObj } from \"@storybook/react\";\nimport * as React from \"react\";\n\nimport { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef } from \"../../index\";\nimport { nativeDeletePieces, nativeFlattenDesign, type NativeAlgorithmLanguage } from \"../../nativeAlgorithmAdapter\";\nimport { useAlgorithmLanguage } from \"../withLanguage\";\n\nimport metabolismKit from \"../../../assets/semio/metabolism.kit.semio.json\";\n\nconst nakaginCapsuleTowerDesignGuid = \"9a890dd4-0a9c-48ac-920a-9e62666465ef\";\nconst rawDesign = (metabolismKit.designs ?? []).find((d: any) =\u003e d.guid === nakaginCapsuleTowerDesignGuid) as any;\n\nconst WINDOWS: AlgorithmWindowDef[] = [\n  { id: \"delete-input\", kind: WindowKind.PIECES_SELECTION_INPUT, label: \"Input\" },\n  { id: \"delete-diff\", kind: WindowKind.DESIGN_DIFF_OUTPUT, label: \"Diff\" },\n  { id: \"delete-output\", kind: WindowKind.DESIGN_OUTPUT, label: \"Output\" },\n];\n\nfunction DeleteFrame() {\n  const language = useAlgorithmLanguage() as NativeAlgorithmLanguage;\n  const kit = metabolismKit as any;\n  const [flattenChange, setFlattenChange] = React.useState\u003cDesignChange | null\u003e(null);\n  const [baseDesign, setBaseDesign] = React.useState\u003cany | null\u003e(null);\n  const [selectedPieceGuids, setSelectedPieceGuids] = React.useState\u003cstring[]\u003e([]);\n  const [designDiff, setDesignDiff] = React.useState\u003cany | undefined\u003e(undefined);\n\n  React.useEffect(() =\u003e {\n    let cancelled = false;\n    // Clear stale preview state immediately on language change to avoid rendering an old diff/output.\n    setFlattenChange(null);\n    setBaseDesign(null);\n    setDesignDiff(undefined);\n    void (async () =\u003e {\n      const fc = await nativeFlattenDesign(kit, rawDesign.guid, language);\n      if (cancelled) return;\n      setFlattenChange(fc);\n      const bd = applyDesignDiff(rawDesign, fc.forward) as any;\n      setBaseDesign(bd);\n      setSelectedPieceGuids((prev) =\u003e {\n        const pieceGuids = new Set\u003cstring\u003e((bd?.pieces ?? []).map((p: any) =\u003e p.guid));\n        const filtered = prev.filter((g) =\u003e pieceGuids.has(g));\n        if (filtered.length \u003e 0) return filtered;\n        return (bd?.pieces ?? []).slice(0, 3).map((piece: any) =\u003e piece.guid);\n      });\n    })();\n    return () =\u003e {\n      cancelled = true;\n    };\n  }, [kit, language]);\n\n  React.useEffect(() =\u003e {\n    if (!baseDesign) return;\n    let cancelled = false;\n    void (async () =\u003e {\n      if (selectedPieceGuids.length === 0) {\n        if (!cancelled) setDesignDiff(undefined);\n        return;\n      }\n      // Invalidate stale output while recomputing.\n      setDesignDiff(undefined);\n      const diff = await nativeDeletePieces(kit, baseDesign, selectedPieceGuids, [], language);\n      if (!cancelled) setDesignDiff(diff);\n    })();\n    return () =\u003e {\n      cancelled = true;\n    };\n  }, [kit, baseDesign, selectedPieceGuids, language]);\n\n  const outputDesign = React.useMemo(() =\u003e (designDiff \u0026\u0026 baseDesign ? applyDesignDiff(baseDesign, designDiff) : (baseDesign ?? rawDesign)), [designDiff, baseDesign]);\n\n  const context: AlgorithmContextValue = React.useMemo(\n    () =\u003e ({\n      kit,\n      design: baseDesign ?? rawDesign,\n      selectedPieceGuids,\n      onSelectedPieceGuidsChange: setSelectedPieceGuids,\n      designDiff,\n      outputDesign,\n      error: !flattenChange || !baseDesign ? `Loading delete preview (${language})…` : selectedPieceGuids.length === 0 ? \"Select at least one piece to delete.\" : !designDiff ? `Loading delete result (${language})…` : undefined,\n    }),\n    [kit, baseDesign, selectedPieceGuids, designDiff, outputDesign, flattenChange, language],\n  );\n\n  return \u003cAlgorithmApp id=\"delete\" label=\"Delete\" windows={WINDOWS} context={context} className=\"h-full w-full\" /\u003e;\n}\n\nconst meta = {\n  title: \"semio-algorithms/Delete\",\n  parameters: { layout: \"fullscreen\" },\n  tags: [\"autodocs\"],\n} satisfies Meta;\n\nexport default meta;\n\ntype Story = StoryObj\u003ctypeof meta\u003e;\n\nexport const Default: Story = { render: () =\u003e \u003cDeleteFrame /\u003e };\n"
+            "file_path": "/workspaces/semio/compose/algorithms/.storybook/stories/Delete.stories.tsx",
+            "content": "// #region 🔖Header\n// 💻 compose/algorithms/.storybook/stories/Delete.stories.tsx\n// Specs: Uses the AlgorithmApp shell with PIECES_SELECTION_INPUT, DESIGN_DIFF_OUTPUT, DESIGN_OUTPUT windows.\n// Summary: Delete story using nativeFlattenDesign/nativeDeletePieces with the Storybook language toolbar.\n// 2026 Ueli Saluz \u003cueli@semio-tech.com\u003e\n// #endregion 🔖Header\n\nimport type { DesignChange } from \"@compose/js\";\nimport { applyDesignDiff } from \"@compose/js\";\nimport type { Meta, StoryObj } from \"@storybook/react\";\nimport * as React from \"react\";\n\nimport { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef } from \"../../index\";\nimport { nativeDeletePieces, nativeFlattenDesign, type NativeAlgorithmLanguage } from \"../../nativeAlgorithmAdapter\";\nimport { useAlgorithmLanguage } from \"../withLanguage\";\n\nimport metabolismKit from \"../../../assets/compose/metabolism.kit.compose.json\";\n\nconst nakaginCapsuleTowerDesignGuid = \"9a890dd4-0a9c-48ac-920a-9e62666465ef\";\nconst rawDesign = (metabolismKit.designs ?? []).find((d: any) =\u003e d.guid === nakaginCapsuleTowerDesignGuid) as any;\n\nconst WINDOWS: AlgorithmWindowDef[] = [\n  { id: \"delete-input\", kind: WindowKind.PIECES_SELECTION_INPUT, label: \"Input\" },\n  { id: \"delete-diff\", kind: WindowKind.DESIGN_DIFF_OUTPUT, label: \"Diff\" },\n  { id: \"delete-output\", kind: WindowKind.DESIGN_OUTPUT, label: \"Output\" },\n];\n\nfunction DeleteFrame() {\n  const language = useAlgorithmLanguage() as NativeAlgorithmLanguage;\n  const kit = metabolismKit as any;\n  const [flattenChange, setFlattenChange] = React.useState\u003cDesignChange | null\u003e(null);\n  const [baseDesign, setBaseDesign] = React.useState\u003cany | null\u003e(null);\n  const [selectedPieceGuids, setSelectedPieceGuids] = React.useState\u003cstring[]\u003e([]);\n  const [designDiff, setDesignDiff] = React.useState\u003cany | undefined\u003e(undefined);\n\n  React.useEffect(() =\u003e {\n    let cancelled = false;\n    // Clear stale preview state immediately on language change to avoid rendering an old diff/output.\n    setFlattenChange(null);\n    setBaseDesign(null);\n    setDesignDiff(undefined);\n    void (async () =\u003e {\n      const fc = await nativeFlattenDesign(kit, rawDesign.guid, language);\n      if (cancelled) return;\n      setFlattenChange(fc);\n      const bd = applyDesignDiff(rawDesign, fc.forward) as any;\n      setBaseDesign(bd);\n      setSelectedPieceGuids((prev) =\u003e {\n        const pieceGuids = new Set\u003cstring\u003e((bd?.pieces ?? []).map((p: any) =\u003e p.guid));\n        const filtered = prev.filter((g) =\u003e pieceGuids.has(g));\n        if (filtered.length \u003e 0) return filtered;\n        return (bd?.pieces ?? []).slice(0, 3).map((piece: any) =\u003e piece.guid);\n      });\n    })();\n    return () =\u003e {\n      cancelled = true;\n    };\n  }, [kit, language]);\n\n  React.useEffect(() =\u003e {\n    if (!baseDesign) return;\n    let cancelled = false;\n    void (async () =\u003e {\n      if (selectedPieceGuids.length === 0) {\n        if (!cancelled) setDesignDiff(undefined);\n        return;\n      }\n      // Invalidate stale output while recomputing.\n      setDesignDiff(undefined);\n      const diff = await nativeDeletePieces(kit, baseDesign, selectedPieceGuids, [], language);\n      if (!cancelled) setDesignDiff(diff);\n    })();\n    return () =\u003e {\n      cancelled = true;\n    };\n  }, [kit, baseDesign, selectedPieceGuids, language]);\n\n  const outputDesign = React.useMemo(() =\u003e (designDiff \u0026\u0026 baseDesign ? applyDesignDiff(baseDesign, designDiff) : (baseDesign ?? rawDesign)), [designDiff, baseDesign]);\n\n  const context: AlgorithmContextValue = React.useMemo(\n    () =\u003e ({\n      kit,\n      design: baseDesign ?? rawDesign,\n      selectedPieceGuids,\n      onSelectedPieceGuidsChange: setSelectedPieceGuids,\n      designDiff,\n      outputDesign,\n      error: !flattenChange || !baseDesign ? `Loading delete preview (${language})…` : selectedPieceGuids.length === 0 ? \"Select at least one piece to delete.\" : !designDiff ? `Loading delete result (${language})…` : undefined,\n    }),\n    [kit, baseDesign, selectedPieceGuids, designDiff, outputDesign, flattenChange, language],\n  );\n\n  return \u003cAlgorithmApp id=\"delete\" label=\"Delete\" windows={WINDOWS} context={context} className=\"h-full w-full\" /\u003e;\n}\n\nconst meta = {\n  title: \"compose-algorithms/Delete\",\n  parameters: { layout: \"fullscreen\" },\n  tags: [\"autodocs\"],\n} satisfies Meta;\n\nexport default meta;\n\ntype Story = StoryObj\u003ctypeof meta\u003e;\n\nexport const Default: Story = { render: () =\u003e \u003cDeleteFrame /\u003e };\n"
           },
           "tool_use_id": "call_AlK8WWBWgTGdaAlkZ9vnBd3K\nctc_0975a6e996722da70169ca71c995b48197bc82a4b788271ebb",
           "hook_event_name": "preToolUse",
@@ -1600,7 +1600,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}
@@ -1613,14 +1613,14 @@
         "kind": "agent.tool.code.edit.ended",
         "second": "2026-03-30T12:51:25Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
           "conversation_id": "eba0c856-1297-471c-9af7-2ee0e818329c",
           "generation_id": "878a11f5-1ca4-4466-9c30-81d64018fbde",
           "model": "default",
-          "file_path": "/workspaces/semio/semio/algorithms/.storybook/stories/Delete.stories.tsx",
+          "file_path": "/workspaces/semio/compose/algorithms/.storybook/stories/Delete.stories.tsx",
           "edits": [
             {
               "old_string": "    setSelectedPieceGuids([]);",
@@ -1637,7 +1637,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}
@@ -1650,7 +1650,7 @@
         "kind": "agent.tool.code.edit.ended",
         "second": "2026-03-30T12:51:25Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
@@ -1659,10 +1659,10 @@
           "model": "default",
           "tool_name": "Write",
           "tool_input": {
-            "file_path": "/workspaces/semio/semio/algorithms/.storybook/stories/Delete.stories.tsx",
-            "content": "// #region 🔖Header\n// 💻 semio/algorithms/.storybook/stories/Delete.stories.tsx\n// Specs: Uses the AlgorithmApp shell with PIECES_SELECTION_INPUT, DESIGN_DIFF_OUTPUT, DESIGN_OUTPUT windows.\n// Summary: Delete story using nativeFlattenDesign/nativeDeletePieces with the Storybook language toolbar.\n// 2026 Ueli Saluz \u003cueli@semio-tech.com\u003e\n// #endregion 🔖Header\n\nimport type { DesignChange } from \"@semio/js\";\nimport { applyDesignDiff } from \"@semio/js\";\nimport type { Meta, StoryObj } from \"@storybook/react\";\nimport * as React from \"react\";\n\nimport { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef } from \"../../index\";\nimport { nativeDeletePieces, nativeFlattenDesign, type NativeAlgorithmLanguage } from \"../../nativeAlgorithmAdapter\";\nimport { useAlgorithmLanguage } from \"../withLanguage\";\n\nimport metabolismKit from \"../../../assets/semio/metabolism.kit.semio.json\";\n\nconst nakaginCapsuleTowerDesignGuid = \"9a890dd4-0a9c-48ac-920a-9e62666465ef\";\nconst rawDesign = (metabolismKit.designs ?? []).find((d: any) =\u003e d.guid === nakaginCapsuleTowerDesignGuid) as any;\n\nconst WINDOWS: AlgorithmWindowDef[] = [\n  { id: \"delete-input\", kind: WindowKind.PIECES_SELECTION_INPUT, label: \"Input\" },\n  { id: \"delete-diff\", kind: WindowKind.DESIGN_DIFF_OUTPUT, label: \"Diff\" },\n  { id: \"delete-output\", kind: WindowKind.DESIGN_OUTPUT, label: \"Output\" },\n];\n\nfunction DeleteFrame() {\n  const language = useAlgorithmLanguage() as NativeAlgorithmLanguage;\n  const kit = metabolismKit as any;\n  const [flattenChange, setFlattenChange] = React.useState\u003cDesignChange | null\u003e(null);\n  const [baseDesign, setBaseDesign] = React.useState\u003cany | null\u003e(null);\n  const [selectedPieceGuids, setSelectedPieceGuids] = React.useState\u003cstring[]\u003e([]);\n  const [designDiff, setDesignDiff] = React.useState\u003cany | undefined\u003e(undefined);\n\n  React.useEffect(() =\u003e {\n    let cancelled = false;\n    // Clear stale preview state immediately on language change to avoid rendering an old diff/output.\n    setFlattenChange(null);\n    setBaseDesign(null);\n    setDesignDiff(undefined);\n    void (async () =\u003e {\n      const fc = await nativeFlattenDesign(kit, rawDesign.guid, language);\n      if (cancelled) return;\n      setFlattenChange(fc);\n      const bd = applyDesignDiff(rawDesign, fc.forward) as any;\n      setBaseDesign(bd);\n      setSelectedPieceGuids((prev) =\u003e {\n        const pieceGuids = new Set\u003cstring\u003e((bd?.pieces ?? []).map((p: any) =\u003e p.guid));\n        const filtered = prev.filter((g) =\u003e pieceGuids.has(g));\n        if (filtered.length \u003e 0) return filtered;\n        return (bd?.pieces ?? []).slice(0, 3).map((piece: any) =\u003e piece.guid);\n      });\n    })();\n    return () =\u003e {\n      cancelled = true;\n    };\n  }, [kit, language]);\n\n  React.useEffect(() =\u003e {\n    if (!baseDesign) return;\n    let cancelled = false;\n    void (async () =\u003e {\n      if (selectedPieceGuids.length === 0) {\n        if (!cancelled) setDesignDiff(undefined);\n        return;\n      }\n      // Invalidate stale output while recomputing.\n      setDesignDiff(undefined);\n      const diff = await nativeDeletePieces(kit, baseDesign, selectedPieceGuids, [], language);\n      if (!cancelled) setDesignDiff(diff);\n    })();\n    return () =\u003e {\n      cancelled = true;\n    };\n  }, [kit, baseDesign, selectedPieceGuids, language]);\n\n  const outputDesign = React.useMemo(() =\u003e (designDiff \u0026\u0026 baseDesign ? applyDesignDiff(baseDesign, designDiff) : (baseDesign ?? rawDesign)), [designDiff, baseDesign]);\n\n  const context: AlgorithmContextValue = React.useMemo(\n    () =\u003e ({\n      kit,\n      design: baseDesign ?? rawDesign,\n      selectedPieceGuids,\n      onSelectedPieceGuidsChange: setSelectedPieceGuids,\n      designDiff,\n      outputDesign,\n      error: !flattenChange || !baseDesign ? `Loading delete preview (${language})…` : selectedPieceGuids.length === 0 ? \"Select at least one piece to delete.\" : !designDiff ? `Loading delete result (${language})…` : undefined,\n    }),\n    [kit, baseDesign, selectedPieceGuids, designDiff, outputDesign, flattenChange, language],\n  );\n\n  return \u003cAlgorithmApp id=\"delete\" label=\"Delete\" windows={WINDOWS} context={context} className=\"h-full w-full\" /\u003e;\n}\n\nconst meta = {\n  title: \"semio-algorithms/Delete\",\n  parameters: { layout: \"fullscreen\" },\n  tags: [\"autodocs\"],\n} satisfies Meta;\n\nexport default meta;\n\ntype Story = StoryObj\u003ctypeof meta\u003e;\n\nexport const Default: Story = { render: () =\u003e \u003cDeleteFrame /\u003e };\n"
+            "file_path": "/workspaces/semio/compose/algorithms/.storybook/stories/Delete.stories.tsx",
+            "content": "// #region 🔖Header\n// 💻 compose/algorithms/.storybook/stories/Delete.stories.tsx\n// Specs: Uses the AlgorithmApp shell with PIECES_SELECTION_INPUT, DESIGN_DIFF_OUTPUT, DESIGN_OUTPUT windows.\n// Summary: Delete story using nativeFlattenDesign/nativeDeletePieces with the Storybook language toolbar.\n// 2026 Ueli Saluz \u003cueli@semio-tech.com\u003e\n// #endregion 🔖Header\n\nimport type { DesignChange } from \"@compose/js\";\nimport { applyDesignDiff } from \"@compose/js\";\nimport type { Meta, StoryObj } from \"@storybook/react\";\nimport * as React from \"react\";\n\nimport { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef } from \"../../index\";\nimport { nativeDeletePieces, nativeFlattenDesign, type NativeAlgorithmLanguage } from \"../../nativeAlgorithmAdapter\";\nimport { useAlgorithmLanguage } from \"../withLanguage\";\n\nimport metabolismKit from \"../../../assets/compose/metabolism.kit.compose.json\";\n\nconst nakaginCapsuleTowerDesignGuid = \"9a890dd4-0a9c-48ac-920a-9e62666465ef\";\nconst rawDesign = (metabolismKit.designs ?? []).find((d: any) =\u003e d.guid === nakaginCapsuleTowerDesignGuid) as any;\n\nconst WINDOWS: AlgorithmWindowDef[] = [\n  { id: \"delete-input\", kind: WindowKind.PIECES_SELECTION_INPUT, label: \"Input\" },\n  { id: \"delete-diff\", kind: WindowKind.DESIGN_DIFF_OUTPUT, label: \"Diff\" },\n  { id: \"delete-output\", kind: WindowKind.DESIGN_OUTPUT, label: \"Output\" },\n];\n\nfunction DeleteFrame() {\n  const language = useAlgorithmLanguage() as NativeAlgorithmLanguage;\n  const kit = metabolismKit as any;\n  const [flattenChange, setFlattenChange] = React.useState\u003cDesignChange | null\u003e(null);\n  const [baseDesign, setBaseDesign] = React.useState\u003cany | null\u003e(null);\n  const [selectedPieceGuids, setSelectedPieceGuids] = React.useState\u003cstring[]\u003e([]);\n  const [designDiff, setDesignDiff] = React.useState\u003cany | undefined\u003e(undefined);\n\n  React.useEffect(() =\u003e {\n    let cancelled = false;\n    // Clear stale preview state immediately on language change to avoid rendering an old diff/output.\n    setFlattenChange(null);\n    setBaseDesign(null);\n    setDesignDiff(undefined);\n    void (async () =\u003e {\n      const fc = await nativeFlattenDesign(kit, rawDesign.guid, language);\n      if (cancelled) return;\n      setFlattenChange(fc);\n      const bd = applyDesignDiff(rawDesign, fc.forward) as any;\n      setBaseDesign(bd);\n      setSelectedPieceGuids((prev) =\u003e {\n        const pieceGuids = new Set\u003cstring\u003e((bd?.pieces ?? []).map((p: any) =\u003e p.guid));\n        const filtered = prev.filter((g) =\u003e pieceGuids.has(g));\n        if (filtered.length \u003e 0) return filtered;\n        return (bd?.pieces ?? []).slice(0, 3).map((piece: any) =\u003e piece.guid);\n      });\n    })();\n    return () =\u003e {\n      cancelled = true;\n    };\n  }, [kit, language]);\n\n  React.useEffect(() =\u003e {\n    if (!baseDesign) return;\n    let cancelled = false;\n    void (async () =\u003e {\n      if (selectedPieceGuids.length === 0) {\n        if (!cancelled) setDesignDiff(undefined);\n        return;\n      }\n      // Invalidate stale output while recomputing.\n      setDesignDiff(undefined);\n      const diff = await nativeDeletePieces(kit, baseDesign, selectedPieceGuids, [], language);\n      if (!cancelled) setDesignDiff(diff);\n    })();\n    return () =\u003e {\n      cancelled = true;\n    };\n  }, [kit, baseDesign, selectedPieceGuids, language]);\n\n  const outputDesign = React.useMemo(() =\u003e (designDiff \u0026\u0026 baseDesign ? applyDesignDiff(baseDesign, designDiff) : (baseDesign ?? rawDesign)), [designDiff, baseDesign]);\n\n  const context: AlgorithmContextValue = React.useMemo(\n    () =\u003e ({\n      kit,\n      design: baseDesign ?? rawDesign,\n      selectedPieceGuids,\n      onSelectedPieceGuidsChange: setSelectedPieceGuids,\n      designDiff,\n      outputDesign,\n      error: !flattenChange || !baseDesign ? `Loading delete preview (${language})…` : selectedPieceGuids.length === 0 ? \"Select at least one piece to delete.\" : !designDiff ? `Loading delete result (${language})…` : undefined,\n    }),\n    [kit, baseDesign, selectedPieceGuids, designDiff, outputDesign, flattenChange, language],\n  );\n\n  return \u003cAlgorithmApp id=\"delete\" label=\"Delete\" windows={WINDOWS} context={context} className=\"h-full w-full\" /\u003e;\n}\n\nconst meta = {\n  title: \"compose-algorithms/Delete\",\n  parameters: { layout: \"fullscreen\" },\n  tags: [\"autodocs\"],\n} satisfies Meta;\n\nexport default meta;\n\ntype Story = StoryObj\u003ctypeof meta\u003e;\n\nexport const Default: Story = { render: () =\u003e \u003cDeleteFrame /\u003e };\n"
           },
-          "tool_output": "{\"file_path\":\"/workspaces/semio/semio/algorithms/.storybook/stories/Delete.stories.tsx\",\"success\":true}",
+          "tool_output": "{\"file_path\":\"/workspaces/semio/compose/algorithms/.storybook/stories/Delete.stories.tsx\",\"success\":true}",
           "duration": 190.138,
           "tool_use_id": "call_AlK8WWBWgTGdaAlkZ9vnBd3K\nctc_0975a6e996722da70169ca71c995b48197bc82a4b788271ebb",
           "hook_event_name": "postToolUse",
@@ -1671,7 +1671,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}
@@ -1684,21 +1684,21 @@
         "kind": "agent.ended",
         "second": "2026-03-30T12:51:32Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
           "conversation_id": "eba0c856-1297-471c-9af7-2ee0e818329c",
           "generation_id": "878a11f5-1ca4-4466-9c30-81d64018fbde",
           "model": "default",
-          "text": "### ✅ Language switch now remembers inputs (selection/vec)\n\nI updated the stories so switching `language` **does not reset inputs** anymore.\n\n- **`semio/algorithms/.storybook/stories/Drag.stories.tsx`**\n  - Keeps `selectedPieceGuids` and `vec` when changing language.\n  - When the new `baseDesign` arrives, it **filters** the existing selection to piece guids that still exist; if nothing remains, it falls back to the default first 3 pieces.\n\n- **`semio/algorithms/.storybook/stories/Delete.stories.tsx`**\n  - Same behavior: selection is preserved across language changes, reconciled against the new flattened design, with a sensible fallback.\n\nOutputs still invalidate and show **Loading…** while recomputing, so you can compare languages without losing the chosen input.",
+          "text": "### ✅ Language switch now remembers inputs (selection/vec)\n\nI updated the stories so switching `language` **does not reset inputs** anymore.\n\n- **`compose/algorithms/.storybook/stories/Drag.stories.tsx`**\n  - Keeps `selectedPieceGuids` and `vec` when changing language.\n  - When the new `baseDesign` arrives, it **filters** the existing selection to piece guids that still exist; if nothing remains, it falls back to the default first 3 pieces.\n\n- **`compose/algorithms/.storybook/stories/Delete.stories.tsx`**\n  - Same behavior: selection is preserved across language changes, reconciled against the new flattened design, with a sensible fallback.\n\nOutputs still invalidate and show **Loading…** while recomputing, so you can compare languages without losing the chosen input.",
           "hook_event_name": "afterAgentResponse",
           "cursor_version": "2.6.22",
           "workspace_roots": [
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}
@@ -1711,7 +1711,7 @@
         "kind": "agent.ended",
         "second": "2026-03-30T12:51:33Z",
         "session": "eba0c856-1297-471c-9af7-2ee0e818329c",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
       },
       "native": {
         "event": {
@@ -1726,7 +1726,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
       },
       "response": {}

@@ -2,9 +2,9 @@ import re
 import subprocess
 from pathlib import Path
 
-root = Path(r"c:\git\semio")
+root = Path(r"c:\git\compose")
 head = subprocess.check_output(
-    ["git", "show", "HEAD:semio/client/lib/rs/lib.rs"],
+    ["git", "show", "HEAD:compose/client/lib/rs/lib.rs"],
     cwd=root,
     text=True,
     encoding="utf-8",
@@ -169,7 +169,7 @@ new_mod = (
 )
 
 # replace in current file
-cur_path = root / "semio/client/lib/rs/lib.rs"
+cur_path = root / "compose/client/lib/rs/lib.rs"
 cur = cur_path.read_text(encoding="utf-8")
 region_start = re.search(r"//#region[^\n]*schema_gap_surfaces", cur).start()
 region_end = re.search(r"//#endregion[^\n]*schema_gap_surfaces", cur).end()
@@ -181,7 +181,7 @@ print("finalized schema_gap_surfaces", len(new_mod))
 
 build = subprocess.run(
     ["bun", "scripts/build-wasm.script.mjs"],
-    cwd=root / "semio/client/lib/rs",
+    cwd=root / "compose/client/lib/rs",
     capture_output=True,
     text=True,
     encoding="utf-8",
@@ -193,7 +193,7 @@ if build.returncode != 0:
 print("wasm-pack ok")
 
 sketch = subprocess.run(
-    ["bun", "nx", "run", "@semio/sketchpad:build"],
+    ["bun", "nx", "run", "@compose/sketchpad:build"],
     cwd=root,
     capture_output=True,
     text=True,

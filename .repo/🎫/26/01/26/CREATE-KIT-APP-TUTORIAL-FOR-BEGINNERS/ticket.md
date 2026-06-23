@@ -17,7 +17,7 @@ Act as a senior software engineer and mentor explaining Kit.tsx to a brand-new t
 
 ## Log
 
-- **2026-01-26**: Analyzed `js/semio/sketchpad/Kit.tsx`.
+- **2026-01-26**: Analyzed `js/compose/sketchpad/Kit.tsx`.
 - **2026-01-26**: Generated tutorial with focus on educational analogies and architectural clarity.
 - **2026-01-26**: Created the documentation file at the requested location.
 

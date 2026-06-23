@@ -3,7 +3,7 @@
   "emoji": "🔧",
   "status": "closed",
   "description": "Location steppers are rendering in a new row at the left side of the detail panel instead of inside the property-row grid. Ensure all stepper/slider/input controls in the detail panel always render properly within the property-row grid layout.",
-  "summary": "Added `showLabel` prop to all 20 Stepper components that were missing it in semio/sketchpad/index.tsx. Without `showLabel`, Steppers rendered as bare elements outside the Label/property-row grid, causing them to appear in a new row at the left. All 36 Steppers in the file now have `showLabel`. All 105 tests pass.",
+  "summary": "Added `showLabel` prop to all 20 Stepper components that were missing it in compose/sketchpad/index.tsx. Without `showLabel`, Steppers rendered as bare elements outside the Label/property-row grid, causing them to appear in a new row at the left. All 36 Steppers in the file now have `showLabel`. All 105 tests pass.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1184"
   },

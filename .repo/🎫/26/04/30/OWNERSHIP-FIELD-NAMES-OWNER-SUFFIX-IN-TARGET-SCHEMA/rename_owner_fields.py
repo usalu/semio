@@ -5,7 +5,7 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[6]  # .../.repo/🎫/…/ticket → repo root
-PATH = ROOT / "semio" / "graphql" / "target.schema.graphql"
+PATH = ROOT / "compose" / "graphql" / "target.schema.graphql"
 
 PAT = re.compile(r"\bowner([A-Z][a-zA-Z0-9]*)\b")
 

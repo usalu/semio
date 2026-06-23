@@ -21,7 +21,7 @@ todos:
     content: "Layer C: add label_fill_hovered to VelloThemePalette and select hovered label/stroke colors in dag/board_host renderers; verify puzzle2d/gis consumers."
     status: completed
   - id: downstream-sweep
-    content: "Layer D: sweep cad/puzzle/gis/procedural/semio/framework/infinite renderers replacing default text-foreground with text-element (+ hover emphasis), keeping intentional emphasis."
+    content: "Layer D: sweep cad/puzzle/gis/procedural/compose/framework/infinite renderers replacing default text-foreground with text-element (+ hover emphasis), keeping intentional emphasis."
     status: completed
   - id: verify
     content: Run @ui + affected tech vitest and graph crate builds; runtime-verify hover behavior on flow/play pages; close the ticket with summary.
@@ -91,7 +91,7 @@ Replace default-content `text-foreground` with `text-element` (+ hover emphasis 
 - [cad/js/renderer/index.tsx](cad/js/renderer/index.tsx) (panel/aside/list defaults, attribute/stat/property body text; keep `<code>`/`<strong>` emphasis), [cad/js/renderer/play/index.tsx](cad/js/renderer/play/index.tsx).
 - [puzzle/3d/react/index.tsx](puzzle/3d/react/index.tsx) (menu content base), [puzzle/2d/react/index.tsx](puzzle/2d/react/index.tsx).
 - [framework/product/platform/renderer/react/index.tsx](framework/product/platform/renderer/react/index.tsx) (measure rows, active/inactive tab text), [framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx).
-- [procedural/react/index.tsx](procedural/react/index.tsx), [infinite/world/r3f/index.tsx](infinite/world/r3f/index.tsx), [semio/client/lib/sketchpad/js/index.ts](semio/client/lib/sketchpad/js/index.ts) and the sketchpad play surface.
+- [procedural/react/index.tsx](procedural/react/index.tsx), [infinite/world/r3f/index.tsx](infinite/world/r3f/index.tsx), [compose/client/lib/sketchpad/js/index.ts](compose/client/lib/sketchpad/js/index.ts) and the sketchpad play surface.
 - Exclude other technologies (`coda`, `mit-bestand`) per the no-mixing rule.
 
 ## Verification

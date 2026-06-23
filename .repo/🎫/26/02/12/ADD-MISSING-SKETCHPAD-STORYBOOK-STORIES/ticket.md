@@ -101,4 +101,4 @@ Fix Storybook indexing crash in `Resizable.stories.tsx` caused by duplicate modu
 
 ### Log
 - 2026-02-25: Applied collision fix, validation pending.
-- 2026-02-25: Ran `cd semio/js && npm run build`; Storybook build completed successfully and emitted `Resizable.stories-*.js`.
+- 2026-02-25: Ran `cd compose/js && npm run build`; Storybook build completed successfully and emitted `Resizable.stories-*.js`.

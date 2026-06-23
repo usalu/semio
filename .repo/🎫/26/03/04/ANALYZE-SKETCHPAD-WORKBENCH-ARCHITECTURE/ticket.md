@@ -83,8 +83,8 @@ Dual-zone: tools zone (left of seam) and settings zone (right of seam). Groups r
 #### Design App Workbench Sections (Design.tsx lines 10091-10107)
 
 Two workbench sections registered:
-1. `semio.sketchpad.app.kit.pieces` (specificity 20, order 1): PiecesWorkbenchContent — types tree and designs tree with drag-to-add-piece, create child type/design
-2. `semio.sketchpad.app.design.windows` (specificity 20, order 2): WindowLibrary — draggable window templates
+1. `compose.sketchpad.app.kit.pieces` (specificity 20, order 1): PiecesWorkbenchContent — types tree and designs tree with drag-to-add-piece, create child type/design
+2. `compose.sketchpad.app.design.windows` (specificity 20, order 2): WindowLibrary — draggable window templates
 
 #### State Machine (Sketchpad.tsx)
 

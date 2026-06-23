@@ -1,0 +1,14 @@
+{
+  "title": "Fix Compose Coda Desktop Startup",
+  "emoji": "🔧",
+  "status": "closed",
+  "description": "Investigate and fix Compose Coda Desktop local startup. The attempted command `uv nx dev @coda/desktop` is invalid because `uv` has no `nx` subcommand, and the supported Nx launch path currently fails due to duplicate inferred `.coda` project names under coda/examples. Repair the workspace so `npx nx dev @coda/desktop` starts successfully, update launch/docs wiring if needed, validate with runtime output, and close the ticket with the changed files.",
+  "summary": "Fixed Compose Coda Desktop startup by repairing the sidecar launch argument constant in the Electron main process and assigning unique Nx-visible project names to the example .coda manifests so `npx nx dev @coda/desktop` resolves and launches successfully. Validated with `npx nx show project @coda/desktop` and a runtime `NODE_OPTIONS= npx nx dev @coda/desktop --verbose` run that reached Electron Forge, built Vite bundles, and launched the Electron app.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/870"
+  },
+  "goal": "🎯sketchpadimprovements",
+  "sessions": [
+    "🔀23ded79aa1516d89a72e21e6258cd22bbf7df88b⚪17734083294832217895895751443847260168"
+  ]
+}

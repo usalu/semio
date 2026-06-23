@@ -10,14 +10,14 @@
 
 ## Changes
 
-### [elements.tsx](js/semio/sketchpad/elements.tsx)
+### [elements.tsx](js/compose/sketchpad/elements.tsx)
 
 - Integrated D3 `forceSimulation` into `DiagramInner`.
 - Exposed `forceConfig` prop for physics customization.
 - Implemented node drag reheating logic.
 - Exposed React Flow primitives.
 
-### [Kit.tsx](js/semio/sketchpad/Kit.tsx)
+### [Kit.tsx](js/compose/sketchpad/Kit.tsx)
 
 - Switched to the new shared `Diagram` component.
 - Removed ~500 lines of manual physics code.

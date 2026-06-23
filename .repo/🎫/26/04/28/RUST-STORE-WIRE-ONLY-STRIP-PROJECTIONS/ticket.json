@@ -2,7 +2,7 @@
   "title": "Rs Strip Store Projections Leave Store Only",
   "emoji": "🧹",
   "status": "open",
-  "description": "Remove *Full/*Ref/*Metadata/*Shallow projection structs from semio/rs; keep only *Store per entity (e.g. AttributeStore only). Preserve semio/js DTO names unchanged.",
+  "description": "Remove *Full/*Ref/*Metadata/*Shallow projection structs from compose/rs; keep only *Store per entity (e.g. AttributeStore only). Preserve compose/js DTO names unchanged.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1391"
   },

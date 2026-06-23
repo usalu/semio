@@ -22,7 +22,7 @@
           "session_id": "add049f1-4aa6-4c18-9869-2a6f5b8dc734",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/sketchpad/sketchpad/Sketchpad.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/sketchpad/Sketchpad.tsx",
             "startLine": 11860,
             "endLine": 11950
           },
@@ -49,7 +49,7 @@
           "session_id": "add049f1-4aa6-4c18-9869-2a6f5b8dc734",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/sketchpad/sketchpad/Sketchpad.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/sketchpad/Sketchpad.tsx",
             "startLine": 4560,
             "endLine": 4600
           },

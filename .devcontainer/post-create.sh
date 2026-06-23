@@ -5,7 +5,7 @@ set -e
 WORKSPACE="${containerWorkspaceFolder:-/workspaces/semio}"
 cd "$WORKSPACE"
 
-echo "Setting up semio (Bun + Nx)…"
+echo "Setting up compose (Bun + Nx)…"
 
 #region 🔖EmojiFonts
 configure_emoji_fonts() {

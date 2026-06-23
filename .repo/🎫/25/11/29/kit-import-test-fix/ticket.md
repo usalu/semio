@@ -17,7 +17,7 @@ The Kit Import Playwright test was failing due to multiple issues:
 
 # Changes
 
-## `js/semio/sketchpad/Sketchpad.tsx`
+## `js/compose/sketchpad/Sketchpad.tsx`
 
 - **Fixed critical Y.Map.set() bug**: `Y.Map.set()` returns the Y.Map itself, not the value. Fixed all occurrences where class properties were incorrectly set:
   - `ModelStore`: Fixed `yTags` and `yAttributes`
@@ -30,15 +30,15 @@ The Kit Import Playwright test was failing due to multiple issues:
   - `FileStore`: Values are now set on yFile before pushing to yFiles array, constructor simplified to only accept yFile
   - `FolderStore`: Values are now set on yFolder before pushing to yFolders array, constructor simplified
 
-- **Added batch `semio.kit.addFiles` command**: Accepts both folders and files arrays, creates all in single transaction
+- **Added batch `compose.kit.addFiles` command**: Accepts both folders and files arrays, creates all in single transaction
 
-## `js/semio/sketchpad/Home.tsx`
+## `js/compose/sketchpad/Home.tsx`
 
 - Updated `handleFileInputChange` and `handleDrop` to properly create folder hierarchy from file paths
-- Added `Folder` import from semio
+- Added `Folder` import from compose
 - Files now correctly reference their parent folder via `folder: { guid }` property
 
-## `js/semio/sketchpad.test.ts`
+## `js/compose/sketchpad.test.ts`
 
 - Created "Kit Import Drag and Drop" test that:
   - Imports `metabolism.zip` via file input
@@ -62,13 +62,13 @@ The Kit Import test now **passes consistently**. It verifies:
 
 ## Performance Fix: Batch File Adding
 
-**Problem**: Adding 95 files individually via `semio.kit.addFile` was extremely slow because:
+**Problem**: Adding 95 files individually via `compose.kit.addFile` was extremely slow because:
 
 - Each file triggered a separate Yjs transaction
 - Each transaction triggered observer updates
 - 95 sequential async operations with observer overhead
 
-**Solution**: Added batch `semio.kit.addFiles` command that:
+**Solution**: Added batch `compose.kit.addFiles` command that:
 
 - Accepts array of `{ file, blob }` objects
 - Adds all files in a single Yjs transaction

@@ -1,5 +1,5 @@
 /**
- * Regenerates `semio/fixtures/metabolism.kit.light.semio.json` from `metabolism.kit.snapshot.semio.json`.
+ * Regenerates `compose/fixtures/metabolism.kit.light.compose.json` from `metabolism.kit.snapshot.compose.json`.
  * Adds bundle hash/items blocks, nodeKind on types, handleKind on ports (families + connector refs).
  */
 import fs from "node:fs";
@@ -8,8 +8,8 @@ import { fileURLToPath } from "node:url";
 
 const __dir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dir, "../../../../../..");
-const snapshotPath = path.join(repoRoot, "semio/fixtures/metabolism.kit.snapshot.semio.json");
-const outPath = path.join(repoRoot, "semio/fixtures/metabolism.kit.light.semio.json");
+const snapshotPath = path.join(repoRoot, "compose/fixtures/metabolism.kit.snapshot.compose.json");
+const outPath = path.join(repoRoot, "compose/fixtures/metabolism.kit.light.compose.json");
 const HASH = "…";
 const SCHEMA = "🎆26🌙06⬆️1";
 const KIT_ID = "f042c2a4-3ba5-44b0-b22c-0ae8f568aacc";
@@ -39,14 +39,14 @@ function annotateValue(value) {
 function annotateKitSemantics(kit) {
 	for (const type of /** @type {Record<string, unknown>[]} */ (kit.types ?? [])) {
 		if (typeof type.id === "string") {
-			type.nodeKind = `semio.metabolism.light.node.${type.id}`;
+			type.nodeKind = `compose.metabolism.light.node.${type.id}`;
 		}
 		for (const connector of /** @type {Record<string, unknown>[]} */ (type.connectors ?? [])) {
 			const port = connector.port;
 			if (port != null && typeof port === "object" && !Array.isArray(port)) {
 				const portRow = /** @type {Record<string, unknown>} */ (port);
 				if (typeof portRow.id === "string") {
-					portRow.handleKind = `semio.metabolism.light.handle.${portRow.id}`;
+					portRow.handleKind = `compose.metabolism.light.handle.${portRow.id}`;
 				}
 			}
 		}
@@ -54,7 +54,7 @@ function annotateKitSemantics(kit) {
 	for (const family of /** @type {Record<string, unknown>[]} */ (kit.families ?? [])) {
 		for (const port of /** @type {Record<string, unknown>[]} */ (family.ports ?? [])) {
 			if (typeof port.id === "string") {
-				port.handleKind = `semio.metabolism.light.handle.${port.id}`;
+				port.handleKind = `compose.metabolism.light.handle.${port.id}`;
 			}
 		}
 	}

@@ -8,20 +8,20 @@ test("debug", async ({ page }) => {
   console.log(bodyText.slice(0, 2000));
   console.log("=== IDs ON PAGE ===");
   const ids = await page.evaluate(() => {
-    return Array.from(document.querySelectorAll('[id]')).map(el => el.id).filter(id => id.includes('semio')).join('\n');
+    return Array.from(document.querySelectorAll('[id]')).map(el => el.id).filter(id => id.includes('compose')).join('\n');
   });
   console.log(ids);
   console.log("=== NAVBAR ===");
-  const navbar = await page.locator('[id="semio.sketchpad.navbar"]').isVisible().catch(() => false);
+  const navbar = await page.locator('[id="compose.sketchpad.navbar"]').isVisible().catch(() => false);
   console.log("Navbar visible:", navbar);
   console.log("=== FOOTER ===");
   const footer = await page.locator('footer').isVisible().catch(() => false);
   console.log("Footer visible:", footer);
   console.log("=== TOOLBAR ===");
-  const toolbar = await page.locator('[id="semio.sketchpad.toolbar"]').isVisible().catch(() => false);
+  const toolbar = await page.locator('[id="compose.sketchpad.toolbar"]').isVisible().catch(() => false);
   console.log("Toolbar visible:", toolbar);
   console.log("=== IMPORT KIT ===");
-  const importKit = await page.locator('[id="semio.sketchpad.app.home.importKit"]').count();
+  const importKit = await page.locator('[id="compose.sketchpad.app.home.importKit"]').count();
   console.log("Import kit count:", importKit);
   console.log("=== PANEL TOGGLES ===");
   const toggles = await page.evaluate(() => {
@@ -39,11 +39,11 @@ test("debug", async ({ page }) => {
     return "";
   });
   console.log("Shadow error:", shadowError);
-  console.log("=== ALL ELEMENTS WITH SEMIO IDs ===");
-  const allSemioIds = await page.evaluate(() => {
-    return Array.from(document.querySelectorAll('[id*="semio"]')).map(el => `${el.tagName}#${el.id}`).join('\n');
+  console.log("=== ALL ELEMENTS WITH COMPOSE IDs ===");
+  const allComposeIds = await page.evaluate(() => {
+    return Array.from(document.querySelectorAll('[id*="compose"]')).map(el => `${el.tagName}#${el.id}`).join('\n');
   });
-  console.log(allSemioIds || "(none)");
+  console.log(allComposeIds || "(none)");
   console.log("=== ROOT INNER HTML (first 3000 chars) ===");
   const rootHtml = await page.evaluate(() => {
     const root = document.getElementById('root');

@@ -1,8 +1,8 @@
 /**
- * @emoji 📚 Same contract as Storybook `createStorybookKitGraphqlHandle` via `@semio/js`.
+ * @emoji 📚 Same contract as Storybook `createStorybookKitGraphqlHandle` via `@compose/js`.
  * Run: `bun .repo/🎫/26/05/19/GRAPH-QL-MUTATION-RESPONSE-TYPES/storybook-kit-e2e.ts`
  */
-delete process.env.SEMIO_JS_RUN_EMBEDDED_TESTS;
+delete process.env.COMPOSE_JS_RUN_EMBEDDED_TESTS;
 delete process.env.VITEST;
 
 import { resolve } from "node:path";
@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 
 const here = fileURLToPath(new URL(".", import.meta.url));
 const repoRoot = resolve(here, "../../../../../..");
-const { openSessionInMemory } = await import(resolve(repoRoot, "semio/client/lib/js/index.ts"));
+const { openSessionInMemory } = await import(resolve(repoRoot, "compose/client/lib/js/index.ts"));
 
 const minimalKit = {
   id: "kit-storybook-e2e",

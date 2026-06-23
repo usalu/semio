@@ -1,5 +1,5 @@
-[submodule "semio/examples/metabolism"]
-	path = semio/examples/metabolism
+[submodule "compose/examples/metabolism"]
+	path = compose/examples/metabolism
 	url = https://github.com/usalu/metabolism.git
 [submodule "reuse/recherche"]
 	path = mit-bestand/recherche

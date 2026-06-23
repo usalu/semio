@@ -72,14 +72,14 @@ Create `puzzle/3d/rs/` with `Cargo.toml`, `lib.rs`, `script.ts`, `project.json`,
 
 ## 2. Worker `puzzle/3d/react/precompute.worker.ts`
 
-New file mirroring `semio/client/lib/js/kit-store.worker.ts` and its transport. JSON-RPC over `postMessage` (ops: `init`, `setScene`, `registerMesh`, `query`, idle `tick`).
+New file mirroring `compose/client/lib/js/kit-store.worker.ts` and its transport. JSON-RPC over `postMessage` (ops: `init`, `setScene`, `registerMesh`, `query`, idle `tick`).
 - Loads WASM via `initSync` (fetch `puzzle_3d_bg.wasm`).
 - Drives an idle precompute loop (`setTimeout(0)` chunks like the current fill `PUZZLE_3D_FILL_BUILD_CHUNK_BUDGET = 8`) calling `precompute_step` until the cache is fully warm, yielding between chunks so queries are answered promptly.
 
 ## 3. Main-thread client + interface boundary (in `puzzle/3d/react/index.tsx`)
 
 Add `//#region 🧵Precompute` with a `Puzzle3dCollisionEngine` interface (rule: external libs/workers behind an interface) and two impls:
-- `WasmCollisionEngine` - talks to the worker; `createPuzzle3dPrecomputeWorker()` factory (mirrors `createKitStoreWorker` at [semio/client/lib/js/index.ts](semio/client/lib/js/index.ts) line 233) using `new Worker(new URL("./precompute.worker", import.meta.url), { type: "module" })`.
+- `WasmCollisionEngine` - talks to the worker; `createPuzzle3dPrecomputeWorker()` factory (mirrors `createKitStoreWorker` at [compose/client/lib/js/index.ts](compose/client/lib/js/index.ts) line 233) using `new Worker(new URL("./precompute.worker", import.meta.url), { type: "module" })`.
 - `MeshBvhCollisionEngine` - wraps the existing `three-mesh-bvh` functions, used as fallback when no worker (vitest/SSR/headless), so current tests keep passing.
 
 Wiring:

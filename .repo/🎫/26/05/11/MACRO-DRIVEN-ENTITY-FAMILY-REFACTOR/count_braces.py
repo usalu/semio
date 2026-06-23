@@ -1,4 +1,4 @@
-s = open(r"c:\git\semio\semio\client\lib\rs\lib.rs", encoding="utf-8").read().splitlines()
+s = open(r"c:\git\compose\compose\client\lib\rs\lib.rs", encoding="utf-8").read().splitlines()
 for i, line in enumerate(s):
     if "fn relay_auth_designs_piece_ids" in line:
         q = s[i + 1].strip().strip(",").strip('"')

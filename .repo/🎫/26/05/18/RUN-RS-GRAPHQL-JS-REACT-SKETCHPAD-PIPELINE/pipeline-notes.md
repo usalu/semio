@@ -1,8 +1,8 @@
 # Rs Graphql Js React Sketchpad Pipeline
 
-## Golden schema vs `metabolism.kit.semio.json` (`wip.initialKit`)
+## Golden schema vs `metabolism.kit.compose.json` (`wip.initialKit`)
 
-**Top-level keys on `wip.initialKit` in the fixture** (first lines of `semio/assets/fixtures/metabolism.kit.semio.json`): `id`, `name`, `version`, `createdAt`, `updatedAt`, `description`, `icon`, `image`, `remote`, `homepage`, `license`, `preview`, `types`, …
+**Top-level keys on `wip.initialKit` in the fixture** (first lines of `compose/assets/fixtures/metabolism.kit.compose.json`): `id`, `name`, `version`, `createdAt`, `updatedAt`, `description`, `icon`, `image`, `remote`, `homepage`, `license`, `preview`, `types`, …
 
 **`type Kit` in `schema.golden.graphql`** already exposes the scalar/metadata surface (`name`, `description`, `icon`, `image`, `preview`, `remote`, `homepage`, `license`, `uri`, `createdAt`, …). The fixture field **`version`** was present in RS (`Kit::version`) but **missing from the golden SDL**; **`version: String # data`** was added so GraphQL matches RS and the fixture.
 
@@ -13,13 +13,13 @@
 ## Native store + GraphQL
 
 - **`ParentStore::spawn_from_install_json_value`**: same branch as wasm `bootstrap_runtime_from_json_value` — bundle schema → `hydrate_into_graph` on a spawned store; otherwise overlay from bare projection JSON.
-- **`semio-store` `POST /install`**: `create` and `importFile` both use that helper (full `*.kit.semio.json` bundle or bare `initialKit` DTO).
+- **`compose-store` `POST /install`**: `create` and `importFile` both use that helper (full `*.kit.compose.json` bundle or bare `initialKit` DTO).
 
 ## Play / sketchpad
 
-- Set **`VITE_SEMIO_NATIVE_STORE=1`** and **`VITE_SEMIO_STORE_URL=http://127.0.0.1:4000`** (or your bind URL) to wrap the playground in **`SemioStoreKitLineHost`** (RS over HTTP → `Session` → contexts → sketchpad). Otherwise the default **WASM + `InMemoryKitStore` + `/metabolism.zip`** path is unchanged.
-- Install the store first, e.g. `curl -X POST http://127.0.0.1:4000/install -H "Content-Type: application/json" -d "{\"importFile\":{\"path\":\"C:/.../metabolism.kit.semio.json\"}}"` (path must be readable by the `semio-store` process).
+- Set **`VITE_COMPOSE_NATIVE_STORE=1`** and **`VITE_COMPOSE_STORE_URL=http://127.0.0.1:4000`** (or your bind URL) to wrap the playground in **`ComposeStoreKitLineHost`** (RS over HTTP → `Session` → contexts → sketchpad). Otherwise the default **WASM + `InMemoryKitStore` + `/metabolism.zip`** path is unchanged.
+- Install the store first, e.g. `curl -X POST http://127.0.0.1:4000/install -H "Content-Type: application/json" -d "{\"importFile\":{\"path\":\"C:/.../metabolism.kit.compose.json\"}}"` (path must be readable by the `compose-store` process).
 
 ## Tests run
 
-- `cargo test -p semio-store` (all 5 tests passed after bundle install + `version` projection fixes).
+- `cargo test -p compose-store` (all 5 tests passed after bundle install + `version` projection fixes).

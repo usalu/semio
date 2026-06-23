@@ -314,9 +314,9 @@ type ExtractPayload struct {
 
 // #region 🧳Emit
 
-// 📤Emit posts an event to the repo server. No-op when SEMIO_SERVER_ADDR is unset.
+// 📤Emit posts an event to the repo server. No-op when COMPOSE_SERVER_ADDR is unset.
 func Emit(kind EventKind, source string, payload interface{}) {
-	addr := strings.TrimSpace(os.Getenv("SEMIO_SERVER_ADDR"))
+	addr := strings.TrimSpace(os.Getenv("COMPOSE_SERVER_ADDR"))
 	if addr == "" {
 		return
 	}
@@ -339,7 +339,7 @@ func Emit(kind EventKind, source string, payload interface{}) {
 		return
 	}
 	req.Header.Set("Content-Type", "application/json")
-	if token := strings.TrimSpace(os.Getenv("SEMIO_SERVER_TOKEN")); token != "" {
+	if token := strings.TrimSpace(os.Getenv("COMPOSE_SERVER_TOKEN")); token != "" {
 		req.Header.Set("Authorization", "Bearer "+token)
 	}
 	client := &http.Client{Timeout: 5 * time.Second}

@@ -3,7 +3,7 @@
 import { readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-const root = "c:/git/semio";
+const root = "c:/git/compose";
 
 const replacements: [string, string][] = [
 	["@framework/playground/core-renderer-react", "@framework/playground/renderer/react"],
@@ -43,8 +43,8 @@ const replacements: [string, string][] = [
 	["@elements/styling-core", "@ui/styling-tokens"],
 	["@elements/styling", "@ui/styling"],
 	["@elements/ui", "@ui/react"],
-	["@semio/architect-wasm", "@semio/query/pkg"],
-	["@semio/architect", "@semio/query"],
+	["@compose/architect-wasm", "@compose/query/pkg"],
+	["@compose/architect", "@compose/query"],
 ];
 
 const skipDir = new Set(["node_modules", "dist", "test-results", ".git", "target"]);
@@ -87,7 +87,7 @@ const roots = [
 	"framework",
 	"puzzle",
 	"cad",
-	"semio",
+	"compose",
 	"coda",
 	"repo",
 	".storybook",

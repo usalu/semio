@@ -3,7 +3,7 @@
 ## Todos
 # Previously
 
-The unit tests in `semio.test.ts` verify that flattened designs have correct planes and centers by comparing them against the "Flat" subdesigns stored in the metabolism kit asset. The E2E test (`sketchpad.test.ts`) was missing this verification - it only tested UI interactions but not the correctness of the computed piece metadata.
+The unit tests in `compose.test.ts` verify that flattened designs have correct planes and centers by comparing them against the "Flat" subdesigns stored in the metabolism kit asset. The E2E test (`sketchpad.test.ts`) was missing this verification - it only tested UI interactions but not the correctness of the computed piece metadata.
 
 # Plan
 
@@ -18,10 +18,10 @@ The unit tests in `semio.test.ts` verify that flattened designs have correct pla
 # Changes
 
 - `assets/index.ts`: Added export `MetabolismKitNakaginCapsuleTowerFlatPieces` containing the expected planes and centers from the "Flat" subdesign
-- `js/semio/sketchpad/Sketchpad.tsx`:
+- `js/compose/sketchpad/Sketchpad.tsx`:
   - Exposed `piecesMetadata` function on `window.__piecesMetadata` for E2E test access
   - Fixed `PieceStore` to include `name` property (was missing from constructor, getter/setter, snapshot, and change methods)
-- `js/semio/sketchpad.test.ts`:
+- `js/compose/sketchpad.test.ts`:
   - Added inline import of `MetabolismKitData` from JSON with type assertion
   - Computed `MetabolismKitNakaginCapsuleTowerFlatPieces` locally (Playwright can't use TypeScript imports)
   - Added `Plane` and `Center` interfaces with `TOLERANCE` constant (0.001)

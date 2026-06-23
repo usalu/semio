@@ -9,15 +9,15 @@ goal: SKETCHPAD-IMPROVEMENTS
 Bulk close
 ## Changes
 
-- `semio/js/sketchpad/shared.ts`: Added SETTINGS/CHAT to WindowKind, removed from PanelKind, PanelVisibility, PanelSizes, PanelSections, PanelKey, panelKindConfigs, EMPTY_PANEL_VISIBILITY.
-- `semio/js/sketchpad/Sketchpad.tsx`: Removed chat/settings from usePanelSections, sectionsByKind, useEffect deps, default PanelVisibility/PanelSizes/PanelSections states.
-- `semio/js/sketchpad/Home.tsx`: Added Settings/Chat to HomeAppWindowKind, windowKinds, and defaultLayout as tabs in a single stack. Removed panel addSection/removeSection for settings/chat.
-- `semio/js/sketchpad/Kit.tsx`: Added Settings/Chat to KitAppWindowKind, windowKinds, and defaultLayout as tabs in a single stack. Removed panel addSection/removeSection for settings.
-- `semio/js/sketchpad/Type.tsx`: Added Settings/Chat to TypeAppWindowKind, windowKinds, and manual single-stack defaultLayout. Removed panel addSection/removeSection for settings. Removed createDefaultLayout import.
-- `semio/js/sketchpad/Design.tsx`: Added Settings/Chat to DesignAppWindowKind, windowKinds, and defaultLayout as tabs alongside Diagram in first stack. Removed panel addSection/removeSection for settings.
-- `semio/js/sketchpad/Quality.tsx`: Added Settings/Chat to QualityAppWindowKind, windowKinds, and manual two-stack defaultLayout (Formula 20%, Diagram+Settings+Chat tabs 80%). Removed createDefaultLayout import.
-- `semio/js/sketchpad/Docs.tsx`: Added Settings/Chat to DocsAppWindowKind, windowKinds, and manual single-stack defaultLayout. Removed panel addSection/removeSection for settings. Removed createDefaultLayout import.
-- `semio/js/sketchpad.test.ts`: Removed chat/settings from PANEL_GROUPS, allPanels, openSettingsPanel and getSettingsSections helpers. Restored hudPanel/hud/stats to PANEL_GROUPS. Fixed intersect/lasso/HUD assertions for Kit, Type, Design tests.
+- `compose/js/sketchpad/shared.ts`: Added SETTINGS/CHAT to WindowKind, removed from PanelKind, PanelVisibility, PanelSizes, PanelSections, PanelKey, panelKindConfigs, EMPTY_PANEL_VISIBILITY.
+- `compose/js/sketchpad/Sketchpad.tsx`: Removed chat/settings from usePanelSections, sectionsByKind, useEffect deps, default PanelVisibility/PanelSizes/PanelSections states.
+- `compose/js/sketchpad/Home.tsx`: Added Settings/Chat to HomeAppWindowKind, windowKinds, and defaultLayout as tabs in a single stack. Removed panel addSection/removeSection for settings/chat.
+- `compose/js/sketchpad/Kit.tsx`: Added Settings/Chat to KitAppWindowKind, windowKinds, and defaultLayout as tabs in a single stack. Removed panel addSection/removeSection for settings.
+- `compose/js/sketchpad/Type.tsx`: Added Settings/Chat to TypeAppWindowKind, windowKinds, and manual single-stack defaultLayout. Removed panel addSection/removeSection for settings. Removed createDefaultLayout import.
+- `compose/js/sketchpad/Design.tsx`: Added Settings/Chat to DesignAppWindowKind, windowKinds, and defaultLayout as tabs alongside Diagram in first stack. Removed panel addSection/removeSection for settings.
+- `compose/js/sketchpad/Quality.tsx`: Added Settings/Chat to QualityAppWindowKind, windowKinds, and manual two-stack defaultLayout (Formula 20%, Diagram+Settings+Chat tabs 80%). Removed createDefaultLayout import.
+- `compose/js/sketchpad/Docs.tsx`: Added Settings/Chat to DocsAppWindowKind, windowKinds, and manual single-stack defaultLayout. Removed panel addSection/removeSection for settings. Removed createDefaultLayout import.
+- `compose/js/sketchpad.test.ts`: Removed chat/settings from PANEL_GROUPS, allPanels, openSettingsPanel and getSettingsSections helpers. Restored hudPanel/hud/stats to PANEL_GROUPS. Fixed intersect/lasso/HUD assertions for Kit, Type, Design tests.
 
 ## Log
 

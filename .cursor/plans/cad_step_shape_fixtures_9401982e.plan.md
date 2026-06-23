@@ -30,8 +30,8 @@ isProject: false
 
 ## Goal
 Create two new CAD fixtures by importing the `spatial.shape` geometry from:
-- `semio/fixture/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest-left.stp`
-- `semio/fixture/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest-right.stp`
+- `compose/fixture/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest-left.stp`
+- `compose/fixture/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest-right.stp`
 
 and make them load and render end-to-end in the CAD play harness, fixing kernel/import errors along the way.
 
@@ -83,4 +83,4 @@ In [cad/js/renderer/play/index.tsx](cad/js/renderer/play/index.tsx):
 
 ## Notes / decisions
 - Fixtures use the standard `spatial.modelspace/v1` JSON format and appear in the play navbar, consistent with existing shape fixtures (no schema or brep-blob changes).
-- The `.stp` files (semio fixtures) are only read as importer input via explicit paths; generated CAD fixtures contain pure geometry and no semio coupling, so technologies are not mixed.
+- The `.stp` files (compose fixtures) are only read as importer input via explicit paths; generated CAD fixtures contain pure geometry and no compose coupling, so technologies are not mixed.

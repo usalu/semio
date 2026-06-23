@@ -51,7 +51,7 @@ Replace the `🔖PlatformBreadcrumb` region (lines 742-750) and the `breadcrumb`
 - Replace `platformBreadcrumbToUiItems` (lines 2740-2747) with `navigationTrailToBreadcrumbItems(trail, onNavigate)`: map each level to a `BreadcrumbItemData` where `content = level.node.label`, `onNavigate -> level.node.uri`, and `options = level.alternatives.map(a => ({ id: a.id, label: a.label, href: a.uri }))`. The separator after each item then lists that node's alternatives.
 - Update the breadcrumb `useMemo` (lines 3344-3348): prefer `platform.navigation?.(uriProp)`; fall back to `uriToBreadcrumbItems` (lines 2725-2738) for products that supply no navigation (default keeps no alternatives).
 
-## 3. Sketchpad navigation tree — [semio/client/lib/sketchpad/js/index.ts](semio/client/lib/sketchpad/js/index.ts)
+## 3. Sketchpad navigation tree — [compose/client/lib/sketchpad/js/index.ts](compose/client/lib/sketchpad/js/index.ts)
 
 - Update import (line 61) to the new framework types.
 - Replace `sketchpadBreadcrumb` (lines 14392-14426) with `sketchpadNavigation(platform, uri): NavigationLevel[]` and rewire line 14449 to `platform.navigation = (uri) => sketchpadNavigation(platform, uri)`.
@@ -68,7 +68,7 @@ Replace the `🔖PlatformBreadcrumb` region (lines 742-750) and the `breadcrumb`
 ## 4. Tests (extend existing inline `import.meta.vitest` regions; no new files)
 
 - Renderer (`framework/product/platform/renderer/react/index.tsx`, region near line 3516): test `navigationTrailToBreadcrumbItems` maps `alternatives` onto `options` and `node.uri` onto `onNavigate`.
-- Sketchpad (`semio/client/lib/sketchpad/js/index.ts`, `describe` blocks around line 14534): test `sketchpadNavigation` for a design route yields `Home > Kits > {Kit} > Typologies > {Typology} > Designs > {Design}`, that the Home level's alternatives include Documentation/Feedback, and that the Designs level's alternatives list sibling designs.
+- Sketchpad (`compose/client/lib/sketchpad/js/index.ts`, `describe` blocks around line 14534): test `sketchpadNavigation` for a design route yields `Home > Kits > {Kit} > Typologies > {Typology} > Designs > {Design}`, that the Home level's alternatives include Documentation/Feedback, and that the Designs level's alternatives list sibling designs.
 
 ## Ticket workflow
 

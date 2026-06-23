@@ -1,0 +1,14 @@
+{
+  "title": "Fix Compose Play Jsx Error",
+  "emoji": "🔧",
+  "status": "closed",
+  "description": "Fix the JSX parsing error: Expected corresponding JSX closing tag for \u003cdiv\u003e at elements/ui/index.tsx:15924:10, causing compose play to not start.",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1230"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪e5589f10cf404bdda7318f6e9a827007"
+  ]
+}

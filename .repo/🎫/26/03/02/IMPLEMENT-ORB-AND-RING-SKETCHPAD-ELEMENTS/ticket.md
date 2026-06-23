@@ -21,8 +21,8 @@ Implement Orb and Ring components in elements.tsx per the class diagram spec. Or
 - [x] Run tests and confirm green (13/13 pass)
 
 ## Changes
-- semio/js/sketchpad/elements.tsx: Added Orb (OrbProps) and Ring (RingProps, RingOrbData) components in Input Components region after ToggleGroup, with SVG rendering, pointer-capture drag, Transaction integration
-- semio/js/sketchpad/README.md: Updated Orb/Ring specs with final interfaces
+- compose/js/sketchpad/elements.tsx: Added Orb (OrbProps) and Ring (RingProps, RingOrbData) components in Input Components region after ToggleGroup, with SVG rendering, pointer-capture drag, Transaction integration
+- compose/js/sketchpad/README.md: Updated Orb/Ring specs with final interfaces
 
 ## Summary
 Implemented Orb and Ring sketchpad elements. Orb renders as an SVG circle positioned on a ring circumference by t ∈ [0,1[, with disabled/selected/hovered visual states. Ring is an SVG container rendering a track circle with draggable Orb children, using pointer capture for drag and Transaction for undo support. Both are exported from elements.tsx in the Input Components region.

@@ -6,7 +6,7 @@
 
 ## Overview
 
-The semio VSCode extension at `js/vscode/` needs to be automatically installed when the devcontainer is created or started.
+The compose VSCode extension at `js/vscode/` needs to be automatically installed when the devcontainer is created or started.
 
 ## Current State
 
@@ -83,4 +83,4 @@ Bulk close
 
 ## Result
 
-When a new devcontainer is created, the semio VSCode extension will be automatically built and installed, making it immediately available for development.
+When a new devcontainer is created, the compose VSCode extension will be automatically built and installed, making it immediately available for development.

@@ -18,7 +18,7 @@
 
 ## Changes
 
-- GraphQL `node(id:)` accepts the canonical ID formats emitted by the schema (`semio/...`, `repo/...`) and keeps a fallback for legacy `kind:id` IDs.
+- GraphQL `node(id:)` accepts the canonical ID formats emitted by the schema (`compose/...`, `repo/...`) and keeps a fallback for legacy `kind:id` IDs.
 - E2E ticket-close tests use a non-gitignored file path so ticket file filtering does not drop the list to empty.
 - E2E ticket status parsing normalizes status values for case-insensitive comparisons.
 

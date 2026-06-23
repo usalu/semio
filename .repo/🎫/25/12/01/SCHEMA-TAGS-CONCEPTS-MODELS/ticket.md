@@ -41,10 +41,10 @@ Tags were simple strings on models, and concepts were simple strings on types/de
 - Updated Model to use `tags: list[TagId]` and `file: FileId`
 - Updated Type/Design to use `concepts: list[ConceptId]`
 - Updated Kit to include `tags: list[Tag]` and `concepts: list[Concept]`
-- Added Tag/Concept to SemioEntityKind enum
+- Added Tag/Concept to ComposeEntityKind enum
 - Added relationships: Kit defines Tags/Concepts, Model references Tags/File, Type/Design categorized by Concepts
 
-## js/semio/semio.ts
+## js/compose/compose.ts
 
 - Added TagId, ConceptId types and schemas
 - Added TagSchema, TagDiff, TagsDiff with full diffing functions
@@ -77,7 +77,7 @@ Tags were simple strings on models, and concepts were simple strings on types/de
 ## Pending
 
 - py/engine/engine.py needs similar updates for Python Tag/Concept entities
-- net/Semio/Semio.cs needs similar updates for C# Tag/Concept classes
+- net/Compose/Compose.cs needs similar updates for C# Tag/Concept classes
 
 ## Changes
 

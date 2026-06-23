@@ -2,7 +2,7 @@
 import { mkdirSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 
-const root = "c:/git/semio/spatial/assets/extension/builtin";
+const root = "c:/git/compose/spatial/assets/extension/builtin";
 const interactions: { category: string; id: string; label: string }[] = [
 	{ category: "primitive", id: "box", label: "Box" },
 	{ category: "curve", id: "arc", label: "Arc" },

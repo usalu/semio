@@ -2,20 +2,20 @@
 import re
 from pathlib import Path
 
-p = Path(r"c:\git\semio\semio\client\lib\rs\lib.rs")
+p = Path(r"c:\git\compose\compose\client\lib\rs\lib.rs")
 t = p.read_text(encoding="utf-8")
 
 t = t.replace(
     "    async fn legacy_created_fixed_piece_to_kit_op(input: &serde_json::Value)",
     "    async fn stored_create_fixed_piece_operation(input: &serde_json::Value)",
 )
-old_stored = """    pub(crate) async fn kit_operation_from_stored(kind: &str, input: &serde_json::Value) -> Result<crate::operation::Operation, SemioError> {
+old_stored = """    pub(crate) async fn kit_operation_from_stored(kind: &str, input: &serde_json::Value) -> Result<crate::operation::Operation, ComposeError> {
         if kind == "createdFixedPiece" {
             return legacy_created_fixed_piece_to_kit_op(input).await;
         }
         kit_operation_from_step_json(input)
     }"""
-new_stored = """    pub(crate) async fn kit_operation_from_stored(kind: &str, input: &serde_json::Value) -> Result<crate::operation::Operation, SemioError> {
+new_stored = """    pub(crate) async fn kit_operation_from_stored(kind: &str, input: &serde_json::Value) -> Result<crate::operation::Operation, ComposeError> {
         match kind {
             "createFixedPiece" => stored_create_fixed_piece_operation(input).await,
             _ => kit_operation_from_step_json(input),
@@ -30,12 +30,12 @@ elif "legacy_created_fixed_piece" in t:
     )
 
 t = t.replace(
-    "    /// @emoji 📑 US-001 golden JSON: top-level `operations` array, or legacy key `ops` (see `kit-store.golden.ops.semio.json`).\n    pub fn golden_operation_records_ref",
+    "    /// @emoji 📑 US-001 golden JSON: top-level `operations` array, or legacy key `ops` (see `kit-store.golden.ops.compose.json`).\n    pub fn golden_operation_records_ref",
     "    /// @emoji 📑 US-001 golden JSON: top-level `operations` array.\n    pub fn golden_operation_records_ref",
 )
 t = t.replace(
-    'src.get("operations").and_then(|v| v.as_array()).or_else(|| src.get("ops").and_then(|v| v.as_array())).ok_or_else(|| SemioError::invalid("golden operations missing `operations` or `ops` array"))',
-    'src.get("operations").and_then(|v| v.as_array()).ok_or_else(|| SemioError::invalid("golden operations missing `operations` array"))',
+    'src.get("operations").and_then(|v| v.as_array()).or_else(|| src.get("ops").and_then(|v| v.as_array())).ok_or_else(|| ComposeError::invalid("golden operations missing `operations` or `ops` array"))',
+    'src.get("operations").and_then(|v| v.as_array()).ok_or_else(|| ComposeError::invalid("golden operations missing `operations` array"))',
 )
 t = re.sub(
     r"\n        pub async fn stub_ok\(\) -> Self \{[^}]+\}\n",
@@ -92,7 +92,7 @@ if "Operation::CreateDesign { .. } | Operation::CreateType { .. }" not in t:
     t = t.replace(
         """                Operation::FixPieceInDesign { scope, .. } => {
                     let Scope::PieceInDesign { design_id, piece_id } = scope else {
-                        return Err(SemioError::invalid("fixPieceInDesign expects Scope::PieceInDesign"));
+                        return Err(ComposeError::invalid("fixPieceInDesign expects Scope::PieceInDesign"));
                     };
                     let piece = ensure_piece(kit, design_id, piece_id).await?;
                     let connection_kind = {
@@ -102,7 +102,7 @@ if "Operation::CreateDesign { .. } | Operation::CreateType { .. }" not in t:
                     drop(piece);
                     match connection_kind {
                         Some(crate::kit::design::piece::PieceConnectionKind::Fixed) => Ok(Vec::new()),
-                        _ => Err(SemioError::invalid("fixPieceInDesign backwards is unsupported for non-fixed pre-state")),
+                        _ => Err(ComposeError::invalid("fixPieceInDesign backwards is unsupported for non-fixed pre-state")),
                     }
                 }
             }
@@ -112,7 +112,7 @@ if "Operation::CreateDesign { .. } | Operation::CreateType { .. }" not in t:
     fn validate_attribute_ids""",
         """                Operation::FixPieceInDesign { scope, .. } => {
                     let Scope::PieceInDesign { design_id, piece_id } = scope else {
-                        return Err(SemioError::invalid("fixPieceInDesign expects Scope::PieceInDesign"));
+                        return Err(ComposeError::invalid("fixPieceInDesign expects Scope::PieceInDesign"));
                     };
                     let piece = ensure_piece(kit, design_id, piece_id).await?;
                     let connection_kind = {
@@ -122,10 +122,10 @@ if "Operation::CreateDesign { .. } | Operation::CreateType { .. }" not in t:
                     drop(piece);
                     match connection_kind {
                         Some(crate::kit::design::piece::PieceConnectionKind::Fixed) => Ok(Vec::new()),
-                        _ => Err(SemioError::invalid("fixPieceInDesign backwards is unsupported for non-fixed pre-state")),
+                        _ => Err(ComposeError::invalid("fixPieceInDesign backwards is unsupported for non-fixed pre-state")),
                     }
                 }
-                Operation::CreateDesign { .. } | Operation::CreateType { .. } => Err(SemioError::invalid("backwards not implemented for createDesign/createType")),
+                Operation::CreateDesign { .. } | Operation::CreateType { .. } => Err(ComposeError::invalid("backwards not implemented for createDesign/createType")),
             }
         }
     }

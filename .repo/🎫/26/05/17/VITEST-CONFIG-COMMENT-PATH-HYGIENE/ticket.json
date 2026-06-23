@@ -2,8 +2,8 @@
   "title": "Vitest Config Comment Path Hygiene",
   "emoji": "🧹",
   "status": "closed",
-  "description": "Update stale vitest.config.ts doc comments that reference removed paths elements/ui and semio/ui; run spot Nx test targets to confirm green.",
-  "summary": "Refreshed Vitest config header comments: elements bundle comment now names elements/client/lib/react and semio/client/lib/react/rendering instead of removed elements/ui and semio/ui paths; @semio/ui vitest.config @link now points at elements/client/lib/react/vitest.config.ts with correct relative depth. Ran nx run @semio/ui:test --skip-nx-cache (89 passed). Earlier in session nx run @elements/board:test passed (Rust + Vitest + 1 Playwright).",
+  "description": "Update stale vitest.config.ts doc comments that reference removed paths elements/ui and compose/ui; run spot Nx test targets to confirm green.",
+  "summary": "Refreshed Vitest config header comments: elements bundle comment now names elements/client/lib/react and compose/client/lib/react/rendering instead of removed elements/ui and compose/ui paths; @compose/ui vitest.config @link now points at elements/client/lib/react/vitest.config.ts with correct relative depth. Ran nx run @compose/ui:test --skip-nx-cache (89 passed). Earlier in session nx run @elements/board:test passed (Rust + Vitest + 1 Playwright).",
   "goal": "🎯r2602",
   "sessions": [
     "⚪f0f4a44024a04993b047b5ddf0cea3bd"

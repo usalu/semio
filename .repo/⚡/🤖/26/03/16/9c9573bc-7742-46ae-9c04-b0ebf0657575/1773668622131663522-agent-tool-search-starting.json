@@ -6,7 +6,7 @@
     "kind": "agent.file.read.starting",
     "second": "2026-03-16T13:43:42Z",
     "session": "9c9573bc-7742-46ae-9c04-b0ebf0657575",
-    "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
+    "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
   },
   "native": {
     "event": {
@@ -14,7 +14,7 @@
       "generation_id": "c421f306-6a0e-4fcd-b949-f3f75020b8ab",
       "model": "default",
       "content": "        (REPORTS_DIR / \"py.gltf\").write_bytes(result)\n\n\nclass TestGetGeometricInsightsForModel:\n    \"\"\"Model/KPI tests for get_geometric_insights_for_model using nakagin-capsule-tower.gltf.\"\"\"\n\n    def test_nakagin_capsule_tower_gltf_returns_insights(self):\n        model_path = os.path.join(os.path.dirname(__file__), ASSETS_DIR, \"nakagin-capsule-tower.gltf\")\n        if not os.path.exists(model_path):\n            pytest.skip(\"nakagin-capsule-tower.gltf not found\")\n        insights = get_geometric_insights_for_model(model_path)\n        assert isinstance(insights, GeometricInsights)\n        assert insights.bounding_box_min is not None\n        assert insights.bounding_box_max is not None\n        assert insights.dimension_x is not None and insights.dimension_x \u003e= 0\n        assert insights.dimension_y is not None and insights.dimension_y \u003e= 0\n        assert insights.dimension_z is not None and insights.dimension_z \u003e= 0\n        assert insights.characteristic_length is not None and insights.characteristic_length \u003e= 0\n        assert insights.total_surface_area is not None and insights.total_surface_area \u003e= 0\n        assert insights.vertex_count is not None and insights.vertex_count \u003e 0\n        assert insights.face_count is not None and insights.face_count \u003e 0\n        assert insights.centroid is not None\n        assert insights.euler_characteristic is not None\n\n    def test_nakagin_capsule_tower_from_bytes_gltf(self):\n        model_path = os.path.join(os.path.dirname(__file__), ASSETS_DIR, \"nakagin-capsule-tower.gltf\")\n        if not os.path.exists(model_path):\n            pytest.skip(\"nakagin-capsule-tower.gltf not found\")\n        with open(model_path, \"rb\") as f:\n            data = f.read()\n        insights = get_geometric_insights_for_model(data)\n        assert isinstance(insights, GeometricInsights)\n        assert insights.face_count is not None and insights.face_count \u003e 0\n",
-      "file_path": "/workspaces/semio/semio/py/semio.test.py",
+      "file_path": "/workspaces/semio/compose/py/compose.test.py",
       "attachments": [],
       "hook_event_name": "beforeReadFile",
       "cursor_version": "2.6.19",
@@ -22,7 +22,7 @@
         "/workspaces/semio"
       ],
       "user_email": "ueli.saluz@posteo.de",
-      "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
+      "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
     }
   },
   "response": {}

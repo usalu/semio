@@ -3,7 +3,7 @@
   "emoji": "🔧",
   "status": "closed",
   "description": "Fix duplicate type action in workbench: (1) rename tooltip from \"Duplicate Type\" to \"Duplicate Type by Hover\", (2) rename the duplicated type from \"{name} Copy\" to \"{name} Duplicate\", (3) insert the duplicate right after the original in the types array so it appears immediately below in the workbench.",
-  "summary": "Removed the remaining duplicate-type action from the design workbench type rows in `semio/sketchpad/index.tsx`, removed the stale `CopyIcon` import, and deleted the old inline Design Playwright block that still exercised duplicate-type behavior. Re-verified in source that the type-row action list now only contains `semio.sketchpad.app.design.panel.workbench.types.addPiece`.",
+  "summary": "Removed the remaining duplicate-type action from the design workbench type rows in `compose/sketchpad/index.tsx`, removed the stale `CopyIcon` import, and deleted the old inline Design Playwright block that still exercised duplicate-type behavior. Re-verified in source that the type-row action list now only contains `compose.sketchpad.app.design.panel.workbench.types.addPiece`.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1235"
   },

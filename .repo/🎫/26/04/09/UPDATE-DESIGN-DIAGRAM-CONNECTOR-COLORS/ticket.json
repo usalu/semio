@@ -1,7 +1,7 @@
 {
   "title": "Update Design Diagram Connector Colors",
   "status": "closed",
-  "description": "Update the design diagram connector colors so the default state illustrates compatible connectors across the entire design in semio colors. Fix individual selection of a single connector so selecting one greys out unrelated connectors, highlights the selected connector, and shows compatible vs incompatible connectors in semio red/green.",
+  "description": "Update the design diagram connector colors so the default state illustrates compatible connectors across the entire design in compose colors. Fix individual selection of a single connector so selecting one greys out unrelated connectors, highlights the selected connector, and shows compatible vs incompatible connectors in compose red/green.",
   "summary": "Normalized Design app connector selection to a single canonical connector record plus a synced one-item connectors array. DESIGN.SET_SELECTION, selector reads, store selection diffs, and piece/connection selection transitions now all pass through the same normalization so connector selection cannot drift into multi-selected state. Extended the existing embedded Playwright Design coverage to assert only one diagram connector handle reports selected after each click and that raw connector-array selection is normalized back to a single selected connector.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1306"

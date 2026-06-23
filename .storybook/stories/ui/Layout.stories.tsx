@@ -1,6 +1,6 @@
 // #region 🧲Header
 
-// 🥼︎ semio/js/.storybook/story/elements/Layout.stories.tsx
+// 🥼︎ compose/js/.storybook/story/elements/Layout.stories.tsx
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -137,9 +137,9 @@ export const PageDefault: Story = {
   args: { canvas: null },
   render: () => (
     <div className="h-[400px] w-[600px] border">
-      <Page frontmatter={{ title: "Getting Started", description: "Learn how to use semio to design modular architecture." }}>
+      <Page frontmatter={{ title: "Getting Started", description: "Learn how to use compose to design modular architecture." }}>
         <h2>Introduction</h2>
-        <p>Semio is a platform for kit-of-parts architecture. It helps you model, design and collaborate on modular buildings.</p>
+        <p>Compose is a platform for kit-of-parts architecture. It helps you model, design and collaborate on modular buildings.</p>
         <h2>Prerequisites</h2>
         <p>You need a modern web browser and basic understanding of architectural concepts.</p>
       </Page>

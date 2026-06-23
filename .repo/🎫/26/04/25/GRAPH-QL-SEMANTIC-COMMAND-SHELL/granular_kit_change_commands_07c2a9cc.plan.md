@@ -1,6 +1,6 @@
 ---
 name: granular kit change commands
-overview: Expand `change_command` in [semio/rs/lib.rs](semio/rs/lib.rs) so every property of every entity is expressible as a granular command, add lifecycle (create/remove) and collection (add/remove/replace) commands, make each `apply` return its inverse command(s), and refit `KitChange` to carry forward + inverse command lists instead of forward/backward `KitDiff`.
+overview: Expand `change_command` in [compose/rs/lib.rs](compose/rs/lib.rs) so every property of every entity is expressible as a granular command, add lifecycle (create/remove) and collection (add/remove/replace) commands, make each `apply` return its inverse command(s), and refit `KitChange` to carry forward + inverse command lists instead of forward/backward `KitDiff`.
 todos:
  - id: audit
    content: Freeze the per-entity setter inventory as the source of truth for command variant names and types
@@ -21,14 +21,14 @@ todos:
    content: "Add round-trip tests: forward+inverse returns kit to prior state for every command family"
    status: completed
  - id: agents_md
-   content: Update [semio/rs/AGENTS.md](semio/rs/AGENTS.md) `Change flow` line
+   content: Update [compose/rs/AGENTS.md](compose/rs/AGENTS.md) `Change flow` line
    status: completed
 isProject: false
 ---
 
 ## Background
 
-Today [`change_command`](semio/rs/lib.rs) covers only a handful of fields (`ChangeKitCommand::{Name, Description}`, `ChangeTypeCommand::Name`, `ChangeDesignCommand::Name`, `ChangePieceCommand::{Name, Fix}`) and reaches into `KitStore` setters directly; for `Piece::Name` it round-trips through a `DesignDiff`. Everything else (ports, connectors, representations, files, folders, qualities, benchmarks, authors, concepts, tags, layers, groups, stats, props, attributes, connections, sides, kit/type/design/piece metadata) has no command surface. `KitChange` still models forward/backward as `KitDiff` snapshots.
+Today [`change_command`](compose/rs/lib.rs) covers only a handful of fields (`ChangeKitCommand::{Name, Description}`, `ChangeTypeCommand::Name`, `ChangeDesignCommand::Name`, `ChangePieceCommand::{Name, Fix}`) and reaches into `KitStore` setters directly; for `Piece::Name` it round-trips through a `DesignDiff`. Everything else (ports, connectors, representations, files, folders, qualities, benchmarks, authors, concepts, tags, layers, groups, stats, props, attributes, connections, sides, kit/type/design/piece metadata) has no command surface. `KitChange` still models forward/backward as `KitDiff` snapshots.
 
 The goal: one command variant per setter on every entity store, plus Add/Remove variants for every entity and its child collections, with automatic inverse generation so the VCS layer can store `Vec<ChangeKitCommand>` forward + inverse.
 
@@ -67,7 +67,7 @@ Each "child" command is routable either via a typed nested variant on the parent
 
 ### 1. Audit + scaffolding
 
-- In [semio/rs/lib.rs](semio/rs/lib.rs), rewrite `pub mod change_command` from scratch. Keep file structure (single crate file, `pub mod`).
+- In [compose/rs/lib.rs](compose/rs/lib.rs), rewrite `pub mod change_command` from scratch. Keep file structure (single crate file, `pub mod`).
 - For each store listed below, inventory the existing `pub fn set_*` (already enumerated); one command variant per setter, named after the field (PascalCase), carrying exactly the setter argument type (Option stays Option). Example:
 
 ```rust
@@ -125,7 +125,7 @@ Returning the inverse command(s) for that single forward. Rules:
 - Set-style collections (weak refs, e.g. `Group::Pieces`, `Port::CompatibleFamilies`): treat as atomic replace (whole-vector set) with previous vector as inverse.
 - Associations (`Type::AddAuthorRef { author_id }`, etc.): store the weak-ref addition/removal, inverse is the opposite.
 
-All field lookups go through the live `KitStore` pointers (Arc/Weak) so inverses read the actual current value at apply-time. No path through `DesignDiff` anymore: delete the `Piece::Name` detour at [lib.rs:556-588](semio/rs/lib.rs).
+All field lookups go through the live `KitStore` pointers (Arc/Weak) so inverses read the actual current value at apply-time. No path through `DesignDiff` anymore: delete the `Piece::Name` detour at [lib.rs:556-588](compose/rs/lib.rs).
 
 ### 4. Generic dispatch helpers
 
@@ -142,7 +142,7 @@ impl ChangeKitCommand {
 
 ### 5. `KitChange` + `KitChangeKind` rework
 
-In `pub mod kit_change` (around [lib.rs:5173-5230](semio/rs/lib.rs)):
+In `pub mod kit_change` (around [lib.rs:5173-5230](compose/rs/lib.rs)):
 
 - Replace `KitChange::{forward: KitDiff, backward: KitDiff}` with:
 
@@ -178,14 +178,14 @@ Update every call site of the old model:
 
 ## Key files
 
-- [semio/rs/lib.rs](semio/rs/lib.rs) — sole edit target. Sections touched:
+- [compose/rs/lib.rs](compose/rs/lib.rs) — sole edit target. Sections touched:
   - `pub mod change_command` (lines 472-703): rewrite.
   - `pub mod kit_change` (lines 5173-5230 area): reshape `KitChange` + `KitChangeKind`.
   - `pub mod diff` (line 5872): keep `DesignDiff` as a storage DTO; remove its role as primary change payload.
   - `pub mod kit_transaction`, `pub mod kit_draft`, `pub mod kit_store_command`, `pub mod kit_session`, `pub mod kit_checkpoint`, `pub mod kit_alternative`: signature/route updates.
   - `pub mod wasm` (line 18829): mirror the new enums.
   - `pub mod events`: no change required (setters already emit `FieldChanged`).
-- [semio/rs/AGENTS.md](semio/rs/AGENTS.md): update the "Change flow" line to mention command-list forward + inverse.
+- [compose/rs/AGENTS.md](compose/rs/AGENTS.md): update the "Change flow" line to mention command-list forward + inverse.
 
 ## Notes / constraints
 

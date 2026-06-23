@@ -10,9 +10,9 @@ Ring replaces Slider for connector t property in the Type detail panel. Connecto
 
 ## Changes
 
-- Created `semio/js/.storybook/stories/elements/input/Ring.stories.tsx` with Default, Base, Window, Panel, Overlay, Temporary stories.
-- Created `semio/js/.storybook/stories/elements/input/Orb.stories.tsx` with Default, Selected, Hovered, Disabled, Base, Window, Panel, Overlay, Temporary stories.
-- Added `Ring` import to `semio/js/sketchpad/Type.tsx`.
+- Created `compose/js/.storybook/stories/elements/input/Ring.stories.tsx` with Default, Base, Window, Panel, Overlay, Temporary stories.
+- Created `compose/js/.storybook/stories/elements/input/Orb.stories.tsx` with Default, Selected, Hovered, Disabled, Base, Window, Panel, Overlay, Temporary stories.
+- Added `Ring` import to `compose/js/sketchpad/Type.tsx`.
 - `ConnectorsListSectionForm`: Added Ring at top showing all connector t values as draggable orbs with selection/hover. Removed per-connector Slider for t.
 - `ConnectorSectionForm`: Replaced Slider for t with Ring showing single selected-orb for the connector.
 

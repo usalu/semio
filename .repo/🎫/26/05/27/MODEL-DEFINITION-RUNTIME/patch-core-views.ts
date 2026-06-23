@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-const path = "c:/git/semio/spatial/js/core/index.ts";
+const path = "c:/git/compose/spatial/js/core/index.ts";
 let s = await Bun.file(path).text();
 
 s = s.replace(

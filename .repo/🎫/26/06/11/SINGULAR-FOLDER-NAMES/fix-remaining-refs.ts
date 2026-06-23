@@ -3,15 +3,15 @@
 import { existsSync, readFileSync, readdirSync, renameSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-const root = "/Users/ueli/Documents/semio";
+const root = "/Users/ueli/Documents/compose";
 const SKIP = new Set(["node_modules", ".git", ".repo", ".venv", "temp", ".nx", "dist", "target"]);
 const EXT = new Set([".ts", ".tsx", ".js", ".jsx", ".json", ".md", ".mdx", ".go", ".py", ".cs", ".rs", ".toml", ".yaml", ".yml"]);
 
 const REPLACEMENTS: [string, string][] = [
-	["@semio/algorithms", "@semio/algorithm"],
-	["@semio/icons", "@semio/icon"],
-	["semio/dev/algorithms", "semio/dev/algorithm"],
-	["semio/asset/icons", "semio/asset/icon"],
+	["@compose/algorithms", "@compose/algorithm"],
+	["@compose/icons", "@compose/icon"],
+	["compose/dev/algorithms", "compose/dev/algorithm"],
+	["compose/asset/icons", "compose/asset/icon"],
 	["../../../../assets", "../../../../asset"],
 	["../../../assets", "../../../asset"],
 	["../../assets", "../../asset"],

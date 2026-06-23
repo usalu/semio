@@ -3,7 +3,7 @@
 
 import re, os, collections
 
-BASE = "semio/sketchpad/sketchpad"
+BASE = "compose/sketchpad/sketchpad"
 SKETCHPAD = os.path.join(BASE, "Sketchpad.tsx")
 
 FILES = [

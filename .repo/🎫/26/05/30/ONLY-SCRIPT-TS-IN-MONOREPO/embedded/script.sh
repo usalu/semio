@@ -12,11 +12,11 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 case "${1:-}" in
 setup)
   shift || true
-  export SEMIO_SESSION_START=0
+  export COMPOSE_SESSION_START=0
   ;;
 start)
   shift || true
-  export SEMIO_SESSION_START=1
+  export COMPOSE_SESSION_START=1
   ;;
 *)
   printf '%s\n' "usage: bash ./script.sh <setup|start>" >&2
@@ -32,12 +32,12 @@ NEO4J_VERSION="${NEO4J_VERSION:-5.26.26}"
 APOC_VERSION="${APOC_VERSION:-5.26.4}"
 SKIP_NEO4J_DESKTOP="${SKIP_NEO4J_DESKTOP:-0}"
 SKIP_REPO_BOOTSTRAP="${SKIP_REPO_BOOTSTRAP:-0}"
-SEMIO_SESSION_START="${SEMIO_SESSION_START:-0}"
+COMPOSE_SESSION_START="${COMPOSE_SESSION_START:-0}"
 #endregion 🔖Config
 
 #region 🔖Logging
 log() {
-  printf '%s\n' "[semio] $*"
+  printf '%s\n' "[compose] $*"
 }
 #endregion 🔖Logging
 
@@ -56,7 +56,7 @@ append_neo4j_env_block() {
     printf '%s\n' "export NEO4J_URI=bolt://localhost:7687"
     printf '%s\n' "export NEO4J_USERNAME=neo4j"
     printf '%s\n' "export NEO4J_PASSWORD=password"
-    printf '%s\n' "export NEO4J_DATABASE=semio"
+    printf '%s\n' "export NEO4J_DATABASE=compose"
     printf '%s\n' "#endregion 🔌Neo4j"
   } >>"$f"
   log "Appended Neo4j MCP env block to $f"
@@ -79,7 +79,7 @@ configure_neo4j_shell_env() {
   export NEO4J_URI="bolt://localhost:7687"
   export NEO4J_USERNAME="neo4j"
   export NEO4J_PASSWORD="password"
-  export NEO4J_DATABASE="semio"
+  export NEO4J_DATABASE="compose"
   export NEO4J_TELEMETRY="false"
 }
 #endregion 🔖Neo4jEnv
@@ -150,7 +150,7 @@ set_text_setting() {
 }
 
 resolve_native_graph_database() {
-  local preferred="${NEO4J_DATABASE:-semio}"
+  local preferred="${NEO4J_DATABASE:-compose}"
   if run_cypher "$preferred" "RETURN 1;"; then
     printf '%s\n' "$preferred"
     return 0
@@ -181,25 +181,25 @@ install_neo4j_desktop_apoc() {
   set_text_setting "$dbms_home/conf/neo4j.conf" "dbms.security.procedures.allowlist" "apoc.*"
   set_text_setting "$dbms_home/conf/neo4j.conf" "dbms.security.procedures.unrestricted" "apoc.*"
   set_text_setting "$dbms_home/conf/neo4j.conf" "server.directories.import" "$REPO_ROOT"
-  set_text_setting "$dbms_home/conf/neo4j.conf" "initial.dbms.default_database" "semio"
+  set_text_setting "$dbms_home/conf/neo4j.conf" "initial.dbms.default_database" "compose"
   set_text_setting "$dbms_home/conf/apoc.conf" "apoc.export.file.enabled" "true"
   set_text_setting "$dbms_home/conf/apoc.conf" "apoc.import.file.enabled" "true"
   set_text_setting "$dbms_home/conf/apoc.conf" "apoc.import.file.use_neo4j_config" "false"
 
   if [ -x "$dbms_home/bin/neo4j" ]; then
-    log "Restarting Neo4j Desktop local semio DBMS to load APOC..."
+    log "Restarting Neo4j Desktop local compose DBMS to load APOC..."
     pkill -f "$dbms_home" >/dev/null 2>&1 || true
     for _ in $(seq 1 30); do
       is_neo4j_reachable || break
       sleep 1
     done
-    nohup "$dbms_home/bin/neo4j" console >"$dbms_home/logs/semio-native-console.log" 2>&1 &
+    nohup "$dbms_home/bin/neo4j" console >"$dbms_home/logs/compose-native-console.log" 2>&1 &
     for _ in $(seq 1 45); do
       is_neo4j_reachable && break
       sleep 2
     done
   else
-    log "APOC installed into the semio DBMS. Restart it in Neo4j Desktop to load the plugin."
+    log "APOC installed into the compose DBMS. Restart it in Neo4j Desktop to load the plugin."
   fi
 }
 
@@ -217,7 +217,7 @@ ensure_java_runtime() {
   if [ -n "$major" ] && [ "$major" -ge 21 ]; then
     return 0
   fi
-  if [ "$SEMIO_SESSION_START" = "1" ]; then
+  if [ "$COMPOSE_SESSION_START" = "1" ]; then
     log "Java 21+ is required for Neo4j. Run bash ./script.sh setup to install it."
     return 1
   fi
@@ -274,7 +274,7 @@ ensure_native_neo4j_tools() {
   set_conf_value "$conf" "server.directories.import" "$REPO_ROOT"
   set_conf_value "$conf" "dbms.security.procedures.allowlist" "apoc.*"
   set_conf_value "$conf" "dbms.security.procedures.unrestricted" "apoc.*"
-  set_conf_value "$conf" "initial.dbms.default_database" "semio"
+  set_conf_value "$conf" "initial.dbms.default_database" "compose"
   {
     printf '%s\n' "apoc.export.file.enabled=true"
     printf '%s\n' "apoc.import.file.enabled=true"
@@ -322,7 +322,7 @@ ensure_native_neo4j() {
   if is_neo4j_reachable; then
     log "Neo4j is reachable at bolt://localhost:7687."
   else
-    log "Neo4j is not reachable. Create and start a native Neo4j Desktop local DBMS named semio on Bolt port 7687, password password, then run this setup again."
+    log "Neo4j is not reachable. Create and start a native Neo4j Desktop local DBMS named compose on Bolt port 7687, password password, then run this setup again."
     return 0
   fi
 
@@ -334,31 +334,31 @@ ensure_native_neo4j() {
     install_neo4j_desktop_apoc || true
     graph_db="$(resolve_native_graph_database)"
     if ! run_cypher_expect "$graph_db" "SHOW PROCEDURES YIELD name WHERE name IN ['apoc.cypher.runFile', 'apoc.export.cypher.query'] RETURN count(name) AS count;" "\\b2\\b"; then
-      log "Neo4j is reachable, but APOC is not ready. In Neo4j Desktop, install/enable APOC for the local semio DBMS and restart it."
+      log "Neo4j is reachable, but APOC is not ready. In Neo4j Desktop, install/enable APOC for the local compose DBMS and restart it."
       return 0
     fi
   fi
 
-  run_cypher system "CREATE DATABASE semio IF NOT EXISTS;" >/dev/null 2>&1 || true
+  run_cypher system "CREATE DATABASE compose IF NOT EXISTS;" >/dev/null 2>&1 || true
   while IFS= read -r db; do
     [ -z "$db" ] && continue
     q="$(neo4j_quote_db_name "$db")"
     run_cypher system "CREATE DATABASE $q IF NOT EXISTS;" >/dev/null 2>&1 || true
   done < <(extra_neo4j_graph_names_from_env)
   #region 🔥Neo4jEnterpriseDropStockDb
-  # Enterprise Desktop: schema often lands in the stock `neo4j` DB. Ensure `semio` is default, then drop `neo4j`.
+  # Enterprise Desktop: schema often lands in the stock `neo4j` DB. Ensure `compose` is default, then drop `neo4j`.
   # Community (single user DB): these calls fail harmlessly and are skipped via `|| true`.
-  run_cypher system "START DATABASE semio WAIT;" >/dev/null 2>&1 || true
-  run_cypher system "CALL dbms.setDefaultDatabase('semio');" >/dev/null 2>&1 || true
+  run_cypher system "START DATABASE compose WAIT;" >/dev/null 2>&1 || true
+  run_cypher system "CALL dbms.setDefaultDatabase('compose');" >/dev/null 2>&1 || true
   run_cypher system "DROP DATABASE neo4j IF EXISTS CASCADE ALIASES WAIT;" >/dev/null 2>&1 || true
   #endregion 🔥Neo4jEnterpriseDropStockDb
   graph_db="$(resolve_native_graph_database)"
-  log "Neo4j graph database for imports (after optional CREATE DATABASE semio): ${graph_db}"
+  log "Neo4j graph database for imports (after optional CREATE DATABASE compose): ${graph_db}"
 
   log "Neo4j: clearing graph in ${graph_db}, then loading generated .repo/🛂/*.cypher (from bun run generate) …"
   run_cypher "$graph_db" "MATCH (n) DETACH DELETE n" || log "Neo4j wipe skipped (failed)."
 
-  local technologies=(semio elements coda reuse)
+  local technologies=(compose elements coda reuse)
   local ex
   while IFS= read -r ex; do
     [ -n "$ex" ] && technologies+=("$ex")
@@ -464,7 +464,7 @@ install_neo4j_desktop_linux_appimage() {
   install_linux_fuse_deps
   local ver="$NEO4J_DESKTOP_INSTALLER_VERSION"
   local url="https://dist.neo4j.org/neo4j-desktop/linux/neo4j-desktop-${ver}-x86_64.AppImage"
-  local dest_dir="${HOME}/.local/share/semio/neo4j-desktop"
+  local dest_dir="${HOME}/.local/share/compose/neo4j-desktop"
   local dest="${dest_dir}/neo4j-desktop-${ver}-x86_64.AppImage"
   mkdir -p "$dest_dir"
   if [ -f "$dest" ]; then
@@ -550,7 +550,7 @@ repo_bootstrap() {
 #region 🔖Main
 cd "$REPO_ROOT"
 configure_neo4j_shell_env
-if [ "$SEMIO_SESSION_START" = "1" ]; then
+if [ "$COMPOSE_SESSION_START" = "1" ]; then
   ensure_native_neo4j
   log "Native IDE session setup complete."
   exit 0

@@ -18,10 +18,10 @@ todos:
     content: Migrate board, scene, topology play bundles to the new App+Controller pattern (mirror geometry approach); update their react.tsx adapters and tests
     status: completed
   - id: sketchpad
-    content: "Migrate semio sketchpad: SketchpadApp extends App, SketchpadController, panel/tab/tree wiring; update semio/client/lib/react/rendering and storybook UI.stories.tsx"
+    content: "Migrate compose sketchpad: SketchpadApp extends App, SketchpadController, panel/tab/tree wiring; update compose/client/lib/react/rendering and storybook UI.stories.tsx"
     status: pending
   - id: verify
-    content: Run nx tests for all affected projects (elements/{ui,geometry,board,scene,topology}, semio/sketchpad) and Storybook build; iterate until green
+    content: Run nx tests for all affected projects (elements/{ui,geometry,board,scene,topology}, compose/sketchpad) and Storybook build; iterate until green
     status: completed
   - id: close
     content: Close ticket with summary + file list
@@ -114,8 +114,8 @@ Same pattern (pure `App` + `Controller` class + thin `*-react.ts` registering wi
 - [elements/client/lib/board/play/react.tsx](elements/client/lib/board/play/react.tsx) + [elements/client/lib/board/play/index.tsx](elements/client/lib/board/play/index.tsx)
 - [elements/client/lib/scene/play/react.tsx](elements/client/lib/scene/play/react.tsx) + [elements/client/lib/scene/play/index.tsx](elements/client/lib/scene/play/index.tsx)
 - [elements/client/lib/topology/play/react.tsx](elements/client/lib/topology/play/react.tsx) + [elements/client/lib/topology/play/index.tsx](elements/client/lib/topology/play/index.tsx)
-- [semio/client/lib/sketchpad/react/index.tsx](semio/client/lib/sketchpad/react/index.tsx) — sketchpad becomes `class SketchpadApp extends App` with `class SketchpadController`. (Sketchpad has many panels/tabs; this is the largest single migration.)
-- [semio/client/lib/react/rendering/index.tsx](semio/client/lib/react/rendering/index.tsx) — update wrapper to construct `UI` + mount via `ReactUI`.
+- [compose/client/lib/sketchpad/react/index.tsx](compose/client/lib/sketchpad/react/index.tsx) — sketchpad becomes `class SketchpadApp extends App` with `class SketchpadController`. (Sketchpad has many panels/tabs; this is the largest single migration.)
+- [compose/client/lib/react/rendering/index.tsx](compose/client/lib/react/rendering/index.tsx) — update wrapper to construct `UI` + mount via `ReactUI`.
 - [.storybook/story/elements/ui/UI.stories.tsx](.storybook/story/elements/ui/UI.stories.tsx) — rewrite stories to instantiate `UI`/`App` classes.
 
 ### Tests

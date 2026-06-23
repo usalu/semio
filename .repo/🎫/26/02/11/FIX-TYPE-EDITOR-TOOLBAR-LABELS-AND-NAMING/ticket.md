@@ -9,9 +9,9 @@ goal: SKETCHPAD-FIXES
 Fixed Type Editor toolbar labels to match Design and Kit app patterns. Updated subtool label from 'selection' to 'select' and added missing 'connector' subtool translations in both English and German locale files. Also completed German locale with all missing subtool entries.
 ## Changes
 
-- /workspaces/semio/semio/js/sketchpad/Type.tsx
-- /workspaces/semio/semio/js/sketchpad/locales/en.json
-- /workspaces/semio/semio/js/sketchpad/locales/de.json
+- /workspaces/semio/compose/js/sketchpad/Type.tsx
+- /workspaces/semio/compose/js/sketchpad/locales/en.json
+- /workspaces/semio/compose/js/sketchpad/locales/de.json
 
 ## Log
 
@@ -35,7 +35,7 @@ Fixed Type Editor toolbar labels to match Design and Kit app patterns. Updated s
 ## Plan
 
 1. Update Type.tsx to use correct subtool label IDs:
-   - Change "semio.sketchpad.toolbar.subtool.selection" to "semio.sketchpad.toolbar.subtool.select"
+   - Change "compose.sketchpad.toolbar.subtool.selection" to "compose.sketchpad.toolbar.subtool.select"
    - Add "connector" subtool translation (currently missing)
 
 2. Add missing "connector" translation to locale files:

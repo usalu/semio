@@ -10,7 +10,7 @@ Researched autofix/policy system.
 
 ## Findings
 
-### 1. Fixture Files in semio/assets/repo/some/folder/
+### 1. Fixture Files in compose/assets/repo/some/folder/
 
 14 files total:
 
@@ -40,7 +40,7 @@ Checks every file with a language that SupportsHeaders(). Produces these statute
 ```
 // #region 🔖Header
 //
-// [💻some/folder/file.tsx](semiorepo://file/some/folder/file.tsx)
+// [💻some/folder/file.tsx](composerepo://file/some/folder/file.tsx)
 //
 // 2025 Author Name <email@example.com>
 //
@@ -67,16 +67,16 @@ Checks non-Header sections for:
 2. **SectionMissingEndName** — `#endregion` without section name
 3. **SectionNameMismatch** — start name ≠ end name
 4. **SectionEmpty** — no non-blank non-comment content lines between start/end (and no children)
-5. **SectionMissingIdentification** — no comment line matching `[...](semiorepo://section/...)`
+5. **SectionMissingIdentification** — no comment line matching `[...](composerepo://section/...)`
 6. **SectionMissingSummary** — no non-identification comment line after section start
 
 **To avoid SectionMissingIdentification**: After the `#region 🔖Name` line, within the section, there must be a comment matching:
 
 ```
-// [🔖filePath#SectionName](semiorepo://section/filePath/SECTION-NAME)
+// [🔖filePath#SectionName](composerepo://section/filePath/SECTION-NAME)
 ```
 
-The regex check is: `strings.HasPrefix(commentText, "[") && strings.Contains(commentText, "](semiorepo://section/")`
+The regex check is: `strings.HasPrefix(commentText, "[") && strings.Contains(commentText, "](composerepo://section/")`
 
 **To avoid SectionMissingSummary**: After the identification comment, there must be at least one more comment line (any non-empty comment text that's not the identification). Example:
 
@@ -106,8 +106,8 @@ func SectionHeaderUri(filePath string, sectionPath string) string {
 }
 ```
 
-GetArtifactURI for "section" returns: `semiorepo://section/` + SectionIdValueToUriPath(path)
-So: `SectionHeaderUri("a/b.tsx", "MySection")` → `semiorepo://section/a/b.tsx/MY-SECTION`
+GetArtifactURI for "section" returns: `composerepo://section/` + SectionIdValueToUriPath(path)
+So: `SectionHeaderUri("a/b.tsx", "MySection")` → `composerepo://section/a/b.tsx/MY-SECTION`
 
 ### 6. FileHeaderId (L20284)
 
@@ -137,8 +137,8 @@ func FileHeaderUri(path string) string {
 }
 ```
 
-GetArtifactURI for "file" returns: `semiorepo://file/` + path
-So: `FileHeaderUri("some/folder/file.tsx")` → `semiorepo://file/some/folder/file.tsx`
+GetArtifactURI for "file" returns: `composerepo://file/` + path
+So: `FileHeaderUri("some/folder/file.tsx")` → `composerepo://file/some/folder/file.tsx`
 
 ### 8. SectionIdValueToUriPath (L33804)
 
@@ -217,7 +217,7 @@ No code changes — research only.
 
 ## Log
 
-- Read all 14 fixture files in semio/assets/repo/some/folder/
+- Read all 14 fixture files in compose/assets/repo/some/folder/
 - Read headerPolicy (L14517-L14770)
 - Read sectionPolicy (L14773-L14950)
 - Read FileHeaderId (L20284), FileHeaderUri (L20324)

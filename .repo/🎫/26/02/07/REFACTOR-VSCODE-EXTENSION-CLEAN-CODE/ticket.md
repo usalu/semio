@@ -22,7 +22,7 @@ Refactored repo VS Code extension: consolidated logging, simplified utilities, D
 - **Extracted `buildTicketItem`**: Public helper in MonorepoTreeDataProvider eliminates 5 identical ticket tree item creation blocks.
 - **Merged `navigateToBundle`/`navigateToFolder`**: Both had identical implementation; now share a single `revealInExplorer` helper.
 - **Extracted `navigateToRangedItem`**: Shared helper for section/definition navigation (identical pattern).
-- **Consolidated section/definition URI handling in `semio.navigate`**: Replaced duplicate for-loop code with shared loop over prefixes.
+- **Consolidated section/definition URI handling in `compose.navigate`**: Replaced duplicate for-loop code with shared loop over prefixes.
 - **Data-driven filter toggle command registration**: Replaced ~60 manual `register()` calls with a `filterToggleEntries` record and nested loop.
 - **Data-driven time mode command registration**: Replaced 6 manual calls with `timeModes` array loop.
 - **Data-driven search toggle command registration**: Replaced 3 identical toggle blocks with `searchToggles` array loop.
@@ -32,7 +32,7 @@ Refactored repo VS Code extension: consolidated logging, simplified utilities, D
 ### extension.test.ts
 
 - **Removed duplicated `RepoEvent` type, `parseRepoEvents`, `extractRepoResult`**: Now imported from extension.ts.
-- **Fixed broken fixture paths**: `@semio/` directory doesn't exist; changed all references to `semio/`.
+- **Fixed broken fixture paths**: `@compose/` directory doesn't exist; changed all references to `compose/`.
 - **Parameterized none/all toggle tests**: Replaced 7 identical test blocks with a `for` loop over filter kinds.
 - **Added getFileKindIcon test suite**: 9 tests covering all file type icon mappings.
 - **Added matchesSearch test suite**: 7 tests covering empty query, case-insensitive, case-sensitive, whole word, regex, invalid regex fallback, no filter provider.
@@ -46,7 +46,7 @@ Refactored repo VS Code extension: consolidated logging, simplified utilities, D
 2. Identified 13 categories of duplication/smells
 3. Applied all refactorings to extension.ts
 4. Updated test imports, removed duplicated code, added comprehensive tests
-5. Fixed pre-existing broken fixture paths (@semio/ -> semio/)
+5. Fixed pre-existing broken fixture paths (@compose/ -> compose/)
 6. Build succeeded, all 99 tests pass
 
 ## Todos

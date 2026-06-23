@@ -1,5 +1,5 @@
 """
-Restructure script for semio implementations.
+Restructure script for compose implementations.
 Handles: section reordering, nesting fixes, block moves.
 """
 
@@ -8,35 +8,35 @@ import sys
 import shutil
 from pathlib import Path
 
-BASE = Path(r"c:\git\semio")
+BASE = Path(r"c:\git\compose")
 
 # File configs: (path, start_pattern, end_pattern, comment_prefix)
 FILES = {
     "go": (
-        BASE / "semio/go/main.go",
+        BASE / "compose/go/main.go",
         r"^// #region (.+)$",
         r"^// #endregion (.+)$",
         "// ",
     ),
     "ts": (
-        BASE / "semio/js/index.ts",
+        BASE / "compose/js/index.ts",
         r"^// #region (.+)$",
         r"^// #endregion (.+)$",
         "// ",
     ),
     "py": (
-        BASE / "semio/py/main.py",
+        BASE / "compose/py/main.py",
         r"^# #region (.+)$",
         r"^# #endregion (.+)$",
         "# ",
     ),
     "cs": (
-        BASE / "semio/net/Semio/Semio.cs",
+        BASE / "compose/net/Compose/Compose.cs",
         r"^#region (.+)$",
         r"^#endregion (.+)$",
         "",
     ),
-    "rs": (BASE / "semio/rs/lib.rs", r"^mod (\w+) \{ // (.+)$", r"^\} // (.+)$", ""),
+    "rs": (BASE / "compose/rs/lib.rs", r"^mod (\w+) \{ // (.+)$", r"^\} // (.+)$", ""),
 }
 
 # Canonical top-level section order (shared sections in required relative order)
@@ -51,7 +51,7 @@ CANONICAL_ORDER = [
     "Exceptions",
     "Modeling",
     "Entitying",
-    "SemioValidation",
+    "ComposeValidation",
     "Entity IDs",
     "Weak Entities",
     "Attribute",
@@ -122,7 +122,7 @@ CANONICAL_ORDER = [
     "KitExporter",
     "KitStore",
     "File Tree Utilities",
-    "SemioDiff",
+    "ComposeDiff",
     "WASM Bindings",
     "Tests",
     "Benchmarks",

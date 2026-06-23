@@ -10,7 +10,7 @@
 ## Changes
 
 - `elements/ui/index.tsx` — `skipLazyBlurCommitRef` so Enter-key commit is not duplicated on blur.
-- `semio/sketchpad/index.tsx` — kit name field uses `kit?.name` from `useKitSnapshotTriad()` (materialized host store); removed `useKitName` from `KitSectionForm`.
+- `compose/sketchpad/index.tsx` — kit name field uses `kit?.name` from `useKitSnapshotTriad()` (materialized host store); removed `useKitName` from `KitSectionForm`.
 
 ## Verification
 

@@ -22,7 +22,7 @@
         "isBackground": false,
         "timeout": 5000
       },
-      "tool_response": "Note: The tool simplified the command to ` lsof -i :5173 2\u003e/dev/null | head -5`, and this is the output of running that command instead:\nvscode ➜ /workspaces/semio/semio/sketchpad (ueli/latest) $  lsof -i :5173 2\u003e/dev\n/null | head -5\n",
+      "tool_response": "Note: The tool simplified the command to ` lsof -i :5173 2\u003e/dev/null | head -5`, and this is the output of running that command instead:\nvscode ➜ /workspaces/semio/compose/sketchpad (ueli/latest) $  lsof -i :5173 2\u003e/dev\n/null | head -5\n",
       "tool_use_id": "toolu_bdrk_014PkV5Jdw81h9Tzm9C3ySKk__vscode-1773658270510",
       "cwd": "/workspaces/semio"
     }

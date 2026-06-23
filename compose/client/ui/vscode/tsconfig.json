@@ -1,0 +1,55 @@
+{
+  "compilerOptions": {
+    "module": "ESNext",
+    "target": "ES2022",
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "jsx": "react-jsx",
+    "strict": true,
+    "moduleResolution": "Bundler",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@compose/sketchpad": [
+        "../sketchpad"
+      ],
+      "@compose/sketchpad/*": [
+        "../sketchpad/*"
+      ],
+      "@compose/js": [
+        "../js"
+      ],
+      "@compose/js/*": [
+        "../js/*"
+      ],
+      "@ui/react": [
+        "../../../ui/react"
+      ],
+      "@ui/react/*": [
+        "../../../ui/react/*"
+      ],
+      "@compose/asset": [
+        "../asset"
+      ],
+      "@compose/asset/*": [
+        "../asset/*"
+      ]
+    },
+    "types": [
+      "node",
+      "react",
+      "react-dom",
+      "vite/client"
+    ]
+  },
+  "include": [
+    "extension.ts",
+    "webview.tsx"
+  ]
+}

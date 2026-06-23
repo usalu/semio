@@ -15,7 +15,7 @@ Extended VS Code extension tests and stabilized headless test runner; aligned ti
 ## Log
 
 - Adjusted VS Code test runner to run under Xvfb when `DISPLAY` is missing.
-- Fixed test fixtures to load from `semio/assets`.
+- Fixed test fixtures to load from `compose/assets`.
 - Updated extension GraphQL tickets query to use `interactions` (schema-aligned).
 - Refactored Monorepo provider to accept filter provider injection for testability.
 - Registered contributed commands in activation so command availability checks pass.

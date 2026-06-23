@@ -47,7 +47,7 @@ The AGENTS.md documentation had architecture-level documentation for the Sketchp
 **Design App (Design.tsx):**
 
 - DesignAppState: panelVisibility, activeTool, selection (pieces/connections/connector), hover, camera, diagram state
-- Commands: semio.designApp.selectAll, semio.designApp.deselectAll, semio.designApp.deleteSelected
+- Commands: compose.designApp.selectAll, compose.designApp.deselectAll, compose.designApp.deleteSelected
 - Events: DESIGN.TOGGLE*PANEL, DESIGN.SET_TOOL, DESIGN.SELECT*\_/DESELECT\_\_, DESIGN.DELETE_SELECTED
 - Hooks: useDesignApp(), useDesignAppSelection(), useDesignAppHover(), useDesignAppCamera(), useDesignAppActiveTool()
 

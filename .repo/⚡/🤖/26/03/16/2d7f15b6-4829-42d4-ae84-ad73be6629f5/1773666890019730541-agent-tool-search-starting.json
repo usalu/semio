@@ -16,7 +16,7 @@
       "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2d7f15b6-4829-42d4-ae84-ad73be6629f5.jsonl",
       "tool_name": "run_in_terminal",
       "tool_input": {
-        "command": "cd /workspaces/semio/semio/sketchpad \u0026\u0026 npx playwright test --grep \"Design\" --reporter=list 2\u003e\u00261 | grep -B 2 -A 5 \"Error:\" | grep -v \"WebGL\" | head -30",
+        "command": "cd /workspaces/semio/compose/sketchpad \u0026\u0026 npx playwright test --grep \"Design\" --reporter=list 2\u003e\u00261 | grep -B 2 -A 5 \"Error:\" | grep -v \"WebGL\" | head -30",
         "explanation": "Find the actual error in the test output",
         "goal": "Find failure cause",
         "isBackground": false,

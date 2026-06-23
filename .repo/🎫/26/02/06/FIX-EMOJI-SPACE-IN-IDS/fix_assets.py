@@ -6,14 +6,14 @@ def fix_paths():
     root_dir = "/workspaces/semio"
 
     # 1. Fix assets paths
-    # Inside semio/, ../../assets -> ../assets
+    # Inside compose/, ../../assets -> ../assets
     # (Matches what we did before)
 
     # 2. Fix sql/sqlite paths
-    # semio/rs/../../sql/sqlite/semio/schema.sql -> semio/rs/../sqlite/schema.sql
-    # semio/go/../../sql/sqlite/semio/schema.sql -> semio/go/../sqlite/schema.sql
+    # compose/rs/../../sql/sqlite/compose/schema.sql -> compose/rs/../sqlite/schema.sql
+    # compose/go/../../sql/sqlite/compose/schema.sql -> compose/go/../sqlite/schema.sql
 
-    for subdir in ["semio", "repo", "coda"]:
+    for subdir in ["compose", "repo", "coda"]:
         base_path = os.path.join(root_dir, subdir)
         if not os.path.exists(base_path):
             continue
@@ -45,7 +45,7 @@ def fix_paths():
                         new_content = content
 
                         # Fix assets patterns
-                        if subdir == "semio":
+                        if subdir == "compose":
                             # Replace (../)^n assets with (../)^(n-1) assets
                             # pattern = re.compile(r'(\.\./){2,}assets')
                             def sub_assets(m):
@@ -56,22 +56,22 @@ def fix_paths():
                                 r"(\.\./){2,}assets", sub_assets, new_content
                             )
 
-                        # Fix sql patterns for semio/
-                        if subdir == "semio":
-                            # ../../sql/sqlite/semio/ -> ../sqlite/
-                            def sub_sql_semio(m):
+                        # Fix sql patterns for compose/
+                        if subdir == "compose":
+                            # ../../sql/sqlite/compose/ -> ../sqlite/
+                            def sub_sql_compose(m):
                                 count = m.group(0).count("../")
-                                # if count is 2 (../../sql/sqlite/semio/), we want ../sqlite/
+                                # if count is 2 (../../sql/sqlite/compose/), we want ../sqlite/
                                 # so count - 1
                                 return "../" * (count - 1) + "sqlite/"
 
                             new_content = re.sub(
-                                r"(\.\./)+sql/sqlite/semio/", sub_sql_semio, new_content
+                                r"(\.\./)+sql/sqlite/compose/", sub_sql_compose, new_content
                             )
 
                             # Handle cases without trailing slash
                             new_content = re.sub(
-                                r"(\.\./)+sql/sqlite/semio",
+                                r"(\.\./)+sql/sqlite/compose",
                                 lambda m: (
                                     "../" * (m.group(0).count("../") - 1) + "sqlite"
                                 ),
@@ -110,8 +110,8 @@ def fix_paths():
         with open(agents_path, "r", encoding="utf-8") as f:
             content = f.read()
         new_content = content.replace("sql/sqlite/repo/", "repo/sqlite/")
-        new_content = new_content.replace("sql/sqlite/semio/", "semio/sqlite/")
-        new_content = new_content.replace("./sql/sqlite/", "./semio/sqlite/")
+        new_content = new_content.replace("sql/sqlite/compose/", "compose/sqlite/")
+        new_content = new_content.replace("./sql/sqlite/", "./compose/sqlite/")
         if new_content != content:
             print(f"Fixing paths in {agents_path}")
             with open(agents_path, "w", encoding="utf-8") as f:

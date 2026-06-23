@@ -16,7 +16,7 @@ The `repo` VS Code extension was broken due to:
 
 1. **Schema Mismatch**: The TypeScript extension code queried `autofix` on `Breach` objects, but the Go backend schema only exposed `autofixable`. This caused code generation and runtime errors.
 2. **Packaging Failures**: The `vsce package` process failed because of bundling issues with `dependencies` vs `devDependencies` and missing exclusions in `.vscodeignore`.
-3. **Runtime UI Failure**: The extension installed but showed no icon and no views. This was caused by the `package.json` referencing `../../assets/icons/semio_codeicon.svg` (outside the extension root), which is invalid for VSIX packages. The View Container failed to register, hiding all associated views.
+3. **Runtime UI Failure**: The extension installed but showed no icon and no views. This was caused by the `package.json` referencing `../../assets/icons/compose_codeicon.svg` (outside the extension root), which is invalid for VSIX packages. The View Container failed to register, hiding all associated views.
 
 ## Changes
 
@@ -24,7 +24,7 @@ The `repo` VS Code extension was broken due to:
 
 - **`js/vscode/extension.ts`**:
   - Updated `AnalyzeDocument` GraphQL query to remove the invalid `autofix` field.
-  - Refactored `createRepoCodeAction` to check `breach.autofixable` and invoke the `semio.fixBreach` command instead of applying edits directly ( aligning with the CLI-driven architecture).
+  - Refactored `createRepoCodeAction` to check `breach.autofixable` and invoke the `compose.fixBreach` command instead of applying edits directly ( aligning with the CLI-driven architecture).
   - Verified `fixBreach` implementation calls `repo fix`.
 
 ### 2. Packaging Pipeline
@@ -40,11 +40,11 @@ The `repo` VS Code extension was broken due to:
 ### 3. Runtime & Assets
 
 - **Assets**:
-  - Copied `assets/icons/semio_codeicon.svg` to `js/vscode/semio_codeicon.svg` for the View Container icon.
-  - Copied `assets/icons/semio_512x512.png` to `js/vscode/semio_icon.png` for the Extension Marketplace icon.
+  - Copied `assets/icons/compose_codeicon.svg` to `js/vscode/compose_codeicon.svg` for the View Container icon.
+  - Copied `assets/icons/compose_512x512.png` to `js/vscode/compose_icon.png` for the Extension Marketplace icon.
 - **Manifest (`package.json`)**:
-  - Updated `viewsContainers` to reference the local `semio_codeicon.svg`.
-  - Added `"icon": "semio_icon.png"` to the extension metadata.
+  - Updated `viewsContainers` to reference the local `compose_codeicon.svg`.
+  - Added `"icon": "compose_icon.png"` to the extension metadata.
   - Verified activation events are correct (`onStartupFinished`).
 
 ## Verification

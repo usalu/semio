@@ -1816,11 +1816,11 @@ index 47c993f24..e50493d64 100644
        expect(rel?.label).toBe("Is: Bridge → Capital");
      });
  
-diff --git a/semio/fixtures/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest-left-classic-structure.stp b/semio/fixtures/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest-left-classic-structure.stp
+diff --git a/compose/fixtures/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest-left-classic-structure.stp b/compose/fixtures/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest-left-classic-structure.stp
 new file mode 100644
 index 000000000..9f0219202
 --- /dev/null
-+++ b/semio/fixtures/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest-left-classic-structure.stp
++++ b/compose/fixtures/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest-left-classic-structure.stp
 @@ -0,0 +1,177 @@
 +ISO-10303-21;
 +HEADER;
@@ -1999,11 +1999,11 @@ index 000000000..9f0219202
 +#126=CARTESIAN_POINT('',(0.,0.,0.));
 +ENDSEC;
 +END-ISO-10303-21;
-diff --git a/semio/fixtures/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest-left-energy.stp b/semio/fixtures/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest-left-energy.stp
+diff --git a/compose/fixtures/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest-left-energy.stp b/compose/fixtures/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest-left-energy.stp
 new file mode 100644
 index 000000000..124d66f79
 --- /dev/null
-+++ b/semio/fixtures/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest-left-energy.stp
++++ b/compose/fixtures/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest-left-energy.stp
 @@ -0,0 +1,125 @@
 +ISO-10303-21;
 +HEADER;
@@ -2130,12 +2130,12 @@ index 000000000..124d66f79
 +#77=CARTESIAN_POINT('',(0.,0.,0.));
 +ENDSEC;
 +END-ISO-10303-21;
-diff --git a/semio/fixtures/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest.gh b/semio/fixtures/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest.gh
+diff --git a/compose/fixtures/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest.gh b/compose/fixtures/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest.gh
 index 931e2ed78..7039e29de 100644
-Binary files a/semio/fixtures/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest.gh and b/semio/fixtures/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest.gh differ
-diff --git a/semio/fixtures/kit/folder/abbau-aufbau/stockwerk.3dm b/semio/fixtures/kit/folder/abbau-aufbau/stockwerk.3dm
+Binary files a/compose/fixtures/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest.gh and b/compose/fixtures/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest.gh differ
+diff --git a/compose/fixtures/kit/folder/abbau-aufbau/stockwerk.3dm b/compose/fixtures/kit/folder/abbau-aufbau/stockwerk.3dm
 index b2345d13e..5a273f3cf 100644
-Binary files a/semio/fixtures/kit/folder/abbau-aufbau/stockwerk.3dm and b/semio/fixtures/kit/folder/abbau-aufbau/stockwerk.3dm differ
+Binary files a/compose/fixtures/kit/folder/abbau-aufbau/stockwerk.3dm and b/compose/fixtures/kit/folder/abbau-aufbau/stockwerk.3dm differ
 diff --git a/ui/react/globals-ui.css b/ui/react/globals-ui.css
 index 02d466343..4973ef03d 100644
 --- a/ui/react/globals-ui.css

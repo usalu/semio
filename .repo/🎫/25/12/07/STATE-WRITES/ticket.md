@@ -32,8 +32,8 @@ Right now:
 
 - **UI write hooks for design app (`Design.tsx`):**
   - `useDesignAppCommands()` returns an object with methods like:
-    - `deleteSelected(origin)` → `store.execute("semio.designApp.deleteSelected", origin)`
-    - `setActiveTool(origin, tool)` → `store.execute("semio.designApp.setActiveTool", origin, tool)`
+    - `deleteSelected(origin)` → `store.execute("compose.designApp.deleteSelected", origin)`
+    - `setActiveTool(origin, tool)` → `store.execute("compose.designApp.setActiveTool", origin, tool)`
     - etc.
 
   - Components use these directly.
@@ -115,8 +115,8 @@ For any design app write (e.g. delete selection, move piece, change plane compon
        const store = context.sketchpadStore.designApp({ kit: event.kitGuid, design: event.designGuid }) as DesignStore;
 
        store.execute(
-         "semio.designApp.updatePieces", // existing command
-         "semio.sketchpad.useFlatPiecePlaneXAxisY", // origin
+         "compose.designApp.updatePieces", // existing command
+         "compose.sketchpad.useFlatPiecePlaneXAxisY", // origin
          [{ id: event.pieceGuid, diff: { plane: { xAxis: { y: event.value } } } }],
        );
      },
@@ -128,7 +128,7 @@ For any design app write (e.g. delete selection, move piece, change plane compon
 
      ```ts
      const store = context.sketchpadStore.designApp(...);
-     store.execute("semio.designApp.deleteSelected", "semio.sketchpad.designDeleteSelected");
+     store.execute("compose.designApp.deleteSelected", "compose.sketchpad.designDeleteSelected");
      ```
 
    - And _also_ clear selection in the machine context if you want local copy to stay in sync.
@@ -151,7 +151,7 @@ Same idea:
 
 Right now, in `Design.tsx`:
 
-- `useDesignAppCommands()` returns a big object of functions that directly call `store.execute("semio.designApp.*", origin, ...)`.
+- `useDesignAppCommands()` returns a big object of functions that directly call `store.execute("compose.designApp.*", origin, ...)`.
 
 Plan:
 
@@ -189,7 +189,7 @@ Plan:
      }
      ```
 
-     The `"DESIGN.SET_DIAGRAM_SCALE"` action then must call the appropriate **store execute** command, e.g. `"semio.designApp.setDiagramScale"` or a more generic `"updateDesignAppState"` if you have it.
+     The `"DESIGN.SET_DIAGRAM_SCALE"` action then must call the appropriate **store execute** command, e.g. `"compose.designApp.setDiagramScale"` or a more generic `"updateDesignAppState"` if you have it.
 
 3. **Example: delete selected pieces**
 
@@ -215,7 +215,7 @@ Plan:
    }
    ```
 
-   In the machine, `"DESIGN.DELETE_SELECTED"` action calls `store.execute("semio.designApp.deleteSelected", origin)`.
+   In the machine, `"DESIGN.DELETE_SELECTED"` action calls `store.execute("compose.designApp.deleteSelected", origin)`.
 
 4. Over time, **replace all uses** of `useDesignAppCommands()` in `Design.tsx` UI components with the appropriate triadic hooks:
    - `const [_, deleteSelected, canDelete] = useDesignDeleteSelectedTriad();`
@@ -282,7 +282,7 @@ Implementation sketch:
 
    Then in `machines.ts`:
    - Add the `"DESIGN.UPDATE_PIECE_PLANE_XAXIS_Y"` event type.
-   - Add an action that calls `DesignStore.execute("semio.designApp.updatePieces", origin, [{ id, diff }])` as shown earlier.
+   - Add an action that calls `DesignStore.execute("compose.designApp.updatePieces", origin, [{ id, diff }])` as shown earlier.
 
 No second hook, no factory, no new read system.
 
@@ -312,7 +312,7 @@ Every triadic hook:
 1. **Leave all read mechanisms as they are** (even if overfetching for now).
 2. **Move all writes** from `useDesignAppCommands` / direct store calls in components into:
    - XState events (`DESIGN.*`, `TYPE.*`, `KIT.*`, etc.).
-   - Machine actions that call `*.execute("semio.*", origin, ...)` on the appropriate store/controller.
+   - Machine actions that call `*.execute("compose.*", origin, ...)` on the appropriate store/controller.
 
 3. **Export only triadic hooks** for UI:
    - `useDesignDiagramScale() → [scale, setScale, canSetScale]`
@@ -427,7 +427,7 @@ Added event handlers in the machine's `on` block:
 
 - **Piece-level hooks**: Implement `useFlatPiecePlaneXAxisY` which requires:
   - `DESIGN.UPDATE_PIECE_PLANE_XAXIS_Y` event
-  - Action that calls `DesignStore.execute("semio.designApp.updatePieces", ...)`
+  - Action that calls `DesignStore.execute("compose.designApp.updatePieces", ...)`
   - Uses `usePieceScope()` for piece context
 - **Replace UI usages**: Gradually replace `useDesignAppCommands()` calls with triadic hooks
 - **Quality app hooks**: Add triadic hooks for quality app once needed

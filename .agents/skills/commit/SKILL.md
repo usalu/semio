@@ -23,7 +23,7 @@ description: >-
 | Script (automatic) | You (from analysis) |
 |--------------------|---------------------|
 | Subject `🐙…🔀` | — |
-| Per-bundle and per-day `📊uloc➕…✏️…➖…🟰…` from git **after** you name bundles (`🟰` = ➕+✏️+➖); **bundles sorted highest 🟰 first** | **Which bundles exist**, bundle scope lines (`🏘️semio✍️sketchpad`), **which changes belong where** |
+| Per-bundle and per-day `📊uloc➕…✏️…➖…🟰…` from git **after** you name bundles (`🟰` = ➕+✏️+➖); **bundles sorted highest 🟰 first** | **Which bundles exist**, bundle scope lines (`🏘️compose✍️sketchpad`), **which changes belong where** |
 | Footer `📊uloc➕…✏️…➖…🟰…` (+ per-language rows) + `Signed-off-by` | Date lines `🎆YY🌙MM☀️DD` (no uloc on stdin) |
 | Four `git` commands on prepare stdout | **New** bullets `{emoji}{description}` |
 
@@ -90,7 +90,7 @@ Exit **0** on stderr: `commit check: OK`. Exit **1** with which constraint faile
 
 ```bash
 bun ./script.ts commit prepare <<'EOF'
-🏘️semio✍️sketchpad
+🏘️compose✍️sketchpad
 🎆26🌙06☀️04
 🗺️Summarize highest-impact change you see in the diff that day
 🎆26🌙06☀️03
@@ -106,7 +106,7 @@ EOF
 
 ## Bundle body rules
 
-- **Scope:** emoji + area name (`🏘️semio✍️sketchpad`, `🥅framework`, `🖱️ui⚛️react`) — no paths, no `🔀` / `📊uloc`. You choose scopes after analyzing log + diff; stdin order does not matter — the script reorders bundles by **highest 🟰** once scopes exist.
+- **Scope:** emoji + area name (`🏘️compose✍️sketchpad`, `🥅framework`, `🖱️ui⚛️react`) — no paths, no `🔀` / `📊uloc`. You choose scopes after analyzing log + diff; stdin order does not matter — the script reorders bundles by **highest 🟰** once scopes exist.
 - **Dates:** group bullets by calendar day (`🎆YY🌙MM☀️DD`), **newest first** within each bundle. Script appends `📊uloc➕…✏️…➖…🟰…` to each date line from micro-commits that day (same bundle paths).
 - **Bullets:** impact order; one leading emoji; written **after** reading the diff.
 - **Never** paste subject, uloc block, or `Signed-off-by` on stdin.
@@ -117,7 +117,7 @@ EOF
 Paste **entire** `prepare` stdout verbatim — **six** fenced blocks, in order:
 
 1. `git tag -s -m '…🚩' '…🚩' HEAD`
-2. `git reset --soft <sha> && git commit -S -F '.git/semio-commit-message'`
+2. `git reset --soft <sha> && git commit -S -F '.git/compose-commit-message'`
 3. `git push --follow-tags`
 4. One chained line (tag + squash + push)
 5. **Tag name only** — e.g. `🐙ueli🎆26🌙06☀️04🚩` (single line in the fence)

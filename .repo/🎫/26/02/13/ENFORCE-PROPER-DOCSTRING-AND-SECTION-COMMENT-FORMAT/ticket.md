@@ -12,12 +12,12 @@ Implemented Python triple-quote docstring detection, autofix (create/merge), Def
 
 - `repo/cli/main.go`: Added Python `"""` docstring detection inside body (paren-depth-aware body start), override `isNativeDocstring=false` when `#` comments above def with `"""`, Python autofix for `DefNotNativeDocstring` (creates/merges `"""` from `#` comments), Python-specific `DefMissingIdentification` autofix (inserts inside `"""`), TS/C#/Rust identification autofixes also updated for native docstring format, `DefinitionDocLines` marks Python `"""` lines as doc lines
 - `repo/cli/main_test.go`: Updated Python test from "should NOT flag" to "should flag" for `#` comments, added `TestPythonTripleQuoteDocstringAutofix` (converts `#` → `"""`), `TestPythonTripleQuoteDocstringMerge` (merges `#` into existing `"""`), `TestPythonTripleQuoteDocstringExemptFromCommentBan`, updated `TestBreachsNonEmpty` for 0-breach codebase
-- `semio/py/semio.py`: 533 definitions migrated from `#` comments to `"""` docstrings
-- `semio/engine/engine.py`: 57 definitions migrated
+- `compose/py/compose.py`: 533 definitions migrated from `#` comments to `"""` docstrings
+- `compose/engine/engine.py`: 57 definitions migrated
 - `coda/engine/coda.py`: 25 definitions migrated
-- `semio/js/semio.ts`: Fixed Constants section (extracted ID from JSDoc to `//`)
-- `semio/js/sketchpad/Design.tsx`: Fixed Windows section (extracted ID from JSDoc to `//`)
-- `semio/net/Semio/Semio.cs`: Fixed Expressions section (converted `///` to `//`)
+- `compose/js/compose.ts`: Fixed Constants section (extracted ID from JSDoc to `//`)
+- `compose/js/sketchpad/Design.tsx`: Fixed Windows section (extracted ID from JSDoc to `//`)
+- `compose/net/Compose/Compose.cs`: Fixed Expressions section (converted `///` to `//`)
 
 ## Log
 

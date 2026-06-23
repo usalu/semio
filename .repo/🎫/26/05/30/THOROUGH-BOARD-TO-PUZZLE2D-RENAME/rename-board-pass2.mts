@@ -160,7 +160,7 @@ const files = [
   "framework/product/playground/renderer/react/index.tsx",
   "framework/product/platform/renderer/react/index.tsx",
   "framework/product/platform/core/index.ts",
-  "semio/client/lib/sketchpad/js/index.ts",
+  "compose/client/lib/sketchpad/js/index.ts",
   ".storybook/stories/puzzle/2d/Board.stories.tsx",
   ".storybook/puzzle-2d.spec.ts",
   "puzzle/2d/play/vitest.config.ts",

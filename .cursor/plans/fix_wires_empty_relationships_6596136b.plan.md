@@ -25,11 +25,11 @@ isProject: false
 
 ## Symptom
 
-In dev sketchpad, the kit **Wires** window shows identity boxes but zero connecting lines. The kit is imported from a file, so the store is a `SemioJsKitStore` (Rust/WASM GraphQL is available).
+In dev sketchpad, the kit **Wires** window shows identity boxes but zero connecting lines. The kit is imported from a file, so the store is a `ComposeJsKitStore` (Rust/WASM GraphQL is available).
 
 ## Root cause
 
-Edges are built in `sketchpadKitWiresFixtureFromVisible` ([semio/client/lib/sketchpad/js/index.ts](semio/client/lib/sketchpad/js/index.ts) ~~11885) from the **visible VFS node set** plus Rust reference data from `sketchpadFetchKitWiresReferences` (~~11820). Two bugs zero out the edges:
+Edges are built in `sketchpadKitWiresFixtureFromVisible` ([compose/client/lib/sketchpad/js/index.ts](compose/client/lib/sketchpad/js/index.ts) ~~11885) from the **visible VFS node set** plus Rust reference data from `sketchpadFetchKitWiresReferences` (~~11820). Two bugs zero out the edges:
 
 ### Bug 1 - kit root excluded from visible nodes
 
@@ -50,7 +50,7 @@ In `pushRelationship` an edge is dropped unless both endpoints are in `visibleId
 
 ### Bug 2 - sync race leaves the tree shallow
 
-`syncKitWiresTopology` ([semio/client/lib/sketchpad/js/index.ts](semio/client/lib/sketchpad/js/index.ts) ~14166) runs on mount, on route change (`syncVirtualFileSystemRoute` ~14532), and on every kit-store notification (`registerKitStore` subscribe ~14112 -> `invalidateKitVirtualFileSystem` ~14537, which also resets `kitWiresVfsPreparedKitId = null` and wipes the children cache).
+`syncKitWiresTopology` ([compose/client/lib/sketchpad/js/index.ts](compose/client/lib/sketchpad/js/index.ts) ~14166) runs on mount, on route change (`syncVirtualFileSystemRoute` ~14532), and on every kit-store notification (`registerKitStore` subscribe ~14112 -> `invalidateKitVirtualFileSystem` ~14537, which also resets `kitWiresVfsPreparedKitId = null` and wipes the children cache).
 
 `prepareKitWiresVfsForTopology` (~14131) guards with `kitWiresVfsPreparedKitId`: the first call does the full two-level expansion asynchronously; a concurrent call sees the flag already set and takes the short path, resolving early while only `[kitId]` is expanded. Each sync also bumps `kitWiresSyncGeneration` and the slower (full-expansion) sync aborts at the generation check. Net result: the winning sync builds `visible` with only the kit's first level (or nothing) -> no design/type/piece nodes -> `sketchpadFetchKitWiresReferences` has nothing to query in Rust -> and with Bug 1 those first-level nodes have no drawable parent either. Zero edges.
 
@@ -86,7 +86,7 @@ This guarantees design/type/piece nodes are visible, which both draws their cont
 ## Tests (extend existing files only)
 
 - `framework/product/platform/core/index.ts` test block: keep existing visible-node assertions (root excluded) intact.
-- `semio/client/lib/sketchpad/js/index.ts` `describe("sketchpadKitWiresFixtureFromVisible")` (~~15746) and the Rust-backed wires test (~~15692 region): add a case asserting that the controller's `syncKitWiresTopology` output (or the visible set it feeds the builder) includes the kit root and produces `owns` edges from the root, and that with a fully-expanded kit the fixture yields containment + `references`/`is` edges. Validate at runtime in dev sketchpad (confirm `fixture.relationships.length > 0` and edges render) per repo "confirm runtime behaviour" rule.
+- `compose/client/lib/sketchpad/js/index.ts` `describe("sketchpadKitWiresFixtureFromVisible")` (~~15746) and the Rust-backed wires test (~~15692 region): add a case asserting that the controller's `syncKitWiresTopology` output (or the visible set it feeds the builder) includes the kit root and produces `owns` edges from the root, and that with a fully-expanded kit the fixture yields containment + `references`/`is` edges. Validate at runtime in dev sketchpad (confirm `fixture.relationships.length > 0` and edges render) per repo "confirm runtime behaviour" rule.
 
 ## Repo process
 
@@ -94,6 +94,6 @@ Per repo rules: read `repo://goals`, reopen the existing ticket `26/06/03/WIRES-
 
 ## Files
 
-- [semio/client/lib/sketchpad/js/index.ts](semio/client/lib/sketchpad/js/index.ts) - prepend kit root to visible set; memoized prepare promise; clear memo on invalidate/route reset; extend tests.
+- [compose/client/lib/sketchpad/js/index.ts](compose/client/lib/sketchpad/js/index.ts) - prepend kit root to visible set; memoized prepare promise; clear memo on invalidate/route reset; extend tests.
 - [framework/product/platform/core/index.ts](framework/product/platform/core/index.ts) - unchanged behavior (decision: do not include root in the shared helper).
 

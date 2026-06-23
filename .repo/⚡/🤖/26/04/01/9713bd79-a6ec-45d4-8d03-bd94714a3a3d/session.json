@@ -22,7 +22,7 @@
           "timestamp": "2026-04-01T14:45:47.559884384Z",
           "execution_id": "ed90d8bd-0323-4c36-94e3-6b669293ee89",
           "tool_info": {
-            "user_prompt": "semio engine mcp app scene:\nThe 3d models are not loading in the scene for the pieces.\nA CSP error is reported:\nInvoked start_working_in_design\n\n\n\nstart_working_in_design\n\nInline\n\nPiP\n\nFullscreen\n\nData\n\nCSP\n1\n\nSave View\nOutput available\n1 blocked request\nscript-src\nwasm-eval\nhttp://127.0.0.1:2507\nhttp://localhost:2507\nhttp://[::1]:2507\nws://127.0.0.1:2507\nws://localhost:2507\nhttp://127.0.0.1:2507\nhttp://localhost:2507\nhttp://[::1]:2507\nws://127.0.0.1:2507\nws://localhost:2507\nNot declared\nNot declared\nCSP for MCP Apps docs"
+            "user_prompt": "compose engine mcp app scene:\nThe 3d models are not loading in the scene for the pieces.\nA CSP error is reported:\nInvoked start_working_in_design\n\n\n\nstart_working_in_design\n\nInline\n\nPiP\n\nFullscreen\n\nData\n\nCSP\n1\n\nSave View\nOutput available\n1 blocked request\nscript-src\nwasm-eval\nhttp://127.0.0.1:2507\nhttp://localhost:2507\nhttp://[::1]:2507\nws://127.0.0.1:2507\nws://localhost:2507\nhttp://127.0.0.1:2507\nhttp://localhost:2507\nhttp://[::1]:2507\nws://127.0.0.1:2507\nws://localhost:2507\nNot declared\nNot declared\nCSP for MCP Apps docs"
           }
         }
       },
@@ -144,7 +144,7 @@
             "mcp_tool_arguments": {
               "client": "windsurf-chat",
               "llm": "sonnet-4-5",
-              "prompt": "The 3D models are not loading in the semio engine MCP app scene due to a CSP (Content Security Policy) error. The script-src directive is missing wasm-eval, which is needed for WebAssembly-based 3D rendering (likely Three.js/Draco decoder). Need to find where CSP headers are set and add wasm-eval to script-src.",
+              "prompt": "The 3D models are not loading in the compose engine MCP app scene due to a CSP (Content Security Policy) error. The script-src directive is missing wasm-eval, which is needed for WebAssembly-based 3D rendering (likely Three.js/Draco decoder). Need to find where CSP headers are set and add wasm-eval to script-src.",
               "title": "Fix CSP Wasm Eval for Scene 3d Models"
             },
             "mcp_tool_name": "ticket_open"
@@ -171,7 +171,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "query": "goal semio engine scene MCP app"
+              "query": "goal compose engine scene MCP app"
             },
             "mcp_tool_name": "search"
           }
@@ -197,7 +197,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "query": "goal semio engine scene MCP app"
+              "query": "goal compose engine scene MCP app"
             },
             "mcp_tool_name": "search"
           }
@@ -270,7 +270,7 @@
               "client": "windsurf-chat",
               "goal": "SKETCHPAD-IMPROVEMENTS",
               "llm": "sonnet-4-5",
-              "prompt": "The 3D models are not loading in the semio engine MCP app scene due to a CSP (Content Security Policy) error. The script-src directive is missing wasm-eval, which is needed for WebAssembly-based 3D rendering (likely Three.js/Draco decoder). Need to find where CSP headers are set and add wasm-eval to script-src.",
+              "prompt": "The 3D models are not loading in the compose engine MCP app scene due to a CSP (Content Security Policy) error. The script-src directive is missing wasm-eval, which is needed for WebAssembly-based 3D rendering (likely Three.js/Draco decoder). Need to find where CSP headers are set and add wasm-eval to script-src.",
               "title": "Fix CSP Wasm Eval for Scene 3d Models"
             },
             "mcp_tool_name": "ticket_open"
@@ -301,7 +301,7 @@
               "client": "windsurf-chat",
               "goal": "SKETCHPAD-IMPROVEMENTS",
               "llm": "sonnet-4-5",
-              "prompt": "The 3D models are not loading in the semio engine MCP app scene due to a CSP (Content Security Policy) error. The script-src directive is missing wasm-eval, which is needed for WebAssembly-based 3D rendering (likely Three.js/Draco decoder). Need to find where CSP headers are set and add wasm-eval to script-src.",
+              "prompt": "The 3D models are not loading in the compose engine MCP app scene due to a CSP (Content Security Policy) error. The script-src directive is missing wasm-eval, which is needed for WebAssembly-based 3D rendering (likely Three.js/Draco decoder). Need to find where CSP headers are set and add wasm-eval to script-src.",
               "title": "Fix CSP Wasm Eval for Scene 3d Models"
             },
             "mcp_tool_name": "ticket_open"
@@ -326,7 +326,7 @@
           "timestamp": "2026-04-01T14:47:05.295358578Z",
           "execution_id": "ed90d8bd-0323-4c36-94e3-6b669293ee89",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/engine/main.py"
+            "file_path": "/workspaces/semio/compose/engine/main.py"
           }
         }
       },
@@ -348,7 +348,7 @@
           "timestamp": "2026-04-01T14:47:05.495948999Z",
           "execution_id": "ed90d8bd-0323-4c36-94e3-6b669293ee89",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/engine/main.py"
+            "file_path": "/workspaces/semio/compose/engine/main.py"
           }
         }
       },
@@ -370,7 +370,7 @@
           "timestamp": "2026-04-01T14:47:59.047551435Z",
           "execution_id": "ed90d8bd-0323-4c36-94e3-6b669293ee89",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/engine/main.py"
+            "file_path": "/workspaces/semio/compose/engine/main.py"
           }
         }
       },
@@ -392,7 +392,7 @@
           "timestamp": "2026-04-01T14:47:59.194627681Z",
           "execution_id": "ed90d8bd-0323-4c36-94e3-6b669293ee89",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/engine/main.py"
+            "file_path": "/workspaces/semio/compose/engine/main.py"
           }
         }
       },
@@ -502,7 +502,7 @@
           "timestamp": "2026-04-01T14:50:10.066397945Z",
           "execution_id": "ed90d8bd-0323-4c36-94e3-6b669293ee89",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/ui"
+            "file_path": "/workspaces/semio/compose/ui"
           }
         }
       },
@@ -524,7 +524,7 @@
           "timestamp": "2026-04-01T14:50:12.507122688Z",
           "execution_id": "ed90d8bd-0323-4c36-94e3-6b669293ee89",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/ui"
+            "file_path": "/workspaces/semio/compose/ui"
           }
         }
       },
@@ -546,7 +546,7 @@
           "timestamp": "2026-04-01T14:50:41.973290278Z",
           "execution_id": "ed90d8bd-0323-4c36-94e3-6b669293ee89",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/ui/index.tsx"
+            "file_path": "/workspaces/semio/compose/ui/index.tsx"
           }
         }
       },
@@ -568,7 +568,7 @@
           "timestamp": "2026-04-01T14:50:42.144382357Z",
           "execution_id": "ed90d8bd-0323-4c36-94e3-6b669293ee89",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/ui/index.tsx"
+            "file_path": "/workspaces/semio/compose/ui/index.tsx"
           }
         }
       },
@@ -590,7 +590,7 @@
           "timestamp": "2026-04-01T14:51:12.914703337Z",
           "execution_id": "ed90d8bd-0323-4c36-94e3-6b669293ee89",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/engine/main.py"
+            "file_path": "/workspaces/semio/compose/engine/main.py"
           }
         }
       },
@@ -612,7 +612,7 @@
           "timestamp": "2026-04-01T14:51:13.043737165Z",
           "execution_id": "ed90d8bd-0323-4c36-94e3-6b669293ee89",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/engine/main.py"
+            "file_path": "/workspaces/semio/compose/engine/main.py"
           }
         }
       },
@@ -766,7 +766,7 @@
           "timestamp": "2026-04-01T14:52:03.847788716Z",
           "execution_id": "ed90d8bd-0323-4c36-94e3-6b669293ee89",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/engine/mcp-app.tsx"
+            "file_path": "/workspaces/semio/compose/engine/mcp-app.tsx"
           }
         }
       },
@@ -788,7 +788,7 @@
           "timestamp": "2026-04-01T14:52:03.961374279Z",
           "execution_id": "ed90d8bd-0323-4c36-94e3-6b669293ee89",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/engine/mcp-app.tsx"
+            "file_path": "/workspaces/semio/compose/engine/mcp-app.tsx"
           }
         }
       },
@@ -810,7 +810,7 @@
           "timestamp": "2026-04-01T14:52:13.684705746Z",
           "execution_id": "ed90d8bd-0323-4c36-94e3-6b669293ee89",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/ui/index.tsx"
+            "file_path": "/workspaces/semio/compose/ui/index.tsx"
           }
         }
       },
@@ -832,7 +832,7 @@
           "timestamp": "2026-04-01T14:52:13.79748017Z",
           "execution_id": "ed90d8bd-0323-4c36-94e3-6b669293ee89",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/ui/index.tsx"
+            "file_path": "/workspaces/semio/compose/ui/index.tsx"
           }
         }
       },
@@ -854,7 +854,7 @@
           "timestamp": "2026-04-01T14:53:03.260810294Z",
           "execution_id": "ed90d8bd-0323-4c36-94e3-6b669293ee89",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/engine/main.py"
+            "file_path": "/workspaces/semio/compose/engine/main.py"
           }
         }
       },
@@ -876,7 +876,7 @@
           "timestamp": "2026-04-01T14:53:03.381199549Z",
           "execution_id": "ed90d8bd-0323-4c36-94e3-6b669293ee89",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/engine/main.py"
+            "file_path": "/workspaces/semio/compose/engine/main.py"
           }
         }
       },
@@ -898,7 +898,7 @@
           "timestamp": "2026-04-01T14:53:23.825952763Z",
           "execution_id": "ed90d8bd-0323-4c36-94e3-6b669293ee89",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/engine/main.py"
+            "file_path": "/workspaces/semio/compose/engine/main.py"
           }
         }
       },
@@ -920,7 +920,7 @@
           "timestamp": "2026-04-01T14:53:23.962151876Z",
           "execution_id": "ed90d8bd-0323-4c36-94e3-6b669293ee89",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/engine/main.py"
+            "file_path": "/workspaces/semio/compose/engine/main.py"
           }
         }
       },
@@ -942,7 +942,7 @@
           "timestamp": "2026-04-01T14:54:07.213358347Z",
           "execution_id": "ed90d8bd-0323-4c36-94e3-6b669293ee89",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/engine/vite.mcp-app.config.ts"
+            "file_path": "/workspaces/semio/compose/engine/vite.mcp-app.config.ts"
           }
         }
       },
@@ -964,7 +964,7 @@
           "timestamp": "2026-04-01T14:54:07.359192361Z",
           "execution_id": "ed90d8bd-0323-4c36-94e3-6b669293ee89",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/engine/vite.mcp-app.config.ts"
+            "file_path": "/workspaces/semio/compose/engine/vite.mcp-app.config.ts"
           }
         }
       },
@@ -986,7 +986,7 @@
           "timestamp": "2026-04-01T14:55:10.598302031Z",
           "execution_id": "ed90d8bd-0323-4c36-94e3-6b669293ee89",
           "tool_info": {
-            "command_line": "wc -c /workspaces/semio/semio/engine/dist/mcp-app.html",
+            "command_line": "wc -c /workspaces/semio/compose/engine/dist/mcp-app.html",
             "cwd": "/workspaces/semio"
           }
         }
@@ -1009,7 +1009,7 @@
           "timestamp": "2026-04-01T14:55:14.8749384Z",
           "execution_id": "ed90d8bd-0323-4c36-94e3-6b669293ee89",
           "tool_info": {
-            "command_line": "grep -c 'WebAssembly' /workspaces/semio/semio/engine/dist/mcp-app.html",
+            "command_line": "grep -c 'WebAssembly' /workspaces/semio/compose/engine/dist/mcp-app.html",
             "cwd": "/workspaces/semio"
           }
         }
@@ -1032,7 +1032,7 @@
           "timestamp": "2026-04-01T14:55:19.451457729Z",
           "execution_id": "ed90d8bd-0323-4c36-94e3-6b669293ee89",
           "tool_info": {
-            "command_line": "grep -oP '.{0,80}WebAssembly.{0,80}' /workspaces/semio/semio/engine/dist/mcp-app.html",
+            "command_line": "grep -oP '.{0,80}WebAssembly.{0,80}' /workspaces/semio/compose/engine/dist/mcp-app.html",
             "cwd": "/workspaces/semio"
           }
         }
@@ -1055,7 +1055,7 @@
           "timestamp": "2026-04-01T14:55:59.602373744Z",
           "execution_id": "ed90d8bd-0323-4c36-94e3-6b669293ee89",
           "tool_info": {
-            "command_line": "grep -oP '.{0,200}WebAssembly\\.instantiate.{0,200}' /workspaces/semio/semio/engine/dist/mcp-app.html | head -3",
+            "command_line": "grep -oP '.{0,200}WebAssembly\\.instantiate.{0,200}' /workspaces/semio/compose/engine/dist/mcp-app.html | head -3",
             "cwd": "/workspaces/semio"
           }
         }
@@ -1088,7 +1088,7 @@
                 "new_string": "            \"Content-Security-Policy\": \"default-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob:; frame-ancestors *; connect-src * data: blob:; img-src * data: blob:; worker-src blob:;\",\n        },\n    )\n\n\n@rest.get(\"/app/payload/{token}\")"
               }
             ],
-            "file_path": "/workspaces/semio/semio/engine/main.py"
+            "file_path": "/workspaces/semio/compose/engine/main.py"
           }
         }
       },
@@ -1120,7 +1120,7 @@
                 "new_string": "            \"Content-Security-Policy\": \"default-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob:; frame-ancestors *; connect-src * data: blob:; img-src * data: blob:; worker-src blob:;\",\n        },\n    )\n\n\n@rest.get(\"/app/payload/{token}\")"
               }
             ],
-            "file_path": "/workspaces/semio/semio/engine/main.py"
+            "file_path": "/workspaces/semio/compose/engine/main.py"
           }
         }
       },
@@ -1142,7 +1142,7 @@
           "timestamp": "2026-04-01T14:56:33.130247366Z",
           "execution_id": "ed90d8bd-0323-4c36-94e3-6b669293ee89",
           "tool_info": {
-            "command_line": "grep -r 'meshopt' /workspaces/semio/semio/ui/node_modules/three/examples/jsm/libs/ --include='*.js' --include='*.mjs' -l 2\u003e/dev/null | head -5",
+            "command_line": "grep -r 'meshopt' /workspaces/semio/compose/ui/node_modules/three/examples/jsm/libs/ --include='*.js' --include='*.mjs' -l 2\u003e/dev/null | head -5",
             "cwd": "/workspaces/semio"
           }
         }
@@ -1188,7 +1188,7 @@
           "timestamp": "2026-04-01T14:56:49.854239539Z",
           "execution_id": "ed90d8bd-0323-4c36-94e3-6b669293ee89",
           "tool_info": {
-            "command_line": "grep -oP '.{0,100}meshopt.{0,100}' /workspaces/semio/semio/engine/dist/mcp-app.html | head -5",
+            "command_line": "grep -oP '.{0,100}meshopt.{0,100}' /workspaces/semio/compose/engine/dist/mcp-app.html | head -5",
             "cwd": "/workspaces/semio"
           }
         }
@@ -1326,7 +1326,7 @@
           "timestamp": "2026-04-01T14:57:39.86687614Z",
           "execution_id": "ed90d8bd-0323-4c36-94e3-6b669293ee89",
           "tool_info": {
-            "command_line": "grep -rn 'meshopt_decoder\\|MeshoptDecoder' /workspaces/semio/semio/ui/node_modules/@react-three/drei/ --include='*.js' --include='*.mjs' --include='*.ts' --include='*.tsx' 2\u003e/dev/null | head -10",
+            "command_line": "grep -rn 'meshopt_decoder\\|MeshoptDecoder' /workspaces/semio/compose/ui/node_modules/@react-three/drei/ --include='*.js' --include='*.mjs' --include='*.ts' --include='*.tsx' 2\u003e/dev/null | head -10",
             "cwd": "/workspaces/semio"
           }
         }
@@ -1349,7 +1349,7 @@
           "timestamp": "2026-04-01T14:57:44.416783402Z",
           "execution_id": "ed90d8bd-0323-4c36-94e3-6b669293ee89",
           "tool_info": {
-            "command_line": "grep -rn 'MeshoptDecoder\\|meshopt_decoder' /workspaces/semio/semio/ui/ --include='*.ts' --include='*.tsx' --include='*.js' --include='*.mjs' --exclude-dir=node_modules 2\u003e/dev/null | head -10",
+            "command_line": "grep -rn 'MeshoptDecoder\\|meshopt_decoder' /workspaces/semio/compose/ui/ --include='*.ts' --include='*.tsx' --include='*.js' --include='*.mjs' --exclude-dir=node_modules 2\u003e/dev/null | head -10",
             "cwd": "/workspaces/semio"
           }
         }
@@ -1418,7 +1418,7 @@
           "timestamp": "2026-04-01T14:58:57.886245055Z",
           "execution_id": "ed90d8bd-0323-4c36-94e3-6b669293ee89",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/ui/index.tsx"
+            "file_path": "/workspaces/semio/compose/ui/index.tsx"
           }
         }
       },
@@ -1440,7 +1440,7 @@
           "timestamp": "2026-04-01T14:58:58.04144629Z",
           "execution_id": "ed90d8bd-0323-4c36-94e3-6b669293ee89",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/ui/index.tsx"
+            "file_path": "/workspaces/semio/compose/ui/index.tsx"
           }
         }
       },
@@ -1468,7 +1468,7 @@
                 "new_string": "  // Disable Draco and meshopt to avoid WebAssembly CSP violations in MCP App iframes.\n  // drei defaults meshopt to true which calls WebAssembly.instantiate() violating script-src wasm-eval.\n  const gltf = useGLTF(modelSource, false, false);"
               }
             ],
-            "file_path": "/workspaces/semio/semio/ui/index.tsx"
+            "file_path": "/workspaces/semio/compose/ui/index.tsx"
           }
         }
       },
@@ -1496,7 +1496,7 @@
                 "new_string": "  // Disable Draco and meshopt to avoid WebAssembly CSP violations in MCP App iframes.\n  // drei defaults meshopt to true which calls WebAssembly.instantiate() violating script-src wasm-eval.\n  const gltf = useGLTF(modelSource, false, false);"
               }
             ],
-            "file_path": "/workspaces/semio/semio/ui/index.tsx"
+            "file_path": "/workspaces/semio/compose/ui/index.tsx"
           }
         }
       },
@@ -1541,7 +1541,7 @@
           "timestamp": "2026-04-01T14:59:20.016760731Z",
           "execution_id": "ed90d8bd-0323-4c36-94e3-6b669293ee89",
           "tool_info": {
-            "command_line": "grep -rn 'MeshoptDecoder\\|meshopt' /workspaces/semio/semio/ui/node_modules/@react-three/drei/core/useGLTF.js 2\u003e/dev/null || grep -rn 'MeshoptDecoder\\|meshopt' /workspaces/semio/node_modules/@react-three/drei/core/useGLTF.js 2\u003e/dev/null | head -10",
+            "command_line": "grep -rn 'MeshoptDecoder\\|meshopt' /workspaces/semio/compose/ui/node_modules/@react-three/drei/core/useGLTF.js 2\u003e/dev/null || grep -rn 'MeshoptDecoder\\|meshopt' /workspaces/semio/node_modules/@react-three/drei/core/useGLTF.js 2\u003e/dev/null | head -10",
             "cwd": "/workspaces/semio"
           }
         }
@@ -1704,11 +1704,11 @@
           "tool_info": {
             "edits": [
               {
-                "old_string": "const STUBBED_PREFIXES = [\"@semio/assets\", \"cytoscape\", \"sql.js\", \"jszip\", \"dagre\", \"fuse.js\", \"golden-layout\"];",
-                "new_string": "const STUBBED_PREFIXES = [\"@semio/assets\", \"cytoscape\", \"sql.js\", \"jszip\", \"dagre\", \"fuse.js\", \"golden-layout\", \"three-stdlib/libs/MeshoptDecoder\", \"meshopt_decoder\"];"
+                "old_string": "const STUBBED_PREFIXES = [\"@compose/assets\", \"cytoscape\", \"sql.js\", \"jszip\", \"dagre\", \"fuse.js\", \"golden-layout\"];",
+                "new_string": "const STUBBED_PREFIXES = [\"@compose/assets\", \"cytoscape\", \"sql.js\", \"jszip\", \"dagre\", \"fuse.js\", \"golden-layout\", \"three-stdlib/libs/MeshoptDecoder\", \"meshopt_decoder\"];"
               }
             ],
-            "file_path": "/workspaces/semio/semio/engine/vite.mcp-app.config.ts"
+            "file_path": "/workspaces/semio/compose/engine/vite.mcp-app.config.ts"
           }
         }
       },
@@ -1732,11 +1732,11 @@
           "tool_info": {
             "edits": [
               {
-                "old_string": "const STUBBED_PREFIXES = [\"@semio/assets\", \"cytoscape\", \"sql.js\", \"jszip\", \"dagre\", \"fuse.js\", \"golden-layout\"];",
-                "new_string": "const STUBBED_PREFIXES = [\"@semio/assets\", \"cytoscape\", \"sql.js\", \"jszip\", \"dagre\", \"fuse.js\", \"golden-layout\", \"three-stdlib/libs/MeshoptDecoder\", \"meshopt_decoder\"];"
+                "old_string": "const STUBBED_PREFIXES = [\"@compose/assets\", \"cytoscape\", \"sql.js\", \"jszip\", \"dagre\", \"fuse.js\", \"golden-layout\"];",
+                "new_string": "const STUBBED_PREFIXES = [\"@compose/assets\", \"cytoscape\", \"sql.js\", \"jszip\", \"dagre\", \"fuse.js\", \"golden-layout\", \"three-stdlib/libs/MeshoptDecoder\", \"meshopt_decoder\"];"
               }
             ],
-            "file_path": "/workspaces/semio/semio/engine/vite.mcp-app.config.ts"
+            "file_path": "/workspaces/semio/compose/engine/vite.mcp-app.config.ts"
           }
         }
       },
@@ -1758,8 +1758,8 @@
           "timestamp": "2026-04-01T15:00:44.093684254Z",
           "execution_id": "ed90d8bd-0323-4c36-94e3-6b669293ee89",
           "tool_info": {
-            "command_line": "cd /workspaces/semio/semio/engine \u0026\u0026 npm run build:mcp-app 2\u003e\u00261",
-            "cwd": "/workspaces/semio/semio/engine"
+            "command_line": "cd /workspaces/semio/compose/engine \u0026\u0026 npm run build:mcp-app 2\u003e\u00261",
+            "cwd": "/workspaces/semio/compose/engine"
           }
         }
       },
@@ -1781,7 +1781,7 @@
           "timestamp": "2026-04-01T15:01:02.706179512Z",
           "execution_id": "ed90d8bd-0323-4c36-94e3-6b669293ee89",
           "tool_info": {
-            "command_line": "grep -c 'WebAssembly' /workspaces/semio/semio/engine/dist/mcp-app.html",
+            "command_line": "grep -c 'WebAssembly' /workspaces/semio/compose/engine/dist/mcp-app.html",
             "cwd": "/workspaces/semio"
           }
         }
@@ -1804,7 +1804,7 @@
           "timestamp": "2026-04-01T15:01:14.601622455Z",
           "execution_id": "ed90d8bd-0323-4c36-94e3-6b669293ee89",
           "tool_info": {
-            "command_line": "grep -oP '.{0,80}WebAssembly.{0,80}' /workspaces/semio/semio/engine/dist/mcp-app.html",
+            "command_line": "grep -oP '.{0,80}WebAssembly.{0,80}' /workspaces/semio/compose/engine/dist/mcp-app.html",
             "cwd": "/workspaces/semio"
           }
         }
@@ -1827,7 +1827,7 @@
           "timestamp": "2026-04-01T15:01:41.248420745Z",
           "execution_id": "ed90d8bd-0323-4c36-94e3-6b669293ee89",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/engine/vite.mcp-app.config.ts"
+            "file_path": "/workspaces/semio/compose/engine/vite.mcp-app.config.ts"
           }
         }
       },
@@ -1849,7 +1849,7 @@
           "timestamp": "2026-04-01T15:01:41.399161639Z",
           "execution_id": "ed90d8bd-0323-4c36-94e3-6b669293ee89",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/engine/vite.mcp-app.config.ts"
+            "file_path": "/workspaces/semio/compose/engine/vite.mcp-app.config.ts"
           }
         }
       },
@@ -1873,11 +1873,11 @@
           "tool_info": {
             "edits": [
               {
-                "old_string": "const STUBBED_PREFIXES = [\"@semio/assets\", \"cytoscape\", \"sql.js\", \"jszip\", \"dagre\", \"fuse.js\", \"golden-layout\", \"three-stdlib/libs/MeshoptDecoder\", \"meshopt_decoder\"];\n\nfunction stubHeavyDepsPlugin(): Plugin {",
-                "new_string": "const STUBBED_PREFIXES = [\"@semio/assets\", \"cytoscape\", \"sql.js\", \"jszip\", \"dagre\", \"fuse.js\", \"golden-layout\"];\n\n// #region 🔖MeshoptNoopPlugin\n// Specs: three-stdlib/libs/MeshoptDecoder calls WebAssembly.instantiate() in an IIFE at module\n// scope. The MCP App host iframe CSP blocks wasm-eval, causing a rejection that can crash the\n// scene. This plugin patches the resolved MeshoptDecoder file to return {supported:false}\n// immediately, avoiding any WebAssembly usage while keeping the export shape intact.\n// Summary: Vite plugin neutralizing MeshoptDecoder WASM to avoid CSP wasm-eval violations.\n\nfunction meshoptNoopPlugin(): Plugin {\n  return {\n    name: \"meshopt-noop\",\n    enforce: \"pre\",\n    transform(code, id) {\n      if (!id.includes(\"MeshoptDecoder\") \u0026\u0026 !id.includes(\"meshopt_decoder\")) return;\n      if (!code.includes(\"WebAssembly\")) return;\n      return code\n        .replace(/WebAssembly\\.instantiate\\([^)]*\\)/g, \"Promise.resolve({instance:{exports:{__wasm_call_ctors(){}}}})\")\n        .replace(/WebAssembly\\.validate\\([^)]*\\)/g, \"false\");\n    },\n  };\n}\n\n// #endregion 🔖MeshoptNoopPlugin\n\nfunction stubHeavyDepsPlugin(): Plugin {"
+                "old_string": "const STUBBED_PREFIXES = [\"@compose/assets\", \"cytoscape\", \"sql.js\", \"jszip\", \"dagre\", \"fuse.js\", \"golden-layout\", \"three-stdlib/libs/MeshoptDecoder\", \"meshopt_decoder\"];\n\nfunction stubHeavyDepsPlugin(): Plugin {",
+                "new_string": "const STUBBED_PREFIXES = [\"@compose/assets\", \"cytoscape\", \"sql.js\", \"jszip\", \"dagre\", \"fuse.js\", \"golden-layout\"];\n\n// #region 🔖MeshoptNoopPlugin\n// Specs: three-stdlib/libs/MeshoptDecoder calls WebAssembly.instantiate() in an IIFE at module\n// scope. The MCP App host iframe CSP blocks wasm-eval, causing a rejection that can crash the\n// scene. This plugin patches the resolved MeshoptDecoder file to return {supported:false}\n// immediately, avoiding any WebAssembly usage while keeping the export shape intact.\n// Summary: Vite plugin neutralizing MeshoptDecoder WASM to avoid CSP wasm-eval violations.\n\nfunction meshoptNoopPlugin(): Plugin {\n  return {\n    name: \"meshopt-noop\",\n    enforce: \"pre\",\n    transform(code, id) {\n      if (!id.includes(\"MeshoptDecoder\") \u0026\u0026 !id.includes(\"meshopt_decoder\")) return;\n      if (!code.includes(\"WebAssembly\")) return;\n      return code\n        .replace(/WebAssembly\\.instantiate\\([^)]*\\)/g, \"Promise.resolve({instance:{exports:{__wasm_call_ctors(){}}}})\")\n        .replace(/WebAssembly\\.validate\\([^)]*\\)/g, \"false\");\n    },\n  };\n}\n\n// #endregion 🔖MeshoptNoopPlugin\n\nfunction stubHeavyDepsPlugin(): Plugin {"
               }
             ],
-            "file_path": "/workspaces/semio/semio/engine/vite.mcp-app.config.ts"
+            "file_path": "/workspaces/semio/compose/engine/vite.mcp-app.config.ts"
           }
         }
       },
@@ -1901,11 +1901,11 @@
           "tool_info": {
             "edits": [
               {
-                "old_string": "const STUBBED_PREFIXES = [\"@semio/assets\", \"cytoscape\", \"sql.js\", \"jszip\", \"dagre\", \"fuse.js\", \"golden-layout\", \"three-stdlib/libs/MeshoptDecoder\", \"meshopt_decoder\"];\n\nfunction stubHeavyDepsPlugin(): Plugin {",
-                "new_string": "const STUBBED_PREFIXES = [\"@semio/assets\", \"cytoscape\", \"sql.js\", \"jszip\", \"dagre\", \"fuse.js\", \"golden-layout\"];\n\n// #region 🔖MeshoptNoopPlugin\n// Specs: three-stdlib/libs/MeshoptDecoder calls WebAssembly.instantiate() in an IIFE at module\n// scope. The MCP App host iframe CSP blocks wasm-eval, causing a rejection that can crash the\n// scene. This plugin patches the resolved MeshoptDecoder file to return {supported:false}\n// immediately, avoiding any WebAssembly usage while keeping the export shape intact.\n// Summary: Vite plugin neutralizing MeshoptDecoder WASM to avoid CSP wasm-eval violations.\n\nfunction meshoptNoopPlugin(): Plugin {\n  return {\n    name: \"meshopt-noop\",\n    enforce: \"pre\",\n    transform(code, id) {\n      if (!id.includes(\"MeshoptDecoder\") \u0026\u0026 !id.includes(\"meshopt_decoder\")) return;\n      if (!code.includes(\"WebAssembly\")) return;\n      return code\n        .replace(/WebAssembly\\.instantiate\\([^)]*\\)/g, \"Promise.resolve({instance:{exports:{__wasm_call_ctors(){}}}})\")\n        .replace(/WebAssembly\\.validate\\([^)]*\\)/g, \"false\");\n    },\n  };\n}\n\n// #endregion 🔖MeshoptNoopPlugin\n\nfunction stubHeavyDepsPlugin(): Plugin {"
+                "old_string": "const STUBBED_PREFIXES = [\"@compose/assets\", \"cytoscape\", \"sql.js\", \"jszip\", \"dagre\", \"fuse.js\", \"golden-layout\", \"three-stdlib/libs/MeshoptDecoder\", \"meshopt_decoder\"];\n\nfunction stubHeavyDepsPlugin(): Plugin {",
+                "new_string": "const STUBBED_PREFIXES = [\"@compose/assets\", \"cytoscape\", \"sql.js\", \"jszip\", \"dagre\", \"fuse.js\", \"golden-layout\"];\n\n// #region 🔖MeshoptNoopPlugin\n// Specs: three-stdlib/libs/MeshoptDecoder calls WebAssembly.instantiate() in an IIFE at module\n// scope. The MCP App host iframe CSP blocks wasm-eval, causing a rejection that can crash the\n// scene. This plugin patches the resolved MeshoptDecoder file to return {supported:false}\n// immediately, avoiding any WebAssembly usage while keeping the export shape intact.\n// Summary: Vite plugin neutralizing MeshoptDecoder WASM to avoid CSP wasm-eval violations.\n\nfunction meshoptNoopPlugin(): Plugin {\n  return {\n    name: \"meshopt-noop\",\n    enforce: \"pre\",\n    transform(code, id) {\n      if (!id.includes(\"MeshoptDecoder\") \u0026\u0026 !id.includes(\"meshopt_decoder\")) return;\n      if (!code.includes(\"WebAssembly\")) return;\n      return code\n        .replace(/WebAssembly\\.instantiate\\([^)]*\\)/g, \"Promise.resolve({instance:{exports:{__wasm_call_ctors(){}}}})\")\n        .replace(/WebAssembly\\.validate\\([^)]*\\)/g, \"false\");\n    },\n  };\n}\n\n// #endregion 🔖MeshoptNoopPlugin\n\nfunction stubHeavyDepsPlugin(): Plugin {"
               }
             ],
-            "file_path": "/workspaces/semio/semio/engine/vite.mcp-app.config.ts"
+            "file_path": "/workspaces/semio/compose/engine/vite.mcp-app.config.ts"
           }
         }
       },
@@ -1927,7 +1927,7 @@
           "timestamp": "2026-04-01T15:02:05.710575079Z",
           "execution_id": "ed90d8bd-0323-4c36-94e3-6b669293ee89",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/engine/vite.mcp-app.config.ts"
+            "file_path": "/workspaces/semio/compose/engine/vite.mcp-app.config.ts"
           }
         }
       },
@@ -1949,7 +1949,7 @@
           "timestamp": "2026-04-01T15:02:05.828276557Z",
           "execution_id": "ed90d8bd-0323-4c36-94e3-6b669293ee89",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/engine/vite.mcp-app.config.ts"
+            "file_path": "/workspaces/semio/compose/engine/vite.mcp-app.config.ts"
           }
         }
       },
@@ -1977,7 +1977,7 @@
                 "new_string": "  plugins: [meshoptNoopPlugin(), stubHeavyDepsPlugin(), tailwindcss(), mdx(), zodJitlessPlugin(), viteSingleFile()],"
               }
             ],
-            "file_path": "/workspaces/semio/semio/engine/vite.mcp-app.config.ts"
+            "file_path": "/workspaces/semio/compose/engine/vite.mcp-app.config.ts"
           }
         }
       },
@@ -2005,7 +2005,7 @@
                 "new_string": "  plugins: [meshoptNoopPlugin(), stubHeavyDepsPlugin(), tailwindcss(), mdx(), zodJitlessPlugin(), viteSingleFile()],"
               }
             ],
-            "file_path": "/workspaces/semio/semio/engine/vite.mcp-app.config.ts"
+            "file_path": "/workspaces/semio/compose/engine/vite.mcp-app.config.ts"
           }
         }
       },
@@ -2027,8 +2027,8 @@
           "timestamp": "2026-04-01T15:02:18.216791863Z",
           "execution_id": "ed90d8bd-0323-4c36-94e3-6b669293ee89",
           "tool_info": {
-            "command_line": "cd /workspaces/semio/semio/engine \u0026\u0026 npm run build:mcp-app 2\u003e\u00261",
-            "cwd": "/workspaces/semio/semio/engine"
+            "command_line": "cd /workspaces/semio/compose/engine \u0026\u0026 npm run build:mcp-app 2\u003e\u00261",
+            "cwd": "/workspaces/semio/compose/engine"
           }
         }
       },
@@ -2056,7 +2056,7 @@
                 "new_string": "function meshoptNoopPlugin(): Plugin {\n  const MESHOPT_STUB = `\nconst noop = () =\u003e {};\nconst MeshoptDecoder = { supported: false, ready: Promise.resolve(), decode: noop, decodeGltfBuffer: noop };\nexport { MeshoptDecoder };\nexport default MeshoptDecoder;\n`;\n  return {\n    name: \"meshopt-noop\",\n    enforce: \"pre\",\n    load(id) {\n      if ((id.includes(\"MeshoptDecoder\") || id.includes(\"meshopt_decoder\")) \u0026\u0026 !id.includes(\"node_modules/.cache\")) {\n        return MESHOPT_STUB;\n      }\n      return null;\n    },\n  };\n}"
               }
             ],
-            "file_path": "/workspaces/semio/semio/engine/vite.mcp-app.config.ts"
+            "file_path": "/workspaces/semio/compose/engine/vite.mcp-app.config.ts"
           }
         }
       },
@@ -2084,7 +2084,7 @@
                 "new_string": "function meshoptNoopPlugin(): Plugin {\n  const MESHOPT_STUB = `\nconst noop = () =\u003e {};\nconst MeshoptDecoder = { supported: false, ready: Promise.resolve(), decode: noop, decodeGltfBuffer: noop };\nexport { MeshoptDecoder };\nexport default MeshoptDecoder;\n`;\n  return {\n    name: \"meshopt-noop\",\n    enforce: \"pre\",\n    load(id) {\n      if ((id.includes(\"MeshoptDecoder\") || id.includes(\"meshopt_decoder\")) \u0026\u0026 !id.includes(\"node_modules/.cache\")) {\n        return MESHOPT_STUB;\n      }\n      return null;\n    },\n  };\n}"
               }
             ],
-            "file_path": "/workspaces/semio/semio/engine/vite.mcp-app.config.ts"
+            "file_path": "/workspaces/semio/compose/engine/vite.mcp-app.config.ts"
           }
         }
       },
@@ -2106,8 +2106,8 @@
           "timestamp": "2026-04-01T15:02:46.530812373Z",
           "execution_id": "ed90d8bd-0323-4c36-94e3-6b669293ee89",
           "tool_info": {
-            "command_line": "cd /workspaces/semio/semio/engine \u0026\u0026 npm run build:mcp-app 2\u003e\u00261",
-            "cwd": "/workspaces/semio/semio/engine"
+            "command_line": "cd /workspaces/semio/compose/engine \u0026\u0026 npm run build:mcp-app 2\u003e\u00261",
+            "cwd": "/workspaces/semio/compose/engine"
           }
         }
       },
@@ -2129,7 +2129,7 @@
           "timestamp": "2026-04-01T15:03:09.264782429Z",
           "execution_id": "ed90d8bd-0323-4c36-94e3-6b669293ee89",
           "tool_info": {
-            "command_line": "grep -c 'WebAssembly' /workspaces/semio/semio/engine/dist/mcp-app.html",
+            "command_line": "grep -c 'WebAssembly' /workspaces/semio/compose/engine/dist/mcp-app.html",
             "cwd": "/workspaces/semio"
           }
         }
@@ -2152,7 +2152,7 @@
           "timestamp": "2026-04-01T15:03:20.603410309Z",
           "execution_id": "ed90d8bd-0323-4c36-94e3-6b669293ee89",
           "tool_info": {
-            "command_line": "grep -oP '.{0,80}WebAssembly.{0,80}' /workspaces/semio/semio/engine/dist/mcp-app.html",
+            "command_line": "grep -oP '.{0,80}WebAssembly.{0,80}' /workspaces/semio/compose/engine/dist/mcp-app.html",
             "cwd": "/workspaces/semio"
           }
         }
@@ -2175,7 +2175,7 @@
           "timestamp": "2026-04-01T15:03:46.342374021Z",
           "execution_id": "ed90d8bd-0323-4c36-94e3-6b669293ee89",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/engine/engine.test.py"
+            "file_path": "/workspaces/semio/compose/engine/engine.test.py"
           }
         }
       },
@@ -2197,7 +2197,7 @@
           "timestamp": "2026-04-01T15:03:46.480297479Z",
           "execution_id": "ed90d8bd-0323-4c36-94e3-6b669293ee89",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/engine/engine.test.py"
+            "file_path": "/workspaces/semio/compose/engine/engine.test.py"
           }
         }
       },
@@ -2225,7 +2225,7 @@
                 "new_string": "    def test_app_design_viewer_csp_header(self):\n        \"\"\"The app endpoint includes Content-Security-Policy allowing iframe embedding and wasm-unsafe-eval for Three.js scene.\"\"\"\n        client = TestClient(engine.rest)\n        response = client.get(\"/app/design-viewer\")\n        csp = response.headers[\"content-security-policy\"]\n        assert \"frame-ancestors *\" in csp\n        assert \"'wasm-unsafe-eval'\" in csp\n        assert \"script-src\" in csp\n        assert \"worker-src blob:\" in csp\n\n    def test_app_kit_viewer_csp_header(self):\n        \"\"\"The kit-viewer endpoint includes the same CSP as design-viewer.\"\"\"\n        client = TestClient(engine.rest)\n        response = client.get(\"/app/kit-viewer\")\n        csp = response.headers[\"content-security-policy\"]\n        assert \"frame-ancestors *\" in csp\n        assert \"'wasm-unsafe-eval'\" in csp\n\n    def test_app_design_viewer_html_structure(self):"
               }
             ],
-            "file_path": "/workspaces/semio/semio/engine/engine.test.py"
+            "file_path": "/workspaces/semio/compose/engine/engine.test.py"
           }
         }
       },
@@ -2253,7 +2253,7 @@
                 "new_string": "    def test_app_design_viewer_csp_header(self):\n        \"\"\"The app endpoint includes Content-Security-Policy allowing iframe embedding and wasm-unsafe-eval for Three.js scene.\"\"\"\n        client = TestClient(engine.rest)\n        response = client.get(\"/app/design-viewer\")\n        csp = response.headers[\"content-security-policy\"]\n        assert \"frame-ancestors *\" in csp\n        assert \"'wasm-unsafe-eval'\" in csp\n        assert \"script-src\" in csp\n        assert \"worker-src blob:\" in csp\n\n    def test_app_kit_viewer_csp_header(self):\n        \"\"\"The kit-viewer endpoint includes the same CSP as design-viewer.\"\"\"\n        client = TestClient(engine.rest)\n        response = client.get(\"/app/kit-viewer\")\n        csp = response.headers[\"content-security-policy\"]\n        assert \"frame-ancestors *\" in csp\n        assert \"'wasm-unsafe-eval'\" in csp\n\n    def test_app_design_viewer_html_structure(self):"
               }
             ],
-            "file_path": "/workspaces/semio/semio/engine/engine.test.py"
+            "file_path": "/workspaces/semio/compose/engine/engine.test.py"
           }
         }
       },
@@ -2275,8 +2275,8 @@
           "timestamp": "2026-04-01T15:04:02.336537603Z",
           "execution_id": "ed90d8bd-0323-4c36-94e3-6b669293ee89",
           "tool_info": {
-            "command_line": "cd /workspaces/semio/semio/engine \u0026\u0026 uv run pytest engine.test.py -x -q --tb=short -k \"TestAppEndpoint\" 2\u003e\u00261",
-            "cwd": "/workspaces/semio/semio/engine"
+            "command_line": "cd /workspaces/semio/compose/engine \u0026\u0026 uv run pytest engine.test.py -x -q --tb=short -k \"TestAppEndpoint\" 2\u003e\u00261",
+            "cwd": "/workspaces/semio/compose/engine"
           }
         }
       },
@@ -2298,8 +2298,8 @@
           "timestamp": "2026-04-01T15:04:15.50986358Z",
           "execution_id": "ed90d8bd-0323-4c36-94e3-6b669293ee89",
           "tool_info": {
-            "command_line": "cd /workspaces/semio/semio/engine \u0026\u0026 uv run pytest engine.test.py -x -q --tb=short -k \"TestMcp\" 2\u003e\u00261",
-            "cwd": "/workspaces/semio/semio/engine"
+            "command_line": "cd /workspaces/semio/compose/engine \u0026\u0026 uv run pytest engine.test.py -x -q --tb=short -k \"TestMcp\" 2\u003e\u00261",
+            "cwd": "/workspaces/semio/compose/engine"
           }
         }
       },
@@ -2321,8 +2321,8 @@
           "timestamp": "2026-04-01T15:04:47.847156997Z",
           "execution_id": "ed90d8bd-0323-4c36-94e3-6b669293ee89",
           "tool_info": {
-            "command_line": "cd /workspaces/semio/semio/engine \u0026\u0026 uv run pytest engine.test.py -x -q --tb=short 2\u003e\u00261",
-            "cwd": "/workspaces/semio/semio/engine"
+            "command_line": "cd /workspaces/semio/compose/engine \u0026\u0026 uv run pytest engine.test.py -x -q --tb=short 2\u003e\u00261",
+            "cwd": "/workspaces/semio/compose/engine"
           }
         }
       },
@@ -2344,7 +2344,7 @@
           "timestamp": "2026-04-01T15:05:24.717635615Z",
           "execution_id": "ed90d8bd-0323-4c36-94e3-6b669293ee89",
           "tool_info": {
-            "command_line": "cd /workspaces/semio \u0026\u0026 npx vitest run --reporter=verbose semio/ui/index.tsx 2\u003e\u00261 | tail -30",
+            "command_line": "cd /workspaces/semio \u0026\u0026 npx vitest run --reporter=verbose compose/ui/index.tsx 2\u003e\u00261 | tail -30",
             "cwd": "/workspaces/semio"
           }
         }
@@ -2370,13 +2370,13 @@
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
               "files": [
-                "semio/ui/index.tsx",
-                "semio/engine/main.py",
-                "semio/engine/vite.mcp-app.config.ts",
-                "semio/engine/engine.test.py",
-                "semio/engine/dist/mcp-app.html"
+                "compose/ui/index.tsx",
+                "compose/engine/main.py",
+                "compose/engine/vite.mcp-app.config.ts",
+                "compose/engine/engine.test.py",
+                "compose/engine/dist/mcp-app.html"
               ],
-              "summary": "Fixed CSP wasm-eval violation preventing 3D models from loading in the semio engine MCP app scene.\n\nRoot cause: @react-three/drei's useGLTF defaults meshopt decoder to true (2nd default param). This imports three-stdlib's MeshoptDecoder which calls WebAssembly.instantiate() at module scope, violating the MCP App iframe's script-src CSP policy.\n\nThree fixes applied:\n1. **useGLTF call** (semio/ui/index.tsx): Changed `useGLTF(modelSource, false)` → `useGLTF(modelSource, false, false)` to explicitly disable both Draco AND meshopt decoders.\n2. **REST CSP headers** (semio/engine/main.py): Added `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob:; worker-src blob:;` to both /app/design-viewer and /app/kit-viewer endpoints for defense-in-depth.\n3. **Vite meshoptNoopPlugin** (semio/engine/vite.mcp-app.config.ts): New plugin that replaces MeshoptDecoder module with a {supported:false} stub during MCP app build, eliminating the WASM binary entirely from the bundle (~20KB reduction).\n\nTests: Extended TestAppEndpoint with test_app_design_viewer_csp_header (wasm-unsafe-eval, script-src, worker-src assertions) and test_app_kit_viewer_csp_header. All 174 engine tests pass."
+              "summary": "Fixed CSP wasm-eval violation preventing 3D models from loading in the compose engine MCP app scene.\n\nRoot cause: @react-three/drei's useGLTF defaults meshopt decoder to true (2nd default param). This imports three-stdlib's MeshoptDecoder which calls WebAssembly.instantiate() at module scope, violating the MCP App iframe's script-src CSP policy.\n\nThree fixes applied:\n1. **useGLTF call** (compose/ui/index.tsx): Changed `useGLTF(modelSource, false)` → `useGLTF(modelSource, false, false)` to explicitly disable both Draco AND meshopt decoders.\n2. **REST CSP headers** (compose/engine/main.py): Added `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob:; worker-src blob:;` to both /app/design-viewer and /app/kit-viewer endpoints for defense-in-depth.\n3. **Vite meshoptNoopPlugin** (compose/engine/vite.mcp-app.config.ts): New plugin that replaces MeshoptDecoder module with a {supported:false} stub during MCP app build, eliminating the WASM binary entirely from the bundle (~20KB reduction).\n\nTests: Extended TestAppEndpoint with test_app_design_viewer_csp_header (wasm-unsafe-eval, script-src, worker-src assertions) and test_app_kit_viewer_csp_header. All 174 engine tests pass."
             },
             "mcp_tool_name": "ticket_close"
           }
@@ -2404,13 +2404,13 @@
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
               "files": [
-                "semio/ui/index.tsx",
-                "semio/engine/main.py",
-                "semio/engine/vite.mcp-app.config.ts",
-                "semio/engine/engine.test.py",
-                "semio/engine/dist/mcp-app.html"
+                "compose/ui/index.tsx",
+                "compose/engine/main.py",
+                "compose/engine/vite.mcp-app.config.ts",
+                "compose/engine/engine.test.py",
+                "compose/engine/dist/mcp-app.html"
               ],
-              "summary": "Fixed CSP wasm-eval violation preventing 3D models from loading in the semio engine MCP app scene.\n\nRoot cause: @react-three/drei's useGLTF defaults meshopt decoder to true (2nd default param). This imports three-stdlib's MeshoptDecoder which calls WebAssembly.instantiate() at module scope, violating the MCP App iframe's script-src CSP policy.\n\nThree fixes applied:\n1. **useGLTF call** (semio/ui/index.tsx): Changed `useGLTF(modelSource, false)` → `useGLTF(modelSource, false, false)` to explicitly disable both Draco AND meshopt decoders.\n2. **REST CSP headers** (semio/engine/main.py): Added `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob:; worker-src blob:;` to both /app/design-viewer and /app/kit-viewer endpoints for defense-in-depth.\n3. **Vite meshoptNoopPlugin** (semio/engine/vite.mcp-app.config.ts): New plugin that replaces MeshoptDecoder module with a {supported:false} stub during MCP app build, eliminating the WASM binary entirely from the bundle (~20KB reduction).\n\nTests: Extended TestAppEndpoint with test_app_design_viewer_csp_header (wasm-unsafe-eval, script-src, worker-src assertions) and test_app_kit_viewer_csp_header. All 174 engine tests pass."
+              "summary": "Fixed CSP wasm-eval violation preventing 3D models from loading in the compose engine MCP app scene.\n\nRoot cause: @react-three/drei's useGLTF defaults meshopt decoder to true (2nd default param). This imports three-stdlib's MeshoptDecoder which calls WebAssembly.instantiate() at module scope, violating the MCP App iframe's script-src CSP policy.\n\nThree fixes applied:\n1. **useGLTF call** (compose/ui/index.tsx): Changed `useGLTF(modelSource, false)` → `useGLTF(modelSource, false, false)` to explicitly disable both Draco AND meshopt decoders.\n2. **REST CSP headers** (compose/engine/main.py): Added `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob:; worker-src blob:;` to both /app/design-viewer and /app/kit-viewer endpoints for defense-in-depth.\n3. **Vite meshoptNoopPlugin** (compose/engine/vite.mcp-app.config.ts): New plugin that replaces MeshoptDecoder module with a {supported:false} stub during MCP app build, eliminating the WASM binary entirely from the bundle (~20KB reduction).\n\nTests: Extended TestAppEndpoint with test_app_design_viewer_csp_header (wasm-unsafe-eval, script-src, worker-src assertions) and test_app_kit_viewer_csp_header. All 174 engine tests pass."
             },
             "mcp_tool_name": "ticket_close"
           }
@@ -2434,7 +2434,7 @@
           "timestamp": "2026-04-01T15:06:07.439972462Z",
           "execution_id": "ed90d8bd-0323-4c36-94e3-6b669293ee89",
           "tool_info": {
-            "response": "*Rules used for this response:*\n- (Always On) Triggered Rule: AGENTS.md\n\n*Running MCP tool*\n\n*Updated todo list*\n\n*Found code context*\n\n*Running MCP tool*\n\n*Running MCP tool*\n\n*Listed directory file:///workspaces/semio/.repo/goals*\n\n*Running MCP tool*\n\n### Planner Response\n\nLet me search broadly for where CSP headers or scene serving is configured.\n\n*Grep searched codebase*\n\n*Grep searched codebase*\n\n*Grep searched codebase*\n\n*Grep searched codebase*\n\n*Grep searched codebase*\n\n*Grep searched codebase*\n\n### Planner Response\n\nFound the CSP headers. Let me read the full context to make a precise fix.\n\n*Viewed file:///workspaces/semio/semio/engine/main.py*\n- (Glob) Triggered Rule: AGENTS.md\n- (Glob) Triggered Rule: AGENTS.md\n\n### Planner Response\n\nThe CSP headers at lines 1654 and 1668 are missing `'wasm-unsafe-eval'` in the `script-src` directive, which is required for Three.js/Draco WASM-based 3D model decoding. Let me also check if there are worker-related needs.\n\n*Grep searched codebase*\n\n*Grep searched codebase*\n\n*Grep searched codebase*\n\n*Viewed file:///workspaces/semio/semio/engine/main.py*\n\n*Searched filesystem*\n\n*Viewed file:///workspaces/semio/.repo/%E2%9C%8D%EF%B8%8F/mcp-app.md*\n\n*Grep searched codebase*\n\n*Grep searched codebase*\n\n*Grep searched codebase*\n\n### Planner Response\n\nLet me check the MCP Apps CSP spec to understand what fields are available for script-src/wasm.\n\n*Searched filesystem*\n\n*Grep searched codebase*\n\n*Viewed file:///workspaces/semio/node_modules/@modelcontextprotocol/ext-apps/dist/src/spec.types.d.ts*\n\n*Updated todo list*\n\n### Planner Response\n\nLet me check the 3D scene implementation to understand what triggers the WASM evaluation, and look at how the MCP host constructs CSP from the resource meta.\n\n*Found code context*\n\n*Grep searched codebase*\n\n*Grep searched codebase*\n\n*Viewed file:///workspaces/semio/semio/ui/index.tsx*\n- (Glob) Triggered Rule: AGENTS.md\n- (Glob) Triggered Rule: AGENTS.md\n\n### Planner Response\n\nLet me check how the MCP host actually builds the CSP from the resource meta, and look at the MCP app HTML build.\n\n*Grep searched codebase*\n\n*Viewed file:///workspaces/semio/semio/engine/main.py*\n- (Glob) Triggered Rule: AGENTS.md\n\n*Grep searched codebase*\n\n*Viewed file:///workspaces/semio/node_modules/@modelcontextprotocol/ext-apps/dist/src/generated/schema.json*\n\n*Grep searched codebase*\n\n*Viewed file:///workspaces/semio/node_modules/@modelcontextprotocol/ext-apps/dist/src/generated/schema.json*\n\n*Viewed file:///workspaces/semio/node_modules/@modelcontextprotocol/ext-apps/dist/src/generated/schema.json*\n\n### Planner Response\n\nThe `McpUiResourceCsp` schema has `\"additionalProperties\": false` — the host won't accept custom fields. Let me investigate what's actually triggering the WASM evaluation in the MCP app bundle.\n\n*Searched filesystem*\n\n*Viewed file:///workspaces/semio/semio/engine/mcp-app.tsx*\n\n*Grep searched codebase*\n\n*Viewed file:///workspaces/semio/semio/ui/index.tsx*\n\n*Grep searched codebase*\n\n### Planner Response\n\nLet me look at how file blobs are sent to the MCP app and how the scene gets its model data.\n\n*Grep searched codebase*\n\n*Viewed file:///workspaces/semio/semio/engine/main.py*\n\n*Viewed file:///workspaces/semio/semio/engine/main.py*\n\n*Searched filesystem*\n\n*Viewed file:///workspaces/semio/semio/engine/vite.mcp-app.config.ts*\n\n### Planner Response\n\nKey finding: `sql.js` is stubbed out of the MCP app bundle, but `three` and `@react-three/*` are NOT. The WASM CSP violation likely comes from Three.js internals. Let me check the REST mount path and the file URL generation.\n\n*Grep searched codebase*\n\n*User accepted the command `wc -c /workspaces/semio/semio/engine/dist/mcp-app.html`*\n\n*User accepted the command `grep -c 'WebAssembly' /workspaces/semio/semio/engine/dist/mcp-app.html`*\n\n*User accepted the command `grep -oP '.{0,80}WebAssembly.{0,80}' /workspaces/semio/semio/engine/dist/mcp-app.html`*\n\n*Checked command status*\n\n### Planner Response\n\nFound the WASM sources in the bundle:\n1. **DRACOLoader** - checks for WebAssembly but only initializes when called\n2. **MeshoptDecoder** - calls `WebAssembly.instantiate()` which triggers the CSP violation\n\nLet me check where meshopt comes from in the dependency tree.\n\n*User accepted the command `grep -oP '.{0,200}WebAssembly\\.instantiate.{0,200}' /workspaces/semio/semio/engine/dist/mcp-app.html | head -3`*\n\n*Checked command status*\n\n*Updated todo list*\n\n### Planner Response\n\nNow let me implement the fixes. First, fix the REST CSP headers and stub the meshopt decoder in the Vite build.\n\n*Edited relevant file*\n\n### Planner Response\n\nNow let me stub the meshopt decoder in the Vite build config to prevent the WASM CSP violation in the MCP host iframe:\n\n*User accepted the command `grep -r 'meshopt' /workspaces/semio/semio/ui/node_modules/three/examples/jsm/libs/ --include='*.js' --include='*.mjs' -l 2\u003e/dev/null | head -5`*\n\n*Grep searched codebase*\n\n*User accepted the command `find /workspaces/semio/node_modules/three -name '*meshopt*' -type f 2\u003e/dev/null | head -5`*\n\n*User accepted the command `grep -oP '.{0,100}meshopt.{0,100}' /workspaces/semio/semio/engine/dist/mcp-app.html | head -5`*\n\n*Checked command status*\n\n*User accepted the command `grep -r 'meshopt_decoder' /workspaces/semio/node_modules/@react-three/drei/core/ --include='*.js' --include='*.mjs' --include='*.ts' -l 2\u003e/dev/null | head -5`*\n\n*User accepted the command `grep -r 'meshopt_decoder' /workspaces/semio/node_modules/@react-three/ --include='*.js' --include='*.mjs' -l 2\u003e/dev/null | head -10`*\n\n*User accepted the command `grep -rn 'meshopt' /workspaces/semio/node_modules/three/examples/jsm/loaders/GLTFLoader.js | head -10`*\n\n*User accepted the command `grep -rn 'meshopt_decoder' /workspaces/semio/node_modules/three/src/ --include='*.js' --include='*.mjs' -l 2\u003e/dev/null | head -5`*\n\n*User accepted the command `grep -rn 'meshopt_decoder' /workspaces/semio/node_modules/@react-three/drei/ --include='*.js' --include='*.mjs' --include='*.ts' --include='*.tsx' 2\u003e/dev/null | head -10`*\n\n*User accepted the command `grep -rn 'meshopt_decoder\\|MeshoptDecoder' /workspaces/semio/semio/ui/node_modules/@react-three/drei/ --include='*.js' --include='*.mjs' --include='*.ts' --include='*.tsx' 2\u003e/dev/null | head -10`*\n\n*User accepted the command `grep -rn 'MeshoptDecoder\\|meshopt_decoder' /workspaces/semio/semio/ui/ --include='*.ts' --include='*.tsx' --include='*.js' --include='*.mjs' --exclude-dir=node_modules 2\u003e/dev/null | head -10`*\n\n### Planner Response\n\nFound the actual root cause. Looking at the drei bundle code:\n\n```javascript\nfunction Yte(e=!0, t=!0, n) { // useDraco=true, useMeshopt=true\n  return r =\u003e {\n    e \u0026\u0026 r.setDRACOLoader(L0);\n    t \u0026\u0026 r.setMeshoptDecoder(tI);  // meshopt defaults to TRUE\n  }\n}\n```\n\nWhen calling `useGLTF(modelSource, false)`, only Draco is disabled. **Meshopt defaults to `true`**, triggering the WebAssembly CSP violation. The fix needs two parts:\n\n1. Pass `false` for meshopt in `useGLTF` call\n2. Stub the meshopt decoder module in the Vite build to prevent the WASM IIFE from running\n\n*User accepted the command `grep -rn 'meshopt_decoder\\|MeshoptDecoder' /workspaces/semio/node_modules/three-stdlib/ --include='*.js' --include='*.mjs' -l 2\u003e/dev/null | head -5`*\n\n*Checked command status*\n\n*User accepted the command `head -30 /workspaces/semio/node_modules/three-stdlib/libs/MeshoptDecoder.js`*\n\n*Viewed file:///workspaces/semio/semio/ui/index.tsx*\n\n*Edited relevant file*\n\n### Planner Response\n\nNow I need to also stub the meshopt decoder module in the Vite build to prevent the WASM IIFE from executing at all (even if `useGLTF` doesn't use it, the module is imported at module scope by drei).\n\n*User accepted the command `grep -rn 'MeshoptDecoder' /workspaces/semio/node_modules/@react-three/drei/core/useGLTF.js 2\u003e/dev/null | head -5`*\n\n*User accepted the command `grep -rn 'MeshoptDecoder\\|meshopt' /workspaces/semio/semio/ui/node_modules/@react-three/drei/core/useGLTF.js 2\u003e/dev/null || grep -rn 'MeshoptDecoder\\|meshopt' /workspaces/semio/node_modules/@react-three/drei/core/useGLTF.js 2\u003e/dev/null | head -10`*\n\n*User accepted the command `find /workspaces/semio/node_modules/@react-three/drei -name 'useGLTF*' -type f 2\u003e/dev/null | head -5`*\n\n*User accepted the command `find /workspaces/semio/node_modules/@react-three/drei -name '*.mjs' -o -name '*.js' | head -10`*\n\n*User accepted the command `grep -rn 'meshopt\\|MeshoptDecoder' /workspaces/semio/node_modules/@react-three/drei/index.js 2\u003e/dev/null | head -10`*\n\n*Checked command status*\n\n*User accepted the command `grep -rn 'meshopt\\|MeshoptDecoder' /workspaces/semio/node_modules/@react-three/drei/ --include='*.js' --include='*.mjs' 2\u003e/dev/null | grep -v node_modules | head -10`*\n\n*User accepted the command `grep -rn 'MeshoptDecoder' /workspaces/semio/node_modules/@react-three/drei/ --include='*.cjs.js' 2\u003e/dev/null | head -5`*\n\n### Planner Response\n\nNow I understand the full picture. The `MeshoptDecoder` is imported from `three-stdlib` at module scope by drei, and its WASM IIFE runs on import regardless. I need to stub it in the Vite build.\n\n*User accepted the command `head -5 /workspaces/semio/node_modules/three-stdlib/libs/MeshoptDecoder.js`*\n\n### Planner Response\n\nThe `three-stdlib` `MeshoptDecoder` is a lazy factory but the WASM binary is embedded in the module. The WASM instantiation happens when `MeshoptDecoder()` is called (not on import). However, drei's `useGLTF` setup function calls it when `useMeshopt=true` (the default). Since I've already fixed `useGLTF(modelSource, false, false)`, the `setMeshoptDecoder` call won't happen. But the module is still bundled and might have side effects. Let me also add it to the Vite stub list for safety.\n\n*Edited relevant file*\n\n*Updated todo list*\n\n### Planner Response\n\nLet me rebuild the MCP app bundle and then run the tests.\n\n*Grep searched codebase*\n\n*User accepted the command `cd /workspaces/semio/semio/engine \u0026\u0026 npm run build:mcp-app 2\u003e\u00261`*\n\n### Planner Response\n\nBuild succeeded. Now let me verify the meshopt WASM is actually removed from the new bundle, then update the tests.\n\n*User accepted the command `grep -c 'WebAssembly' /workspaces/semio/semio/engine/dist/mcp-app.html`*\n\n*Checked command status*\n\n*User accepted the command `grep -oP '.{0,80}WebAssembly.{0,80}' /workspaces/semio/semio/engine/dist/mcp-app.html`*\n\n*Checked command status*\n\n### Planner Response\n\nThe meshopt decoder is still in the bundle because `three-stdlib/index.js` re-exports it using a relative path (`./libs/MeshoptDecoder`), which doesn't match the stubbed prefix. I need a different approach — a Vite transform plugin to patch the WASM calls.\n\n*Viewed file:///workspaces/semio/semio/engine/vite.mcp-app.config.ts*\n- (Glob) Triggered Rule: AGENTS.md\n- (Glob) Triggered Rule: AGENTS.md\n\n### Planner Response\n\nThe stub via [resolveId](file:///workspaces/semio/semio/engine/vite.mcp-app.config.ts:60:4-78:5) doesn't catch relative imports from `three-stdlib/index.js`. I need a [transform](file:///workspaces/semio/semio/engine/vite.mcp-app.config.ts:28:4-37:5) plugin that patches the meshopt decoder's WASM code at the resolved file level.\n\n*Edited relevant file*\n\n### Planner Response\n\nNow register the new plugin in the Vite config:\n\n*Viewed file:///workspaces/semio/semio/engine/vite.mcp-app.config.ts*\n\n*Edited relevant file*\n\n*User accepted the command `cd /workspaces/semio/semio/engine \u0026\u0026 npm run build:mcp-app 2\u003e\u00261`*\n\n### Planner Response\n\nThe regex didn't handle nested parentheses properly. Let me use a whole-module replacement approach instead.\n\n*Edited relevant file*\n\n*User accepted the command `cd /workspaces/semio/semio/engine \u0026\u0026 npm run build:mcp-app 2\u003e\u00261`*\n\n### Planner Response\n\nBuild succeeded — bundle is now ~20KB smaller (6,552 vs 6,572). Let me verify WASM is gone:\n\n*User accepted the command `grep -c 'WebAssembly' /workspaces/semio/semio/engine/dist/mcp-app.html`*\n\n*Checked command status*\n\n*User accepted the command `grep -oP '.{0,80}WebAssembly.{0,80}' /workspaces/semio/semio/engine/dist/mcp-app.html`*\n\n*Checked command status*\n\n### Planner Response\n\nThe MeshoptDecoder WASM is eliminated. The remaining `WebAssembly` reference is from DRACOLoader's `typeof WebAssembly` check — that's just a feature detection, not an instantiation call. It won't trigger CSP.\n\nNow let me update the tests and run them.\n\n*Updated todo list*\n\n*Viewed file:///workspaces/semio/semio/engine/engine.test.py*\n\n*Edited relevant file*\n\n### Planner Response\n\nNow let me run the engine tests to verify everything passes:\n\n*User accepted the command `cd /workspaces/semio/semio/engine \u0026\u0026 uv run pytest engine.test.py -x -q --tb=short -k \"TestAppEndpoint\" 2\u003e\u00261`*\n\n### Planner Response\n\nAll 5 app endpoint tests pass. Let me also run the broader test suite to make sure nothing is broken:\n\n*User accepted the command `cd /workspaces/semio/semio/engine \u0026\u0026 uv run pytest engine.test.py -x -q --tb=short -k \"TestMcp\" 2\u003e\u00261`*\n\n### Planner Response\n\nLet me also run the full test suite to ensure nothing is broken:\n\n*User accepted the command `cd /workspaces/semio/semio/engine \u0026\u0026 uv run pytest engine.test.py -x -q --tb=short 2\u003e\u00261`*\n\n### Planner Response\n\nAll 174 tests pass. Let me also run the UI vitest to make sure the `useGLTF` change doesn't break anything:\n\n*User accepted the command `cd /workspaces/semio \u0026\u0026 npx vitest run --reporter=verbose semio/ui/index.tsx 2\u003e\u00261 | tail -30`*\n\n### Planner Response\n\nNow let me close the ticket with a summary of all changes.\n\n*Running MCP tool*\n\n### Planner Response\n\n## Summary\n\nFixed the CSP `wasm-eval` violation that prevented 3D models from loading in the MCP app scene.\n\n### Root Cause\n\n`@react-three/drei`'s `useGLTF` defaults its **meshopt** parameter to `true`. When called as `useGLTF(url, false)` (only disabling Draco), meshopt was still enabled. This caused `three-stdlib`'s `MeshoptDecoder` to call `WebAssembly.instantiate()`, violating the MCP App iframe's `script-src` CSP policy.\n\n### Changes\n\n| File | Change |\n|---|---|\n| `@/workspaces/semio/semio/ui/index.tsx:2080-2082` | `useGLTF(modelSource, false)` → `useGLTF(modelSource, false, false)` — explicitly disables both Draco and meshopt |\n| `@/workspaces/semio/semio/engine/main.py:1654,1668` | Added `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob:; worker-src blob:;` to REST CSP headers |\n| `@/workspaces/semio/semio/engine/vite.mcp-app.config.ts:64-81` | New [meshoptNoopPlugin](file:///workspaces/semio/semio/engine/vite.mcp-app.config.ts:63:0-75:1) replaces `MeshoptDecoder` module with `{supported:false}` stub during build, eliminating WASM binary from bundle (~20KB reduction) |\n| `@/workspaces/semio/semio/engine/engine.test.py:1261-1277` | Extended CSP tests to assert `wasm-unsafe-eval`, `script-src`, and `worker-src` directives |\n\n**All 174 engine tests pass.** MCP app bundle rebuilt with zero `WebAssembly.instantiate()` calls."
+            "response": "*Rules used for this response:*\n- (Always On) Triggered Rule: AGENTS.md\n\n*Running MCP tool*\n\n*Updated todo list*\n\n*Found code context*\n\n*Running MCP tool*\n\n*Running MCP tool*\n\n*Listed directory file:///workspaces/semio/.repo/goals*\n\n*Running MCP tool*\n\n### Planner Response\n\nLet me search broadly for where CSP headers or scene serving is configured.\n\n*Grep searched codebase*\n\n*Grep searched codebase*\n\n*Grep searched codebase*\n\n*Grep searched codebase*\n\n*Grep searched codebase*\n\n*Grep searched codebase*\n\n### Planner Response\n\nFound the CSP headers. Let me read the full context to make a precise fix.\n\n*Viewed file:///workspaces/semio/compose/engine/main.py*\n- (Glob) Triggered Rule: AGENTS.md\n- (Glob) Triggered Rule: AGENTS.md\n\n### Planner Response\n\nThe CSP headers at lines 1654 and 1668 are missing `'wasm-unsafe-eval'` in the `script-src` directive, which is required for Three.js/Draco WASM-based 3D model decoding. Let me also check if there are worker-related needs.\n\n*Grep searched codebase*\n\n*Grep searched codebase*\n\n*Grep searched codebase*\n\n*Viewed file:///workspaces/semio/compose/engine/main.py*\n\n*Searched filesystem*\n\n*Viewed file:///workspaces/semio/.repo/%E2%9C%8D%EF%B8%8F/mcp-app.md*\n\n*Grep searched codebase*\n\n*Grep searched codebase*\n\n*Grep searched codebase*\n\n### Planner Response\n\nLet me check the MCP Apps CSP spec to understand what fields are available for script-src/wasm.\n\n*Searched filesystem*\n\n*Grep searched codebase*\n\n*Viewed file:///workspaces/semio/node_modules/@modelcontextprotocol/ext-apps/dist/src/spec.types.d.ts*\n\n*Updated todo list*\n\n### Planner Response\n\nLet me check the 3D scene implementation to understand what triggers the WASM evaluation, and look at how the MCP host constructs CSP from the resource meta.\n\n*Found code context*\n\n*Grep searched codebase*\n\n*Grep searched codebase*\n\n*Viewed file:///workspaces/semio/compose/ui/index.tsx*\n- (Glob) Triggered Rule: AGENTS.md\n- (Glob) Triggered Rule: AGENTS.md\n\n### Planner Response\n\nLet me check how the MCP host actually builds the CSP from the resource meta, and look at the MCP app HTML build.\n\n*Grep searched codebase*\n\n*Viewed file:///workspaces/semio/compose/engine/main.py*\n- (Glob) Triggered Rule: AGENTS.md\n\n*Grep searched codebase*\n\n*Viewed file:///workspaces/semio/node_modules/@modelcontextprotocol/ext-apps/dist/src/generated/schema.json*\n\n*Grep searched codebase*\n\n*Viewed file:///workspaces/semio/node_modules/@modelcontextprotocol/ext-apps/dist/src/generated/schema.json*\n\n*Viewed file:///workspaces/semio/node_modules/@modelcontextprotocol/ext-apps/dist/src/generated/schema.json*\n\n### Planner Response\n\nThe `McpUiResourceCsp` schema has `\"additionalProperties\": false` — the host won't accept custom fields. Let me investigate what's actually triggering the WASM evaluation in the MCP app bundle.\n\n*Searched filesystem*\n\n*Viewed file:///workspaces/semio/compose/engine/mcp-app.tsx*\n\n*Grep searched codebase*\n\n*Viewed file:///workspaces/semio/compose/ui/index.tsx*\n\n*Grep searched codebase*\n\n### Planner Response\n\nLet me look at how file blobs are sent to the MCP app and how the scene gets its model data.\n\n*Grep searched codebase*\n\n*Viewed file:///workspaces/semio/compose/engine/main.py*\n\n*Viewed file:///workspaces/semio/compose/engine/main.py*\n\n*Searched filesystem*\n\n*Viewed file:///workspaces/semio/compose/engine/vite.mcp-app.config.ts*\n\n### Planner Response\n\nKey finding: `sql.js` is stubbed out of the MCP app bundle, but `three` and `@react-three/*` are NOT. The WASM CSP violation likely comes from Three.js internals. Let me check the REST mount path and the file URL generation.\n\n*Grep searched codebase*\n\n*User accepted the command `wc -c /workspaces/semio/compose/engine/dist/mcp-app.html`*\n\n*User accepted the command `grep -c 'WebAssembly' /workspaces/semio/compose/engine/dist/mcp-app.html`*\n\n*User accepted the command `grep -oP '.{0,80}WebAssembly.{0,80}' /workspaces/semio/compose/engine/dist/mcp-app.html`*\n\n*Checked command status*\n\n### Planner Response\n\nFound the WASM sources in the bundle:\n1. **DRACOLoader** - checks for WebAssembly but only initializes when called\n2. **MeshoptDecoder** - calls `WebAssembly.instantiate()` which triggers the CSP violation\n\nLet me check where meshopt comes from in the dependency tree.\n\n*User accepted the command `grep -oP '.{0,200}WebAssembly\\.instantiate.{0,200}' /workspaces/semio/compose/engine/dist/mcp-app.html | head -3`*\n\n*Checked command status*\n\n*Updated todo list*\n\n### Planner Response\n\nNow let me implement the fixes. First, fix the REST CSP headers and stub the meshopt decoder in the Vite build.\n\n*Edited relevant file*\n\n### Planner Response\n\nNow let me stub the meshopt decoder in the Vite build config to prevent the WASM CSP violation in the MCP host iframe:\n\n*User accepted the command `grep -r 'meshopt' /workspaces/semio/compose/ui/node_modules/three/examples/jsm/libs/ --include='*.js' --include='*.mjs' -l 2\u003e/dev/null | head -5`*\n\n*Grep searched codebase*\n\n*User accepted the command `find /workspaces/semio/node_modules/three -name '*meshopt*' -type f 2\u003e/dev/null | head -5`*\n\n*User accepted the command `grep -oP '.{0,100}meshopt.{0,100}' /workspaces/semio/compose/engine/dist/mcp-app.html | head -5`*\n\n*Checked command status*\n\n*User accepted the command `grep -r 'meshopt_decoder' /workspaces/semio/node_modules/@react-three/drei/core/ --include='*.js' --include='*.mjs' --include='*.ts' -l 2\u003e/dev/null | head -5`*\n\n*User accepted the command `grep -r 'meshopt_decoder' /workspaces/semio/node_modules/@react-three/ --include='*.js' --include='*.mjs' -l 2\u003e/dev/null | head -10`*\n\n*User accepted the command `grep -rn 'meshopt' /workspaces/semio/node_modules/three/examples/jsm/loaders/GLTFLoader.js | head -10`*\n\n*User accepted the command `grep -rn 'meshopt_decoder' /workspaces/semio/node_modules/three/src/ --include='*.js' --include='*.mjs' -l 2\u003e/dev/null | head -5`*\n\n*User accepted the command `grep -rn 'meshopt_decoder' /workspaces/semio/node_modules/@react-three/drei/ --include='*.js' --include='*.mjs' --include='*.ts' --include='*.tsx' 2\u003e/dev/null | head -10`*\n\n*User accepted the command `grep -rn 'meshopt_decoder\\|MeshoptDecoder' /workspaces/semio/compose/ui/node_modules/@react-three/drei/ --include='*.js' --include='*.mjs' --include='*.ts' --include='*.tsx' 2\u003e/dev/null | head -10`*\n\n*User accepted the command `grep -rn 'MeshoptDecoder\\|meshopt_decoder' /workspaces/semio/compose/ui/ --include='*.ts' --include='*.tsx' --include='*.js' --include='*.mjs' --exclude-dir=node_modules 2\u003e/dev/null | head -10`*\n\n### Planner Response\n\nFound the actual root cause. Looking at the drei bundle code:\n\n```javascript\nfunction Yte(e=!0, t=!0, n) { // useDraco=true, useMeshopt=true\n  return r =\u003e {\n    e \u0026\u0026 r.setDRACOLoader(L0);\n    t \u0026\u0026 r.setMeshoptDecoder(tI);  // meshopt defaults to TRUE\n  }\n}\n```\n\nWhen calling `useGLTF(modelSource, false)`, only Draco is disabled. **Meshopt defaults to `true`**, triggering the WebAssembly CSP violation. The fix needs two parts:\n\n1. Pass `false` for meshopt in `useGLTF` call\n2. Stub the meshopt decoder module in the Vite build to prevent the WASM IIFE from running\n\n*User accepted the command `grep -rn 'meshopt_decoder\\|MeshoptDecoder' /workspaces/semio/node_modules/three-stdlib/ --include='*.js' --include='*.mjs' -l 2\u003e/dev/null | head -5`*\n\n*Checked command status*\n\n*User accepted the command `head -30 /workspaces/semio/node_modules/three-stdlib/libs/MeshoptDecoder.js`*\n\n*Viewed file:///workspaces/semio/compose/ui/index.tsx*\n\n*Edited relevant file*\n\n### Planner Response\n\nNow I need to also stub the meshopt decoder module in the Vite build to prevent the WASM IIFE from executing at all (even if `useGLTF` doesn't use it, the module is imported at module scope by drei).\n\n*User accepted the command `grep -rn 'MeshoptDecoder' /workspaces/semio/node_modules/@react-three/drei/core/useGLTF.js 2\u003e/dev/null | head -5`*\n\n*User accepted the command `grep -rn 'MeshoptDecoder\\|meshopt' /workspaces/semio/compose/ui/node_modules/@react-three/drei/core/useGLTF.js 2\u003e/dev/null || grep -rn 'MeshoptDecoder\\|meshopt' /workspaces/semio/node_modules/@react-three/drei/core/useGLTF.js 2\u003e/dev/null | head -10`*\n\n*User accepted the command `find /workspaces/semio/node_modules/@react-three/drei -name 'useGLTF*' -type f 2\u003e/dev/null | head -5`*\n\n*User accepted the command `find /workspaces/semio/node_modules/@react-three/drei -name '*.mjs' -o -name '*.js' | head -10`*\n\n*User accepted the command `grep -rn 'meshopt\\|MeshoptDecoder' /workspaces/semio/node_modules/@react-three/drei/index.js 2\u003e/dev/null | head -10`*\n\n*Checked command status*\n\n*User accepted the command `grep -rn 'meshopt\\|MeshoptDecoder' /workspaces/semio/node_modules/@react-three/drei/ --include='*.js' --include='*.mjs' 2\u003e/dev/null | grep -v node_modules | head -10`*\n\n*User accepted the command `grep -rn 'MeshoptDecoder' /workspaces/semio/node_modules/@react-three/drei/ --include='*.cjs.js' 2\u003e/dev/null | head -5`*\n\n### Planner Response\n\nNow I understand the full picture. The `MeshoptDecoder` is imported from `three-stdlib` at module scope by drei, and its WASM IIFE runs on import regardless. I need to stub it in the Vite build.\n\n*User accepted the command `head -5 /workspaces/semio/node_modules/three-stdlib/libs/MeshoptDecoder.js`*\n\n### Planner Response\n\nThe `three-stdlib` `MeshoptDecoder` is a lazy factory but the WASM binary is embedded in the module. The WASM instantiation happens when `MeshoptDecoder()` is called (not on import). However, drei's `useGLTF` setup function calls it when `useMeshopt=true` (the default). Since I've already fixed `useGLTF(modelSource, false, false)`, the `setMeshoptDecoder` call won't happen. But the module is still bundled and might have side effects. Let me also add it to the Vite stub list for safety.\n\n*Edited relevant file*\n\n*Updated todo list*\n\n### Planner Response\n\nLet me rebuild the MCP app bundle and then run the tests.\n\n*Grep searched codebase*\n\n*User accepted the command `cd /workspaces/semio/compose/engine \u0026\u0026 npm run build:mcp-app 2\u003e\u00261`*\n\n### Planner Response\n\nBuild succeeded. Now let me verify the meshopt WASM is actually removed from the new bundle, then update the tests.\n\n*User accepted the command `grep -c 'WebAssembly' /workspaces/semio/compose/engine/dist/mcp-app.html`*\n\n*Checked command status*\n\n*User accepted the command `grep -oP '.{0,80}WebAssembly.{0,80}' /workspaces/semio/compose/engine/dist/mcp-app.html`*\n\n*Checked command status*\n\n### Planner Response\n\nThe meshopt decoder is still in the bundle because `three-stdlib/index.js` re-exports it using a relative path (`./libs/MeshoptDecoder`), which doesn't match the stubbed prefix. I need a different approach — a Vite transform plugin to patch the WASM calls.\n\n*Viewed file:///workspaces/semio/compose/engine/vite.mcp-app.config.ts*\n- (Glob) Triggered Rule: AGENTS.md\n- (Glob) Triggered Rule: AGENTS.md\n\n### Planner Response\n\nThe stub via [resolveId](file:///workspaces/semio/compose/engine/vite.mcp-app.config.ts:60:4-78:5) doesn't catch relative imports from `three-stdlib/index.js`. I need a [transform](file:///workspaces/semio/compose/engine/vite.mcp-app.config.ts:28:4-37:5) plugin that patches the meshopt decoder's WASM code at the resolved file level.\n\n*Edited relevant file*\n\n### Planner Response\n\nNow register the new plugin in the Vite config:\n\n*Viewed file:///workspaces/semio/compose/engine/vite.mcp-app.config.ts*\n\n*Edited relevant file*\n\n*User accepted the command `cd /workspaces/semio/compose/engine \u0026\u0026 npm run build:mcp-app 2\u003e\u00261`*\n\n### Planner Response\n\nThe regex didn't handle nested parentheses properly. Let me use a whole-module replacement approach instead.\n\n*Edited relevant file*\n\n*User accepted the command `cd /workspaces/semio/compose/engine \u0026\u0026 npm run build:mcp-app 2\u003e\u00261`*\n\n### Planner Response\n\nBuild succeeded — bundle is now ~20KB smaller (6,552 vs 6,572). Let me verify WASM is gone:\n\n*User accepted the command `grep -c 'WebAssembly' /workspaces/semio/compose/engine/dist/mcp-app.html`*\n\n*Checked command status*\n\n*User accepted the command `grep -oP '.{0,80}WebAssembly.{0,80}' /workspaces/semio/compose/engine/dist/mcp-app.html`*\n\n*Checked command status*\n\n### Planner Response\n\nThe MeshoptDecoder WASM is eliminated. The remaining `WebAssembly` reference is from DRACOLoader's `typeof WebAssembly` check — that's just a feature detection, not an instantiation call. It won't trigger CSP.\n\nNow let me update the tests and run them.\n\n*Updated todo list*\n\n*Viewed file:///workspaces/semio/compose/engine/engine.test.py*\n\n*Edited relevant file*\n\n### Planner Response\n\nNow let me run the engine tests to verify everything passes:\n\n*User accepted the command `cd /workspaces/semio/compose/engine \u0026\u0026 uv run pytest engine.test.py -x -q --tb=short -k \"TestAppEndpoint\" 2\u003e\u00261`*\n\n### Planner Response\n\nAll 5 app endpoint tests pass. Let me also run the broader test suite to make sure nothing is broken:\n\n*User accepted the command `cd /workspaces/semio/compose/engine \u0026\u0026 uv run pytest engine.test.py -x -q --tb=short -k \"TestMcp\" 2\u003e\u00261`*\n\n### Planner Response\n\nLet me also run the full test suite to ensure nothing is broken:\n\n*User accepted the command `cd /workspaces/semio/compose/engine \u0026\u0026 uv run pytest engine.test.py -x -q --tb=short 2\u003e\u00261`*\n\n### Planner Response\n\nAll 174 tests pass. Let me also run the UI vitest to make sure the `useGLTF` change doesn't break anything:\n\n*User accepted the command `cd /workspaces/semio \u0026\u0026 npx vitest run --reporter=verbose compose/ui/index.tsx 2\u003e\u00261 | tail -30`*\n\n### Planner Response\n\nNow let me close the ticket with a summary of all changes.\n\n*Running MCP tool*\n\n### Planner Response\n\n## Summary\n\nFixed the CSP `wasm-eval` violation that prevented 3D models from loading in the MCP app scene.\n\n### Root Cause\n\n`@react-three/drei`'s `useGLTF` defaults its **meshopt** parameter to `true`. When called as `useGLTF(url, false)` (only disabling Draco), meshopt was still enabled. This caused `three-stdlib`'s `MeshoptDecoder` to call `WebAssembly.instantiate()`, violating the MCP App iframe's `script-src` CSP policy.\n\n### Changes\n\n| File | Change |\n|---|---|\n| `@/workspaces/semio/compose/ui/index.tsx:2080-2082` | `useGLTF(modelSource, false)` → `useGLTF(modelSource, false, false)` — explicitly disables both Draco and meshopt |\n| `@/workspaces/semio/compose/engine/main.py:1654,1668` | Added `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob:; worker-src blob:;` to REST CSP headers |\n| `@/workspaces/semio/compose/engine/vite.mcp-app.config.ts:64-81` | New [meshoptNoopPlugin](file:///workspaces/semio/compose/engine/vite.mcp-app.config.ts:63:0-75:1) replaces `MeshoptDecoder` module with `{supported:false}` stub during build, eliminating WASM binary from bundle (~20KB reduction) |\n| `@/workspaces/semio/compose/engine/engine.test.py:1261-1277` | Extended CSP tests to assert `wasm-unsafe-eval`, `script-src`, and `worker-src` directives |\n\n**All 174 engine tests pass.** MCP app bundle rebuilt with zero `WebAssembly.instantiate()` calls."
           }
         }
       },

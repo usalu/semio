@@ -2,7 +2,7 @@
   "title": "Disable Default Panel Opening",
   "emoji": "🎫",
   "status": "closed",
-  "description": "elements/ui/UI: Make sure no panel is opened by default, including semio/algorithms and semio/sketchpad details panels. Extend existing tests only and verify relevant checks pass.",
+  "description": "elements/ui/UI: Make sure no panel is opened by default, including compose/algorithms and compose/sketchpad details panels. Extend existing tests only and verify relevant checks pass.",
   "summary": "Updated shared UI and sketchpad defaults so side/detail panels start closed by default, including mobile panel state in elements UI and app/default/fallback panel visibility in sketchpad. Extended existing embedded tests to assert default closed panel visibility. Verified with focused sketchpad Playwright test, sketchpad production build, and runtime browser check against a local dev server. UI package test command currently reports no test files; UI lint is blocked by pre-existing Storybook renderer import rule violations in .storybook/stories.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1376"

@@ -2,9 +2,9 @@
     "codebase": {
         "bundles": [
             {
-                "id": "semio/js",
+                "id": "compose/js",
                 "folder": "js",
-                "uri": "file://c:/git/semio.tech/semio/js",
+                "uri": "file://c:/git/compose.tech/compose/js",
                 "contributors": [
                     "https://github.com/usalu"
                 ],
@@ -23,8 +23,8 @@
         ],
         "folders": [
             {
-                "path": "js/semio",
-                "uri": "file://c:/git/semio.tech/semio/js/semio",
+                "path": "js/compose",
+                "uri": "file://c:/git/compose.tech/compose/js/compose",
                 "metrics": {
                     "files": 5,
                     "lines": 5000,
@@ -34,9 +34,9 @@
         ],
         "files": [
             {
-                "id": "semio/js.ts",
-                "path": "js/semio/semio.ts",
-                "uri": "file://c:/git/semio.tech/semio/js/semio/semio.ts",
+                "id": "compose/js.ts",
+                "path": "js/compose/compose.ts",
+                "uri": "file://c:/git/compose.tech/compose/js/compose/compose.ts",
                 "metrics": {
                     "sections": 10,
                     "definitions": 100,
@@ -54,9 +54,9 @@
         ],
         "sections": [
             {
-                "id": "semio/js.ts#Kit",
-                "path": "js/semio/semio.ts#Kit",
-                "uri": "file://c:/git/semio.tech/semio/js/semio/semio.ts#Kit",
+                "id": "compose/js.ts#Kit",
+                "path": "js/compose/compose.ts#Kit",
+                "uri": "file://c:/git/compose.tech/compose/js/compose/compose.ts#Kit",
                 "metrics": {
                     "definitions": 10,
                     "lines": 500,
@@ -66,9 +66,9 @@
         ],
         "definitions": [
             {
-                "id": "semio/js.ts#KitDiff",
-                "path": "js/semio/semio.ts#KitDiff",
-                "uri": "file://c:/git/semio.tech/semio/js/semio/semio.ts#KitDiff",
+                "id": "compose/js.ts#KitDiff",
+                "path": "js/compose/compose.ts#KitDiff",
+                "uri": "file://c:/git/compose.tech/compose/js/compose/compose.ts#KitDiff",
                 "metrics": {
                     "definitions": 3,
                     "lines": 100,
@@ -79,12 +79,12 @@
         "contributors": [
             {
                 "id": "usalu",
-                "uri": "file://c:/git/semio.tech/semio/contributors/usalu",
+                "uri": "file://c:/git/compose.tech/compose/contributors/usalu",
                 "path": "contributors/usalu/contributor.json",
                 "name": "Ueli Saluz",
                 "icons": {
-                    "avatar": "file://c:/git/semio.tech/semio/contributors/usalu/avatar.png",
-                    "avatar-round-90x90": "file://c:/git/semio.tech/semio/contributors/usalu/avatar-round-90x90.png",
+                    "avatar": "file://c:/git/compose.tech/compose/contributors/usalu/avatar.png",
+                    "avatar-round-90x90": "file://c:/git/compose.tech/compose/contributors/usalu/avatar-round-90x90.png",
                     "github": "https://github.com/usalu.png"
                 },
                 "emails": [
@@ -120,7 +120,7 @@
                     ],
                     "bundles": [
                         {
-                            "id": "semio/js",
+                            "id": "compose/js",
                             "metrics": {
                                 "folders": {
                                     "added": 1,
@@ -141,7 +141,7 @@
                     ],
                     "folders": [
                         {
-                            "id": "semio/js",
+                            "id": "compose/js",
                             "metrics": {
                                 "files": {
                                     "added": 10,
@@ -157,7 +157,7 @@
                     ],
                     "files": [
                         {
-                            "id": "semio/js.ts",
+                            "id": "compose/js.ts",
                             "metrics": {
                                 "lines": {
                                     "added": 100,
@@ -168,7 +168,7 @@
                     ],
                     "sections": [
                         {
-                            "id": "semio/js.ts#Kit",
+                            "id": "compose/js.ts#Kit",
                             "metrics": {
                                 "lines": {
                                     "added": 100,
@@ -179,7 +179,7 @@
                     ],
                     "definitions": [
                         {
-                            "id": "semio/js.ts#Kit§KitDiff",
+                            "id": "compose/js.ts#Kit§KitDiff",
                             "metrics": {
                                 "lines": {
                                     "added": 100,
@@ -205,7 +205,7 @@
             {
                 "id": "2026/01/05/CONTRIBUTOR-DERIVED",
                 "path": "tickets/2026/01/05/CONTRIBUTOR-DERIVED.md",
-                "uri": "file://c:/git/semio.tech/semio/tickets/2026/01/05/CONTRIBUTOR-DERIVED.md",
+                "uri": "file://c:/git/compose.tech/compose/tickets/2026/01/05/CONTRIBUTOR-DERIVED.md",
                 "date": {
                     "created": "2026-01-05T14:05:02Z",
                     "finished": "2026-01-05T14:10:21Z"
@@ -220,7 +220,7 @@
                 "author": "usalu",
                 "bundles": [
                     {
-                        "id": "semio/js",
+                        "id": "compose/js",
                         "metrics": {
                             "folders": {
                                 "added": 1,
@@ -277,7 +277,7 @@
                 ],
                 "files": [
                     {
-                        "id": "semio/js.ts",
+                        "id": "compose/js.ts",
                         "metrics": {
                             "sections": {
                                 "added": 1,
@@ -298,7 +298,7 @@
                 ],
                 "sections": [
                     {
-                        "id": "semio/js.ts#Kit",
+                        "id": "compose/js.ts#Kit",
                         "metrics": {
                             "definitions": {
                                 "added": 1,
@@ -314,7 +314,7 @@
                 ],
                 "definitions": [
                     {
-                        "id": "semio/js.ts#KitDiff",
+                        "id": "compose/js.ts#KitDiff",
                         "metrics": {
                             "lines": {
                                 "added": 100,
@@ -330,7 +330,7 @@
                 "id": "code:header:missing-filepath",
                 "name": "Missing Filepath",
                 "scopes": [
-                    "semio/js/sketchpad/**/*.[ts|tsx]"
+                    "compose/js/sketchpad/**/*.[ts|tsx]"
                 ],
                 "breachs": [
                     {
@@ -344,19 +344,19 @@
         ],
         "breachs": [
             {
-                "id": "code:header:missing-filepath#|js|semio/js.ts#1",
+                "id": "code:header:missing-filepath#|js|compose/js.ts#1",
                 "folders": [
                     {
                         "id": "js",
                         "path": "js",
-                        "uri": "folder://c:/git/semio.tech/semio/js"
+                        "uri": "folder://c:/git/compose.tech/compose/js"
                     }
                 ],
                 "files": [
                     {
-                        "id": "semio/js.ts",
-                        "path": "js/semio/semio.ts",
-                        "uri": "file://c:/git/semio.tech/semio/js/semio/semio.ts",
+                        "id": "compose/js.ts",
+                        "path": "js/compose/compose.ts",
+                        "uri": "file://c:/git/compose.tech/compose/js/compose/compose.ts",
                         "range": {
                             "start": {
                                 "line": 100,
@@ -376,7 +376,7 @@
             }
         ],
         "tree": {
-            "semio": {
+            "compose": {
                 "kind": "repo",
                 "js": {
                     "kind": "folder",
@@ -384,15 +384,15 @@
                         "kind": "file",
                     }
                 }
-        "semio/js": {
+        "compose/js": {
                     "kind": "bundle",
-                    "semio/js.ts": {
+                    "compose/js.ts": {
                         "kind": "file",
-                        "semio/js.ts#Entities": {
+                        "compose/js.ts#Entities": {
                             "kind": "section",
-                            "semio/js.ts#Entities#Kit": {
+                            "compose/js.ts#Entities#Kit": {
                                 "kind": "section",
-                                "semio/js.ts#Entities#Kit§KitDiff": {
+                                "compose/js.ts#Entities#Kit§KitDiff": {
                                     "kind": "definition",
                                 }
                             }

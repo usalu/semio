@@ -1,6 +1,6 @@
 // #region 🧲Header
 
-// 2026 Ueli Saluz <ueli@semio-tech.de>
+// 2026 Ueli Saluz <ueli@compose-tech.de>
 
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details. You should have received a copy of the GNU Affero General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
@@ -100,8 +100,8 @@ const configuration: UserConfig = {
   },
   resolve: {
     alias: {
-      "@semio/js": path.resolve(__dirname, "../../../../semio/client/lib/js"),
-      "@semio/asset": path.resolve(__dirname, "../../../../semio/asset"),
+      "@compose/js": path.resolve(__dirname, "../../../../compose/client/lib/js"),
+      "@compose/asset": path.resolve(__dirname, "../../../../compose/asset"),
       "@ui/react": path.resolve(__dirname, "../../../../ui/react"),
       "@coda/desktop": path.resolve(__dirname, "."),
     },

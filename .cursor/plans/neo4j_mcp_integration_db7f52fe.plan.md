@@ -1,6 +1,6 @@
 ---
 name: neo4j mcp integration
-overview: Wire up the official Neo4j MCP server (`uvx mcp-neo4j-cypher`) once per technology (semio, elements, coda, reuse) into every MCP client config, and make the connection to the dev's native Neo4j Desktop 2 zero-touch on devcontainer, Windows, macOS, and Linux.
+overview: Wire up the official Neo4j MCP server (`uvx mcp-neo4j-cypher`) once per technology (compose, elements, coda, reuse) into every MCP client config, and make the connection to the dev's native Neo4j Desktop 2 zero-touch on devcontainer, Windows, macOS, and Linux.
 todos:
   - id: mcp_configs
     content: Add 4 neo4j-<tech> MCP entries to .mcp.json, .cursor/mcp.json, .windsurf/mcp.json, .kiro/settings/mcp.json
@@ -23,7 +23,7 @@ isProject: false
 ## Decisions (confirmed)
 
 - Run the official server via `uvx mcp-neo4j-cypher` (uv is already installed everywhere).
-- One MCP entry per technology: `neo4j-semio`, `neo4j-elements`, `neo4j-coda`, `neo4j-reuse`, each pinned to its own `NEO4J_DATABASE`.
+- One MCP entry per technology: `neo4j-compose`, `neo4j-elements`, `neo4j-coda`, `neo4j-reuse`, each pinned to its own `NEO4J_DATABASE`.
 - Devcontainer reaches host Neo4j Desktop 2 via `bolt://host.docker.internal:7687` (with `host-gateway` for Linux parity).
 
 ## Shared env contract
@@ -38,7 +38,7 @@ NEO4J_PASSWORD=password
 NEO4J_TELEMETRY=false
 ```
 
-Per-technology databases: `semio`, `elements`, `coda`, `reuse` (created by devs in Neo4j Desktop 2 — we document the bootstrap, not auto-create, since Desktop 2 owns DBMS lifecycle).
+Per-technology databases: `compose`, `elements`, `coda`, `reuse` (created by devs in Neo4j Desktop 2 — we document the bootstrap, not auto-create, since Desktop 2 owns DBMS lifecycle).
 
 ## Files to change
 
@@ -52,7 +52,7 @@ Apply the same block to all four — using `${env:VAR}` interpolation so the val
 - [.kiro/settings/mcp.json](.kiro/settings/mcp.json)
 
 ```json
-"neo4j-semio": {
+"neo4j-compose": {
   "type": "stdio",
   "command": "uvx",
   "args": ["mcp-neo4j-cypher"],
@@ -60,7 +60,7 @@ Apply the same block to all four — using `${env:VAR}` interpolation so the val
     "NEO4J_URI": "${env:NEO4J_URI}",
     "NEO4J_USERNAME": "${env:NEO4J_USERNAME}",
     "NEO4J_PASSWORD": "${env:NEO4J_PASSWORD}",
-    "NEO4J_DATABASE": "semio",
+    "NEO4J_DATABASE": "compose",
     "NEO4J_TELEMETRY": "false"
   }
 }
@@ -125,7 +125,7 @@ flowchart LR
   Agent[Agent in editor] -->|spawn stdio| MCP["uvx mcp-neo4j-cypher"]
   MCP -->|env NEO4J_URI/USER/PASS/DATABASE| Bolt[(bolt://...:7687)]
   Bolt --> Desktop[Neo4j Desktop 2 on host]
-  Desktop --> dbSemio[(semio)]
+  Desktop --> dbCompose[(compose)]
   Desktop --> dbElements[(elements)]
   Desktop --> dbCoda[(coda)]
   Desktop --> dbReuse[(reuse)]

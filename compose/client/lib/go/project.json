@@ -1,0 +1,22 @@
+{
+  "name": "@compose/go",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "compose/client/lib/go",
+        "command": "go build ./...",
+        "forwardAllArgs": true
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "compose/client/lib/go",
+        "command": "go test -v ./...",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

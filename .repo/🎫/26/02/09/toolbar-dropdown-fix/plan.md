@@ -16,4 +16,4 @@
 5.  **Verify**: Ensure changes match the requirements.
 
 ## Current State
-- Reading `js/semio/sketchpad/Sketchpad.tsx` to understand current implementation.
+- Reading `js/compose/sketchpad/Sketchpad.tsx` to understand current implementation.

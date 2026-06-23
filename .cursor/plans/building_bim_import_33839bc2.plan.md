@@ -24,7 +24,7 @@ isProject: false
 
 ## Context
 
-- New asset: [`hexagonal-cut-concrete-forest-left-bim.stp`](semio/fixture/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest-left-bim.stp). It contains 12 `MANIFOLD_SOLID_BREP` solids grouped by `PRESENTATION_LAYER_ASSIGNMENT` into 3 layers: `Slab` (1), `Beams` (8), `Column` (3).
+- New asset: [`hexagonal-cut-concrete-forest-left-bim.stp`](compose/fixture/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest-left-bim.stp). It contains 12 `MANIFOLD_SOLID_BREP` solids grouped by `PRESENTATION_LAYER_ASSIGNMENT` into 3 layers: `Slab` (1), `Beams` (8), `Column` (3).
 - [`aec.building/modelDefinition.json`](cad/asset/modelDefinition/aec.building/modelDefinition.json) currently declares `kinds: ["action","typology"]` but defines **no** typologies, so the Building pane is empty.
 - The current importer [`importStepBrepToModelSpace`](cad/js/kernel/brepjs/index.ts) ignores STEP layers and tags every solid `spatial.shape.kernel.solid`; [`modelFromImportedBrepSolid`](cad/js/kernel/brepjs/index.ts) hardcodes that typology.
 - Objects render/list in a pane only when their typology is owned by the pane's model definition (`listModelObjectsForModelDefinition` -> `listTypologiesForModelDefinition`).

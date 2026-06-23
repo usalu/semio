@@ -2426,7 +2426,7 @@ if (import.meta.vitest) {
 			).map((row) => row.name);
 			expect(catalogNodes).toEqual(expect.arrayContaining(["Capsule J", "Last Storey Tambour", "Cylindric Tambour"]));
 			expect(catalogNodes.some((name) => name === "J" || name === "p" || name === "/" || name === "Tambour Last Storey")).toBe(false);
-			expect(catalogNodes.some((name) => name.includes("semio."))).toBe(false);
+			expect(catalogNodes.some((name) => name.includes("compose."))).toBe(false);
 		});
 
 		it("buildPuzzle2dPlayKindsTree mirrors puzzle 3d catalog slices with 2d names", () => {

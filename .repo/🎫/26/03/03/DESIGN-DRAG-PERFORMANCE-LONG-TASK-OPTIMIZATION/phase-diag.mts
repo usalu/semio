@@ -10,8 +10,8 @@ page.on('console', (msg) => {
 await page.goto("http://127.0.0.1:5173/");
 await page.waitForLoadState("domcontentloaded");
 await page.waitForTimeout(2000);
-const zipPath = path.resolve(process.cwd(), "semio/assets/semio/metabolism.zip");
-const fileInput = page.locator('[id="semio.sketchpad.app.home.importKit"]');
+const zipPath = path.resolve(process.cwd(), "compose/assets/compose/metabolism.zip");
+const fileInput = page.locator('[id="compose.sketchpad.app.home.importKit"]');
 await fileInput.waitFor({ state: 'attached', timeout: 10000 });
 const [fileChooser] = await Promise.all([
   page.waitForEvent("filechooser", { timeout: 5000 }).catch(() => null),
@@ -52,7 +52,7 @@ for (let i = 0; i < 20; i++) {
 }
 await page.waitForTimeout(3000);
 // Close left panel
-const leftPanelToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.leftSidePanel"]');
+const leftPanelToggle = page.locator('[id="compose.sketchpad.navbar.panelToggle.leftSidePanel"]');
 if (await leftPanelToggle.isVisible().catch(() => false)) {
   const leftPanelOpen = await page.locator('[data-panel="leftSidePanel"]').isVisible().catch(() => false);
   if (leftPanelOpen) {

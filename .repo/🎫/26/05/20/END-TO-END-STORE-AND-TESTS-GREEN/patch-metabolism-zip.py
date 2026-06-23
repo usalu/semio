@@ -1,4 +1,4 @@
-"""Add kit.json to metabolism.zip from metabolism.kit.semio.json."""
+"""Add kit.json to metabolism.zip from metabolism.kit.compose.json."""
 import json
 import shutil
 import tempfile
@@ -6,8 +6,8 @@ import zipfile
 from pathlib import Path
 
 repo = Path(__file__).resolve().parents[6]
-fixtures = repo / "semio" / "assets" / "fixtures"
-kit_json_src = fixtures / "metabolism.kit.semio.json"
+fixtures = repo / "compose" / "assets" / "fixtures"
+kit_json_src = fixtures / "metabolism.kit.compose.json"
 zip_path = fixtures / "metabolism.zip"
 normalized = json.loads(kit_json_src.read_text(encoding="utf-8"))
 wip = normalized.get("wip", {}).get("initialKit", normalized)

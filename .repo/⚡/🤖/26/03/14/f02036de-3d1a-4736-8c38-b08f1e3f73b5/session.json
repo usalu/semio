@@ -1,6 +1,6 @@
 {
   "id": "f02036de-3d1a-4736-8c38-b08f1e3f73b5",
-  "uri": "semiorepo://s/f02036de-3d1a-4736-8c38-b08f1e3f73b5",
+  "uri": "composerepo://s/f02036de-3d1a-4736-8c38-b08f1e3f73b5",
   "checkpoint": "bc8244f5cdf1436e870187d2d72a267bd75b8746",
   "contributor": "🧑‍💻ueli",
   "client": "cursor-chat",

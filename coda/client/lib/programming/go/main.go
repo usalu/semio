@@ -16,7 +16,7 @@ import (
 )
 
 // #region 🗄️Translation
-// Translation input from semio-to-programming translator.
+// Translation input from compose-to-programming translator.
 
 type Translation struct {
 	TargetID string  `json:"target_id"`

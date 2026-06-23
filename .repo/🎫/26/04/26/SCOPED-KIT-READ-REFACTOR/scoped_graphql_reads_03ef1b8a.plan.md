@@ -1,18 +1,18 @@
 ---
 name: scoped graphql reads
-overview: Refactor the Semio Rust GraphQL/store surface so reads are always scoped and undo/redo exists only at draft and transaction scope. The work should attach to the existing open `Scoped Kit Read Refactor` ticket once execution is approved.
+overview: Refactor the Compose Rust GraphQL/store surface so reads are always scoped and undo/redo exists only at draft and transaction scope. The work should attach to the existing open `Scoped Kit Read Refactor` ticket once execution is approved.
 todos:
  - id: ticket
    content: Reopen the existing `Scoped Kit Read Refactor` ticket before implementation and close it after verification.
    status: completed
  - id: rust-graphql
-   content: Refactor `semio/rs/lib.rs` GraphQL query/mutation surface so all reads require `KitReadScopeInput` and live undo/redo disappears.
+   content: Refactor `compose/rs/lib.rs` GraphQL query/mutation surface so all reads require `KitReadScopeInput` and live undo/redo disappears.
    status: completed
  - id: schema
-   content: Regenerate or update `semio/graphql/schema.graphql` to match the Rust schema.
+   content: Regenerate or update `compose/graphql/schema.graphql` to match the Rust schema.
    status: completed
  - id: js-client
-   content: Update `semio/js/index.ts` client queries to always use scoped reads.
+   content: Update `compose/js/index.ts` client queries to always use scoped reads.
    status: completed
  - id: tests
    content: Extend existing Rust and affected JS tests to cover scoped reads and scoped-only undo/redo.
@@ -27,15 +27,15 @@ isProject: false
 
 ## Context
 
-- Primary implementation file: [semio/rs/lib.rs](semio/rs/lib.rs).
-- Generated/static schema file: [semio/graphql/schema.graphql](semio/graphql/schema.graphql).
-- Downstream clients to adjust: [semio/js/index.ts](semio/js/index.ts) and, if compile feedback requires it, [semio/react/index.tsx](semio/react/index.tsx).
+- Primary implementation file: [compose/rs/lib.rs](compose/rs/lib.rs).
+- Generated/static schema file: [compose/graphql/schema.graphql](compose/graphql/schema.graphql).
+- Downstream clients to adjust: [compose/js/index.ts](compose/js/index.ts) and, if compile feedback requires it, [compose/react/index.tsx](compose/react/index.tsx).
 
 Current mismatch:
 
 - `KitReadScope` and `ReadKitCommand` already exist and support scoped materialization:
 
-```6575:6671:semio/rs/lib.rs
+```6575:6671:compose/rs/lib.rs
 pub mod kit_read_scope {
     // ...
     pub enum KitReadScope {
@@ -54,7 +54,7 @@ pub mod kit_read_scope {
 
 - GraphQL still has an unscoped live read root and live undo/redo:
 
-```27322:27337:semio/rs/lib.rs
+```27322:27337:compose/rs/lib.rs
 impl RootQuery {
     async fn kit_store(&self, ctx: &Context<'_>) -> Result<KitStoreNode> {
         Ok(KitStoreNode(ctx.data::<KitGraphRef>()?.clone()))
@@ -88,29 +88,29 @@ impl RootQuery {
 - Preserve `UndoDraft`, `RedoDraft`, `UndoTransaction`, and `RedoTransaction` only.
 - If any “the kit” write remains needed, model it as a draft/transaction lifecycle operation rather than a live mutation shortcut.
 
-4. Align `semio/js` with the scoped GraphQL API.
+4. Align `compose/js` with the scoped GraphQL API.
 
 - Remove the compatibility branch in `gqlRunWithReadScope` that rewrites `kitReadScope` to `kitStore` for `theKit`.
 - Make all reads pass a `KitReadScopeInput`, including the main committed kit scope.
 - Update snapshot, materialization, VCS state, canUndo/canRedo, and read command mapping to use the unified scoped query.
 - Remove public wording that distinguishes live store reads from scoped reads.
 
-5. Regenerate or update [semio/graphql/schema.graphql](semio/graphql/schema.graphql).
+5. Regenerate or update [compose/graphql/schema.graphql](compose/graphql/schema.graphql).
 
 - Prefer the existing schema-build command if it is available and reliable.
 - If schema generation is not usable, update the checked-in schema by matching the Rust async-graphql output shape.
 
 6. Extend existing tests only.
 
-- Add Rust tests inside the existing `#[cfg(test)] mod tests` in [semio/rs/lib.rs](semio/rs/lib.rs).
+- Add Rust tests inside the existing `#[cfg(test)] mod tests` in [compose/rs/lib.rs](compose/rs/lib.rs).
 - Cover that GraphQL rejects/does not expose unscoped `kitStore` reads.
 - Cover that scoped reads work for `theKit`, draft, and open transaction scopes.
 - Cover that live undo/redo is absent from GraphQL, while draft and transaction undo/redo remain available.
-- Add or adjust existing JS tests in [semio/js/index.ts](semio/js/index.ts) if client query rewiring changes expectations.
+- Add or adjust existing JS tests in [compose/js/index.ts](compose/js/index.ts) if client query rewiring changes expectations.
 
 ## Verification
 
-- Run focused Rust checks for `semio/rs` (`cargo test` from `semio/rs`, and `cargo check` if compile feedback is faster).
-- Run relevant JS checks for `semio/js` after client query updates.
+- Run focused Rust checks for `compose/rs` (`cargo test` from `compose/rs`, and `cargo check` if compile feedback is faster).
+- Run relevant JS checks for `compose/js` after client query updates.
 - Run schema-related check/build if the GraphQL schema build command is present.
 - Use lints/diagnostics on touched files after edits.

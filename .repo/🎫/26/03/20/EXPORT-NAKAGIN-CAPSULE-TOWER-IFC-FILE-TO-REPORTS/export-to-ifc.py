@@ -12,15 +12,15 @@ import sys
 import os
 from pathlib import Path
 
-# Add semio.py to path
-semio_py_path = Path('/workspaces/semio/semio/py')
-sys.path.insert(0, str(semio_py_path))
+# Add compose.py to path
+compose_py_path = Path('/workspaces/semio/compose/py')
+sys.path.insert(0, str(compose_py_path))
 
 try:
-    from semio import export_design_model
+    from compose import export_design_model
 except ImportError as e:
-    print(f"❌ Failed to import export_design_model from semio.py: {e}")
-    print(f"❌ Tried to import from: {semio_py_path}")
+    print(f"❌ Failed to import export_design_model from compose.py: {e}")
+    print(f"❌ Tried to import from: {compose_py_path}")
     sys.exit(1)
 
 # region 🔖Main
@@ -29,7 +29,7 @@ except ImportError as e:
 def extract_nakagin_capsule_tower_design():
     """Extract Nakagin Capsule Tower design from Metabolism kit"""
     try:
-        kit_path = Path('/workspaces/semio/semio/assets/semio/kit_metabolism.json')
+        kit_path = Path('/workspaces/semio/compose/assets/compose/kit_metabolism.json')
         
         if not kit_path.exists():
             print(f"❌ Metabolism kit file not found: {kit_path}")
@@ -55,11 +55,11 @@ def extract_nakagin_capsule_tower_design():
         return None, None
 
 def export_ifc_model(kit, design, output_path):
-    """Export design to IFC format using semio.py export_design_model"""
+    """Export design to IFC format using compose.py export_design_model"""
     try:
         print(f"🔄 Exporting {design['name']} to IFC format...")
         
-        # Use the export_design_model function from semio.py
+        # Use the export_design_model function from compose.py
         ifc_bytes = export_design_model(
             kit=kit,
             design_id=design.get('guid'),
@@ -100,7 +100,7 @@ def main():
     print(f"🧩 Pieces: {len(design.get('pieces', []))}")
     
     # Define output path
-    output_dir = Path('/workspaces/semio/semio/assets/models')
+    output_dir = Path('/workspaces/semio/compose/assets/models')
     output_dir.mkdir(parents=True, exist_ok=True)
     output_path = output_dir / 'nakagin-capsule-tower.ifc'
     

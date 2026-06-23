@@ -2,12 +2,12 @@
   "title": "Field Only Kit Reads Cqrs Classes",
   "emoji": "📜",
   "status": "open",
-  "description": "Phases 0, 1 (semio/js entity classes), Phase 3 JS deletions: stateless Kit + GqlTransport + EventBus + Entity factories; GraphQL-only worker; regions per plan §7.1.1. Scope: semio/js/index.ts + kit-store.worker.ts only; ticket folder for artifacts.",
+  "description": "Phases 0, 1 (compose/js entity classes), Phase 3 JS deletions: stateless Kit + GqlTransport + EventBus + Entity factories; GraphQL-only worker; regions per plan §7.1.1. Scope: compose/js/index.ts + kit-store.worker.ts only; ticket folder for artifacts.",
   "goal": "🎯r2602",
   "plan": {
     "client": "cursor",
     "id": "09fc9816",
-    "source": "c:\\git\\semio\\.cursor\\plans\\field-only_kit_reads_refactor_09fc9816.plan.md"
+    "source": "c:\\git\\compose\\.cursor\\plans\\field-only_kit_reads_refactor_09fc9816.plan.md"
   },
   "sessions": [
     "⚪38a70657a55840ceb73bfee7b53877ae"

@@ -1,6 +1,6 @@
 ---
 name: Generalize Icon Union
-overview: Introduce one canonical, structured Icon discriminated union (url, shortcode, data image, emoji, typst, text, plus inline svg / catalog) shared across TS and Rust, with a bidirectional string codec for the WASM wire form, and refactor every canvas, the UI chrome, the icon editor, and the semio domain to resolve icons through it — keeping puzzle 2d behavior identical.
+overview: Introduce one canonical, structured Icon discriminated union (url, shortcode, data image, emoji, typst, text, plus inline svg / catalog) shared across TS and Rust, with a bidirectional string codec for the WASM wire form, and refactor every canvas, the UI chrome, the icon editor, and the compose domain to resolve icons through it — keeping puzzle 2d behavior identical.
 todos:
   - id: ticket
     content: Read repo://goals and open a repo ticket for the icon generalization, associated to the best goal
@@ -20,8 +20,8 @@ todos:
   - id: icon-editor
     content: Generalize IconSelector into a shared editor for all Icon kinds; remove puzzle-specific classifier/mode
     status: completed
-  - id: semio-domain
-    content: Adopt canonical icon-string grammar for semio domain icon fields and resolve via shared codec on render
+  - id: compose-domain
+    content: Adopt canonical icon-string grammar for compose domain icon fields and resolve via shared codec on render
     status: completed
   - id: wire-canvases
     content: Route dag/flow/gis/reasoning node icons through the shared resolver; accept Icon union for r3f 2D markers via rasterized textures
@@ -96,7 +96,7 @@ Canonical string grammar (superset of today's prefixes, so puzzle 2d is unaffect
 
 - Generalize `IconSelector` (currently in `[ui/react/index.tsx](ui/react/index.tsx)`) and remove the puzzle-specific `Puzzle2dIconSelectorMode`/`classifyPuzzle2dIconSelectorMode` in `[puzzle/2d/react/index.tsx](puzzle/2d/react/index.tsx)` in favor of the shared `Icon` kinds (tabs: url, shortcode, data, emoji, math/typst, text, vector). Playground inspector patches the structured `Icon`.
 
-### 7. Semio domain — `[semio/client/lib/rs/lib.rs](semio/client/lib/rs/lib.rs)`
+### 7. Compose domain — `[compose/client/lib/rs/lib.rs](compose/client/lib/rs/lib.rs)`
 
 - Keep `icon: Option<String>` columns but define them as the canonical icon-string grammar; add `infinite_cavas` dependency where needed and resolve via `decode_icon`/`board_resolve_icon_kind` when rendered on a canvas. No GraphQL schema change.
 

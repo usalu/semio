@@ -8,7 +8,7 @@
 - Both sections should use the same Toolbar component but be registered as separate sections with different specificity values to maintain left-to-right ordering.
 
 ## Analysis
-- **File**: `js/semio/sketchpad/Kit.tsx`
+- **File**: `js/compose/sketchpad/Kit.tsx`
 - **Current State**: 
     - `panelVisibility` includes `toolbar`.
     - `addSection` is likely used to register toolbar content.
@@ -29,7 +29,7 @@
         -   The prompt mentions "Selection section should show tool kind buttons with icons". I need to check `ToolKind` enum and available icons.
 
 ## Steps
-1.  **Analyze `Kit.tsx`**: Read the full content of `js/semio/sketchpad/Kit.tsx` to understand current toolbar implementation and filter state.
+1.  **Analyze `Kit.tsx`**: Read the full content of `js/compose/sketchpad/Kit.tsx` to understand current toolbar implementation and filter state.
 2.  **Refactor Filter State**: If filters are currently implied or default to "all active", introduce explicit state or change the default logic.
 3.  **Implement Split Toolbar**:
     -   Create `FilterToolbar` component (or inline).
@@ -38,7 +38,7 @@
 4.  **Verify**: Ensure correct rendering and behavior.
 
 ## Todo
-- [ ] Analyze `js/semio/sketchpad/Kit.tsx` for toolbar and filter logic.
+- [ ] Analyze `js/compose/sketchpad/Kit.tsx` for toolbar and filter logic.
 - [ ] Create/Update state for filters if needed (inactive by default).
 - [ ] Split toolbar registration into `filters` and `tools` sections.
 - [ ] Implement `tools` section with icons.

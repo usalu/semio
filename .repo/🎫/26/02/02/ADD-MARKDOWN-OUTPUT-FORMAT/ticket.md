@@ -24,10 +24,10 @@ created: 2026-02-02
 - Updated `Config` struct to include `Markdown` boolean field.
 - Bound `--md` flag to `Config.Markdown`.
 - Implemented `MarkdownRenderer` with `Header` and `Footer` logic.
-- Implemented `formatMarkdownResult` to convert `Result` objects into Markdown strings with `semiorepo://` URIs.
+- Implemented `formatMarkdownResult` to convert `Result` objects into Markdown strings with `composerepo://` URIs.
 - Integrated `MarkdownRenderer` into the `renderStream` function.
 - Verified functionality with `bundle list --md` and `ticket list --md`.
 
 ## Summary
 
-Implemented a new `--md` flag for the repo binary that outputs command results in Markdown format. The output uses `semiorepo://` URIs as required for MCP integration. This feature is available for list and tree commands.
+Implemented a new `--md` flag for the repo binary that outputs command results in Markdown format. The output uses `composerepo://` URIs as required for MCP integration. This feature is available for list and tree commands.

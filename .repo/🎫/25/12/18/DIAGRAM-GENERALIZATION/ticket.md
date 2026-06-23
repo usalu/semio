@@ -9,31 +9,31 @@ The sketchpad currently uses multiple diagram implementations across apps.
 
 # Plan
 
-- Define the generalized diagram contract (Semio-first).
+- Define the generalized diagram contract (Compose-first).
   - Diagram coords are unit-based and independent from pixels.
   - 1 diagram unit equals the diameter of circular nodes.
-  - All interaction callbacks export semio coordinates (u/v) and semio identifiers.
+  - All interaction callbacks export compose coordinates (u/v) and compose identifiers.
   - Nodes support circle+icon and square+label.
   - Handles are edge dots positioned by t in [0..1) where t=0/1 is 12 o'clock and increases clockwise.
-- Implement the generalized diagram renderer in `js/semio/sketchpad/elements.tsx`.
+- Implement the generalized diagram renderer in `js/compose/sketchpad/elements.tsx`.
   - Keep `@xyflow/react` imports in this file only.
   - Add unit conversion helpers (diagram units <-> internal flow coords).
   - Add an imperative API ref (screen->diagram position, get nodes, fit view) without exposing `ReactFlowInstance`.
   - Provide overlay rendering support for diagram-attached UI (viewport overlay/portal).
 - Remove all `@xyflow/react` imports outside `elements.tsx`.
-  - `Design.tsx`: replace direct reactflow use with the generalized diagram API and semio callbacks.
+  - `Design.tsx`: replace direct reactflow use with the generalized diagram API and compose callbacks.
   - `Kit.tsx`: replace `<ReactFlow>` usage with `<Diagram>` and convert node+edge types to generalized node spec.
   - `Quality.tsx`: replace `ReactFlowInstance` usage with the generalized diagram API ref; remove remaining reactflow types.
   - `Sketchpad.tsx`: remove `ReactFlowProvider` import and rely on `elements.tsx` exports.
 - Migrate each app.
   - `Design.tsx` migration
-    - Replace node drag updates with semio `onNodeDrag` events in u/v.
+    - Replace node drag updates with compose `onNodeDrag` events in u/v.
     - Replace handle definitions with `t`-based handles (connector `t` mapping).
     - Replace reactflow portals with diagram overlay support from `elements.tsx`.
     - Preserve helper lines, clustering overlays, and presence cursor rendering.
   - `Kit.tsx` migration
     - Keep d3-force simulation but run in diagram units.
-    - Preserve drag pinning behavior using semio `onNodeDragStart/onNodeDrag/onNodeDragEnd` callbacks.
+    - Preserve drag pinning behavior using compose `onNodeDragStart/onNodeDrag/onNodeDragEnd` callbacks.
     - Move floating-edge boundary intersection math to `elements.tsx`.
   - `Quality.tsx` migration
     - Update drag/drop placement to use `screenToDiagramPosition` and unit-based hit testing.
@@ -46,8 +46,8 @@ The sketchpad currently uses multiple diagram implementations across apps.
     - SRS UI/UX: diagram coordinate system + interaction requirements.
     - Codebase: sketchpad diagram architecture and file boundaries (`elements.tsx` sole reactflow importer).
 - Acceptance criteria.
-  - No file except `js/semio/sketchpad/elements.tsx` imports `@xyflow/react`.
-  - All diagram callbacks emit semio coords (u/v) and semio identifiers.
+  - No file except `js/compose/sketchpad/elements.tsx` imports `@xyflow/react`.
+  - All diagram callbacks emit compose coords (u/v) and compose identifiers.
   - Circle and square nodes render correctly with `t`-based handles.
   - Design/Kit/Quality diagrams retain existing interaction features (drag, select, hover, connect, overlays).
 
@@ -74,14 +74,14 @@ The sketchpad currently uses multiple diagram implementations across apps.
     - DOM coupling to reactflow class names to remove.
       - `querySelector(.react-flow__nodes/.react-flow__edges/.react-flow__viewport)` for pointerEvents and transform parsing.
     - Coordinate conversion currently embedded in app.
-      - `ICON_WIDTH` maps between semio u/v and reactflow x/y.
+      - `ICON_WIDTH` maps between compose u/v and reactflow x/y.
       - Drop placement derives u/v by parsing viewport transform.
     - App-owned logic that stays in `Design.tsx`.
       - Selection logic (`onNodeClick`, `onEdgeClick`, `onPaneClick`).
       - Navigation (`onNodeDoubleClick` routes to type/design).
       - Hover throttling and delayed clear.
       - Snap + helper line computation (but should move to diagram units).
-      - semio diff/transaction updates (`addPiece`, `updatePieces`, `addConnection`, `updateConnections`, etc).
+      - compose diff/transaction updates (`addPiece`, `updatePieces`, `addConnection`, `updateConnections`, etc).
   - `Kit.tsx`
     - ReactFlow imports to remove.
       - `ConnectionLineComponentProps`, `Edge`, `EdgeProps`, `Node`, `NodeProps`.

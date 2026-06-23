@@ -23,7 +23,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 5300,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 5160
           },
           "tool_use_id": "toolu_bdrk_018VCd8ReEXtCCTF6hMQPfcp__vscode-1774149956814",
@@ -49,7 +49,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 5300,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 5160
           },
           "tool_response": "",
@@ -76,7 +76,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 5600,
-            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "filePath": "/workspaces/semio/compose/js/index.ts",
             "startLine": 4200
           },
           "tool_response": "",
@@ -185,7 +185,7 @@
             "maxResults": 5,
             "isRegexp": false,
             "query": "Layer",
-            "includePattern": "**/semio/assets/semio/*.json"
+            "includePattern": "**/compose/assets/compose/*.json"
           },
           "tool_response": "",
           "tool_use_id": "toolu_bdrk_01BehirZRNmkNRLWfEwvT7jm__vscode-1774149956817",

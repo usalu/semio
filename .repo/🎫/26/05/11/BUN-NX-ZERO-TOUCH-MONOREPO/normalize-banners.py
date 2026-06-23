@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""🧩 Idempotent banner + scope reference tweaks for semio/graphql/target.schema.graphql."""
+"""🧩 Idempotent banner + scope reference tweaks for compose/graphql/target.schema.graphql."""
 
 from __future__ import annotations
 

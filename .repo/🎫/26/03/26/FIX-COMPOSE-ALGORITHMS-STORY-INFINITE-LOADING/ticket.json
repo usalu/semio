@@ -1,0 +1,14 @@
+{
+  "title": "Fix Compose Algorithms Story Infinite Loading",
+  "emoji": "🔧",
+  "status": "closed",
+  "description": "The drag story (and possibly other stories) in compose/algorithms Storybook infinitely loads and only killing the tab resolves it. Not even refreshing works. Need to find root cause and fix.",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1112"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪832bc13d484e4d998d31904be16a4f84"
+  ]
+}

@@ -1,4 +1,4 @@
-"""One-off transform for semio/graphql/target.schema.graphql Operation Input plan."""
+"""One-off transform for compose/graphql/target.schema.graphql Operation Input plan."""
 from __future__ import annotations
 
 import re
@@ -104,7 +104,7 @@ def build_input_type(type_name: str, inner: list[str]) -> list[str]:
 
 
 def main() -> None:
-    path = Path("semio/graphql/target.schema.graphql")
+    path = Path("compose/graphql/target.schema.graphql")
     lines = path.read_text(encoding="utf-8").splitlines()
     out: list[str] = []
     i = 0

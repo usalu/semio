@@ -1150,7 +1150,7 @@ const UIToolbar: React.FC<{
                   pressed={activeCategory === category}
                   onPressedChange={() => setActiveCategory((previousValue) => (previousValue === category ? null : category))}
                   icon={resolveAppToolCategoryIcon(category)}
-                  text={resolveTranslationLabel(t(`semio.sketchpad.toolbar.parent.${category}`))}
+                  text={resolveTranslationLabel(t(`compose.sketchpad.toolbar.parent.${category}`))}
                 />
               ))}
             </ToolbarZone>

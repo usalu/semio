@@ -8,8 +8,8 @@ goal: SKETCHPAD-IMPROVEMENTS
 
 Fixed Design navbar disappearance by restoring missing SettingsIcon and ChatIcon imports in Design.tsx and validating navbar utility toggles with Playwright.
 ## Changes
-- Updated `semio/js/sketchpad/Design.tsx` asset imports to include `SettingsIcon` and `ChatIcon`
-- Kept existing Design side-panel tab registration intact (`semio.sketchpad.app.design.settings` and `semio.sketchpad.app.design.chat`)
+- Updated `compose/js/sketchpad/Design.tsx` asset imports to include `SettingsIcon` and `ChatIcon`
+- Kept existing Design side-panel tab registration intact (`compose.sketchpad.app.design.settings` and `compose.sketchpad.app.design.chat`)
 - Revalidated Design navbar rendering and utility toggles after import fix
 
 ## Log

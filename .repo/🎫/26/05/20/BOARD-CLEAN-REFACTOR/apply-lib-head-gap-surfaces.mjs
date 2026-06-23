@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 
-const headPath = "c:/git/semio/.repo/🎫/26/05/19/GRAPH-QL-MUTATION-RESPONSE-TYPES/lib-head.rs";
-const libPath = "c:/git/semio/semio/client/lib/rs/lib.rs";
+const headPath = "c:/git/compose/.repo/🎫/26/05/19/GRAPH-QL-MUTATION-RESPONSE-TYPES/lib-head.rs";
+const libPath = "c:/git/compose/compose/client/lib/rs/lib.rs";
 
 function sliceGapRegion(src) {
   const modStart = src.indexOf("pub mod schema_gap_surfaces");

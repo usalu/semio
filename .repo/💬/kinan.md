@@ -49,9 +49,9 @@ add every design that has the same port, or a compatible port, for all selected 
 
 show in target a single tree for bot htypes and designs as well as the icons/shortcut e.g (first storey, L, G) of the compatable ports and designs together. up: shortcuts and down: tree of both types and designs.
 
-Add `findReplaceableTypesAndDesignsForPiecesInDesign` test case with selection `nakagin-capsule-tower.copy.design.selection.semio.json`
+Add `findReplaceableTypesAndDesignsForPiecesInDesign` test case with selection `nakagin-capsule-tower.copy.design.selection.compose.json`
 
-Add `findReplaceableTypesAndDesignsForPiecesInDesign` story to semio/algorithms with source (design with selectable pieces), , and output (target is compatable type tree with parents muted and children heighlighted )
+Add `findReplaceableTypesAndDesignsForPiecesInDesign` story to compose/algorithms with source (design with selectable pieces), , and output (target is compatable type tree with parents muted and children heighlighted )
 
 ---
 
@@ -65,10 +65,10 @@ Implement an adaptive shared property-row layout in the sketchpad Details panel 
 
 ---
 
-Refine the shared semio/sketchpad tree spacing so that whenever a sibling transition goes from a leaf/property row to an expandable/group row at the same depth, insert one empty-row-sized gap before the group row. Apply this generically based on row kind and sibling transition, not by field names. Keep compact spacing within consecutive property rows, preserve hierarchy, tree lines, property row/value-column layout, and actions, and do not hardcode specific sections.
+Refine the shared compose/sketchpad tree spacing so that whenever a sibling transition goes from a leaf/property row to an expandable/group row at the same depth, insert one empty-row-sized gap before the group row. Apply this generically based on row kind and sibling transition, not by field names. Keep compact spacing within consecutive property rows, preserve hierarchy, tree lines, property row/value-column layout, and actions, and do not hardcode specific sections.
 
-default should illustrate compatable connectors in the entire design in semio colors
-when selected a single connector all other connectors grey out and it gets highlighted and show the compatible and incompatible connectors in the design in semio red/green
+default should illustrate compatable connectors in the entire design in compose colors
+when selected a single connector all other connectors grey out and it gets highlighted and show the compatible and incompatible connectors in the design in compose red/green
 
 ---
 
@@ -171,7 +171,7 @@ Fix the overflow-field refactor so it does not change typography or row metrics.
 
 ---
 
-Refactor the single-line overflow feature in the semio/sketchpad Details panel. The current implementation is incorrectly
+Refactor the single-line overflow feature in the compose/sketchpad Details panel. The current implementation is incorrectly
 
 Rules:
 
@@ -204,9 +204,9 @@ This should be a strict reimplementation of the overflow behavior, not a styling
 
 ---
 
-## Fix the `Ring` row in the semio/sketchpad Details panel so it follows the same shared tree/header structure as the rest of the right-side property inspector. `Ring` should render as a normal collection/group `TreeItem` header: correct name, correct label-start alignment, correct action placement, correct gutter/chevron spacing, and no drift into the value-column area. Keep PanelSection, TreeSection, TreeItem, TreeRow, TreeContent, SortableTreeItems, IndentationLines, hierarchy, and property row/value-column layout unchanged. Apply the fix generically at the shared Details panel tree layout level so group rows like `Ring` do not become one-off misaligned headers.
+## Fix the `Ring` row in the compose/sketchpad Details panel so it follows the same shared tree/header structure as the rest of the right-side property inspector. `Ring` should render as a normal collection/group `TreeItem` header: correct name, correct label-start alignment, correct action placement, correct gutter/chevron spacing, and no drift into the value-column area. Keep PanelSection, TreeSection, TreeItem, TreeRow, TreeContent, SortableTreeItems, IndentationLines, hierarchy, and property row/value-column layout unchanged. Apply the fix generically at the shared Details panel tree layout level so group rows like `Ring` do not become one-off misaligned headers.
 
-Fix the single-line overflow state in the semio/sketchpad Details panel. The current implementation is overlapping adjacent rows and the explicit `MORE` label is too heavy. Rework this at the field-widget level only.
+Fix the single-line overflow state in the compose/sketchpad Details panel. The current implementation is overlapping adjacent rows and the explicit `MORE` label is too heavy. Rework this at the field-widget level only.
 
 When a true single-line value-side text field actually overflows, the field must expand into a clean real 2-row internal layout and the containing property row must grow with it so the next row is pushed down normally with no overlap or clipping. Keep the first row as the truncated text, but replace the current textual `MORE` treatment with a non-verbal overflow affordance that is subtle and clear — for example a centered second-row overflow indicator such as a small downward chevron pair
 
@@ -220,7 +220,7 @@ Do not affect TreeSection, TreeItem, TreeRow, headers, actions, hierarchy, tree 
 
 ---
 
-Fix the single-line field overflow feature in the semio/sketchpad Details panel. The current implementation is triggering overflow on fields that actually fit, clipping text at bad breakpoints, using an unclear ellipsis treatment, and overlapping the next row instead of expanding the row cleanly. Rework this narrowly at the field-widget level.
+Fix the single-line field overflow feature in the compose/sketchpad Details panel. The current implementation is triggering overflow on fields that actually fit, clipping text at bad breakpoints, using an unclear ellipsis treatment, and overlapping the next row instead of expanding the row cleanly. Rework this narrowly at the field-widget level.
 
 Requirements:
 
@@ -243,21 +243,21 @@ Constraints:
 
 ## In the Workbench tree only, add one extra empty-row-sized vertical gap after abstract type rows before the next sibling/child block begins. Apply this as a structural spacing rule in the shared Workbench tree rendering, not as a hardcoded type-name fix. Keep hierarchy, tree lines, expand/collapse behavior, actions, and all other spacing unchanged.
 
-Refine the global semio/sketchpad Details panel empty-state styling for editable value-side controls in the right-side property inspector. Any editable field/control on the value side that currently has no value should render in a muted/grayed state while empty (semio styling), but it must remain fully editable. As soon as the user focuses, types, or the control has a real value, it should return to the normal active styling qautomatically.
+Refine the global compose/sketchpad Details panel empty-state styling for editable value-side controls in the right-side property inspector. Any editable field/control on the value side that currently has no value should render in a muted/grayed state while empty (compose styling), but it must remain fully editable. As soon as the user focuses, types, or the control has a real value, it should return to the normal active styling qautomatically.
 
 Apply this generically across editable Input, Textarea, Combobox, slider, Stepper value display, and similar editable value-side widgets used in TreeRow / TreeItem property rows. Keep PanelSection, TreeSection, TreeItem, TreeRow, TreeContent, SortableTreeItems, IndentationLines, hierarchy, spacing, and property row/value-column layout unchanged. Do not treat empty editable fields as disabled or readOnly; this is only an empty-value visual state that clears immediately on input/value presence. Do not hardcode section names or field names.
 
 ---
 
-Refactor the global semio/sketchpad Details panel tree ordering so structural depth controls render priority. As a general rule, within any TreeSection or parent subtree, all first-level direct child rows / group headers must render before any second-level or deeper nested rows. Expanded nested content must not interrupt remaining first-level sibling rows. In practice, render the first-level skeleton of the section first, then render the bodies of expanded nested TreeItems / SortableTreeItems after all direct-child siblings have been placed. Apply this generically across TreeSection, TreeItem, TreeRow, TreeContent, and collection/group nodes in the right-side property inspector. Keep PanelSection architecture, hierarchy, expand/collapse behavior, actions, spacing, and tree lines unchanged, and do not hardcode section names or field names.
+Refactor the global compose/sketchpad Details panel tree ordering so structural depth controls render priority. As a general rule, within any TreeSection or parent subtree, all first-level direct child rows / group headers must render before any second-level or deeper nested rows. Expanded nested content must not interrupt remaining first-level sibling rows. In practice, render the first-level skeleton of the section first, then render the bodies of expanded nested TreeItems / SortableTreeItems after all direct-child siblings have been placed. Apply this generically across TreeSection, TreeItem, TreeRow, TreeContent, and collection/group nodes in the right-side property inspector. Keep PanelSection architecture, hierarchy, expand/collapse behavior, actions, spacing, and tree lines unchanged, and do not hardcode section names or field names.
 
 ---
 
-Refine the global semio/sketchpad Details panel overflow behavior for single-line text fields without changing the current layout system. For any value-side field that currently renders as a one-row text control and whose text exceeds the available width, do not keep it as a normal single truncated row with `...` at the end. Instead, switch that field into a compact two-row overflow state: keep the truncated text on the first row, add a second empty row inside the same field box, and render the ellipsis vertically stacked / centered in that second row so it is clearly readable as overflow. Apply this generically to all single-line text-style fields in the right-side property inspector (editable, readOnly, disabled, and similar text-field variants), while preserving the existing PanelSection, TreeSection, TreeItem, TreeRow, TreeContent, property row/value-column layout, widths, alignment, hierarchy, and spacing. Do not affect real multiline Textarea controls or non-text widgets. This should be a narrow global overflow affordance improvement, not a redesign
+Refine the global compose/sketchpad Details panel overflow behavior for single-line text fields without changing the current layout system. For any value-side field that currently renders as a one-row text control and whose text exceeds the available width, do not keep it as a normal single truncated row with `...` at the end. Instead, switch that field into a compact two-row overflow state: keep the truncated text on the first row, add a second empty row inside the same field box, and render the ellipsis vertically stacked / centered in that second row so it is clearly readable as overflow. Apply this generically to all single-line text-style fields in the right-side property inspector (editable, readOnly, disabled, and similar text-field variants), while preserving the existing PanelSection, TreeSection, TreeItem, TreeRow, TreeContent, property row/value-column layout, widths, alignment, hierarchy, and spacing. Do not affect real multiline Textarea controls or non-text widgets. This should be a narrow global overflow affordance improvement, not a redesign
 
 ---
 
-semio:
+compose:
 Define a copyPiecesAndConnectionsInDesign(design:Design, pieces:Guid[], connections:Guid[], anchor: ["byMiddle", "byCentroid", "byBottomLeftCorner", "byBottomRightCorner", "byTopLeftCorner", "byTopRightCorner"]):Design function that:
 
 copy should copy all internal connected (=non-fixed) pieces,
@@ -285,7 +285,7 @@ analyze all different ui elements in the toolbar. i want all of them to be visua
 
 ## sketchpad type app: gumball
 
-Fix the semio/sketchpad Details panel layout regression globally, including the Type app. The current implementation works perfectly in design app but in type app it is breaking the shared Details panel structure in nested sections such as connectors/point/direction, causing rows, controls, and tree guides to drift, overlap, or stop following the standard property row/value-column layout. the Details panel implementation must be consistent across all apps and all section types.
+Fix the compose/sketchpad Details panel layout regression globally, including the Type app. The current implementation works perfectly in design app but in type app it is breaking the shared Details panel structure in nested sections such as connectors/point/direction, causing rows, controls, and tree guides to drift, overlap, or stop following the standard property row/value-column layout. the Details panel implementation must be consistent across all apps and all section types.
 
 Refactor the shared Details panel tree/layout primitives so TreeSection, TreeItem, TreeRow, TreeContent, SortableTreeItems, and IndentationLines all resolve through the same global structure: tree header rows stay tree headers, property rows stay property rows, nested groups keep hierarchy, and all value-side controls stay within the same shared value-column bounds. Preserve PanelSection architecture, hierarchy, spacing rhythm, actions, and tree lines. Do not hardcode section names or field names. Apply the fix generically so nested connector content in the Type app follows the same stable Details panel structure as every other panel subtree. importaant is dont break the deign app structure only fix the type app structure to follow the same structure as design app by applaying global layout rules and not one off fixes.
 
@@ -293,7 +293,7 @@ Refactor the shared Details panel tree/layout primitives so TreeSection, TreeIte
 
 Extend the tree-path hover highlight so it also includes the terminal branch segment of the hovered lowest-level row. Right now the ancestor path highlights, but the final local connector for the hovered TreeRow / leaf-level row is missing. When a row is hovered, highlight the complete path: the vertical ancestor chain, the final vertical segment at the hovered depth, and the small horizontal branch/elbow segment that connects into the hovered row label. Keep the existing TreeContext, TreeSection, TreeItem, TreeRow, TreeContent, and IndentationLines behavior unchanged; this is only a completion fix for the active path rendering. Apply it generically to all leaf and non-leaf rows without hardcoding section names or field names.
 
-Implement a generic tree-path hover highlight for the semio/sketchpad tree system. When any TreeSection, TreeItem, or TreeRow is hovered, highlight the full ancestor path in the tree gutter from that row up to the highest visible parent/root. Use the existing tree infrastructure — TreeContext, TreeContent, IndentationLines, and current guide rendering — without changing hierarchy, spacing, or layout behavior.
+Implement a generic tree-path hover highlight for the compose/sketchpad tree system. When any TreeSection, TreeItem, or TreeRow is hovered, highlight the full ancestor path in the tree gutter from that row up to the highest visible parent/root. Use the existing tree infrastructure — TreeContext, TreeContent, IndentationLines, and current guide rendering — without changing hierarchy, spacing, or layout behavior.
 
 Behavior:
 
@@ -323,7 +323,7 @@ currently > toggles buttons are able to be activated at the same time, and they 
 ////////////////////////////////////////////////////////////////////////////////
 move chat and setting from the right panel as tabs and place them as seperate buttons in the navbar following the exact same ui icon as right and left panel toggels. place them to the right of right and left panel toggles. they should open the setting and the chat exactly in the same panel as the right panel but should be only accesable through the navbar. one of the three togggles could be enabled at the same time (chat,setting,or right toggle panel) all render at the exact same place and size on the screen when active. remove them as tabs from the right panel toggle so that they are only accesable from navbar
 
-Refactor the semio/sketchpad Details panel tree spacing and line layout in index2.tsx using the Ant Design Tree `showLine` + `switcherIcon` example as the visual reference for gutter rhythm, label-start spacing, and connector-line behavior — but keep my existing tree system and UI primitives.
+Refactor the compose/sketchpad Details panel tree spacing and line layout in index2.tsx using the Ant Design Tree `showLine` + `switcherIcon` example as the visual reference for gutter rhythm, label-start spacing, and connector-line behavior — but keep my existing tree system and UI primitives.
 
 Do not replace anything with Ant components. Reuse the current TreeContext, TreeSection, TreeItem, TreeContent, IndentationLines, SortableTreeItems, PanelSection architecture, and existing tree lines. This is a spacing/layout adaptation only.
 
@@ -371,7 +371,7 @@ Keep the current PanelSection, TreeSection, TreeItem, TreeRow, TreeContent, Sort
 
 ---
 
-Fix the semio/sketchpad Details panel tree rendering regression . remove the duplicate/background tree lines that still show the old broken/gapped path and keep only one clean continuous set of tree guides. `IndentationLines` and all connector rendering should produce a single continuous vertical guide system with no overlapping secondary lines, no broken background line remnants, and no double-rendered gutter strokes.
+Fix the compose/sketchpad Details panel tree rendering regression . remove the duplicate/background tree lines that still show the old broken/gapped path and keep only one clean continuous set of tree guides. `IndentationLines` and all connector rendering should produce a single continuous vertical guide system with no overlapping secondary lines, no broken background line remnants, and no double-rendered gutter strokes.
 
 Also remove the small rectangular element currently overlapping the chevron in nested `TreeItem` / `SortableTreeItems` headers. Eliminate that box visually and structurally from the shared tree/header layout while preserving expand/collapse, drag-reorder behavior, hit targets, alignment, and spacing. If it is tied to a sortable drag handle or wrapper, refactor that handle so it no longer renders as a separate rectangle in the tree gutter and instead integrates cleanly with the existing header row.
 
@@ -387,9 +387,9 @@ Keep PanelSection, TreeSection, TreeItem, TreeRow, TreeContent, SortableTreeItem
 
 ---
 
-sketchpad workbench fix the name of add piece to show as add piece when hover currenly semio.sketchpad...types..addpiece
+sketchpad workbench fix the name of add piece to show as add piece when hover currenly compose.sketchpad...types..addpiece
 
-Refactor the semio/sketchpad Details panel so the right edge of every value-side UI widget ends on the same exact x-coordinate, regardless of widget type or nesting level. In the right-side property inspector, all Input, Textarea, Combobox, Stepper, Slider, Toggle, Button, and tree add/remove action controls must share one common vertical end line. For composite controls, align the outermost rendered control boundary: the right border of Input/Textarea/Combobox, the right edge of the plus button in Stepper, the right edge of the value/action area for Slider, the right edge of Toggle/Button, and the right edge of TreeSection/TreeItem action buttons. Keep PanelSection, TreeSection, TreeItem, TreeRow, TreeContent, SortableTreeItems, IndentationLines, the existing hierarchy, and the property row/value-column layout unchanged. Apply this generically by shared layout rules, not by hardcoded section names or one-off fixes, so every control in the Details panel terminates on one shared vertical line.
+Refactor the compose/sketchpad Details panel so the right edge of every value-side UI widget ends on the same exact x-coordinate, regardless of widget type or nesting level. In the right-side property inspector, all Input, Textarea, Combobox, Stepper, Slider, Toggle, Button, and tree add/remove action controls must share one common vertical end line. For composite controls, align the outermost rendered control boundary: the right border of Input/Textarea/Combobox, the right edge of the plus button in Stepper, the right edge of the value/action area for Slider, the right edge of Toggle/Button, and the right edge of TreeSection/TreeItem action buttons. Keep PanelSection, TreeSection, TreeItem, TreeRow, TreeContent, SortableTreeItems, IndentationLines, the existing hierarchy, and the property row/value-column layout unchanged. Apply this generically by shared layout rules, not by hardcoded section names or one-off fixes, so every control in the Details panel terminates on one shared vertical line.
 
 sketchpad kit app tags should be never visible in the ui. remove from the diagram and table views and make sure they are not rendered anywhere in the app. also make sure that they are not selectable or interactable in any way, and that they do not cause any visual glitches or layout issues when present in the data. if they are used for internal logic or data management, ensure that they are properly filtered out before rendering and that their presence does not affect the user experience in any negative way. overall, ensure that the kit app maintains a clean and professional appearance without any unintended tag elements visible to the user. remove the tag from the toolbar filter as well.
 
@@ -401,7 +401,7 @@ Make node sizing noticeably smaller, Do not scale the text; instead, size each c
 
 //////////////////////////////////////////////////
 
-Refine the semio/sketchpad Details panel spacing in the right-side property inspector without changing the existing PanelSection architecture, section registration logic, interaction model, or tree-based inspector layout.
+Refine the compose/sketchpad Details panel spacing in the right-side property inspector without changing the existing PanelSection architecture, section registration logic, interaction model, or tree-based inspector layout.
 
 Keep the current TreeSection, TreeItem, TreeRow, SortableTreeItems, and property row/value-column layout. Improve readability by introducing structure-driven spacing rules in the shared tree primitives: use minimal spacing between rows that belong to the same logical property group, use a clearly larger gap between sibling nested groups, and use the strongest separation plus a divider between top-level property sections. Apply this generically by hierarchy and structural role, not by section name or field name.
 
@@ -447,7 +447,7 @@ Use the the drag function for dragging nodes.
 
 ---
 
-extend semio with anotehr function
+extend compose with anotehr function
 `movePieces`
 design
 offset
@@ -468,7 +468,7 @@ add offset to connection
 Conns:
 b2 -- t_fx_b2_co
 
-ensure consistency with semio.ts
+ensure consistency with compose.ts
 
 ---
 
@@ -563,8 +563,8 @@ Fix and validate Sketchpad Design Workbench duplicate behavior.
 
 Context:
 
-- Scope only `semio/js/sketchpad/Design.tsx` and existing tests in `semio/js/sketchpad.test.ts`.
-- In Workbench Types, duplicate action id is `semio.sketchpad.common.duplicateType`.
+- Scope only `compose/js/sketchpad/Design.tsx` and existing tests in `compose/js/sketchpad.test.ts`.
+- In Workbench Types, duplicate action id is `compose.sketchpad.common.duplicateType`.
 - Do not create new test files.
 - Do not switch to Type app after duplication.
 - Keep Workbench action renamed to `Duplicate Type` and keep it visually distinct from add-piece (different icon).
@@ -579,7 +579,7 @@ Task:
 Test requirements (existing `sketchpad.test.ts` only):
 
 1. Capture current Design URL before duplicate click.
-2. Click `semio.sketchpad.common.duplicateType` on a valid parent type row.
+2. Click `compose.sketchpad.common.duplicateType` on a valid parent type row.
 3. Assert child count for that parent increases by exactly `+1`.
 4. Assert exactly one new child type guid appears.
 5. Assert URL equals pre-click URL and does not contain `/types/`.
@@ -600,10 +600,10 @@ Validate that Workbench type piece creation is fully implemented and working in 
 
 Context:
 
-- Repo: semio monorepo
+- Repo: compose monorepo
 - Relevant files:
-  - semio/js/sketchpad/Design.tsx
-  - semio/js/sketchpad.test.ts
+  - compose/js/sketchpad/Design.tsx
+  - compose/js/sketchpad.test.ts
 - Existing expected behavior:
   - A piece can be created from Workbench Types by drag-and-drop.
   - A piece can also be created by clicking the `+` action on each type row.
@@ -624,7 +624,7 @@ Required workflow:
    - Find `TypeTreeItem` actions and creation handlers.
    - Verify `+` action calls add-piece flow (not only create-child flow).
    - Verify drag-drop flow still adds piece via drop handling.
-2. Inspect `semio/js/sketchpad.test.ts`:
+2. Inspect `compose/js/sketchpad.test.ts`:
    - Locate existing Design app left panel/workbench tests.
    - Add/adjust tests in-place to cover both creation paths in one coherent unit flow.
 3. Implement missing behavior if needed:
@@ -661,7 +661,7 @@ Acceptance criteria:
 Deliverables:
 
 - Updated implementation (if required).
-- Updated `semio/js/sketchpad.test.ts` with coverage for both flows.
+- Updated `compose/js/sketchpad.test.ts` with coverage for both flows.
 - Final summary with:
   - changed files
   - what each change does
@@ -1107,7 +1107,7 @@ fix these :
 - Make sure all buttons are rendered and visible in exactly the space they need to be visible. currently under Create tool setting bar the Button are not clearly visible, where in filter all buttons are visible but they dont all fit whithin the Toolbar setting boarders
 - make sure the boarders of both toolbar and tool setting bar are created based on the grown space out of all buttons or drop down menus
 
-- all button and drop down toggle should visible be a single word with an icon in both the toolbar and the tool setting bar. Currently seelction tool is semio,sketpad.toolbar.subtool. It should be selection+ the cion
+- all button and drop down toggle should visible be a single word with an icon in both the toolbar and the tool setting bar. Currently seelction tool is compose,sketpad.toolbar.subtool. It should be selection+ the cion
   -Any tool that has sub selection tool should be implemented as a drop down button and rendered vertically from the exact same position as the dropdown button and in the same size.
 
 -extend the boarder of the setting tool bar to contain all the toggles.
@@ -1257,7 +1257,7 @@ The red selection should only heighligh the node outline like in the design app
 
 i want to fix the diagram
 
-previously : adapt the atlas by explaining all general concepts with concrete examples, workflow, programming langaues, package manager, programming styles, repo structure, use cases etc exclusively from semio. do it one section at a time
-Now: I like the resault but combine.old with the new where you explain general concepts first with examples from semios programing languages, workflows, architecture, package manager etc.. Simplify the lanague for non dev to start learning while keeping all techical terms and comlexity. always comment code and its systemetic thinking by relating it to the main concept. this should be an intro to programming speciffically on semio as an example guide
+previously : adapt the atlas by explaining all general concepts with concrete examples, workflow, programming langaues, package manager, programming styles, repo structure, use cases etc exclusively from compose. do it one section at a time
+Now: I like the resault but combine.old with the new where you explain general concepts first with examples from composes programing languages, workflows, architecture, package manager etc.. Simplify the lanague for non dev to start learning while keeping all techical terms and comlexity. always comment code and its systemetic thinking by relating it to the main concept. this should be an intro to programming speciffically on compose as an example guide
 
 Extract prompt strategies out to plans/prompt-strategy.md

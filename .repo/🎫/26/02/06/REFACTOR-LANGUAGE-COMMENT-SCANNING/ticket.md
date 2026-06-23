@@ -57,12 +57,12 @@ Refactored comment scanning to be language-agnostic via BaseLanguage.ScanComment
 
 - `repo/cli/main.go`: Added language-specific fields to BaseLanguage, CommentScanState. Added SkipDirectives() to LanguagePlugin interface. Replaced no-op BaseLanguage.ScanComments with generic implementation. Removed TypeScriptLanguage.ScanComments override. Updated all language constructors. Made ParseIgnoreDirectives and applyAutofixes language-aware.
 - `repo/cli/main_test.go`: Fixed TestFileHeaderId expectations. Fixed TestFixImprovedCommentLogic and TestFixConfigIgnored to use constructors. Added 7 new test functions with 48 subtests covering all languages.
-- `semio/assets/repo/some/folder/file_fixed.tsx`: Fixed header ID format.
-- `semio/assets/repo/some/folder/file_fixed.py`: Fixed header ID format, removed bare # comment.
-- `semio/assets/repo/some/folder/file_fixed.go`: Fixed header ID format.
-- `semio/assets/repo/some/folder/file_fixed.cs`: Fixed header ID format.
-- `semio/assets/repo/some/folder/file_fixable.tsx`: Restored original fixture with breachs.
-- `semio/assets/repo/some/folder/file_fixable_expected.tsx`: Fixed header ID format.
+- `compose/assets/repo/some/folder/file_fixed.tsx`: Fixed header ID format.
+- `compose/assets/repo/some/folder/file_fixed.py`: Fixed header ID format, removed bare # comment.
+- `compose/assets/repo/some/folder/file_fixed.go`: Fixed header ID format.
+- `compose/assets/repo/some/folder/file_fixed.cs`: Fixed header ID format.
+- `compose/assets/repo/some/folder/file_fixable.tsx`: Restored original fixture with breachs.
+- `compose/assets/repo/some/folder/file_fixable_expected.tsx`: Fixed header ID format.
 
 ## Log
 

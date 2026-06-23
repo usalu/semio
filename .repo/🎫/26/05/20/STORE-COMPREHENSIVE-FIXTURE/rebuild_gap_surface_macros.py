@@ -2,7 +2,7 @@
 from pathlib import Path
 import re
 
-p = Path(r"c:\git\semio\semio\client\lib\rs\lib.rs")
+p = Path(r"c:\git\compose\compose\client\lib\rs\lib.rs")
 lines = p.read_text(encoding="utf-8").splitlines(keepends=True)
 
 

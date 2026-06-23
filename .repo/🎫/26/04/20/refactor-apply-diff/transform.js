@@ -1,5 +1,5 @@
 const fs = require("fs");
-const filePath = "c:\\git\\semio\\semio\\rs\\lib.rs";
+const filePath = "c:\\git\\compose\\compose\\rs\\lib.rs";
 let content = fs.readFileSync(filePath, "utf-8");
 
 const modStartMarker = "mod apply_diff {";
@@ -826,14 +826,14 @@ const newModule = `mod apply_diff {
         }
 
         /// 📌Creates a mixed design keeping old entities with diff status annotations.
-        /// annotate each with a semio.diffStatus attribute (unchanged/modified/removed/added).
+        /// annotate each with a compose.diffStatus attribute (unchanged/modified/removed/added).
         /// Updated entities are applied (new positions/values) and marked as modified.
         /// Removed entities are kept in place marked as removed.
         /// Added entities are appended marked as added.
         pub fn with_diff(&self, diff: &DesignDiff) -> Design {
             let status_attr = |status: &str| Attribute {
-                guid: format!("semio.diffStatus.{}", status),
-                key: "semio.diffStatus".to_string(),
+                guid: format!("compose.diffStatus.{}", status),
+                key: "compose.diffStatus".to_string(),
                 value: Some(status.to_string()),
                 definition: None,
             };

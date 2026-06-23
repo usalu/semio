@@ -15,7 +15,7 @@
       "tool_name": "grep_search",
       "tool_input": {
         "maxResults": 15,
-        "includePattern": "**/semio/sketchpad/sketchpad/shared.ts",
+        "includePattern": "**/compose/sketchpad/sketchpad/shared.ts",
         "isRegexp": true,
         "query": "registerKeyedAppEventHandlers|createKeyedSet|function.*SET_SELECTION"
       },

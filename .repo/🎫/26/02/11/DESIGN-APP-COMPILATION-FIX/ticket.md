@@ -9,11 +9,11 @@ goal: R26-02/RUNNING-SKETCHPAD
 Bulk close
 ## Changes
 
-- `semio/js/package.json`: Remove `--strictPort` from `dev:sketchpad` so the dev server still starts when `5173` is occupied, while keeping `5173` as the preferred default port.
+- `compose/js/package.json`: Remove `--strictPort` from `dev:sketchpad` so the dev server still starts when `5173` is occupied, while keeping `5173` as the preferred default port.
 
 ## Log
 
-- Reproduced the startup failure with `cd semio/js && npm run dev:sketchpad`.
+- Reproduced the startup failure with `cd compose/js && npm run dev:sketchpad`.
 - In the sandbox, binding errors were permission-related and not useful for the repo diagnosis.
 - Re-ran the command unrestricted and observed the actual repo-level failure: `Error: Port 5173 is already in use`.
 - Root cause: `dev:sketchpad` used `vite --strictPort --port 5173 --host 0.0.0.0`, which aborts instead of choosing a free port.
@@ -31,6 +31,6 @@ Bulk close
 
 ## Plan
 
-1. Re-run the `@semio/js` sketchpad dev entrypoint after removing `--strictPort`
+1. Re-run the `@compose/js` sketchpad dev entrypoint after removing `--strictPort`
 2. Confirm Vite starts and reports a served URL on `5173` or the next available port
 3. Close the ticket with the verified file list

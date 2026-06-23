@@ -3,7 +3,7 @@
 ## Todos
 # Previously
 
-- Kit table row expansion triggered `semio.kitApp.toggleExpandedRow` but the UI never reflected the change, implying the machine-facing state was not updated by the interaction.
+- Kit table row expansion triggered `compose.kitApp.toggleExpandedRow` but the UI never reflected the change, implying the machine-facing state was not updated by the interaction.
 
 # Plan
 
@@ -13,7 +13,7 @@
 
 # Changes
 
-- Updated `Kit.tsx` row toggles to dispatch `useKitAppToggleRow` before issuing `semio.kitApp.toggleExpandedRow`, and wired all call sites through the shared helper to keep XState and Y.js in lockstep.
+- Updated `Kit.tsx` row toggles to dispatch `useKitAppToggleRow` before issuing `compose.kitApp.toggleExpandedRow`, and wired all call sites through the shared helper to keep XState and Y.js in lockstep.
 - Documented the kit table expansion pattern in `AGENTS.md` and `README.md` for future contributors.
 
 ## Changes

@@ -9,9 +9,9 @@ goal: SKETCHPAD-UI/CONTROLTREE
 Fixed ControlTree hierarchy indentation: leaf controls now wrapped in TreeItem+TreeContent matching Design.tsx pattern. Fixed missing TreeItem/TreeContent imports in Sketchpad.tsx chat panel. Zero TypeScript errors.
 ## Changes
 
-- `semio/js/sketchpad/elements.tsx`: Fixed `ControlTreeFolder` — removed wrapping `<TreeContent>` around all children, each leaf now individually wrapped in `<TreeItem><TreeContent><div data-slot="control-tree-leaf">...</div></TreeContent></TreeItem>`.
-- `semio/js/sketchpad/elements.tsx`: Fixed `ControlTree` root — root-level leaf controls also wrapped in `<TreeItem><TreeContent>` for proper indentation.
-- `semio/js/sketchpad/Sketchpad.tsx`: Added missing `TreeItem` and `TreeContent` to imports from `./elements` (lines 170-172) to fix TS2304 errors in the chat panel component.
+- `compose/js/sketchpad/elements.tsx`: Fixed `ControlTreeFolder` — removed wrapping `<TreeContent>` around all children, each leaf now individually wrapped in `<TreeItem><TreeContent><div data-slot="control-tree-leaf">...</div></TreeContent></TreeItem>`.
+- `compose/js/sketchpad/elements.tsx`: Fixed `ControlTree` root — root-level leaf controls also wrapped in `<TreeItem><TreeContent>` for proper indentation.
+- `compose/js/sketchpad/Sketchpad.tsx`: Added missing `TreeItem` and `TreeContent` to imports from `./elements` (lines 170-172) to fix TS2304 errors in the chat panel component.
 
 ## Log
 

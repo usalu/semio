@@ -9,7 +9,7 @@ goal: SKETCHPAD-IMPROVEMENTS
 Extended filter coverage in existing sketchpad test structure with full Home and Kit URL toggle cycles; Home+Kit targeted playwright runs pass.
 ## Changes
 
-- Updated `semio/js/sketchpad.test.ts` (existing file only):
+- Updated `compose/js/sketchpad.test.ts` (existing file only):
 - Extended `Home` filter section with URL on/off cycle assertions for all three toggles: `temporary`, `local`, `remote`.
 - Extended `Kit` filter section with URL on/off cycle assertions for `designs`, `types`, and `qualities`.
 - Kept all changes inside existing test blocks and existing file structure.

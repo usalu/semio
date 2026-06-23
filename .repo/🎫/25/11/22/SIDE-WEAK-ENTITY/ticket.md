@@ -13,14 +13,14 @@ All changes have been successfully implemented across TypeScript, C#, and suppor
 
 `Side` is currently treated as a strong entity with its own GUID:
 
-**TypeScript (semio.ts):**
+**TypeScript (compose.ts):**
 
 - Has `SideId` type with guid
 - Has `guid` field in `SideSchema`
 - Has helper functions: `createSideId`, `areSameSideId`, `getSideGuid`
 - Used in `Connection` which has `connected` and `connecting` sides
 
-**C# (Semio.cs):**
+**C# (Compose.cs):**
 
 - Likely has similar structure with Side as a class with Guid property
 - Used in Connection class
@@ -54,7 +54,7 @@ All changes have been successfully implemented across TypeScript, C#, and suppor
 
 ## Implementation Plan
 
-### 1. TypeScript (js/semio/semio.ts)
+### 1. TypeScript (js/compose/compose.ts)
 
 #### Remove SideId Type and Functions
 
@@ -83,7 +83,7 @@ All changes have been successfully implemented across TypeScript, C#, and suppor
 - `applySideDiff`: Keep as-is (applies diff)
 - Add `areSameSide(a: Side, b: Side): boolean` - compare by piece+connector
 
-### 2. C# (net/Semio/Semio.cs)
+### 2. C# (net/Compose/Compose.cs)
 
 #### Update Side Class
 
@@ -179,7 +179,7 @@ After implementation:
 
 ### Completed Changes
 
-#### 1. TypeScript (js/semio/semio.ts) ✅
+#### 1. TypeScript (js/compose/compose.ts) ✅
 
 - ✅ Removed `SideId` type definition
 - ✅ Removed `SideIdSchema`
@@ -190,13 +190,13 @@ After implementation:
 - ✅ Updated `SidesDiffSchema` to use composite key `{ piece, designPiece?, connector }` for identification
 - ✅ Added `areSameSide(a: Side, b: Side): boolean` function for value equality comparison
 
-#### 2. C# (net/Semio/Semio.cs) ✅
+#### 2. C# (net/Compose/Compose.cs) ✅
 
 - ✅ Added `Equals` override to compare by composite key (piece.guid, designPiece?.guid, connector.guid)
 - ✅ Added `GetHashCode` override for proper dictionary/set usage
 - ✅ Side methods (ApplyDiff, CreateDiff, InverseDiff) remain unchanged (already guid-agnostic)
 
-#### 3. Migration Code (js/semio/test-roundtrip.mjs) ✅
+#### 3. Migration Code (js/compose/test-roundtrip.mjs) ✅
 
 - ✅ Removed old schema migration code that handled `side.guid` → `connector.guid` fallback
 - ✅ Connections now use sides directly without transformation
@@ -215,9 +215,9 @@ After implementation:
 
 ### Files Modified
 
-1. `js/semio/semio.ts` - Removed SideId type and functions, updated Side schema
-2. `net/Semio/Semio.cs` - Added value equality (Equals/GetHashCode)
-3. `js/semio/test-roundtrip.mjs` - Removed legacy migration code
+1. `js/compose/compose.ts` - Removed SideId type and functions, updated Side schema
+2. `net/Compose/Compose.cs` - Added value equality (Equals/GetHashCode)
+3. `js/compose/test-roundtrip.mjs` - Removed legacy migration code
 4. `agents/2025-11-22_side-weak-entity.md` - This plan document
 
 ## Changes

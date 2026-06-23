@@ -10,19 +10,19 @@
 - [x] Run targeted verification commands.
 
 ## Changes
-- Updated `semio/js/sketchpad/Sketchpad.tsx` to make toolbar subtool mechanics group-agnostic while preserving current UI behavior:
+- Updated `compose/js/sketchpad/Sketchpad.tsx` to make toolbar subtool mechanics group-agnostic while preserving current UI behavior:
   - Added infrastructure-level toolbar group ordering support including future `settings` group.
   - Added generic `groupSubTools` and `groupHasDropdown` derivation from section metadata.
   - Generalized toolbar button rendering so any group can become a dropdown when configured.
   - Preserved current behavior by keeping legacy `selection` dropdown rule (`selection` dropdown remains as before) and requiring multiple subtools for other groups.
   - Generalized settings-toolbar section filtering by active subtool for whichever group is active.
   - Added `SettingsIcon` mapping for future `settings` parent tool.
-- Updated `semio/js/sketchpad/locales/en.json`:
-  - Added `semio.sketchpad.toolbar.parent.settings`.
-  - Added `semio.sketchpad.toolbar.subtool.appSettings`, `command`, `tools`.
-- Updated `semio/js/sketchpad/locales/de.json`:
+- Updated `compose/js/sketchpad/locales/en.json`:
+  - Added `compose.sketchpad.toolbar.parent.settings`.
+  - Added `compose.sketchpad.toolbar.subtool.appSettings`, `command`, `tools`.
+- Updated `compose/js/sketchpad/locales/de.json`:
   - Added toolbar parent settings label and matching subtool labels for `appSettings`, `command`, `tools`.
-- Updated `semio/js/sketchpad/README.md` Specs -> Toolbar:
+- Updated `compose/js/sketchpad/README.md` Specs -> Toolbar:
   - Documented that subtool dropdown infrastructure is group-agnostic while preserving current selection behavior unless additional groups define multiple subtools.
 
 ## Log
@@ -32,9 +32,9 @@
 - Active subtool filtering in the right toolbar is now generic and no longer hardcoded to `selection`.
 
 ### Verification
-- `node -e "JSON.parse(...)"` validation passed for `semio/js/sketchpad/locales/en.json` and `semio/js/sketchpad/locales/de.json`.
-- `npx playwright test --config semio/js/playwright.config.ts sketchpad.test.ts --grep "Toolbar"` failed before test execution because `config.webServer` could not start in this environment.
-- `npx tsc -p semio/js/tsconfig.json --noEmit` reports existing unrelated baseline errors in `Design.tsx`, `Feedback.tsx`, `Type.tsx`, and `elements.tsx`; no additional parse/runtime errors were introduced by locale JSON edits.
+- `node -e "JSON.parse(...)"` validation passed for `compose/js/sketchpad/locales/en.json` and `compose/js/sketchpad/locales/de.json`.
+- `npx playwright test --config compose/js/playwright.config.ts sketchpad.test.ts --grep "Toolbar"` failed before test execution because `config.webServer` could not start in this environment.
+- `npx tsc -p compose/js/tsconfig.json --noEmit` reports existing unrelated baseline errors in `Design.tsx`, `Feedback.tsx`, `Type.tsx`, and `elements.tsx`; no additional parse/runtime errors were introduced by locale JSON edits.
 
 ## Summary
 

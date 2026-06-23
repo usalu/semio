@@ -1,0 +1,28 @@
+{
+  "name": "compose-hub",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "targets": {
+    "setup": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "compose/server/hub",
+        "command": "cargo fetch --manifest-path Cargo.toml"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "compose/server/hub",
+        "command": "cargo build --release --manifest-path Cargo.toml"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "compose/server/hub",
+        "command": "cargo test --manifest-path Cargo.toml"
+      }
+    }
+  }
+}

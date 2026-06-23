@@ -6,7 +6,7 @@
     "kind": "agent.file.read.ended",
     "second": "2026-03-16T13:43:42Z",
     "session": "9c9573bc-7742-46ae-9c04-b0ebf0657575",
-    "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
+    "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
   },
   "native": {
     "event": {
@@ -15,9 +15,9 @@
       "model": "default",
       "tool_name": "Read",
       "tool_input": {
-        "file_path": "/workspaces/semio/semio/py/semio.test.py"
+        "file_path": "/workspaces/semio/compose/py/compose.test.py"
       },
-      "tool_output": "{\"file_path\":\"/workspaces/semio/semio/py/semio.test.py\",\"content_length\":1900}",
+      "tool_output": "{\"file_path\":\"/workspaces/semio/compose/py/compose.test.py\",\"content_length\":1900}",
       "duration": 70.078,
       "tool_use_id": "call_WdNeAqeztTxAcBeAlm2kiMWJ\nfc_07029c2b3907fcc90169b8090c5f90819aa0ccac0b6f6ef9a3",
       "hook_event_name": "postToolUse",
@@ -26,7 +26,7 @@
         "/workspaces/semio"
       ],
       "user_email": "ueli.saluz@posteo.de",
-      "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
+      "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
     }
   },
   "response": {}

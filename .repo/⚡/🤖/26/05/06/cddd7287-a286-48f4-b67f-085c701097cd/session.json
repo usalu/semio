@@ -5,7 +5,7 @@
   "second": "2026-05-06T21:33:29Z",
   "checkpoint": "1792a5e6fadc28eeb1a3e0d8607ea4c4f6696131",
   "contributor": "unknown",
-  "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl",
+  "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl",
   "events": [
     {
       "event": {
@@ -15,7 +15,7 @@
         "kind": "agent.file.read.starting",
         "second": "2026-05-06T21:33:29Z",
         "session": "cddd7287-a286-48f4-b67f-085c701097cd",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
       },
       "native": {
         "event": {
@@ -34,7 +34,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
         }
       },
       "response": {}
@@ -47,14 +47,14 @@
         "kind": "agent.file.read.starting",
         "second": "2026-05-06T21:33:30Z",
         "session": "cddd7287-a286-48f4-b67f-085c701097cd",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
       },
       "native": {
         "event": {
           "conversation_id": "cddd7287-a286-48f4-b67f-085c701097cd",
           "generation_id": "cddd7287-a286-48f4-b67f-085c701097cd",
           "model": "composer-2",
-          "content": "# Ralph Progress Log\n\nThis file tracks progress across iterations. Agents update this file\nafter each iteration and it's included in prompts for context.\n\n## Codebase Patterns (Study These First)\n\n- **Kit store assets:** Canonical shape is `semio.kit_store.bundle` with `rootSnapshot`, ordered `semanticOpLog`, optional `histories` (checkpoint/draft/transaction metadata over the same op model), and `backbonePointers`. Document the intent in `semio/assets/semio/kit-store.contract.semio.json`; pair `kit-store.golden.ops.semio.json` with `kit-store.golden.expected.semio.json` for RS replay tests (`projectionFingerprint` = blake3-style `hash::h` over sorted piece centers) and lightweight JS fixture parses.\n- **Root pnpm for semio slice:** A minimal `pnpm-workspace.yaml` including only `semio/js`, `semio/react`, and `semio/assets` avoids `pnpm install` pulling packages that depend on `file:../rs/pkg` before `wasm-pack build` populates `semio/rs/pkg`.\n- **GraphQL SDL source of truth:** Integrators read `semio/graphql/schema.graphql`, but it is **generated** from `semio/rs` (`async_graphql` `Schema::sdl`) via `pnpm exec nx build semio/graphql` (runs the ignored `export_semio_graphql_schema_file` test with `SEMIO_GRAPHQL_SCHEMA_OUT`). Edit the Rust schema, then rebuild—do not hand-edit the SDL long-term.\n- **Kit graph engine (RS):** `crate::kit_graph_engine` owns `projection_fingerprint_for_kit` (golden-compatible), `deterministic_semantic_diff`, and async `apply_semantic_op_json`. `Kit`/`Design` use `design_id_to_index` and `piece_id_to_index` for O(1) slot resolve after a single `bind_external_design_id` at the boundary; GraphQL `Graph.projectionFingerprint` delegates to the engine.\n\n---\n\n## 2026-05-06 - US-001\n\n- **What was implemented:** Kit asset contracts aligned to **one root snapshot + ordered semantic ops** with checkpoint/draft/transaction wrappers documented in JSON; golden ops/expected pair; `metabolism.new.kit.semio.json` replaced with a minimal bundle exemplar; RS tests replay golden ops and assert invariants/fingerprint; `@semio/js` embedded tests load golden + bundle paths for structural checks; root `pnpm typecheck` / `pnpm lint` validate the touched packages.\n- **Files changed:** `semio/assets/semio/kit-store.contract.semio.json`, `kit-store.golden.*.semio.json`, `metabolism.new.kit.semio.json`, `semio/rs/lib.rs`, `semio/js/index.ts`, root `package.json`, `pnpm-workspace.yaml`, `.npmrc`, `eslint.config.mjs`, plus prior workspace/JS fixes from this epic (see git status for full set).\n- **Learnings:**\n  - **Patterns discovered:** Same ordered op log underlies snapshot projection and history wrappers—difference is metadata/lifecycle, not a second persistence shape. Golden fixtures should encode **invariants** (`sortedPieceCenters`, counts) plus a stable **fingerprint** for deterministic CI.\n  - **Gotchas encountered:** Full pnpm workspace that includes `semio/algorithms` breaks install until `semio/rs/pkg` exists; narrow the workspace or document wasm-pack as a prereq. Legacy `KitStoreHandle` / `eventStream` GraphQL expectations in JS need a follow-up (e.g. US-006) rather than half-wiring old APIs.\n---\n\n## 2026-05-06 - US-002\n\n- **What was implemented:** Finalized the **kit-store GraphQL contract** in `semio/rs` (exported SDL): `Query.readableKitGraph` + `backboneCapabilities` with `ReadableGraphSelector` (`KitGraphWorkspace` + optional checkpoint/draft/transaction anchors); `Graph.semanticOpLog`, `projectionFingerprint`, `rootSnapshotHash`; lifecycle linkage fields on `Change` / `Checkpoint` / `Transaction` / `Draft`; `BackboneStoreKind`, `backboneAttach` / `backboneDetach`; mutations return `Command` (`requestId` + `kind`) and take `workspace` for wip vs authoritative routing; `Diff.summary`; `SemanticOpRecord` type. Regenerated `semio/graphql/schema.graphql`; documented `graphqlSurface` on `kit-store.contract.semio.json`; root `pnpm typecheck` now runs `nx build semio/graphql`.\n- **Files changed:** `semio/rs/lib.rs`, `semio/graphql/schema.graphql`, `semio/assets/semio/kit-store.contract.semio.json`, `package.json`, `.ralph-tui/progress.md`, `.repo/🎫/26/05/06/graphql-kit-store-contract-us-002/ticket.json`.\n- **Learnings:**\n  - **Patterns discovered:** Object-typed mutation payloads (`Command`) require selection sets in GraphQL documents—integration tests and clients must request `{ requestId kind }`. Enum variables (e.g. `KitGraphWorkspace`) flow through `async_graphql::value!` as string labels (`\"WIP\"`).\n  - **Gotchas encountered:** `target.schema.graphql` remains a separate Relay-style design draft; runtime SDL is only what `gql::sdl()` emits—do not assume parity without an explicit codegen/link step.\n---\n\n",
+          "content": "# Ralph Progress Log\n\nThis file tracks progress across iterations. Agents update this file\nafter each iteration and it's included in prompts for context.\n\n## Codebase Patterns (Study These First)\n\n- **Kit store assets:** Canonical shape is `compose.kit_store.bundle` with `rootSnapshot`, ordered `semanticOpLog`, optional `histories` (checkpoint/draft/transaction metadata over the same op model), and `backbonePointers`. Document the intent in `compose/assets/compose/kit-store.contract.compose.json`; pair `kit-store.golden.ops.compose.json` with `kit-store.golden.expected.compose.json` for RS replay tests (`projectionFingerprint` = blake3-style `hash::h` over sorted piece centers) and lightweight JS fixture parses.\n- **Root pnpm for compose slice:** A minimal `pnpm-workspace.yaml` including only `compose/js`, `compose/react`, and `compose/assets` avoids `pnpm install` pulling packages that depend on `file:../rs/pkg` before `wasm-pack build` populates `compose/rs/pkg`.\n- **GraphQL SDL source of truth:** Integrators read `compose/graphql/schema.graphql`, but it is **generated** from `compose/rs` (`async_graphql` `Schema::sdl`) via `pnpm exec nx build compose/graphql` (runs the ignored `export_compose_graphql_schema_file` test with `COMPOSE_GRAPHQL_SCHEMA_OUT`). Edit the Rust schema, then rebuild—do not hand-edit the SDL long-term.\n- **Kit graph engine (RS):** `crate::kit_graph_engine` owns `projection_fingerprint_for_kit` (golden-compatible), `deterministic_semantic_diff`, and async `apply_semantic_op_json`. `Kit`/`Design` use `design_id_to_index` and `piece_id_to_index` for O(1) slot resolve after a single `bind_external_design_id` at the boundary; GraphQL `Graph.projectionFingerprint` delegates to the engine.\n\n---\n\n## 2026-05-06 - US-001\n\n- **What was implemented:** Kit asset contracts aligned to **one root snapshot + ordered semantic ops** with checkpoint/draft/transaction wrappers documented in JSON; golden ops/expected pair; `metabolism.new.kit.compose.json` replaced with a minimal bundle exemplar; RS tests replay golden ops and assert invariants/fingerprint; `@compose/js` embedded tests load golden + bundle paths for structural checks; root `pnpm typecheck` / `pnpm lint` validate the touched packages.\n- **Files changed:** `compose/assets/compose/kit-store.contract.compose.json`, `kit-store.golden.*.compose.json`, `metabolism.new.kit.compose.json`, `compose/rs/lib.rs`, `compose/js/index.ts`, root `package.json`, `pnpm-workspace.yaml`, `.npmrc`, `eslint.config.mjs`, plus prior workspace/JS fixes from this epic (see git status for full set).\n- **Learnings:**\n  - **Patterns discovered:** Same ordered op log underlies snapshot projection and history wrappers—difference is metadata/lifecycle, not a second persistence shape. Golden fixtures should encode **invariants** (`sortedPieceCenters`, counts) plus a stable **fingerprint** for deterministic CI.\n  - **Gotchas encountered:** Full pnpm workspace that includes `compose/algorithms` breaks install until `compose/rs/pkg` exists; narrow the workspace or document wasm-pack as a prereq. Legacy `KitStoreHandle` / `eventStream` GraphQL expectations in JS need a follow-up (e.g. US-006) rather than half-wiring old APIs.\n---\n\n## 2026-05-06 - US-002\n\n- **What was implemented:** Finalized the **kit-store GraphQL contract** in `compose/rs` (exported SDL): `Query.readableKitGraph` + `backboneCapabilities` with `ReadableGraphSelector` (`KitGraphWorkspace` + optional checkpoint/draft/transaction anchors); `Graph.semanticOpLog`, `projectionFingerprint`, `rootSnapshotHash`; lifecycle linkage fields on `Change` / `Checkpoint` / `Transaction` / `Draft`; `BackboneStoreKind`, `backboneAttach` / `backboneDetach`; mutations return `Command` (`requestId` + `kind`) and take `workspace` for wip vs authoritative routing; `Diff.summary`; `SemanticOpRecord` type. Regenerated `compose/graphql/schema.graphql`; documented `graphqlSurface` on `kit-store.contract.compose.json`; root `pnpm typecheck` now runs `nx build compose/graphql`.\n- **Files changed:** `compose/rs/lib.rs`, `compose/graphql/schema.graphql`, `compose/assets/compose/kit-store.contract.compose.json`, `package.json`, `.ralph-tui/progress.md`, `.repo/🎫/26/05/06/graphql-kit-store-contract-us-002/ticket.json`.\n- **Learnings:**\n  - **Patterns discovered:** Object-typed mutation payloads (`Command`) require selection sets in GraphQL documents—integration tests and clients must request `{ requestId kind }`. Enum variables (e.g. `KitGraphWorkspace`) flow through `async_graphql::value!` as string labels (`\"WIP\"`).\n  - **Gotchas encountered:** `target.schema.graphql` remains a separate Relay-style design draft; runtime SDL is only what `gql::sdl()` emits—do not assume parity without an explicit codegen/link step.\n---\n\n",
           "file_path": "/workspaces/semio/.ralph-tui/progress.md",
           "attachments": [],
           "session_id": "cddd7287-a286-48f4-b67f-085c701097cd",
@@ -64,7 +64,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
         }
       },
       "response": {}
@@ -77,7 +77,7 @@
         "kind": "agent.file.read.ended",
         "second": "2026-05-06T21:33:31Z",
         "session": "cddd7287-a286-48f4-b67f-085c701097cd",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
       },
       "native": {
         "event": {
@@ -98,7 +98,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
         }
       },
       "response": {}
@@ -111,7 +111,7 @@
         "kind": "agent.tool.code.edit.starting",
         "second": "2026-05-06T21:33:31Z",
         "session": "cddd7287-a286-48f4-b67f-085c701097cd",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
       },
       "native": {
         "event": {
@@ -121,7 +121,7 @@
           "tool_name": "Write",
           "tool_input": {
             "file_path": "/workspaces/semio/.ralph-tui/progress.md",
-            "content": "# Ralph Progress Log\n\nThis file tracks progress across iterations. Agents update this file\nafter each iteration and it's included in prompts for context.\n\n## Codebase Patterns (Study These First)\n\n- **Kit store assets:** Canonical shape is `semio.kit_store.bundle` with `rootSnapshot`, ordered `semanticOpLog`, optional `histories` (checkpoint/draft/transaction metadata over the same op model), and `backbonePointers`. Document the intent in `semio/assets/semio/kit-store.contract.semio.json`; pair `kit-store.golden.ops.semio.json` with `kit-store.golden.expected.semio.json` for RS replay tests (`projectionFingerprint` = blake3-style `hash::h` over sorted piece centers) and lightweight JS fixture parses.\n- **Root pnpm for semio slice:** A minimal `pnpm-workspace.yaml` including only `semio/js`, `semio/react`, and `semio/assets` avoids `pnpm install` pulling packages that depend on `file:../rs/pkg` before `wasm-pack build` populates `semio/rs/pkg`.\n- **GraphQL SDL source of truth:** Integrators read `semio/graphql/schema.graphql`, but it is **generated** from `semio/rs` (`async_graphql` `Schema::sdl`) via `pnpm exec nx build semio/graphql` (runs the ignored `export_semio_graphql_schema_file` test with `SEMIO_GRAPHQL_SCHEMA_OUT`). Edit the Rust schema, then rebuild—do not hand-edit the SDL long-term.\n- **Kit graph engine (RS):** `crate::kit_graph_engine` owns `projection_fingerprint_for_kit` (golden-compatible), `deterministic_semantic_diff`, and async `apply_semantic_op_json`. `Kit`/`Design` use `design_id_to_index` and `piece_id_to_index` for O(1) slot resolve after a single `bind_external_design_id` at the boundary; GraphQL `Graph.projectionFingerprint` delegates to the engine.\n\n---\n\n## 2026-05-06 - US-001\n\n- **What was implemented:** Kit asset contracts aligned to **one root snapshot + ordered semantic ops** with checkpoint/draft/transaction wrappers documented in JSON; golden ops/expected pair; `metabolism.new.kit.semio.json` replaced with a minimal bundle exemplar; RS tests replay golden ops and assert invariants/fingerprint; `@semio/js` embedded tests load golden + bundle paths for structural checks; root `pnpm typecheck` / `pnpm lint` validate the touched packages.\n- **Files changed:** `semio/assets/semio/kit-store.contract.semio.json`, `kit-store.golden.*.semio.json`, `metabolism.new.kit.semio.json`, `semio/rs/lib.rs`, `semio/js/index.ts`, root `package.json`, `pnpm-workspace.yaml`, `.npmrc`, `eslint.config.mjs`, plus prior workspace/JS fixes from this epic (see git status for full set).\n- **Learnings:**\n  - **Patterns discovered:** Same ordered op log underlies snapshot projection and history wrappers—difference is metadata/lifecycle, not a second persistence shape. Golden fixtures should encode **invariants** (`sortedPieceCenters`, counts) plus a stable **fingerprint** for deterministic CI.\n  - **Gotchas encountered:** Full pnpm workspace that includes `semio/algorithms` breaks install until `semio/rs/pkg` exists; narrow the workspace or document wasm-pack as a prereq. Legacy `KitStoreHandle` / `eventStream` GraphQL expectations in JS need a follow-up (e.g. US-006) rather than half-wiring old APIs.\n---\n\n## 2026-05-06 - US-002\n\n- **What was implemented:** Finalized the **kit-store GraphQL contract** in `semio/rs` (exported SDL): `Query.readableKitGraph` + `backboneCapabilities` with `ReadableGraphSelector` (`KitGraphWorkspace` + optional checkpoint/draft/transaction anchors); `Graph.semanticOpLog`, `projectionFingerprint`, `rootSnapshotHash`; lifecycle linkage fields on `Change` / `Checkpoint` / `Transaction` / `Draft`; `BackboneStoreKind`, `backboneAttach` / `backboneDetach`; mutations return `Command` (`requestId` + `kind`) and take `workspace` for wip vs authoritative routing; `Diff.summary`; `SemanticOpRecord` type. Regenerated `semio/graphql/schema.graphql`; documented `graphqlSurface` on `kit-store.contract.semio.json`; root `pnpm typecheck` now runs `nx build semio/graphql`.\n- **Files changed:** `semio/rs/lib.rs`, `semio/graphql/schema.graphql`, `semio/assets/semio/kit-store.contract.semio.json`, `package.json`, `.ralph-tui/progress.md`, `.repo/🎫/26/05/06/graphql-kit-store-contract-us-002/ticket.json`.\n- **Learnings:**\n  - **Patterns discovered:** Object-typed mutation payloads (`Command`) require selection sets in GraphQL documents—integration tests and clients must request `{ requestId kind }`. Enum variables (e.g. `KitGraphWorkspace`) flow through `async_graphql::value!` as string labels (`\"WIP\"`).\n  - **Gotchas encountered:** `target.schema.graphql` remains a separate Relay-style design draft; runtime SDL is only what `gql::sdl()` emits—do not assume parity without an explicit codegen/link step.\n---\n\n## 2026-05-06 - US-003\n\n- **What was implemented:** Core **kit graph engine** in `semio/rs`: `crate::kit_graph_engine` with `DesignHandle`, `projection_fingerprint_for_kit` (same algorithm as kit-store golden), `deterministic_semantic_diff` (ephemeral, from op kind + payload JSON + fp before/after), and async `apply_semantic_op_json` for bundle-shaped replay. `Kit`/`Design` now keep **slot maps** (`design_id_to_index`, `piece_id_to_index`) so hot paths avoid linear Id scans; `bind_external_design_id` is the single translation from external design `Id` to internal handle + `Arc`. `Graph::apply_create_fixed_piece` returns `(piece, diff)` and uses `apply_create_fixed_piece_on_design_node` for pointer-only mutation; GraphQL `projectionFingerprint` calls the engine. `CreatedFixedPiece` events carry computed diffs. Contract JSON documents `kitGraphEngine`.\n- **Files changed:** `semio/rs/lib.rs`, `semio/assets/semio/kit-store.contract.semio.json`, `.ralph-tui/progress.md`, `.repo/🎫/26/05/06/core-kit-graph-engine-us-003/ticket.json` (and regenerated `semio/graphql/schema.graphql` if nx touched it—verify tree).\n- **Learnings:**\n  - **Patterns discovered:** Treat **two `Arc\u003cGraph\u003e` instances** (wip vs authoritative) as the multi-state primitive; semantic apply + fp/diff logic stays identical per graph. Deterministic diff should key on **canonical input JSON + fp transition** so replay and live mutation agree without persisting diffs.\n  - **Gotchas encountered:** `apply_create_fixed_piece` must **clone** fields passed to the inner node helper when building `CreatedFixedPieceInput` for serde, or Rust move analysis fails; serde field names in golden JSON must match `#[serde(rename)]` on payload DTOs.\n---\n\n"
+            "content": "# Ralph Progress Log\n\nThis file tracks progress across iterations. Agents update this file\nafter each iteration and it's included in prompts for context.\n\n## Codebase Patterns (Study These First)\n\n- **Kit store assets:** Canonical shape is `compose.kit_store.bundle` with `rootSnapshot`, ordered `semanticOpLog`, optional `histories` (checkpoint/draft/transaction metadata over the same op model), and `backbonePointers`. Document the intent in `compose/assets/compose/kit-store.contract.compose.json`; pair `kit-store.golden.ops.compose.json` with `kit-store.golden.expected.compose.json` for RS replay tests (`projectionFingerprint` = blake3-style `hash::h` over sorted piece centers) and lightweight JS fixture parses.\n- **Root pnpm for compose slice:** A minimal `pnpm-workspace.yaml` including only `compose/js`, `compose/react`, and `compose/assets` avoids `pnpm install` pulling packages that depend on `file:../rs/pkg` before `wasm-pack build` populates `compose/rs/pkg`.\n- **GraphQL SDL source of truth:** Integrators read `compose/graphql/schema.graphql`, but it is **generated** from `compose/rs` (`async_graphql` `Schema::sdl`) via `pnpm exec nx build compose/graphql` (runs the ignored `export_compose_graphql_schema_file` test with `COMPOSE_GRAPHQL_SCHEMA_OUT`). Edit the Rust schema, then rebuild—do not hand-edit the SDL long-term.\n- **Kit graph engine (RS):** `crate::kit_graph_engine` owns `projection_fingerprint_for_kit` (golden-compatible), `deterministic_semantic_diff`, and async `apply_semantic_op_json`. `Kit`/`Design` use `design_id_to_index` and `piece_id_to_index` for O(1) slot resolve after a single `bind_external_design_id` at the boundary; GraphQL `Graph.projectionFingerprint` delegates to the engine.\n\n---\n\n## 2026-05-06 - US-001\n\n- **What was implemented:** Kit asset contracts aligned to **one root snapshot + ordered semantic ops** with checkpoint/draft/transaction wrappers documented in JSON; golden ops/expected pair; `metabolism.new.kit.compose.json` replaced with a minimal bundle exemplar; RS tests replay golden ops and assert invariants/fingerprint; `@compose/js` embedded tests load golden + bundle paths for structural checks; root `pnpm typecheck` / `pnpm lint` validate the touched packages.\n- **Files changed:** `compose/assets/compose/kit-store.contract.compose.json`, `kit-store.golden.*.compose.json`, `metabolism.new.kit.compose.json`, `compose/rs/lib.rs`, `compose/js/index.ts`, root `package.json`, `pnpm-workspace.yaml`, `.npmrc`, `eslint.config.mjs`, plus prior workspace/JS fixes from this epic (see git status for full set).\n- **Learnings:**\n  - **Patterns discovered:** Same ordered op log underlies snapshot projection and history wrappers—difference is metadata/lifecycle, not a second persistence shape. Golden fixtures should encode **invariants** (`sortedPieceCenters`, counts) plus a stable **fingerprint** for deterministic CI.\n  - **Gotchas encountered:** Full pnpm workspace that includes `compose/algorithms` breaks install until `compose/rs/pkg` exists; narrow the workspace or document wasm-pack as a prereq. Legacy `KitStoreHandle` / `eventStream` GraphQL expectations in JS need a follow-up (e.g. US-006) rather than half-wiring old APIs.\n---\n\n## 2026-05-06 - US-002\n\n- **What was implemented:** Finalized the **kit-store GraphQL contract** in `compose/rs` (exported SDL): `Query.readableKitGraph` + `backboneCapabilities` with `ReadableGraphSelector` (`KitGraphWorkspace` + optional checkpoint/draft/transaction anchors); `Graph.semanticOpLog`, `projectionFingerprint`, `rootSnapshotHash`; lifecycle linkage fields on `Change` / `Checkpoint` / `Transaction` / `Draft`; `BackboneStoreKind`, `backboneAttach` / `backboneDetach`; mutations return `Command` (`requestId` + `kind`) and take `workspace` for wip vs authoritative routing; `Diff.summary`; `SemanticOpRecord` type. Regenerated `compose/graphql/schema.graphql`; documented `graphqlSurface` on `kit-store.contract.compose.json`; root `pnpm typecheck` now runs `nx build compose/graphql`.\n- **Files changed:** `compose/rs/lib.rs`, `compose/graphql/schema.graphql`, `compose/assets/compose/kit-store.contract.compose.json`, `package.json`, `.ralph-tui/progress.md`, `.repo/🎫/26/05/06/graphql-kit-store-contract-us-002/ticket.json`.\n- **Learnings:**\n  - **Patterns discovered:** Object-typed mutation payloads (`Command`) require selection sets in GraphQL documents—integration tests and clients must request `{ requestId kind }`. Enum variables (e.g. `KitGraphWorkspace`) flow through `async_graphql::value!` as string labels (`\"WIP\"`).\n  - **Gotchas encountered:** `target.schema.graphql` remains a separate Relay-style design draft; runtime SDL is only what `gql::sdl()` emits—do not assume parity without an explicit codegen/link step.\n---\n\n## 2026-05-06 - US-003\n\n- **What was implemented:** Core **kit graph engine** in `compose/rs`: `crate::kit_graph_engine` with `DesignHandle`, `projection_fingerprint_for_kit` (same algorithm as kit-store golden), `deterministic_semantic_diff` (ephemeral, from op kind + payload JSON + fp before/after), and async `apply_semantic_op_json` for bundle-shaped replay. `Kit`/`Design` now keep **slot maps** (`design_id_to_index`, `piece_id_to_index`) so hot paths avoid linear Id scans; `bind_external_design_id` is the single translation from external design `Id` to internal handle + `Arc`. `Graph::apply_create_fixed_piece` returns `(piece, diff)` and uses `apply_create_fixed_piece_on_design_node` for pointer-only mutation; GraphQL `projectionFingerprint` calls the engine. `CreatedFixedPiece` events carry computed diffs. Contract JSON documents `kitGraphEngine`.\n- **Files changed:** `compose/rs/lib.rs`, `compose/assets/compose/kit-store.contract.compose.json`, `.ralph-tui/progress.md`, `.repo/🎫/26/05/06/core-kit-graph-engine-us-003/ticket.json` (and regenerated `compose/graphql/schema.graphql` if nx touched it—verify tree).\n- **Learnings:**\n  - **Patterns discovered:** Treat **two `Arc\u003cGraph\u003e` instances** (wip vs authoritative) as the multi-state primitive; semantic apply + fp/diff logic stays identical per graph. Deterministic diff should key on **canonical input JSON + fp transition** so replay and live mutation agree without persisting diffs.\n  - **Gotchas encountered:** `apply_create_fixed_piece` must **clone** fields passed to the inner node helper when building `CreatedFixedPieceInput` for serde, or Rust move analysis fails; serde field names in golden JSON must match `#[serde(rename)]` on payload DTOs.\n---\n\n"
           },
           "tool_use_id": "tool_05fbb014-ba5e-40d6-8021-575f7b85eed",
           "session_id": "cddd7287-a286-48f4-b67f-085c701097cd",
@@ -131,7 +131,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
         }
       },
       "response": {}
@@ -144,7 +144,7 @@
         "kind": "agent.tool.code.edit.ended",
         "second": "2026-05-06T21:33:32Z",
         "session": "cddd7287-a286-48f4-b67f-085c701097cd",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
       },
       "native": {
         "event": {
@@ -155,7 +155,7 @@
           "edits": [
             {
               "old_string": "",
-              "new_string": "## 2026-05-06 - US-003\n\n- **What was implemented:** Core **kit graph engine** in `semio/rs`: `crate::kit_graph_engine` with `DesignHandle`, `projection_fingerprint_for_kit` (same algorithm as kit-store golden), `deterministic_semantic_diff` (ephemeral, from op kind + payload JSON + fp before/after), and async `apply_semantic_op_json` for bundle-shaped replay. `Kit`/`Design` now keep **slot maps** (`design_id_to_index`, `piece_id_to_index`) so hot paths avoid linear Id scans; `bind_external_design_id` is the single translation from external design `Id` to internal handle + `Arc`. `Graph::apply_create_fixed_piece` returns `(piece, diff)` and uses `apply_create_fixed_piece_on_design_node` for pointer-only mutation; GraphQL `projectionFingerprint` calls the engine. `CreatedFixedPiece` events carry computed diffs. Contract JSON documents `kitGraphEngine`.\n- **Files changed:** `semio/rs/lib.rs`, `semio/assets/semio/kit-store.contract.semio.json`, `.ralph-tui/progress.md`, `.repo/🎫/26/05/06/core-kit-graph-engine-us-003/ticket.json` (and regenerated `semio/graphql/schema.graphql` if nx touched it—verify tree).\n- **Learnings:**\n  - **Patterns discovered:** Treat **two `Arc\u003cGraph\u003e` instances** (wip vs authoritative) as the multi-state primitive; semantic apply + fp/diff logic stays identical per graph. Deterministic diff should key on **canonical input JSON + fp transition** so replay and live mutation agree without persisting diffs.\n  - **Gotchas encountered:** `apply_create_fixed_piece` must **clone** fields passed to the inner node helper when building `CreatedFixedPieceInput` for serde, or Rust move analysis fails; serde field names in golden JSON must match `#[serde(rename)]` on payload DTOs.\n---\n"
+              "new_string": "## 2026-05-06 - US-003\n\n- **What was implemented:** Core **kit graph engine** in `compose/rs`: `crate::kit_graph_engine` with `DesignHandle`, `projection_fingerprint_for_kit` (same algorithm as kit-store golden), `deterministic_semantic_diff` (ephemeral, from op kind + payload JSON + fp before/after), and async `apply_semantic_op_json` for bundle-shaped replay. `Kit`/`Design` now keep **slot maps** (`design_id_to_index`, `piece_id_to_index`) so hot paths avoid linear Id scans; `bind_external_design_id` is the single translation from external design `Id` to internal handle + `Arc`. `Graph::apply_create_fixed_piece` returns `(piece, diff)` and uses `apply_create_fixed_piece_on_design_node` for pointer-only mutation; GraphQL `projectionFingerprint` calls the engine. `CreatedFixedPiece` events carry computed diffs. Contract JSON documents `kitGraphEngine`.\n- **Files changed:** `compose/rs/lib.rs`, `compose/assets/compose/kit-store.contract.compose.json`, `.ralph-tui/progress.md`, `.repo/🎫/26/05/06/core-kit-graph-engine-us-003/ticket.json` (and regenerated `compose/graphql/schema.graphql` if nx touched it—verify tree).\n- **Learnings:**\n  - **Patterns discovered:** Treat **two `Arc\u003cGraph\u003e` instances** (wip vs authoritative) as the multi-state primitive; semantic apply + fp/diff logic stays identical per graph. Deterministic diff should key on **canonical input JSON + fp transition** so replay and live mutation agree without persisting diffs.\n  - **Gotchas encountered:** `apply_create_fixed_piece` must **clone** fields passed to the inner node helper when building `CreatedFixedPieceInput` for serde, or Rust move analysis fails; serde field names in golden JSON must match `#[serde(rename)]` on payload DTOs.\n---\n"
             }
           ],
           "session_id": "cddd7287-a286-48f4-b67f-085c701097cd",
@@ -165,7 +165,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
         }
       },
       "response": {}
@@ -178,7 +178,7 @@
         "kind": "agent.tool.code.edit.ended",
         "second": "2026-05-06T21:33:32Z",
         "session": "cddd7287-a286-48f4-b67f-085c701097cd",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
       },
       "native": {
         "event": {
@@ -188,7 +188,7 @@
           "tool_name": "Write",
           "tool_input": {
             "file_path": "/workspaces/semio/.ralph-tui/progress.md",
-            "content": "# Ralph Progress Log\n\nThis file tracks progress across iterations. Agents update this file\nafter each iteration and it's included in prompts for context.\n\n## Codebase Patterns (Study These First)\n\n- **Kit store assets:** Canonical shape is `semio.kit_store.bundle` with `rootSnapshot`, ordered `semanticOpLog`, optional `histories` (checkpoint/draft/transaction metadata over the same op model), and `backbonePointers`. Document the intent in `semio/assets/semio/kit-store.contract.semio.json`; pair `kit-store.golden.ops.semio.json` with `kit-store.golden.expected.semio.json` for RS replay tests (`projectionFingerprint` = blake3-style `hash::h` over sorted piece centers) and lightweight JS fixture parses.\n- **Root pnpm for semio slice:** A minimal `pnpm-workspace.yaml` including only `semio/js`, `semio/react`, and `semio/assets` avoids `pnpm install` pulling packages that depend on `file:../rs/pkg` before `wasm-pack build` populates `semio/rs/pkg`.\n- **GraphQL SDL source of truth:** Integrators read `semio/graphql/schema.graphql`, but it is **generated** from `semio/rs` (`async_graphql` `Schema::sdl`) via `pnpm exec nx build semio/graphql` (runs the ignored `export_semio_graphql_schema_file` test with `SEMIO_GRAPHQL_SCHEMA_OUT`). Edit the Rust schema, then rebuild—do not hand-edit the SDL long-term.\n- **Kit graph engine (RS):** `crate::kit_graph_engine` owns `projection_fingerprint_for_kit` (golden-compatible), `deterministic_semantic_diff`, and async `apply_semantic_op_json`. `Kit`/`Design` use `design_id_to_index` and `piece_id_to_index` for O(1) slot resolve after a single `bind_external_design_id` at the boundary; GraphQL `Graph.projectionFingerprint` delegates to the engine.\n\n---\n\n## 2026-05-06 - US-001\n\n- **What was implemented:** Kit asset contracts aligned to **one root snapshot + ordered semantic ops** with checkpoint/draft/transaction wrappers documented in JSON; golden ops/expected pair; `metabolism.new.kit.semio.json` replaced with a minimal bundle exemplar; RS tests replay golden ops and assert invariants/fingerprint; `@semio/js` embedded tests load golden + bundle paths for structural checks; root `pnpm typecheck` / `pnpm lint` validate the touched packages.\n- **Files changed:** `semio/assets/semio/kit-store.contract.semio.json`, `kit-store.golden.*.semio.json`, `metabolism.new.kit.semio.json`, `semio/rs/lib.rs`, `semio/js/index.ts`, root `package.json`, `pnpm-workspace.yaml`, `.npmrc`, `eslint.config.mjs`, plus prior workspace/JS fixes from this epic (see git status for full set).\n- **Learnings:**\n  - **Patterns discovered:** Same ordered op log underlies snapshot projection and history wrappers—difference is metadata/lifecycle, not a second persistence shape. Golden fixtures should encode **invariants** (`sortedPieceCenters`, counts) plus a stable **fingerprint** for deterministic CI.\n  - **Gotchas encountered:** Full pnpm workspace that includes `semio/algorithms` breaks install until `semio/rs/pkg` exists; narrow the workspace or document wasm-pack as a prereq. Legacy `KitStoreHandle` / `eventStream` GraphQL expectations in JS need a follow-up (e.g. US-006) rather than half-wiring old APIs.\n---\n\n## 2026-05-06 - US-002\n\n- **What was implemented:** Finalized the **kit-store GraphQL contract** in `semio/rs` (exported SDL): `Query.readableKitGraph` + `backboneCapabilities` with `ReadableGraphSelector` (`KitGraphWorkspace` + optional checkpoint/draft/transaction anchors); `Graph.semanticOpLog`, `projectionFingerprint`, `rootSnapshotHash`; lifecycle linkage fields on `Change` / `Checkpoint` / `Transaction` / `Draft`; `BackboneStoreKind`, `backboneAttach` / `backboneDetach`; mutations return `Command` (`requestId` + `kind`) and take `workspace` for wip vs authoritative routing; `Diff.summary`; `SemanticOpRecord` type. Regenerated `semio/graphql/schema.graphql`; documented `graphqlSurface` on `kit-store.contract.semio.json`; root `pnpm typecheck` now runs `nx build semio/graphql`.\n- **Files changed:** `semio/rs/lib.rs`, `semio/graphql/schema.graphql`, `semio/assets/semio/kit-store.contract.semio.json`, `package.json`, `.ralph-tui/progress.md`, `.repo/🎫/26/05/06/graphql-kit-store-contract-us-002/ticket.json`.\n- **Learnings:**\n  - **Patterns discovered:** Object-typed mutation payloads (`Command`) require selection sets in GraphQL documents—integration tests and clients must request `{ requestId kind }`. Enum variables (e.g. `KitGraphWorkspace`) flow through `async_graphql::value!` as string labels (`\"WIP\"`).\n  - **Gotchas encountered:** `target.schema.graphql` remains a separate Relay-style design draft; runtime SDL is only what `gql::sdl()` emits—do not assume parity without an explicit codegen/link step.\n---\n\n## 2026-05-06 - US-003\n\n- **What was implemented:** Core **kit graph engine** in `semio/rs`: `crate::kit_graph_engine` with `DesignHandle`, `projection_fingerprint_for_kit` (same algorithm as kit-store golden), `deterministic_semantic_diff` (ephemeral, from op kind + payload JSON + fp before/after), and async `apply_semantic_op_json` for bundle-shaped replay. `Kit`/`Design` now keep **slot maps** (`design_id_to_index`, `piece_id_to_index`) so hot paths avoid linear Id scans; `bind_external_design_id` is the single translation from external design `Id` to internal handle + `Arc`. `Graph::apply_create_fixed_piece` returns `(piece, diff)` and uses `apply_create_fixed_piece_on_design_node` for pointer-only mutation; GraphQL `projectionFingerprint` calls the engine. `CreatedFixedPiece` events carry computed diffs. Contract JSON documents `kitGraphEngine`.\n- **Files changed:** `semio/rs/lib.rs`, `semio/assets/semio/kit-store.contract.semio.json`, `.ralph-tui/progress.md`, `.repo/🎫/26/05/06/core-kit-graph-engine-us-003/ticket.json` (and regenerated `semio/graphql/schema.graphql` if nx touched it—verify tree).\n- **Learnings:**\n  - **Patterns discovered:** Treat **two `Arc\u003cGraph\u003e` instances** (wip vs authoritative) as the multi-state primitive; semantic apply + fp/diff logic stays identical per graph. Deterministic diff should key on **canonical input JSON + fp transition** so replay and live mutation agree without persisting diffs.\n  - **Gotchas encountered:** `apply_create_fixed_piece` must **clone** fields passed to the inner node helper when building `CreatedFixedPieceInput` for serde, or Rust move analysis fails; serde field names in golden JSON must match `#[serde(rename)]` on payload DTOs.\n---\n\n"
+            "content": "# Ralph Progress Log\n\nThis file tracks progress across iterations. Agents update this file\nafter each iteration and it's included in prompts for context.\n\n## Codebase Patterns (Study These First)\n\n- **Kit store assets:** Canonical shape is `compose.kit_store.bundle` with `rootSnapshot`, ordered `semanticOpLog`, optional `histories` (checkpoint/draft/transaction metadata over the same op model), and `backbonePointers`. Document the intent in `compose/assets/compose/kit-store.contract.compose.json`; pair `kit-store.golden.ops.compose.json` with `kit-store.golden.expected.compose.json` for RS replay tests (`projectionFingerprint` = blake3-style `hash::h` over sorted piece centers) and lightweight JS fixture parses.\n- **Root pnpm for compose slice:** A minimal `pnpm-workspace.yaml` including only `compose/js`, `compose/react`, and `compose/assets` avoids `pnpm install` pulling packages that depend on `file:../rs/pkg` before `wasm-pack build` populates `compose/rs/pkg`.\n- **GraphQL SDL source of truth:** Integrators read `compose/graphql/schema.graphql`, but it is **generated** from `compose/rs` (`async_graphql` `Schema::sdl`) via `pnpm exec nx build compose/graphql` (runs the ignored `export_compose_graphql_schema_file` test with `COMPOSE_GRAPHQL_SCHEMA_OUT`). Edit the Rust schema, then rebuild—do not hand-edit the SDL long-term.\n- **Kit graph engine (RS):** `crate::kit_graph_engine` owns `projection_fingerprint_for_kit` (golden-compatible), `deterministic_semantic_diff`, and async `apply_semantic_op_json`. `Kit`/`Design` use `design_id_to_index` and `piece_id_to_index` for O(1) slot resolve after a single `bind_external_design_id` at the boundary; GraphQL `Graph.projectionFingerprint` delegates to the engine.\n\n---\n\n## 2026-05-06 - US-001\n\n- **What was implemented:** Kit asset contracts aligned to **one root snapshot + ordered semantic ops** with checkpoint/draft/transaction wrappers documented in JSON; golden ops/expected pair; `metabolism.new.kit.compose.json` replaced with a minimal bundle exemplar; RS tests replay golden ops and assert invariants/fingerprint; `@compose/js` embedded tests load golden + bundle paths for structural checks; root `pnpm typecheck` / `pnpm lint` validate the touched packages.\n- **Files changed:** `compose/assets/compose/kit-store.contract.compose.json`, `kit-store.golden.*.compose.json`, `metabolism.new.kit.compose.json`, `compose/rs/lib.rs`, `compose/js/index.ts`, root `package.json`, `pnpm-workspace.yaml`, `.npmrc`, `eslint.config.mjs`, plus prior workspace/JS fixes from this epic (see git status for full set).\n- **Learnings:**\n  - **Patterns discovered:** Same ordered op log underlies snapshot projection and history wrappers—difference is metadata/lifecycle, not a second persistence shape. Golden fixtures should encode **invariants** (`sortedPieceCenters`, counts) plus a stable **fingerprint** for deterministic CI.\n  - **Gotchas encountered:** Full pnpm workspace that includes `compose/algorithms` breaks install until `compose/rs/pkg` exists; narrow the workspace or document wasm-pack as a prereq. Legacy `KitStoreHandle` / `eventStream` GraphQL expectations in JS need a follow-up (e.g. US-006) rather than half-wiring old APIs.\n---\n\n## 2026-05-06 - US-002\n\n- **What was implemented:** Finalized the **kit-store GraphQL contract** in `compose/rs` (exported SDL): `Query.readableKitGraph` + `backboneCapabilities` with `ReadableGraphSelector` (`KitGraphWorkspace` + optional checkpoint/draft/transaction anchors); `Graph.semanticOpLog`, `projectionFingerprint`, `rootSnapshotHash`; lifecycle linkage fields on `Change` / `Checkpoint` / `Transaction` / `Draft`; `BackboneStoreKind`, `backboneAttach` / `backboneDetach`; mutations return `Command` (`requestId` + `kind`) and take `workspace` for wip vs authoritative routing; `Diff.summary`; `SemanticOpRecord` type. Regenerated `compose/graphql/schema.graphql`; documented `graphqlSurface` on `kit-store.contract.compose.json`; root `pnpm typecheck` now runs `nx build compose/graphql`.\n- **Files changed:** `compose/rs/lib.rs`, `compose/graphql/schema.graphql`, `compose/assets/compose/kit-store.contract.compose.json`, `package.json`, `.ralph-tui/progress.md`, `.repo/🎫/26/05/06/graphql-kit-store-contract-us-002/ticket.json`.\n- **Learnings:**\n  - **Patterns discovered:** Object-typed mutation payloads (`Command`) require selection sets in GraphQL documents—integration tests and clients must request `{ requestId kind }`. Enum variables (e.g. `KitGraphWorkspace`) flow through `async_graphql::value!` as string labels (`\"WIP\"`).\n  - **Gotchas encountered:** `target.schema.graphql` remains a separate Relay-style design draft; runtime SDL is only what `gql::sdl()` emits—do not assume parity without an explicit codegen/link step.\n---\n\n## 2026-05-06 - US-003\n\n- **What was implemented:** Core **kit graph engine** in `compose/rs`: `crate::kit_graph_engine` with `DesignHandle`, `projection_fingerprint_for_kit` (same algorithm as kit-store golden), `deterministic_semantic_diff` (ephemeral, from op kind + payload JSON + fp before/after), and async `apply_semantic_op_json` for bundle-shaped replay. `Kit`/`Design` now keep **slot maps** (`design_id_to_index`, `piece_id_to_index`) so hot paths avoid linear Id scans; `bind_external_design_id` is the single translation from external design `Id` to internal handle + `Arc`. `Graph::apply_create_fixed_piece` returns `(piece, diff)` and uses `apply_create_fixed_piece_on_design_node` for pointer-only mutation; GraphQL `projectionFingerprint` calls the engine. `CreatedFixedPiece` events carry computed diffs. Contract JSON documents `kitGraphEngine`.\n- **Files changed:** `compose/rs/lib.rs`, `compose/assets/compose/kit-store.contract.compose.json`, `.ralph-tui/progress.md`, `.repo/🎫/26/05/06/core-kit-graph-engine-us-003/ticket.json` (and regenerated `compose/graphql/schema.graphql` if nx touched it—verify tree).\n- **Learnings:**\n  - **Patterns discovered:** Treat **two `Arc\u003cGraph\u003e` instances** (wip vs authoritative) as the multi-state primitive; semantic apply + fp/diff logic stays identical per graph. Deterministic diff should key on **canonical input JSON + fp transition** so replay and live mutation agree without persisting diffs.\n  - **Gotchas encountered:** `apply_create_fixed_piece` must **clone** fields passed to the inner node helper when building `CreatedFixedPieceInput` for serde, or Rust move analysis fails; serde field names in golden JSON must match `#[serde(rename)]` on payload DTOs.\n---\n\n"
           },
           "tool_output": "{\"file_path\":\"/workspaces/semio/.ralph-tui/progress.md\",\"success\":true}",
           "duration": 26.656,
@@ -200,7 +200,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
         }
       },
       "response": {}
@@ -213,7 +213,7 @@
         "kind": "agent.file.read.starting",
         "second": "2026-05-06T21:33:34Z",
         "session": "cddd7287-a286-48f4-b67f-085c701097cd",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
       },
       "native": {
         "event": {
@@ -232,7 +232,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
         }
       },
       "response": {}
@@ -245,14 +245,14 @@
         "kind": "agent.file.read.starting",
         "second": "2026-05-06T21:33:35Z",
         "session": "cddd7287-a286-48f4-b67f-085c701097cd",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
       },
       "native": {
         "event": {
           "conversation_id": "cddd7287-a286-48f4-b67f-085c701097cd",
           "generation_id": "cddd7287-a286-48f4-b67f-085c701097cd",
           "model": "composer-2",
-          "content": "# Ralph Progress Log\n\nThis file tracks progress across iterations. Agents update this file\nafter each iteration and it's included in prompts for context.\n\n## Codebase Patterns (Study These First)\n\n- **Kit store assets:** Canonical shape is `semio.kit_store.bundle` with `rootSnapshot`, ordered `semanticOpLog`, optional `histories` (checkpoint/draft/transaction metadata over the same op model), and `backbonePointers`. Document the intent in `semio/assets/semio/kit-store.contract.semio.json`; pair `kit-store.golden.ops.semio.json` with `kit-store.golden.expected.semio.json` for RS replay tests (`projectionFingerprint` = blake3-style `hash::h` over sorted piece centers) and lightweight JS fixture parses.\n- **Root pnpm for semio slice:** A minimal `pnpm-workspace.yaml` including only `semio/js`, `semio/react`, and `semio/assets` avoids `pnpm install` pulling packages that depend on `file:../rs/pkg` before `wasm-pack build` populates `semio/rs/pkg`.\n- **GraphQL SDL source of truth:** Integrators read `semio/graphql/schema.graphql`, but it is **generated** from `semio/rs` (`async_graphql` `Schema::sdl`) via `pnpm exec nx build semio/graphql` (runs the ignored `export_semio_graphql_schema_file` test with `SEMIO_GRAPHQL_SCHEMA_OUT`). Edit the Rust schema, then rebuild—do not hand-edit the SDL long-term.\n- **Kit graph engine (RS):** `crate::kit_graph_engine` owns `projection_fingerprint_for_kit` (golden-compatible), `deterministic_semantic_diff`, and async `apply_semantic_op_json`. `Kit`/`Design` use `design_id_to_index` and `piece_id_to_index` for O(1) slot resolve after a single `bind_external_design_id` at the boundary; GraphQL `Graph.projectionFingerprint` delegates to the engine.\n\n---\n\n## 2026-05-06 - US-001\n\n- **What was implemented:** Kit asset contracts aligned to **one root snapshot + ordered semantic ops** with checkpoint/draft/transaction wrappers documented in JSON; golden ops/expected pair; `metabolism.new.kit.semio.json` replaced with a minimal bundle exemplar; RS tests replay golden ops and assert invariants/fingerprint; `@semio/js` embedded tests load golden + bundle paths for structural checks; root `pnpm typecheck` / `pnpm lint` validate the touched packages.\n- **Files changed:** `semio/assets/semio/kit-store.contract.semio.json`, `kit-store.golden.*.semio.json`, `metabolism.new.kit.semio.json`, `semio/rs/lib.rs`, `semio/js/index.ts`, root `package.json`, `pnpm-workspace.yaml`, `.npmrc`, `eslint.config.mjs`, plus prior workspace/JS fixes from this epic (see git status for full set).\n- **Learnings:**\n  - **Patterns discovered:** Same ordered op log underlies snapshot projection and history wrappers—difference is metadata/lifecycle, not a second persistence shape. Golden fixtures should encode **invariants** (`sortedPieceCenters`, counts) plus a stable **fingerprint** for deterministic CI.\n  - **Gotchas encountered:** Full pnpm workspace that includes `semio/algorithms` breaks install until `semio/rs/pkg` exists; narrow the workspace or document wasm-pack as a prereq. Legacy `KitStoreHandle` / `eventStream` GraphQL expectations in JS need a follow-up (e.g. US-006) rather than half-wiring old APIs.\n---\n\n## 2026-05-06 - US-002\n\n- **What was implemented:** Finalized the **kit-store GraphQL contract** in `semio/rs` (exported SDL): `Query.readableKitGraph` + `backboneCapabilities` with `ReadableGraphSelector` (`KitGraphWorkspace` + optional checkpoint/draft/transaction anchors); `Graph.semanticOpLog`, `projectionFingerprint`, `rootSnapshotHash`; lifecycle linkage fields on `Change` / `Checkpoint` / `Transaction` / `Draft`; `BackboneStoreKind`, `backboneAttach` / `backboneDetach`; mutations return `Command` (`requestId` + `kind`) and take `workspace` for wip vs authoritative routing; `Diff.summary`; `SemanticOpRecord` type. Regenerated `semio/graphql/schema.graphql`; documented `graphqlSurface` on `kit-store.contract.semio.json`; root `pnpm typecheck` now runs `nx build semio/graphql`.\n- **Files changed:** `semio/rs/lib.rs`, `semio/graphql/schema.graphql`, `semio/assets/semio/kit-store.contract.semio.json`, `package.json`, `.ralph-tui/progress.md`, `.repo/🎫/26/05/06/graphql-kit-store-contract-us-002/ticket.json`.\n- **Learnings:**\n  - **Patterns discovered:** Object-typed mutation payloads (`Command`) require selection sets in GraphQL documents—integration tests and clients must request `{ requestId kind }`. Enum variables (e.g. `KitGraphWorkspace`) flow through `async_graphql::value!` as string labels (`\"WIP\"`).\n  - **Gotchas encountered:** `target.schema.graphql` remains a separate Relay-style design draft; runtime SDL is only what `gql::sdl()` emits—do not assume parity without an explicit codegen/link step.\n---\n\n## 2026-05-06 - US-003\n\n- **What was implemented:** Core **kit graph engine** in `semio/rs`: `crate::kit_graph_engine` with `DesignHandle`, `projection_fingerprint_for_kit` (same algorithm as kit-store golden), `deterministic_semantic_diff` (ephemeral, from op kind + payload JSON + fp before/after), and async `apply_semantic_op_json` for bundle-shaped replay. `Kit`/`Design` now keep **slot maps** (`design_id_to_index`, `piece_id_to_index`) so hot paths avoid linear Id scans; `bind_external_design_id` is the single translation from external design `Id` to internal handle + `Arc`. `Graph::apply_create_fixed_piece` returns `(piece, diff)` and uses `apply_create_fixed_piece_on_design_node` for pointer-only mutation; GraphQL `projectionFingerprint` calls the engine. `CreatedFixedPiece` events carry computed diffs. Contract JSON documents `kitGraphEngine`.\n- **Files changed:** `semio/rs/lib.rs`, `semio/assets/semio/kit-store.contract.semio.json`, `.ralph-tui/progress.md`, `.repo/🎫/26/05/06/core-kit-graph-engine-us-003/ticket.json` (and regenerated `semio/graphql/schema.graphql` if nx touched it—verify tree).\n- **Learnings:**\n  - **Patterns discovered:** Treat **two `Arc\u003cGraph\u003e` instances** (wip vs authoritative) as the multi-state primitive; semantic apply + fp/diff logic stays identical per graph. Deterministic diff should key on **canonical input JSON + fp transition** so replay and live mutation agree without persisting diffs.\n  - **Gotchas encountered:** `apply_create_fixed_piece` must **clone** fields passed to the inner node helper when building `CreatedFixedPieceInput` for serde, or Rust move analysis fails; serde field names in golden JSON must match `#[serde(rename)]` on payload DTOs.\n---\n\n",
+          "content": "# Ralph Progress Log\n\nThis file tracks progress across iterations. Agents update this file\nafter each iteration and it's included in prompts for context.\n\n## Codebase Patterns (Study These First)\n\n- **Kit store assets:** Canonical shape is `compose.kit_store.bundle` with `rootSnapshot`, ordered `semanticOpLog`, optional `histories` (checkpoint/draft/transaction metadata over the same op model), and `backbonePointers`. Document the intent in `compose/assets/compose/kit-store.contract.compose.json`; pair `kit-store.golden.ops.compose.json` with `kit-store.golden.expected.compose.json` for RS replay tests (`projectionFingerprint` = blake3-style `hash::h` over sorted piece centers) and lightweight JS fixture parses.\n- **Root pnpm for compose slice:** A minimal `pnpm-workspace.yaml` including only `compose/js`, `compose/react`, and `compose/assets` avoids `pnpm install` pulling packages that depend on `file:../rs/pkg` before `wasm-pack build` populates `compose/rs/pkg`.\n- **GraphQL SDL source of truth:** Integrators read `compose/graphql/schema.graphql`, but it is **generated** from `compose/rs` (`async_graphql` `Schema::sdl`) via `pnpm exec nx build compose/graphql` (runs the ignored `export_compose_graphql_schema_file` test with `COMPOSE_GRAPHQL_SCHEMA_OUT`). Edit the Rust schema, then rebuild—do not hand-edit the SDL long-term.\n- **Kit graph engine (RS):** `crate::kit_graph_engine` owns `projection_fingerprint_for_kit` (golden-compatible), `deterministic_semantic_diff`, and async `apply_semantic_op_json`. `Kit`/`Design` use `design_id_to_index` and `piece_id_to_index` for O(1) slot resolve after a single `bind_external_design_id` at the boundary; GraphQL `Graph.projectionFingerprint` delegates to the engine.\n\n---\n\n## 2026-05-06 - US-001\n\n- **What was implemented:** Kit asset contracts aligned to **one root snapshot + ordered semantic ops** with checkpoint/draft/transaction wrappers documented in JSON; golden ops/expected pair; `metabolism.new.kit.compose.json` replaced with a minimal bundle exemplar; RS tests replay golden ops and assert invariants/fingerprint; `@compose/js` embedded tests load golden + bundle paths for structural checks; root `pnpm typecheck` / `pnpm lint` validate the touched packages.\n- **Files changed:** `compose/assets/compose/kit-store.contract.compose.json`, `kit-store.golden.*.compose.json`, `metabolism.new.kit.compose.json`, `compose/rs/lib.rs`, `compose/js/index.ts`, root `package.json`, `pnpm-workspace.yaml`, `.npmrc`, `eslint.config.mjs`, plus prior workspace/JS fixes from this epic (see git status for full set).\n- **Learnings:**\n  - **Patterns discovered:** Same ordered op log underlies snapshot projection and history wrappers—difference is metadata/lifecycle, not a second persistence shape. Golden fixtures should encode **invariants** (`sortedPieceCenters`, counts) plus a stable **fingerprint** for deterministic CI.\n  - **Gotchas encountered:** Full pnpm workspace that includes `compose/algorithms` breaks install until `compose/rs/pkg` exists; narrow the workspace or document wasm-pack as a prereq. Legacy `KitStoreHandle` / `eventStream` GraphQL expectations in JS need a follow-up (e.g. US-006) rather than half-wiring old APIs.\n---\n\n## 2026-05-06 - US-002\n\n- **What was implemented:** Finalized the **kit-store GraphQL contract** in `compose/rs` (exported SDL): `Query.readableKitGraph` + `backboneCapabilities` with `ReadableGraphSelector` (`KitGraphWorkspace` + optional checkpoint/draft/transaction anchors); `Graph.semanticOpLog`, `projectionFingerprint`, `rootSnapshotHash`; lifecycle linkage fields on `Change` / `Checkpoint` / `Transaction` / `Draft`; `BackboneStoreKind`, `backboneAttach` / `backboneDetach`; mutations return `Command` (`requestId` + `kind`) and take `workspace` for wip vs authoritative routing; `Diff.summary`; `SemanticOpRecord` type. Regenerated `compose/graphql/schema.graphql`; documented `graphqlSurface` on `kit-store.contract.compose.json`; root `pnpm typecheck` now runs `nx build compose/graphql`.\n- **Files changed:** `compose/rs/lib.rs`, `compose/graphql/schema.graphql`, `compose/assets/compose/kit-store.contract.compose.json`, `package.json`, `.ralph-tui/progress.md`, `.repo/🎫/26/05/06/graphql-kit-store-contract-us-002/ticket.json`.\n- **Learnings:**\n  - **Patterns discovered:** Object-typed mutation payloads (`Command`) require selection sets in GraphQL documents—integration tests and clients must request `{ requestId kind }`. Enum variables (e.g. `KitGraphWorkspace`) flow through `async_graphql::value!` as string labels (`\"WIP\"`).\n  - **Gotchas encountered:** `target.schema.graphql` remains a separate Relay-style design draft; runtime SDL is only what `gql::sdl()` emits—do not assume parity without an explicit codegen/link step.\n---\n\n## 2026-05-06 - US-003\n\n- **What was implemented:** Core **kit graph engine** in `compose/rs`: `crate::kit_graph_engine` with `DesignHandle`, `projection_fingerprint_for_kit` (same algorithm as kit-store golden), `deterministic_semantic_diff` (ephemeral, from op kind + payload JSON + fp before/after), and async `apply_semantic_op_json` for bundle-shaped replay. `Kit`/`Design` now keep **slot maps** (`design_id_to_index`, `piece_id_to_index`) so hot paths avoid linear Id scans; `bind_external_design_id` is the single translation from external design `Id` to internal handle + `Arc`. `Graph::apply_create_fixed_piece` returns `(piece, diff)` and uses `apply_create_fixed_piece_on_design_node` for pointer-only mutation; GraphQL `projectionFingerprint` calls the engine. `CreatedFixedPiece` events carry computed diffs. Contract JSON documents `kitGraphEngine`.\n- **Files changed:** `compose/rs/lib.rs`, `compose/assets/compose/kit-store.contract.compose.json`, `.ralph-tui/progress.md`, `.repo/🎫/26/05/06/core-kit-graph-engine-us-003/ticket.json` (and regenerated `compose/graphql/schema.graphql` if nx touched it—verify tree).\n- **Learnings:**\n  - **Patterns discovered:** Treat **two `Arc\u003cGraph\u003e` instances** (wip vs authoritative) as the multi-state primitive; semantic apply + fp/diff logic stays identical per graph. Deterministic diff should key on **canonical input JSON + fp transition** so replay and live mutation agree without persisting diffs.\n  - **Gotchas encountered:** `apply_create_fixed_piece` must **clone** fields passed to the inner node helper when building `CreatedFixedPieceInput` for serde, or Rust move analysis fails; serde field names in golden JSON must match `#[serde(rename)]` on payload DTOs.\n---\n\n",
           "file_path": "/workspaces/semio/.ralph-tui/progress.md",
           "attachments": [],
           "session_id": "cddd7287-a286-48f4-b67f-085c701097cd",
@@ -262,7 +262,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
         }
       },
       "response": {}
@@ -275,7 +275,7 @@
         "kind": "agent.file.read.ended",
         "second": "2026-05-06T21:33:36Z",
         "session": "cddd7287-a286-48f4-b67f-085c701097cd",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
       },
       "native": {
         "event": {
@@ -296,7 +296,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
         }
       },
       "response": {}
@@ -309,7 +309,7 @@
         "kind": "agent.tool.terminal.starting",
         "second": "2026-05-06T21:33:38Z",
         "session": "cddd7287-a286-48f4-b67f-085c701097cd",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
       },
       "native": {
         "event": {
@@ -318,7 +318,7 @@
           "model": "composer-2",
           "tool_name": "Shell",
           "tool_input": {
-            "command": "cd /workspaces/semio \u0026\u0026 git diff --name-only semio/graphql/schema.graphql 2\u003e\u00261",
+            "command": "cd /workspaces/semio \u0026\u0026 git diff --name-only compose/graphql/schema.graphql 2\u003e\u00261",
             "cwd": "",
             "timeout": 30000
           },
@@ -331,7 +331,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
         }
       },
       "response": {}
@@ -344,7 +344,7 @@
         "kind": "agent.file.read.starting",
         "second": "2026-05-06T21:33:38Z",
         "session": "cddd7287-a286-48f4-b67f-085c701097cd",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
       },
       "native": {
         "event": {
@@ -363,7 +363,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
         }
       },
       "response": {}
@@ -376,14 +376,14 @@
         "kind": "agent.tool.terminal.starting",
         "second": "2026-05-06T21:33:38Z",
         "session": "cddd7287-a286-48f4-b67f-085c701097cd",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
       },
       "native": {
         "event": {
           "conversation_id": "cddd7287-a286-48f4-b67f-085c701097cd",
           "generation_id": "cddd7287-a286-48f4-b67f-085c701097cd",
           "model": "composer-2",
-          "command": "cd /workspaces/semio \u0026\u0026 git diff --name-only semio/graphql/schema.graphql 2\u003e\u00261",
+          "command": "cd /workspaces/semio \u0026\u0026 git diff --name-only compose/graphql/schema.graphql 2\u003e\u00261",
           "cwd": "",
           "sandbox": false,
           "session_id": "cddd7287-a286-48f4-b67f-085c701097cd",
@@ -393,7 +393,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
         }
       },
       "response": {}
@@ -406,7 +406,7 @@
         "kind": "agent.file.read.starting",
         "second": "2026-05-06T21:33:39Z",
         "session": "cddd7287-a286-48f4-b67f-085c701097cd",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
       },
       "native": {
         "event": {
@@ -423,7 +423,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
         }
       },
       "response": {}
@@ -436,15 +436,15 @@
         "kind": "agent.tool.terminal.ended",
         "second": "2026-05-06T21:33:40Z",
         "session": "cddd7287-a286-48f4-b67f-085c701097cd",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
       },
       "native": {
         "event": {
           "conversation_id": "cddd7287-a286-48f4-b67f-085c701097cd",
           "generation_id": "cddd7287-a286-48f4-b67f-085c701097cd",
           "model": "composer-2",
-          "command": "cd /workspaces/semio \u0026\u0026 git diff --name-only semio/graphql/schema.graphql 2\u003e\u00261",
-          "output": "semio/graphql/schema.graphql\n",
+          "command": "cd /workspaces/semio \u0026\u0026 git diff --name-only compose/graphql/schema.graphql 2\u003e\u00261",
+          "output": "compose/graphql/schema.graphql\n",
           "duration": 421.497,
           "sandbox": false,
           "session_id": "cddd7287-a286-48f4-b67f-085c701097cd",
@@ -454,7 +454,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
         }
       },
       "response": {}
@@ -467,7 +467,7 @@
         "kind": "agent.file.read.ended",
         "second": "2026-05-06T21:33:40Z",
         "session": "cddd7287-a286-48f4-b67f-085c701097cd",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
       },
       "native": {
         "event": {
@@ -488,7 +488,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
         }
       },
       "response": {}
@@ -501,7 +501,7 @@
         "kind": "agent.tool.code.edit.starting",
         "second": "2026-05-06T21:33:40Z",
         "session": "cddd7287-a286-48f4-b67f-085c701097cd",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
       },
       "native": {
         "event": {
@@ -511,7 +511,7 @@
           "tool_name": "Write",
           "tool_input": {
             "file_path": "/workspaces/semio/.repo/🎫/26/05/06/core-kit-graph-engine-us-003/ticket.json",
-            "content": "{\n  \"id\": \"2026/05/06/core-kit-graph-engine-us-003\",\n  \"title\": \"Implement Semio Rs Core Kit Graph Engine\",\n  \"story\": \"US-003\",\n  \"status\": \"closed\",\n  \"summary\": \"Pointer-backed kit graph slots, kit_graph_engine module, deterministic semantic diffs, projectionFingerprint aligned with golden, apply_semantic_op_json.\"\n}\n"
+            "content": "{\n  \"id\": \"2026/05/06/core-kit-graph-engine-us-003\",\n  \"title\": \"Implement Compose Rs Core Kit Graph Engine\",\n  \"story\": \"US-003\",\n  \"status\": \"closed\",\n  \"summary\": \"Pointer-backed kit graph slots, kit_graph_engine module, deterministic semantic diffs, projectionFingerprint aligned with golden, apply_semantic_op_json.\"\n}\n"
           },
           "tool_use_id": "tool_5b1d2018-ff51-4ba3-aa1f-9310ec59abe",
           "session_id": "cddd7287-a286-48f4-b67f-085c701097cd",
@@ -521,7 +521,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
         }
       },
       "response": {}
@@ -534,7 +534,7 @@
         "kind": "agent.tool.terminal.ended",
         "second": "2026-05-06T21:33:41Z",
         "session": "cddd7287-a286-48f4-b67f-085c701097cd",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
       },
       "native": {
         "event": {
@@ -543,11 +543,11 @@
           "model": "composer-2",
           "tool_name": "Shell",
           "tool_input": {
-            "command": "cd /workspaces/semio \u0026\u0026 git diff --name-only semio/graphql/schema.graphql 2\u003e\u00261",
+            "command": "cd /workspaces/semio \u0026\u0026 git diff --name-only compose/graphql/schema.graphql 2\u003e\u00261",
             "cwd": "",
             "timeout": 30000
           },
-          "tool_output": "{\"output\":\"semio/graphql/schema.graphql\\n\",\"exitCode\":0}",
+          "tool_output": "{\"output\":\"compose/graphql/schema.graphql\\n\",\"exitCode\":0}",
           "duration": 421.497,
           "tool_use_id": "3a293b51-87d7-46d0-a4cb-6c594f1ce795",
           "cwd": "",
@@ -558,7 +558,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
         }
       },
       "response": {}
@@ -571,7 +571,7 @@
         "kind": "agent.tool.code.edit.ended",
         "second": "2026-05-06T21:33:41Z",
         "session": "cddd7287-a286-48f4-b67f-085c701097cd",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
       },
       "native": {
         "event": {
@@ -582,7 +582,7 @@
           "edits": [
             {
               "old_string": "  \"title\": \"Core Kit Graph Engine Us 003\",",
-              "new_string": "  \"title\": \"Implement Semio Rs Core Kit Graph Engine\","
+              "new_string": "  \"title\": \"Implement Compose Rs Core Kit Graph Engine\","
             }
           ],
           "session_id": "cddd7287-a286-48f4-b67f-085c701097cd",
@@ -592,7 +592,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
         }
       },
       "response": {}
@@ -605,7 +605,7 @@
         "kind": "agent.tool.code.edit.ended",
         "second": "2026-05-06T21:33:42Z",
         "session": "cddd7287-a286-48f4-b67f-085c701097cd",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
       },
       "native": {
         "event": {
@@ -615,7 +615,7 @@
           "tool_name": "Write",
           "tool_input": {
             "file_path": "/workspaces/semio/.repo/🎫/26/05/06/core-kit-graph-engine-us-003/ticket.json",
-            "content": "{\n  \"id\": \"2026/05/06/core-kit-graph-engine-us-003\",\n  \"title\": \"Implement Semio Rs Core Kit Graph Engine\",\n  \"story\": \"US-003\",\n  \"status\": \"closed\",\n  \"summary\": \"Pointer-backed kit graph slots, kit_graph_engine module, deterministic semantic diffs, projectionFingerprint aligned with golden, apply_semantic_op_json.\"\n}\n"
+            "content": "{\n  \"id\": \"2026/05/06/core-kit-graph-engine-us-003\",\n  \"title\": \"Implement Compose Rs Core Kit Graph Engine\",\n  \"story\": \"US-003\",\n  \"status\": \"closed\",\n  \"summary\": \"Pointer-backed kit graph slots, kit_graph_engine module, deterministic semantic diffs, projectionFingerprint aligned with golden, apply_semantic_op_json.\"\n}\n"
           },
           "tool_output": "{\"file_path\":\"/workspaces/semio/.repo/🎫/26/05/06/core-kit-graph-engine-us-003/ticket.json\",\"success\":true}",
           "duration": 22.887,
@@ -627,7 +627,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
         }
       },
       "response": {}
@@ -640,7 +640,7 @@
         "kind": "agent.file.read.starting",
         "second": "2026-05-06T21:33:52Z",
         "session": "cddd7287-a286-48f4-b67f-085c701097cd",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
       },
       "native": {
         "event": {
@@ -649,7 +649,7 @@
           "model": "composer-2",
           "tool_name": "Shell",
           "tool_input": {
-            "command": "cd /workspaces/semio \u0026\u0026 git diff semio/graphql/schema.graphql | head -80",
+            "command": "cd /workspaces/semio \u0026\u0026 git diff compose/graphql/schema.graphql | head -80",
             "cwd": "",
             "timeout": 30000
           },
@@ -662,7 +662,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
         }
       },
       "response": {}
@@ -675,14 +675,14 @@
         "kind": "agent.file.read.starting",
         "second": "2026-05-06T21:33:53Z",
         "session": "cddd7287-a286-48f4-b67f-085c701097cd",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
       },
       "native": {
         "event": {
           "conversation_id": "cddd7287-a286-48f4-b67f-085c701097cd",
           "generation_id": "cddd7287-a286-48f4-b67f-085c701097cd",
           "model": "composer-2",
-          "command": "cd /workspaces/semio \u0026\u0026 git diff semio/graphql/schema.graphql | head -80",
+          "command": "cd /workspaces/semio \u0026\u0026 git diff compose/graphql/schema.graphql | head -80",
           "cwd": "",
           "sandbox": false,
           "session_id": "cddd7287-a286-48f4-b67f-085c701097cd",
@@ -692,7 +692,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
         }
       },
       "response": {}
@@ -705,15 +705,15 @@
         "kind": "agent.file.read.ended",
         "second": "2026-05-06T21:33:54Z",
         "session": "cddd7287-a286-48f4-b67f-085c701097cd",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
       },
       "native": {
         "event": {
           "conversation_id": "cddd7287-a286-48f4-b67f-085c701097cd",
           "generation_id": "cddd7287-a286-48f4-b67f-085c701097cd",
           "model": "composer-2",
-          "command": "cd /workspaces/semio \u0026\u0026 git diff semio/graphql/schema.graphql | head -80",
-          "output": "diff --git a/semio/graphql/schema.graphql b/semio/graphql/schema.graphql\nindex 17ed0ce15..864070aa9 100644\n--- a/semio/graphql/schema.graphql\n+++ b/semio/graphql/schema.graphql\n@@ -303,7 +303,7 @@ type Graph {\n \t\"\"\"\n \tsemanticOpLog(limit: Int): [SemanticOpRecord!]!\n \t\"\"\"\n-\t@emoji 🔢 Stable `projectionFingerprint` (blake3-style `hash::h`) keyed from graph + kit identity until piece-center sort lands.\n+\t@emoji 🔢 Stable `projectionFingerprint` (sorted piece centers via [`crate::kit_graph_engine::projection_fingerprint_for_kit`]).\n \t\"\"\"\n \tprojectionFingerprint: String!\n \t\"\"\"\n",
+          "command": "cd /workspaces/semio \u0026\u0026 git diff compose/graphql/schema.graphql | head -80",
+          "output": "diff --git a/compose/graphql/schema.graphql b/compose/graphql/schema.graphql\nindex 17ed0ce15..864070aa9 100644\n--- a/compose/graphql/schema.graphql\n+++ b/compose/graphql/schema.graphql\n@@ -303,7 +303,7 @@ type Graph {\n \t\"\"\"\n \tsemanticOpLog(limit: Int): [SemanticOpRecord!]!\n \t\"\"\"\n-\t@emoji 🔢 Stable `projectionFingerprint` (blake3-style `hash::h`) keyed from graph + kit identity until piece-center sort lands.\n+\t@emoji 🔢 Stable `projectionFingerprint` (sorted piece centers via [`crate::kit_graph_engine::projection_fingerprint_for_kit`]).\n \t\"\"\"\n \tprojectionFingerprint: String!\n \t\"\"\"\n",
           "duration": 411.603,
           "sandbox": false,
           "session_id": "cddd7287-a286-48f4-b67f-085c701097cd",
@@ -723,7 +723,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
         }
       },
       "response": {}
@@ -736,7 +736,7 @@
         "kind": "agent.file.read.ended",
         "second": "2026-05-06T21:33:55Z",
         "session": "cddd7287-a286-48f4-b67f-085c701097cd",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
       },
       "native": {
         "event": {
@@ -745,11 +745,11 @@
           "model": "composer-2",
           "tool_name": "Shell",
           "tool_input": {
-            "command": "cd /workspaces/semio \u0026\u0026 git diff semio/graphql/schema.graphql | head -80",
+            "command": "cd /workspaces/semio \u0026\u0026 git diff compose/graphql/schema.graphql | head -80",
             "cwd": "",
             "timeout": 30000
           },
-          "tool_output": "{\"output\":\"diff --git a/semio/graphql/schema.graphql b/semio/graphql/schema.graphql\\nindex 17ed0ce15..864070aa9 100644\\n--- a/semio/graphql/schema.graphql\\n+++ b/semio/graphql/schema.graphql\\n@@ -303,7 +303,7 @@ type Graph {\\n \\t\\\"\\\"\\\"\\n \\tsemanticOpLog(limit: Int): [SemanticOpRecord!]!\\n \\t\\\"\\\"\\\"\\n-\\t@emoji 🔢 Stable `projectionFingerprint` (blake3-style `hash::h`) keyed from graph + kit identity until piece-center sort lands.\\n+\\t@emoji 🔢 Stable `projectionFingerprint` (sorted piece centers via [`crate::kit_graph_engine::projection_fingerprint_for_kit`]).\\n \\t\\\"\\\"\\\"\\n \\tprojectionFingerprint: String!\\n \\t\\\"\\\"\\\"\\n\",\"exitCode\":0}",
+          "tool_output": "{\"output\":\"diff --git a/compose/graphql/schema.graphql b/compose/graphql/schema.graphql\\nindex 17ed0ce15..864070aa9 100644\\n--- a/compose/graphql/schema.graphql\\n+++ b/compose/graphql/schema.graphql\\n@@ -303,7 +303,7 @@ type Graph {\\n \\t\\\"\\\"\\\"\\n \\tsemanticOpLog(limit: Int): [SemanticOpRecord!]!\\n \\t\\\"\\\"\\\"\\n-\\t@emoji 🔢 Stable `projectionFingerprint` (blake3-style `hash::h`) keyed from graph + kit identity until piece-center sort lands.\\n+\\t@emoji 🔢 Stable `projectionFingerprint` (sorted piece centers via [`crate::kit_graph_engine::projection_fingerprint_for_kit`]).\\n \\t\\\"\\\"\\\"\\n \\tprojectionFingerprint: String!\\n \\t\\\"\\\"\\\"\\n\",\"exitCode\":0}",
           "duration": 411.603,
           "tool_use_id": "6357ea64-ec44-4f8e-af6a-2c04d67ca337",
           "cwd": "",
@@ -760,7 +760,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
         }
       },
       "response": {}
@@ -773,7 +773,7 @@
         "kind": "agent.file.read.starting",
         "second": "2026-05-06T21:33:58Z",
         "session": "cddd7287-a286-48f4-b67f-085c701097cd",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
       },
       "native": {
         "event": {
@@ -792,7 +792,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
         }
       },
       "response": {}
@@ -805,14 +805,14 @@
         "kind": "agent.file.read.starting",
         "second": "2026-05-06T21:33:59Z",
         "session": "cddd7287-a286-48f4-b67f-085c701097cd",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
       },
       "native": {
         "event": {
           "conversation_id": "cddd7287-a286-48f4-b67f-085c701097cd",
           "generation_id": "cddd7287-a286-48f4-b67f-085c701097cd",
           "model": "composer-2",
-          "content": "# Ralph Progress Log\n\nThis file tracks progress across iterations. Agents update this file\nafter each iteration and it's included in prompts for context.\n\n## Codebase Patterns (Study These First)\n\n- **Kit store assets:** Canonical shape is `semio.kit_store.bundle` with `rootSnapshot`, ordered `semanticOpLog`, optional `histories` (checkpoint/draft/transaction metadata over the same op model), and `backbonePointers`. Document the intent in `semio/assets/semio/kit-store.contract.semio.json`; pair `kit-store.golden.ops.semio.json` with `kit-store.golden.expected.semio.json` for RS replay tests (`projectionFingerprint` = blake3-style `hash::h` over sorted piece centers) and lightweight JS fixture parses.\n- **Root pnpm for semio slice:** A minimal `pnpm-workspace.yaml` including only `semio/js`, `semio/react`, and `semio/assets` avoids `pnpm install` pulling packages that depend on `file:../rs/pkg` before `wasm-pack build` populates `semio/rs/pkg`.\n- **GraphQL SDL source of truth:** Integrators read `semio/graphql/schema.graphql`, but it is **generated** from `semio/rs` (`async_graphql` `Schema::sdl`) via `pnpm exec nx build semio/graphql` (runs the ignored `export_semio_graphql_schema_file` test with `SEMIO_GRAPHQL_SCHEMA_OUT`). Edit the Rust schema, then rebuild—do not hand-edit the SDL long-term.\n- **Kit graph engine (RS):** `crate::kit_graph_engine` owns `projection_fingerprint_for_kit` (golden-compatible), `deterministic_semantic_diff`, and async `apply_semantic_op_json`. `Kit`/`Design` use `design_id_to_index` and `piece_id_to_index` for O(1) slot resolve after a single `bind_external_design_id` at the boundary; GraphQL `Graph.projectionFingerprint` delegates to the engine.\n\n---\n\n## 2026-05-06 - US-001\n\n- **What was implemented:** Kit asset contracts aligned to **one root snapshot + ordered semantic ops** with checkpoint/draft/transaction wrappers documented in JSON; golden ops/expected pair; `metabolism.new.kit.semio.json` replaced with a minimal bundle exemplar; RS tests replay golden ops and assert invariants/fingerprint; `@semio/js` embedded tests load golden + bundle paths for structural checks; root `pnpm typecheck` / `pnpm lint` validate the touched packages.\n- **Files changed:** `semio/assets/semio/kit-store.contract.semio.json`, `kit-store.golden.*.semio.json`, `metabolism.new.kit.semio.json`, `semio/rs/lib.rs`, `semio/js/index.ts`, root `package.json`, `pnpm-workspace.yaml`, `.npmrc`, `eslint.config.mjs`, plus prior workspace/JS fixes from this epic (see git status for full set).\n- **Learnings:**\n  - **Patterns discovered:** Same ordered op log underlies snapshot projection and history wrappers—difference is metadata/lifecycle, not a second persistence shape. Golden fixtures should encode **invariants** (`sortedPieceCenters`, counts) plus a stable **fingerprint** for deterministic CI.\n  - **Gotchas encountered:** Full pnpm workspace that includes `semio/algorithms` breaks install until `semio/rs/pkg` exists; narrow the workspace or document wasm-pack as a prereq. Legacy `KitStoreHandle` / `eventStream` GraphQL expectations in JS need a follow-up (e.g. US-006) rather than half-wiring old APIs.\n---\n\n## 2026-05-06 - US-002\n\n- **What was implemented:** Finalized the **kit-store GraphQL contract** in `semio/rs` (exported SDL): `Query.readableKitGraph` + `backboneCapabilities` with `ReadableGraphSelector` (`KitGraphWorkspace` + optional checkpoint/draft/transaction anchors); `Graph.semanticOpLog`, `projectionFingerprint`, `rootSnapshotHash`; lifecycle linkage fields on `Change` / `Checkpoint` / `Transaction` / `Draft`; `BackboneStoreKind`, `backboneAttach` / `backboneDetach`; mutations return `Command` (`requestId` + `kind`) and take `workspace` for wip vs authoritative routing; `Diff.summary`; `SemanticOpRecord` type. Regenerated `semio/graphql/schema.graphql`; documented `graphqlSurface` on `kit-store.contract.semio.json`; root `pnpm typecheck` now runs `nx build semio/graphql`.\n- **Files changed:** `semio/rs/lib.rs`, `semio/graphql/schema.graphql`, `semio/assets/semio/kit-store.contract.semio.json`, `package.json`, `.ralph-tui/progress.md`, `.repo/🎫/26/05/06/graphql-kit-store-contract-us-002/ticket.json`.\n- **Learnings:**\n  - **Patterns discovered:** Object-typed mutation payloads (`Command`) require selection sets in GraphQL documents—integration tests and clients must request `{ requestId kind }`. Enum variables (e.g. `KitGraphWorkspace`) flow through `async_graphql::value!` as string labels (`\"WIP\"`).\n  - **Gotchas encountered:** `target.schema.graphql` remains a separate Relay-style design draft; runtime SDL is only what `gql::sdl()` emits—do not assume parity without an explicit codegen/link step.\n---\n\n## 2026-05-06 - US-003\n\n- **What was implemented:** Core **kit graph engine** in `semio/rs`: `crate::kit_graph_engine` with `DesignHandle`, `projection_fingerprint_for_kit` (same algorithm as kit-store golden), `deterministic_semantic_diff` (ephemeral, from op kind + payload JSON + fp before/after), and async `apply_semantic_op_json` for bundle-shaped replay. `Kit`/`Design` now keep **slot maps** (`design_id_to_index`, `piece_id_to_index`) so hot paths avoid linear Id scans; `bind_external_design_id` is the single translation from external design `Id` to internal handle + `Arc`. `Graph::apply_create_fixed_piece` returns `(piece, diff)` and uses `apply_create_fixed_piece_on_design_node` for pointer-only mutation; GraphQL `projectionFingerprint` calls the engine. `CreatedFixedPiece` events carry computed diffs. Contract JSON documents `kitGraphEngine`.\n- **Files changed:** `semio/rs/lib.rs`, `semio/assets/semio/kit-store.contract.semio.json`, `.ralph-tui/progress.md`, `.repo/🎫/26/05/06/core-kit-graph-engine-us-003/ticket.json` (and regenerated `semio/graphql/schema.graphql` if nx touched it—verify tree).\n- **Learnings:**\n  - **Patterns discovered:** Treat **two `Arc\u003cGraph\u003e` instances** (wip vs authoritative) as the multi-state primitive; semantic apply + fp/diff logic stays identical per graph. Deterministic diff should key on **canonical input JSON + fp transition** so replay and live mutation agree without persisting diffs.\n  - **Gotchas encountered:** `apply_create_fixed_piece` must **clone** fields passed to the inner node helper when building `CreatedFixedPieceInput` for serde, or Rust move analysis fails; serde field names in golden JSON must match `#[serde(rename)]` on payload DTOs.\n---\n\n",
+          "content": "# Ralph Progress Log\n\nThis file tracks progress across iterations. Agents update this file\nafter each iteration and it's included in prompts for context.\n\n## Codebase Patterns (Study These First)\n\n- **Kit store assets:** Canonical shape is `compose.kit_store.bundle` with `rootSnapshot`, ordered `semanticOpLog`, optional `histories` (checkpoint/draft/transaction metadata over the same op model), and `backbonePointers`. Document the intent in `compose/assets/compose/kit-store.contract.compose.json`; pair `kit-store.golden.ops.compose.json` with `kit-store.golden.expected.compose.json` for RS replay tests (`projectionFingerprint` = blake3-style `hash::h` over sorted piece centers) and lightweight JS fixture parses.\n- **Root pnpm for compose slice:** A minimal `pnpm-workspace.yaml` including only `compose/js`, `compose/react`, and `compose/assets` avoids `pnpm install` pulling packages that depend on `file:../rs/pkg` before `wasm-pack build` populates `compose/rs/pkg`.\n- **GraphQL SDL source of truth:** Integrators read `compose/graphql/schema.graphql`, but it is **generated** from `compose/rs` (`async_graphql` `Schema::sdl`) via `pnpm exec nx build compose/graphql` (runs the ignored `export_compose_graphql_schema_file` test with `COMPOSE_GRAPHQL_SCHEMA_OUT`). Edit the Rust schema, then rebuild—do not hand-edit the SDL long-term.\n- **Kit graph engine (RS):** `crate::kit_graph_engine` owns `projection_fingerprint_for_kit` (golden-compatible), `deterministic_semantic_diff`, and async `apply_semantic_op_json`. `Kit`/`Design` use `design_id_to_index` and `piece_id_to_index` for O(1) slot resolve after a single `bind_external_design_id` at the boundary; GraphQL `Graph.projectionFingerprint` delegates to the engine.\n\n---\n\n## 2026-05-06 - US-001\n\n- **What was implemented:** Kit asset contracts aligned to **one root snapshot + ordered semantic ops** with checkpoint/draft/transaction wrappers documented in JSON; golden ops/expected pair; `metabolism.new.kit.compose.json` replaced with a minimal bundle exemplar; RS tests replay golden ops and assert invariants/fingerprint; `@compose/js` embedded tests load golden + bundle paths for structural checks; root `pnpm typecheck` / `pnpm lint` validate the touched packages.\n- **Files changed:** `compose/assets/compose/kit-store.contract.compose.json`, `kit-store.golden.*.compose.json`, `metabolism.new.kit.compose.json`, `compose/rs/lib.rs`, `compose/js/index.ts`, root `package.json`, `pnpm-workspace.yaml`, `.npmrc`, `eslint.config.mjs`, plus prior workspace/JS fixes from this epic (see git status for full set).\n- **Learnings:**\n  - **Patterns discovered:** Same ordered op log underlies snapshot projection and history wrappers—difference is metadata/lifecycle, not a second persistence shape. Golden fixtures should encode **invariants** (`sortedPieceCenters`, counts) plus a stable **fingerprint** for deterministic CI.\n  - **Gotchas encountered:** Full pnpm workspace that includes `compose/algorithms` breaks install until `compose/rs/pkg` exists; narrow the workspace or document wasm-pack as a prereq. Legacy `KitStoreHandle` / `eventStream` GraphQL expectations in JS need a follow-up (e.g. US-006) rather than half-wiring old APIs.\n---\n\n## 2026-05-06 - US-002\n\n- **What was implemented:** Finalized the **kit-store GraphQL contract** in `compose/rs` (exported SDL): `Query.readableKitGraph` + `backboneCapabilities` with `ReadableGraphSelector` (`KitGraphWorkspace` + optional checkpoint/draft/transaction anchors); `Graph.semanticOpLog`, `projectionFingerprint`, `rootSnapshotHash`; lifecycle linkage fields on `Change` / `Checkpoint` / `Transaction` / `Draft`; `BackboneStoreKind`, `backboneAttach` / `backboneDetach`; mutations return `Command` (`requestId` + `kind`) and take `workspace` for wip vs authoritative routing; `Diff.summary`; `SemanticOpRecord` type. Regenerated `compose/graphql/schema.graphql`; documented `graphqlSurface` on `kit-store.contract.compose.json`; root `pnpm typecheck` now runs `nx build compose/graphql`.\n- **Files changed:** `compose/rs/lib.rs`, `compose/graphql/schema.graphql`, `compose/assets/compose/kit-store.contract.compose.json`, `package.json`, `.ralph-tui/progress.md`, `.repo/🎫/26/05/06/graphql-kit-store-contract-us-002/ticket.json`.\n- **Learnings:**\n  - **Patterns discovered:** Object-typed mutation payloads (`Command`) require selection sets in GraphQL documents—integration tests and clients must request `{ requestId kind }`. Enum variables (e.g. `KitGraphWorkspace`) flow through `async_graphql::value!` as string labels (`\"WIP\"`).\n  - **Gotchas encountered:** `target.schema.graphql` remains a separate Relay-style design draft; runtime SDL is only what `gql::sdl()` emits—do not assume parity without an explicit codegen/link step.\n---\n\n## 2026-05-06 - US-003\n\n- **What was implemented:** Core **kit graph engine** in `compose/rs`: `crate::kit_graph_engine` with `DesignHandle`, `projection_fingerprint_for_kit` (same algorithm as kit-store golden), `deterministic_semantic_diff` (ephemeral, from op kind + payload JSON + fp before/after), and async `apply_semantic_op_json` for bundle-shaped replay. `Kit`/`Design` now keep **slot maps** (`design_id_to_index`, `piece_id_to_index`) so hot paths avoid linear Id scans; `bind_external_design_id` is the single translation from external design `Id` to internal handle + `Arc`. `Graph::apply_create_fixed_piece` returns `(piece, diff)` and uses `apply_create_fixed_piece_on_design_node` for pointer-only mutation; GraphQL `projectionFingerprint` calls the engine. `CreatedFixedPiece` events carry computed diffs. Contract JSON documents `kitGraphEngine`.\n- **Files changed:** `compose/rs/lib.rs`, `compose/assets/compose/kit-store.contract.compose.json`, `.ralph-tui/progress.md`, `.repo/🎫/26/05/06/core-kit-graph-engine-us-003/ticket.json` (and regenerated `compose/graphql/schema.graphql` if nx touched it—verify tree).\n- **Learnings:**\n  - **Patterns discovered:** Treat **two `Arc\u003cGraph\u003e` instances** (wip vs authoritative) as the multi-state primitive; semantic apply + fp/diff logic stays identical per graph. Deterministic diff should key on **canonical input JSON + fp transition** so replay and live mutation agree without persisting diffs.\n  - **Gotchas encountered:** `apply_create_fixed_piece` must **clone** fields passed to the inner node helper when building `CreatedFixedPieceInput` for serde, or Rust move analysis fails; serde field names in golden JSON must match `#[serde(rename)]` on payload DTOs.\n---\n\n",
           "file_path": "/workspaces/semio/.ralph-tui/progress.md",
           "attachments": [],
           "session_id": "cddd7287-a286-48f4-b67f-085c701097cd",
@@ -822,7 +822,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
         }
       },
       "response": {}
@@ -835,7 +835,7 @@
         "kind": "agent.file.read.ended",
         "second": "2026-05-06T21:34:00Z",
         "session": "cddd7287-a286-48f4-b67f-085c701097cd",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
       },
       "native": {
         "event": {
@@ -856,7 +856,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
         }
       },
       "response": {}
@@ -869,7 +869,7 @@
         "kind": "agent.tool.code.edit.starting",
         "second": "2026-05-06T21:34:00Z",
         "session": "cddd7287-a286-48f4-b67f-085c701097cd",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
       },
       "native": {
         "event": {
@@ -879,7 +879,7 @@
           "tool_name": "Write",
           "tool_input": {
             "file_path": "/workspaces/semio/.ralph-tui/progress.md",
-            "content": "# Ralph Progress Log\n\nThis file tracks progress across iterations. Agents update this file\nafter each iteration and it's included in prompts for context.\n\n## Codebase Patterns (Study These First)\n\n- **Kit store assets:** Canonical shape is `semio.kit_store.bundle` with `rootSnapshot`, ordered `semanticOpLog`, optional `histories` (checkpoint/draft/transaction metadata over the same op model), and `backbonePointers`. Document the intent in `semio/assets/semio/kit-store.contract.semio.json`; pair `kit-store.golden.ops.semio.json` with `kit-store.golden.expected.semio.json` for RS replay tests (`projectionFingerprint` = blake3-style `hash::h` over sorted piece centers) and lightweight JS fixture parses.\n- **Root pnpm for semio slice:** A minimal `pnpm-workspace.yaml` including only `semio/js`, `semio/react`, and `semio/assets` avoids `pnpm install` pulling packages that depend on `file:../rs/pkg` before `wasm-pack build` populates `semio/rs/pkg`.\n- **GraphQL SDL source of truth:** Integrators read `semio/graphql/schema.graphql`, but it is **generated** from `semio/rs` (`async_graphql` `Schema::sdl`) via `pnpm exec nx build semio/graphql` (runs the ignored `export_semio_graphql_schema_file` test with `SEMIO_GRAPHQL_SCHEMA_OUT`). Edit the Rust schema, then rebuild—do not hand-edit the SDL long-term.\n- **Kit graph engine (RS):** `crate::kit_graph_engine` owns `projection_fingerprint_for_kit` (golden-compatible), `deterministic_semantic_diff`, and async `apply_semantic_op_json`. `Kit`/`Design` use `design_id_to_index` and `piece_id_to_index` for O(1) slot resolve after a single `bind_external_design_id` at the boundary; GraphQL `Graph.projectionFingerprint` delegates to the engine.\n\n---\n\n## 2026-05-06 - US-001\n\n- **What was implemented:** Kit asset contracts aligned to **one root snapshot + ordered semantic ops** with checkpoint/draft/transaction wrappers documented in JSON; golden ops/expected pair; `metabolism.new.kit.semio.json` replaced with a minimal bundle exemplar; RS tests replay golden ops and assert invariants/fingerprint; `@semio/js` embedded tests load golden + bundle paths for structural checks; root `pnpm typecheck` / `pnpm lint` validate the touched packages.\n- **Files changed:** `semio/assets/semio/kit-store.contract.semio.json`, `kit-store.golden.*.semio.json`, `metabolism.new.kit.semio.json`, `semio/rs/lib.rs`, `semio/js/index.ts`, root `package.json`, `pnpm-workspace.yaml`, `.npmrc`, `eslint.config.mjs`, plus prior workspace/JS fixes from this epic (see git status for full set).\n- **Learnings:**\n  - **Patterns discovered:** Same ordered op log underlies snapshot projection and history wrappers—difference is metadata/lifecycle, not a second persistence shape. Golden fixtures should encode **invariants** (`sortedPieceCenters`, counts) plus a stable **fingerprint** for deterministic CI.\n  - **Gotchas encountered:** Full pnpm workspace that includes `semio/algorithms` breaks install until `semio/rs/pkg` exists; narrow the workspace or document wasm-pack as a prereq. Legacy `KitStoreHandle` / `eventStream` GraphQL expectations in JS need a follow-up (e.g. US-006) rather than half-wiring old APIs.\n---\n\n## 2026-05-06 - US-002\n\n- **What was implemented:** Finalized the **kit-store GraphQL contract** in `semio/rs` (exported SDL): `Query.readableKitGraph` + `backboneCapabilities` with `ReadableGraphSelector` (`KitGraphWorkspace` + optional checkpoint/draft/transaction anchors); `Graph.semanticOpLog`, `projectionFingerprint`, `rootSnapshotHash`; lifecycle linkage fields on `Change` / `Checkpoint` / `Transaction` / `Draft`; `BackboneStoreKind`, `backboneAttach` / `backboneDetach`; mutations return `Command` (`requestId` + `kind`) and take `workspace` for wip vs authoritative routing; `Diff.summary`; `SemanticOpRecord` type. Regenerated `semio/graphql/schema.graphql`; documented `graphqlSurface` on `kit-store.contract.semio.json`; root `pnpm typecheck` now runs `nx build semio/graphql`.\n- **Files changed:** `semio/rs/lib.rs`, `semio/graphql/schema.graphql`, `semio/assets/semio/kit-store.contract.semio.json`, `package.json`, `.ralph-tui/progress.md`, `.repo/🎫/26/05/06/graphql-kit-store-contract-us-002/ticket.json`.\n- **Learnings:**\n  - **Patterns discovered:** Object-typed mutation payloads (`Command`) require selection sets in GraphQL documents—integration tests and clients must request `{ requestId kind }`. Enum variables (e.g. `KitGraphWorkspace`) flow through `async_graphql::value!` as string labels (`\"WIP\"`).\n  - **Gotchas encountered:** `target.schema.graphql` remains a separate Relay-style design draft; runtime SDL is only what `gql::sdl()` emits—do not assume parity without an explicit codegen/link step.\n---\n\n## 2026-05-06 - US-003\n\n- **What was implemented:** Core **kit graph engine** in `semio/rs`: `crate::kit_graph_engine` with `DesignHandle`, `projection_fingerprint_for_kit` (same algorithm as kit-store golden), `deterministic_semantic_diff` (ephemeral, from op kind + payload JSON + fp before/after), and async `apply_semantic_op_json` for bundle-shaped replay. `Kit`/`Design` now keep **slot maps** (`design_id_to_index`, `piece_id_to_index`) so hot paths avoid linear Id scans; `bind_external_design_id` is the single translation from external design `Id` to internal handle + `Arc`. `Graph::apply_create_fixed_piece` returns `(piece, diff)` and uses `apply_create_fixed_piece_on_design_node` for pointer-only mutation; GraphQL `projectionFingerprint` calls the engine. `CreatedFixedPiece` events carry computed diffs. Contract JSON documents `kitGraphEngine`.\n- **Files changed:** `semio/rs/lib.rs`, `semio/assets/semio/kit-store.contract.semio.json`, `semio/graphql/schema.graphql` (SDL doc comment from resolver), `.ralph-tui/progress.md`, `.repo/🎫/26/05/06/core-kit-graph-engine-us-003/ticket.json`.\n- **Learnings:**\n  - **Patterns discovered:** Treat **two `Arc\u003cGraph\u003e` instances** (wip vs authoritative) as the multi-state primitive; semantic apply + fp/diff logic stays identical per graph. Deterministic diff should key on **canonical input JSON + fp transition** so replay and live mutation agree without persisting diffs.\n  - **Gotchas encountered:** `apply_create_fixed_piece` must **clone** fields passed to the inner node helper when building `CreatedFixedPieceInput` for serde, or Rust move analysis fails; serde field names in golden JSON must match `#[serde(rename)]` on payload DTOs.\n---\n\n"
+            "content": "# Ralph Progress Log\n\nThis file tracks progress across iterations. Agents update this file\nafter each iteration and it's included in prompts for context.\n\n## Codebase Patterns (Study These First)\n\n- **Kit store assets:** Canonical shape is `compose.kit_store.bundle` with `rootSnapshot`, ordered `semanticOpLog`, optional `histories` (checkpoint/draft/transaction metadata over the same op model), and `backbonePointers`. Document the intent in `compose/assets/compose/kit-store.contract.compose.json`; pair `kit-store.golden.ops.compose.json` with `kit-store.golden.expected.compose.json` for RS replay tests (`projectionFingerprint` = blake3-style `hash::h` over sorted piece centers) and lightweight JS fixture parses.\n- **Root pnpm for compose slice:** A minimal `pnpm-workspace.yaml` including only `compose/js`, `compose/react`, and `compose/assets` avoids `pnpm install` pulling packages that depend on `file:../rs/pkg` before `wasm-pack build` populates `compose/rs/pkg`.\n- **GraphQL SDL source of truth:** Integrators read `compose/graphql/schema.graphql`, but it is **generated** from `compose/rs` (`async_graphql` `Schema::sdl`) via `pnpm exec nx build compose/graphql` (runs the ignored `export_compose_graphql_schema_file` test with `COMPOSE_GRAPHQL_SCHEMA_OUT`). Edit the Rust schema, then rebuild—do not hand-edit the SDL long-term.\n- **Kit graph engine (RS):** `crate::kit_graph_engine` owns `projection_fingerprint_for_kit` (golden-compatible), `deterministic_semantic_diff`, and async `apply_semantic_op_json`. `Kit`/`Design` use `design_id_to_index` and `piece_id_to_index` for O(1) slot resolve after a single `bind_external_design_id` at the boundary; GraphQL `Graph.projectionFingerprint` delegates to the engine.\n\n---\n\n## 2026-05-06 - US-001\n\n- **What was implemented:** Kit asset contracts aligned to **one root snapshot + ordered semantic ops** with checkpoint/draft/transaction wrappers documented in JSON; golden ops/expected pair; `metabolism.new.kit.compose.json` replaced with a minimal bundle exemplar; RS tests replay golden ops and assert invariants/fingerprint; `@compose/js` embedded tests load golden + bundle paths for structural checks; root `pnpm typecheck` / `pnpm lint` validate the touched packages.\n- **Files changed:** `compose/assets/compose/kit-store.contract.compose.json`, `kit-store.golden.*.compose.json`, `metabolism.new.kit.compose.json`, `compose/rs/lib.rs`, `compose/js/index.ts`, root `package.json`, `pnpm-workspace.yaml`, `.npmrc`, `eslint.config.mjs`, plus prior workspace/JS fixes from this epic (see git status for full set).\n- **Learnings:**\n  - **Patterns discovered:** Same ordered op log underlies snapshot projection and history wrappers—difference is metadata/lifecycle, not a second persistence shape. Golden fixtures should encode **invariants** (`sortedPieceCenters`, counts) plus a stable **fingerprint** for deterministic CI.\n  - **Gotchas encountered:** Full pnpm workspace that includes `compose/algorithms` breaks install until `compose/rs/pkg` exists; narrow the workspace or document wasm-pack as a prereq. Legacy `KitStoreHandle` / `eventStream` GraphQL expectations in JS need a follow-up (e.g. US-006) rather than half-wiring old APIs.\n---\n\n## 2026-05-06 - US-002\n\n- **What was implemented:** Finalized the **kit-store GraphQL contract** in `compose/rs` (exported SDL): `Query.readableKitGraph` + `backboneCapabilities` with `ReadableGraphSelector` (`KitGraphWorkspace` + optional checkpoint/draft/transaction anchors); `Graph.semanticOpLog`, `projectionFingerprint`, `rootSnapshotHash`; lifecycle linkage fields on `Change` / `Checkpoint` / `Transaction` / `Draft`; `BackboneStoreKind`, `backboneAttach` / `backboneDetach`; mutations return `Command` (`requestId` + `kind`) and take `workspace` for wip vs authoritative routing; `Diff.summary`; `SemanticOpRecord` type. Regenerated `compose/graphql/schema.graphql`; documented `graphqlSurface` on `kit-store.contract.compose.json`; root `pnpm typecheck` now runs `nx build compose/graphql`.\n- **Files changed:** `compose/rs/lib.rs`, `compose/graphql/schema.graphql`, `compose/assets/compose/kit-store.contract.compose.json`, `package.json`, `.ralph-tui/progress.md`, `.repo/🎫/26/05/06/graphql-kit-store-contract-us-002/ticket.json`.\n- **Learnings:**\n  - **Patterns discovered:** Object-typed mutation payloads (`Command`) require selection sets in GraphQL documents—integration tests and clients must request `{ requestId kind }`. Enum variables (e.g. `KitGraphWorkspace`) flow through `async_graphql::value!` as string labels (`\"WIP\"`).\n  - **Gotchas encountered:** `target.schema.graphql` remains a separate Relay-style design draft; runtime SDL is only what `gql::sdl()` emits—do not assume parity without an explicit codegen/link step.\n---\n\n## 2026-05-06 - US-003\n\n- **What was implemented:** Core **kit graph engine** in `compose/rs`: `crate::kit_graph_engine` with `DesignHandle`, `projection_fingerprint_for_kit` (same algorithm as kit-store golden), `deterministic_semantic_diff` (ephemeral, from op kind + payload JSON + fp before/after), and async `apply_semantic_op_json` for bundle-shaped replay. `Kit`/`Design` now keep **slot maps** (`design_id_to_index`, `piece_id_to_index`) so hot paths avoid linear Id scans; `bind_external_design_id` is the single translation from external design `Id` to internal handle + `Arc`. `Graph::apply_create_fixed_piece` returns `(piece, diff)` and uses `apply_create_fixed_piece_on_design_node` for pointer-only mutation; GraphQL `projectionFingerprint` calls the engine. `CreatedFixedPiece` events carry computed diffs. Contract JSON documents `kitGraphEngine`.\n- **Files changed:** `compose/rs/lib.rs`, `compose/assets/compose/kit-store.contract.compose.json`, `compose/graphql/schema.graphql` (SDL doc comment from resolver), `.ralph-tui/progress.md`, `.repo/🎫/26/05/06/core-kit-graph-engine-us-003/ticket.json`.\n- **Learnings:**\n  - **Patterns discovered:** Treat **two `Arc\u003cGraph\u003e` instances** (wip vs authoritative) as the multi-state primitive; semantic apply + fp/diff logic stays identical per graph. Deterministic diff should key on **canonical input JSON + fp transition** so replay and live mutation agree without persisting diffs.\n  - **Gotchas encountered:** `apply_create_fixed_piece` must **clone** fields passed to the inner node helper when building `CreatedFixedPieceInput` for serde, or Rust move analysis fails; serde field names in golden JSON must match `#[serde(rename)]` on payload DTOs.\n---\n\n"
           },
           "tool_use_id": "tool_3ce71a9f-5d1f-4fe0-ad4c-64faee2770d",
           "session_id": "cddd7287-a286-48f4-b67f-085c701097cd",
@@ -889,7 +889,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
         }
       },
       "response": {}
@@ -902,7 +902,7 @@
         "kind": "agent.tool.code.edit.ended",
         "second": "2026-05-06T21:34:01Z",
         "session": "cddd7287-a286-48f4-b67f-085c701097cd",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
       },
       "native": {
         "event": {
@@ -912,8 +912,8 @@
           "file_path": "/workspaces/semio/.ralph-tui/progress.md",
           "edits": [
             {
-              "old_string": "- **Files changed:** `semio/rs/lib.rs`, `semio/assets/semio/kit-store.contract.semio.json`, `.ralph-tui/progress.md`, `.repo/🎫/26/05/06/core-kit-graph-engine-us-003/ticket.json` (and regenerated `semio/graphql/schema.graphql` if nx touched it—verify tree).",
-              "new_string": "- **Files changed:** `semio/rs/lib.rs`, `semio/assets/semio/kit-store.contract.semio.json`, `semio/graphql/schema.graphql` (SDL doc comment from resolver), `.ralph-tui/progress.md`, `.repo/🎫/26/05/06/core-kit-graph-engine-us-003/ticket.json`."
+              "old_string": "- **Files changed:** `compose/rs/lib.rs`, `compose/assets/compose/kit-store.contract.compose.json`, `.ralph-tui/progress.md`, `.repo/🎫/26/05/06/core-kit-graph-engine-us-003/ticket.json` (and regenerated `compose/graphql/schema.graphql` if nx touched it—verify tree).",
+              "new_string": "- **Files changed:** `compose/rs/lib.rs`, `compose/assets/compose/kit-store.contract.compose.json`, `compose/graphql/schema.graphql` (SDL doc comment from resolver), `.ralph-tui/progress.md`, `.repo/🎫/26/05/06/core-kit-graph-engine-us-003/ticket.json`."
             }
           ],
           "session_id": "cddd7287-a286-48f4-b67f-085c701097cd",
@@ -923,7 +923,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
         }
       },
       "response": {}
@@ -936,7 +936,7 @@
         "kind": "agent.tool.code.edit.ended",
         "second": "2026-05-06T21:34:02Z",
         "session": "cddd7287-a286-48f4-b67f-085c701097cd",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
       },
       "native": {
         "event": {
@@ -946,7 +946,7 @@
           "tool_name": "Write",
           "tool_input": {
             "file_path": "/workspaces/semio/.ralph-tui/progress.md",
-            "content": "# Ralph Progress Log\n\nThis file tracks progress across iterations. Agents update this file\nafter each iteration and it's included in prompts for context.\n\n## Codebase Patterns (Study These First)\n\n- **Kit store assets:** Canonical shape is `semio.kit_store.bundle` with `rootSnapshot`, ordered `semanticOpLog`, optional `histories` (checkpoint/draft/transaction metadata over the same op model), and `backbonePointers`. Document the intent in `semio/assets/semio/kit-store.contract.semio.json`; pair `kit-store.golden.ops.semio.json` with `kit-store.golden.expected.semio.json` for RS replay tests (`projectionFingerprint` = blake3-style `hash::h` over sorted piece centers) and lightweight JS fixture parses.\n- **Root pnpm for semio slice:** A minimal `pnpm-workspace.yaml` including only `semio/js`, `semio/react`, and `semio/assets` avoids `pnpm install` pulling packages that depend on `file:../rs/pkg` before `wasm-pack build` populates `semio/rs/pkg`.\n- **GraphQL SDL source of truth:** Integrators read `semio/graphql/schema.graphql`, but it is **generated** from `semio/rs` (`async_graphql` `Schema::sdl`) via `pnpm exec nx build semio/graphql` (runs the ignored `export_semio_graphql_schema_file` test with `SEMIO_GRAPHQL_SCHEMA_OUT`). Edit the Rust schema, then rebuild—do not hand-edit the SDL long-term.\n- **Kit graph engine (RS):** `crate::kit_graph_engine` owns `projection_fingerprint_for_kit` (golden-compatible), `deterministic_semantic_diff`, and async `apply_semantic_op_json`. `Kit`/`Design` use `design_id_to_index` and `piece_id_to_index` for O(1) slot resolve after a single `bind_external_design_id` at the boundary; GraphQL `Graph.projectionFingerprint` delegates to the engine.\n\n---\n\n## 2026-05-06 - US-001\n\n- **What was implemented:** Kit asset contracts aligned to **one root snapshot + ordered semantic ops** with checkpoint/draft/transaction wrappers documented in JSON; golden ops/expected pair; `metabolism.new.kit.semio.json` replaced with a minimal bundle exemplar; RS tests replay golden ops and assert invariants/fingerprint; `@semio/js` embedded tests load golden + bundle paths for structural checks; root `pnpm typecheck` / `pnpm lint` validate the touched packages.\n- **Files changed:** `semio/assets/semio/kit-store.contract.semio.json`, `kit-store.golden.*.semio.json`, `metabolism.new.kit.semio.json`, `semio/rs/lib.rs`, `semio/js/index.ts`, root `package.json`, `pnpm-workspace.yaml`, `.npmrc`, `eslint.config.mjs`, plus prior workspace/JS fixes from this epic (see git status for full set).\n- **Learnings:**\n  - **Patterns discovered:** Same ordered op log underlies snapshot projection and history wrappers—difference is metadata/lifecycle, not a second persistence shape. Golden fixtures should encode **invariants** (`sortedPieceCenters`, counts) plus a stable **fingerprint** for deterministic CI.\n  - **Gotchas encountered:** Full pnpm workspace that includes `semio/algorithms` breaks install until `semio/rs/pkg` exists; narrow the workspace or document wasm-pack as a prereq. Legacy `KitStoreHandle` / `eventStream` GraphQL expectations in JS need a follow-up (e.g. US-006) rather than half-wiring old APIs.\n---\n\n## 2026-05-06 - US-002\n\n- **What was implemented:** Finalized the **kit-store GraphQL contract** in `semio/rs` (exported SDL): `Query.readableKitGraph` + `backboneCapabilities` with `ReadableGraphSelector` (`KitGraphWorkspace` + optional checkpoint/draft/transaction anchors); `Graph.semanticOpLog`, `projectionFingerprint`, `rootSnapshotHash`; lifecycle linkage fields on `Change` / `Checkpoint` / `Transaction` / `Draft`; `BackboneStoreKind`, `backboneAttach` / `backboneDetach`; mutations return `Command` (`requestId` + `kind`) and take `workspace` for wip vs authoritative routing; `Diff.summary`; `SemanticOpRecord` type. Regenerated `semio/graphql/schema.graphql`; documented `graphqlSurface` on `kit-store.contract.semio.json`; root `pnpm typecheck` now runs `nx build semio/graphql`.\n- **Files changed:** `semio/rs/lib.rs`, `semio/graphql/schema.graphql`, `semio/assets/semio/kit-store.contract.semio.json`, `package.json`, `.ralph-tui/progress.md`, `.repo/🎫/26/05/06/graphql-kit-store-contract-us-002/ticket.json`.\n- **Learnings:**\n  - **Patterns discovered:** Object-typed mutation payloads (`Command`) require selection sets in GraphQL documents—integration tests and clients must request `{ requestId kind }`. Enum variables (e.g. `KitGraphWorkspace`) flow through `async_graphql::value!` as string labels (`\"WIP\"`).\n  - **Gotchas encountered:** `target.schema.graphql` remains a separate Relay-style design draft; runtime SDL is only what `gql::sdl()` emits—do not assume parity without an explicit codegen/link step.\n---\n\n## 2026-05-06 - US-003\n\n- **What was implemented:** Core **kit graph engine** in `semio/rs`: `crate::kit_graph_engine` with `DesignHandle`, `projection_fingerprint_for_kit` (same algorithm as kit-store golden), `deterministic_semantic_diff` (ephemeral, from op kind + payload JSON + fp before/after), and async `apply_semantic_op_json` for bundle-shaped replay. `Kit`/`Design` now keep **slot maps** (`design_id_to_index`, `piece_id_to_index`) so hot paths avoid linear Id scans; `bind_external_design_id` is the single translation from external design `Id` to internal handle + `Arc`. `Graph::apply_create_fixed_piece` returns `(piece, diff)` and uses `apply_create_fixed_piece_on_design_node` for pointer-only mutation; GraphQL `projectionFingerprint` calls the engine. `CreatedFixedPiece` events carry computed diffs. Contract JSON documents `kitGraphEngine`.\n- **Files changed:** `semio/rs/lib.rs`, `semio/assets/semio/kit-store.contract.semio.json`, `semio/graphql/schema.graphql` (SDL doc comment from resolver), `.ralph-tui/progress.md`, `.repo/🎫/26/05/06/core-kit-graph-engine-us-003/ticket.json`.\n- **Learnings:**\n  - **Patterns discovered:** Treat **two `Arc\u003cGraph\u003e` instances** (wip vs authoritative) as the multi-state primitive; semantic apply + fp/diff logic stays identical per graph. Deterministic diff should key on **canonical input JSON + fp transition** so replay and live mutation agree without persisting diffs.\n  - **Gotchas encountered:** `apply_create_fixed_piece` must **clone** fields passed to the inner node helper when building `CreatedFixedPieceInput` for serde, or Rust move analysis fails; serde field names in golden JSON must match `#[serde(rename)]` on payload DTOs.\n---\n\n"
+            "content": "# Ralph Progress Log\n\nThis file tracks progress across iterations. Agents update this file\nafter each iteration and it's included in prompts for context.\n\n## Codebase Patterns (Study These First)\n\n- **Kit store assets:** Canonical shape is `compose.kit_store.bundle` with `rootSnapshot`, ordered `semanticOpLog`, optional `histories` (checkpoint/draft/transaction metadata over the same op model), and `backbonePointers`. Document the intent in `compose/assets/compose/kit-store.contract.compose.json`; pair `kit-store.golden.ops.compose.json` with `kit-store.golden.expected.compose.json` for RS replay tests (`projectionFingerprint` = blake3-style `hash::h` over sorted piece centers) and lightweight JS fixture parses.\n- **Root pnpm for compose slice:** A minimal `pnpm-workspace.yaml` including only `compose/js`, `compose/react`, and `compose/assets` avoids `pnpm install` pulling packages that depend on `file:../rs/pkg` before `wasm-pack build` populates `compose/rs/pkg`.\n- **GraphQL SDL source of truth:** Integrators read `compose/graphql/schema.graphql`, but it is **generated** from `compose/rs` (`async_graphql` `Schema::sdl`) via `pnpm exec nx build compose/graphql` (runs the ignored `export_compose_graphql_schema_file` test with `COMPOSE_GRAPHQL_SCHEMA_OUT`). Edit the Rust schema, then rebuild—do not hand-edit the SDL long-term.\n- **Kit graph engine (RS):** `crate::kit_graph_engine` owns `projection_fingerprint_for_kit` (golden-compatible), `deterministic_semantic_diff`, and async `apply_semantic_op_json`. `Kit`/`Design` use `design_id_to_index` and `piece_id_to_index` for O(1) slot resolve after a single `bind_external_design_id` at the boundary; GraphQL `Graph.projectionFingerprint` delegates to the engine.\n\n---\n\n## 2026-05-06 - US-001\n\n- **What was implemented:** Kit asset contracts aligned to **one root snapshot + ordered semantic ops** with checkpoint/draft/transaction wrappers documented in JSON; golden ops/expected pair; `metabolism.new.kit.compose.json` replaced with a minimal bundle exemplar; RS tests replay golden ops and assert invariants/fingerprint; `@compose/js` embedded tests load golden + bundle paths for structural checks; root `pnpm typecheck` / `pnpm lint` validate the touched packages.\n- **Files changed:** `compose/assets/compose/kit-store.contract.compose.json`, `kit-store.golden.*.compose.json`, `metabolism.new.kit.compose.json`, `compose/rs/lib.rs`, `compose/js/index.ts`, root `package.json`, `pnpm-workspace.yaml`, `.npmrc`, `eslint.config.mjs`, plus prior workspace/JS fixes from this epic (see git status for full set).\n- **Learnings:**\n  - **Patterns discovered:** Same ordered op log underlies snapshot projection and history wrappers—difference is metadata/lifecycle, not a second persistence shape. Golden fixtures should encode **invariants** (`sortedPieceCenters`, counts) plus a stable **fingerprint** for deterministic CI.\n  - **Gotchas encountered:** Full pnpm workspace that includes `compose/algorithms` breaks install until `compose/rs/pkg` exists; narrow the workspace or document wasm-pack as a prereq. Legacy `KitStoreHandle` / `eventStream` GraphQL expectations in JS need a follow-up (e.g. US-006) rather than half-wiring old APIs.\n---\n\n## 2026-05-06 - US-002\n\n- **What was implemented:** Finalized the **kit-store GraphQL contract** in `compose/rs` (exported SDL): `Query.readableKitGraph` + `backboneCapabilities` with `ReadableGraphSelector` (`KitGraphWorkspace` + optional checkpoint/draft/transaction anchors); `Graph.semanticOpLog`, `projectionFingerprint`, `rootSnapshotHash`; lifecycle linkage fields on `Change` / `Checkpoint` / `Transaction` / `Draft`; `BackboneStoreKind`, `backboneAttach` / `backboneDetach`; mutations return `Command` (`requestId` + `kind`) and take `workspace` for wip vs authoritative routing; `Diff.summary`; `SemanticOpRecord` type. Regenerated `compose/graphql/schema.graphql`; documented `graphqlSurface` on `kit-store.contract.compose.json`; root `pnpm typecheck` now runs `nx build compose/graphql`.\n- **Files changed:** `compose/rs/lib.rs`, `compose/graphql/schema.graphql`, `compose/assets/compose/kit-store.contract.compose.json`, `package.json`, `.ralph-tui/progress.md`, `.repo/🎫/26/05/06/graphql-kit-store-contract-us-002/ticket.json`.\n- **Learnings:**\n  - **Patterns discovered:** Object-typed mutation payloads (`Command`) require selection sets in GraphQL documents—integration tests and clients must request `{ requestId kind }`. Enum variables (e.g. `KitGraphWorkspace`) flow through `async_graphql::value!` as string labels (`\"WIP\"`).\n  - **Gotchas encountered:** `target.schema.graphql` remains a separate Relay-style design draft; runtime SDL is only what `gql::sdl()` emits—do not assume parity without an explicit codegen/link step.\n---\n\n## 2026-05-06 - US-003\n\n- **What was implemented:** Core **kit graph engine** in `compose/rs`: `crate::kit_graph_engine` with `DesignHandle`, `projection_fingerprint_for_kit` (same algorithm as kit-store golden), `deterministic_semantic_diff` (ephemeral, from op kind + payload JSON + fp before/after), and async `apply_semantic_op_json` for bundle-shaped replay. `Kit`/`Design` now keep **slot maps** (`design_id_to_index`, `piece_id_to_index`) so hot paths avoid linear Id scans; `bind_external_design_id` is the single translation from external design `Id` to internal handle + `Arc`. `Graph::apply_create_fixed_piece` returns `(piece, diff)` and uses `apply_create_fixed_piece_on_design_node` for pointer-only mutation; GraphQL `projectionFingerprint` calls the engine. `CreatedFixedPiece` events carry computed diffs. Contract JSON documents `kitGraphEngine`.\n- **Files changed:** `compose/rs/lib.rs`, `compose/assets/compose/kit-store.contract.compose.json`, `compose/graphql/schema.graphql` (SDL doc comment from resolver), `.ralph-tui/progress.md`, `.repo/🎫/26/05/06/core-kit-graph-engine-us-003/ticket.json`.\n- **Learnings:**\n  - **Patterns discovered:** Treat **two `Arc\u003cGraph\u003e` instances** (wip vs authoritative) as the multi-state primitive; semantic apply + fp/diff logic stays identical per graph. Deterministic diff should key on **canonical input JSON + fp transition** so replay and live mutation agree without persisting diffs.\n  - **Gotchas encountered:** `apply_create_fixed_piece` must **clone** fields passed to the inner node helper when building `CreatedFixedPieceInput` for serde, or Rust move analysis fails; serde field names in golden JSON must match `#[serde(rename)]` on payload DTOs.\n---\n\n"
           },
           "tool_output": "{\"file_path\":\"/workspaces/semio/.ralph-tui/progress.md\",\"success\":true}",
           "duration": 25.255,
@@ -958,7 +958,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
         }
       },
       "response": {}
@@ -971,7 +971,7 @@
         "kind": "agent.ended",
         "second": "2026-05-06T21:34:06Z",
         "session": "cddd7287-a286-48f4-b67f-085c701097cd",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
       },
       "native": {
         "event": {
@@ -989,7 +989,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/cddd7287-a286-48f4-b67f-085c701097cd/cddd7287-a286-48f4-b67f-085c701097cd.jsonl"
         }
       },
       "response": {}

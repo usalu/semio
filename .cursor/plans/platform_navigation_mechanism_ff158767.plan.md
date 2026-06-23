@@ -94,7 +94,7 @@ Extend the existing `🧪Tests` regions (no new test files): toggles hidden when
 
 - Update `buildPlaygroundWorkbenchApp` (616-617) to set `app.panelTabs = [{...panel:"workbench"}, {...panel:"details"}]` instead of `leftTabs`/`rightTabs` (keeps playground compiling after the core rename).
 
-## 5. Sketchpad — `semio/client/lib/sketchpad/js/index.ts`
+## 5. Sketchpad — `compose/client/lib/sketchpad/js/index.ts`
 
 - Convert the six apps' `leftTabs`/`rightTabs` (1701-1736) to `panelTabs` with explicit `panel` kinds (`workbench`, `details`; add `windows`/`settings`/`chat` where appropriate, e.g. a `windows` tab listing the app's window kinds, a `settings` tab).
 - Delete `wireSketchpadBrowserNavigation` (1794-1807) and its `onNavigate`/`popstate`; instead set `platform.applyUri = (uri) => applySketchpadUri(platform, uri)` so the shared history mechanism owns pushState/popstate. Keep `applySketchpadUri` (sets `activeAppId` + dispatches `setNavigation`).

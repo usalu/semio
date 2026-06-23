@@ -1,0 +1,25 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "type": "module",
+  "name": "@compose/play",
+  "version": "0.1.0",
+  "description": "compose ⋅ playground",
+  "dependencies": {
+    "@ui/react": "workspace:*",
+    "@compose/js": "*",
+    "@compose/sketchpad": "*"
+  },
+  "author": {
+    "name": "Ueli Saluz",
+    "email": "ueli@semio-tech.com",
+    "url": "https://github.com/usalu"
+  },
+  "license": "AGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/usalu/semio.git",
+    "directory": "compose/sites/play"
+  },
+  "bundleKind": "site"
+}

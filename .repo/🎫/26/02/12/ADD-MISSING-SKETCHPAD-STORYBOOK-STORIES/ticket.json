@@ -27,7 +27,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "semio/semio/semio/js",
+              "path": "compose/compose/compose/js",
               "lines": {
                 "added": 401,
                 "removed": 0
@@ -47,77 +47,77 @@
           "renamed": [],
           "modified": [
             {
-              "path": "🧪semio/js/.storybook/stories/elements/Canvas.stories.tsx",
+              "path": "🧪compose/js/.storybook/stories/elements/Canvas.stories.tsx",
               "lines": {
                 "added": 28,
                 "removed": 1
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/Layout.stories.tsx",
+              "path": "🧪compose/js/.storybook/stories/elements/Layout.stories.tsx",
               "lines": {
                 "added": 63,
                 "removed": 2
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/Navbar.stories.tsx",
+              "path": "🧪compose/js/.storybook/stories/elements/Navbar.stories.tsx",
               "lines": {
                 "added": 40,
                 "removed": 2
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/aggregation/Band.stories.tsx",
+              "path": "🧪compose/js/.storybook/stories/elements/aggregation/Band.stories.tsx",
               "lines": {
                 "added": 39,
                 "removed": 1
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/aggregation/Collapsible.stories.tsx",
+              "path": "🧪compose/js/.storybook/stories/elements/aggregation/Collapsible.stories.tsx",
               "lines": {
                 "added": 40,
                 "removed": 1
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/aggregation/Resizable.stories.tsx",
+              "path": "🧪compose/js/.storybook/stories/elements/aggregation/Resizable.stories.tsx",
               "lines": {
                 "added": 26,
                 "removed": 1
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/display/Avatar.stories.tsx",
+              "path": "🧪compose/js/.storybook/stories/elements/display/Avatar.stories.tsx",
               "lines": {
                 "added": 27,
                 "removed": 1
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/display/HoverCard.stories.tsx",
+              "path": "🧪compose/js/.storybook/stories/elements/display/HoverCard.stories.tsx",
               "lines": {
                 "added": 46,
                 "removed": 1
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/display/Icons.stories.tsx",
+              "path": "🧪compose/js/.storybook/stories/elements/display/Icons.stories.tsx",
               "lines": {
                 "added": 29,
                 "removed": 1
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/navigation/Breadcrumb.stories.tsx",
+              "path": "🧪compose/js/.storybook/stories/elements/navigation/Breadcrumb.stories.tsx",
               "lines": {
                 "added": 55,
                 "removed": 2
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/window/Table.stories.tsx",
+              "path": "🧪compose/js/.storybook/stories/elements/window/Table.stories.tsx",
               "lines": {
                 "added": 22,
                 "removed": 1
@@ -131,133 +131,133 @@
           "renamed": [],
           "modified": [
             {
-              "path": "🧪semio/js/.storybook/stories/elements/Canvas.stories.tsx#DiagramNode",
+              "path": "🧪compose/js/.storybook/stories/elements/Canvas.stories.tsx#DiagramNode",
               "lines": {
                 "added": 14,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/Canvas.stories.tsx#DiagramSkeleton",
+              "path": "🧪compose/js/.storybook/stories/elements/Canvas.stories.tsx#DiagramSkeleton",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/Layout.stories.tsx#HudPanel",
+              "path": "🧪compose/js/.storybook/stories/elements/Layout.stories.tsx#HudPanel",
               "lines": {
                 "added": 20,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/Layout.stories.tsx#Page",
+              "path": "🧪compose/js/.storybook/stories/elements/Layout.stories.tsx#Page",
               "lines": {
                 "added": 15,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/Layout.stories.tsx#SidePanel",
+              "path": "🧪compose/js/.storybook/stories/elements/Layout.stories.tsx#SidePanel",
               "lines": {
                 "added": 22,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/Navbar.stories.tsx#Toolbar",
+              "path": "🧪compose/js/.storybook/stories/elements/Navbar.stories.tsx#Toolbar",
               "lines": {
                 "added": 36,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/aggregation/Band.stories.tsx#Strip",
+              "path": "🧪compose/js/.storybook/stories/elements/aggregation/Band.stories.tsx#Strip",
               "lines": {
                 "added": 35,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/aggregation/Collapsible.stories.tsx#Section",
+              "path": "🧪compose/js/.storybook/stories/elements/aggregation/Collapsible.stories.tsx#Section",
               "lines": {
                 "added": 14,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/aggregation/Collapsible.stories.tsx#Steps",
+              "path": "🧪compose/js/.storybook/stories/elements/aggregation/Collapsible.stories.tsx#Steps",
               "lines": {
                 "added": 22,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/aggregation/Resizable.stories.tsx#Panel",
+              "path": "🧪compose/js/.storybook/stories/elements/aggregation/Resizable.stories.tsx#Panel",
               "lines": {
                 "added": 22,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/display/Avatar.stories.tsx#DraggableAvatar",
+              "path": "🧪compose/js/.storybook/stories/elements/display/Avatar.stories.tsx#DraggableAvatar",
               "lines": {
                 "added": 12,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/display/Avatar.stories.tsx#TableAvatar",
+              "path": "🧪compose/js/.storybook/stories/elements/display/Avatar.stories.tsx#TableAvatar",
               "lines": {
                 "added": 12,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/display/HoverCard.stories.tsx#Aside",
+              "path": "🧪compose/js/.storybook/stories/elements/display/HoverCard.stories.tsx#Aside",
               "lines": {
                 "added": 20,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/display/HoverCard.stories.tsx#Card",
+              "path": "🧪compose/js/.storybook/stories/elements/display/HoverCard.stories.tsx#Card",
               "lines": {
                 "added": 22,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/display/Icons.stories.tsx#LoadingRow",
+              "path": "🧪compose/js/.storybook/stories/elements/display/Icons.stories.tsx#LoadingRow",
               "lines": {
                 "added": 12,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/display/Icons.stories.tsx#Spinner",
+              "path": "🧪compose/js/.storybook/stories/elements/display/Icons.stories.tsx#Spinner",
               "lines": {
                 "added": 12,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/navigation/Breadcrumb.stories.tsx#NotFound",
+              "path": "🧪compose/js/.storybook/stories/elements/navigation/Breadcrumb.stories.tsx#NotFound",
               "lines": {
                 "added": 23,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/navigation/Breadcrumb.stories.tsx#PageNavigation",
+              "path": "🧪compose/js/.storybook/stories/elements/navigation/Breadcrumb.stories.tsx#PageNavigation",
               "lines": {
                 "added": 26,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/window/Table.stories.tsx#TableSkeleton",
+              "path": "🧪compose/js/.storybook/stories/elements/window/Table.stories.tsx#TableSkeleton",
               "lines": {
                 "added": 19,
                 "removed": 0
@@ -266,133 +266,133 @@
           ],
           "added": [
             {
-              "path": "semio/js/.storybook/stories/elements/Canvas.stories.tsx#DiagramNode",
+              "path": "compose/js/.storybook/stories/elements/Canvas.stories.tsx#DiagramNode",
               "lines": {
                 "added": 14,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/.storybook/stories/elements/Canvas.stories.tsx#DiagramSkeleton",
+              "path": "compose/js/.storybook/stories/elements/Canvas.stories.tsx#DiagramSkeleton",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/.storybook/stories/elements/Layout.stories.tsx#HudPanel",
+              "path": "compose/js/.storybook/stories/elements/Layout.stories.tsx#HudPanel",
               "lines": {
                 "added": 20,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/.storybook/stories/elements/Layout.stories.tsx#Page",
+              "path": "compose/js/.storybook/stories/elements/Layout.stories.tsx#Page",
               "lines": {
                 "added": 15,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/.storybook/stories/elements/Layout.stories.tsx#SidePanel",
+              "path": "compose/js/.storybook/stories/elements/Layout.stories.tsx#SidePanel",
               "lines": {
                 "added": 22,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/.storybook/stories/elements/Navbar.stories.tsx#Toolbar",
+              "path": "compose/js/.storybook/stories/elements/Navbar.stories.tsx#Toolbar",
               "lines": {
                 "added": 36,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/.storybook/stories/elements/aggregation/Band.stories.tsx#Strip",
+              "path": "compose/js/.storybook/stories/elements/aggregation/Band.stories.tsx#Strip",
               "lines": {
                 "added": 35,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/.storybook/stories/elements/aggregation/Collapsible.stories.tsx#Section",
+              "path": "compose/js/.storybook/stories/elements/aggregation/Collapsible.stories.tsx#Section",
               "lines": {
                 "added": 14,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/.storybook/stories/elements/aggregation/Collapsible.stories.tsx#Steps",
+              "path": "compose/js/.storybook/stories/elements/aggregation/Collapsible.stories.tsx#Steps",
               "lines": {
                 "added": 22,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/.storybook/stories/elements/aggregation/Resizable.stories.tsx#Panel",
+              "path": "compose/js/.storybook/stories/elements/aggregation/Resizable.stories.tsx#Panel",
               "lines": {
                 "added": 22,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/.storybook/stories/elements/display/Avatar.stories.tsx#DraggableAvatar",
+              "path": "compose/js/.storybook/stories/elements/display/Avatar.stories.tsx#DraggableAvatar",
               "lines": {
                 "added": 12,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/.storybook/stories/elements/display/Avatar.stories.tsx#TableAvatar",
+              "path": "compose/js/.storybook/stories/elements/display/Avatar.stories.tsx#TableAvatar",
               "lines": {
                 "added": 12,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/.storybook/stories/elements/display/HoverCard.stories.tsx#Aside",
+              "path": "compose/js/.storybook/stories/elements/display/HoverCard.stories.tsx#Aside",
               "lines": {
                 "added": 20,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/.storybook/stories/elements/display/HoverCard.stories.tsx#Card",
+              "path": "compose/js/.storybook/stories/elements/display/HoverCard.stories.tsx#Card",
               "lines": {
                 "added": 22,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/.storybook/stories/elements/display/Icons.stories.tsx#LoadingRow",
+              "path": "compose/js/.storybook/stories/elements/display/Icons.stories.tsx#LoadingRow",
               "lines": {
                 "added": 12,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/.storybook/stories/elements/display/Icons.stories.tsx#Spinner",
+              "path": "compose/js/.storybook/stories/elements/display/Icons.stories.tsx#Spinner",
               "lines": {
                 "added": 12,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/.storybook/stories/elements/navigation/Breadcrumb.stories.tsx#NotFound",
+              "path": "compose/js/.storybook/stories/elements/navigation/Breadcrumb.stories.tsx#NotFound",
               "lines": {
                 "added": 23,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/.storybook/stories/elements/navigation/Breadcrumb.stories.tsx#PageNavigation",
+              "path": "compose/js/.storybook/stories/elements/navigation/Breadcrumb.stories.tsx#PageNavigation",
               "lines": {
                 "added": 26,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/.storybook/stories/elements/window/Table.stories.tsx#TableSkeleton",
+              "path": "compose/js/.storybook/stories/elements/window/Table.stories.tsx#TableSkeleton",
               "lines": {
                 "added": 19,
                 "removed": 0
@@ -405,168 +405,168 @@
           "renamed": [],
           "modified": [
             {
-              "path": "🧪semio/js/.storybook/stories/elements/Canvas.stories.tsx#DiagramNode§DiagramNodeDefault",
+              "path": "🧪compose/js/.storybook/stories/elements/Canvas.stories.tsx#DiagramNode§DiagramNodeDefault",
               "lines": {
                 "added": 12,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/Canvas.stories.tsx#DiagramSkeleton§DiagramSkeletonDefault",
+              "path": "🧪compose/js/.storybook/stories/elements/Canvas.stories.tsx#DiagramSkeleton§DiagramSkeletonDefault",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/Layout.stories.tsx#HudPanel§HudPanelDefault",
+              "path": "🧪compose/js/.storybook/stories/elements/Layout.stories.tsx#HudPanel§HudPanelDefault",
               "lines": {
                 "added": 18,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/Layout.stories.tsx#Page§PageDefault",
+              "path": "🧪compose/js/.storybook/stories/elements/Layout.stories.tsx#Page§PageDefault",
               "lines": {
                 "added": 13,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/Layout.stories.tsx#SidePanel§SidePanelDefault",
+              "path": "🧪compose/js/.storybook/stories/elements/Layout.stories.tsx#SidePanel§SidePanelDefault",
               "lines": {
                 "added": 20,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/Navbar.stories.tsx#Toolbar§ToolbarDefault",
+              "path": "🧪compose/js/.storybook/stories/elements/Navbar.stories.tsx#Toolbar§ToolbarDefault",
               "lines": {
                 "added": 34,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/aggregation/Band.stories.tsx#Strip§StripHorizontal",
+              "path": "🧪compose/js/.storybook/stories/elements/aggregation/Band.stories.tsx#Strip§StripHorizontal",
               "lines": {
                 "added": 16,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/aggregation/Band.stories.tsx#Strip§StripNonScrollable",
+              "path": "🧪compose/js/.storybook/stories/elements/aggregation/Band.stories.tsx#Strip§StripNonScrollable",
               "lines": {
                 "added": 16,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/aggregation/Collapsible.stories.tsx#Section§SectionDefault",
+              "path": "🧪compose/js/.storybook/stories/elements/aggregation/Collapsible.stories.tsx#Section§SectionDefault",
               "lines": {
                 "added": 12,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/aggregation/Collapsible.stories.tsx#Steps§StepsDefault",
+              "path": "🧪compose/js/.storybook/stories/elements/aggregation/Collapsible.stories.tsx#Steps§StepsDefault",
               "lines": {
                 "added": 20,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/aggregation/Resizable.stories.tsx#Panel§PanelDefault",
+              "path": "🧪compose/js/.storybook/stories/elements/aggregation/Resizable.stories.tsx#Panel§PanelDefault",
               "lines": {
                 "added": 20,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/display/Avatar.stories.tsx#DraggableAvatar§DraggableAvatarDefault",
+              "path": "🧪compose/js/.storybook/stories/elements/display/Avatar.stories.tsx#DraggableAvatar§DraggableAvatarDefault",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/display/Avatar.stories.tsx#TableAvatar§TableAvatarDefault",
+              "path": "🧪compose/js/.storybook/stories/elements/display/Avatar.stories.tsx#TableAvatar§TableAvatarDefault",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/display/HoverCard.stories.tsx#Aside§AsideNote",
+              "path": "🧪compose/js/.storybook/stories/elements/display/HoverCard.stories.tsx#Aside§AsideNote",
               "lines": {
                 "added": 18,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/display/HoverCard.stories.tsx#Card§CardDefault",
+              "path": "🧪compose/js/.storybook/stories/elements/display/HoverCard.stories.tsx#Card§CardDefault",
               "lines": {
                 "added": 9,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/display/HoverCard.stories.tsx#Card§CardGridDefault",
+              "path": "🧪compose/js/.storybook/stories/elements/display/HoverCard.stories.tsx#Card§CardGridDefault",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/display/Icons.stories.tsx#LoadingRow§LoadingRowDefault",
+              "path": "🧪compose/js/.storybook/stories/elements/display/Icons.stories.tsx#LoadingRow§LoadingRowDefault",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/display/Icons.stories.tsx#Spinner§SpinnerSizes",
+              "path": "🧪compose/js/.storybook/stories/elements/display/Icons.stories.tsx#Spinner§SpinnerSizes",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/navigation/Breadcrumb.stories.tsx#NotFound§NotFoundDefault",
+              "path": "🧪compose/js/.storybook/stories/elements/navigation/Breadcrumb.stories.tsx#NotFound§NotFoundDefault",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/navigation/Breadcrumb.stories.tsx#NotFound§NotFoundMinimal",
+              "path": "🧪compose/js/.storybook/stories/elements/navigation/Breadcrumb.stories.tsx#NotFound§NotFoundMinimal",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/navigation/Breadcrumb.stories.tsx#PageNavigation§PageNavigationDefault",
+              "path": "🧪compose/js/.storybook/stories/elements/navigation/Breadcrumb.stories.tsx#PageNavigation§PageNavigationDefault",
               "lines": {
                 "added": 13,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/navigation/Breadcrumb.stories.tsx#PageNavigation§PageNavigationNextOnly",
+              "path": "🧪compose/js/.storybook/stories/elements/navigation/Breadcrumb.stories.tsx#PageNavigation§PageNavigationNextOnly",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/window/Table.stories.tsx#TableSkeleton§SkeletonDefault",
+              "path": "🧪compose/js/.storybook/stories/elements/window/Table.stories.tsx#TableSkeleton§SkeletonDefault",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/window/Table.stories.tsx#TableSkeleton§SkeletonMinimal",
+              "path": "🧪compose/js/.storybook/stories/elements/window/Table.stories.tsx#TableSkeleton§SkeletonMinimal",
               "lines": {
                 "added": 8,
                 "removed": 0
@@ -575,168 +575,168 @@
           ],
           "added": [
             {
-              "path": "🧪semio/js/.storybook/stories/elements/Canvas.stories.tsx#DiagramNode§DiagramNodeDefault",
+              "path": "🧪compose/js/.storybook/stories/elements/Canvas.stories.tsx#DiagramNode§DiagramNodeDefault",
               "lines": {
                 "added": 12,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/Canvas.stories.tsx#DiagramSkeleton§DiagramSkeletonDefault",
+              "path": "🧪compose/js/.storybook/stories/elements/Canvas.stories.tsx#DiagramSkeleton§DiagramSkeletonDefault",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/Layout.stories.tsx#HudPanel§HudPanelDefault",
+              "path": "🧪compose/js/.storybook/stories/elements/Layout.stories.tsx#HudPanel§HudPanelDefault",
               "lines": {
                 "added": 18,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/Layout.stories.tsx#Page§PageDefault",
+              "path": "🧪compose/js/.storybook/stories/elements/Layout.stories.tsx#Page§PageDefault",
               "lines": {
                 "added": 13,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/Layout.stories.tsx#SidePanel§SidePanelDefault",
+              "path": "🧪compose/js/.storybook/stories/elements/Layout.stories.tsx#SidePanel§SidePanelDefault",
               "lines": {
                 "added": 20,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/Navbar.stories.tsx#Toolbar§ToolbarDefault",
+              "path": "🧪compose/js/.storybook/stories/elements/Navbar.stories.tsx#Toolbar§ToolbarDefault",
               "lines": {
                 "added": 34,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/aggregation/Band.stories.tsx#Strip§StripHorizontal",
+              "path": "🧪compose/js/.storybook/stories/elements/aggregation/Band.stories.tsx#Strip§StripHorizontal",
               "lines": {
                 "added": 16,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/aggregation/Band.stories.tsx#Strip§StripNonScrollable",
+              "path": "🧪compose/js/.storybook/stories/elements/aggregation/Band.stories.tsx#Strip§StripNonScrollable",
               "lines": {
                 "added": 16,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/aggregation/Collapsible.stories.tsx#Section§SectionDefault",
+              "path": "🧪compose/js/.storybook/stories/elements/aggregation/Collapsible.stories.tsx#Section§SectionDefault",
               "lines": {
                 "added": 12,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/aggregation/Collapsible.stories.tsx#Steps§StepsDefault",
+              "path": "🧪compose/js/.storybook/stories/elements/aggregation/Collapsible.stories.tsx#Steps§StepsDefault",
               "lines": {
                 "added": 20,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/aggregation/Resizable.stories.tsx#Panel§PanelDefault",
+              "path": "🧪compose/js/.storybook/stories/elements/aggregation/Resizable.stories.tsx#Panel§PanelDefault",
               "lines": {
                 "added": 20,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/display/Avatar.stories.tsx#DraggableAvatar§DraggableAvatarDefault",
+              "path": "🧪compose/js/.storybook/stories/elements/display/Avatar.stories.tsx#DraggableAvatar§DraggableAvatarDefault",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/display/Avatar.stories.tsx#TableAvatar§TableAvatarDefault",
+              "path": "🧪compose/js/.storybook/stories/elements/display/Avatar.stories.tsx#TableAvatar§TableAvatarDefault",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/display/HoverCard.stories.tsx#Aside§AsideNote",
+              "path": "🧪compose/js/.storybook/stories/elements/display/HoverCard.stories.tsx#Aside§AsideNote",
               "lines": {
                 "added": 18,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/display/HoverCard.stories.tsx#Card§CardDefault",
+              "path": "🧪compose/js/.storybook/stories/elements/display/HoverCard.stories.tsx#Card§CardDefault",
               "lines": {
                 "added": 9,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/display/HoverCard.stories.tsx#Card§CardGridDefault",
+              "path": "🧪compose/js/.storybook/stories/elements/display/HoverCard.stories.tsx#Card§CardGridDefault",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/display/Icons.stories.tsx#LoadingRow§LoadingRowDefault",
+              "path": "🧪compose/js/.storybook/stories/elements/display/Icons.stories.tsx#LoadingRow§LoadingRowDefault",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/display/Icons.stories.tsx#Spinner§SpinnerSizes",
+              "path": "🧪compose/js/.storybook/stories/elements/display/Icons.stories.tsx#Spinner§SpinnerSizes",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/navigation/Breadcrumb.stories.tsx#NotFound§NotFoundDefault",
+              "path": "🧪compose/js/.storybook/stories/elements/navigation/Breadcrumb.stories.tsx#NotFound§NotFoundDefault",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/navigation/Breadcrumb.stories.tsx#NotFound§NotFoundMinimal",
+              "path": "🧪compose/js/.storybook/stories/elements/navigation/Breadcrumb.stories.tsx#NotFound§NotFoundMinimal",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/navigation/Breadcrumb.stories.tsx#PageNavigation§PageNavigationDefault",
+              "path": "🧪compose/js/.storybook/stories/elements/navigation/Breadcrumb.stories.tsx#PageNavigation§PageNavigationDefault",
               "lines": {
                 "added": 13,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/navigation/Breadcrumb.stories.tsx#PageNavigation§PageNavigationNextOnly",
+              "path": "🧪compose/js/.storybook/stories/elements/navigation/Breadcrumb.stories.tsx#PageNavigation§PageNavigationNextOnly",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/window/Table.stories.tsx#TableSkeleton§SkeletonDefault",
+              "path": "🧪compose/js/.storybook/stories/elements/window/Table.stories.tsx#TableSkeleton§SkeletonDefault",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/window/Table.stories.tsx#TableSkeleton§SkeletonMinimal",
+              "path": "🧪compose/js/.storybook/stories/elements/window/Table.stories.tsx#TableSkeleton§SkeletonMinimal",
               "lines": {
                 "added": 8,
                 "removed": 0
@@ -763,7 +763,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "semio/semio/semio/js",
+              "path": "compose/compose/compose/js",
               "lines": {
                 "added": 22,
                 "removed": 0
@@ -783,7 +783,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "🧪semio/js/.storybook/stories/elements/aggregation/Resizable.stories.tsx",
+              "path": "🧪compose/js/.storybook/stories/elements/aggregation/Resizable.stories.tsx",
               "lines": {
                 "added": 25,
                 "removed": 3
@@ -797,14 +797,14 @@
           "renamed": [],
           "modified": [
             {
-              "path": "🧪semio/js/.storybook/stories/elements/aggregation/Resizable.stories.tsx#Panel",
+              "path": "🧪compose/js/.storybook/stories/elements/aggregation/Resizable.stories.tsx#Panel",
               "lines": {
                 "added": 22,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/.storybook/stories/elements/aggregation/Resizable.stories.tsx#Header",
+              "path": "🧪compose/js/.storybook/stories/elements/aggregation/Resizable.stories.tsx#Header",
               "lines": {
                 "added": 0,
                 "removed": 2
@@ -813,7 +813,7 @@
           ],
           "added": [
             {
-              "path": "semio/js/.storybook/stories/elements/aggregation/Resizable.stories.tsx#Panel",
+              "path": "compose/js/.storybook/stories/elements/aggregation/Resizable.stories.tsx#Panel",
               "lines": {
                 "added": 22,
                 "removed": 0
@@ -826,7 +826,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "🧪semio/js/.storybook/stories/elements/aggregation/Resizable.stories.tsx#Panel§PanelDefault",
+              "path": "🧪compose/js/.storybook/stories/elements/aggregation/Resizable.stories.tsx#Panel§PanelDefault",
               "lines": {
                 "added": 20,
                 "removed": 0
@@ -835,7 +835,7 @@
           ],
           "added": [
             {
-              "path": "🧪semio/js/.storybook/stories/elements/aggregation/Resizable.stories.tsx#Panel§PanelDefault",
+              "path": "🧪compose/js/.storybook/stories/elements/aggregation/Resizable.stories.tsx#Panel§PanelDefault",
               "lines": {
                 "added": 20,
                 "removed": 0

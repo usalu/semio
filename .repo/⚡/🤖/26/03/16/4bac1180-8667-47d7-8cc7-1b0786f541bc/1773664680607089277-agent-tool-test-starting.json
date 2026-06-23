@@ -6,12 +6,12 @@
     "kind": "agent.tool.test.starting",
     "second": "2026-03-16T12:38:00Z",
     "session": "4bac1180-8667-47d7-8cc7-1b0786f541bc",
-    "transcript": "/home/vscode/.claude/projects/-workspaces-semio/4bac1180-8667-47d7-8cc7-1b0786f541bc.jsonl"
+    "transcript": "/home/vscode/.claude/projects/-workspaces-compose/4bac1180-8667-47d7-8cc7-1b0786f541bc.jsonl"
   },
   "native": {
     "event": {
       "session_id": "4bac1180-8667-47d7-8cc7-1b0786f541bc",
-      "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/4bac1180-8667-47d7-8cc7-1b0786f541bc.jsonl",
+      "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/4bac1180-8667-47d7-8cc7-1b0786f541bc.jsonl",
       "cwd": "/workspaces/semio",
       "permission_mode": "bypassPermissions",
       "hook_event_name": "PreToolUse",

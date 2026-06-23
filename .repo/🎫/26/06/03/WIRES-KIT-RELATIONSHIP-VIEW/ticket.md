@@ -6,7 +6,7 @@ Goal: Kit app Wires window — identities from visible VFS nodes, relationships 
 
 - Renamed kit Diagram window to **Wires** (`wires` window kind, `SKETCHPAD_SURFACE_KIT_WIRES`).
 - Added `visibleVirtualFileSystemNodes` on `VirtualFileSystemController`.
-- Built `sketchpadKitWiresFixtureFromVisible` + `sketchpadFetchKitWiresReferences` (Rust GraphQL via `@semio/js`, DTO fallback).
+- Built `sketchpadKitWiresFixtureFromVisible` + `sketchpadFetchKitWiresReferences` (Rust GraphQL via `@compose/js`, DTO fallback).
 - Sync on VFS expand, children load, route change, and topology refresh.
 
 ## Fix empty edges (reopened)
@@ -17,10 +17,10 @@ Goal: Kit app Wires window — identities from visible VFS nodes, relationships 
 ## Files
 
 - `framework/product/platform/core/index.ts`
-- `semio/client/lib/sketchpad/js/index.ts`
-- `semio/client/lib/sketchpad/js/package.json`
-- `semio/client/lib/sketchpad/js/vite.config.ts`
-- `semio/client/lib/sketchpad/js/vitest.config.ts`
+- `compose/client/lib/sketchpad/js/index.ts`
+- `compose/client/lib/sketchpad/js/package.json`
+- `compose/client/lib/sketchpad/js/vite.config.ts`
+- `compose/client/lib/sketchpad/js/vitest.config.ts`
 - `.repo/🎫/26/06/03/WIRES-KIT-RELATIONSHIP-VIEW/fix-empty-edges.md`
 
 ## Verification

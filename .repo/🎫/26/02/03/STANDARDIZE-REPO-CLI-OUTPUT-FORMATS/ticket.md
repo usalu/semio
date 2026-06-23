@@ -6,12 +6,12 @@ Standardized markdown output formats for `ticket` and `goal` commands.
 
 ## Changes
 
-- Modified `repo/cli/main.go` to use `semiorepo://ticket/SLUG` URI format for ticket links in markdown output of `ticket tree` command.
+- Modified `repo/cli/main.go` to use `composerepo://ticket/SLUG` URI format for ticket links in markdown output of `ticket tree` command.
 
 ## Log
 
 - Diagnosed `Goal_Tree_MD` double dash issue (found it was likely resolved or non-existent in current codebase, verified test pass).
-- Diagnosed `Ticket_Tree_MD` failure (missing `semiorepo://` markers).
+- Diagnosed `Ticket_Tree_MD` failure (missing `composerepo://` markers).
 - Fixed `treeCmd` in `main.go` to use ticket URIs.
 - Verified all tests in `TestMarkdownOutput` passed.
 

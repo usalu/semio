@@ -6,14 +6,14 @@
     "kind": "agent.tool.code.edit.ended",
     "second": "2026-03-16T13:44:36Z",
     "session": "9c9573bc-7742-46ae-9c04-b0ebf0657575",
-    "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
+    "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
   },
   "native": {
     "event": {
       "conversation_id": "9c9573bc-7742-46ae-9c04-b0ebf0657575",
       "generation_id": "c421f306-6a0e-4fcd-b949-f3f75020b8ab",
       "model": "default",
-      "file_path": "/workspaces/semio/semio/py/semio.test.py",
+      "file_path": "/workspaces/semio/compose/py/compose.test.py",
       "edits": [
         {
           "old_string": "REPORTS_DIR = Path(__file__).resolve().parents[2] / \"reports\" / \"export-design-model\"",
@@ -34,7 +34,7 @@
         "/workspaces/semio"
       ],
       "user_email": "ueli.saluz@posteo.de",
-      "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
+      "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
     }
   },
   "response": {}

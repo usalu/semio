@@ -70,33 +70,33 @@
         }
       }
     },
-    "dev-storybook-semio": {
+    "dev-storybook-compose": {
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./script.ts dev storybook semio",
+        "command": "bun ./script.ts dev storybook compose",
         "forwardAllArgs": true,
         "env": {
           "STORYBOOK_PORT": "6010"
         }
       }
     },
-    "dev-storybook-semio-algorithms": {
+    "dev-storybook-compose-algorithms": {
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./script.ts dev storybook semio algorithms",
+        "command": "bun ./script.ts dev storybook compose algorithms",
         "forwardAllArgs": true,
         "env": {
           "STORYBOOK_PORT": "6010"
         }
       }
     },
-    "dev-storybook-semio-ui": {
+    "dev-storybook-compose-ui": {
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./script.ts dev storybook semio ui",
+        "command": "bun ./script.ts dev storybook compose ui",
         "forwardAllArgs": true,
         "env": {
           "STORYBOOK_PORT": "6010"

@@ -1,7 +1,7 @@
 """Repair schema_gap_surfaces macros in lib.rs (splice name lists, drop duplicates)."""
 from pathlib import Path
 
-p = Path(r"c:\git\semio\semio\client\lib\rs\lib.rs")
+p = Path(r"c:\git\compose\compose\client\lib\rs\lib.rs")
 text = p.read_text(encoding="utf-8")
 start = text.index("//#region")
 start = text.index("schema_gap_surfaces", start)

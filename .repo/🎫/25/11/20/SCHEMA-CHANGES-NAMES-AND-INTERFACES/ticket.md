@@ -45,13 +45,13 @@ This plan covers two major schema changes:
 
 ### TypeScript/JavaScript
 
-- `js/semio/semio.ts` - Core domain logic and types
-- `js/semio/sketchpad/apps/*/App.tsx` - All app stores that work with these models
+- `js/compose/compose.ts` - Core domain logic and types
+- `js/compose/sketchpad/apps/*/App.tsx` - All app stores that work with these models
 - `js/elements/**/*.tsx` - UI components that display/edit these properties
 
 ### .NET
 
-- `net/Semio/Semio.cs` - C# domain models
+- `net/Compose/Compose.cs` - C# domain models
 
 ### GraphQL
 
@@ -86,7 +86,7 @@ This plan covers two major schema changes:
 
 ### Phase 2: TypeScript Implementation
 
-1. Update `js/semio/semio.ts`
+1. Update `js/compose/compose.ts`
    - Add `PortId` type
    - Add `Port` model with properties
    - Add `PortInput`, `PortDiff`, etc.
@@ -97,7 +97,7 @@ This plan covers two major schema changes:
    - Update all getDiff, applyDiff, inverseDiff functions
    - Add getters for port compatibility resolution
 
-2. Update stores in `js/semio/sketchpad/App.tsx` and app files
+2. Update stores in `js/compose/sketchpad/App.tsx` and app files
    - Update KitStore to manage ports
    - Add port-related commands
    - Update DesignAppStore, TypeAppStore to handle new properties
@@ -111,7 +111,7 @@ This plan covers two major schema changes:
 
 ### Phase 3: .NET Implementation
 
-1. Update `net/Semio/Semio.cs`
+1. Update `net/Compose/Compose.cs`
    - Add `PortId` struct
    - Add `Port` class
    - Update `Piece`, `Connector`, `Model` classes
@@ -180,7 +180,7 @@ Update the model hierarchy order in AGENTS.md:
 ## 7. Implementation Order
 
 1. ✅ Schema files (sqlite, jsonschema, engineering)
-2. ✅ Core TypeScript types and logic (semio.ts)
+2. ✅ Core TypeScript types and logic (compose.ts)
 3. ✅ Store updates (App.tsx, app stores)
 4. ✅ UI components
 5. ✅ .NET implementation

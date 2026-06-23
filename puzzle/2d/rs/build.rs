@@ -8,7 +8,7 @@ fn main() {
     let emoji_font = manifest_dir.join("asset/NotoColorEmoji-subset.ttf");
     println!("cargo:rerun-if-changed={}", emoji_font.display());
 
-    let icons_src = manifest_dir.join("../../../semio/client/example/metabolism/icon");
+    let icons_src = manifest_dir.join("../../../compose/client/example/metabolism/icon");
     println!("cargo:rerun-if-changed={}", icons_src.display());
 
     let mut arms = String::new();

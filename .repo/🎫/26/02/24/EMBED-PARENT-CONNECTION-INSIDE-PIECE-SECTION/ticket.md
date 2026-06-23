@@ -10,7 +10,7 @@ Embedding parent connection details INSIDE the piece section of the details pane
 
 ## Changes
 
-- `semio/js/sketchpad/Design.tsx`: Added parent connection TreeItem inside `PiecesSectionForm` using `ConnectionScopeProvider` + `SingleConnectionInfo` + `SingleConnectionFields`. Removed standalone `ParentConnectionSection`/`ParentConnectionSectionForm` components. Removed panel section registration for parent connection.
+- `compose/js/sketchpad/Design.tsx`: Added parent connection TreeItem inside `PiecesSectionForm` using `ConnectionScopeProvider` + `SingleConnectionInfo` + `SingleConnectionFields`. Removed standalone `ParentConnectionSection`/`ParentConnectionSectionForm` components. Removed panel section registration for parent connection.
 
 ## Log
 

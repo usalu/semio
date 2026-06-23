@@ -4,7 +4,7 @@ Act as a senior software engineer and mentor explaining Kit.tsx to a brand-new t
 
 ## Steps
 
-1. **Research Kit.tsx**: Analyze the structure, imports, state management, and hooks in `js/semio/sketchpad/Kit.tsx`.
+1. **Research Kit.tsx**: Analyze the structure, imports, state management, and hooks in `js/compose/sketchpad/Kit.tsx`.
 2. **Draft Tutorial**: Create a comprehensive guide following the requested structure:
    - Big Picture Overview
    - Architecture & Relationships

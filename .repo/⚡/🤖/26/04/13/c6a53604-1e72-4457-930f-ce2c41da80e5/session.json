@@ -5,7 +5,7 @@
   "second": "2026-04-13T08:32:13Z",
   "checkpoint": "aa87ea213167e5254ecec7c756b009e55aecfe99",
   "contributor": "unknown",
-  "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl",
+  "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl",
   "events": [
     {
       "event": {
@@ -49,7 +49,7 @@
         "kind": "agent.file.read.ended",
         "second": "2026-04-13T08:32:14Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -73,7 +73,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -86,7 +86,7 @@
         "kind": "agent.file.read.ended",
         "second": "2026-04-13T08:32:14Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -110,7 +110,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -123,7 +123,7 @@
         "kind": "agent.file.read.starting",
         "second": "2026-04-13T08:32:16Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -133,7 +133,7 @@
           "tool_name": "Grep",
           "tool_input": {
             "pattern": "function TreeRow|const TreeRow|function TreeContent|const TreeContent|function Details|Details panel|TreeSection|IndentationLines",
-            "file_path": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "file_path": "/workspaces/semio/compose/sketchpad/index.tsx",
             "output_mode": "content"
           },
           "tool_use_id": "call_j68F05oz5ePHfy5ec3xssMSP\nfc_0b9417947c8e725e0169dcaa10857c8190bced44d1feee61e9",
@@ -144,7 +144,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -157,7 +157,7 @@
         "kind": "agent.file.read.ended",
         "second": "2026-04-13T08:32:17Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -167,7 +167,7 @@
           "tool_name": "Grep",
           "tool_input": {
             "pattern": "function TreeRow|const TreeRow|function TreeContent|const TreeContent|function Details|Details panel|TreeSection|IndentationLines",
-            "file_path": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "file_path": "/workspaces/semio/compose/sketchpad/index.tsx",
             "output_mode": "content"
           },
           "tool_output": "{\"pattern\":\"function TreeRow|const TreeRow|function TreeContent|const TreeContent|function Details|Details panel|TreeSection|IndentationLines\",\"success\":true}",
@@ -180,7 +180,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -193,7 +193,7 @@
         "kind": "agent.file.read.starting",
         "second": "2026-04-13T08:32:21Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -202,7 +202,7 @@
           "model": "default",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/workspaces/semio/semio/ui/index.tsx"
+            "file_path": "/workspaces/semio/compose/ui/index.tsx"
           },
           "tool_use_id": "call_uCviVH60c1EWlKpmDuGMPxbM\nfc_0b9417947c8e725e0169dcaa15f7a08190a52390e3e29cbcfc",
           "session_id": "c6a53604-1e72-4457-930f-ce2c41da80e5",
@@ -212,7 +212,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -225,7 +225,7 @@
         "kind": "agent.file.read.starting",
         "second": "2026-04-13T08:32:21Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -244,7 +244,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -257,15 +257,15 @@
         "kind": "agent.file.read.starting",
         "second": "2026-04-13T08:32:23Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
           "conversation_id": "c6a53604-1e72-4457-930f-ce2c41da80e5",
           "generation_id": "7a87d528-37c3-4222-a03a-c27711a69f16",
           "model": "default",
-          "content": "// #region 🧲Header\n// semio/ui/index.tsx\n// 2026 Ueli Saluz \u003cueli@semio-tech.com\u003e\n// This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see \u003chttps://www.gnu.org/licenses/\u003e.\n// 🖱️Shared semio ui components.\n// #endregion 🧲Header\n\nimport { Breadcrumb, Button, Section } from \"@elements/ui/elements\";\nimport { Bounds, useBounds } from \"@react-three/drei/core/Bounds.js\";\nimport { Clone } from \"@react-three/drei/core/Clone.js\";\nimport { Edges } from \"@react-three/drei/core/Edges.js\";\nimport { GizmoHelper } from \"@react-three/drei/core/GizmoHelper.js\";\nimport { GizmoViewport } from \"@react-three/drei/core/GizmoViewport.js\";\nimport { useGLTF } from \"@react-three/drei/core/Gltf.js\";\nimport { Grid } from \"@react-three/drei/core/Grid.js\";\nimport { OrbitControls } from \"@react-three/drei/core/OrbitControls.js\";\nimport { Canvas as ThreeCanvas, useFrame, useThree } from \"@react-three/fiber\";\nimport {\n    applyDesignDiff,\n    designWithDiff,\n    DiffStatus,\n    flattenDesign,\n    planeToMatrix,\n    selectBestModel,\n    toThreeRotation,\n    type Attribute,\n    type Camera,\n    type Connection,\n    type Connector,\n    type Coord,\n    type Design,\n    type DesignDiff,\n    type Kit,\n    type MoveVector,\n    type Piece,\n    type Plane,\n    type File as SemioFile,\n    type Type as SemioKind,\n    type Vector as SemioVector,\n} from \"@semio/js\";\nimport * as React from \"react\";\nimport * as THREE from \"three\";\nimport { clone as cloneSkeleton } from \"three/examples/jsm/utils/SkeletonUtils.js\";\n\n// #region 💻ControllableState\n// Specs: Semio UI components MUST support controlled/uncontrolled and partial/full control.\n// This hook is the shared mechanism used by multiple components for interactive state that can\n// be externally controlled while still supporting internal defaults.\n// Summary: Shared controllable state hook for Semio UI components.\n\nconst useResolvedValue = \u003cT,\u003e(value: T | undefined, defaultValue: T) =\u003e value ?? defaultValue;\n\nconst useInteractiveControllableValue = \u003cT,\u003e(value: T | undefined, defaultValue: T, onChange?: (nextValue: T) =\u003e void) =\u003e {\n  const [internalValue, setInternalValue] = React.useState(value ?? defaultValue);\n  const isControlled = value !== undefined \u0026\u0026 onChange !== undefined;\n  const lastExternalValueRef = React.useRef(value);\n\n  React.useEffect(() =\u003e {\n    if (isControlled) return;\n    if (value === undefined) return;\n    if (Object.is(lastExternalValueRef.current, value)) return;\n    lastExternalValueRef.current = value;\n    setInternalValue(value);\n  }, [isControlled, value]);\n\n  const resolvedValue = isControlled ? value : internalValue;\n  const setValue = React.useCallback(\n    (nextValue: T) =\u003e {\n      if (!isControlled) {\n        setInternalValue(nextValue);\n      }\n      onChange?.(nextValue);\n    },\n    [isControlled, onChange],\n  );\n  return [resolvedValue, setValue, isControlled] as const;\n};\n\n// #endregion 💻ControllableState\n\n// #region 🗃️Exports\n\n// Re-export the runtime-safe ui primitives from @elements/ui/elements.\n\nexport * from \"@elements/ui/elements\";\n\n// #endregion 🗃️Exports\n\n// #region ⏱️Kit\n// Specs: Kit provides a kit-scoped artifact picker (designs, kinds, kit-level ports, type connectors)\n// with the standard Semio UI controllable-state pattern: partial/full controlled/uncontrolled for\n// both available data and selection. It supports partial/full select via per-group enable flags.\n// Summary: Kit hierarchy browser with composed Semio viewers, browse history, metadata, and open action.\n// Specs (navigation): Back/forward buttons appear before the breadcrumb; double-click on a scene or diagram piece\n// navigates to the nested design or referenced kind when that node exists in the current hierarchy.\n\nexport type KitGroupKind = \"design\" | \"type\" | \"port\" | \"connector\";\n\n/** Kit-level {@link Port} rows (from {@link Kit.ports}), not type {@link Connector}s. */\nexport interface KitPortArtifact {\n  guid: string;\n  name: string;\n  description?: string;\n  icon?: string;\n  maxChildren?: number;\n}\n\n/** Flattened type {@link Connector} rows for browsing (nested under kinds in the hierarchy). */\nexport interface KitConnectorArtifact {\n  guid: string;\n  typeGuid: string;\n  id?: string;\n  port?: string;\n  name?: string;\n  description?: string;\n  mandatory?: boolean;\n  maxChildren?: number;\n}\n\nexport interface KitDesignData extends Pick\u003cDesign, \"guid\" | \"name\" | \"description\" | \"createdAt\" | \"updatedAt\" | \"unit\" | \"icon\" | \"image\"\u003e {\n  parent?: { guid: string };\n}\n\nexport interface KitKindData extends Pick\u003cSemioKind, \"guid\" | \"name\" | \"description\" | \"createdAt\" | \"updatedAt\" | \"icon\" | \"image\"\u003e {\n  parent?: { guid: string };\n}\n\nexport interface KitData {\n  guid?: string;\n  name?: string;\n  description?: string;\n  version?: string;\n  createdAt?: string;\n  updatedAt?: string;\n  homepage?: string;\n  remote?: string;\n  preview?: string;\n  icon?: string;\n  image?: string;\n  license?: string;\n  designs?: KitDesignData[];\n  types?: KitKindData[];\n  /** Kit-level ports ({@link Port} entities). */\n  ports?: KitPortArtifact[];\n  /** Flattened connectors from kinds ({@link Connector} on {@link SemioKind}). */\n  connectors?: KitConnectorArtifact[];\n}\n\nexport interface KitSelection {\n  designGuids?: string[];\n  typeGuids?: string[];\n  portGuids?: string[];\n  connectorGuids?: string[];\n}\n\nexport interface KitProps {\n  kit?: Kit;\n  data?: KitData;\n  defaultData?: KitData;\n  onDataChange?: (data: KitData) =\u003e void;\n\n  selection?: KitSelection;\n  defaultSelection?: KitSelection;\n  onSelectionChange?: (selection: KitSelection) =\u003e void;\n\n  selectionEnabled?: boolean;\n  designSelectionEnabled?: boolean;\n  typeSelectionEnabled?: boolean;\n  portSelectionEnabled?: boolean;\n  connectorSelectionEnabled?: boolean;\n\n  dataEnabled?: boolean;\n  designDataEnabled?: boolean;\n  typeDataEnabled?: boolean;\n  portDataEnabled?: boolean;\n  connectorDataEnabled?: boolean;\n\n  onOpenArtifact?: (artifact: KitHierarchyNode) =\u003e void;\n\n  title?: string;\n  className?: string;\n}\n\nconst normalizeKitSelection = (selection?: KitSelection): KitSelection =\u003e ({\n  designGuids: selection?.designGuids ?? [],\n  typeGuids: selection?.typeGuids ?? [],\n  portGuids: selection?.portGuids ?? [],\n  connectorGuids: selection?.connectorGuids ?? [],\n});\n\nconst getReferenceGuid = (value: unknown): string | undefined =\u003e {\n  if (typeof value === \"string\") return value;\n  if (value \u0026\u0026 typeof value === \"object\" \u0026\u0026 \"guid\" in value \u0026\u0026 typeof value.guid === \"string\") return value.guid;\n  return undefined;\n};\n\nconst getReferenceLabel = (value: unknown): string | undefined =\u003e {\n  if (typeof value === \"string\") return value;\n  if (value \u0026\u0026 typeof value === \"object\") {\n    if (\"name\" in value \u0026\u0026 typeof value.name === \"string\" \u0026\u0026 value.name.length \u003e 0) return value.name;\n    if (\"id\" in value \u0026\u0026 typeof value.id === \"string\" \u0026\u0026 value.id.length \u003e 0) return value.id;\n    if (\"guid\" in value \u0026\u0026 typeof value.guid === \"string\" \u0026\u0026 value.guid.length \u003e 0) return value.guid;\n  }\n  return undefined;\n};\n\nconst buildKitDataFromKit = (kit: Kit | undefined): KitData =\u003e {\n  if (!kit) return {};\n  const designs = (kit.designs ?? []).map((d) =\u003e ({\n    guid: d.guid,\n    name: d.name,\n    description: d.description,\n    createdAt: d.createdAt,\n    updatedAt: d.updatedAt,\n    unit: d.unit,\n    icon: d.icon,\n    image: d.image,\n    parent: d.parent ? { guid: d.parent.guid } : undefined,\n  }));\n  const types = (kit.types ?? []).map((t) =\u003e ({\n    guid: t.guid,\n    name: t.name,\n    description: t.description,\n    createdAt: t.createdAt,\n    updatedAt: t.updatedAt,\n    icon: t.icon,\n    image: t.image,\n    parent: t.parent ? { guid: t.parent.guid } : undefined,\n  }));\n  const ports: KitPortArtifact[] = (kit.ports ?? []).map((p) =\u003e ({\n    guid: p.guid,\n    name: p.name,\n    description: p.description,\n    icon: p.icon,\n    maxChildren: p.maxChildren,\n  }));\n  const connectors: KitConnectorArtifact[] = (kit.types ?? []).flatMap((t) =\u003e\n    (t.connectors ?? []).map((c) =\u003e ({\n      guid: c.guid,\n      typeGuid: t.guid,\n      id: c.name,\n      port: getReferenceGuid(c.port),\n      name: c.name || getReferenceLabel(c.port) || \"connector\",\n      description: c.description,\n      mandatory: c.mandatory,\n      maxChildren: c.maxChildren,\n    })),\n  );\n  return {\n    guid: kit.guid,\n    name: kit.name,\n    description: kit.description,\n    version: kit.version,\n    createdAt: kit.createdAt,\n    updatedAt: kit.updatedAt,\n    homepage: kit.homepage,\n    remote: kit.remote,\n    preview: kit.preview,\n    icon: kit.icon,\n    image: kit.image,\n    license: kit.license,\n    designs,\n    types,\n    ports,\n    connectors,\n  };\n};\n\ntype KitHierarchyNodeKind = \"scope\" | \"kit\" | \"group\" | \"design\" | \"kind\" | \"port\" | \"connector\";\n\nexport interface KitHierarchyNode {\n  key: string;\n  kind: KitHierarchyNodeKind;\n  label: string;\n  parentKey?: string;\n  guid?: string;\n  groupKind?: KitGroupKind;\n  href?: string;\n  summary?: string;\n  metadata: Array\u003c{ label: string; value: string }\u003e;\n}\n\ninterface KitHierarchy {\n  rootKey: string;\n  nodesByKey: Map\u003cstring, KitHierarchyNode\u003e;\n  childKeysByParentKey: Map\u003cstring, string[]\u003e;\n}\n\nconst addKitMetaEntry = (entries: Array\u003c{ label: string; value: string }\u003e, label: string, value: unknown) =\u003e {\n  if (typeof value !== \"string\" || value.trim().length === 0) return;\n  entries.push({ label, value });\n};\n\nconst getKitArtifactHref = (value: Partial\u003cKitData \u0026 KitDesignData \u0026 KitKindData\u003e): string | undefined =\u003e value.image ?? value.icon ?? value.preview ?? value.homepage ?? value.remote;\n\nconst buildKitHierarchy = (data: KitData, options: { designDataEnabled: boolean; typeDataEnabled: boolean; portDataEnabled: boolean; connectorDataEnabled: boolean }): KitHierarchy =\u003e {\n  const rootKey = \"scope:kit\";\n  const kitKey = \"kit:root\";\n  const designGroupKey = \"group:designs\";\n  const kindGroupKey = \"group:types\";\n  const kitPortsGroupKey = \"group:kit-ports\";\n  const orphanConnectorGroupKey = \"group:orphan-connectors\";\n  const nodesByKey = new Map\u003cstring, KitHierarchyNode\u003e();\n  const childKeysByParentKey = new Map\u003cstring, string[]\u003e();\n\n  const registerNode = (node: KitHierarchyNode) =\u003e {\n    nodesByKey.set(node.key, node);\n    if (!childKeysByParentKey.has(node.key)) childKeysByParentKey.set(node.key, []);\n    if (!node.parentKey) return;\n    const currentChildren = childKeysByParentKey.get(node.parentKey) ?? [];\n    currentChildren.push(node.key);\n    childKeysByParentKey.set(node.parentKey, currentChildren);\n  };\n\n  const designCount = String(data.designs?.length ?? 0);\n  const kindCount = String(data.types?.length ?? 0);\n  const kitPortCount = String(data.ports?.length ?? 0);\n  const connectorCount = String(data.connectors?.length ?? 0);\n\n  registerNode({\n    key: rootKey,\n    kind: \"scope\",\n    label: \"Kit\",\n    summary: \"Kit hierarchy root.\",\n    metadata: [\n      { label: \"Designs\", value: designCount },\n      { label: \"Types\", value: kindCount },\n      { label: \"Ports\", value: kitPortCount },\n      { label: \"Connectors\", value: connectorCount },\n    ],\n  });\n\n  const kitMetadata: Array\u003c{ label: string; value: string }\u003e = [];\n  addKitMetaEntry(kitMetadata, \"Name\", data.name);\n  addKitMetaEntry(kitMetadata, \"Guid\", data.guid);\n  addKitMetaEntry(kitMetadata, \"Description\", data.description);\n  addKitMetaEntry(kitMetadata, \"Version\", data.version);\n  addKitMetaEntry(kitMetadata, \"License\", data.license);\n  addKitMetaEntry(kitMetadata, \"Homepage\", data.homepage);\n  addKitMetaEntry(kitMetadata, \"Remote\", data.remote);\n  addKitMetaEntry(kitMetadata, \"Created\", data.createdAt);\n  addKitMetaEntry(kitMetadata, \"Updated\", data.updatedAt);\n  registerNode({\n    key: kitKey,\n    kind: \"kit\",\n    label: data.name?.trim() || \"Unnamed Kit\",\n    parentKey: rootKey,\n    guid: data.guid,\n    href: getKitArtifactHref(data),\n    summary: data.description || \"Kit metadata.\",\n    metadata: kitMetadata,\n  });\n\n  if (options.designDataEnabled) {\n    registerNode({\n      key: designGroupKey,\n      kind: \"group\",\n      label: \"Designs\",\n      parentKey: kitKey,\n      groupKind: \"design\",\n      summary: \"Design hierarchy.\",\n      metadata: [{ label: \"Count\", value: designCount }],\n    });\n  }\n\n  if (options.typeDataEnabled) {\n    registerNode({\n      key: kindGroupKey,\n      kind: \"group\",\n      label: \"Types\",\n      parentKey: kitKey,\n      groupKind: \"type\",\n      summary: \"Type hierarchy.\",\n      metadata: [{ label: \"Count\", value: kindCount }],\n    });\n  }\n\n  if (options.portDataEnabled \u0026\u0026 (data.ports?.length ?? 0) \u003e 0) {\n    registerNode({\n      key: kitPortsGroupKey,\n      kind: \"group\",\n      label: \"Ports\",\n      parentKey: kitKey,\n      groupKind: \"port\",\n      summary: \"Kit-level port definitions.\",\n      metadata: [{ label: \"Count\", value: kitPortCount }],\n    });\n  }\n\n  const kindKeyByGuid = new Map\u003cstring, string\u003e();\n  (data.types ?? []).forEach((kind) =\u003e {\n    const metadata: Array\u003c{ label: string; value: string }\u003e = [];\n    addKitMetaEntry(metadata, \"Kind\", \"Type\");\n    addKitMetaEntry(metadata, \"Name\", kind.name);\n    addKitMetaEntry(metadata, \"Guid\", kind.guid);\n    addKitMetaEntry(metadata, \"Description\", kind.description);\n    addKitMetaEntry(metadata, \"Created\", kind.createdAt);\n    addKitMetaEntry(metadata, \"Updated\", kind.updatedAt);\n    const key = `kind:${kind.guid}`;\n    kindKeyByGuid.set(kind.guid, key);\n    registerNode({\n      key,\n      kind: \"kind\",\n      label: kind.name || kind.guid,\n      parentKey: kind.parent?.guid ? `kind:${kind.parent.guid}` : kindGroupKey,\n      guid: kind.guid,\n      groupKind: \"type\",\n      href: getKitArtifactHref(kind),\n      summary: kind.description || \"Type artifact.\",\n      metadata,\n    });\n  });\n\n  (data.designs ?? []).forEach((design) =\u003e {\n    const metadata: Array\u003c{ label: string; value: string }\u003e = [];\n    addKitMetaEntry(metadata, \"Kind\", \"Design\");\n    addKitMetaEntry(metadata, \"Name\", design.name);\n    addKitMetaEntry(metadata, \"Guid\", design.guid);\n    addKitMetaEntry(metadata, \"Description\", design.description);\n    addKitMetaEntry(metadata, \"Unit\", design.unit);\n    addKitMetaEntry(metadata, \"Created\", design.createdAt);\n    addKitMetaEntry(metadata, \"Updated\", design.updatedAt);\n    registerNode({\n      key: `design:${design.guid}`,\n      kind: \"design\",\n      label: design.name || design.guid,\n      parentKey: design.parent?.guid ? `design:${design.parent.guid}` : designGroupKey,\n      guid: design.guid,\n      groupKind: \"design\",\n      href: getKitArtifactHref(design),\n      summary: design.description || \"Design artifact.\",\n      metadata,\n    });\n  });\n\n  if (options.portDataEnabled) {\n    (data.ports ?? []).forEach((port) =\u003e {\n      const metadata: Array\u003c{ label: string; value: string }\u003e = [];\n      addKitMetaEntry(metadata, \"Kind\", \"Port\");\n      addKitMetaEntry(metadata, \"Name\", port.name);\n      addKitMetaEntry(metadata, \"Guid\", port.guid);\n      addKitMetaEntry(metadata, \"Description\", port.description);\n      registerNode({\n        key: `port:${port.guid}`,\n        kind: \"port\",\n        label: port.name || port.guid,\n        parentKey: kitPortsGroupKey,\n        guid: port.guid,\n        groupKind: \"port\",\n        href: port.icon,\n        summary: port.description || \"Port definition.\",\n        metadata,\n      });\n    });\n  }\n\n  let orphanConnectorCount = 0;\n  if (options.connectorDataEnabled) {\n    (data.connectors ?? []).forEach((connector) =\u003e {\n      const metadata: Array\u003c{ label: string; value: string }\u003e = [];\n      addKitMetaEntry(metadata, \"Kind\", \"Connector\");\n      addKitMetaEntry(metadata, \"Name\", connector.name);\n      addKitMetaEntry(metadata, \"Guid\", connector.guid);\n      addKitMetaEntry(metadata, \"Connector Id\", connector.id);\n      addKitMetaEntry(metadata, \"Port\", connector.port);\n      addKitMetaEntry(metadata, \"Description\", connector.description);\n      addKitMetaEntry(metadata, \"Mandatory\", connector.mandatory === undefined ? undefined : String(connector.mandatory));\n      const parentKey = kindKeyByGuid.get(connector.typeGuid) ?? orphanConnectorGroupKey;\n      if (parentKey === orphanConnectorGroupKey) orphanConnectorCount += 1;\n      registerNode({\n        key: `connector:${connector.guid}`,\n        kind: \"connector\",\n        label: connector.name || connector.guid,\n        parentKey,\n        guid: connector.guid,\n        groupKind: \"connector\",\n        summary: connector.description || \"Connector on a kind.\",\n        metadata,\n      });\n    });\n  }\n\n  if (orphanConnectorCount \u003e 0 \u0026\u0026 options.connectorDataEnabled) {\n    registerNode({\n      key: orphanConnectorGroupKey,\n      kind: \"group\",\n      label: \"Connectors\",\n      parentKey: kitKey,\n      groupKind: \"connector\",\n      summary: \"Connectors without a resolved kind parent.\",\n      metadata: [{ label: \"Count\", value: String(orphanConnectorCount) }],\n    });\n  }\n\n  return { rootKey, nodesByKey, childKeysByParentKey };\n};\n\nconst getKitNodePath = (hierarchy: KitHierarchy, nodeKey: string | undefined): KitHierarchyNode[] =\u003e {\n  if (!nodeKey) return [];\n  const path: KitHierarchyNode[] = [];\n  let currentKey: string | undefined = nodeKey;\n  while (currentKey) {\n    const node = hierarchy.nodesByKey.get(currentKey);\n    if (!node) break;\n    path.unshift(node);\n    currentKey = node.parentKey;\n  }\n  return path;\n};\n\nconst getKitChildNodes = (hierarchy: KitHierarchy, node: KitHierarchyNode): KitHierarchyNode[] =\u003e {\n  const childKeys = hierarchy.childKeysByParentKey.get(node.key) ?? [];\n  return childKeys\n    .map((key) =\u003e hierarchy.nodesByKey.get(key))\n    .filter((value): value is KitHierarchyNode =\u003e Boolean(value))\n    .sort((left, right) =\u003e {\n      if (left.kind === \"group\" \u0026\u0026 right.kind !== \"group\") return -1;\n      if (left.kind !== \"group\" \u0026\u0026 right.kind === \"group\") return 1;\n      return left.label.localeCompare(right.label);\n    });",
-          "file_path": "/workspaces/semio/semio/ui/index.tsx",
+          "content": "// #region 🧲Header\n// compose/ui/index.tsx\n// 2026 Ueli Saluz \u003cueli@semio-tech.com\u003e\n// This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see \u003chttps://www.gnu.org/licenses/\u003e.\n// 🖱️Shared compose ui components.\n// #endregion 🧲Header\n\nimport { Breadcrumb, Button, Section } from \"@elements/ui/elements\";\nimport { Bounds, useBounds } from \"@react-three/drei/core/Bounds.js\";\nimport { Clone } from \"@react-three/drei/core/Clone.js\";\nimport { Edges } from \"@react-three/drei/core/Edges.js\";\nimport { GizmoHelper } from \"@react-three/drei/core/GizmoHelper.js\";\nimport { GizmoViewport } from \"@react-three/drei/core/GizmoViewport.js\";\nimport { useGLTF } from \"@react-three/drei/core/Gltf.js\";\nimport { Grid } from \"@react-three/drei/core/Grid.js\";\nimport { OrbitControls } from \"@react-three/drei/core/OrbitControls.js\";\nimport { Canvas as ThreeCanvas, useFrame, useThree } from \"@react-three/fiber\";\nimport {\n    applyDesignDiff,\n    designWithDiff,\n    DiffStatus,\n    flattenDesign,\n    planeToMatrix,\n    selectBestModel,\n    toThreeRotation,\n    type Attribute,\n    type Camera,\n    type Connection,\n    type Connector,\n    type Coord,\n    type Design,\n    type DesignDiff,\n    type Kit,\n    type MoveVector,\n    type Piece,\n    type Plane,\n    type File as ComposeFile,\n    type Type as ComposeKind,\n    type Vector as ComposeVector,\n} from \"@compose/js\";\nimport * as React from \"react\";\nimport * as THREE from \"three\";\nimport { clone as cloneSkeleton } from \"three/examples/jsm/utils/SkeletonUtils.js\";\n\n// #region 💻ControllableState\n// Specs: Compose UI components MUST support controlled/uncontrolled and partial/full control.\n// This hook is the shared mechanism used by multiple components for interactive state that can\n// be externally controlled while still supporting internal defaults.\n// Summary: Shared controllable state hook for Compose UI components.\n\nconst useResolvedValue = \u003cT,\u003e(value: T | undefined, defaultValue: T) =\u003e value ?? defaultValue;\n\nconst useInteractiveControllableValue = \u003cT,\u003e(value: T | undefined, defaultValue: T, onChange?: (nextValue: T) =\u003e void) =\u003e {\n  const [internalValue, setInternalValue] = React.useState(value ?? defaultValue);\n  const isControlled = value !== undefined \u0026\u0026 onChange !== undefined;\n  const lastExternalValueRef = React.useRef(value);\n\n  React.useEffect(() =\u003e {\n    if (isControlled) return;\n    if (value === undefined) return;\n    if (Object.is(lastExternalValueRef.current, value)) return;\n    lastExternalValueRef.current = value;\n    setInternalValue(value);\n  }, [isControlled, value]);\n\n  const resolvedValue = isControlled ? value : internalValue;\n  const setValue = React.useCallback(\n    (nextValue: T) =\u003e {\n      if (!isControlled) {\n        setInternalValue(nextValue);\n      }\n      onChange?.(nextValue);\n    },\n    [isControlled, onChange],\n  );\n  return [resolvedValue, setValue, isControlled] as const;\n};\n\n// #endregion 💻ControllableState\n\n// #region 🗃️Exports\n\n// Re-export the runtime-safe ui primitives from @elements/ui/elements.\n\nexport * from \"@elements/ui/elements\";\n\n// #endregion 🗃️Exports\n\n// #region ⏱️Kit\n// Specs: Kit provides a kit-scoped artifact picker (designs, kinds, kit-level ports, type connectors)\n// with the standard Compose UI controllable-state pattern: partial/full controlled/uncontrolled for\n// both available data and selection. It supports partial/full select via per-group enable flags.\n// Summary: Kit hierarchy browser with composed Compose viewers, browse history, metadata, and open action.\n// Specs (navigation): Back/forward buttons appear before the breadcrumb; double-click on a scene or diagram piece\n// navigates to the nested design or referenced kind when that node exists in the current hierarchy.\n\nexport type KitGroupKind = \"design\" | \"type\" | \"port\" | \"connector\";\n\n/** Kit-level {@link Port} rows (from {@link Kit.ports}), not type {@link Connector}s. */\nexport interface KitPortArtifact {\n  guid: string;\n  name: string;\n  description?: string;\n  icon?: string;\n  maxChildren?: number;\n}\n\n/** Flattened type {@link Connector} rows for browsing (nested under kinds in the hierarchy). */\nexport interface KitConnectorArtifact {\n  guid: string;\n  typeGuid: string;\n  id?: string;\n  port?: string;\n  name?: string;\n  description?: string;\n  mandatory?: boolean;\n  maxChildren?: number;\n}\n\nexport interface KitDesignData extends Pick\u003cDesign, \"guid\" | \"name\" | \"description\" | \"createdAt\" | \"updatedAt\" | \"unit\" | \"icon\" | \"image\"\u003e {\n  parent?: { guid: string };\n}\n\nexport interface KitKindData extends Pick\u003cComposeKind, \"guid\" | \"name\" | \"description\" | \"createdAt\" | \"updatedAt\" | \"icon\" | \"image\"\u003e {\n  parent?: { guid: string };\n}\n\nexport interface KitData {\n  guid?: string;\n  name?: string;\n  description?: string;\n  version?: string;\n  createdAt?: string;\n  updatedAt?: string;\n  homepage?: string;\n  remote?: string;\n  preview?: string;\n  icon?: string;\n  image?: string;\n  license?: string;\n  designs?: KitDesignData[];\n  types?: KitKindData[];\n  /** Kit-level ports ({@link Port} entities). */\n  ports?: KitPortArtifact[];\n  /** Flattened connectors from kinds ({@link Connector} on {@link ComposeKind}). */\n  connectors?: KitConnectorArtifact[];\n}\n\nexport interface KitSelection {\n  designGuids?: string[];\n  typeGuids?: string[];\n  portGuids?: string[];\n  connectorGuids?: string[];\n}\n\nexport interface KitProps {\n  kit?: Kit;\n  data?: KitData;\n  defaultData?: KitData;\n  onDataChange?: (data: KitData) =\u003e void;\n\n  selection?: KitSelection;\n  defaultSelection?: KitSelection;\n  onSelectionChange?: (selection: KitSelection) =\u003e void;\n\n  selectionEnabled?: boolean;\n  designSelectionEnabled?: boolean;\n  typeSelectionEnabled?: boolean;\n  portSelectionEnabled?: boolean;\n  connectorSelectionEnabled?: boolean;\n\n  dataEnabled?: boolean;\n  designDataEnabled?: boolean;\n  typeDataEnabled?: boolean;\n  portDataEnabled?: boolean;\n  connectorDataEnabled?: boolean;\n\n  onOpenArtifact?: (artifact: KitHierarchyNode) =\u003e void;\n\n  title?: string;\n  className?: string;\n}\n\nconst normalizeKitSelection = (selection?: KitSelection): KitSelection =\u003e ({\n  designGuids: selection?.designGuids ?? [],\n  typeGuids: selection?.typeGuids ?? [],\n  portGuids: selection?.portGuids ?? [],\n  connectorGuids: selection?.connectorGuids ?? [],\n});\n\nconst getReferenceGuid = (value: unknown): string | undefined =\u003e {\n  if (typeof value === \"string\") return value;\n  if (value \u0026\u0026 typeof value === \"object\" \u0026\u0026 \"guid\" in value \u0026\u0026 typeof value.guid === \"string\") return value.guid;\n  return undefined;\n};\n\nconst getReferenceLabel = (value: unknown): string | undefined =\u003e {\n  if (typeof value === \"string\") return value;\n  if (value \u0026\u0026 typeof value === \"object\") {\n    if (\"name\" in value \u0026\u0026 typeof value.name === \"string\" \u0026\u0026 value.name.length \u003e 0) return value.name;\n    if (\"id\" in value \u0026\u0026 typeof value.id === \"string\" \u0026\u0026 value.id.length \u003e 0) return value.id;\n    if (\"guid\" in value \u0026\u0026 typeof value.guid === \"string\" \u0026\u0026 value.guid.length \u003e 0) return value.guid;\n  }\n  return undefined;\n};\n\nconst buildKitDataFromKit = (kit: Kit | undefined): KitData =\u003e {\n  if (!kit) return {};\n  const designs = (kit.designs ?? []).map((d) =\u003e ({\n    guid: d.guid,\n    name: d.name,\n    description: d.description,\n    createdAt: d.createdAt,\n    updatedAt: d.updatedAt,\n    unit: d.unit,\n    icon: d.icon,\n    image: d.image,\n    parent: d.parent ? { guid: d.parent.guid } : undefined,\n  }));\n  const types = (kit.types ?? []).map((t) =\u003e ({\n    guid: t.guid,\n    name: t.name,\n    description: t.description,\n    createdAt: t.createdAt,\n    updatedAt: t.updatedAt,\n    icon: t.icon,\n    image: t.image,\n    parent: t.parent ? { guid: t.parent.guid } : undefined,\n  }));\n  const ports: KitPortArtifact[] = (kit.ports ?? []).map((p) =\u003e ({\n    guid: p.guid,\n    name: p.name,\n    description: p.description,\n    icon: p.icon,\n    maxChildren: p.maxChildren,\n  }));\n  const connectors: KitConnectorArtifact[] = (kit.types ?? []).flatMap((t) =\u003e\n    (t.connectors ?? []).map((c) =\u003e ({\n      guid: c.guid,\n      typeGuid: t.guid,\n      id: c.name,\n      port: getReferenceGuid(c.port),\n      name: c.name || getReferenceLabel(c.port) || \"connector\",\n      description: c.description,\n      mandatory: c.mandatory,\n      maxChildren: c.maxChildren,\n    })),\n  );\n  return {\n    guid: kit.guid,\n    name: kit.name,\n    description: kit.description,\n    version: kit.version,\n    createdAt: kit.createdAt,\n    updatedAt: kit.updatedAt,\n    homepage: kit.homepage,\n    remote: kit.remote,\n    preview: kit.preview,\n    icon: kit.icon,\n    image: kit.image,\n    license: kit.license,\n    designs,\n    types,\n    ports,\n    connectors,\n  };\n};\n\ntype KitHierarchyNodeKind = \"scope\" | \"kit\" | \"group\" | \"design\" | \"kind\" | \"port\" | \"connector\";\n\nexport interface KitHierarchyNode {\n  key: string;\n  kind: KitHierarchyNodeKind;\n  label: string;\n  parentKey?: string;\n  guid?: string;\n  groupKind?: KitGroupKind;\n  href?: string;\n  summary?: string;\n  metadata: Array\u003c{ label: string; value: string }\u003e;\n}\n\ninterface KitHierarchy {\n  rootKey: string;\n  nodesByKey: Map\u003cstring, KitHierarchyNode\u003e;\n  childKeysByParentKey: Map\u003cstring, string[]\u003e;\n}\n\nconst addKitMetaEntry = (entries: Array\u003c{ label: string; value: string }\u003e, label: string, value: unknown) =\u003e {\n  if (typeof value !== \"string\" || value.trim().length === 0) return;\n  entries.push({ label, value });\n};\n\nconst getKitArtifactHref = (value: Partial\u003cKitData \u0026 KitDesignData \u0026 KitKindData\u003e): string | undefined =\u003e value.image ?? value.icon ?? value.preview ?? value.homepage ?? value.remote;\n\nconst buildKitHierarchy = (data: KitData, options: { designDataEnabled: boolean; typeDataEnabled: boolean; portDataEnabled: boolean; connectorDataEnabled: boolean }): KitHierarchy =\u003e {\n  const rootKey = \"scope:kit\";\n  const kitKey = \"kit:root\";\n  const designGroupKey = \"group:designs\";\n  const kindGroupKey = \"group:types\";\n  const kitPortsGroupKey = \"group:kit-ports\";\n  const orphanConnectorGroupKey = \"group:orphan-connectors\";\n  const nodesByKey = new Map\u003cstring, KitHierarchyNode\u003e();\n  const childKeysByParentKey = new Map\u003cstring, string[]\u003e();\n\n  const registerNode = (node: KitHierarchyNode) =\u003e {\n    nodesByKey.set(node.key, node);\n    if (!childKeysByParentKey.has(node.key)) childKeysByParentKey.set(node.key, []);\n    if (!node.parentKey) return;\n    const currentChildren = childKeysByParentKey.get(node.parentKey) ?? [];\n    currentChildren.push(node.key);\n    childKeysByParentKey.set(node.parentKey, currentChildren);\n  };\n\n  const designCount = String(data.designs?.length ?? 0);\n  const kindCount = String(data.types?.length ?? 0);\n  const kitPortCount = String(data.ports?.length ?? 0);\n  const connectorCount = String(data.connectors?.length ?? 0);\n\n  registerNode({\n    key: rootKey,\n    kind: \"scope\",\n    label: \"Kit\",\n    summary: \"Kit hierarchy root.\",\n    metadata: [\n      { label: \"Designs\", value: designCount },\n      { label: \"Types\", value: kindCount },\n      { label: \"Ports\", value: kitPortCount },\n      { label: \"Connectors\", value: connectorCount },\n    ],\n  });\n\n  const kitMetadata: Array\u003c{ label: string; value: string }\u003e = [];\n  addKitMetaEntry(kitMetadata, \"Name\", data.name);\n  addKitMetaEntry(kitMetadata, \"Guid\", data.guid);\n  addKitMetaEntry(kitMetadata, \"Description\", data.description);\n  addKitMetaEntry(kitMetadata, \"Version\", data.version);\n  addKitMetaEntry(kitMetadata, \"License\", data.license);\n  addKitMetaEntry(kitMetadata, \"Homepage\", data.homepage);\n  addKitMetaEntry(kitMetadata, \"Remote\", data.remote);\n  addKitMetaEntry(kitMetadata, \"Created\", data.createdAt);\n  addKitMetaEntry(kitMetadata, \"Updated\", data.updatedAt);\n  registerNode({\n    key: kitKey,\n    kind: \"kit\",\n    label: data.name?.trim() || \"Unnamed Kit\",\n    parentKey: rootKey,\n    guid: data.guid,\n    href: getKitArtifactHref(data),\n    summary: data.description || \"Kit metadata.\",\n    metadata: kitMetadata,\n  });\n\n  if (options.designDataEnabled) {\n    registerNode({\n      key: designGroupKey,\n      kind: \"group\",\n      label: \"Designs\",\n      parentKey: kitKey,\n      groupKind: \"design\",\n      summary: \"Design hierarchy.\",\n      metadata: [{ label: \"Count\", value: designCount }],\n    });\n  }\n\n  if (options.typeDataEnabled) {\n    registerNode({\n      key: kindGroupKey,\n      kind: \"group\",\n      label: \"Types\",\n      parentKey: kitKey,\n      groupKind: \"type\",\n      summary: \"Type hierarchy.\",\n      metadata: [{ label: \"Count\", value: kindCount }],\n    });\n  }\n\n  if (options.portDataEnabled \u0026\u0026 (data.ports?.length ?? 0) \u003e 0) {\n    registerNode({\n      key: kitPortsGroupKey,\n      kind: \"group\",\n      label: \"Ports\",\n      parentKey: kitKey,\n      groupKind: \"port\",\n      summary: \"Kit-level port definitions.\",\n      metadata: [{ label: \"Count\", value: kitPortCount }],\n    });\n  }\n\n  const kindKeyByGuid = new Map\u003cstring, string\u003e();\n  (data.types ?? []).forEach((kind) =\u003e {\n    const metadata: Array\u003c{ label: string; value: string }\u003e = [];\n    addKitMetaEntry(metadata, \"Kind\", \"Type\");\n    addKitMetaEntry(metadata, \"Name\", kind.name);\n    addKitMetaEntry(metadata, \"Guid\", kind.guid);\n    addKitMetaEntry(metadata, \"Description\", kind.description);\n    addKitMetaEntry(metadata, \"Created\", kind.createdAt);\n    addKitMetaEntry(metadata, \"Updated\", kind.updatedAt);\n    const key = `kind:${kind.guid}`;\n    kindKeyByGuid.set(kind.guid, key);\n    registerNode({\n      key,\n      kind: \"kind\",\n      label: kind.name || kind.guid,\n      parentKey: kind.parent?.guid ? `kind:${kind.parent.guid}` : kindGroupKey,\n      guid: kind.guid,\n      groupKind: \"type\",\n      href: getKitArtifactHref(kind),\n      summary: kind.description || \"Type artifact.\",\n      metadata,\n    });\n  });\n\n  (data.designs ?? []).forEach((design) =\u003e {\n    const metadata: Array\u003c{ label: string; value: string }\u003e = [];\n    addKitMetaEntry(metadata, \"Kind\", \"Design\");\n    addKitMetaEntry(metadata, \"Name\", design.name);\n    addKitMetaEntry(metadata, \"Guid\", design.guid);\n    addKitMetaEntry(metadata, \"Description\", design.description);\n    addKitMetaEntry(metadata, \"Unit\", design.unit);\n    addKitMetaEntry(metadata, \"Created\", design.createdAt);\n    addKitMetaEntry(metadata, \"Updated\", design.updatedAt);\n    registerNode({\n      key: `design:${design.guid}`,\n      kind: \"design\",\n      label: design.name || design.guid,\n      parentKey: design.parent?.guid ? `design:${design.parent.guid}` : designGroupKey,\n      guid: design.guid,\n      groupKind: \"design\",\n      href: getKitArtifactHref(design),\n      summary: design.description || \"Design artifact.\",\n      metadata,\n    });\n  });\n\n  if (options.portDataEnabled) {\n    (data.ports ?? []).forEach((port) =\u003e {\n      const metadata: Array\u003c{ label: string; value: string }\u003e = [];\n      addKitMetaEntry(metadata, \"Kind\", \"Port\");\n      addKitMetaEntry(metadata, \"Name\", port.name);\n      addKitMetaEntry(metadata, \"Guid\", port.guid);\n      addKitMetaEntry(metadata, \"Description\", port.description);\n      registerNode({\n        key: `port:${port.guid}`,\n        kind: \"port\",\n        label: port.name || port.guid,\n        parentKey: kitPortsGroupKey,\n        guid: port.guid,\n        groupKind: \"port\",\n        href: port.icon,\n        summary: port.description || \"Port definition.\",\n        metadata,\n      });\n    });\n  }\n\n  let orphanConnectorCount = 0;\n  if (options.connectorDataEnabled) {\n    (data.connectors ?? []).forEach((connector) =\u003e {\n      const metadata: Array\u003c{ label: string; value: string }\u003e = [];\n      addKitMetaEntry(metadata, \"Kind\", \"Connector\");\n      addKitMetaEntry(metadata, \"Name\", connector.name);\n      addKitMetaEntry(metadata, \"Guid\", connector.guid);\n      addKitMetaEntry(metadata, \"Connector Id\", connector.id);\n      addKitMetaEntry(metadata, \"Port\", connector.port);\n      addKitMetaEntry(metadata, \"Description\", connector.description);\n      addKitMetaEntry(metadata, \"Mandatory\", connector.mandatory === undefined ? undefined : String(connector.mandatory));\n      const parentKey = kindKeyByGuid.get(connector.typeGuid) ?? orphanConnectorGroupKey;\n      if (parentKey === orphanConnectorGroupKey) orphanConnectorCount += 1;\n      registerNode({\n        key: `connector:${connector.guid}`,\n        kind: \"connector\",\n        label: connector.name || connector.guid,\n        parentKey,\n        guid: connector.guid,\n        groupKind: \"connector\",\n        summary: connector.description || \"Connector on a kind.\",\n        metadata,\n      });\n    });\n  }\n\n  if (orphanConnectorCount \u003e 0 \u0026\u0026 options.connectorDataEnabled) {\n    registerNode({\n      key: orphanConnectorGroupKey,\n      kind: \"group\",\n      label: \"Connectors\",\n      parentKey: kitKey,\n      groupKind: \"connector\",\n      summary: \"Connectors without a resolved kind parent.\",\n      metadata: [{ label: \"Count\", value: String(orphanConnectorCount) }],\n    });\n  }\n\n  return { rootKey, nodesByKey, childKeysByParentKey };\n};\n\nconst getKitNodePath = (hierarchy: KitHierarchy, nodeKey: string | undefined): KitHierarchyNode[] =\u003e {\n  if (!nodeKey) return [];\n  const path: KitHierarchyNode[] = [];\n  let currentKey: string | undefined = nodeKey;\n  while (currentKey) {\n    const node = hierarchy.nodesByKey.get(currentKey);\n    if (!node) break;\n    path.unshift(node);\n    currentKey = node.parentKey;\n  }\n  return path;\n};\n\nconst getKitChildNodes = (hierarchy: KitHierarchy, node: KitHierarchyNode): KitHierarchyNode[] =\u003e {\n  const childKeys = hierarchy.childKeysByParentKey.get(node.key) ?? [];\n  return childKeys\n    .map((key) =\u003e hierarchy.nodesByKey.get(key))\n    .filter((value): value is KitHierarchyNode =\u003e Boolean(value))\n    .sort((left, right) =\u003e {\n      if (left.kind === \"group\" \u0026\u0026 right.kind !== \"group\") return -1;\n      if (left.kind !== \"group\" \u0026\u0026 right.kind === \"group\") return 1;\n      return left.label.localeCompare(right.label);\n    });",
+          "file_path": "/workspaces/semio/compose/ui/index.tsx",
           "attachments": [],
           "session_id": "c6a53604-1e72-4457-930f-ce2c41da80e5",
           "hook_event_name": "beforeReadFile",
@@ -274,7 +274,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -287,14 +287,14 @@
         "kind": "agent.file.read.starting",
         "second": "2026-04-13T08:32:23Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
           "conversation_id": "c6a53604-1e72-4457-930f-ce2c41da80e5",
           "generation_id": "7a87d528-37c3-4222-a03a-c27711a69f16",
           "model": "default",
-          "content": "// #region 🧲Header\n\n// 💻 elements/ui/index.tsx\n\n// 2026 Ueli Saluz \u003cueli@semio-tech.com\u003e\n// 2026 Kinan Sarakbi \u003ckinan.sarak@gmail.com\u003e\n\n// This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see \u003chttps://www.gnu.org/licenses/\u003e.\n\n// Shared export surface for elements ui primitives.\n\n// #endregion 🧲Header\n\n// #region ⛩️Imports\n\nimport * as AccordionPrimitive from \"@radix-ui/react-accordion\";\nimport * as AvatarPrimitive from \"@radix-ui/react-avatar\";\nimport * as CollapsiblePrimitive from \"@radix-ui/react-collapsible\";\nimport * as DialogPrimitive from \"@radix-ui/react-dialog\";\nimport * as DropdownMenuPrimitive from \"@radix-ui/react-dropdown-menu\";\nimport * as HoverCardPrimitive from \"@radix-ui/react-hover-card\";\nimport * as PopoverPrimitive from \"@radix-ui/react-popover\";\nimport * as ScrollAreaPrimitive from \"@radix-ui/react-scroll-area\";\nimport * as SelectPrimitive from \"@radix-ui/react-select\";\nimport * as SliderPrimitive from \"@radix-ui/react-slider\";\nimport * as TabsPrimitive from \"@radix-ui/react-tabs\";\nimport * as TogglePrimitive from \"@radix-ui/react-toggle\";\nimport * as ToggleGroupPrimitive from \"@radix-ui/react-toggle-group\";\nimport * as TooltipPrimitive from \"@radix-ui/react-tooltip\";\nimport type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, OnSelectionChangeParams, ReactFlowInstance } from \"@xyflow/react\";\nimport \"@xyflow/react/dist/style.css\";\nimport * as dagre from \"dagre\";\nimport Fuse, { type FuseResult } from \"fuse.js\";\nimport i18next from \"i18next\";\nimport LanguageDetector from \"i18next-browser-languagedetector\";\nimport * as React from \"react\";\nimport * as ResizablePrimitive from \"react-resizable-panels\";\nimport * as THREE from \"three\";\n\nimport { closestCenter, DndContext, DragEndEvent, PointerSensor, useDraggable, useDroppable, useSensor, useSensors } from \"@dnd-kit/core\";\nimport { SortableContext, useSortable, verticalListSortingStrategy } from \"@dnd-kit/sortable\";\nimport { CSS } from \"@dnd-kit/utilities\";\nimport { Slot } from \"@radix-ui/react-slot\";\nimport { Edges, GizmoHelper, GizmoViewport, Grid, OrbitControls, useGLTF } from \"@react-three/drei\";\nimport { Canvas as ThreeCanvas, ThreeEvent, useThree } from \"@react-three/fiber\";\nimport {\n    applyNodeChanges,\n    Background,\n    BackgroundVariant,\n    BaseEdge,\n    ConnectionMode,\n    getBezierPath,\n    Handle,\n    MiniMap,\n    Position,\n    ReactFlow,\n    ReactFlowProvider,\n    SelectionMode,\n    useInternalNode,\n    useReactFlow,\n    useStoreApi,\n    ViewportPortal,\n} from \"@xyflow/react\";\nimport { cva, type VariantProps } from \"class-variance-authority\";\nimport { ClassValue, clsx } from \"clsx\";\nimport { Command as CommandPrimitive } from \"cmdk\";\nimport { forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY, Simulation, SimulationLinkDatum, SimulationNodeDatum } from \"d3-force\";\nimport type { LucideIcon } from \"lucide-react\";\nimport {\n    Plus as AddIcon,\n    AlertCircle as AlertCircleIcon,\n    BookOpen as BookIcon,\n    Camera as CameraIcon,\n    Check as CheckIcon,\n    CheckIcon as CheckIconAlt,\n    ChevronDown as ChevronDownIcon,\n    ChevronDownIcon as ChevronDownIconAlt,\n    ChevronLeft as ChevronLeftIcon,\n    ChevronRight as ChevronRightIcon,\n    ChevronsUpDown as ChevronsUpDownIcon,\n    X as CloseIcon,\n    XIcon as CloseIconAlt,\n    FileText as DocumentIcon,\n    ExternalLink as ExternalLinkIcon,\n    Folder as FolderIcon,\n    GripVertical as GripVerticalIcon,\n    Info as InfoIcon,\n    Lightbulb as LightbulbIcon,\n    Maximize2 as Maximize2Icon,\n    Minimize2 as Minimize2Icon,\n    ArrowLeft as NavigateBackIcon,\n    ArrowRight as NavigateForwardIcon,\n    ArrowUp as NavigateUpIcon,\n    Minus as RemoveIcon,\n    SearchIcon,\n    TriangleAlert as TriangleAlertIcon,\n    GraduationCap as TutorialIcon,\n} from \"lucide-react\";\nimport { createPortal } from \"react-dom\";\nimport { renderToStaticMarkup } from \"react-dom/server\";\nimport { useHotkeys } from \"react-hotkeys-hook\";\nimport { initReactI18next, useTranslation } from \"react-i18next\";\nimport { Link, useNavigate } from \"react-router\";\nimport { twMerge } from \"tailwind-merge\";\n// #endregion ⛩️Imports\n\n// #region 🎼Utilities\n\n// Generic utility and type definitions that make .elements/ui self-contained.\n// These MUST NOT depend on any external semio package.\n\n/**\n * Merges CSS class names using Tailwind merge.\n **/\nexport function cn(...inputs: ClassValue[]) {\n  return twMerge(clsx(inputs));\n}\n\n/**\n * Expertise levels for label resolution.\n **/\nexport enum Expertise {\n  BEGINNER = \"beginner\",\n  NORMAL = \"normal\",\n  EXPERT = \"expert\",\n}\n\nlet _expertiseProvider: (() =\u003e Expertise) | undefined;\n\n/**\n * Registers a function that returns the current expertise level.\n **/\nexport function setExpertiseProvider(fn: () =\u003e Expertise) {\n  _expertiseProvider = fn;\n}\n\n// #region 🪁I18n Resources\n\n// Shared UI translation bundles and initialization for all multilingual UI surfaces.\n// UI bundles MUST keep translation resources in source code and MUST not rely on sketchpad-local JSON files.\n\nconst elementUiTranslationBundles = {\n  de: {\n    translation: JSON.parse(String.raw`{\n  \"semio\": {\n    \"label\": {\n      \"normal\": \"\",\n      \"beginner\": \"\"\n    },\n    \"sketchpad\": {\n      \"label\": {\n        \"normal\": \"\",\n        \"beginner\": \"\"\n      },\n      \"navbar\": {\n        \"label\": {\n          \"normal\": \"\",\n          \"beginner\": \"\"\n        },\n        \"back\": {\n          \"label\": {\n            \"normal\": \"Zurueck\",\n            \"beginner\": \"Klicken, um zurueckzugehen, halten um Historie zu sehen\"\n          },\n          \"manual\": \"navigation\",\n          \"tutorial\": \"getting-started/intro\",\n          \"hotkey\": \"Alt+Links\"\n        },\n        \"forward\": {\n          \"label\": {\n            \"normal\": \"Vorwaerts\",\n            \"beginner\": \"Klicken, um vorwaerts zu gehen, halten um Historie zu sehen\"\n          },\n          \"manual\": \"navigation\",\n          \"tutorial\": \"getting-started/intro\",\n          \"hotkey\": \"Alt+Rechts\"\n        },\n        \"up\": {\n          \"label\": {\n            \"normal\": \"Eine Ebene hoch\",\n            \"beginner\": \"Klicken, um eine Ebene hoeher in der Navigationshierarchie zu gehen\"\n          },\n          \"manual\": \"navigation\",\n          \"tutorial\": \"getting-started/intro\",\n          \"hotkey\": \"Alt+Oben\"\n        },\n        \"kits\": {\n          \"label\": {\n            \"normal\": \"Kits\",\n            \"beginner\": \"Klicken, um alle Kits zu sehen\"\n          }\n        },\n        \"navigationButtons\": {\n          \"label\": {\n            \"normal\": \"Navigation\",\n            \"beginner\": \"Navigationsknoepfe\"\n          }\n        },\n        \"docs\": {\n          \"label\": {\n            \"normal\": \"Dokumentation\",\n            \"beginner\": \"Klicken, um Dokumentation anzuzeigen\"\n          },\n          \"hotkey\": \"Ctrl+Shift+D\"\n        },\n        \"search\": {\n          \"label\": {\n            \"normal\": \"Suche\",\n            \"beginner\": \"Nach Inhalten suchen\"\n          },\n          \"open\": {\n            \"label\": {\n              \"normal\": \"Suche\",\n              \"beginner\": \"Klicken, um Suche zu oeffnen und schnell zu jedem Element zu navigieren\"\n            },\n            \"manual\": \"navigation#search\",\n            \"tutorial\": \"getting-started/intro#search\",\n            \"hotkey\": \"Ctrl+K\"\n          },\n          \"close\": {\n            \"label\": {\n              \"normal\": \"Suche schliessen\",\n              \"beginner\": \"Klicken, um den Suchdialog zu schliessen\"\n            },\n            \"manual\": \"navigation#search\",\n            \"tutorial\": \"getting-started/intro#search\",\n            \"hotkey\": \"Escape\"\n          },\n          \"title\": {\n            \"label\": {\n              \"normal\": \"Suche\",\n              \"beginner\": \"Suche\"\n            }\n          },\n          \"description\": {\n            \"label\": {\n              \"normal\": \"Nach Kits, Entwuerfen, Typen und mehr suchen\",\n              \"beginner\": \"Nach Kits, Entwuerfen, Typen und mehr suchen\"\n            }\n          },\n          \"placeholder\": {\n            \"label\": {\n              \"normal\": \"Suchen...\",\n              \"beginner\": \"Suchen...\"\n            }\n          },\n          \"noResults\": {\n            \"label\": {\n              \"normal\": \"Keine Ergebnisse gefunden\",\n              \"beginner\": \"Keine Ergebnisse gefunden\"\n            }\n          }\n        },\n        \"focus\": {\n          \"label\": {\n            \"normal\": \"Fokusmodus\",\n            \"beginner\": \"Fokusmodus umschalten um Ablenkungen auszublenden\"\n          },\n          \"open\": {\n            \"label\": {\n              \"normal\": \"Fokus\",\n              \"beginner\": \"Klicken, um in den Fokusmodus zu wechseln und Ablenkungen auszublenden\"\n            },\n            \"manual\": \"navigation#focus\",\n            \"tutorial\": \"getting-started/intro#focus\",\n            \"hotkey\": \"Ctrl+Shift+F\"\n          },\n          \"close\": {\n            \"label\": {\n              \"normal\": \"Fokus verlassen\",\n              \"beginner\": \"Klicken, um den Fokusmodus zu verlassen und alle UI-Elemente anzuzeigen\"\n            },\n            \"manual\": \"navigation#focus\",\n            \"tutorial\": \"getting-started/intro#focus\",\n            \"hotkey\": \"Escape\"\n          },\n          \"input\": {\n            \"label\": {\n              \"normal\": \"Fokus-Eingabe\",\n              \"beginner\": \"Tippen, um nach einem Element zum Fokussieren zu suchen\"\n            }\n          },\n          \"placeholder\": {\n            \"label\": {\n              \"normal\": \"Nach einem Element suchen...\",\n              \"beginner\": \"Nach einem Element suchen...\"\n            }\n          },\n          \"title\": {\n            \"label\": {\n              \"normal\": \"Fokus\",\n              \"beginner\": \"Fokus\"\n            }\n          },\n          \"description\": {\n            \"label\": {\n              \"normal\": \"Auf ein Element in der aktuellen Ansicht fokussieren\",\n              \"beginner\": \"Auf ein Element in der aktuellen Ansicht fokussieren\"\n            }\n          },\n          \"other\": {\n            \"label\": {\n              \"normal\": \"Andere\",\n              \"beginner\": \"Andere\"\n            }\n          }\n        },\n        \"copyJsonToClipboard\": {\n          \"label\": {\n            \"normal\": \"JSON kopieren\",\n            \"beginner\": \"Den aktuellen Sketchpad-JSON-Status in die Zwischenablage kopieren\"\n          },\n          \"hotkey\": \"Ctrl+Shift+J\"\n        },\n        \"breadcrumb\": {\n          \"label\": {\n            \"normal\": \"\",\n            \"beginner\": \"\"\n          },\n          \"designs\": {\n            \"label\": {\n              \"normal\": \"Entwuerfe\",\n              \"beginner\": \"Entwuerfe\"\n            }\n          },\n          \"types\": {\n            \"label\": {\n              \"normal\": \"Typen\",\n              \"beginner\": \"Typen\"\n            }\n          },\n          \"qualities\": {\n            \"label\": {\n              \"normal\": \"Qualitaeten\",\n              \"beginner\": \"Qualitaeten\"\n            }\n          },\n          \"temporary\": {\n            \"label\": {\n              \"normal\": \"Temporär\",\n              \"beginner\": \"Temporär\"\n            }\n          },\n          \"local\": {\n            \"label\": {\n              \"normal\": \"Lokal\",\n              \"beginner\": \"Lokal\"\n            }\n          },\n          \"remote\": {\n            \"label\": {\n              \"normal\": \"Remote\",\n              \"beginner\": \"Remote\"\n            }\n          },\n          \"files\": {\n            \"label\": {\n              \"normal\": \"Files\",\n              \"beginner\": \"Files\"\n            }\n          },\n          \"authors\": {\n            \"label\": {\n              \"normal\": \"Autoren\",\n              \"beginner\": \"Autoren\"\n            }\n          }\n        },\n        \"tutorials\": {\n          \"label\": {\n            \"normal\": \"Tutorials\",\n            \"beginner\": \"Tutorials\"\n          }\n        },\n        \"tutorial\": {\n          \"controls\": {\n            \"stop\": {\n              \"label\": {\n                \"normal\": \"Tutorial beenden\",\n                \"beginner\": \"Klicken, um das aktuelle Tutorial zu beenden\"\n              }\n            },\n            \"previous\": {\n              \"label\": {\n                \"normal\": \"Vorheriger Schritt\",\n                \"beginner\": \"Zum vorherigen Schritt im Tutorial gehen\"\n              }\n            },\n            \"playPause\": {\n              \"label\": {\n                \"normal\": \"Abspielen/Pause\",\n                \"beginner\": \"Tutorial abspielen oder pausieren\"\n              }\n            },\n            \"next\": {\n              \"label\": {\n                \"normal\": \"Nächster Schritt\",\n                \"beginner\": \"Zum nächsten Schritt im Tutorial gehen\"\n              }\n            }\n          }\n        },\n        \"recording\": {\n          \"controls\": {\n            \"playPause\": {\n              \"label\": {\n                \"normal\": \"Aufnahme abspielen/pausieren\",\n                \"beginner\": \"Aufnahme abspielen oder pausieren\"\n              }\n            },\n            \"stop\": {\n              \"label\": {\n                \"normal\": \"Aufnahme beenden\",\n                \"beginner\": \"Aufnahme beenden und speichern\"\n              }\n            }\n          }\n        },\n        \"createKit\": {\n          \"label\": {\n            \"normal\": \"Kit erstellen\",\n            \"beginner\": \"Klicken, um ein neues Kit zu erstellen\"\n          }\n        },\n        \"createDesign\": {\n          \"label\": {\n            \"normal\": \"Entwurf erstellen\",\n            \"beginner\": \"Klicken, um einen neuen Entwurf zu erstellen\"\n          }\n        },\n        \"createChild\": {\n          \"label\": {\n            \"normal\": \"Kind erstellen\",\n            \"beginner\": \"Klicken, um ein Kind-Artefakt zu erstellen\"\n          }\n        },\n        \"createType\": {\n          \"label\": {\n            \"normal\": \"Typ erstellen\",\n            \"beginner\": \"Klicken, um einen neuen Typ zu erstellen\"\n          }\n        },\n        \"createVersion\": {\n          \"label\": {\n            \"normal\": \"Version erstellen\",\n            \"beginner\": \"Klicken, um eine neue Version zu erstellen\"\n          }\n        },\n        \"searchInput\": {\n          \"label\": {\n            \"normal\": \"Such-Eingabe\",\n            \"beginner\": \"Tippen, um nach Elementen zu suchen\"\n          }\n        },\n        \"panelToggle\": {\n          \"label\": {\n            \"normal\": \"\",\n            \"beginner\": \"\"\n          },\n          \"workbench\": {\n            \"label\": {\n              \"normal\": \"Workbench umschalten\",\n              \"beginner\": \"Das Workbench-Panel auf der linken Seite ein- oder ausblenden\"\n            },\n            \"show\": {\n              \"label\": {\n                \"normal\": \"Anzeigen\",\n                \"beginner\": \"Anzeigen\"\n              }\n            }\n          },\n          \"hud\": {\n            \"label\": {\n              \"normal\": \"HUD umschalten\",\n              \"beginner\": \"Das HUD-Panel in der Mitte ein- oder ausblenden\"\n            },\n            \"show\": {\n              \"label\": {\n                \"normal\": \"Anzeigen\",\n                \"beginner\": \"Anzeigen\"\n              }\n            }\n          },\n          \"right\": {\n            \"label\": {\n              \"normal\": \"Rechtes Panel umschalten\",\n              \"beginner\": \"Das rechte Panel fuer Details und Einstellungen ein- oder ausblenden\"\n            }\n          },\n          \"tools\": {\n            \"show\": {\n              \"label\": {\n                \"normal\": \"Anzeigen\",\n                \"beginner\": \"Anzeigen\"\n              }\n            }\n          },\n          \"toolbar\": {\n            \"show\": {\n              \"label\": {\n                \"normal\": \"Anzeigen\",\n                \"beginner\": \"Anzeigen\"\n              }\n            }\n          },\n          \"stats\": {\n            \"show\": {\n              \"label\": {\n                \"normal\": \"Anzeigen\",\n                \"beginner\": \"Anzeigen\"\n              }\n            }\n          },\n          \"details\": {\n            \"show\": {\n              \"label\": {\n                \"normal\": \"Anzeigen\",\n                \"beginner\": \"Anzeigen\"\n              }\n            }",
+          "content": "// #region 🧲Header\n\n// 💻 elements/ui/index.tsx\n\n// 2026 Ueli Saluz \u003cueli@semio-tech.com\u003e\n// 2026 Kinan Sarakbi \u003ckinan.sarak@gmail.com\u003e\n\n// This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see \u003chttps://www.gnu.org/licenses/\u003e.\n\n// Shared export surface for elements ui primitives.\n\n// #endregion 🧲Header\n\n// #region ⛩️Imports\n\nimport * as AccordionPrimitive from \"@radix-ui/react-accordion\";\nimport * as AvatarPrimitive from \"@radix-ui/react-avatar\";\nimport * as CollapsiblePrimitive from \"@radix-ui/react-collapsible\";\nimport * as DialogPrimitive from \"@radix-ui/react-dialog\";\nimport * as DropdownMenuPrimitive from \"@radix-ui/react-dropdown-menu\";\nimport * as HoverCardPrimitive from \"@radix-ui/react-hover-card\";\nimport * as PopoverPrimitive from \"@radix-ui/react-popover\";\nimport * as ScrollAreaPrimitive from \"@radix-ui/react-scroll-area\";\nimport * as SelectPrimitive from \"@radix-ui/react-select\";\nimport * as SliderPrimitive from \"@radix-ui/react-slider\";\nimport * as TabsPrimitive from \"@radix-ui/react-tabs\";\nimport * as TogglePrimitive from \"@radix-ui/react-toggle\";\nimport * as ToggleGroupPrimitive from \"@radix-ui/react-toggle-group\";\nimport * as TooltipPrimitive from \"@radix-ui/react-tooltip\";\nimport type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, OnSelectionChangeParams, ReactFlowInstance } from \"@xyflow/react\";\nimport \"@xyflow/react/dist/style.css\";\nimport * as dagre from \"dagre\";\nimport Fuse, { type FuseResult } from \"fuse.js\";\nimport i18next from \"i18next\";\nimport LanguageDetector from \"i18next-browser-languagedetector\";\nimport * as React from \"react\";\nimport * as ResizablePrimitive from \"react-resizable-panels\";\nimport * as THREE from \"three\";\n\nimport { closestCenter, DndContext, DragEndEvent, PointerSensor, useDraggable, useDroppable, useSensor, useSensors } from \"@dnd-kit/core\";\nimport { SortableContext, useSortable, verticalListSortingStrategy } from \"@dnd-kit/sortable\";\nimport { CSS } from \"@dnd-kit/utilities\";\nimport { Slot } from \"@radix-ui/react-slot\";\nimport { Edges, GizmoHelper, GizmoViewport, Grid, OrbitControls, useGLTF } from \"@react-three/drei\";\nimport { Canvas as ThreeCanvas, ThreeEvent, useThree } from \"@react-three/fiber\";\nimport {\n    applyNodeChanges,\n    Background,\n    BackgroundVariant,\n    BaseEdge,\n    ConnectionMode,\n    getBezierPath,\n    Handle,\n    MiniMap,\n    Position,\n    ReactFlow,\n    ReactFlowProvider,\n    SelectionMode,\n    useInternalNode,\n    useReactFlow,\n    useStoreApi,\n    ViewportPortal,\n} from \"@xyflow/react\";\nimport { cva, type VariantProps } from \"class-variance-authority\";\nimport { ClassValue, clsx } from \"clsx\";\nimport { Command as CommandPrimitive } from \"cmdk\";\nimport { forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY, Simulation, SimulationLinkDatum, SimulationNodeDatum } from \"d3-force\";\nimport type { LucideIcon } from \"lucide-react\";\nimport {\n    Plus as AddIcon,\n    AlertCircle as AlertCircleIcon,\n    BookOpen as BookIcon,\n    Camera as CameraIcon,\n    Check as CheckIcon,\n    CheckIcon as CheckIconAlt,\n    ChevronDown as ChevronDownIcon,\n    ChevronDownIcon as ChevronDownIconAlt,\n    ChevronLeft as ChevronLeftIcon,\n    ChevronRight as ChevronRightIcon,\n    ChevronsUpDown as ChevronsUpDownIcon,\n    X as CloseIcon,\n    XIcon as CloseIconAlt,\n    FileText as DocumentIcon,\n    ExternalLink as ExternalLinkIcon,\n    Folder as FolderIcon,\n    GripVertical as GripVerticalIcon,\n    Info as InfoIcon,\n    Lightbulb as LightbulbIcon,\n    Maximize2 as Maximize2Icon,\n    Minimize2 as Minimize2Icon,\n    ArrowLeft as NavigateBackIcon,\n    ArrowRight as NavigateForwardIcon,\n    ArrowUp as NavigateUpIcon,\n    Minus as RemoveIcon,\n    SearchIcon,\n    TriangleAlert as TriangleAlertIcon,\n    GraduationCap as TutorialIcon,\n} from \"lucide-react\";\nimport { createPortal } from \"react-dom\";\nimport { renderToStaticMarkup } from \"react-dom/server\";\nimport { useHotkeys } from \"react-hotkeys-hook\";\nimport { initReactI18next, useTranslation } from \"react-i18next\";\nimport { Link, useNavigate } from \"react-router\";\nimport { twMerge } from \"tailwind-merge\";\n// #endregion ⛩️Imports\n\n// #region 🎼Utilities\n\n// Generic utility and type definitions that make .elements/ui self-contained.\n// These MUST NOT depend on any external compose package.\n\n/**\n * Merges CSS class names using Tailwind merge.\n **/\nexport function cn(...inputs: ClassValue[]) {\n  return twMerge(clsx(inputs));\n}\n\n/**\n * Expertise levels for label resolution.\n **/\nexport enum Expertise {\n  BEGINNER = \"beginner\",\n  NORMAL = \"normal\",\n  EXPERT = \"expert\",\n}\n\nlet _expertiseProvider: (() =\u003e Expertise) | undefined;\n\n/**\n * Registers a function that returns the current expertise level.\n **/\nexport function setExpertiseProvider(fn: () =\u003e Expertise) {\n  _expertiseProvider = fn;\n}\n\n// #region 🪁I18n Resources\n\n// Shared UI translation bundles and initialization for all multilingual UI surfaces.\n// UI bundles MUST keep translation resources in source code and MUST not rely on sketchpad-local JSON files.\n\nconst elementUiTranslationBundles = {\n  de: {\n    translation: JSON.parse(String.raw`{\n  \"compose\": {\n    \"label\": {\n      \"normal\": \"\",\n      \"beginner\": \"\"\n    },\n    \"sketchpad\": {\n      \"label\": {\n        \"normal\": \"\",\n        \"beginner\": \"\"\n      },\n      \"navbar\": {\n        \"label\": {\n          \"normal\": \"\",\n          \"beginner\": \"\"\n        },\n        \"back\": {\n          \"label\": {\n            \"normal\": \"Zurueck\",\n            \"beginner\": \"Klicken, um zurueckzugehen, halten um Historie zu sehen\"\n          },\n          \"manual\": \"navigation\",\n          \"tutorial\": \"getting-started/intro\",\n          \"hotkey\": \"Alt+Links\"\n        },\n        \"forward\": {\n          \"label\": {\n            \"normal\": \"Vorwaerts\",\n            \"beginner\": \"Klicken, um vorwaerts zu gehen, halten um Historie zu sehen\"\n          },\n          \"manual\": \"navigation\",\n          \"tutorial\": \"getting-started/intro\",\n          \"hotkey\": \"Alt+Rechts\"\n        },\n        \"up\": {\n          \"label\": {\n            \"normal\": \"Eine Ebene hoch\",\n            \"beginner\": \"Klicken, um eine Ebene hoeher in der Navigationshierarchie zu gehen\"\n          },\n          \"manual\": \"navigation\",\n          \"tutorial\": \"getting-started/intro\",\n          \"hotkey\": \"Alt+Oben\"\n        },\n        \"kits\": {\n          \"label\": {\n            \"normal\": \"Kits\",\n            \"beginner\": \"Klicken, um alle Kits zu sehen\"\n          }\n        },\n        \"navigationButtons\": {\n          \"label\": {\n            \"normal\": \"Navigation\",\n            \"beginner\": \"Navigationsknoepfe\"\n          }\n        },\n        \"docs\": {\n          \"label\": {\n            \"normal\": \"Dokumentation\",\n            \"beginner\": \"Klicken, um Dokumentation anzuzeigen\"\n          },\n          \"hotkey\": \"Ctrl+Shift+D\"\n        },\n        \"search\": {\n          \"label\": {\n            \"normal\": \"Suche\",\n            \"beginner\": \"Nach Inhalten suchen\"\n          },\n          \"open\": {\n            \"label\": {\n              \"normal\": \"Suche\",\n              \"beginner\": \"Klicken, um Suche zu oeffnen und schnell zu jedem Element zu navigieren\"\n            },\n            \"manual\": \"navigation#search\",\n            \"tutorial\": \"getting-started/intro#search\",\n            \"hotkey\": \"Ctrl+K\"\n          },\n          \"close\": {\n            \"label\": {\n              \"normal\": \"Suche schliessen\",\n              \"beginner\": \"Klicken, um den Suchdialog zu schliessen\"\n            },\n            \"manual\": \"navigation#search\",\n            \"tutorial\": \"getting-started/intro#search\",\n            \"hotkey\": \"Escape\"\n          },\n          \"title\": {\n            \"label\": {\n              \"normal\": \"Suche\",\n              \"beginner\": \"Suche\"\n            }\n          },\n          \"description\": {\n            \"label\": {\n              \"normal\": \"Nach Kits, Entwuerfen, Typen und mehr suchen\",\n              \"beginner\": \"Nach Kits, Entwuerfen, Typen und mehr suchen\"\n            }\n          },\n          \"placeholder\": {\n            \"label\": {\n              \"normal\": \"Suchen...\",\n              \"beginner\": \"Suchen...\"\n            }\n          },\n          \"noResults\": {\n            \"label\": {\n              \"normal\": \"Keine Ergebnisse gefunden\",\n              \"beginner\": \"Keine Ergebnisse gefunden\"\n            }\n          }\n        },\n        \"focus\": {\n          \"label\": {\n            \"normal\": \"Fokusmodus\",\n            \"beginner\": \"Fokusmodus umschalten um Ablenkungen auszublenden\"\n          },\n          \"open\": {\n            \"label\": {\n              \"normal\": \"Fokus\",\n              \"beginner\": \"Klicken, um in den Fokusmodus zu wechseln und Ablenkungen auszublenden\"\n            },\n            \"manual\": \"navigation#focus\",\n            \"tutorial\": \"getting-started/intro#focus\",\n            \"hotkey\": \"Ctrl+Shift+F\"\n          },\n          \"close\": {\n            \"label\": {\n              \"normal\": \"Fokus verlassen\",\n              \"beginner\": \"Klicken, um den Fokusmodus zu verlassen und alle UI-Elemente anzuzeigen\"\n            },\n            \"manual\": \"navigation#focus\",\n            \"tutorial\": \"getting-started/intro#focus\",\n            \"hotkey\": \"Escape\"\n          },\n          \"input\": {\n            \"label\": {\n              \"normal\": \"Fokus-Eingabe\",\n              \"beginner\": \"Tippen, um nach einem Element zum Fokussieren zu suchen\"\n            }\n          },\n          \"placeholder\": {\n            \"label\": {\n              \"normal\": \"Nach einem Element suchen...\",\n              \"beginner\": \"Nach einem Element suchen...\"\n            }\n          },\n          \"title\": {\n            \"label\": {\n              \"normal\": \"Fokus\",\n              \"beginner\": \"Fokus\"\n            }\n          },\n          \"description\": {\n            \"label\": {\n              \"normal\": \"Auf ein Element in der aktuellen Ansicht fokussieren\",\n              \"beginner\": \"Auf ein Element in der aktuellen Ansicht fokussieren\"\n            }\n          },\n          \"other\": {\n            \"label\": {\n              \"normal\": \"Andere\",\n              \"beginner\": \"Andere\"\n            }\n          }\n        },\n        \"copyJsonToClipboard\": {\n          \"label\": {\n            \"normal\": \"JSON kopieren\",\n            \"beginner\": \"Den aktuellen Sketchpad-JSON-Status in die Zwischenablage kopieren\"\n          },\n          \"hotkey\": \"Ctrl+Shift+J\"\n        },\n        \"breadcrumb\": {\n          \"label\": {\n            \"normal\": \"\",\n            \"beginner\": \"\"\n          },\n          \"designs\": {\n            \"label\": {\n              \"normal\": \"Entwuerfe\",\n              \"beginner\": \"Entwuerfe\"\n            }\n          },\n          \"types\": {\n            \"label\": {\n              \"normal\": \"Typen\",\n              \"beginner\": \"Typen\"\n            }\n          },\n          \"qualities\": {\n            \"label\": {\n              \"normal\": \"Qualitaeten\",\n              \"beginner\": \"Qualitaeten\"\n            }\n          },\n          \"temporary\": {\n            \"label\": {\n              \"normal\": \"Temporär\",\n              \"beginner\": \"Temporär\"\n            }\n          },\n          \"local\": {\n            \"label\": {\n              \"normal\": \"Lokal\",\n              \"beginner\": \"Lokal\"\n            }\n          },\n          \"remote\": {\n            \"label\": {\n              \"normal\": \"Remote\",\n              \"beginner\": \"Remote\"\n            }\n          },\n          \"files\": {\n            \"label\": {\n              \"normal\": \"Files\",\n              \"beginner\": \"Files\"\n            }\n          },\n          \"authors\": {\n            \"label\": {\n              \"normal\": \"Autoren\",\n              \"beginner\": \"Autoren\"\n            }\n          }\n        },\n        \"tutorials\": {\n          \"label\": {\n            \"normal\": \"Tutorials\",\n            \"beginner\": \"Tutorials\"\n          }\n        },\n        \"tutorial\": {\n          \"controls\": {\n            \"stop\": {\n              \"label\": {\n                \"normal\": \"Tutorial beenden\",\n                \"beginner\": \"Klicken, um das aktuelle Tutorial zu beenden\"\n              }\n            },\n            \"previous\": {\n              \"label\": {\n                \"normal\": \"Vorheriger Schritt\",\n                \"beginner\": \"Zum vorherigen Schritt im Tutorial gehen\"\n              }\n            },\n            \"playPause\": {\n              \"label\": {\n                \"normal\": \"Abspielen/Pause\",\n                \"beginner\": \"Tutorial abspielen oder pausieren\"\n              }\n            },\n            \"next\": {\n              \"label\": {\n                \"normal\": \"Nächster Schritt\",\n                \"beginner\": \"Zum nächsten Schritt im Tutorial gehen\"\n              }\n            }\n          }\n        },\n        \"recording\": {\n          \"controls\": {\n            \"playPause\": {\n              \"label\": {\n                \"normal\": \"Aufnahme abspielen/pausieren\",\n                \"beginner\": \"Aufnahme abspielen oder pausieren\"\n              }\n            },\n            \"stop\": {\n              \"label\": {\n                \"normal\": \"Aufnahme beenden\",\n                \"beginner\": \"Aufnahme beenden und speichern\"\n              }\n            }\n          }\n        },\n        \"createKit\": {\n          \"label\": {\n            \"normal\": \"Kit erstellen\",\n            \"beginner\": \"Klicken, um ein neues Kit zu erstellen\"\n          }\n        },\n        \"createDesign\": {\n          \"label\": {\n            \"normal\": \"Entwurf erstellen\",\n            \"beginner\": \"Klicken, um einen neuen Entwurf zu erstellen\"\n          }\n        },\n        \"createChild\": {\n          \"label\": {\n            \"normal\": \"Kind erstellen\",\n            \"beginner\": \"Klicken, um ein Kind-Artefakt zu erstellen\"\n          }\n        },\n        \"createType\": {\n          \"label\": {\n            \"normal\": \"Typ erstellen\",\n            \"beginner\": \"Klicken, um einen neuen Typ zu erstellen\"\n          }\n        },\n        \"createVersion\": {\n          \"label\": {\n            \"normal\": \"Version erstellen\",\n            \"beginner\": \"Klicken, um eine neue Version zu erstellen\"\n          }\n        },\n        \"searchInput\": {\n          \"label\": {\n            \"normal\": \"Such-Eingabe\",\n            \"beginner\": \"Tippen, um nach Elementen zu suchen\"\n          }\n        },\n        \"panelToggle\": {\n          \"label\": {\n            \"normal\": \"\",\n            \"beginner\": \"\"\n          },\n          \"workbench\": {\n            \"label\": {\n              \"normal\": \"Workbench umschalten\",\n              \"beginner\": \"Das Workbench-Panel auf der linken Seite ein- oder ausblenden\"\n            },\n            \"show\": {\n              \"label\": {\n                \"normal\": \"Anzeigen\",\n                \"beginner\": \"Anzeigen\"\n              }\n            }\n          },\n          \"hud\": {\n            \"label\": {\n              \"normal\": \"HUD umschalten\",\n              \"beginner\": \"Das HUD-Panel in der Mitte ein- oder ausblenden\"\n            },\n            \"show\": {\n              \"label\": {\n                \"normal\": \"Anzeigen\",\n                \"beginner\": \"Anzeigen\"\n              }\n            }\n          },\n          \"right\": {\n            \"label\": {\n              \"normal\": \"Rechtes Panel umschalten\",\n              \"beginner\": \"Das rechte Panel fuer Details und Einstellungen ein- oder ausblenden\"\n            }\n          },\n          \"tools\": {\n            \"show\": {\n              \"label\": {\n                \"normal\": \"Anzeigen\",\n                \"beginner\": \"Anzeigen\"\n              }\n            }\n          },\n          \"toolbar\": {\n            \"show\": {\n              \"label\": {\n                \"normal\": \"Anzeigen\",\n                \"beginner\": \"Anzeigen\"\n              }\n            }\n          },\n          \"stats\": {\n            \"show\": {\n              \"label\": {\n                \"normal\": \"Anzeigen\",\n                \"beginner\": \"Anzeigen\"\n              }\n            }\n          },\n          \"details\": {\n            \"show\": {\n              \"label\": {\n                \"normal\": \"Anzeigen\",\n                \"beginner\": \"Anzeigen\"\n              }\n            }",
           "file_path": "/workspaces/semio/elements/ui/index.tsx",
           "attachments": [],
           "session_id": "c6a53604-1e72-4457-930f-ce2c41da80e5",
@@ -304,7 +304,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -317,7 +317,7 @@
         "kind": "agent.file.read.ended",
         "second": "2026-04-13T08:32:24Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -326,9 +326,9 @@
           "model": "default",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/workspaces/semio/semio/ui/index.tsx"
+            "file_path": "/workspaces/semio/compose/ui/index.tsx"
           },
-          "tool_output": "{\"file_path\":\"/workspaces/semio/semio/ui/index.tsx\",\"content_length\":18274}",
+          "tool_output": "{\"file_path\":\"/workspaces/semio/compose/ui/index.tsx\",\"content_length\":18274}",
           "duration": 183.575,
           "tool_use_id": "call_uCviVH60c1EWlKpmDuGMPxbM\nfc_0b9417947c8e725e0169dcaa15f7a08190a52390e3e29cbcfc",
           "session_id": "c6a53604-1e72-4457-930f-ce2c41da80e5",
@@ -338,7 +338,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -351,7 +351,7 @@
         "kind": "agent.file.read.ended",
         "second": "2026-04-13T08:32:24Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -372,7 +372,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -385,7 +385,7 @@
         "kind": "agent.file.read.starting",
         "second": "2026-04-13T08:32:27Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -406,7 +406,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -419,7 +419,7 @@
         "kind": "agent.file.read.ended",
         "second": "2026-04-13T08:32:27Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -442,7 +442,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -455,7 +455,7 @@
         "kind": "agent.file.read.starting",
         "second": "2026-04-13T08:32:29Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -474,7 +474,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -487,7 +487,7 @@
         "kind": "agent.file.read.starting",
         "second": "2026-04-13T08:32:30Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -504,7 +504,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -517,7 +517,7 @@
         "kind": "agent.file.read.ended",
         "second": "2026-04-13T08:32:31Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -538,7 +538,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -551,7 +551,7 @@
         "kind": "agent.file.read.starting",
         "second": "2026-04-13T08:32:32Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -570,7 +570,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -583,7 +583,7 @@
         "kind": "agent.file.read.starting",
         "second": "2026-04-13T08:32:33Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -600,7 +600,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -613,7 +613,7 @@
         "kind": "agent.file.read.ended",
         "second": "2026-04-13T08:32:34Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -634,7 +634,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -647,7 +647,7 @@
         "kind": "agent.file.read.starting",
         "second": "2026-04-13T08:32:36Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -668,7 +668,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -681,7 +681,7 @@
         "kind": "agent.file.read.ended",
         "second": "2026-04-13T08:32:37Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -704,7 +704,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -717,7 +717,7 @@
         "kind": "agent.file.read.starting",
         "second": "2026-04-13T08:32:40Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -736,7 +736,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -749,14 +749,14 @@
         "kind": "agent.file.read.starting",
         "second": "2026-04-13T08:32:41Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
           "conversation_id": "c6a53604-1e72-4457-930f-ce2c41da80e5",
           "generation_id": "7a87d528-37c3-4222-a03a-c27711a69f16",
           "model": "default",
-          "content": "      \u003cTooltip\u003e\n        \u003cTooltipTrigger asChild\u003e\n          \u003cspan data-slot=\"tree-label\" id={labelElementId} className=\"flex min-w-0 flex-1 items-center text-xs font-normal text-left truncate text-foreground h-[22px]\" style={treeItemLabelStyle}\u003e\n            {displayLabel}\n          \u003c/span\u003e\n        \u003c/TooltipTrigger\u003e\n        \u003cTooltipContent\u003e\n          \u003cDescriptionTooltipContent id={id} /\u003e\n        \u003c/TooltipContent\u003e\n      \u003c/Tooltip\u003e\n    ) : (\n      \u003cspan data-slot=\"tree-label\" id={labelElementId} className=\"flex min-w-0 flex-1 items-center text-xs font-normal text-left truncate text-foreground h-[22px]\"\u003e\n        {displayLabel}\n      \u003c/span\u003e\n    );\n\n    const treeGroupHeaderInner = (\n      \u003cdiv id={rowId} data-slot=\"tree-group-header-row\" className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName, className)}\u003e\n        \u003cdiv className={cn(treeHeaderMainClassName, \"min-h-[22px] items-center\")}\u003e\n          {treeGroupHeaderLabel}\n          \u003cdiv data-slot=\"tree-group-header-control\" className=\"ml-auto flex min-w-0 shrink-0 items-center justify-end\"\u003e\n            {children}\n          \u003c/div\u003e\n        \u003c/div\u003e\n      \u003c/div\u003e\n    );\n\n    if (!isTree) {\n      return \u003cTreeRowAlignmentContext.Provider value={false}\u003e{treeGroupHeaderInner}\u003c/TreeRowAlignmentContext.Provider\u003e;\n    }\n\n    if (isInsideTreeRow) {\n      return \u003cTreeRowAlignmentContext.Provider value={false}\u003e{treeGroupHeaderInner}\u003c/TreeRowAlignmentContext.Provider\u003e;\n    }\n\n    return (\n      \u003cTreeRowAlignmentContext.Provider value={false}\u003e\n        \u003cTreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level \u003e 0} contentClassName=\"min-w-0\"\u003e\n          {treeGroupHeaderInner}\n        \u003c/TreeAlignedRow\u003e\n      \u003c/TreeRowAlignmentContext.Provider\u003e\n    );\n  }\n\n  const propertyLabelElement = (\n    \u003cTooltip\u003e\n      \u003cTooltipTrigger asChild\u003e\n        {isTree ? (\n          \u003cdiv data-slot=\"property-label-tree\" className=\"min-w-0\" style={{ paddingLeft: `${treePropertyRowOffsetPx}px` }}\u003e\n            \u003cdiv className=\"inline-flex min-w-0 h-[22px]\"\u003e\n              \u003cspan data-slot=\"property-label\" id={labelElementId} className=\"inline-flex items-center text-xs font-medium flex-shrink-0 text-left truncate cursor-pointer transition-colors hover:bg-hover-panel h-[22px] pl-[4px]\"\u003e\n                {resolvedLabel}\n              \u003c/span\u003e\n            \u003c/div\u003e\n          \u003c/div\u003e\n        ) : (\n          \u003cspan data-slot=\"property-label\" id={labelElementId} className=\"inline-flex items-center text-xs font-medium flex-shrink-0 text-left truncate cursor-pointer transition-colors hover:bg-hover-panel h-[22px]\"\u003e\n            {resolvedLabel}\n          \u003c/span\u003e\n        )}\n      \u003c/TooltipTrigger\u003e\n      \u003cTooltipContent\u003e\n        \u003cDescriptionTooltipContent id={id} /\u003e\n      \u003c/TooltipContent\u003e\n    \u003c/Tooltip\u003e\n  );\n\n  const propertyRowElement = (\n    \u003cdiv\n      id={rowId}\n      data-slot=\"property-row\"\n      style={isTree ? { marginLeft: `${-treePropertyRowOffsetPx}px`, width: treePropertyRowOffsetPx \u003e 0 ? `calc(100% + ${treePropertyRowOffsetPx}px)` : \"100%\" } : undefined}\n      className={cn(detailPanelPropertyRowClassName, isTree ? \"grid-cols-[96px_minmax(0,1fr)]\" : \"w-full grid-cols-[96px_1fr]\", className)}\n    \u003e\n      {propertyLabelElement}\n      \u003cdiv data-slot=\"property-control\" className={detailPanelPropertyControlClassName}\u003e\n        \u003cPropertyValueColumnContext.Provider value={true}\u003e{children}\u003c/PropertyValueColumnContext.Provider\u003e\n      \u003c/div\u003e\n    \u003c/div\u003e\n  );\n\n  if (isTree) {\n    if (isInsideTreeRow) {\n      return propertyRowElement;\n    }\n    return (\n      \u003cTreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} align=\"start\" connectCurrentLevel={level \u003e 0} anchorOffsetPx={detailPanelHeaderLineCenterPx}\u003e\n        {propertyRowElement}\n      \u003c/TreeAlignedRow\u003e\n    );\n  }\n\n  return propertyRowElement;\n}\n\n// #endregion 🌥️Base Components\n\n// #region 🏷️Display Components\n// Read-only display wrappers for tooltips and callouts.\n// Consumers MUST pass valid config objects.\n\n/**\n * SemioTooltipProps holds the data fields for a SemioTooltipProps record.\n **/\ninterface SemioTooltipProps {\n  children: React.ReactElement;\n  config: TooltipConfig;\n}\n\n/**\n * SemioTooltip holds the data fields for a SemioTooltip record.\n **/\nfunction SemioTooltip({ children, config }: SemioTooltipProps) {\n  const mode = useTooltipMode();\n  if (mode === Expertise.EXPERT) return children;\n  return (\n    \u003cTooltip\u003e\n      \u003cTooltipTrigger asChild\u003e{children}\u003c/TooltipTrigger\u003e\n      \u003cTooltipContent\u003e\n        \u003cEnhancedTooltipContent config={config} /\u003e\n      \u003c/TooltipContent\u003e\n    \u003c/Tooltip\u003e\n  );\n}\n\n/**\n * IdSemioTooltipProps holds the data fields for a IdSemioTooltipProps record.\n **/\ninterface IdSemioTooltipProps {\n  id: string;\n  children: React.ReactNode;\n}\n\n/**\n **/\nfunction IdSemioTooltip({ id, children }: IdSemioTooltipProps) {\n  const mode = useTooltipMode();\n  if (mode === Expertise.EXPERT) return children;\n  return (\n    \u003cTooltip\u003e",
+          "content": "      \u003cTooltip\u003e\n        \u003cTooltipTrigger asChild\u003e\n          \u003cspan data-slot=\"tree-label\" id={labelElementId} className=\"flex min-w-0 flex-1 items-center text-xs font-normal text-left truncate text-foreground h-[22px]\" style={treeItemLabelStyle}\u003e\n            {displayLabel}\n          \u003c/span\u003e\n        \u003c/TooltipTrigger\u003e\n        \u003cTooltipContent\u003e\n          \u003cDescriptionTooltipContent id={id} /\u003e\n        \u003c/TooltipContent\u003e\n      \u003c/Tooltip\u003e\n    ) : (\n      \u003cspan data-slot=\"tree-label\" id={labelElementId} className=\"flex min-w-0 flex-1 items-center text-xs font-normal text-left truncate text-foreground h-[22px]\"\u003e\n        {displayLabel}\n      \u003c/span\u003e\n    );\n\n    const treeGroupHeaderInner = (\n      \u003cdiv id={rowId} data-slot=\"tree-group-header-row\" className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName, className)}\u003e\n        \u003cdiv className={cn(treeHeaderMainClassName, \"min-h-[22px] items-center\")}\u003e\n          {treeGroupHeaderLabel}\n          \u003cdiv data-slot=\"tree-group-header-control\" className=\"ml-auto flex min-w-0 shrink-0 items-center justify-end\"\u003e\n            {children}\n          \u003c/div\u003e\n        \u003c/div\u003e\n      \u003c/div\u003e\n    );\n\n    if (!isTree) {\n      return \u003cTreeRowAlignmentContext.Provider value={false}\u003e{treeGroupHeaderInner}\u003c/TreeRowAlignmentContext.Provider\u003e;\n    }\n\n    if (isInsideTreeRow) {\n      return \u003cTreeRowAlignmentContext.Provider value={false}\u003e{treeGroupHeaderInner}\u003c/TreeRowAlignmentContext.Provider\u003e;\n    }\n\n    return (\n      \u003cTreeRowAlignmentContext.Provider value={false}\u003e\n        \u003cTreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level \u003e 0} contentClassName=\"min-w-0\"\u003e\n          {treeGroupHeaderInner}\n        \u003c/TreeAlignedRow\u003e\n      \u003c/TreeRowAlignmentContext.Provider\u003e\n    );\n  }\n\n  const propertyLabelElement = (\n    \u003cTooltip\u003e\n      \u003cTooltipTrigger asChild\u003e\n        {isTree ? (\n          \u003cdiv data-slot=\"property-label-tree\" className=\"min-w-0\" style={{ paddingLeft: `${treePropertyRowOffsetPx}px` }}\u003e\n            \u003cdiv className=\"inline-flex min-w-0 h-[22px]\"\u003e\n              \u003cspan data-slot=\"property-label\" id={labelElementId} className=\"inline-flex items-center text-xs font-medium flex-shrink-0 text-left truncate cursor-pointer transition-colors hover:bg-hover-panel h-[22px] pl-[4px]\"\u003e\n                {resolvedLabel}\n              \u003c/span\u003e\n            \u003c/div\u003e\n          \u003c/div\u003e\n        ) : (\n          \u003cspan data-slot=\"property-label\" id={labelElementId} className=\"inline-flex items-center text-xs font-medium flex-shrink-0 text-left truncate cursor-pointer transition-colors hover:bg-hover-panel h-[22px]\"\u003e\n            {resolvedLabel}\n          \u003c/span\u003e\n        )}\n      \u003c/TooltipTrigger\u003e\n      \u003cTooltipContent\u003e\n        \u003cDescriptionTooltipContent id={id} /\u003e\n      \u003c/TooltipContent\u003e\n    \u003c/Tooltip\u003e\n  );\n\n  const propertyRowElement = (\n    \u003cdiv\n      id={rowId}\n      data-slot=\"property-row\"\n      style={isTree ? { marginLeft: `${-treePropertyRowOffsetPx}px`, width: treePropertyRowOffsetPx \u003e 0 ? `calc(100% + ${treePropertyRowOffsetPx}px)` : \"100%\" } : undefined}\n      className={cn(detailPanelPropertyRowClassName, isTree ? \"grid-cols-[96px_minmax(0,1fr)]\" : \"w-full grid-cols-[96px_1fr]\", className)}\n    \u003e\n      {propertyLabelElement}\n      \u003cdiv data-slot=\"property-control\" className={detailPanelPropertyControlClassName}\u003e\n        \u003cPropertyValueColumnContext.Provider value={true}\u003e{children}\u003c/PropertyValueColumnContext.Provider\u003e\n      \u003c/div\u003e\n    \u003c/div\u003e\n  );\n\n  if (isTree) {\n    if (isInsideTreeRow) {\n      return propertyRowElement;\n    }\n    return (\n      \u003cTreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} align=\"start\" connectCurrentLevel={level \u003e 0} anchorOffsetPx={detailPanelHeaderLineCenterPx}\u003e\n        {propertyRowElement}\n      \u003c/TreeAlignedRow\u003e\n    );\n  }\n\n  return propertyRowElement;\n}\n\n// #endregion 🌥️Base Components\n\n// #region 🏷️Display Components\n// Read-only display wrappers for tooltips and callouts.\n// Consumers MUST pass valid config objects.\n\n/**\n * ComposeTooltipProps holds the data fields for a ComposeTooltipProps record.\n **/\ninterface ComposeTooltipProps {\n  children: React.ReactElement;\n  config: TooltipConfig;\n}\n\n/**\n * ComposeTooltip holds the data fields for a ComposeTooltip record.\n **/\nfunction ComposeTooltip({ children, config }: ComposeTooltipProps) {\n  const mode = useTooltipMode();\n  if (mode === Expertise.EXPERT) return children;\n  return (\n    \u003cTooltip\u003e\n      \u003cTooltipTrigger asChild\u003e{children}\u003c/TooltipTrigger\u003e\n      \u003cTooltipContent\u003e\n        \u003cEnhancedTooltipContent config={config} /\u003e\n      \u003c/TooltipContent\u003e\n    \u003c/Tooltip\u003e\n  );\n}\n\n/**\n * IdComposeTooltipProps holds the data fields for a IdComposeTooltipProps record.\n **/\ninterface IdComposeTooltipProps {\n  id: string;\n  children: React.ReactNode;\n}\n\n/**\n **/\nfunction IdComposeTooltip({ id, children }: IdComposeTooltipProps) {\n  const mode = useTooltipMode();\n  if (mode === Expertise.EXPERT) return children;\n  return (\n    \u003cTooltip\u003e",
           "file_path": "/workspaces/semio/elements/ui/index.tsx",
           "attachments": [],
           "session_id": "c6a53604-1e72-4457-930f-ce2c41da80e5",
@@ -766,7 +766,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -779,7 +779,7 @@
         "kind": "agent.file.read.ended",
         "second": "2026-04-13T08:32:42Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -800,7 +800,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -813,7 +813,7 @@
         "kind": "agent.file.read.starting",
         "second": "2026-04-13T08:32:46Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -834,7 +834,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -847,7 +847,7 @@
         "kind": "agent.file.read.ended",
         "second": "2026-04-13T08:32:47Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -870,7 +870,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -883,7 +883,7 @@
         "kind": "agent.file.read.starting",
         "second": "2026-04-13T08:32:48Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -902,7 +902,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -915,14 +915,14 @@
         "kind": "agent.file.read.starting",
         "second": "2026-04-13T08:32:49Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
           "conversation_id": "c6a53604-1e72-4457-930f-ce2c41da80e5",
           "generation_id": "7a87d528-37c3-4222-a03a-c27711a69f16",
           "model": "default",
-          "content": "          )}\n          {showTutorial \u0026\u0026 fullTutorialPath \u0026\u0026 (\n            \u003cLink to={fullTutorialPath} className=\"flex items-center gap-single cursor-pointer text-foreground transition-colors p-single hover:bg-hover-temporary\"\u003e\n              \u003cTutorialIcon className=\"size-3\" /\u003e\n              \u003cspan className=\"block text-center\"\u003e{tutorialLabel}\u003c/span\u003e\n            \u003c/Link\u003e\n          )}\n          {hotkey \u0026\u0026 (\n            \u003ckbd onClick={handleHotkeyClick} className=\"border border-accent-foreground text-muted-foreground p-single text-2xs font-mono ml-auto cursor-pointer\"\u003e\n              {hotkey}\n            \u003c/kbd\u003e\n          )}\n        \u003c/div\u003e\n      ) : null}\n    \u003c/div\u003e\n  );\n}\n\n// #endregion 🎙️Tooltip\n\n// #region 🌥️Base Components\n// Foundational internal components like Label.\n// Consumers MUST use these as building blocks for inputs.\n\n/**\n * LabelProps holds the data fields for a LabelProps record.\n **/\ninterface LabelProps {\n  id: string;\n  rowId?: string;\n  label?: React.ReactNode;\n  labelElementId?: string;\n  className?: string;\n  /**\n   * Property rows use the label/value grid; tree group headers mirror TreeItem header geometry\n   * (gutter, tree-label slot, trailing control) so collection rows do not drift into the value column.\n   */\n  labelLayoutKind?: \"property\" | \"treeGroupHeader\";\n  children: React.ReactNode;\n}\n// [🏘️semio📚js🗃️sketchpad💻elements🔖basecomponents🪨label](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Base%20Components/d/i/Label)\nexport function Label({ id, rowId, label, labelElementId, className, children, labelLayoutKind = \"property\" }: LabelProps) {\n  const localizedLabel = useLabel(id);\n  const resolvedLabel = label ?? localizedLabel;\n  const fallbackLabel = React.useMemo(() =\u003e {\n    const trailingToken = id.split(\".\").pop() ?? id;\n    const normalizedToken = trailingToken.replace(/[-_]+/g, \" \").trim();\n    if (!normalizedToken) return id;\n    return normalizedToken\n      .split(/\\s+/)\n      .map((word) =\u003e (word.length \u003e 0 ? `${word[0].toUpperCase()}${word.slice(1)}` : word))\n      .join(\" \");\n  }, [id]);\n  const displayLabel = resolvedLabel ?? fallbackLabel;\n  const { level, isLastAtLevel, showLines, isTree, indentMultiplier } = React.useContext(TreeContext);\n  const isInsideTreeRow = React.useContext(TreeRowAlignmentContext);\n  const treePropertyRowOffsetPx = detailPanelIndentPx(level, indentMultiplier);\n\n  if (labelLayoutKind === \"treeGroupHeader\") {\n    const treeGroupHeaderLabel = id ? (\n      \u003cTooltip\u003e\n        \u003cTooltipTrigger asChild\u003e\n          \u003cspan data-slot=\"tree-label\" id={labelElementId} className=\"flex min-w-0 flex-1 items-center text-xs font-normal text-left truncate text-foreground h-[22px]\" style={treeItemLabelStyle}\u003e\n            {displayLabel}\n          \u003c/span\u003e\n        \u003c/TooltipTrigger\u003e\n        \u003cTooltipContent\u003e\n          \u003cDescriptionTooltipContent id={id} /\u003e\n        \u003c/TooltipContent\u003e\n      \u003c/Tooltip\u003e\n    ) : (\n      \u003cspan data-slot=\"tree-label\" id={labelElementId} className=\"flex min-w-0 flex-1 items-center text-xs font-normal text-left truncate text-foreground h-[22px]\"\u003e\n        {displayLabel}\n      \u003c/span\u003e\n    );\n\n    const treeGroupHeaderInner = (\n      \u003cdiv id={rowId} data-slot=\"tree-group-header-row\" className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName, className)}\u003e\n        \u003cdiv className={cn(treeHeaderMainClassName, \"min-h-[22px] items-center\")}\u003e\n          {treeGroupHeaderLabel}\n          \u003cdiv data-slot=\"tree-group-header-control\" className=\"ml-auto flex min-w-0 shrink-0 items-center justify-end\"\u003e\n            {children}\n          \u003c/div\u003e\n        \u003c/div\u003e\n      \u003c/div\u003e\n    );\n\n    if (!isTree) {\n      return \u003cTreeRowAlignmentContext.Provider value={false}\u003e{treeGroupHeaderInner}\u003c/TreeRowAlignmentContext.Provider\u003e;\n    }\n\n    if (isInsideTreeRow) {\n      return \u003cTreeRowAlignmentContext.Provider value={false}\u003e{treeGroupHeaderInner}\u003c/TreeRowAlignmentContext.Provider\u003e;\n    }\n\n    return (\n      \u003cTreeRowAlignmentContext.Provider value={false}\u003e\n        \u003cTreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level \u003e 0} contentClassName=\"min-w-0\"\u003e\n          {treeGroupHeaderInner}\n        \u003c/TreeAlignedRow\u003e\n      \u003c/TreeRowAlignmentContext.Provider\u003e\n    );\n  }\n\n  const propertyLabelElement = (\n    \u003cTooltip\u003e\n      \u003cTooltipTrigger asChild\u003e\n        {isTree ? (\n          \u003cdiv data-slot=\"property-label-tree\" className=\"min-w-0\" style={{ paddingLeft: `${treePropertyRowOffsetPx}px` }}\u003e\n            \u003cdiv className=\"inline-flex min-w-0 h-[22px]\"\u003e\n              \u003cspan data-slot=\"property-label\" id={labelElementId} className=\"inline-flex items-center text-xs font-medium flex-shrink-0 text-left truncate cursor-pointer transition-colors hover:bg-hover-panel h-[22px] pl-[4px]\"\u003e\n                {resolvedLabel}\n              \u003c/span\u003e\n            \u003c/div\u003e\n          \u003c/div\u003e\n        ) : (\n          \u003cspan data-slot=\"property-label\" id={labelElementId} className=\"inline-flex items-center text-xs font-medium flex-shrink-0 text-left truncate cursor-pointer transition-colors hover:bg-hover-panel h-[22px]\"\u003e\n            {resolvedLabel}\n          \u003c/span\u003e\n        )}\n      \u003c/TooltipTrigger\u003e\n      \u003cTooltipContent\u003e\n        \u003cDescriptionTooltipContent id={id} /\u003e\n      \u003c/TooltipContent\u003e\n    \u003c/Tooltip\u003e\n  );\n\n  const propertyRowElement = (\n    \u003cdiv\n      id={rowId}\n      data-slot=\"property-row\"\n      style={isTree ? { marginLeft: `${-treePropertyRowOffsetPx}px`, width: treePropertyRowOffsetPx \u003e 0 ? `calc(100% + ${treePropertyRowOffsetPx}px)` : \"100%\" } : undefined}\n      className={cn(detailPanelPropertyRowClassName, isTree ? \"grid-cols-[96px_minmax(0,1fr)]\" : \"w-full grid-cols-[96px_1fr]\", className)}\n    \u003e\n      {propertyLabelElement}\n      \u003cdiv data-slot=\"property-control\" className={detailPanelPropertyControlClassName}\u003e\n        \u003cPropertyValueColumnContext.Provider value={true}\u003e{children}\u003c/PropertyValueColumnContext.Provider\u003e\n      \u003c/div\u003e\n    \u003c/div\u003e\n  );\n\n  if (isTree) {\n    if (isInsideTreeRow) {\n      return propertyRowElement;\n    }\n    return (\n      \u003cTreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} align=\"start\" connectCurrentLevel={level \u003e 0} anchorOffsetPx={detailPanelHeaderLineCenterPx}\u003e\n        {propertyRowElement}\n      \u003c/TreeAlignedRow\u003e\n    );\n  }\n\n  return propertyRowElement;\n}\n\n// #endregion 🌥️Base Components\n\n// #region 🏷️Display Components\n// Read-only display wrappers for tooltips and callouts.\n// Consumers MUST pass valid config objects.\n\n/**\n * SemioTooltipProps holds the data fields for a SemioTooltipProps record.\n **/\ninterface SemioTooltipProps {\n  children: React.ReactElement;\n  config: TooltipConfig;\n}\n\n/**\n * SemioTooltip holds the data fields for a SemioTooltip record.\n **/\nfunction SemioTooltip({ children, config }: SemioTooltipProps) {\n  const mode = useTooltipMode();\n  if (mode === Expertise.EXPERT) return children;\n  return (\n    \u003cTooltip\u003e\n      \u003cTooltipTrigger asChild\u003e{children}\u003c/TooltipTrigger\u003e\n      \u003cTooltipContent\u003e\n        \u003cEnhancedTooltipContent config={config} /\u003e",
+          "content": "          )}\n          {showTutorial \u0026\u0026 fullTutorialPath \u0026\u0026 (\n            \u003cLink to={fullTutorialPath} className=\"flex items-center gap-single cursor-pointer text-foreground transition-colors p-single hover:bg-hover-temporary\"\u003e\n              \u003cTutorialIcon className=\"size-3\" /\u003e\n              \u003cspan className=\"block text-center\"\u003e{tutorialLabel}\u003c/span\u003e\n            \u003c/Link\u003e\n          )}\n          {hotkey \u0026\u0026 (\n            \u003ckbd onClick={handleHotkeyClick} className=\"border border-accent-foreground text-muted-foreground p-single text-2xs font-mono ml-auto cursor-pointer\"\u003e\n              {hotkey}\n            \u003c/kbd\u003e\n          )}\n        \u003c/div\u003e\n      ) : null}\n    \u003c/div\u003e\n  );\n}\n\n// #endregion 🎙️Tooltip\n\n// #region 🌥️Base Components\n// Foundational internal components like Label.\n// Consumers MUST use these as building blocks for inputs.\n\n/**\n * LabelProps holds the data fields for a LabelProps record.\n **/\ninterface LabelProps {\n  id: string;\n  rowId?: string;\n  label?: React.ReactNode;\n  labelElementId?: string;\n  className?: string;\n  /**\n   * Property rows use the label/value grid; tree group headers mirror TreeItem header geometry\n   * (gutter, tree-label slot, trailing control) so collection rows do not drift into the value column.\n   */\n  labelLayoutKind?: \"property\" | \"treeGroupHeader\";\n  children: React.ReactNode;\n}\n// [🏘️compose📚js🗃️sketchpad💻elements🔖basecomponents🪨label](repo://p/u/compose/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Base%20Components/d/i/Label)\nexport function Label({ id, rowId, label, labelElementId, className, children, labelLayoutKind = \"property\" }: LabelProps) {\n  const localizedLabel = useLabel(id);\n  const resolvedLabel = label ?? localizedLabel;\n  const fallbackLabel = React.useMemo(() =\u003e {\n    const trailingToken = id.split(\".\").pop() ?? id;\n    const normalizedToken = trailingToken.replace(/[-_]+/g, \" \").trim();\n    if (!normalizedToken) return id;\n    return normalizedToken\n      .split(/\\s+/)\n      .map((word) =\u003e (word.length \u003e 0 ? `${word[0].toUpperCase()}${word.slice(1)}` : word))\n      .join(\" \");\n  }, [id]);\n  const displayLabel = resolvedLabel ?? fallbackLabel;\n  const { level, isLastAtLevel, showLines, isTree, indentMultiplier } = React.useContext(TreeContext);\n  const isInsideTreeRow = React.useContext(TreeRowAlignmentContext);\n  const treePropertyRowOffsetPx = detailPanelIndentPx(level, indentMultiplier);\n\n  if (labelLayoutKind === \"treeGroupHeader\") {\n    const treeGroupHeaderLabel = id ? (\n      \u003cTooltip\u003e\n        \u003cTooltipTrigger asChild\u003e\n          \u003cspan data-slot=\"tree-label\" id={labelElementId} className=\"flex min-w-0 flex-1 items-center text-xs font-normal text-left truncate text-foreground h-[22px]\" style={treeItemLabelStyle}\u003e\n            {displayLabel}\n          \u003c/span\u003e\n        \u003c/TooltipTrigger\u003e\n        \u003cTooltipContent\u003e\n          \u003cDescriptionTooltipContent id={id} /\u003e\n        \u003c/TooltipContent\u003e\n      \u003c/Tooltip\u003e\n    ) : (\n      \u003cspan data-slot=\"tree-label\" id={labelElementId} className=\"flex min-w-0 flex-1 items-center text-xs font-normal text-left truncate text-foreground h-[22px]\"\u003e\n        {displayLabel}\n      \u003c/span\u003e\n    );\n\n    const treeGroupHeaderInner = (\n      \u003cdiv id={rowId} data-slot=\"tree-group-header-row\" className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName, className)}\u003e\n        \u003cdiv className={cn(treeHeaderMainClassName, \"min-h-[22px] items-center\")}\u003e\n          {treeGroupHeaderLabel}\n          \u003cdiv data-slot=\"tree-group-header-control\" className=\"ml-auto flex min-w-0 shrink-0 items-center justify-end\"\u003e\n            {children}\n          \u003c/div\u003e\n        \u003c/div\u003e\n      \u003c/div\u003e\n    );\n\n    if (!isTree) {\n      return \u003cTreeRowAlignmentContext.Provider value={false}\u003e{treeGroupHeaderInner}\u003c/TreeRowAlignmentContext.Provider\u003e;\n    }\n\n    if (isInsideTreeRow) {\n      return \u003cTreeRowAlignmentContext.Provider value={false}\u003e{treeGroupHeaderInner}\u003c/TreeRowAlignmentContext.Provider\u003e;\n    }\n\n    return (\n      \u003cTreeRowAlignmentContext.Provider value={false}\u003e\n        \u003cTreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level \u003e 0} contentClassName=\"min-w-0\"\u003e\n          {treeGroupHeaderInner}\n        \u003c/TreeAlignedRow\u003e\n      \u003c/TreeRowAlignmentContext.Provider\u003e\n    );\n  }\n\n  const propertyLabelElement = (\n    \u003cTooltip\u003e\n      \u003cTooltipTrigger asChild\u003e\n        {isTree ? (\n          \u003cdiv data-slot=\"property-label-tree\" className=\"min-w-0\" style={{ paddingLeft: `${treePropertyRowOffsetPx}px` }}\u003e\n            \u003cdiv className=\"inline-flex min-w-0 h-[22px]\"\u003e\n              \u003cspan data-slot=\"property-label\" id={labelElementId} className=\"inline-flex items-center text-xs font-medium flex-shrink-0 text-left truncate cursor-pointer transition-colors hover:bg-hover-panel h-[22px] pl-[4px]\"\u003e\n                {resolvedLabel}\n              \u003c/span\u003e\n            \u003c/div\u003e\n          \u003c/div\u003e\n        ) : (\n          \u003cspan data-slot=\"property-label\" id={labelElementId} className=\"inline-flex items-center text-xs font-medium flex-shrink-0 text-left truncate cursor-pointer transition-colors hover:bg-hover-panel h-[22px]\"\u003e\n            {resolvedLabel}\n          \u003c/span\u003e\n        )}\n      \u003c/TooltipTrigger\u003e\n      \u003cTooltipContent\u003e\n        \u003cDescriptionTooltipContent id={id} /\u003e\n      \u003c/TooltipContent\u003e\n    \u003c/Tooltip\u003e\n  );\n\n  const propertyRowElement = (\n    \u003cdiv\n      id={rowId}\n      data-slot=\"property-row\"\n      style={isTree ? { marginLeft: `${-treePropertyRowOffsetPx}px`, width: treePropertyRowOffsetPx \u003e 0 ? `calc(100% + ${treePropertyRowOffsetPx}px)` : \"100%\" } : undefined}\n      className={cn(detailPanelPropertyRowClassName, isTree ? \"grid-cols-[96px_minmax(0,1fr)]\" : \"w-full grid-cols-[96px_1fr]\", className)}\n    \u003e\n      {propertyLabelElement}\n      \u003cdiv data-slot=\"property-control\" className={detailPanelPropertyControlClassName}\u003e\n        \u003cPropertyValueColumnContext.Provider value={true}\u003e{children}\u003c/PropertyValueColumnContext.Provider\u003e\n      \u003c/div\u003e\n    \u003c/div\u003e\n  );\n\n  if (isTree) {\n    if (isInsideTreeRow) {\n      return propertyRowElement;\n    }\n    return (\n      \u003cTreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} align=\"start\" connectCurrentLevel={level \u003e 0} anchorOffsetPx={detailPanelHeaderLineCenterPx}\u003e\n        {propertyRowElement}\n      \u003c/TreeAlignedRow\u003e\n    );\n  }\n\n  return propertyRowElement;\n}\n\n// #endregion 🌥️Base Components\n\n// #region 🏷️Display Components\n// Read-only display wrappers for tooltips and callouts.\n// Consumers MUST pass valid config objects.\n\n/**\n * ComposeTooltipProps holds the data fields for a ComposeTooltipProps record.\n **/\ninterface ComposeTooltipProps {\n  children: React.ReactElement;\n  config: TooltipConfig;\n}\n\n/**\n * ComposeTooltip holds the data fields for a ComposeTooltip record.\n **/\nfunction ComposeTooltip({ children, config }: ComposeTooltipProps) {\n  const mode = useTooltipMode();\n  if (mode === Expertise.EXPERT) return children;\n  return (\n    \u003cTooltip\u003e\n      \u003cTooltipTrigger asChild\u003e{children}\u003c/TooltipTrigger\u003e\n      \u003cTooltipContent\u003e\n        \u003cEnhancedTooltipContent config={config} /\u003e",
           "file_path": "/workspaces/semio/elements/ui/index.tsx",
           "attachments": [],
           "session_id": "c6a53604-1e72-4457-930f-ce2c41da80e5",
@@ -932,7 +932,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -945,7 +945,7 @@
         "kind": "agent.file.read.ended",
         "second": "2026-04-13T08:32:50Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -966,7 +966,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -979,7 +979,7 @@
         "kind": "agent.file.read.starting",
         "second": "2026-04-13T08:33:06Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -1000,7 +1000,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -1013,7 +1013,7 @@
         "kind": "agent.file.read.ended",
         "second": "2026-04-13T08:33:07Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -1036,7 +1036,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -1049,7 +1049,7 @@
         "kind": "agent.file.read.starting",
         "second": "2026-04-13T08:33:11Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -1068,7 +1068,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -1081,7 +1081,7 @@
         "kind": "agent.file.read.starting",
         "second": "2026-04-13T08:33:12Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -1098,7 +1098,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -1111,7 +1111,7 @@
         "kind": "agent.file.read.ended",
         "second": "2026-04-13T08:33:13Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -1132,7 +1132,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -1145,7 +1145,7 @@
         "kind": "agent.file.read.starting",
         "second": "2026-04-13T08:33:19Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -1164,7 +1164,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -1177,7 +1177,7 @@
         "kind": "agent.file.read.ended",
         "second": "2026-04-13T08:33:20Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -1198,7 +1198,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -1211,7 +1211,7 @@
         "kind": "agent.file.read.starting",
         "second": "2026-04-13T08:33:54Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -1232,7 +1232,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -1245,7 +1245,7 @@
         "kind": "agent.file.read.ended",
         "second": "2026-04-13T08:33:55Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -1268,7 +1268,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -1281,7 +1281,7 @@
         "kind": "agent.file.read.starting",
         "second": "2026-04-13T08:34:02Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -1303,7 +1303,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -1316,7 +1316,7 @@
         "kind": "agent.file.read.ended",
         "second": "2026-04-13T08:34:04Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -1340,7 +1340,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -1353,7 +1353,7 @@
         "kind": "agent.file.read.starting",
         "second": "2026-04-13T08:34:05Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -1372,7 +1372,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -1385,7 +1385,7 @@
         "kind": "agent.file.read.starting",
         "second": "2026-04-13T08:34:06Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -1402,7 +1402,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -1415,7 +1415,7 @@
         "kind": "agent.file.read.ended",
         "second": "2026-04-13T08:34:07Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -1436,7 +1436,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -1449,7 +1449,7 @@
         "kind": "agent.tool.test.starting",
         "second": "2026-04-13T08:34:10Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -1471,7 +1471,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -1484,7 +1484,7 @@
         "kind": "agent.tool.test.starting",
         "second": "2026-04-13T08:34:11Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -1501,7 +1501,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -1514,7 +1514,7 @@
         "kind": "agent.tool.test.ended",
         "second": "2026-04-13T08:34:12Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -1532,7 +1532,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -1545,7 +1545,7 @@
         "kind": "agent.tool.test.ended",
         "second": "2026-04-13T08:34:14Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -1569,7 +1569,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -1582,7 +1582,7 @@
         "kind": "agent.tool.test.starting",
         "second": "2026-04-13T08:34:16Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -1604,7 +1604,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -1617,7 +1617,7 @@
         "kind": "agent.tool.test.starting",
         "second": "2026-04-13T08:34:17Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -1634,7 +1634,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -1647,7 +1647,7 @@
         "kind": "agent.tool.test.ended",
         "second": "2026-04-13T08:34:24Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -1665,7 +1665,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -1678,7 +1678,7 @@
         "kind": "agent.tool.test.ended",
         "second": "2026-04-13T08:34:26Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -1702,7 +1702,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -1715,7 +1715,7 @@
         "kind": "agent.tool.terminal.starting",
         "second": "2026-04-13T08:34:29Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -1737,7 +1737,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -1750,7 +1750,7 @@
         "kind": "agent.tool.terminal.starting",
         "second": "2026-04-13T08:34:29Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -1767,7 +1767,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -1780,7 +1780,7 @@
         "kind": "agent.tool.terminal.ended",
         "second": "2026-04-13T08:34:30Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -1798,7 +1798,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -1811,7 +1811,7 @@
         "kind": "agent.tool.terminal.ended",
         "second": "2026-04-13T08:34:31Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -1835,7 +1835,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -1848,7 +1848,7 @@
         "kind": "agent.ended",
         "second": "2026-04-13T08:34:41Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -1867,7 +1867,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -1880,7 +1880,7 @@
         "kind": "agent.ended",
         "second": "2026-04-13T08:34:41Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -1900,7 +1900,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -1913,7 +1913,7 @@
         "kind": "agent.prompt.submitting",
         "second": "2026-04-13T09:01:06Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -1939,7 +1939,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -1952,7 +1952,7 @@
         "kind": "agent.file.read.starting",
         "second": "2026-04-13T09:01:33Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -1973,7 +1973,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -1986,7 +1986,7 @@
         "kind": "agent.file.read.ended",
         "second": "2026-04-13T09:01:34Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -2009,7 +2009,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -2022,7 +2022,7 @@
         "kind": "agent.tool.test.starting",
         "second": "2026-04-13T09:01:54Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -2044,7 +2044,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -2057,7 +2057,7 @@
         "kind": "agent.tool.test.starting",
         "second": "2026-04-13T09:01:55Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -2074,7 +2074,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -2087,7 +2087,7 @@
         "kind": "agent.tool.test.ended",
         "second": "2026-04-13T09:02:03Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -2105,7 +2105,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -2118,7 +2118,7 @@
         "kind": "agent.tool.test.ended",
         "second": "2026-04-13T09:02:07Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -2142,7 +2142,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -2155,7 +2155,7 @@
         "kind": "agent.ended",
         "second": "2026-04-13T09:02:12Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -2174,7 +2174,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}
@@ -2187,7 +2187,7 @@
         "kind": "agent.ended",
         "second": "2026-04-13T09:02:13Z",
         "session": "c6a53604-1e72-4457-930f-ce2c41da80e5",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
       },
       "native": {
         "event": {
@@ -2207,7 +2207,7 @@
             "/workspaces/semio"
           ],
           "user_email": "kinan.sarak@gmail.com",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/c6a53604-1e72-4457-930f-ce2c41da80e5/c6a53604-1e72-4457-930f-ce2c41da80e5.jsonl"
         }
       },
       "response": {}

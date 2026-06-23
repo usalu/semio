@@ -2,8 +2,8 @@
   "title": "Stabilize Sketchpad Consolidation Tests",
   "emoji": "✏️",
   "status": "closed",
-  "description": "Stabilize semio/sketchpad after consolidation into Sketchpad.tsx. Fix remaining runtime regressions and Playwright failures without removing functionality. Current known issues include missing alias regressions after consolidation and runtime errors in kit/type/design flows.",
-  "summary": "Consolidated semio sketchpad Playwright discovery so only the six app tests are registered and listed. Removed the root seed.spec.ts sketchpad drag spec, narrowed semio/sketchpad Playwright config to index.tsx, and added runtime app-test-only registration around the embedded sketchpad tests. Also stabilized app-state selector defaults and the lightweight Design app path used by the consolidated Design test.",
+  "description": "Stabilize compose/sketchpad after consolidation into Sketchpad.tsx. Fix remaining runtime regressions and Playwright failures without removing functionality. Current known issues include missing alias regressions after consolidation and runtime errors in kit/type/design flows.",
+  "summary": "Consolidated compose sketchpad Playwright discovery so only the six app tests are registered and listed. Removed the root seed.spec.ts sketchpad drag spec, narrowed compose/sketchpad Playwright config to index.tsx, and added runtime app-test-only registration around the embedded sketchpad tests. Also stabilized app-state selector defaults and the lightweight Design app path used by the consolidated Design test.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1010"
   },

@@ -20,7 +20,7 @@ Complete log management script with:
 - **YAML Frontmatter**: Metadata tracking for date, slug, author, summary, model
 - **Date-based Structure**: `log/YEAR/MONTH/DAY/SLUG.md`
 - **Git Integration**: Auto-retrieves author from git config
-- **Environment Variables**: `SEMIO_MODEL` for default LLM model
+- **Environment Variables**: `COMPOSE_MODEL` for default LLM model
 - **Migration Tool**: Converts old flat logs to new structure
 
 #### Key Functions

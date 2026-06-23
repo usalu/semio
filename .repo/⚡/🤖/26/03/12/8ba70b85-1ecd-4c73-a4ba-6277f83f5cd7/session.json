@@ -1,17 +1,17 @@
 {
   "id": "8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7",
-  "uri": "semiorepo://s/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7",
+  "uri": "composerepo://s/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7",
   "checkpoint": "b206b77c4747a568056c9529317b17e33a0bd823",
   "contributor": "🧑‍💻ueli",
   "client": "claude-code",
   "second": "2026-03-12T11:09:29Z",
-  "transcript": "/home/vscode/.claude/projects/-workspaces-semio/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl",
+  "transcript": "/home/vscode/.claude/projects/-workspaces-compose/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl",
   "events": [
     {
       "native": {
         "event": {
           "session_id": "8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl",
           "cwd": "/workspaces/semio",
           "hook_event_name": "SessionStart",
           "source": "startup"
@@ -25,7 +25,7 @@
         "parent": "",
         "second": "🎆26🌙03☀️12⏰11⌚09⏱️29",
         "session": "⚪8ba70b851ecd4c73a4ba6277f83f5cd7",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl"
       },
       "response": {
         "allowed": true
@@ -35,7 +35,7 @@
       "native": {
         "event": {
           "session_id": "8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "UserPromptSubmit",
@@ -51,7 +51,7 @@
         "prompt": "repo cli mcp:\nAll identifying arguments of mcp tool MUST use the uris of the mcp resources. E.g. dont use path in ticket reopen or close",
         "second": "🎆26🌙03☀️12⏰12⌚27⏱️23",
         "session": "⚪8ba70b851ecd4c73a4ba6277f83f5cd7",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl"
       },
       "response": {
         "allowed": true
@@ -61,13 +61,13 @@
       "native": {
         "event": {
           "session_id": "8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PreToolUse",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/home/vscode/.claude/projects/-workspaces-semio/memory/MEMORY.md"
+            "file_path": "/home/vscode/.claude/projects/-workspaces-compose/memory/MEMORY.md"
           },
           "tool_use_id": "toolu_01N4e7rSYAy7p47EWJiRnNuD"
         }
@@ -79,11 +79,11 @@
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🛅🛅🗃️home🗃️vscode🛅claude🗃️projects🗃️workspacessemio🗃️memory📃memory📌1"
+          "🛅🛅🗃️home🗃️vscode🛅claude🗃️projects🗃️workspacescompose🗃️memory📃memory📌1"
         ],
         "second": "🎆26🌙03☀️12⏰12⌚28⏱️05",
         "session": "⚪8ba70b851ecd4c73a4ba6277f83f5cd7",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl"
       },
       "response": {
         "allowed": true
@@ -93,18 +93,18 @@
       "native": {
         "event": {
           "session_id": "8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PostToolUse",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/home/vscode/.claude/projects/-workspaces-semio/memory/MEMORY.md"
+            "file_path": "/home/vscode/.claude/projects/-workspaces-compose/memory/MEMORY.md"
           },
           "tool_response": {
             "type": "text",
             "file": {
-              "filePath": "/home/vscode/.claude/projects/-workspaces-semio/memory/MEMORY.md",
+              "filePath": "/home/vscode/.claude/projects/-workspaces-compose/memory/MEMORY.md",
               "content": "",
               "numLines": 1,
               "startLine": 1,
@@ -121,11 +121,11 @@
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🛅🛅🗃️home🗃️vscode🛅claude🗃️projects🗃️workspacessemio🗃️memory📃memory📌1"
+          "🛅🛅🗃️home🗃️vscode🛅claude🗃️projects🗃️workspacescompose🗃️memory📃memory📌1"
         ],
         "second": "🎆26🌙03☀️12⏰12⌚28⏱️21",
         "session": "⚪8ba70b851ecd4c73a4ba6277f83f5cd7",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl"
       },
       "response": {
         "allowed": true
@@ -135,13 +135,13 @@
       "native": {
         "event": {
           "session_id": "8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PreToolUse",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/home/vscode/.claude/projects/-workspaces-semio/memory/MEMORY.md"
+            "file_path": "/home/vscode/.claude/projects/-workspaces-compose/memory/MEMORY.md"
           },
           "tool_use_id": "toolu_01Ngia3V35VzgJejxJyAMNV1"
         }
@@ -153,11 +153,11 @@
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🛅🛅🗃️home🗃️vscode🛅claude🗃️projects🗃️workspacessemio🗃️memory📃memory📌1"
+          "🛅🛅🗃️home🗃️vscode🛅claude🗃️projects🗃️workspacescompose🗃️memory📃memory📌1"
         ],
         "second": "🎆26🌙03☀️12⏰12⌚28⏱️39",
         "session": "⚪8ba70b851ecd4c73a4ba6277f83f5cd7",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl"
       },
       "response": {
         "allowed": true
@@ -167,18 +167,18 @@
       "native": {
         "event": {
           "session_id": "8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PostToolUse",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/home/vscode/.claude/projects/-workspaces-semio/memory/MEMORY.md"
+            "file_path": "/home/vscode/.claude/projects/-workspaces-compose/memory/MEMORY.md"
           },
           "tool_response": {
             "type": "text",
             "file": {
-              "filePath": "/home/vscode/.claude/projects/-workspaces-semio/memory/MEMORY.md",
+              "filePath": "/home/vscode/.claude/projects/-workspaces-compose/memory/MEMORY.md",
               "content": "",
               "numLines": 1,
               "startLine": 1,
@@ -195,11 +195,11 @@
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🛅🛅🗃️home🗃️vscode🛅claude🗃️projects🗃️workspacessemio🗃️memory📃memory📌1"
+          "🛅🛅🗃️home🗃️vscode🛅claude🗃️projects🗃️workspacescompose🗃️memory📃memory📌1"
         ],
         "second": "🎆26🌙03☀️12⏰12⌚28⏱️52",
         "session": "⚪8ba70b851ecd4c73a4ba6277f83f5cd7",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl"
       },
       "response": {
         "allowed": true
@@ -209,13 +209,13 @@
       "native": {
         "event": {
           "session_id": "8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PreToolUse",
           "tool_name": "Bash",
           "tool_input": {
-            "command": "cat /home/vscode/.claude/projects/-workspaces-semio/memory/MEMORY.md"
+            "command": "cat /home/vscode/.claude/projects/-workspaces-compose/memory/MEMORY.md"
           },
           "tool_use_id": "toolu_01PsHZNRESNyiFM7rpoGkJ2z"
         }
@@ -228,7 +228,7 @@
         "parent": "",
         "second": "🎆26🌙03☀️12⏰12⌚29⏱️10",
         "session": "⚪8ba70b851ecd4c73a4ba6277f83f5cd7",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl"
       },
       "response": {
         "allowed": true
@@ -238,13 +238,13 @@
       "native": {
         "event": {
           "session_id": "8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PostToolUse",
           "tool_name": "Bash",
           "tool_input": {
-            "command": "cat /home/vscode/.claude/projects/-workspaces-semio/memory/MEMORY.md"
+            "command": "cat /home/vscode/.claude/projects/-workspaces-compose/memory/MEMORY.md"
           },
           "tool_response": {
             "stdout": "",
@@ -264,7 +264,7 @@
         "parent": "",
         "second": "🎆26🌙03☀️12⏰12⌚29⏱️24",
         "session": "⚪8ba70b851ecd4c73a4ba6277f83f5cd7",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl"
       },
       "response": {
         "allowed": true
@@ -274,13 +274,13 @@
       "native": {
         "event": {
           "session_id": "8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PreToolUse",
           "tool_name": "Write",
           "tool_input": {
-            "file_path": "/home/vscode/.claude/projects/-workspaces-semio/memory/feedback_semio_repo_mcp_uris.md",
+            "file_path": "/home/vscode/.claude/projects/-workspaces-compose/memory/feedback_compose_repo_mcp_uris.md",
             "content": "---\nname: repo MCP uses URIs not paths\ndescription: When calling repo MCP tools, all identifying arguments must use MCP resource URIs, not file paths\ntype: feedback\n---\n\nAlways use MCP resource URIs (not file paths) for identifying arguments in repo MCP tools like `ticket_reopen`, `ticket_close`, `ticket_open`, etc.\n\n**Why:** MCP tools are resource-oriented; passing raw paths instead of URIs causes incorrect behavior or failures.\n\n**How to apply:** Whenever calling repo MCP tools that reference tickets, goals, drafts, or other resources, use the URI format returned by MCP (e.g., from `search` results or `ticket_open` response) — never construct a raw path string.\n"
           },
           "tool_use_id": "toolu_01Dc2pGETttozjQz9zVjSzCk"
@@ -292,10 +292,10 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.code.edit.starting",
         "parent": "",
-        "path": "🛅🛅🗃️home🗃️vscode🛅claude🗃️projects🗃️workspacessemio🗃️memory📃feedbacksemiorepomcpuris",
+        "path": "🛅🛅🗃️home🗃️vscode🛅claude🗃️projects🗃️workspacescompose🗃️memory📃feedbackcomposerepomcpuris",
         "second": "🎆26🌙03☀️12⏰12⌚29⏱️47",
         "session": "⚪8ba70b851ecd4c73a4ba6277f83f5cd7",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl"
       },
       "response": {
         "allowed": true
@@ -305,18 +305,18 @@
       "native": {
         "event": {
           "session_id": "8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PostToolUse",
           "tool_name": "Write",
           "tool_input": {
-            "file_path": "/home/vscode/.claude/projects/-workspaces-semio/memory/feedback_semio_repo_mcp_uris.md",
+            "file_path": "/home/vscode/.claude/projects/-workspaces-compose/memory/feedback_compose_repo_mcp_uris.md",
             "content": "---\nname: repo MCP uses URIs not paths\ndescription: When calling repo MCP tools, all identifying arguments must use MCP resource URIs, not file paths\ntype: feedback\n---\n\nAlways use MCP resource URIs (not file paths) for identifying arguments in repo MCP tools like `ticket_reopen`, `ticket_close`, `ticket_open`, etc.\n\n**Why:** MCP tools are resource-oriented; passing raw paths instead of URIs causes incorrect behavior or failures.\n\n**How to apply:** Whenever calling repo MCP tools that reference tickets, goals, drafts, or other resources, use the URI format returned by MCP (e.g., from `search` results or `ticket_open` response) — never construct a raw path string.\n"
           },
           "tool_response": {
             "type": "create",
-            "filePath": "/home/vscode/.claude/projects/-workspaces-semio/memory/feedback_semio_repo_mcp_uris.md",
+            "filePath": "/home/vscode/.claude/projects/-workspaces-compose/memory/feedback_compose_repo_mcp_uris.md",
             "content": "---\nname: repo MCP uses URIs not paths\ndescription: When calling repo MCP tools, all identifying arguments must use MCP resource URIs, not file paths\ntype: feedback\n---\n\nAlways use MCP resource URIs (not file paths) for identifying arguments in repo MCP tools like `ticket_reopen`, `ticket_close`, `ticket_open`, etc.\n\n**Why:** MCP tools are resource-oriented; passing raw paths instead of URIs causes incorrect behavior or failures.\n\n**How to apply:** Whenever calling repo MCP tools that reference tickets, goals, drafts, or other resources, use the URI format returned by MCP (e.g., from `search` results or `ticket_open` response) — never construct a raw path string.\n",
             "structuredPatch": [],
             "originalFile": null
@@ -330,10 +330,10 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.code.edit.ended",
         "parent": "",
-        "path": "🛅🛅🗃️home🗃️vscode🛅claude🗃️projects🗃️workspacessemio🗃️memory📃feedbacksemiorepomcpuris",
+        "path": "🛅🛅🗃️home🗃️vscode🛅claude🗃️projects🗃️workspacescompose🗃️memory📃feedbackcomposerepomcpuris",
         "second": "🎆26🌙03☀️12⏰12⌚30⏱️03",
         "session": "⚪8ba70b851ecd4c73a4ba6277f83f5cd7",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl"
       },
       "response": {
         "allowed": true
@@ -343,14 +343,14 @@
       "native": {
         "event": {
           "session_id": "8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PreToolUse",
           "tool_name": "Write",
           "tool_input": {
-            "file_path": "/home/vscode/.claude/projects/-workspaces-semio/memory/MEMORY.md",
-            "content": "# Memory Index\n\n## Feedback\n- [feedback_semio_repo_mcp_uris.md](feedback_semio_repo_mcp_uris.md) — repo MCP tools require URI identifiers, not file paths\n"
+            "file_path": "/home/vscode/.claude/projects/-workspaces-compose/memory/MEMORY.md",
+            "content": "# Memory Index\n\n## Feedback\n- [feedback_compose_repo_mcp_uris.md](feedback_compose_repo_mcp_uris.md) — repo MCP tools require URI identifiers, not file paths\n"
           },
           "tool_use_id": "toolu_0177JcHr5Wn8ksYDEtadEUpq"
         }
@@ -361,10 +361,10 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.code.edit.starting",
         "parent": "",
-        "path": "🛅🛅🗃️home🗃️vscode🛅claude🗃️projects🗃️workspacessemio🗃️memory📃memory",
+        "path": "🛅🛅🗃️home🗃️vscode🛅claude🗃️projects🗃️workspacescompose🗃️memory📃memory",
         "second": "🎆26🌙03☀️12⏰12⌚30⏱️22",
         "session": "⚪8ba70b851ecd4c73a4ba6277f83f5cd7",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl"
       },
       "response": {
         "allowed": true
@@ -374,19 +374,19 @@
       "native": {
         "event": {
           "session_id": "8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PostToolUse",
           "tool_name": "Write",
           "tool_input": {
-            "file_path": "/home/vscode/.claude/projects/-workspaces-semio/memory/MEMORY.md",
-            "content": "# Memory Index\n\n## Feedback\n- [feedback_semio_repo_mcp_uris.md](feedback_semio_repo_mcp_uris.md) — repo MCP tools require URI identifiers, not file paths\n"
+            "file_path": "/home/vscode/.claude/projects/-workspaces-compose/memory/MEMORY.md",
+            "content": "# Memory Index\n\n## Feedback\n- [feedback_compose_repo_mcp_uris.md](feedback_compose_repo_mcp_uris.md) — repo MCP tools require URI identifiers, not file paths\n"
           },
           "tool_response": {
             "type": "create",
-            "filePath": "/home/vscode/.claude/projects/-workspaces-semio/memory/MEMORY.md",
-            "content": "# Memory Index\n\n## Feedback\n- [feedback_semio_repo_mcp_uris.md](feedback_semio_repo_mcp_uris.md) — repo MCP tools require URI identifiers, not file paths\n",
+            "filePath": "/home/vscode/.claude/projects/-workspaces-compose/memory/MEMORY.md",
+            "content": "# Memory Index\n\n## Feedback\n- [feedback_compose_repo_mcp_uris.md](feedback_compose_repo_mcp_uris.md) — repo MCP tools require URI identifiers, not file paths\n",
             "structuredPatch": [],
             "originalFile": null
           },
@@ -399,10 +399,10 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.code.edit.ended",
         "parent": "",
-        "path": "🛅🛅🗃️home🗃️vscode🛅claude🗃️projects🗃️workspacessemio🗃️memory📃memory",
+        "path": "🛅🛅🗃️home🗃️vscode🛅claude🗃️projects🗃️workspacescompose🗃️memory📃memory",
         "second": "🎆26🌙03☀️12⏰12⌚30⏱️37",
         "session": "⚪8ba70b851ecd4c73a4ba6277f83f5cd7",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl"
       },
       "response": {
         "allowed": true
@@ -412,7 +412,7 @@
       "native": {
         "event": {
           "session_id": "8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl",
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "Stop",
@@ -428,7 +428,7 @@
         "parent": "",
         "second": "🎆26🌙03☀️12⏰12⌚30⏱️50",
         "session": "⚪8ba70b851ecd4c73a4ba6277f83f5cd7",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl"
       },
       "response": {
         "allowed": true

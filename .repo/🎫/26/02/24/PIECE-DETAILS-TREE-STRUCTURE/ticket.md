@@ -27,8 +27,8 @@ Move Attributes section before Scale/Color/Center/FixPiece/Plane.
 - [x] Close ticket
 
 ## Changes
-- `semio/js/sketchpad/Design.tsx` - Reorder piece detail fields: Type → Id → Name → Description → Attributes → Scale → Color → Center → FixPiece → Plane
-- `semio/js/sketchpad.test.ts` - Fix pre-existing TS2769/TS2339 errors: add `as string[]` cast and `as string` casts
+- `compose/js/sketchpad/Design.tsx` - Reorder piece detail fields: Type → Id → Name → Description → Attributes → Scale → Color → Center → FixPiece → Plane
+- `compose/js/sketchpad.test.ts` - Fix pre-existing TS2769/TS2339 errors: add `as string[]` cast and `as string` casts
 
 ## Summary
 Reordered piece detail fields in PiecesSectionForm (Design.tsx) to match spec tree structure. Moved Attributes section before Scale/Color/Center/FixPiece/Plane. Fixed pre-existing TypeScript errors in test file. TypeScript compilation passes with 0 errors.

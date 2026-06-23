@@ -1,0 +1,227 @@
+{
+  "cases": [
+    {
+      "name": "nakagin_capsule_tower",
+      "kit": "kit/dev/metabolism/wip/initialKit/kit.compose.json",
+      "designName": "Nakagin Capsule Tower",
+      "expectedKit": "nakagin-capsule-tower.filtered.kit.compose.json",
+      "designFamilies": []
+    }
+  ],
+  "globCases": [
+    {
+      "name": "type_include_capsule",
+      "kit": "kit/dev/metabolism/wip/initialKit/kit.compose.json",
+      "typeInclude": [
+        "Capsule*"
+      ]
+    },
+    {
+      "name": "type_exclude_capsule",
+      "kit": "kit/dev/metabolism/wip/initialKit/kit.compose.json",
+      "typeExclude": [
+        "Capsule*"
+      ]
+    },
+    {
+      "name": "design_include_nakagin",
+      "kit": "kit/dev/metabolism/wip/initialKit/kit.compose.json",
+      "designInclude": [
+        "Nakagin*"
+      ]
+    },
+    {
+      "name": "empty_filter",
+      "kit": "kit/dev/metabolism/wip/initialKit/kit.compose.json"
+    },
+    {
+      "name": "combined_design_and_type_exclude",
+      "kit": "kit/dev/metabolism/wip/initialKit/kit.compose.json",
+      "designName": "Nakagin Capsule Tower",
+      "typeExclude": [
+        "Cylindric*"
+      ],
+      "designFamilies": []
+    }
+  ],
+  "globMatchCases": [
+    {
+      "input": "Nakagin Capsule Tower",
+      "pattern": "Nakagin*",
+      "expected": true
+    },
+    {
+      "input": "Nakagin Capsule Tower",
+      "pattern": "*Tower",
+      "expected": true
+    },
+    {
+      "input": "Nakagin Capsule Tower",
+      "pattern": "*Capsule*",
+      "expected": true
+    },
+    {
+      "input": "Nakagin Capsule Tower",
+      "pattern": "Nakagin Capsule Tower",
+      "expected": true
+    },
+    {
+      "input": "Nakagin Capsule Tower",
+      "pattern": "Other*",
+      "expected": false
+    },
+    {
+      "input": "Wall",
+      "pattern": "W?ll",
+      "expected": true
+    },
+    {
+      "input": "Wall",
+      "pattern": "W??l",
+      "expected": true
+    },
+    {
+      "input": "Wall",
+      "pattern": "W????",
+      "expected": false
+    }
+  ],
+  "globMatchCaseInsensitiveCases": [
+    {
+      "input": "Wall",
+      "pattern": "wall",
+      "expected": true
+    },
+    {
+      "input": "wall",
+      "pattern": "WALL",
+      "expected": true
+    },
+    {
+      "input": "Nakagin Capsule Tower",
+      "pattern": "nakagin*",
+      "expected": true
+    }
+  ],
+  "matchesGlobFilterCases": [
+    {
+      "name": "include_only_exact",
+      "input": "Wall",
+      "filter": {
+        "include": [
+          "Wall"
+        ]
+      },
+      "expected": true
+    },
+    {
+      "name": "include_only_no_match",
+      "input": "Column",
+      "filter": {
+        "include": [
+          "Wall"
+        ]
+      },
+      "expected": false
+    },
+    {
+      "name": "include_multiple_first",
+      "input": "Wall",
+      "filter": {
+        "include": [
+          "W*",
+          "C*"
+        ]
+      },
+      "expected": true
+    },
+    {
+      "name": "include_multiple_second",
+      "input": "Column",
+      "filter": {
+        "include": [
+          "W*",
+          "C*"
+        ]
+      },
+      "expected": true
+    },
+    {
+      "name": "include_multiple_none",
+      "input": "Beam",
+      "filter": {
+        "include": [
+          "W*",
+          "C*"
+        ]
+      },
+      "expected": false
+    },
+    {
+      "name": "exclude_only_match",
+      "input": "Wall",
+      "filter": {
+        "exclude": [
+          "Wall"
+        ]
+      },
+      "expected": false
+    },
+    {
+      "name": "exclude_only_no_match",
+      "input": "Column",
+      "filter": {
+        "exclude": [
+          "Wall"
+        ]
+      },
+      "expected": true
+    },
+    {
+      "name": "exclude_only_wildcard",
+      "input": "Wall",
+      "filter": {
+        "exclude": [
+          "*all"
+        ]
+      },
+      "expected": false
+    },
+    {
+      "name": "include_and_exclude_blocked",
+      "input": "Wall",
+      "filter": {
+        "include": [
+          "W*"
+        ],
+        "exclude": [
+          "Wall"
+        ]
+      },
+      "expected": false
+    },
+    {
+      "name": "include_and_exclude_passed",
+      "input": "Window",
+      "filter": {
+        "include": [
+          "W*"
+        ],
+        "exclude": [
+          "Wall"
+        ]
+      },
+      "expected": true
+    },
+    {
+      "name": "no_filter_string",
+      "input": "anything",
+      "expected": true
+    },
+    {
+      "name": "no_filter_undefined",
+      "input": "anything",
+      "expected": true
+    }
+  ]
+}

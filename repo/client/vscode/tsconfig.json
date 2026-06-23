@@ -12,14 +12,14 @@
     "resolveJsonModule": true,
     "noEmit": true,
     "paths": {
-      "semio/js/*": [
-        "../../semio/js/*"
+      "compose/js/*": [
+        "../../compose/js/*"
       ],
-      "semio/js": [
-        "../../semio/js/index.ts"
+      "compose/js": [
+        "../../compose/js/index.ts"
       ],
-      "semio/asset/*": [
-        "../../semio/asset/*"
+      "compose/asset/*": [
+        "../../compose/asset/*"
       ]
     }
   },

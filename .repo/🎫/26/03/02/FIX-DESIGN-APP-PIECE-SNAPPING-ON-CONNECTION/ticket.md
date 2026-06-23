@@ -7,7 +7,7 @@ SKETCHPAD-IMPROVEMENTS
 Pieces don't snap together (connector piece A to connector piece B) in the scene window after creating a connection between two connectors from different pieces in the diagram window.
 
 ## Plan
-1. Understand flattenDesign snapping logic in semio.ts
+1. Understand flattenDesign snapping logic in compose.ts
 2. Understand connection creation flow in Design.tsx diagram
 3. Find root cause of missing snap
 4. Implement fix
@@ -37,7 +37,7 @@ Changed `ModelPiece` to check `useIsConnectedPiece()`:
 This ensures that when a connection is created between two pieces, the child piece snaps to the computed position based on connector geometry.
 
 ## Changes
-- `semio/js/sketchpad/Design.tsx`:
+- `compose/js/sketchpad/Design.tsx`:
   - Added `useIsConnectedPiece` to imports from `./Sketchpad`
   - Changed `ModelPiece` plane resolution to use `flatPlane` for connected child pieces
 

@@ -1,2 +1,0 @@
-[DEBUG] 2026-04-09: uv --directory semio/engine run main.py --mcp-stdio → "Starting engine" (stdio wait OK).
-[DEBUG] pytest subset: metabolism diff test + flatten capsule dream → 2 passed.

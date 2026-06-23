@@ -16,7 +16,7 @@
     "@ui/react": "workspace:*",
     "@mdx-js/rollup": "^3.1.1",
     "@modelcontextprotocol/ext-apps": "^1.3.2",
-    "@semio/asset": "*",
+    "@compose/asset": "*",
     "@tailwindcss/vite": "^4.1.18",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",

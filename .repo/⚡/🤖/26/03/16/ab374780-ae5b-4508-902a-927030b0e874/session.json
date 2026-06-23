@@ -1,6 +1,6 @@
 {
   "id": "ab374780-ae5b-4508-902a-927030b0e874",
-  "uri": "semiorepo://session/ab374780-ae5b-4508-902a-927030b0e874",
+  "uri": "composerepo://session/ab374780-ae5b-4508-902a-927030b0e874",
   "client": "windsurf-chat",
   "second": "2026-03-16T16:46:39Z",
   "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
@@ -22,7 +22,7 @@
           "timestamp": "2026-03-16T16:46:39.04804454Z",
           "execution_id": "45f0bed1-24a3-432e-ac89-1a5bff1ac376",
           "tool_info": {
-            "user_prompt": "Remove all scripts from all package.json accross the complete repo that are not inside launch.json.\ne.g. most scripts should be deleted from:\n\"dev\": \"npx nx run-many -t dev\",\n    \"dev:3dm:ui\": \"npx nx dev @semio/3dm-ui\",\n    \"dev:coda-desktop\": \"cd coda/desktop \u0026\u0026 npm run dev\",\n    \"dev:elements:ui:storybook\": \"npx nx dev elements/ui\",\n    \"dev:js:js:sketchpad\": \"npx nx dev:sketchpad semio/js\",\n    \"analyze\": \"repo/cli/cli analyze\",\n    \"fix\": \"repo/cli/cli fix\",\n    \"lint\": \"npx nx run-many -t lint\",\n    \"test\": \"npx nx run-many -t test\",\n    \"test:repo\": \"npx nx test repo/cli\",\n    \"build\": \"npx nx run-many -t build\",\n    \"update\": \"repo/cli/cli update\",\n    \"publish:test\": \"npx nx run-many -t publish:test\",\n    \"publish\": \"npx nx run-many -t publish\",\n    \"benchmark\": \"repo/cli/cli benchmark\",\n    \"pre-commit\": \"uv run --group dev pre-commit run --all-files\",\n    \"pre-commit:install\": \"uv run --group dev pre-commit install --install-hooks\",\n    \"configure\": \"repo/cli/cli configure\",\n    \"mcp:inspector\": \"HOST=0.0.0.0 npx @modelcontextprotocol/inspector --config .cursor/mcp.json --server repo\"\n"
+            "user_prompt": "Remove all scripts from all package.json accross the complete repo that are not inside launch.json.\ne.g. most scripts should be deleted from:\n\"dev\": \"npx nx run-many -t dev\",\n    \"dev:3dm:ui\": \"npx nx dev @compose/3dm-ui\",\n    \"dev:coda-desktop\": \"cd coda/desktop \u0026\u0026 npm run dev\",\n    \"dev:elements:ui:storybook\": \"npx nx dev elements/ui\",\n    \"dev:js:js:sketchpad\": \"npx nx dev:sketchpad compose/js\",\n    \"analyze\": \"repo/cli/cli analyze\",\n    \"fix\": \"repo/cli/cli fix\",\n    \"lint\": \"npx nx run-many -t lint\",\n    \"test\": \"npx nx run-many -t test\",\n    \"test:repo\": \"npx nx test repo/cli\",\n    \"build\": \"npx nx run-many -t build\",\n    \"update\": \"repo/cli/cli update\",\n    \"publish:test\": \"npx nx run-many -t publish:test\",\n    \"publish\": \"npx nx run-many -t publish\",\n    \"benchmark\": \"repo/cli/cli benchmark\",\n    \"pre-commit\": \"uv run --group dev pre-commit run --all-files\",\n    \"pre-commit:install\": \"uv run --group dev pre-commit install --install-hooks\",\n    \"configure\": \"repo/cli/cli configure\",\n    \"mcp:inspector\": \"HOST=0.0.0.0 npx @modelcontextprotocol/inspector --config .cursor/mcp.json --server repo\"\n"
           }
         }
       },
@@ -70,7 +70,7 @@
           "timestamp": "2026-03-16T16:46:57.863814614Z",
           "execution_id": "45f0bed1-24a3-432e-ac89-1a5bff1ac376",
           "tool_info": {
-            "mcp_result": "- [🎯Goals](semiorepo://gs)\n  - [🎯r2603](semiorepo://g/R26-03) - `r26-03` - `open` - `r26-03 release cycle`\n    - [🎯r2603🎫setuprhinoplugindebugconfiguration](semiorepo://y/26/m/03/d/11/tk/SETUP-RHINO-PLUGIN-DEBUG-CONFIGURATION) - `Setup Rhino Plugin Debug Configuration` - `closed` - `a long while ago` - `Changed TargetFramework to net8.0-windows so Visual Studio uses Managed (CoreCLR) debugger matching Rhino 8 runtime. Updated launchSettings.json plugin path accordingly.`\n",
+            "mcp_result": "- [🎯Goals](composerepo://gs)\n  - [🎯r2603](composerepo://g/R26-03) - `r26-03` - `open` - `r26-03 release cycle`\n    - [🎯r2603🎫setuprhinoplugindebugconfiguration](composerepo://y/26/m/03/d/11/tk/SETUP-RHINO-PLUGIN-DEBUG-CONFIGURATION) - `Setup Rhino Plugin Debug Configuration` - `closed` - `a long while ago` - `Changed TargetFramework to net8.0-windows so Visual Studio uses Managed (CoreCLR) debugger matching Rhino 8 runtime. Updated launchSettings.json plugin path accordingly.`\n",
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
               "query": "package.json launch.json scripts"
@@ -259,7 +259,7 @@
           "timestamp": "2026-03-16T16:47:11.712244438Z",
           "execution_id": "45f0bed1-24a3-432e-ac89-1a5bff1ac376",
           "tool_info": {
-            "mcp_result": "[🎫removeunreferencedpackagejsonscripts](semiorepo://y/26/m/03/d/16/tk/REMOVE-UNREFERENCED-PACKAGE-JSON-SCRIPTS) - `open`\n",
+            "mcp_result": "[🎫removeunreferencedpackagejsonscripts](composerepo://y/26/m/03/d/16/tk/REMOVE-UNREFERENCED-PACKAGE-JSON-SCRIPTS) - `open`\n",
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
               "client": "windsurf-chat",
@@ -312,7 +312,7 @@
           "timestamp": "2026-03-16T16:47:13.215915566Z",
           "execution_id": "45f0bed1-24a3-432e-ac89-1a5bff1ac376",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/js/package.json"
+            "file_path": "/workspaces/semio/compose/js/package.json"
           }
         }
       },
@@ -356,7 +356,7 @@
           "timestamp": "2026-03-16T16:47:13.574086723Z",
           "execution_id": "45f0bed1-24a3-432e-ac89-1a5bff1ac376",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/js/package.json"
+            "file_path": "/workspaces/semio/compose/js/package.json"
           }
         }
       },
@@ -380,7 +380,7 @@
           "tool_info": {
             "edits": [
               {
-                "old_string": "\"scripts\": {\n    \"dev\": \"npx nx run-many -t dev\",\n    \"dev:3dm:ui\": \"npx nx dev @semio/3dm-ui\",\n    \"dev:coda-desktop\": \"cd coda/desktop \u0026\u0026 npm run dev\",\n    \"dev:elements:ui:storybook\": \"npx nx dev elements/ui\",\n    \"dev:js:js:sketchpad\": \"npx nx dev:sketchpad semio/js\",\n    \"analyze\": \"repo/cli/cli analyze\",\n    \"fix\": \"repo/cli/cli fix\",\n    \"lint\": \"npx nx run-many -t lint\",\n    \"test\": \"npx nx run-many -t test\",\n    \"test:repo\": \"npx nx test repo/cli\",\n    \"build\": \"npx nx run-many -t build\",\n    \"update\": \"repo/cli/cli update\",\n    \"publish:test\": \"npx nx run-many -t publish:test\",\n    \"publish\": \"npx nx run-many -t publish\",\n    \"benchmark\": \"repo/cli/cli benchmark\",\n    \"pre-commit\": \"uv run --group dev pre-commit run --all-files\",\n    \"pre-commit:install\": \"uv run --group dev pre-commit install --install-hooks\",\n    \"configure\": \"repo/cli/cli configure\",\n    \"mcp:inspector\": \"HOST=0.0.0.0 npx @modelcontextprotocol/inspector --config .cursor/mcp.json --server repo\"\n  },",
+                "old_string": "\"scripts\": {\n    \"dev\": \"npx nx run-many -t dev\",\n    \"dev:3dm:ui\": \"npx nx dev @compose/3dm-ui\",\n    \"dev:coda-desktop\": \"cd coda/desktop \u0026\u0026 npm run dev\",\n    \"dev:elements:ui:storybook\": \"npx nx dev elements/ui\",\n    \"dev:js:js:sketchpad\": \"npx nx dev:sketchpad compose/js\",\n    \"analyze\": \"repo/cli/cli analyze\",\n    \"fix\": \"repo/cli/cli fix\",\n    \"lint\": \"npx nx run-many -t lint\",\n    \"test\": \"npx nx run-many -t test\",\n    \"test:repo\": \"npx nx test repo/cli\",\n    \"build\": \"npx nx run-many -t build\",\n    \"update\": \"repo/cli/cli update\",\n    \"publish:test\": \"npx nx run-many -t publish:test\",\n    \"publish\": \"npx nx run-many -t publish\",\n    \"benchmark\": \"repo/cli/cli benchmark\",\n    \"pre-commit\": \"uv run --group dev pre-commit run --all-files\",\n    \"pre-commit:install\": \"uv run --group dev pre-commit install --install-hooks\",\n    \"configure\": \"repo/cli/cli configure\",\n    \"mcp:inspector\": \"HOST=0.0.0.0 npx @modelcontextprotocol/inspector --config .cursor/mcp.json --server repo\"\n  },",
                 "new_string": "\"scripts\": {\n    \"mcp:inspector\": \"HOST=0.0.0.0 npx @modelcontextprotocol/inspector --config .cursor/mcp.json --server repo\"\n  },"
               }
             ],
@@ -408,7 +408,7 @@
           "tool_info": {
             "edits": [
               {
-                "old_string": "\"scripts\": {\n    \"dev\": \"npx nx run-many -t dev\",\n    \"dev:3dm:ui\": \"npx nx dev @semio/3dm-ui\",\n    \"dev:coda-desktop\": \"cd coda/desktop \u0026\u0026 npm run dev\",\n    \"dev:elements:ui:storybook\": \"npx nx dev elements/ui\",\n    \"dev:js:js:sketchpad\": \"npx nx dev:sketchpad semio/js\",\n    \"analyze\": \"repo/cli/cli analyze\",\n    \"fix\": \"repo/cli/cli fix\",\n    \"lint\": \"npx nx run-many -t lint\",\n    \"test\": \"npx nx run-many -t test\",\n    \"test:repo\": \"npx nx test repo/cli\",\n    \"build\": \"npx nx run-many -t build\",\n    \"update\": \"repo/cli/cli update\",\n    \"publish:test\": \"npx nx run-many -t publish:test\",\n    \"publish\": \"npx nx run-many -t publish\",\n    \"benchmark\": \"repo/cli/cli benchmark\",\n    \"pre-commit\": \"uv run --group dev pre-commit run --all-files\",\n    \"pre-commit:install\": \"uv run --group dev pre-commit install --install-hooks\",\n    \"configure\": \"repo/cli/cli configure\",\n    \"mcp:inspector\": \"HOST=0.0.0.0 npx @modelcontextprotocol/inspector --config .cursor/mcp.json --server repo\"\n  },",
+                "old_string": "\"scripts\": {\n    \"dev\": \"npx nx run-many -t dev\",\n    \"dev:3dm:ui\": \"npx nx dev @compose/3dm-ui\",\n    \"dev:coda-desktop\": \"cd coda/desktop \u0026\u0026 npm run dev\",\n    \"dev:elements:ui:storybook\": \"npx nx dev elements/ui\",\n    \"dev:js:js:sketchpad\": \"npx nx dev:sketchpad compose/js\",\n    \"analyze\": \"repo/cli/cli analyze\",\n    \"fix\": \"repo/cli/cli fix\",\n    \"lint\": \"npx nx run-many -t lint\",\n    \"test\": \"npx nx run-many -t test\",\n    \"test:repo\": \"npx nx test repo/cli\",\n    \"build\": \"npx nx run-many -t build\",\n    \"update\": \"repo/cli/cli update\",\n    \"publish:test\": \"npx nx run-many -t publish:test\",\n    \"publish\": \"npx nx run-many -t publish\",\n    \"benchmark\": \"repo/cli/cli benchmark\",\n    \"pre-commit\": \"uv run --group dev pre-commit run --all-files\",\n    \"pre-commit:install\": \"uv run --group dev pre-commit install --install-hooks\",\n    \"configure\": \"repo/cli/cli configure\",\n    \"mcp:inspector\": \"HOST=0.0.0.0 npx @modelcontextprotocol/inspector --config .cursor/mcp.json --server repo\"\n  },",
                 "new_string": "\"scripts\": {\n    \"mcp:inspector\": \"HOST=0.0.0.0 npx @modelcontextprotocol/inspector --config .cursor/mcp.json --server repo\"\n  },"
               }
             ],
@@ -680,7 +680,7 @@
                 "new_string": ""
               }
             ],
-            "file_path": "/workspaces/semio/semio/js/package.json"
+            "file_path": "/workspaces/semio/compose/js/package.json"
           }
         }
       },
@@ -708,7 +708,7 @@
                 "new_string": ""
               }
             ],
-            "file_path": "/workspaces/semio/semio/js/package.json"
+            "file_path": "/workspaces/semio/compose/js/package.json"
           }
         }
       },
@@ -736,7 +736,7 @@
                 "new_string": "},\n  \"dependencies\": {"
               }
             ],
-            "file_path": "/workspaces/semio/semio/js/package.json"
+            "file_path": "/workspaces/semio/compose/js/package.json"
           }
         }
       },
@@ -758,7 +758,7 @@
           "timestamp": "2026-03-16T16:47:57.967562301Z",
           "execution_id": "45f0bed1-24a3-432e-ac89-1a5bff1ac376",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/js/package.json"
+            "file_path": "/workspaces/semio/compose/js/package.json"
           }
         }
       },
@@ -780,7 +780,7 @@
           "timestamp": "2026-03-16T16:47:59.018031505Z",
           "execution_id": "45f0bed1-24a3-432e-ac89-1a5bff1ac376",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/js/package.json"
+            "file_path": "/workspaces/semio/compose/js/package.json"
           }
         }
       },
@@ -846,7 +846,7 @@
           "timestamp": "2026-03-16T16:48:07.943245323Z",
           "execution_id": "45f0bed1-24a3-432e-ac89-1a5bff1ac376",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/assets/package.json"
+            "file_path": "/workspaces/semio/compose/assets/package.json"
           }
         }
       },
@@ -868,7 +868,7 @@
           "timestamp": "2026-03-16T16:48:07.925531096Z",
           "execution_id": "45f0bed1-24a3-432e-ac89-1a5bff1ac376",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/desktop/package.json"
+            "file_path": "/workspaces/semio/compose/desktop/package.json"
           }
         }
       },
@@ -890,7 +890,7 @@
           "timestamp": "2026-03-16T16:48:08.85760305Z",
           "execution_id": "45f0bed1-24a3-432e-ac89-1a5bff1ac376",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/assets/package.json"
+            "file_path": "/workspaces/semio/compose/assets/package.json"
           }
         }
       },
@@ -912,7 +912,7 @@
           "timestamp": "2026-03-16T16:48:08.940410212Z",
           "execution_id": "45f0bed1-24a3-432e-ac89-1a5bff1ac376",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio/desktop/package.json"
+            "file_path": "/workspaces/semio/compose/desktop/package.json"
           }
         }
       },

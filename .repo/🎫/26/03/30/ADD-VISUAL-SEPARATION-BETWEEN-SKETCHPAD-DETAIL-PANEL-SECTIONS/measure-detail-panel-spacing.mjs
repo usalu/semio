@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 
 const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage();
-const metabolismKit = JSON.parse(await readFile("/workspaces/semio/semio/assets/semio/kit_metabolism.json", "utf8"));
+const metabolismKit = JSON.parse(await readFile("/workspaces/semio/compose/assets/compose/kit_metabolism.json", "utf8"));
 
 page.on("console", (msg) => {
   console.log(`[browser:${msg.type()}] ${msg.text()}`);
@@ -14,10 +14,10 @@ page.on("pageerror", (err) => {
 
 const baseUrl = "http://127.0.0.1:5173";
 await page.goto(baseUrl, { waitUntil: "domcontentloaded", timeout: 60000 });
-await page.waitForFunction(() => Boolean(window.__SEMIO_STORE__ && window.__SEMIO_NAVIGATE__), { timeout: 60000 });
+await page.waitForFunction(() => Boolean(window.__COMPOSE_STORE__ && window.__COMPOSE_NAVIGATE__), { timeout: 60000 });
 
 const importedKit = await page.evaluate(async (kit) => {
-  const store = window.__SEMIO_STORE__;
+  const store = window.__COMPOSE_STORE__;
   if (!store || typeof store.kitShallows !== "function") {
     throw new Error("Sketchpad store is not available");
   }
@@ -40,7 +40,7 @@ const importedKit = await page.evaluate(async (kit) => {
     return { kitGuid: existingKit.guid, designGuid: targetDesign?.guid ?? null };
   }
 
-  await store.execute("semio.sketchpad.createKit", "semio.sketchpad.test.measureDetailPanelSpacing", kit, false, false);
+  await store.execute("compose.sketchpad.createKit", "compose.sketchpad.test.measureDetailPanelSpacing", kit, false, false);
 
   const match = (store.kitShallows?.() ?? []).find((entry) =>
     String(entry?.name ?? "")
@@ -68,7 +68,7 @@ if (!importedKit?.kitGuid || !importedKit?.designGuid) {
 }
 
 await page.evaluate(({ kitGuid, designGuid }) => {
-  const navigate = window.__SEMIO_NAVIGATE__;
+  const navigate = window.__COMPOSE_NAVIGATE__;
   if (typeof navigate !== "function") {
     throw new Error("Sketchpad navigation bridge is not available");
   }
@@ -77,7 +77,7 @@ await page.evaluate(({ kitGuid, designGuid }) => {
 await page.waitForURL(new RegExp(`.*/kits/${importedKit.kitGuid}/designs/${importedKit.designGuid}`), { timeout: 30000 });
 console.log(`[measure] Design URL: ${page.url()}`);
 
-const detailsToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.details.show"]').first();
+const detailsToggle = page.locator('[id="compose.sketchpad.navbar.panelToggle.details.show"]').first();
 if (await detailsToggle.count()) {
   await detailsToggle.click({ force: true }).catch(() => {});
 }
@@ -85,8 +85,8 @@ await page.waitForSelector('[data-panel="rightSidePanel"]', { timeout: 10000 });
 
 const panel = page.locator('[data-panel="rightSidePanel"]').first();
 const selectionResult = await page.evaluate(() => {
-  const actor = window.__SEMIO_ACTOR__;
-  const store = window.__SEMIO_STORE__;
+  const actor = window.__COMPOSE_ACTOR__;
+  const store = window.__COMPOSE_STORE__;
   if (!actor || !store) return { ok: false, reason: "missing-actor-or-store" };
   const path = window.location.pathname;
   const designGuid = path.match(/\/designs\/([^/]+)/)?.[1];
@@ -111,15 +111,15 @@ console.log(`[measure] Selection result: ${JSON.stringify(selectionResult)}`);
 if (!selectionResult.ok) {
   throw new Error(`Selection failed: ${selectionResult.reason}`);
 }
-const pieceSection = panel.locator('[id="semio.sketchpad.app.design.panel.details.section.piece.properties"]').first();
+const pieceSection = panel.locator('[id="compose.sketchpad.app.design.panel.details.section.piece.properties"]').first();
 await pieceSection.waitFor({ state: "visible", timeout: 15000 });
 console.log("[measure] Piece details visible");
 
 for (const itemId of [
-  "semio.sketchpad.app.design.piece.plane",
-  "semio.sketchpad.app.design.piece.planeOrigin",
-  "semio.sketchpad.app.design.piece.planeXAxis",
-  "semio.sketchpad.app.design.piece.planeYAxis",
+  "compose.sketchpad.app.design.piece.plane",
+  "compose.sketchpad.app.design.piece.planeOrigin",
+  "compose.sketchpad.app.design.piece.planeXAxis",
+  "compose.sketchpad.app.design.piece.planeYAxis",
 ]) {
   const item = panel.locator(`[id="${itemId}"]`).first();
   if ((await item.count()) === 0) continue;
@@ -133,9 +133,9 @@ for (const itemId of [
 
 const spacing = await page.evaluate(() => {
   const groupIds = [
-    "semio.sketchpad.app.design.piece.planeOrigin",
-    "semio.sketchpad.app.design.piece.planeXAxis",
-    "semio.sketchpad.app.design.piece.planeYAxis",
+    "compose.sketchpad.app.design.piece.planeOrigin",
+    "compose.sketchpad.app.design.piece.planeXAxis",
+    "compose.sketchpad.app.design.piece.planeYAxis",
   ];
   const readPx = (value) => {
     const parsed = Number.parseFloat(value ?? "0");

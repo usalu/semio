@@ -16,7 +16,7 @@ The Playwright tests were not running due to two issues:
 
 ## Files to Change
 
-- `js/semio/playwright.config.ts` - Fix baseURL port from 3000 to 5173
+- `js/compose/playwright.config.ts` - Fix baseURL port from 3000 to 5173
 
 ## Changes
 

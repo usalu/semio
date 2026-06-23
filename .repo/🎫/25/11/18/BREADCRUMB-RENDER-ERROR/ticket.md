@@ -7,7 +7,7 @@
 
 ### 1.1. Problem Description
 
-When creating a new kit via `semio.sketchpad.createKit`, a React error occurs:
+When creating a new kit via `compose.sketchpad.createKit`, a React error occurs:
 
 ```
 Error: Objects are not valid as a React child (found: object with keys {label}).
@@ -16,9 +16,9 @@ If you meant to render a collection of children, use an array instead.
 
 The error occurs in a `<span>` component during:
 
-1. Command execution: `semio.sketchpad.createKit`
-2. Navigation command: `semio.sketchpad.addNavigation`
-3. Sync command: `semio.sketchpad.syncNavigation`
+1. Command execution: `compose.sketchpad.createKit`
+2. Navigation command: `compose.sketchpad.addNavigation`
+3. Sync command: `compose.sketchpad.syncNavigation`
 
 The stack trace points to `AppContent` and `App` components in `App.tsx`.
 
@@ -28,9 +28,9 @@ The error message mentions "object with keys {label}" being rendered. This sugge
 
 The commands involved are:
 
-- `semio.sketchpad.createKit` - Creates a new kit
-- `semio.sketchpad.addNavigation` - Adds navigation entry
-- `semio.sketchpad.syncNavigation` - Syncs navigation state
+- `compose.sketchpad.createKit` - Creates a new kit
+- `compose.sketchpad.addNavigation` - Adds navigation entry
+- `compose.sketchpad.syncNavigation` - Syncs navigation state
 
 These commands likely update the navigation/breadcrumb state, which then triggers a render that fails.
 
@@ -42,9 +42,9 @@ The breadcrumb component is likely trying to render a translation object `{label
 
 **Investigation:**
 
-1. Added diagnostic logs to `useLabel` function in `js/semio/i18n.ts` ✓
+1. Added diagnostic logs to `useLabel` function in `js/compose/i18n.ts` ✓
    - Result: `useLabel` correctly returns strings, not objects
-2. Added diagnostic logs to breadcrumb dropdown rendering in `js/semio/sketchpad/elements.tsx` ✓
+2. Added diagnostic logs to breadcrumb dropdown rendering in `js/compose/sketchpad/elements.tsx` ✓
    - Result: Found that some dropdown items have `label` as an object with 6 keys instead of React elements
    - Items affected: First few items in dropdowns (likely `kitKindItems` and `artifactKinds`)
    - String labels work fine (e.g., "New Kit", "+ Create Kit")

@@ -4,7 +4,7 @@ from __future__ import annotations
 import pathlib
 import re
 
-LIB = pathlib.Path(__file__).resolve().parents[6] / "semio" / "rs" / "lib.rs"
+LIB = pathlib.Path(__file__).resolve().parents[6] / "compose" / "rs" / "lib.rs"
 
 
 def main() -> None:

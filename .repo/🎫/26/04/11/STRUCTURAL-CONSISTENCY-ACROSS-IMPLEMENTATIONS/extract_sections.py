@@ -1,11 +1,11 @@
 import re
 
 files = {
-    'Go': ('semio/go/main.go', r'^// #region (.+)', r'^// #endregion (.+)'),
-    'TS': ('semio/js/index.ts', r'^// #region (.+)', r'^// #endregion (.+)'),
-    'Py': ('semio/py/main.py', r'^# #region (.+)', r'^# #endregion (.+)'),
-    'CS': ('semio/net/Semio/Semio.cs', r'^\s{4}#region (.+)', r'^\s{4}#endregion (.+)'),
-    'RS': ('semio/rs/lib.rs', r'^pub mod \w+ \{ // (.+)', r'^\} // (.+)'),
+    'Go': ('compose/go/main.go', r'^// #region (.+)', r'^// #endregion (.+)'),
+    'TS': ('compose/js/index.ts', r'^// #region (.+)', r'^// #endregion (.+)'),
+    'Py': ('compose/py/main.py', r'^# #region (.+)', r'^# #endregion (.+)'),
+    'CS': ('compose/net/Compose/Compose.cs', r'^\s{4}#region (.+)', r'^\s{4}#endregion (.+)'),
+    'RS': ('compose/rs/lib.rs', r'^pub mod \w+ \{ // (.+)', r'^\} // (.+)'),
 }
 
 for lang, (path, start_re, end_re) in files.items():

@@ -27,7 +27,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "semio/semio/semio/js",
+              "path": "compose/compose/compose/js",
               "lines": {
                 "added": 65,
                 "removed": 0
@@ -48,7 +48,7 @@
           "modified": [],
           "added": [
             {
-              "path": "📃semio/js/sketchpad/README.md",
+              "path": "📃compose/js/sketchpad/README.md",
               "lines": {
                 "added": 490,
                 "removed": 0
@@ -61,56 +61,56 @@
           "renamed": [],
           "modified": [
             {
-              "path": "📃semio/js/sketchpad/README.md#Specs#Left Toggle Panel",
+              "path": "📃compose/js/sketchpad/README.md#Specs#Left Toggle Panel",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "📃semio/js/sketchpad/README.md#Specs#Left Toggle Panel#Architecture",
+              "path": "📃compose/js/sketchpad/README.md#Specs#Left Toggle Panel#Architecture",
               "lines": {
                 "added": 12,
                 "removed": 0
               }
             },
             {
-              "path": "📃semio/js/sketchpad/README.md#Specs#Left Toggle Panel#Design App Mapping",
+              "path": "📃compose/js/sketchpad/README.md#Specs#Left Toggle Panel#Design App Mapping",
               "lines": {
                 "added": 13,
                 "removed": 0
               }
             },
             {
-              "path": "📃semio/js/sketchpad/README.md#Specs#Left Toggle Panel#Invariants",
+              "path": "📃compose/js/sketchpad/README.md#Specs#Left Toggle Panel#Invariants",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "📃semio/js/sketchpad/README.md#Specs#Left Toggle Panel#Left Panel Kinds",
+              "path": "📃compose/js/sketchpad/README.md#Specs#Left Toggle Panel#Left Panel Kinds",
               "lines": {
                 "added": 7,
                 "removed": 0
               }
             },
             {
-              "path": "📃semio/js/sketchpad/README.md#Specs#Left Toggle Panel#State, Sorting, and Defaults",
+              "path": "📃compose/js/sketchpad/README.md#Specs#Left Toggle Panel#State, Sorting, and Defaults",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "📃semio/js/sketchpad/README.md#Specs#Left Toggle Panel#Tab Registration Contract",
+              "path": "📃compose/js/sketchpad/README.md#Specs#Left Toggle Panel#Tab Registration Contract",
               "lines": {
                 "added": 11,
                 "removed": 0
               }
             },
             {
-              "path": "📃semio/js/sketchpad/README.md#Specs#Left Toggle Panel#Toggle Behavior",
+              "path": "📃compose/js/sketchpad/README.md#Specs#Left Toggle Panel#Toggle Behavior",
               "lines": {
                 "added": 6,
                 "removed": 0
@@ -119,56 +119,56 @@
           ],
           "added": [
             {
-              "path": "semio/js/sketchpad/README.md#Specs#Left Toggle Panel",
+              "path": "compose/js/sketchpad/README.md#Specs#Left Toggle Panel",
               "lines": {
                 "added": 65,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/README.md#Specs#Left Toggle Panel#Architecture",
+              "path": "compose/js/sketchpad/README.md#Specs#Left Toggle Panel#Architecture",
               "lines": {
                 "added": 12,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/README.md#Specs#Left Toggle Panel#Design App Mapping",
+              "path": "compose/js/sketchpad/README.md#Specs#Left Toggle Panel#Design App Mapping",
               "lines": {
                 "added": 13,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/README.md#Specs#Left Toggle Panel#Invariants",
+              "path": "compose/js/sketchpad/README.md#Specs#Left Toggle Panel#Invariants",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/README.md#Specs#Left Toggle Panel#Left Panel Kinds",
+              "path": "compose/js/sketchpad/README.md#Specs#Left Toggle Panel#Left Panel Kinds",
               "lines": {
                 "added": 7,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/README.md#Specs#Left Toggle Panel#State, Sorting, and Defaults",
+              "path": "compose/js/sketchpad/README.md#Specs#Left Toggle Panel#State, Sorting, and Defaults",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/README.md#Specs#Left Toggle Panel#Tab Registration Contract",
+              "path": "compose/js/sketchpad/README.md#Specs#Left Toggle Panel#Tab Registration Contract",
               "lines": {
                 "added": 11,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/README.md#Specs#Left Toggle Panel#Toggle Behavior",
+              "path": "compose/js/sketchpad/README.md#Specs#Left Toggle Panel#Toggle Behavior",
               "lines": {
                 "added": 6,
                 "removed": 0
@@ -201,7 +201,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "semio/semio/semio/js",
+              "path": "compose/compose/compose/js",
               "lines": {
                 "added": 145,
                 "removed": 0
@@ -222,7 +222,7 @@
           "modified": [],
           "added": [
             {
-              "path": "📃semio/js/sketchpad/README.md",
+              "path": "📃compose/js/sketchpad/README.md",
               "lines": {
                 "added": 570,
                 "removed": 0
@@ -235,84 +235,84 @@
           "renamed": [],
           "modified": [
             {
-              "path": "📃semio/js/sketchpad/README.md#Specs#Left Toggle Panel",
+              "path": "📃compose/js/sketchpad/README.md#Specs#Left Toggle Panel",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "📃semio/js/sketchpad/README.md#Specs#Left Toggle Panel#Architecture",
+              "path": "📃compose/js/sketchpad/README.md#Specs#Left Toggle Panel#Architecture",
               "lines": {
                 "added": 12,
                 "removed": 0
               }
             },
             {
-              "path": "📃semio/js/sketchpad/README.md#Specs#Left Toggle Panel#Design App Mapping",
+              "path": "📃compose/js/sketchpad/README.md#Specs#Left Toggle Panel#Design App Mapping",
               "lines": {
                 "added": 13,
                 "removed": 0
               }
             },
             {
-              "path": "📃semio/js/sketchpad/README.md#Specs#Left Toggle Panel#Invariants",
+              "path": "📃compose/js/sketchpad/README.md#Specs#Left Toggle Panel#Invariants",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "📃semio/js/sketchpad/README.md#Specs#Left Toggle Panel#Left Panel Kinds",
+              "path": "📃compose/js/sketchpad/README.md#Specs#Left Toggle Panel#Left Panel Kinds",
               "lines": {
                 "added": 7,
                 "removed": 0
               }
             },
             {
-              "path": "📃semio/js/sketchpad/README.md#Specs#Left Toggle Panel#Manual Formula (Prompt-Ready)",
+              "path": "📃compose/js/sketchpad/README.md#Specs#Left Toggle Panel#Manual Formula (Prompt-Ready)",
               "lines": {
                 "added": 3,
                 "removed": 0
               }
             },
             {
-              "path": "📃semio/js/sketchpad/README.md#Specs#Left Toggle Panel#Manual Formula (Prompt-Ready)#Base Formula",
+              "path": "📃compose/js/sketchpad/README.md#Specs#Left Toggle Panel#Manual Formula (Prompt-Ready)#Base Formula",
               "lines": {
                 "added": 34,
                 "removed": 0
               }
             },
             {
-              "path": "📃semio/js/sketchpad/README.md#Specs#Left Toggle Panel#Manual Formula (Prompt-Ready)#Diff Addon Formula",
+              "path": "📃compose/js/sketchpad/README.md#Specs#Left Toggle Panel#Manual Formula (Prompt-Ready)#Diff Addon Formula",
               "lines": {
                 "added": 32,
                 "removed": 0
               }
             },
             {
-              "path": "📃semio/js/sketchpad/README.md#Specs#Left Toggle Panel#Manual Formula (Prompt-Ready)#Prompt Template",
+              "path": "📃compose/js/sketchpad/README.md#Specs#Left Toggle Panel#Manual Formula (Prompt-Ready)#Prompt Template",
               "lines": {
                 "added": 13,
                 "removed": 0
               }
             },
             {
-              "path": "📃semio/js/sketchpad/README.md#Specs#Left Toggle Panel#State, Sorting, and Defaults",
+              "path": "📃compose/js/sketchpad/README.md#Specs#Left Toggle Panel#State, Sorting, and Defaults",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "📃semio/js/sketchpad/README.md#Specs#Left Toggle Panel#Tab Registration Contract",
+              "path": "📃compose/js/sketchpad/README.md#Specs#Left Toggle Panel#Tab Registration Contract",
               "lines": {
                 "added": 11,
                 "removed": 0
               }
             },
             {
-              "path": "📃semio/js/sketchpad/README.md#Specs#Left Toggle Panel#Toggle Behavior",
+              "path": "📃compose/js/sketchpad/README.md#Specs#Left Toggle Panel#Toggle Behavior",
               "lines": {
                 "added": 6,
                 "removed": 0
@@ -321,84 +321,84 @@
           ],
           "added": [
             {
-              "path": "semio/js/sketchpad/README.md#Specs#Left Toggle Panel",
+              "path": "compose/js/sketchpad/README.md#Specs#Left Toggle Panel",
               "lines": {
                 "added": 145,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/README.md#Specs#Left Toggle Panel#Architecture",
+              "path": "compose/js/sketchpad/README.md#Specs#Left Toggle Panel#Architecture",
               "lines": {
                 "added": 12,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/README.md#Specs#Left Toggle Panel#Design App Mapping",
+              "path": "compose/js/sketchpad/README.md#Specs#Left Toggle Panel#Design App Mapping",
               "lines": {
                 "added": 13,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/README.md#Specs#Left Toggle Panel#Invariants",
+              "path": "compose/js/sketchpad/README.md#Specs#Left Toggle Panel#Invariants",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/README.md#Specs#Left Toggle Panel#Left Panel Kinds",
+              "path": "compose/js/sketchpad/README.md#Specs#Left Toggle Panel#Left Panel Kinds",
               "lines": {
                 "added": 7,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/README.md#Specs#Left Toggle Panel#Manual Formula (Prompt-Ready)",
+              "path": "compose/js/sketchpad/README.md#Specs#Left Toggle Panel#Manual Formula (Prompt-Ready)",
               "lines": {
                 "added": 82,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/README.md#Specs#Left Toggle Panel#Manual Formula (Prompt-Ready)#Base Formula",
+              "path": "compose/js/sketchpad/README.md#Specs#Left Toggle Panel#Manual Formula (Prompt-Ready)#Base Formula",
               "lines": {
                 "added": 34,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/README.md#Specs#Left Toggle Panel#Manual Formula (Prompt-Ready)#Diff Addon Formula",
+              "path": "compose/js/sketchpad/README.md#Specs#Left Toggle Panel#Manual Formula (Prompt-Ready)#Diff Addon Formula",
               "lines": {
                 "added": 32,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/README.md#Specs#Left Toggle Panel#Manual Formula (Prompt-Ready)#Prompt Template",
+              "path": "compose/js/sketchpad/README.md#Specs#Left Toggle Panel#Manual Formula (Prompt-Ready)#Prompt Template",
               "lines": {
                 "added": 13,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/README.md#Specs#Left Toggle Panel#State, Sorting, and Defaults",
+              "path": "compose/js/sketchpad/README.md#Specs#Left Toggle Panel#State, Sorting, and Defaults",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/README.md#Specs#Left Toggle Panel#Tab Registration Contract",
+              "path": "compose/js/sketchpad/README.md#Specs#Left Toggle Panel#Tab Registration Contract",
               "lines": {
                 "added": 11,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/README.md#Specs#Left Toggle Panel#Toggle Behavior",
+              "path": "compose/js/sketchpad/README.md#Specs#Left Toggle Panel#Toggle Behavior",
               "lines": {
                 "added": 6,
                 "removed": 0

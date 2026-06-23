@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync, unlinkSync } from "node:fs";
 
-const dir = "c:/git/semio/cad/js/renderer/play";
+const dir = "c:/git/compose/cad/js/renderer/play";
 const index = readFileSync(`${dir}/index.ts`, "utf8");
 let main = readFileSync(`${dir}/main.tsx`, "utf8");
 

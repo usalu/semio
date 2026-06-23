@@ -3,9 +3,9 @@ import { join } from "path";
 import {
   getKitDiff, inverseKitDiff, applyKitDiff,
   areKitsEqual, Kit,
-} from "/workspaces/semio/semio/js/semio";
+} from "/workspaces/semio/compose/js/compose";
 
-const ASSETS_DIR = "/workspaces/semio/semio/assets/semio";
+const ASSETS_DIR = "/workspaces/semio/compose/assets/compose";
 const kitRaw: Kit = JSON.parse(readFileSync(join(ASSETS_DIR, "kit_metabolism.json"), "utf-8"));
 const kitBefore: Kit = { ...kitRaw, designs: (kitRaw.designs ?? []).filter((d: any) => !d.parent) };
 

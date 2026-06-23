@@ -1,6 +1,6 @@
 {
   "id": "d079495e-6b8a-4858-8a2b-63b94327b3ae",
-  "uri": "semiorepo://s/d079495e-6b8a-4858-8a2b-63b94327b3ae",
+  "uri": "composerepo://s/d079495e-6b8a-4858-8a2b-63b94327b3ae",
   "contributor": "🧑‍💻ueli",
   "client": "cursor-chat",
   "second": "2026-03-14T22:48:17Z",
@@ -48,7 +48,7 @@
           "conversation_id": "d079495e-6b8a-4858-8a2b-63b94327b3ae",
           "generation_id": "62c54234-026c-4d52-9569-52b25af008b3",
           "model": "claude-4.6-opus-high-thinking",
-          "command": "sed -n '28,44p' /workspaces/semio/semio/go/semio.go",
+          "command": "sed -n '28,44p' /workspaces/semio/compose/go/compose.go",
           "cwd": "",
           "sandbox": false,
           "hook_event_name": "beforeShellExecution",
@@ -80,7 +80,7 @@
           "conversation_id": "d079495e-6b8a-4858-8a2b-63b94327b3ae",
           "generation_id": "62c54234-026c-4d52-9569-52b25af008b3",
           "model": "claude-4.6-opus-high-thinking",
-          "command": "sed -n '28,44p' /workspaces/semio/semio/go/semio.go",
+          "command": "sed -n '28,44p' /workspaces/semio/compose/go/compose.go",
           "cwd": "",
           "sandbox": false,
           "hook_event_name": "beforeShellExecution",
@@ -240,7 +240,7 @@
           "conversation_id": "d079495e-6b8a-4858-8a2b-63b94327b3ae",
           "generation_id": "62c54234-026c-4d52-9569-52b25af008b3",
           "model": "claude-4.6-opus-high-thinking",
-          "command": "sed -n '28,44p' /workspaces/semio/semio/go/semio.go",
+          "command": "sed -n '28,44p' /workspaces/semio/compose/go/compose.go",
           "output": "",
           "duration": 1.366,
           "sandbox": false,
@@ -273,7 +273,7 @@
           "conversation_id": "d079495e-6b8a-4858-8a2b-63b94327b3ae",
           "generation_id": "62c54234-026c-4d52-9569-52b25af008b3",
           "model": "claude-4.6-opus-high-thinking",
-          "command": "sed -n '28,44p' /workspaces/semio/semio/go/semio.go",
+          "command": "sed -n '28,44p' /workspaces/semio/compose/go/compose.go",
           "output": "",
           "duration": 1.185,
           "sandbox": false,
@@ -306,7 +306,7 @@
           "conversation_id": "d079495e-6b8a-4858-8a2b-63b94327b3ae",
           "generation_id": "62c54234-026c-4d52-9569-52b25af008b3",
           "model": "claude-4.6-opus-high-thinking",
-          "command": "sed -n '28,44p' /workspaces/semio/semio/go/semio.go",
+          "command": "sed -n '28,44p' /workspaces/semio/compose/go/compose.go",
           "output": "",
           "duration": 1.057,
           "sandbox": false,
@@ -342,7 +342,7 @@
           "tool_name": "Grep",
           "tool_input": {
             "pattern": "exportMeshData",
-            "file_path": "/workspaces/semio/semio/go/semio.go"
+            "file_path": "/workspaces/semio/compose/go/compose.go"
           },
           "tool_output": "{\"pattern\":\"exportMeshData\",\"success\":true}",
           "duration": 13618.873,
@@ -362,14 +362,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio"
+            "id": "👤compose📚go💻compose"
           }
         ],
         "kind": "agent.tool.search.ended",
         "llm": "claude-4.6-opus-high-thinking",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌1📌9811"
+          "👤compose📚go💻compose📌1📌9811"
         ],
         "second": "🎆26🌙03☀️14⏰22⌚55⏱️30",
         "session": "⚪d079495e6b8a48588a2b63b94327b3ae"
@@ -387,7 +387,7 @@
           "tool_name": "Grep",
           "tool_input": {
             "pattern": "exportMeshData",
-            "file_path": "/workspaces/semio/semio/go/semio.go"
+            "file_path": "/workspaces/semio/compose/go/compose.go"
           },
           "tool_output": "{\"pattern\":\"exportMeshData\",\"success\":true}",
           "duration": 13619.831,
@@ -407,14 +407,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio"
+            "id": "👤compose📚go💻compose"
           }
         ],
         "kind": "agent.tool.search.ended",
         "llm": "claude-4.6-opus-high-thinking",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌1📌9811"
+          "👤compose📚go💻compose📌1📌9811"
         ],
         "second": "🎆26🌙03☀️14⏰22⌚55⏱️31",
         "session": "⚪d079495e6b8a48588a2b63b94327b3ae"
@@ -432,7 +432,7 @@
           "tool_name": "Grep",
           "tool_input": {
             "pattern": "exportMeshData",
-            "file_path": "/workspaces/semio/semio/go/semio.go"
+            "file_path": "/workspaces/semio/compose/go/compose.go"
           },
           "tool_output": "{\"pattern\":\"exportMeshData\",\"success\":true}",
           "duration": 13618.777,
@@ -452,14 +452,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio"
+            "id": "👤compose📚go💻compose"
           }
         ],
         "kind": "agent.tool.search.ended",
         "llm": "claude-4.6-opus-high-thinking",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌1📌9811"
+          "👤compose📚go💻compose📌1📌9811"
         ],
         "second": "🎆26🌙03☀️14⏰22⌚55⏱️32",
         "session": "⚪d079495e6b8a48588a2b63b94327b3ae"

@@ -2,11 +2,11 @@
   "id": "2026/04/11/MIGRATE-SCHEMA-FIRST",
   "title": "Migrate Engine To Schema First Openapi And Graphql",
   "status": "closed",
-  "summary": "Engine REST OpenAPI is served from hand-written openapi/schema.json (runtime injects info.version). GraphQL uses Ariadne + graphql/schema.graphql SDL with resolvers; removed Graphene and starlette-graphene3 from engine deps. Removed generateSchemas and Pydantic JSON-schema export helpers; build.ts no longer invokes codegen; PyInstaller bundles graphql/schema.graphql and openapi/schema.json. semioonschema JSON files remain manually maintained. Domain Graphene types in semio/py are unchanged (unused by engine).",
+  "summary": "Engine REST OpenAPI is served from hand-written openapi/schema.json (runtime injects info.version). GraphQL uses Ariadne + graphql/schema.graphql SDL with resolvers; removed Graphene and starlette-graphene3 from engine deps. Removed generateSchemas and Pydantic JSON-schema export helpers; build.ts no longer invokes codegen; PyInstaller bundles graphql/schema.graphql and openapi/schema.json. composeonschema JSON files remain manually maintained. Domain Graphene types in compose/py are unchanged (unused by engine).",
   "files": [
-    "semio/engine/main.py",
-    "semio/engine/pyproject.toml",
-    "semio/engine/build.ts",
-    "semio/engine/generate-schemas.ts"
+    "compose/engine/main.py",
+    "compose/engine/pyproject.toml",
+    "compose/engine/build.ts",
+    "compose/engine/generate-schemas.ts"
   ]
 }

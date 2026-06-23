@@ -3,8 +3,8 @@ import re
 import subprocess
 from pathlib import Path
 
-root = Path(r"c:\git\semio")
-lib_path = root / "semio/client/lib/rs/lib.rs"
+root = Path(r"c:\git\compose")
+lib_path = root / "compose/client/lib/rs/lib.rs"
 text = lib_path.read_text(encoding="utf-8")
 
 
@@ -122,7 +122,7 @@ print("patched name_list macros")
 
 build = subprocess.run(
     ["bun", "scripts/build-wasm.script.mjs"],
-    cwd=root / "semio/client/lib/rs",
+    cwd=root / "compose/client/lib/rs",
     capture_output=True,
     text=True,
     encoding="utf-8",
@@ -133,7 +133,7 @@ if build.returncode != 0:
 print("wasm-pack ok")
 
 sketch = subprocess.run(
-    ["bun", "nx", "run", "@semio/sketchpad:build"],
+    ["bun", "nx", "run", "@compose/sketchpad:build"],
     cwd=root,
     capture_output=True,
     text=True,

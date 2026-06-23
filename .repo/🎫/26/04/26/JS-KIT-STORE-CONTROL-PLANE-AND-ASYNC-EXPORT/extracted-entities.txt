@@ -18,7 +18,7 @@ export const TOLERANCE = 1e-5;
 // #endregion Constants
 
 // #region Utilities
-// Removed: toArray, SeededRandom, Generator, round, jaccard, deepEqual, arraysEqual — domain logic moved to semio/rs (Requirements 1.3, 3.5)
+// Removed: toArray, SeededRandom, Generator, round, jaccard, deepEqual, arraysEqual — domain logic moved to compose/rs (Requirements 1.3, 3.5)
 
 /**
  * Zod schema for DiffStatus validation.
@@ -40,29 +40,29 @@ export enum DiffStatus {
  **/
 export type Id = string;
 
-// #region Semio
-// Semio utility class delegates to WASM for domain operations.
+// #region Compose
+// Compose utility class delegates to WASM for domain operations.
 
 /**
- * Semio utility class with static methods delegating to WASM.
+ * Compose utility class with static methods delegating to WASM.
  */
-export class Semio {
+export class Compose {
   private static _wasm: any;
   private static async wasm() {
-    if (!Semio._wasm) Semio._wasm = await import("@semio/rs-wasm");
-    return Semio._wasm;
+    if (!Compose._wasm) Compose._wasm = await import("@compose/rs-wasm");
+    return Compose._wasm;
   }
-  static async normalizeName(s: string): Promise<string> { return (await Semio.wasm()).semioNormalizeName(s); }
-  static async round(value: number, decimals: number): Promise<number> { return (await Semio.wasm()).semioRound(value, decimals); }
-  static async generateId(): Promise<string> { return (await Semio.wasm()).generateId(); }
-  static async kitFromJson(s: string): Promise<any> { return (await Semio.wasm()).kitFromJson(s); }
-  static async kitToJson(value: any): Promise<any> { return (await Semio.wasm()).kitToJson(value); }
-  static async kitValidate(value: any): Promise<any> { return (await Semio.wasm()).kitValidate(value); }
-  static async kitsAreEqual(a: any, b: any): Promise<any> { return (await Semio.wasm()).kitsAreEqual(a, b); }
-  static async flattenDesign(kit: any, designId: string): Promise<any> { return (await Semio.wasm()).flattenDesign(kit, designId); }
+  static async normalizeName(s: string): Promise<string> { return (await Compose.wasm()).composeNormalizeName(s); }
+  static async round(value: number, decimals: number): Promise<number> { return (await Compose.wasm()).composeRound(value, decimals); }
+  static async generateId(): Promise<string> { return (await Compose.wasm()).generateId(); }
+  static async kitFromJson(s: string): Promise<any> { return (await Compose.wasm()).kitFromJson(s); }
+  static async kitToJson(value: any): Promise<any> { return (await Compose.wasm()).kitToJson(value); }
+  static async kitValidate(value: any): Promise<any> { return (await Compose.wasm()).kitValidate(value); }
+  static async kitsAreEqual(a: any, b: any): Promise<any> { return (await Compose.wasm()).kitsAreEqual(a, b); }
+  static async flattenDesign(kit: any, designId: string): Promise<any> { return (await Compose.wasm()).flattenDesign(kit, designId); }
 }
 
-// #endregion Semio
+// #endregion Compose
 
 // #endregion Utilities
 
@@ -210,7 +210,7 @@ export class Plane implements PlanePlain {
   toPlain(): PlanePlain { return PlaneSchema.parse(this as unknown as PlanePlain); }
   serialize(): string { return JSON.stringify(this.toPlain()); }
   static deserialize(json: string): Plane { return new Plane(PlaneSchema.parse(JSON.parse(json))); }
-  // Removed: averageWith, average, rounded — geometry computation moved to semio/rs (Requirement 1.14)
+  // Removed: averageWith, average, rounded — geometry computation moved to compose/rs (Requirement 1.14)
 }
 export const PlaneDiffSchema = PlaneSchema.omit({ origin: true, xAxis: true, yAxis: true })
   .extend({ origin: PointDiffSchema, xAxis: VectorDiffSchema, yAxis: VectorDiffSchema }).partial();
@@ -556,7 +556,7 @@ export const RepresentationDiffSchema = RepresentationSchema.partial().omit({ at
 export type RepresentationDiff = z.infer<typeof RepresentationDiffSchema>;
 export const RepresentationsDiffSchema = z.object({ removed: z.array(RepresentationIdSchema).optional(), updated: z.array(z.object({ representation: RepresentationIdSchema, diff: RepresentationDiffSchema })).optional(), added: z.array(z.any()).optional() });
 export type RepresentationsDiff = z.infer<typeof RepresentationsDiffSchema>;
-// Removed: selectBestRepresentation, filterRepresentationsByTagIds, getAvailableTagIdsForRepresentations, getAllTagIdsFromRepresentations, findRepresentation, areSameRepresentation, SUPPORTED_3D_EXTENSIONS, isSupportedRepresentationExtension, validateRepresentationFile, RepresentationFileValidation — representation selection logic moved to semio/rs (Requirement 1.3)
+// Removed: selectBestRepresentation, filterRepresentationsByTagIds, getAvailableTagIdsForRepresentations, getAllTagIdsFromRepresentations, findRepresentation, areSameRepresentation, SUPPORTED_3D_EXTENSIONS, isSupportedRepresentationExtension, validateRepresentationFile, RepresentationFileValidation — representation selection logic moved to compose/rs (Requirement 1.3)
 // #endregion Representation
 
 // #region Connector
@@ -581,7 +581,7 @@ export const ConnectorDiffSchema = ConnectorSchema.partial().omit({ point: true,
 export type ConnectorDiff = z.infer<typeof ConnectorDiffSchema>;
 export const ConnectorsDiffSchema = z.object({ removed: z.array(ConnectorIdSchema).optional(), updated: z.array(z.object({ connector: ConnectorIdSchema, diff: ConnectorDiffSchema })).optional(), added: z.array(z.any()).optional() });
 export type ConnectorsDiff = z.infer<typeof ConnectorsDiffSchema>;
-// Removed: areConnectorsCompatible, unifyConnectorPortsAndCompatiblePortsForTypes, findConnector, findConnectorInType — connector compatibility moved to semio/rs (Requirement 1.5)
+// Removed: areConnectorsCompatible, unifyConnectorPortsAndCompatiblePortsForTypes, findConnector, findConnectorInType — connector compatibility moved to compose/rs (Requirement 1.5)
 // #endregion Connector
 
 // #region Type
@@ -653,7 +653,7 @@ export const PieceDiffSchema = PieceSchema.partial().omit({ plane: true, props: 
 export type PieceDiff = z.infer<typeof PieceDiffSchema>;
 export const PiecesDiffSchema = z.object({ removed: z.array(PieceIdSchema).optional(), updated: z.array(z.object({ piece: PieceIdSchema, diff: PieceDiffSchema })).optional(), added: z.array(z.any()).optional() });
 export type PiecesDiff = z.infer<typeof PiecesDiffSchema>;
-// Removed: isFixedPiece, findPiece, findPieceConnections, findConnectorForPieceInConnection, getPieceRepresentationFileIds, getPieceRepresentationUrls, resolvePieceTypeForFlatten — domain logic moved to semio/rs
+// Removed: isFixedPiece, findPiece, findPieceConnections, findConnectorForPieceInConnection, getPieceRepresentationFileIds, getPieceRepresentationUrls, resolvePieceTypeForFlatten — domain logic moved to compose/rs
 // #endregion Piece
 
 // #region Group
@@ -803,7 +803,7 @@ export const DesignDiffSchema = DesignSchema.omit({ pieces: true, connections: t
 export type DesignDiff = z.infer<typeof DesignDiffSchema>;
 export const DesignsDiffSchema = z.object({ removed: z.array(DesignIdSchema).optional(), updated: z.array(z.object({ design: DesignIdSchema, diff: DesignDiffSchema })).optional(), added: z.array(z.any()).optional() });
 export type DesignsDiff = z.infer<typeof DesignsDiffSchema>;
-// Removed: addPieceToDesignDiff, setPieceInDesignDiff, removePieceFromDesignDiff, addPiecesToDesignDiff, setPiecesInDesignDiff, removePiecesFromDesignDiff, addConnectionToDesignDiff, setConnectionInDesignDiff, removeConnectionFromDesignDiff, addConnectionsToDesignDiff, setConnectionsInDesignDiff, removeConnectionsFromDesignDiff, mergeDesigns, orientDesign, duplicateDesignDiffForIsolation — design-diff builder functions moved to semio/rs (Requirement 3.7)
+// Removed: addPieceToDesignDiff, setPieceInDesignDiff, removePieceFromDesignDiff, addPiecesToDesignDiff, setPiecesInDesignDiff, removePiecesFromDesignDiff, addConnectionToDesignDiff, setConnectionInDesignDiff, removeConnectionFromDesignDiff, addConnectionsToDesignDiff, setConnectionsInDesignDiff, removeConnectionsFromDesignDiff, mergeDesigns, orientDesign, duplicateDesignDiffForIsolation — design-diff builder functions moved to compose/rs (Requirement 3.7)
 // #endregion Design
 
 // #region Kit
@@ -869,7 +869,7 @@ export function asKitInstance(input: KitLike): Kit {
 /**
  * @emoji 🧾 Pulls the authoritative DTO from `kitClient` into a host {@link KitHostStore} (no React; call after GQL events).
  */
-export async function applyKitClientSnapshotToLocalStore(kitClient: SemioKitBridge, store: KitHostStore): Promise<void> {
+export async function applyKitClientSnapshotToLocalStore(kitClient: ComposeKitBridge, store: KitHostStore): Promise<void> {
   try {
     await kitClient.getSnapshot();
   } catch {
@@ -898,11 +898,11 @@ export type KitHostStore = { getSnapshot(): KitHostStoreSnapshot; subscribe(onCh
 export class InMemoryKitStore implements KitHostStore {
   private listeners = new Set<() => void>();
   private _kit: Kit;
-  /** @internal Used by `inferPersistenceFromInit` in @semio/react. */
+  /** @internal Used by `inferPersistenceFromInit` in @compose/react. */
   readonly name = "InMemoryKitStore";
   constructor(seed: Kit) { this._kit = seed; }
   getSnapshot(): KitHostStoreSnapshot {
-    const c = (this as InMemoryKitStore & { __semioKitBridge?: SemioKitBridge }).__semioKitBridge;
+    const c = (this as InMemoryKitStore & { __composeKitBridge?: ComposeKitBridge }).__composeKitBridge;
     const kit = c ? asKitInstance(c.getDto() as any) : this._kit;
     return { kit, sync: DEFAULT_KIT_SYNC };
   }
@@ -925,7 +925,7 @@ export class JsonFileKitStore implements KitHostStore {
     return new JsonFileKitStore(adapter, seed);
   }
   getSnapshot(): KitHostStoreSnapshot {
-    const c = (this as JsonFileKitStore & { __semioKitBridge?: SemioKitBridge }).__semioKitBridge;
+    const c = (this as JsonFileKitStore & { __composeKitBridge?: ComposeKitBridge }).__composeKitBridge;
     const kit = c ? asKitInstance(c.getDto() as any) : this._kit;
     return { kit, sync: DEFAULT_KIT_SYNC };
   }
@@ -947,7 +947,7 @@ export class FolderKitStore implements KitHostStore {
     return new FolderKitStore(adapter, asKitInstance(initial ?? { id: id(), name: "Untitled", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }));
   }
   getSnapshot(): KitHostStoreSnapshot {
-    const c = (this as FolderKitStore & { __semioKitBridge?: SemioKitBridge }).__semioKitBridge;
+    const c = (this as FolderKitStore & { __composeKitBridge?: ComposeKitBridge }).__composeKitBridge;
     const kit = c ? asKitInstance(c.getDto() as any) : this._kit;
     return { kit, sync: DEFAULT_KIT_SYNC };
   }
@@ -963,7 +963,7 @@ export type SessionKitStoreConfig = { serverUrl: string; sessionId?: string; kit
 export async function createSessionKitStore(config: SessionKitStoreConfig) {
   const t = new Date().toISOString();
   const store = new InMemoryKitStore(asKitInstance({ id: id(), name: config.kitName ?? "Remote", createdAt: t, updatedAt: t, remote: config.serverUrl }));
-  (store as InMemoryKitStore & { __semioSessionConfig?: SessionKitStoreConfig }).__semioSessionConfig = config;
+  (store as InMemoryKitStore & { __composeSessionConfig?: SessionKitStoreConfig }).__composeSessionConfig = config;
   return store;
 }
 // #endregion KitHostStores

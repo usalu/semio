@@ -48,7 +48,7 @@
           "session_id": "025c8758-96db-4f1a-b343-50c1e9fc0f32",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/assets/icons.ts",
+            "filePath": "/workspaces/semio/compose/assets/icons.ts",
             "startLine": 1,
             "endLine": 50
           },
@@ -74,7 +74,7 @@
           "session_id": "025c8758-96db-4f1a-b343-50c1e9fc0f32",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/ui/index.tsx",
+            "filePath": "/workspaces/semio/compose/ui/index.tsx",
             "startLine": 1,
             "endLine": 150
           },
@@ -126,7 +126,7 @@
           "session_id": "025c8758-96db-4f1a-b343-50c1e9fc0f32",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/assets/icons.ts",
+            "filePath": "/workspaces/semio/compose/assets/icons.ts",
             "startLine": 1,
             "endLine": 50
           },
@@ -178,7 +178,7 @@
           "session_id": "025c8758-96db-4f1a-b343-50c1e9fc0f32",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/ui/index.tsx",
+            "filePath": "/workspaces/semio/compose/ui/index.tsx",
             "startLine": 1,
             "endLine": 150
           },
@@ -259,7 +259,7 @@
           "session_id": "025c8758-96db-4f1a-b343-50c1e9fc0f32",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/ui/index.tsx",
+            "filePath": "/workspaces/semio/compose/ui/index.tsx",
             "startLine": 1,
             "endLine": 150
           },
@@ -286,7 +286,7 @@
           "session_id": "025c8758-96db-4f1a-b343-50c1e9fc0f32",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/assets/icons.ts",
+            "filePath": "/workspaces/semio/compose/assets/icons.ts",
             "startLine": 1,
             "endLine": 50
           },
@@ -313,7 +313,7 @@
           "session_id": "025c8758-96db-4f1a-b343-50c1e9fc0f32",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/assets/icons.ts",
+            "filePath": "/workspaces/semio/compose/assets/icons.ts",
             "startLine": 1,
             "endLine": 50
           },
@@ -395,7 +395,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "query": "^import.*from\\s+\"(@semio/|@elements/|@coda/)",
+            "query": "^import.*from\\s+\"(@compose/|@elements/|@coda/)",
             "isRegexp": true
           },
           "tool_use_id": "toolu_bdrk_01Tz9nD3iJtcLf6WwH7xy5zt__vscode-1774519724573",
@@ -421,7 +421,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 200,
-            "filePath": "/workspaces/semio/semio/ui/index.tsx",
+            "filePath": "/workspaces/semio/compose/ui/index.tsx",
             "startLine": 40
           },
           "tool_use_id": "toolu_bdrk_01MKjVhmK3xjSnQqzefMRZ8h__vscode-1774519724575",
@@ -472,7 +472,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 200,
-            "filePath": "/workspaces/semio/semio/ui/index.tsx",
+            "filePath": "/workspaces/semio/compose/ui/index.tsx",
             "startLine": 40
           },
           "tool_use_id": "toolu_bdrk_01MKjVhmK3xjSnQqzefMRZ8h__vscode-1774519724575",
@@ -524,7 +524,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 200,
-            "filePath": "/workspaces/semio/semio/ui/index.tsx",
+            "filePath": "/workspaces/semio/compose/ui/index.tsx",
             "startLine": 40
           },
           "tool_response": "",
@@ -551,7 +551,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "query": "^import.*from\\s+\"(@semio/|@elements/|@coda/)",
+            "query": "^import.*from\\s+\"(@compose/|@elements/|@coda/)",
             "isRegexp": true
           },
           "tool_response": "",
@@ -604,7 +604,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 200,
-            "filePath": "/workspaces/semio/semio/ui/index.tsx",
+            "filePath": "/workspaces/semio/compose/ui/index.tsx",
             "startLine": 40
           },
           "tool_response": "",
@@ -631,7 +631,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "query": "^import.*from\\s+\"(@semio/|@elements/|@coda/)",
+            "query": "^import.*from\\s+\"(@compose/|@elements/|@coda/)",
             "isRegexp": true
           },
           "tool_response": "",
@@ -683,7 +683,7 @@
           "session_id": "025c8758-96db-4f1a-b343-50c1e9fc0f32",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/ui/tsconfig.json",
+            "filePath": "/workspaces/semio/compose/ui/tsconfig.json",
             "startLine": 1,
             "endLine": 50
           },
@@ -761,7 +761,7 @@
           "session_id": "025c8758-96db-4f1a-b343-50c1e9fc0f32",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/js/tsconfig.json",
+            "filePath": "/workspaces/semio/compose/js/tsconfig.json",
             "startLine": 1,
             "endLine": 50
           },
@@ -787,7 +787,7 @@
           "session_id": "025c8758-96db-4f1a-b343-50c1e9fc0f32",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/ui/tsconfig.json",
+            "filePath": "/workspaces/semio/compose/ui/tsconfig.json",
             "startLine": 1,
             "endLine": 50
           },
@@ -867,7 +867,7 @@
           "session_id": "025c8758-96db-4f1a-b343-50c1e9fc0f32",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/js/tsconfig.json",
+            "filePath": "/workspaces/semio/compose/js/tsconfig.json",
             "startLine": 1,
             "endLine": 50
           },
@@ -894,7 +894,7 @@
           "session_id": "025c8758-96db-4f1a-b343-50c1e9fc0f32",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/ui/tsconfig.json",
+            "filePath": "/workspaces/semio/compose/ui/tsconfig.json",
             "startLine": 1,
             "endLine": 50
           },
@@ -975,7 +975,7 @@
           "session_id": "025c8758-96db-4f1a-b343-50c1e9fc0f32",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/js/tsconfig.json",
+            "filePath": "/workspaces/semio/compose/js/tsconfig.json",
             "startLine": 1,
             "endLine": 50
           },
@@ -1002,7 +1002,7 @@
           "session_id": "025c8758-96db-4f1a-b343-50c1e9fc0f32",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/ui/tsconfig.json",
+            "filePath": "/workspaces/semio/compose/ui/tsconfig.json",
             "startLine": 1,
             "endLine": 50
           },
@@ -1030,7 +1030,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 50,
-            "filePath": "/workspaces/semio/semio/studio/tsconfig.json",
+            "filePath": "/workspaces/semio/compose/studio/tsconfig.json",
             "startLine": 1
           },
           "tool_use_id": "toolu_bdrk_016yz3XHNwCzhFtRmM92SLgT__vscode-1774519724582",
@@ -1056,7 +1056,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 50,
-            "filePath": "/workspaces/semio/semio/assets/tsconfig.json",
+            "filePath": "/workspaces/semio/compose/assets/tsconfig.json",
             "startLine": 1
           },
           "tool_use_id": "toolu_bdrk_017RoqzznJ5YuNBXCnWUHzjf__vscode-1774519724583",
@@ -1082,7 +1082,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 50,
-            "filePath": "/workspaces/semio/semio/sketchpad/tsconfig.json",
+            "filePath": "/workspaces/semio/compose/sketchpad/tsconfig.json",
             "startLine": 1
           },
           "tool_use_id": "toolu_bdrk_01FF9Zjdrg6np1JUV7vmGCt1__vscode-1774519724581",
@@ -1108,7 +1108,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 50,
-            "filePath": "/workspaces/semio/semio/assets/tsconfig.json",
+            "filePath": "/workspaces/semio/compose/assets/tsconfig.json",
             "startLine": 1
           },
           "tool_use_id": "toolu_bdrk_017RoqzznJ5YuNBXCnWUHzjf__vscode-1774519724583",
@@ -1134,7 +1134,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 200,
-            "filePath": "/workspaces/semio/semio/js/tsconfig.json",
+            "filePath": "/workspaces/semio/compose/js/tsconfig.json",
             "startLine": 1
           },
           "tool_use_id": "toolu_bdrk_01R3if1XjHAzwgwRgocPy8i7__vscode-1774519724580",
@@ -1160,7 +1160,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 50,
-            "filePath": "/workspaces/semio/semio/sketchpad/tsconfig.json",
+            "filePath": "/workspaces/semio/compose/sketchpad/tsconfig.json",
             "startLine": 1
           },
           "tool_response": "",
@@ -1187,7 +1187,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 200,
-            "filePath": "/workspaces/semio/semio/js/tsconfig.json",
+            "filePath": "/workspaces/semio/compose/js/tsconfig.json",
             "startLine": 1
           },
           "tool_response": "",
@@ -1214,7 +1214,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 50,
-            "filePath": "/workspaces/semio/semio/sketchpad/tsconfig.json",
+            "filePath": "/workspaces/semio/compose/sketchpad/tsconfig.json",
             "startLine": 1
           },
           "tool_response": "",
@@ -1241,7 +1241,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 50,
-            "filePath": "/workspaces/semio/semio/assets/tsconfig.json",
+            "filePath": "/workspaces/semio/compose/assets/tsconfig.json",
             "startLine": 1
           },
           "tool_response": "",
@@ -1268,7 +1268,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 200,
-            "filePath": "/workspaces/semio/semio/js/tsconfig.json",
+            "filePath": "/workspaces/semio/compose/js/tsconfig.json",
             "startLine": 1
           },
           "tool_response": "",
@@ -1295,7 +1295,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 50,
-            "filePath": "/workspaces/semio/semio/studio/tsconfig.json",
+            "filePath": "/workspaces/semio/compose/studio/tsconfig.json",
             "startLine": 1
           },
           "tool_response": "",
@@ -1322,7 +1322,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 50,
-            "filePath": "/workspaces/semio/semio/assets/tsconfig.json",
+            "filePath": "/workspaces/semio/compose/assets/tsconfig.json",
             "startLine": 1
           },
           "tool_response": "",
@@ -1349,7 +1349,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 50,
-            "filePath": "/workspaces/semio/semio/vscode/tsconfig.json",
+            "filePath": "/workspaces/semio/compose/vscode/tsconfig.json",
             "startLine": 1
           },
           "tool_use_id": "toolu_bdrk_01D4DDwnKLJ7ANhZvsXXbARj__vscode-1774519724585",
@@ -1376,7 +1376,7 @@
           "tool_input": {
             "maxResults": 50,
             "isRegexp": true,
-            "query": "from\\s+\"(@semio/|@elements/|@coda/)"
+            "query": "from\\s+\"(@compose/|@elements/|@coda/)"
           },
           "tool_use_id": "toolu_bdrk_01R1ERf2fZRZrC2cxqsLQCGy__vscode-1774519724586",
           "cwd": "/workspaces/semio"
@@ -1401,7 +1401,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 50,
-            "filePath": "/workspaces/semio/semio/desktop/tsconfig.json",
+            "filePath": "/workspaces/semio/compose/desktop/tsconfig.json",
             "startLine": 1
           },
           "tool_use_id": "toolu_bdrk_013BhE28M6cCU8sMpGv6i4qR__vscode-1774519724584",
@@ -1427,7 +1427,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 50,
-            "filePath": "/workspaces/semio/semio/vscode/tsconfig.json",
+            "filePath": "/workspaces/semio/compose/vscode/tsconfig.json",
             "startLine": 1
           },
           "tool_use_id": "toolu_bdrk_01D4DDwnKLJ7ANhZvsXXbARj__vscode-1774519724585",
@@ -1454,7 +1454,7 @@
           "tool_input": {
             "maxResults": 50,
             "isRegexp": true,
-            "query": "from\\s+\"(@semio/|@elements/|@coda/)"
+            "query": "from\\s+\"(@compose/|@elements/|@coda/)"
           },
           "tool_response": "",
           "tool_use_id": "toolu_bdrk_01R1ERf2fZRZrC2cxqsLQCGy__vscode-1774519724586",
@@ -1480,7 +1480,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 50,
-            "filePath": "/workspaces/semio/semio/desktop/tsconfig.json",
+            "filePath": "/workspaces/semio/compose/desktop/tsconfig.json",
             "startLine": 1
           },
           "tool_response": "",
@@ -1508,7 +1508,7 @@
           "tool_input": {
             "maxResults": 50,
             "isRegexp": true,
-            "query": "from\\s+\"(@semio/|@elements/|@coda/)"
+            "query": "from\\s+\"(@compose/|@elements/|@coda/)"
           },
           "tool_response": "",
           "tool_use_id": "toolu_bdrk_01R1ERf2fZRZrC2cxqsLQCGy__vscode-1774519724586",
@@ -1534,7 +1534,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 50,
-            "filePath": "/workspaces/semio/semio/vscode/tsconfig.json",
+            "filePath": "/workspaces/semio/compose/vscode/tsconfig.json",
             "startLine": 1
           },
           "tool_response": "",
@@ -1561,7 +1561,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 50,
-            "filePath": "/workspaces/semio/semio/desktop/tsconfig.json",
+            "filePath": "/workspaces/semio/compose/desktop/tsconfig.json",
             "startLine": 1
           },
           "tool_response": "",
@@ -1797,7 +1797,7 @@
           "tool_input": {
             "maxResults": 20,
             "isRegexp": true,
-            "query": "@semio/studio"
+            "query": "@compose/studio"
           },
           "tool_use_id": "toolu_bdrk_012WBpzqfznQpN2D4WcWCCsS__vscode-1774519724590",
           "cwd": "/workspaces/semio"
@@ -1822,7 +1822,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 80,
-            "filePath": "/workspaces/semio/semio/sketchpad/vite.config.ts",
+            "filePath": "/workspaces/semio/compose/sketchpad/vite.config.ts",
             "startLine": 1
           },
           "tool_use_id": "toolu_bdrk_01F2F2pt9d3f5VxGQhysff4E__vscode-1774519724589",
@@ -1849,7 +1849,7 @@
           "tool_input": {
             "maxResults": 20,
             "isRegexp": true,
-            "query": "@semio/studio"
+            "query": "@compose/studio"
           },
           "tool_use_id": "toolu_bdrk_012WBpzqfznQpN2D4WcWCCsS__vscode-1774519724590",
           "cwd": "/workspaces/semio"
@@ -1874,7 +1874,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 80,
-            "filePath": "/workspaces/semio/semio/sketchpad/vite.config.ts",
+            "filePath": "/workspaces/semio/compose/sketchpad/vite.config.ts",
             "startLine": 1
           },
           "tool_use_id": "toolu_bdrk_01F2F2pt9d3f5VxGQhysff4E__vscode-1774519724589",
@@ -1901,7 +1901,7 @@
           "tool_input": {
             "maxResults": 20,
             "isRegexp": true,
-            "query": "@semio/studio"
+            "query": "@compose/studio"
           },
           "tool_response": "",
           "tool_use_id": "toolu_bdrk_012WBpzqfznQpN2D4WcWCCsS__vscode-1774519724590",
@@ -1927,7 +1927,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 80,
-            "filePath": "/workspaces/semio/semio/sketchpad/vite.config.ts",
+            "filePath": "/workspaces/semio/compose/sketchpad/vite.config.ts",
             "startLine": 1
           },
           "tool_response": "",
@@ -1955,7 +1955,7 @@
           "tool_input": {
             "maxResults": 20,
             "isRegexp": true,
-            "query": "@semio/studio"
+            "query": "@compose/studio"
           },
           "tool_response": "",
           "tool_use_id": "toolu_bdrk_012WBpzqfznQpN2D4WcWCCsS__vscode-1774519724590",
@@ -1981,7 +1981,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 80,
-            "filePath": "/workspaces/semio/semio/sketchpad/vite.config.ts",
+            "filePath": "/workspaces/semio/compose/sketchpad/vite.config.ts",
             "startLine": 1
           },
           "tool_response": "",

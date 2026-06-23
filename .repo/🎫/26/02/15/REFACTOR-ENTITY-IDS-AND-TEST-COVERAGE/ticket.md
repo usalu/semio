@@ -1,5 +1,5 @@
 ---
-goal: SEMIO-REPO/SPECS
+goal: COMPOSE-REPO/SPECS
 ---
 
 # Ticket
@@ -11,9 +11,9 @@ Removed @ from project URIs and aligned ID/URI tests.
 ## Changes
 
 - Updated project URI generation in `repo/cli/main.go`:
-- `Project.GetURI` now returns `semiorepo://project/<NAME>` without `@`.
-- `GetArtifactURI("project")` now returns `semiorepo://project/<NAME>` and trims leading `@` from source name.
-- `IdToUri` now renders project IDs as `semiorepo://project/<PROJECT>`.
+- `Project.GetURI` now returns `composerepo://project/<NAME>` without `@`.
+- `GetArtifactURI("project")` now returns `composerepo://project/<NAME>` and trims leading `@` from source name.
+- `IdToUri` now renders project IDs as `composerepo://project/<PROJECT>`.
 - `UriToId` now parses both `project/<PROJECT>` and `project/@<PROJECT>` by stripping optional `@`.
 - Updated URI expectations in `repo/cli/main_test.go` for:
 - `TestArtifactIDAndURI`
@@ -29,8 +29,8 @@ Removed @ from project URIs and aligned ID/URI tests.
 - Verified tests:
 - `go test ./repo/cli -run 'TestArtifactIDAndURI|TestIdToUri|TestUriToId|TestIdUriRoundTrip'`
 - Verified runtime behavior from updated source:
-- `go run ./repo/cli tree semio --only-project --json | grep -o 'semiorepo://project[^\" ]*' | head -n 10`
-- Observed output contains `semiorepo://project/SEMIO` and no `@` prefix.
+- `go run ./repo/cli tree compose --only-project --json | grep -o 'composerepo://project[^\" ]*' | head -n 10`
+- Observed output contains `composerepo://project/COMPOSE` and no `@` prefix.
 
 ## Todos
 

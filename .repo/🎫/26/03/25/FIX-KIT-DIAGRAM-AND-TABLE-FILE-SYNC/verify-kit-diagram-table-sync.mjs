@@ -2,7 +2,7 @@ import { chromium } from "playwright";
 import { readFile } from "node:fs/promises";
 
 const baseUrl = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:4173";
-const kitFixturePath = "/workspaces/semio/semio/assets/semio/kit_metabolism.json";
+const kitFixturePath = "/workspaces/semio/compose/assets/compose/kit_metabolism.json";
 
 const setTogglePressed = async (toggle, pressed) => {
   const currentState = (await toggle.getAttribute("aria-pressed").catch(() => null)) ?? (await toggle.getAttribute("data-state").catch(() => null));
@@ -27,15 +27,15 @@ const main = async () => {
 
   try {
     await page.goto("/");
-    await page.waitForFunction(() => Boolean(window.__SEMIO_STORE__), undefined, { timeout: 30000 });
+    await page.waitForFunction(() => Boolean(window.__COMPOSE_STORE__), undefined, { timeout: 30000 });
 
     const kitGuid = await page.evaluate(async (fixture) => {
-      const store = window.__SEMIO_STORE__;
+      const store = window.__COMPOSE_STORE__;
       const existing = (store.kitShallows?.() ?? []).find((kit) => String(kit?.name ?? "").toLowerCase().includes("metabolism"));
       if (existing?.guid) {
         return existing.guid;
       }
-      await store.execute("semio.sketchpad.createKit", "semio.sketchpad.ticket.verifyKitDiagramTableSync", fixture, false, false);
+      await store.execute("compose.sketchpad.createKit", "compose.sketchpad.ticket.verifyKitDiagramTableSync", fixture, false, false);
       const created = (store.kitShallows?.() ?? []).find((kit) => String(kit?.name ?? "").toLowerCase().includes("metabolism"));
       return created?.guid ?? null;
     }, kitFixture);
@@ -48,8 +48,8 @@ const main = async () => {
     await page.locator('tbody tr[data-row-id]').first().waitFor({ timeout: 30000 });
     await page.locator('[data-testid="kit-diagram"]').waitFor({ timeout: 30000 });
 
-    const filesToggle = page.locator('[id="semio.sketchpad.app.kit.toolbar.showFiles"]');
-    const foldersToggle = page.locator('[id="semio.sketchpad.app.kit.toolbar.showFolders"]');
+    const filesToggle = page.locator('[id="compose.sketchpad.app.kit.toolbar.showFiles"]');
+    const foldersToggle = page.locator('[id="compose.sketchpad.app.kit.toolbar.showFolders"]');
 
     if ((await filesToggle.count()) > 0) {
       await setTogglePressed(filesToggle, true);
@@ -62,8 +62,8 @@ const main = async () => {
 
     const referencedCounts = await page.evaluate(() => {
       const normalizePath = (path) => path.replace(/^\.?\//, "").replace(/\/+$/, "");
-      const store = window.__SEMIO_STORE__;
-      const actor = window.__SEMIO_ACTOR__;
+      const store = window.__COMPOSE_STORE__;
+      const actor = window.__COMPOSE_ACTOR__;
       const kitGuid = window.location.pathname.match(/\/kits\/([^/]+)/)?.[1];
       if (!store || !kitGuid || !store.hasKit(kitGuid)) {
         return null;

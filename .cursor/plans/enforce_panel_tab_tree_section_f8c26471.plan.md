@@ -94,7 +94,7 @@ Each becomes `UiTreeNode` with sections whose items carry controls:
 - Puzzle 2D inspector + settings ([framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx) ~2311-2349, builders ~3388-3460, ~2465-2579): sliders/selects/checkboxes → control items.
 - Puzzle 5D status ([framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx) ~1750-1759, [puzzle/5d/play/index.ts](puzzle/5d/play/index.ts)): stats → keyValue control items.
 - CAD catalog + details ([cad/js/renderer/play/index.tsx](cad/js/renderer/play/index.tsx) ~1985-2185): shape select/file status/attribute editors → control items.
-- Sketchpad windows/workbench/details ([semio/client/lib/sketchpad/js/index.ts](semio/client/lib/sketchpad/js/index.ts) ~14865-14884, ~13704-13934): stack/text/button bodies → trees of items.
+- Sketchpad windows/workbench/details ([compose/client/lib/sketchpad/js/index.ts](compose/client/lib/sketchpad/js/index.ts) ~14865-14884, ~13704-13934): stack/text/button bodies → trees of items.
 - Playground template workbench/details ([framework/product/playground/core/index.ts](framework/product/playground/core/index.ts) ~721-754): table-host bodies are canvas-like; if they must remain tabular, treat the table as the single tree body, otherwise express as item rows. Confirm during implementation.
 
 ## 5. Tests + verification

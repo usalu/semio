@@ -5,7 +5,7 @@
 // #endregion 🧲Header
 
 export const metadata = {
-  title: "semio repo",
+  title: "compose repo",
   description: "Monorepo management server",
 };
 

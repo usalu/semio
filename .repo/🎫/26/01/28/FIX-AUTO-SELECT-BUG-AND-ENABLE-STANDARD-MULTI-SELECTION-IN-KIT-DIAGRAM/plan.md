@@ -1,7 +1,7 @@
 # Plan - Fix Auto Select Bug and Enable Standard Multi Selection in Kit Diagram
 
 ## Diagnosis
-1.  **Analyze `js/semio/sketchpad/Kit.tsx`**: Search for the diagram interaction logic. Look for where node selection is handled.
+1.  **Analyze `js/compose/sketchpad/Kit.tsx`**: Search for the diagram interaction logic. Look for where node selection is handled.
 2.  **Verify React Flow Configuration**: Check if `selectionOnDrag` and other selection-related props are correctly configured.
 3.  **Investigate Event Handlers**: Check if there are custom `onClick` or `onNodeClick` handlers that are forcing selection on every interaction.
 

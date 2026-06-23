@@ -5,12 +5,12 @@ import sys
 import traceback
 from pathlib import Path
 
-# Add semio.py to path
-semio_py_path = Path('/workspaces/semio/semio/py')
-sys.path.insert(0, str(semio_py_path))
+# Add compose.py to path
+compose_py_path = Path('/workspaces/semio/compose/py')
+sys.path.insert(0, str(compose_py_path))
 
 try:
-    from semio import export_design_model
+    from compose import export_design_model
     print("✅ Import successful")
 except ImportError as e:
     print(f"❌ Failed to import: {e}")
@@ -20,7 +20,7 @@ def debug_export():
     """Debug the IFC export process"""
     try:
         # Load the kit
-        kit_path = Path('/workspaces/semio/semio/assets/semio/kit_metabolism.json')
+        kit_path = Path('/workspaces/semio/compose/assets/compose/kit_metabolism.json')
         with open(kit_path, 'r', encoding='utf-8') as f:
             kit_data = json.load(f)
         

@@ -1,0 +1,986 @@
+# baseURI: https://usalu.github.io/compose/2/shacl#
+# compose Vocabulary
+# Version 2
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix se: <https://usalu.github.io/compose/2/shacl#> .
+se:
+  a owl:Ontology ;
+  rdfs:label "compose Vocabulary"@en ;
+  rdfs:comment "This vocabulary defines terms used in compose."@en ;
+  sh:declare
+    [
+      sh:prefix "se" ;
+      sh:namespace "https://usalu.github.io/compose/2/shacl#"^^xsd:anyURI ;
+    ] ;
+  sh:suggestedShapesGraph <http://www.w3.org/ns/shacl-shacl#> ;
+.
+se:Kit
+  a sh:NodeShape ;
+  sh:targetClass se:Kit ;
+  sh:name "Kit"@en ;
+  sh:description "An kit is a container for a bundle of related artifacts."@en ;
+  sh:property
+    [
+      sh:path se:dependency ;
+      sh:name "kit dependency"@en ;
+      sh:description "Another kit that this kit depends on."@en ;
+      sh:class se:Kit;
+    ] ,
+    [
+      sh:path se:name ;
+      sh:name "name"@en ;
+      sh:description "The name of the kit."@en ;
+      sh:minCount 1 ;
+      sh:datatype rdf:langString ;
+      sh:uniqueLang true ;
+    ] ,
+    [
+      sh:path se:decription ;
+      sh:name "decription"@en ;
+      sh:description "An decription of the kit."@en ;
+      sh:datatype rdf:langString ;
+      sh:uniqueLang true ;
+    ] ,
+    [
+      sh:path se:type ;
+      sh:name "type"@en ;
+      sh:description "A type of the kit."@en ;
+      sh:class se:Type ;
+    ] ,
+    [
+      sh:path se:design ;
+      sh:name "design"@en ;
+      sh:description "A design of the kit."@en ;
+      sh:class se:Design ;
+    ] ,
+    [
+      sh:path se:family ;
+      sh:name "family"@en ;
+      sh:description "A family (ports) owned by the kit."@en ;
+      sh:class se:Family ;
+    ] ;
+.
+se:Family
+  a sh:NodeShape ;
+  sh:targetClass se:Family ;
+  sh:name "Family"@en ;
+  sh:description "Kit-level family owning ports; types and designs reference families."@en ;
+  sh:property
+    [
+      sh:path se:name ;
+      sh:name "name"@en ;
+      sh:description "The name of the family."@en ;
+      sh:minCount 1 ;
+      sh:datatype rdf:langString ;
+      sh:uniqueLang true ;
+    ] ,
+    [
+      sh:path se:port ;
+      sh:name "port"@en ;
+      sh:description "A port defined on this family."@en ;
+      sh:class se:Port ;
+    ] ;
+.
+se:Port
+  a sh:NodeShape ;
+  sh:targetClass se:Port ;
+  sh:name "Port"@en ;
+  sh:description "Geometry and compatibility for a connector slot on a family."@en ;
+  sh:property
+    [
+      sh:path se:name ;
+      sh:name "name"@en ;
+      sh:description "The name of the port."@en ;
+      sh:minCount 1 ;
+      sh:datatype rdf:langString ;
+      sh:uniqueLang true ;
+    ] ;
+.
+se:Design
+  a sh:NodeShape ;
+  sh:name "Design"@en ;
+  sh:description "A design is like the assembly manual for a LEGO set."@en ;
+  sh:property
+    [
+      sh:path se:name ;
+      sh:name "name"@en ;
+      sh:description "The name of the design."@en ;
+      sh:minCount 1 ;
+      sh:datatype rdf:langString ;
+      sh:uniqueLang true ;
+    ] ,
+    [
+      sh:path se:decription ;
+      sh:name "decription"@en ;
+      sh:description "An decription of the design."@en ;
+      sh:datatype rdf:langString ;
+      sh:uniqueLang true ;
+    ] ,
+    [
+      sh:path se:piece ;
+      sh:name "piece"@en ;
+      sh:description "A piece of the design."@en ;
+      sh:minCount 1 ;
+    ] ,
+    [
+      sh:path se:connection ;
+      sh:name "connection"@en ;
+      sh:description "An connection of the design."@en ;
+      sh:class se:Connection ;
+    ] ,
+    [
+      sh:path se:family ;
+      sh:name "family"@en ;
+      sh:description "A family referenced by this design."@en ;
+      sh:class se:Family ;
+    ] ;
+.
+se:Piece
+  a sh:NodeShape ;
+  sh:targetClass se:Piece ;
+  sh:name "Piece"@en ;
+  sh:description "An piece is like a LEGO piece inside a set."@en ;
+  sh:property
+    [
+      sh:path se:type ;
+      sh:name "type"@en ;
+      sh:description "The type of the piece."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:class se:Type ;
+    ] ;
+.
+se:Connection
+  a sh:NodeShape ;
+  sh:targetClass se:Connection ;
+  sh:name "Connection"@en ;
+  sh:description "An connection makes the connected piece being pulled to the connecting piece."@en ;
+  sh:property
+    [
+      sh:path se:connecting ;
+      sh:name "connecting side"@en ;
+      sh:description "The side of the connecting piece. This piece does not move."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:class se:Side ;
+    ] ,
+    [
+      sh:path se:connected ;
+      sh:name "connected side"@en ;
+      sh:description "The side of the connected piece. This piece does move."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:class se:Side ;
+    ] ;
+.
+se:Side
+  a sh:NodeShape ;
+  sh:targetClass se:Side ;
+  sh:name "Side"@en ;
+  sh:description "A side is a connector of the type of a piece and the a piece."@en ;
+  sh:property
+    [
+      sh:path se:piece ;
+      sh:name "piece"@en ;
+      sh:description "The piece of the side."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:class se:Piece ;
+    ] ,
+    [
+      sh:path se:connector ;
+      sh:name "connector"@en ;
+      sh:description "The connector of the type of the piece of the side."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:class se:Connector ;
+    ] ;
+.
+se:Type
+  a sh:NodeShape ;
+  sh:targetClass se:Type ;
+  sh:name "type"@en ;
+  sh:description "A type is like a LEGO piece type. It has connectors to connect with other types and it consits of many pieces of indesign in different formats. In CAD lingo a type is a block (definition)."@en ;
+  sh:property
+    [
+      sh:path se:name ;
+      sh:name "name"@en ;
+      sh:description "The name of the type."@en ;
+      sh:minCount 1 ;
+      sh:datatype rdf:langString ;
+      sh:uniqueLang true ;
+    ] ,
+    [
+      sh:path se:decription ;
+      sh:name "decription"@en ;
+      sh:description "An decription of the type."@en ;
+      sh:datatype rdf:langString ;
+      sh:uniqueLang true ;
+    ] ,
+    [
+      sh:path se:attribute ;
+      sh:name "attribute"@en ;
+      sh:description "A attribute of the type."@en ;
+      sh:or (
+        [
+          sh:class se:DecimalAttribute ;
+          sh:name "decimal attribute"@en ;
+          sh:description "A decimal attribute of the type."@en ;
+        ]
+        [
+          sh:class se:IntegerAttribute ;
+          sh:name "integer attribute"@en ;
+          sh:description "A integer attribute of the type."@en ;
+        ]
+        [
+          sh:class se:NaturalAttribute ;
+          sh:name "natural attribute"@en ;
+          sh:description "A natural attribute of the type."@en ;
+        ]
+        [
+          sh:class se:BooleanAttribute ;
+          sh:name "boolean attribute"@en ;
+          sh:description "A boolean attribute of the type."@en ;
+        ]
+        [
+          sh:class se:FuzzyAttribute ;
+          sh:name "fuzzy attribute"@en ;
+          sh:description "A fuzzy attribute of the type."@en ;
+        ]
+        [
+          sh:class se:ChoiceAttribute ;
+          sh:name "choice attribute"@en ;
+          sh:description "A choice attribute of the type."@en ;
+        ]
+        [
+          sh:class se:BlobAttribute ;
+          sh:name "blob attribute"@en ;
+          sh:description "A blob attribute of the type."@en ;
+        ]
+        [
+          sh:class se:PointAttribute ;
+          sh:name "point attribute"@en ;
+          sh:description "A point attribute of the type."@en ;
+        ]
+        [
+          sh:class se:VectorAttribute ;
+          sh:name "vector attribute"@en ;
+          sh:description "A vector attribute of the type."@en ;
+        ]
+        [
+          sh:class se:PlaneAttribute ;
+          sh:name "plane attribute"@en ;
+          sh:description "A plane attribute of the type."@en ;
+        ]
+      )
+    ] ,
+    [
+      sh:path se:family ;
+      sh:name "family"@en ;
+      sh:description "A family referenced by this type."@en ;
+      sh:class se:Family ;
+    ] ,
+    [
+      sh:path se:connector ;
+      sh:name "connector"@en ;
+      sh:description "A connector of the type."@en ;
+      sh:class se:Connector ;
+    ] ;
+.
+se:Connector
+  a sh:NodeShape ;
+  sh:targetClass se:Connector ;
+  sh:name "connector"@en ;
+  sh:description "Type-owned connector referencing a port on a kit family; geometry lives on the port."@en ;
+  sh:property
+    [
+      sh:path se:port ;
+      sh:name "port"@en ;
+      sh:description "The family port filled by this connector."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:class se:Port ;
+    ] ,
+    [
+      sh:path se:maxChildren ;
+      sh:name "maxChildren"@en ;
+      sh:description "Maximum number of connections. Defaults to 1. May override the port default."@en ;
+      sh:maxCount 1 ;
+      sh:datatype xsd:integer ;
+    ] ,
+    [
+      sh:path se:attribute ;
+      sh:name "attribute"@en ;
+      sh:description "A attribute for the connector."@en ;
+      sh:or (
+        [
+          sh:class se:DecimalAttribute ;
+          sh:name "decimal attribute"@en ;
+          sh:description "A decimal attribute of the connector."@en ;
+        ]
+        [
+          sh:class se:IntegerAttribute ;
+          sh:name "integer attribute"@en ;
+          sh:description "A integer attribute of the connector."@en ;
+        ]
+        [
+          sh:class se:NaturalAttribute ;
+          sh:name "natural attribute"@en ;
+          sh:description "A natural attribute of the connector."@en ;
+        ]
+        [
+          sh:class se:BooleanAttribute ;
+          sh:name "boolean attribute"@en ;
+          sh:description "A boolean attribute of the connector."@en ;
+        ]
+        [
+          sh:class se:FuzzyAttribute ;
+          sh:name "fuzzy attribute"@en ;
+          sh:description "A fuzzy attribute of the connector."@en ;
+        ]
+        [
+          sh:class se:ChoiceAttribute ;
+          sh:name "choice attribute"@en ;
+          sh:description "A choice attribute of the connector."@en ;
+        ]
+        [
+          sh:class se:BlobAttribute ;
+          sh:name "blob attribute"@en ;
+          sh:description "A blob attribute of the connector."@en ;
+        ]
+        [
+          sh:class se:PointAttribute ;
+          sh:name "point attribute"@en ;
+          sh:description "A point attribute of the connector."@en ;
+        ]
+        [
+          sh:class se:VectorAttribute ;
+          sh:name "vector attribute"@en ;
+          sh:description "A vector attribute of the connector."@en ;
+        ]
+        [
+          sh:class se:PlaneAttribute ;
+          sh:name "plane attribute"@en ;
+          sh:description "A plane attribute of the connector."@en ;
+        ]
+      )
+    ] ;
+.
+se:DecimalAttribute
+  a sh:NodeShape ;
+  sh:targetClass se:DecimalAttribute ;
+  sh:name "decimal (number) attribute"@en ;
+  sh:description "A decimal (number) attribute is a attribute with a real number (floating point arithmetic and double precision) value."@en ;
+  sh:property
+    [
+      sh:path se:name ;
+      sh:name "name"@en ;
+      sh:description "The name of the decimal (number) attribute."@en ;
+      sh:minCount 1 ;
+      sh:datatype rdf:langString ;
+      sh:uniqueLang true ;
+    ] ,
+    [
+      sh:path se:value ;
+      sh:name "decimal (number) value"@en ;
+      sh:description "The decimal (number) value of the decimal (number) attribute."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:datatype xsd:double ; 
+    ] ,
+    [
+      sh:path se:unit ;
+      sh:name "unit"@en ;
+      sh:description "The unit of the decimal (number) attribute."@en ;
+      sh:maxCount 1 ;
+      sh:datatype xsd:string ; 
+    ] ,
+    [
+      sh:path se:context ;
+      se:name "context"@en ;
+      se:description "A context of the decimal (number) attribute."@en ;
+      sh:class se:Context ;
+    ] ;
+.
+se:IntegerAttribute
+  a sh:NodeShape ;
+  sh:targetClass se:IntegerAttribute ;
+  sh:name "integer (number) attribute"@en ;
+  sh:description "An integer (number) attribute is a attribute with a whole number (without decimals) value."@en ;
+  sh:property
+    [
+      sh:path se:name ;
+      sh:name "name"@en ;
+      sh:description "The name of the integer (number) attribute."@en ;
+      sh:minCount 1 ;
+      sh:datatype rdf:langString ;
+      sh:uniqueLang true ;
+    ] ,
+    [
+      sh:path se:value ;
+      sh:name "integer (number) value"@en ;
+      sh:description "The integer (number) value of the integer (number) attribute."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:datatype xsd:integer ;
+    ] ,
+    [
+      sh:path se:context ;
+      se:name "context"@en ;
+      se:description "A context of the integer (number) attribute."@en ;
+      sh:class se:Context ;
+    ] ;
+.
+se:NaturalAttribute
+  a sh:NodeShape ;
+  sh:targetClass se:NaturalAttribute ;
+  sh:name "natural (number) attribute"@en ;
+  sh:description "A natural (number) attribute is a attribute with a positive (=not zero or negative) integer (=no decimals) number value."@en ;
+  sh:property
+    [
+      sh:path se:name ;
+      sh:name "name"@en ;
+      sh:description "The name of the natural (number) attribute."@en ;
+      sh:minCount 1 ;
+      sh:datatype rdf:langString ;
+      sh:uniqueLang true ;
+    ] ,
+    [
+      sh:path se:value ;
+      sh:name "natural (number) value"@en ;
+      sh:description "The natural (number) value of the natural (number) attribute."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:datatype xsd:positiveInteger ; 
+    ] ,
+    [
+      sh:path se:context ;
+      se:name "context"@en ;
+      se:description "A context of the natural (number) attribute."@en ;
+      sh:class se:Context ;
+    ] ;
+.
+se:BooleanAttribute
+  a sh:NodeShape ;
+  sh:targetClass se:BooleanAttribute ;
+  sh:name "boolean attribute"@en ;
+  sh:description "A boolean attribute is attribute with a boolean (either true or false) value."@en ;
+  sh:property
+    [
+      sh:path se:name ;
+      sh:name "name"@en ;
+      sh:description "The name of the boolean attribute."@en ;
+      sh:minCount 1 ;
+      sh:datatype rdf:langString ;
+      sh:uniqueLang true ;
+    ] ,
+    [
+      sh:path se:value ;
+      sh:name "boolean value"@en ;
+      sh:description "The boolean value of the boolean attribute."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:datatype xsd:boolean ;
+    ] ,
+    [
+      sh:path se:context ;
+      se:name "context"@en ;
+      se:description "A context of the boolean attribute."@en ;
+      sh:class se:Context ;
+    ] ;
+.
+se:FuzzyAttribute
+  a sh:NodeShape ;
+  sh:targetClass se:FuzzyAttribute ;
+  sh:name "fuzzy (logic) attribute"@en ;
+  sh:description "A fuzzy (logic) attribute is a attribute with a fuzzy (real number between 0 and 1, inclusive) value."@en ;
+  sh:property
+    [
+      sh:path se:name ;
+      sh:name "name"@en ;
+      sh:description "The name of the fuzzy (logic) attribute."@en ;
+      sh:minCount 1 ;
+      sh:datatype rdf:langString ;
+      sh:uniqueLang true ;
+    ] ,
+    [
+      sh:path se:value ;
+      sh:name "fuzzy (logic) value"@en ;
+      sh:description "The fuzzy (logic) value of the fuzzy (logic) attribute."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:datatype xsd:double ;
+      sh:minInclusive "0"^^xsd:double ;
+      sh:maxInclusive "1"^^xsd:double ;
+    ] ,
+    [
+      sh:path se:context ;
+      se:name "context"@en ;
+      se:description "A context of the fuzzy attribute."@en ;
+      sh:class se:Context ;
+    ] ;
+.
+se:ChoiceAttribute
+  a sh:NodeShape ;
+  sh:targetClass se:ChoiceAttribute ;
+  sh:name "choice attribute"@en ;
+  sh:description "A choice attribute is a attribute with a textual value which represents one choice from a known finite amount of possible choises."@en ;
+  sh:property
+    [
+      sh:path se:name ;
+      sh:name "name"@en ;
+      sh:description "The name of the choice attribute."@en ;
+      sh:datatype rdf:langString ;
+      sh:minCount 1 ;
+      sh:uniqueLang true ;
+    ] ,
+    [
+      sh:path se:value ;
+      sh:name "choice value"@en ;
+      sh:description "The choice value of the choice attribute."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:datatype rdf:langString ;
+      sh:minCount 1 ;
+      sh:uniqueLang true ;
+    ] ,
+    [
+      sh:path se:context ;
+      se:name "context"@en ;
+      se:description "A context of the choice attribute."@en ;
+      sh:class se:Context ;
+    ] ;
+.
+se:BlobAttribute
+  a sh:NodeShape ;
+  sh:targetClass se:BlobAttribute ;
+  sh:name "blob attribute"@en ;
+  sh:description "A binary large object (blob) attribute is a attribute with a blob value."@en ;
+  sh:property
+    [
+      sh:path se:name ;
+      sh:name "name"@en ;
+      sh:description "The name of the blob attribute."@en ;
+      sh:datatype rdf:langString ;
+      sh:minCount 1 ;
+      sh:uniqueLang true ;
+    ] ,
+    [
+      sh:path se:value ;
+      se:name "blob value"@en ;
+      se:description "The blob value of the blob attribute."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:class se:Blob ;
+    ] ,
+    [
+      sh:path se:context ;
+      se:name "context"@en ;
+      se:description "A context of the blob attribute."@en ;
+      sh:class se:Context ;
+    ] ;
+.
+se:Blob
+  a sh:NodeShape ;
+  sh:targetClass se:Blob ;
+  sh:name "blob"@en ;
+  sh:description "A binary large object (blob) is an array of bytes with metadata in order to interpret the bytes."@en ;
+  sh:property
+    [
+      sh:path se:url ;
+      se:name "url"@en ;
+      se:description "The url where the blob is stored."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:nodeKind sh:IRI ;
+    ] ,
+    [
+      sh:path se:endianness ;
+      sh:name "endianness"@en ;
+      se:description "The endianness specifcies the order of bytes. Either big-endian (BE) with most siginificant bit first or little-endian (LE) with least significant first."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:in (
+        se:BigEndian
+        se:LittleEndian
+      ) ;
+    ] ,
+    [
+      sh:path se:encoding ;
+      sh:name "encoding"@en ;
+      sh:description "The encoding format of the blob attribute."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:in (
+        se:Utf8Encoding
+        se:Utf16Encoding
+        se:ASCIIEncoding
+        se:BASE32Encoding
+        se:BASE64Encoding
+      ) ;
+    ] ,
+    [
+      sh:path se:dataFormat ;
+      sh:name "data format"@en ;
+      sh:description "The data format of the blob attribute."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:in (
+        se:CustomDataFormat
+        se:JsonDataFormat
+        se:XmlDataFormat
+        se:YamlDataFormat
+        se:TomlDataFormat
+        se:RdfDataFormat
+      ) ;
+    ] ,
+    [
+      sh:path se:schema ;
+      sh:name "schema"@en ;
+      sh:description "The schema of the blob attribute."@en ;
+      sh:nodeKind sh:IRI ; 
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+    ] ;
+.
+se:PlaneAttribute
+  a sh:NodeShape ;
+  sh:targetClass se:PlaneAttribute ;
+  sh:name "plane attribute"@en ;
+  sh:description "A plane attribute is a attribute with a plane (3d reference frame) value."@en ;
+  sh:property
+    [
+      sh:path se:name ;
+      sh:name "name"@en ;
+      sh:description "The name of the plane attribute."@en ;
+      sh:datatype rdf:langString ;
+      sh:minCount 1 ;
+      sh:uniqueLang true ;
+    ] ,
+    [
+      sh:path se:value ;
+      se:name "plane value"@en ;
+      se:description "The plane value of the plane attribute."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:class se:Plane ;
+    ] ,
+    [
+      sh:path se:context ;
+      se:name "context"@en ;
+      se:description "A context of the plane attribute."@en ;
+      sh:class se:Context ;
+    ] ;
+.
+se:Plane
+  a sh:NodeShape ;
+  sh:targetClass se:Plane ;
+  sh:name "plane"@en ;
+  sh:description "A plane is a 3d reference frame defined by an origin point, a unitized x-axis vector and unitized y-axis vector."@en ;
+  sh:property
+    [
+      sh:path se:origin ;
+      sh:name "origin point"@en ;
+      sh:description "The origin point of the plane."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:class se:Point ; 
+    ] ,
+    # TODO: check how to integrate unitizing heuristic (-1<=x,y,z<=1) or advanced shacl feature
+    [
+      sh:path se:x ;
+      sh:name "unitized x-axis vector"@en ;
+      sh:description "The unitized x-axis vector of the plane."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:class se:Vector ; 
+    ] ,
+    [
+      sh:path se:y ;
+      sh:name "unitized y-axis vector"@en ;
+      sh:description "The unitized y-axis vector of the plane."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:class se:Vector ; 
+    ] ;
+.
+se:VectorAttribute
+  a sh:NodeShape ;
+  sh:targetClass se:VectorAttribute ;
+  sh:name "vector attribute"@en ;
+  sh:description "A vector attribute has a vector as a value."@en ;
+  sh:property
+    [
+      sh:path se:name ;
+      sh:name "name"@en ;
+      sh:description "The name of the vector attribute."@en ;
+      sh:datatype rdf:langString ;
+      sh:minCount 1 ;
+      sh:uniqueLang true ;
+    ] ,
+    [
+      sh:path se:value ;
+      sh:name "vector value"@en ;
+      sh:description "The vector value of the vector attribute."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:class se:Vector ; 
+    ] ,
+    [
+      sh:path se:context ;
+      se:name "context"@en ;
+      se:description "A context of the vector attribute."@en ;
+      sh:class se:Context ;
+    ] ;
+.
+se:Vector
+  a sh:NodeShape ;
+  sh:targetClass se:Vector ;
+  sh:name "vector"@en ;
+  sh:description "A vector is a 3d vector of decimal numbers."@en ;
+  sh:property
+    [
+      sh:path se:x ;
+      sh:name "x number"@en ;
+      sh:description "The first number (x) of the vector."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:datatype xsd:double ; 
+    ] ,
+    [
+      sh:path se:y ;
+      sh:name "y number"@en ;
+      sh:description "The second number (y) of the vector."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:datatype xsd:double ; 
+    ] ,
+    [
+      sh:path se:z ;
+      sh:name "z number"@en ;
+      sh:description "The third number (z) of the vector."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:datatype xsd:double ; 
+    ] ;
+.
+se:PointAttribute
+  a sh:NodeShape ;
+  sh:targetClass se:PointAttribute ;
+  sh:name "point attribute"@en ;
+  sh:description "A point attribute has a point as a value."@en ;
+  sh:property
+    [
+      sh:path se:name ;
+      sh:name "name"@en ;
+      sh:description "The name of the point attribute."@en ;
+      sh:datatype rdf:langString ;
+      sh:minCount 1 ;
+      sh:uniqueLang true ;
+    ] ,
+    [
+      sh:path se:value ;
+      sh:name "point value"@en ;
+      sh:description "The point value of the point attribute."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:class se:Point ; 
+    ] ,
+    [
+      sh:path se:context ;
+      se:name "context"@en ;
+      se:description "A context of the point attribute."@en ;
+      sh:class se:Context ;
+    ] ;
+.
+se:Point
+  a sh:NodeShape ;
+  sh:targetClass se:Point ;
+  sh:name "point"@en ;
+  sh:description "A point is a 3d point of decimal numbers."@en ;
+  sh:property
+    [
+      sh:path se:x ;
+      sh:name "x coordinate"@en ;
+      sh:description "The first coordinate (x) of the point."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:datatype xsd:double ; 
+    ] ,
+    [
+      sh:path se:y ;
+      sh:name "y coordinate"@en ;
+      sh:description "The second coordinate (y) of the point."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:datatype xsd:double ; 
+    ] ,
+    [
+      sh:path se:z ;
+      sh:name "z coordinate"@en ;
+      sh:description "The third coordinate (z) of the point."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:datatype xsd:double ; 
+    ] ;
+.
+se:Context
+  a sh:NodeShape ;
+  sh:targetClass se:Context ;
+  sh:name "context"@en ;
+  sh:description "A context allows to (re)create complex data structures from single values."
+  sh:property
+    [
+      sh:path se:category ;
+      sh:name "category"@en ;
+      sh:description "The category of the context."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:datatype xsd:string ; 
+    ] ,
+    [
+      sh:path se:order ;
+      sh:name "order"@en ;
+      sh:description "The order of the the category of the context."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:datatype xsd:string ; 
+    ] ;
+.
+# se:Enumeration
+#   a sh:NodeShape ;
+#   sh:targetClass se:Enumeration ;
+#   sh:name "enumeration"@en ;
+#   sh:description "An enumeration is "
+#   sh:property
+#     [
+#       sh:path se:ordering ;
+#       sh:minCount 1 ;
+#       sh:class se:Ordering; 
+#     ] ;
+# .
+# se:Ordering
+#   a sh:NodeShape ;
+#   sh:targetClass se:Map ;
+#   sh:name "enumeration"@en ;
+#   sh:description "An enumeration is "
+#   sh:property
+#     [
+#       sh:path se:category ;
+#       sh:minCount 1 ;
+#       sh:maxCount 1 ;
+#       sh:datatype xsd:string ; 
+#     ] ,
+#     [
+#       sh:path se:integer ;
+#       sh:minCount 1 ;
+#       sh:maxCount 1 ;
+#       sh:datatype xsd:integer ; 
+#     ] ;
+# .
+# Runtime
+se:InitializeKitCommand
+  a sh:NodeShape ;
+  sh:targetClass se:InitializeKitCommand ;
+  sh:name "initialize kit command"@en ;
+  sh:description "Initializes an kit in a directory. Uses the "@en ;
+  sh:property
+    [
+      sh:path se:kit ;
+      sh:name "kit"@en ;
+      sh:description "The kit to initialization command."@en ;
+      sh:maxCount 1 ;
+      sh:class se:Kit ; 
+    ] ,
+    [
+      sh:path se:directory ;
+      sh:name "directory"@en ;
+      sh:description "The directory to write the kit into. If none is provided then the current directory will be used."@en ;
+      sh:maxCount 1 ;
+      sh:datatype xsd:anyURI ; 
+    ] ;
+.
+# se:Transdesign
+#   a sh:NodeShape ;
+#   sh:targetClass se:Transdesign ;
+#   sh:name "transdesign"@en ;
+#   sh:description "A transdesign transformed one design into another design according to properties."
+#   sh:property
+#     [
+#       sh:path se:initial ;
+#       sh:name "initial design"@en ;
+#       sh:description "The initial design before the transdesign."@en ;
+#       sh:minCount 1 ;
+#       sh:maxCount 1 ;
+#       sh:class se:Design ; 
+#     ] ,
+#     [
+#       sh:path se:transformed ;
+#       sh:name "transformed design"@en ;
+#       sh:description "The transformed design after the transdesign."@en ;
+#       sh:minCount 1 ;
+#       sh:maxCount 1 ;
+#       sh:class se:Design ; 
+#     ] ,
+#     [
+#       sh:path se:parameter ;
+#       sh:name "parameter"@en ;
+#       sh:description "A parameter of the transdesign."@en ;
+#       sh:or (
+#         [
+#           sh:class se:DecimalAttribute ;
+#           sh:name "decimal attribute parameter"@en ;
+#           sh:description "A decimal attribute of the transdesign."@en ;
+#         ]
+#         [
+#           sh:class se:IntegerAttribute ;
+#           sh:name "integer attribute parameter"@en ;
+#           sh:description "A integer attribute parameter of the transdesign."@en ;
+#         ]
+#         [
+#           sh:class se:NaturalAttribute ;
+#           sh:name "natural attribute parameter"@en ;
+#           sh:description "A natural attribute parameter of the transdesign."@en ;
+#         ]
+#         [
+#           sh:class se:BooleanAttribute ;
+#           sh:name "boolean attribute parameter"@en ;
+#           sh:description "A boolean attribute parameter of the transdesign."@en ;
+#         ]
+#         [
+#           sh:class se:FuzzyAttribute ;
+#           sh:name "fuzzy attribute parameter"@en ;
+#           sh:description "A fuzzy attribute parameter of the transdesign."@en ;
+#         ]
+#         [
+#           sh:class se:ChoiceAttribute ;
+#           sh:name "choice attribute parameter"@en ;
+#           sh:description "A choice attribute parameter of the transdesign."@en ;
+#         ]
+#         [
+#           sh:class se:BlobAttribute ;
+#           sh:name "blob attribute parameter"@en ;
+#           sh:description "A blob attribute parameter of the transdesign."@en ;
+#         ]
+#         [
+#           sh:class se:PointAttribute ;
+#           sh:name "point attribute parameter"@en ;
+#           sh:description "A point attribute parameter of the transdesign."@en ;
+#         ]
+#         [
+#           sh:class se:VectorAttribute ;
+#           sh:name "vector attribute parameter"@en ;
+#           sh:description "A vector attribute parameter of the transdesign."@en ;
+#         ]
+#         [
+#           sh:class se:PlaneAttribute ;
+#           sh:name "plane attribute parameter"@en ;
+#           sh:description "A plane attribute parameter of the transdesign."@en ;
+#         ]
+#       )
+#     ] ;
+# .

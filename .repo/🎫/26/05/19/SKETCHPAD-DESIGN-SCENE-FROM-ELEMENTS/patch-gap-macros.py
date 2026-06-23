@@ -1,7 +1,7 @@
 from pathlib import Path
 import re
 
-p = Path(r"c:\git\semio\semio\client\lib\rs\lib.rs")
+p = Path(r"c:\git\compose\compose\client\lib\rs\lib.rs")
 text = p.read_text(encoding="utf-8")
 
 def patch_list(name: str, families_macro: str, register_macro: str) -> None:

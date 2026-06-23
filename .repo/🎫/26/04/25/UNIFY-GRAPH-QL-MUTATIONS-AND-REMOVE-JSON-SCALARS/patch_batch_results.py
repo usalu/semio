@@ -1,7 +1,7 @@
 import pathlib
 import re
 
-p = pathlib.Path("semio/rs/lib.rs")
+p = pathlib.Path("compose/rs/lib.rs")
 text = p.read_text(encoding="utf-8")
 
 c1 = len(re.findall(r"(?m)^[ \t]+conflicts: None,\n(?![ \t]+change_kind)", text))

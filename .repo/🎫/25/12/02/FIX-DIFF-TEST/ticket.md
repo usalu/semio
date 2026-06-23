@@ -22,7 +22,7 @@ Root cause: The schema changed. `concepts` in Kit is now `Concept[]` (array of o
 - Enhanced comprehensive diff coverage for all entity types: types, designs, tags, concepts, ports, qualities, files, folders, authors, attributes
 - Each entity type now tests: add, remove, update operations
 
-## `semio.ts`
+## `compose.ts`
 
 - Fixed `PortDiffSchema` to allow nullable `description` and `icon` fields
 - Fixed `getPortDiff` to use `null` instead of `undefined` for cleared values

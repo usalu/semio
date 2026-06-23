@@ -1,4 +1,4 @@
-$path = "c:\git\semio\semio\client\lib\sketchpad\react\index.tsx"
+$path = "c:\git\compose\compose\client\lib\sketchpad\react\index.tsx"
 $content = Get-Content $path -Raw
 $start = $content.IndexOf("        <LevelProvider level=`"base`">`r`n          <ToolbarContextHost>`r`n            <LayoutComponent")
 if ($start -lt 0) { $start = $content.IndexOf("        <LevelProvider level=`"base`">`n          <ToolbarContextHost>`n            <LayoutComponent") }
@@ -16,9 +16,9 @@ $replacement = @'
               toolbarSlot={
                 panelVisibility.toolbar || appType === "type" || appType === "design" || appType === "feedback" || appType === "kit" || appType === "home" || appType === "docs" ? (
                   toolbarSections.length > 0 ? (
-                    <div role="toolbar" id="semio.sketchpad.toolbar" className="pointer-events-none absolute bottom-1.5 left-0 right-0 h-[40px] w-full max-w-full px-2">
-                      <div id="semio.sketchpad.toolbar.seam" className="absolute left-1/2 top-0 h-full w-0 -translate-x-1/2 pointer-events-none" aria-hidden />
-                      <div ref={toolbarToolsZoneRef} id="semio.sketchpad.toolbar.zone.tools" className="absolute top-0 left-0 h-full max-w-[calc(50vw-1rem)] right-[calc(50%_+_4px)] pointer-events-auto flex items-center justify-end">
+                    <div role="toolbar" id="compose.sketchpad.toolbar" className="pointer-events-none absolute bottom-1.5 left-0 right-0 h-[40px] w-full max-w-full px-2">
+                      <div id="compose.sketchpad.toolbar.seam" className="absolute left-1/2 top-0 h-full w-0 -translate-x-1/2 pointer-events-none" aria-hidden />
+                      <div ref={toolbarToolsZoneRef} id="compose.sketchpad.toolbar.zone.tools" className="absolute top-0 left-0 h-full max-w-[calc(50vw-1rem)] right-[calc(50%_+_4px)] pointer-events-auto flex items-center justify-end">
                         <LevelProvider level="panel">
                           <ToolbarZone>
                             {toolbarGroups.history && (
@@ -38,11 +38,11 @@ $replacement = @'
                                   <Toggle
                                     key={groupId}
                                     kind="single"
-                                    id={`semio.sketchpad.toolbar.group.${groupId}`}
+                                    id={`compose.sketchpad.toolbar.group.${groupId}`}
                                     pressed={isActive}
                                     onPressedChange={() => toggleToolbarGroup(groupId)}
                                     icon={getGroupIcon(groupId)}
-                                    text={resolveTranslationLabel(i18n.t(`semio.sketchpad.toolbar.parent.${groupId}`))}
+                                    text={resolveTranslationLabel(i18n.t(`compose.sketchpad.toolbar.parent.${groupId}`))}
                                   />
                                 );
                               })}
@@ -51,7 +51,7 @@ $replacement = @'
                       </div>
 
                       {activeToolbarGroup && toolbarGroups[activeToolbarGroup] && (
-                        <div ref={toolbarSettingsZoneRef} id="semio.sketchpad.toolbar.zone.settings" className="absolute top-0 left-[calc(50%_+_4px)] right-0 h-full min-w-0 pointer-events-auto flex items-center justify-start">
+                        <div ref={toolbarSettingsZoneRef} id="compose.sketchpad.toolbar.zone.settings" className="absolute top-0 left-[calc(50%_+_4px)] right-0 h-full min-w-0 pointer-events-auto flex items-center justify-start">
                           <LevelProvider level="panel">
                             <div ref={toolbarSettingsContentRef} className="flex w-fit max-w-full shrink-0">
                               <ToolbarZone className="w-fit max-w-full shrink-0 flex-nowrap">
@@ -67,7 +67,7 @@ $replacement = @'
                       )}
                     </div>
                   ) : (
-                    <div id="semio.sketchpad.toolbar" className="hidden" />
+                    <div id="compose.sketchpad.toolbar" className="hidden" />
                   )
                 ) : undefined
               }
@@ -80,8 +80,8 @@ $replacement = @'
               canGoForward={navigationHistory.canGoForward}
               canGoUp={Boolean(upTarget)}
               onNavigate={(uri) => reactNavigate(uri)}
-              onGoBack={() => sketchpadCommands.navigateBack("semio.sketchpad.navbar.back")}
-              onGoForward={() => sketchpadCommands.navigateForward("semio.sketchpad.navbar.forward")}
+              onGoBack={() => sketchpadCommands.navigateBack("compose.sketchpad.navbar.back")}
+              onGoForward={() => sketchpadCommands.navigateForward("compose.sketchpad.navbar.forward")}
               onGoUp={() => {
                 if (upTarget) reactNavigate(upTarget);
               }}

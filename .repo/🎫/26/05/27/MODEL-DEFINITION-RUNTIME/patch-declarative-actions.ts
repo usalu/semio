@@ -3,7 +3,7 @@
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-const root = "c:/git/semio/spatial/assets/modelDefinition";
+const root = "c:/git/compose/spatial/assets/modelDefinition";
 
 const SELECTION: Record<string, { operation: string; kinds?: string[] }> = {
 	"selection.selectAll": { operation: "selectAll" },

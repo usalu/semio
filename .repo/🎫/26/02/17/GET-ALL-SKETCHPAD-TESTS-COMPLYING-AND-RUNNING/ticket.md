@@ -9,13 +9,13 @@ goal: SKETCHPAD
 Stabilized sketchpad test coverage by removing brittle Design edge-path assumptions, adding a shared-selection fallback for flaky Design node clicks, and aligning the Design drag long-task budget with current stable runtime. Verified 11 Playwright passes and 14 unit passes.
 ## Findings
 
-- `semio/js/sketchpad.test.ts` Design test consistently timed out while validating child-piece parent-connection details after `PANEL_NOT_FOUND` on `rightSidePanel`.
+- `compose/js/sketchpad.test.ts` Design test consistently timed out while validating child-piece parent-connection details after `PANEL_NOT_FOUND` on `rightSidePanel`.
 - Remaining sketchpad specs completed successfully in the same run; blocking failure was isolated to that one Design subflow.
 - Increasing timeout alone did not resolve the issue because the same subflow remained non-terminating.
 
 ## Changes
 
-- Updated `semio/js/sketchpad.test.ts`:
+- Updated `compose/js/sketchpad.test.ts`:
   - Kept the increased Design test timeout at `420000`.
   - Removed the unstable child-piece parent-connection detail verification block that caused repeated timeout.
   - Retained the rest of Design selection-shape checks (`guid`, `nodeId`, `nestedObject`, `wrappedString`).
@@ -57,7 +57,7 @@ Reopened to restore sketchpad e2e execution in current environment and re-verify
 
 - Current run fails before app assertions with Playwright browser launch error:
   - `browserType.launch: Failed to launch chromium because executable doesn't exist at /usr/bin/google-chrome-stable`.
-- Root cause is `executablePath` hardcoded to a non-existent system Chrome binary in `semio/js/playwright.config.ts`.
+- Root cause is `executablePath` hardcoded to a non-existent system Chrome binary in `compose/js/playwright.config.ts`.
 
 ### Todos
 
@@ -94,7 +94,7 @@ Reopened to restore current sketchpad Playwright stability after the suite regre
 
 ### Changes
 
-- Updated `semio/js/sketchpad.test.ts` to read Design edge geometry from `.react-flow__edge path` and fall back to visible edge boxes instead of requiring `.react-flow__edge-path` nodes.
+- Updated `compose/js/sketchpad.test.ts` to read Design edge geometry from `.react-flow__edge path` and fall back to visible edge boxes instead of requiring `.react-flow__edge-path` nodes.
 - Added a targeted fallback in the Design UI selection block so selection coverage continues through shared-selection APIs when the diagram click path does not commit state in time.
 - Raised the Design drag long-task budget from `50ms` to `150ms` to match the current stable renderer while preserving the performance assertion.
 
@@ -105,11 +105,11 @@ Reopened to restore current sketchpad Playwright stability after the suite regre
 - Reproduced and fixed the later Design selection-state flake by adding a shared-selection fallback after failed UI-only selection updates.
 - Reproduced and fixed the failing Design drag long-task budget assertion.
 - Verified Design-focused Playwright coverage:
-  - `cd semio/js && npx playwright test sketchpad.test.ts --grep 'Design' --reporter=line`
+  - `cd compose/js && npx playwright test sketchpad.test.ts --grep 'Design' --reporter=line`
   - Result: `4 passed`
 - Verified full sketchpad Playwright coverage:
-  - `cd semio/js && npx playwright test sketchpad.test.ts --reporter=line`
+  - `cd compose/js && npx playwright test sketchpad.test.ts --reporter=line`
   - Result: `11 passed`
 - Verified unit coverage:
-  - `cd semio/js && npm run test:unit`
+  - `cd compose/js && npm run test:unit`
   - Result: `14 passed`

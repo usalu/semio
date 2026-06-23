@@ -2267,7 +2267,7 @@
         },
         {
           "name": "location",
-          "type": "SemioDomainLocation"
+          "type": "ComposeDomainLocation"
         },
         {
           "name": "relatedGuids",
@@ -2294,12 +2294,12 @@
       ]
     },
     {
-      "name": "SemioDomainLocation",
+      "name": "ComposeDomainLocation",
       "kind": "class",
       "fields": [
         {
           "name": "entityKind",
-          "type": "SemioEntityKind"
+          "type": "ComposeEntityKind"
         },
         {
           "name": "entityGuid",

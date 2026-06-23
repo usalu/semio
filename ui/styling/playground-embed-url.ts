@@ -7,7 +7,7 @@ import { PLAYGROUND_EMBED_SITE_DEV_PORTS, type PlaygroundEmbedSiteKind } from ".
 //#region 🔖PlaygroundEmbedUrl
 /** @emoji 🌐 Latest-only GitHub Pages hostnames for iframe-embeddable playground static sites. */
 export const PLAYGROUND_SITE_HOSTS = {
-	semio: "play.semio-tech.com",
+	compose: "play.semio-tech.com",
 	cad: "play.cad.semio-tech.com",
 	"2d": "play.2d.semio-tech.com",
 	"3d": "play.3d.semio-tech.com",

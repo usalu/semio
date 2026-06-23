@@ -2,7 +2,7 @@
 """Phase 2: Fix remaining CollaborativeKitStore references and rewrite hooks."""
 import re
 
-FILE = "/workspaces/semio/semio/sketchpad/sketchpad/Sketchpad.tsx"
+FILE = "/workspaces/semio/compose/sketchpad/sketchpad/Sketchpad.tsx"
 
 with open(FILE, "r") as f:
     content = f.read()
@@ -325,86 +325,86 @@ content = content.replace(old_transaction, new_transaction)
 # 8. Fix useKitCommands to use executeKitCommand
 old_commands_body = """  const kitStore = store.kit(kitGuid);
   return {
-    importKit: (url: string) => kitStore.execute("semio.kit.import", getOrigin(), url),
-    exportKit: () => kitStore.execute("semio.kit.export", getOrigin()),
-    createAuthor: (author: Author) => kitStore.execute("semio.kit.createAuthor", getOrigin(), author),
-    updateAuthor: (Guid: Guid, authorDiff: AuthorDiff) => kitStore.execute("semio.kit.updateAuthor", getOrigin(), Guid, authorDiff),
-    deleteAuthor: (Guid: Guid) => kitStore.execute("semio.kit.deleteAuthor", getOrigin(), Guid),
-    createType: (type: Type) => kitStore.execute("semio.kit.createType", getOrigin(), type),
-    updateType: (guid: Guid, diff: TypeDiff) => kitStore.execute("semio.kit.updateType", getOrigin(), guid, diff),
-    deleteType: (guid: Guid) => kitStore.execute("semio.kit.deleteType", getOrigin(), guid),
-    createDesign: (design: Design) => kitStore.execute("semio.kit.createDesign", getOrigin(), design),
-    updateDesign: (guid: Guid, diff: DesignDiff) => kitStore.execute("semio.kit.updateDesign", getOrigin(), guid, diff),
-    deleteDesign: (guid: Guid) => kitStore.execute("semio.kit.deleteDesign", getOrigin(), guid),
-    createQuality: (quality: Quality) => kitStore.execute("semio.kit.createQuality", getOrigin(), quality),
-    updateQuality: (guid: Guid, diff: QualityDiff) => kitStore.execute("semio.kit.updateQuality", getOrigin(), guid, diff),
-    deleteQuality: (guid: Guid) => kitStore.execute("semio.kit.deleteQuality", getOrigin(), guid),
-    createPort: (iface: Port) => kitStore.execute("semio.kit.createPort", getOrigin(), iface),
-    updatePort: (guid: Guid, diff: PortDiff) => kitStore.execute("semio.kit.updatePort", getOrigin(), guid, diff),
-    deletePort: (guid: Guid) => kitStore.execute("semio.kit.deletePort", getOrigin(), guid),
-    createTag: (tag: Tag) => kitStore.execute("semio.kit.createTag", getOrigin(), tag),
-    updateTag: (guid: Guid, diff: TagDiff) => kitStore.execute("semio.kit.updateTag", getOrigin(), guid, diff),
-    deleteTag: (guid: Guid) => kitStore.execute("semio.kit.deleteTag", getOrigin(), guid),
-    createConcept: (concept: Concept) => kitStore.execute("semio.kit.createConcept", getOrigin(), concept),
-    deleteConcept: (guid: Guid) => kitStore.execute("semio.kit.deleteConcept", getOrigin(), guid),
-    addFile: (file: SemioFile, blob?: Blob) => kitStore.execute("semio.kit.addFile", getOrigin(), file, blob),
-    updateFile: (url: Url, fileDiff: FileDiff, blob?: Blob) => kitStore.execute("semio.kit.updateFile", getOrigin(), url, fileDiff, blob),
-    removeFile: (url: Url) => kitStore.execute("semio.kit.removeFile", getOrigin(), url),
-    createFolder: (folder: Folder) => kitStore.execute("semio.kit.createFolder", getOrigin(), folder),
-    updateFolder: (guid: Guid, folderDiff: FolderDiff) => kitStore.execute("semio.kit.updateFolder", getOrigin(), guid, folderDiff),
-    deleteFolder: (guid: Guid) => kitStore.execute("semio.kit.deleteFolder", getOrigin(), guid),
-    moveToFolder: (artifactKind: string, artifactGuid: Guid, folderGuid: Guid | null) => kitStore.execute("semio.kit.moveToFolder", getOrigin(), artifactGuid, artifactKind, folderGuid),
-    addPiece: (design: Guid, piece: Piece) => kitStore.execute("semio.kit.addPiece", getOrigin(), design, piece),
-    addPieces: (design: Guid, pieces: Piece[]) => kitStore.execute("semio.kit.addPieces", getOrigin(), design, pieces),
-    removePiece: (design: Guid, piece: Guid) => kitStore.execute("semio.kit.removePiece", getOrigin(), design, piece),
-    removePieces: (design: Guid, pieces: Guid[]) => kitStore.execute("semio.kit.removePieces", getOrigin(), design, pieces),
-    addConnection: (design: Guid, connection: Connection) => kitStore.execute("semio.kit.addConnection", getOrigin(), design, connection),
-    addConnections: (design: Guid, connections: Connection[]) => kitStore.execute("semio.kit.addConnections", getOrigin(), design, connections),
-    removeConnection: (design: Guid, connection: Guid) => kitStore.execute("semio.kit.removeConnection", getOrigin(), design, connection),
-    removeConnections: (design: Guid, connections: Guid[]) => kitStore.execute("semio.kit.removeConnections", getOrigin(), design, connections),
-    deleteSelected: (design: Guid, selectedPieces: Guid[], selectedConnections: Guid[]) => kitStore.execute("semio.kit.deleteSelected", getOrigin(), design, selectedPieces, selectedConnections),
+    importKit: (url: string) => kitStore.execute("compose.kit.import", getOrigin(), url),
+    exportKit: () => kitStore.execute("compose.kit.export", getOrigin()),
+    createAuthor: (author: Author) => kitStore.execute("compose.kit.createAuthor", getOrigin(), author),
+    updateAuthor: (Guid: Guid, authorDiff: AuthorDiff) => kitStore.execute("compose.kit.updateAuthor", getOrigin(), Guid, authorDiff),
+    deleteAuthor: (Guid: Guid) => kitStore.execute("compose.kit.deleteAuthor", getOrigin(), Guid),
+    createType: (type: Type) => kitStore.execute("compose.kit.createType", getOrigin(), type),
+    updateType: (guid: Guid, diff: TypeDiff) => kitStore.execute("compose.kit.updateType", getOrigin(), guid, diff),
+    deleteType: (guid: Guid) => kitStore.execute("compose.kit.deleteType", getOrigin(), guid),
+    createDesign: (design: Design) => kitStore.execute("compose.kit.createDesign", getOrigin(), design),
+    updateDesign: (guid: Guid, diff: DesignDiff) => kitStore.execute("compose.kit.updateDesign", getOrigin(), guid, diff),
+    deleteDesign: (guid: Guid) => kitStore.execute("compose.kit.deleteDesign", getOrigin(), guid),
+    createQuality: (quality: Quality) => kitStore.execute("compose.kit.createQuality", getOrigin(), quality),
+    updateQuality: (guid: Guid, diff: QualityDiff) => kitStore.execute("compose.kit.updateQuality", getOrigin(), guid, diff),
+    deleteQuality: (guid: Guid) => kitStore.execute("compose.kit.deleteQuality", getOrigin(), guid),
+    createPort: (iface: Port) => kitStore.execute("compose.kit.createPort", getOrigin(), iface),
+    updatePort: (guid: Guid, diff: PortDiff) => kitStore.execute("compose.kit.updatePort", getOrigin(), guid, diff),
+    deletePort: (guid: Guid) => kitStore.execute("compose.kit.deletePort", getOrigin(), guid),
+    createTag: (tag: Tag) => kitStore.execute("compose.kit.createTag", getOrigin(), tag),
+    updateTag: (guid: Guid, diff: TagDiff) => kitStore.execute("compose.kit.updateTag", getOrigin(), guid, diff),
+    deleteTag: (guid: Guid) => kitStore.execute("compose.kit.deleteTag", getOrigin(), guid),
+    createConcept: (concept: Concept) => kitStore.execute("compose.kit.createConcept", getOrigin(), concept),
+    deleteConcept: (guid: Guid) => kitStore.execute("compose.kit.deleteConcept", getOrigin(), guid),
+    addFile: (file: ComposeFile, blob?: Blob) => kitStore.execute("compose.kit.addFile", getOrigin(), file, blob),
+    updateFile: (url: Url, fileDiff: FileDiff, blob?: Blob) => kitStore.execute("compose.kit.updateFile", getOrigin(), url, fileDiff, blob),
+    removeFile: (url: Url) => kitStore.execute("compose.kit.removeFile", getOrigin(), url),
+    createFolder: (folder: Folder) => kitStore.execute("compose.kit.createFolder", getOrigin(), folder),
+    updateFolder: (guid: Guid, folderDiff: FolderDiff) => kitStore.execute("compose.kit.updateFolder", getOrigin(), guid, folderDiff),
+    deleteFolder: (guid: Guid) => kitStore.execute("compose.kit.deleteFolder", getOrigin(), guid),
+    moveToFolder: (artifactKind: string, artifactGuid: Guid, folderGuid: Guid | null) => kitStore.execute("compose.kit.moveToFolder", getOrigin(), artifactGuid, artifactKind, folderGuid),
+    addPiece: (design: Guid, piece: Piece) => kitStore.execute("compose.kit.addPiece", getOrigin(), design, piece),
+    addPieces: (design: Guid, pieces: Piece[]) => kitStore.execute("compose.kit.addPieces", getOrigin(), design, pieces),
+    removePiece: (design: Guid, piece: Guid) => kitStore.execute("compose.kit.removePiece", getOrigin(), design, piece),
+    removePieces: (design: Guid, pieces: Guid[]) => kitStore.execute("compose.kit.removePieces", getOrigin(), design, pieces),
+    addConnection: (design: Guid, connection: Connection) => kitStore.execute("compose.kit.addConnection", getOrigin(), design, connection),
+    addConnections: (design: Guid, connections: Connection[]) => kitStore.execute("compose.kit.addConnections", getOrigin(), design, connections),
+    removeConnection: (design: Guid, connection: Guid) => kitStore.execute("compose.kit.removeConnection", getOrigin(), design, connection),
+    removeConnections: (design: Guid, connections: Guid[]) => kitStore.execute("compose.kit.removeConnections", getOrigin(), design, connections),
+    deleteSelected: (design: Guid, selectedPieces: Guid[], selectedConnections: Guid[]) => kitStore.execute("compose.kit.deleteSelected", getOrigin(), design, selectedPieces, selectedConnections),
   };"""
 
 new_commands_body = """  const kitStore = store.kit(kitGuid);
   return {
-    importKit: (url: string) => executeKitCommand(kitStore, "semio.kit.import", getOrigin(), url),
-    exportKit: () => executeKitCommand(kitStore, "semio.kit.export", getOrigin()),
-    createAuthor: (author: Author) => executeKitCommand(kitStore, "semio.kit.createAuthor", getOrigin(), author),
-    updateAuthor: (Guid: Guid, authorDiff: AuthorDiff) => executeKitCommand(kitStore, "semio.kit.updateAuthor", getOrigin(), Guid, authorDiff),
-    deleteAuthor: (Guid: Guid) => executeKitCommand(kitStore, "semio.kit.deleteAuthor", getOrigin(), Guid),
-    createType: (type: Type) => executeKitCommand(kitStore, "semio.kit.createType", getOrigin(), type),
-    updateType: (guid: Guid, diff: TypeDiff) => executeKitCommand(kitStore, "semio.kit.updateType", getOrigin(), guid, diff),
-    deleteType: (guid: Guid) => executeKitCommand(kitStore, "semio.kit.deleteType", getOrigin(), guid),
-    createDesign: (design: Design) => executeKitCommand(kitStore, "semio.kit.createDesign", getOrigin(), design),
-    updateDesign: (guid: Guid, diff: DesignDiff) => executeKitCommand(kitStore, "semio.kit.updateDesign", getOrigin(), guid, diff),
-    deleteDesign: (guid: Guid) => executeKitCommand(kitStore, "semio.kit.deleteDesign", getOrigin(), guid),
-    createQuality: (quality: Quality) => executeKitCommand(kitStore, "semio.kit.createQuality", getOrigin(), quality),
-    updateQuality: (guid: Guid, diff: QualityDiff) => executeKitCommand(kitStore, "semio.kit.updateQuality", getOrigin(), guid, diff),
-    deleteQuality: (guid: Guid) => executeKitCommand(kitStore, "semio.kit.deleteQuality", getOrigin(), guid),
-    createPort: (iface: Port) => executeKitCommand(kitStore, "semio.kit.createPort", getOrigin(), iface),
-    updatePort: (guid: Guid, diff: PortDiff) => executeKitCommand(kitStore, "semio.kit.updatePort", getOrigin(), guid, diff),
-    deletePort: (guid: Guid) => executeKitCommand(kitStore, "semio.kit.deletePort", getOrigin(), guid),
-    createTag: (tag: Tag) => executeKitCommand(kitStore, "semio.kit.createTag", getOrigin(), tag),
-    updateTag: (guid: Guid, diff: TagDiff) => executeKitCommand(kitStore, "semio.kit.updateTag", getOrigin(), guid, diff),
-    deleteTag: (guid: Guid) => executeKitCommand(kitStore, "semio.kit.deleteTag", getOrigin(), guid),
-    createConcept: (concept: Concept) => executeKitCommand(kitStore, "semio.kit.createConcept", getOrigin(), concept),
-    deleteConcept: (guid: Guid) => executeKitCommand(kitStore, "semio.kit.deleteConcept", getOrigin(), guid),
-    addFile: (file: SemioFile, blob?: Blob) => executeKitCommand(kitStore, "semio.kit.addFile", getOrigin(), file, blob),
-    updateFile: (url: Url, fileDiff: FileDiff, blob?: Blob) => executeKitCommand(kitStore, "semio.kit.updateFile", getOrigin(), url, fileDiff, blob),
-    removeFile: (url: Url) => executeKitCommand(kitStore, "semio.kit.removeFile", getOrigin(), url),
-    createFolder: (folder: Folder) => executeKitCommand(kitStore, "semio.kit.createFolder", getOrigin(), folder),
-    updateFolder: (guid: Guid, folderDiff: FolderDiff) => executeKitCommand(kitStore, "semio.kit.updateFolder", getOrigin(), guid, folderDiff),
-    deleteFolder: (guid: Guid) => executeKitCommand(kitStore, "semio.kit.deleteFolder", getOrigin(), guid),
-    moveToFolder: (artifactKind: string, artifactGuid: Guid, folderGuid: Guid | null) => executeKitCommand(kitStore, "semio.kit.moveToFolder", getOrigin(), artifactGuid, artifactKind, folderGuid),
-    addPiece: (design: Guid, piece: Piece) => executeKitCommand(kitStore, "semio.kit.addPiece", getOrigin(), design, piece),
-    addPieces: (design: Guid, pieces: Piece[]) => executeKitCommand(kitStore, "semio.kit.addPieces", getOrigin(), design, pieces),
-    removePiece: (design: Guid, piece: Guid) => executeKitCommand(kitStore, "semio.kit.removePiece", getOrigin(), design, piece),
-    removePieces: (design: Guid, pieces: Guid[]) => executeKitCommand(kitStore, "semio.kit.removePieces", getOrigin(), design, pieces),
-    addConnection: (design: Guid, connection: Connection) => executeKitCommand(kitStore, "semio.kit.addConnection", getOrigin(), design, connection),
-    addConnections: (design: Guid, connections: Connection[]) => executeKitCommand(kitStore, "semio.kit.addConnections", getOrigin(), design, connections),
-    removeConnection: (design: Guid, connection: Guid) => executeKitCommand(kitStore, "semio.kit.removeConnection", getOrigin(), design, connection),
-    removeConnections: (design: Guid, connections: Guid[]) => executeKitCommand(kitStore, "semio.kit.removeConnections", getOrigin(), design, connections),
-    deleteSelected: (design: Guid, selectedPieces: Guid[], selectedConnections: Guid[]) => executeKitCommand(kitStore, "semio.kit.deleteSelected", getOrigin(), design, selectedPieces, selectedConnections),
+    importKit: (url: string) => executeKitCommand(kitStore, "compose.kit.import", getOrigin(), url),
+    exportKit: () => executeKitCommand(kitStore, "compose.kit.export", getOrigin()),
+    createAuthor: (author: Author) => executeKitCommand(kitStore, "compose.kit.createAuthor", getOrigin(), author),
+    updateAuthor: (Guid: Guid, authorDiff: AuthorDiff) => executeKitCommand(kitStore, "compose.kit.updateAuthor", getOrigin(), Guid, authorDiff),
+    deleteAuthor: (Guid: Guid) => executeKitCommand(kitStore, "compose.kit.deleteAuthor", getOrigin(), Guid),
+    createType: (type: Type) => executeKitCommand(kitStore, "compose.kit.createType", getOrigin(), type),
+    updateType: (guid: Guid, diff: TypeDiff) => executeKitCommand(kitStore, "compose.kit.updateType", getOrigin(), guid, diff),
+    deleteType: (guid: Guid) => executeKitCommand(kitStore, "compose.kit.deleteType", getOrigin(), guid),
+    createDesign: (design: Design) => executeKitCommand(kitStore, "compose.kit.createDesign", getOrigin(), design),
+    updateDesign: (guid: Guid, diff: DesignDiff) => executeKitCommand(kitStore, "compose.kit.updateDesign", getOrigin(), guid, diff),
+    deleteDesign: (guid: Guid) => executeKitCommand(kitStore, "compose.kit.deleteDesign", getOrigin(), guid),
+    createQuality: (quality: Quality) => executeKitCommand(kitStore, "compose.kit.createQuality", getOrigin(), quality),
+    updateQuality: (guid: Guid, diff: QualityDiff) => executeKitCommand(kitStore, "compose.kit.updateQuality", getOrigin(), guid, diff),
+    deleteQuality: (guid: Guid) => executeKitCommand(kitStore, "compose.kit.deleteQuality", getOrigin(), guid),
+    createPort: (iface: Port) => executeKitCommand(kitStore, "compose.kit.createPort", getOrigin(), iface),
+    updatePort: (guid: Guid, diff: PortDiff) => executeKitCommand(kitStore, "compose.kit.updatePort", getOrigin(), guid, diff),
+    deletePort: (guid: Guid) => executeKitCommand(kitStore, "compose.kit.deletePort", getOrigin(), guid),
+    createTag: (tag: Tag) => executeKitCommand(kitStore, "compose.kit.createTag", getOrigin(), tag),
+    updateTag: (guid: Guid, diff: TagDiff) => executeKitCommand(kitStore, "compose.kit.updateTag", getOrigin(), guid, diff),
+    deleteTag: (guid: Guid) => executeKitCommand(kitStore, "compose.kit.deleteTag", getOrigin(), guid),
+    createConcept: (concept: Concept) => executeKitCommand(kitStore, "compose.kit.createConcept", getOrigin(), concept),
+    deleteConcept: (guid: Guid) => executeKitCommand(kitStore, "compose.kit.deleteConcept", getOrigin(), guid),
+    addFile: (file: ComposeFile, blob?: Blob) => executeKitCommand(kitStore, "compose.kit.addFile", getOrigin(), file, blob),
+    updateFile: (url: Url, fileDiff: FileDiff, blob?: Blob) => executeKitCommand(kitStore, "compose.kit.updateFile", getOrigin(), url, fileDiff, blob),
+    removeFile: (url: Url) => executeKitCommand(kitStore, "compose.kit.removeFile", getOrigin(), url),
+    createFolder: (folder: Folder) => executeKitCommand(kitStore, "compose.kit.createFolder", getOrigin(), folder),
+    updateFolder: (guid: Guid, folderDiff: FolderDiff) => executeKitCommand(kitStore, "compose.kit.updateFolder", getOrigin(), guid, folderDiff),
+    deleteFolder: (guid: Guid) => executeKitCommand(kitStore, "compose.kit.deleteFolder", getOrigin(), guid),
+    moveToFolder: (artifactKind: string, artifactGuid: Guid, folderGuid: Guid | null) => executeKitCommand(kitStore, "compose.kit.moveToFolder", getOrigin(), artifactGuid, artifactKind, folderGuid),
+    addPiece: (design: Guid, piece: Piece) => executeKitCommand(kitStore, "compose.kit.addPiece", getOrigin(), design, piece),
+    addPieces: (design: Guid, pieces: Piece[]) => executeKitCommand(kitStore, "compose.kit.addPieces", getOrigin(), design, pieces),
+    removePiece: (design: Guid, piece: Guid) => executeKitCommand(kitStore, "compose.kit.removePiece", getOrigin(), design, piece),
+    removePieces: (design: Guid, pieces: Guid[]) => executeKitCommand(kitStore, "compose.kit.removePieces", getOrigin(), design, pieces),
+    addConnection: (design: Guid, connection: Connection) => executeKitCommand(kitStore, "compose.kit.addConnection", getOrigin(), design, connection),
+    addConnections: (design: Guid, connections: Connection[]) => executeKitCommand(kitStore, "compose.kit.addConnections", getOrigin(), design, connections),
+    removeConnection: (design: Guid, connection: Guid) => executeKitCommand(kitStore, "compose.kit.removeConnection", getOrigin(), design, connection),
+    removeConnections: (design: Guid, connections: Guid[]) => executeKitCommand(kitStore, "compose.kit.removeConnections", getOrigin(), design, connections),
+    deleteSelected: (design: Guid, selectedPieces: Guid[], selectedConnections: Guid[]) => executeKitCommand(kitStore, "compose.kit.deleteSelected", getOrigin(), design, selectedPieces, selectedConnections),
   };"""
 
 content = content.replace(old_commands_body, new_commands_body)
@@ -452,22 +452,22 @@ content = content.replace(
 )
 
 # 11. Fix SketchpadStore.executeCommand importKit dispatch to use executeKitCommand
-old_import_cmd = """    if (command === "semio.sketchpad.importKit") {
+old_import_cmd = """    if (command === "compose.sketchpad.importKit") {
       const Guid = rest[0] as Guid;
       const url = rest[1] as string;
       const kitStore = this.kits.get(Guid);
       if (kitStore) {
-        await kitStore.execute("semio.kit.import", origin, url);
+        await kitStore.execute("compose.kit.import", origin, url);
       }
       return {} as T;
     }"""
 
-new_import_cmd = """    if (command === "semio.sketchpad.importKit") {
+new_import_cmd = """    if (command === "compose.sketchpad.importKit") {
       const Guid = rest[0] as Guid;
       const url = rest[1] as string;
       const kitStore = this.kits.get(Guid);
       if (kitStore) {
-        await executeKitCommand(kitStore, "semio.kit.import", origin, url);
+        await executeKitCommand(kitStore, "compose.kit.import", origin, url);
       }
       return {} as T;
     }"""
@@ -495,9 +495,9 @@ new_loadKit = "private loadKitFilesFromPublic = async (kitGuid: string) => {"
 content = content.replace(old_loadKit, new_loadKit)
 
 # And fix the execute call inside loadKitFilesFromPublic
-old_loadKit_exec = 'await kitStore.execute("semio.kit.addFile", "system.loadKitFiles", file, fileBlob);'
+old_loadKit_exec = 'await kitStore.execute("compose.kit.addFile", "system.loadKitFiles", file, fileBlob);'
 new_loadKit_exec = """const loadKitStore = this.kits.get(kitGuid);
-              if (loadKitStore) await executeKitCommand(loadKitStore, "semio.kit.addFile", "system.loadKitFiles", file, fileBlob);"""
+              if (loadKitStore) await executeKitCommand(loadKitStore, "compose.kit.addFile", "system.loadKitFiles", file, fileBlob);"""
 content = content.replace(old_loadKit_exec, new_loadKit_exec)
 
 # 15. Fix SketchpadStore serialization - kitStore.snapshot()

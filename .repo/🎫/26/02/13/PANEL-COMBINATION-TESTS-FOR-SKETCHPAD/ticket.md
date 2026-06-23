@@ -9,14 +9,14 @@ goal: test/js
 Fixed right side panel default tab selection so selected Design elements show properties; extended Design e2e coverage and verified full sketchpad e2e suite passes.
 ## Changes
 
-- `semio/js/sketchpad/Sketchpad.tsx`: Stabilized side panel tab ordering and added active-tab fallback logic; right side now defaults to `details` when no active tab exists, so right panel opens with properties content.
-- `semio/js/sketchpad.test.ts`: Extended existing Design e2e assertions to require selected-piece properties in right panel and verify general design properties are hidden during selection.
-- `semio/js/sketchpad.test.ts`: Added `test("Panels")` (~350 lines) covering 8 panel combination scenarios across 4 apps + cross-app navigation + resize + keyboard shortcuts
-- `semio/js/sketchpad/Design.tsx`: Removed stale `PanelKind.HUD` panel definition reference to fix runtime panel config crash after HUD removal
-- `semio/js/index.ts`: Added explicit side-effect imports for sketchpad app modules to ensure plugin registration is loaded in runtime
-- `semio/js/sketchpad.test.ts`: Extended existing tests with right side panel toggle persistence coverage and stabilized brittle assertions in Design drag + panel checks
-- `semio/js/sketchpad/Design.tsx`: Removed selection-time fallback registration of `semio.sketchpad.app.design.properties` from the details panel
-- `semio/js/sketchpad.test.ts`: Added assertions that general design details are hidden for selected piece/connection and visible again after clearing selection
+- `compose/js/sketchpad/Sketchpad.tsx`: Stabilized side panel tab ordering and added active-tab fallback logic; right side now defaults to `details` when no active tab exists, so right panel opens with properties content.
+- `compose/js/sketchpad.test.ts`: Extended existing Design e2e assertions to require selected-piece properties in right panel and verify general design properties are hidden during selection.
+- `compose/js/sketchpad.test.ts`: Added `test("Panels")` (~350 lines) covering 8 panel combination scenarios across 4 apps + cross-app navigation + resize + keyboard shortcuts
+- `compose/js/sketchpad/Design.tsx`: Removed stale `PanelKind.HUD` panel definition reference to fix runtime panel config crash after HUD removal
+- `compose/js/index.ts`: Added explicit side-effect imports for sketchpad app modules to ensure plugin registration is loaded in runtime
+- `compose/js/sketchpad.test.ts`: Extended existing tests with right side panel toggle persistence coverage and stabilized brittle assertions in Design drag + panel checks
+- `compose/js/sketchpad/Design.tsx`: Removed selection-time fallback registration of `compose.sketchpad.app.design.properties` from the details panel
+- `compose/js/sketchpad.test.ts`: Added assertions that general design details are hidden for selected piece/connection and visible again after clearing selection
 
 ## Log
 
@@ -44,8 +44,8 @@ Fixed right side panel default tab selection so selected Design elements show pr
 - 2026-02-16: Compared `.old` details panel behavior and confirmed current details registration still rendered general design section during selection
 - 2026-02-16: Updated Design details section registration to only show general design section when selection is empty
 - 2026-02-16: Updated Design e2e checks to validate general details hidden on selection and visible after clear
-- 2026-02-16: `cd semio/js && npm run test:e2e -- sketchpad.test.ts -g "Design"` now passes
-- 2026-02-16: Full `cd semio/js && npm run test:e2e -- sketchpad.test.ts` interrupted by `ERR_CONNECTION_REFUSED` after Home/Kit/Type passed (server process unavailable mid-run)
+- 2026-02-16: `cd compose/js && npm run test:e2e -- sketchpad.test.ts -g "Design"` now passes
+- 2026-02-16: Full `cd compose/js && npm run test:e2e -- sketchpad.test.ts` interrupted by `ERR_CONNECTION_REFUSED` after Home/Kit/Type passed (server process unavailable mid-run)
 
 ## Todos
 
@@ -63,11 +63,11 @@ Fixed right side panel default tab selection so selected Design elements show pr
 - [x] Restore app bootstrap side-effect registration in sketchpad runtime
 - [x] Restore panel kind compatibility used by existing app modules
 - [x] Align right side panel toggle behavior with old storyground expectations
-- [x] Extend existing `semio/js/sketchpad.test.ts` with right-panel toggle regressions (no new test files)
+- [x] Extend existing `compose/js/sketchpad.test.ts` with right-panel toggle regressions (no new test files)
 - [x] Run sketchpad e2e tests and record outcomes
 - [x] Implement Design diagram click handlers to update selection state for pieces/connections and clear on pane click
 - [x] Verify details panel sections switch according to selection (piece/connection/port/design)
-- [x] Extend existing e2e coverage in `semio/js/sketchpad.test.ts` for selection-driven panel behavior
+- [x] Extend existing e2e coverage in `compose/js/sketchpad.test.ts` for selection-driven panel behavior
 - [x] Run sketchpad e2e tests and validate pass
 
 ## Plan
@@ -79,20 +79,20 @@ Fixed right side panel default tab selection so selected Design elements show pr
 
 ## Verification
 
-- `cd semio/js && npm run test:e2e -- sketchpad.test.ts --grep "Design"`
+- `cd compose/js && npm run test:e2e -- sketchpad.test.ts --grep "Design"`
 - Result: `1 passed`
 - `npm run test:e2e -- sketchpad.test.ts`
 - Result: `7 passed`
-- `cd semio/js && npm run test:e2e -- sketchpad.test.ts -g "Design"`
+- `cd compose/js && npm run test:e2e -- sketchpad.test.ts -g "Design"`
 - Result: `failed` at connection selection assertion (`designApp.selection.connections` stays empty after edge-path click); piece selection assertions pass
-- `cd semio/js && npm run test:e2e -- sketchpad.test.ts -g "Design"` (multiple reruns)
+- `cd compose/js && npm run test:e2e -- sketchpad.test.ts -g "Design"` (multiple reruns)
 - Result: `failed` with mixed instability:
   - piece selection can be validated via direct click or actor fallback
   - connection selection via edge click remains flaky/non-deterministic in current scenario
   - later test phases fail due unrelated Design test instability (context reset/navigation, zero nodes/pieces in drag phase)
-- `cd semio/js && npm run test:e2e -- sketchpad.test.ts -g "Design"`
+- `cd compose/js && npm run test:e2e -- sketchpad.test.ts -g "Design"`
 - Result: `passed` (1/1)
-- `cd semio/js && npm run test:e2e -- sketchpad.test.ts`
+- `cd compose/js && npm run test:e2e -- sketchpad.test.ts`
 - Result: `failed` with `page.goto: net::ERR_CONNECTION_REFUSED` in later tests (Design/Docs/Feedback/Panels) after Home/Kit/Type passed
 
 ## Research Results
@@ -149,35 +149,35 @@ Fixed right side panel default tab selection so selected Design elements show pr
 #### getPanels
 | PanelKind | Panel Toggle ID |
 |-----------|----------------|
-| TOOLBAR | `semio.sketchpad.navbar.panelToggle.toolbar.show` |
-| DETAILS | `semio.sketchpad.navbar.panelToggle.details.show` |
-| CHAT | `semio.sketchpad.navbar.panelToggle.chat.show` |
-| SETTINGS | `semio.sketchpad.navbar.panelToggle.settings.show` |
+| TOOLBAR | `compose.sketchpad.navbar.panelToggle.toolbar.show` |
+| DETAILS | `compose.sketchpad.navbar.panelToggle.details.show` |
+| CHAT | `compose.sketchpad.navbar.panelToggle.chat.show` |
+| SETTINGS | `compose.sketchpad.navbar.panelToggle.settings.show` |
 
 #### Panel Sections (addSection calls)
 
 **`"details"` panel:**
 | Section ID | Specificity | Order | Condition |
 |-----------|-------------|-------|-----------|
-| `semio.sketchpad.app.kit.properties` | 0 | 0 | Single kit selected |
-| `semio.sketchpad.app.home.kits.multiple` | 0 | 0 | Multiple kits selected |
+| `compose.sketchpad.app.kit.properties` | 0 | 0 | Single kit selected |
+| `compose.sketchpad.app.home.kits.multiple` | 0 | 0 | Multiple kits selected |
 
 **`"chat"` panel:**
 | Section ID | Specificity | Order |
 |-----------|-------------|-------|
-| `semio.sketchpad.app.home.chat` | 0 | 0 |
+| `compose.sketchpad.app.home.chat` | 0 | 0 |
 
 **`"settings"` panel:**
 | Section ID | Specificity | Order |
 |-----------|-------------|-------|
-| `semio.sketchpad.app.home.settings` | 20 | 0 |
-| `semio.sketchpad.settings` | 0 | 0 |
+| `compose.sketchpad.app.home.settings` | 20 | 0 |
+| `compose.sketchpad.settings` | 0 | 0 |
 
 **`"toolbar"` panel:**
 | Section ID | Specificity | Order | Toolbar Group |
 |-----------|-------------|-------|---------------|
-| `semio.sketchpad.app.home.toolbar.filters` | 20 | 0 | `{ id: "filter", labelId: "semio.sketchpad.toolbar.parent.filter", order: 20 }` |
-| `semio.sketchpad.app.home.toolbar.create` | 20 | 0 | `{ id: "create", labelId: "semio.sketchpad.toolbar.parent.create", order: 30 }` |
+| `compose.sketchpad.app.home.toolbar.filters` | 20 | 0 | `{ id: "filter", labelId: "compose.sketchpad.toolbar.parent.filter", order: 20 }` |
+| `compose.sketchpad.app.home.toolbar.create` | 20 | 0 | `{ id: "create", labelId: "compose.sketchpad.toolbar.parent.create", order: 30 }` |
 
 ---
 
@@ -190,45 +190,45 @@ Fixed right side panel default tab selection so selected Design elements show pr
 #### getPanels
 | PanelKind | Panel Toggle ID |
 |-----------|----------------|
-| TOOLBAR | `semio.sketchpad.navbar.panelToggle.toolbar.show` |
-| DETAILS | `semio.sketchpad.navbar.panelToggle.details.show` |
-| CHAT | `semio.sketchpad.navbar.panelToggle.chat.show` |
-| SETTINGS | `semio.sketchpad.navbar.panelToggle.settings.show` |
+| TOOLBAR | `compose.sketchpad.navbar.panelToggle.toolbar.show` |
+| DETAILS | `compose.sketchpad.navbar.panelToggle.details.show` |
+| CHAT | `compose.sketchpad.navbar.panelToggle.chat.show` |
+| SETTINGS | `compose.sketchpad.navbar.panelToggle.settings.show` |
 
 #### Panel Sections (addSection calls)
 
 **`"details"` panel:**
 | Section ID | Specificity | Order | Condition |
 |-----------|-------------|-------|-----------|
-| `semio.sketchpad.app.kit.artifacts.multiple` | 30 | 0 | totalSelectedKinds > 1 |
-| `semio.sketchpad.app.design.properties` | 30 | 10 | single design selected |
-| `semio.sketchpad.app.kit.designs.multipleTitle` | 30 | 10 | multiple designs selected |
-| `semio.sketchpad.app.type.properties` | 30 | 20 | single type selected |
-| `semio.sketchpad.app.kit.types.multipleTitle` | 30 | 20 | multiple types selected |
-| `semio.sketchpad.app.kit.port.properties` | 30 | 25 | single port selected |
-| `semio.sketchpad.app.kit.ports.multipleTitle` | 30 | 25 | multiple ports selected |
-| `semio.sketchpad.app.kit.tag.properties` | 30 | 26 | single tag selected |
-| `semio.sketchpad.app.kit.tags.multipleTitle` | 30 | 26 | multiple tags selected |
-| `semio.sketchpad.app.kit.concept.properties` | 30 | 27 | single concept selected |
-| `semio.sketchpad.app.kit.concepts.multipleTitle` | 30 | 27 | multiple concepts selected |
-| `semio.sketchpad.app.kit.file.properties` | 30 | 30 | single file selected |
-| `semio.sketchpad.app.kit.files.multipleTitle` | 30 | 30 | multiple files selected |
-| `semio.sketchpad.app.kit.folder.properties` | 30 | 40 | single folder selected |
-| `semio.sketchpad.app.kit.folders.multipleTitle` | 30 | 40 | multiple folders selected |
-| `semio.sketchpad.app.kit.properties` | 10 | 100 | always |
+| `compose.sketchpad.app.kit.artifacts.multiple` | 30 | 0 | totalSelectedKinds > 1 |
+| `compose.sketchpad.app.design.properties` | 30 | 10 | single design selected |
+| `compose.sketchpad.app.kit.designs.multipleTitle` | 30 | 10 | multiple designs selected |
+| `compose.sketchpad.app.type.properties` | 30 | 20 | single type selected |
+| `compose.sketchpad.app.kit.types.multipleTitle` | 30 | 20 | multiple types selected |
+| `compose.sketchpad.app.kit.port.properties` | 30 | 25 | single port selected |
+| `compose.sketchpad.app.kit.ports.multipleTitle` | 30 | 25 | multiple ports selected |
+| `compose.sketchpad.app.kit.tag.properties` | 30 | 26 | single tag selected |
+| `compose.sketchpad.app.kit.tags.multipleTitle` | 30 | 26 | multiple tags selected |
+| `compose.sketchpad.app.kit.concept.properties` | 30 | 27 | single concept selected |
+| `compose.sketchpad.app.kit.concepts.multipleTitle` | 30 | 27 | multiple concepts selected |
+| `compose.sketchpad.app.kit.file.properties` | 30 | 30 | single file selected |
+| `compose.sketchpad.app.kit.files.multipleTitle` | 30 | 30 | multiple files selected |
+| `compose.sketchpad.app.kit.folder.properties` | 30 | 40 | single folder selected |
+| `compose.sketchpad.app.kit.folders.multipleTitle` | 30 | 40 | multiple folders selected |
+| `compose.sketchpad.app.kit.properties` | 10 | 100 | always |
 
 **`"settings"` panel:**
 | Section ID | Specificity | Order |
 |-----------|-------------|-------|
-| `semio.sketchpad.app.kit.settings` | 10 | 0 |
-| `semio.sketchpad.settings` | 0 | 0 |
+| `compose.sketchpad.app.kit.settings` | 10 | 0 |
+| `compose.sketchpad.settings` | 0 | 0 |
 
 **`"toolbar"` panel:**
 | Section ID | Specificity | Order | Toolbar Group |
 |-----------|-------------|-------|---------------|
-| `semio.sketchpad.app.kit.toolbar.selection` | 20 | 10 | `{ id: "selection", labelId: "semio.sketchpad.toolbar.parent.selection", order: 10, subToolId: "select", subToolLabelId: "semio.sketchpad.toolbar.subtool.select" }` |
-| `semio.sketchpad.app.kit.toolbar.filters` | 20 | 20 | `{ id: "filter", labelId: "semio.sketchpad.toolbar.parent.filter", order: 20 }` |
-| `semio.sketchpad.app.kit.toolbar.create` | 20 | 30 | `{ id: "create", labelId: "semio.sketchpad.toolbar.parent.create", order: 30 }` |
+| `compose.sketchpad.app.kit.toolbar.selection` | 20 | 10 | `{ id: "selection", labelId: "compose.sketchpad.toolbar.parent.selection", order: 10, subToolId: "select", subToolLabelId: "compose.sketchpad.toolbar.subtool.select" }` |
+| `compose.sketchpad.app.kit.toolbar.filters` | 20 | 20 | `{ id: "filter", labelId: "compose.sketchpad.toolbar.parent.filter", order: 20 }` |
+| `compose.sketchpad.app.kit.toolbar.create` | 20 | 30 | `{ id: "create", labelId: "compose.sketchpad.toolbar.parent.create", order: 30 }` |
 
 ---
 
@@ -241,51 +241,51 @@ Fixed right side panel default tab selection so selected Design elements show pr
 #### getPanels
 | PanelKind | Panel Toggle ID |
 |-----------|----------------|
-| WORKBENCH | `semio.sketchpad.navbar.panelToggle.workbench.show` |
-| TOOLS | `semio.sketchpad.navbar.panelToggle.tools.show` |
-| TOOLBAR | `semio.sketchpad.navbar.panelToggle.toolbar.show` |
-| HUD | `semio.sketchpad.navbar.panelToggle.hud.show` |
-| STATS | `semio.sketchpad.navbar.panelToggle.stats.show` |
-| DETAILS | `semio.sketchpad.navbar.panelToggle.details.show` |
-| CHAT | `semio.sketchpad.navbar.panelToggle.chat.show` |
-| SETTINGS | `semio.sketchpad.navbar.panelToggle.settings.show` |
+| WORKBENCH | `compose.sketchpad.navbar.panelToggle.workbench.show` |
+| TOOLS | `compose.sketchpad.navbar.panelToggle.tools.show` |
+| TOOLBAR | `compose.sketchpad.navbar.panelToggle.toolbar.show` |
+| HUD | `compose.sketchpad.navbar.panelToggle.hud.show` |
+| STATS | `compose.sketchpad.navbar.panelToggle.stats.show` |
+| DETAILS | `compose.sketchpad.navbar.panelToggle.details.show` |
+| CHAT | `compose.sketchpad.navbar.panelToggle.chat.show` |
+| SETTINGS | `compose.sketchpad.navbar.panelToggle.settings.show` |
 
 #### Panel Sections (addSection calls)
 
 **`"details"` panel:**
 | Section ID | Specificity | Order | Condition |
 |-----------|-------------|-------|-----------|
-| `semio.sketchpad.app.design.properties` | 20 | 50 | no selection / always as fallback |
-| `semio.sketchpad.app.type.connector.properties` | 30 | 0 | port/connector selected |
-| `semio.sketchpad.app.design.panel.details.section.piece.properties` | 30 | 0 | single piece selected |
-| `semio.sketchpad.app.design.panel.details.section.piece.multipleTitle` | 30 | 0 | multiple pieces selected |
-| `semio.sketchpad.app.design.panel.details.section.connection.properties` | 30 | 10 | single connection selected |
-| `semio.sketchpad.app.design.panel.details.section.connection.multipleTitle` | 30 | 10 | multiple connections selected |
-| `semio.sketchpad.app.design.panel.details.section.selection.multipleTitle` | 30 | 20 | pieces AND connections selected |
-| `semio.sketchpad.app.kit.properties` | 10 | 100 | always |
+| `compose.sketchpad.app.design.properties` | 20 | 50 | no selection / always as fallback |
+| `compose.sketchpad.app.type.connector.properties` | 30 | 0 | port/connector selected |
+| `compose.sketchpad.app.design.panel.details.section.piece.properties` | 30 | 0 | single piece selected |
+| `compose.sketchpad.app.design.panel.details.section.piece.multipleTitle` | 30 | 0 | multiple pieces selected |
+| `compose.sketchpad.app.design.panel.details.section.connection.properties` | 30 | 10 | single connection selected |
+| `compose.sketchpad.app.design.panel.details.section.connection.multipleTitle` | 30 | 10 | multiple connections selected |
+| `compose.sketchpad.app.design.panel.details.section.selection.multipleTitle` | 30 | 20 | pieces AND connections selected |
+| `compose.sketchpad.app.kit.properties` | 10 | 100 | always |
 
 **`"workbench"` panel:**
 | Section ID | Specificity | Order |
 |-----------|-------------|-------|
-| `semio.sketchpad.app.kit.pieces` | 20 | 0 |
-| `semio.sketchpad.app.design.windows` | 20 | 1 |
+| `compose.sketchpad.app.kit.pieces` | 20 | 0 |
+| `compose.sketchpad.app.design.windows` | 20 | 1 |
 
 **`"hud"` panel:**
 | Section ID | Specificity | Order |
 |-----------|-------------|-------|
-| `semio.sketchpad.app.design.hud.pieces` | 20 | 0 |
+| `compose.sketchpad.app.design.hud.pieces` | 20 | 0 |
 
 **`"settings"` panel:**
 | Section ID | Specificity | Order |
 |-----------|-------------|-------|
-| `semio.sketchpad.app.design.settings` | 30 | 0 |
-| `semio.sketchpad.app.kit.settings` | 10 | 0 |
-| `semio.sketchpad.settings` | 0 | 0 |
+| `compose.sketchpad.app.design.settings` | 30 | 0 |
+| `compose.sketchpad.app.kit.settings` | 10 | 0 |
+| `compose.sketchpad.settings` | 0 | 0 |
 
 **`"toolbar"` panel (from DesignApp component):**
 | Section ID | Specificity | Order | Toolbar Group |
 |-----------|-------------|-------|---------------|
-| `semio.sketchpad.app.design.tools.select` | 20 | 0 | `{ id: "selection", labelId: "semio.sketchpad.toolbar.parent.selection", order: 10 }` |
+| `compose.sketchpad.app.design.tools.select` | 20 | 0 | `{ id: "selection", labelId: "compose.sketchpad.toolbar.parent.selection", order: 10 }` |
 
 ---
 
@@ -298,35 +298,35 @@ Fixed right side panel default tab selection so selected Design elements show pr
 #### getPanels
 | PanelKind | Panel Toggle ID |
 |-----------|----------------|
-| TOOLBAR | `semio.sketchpad.navbar.panelToggle.toolbar.show` |
-| HUD | `semio.sketchpad.navbar.panelToggle.hud.show` |
-| STATS | `semio.sketchpad.navbar.panelToggle.stats.show` |
-| DETAILS | `semio.sketchpad.navbar.panelToggle.details.show` |
-| CHAT | `semio.sketchpad.navbar.panelToggle.chat.show` |
-| SETTINGS | `semio.sketchpad.navbar.panelToggle.settings.show` |
+| TOOLBAR | `compose.sketchpad.navbar.panelToggle.toolbar.show` |
+| HUD | `compose.sketchpad.navbar.panelToggle.hud.show` |
+| STATS | `compose.sketchpad.navbar.panelToggle.stats.show` |
+| DETAILS | `compose.sketchpad.navbar.panelToggle.details.show` |
+| CHAT | `compose.sketchpad.navbar.panelToggle.chat.show` |
+| SETTINGS | `compose.sketchpad.navbar.panelToggle.settings.show` |
 
 #### Panel Sections (addSection calls)
 
 **`"details"` panel:**
 | Section ID | Specificity | Order | Condition |
 |-----------|-------------|-------|-----------|
-| `semio.sketchpad.app.type.connector.properties` | 30 | 0 | single connector selected |
-| `semio.sketchpad.app.type.panel.details.section.connectors.multipleTitle` | 30 | 0 | multiple connectors selected |
-| `semio.sketchpad.app.type.properties` | 20 | 50 | always |
-| `semio.sketchpad.app.kit.properties` | 10 | 100 | always |
+| `compose.sketchpad.app.type.connector.properties` | 30 | 0 | single connector selected |
+| `compose.sketchpad.app.type.panel.details.section.connectors.multipleTitle` | 30 | 0 | multiple connectors selected |
+| `compose.sketchpad.app.type.properties` | 20 | 50 | always |
+| `compose.sketchpad.app.kit.properties` | 10 | 100 | always |
 
 **`"settings"` panel:**
 | Section ID | Specificity | Order |
 |-----------|-------------|-------|
-| `semio.sketchpad.app.type.settings` | 30 | 0 |
-| `semio.sketchpad.app.kit.settings` | 10 | 0 |
-| `semio.sketchpad.settings` | 0 | 0 |
+| `compose.sketchpad.app.type.settings` | 30 | 0 |
+| `compose.sketchpad.app.kit.settings` | 10 | 0 |
+| `compose.sketchpad.settings` | 0 | 0 |
 
 **`"toolbar"` panel:**
 | Section ID | Specificity | Order | Toolbar Group |
 |-----------|-------------|-------|---------------|
-| `semio.sketchpad.app.type.tools.selection` | 20 | 0 | `{ id: "selection", labelId: "semio.sketchpad.toolbar.parent.selection", order: 10, subToolId: ToolKind.SELECTION_NORMAL, subToolLabelId: "semio.sketchpad.toolbar.subtool.select" }` |
-| `semio.sketchpad.app.type.tools.connector` | 20 | 10 | `{ id: "create", labelId: "semio.sketchpad.toolbar.parent.create", order: 10, subToolId: ToolKind.CONNECTOR, subToolLabelId: "semio.sketchpad.toolbar.subtool.connector" }` |
+| `compose.sketchpad.app.type.tools.selection` | 20 | 0 | `{ id: "selection", labelId: "compose.sketchpad.toolbar.parent.selection", order: 10, subToolId: ToolKind.SELECTION_NORMAL, subToolLabelId: "compose.sketchpad.toolbar.subtool.select" }` |
+| `compose.sketchpad.app.type.tools.connector` | 20 | 10 | `{ id: "create", labelId: "compose.sketchpad.toolbar.parent.create", order: 10, subToolId: ToolKind.CONNECTOR, subToolLabelId: "compose.sketchpad.toolbar.subtool.connector" }` |
 
 #### Initial PanelVisibility (from useTypeAppInitialize)
 - `{ toolbar: true, workbench: false, details: false, chat: false, settings: false }`
@@ -342,32 +342,32 @@ Fixed right side panel default tab selection so selected Design elements show pr
 #### getPanels
 | PanelKind | Panel Toggle ID | Hotkey | Tooltip |
 |-----------|----------------|--------|---------|
-| WORKBENCH | `semio.sketchpad.navbar.panelToggle.workbench.show` | from getHotkeyFn | `{ labelKey: "...", manualPath: "/docs/manuals/sketchpad#workbench" }` |
-| DETAILS | `semio.sketchpad.navbar.panelToggle.details.show` | from getHotkeyFn | `{ labelKey: "...", manualPath: "/docs/manuals/sketchpad#details" }` |
-| SETTINGS | `semio.sketchpad.navbar.panelToggle.settings.show` | from getHotkeyFn | `{ labelKey: "...", manualPath: "/docs/manuals/sketchpad#settings" }` |
+| WORKBENCH | `compose.sketchpad.navbar.panelToggle.workbench.show` | from getHotkeyFn | `{ labelKey: "...", manualPath: "/docs/manuals/sketchpad#workbench" }` |
+| DETAILS | `compose.sketchpad.navbar.panelToggle.details.show` | from getHotkeyFn | `{ labelKey: "...", manualPath: "/docs/manuals/sketchpad#details" }` |
+| SETTINGS | `compose.sketchpad.navbar.panelToggle.settings.show` | from getHotkeyFn | `{ labelKey: "...", manualPath: "/docs/manuals/sketchpad#settings" }` |
 
 #### Panel Sections (addSection calls)
 
 **`"workbench"` panel:**
 | Section ID | Specificity | Order |
 |-----------|-------------|-------|
-| `semio.sketchpad.app.docs.docs` | 20 | 1 |
-| `semio.sketchpad.app.docs.overview` | 20 | 2 |
+| `compose.sketchpad.app.docs.docs` | 20 | 1 |
+| `compose.sketchpad.app.docs.overview` | 20 | 2 |
 
 **`"details"` panel:**
 | Section ID | Specificity | Order |
 |-----------|-------------|-------|
-| `semio.sketchpad.app.docs.page` | 20 | 1 |
+| `compose.sketchpad.app.docs.page` | 20 | 1 |
 
 **`"settings"` panel:**
 | Section ID | Specificity | Order |
 |-----------|-------------|-------|
-| `semio.sketchpad.app.docs.settings` | 20 | 1 |
+| `compose.sketchpad.app.docs.settings` | 20 | 1 |
 
 **`"toolbar"` panel:**
 | Section ID | Specificity | Order | Notes |
 |-----------|-------------|-------|-------|
-| `semio.sketchpad.app.docs.toolbar.empty` | 20 | 0 | `toolbarPlaceholder: true` |
+| `compose.sketchpad.app.docs.toolbar.empty` | 20 | 0 | `toolbarPlaceholder: true` |
 
 ---
 
@@ -380,14 +380,14 @@ Fixed right side panel default tab selection so selected Design elements show pr
 #### getPanels
 | PanelKind | Panel Toggle ID |
 |-----------|----------------|
-| TOOLBAR | `semio.sketchpad.navbar.panelToggle.toolbar.show` |
+| TOOLBAR | `compose.sketchpad.navbar.panelToggle.toolbar.show` |
 
 #### Panel Sections (addSection calls)
 
 **`"toolbar"` panel:**
 | Section ID | Specificity | Order | Toolbar Group |
 |-----------|-------------|-------|---------------|
-| `semio.sketchpad.app.feedback.toolbar.send` | 20 | 0 | `{ id: "actions", labelId: "semio.sketchpad.toolbar.parent.actions", order: 50 }` |
+| `compose.sketchpad.app.feedback.toolbar.send` | 20 | 0 | `{ id: "actions", labelId: "compose.sketchpad.toolbar.parent.actions", order: 50 }` |
 
 ---
 
@@ -395,29 +395,29 @@ Fixed right side panel default tab selection so selected Design elements show pr
 
 | App | Group ID | Group labelId | Group Order |
 |-----|----------|---------------|-------------|
-| Home | `filter` | `semio.sketchpad.toolbar.parent.filter` | 20 |
-| Home | `create` | `semio.sketchpad.toolbar.parent.create` | 30 |
-| Kit | `selection` | `semio.sketchpad.toolbar.parent.selection` | 10 |
-| Kit | `filter` | `semio.sketchpad.toolbar.parent.filter` | 20 |
-| Kit | `create` | `semio.sketchpad.toolbar.parent.create` | 30 |
-| Design | `selection` | `semio.sketchpad.toolbar.parent.selection` | 10 |
-| Type | `selection` | `semio.sketchpad.toolbar.parent.selection` | 10 |
-| Type | `create` | `semio.sketchpad.toolbar.parent.create` | 10 |
-| Feedback | `actions` | `semio.sketchpad.toolbar.parent.actions` | 50 |
+| Home | `filter` | `compose.sketchpad.toolbar.parent.filter` | 20 |
+| Home | `create` | `compose.sketchpad.toolbar.parent.create` | 30 |
+| Kit | `selection` | `compose.sketchpad.toolbar.parent.selection` | 10 |
+| Kit | `filter` | `compose.sketchpad.toolbar.parent.filter` | 20 |
+| Kit | `create` | `compose.sketchpad.toolbar.parent.create` | 30 |
+| Design | `selection` | `compose.sketchpad.toolbar.parent.selection` | 10 |
+| Type | `selection` | `compose.sketchpad.toolbar.parent.selection` | 10 |
+| Type | `create` | `compose.sketchpad.toolbar.parent.create` | 10 |
+| Feedback | `actions` | `compose.sketchpad.toolbar.parent.actions` | 50 |
 | Docs | — (placeholder) | — | — |
 
 ### Summary of All Panel Toggle IDs (navbar buttons)
 
 | ID | Used By Apps |
 |----|-------------|
-| `semio.sketchpad.navbar.panelToggle.toolbar.show` | Home, Kit, Design, Type, Feedback |
-| `semio.sketchpad.navbar.panelToggle.details.show` | Home, Kit, Design, Type, Docs |
-| `semio.sketchpad.navbar.panelToggle.chat.show` | Home, Kit, Design, Type |
-| `semio.sketchpad.navbar.panelToggle.settings.show` | Home, Kit, Design, Type, Docs |
-| `semio.sketchpad.navbar.panelToggle.workbench.show` | Design, Docs |
-| `semio.sketchpad.navbar.panelToggle.tools.show` | Design |
-| `semio.sketchpad.navbar.panelToggle.hud.show` | Design, Type |
-| `semio.sketchpad.navbar.panelToggle.stats.show` | Design, Type |
+| `compose.sketchpad.navbar.panelToggle.toolbar.show` | Home, Kit, Design, Type, Feedback |
+| `compose.sketchpad.navbar.panelToggle.details.show` | Home, Kit, Design, Type, Docs |
+| `compose.sketchpad.navbar.panelToggle.chat.show` | Home, Kit, Design, Type |
+| `compose.sketchpad.navbar.panelToggle.settings.show` | Home, Kit, Design, Type, Docs |
+| `compose.sketchpad.navbar.panelToggle.workbench.show` | Design, Docs |
+| `compose.sketchpad.navbar.panelToggle.tools.show` | Design |
+| `compose.sketchpad.navbar.panelToggle.hud.show` | Design, Type |
+| `compose.sketchpad.navbar.panelToggle.stats.show` | Design, Type |
 
 ---
 
@@ -429,21 +429,21 @@ Fixed right side panel default tab selection so selected Design elements show pr
 - Extend existing sketchpad e2e test coverage to assert Design does not expose create toolbar group.
 
 ### Changes
-- Updated `semio/js/sketchpad/Design.tsx`:
+- Updated `compose/js/sketchpad/Design.tsx`:
   - Removed `DesignToolbarCreate` component.
-  - Removed `semio.sketchpad.app.design.toolbar.create` section registration.
+  - Removed `compose.sketchpad.app.design.toolbar.create` section registration.
   - Removed toolbar create section cleanup call.
   - Updated toolbar section intent text to filter-only behavior.
-- Updated `semio/js/sketchpad.test.ts`:
-  - Added explicit assertion in Design test that `semio.sketchpad.toolbar.group.create` is not visible.
+- Updated `compose/js/sketchpad.test.ts`:
+  - Added explicit assertion in Design test that `compose.sketchpad.toolbar.group.create` is not visible.
   - Added explicit assertion in Panels/Design combination test that create group remains hidden.
 
 ### Verification
-- Ran: `npm run test:e2e -- sketchpad.test.ts` in `semio/js`
+- Ran: `npm run test:e2e -- sketchpad.test.ts` in `compose/js`
   - Result: failed (1 passed, 6 failed).
   - Primary failures were environment instability / server connection failures (`ERR_CONNECTION_REFUSED`) and unrelated existing assertions in Kit/Type flow.
-- Ran: `npm run test:unit` in `semio/js`
-  - Result: passed (`semio.test.ts`, 12/12 tests).
+- Ran: `npm run test:unit` in `compose/js`
+  - Result: passed (`compose.test.ts`, 12/12 tests).
 
 ## 2026-02-16 Follow-up 2: Remove Design Toolbar Create Group
 
@@ -453,17 +453,17 @@ Fixed right side panel default tab selection so selected Design elements show pr
 - Verify Design app toolbar no longer exposes create group.
 
 ### Changes
-- Updated `semio/js/sketchpad/Design.tsx`:
+- Updated `compose/js/sketchpad/Design.tsx`:
   - Removed `DesignToolbarCreate` component.
-  - Removed `semio.sketchpad.app.design.toolbar.create` `addSection` registration.
-  - Removed `semio.sketchpad.app.design.toolbar.create` cleanup `removeSection` call.
+  - Removed `compose.sketchpad.app.design.toolbar.create` `addSection` registration.
+  - Removed `compose.sketchpad.app.design.toolbar.create` cleanup `removeSection` call.
   - Updated toolbar section summary comment from filter/create to filter-only.
 
 ### Verification
-- Ran: `npm run test:e2e -- sketchpad.test.ts -g "Design"` in `semio/js`
+- Ran: `npm run test:e2e -- sketchpad.test.ts -g "Design"` in `compose/js`
   - Result: failed (1 failed).
   - Confirmed behavior from logs: `[Design] Create group toggle visible: false`.
-  - Failing assertion is unrelated existing selection-tool behavior in `semio/js/sketchpad.test.ts:1980` (`Hand` toggle expected `"on"` but received `"off"`).
+  - Failing assertion is unrelated existing selection-tool behavior in `compose/js/sketchpad.test.ts:1980` (`Hand` toggle expected `"on"` but received `"off"`).
 
 ## 2026-02-16 Follow-up 3: Design Right Panel Selection Properties
 
@@ -474,18 +474,18 @@ Fixed right side panel default tab selection so selected Design elements show pr
 - Stabilize flaky panel/navigation checks in the existing test file without creating new tests.
 
 ### Changes
-- Updated `semio/js/sketchpad/Design.tsx`:
+- Updated `compose/js/sketchpad/Design.tsx`:
   - Kept node/edge click handlers updating selection state and clearing connector selection.
   - Fixed connection ID extraction in selection/click paths to use full edge IDs (`edge.id`) instead of truncated `split("-").pop()` IDs.
-- Updated `semio/js/sketchpad.test.ts`:
+- Updated `compose/js/sketchpad.test.ts`:
   - Strengthened Design selection assertions to verify piece selection updates state and renders piece details section.
   - Added connection-selection verification with robust fallback to actor selection and details-panel assertion.
   - Hardened drag assertion to accept either center change, visible node move, or confirmed `[DEBUG] onNodeDragStop updating` dispatch signal.
   - Hardened Panels cross-app navigation check to avoid false timeout on kit navigation by retrying row interaction and validating current URL state.
-- Restored `semio/js/playwright.config.ts` from `HEAD` after concurrent deletion in worktree so e2e runner remains configured.
+- Restored `compose/js/playwright.config.ts` from `HEAD` after concurrent deletion in worktree so e2e runner remains configured.
 
 ### Verification
-- Ran: `npm run test:e2e -- sketchpad.test.ts -g "Design"` in `semio/js`
+- Ran: `npm run test:e2e -- sketchpad.test.ts -g "Design"` in `compose/js`
   - Result: passed (1 passed).
-- Ran: `npm run test:e2e -- sketchpad.test.ts` in `semio/js`
+- Ran: `npm run test:e2e -- sketchpad.test.ts` in `compose/js`
   - Result: passed (7 passed).

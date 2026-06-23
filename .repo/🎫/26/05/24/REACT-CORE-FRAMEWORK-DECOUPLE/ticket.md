@@ -27,6 +27,6 @@
 - `elements/lib/react/core/index.tsx`, `package.json`, `vitest.config.ts` (removed `ui-declarative-renderer.tsx`)
 - `elements/lib/framework/core/index.ts`
 - `elements/lib/framework/renderer/react/workbench-view.tsx`, `workbench-mount.tsx`, `workbench-bridge.tsx`, `ui-declarative-renderer.tsx`, `index.tsx`, `package.json`
-- `semio/client/lib/sketchpad/js/index.ts`
+- `compose/client/lib/sketchpad/js/index.ts`
 - `.storybook/stories/elements/ui/UI.stories.tsx`
 - `elements/lib/react/board/board-play-host.tsx`

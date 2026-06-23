@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: AGPL-3.0-only
 #region 🔖Neo4jLocalCheck
-# 🗄️Legacy helper that now verifies the single semio devcontainer's local Neo4j ports; post-start owns startup.
+# 🗄️Legacy helper that now verifies the single compose devcontainer's local Neo4j ports; post-start owns startup.
 set -u
 
 wait_for_neo4j_bolt() {

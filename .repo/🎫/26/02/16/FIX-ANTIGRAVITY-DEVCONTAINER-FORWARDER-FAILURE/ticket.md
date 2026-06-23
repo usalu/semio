@@ -13,7 +13,7 @@ Enabled concurrent multi-IDE devcontainer use by persisting Cursor/Antigravity s
 - Added ownership normalization for `/home/vscode/.cursor-server` and `/home/vscode/.antigravity-server` in `.devcontainer/post-start.sh`.
 - Added directory initialization for `/home/vscode/.cursor-server` and `/home/vscode/.antigravity-server` in `.devcontainer/Dockerfile`.
 - Refactored `.devcontainer/post-attach.sh` extension install flow to be non-destructive and multi-editor-safe:
-  - Added lock file serialization (`/tmp/semio-post-attach-extension-install.lock`) for concurrent attach sessions.
+  - Added lock file serialization (`/tmp/compose-post-attach-extension-install.lock`) for concurrent attach sessions.
   - Removed uninstall/purge behavior that removed extensions and caches across IDE server homes.
   - Removed direct filesystem rewrite of extension directories and `extensions.json`.
   - Kept install-only `--install-extension --force` flow per detected CLI.
@@ -38,7 +38,7 @@ Enabled concurrent multi-IDE devcontainer use by persisting Cursor/Antigravity s
 ## Todos
 - Rebuild devcontainer image and reopen workspace from each IDE (VS Code, Antigravity, Windsurf, Cursor).
 - Validate all four IDEs can stay attached simultaneously to the same running container.
-- Confirm no attach session uninstalls or invalidates semio extension state for another active IDE.
+- Confirm no attach session uninstalls or invalidates compose extension state for another active IDE.
 - Confirm no `forwardPort ... return code 127`, no repeated WebSocket `1006`, and no `ENOPRO` remote filesystem errors in attach logs.
 
 ## Plan

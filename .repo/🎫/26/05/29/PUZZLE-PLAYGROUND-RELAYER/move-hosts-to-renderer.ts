@@ -2,7 +2,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
 
-const root = "c:/git/semio";
+const root = "c:/git/compose";
 const rendererPuzzle = join(root, "framework/playground/renderer/react/puzzle");
 mkdirSync(rendererPuzzle, { recursive: true });
 

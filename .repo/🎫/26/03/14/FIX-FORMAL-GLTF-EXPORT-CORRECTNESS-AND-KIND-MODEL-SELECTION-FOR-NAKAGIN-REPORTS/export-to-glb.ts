@@ -23,7 +23,7 @@ const __dirname = dirname(__filename);
  */
 function extractNakaginCapsuleTowerDesign(): any | null {
   try {
-    const kitPath = '/workspaces/semio/semio/assets/semio/kit_metabolism.json';
+    const kitPath = '/workspaces/semio/compose/assets/compose/kit_metabolism.json';
     const kitData = JSON.parse(readFileSync(kitPath, 'utf8'));
     
     const nakaginDesigns = kitData.designs?.filter((design: any) => design.name === "Nakagin Capsule Tower") || [];
@@ -49,8 +49,8 @@ function createGLTFStructure(design: any): any {
   return {
     asset: {
       version: "2.0",
-      generator: "Semio Nakagin Export",
-      copyright: "© 2025 Semio Tech"
+      generator: "Compose Nakagin Export",
+      copyright: "© 2025 Compose Tech"
     },
     scene: 0,
     scenes: [
@@ -137,7 +137,7 @@ function createGLTFStructure(design: any): any {
       }
     ],
     extras: {
-      semioDesign: {
+      composeDesign: {
         guid: design.guid,
         name: design.name,
         description: design.description,
@@ -185,7 +185,7 @@ function main(): void {
   const gltfModel = createGLTFStructure(design);
   
   // Define output path
-  const outputPath = '/workspaces/semio/semio/assets/models/nakagin-capsule-tower.gltf';
+  const outputPath = '/workspaces/semio/compose/assets/models/nakagin-capsule-tower.gltf';
   
   // Export the model
   exportGLBCompatible(gltfModel, outputPath);

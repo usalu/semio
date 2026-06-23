@@ -1,6 +1,6 @@
 ---
 name: Operation Input Interface
-overview: "Design a uniform Operation Input API in `semio/graphql/target.schema.graphql`: every operation that has real argument data gets a `<Op>Input implements Input` WeakEntity (hash-id) owned by the Operation; operations whose data is fully carried by `scope` drop their `*Input` type entirely and inherit nullable `input: Input` from the `Operation` interface."
+overview: "Design a uniform Operation Input API in `compose/graphql/target.schema.graphql`: every operation that has real argument data gets a `<Op>Input implements Input` WeakEntity (hash-id) owned by the Operation; operations whose data is fully carried by `scope` drop their `*Input` type entirely and inherit nullable `input: Input` from the `Operation` interface."
 todos:
   - id: input_interface
     content: Sharpen `interface Input` (owner // Operation, owns empty)
@@ -32,7 +32,7 @@ Replace today's 109 inconsistent `type *Input { ... }` bag types with a uniform 
 - **Non-empty inputs** become `type <Op>Input implements Input` (WeakEntity, hash-id) that is owned by its `<Op>` Operation.
 - **Empty inputs** (the 35 placeholders that today carry only `hasInput: Boolean! # computed`) are deleted; their operations inherit `input: Input` (nullable) from the `Operation` interface and resolve to `null` at runtime.
 
-All edits land in [semio/graphql/target.schema.graphql](semio/graphql/target.schema.graphql). The non-target [semio/graphql/schema.graphql](semio/graphql/schema.graphql) is the current/source schema and is NOT touched in this design pass.
+All edits land in [compose/graphql/target.schema.graphql](compose/graphql/target.schema.graphql). The non-target [compose/graphql/schema.graphql](compose/graphql/schema.graphql) is the current/source schema and is NOT touched in this design pass.
 
 ## Decisions (locked from the dialogue)
 
@@ -123,7 +123,7 @@ type RenamedQualityInput implements Input {
 }
 ```
 
-Special case — fix the broken example at [semio/graphql/target.schema.graphql](semio/graphql/target.schema.graphql) line 4902: change `CreatedFixedPieceInput.id` from `# data // uuidv7` to `# computed // hash` so it actually conforms to the `Input` (WeakEntity) interface.
+Special case — fix the broken example at [compose/graphql/target.schema.graphql](compose/graphql/target.schema.graphql) line 4902: change `CreatedFixedPieceInput.id` from `# data // uuidv7` to `# computed // hash` so it actually conforms to the `Input` (WeakEntity) interface.
 
 The 74 concrete Inputs to convert, grouped by region:
 
@@ -175,5 +175,5 @@ flowchart LR
 
 - No regeneration of resolvers, codegen, or downstream TS/Rust/Python types — this is a schema-only design pass.
 - Per-`<Op>Input` `Edge`/`Connection` types are deliberately omitted.
-- The non-target [semio/graphql/schema.graphql](semio/graphql/schema.graphql) is left untouched; once the target shape is approved we can sync it in a follow-up.
+- The non-target [compose/graphql/schema.graphql](compose/graphql/schema.graphql) is left untouched; once the target shape is approved we can sync it in a follow-up.
 

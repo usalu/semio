@@ -28,7 +28,7 @@ import {
 } from "../../../../ui/styling/vite-elements-assets.ts";
 describe("Neo4j graph database registry", () => {
   test("joins name segments with hyphen", () => {
-    expect(joinNeo4jGraphDatabaseName(["semio", "kit"])).toBe("semio-kit");
+    expect(joinNeo4jGraphDatabaseName(["compose", "kit"])).toBe("compose-kit");
   });
 
   test("partitions argv into name segments and uvx passthrough", () => {
@@ -39,7 +39,7 @@ describe("Neo4j graph database registry", () => {
   });
 
   test("product graphs are fixed four joined names", () => {
-    expect(NEO4J_GRAPH_DATABASE_NAMES).toEqual(["semio", "elements", "coda", "reuse"]);
+    expect(NEO4J_GRAPH_DATABASE_NAMES).toEqual(["compose", "elements", "coda", "reuse"]);
   });
 
   test("NEO4J_EXTRA_GRAPH_DATABASES extends export specs", () => {
@@ -125,8 +125,8 @@ describe("dependency-boundary", () => {
   test("detects adapter region marker", () => {
     expect(isAdapterBoundaryFile("pkg/foo.ts", "// #region 🔌Adapters\nimport x from 'react'")).toBe(true);
     expect(isAdapterBoundaryFile("pkg/main.py", "# #region 🔌Adapters\nimport fastapi")).toBe(true);
-    expect(isAdapterBoundaryFile("semio/client/lib/js/index.ts", "//#region 🌐RsWasmTransport\nexport async function x() {}")).toBe(true);
-    expect(isAdapterBoundaryFile("semio/client/lib/js/kit-store.worker.ts", "export async function x() {}")).toBe(true);
+    expect(isAdapterBoundaryFile("compose/client/lib/js/index.ts", "//#region 🌐RsWasmTransport\nexport async function x() {}")).toBe(true);
+    expect(isAdapterBoundaryFile("compose/client/lib/js/kit-store.worker.ts", "export async function x() {}")).toBe(true);
     expect(isAdapterBoundaryFile("coda/client/bin/assistant/mcp-app.tsx", "// #region 🔌Adapters\nimport x from 'react'")).toBe(true);
     expect(isAdapterBoundaryFile("framework/platform/renderer/react/index.tsx", "// #region 🔌Adapters\nimport x from 'react'")).toBe(true);
     expect(isAdapterBoundaryFile("pkg/foo.ts", "import x from 'react'")).toBe(false);
@@ -138,7 +138,7 @@ describe("dependency-boundary", () => {
 
   test("flags direct third-party import outside adapter", () => {
     const content = `import { z } from "zod";\nexport const a = 1;\n`;
-    const file = "semio/client/lib/js/boundary-probe.ts";
+    const file = "compose/client/lib/js/boundary-probe.ts";
     const breachs = dependencyBoundaryBreachesForFile(
       new URL("../../../../", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1"),
       file,
@@ -313,7 +313,7 @@ describe("micro-commit", () => {
     const root = process.cwd();
     expect(shouldSkipPathForUloc(root, ".cursor/plans/foo.plan.md")).toBe(true);
     expect(shouldSkipPathForUloc(root, ".agents/skills/micro-commit/SKILL.md")).toBe(true);
-    expect(shouldSkipPathForUloc(root, "semio/client/ui/LICENSE.md")).toBe(true);
+    expect(shouldSkipPathForUloc(root, "compose/client/ui/LICENSE.md")).toBe(true);
     expect(shouldSkipPathForUloc(root, "repo/AGENTS.md")).toBe(false);
     expect(shouldSkipPathForUloc(root, "repo/CHANGELOG.md")).toBe(false);
     expect(shouldSkipPathForUloc(root, ".repo/cache/x")).toBe(true);
@@ -386,15 +386,15 @@ describe("micro-commit", () => {
     const { tmpdir } = await import("node:os");
     const { join } = await import("node:path");
     const { spawnSync } = await import("node:child_process");
-    const root = mkdtempSync(join(tmpdir(), "semio-micro-commit-"));
+    const root = mkdtempSync(join(tmpdir(), "compose-micro-commit-"));
     try {
       const init = spawnSync("git", ["init"], { cwd: root, encoding: "utf8" });
       expect(init.status).toBe(0);
       installMicroCommitGitHooks(root);
       const hook = readFileSync(join(root, ".git/hook/post-commit"), "utf8");
-      expect(hook).toContain("semio_micro_commit_wipe");
+      expect(hook).toContain("compose_micro_commit_wipe");
       expect(hook).not.toContain("\r");
-      expect(existsSync(join(root, ".repo/semio-micro-commit-bun"))).toBe(true);
+      expect(existsSync(join(root, ".repo/compose-micro-commit-bun"))).toBe(true);
       expect(renderMicroCommitGitHook("post-commit")).toContain("#!/usr/bin/env sh");
     } finally {
       rmSync(root, { recursive: true, force: true });
@@ -407,7 +407,7 @@ describe("micro-commit", () => {
     const { tmpdir } = await import("node:os");
     const { join } = await import("node:path");
     const { spawnSync } = await import("node:child_process");
-    const root = mkdtempSync(join(tmpdir(), "semio-micro-commit-"));
+    const root = mkdtempSync(join(tmpdir(), "compose-micro-commit-"));
     try {
       expect(spawnSync("git", ["init"], { cwd: root, encoding: "utf8" }).status).toBe(0);
       const msgFile = join(root, ".git", "COMMIT_EDITMSG");
@@ -425,7 +425,7 @@ describe("micro-commit", () => {
     const { tmpdir } = await import("node:os");
     const { join } = await import("node:path");
     const { spawnSync } = await import("node:child_process");
-    const root = mkdtempSync(join(tmpdir(), "semio-micro-commit-wipe-"));
+    const root = mkdtempSync(join(tmpdir(), "compose-micro-commit-wipe-"));
     try {
       expect(spawnSync("git", ["init"], { cwd: root, encoding: "utf8" }).status).toBe(0);
       spawnSync("git", ["config", "user.email", "u@example.com"], { cwd: root });
@@ -441,7 +441,7 @@ describe("micro-commit", () => {
       expect(readFileSync(join(root, ".git/gkcommittemplate.txt"), "utf8")).toBe("");
       const gkLeft = readdirSync(join(root, ".git")).filter((n) => n.startsWith("gkcommittemplate"));
       expect(gkLeft).toEqual(["gkcommittemplate.txt"]);
-      expect(existsSync(join(root, ".git/semio-micro-commit-active"))).toBe(false);
+      expect(existsSync(join(root, ".git/compose-micro-commit-active"))).toBe(false);
       expect(readFileSync(join(root, ".git/COMMIT_EDITMSG"), "utf8")).toBe("");
     } finally {
       rmSync(root, { recursive: true, force: true });
@@ -454,7 +454,7 @@ describe("micro-commit", () => {
     const { tmpdir } = await import("node:os");
     const { join } = await import("node:path");
     const { spawnSync } = await import("node:child_process");
-    const root = mkdtempSync(join(tmpdir(), "semio-micro-commit-tpl-"));
+    const root = mkdtempSync(join(tmpdir(), "compose-micro-commit-tpl-"));
     try {
       expect(spawnSync("git", ["init"], { cwd: root, encoding: "utf8" }).status).toBe(0);
       const msg = buildMicroCommitMessage(
@@ -484,7 +484,7 @@ describe("micro-commit", () => {
 
 describe("playground static sites", () => {
   test("PLAYGROUND_SITE_HOSTS maps each play to latest canonical host", () => {
-    expect(PLAYGROUND_SITE_HOSTS.semio).toBe("play.semio-tech.com");
+    expect(PLAYGROUND_SITE_HOSTS.compose).toBe("play.semio-tech.com");
     expect(PLAYGROUND_SITE_HOSTS.cad).toBe("play.cad.semio-tech.com");
     expect(PLAYGROUND_SITE_HOSTS["2d"]).toBe("play.2d.semio-tech.com");
     expect(PLAYGROUND_SITE_HOSTS["3d"]).toBe("play.3d.semio-tech.com");
@@ -518,10 +518,10 @@ describe("commit", () => {
   test("parseCommitBundleBody reads emoji scopes dates and bullets", async () => {
     const { parseCommitBundleBody } = await import("./index.ts");
     const bundles = parseCommitBundleBody(
-      "🏘️semio✍️sketchpad\n🎆26🌙06☀️04\n🗺️Map work\n🎆26🌙06☀️03\n🧪Playground\n\n🖱️ui⚛️react\n🎆26🌙06☀️02\n🖥️Shell",
+      "🏘️compose✍️sketchpad\n🎆26🌙06☀️04\n🗺️Map work\n🎆26🌙06☀️03\n🧪Playground\n\n🖱️ui⚛️react\n🎆26🌙06☀️02\n🖥️Shell",
     );
     expect(bundles).toHaveLength(2);
-    expect(bundles[0]?.label).toBe("🏘️semio✍️sketchpad");
+    expect(bundles[0]?.label).toBe("🏘️compose✍️sketchpad");
     expect(bundles[0]?.dates).toHaveLength(2);
     expect(bundles[0]?.dates[0]?.bullets[0]).toBe("🗺️Map work");
   });
@@ -529,17 +529,17 @@ describe("commit", () => {
   test("parseCommitBundleBody rejects path prefixes and reserved emojis", async () => {
     const { parseCommitBundleBody } = await import("./index.ts");
     expect(() =>
-      parseCommitBundleBody("semio/foo|🏘️semio\n🎆26🌙06☀️04\n🗺️Map work"),
+      parseCommitBundleBody("compose/foo|🏘️compose\n🎆26🌙06☀️04\n🗺️Map work"),
     ).toThrow();
     expect(() =>
-      parseCommitBundleBody("🏘️semio🔀📊uloc\n🎆26🌙06☀️04\n🗺️Map work"),
+      parseCommitBundleBody("🏘️compose🔀📊uloc\n🎆26🌙06☀️04\n🗺️Map work"),
     ).toThrow();
     expect(() => parseCommitBundleBody("🗺️🧩🕸️\n🎆26🌙06☀️04\n🗺️Map work")).toThrow();
   });
 
   test("normalizeBundleScopeLabel strips reserved and uloc suffix", async () => {
     const { normalizeBundleScopeLabel } = await import("./index.ts");
-    expect(normalizeBundleScopeLabel("🏘️semio🔀📊uloc➕1")).toBe("🏘️semio");
+    expect(normalizeBundleScopeLabel("🏘️compose🔀📊uloc➕1")).toBe("🏘️compose");
   });
 
   test("isBundleScopeLine accepts area and technology root labels", async () => {
@@ -573,12 +573,12 @@ describe("commit", () => {
   test("pathMatchesBundleIndex does not treat empty prefix set as match-all", async () => {
     const { pathMatchesBundleIndex } = await import("./index.ts");
     const bundles = [
-      { label: "🏘️semio✍️sketchpad", dates: [{ dateLine: "🎆26🌙06☀️04", bullets: ["✍️x"] }] },
-      { label: "🏘️semio🗃️fixtures", dates: [{ dateLine: "🎆26🌙06☀️04", bullets: ["🗃️y"] }] },
+      { label: "🏘️compose✍️sketchpad", dates: [{ dateLine: "🎆26🌙06☀️04", bullets: ["✍️x"] }] },
+      { label: "🏘️compose🗃️fixtures", dates: [{ dateLine: "🎆26🌙06☀️04", bullets: ["🗃️y"] }] },
     ];
-    const prefixSets = [[], ["semio/fixture"]];
-    expect(pathMatchesBundleIndex("semio/fixture/a.json", 0, prefixSets, bundles)).toBe(false);
-    expect(pathMatchesBundleIndex("semio/fixture/a.json", 1, prefixSets, bundles)).toBe(true);
+    const prefixSets = [[], ["compose/fixture"]];
+    expect(pathMatchesBundleIndex("compose/fixture/a.json", 0, prefixSets, bundles)).toBe(false);
+    expect(pathMatchesBundleIndex("compose/fixture/a.json", 1, prefixSets, bundles)).toBe(true);
   });
 
   test("formatBundleDateLine appends per-day uloc suffix", async () => {
@@ -590,7 +590,7 @@ describe("commit", () => {
 
   test("commitBundleBodyError rejects per-day uloc on stdin", async () => {
     const { commitBundleBodyError } = await import("./index.ts");
-    expect(commitBundleBodyError("🏘️semio\n🎆26🌙06☀️04📊uloc➕1\n🗺️Work")).toMatch(/per-day/);
+    expect(commitBundleBodyError("🏘️compose\n🎆26🌙06☀️04📊uloc➕1\n🗺️Work")).toMatch(/per-day/);
   });
 
   test("validateMicroCommitLangMetricsDeltaSum passes when language rows sum to footer", async () => {
@@ -607,7 +607,7 @@ describe("commit", () => {
     const { mkdtempSync, writeFileSync, mkdirSync, rmSync } = await import("node:fs");
     const { tmpdir } = await import("node:os");
     const { validateBundleCommitAttribution, parseCommitBundleBody } = await import("./index.ts");
-    const root = mkdtempSync(join(tmpdir(), "semio-commit-check-sum-"));
+    const root = mkdtempSync(join(tmpdir(), "compose-commit-check-sum-"));
     try {
       spawnSync("git", ["init"], { cwd: root });
       spawnSync("git", ["config", "user.email", "t@e.com"], { cwd: root });
@@ -639,7 +639,7 @@ describe("commit", () => {
     const { mkdtempSync, writeFileSync, mkdirSync, rmSync } = await import("node:fs");
     const { tmpdir } = await import("node:os");
     const { validateBundleCommitAttribution, parseCommitBundleBody } = await import("./index.ts");
-    const root = mkdtempSync(join(tmpdir(), "semio-commit-churn-"));
+    const root = mkdtempSync(join(tmpdir(), "compose-commit-churn-"));
     try {
       spawnSync("git", ["init"], { cwd: root });
       spawnSync("git", ["config", "user.email", "t@e.com"], { cwd: root });
@@ -703,7 +703,7 @@ describe("commit", () => {
     const { mkdtempSync, writeFileSync, mkdirSync, rmSync } = await import("node:fs");
     const { tmpdir } = await import("node:os");
     const { buildCommitMessage, parseCommitBundleBody } = await import("./index.ts");
-    const root = mkdtempSync(join(tmpdir(), "semio-commit-day-uloc-"));
+    const root = mkdtempSync(join(tmpdir(), "compose-commit-day-uloc-"));
     try {
       spawnSync("git", ["init"], { cwd: root });
       spawnSync("git", ["config", "user.email", "t@e.com"], { cwd: root });
@@ -716,7 +716,7 @@ describe("commit", () => {
       const wip = spawnSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).stdout?.trim()!;
       writeFileSync(join(root, "repo/js/a.ts"), "a\nb\n", "utf8");
       spawnSync("git", ["add", "repo/js/a.ts"], { cwd: root });
-      const msg1 = join(tmpdir(), `semio-mc1-${Date.now()}.txt`);
+      const msg1 = join(tmpdir(), `compose-mc1-${Date.now()}.txt`);
       writeFileSync(
         msg1,
         "🐙ueli🎆26🌙06☀️01🚩001\n\n🎆26🌙06☀️03⏰12⌚00⏱️00\n🔧Day three\n",
@@ -725,7 +725,7 @@ describe("commit", () => {
       spawnSync("git", ["-c", "commit.gpgsign=false", "commit", "-F", msg1], { cwd: root });
       writeFileSync(join(root, "repo/js/a.ts"), "a\nb\nc\nd\n", "utf8");
       spawnSync("git", ["add", "repo/js/a.ts"], { cwd: root });
-      const msg2 = join(tmpdir(), `semio-mc2-${Date.now()}.txt`);
+      const msg2 = join(tmpdir(), `compose-mc2-${Date.now()}.txt`);
       writeFileSync(
         msg2,
         "🐙ueli🎆26🌙06☀️01🚩002\n\n🎆26🌙06☀️04⏰12⌚01⏱️00\n🔧Day four\n",
@@ -750,31 +750,31 @@ describe("commit", () => {
       label,
       dates: [{ dateLine: "🎆26🌙06☀️04", bullets: ["🗺️change"] }],
     });
-    const root = mkdtempSync(join(tmpdir(), "semio-commit-sort-"));
+    const root = mkdtempSync(join(tmpdir(), "compose-commit-sort-"));
     try {
       spawnSync("git", ["init"], { cwd: root });
       spawnSync("git", ["config", "user.email", "t@e.com"], { cwd: root });
       spawnSync("git", ["config", "user.name", "T"], { cwd: root });
       spawnSync("git", ["config", "commit.gpgsign", "false"], { cwd: root });
-      mkdirSync(join(root, "semio"), { recursive: true });
+      mkdirSync(join(root, "compose"), { recursive: true });
       mkdirSync(join(root, "ui"), { recursive: true });
       mkdirSync(join(root, "framework"), { recursive: true });
-      writeFileSync(join(root, "semio/a.ts"), "a\n", "utf8");
+      writeFileSync(join(root, "compose/a.ts"), "a\n", "utf8");
       writeFileSync(join(root, "ui/b.ts"), "b\n", "utf8");
       writeFileSync(join(root, "framework/c.ts"), "c\n", "utf8");
       spawnSync("git", ["add", "-A"], { cwd: root });
       spawnSync("git", ["-c", "commit.gpgsign=false", "commit", "-m", "init"], { cwd: root });
       const base = spawnSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).stdout?.trim()!;
-      writeFileSync(join(root, "semio/a.ts"), `${"a\n".repeat(11)}`, "utf8");
+      writeFileSync(join(root, "compose/a.ts"), `${"a\n".repeat(11)}`, "utf8");
       writeFileSync(join(root, "ui/b.ts"), `${"b\n".repeat(151)}`, "utf8");
       writeFileSync(join(root, "framework/c.ts"), `${"c\n".repeat(5)}`, "utf8");
       spawnSync("git", ["add", "-A"], { cwd: root });
       spawnSync("git", ["-c", "commit.gpgsign=false", "commit", "-m", "delta"], { cwd: root });
       const head = spawnSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).stdout?.trim()!;
-      const bundles = [mk("🏘️semio"), mk("🖱️ui"), mk("🥅framework")];
-      const paths = [["semio/a.ts"], ["ui/b.ts"], ["framework/c.ts"]];
+      const bundles = [mk("🏘️compose"), mk("🖱️ui"), mk("🥅framework")];
+      const paths = [["compose/a.ts"], ["ui/b.ts"], ["framework/c.ts"]];
       const sorted = sortCommitBundlesByEditTotal(root, base, head, bundles, paths);
-      expect(sorted.bundles.map((b) => b.label)).toEqual(["🖱️ui", "🏘️semio", "🥅framework"]);
+      expect(sorted.bundles.map((b) => b.label)).toEqual(["🖱️ui", "🏘️compose", "🥅framework"]);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
@@ -811,7 +811,7 @@ describe("commit", () => {
     const out = formatCommitPrepareCommands({
       tagName: "🐙ueli🎆26🌙06☀️04🚩",
       wipSha: "abc123def456",
-      messageFile: ".git/semio-commit-message",
+      messageFile: ".git/compose-commit-message",
     });
     const blocks = out.trimEnd().split("\n\n");
     expect(blocks).toHaveLength(4);
@@ -822,7 +822,7 @@ describe("commit", () => {
 
   test("formatCommitPrepareAgentReply ends with tag name and commit message blocks", async () => {
     const { formatCommitPrepareAgentReply } = await import("./index.ts");
-    const commitMessage = "🐙ueli🎆26🌙06☀️04🔀\n\n🏘️semio✍️sketchpad📊uloc\n🎆26🌙06☀️04\n🗺️Work\n\n📊uloc➕1🟰1\n\nSigned-off-by: U <u@e.com>\n";
+    const commitMessage = "🐙ueli🎆26🌙06☀️04🔀\n\n🏘️compose✍️sketchpad📊uloc\n🎆26🌙06☀️04\n🗺️Work\n\n📊uloc➕1🟰1\n\nSigned-off-by: U <u@e.com>\n";
     const out = formatCommitPrepareAgentReply({
       tagName: "🐙ueli🎆26🌙06☀️04🚩",
       wipSha: "abc",

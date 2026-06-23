@@ -15,7 +15,7 @@ The repo CLI had multiple output modes (--json, plain text), dry-run support, an
 5. Update VSCode extension with interactive wizards:
    - pickTicket() - QuickPick to select from ticket list
    - pickPolicy() - QuickPick to select from policy list
-   - Add semio.ticketOpen command to open ticket file directly
+   - Add compose.ticketOpen command to open ticket file directly
 6. Update tests for new commands
 7. Update documentation in AGENTS.md
 
@@ -42,13 +42,13 @@ The repo CLI had multiple output modes (--json, plain text), dry-run support, an
 - Added `ToolResult`, `TicketData`, `PolicyData` interfaces
 - Added `pickTicket()` - interactive QuickPick for ticket selection
 - Added `pickPolicy()` - interactive QuickPick for policy selection
-- Added `semio.ticketOpen` command to open ticket file in editor
+- Added `compose.ticketOpen` command to open ticket file in editor
 - Updated ticket commands to use picker instead of manual date/slug input
 - Updated policy check command to use picker
 
 ## js/vscode/extension.test.ts
 
-- Added test for `semio.ticketOpen` command registration
+- Added test for `compose.ticketOpen` command registration
 
 ## AGENTS.md
 

@@ -10,7 +10,7 @@ In `ModelPiece`, `activeBaseColor` and `hoverBaseColor` are computed via `getCom
 Resolve CSS variables to actual RGB values using a temporary DOM element (same pattern as `materialColor` in `ModelPiece`).
 
 ## Files
-- `semio/sketchpad/index.tsx`
+- `compose/sketchpad/index.tsx`
 
 ## Fix Applied
 In `ModelPiece` (~line 37804), replaced `getComputedColor("--active-base")` and `getComputedColor("--hover-base")` with DOM-based resolution that sets `color: var(--active-base)` on a hidden element and reads `getComputedStyle(el).color`, returning a resolved `rgb(...)` string that `THREE.Color` can parse.

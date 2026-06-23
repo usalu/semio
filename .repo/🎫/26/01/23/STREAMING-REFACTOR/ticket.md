@@ -201,7 +201,7 @@ Currently CLI commands call `runInvoke`/`runGraphQL` which build a `Request`. Re
 - Pipe to renderer
 
 **GraphQL CLI**
-- Keep `semio graphql` command if you want, but it calls the registry command `graphql.query`.
+- Keep `compose graphql` command if you want, but it calls the registry command `graphql.query`.
 - That keeps everything uniformly streaming.
 
 ---

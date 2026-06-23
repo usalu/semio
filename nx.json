@@ -6,8 +6,8 @@
   "useDaemonProcess": false,
   "defaultBase": "⛳wip",
   "workspaceLayout": {
-    "appsDir": "semio",
-    "libsDir": "semio"
+    "appsDir": "compose",
+    "libsDir": "compose"
   },
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"],

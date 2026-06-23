@@ -2,7 +2,7 @@
   "title": "Filter Kit With Design Across Language Bindings",
   "emoji": "🧰",
   "status": "closed",
-  "description": "Introduce filterKitWithDesign(kit, designGuid, tags?) across semio language bindings, create filtered Nakagin Capsule Tower kit asset, extend existing tests to cover Kit/Filter/Design behavior in all supported languages, and verify builds/tests.",
+  "description": "Introduce filterKitWithDesign(kit, designGuid, tags?) across compose language bindings, create filtered Nakagin Capsule Tower kit asset, extend existing tests to cover Kit/Filter/Design behavior in all supported languages, and verify builds/tests.",
   "summary": "Bulk close",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1065"

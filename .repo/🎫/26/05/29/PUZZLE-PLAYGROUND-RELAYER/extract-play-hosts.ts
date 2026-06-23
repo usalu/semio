@@ -2,7 +2,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 
 function extract2d(): void {
-	const indexPath = "c:/git/semio/puzzle/2d/react/index.tsx";
+	const indexPath = "c:/git/compose/puzzle/2d/react/index.tsx";
 	const c = readFileSync(indexPath, "utf8");
 	const marker = "\nconst NAKAGIN_BOARD_PLAY_KIND_CATALOGS";
 	const pos = c.indexOf(marker);
@@ -15,7 +15,7 @@ function extract2d(): void {
 		"\n",
 	);
 	const tail = c.slice(pos);
-	const hostPath = "c:/git/semio/puzzle/2d/play/host.tsx";
+	const hostPath = "c:/git/compose/puzzle/2d/play/host.tsx";
 	const hostHeader = `/** @emoji 🛝 Board play React host — imported only from play/main.ts. */
 import {
 	Button,

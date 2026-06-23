@@ -4,7 +4,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 const repoRoot = join(import.meta.dir, "..", "..", "..", "..", "..", "..");
-const kitPath = join(repoRoot, "semio/fixtures/stores/metabolism/wip/initialKit/kit.semio.json");
+const kitPath = join(repoRoot, "compose/fixtures/stores/metabolism/wip/initialKit/kit.compose.json");
 const boardPath = join(repoRoot, "elements/lib/board/play/fixtures/nakagin-capsule-tower.board.json");
 const scenePath = join(repoRoot, "elements/lib/react/scene/play/fixtures/nakagin-capsule-tower.scene.json");
 

@@ -38,7 +38,7 @@ Source spec: [.repo/✍️/spatial-step-export-import.md](.repo/%E2%9C%8D%EF%B8%
 
 ## Current state
 
-- brepjs is `opencascade.js`-backed and exposes `exportSTEP`, `exportSTEPConfigured`, `exportAssemblySTEP`, and `importSTEP` (see `c:\git\semio\spatial\js\node_modules\brepjs\dist\brepjs.js`). It can write/read geometry but cannot attach metadata to shapes and has no JSON IO.
+- brepjs is `opencascade.js`-backed and exposes `exportSTEP`, `exportSTEPConfigured`, `exportAssemblySTEP`, and `importSTEP` (see `c:\git\compose\spatial\js\node_modules\brepjs\dist\brepjs.js`). It can write/read geometry but cannot attach metadata to shapes and has no JSON IO.
 - Our spatial layer already keeps an out-of-band sidecar: [`AttributeStore`](spatial/js/core/index.ts) at line 327, attached to `Model.metadata` at line 1006. `Model.toJSON` / `fromJSON` cover JSON IO for primitives + objects but do not yet persist `AttributeStore` and have no STEP path.
 - `ModelSpaceJson` (line 1140) covers the linked-model container.
 - Properties are derived (`derivePropertyDefinitionForObject`, line 1597); they are not stored, so on STEP export they must be re-derived per object.

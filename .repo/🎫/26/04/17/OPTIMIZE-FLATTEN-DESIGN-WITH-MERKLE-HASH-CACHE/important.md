@@ -47,7 +47,7 @@ byte-identical bytes before hashing.
 ## 🧪 Tests
 
 All five implementations add the same unit that loads
-`semio/assets/semio/flatten-merkle.cases.semio.json` and for each case:
+`compose/assets/compose/flatten-merkle.cases.compose.json` and for each case:
 
 1. Runs `flattenDesign` once, capturing the hash map.
 2. Mutates the kit in a deterministic way described in the case, runs again.

@@ -8,14 +8,14 @@
 - [x] Update README.md and AGENTS.md docs.
 
 ## Changes
-- Updated `js/semio/sketchpad/Design.tsx` to register 5 Selection subtools in Design toolbar group:
+- Updated `js/compose/sketchpad/Design.tsx` to register 5 Selection subtools in Design toolbar group:
   - `select`
   - `hand`
   - `additive`
   - `subtractive`
   - `intersect`
 - Added three new toolbar sections for `additive`, `subtractive`, and `intersect` subtools with unique ids, icons, and cleanup removals.
-- Updated `js/semio/sketchpad/locales/en.json` toolbar subtool labels for `hand`, `additive`, `subtractive`, and `intersect`.
+- Updated `js/compose/sketchpad/locales/en.json` toolbar subtool labels for `hand`, `additive`, `subtractive`, and `intersect`.
 - Updated docs in `README.md` and `AGENTS.md` to specify five one-column stacked Selection subtools.
 
 ## Log

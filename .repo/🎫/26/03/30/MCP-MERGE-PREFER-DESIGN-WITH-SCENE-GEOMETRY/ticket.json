@@ -2,8 +2,8 @@
   "title": "Mcp Merge Prefer Design With Scene Geometry",
   "emoji": "🔀",
   "status": "closed",
-  "description": "SemioDesign only shows 3D scene when pieces have plane+center; host merged payloads dropped planes. Score and merge MCP payloads by scene geometry richness and final pass pick max plane+center design per guid.",
-  "summary": "SemioDesign hides the scene column unless pieces have plane+center; stripped MCP payloads often kept many pieces but dropped planes so only the diagram showed. Added mcpSceneGeometryRichness, folded into scoreMcpDiagramPayload and mcpDesignMergeScore; mergeRichestDesignFromCandidates uses merge score with merged context and a final pass that replaces design with the same guid that maximizes plane+center count. Vitest regression added. Documented SemioDesign scene gate.",
+  "description": "ComposeDesign only shows 3D scene when pieces have plane+center; host merged payloads dropped planes. Score and merge MCP payloads by scene geometry richness and final pass pick max plane+center design per guid.",
+  "summary": "ComposeDesign hides the scene column unless pieces have plane+center; stripped MCP payloads often kept many pieces but dropped planes so only the diagram showed. Added mcpSceneGeometryRichness, folded into scoreMcpDiagramPayload and mcpDesignMergeScore; mergeRichestDesignFromCandidates uses merge score with merged context and a final pass that replaces design with the same guid that maximizes plane+center count. Vitest regression added. Documented ComposeDesign scene gate.",
   "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningdesignapp",
   "sessions": [
     "⚪08da76dfa15d4a8f8078b76c6b8c0617"

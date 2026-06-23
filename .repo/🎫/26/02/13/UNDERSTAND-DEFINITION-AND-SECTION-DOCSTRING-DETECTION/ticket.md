@@ -71,7 +71,7 @@ Inside `sectionPolicy`, for each real definition range:
 1. Skips test/benchmark files
 2. Skips non-exported definitions (via `isExportedDefinition`)
 3. Native docstring detection by language:
-   - **TypeScript**: Checks if prev line ends with `**/` or `*/`, then scans back for `/**` opener. Parses content for identification `[...](semiorepo://definition/...)`, requirements (RFC2119 keywords via `isSpecText`), and summary.
+   - **TypeScript**: Checks if prev line ends with `**/` or `*/`, then scans back for `/**` opener. Parses content for identification `[...](composerepo://definition/...)`, requirements (RFC2119 keywords via `isSpecText`), and summary.
    - **C#/Rust**: Checks if prev line starts with `///`, then scans back through `///` lines.
    - **Go/Python**: Automatically set `isNativeDocstring = true` (their comment prefix IS the native docstring format).
 4. If NOT native docstring but has summary/requirements/identification: emits `BreachCodeDefNotNativeDocstring`
@@ -83,7 +83,7 @@ For each section (recursive):
 
 1. Checks for empty sections (no non-comment/non-blank lines, no children)
 2. For non-Header, non-empty-name, non-test sections:
-   - Scans comment lines after section start for identification `[...](semiorepo://section/...)` and summary text
+   - Scans comment lines after section start for identification `[...](composerepo://section/...)` and summary text
    - Emits `BreachCodeSectionMissingIdentification` and `BreachCodeSectionMissingSummary`
 
 ### 5. SectionDocLines (main.go:13758-13815)
@@ -149,27 +149,27 @@ Marks lines that are "definition doc" lines (immune from comment-ban):
 
 ### 9. Source File Formats
 
-**TypeScript (semio/js/semio.ts)**:
+**TypeScript (compose/js/compose.ts)**:
 
-- Section: `// [🔖path#Name](semiorepo://section/...)` + `// Summary text.`
+- Section: `// [🔖path#Name](composerepo://section/...)` + `// Summary text.`
 - Definition: JSDoc `/** ... **/` with summary, requirements (MUST/SHOULD), and `*  * [🛠️...](...)`
 
-**Python (semio/py/semio.py)**:
+**Python (compose/py/compose.py)**:
 
-- Section: `# [🔖path#Name](semiorepo://section/...)` + `# Summary text.`
+- Section: `# [🔖path#Name](composerepo://section/...)` + `# Summary text.`
 - Definition: `# spec MUST ...` + `# Summary.` + `# [🛠️...](...)` above `def`/`class`
 
-**C# (semio/net/Semio/Semio.cs)**:
+**C# (compose/net/Compose/Compose.cs)**:
 
-- Section: `/// [🔖path#Name](semiorepo://section/...)` + `/// Requirements...` + `/// Summary.`
+- Section: `/// [🔖path#Name](composerepo://section/...)` + `/// Requirements...` + `/// Summary.`
 - Definition: `/// Summary.` + `/// Requirements.` + `/// [🛠️...](...)` above class/method
 
-**Go (semio/go/semio.go)**:
+**Go (compose/go/compose.go)**:
 
-- Section: `// [🔖path#Name](semiorepo://section/...)` + `// Summary text.`
+- Section: `// [🔖path#Name](composerepo://section/...)` + `// Summary text.`
 - Definition: `// Name MUST ...` + `// Summary.` + `// [🛠️...](...)` above `func`
 
-**Rust**: No `lib.rs` file found (path `semio/rs/src/lib.rs` does not exist).
+**Rust**: No `lib.rs` file found (path `compose/rs/src/lib.rs` does not exist).
 
 ### 10. Key Helper Functions
 

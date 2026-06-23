@@ -3272,29 +3272,29 @@ index 2a49c53e0..a34502376 100644
        selection={canvasSelection}
      >
        <Puzzle3dParts relocate={props.gumballConfig ?? DEFAULT_GUMBALL_CONFIG} />
-diff --git a/semio/client/lib/sketchpad/js/index.ts b/semio/client/lib/sketchpad/js/index.ts
+diff --git a/compose/client/lib/sketchpad/js/index.ts b/compose/client/lib/sketchpad/js/index.ts
 index 56e6274c6..28ef29fdd 100644
---- a/semio/client/lib/sketchpad/js/index.ts
-+++ b/semio/client/lib/sketchpad/js/index.ts
+--- a/compose/client/lib/sketchpad/js/index.ts
++++ b/compose/client/lib/sketchpad/js/index.ts
 @@ -11842,38 +11842,119 @@ export type SketchpadKitWiresReferenceData = {
  	readonly pieceBlueprints: ReadonlyMap<string, { readonly kind: "Type" | "Design"; readonly id: string }>;
  };
  
 -const SKETCHPAD_KIT_WIRES_KIND_CATALOGS: WiresFixtureV1["kindCatalogs"] = {
 -	identityKinds: [
--		{ id: "semio.kit.kit", name: "Kit", shape: "rectangle", color: "var(--color-dark-8-9)" },
--		{ id: "semio.kit.typology", name: "Typology", shape: "rectangle", color: "var(--color-dark-6-7)" },
--		{ id: "semio.kit.folder", name: "Folder", shape: "rectangle", color: "var(--color-dark-5-7)" },
--		{ id: "semio.kit.design", name: "Design", shape: "circle", color: "var(--color-secondary)" },
--		{ id: "semio.kit.type", name: "Type", shape: "rectangle", color: "var(--color-tertiary)" },
--		{ id: "semio.kit.piece", name: "Piece", shape: "rectangle", color: "var(--color-warning)" },
--		{ id: "semio.kit.connection", name: "Connection", shape: "rectangle", color: "var(--color-primary)" },
--		{ id: "semio.kit.representation", name: "Representation", shape: "rectangle", color: "var(--color-info)" },
--		{ id: "semio.kit.port", name: "Port", shape: "rectangle", color: "var(--color-success)" },
--		{ id: "semio.kit.connector", name: "Connector", shape: "rectangle", color: "var(--color-secondary)" },
--		{ id: "semio.kit.kit", name: "Kit", shape: "rectangle", color: "var(--color-dark-6-7)" },
--		{ id: "semio.kit.file", name: "File", shape: "rectangle", color: "var(--color-gray)" },
--		{ id: "semio.kit.family", name: "Family", shape: "rectangle", color: "var(--color-gray-400)" },
+-		{ id: "compose.kit.kit", name: "Kit", shape: "rectangle", color: "var(--color-dark-8-9)" },
+-		{ id: "compose.kit.typology", name: "Typology", shape: "rectangle", color: "var(--color-dark-6-7)" },
+-		{ id: "compose.kit.folder", name: "Folder", shape: "rectangle", color: "var(--color-dark-5-7)" },
+-		{ id: "compose.kit.design", name: "Design", shape: "circle", color: "var(--color-secondary)" },
+-		{ id: "compose.kit.type", name: "Type", shape: "rectangle", color: "var(--color-tertiary)" },
+-		{ id: "compose.kit.piece", name: "Piece", shape: "rectangle", color: "var(--color-warning)" },
+-		{ id: "compose.kit.connection", name: "Connection", shape: "rectangle", color: "var(--color-primary)" },
+-		{ id: "compose.kit.representation", name: "Representation", shape: "rectangle", color: "var(--color-info)" },
+-		{ id: "compose.kit.port", name: "Port", shape: "rectangle", color: "var(--color-success)" },
+-		{ id: "compose.kit.connector", name: "Connector", shape: "rectangle", color: "var(--color-secondary)" },
+-		{ id: "compose.kit.kit", name: "Kit", shape: "rectangle", color: "var(--color-dark-6-7)" },
+-		{ id: "compose.kit.file", name: "File", shape: "rectangle", color: "var(--color-gray)" },
+-		{ id: "compose.kit.family", name: "Family", shape: "rectangle", color: "var(--color-gray-400)" },
 -	],
 -	relationshipKinds: [
 -		{ id: "wires.owns", name: "Owns", color: "var(--color-muted-foreground)", pattern: "solid" },
@@ -3304,18 +3304,18 @@ index 56e6274c6..28ef29fdd 100644
 -	],
 -};
 +const SKETCHPAD_KIT_WIRES_FILE_NODE_KIND_CATALOGS: NonNullable<WiresFixtureV1["kindCatalogs"]>["identityKinds"] = [
-+	{ id: "semio.kit.kit", name: "Kit", shape: "rectangle", color: "var(--color-dark-8-9)" },
-+	{ id: "semio.kit.typology", name: "Typology", shape: "rectangle", color: "var(--color-dark-6-7)" },
-+	{ id: "semio.kit.folder", name: "Folder", shape: "rectangle", color: "var(--color-dark-5-7)" },
-+	{ id: "semio.kit.design", name: "Design", shape: "circle", color: "var(--color-secondary)" },
-+	{ id: "semio.kit.type", name: "Type", shape: "rectangle", color: "var(--color-tertiary)" },
-+	{ id: "semio.kit.piece", name: "Piece", shape: "rectangle", color: "var(--color-warning)" },
-+	{ id: "semio.kit.connection", name: "Connection", shape: "rectangle", color: "var(--color-primary)" },
-+	{ id: "semio.kit.representation", name: "Representation", shape: "rectangle", color: "var(--color-info)" },
-+	{ id: "semio.kit.port", name: "Port", shape: "rectangle", color: "var(--color-success)" },
-+	{ id: "semio.kit.connector", name: "Connector", shape: "rectangle", color: "var(--color-secondary)" },
-+	{ id: "semio.kit.file", name: "File", shape: "rectangle", color: "var(--color-gray)" },
-+	{ id: "semio.kit.family", name: "Family", shape: "rectangle", color: "var(--color-gray-400)" },
++	{ id: "compose.kit.kit", name: "Kit", shape: "rectangle", color: "var(--color-dark-8-9)" },
++	{ id: "compose.kit.typology", name: "Typology", shape: "rectangle", color: "var(--color-dark-6-7)" },
++	{ id: "compose.kit.folder", name: "Folder", shape: "rectangle", color: "var(--color-dark-5-7)" },
++	{ id: "compose.kit.design", name: "Design", shape: "circle", color: "var(--color-secondary)" },
++	{ id: "compose.kit.type", name: "Type", shape: "rectangle", color: "var(--color-tertiary)" },
++	{ id: "compose.kit.piece", name: "Piece", shape: "rectangle", color: "var(--color-warning)" },
++	{ id: "compose.kit.connection", name: "Connection", shape: "rectangle", color: "var(--color-primary)" },
++	{ id: "compose.kit.representation", name: "Representation", shape: "rectangle", color: "var(--color-info)" },
++	{ id: "compose.kit.port", name: "Port", shape: "rectangle", color: "var(--color-success)" },
++	{ id: "compose.kit.connector", name: "Connector", shape: "rectangle", color: "var(--color-secondary)" },
++	{ id: "compose.kit.file", name: "File", shape: "rectangle", color: "var(--color-gray)" },
++	{ id: "compose.kit.family", name: "Family", shape: "rectangle", color: "var(--color-gray-400)" },
 +];
 +
 +const SKETCHPAD_KIT_WIRES_RELATIONSHIP_KIND_CATALOGS: NonNullable<WiresFixtureV1["kindCatalogs"]>["relationshipKinds"] = [
@@ -3326,11 +3326,11 @@ index 56e6274c6..28ef29fdd 100644
 +];
 +
 +function sketchpadKitWiresFileNodeKindCatalog(fileNodeKindId: string) {
-+	return SKETCHPAD_KIT_WIRES_FILE_NODE_KIND_CATALOGS.find((row) => row.id === `semio.kit.${fileNodeKindId}`);
++	return SKETCHPAD_KIT_WIRES_FILE_NODE_KIND_CATALOGS.find((row) => row.id === `compose.kit.${fileNodeKindId}`);
 +}
 +
 +function sketchpadKitWiresIdentityKindId(nodeId: string): string {
-+	return `semio.kit.identity.${nodeId}`;
++	return `compose.kit.identity.${nodeId}`;
 +}
 +
 +function sketchpadKitEntityIconField(value: unknown): string | undefined {
@@ -3386,7 +3386,7 @@ index 56e6274c6..28ef29fdd 100644
 +}
  
 -function sketchpadKitWiresIdentityKind(fileNodeKindId: string): string {
--	return `semio.kit.${fileNodeKindId}`;
+-	return `compose.kit.${fileNodeKindId}`;
 +/** @emoji 🖼️ Puzzle 2d {@link iconKind} for a kit wires identity icon (catalog id, emoji, typst, data URL, or inline SVG). */
 +function sketchpadKitWiresResolveIconKind(raw: string | undefined): string | undefined {
 +	const catalogKey = sketchpadKitWiresCatalogIconKey(raw);
@@ -3614,10 +3614,10 @@ index 56e6274c6..28ef29fdd 100644
 +			expect(plainTypeNode.iconKind).toBeUndefined();
  			expect(unknownNode.text).toBe("Mystery");
  			expect(unknownNode.iconKind).toBeUndefined();
-+			expect(kitNode.nodeKind).toBe(`semio.kit.identity.${kitId}`);
-+			expect(typeNode.nodeKind).toBe(`semio.kit.identity.${typeId}`);
-+			expect(fixture.kindCatalogs?.identityKinds?.some((row) => row.id === `semio.kit.identity.${typeId}` && row.icon === "base")).toBe(true);
-+			expect(fixture.kindCatalogs?.identityKinds?.some((row) => row.id === `semio.kit.identity.${plainTypeId}` && row.icon === undefined)).toBe(true);
++			expect(kitNode.nodeKind).toBe(`compose.kit.identity.${kitId}`);
++			expect(typeNode.nodeKind).toBe(`compose.kit.identity.${typeId}`);
++			expect(fixture.kindCatalogs?.identityKinds?.some((row) => row.id === `compose.kit.identity.${typeId}` && row.icon === "base")).toBe(true);
++			expect(fixture.kindCatalogs?.identityKinds?.some((row) => row.id === `compose.kit.identity.${plainTypeId}` && row.icon === undefined)).toBe(true);
  			const board = wiresFixtureBoard(fixture);
  			const boardType = board.nodes.find((node) => node.id === typeId) as { text?: string; iconKind?: string };
  			expect(boardType.text).toBe("Beam");
@@ -3636,8 +3636,8 @@ index 56e6274c6..28ef29fdd 100644
  			const ctrl = new SketchpadShellController(bus, () => {});
  			const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
  			const typeId = "11111111-2222-3333-4444-555555555555";
--			ctrl.registerKitStore(kitId, new InMemorySemioKitStore({ id: kitId, name: "K", types: [], designs: [] } as Kit));
-+			ctrl.registerKitStore(kitId, new InMemorySemioKitStore({ id: kitId, name: "K", types: [{ id: typeId, name: "T" }], designs: [] } as Kit));
+-			ctrl.registerKitStore(kitId, new InMemoryComposeKitStore({ id: kitId, name: "K", types: [], designs: [] } as Kit));
++			ctrl.registerKitStore(kitId, new InMemoryComposeKitStore({ id: kitId, name: "K", types: [{ id: typeId, name: "T" }], designs: [] } as Kit));
  			ctrl.navigateTo(`/kits/${kitId}`);
 +			ctrl.syncVirtualFileSystemRoute(sketchpadVfsScope(SKETCHPAD_KIT_APP_ID), kitId);
  			sketchpadApplyPuzzle2dSelection(sketchpadKitWiresInstanceId(kitId), [typeId], ctrl);
@@ -3653,7 +3653,7 @@ index 56e6274c6..28ef29fdd 100644
 +			const ctrl = new SketchpadShellController(bus, () => {});
 +			const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
 +			const typeId = "11111111-2222-3333-4444-555555555555";
-+			ctrl.registerKitStore(kitId, new InMemorySemioKitStore({ id: kitId, name: "K", types: [{ id: typeId, name: "T" }], designs: [] } as Kit));
++			ctrl.registerKitStore(kitId, new InMemoryComposeKitStore({ id: kitId, name: "K", types: [{ id: typeId, name: "T" }], designs: [] } as Kit));
 +			ctrl.navigateTo(`/kits/${kitId}`);
 +			ctrl.syncVirtualFileSystemRoute(sketchpadVfsScope(SKETCHPAD_KIT_APP_ID), kitId);
 +			sketchpadNavigateFromWiresSelection(sketchpadKitWiresInstanceId(kitId), [typeId], ctrl);
@@ -3663,9 +3663,9 @@ index 56e6274c6..28ef29fdd 100644
  	});
  
  	describe("sketchpadKitVfsChildren", () => {
-diff --git a/semio/fixtures/kit/folder/abbau-aufbau/stockwerk.3dm b/semio/fixtures/kit/folder/abbau-aufbau/stockwerk.3dm
+diff --git a/compose/fixtures/kit/folder/abbau-aufbau/stockwerk.3dm b/compose/fixtures/kit/folder/abbau-aufbau/stockwerk.3dm
 index 475119c11..b2345d13e 100644
-Binary files a/semio/fixtures/kit/folder/abbau-aufbau/stockwerk.3dm and b/semio/fixtures/kit/folder/abbau-aufbau/stockwerk.3dm differ
+Binary files a/compose/fixtures/kit/folder/abbau-aufbau/stockwerk.3dm and b/compose/fixtures/kit/folder/abbau-aufbau/stockwerk.3dm differ
 diff --git a/ui/react/index.tsx b/ui/react/index.tsx
 index 2fb5b266b..f41d6f039 100644
 --- a/ui/react/index.tsx
@@ -3938,7 +3938,7 @@ index 2fb5b266b..f41d6f039 100644
 +/** @emoji ↔️ Document capture hook so corner grabs win over react-resizable-panels (registered at module load). */
 +function installResizableCornerInterceptor(): void {
 +  if (typeof document === "undefined") return;
-+  const marker = "__semioResizableCornerInterceptor";
++  const marker = "__composeResizableCornerInterceptor";
 +  if ((document as Document & Record<string, boolean>)[marker]) return;
 +  (document as Document & Record<string, boolean>)[marker] = true;
 +  let drag: { pointerId: number; x: number; y: number; spec: ResizableJoinCornerSpec } | null = null;

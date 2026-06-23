@@ -3,7 +3,7 @@
   "emoji": "➕",
   "status": "closed",
   "description": "Add Meta and Shallow Types to Python Library",
-  "summary": "Added Meta and Shallow TypedDict types to semio/py/main.py for all entities with Diff equivalents. Added 16 sub-entity Meta types (AttributeMeta, TagMeta, ConceptMeta, StatMeta, PropMeta, AuthorMeta, FileMeta, FolderMeta, QualityMeta, PortMeta, ModelMeta, ConnectorMeta, LayerMeta, PieceMeta, GroupMeta, ConnectionMeta), 3 main entity Meta types (TypeMeta, DesignMeta, KitMeta), 3 Shallow types (TypeShallow, DesignShallow, KitShallow), 19 toMeta conversion functions, 3 toShallow conversion functions, and 7 tests. All 29 tests pass (1 pre-existing failure unchanged).",
+  "summary": "Added Meta and Shallow TypedDict types to compose/py/main.py for all entities with Diff equivalents. Added 16 sub-entity Meta types (AttributeMeta, TagMeta, ConceptMeta, StatMeta, PropMeta, AuthorMeta, FileMeta, FolderMeta, QualityMeta, PortMeta, ModelMeta, ConnectorMeta, LayerMeta, PieceMeta, GroupMeta, ConnectionMeta), 3 main entity Meta types (TypeMeta, DesignMeta, KitMeta), 3 Shallow types (TypeShallow, DesignShallow, KitShallow), 19 toMeta conversion functions, 3 toShallow conversion functions, and 7 tests. All 29 tests pass (1 pre-existing failure unchanged).",
   "goal": "🎯aioptimizedrepo",
   "sessions": [
     "⚪02ba8ad096dd4dfa9e30dafccd655277"

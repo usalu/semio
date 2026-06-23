@@ -1,0 +1,198 @@
+{
+  "syntheticKit": "synthetic-find-replaceable.kit.compose.json",
+  "cases": [
+    {
+      "name": "selection_asset_returns_compatible_ids",
+      "kit": "kit/dev/metabolism/wip/initialKit/kit.compose.json",
+      "designName": "Nakagin Capsule Tower",
+      "selectionAsset": "nakagin-capsule-tower.copy.design.selection.compose.json",
+      "expectedSelectionPieceCount": 10,
+      "expectedSelectionConnectionCount": 9,
+      "expectedTypeIds": [],
+      "expectedDesignIds": [
+        "d7e12638-9749-471b-937e-a6e5523778ff",
+        "019ab4e0-7295-7e1e-bb5f-9dfae8c0c4cf",
+        "019ab4e0-8da8-7217-946f-5b5a83aca0e3"
+      ],
+      "designFamilies": []
+    },
+    {
+      "name": "parent_piece_yields_only_exact_design_matches",
+      "kit": "kit/dev/metabolism/wip/initialKit/kit.compose.json",
+      "designName": "Nakagin Capsule Tower",
+      "pieceNames": [
+        "t_f1_b_c0"
+      ],
+      "expectedTypeIdCount": 0,
+      "expectedDesignIds": [
+        "d7e12638-9749-471b-937e-a6e5523778ff",
+        "019ab4e0-7295-7e1e-bb5f-9dfae8c0c4cf",
+        "019ab4e0-8da8-7217-946f-5b5a83aca0e3"
+      ],
+      "designFamilies": []
+    },
+    {
+      "name": "isolated_piece",
+      "kit": "kit/dev/metabolism/wip/initialKit/kit.compose.json",
+      "designName": "Flat",
+      "designParentName": "Nakagin Capsule Tower",
+      "usePieceIndex": 0,
+      "expectNonEmptyTypes": true,
+      "expectOwnTypeInResults": true,
+      "designFamilies": []
+    },
+    {
+      "name": "capital_piece",
+      "kit": "kit/dev/metabolism/wip/initialKit/kit.compose.json",
+      "designName": "Nakagin Capsule Tower",
+      "lookupTypeName": "Capital",
+      "expectNonEmptyTypes": true,
+      "forbiddenTypeNames": [
+        "Capital",
+        "Capsule"
+      ],
+      "designFamilies": []
+    },
+    {
+      "name": "multiple_selected_pieces",
+      "kit": "kit/dev/metabolism/wip/initialKit/kit.compose.json",
+      "designName": "Nakagin Capsule Tower",
+      "pieceNames": [
+        "t_f1_b_c0",
+        "t_f2_b_c0"
+      ],
+      "expectedTypeIdCount": 0,
+      "expectedDesignIds": [
+        "d7e12638-9749-471b-937e-a6e5523778ff",
+        "019ab4e0-7295-7e1e-bb5f-9dfae8c0c4cf",
+        "019ab4e0-8da8-7217-946f-5b5a83aca0e3"
+      ],
+      "designFamilies": []
+    },
+    {
+      "name": "empty_selection",
+      "kit": "kit/dev/metabolism/wip/initialKit/kit.compose.json",
+      "designName": "Nakagin Capsule Tower",
+      "pieceNames": [],
+      "expectConnectorlessTypeCount": true,
+      "designFamilies": []
+    }
+  ],
+  "boundaryCases": {
+    "kit": "kit/dev/metabolism/wip/initialKit/kit.compose.json",
+    "designName": "Nakagin Capsule Tower",
+    "singleCapsulePieces": [
+      "cs_sl2_d0_t_f9_b_c1"
+    ],
+    "twoCapsulePieces": [
+      "cs_sl2_d0_t_f8_b_c1",
+      "cs_sl2_d0_t_f9_b_c1"
+    ],
+    "fourCapsulePieces": [
+      "cs_sl1_d0_t_f9_b_c1",
+      "cs_sl1_d1_t_f9_b_c1",
+      "cs_sl2_d0_t_f9_b_c1",
+      "cs_sl2_d1_t_f9_b_c1"
+    ],
+    "eightCapsulePieces": [
+      "cs_sl0_d0_t_f0_b_c0",
+      "cs_sl0_d1_t_f0_b_c0",
+      "cs_sl0_d2_t_f0_b_c0",
+      "cs_sl0_d3_t_f0_b_c0",
+      "cs_sl1_d0_t_f0_b_c0",
+      "cs_sl1_d1_t_f0_b_c0",
+      "cs_sl2_d0_t_f0_b_c0",
+      "cs_sl2_d1_t_f0_b_c0"
+    ],
+    "tambourPieceName": "t_f9_b_c1",
+    "expectedTambourTypeIdCount": 0,
+    "expectedTambourDesignIdCount": 3,
+    "forbiddenFamilies": [
+      "\\",
+      "/",
+      "q",
+      "p",
+      "J",
+      "L",
+      "s",
+      "z"
+    ],
+    "expectedTwoCapsuleFamilies": [
+      "Bridge",
+      "Cylindric Tambour",
+      "First Storey",
+      "Last Storey",
+      "Single Storey",
+      "Tambour"
+    ],
+    "expectedLargeFamilies": [
+      "Cylindric Tambour",
+      "First Storey",
+      "Last Storey",
+      "Single Storey",
+      "Tambour"
+    ],
+    "designFamilies": []
+  },
+  "syntheticCases": [
+    {
+      "name": "double_left_selection",
+      "designId": "root-design",
+      "pieceIds": [
+        "piece-external-ll"
+      ],
+      "expectedContainsTypes": [
+        "candidate-ll"
+      ],
+      "expectedNotContainsTypes": [
+        "candidate-g"
+      ]
+    },
+    {
+      "name": "left_and_gable_selection",
+      "designId": "root-design",
+      "pieceIds": [
+        "piece-external-lg"
+      ],
+      "expectedContainsTypes": [
+        "candidate-lg"
+      ],
+      "expectedNotContainsTypes": [
+        "candidate-l"
+      ],
+      "expectedContainsDesigns": [
+        "candidate-design-free-lg"
+      ],
+      "expectedNotContainsDesigns": [
+        "candidate-design-consumed-lg"
+      ]
+    },
+    {
+      "name": "isolated_selection",
+      "designId": "root-design",
+      "pieceIds": [
+        "piece-isolated-lg"
+      ],
+      "expectedContainsTypes": [
+        "candidate-lg"
+      ],
+      "expectedNotContainsTypes": [
+        "candidate-l"
+      ]
+    },
+    {
+      "name": "multiple_piece_selection",
+      "designId": "root-design",
+      "pieceIds": [
+        "piece-external-lg",
+        "piece-isolated-lg"
+      ],
+      "expectedContainsTypes": [
+        "candidate-lg"
+      ],
+      "expectedNotContainsTypes": [
+        "candidate-l"
+      ]
+    }
+  ]
+}

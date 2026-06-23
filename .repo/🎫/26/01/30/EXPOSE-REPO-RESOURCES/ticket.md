@@ -23,4 +23,4 @@
 
 ## Summary
 
-Exposed repository entities as MCP resources to allow LLMs to read codebase structure and metadata directly via the `repo` server. Implemented resources include bundles, folders, files, sections, definitions, contributors, goals, tickets, policies, and breach-kinds. Resources are available via static URIs (e.g., `semio://bundles`) and parameterized templates (e.g., `semio://folder/{path}`).
+Exposed repository entities as MCP resources to allow LLMs to read codebase structure and metadata directly via the `repo` server. Implemented resources include bundles, folders, files, sections, definitions, contributors, goals, tickets, policies, and breach-kinds. Resources are available via static URIs (e.g., `compose://bundles`) and parameterized templates (e.g., `compose://folder/{path}`).

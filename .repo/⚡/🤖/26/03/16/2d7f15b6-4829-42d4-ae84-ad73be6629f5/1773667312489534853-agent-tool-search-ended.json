@@ -18,7 +18,7 @@
       "tool_input": {
         "maxResults": 20,
         "query": "HomeDropZone",
-        "includePattern": "**/semio/sketchpad/sketchpad/Home.tsx",
+        "includePattern": "**/compose/sketchpad/sketchpad/Home.tsx",
         "isRegexp": false
       },
       "tool_response": "",

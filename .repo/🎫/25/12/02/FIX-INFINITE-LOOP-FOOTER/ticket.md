@@ -30,7 +30,7 @@ Multiple root causes identified:
 
 # Changes
 
-## `js/semio/sketchpad/Design.tsx`
+## `js/compose/sketchpad/Design.tsx`
 
 Removed `isTagSelected` and `getTypesWithTag` callback functions from the `useEffect` dependency array. Instead:
 
@@ -39,7 +39,7 @@ Removed `isTagSelected` and `getTypesWithTag` callback functions from the `useEf
 3. Define helper functions inside the main `useEffect` that read from refs
 4. This prevents infinite loop since the functions aren't in the dependency array and the refs are stable
 
-## `js/semio/sketchpad/Home.tsx`
+## `js/compose/sketchpad/Home.tsx`
 
 Fixed file loading order in both `handleDrop` and `handleFileInputChange`:
 
@@ -48,14 +48,14 @@ Fixed file loading order in both `handleDrop` and `handleFileInputChange`:
 
 This ensures file blobs are available when the Type/Design app tries to load models.
 
-## `js/semio/sketchpad/Sketchpad.tsx`
+## `js/compose/sketchpad/Sketchpad.tsx`
 
 Memoized context values in providers to prevent unnecessary re-renders:
 
 - `PanelSectionProvider`: Added `useMemo` for context value
 - `FooterItemProvider`: Added `useMemo` for context value
 
-## `js/semio/sketchpad/Type.tsx`
+## `js/compose/sketchpad/Type.tsx`
 
 Fixed TypeMesh warning logic:
 

@@ -47,17 +47,17 @@ await page.waitForLoadState("domcontentloaded");
 await page.waitForTimeout(3000);
 
 // Create kit with metabolism data in same page context, then SPA-navigate.
-const zipBytes = await readFile(path.resolve("semio/assets/semio/metabolism.zip"));
+const zipBytes = await readFile(path.resolve("compose/assets/compose/metabolism.zip"));
 const zipB64 = zipBytes.toString("base64");
 
 const kitId = await page.evaluate(async (b64) => {
     const bin = atob(b64);
     const buf = new Uint8Array(bin.length);
     for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
-    const mod = await import("/@fs/C:/git/semio/semio/js/index.ts");
+    const mod = await import("/@fs/C:/git/compose/compose/js/index.ts");
     const { kit } = await mod.importArchiveKit(buf);
-    const store = window.__SEMIO_STORE__;
-    await store.execute("semio.sketchpad.createKit", "semio.sketchpad.test.repro", kit, false, false);
+    const store = window.__COMPOSE_STORE__;
+    await store.execute("compose.sketchpad.createKit", "compose.sketchpad.test.repro", kit, false, false);
     window.history.pushState({}, "", `/kits/${kit.id}`);
     window.dispatchEvent(new PopStateEvent("popstate"));
     return kit.id;
@@ -71,7 +71,7 @@ const visible = await page.locator('[data-panel="rightSidePanel"]').first().isVi
 console.log("details panel visible=", visible);
 
 // Make sure details tab is active: click the info icon button in the tabs
-const detailsShowBtn = page.locator('[id="semio.sketchpad.navbar.panelToggle.details.show"]').first();
+const detailsShowBtn = page.locator('[id="compose.sketchpad.navbar.panelToggle.details.show"]').first();
 if (await detailsShowBtn.count()) {
     const state = await detailsShowBtn.getAttribute("data-state").catch(() => null);
     console.log("details tab state=", state);
@@ -85,7 +85,7 @@ await page.waitForTimeout(2000);
 
 // Select first type via store to populate TypeSection in details.
 await page.evaluate(async (kitId) => {
-    const store = window.__SEMIO_STORE__;
+    const store = window.__COMPOSE_STORE__;
     if (!store || !store.hasKitApp?.({ kit: kitId })) return;
     const kitApp = store.kitApp({ kit: kitId });
     const kit = store.kit(kitId).getSnapshot()?.kit;

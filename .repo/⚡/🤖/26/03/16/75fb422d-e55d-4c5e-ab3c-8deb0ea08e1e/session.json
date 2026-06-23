@@ -22,7 +22,7 @@
           "session_id": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e",
           "tool_name": "list_dir",
           "tool_input": {
-            "path": "/workspaces/semio/semio/sketchpad/sketchpad"
+            "path": "/workspaces/semio/compose/sketchpad/sketchpad"
           },
           "tool_use_id": "toolu_bdrk_01GaU1jkBUgw3iuewdDTZVGq__vscode-1773658270560",
           "cwd": "/workspaces/semio"
@@ -47,7 +47,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/sketchpad/**",
+            "includePattern": "**/compose/sketchpad/sketchpad/**",
             "isRegexp": true,
             "query": "Stepper|stepper"
           },
@@ -74,7 +74,7 @@
           "session_id": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e",
           "tool_name": "list_dir",
           "tool_input": {
-            "path": "/workspaces/semio/semio/sketchpad/sketchpad"
+            "path": "/workspaces/semio/compose/sketchpad/sketchpad"
           },
           "tool_response": "",
           "tool_use_id": "toolu_bdrk_01GaU1jkBUgw3iuewdDTZVGq__vscode-1773658270560",
@@ -100,7 +100,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/sketchpad/sketchpad/**",
+            "includePattern": "**/compose/sketchpad/sketchpad/**",
             "isRegexp": true,
             "query": "connection\\.x|connection\\.y"
           },
@@ -154,7 +154,7 @@
           "session_id": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/sketchpad/sketchpad/Design.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/sketchpad/Design.tsx",
             "startLine": 5635,
             "endLine": 5660
           },
@@ -180,7 +180,7 @@
           "session_id": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/sketchpad/sketchpad/Design.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/sketchpad/Design.tsx",
             "startLine": 5635,
             "endLine": 5660
           },

@@ -21,7 +21,7 @@ Fixed remaining source section/definition IDs in main.go to chained format and e
 - Repaired pre-existing syntax break in `listCommand` (`limit` flag declaration placement) discovered while compiling tests.
 - Updated test expectations for chained section/definition IDs and Go `type`→`✂️` behavior in `repo/cli/main_test.go`.
 - Rewrote stale source identification comments in `repo/cli/main.go` from legacy `file#section§definition` style to chained IDs derived from the linked URI:
-  - Section comments now use `🧰semiorepo⌨️cli💻maingo🔖...`.
+  - Section comments now use `🧰composerepo⌨️cli💻maingo🔖...`.
   - Definition comments now use `<section-id><kind><flat-definition-name>`.
   - Go `type` declarations in comments now emit `✂️`.
 
@@ -33,7 +33,7 @@ Fixed remaining source section/definition IDs in main.go to chained format and e
   - Result: pass.
 - Started a broader test run (`TestDefinitionKind`), observed hang/no output in this environment, then terminated that run.
 - Verified runtime output for the reported example with GraphQL:
-  - `TicketCloseInput` now resolves to `🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖graphqlinputtypes✂️ticketcloseinput`.
+  - `TicketCloseInput` now resolves to `🧰composerepo⌨️cli💻maingo🔖graphqltypes🔖graphqlinputtypes✂️ticketcloseinput`.
 - Re-ran focused CLI ID suite after source-comment rewrite and it passed.
 
 ## Todos

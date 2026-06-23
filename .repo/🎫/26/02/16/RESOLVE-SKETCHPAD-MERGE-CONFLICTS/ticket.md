@@ -6,11 +6,11 @@ goal: NONE
 
 ## Summary
 
-Resolve 11 merge conflicts in semio/js/sketchpad/Sketchpad.tsx preferring origin/ueli/latest side.
+Resolve 11 merge conflicts in compose/js/sketchpad/Sketchpad.tsx preferring origin/ueli/latest side.
 
 ## Changes
 
-- semio/js/sketchpad/Sketchpad.tsx: Resolved 11 merge conflicts
+- compose/js/sketchpad/Sketchpad.tsx: Resolved 11 merge conflicts
 
 ## Log
 

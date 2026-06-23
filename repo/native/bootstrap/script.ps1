@@ -2,9 +2,9 @@
 #
 # 2026 Ueli Saluz <ueli@semio-tech.com>
 #
-# Specs: Zero-touch Windows-native bootstrap that upgrades machine dependencies to the current supported baseline with winget, prepares repo-local caches and env vars, syncs workspace dependencies, verifies a user-created native Neo4j Desktop semio DBMS, and installs the local VS Code extension when editor CLIs are available.
+# Specs: Zero-touch Windows-native bootstrap that upgrades machine dependencies to the current supported baseline with winget, prepares repo-local caches and env vars, syncs workspace dependencies, verifies a user-created native Neo4j Desktop compose DBMS, and installs the local VS Code extension when editor CLIs are available.
 #
-# Summary: Windows-native bootstrap for the semio monorepo. Invoke `.\script.ps1 setup` (full) or `.\script.ps1 start` (IDE session).
+# Summary: Windows-native bootstrap for the compose monorepo. Invoke `.\script.ps1 setup` (full) or `.\script.ps1 start` (IDE session).
 #
 #endregion 🧲Header
 
@@ -35,12 +35,12 @@ $script:ApocVersion = "5.26.4"
 #region 🔧Helpers
 function Write-Step {
     param([string]$Message)
-    Write-Host "[semio] $Message"
+    Write-Host "[compose] $Message"
 }
 
 function Get-RepoRoot {
-    if ($env:SEMIO_REPO_ROOT) {
-        return (Resolve-Path $env:SEMIO_REPO_ROOT).Path
+    if ($env:COMPOSE_REPO_ROOT) {
+        return (Resolve-Path $env:COMPOSE_REPO_ROOT).Path
     }
     $dir = $PSScriptRoot
     for ($i = 0; $i -lt 32; $i++) {
@@ -375,7 +375,7 @@ function Invoke-Neo4jCypher {
     param(
         [string]$RepoRoot,
         [string]$Cypher,
-        [string]$Database = "semio",
+        [string]$Database = "compose",
         [string]$RequiredOutputPattern = ""
     )
 
@@ -498,14 +498,14 @@ function Install-Neo4jDesktopApoc {
     Set-TextSetting -Path (Join-Path $conf "neo4j.conf") -Key "dbms.security.procedures.allowlist" -Value "apoc.*"
     Set-TextSetting -Path (Join-Path $conf "neo4j.conf") -Key "dbms.security.procedures.unrestricted" -Value "apoc.*"
     Set-TextSetting -Path (Join-Path $conf "neo4j.conf") -Key "server.directories.import" -Value (($RepoRoot -replace "\\", "/"))
-    Set-TextSetting -Path (Join-Path $conf "neo4j.conf") -Key "initial.dbms.default_database" -Value "semio"
+    Set-TextSetting -Path (Join-Path $conf "neo4j.conf") -Key "initial.dbms.default_database" -Value "compose"
     Set-TextSetting -Path (Join-Path $conf "apoc.conf") -Key "apoc.export.file.enabled" -Value "true"
     Set-TextSetting -Path (Join-Path $conf "apoc.conf") -Key "apoc.import.file.enabled" -Value "true"
     Set-TextSetting -Path (Join-Path $conf "apoc.conf") -Key "apoc.import.file.use_neo4j_config" -Value "false"
 
     $neo4jBat = Join-Path $dbmsHome "bin\neo4j.bat"
     if (Test-Path -LiteralPath $neo4jBat) {
-        Write-Step "Restarting Neo4j Desktop local semio DBMS to load APOC..."
+        Write-Step "Restarting Neo4j Desktop local compose DBMS to load APOC..."
         Use-MicrosoftOpenJdk21
         $escapedHome = [Regex]::Escape($dbmsHome)
         $processes = Get-CimInstance Win32_Process | Where-Object {
@@ -522,7 +522,7 @@ function Install-Neo4jDesktopApoc {
             Start-Sleep -Seconds 2
         }
     } else {
-        Write-Step "APOC installed into the semio DBMS. Restart it in Neo4j Desktop to load the plugin."
+        Write-Step "APOC installed into the compose DBMS. Restart it in Neo4j Desktop to load the plugin."
     }
 
     return $true
@@ -531,7 +531,7 @@ function Install-Neo4jDesktopApoc {
 function Resolve-NativeNeo4jGraphDatabase {
     param([string]$RepoRoot)
 
-    $preferred = if ($env:NEO4J_DATABASE) { $env:NEO4J_DATABASE } else { "semio" }
+    $preferred = if ($env:NEO4J_DATABASE) { $env:NEO4J_DATABASE } else { "compose" }
     if (Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database $preferred -Cypher "RETURN 1 AS ok;") {
         return $preferred
     }
@@ -659,11 +659,11 @@ function Ensure-NativeNeo4jTools {
 function Ensure-NativeNeo4j {
     param([string]$RepoRoot)
 
-    $technologies = @("semio", "elements", "coda", "reuse") + @(Get-Neo4jExtraBoltGraphNamesFromEnv)
+    $technologies = @("compose", "elements", "coda", "reuse") + @(Get-Neo4jExtraBoltGraphNamesFromEnv)
     if (Test-TcpPort -HostName "127.0.0.1" -Port 7687) {
         Write-Step "Neo4j is reachable at bolt://localhost:7687."
     } else {
-        Write-Step "Neo4j is not reachable. Create and start a native Neo4j Desktop local DBMS named semio on Bolt port 7687, password password, then run this setup again."
+        Write-Step "Neo4j is not reachable. Create and start a native Neo4j Desktop local DBMS named compose on Bolt port 7687, password password, then run this setup again."
         return
     }
 
@@ -678,25 +678,25 @@ function Ensure-NativeNeo4j {
             $apocReady = Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database $graphDb -Cypher "SHOW PROCEDURES YIELD name WHERE name IN ['apoc.cypher.runFile', 'apoc.export.cypher.query'] RETURN count(name) AS count;" -RequiredOutputPattern "\b2\b"
         }
         if (-not $apocReady) {
-            Write-Step "Neo4j is reachable, but APOC is not ready. In Neo4j Desktop, install/enable APOC for the local semio DBMS and restart it."
+            Write-Step "Neo4j is reachable, but APOC is not ready. In Neo4j Desktop, install/enable APOC for the local compose DBMS and restart it."
             return
         }
     }
 
-    Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database "system" -Cypher "CREATE DATABASE semio IF NOT EXISTS;" | Out-Null
+    Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database "system" -Cypher "CREATE DATABASE compose IF NOT EXISTS;" | Out-Null
     foreach ($extraDb in (Get-Neo4jExtraBoltGraphNamesFromEnv)) {
         $q = Format-Neo4jDatabaseNameForCypher -Name $extraDb
         Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database "system" -Cypher "CREATE DATABASE $q IF NOT EXISTS;" | Out-Null
     }
     #region 🔥Neo4jEnterpriseDropStockDb
-    # Enterprise Desktop: schema often lands in the stock `neo4j` DB. Ensure `semio` is default, then drop `neo4j`.
+    # Enterprise Desktop: schema often lands in the stock `neo4j` DB. Ensure `compose` is default, then drop `neo4j`.
     # Community (single user DB): these calls fail harmlessly.
-    Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database "system" -Cypher "START DATABASE semio WAIT;" | Out-Null
-    Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database "system" -Cypher "CALL dbms.setDefaultDatabase('semio');" | Out-Null
+    Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database "system" -Cypher "START DATABASE compose WAIT;" | Out-Null
+    Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database "system" -Cypher "CALL dbms.setDefaultDatabase('compose');" | Out-Null
     Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database "system" -Cypher "DROP DATABASE neo4j IF EXISTS CASCADE ALIASES WAIT;" | Out-Null
     #endregion 🔥Neo4jEnterpriseDropStockDb
     $graphDb = Resolve-NativeNeo4jGraphDatabase -RepoRoot $RepoRoot
-    Write-Step "Neo4j graph database for imports (after optional CREATE DATABASE semio): $graphDb"
+    Write-Step "Neo4j graph database for imports (after optional CREATE DATABASE compose): $graphDb"
 
     Write-Step "Neo4j: clearing graph in $graphDb, then loading generated .repo/🛂/*.cypher (from `bun run generate`) …"
     Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database $graphDb -Cypher "MATCH (n) DETACH DELETE n;" | Out-Null
@@ -817,7 +817,7 @@ Set-UserEnvironmentVariable -Name "VCPKG_ROOT" -Value (Join-Path $repoRoot ".rep
 Set-UserEnvironmentVariable -Name "CMAKE_PRESET" -Value "windows"
 Set-UserEnvironmentVariable -Name "DOTNET_CLI_TELEMETRY_OPTOUT" -Value "1"
 Set-UserEnvironmentVariable -Name "PLAYWRIGHT_BROWSERS_PATH" -Value $playwrightPath
-Set-UserEnvironmentVariable -Name "SEMIO_GITKRAKEN_WORKSPACE_NAME" -Value "semio"
+Set-UserEnvironmentVariable -Name "SEMIO_GITKRAKEN_WORKSPACE_NAME" -Value "compose"
 Set-UserEnvironmentVariable -Name "SEMIO_GITKRAKEN_AUTO_START" -Value "false"
 Set-UserEnvironmentVariable -Name "SEMIO_F3D_AUTO_START" -Value "true"
 Set-UserEnvironmentVariable -Name "SEMIO_POST_ATTACH_SKIP_EXTENSION_INSTALL" -Value ""
@@ -826,7 +826,7 @@ Set-UserEnvironmentVariable -Name "NEO4J_URI" -Value "bolt://localhost:7687"
 Set-UserEnvironmentVariable -Name "NEO4J_USERNAME" -Value "neo4j"
 Set-UserEnvironmentVariable -Name "NEO4J_PASSWORD" -Value "password"
     Set-UserEnvironmentVariable -Name "NEO4J_TELEMETRY" -Value "false"
-    Set-UserEnvironmentVariable -Name "NEO4J_DATABASE" -Value "semio"
+    Set-UserEnvironmentVariable -Name "NEO4J_DATABASE" -Value "compose"
 #endregion 🗂️UserState
 
 #region 🗄️Neo4jRuntime

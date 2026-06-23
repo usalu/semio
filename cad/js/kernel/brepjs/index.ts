@@ -4222,7 +4222,7 @@ if (import.meta.vitest) {
 			expect(model.vertices[v0]!.position).toEqual([2, 3, 4]);
 		});
 
-		const semioStepFixtures = [
+		const composeStepFixtures = [
 			{
 				name: "hexagonal-cut-concrete-forest-left",
 				file: "hexagonal-cut-concrete-forest-left.stp",
@@ -4233,11 +4233,11 @@ if (import.meta.vitest) {
 			},
 		] as const;
 
-		for (const fixture of semioStepFixtures) {
+		for (const fixture of composeStepFixtures) {
 			it(`imports raw Rhino STEP BREP for ${fixture.name}`, async () => {
 				const { readFile } = await import("node:fs/promises");
 				const { resolve } = await import("node:path");
-				const stepPath = resolve(import.meta.dirname, "../../../../semio/fixture/kit/folder/abbau-aufbau", fixture.file);
+				const stepPath = resolve(import.meta.dirname, "../../../../compose/fixture/kit/folder/abbau-aufbau", fixture.file);
 				const stepText = await readFile(stepPath, "utf8");
 				const space = await kernel.importStepBrepToModelSpace(stepText, { prefix: fixture.name });
 				const modelId = defaultModelDefinitionId();
@@ -4266,7 +4266,7 @@ if (import.meta.vitest) {
 			const { resolve } = await import("node:path");
 			const stepPath = resolve(
 				import.meta.dirname,
-				"../../../../semio/fixture/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest-left-bim.stp",
+				"../../../../compose/fixture/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest-left-bim.stp",
 			);
 			const stepText = await readFile(stepPath, "utf8");
 			const { solidOrder, layerBySolidEntity } = stepPresentationLayers(stepText);
@@ -4283,7 +4283,7 @@ if (import.meta.vitest) {
 			const { resolve } = await import("node:path");
 			const stepPath = resolve(
 				import.meta.dirname,
-				"../../../../semio/fixture/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest-left-bim.stp",
+				"../../../../compose/fixture/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest-left-bim.stp",
 			);
 			const stepText = await readFile(stepPath, "utf8");
 			const space = await kernel.importStepBimToModelSpace(stepText, {
@@ -4333,7 +4333,7 @@ if (import.meta.vitest) {
 		it("imports energy and classic structure STEP presentation fixtures for concrete forest left", async () => {
 			const { readFile } = await import("node:fs/promises");
 			const { resolve } = await import("node:path");
-			const fixtureRoot = resolve(import.meta.dirname, "../../../../semio/fixture/kit/folder/abbau-aufbau");
+			const fixtureRoot = resolve(import.meta.dirname, "../../../../compose/fixture/kit/folder/abbau-aufbau");
 			const energyText = await readFile(resolve(fixtureRoot, "hexagonal-cut-concrete-forest-left-energy.stp"), "utf8");
 			const structureText = await readFile(resolve(fixtureRoot, "hexagonal-cut-concrete-forest-left-classic-structure.stp"), "utf8");
 			const energySpace = await kernel.importStepBimToModelSpace(energyText, {
@@ -4367,13 +4367,13 @@ if (import.meta.vitest) {
 			}
 		});
 
-		it("generates play fixtures from semio STEP sources", async () => {
+		it("generates play fixtures from compose STEP sources", async () => {
 			if (process.env.CAD_GENERATE_STEP_FIXTURES !== "1") return;
 			const { readFile, writeFile } = await import("node:fs/promises");
 			const { resolve } = await import("node:path");
-			const fixtureRoot = resolve(import.meta.dirname, "../../../../semio/fixture/kit/folder/abbau-aufbau");
+			const fixtureRoot = resolve(import.meta.dirname, "../../../../compose/fixture/kit/folder/abbau-aufbau");
 			const playRoot = resolve(import.meta.dirname, "../../../asset/play");
-			for (const fixture of semioStepFixtures) {
+			for (const fixture of composeStepFixtures) {
 				const stepPath = resolve(fixtureRoot, fixture.file);
 				const stepText = await readFile(stepPath, "utf8");
 				const shapeSpace = await kernel.importStepBrepToModelSpace(stepText, { prefix: fixture.name });

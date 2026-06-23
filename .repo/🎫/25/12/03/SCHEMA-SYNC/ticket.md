@@ -5,10 +5,10 @@
 
 The user wants a script similar to the i18n script that extracts schema from multiple sources:
 
-- `semio.ts` (TypeScript - source of truth)
+- `compose.ts` (TypeScript - source of truth)
 - `engine.py` (Python)
-- `Semio.cs` (C#)
-- `Semio.Grasshopper.cs` (Grasshopper components)
+- `Compose.cs` (C#)
+- `Compose.Grasshopper.cs` (Grasshopper components)
 
 # Plan
 
@@ -27,10 +27,10 @@ The user wants a script similar to the i18n script that extracts schema from mul
 
 Created new schema extraction script that:
 
-- Parses TypeScript Zod schemas from `semio.ts`
+- Parses TypeScript Zod schemas from `compose.ts`
 - Parses Python SQLModel field classes from `engine.py`
-- Parses C# entity classes from `Semio.cs`
-- Parses Grasshopper components/params/goos from `Semio.Grasshopper.cs`
+- Parses C# entity classes from `Compose.cs`
+- Parses Grasshopper components/params/goos from `Compose.Grasshopper.cs`
 - Generates individual reports: `schema-ts.json`, `schema-py.json`, `schema-net.json`, `schema-grasshopper.json`
 - Generates summary report: `schema.json` with all errors/warnings
 

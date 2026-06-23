@@ -67,7 +67,7 @@ Implements presentation/AGENTS.md verbatim, render-neutral, with inline vitest. 
 - `Sequence { id; thoughts: Thought[] }`
 - `Presentation { id; name; sequences: Sequence[]; width?; height? }`
 - Resolver helpers: `resolveArrangement(thought, arrangementId)` → ordered `{ participant, embodiment, emphasis }[]`.
-- Template `intro(spec)` producing the standard 5-arrangement build (brand active → title.full → description + title.short(muted) → authors → affiliations + authors-with-marks), matching `Semio/Title/Subtitle/Authors/Institutions` in [`temp/eg-ice-25/index.tsx`](temp/eg-ice-25/index.tsx) lines 24-125. `intro` params: `brand`, `title{ full, short }`, `description`, `authors[]`, `affiliations[]`.
+- Template `intro(spec)` producing the standard 5-arrangement build (brand active → title.full → description + title.short(muted) → authors → affiliations + authors-with-marks), matching `Compose/Title/Subtitle/Authors/Institutions` in [`temp/eg-ice-25/index.tsx`](temp/eg-ice-25/index.tsx) lines 24-125. `intro` params: `brand`, `title{ full, short }`, `description`, `authors[]`, `affiliations[]`.
 
 ## Renderer (`@framework/presentation/renderer/react/index.tsx`)
 
@@ -86,7 +86,7 @@ Implements presentation/AGENTS.md verbatim, render-neutral, with inline vitest. 
 
 ## 33.projektetage migration
 
-- Rename `index.tsx` → `index.ts` (no JSX/React anymore). Content: build the deck via `intro({...})` with the verbatim eg-ice-25 intro text (semio; "Large-Language-Model-based / Building-Information-Model Alignment / for Automatic-Compliance-Checking"; short "LLM-based BIM Alignment for ACC"; subtitle 3 lines; authors Ueli Saluz/Ildar Baimuratov/Philipp Geyer with marks 1,a/1,b/1,a; affiliations ¹ Leibniz University Hannover, ᵃ Faculty of Architecture, ᵇ Faculty of Computer Science), then `mountPresentation(document.getElementById("root")!, deck)`. Keep inline vitest asserting the deck has 5 arrangements.
+- Rename `index.tsx` → `index.ts` (no JSX/React anymore). Content: build the deck via `intro({...})` with the verbatim eg-ice-25 intro text (compose; "Large-Language-Model-based / Building-Information-Model Alignment / for Automatic-Compliance-Checking"; short "LLM-based BIM Alignment for ACC"; subtitle 3 lines; authors Ueli Saluz/Ildar Baimuratov/Philipp Geyer with marks 1,a/1,b/1,a; affiliations ¹ Leibniz University Hannover, ᵃ Faculty of Architecture, ᵇ Faculty of Computer Science), then `mountPresentation(document.getElementById("root")!, deck)`. Keep inline vitest asserting the deck has 5 arrangements.
 - [`package.json`](mit-bestand/präsentation/33.projektetage/package.json): drop `react`, `react-dom`, `reveal.js`, `@types/reveal.js`, `@ui/react`; add `@framework/presentation/core` + `@framework/presentation/renderer/react`. Keep vite/tailwind/vitest + `@vitejs/plugin-react` (vite still compiles the renderer's tsx).
 - [`vite.config.ts`](mit-bestand/präsentation/33.projektetage/vite.config.ts): add aliases for `@framework/presentation/core`, `@framework/presentation/renderer/react`, `@framework/core`, keep `@ui/react`.
 - [`globals.css`](mit-bestand/präsentation/33.projektetage/globals.css): import `@framework/presentation/renderer/react/globals.css` + keep `@source` lines; remove the now-duplicated reveal overrides (they live in the renderer).

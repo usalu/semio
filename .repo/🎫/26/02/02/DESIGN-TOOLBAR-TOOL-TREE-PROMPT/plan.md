@@ -2,12 +2,12 @@
 
 ## 11) 2026-02-03 Shape Strategy Delivery (Completed)
 
-1. Implement kit diagram shape-strategy contract and strategy registry in `js/semio/sketchpad/kitSelectionHelpers.ts`.
-2. Migrate `js/semio/sketchpad/Kit.tsx` node rendering, edge anchor resolution, connection preview routing, and proximity anchor targeting to strategy snap points.
-3. Add deterministic geometry unit coverage in `js/semio/semio.test.ts` and keep `js/semio/diagram-alignment.test.ts` aligned to the same shape/snap-point contract.
-4. Update Playwright alignment assertions in `js/semio/playwright/kit/diagram-alignment.spec.ts` for shape-aware endpoint checks (skip-safe when fixtures are empty).
+1. Implement kit diagram shape-strategy contract and strategy registry in `js/compose/sketchpad/kitSelectionHelpers.ts`.
+2. Migrate `js/compose/sketchpad/Kit.tsx` node rendering, edge anchor resolution, connection preview routing, and proximity anchor targeting to strategy snap points.
+3. Add deterministic geometry unit coverage in `js/compose/compose.test.ts` and keep `js/compose/diagram-alignment.test.ts` aligned to the same shape/snap-point contract.
+4. Update Playwright alignment assertions in `js/compose/playwright/kit/diagram-alignment.spec.ts` for shape-aware endpoint checks (skip-safe when fixtures are empty).
 5. Update dev docs in `README.md` and `AGENTS.md` with strategy registry, snap-point routing, and resolver ownership details.
-6. Validate with `npm run test` in `js/semio` and `npx playwright test playwright/kit/diagram-alignment.spec.ts --project=firefox` in `js/semio`.
+6. Validate with `npm run test` in `js/compose` and `npx playwright test playwright/kit/diagram-alignment.spec.ts --project=firefox` in `js/compose`.
 
 ## 10) 2026-02-03 Execution Slice (Current Run)
 
@@ -57,7 +57,7 @@
 
 ## 0) Scope, Ground Rules, and Baseline
 
-1. Keep the existing floating toolbar placement and panel plumbing in `js/semio/sketchpad/Sketchpad.tsx`; refactor only the internal toolbar content model from flat sections to parent/subtool groups.
+1. Keep the existing floating toolbar placement and panel plumbing in `js/compose/sketchpad/Sketchpad.tsx`; refactor only the internal toolbar content model from flat sections to parent/subtool groups.
 2. Apply one shared tooltree model across Home, Kit, Design, Type, Feedback, and reserve extension points for Docs/Quality even if they currently register no toolbar sections.
 3. Preserve all current app behaviors (no functional drop): same actions, same state outcomes, same URL filter semantics, and same active-tool integrations with app state machines.
 4. Treat this as a structural refactor with no backward-compatibility requirements for old toolbar section shape, but maintain temporary adapter bridges during migration phases.
@@ -68,11 +68,11 @@
 ### 1.1 Inventory Collection Procedure
 
 1. Enumerate all `addSection("toolbar", ...)` registrations in:
-   - `js/semio/sketchpad/Home.tsx`
-   - `js/semio/sketchpad/Kit.tsx`
-   - `js/semio/sketchpad/Design.tsx`
-   - `js/semio/sketchpad/Type.tsx`
-   - `js/semio/sketchpad/Feedback.tsx`
+   - `js/compose/sketchpad/Home.tsx`
+   - `js/compose/sketchpad/Kit.tsx`
+   - `js/compose/sketchpad/Design.tsx`
+   - `js/compose/sketchpad/Type.tsx`
+   - `js/compose/sketchpad/Feedback.tsx`
 2. Enumerate all tool widgets rendered inside those sections (`Toggle`, `ToggleGroup`, `Button`, `ToolGroup`).
 3. Capture each control with:
    - app
@@ -85,7 +85,7 @@
 ### 1.2 Current-State Inventory (Per App)
 
 1. **Home**
-   - Section: `semio.sketchpad.app.home.toolbar.filters`
+   - Section: `compose.sketchpad.app.home.toolbar.filters`
    - Controls:
      - `showTemporary` + `createTemporary`
      - `showLocal` + `createLocal`
@@ -93,8 +93,8 @@
    - State: URL `kind` param (single active kind) + create action.
 2. **Kit**
    - Sections:
-     - `semio.sketchpad.app.kit.toolbar.filters`
-     - `semio.sketchpad.app.kit.toolbar.selection`
+     - `compose.sketchpad.app.kit.toolbar.filters`
+     - `compose.sketchpad.app.kit.toolbar.selection`
    - Filter controls (all toggle+action):
      - Designs, Types, Qualities, Ports, Tags, Concepts, Files, Folders, Authors
    - Selection controls:
@@ -102,19 +102,19 @@
      - Hand (`HAND`)
    - State: URL multi-kind filters + kit app active tool.
 3. **Design**
-   - Section: `semio.sketchpad.app.design.tools`
+   - Section: `compose.sketchpad.app.design.tools`
    - `ToolGroup` clusters:
      - Selection modes: normal/additive/subtractive
      - Lasso modes: rectangular/freeform
    - State: design app active tool.
 4. **Type**
-   - Section: `semio.sketchpad.app.type.tools`
+   - Section: `compose.sketchpad.app.type.tools`
    - `ToolGroup` clusters:
      - Selection modes: normal/additive/subtractive
      - Connector mode
    - State: type app active tool.
 5. **Feedback**
-   - Section: `semio.sketchpad.app.feedback.toolbar.send`
+   - Section: `compose.sketchpad.app.feedback.toolbar.send`
    - Control:
      - Send button (triggers form submit button click)
    - State: form submission lifecycle.

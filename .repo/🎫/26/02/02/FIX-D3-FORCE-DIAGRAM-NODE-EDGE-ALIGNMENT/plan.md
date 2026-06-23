@@ -64,8 +64,8 @@ Node avatars in the D3 Force diagram appear smaller than their edge connection c
 
 ## Files to Modify
 
-- `js/semio/sketchpad/elements.tsx` - Diagram component and Avatar sizing
-- `js/semio/sketchpad/Kit.tsx` - Kit diagram edge calculations (if needed)
-- `js/semio/sketchpad/Design.tsx` - Design diagram (if needed)
-- `js/semio/globals.css` - Size unit definitions (if needed)
+- `js/compose/sketchpad/elements.tsx` - Diagram component and Avatar sizing
+- `js/compose/sketchpad/Kit.tsx` - Kit diagram edge calculations (if needed)
+- `js/compose/sketchpad/Design.tsx` - Design diagram (if needed)
+- `js/compose/globals.css` - Size unit definitions (if needed)
 - New: Playwright test file for alignment verification

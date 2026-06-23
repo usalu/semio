@@ -10,17 +10,17 @@ Extended Design app toolbar filters to include piece, connection, and port toggl
 
 ## Changes
 
-- `semio/assets/icons.ts`: Added `Puzzle as PieceIcon` export
-- `semio/js/sketchpad/locales/en.json`: Added `showPorts` i18n entries under `design.toolbar`
-- `semio/js/sketchpad/locales/de.json`: Added `showPorts` i18n entries under `design.toolbar`
-- `semio/js/sketchpad/Design.tsx`:
+- `compose/assets/icons.ts`: Added `Puzzle as PieceIcon` export
+- `compose/js/sketchpad/locales/en.json`: Added `showPorts` i18n entries under `design.toolbar`
+- `compose/js/sketchpad/locales/de.json`: Added `showPorts` i18n entries under `design.toolbar`
+- `compose/js/sketchpad/Design.tsx`:
   - Added `DesignFilterKind`, `DesignFilterState`, `DesignFilterContext`, `DesignFilterProvider`, `useDesignFilters` in Filters region
   - Replaced static `DesignToolbarFilters` with working URL-state toggles (pieces, connections, ports)
   - Wired `useDesignFilters()` into `PieceNodeInner` and `DesignNodeInner` to conditionally render port handles
   - Wired `useDesignFilters()` into `DesignDiagram` to set `hidden: true` on nodes/edges
   - Wired `useDesignFilters()` into `ModelDesign` to conditionally render 3D piece models
   - Wrapped `DesignApp` with `<DesignFilterProvider>`
-- `semio/js/sketchpad/Sketchpad.tsx`: Fixed 11 merge conflicts and removed stale HUD panel references
+- `compose/js/sketchpad/Sketchpad.tsx`: Fixed 11 merge conflicts and removed stale HUD panel references
 
 ## Log
 

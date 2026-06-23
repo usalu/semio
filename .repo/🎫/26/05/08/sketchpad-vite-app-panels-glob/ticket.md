@@ -9,37 +9,37 @@
 3. `SketchpadScopeWithKitRegistry` referenced an undefined `piecesMetadata` global in a `window` assignment.
 4. `SketchpadStore.hasKitApp` checked `typeof kitAppStore?.id === "function"` but `Store.id` is a string field, leaving the UI on “Preparing kit app…”.
 5. `useKitName` infinite-loop in browser fallback path: `subscribeKitName` / `subscribeRenameStatus` in `FallbackKitClient` invoked the React subscriber callback synchronously, and `getRenameStatusSnapshot` returned a fresh `{ kind: "idle" }` object on every call (`useSyncExternalStore` requires referential stability).
-6. Dedicated WASM worker init silently timed out: a Blob worker can't resolve the bare specifier `@semio/rs-wasm`, so the new rename architecture fell all the way back to `FallbackKitClient` (no real rename).
+6. Dedicated WASM worker init silently timed out: a Blob worker can't resolve the bare specifier `@compose/rs-wasm`, so the new rename architecture fell all the way back to `FallbackKitClient` (no real rename).
 
 ## Changes
 
-- `semio/sketchpad/index.tsx`
+- `compose/sketchpad/index.tsx`
   - `import.meta.glob("./apps/*/panels.ts")` instead of a dynamic template import.
   - Removed `(window as any).__piecesMetadata = piecesMetadata;` (undefined identifier).
   - `SketchpadStore.hasKitApp(kitApp)` now uses `this.kitApps.has(kitApp.kit)` (the Map is keyed by kit uuid). `kitAppIds()` rebuilds `{ kit }` from `this.kitApps.keys()`.
-- `semio/js/index.ts`
+- `compose/js/index.ts`
   - Added exported `KIT_RENAME_STATUS_IDLE` (frozen) used by `KitStore.renameStatus$` and the fallback snapshot for stable identity.
   - `FallbackKitClient.subscribeKitName` / `subscribeRenameStatus` no longer call the subscriber synchronously.
   - `FallbackKitClient.getRenameStatusSnapshot` returns the cached `KIT_RENAME_STATUS_IDLE`.
-  - Embedded test gate now guards `process` existence: `typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1"`.
+  - Embedded test gate now guards `process` existence: `typeof process !== "undefined" && !!process.env && process.env["COMPOSE_JS_RUN_EMBEDDED_TESTS"] === "1"`.
   - `WorkerStringTransport.init` now rejects fast on the worker's `error` op / `error` event (was only resolving on `ready`, then waiting 30s).
   - `KitStore.open` falls back from the dedicated Blob worker to the inline main-thread WASM transport when the worker init throws (still real rust authority, so the new rename architecture works through real `KitStoreHandle` even without a worker).
-- `semio/react/index.tsx`
+- `compose/react/index.tsx`
   - `useKitName` snapshot for kit name and rename status now use stable references (`runtime.store.getSnapshot()` instead of identity-changing `runtime.snapshot`; `KIT_RENAME_STATUS_IDLE` for the no-client branch).
-  - Imported `KIT_RENAME_STATUS_IDLE` from `@semio/js`.
+  - Imported `KIT_RENAME_STATUS_IDLE` from `@compose/js`.
   - Replaced the `{ kind: "idle" } as const` test-stub literals with `KIT_RENAME_STATUS_IDLE`.
 
 ## Verification
 
-- `cd semio/react && npm test` → 15 / 15 passed (includes “useKitName rejects empty required name via kit client” and the kit-metadata write test).
-- `cd semio/js && npm test -- --testNamePattern=rename` → rename test passes (other failures pre-existing and unrelated: WASM-asset / SDL fixture tests).
-- `cd semio/sketchpad && npx vite --host 127.0.0.1 --port 5210` → server boots cleanly (no dependency-scan error, no `process` reference error, no “Preparing kit app…” render-time crash).
+- `cd compose/react && npm test` → 15 / 15 passed (includes “useKitName rejects empty required name via kit client” and the kit-metadata write test).
+- `cd compose/js && npm test -- --testNamePattern=rename` → rename test passes (other failures pre-existing and unrelated: WASM-asset / SDL fixture tests).
+- `cd compose/sketchpad && npx vite --host 127.0.0.1 --port 5210` → server boots cleanly (no dependency-scan error, no `process` reference error, no “Preparing kit app…” render-time crash).
 
 ## Files
 
-- `semio/js/index.ts`
-- `semio/react/index.tsx`
-- `semio/sketchpad/index.tsx`
+- `compose/js/index.ts`
+- `compose/react/index.tsx`
+- `compose/sketchpad/index.tsx`
 - `.repo/🎫/26/05/08/sketchpad-vite-app-panels-glob/ticket.md`
 
 ---
@@ -48,12 +48,12 @@
 
 **Goal:** Apply the same UX pattern as kit rename (inline spinner + error under control, stable subscription semantics) across sketchpad detail panels and schema hooks.
 
-### React (`semio/react/index.tsx`)
+### React (`compose/react/index.tsx`)
 
 - Added `writeStatusEquivalent()` plus `USE_KIT_NAME_PENDING_STATUS` (frozen). `useKitName` now derives status with **primitive deps** (`renameKind`, `renameErrorMessage`) instead of the whole `renameSnap` object, and caches error `{ kind: "error", … }` by message so **`WriteStatus` identity stays stable** across renders when nothing changed.
 - `useSchemaFieldState` wraps computed status in a ref: reuse the previous **`WriteStatus` reference** when semantically equal (pending count + `lastError` ref, error ref, idle/readonly frozen singletons).
 
-### Sketchpad (`semio/sketchpad/index.tsx`)
+### Sketchpad (`compose/sketchpad/index.tsx`)
 
 - New region **`SketchpadTriadFieldRows`**: `SketchpadTriadInputRow`, `SketchpadTriadTextareaRow`, `SketchpadTriadToggleRow` — each consumes a **`HookTriad`** + **`useWriteIndicator`** (spinner + destructive error text).
 - **Kit detail**: all kit metadata rows use triad components + `mapCommit` where optional strings trim to `null`.
@@ -62,13 +62,13 @@
 
 ### Verification (this pass)
 
-- `cd semio/react && npm test` → **15 / 15 passed**.
+- `cd compose/react && npm test` → **15 / 15 passed**.
 
 ---
 
 ## Follow-up: Strip JS-side knowledge of the on-disk kit-store bundle envelope (Rust-owned format)
 
-**Constraint reaffirmed by the dev:** *"Everything kit state related MUST be only in semio/rs. The dev kit backbone (json file) is only interacted by rust."*
+**Constraint reaffirmed by the dev:** *"Everything kit state related MUST be only in compose/rs. The dev kit backbone (json file) is only interacted by rust."*
 
 ### Why this changed
 
@@ -76,17 +76,17 @@ A previous in-session attempt added a JS bundle codec
 (`KIT_STORE_BUNDLE_SCHEMA` / `encodeKitStoreBundle` / `decodeKitStoreBundle`) and used it
 in `JsonFileKitStore`, `FolderKitStore`, `importKitToDto`, and the sketchpad
 `importKit` to read/write `{ schema, wip: { id, root: <KitFullDto> } }` envelopes
-matching `semio/assets/semio/metabolism.new.kit.semio.json`. That violated the
-layering: **JS reshaped/persisted the on-disk bundle** that is owned by `semio/rs`.
+matching `compose/assets/compose/metabolism.new.kit.compose.json`. That violated the
+layering: **JS reshaped/persisted the on-disk bundle** that is owned by `compose/rs`.
 
-In addition, the *real* dev-json backbone (Rust `DevJsonBackboneFile` in `semio/rs/lib.rs`)
+In addition, the *real* dev-json backbone (Rust `DevJsonBackboneFile` in `compose/rs/lib.rs`)
 uses an entirely different on-disk shape — `kind` / `schema = "2026-05-06"` /
 `connectionUri` / `persistence` / `semanticOpLog[]` — so **the JS bundle envelope was
 both architecturally wrong and format-wrong.**
 
 ### Reverts in this pass
 
-- `semio/js/index.ts`
+- `compose/js/index.ts`
   - **Removed** `KIT_STORE_BUNDLE_SCHEMA`, `KitStoreBundle`, `encodeKitStoreBundle`,
     `decodeKitStoreBundle`. Replaced with a `🚧` block-comment explaining JS does not
     speak the on-disk kit bundle format.
@@ -97,7 +97,7 @@ both architecturally wrong and format-wrong.**
     adapter contract alive but does not decode bytes).
   - `importKitToDto`: parses bytes strictly as the flat `KitFullDto`. Wrapped files
     must reach the host through Rust.
-- `semio/sketchpad/index.tsx`
+- `compose/sketchpad/index.tsx`
   - `importKit`: removed bundle-shape unwrapping. Parses the flat `KitFullDto` only.
 
 ### Open Rust-side gap (next ticket)
@@ -107,23 +107,23 @@ both architecturally wrong and format-wrong.**
   variant) reads/writes the on-disk bundle. After that, `JsonFileKitStore` /
   `FolderKitStore` can become pure projections of the rs `KitStore` snapshot, and the
   empty-seed bootstrap above can be replaced with the rs-projected DTO.
-- Decide which on-disk shape is canonical (the `metabolism.new.kit.semio.json`
+- Decide which on-disk shape is canonical (the `metabolism.new.kit.compose.json`
   wip-projection envelope vs. the `DevJsonBackboneFile` op-log envelope) and converge
   the rs serializer.
 
 ### Files (JS-strip pass)
 
-- `semio/js/index.ts`
-- `semio/sketchpad/index.tsx`
+- `compose/js/index.ts`
+- `compose/sketchpad/index.tsx`
 - `.repo/🎫/26/05/08/sketchpad-vite-app-panels-glob/ticket.md`
 
 ---
 
 ## Follow-up: Rust dev-json backbone refactored to the metabolism.new shape
 
-**Constraint:** *"semio/rs MUST be refactored to have the shape semio/assets/semio/metabolism.new.kit.semio.json"*
+**Constraint:** *"compose/rs MUST be refactored to have the shape compose/assets/compose/metabolism.new.kit.compose.json"*
 
-### What changed in `semio/rs/lib.rs`
+### What changed in `compose/rs/lib.rs`
 
 `kit_backbone` module — the on-disk wire format is now the metabolism shape:
 
@@ -141,7 +141,7 @@ both architecturally wrong and format-wrong.**
 - `KitStoreBundleFile::append_wip_step(draft_id, transaction_id, kind, input)` materialises the draft / transaction path on demand and appends one forward step (uuid-v7 step id, placeholder hash).
 - `KitStoreBundleFile::from_stored_semantic_ops(ops)` rebuilds the metabolism-shaped bundle from a flat semantic-op list (used by the golden test fixture).
 - The legacy `DevJsonBackboneFile / DevJsonPersistenceNotes` (kind / schema "2026-05-06" / connectionUri / persistence / semanticOpLog) is **gone**.
-- `StoredSemanticOp` is retained but downgraded to an internal value type (no `Serialize`/`Deserialize`) used only by the SQLite local-`.semio/` path and replay.
+- `StoredSemanticOp` is retained but downgraded to an internal value type (no `Serialize`/`Deserialize`) used only by the SQLite local-`.compose/` path and replay.
 - IO helpers renamed: `atomic_write_json → atomic_write_bundle`, `read_or_init_dev_json → read_or_init_bundle`. They now read/write `KitStoreBundleFile`.
 - `DevJsonAttached`:
   - `read_doc()` → `read_bundle()`.
@@ -159,9 +159,9 @@ both architecturally wrong and format-wrong.**
 ### Verification
 
 ```
-cargo build  -p semio                                           → clean
-cargo check  -p semio --target wasm32-unknown-unknown           → clean
-cargo test   -p semio                                           → 17 / 17 passed (1 ignored: pre-existing target_sdl_byte_match)
+cargo build  -p compose                                           → clean
+cargo check  -p compose --target wasm32-unknown-unknown           → clean
+cargo test   -p compose                                           → 17 / 17 passed (1 ignored: pre-existing target_sdl_byte_match)
 ```
 
 ### Out of scope (next ticket — won't break Rust today)
@@ -172,7 +172,7 @@ cargo test   -p semio                                           → 17 / 17 pass
 
 ### Files (Rust-shape pass)
 
-- `semio/rs/lib.rs`
+- `compose/rs/lib.rs`
 - `.repo/🎫/26/05/08/sketchpad-vite-app-panels-glob/ticket.md`
 
 ---
@@ -181,12 +181,12 @@ cargo test   -p semio                                           → 17 / 17 pass
 
 **Constraint from the dev:** *"Every kit change operation must happen within a draft and a transaction. When clicking the input for kit name then a transaction is started and on enter rename operation is sent and on success the transaction is finalized."*
 
-### Rust (`semio/rs/lib.rs`)
+### Rust (`compose/rs/lib.rs`)
 
 - `kit_backbone::KitStoreBundleFile`
   - New `initialize_with_active_draft(kit_id, draft_id, checkpoint_id) -> Self`: seeds an empty bundle whose `wip` already has the seed checkpoint and an active draft anchored on it (data shape only — used by tests today and by the future host file adapter).
   - New `open_transaction(draft_id) -> tx_id`: creates a fresh `TransactionDto` inside `wip.drafts[draft_id]` (creating the draft on demand) and returns the new uuid-v7 transaction id.
-  - New `commit_transaction(draft_id, tx_id)` / `abort_transaction(draft_id, tx_id)`: validate / drop a transaction in a draft, returning `SemioError::not_found` for unknown drafts or transactions. Commit currently keeps the row in `wip` until the checkpointing pipeline lands.
+  - New `commit_transaction(draft_id, tx_id)` / `abort_transaction(draft_id, tx_id)`: validate / drop a transaction in a draft, returning `ComposeError::not_found` for unknown drafts or transactions. Commit currently keeps the row in `wip` until the checkpointing pipeline lands.
 - `vcs::Graph`
   - New `open_transaction(draft_id) -> Arc<Transaction>`: ensures the draft, mints a new uuid-v7 transaction, marks it as the draft's open transaction.
   - New `commit_transaction(draft_id, tx_id)`: moves the transaction from `transactions` → `finalized_transactions`, clears `open_transaction` if it was the same one.
@@ -199,7 +199,7 @@ cargo test   -p semio                                           → 17 / 17 pass
   - `kit_store_bundle_open_commit_abort_transaction_lifecycle` — full open / commit / abort lifecycle on the bundle, with error paths for unknown drafts / transactions.
   - `transaction_open_commit_abort_lifecycle_on_wip_graph` — full lifecycle through the actual GraphQL schema: `transactionOpen` → probe `wip.draft(id:) { openTransaction, orderedTransactionIds }` → `transactionCommit` → `transactionAbort` → unknown-id failure modes.
 
-### JS (`semio/js/index.ts`)
+### JS (`compose/js/index.ts`)
 
 - `KitStore.ensureWriteGraph` no longer mints the transaction id locally — only the draft id. The transaction is opened explicitly through Rust.
 - New `KitStore.openKitWriteTransaction()`: calls `mutation transactionOpen(draftId)`, stores the rs-minted transaction id in `kitWriteTransactionId`, returns `{ ok: true, draftId, transactionId }`.
@@ -208,7 +208,7 @@ cargo test   -p semio                                           → 17 / 17 pass
 - `KitStore.rename(name)` now goes through `ensureOpenKitWriteTransaction()` instead of bypassing it — rename always runs inside a real rs-side transaction.
 - Updated `metabolism.new kit bundle has metabolism on-disk shape (Rust-owned)` test to assert the new bundle shape (`schema = "🎆26🌙06⬆️1"` + 5 top-level keys) instead of the legacy `kind / semanticOpLog` shape.
 
-### React (`semio/react/index.tsx`)
+### React (`compose/react/index.tsx`)
 
 - `useKitName.setter` now wraps every logical edit (Enter / blur via `lazy` Input) in a complete transaction lifecycle:
   1. `ks.openKitWriteTransaction()` — opens a fresh rs-side transaction.
@@ -221,9 +221,9 @@ This satisfies the *"every kit change operation must happen within a draft and a
 ### Verification
 
 ```
-cargo test  -p semio kit_store_bundle                                → 5 / 5 passed
-cargo test  -p semio transaction_open_commit_abort                   → 1 / 1 passed
-cd semio/js && npm test -- --testNamePattern=rename                  → rename test passes
+cargo test  -p compose kit_store_bundle                                → 5 / 5 passed
+cargo test  -p compose transaction_open_commit_abort                   → 1 / 1 passed
+cd compose/js && npm test -- --testNamePattern=rename                  → rename test passes
 ```
 
 (JS suite still has 6 pre-existing failures unrelated to this work — `TypeConnection.id` GraphQL mismatches and an SDL fixture asserting `type SubscriptionRoot` instead of `type Subscription`. These predate this ticket.)
@@ -236,46 +236,46 @@ cd semio/js && npm test -- --testNamePattern=rename                  → rename 
 
 ### Files
 
-- `semio/rs/lib.rs`
-- `semio/js/index.ts`
-- `semio/react/index.tsx`
+- `compose/rs/lib.rs`
+- `compose/js/index.ts`
+- `compose/react/index.tsx`
 - `.repo/🎫/26/05/08/sketchpad-vite-app-panels-glob/ticket.md`
 
 ---
 
-## Follow-up: `npx nx dev @semio/sketchpad` always uses the latest rs WASM (zero-touch)
+## Follow-up: `npx nx dev @compose/sketchpad` always uses the latest rs WASM (zero-touch)
 
-**Problem reported:** `npx nx dev @semio/sketchpad` fails with `Failed to resolve import "@semio/rs-wasm" from "../js/index.ts"` even after `wasm-pack` ran successfully. Root cause: `wasm-pack build --no-pack` regenerates `semio/rs/pkg/` on every invocation and **wipes `pkg/package.json`**, so the Vite alias `path.resolve(__dirname, "../rs/pkg")` (a directory) has no `main` / `module` entry to resolve.
+**Problem reported:** `npx nx dev @compose/sketchpad` fails with `Failed to resolve import "@compose/rs-wasm" from "../js/index.ts"` even after `wasm-pack` ran successfully. Root cause: `wasm-pack build --no-pack` regenerates `compose/rs/pkg/` on every invocation and **wipes `pkg/package.json`**, so the Vite alias `path.resolve(__dirname, "../rs/pkg")` (a directory) has no `main` / `module` entry to resolve.
 
 ### Resilient fix (two layers, defence in depth)
 
-1. **Direct-file Vite aliases** — alias `@semio/rs-wasm` to `pkg/semio.js` (the wasm-bindgen entry) instead of the directory. Survives `wasm-pack` regenerations because there's no `package.json` lookup involved.
-   - `semio/sketchpad/vite.config.ts`
-   - `semio/js/vite.config.ts`
-   - `semio/react/vite.config.ts`
-2. **Always-fresh WASM via predev / prebuild / pretest hooks** — new `semio/rs/scripts/build-wasm.mjs`:
+1. **Direct-file Vite aliases** — alias `@compose/rs-wasm` to `pkg/compose.js` (the wasm-bindgen entry) instead of the directory. Survives `wasm-pack` regenerations because there's no `package.json` lookup involved.
+   - `compose/sketchpad/vite.config.ts`
+   - `compose/js/vite.config.ts`
+   - `compose/react/vite.config.ts`
+2. **Always-fresh WASM via predev / prebuild / pretest hooks** — new `compose/rs/scripts/build-wasm.mjs`:
    - Runs `wasm-pack build --release --target web --out-dir pkg --no-pack` (cargo's incremental cache makes this ~1-2s on no-source-change vs. ~80s for a clean build).
-   - Always restores `pkg/package.json` (with the canonical `@semio/rs-wasm` name) so node-style module resolution (cli, vitest, ssr) still works alongside the file aliases.
+   - Always restores `pkg/package.json` (with the canonical `@compose/rs-wasm` name) so node-style module resolution (cli, vitest, ssr) still works alongside the file aliases.
    - Cross-platform (`spawnSync('npx', [...], { shell: true })`) — works on devcontainer, native Windows, native macOS, native Linux.
-   - Skip with `SEMIO_SKIP_WASM_BUILD=1` for CI that pre-builds.
+   - Skip with `COMPOSE_SKIP_WASM_BUILD=1` for CI that pre-builds.
 3. **Wired into npm script lifecycle** — npm runs `pre*` automatically:
-   - `semio/sketchpad/package.json` → `predev` + `prebuild`
-   - `semio/react/package.json` → `pretest` + `prebuild`
-   - `semio/js/package.json` → `pretest` + `pretest:unit` + `prebuild`
+   - `compose/sketchpad/package.json` → `predev` + `prebuild`
+   - `compose/react/package.json` → `pretest` + `prebuild`
+   - `compose/js/package.json` → `pretest` + `pretest:unit` + `prebuild`
 
 ### Verification
 
-- `node semio/rs/scripts/build-wasm.mjs` → wasm-pack build done in ~1s (cached) + `pkg/semio_bg.wasm` ready (5.91 MiB) + `pkg/package.json` restored.
-- `cd semio/sketchpad && npx vite --strictPort --port 5215` → vite ready in ~10s, no `Failed to resolve import` errors. Entry `index.tsx` transforms cleanly (200 OK, 7.4 MiB), `/@fs/C:/git/semio/semio/rs/pkg/semio.js` returns 200, HMR fires for `semio/react/index.tsx`.
+- `node compose/rs/scripts/build-wasm.mjs` → wasm-pack build done in ~1s (cached) + `pkg/compose_bg.wasm` ready (5.91 MiB) + `pkg/package.json` restored.
+- `cd compose/sketchpad && npx vite --strictPort --port 5215` → vite ready in ~10s, no `Failed to resolve import` errors. Entry `index.tsx` transforms cleanly (200 OK, 7.4 MiB), `/@fs/C:/git/compose/compose/rs/pkg/compose.js` returns 200, HMR fires for `compose/react/index.tsx`.
 
 ### Files
 
-- `semio/rs/scripts/build-wasm.mjs` (new)
-- `semio/sketchpad/vite.config.ts`
-- `semio/sketchpad/package.json`
-- `semio/js/vite.config.ts`
-- `semio/js/package.json`
-- `semio/react/vite.config.ts`
-- `semio/react/package.json`
+- `compose/rs/scripts/build-wasm.mjs` (new)
+- `compose/sketchpad/vite.config.ts`
+- `compose/sketchpad/package.json`
+- `compose/js/vite.config.ts`
+- `compose/js/package.json`
+- `compose/react/vite.config.ts`
+- `compose/react/package.json`
 - `.repo/🎫/26/05/08/sketchpad-vite-app-panels-glob/ticket.md`
 

@@ -5,7 +5,7 @@
   "second": "2026-04-03T11:32:25Z",
   "checkpoint": "c522b2737bf33da279a9b85eefb580db5eab2c9f",
   "contributor": "unknown",
-  "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/adee9a4e-ea82-4465-aaff-39731e4ff0b6/adee9a4e-ea82-4465-aaff-39731e4ff0b6.jsonl",
+  "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/adee9a4e-ea82-4465-aaff-39731e4ff0b6/adee9a4e-ea82-4465-aaff-39731e4ff0b6.jsonl",
   "events": [
     {
       "event": {
@@ -15,7 +15,7 @@
         "kind": "agent.ended",
         "second": "2026-04-03T11:32:25Z",
         "session": "adee9a4e-ea82-4465-aaff-39731e4ff0b6",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/adee9a4e-ea82-4465-aaff-39731e4ff0b6/adee9a4e-ea82-4465-aaff-39731e4ff0b6.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/adee9a4e-ea82-4465-aaff-39731e4ff0b6/adee9a4e-ea82-4465-aaff-39731e4ff0b6.jsonl"
       },
       "native": {
         "event": {
@@ -33,7 +33,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/adee9a4e-ea82-4465-aaff-39731e4ff0b6/adee9a4e-ea82-4465-aaff-39731e4ff0b6.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/adee9a4e-ea82-4465-aaff-39731e4ff0b6/adee9a4e-ea82-4465-aaff-39731e4ff0b6.jsonl"
         }
       },
       "response": {}
@@ -46,7 +46,7 @@
         "kind": "agent.ended",
         "second": "2026-04-03T17:10:04Z",
         "session": "adee9a4e-ea82-4465-aaff-39731e4ff0b6",
-        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/adee9a4e-ea82-4465-aaff-39731e4ff0b6/adee9a4e-ea82-4465-aaff-39731e4ff0b6.jsonl"
+        "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/adee9a4e-ea82-4465-aaff-39731e4ff0b6/adee9a4e-ea82-4465-aaff-39731e4ff0b6.jsonl"
       },
       "native": {
         "event": {
@@ -64,7 +64,7 @@
             "/workspaces/semio"
           ],
           "user_email": "ueli.saluz@posteo.de",
-          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/adee9a4e-ea82-4465-aaff-39731e4ff0b6/adee9a4e-ea82-4465-aaff-39731e4ff0b6.jsonl"
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/adee9a4e-ea82-4465-aaff-39731e4ff0b6/adee9a4e-ea82-4465-aaff-39731e4ff0b6.jsonl"
         }
       },
       "response": {}

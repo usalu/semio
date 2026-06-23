@@ -16,7 +16,7 @@ const nodeIdMap = new Map<string, string>();
 const nodeHandlesByName = new Map<string, { handleKind: string; angle: number; radius?: number }[]>();
 for (const row of d2.meta.kindCatalogs.nodes ?? []) {
   const name = row.name?.trim() ?? "";
-  if (name.startsWith("semio.")) continue;
+  if (name.startsWith("compose.")) continue;
   nodeIdMap.set(row.id, name);
   if (row.handles?.length) {
     const existing = nodeHandlesByName.get(name) ?? [];
@@ -90,5 +90,5 @@ const out = remapValue({ ...d2, meta: { ...d2.meta, kindCatalogs, kindCompatibil
 const path = "puzzle/2d/fixture/nakagin-capsule-tower.2d.json";
 writeFileSync(path, `${JSON.stringify(out, null, 2)}\n`);
 
-const left = JSON.stringify(out).match(/semio\.metabolism/g)?.length ?? 0;
-console.log(`written ${path}; remaining semio.metabolism: ${left}`);
+const left = JSON.stringify(out).match(/compose\.metabolism/g)?.length ?? 0;
+console.log(`written ${path}; remaining compose.metabolism: ${left}`);

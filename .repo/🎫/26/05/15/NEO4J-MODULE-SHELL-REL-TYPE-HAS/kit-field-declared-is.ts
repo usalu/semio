@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * @emoji 🧭 Rebuilds declared `IS` from `semio/client/schema/semio/schema.yaml`: kit members get one `IS` per field; `Class`/`Interface` types keep **only** direct `implements` targets (no transitive `IS` to supertypes like Entity).
+ * @emoji 🧭 Rebuilds declared `IS` from `compose/client/schema/compose/schema.yaml`: kit members get one `IS` per field; `Class`/`Interface` types keep **only** direct `implements` targets (no transitive `IS` to supertypes like Entity).
  */
 import { existsSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -410,7 +410,7 @@ function runCypherFile(repoRoot: string, shell: string, database: string, filePa
  * @emoji 🛠️ Realigns `IS` with schema.yaml: kit fields get one declared `IS` each; `Class`/`Interface` get only direct `implements` (no transitive supertypes).
  */
 export function runKitFieldDeclaredIsRepair(opts: Readonly<{ repoRoot: string; database: string; cacheDir: string }>): void {
-  const yamlPath = join(opts.repoRoot, "semio", "client", "schema", "semio", "schema.yaml");
+  const yamlPath = join(opts.repoRoot, "compose", "client", "schema", "compose", "schema.yaml");
   if (!existsSync(yamlPath)) {
     throw new Error(`[kit-field-is] missing ${yamlPath}`);
   }

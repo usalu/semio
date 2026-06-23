@@ -357,7 +357,7 @@ export type { ThreeEvent };
 // #region 🎼Utilities
 
 // Generic utility and type definitions that make @ui/react self-contained.
-// These MUST NOT depend on any external semio package.
+// These MUST NOT depend on any external compose package.
 
 /**
  * Merges CSS class names using Tailwind merge.
@@ -1771,7 +1771,7 @@ export function resolveControlLabelId(id: string): string {
 export function panelKindFromPanelToggleControlId(id: string): string | undefined {
   if (id.startsWith("ui.panelToggle.")) return id.slice("ui.panelToggle.".length);
   if (id.startsWith("playground.panel.")) return id.slice("playground.panel.".length);
-  if (id.startsWith("semio.sketchpad.navbar.panelToggle.")) return id.slice("semio.sketchpad.navbar.panelToggle.".length);
+  if (id.startsWith("compose.sketchpad.navbar.panelToggle.")) return id.slice("compose.sketchpad.navbar.panelToggle.".length);
   return undefined;
 }
 
@@ -1849,7 +1849,7 @@ export function ChromeControlHint({
 
 
 // Domain-neutral UI translation bundles (settings, tooltip, generic shell `ui.*` ids).
-// Product-specific bundles (e.g. semio sketchpad) register via {@link registerUiTranslationBundles}.
+// Product-specific bundles (e.g. compose sketchpad) register via {@link registerUiTranslationBundles}.
 
 /** @emoji 🪁 Supported UI locale codes. */
 export type UiLocale = "en" | "de";
@@ -4370,7 +4370,7 @@ interface LabelProps {
   labelLayoutKind?: "property" | "treeGroupHeader";
   children: React.ReactNode;
 }
-// [🏘️semio📚js🗃️sketchpad💻elements🔖basecomponents🪨label](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Base%20Components/d/i/Label)
+// [🏘️compose📚js🗃️sketchpad💻elements🔖basecomponents🪨label](repo://p/u/compose/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Base%20Components/d/i/Label)
 export function Label({ id, rowId, label, labelElementId, className, children, labelLayoutKind = "property" }: LabelProps) {
   const localizedLabel = useLabel(id);
   const resolvedLabel = label ?? localizedLabel;
@@ -4533,17 +4533,17 @@ export function Label({ id, rowId, label, labelElementId, className, children, l
 // Consumers MUST pass valid config objects.
 
 /**
- * SemioTooltipProps holds the data fields for a SemioTooltipProps record.
+ * ComposeTooltipProps holds the data fields for a ComposeTooltipProps record.
  **/
-interface SemioTooltipProps {
+interface ComposeTooltipProps {
   children: React.ReactElement;
   config: TooltipConfig;
 }
 
 /**
- * SemioTooltip holds the data fields for a SemioTooltip record.
+ * ComposeTooltip holds the data fields for a ComposeTooltip record.
  **/
-function SemioTooltip({ children, config }: SemioTooltipProps) {
+function ComposeTooltip({ children, config }: ComposeTooltipProps) {
   const mode = useTooltipMode();
   if (mode === Expertise.EXPERT) return children;
   if (!React.isValidElement(children)) return children;
@@ -4551,23 +4551,23 @@ function SemioTooltip({ children, config }: SemioTooltipProps) {
 }
 
 /**
- * IdSemioTooltipProps holds the data fields for a IdSemioTooltipProps record.
+ * IdComposeTooltipProps holds the data fields for a IdComposeTooltipProps record.
  **/
-interface IdSemioTooltipProps {
+interface IdComposeTooltipProps {
   id: string;
   children: React.ReactNode;
 }
 
 /**
  **/
-function IdSemioTooltip({ id, children }: IdSemioTooltipProps) {
+function IdComposeTooltip({ id, children }: IdComposeTooltipProps) {
   const mode = useTooltipMode();
   if (mode === Expertise.EXPERT) return children;
   if (!React.isValidElement(children)) return <>{children}</>;
   return <ChromeControlHint id={id}>{children}</ChromeControlHint>;
 }
 
-export { DescriptionTooltipContent, EnhancedTooltipContent, IdSemioTooltip, SemioTooltip, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger };
+export { DescriptionTooltipContent, EnhancedTooltipContent, IdComposeTooltip, ComposeTooltip, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger };
 
 // #region 📣Aside
 // Callout boxes for notes, tips, cautions, and dangers.
@@ -7872,7 +7872,7 @@ function writeResizableJoinCornerSpec(element: HTMLElement, spec: ResizableJoinC
 /** @emoji ↔️ Document capture hook so corner grabs win over react-resizable-panels (registered at module load). */
 function installResizableCornerInterceptor(): void {
   if (typeof document === "undefined") return;
-  const marker = "__semioResizableCornerInterceptor";
+  const marker = "__composeResizableCornerInterceptor";
   if ((document as Document & Record<string, boolean>)[marker]) return;
   (document as Document & Record<string, boolean>)[marker] = true;
   let drag: { pointerId: number; x: number; y: number; spec: ResizableJoinCornerSpec } | null = null;
@@ -18002,7 +18002,7 @@ const VIRTUAL_FILE_SYSTEM_ICON_BY_ID: Readonly<Record<string, IconName>> = {
   css: "file-code",
   scss: "file-code",
   sql: "file-code",
-  semio: "file-json",
+  compose: "file-json",
 };
 
 /** @emoji 📁 Resolves a built-in icon for a VFS schema icon id or file node kind id. */
@@ -18254,10 +18254,10 @@ export interface ModeWindowDescriptor extends Omit<WindowConfig, "children" | "o
   children: React.ReactNode;
 }
 
-export const SEMIO_WINDOW_TEMPLATE_MIME = "application/x-semio-window-template";
+export const COMPOSE_WINDOW_TEMPLATE_MIME = "application/x-compose-window-template";
 
 /** @emoji 👻 Ephemeral window id used while previewing an external template drag on {@link Mode}. */
-export const MODE_TEMPLATE_PREVIEW_WINDOW_ID = "__semio-mode-template-preview__";
+export const MODE_TEMPLATE_PREVIEW_WINDOW_ID = "__compose-mode-template-preview__";
 
 export interface WindowTemplateDragSession {
   readonly payload: WindowTemplateDropPayload;
@@ -18308,7 +18308,7 @@ export function cancelWindowTemplatePointerDrag(): void {
 /** @emoji 🖱️ {@link TreeDragAndDropController} for Display rows that carry window-template `dragData`. */
 export function windowTemplatePaletteTreeDragController(): TreeDragAndDropController {
   const readEncoded = (dragData: Record<string, string> | undefined): string | undefined => {
-    const payload = dragData?.[SEMIO_WINDOW_TEMPLATE_MIME];
+    const payload = dragData?.[COMPOSE_WINDOW_TEMPLATE_MIME];
     return payload?.trim() ? payload : undefined;
   };
   return {
@@ -19749,7 +19749,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
 
   const handleExternalTemplateDragOver = reactHostPort.useCallback(
     (event: React.DragEvent<HTMLDivElement>) => {
-      if (!onTemplateDrop || !event.dataTransfer.types.includes(SEMIO_WINDOW_TEMPLATE_MIME)) return;
+      if (!onTemplateDrop || !event.dataTransfer.types.includes(COMPOSE_WINDOW_TEMPLATE_MIME)) return;
       const session = readActiveWindowTemplateDragSession();
       if (!session) return;
       event.preventDefault();
@@ -19763,7 +19763,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
   const handleExternalTemplateDrop = reactHostPort.useCallback(
     (event: React.DragEvent<HTMLDivElement>) => {
       if (!onTemplateDrop) return;
-      const raw = event.dataTransfer.getData(SEMIO_WINDOW_TEMPLATE_MIME);
+      const raw = event.dataTransfer.getData(COMPOSE_WINDOW_TEMPLATE_MIME);
       if (!raw) return;
       event.preventDefault();
       let payload: WindowTemplateDropPayload;
@@ -21001,7 +21001,7 @@ if (import.meta.vitest) {
         sourceItem: {
           id: "framework.display.windows.puzzle-3d-main.perspective",
           label: "Perspective",
-          dragData: { [SEMIO_WINDOW_TEMPLATE_MIME]: encoded },
+          dragData: { [COMPOSE_WINDOW_TEMPLATE_MIME]: encoded },
         },
         section: { id: "framework.display.windows.puzzle-3d-main", items: [] },
       });

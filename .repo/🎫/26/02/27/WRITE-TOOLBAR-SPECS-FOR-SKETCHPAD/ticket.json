@@ -27,7 +27,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "semio/semio/semio/js",
+              "path": "compose/compose/compose/js",
               "lines": {
                 "added": 84,
                 "removed": 0
@@ -47,7 +47,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "📃semio/js/sketchpad/README.md",
+              "path": "📃compose/js/sketchpad/README.md",
               "lines": {
                 "added": 147,
                 "removed": 62
@@ -59,49 +59,49 @@
         "sections": {
           "deleted": [
             {
-              "path": "semio/js/sketchpad/README.md#Docs",
+              "path": "compose/js/sketchpad/README.md#Docs",
               "lines": {
                 "added": 0,
                 "removed": 18
               }
             },
             {
-              "path": "semio/js/sketchpad/README.md#Docs#Kit.tsx",
+              "path": "compose/js/sketchpad/README.md#Docs#Kit.tsx",
               "lines": {
                 "added": 0,
                 "removed": 4
               }
             },
             {
-              "path": "semio/js/sketchpad/README.md#Docs#elements.tsx",
+              "path": "compose/js/sketchpad/README.md#Docs#elements.tsx",
               "lines": {
                 "added": 0,
                 "removed": 4
               }
             },
             {
-              "path": "semio/js/sketchpad/README.md#Specs#Borders",
+              "path": "compose/js/sketchpad/README.md#Specs#Borders",
               "lines": {
                 "added": 0,
                 "removed": 13
               }
             },
             {
-              "path": "semio/js/sketchpad/README.md#Specs#Interaction State",
+              "path": "compose/js/sketchpad/README.md#Specs#Interaction State",
               "lines": {
                 "added": 0,
                 "removed": 36
               }
             },
             {
-              "path": "semio/js/sketchpad/README.md#Specs#State Management",
+              "path": "compose/js/sketchpad/README.md#Specs#State Management",
               "lines": {
                 "added": 0,
                 "removed": 4
               }
             },
             {
-              "path": "semio/js/sketchpad/README.md#Specs#Windows",
+              "path": "compose/js/sketchpad/README.md#Specs#Windows",
               "lines": {
                 "added": 0,
                 "removed": 12
@@ -110,24 +110,24 @@
           ],
           "renamed": [
             {
-              "from": "semio/js/sketchpad/README.md#Specs#Toolbar#Toolbar Sizing Normalization",
-              "to": "semio/js/sketchpad/README.md#Specs#Toolbar#Component Hierarchy",
+              "from": "compose/js/sketchpad/README.md#Specs#Toolbar#Toolbar Sizing Normalization",
+              "to": "compose/js/sketchpad/README.md#Specs#Toolbar#Component Hierarchy",
               "lines": {
                 "added": 9,
                 "removed": 9
               }
             },
             {
-              "from": "semio/js/sketchpad/README.md#Docs#Home.tsx",
-              "to": "semio/js/sketchpad/README.md#Specs#Toolbar#Per-App Toolbar Sections#Docs",
+              "from": "compose/js/sketchpad/README.md#Docs#Home.tsx",
+              "to": "compose/js/sketchpad/README.md#Specs#Toolbar#Per-App Toolbar Sections#Docs",
               "lines": {
                 "added": 4,
                 "removed": 4
               }
             },
             {
-              "from": "semio/js/sketchpad/README.md#Docs#Sketchpad.tsx",
-              "to": "semio/js/sketchpad/README.md#Specs#Toolbar#Per-App Toolbar Sections#Feedback",
+              "from": "compose/js/sketchpad/README.md#Docs#Sketchpad.tsx",
+              "to": "compose/js/sketchpad/README.md#Specs#Toolbar#Per-App Toolbar Sections#Feedback",
               "lines": {
                 "added": 4,
                 "removed": 4
@@ -136,231 +136,231 @@
           ],
           "modified": [
             {
-              "path": "📃semio/js/sketchpad/README.md#Docs",
+              "path": "📃compose/js/sketchpad/README.md#Docs",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "📃semio/js/sketchpad/README.md#Docs#Home.tsx",
+              "path": "📃compose/js/sketchpad/README.md#Docs#Home.tsx",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "📃semio/js/sketchpad/README.md#Docs#Kit.tsx",
+              "path": "📃compose/js/sketchpad/README.md#Docs#Kit.tsx",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "📃semio/js/sketchpad/README.md#Docs#Sketchpad.tsx",
+              "path": "📃compose/js/sketchpad/README.md#Docs#Sketchpad.tsx",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "📃semio/js/sketchpad/README.md#Docs#elements.tsx",
+              "path": "📃compose/js/sketchpad/README.md#Docs#elements.tsx",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "📃semio/js/sketchpad/README.md#Specs",
+              "path": "📃compose/js/sketchpad/README.md#Specs",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "📃semio/js/sketchpad/README.md#Specs#Borders",
+              "path": "📃compose/js/sketchpad/README.md#Specs#Borders",
               "lines": {
                 "added": 0,
                 "removed": 11
               }
             },
             {
-              "path": "📃semio/js/sketchpad/README.md#Specs#Interaction State",
+              "path": "📃compose/js/sketchpad/README.md#Specs#Interaction State",
               "lines": {
                 "added": 0,
                 "removed": 18
               }
             },
             {
-              "path": "📃semio/js/sketchpad/README.md#Specs#State Management",
+              "path": "📃compose/js/sketchpad/README.md#Specs#State Management",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "📃semio/js/sketchpad/README.md#Specs#Toolbar",
+              "path": "📃compose/js/sketchpad/README.md#Specs#Toolbar",
               "lines": {
                 "added": 1,
                 "removed": 10
               }
             },
             {
-              "path": "📃semio/js/sketchpad/README.md#Specs#Toolbar#Active Group and Settings Zone",
+              "path": "📃compose/js/sketchpad/README.md#Specs#Toolbar#Active Group and Settings Zone",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "📃semio/js/sketchpad/README.md#Specs#Toolbar#Architecture",
+              "path": "📃compose/js/sketchpad/README.md#Specs#Toolbar#Architecture",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "📃semio/js/sketchpad/README.md#Specs#Toolbar#CSS Sizing Normalization",
+              "path": "📃compose/js/sketchpad/README.md#Specs#Toolbar#CSS Sizing Normalization",
               "lines": {
                 "added": 12,
                 "removed": 0
               }
             },
             {
-              "path": "📃semio/js/sketchpad/README.md#Specs#Toolbar#Component Hierarchy",
+              "path": "📃compose/js/sketchpad/README.md#Specs#Toolbar#Component Hierarchy",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "📃semio/js/sketchpad/README.md#Specs#Toolbar#Group Ordering and Rendering",
+              "path": "📃compose/js/sketchpad/README.md#Specs#Toolbar#Group Ordering and Rendering",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "📃semio/js/sketchpad/README.md#Specs#Toolbar#Interaction Invariants",
+              "path": "📃compose/js/sketchpad/README.md#Specs#Toolbar#Interaction Invariants",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "📃semio/js/sketchpad/README.md#Specs#Toolbar#Per-App Toolbar Sections",
+              "path": "📃compose/js/sketchpad/README.md#Specs#Toolbar#Per-App Toolbar Sections",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "📃semio/js/sketchpad/README.md#Specs#Toolbar#Per-App Toolbar Sections#Design",
+              "path": "📃compose/js/sketchpad/README.md#Specs#Toolbar#Per-App Toolbar Sections#Design",
               "lines": {
                 "added": 3,
                 "removed": 0
               }
             },
             {
-              "path": "📃semio/js/sketchpad/README.md#Specs#Toolbar#Per-App Toolbar Sections#Docs",
+              "path": "📃compose/js/sketchpad/README.md#Specs#Toolbar#Per-App Toolbar Sections#Docs",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "📃semio/js/sketchpad/README.md#Specs#Toolbar#Per-App Toolbar Sections#Feedback",
+              "path": "📃compose/js/sketchpad/README.md#Specs#Toolbar#Per-App Toolbar Sections#Feedback",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "📃semio/js/sketchpad/README.md#Specs#Toolbar#Per-App Toolbar Sections#Home",
+              "path": "📃compose/js/sketchpad/README.md#Specs#Toolbar#Per-App Toolbar Sections#Home",
               "lines": {
                 "added": 3,
                 "removed": 0
               }
             },
             {
-              "path": "📃semio/js/sketchpad/README.md#Specs#Toolbar#Per-App Toolbar Sections#Kit",
+              "path": "📃compose/js/sketchpad/README.md#Specs#Toolbar#Per-App Toolbar Sections#Kit",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "📃semio/js/sketchpad/README.md#Specs#Toolbar#Per-App Toolbar Sections#Quality",
+              "path": "📃compose/js/sketchpad/README.md#Specs#Toolbar#Per-App Toolbar Sections#Quality",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "📃semio/js/sketchpad/README.md#Specs#Toolbar#Per-App Toolbar Sections#Type",
+              "path": "📃compose/js/sketchpad/README.md#Specs#Toolbar#Per-App Toolbar Sections#Type",
               "lines": {
                 "added": 5,
                 "removed": 0
               }
             },
             {
-              "path": "📃semio/js/sketchpad/README.md#Specs#Toolbar#Registration Contract",
+              "path": "📃compose/js/sketchpad/README.md#Specs#Toolbar#Registration Contract",
               "lines": {
                 "added": 26,
                 "removed": 0
               }
             },
             {
-              "path": "📃semio/js/sketchpad/README.md#Specs#Toolbar#Sub-Tool Mechanics",
+              "path": "📃compose/js/sketchpad/README.md#Specs#Toolbar#Sub-Tool Mechanics",
               "lines": {
                 "added": 3,
                 "removed": 0
               }
             },
             {
-              "path": "📃semio/js/sketchpad/README.md#Specs#Toolbar#Toolbar Sizing Normalization",
+              "path": "📃compose/js/sketchpad/README.md#Specs#Toolbar#Toolbar Sizing Normalization",
               "lines": {
                 "added": 0,
                 "removed": 5
               }
             },
             {
-              "path": "📃semio/js/sketchpad/README.md#Specs#Toolbar#Toolbar State Management",
+              "path": "📃compose/js/sketchpad/README.md#Specs#Toolbar#Toolbar State Management",
               "lines": {
                 "added": 5,
                 "removed": 0
               }
             },
             {
-              "path": "📃semio/js/sketchpad/README.md#Specs#Windows",
+              "path": "📃compose/js/sketchpad/README.md#Specs#Windows",
               "lines": {
                 "added": 0,
                 "removed": 6
               }
             },
             {
-              "path": "📃semio/js/sketchpad/README.md#💯Requirements",
+              "path": "📃compose/js/sketchpad/README.md#💯Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "📃semio/js/sketchpad/README.md#💯Requirements#🏘️semio📚js🗃️sketchpad💻designtsx",
+              "path": "📃compose/js/sketchpad/README.md#💯Requirements#🏘️compose📚js🗃️sketchpad💻designtsx",
               "lines": {
                 "added": 3,
                 "removed": 0
               }
             },
             {
-              "path": "📃semio/js/sketchpad/README.md#💯Requirements#🏘️semio📚js🗃️sketchpad💻designtsx#Panels",
+              "path": "📃compose/js/sketchpad/README.md#💯Requirements#🏘️compose📚js🗃️sketchpad💻designtsx#Panels",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "📃semio/js/sketchpad/README.md#💯Requirements#🏘️semio📚js🗃️sketchpad💻designtsx#Panels#Detail",
+              "path": "📃compose/js/sketchpad/README.md#💯Requirements#🏘️compose📚js🗃️sketchpad💻designtsx#Panels#Detail",
               "lines": {
                 "added": 38,
                 "removed": 0
@@ -369,126 +369,126 @@
           ],
           "added": [
             {
-              "path": "semio/js/sketchpad/README.md#Specs#Toolbar#Active Group and Settings Zone",
+              "path": "compose/js/sketchpad/README.md#Specs#Toolbar#Active Group and Settings Zone",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/README.md#Specs#Toolbar#Architecture",
+              "path": "compose/js/sketchpad/README.md#Specs#Toolbar#Architecture",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/README.md#Specs#Toolbar#CSS Sizing Normalization",
+              "path": "compose/js/sketchpad/README.md#Specs#Toolbar#CSS Sizing Normalization",
               "lines": {
                 "added": 17,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/README.md#Specs#Toolbar#Group Ordering and Rendering",
+              "path": "compose/js/sketchpad/README.md#Specs#Toolbar#Group Ordering and Rendering",
               "lines": {
                 "added": 9,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/README.md#Specs#Toolbar#Interaction Invariants",
+              "path": "compose/js/sketchpad/README.md#Specs#Toolbar#Interaction Invariants",
               "lines": {
                 "added": 11,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/README.md#Specs#Toolbar#Per-App Toolbar Sections",
+              "path": "compose/js/sketchpad/README.md#Specs#Toolbar#Per-App Toolbar Sections",
               "lines": {
                 "added": 39,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/README.md#Specs#Toolbar#Per-App Toolbar Sections#Design",
+              "path": "compose/js/sketchpad/README.md#Specs#Toolbar#Per-App Toolbar Sections#Design",
               "lines": {
                 "added": 5,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/README.md#Specs#Toolbar#Per-App Toolbar Sections#Home",
+              "path": "compose/js/sketchpad/README.md#Specs#Toolbar#Per-App Toolbar Sections#Home",
               "lines": {
                 "added": 5,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/README.md#Specs#Toolbar#Per-App Toolbar Sections#Kit",
+              "path": "compose/js/sketchpad/README.md#Specs#Toolbar#Per-App Toolbar Sections#Kit",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/README.md#Specs#Toolbar#Per-App Toolbar Sections#Quality",
+              "path": "compose/js/sketchpad/README.md#Specs#Toolbar#Per-App Toolbar Sections#Quality",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/README.md#Specs#Toolbar#Per-App Toolbar Sections#Type",
+              "path": "compose/js/sketchpad/README.md#Specs#Toolbar#Per-App Toolbar Sections#Type",
               "lines": {
                 "added": 7,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/README.md#Specs#Toolbar#Registration Contract",
+              "path": "compose/js/sketchpad/README.md#Specs#Toolbar#Registration Contract",
               "lines": {
                 "added": 28,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/README.md#Specs#Toolbar#Sub-Tool Mechanics",
+              "path": "compose/js/sketchpad/README.md#Specs#Toolbar#Sub-Tool Mechanics",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/README.md#Specs#Toolbar#Toolbar State Management",
+              "path": "compose/js/sketchpad/README.md#Specs#Toolbar#Toolbar State Management",
               "lines": {
                 "added": 7,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/README.md#💯Requirements",
+              "path": "compose/js/sketchpad/README.md#💯Requirements",
               "lines": {
                 "added": 46,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/README.md#💯Requirements#🏘️semio📚js🗃️sketchpad💻designtsx",
+              "path": "compose/js/sketchpad/README.md#💯Requirements#🏘️compose📚js🗃️sketchpad💻designtsx",
               "lines": {
                 "added": 44,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/README.md#💯Requirements#🏘️semio📚js🗃️sketchpad💻designtsx#Panels",
+              "path": "compose/js/sketchpad/README.md#💯Requirements#🏘️compose📚js🗃️sketchpad💻designtsx#Panels",
               "lines": {
                 "added": 41,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/README.md#💯Requirements#🏘️semio📚js🗃️sketchpad💻designtsx#Panels#Detail",
+              "path": "compose/js/sketchpad/README.md#💯Requirements#🏘️compose📚js🗃️sketchpad💻designtsx#Panels#Detail",
               "lines": {
                 "added": 39,
                 "removed": 0

@@ -6,7 +6,7 @@ todos:
    content: Use repo ticket workflow before edits and associate this refactor with the appropriate sketchpad/layering goal.
    status: completed
  - id: store-section
-   content: Consolidate state-management definitions in one Store section inside semio/sketchpad/index.tsx.
+   content: Consolidate state-management definitions in one Store section inside compose/sketchpad/index.tsx.
    status: completed
  - id: single-machine
    content: Make the sketchpad machine the only authority for sketchpad and app UI state.
@@ -30,12 +30,12 @@ isProject: false
 
 ## Scope
 
-Refactor [semio/sketchpad/index.tsx](semio/sketchpad/index.tsx). Keep the one-file structure required by the repo, but reorganize the state-management code into one `Store` section with subregions for state shape, machine events, transition definitions, actor lifecycle, persistence projection, selectors, and public hooks.
+Refactor [compose/sketchpad/index.tsx](compose/sketchpad/index.tsx). Keep the one-file structure required by the repo, but reorganize the state-management code into one `Store` section with subregions for state shape, machine events, transition definitions, actor lifecycle, persistence projection, selectors, and public hooks.
 
 Relevant current hotspots:
 
 ```ts
-// [semio/sketchpad/index.tsx](semio/sketchpad/index.tsx)
+// [compose/sketchpad/index.tsx](compose/sketchpad/index.tsx)
 export class SketchpadStore {
  private readonly syncDoc: SyncDoc;
  private readonly syncSketchpad: SyncSketchpad;
@@ -44,7 +44,7 @@ export class SketchpadStore {
 ```
 
 ```ts
-// [semio/sketchpad/index.tsx](semio/sketchpad/index.tsx)
+// [compose/sketchpad/index.tsx](compose/sketchpad/index.tsx)
 export function useTheme(): HookResult<Theme> {
  const actor = useSketchpadActor();
  const value = useSelector(actor, (snapshot) => selectTheme(snapshot.context));
@@ -77,13 +77,13 @@ The machine remains the only runtime authority for sketchpad UI state, shell sta
 
 4. Replace XState-facing public hooks with clean wrappers such as `useSketchpadField`, `useSketchpadAction`, `useKitAppField`, `useDesignAppField`, `useTypeAppField`, and `useQualityAppField`. Keep XState imports, actor references, `useSelector`, and transition inspection private to the Store section. Existing consumer hooks like `useTheme`, `useLanguage`, `useKitAppSelection`, and `useDesignAppSelection` continue returning `HookResult` or action tuples, but no consumer receives an actor or XState snapshot.
 
-5. Remove or inline the sketchpad-local sync helpers: `useSync`, `useSyncOptional`, `useSyncDeep`, `useSyncField`, `useSyncFields`, and direct `useSyncExternalStore` uses in sketchpad state hooks. Any remaining external subscriptions must either move into the machine or be replaced by existing `@semio/react` kit hooks when they represent kit data.
+5. Remove or inline the sketchpad-local sync helpers: `useSync`, `useSyncOptional`, `useSyncDeep`, `useSyncField`, `useSyncFields`, and direct `useSyncExternalStore` uses in sketchpad state hooks. Any remaining external subscriptions must either move into the machine or be replaced by existing `@compose/react` kit hooks when they represent kit data.
 
 6. Collapse duplicate state surfaces: delete the unused `SketchpadMachineContext`/`StoreSyncContext` sync bridge concepts, stop writing to `syncSketchpad` as state authority, and make `readSketchpadStateFromLocalStorage` / `writeSketchpadStateToLocalStorage` hydrate and persist the machine context directly.
 
 7. Update existing embedded or package-level verification without adding new test files. If no real sketchpad test file exists, add focused runtime assertions to the existing sketchpad test harness path used by `npm run test` or extend the nearest existing repo test only for structural rules. Cover one unit per test: machine transitions, capability derivation, hook wrapper return shape, and absence of duplicate sync helpers.
 
-8. Run validation after implementation: `npm run build --workspace @semio/sketchpad` or the repo-equivalent build, `npm run test --workspace @semio/sketchpad`, and any available layer/dependency check such as `npm run depcruise:layers` from the repo root.
+8. Run validation after implementation: `npm run build --workspace @compose/sketchpad` or the repo-equivalent build, `npm run test --workspace @compose/sketchpad`, and any available layer/dependency check such as `npm run depcruise:layers` from the repo root.
 
 ## Ticket Workflow
 

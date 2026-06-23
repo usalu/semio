@@ -21,7 +21,7 @@ todos:
     content: "Add `Session.alternative(id: ID!): Alternative` and `Session.theKit: Version` so subscription paths mirror SessionCommandInput. Promote Checkpoint.change/edit id args from optional to required."
     status: completed
   - id: validate_schema
-    content: "Re-run `semio/graphql/scripts/export-schema.ts`; ripgrep checks for remaining bare singular accessors and remaining `event: Json!`; validate a sample subscription doc with the user's full example path against the new SDL."
+    content: "Re-run `compose/graphql/scripts/export-schema.ts`; ripgrep checks for remaining bare singular accessors and remaining `event: Json!`; validate a sample subscription doc with the user's full example path against the new SDL."
     status: completed
   - id: ticket_lifecycle
     content: Open ticket via repo MCP under goal r2602/runningsketchpad with this plan id, update ticket.md with problem/change/verification, close ticket on completion.
@@ -43,7 +43,7 @@ Make `subscription { wip { alternative(id: $alt) { kit { design(id: $des) { piec
 - The server emits the resolved selection once on subscribe (initial value), then again whenever any reachable field changes (live-query). Granularity is fully driven by the client's selection set: select one scalar → emit only when that scalar changes.
 - Errors propagate per emission; the stream stays open until the client unsubscribes.
 
-### Schema replacement (`semio/graphql/target.schema.graphql` lines 8256-8259)
+### Schema replacement (`compose/graphql/target.schema.graphql` lines 8256-8259)
 
 ```graphql
 # 🔴 Live subscription. Each field mirrors `Query`. The server emits the
@@ -66,7 +66,7 @@ type Subscription {
 
 The example path requires `design(id: ID!)` on `Kit` and `piece(id: ID!)` on `Design`, but the convention should be uniform across the navigation. Add `<entity>(id: ID!): <Entity>` everywhere a `<entities>: <Entity>Connection` exists, replacing the current bare singular accessors (which today silently return "the first" or similar).
 
-Concrete edits to `semio/graphql/target.schema.graphql`:
+Concrete edits to `compose/graphql/target.schema.graphql`:
 
 - `Kit` (~L7511): replace `design: Design` / `type: Type` with `design(id: ID!): Design` / `type(id: ID!): Type`; add `family(id: ID!)`, `file(id: ID!)`, `folder(id: ID!)`, `author(id: ID!)`, `concept(id: ID!)`, `tag(id: ID!)`, `quality(id: ID!)`, `prop(id: ID!)`, `attribute(id: ID!)`, `stat(id: ID!)`.
 - `Design` (~L7013): replace `piece: Piece` / `connection: Connection` with id-based variants; add `layer(id: ID!)`, `group(id: ID!)`, `author(id: ID!)`, `quality(id: ID!)`, `prop(id: ID!)`, `attribute(id: ID!)`, `stat(id: ID!)`.
@@ -100,15 +100,15 @@ flowchart LR
 
 - Operation/Modification/Diff trees and `Event` enum stay as they are. Subscriptions track *state*, not events.
 - Mutation tree (`session → theKit | alternative(id) → unsavedChange(id) → kit → …`) is unchanged.
-- Rust resolvers (`semio/rs/lib.rs::gql::Subscription`) are not rewritten by this ticket — schema-only. A follow-up ticket wires `EventBus` updates into the new live-query tree (the existing bus already broadcasts the typed events needed to invalidate selections). The schema change is the contract; the resolver is the implementation.
+- Rust resolvers (`compose/rs/lib.rs::gql::Subscription`) are not rewritten by this ticket — schema-only. A follow-up ticket wires `EventBus` updates into the new live-query tree (the existing bus already broadcasts the typed events needed to invalidate selections). The schema change is the contract; the resolver is the implementation.
 
 ## Verification
 
-- Re-run the schema export script (`semio/graphql/scripts/export-schema.ts`) — must still parse.
-- `rg "^  (design|type|piece|connection|port|connector|representation|attribute|file|folder|family|author|concept|tag|quality|prop|stat|childPiece|childConnection|layer|group|alternative|change|edit): \w+( |$)" semio/graphql/target.schema.graphql` — every match should be either a Connection-returning plural OR an `(id: ID!)`-taking singular; no bare singular accessors left.
-- `rg "^\s+event: Json!" semio/graphql/target.schema.graphql` → 0 matches.
+- Re-run the schema export script (`compose/graphql/scripts/export-schema.ts`) — must still parse.
+- `rg "^  (design|type|piece|connection|port|connector|representation|attribute|file|folder|family|author|concept|tag|quality|prop|stat|childPiece|childConnection|layer|group|alternative|change|edit): \w+( |$)" compose/graphql/target.schema.graphql` — every match should be either a Connection-returning plural OR an `(id: ID!)`-taking singular; no bare singular accessors left.
+- `rg "^\s+event: Json!" compose/graphql/target.schema.graphql` → 0 matches.
 - Author a smoke `subscription` document with the full example path and run it through `graphql-js` `validate` (script in ticket folder).
 
 ## Ticket
 
-Open ticket `🎫 Live Subscription Field Tree` under goal `🎯r2602🎯runningsketchpad` (sketchpad apps need fine-grained reactive selections). Files touched: `semio/graphql/target.schema.graphql`. Plan id: this plan's id.
+Open ticket `🎫 Live Subscription Field Tree` under goal `🎯r2602🎯runningsketchpad` (sketchpad apps need fine-grained reactive selections). Files touched: `compose/graphql/target.schema.graphql`. Plan id: this plan's id.

@@ -1,8 +1,8 @@
 {
   "title": "Fix Flatten Story Diff and Output",
   "status": "closed",
-  "description": "The flattenDesign story in semio algorithms storybook has issues: 1) Diff is not showing the correct diff (all connections removed and all connected pieces modified), 2) Output is not showing the correct output (all pieces with no connections). Need to fix the flatten algorithm story to properly compute and display the diff and output.",
-  "summary": "PasteDesign (Go/JS/Python/C#/Rust): when pasting with coord, diagram u/v are adjusted only if the remapped parent connection is the actual child–parent edge and exactly one endpoint is a semio.piece.origin=external clipboard stub. Internal–internal source connections keep deep-cloned u/v. Go also aligns parent/child center resolution with JS (semio.center attr then piece.center; external parent center from attr or piece). All existing Nakagin copy/paste and pytest paste tests pass.",
+  "description": "The flattenDesign story in compose algorithms storybook has issues: 1) Diff is not showing the correct diff (all connections removed and all connected pieces modified), 2) Output is not showing the correct output (all pieces with no connections). Need to fix the flatten algorithm story to properly compute and display the diff and output.",
+  "summary": "PasteDesign (Go/JS/Python/C#/Rust): when pasting with coord, diagram u/v are adjusted only if the remapped parent connection is the actual child–parent edge and exactly one endpoint is a compose.piece.origin=external clipboard stub. Internal–internal source connections keep deep-cloned u/v. Go also aligns parent/child center resolution with JS (compose.center attr then piece.center; external parent center from attr or piece). All existing Nakagin copy/paste and pytest paste tests pass.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1301"
   },

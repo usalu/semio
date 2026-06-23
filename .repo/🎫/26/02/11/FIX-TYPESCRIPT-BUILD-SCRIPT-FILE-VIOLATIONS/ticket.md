@@ -9,11 +9,11 @@ goal: AI-OPTIMIZED-REPO/SINGLE-FILE-REPO/CONSISTENT-SECTIONS
 Added section regions around orphan code and summary+spec comments for definitions in 5 engine TypeScript files: build.ts (Build section, cwd/args defs), generate-schemas.ts (Schema Generation section), test.ts (Test Runner section), sqliteschema.ts (Schema Export section, dbPath/outputPath defs), post-build.ts (Post Build section, 6 path constant defs)
 ## Changes
 
-- semio/engine/build.ts: Wrapped orphan code in Build section, added summary+spec for `cwd` and `args` definitions
-- semio/engine/generate-schemas.ts: Wrapped orphan code in Schema Generation section
-- semio/engine/test.ts: Wrapped orphan code in Test Runner section
-- semio/engine/sqliteschema.ts: Wrapped orphan code in Schema Export section, added summary+spec for `dbPath` and `outputPath` definitions
-- semio/engine/post-build.ts: Wrapped orphan code in Post Build section, added summary+spec for path constant definitions
+- compose/engine/build.ts: Wrapped orphan code in Build section, added summary+spec for `cwd` and `args` definitions
+- compose/engine/generate-schemas.ts: Wrapped orphan code in Schema Generation section
+- compose/engine/test.ts: Wrapped orphan code in Test Runner section
+- compose/engine/sqliteschema.ts: Wrapped orphan code in Schema Export section, added summary+spec for `dbPath` and `outputPath` definitions
+- compose/engine/post-build.ts: Wrapped orphan code in Post Build section, added summary+spec for path constant definitions
 
 ## Log
 

@@ -15,7 +15,7 @@ todos:
     content: Add ui.toolbar.parent.* keys for every AppToolCategory (en+de) and add compile-time toolbar-coverage assertion in framework/core
     status: completed
   - id: sketchpad
-    content: Type semio sketchpad bundle, fix en/de parity for toolbar.parent.*, type resolver, register via port
+    content: Type compose sketchpad bundle, fix en/de parity for toolbar.parent.*, type resolver, register via port
     status: completed
   - id: coda
     content: Remove empty-resources i18next reinit in coda renderer; configure language via typed port
@@ -34,7 +34,7 @@ isProject: false
 
 # Make Broken i18n Fail Compilation
 
-The user explicitly asked to span all UIs (ui, framework, semio sketchpad, cad, coda), wrap the i18n external dependency behind an interface, and enforce with TypeScript. This is cross-technology by request.
+The user explicitly asked to span all UIs (ui, framework, compose sketchpad, cad, coda), wrap the i18n external dependency behind an interface, and enforce with TypeScript. This is cross-technology by request.
 
 ## Mechanism overview
 
@@ -83,10 +83,10 @@ In [ui/react/index.tsx](ui/react/index.tsx) `🪁I18n Resources` region:
 - Add `ui.toolbar.parent.{history,hand,selection,lasso,filter,open,save,transfer,transform,create,view,actions,settings}` (en + de, proper names) to the schema and bundles.
 - In [framework/product/platform/renderer/react/index.tsx](framework/product/platform/renderer/react/index.tsx) line 1240 keep `t(\`ui.toolbar.parent.${category})`but it is now type-checked; add`type _AssertToolbarCovered = Expect<ui.toolbar.parent.${AppToolCategory} extends UiTranslationKey ? true : false>`near`AppToolCategory` in [framework/core/index.ts](framework/core/index.ts) line 176 so a new category without a key fails to compile.
 
-## 4. Type the semio sketchpad bundle + fix language parity
+## 4. Type the compose sketchpad bundle + fix language parity
 
-- In [semio/client/lib/sketchpad/js/index.ts](semio/client/lib/sketchpad/js/index.ts) `🪁SemioUiI18n` region type `semioSketchpadTranslationBundles` with a `SemioSketchpadTranslationSchema` (`satisfies Record<UiLocale, ...>`).
-- Fix the en/de drift: the en `semio.sketchpad.toolbar.parent.*` entries are plain strings (line ~9996) while de uses `{ label: { normal, beginner } }` (line ~4960) — normalize both to the schema shape so parity is enforced.
+- In [compose/client/lib/sketchpad/js/index.ts](compose/client/lib/sketchpad/js/index.ts) `🪁ComposeUiI18n` region type `composeSketchpadTranslationBundles` with a `ComposeSketchpadTranslationSchema` (`satisfies Record<UiLocale, ...>`).
+- Fix the en/de drift: the en `compose.sketchpad.toolbar.parent.*` entries are plain strings (line ~9996) while de uses `{ label: { normal, beginner } }` (line ~4960) — normalize both to the schema shape so parity is enforced.
 - Type `sketchpadResolveControlLabelId` (line 10060) return and register through the typed port.
 
 ## 5. Fix coda misconfigured-language reinit
@@ -95,7 +95,7 @@ In [ui/react/index.tsx](ui/react/index.tsx) `🪁I18n Resources` region:
 
 ## 6. Make broken i18n actually fail the build
 
-- Add a `typecheck` target (`bunx tsc --noEmit`) via `script.ts` `ScriptRouter` + `project.json` for the i18n-consuming projects: `@ui/react`, `@framework/platform/renderer/react`, `@framework/playground/renderer/react`, `@semio/sketchpad`, `@cad/js/renderer`, `@coda/desktop` (mirroring `@semio/js`'s existing `bunx tsc --noEmit`).
+- Add a `typecheck` target (`bunx tsc --noEmit`) via `script.ts` `ScriptRouter` + `project.json` for the i18n-consuming projects: `@ui/react`, `@framework/platform/renderer/react`, `@framework/playground/renderer/react`, `@compose/sketchpad`, `@cad/js/renderer`, `@coda/desktop` (mirroring `@compose/js`'s existing `bunx tsc --noEmit`).
 - Register each `typecheck` in `.vscode/launch.json` following existing grouping/order.
 
 ## 7. Tests (extend existing files only)

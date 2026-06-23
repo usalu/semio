@@ -1,6 +1,6 @@
 ---
 name: EventBus Field Change API
-overview: Extend the `EventBus` in `semio/js/index.ts` with a typed WIP/session tick fan-out and a `subscribeFieldChange` diff helper, then add `on${Field}Change(cb)` methods on every entity class (Kit, Design, Type, Port, Connector, Piece, Connection, Author, Quality, Tag, Concept, Representation, Family, FileEntity, FolderEntity, LayerEntity, GroupEntity, StatEntity, PropEntity) that mirror their existing `read${Field}` methods. Field-level events fire only when the parsed value actually changed; they are deliberately separate from operation-level events (e.g. `onRenamed`).
+overview: Extend the `EventBus` in `compose/js/index.ts` with a typed WIP/session tick fan-out and a `subscribeFieldChange` diff helper, then add `on${Field}Change(cb)` methods on every entity class (Kit, Design, Type, Port, Connector, Piece, Connection, Author, Quality, Tag, Concept, Representation, Family, FileEntity, FolderEntity, LayerEntity, GroupEntity, StatEntity, PropEntity) that mirror their existing `read${Field}` methods. Field-level events fire only when the parsed value actually changed; they are deliberately separate from operation-level events (e.g. `onRenamed`).
 todos:
   - id: ticket_open
     content: Read repo://goals, open ticket EventBus-Field-Change under the right goal
@@ -30,10 +30,10 @@ todos:
     content: Add on*Change for Author, Quality, Tag, Concept, Representation, Family, FileEntity, FolderEntity, LayerEntity, GroupEntity, StatEntity, PropEntity
     status: pending
   - id: tests
-    content: "Extend embedded describe(\"semio/js field-only kit\") block: subscribeFieldChange unit, Kit/Design/Piece on*Change end-to-end, multi-listener, unsubscribe, no-op suppression"
+    content: "Extend embedded describe(\"compose/js field-only kit\") block: subscribeFieldChange unit, Kit/Design/Piece on*Change end-to-end, multi-listener, unsubscribe, no-op suppression"
     status: pending
   - id: validate
-    content: Run tsc --noEmit and vitest run in semio/js until green
+    content: Run tsc --noEmit and vitest run in compose/js until green
     status: pending
   - id: ticket_close
     content: ticket_close with summary and file list
@@ -45,7 +45,7 @@ isProject: false
 
 - **Field-level events (this ticket):** `on${Field}Change(cb)` reacts to the value of a GraphQL leaf changing in the WIP graph (e.g. `onNameChange` fires when `kit.name` is now different from before). Same intent as MobX `observe` / Svelte stores.
 - **Operation-level events (out of scope):** `on${Operation}(cb)` would fire whenever a specific mutation succeeds (`onRenamed`, `onPieceMoved`, …). Not added here; the obsolete bus kinds (`kitRenamed`, `changedDescription`) emitted from `wip` ticks are removed because they conflate the two notions.
-- **Transport limitation:** `[semio/js/index.ts](semio/js/index.ts)` lines 137–193 — `WorkerStringTransport.subscribe` returns `Promise<void>` with no per-subscription cancel handle. We therefore keep the single coarse `subscription { wip { id hash } }` (line 252) and diff per listener. The `subscribeFieldChange` API is designed transport-agnostic so a follow-up ticket can swap each listener to its own `subscription { wip { theKit { kit { … field … } } } }` once `op: "unsubscribe"` lands in `[semio/js/kit-store.worker.ts](semio/js/kit-store.worker.ts)`.
+- **Transport limitation:** `[compose/js/index.ts](compose/js/index.ts)` lines 137–193 — `WorkerStringTransport.subscribe` returns `Promise<void>` with no per-subscription cancel handle. We therefore keep the single coarse `subscription { wip { id hash } }` (line 252) and diff per listener. The `subscribeFieldChange` API is designed transport-agnostic so a follow-up ticket can swap each listener to its own `subscription { wip { theKit { kit { … field … } } } }` once `op: "unsubscribe"` lands in `[compose/js/kit-store.worker.ts](compose/js/kit-store.worker.ts)`.
 
 ## Architecture
 
@@ -62,7 +62,7 @@ flowchart TD
 
 
 
-## EventBus surface (`[semio/js/index.ts](semio/js/index.ts)` lines 222–249)
+## EventBus surface (`[compose/js/index.ts](compose/js/index.ts)` lines 222–249)
 
 Replace the current minimal bus with:
 
@@ -102,7 +102,7 @@ Semantics of `subscribeFieldChange`:
 - On every selected tick (`wip` by default), run `read()`. Cache the result. If `equals(prev, next)` is false, invoke `cb(next)` and update the cache.
 - Sequential per-listener: drop overlapping refetches (track an in-flight token; if a new tick arrives while one is in flight, queue exactly one re-run after it settles).
 - `fireInitial: true` schedules one immediate `read()` and unconditional `cb(next)` (cache is seeded but the diff is skipped for that first call). Default `false`.
-- Errors in `read()` are swallowed (logged via `console.warn` with a `[semio]` prefix) so a transient GraphQL hiccup does not poison the listener.
+- Errors in `read()` are swallowed (logged via `console.warn` with a `[compose]` prefix) so a transient GraphQL hiccup does not poison the listener.
 
 Equality helpers (module-private):
 
@@ -110,7 +110,7 @@ Equality helpers (module-private):
 - `eqIdList = (a: readonly string[], b: readonly string[]) => a.length === b.length && a.every((x, i) => x === b[i])`.
 - `eqDeep = (a, b) => stableStringify(a) === stableStringify(b)` for `Position`, `Plane`, `Coordinate`, `Attribute[]`, `Benchmark[]`, `ConnectionSide`, `PieceBlueprint`.
 
-## Dispatcher cleanup (`[semio/js/index.ts](semio/js/index.ts)` lines 638–659)
+## Dispatcher cleanup (`[compose/js/index.ts](compose/js/index.ts)` lines 638–659)
 
 Rewrite `Kit.dispatchSubscriptionGraphqlData`:
 
@@ -130,7 +130,7 @@ Removed:
 - The `data["event"]` legacy branch (the schema no longer carries `Subscription.event`).
 - `data["operationSucceeded"]` legacy branch.
 
-## `KIT_ARTIFACT_FIELD_SPECS` / `DESIGN_ARTIFACT_FIELD_SPECS` cleanup (`[semio/js/index.ts](semio/js/index.ts)` lines 491–550)
+## `KIT_ARTIFACT_FIELD_SPECS` / `DESIGN_ARTIFACT_FIELD_SPECS` cleanup (`[compose/js/index.ts](compose/js/index.ts)` lines 491–550)
 
 Drop the `eventKind` markers — they only existed to wire the legacy semantic-event bus into `bindDefinedFieldToReact`. The new path is `entity.on${Field}Change`, so React bindings simply call that.
 
@@ -140,7 +140,7 @@ Drop the `eventKind` markers — they only existed to wire the legacy semantic-e
 export type FieldSpec<T> = Readonly<{ selection: string; parse: (v: JsonValue) => T }>;
 ```
 
-`Design.subscribeField` (`[semio/js/index.ts](semio/js/index.ts)` lines 1128–1134) is removed (callers should use the typed `on*Change` methods); `Design.onDescriptionChanged` is renamed to `Design.onDescriptionChange` (no back-compat per repo rules).
+`Design.subscribeField` (`[compose/js/index.ts](compose/js/index.ts)` lines 1128–1134) is removed (callers should use the typed `on*Change` methods); `Design.onDescriptionChanged` is renamed to `Design.onDescriptionChange` (no back-compat per repo rules).
 
 ## `on${Field}Change` factory
 
@@ -190,7 +190,7 @@ For every `read${X}()` listed below, add one matching `on${X}Change(cb)`:
 
 For `Family`, `FileEntity`, `FolderEntity`, `StatEntity`, `PropEntity` the underlying `readScalarOnNode` paths use root `Query.node(id:)` (not WIP-scoped), so the diff still works — `subscribeFieldChange` only cares that `read()` returns a comparable value on each WIP tick.
 
-## Tests (`[semio/js/index.ts](semio/js/index.ts)` embedded `describe("semio/js field-only kit", …)` block, line 3256)
+## Tests (`[compose/js/index.ts](compose/js/index.ts)` embedded `describe("compose/js field-only kit", …)` block, line 3256)
 
 Extend that block (no new files) with:
 
@@ -213,7 +213,7 @@ Extend that block (no new files) with:
 - Read `repo://goals` first; associate with the existing live-subscription / subscriptions goal (e.g. the goal that owns the live-query refactor) — fall back to creating a new ticket under that goal if none exists.
 - `ticket_open` with title `"Extend EventBus With Field-Level on*Change"` before any code edits.
 - All temp logs / scratch under `.repo/🎫/26/05/12/EVENTBUS-FIELD-CHANGE/`.
-- `ticket_close` with the file list (`semio/js/index.ts`, ticket folder) once `tsc --noEmit` and `vitest run` in `semio/js` pass.
+- `ticket_close` with the file list (`compose/js/index.ts`, ticket folder) once `tsc --noEmit` and `vitest run` in `compose/js` pass.
 
 ## Out of scope (explicit follow-ups)
 

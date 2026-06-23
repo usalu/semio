@@ -8,13 +8,13 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE
 PATH: Path | None = None
 for _ in range(14):
-    cand = ROOT / "semio" / "graphql" / "target.schema.graphql"
+    cand = ROOT / "compose" / "graphql" / "target.schema.graphql"
     if cand.is_file():
         PATH = cand
         break
     ROOT = ROOT.parent
 else:
-    raise SystemExit("annotate_field_comments: could not find semio/graphql/target.schema.graphql from script location")
+    raise SystemExit("annotate_field_comments: could not find compose/graphql/target.schema.graphql from script location")
 
 # Field definition: indent, name, optional args, colon, type part (may include directives), optional comment
 FIELD_RE = re.compile(

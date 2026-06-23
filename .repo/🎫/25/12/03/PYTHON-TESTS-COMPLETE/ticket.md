@@ -3,7 +3,7 @@
 ## Todos
 # Previously
 
-The Python tests in `engine.test.py` were incomplete compared to the TypeScript tests in `semio.test.ts`. The TypeScript tests covered:
+The Python tests in `engine.test.py` were incomplete compared to the TypeScript tests in `compose.test.ts`. The TypeScript tests covered:
 
 - Diffs (getKitDiff, inverseKitDiff, applyKitDiff, areKitDiffsEqual, areKitsEqual)
 - Flattening Designs
@@ -18,7 +18,7 @@ Additionally, REST and GraphQL engine tests were needed with the following schem
 # Plan
 
 1. Implement missing diff functions in engine.py (dict-based operations)
-2. Complete Python diff tests to match semio.test.ts structure
+2. Complete Python diff tests to match compose.test.ts structure
 3. Complete Python serialization tests (Kit -> JSON -> Kit)
 4. Complete Python flattening design tests
 5. Add REST and GraphQL API tests
@@ -92,7 +92,7 @@ Added `_getGuidFromRef(ref)` helper to handle both Input format (string guid) an
 
 ### Session 1: Initial restructuring
 
-Restructured to match semio.test.ts structure with REST/GraphQL tests skipped pending Input format fixtures.
+Restructured to match compose.test.ts structure with REST/GraphQL tests skipped pending Input format fixtures.
 
 ### Session 2: Full compliance - no skips
 
@@ -154,4 +154,4 @@ Single comprehensive test matching TypeScript exactly:
 ## Summary
 # Summary
 
-Complete Python engine tests to match TypeScript semio.test.ts functionality
+Complete Python engine tests to match TypeScript compose.test.ts functionality

@@ -25,13 +25,13 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\f9902ac1-b416-4f16-a815-964f72bdf790.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "c:\\git\\semio\\semio\\client\\lib\\net\\Semio.Tests\\Tests.cs",
+            "filePath": "c:\\git\\compose\\compose\\client\\lib\\net\\Compose.Tests\\Tests.cs",
             "startLine": 384,
             "endLine": 395
           },
           "tool_response": "",
           "tool_use_id": "call_Ry9MeFucYf5g0seYAg2KK2Aq__vscode-1779617654275",
-          "cwd": "c:\\git\\semio"
+          "cwd": "c:\\git\\compose"
         }
       },
       "response": {}
@@ -54,13 +54,13 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\f9902ac1-b416-4f16-a815-964f72bdf790.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "c:\\git\\semio\\semio\\client\\lib\\py\\main.py",
+            "filePath": "c:\\git\\compose\\compose\\client\\lib\\py\\main.py",
             "startLine": 1858,
             "endLine": 1868
           },
           "tool_response": "",
           "tool_use_id": "call_A2VJd8eRo1AK5MJgvqFWNFtb__vscode-1779617654276",
-          "cwd": "c:\\git\\semio"
+          "cwd": "c:\\git\\compose"
         }
       },
       "response": {}
@@ -83,14 +83,14 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\f9902ac1-b416-4f16-a815-964f72bdf790.jsonl",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "rg -uu --glob '!**/dist/**' --glob '!**/storybook-static/**' --glob '!**/htmlcov/**' --glob '!target/**' --glob '!test-results/**' --glob '!repo/client/vscode/.vscode-test/**' \"metabolism\\.kit\\.semio\\.json\" c:/git/semio/.storybook c:/git/semio/semio c:/git/semio/repo",
+            "command": "rg -uu --glob '!**/dist/**' --glob '!**/storybook-static/**' --glob '!**/htmlcov/**' --glob '!target/**' --glob '!test-results/**' --glob '!repo/client/vscode/.vscode-test/**' \"metabolism\\.kit\\.compose\\.json\" c:/git/compose/.storybook c:/git/compose/compose c:/git/compose/repo",
             "explanation": "Verify that no non-generated source files still reference the removed metabolism bundle path.",
             "goal": "Verify stale references removed",
             "mode": "sync",
             "timeout": 600000
           },
           "tool_use_id": "call_78iB9IVDCuL2O3XBjRajuG2m__vscode-1779617654277",
-          "cwd": "c:\\git\\semio"
+          "cwd": "c:\\git\\compose"
         }
       },
       "response": {}
@@ -113,14 +113,14 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\f9902ac1-b416-4f16-a815-964f72bdf790.jsonl",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "rg -uu --glob '!**/dist/**' --glob '!**/storybook-static/**' --glob '!**/htmlcov/**' --glob '!target/**' --glob '!test-results/**' --glob '!repo/client/vscode/.vscode-test/**' \"metabolism\\.kit\\.semio\\.json\" c:/git/semio/.storybook c:/git/semio/semio c:/git/semio/repo",
+            "command": "rg -uu --glob '!**/dist/**' --glob '!**/storybook-static/**' --glob '!**/htmlcov/**' --glob '!target/**' --glob '!test-results/**' --glob '!repo/client/vscode/.vscode-test/**' \"metabolism\\.kit\\.compose\\.json\" c:/git/compose/.storybook c:/git/compose/compose c:/git/compose/repo",
             "explanation": "Verify that no non-generated source files still reference the removed metabolism bundle path.",
             "goal": "Verify stale references removed",
             "mode": "sync",
             "timeout": 600000
           },
           "tool_use_id": "call_78iB9IVDCuL2O3XBjRajuG2m__vscode-1779617654277",
-          "cwd": "c:\\git\\semio"
+          "cwd": "c:\\git\\compose"
         }
       },
       "response": {}
@@ -143,15 +143,15 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\f9902ac1-b416-4f16-a815-964f72bdf790.jsonl",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "rg -uu --glob '!**/dist/**' --glob '!**/storybook-static/**' --glob '!**/htmlcov/**' --glob '!target/**' --glob '!test-results/**' --glob '!repo/client/vscode/.vscode-test/**' \"metabolism\\.kit\\.semio\\.json\" c:/git/semio/.storybook c:/git/semio/semio c:/git/semio/repo",
+            "command": "rg -uu --glob '!**/dist/**' --glob '!**/storybook-static/**' --glob '!**/htmlcov/**' --glob '!target/**' --glob '!test-results/**' --glob '!repo/client/vscode/.vscode-test/**' \"metabolism\\.kit\\.compose\\.json\" c:/git/compose/.storybook c:/git/compose/compose c:/git/compose/repo",
             "explanation": "Verify that no non-generated source files still reference the removed metabolism bundle path.",
             "goal": "Verify stale references removed",
             "mode": "sync",
             "timeout": 600000
           },
-          "tool_response": "c:/git/semio/repo\\client\\vscode\\extension.test.ts\n1967:    assert.strictEqual(isLikelyKitJsonFilePath(\"/workspace/semio/assets/semio/metabolism.kit.semio.json\"), true);\n\nc:/git/semio/semio\\client\\bin\\engine\\main.py\n2060:        folder / \"metabolism.kit.semio.json\",\n2062:        folder.parent / \"metabolism.kit.semio.json\",\n2120:        for name in (\"wip/initialKit/kit.semio.json\", \"metabolism.kit.semio.json\", \"kit.json\"):\n2125:        for parent_json in (p.parent / \"metabolism.kit.semio.json\", p.parent / \"wip\" / \"initialKit\" / \"kit.semio.json\"):",
+          "tool_response": "c:/git/compose/repo\\client\\vscode\\extension.test.ts\n1967:    assert.strictEqual(isLikelyKitJsonFilePath(\"/workspace/compose/assets/compose/metabolism.kit.compose.json\"), true);\n\nc:/git/compose/compose\\client\\bin\\engine\\main.py\n2060:        folder / \"metabolism.kit.compose.json\",\n2062:        folder.parent / \"metabolism.kit.compose.json\",\n2120:        for name in (\"wip/initialKit/kit.compose.json\", \"metabolism.kit.compose.json\", \"kit.json\"):\n2125:        for parent_json in (p.parent / \"metabolism.kit.compose.json\", p.parent / \"wip\" / \"initialKit\" / \"kit.compose.json\"):",
           "tool_use_id": "call_78iB9IVDCuL2O3XBjRajuG2m__vscode-1779617654277",
-          "cwd": "c:\\git\\semio"
+          "cwd": "c:\\git\\compose"
         }
       },
       "response": {}
@@ -174,15 +174,15 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\f9902ac1-b416-4f16-a815-964f72bdf790.jsonl",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "rg -uu --glob '!**/dist/**' --glob '!**/storybook-static/**' --glob '!**/htmlcov/**' --glob '!target/**' --glob '!test-results/**' --glob '!repo/client/vscode/.vscode-test/**' \"metabolism\\.kit\\.semio\\.json\" c:/git/semio/.storybook c:/git/semio/semio c:/git/semio/repo",
+            "command": "rg -uu --glob '!**/dist/**' --glob '!**/storybook-static/**' --glob '!**/htmlcov/**' --glob '!target/**' --glob '!test-results/**' --glob '!repo/client/vscode/.vscode-test/**' \"metabolism\\.kit\\.compose\\.json\" c:/git/compose/.storybook c:/git/compose/compose c:/git/compose/repo",
             "explanation": "Verify that no non-generated source files still reference the removed metabolism bundle path.",
             "goal": "Verify stale references removed",
             "mode": "sync",
             "timeout": 600000
           },
-          "tool_response": "c:/git/semio/repo\\client\\vscode\\extension.test.ts\n1967:    assert.strictEqual(isLikelyKitJsonFilePath(\"/workspace/semio/assets/semio/metabolism.kit.semio.json\"), true);\n\nc:/git/semio/semio\\client\\bin\\engine\\main.py\n2060:        folder / \"metabolism.kit.semio.json\",\n2062:        folder.parent / \"metabolism.kit.semio.json\",\n2120:        for name in (\"wip/initialKit/kit.semio.json\", \"metabolism.kit.semio.json\", \"kit.json\"):\n2125:        for parent_json in (p.parent / \"metabolism.kit.semio.json\", p.parent / \"wip\" / \"initialKit\" / \"kit.semio.json\"):",
+          "tool_response": "c:/git/compose/repo\\client\\vscode\\extension.test.ts\n1967:    assert.strictEqual(isLikelyKitJsonFilePath(\"/workspace/compose/assets/compose/metabolism.kit.compose.json\"), true);\n\nc:/git/compose/compose\\client\\bin\\engine\\main.py\n2060:        folder / \"metabolism.kit.compose.json\",\n2062:        folder.parent / \"metabolism.kit.compose.json\",\n2120:        for name in (\"wip/initialKit/kit.compose.json\", \"metabolism.kit.compose.json\", \"kit.json\"):\n2125:        for parent_json in (p.parent / \"metabolism.kit.compose.json\", p.parent / \"wip\" / \"initialKit\" / \"kit.compose.json\"):",
           "tool_use_id": "call_78iB9IVDCuL2O3XBjRajuG2m__vscode-1779617654277",
-          "cwd": "c:\\git\\semio"
+          "cwd": "c:\\git\\compose"
         }
       },
       "response": {}
@@ -205,11 +205,11 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\f9902ac1-b416-4f16-a815-964f72bdf790.jsonl",
           "tool_name": "apply_patch",
           "tool_input": {
-            "input": "*** Begin Patch\n*** Update File: c:\\git\\semio\\semio\\client\\bin\\engine\\main.py\n@@\n-    for json_path in (\n-        folder / \"wip\" / \"initialKit\" / \"kit.semio.json\",\n-        folder / \"metabolism.kit.semio.json\",\n-        folder / \"kit.json\",\n-        folder.parent / \"metabolism.kit.semio.json\",\n-        folder.parent / \"wip\" / \"initialKit\" / \"kit.semio.json\",\n-    ):\n+    for json_path in (\n+        folder / \"kit.semio.json\",\n+        folder / \"kit.json\",\n+        folder / \"wip\" / \"initialKit\" / \"kit.semio.json\",\n+        folder.parent / \"kit.semio.json\",\n+        folder.parent / \"wip\" / \"initialKit\" / \"kit.semio.json\",\n+    ):\n@@\n-        for name in (\"wip/initialKit/kit.semio.json\", \"metabolism.kit.semio.json\", \"kit.json\"):\n+        for name in (\"wip/initialKit/kit.semio.json\", \"kit.semio.json\", \"kit.json\"):\n             json_path = p / name\n             if json_path.exists():\n                 with open(json_path, \"r\", encoding=\"utf-8\") as f:\n                     return json.load(f)\n-        for parent_json in (p.parent / \"metabolism.kit.semio.json\", p.parent / \"wip\" / \"initialKit\" / \"kit.semio.json\"):\n+        for parent_json in (p.parent / \"kit.semio.json\", p.parent / \"wip\" / \"initialKit\" / \"kit.semio.json\"):\n             if parent_json.exists():\n                 with open(parent_json, \"r\", encoding=\"utf-8\") as f:\n                     return json.load(f)\n*** Update File: c:\\git\\semio\\repo\\client\\vscode\\extension.test.ts\n@@\n-    assert.strictEqual(isLikelyKitJsonFilePath(\"/workspace/semio/assets/semio/metabolism.kit.semio.json\"), true);\n+    assert.strictEqual(isLikelyKitJsonFilePath(\"/workspace/semio/assets/semio/metabolism/wip/initialKit/kit.semio.json\"), true);\n*** End Patch",
+            "input": "*** Begin Patch\n*** Update File: c:\\git\\compose\\compose\\client\\bin\\engine\\main.py\n@@\n-    for json_path in (\n-        folder / \"wip\" / \"initialKit\" / \"kit.compose.json\",\n-        folder / \"metabolism.kit.compose.json\",\n-        folder / \"kit.json\",\n-        folder.parent / \"metabolism.kit.compose.json\",\n-        folder.parent / \"wip\" / \"initialKit\" / \"kit.compose.json\",\n-    ):\n+    for json_path in (\n+        folder / \"kit.compose.json\",\n+        folder / \"kit.json\",\n+        folder / \"wip\" / \"initialKit\" / \"kit.compose.json\",\n+        folder.parent / \"kit.compose.json\",\n+        folder.parent / \"wip\" / \"initialKit\" / \"kit.compose.json\",\n+    ):\n@@\n-        for name in (\"wip/initialKit/kit.compose.json\", \"metabolism.kit.compose.json\", \"kit.json\"):\n+        for name in (\"wip/initialKit/kit.compose.json\", \"kit.compose.json\", \"kit.json\"):\n             json_path = p / name\n             if json_path.exists():\n                 with open(json_path, \"r\", encoding=\"utf-8\") as f:\n                     return json.load(f)\n-        for parent_json in (p.parent / \"metabolism.kit.compose.json\", p.parent / \"wip\" / \"initialKit\" / \"kit.compose.json\"):\n+        for parent_json in (p.parent / \"kit.compose.json\", p.parent / \"wip\" / \"initialKit\" / \"kit.compose.json\"):\n             if parent_json.exists():\n                 with open(parent_json, \"r\", encoding=\"utf-8\") as f:\n                     return json.load(f)\n*** Update File: c:\\git\\compose\\repo\\client\\vscode\\extension.test.ts\n@@\n-    assert.strictEqual(isLikelyKitJsonFilePath(\"/workspace/compose/assets/compose/metabolism.kit.compose.json\"), true);\n+    assert.strictEqual(isLikelyKitJsonFilePath(\"/workspace/compose/assets/compose/metabolism/wip/initialKit/kit.compose.json\"), true);\n*** End Patch",
             "explanation": "Remove the last stale legacy metabolism bundle references from the engine loader and VS Code test."
           },
           "tool_use_id": "call_F47AvBo3iGnvZLe0uxUx12xO__vscode-1779617654278",
-          "cwd": "c:\\git\\semio"
+          "cwd": "c:\\git\\compose"
         }
       },
       "response": {}
@@ -232,11 +232,11 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\f9902ac1-b416-4f16-a815-964f72bdf790.jsonl",
           "tool_name": "apply_patch",
           "tool_input": {
-            "input": "*** Begin Patch\n*** Update File: c:\\git\\semio\\semio\\client\\bin\\engine\\main.py\n@@\n-    for json_path in (\n-        folder / \"wip\" / \"initialKit\" / \"kit.semio.json\",\n-        folder / \"metabolism.kit.semio.json\",\n-        folder / \"kit.json\",\n-        folder.parent / \"metabolism.kit.semio.json\",\n-        folder.parent / \"wip\" / \"initialKit\" / \"kit.semio.json\",\n-    ):\n+    for json_path in (\n+        folder / \"kit.semio.json\",\n+        folder / \"kit.json\",\n+        folder / \"wip\" / \"initialKit\" / \"kit.semio.json\",\n+        folder.parent / \"kit.semio.json\",\n+        folder.parent / \"wip\" / \"initialKit\" / \"kit.semio.json\",\n+    ):\n@@\n-        for name in (\"wip/initialKit/kit.semio.json\", \"metabolism.kit.semio.json\", \"kit.json\"):\n+        for name in (\"wip/initialKit/kit.semio.json\", \"kit.semio.json\", \"kit.json\"):\n             json_path = p / name\n             if json_path.exists():\n                 with open(json_path, \"r\", encoding=\"utf-8\") as f:\n                     return json.load(f)\n-        for parent_json in (p.parent / \"metabolism.kit.semio.json\", p.parent / \"wip\" / \"initialKit\" / \"kit.semio.json\"):\n+        for parent_json in (p.parent / \"kit.semio.json\", p.parent / \"wip\" / \"initialKit\" / \"kit.semio.json\"):\n             if parent_json.exists():\n                 with open(parent_json, \"r\", encoding=\"utf-8\") as f:\n                     return json.load(f)\n*** Update File: c:\\git\\semio\\repo\\client\\vscode\\extension.test.ts\n@@\n-    assert.strictEqual(isLikelyKitJsonFilePath(\"/workspace/semio/assets/semio/metabolism.kit.semio.json\"), true);\n+    assert.strictEqual(isLikelyKitJsonFilePath(\"/workspace/semio/assets/semio/metabolism/wip/initialKit/kit.semio.json\"), true);\n*** End Patch",
+            "input": "*** Begin Patch\n*** Update File: c:\\git\\compose\\compose\\client\\bin\\engine\\main.py\n@@\n-    for json_path in (\n-        folder / \"wip\" / \"initialKit\" / \"kit.compose.json\",\n-        folder / \"metabolism.kit.compose.json\",\n-        folder / \"kit.json\",\n-        folder.parent / \"metabolism.kit.compose.json\",\n-        folder.parent / \"wip\" / \"initialKit\" / \"kit.compose.json\",\n-    ):\n+    for json_path in (\n+        folder / \"kit.compose.json\",\n+        folder / \"kit.json\",\n+        folder / \"wip\" / \"initialKit\" / \"kit.compose.json\",\n+        folder.parent / \"kit.compose.json\",\n+        folder.parent / \"wip\" / \"initialKit\" / \"kit.compose.json\",\n+    ):\n@@\n-        for name in (\"wip/initialKit/kit.compose.json\", \"metabolism.kit.compose.json\", \"kit.json\"):\n+        for name in (\"wip/initialKit/kit.compose.json\", \"kit.compose.json\", \"kit.json\"):\n             json_path = p / name\n             if json_path.exists():\n                 with open(json_path, \"r\", encoding=\"utf-8\") as f:\n                     return json.load(f)\n-        for parent_json in (p.parent / \"metabolism.kit.compose.json\", p.parent / \"wip\" / \"initialKit\" / \"kit.compose.json\"):\n+        for parent_json in (p.parent / \"kit.compose.json\", p.parent / \"wip\" / \"initialKit\" / \"kit.compose.json\"):\n             if parent_json.exists():\n                 with open(parent_json, \"r\", encoding=\"utf-8\") as f:\n                     return json.load(f)\n*** Update File: c:\\git\\compose\\repo\\client\\vscode\\extension.test.ts\n@@\n-    assert.strictEqual(isLikelyKitJsonFilePath(\"/workspace/compose/assets/compose/metabolism.kit.compose.json\"), true);\n+    assert.strictEqual(isLikelyKitJsonFilePath(\"/workspace/compose/assets/compose/metabolism/wip/initialKit/kit.compose.json\"), true);\n*** End Patch",
             "explanation": "Remove the last stale legacy metabolism bundle references from the engine loader and VS Code test."
           },
           "tool_use_id": "call_F47AvBo3iGnvZLe0uxUx12xO__vscode-1779617654278",
-          "cwd": "c:\\git\\semio"
+          "cwd": "c:\\git\\compose"
         }
       },
       "response": {}
@@ -259,12 +259,12 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\f9902ac1-b416-4f16-a815-964f72bdf790.jsonl",
           "tool_name": "apply_patch",
           "tool_input": {
-            "input": "*** Begin Patch\n*** Update File: c:\\git\\semio\\semio\\client\\bin\\engine\\main.py\n@@\n-    for json_path in (\n-        folder / \"wip\" / \"initialKit\" / \"kit.semio.json\",\n-        folder / \"metabolism.kit.semio.json\",\n-        folder / \"kit.json\",\n-        folder.parent / \"metabolism.kit.semio.json\",\n-        folder.parent / \"wip\" / \"initialKit\" / \"kit.semio.json\",\n-    ):\n+    for json_path in (\n+        folder / \"kit.semio.json\",\n+        folder / \"kit.json\",\n+        folder / \"wip\" / \"initialKit\" / \"kit.semio.json\",\n+        folder.parent / \"kit.semio.json\",\n+        folder.parent / \"wip\" / \"initialKit\" / \"kit.semio.json\",\n+    ):\n@@\n-        for name in (\"wip/initialKit/kit.semio.json\", \"metabolism.kit.semio.json\", \"kit.json\"):\n+        for name in (\"wip/initialKit/kit.semio.json\", \"kit.semio.json\", \"kit.json\"):\n             json_path = p / name\n             if json_path.exists():\n                 with open(json_path, \"r\", encoding=\"utf-8\") as f:\n                     return json.load(f)\n-        for parent_json in (p.parent / \"metabolism.kit.semio.json\", p.parent / \"wip\" / \"initialKit\" / \"kit.semio.json\"):\n+        for parent_json in (p.parent / \"kit.semio.json\", p.parent / \"wip\" / \"initialKit\" / \"kit.semio.json\"):\n             if parent_json.exists():\n                 with open(parent_json, \"r\", encoding=\"utf-8\") as f:\n                     return json.load(f)\n*** Update File: c:\\git\\semio\\repo\\client\\vscode\\extension.test.ts\n@@\n-    assert.strictEqual(isLikelyKitJsonFilePath(\"/workspace/semio/assets/semio/metabolism.kit.semio.json\"), true);\n+    assert.strictEqual(isLikelyKitJsonFilePath(\"/workspace/semio/assets/semio/metabolism/wip/initialKit/kit.semio.json\"), true);\n*** End Patch",
+            "input": "*** Begin Patch\n*** Update File: c:\\git\\compose\\compose\\client\\bin\\engine\\main.py\n@@\n-    for json_path in (\n-        folder / \"wip\" / \"initialKit\" / \"kit.compose.json\",\n-        folder / \"metabolism.kit.compose.json\",\n-        folder / \"kit.json\",\n-        folder.parent / \"metabolism.kit.compose.json\",\n-        folder.parent / \"wip\" / \"initialKit\" / \"kit.compose.json\",\n-    ):\n+    for json_path in (\n+        folder / \"kit.compose.json\",\n+        folder / \"kit.json\",\n+        folder / \"wip\" / \"initialKit\" / \"kit.compose.json\",\n+        folder.parent / \"kit.compose.json\",\n+        folder.parent / \"wip\" / \"initialKit\" / \"kit.compose.json\",\n+    ):\n@@\n-        for name in (\"wip/initialKit/kit.compose.json\", \"metabolism.kit.compose.json\", \"kit.json\"):\n+        for name in (\"wip/initialKit/kit.compose.json\", \"kit.compose.json\", \"kit.json\"):\n             json_path = p / name\n             if json_path.exists():\n                 with open(json_path, \"r\", encoding=\"utf-8\") as f:\n                     return json.load(f)\n-        for parent_json in (p.parent / \"metabolism.kit.compose.json\", p.parent / \"wip\" / \"initialKit\" / \"kit.compose.json\"):\n+        for parent_json in (p.parent / \"kit.compose.json\", p.parent / \"wip\" / \"initialKit\" / \"kit.compose.json\"):\n             if parent_json.exists():\n                 with open(parent_json, \"r\", encoding=\"utf-8\") as f:\n                     return json.load(f)\n*** Update File: c:\\git\\compose\\repo\\client\\vscode\\extension.test.ts\n@@\n-    assert.strictEqual(isLikelyKitJsonFilePath(\"/workspace/compose/assets/compose/metabolism.kit.compose.json\"), true);\n+    assert.strictEqual(isLikelyKitJsonFilePath(\"/workspace/compose/assets/compose/metabolism/wip/initialKit/kit.compose.json\"), true);\n*** End Patch",
             "explanation": "Remove the last stale legacy metabolism bundle references from the engine loader and VS Code test."
           },
           "tool_response": "",
           "tool_use_id": "call_F47AvBo3iGnvZLe0uxUx12xO__vscode-1779617654278",
-          "cwd": "c:\\git\\semio"
+          "cwd": "c:\\git\\compose"
         }
       },
       "response": {}
@@ -287,12 +287,12 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\f9902ac1-b416-4f16-a815-964f72bdf790.jsonl",
           "tool_name": "apply_patch",
           "tool_input": {
-            "input": "*** Begin Patch\n*** Update File: c:\\git\\semio\\semio\\client\\bin\\engine\\main.py\n@@\n-    for json_path in (\n-        folder / \"wip\" / \"initialKit\" / \"kit.semio.json\",\n-        folder / \"metabolism.kit.semio.json\",\n-        folder / \"kit.json\",\n-        folder.parent / \"metabolism.kit.semio.json\",\n-        folder.parent / \"wip\" / \"initialKit\" / \"kit.semio.json\",\n-    ):\n+    for json_path in (\n+        folder / \"kit.semio.json\",\n+        folder / \"kit.json\",\n+        folder / \"wip\" / \"initialKit\" / \"kit.semio.json\",\n+        folder.parent / \"kit.semio.json\",\n+        folder.parent / \"wip\" / \"initialKit\" / \"kit.semio.json\",\n+    ):\n@@\n-        for name in (\"wip/initialKit/kit.semio.json\", \"metabolism.kit.semio.json\", \"kit.json\"):\n+        for name in (\"wip/initialKit/kit.semio.json\", \"kit.semio.json\", \"kit.json\"):\n             json_path = p / name\n             if json_path.exists():\n                 with open(json_path, \"r\", encoding=\"utf-8\") as f:\n                     return json.load(f)\n-        for parent_json in (p.parent / \"metabolism.kit.semio.json\", p.parent / \"wip\" / \"initialKit\" / \"kit.semio.json\"):\n+        for parent_json in (p.parent / \"kit.semio.json\", p.parent / \"wip\" / \"initialKit\" / \"kit.semio.json\"):\n             if parent_json.exists():\n                 with open(parent_json, \"r\", encoding=\"utf-8\") as f:\n                     return json.load(f)\n*** Update File: c:\\git\\semio\\repo\\client\\vscode\\extension.test.ts\n@@\n-    assert.strictEqual(isLikelyKitJsonFilePath(\"/workspace/semio/assets/semio/metabolism.kit.semio.json\"), true);\n+    assert.strictEqual(isLikelyKitJsonFilePath(\"/workspace/semio/assets/semio/metabolism/wip/initialKit/kit.semio.json\"), true);\n*** End Patch",
+            "input": "*** Begin Patch\n*** Update File: c:\\git\\compose\\compose\\client\\bin\\engine\\main.py\n@@\n-    for json_path in (\n-        folder / \"wip\" / \"initialKit\" / \"kit.compose.json\",\n-        folder / \"metabolism.kit.compose.json\",\n-        folder / \"kit.json\",\n-        folder.parent / \"metabolism.kit.compose.json\",\n-        folder.parent / \"wip\" / \"initialKit\" / \"kit.compose.json\",\n-    ):\n+    for json_path in (\n+        folder / \"kit.compose.json\",\n+        folder / \"kit.json\",\n+        folder / \"wip\" / \"initialKit\" / \"kit.compose.json\",\n+        folder.parent / \"kit.compose.json\",\n+        folder.parent / \"wip\" / \"initialKit\" / \"kit.compose.json\",\n+    ):\n@@\n-        for name in (\"wip/initialKit/kit.compose.json\", \"metabolism.kit.compose.json\", \"kit.json\"):\n+        for name in (\"wip/initialKit/kit.compose.json\", \"kit.compose.json\", \"kit.json\"):\n             json_path = p / name\n             if json_path.exists():\n                 with open(json_path, \"r\", encoding=\"utf-8\") as f:\n                     return json.load(f)\n-        for parent_json in (p.parent / \"metabolism.kit.compose.json\", p.parent / \"wip\" / \"initialKit\" / \"kit.compose.json\"):\n+        for parent_json in (p.parent / \"kit.compose.json\", p.parent / \"wip\" / \"initialKit\" / \"kit.compose.json\"):\n             if parent_json.exists():\n                 with open(parent_json, \"r\", encoding=\"utf-8\") as f:\n                     return json.load(f)\n*** Update File: c:\\git\\compose\\repo\\client\\vscode\\extension.test.ts\n@@\n-    assert.strictEqual(isLikelyKitJsonFilePath(\"/workspace/compose/assets/compose/metabolism.kit.compose.json\"), true);\n+    assert.strictEqual(isLikelyKitJsonFilePath(\"/workspace/compose/assets/compose/metabolism/wip/initialKit/kit.compose.json\"), true);\n*** End Patch",
             "explanation": "Remove the last stale legacy metabolism bundle references from the engine loader and VS Code test."
           },
           "tool_response": "",
           "tool_use_id": "call_F47AvBo3iGnvZLe0uxUx12xO__vscode-1779617654278",
-          "cwd": "c:\\git\\semio"
+          "cwd": "c:\\git\\compose"
         }
       },
       "response": {}
@@ -315,14 +315,14 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\f9902ac1-b416-4f16-a815-964f72bdf790.jsonl",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "rg -uu --glob '!**/dist/**' --glob '!**/storybook-static/**' --glob '!**/htmlcov/**' --glob '!target/**' --glob '!test-results/**' --glob '!repo/client/vscode/.vscode-test/**' \"metabolism\\.kit\\.semio\\.json\" c:/git/semio/.storybook c:/git/semio/semio c:/git/semio/repo",
+            "command": "rg -uu --glob '!**/dist/**' --glob '!**/storybook-static/**' --glob '!**/htmlcov/**' --glob '!target/**' --glob '!test-results/**' --glob '!repo/client/vscode/.vscode-test/**' \"metabolism\\.kit\\.compose\\.json\" c:/git/compose/.storybook c:/git/compose/compose c:/git/compose/repo",
             "explanation": "Confirm that non-generated source files no longer reference the removed metabolism bundle path.",
             "goal": "Confirm stale references removed",
             "mode": "sync",
             "timeout": 600000
           },
           "tool_use_id": "call_81UT4ELGR8YPwV3CzlfgcIzh__vscode-1779617654279",
-          "cwd": "c:\\git\\semio"
+          "cwd": "c:\\git\\compose"
         }
       },
       "response": {}
@@ -345,14 +345,14 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\f9902ac1-b416-4f16-a815-964f72bdf790.jsonl",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "rg -uu --glob '!**/dist/**' --glob '!**/storybook-static/**' --glob '!**/htmlcov/**' --glob '!target/**' --glob '!test-results/**' --glob '!repo/client/vscode/.vscode-test/**' \"metabolism\\.kit\\.semio\\.json\" c:/git/semio/.storybook c:/git/semio/semio c:/git/semio/repo",
+            "command": "rg -uu --glob '!**/dist/**' --glob '!**/storybook-static/**' --glob '!**/htmlcov/**' --glob '!target/**' --glob '!test-results/**' --glob '!repo/client/vscode/.vscode-test/**' \"metabolism\\.kit\\.compose\\.json\" c:/git/compose/.storybook c:/git/compose/compose c:/git/compose/repo",
             "explanation": "Confirm that non-generated source files no longer reference the removed metabolism bundle path.",
             "goal": "Confirm stale references removed",
             "mode": "sync",
             "timeout": 600000
           },
           "tool_use_id": "call_81UT4ELGR8YPwV3CzlfgcIzh__vscode-1779617654279",
-          "cwd": "c:\\git\\semio"
+          "cwd": "c:\\git\\compose"
         }
       },
       "response": {}
@@ -375,7 +375,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\f9902ac1-b416-4f16-a815-964f72bdf790.jsonl",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "rg -uu --glob '!**/dist/**' --glob '!**/storybook-static/**' --glob '!**/htmlcov/**' --glob '!target/**' --glob '!test-results/**' --glob '!repo/client/vscode/.vscode-test/**' \"metabolism\\.kit\\.semio\\.json\" c:/git/semio/.storybook c:/git/semio/semio c:/git/semio/repo",
+            "command": "rg -uu --glob '!**/dist/**' --glob '!**/storybook-static/**' --glob '!**/htmlcov/**' --glob '!target/**' --glob '!test-results/**' --glob '!repo/client/vscode/.vscode-test/**' \"metabolism\\.kit\\.compose\\.json\" c:/git/compose/.storybook c:/git/compose/compose c:/git/compose/repo",
             "explanation": "Confirm that non-generated source files no longer reference the removed metabolism bundle path.",
             "goal": "Confirm stale references removed",
             "mode": "sync",
@@ -383,7 +383,7 @@
           },
           "tool_response": "\n\nCommand produced no output\nCommand exited with code 1",
           "tool_use_id": "call_81UT4ELGR8YPwV3CzlfgcIzh__vscode-1779617654279",
-          "cwd": "c:\\git\\semio"
+          "cwd": "c:\\git\\compose"
         }
       },
       "response": {}
@@ -406,7 +406,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\f9902ac1-b416-4f16-a815-964f72bdf790.jsonl",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "rg -uu --glob '!**/dist/**' --glob '!**/storybook-static/**' --glob '!**/htmlcov/**' --glob '!target/**' --glob '!test-results/**' --glob '!repo/client/vscode/.vscode-test/**' \"metabolism\\.kit\\.semio\\.json\" c:/git/semio/.storybook c:/git/semio/semio c:/git/semio/repo",
+            "command": "rg -uu --glob '!**/dist/**' --glob '!**/storybook-static/**' --glob '!**/htmlcov/**' --glob '!target/**' --glob '!test-results/**' --glob '!repo/client/vscode/.vscode-test/**' \"metabolism\\.kit\\.compose\\.json\" c:/git/compose/.storybook c:/git/compose/compose c:/git/compose/repo",
             "explanation": "Confirm that non-generated source files no longer reference the removed metabolism bundle path.",
             "goal": "Confirm stale references removed",
             "mode": "sync",
@@ -414,7 +414,7 @@
           },
           "tool_response": "\n\nCommand produced no output\nCommand exited with code 1",
           "tool_use_id": "call_81UT4ELGR8YPwV3CzlfgcIzh__vscode-1779617654279",
-          "cwd": "c:\\git\\semio"
+          "cwd": "c:\\git\\compose"
         }
       },
       "response": {}
@@ -437,14 +437,14 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\f9902ac1-b416-4f16-a815-964f72bdf790.jsonl",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "Set-Location c:/git/semio; bun -e \"import { MetabolismKit, MetabolismKitTypes, MetabolismKitDesigns } from './semio/assets/index.ts'; const name = (MetabolismKit as any)?.name ?? (MetabolismKit as any)?.wip?.initialKit?.name ?? null; console.log(JSON.stringify({ name, types: MetabolismKitTypes.length, designs: MetabolismKitDesigns.length }, null, 2));\"",
-            "explanation": "Validate that the semio asset barrel can still import and expose the split metabolism kit data.",
+            "command": "Set-Location c:/git/compose; bun -e \"import { MetabolismKit, MetabolismKitTypes, MetabolismKitDesigns } from './compose/assets/index.ts'; const name = (MetabolismKit as any)?.name ?? (MetabolismKit as any)?.wip?.initialKit?.name ?? null; console.log(JSON.stringify({ name, types: MetabolismKitTypes.length, designs: MetabolismKitDesigns.length }, null, 2));\"",
+            "explanation": "Validate that the compose asset barrel can still import and expose the split metabolism kit data.",
             "goal": "Validate asset barrel import",
             "mode": "sync",
             "timeout": 600000
           },
           "tool_use_id": "call_gdKubRHVYuZE05KFV0rmSSdj__vscode-1779617654280",
-          "cwd": "c:\\git\\semio"
+          "cwd": "c:\\git\\compose"
         }
       },
       "response": {}
@@ -467,14 +467,14 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\f9902ac1-b416-4f16-a815-964f72bdf790.jsonl",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "Set-Location c:/git/semio; bun -e \"import { MetabolismKit, MetabolismKitTypes, MetabolismKitDesigns } from './semio/assets/index.ts'; const name = (MetabolismKit as any)?.name ?? (MetabolismKit as any)?.wip?.initialKit?.name ?? null; console.log(JSON.stringify({ name, types: MetabolismKitTypes.length, designs: MetabolismKitDesigns.length }, null, 2));\"",
-            "explanation": "Validate that the semio asset barrel can still import and expose the split metabolism kit data.",
+            "command": "Set-Location c:/git/compose; bun -e \"import { MetabolismKit, MetabolismKitTypes, MetabolismKitDesigns } from './compose/assets/index.ts'; const name = (MetabolismKit as any)?.name ?? (MetabolismKit as any)?.wip?.initialKit?.name ?? null; console.log(JSON.stringify({ name, types: MetabolismKitTypes.length, designs: MetabolismKitDesigns.length }, null, 2));\"",
+            "explanation": "Validate that the compose asset barrel can still import and expose the split metabolism kit data.",
             "goal": "Validate asset barrel import",
             "mode": "sync",
             "timeout": 600000
           },
           "tool_use_id": "call_gdKubRHVYuZE05KFV0rmSSdj__vscode-1779617654280",
-          "cwd": "c:\\git\\semio"
+          "cwd": "c:\\git\\compose"
         }
       },
       "response": {}
@@ -497,15 +497,15 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\f9902ac1-b416-4f16-a815-964f72bdf790.jsonl",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "Set-Location c:/git/semio; bun -e \"import { MetabolismKit, MetabolismKitTypes, MetabolismKitDesigns } from './semio/assets/index.ts'; const name = (MetabolismKit as any)?.name ?? (MetabolismKit as any)?.wip?.initialKit?.name ?? null; console.log(JSON.stringify({ name, types: MetabolismKitTypes.length, designs: MetabolismKitDesigns.length }, null, 2));\"",
-            "explanation": "Validate that the semio asset barrel can still import and expose the split metabolism kit data.",
+            "command": "Set-Location c:/git/compose; bun -e \"import { MetabolismKit, MetabolismKitTypes, MetabolismKitDesigns } from './compose/assets/index.ts'; const name = (MetabolismKit as any)?.name ?? (MetabolismKit as any)?.wip?.initialKit?.name ?? null; console.log(JSON.stringify({ name, types: MetabolismKitTypes.length, designs: MetabolismKitDesigns.length }, null, 2));\"",
+            "explanation": "Validate that the compose asset barrel can still import and expose the split metabolism kit data.",
             "goal": "Validate asset barrel import",
             "mode": "sync",
             "timeout": 600000
           },
-          "tool_response": "designs: MetabolismKitDesigns.length }, null, 2));\"\nerror: Cannot find module './fixtures/drag/design.semio.json' from 'C:\\git\\semio\\semio\\assets\\index.ts'\n\nBun v1.2.5 (Windows x64)\n\nCommand exited with code 1",
+          "tool_response": "designs: MetabolismKitDesigns.length }, null, 2));\"\nerror: Cannot find module './fixtures/drag/design.compose.json' from 'C:\\git\\compose\\compose\\assets\\index.ts'\n\nBun v1.2.5 (Windows x64)\n\nCommand exited with code 1",
           "tool_use_id": "call_gdKubRHVYuZE05KFV0rmSSdj__vscode-1779617654280",
-          "cwd": "c:\\git\\semio"
+          "cwd": "c:\\git\\compose"
         }
       },
       "response": {}
@@ -528,15 +528,15 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\f9902ac1-b416-4f16-a815-964f72bdf790.jsonl",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "Set-Location c:/git/semio; bun -e \"import { MetabolismKit, MetabolismKitTypes, MetabolismKitDesigns } from './semio/assets/index.ts'; const name = (MetabolismKit as any)?.name ?? (MetabolismKit as any)?.wip?.initialKit?.name ?? null; console.log(JSON.stringify({ name, types: MetabolismKitTypes.length, designs: MetabolismKitDesigns.length }, null, 2));\"",
-            "explanation": "Validate that the semio asset barrel can still import and expose the split metabolism kit data.",
+            "command": "Set-Location c:/git/compose; bun -e \"import { MetabolismKit, MetabolismKitTypes, MetabolismKitDesigns } from './compose/assets/index.ts'; const name = (MetabolismKit as any)?.name ?? (MetabolismKit as any)?.wip?.initialKit?.name ?? null; console.log(JSON.stringify({ name, types: MetabolismKitTypes.length, designs: MetabolismKitDesigns.length }, null, 2));\"",
+            "explanation": "Validate that the compose asset barrel can still import and expose the split metabolism kit data.",
             "goal": "Validate asset barrel import",
             "mode": "sync",
             "timeout": 600000
           },
-          "tool_response": "designs: MetabolismKitDesigns.length }, null, 2));\"\nerror: Cannot find module './fixtures/drag/design.semio.json' from 'C:\\git\\semio\\semio\\assets\\index.ts'\n\nBun v1.2.5 (Windows x64)\n\nCommand exited with code 1",
+          "tool_response": "designs: MetabolismKitDesigns.length }, null, 2));\"\nerror: Cannot find module './fixtures/drag/design.compose.json' from 'C:\\git\\compose\\compose\\assets\\index.ts'\n\nBun v1.2.5 (Windows x64)\n\nCommand exited with code 1",
           "tool_use_id": "call_gdKubRHVYuZE05KFV0rmSSdj__vscode-1779617654280",
-          "cwd": "c:\\git\\semio"
+          "cwd": "c:\\git\\compose"
         }
       },
       "response": {}
@@ -559,14 +559,14 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\f9902ac1-b416-4f16-a815-964f72bdf790.jsonl",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "Set-Location c:/git/semio; $exists = @(\n  'c:/git/semio/semio/fixtures/stores/metabolism/wip/initialKit/kit.semio.json',\n  'c:/git/semio/semio/fixtures/stores/metabolism/wip/initialKit/designs/nakagin-capsule-tower.design.semio.json',\n  'c:/git/semio/semio/fixtures/stores/metabolism/wip/initialKit/types/slash.capsule.type.semio.json'\n) | ForEach-Object { [pscustomobject]@{ path = $_; exists = (Test-Path $_) } };\n$kit = Get-Content 'c:/git/semio/semio/fixtures/stores/metabolism/wip/initialKit/kit.semio.json' -Raw | ConvertFrom-Json -Depth 100;\n[pscustomobject]@{\n  name = $kit.name;\n  types = $kit.types.items.Count;\n  designs = $kit.designs.items.Count;\n} | ConvertTo-Json -Depth 5;\n$exists | ConvertTo-Json -Depth 5",
+            "command": "Set-Location c:/git/compose; $exists = @(\n  'c:/git/compose/compose/fixtures/stores/metabolism/wip/initialKit/kit.compose.json',\n  'c:/git/compose/compose/fixtures/stores/metabolism/wip/initialKit/designs/nakagin-capsule-tower.design.compose.json',\n  'c:/git/compose/compose/fixtures/stores/metabolism/wip/initialKit/types/slash.capsule.type.compose.json'\n) | ForEach-Object { [pscustomobject]@{ path = $_; exists = (Test-Path $_) } };\n$kit = Get-Content 'c:/git/compose/compose/fixtures/stores/metabolism/wip/initialKit/kit.compose.json' -Raw | ConvertFrom-Json -Depth 100;\n[pscustomobject]@{\n  name = $kit.name;\n  types = $kit.types.items.Count;\n  designs = $kit.designs.items.Count;\n} | ConvertTo-Json -Depth 5;\n$exists | ConvertTo-Json -Depth 5",
             "explanation": "Validate that the split metabolism store entrypoint parses and that representative split files exist at the rewritten paths.",
             "goal": "Validate split store files",
             "mode": "sync",
             "timeout": 600000
           },
           "tool_use_id": "call_KzWZMmz6VWT4qWS7HtdbuHej__vscode-1779617654281",
-          "cwd": "c:\\git\\semio"
+          "cwd": "c:\\git\\compose"
         }
       },
       "response": {}
@@ -589,14 +589,14 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\f9902ac1-b416-4f16-a815-964f72bdf790.jsonl",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "Set-Location c:/git/semio; $exists = @(\n  'c:/git/semio/semio/fixtures/stores/metabolism/wip/initialKit/kit.semio.json',\n  'c:/git/semio/semio/fixtures/stores/metabolism/wip/initialKit/designs/nakagin-capsule-tower.design.semio.json',\n  'c:/git/semio/semio/fixtures/stores/metabolism/wip/initialKit/types/slash.capsule.type.semio.json'\n) | ForEach-Object { [pscustomobject]@{ path = $_; exists = (Test-Path $_) } };\n$kit = Get-Content 'c:/git/semio/semio/fixtures/stores/metabolism/wip/initialKit/kit.semio.json' -Raw | ConvertFrom-Json -Depth 100;\n[pscustomobject]@{\n  name = $kit.name;\n  types = $kit.types.items.Count;\n  designs = $kit.designs.items.Count;\n} | ConvertTo-Json -Depth 5;\n$exists | ConvertTo-Json -Depth 5",
+            "command": "Set-Location c:/git/compose; $exists = @(\n  'c:/git/compose/compose/fixtures/stores/metabolism/wip/initialKit/kit.compose.json',\n  'c:/git/compose/compose/fixtures/stores/metabolism/wip/initialKit/designs/nakagin-capsule-tower.design.compose.json',\n  'c:/git/compose/compose/fixtures/stores/metabolism/wip/initialKit/types/slash.capsule.type.compose.json'\n) | ForEach-Object { [pscustomobject]@{ path = $_; exists = (Test-Path $_) } };\n$kit = Get-Content 'c:/git/compose/compose/fixtures/stores/metabolism/wip/initialKit/kit.compose.json' -Raw | ConvertFrom-Json -Depth 100;\n[pscustomobject]@{\n  name = $kit.name;\n  types = $kit.types.items.Count;\n  designs = $kit.designs.items.Count;\n} | ConvertTo-Json -Depth 5;\n$exists | ConvertTo-Json -Depth 5",
             "explanation": "Validate that the split metabolism store entrypoint parses and that representative split files exist at the rewritten paths.",
             "goal": "Validate split store files",
             "mode": "sync",
             "timeout": 600000
           },
           "tool_use_id": "call_KzWZMmz6VWT4qWS7HtdbuHej__vscode-1779617654281",
-          "cwd": "c:\\git\\semio"
+          "cwd": "c:\\git\\compose"
         }
       },
       "response": {}
@@ -619,15 +619,15 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\f9902ac1-b416-4f16-a815-964f72bdf790.jsonl",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "Set-Location c:/git/semio; $exists = @(\n  'c:/git/semio/semio/fixtures/stores/metabolism/wip/initialKit/kit.semio.json',\n  'c:/git/semio/semio/fixtures/stores/metabolism/wip/initialKit/designs/nakagin-capsule-tower.design.semio.json',\n  'c:/git/semio/semio/fixtures/stores/metabolism/wip/initialKit/types/slash.capsule.type.semio.json'\n) | ForEach-Object { [pscustomobject]@{ path = $_; exists = (Test-Path $_) } };\n$kit = Get-Content 'c:/git/semio/semio/fixtures/stores/metabolism/wip/initialKit/kit.semio.json' -Raw | ConvertFrom-Json -Depth 100;\n[pscustomobject]@{\n  name = $kit.name;\n  types = $kit.types.items.Count;\n  designs = $kit.designs.items.Count;\n} | ConvertTo-Json -Depth 5;\n$exists | ConvertTo-Json -Depth 5",
+            "command": "Set-Location c:/git/compose; $exists = @(\n  'c:/git/compose/compose/fixtures/stores/metabolism/wip/initialKit/kit.compose.json',\n  'c:/git/compose/compose/fixtures/stores/metabolism/wip/initialKit/designs/nakagin-capsule-tower.design.compose.json',\n  'c:/git/compose/compose/fixtures/stores/metabolism/wip/initialKit/types/slash.capsule.type.compose.json'\n) | ForEach-Object { [pscustomobject]@{ path = $_; exists = (Test-Path $_) } };\n$kit = Get-Content 'c:/git/compose/compose/fixtures/stores/metabolism/wip/initialKit/kit.compose.json' -Raw | ConvertFrom-Json -Depth 100;\n[pscustomobject]@{\n  name = $kit.name;\n  types = $kit.types.items.Count;\n  designs = $kit.designs.items.Count;\n} | ConvertTo-Json -Depth 5;\n$exists | ConvertTo-Json -Depth 5",
             "explanation": "Validate that the split metabolism store entrypoint parses and that representative split files exist at the rewritten paths.",
             "goal": "Validate split store files",
             "mode": "sync",
             "timeout": 600000
           },
-          "tool_response": "PS C:\\git\\semio\u003e Set-Location c:/git/semio; $exists = @(\n\u003e\u003e   'c:/git/semio/semio/fixtures/stores/metabolism/wip/initialKit/kit.semio.jso\nn',\n\u003e\u003e   'c:/git/semio/semio/fixtures/stores/metabolism/wip/initialKit/designs/nakag\nin-capsule-tower.design.semio.json',\n\u003e\u003e   'c:/git/semio/semio/fixtures/stores/metabolism/wip/initialKit/types/slash.c\napsule.type.semio.json'\n\u003e\u003e ) | ForEach-Object { [pscustomobject]@{ path = $_; exists = (Test-Path $_) } \n};",
+          "tool_response": "PS C:\\git\\compose\u003e Set-Location c:/git/compose; $exists = @(\n\u003e\u003e   'c:/git/compose/compose/fixtures/stores/metabolism/wip/initialKit/kit.compose.jso\nn',\n\u003e\u003e   'c:/git/compose/compose/fixtures/stores/metabolism/wip/initialKit/designs/nakag\nin-capsule-tower.design.compose.json',\n\u003e\u003e   'c:/git/compose/compose/fixtures/stores/metabolism/wip/initialKit/types/slash.c\napsule.type.compose.json'\n\u003e\u003e ) | ForEach-Object { [pscustomobject]@{ path = $_; exists = (Test-Path $_) } \n};",
           "tool_use_id": "call_KzWZMmz6VWT4qWS7HtdbuHej__vscode-1779617654281",
-          "cwd": "c:\\git\\semio"
+          "cwd": "c:\\git\\compose"
         }
       },
       "response": {}
@@ -650,15 +650,15 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\f9902ac1-b416-4f16-a815-964f72bdf790.jsonl",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "Set-Location c:/git/semio; $exists = @(\n  'c:/git/semio/semio/fixtures/stores/metabolism/wip/initialKit/kit.semio.json',\n  'c:/git/semio/semio/fixtures/stores/metabolism/wip/initialKit/designs/nakagin-capsule-tower.design.semio.json',\n  'c:/git/semio/semio/fixtures/stores/metabolism/wip/initialKit/types/slash.capsule.type.semio.json'\n) | ForEach-Object { [pscustomobject]@{ path = $_; exists = (Test-Path $_) } };\n$kit = Get-Content 'c:/git/semio/semio/fixtures/stores/metabolism/wip/initialKit/kit.semio.json' -Raw | ConvertFrom-Json -Depth 100;\n[pscustomobject]@{\n  name = $kit.name;\n  types = $kit.types.items.Count;\n  designs = $kit.designs.items.Count;\n} | ConvertTo-Json -Depth 5;\n$exists | ConvertTo-Json -Depth 5",
+            "command": "Set-Location c:/git/compose; $exists = @(\n  'c:/git/compose/compose/fixtures/stores/metabolism/wip/initialKit/kit.compose.json',\n  'c:/git/compose/compose/fixtures/stores/metabolism/wip/initialKit/designs/nakagin-capsule-tower.design.compose.json',\n  'c:/git/compose/compose/fixtures/stores/metabolism/wip/initialKit/types/slash.capsule.type.compose.json'\n) | ForEach-Object { [pscustomobject]@{ path = $_; exists = (Test-Path $_) } };\n$kit = Get-Content 'c:/git/compose/compose/fixtures/stores/metabolism/wip/initialKit/kit.compose.json' -Raw | ConvertFrom-Json -Depth 100;\n[pscustomobject]@{\n  name = $kit.name;\n  types = $kit.types.items.Count;\n  designs = $kit.designs.items.Count;\n} | ConvertTo-Json -Depth 5;\n$exists | ConvertTo-Json -Depth 5",
             "explanation": "Validate that the split metabolism store entrypoint parses and that representative split files exist at the rewritten paths.",
             "goal": "Validate split store files",
             "mode": "sync",
             "timeout": 600000
           },
-          "tool_response": "PS C:\\git\\semio\u003e Set-Location c:/git/semio; $exists = @(\n\u003e\u003e   'c:/git/semio/semio/fixtures/stores/metabolism/wip/initialKit/kit.semio.jso\nn',\n\u003e\u003e   'c:/git/semio/semio/fixtures/stores/metabolism/wip/initialKit/designs/nakag\nin-capsule-tower.design.semio.json',\n\u003e\u003e   'c:/git/semio/semio/fixtures/stores/metabolism/wip/initialKit/types/slash.c\napsule.type.semio.json'\n\u003e\u003e ) | ForEach-Object { [pscustomobject]@{ path = $_; exists = (Test-Path $_) } \n};",
+          "tool_response": "PS C:\\git\\compose\u003e Set-Location c:/git/compose; $exists = @(\n\u003e\u003e   'c:/git/compose/compose/fixtures/stores/metabolism/wip/initialKit/kit.compose.jso\nn',\n\u003e\u003e   'c:/git/compose/compose/fixtures/stores/metabolism/wip/initialKit/designs/nakag\nin-capsule-tower.design.compose.json',\n\u003e\u003e   'c:/git/compose/compose/fixtures/stores/metabolism/wip/initialKit/types/slash.c\napsule.type.compose.json'\n\u003e\u003e ) | ForEach-Object { [pscustomobject]@{ path = $_; exists = (Test-Path $_) } \n};",
           "tool_use_id": "call_KzWZMmz6VWT4qWS7HtdbuHej__vscode-1779617654281",
-          "cwd": "c:\\git\\semio"
+          "cwd": "c:\\git\\compose"
         }
       },
       "response": {}
@@ -681,14 +681,14 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\f9902ac1-b416-4f16-a815-964f72bdf790.jsonl",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "Set-Location c:/git/semio; $exists = @('c:/git/semio/semio/fixtures/stores/metabolism/wip/initialKit/kit.semio.json','c:/git/semio/semio/fixtures/stores/metabolism/wip/initialKit/designs/nakagin-capsule-tower.design.semio.json','c:/git/semio/semio/fixtures/stores/metabolism/wip/initialKit/types/slash.capsule.type.semio.json') | ForEach-Object { [pscustomobject]@{ path = $_; exists = (Test-Path $_) } }; $kit = Get-Content 'c:/git/semio/semio/fixtures/stores/metabolism/wip/initialKit/kit.semio.json' -Raw | ConvertFrom-Json -Depth 100; [pscustomobject]@{ name = $kit.name; types = $kit.types.items.Count; designs = $kit.designs.items.Count; files = $exists } | ConvertTo-Json -Depth 6",
+            "command": "Set-Location c:/git/compose; $exists = @('c:/git/compose/compose/fixtures/stores/metabolism/wip/initialKit/kit.compose.json','c:/git/compose/compose/fixtures/stores/metabolism/wip/initialKit/designs/nakagin-capsule-tower.design.compose.json','c:/git/compose/compose/fixtures/stores/metabolism/wip/initialKit/types/slash.capsule.type.compose.json') | ForEach-Object { [pscustomobject]@{ path = $_; exists = (Test-Path $_) } }; $kit = Get-Content 'c:/git/compose/compose/fixtures/stores/metabolism/wip/initialKit/kit.compose.json' -Raw | ConvertFrom-Json -Depth 100; [pscustomobject]@{ name = $kit.name; types = $kit.types.items.Count; designs = $kit.designs.items.Count; files = $exists } | ConvertTo-Json -Depth 6",
             "explanation": "Validate that the split metabolism store entrypoint parses and that representative split files exist at the rewritten paths.",
             "goal": "Validate split store files",
             "mode": "sync",
             "timeout": 600000
           },
           "tool_use_id": "call_LPx8M4cc0zMVhKBebc1EMlyH__vscode-1779617654282",
-          "cwd": "c:\\git\\semio"
+          "cwd": "c:\\git\\compose"
         }
       },
       "response": {}
@@ -711,14 +711,14 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\f9902ac1-b416-4f16-a815-964f72bdf790.jsonl",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "Set-Location c:/git/semio; $exists = @('c:/git/semio/semio/fixtures/stores/metabolism/wip/initialKit/kit.semio.json','c:/git/semio/semio/fixtures/stores/metabolism/wip/initialKit/designs/nakagin-capsule-tower.design.semio.json','c:/git/semio/semio/fixtures/stores/metabolism/wip/initialKit/types/slash.capsule.type.semio.json') | ForEach-Object { [pscustomobject]@{ path = $_; exists = (Test-Path $_) } }; $kit = Get-Content 'c:/git/semio/semio/fixtures/stores/metabolism/wip/initialKit/kit.semio.json' -Raw | ConvertFrom-Json -Depth 100; [pscustomobject]@{ name = $kit.name; types = $kit.types.items.Count; designs = $kit.designs.items.Count; files = $exists } | ConvertTo-Json -Depth 6",
+            "command": "Set-Location c:/git/compose; $exists = @('c:/git/compose/compose/fixtures/stores/metabolism/wip/initialKit/kit.compose.json','c:/git/compose/compose/fixtures/stores/metabolism/wip/initialKit/designs/nakagin-capsule-tower.design.compose.json','c:/git/compose/compose/fixtures/stores/metabolism/wip/initialKit/types/slash.capsule.type.compose.json') | ForEach-Object { [pscustomobject]@{ path = $_; exists = (Test-Path $_) } }; $kit = Get-Content 'c:/git/compose/compose/fixtures/stores/metabolism/wip/initialKit/kit.compose.json' -Raw | ConvertFrom-Json -Depth 100; [pscustomobject]@{ name = $kit.name; types = $kit.types.items.Count; designs = $kit.designs.items.Count; files = $exists } | ConvertTo-Json -Depth 6",
             "explanation": "Validate that the split metabolism store entrypoint parses and that representative split files exist at the rewritten paths.",
             "goal": "Validate split store files",
             "mode": "sync",
             "timeout": 600000
           },
           "tool_use_id": "call_LPx8M4cc0zMVhKBebc1EMlyH__vscode-1779617654282",
-          "cwd": "c:\\git\\semio"
+          "cwd": "c:\\git\\compose"
         }
       },
       "response": {}
@@ -741,15 +741,15 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\f9902ac1-b416-4f16-a815-964f72bdf790.jsonl",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "Set-Location c:/git/semio; $exists = @('c:/git/semio/semio/fixtures/stores/metabolism/wip/initialKit/kit.semio.json','c:/git/semio/semio/fixtures/stores/metabolism/wip/initialKit/designs/nakagin-capsule-tower.design.semio.json','c:/git/semio/semio/fixtures/stores/metabolism/wip/initialKit/types/slash.capsule.type.semio.json') | ForEach-Object { [pscustomobject]@{ path = $_; exists = (Test-Path $_) } }; $kit = Get-Content 'c:/git/semio/semio/fixtures/stores/metabolism/wip/initialKit/kit.semio.json' -Raw | ConvertFrom-Json -Depth 100; [pscustomobject]@{ name = $kit.name; types = $kit.types.items.Count; designs = $kit.designs.items.Count; files = $exists } | ConvertTo-Json -Depth 6",
+            "command": "Set-Location c:/git/compose; $exists = @('c:/git/compose/compose/fixtures/stores/metabolism/wip/initialKit/kit.compose.json','c:/git/compose/compose/fixtures/stores/metabolism/wip/initialKit/designs/nakagin-capsule-tower.design.compose.json','c:/git/compose/compose/fixtures/stores/metabolism/wip/initialKit/types/slash.capsule.type.compose.json') | ForEach-Object { [pscustomobject]@{ path = $_; exists = (Test-Path $_) } }; $kit = Get-Content 'c:/git/compose/compose/fixtures/stores/metabolism/wip/initialKit/kit.compose.json' -Raw | ConvertFrom-Json -Depth 100; [pscustomobject]@{ name = $kit.name; types = $kit.types.items.Count; designs = $kit.designs.items.Count; files = $exists } | ConvertTo-Json -Depth 6",
             "explanation": "Validate that the split metabolism store entrypoint parses and that representative split files exist at the rewritten paths.",
             "goal": "Validate split store files",
             "mode": "sync",
             "timeout": 600000
           },
-          "tool_response": "{\n  \"name\": \"Metabolism\",\n  \"types\": 50,\n  \"designs\": 10,\n  \"files\": [\n    {\n      \"path\": \"c:/git/semio/semio/fixtures/stores/metabolism/wip/initialKit/kit.semio.json\",\n      \"exists\": true\n    },\n    {\n      \"path\": \"c:/git/semio/semio/fixtures/stores/metabolism/wip/initialKit/designs/nakagin-capsule-tower.design.semio.json\",\n      \"exists\": true\n    },\n    {\n      \"path\": \"c:/git/semio/semio/fixtures/stores/metabolism/wip/initialKit/types/slash.capsule.type.semio.json\",\n      \"exists\": true\n    }\n  ]\n}",
+          "tool_response": "{\n  \"name\": \"Metabolism\",\n  \"types\": 50,\n  \"designs\": 10,\n  \"files\": [\n    {\n      \"path\": \"c:/git/compose/compose/fixtures/stores/metabolism/wip/initialKit/kit.compose.json\",\n      \"exists\": true\n    },\n    {\n      \"path\": \"c:/git/compose/compose/fixtures/stores/metabolism/wip/initialKit/designs/nakagin-capsule-tower.design.compose.json\",\n      \"exists\": true\n    },\n    {\n      \"path\": \"c:/git/compose/compose/fixtures/stores/metabolism/wip/initialKit/types/slash.capsule.type.compose.json\",\n      \"exists\": true\n    }\n  ]\n}",
           "tool_use_id": "call_LPx8M4cc0zMVhKBebc1EMlyH__vscode-1779617654282",
-          "cwd": "c:\\git\\semio"
+          "cwd": "c:\\git\\compose"
         }
       },
       "response": {}
@@ -772,15 +772,15 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\f9902ac1-b416-4f16-a815-964f72bdf790.jsonl",
           "tool_name": "run_in_terminal",
           "tool_input": {
-            "command": "Set-Location c:/git/semio; $exists = @('c:/git/semio/semio/fixtures/stores/metabolism/wip/initialKit/kit.semio.json','c:/git/semio/semio/fixtures/stores/metabolism/wip/initialKit/designs/nakagin-capsule-tower.design.semio.json','c:/git/semio/semio/fixtures/stores/metabolism/wip/initialKit/types/slash.capsule.type.semio.json') | ForEach-Object { [pscustomobject]@{ path = $_; exists = (Test-Path $_) } }; $kit = Get-Content 'c:/git/semio/semio/fixtures/stores/metabolism/wip/initialKit/kit.semio.json' -Raw | ConvertFrom-Json -Depth 100; [pscustomobject]@{ name = $kit.name; types = $kit.types.items.Count; designs = $kit.designs.items.Count; files = $exists } | ConvertTo-Json -Depth 6",
+            "command": "Set-Location c:/git/compose; $exists = @('c:/git/compose/compose/fixtures/stores/metabolism/wip/initialKit/kit.compose.json','c:/git/compose/compose/fixtures/stores/metabolism/wip/initialKit/designs/nakagin-capsule-tower.design.compose.json','c:/git/compose/compose/fixtures/stores/metabolism/wip/initialKit/types/slash.capsule.type.compose.json') | ForEach-Object { [pscustomobject]@{ path = $_; exists = (Test-Path $_) } }; $kit = Get-Content 'c:/git/compose/compose/fixtures/stores/metabolism/wip/initialKit/kit.compose.json' -Raw | ConvertFrom-Json -Depth 100; [pscustomobject]@{ name = $kit.name; types = $kit.types.items.Count; designs = $kit.designs.items.Count; files = $exists } | ConvertTo-Json -Depth 6",
             "explanation": "Validate that the split metabolism store entrypoint parses and that representative split files exist at the rewritten paths.",
             "goal": "Validate split store files",
             "mode": "sync",
             "timeout": 600000
           },
-          "tool_response": "{\n  \"name\": \"Metabolism\",\n  \"types\": 50,\n  \"designs\": 10,\n  \"files\": [\n    {\n      \"path\": \"c:/git/semio/semio/fixtures/stores/metabolism/wip/initialKit/kit.semio.json\",\n      \"exists\": true\n    },\n    {\n      \"path\": \"c:/git/semio/semio/fixtures/stores/metabolism/wip/initialKit/designs/nakagin-capsule-tower.design.semio.json\",\n      \"exists\": true\n    },\n    {\n      \"path\": \"c:/git/semio/semio/fixtures/stores/metabolism/wip/initialKit/types/slash.capsule.type.semio.json\",\n      \"exists\": true\n    }\n  ]\n}",
+          "tool_response": "{\n  \"name\": \"Metabolism\",\n  \"types\": 50,\n  \"designs\": 10,\n  \"files\": [\n    {\n      \"path\": \"c:/git/compose/compose/fixtures/stores/metabolism/wip/initialKit/kit.compose.json\",\n      \"exists\": true\n    },\n    {\n      \"path\": \"c:/git/compose/compose/fixtures/stores/metabolism/wip/initialKit/designs/nakagin-capsule-tower.design.compose.json\",\n      \"exists\": true\n    },\n    {\n      \"path\": \"c:/git/compose/compose/fixtures/stores/metabolism/wip/initialKit/types/slash.capsule.type.compose.json\",\n      \"exists\": true\n    }\n  ]\n}",
           "tool_use_id": "call_LPx8M4cc0zMVhKBebc1EMlyH__vscode-1779617654282",
-          "cwd": "c:\\git\\semio"
+          "cwd": "c:\\git\\compose"
         }
       },
       "response": {}
@@ -827,7 +827,7 @@
             ]
           },
           "tool_use_id": "call_WptXNmeJJb0RthDoymX4jut8__vscode-1779617654283",
-          "cwd": "c:\\git\\semio"
+          "cwd": "c:\\git\\compose"
         }
       },
       "response": {}
@@ -874,7 +874,7 @@
             ]
           },
           "tool_use_id": "call_WptXNmeJJb0RthDoymX4jut8__vscode-1779617654283",
-          "cwd": "c:\\git\\semio"
+          "cwd": "c:\\git\\compose"
         }
       },
       "response": {}
@@ -922,7 +922,7 @@
           },
           "tool_response": "Successfully wrote todo list\n\nWarning: Did you mean to update so many todos at the same time? Consider working on them one by one.",
           "tool_use_id": "call_WptXNmeJJb0RthDoymX4jut8__vscode-1779617654283",
-          "cwd": "c:\\git\\semio"
+          "cwd": "c:\\git\\compose"
         }
       },
       "response": {}
@@ -970,7 +970,7 @@
           },
           "tool_response": "Successfully wrote todo list\n\nWarning: Did you mean to update so many todos at the same time? Consider working on them one by one.",
           "tool_use_id": "call_WptXNmeJJb0RthDoymX4jut8__vscode-1779617654283",
-          "cwd": "c:\\git\\semio"
+          "cwd": "c:\\git\\compose"
         }
       },
       "response": {}
@@ -992,7 +992,7 @@
           "session_id": "f9902ac1-b416-4f16-a815-964f72bdf790",
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\f9902ac1-b416-4f16-a815-964f72bdf790.jsonl",
           "stop_hook_active": false,
-          "cwd": "c:\\git\\semio"
+          "cwd": "c:\\git\\compose"
         }
       },
       "response": {}

@@ -8,22 +8,22 @@
 ### Missing ID Detection
 
 1. **Action IDs** - Added detection for `actionId` attributes in both string and JSX curly brace formats:
-   - `semio.sketchpad.app.home.createTemporary`
-   - `semio.sketchpad.app.home.createKit`
-   - `semio.sketchpad.app.home.createLocal`
-   - `semio.sketchpad.app.home.createRemote`
+   - `compose.sketchpad.app.home.createTemporary`
+   - `compose.sketchpad.app.home.createKit`
+   - `compose.sketchpad.app.home.createLocal`
+   - `compose.sketchpad.app.home.createRemote`
 
 2. **Tooltip IDs** - Added detection for `tooltipId` attributes in both formats
 
 3. **Panel Toggle Tooltips** - Enhanced detection for dynamically generated panel toggle IDs:
-   - `semio.sketchpad.navbar.panelToggle.workbench.show`
-   - `semio.sketchpad.navbar.panelToggle.tools.show`
-   - `semio.sketchpad.navbar.panelToggle.toolbar.show`
-   - `semio.sketchpad.navbar.panelToggle.hud.show`
-   - `semio.sketchpad.navbar.panelToggle.stats.show`
-   - `semio.sketchpad.navbar.panelToggle.details.show`
-   - `semio.sketchpad.navbar.panelToggle.chat.show`
-   - `semio.sketchpad.navbar.panelToggle.settings.show`
+   - `compose.sketchpad.navbar.panelToggle.workbench.show`
+   - `compose.sketchpad.navbar.panelToggle.tools.show`
+   - `compose.sketchpad.navbar.panelToggle.toolbar.show`
+   - `compose.sketchpad.navbar.panelToggle.hud.show`
+   - `compose.sketchpad.navbar.panelToggle.stats.show`
+   - `compose.sketchpad.navbar.panelToggle.details.show`
+   - `compose.sketchpad.navbar.panelToggle.chat.show`
+   - `compose.sketchpad.navbar.panelToggle.settings.show`
 
 4. **Tooltip Namespace** - Added support for `tooltip.*` and `settings.*` prefixes:
    - `tooltip.manual`
@@ -47,7 +47,7 @@ Enhanced `scanSourceFiles()` function:
 
 - Added dynamic panel toggle pattern detection
 - Added inline tooltip construction pattern detection
-- Extended ID prefix filter to accept `tooltip.` and `settings.` in addition to `semio.sketchpad.`
+- Extended ID prefix filter to accept `tooltip.` and `settings.` in addition to `compose.sketchpad.`
 
 ## Results
 

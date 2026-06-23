@@ -24,7 +24,7 @@ function formatBundleHeaderLine(label: string, total: GitDeltaSum): string {
   return `${normalizeBundleScopeLabel(label)}${formatBundleUlocSuffix(total)}`;
 }
 
-const root = "/Users/ueli/Documents/semio";
+const root = "/Users/ueli/Documents/compose";
 const wip = "6831b35f5e7b0edc35e97c8631c2458bada62bf5";
 const head = "a9ba9ef2c";
 const microHead = "4d17010754182decd30a2dda29b12a86fe7c115b";
@@ -102,7 +102,7 @@ const remainderBody = `
 🎆26🌙06☀️04
 🌐Framework hosts, UI assets, infinite cavas, agents skills, and monorepo paths outside named bundles
 🎆26🌙06☀️03
-🌐Mathematical graph crates, CAD JSON, reasoning notes, and semio core outside fixtures
+🌐Mathematical graph crates, CAD JSON, reasoning notes, and compose core outside fixtures
 🎆26🌙06☀️02
 🌐Storybook, cursor plans, and workspace scaffolding touched during the sprint
 `;
@@ -195,5 +195,5 @@ for (let bi = 0; bi < bundles.length; bi++) {
   }
 }
 
-writeFileSync("/Users/ueli/Documents/semio/.git/semio-commit-message", message);
+writeFileSync("/Users/ueli/Documents/compose/.git/compose-commit-message", message);
 process.stdout.write(message);

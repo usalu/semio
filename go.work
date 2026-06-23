@@ -12,5 +12,5 @@ use (
 	./repo/client/mcp/kiro
 	./repo/lib/go
 	./repo/server/coordinator
-	./semio/client/lib/go
+	./compose/client/lib/go
 )

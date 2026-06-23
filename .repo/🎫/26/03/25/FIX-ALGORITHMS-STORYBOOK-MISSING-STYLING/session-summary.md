@@ -4,13 +4,13 @@
 
 - `elements/ui/index.tsx` — Restored from `git show 76680d50c:elements/ui/elements.tsx`; UIFind: `EMPTY_FIND_ITEMS`, ref-based `UIFindItemsSync`, shallow `setFindItemsStable`.
 - `elements/ui/package.json` — Exports/scripts use `tailwind.config.ts`, `postcss.config.ts`, `eslint.config.ts`, `vitest.config.ts`.
-- `semio/js/index.ts` — Removed duplicate `filterKitWithDesign`; fixed vitest block stray `} = await import`.
-- `semio/ui/index.tsx` — AlgorithmApp: `toolbarItems` (diagram + clear selection), `UIToolbarItem` import, `pieces.updated` count without `as any`.
+- `compose/js/index.ts` — Removed duplicate `filterKitWithDesign`; fixed vitest block stray `} = await import`.
+- `compose/ui/index.tsx` — AlgorithmApp: `toolbarItems` (diagram + clear selection), `UIToolbarItem` import, `pieces.updated` count without `as any`.
 
 ## Verification
 
-- `npm run build --workspace=semio/algorithms` — **passes**.
-- `npm run test --workspace=semio/algorithms` — fails on known Playwright `test.use()` pulled into Vitest via sketchpad (unchanged).
+- `npm run build --workspace=compose/algorithms` — **passes**.
+- `npm run test --workspace=compose/algorithms` — fails on known Playwright `test.use()` pulled into Vitest via sketchpad (unchanged).
 
 ## MCP
 

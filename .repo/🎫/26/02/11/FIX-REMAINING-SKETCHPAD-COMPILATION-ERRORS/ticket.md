@@ -9,7 +9,7 @@ goal: AI-OPTIMIZED-REPO/REPO-CLIENT
 Fixed 4 remaining PanelGroup/PanelResizeHandle TS errors in elements.tsx. 0 tsc errors, 11/11 tests pass, vite dev server starts cleanly
 ## Changes
 
-### semio/js/sketchpad/elements.tsx
+### compose/js/sketchpad/elements.tsx
 - Replaced `ResizablePrimitive.PanelGroup` with `ResizablePrimitive.Group` (react-resizable-panels v3 renamed export)
 - Replaced `ResizablePrimitive.PanelResizeHandle` with `ResizablePrimitive.Separator` (react-resizable-panels v3 renamed export)
 

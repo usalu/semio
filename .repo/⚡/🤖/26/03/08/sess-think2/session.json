@@ -1,6 +1,6 @@
 {
   "id": "sess-think2",
-  "uri": "semiorepo://s/sess-think2",
+  "uri": "composerepo://s/sess-think2",
   "contributor": "unknown",
   "client": "cursor-chat",
   "second": "2026-03-08T00:40:12Z",

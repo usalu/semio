@@ -1,7 +1,7 @@
 {
   "schema": "reasoning.wires.fixture/v1",
   "source": {
-    "kitPath": "semio/fixture/metabolism.kit.light.semio.json",
+    "kitPath": "compose/fixture/metabolism.kit.light.compose.json",
     "kitId": "f042c2a4-3ba5-44b0-b22c-0ae8f568aacc",
     "kitName": "Metabolism"
   },
@@ -10,43 +10,43 @@
       "identityId": 1,
       "label": "Metabolism",
       "nodeId": "f042c2a4-3ba5-44b0-b22c-0ae8f568aacc",
-      "identityKind": "semio.metabolism.light.node.3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4"
+      "identityKind": "compose.metabolism.light.node.3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4"
     },
     {
       "identityId": 2,
       "label": "Capsule",
       "nodeId": "71749140-9db9-43f6-bd81-d89011667b80",
-      "identityKind": "semio.metabolism.light.node.71749140-9db9-43f6-bd81-d89011667b80"
+      "identityKind": "compose.metabolism.light.node.71749140-9db9-43f6-bd81-d89011667b80"
     },
     {
       "identityId": 3,
       "label": "Base",
       "nodeId": "3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4",
-      "identityKind": "semio.metabolism.light.node.3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4"
+      "identityKind": "compose.metabolism.light.node.3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4"
     },
     {
       "identityId": 4,
       "label": "Bridge",
       "nodeId": "0e240cd2-7f98-42b6-af39-34e7ee4fad35",
-      "identityKind": "semio.metabolism.light.node.0e240cd2-7f98-42b6-af39-34e7ee4fad35"
+      "identityKind": "compose.metabolism.light.node.0e240cd2-7f98-42b6-af39-34e7ee4fad35"
     },
     {
       "identityId": 5,
       "label": "Capital",
       "nodeId": "49ff4ea0-5bb2-4b45-9afd-a1aed3fc8e3e",
-      "identityKind": "semio.metabolism.light.node.49ff4ea0-5bb2-4b45-9afd-a1aed3fc8e3e"
+      "identityKind": "compose.metabolism.light.node.49ff4ea0-5bb2-4b45-9afd-a1aed3fc8e3e"
     },
     {
       "identityId": 6,
       "label": "Tambour",
       "nodeId": "1b1fcf80-0acc-4456-bc16-71f69c5df571",
-      "identityKind": "semio.metabolism.light.node.1b1fcf80-0acc-4456-bc16-71f69c5df571"
+      "identityKind": "compose.metabolism.light.node.1b1fcf80-0acc-4456-bc16-71f69c5df571"
     },
     {
       "identityId": 7,
       "label": "Tower",
       "nodeId": "wires-identity-tower",
-      "identityKind": "semio.metabolism.light.node.3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4"
+      "identityKind": "compose.metabolism.light.node.3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4"
     }
   ],
   "relationships": [
@@ -74,31 +74,31 @@
         "identityKinds": [
           {
             "color": "var(--color-light)",
-            "id": "semio.metabolism.light.node.71749140-9db9-43f6-bd81-d89011667b80",
+            "id": "compose.metabolism.light.node.71749140-9db9-43f6-bd81-d89011667b80",
             "name": "Capsule",
             "shape": "circle"
           },
           {
             "color": "var(--color-light-8-9)",
-            "id": "semio.metabolism.light.node.3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4",
+            "id": "compose.metabolism.light.node.3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4",
             "name": "Base",
             "shape": "rectangle"
           },
           {
             "color": "var(--color-light-6-7)",
-            "id": "semio.metabolism.light.node.0e240cd2-7f98-42b6-af39-34e7ee4fad35",
+            "id": "compose.metabolism.light.node.0e240cd2-7f98-42b6-af39-34e7ee4fad35",
             "name": "Bridge",
             "shape": "rectangle"
           },
           {
             "color": "var(--color-gray-700)",
-            "id": "semio.metabolism.light.node.49ff4ea0-5bb2-4b45-9afd-a1aed3fc8e3e",
+            "id": "compose.metabolism.light.node.49ff4ea0-5bb2-4b45-9afd-a1aed3fc8e3e",
             "name": "Capital",
             "shape": "rectangle"
           },
           {
             "color": "var(--color-gray)",
-            "id": "semio.metabolism.light.node.1b1fcf80-0acc-4456-bc16-71f69c5df571",
+            "id": "compose.metabolism.light.node.1b1fcf80-0acc-4456-bc16-71f69c5df571",
             "name": "Tambour",
             "shape": "circle"
           }
@@ -112,7 +112,7 @@
       {
         "height": 48,
         "id": "f042c2a4-3ba5-44b0-b22c-0ae8f568aacc",
-        "nodeKind": "semio.metabolism.light.node.3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4",
+        "nodeKind": "compose.metabolism.light.node.3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4",
         "root": true,
         "shape": "rectangle",
         "text": "Metabolism",
@@ -122,7 +122,7 @@
       },
       {
         "id": "71749140-9db9-43f6-bd81-d89011667b80",
-        "nodeKind": "semio.metabolism.light.node.71749140-9db9-43f6-bd81-d89011667b80",
+        "nodeKind": "compose.metabolism.light.node.71749140-9db9-43f6-bd81-d89011667b80",
         "radius": 22,
         "shape": "circle",
         "text": "Capsule",
@@ -132,7 +132,7 @@
       {
         "height": 40,
         "id": "3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4",
-        "nodeKind": "semio.metabolism.light.node.3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4",
+        "nodeKind": "compose.metabolism.light.node.3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4",
         "shape": "rectangle",
         "text": "Base",
         "width": 40,
@@ -142,7 +142,7 @@
       {
         "height": 40,
         "id": "0e240cd2-7f98-42b6-af39-34e7ee4fad35",
-        "nodeKind": "semio.metabolism.light.node.0e240cd2-7f98-42b6-af39-34e7ee4fad35",
+        "nodeKind": "compose.metabolism.light.node.0e240cd2-7f98-42b6-af39-34e7ee4fad35",
         "shape": "rectangle",
         "text": "Bridge",
         "width": 40,
@@ -152,7 +152,7 @@
       {
         "height": 40,
         "id": "49ff4ea0-5bb2-4b45-9afd-a1aed3fc8e3e",
-        "nodeKind": "semio.metabolism.light.node.49ff4ea0-5bb2-4b45-9afd-a1aed3fc8e3e",
+        "nodeKind": "compose.metabolism.light.node.49ff4ea0-5bb2-4b45-9afd-a1aed3fc8e3e",
         "shape": "rectangle",
         "text": "Capital",
         "width": 40,
@@ -161,7 +161,7 @@
       },
       {
         "id": "1b1fcf80-0acc-4456-bc16-71f69c5df571",
-        "nodeKind": "semio.metabolism.light.node.1b1fcf80-0acc-4456-bc16-71f69c5df571",
+        "nodeKind": "compose.metabolism.light.node.1b1fcf80-0acc-4456-bc16-71f69c5df571",
         "radius": 22,
         "shape": "circle",
         "text": "Tambour",
@@ -171,7 +171,7 @@
       {
         "height": 40,
         "id": "wires-identity-tower",
-        "nodeKind": "semio.metabolism.light.node.3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4",
+        "nodeKind": "compose.metabolism.light.node.3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4",
         "shape": "rectangle",
         "text": "Tower",
         "width": 40,

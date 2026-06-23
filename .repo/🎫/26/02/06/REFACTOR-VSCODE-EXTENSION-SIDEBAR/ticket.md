@@ -12,8 +12,8 @@ Refactored the repo/vscode extension sidebar into exactly two sections (Monorepo
 
 ### package.json
 
-- Removed `semio.todos` view, kept only `semio.monorepo` and `semio.filter` in `repo` container
-- Added commands: `semio.copyId`, `semio.refreshMonorepo`, `semio.mailto`, `semio.openLink`, `semio.copyCommitSha`, `semio.openCommitInGitHub`, `semio.ticketReopen`
+- Removed `compose.todos` view, kept only `compose.monorepo` and `compose.filter` in `repo` container
+- Added commands: `compose.copyId`, `compose.refreshMonorepo`, `compose.mailto`, `compose.openLink`, `compose.copyCommitSha`, `compose.openCommitInGitHub`, `compose.ticketReopen`
 - Added ~40 filter toggle commands with none/all variants for bundle, folder, definition, ticket categories
 - Completely rewrote menus section with proper view references and contextValue regex patterns
 

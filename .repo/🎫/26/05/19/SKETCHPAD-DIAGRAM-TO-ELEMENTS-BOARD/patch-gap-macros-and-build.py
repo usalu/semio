@@ -3,8 +3,8 @@ import re
 import subprocess
 from pathlib import Path
 
-root = Path(r"c:\git\semio")
-lib = root / "semio/client/lib/rs/lib.rs"
+root = Path(r"c:\git\compose")
+lib = root / "compose/client/lib/rs/lib.rs"
 text = lib.read_text(encoding="utf-8")
 
 text = text.replace(
@@ -83,8 +83,8 @@ lib.write_text(text, encoding="utf-8")
 print("patched lib.rs")
 
 for label, cmd, cwd in [
-    ("wasm-pack", ["bun", "scripts/build-wasm.script.mjs"], root / "semio/client/lib/rs"),
-    ("sketchpad", ["bun", "nx", "run", "@semio/sketchpad:build"], root),
+    ("wasm-pack", ["bun", "scripts/build-wasm.script.mjs"], root / "compose/client/lib/rs"),
+    ("sketchpad", ["bun", "nx", "run", "@compose/sketchpad:build"], root),
 ]:
     r = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, encoding="utf-8")
     if r.returncode != 0:

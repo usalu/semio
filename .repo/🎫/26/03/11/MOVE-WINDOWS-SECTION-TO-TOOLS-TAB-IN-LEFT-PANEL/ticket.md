@@ -8,7 +8,7 @@ goal: SKETCHPAD-IMPROVEMENTS
 
 Moved the WindowLibrary (windows) section from the workbench tab to the tools tab in the left toggle panel of the Design app. Changed addSection/removeSection panel key from "workbench" to "tools" in Design.tsx.
 ## Changes
-- `semio/js/sketchpad/Design.tsx`: Changed `addSection("workbench", ...)` to `addSection("tools", ...)` for the windows section, and updated the cleanup `removeSection` call accordingly. Set order to 1 since it's the first section in the tools tab.
+- `compose/js/sketchpad/Design.tsx`: Changed `addSection("workbench", ...)` to `addSection("tools", ...)` for the windows section, and updated the cleanup `removeSection` call accordingly. Set order to 1 since it's the first section in the tools tab.
 
 ## Log
 - Identified windows section registered at Design.tsx:10126 under "workbench" panel

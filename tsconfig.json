@@ -21,8 +21,8 @@
   "include": [
     "**/*.ts",
     "**/*.tsx",
-    "js/semio/.storybook/**/*.ts",
-    "js/semio/.storybook/**/*.tsx"
+    "js/compose/.storybook/**/*.ts",
+    "js/compose/.storybook/**/*.tsx"
   ],
   "exclude": [
     "**/node_modules/**",

@@ -8,7 +8,7 @@
 
 ## Overview
 
-The migration from name-based references to GUID-based ID objects is complete. All TypeScript code compiles without errors. All assets in the `assets/semio` folder are compliant with the new schema with:
+The migration from name-based references to GUID-based ID objects is complete. All TypeScript code compiles without errors. All assets in the `assets/compose` folder are compliant with the new schema with:
 
 - GUID Consistency: Types and designs have the same GUID across all files (kit, standalone, piece references)
 - Clean Schema: Deprecated `view` field removed from all designs

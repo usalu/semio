@@ -12,7 +12,7 @@ Fix and validate Sketchpad Design behavior so newly added diagram pieces render 
 6. Run tests and verify
 
 ## Context
-- Pieces are added via `semio.designApp.addPiece` command with `{ guid, type: { guid }, center, plane }`
+- Pieces are added via `compose.designApp.addPiece` command with `{ guid, type: { guid }, center, plane }`
 - Scene renders pieces through `ModelPiece` → `PieceMesh` → `LoadedPieceMesh`
 - PieceMesh resolves type, finds model via `selectBestModel`, then loads file blob URL
 - Piece needs `plane` for scene positioning (used in `ModelPiece` via `planeToMatrix`)

@@ -2,7 +2,7 @@
   "title": "Update Emoji Docstrings in Go Utils and Meta Shallow Conversions",
   "status": "closed",
   "description": "Update Emoji Docstrings in Go Utils and Meta Shallow Conversions",
-  "summary": "Replaced 25 emoji+description docstrings in Utils and Meta/Shallow Conversions regions of semio/go/main.go. Build and tests pass.",
+  "summary": "Replaced 25 emoji+description docstrings in Utils and Meta/Shallow Conversions regions of compose/go/main.go. Build and tests pass.",
   "goal": "🎯r2603",
   "sessions": [
     "⚪c2718394245f4350adf42a30efd23f58"

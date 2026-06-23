@@ -1,0 +1,14 @@
+{
+  "title": "Fix dev compose sketchpad not running",
+  "emoji": "🔧",
+  "status": "closed",
+  "description": "dev compose sketchpad is not running",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1007"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪c2bba6a88242457dbb9b8f2f692638d5"
+  ]
+}

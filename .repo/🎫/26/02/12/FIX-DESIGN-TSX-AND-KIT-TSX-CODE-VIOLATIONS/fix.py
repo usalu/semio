@@ -38,7 +38,7 @@ def fix_file(filepath, section_summaries, definition_summaries):
 
 
 def fix_design():
-    filepath = "/workspaces/semio/semio/js/sketchpad/Design.tsx"
+    filepath = "/workspaces/semio/compose/js/sketchpad/Design.tsx"
 
     section_summaries = {
         28: "Imports for Design app MUST include all shared sketchpad, React, and UI dependencies.",
@@ -580,7 +580,7 @@ def fix_design():
 
 
 def fix_kit():
-    filepath = "/workspaces/semio/semio/js/sketchpad/Kit.tsx"
+    filepath = "/workspaces/semio/compose/js/sketchpad/Kit.tsx"
 
     section_summaries = {
         29: "Imports for Kit app MUST include all shared sketchpad, React, DnD, and UI dependencies.",

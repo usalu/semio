@@ -145,15 +145,15 @@ Add the token aliases to `globals.css` so future changes to toolbar spacing can 
 
 ## Changes
 
-- `semio/js/globals.css`: Added 5 toolbar design tokens (`--toolbar-item-height`, `--toolbar-gap`, `--toolbar-group-gap`, `--toolbar-padding-inline`, `--toolbar-divider-height`). Added CSS normalization rules for `[data-slot="toolbar-zone"]` descendants that strip `border-width` and set `height: 100%` on `toggle-group`, `button-group`, `toggle-group-item`, and `button-group-item` so all toolbar elements derive their height from the zone rather than hardcoded `h-medium`.
-- `semio/js/sketchpad/elements.tsx`: Added `ToolbarZone`, `ToolbarGroup`, `ToolbarDivider`, `ToolbarItem` components in new `Toolbar Components` region
-- `semio/js/sketchpad/Sketchpad.tsx`: Replaced inline toolbar zone divs with `ToolbarZone`, per-section wrappers with `ToolbarItem`
-- `semio/js/sketchpad/Home.tsx`: Migrated `HomeToolbarFilters` and `HomeToolbarCreate` wrappers to `ToolbarGroup`
-- `semio/js/sketchpad/Kit.tsx`: Migrated `KitKindToggles`, `KitFilters`, `KitToolbarSelection`, `KitCreateActions` to `ToolbarGroup`/`ToolbarDivider`
-- `semio/js/sketchpad/Design.tsx`: Migrated `DesignSelectSettings` 3-category layout to nested `ToolbarGroup`/`ToolbarDivider`
-- `semio/js/sketchpad/Type.tsx`: Migrated `TypeSelectSettings` and `TypeConnectorSettings` wrappers to `ToolbarGroup`
-- `semio/js/sketchpad/Feedback.tsx`: Migrated `FeedbackToolbar` wrapper to `ToolbarGroup`
-- `semio/js/sketchpad/README.md`: Documented toolbar sizing normalization mechanism in Specs
+- `compose/js/globals.css`: Added 5 toolbar design tokens (`--toolbar-item-height`, `--toolbar-gap`, `--toolbar-group-gap`, `--toolbar-padding-inline`, `--toolbar-divider-height`). Added CSS normalization rules for `[data-slot="toolbar-zone"]` descendants that strip `border-width` and set `height: 100%` on `toggle-group`, `button-group`, `toggle-group-item`, and `button-group-item` so all toolbar elements derive their height from the zone rather than hardcoded `h-medium`.
+- `compose/js/sketchpad/elements.tsx`: Added `ToolbarZone`, `ToolbarGroup`, `ToolbarDivider`, `ToolbarItem` components in new `Toolbar Components` region
+- `compose/js/sketchpad/Sketchpad.tsx`: Replaced inline toolbar zone divs with `ToolbarZone`, per-section wrappers with `ToolbarItem`
+- `compose/js/sketchpad/Home.tsx`: Migrated `HomeToolbarFilters` and `HomeToolbarCreate` wrappers to `ToolbarGroup`
+- `compose/js/sketchpad/Kit.tsx`: Migrated `KitKindToggles`, `KitFilters`, `KitToolbarSelection`, `KitCreateActions` to `ToolbarGroup`/`ToolbarDivider`
+- `compose/js/sketchpad/Design.tsx`: Migrated `DesignSelectSettings` 3-category layout to nested `ToolbarGroup`/`ToolbarDivider`
+- `compose/js/sketchpad/Type.tsx`: Migrated `TypeSelectSettings` and `TypeConnectorSettings` wrappers to `ToolbarGroup`
+- `compose/js/sketchpad/Feedback.tsx`: Migrated `FeedbackToolbar` wrapper to `ToolbarGroup`
+- `compose/js/sketchpad/README.md`: Documented toolbar sizing normalization mechanism in Specs
 
 ## Log
 

@@ -144,13 +144,13 @@ In general there are `rules` which are validated by the `validators`. Every `rul
 
 It should all be within one file `go/assistant/main.go`.
 
-As example, the design format/authoring platform/mcp server is `semio` and the targets are `BerlinBuildingCode` and `programming`.
+As example, the design format/authoring platform/mcp server is `compose` and the targets are `BerlinBuildingCode` and `programming`.
 There is one translator
-for `semio->BerlinBuildingCode`
+for `compose->BerlinBuildingCode`
 and a validator
 for `BerlinBuildingCode`.
 There is one translator
-for `semio->programming`
+for `compose->programming`
 and a validator
 for `programming`.
 
@@ -195,6 +195,6 @@ change <prompt>
 
 # Agents
 
-semio-to-blnbo-translation-agent # Responsible for translating semio format to blnbo
-semio-to-programming-translation-agent # Responsible for translating semio format to programming
-semio-change-agent # Responsible for changing the semio with semio-mcp to fix breachs from the report
+compose-to-blnbo-translation-agent # Responsible for translating compose format to blnbo
+compose-to-programming-translation-agent # Responsible for translating compose format to programming
+compose-change-agent # Responsible for changing the compose with compose-mcp to fix breachs from the report

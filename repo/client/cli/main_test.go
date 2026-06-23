@@ -175,7 +175,7 @@ func TestInteractionUnmarshalAuthorShapes(t *testing.T) {
 
 func TestContributorDiscovery(t *testing.T) {
 
-	tmpDir, err := os.MkdirTemp("", "semio-test-discovery")
+	tmpDir, err := os.MkdirTemp("", "compose-test-discovery")
 	if err != nil {
 		t.Fatalf("failed to create tmp dir: %v", err)
 	}
@@ -332,7 +332,7 @@ exit 0
 			"containerWorkspaceFolder="+workspaceDir,
 			"SEMIO_POST_ATTACH_SKIP_EXTENSION_INSTALL=1",
 			"SEMIO_POST_ATTACH_SKIP_TOOL_INSTALL=1",
-			"SEMIO_GITKRAKEN_WORKSPACE_NAME=Semio Test Workspace",
+			"SEMIO_GITKRAKEN_WORKSPACE_NAME=Compose Test Workspace",
 		)
 		output, err := cmd.CombinedOutput()
 		if err != nil {
@@ -345,13 +345,13 @@ exit 0
 		}
 		logText := string(logData)
 		expectedRepoArg := workspaceDir + "," + submoduleDir
-		if !strings.Contains(logText, "ws create Semio Test Workspace --add-repos "+expectedRepoArg) {
+		if !strings.Contains(logText, "ws create Compose Test Workspace --add-repos "+expectedRepoArg) {
 			t.Fatalf("expected workspace creation call with repos %q, got log:\n%s", expectedRepoArg, logText)
 		}
-		if !strings.Contains(logText, "ws refresh Semio Test Workspace") {
+		if !strings.Contains(logText, "ws refresh Compose Test Workspace") {
 			t.Fatalf("expected workspace refresh call, got log:\n%s", logText)
 		}
-		if !strings.Contains(logText, "ws set Semio Test Workspace") {
+		if !strings.Contains(logText, "ws set Compose Test Workspace") {
 			t.Fatalf("expected workspace set call, got log:\n%s", logText)
 		}
 
@@ -392,7 +392,7 @@ exit 0
 		if !strings.Contains(codexText, fmt.Sprintf("cwd = %q", repoRoot)) {
 			t.Fatalf("expected Codex MCP config to set cwd to repo root, got:\n%s", codexData)
 		}
-		if !strings.Contains(codexText, fmt.Sprintf("%q", filepath.Join(repoRoot, "semio", "engine"))) {
+		if !strings.Contains(codexText, fmt.Sprintf("%q", filepath.Join(repoRoot, "compose", "engine"))) {
 			t.Fatalf("expected Codex MCP config to normalize --directory arguments to absolute paths, got:\n%s", codexData)
 		}
 	})
@@ -457,7 +457,7 @@ exit 0
 			"containerWorkspaceFolder="+workspaceDir,
 			"SEMIO_POST_ATTACH_SKIP_EXTENSION_INSTALL=1",
 			"SEMIO_POST_ATTACH_SKIP_TOOL_INSTALL=1",
-			"SEMIO_GITKRAKEN_WORKSPACE_NAME=Semio Existing Workspace",
+			"SEMIO_GITKRAKEN_WORKSPACE_NAME=Compose Existing Workspace",
 		)
 		output, err := cmd.CombinedOutput()
 		if err != nil {
@@ -469,16 +469,16 @@ exit 0
 			t.Fatalf("failed to read gk log: %v", err)
 		}
 		logText := string(logData)
-		if strings.Contains(logText, "ws create Semio Existing Workspace") {
+		if strings.Contains(logText, "ws create Compose Existing Workspace") {
 			t.Fatalf("did not expect workspace create call, got log:\n%s", logText)
 		}
-		if !strings.Contains(logText, "ws update Semio Existing Workspace --add-repos "+submoduleDir) {
+		if !strings.Contains(logText, "ws update Compose Existing Workspace --add-repos "+submoduleDir) {
 			t.Fatalf("expected workspace update call for missing submodule, got log:\n%s", logText)
 		}
-		if strings.Contains(logText, "ws update Semio Existing Workspace --add-repos "+workspaceDir+","+submoduleDir) {
+		if strings.Contains(logText, "ws update Compose Existing Workspace --add-repos "+workspaceDir+","+submoduleDir) {
 			t.Fatalf("expected update to include only missing repos, got log:\n%s", logText)
 		}
-		if !strings.Contains(logText, "ws set Semio Existing Workspace") {
+		if !strings.Contains(logText, "ws set Compose Existing Workspace") {
 			t.Fatalf("expected workspace set call, got log:\n%s", logText)
 		}
 	})
@@ -521,8 +521,8 @@ func TestNativeBootstrapAssetsStayRepoRelative(t *testing.T) {
 			},
 		},
 		{
-			name: "kiro semio agent uses coda assistant",
-			path: filepath.Join(repoRoot, ".kiro", "agents", "semio.json"),
+			name: "kiro compose agent uses coda assistant",
+			path: filepath.Join(repoRoot, ".kiro", "agents", "compose.json"),
 			requiredFragments: []string{
 				`"./repo/kiro"`,
 				`"go"`,
@@ -537,7 +537,7 @@ func TestNativeBootstrapAssetsStayRepoRelative(t *testing.T) {
 			name: "devcontainer post-create antigravity config uses coda assistant",
 			path: filepath.Join(repoRoot, ".devcontainer", "post-create.sh"),
 			requiredFragments: []string{
-				"/workspaces/semio/semio/engine",
+				"/workspaces/semio/compose/engine",
 				"/workspaces/semio/coda/assistant",
 				"main.py",
 			},
@@ -585,7 +585,7 @@ func TestNativeBootstrapAssetsStayRepoRelative(t *testing.T) {
 				"dotnet restore Monorepo.sln",
 			},
 			forbiddenFragments: []string{
-				"dotnet restore net/Semio.sln",
+				"dotnet restore net/Compose.sln",
 			},
 		},
 	}
@@ -611,8 +611,8 @@ func TestNativeBootstrapAssetsStayRepoRelative(t *testing.T) {
 	}
 }
 
-// 📌#region 🔑Semio Repo ID Conversion
-func TestGoalPathToSemioID(t *testing.T) {
+// 📌#region 🔑Compose Repo ID Conversion
+func TestGoalPathToComposeID(t *testing.T) {
 	cases := []struct {
 		name     string
 		input    string
@@ -626,30 +626,30 @@ func TestGoalPathToSemioID(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			got := goalPathToSemioID(tc.input)
+			got := goalPathToComposeID(tc.input)
 			if got != tc.expected {
-				t.Errorf("goalPathToSemioID(%q) = %q, want %q", tc.input, got, tc.expected)
+				t.Errorf("goalPathToComposeID(%q) = %q, want %q", tc.input, got, tc.expected)
 			}
 		})
 	}
 }
 
-func TestSemioIDToGoalPath(t *testing.T) {
+func TestComposeIDToGoalPath(t *testing.T) {
 
 	goals, err := ListGoals()
 	if err != nil || len(goals) == 0 {
 		t.Skip("no goals available for round-trip test")
 	}
 	for _, g := range goals {
-		semioID := goalPathToSemioID(g.ID)
-		roundTrip := semioIDToGoalPath(semioID)
+		composeID := goalPathToComposeID(g.ID)
+		roundTrip := composeIDToGoalPath(composeID)
 		if roundTrip != g.ID {
-			t.Errorf("round-trip failed: %q -> %q -> %q (expected %q)", g.ID, semioID, roundTrip, g.ID)
+			t.Errorf("round-trip failed: %q -> %q -> %q (expected %q)", g.ID, composeID, roundTrip, g.ID)
 		}
 	}
 }
 
-func TestContributorSemioIDRoundTrip(t *testing.T) {
+func TestContributorComposeIDRoundTrip(t *testing.T) {
 	cases := []struct {
 		name     string
 		github   string
@@ -662,15 +662,15 @@ func TestContributorSemioIDRoundTrip(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			got := contributorGithubToSemioID(tc.github)
+			got := contributorGithubToComposeID(tc.github)
 			if got != tc.expected {
-				t.Errorf("contributorGithubToSemioID(%q) = %q, want %q", tc.github, got, tc.expected)
+				t.Errorf("contributorGithubToComposeID(%q) = %q, want %q", tc.github, got, tc.expected)
 			}
 		})
 	}
 }
 
-func TestTicketMarshalJSONGoalToSemioID(t *testing.T) {
+func TestTicketMarshalJSONGoalToComposeID(t *testing.T) {
 	ticket := Ticket{
 		Title:    "Test Ticket",
 		Emoji:    "🔧",
@@ -702,7 +702,7 @@ func TestTicketMarshalJSONGoalToSemioID(t *testing.T) {
 	}
 }
 
-func TestTicketUnmarshalJSONSemioIDToGoalPath(t *testing.T) {
+func TestTicketUnmarshalJSONComposeIDToGoalPath(t *testing.T) {
 	goalEmoji := emojiText(EmojiGoal)
 	raw := fmt.Sprintf(`{
 		"title": "Test",
@@ -733,7 +733,7 @@ func TestTicketUnmarshalJSONSemioIDToGoalPath(t *testing.T) {
 	}
 }
 
-func TestGoalMarshalJSONParentToSemioID(t *testing.T) {
+func TestGoalMarshalJSONParentToComposeID(t *testing.T) {
 	goal := Goal{
 		Title:       "Test Goal",
 		Description: "desc",
@@ -790,7 +790,7 @@ func TestTicketGoalRoundTripThroughJSON(t *testing.T) {
 	}
 }
 
-// #endregion 🔑Semio Repo ID Conversion
+// #endregion 🔑Compose Repo ID Conversion
 
 func parseTicketCloseStatus(t *testing.T, output string) string {
 	t.Helper()
@@ -1023,7 +1023,7 @@ func TestFilesNonEmpty(t *testing.T) {
 func TestBreachsNonEmpty(t *testing.T) {
 	executor := getTestExecutor(t)
 	ctx := context.Background()
-	// Unscoped breachs defaults to technology scope "semio" and runs full policy
+	// Unscoped breachs defaults to technology scope "compose" and runs full policy
 	// analysis across the tree (very slow). Single-file scope keeps the test
 	// representative while bounded.
 	result, err := executor.ExecuteJSON(ctx, `{ breachs(scope: "repo/client/main.go") { id } }`, nil)
@@ -1060,7 +1060,7 @@ func TestTicketTitleValidation(t *testing.T) {
 		{"Emoji Allcaps Valid", "🔥", "FIX EVERYTHING", false},
 		{"Emoji Slug Valid", "🎫", "some-slug-title", false},
 		{"Emoji Dashed Slug Valid", "🎫", "fix-vscode-types-version-mismatch", false},
-		{"Emoji Uppercase Slug Valid", "🎫", "ENSURE-SEMIO-REPO-MCP-WORKS-ALLIDES", false},
+		{"Emoji Uppercase Slug Valid", "🎫", "ENSURE-COMPOSE-REPO-MCP-WORKS-ALLIDES", false},
 		{"Missing Emoji Invalid", "", "Some Title on Something", true},
 		{"Plain Text Emoji Invalid", "ticket", "Some Title", true},
 		{"Multiple Emoji Invalid", "🎫🎫", "Some Title", true},
@@ -1985,14 +1985,14 @@ func TestCodebaseCommand(t *testing.T) {
 
 // 🔬#region 🗝️Analyze
 func TestAnalyzeCommand(t *testing.T) {
-	result := ToolAnalyze("semio/js", nil)
+	result := ToolAnalyze("compose/js", nil)
 	if result.Error != "" {
 		t.Errorf("ToolAnalyze returned error: %s", result.Error)
 	}
 }
 
 func TestAnalyzeFile(t *testing.T) {
-	result := ToolAnalyze("semio/js/semio.ts", nil)
+	result := ToolAnalyze("compose/js/compose.ts", nil)
 	if result.Error != "" {
 		t.Errorf("ToolAnalyze file returned error: %s", result.Error)
 	}
@@ -2041,7 +2041,7 @@ func TestAnalyzeReadsBreachCacheJSON(t *testing.T) {
 
 // 🔧#region 🎁Fix
 func TestFixCommand(t *testing.T) {
-	result := ToolFix("semio/js")
+	result := ToolFix("compose/js")
 	if result.Error == "" {
 		t.Fatal("expected ToolFix to error now that server-side fix was removed")
 	}
@@ -2056,12 +2056,12 @@ func TestFileHeaderId(t *testing.T) {
 		path string
 		want string
 	}{
-		{"code ts", "semio/js/src/index.ts", "🏘️semio📜js" + emojiText(EmojiFolderOrg) + "src" + emojiText(EmojiFileCode) + "index"},
-		{"code tsx", "semio/js/src/App.tsx", "🏘️semio📜js" + emojiText(EmojiFolderOrg) + "src" + emojiText(EmojiFileCode) + "app"},
+		{"code ts", "compose/js/src/index.ts", "🏘️compose📜js" + emojiText(EmojiFolderOrg) + "src" + emojiText(EmojiFileCode) + "index"},
+		{"code tsx", "compose/js/src/App.tsx", "🏘️compose📜js" + emojiText(EmojiFolderOrg) + "src" + emojiText(EmojiFileCode) + "app"},
 		{"code go", "repo/client/client.go", "🧰repo⌨️client" + emojiText(EmojiFileCode) + "client"},
-		{"code cs", "semio/gh/Semio.cs", "🏘️semio🐙gh" + emojiText(EmojiFileCode) + "semio"},
-		{"code py", "semio/engine/main.py", "🏘️semio⚙️engine" + emojiText(EmojiFileCode) + "main"},
-		{"test ts", "semio/js/src/index.test.ts", "🏘️semio📜js" + emojiText(EmojiFolderOrg) + "src" + emojiText(EmojiFileLab) + "indextest"},
+		{"code cs", "compose/gh/Compose.cs", "🏘️compose🐙gh" + emojiText(EmojiFileCode) + "compose"},
+		{"code py", "compose/engine/main.py", "🏘️compose⚙️engine" + emojiText(EmojiFileCode) + "main"},
+		{"test ts", "compose/js/src/index.test.ts", "🏘️compose📜js" + emojiText(EmojiFolderOrg) + "src" + emojiText(EmojiFileLab) + "indextest"},
 		{"test go", "repo/client/client_test.go", "🧰repo⌨️client" + emojiText(EmojiFileLab) + "clienttest"},
 		{"config json", "tsconfig.json", emojiText(EmojiFileConfig) + "tsconfig"},
 		{"docs md", "README.md", emojiText(EmojiFileDocs) + "readme"},
@@ -2155,8 +2155,8 @@ func TestDeriveFileKind(t *testing.T) {
 		{"ts code", "index.ts", FileKindCode},
 		{"tsx code", "App.tsx", FileKindCode},
 		{"go code", "main.go", FileKindCode},
-		{"py code", "semio.py", FileKindCode},
-		{"cs code", "Semio.cs", FileKindCode},
+		{"py code", "compose.py", FileKindCode},
+		{"cs code", "Compose.cs", FileKindCode},
 		{"rs code", "lib.rs", FileKindCode},
 		{"rb code", "app.rb", FileKindCode},
 		{"sh script", "build.sh", FileKindScript},
@@ -2170,7 +2170,7 @@ func TestDeriveFileKind(t *testing.T) {
 		{"test ts", "index.test.ts", FileKindLab},
 		{"test go", "main_test.go", FileKindLab},
 		{"spec ts", "app.spec.ts", FileKindLab},
-		{"benchmark go", "semio_benchmark.go", FileKindLab},
+		{"benchmark go", "compose_benchmark.go", FileKindLab},
 		{"stories tsx", "Button.stories.tsx", FileKindLab},
 		{"json config", "tsconfig.json", FileKindConfig},
 		{"yaml config", "config.yaml", FileKindConfig},
@@ -2242,8 +2242,8 @@ func TestFixApplyAutofixes(t *testing.T) {
 	rootDir = findTestRepoRoot(cwd)
 	defer func() { rootDir = oldRoot }()
 
-	fixtureSrc := "semio/asset/repo/some/folder/file_fixable.tsx"
-	expectedSrc := "semio/asset/repo/some/folder/file_fixable_expected.tsx"
+	fixtureSrc := "compose/asset/repo/some/folder/file_fixable.tsx"
+	expectedSrc := "compose/asset/repo/some/folder/file_fixable_expected.tsx"
 
 	srcAbs := filepath.Join(rootDir, fixtureSrc)
 	expectedAbs := filepath.Join(rootDir, expectedSrc)
@@ -3391,7 +3391,7 @@ func TestEmojiVariationAutofix(t *testing.T) {
 		oldRoot := rootDir
 		rootDir = tmpDir
 		defer func() { rootDir = oldRoot }()
-		fileContent := "// #region \U0001F516Header\n\n// \U0001F4BBsemio/test.tsx\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// #endregion \U0001F516Header\n\n//#region \U0001F516Action Hooks\nconst x = 1;\n//#endregion \U0001F516Action Hooks\n"
+		fileContent := "// #region \U0001F516Header\n\n// \U0001F4BBcompose/test.tsx\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// #endregion \U0001F516Header\n\n//#region \U0001F516Action Hooks\nconst x = 1;\n//#endregion \U0001F516Action Hooks\n"
 		testFile := "test.tsx"
 		absPath := filepath.Join(tmpDir, testFile)
 		WriteTextFile(absPath, fileContent)
@@ -3414,7 +3414,7 @@ func TestFixNonAutofixableNotFixed(t *testing.T) {
 	defer func() { rootDir = oldRoot }()
 
 	bundles := LoadBundles()
-	path := "semio/asset/repo/some/folder/file_invalid.tsx"
+	path := "compose/asset/repo/some/folder/file_invalid.tsx"
 	scope := Scope{Kind: ScopeFile, FilePath: path}
 	ctx := NewPolicyContextWithFiles(scope, bundles, []string{path})
 	breachs, err := CheckPoliciesWithContext(ctx, nil)
@@ -4493,7 +4493,7 @@ func TestPolicyTreeCommand(t *testing.T) {
 }
 
 func TestPolicyCheckCommand(t *testing.T) {
-	result := ToolPolicyCheck("code", "semio/js")
+	result := ToolPolicyCheck("code", "compose/js")
 	if result.Error != "" {
 		t.Errorf("ToolPolicyCheck returned error: %s", result.Error)
 	}
@@ -4507,7 +4507,7 @@ func TestPolicyBreachListCommand(t *testing.T) {
 }
 
 func TestFixtureBreachsGroupedInline(t *testing.T) {
-	path := "semio/asset/repo/some/folder/file_invalid.tsx"
+	path := "compose/asset/repo/some/folder/file_invalid.tsx"
 	bundles := LoadBundles()
 	scope := Scope{Kind: ScopeFile, FilePath: path}
 	ctx := NewPolicyContextWithFiles(scope, bundles, []string{path})
@@ -4540,15 +4540,15 @@ func TestFixtureBreachsByLanguage(t *testing.T) {
 		requiredKinds []Statute
 	}{
 		{
-			path:          "semio/asset/repo/some/folder/file_invalid.py",
+			path:          "compose/asset/repo/some/folder/file_invalid.py",
 			requiredKinds: []Statute{BreachCodeDefMissingSummary},
 		},
 		{
-			path:          "semio/asset/repo/some/folder/file_invalid.cs",
+			path:          "compose/asset/repo/some/folder/file_invalid.cs",
 			requiredKinds: []Statute{BreachCodeSectionMissingSummary},
 		},
 		{
-			path:          "semio/asset/repo/some/folder/file_invalid.go",
+			path:          "compose/asset/repo/some/folder/file_invalid.go",
 			requiredKinds: []Statute{BreachCodeSectionMissingSummary},
 		},
 	}
@@ -4573,10 +4573,10 @@ func TestFixtureBreachsByLanguage(t *testing.T) {
 		}
 	}
 	clean := []string{
-		"semio/asset/repo/some/folder/file_fixed.tsx",
-		"semio/asset/repo/some/folder/file_fixed.py",
-		"semio/asset/repo/some/folder/file_fixed.cs",
-		"semio/asset/repo/some/folder/file_fixed.go",
+		"compose/asset/repo/some/folder/file_fixed.tsx",
+		"compose/asset/repo/some/folder/file_fixed.py",
+		"compose/asset/repo/some/folder/file_fixed.cs",
+		"compose/asset/repo/some/folder/file_fixed.go",
 	}
 	for _, path := range clean {
 		scope := Scope{Kind: ScopeFile, FilePath: path}
@@ -6159,13 +6159,13 @@ func TestBundleListCommand(t *testing.T) {
 	}
 	foundJS := false
 	for _, b := range bundles {
-		if b.Name == "semio/js" {
+		if b.Name == "compose/js" {
 			foundJS = true
 			break
 		}
 	}
 	if !foundJS {
-		t.Error("Expected to find 'semio/js' bundle")
+		t.Error("Expected to find 'compose/js' bundle")
 	}
 }
 
@@ -6194,7 +6194,7 @@ func TestFolderListCommand(t *testing.T) {
 func TestFolderTreeCommand(t *testing.T) {
 	cwd, _ := os.Getwd()
 	SetRootDir(findTestRepoRoot(cwd))
-	result := ToolFolderTree("semio/go")
+	result := ToolFolderTree("compose/go")
 	if result.Error != "" {
 		t.Errorf("ToolFolderTree returned error: %s", result.Error)
 	}
@@ -6220,7 +6220,7 @@ func TestFolderCreateMoveDelete(t *testing.T) {
 
 // 📄#region ✏️File
 func TestFileListCommand(t *testing.T) {
-	result := ToolFileList("semio/js")
+	result := ToolFileList("compose/js")
 	if result.Error != "" {
 		t.Errorf("ToolFileList returned error: %s", result.Error)
 	}
@@ -6232,7 +6232,7 @@ func TestFileListCommand(t *testing.T) {
 func TestFileTreeCommand(t *testing.T) {
 	cwd, _ := os.Getwd()
 	SetRootDir(findTestRepoRoot(cwd))
-	result := ToolFileTree("semio/go")
+	result := ToolFileTree("compose/go")
 	if result.Error != "" {
 		t.Errorf("ToolFileTree returned error: %s", result.Error)
 	}
@@ -6357,7 +6357,7 @@ func TestToolRenameScopeLimitsWalk(t *testing.T) {
 	defer SetRootDir(oldRoot)
 	rootDir = tmpRoot
 
-	inScope := filepath.Join(tmpRoot, "semio", "model.txt")
+	inScope := filepath.Join(tmpRoot, "compose", "model.txt")
 	outOfScope := filepath.Join(tmpRoot, "elements", "model.txt")
 	if err := os.MkdirAll(filepath.Dir(inScope), 0755); err != nil {
 		t.Fatalf("mkdir in-scope: %v", err)
@@ -6372,7 +6372,7 @@ func TestToolRenameScopeLimitsWalk(t *testing.T) {
 		t.Fatalf("write out: %v", err)
 	}
 
-	result := ToolRename("model", "representation", "semio")
+	result := ToolRename("model", "representation", "compose")
 	if result.Error != "" {
 		t.Fatalf("ToolRename error: %s", result.Error)
 	}
@@ -6380,7 +6380,7 @@ func TestToolRenameScopeLimitsWalk(t *testing.T) {
 	if _, err := os.Stat(inScope); !os.IsNotExist(err) {
 		t.Fatalf("expected in-scope file to be renamed, stat err: %v", err)
 	}
-	renamed := filepath.Join(tmpRoot, "semio", "representation.txt")
+	renamed := filepath.Join(tmpRoot, "compose", "representation.txt")
 	data, err := os.ReadFile(renamed)
 	if err != nil {
 		t.Fatalf("expected renamed file at %s: %v", renamed, err)
@@ -6401,7 +6401,7 @@ func TestToolRenameScopeLimitsWalk(t *testing.T) {
 
 // 📑#region 🖲️Section
 func TestSectionListCommand(t *testing.T) {
-	result := ToolSectionList("semio/js/index.ts")
+	result := ToolSectionList("compose/js/index.ts")
 	if result.Error != "" {
 		t.Errorf("ToolSectionList returned error: %s", result.Error)
 	}
@@ -6424,12 +6424,12 @@ func TestSectionListCommand(t *testing.T) {
 		}
 	}
 	if !foundHeader {
-		t.Error("Expected to find 'Header' section in semio/js/index.ts")
+		t.Error("Expected to find 'Header' section in compose/js/index.ts")
 	}
 }
 
 func TestSectionTreeCommand(t *testing.T) {
-	result := ToolSectionTree("semio/js/index.ts")
+	result := ToolSectionTree("compose/js/index.ts")
 	if result.Error != "" {
 		t.Errorf("ToolSectionTree returned error: %s", result.Error)
 	}
@@ -6439,7 +6439,7 @@ func TestSectionTreeCommand(t *testing.T) {
 
 // 📖#region 🐍Definition
 func TestDefinitionListCommand(t *testing.T) {
-	result := ToolDefinitionList("semio/js/index.ts")
+	result := ToolDefinitionList("compose/js/index.ts")
 	if result.Error != "" {
 		t.Errorf("ToolDefinitionList returned error: %s", result.Error)
 	}
@@ -6902,7 +6902,7 @@ func TestGetArtifactID_Technology(t *testing.T) {
 		data     map[string]interface{}
 		expected string
 	}{
-		{"user technology", map[string]interface{}{"name": "semio", "kind": "user"}, emojiText(EmojiTechnologyUser) + "semio"},
+		{"user technology", map[string]interface{}{"name": "compose", "kind": "user"}, emojiText(EmojiTechnologyUser) + "compose"},
 		{"infra technology", map[string]interface{}{"name": "repo", "kind": "infrastructure"}, emojiText(EmojiTechnologyInfra) + "repo"},
 		{"research technology", map[string]interface{}{"name": "coda", "kind": "research"}, emojiText(EmojiTechnologyResearch) + "coda"},
 	}
@@ -6917,7 +6917,7 @@ func TestGetArtifactID_Technology(t *testing.T) {
 }
 
 func TestGetArtifactID_Bundles(t *testing.T) {
-	technologyId := emojiText(EmojiTechnologyUser) + "semio"
+	technologyId := emojiText(EmojiTechnologyUser) + "compose"
 	id := GetArtifactID("bundles", map[string]interface{}{"parentId": technologyId})
 	expected := technologyId + emojiText(EmojiBundles)
 	if id != expected {
@@ -6931,13 +6931,13 @@ func TestGetArtifactID_Bundle(t *testing.T) {
 		data     map[string]interface{}
 		expected string
 	}{
-		{"library bundle", map[string]interface{}{"name": "semio/js", "kind": "library"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js"},
+		{"library bundle", map[string]interface{}{"name": "compose/js", "kind": "library"}, emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js"},
 		{"schema bundle", map[string]interface{}{"name": "repo/graphql", "kind": "schema"}, emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleSchema) + "graphql"},
 		{"binary bundle", map[string]interface{}{"name": "repo/client", "kind": "binary"}, emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleBinary) + "client"},
 		{"ui bundle", map[string]interface{}{"name": "repo/vscode", "kind": "ui"}, emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleUI) + "vscode"},
 		{"example bundle", map[string]interface{}{"name": "coda/example", "kind": "example"}, emojiText(EmojiTechnologyResearch) + "coda" + emojiText(EmojiBundleExample) + "examples"},
-		{"site bundle", map[string]interface{}{"name": "semio/desktop", "kind": "site"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleSite) + "desktop"},
-		{"assets bundle", map[string]interface{}{"name": "semio/asset", "kind": "assets"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleAssets) + "assets"},
+		{"site bundle", map[string]interface{}{"name": "compose/desktop", "kind": "site"}, emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleSite) + "desktop"},
+		{"assets bundle", map[string]interface{}{"name": "compose/asset", "kind": "assets"}, emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleAssets) + "assets"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -6956,7 +6956,7 @@ func TestGetArtifactID_Folders(t *testing.T) {
 		expected string
 	}{
 		{"root folders", "", emojiText(EmojiFolders)},
-		{"bundle folders", emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad", emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFolders)},
+		{"bundle folders", emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad", emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFolders)},
 		{"required folder folders", emojiText(EmojiFolderRequired) + "github", emojiText(EmojiFolderRequired) + "github" + emojiText(EmojiFolders)},
 	}
 	for _, tc := range cases {
@@ -6970,15 +6970,15 @@ func TestGetArtifactID_Folders(t *testing.T) {
 }
 
 func TestGetArtifactID_Folder(t *testing.T) {
-	bundleId := emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js"
+	bundleId := emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js"
 	cases := []struct {
 		name     string
 		data     map[string]interface{}
 		expected string
 	}{
-		{"org folder under bundle", map[string]interface{}{"path": "semio/js/sketchpad", "name": "sketchpad", "kind": "organization", "parentId": bundleId}, bundleId + emojiText(EmojiFolderOrg) + "sketchpad"},
+		{"org folder under bundle", map[string]interface{}{"path": "compose/js/sketchpad", "name": "sketchpad", "kind": "organization", "parentId": bundleId}, bundleId + emojiText(EmojiFolderOrg) + "sketchpad"},
 		{"required folder at root", map[string]interface{}{"path": ".devcontainer", "name": ".devcontainer", "kind": "required", "parentId": ""}, emojiText(EmojiFolderRequired) + "devcontainer"},
-		{"nested folder", map[string]interface{}{"path": "semio/js/sketchpad/pages", "name": "pages", "kind": "organization", "parentId": bundleId + emojiText(EmojiFolderOrg) + "sketchpad"}, bundleId + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFolderOrg) + "pages"},
+		{"nested folder", map[string]interface{}{"path": "compose/js/sketchpad/pages", "name": "pages", "kind": "organization", "parentId": bundleId + emojiText(EmojiFolderOrg) + "sketchpad"}, bundleId + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFolderOrg) + "pages"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -6997,7 +6997,7 @@ func TestGetArtifactID_Files(t *testing.T) {
 		expected string
 	}{
 		{"root files", "", emojiText(EmojiFiles)},
-		{"folder files", emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad", emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFiles)},
+		{"folder files", emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad", emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFiles)},
 		{"required folder files", emojiText(EmojiFolderRequired) + "github", emojiText(EmojiFolderRequired) + "github" + emojiText(EmojiFiles)},
 	}
 	for _, tc := range cases {
@@ -7011,14 +7011,14 @@ func TestGetArtifactID_Files(t *testing.T) {
 }
 
 func TestGetArtifactID_File(t *testing.T) {
-	folderId := emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad"
+	folderId := emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad"
 	cases := []struct {
 		name     string
 		data     map[string]interface{}
 		expected string
 	}{
-		{"code file", map[string]interface{}{"path": "semio/js/sketchpad/Design.tsx", "name": "Design.tsx", "kind": "code", "parentId": folderId}, folderId + emojiText(EmojiFileCode) + "design"},
-		{"test file", map[string]interface{}{"path": "semio/js/sketchpad.test.ts", "name": "sketchpad.test.ts", "kind": "lab", "parentId": emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFileLab) + "sketchpadtest"},
+		{"code file", map[string]interface{}{"path": "compose/js/sketchpad/Design.tsx", "name": "Design.tsx", "kind": "code", "parentId": folderId}, folderId + emojiText(EmojiFileCode) + "design"},
+		{"test file", map[string]interface{}{"path": "compose/js/sketchpad.test.ts", "name": "sketchpad.test.ts", "kind": "lab", "parentId": emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js"}, emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFileLab) + "sketchpadtest"},
 		{"config file at root", map[string]interface{}{"path": ".devcontainer/devcontainer.json", "name": "devcontainer.json", "kind": "config", "parentId": emojiText(EmojiFolderRequired) + "devcontainer"}, emojiText(EmojiFolderRequired) + "devcontainer" + emojiText(EmojiFileConfig) + "devcontainer"},
 	}
 	for _, tc := range cases {
@@ -7032,7 +7032,7 @@ func TestGetArtifactID_File(t *testing.T) {
 }
 
 func TestGetArtifactID_Line(t *testing.T) {
-	fileId := emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design"
+	fileId := emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design"
 	id := GetArtifactID("line", map[string]interface{}{"parentId": fileId, "line": float64(3872)})
 	expected := fileId + emojiText(EmojiLine) + "3872"
 	if id != expected {
@@ -7041,7 +7041,7 @@ func TestGetArtifactID_Line(t *testing.T) {
 }
 
 func TestGetArtifactID_Range(t *testing.T) {
-	fileId := emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design"
+	fileId := emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design"
 	id := GetArtifactID("range", map[string]interface{}{"parentId": fileId, "startLine": float64(3872), "endLine": float64(3875)})
 	expected := fileId + emojiText(EmojiLine) + "3872" + emojiText(EmojiLine) + "3875"
 	if id != expected {
@@ -7050,7 +7050,7 @@ func TestGetArtifactID_Range(t *testing.T) {
 }
 
 func TestGetArtifactID_Sections(t *testing.T) {
-	fileId := emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design"
+	fileId := emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design"
 	id := GetArtifactID("sections", map[string]interface{}{"parentId": fileId})
 	expected := fileId + emojiText(EmojiSections)
 	if id != expected {
@@ -7059,7 +7059,7 @@ func TestGetArtifactID_Sections(t *testing.T) {
 }
 
 func TestGetArtifactID_Section(t *testing.T) {
-	fileId := emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design"
+	fileId := emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design"
 	cases := []struct {
 		name     string
 		data     map[string]interface{}
@@ -7079,7 +7079,7 @@ func TestGetArtifactID_Section(t *testing.T) {
 }
 
 func TestGetArtifactID_Definitions(t *testing.T) {
-	sectionId := emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store"
+	sectionId := emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store"
 	id := GetArtifactID("definitions", map[string]interface{}{"parentId": sectionId})
 	expected := sectionId + emojiText(EmojiDefinitions)
 	if id != expected {
@@ -7088,7 +7088,7 @@ func TestGetArtifactID_Definitions(t *testing.T) {
 }
 
 func TestGetArtifactID_Definition(t *testing.T) {
-	sectionId := emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store"
+	sectionId := emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store"
 	id := GetArtifactID("definition", map[string]interface{}{"name": "createSketchpadStore", "kind": "implementation", "parentId": sectionId})
 	expected := sectionId + emojiText(EmojiDefinitionImpl) + "createsketchpadstore"
 	if id != expected {
@@ -7142,7 +7142,7 @@ func TestGetArtifactID_Tickets(t *testing.T) {
 	}{
 		{"root tickets", "", emojiText(EmojiTickets)},
 		{"goal tickets", emojiText(EmojiGoal) + "r26021" + emojiText(EmojiGoal) + "runningsketchpad", emojiText(EmojiGoal) + "r26021" + emojiText(EmojiGoal) + "runningsketchpad" + emojiText(EmojiTickets)},
-		{"section tickets", emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store", emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiTickets)},
+		{"section tickets", emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store", emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiTickets)},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -7193,7 +7193,7 @@ func TestGetArtifactID_Draft(t *testing.T) {
 }
 
 func TestGetArtifactID_Todos(t *testing.T) {
-	parentId := emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiDefinitionImpl) + "createsketchpadstore"
+	parentId := emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiDefinitionImpl) + "createsketchpadstore"
 	id := GetArtifactID("todos", map[string]interface{}{"parentId": parentId})
 	expected := parentId + emojiText(EmojiTodos)
 	if id != expected {
@@ -7202,7 +7202,7 @@ func TestGetArtifactID_Todos(t *testing.T) {
 }
 
 func TestGetArtifactID_Todo(t *testing.T) {
-	parentId := emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiDefinitionImpl) + "createsketchpadstore"
+	parentId := emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiDefinitionImpl) + "createsketchpadstore"
 	id := GetArtifactID("todo", map[string]interface{}{"id": "INTRODUCE-PROPER-SYNC-MECHANISM", "parentId": parentId})
 	expected := parentId + emojiText(EmojiTodo) + "introducepropersyncmechanism"
 	if id != expected {
@@ -7236,7 +7236,7 @@ func TestGetArtifactID_Policy(t *testing.T) {
 		expected string
 	}{
 		{"general policy on file kind", map[string]interface{}{"id": "godfiles", "parentId": emojiText(EmojiFileCode)}, emojiText(EmojiFileCode) + emojiText(EmojiPolicy) + "godfiles"},
-		{"specific policy", map[string]interface{}{"id": "only-one-store", "parentId": emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiPolicy) + "onlyonestore"},
+		{"specific policy", map[string]interface{}{"id": "only-one-store", "parentId": emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store"}, emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiPolicy) + "onlyonestore"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -7517,7 +7517,7 @@ func TestNormalizeTicketSessionID(t *testing.T) {
 
 func TestGetArtifactID_Breach(t *testing.T) {
 	policyId := emojiText(EmojiFileCode) + emojiText(EmojiPolicy) + "godfiles"
-	affected := emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designstore"
+	affected := emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designstore"
 	lineId := emojiText(EmojiLine) + "3872" + emojiText(EmojiLine) + "3875"
 	secondId := emojiText(EmojiYear) + "26" + emojiText(EmojiMonth) + "02" + emojiText(EmojiDay) + "14" + emojiText(EmojiHour) + "19" + emojiText(EmojiMinute) + "07" + emojiText(EmojiSecond) + "12"
 	id := GetArtifactID("breach", map[string]interface{}{"parentId": policyId, "affected": affected, "lineId": lineId, "secondId": secondId})
@@ -7568,41 +7568,41 @@ func TestSpecExactIDs(t *testing.T) {
 		{"second 38", "second", map[string]interface{}{"parentId": "🎆26🌙02☀️15⏰14⌚33", "ss": "38"}, "🎆26🌙02☀️15⏰14⌚33⏱️38"},
 		{"technologies", "technologies", map[string]interface{}{"parentId": ""}, "🏗️"},
 		{"technology repo", "technology", map[string]interface{}{"name": "repo", "kind": "infrastructure"}, "🧰repo"},
-		{"bundles", "bundles", map[string]interface{}{"parentId": "🏘️semio"}, "🏘️semio📦"},
-		{"bundle semio/js", "bundle", map[string]interface{}{"name": "semio/js", "kind": "library"}, "🏘️semio📚js"},
+		{"bundles", "bundles", map[string]interface{}{"parentId": "🏘️compose"}, "🏘️compose📦"},
+		{"bundle compose/js", "bundle", map[string]interface{}{"name": "compose/js", "kind": "library"}, "🏘️compose📚js"},
 		{"root folders", "folders", map[string]interface{}{"parentId": ""}, "📁"},
-		{"bundle folders", "folders", map[string]interface{}{"parentId": "🏘️semio📚js🗃️sketchpad"}, "🏘️semio📚js🗃️sketchpad📁"},
+		{"bundle folders", "folders", map[string]interface{}{"parentId": "🏘️compose📚js🗃️sketchpad"}, "🏘️compose📚js🗃️sketchpad📁"},
 		{"required folder folders", "folders", map[string]interface{}{"parentId": "🛅github"}, "🛅github📁"},
-		{"folder semio/js/sketchpad", "folder", map[string]interface{}{"path": "semio/js/sketchpad", "kind": "organization", "parentId": "🏘️semio📚js"}, "🏘️semio📚js🗃️sketchpad"},
+		{"folder compose/js/sketchpad", "folder", map[string]interface{}{"path": "compose/js/sketchpad", "kind": "organization", "parentId": "🏘️compose📚js"}, "🏘️compose📚js🗃️sketchpad"},
 		{"folder .devcontainer", "folder", map[string]interface{}{"path": ".devcontainer", "kind": "required", "parentId": ""}, "🛅devcontainer"},
 		{"root files", "files", map[string]interface{}{"parentId": ""}, "📄"},
-		{"folder files", "files", map[string]interface{}{"parentId": "🏘️semio📚js🗃️sketchpad"}, "🏘️semio📚js🗃️sketchpad📄"},
+		{"folder files", "files", map[string]interface{}{"parentId": "🏘️compose📚js🗃️sketchpad"}, "🏘️compose📚js🗃️sketchpad📄"},
 		{"required folder files", "files", map[string]interface{}{"parentId": "🛅github"}, "🛅github📄"},
-		{"code file Design.tsx", "file", map[string]interface{}{"path": "semio/js/sketchpad/Design.tsx", "kind": "code", "parentId": "🏘️semio📚js🗃️sketchpad"}, "🏘️semio📚js🗃️sketchpad💻design"},
+		{"code file Design.tsx", "file", map[string]interface{}{"path": "compose/js/sketchpad/Design.tsx", "kind": "code", "parentId": "🏘️compose📚js🗃️sketchpad"}, "🏘️compose📚js🗃️sketchpad💻design"},
 		{"config file devcontainer.json", "file", map[string]interface{}{"path": ".devcontainer/devcontainer.json", "kind": "config", "parentId": "🛅devcontainer"}, "🛅devcontainer⚙️devcontainer"},
-		{"line 3872", "line", map[string]interface{}{"parentId": "🏘️semio📚js🗃️sketchpad💻design", "line": float64(3872)}, "🏘️semio📚js🗃️sketchpad💻design📌3872"},
-		{"sections in file", "sections", map[string]interface{}{"parentId": "🏘️semio📚js🗃️sketchpad💻design"}, "🏘️semio📚js🗃️sketchpad💻design🔖"},
-		{"section State Managment", "section", map[string]interface{}{"name": "State Managment", "parentId": "🏘️semio📚js🗃️sketchpad💻design"}, "🏘️semio📚js🗃️sketchpad💻design🔖statemanagment"},
-		{"section Store nested", "section", map[string]interface{}{"name": "Store", "parentId": "🏘️semio📚js🗃️sketchpad💻design🔖statemanagment"}, "🏘️semio📚js🗃️sketchpad💻design🔖statemanagment🔖store"},
-		{"definitions in section", "definitions", map[string]interface{}{"parentId": "🏘️semio📚js🗃️sketchpad💻design🔖statemanagment🔖store"}, "🏘️semio📚js🗃️sketchpad💻design🔖statemanagment🔖store🏷️"},
-		{"definition createSketchpadStore", "definition", map[string]interface{}{"name": "createSketchpadStore", "kind": "implementation", "parentId": "🏘️semio📚js🗃️sketchpad💻design🔖statemanagment🔖store"}, "🏘️semio📚js🗃️sketchpad💻design🔖statemanagment🔖store🛠️createsketchpadstore"},
+		{"line 3872", "line", map[string]interface{}{"parentId": "🏘️compose📚js🗃️sketchpad💻design", "line": float64(3872)}, "🏘️compose📚js🗃️sketchpad💻design📌3872"},
+		{"sections in file", "sections", map[string]interface{}{"parentId": "🏘️compose📚js🗃️sketchpad💻design"}, "🏘️compose📚js🗃️sketchpad💻design🔖"},
+		{"section State Managment", "section", map[string]interface{}{"name": "State Managment", "parentId": "🏘️compose📚js🗃️sketchpad💻design"}, "🏘️compose📚js🗃️sketchpad💻design🔖statemanagment"},
+		{"section Store nested", "section", map[string]interface{}{"name": "Store", "parentId": "🏘️compose📚js🗃️sketchpad💻design🔖statemanagment"}, "🏘️compose📚js🗃️sketchpad💻design🔖statemanagment🔖store"},
+		{"definitions in section", "definitions", map[string]interface{}{"parentId": "🏘️compose📚js🗃️sketchpad💻design🔖statemanagment🔖store"}, "🏘️compose📚js🗃️sketchpad💻design🔖statemanagment🔖store🏷️"},
+		{"definition createSketchpadStore", "definition", map[string]interface{}{"name": "createSketchpadStore", "kind": "implementation", "parentId": "🏘️compose📚js🗃️sketchpad💻design🔖statemanagment🔖store"}, "🏘️compose📚js🗃️sketchpad💻design🔖statemanagment🔖store🛠️createsketchpadstore"},
 		{"root goals", "goals", map[string]interface{}{"parentId": ""}, "🎯"},
 		{"nested goals", "goals", map[string]interface{}{"parentId": "🎯r26021🎯runningsketchpad"}, "🎯r26021🎯runningsketchpad🎯"},
 		{"goal Running Sketchpad", "goal", map[string]interface{}{"id": "R26-02-1/RUNNING-SKETCHPAD", "parentId": "🎯r26021"}, "🎯r26021🎯runningsketchpad"},
 		{"root tickets", "tickets", map[string]interface{}{"parentId": ""}, "🎫"},
 		{"goal tickets", "tickets", map[string]interface{}{"parentId": "🎯r26021🎯runningsketchpad"}, "🎯r26021🎯runningsketchpad🎫"},
-		{"section tickets", "tickets", map[string]interface{}{"parentId": "🏘️semio📚js🗃️sketchpad💻design🔖statemanagment🔖store"}, "🏘️semio📚js🗃️sketchpad💻design🔖statemanagment🔖store🎫"},
+		{"section tickets", "tickets", map[string]interface{}{"parentId": "🏘️compose📚js🗃️sketchpad💻design🔖statemanagment🔖store"}, "🏘️compose📚js🗃️sketchpad💻design🔖statemanagment🔖store🎫"},
 		{"ticket", "ticket", map[string]interface{}{"slug": "INTRODUCE-KEY-GUID-URI-MECHANISM", "parentId": "🎯r26021🎯runningsketchpad"}, "🎯r26021🎯runningsketchpad🎫introducekeyguidurimechanism"},
 		{"draft", "draft", map[string]interface{}{"slug": "NEW-ARCHITECTURE", "parentId": "🧰repo⌨️client"}, "🧰repo⌨️client📝newarchitecture"},
-		{"todo", "todo", map[string]interface{}{"id": "INTRODUCE-PROPER-SYNC-MECHANISM", "parentId": "🏘️semio📚js🗃️sketchpad💻design🔖statemanagment🔖store🛠️createsketchpadstore"}, "🏘️semio📚js🗃️sketchpad💻design🔖statemanagment🔖store🛠️createsketchpadstore📝introducepropersyncmechanism"},
+		{"todo", "todo", map[string]interface{}{"id": "INTRODUCE-PROPER-SYNC-MECHANISM", "parentId": "🏘️compose📚js🗃️sketchpad💻design🔖statemanagment🔖store🛠️createsketchpadstore"}, "🏘️compose📚js🗃️sketchpad💻design🔖statemanagment🔖store🛠️createsketchpadstore📝introducepropersyncmechanism"},
 		{"general policy godfiles", "policy", map[string]interface{}{"id": "godfiles", "parentId": emojiText(EmojiFileCode)}, emojiText(EmojiFileCode) + emojiText(EmojiPolicy) + "godfiles"},
-		{"specific policy", "policy", map[string]interface{}{"id": "only-one-store", "parentId": emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiPolicy) + "onlyonestore"},
+		{"specific policy", "policy", map[string]interface{}{"id": "only-one-store", "parentId": emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store"}, emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiPolicy) + "onlyonestore"},
 		{"breach", "breach", map[string]interface{}{
 			"parentId": "💻👮godfiles",
-			"affected": "🏘️semio📚js🗃️sketchpad💻designstore",
+			"affected": "🏘️compose📚js🗃️sketchpad💻designstore",
 			"lineId":   "📌3872📌3875",
 			"secondId": "🎆26🌙02☀️14⏰19⌚07⏱️12",
-		}, "💻👮godfiles🚫🏘️semio📚js🗃️sketchpad💻designstore🔍📌3872📌3875🎆26🌙02☀️14⏰19⌚07⏱️12"},
+		}, "💻👮godfiles🚫🏘️compose📚js🗃️sketchpad💻designstore🔍📌3872📌3875🎆26🌙02☀️14⏰19⌚07⏱️12"},
 		{"contributor", "contributor", map[string]interface{}{"alias": "ueli", "github": "usalu"}, "🧑‍💻ueli"},
 		{"checkpoint", "checkpoint", map[string]interface{}{"sha": "cfb3b6084ff3fe883d5f39b08810a0b90997907a", "contributorId": "🧑‍💻ueli"}, "🧑‍💻ueli🔀cfb3b6084ff3fe883d5f39b08810a0b90997907a"},
 		{"interaction started", "interaction", map[string]interface{}{
@@ -7632,10 +7632,10 @@ func TestSpecExactIDs(t *testing.T) {
 
 func TestPropagateParentIDs(t *testing.T) {
 	root := &TreeNode{Kind: TreeNodeCategory, Data: map[string]interface{}{}, Children: []*TreeNode{
-		{Kind: TreeNodeTechnology, Data: map[string]interface{}{"name": "semio", "kind": "user"}, Children: []*TreeNode{
-			{Kind: TreeNodeBundle, Data: map[string]interface{}{"name": "semio/js", "kind": "library"}, Children: []*TreeNode{
-				{Kind: TreeNodeFolder, Data: map[string]interface{}{"path": "semio/js/sketchpad", "name": "sketchpad", "kind": "organization"}, Children: []*TreeNode{
-					{Kind: TreeNodeFile, Data: map[string]interface{}{"path": "semio/js/sketchpad/Design.tsx", "name": "Design.tsx", "kind": "code"}, Children: []*TreeNode{
+		{Kind: TreeNodeTechnology, Data: map[string]interface{}{"name": "compose", "kind": "user"}, Children: []*TreeNode{
+			{Kind: TreeNodeBundle, Data: map[string]interface{}{"name": "compose/js", "kind": "library"}, Children: []*TreeNode{
+				{Kind: TreeNodeFolder, Data: map[string]interface{}{"path": "compose/js/sketchpad", "name": "sketchpad", "kind": "organization"}, Children: []*TreeNode{
+					{Kind: TreeNodeFile, Data: map[string]interface{}{"path": "compose/js/sketchpad/Design.tsx", "name": "Design.tsx", "kind": "code"}, Children: []*TreeNode{
 						{Kind: TreeNodeSection, Data: map[string]interface{}{"name": "Store"}, Children: []*TreeNode{
 							{Kind: TreeNodeDefinition, Data: map[string]interface{}{"name": "createStore", "kind": "implementation"}},
 						}},
@@ -7645,7 +7645,7 @@ func TestPropagateParentIDs(t *testing.T) {
 		}},
 	}}
 	PropagateParentIDs(root, "")
-	technologyId := emojiText(EmojiTechnologyUser) + "semio"
+	technologyId := emojiText(EmojiTechnologyUser) + "compose"
 	bundleId := technologyId + emojiText(EmojiBundleLibrary) + "js"
 	folderId := bundleId + emojiText(EmojiFolderOrg) + "sketchpad"
 	fileId := folderId + emojiText(EmojiFileCode) + "design"
@@ -7685,7 +7685,7 @@ func TestFlat(t *testing.T) {
 		{"devcontainer.json", "devcontainerjson"},
 		{"RUNNING-SKETCHPAD", "runningsketchpad"},
 		{"R26-02-1", "r26021"},
-		{"semio.ts", "semiots"},
+		{"compose.ts", "composets"},
 		{"State Managment", "statemanagment"},
 		{"createSketchpadStore", "createsketchpadstore"},
 	}
@@ -7737,37 +7737,37 @@ func TestMonorepoTreeEntityIDs(t *testing.T) {
 	if codebaseNode == nil {
 		t.Fatal("codebase node not found")
 	}
-	var semioTechnology, semioRepoTechnology *TreeNode
+	var composeTechnology, composeRepoTechnology *TreeNode
 	for _, c := range codebaseNode.Children {
 		entityKind := treeNodeKindToEntityKind(c.Kind)
 		id := GetArtifactID(entityKind, c.Data)
 		t.Logf("Found technology: %s", id)
-		if strings.Contains(id, "semio") && !strings.Contains(id, "repo") && !strings.Contains(id, "coda") {
-			semioTechnology = c
+		if strings.Contains(id, "compose") && !strings.Contains(id, "repo") && !strings.Contains(id, "coda") {
+			composeTechnology = c
 		}
 		if strings.Contains(id, "repo") {
-			semioRepoTechnology = c
+			composeRepoTechnology = c
 		}
 	}
-	if semioTechnology == nil {
-		t.Fatal("semio technology not found")
+	if composeTechnology == nil {
+		t.Fatal("compose technology not found")
 	}
-	if semioRepoTechnology == nil {
+	if composeRepoTechnology == nil {
 		t.Fatal("repo technology not found")
 	}
-	semioId := GetArtifactID("technology", semioTechnology.Data)
-	if semioId != emojiText(EmojiTechnologyUser)+"semio" {
-		t.Errorf("semio technology id: expected %q, got %q", emojiText(EmojiTechnologyUser)+"semio", semioId)
+	composeId := GetArtifactID("technology", composeTechnology.Data)
+	if composeId != emojiText(EmojiTechnologyUser)+"compose" {
+		t.Errorf("compose technology id: expected %q, got %q", emojiText(EmojiTechnologyUser)+"compose", composeId)
 	}
-	semioRepoId := GetArtifactID("technology", semioRepoTechnology.Data)
-	if semioRepoId != emojiText(EmojiTechnologyInfra)+"repo" {
-		t.Errorf("repo technology id: expected %q, got %q", emojiText(EmojiTechnologyInfra)+"repo", semioRepoId)
+	composeRepoId := GetArtifactID("technology", composeRepoTechnology.Data)
+	if composeRepoId != emojiText(EmojiTechnologyInfra)+"repo" {
+		t.Errorf("repo technology id: expected %q, got %q", emojiText(EmojiTechnologyInfra)+"repo", composeRepoId)
 	}
 	var antlrBundle *TreeNode
-	for _, c := range semioTechnology.Children {
+	for _, c := range composeTechnology.Children {
 		if c.Kind == TreeNodeBundle {
 			bId := GetArtifactID("bundle", c.Data)
-			t.Logf("Found bundle in semioTechnology: %s", bId)
+			t.Logf("Found bundle in composeTechnology: %s", bId)
 			if strings.HasSuffix(bId, emojiText("🔤")+"antlr") {
 				antlrBundle = c
 				break
@@ -7775,12 +7775,12 @@ func TestMonorepoTreeEntityIDs(t *testing.T) {
 		}
 	}
 	if antlrBundle == nil {
-		t.Fatal("semio/antlr bundle not found")
+		t.Fatal("compose/antlr bundle not found")
 	}
 	antlrBundleId := GetArtifactID("bundle", antlrBundle.Data)
-	expectedBundleId := emojiText(EmojiTechnologyUser) + "semio" + emojiText("🔤") + "antlr"
+	expectedBundleId := emojiText(EmojiTechnologyUser) + "compose" + emojiText("🔤") + "antlr"
 	if antlrBundleId != expectedBundleId {
-		t.Errorf("semio/antlr bundle id: expected %q, got %q", expectedBundleId, antlrBundleId)
+		t.Errorf("compose/antlr bundle id: expected %q, got %q", expectedBundleId, antlrBundleId)
 	}
 	for _, c := range antlrBundle.Children {
 		ek := treeNodeKindToEntityKind(c.Kind)
@@ -7793,7 +7793,7 @@ func TestMonorepoTreeEntityIDs(t *testing.T) {
 		}
 	}
 	var clientBundle *TreeNode
-	for _, c := range semioRepoTechnology.Children {
+	for _, c := range composeRepoTechnology.Children {
 		if c.Kind == TreeNodeBundle {
 			bId := GetArtifactID("bundle", c.Data)
 			if strings.HasSuffix(bId, emojiText(EmojiBundleBinary)+"client") {
@@ -7983,7 +7983,7 @@ func TestTechnologyListIDs(t *testing.T) {
 		t.Fatal("ToolTechnologyList data is not []Technology")
 	}
 	expectedIDs := map[string]string{
-		"semio": emojiText(EmojiTechnologyUser) + "semio",
+		"compose": emojiText(EmojiTechnologyUser) + "compose",
 		"repo":  emojiText(EmojiTechnologyInfra) + "repo",
 		"coda":  emojiText(EmojiTechnologyResearch) + "coda",
 	}
@@ -8013,19 +8013,19 @@ func TestBundleListIDs(t *testing.T) {
 		t.Fatal("ToolBundleList data is not []Bundle")
 	}
 	expectedIDs := map[string]string{
-		"semio/js":         emojiText(EmojiTechnologyUser) + "semio" + emojiText("📜") + "js",
-		"semio/engine":     emojiText(EmojiTechnologyUser) + "semio" + emojiText("⚙️") + "engine",
-		"semio/go":         emojiText(EmojiTechnologyUser) + "semio" + emojiText("🐹") + "go",
-		"semio/rs":         emojiText(EmojiTechnologyUser) + "semio" + emojiText("🦀") + "rs",
-		"semio/py":         emojiText(EmojiTechnologyUser) + "semio" + emojiText("🐍") + "py",
-		"semio/net":        emojiText(EmojiTechnologyUser) + "semio" + emojiText("🔷") + "net",
-		"semio/graphql":    emojiText(EmojiTechnologyUser) + "semio" + emojiText("🔗") + "graphql",
-		"semio/jsonschema": emojiText(EmojiTechnologyUser) + "semio" + emojiText("📋") + "jsonschema",
-		"semio/openapi":    emojiText(EmojiTechnologyUser) + "semio" + emojiText("📡") + "openapi",
-		"semio/desktop":    emojiText(EmojiTechnologyUser) + "semio" + emojiText("🖥️") + "desktop",
-		"semio/docs":       emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleSite) + "docs",
-		"semio/play":       emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleSite) + "play",
-		"semio/asset":     emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleAssets) + "assets",
+		"compose/js":         emojiText(EmojiTechnologyUser) + "compose" + emojiText("📜") + "js",
+		"compose/engine":     emojiText(EmojiTechnologyUser) + "compose" + emojiText("⚙️") + "engine",
+		"compose/go":         emojiText(EmojiTechnologyUser) + "compose" + emojiText("🐹") + "go",
+		"compose/rs":         emojiText(EmojiTechnologyUser) + "compose" + emojiText("🦀") + "rs",
+		"compose/py":         emojiText(EmojiTechnologyUser) + "compose" + emojiText("🐍") + "py",
+		"compose/net":        emojiText(EmojiTechnologyUser) + "compose" + emojiText("🔷") + "net",
+		"compose/graphql":    emojiText(EmojiTechnologyUser) + "compose" + emojiText("🔗") + "graphql",
+		"compose/jsonschema": emojiText(EmojiTechnologyUser) + "compose" + emojiText("📋") + "jsonschema",
+		"compose/openapi":    emojiText(EmojiTechnologyUser) + "compose" + emojiText("📡") + "openapi",
+		"compose/desktop":    emojiText(EmojiTechnologyUser) + "compose" + emojiText("🖥️") + "desktop",
+		"compose/docs":       emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleSite) + "docs",
+		"compose/play":       emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleSite) + "play",
+		"compose/asset":     emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleAssets) + "assets",
 		"repo/client":      emojiText(EmojiTechnologyInfra) + "repo" + emojiText("⌨️") + "client",
 		"repo/server":      emojiText(EmojiTechnologyInfra) + "repo" + emojiText("🌍") + "server",
 		"repo/go":          emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleLibrary) + "go",
@@ -8200,34 +8200,34 @@ func TestMonorepoTreeFullIDHierarchy(t *testing.T) {
 	if codebaseNode == nil {
 		t.Fatal("codebase node not found")
 	}
-	var semioTechnology, semioRepoTechnology, codaTechnology *TreeNode
+	var composeTechnology, composeRepoTechnology, codaTechnology *TreeNode
 	for _, c := range codebaseNode.Children {
 		entityKind := treeNodeKindToEntityKind(c.Kind)
 		id := GetArtifactID(entityKind, c.Data)
-		if id == emojiText(EmojiTechnologyUser)+"semio" {
-			semioTechnology = c
+		if id == emojiText(EmojiTechnologyUser)+"compose" {
+			composeTechnology = c
 		} else if id == emojiText(EmojiTechnologyInfra)+"repo" {
-			semioRepoTechnology = c
+			composeRepoTechnology = c
 		} else if id == emojiText(EmojiTechnologyResearch)+"coda" {
 			codaTechnology = c
 		}
 	}
-	if semioTechnology == nil {
-		t.Fatal("semio technology not found with expected id " + emojiText(EmojiTechnologyUser) + "semio")
+	if composeTechnology == nil {
+		t.Fatal("compose technology not found with expected id " + emojiText(EmojiTechnologyUser) + "compose")
 	}
-	if semioRepoTechnology == nil {
+	if composeRepoTechnology == nil {
 		t.Fatal("repo technology not found with expected id " + emojiText(EmojiTechnologyInfra) + "repo")
 	}
 	if codaTechnology == nil {
 		t.Fatal("coda technology not found with expected id " + emojiText(EmojiTechnologyResearch) + "coda")
 	}
-	expectedSemioId := emojiText(EmojiTechnologyUser) + "semio"
-	actualSemioId := GetArtifactID("technology", semioTechnology.Data)
-	if actualSemioId != expectedSemioId {
-		t.Errorf("semio technology id: expected %q, got %q", expectedSemioId, actualSemioId)
+	expectedComposeId := emojiText(EmojiTechnologyUser) + "compose"
+	actualComposeId := GetArtifactID("technology", composeTechnology.Data)
+	if actualComposeId != expectedComposeId {
+		t.Errorf("compose technology id: expected %q, got %q", expectedComposeId, actualComposeId)
 	}
 	expectedRepoId := emojiText(EmojiTechnologyInfra) + "repo"
-	actualRepoId := GetArtifactID("technology", semioRepoTechnology.Data)
+	actualRepoId := GetArtifactID("technology", composeRepoTechnology.Data)
 	if actualRepoId != expectedRepoId {
 		t.Errorf("repo technology id: expected %q, got %q", expectedRepoId, actualRepoId)
 	}
@@ -8237,18 +8237,18 @@ func TestMonorepoTreeFullIDHierarchy(t *testing.T) {
 		t.Errorf("coda technology id: expected %q, got %q", expectedCodaId, actualCodaId)
 	}
 	bundleChecks := map[string]string{
-		"semio/js":      emojiText(EmojiTechnologyUser) + "semio" + emojiText("📜") + "js",
-		"semio/go":      emojiText(EmojiTechnologyUser) + "semio" + emojiText("🐹") + "go",
-		"semio/engine":  emojiText(EmojiTechnologyUser) + "semio" + emojiText("⚙️") + "engine",
-		"semio/asset":  emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleAssets) + "assets",
-		"semio/desktop": emojiText(EmojiTechnologyUser) + "semio" + emojiText("🖥️") + "desktop",
-		"semio/docs":    emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleSite) + "docs",
+		"compose/js":      emojiText(EmojiTechnologyUser) + "compose" + emojiText("📜") + "js",
+		"compose/go":      emojiText(EmojiTechnologyUser) + "compose" + emojiText("🐹") + "go",
+		"compose/engine":  emojiText(EmojiTechnologyUser) + "compose" + emojiText("⚙️") + "engine",
+		"compose/asset":  emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleAssets) + "assets",
+		"compose/desktop": emojiText(EmojiTechnologyUser) + "compose" + emojiText("🖥️") + "desktop",
+		"compose/docs":    emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleSite) + "docs",
 		"repo/client":   emojiText(EmojiTechnologyInfra) + "repo" + emojiText("⌨️") + "client",
 		"repo/server":   emojiText(EmojiTechnologyInfra) + "repo" + emojiText("🌍") + "server",
 		"repo/vscode":   emojiText(EmojiTechnologyInfra) + "repo" + emojiText("🧩") + "vscode",
 	}
 	allBundles := []*TreeNode{}
-	for _, technology := range []*TreeNode{semioTechnology, semioRepoTechnology, codaTechnology} {
+	for _, technology := range []*TreeNode{composeTechnology, composeRepoTechnology, codaTechnology} {
 		for _, child := range technology.Children {
 			if child.Kind == TreeNodeBundle {
 				allBundles = append(allBundles, child)
@@ -8428,52 +8428,52 @@ func TestAllSpecIDExamples(t *testing.T) {
 		{"second 38", "second", map[string]interface{}{"parentId": "\U0001F38626\U0001F31902" + emojiText(EmojiDay) + "15\u23F014" + emojiText(EmojiMinute) + "33", "ss": "38"}, "\U0001F38626\U0001F31902" + emojiText(EmojiDay) + "15\u23F014" + emojiText(EmojiMinute) + "33" + emojiText(EmojiSecond) + "38"},
 		{"technologies under root", "technologies", map[string]interface{}{"parentId": ""}, emojiText(EmojiTechnologies)},
 		{"infra technology repo", "technology", map[string]interface{}{"name": "repo", "kind": "infrastructure"}, emojiText(EmojiTechnologyInfra) + "repo"},
-		{"user technology semio", "technology", map[string]interface{}{"name": "semio", "kind": "user"}, emojiText(EmojiTechnologyUser) + "semio"},
+		{"user technology compose", "technology", map[string]interface{}{"name": "compose", "kind": "user"}, emojiText(EmojiTechnologyUser) + "compose"},
 		{"research technology coda", "technology", map[string]interface{}{"name": "coda", "kind": "research"}, emojiText(EmojiTechnologyResearch) + "coda"},
-		{"bundles under technology", "bundles", map[string]interface{}{"parentId": emojiText(EmojiTechnologyUser) + "semio"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundles)},
-		{"library bundle semio/js", "bundle", map[string]interface{}{"name": "semio/js", "kind": "library"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js"},
-		{"schema bundle semio/graphql", "bundle", map[string]interface{}{"name": "semio/graphql", "kind": "schema"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleSchema) + "graphql"},
+		{"bundles under technology", "bundles", map[string]interface{}{"parentId": emojiText(EmojiTechnologyUser) + "compose"}, emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundles)},
+		{"library bundle compose/js", "bundle", map[string]interface{}{"name": "compose/js", "kind": "library"}, emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js"},
+		{"schema bundle compose/graphql", "bundle", map[string]interface{}{"name": "compose/graphql", "kind": "schema"}, emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleSchema) + "graphql"},
 		{"binary bundle repo/client", "bundle", map[string]interface{}{"name": "repo/client", "kind": "binary"}, emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleBinary) + "client"},
 		{"ui bundle repo/vscode", "bundle", map[string]interface{}{"name": "repo/vscode", "kind": "ui"}, emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleUI) + "vscode"},
 		{"example bundle coda/example", "bundle", map[string]interface{}{"name": "coda/example", "kind": "example"}, emojiText(EmojiTechnologyResearch) + "coda" + emojiText(EmojiBundleExample) + "examples"},
-		{"assets bundle semio/asset", "bundle", map[string]interface{}{"name": "semio/asset", "kind": "assets"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleAssets) + "assets"},
+		{"assets bundle compose/asset", "bundle", map[string]interface{}{"name": "compose/asset", "kind": "assets"}, emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleAssets) + "assets"},
 		{"root folders", "folders", map[string]interface{}{"parentId": ""}, emojiText(EmojiFolders)},
-		{"bundle sketchpad folders", "folders", map[string]interface{}{"parentId": emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFolders)},
+		{"bundle sketchpad folders", "folders", map[string]interface{}{"parentId": emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad"}, emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFolders)},
 		{"required folder .github folders", "folders", map[string]interface{}{"parentId": emojiText(EmojiFolderRequired) + "github"}, emojiText(EmojiFolderRequired) + "github" + emojiText(EmojiFolders)},
-		{"org folder semio/js/sketchpad", "folder", map[string]interface{}{"path": "semio/js/sketchpad", "kind": "organization", "parentId": emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad"},
+		{"org folder compose/js/sketchpad", "folder", map[string]interface{}{"path": "compose/js/sketchpad", "kind": "organization", "parentId": emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js"}, emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad"},
 		{"required folder .devcontainer", "folder", map[string]interface{}{"path": ".devcontainer", "kind": "required", "parentId": ""}, emojiText(EmojiFolderRequired) + "devcontainer"},
 		{"root files", "files", map[string]interface{}{"parentId": ""}, emojiText(EmojiFiles)},
-		{"sketchpad files", "files", map[string]interface{}{"parentId": emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFiles)},
+		{"sketchpad files", "files", map[string]interface{}{"parentId": emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad"}, emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFiles)},
 		{"github files", "files", map[string]interface{}{"parentId": emojiText(EmojiFolderRequired) + "github"}, emojiText(EmojiFolderRequired) + "github" + emojiText(EmojiFiles)},
-		{"code file Design.tsx", "file", map[string]interface{}{"path": "semio/js/sketchpad/Design.tsx", "kind": "code", "parentId": emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design"},
+		{"code file Design.tsx", "file", map[string]interface{}{"path": "compose/js/sketchpad/Design.tsx", "kind": "code", "parentId": emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad"}, emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design"},
 		{"config file devcontainer.json", "file", map[string]interface{}{"path": ".devcontainer/devcontainer.json", "kind": "config", "parentId": emojiText(EmojiFolderRequired) + "devcontainer"}, emojiText(EmojiFolderRequired) + "devcontainer" + emojiText(EmojiFileConfig) + "devcontainer"},
-		{"line 3872", "line", map[string]interface{}{"parentId": emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design", "line": float64(3872)}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiLine) + "3872"},
-		{"range 3872-3875", "range", map[string]interface{}{"parentId": emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designstore", "startLine": float64(3872), "endLine": float64(3875)}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designstore" + emojiText(EmojiLine) + "3872" + emojiText(EmojiLine) + "3875"},
-		{"sections in file", "sections", map[string]interface{}{"parentId": emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSections)},
-		{"section State Managment", "section", map[string]interface{}{"name": "State Managment", "parentId": emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment"},
-		{"nested section Store", "section", map[string]interface{}{"name": "Store", "parentId": emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store"},
-		{"definitions in section", "definitions", map[string]interface{}{"parentId": emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiDefinitions)},
-		{"definition impl createSketchpadStore", "definition", map[string]interface{}{"name": "createSketchpadStore", "kind": "implementation", "parentId": emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiDefinitionImpl) + "createsketchpadstore"},
-		{"definition interface", "definition", map[string]interface{}{"name": "IStore", "kind": "interface", "parentId": emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiDefinitionInterface) + "istore"},
-		{"definition constant", "definition", map[string]interface{}{"name": "MAX_SIZE", "kind": "constant", "parentId": emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiDefinitionConstant) + "maxsize"},
+		{"line 3872", "line", map[string]interface{}{"parentId": emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design", "line": float64(3872)}, emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiLine) + "3872"},
+		{"range 3872-3875", "range", map[string]interface{}{"parentId": emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designstore", "startLine": float64(3872), "endLine": float64(3875)}, emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designstore" + emojiText(EmojiLine) + "3872" + emojiText(EmojiLine) + "3875"},
+		{"sections in file", "sections", map[string]interface{}{"parentId": emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design"}, emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSections)},
+		{"section State Managment", "section", map[string]interface{}{"name": "State Managment", "parentId": emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design"}, emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment"},
+		{"nested section Store", "section", map[string]interface{}{"name": "Store", "parentId": emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment"}, emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store"},
+		{"definitions in section", "definitions", map[string]interface{}{"parentId": emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store"}, emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiDefinitions)},
+		{"definition impl createSketchpadStore", "definition", map[string]interface{}{"name": "createSketchpadStore", "kind": "implementation", "parentId": emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store"}, emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiDefinitionImpl) + "createsketchpadstore"},
+		{"definition interface", "definition", map[string]interface{}{"name": "IStore", "kind": "interface", "parentId": emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store"}, emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiDefinitionInterface) + "istore"},
+		{"definition constant", "definition", map[string]interface{}{"name": "MAX_SIZE", "kind": "constant", "parentId": emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store"}, emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiDefinitionConstant) + "maxsize"},
 		{"root goals", "goals", map[string]interface{}{"parentId": ""}, emojiText(EmojiGoals)},
 		{"nested goals under parent", "goals", map[string]interface{}{"parentId": emojiText(EmojiGoal) + "r26021" + emojiText(EmojiGoal) + "runningsketchpad"}, emojiText(EmojiGoal) + "r26021" + emojiText(EmojiGoal) + "runningsketchpad" + emojiText(EmojiGoals)},
 		{"top-level goal", "goal", map[string]interface{}{"id": "R26-02-1", "parentId": ""}, emojiText(EmojiGoal) + "r26021"},
 		{"nested goal Running Sketchpad", "goal", map[string]interface{}{"id": "R26-02-1/RUNNING-SKETCHPAD", "parentId": emojiText(EmojiGoal) + "r26021"}, emojiText(EmojiGoal) + "r26021" + emojiText(EmojiGoal) + "runningsketchpad"},
 		{"root tickets", "tickets", map[string]interface{}{"parentId": ""}, emojiText(EmojiTickets)},
 		{"goal tickets", "tickets", map[string]interface{}{"parentId": emojiText(EmojiGoal) + "r26021" + emojiText(EmojiGoal) + "runningsketchpad"}, emojiText(EmojiGoal) + "r26021" + emojiText(EmojiGoal) + "runningsketchpad" + emojiText(EmojiTickets)},
-		{"section tickets", "tickets", map[string]interface{}{"parentId": emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiTickets)},
+		{"section tickets", "tickets", map[string]interface{}{"parentId": emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store"}, emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiTickets)},
 		{"ticket Introduce Key Guid Uri Mechanism", "ticket", map[string]interface{}{"slug": "INTRODUCE-KEY-GUID-URI-MECHANISM", "parentId": emojiText(EmojiGoal) + "r26021" + emojiText(EmojiGoal) + "runningsketchpad"}, emojiText(EmojiGoal) + "r26021" + emojiText(EmojiGoal) + "runningsketchpad" + emojiText(EmojiTicket) + "introducekeyguidurimechanism"},
 		{"draft New Architecture", "draft", map[string]interface{}{"slug": "NEW-ARCHITECTURE", "parentId": emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleBinary) + "client"}, emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleBinary) + "client" + emojiText(EmojiDraft) + "newarchitecture"},
-		{"todo Introduce Proper Sync Mechanism", "todo", map[string]interface{}{"id": "INTRODUCE-PROPER-SYNC-MECHANISM", "parentId": emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiDefinitionImpl) + "createsketchpadstore"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiDefinitionImpl) + "createsketchpadstore" + emojiText(EmojiTodo) + "introducepropersyncmechanism"},
+		{"todo Introduce Proper Sync Mechanism", "todo", map[string]interface{}{"id": "INTRODUCE-PROPER-SYNC-MECHANISM", "parentId": emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiDefinitionImpl) + "createsketchpadstore"}, emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiDefinitionImpl) + "createsketchpadstore" + emojiText(EmojiTodo) + "introducepropersyncmechanism"},
 		{"general policy godfiles", "policy", map[string]interface{}{"id": "godfiles", "parentId": emojiText(EmojiFileCode)}, emojiText(EmojiFileCode) + emojiText(EmojiPolicy) + "godfiles"},
-		{"specific policy Only One Store", "policy", map[string]interface{}{"id": "only-one-store", "parentId": emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiPolicy) + "onlyonestore"},
+		{"specific policy Only One Store", "policy", map[string]interface{}{"id": "only-one-store", "parentId": emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store"}, emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiPolicy) + "onlyonestore"},
 		{"breach", "breach", map[string]interface{}{
 			"parentId": emojiText(EmojiFileCode) + emojiText(EmojiPolicy) + "godfiles",
-			"affected": emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designstore",
+			"affected": emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designstore",
 			"lineId":   emojiText(EmojiLine) + "3872" + emojiText(EmojiLine) + "3875",
 			"secondId": emojiText(EmojiYear) + "26" + emojiText(EmojiMonth) + "02" + emojiText(EmojiDay) + "14" + emojiText(EmojiHour) + "19" + emojiText(EmojiMinute) + "07" + emojiText(EmojiSecond) + "12",
-		}, emojiText(EmojiFileCode) + emojiText(EmojiPolicy) + "godfiles" + emojiText(EmojiBreach) + emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designstore" + emojiText(EmojiBreachScope) + emojiText(EmojiLine) + "3872" + emojiText(EmojiLine) + "3875" + emojiText(EmojiYear) + "26" + emojiText(EmojiMonth) + "02" + emojiText(EmojiDay) + "14" + emojiText(EmojiHour) + "19" + emojiText(EmojiMinute) + "07" + emojiText(EmojiSecond) + "12"},
+		}, emojiText(EmojiFileCode) + emojiText(EmojiPolicy) + "godfiles" + emojiText(EmojiBreach) + emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designstore" + emojiText(EmojiBreachScope) + emojiText(EmojiLine) + "3872" + emojiText(EmojiLine) + "3875" + emojiText(EmojiYear) + "26" + emojiText(EmojiMonth) + "02" + emojiText(EmojiDay) + "14" + emojiText(EmojiHour) + "19" + emojiText(EmojiMinute) + "07" + emojiText(EmojiSecond) + "12"},
 		{"contributor usalu", "contributor", map[string]interface{}{"github": "usalu"}, emojiText(EmojiContributor) + "usalu"},
 		{"checkpoint", "checkpoint", map[string]interface{}{"sha": "cfb3b6084ff3fe883d5f39b08810a0b90997907a", "contributorId": emojiText(EmojiContributor) + "usalu"}, emojiText(EmojiContributor) + "usalu" + emojiText(EmojiCheckpoint) + "cfb3b6084ff3fe883d5f39b08810a0b90997907a"},
 		{"interaction started", "interaction", map[string]interface{}{
@@ -8506,12 +8506,12 @@ func TestAllSpecIDExamples(t *testing.T) {
 			"entityId":      emojiText(EmojiGoal) + "r26021" + emojiText(EmojiGoal) + "runningsketchpad" + emojiText(EmojiTicket) + "introducekeyguidurimechanism",
 			"kind":          "deleted",
 		}, emojiText(EmojiYear) + "26" + emojiText(EmojiMonth) + "02" + emojiText(EmojiDay) + "14" + emojiText(EmojiHour) + "19" + emojiText(EmojiMinute) + "07" + emojiText(EmojiSecond) + "12" + emojiText(EmojiContributor) + "usalu" + emojiText(EmojiGoal) + "r26021" + emojiText(EmojiGoal) + "runningsketchpad" + emojiText(EmojiTicket) + "introducekeyguidurimechanism" + emojiText(EmojiInteractionDeleted)},
-		{"file test kind", "file", map[string]interface{}{"path": "semio/js/sketchpad.test.ts", "kind": "lab", "parentId": emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFileLab) + "sketchpadtest"},
-		{"file script kind", "file", map[string]interface{}{"path": "semio/engine/build.ts", "kind": "script", "parentId": emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "engine"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "engine" + emojiText(EmojiFileScript) + "build"},
-		{"file docs kind", "file", map[string]interface{}{"path": "semio/js/README.md", "kind": "docs", "parentId": emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFileDocs) + "readme"},
-		{"file asset kind", "file", map[string]interface{}{"path": "semio/js/sketchpad/page/showcase/metabolism.mdx", "kind": "resource", "parentId": emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFolderOrg) + "pages" + emojiText(EmojiFolderOrg) + "showcases"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFolderOrg) + "pages" + emojiText(EmojiFolderOrg) + "showcases" + emojiText(EmojiFileResource) + "metabolism"},
-		{"file license kind", "file", map[string]interface{}{"path": "semio/go/LICENSE.md", "kind": "license", "parentId": emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "go"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "go" + emojiText(EmojiFileLicense) + "license"},
-		{"site bundle semio/docs", "bundle", map[string]interface{}{"name": "semio/docs", "kind": "site"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleSite) + "docs"},
+		{"file test kind", "file", map[string]interface{}{"path": "compose/js/sketchpad.test.ts", "kind": "lab", "parentId": emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js"}, emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFileLab) + "sketchpadtest"},
+		{"file script kind", "file", map[string]interface{}{"path": "compose/engine/build.ts", "kind": "script", "parentId": emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "engine"}, emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "engine" + emojiText(EmojiFileScript) + "build"},
+		{"file docs kind", "file", map[string]interface{}{"path": "compose/js/README.md", "kind": "docs", "parentId": emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js"}, emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFileDocs) + "readme"},
+		{"file asset kind", "file", map[string]interface{}{"path": "compose/js/sketchpad/page/showcase/metabolism.mdx", "kind": "resource", "parentId": emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFolderOrg) + "pages" + emojiText(EmojiFolderOrg) + "showcases"}, emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFolderOrg) + "pages" + emojiText(EmojiFolderOrg) + "showcases" + emojiText(EmojiFileResource) + "metabolism"},
+		{"file license kind", "file", map[string]interface{}{"path": "compose/go/LICENSE.md", "kind": "license", "parentId": emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "go"}, emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "go" + emojiText(EmojiFileLicense) + "license"},
+		{"site bundle compose/docs", "bundle", map[string]interface{}{"name": "compose/docs", "kind": "site"}, emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleSite) + "docs"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -8531,8 +8531,8 @@ func TestGraphQLRepoQuery(t *testing.T) {
 	if err != nil {
 		t.Errorf("ExecuteGraphQL returned error: %v", err)
 	}
-	if !strings.Contains(result, "semio") {
-		t.Errorf("Expected result to contain 'semio', got: %s", result)
+	if !strings.Contains(result, "compose") {
+		t.Errorf("Expected result to contain 'compose', got: %s", result)
 	}
 }
 
@@ -8541,8 +8541,8 @@ func TestGraphQLBundlesQuery(t *testing.T) {
 	if err != nil {
 		t.Errorf("ExecuteGraphQL bundles returned error: %v", err)
 	}
-	if !strings.Contains(result, "semio/js") {
-		t.Errorf("Expected result to contain 'semio/js', got: %s", result)
+	if !strings.Contains(result, "compose/js") {
+		t.Errorf("Expected result to contain 'compose/js', got: %s", result)
 	}
 }
 
@@ -8570,7 +8570,7 @@ func TestGraphQLAnalyzeQuery(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow analyze query test in short mode")
 	}
-	result, err := executor.ExecuteJSON(context.Background(), `{ analyze(scope: "semio/asset/repo/some/folder/file_fixed.go") { metrics { total } } }`, nil)
+	result, err := executor.ExecuteJSON(context.Background(), `{ analyze(scope: "compose/asset/repo/some/folder/file_fixed.go") { metrics { total } } }`, nil)
 	if err != nil {
 		t.Errorf("ExecuteGraphQL analyze returned error: %v", err)
 	}
@@ -8619,12 +8619,12 @@ func TestTreeCommands(t *testing.T) {
 		t.Skip("skipping slow tree test")
 	}
 
-	output, err := executeTreeCommand("search", "semio/go")
+	output, err := executeTreeCommand("search", "compose/go")
 	if err != nil {
 		t.Errorf("repo tree failed: %v", err)
 	}
-	if !strings.Contains(strings.ToLower(output), "semio.go") && !strings.Contains(output, "semiogo") && !strings.Contains(output, "💻semio") {
-		t.Errorf("repo tree semio/go missing semio.go, got:\n%s", output)
+	if !strings.Contains(strings.ToLower(output), "compose.go") && !strings.Contains(output, "composego") && !strings.Contains(output, "💻compose") {
+		t.Errorf("repo tree compose/go missing compose.go, got:\n%s", output)
 	}
 	if strings.Contains(output, "├── ") || strings.Contains(output, "└── ") {
 		t.Errorf("repo tree default output must be markdown, got:\n%s", output)
@@ -8633,11 +8633,11 @@ func TestTreeCommands(t *testing.T) {
 		t.Errorf("repo tree default output missing markdown list items, got:\n%s", output)
 	}
 
-	output, err = executeTreeCommand("search", "--only-folder", "semio/go")
+	output, err = executeTreeCommand("search", "--only-folder", "compose/go")
 	if err != nil {
 		t.Errorf("folder tree failed: %v", err)
 	}
-	if !strings.Contains(output, "semio.go") {
+	if !strings.Contains(output, "compose.go") {
 
 		if len(output) < 10 {
 			t.Errorf("folder tree output suspicious: %s", output)
@@ -8647,12 +8647,12 @@ func TestTreeCommands(t *testing.T) {
 		t.Errorf("folder tree default output must be markdown, got:\n%s", output)
 	}
 
-	output, err = executeTreeCommand("search", "--only-file", "semio/go")
+	output, err = executeTreeCommand("search", "--only-file", "compose/go")
 	if err != nil {
 		t.Errorf("file tree failed: %v", err)
 	}
-	if !strings.Contains(strings.ToLower(output), "semio.go") && !strings.Contains(output, "semiogo") && !strings.Contains(output, "💻semio") {
-		t.Errorf("file tree missing semio.go")
+	if !strings.Contains(strings.ToLower(output), "compose.go") && !strings.Contains(output, "composego") && !strings.Contains(output, "💻compose") {
+		t.Errorf("file tree missing compose.go")
 	}
 	if !strings.Contains(output, "- [") {
 		t.Errorf("file tree default output must be markdown, got:\n%s", output)
@@ -8680,7 +8680,7 @@ func TestTreeCommands(t *testing.T) {
 		t.Errorf("goal tree default output must be markdown, got:\n%s", output)
 	}
 
-	output, err = executeTreeCommand("search", "semio/go", "--text")
+	output, err = executeTreeCommand("search", "compose/go", "--text")
 	if err != nil {
 		t.Errorf("repo tree text failed: %v", err)
 	}
@@ -8688,7 +8688,7 @@ func TestTreeCommands(t *testing.T) {
 		t.Errorf("repo tree text output should use connectors, got:\n%s", output)
 	}
 
-	output, err = executeTreeCommand("search", "semio/go", "--json")
+	output, err = executeTreeCommand("search", "compose/go", "--json")
 	if err != nil {
 		t.Errorf("repo tree json failed: %v", err)
 	}
@@ -8864,10 +8864,10 @@ func TestCliE2E_MiscCommands_NoSideEffects(t *testing.T) {
 		{"bundle tree", []string{"search", "--only-bundle"}},
 		{"folder list", []string{"list", "--only-folder", "go"}},
 		{"file list", []string{"list", "--only-file", "go"}},
-		{"section list", []string{"list", "--only-section", "semio/js/semio.ts"}},
-		{"definition list", []string{"list", "--only-definition", "semio/js/semio.ts"}},
+		{"section list", []string{"list", "--only-section", "compose/js/compose.ts"}},
+		{"definition list", []string{"list", "--only-definition", "compose/js/compose.ts"}},
 		{"policy list", []string{"list", "--only-policy"}},
-		{"policy check", []string{"policy", "check", "code", "semio/js"}},
+		{"policy check", []string{"policy", "check", "code", "compose/js"}},
 		{"goal list", []string{"list", "--only-goal"}},
 		{"goal tree", []string{"search", "--only-goal"}},
 		{"ticket list", []string{"list", "--only-ticket"}},
@@ -10942,12 +10942,12 @@ func TestExtractTranscriptAndLLMFromNestedInput(t *testing.T) {
 		"native": {
 			"event": {
 				"model": "composer-1.5",
-				"transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/session-1/session-1.jsonl"
+				"transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/session-1/session-1.jsonl"
 			}
 		}
 	}`)
 
-	if got := extractTranscriptFromInput(input); got != "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/session-1/session-1.jsonl" {
+	if got := extractTranscriptFromInput(input); got != "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/session-1/session-1.jsonl" {
 		t.Fatalf("expected nested transcript path, got %q", got)
 	}
 
@@ -11069,9 +11069,9 @@ func TestArtifactIDAndURI(t *testing.T) {
 		{
 			name:    "technology user",
 			kind:    "technology",
-			data:    map[string]interface{}{"name": "semio", "kind": "user"},
-			wantID:  emojiText(EmojiTechnologyUser) + "semio",
-			wantURI: "repo://technology/" + emojiText(EmojiTechnologyUser) + "semio",
+			data:    map[string]interface{}{"name": "compose", "kind": "user"},
+			wantID:  emojiText(EmojiTechnologyUser) + "compose",
+			wantURI: "repo://technology/" + emojiText(EmojiTechnologyUser) + "compose",
 		},
 		{
 			name:    "technology infrastructure",
@@ -11090,16 +11090,16 @@ func TestArtifactIDAndURI(t *testing.T) {
 		{
 			name:    "bundles collection",
 			kind:    "bundles",
-			data:    map[string]interface{}{"technologyCode": "semio", "parentId": emojiText(EmojiTechnologyUser) + "semio"},
-			wantID:  emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundles),
-			wantURI: "repo://bundles/" + emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundles),
+			data:    map[string]interface{}{"technologyCode": "compose", "parentId": emojiText(EmojiTechnologyUser) + "compose"},
+			wantID:  emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundles),
+			wantURI: "repo://bundles/" + emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundles),
 		},
 		{
 			name:    "bundle library",
 			kind:    "bundle",
-			data:    map[string]interface{}{"name": "semio/js", "kind": "library"},
-			wantID:  emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js",
-			wantURI: "repo://bundle/" + emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js",
+			data:    map[string]interface{}{"name": "compose/js", "kind": "library"},
+			wantID:  emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js",
+			wantURI: "repo://bundle/" + emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js",
 		},
 		{
 			name:    "bundle example",
@@ -11111,9 +11111,9 @@ func TestArtifactIDAndURI(t *testing.T) {
 		{
 			name:    "bundle ui",
 			kind:    "bundle",
-			data:    map[string]interface{}{"name": "semio/desktop", "kind": "ui"},
-			wantID:  emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleUI) + "desktop",
-			wantURI: "repo://bundle/" + emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleUI) + "desktop",
+			data:    map[string]interface{}{"name": "compose/desktop", "kind": "ui"},
+			wantID:  emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleUI) + "desktop",
+			wantURI: "repo://bundle/" + emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleUI) + "desktop",
 		},
 		{
 			name:    "folders collection empty",
@@ -11125,21 +11125,21 @@ func TestArtifactIDAndURI(t *testing.T) {
 		{
 			name:    "folders collection with parent",
 			kind:    "folders",
-			data:    map[string]interface{}{"parentPath": "semio/js/src", "parentId": emojiText(EmojiFolderOrg) + "src"},
+			data:    map[string]interface{}{"parentPath": "compose/js/src", "parentId": emojiText(EmojiFolderOrg) + "src"},
 			wantID:  emojiText(EmojiFolderOrg) + "src" + emojiText(EmojiFolders),
 			wantURI: "repo://folders/" + emojiText(EmojiFolderOrg) + "src" + emojiText(EmojiFolders),
 		},
 		{
 			name:    "folder required",
 			kind:    "folder",
-			data:    map[string]interface{}{"path": "semio/js/src", "kind": "required"},
+			data:    map[string]interface{}{"path": "compose/js/src", "kind": "required"},
 			wantID:  emojiText(EmojiFolderRequired) + "src",
 			wantURI: "repo://folder/" + emojiText(EmojiFolderRequired) + "src",
 		},
 		{
 			name:    "folder organization",
 			kind:    "folder",
-			data:    map[string]interface{}{"path": "semio/js/utils", "kind": "organization"},
+			data:    map[string]interface{}{"path": "compose/js/utils", "kind": "organization"},
 			wantID:  emojiText(EmojiFolderOrg) + "utils",
 			wantURI: "repo://folder/" + emojiText(EmojiFolderOrg) + "utils",
 		},
@@ -11167,7 +11167,7 @@ func TestArtifactIDAndURI(t *testing.T) {
 		{
 			name:    "file test",
 			kind:    "file",
-			data:    map[string]interface{}{"path": "semio/js/src/index.test.ts", "kind": "lab"},
+			data:    map[string]interface{}{"path": "compose/js/src/index.test.ts", "kind": "lab"},
 			wantID:  emojiText(EmojiFileLab) + "indextest",
 			wantURI: "repo://file/" + emojiText(EmojiFileLab) + "indextest",
 		},
@@ -11202,44 +11202,44 @@ func TestArtifactIDAndURI(t *testing.T) {
 		{
 			name:    "sections collection",
 			kind:    "sections",
-			data:    map[string]interface{}{"filePath": "semio/js/src/index.ts", "parentId": emojiText(EmojiFileCode) + "index"},
+			data:    map[string]interface{}{"filePath": "compose/js/src/index.ts", "parentId": emojiText(EmojiFileCode) + "index"},
 			wantID:  emojiText(EmojiFileCode) + "index" + emojiText(EmojiSections),
 			wantURI: "repo://sections/" + emojiText(EmojiFileCode) + "index" + emojiText(EmojiSections),
 		},
 		{
 			name:    "section",
 			kind:    "section",
-			data:    map[string]interface{}{"path": "semio/js/src/Design.tsx#State Management#Design Store"},
-			wantID:  buildSectionID(buildFileID("semio/js/src/Design.tsx", nil), []string{"State Management", "Design Store"}),
-			wantURI: "repo://section/" + buildSectionID(buildFileID("semio/js/src/Design.tsx", nil), []string{"State Management", "Design Store"}),
+			data:    map[string]interface{}{"path": "compose/js/src/Design.tsx#State Management#Design Store"},
+			wantID:  buildSectionID(buildFileID("compose/js/src/Design.tsx", nil), []string{"State Management", "Design Store"}),
+			wantURI: "repo://section/" + buildSectionID(buildFileID("compose/js/src/Design.tsx", nil), []string{"State Management", "Design Store"}),
 		},
 		{
 			name:    "section single level",
 			kind:    "section",
-			data:    map[string]interface{}{"path": "semio/js/src/file.ts#Imports"},
-			wantID:  buildSectionID(buildFileID("semio/js/src/file.ts", nil), []string{"Imports"}),
-			wantURI: "repo://section/" + buildSectionID(buildFileID("semio/js/src/file.ts", nil), []string{"Imports"}),
+			data:    map[string]interface{}{"path": "compose/js/src/file.ts#Imports"},
+			wantID:  buildSectionID(buildFileID("compose/js/src/file.ts", nil), []string{"Imports"}),
+			wantURI: "repo://section/" + buildSectionID(buildFileID("compose/js/src/file.ts", nil), []string{"Imports"}),
 		},
 		{
 			name:    "definitions collection",
 			kind:    "definitions",
-			data:    map[string]interface{}{"filePath": "semio/js/src/index.ts", "parentId": emojiText(EmojiSection) + "types"},
+			data:    map[string]interface{}{"filePath": "compose/js/src/index.ts", "parentId": emojiText(EmojiSection) + "types"},
 			wantID:  emojiText(EmojiSection) + "types" + emojiText(EmojiDefinitions),
 			wantURI: "repo://definitions/" + emojiText(EmojiSection) + "types" + emojiText(EmojiDefinitions),
 		},
 		{
 			name:    "definition with id",
 			kind:    "definition",
-			data:    map[string]interface{}{"id": "semio/js/src/index.ts#MyClass", "kind": "implementation"},
-			wantID:  buildDefinitionID(buildFileID("semio/js/src/index.ts", nil), nil, "MyClass", DefinitionKindImplementation),
-			wantURI: "repo://definition/" + buildDefinitionID(buildFileID("semio/js/src/index.ts", nil), nil, "MyClass", DefinitionKindImplementation),
+			data:    map[string]interface{}{"id": "compose/js/src/index.ts#MyClass", "kind": "implementation"},
+			wantID:  buildDefinitionID(buildFileID("compose/js/src/index.ts", nil), nil, "MyClass", DefinitionKindImplementation),
+			wantURI: "repo://definition/" + buildDefinitionID(buildFileID("compose/js/src/index.ts", nil), nil, "MyClass", DefinitionKindImplementation),
 		},
 		{
 			name:    "definition interface",
 			kind:    "definition",
-			data:    map[string]interface{}{"kind": "interface", "filePath": "semio/js/src/file.ts", "sectionPath": "Types", "name": "MyInterface"},
-			wantID:  buildDefinitionID(buildFileID("semio/js/src/file.ts", nil), []string{"Types"}, "MyInterface", DefinitionKindInterface),
-			wantURI: "repo://definition/" + buildDefinitionID(buildFileID("semio/js/src/file.ts", nil), []string{"Types"}, "MyInterface", DefinitionKindInterface),
+			data:    map[string]interface{}{"kind": "interface", "filePath": "compose/js/src/file.ts", "sectionPath": "Types", "name": "MyInterface"},
+			wantID:  buildDefinitionID(buildFileID("compose/js/src/file.ts", nil), []string{"Types"}, "MyInterface", DefinitionKindInterface),
+			wantURI: "repo://definition/" + buildDefinitionID(buildFileID("compose/js/src/file.ts", nil), []string{"Types"}, "MyInterface", DefinitionKindInterface),
 		},
 		{
 			name:    "definition go type treated as interface",
@@ -11251,9 +11251,9 @@ func TestArtifactIDAndURI(t *testing.T) {
 		{
 			name:    "definition constant",
 			kind:    "definition",
-			data:    map[string]interface{}{"kind": "constant", "filePath": "semio/js/src/file.ts", "name": "MAX_SIZE"},
-			wantID:  buildDefinitionID(buildFileID("semio/js/src/file.ts", nil), nil, "MAX_SIZE", DefinitionKindConstant),
-			wantURI: "repo://definition/" + buildDefinitionID(buildFileID("semio/js/src/file.ts", nil), nil, "MAX_SIZE", DefinitionKindConstant),
+			data:    map[string]interface{}{"kind": "constant", "filePath": "compose/js/src/file.ts", "name": "MAX_SIZE"},
+			wantID:  buildDefinitionID(buildFileID("compose/js/src/file.ts", nil), nil, "MAX_SIZE", DefinitionKindConstant),
+			wantURI: "repo://definition/" + buildDefinitionID(buildFileID("compose/js/src/file.ts", nil), nil, "MAX_SIZE", DefinitionKindConstant),
 		},
 		{
 			name:    "tickets collection",
@@ -11435,16 +11435,16 @@ func TestIdToUri(t *testing.T) {
 		id   string
 		want string
 	}{
-		{"technology user", emojiText(EmojiTechnologyUser) + "semio", "repo://technology/" + emojiText(EmojiTechnologyUser) + "semio"},
+		{"technology user", emojiText(EmojiTechnologyUser) + "compose", "repo://technology/" + emojiText(EmojiTechnologyUser) + "compose"},
 		{"technology infra", emojiText(EmojiTechnologyInfra) + "repo", "repo://technology/" + emojiText(EmojiTechnologyInfra) + "repo"},
-		{"bundle", emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js", "repo://bundle/" + emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js"},
+		{"bundle", emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js", "repo://bundle/" + emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js"},
 		{"folder required", emojiText(EmojiFolderRequired) + "src", "repo://folder/" + emojiText(EmojiFolderRequired) + "src"},
 		{"folder org", emojiText(EmojiFolderOrg) + "utils", "repo://folder/" + emojiText(EmojiFolderOrg) + "utils"},
 		{"file docs", emojiText(EmojiFileDocs) + "test", "repo://file/" + emojiText(EmojiFileDocs) + "test"},
 		{"file code", emojiText(EmojiFileCode) + "main", "repo://file/" + emojiText(EmojiFileCode) + "main"},
 		{"section", emojiText(EmojiSection), "repo://section/" + emojiText(EmojiSection)},
-		{"section nested", buildSectionID(buildFileID("semio/js/src/design.tsx", nil), []string{"state managment", "store"}), "repo://section/" + buildSectionID(buildFileID("semio/js/src/design.tsx", nil), []string{"state managment", "store"})},
-		{"definition impl", buildDefinitionID(buildFileID("semio/js/src/file.ts", nil), []string{"types"}, "myclass", DefinitionKindImplementation), "repo://definition/" + buildDefinitionID(buildFileID("semio/js/src/file.ts", nil), []string{"types"}, "myclass", DefinitionKindImplementation)},
+		{"section nested", buildSectionID(buildFileID("compose/js/src/design.tsx", nil), []string{"state managment", "store"}), "repo://section/" + buildSectionID(buildFileID("compose/js/src/design.tsx", nil), []string{"state managment", "store"})},
+		{"definition impl", buildDefinitionID(buildFileID("compose/js/src/file.ts", nil), []string{"types"}, "myclass", DefinitionKindImplementation), "repo://definition/" + buildDefinitionID(buildFileID("compose/js/src/file.ts", nil), []string{"types"}, "myclass", DefinitionKindImplementation)},
 		{"ticket", emojiText(EmojiTicket) + "testticket", "repo://ticket/" + emojiText(EmojiTicket) + "testticket"},
 		{"goal", emojiText(EmojiGoal) + "r2602runningsketchpad", "repo://goal/" + emojiText(EmojiGoal) + "r2602runningsketchpad"},
 		{"goal nested", emojiText(EmojiGoal) + "r2602" + emojiText(EmojiGoal) + "runningsketchpad", "repo://goal/" + emojiText(EmojiGoal) + "r2602" + emojiText(EmojiGoal) + "runningsketchpad"},
@@ -11475,14 +11475,14 @@ func TestUriToId(t *testing.T) {
 	}{
 		{"root", "repo://root", ""},
 		{"technologies", "repo://technologies/" + emojiText(EmojiTechnologies), emojiText(EmojiTechnologies)},
-		{"technology", "repo://technology/" + emojiText(EmojiTechnologyUser) + "semio", emojiText(EmojiTechnologyUser) + "semio"},
+		{"technology", "repo://technology/" + emojiText(EmojiTechnologyUser) + "compose", emojiText(EmojiTechnologyUser) + "compose"},
 		{"technology infra", "repo://technology/" + emojiText(EmojiTechnologyInfra) + "repo", emojiText(EmojiTechnologyInfra) + "repo"},
-		{"bundle", "repo://bundle/" + emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js", emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js"},
+		{"bundle", "repo://bundle/" + emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js", emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js"},
 		{"folder", "repo://folder/" + emojiText(EmojiFolderOrg) + "src", emojiText(EmojiFolderOrg) + "src"},
 		{"file", "repo://file/" + emojiText(EmojiFileCode) + "test", emojiText(EmojiFileCode) + "test"},
-		{"section", "repo://section/" + buildSectionID(buildFileID("semio/js/src/Design.tsx", nil), []string{"State Management", "Design Store"}), buildSectionID(buildFileID("semio/js/src/Design.tsx", nil), []string{"State Management", "Design Store"})},
-		{"definition", "repo://definition/" + buildDefinitionID(buildFileID("semio/js/src/file.ts", nil), nil, "myFunc", DefinitionKindImplementation), buildDefinitionID(buildFileID("semio/js/src/file.ts", nil), nil, "myFunc", DefinitionKindImplementation)},
-		{"definition with section", "repo://definition/" + buildDefinitionID(buildFileID("semio/js/src/file.ts", nil), []string{"Section"}, "myFunc", DefinitionKindImplementation), buildDefinitionID(buildFileID("semio/js/src/file.ts", nil), []string{"Section"}, "myFunc", DefinitionKindImplementation)},
+		{"section", "repo://section/" + buildSectionID(buildFileID("compose/js/src/Design.tsx", nil), []string{"State Management", "Design Store"}), buildSectionID(buildFileID("compose/js/src/Design.tsx", nil), []string{"State Management", "Design Store"})},
+		{"definition", "repo://definition/" + buildDefinitionID(buildFileID("compose/js/src/file.ts", nil), nil, "myFunc", DefinitionKindImplementation), buildDefinitionID(buildFileID("compose/js/src/file.ts", nil), nil, "myFunc", DefinitionKindImplementation)},
+		{"definition with section", "repo://definition/" + buildDefinitionID(buildFileID("compose/js/src/file.ts", nil), []string{"Section"}, "myFunc", DefinitionKindImplementation), buildDefinitionID(buildFileID("compose/js/src/file.ts", nil), []string{"Section"}, "myFunc", DefinitionKindImplementation)},
 		{"ticket", "repo://ticket/" + emojiText(EmojiTicket) + "testticket", emojiText(EmojiTicket) + "testticket"},
 		{"goal", "repo://goal/" + emojiText(EmojiGoal) + "runningsketchpad", emojiText(EmojiGoal) + "runningsketchpad"},
 		{"goal nested", "repo://goal/" + emojiText(EmojiGoal) + "r2602" + emojiText(EmojiGoal) + "runningsketchpad", emojiText(EmojiGoal) + "r2602" + emojiText(EmojiGoal) + "runningsketchpad"},
@@ -11511,7 +11511,7 @@ func TestPathToUriPath(t *testing.T) {
 		path string
 		want string
 	}{
-		{"semio/js/src", "semio/js/src"},
+		{"compose/js/src", "compose/js/src"},
 		{"repo/client/main.go", "repo/client/main.go"},
 		{"test.txt", "test.txt"},
 		{"a b/c d", "a%20b/c%20d"},
@@ -11530,7 +11530,7 @@ func TestPathFromUriPath(t *testing.T) {
 		uriPath string
 		want    string
 	}{
-		{"semio/js/src", "semio/js/src"},
+		{"compose/js/src", "compose/js/src"},
 		{"repo/client/main.go", "repo/client/main.go"},
 		{"a%20b/c%20d", "a b/c d"},
 	}
@@ -11549,9 +11549,9 @@ func TestSectionIdValueToUriPath(t *testing.T) {
 		value string
 		want  string
 	}{
-		{"no hash", "semio/js/src/file.ts", "semio/js/src/file.ts"},
-		{"single section", "semio/js/src/file.ts#Imports", "semio/js/src/file.ts/Imports"},
-		{"nested sections", "semio/js/src/Design.tsx#State Management#Design Store", "semio/js/src/Design.tsx/State%20Management/Design%20Store"},
+		{"no hash", "compose/js/src/file.ts", "compose/js/src/file.ts"},
+		{"single section", "compose/js/src/file.ts#Imports", "compose/js/src/file.ts/Imports"},
+		{"nested sections", "compose/js/src/Design.tsx#State Management#Design Store", "compose/js/src/Design.tsx/State%20Management/Design%20Store"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -11569,9 +11569,9 @@ func TestDefinitionIdValueToUriPath(t *testing.T) {
 		value string
 		want  string
 	}{
-		{"no hash", "semio/js/src/file.ts", "semio/js/src/file.ts"},
-		{"with section and def", "semio/js/src/file.ts#Section§myFunc", "semio/js/src/file.ts/Section/myFunc"},
-		{"def only", "semio/js/src/file.ts§myFunc", "semio/js/src/file.ts/myFunc"},
+		{"no hash", "compose/js/src/file.ts", "compose/js/src/file.ts"},
+		{"with section and def", "compose/js/src/file.ts#Section§myFunc", "compose/js/src/file.ts/Section/myFunc"},
+		{"def only", "compose/js/src/file.ts§myFunc", "compose/js/src/file.ts/myFunc"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -11590,9 +11590,9 @@ func TestParseSectionUriPath(t *testing.T) {
 		wantFile  string
 		wantSlugs []string
 	}{
-		{"file only", "semio/js/src/file.ts", "semio/js/src/file.ts", nil},
-		{"file with sections", "semio/js/src/Design.tsx/State%20Management/Design%20Store", "semio/js/src/Design.tsx", []string{"State%20Management", "Design%20Store"}},
-		{"file with one section", "semio/js/src/file.ts/Imports", "semio/js/src/file.ts", []string{"Imports"}},
+		{"file only", "compose/js/src/file.ts", "compose/js/src/file.ts", nil},
+		{"file with sections", "compose/js/src/Design.tsx/State%20Management/Design%20Store", "compose/js/src/Design.tsx", []string{"State%20Management", "Design%20Store"}},
+		{"file with one section", "compose/js/src/file.ts/Imports", "compose/js/src/file.ts", []string{"Imports"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -11754,8 +11754,8 @@ func TestIdUriRoundTrip(t *testing.T) {
 		{"ticket", emojiText(EmojiTicket) + "20260115someticket", "repo://ticket/" + emojiText(EmojiTicket) + "20260115someticket"},
 		{"goal", emojiText(EmojiGoal) + "r2602running", "repo://goal/" + emojiText(EmojiGoal) + "r2602running"},
 		{"interaction goal", emojiText(EmojiGoal) + "r2602" + emojiText(EmojiInteractionStarted), "repo://interaction/" + emojiText(EmojiGoal) + "r2602" + emojiText(EmojiInteractionStarted)},
-		{"technology", emojiText(EmojiTechnologyUser) + "semio", "repo://technology/" + emojiText(EmojiTechnologyUser) + "semio"},
-		{"bundle", emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js", "repo://bundle/" + emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js"},
+		{"technology", emojiText(EmojiTechnologyUser) + "compose", "repo://technology/" + emojiText(EmojiTechnologyUser) + "compose"},
+		{"bundle", emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js", "repo://bundle/" + emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name+"_IdToUri", func(t *testing.T) {
@@ -11867,19 +11867,19 @@ func TestQueryFlag(t *testing.T) {
 			name:          "tree --query excludes unrelated",
 			args:          []string{"search", "--query", "zzz_nonexistent_xyz", "--text"},
 			query:         "",
-			expectMissing: "semio/go",
+			expectMissing: "compose/go",
 		},
 		{
 			name:        "technology list --query matches",
-			args:        []string{"list", "--only-technology", "--query", "semio", "--json"},
+			args:        []string{"list", "--only-technology", "--query", "compose", "--json"},
 			query:       "",
-			expectMatch: "semio",
+			expectMatch: "compose",
 		},
 		{
 			name:        "technology tree --query matches",
-			args:        []string{"search", "--only-technology", "--query", "semio", "--json"},
+			args:        []string{"search", "--only-technology", "--query", "compose", "--json"},
 			query:       "",
-			expectMatch: "semio",
+			expectMatch: "compose",
 		},
 		{
 			name:        "bundle list --query matches",
@@ -11913,15 +11913,15 @@ func TestQueryFlag(t *testing.T) {
 		},
 		{
 			name:        "file list --query matches",
-			args:        []string{"list", "--only-file", "--query", "semio", "--json"},
+			args:        []string{"list", "--only-file", "--query", "compose", "--json"},
 			query:       "",
-			expectMatch: "semio",
+			expectMatch: "compose",
 		},
 		{
 			name:        "file tree --query matches",
-			args:        []string{"search", "--only-file", "--query", "semio", "--text"},
+			args:        []string{"search", "--only-file", "--query", "compose", "--text"},
 			query:       "",
-			expectMatch: "semio",
+			expectMatch: "compose",
 		},
 		{
 			name:        "section list --query matches",
@@ -12155,9 +12155,9 @@ func TestCacheIndexAndTreeQuery(t *testing.T) {
 		if !strings.Contains(strings.ToLower(output), "cli") {
 			t.Errorf("expected 'cli' in output:\n%s", output)
 		}
-		hasSemioRepo := strings.Contains(output, "repo")
+		hasComposeRepo := strings.Contains(output, "repo")
 		hasTechnologyOrBundle := strings.Contains(output, "bundle") || strings.Contains(output, "Technologies")
-		if !hasSemioRepo || !hasTechnologyOrBundle {
+		if !hasComposeRepo || !hasTechnologyOrBundle {
 			t.Errorf("tree --query cli should return technology/bundle hierarchy; got:\n%s", output)
 		}
 	})
@@ -13447,7 +13447,7 @@ func TestSearchMonorepoTree(t *testing.T) {
 		return &TreeNode{
 			Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{
 				{Kind: TreeNodeCategory, ID: "codebase", Label: "Codebase", Children: []*TreeNode{
-					{Kind: TreeNodeTechnology, ID: "proj:semio", Label: "semio", Children: []*TreeNode{
+					{Kind: TreeNodeTechnology, ID: "proj:compose", Label: "compose", Children: []*TreeNode{
 						{Kind: TreeNodeBundle, ID: "bundle:cli", Label: "cli", SubKind: "binary"},
 						{Kind: TreeNodeBundle, ID: "bundle:docs", Label: "docs", SubKind: "site"},
 					}},
@@ -13512,8 +13512,8 @@ func TestSearchMonorepoTree(t *testing.T) {
 			t.Fatal("expected technology under technologies")
 		}
 		proj := technologiesNode.Children[0]
-		if proj.ID != "proj:semio" {
-			t.Errorf("expected semio technology, got %s", proj.ID)
+		if proj.ID != "proj:compose" {
+			t.Errorf("expected compose technology, got %s", proj.ID)
 		}
 	})
 }
@@ -13584,7 +13584,7 @@ func TestRenderMonorepoTree(t *testing.T) {
 		tree := &TreeNode{
 			Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{
 				{Kind: TreeNodeCategory, ID: "codebase", Label: "🖥️Codebase", URI: "repo://codebase", Children: []*TreeNode{
-					{Kind: TreeNodeTechnology, ID: "p1", Label: "semio"},
+					{Kind: TreeNodeTechnology, ID: "p1", Label: "compose"},
 				}},
 			},
 		}
@@ -13592,7 +13592,7 @@ func TestRenderMonorepoTree(t *testing.T) {
 		if !strings.Contains(output, "🖥️Codebase") {
 			t.Error("output should contain Codebase label")
 		}
-		if !strings.Contains(output, "semio") {
+		if !strings.Contains(output, "compose") {
 			t.Error("output should contain technology name")
 		}
 	})
@@ -13636,7 +13636,7 @@ func TestRenderMonorepoTree(t *testing.T) {
 		tree := &TreeNode{
 			Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{
 				{Kind: TreeNodeCategory, ID: "codebase", Label: "🖥️Codebase", URI: "repo://codebase", Children: []*TreeNode{
-					{Kind: TreeNodeTechnology, ID: "p1", Label: "semio"},
+					{Kind: TreeNodeTechnology, ID: "p1", Label: "compose"},
 				}},
 			},
 		}
@@ -13644,7 +13644,7 @@ func TestRenderMonorepoTree(t *testing.T) {
 		if !strings.Contains(output, "- [🖥️Codebase](repo://codebase)") {
 			t.Errorf("markdown tree should contain markdown link list item, got: %s", output)
 		}
-		if !strings.Contains(output, "  - semio") {
+		if !strings.Contains(output, "  - compose") {
 			t.Errorf("markdown tree should contain nested bullet item, got: %s", output)
 		}
 		if strings.Contains(output, "├── ") || strings.Contains(output, "└── ") {
@@ -15335,7 +15335,7 @@ func TestFilePolicyGodfileSupportsGlobPatterns(t *testing.T) {
 	}
 }
 
-func TestFilePolicyGodfileSkipsSemioRepo(t *testing.T) {
+func TestFilePolicyGodfileSkipsComposeRepo(t *testing.T) {
 	tmpDir := t.TempDir()
 	oldRoot := rootDir
 	rootDir = tmpDir
@@ -15411,8 +15411,8 @@ func TestBuildBinaryArtifactsGitIgnored(t *testing.T) {
 		"kiro.exe",
 		"mcp",
 		"mcp.exe",
-		"coda/example/semio-blnbo-roomprogram/.coda/validators/programming",
-		"coda/example/semio-blnbo-roomprogram/.coda/validators/programming.exe",
+		"coda/example/compose-blnbo-roomprogram/.coda/validators/programming",
+		"coda/example/compose-blnbo-roomprogram/.coda/validators/programming.exe",
 	}
 	ignored := GetGitIgnoredSet(artifacts)
 	for _, path := range artifacts {
@@ -15573,111 +15573,111 @@ func TestFilePolicyRegistered(t *testing.T) {
 	}
 }
 
-func TestSemioPolicyRegistered(t *testing.T) {
-	policy, found := FindPolicy("semio")
+func TestComposePolicyRegistered(t *testing.T) {
+	policy, found := FindPolicy("compose")
 	if !found {
-		t.Fatal("semio policy not registered")
+		t.Fatal("compose policy not registered")
 	}
-	if policy.Name != "Semio" {
-		t.Errorf("expected policy name Semio, got %s", policy.Name)
+	if policy.Name != "Compose" {
+		t.Errorf("expected policy name Compose, got %s", policy.Name)
 	}
 	allKinds := policy.AllKinds()
 	foundKind := false
 	for _, k := range allKinds {
-		if k == BreachSemioNoUiDependency {
+		if k == BreachComposeNoUiDependency {
 			foundKind = true
 		}
 	}
 	if !foundKind {
-		t.Error("semio policy should contain BreachSemioNoUiDependency kind")
+		t.Error("compose policy should contain BreachComposeNoUiDependency kind")
 	}
 }
 
-func TestSemioPolicyNoUiDependency(t *testing.T) {
+func TestComposePolicyNoUiDependency(t *testing.T) {
 	tmpDir := t.TempDir()
 	oldRoot := rootDir
 	rootDir = tmpDir
 	defer func() { rootDir = oldRoot }()
 	t.Run("detects tailwind-merge import", func(t *testing.T) {
-		relPath := "semio.ts"
+		relPath := "compose.ts"
 		os.WriteFile(filepath.Join(tmpDir, relPath), []byte("import { twMerge } from \"tailwind-merge\";\n"), 0644)
 		scope := Scope{Kind: ScopeRepo}
 		ctx := NewPolicyContextWithFiles(scope, []Bundle{}, []string{relPath})
-		breachs := semioPolicy(ctx)
+		breachs := composePolicy(ctx)
 		if len(breachs) != 1 {
 			t.Fatalf("expected 1 breach, got %d", len(breachs))
 		}
-		if breachs[0].Kind != BreachSemioNoUiDependency {
-			t.Errorf("expected BreachSemioNoUiDependency, got %s", breachs[0].Kind)
+		if breachs[0].Kind != BreachComposeNoUiDependency {
+			t.Errorf("expected BreachComposeNoUiDependency, got %s", breachs[0].Kind)
 		}
 	})
 	t.Run("detects elements/ui import", func(t *testing.T) {
-		relPath := "semio.test.ts"
+		relPath := "compose.test.ts"
 		os.WriteFile(filepath.Join(tmpDir, relPath), []byte("import * as UI from \"../../elements/ui\";\n"), 0644)
 		scope := Scope{Kind: ScopeRepo}
 		ctx := NewPolicyContextWithFiles(scope, []Bundle{}, []string{relPath})
-		breachs := semioPolicy(ctx)
+		breachs := composePolicy(ctx)
 		if len(breachs) != 1 {
 			t.Fatalf("expected 1 breach, got %d", len(breachs))
 		}
-		if breachs[0].Kind != BreachSemioNoUiDependency {
-			t.Errorf("expected BreachSemioNoUiDependency, got %s", breachs[0].Kind)
+		if breachs[0].Kind != BreachComposeNoUiDependency {
+			t.Errorf("expected BreachComposeNoUiDependency, got %s", breachs[0].Kind)
 		}
 	})
 	t.Run("detects clsx import", func(t *testing.T) {
-		relPath := "semio.ts"
+		relPath := "compose.ts"
 		os.WriteFile(filepath.Join(tmpDir, relPath), []byte("import { ClassValue, clsx } from \"clsx\";\n"), 0644)
 		scope := Scope{Kind: ScopeRepo}
 		ctx := NewPolicyContextWithFiles(scope, []Bundle{}, []string{relPath})
-		breachs := semioPolicy(ctx)
+		breachs := composePolicy(ctx)
 		if len(breachs) != 1 {
 			t.Fatalf("expected 1 breach, got %d", len(breachs))
 		}
 	})
 	t.Run("detects three import", func(t *testing.T) {
-		relPath := "semio.ts"
+		relPath := "compose.ts"
 		os.WriteFile(filepath.Join(tmpDir, relPath), []byte("import * as THREE from \"three\";\n"), 0644)
 		scope := Scope{Kind: ScopeRepo}
 		ctx := NewPolicyContextWithFiles(scope, []Bundle{}, []string{relPath})
-		breachs := semioPolicy(ctx)
+		breachs := composePolicy(ctx)
 		if len(breachs) != 1 {
 			t.Fatalf("expected 1 breach, got %d", len(breachs))
 		}
 	})
 	t.Run("detects multiple ui imports", func(t *testing.T) {
-		relPath := "semio.ts"
+		relPath := "compose.ts"
 		os.WriteFile(filepath.Join(tmpDir, relPath), []byte("import { clsx } from \"clsx\";\nimport { twMerge } from \"tailwind-merge\";\nimport * as THREE from \"three\";\n"), 0644)
 		scope := Scope{Kind: ScopeRepo}
 		ctx := NewPolicyContextWithFiles(scope, []Bundle{}, []string{relPath})
-		breachs := semioPolicy(ctx)
+		breachs := composePolicy(ctx)
 		if len(breachs) != 3 {
 			t.Fatalf("expected 3 breachs, got %d", len(breachs))
 		}
 	})
 	t.Run("allows non-ui imports", func(t *testing.T) {
-		relPath := "semio.ts"
+		relPath := "compose.ts"
 		os.WriteFile(filepath.Join(tmpDir, relPath), []byte("import { z } from \"zod\";\nimport { v7 as uuidv7 } from \"uuid\";\n"), 0644)
 		scope := Scope{Kind: ScopeRepo}
 		ctx := NewPolicyContextWithFiles(scope, []Bundle{}, []string{relPath})
-		breachs := semioPolicy(ctx)
+		breachs := composePolicy(ctx)
 		if len(breachs) != 0 {
 			t.Errorf("expected 0 breachs, got %d", len(breachs))
 		}
 	})
-	t.Run("ignores non-semio files", func(t *testing.T) {
+	t.Run("ignores non-compose files", func(t *testing.T) {
 		relPath := "other.ts"
 		os.WriteFile(filepath.Join(tmpDir, relPath), []byte("import { clsx } from \"clsx\";\n"), 0644)
 		scope := Scope{Kind: ScopeRepo}
 		ctx := NewPolicyContextWithFiles(scope, []Bundle{}, []string{relPath})
-		breachs := semioPolicy(ctx)
+		breachs := composePolicy(ctx)
 		if len(breachs) != 0 {
-			t.Errorf("expected 0 breachs for non-semio file, got %d", len(breachs))
+			t.Errorf("expected 0 breachs for non-compose file, got %d", len(breachs))
 		}
 	})
 	t.Run("not autofixable", func(t *testing.T) {
-		info := BreachSemioNoUiDependency.Info()
+		info := BreachComposeNoUiDependency.Info()
 		if info.Autofixable {
-			t.Error("BreachSemioNoUiDependency should not be autofixable")
+			t.Error("BreachComposeNoUiDependency should not be autofixable")
 		}
 	})
 }
@@ -15786,7 +15786,7 @@ func TestIsToolBlocked(t *testing.T) {
 		{"git cherry-pick blocked", "run_in_terminal", "git cherry-pick abc123", true},
 		{"git clone blocked", "run_in_terminal", "git clone https://example.com/repo.git", true},
 		{"git commit blocked", "run_in_terminal", "git commit -m test", true},
-		{"git config blocked", "run_in_terminal", "git config user.name semio", true},
+		{"git config blocked", "run_in_terminal", "git config user.name compose", true},
 		{"git fetch blocked", "run_in_terminal", "git fetch origin", true},
 		{"git init blocked", "run_in_terminal", "git init", true},
 		{"git merge blocked", "run_in_terminal", "git merge main", true},
@@ -15825,7 +15825,7 @@ func TestIsToolBlocked(t *testing.T) {
 		{"case insensitive", "TERMINAL", "GIT CHECKOUT main", true},
 		{"grep with git checkout pattern not blocked", "", `grep "git checkout" file.go`, false},
 		{"echo with git stash not blocked", "", `echo "git stash"`, false},
-		{"semio cli command not blocked", "", `go run ./repo/client/mcp tree "hooks events inlet adapter cli"`, false},
+		{"compose cli command not blocked", "", `go run ./repo/client/mcp tree "hooks events inlet adapter cli"`, false},
 		{"cd then git checkout blocked", "", "cd /workspaces && git checkout feature", true},
 		{"pipe grep allowed", "", `ls | grep "git checkout"`, false},
 		{"git checkout after semicolon blocked", "", "echo done; git checkout main", true},
@@ -17387,7 +17387,7 @@ func TestDeriveRepoOpFromMCPTool(t *testing.T) {
 		{"graphql", "mcp__repo__graphql", "graphql"},
 		{"move", "mcp__repo__move", "move"},
 		{"policy check", "mcp__repo__policy_check", "policy.check"},
-		{"non-semio tool", "mcp__other__thing", ""},
+		{"non-compose tool", "mcp__other__thing", ""},
 		{"bash tool", "Bash", ""},
 		{"empty", "", ""},
 	}
@@ -17409,7 +17409,7 @@ func TestDeriveRepoOpFromCLICommand(t *testing.T) {
 	}{
 		{"ticket open full path", "go run ./repo/client/mcp ticket open MY-GOAL 'My Title' 'My Prompt' claude-code sonnet-4-5", "ticket.open"},
 		{"ticket open exe path", ".\\repo\\cli\\cli.exe ticket open MY-GOAL 'My Title' 'My Prompt' claude-code sonnet-4-5", "ticket.open"},
-		{"ticket close", "./cli ticket close 26 03 05 MY-SLUG 'Summary' semio/go/semio.go", "ticket.close"},
+		{"ticket close", "./cli ticket close 26 03 05 MY-SLUG 'Summary' compose/go/compose.go", "ticket.close"},
 		{"ticket reopen", "/workspaces/semio/repo/client/client ticket reopen 26 03 05 MY-SLUG 'Prompt' claude-code sonnet-4-5", "ticket.reopen"},
 		{"ticket reopen go run", "go run ./repo/client/mcp ticket reopen 26 03 05 MY-SLUG 'Prompt' claude-code sonnet-4-5", "ticket.reopen"},
 		{"goal open", "./cli goal open 'Title' 'Desc' 'Prompt' claude-code sonnet-4-5", "goal.open"},
@@ -17519,7 +17519,7 @@ func TestLogRepoOperationHookMCPTool(t *testing.T) {
 		}
 	})
 
-	t.Run("no extra file for non-semio tool", func(t *testing.T) {
+	t.Run("no extra file for non-compose tool", func(t *testing.T) {
 		result := HookResultAgentToolStarting{
 			HookResultAgentBase: HookResultAgentBase{
 				HookResultBase: HookResultBase{Allowed: true},
@@ -17763,8 +17763,8 @@ func TestTrackHookAllEventsLogged(t *testing.T) {
 		{"agent.tool.terminal.ended", HookAgentToolTerminalEnded, json.RawMessage(`{"session_id":"test-session-1","command":"go test ./...","pid":"12345","stdout":"PASS"}`)},
 		{"agent.tool.test.starting", HookAgentToolTestStarting, json.RawMessage(`{"session_id":"test-session-1","tool_input":{"files":["/tmp/test.go"],"timeout":"30000"}}`)},
 		{"agent.tool.test.ended", HookAgentToolTestEnded, json.RawMessage(`{"session_id":"test-session-1","tool_output":{"succeeded":["TestA"],"failed":["TestB"]}}`)},
-		{"agent.tool.build.starting", HookAgentToolBuildStarting, json.RawMessage(`{"session_id":"test-session-1","tool_input":{"bundles":["semio/js"]}}`)},
-		{"agent.tool.build.ended", HookAgentToolBuildEnded, json.RawMessage(`{"session_id":"test-session-1","tool_output":{"succeeded":["semio/js"]}}`)},
+		{"agent.tool.build.starting", HookAgentToolBuildStarting, json.RawMessage(`{"session_id":"test-session-1","tool_input":{"bundles":["compose/js"]}}`)},
+		{"agent.tool.build.ended", HookAgentToolBuildEnded, json.RawMessage(`{"session_id":"test-session-1","tool_output":{"succeeded":["compose/js"]}}`)},
 		{"agent.tool.ended", HookAgentToolEnded, json.RawMessage(`{"session_id":"test-session-1","tool_name":"grep_search"}`)},
 		{"agent.tool.plan.updating.starting", HookAgentToolPlanUpdatingStarting, json.RawMessage(`{"session_id":"test-session-1","tool_input":{"todoList":[{"title":"Step 1","status":"completed"},{"title":"Step 2","status":"in-progress"}]}}`)},
 		{"agent.ended", HookAgentEnded, sessionInput},
@@ -18109,7 +18109,7 @@ func TestHookCommandStdinPiped(t *testing.T) {
 	payload := `{"session_id":"sess1","tool_name":"Read","tool_input":{"file_path":"/tmp/x"}}`
 	cmd := exec.Command("./cli", "hook", "agent.tool.ended", "claude-code", "--tool-name", "Read")
 	cmd.Stdin = strings.NewReader(payload)
-	cmd.Env = append(os.Environ(), fmt.Sprintf("SEMIO_REPO=%s", tmpDir))
+	cmd.Env = append(os.Environ(), fmt.Sprintf("COMPOSE_REPO=%s", tmpDir))
 	cmd.Dir = filepath.Dir(os.Args[0])
 	out, err := cmd.CombinedOutput()
 	_ = out
@@ -20101,12 +20101,12 @@ func TestExtractSearchFromInput(t *testing.T) {
 		}
 	})
 	t.Run("webpages only", func(t *testing.T) {
-		input := json.RawMessage(`{"tool_input":{"url":"https://example.com/docs","pages":["https://semio.dev","not-a-url"]}}`)
+		input := json.RawMessage(`{"tool_input":{"url":"https://example.com/docs","pages":["https://compose.dev","not-a-url"]}}`)
 		pages, ranges := extractSearchFromInput(input, "")
 		if len(ranges) != 0 {
 			t.Errorf("expected no ranges, got %v", ranges)
 		}
-		if len(pages) != 2 || pages[0] != "https://example.com/docs" || pages[1] != "https://semio.dev" {
+		if len(pages) != 2 || pages[0] != "https://example.com/docs" || pages[1] != "https://compose.dev" {
 			t.Errorf("expected only valid webpages, got %v", pages)
 		}
 	})
@@ -20798,25 +20798,25 @@ func TestNativeHookEventMappingWithRealData(t *testing.T) {
 		{"windsurf/post_write_code", "post_write_code", "windsurf-chat", "", `{"second":"2026-02-18T18:57:35.000Z","trajectory_id":"23e6dcf5","execution_id":"d9b64466"}`, HookAgentToolCodeEditEnded, ""},
 		{"windsurf/pre_run_command", "pre_run_command", "windsurf-chat", "", `{"second":"2026-02-18T18:54:00.000Z","trajectory_id":"23e6dcf5","execution_id":"d9b64466"}`, HookAgentToolTerminalStarting, ""},
 		{"windsurf/post_run_command", "post_run_command", "windsurf-chat", "", `{"agent_action_name":"post_run_command","trajectory_id":"23e6dcf5","second":"2026-02-18T18:57:49.375Z","execution_id":"d9b64466","tool_info":{"command_line":"npm install","cwd":"/workspaces/semio"}}`, HookAgentToolTerminalEnded, ""},
-		{"claude/SessionStart", "SessionStart", "claude-code", "", `{"session_id":"167906cd-0550-4387-96af-2cc20cb48fe3","transcript_path":"/home/vscode/.claude/technologies/-workspaces-semio/167906cd.jsonl","cwd":"/workspaces/semio","hook_event_name":"SessionStart","source":"startup"}`, HookAgentStarted, ""},
-		{"claude/SessionEnd", "SessionEnd", "claude-code", "", `{"session_id":"167906cd-0550-4387-96af-2cc20cb48fe3","transcript_path":"/home/vscode/.claude/technologies/-workspaces-semio/167906cd.jsonl","cwd":"/workspaces/semio","hook_event_name":"SessionEnd"}`, HookAgentEnded, ""},
+		{"claude/SessionStart", "SessionStart", "claude-code", "", `{"session_id":"167906cd-0550-4387-96af-2cc20cb48fe3","transcript_path":"/home/vscode/.claude/technologies/-workspaces-compose/167906cd.jsonl","cwd":"/workspaces/semio","hook_event_name":"SessionStart","source":"startup"}`, HookAgentStarted, ""},
+		{"claude/SessionEnd", "SessionEnd", "claude-code", "", `{"session_id":"167906cd-0550-4387-96af-2cc20cb48fe3","transcript_path":"/home/vscode/.claude/technologies/-workspaces-compose/167906cd.jsonl","cwd":"/workspaces/semio","hook_event_name":"SessionEnd"}`, HookAgentEnded, ""},
 		{"claude/SubagentStart", "SubagentStart", "claude-code", "", `{"session_id":"167906cd","transcript_path":"/tmp/t.jsonl","hook_event_name":"SubagentStart"}`, HookAgentStarted, "subagent"},
 		{"claude/SubagentStop", "SubagentStop", "claude-code", "", `{"session_id":"167906cd","transcript_path":"/tmp/t.jsonl","hook_event_name":"SubagentStop"}`, HookAgentEnded, "subagent"},
-		{"claude/Stop", "Stop", "claude-code", "", `{"session_id":"167906cd-0550-4387-96af-2cc20cb48fe3","transcript_path":"/home/vscode/.claude/technologies/-workspaces-semio/167906cd.jsonl","cwd":"/workspaces/semio","permission_mode":"bypassPermissions","hook_event_name":"Stop","stop_hook_active":false}`, HookAgentEnded, ""},
+		{"claude/Stop", "Stop", "claude-code", "", `{"session_id":"167906cd-0550-4387-96af-2cc20cb48fe3","transcript_path":"/home/vscode/.claude/technologies/-workspaces-compose/167906cd.jsonl","cwd":"/workspaces/semio","permission_mode":"bypassPermissions","hook_event_name":"Stop","stop_hook_active":false}`, HookAgentEnded, ""},
 		{"claude/UserPromptSubmit", "UserPromptSubmit", "claude-code", "", `{"session_id":"167906cd","transcript_path":"/tmp/t.jsonl","hook_event_name":"UserPromptSubmit","prompt":"Fix the bug"}`, HookAgentPromptSubmitting, ""},
 		{"claude/PreCompact", "PreCompact", "claude-code", "", `{"session_id":"167906cd","transcript_path":"/tmp/t.jsonl","hook_event_name":"PreCompact"}`, HookAgentCompacting, ""},
 		{"claude/TaskCompleted", "TaskCompleted", "claude-code", "", `{"session_id":"167906cd","transcript_path":"/tmp/t.jsonl","hook_event_name":"TaskCompleted"}`, HookAgentToolPlanUpdatingEnded, ""},
 		{"claude/Notification", "Notification", "claude-code", "", `{"session_id":"167906cd","transcript_path":"/tmp/t.jsonl","hook_event_name":"Notification"}`, HookAgentToolStarting, ""},
 		{"claude/TeammateIdle", "TeammateIdle", "claude-code", "", `{"session_id":"167906cd","transcript_path":"/tmp/t.jsonl","hook_event_name":"TeammateIdle"}`, HookAgentToolStarting, ""},
 		{"claude/PermissionRequest", "PermissionRequest", "claude-code", "", `{"session_id":"167906cd","transcript_path":"/tmp/t.jsonl","hook_event_name":"PermissionRequest"}`, HookAgentToolStarting, ""},
-		{"claude/PreToolUse/Bash", "PreToolUse", "claude-code", "Bash", `{"session_id":"167906cd-0550-4387-96af-2cc20cb48fe3","transcript_path":"/home/vscode/.claude/technologies/-workspaces-semio/167906cd.jsonl","cwd":"/workspaces/semio","permission_mode":"bypassPermissions","hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"go test -v"},"tool_use_id":"toolu_01WKqqc5y27LZu1KTB5GsGDu"}`, HookAgentToolTestStarting, ""},
-		{"claude/PreToolUse/Read", "PreToolUse", "claude-code", "Read", `{"session_id":"167906cd-0550-4387-96af-2cc20cb48fe3","transcript_path":"/home/vscode/.claude/technologies/-workspaces-semio/167906cd.jsonl","cwd":"/workspaces/semio","permission_mode":"bypassPermissions","hook_event_name":"PreToolUse","tool_name":"Read","tool_input":{"file_path":"/workspaces/semio/main.go"},"tool_use_id":"toolu_01Md976UFvJmmL5KaH4xzsx8"}`, HookAgentToolSearchStarting, ""},
-		{"claude/PreToolUse/Edit", "PreToolUse", "claude-code", "Edit", `{"session_id":"e51a2976-3fee-42db-a5cf-7b2f0a4c5b84","transcript_path":"/home/vscode/.claude/technologies/-workspaces-semio/e51a2976.jsonl","tool_name":"Edit"}`, HookAgentToolCodeEditStarting, ""},
-		{"claude/PreToolUse/Glob", "PreToolUse", "claude-code", "Glob", `{"session_id":"167906cd-0550-4387-96af-2cc20cb48fe3","transcript_path":"/home/vscode/.claude/technologies/-workspaces-semio/167906cd.jsonl","hook_event_name":"PreToolUse","tool_name":"Glob","tool_input":{"pattern":"**/*.json"}}`, HookAgentToolStarting, ""},
+		{"claude/PreToolUse/Bash", "PreToolUse", "claude-code", "Bash", `{"session_id":"167906cd-0550-4387-96af-2cc20cb48fe3","transcript_path":"/home/vscode/.claude/technologies/-workspaces-compose/167906cd.jsonl","cwd":"/workspaces/semio","permission_mode":"bypassPermissions","hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"go test -v"},"tool_use_id":"toolu_01WKqqc5y27LZu1KTB5GsGDu"}`, HookAgentToolTestStarting, ""},
+		{"claude/PreToolUse/Read", "PreToolUse", "claude-code", "Read", `{"session_id":"167906cd-0550-4387-96af-2cc20cb48fe3","transcript_path":"/home/vscode/.claude/technologies/-workspaces-compose/167906cd.jsonl","cwd":"/workspaces/semio","permission_mode":"bypassPermissions","hook_event_name":"PreToolUse","tool_name":"Read","tool_input":{"file_path":"/workspaces/semio/main.go"},"tool_use_id":"toolu_01Md976UFvJmmL5KaH4xzsx8"}`, HookAgentToolSearchStarting, ""},
+		{"claude/PreToolUse/Edit", "PreToolUse", "claude-code", "Edit", `{"session_id":"e51a2976-3fee-42db-a5cf-7b2f0a4c5b84","transcript_path":"/home/vscode/.claude/technologies/-workspaces-compose/e51a2976.jsonl","tool_name":"Edit"}`, HookAgentToolCodeEditStarting, ""},
+		{"claude/PreToolUse/Glob", "PreToolUse", "claude-code", "Glob", `{"session_id":"167906cd-0550-4387-96af-2cc20cb48fe3","transcript_path":"/home/vscode/.claude/technologies/-workspaces-compose/167906cd.jsonl","hook_event_name":"PreToolUse","tool_name":"Glob","tool_input":{"pattern":"**/*.json"}}`, HookAgentToolStarting, ""},
 		{"claude/PreToolUse/Grep", "PreToolUse", "claude-code", "Grep", `{"session_id":"e51a2976","transcript_path":"/tmp/t.jsonl","hook_event_name":"PreToolUse","tool_name":"Grep","tool_input":{"pattern":"BlockedToolPatterns"}}`, HookAgentToolSearchStarting, ""},
-		{"claude/PreToolUse/mcp_tree", "PreToolUse", "claude-code", "mcp__repo__tree", `{"session_id":"167906cd-0550-4387-96af-2cc20cb48fe3","transcript_path":"/home/vscode/.claude/technologies/-workspaces-semio/167906cd.jsonl","hook_event_name":"PreToolUse","tool_name":"mcp__repo__tree","tool_input":{"query":"hooks"}}`, HookAgentToolStarting, ""},
-		{"claude/PostToolUse/Bash", "PostToolUse", "claude-code", "Bash", `{"session_id":"167906cd-0550-4387-96af-2cc20cb48fe3","tool_name":"Bash","transcript_path":"/home/vscode/.claude/technologies/-workspaces-semio/167906cd.jsonl"}`, HookAgentToolTerminalEnded, ""},
-		{"claude/PostToolUse/Edit", "PostToolUse", "claude-code", "Edit", `{"session_id":"e51a2976-3fee-42db-a5cf-7b2f0a4c5b84","tool_name":"Edit","transcript_path":"/home/vscode/.claude/technologies/-workspaces-semio/e51a2976.jsonl"}`, HookAgentToolCodeEditEnded, ""},
+		{"claude/PreToolUse/mcp_tree", "PreToolUse", "claude-code", "mcp__repo__tree", `{"session_id":"167906cd-0550-4387-96af-2cc20cb48fe3","transcript_path":"/home/vscode/.claude/technologies/-workspaces-compose/167906cd.jsonl","hook_event_name":"PreToolUse","tool_name":"mcp__repo__tree","tool_input":{"query":"hooks"}}`, HookAgentToolStarting, ""},
+		{"claude/PostToolUse/Bash", "PostToolUse", "claude-code", "Bash", `{"session_id":"167906cd-0550-4387-96af-2cc20cb48fe3","tool_name":"Bash","transcript_path":"/home/vscode/.claude/technologies/-workspaces-compose/167906cd.jsonl"}`, HookAgentToolTerminalEnded, ""},
+		{"claude/PostToolUse/Edit", "PostToolUse", "claude-code", "Edit", `{"session_id":"e51a2976-3fee-42db-a5cf-7b2f0a4c5b84","tool_name":"Edit","transcript_path":"/home/vscode/.claude/technologies/-workspaces-compose/e51a2976.jsonl"}`, HookAgentToolCodeEditEnded, ""},
 		{"claude/PostToolUse/Read", "PostToolUse", "claude-code", "Read", `{"session_id":"167906cd","tool_name":"Read","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolSearchEnded, ""},
 		{"claude/PostToolUse/TodoWrite", "PostToolUse", "claude-code", "TodoWrite", `{"session_id":"167906cd","tool_name":"TodoWrite","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolPlanUpdatingEnded, ""},
 		{"claude/PostToolUse/mcp_tree", "PostToolUse", "claude-code", "mcp__repo__tree", `{"session_id":"167906cd","tool_name":"mcp__repo__tree","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolEnded, ""},
@@ -21255,7 +21255,7 @@ func TestCheckpointInLoggedEventJSON(t *testing.T) {
 	}
 }
 
-func TestEventIDsUseSemioRepoFormat(t *testing.T) {
+func TestEventIDsUseComposeRepoFormat(t *testing.T) {
 	tmpDir := initTestGitRepo(t, "main")
 	SetRootDir(tmpDir)
 
@@ -22020,7 +22020,7 @@ func TestIsHeaderMetaLine(t *testing.T) {
 	if !isHeaderMetaLine("2025 Ueli Saluz <ueli@semio-tech.com>") {
 		t.Error("should detect contributor line starting with year")
 	}
-	if !isHeaderMetaLine("💻semio/asset/repo/some/folder/file.py") {
+	if !isHeaderMetaLine("💻compose/asset/repo/some/folder/file.py") {
 		t.Error("should detect file ID emoji prefix")
 	}
 	if isHeaderMetaLine("This function handles parsing.") {
@@ -22049,7 +22049,7 @@ func TestExtractMarkdownSection(t *testing.T) {
 }
 
 func TestExtractFileHeaderSummary(t *testing.T) {
-	summary := ExtractFileHeaderSummary("semio/asset/repo/some/folder/file_empty_region.tsx")
+	summary := ExtractFileHeaderSummary("compose/asset/repo/some/folder/file_empty_region.tsx")
 	if strings.Contains(summary, "GNU") || strings.Contains(summary, "license") || strings.Contains(summary, "redistribute") {
 		t.Errorf("should not contain license text, got: %q", summary)
 	}
@@ -22059,14 +22059,14 @@ func TestExtractFileHeaderSummary(t *testing.T) {
 }
 
 func TestExtractFileHeaderSummaryReturnsActualSummary(t *testing.T) {
-	summary := ExtractFileHeaderSummary("semio/asset/repo/some/folder/file_empty_region.tsx")
+	summary := ExtractFileHeaderSummary("compose/asset/repo/some/folder/file_empty_region.tsx")
 	if strings.Contains(summary, "free software") {
 		t.Errorf("should not return license as summary, got: %q", summary)
 	}
 }
 
 func TestExtractFileHeaderRequirementsNoLicense(t *testing.T) {
-	requirements := ExtractFileHeaderRequirements("semio/asset/repo/some/folder/file.py")
+	requirements := ExtractFileHeaderRequirements("compose/asset/repo/some/folder/file.py")
 	if strings.Contains(requirements, "GNU") || strings.Contains(requirements, "license") || strings.Contains(requirements, "redistribute") {
 		t.Errorf("should not contain license text, got: %q", requirements)
 	}
@@ -22179,38 +22179,38 @@ func TestGenerateTechnologyTodosInvalidTechnology(t *testing.T) {
 	}
 }
 
-func TestGenerateTechnologyRequirementsSemio(t *testing.T) {
-	err := GenerateTechnologyRequirements("semio")
+func TestGenerateTechnologyRequirementsCompose(t *testing.T) {
+	err := GenerateTechnologyRequirements("compose")
 	if err != nil {
-		t.Fatalf("GenerateTechnologyRequirements semio failed: %v", err)
+		t.Fatalf("GenerateTechnologyRequirements compose failed: %v", err)
 	}
-	content, err := ReadTextFile(filepath.Join(rootDir, "semio", "SPECS.md"))
+	content, err := ReadTextFile(filepath.Join(rootDir, "compose", "SPECS.md"))
 	if err != nil {
-		t.Fatalf("failed to read semio/SPECS.md: %v", err)
+		t.Fatalf("failed to read compose/SPECS.md: %v", err)
 	}
 	if strings.Contains(content, "GNU") || strings.Contains(content, "free software") || strings.Contains(content, "redistribute") {
-		t.Error("semio SPECS.md should not contain license text")
+		t.Error("compose SPECS.md should not contain license text")
 	}
 	if !strings.Contains(content, "MUST") {
-		t.Error("semio SPECS.md should contain MUST keywords")
+		t.Error("compose SPECS.md should contain MUST keywords")
 	}
 }
 
-func TestGenerateTechnologyDocsSemio(t *testing.T) {
-	err := GenerateTechnologyDocs("semio")
+func TestGenerateTechnologyDocsCompose(t *testing.T) {
+	err := GenerateTechnologyDocs("compose")
 	if err != nil {
-		t.Fatalf("GenerateTechnologyDocs semio failed: %v", err)
+		t.Fatalf("GenerateTechnologyDocs compose failed: %v", err)
 	}
-	content, err := ReadTextFile(filepath.Join(rootDir, "semio", "DOCS.md"))
+	content, err := ReadTextFile(filepath.Join(rootDir, "compose", "DOCS.md"))
 	if err != nil {
-		t.Fatalf("failed to read semio/DOCS.md: %v", err)
+		t.Fatalf("failed to read compose/DOCS.md: %v", err)
 	}
 	if strings.Contains(content, "GNU") || strings.Contains(content, "free software") || strings.Contains(content, "redistribute") {
-		t.Error("semio DOCS.md should not contain license text")
+		t.Error("compose DOCS.md should not contain license text")
 	}
 }
 
-func TestGenerateTechnologyRequirementsSemioRepo(t *testing.T) {
+func TestGenerateTechnologyRequirementsComposeRepo(t *testing.T) {
 	err := GenerateTechnologyRequirements("repo")
 	if err != nil {
 		t.Fatalf("GenerateTechnologyRequirements repo failed: %v", err)

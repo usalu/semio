@@ -74,8 +74,8 @@ def hl(items=None):
 
 def main() -> None:
     repo = Path(__file__).resolve().parents[6]
-    snap_path = repo / "semio" / "assets" / "semio" / "metabolism.kit.snapshot.semio.json"
-    out_path = repo / "semio" / "assets" / "semio" / "metabolism.kit.semio.json"
+    snap_path = repo / "compose" / "assets" / "compose" / "metabolism.kit.snapshot.compose.json"
+    out_path = repo / "compose" / "assets" / "compose" / "metabolism.kit.compose.json"
 
     full = json.loads(snap_path.read_text(encoding="utf-8"))
     shaped = transform_obj(copy.deepcopy(full))
@@ -95,7 +95,7 @@ def main() -> None:
         "id": ckpt_id,
         "hash": HASH,
         "timestamp": ts,
-        "message": "initial import from metabolism.kit.snapshot.semio.json",
+        "message": "initial import from metabolism.kit.snapshot.compose.json",
         "authors": hl(),
         "changes": hl(),
         "frozenRoot": frozen,

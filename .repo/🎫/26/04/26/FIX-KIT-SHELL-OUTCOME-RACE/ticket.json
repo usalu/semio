@@ -3,7 +3,7 @@
   "emoji": "🎫",
   "status": "closed",
   "description": "`KitStore.submitShell` awaited `submitKitCommand` then subscribed for `succeeded`/`failed`. On inline WASM (Node vitest), the command shell can emit the terminal lifecycle event before the waiter subscribes, so the client timed out. Subscribe and buffer lifecycle events before issuing the mutation, then correlate by `requestId` after the receipt.",
-  "summary": "Replaced post-receipt `waitForKitCommandOutcome` with a single `submitShell` flow: subscribe first, buffer up to 64 `KitCommandLifecycleEvent`s, run `submitKitCommand`, set `targetRequestId`, drain buffer, and keep the same subscription for late events until timeout or outcome. Kept `normalizeKitEventFromSubscription` unwrap of serde `SemioKitCommand` tag. Verified with `npm test` in `semio/js` (6/6). Repo MCP was unavailable in this session (server not registered), so ticket lifecycle was recorded manually in this folder.",
+  "summary": "Replaced post-receipt `waitForKitCommandOutcome` with a single `submitShell` flow: subscribe first, buffer up to 64 `KitCommandLifecycleEvent`s, run `submitKitCommand`, set `targetRequestId`, drain buffer, and keep the same subscription for late events until timeout or outcome. Kept `normalizeKitEventFromSubscription` unwrap of serde `ComposeKitCommand` tag. Verified with `npm test` in `compose/js` (6/6). Repo MCP was unavailable in this session (server not registered), so ticket lifecycle was recorded manually in this folder.",
   "github": {
     "issue": ""
   },

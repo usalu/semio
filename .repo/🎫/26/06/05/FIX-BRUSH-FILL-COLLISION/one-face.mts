@@ -6,15 +6,15 @@ import {
   brushPreviewCollisionBox, boxesPenetrationExceeds, brushCollisionContactEpsilon,
   brushCollisionGltfRoot, clearBrushCollisionGltfScenes, parseFixtureV1, registerBrushCollisionGltfScene,
   enumerateBrushFillVortexTargets, vortexWorldCadFromObject, type BrushSceneCollisionSource,
-} from "/Users/ueli/Documents/semio/puzzle/3d/react/index.tsx";
+} from "/Users/ueli/Documents/compose/puzzle/3d/react/index.tsx";
 import { Group } from "three";
 
-const repo = "/Users/ueli/Documents/semio";
+const repo = "/Users/ueli/Documents/compose";
 const loader = new GLTFLoader();
-const left = await new Promise<Group>((res,rej)=>loader.parse(readFileSync(resolve(repo,"semio/fixtures/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest-left.glb")).buffer.slice(0),"",g=>res(g.scene),rej));
+const left = await new Promise<Group>((res,rej)=>loader.parse(readFileSync(resolve(repo,"compose/fixtures/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest-left.glb")).buffer.slice(0),"",g=>res(g.scene),rej));
 clearBrushCollisionGltfScenes();
 registerBrushCollisionGltfScene("/meshes/hexagonal-cut-concrete-forest-left.glb", left);
-registerBrushCollisionGltfScene("/meshes/hexagonal-cut-concrete-forest-right.glb", await new Promise<Group>((res,rej)=>loader.parse(readFileSync(resolve(repo,"semio/fixtures/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest-right.glb")).buffer.slice(0),"",g=>res(g.scene),rej)));
+registerBrushCollisionGltfScene("/meshes/hexagonal-cut-concrete-forest-right.glb", await new Promise<Group>((res,rej)=>loader.parse(readFileSync(resolve(repo,"compose/fixtures/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest-right.glb")).buffer.slice(0),"",g=>res(g.scene),rej)));
 const f = parseFixtureV1(JSON.parse(readFileSync(resolve(repo,"puzzle/3d/fixture/concrete-forest.3d.json"),"utf8")))!;
 const catalogs = JSON.parse(readFileSync(resolve(repo,"puzzle/3d/fixture/concrete-forest.3d.json"),"utf8")).meta;
 const seed = f.objects[0]!;

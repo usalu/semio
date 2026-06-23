@@ -1,7 +1,7 @@
 {
   "title": "Desktop Vite Shim Alias And Metabolism Folder E2E",
   "status": "closed",
-  "description": "Fix react/with-selector alias; add SEMIO_E2E_KIT_FOLDER hook; folder kit test for metabolism/Nakagin.",
+  "description": "Fix react/with-selector alias; add COMPOSE_E2E_KIT_FOLDER hook; folder kit test for metabolism/Nakagin.",
   "summary": "Bulk close",
   "goal": "🎯r2602🎯runningsketchpad",
   "sessions": [

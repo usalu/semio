@@ -1,6 +1,6 @@
 import fs from "node:fs";
 
-const idx = fs.readFileSync("semio/js/index.ts", "utf8");
+const idx = fs.readFileSync("compose/js/index.ts", "utf8");
 const idxHead = idx.split("//#region 🧩WasmGraphNamespace")[0] ?? idx;
 const cqrsNames = new Set();
 for (const re of [/^export (async )?function (\w+)/gm, /^export const (\w+)/gm, /^export class (\w+)/gm]) {
@@ -8,7 +8,7 @@ for (const re of [/^export (async )?function (\w+)/gm, /^export const (\w+)/gm, 
   while ((m = re.exec(idxHead))) cqrsNames.add(m[2] || m[1]);
 }
 
-const wasm = fs.readFileSync("semio/js/kit-wasm-store.ts", "utf8");
+const wasm = fs.readFileSync("compose/js/kit-wasm-store.ts", "utf8");
 const names = new Set();
 for (const re of [/^export (async )?function (\w+)/gm, /^export const (\w+)/gm, /^export class (\w+)/gm]) {
   let m;

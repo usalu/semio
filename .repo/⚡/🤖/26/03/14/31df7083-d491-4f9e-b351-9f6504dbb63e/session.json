@@ -1,6 +1,6 @@
 {
   "id": "31df7083-d491-4f9e-b351-9f6504dbb63e",
-  "uri": "semiorepo://s/31df7083-d491-4f9e-b351-9f6504dbb63e",
+  "uri": "composerepo://s/31df7083-d491-4f9e-b351-9f6504dbb63e",
   "contributor": "🧑‍💻ueli",
   "client": "windsurf-chat",
   "second": "2026-03-14T23:18:26Z",
@@ -23,13 +23,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🧰semiorepo⌨️cli💻main"
+            "id": "🧰composerepo⌨️cli💻main"
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🧰semiorepo⌨️cli💻main📌1📌43912"
+          "🧰composerepo⌨️cli💻main📌1📌43912"
         ],
         "second": "🎆26🌙03☀️14⏰23⌚18⏱️26",
         "session": "⚪31df7083d4914f9eb3519f6504dbb63e"
@@ -56,13 +56,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🧰semiorepo⌨️cli💻main"
+            "id": "🧰composerepo⌨️cli💻main"
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🧰semiorepo⌨️cli💻main📌1📌43912"
+          "🧰composerepo⌨️cli💻main📌1📌43912"
         ],
         "second": "🎆26🌙03☀️14⏰23⌚20⏱️45",
         "session": "⚪31df7083d4914f9eb3519f6504dbb63e"
@@ -89,13 +89,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🧰semiorepo⌨️cli💻main"
+            "id": "🧰composerepo⌨️cli💻main"
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🧰semiorepo⌨️cli💻main📌1📌43912"
+          "🧰composerepo⌨️cli💻main📌1📌43912"
         ],
         "second": "🎆26🌙03☀️14⏰23⌚21⏱️35",
         "session": "⚪31df7083d4914f9eb3519f6504dbb63e"
@@ -114,16 +114,16 @@
           "tool_info": {
             "edits": [
               {
-                "old_string": "\tFolderPath    string                `json:\"-\" yaml:\"-\"`\n\tJsonPath      string                `json:\"-\" yaml:\"-\"`\n\tImportantPath string                `json:\"-\" yaml:\"-\"`\n}\n\n// UnmarshalJSON MUST handle both legacy and current ticket JSON layouts.\n// UnmarshalJSON performs the unmarshal j s o n operation on the Ticket.\n// [🧰semiorepo⌨️cli💻main🔖graphqltypes🛠️unmarshaljson](semiorepo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/UnmarshalJSON)\nfunc (t *Ticket) UnmarshalJSON(data []byte) error {\n@@\n// HookKind categorizes a hook as either a git hook or an agent hook.\n// [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖hooks✂️hookkind](semiorepo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookKind)\ntype HookKind string\n\nconst (\n\tHookKindVersion HookKind = \"version\"\n\tHookKindAgent   HookKind = \"agent\"\n)",
-                "new_string": "\tFolderPath    string                `json:\"-\" yaml:\"-\"`\n\tJsonPath      string                `json:\"-\" yaml:\"-\"`\n\tImportantPath string                `json:\"-\" yaml:\"-\"`\n}\n\nfunc appendTicketSessionID(ticket *Ticket, sessionID string) {\n\tsessionID = strings.TrimSpace(sessionID)\n\tif ticket == nil || sessionID == \"\" {\n\t\treturn\n\t}\n\tfor _, existing := range ticket.Sessions {\n\t\tif existing == sessionID {\n\t\t\treturn\n\t\t}\n\t}\n\tticket.Sessions = append(ticket.Sessions, sessionID)\n}\n\n// UnmarshalJSON MUST handle both legacy and current ticket JSON layouts.\n// UnmarshalJSON performs the unmarshal j s o n operation on the Ticket.\n// [🧰semiorepo⌨️cli💻main🔖graphqltypes🛠️unmarshaljson](semiorepo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/UnmarshalJSON)\nfunc (t *Ticket) UnmarshalJSON(data []byte) error {\n@@\n// HookKind categorizes a hook as either a git hook or an agent hook.\n// [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖hooks✂️hookkind](semiorepo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookKind)\ntype HookKind string\n\ntype ToolKind string\n\nconst (\n\tHookKindVersion HookKind = \"version\"\n\tHookKindAgent   HookKind = \"agent\"\n)"
+                "old_string": "\tFolderPath    string                `json:\"-\" yaml:\"-\"`\n\tJsonPath      string                `json:\"-\" yaml:\"-\"`\n\tImportantPath string                `json:\"-\" yaml:\"-\"`\n}\n\n// UnmarshalJSON MUST handle both legacy and current ticket JSON layouts.\n// UnmarshalJSON performs the unmarshal j s o n operation on the Ticket.\n// [🧰composerepo⌨️cli💻main🔖graphqltypes🛠️unmarshaljson](composerepo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/UnmarshalJSON)\nfunc (t *Ticket) UnmarshalJSON(data []byte) error {\n@@\n// HookKind categorizes a hook as either a git hook or an agent hook.\n// [🧰composerepo⌨️cli💻main🔖types🔖cli🔖hooks✂️hookkind](composerepo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookKind)\ntype HookKind string\n\nconst (\n\tHookKindVersion HookKind = \"version\"\n\tHookKindAgent   HookKind = \"agent\"\n)",
+                "new_string": "\tFolderPath    string                `json:\"-\" yaml:\"-\"`\n\tJsonPath      string                `json:\"-\" yaml:\"-\"`\n\tImportantPath string                `json:\"-\" yaml:\"-\"`\n}\n\nfunc appendTicketSessionID(ticket *Ticket, sessionID string) {\n\tsessionID = strings.TrimSpace(sessionID)\n\tif ticket == nil || sessionID == \"\" {\n\t\treturn\n\t}\n\tfor _, existing := range ticket.Sessions {\n\t\tif existing == sessionID {\n\t\t\treturn\n\t\t}\n\t}\n\tticket.Sessions = append(ticket.Sessions, sessionID)\n}\n\n// UnmarshalJSON MUST handle both legacy and current ticket JSON layouts.\n// UnmarshalJSON performs the unmarshal j s o n operation on the Ticket.\n// [🧰composerepo⌨️cli💻main🔖graphqltypes🛠️unmarshaljson](composerepo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/UnmarshalJSON)\nfunc (t *Ticket) UnmarshalJSON(data []byte) error {\n@@\n// HookKind categorizes a hook as either a git hook or an agent hook.\n// [🧰composerepo⌨️cli💻main🔖types🔖cli🔖hooks✂️hookkind](composerepo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookKind)\ntype HookKind string\n\ntype ToolKind string\n\nconst (\n\tHookKindVersion HookKind = \"version\"\n\tHookKindAgent   HookKind = \"agent\"\n)"
               },
               {
-                "old_string": "// HookResultAgentBase provides shared fields for all agent hook results.\n// [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖hooks✂️hookresultagentbase](semiorepo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultAgentBase)\ntype HookResultAgentBase struct {\n\tHookResultBase",
-                "new_string": "// HookResultAgentBase provides shared fields for all agent hook results.\n// [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖hooks✂️hookresultagentbase](semiorepo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultAgentBase)\ntype HookResultAgentBase struct {\n\tHookResultBase"
+                "old_string": "// HookResultAgentBase provides shared fields for all agent hook results.\n// [🧰composerepo⌨️cli💻main🔖types🔖cli🔖hooks✂️hookresultagentbase](composerepo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultAgentBase)\ntype HookResultAgentBase struct {\n\tHookResultBase",
+                "new_string": "// HookResultAgentBase provides shared fields for all agent hook results.\n// [🧰composerepo⌨️cli💻main🔖types🔖cli🔖hooks✂️hookresultagentbase](composerepo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultAgentBase)\ntype HookResultAgentBase struct {\n\tHookResultBase"
               },
               {
-                "old_string": "\tParent     string `json:\"parent\"`\n}\n\n// HookResultAgentStarted represents the result of an agent started event.\n// [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖hooks✂️hookresultagentstarted](semiorepo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultAgentStarted)\ntype HookResultAgentStarted struct {\n\tHookResultAgentBase",
-                "new_string": "\tParent     string `json:\"parent\"`\n}\n\ntype HookResultVersionCheckpointStarting struct {\n\tHookResultBase\n\tDescription string `json:\"description,omitempty\"`\n}\n\n// HookResultAgentStarted represents the result of an agent started event.\n// [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖hooks✂️hookresultagentstarted](semiorepo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultAgentStarted)\ntype HookResultAgentStarted struct {\n\tHookResultAgentBase"
+                "old_string": "\tParent     string `json:\"parent\"`\n}\n\n// HookResultAgentStarted represents the result of an agent started event.\n// [🧰composerepo⌨️cli💻main🔖types🔖cli🔖hooks✂️hookresultagentstarted](composerepo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultAgentStarted)\ntype HookResultAgentStarted struct {\n\tHookResultAgentBase",
+                "new_string": "\tParent     string `json:\"parent\"`\n}\n\ntype HookResultVersionCheckpointStarting struct {\n\tHookResultBase\n\tDescription string `json:\"description,omitempty\"`\n}\n\n// HookResultAgentStarted represents the result of an agent started event.\n// [🧰composerepo⌨️cli💻main🔖types🔖cli🔖hooks✂️hookresultagentstarted](composerepo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultAgentStarted)\ntype HookResultAgentStarted struct {\n\tHookResultAgentBase"
               },
               {
                 "old_string": "func runCheckpointStartingHook(hctx HookContext) HookResultVersionCheckpointStarting {\n\trepoRoot := hctx.RepoRoot\n\tif repoRoot == \"\" {\n\t\tcwd, err := os.Getwd()\n\t\tif err != nil {",
@@ -161,16 +161,16 @@
           "tool_info": {
             "edits": [
               {
-                "old_string": "\tFolderPath    string                `json:\"-\" yaml:\"-\"`\n\tJsonPath      string                `json:\"-\" yaml:\"-\"`\n\tImportantPath string                `json:\"-\" yaml:\"-\"`\n}\n\n// UnmarshalJSON MUST handle both legacy and current ticket JSON layouts.\n// UnmarshalJSON performs the unmarshal j s o n operation on the Ticket.\n// [🧰semiorepo⌨️cli💻main🔖graphqltypes🛠️unmarshaljson](semiorepo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/UnmarshalJSON)\nfunc (t *Ticket) UnmarshalJSON(data []byte) error {\n@@\n// HookKind categorizes a hook as either a git hook or an agent hook.\n// [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖hooks✂️hookkind](semiorepo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookKind)\ntype HookKind string\n\nconst (\n\tHookKindVersion HookKind = \"version\"\n\tHookKindAgent   HookKind = \"agent\"\n)",
-                "new_string": "\tFolderPath    string                `json:\"-\" yaml:\"-\"`\n\tJsonPath      string                `json:\"-\" yaml:\"-\"`\n\tImportantPath string                `json:\"-\" yaml:\"-\"`\n}\n\nfunc appendTicketSessionID(ticket *Ticket, sessionID string) {\n\tsessionID = strings.TrimSpace(sessionID)\n\tif ticket == nil || sessionID == \"\" {\n\t\treturn\n\t}\n\tfor _, existing := range ticket.Sessions {\n\t\tif existing == sessionID {\n\t\t\treturn\n\t\t}\n\t}\n\tticket.Sessions = append(ticket.Sessions, sessionID)\n}\n\n// UnmarshalJSON MUST handle both legacy and current ticket JSON layouts.\n// UnmarshalJSON performs the unmarshal j s o n operation on the Ticket.\n// [🧰semiorepo⌨️cli💻main🔖graphqltypes🛠️unmarshaljson](semiorepo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/UnmarshalJSON)\nfunc (t *Ticket) UnmarshalJSON(data []byte) error {\n@@\n// HookKind categorizes a hook as either a git hook or an agent hook.\n// [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖hooks✂️hookkind](semiorepo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookKind)\ntype HookKind string\n\ntype ToolKind string\n\nconst (\n\tHookKindVersion HookKind = \"version\"\n\tHookKindAgent   HookKind = \"agent\"\n)"
+                "old_string": "\tFolderPath    string                `json:\"-\" yaml:\"-\"`\n\tJsonPath      string                `json:\"-\" yaml:\"-\"`\n\tImportantPath string                `json:\"-\" yaml:\"-\"`\n}\n\n// UnmarshalJSON MUST handle both legacy and current ticket JSON layouts.\n// UnmarshalJSON performs the unmarshal j s o n operation on the Ticket.\n// [🧰composerepo⌨️cli💻main🔖graphqltypes🛠️unmarshaljson](composerepo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/UnmarshalJSON)\nfunc (t *Ticket) UnmarshalJSON(data []byte) error {\n@@\n// HookKind categorizes a hook as either a git hook or an agent hook.\n// [🧰composerepo⌨️cli💻main🔖types🔖cli🔖hooks✂️hookkind](composerepo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookKind)\ntype HookKind string\n\nconst (\n\tHookKindVersion HookKind = \"version\"\n\tHookKindAgent   HookKind = \"agent\"\n)",
+                "new_string": "\tFolderPath    string                `json:\"-\" yaml:\"-\"`\n\tJsonPath      string                `json:\"-\" yaml:\"-\"`\n\tImportantPath string                `json:\"-\" yaml:\"-\"`\n}\n\nfunc appendTicketSessionID(ticket *Ticket, sessionID string) {\n\tsessionID = strings.TrimSpace(sessionID)\n\tif ticket == nil || sessionID == \"\" {\n\t\treturn\n\t}\n\tfor _, existing := range ticket.Sessions {\n\t\tif existing == sessionID {\n\t\t\treturn\n\t\t}\n\t}\n\tticket.Sessions = append(ticket.Sessions, sessionID)\n}\n\n// UnmarshalJSON MUST handle both legacy and current ticket JSON layouts.\n// UnmarshalJSON performs the unmarshal j s o n operation on the Ticket.\n// [🧰composerepo⌨️cli💻main🔖graphqltypes🛠️unmarshaljson](composerepo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/UnmarshalJSON)\nfunc (t *Ticket) UnmarshalJSON(data []byte) error {\n@@\n// HookKind categorizes a hook as either a git hook or an agent hook.\n// [🧰composerepo⌨️cli💻main🔖types🔖cli🔖hooks✂️hookkind](composerepo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookKind)\ntype HookKind string\n\ntype ToolKind string\n\nconst (\n\tHookKindVersion HookKind = \"version\"\n\tHookKindAgent   HookKind = \"agent\"\n)"
               },
               {
-                "old_string": "// HookResultAgentBase provides shared fields for all agent hook results.\n// [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖hooks✂️hookresultagentbase](semiorepo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultAgentBase)\ntype HookResultAgentBase struct {\n\tHookResultBase",
-                "new_string": "// HookResultAgentBase provides shared fields for all agent hook results.\n// [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖hooks✂️hookresultagentbase](semiorepo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultAgentBase)\ntype HookResultAgentBase struct {\n\tHookResultBase"
+                "old_string": "// HookResultAgentBase provides shared fields for all agent hook results.\n// [🧰composerepo⌨️cli💻main🔖types🔖cli🔖hooks✂️hookresultagentbase](composerepo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultAgentBase)\ntype HookResultAgentBase struct {\n\tHookResultBase",
+                "new_string": "// HookResultAgentBase provides shared fields for all agent hook results.\n// [🧰composerepo⌨️cli💻main🔖types🔖cli🔖hooks✂️hookresultagentbase](composerepo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultAgentBase)\ntype HookResultAgentBase struct {\n\tHookResultBase"
               },
               {
-                "old_string": "\tParent     string `json:\"parent\"`\n}\n\n// HookResultAgentStarted represents the result of an agent started event.\n// [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖hooks✂️hookresultagentstarted](semiorepo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultAgentStarted)\ntype HookResultAgentStarted struct {\n\tHookResultAgentBase",
-                "new_string": "\tParent     string `json:\"parent\"`\n}\n\ntype HookResultVersionCheckpointStarting struct {\n\tHookResultBase\n\tDescription string `json:\"description,omitempty\"`\n}\n\n// HookResultAgentStarted represents the result of an agent started event.\n// [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖hooks✂️hookresultagentstarted](semiorepo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultAgentStarted)\ntype HookResultAgentStarted struct {\n\tHookResultAgentBase"
+                "old_string": "\tParent     string `json:\"parent\"`\n}\n\n// HookResultAgentStarted represents the result of an agent started event.\n// [🧰composerepo⌨️cli💻main🔖types🔖cli🔖hooks✂️hookresultagentstarted](composerepo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultAgentStarted)\ntype HookResultAgentStarted struct {\n\tHookResultAgentBase",
+                "new_string": "\tParent     string `json:\"parent\"`\n}\n\ntype HookResultVersionCheckpointStarting struct {\n\tHookResultBase\n\tDescription string `json:\"description,omitempty\"`\n}\n\n// HookResultAgentStarted represents the result of an agent started event.\n// [🧰composerepo⌨️cli💻main🔖types🔖cli🔖hooks✂️hookresultagentstarted](composerepo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultAgentStarted)\ntype HookResultAgentStarted struct {\n\tHookResultAgentBase"
               },
               {
                 "old_string": "func runCheckpointStartingHook(hctx HookContext) HookResultVersionCheckpointStarting {\n\trepoRoot := hctx.RepoRoot\n\tif repoRoot == \"\" {\n\t\tcwd, err := os.Getwd()\n\t\tif err != nil {",
@@ -235,7 +235,7 @@
           "timestamp": "2026-03-14T23:30:54.409952753Z",
           "execution_id": "711c2386-7ad3-4ed9-99e5-1c0cffe3cbbe",
           "tool_info": {
-            "mcp_result": "- [🎯Goals](semiorepo://gs)\n  - [🎯🎯sketchpadimprovements🎫fixtypescriptsectionregionformatting](semiorepo://y/26/m/03/d/14/tk/FIX-TYPE-SCRIPT-SECTION-REGION-FORMATTING) - `Fix TypeScript Section Region Formatting` - `open` - `opened a long while ago` - `Fix repo TypeScript section emission so region start lines use '// #region 🔖\u003cName\u003e' with no blank line before the section id/doc lines, and section ids include the '🔖' prefix on every section name segment required by the current semio format. Update the existing formatter/parsing tests accordingly and validate with focused test runs.`\n",
+            "mcp_result": "- [🎯Goals](composerepo://gs)\n  - [🎯🎯sketchpadimprovements🎫fixtypescriptsectionregionformatting](composerepo://y/26/m/03/d/14/tk/FIX-TYPE-SCRIPT-SECTION-REGION-FORMATTING) - `Fix TypeScript Section Region Formatting` - `open` - `opened a long while ago` - `Fix repo TypeScript section emission so region start lines use '// #region 🔖\u003cName\u003e' with no blank line before the section id/doc lines, and section ids include the '🔖' prefix on every section name segment required by the current compose format. Update the existing formatter/parsing tests accordingly and validate with focused test runs.`\n",
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
               "query": "fixtypescriptsectionregionformatting typescript section formatting ticket"

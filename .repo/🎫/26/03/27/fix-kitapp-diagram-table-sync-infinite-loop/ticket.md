@@ -8,7 +8,7 @@ Two bugs: (1) `useFileUrls` caused infinite render loop because `getSnapshot` re
 2. Internal model files stored by the engine have no file extension (e.g. `c7c924...`). Both `filteredKitFiles` (table) and `filteredDiagramFiles` (diagram) now require `file.name.includes(".")` to exclude them.
 
 ## Files
-- `semio/sketchpad/index.tsx` (updated)
+- `compose/sketchpad/index.tsx` (updated)
 
 ## Status
 Closed

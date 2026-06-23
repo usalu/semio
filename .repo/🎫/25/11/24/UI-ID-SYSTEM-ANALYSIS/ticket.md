@@ -8,26 +8,26 @@
 
 ## Overview
 
-The semio Sketchpad UI system uses a comprehensive ID-based architecture where every interactive UI component has a unique identifier following the pattern `semio.sketchpad.*`. This ID serves as the central integration point for multiple subsystems.
+The compose Sketchpad UI system uses a comprehensive ID-based architecture where every interactive UI component has a unique identifier following the pattern `compose.sketchpad.*`. This ID serves as the central integration point for multiple subsystems.
 
 ## ID Pattern
 
 ### Convention
 
 ```
-semio.sketchpad.<context>.<feature>.<component>
+compose.sketchpad.<context>.<feature>.<component>
 ```
 
 **Examples:**
 
-- `semio.sketchpad.navbar.panelToggle.workbench`
-- `semio.sketchpad.app.quality.panel.details.key`
-- `semio.sketchpad.app.kit.kitApp.createType`
-- `semio.sketchpad.app.home.createTemporary`
+- `compose.sketchpad.navbar.panelToggle.workbench`
+- `compose.sketchpad.app.quality.panel.details.key`
+- `compose.sketchpad.app.kit.kitApp.createType`
+- `compose.sketchpad.app.home.createTemporary`
 
 ### Policies
 
-1. **All IDs start with `semio.sketchpad.`**
+1. **All IDs start with `compose.sketchpad.`**
 2. **Kebab-case** for multi-word segments
 3. **Hierarchical structure** reflecting UI containment
 4. **Only the final DOM element** receives the `id` attribute
@@ -38,7 +38,7 @@ The ID system integrates with **7 major subsystems**:
 
 ### 1. Internationalization (i18n)
 
-**Location:** `js/semio/sketchpad/locales/{lang}.json`
+**Location:** `js/compose/sketchpad/locales/{lang}.json`
 
 **Mechanism:**
 
@@ -54,7 +54,7 @@ The ID system integrates with **7 major subsystems**:
 
 ```json
 {
-  "semio.sketchpad.navbar.panelToggle.workbench": {
+  "compose.sketchpad.navbar.panelToggle.workbench": {
     "label": "Workbench",
     "beginner": "Open the workbench panel to see available types",
     "manual": "panels/workbench",
@@ -78,12 +78,12 @@ The ID system integrates with **7 major subsystems**:
 
 ### 2. Tooltips
 
-**Location:** `js/semio/sketchpad/elements.tsx`
+**Location:** `js/compose/sketchpad/elements.tsx`
 
 **Components:**
 
 - `DescriptionTooltipContent` - Automatic tooltip from ID
-- `IdSemioTooltip` - Wrapper providing ID-based tooltip
+- `IdComposeTooltip` - Wrapper providing ID-based tooltip
 - `EnhancedTooltipContent` - Manual tooltip configuration
 
 **Mechanism:**
@@ -111,20 +111,20 @@ function DescriptionTooltipContent({ id }: { id: string }) {
 
 ```tsx
 // Automatic via wrapper
-<Input id="semio.sketchpad.app.quality.name" showLabel />
+<Input id="compose.sketchpad.app.quality.name" showLabel />
 
 // Manual tooltip
 <Tooltip>
   <TooltipTrigger>...</TooltipTrigger>
   <TooltipContent>
-    <DescriptionTooltipContent id="semio.sketchpad.navbar.back" />
+    <DescriptionTooltipContent id="compose.sketchpad.navbar.back" />
   </TooltipContent>
 </Tooltip>
 ```
 
 ### 3. Hotkeys
 
-**Location:** `js/semio/sketchpad/App.tsx` (SketchpadStore)
+**Location:** `js/compose/sketchpad/App.tsx` (SketchpadStore)
 
 **Mechanism:**
 
@@ -164,7 +164,7 @@ const handleHotkeyClick = () => {
 
 ### 4. Command System (Origin Tracking)
 
-**Location:** `js/semio/sketchpad/App.tsx` (AppStore, KitDiffAppStore)
+**Location:** `js/compose/sketchpad/App.tsx` (AppStore, KitDiffAppStore)
 
 **Mechanism:**
 
@@ -176,8 +176,8 @@ const handleHotkeyClick = () => {
 
 ```tsx
 // Command execution with origin
-executeCommand("semio.kitApp.addType",
-  "semio.sketchpad.app.kit.toolbar.addType", // origin
+executeCommand("compose.kitApp.addType",
+  "compose.sketchpad.app.kit.toolbar.addType", // origin
   typeData
 );
 
@@ -185,10 +185,10 @@ executeCommand("semio.kitApp.addType",
 async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
   let origin: string | undefined;
 
-  // First arg is origin if it's a semio.sketchpad.* string
+  // First arg is origin if it's a compose.sketchpad.* string
   if (rest.length > 0 &&
       typeof rest[0] === "string" &&
-      rest[0].startsWith("semio.sketchpad.")) {
+      rest[0].startsWith("compose.sketchpad.")) {
     origin = rest[0];
     rest = rest.slice(1);
   }
@@ -208,11 +208,11 @@ async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
 ```tsx
 // Button triggers command with origin
 <Button
-  id="semio.sketchpad.app.kit.createType"
+  id="compose.sketchpad.app.kit.createType"
   onClick={() =>
     executeCommand(
-      "semio.kitApp.addType",
-      "semio.sketchpad.app.kit.createType", // origin matches id
+      "compose.kitApp.addType",
+      "compose.sketchpad.app.kit.createType", // origin matches id
       newTypeData,
     )
   }
@@ -223,7 +223,7 @@ async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
 
 ### 5. Tutorial Recording
 
-**Location:** `js/semio/sketchpad/tutorials/`
+**Location:** `js/compose/sketchpad/tutorials/`
 
 **Mechanism:**
 
@@ -272,7 +272,7 @@ const useTutorialCommandInterceptor = () => {
 
 ### 6. Testing (E2E)
 
-**Location:** `js/semio/e2e/**/*.spec.ts`
+**Location:** `js/compose/e2e/**/*.spec.ts`
 
 **Mechanism:**
 
@@ -285,19 +285,19 @@ const useTutorialCommandInterceptor = () => {
 ```typescript
 test("drag type from workbench to canvas", async ({ page }) => {
   // Create temporary kit
-  await page.locator('[id="semio.sketchpad.app.home.createTemporary"]').click();
+  await page.locator('[id="compose.sketchpad.app.home.createTemporary"]').click();
 
   // Create type
-  await page.locator('[id="semio.sketchpad.app.kit.kitApp.createType"]').click();
+  await page.locator('[id="compose.sketchpad.app.kit.kitApp.createType"]').click();
 
   // Navigate back
-  await page.locator('[id="semio.sketchpad.navbar.back"]').click();
+  await page.locator('[id="compose.sketchpad.navbar.back"]').click();
 
   // Create design
-  await page.locator('[id="semio.sketchpad.app.kit.kitApp.createDesign"]').click();
+  await page.locator('[id="compose.sketchpad.app.kit.kitApp.createDesign"]').click();
 
   // Toggle workbench
-  await page.locator('[id="semio.sketchpad.navbar.panelToggle.workbench"]').click();
+  await page.locator('[id="compose.sketchpad.navbar.panelToggle.workbench"]').click();
 
   // ... drag and drop test
 });
@@ -347,7 +347,7 @@ interface BaseInputProps {
 
 // Usage
 <Input
-  id="semio.sketchpad.app.quality.name"
+  id="compose.sketchpad.app.quality.name"
   value={quality.name}
   onChange={handleChange}
   showLabel // Shows translated label
@@ -370,11 +370,11 @@ interface BaseInputProps {
 
 ```tsx
 <Button
-  id="semio.sketchpad.navbar.back"
+  id="compose.sketchpad.navbar.back"
   onClick={() =>
     executeCommand(
-      "semio.sketchpad.navigate",
-      "semio.sketchpad.navbar.back", // origin = id
+      "compose.sketchpad.navigate",
+      "compose.sketchpad.navbar.back", // origin = id
       -1,
     )
   }
@@ -386,7 +386,7 @@ interface BaseInputProps {
 ### Panel Toggle Pattern
 
 ```tsx
-<Action id={`semio.sketchpad.navbar.panelToggle.${panelKey}`} onClick={() => executeCommand("semio.sketchpad.togglePanel", `semio.sketchpad.navbar.panelToggle.${panelKey}`, panelKey)} pressed={isPanelVisible} />
+<Action id={`compose.sketchpad.navbar.panelToggle.${panelKey}`} onClick={() => executeCommand("compose.sketchpad.togglePanel", `compose.sketchpad.navbar.panelToggle.${panelKey}`, panelKey)} pressed={isPanelVisible} />
 ```
 
 ## Current Implementation Status
@@ -394,7 +394,7 @@ interface BaseInputProps {
 ### ✅ Fully Implemented
 
 1. **i18n System**
-   - Translation files: `js/semio/sketchpad/locales/{en,de}.json`
+   - Translation files: `js/compose/sketchpad/locales/{en,de}.json`
    - Validation script: `scripts/i18n.ts`
    - Hook: `useLabel(id)`
    - Auto-resolution in components
@@ -413,12 +413,12 @@ interface BaseInputProps {
 4. **E2E Testing**
    - ID-based selectors
    - Stable test suite
-   - Example: `js/semio/e2e/kit/design/drag-and-drop.spec.ts`
+   - Example: `js/compose/e2e/kit/design/drag-and-drop.spec.ts`
 
 ### ⚠️ Partially Implemented
 
 1. **Tutorial Recording**
-   - Infrastructure exists: `js/semio/sketchpad/tutorials/`
+   - Infrastructure exists: `js/compose/sketchpad/tutorials/`
    - Recording events with origins
    - Playback mechanism
    - ⚠️ Not all apps integrate recording yet
@@ -499,10 +499,10 @@ interface BaseInputProps {
 
 ```tsx
 // ❌ Bad - no origin
-executeCommand("semio.kitApp.addType", typeData);
+executeCommand("compose.kitApp.addType", typeData);
 
 // ✅ Good - with origin
-executeCommand("semio.kitApp.addType", "semio.sketchpad.app.kit.toolbar.addType", typeData);
+executeCommand("compose.kitApp.addType", "compose.sketchpad.app.kit.toolbar.addType", typeData);
 ```
 
 **Impact:**
@@ -519,17 +519,17 @@ executeCommand("semio.kitApp.addType", "semio.sketchpad.app.kit.toolbar.addType"
 
 ```tsx
 // ❌ Bad - hardcoded label
-<Button id="semio.sketchpad.navbar.back">
+<Button id="compose.sketchpad.navbar.back">
   Back
 </Button>
 
 // ✅ Good - i18n label
-<Button id="semio.sketchpad.navbar.back">
-  {useLabel("semio.sketchpad.navbar.back")}
+<Button id="compose.sketchpad.navbar.back">
+  {useLabel("compose.sketchpad.navbar.back")}
 </Button>
 
 // ✅ Better - auto-label
-<Button id="semio.sketchpad.navbar.back" showLabel />
+<Button id="compose.sketchpad.navbar.back" showLabel />
 ```
 
 ### 4. Tooltip Inconsistency
@@ -595,10 +595,10 @@ interface ButtonProps {
 ```tsx
 // Standard pattern
 <Button
-  id="semio.sketchpad.app.kit.createType"
+  id="compose.sketchpad.app.kit.createType"
   onClick={() => {
-    const origin = "semio.sketchpad.app.kit.createType";
-    executeCommand("semio.kitApp.addType", origin, typeData);
+    const origin = "compose.sketchpad.app.kit.createType";
+    executeCommand("compose.kitApp.addType", origin, typeData);
   }}
 />;
 
@@ -610,8 +610,8 @@ const useCommandExecutor = (id: string) => {
 };
 
 // Usage
-const execute = useCommandExecutor("semio.sketchpad.app.kit.createType");
-<Button onClick={() => execute("semio.kitApp.addType", typeData)} />;
+const execute = useCommandExecutor("compose.sketchpad.app.kit.createType");
+<Button onClick={() => execute("compose.kitApp.addType", typeData)} />;
 ```
 
 ### 3. Auto-Generate i18n Skeleton
@@ -621,7 +621,7 @@ const execute = useCommandExecutor("semio.sketchpad.app.kit.createType");
 ```typescript
 // Auto-generate skeleton
 {
-  "semio.sketchpad.navbar.back": {
+  "compose.sketchpad.navbar.back": {
     "label": "[TODO: Translate] Back",
     "beginner": "[TODO: Add beginner description]",
     "manual": "",  // Optional
@@ -667,7 +667,7 @@ export function MyComponent({ id, ...props }: MyComponentProps) {
 #### Section: "UI Component ID System"
 
 1. **ID Convention**
-   - Pattern: `semio.sketchpad.<context>.<feature>.<component>`
+   - Pattern: `compose.sketchpad.<context>.<feature>.<component>`
    - Examples for each app type
    - Naming guidelines
 
@@ -692,7 +692,7 @@ export function MyComponent({ id, ...props }: MyComponentProps) {
    - Adding new keys
 
 5. **Testing Guide**
-   - Selector pattern: `[id="semio.sketchpad.X"]`
+   - Selector pattern: `[id="compose.sketchpad.X"]`
    - Example test structure
    - Common scenarios
 
@@ -730,7 +730,7 @@ export function MyComponent({ id, ...props }: MyComponentProps) {
 
 ## Conclusion
 
-The semio Sketchpad UI ID system is a well-architected solution for integrating multiple subsystems (i18n, tooltips, hotkeys, commands, recording, testing, analytics) through a single identifier.
+The compose Sketchpad UI ID system is a well-architected solution for integrating multiple subsystems (i18n, tooltips, hotkeys, commands, recording, testing, analytics) through a single identifier.
 
 **Strengths:**
 

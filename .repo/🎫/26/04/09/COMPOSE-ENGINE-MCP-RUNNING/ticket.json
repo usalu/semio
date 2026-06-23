@@ -1,0 +1,13 @@
+{
+  "title": "Compose Engine MCP Running",
+  "status": "closed",
+  "description": "Get compose engine MCP server running in Cursor/devcontainer; verify uv launch and fix config drift.",
+  "summary": "Engine MCP starts via uv+main.py; fixed Python 3 except syntax in compose/py, diff equality for sparse vectors/connections, Codex config engine.py→main.py",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1314"
+  },
+  "goal": "🎯enginemcp",
+  "sessions": [
+    "⚪c65ae2af784f45a1ba5f4421f8fd356f"
+  ]
+}

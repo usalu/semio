@@ -31,7 +31,7 @@ Created `scripts/regen-metabolism.ts` to regenerate the metabolism.zip file with
 
 ```typescript
 import { MetabolismKit } from "../assets/index";
-import { exportKit, importKit } from "../semio/semio/semio";
+import { exportKit, importKit } from "../compose/compose/compose";
 import { writeFileSync } from "fs";
 import { join } from "path";
 
@@ -40,7 +40,7 @@ async function main() {
   const files = new Map<string, Blob>();
   const zipBlob = await exportKit(kit, files);
   const buffer = Buffer.from(await zipBlob.arrayBuffer());
-  writeFileSync(join(__dirname, "..", "assets", "semio", "metabolism.zip"), buffer);
+  writeFileSync(join(__dirname, "..", "assets", "compose", "metabolism.zip"), buffer);
 }
 ```
 
@@ -54,7 +54,7 @@ Tambour models after import: 6
 
 ## Test Status
 
-**Model issue is fixed** - verified by running `npx vitest run semio.test.ts`:
+**Model issue is fixed** - verified by running `npx vitest run compose.test.ts`:
 
 - "Kit -> Zip -> Kit" test passes
 - `areKitsEqual(originalKit, importedKit)` returns true
@@ -64,7 +64,7 @@ Tambour models after import: 6
 
 ## Files Changed
 
-1. `assets/semio/metabolism.zip` - Regenerated with models in SQLite database
+1. `assets/compose/metabolism.zip` - Regenerated with models in SQLite database
 2. `scripts/regen-metabolism.ts` - New script to regenerate the zip file
 
 ## Changes

@@ -13,15 +13,15 @@ Bulk close
 ### Undo Redo Migration Analysis 2026-03-04
 
 - Compared legacy undo/redo integration points in:
-  - `semio/js/sketchpad/Desing.tsx.old`
-  - `semio/js/sketchpad/Console.tsx.old`
-  - `semio/js/sketchpad/Design.Details.tsx.old`
-  - `semio/js/sketchpad/Design.Diagram.tsx.old`
-  - `semio/js/sketchpad/Design.Model.tsx.old`
+  - `compose/js/sketchpad/Desing.tsx.old`
+  - `compose/js/sketchpad/Console.tsx.old`
+  - `compose/js/sketchpad/Design.Details.tsx.old`
+  - `compose/js/sketchpad/Design.Diagram.tsx.old`
+  - `compose/js/sketchpad/Design.Model.tsx.old`
 - Compared current migration state in:
-  - `semio/js/sketchpad/Design.tsx`
-  - `semio/js/sketchpad/Sketchpad.tsx`
-  - `semio/js/sketchpad/elements.tsx`
+  - `compose/js/sketchpad/Design.tsx`
+  - `compose/js/sketchpad/Sketchpad.tsx`
+  - `compose/js/sketchpad/elements.tsx`
 - No product code changed in this pass.
 
 ### Legacy Behavior Inventory
@@ -47,7 +47,7 @@ Bulk close
 
 - The current Design app already has the core undo/redo engine:
   - `Sketchpad.tsx` `PlainKitDiffAppStore` records `kitDiff` + `selectionDiff`, maintains `pastTransactionsStack`, `redoStack`, supports `undo`, `redo`, `abortTransaction`, and merges active transaction edits on finalize.
-  - `Design.tsx` `DesignStore` routes `semio.designApp.startTransaction`, `semio.designApp.finalizeTransaction`, `semio.designApp.abortTransaction`, `semio.designApp.undo`, and `semio.designApp.redo` into that store.
+  - `Design.tsx` `DesignStore` routes `compose.designApp.startTransaction`, `compose.designApp.finalizeTransaction`, `compose.designApp.abortTransaction`, `compose.designApp.undo`, and `compose.designApp.redo` into that store.
 - The current Design app already has the primary user-facing triggers:
   - `useDesignAppUndo()` and `useDesignAppRedo()` are implemented.
   - `ctrl+z`, `ctrl+y`, and `ctrl+shift+z` are already wired in `Design.tsx`.
@@ -64,10 +64,10 @@ Bulk close
 ### Migration Gaps
 
 - The old Console command entry point is not migrated:
-  - there is no current `semio/js/sketchpad/Console.tsx`
+  - there is no current `compose/js/sketchpad/Console.tsx`
   - the legacy `undo` / `redo` command registration has no current equivalent command surface
 - Undo/redo regression coverage is missing in the current test suite:
-  - grep found no undo/redo assertions in `semio/js/sketchpad.test.ts`
+  - grep found no undo/redo assertions in `compose/js/sketchpad.test.ts`
   - current migration risk is behavioral regressions in transaction grouping, not missing store primitives
 - The old Model transform undo story remains effectively unported:
   - legacy code only sketched transform-control transaction handling
@@ -76,8 +76,8 @@ Bulk close
 ### Implementation-Ready Migration Plan
 
 1. Keep the current store/history architecture as the source of truth. Do not reintroduce legacy `useDesignEditorCommands` patterns.
-2. If a command surface is still required, reintroduce undo/redo through the current command system by calling `store.execute(\"semio.designApp.undo\", origin)` and `store.execute(\"semio.designApp.redo\", origin)` or the existing `useDesignAppUndo()` / `useDesignAppRedo()` hooks.
-3. Extend the existing test file only (`semio/js/sketchpad.test.ts`) with explicit coverage for:
+2. If a command surface is still required, reintroduce undo/redo through the current command system by calling `store.execute(\"compose.designApp.undo\", origin)` and `store.execute(\"compose.designApp.redo\", origin)` or the existing `useDesignAppUndo()` / `useDesignAppRedo()` hooks.
+3. Extend the existing test file only (`compose/js/sketchpad.test.ts`) with explicit coverage for:
    - one text-field edit => one undo step
    - one drag gesture => one undo step
    - `Escape` during drag => aborts without persisting the move

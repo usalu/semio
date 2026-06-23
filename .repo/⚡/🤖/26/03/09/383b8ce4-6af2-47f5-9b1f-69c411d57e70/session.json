@@ -1,6 +1,6 @@
 {
   "id": "383b8ce4-6af2-47f5-9b1f-69c411d57e70",
-  "uri": "semiorepo://s/383b8ce4-6af2-47f5-9b1f-69c411d57e70",
+  "uri": "composerepo://s/383b8ce4-6af2-47f5-9b1f-69c411d57e70",
   "contributor": "🧑‍💻ueli",
   "client": "copilot-chat",
   "second": "2026-03-09T10:14:01Z",
@@ -14,7 +14,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 5760,
-            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "filePath": "/workspaces/semio/compose/js/compose.ts",
             "startLine": 5644
           },
           "tool_use_id": "toolu_01PSdq5FeGG1dhdQZDYf1cEK__vscode-1772913893568",
@@ -33,38 +33,38 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚js💻semio✂️connectionsdiff",
+            "id": "👤compose📚js💻compose✂️connectionsdiff",
             "loc": 8
           },
           {
-            "id": "👤semio📚js💻semio🛠️applyconnectiondiff",
+            "id": "👤compose📚js💻compose🛠️applyconnectiondiff",
             "loc": 22
           },
           {
-            "id": "👤semio📚js💻semio🛠️getconnectiondiff",
+            "id": "👤compose📚js💻compose🛠️getconnectiondiff",
             "loc": 16
           },
           {
-            "id": "👤semio📚js💻semio🛠️inverseconnectiondiff",
+            "id": "👤compose📚js💻compose🛠️inverseconnectiondiff",
             "loc": 16
           },
           {
-            "id": "👤semio📚js💻semio🛠️mergeconnectiondiff",
+            "id": "👤compose📚js💻compose🛠️mergeconnectiondiff",
             "loc": 9
           },
           {
-            "id": "👤semio📚js💻semio🛠️serializeconnection",
+            "id": "👤compose📚js💻compose🛠️serializeconnection",
             "loc": 6
           },
           {
-            "id": "👤semio📚js💻semio🪨connectionsdiffschema",
+            "id": "👤compose📚js💻compose🪨connectionsdiffschema",
             "loc": 5
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚js💻semio📌5644📌5760"
+          "👤compose📚js💻compose📌5644📌5760"
         ],
         "second": "🎆26🌙03☀️09⏰10⌚14⏱️01",
         "session": "⚪383b8ce46af247f59b1f69c411d57e70"
@@ -82,7 +82,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 6470,
-            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "filePath": "/workspaces/semio/compose/js/compose.ts",
             "startLine": 6078
           },
           "tool_use_id": "toolu_01EZqYSDEGKgQkrbmDNdeTCJ__vscode-1772913893569",
@@ -101,90 +101,90 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚js💻semio✂️designsdiff",
+            "id": "👤compose📚js💻compose✂️designsdiff",
             "loc": 9
           },
           {
-            "id": "👤semio📚js💻semio🛠️addconnectionstodesigndiff",
+            "id": "👤compose📚js💻compose🛠️addconnectionstodesigndiff",
             "loc": 9
           },
           {
-            "id": "👤semio📚js💻semio🛠️addconnectiontodesigndiff",
+            "id": "👤compose📚js💻compose🛠️addconnectiontodesigndiff",
             "loc": 9
           },
           {
-            "id": "👤semio📚js💻semio🛠️addpiecestodesigndiff",
+            "id": "👤compose📚js💻compose🛠️addpiecestodesigndiff",
             "loc": 9
           },
           {
-            "id": "👤semio📚js💻semio🛠️addpiecetodesigndiff",
+            "id": "👤compose📚js💻compose🛠️addpiecetodesigndiff",
             "loc": 9
           },
           {
-            "id": "👤semio📚js💻semio🛠️applydesigndiff",
+            "id": "👤compose📚js💻compose🛠️applydesigndiff",
             "loc": 40
           },
           {
-            "id": "👤semio📚js💻semio🛠️getdesigndiff",
+            "id": "👤compose📚js💻compose🛠️getdesigndiff",
             "loc": 32
           },
           {
-            "id": "👤semio📚js💻semio🛠️inversedesigndiff",
+            "id": "👤compose📚js💻compose🛠️inversedesigndiff",
             "loc": 25
           },
           {
-            "id": "👤semio📚js💻semio🛠️mergedesigndiff",
+            "id": "👤compose📚js💻compose🛠️mergedesigndiff",
             "loc": 14
           },
           {
-            "id": "👤semio📚js💻semio🛠️mergedesigns",
+            "id": "👤compose📚js💻compose🛠️mergedesigns",
             "loc": 9
           },
           {
-            "id": "👤semio📚js💻semio🛠️orientdesign",
+            "id": "👤compose📚js💻compose🛠️orientdesign",
             "loc": 7
           },
           {
-            "id": "👤semio📚js💻semio🛠️removeconnectionfromdesigndiff",
+            "id": "👤compose📚js💻compose🛠️removeconnectionfromdesigndiff",
             "loc": 1
           },
           {
-            "id": "👤semio📚js💻semio🛠️removeconnectionsfromdesigndiff",
+            "id": "👤compose📚js💻compose🛠️removeconnectionsfromdesigndiff",
             "loc": 9
           },
           {
-            "id": "👤semio📚js💻semio🛠️removepiecefromdesigndiff",
+            "id": "👤compose📚js💻compose🛠️removepiecefromdesigndiff",
             "loc": 9
           },
           {
-            "id": "👤semio📚js💻semio🛠️removepiecesfromdesigndiff",
+            "id": "👤compose📚js💻compose🛠️removepiecesfromdesigndiff",
             "loc": 9
           },
           {
-            "id": "👤semio📚js💻semio🛠️setconnectionindesigndiff",
+            "id": "👤compose📚js💻compose🛠️setconnectionindesigndiff",
             "loc": 10
           },
           {
-            "id": "👤semio📚js💻semio🛠️setconnectionsindesigndiff",
+            "id": "👤compose📚js💻compose🛠️setconnectionsindesigndiff",
             "loc": 12
           },
           {
-            "id": "👤semio📚js💻semio🛠️setpieceindesigndiff",
+            "id": "👤compose📚js💻compose🛠️setpieceindesigndiff",
             "loc": 1
           },
           {
-            "id": "👤semio📚js💻semio🛠️setpiecesindesigndiff",
+            "id": "👤compose📚js💻compose🛠️setpiecesindesigndiff",
             "loc": 1
           },
           {
-            "id": "👤semio📚js💻semio🪨designsdiffschema",
+            "id": "👤compose📚js💻compose🪨designsdiffschema",
             "loc": 5
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚js💻semio📌6078📌6470"
+          "👤compose📚js💻compose📌6078📌6470"
         ],
         "second": "🎆26🌙03☀️09⏰10⌚14⏱️01",
         "session": "⚪383b8ce46af247f59b1f69c411d57e70"
@@ -202,7 +202,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 4880,
-            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "filePath": "/workspaces/semio/compose/js/compose.ts",
             "startLine": 4728
           },
           "tool_response": "",
@@ -221,42 +221,42 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚js💻semio✂️typesdiff",
+            "id": "👤compose📚js💻compose✂️typesdiff",
             "loc": 8
           },
           {
-            "id": "👤semio📚js💻semio🛠️applytypediff",
+            "id": "👤compose📚js💻compose🛠️applytypediff",
             "loc": 33
           },
           {
-            "id": "👤semio📚js💻semio🛠️findconnectorintype",
+            "id": "👤compose📚js💻compose🛠️findconnectorintype",
             "loc": 14
           },
           {
-            "id": "👤semio📚js💻semio🛠️gettypediff",
+            "id": "👤compose📚js💻compose🛠️gettypediff",
             "loc": 25
           },
           {
-            "id": "👤semio📚js💻semio🛠️inversetypediff",
+            "id": "👤compose📚js💻compose🛠️inversetypediff",
             "loc": 21
           },
           {
-            "id": "👤semio📚js💻semio🛠️mergetypediff",
+            "id": "👤compose📚js💻compose🛠️mergetypediff",
             "loc": 7
           },
           {
-            "id": "👤semio📚js💻semio🪨layerschema",
+            "id": "👤compose📚js💻compose🪨layerschema",
             "loc": 5
           },
           {
-            "id": "👤semio📚js💻semio🪨typesdiffschema",
+            "id": "👤compose📚js💻compose🪨typesdiffschema",
             "loc": 5
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚js💻semio📌4728📌4880"
+          "👤compose📚js💻compose📌4728📌4880"
         ],
         "second": "🎆26🌙03☀️09⏰10⌚14⏱️08",
         "session": "⚪383b8ce46af247f59b1f69c411d57e70"
@@ -274,7 +274,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 5170,
-            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "filePath": "/workspaces/semio/compose/js/compose.ts",
             "startLine": 5082
           },
           "tool_response": "",
@@ -293,26 +293,26 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚js💻semio🛠️applypiecediff",
+            "id": "👤compose📚js💻compose🛠️applypiecediff",
             "loc": 26
           },
           {
-            "id": "👤semio📚js💻semio🛠️getpiecediff",
+            "id": "👤compose📚js💻compose🛠️getpiecediff",
             "loc": 17
           },
           {
-            "id": "👤semio📚js💻semio🛠️inversepiecediff",
+            "id": "👤compose📚js💻compose🛠️inversepiecediff",
             "loc": 17
           },
           {
-            "id": "👤semio📚js💻semio🛠️mergepiecediff",
+            "id": "👤compose📚js💻compose🛠️mergepiecediff",
             "loc": 8
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚js💻semio📌5082📌5170"
+          "👤compose📚js💻compose📌5082📌5170"
         ],
         "second": "🎆26🌙03☀️09⏰10⌚14⏱️09",
         "session": "⚪383b8ce46af247f59b1f69c411d57e70"
@@ -330,7 +330,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 5760,
-            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "filePath": "/workspaces/semio/compose/js/compose.ts",
             "startLine": 5644
           },
           "tool_response": "",
@@ -349,38 +349,38 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚js💻semio✂️connectionsdiff",
+            "id": "👤compose📚js💻compose✂️connectionsdiff",
             "loc": 8
           },
           {
-            "id": "👤semio📚js💻semio🛠️applyconnectiondiff",
+            "id": "👤compose📚js💻compose🛠️applyconnectiondiff",
             "loc": 22
           },
           {
-            "id": "👤semio📚js💻semio🛠️getconnectiondiff",
+            "id": "👤compose📚js💻compose🛠️getconnectiondiff",
             "loc": 16
           },
           {
-            "id": "👤semio📚js💻semio🛠️inverseconnectiondiff",
+            "id": "👤compose📚js💻compose🛠️inverseconnectiondiff",
             "loc": 16
           },
           {
-            "id": "👤semio📚js💻semio🛠️mergeconnectiondiff",
+            "id": "👤compose📚js💻compose🛠️mergeconnectiondiff",
             "loc": 9
           },
           {
-            "id": "👤semio📚js💻semio🛠️serializeconnection",
+            "id": "👤compose📚js💻compose🛠️serializeconnection",
             "loc": 6
           },
           {
-            "id": "👤semio📚js💻semio🪨connectionsdiffschema",
+            "id": "👤compose📚js💻compose🪨connectionsdiffschema",
             "loc": 5
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚js💻semio📌5644📌5760"
+          "👤compose📚js💻compose📌5644📌5760"
         ],
         "second": "🎆26🌙03☀️09⏰10⌚14⏱️09",
         "session": "⚪383b8ce46af247f59b1f69c411d57e70"
@@ -398,7 +398,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 6470,
-            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "filePath": "/workspaces/semio/compose/js/compose.ts",
             "startLine": 6078
           },
           "tool_response": "",
@@ -417,90 +417,90 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚js💻semio✂️designsdiff",
+            "id": "👤compose📚js💻compose✂️designsdiff",
             "loc": 9
           },
           {
-            "id": "👤semio📚js💻semio🛠️addconnectionstodesigndiff",
+            "id": "👤compose📚js💻compose🛠️addconnectionstodesigndiff",
             "loc": 9
           },
           {
-            "id": "👤semio📚js💻semio🛠️addconnectiontodesigndiff",
+            "id": "👤compose📚js💻compose🛠️addconnectiontodesigndiff",
             "loc": 9
           },
           {
-            "id": "👤semio📚js💻semio🛠️addpiecestodesigndiff",
+            "id": "👤compose📚js💻compose🛠️addpiecestodesigndiff",
             "loc": 9
           },
           {
-            "id": "👤semio📚js💻semio🛠️addpiecetodesigndiff",
+            "id": "👤compose📚js💻compose🛠️addpiecetodesigndiff",
             "loc": 9
           },
           {
-            "id": "👤semio📚js💻semio🛠️applydesigndiff",
+            "id": "👤compose📚js💻compose🛠️applydesigndiff",
             "loc": 40
           },
           {
-            "id": "👤semio📚js💻semio🛠️getdesigndiff",
+            "id": "👤compose📚js💻compose🛠️getdesigndiff",
             "loc": 32
           },
           {
-            "id": "👤semio📚js💻semio🛠️inversedesigndiff",
+            "id": "👤compose📚js💻compose🛠️inversedesigndiff",
             "loc": 25
           },
           {
-            "id": "👤semio📚js💻semio🛠️mergedesigndiff",
+            "id": "👤compose📚js💻compose🛠️mergedesigndiff",
             "loc": 14
           },
           {
-            "id": "👤semio📚js💻semio🛠️mergedesigns",
+            "id": "👤compose📚js💻compose🛠️mergedesigns",
             "loc": 9
           },
           {
-            "id": "👤semio📚js💻semio🛠️orientdesign",
+            "id": "👤compose📚js💻compose🛠️orientdesign",
             "loc": 7
           },
           {
-            "id": "👤semio📚js💻semio🛠️removeconnectionfromdesigndiff",
+            "id": "👤compose📚js💻compose🛠️removeconnectionfromdesigndiff",
             "loc": 1
           },
           {
-            "id": "👤semio📚js💻semio🛠️removeconnectionsfromdesigndiff",
+            "id": "👤compose📚js💻compose🛠️removeconnectionsfromdesigndiff",
             "loc": 9
           },
           {
-            "id": "👤semio📚js💻semio🛠️removepiecefromdesigndiff",
+            "id": "👤compose📚js💻compose🛠️removepiecefromdesigndiff",
             "loc": 9
           },
           {
-            "id": "👤semio📚js💻semio🛠️removepiecesfromdesigndiff",
+            "id": "👤compose📚js💻compose🛠️removepiecesfromdesigndiff",
             "loc": 9
           },
           {
-            "id": "👤semio📚js💻semio🛠️setconnectionindesigndiff",
+            "id": "👤compose📚js💻compose🛠️setconnectionindesigndiff",
             "loc": 10
           },
           {
-            "id": "👤semio📚js💻semio🛠️setconnectionsindesigndiff",
+            "id": "👤compose📚js💻compose🛠️setconnectionsindesigndiff",
             "loc": 12
           },
           {
-            "id": "👤semio📚js💻semio🛠️setpieceindesigndiff",
+            "id": "👤compose📚js💻compose🛠️setpieceindesigndiff",
             "loc": 1
           },
           {
-            "id": "👤semio📚js💻semio🛠️setpiecesindesigndiff",
+            "id": "👤compose📚js💻compose🛠️setpiecesindesigndiff",
             "loc": 1
           },
           {
-            "id": "👤semio📚js💻semio🪨designsdiffschema",
+            "id": "👤compose📚js💻compose🪨designsdiffschema",
             "loc": 5
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚js💻semio📌6078📌6470"
+          "👤compose📚js💻compose📌6078📌6470"
         ],
         "second": "🎆26🌙03☀️09⏰10⌚14⏱️14",
         "session": "⚪383b8ce46af247f59b1f69c411d57e70"
@@ -518,7 +518,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 5180,
-            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "filePath": "/workspaces/semio/compose/js/compose.ts",
             "startLine": 5145
           },
           "tool_use_id": "toolu_015GPpX4dcWoWhxCrBuCRX8m__vscode-1772913893570",
@@ -537,14 +537,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚js💻semio🛠️applypiecediff",
+            "id": "👤compose📚js💻compose🛠️applypiecediff",
             "loc": 33
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚js💻semio📌5145📌5180"
+          "👤compose📚js💻compose📌5145📌5180"
         ],
         "second": "🎆26🌙03☀️09⏰10⌚14⏱️21",
         "session": "⚪383b8ce46af247f59b1f69c411d57e70"
@@ -562,7 +562,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 5180,
-            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "filePath": "/workspaces/semio/compose/js/compose.ts",
             "startLine": 5145
           },
           "tool_response": "",
@@ -581,14 +581,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚js💻semio🛠️applypiecediff",
+            "id": "👤compose📚js💻compose🛠️applypiecediff",
             "loc": 33
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚js💻semio📌5145📌5180"
+          "👤compose📚js💻compose📌5145📌5180"
         ],
         "second": "🎆26🌙03☀️09⏰10⌚14⏱️33",
         "session": "⚪383b8ce46af247f59b1f69c411d57e70"

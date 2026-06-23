@@ -31,7 +31,7 @@ export type BreachRecord = {
 //#endregion 🔖breach
 
 //#region 🔖cli
-/** 🔎Resolves monorepo root (directory containing root package.json named `semio`). */
+/** 🔎Resolves monorepo root (directory containing root package.json named `compose`). */
 export function getWorkspaceRoot(): string {
   const fromEnv = process.env.REPO_ROOT?.trim();
   if (fromEnv) return resolve(fromEnv);
@@ -41,7 +41,7 @@ export function getWorkspaceRoot(): string {
     if (existsSync(pkg)) {
       try {
         const j = JSON.parse(readFileSync(pkg, "utf8")) as { name?: string };
-        if (j.name === "semio") return dir;
+        if (j.name === "compose") return dir;
       } catch {
         /* ignore */
       }
@@ -461,7 +461,7 @@ const ADAPTER_MARKERS = [
 ];
 
 const INTERNAL_PREFIXES = [
-  "@semio/",
+  "@compose/",
   "@ui/",
   "@cad/",
   "@puzzle/",
@@ -1569,7 +1569,7 @@ type UlocCacheFile = {
 };
 
 function ulocCachePath(root: string): string {
-  return join(gitDir(root), "semio-uloc-cache.json");
+  return join(gitDir(root), "compose-uloc-cache.json");
 }
 
 function ulocCacheStats(counts: UlocByLanguage): { totalLoc: number; langCount: number } {
@@ -1666,7 +1666,7 @@ export function scanRepoUnifiedLocUncached(root: string): UlocByLanguage {
   return out;
 }
 
-/** 📊Repo uloc with per-HEAD cache under `.git/semio-uloc-cache.json`. */
+/** 📊Repo uloc with per-HEAD cache under `.git/compose-uloc-cache.json`. */
 export function scanRepoUnifiedLoc(root: string): UlocByLanguage {
   const cached = readUlocCache(root);
   if (cached) return cached;
@@ -1946,11 +1946,11 @@ export function digestMicroCommitMessage(message: string): string {
 }
 
 function preparedDigestPath(root: string): string {
-  return join(gitDir(root), "semio-micro-commit-digest");
+  return join(gitDir(root), "compose-micro-commit-digest");
 }
 
 function preparedActivePath(root: string): string {
-  return join(gitDir(root), "semio-micro-commit-active");
+  return join(gitDir(root), "compose-micro-commit-active");
 }
 
 function markPrepareActive(root: string): void {
@@ -2085,7 +2085,7 @@ function formatSecond(now: Date): string {
 }
 
 function preparedBulletsPath(root: string): string {
-  return join(gitDir(root), "semio-micro-commit-bullets");
+  return join(gitDir(root), "compose-micro-commit-bullets");
 }
 
 const EMOJI_LEAD_RE = /^((?:\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic})*)+)/u;
@@ -2174,7 +2174,7 @@ const STAGED_CHANGE_AREAS = [
   { id: ".devcontainer", match: (p: string) => p.startsWith(".devcontainer/"), keywords: ["devcontainer"] },
   {
     id: "product",
-    match: (p: string) => /^(framework|puzzle|semio|cad|ui|mathematical|infinite|elements|coda|reuse)\//.test(p),
+    match: (p: string) => /^(framework|puzzle|compose|cad|ui|mathematical|infinite|elements|coda|reuse)\//.test(p),
     keywords: [],
   },
 ] as const;
@@ -2338,7 +2338,7 @@ export function clearGitCommitDraftState(root: string): void {
       /* ignore */
     }
   }
-  removeGitDirPrefixed(root, "semio-micro-commit");
+  removeGitDirPrefixed(root, "compose-micro-commit");
 }
 
 export function clearMicroCommitTemplatesOnly(root: string): void {
@@ -2379,11 +2379,11 @@ export function handlePrepareCommitMsg(root: string, msgFile: string, source: st
   writeMicroCommitTemplates(root, message);
 }
 
-const MICRO_COMMIT_BUN_PIN = "semio-micro-commit-bun";
+const MICRO_COMMIT_BUN_PIN = "compose-micro-commit-bun";
 
 /** 🥖Resolves the Bun executable for git hooks (GUI git often has a minimal PATH). */
 export function resolveMicroCommitBunBin(root: string): string {
-  const fromEnv = process.env.SEMIO_BUN?.trim();
+  const fromEnv = process.env.COMPOSE_BUN?.trim();
   if (fromEnv) return fromEnv;
   const argv0 = process.argv[0] ?? "";
   if (/bun(\.exe)?$/i.test(argv0)) return argv0;
@@ -2407,7 +2407,7 @@ export function resolveMicroCommitBunBin(root: string): string {
   return win ? "bun.exe" : "bun";
 }
 
-const MICRO_COMMIT_SEED_EMPTY_GK_SH = `semio_micro_commit_seed_empty_gk() {
+const MICRO_COMMIT_SEED_EMPTY_GK_SH = `compose_micro_commit_seed_empty_gk() {
   GIT_DIR=$(git rev-parse --git-dir 2>/dev/null) || return 0
   GK_TEMPLATE="$GIT_DIR/${GK_COMMIT_TEMPLATE_FILE}"
   if [ -d "$GIT_DIR" ]; then
@@ -2421,26 +2421,26 @@ const MICRO_COMMIT_SEED_EMPTY_GK_SH = `semio_micro_commit_seed_empty_gk() {
 }`;
 
 const MICRO_COMMIT_WIPE_FULL_SH = `${MICRO_COMMIT_SEED_EMPTY_GK_SH}
-semio_micro_commit_wipe() {
+compose_micro_commit_wipe() {
   GIT_DIR=$(git rev-parse --git-dir 2>/dev/null) || return 0
-  semio_micro_commit_seed_empty_gk
+  compose_micro_commit_seed_empty_gk
   for msg in COMMIT_EDITMSG MERGE_MSG SQUASH_MSG; do
     if [ -f "$GIT_DIR/$msg" ]; then
       : >"$GIT_DIR/$msg" 2>/dev/null || true
     fi
   done
   if [ -d "$GIT_DIR" ]; then
-    for f in "$GIT_DIR"/semio-micro-commit-*; do
+    for f in "$GIT_DIR"/compose-micro-commit-*; do
       [ -e "$f" ] || continue
       rm -f "$f" 2>/dev/null || true
     done
   fi
 }`;
 
-const MICRO_COMMIT_RESOLVE_BUN_SH = `semio_resolve_bun() {
+const MICRO_COMMIT_RESOLVE_BUN_SH = `compose_resolve_bun() {
   ROOT="$1"
-  if [ -n "$SEMIO_BUN" ] && [ -x "$SEMIO_BUN" ]; then
-    echo "$SEMIO_BUN"
+  if [ -n "$COMPOSE_BUN" ] && [ -x "$COMPOSE_BUN" ]; then
+    echo "$COMPOSE_BUN"
     return
   fi
   if [ -f "$ROOT/.repo/${MICRO_COMMIT_BUN_PIN}" ]; then
@@ -2499,19 +2499,19 @@ export function renderMicroCommitGitHook(
   if (isPostWipe) {
     lines.push(
       MICRO_COMMIT_RESOLVE_BUN_SH,
-      'BUN=$(semio_resolve_bun "$ROOT")',
+      'BUN=$(compose_resolve_bun "$ROOT")',
       '[ -n "$BUN" ] && "$BUN" ./script.ts micro-commit reset 2>/dev/null || true',
-      "semio_micro_commit_wipe",
+      "compose_micro_commit_wipe",
       "exit 0",
     );
   } else {
     lines.push(
       MICRO_COMMIT_RESOLVE_BUN_SH,
-      '[ ! -f "$GIT_DIR/semio-micro-commit-active" ] && {',
-      "  semio_micro_commit_seed_empty_gk",
+      '[ ! -f "$GIT_DIR/compose-micro-commit-active" ] && {',
+      "  compose_micro_commit_seed_empty_gk",
       "  exit 0",
       "}",
-      'BUN=$(semio_resolve_bun "$ROOT")',
+      'BUN=$(compose_resolve_bun "$ROOT")',
       '[ -z "$BUN" ] && exit 0',
       'exec "$BUN" ./script.ts micro-commit prepare-commit-msg "$1" "$2"',
     );
@@ -2754,7 +2754,7 @@ export function formatCommitPrepareCommands(opts: {
   wipSha: string;
   messageFile?: string;
 }): string {
-  const msg = opts.messageFile ?? ".git/semio-commit-message";
+  const msg = opts.messageFile ?? ".git/compose-commit-message";
   const tag = formatGitSignedTagCommand(opts.tagName);
   const squash = `git reset --soft ${opts.wipSha} && git commit -S -F ${shSingleQuote(msg)}`;
   const push = `git push --follow-tags`;
@@ -2860,7 +2860,7 @@ export function bundleScopeLabelError(line: string): string | null {
   if (!norm) return "commit: empty bundle scope after removing reserved emojis";
   const tokens = labelPathTokens(norm);
   if (tokens.length === 0) {
-    return "commit: bundle scope needs an area name after emojis (e.g. 🏘️semio✍️sketchpad, 🥅framework, 🖱️ui⚛️react)";
+    return "commit: bundle scope needs an area name after emojis (e.g. 🏘️compose✍️sketchpad, 🥅framework, 🖱️ui⚛️react)";
   }
   if (!isBundleScopeLine(norm)) {
     return `commit: invalid bundle scope: ${raw}`;
@@ -3661,7 +3661,7 @@ export function runCommit(root: string, segments: string[]): void {
   const bodyFile = dash >= 0 ? (segments[dash + 1] ?? null) : null;
   const steps = loadCommitSteps(root, contributor, levelSegments);
   const prepareOnly = isCommitPrepareOnly(levelSegments);
-  const messagePath = join(gitDir(root), "semio-commit-message");
+  const messagePath = join(gitDir(root), "compose-commit-message");
 
   const wip = findLastBundleWipCommit(root);
   if (!wip) {
@@ -3701,7 +3701,7 @@ export function runCommit(root: string, segments: string[]): void {
   } else if (existsSync(messagePath)) {
     message = readFileSync(messagePath, "utf8");
     if (!message.trim()) {
-      console.error("commit: semio-commit-message is empty — run prepare with bundle body first");
+      console.error("commit: compose-commit-message is empty — run prepare with bundle body first");
       process.exit(1);
     }
   } else {
@@ -3719,7 +3719,7 @@ export function runCommit(root: string, segments: string[]): void {
       formatCommitPrepareAgentReply({
         tagName,
         wipSha: wip.sha,
-        messageFile: ".git/semio-commit-message",
+        messageFile: ".git/compose-commit-message",
         commitMessage: message,
       }),
     );

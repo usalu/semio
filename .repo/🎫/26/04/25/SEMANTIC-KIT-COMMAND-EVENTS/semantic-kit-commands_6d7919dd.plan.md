@@ -1,15 +1,15 @@
 ---
 name: semantic-kit-commands
-overview: Replace kit-modifying diff paths with semantic command execution across Rust, JS, React, and Sketchpad, using the existing Semio JS thin-client refactor ticket as the work container.
+overview: Replace kit-modifying diff paths with semantic command execution across Rust, JS, React, and Sketchpad, using the existing Compose JS thin-client refactor ticket as the work container.
 todos:
  - id: rust-command-only
-   content: Refactor `semio/rs/lib.rs` so semantic commands mutate the kit directly and no mutation path applies `KitDiff` or `DesignDiff`.
+   content: Refactor `compose/rs/lib.rs` so semantic commands mutate the kit directly and no mutation path applies `KitDiff` or `DesignDiff`.
    status: completed
  - id: rust-wire-tests
    content: Remove raw diff wire mutations and update Rust tests around semantic command application, inverse commands, and undo/redo.
    status: completed
  - id: js-client-contract
-   content: Remove diff mutation methods from `KitStoreClient` and route `semio.kit.*` command execution through semantic store commands.
+   content: Remove diff mutation methods from `KitStoreClient` and route `compose.kit.*` command execution through semantic store commands.
    status: in_progress
  - id: react-downstream
    content: Replace React piece/connection diff update hooks with semantic command or field patch calls.
@@ -31,16 +31,16 @@ All kit modifications must flow through semantic commands. `KitDiff` / `DesignDi
 
 Relevant existing paths:
 
-- [semio/rs/lib.rs](semio/rs/lib.rs): `ChangeKitCommand`, `ChangeDesignCommand`, `KitStoreCommand`, `KitGraph::apply_kit_diff`, `KitGraph::apply_design_diff`, GraphQL `apply_kit_diff` / `apply_design_diff`.
-- [semio/js/index.ts](semio/js/index.ts): `KitStoreClient.applyKitDiff`, `KitStoreClient.applyDesignDiff`, `executeSemioKitCommand`, `semioKitCommandHandlers`, JS stores and embedded tests.
-- [semio/react/index.tsx](semio/react/index.tsx): `useUpdatePiece*` / `useUpdateConnection*` currently construct design diffs.
-- [semio/sketchpad/index.tsx](semio/sketchpad/index.tsx): `KitDiffAppStore`, `KitDiffAppEdit`, `KitMachineEvent.CHANGE`, local `applyKitDiff` projections, and `executeSemioKitCommand` usage.
+- [compose/rs/lib.rs](compose/rs/lib.rs): `ChangeKitCommand`, `ChangeDesignCommand`, `KitStoreCommand`, `KitGraph::apply_kit_diff`, `KitGraph::apply_design_diff`, GraphQL `apply_kit_diff` / `apply_design_diff`.
+- [compose/js/index.ts](compose/js/index.ts): `KitStoreClient.applyKitDiff`, `KitStoreClient.applyDesignDiff`, `executeComposeKitCommand`, `composeKitCommandHandlers`, JS stores and embedded tests.
+- [compose/react/index.tsx](compose/react/index.tsx): `useUpdatePiece*` / `useUpdateConnection*` currently construct design diffs.
+- [compose/sketchpad/index.tsx](compose/sketchpad/index.tsx): `KitDiffAppStore`, `KitDiffAppEdit`, `KitMachineEvent.CHANGE`, local `applyKitDiff` projections, and `executeComposeKitCommand` usage.
 
 ## Implementation Plan
 
-1. Reuse the existing open ticket `.repo/🎫/26/04/25/SEMIO-JS-THIN-CLIENT-REFACTOR/ticket.json` and close it when implementation and verification are complete.
+1. Reuse the existing open ticket `.repo/🎫/26/04/25/COMPOSE-JS-THIN-CLIENT-REFACTOR/ticket.json` and close it when implementation and verification are complete.
 
-2. Refactor Rust mutation internals in [semio/rs/lib.rs](semio/rs/lib.rs):
+2. Refactor Rust mutation internals in [compose/rs/lib.rs](compose/rs/lib.rs):
 
 - Change `ChangeKitCommand::apply` / `apply_many` to mutate and return inverse semantic commands only, not `KitDiff`.
 - Delete or demote `apply_many_kit_diff` and tests that assert command output equals `KitDiff::between`.
@@ -54,20 +54,20 @@ Relevant existing paths:
 - Ensure undo/redo/checkpoint code stores and replays semantic commands only.
 - Update GraphQL schema exposure/generated resolver surface so there is no `applyKitDiff` or `applyDesignDiff` mutation path.
 
-4. Refactor [semio/js/index.ts](semio/js/index.ts) into the command-only downstream contract:
+4. Refactor [compose/js/index.ts](compose/js/index.ts) into the command-only downstream contract:
 
 - Remove `KitStoreClient.applyKitDiff` and `KitStoreClient.applyDesignDiff` from the interface and both worker/fallback implementations.
-- Replace JS `semio.kit.*` handlers returning `{ diff }` with handlers that call `client.execute(...)`, `setField`, `addChild`, `removeChild`, or named client methods.
+- Replace JS `compose.kit.*` handlers returning `{ diff }` with handlers that call `client.execute(...)`, `setField`, `addChild`, `removeChild`, or named client methods.
 - Delete `expandSemanticCommandToDiff`, `applyKitDiff` mutation usage, JS-side stores that mutate via `KitDiff`, and embedded tests whose unit is diff application rather than command behavior.
-- Add/extend embedded tests around command execution, inverse command behavior, field patch compilation, and representative `semio.kit.*` commands.
+- Add/extend embedded tests around command execution, inverse command behavior, field patch compilation, and representative `compose.kit.*` commands.
 
-5. Refactor [semio/react/index.tsx](semio/react/index.tsx):
+5. Refactor [compose/react/index.tsx](compose/react/index.tsx):
 
 - Replace `useUpdatePiece`, `useUpdatePieces`, `useUpdateConnection`, and `useUpdateConnections` so they emit semantic field/child commands instead of `applyDesignDiff` envelopes.
 - Remove re-exports of `applyKitDiff`, `inverseKitDiff`, and raw `KitDiff` mutation helpers unless a remaining read-only kind alias is genuinely needed by UI state.
 - Keep existing entity update hooks that already use `setField`, and align piece/connection updates with that pattern.
 
-6. Refactor [semio/sketchpad/index.tsx](semio/sketchpad/index.tsx):
+6. Refactor [compose/sketchpad/index.tsx](compose/sketchpad/index.tsx):
 
 - Rename and rework `KitDiffAppStore` / related edit/result/event kinds to store semantic kit command steps rather than `KitDiff`.
 - Replace local `applyKitDiff` kit projections with either live snapshot refreshes from `KitStoreClient` or command execution followed by `getSnapshot`.
@@ -76,8 +76,8 @@ Relevant existing paths:
 
 7. Verification:
 
-- Run Rust tests for `semio/rs`.
-- Run `npm test` / build checks in `semio/js`.
-- Run `npm test` in `semio/react`.
-- Run the sketchpad embedded test command from `semio/sketchpad/package.json` if the local environment can run Playwright; otherwise report the exact blocker.
+- Run Rust tests for `compose/rs`.
+- Run `npm test` / build checks in `compose/js`.
+- Run `npm test` in `compose/react`.
+- Run the sketchpad embedded test command from `compose/sketchpad/package.json` if the local environment can run Playwright; otherwise report the exact blocker.
 - Search the repo for remaining kit-modifying `applyKitDiff`, `applyDesignDiff`, `apply_kit_diff`, `apply_design_diff`, and `DesignDiff {` usages and verify each survivor is non-mutating or removed.

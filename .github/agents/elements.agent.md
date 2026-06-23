@@ -1,6 +1,6 @@
 ---
-name: semio
-description: Interacts with `./semio` technology.
+name: compose
+description: Interacts with `./compose` technology.
 argument-hint: The task to perform.
 tools:
  [

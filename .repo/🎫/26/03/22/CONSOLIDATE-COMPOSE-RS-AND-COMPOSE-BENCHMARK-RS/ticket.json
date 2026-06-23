@@ -1,0 +1,14 @@
+{
+  "title": "Consolidate Compose.rs And Compose.benchmark.rs",
+  "emoji": "🧹",
+  "status": "closed",
+  "description": "Consolidate compose.rs and compose.benchmark.rs into one single lib.rs file",
+  "summary": "Consolidated compose.rs and compose.benchmark.rs into lib.rs, moved the benchmark code into a pub mod benchmark, updated Cargo.toml to compile successfully and removed the obsolete binary target.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1032"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪9443407fd7c94ddeb9baf581961a40c8"
+  ]
+}

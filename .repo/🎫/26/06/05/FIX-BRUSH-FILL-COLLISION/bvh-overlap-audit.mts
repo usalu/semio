@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { Group } from "three";
-import { solidOverlapVolume } from "/Users/ueli/Documents/semio/infinite/world/r3f/index.tsx";
+import { solidOverlapVolume } from "/Users/ueli/Documents/compose/infinite/world/r3f/index.tsx";
 import {
   applyBrushFillPlacementsToFixture,
   brushCollisionGltfRoot,
@@ -14,13 +14,13 @@ import {
   parseFixtureV1,
   registerBrushCollisionGltfScene,
   resolveObjectKindMeshUrl,
-} from "/Users/ueli/Documents/semio/puzzle/3d/react/index.tsx";
+} from "/Users/ueli/Documents/compose/puzzle/3d/react/index.tsx";
 
-const repo = "/Users/ueli/Documents/semio";
+const repo = "/Users/ueli/Documents/compose";
 const loader = new GLTFLoader();
 const load = (n: string) =>
   new Promise<Group>((res, rej) =>
-    loader.parse(readFileSync(resolve(repo, "semio/fixtures/kit/folder/abbau-aufbau", n)).buffer.slice(0), "", (g) => res(g.scene), rej),
+    loader.parse(readFileSync(resolve(repo, "compose/fixtures/kit/folder/abbau-aufbau", n)).buffer.slice(0), "", (g) => res(g.scene), rej),
   );
 
 clearBrushCollisionGltfScenes();

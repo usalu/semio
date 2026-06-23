@@ -137,7 +137,7 @@ export type KitId = { guid: Guid };
 
 ### 1.4. Affected Files
 
-#### Core Schema (semio.ts)
+#### Core Schema (compose.ts)
 
 - Define all `*Id` types
 - Update all entity schemas
@@ -157,11 +157,11 @@ export type KitId = { guid: Guid };
 
 #### App Stores
 
-- `js/semio/sketchpad/apps/design/App.tsx` - DesignAppStore
-- `js/semio/sketchpad/apps/type/App.tsx` - TypeAppStore
-- `js/semio/sketchpad/apps/quality/App.tsx` - QualityAppStore
-- `js/semio/sketchpad/apps/kit/App.tsx` - KitAppStore
-- `js/semio/sketchpad/apps/home/App.tsx` - HomeStore
+- `js/compose/sketchpad/apps/design/App.tsx` - DesignAppStore
+- `js/compose/sketchpad/apps/type/App.tsx` - TypeAppStore
+- `js/compose/sketchpad/apps/quality/App.tsx` - QualityAppStore
+- `js/compose/sketchpad/apps/kit/App.tsx` - KitAppStore
+- `js/compose/sketchpad/apps/home/App.tsx` - HomeStore
 
 #### Commands
 
@@ -192,7 +192,7 @@ export type KitId = { guid: Guid };
 
 ## 2. Implementation Strategy
 
-### 2.1. Phase 1: Core Types (semio.ts)
+### 2.1. Phase 1: Core Types (compose.ts)
 
 **Goal:** Define all ID types and update entity schemas
 
@@ -287,26 +287,26 @@ export type KitId = { guid: Guid };
 
 #### Steps:
 
-1. **DesignAppStore** (`js/semio/sketchpad/apps/design/App.tsx`)
+1. **DesignAppStore** (`js/compose/sketchpad/apps/design/App.tsx`)
    - Update selection types (pieces, connections, connectors now use IDs)
    - Update command contexts
    - Update all commands
 
-2. **TypeAppStore** (`js/semio/sketchpad/apps/type/App.tsx`)
+2. **TypeAppStore** (`js/compose/sketchpad/apps/type/App.tsx`)
    - Update connector references
    - Update model handling
    - Update commands
 
-3. **KitAppStore** (`js/semio/sketchpad/apps/kit/App.tsx`)
+3. **KitAppStore** (`js/compose/sketchpad/apps/kit/App.tsx`)
    - Update file/folder operations
    - Update author management
    - Update quality references
 
-4. **QualityAppStore** (`js/semio/sketchpad/apps/quality/App.tsx`)
+4. **QualityAppStore** (`js/compose/sketchpad/apps/quality/App.tsx`)
    - Update benchmark references
    - Update quality usage tracking
 
-5. **HomeStore** (`js/semio/sketchpad/apps/home/App.tsx`)
+5. **HomeStore** (`js/compose/sketchpad/apps/home/App.tsx`)
    - Update kit references
 
 ### 2.4. Phase 4: Commands
@@ -396,7 +396,7 @@ export type KitId = { guid: Guid };
 Create a PowerShell migration script: `scripts/migrate-to-entity-ids.ps1`
 
 ```powershell
-# For each .semio.zip file:
+# For each .compose.zip file:
 # 1. Extract kit.db
 # 2. Read JSON from sqlite
 # 3. Transform all string refs to ID objects
@@ -453,7 +453,7 @@ Create a PowerShell migration script: `scripts/migrate-to-entity-ids.ps1`
 
 ### 6.1. Recommended Sequence
 
-1. **semio.ts** - Core types and schemas (Phase 1)
+1. **compose.ts** - Core types and schemas (Phase 1)
 2. **App.tsx** - Base store infrastructure (Phase 2)
 3. **App stores** - App-level stores in order:
    - HomeStore (simplest)
@@ -528,7 +528,7 @@ Once this refactor is complete, we enable:
 
 ## 10. Progress Tracking
 
-### Phase 1: Core Types (semio.ts) - ✅ COMPLETE
+### Phase 1: Core Types (compose.ts) - ✅ COMPLETE
 
 **Completed:**
 
@@ -557,7 +557,7 @@ Once this refactor is complete, we enable:
   - Model helpers
   - Connector finding helpers
   - And many more...
-- ✅ No TypeScript errors in semio.ts
+- ✅ No TypeScript errors in compose.ts
 
 **Key Changes:**
 
@@ -590,7 +590,7 @@ All Y.js stores updated to handle ID objects:
 
 - Y.js stores GUID strings internally (for CRDTs)
 - Getters/setters work with GUID strings
-- snapshot() returns ID objects matching semio.ts schemas
+- snapshot() returns ID objects matching compose.ts schemas
 - change() accepts ID objects and extracts .guid
 - Constructors accept ID objects and extract .guid when initializing Y.js
 
@@ -611,7 +611,7 @@ All remaining phases completed with no TypeScript errors:
 **Final Status:**
 
 - ✅ No TypeScript compilation errors
-- ✅ Core type system complete (semio.ts)
+- ✅ Core type system complete (compose.ts)
 - ✅ Store layer complete (App.tsx)
 - ✅ Critical command handlers updated
 - ✅ Critical UI components updated
@@ -633,7 +633,7 @@ While there are no TypeScript errors, some UI components still access ID fields 
 
 ---
 
-**Next Steps:** Begin Phase 1 - Core Types in semio.ts
+**Next Steps:** Begin Phase 1 - Core Types in compose.ts
 
 ## Changes
 

@@ -12,12 +12,12 @@ Replaced plain file paths in source code headers with emoji-prefixed artifact ID
 
 - `repo/cli/cli.go`: Added `FileHeaderId()` helper, renamed statute, updated `headerPolicy` detection, updated `generateFileHeader`, added autofix case in `applyAutofixes`, fixed pre-existing `BundleKindClient` → `BundleKindUI` bug
 - `repo/cli/cli_test.go`: Added `TestFileHeaderId`, `TestFixHeaderWrongFileId`, `TestFixHeaderWrongFileIdIdempotent`, `TestFixHeaderWrongFileIdDetection`, `TestFixHeaderWrongFileIdEndToEnd`; updated existing tests for new statute; fixed inline comment count expectation
-- `semio/assets/repo/some/folder/file.tsx`: Updated header to artifact ID
-- `semio/assets/repo/some/folder/file_fixed.tsx`: Updated header to artifact ID
-- `semio/assets/repo/some/folder/file_fixed.go`: Updated header to artifact ID
-- `semio/assets/repo/some/folder/file_fixed.cs`: Updated header to artifact ID
-- `semio/assets/repo/some/folder/file_fixed.py`: Updated header to artifact ID
-- `semio/assets/repo/some/folder/file_fixable_expected.tsx`: Updated header to artifact ID of source file
+- `compose/assets/repo/some/folder/file.tsx`: Updated header to artifact ID
+- `compose/assets/repo/some/folder/file_fixed.tsx`: Updated header to artifact ID
+- `compose/assets/repo/some/folder/file_fixed.go`: Updated header to artifact ID
+- `compose/assets/repo/some/folder/file_fixed.cs`: Updated header to artifact ID
+- `compose/assets/repo/some/folder/file_fixed.py`: Updated header to artifact ID
+- `compose/assets/repo/some/folder/file_fixable_expected.tsx`: Updated header to artifact ID of source file
 - ~155 source files across the repo: Headers replaced via `cli fix`
 - `AGENTS.md`: Documented file header artifact ID requirement, autofixable statute, codebase sections
 - `README.md`: Documented file header artifact ID policy in Breachs and Code Hygiene sections

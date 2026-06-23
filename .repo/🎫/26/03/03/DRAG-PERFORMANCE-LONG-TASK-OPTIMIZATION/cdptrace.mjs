@@ -2,7 +2,7 @@ import { chromium } from 'playwright';
 import path from 'node:path';
 import fs from 'node:fs';
 const BASE_URL = process.env.PLAYWRIGHT_BASE_URL || 'http://127.0.0.1:5173';
-const ZIP_PATH = path.resolve('/workspaces/semio/semio/assets/semio/metabolism.zip');
+const ZIP_PATH = path.resolve('/workspaces/semio/compose/assets/compose/metabolism.zip');
 const TRACE_DIR = path.dirname(new URL(import.meta.url).pathname);
 async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 (async () => {
@@ -10,8 +10,8 @@ async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
   const context = await browser.newContext({ viewport: { width: 1280, height: 720 } });
   const page = await context.newPage();
   await page.addInitScript(() => {
-    window.__SEMIO_PERFORMANCE__ = { longTaskSupported: false, longTasks: [] };
-    const store = window.__SEMIO_PERFORMANCE__;
+    window.__COMPOSE_PERFORMANCE__ = { longTaskSupported: false, longTasks: [] };
+    const store = window.__COMPOSE_PERFORMANCE__;
     const obs = window.PerformanceObserver;
     if (!obs || !(obs.supportedEntryTypes || []).includes('longtask')) return;
     store.longTaskSupported = true;
@@ -22,7 +22,7 @@ async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
   await page.goto(BASE_URL);
   await page.waitForLoadState('domcontentloaded');
   await sleep(2000);
-  const fileInput = page.locator('[id="semio.sketchpad.app.home.importKit"]');
+  const fileInput = page.locator('[id="compose.sketchpad.app.home.importKit"]');
   await fileInput.waitFor({ state: 'attached', timeout: 10000 });
   const [fc] = await Promise.all([page.waitForEvent('filechooser', { timeout: 5000 }).catch(() => null), fileInput.dispatchEvent('click')]);
   if (fc) await fc.setFiles(ZIP_PATH); else await fileInput.setInputFiles(ZIP_PATH);
@@ -51,12 +51,12 @@ async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
     lastPos = pos;
   }
   console.log(`Nodes: ${await nodes.count()}`);
-  const leftPanelToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.leftSidePanel"]');
+  const leftPanelToggle = page.locator('[id="compose.sketchpad.navbar.panelToggle.leftSidePanel"]');
   if (await leftPanelToggle.isVisible().catch(() => false)) {
     const leftPanelOpen = await page.locator('[data-panel="leftSidePanel"]').isVisible().catch(() => false);
     if (leftPanelOpen) { await leftPanelToggle.click(); await sleep(500); }
   }
-  await page.evaluate(() => { window.__SEMIO_PERFORMANCE__.longTasks = []; });
+  await page.evaluate(() => { window.__COMPOSE_PERFORMANCE__.longTasks = []; });
   const firstNode = nodes.first();
   const nodeBox = await firstNode.boundingBox();
   const sx = nodeBox.x + nodeBox.width / 2;
@@ -65,7 +65,7 @@ async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
   // Instrument: add detailed timing around drag
   await page.addScriptTag({ content: `
     window.__DRAG_TRACE__ = [];
-    const origObs = window.__SEMIO_PERFORMANCE__;
+    const origObs = window.__COMPOSE_PERFORMANCE__;
     // Also inject timing into onNodesChange if possible
     const origPerf = performance;
   `});
@@ -140,7 +140,7 @@ async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
   console.log(`\nTrace written to trace.json (${traceChunks.length} events)`);
   
   const lt = await page.evaluate(() => {
-    const s = window.__SEMIO_PERFORMANCE__;
+    const s = window.__COMPOSE_PERFORMANCE__;
     const tasks = s.longTasks.sort((a,b) => b.duration - a.duration).slice(0,3);
     return { count: s.longTasks.length, tasks };
   });

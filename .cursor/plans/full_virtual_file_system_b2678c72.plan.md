@@ -1,21 +1,21 @@
 ---
 name: Full Virtual File System
-overview: Make the rs FileSystemNode GraphQL interface the single source of truth for the semio virtual file system, extend it to cover Type children (representations, ports, connectors) and a hasChildren signal, and rewire the sketchpad kit/design VFS surfaces to lazily load children over GraphQL through js/react instead of the divergent client-side builder.
+overview: Make the rs FileSystemNode GraphQL interface the single source of truth for the compose virtual file system, extend it to cover Type children (representations, ports, connectors) and a hasChildren signal, and rewire the sketchpad kit/design VFS surfaces to lazily load children over GraphQL through js/react instead of the divergent client-side builder.
 todos:
   - id: ticket
-    content: Open repo MCP ticket (e.g. FULL-VIRTUAL-FILE-SYSTEM) under goal semio after reading repo://goals
+    content: Open repo MCP ticket (e.g. FULL-VIRTUAL-FILE-SYSTEM) under goal compose after reading repo://goals
     status: completed
   - id: rs
-    content: "Extend semio/rs FileSystemNode: add Representation/Port/Connector kinds+variants, Type children, fileSystemHasChildren, parent/path/name/node_for resolvers, interface impls for the three new types"
+    content: "Extend compose/rs FileSystemNode: add Representation/Port/Connector kinds+variants, Type children, fileSystemHasChildren, parent/path/name/node_for resolvers, interface impls for the three new types"
     status: completed
   - id: schema
     content: "Update golden + working GraphQL schema: enum values, fileSystemHasChildren, implements FileSystemNode on Representation/Port/Connector"
     status: completed
   - id: js
-    content: Extend semio/js vfsKitFields (hasChildren + richer child selection), resolveFileSystemNode kinds, attach vfs fields to Representation/Port/Connector entities
+    content: Extend compose/js vfsKitFields (hasChildren + richer child selection), resolveFileSystemNode kinds, attach vfs fields to Representation/Port/Connector entities
     status: completed
   - id: react
-    content: Add semio/react fetchSemioFileSystemChildren / root helper over the js store
+    content: Add compose/react fetchComposeFileSystemChildren / root helper over the js store
     status: completed
   - id: framework
     content: Add async loadChildrenAsync support (in-flight dedupe + emit) to VirtualFileSystemController in framework platform core
@@ -32,13 +32,13 @@ todos:
 isProject: false
 ---
 
-# Full Virtual File System for semio
+# Full Virtual File System for compose
 
-Make `semio/rs` `FileSystemNode` the single source of truth and have sketchpad lazily fetch children over GraphQL. Hierarchy: `Kit -> Folders/Files/Designs/Types/Families` (nested by folder), `Type -> Representations/Ports/Connectors`, `Design -> Pieces/Connections`, everything else is a leaf.
+Make `compose/rs` `FileSystemNode` the single source of truth and have sketchpad lazily fetch children over GraphQL. Hierarchy: `Kit -> Folders/Files/Designs/Types/Families` (nested by folder), `Type -> Representations/Ports/Connectors`, `Design -> Pieces/Connections`, everything else is a leaf.
 
-Per repo rules, open a ticket via repo MCP first; associate to goal `semio` (ticket `VIRTUAL-FILE-SYSTEM-ROW-SELECTION` is selection-only, so create a new ticket e.g. `FULL-VIRTUAL-FILE-SYSTEM`). Extend existing files/tests only (no new files outside the ticket folder). No legacy/back-compat.
+Per repo rules, open a ticket via repo MCP first; associate to goal `compose` (ticket `VIRTUAL-FILE-SYSTEM-ROW-SELECTION` is selection-only, so create a new ticket e.g. `FULL-VIRTUAL-FILE-SYSTEM`). Extend existing files/tests only (no new files outside the ticket folder). No legacy/back-compat.
 
-## 1. semio/rs (`semio/client/lib/rs/lib.rs`) - source of truth
+## 1. compose/rs (`compose/client/lib/rs/lib.rs`) - source of truth
 
 - Add `Representation`, `Port`, `Connector` to `FileSystemNodeKind` enum (around line 13110) and to `FileSystemNodeInterface` enum (`pub enum FileSystemNodeInterface`, ~~13199), plus `matches_id` arms (~~13212).
 - Extend `file_system_vfs::children_nodes` (~13398): add a `Type` arm yielding its `representations`, `ports`, `connectors` (currently `_ => Vec::new()`); keep `Design -> pieces + connections`. Representation/Port/Connector/Piece/Connection/File/Family stay leaves.
@@ -48,31 +48,31 @@ Per repo rules, open a ticket via repo MCP first; associate to goal `semio` (tic
 - Make `Representation`, `Port`, `Connector` implement the interface: invoke `file_system_node_vfs_complex_ctx!(Type, node_for_x)`-style impls for them (they are hand-written `#[Object]` types with manual `owner`/`owns`), so they expose `fileSystem*` fields.
 - Regenerate/update the golden + working schema below to match (rs emits the schema).
 
-## 2. GraphQL schema (`semio/client/schema/graphql/schema.golden.graphql` + `schema.graphql`)
+## 2. GraphQL schema (`compose/client/schema/graphql/schema.golden.graphql` + `schema.graphql`)
 
 - `enum FileSystemNodeKind` (line 123): add `REPRESENTATION`, `PORT`, `CONNECTOR`.
 - `interface FileSystemNode` (line 134): add `fileSystemHasChildren: Boolean! # computed`.
 - Add `& FileSystemNode` to the `implements` lists of `Representation`, `Port`, `Connector` type definitions; add the interface fields to each.
 
-## 3. semio/js (`semio/client/lib/js/index.ts`)
+## 3. compose/js (`compose/client/lib/js/index.ts`)
 
 - `vfsKitFields` (~1419): add a `fileSystemHasChildren` field entry; include `fileSystemHasChildren` in the `fileSystemChildren` child selection (`node { id fileSystemKind fileSystemName fileSystemPath fileSystemHasChildren }`) so each child carries name/path/hasChildren in one query.
 - `resolveFileSystemNode` (~1390): add `REPRESENTATION`/`PORT`/`CONNECTOR` cases returning the right entity classes.
 - Ensure `Representation`, `Port`, `Connector` entity classes spread `vfsKitFields(...)` into their field defs (verify where `Type`/`Design` attach them and add the same).
 
-## 4. semio/react (`semio/client/lib/react/index.ts`)
+## 4. compose/react (`compose/client/lib/react/index.ts`)
 
-- Expose an imperative helper (e.g. `fetchSemioFileSystemChildren(store, nodeId, kind)` and `fetchSemioFileSystemRoot`) that runs the `fileSystemChildren` query via the js store and returns `{ id, kind, name, path, hasChildren }[]`. Sketchpad must consume VFS only through react, never `@semio/js` directly.
+- Expose an imperative helper (e.g. `fetchComposeFileSystemChildren(store, nodeId, kind)` and `fetchComposeFileSystemRoot`) that runs the `fileSystemChildren` query via the js store and returns `{ id, kind, name, path, hasChildren }[]`. Sketchpad must consume VFS only through react, never `@compose/js` directly.
 
 ## 5. framework/product/platform/core (`framework/product/platform/core/index.ts`) - async children
 
 - `VirtualFileSystemController` (~~650): add async children support. Add an overridable `protected loadChildrenAsync(parentId, scope): Promise<readonly VirtualFileSystemNodeRecord[]> | undefined` (default `undefined`). In `ensureChildrenLoaded` (~~706): if `loadChildrenAsync` is provided and the parent isn't cached/in-flight, mark in-flight (new `requestedChildrenByScope` set), call it, then `childrenStore.setChildren` + `this.emit()`; otherwise fall back to sync `loadChildren`. Keeps demo/home controllers working unchanged.
 
-## 6. semio/sketchpad (`semio/client/lib/sketchpad/js/index.ts`) - rewire kit/design VFS
+## 6. compose/sketchpad (`compose/client/lib/sketchpad/js/index.ts`) - rewire kit/design VFS
 
 - Extend `SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_SCHEMA_MODEL` (~12187): add `representation`, `port`, `connector` fileNodeKinds and give every kind a distinct `icon` (kit/folder/file/design/type/family/piece/connection/representation/port/connector).
 - Add a kind map `rs FileSystemNodeKind -> sketchpad fileNodeKindId`, and a builder turning fetched child refs into `VirtualFileSystemNodeRecord` (name, path, `hasChildren`, `navigateUri`, `descriptorValues`). `navigateUri` per kind: type `/kits/{kit}/type/{id}`, design `/kits/{kit}/design/{id}`, representation -> `sketchpadTypeRepresentationSurfaceId`-based route, folder `?folder=`, file `?file=`, piece/connection -> design route-selection query.
-- In `SketchpadShellController` (~13115): for `SKETCHPAD_KIT_APP_ID` and `SKETCHPAD_DESIGN_APP_ID`, override `loadChildrenAsync` to call the react helper against `getKitStore(kitId)` (the `SemioJsKitStore`); remove the kit/design branches from the sync `sketchpadKitVfsChildren` path. Keep `SKETCHPAD_HOME_APP_ID` client-side (open kits + Documentation are sketchpad concepts, not kit entities).
+- In `SketchpadShellController` (~13115): for `SKETCHPAD_KIT_APP_ID` and `SKETCHPAD_DESIGN_APP_ID`, override `loadChildrenAsync` to call the react helper against `getKitStore(kitId)` (the `ComposeJsKitStore`); remove the kit/design branches from the sync `sketchpadKitVfsChildren` path. Keep `SKETCHPAD_HOME_APP_ID` client-side (open kits + Documentation are sketchpad concepts, not kit entities).
 - Map node ids consistently with rs entity ids so expand/selection/route state keep working; root remains the kit/design node.
 
 ## 7. ui/react (`ui/react/index.tsx`)
@@ -93,9 +93,9 @@ Per repo rules, open a ticket via repo MCP first; associate to goal `semio` (tic
 
 ```mermaid
 flowchart LR
-  rs["semio/rs FileSystemNode (source of truth)"] --> gql["GraphQL fileSystemChildren / fileSystemHasChildren"]
-  gql --> js["semio/js vfsKitFields"]
-  js --> react["semio/react fetchSemioFileSystemChildren"]
+  rs["compose/rs FileSystemNode (source of truth)"] --> gql["GraphQL fileSystemChildren / fileSystemHasChildren"]
+  gql --> js["compose/js vfsKitFields"]
+  js --> react["compose/react fetchComposeFileSystemChildren"]
   react --> sk["sketchpad loadChildrenAsync"]
   sk --> ctrl["VirtualFileSystemController (async children)"]
   ctrl --> ui["ui/react VirtualFileSystem"]

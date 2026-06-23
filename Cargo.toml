@@ -28,10 +28,10 @@ members = [
     "reasoning/mindmap",
     "puzzle/2d/rs",
     "puzzle/3d/rs",
-    "semio/client/lib/rs",
-    "semio/client/lib/query",
-    "semio/client/bin/store",
-    "semio/server/hub", "geometry/brep/engine", "geometry/brep/rs",
+    "compose/client/lib/rs",
+    "compose/client/lib/query",
+    "compose/client/bin/store",
+    "compose/server/hub", "geometry/brep/engine", "geometry/brep/rs",
 ]
 
 resolver = "2"

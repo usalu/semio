@@ -11,8 +11,8 @@ Implemented project generate requirements/docs/todos CLI commands with content-b
 ## Changes
 
 - repo/cli/main.go: Added `isLicenseText`, `isHeaderMetaLine` helpers, `ExtractMarkdownSection`, `ExtractFileHeaderSummary` (content-based), `ExtractFileHeaderRequirements` (content-based), `ExtractSectionLeadComments` (filters license/region markers), `ExtractDefinitionDocstring`, `findProjectByName`, `walkProjectFiles` (gitignore+generated filtering), `findFolderReadmes`, `EntityEntry` struct, `GenerateProjectRequirements`, `GenerateProjectDocs`, `GenerateProjectTodos`, `projectCommand` with generate subcommand registered in root
-- repo/cli/main_test.go: Added 17 tests covering isLicenseText, isHeaderMetaLine, ExtractMarkdownSection, ExtractFileHeaderSummary, ExtractFileHeaderRequirements, ExtractSectionLeadComments, GenerateProjectRequirements/Docs/Todos for coda+semio+repo, invalid project error handling
-- semio/SPECS.md, semio/DOCS.md, semio/TODOS.md: Generated output files (3146, 5769, 1 lines)
+- repo/cli/main_test.go: Added 17 tests covering isLicenseText, isHeaderMetaLine, ExtractMarkdownSection, ExtractFileHeaderSummary, ExtractFileHeaderRequirements, ExtractSectionLeadComments, GenerateProjectRequirements/Docs/Todos for coda+compose+repo, invalid project error handling
+- compose/SPECS.md, compose/DOCS.md, compose/TODOS.md: Generated output files (3146, 5769, 1 lines)
 - repo/SPECS.md, repo/DOCS.md, repo/TODOS.md: Generated output files (3029, 4847, 1 lines)
 - coda/SPECS.md, coda/DOCS.md, coda/TODOS.md: Generated output files (25, 1, 1 lines)
 

@@ -228,7 +228,7 @@ def split_entity_lines(content_lines, entity_groups):
 
 
 def main():
-    filepath = "semio/rs/lib.rs"
+    filepath = "compose/rs/lib.rs"
     with open(filepath, "r", encoding="utf-8") as f:
         content = f.read()
     original_lines = content.split("\n")

@@ -19,7 +19,7 @@
         "maxResults": 20,
         "query": "updateConnection.*kitStore\\.execute",
         "isRegexp": true,
-        "includePattern": "**/semio/sketchpad/sketchpad/Sketchpad.tsx"
+        "includePattern": "**/compose/sketchpad/sketchpad/Sketchpad.tsx"
       },
       "tool_use_id": "toolu_bdrk_01L7wp1P29YreQWvSerigcfw__vscode-1773671759824",
       "cwd": "/workspaces/semio"

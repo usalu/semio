@@ -609,7 +609,7 @@
           "session_id": "fd0a3d01-cc21-4364-9916-a9eb8a9cf1dd",
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/fd0a3d01-cc21-4364-9916-a9eb8a9cf1dd.jsonl",
           "agent_id": "toolu_vrtx_01L2JXqSXE2ve7C1Nqrfq93F",
-          "agent_type": "semio",
+          "agent_type": "compose",
           "stop_hook_active": false,
           "cwd": "/workspaces/semio"
         }
@@ -633,7 +633,7 @@
           "session_id": "fd0a3d01-cc21-4364-9916-a9eb8a9cf1dd",
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/fd0a3d01-cc21-4364-9916-a9eb8a9cf1dd.jsonl",
           "agent_id": "toolu_vrtx_01L2JXqSXE2ve7C1Nqrfq93F",
-          "agent_type": "semio",
+          "agent_type": "compose",
           "stop_hook_active": false,
           "cwd": "/workspaces/semio"
         }
@@ -658,7 +658,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/fd0a3d01-cc21-4364-9916-a9eb8a9cf1dd.jsonl",
           "tool_name": "runSubagent",
           "tool_input": {
-            "agentName": "semio",
+            "agentName": "compose",
             "description": "Refactor level stories batch 2",
             "prompt": "You are editing story files to remove per-level stories. The level is now handled by a global storybook decorator (withLevel in preview.ts), so individual level stories (Base, Window, Panel, Overlay, Temporary) and the `createLevelRender` helper are no longer needed.\n\nFor each file below, you MUST:\n1. Read the full file\n2. Remove the `createLevelRender` function definition\n3. Remove ALL exported level stories: `Base`, `Window`, `Panel`, `Overlay`, `Temporary`\n4. Remove unused imports that were only needed for level stories (specifically `Level`, `LevelProvider`, `getLevelBgClass` if they are not used elsewhere in the file)\n5. Keep everything else intact (the Default story, any other non-level stories, the meta, etc.)\n\nDO NOT create any new files. Edit in place.\n\nFiles to process (read each one fully first, then edit):\n1. /workspaces/semio/elements/ui/.storybook/stories/Navbar.stories.tsx\n2. /workspaces/semio/elements/ui/.storybook/stories/Slider.stories.tsx\n3. /workspaces/semio/elements/ui/.storybook/stories/Resizable.stories.tsx\n4. /workspaces/semio/elements/ui/.storybook/stories/Toggle.stories.tsx\n5. /workspaces/semio/elements/ui/.storybook/stories/Footer.stories.tsx\n6. /workspaces/semio/elements/ui/.storybook/stories/Band.stories.tsx\n7. /workspaces/semio/elements/ui/.storybook/stories/Textarea.stories.tsx\n8. /workspaces/semio/elements/ui/.storybook/stories/Command.stories.tsx\n9. /workspaces/semio/elements/ui/.storybook/stories/Icons.stories.tsx\n10. /workspaces/semio/elements/ui/.storybook/stories/Scrollable.stories.tsx\n\nIMPORTANT: \n- Do NOT modify any ticket or create files\n- Only edit the story files listed above\n- Make sure region markers (#region / #endregion) are preserved properly\n- Be thorough - read each file, understand what's used where, then remove only what's needed\n\nReport back with a summary of what was removed from each file."
           },
@@ -687,7 +687,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/fd0a3d01-cc21-4364-9916-a9eb8a9cf1dd.jsonl",
           "tool_name": "runSubagent",
           "tool_input": {
-            "agentName": "semio",
+            "agentName": "compose",
             "description": "Refactor level stories batch 2",
             "prompt": "You are editing story files to remove per-level stories. The level is now handled by a global storybook decorator (withLevel in preview.ts), so individual level stories (Base, Window, Panel, Overlay, Temporary) and the `createLevelRender` helper are no longer needed.\n\nFor each file below, you MUST:\n1. Read the full file\n2. Remove the `createLevelRender` function definition\n3. Remove ALL exported level stories: `Base`, `Window`, `Panel`, `Overlay`, `Temporary`\n4. Remove unused imports that were only needed for level stories (specifically `Level`, `LevelProvider`, `getLevelBgClass` if they are not used elsewhere in the file)\n5. Keep everything else intact (the Default story, any other non-level stories, the meta, etc.)\n\nDO NOT create any new files. Edit in place.\n\nFiles to process (read each one fully first, then edit):\n1. /workspaces/semio/elements/ui/.storybook/stories/Navbar.stories.tsx\n2. /workspaces/semio/elements/ui/.storybook/stories/Slider.stories.tsx\n3. /workspaces/semio/elements/ui/.storybook/stories/Resizable.stories.tsx\n4. /workspaces/semio/elements/ui/.storybook/stories/Toggle.stories.tsx\n5. /workspaces/semio/elements/ui/.storybook/stories/Footer.stories.tsx\n6. /workspaces/semio/elements/ui/.storybook/stories/Band.stories.tsx\n7. /workspaces/semio/elements/ui/.storybook/stories/Textarea.stories.tsx\n8. /workspaces/semio/elements/ui/.storybook/stories/Command.stories.tsx\n9. /workspaces/semio/elements/ui/.storybook/stories/Icons.stories.tsx\n10. /workspaces/semio/elements/ui/.storybook/stories/Scrollable.stories.tsx\n\nIMPORTANT: \n- Do NOT modify any ticket or create files\n- Only edit the story files listed above\n- Make sure region markers (#region / #endregion) are preserved properly\n- Be thorough - read each file, understand what's used where, then remove only what's needed\n\nReport back with a summary of what was removed from each file."
           },
@@ -716,7 +716,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/fd0a3d01-cc21-4364-9916-a9eb8a9cf1dd.jsonl",
           "tool_name": "runSubagent",
           "tool_input": {
-            "agentName": "semio",
+            "agentName": "compose",
             "description": "Refactor level stories batch 3",
             "prompt": "You are editing story files to remove per-level stories. The level is now handled by a global storybook decorator (withLevel in preview.ts), so individual level stories (Base, Window, Panel, Overlay, Temporary) and the `createLevelRender` helper are no longer needed.\n\nFor each file below, you MUST:\n1. Read the full file\n2. Remove the `createLevelRender` function definition\n3. Remove ALL exported level stories: `Base`, `Window`, `Panel`, `Overlay`, `Temporary`\n4. Remove unused imports that were only needed for level stories (specifically `Level`, `LevelProvider`, `getLevelBgClass` if they are not used elsewhere in the file)\n5. Keep everything else intact (the Default story, any other non-level stories, the meta, etc.)\n\nDO NOT create any new files. Edit in place.\n\nFiles to process (read each one fully first, then edit):\n1. /workspaces/semio/elements/ui/.storybook/stories/Select.stories.tsx\n2. /workspaces/semio/elements/ui/.storybook/stories/Avatar.stories.tsx\n3. /workspaces/semio/elements/ui/.storybook/stories/Input.stories.tsx\n4. /workspaces/semio/elements/ui/.storybook/stories/Accordion.stories.tsx\n5. /workspaces/semio/elements/ui/.storybook/stories/ActionGroup.stories.tsx\n6. /workspaces/semio/elements/ui/.storybook/stories/Tooltip.stories.tsx\n7. /workspaces/semio/elements/ui/.storybook/stories/Layout.stories.tsx\n8. /workspaces/semio/elements/ui/.storybook/stories/Tree.stories.tsx\n9. /workspaces/semio/elements/ui/.storybook/stories/Popover.stories.tsx\n10. /workspaces/semio/elements/ui/.storybook/stories/Table.stories.tsx\n\nIMPORTANT: \n- Do NOT modify any ticket or create files\n- Only edit the story files listed above\n- Make sure region markers (#region / #endregion) are preserved properly\n- Be thorough - read each file, understand what's used where, then remove only what's needed\n\nReport back with a summary of what was removed from each file."
           },
@@ -744,7 +744,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/fd0a3d01-cc21-4364-9916-a9eb8a9cf1dd.jsonl",
           "tool_name": "runSubagent",
           "tool_input": {
-            "agentName": "semio",
+            "agentName": "compose",
             "description": "Refactor level stories batch 3",
             "prompt": "You are editing story files to remove per-level stories. The level is now handled by a global storybook decorator (withLevel in preview.ts), so individual level stories (Base, Window, Panel, Overlay, Temporary) and the `createLevelRender` helper are no longer needed.\n\nFor each file below, you MUST:\n1. Read the full file\n2. Remove the `createLevelRender` function definition\n3. Remove ALL exported level stories: `Base`, `Window`, `Panel`, `Overlay`, `Temporary`\n4. Remove unused imports that were only needed for level stories (specifically `Level`, `LevelProvider`, `getLevelBgClass` if they are not used elsewhere in the file)\n5. Keep everything else intact (the Default story, any other non-level stories, the meta, etc.)\n\nDO NOT create any new files. Edit in place.\n\nFiles to process (read each one fully first, then edit):\n1. /workspaces/semio/elements/ui/.storybook/stories/Select.stories.tsx\n2. /workspaces/semio/elements/ui/.storybook/stories/Avatar.stories.tsx\n3. /workspaces/semio/elements/ui/.storybook/stories/Input.stories.tsx\n4. /workspaces/semio/elements/ui/.storybook/stories/Accordion.stories.tsx\n5. /workspaces/semio/elements/ui/.storybook/stories/ActionGroup.stories.tsx\n6. /workspaces/semio/elements/ui/.storybook/stories/Tooltip.stories.tsx\n7. /workspaces/semio/elements/ui/.storybook/stories/Layout.stories.tsx\n8. /workspaces/semio/elements/ui/.storybook/stories/Tree.stories.tsx\n9. /workspaces/semio/elements/ui/.storybook/stories/Popover.stories.tsx\n10. /workspaces/semio/elements/ui/.storybook/stories/Table.stories.tsx\n\nIMPORTANT: \n- Do NOT modify any ticket or create files\n- Only edit the story files listed above\n- Make sure region markers (#region / #endregion) are preserved properly\n- Be thorough - read each file, understand what's used where, then remove only what's needed\n\nReport back with a summary of what was removed from each file."
           },
@@ -771,7 +771,7 @@
           "session_id": "fd0a3d01-cc21-4364-9916-a9eb8a9cf1dd",
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/fd0a3d01-cc21-4364-9916-a9eb8a9cf1dd.jsonl",
           "agent_id": "toolu_vrtx_01CHQ31WKer3ihhdGtTbMqfT",
-          "agent_type": "semio",
+          "agent_type": "compose",
           "cwd": "/workspaces/semio"
         }
       },
@@ -794,7 +794,7 @@
           "session_id": "fd0a3d01-cc21-4364-9916-a9eb8a9cf1dd",
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/fd0a3d01-cc21-4364-9916-a9eb8a9cf1dd.jsonl",
           "agent_id": "toolu_vrtx_01CHQ31WKer3ihhdGtTbMqfT",
-          "agent_type": "semio",
+          "agent_type": "compose",
           "cwd": "/workspaces/semio"
         }
       },
@@ -3611,7 +3611,7 @@
           "session_id": "fd0a3d01-cc21-4364-9916-a9eb8a9cf1dd",
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/fd0a3d01-cc21-4364-9916-a9eb8a9cf1dd.jsonl",
           "agent_id": "toolu_vrtx_01CHQ31WKer3ihhdGtTbMqfT",
-          "agent_type": "semio",
+          "agent_type": "compose",
           "stop_hook_active": false,
           "cwd": "/workspaces/semio"
         }
@@ -3635,7 +3635,7 @@
           "session_id": "fd0a3d01-cc21-4364-9916-a9eb8a9cf1dd",
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/fd0a3d01-cc21-4364-9916-a9eb8a9cf1dd.jsonl",
           "agent_id": "toolu_vrtx_01CHQ31WKer3ihhdGtTbMqfT",
-          "agent_type": "semio",
+          "agent_type": "compose",
           "stop_hook_active": false,
           "cwd": "/workspaces/semio"
         }
@@ -3660,7 +3660,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/fd0a3d01-cc21-4364-9916-a9eb8a9cf1dd.jsonl",
           "tool_name": "runSubagent",
           "tool_input": {
-            "agentName": "semio",
+            "agentName": "compose",
             "description": "Refactor level stories batch 3",
             "prompt": "You are editing story files to remove per-level stories. The level is now handled by a global storybook decorator (withLevel in preview.ts), so individual level stories (Base, Window, Panel, Overlay, Temporary) and the `createLevelRender` helper are no longer needed.\n\nFor each file below, you MUST:\n1. Read the full file\n2. Remove the `createLevelRender` function definition\n3. Remove ALL exported level stories: `Base`, `Window`, `Panel`, `Overlay`, `Temporary`\n4. Remove unused imports that were only needed for level stories (specifically `Level`, `LevelProvider`, `getLevelBgClass` if they are not used elsewhere in the file)\n5. Keep everything else intact (the Default story, any other non-level stories, the meta, etc.)\n\nDO NOT create any new files. Edit in place.\n\nFiles to process (read each one fully first, then edit):\n1. /workspaces/semio/elements/ui/.storybook/stories/Select.stories.tsx\n2. /workspaces/semio/elements/ui/.storybook/stories/Avatar.stories.tsx\n3. /workspaces/semio/elements/ui/.storybook/stories/Input.stories.tsx\n4. /workspaces/semio/elements/ui/.storybook/stories/Accordion.stories.tsx\n5. /workspaces/semio/elements/ui/.storybook/stories/ActionGroup.stories.tsx\n6. /workspaces/semio/elements/ui/.storybook/stories/Tooltip.stories.tsx\n7. /workspaces/semio/elements/ui/.storybook/stories/Layout.stories.tsx\n8. /workspaces/semio/elements/ui/.storybook/stories/Tree.stories.tsx\n9. /workspaces/semio/elements/ui/.storybook/stories/Popover.stories.tsx\n10. /workspaces/semio/elements/ui/.storybook/stories/Table.stories.tsx\n\nIMPORTANT: \n- Do NOT modify any ticket or create files\n- Only edit the story files listed above\n- Make sure region markers (#region / #endregion) are preserved properly\n- Be thorough - read each file, understand what's used where, then remove only what's needed\n\nReport back with a summary of what was removed from each file."
           },
@@ -3689,7 +3689,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/fd0a3d01-cc21-4364-9916-a9eb8a9cf1dd.jsonl",
           "tool_name": "runSubagent",
           "tool_input": {
-            "agentName": "semio",
+            "agentName": "compose",
             "description": "Refactor level stories batch 3",
             "prompt": "You are editing story files to remove per-level stories. The level is now handled by a global storybook decorator (withLevel in preview.ts), so individual level stories (Base, Window, Panel, Overlay, Temporary) and the `createLevelRender` helper are no longer needed.\n\nFor each file below, you MUST:\n1. Read the full file\n2. Remove the `createLevelRender` function definition\n3. Remove ALL exported level stories: `Base`, `Window`, `Panel`, `Overlay`, `Temporary`\n4. Remove unused imports that were only needed for level stories (specifically `Level`, `LevelProvider`, `getLevelBgClass` if they are not used elsewhere in the file)\n5. Keep everything else intact (the Default story, any other non-level stories, the meta, etc.)\n\nDO NOT create any new files. Edit in place.\n\nFiles to process (read each one fully first, then edit):\n1. /workspaces/semio/elements/ui/.storybook/stories/Select.stories.tsx\n2. /workspaces/semio/elements/ui/.storybook/stories/Avatar.stories.tsx\n3. /workspaces/semio/elements/ui/.storybook/stories/Input.stories.tsx\n4. /workspaces/semio/elements/ui/.storybook/stories/Accordion.stories.tsx\n5. /workspaces/semio/elements/ui/.storybook/stories/ActionGroup.stories.tsx\n6. /workspaces/semio/elements/ui/.storybook/stories/Tooltip.stories.tsx\n7. /workspaces/semio/elements/ui/.storybook/stories/Layout.stories.tsx\n8. /workspaces/semio/elements/ui/.storybook/stories/Tree.stories.tsx\n9. /workspaces/semio/elements/ui/.storybook/stories/Popover.stories.tsx\n10. /workspaces/semio/elements/ui/.storybook/stories/Table.stories.tsx\n\nIMPORTANT: \n- Do NOT modify any ticket or create files\n- Only edit the story files listed above\n- Make sure region markers (#region / #endregion) are preserved properly\n- Be thorough - read each file, understand what's used where, then remove only what's needed\n\nReport back with a summary of what was removed from each file."
           },
@@ -3954,7 +3954,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/fd0a3d01-cc21-4364-9916-a9eb8a9cf1dd.jsonl",
           "tool_name": "runSubagent",
           "tool_input": {
-            "agentName": "semio",
+            "agentName": "compose",
             "description": "Refactor level stories batch 4",
             "prompt": "You are editing story files to remove per-level stories. The level is now handled by a global storybook decorator (withLevel in preview.ts), so individual level stories (Base, Window, Panel, Overlay, Temporary) and the `createLevelRender` helper are no longer needed.\n\nFor each file below, you MUST:\n1. Read the full file\n2. Remove the `createLevelRender` function definition (if present)\n3. Remove ALL exported level stories: `Base`, `Window`, `Panel`, `Overlay`, `Temporary`\n4. Remove unused imports that were only needed for level stories (specifically `Level`, `LevelProvider`, `getLevelBgClass` if they are not used elsewhere in the file)\n5. Keep everything else intact (the Default story, any other non-level stories, the meta, etc.)\n\nDO NOT create any new files. Edit in place.\n\nFiles to process (read each one fully first, then edit):\n1. /workspaces/semio/elements/ui/.storybook/stories/Collapsible.stories.tsx\n2. /workspaces/semio/elements/ui/.storybook/stories/Dialog.stories.tsx\n3. /workspaces/semio/elements/ui/.storybook/stories/ToggleGroup.stories.tsx\n\nIMPORTANT: \n- Do NOT modify any ticket or create files\n- Only edit the story files listed above\n- Make sure region markers (#region / #endregion) are preserved properly\n- Be thorough - read each file, understand what's used where, then remove only what's needed\n\nReport back with a summary of what was removed from each file."
           },
@@ -3982,7 +3982,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/fd0a3d01-cc21-4364-9916-a9eb8a9cf1dd.jsonl",
           "tool_name": "runSubagent",
           "tool_input": {
-            "agentName": "semio",
+            "agentName": "compose",
             "description": "Refactor level stories batch 4",
             "prompt": "You are editing story files to remove per-level stories. The level is now handled by a global storybook decorator (withLevel in preview.ts), so individual level stories (Base, Window, Panel, Overlay, Temporary) and the `createLevelRender` helper are no longer needed.\n\nFor each file below, you MUST:\n1. Read the full file\n2. Remove the `createLevelRender` function definition (if present)\n3. Remove ALL exported level stories: `Base`, `Window`, `Panel`, `Overlay`, `Temporary`\n4. Remove unused imports that were only needed for level stories (specifically `Level`, `LevelProvider`, `getLevelBgClass` if they are not used elsewhere in the file)\n5. Keep everything else intact (the Default story, any other non-level stories, the meta, etc.)\n\nDO NOT create any new files. Edit in place.\n\nFiles to process (read each one fully first, then edit):\n1. /workspaces/semio/elements/ui/.storybook/stories/Collapsible.stories.tsx\n2. /workspaces/semio/elements/ui/.storybook/stories/Dialog.stories.tsx\n3. /workspaces/semio/elements/ui/.storybook/stories/ToggleGroup.stories.tsx\n\nIMPORTANT: \n- Do NOT modify any ticket or create files\n- Only edit the story files listed above\n- Make sure region markers (#region / #endregion) are preserved properly\n- Be thorough - read each file, understand what's used where, then remove only what's needed\n\nReport back with a summary of what was removed from each file."
           },
@@ -4009,7 +4009,7 @@
           "session_id": "fd0a3d01-cc21-4364-9916-a9eb8a9cf1dd",
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/fd0a3d01-cc21-4364-9916-a9eb8a9cf1dd.jsonl",
           "agent_id": "toolu_vrtx_016X3wvk8UfBXUBUsMuDPird",
-          "agent_type": "semio",
+          "agent_type": "compose",
           "cwd": "/workspaces/semio"
         }
       },
@@ -4032,7 +4032,7 @@
           "session_id": "fd0a3d01-cc21-4364-9916-a9eb8a9cf1dd",
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/fd0a3d01-cc21-4364-9916-a9eb8a9cf1dd.jsonl",
           "agent_id": "toolu_vrtx_016X3wvk8UfBXUBUsMuDPird",
-          "agent_type": "semio",
+          "agent_type": "compose",
           "cwd": "/workspaces/semio"
         }
       },
@@ -4667,7 +4667,7 @@
           "session_id": "fd0a3d01-cc21-4364-9916-a9eb8a9cf1dd",
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/fd0a3d01-cc21-4364-9916-a9eb8a9cf1dd.jsonl",
           "agent_id": "toolu_vrtx_016X3wvk8UfBXUBUsMuDPird",
-          "agent_type": "semio",
+          "agent_type": "compose",
           "stop_hook_active": false,
           "cwd": "/workspaces/semio"
         }
@@ -4691,7 +4691,7 @@
           "session_id": "fd0a3d01-cc21-4364-9916-a9eb8a9cf1dd",
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/fd0a3d01-cc21-4364-9916-a9eb8a9cf1dd.jsonl",
           "agent_id": "toolu_vrtx_016X3wvk8UfBXUBUsMuDPird",
-          "agent_type": "semio",
+          "agent_type": "compose",
           "stop_hook_active": false,
           "cwd": "/workspaces/semio"
         }
@@ -4716,7 +4716,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/fd0a3d01-cc21-4364-9916-a9eb8a9cf1dd.jsonl",
           "tool_name": "runSubagent",
           "tool_input": {
-            "agentName": "semio",
+            "agentName": "compose",
             "description": "Refactor level stories batch 4",
             "prompt": "You are editing story files to remove per-level stories. The level is now handled by a global storybook decorator (withLevel in preview.ts), so individual level stories (Base, Window, Panel, Overlay, Temporary) and the `createLevelRender` helper are no longer needed.\n\nFor each file below, you MUST:\n1. Read the full file\n2. Remove the `createLevelRender` function definition (if present)\n3. Remove ALL exported level stories: `Base`, `Window`, `Panel`, `Overlay`, `Temporary`\n4. Remove unused imports that were only needed for level stories (specifically `Level`, `LevelProvider`, `getLevelBgClass` if they are not used elsewhere in the file)\n5. Keep everything else intact (the Default story, any other non-level stories, the meta, etc.)\n\nDO NOT create any new files. Edit in place.\n\nFiles to process (read each one fully first, then edit):\n1. /workspaces/semio/elements/ui/.storybook/stories/Collapsible.stories.tsx\n2. /workspaces/semio/elements/ui/.storybook/stories/Dialog.stories.tsx\n3. /workspaces/semio/elements/ui/.storybook/stories/ToggleGroup.stories.tsx\n\nIMPORTANT: \n- Do NOT modify any ticket or create files\n- Only edit the story files listed above\n- Make sure region markers (#region / #endregion) are preserved properly\n- Be thorough - read each file, understand what's used where, then remove only what's needed\n\nReport back with a summary of what was removed from each file."
           },
@@ -4745,7 +4745,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/fd0a3d01-cc21-4364-9916-a9eb8a9cf1dd.jsonl",
           "tool_name": "runSubagent",
           "tool_input": {
-            "agentName": "semio",
+            "agentName": "compose",
             "description": "Refactor level stories batch 4",
             "prompt": "You are editing story files to remove per-level stories. The level is now handled by a global storybook decorator (withLevel in preview.ts), so individual level stories (Base, Window, Panel, Overlay, Temporary) and the `createLevelRender` helper are no longer needed.\n\nFor each file below, you MUST:\n1. Read the full file\n2. Remove the `createLevelRender` function definition (if present)\n3. Remove ALL exported level stories: `Base`, `Window`, `Panel`, `Overlay`, `Temporary`\n4. Remove unused imports that were only needed for level stories (specifically `Level`, `LevelProvider`, `getLevelBgClass` if they are not used elsewhere in the file)\n5. Keep everything else intact (the Default story, any other non-level stories, the meta, etc.)\n\nDO NOT create any new files. Edit in place.\n\nFiles to process (read each one fully first, then edit):\n1. /workspaces/semio/elements/ui/.storybook/stories/Collapsible.stories.tsx\n2. /workspaces/semio/elements/ui/.storybook/stories/Dialog.stories.tsx\n3. /workspaces/semio/elements/ui/.storybook/stories/ToggleGroup.stories.tsx\n\nIMPORTANT: \n- Do NOT modify any ticket or create files\n- Only edit the story files listed above\n- Make sure region markers (#region / #endregion) are preserved properly\n- Be thorough - read each file, understand what's used where, then remove only what's needed\n\nReport back with a summary of what was removed from each file."
           },

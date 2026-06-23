@@ -2,7 +2,7 @@
   "title": "Fix Scene Pieces Showing Red When No Selection or Diff",
   "emoji": "🔧",
   "status": "closed",
-  "description": "Too many pieces are red in the semio UI scene. Even on empty selection and no diff, pieces appear red. The base color SCENE_SEMIO_COLOR is #ff344f (red), which makes all pieces look red regardless of status. Fix the coloring so pieces only appear red when they are in \"removed\" diff status, and use appropriate neutral/default colors otherwise.",
+  "description": "Too many pieces are red in the compose UI scene. Even on empty selection and no diff, pieces appear red. The base color SCENE_COMPOSE_COLOR is #ff344f (red), which makes all pieces look red regardless of status. Fix the coloring so pieces only appear red when they are in \"removed\" diff status, and use appropriate neutral/default colors otherwise.",
   "summary": "Bulk close",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1201"

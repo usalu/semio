@@ -1,17 +1,17 @@
 {
   "id": "ba87a987-7fab-46cd-8dad-75ed8987ef90",
-  "uri": "semiorepo://s/ba87a987-7fab-46cd-8dad-75ed8987ef90",
+  "uri": "composerepo://s/ba87a987-7fab-46cd-8dad-75ed8987ef90",
   "checkpoint": "b246a0ee16a521dcd1034a05b47033ddfcd3916b",
   "contributor": "🧑‍💻ueli",
   "client": "claude-code",
   "second": "2026-03-13T10:22:47Z",
-  "transcript": "/home/vscode/.claude/projects/-workspaces-semio/ba87a987-7fab-46cd-8dad-75ed8987ef90.jsonl",
+  "transcript": "/home/vscode/.claude/projects/-workspaces-compose/ba87a987-7fab-46cd-8dad-75ed8987ef90.jsonl",
   "events": [
     {
       "native": {
         "event": {
           "session_id": "ba87a987-7fab-46cd-8dad-75ed8987ef90",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/ba87a987-7fab-46cd-8dad-75ed8987ef90.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/ba87a987-7fab-46cd-8dad-75ed8987ef90.jsonl",
           "cwd": "/workspaces/semio",
           "hook_event_name": "SessionStart",
           "source": "startup"
@@ -25,7 +25,7 @@
         "parent": "",
         "second": "🎆26🌙03☀️13⏰10⌚22⏱️47",
         "session": "⚪ba87a9877fab46cd8dad75ed8987ef90",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/ba87a987-7fab-46cd-8dad-75ed8987ef90.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/ba87a987-7fab-46cd-8dad-75ed8987ef90.jsonl"
       },
       "response": {
         "allowed": true
@@ -35,7 +35,7 @@
       "native": {
         "event": {
           "session_id": "ba87a987-7fab-46cd-8dad-75ed8987ef90",
-          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/ba87a987-7fab-46cd-8dad-75ed8987ef90.jsonl",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-compose/ba87a987-7fab-46cd-8dad-75ed8987ef90.jsonl",
           "cwd": "/workspaces/semio",
           "hook_event_name": "SessionEnd",
           "reason": "other"
@@ -49,7 +49,7 @@
         "parent": "",
         "second": "🎆26🌙03☀️13⏰10⌚24⏱️50",
         "session": "⚪ba87a9877fab46cd8dad75ed8987ef90",
-        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/ba87a987-7fab-46cd-8dad-75ed8987ef90.jsonl"
+        "transcript": "/home/vscode/.claude/projects/-workspaces-compose/ba87a987-7fab-46cd-8dad-75ed8987ef90.jsonl"
       },
       "response": {
         "allowed": true

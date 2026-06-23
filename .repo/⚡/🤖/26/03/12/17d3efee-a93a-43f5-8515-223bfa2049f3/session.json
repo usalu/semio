@@ -1,6 +1,6 @@
 {
   "id": "17d3efee-a93a-43f5-8515-223bfa2049f3",
-  "uri": "semiorepo://s/17d3efee-a93a-43f5-8515-223bfa2049f3",
+  "uri": "composerepo://s/17d3efee-a93a-43f5-8515-223bfa2049f3",
   "contributor": "🧑‍💻ueli",
   "client": "copilot-chat",
   "second": "2026-03-12T07:52:57Z",
@@ -13,7 +13,7 @@
           "session_id": "17d3efee-a93a-43f5-8515-223bfa2049f3",
           "tool_name": "list_dir",
           "tool_input": {
-            "path": "/workspaces/semio/semio/net"
+            "path": "/workspaces/semio/compose/net"
           },
           "tool_use_id": "toolu_014a5veg6c1HqLB6C28PjHHH__vscode-1773233523846",
           "cwd": "/workspaces/semio"
@@ -46,7 +46,7 @@
           "session_id": "17d3efee-a93a-43f5-8515-223bfa2049f3",
           "tool_name": "list_dir",
           "tool_input": {
-            "path": "/workspaces/semio/semio/gh"
+            "path": "/workspaces/semio/compose/gh"
           },
           "tool_use_id": "toolu_01Ajs2934XbyZS2TwdFiuGTE__vscode-1773233523847",
           "cwd": "/workspaces/semio"
@@ -79,7 +79,7 @@
           "session_id": "17d3efee-a93a-43f5-8515-223bfa2049f3",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "filePath": "/workspaces/semio/compose/js/compose.ts",
             "startLine": 8000,
             "endLine": 8250
           },
@@ -99,82 +99,82 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚js💻semio🛠️aredesignsinsamefamily",
+            "id": "👤compose📚js💻compose🛠️aredesignsinsamefamily",
             "loc": 5
           },
           {
-            "id": "👤semio📚js💻semio🛠️aresamekit",
+            "id": "👤compose📚js💻compose🛠️aresamekit",
             "loc": 3
           },
           {
-            "id": "👤semio📚js💻semio🛠️aretypesinsamefamily",
+            "id": "👤compose📚js💻compose🛠️aretypesinsamefamily",
             "loc": 5
           },
           {
-            "id": "👤semio📚js💻semio🛠️canusedesignaspiece",
+            "id": "👤compose📚js💻compose🛠️canusedesignaspiece",
             "loc": 3
           },
           {
-            "id": "👤semio📚js💻semio🛠️finddesigninkit",
+            "id": "👤compose📚js💻compose🛠️finddesigninkit",
             "loc": 5
           },
           {
-            "id": "👤semio📚js💻semio🛠️findpiecetypeindesign",
+            "id": "👤compose📚js💻compose🛠️findpiecetypeindesign",
             "loc": 2
           },
           {
-            "id": "👤semio📚js💻semio🛠️findportinkit",
+            "id": "👤compose📚js💻compose🛠️findportinkit",
             "loc": 5
           },
           {
-            "id": "👤semio📚js💻semio🛠️findsamefamilydesignpieces",
+            "id": "👤compose📚js💻compose🛠️findsamefamilydesignpieces",
             "loc": 7
           },
           {
-            "id": "👤semio📚js💻semio🛠️findtypeinkit",
+            "id": "👤compose📚js💻compose🛠️findtypeinkit",
             "loc": 5
           },
           {
-            "id": "👤semio📚js💻semio🛠️getdesignchildren",
+            "id": "👤compose📚js💻compose🛠️getdesignchildren",
             "loc": 3
           },
           {
-            "id": "👤semio📚js💻semio🛠️getdesignfamily",
+            "id": "👤compose📚js💻compose🛠️getdesignfamily",
             "loc": 12
           },
           {
-            "id": "👤semio📚js💻semio🛠️getdesignsiblings",
+            "id": "👤compose📚js💻compose🛠️getdesignsiblings",
             "loc": 5
           },
           {
-            "id": "👤semio📚js💻semio🛠️getprimitivedesign",
+            "id": "👤compose📚js💻compose🛠️getprimitivedesign",
             "loc": 7
           },
           {
-            "id": "👤semio📚js💻semio🛠️getprimitivetype",
+            "id": "👤compose📚js💻compose🛠️getprimitivetype",
             "loc": 7
           },
           {
-            "id": "👤semio📚js💻semio🛠️gettypechildren",
+            "id": "👤compose📚js💻compose🛠️gettypechildren",
             "loc": 3
           },
           {
-            "id": "👤semio📚js💻semio🛠️gettypefamily",
+            "id": "👤compose📚js💻compose🛠️gettypefamily",
             "loc": 12
           },
           {
-            "id": "👤semio📚js💻semio🛠️gettypesiblings",
+            "id": "👤compose📚js💻compose🛠️gettypesiblings",
             "loc": 5
           },
           {
-            "id": "👤semio📚js💻semio🛠️hassamekit",
+            "id": "👤compose📚js💻compose🛠️hassamekit",
             "loc": 9
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚js💻semio📌8000📌8250"
+          "👤compose📚js💻compose📌8000📌8250"
         ],
         "second": "🎆26🌙03☀️12⏰07⌚52⏱️57",
         "session": "⚪17d3efeea93a43f58515223bfa2049f3"
@@ -192,7 +192,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/go/**",
+            "includePattern": "**/compose/go/**",
             "isRegexp": true,
             "query": "func.*Test|func.*Benchmark|FindQualityInKit|FindTagInKit"
           },
@@ -228,7 +228,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/py/semio.py",
+            "includePattern": "**/compose/py/compose.py",
             "isRegexp": true,
             "query": "def _find.*InKit|def _find.*in_kit|FindQualityInKit"
           },
@@ -263,7 +263,7 @@
           "session_id": "17d3efee-a93a-43f5-8515-223bfa2049f3",
           "tool_name": "list_dir",
           "tool_input": {
-            "path": "/workspaces/semio/semio/net"
+            "path": "/workspaces/semio/compose/net"
           },
           "tool_response": "",
           "tool_use_id": "toolu_014a5veg6c1HqLB6C28PjHHH__vscode-1773233523846",
@@ -296,7 +296,7 @@
           "session_id": "17d3efee-a93a-43f5-8515-223bfa2049f3",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "filePath": "/workspaces/semio/compose/js/compose.ts",
             "startLine": 8000,
             "endLine": 8250
           },
@@ -316,82 +316,82 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚js💻semio🛠️aredesignsinsamefamily",
+            "id": "👤compose📚js💻compose🛠️aredesignsinsamefamily",
             "loc": 5
           },
           {
-            "id": "👤semio📚js💻semio🛠️aresamekit",
+            "id": "👤compose📚js💻compose🛠️aresamekit",
             "loc": 3
           },
           {
-            "id": "👤semio📚js💻semio🛠️aretypesinsamefamily",
+            "id": "👤compose📚js💻compose🛠️aretypesinsamefamily",
             "loc": 5
           },
           {
-            "id": "👤semio📚js💻semio🛠️canusedesignaspiece",
+            "id": "👤compose📚js💻compose🛠️canusedesignaspiece",
             "loc": 3
           },
           {
-            "id": "👤semio📚js💻semio🛠️finddesigninkit",
+            "id": "👤compose📚js💻compose🛠️finddesigninkit",
             "loc": 5
           },
           {
-            "id": "👤semio📚js💻semio🛠️findpiecetypeindesign",
+            "id": "👤compose📚js💻compose🛠️findpiecetypeindesign",
             "loc": 2
           },
           {
-            "id": "👤semio📚js💻semio🛠️findportinkit",
+            "id": "👤compose📚js💻compose🛠️findportinkit",
             "loc": 5
           },
           {
-            "id": "👤semio📚js💻semio🛠️findsamefamilydesignpieces",
+            "id": "👤compose📚js💻compose🛠️findsamefamilydesignpieces",
             "loc": 7
           },
           {
-            "id": "👤semio📚js💻semio🛠️findtypeinkit",
+            "id": "👤compose📚js💻compose🛠️findtypeinkit",
             "loc": 5
           },
           {
-            "id": "👤semio📚js💻semio🛠️getdesignchildren",
+            "id": "👤compose📚js💻compose🛠️getdesignchildren",
             "loc": 3
           },
           {
-            "id": "👤semio📚js💻semio🛠️getdesignfamily",
+            "id": "👤compose📚js💻compose🛠️getdesignfamily",
             "loc": 12
           },
           {
-            "id": "👤semio📚js💻semio🛠️getdesignsiblings",
+            "id": "👤compose📚js💻compose🛠️getdesignsiblings",
             "loc": 5
           },
           {
-            "id": "👤semio📚js💻semio🛠️getprimitivedesign",
+            "id": "👤compose📚js💻compose🛠️getprimitivedesign",
             "loc": 7
           },
           {
-            "id": "👤semio📚js💻semio🛠️getprimitivetype",
+            "id": "👤compose📚js💻compose🛠️getprimitivetype",
             "loc": 7
           },
           {
-            "id": "👤semio📚js💻semio🛠️gettypechildren",
+            "id": "👤compose📚js💻compose🛠️gettypechildren",
             "loc": 3
           },
           {
-            "id": "👤semio📚js💻semio🛠️gettypefamily",
+            "id": "👤compose📚js💻compose🛠️gettypefamily",
             "loc": 12
           },
           {
-            "id": "👤semio📚js💻semio🛠️gettypesiblings",
+            "id": "👤compose📚js💻compose🛠️gettypesiblings",
             "loc": 5
           },
           {
-            "id": "👤semio📚js💻semio🛠️hassamekit",
+            "id": "👤compose📚js💻compose🛠️hassamekit",
             "loc": 9
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚js💻semio📌8000📌8250"
+          "👤compose📚js💻compose📌8000📌8250"
         ],
         "second": "🎆26🌙03☀️12⏰07⌚53⏱️12",
         "session": "⚪17d3efeea93a43f58515223bfa2049f3"
@@ -408,7 +408,7 @@
           "session_id": "17d3efee-a93a-43f5-8515-223bfa2049f3",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "filePath": "/workspaces/semio/compose/go/compose.go",
             "startLine": 1828,
             "endLine": 1950
           },
@@ -428,50 +428,50 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go💻semio🛠️findconnectionindesign",
+            "id": "👤compose📚go💻compose🛠️findconnectionindesign",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio🛠️findconnectorintype",
+            "id": "👤compose📚go💻compose🛠️findconnectorintype",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio🛠️finddesigninkit",
+            "id": "👤compose📚go💻compose🛠️finddesigninkit",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio🛠️findfileinkit",
+            "id": "👤compose📚go💻compose🛠️findfileinkit",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio🛠️findfolderinkit",
+            "id": "👤compose📚go💻compose🛠️findfolderinkit",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio🛠️findpieceindesign",
+            "id": "👤compose📚go💻compose🛠️findpieceindesign",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio🛠️findportinkit",
+            "id": "👤compose📚go💻compose🛠️findportinkit",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio🛠️findqualityinkit",
+            "id": "👤compose📚go💻compose🛠️findqualityinkit",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio🛠️findtaginkit",
+            "id": "👤compose📚go💻compose🛠️findtaginkit",
             "loc": 8
           },
           {
-            "id": "👤semio📚go💻semio🛠️findtypeinkit",
+            "id": "👤compose📚go💻compose🛠️findtypeinkit",
             "loc": 8
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚go💻semio📌1828📌1950"
+          "👤compose📚go💻compose📌1828📌1950"
         ],
         "second": "🎆26🌙03☀️12⏰07⌚53⏱️14",
         "session": "⚪17d3efeea93a43f58515223bfa2049f3"
@@ -488,7 +488,7 @@
           "session_id": "17d3efee-a93a-43f5-8515-223bfa2049f3",
           "tool_name": "list_dir",
           "tool_input": {
-            "path": "/workspaces/semio/semio/gh"
+            "path": "/workspaces/semio/compose/gh"
           },
           "tool_response": "",
           "tool_use_id": "toolu_01Ajs2934XbyZS2TwdFiuGTE__vscode-1773233523847",
@@ -522,7 +522,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/net/Semio/**",
+            "includePattern": "**/compose/net/Compose/**",
             "isRegexp": true,
             "query": "FindDesignInKit|FindQualityInKit|public.*Find"
           },
@@ -558,7 +558,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/gh/**",
+            "includePattern": "**/compose/gh/**",
             "isRegexp": true,
             "query": "class.*Component|public.*Property"
           },
@@ -593,7 +593,7 @@
           "session_id": "17d3efee-a93a-43f5-8515-223bfa2049f3",
           "tool_name": "file_search",
           "tool_input": {
-            "query": "**/semio/js/**sketchpad**",
+            "query": "**/compose/js/**sketchpad**",
             "maxResults": 20
           },
           "tool_use_id": "toolu_01UAsLDQPcyhtKukY8aivtUG__vscode-1773233523852",
@@ -627,7 +627,7 @@
           "session_id": "17d3efee-a93a-43f5-8515-223bfa2049f3",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/go/semio_test.go",
+            "filePath": "/workspaces/semio/compose/go/compose_test.go",
             "startLine": 1,
             "endLine": 100
           },
@@ -647,34 +647,34 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go🥼semiotest✂️modelselectionasset",
+            "id": "👤compose📚go🥼composetest✂️modelselectionasset",
             "loc": 3
           },
           {
-            "id": "👤semio📚go🥼semiotest✂️modelselectioncase",
+            "id": "👤compose📚go🥼composetest✂️modelselectioncase",
             "loc": 6
           },
           {
-            "id": "👤semio📚go🥼semiotest✂️modelselectionmodel",
+            "id": "👤compose📚go🥼composetest✂️modelselectionmodel",
             "loc": 5
           },
           {
-            "id": "👤semio📚go🥼semiotest🛠️containsalltags",
+            "id": "👤compose📚go🥼composetest🛠️containsalltags",
             "loc": 15
           },
           {
-            "id": "👤semio📚go🥼semiotest🛠️jaccardtagguids",
+            "id": "👤compose📚go🥼composetest🛠️jaccardtagguids",
             "loc": 29
           },
           {
-            "id": "👤semio📚go🥼semiotest🛠️loadjson",
+            "id": "👤compose📚go🥼composetest🛠️loadjson",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚go🥼semiotest📌1📌100"
+          "👤compose📚go🥼composetest📌1📌100"
         ],
         "second": "🎆26🌙03☀️12⏰07⌚53⏱️25",
         "session": "⚪17d3efeea93a43f58515223bfa2049f3"
@@ -691,7 +691,7 @@
           "session_id": "17d3efee-a93a-43f5-8515-223bfa2049f3",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/py/semio.py",
+            "filePath": "/workspaces/semio/compose/py/compose.py",
             "startLine": 7700,
             "endLine": 7780
           },
@@ -711,38 +711,38 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚py💻semio🛠️applydesigndiffdict",
+            "id": "👤compose📚py💻compose🛠️applydesigndiffdict",
             "loc": 41
           },
           {
-            "id": "👤semio📚py💻semio🛠️findconnectorintypedict",
+            "id": "👤compose📚py💻compose🛠️findconnectorintypedict",
             "loc": 7
           },
           {
-            "id": "👤semio📚py💻semio🛠️finddesigninkitdict",
+            "id": "👤compose📚py💻compose🛠️finddesigninkitdict",
             "loc": 7
           },
           {
-            "id": "👤semio📚py💻semio🛠️findpiececonnectionsindesigndict",
+            "id": "👤compose📚py💻compose🛠️findpiececonnectionsindesigndict",
             "loc": 4
           },
           {
-            "id": "👤semio📚py💻semio🛠️findpieceindesigndict",
+            "id": "👤compose📚py💻compose🛠️findpieceindesigndict",
             "loc": 7
           },
           {
-            "id": "👤semio📚py💻semio🛠️findtypeinkitdict",
+            "id": "👤compose📚py💻compose🛠️findtypeinkitdict",
             "loc": 7
           },
           {
-            "id": "👤semio📚py💻semio🛠️piecesmetadatadict",
+            "id": "👤compose📚py💻compose🛠️piecesmetadatadict",
             "loc": 8
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚py💻semio📌7700📌7780"
+          "👤compose📚py💻compose📌7700📌7780"
         ],
         "second": "🎆26🌙03☀️12⏰07⌚53⏱️25",
         "session": "⚪17d3efeea93a43f58515223bfa2049f3"
@@ -760,7 +760,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/gh/**",
+            "includePattern": "**/compose/gh/**",
             "isRegexp": true,
             "query": "class.*Component|public.*Property"
           },
@@ -796,7 +796,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/net/Semio/**",
+            "includePattern": "**/compose/net/Compose/**",
             "isRegexp": true,
             "query": "FindDesignInKit|FindQualityInKit|public.*Find"
           },
@@ -831,7 +831,7 @@
           "session_id": "17d3efee-a93a-43f5-8515-223bfa2049f3",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/py/semio.py",
+            "filePath": "/workspaces/semio/compose/py/compose.py",
             "startLine": 7700,
             "endLine": 7780
           },
@@ -851,38 +851,38 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚py💻semio🛠️applydesigndiffdict",
+            "id": "👤compose📚py💻compose🛠️applydesigndiffdict",
             "loc": 41
           },
           {
-            "id": "👤semio📚py💻semio🛠️findconnectorintypedict",
+            "id": "👤compose📚py💻compose🛠️findconnectorintypedict",
             "loc": 7
           },
           {
-            "id": "👤semio📚py💻semio🛠️finddesigninkitdict",
+            "id": "👤compose📚py💻compose🛠️finddesigninkitdict",
             "loc": 7
           },
           {
-            "id": "👤semio📚py💻semio🛠️findpiececonnectionsindesigndict",
+            "id": "👤compose📚py💻compose🛠️findpiececonnectionsindesigndict",
             "loc": 4
           },
           {
-            "id": "👤semio📚py💻semio🛠️findpieceindesigndict",
+            "id": "👤compose📚py💻compose🛠️findpieceindesigndict",
             "loc": 7
           },
           {
-            "id": "👤semio📚py💻semio🛠️findtypeinkitdict",
+            "id": "👤compose📚py💻compose🛠️findtypeinkitdict",
             "loc": 7
           },
           {
-            "id": "👤semio📚py💻semio🛠️piecesmetadatadict",
+            "id": "👤compose📚py💻compose🛠️piecesmetadatadict",
             "loc": 8
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚py💻semio📌7700📌7780"
+          "👤compose📚py💻compose📌7700📌7780"
         ],
         "second": "🎆26🌙03☀️12⏰07⌚53⏱️48",
         "session": "⚪17d3efeea93a43f58515223bfa2049f3"
@@ -899,7 +899,7 @@
           "session_id": "17d3efee-a93a-43f5-8515-223bfa2049f3",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/semio/go/semio_test.go",
+            "filePath": "/workspaces/semio/compose/go/compose_test.go",
             "startLine": 1,
             "endLine": 100
           },
@@ -919,34 +919,34 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go🥼semiotest✂️modelselectionasset",
+            "id": "👤compose📚go🥼composetest✂️modelselectionasset",
             "loc": 3
           },
           {
-            "id": "👤semio📚go🥼semiotest✂️modelselectioncase",
+            "id": "👤compose📚go🥼composetest✂️modelselectioncase",
             "loc": 6
           },
           {
-            "id": "👤semio📚go🥼semiotest✂️modelselectionmodel",
+            "id": "👤compose📚go🥼composetest✂️modelselectionmodel",
             "loc": 5
           },
           {
-            "id": "👤semio📚go🥼semiotest🛠️containsalltags",
+            "id": "👤compose📚go🥼composetest🛠️containsalltags",
             "loc": 15
           },
           {
-            "id": "👤semio📚go🥼semiotest🛠️jaccardtagguids",
+            "id": "👤compose📚go🥼composetest🛠️jaccardtagguids",
             "loc": 29
           },
           {
-            "id": "👤semio📚go🥼semiotest🛠️loadjson",
+            "id": "👤compose📚go🥼composetest🛠️loadjson",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚go🥼semiotest📌1📌100"
+          "👤compose📚go🥼composetest📌1📌100"
         ],
         "second": "🎆26🌙03☀️12⏰07⌚53⏱️48",
         "session": "⚪17d3efeea93a43f58515223bfa2049f3"
@@ -963,7 +963,7 @@
           "session_id": "17d3efee-a93a-43f5-8515-223bfa2049f3",
           "tool_name": "file_search",
           "tool_input": {
-            "query": "**/semio/js/**sketchpad**",
+            "query": "**/compose/js/**sketchpad**",
             "maxResults": 20
           },
           "tool_response": "",
@@ -1031,7 +1031,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/net/Semio/Semio.cs",
+            "includePattern": "**/compose/net/Compose/Compose.cs",
             "isRegexp": true,
             "query": "public static.*Find.*Kit|public static.*Quality|FindQualityInKit"
           },
@@ -1067,7 +1067,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 1950,
-            "filePath": "/workspaces/semio/semio/rs/semio.rs",
+            "filePath": "/workspaces/semio/compose/rs/compose.rs",
             "startLine": 1185
           },
           "tool_use_id": "toolu_01C2GwU374dkin1LcyDyxckA__vscode-1773233523854",
@@ -1086,190 +1086,190 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚rs💻semio🛠️aredesignsequal",
+            "id": "👤compose📚rs💻compose🛠️aredesignsequal",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️arekitsequal",
+            "id": "👤compose📚rs💻compose🛠️arekitsequal",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️aretypesequal",
+            "id": "👤compose📚rs💻compose🛠️aretypesequal",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️attributediff",
+            "id": "👤compose📚rs💻compose🛠️attributediff",
             "loc": 9
           },
           {
-            "id": "👤semio📚rs💻semio🛠️collectiondiff",
+            "id": "👤compose📚rs💻compose🛠️collectiondiff",
             "loc": 8
           },
           {
-            "id": "👤semio📚rs💻semio🛠️connectiondiff",
+            "id": "👤compose📚rs💻compose🛠️connectiondiff",
             "loc": 27
           },
           {
-            "id": "👤semio📚rs💻semio🛠️connectordiff",
+            "id": "👤compose📚rs💻compose🛠️connectordiff",
             "loc": 21
           },
           {
-            "id": "👤semio📚rs💻semio🛠️deserializedesign",
+            "id": "👤compose📚rs💻compose🛠️deserializedesign",
             "loc": 5
           },
           {
-            "id": "👤semio📚rs💻semio🛠️deserializekit",
+            "id": "👤compose📚rs💻compose🛠️deserializekit",
             "loc": 5
           },
           {
-            "id": "👤semio📚rs💻semio🛠️deserializetype",
+            "id": "👤compose📚rs💻compose🛠️deserializetype",
             "loc": 5
           },
           {
-            "id": "👤semio📚rs💻semio🛠️designdiff",
+            "id": "👤compose📚rs💻compose🛠️designdiff",
             "loc": 41
           },
           {
-            "id": "👤semio📚rs💻semio🛠️diffupdate",
+            "id": "👤compose📚rs💻compose🛠️diffupdate",
             "loc": 5
           },
           {
-            "id": "👤semio📚rs💻semio🛠️findauthorinkit",
+            "id": "👤compose📚rs💻compose🛠️findauthorinkit",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️findconceptinkit",
+            "id": "👤compose📚rs💻compose🛠️findconceptinkit",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️findconnectionindesign",
+            "id": "👤compose📚rs💻compose🛠️findconnectionindesign",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️findconnectorintype",
+            "id": "👤compose📚rs💻compose🛠️findconnectorintype",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️finddesigninkit",
+            "id": "👤compose📚rs💻compose🛠️finddesigninkit",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️finddesigninkitmut",
+            "id": "👤compose📚rs💻compose🛠️finddesigninkitmut",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️findfileinkit",
+            "id": "👤compose📚rs💻compose🛠️findfileinkit",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️findfolderinkit",
+            "id": "👤compose📚rs💻compose🛠️findfolderinkit",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️findgroupindesign",
+            "id": "👤compose📚rs💻compose🛠️findgroupindesign",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️findinterfaceinkit",
+            "id": "👤compose📚rs💻compose🛠️findinterfaceinkit",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️findlayerindesign",
+            "id": "👤compose📚rs💻compose🛠️findlayerindesign",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️findmodelintype",
+            "id": "👤compose📚rs💻compose🛠️findmodelintype",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️findpieceindesign",
+            "id": "👤compose📚rs💻compose🛠️findpieceindesign",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️findpieceindesignmut",
+            "id": "👤compose📚rs💻compose🛠️findpieceindesignmut",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️findqualityinkit",
+            "id": "👤compose📚rs💻compose🛠️findqualityinkit",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️findstatindesign",
+            "id": "👤compose📚rs💻compose🛠️findstatindesign",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️findtaginkit",
+            "id": "👤compose📚rs💻compose🛠️findtaginkit",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️findtypeinkit",
+            "id": "👤compose📚rs💻compose🛠️findtypeinkit",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️findtypeinkitmut",
+            "id": "👤compose📚rs💻compose🛠️findtypeinkitmut",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️groupdiff",
+            "id": "👤compose📚rs💻compose🛠️groupdiff",
             "loc": 13
           },
           {
-            "id": "👤semio📚rs💻semio🛠️issupportedmodelextension",
+            "id": "👤compose📚rs💻compose🛠️issupportedmodelextension",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️layerdiff",
+            "id": "👤compose📚rs💻compose🛠️layerdiff",
             "loc": 15
           },
           {
-            "id": "👤semio📚rs💻semio🛠️modeldiff",
+            "id": "👤compose📚rs💻compose🛠️modeldiff",
             "loc": 13
           },
           {
-            "id": "👤semio📚rs💻semio🛠️piecediff",
+            "id": "👤compose📚rs💻compose🛠️piecediff",
             "loc": 29
           },
           {
-            "id": "👤semio📚rs💻semio🛠️propdiff",
+            "id": "👤compose📚rs💻compose🛠️propdiff",
             "loc": 11
           },
           {
-            "id": "👤semio📚rs💻semio🛠️removeditem",
+            "id": "👤compose📚rs💻compose🛠️removeditem",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️serializedesign",
+            "id": "👤compose📚rs💻compose🛠️serializedesign",
             "loc": 5
           },
           {
-            "id": "👤semio📚rs💻semio🛠️serializekit",
+            "id": "👤compose📚rs💻compose🛠️serializekit",
             "loc": 5
           },
           {
-            "id": "👤semio📚rs💻semio🛠️serializetype",
+            "id": "👤compose📚rs💻compose🛠️serializetype",
             "loc": 5
           },
           {
-            "id": "👤semio📚rs💻semio🛠️sidediff",
+            "id": "👤compose📚rs💻compose🛠️sidediff",
             "loc": 8
           },
           {
-            "id": "👤semio📚rs💻semio🛠️statdiff",
+            "id": "👤compose📚rs💻compose🛠️statdiff",
             "loc": 15
           },
           {
-            "id": "👤semio📚rs💻semio🛠️typediff",
+            "id": "👤compose📚rs💻compose🛠️typediff",
             "loc": 37
           },
           {
-            "id": "👤semio📚rs💻semio🪨supportedmodelextensions",
+            "id": "👤compose📚rs💻compose🪨supportedmodelextensions",
             "loc": 11
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚rs💻semio📌1185📌1950"
+          "👤compose📚rs💻compose📌1185📌1950"
         ],
         "second": "🎆26🌙03☀️12⏰07⌚53⏱️59",
         "session": "⚪17d3efeea93a43f58515223bfa2049f3"
@@ -1287,7 +1287,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 50,
-            "filePath": "/workspaces/semio/semio/js/sketchpad.test.ts",
+            "filePath": "/workspaces/semio/compose/js/sketchpad.test.ts",
             "startLine": 1
           },
           "tool_use_id": "toolu_01Ly8c6QwNvdEry5eUtvHfmy__vscode-1773233523856",
@@ -1306,46 +1306,46 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚js🥼sketchpadtest✂️center",
+            "id": "👤compose📚js🥼sketchpadtest✂️center",
             "loc": 2
           },
           {
-            "id": "👤semio📚js🥼sketchpadtest✂️plane",
+            "id": "👤compose📚js🥼sketchpadtest✂️plane",
             "loc": 5
           },
           {
-            "id": "👤semio📚js🥼sketchpadtest🪨designs",
+            "id": "👤compose📚js🥼sketchpadtest🪨designs",
             "loc": 1
           },
           {
-            "id": "👤semio📚js🥼sketchpadtest🪨dirname",
+            "id": "👤compose📚js🥼sketchpadtest🪨dirname",
             "loc": 2
           },
           {
-            "id": "👤semio📚js🥼sketchpadtest🪨filename",
+            "id": "👤compose📚js🥼sketchpadtest🪨filename",
             "loc": 1
           },
           {
-            "id": "👤semio📚js🥼sketchpadtest🪨metabolismkitnakagincapsuletowerflatpieces",
+            "id": "👤compose📚js🥼sketchpadtest🪨metabolismkitnakagincapsuletowerflatpieces",
             "loc": 6
           },
           {
-            "id": "👤semio📚js🥼sketchpadtest🪨nakagincapsuletowerdesign",
+            "id": "👤compose📚js🥼sketchpadtest🪨nakagincapsuletowerdesign",
             "loc": 1
           },
           {
-            "id": "👤semio📚js🥼sketchpadtest🪨nakagincapsuletowerflatdesign",
+            "id": "👤compose📚js🥼sketchpadtest🪨nakagincapsuletowerflatdesign",
             "loc": 1
           },
           {
-            "id": "👤semio📚js🥼sketchpadtest🪨tolerance",
+            "id": "👤compose📚js🥼sketchpadtest🪨tolerance",
             "loc": 2
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚js🥼sketchpadtest📌1📌50"
+          "👤compose📚js🥼sketchpadtest📌1📌50"
         ],
         "second": "🎆26🌙03☀️12⏰07⌚53⏱️59",
         "session": "⚪17d3efeea93a43f58515223bfa2049f3"
@@ -1363,7 +1363,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/net/Semio/Semio.cs",
+            "includePattern": "**/compose/net/Compose/Compose.cs",
             "isRegexp": true,
             "query": "public static.*Find.*Kit|public static.*Quality|FindQualityInKit"
           },
@@ -1399,7 +1399,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 50,
-            "filePath": "/workspaces/semio/semio/js/sketchpad.test.ts",
+            "filePath": "/workspaces/semio/compose/js/sketchpad.test.ts",
             "startLine": 1
           },
           "tool_response": "",
@@ -1418,46 +1418,46 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚js🥼sketchpadtest✂️center",
+            "id": "👤compose📚js🥼sketchpadtest✂️center",
             "loc": 2
           },
           {
-            "id": "👤semio📚js🥼sketchpadtest✂️plane",
+            "id": "👤compose📚js🥼sketchpadtest✂️plane",
             "loc": 5
           },
           {
-            "id": "👤semio📚js🥼sketchpadtest🪨designs",
+            "id": "👤compose📚js🥼sketchpadtest🪨designs",
             "loc": 1
           },
           {
-            "id": "👤semio📚js🥼sketchpadtest🪨dirname",
+            "id": "👤compose📚js🥼sketchpadtest🪨dirname",
             "loc": 2
           },
           {
-            "id": "👤semio📚js🥼sketchpadtest🪨filename",
+            "id": "👤compose📚js🥼sketchpadtest🪨filename",
             "loc": 1
           },
           {
-            "id": "👤semio📚js🥼sketchpadtest🪨metabolismkitnakagincapsuletowerflatpieces",
+            "id": "👤compose📚js🥼sketchpadtest🪨metabolismkitnakagincapsuletowerflatpieces",
             "loc": 6
           },
           {
-            "id": "👤semio📚js🥼sketchpadtest🪨nakagincapsuletowerdesign",
+            "id": "👤compose📚js🥼sketchpadtest🪨nakagincapsuletowerdesign",
             "loc": 1
           },
           {
-            "id": "👤semio📚js🥼sketchpadtest🪨nakagincapsuletowerflatdesign",
+            "id": "👤compose📚js🥼sketchpadtest🪨nakagincapsuletowerflatdesign",
             "loc": 1
           },
           {
-            "id": "👤semio📚js🥼sketchpadtest🪨tolerance",
+            "id": "👤compose📚js🥼sketchpadtest🪨tolerance",
             "loc": 2
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚js🥼sketchpadtest📌1📌50"
+          "👤compose📚js🥼sketchpadtest📌1📌50"
         ],
         "second": "🎆26🌙03☀️12⏰07⌚54⏱️33",
         "session": "⚪17d3efeea93a43f58515223bfa2049f3"
@@ -1475,7 +1475,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 1950,
-            "filePath": "/workspaces/semio/semio/rs/semio.rs",
+            "filePath": "/workspaces/semio/compose/rs/compose.rs",
             "startLine": 1185
           },
           "tool_response": "",
@@ -1494,190 +1494,190 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚rs💻semio🛠️aredesignsequal",
+            "id": "👤compose📚rs💻compose🛠️aredesignsequal",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️arekitsequal",
+            "id": "👤compose📚rs💻compose🛠️arekitsequal",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️aretypesequal",
+            "id": "👤compose📚rs💻compose🛠️aretypesequal",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️attributediff",
+            "id": "👤compose📚rs💻compose🛠️attributediff",
             "loc": 9
           },
           {
-            "id": "👤semio📚rs💻semio🛠️collectiondiff",
+            "id": "👤compose📚rs💻compose🛠️collectiondiff",
             "loc": 8
           },
           {
-            "id": "👤semio📚rs💻semio🛠️connectiondiff",
+            "id": "👤compose📚rs💻compose🛠️connectiondiff",
             "loc": 27
           },
           {
-            "id": "👤semio📚rs💻semio🛠️connectordiff",
+            "id": "👤compose📚rs💻compose🛠️connectordiff",
             "loc": 21
           },
           {
-            "id": "👤semio📚rs💻semio🛠️deserializedesign",
+            "id": "👤compose📚rs💻compose🛠️deserializedesign",
             "loc": 5
           },
           {
-            "id": "👤semio📚rs💻semio🛠️deserializekit",
+            "id": "👤compose📚rs💻compose🛠️deserializekit",
             "loc": 5
           },
           {
-            "id": "👤semio📚rs💻semio🛠️deserializetype",
+            "id": "👤compose📚rs💻compose🛠️deserializetype",
             "loc": 5
           },
           {
-            "id": "👤semio📚rs💻semio🛠️designdiff",
+            "id": "👤compose📚rs💻compose🛠️designdiff",
             "loc": 41
           },
           {
-            "id": "👤semio📚rs💻semio🛠️diffupdate",
+            "id": "👤compose📚rs💻compose🛠️diffupdate",
             "loc": 5
           },
           {
-            "id": "👤semio📚rs💻semio🛠️findauthorinkit",
+            "id": "👤compose📚rs💻compose🛠️findauthorinkit",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️findconceptinkit",
+            "id": "👤compose📚rs💻compose🛠️findconceptinkit",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️findconnectionindesign",
+            "id": "👤compose📚rs💻compose🛠️findconnectionindesign",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️findconnectorintype",
+            "id": "👤compose📚rs💻compose🛠️findconnectorintype",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️finddesigninkit",
+            "id": "👤compose📚rs💻compose🛠️finddesigninkit",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️finddesigninkitmut",
+            "id": "👤compose📚rs💻compose🛠️finddesigninkitmut",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️findfileinkit",
+            "id": "👤compose📚rs💻compose🛠️findfileinkit",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️findfolderinkit",
+            "id": "👤compose📚rs💻compose🛠️findfolderinkit",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️findgroupindesign",
+            "id": "👤compose📚rs💻compose🛠️findgroupindesign",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️findinterfaceinkit",
+            "id": "👤compose📚rs💻compose🛠️findinterfaceinkit",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️findlayerindesign",
+            "id": "👤compose📚rs💻compose🛠️findlayerindesign",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️findmodelintype",
+            "id": "👤compose📚rs💻compose🛠️findmodelintype",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️findpieceindesign",
+            "id": "👤compose📚rs💻compose🛠️findpieceindesign",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️findpieceindesignmut",
+            "id": "👤compose📚rs💻compose🛠️findpieceindesignmut",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️findqualityinkit",
+            "id": "👤compose📚rs💻compose🛠️findqualityinkit",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️findstatindesign",
+            "id": "👤compose📚rs💻compose🛠️findstatindesign",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️findtaginkit",
+            "id": "👤compose📚rs💻compose🛠️findtaginkit",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️findtypeinkit",
+            "id": "👤compose📚rs💻compose🛠️findtypeinkit",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️findtypeinkitmut",
+            "id": "👤compose📚rs💻compose🛠️findtypeinkitmut",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️groupdiff",
+            "id": "👤compose📚rs💻compose🛠️groupdiff",
             "loc": 13
           },
           {
-            "id": "👤semio📚rs💻semio🛠️issupportedmodelextension",
+            "id": "👤compose📚rs💻compose🛠️issupportedmodelextension",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️layerdiff",
+            "id": "👤compose📚rs💻compose🛠️layerdiff",
             "loc": 15
           },
           {
-            "id": "👤semio📚rs💻semio🛠️modeldiff",
+            "id": "👤compose📚rs💻compose🛠️modeldiff",
             "loc": 13
           },
           {
-            "id": "👤semio📚rs💻semio🛠️piecediff",
+            "id": "👤compose📚rs💻compose🛠️piecediff",
             "loc": 29
           },
           {
-            "id": "👤semio📚rs💻semio🛠️propdiff",
+            "id": "👤compose📚rs💻compose🛠️propdiff",
             "loc": 11
           },
           {
-            "id": "👤semio📚rs💻semio🛠️removeditem",
+            "id": "👤compose📚rs💻compose🛠️removeditem",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️serializedesign",
+            "id": "👤compose📚rs💻compose🛠️serializedesign",
             "loc": 5
           },
           {
-            "id": "👤semio📚rs💻semio🛠️serializekit",
+            "id": "👤compose📚rs💻compose🛠️serializekit",
             "loc": 5
           },
           {
-            "id": "👤semio📚rs💻semio🛠️serializetype",
+            "id": "👤compose📚rs💻compose🛠️serializetype",
             "loc": 5
           },
           {
-            "id": "👤semio📚rs💻semio🛠️sidediff",
+            "id": "👤compose📚rs💻compose🛠️sidediff",
             "loc": 8
           },
           {
-            "id": "👤semio📚rs💻semio🛠️statdiff",
+            "id": "👤compose📚rs💻compose🛠️statdiff",
             "loc": 15
           },
           {
-            "id": "👤semio📚rs💻semio🛠️typediff",
+            "id": "👤compose📚rs💻compose🛠️typediff",
             "loc": 37
           },
           {
-            "id": "👤semio📚rs💻semio🪨supportedmodelextensions",
+            "id": "👤compose📚rs💻compose🪨supportedmodelextensions",
             "loc": 11
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚rs💻semio📌1185📌1950"
+          "👤compose📚rs💻compose📌1185📌1950"
         ],
         "second": "🎆26🌙03☀️12⏰07⌚54⏱️34",
         "session": "⚪17d3efeea93a43f58515223bfa2049f3"
@@ -1728,7 +1728,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/net/Semio/Semio.cs",
+            "includePattern": "**/compose/net/Compose/Compose.cs",
             "isRegexp": true,
             "query": "public static.*Find.*Quality|FindQualityByGuid|Quality.*Find"
           },
@@ -1764,7 +1764,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/gh/Semio.Grasshopper/**",
+            "includePattern": "**/compose/gh/Compose.Grasshopper/**",
             "isRegexp": true,
             "query": "class.*Component.*:.*Component|protected override"
           },
@@ -1800,7 +1800,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 15,
-            "includePattern": "**/semio/js/sketchpad/**",
+            "includePattern": "**/compose/js/sketchpad/**",
             "isRegexp": true,
             "query": "export.*function|export const.*="
           },
@@ -1836,7 +1836,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 8100,
-            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "filePath": "/workspaces/semio/compose/js/compose.ts",
             "startLine": 8000
           },
           "tool_use_id": "toolu_01JVFKQ6mPxaCCvi3REnWPdd__vscode-1773233523858",
@@ -1855,38 +1855,38 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚js💻semio🛠️aresamekit",
+            "id": "👤compose📚js💻compose🛠️aresamekit",
             "loc": 3
           },
           {
-            "id": "👤semio📚js💻semio🛠️finddesigninkit",
+            "id": "👤compose📚js💻compose🛠️finddesigninkit",
             "loc": 5
           },
           {
-            "id": "👤semio📚js💻semio🛠️findtypeinkit",
+            "id": "👤compose📚js💻compose🛠️findtypeinkit",
             "loc": 5
           },
           {
-            "id": "👤semio📚js💻semio🛠️getdesignfamily",
+            "id": "👤compose📚js💻compose🛠️getdesignfamily",
             "loc": 12
           },
           {
-            "id": "👤semio📚js💻semio🛠️getdesignsiblings",
+            "id": "👤compose📚js💻compose🛠️getdesignsiblings",
             "loc": 5
           },
           {
-            "id": "👤semio📚js💻semio🛠️getprimitivedesign",
+            "id": "👤compose📚js💻compose🛠️getprimitivedesign",
             "loc": 7
           },
           {
-            "id": "👤semio📚js💻semio🛠️hassamekit",
+            "id": "👤compose📚js💻compose🛠️hassamekit",
             "loc": 9
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚js💻semio📌8000📌8100"
+          "👤compose📚js💻compose📌8000📌8100"
         ],
         "second": "🎆26🌙03☀️12⏰07⌚54⏱️45",
         "session": "⚪17d3efeea93a43f58515223bfa2049f3"
@@ -1904,7 +1904,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/gh/Semio.Grasshopper/**",
+            "includePattern": "**/compose/gh/Compose.Grasshopper/**",
             "isRegexp": true,
             "query": "class.*Component.*:.*Component|protected override"
           },
@@ -1940,7 +1940,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 15,
-            "includePattern": "**/semio/js/sketchpad/**",
+            "includePattern": "**/compose/js/sketchpad/**",
             "isRegexp": true,
             "query": "export.*function|export const.*="
           },
@@ -1976,7 +1976,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/net/Semio/Semio.cs",
+            "includePattern": "**/compose/net/Compose/Compose.cs",
             "isRegexp": true,
             "query": "public static.*Find.*Quality|FindQualityByGuid|Quality.*Find"
           },
@@ -2012,7 +2012,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 8100,
-            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "filePath": "/workspaces/semio/compose/js/compose.ts",
             "startLine": 8000
           },
           "tool_response": "",
@@ -2031,38 +2031,38 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚js💻semio🛠️aresamekit",
+            "id": "👤compose📚js💻compose🛠️aresamekit",
             "loc": 3
           },
           {
-            "id": "👤semio📚js💻semio🛠️finddesigninkit",
+            "id": "👤compose📚js💻compose🛠️finddesigninkit",
             "loc": 5
           },
           {
-            "id": "👤semio📚js💻semio🛠️findtypeinkit",
+            "id": "👤compose📚js💻compose🛠️findtypeinkit",
             "loc": 5
           },
           {
-            "id": "👤semio📚js💻semio🛠️getdesignfamily",
+            "id": "👤compose📚js💻compose🛠️getdesignfamily",
             "loc": 12
           },
           {
-            "id": "👤semio📚js💻semio🛠️getdesignsiblings",
+            "id": "👤compose📚js💻compose🛠️getdesignsiblings",
             "loc": 5
           },
           {
-            "id": "👤semio📚js💻semio🛠️getprimitivedesign",
+            "id": "👤compose📚js💻compose🛠️getprimitivedesign",
             "loc": 7
           },
           {
-            "id": "👤semio📚js💻semio🛠️hassamekit",
+            "id": "👤compose📚js💻compose🛠️hassamekit",
             "loc": 9
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚js💻semio📌8000📌8100"
+          "👤compose📚js💻compose📌8000📌8100"
         ],
         "second": "🎆26🌙03☀️12⏰07⌚55⏱️14",
         "session": "⚪17d3efeea93a43f58515223bfa2049f3"
@@ -2081,7 +2081,7 @@
           "tool_input": {
             "maxResults": 20,
             "includeIgnoredFiles": true,
-            "includePattern": "**/semio/net/Semio/Semio.cs",
+            "includePattern": "**/compose/net/Compose/Compose.cs",
             "isRegexp": true,
             "query": "Find.*Quality|FindQuality"
           },
@@ -2118,7 +2118,7 @@
           "tool_input": {
             "maxResults": 20,
             "includeIgnoredFiles": true,
-            "includePattern": "**/semio/js/semio.ts",
+            "includePattern": "**/compose/js/compose.ts",
             "isRegexp": true,
             "query": "findQualityInKit|findPortInKit|findFileInKit|findTagInKit|findAuthorInKit"
           },
@@ -2154,7 +2154,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 7800,
-            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "filePath": "/workspaces/semio/compose/js/compose.ts",
             "startLine": 7856
           },
           "tool_use_id": "toolu_01G6V6Pv9xSNkBEZavzqNSdT__vscode-1773233523863",
@@ -2174,7 +2174,7 @@
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚js💻semio📌7856📌7800"
+          "👤compose📚js💻compose📌7856📌7800"
         ],
         "second": "🎆26🌙03☀️12⏰07⌚55⏱️20",
         "session": "⚪17d3efeea93a43f58515223bfa2049f3"
@@ -2192,7 +2192,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 1365,
-            "filePath": "/workspaces/semio/semio/rs/semio.rs",
+            "filePath": "/workspaces/semio/compose/rs/compose.rs",
             "startLine": 1315
           },
           "tool_use_id": "toolu_01TBc6uth4mnHdXdLR68y9Cx__vscode-1773233523864",
@@ -2211,34 +2211,34 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚rs💻semio🛠️findconceptinkit",
+            "id": "👤compose📚rs💻compose🛠️findconceptinkit",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️findgroupindesign",
+            "id": "👤compose📚rs💻compose🛠️findgroupindesign",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️findinterfaceinkit",
+            "id": "👤compose📚rs💻compose🛠️findinterfaceinkit",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️findlayerindesign",
+            "id": "👤compose📚rs💻compose🛠️findlayerindesign",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️findqualityinkit",
+            "id": "👤compose📚rs💻compose🛠️findqualityinkit",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️findstatindesign",
+            "id": "👤compose📚rs💻compose🛠️findstatindesign",
             "loc": 3
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚rs💻semio📌1315📌1365"
+          "👤compose📚rs💻compose📌1315📌1365"
         ],
         "second": "🎆26🌙03☀️12⏰07⌚55⏱️20",
         "session": "⚪17d3efeea93a43f58515223bfa2049f3"
@@ -2256,7 +2256,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 7800,
-            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "filePath": "/workspaces/semio/compose/js/compose.ts",
             "startLine": 7856
           },
           "tool_response": "",
@@ -2276,7 +2276,7 @@
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚js💻semio📌7856📌7800"
+          "👤compose📚js💻compose📌7856📌7800"
         ],
         "second": "🎆26🌙03☀️12⏰07⌚55⏱️52",
         "session": "⚪17d3efeea93a43f58515223bfa2049f3"
@@ -2294,7 +2294,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 1365,
-            "filePath": "/workspaces/semio/semio/rs/semio.rs",
+            "filePath": "/workspaces/semio/compose/rs/compose.rs",
             "startLine": 1315
           },
           "tool_response": "",
@@ -2313,34 +2313,34 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚rs💻semio🛠️findconceptinkit",
+            "id": "👤compose📚rs💻compose🛠️findconceptinkit",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️findgroupindesign",
+            "id": "👤compose📚rs💻compose🛠️findgroupindesign",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️findinterfaceinkit",
+            "id": "👤compose📚rs💻compose🛠️findinterfaceinkit",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️findlayerindesign",
+            "id": "👤compose📚rs💻compose🛠️findlayerindesign",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️findqualityinkit",
+            "id": "👤compose📚rs💻compose🛠️findqualityinkit",
             "loc": 3
           },
           {
-            "id": "👤semio📚rs💻semio🛠️findstatindesign",
+            "id": "👤compose📚rs💻compose🛠️findstatindesign",
             "loc": 3
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚rs💻semio📌1315📌1365"
+          "👤compose📚rs💻compose📌1315📌1365"
         ],
         "second": "🎆26🌙03☀️12⏰07⌚55⏱️53",
         "session": "⚪17d3efeea93a43f58515223bfa2049f3"
@@ -2359,7 +2359,7 @@
           "tool_input": {
             "maxResults": 20,
             "includeIgnoredFiles": true,
-            "includePattern": "**/semio/js/semio.ts",
+            "includePattern": "**/compose/js/compose.ts",
             "isRegexp": true,
             "query": "findQualityInKit|findPortInKit|findFileInKit|findTagInKit|findAuthorInKit"
           },
@@ -2396,7 +2396,7 @@
           "tool_input": {
             "maxResults": 20,
             "includeIgnoredFiles": true,
-            "includePattern": "**/semio/net/Semio/Semio.cs",
+            "includePattern": "**/compose/net/Compose/Compose.cs",
             "isRegexp": true,
             "query": "Find.*Quality|FindQuality"
           },
@@ -2432,7 +2432,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 5,
-            "includePattern": "**/semio/assets/semio/kit_metabolism.json",
+            "includePattern": "**/compose/assets/compose/kit_metabolism.json",
             "isRegexp": true,
             "query": "\"qualities\"|\"effective floor area\"|\"name\".*\"quality\""
           },
@@ -2469,7 +2469,7 @@
           "tool_input": {
             "maxResults": 10,
             "includeIgnoredFiles": true,
-            "includePattern": "**/semio/py/semio.py",
+            "includePattern": "**/compose/py/compose.py",
             "isRegexp": true,
             "query": "class Quality|find_quality|FindQualityInKit"
           },
@@ -2506,7 +2506,7 @@
           "tool_input": {
             "maxResults": 15,
             "includeIgnoredFiles": true,
-            "includePattern": "**/semio/go/semio.go",
+            "includePattern": "**/compose/go/compose.go",
             "isRegexp": true,
             "query": "type Quality struct|FindAuthorInKit|FindConceptInKit|FindFolderInKit"
           },
@@ -2542,7 +2542,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 100,
-            "filePath": "/workspaces/semio/semio/assets/semio/kit_metabolism.json",
+            "filePath": "/workspaces/semio/compose/assets/compose/kit_metabolism.json",
             "startLine": 1
           },
           "tool_use_id": "toolu_018EvFmbritn7qVoXh6wuwLM__vscode-1773233523866",
@@ -2562,7 +2562,7 @@
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio🏪assets🗃️semio⚙️kitmetabolism📌1📌100"
+          "👤compose🏪assets🗃️compose⚙️kitmetabolism📌1📌100"
         ],
         "second": "🎆26🌙03☀️12⏰07⌚56⏱️15",
         "session": "⚪17d3efeea93a43f58515223bfa2049f3"
@@ -2580,7 +2580,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 5,
-            "includePattern": "**/semio/assets/semio/kit_metabolism.json",
+            "includePattern": "**/compose/assets/compose/kit_metabolism.json",
             "isRegexp": true,
             "query": "\"qualities\"|\"effective floor area\"|\"name\".*\"quality\""
           },
@@ -2617,7 +2617,7 @@
           "tool_input": {
             "maxResults": 10,
             "includeIgnoredFiles": true,
-            "includePattern": "**/semio/py/semio.py",
+            "includePattern": "**/compose/py/compose.py",
             "isRegexp": true,
             "query": "class Quality|find_quality|FindQualityInKit"
           },
@@ -2653,7 +2653,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 100,
-            "filePath": "/workspaces/semio/semio/assets/semio/kit_metabolism.json",
+            "filePath": "/workspaces/semio/compose/assets/compose/kit_metabolism.json",
             "startLine": 1
           },
           "tool_response": "",
@@ -2673,7 +2673,7 @@
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio🏪assets🗃️semio⚙️kitmetabolism📌1📌100"
+          "👤compose🏪assets🗃️compose⚙️kitmetabolism📌1📌100"
         ],
         "second": "🎆26🌙03☀️12⏰08⌚02⏱️11",
         "session": "⚪17d3efeea93a43f58515223bfa2049f3"
@@ -2691,7 +2691,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/go/semio.go",
+            "includePattern": "**/compose/go/compose.go",
             "isRegexp": true,
             "query": "func Find.*InKit|func Find.*InDesign"
           },
@@ -2728,7 +2728,7 @@
           "tool_input": {
             "maxResults": 20,
             "includeIgnoredFiles": true,
-            "includePattern": "**/semio/py/semio.py",
+            "includePattern": "**/compose/py/compose.py",
             "query": "class Quality|def find|FindQuality",
             "isRegexp": true
           },
@@ -2763,7 +2763,7 @@
           "session_id": "17d3efee-a93a-43f5-8515-223bfa2049f3",
           "tool_name": "list_dir",
           "tool_input": {
-            "path": "/workspaces/semio/semio/js/sketchpad"
+            "path": "/workspaces/semio/compose/js/sketchpad"
           },
           "tool_use_id": "toolu_015vqxfN4F77sGf6k7NCF3q5__vscode-1773233523872",
           "cwd": "/workspaces/semio"
@@ -2797,7 +2797,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 293950,
-            "filePath": "/workspaces/semio/semio/assets/semio/kit_metabolism.json",
+            "filePath": "/workspaces/semio/compose/assets/compose/kit_metabolism.json",
             "startLine": 293850
           },
           "tool_use_id": "toolu_01LEbnkZtrM872gb4MPcZyDH__vscode-1773233523870",
@@ -2817,7 +2817,7 @@
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio🏪assets🗃️semio⚙️kitmetabolism📌293850📌293950"
+          "👤compose🏪assets🗃️compose⚙️kitmetabolism📌293850📌293950"
         ],
         "second": "🎆26🌙03☀️12⏰08⌚02⏱️22",
         "session": "⚪17d3efeea93a43f58515223bfa2049f3"
@@ -2835,7 +2835,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/go/semio.go",
+            "includePattern": "**/compose/go/compose.go",
             "isRegexp": true,
             "query": "func Find.*InKit|func Find.*InDesign"
           },
@@ -2872,7 +2872,7 @@
           "tool_input": {
             "maxResults": 20,
             "includeIgnoredFiles": true,
-            "includePattern": "**/semio/py/semio.py",
+            "includePattern": "**/compose/py/compose.py",
             "query": "class Quality|def find|FindQuality",
             "isRegexp": true
           },
@@ -2907,7 +2907,7 @@
           "session_id": "17d3efee-a93a-43f5-8515-223bfa2049f3",
           "tool_name": "list_dir",
           "tool_input": {
-            "path": "/workspaces/semio/semio/js/sketchpad"
+            "path": "/workspaces/semio/compose/js/sketchpad"
           },
           "tool_response": "",
           "tool_use_id": "toolu_015vqxfN4F77sGf6k7NCF3q5__vscode-1773233523872",
@@ -2941,7 +2941,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 293950,
-            "filePath": "/workspaces/semio/semio/assets/semio/kit_metabolism.json",
+            "filePath": "/workspaces/semio/compose/assets/compose/kit_metabolism.json",
             "startLine": 293850
           },
           "tool_response": "",
@@ -2961,7 +2961,7 @@
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio🏪assets🗃️semio⚙️kitmetabolism📌293850📌293950"
+          "👤compose🏪assets🗃️compose⚙️kitmetabolism📌293850📌293950"
         ],
         "second": "🎆26🌙03☀️12⏰08⌚09⏱️04",
         "session": "⚪17d3efeea93a43f58515223bfa2049f3"
@@ -2979,7 +2979,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/js/sketchpad/Quality.tsx",
+            "includePattern": "**/compose/js/sketchpad/Quality.tsx",
             "isRegexp": true,
             "query": "export|function|const|useQuality"
           },
@@ -3016,7 +3016,7 @@
           "tool_input": {
             "maxResults": 20,
             "includeIgnoredFiles": true,
-            "includePattern": "**/semio/go/semio_test.go",
+            "includePattern": "**/compose/go/compose_test.go",
             "isRegexp": true,
             "query": "Test|Benchmark|func"
           },
@@ -3052,7 +3052,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 100,
-            "filePath": "/workspaces/semio/semio/js/sketchpad/Quality.tsx",
+            "filePath": "/workspaces/semio/compose/js/sketchpad/Quality.tsx",
             "startLine": 1
           },
           "tool_use_id": "toolu_018HhyPpN9bBbBzvkvvr3qzd__vscode-1773233523873",
@@ -3071,14 +3071,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚js🗃️sketchpad💻quality✂️formulanode",
+            "id": "👤compose📚js🗃️sketchpad💻quality✂️formulanode",
             "loc": 2
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚js🗃️sketchpad💻quality📌1📌100"
+          "👤compose📚js🗃️sketchpad💻quality📌1📌100"
         ],
         "second": "🎆26🌙03☀️12⏰08⌚09⏱️29",
         "session": "⚪17d3efeea93a43f58515223bfa2049f3"
@@ -3096,7 +3096,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 300,
-            "filePath": "/workspaces/semio/semio/go/semio_test.go",
+            "filePath": "/workspaces/semio/compose/go/compose_test.go",
             "startLine": 188
           },
           "tool_use_id": "toolu_01YGdbupDAiJer43x8NNJkXd__vscode-1773233523876",
@@ -3115,22 +3115,22 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go🥼semiotest🛠️testflattendesign",
+            "id": "👤compose📚go🥼composetest🛠️testflattendesign",
             "loc": 50
           },
           {
-            "id": "👤semio📚go🥼semiotest🧪testdesignmodel",
+            "id": "👤compose📚go🥼composetest🧪testdesignmodel",
             "loc": 11
           },
           {
-            "id": "👤semio📚go🥼semiotest🧪testroundtrip",
+            "id": "👤compose📚go🥼composetest🧪testroundtrip",
             "loc": 50
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚go🥼semiotest📌188📌300"
+          "👤compose📚go🥼composetest📌188📌300"
         ],
         "second": "🎆26🌙03☀️12⏰08⌚09⏱️31",
         "session": "⚪17d3efeea93a43f58515223bfa2049f3"
@@ -3148,7 +3148,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/js/sketchpad/Quality.tsx",
+            "includePattern": "**/compose/js/sketchpad/Quality.tsx",
             "isRegexp": true,
             "query": "export|function|const|useQuality"
           },
@@ -3185,7 +3185,7 @@
           "tool_input": {
             "maxResults": 20,
             "includeIgnoredFiles": true,
-            "includePattern": "**/semio/go/semio_test.go",
+            "includePattern": "**/compose/go/compose_test.go",
             "isRegexp": true,
             "query": "Test|Benchmark|func"
           },
@@ -3221,7 +3221,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 100,
-            "filePath": "/workspaces/semio/semio/js/sketchpad/Quality.tsx",
+            "filePath": "/workspaces/semio/compose/js/sketchpad/Quality.tsx",
             "startLine": 1
           },
           "tool_response": "",
@@ -3240,14 +3240,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚js🗃️sketchpad💻quality✂️formulanode",
+            "id": "👤compose📚js🗃️sketchpad💻quality✂️formulanode",
             "loc": 2
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚js🗃️sketchpad💻quality📌1📌100"
+          "👤compose📚js🗃️sketchpad💻quality📌1📌100"
         ],
         "second": "🎆26🌙03☀️12⏰08⌚10⏱️21",
         "session": "⚪17d3efeea93a43f58515223bfa2049f3"
@@ -3265,7 +3265,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 300,
-            "filePath": "/workspaces/semio/semio/go/semio_test.go",
+            "filePath": "/workspaces/semio/compose/go/compose_test.go",
             "startLine": 188
           },
           "tool_response": "",
@@ -3284,22 +3284,22 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚go🥼semiotest🛠️testflattendesign",
+            "id": "👤compose📚go🥼composetest🛠️testflattendesign",
             "loc": 50
           },
           {
-            "id": "👤semio📚go🥼semiotest🧪testdesignmodel",
+            "id": "👤compose📚go🥼composetest🧪testdesignmodel",
             "loc": 11
           },
           {
-            "id": "👤semio📚go🥼semiotest🧪testroundtrip",
+            "id": "👤compose📚go🥼composetest🧪testroundtrip",
             "loc": 50
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚go🥼semiotest📌188📌300"
+          "👤compose📚go🥼composetest📌188📌300"
         ],
         "second": "🎆26🌙03☀️12⏰08⌚10⏱️22",
         "session": "⚪17d3efeea93a43f58515223bfa2049f3"
@@ -3317,8 +3317,8 @@
           "tool_name": "memory",
           "tool_input": {
             "command": "create",
-            "path": "/memories/repo/semio-comprehensive-exploration.md",
-            "file_text": "# Comprehensive Semio Monorepo Exploration\n\n## 1. Helper Functions Pattern - FindXInKit\n\n### Go (`semio/go/semio.go`)\n- `FindTypeInKit(kit *Kit, typeGuid string) *Type` [L1831](semio/go/semio.go#L1831)\n- `FindDesignInKit(kit *Kit, designGuid string) *Design` [L1843](semio/go/semio.go#L1843)\n- `FindPieceInDesign(design *Design, pieceGuid string) *Piece` [L1855](semio/go/semio.go#L1855)\n- `FindConnectionInDesign(design *Design, connectionGuid string) *Connection` [L1867](semio/go/semio.go#L1867)\n- `FindConnectorInType(typ *Type, connectorGuid string) *Connector` [L1879](semio/go/semio.go#L1879)\n- `FindFileInKit(kit *Kit, fileGuid string) *File` [L1891](semio/go/semio.go#L1891)\n- `FindFolderInKit(kit *Kit, folderGuid string) *Folder` [L1903](semio/go/semio.go#L1903)\n- `FindQualityInKit(kit *Kit, qualityGuid string) *Quality` [L1915](semio/go/semio.go#L1915)\n- `FindPortInKit(kit *Kit, interfaceGuid string) *Port` [L1927](semio/go/semio.go#L1927)\n- `FindTagInKit(kit *Kit, tagGuid string) *Tag` [L1939](semio/go/semio.go#L1939)\n- `FindConceptInKit(kit *Kit, conceptGuid string) *Concept` [L1951](semio/go/semio.go#L1951)\n- `FindAuthorInKit(kit *Kit, authorGuid string) *Author` [L1963](semio/go/semio.go#L1963)\n\n### TypeScript/JavaScript (`semio/js/semio.ts`)\n- `findTypeInKit(kit: Kit, typeGuid: string): Type` [L8026](semio/js/semio.ts#L8026)\n- `findDesignInKit(kit: Kit, designGuid: string): Design` [L8039](semio/js/semio.ts#L8039)\n- `findFileInKit(kit: Kit, fileGuid: string): File` [L7858](semio/js/semio.ts#L7858)\n- `findTagInKit(kit: Kit, tagGuid: string): Tag` [L7908](semio/js/semio.ts#L7908)\n- `findConceptInKit(kit: Kit, conceptGuid: string): Concept` [L7948](semio/js/semio.ts#L7948)\n- `findPortInKit(kit: Kit, portGuid: string): Port` [L8236](semio/js/semio.ts#L8236)\n\n**Design Family Helpers** (TS/JS):\n- `getPrimitiveDesign(kit: Kit, designGuid: string): Design` - traverses to root parent\n- `getDesignFamily(kit: Kit, designGuid: string): Design[]` - all descendants\n- `getDesignSiblings(kit: Kit, designGuid: string): Design[]`\n- `getDesignChildren(kit: Kit, designGuid: string): Design[]`\n- `areDesignsInSameFamily(kit: Kit, designGuidA: string, designGuidB: string): boolean`\n- `canUseDesignAsPiece(kit: Kit, containerDesignGuid: string, pieceDesignGuid: string): boolean`\n- `findSameFamilyDesignPieces(kit: Kit, designGuid: string): Piece[]`\n\n**Type Family Helpers** (TS/JS):\n- `getPrimitiveType()`, `getTypeFamily()`, `getTypeSiblings()`, `getTypeChildren()`, `areTypesInSameFamily()`\n\n### Rust (`semio/rs/semio.rs`)\n- `find_type_in_kit\u003c'a\u003e(kit: \u0026'a Kit, guid: \u0026str) -\u003e Option\u003c\u0026'a Type\u003e` [L1185](semio/rs/semio.rs#L1185)\n- `find_type_in_kit_mut\u003c'a\u003e(kit: \u0026'a mut Kit, guid: \u0026str) -\u003e Option\u003c\u0026'a mut Type\u003e` [L1195](semio/rs/semio.rs#L1195)\n- `find_design_in_kit\u003c'a\u003e(kit: \u0026'a Kit, guid: \u0026str) -\u003e Option\u003c\u0026'a Design\u003e` [L1205](semio/rs/semio.rs#L1205)\n- `find_design_in_kit_mut\u003c'a\u003e(kit: \u0026'a mut Kit, guid: \u0026str) -\u003e Option\u003c\u0026'a mut Design\u003e` [L1215](semio/rs/semio.rs#L1215)\n- `find_piece_in_design\u003c'a\u003e(design: \u0026'a Design, guid: \u0026str) -\u003e Option\u003c\u0026'a Piece\u003e` [L1225](semio/rs/semio.rs#L1225)\n- `find_piece_in_design_mut\u003c'a\u003e(design: \u0026'a mut Design, guid: \u0026str) -\u003e Option\u003c\u0026'a mut Piece\u003e` [L1235](semio/rs/semio.rs#L1235)\n- `find_connection_in_design\u003c'a\u003e(design: \u0026'a Design, guid: \u0026str) -\u003e Option\u003c\u0026'a Connection\u003e` [L1245](semio/rs/semio.rs#L1245)\n- `find_connector_in_type\u003c'a\u003e(t: \u0026'a Type, guid: \u0026str) -\u003e Option\u003c\u0026'a Connector\u003e` [L1255](semio/rs/semio.rs#L1255)\n- `find_model_in_type\u003c'a\u003e(t: \u0026'a Type, guid: \u0026str) -\u003e Option\u003c\u0026'a Model\u003e` [L1265](semio/rs/semio.rs#L1265)\n- `find_file_in_kit\u003c'a\u003e(kit: \u0026'a Kit, guid: \u0026str) -\u003e Option\u003c\u0026'a File\u003e` [L1275](semio/rs/semio.rs#L1275)\n- `find_folder_in_kit\u003c'a\u003e(kit: \u0026'a Kit, guid: \u0026str) -\u003e Option\u003c\u0026'a Folder\u003e` [L1284](semio/rs/semio.rs#L1284)\n- `find_author_in_kit\u003c'a\u003e(kit: \u0026'a Kit, guid: \u0026str) -\u003e Option\u003c\u0026'a Author\u003e` [L1295](semio/rs/semio.rs#L1295)\n- `find_tag_in_kit\u003c'a\u003e(kit: \u0026'a Kit, guid: \u0026str) -\u003e Option\u003c\u0026'a Tag\u003e` [L1305](semio/rs/semio.rs#L1305)\n- `find_concept_in_kit\u003c'a\u003e(kit: \u0026'a Kit, guid: \u0026str) -\u003e Option\u003c\u0026'a Concept\u003e` [L1315](semio/rs/semio.rs#L1315)\n- `find_quality_in_kit\u003c'a\u003e(kit: \u0026'a Kit, guid: \u0026str) -\u003e Option\u003c\u0026'a Quality\u003e` [L1325](semio/rs/semio.rs#L1325)\n- `find_interface_in_kit\u003c'a\u003e(kit: \u0026'a Kit, guid: \u0026str) -\u003e Option\u003c\u0026'a Port\u003e` [L1335](semio/rs/semio.rs#L1335)\n- `find_layer_in_design\u003c'a\u003e(design: \u0026'a Design, guid: \u0026str) -\u003e Option\u003c\u0026'a Layer\u003e` [L1355](semio/rs/semio.rs#L1355)\n- `find_group_in_design\u003c'a\u003e(design: \u0026'a Design, guid: \u0026str) -\u003e Option\u003c\u0026'a Group\u003e` [L1365](semio/rs/semio.rs#L1365)\n- `find_stat_in_design\u003c'a\u003e(design: \u0026'a Design, guid: \u0026str) -\u003e Option\u003c\u0026'a Stat\u003e` [L1375](semio/rs/semio.rs#L1375)\n\n### Python (`semio/py/semio.py`)\n- `_findDesignInKitDict(kit: dict, design_guid: str) -\u003e dict` [L7700](semio/py/semio.py#L7700) - raises ValueError if not found\n- `_findTypeInKitDict(kit: dict, type_guid: str) -\u003e dict` [L7707](semio/py/semio.py#L7707)\n- `_findPieceInDesignDict(design: dict, piece_guid: str) -\u003e dict` [L7714](semio/py/semio.py#L7714)\n- `_findPieceConnectionsInDesignDict(design: dict, piece_guid: str) -\u003e list[dict]`\n- `_findConnectorInTypeDict(type_dict: dict, connector_guid: str) -\u003e dict`\n\n**Quality-related Python classes:**\n- QualityKeyField, QualityNameField, QualityDescriptionField, QualityUriField, QualityScalableField\n- QualityKindField, QualitySiField, QualityImperialField, QualityMinField, QualityMinExcludedField\n- QualityMaxField, QualityMaxExcludedField, QualityDefaultField, QualityFormulaField\n- QualityFolderField, QualityIconField, QualityImageField, QualityUnitField\n- QualityCreatedField, QualityUpdatedField, QualityId [L2223-L2363](semio/py/semio.py#L2223-L2363)\n\n---\n\n## 2. Test File Patterns\n\n### Go Tests (`semio/go/semio_test.go`)\n\n**Test Structure:** Uses `testing.T` with nested `t.Run()` for test groups\n\n**Test Functions:**\n- `TestRoundtrip(t *testing.T)` [L239](semio/go/semio_test.go#L239) - Kit -\u003e JSON -\u003e Memory -\u003e ZIP roundtrip validation\n- `TestDesignModel(t *testing.T)` [L290](semio/go/semio_test.go#L290) - Model selection from assets\n- `TestFlatten(t *testing.T)` [L325](semio/go/semio_test.go#L325) - Design flattening for variants:\n  - \"Nakagin Capsule Tower\" [L329](semio/go/semio_test.go#L329)\n  - \"Slanted\" [L333](semio/go/semio_test.go#L333)\n  - \"Twisted\" [L338](semio/go/semio_test.go#L338)\n  - \"Dancing\" [L343](semio/go/semio_test.go#L343)\n  - \"Capsule Dream\" [L350](semio/go/semio_test.go#L350)\n- `TestChange(t *testing.T)` [L357](semio/go/semio_test.go#L357)\n- `TestValidation(t *testing.T)` [L396](semio/go/semio_test.go#L396)\n\n**Helper Functions:**\n- `loadJSON(t *testing.T, filename string, v interface{})` [L45](semio/go/semio_test.go#L45)\n- `findDesignByName(designs []Design, name string, parentGuid *string) *Design` [L160](semio/go/semio_test.go#L160)\n- `findPieceByName(pieces []Piece, name string) *Piece` [L179](semio/go/semio_test.go#L179)\n- `testFlattenDesign(t *testing.T, kit Kit, designPath []string)` [L188](semio/go/semio_test.go#L188)\n- `planesEqual(p1, p2 *Plane, tolerance float64) bool` [L135](semio/go/semio_test.go#L135)\n- `centersEqual(c1, c2 *Coord, tolerance float64) bool` [L150](semio/go/semio_test.go#L150)\n- `selectBestModelLikeSemioTS(models []Model, selectedTagGuids []string) *Model` [L102](semio/go/semio_test.go#L102)\n- `jaccardTagGuids(a []TagId, b []string) float64` [L72](semio/go/semio_test.go#L72)\n- `containsAllTags(model Model, selectedTagGuids []string) bool` [L56](semio/go/semio_test.go#L56)\n\n**Benchmark Functions:**\n- `BenchmarkFlattenDesign()` in semio_benchmark.go using `findDesign()` helper\n\n### TypeScript Tests (`semio/js/sketchpad.test.ts`)\n\n**Test Framework:** Playwright E2E tests\n\n**Test Setup:** [L1-L50](semio/js/sketchpad.test.ts#L1-L50)\n- Imports MetabolismKitData from JSON [L22](semio/js/sketchpad.test.ts#L22)\n- Extracts designs, finds Nakagin Capsule Tower and Flat variant\n- Creates array of expected flat pieces with plane and center data\n\n**Example Test:**\n```typescript\nconst designs = (MetabolismKitData as any).designs ?? [];\nconst nakaginCapsuleTowerDesign = designs.find((d: any) =\u003e d.name === \"Nakagin Capsule Tower\");\nconst nakaginCapsuleTowerFlatDesign = designs.find((d: any) =\u003e d.name === \"Flat\" \u0026\u0026 d.parent?.guid === nakaginCapsuleTowerDesign?.guid);\nconst MetabolismKitNakaginCapsuleTowerFlatPieces = nakaginCapsuleTowerFlatDesign?.pieces?.map((p: any) =\u003e ({...})) ?? [];\n```\n\n---\n\n## 3. Nakagin Capsule Tower Kit Data\n\n**Location:** `semio/assets/semio/kit_metabolism.json` [L293759+](semio/assets/semio/kit_metabolism.json#L293759)\n\n**Design Hierarchy:**\n```\n- Nakagin Capsule Tower (root)\n  - Flat (variant)\n  - Slanted (variant) \n  - Twisted (variant)\n  - Dancing (variant)\n- Capsule Dream (root)\n```\n\n**Key Quality - Effective Floor Area:**\n```json\n{\n  \"guid\": \"7cfe065b-c0da-5e2c-8789-9f7a860773c2\",\n  \"key\": \"effective floor area\",\n  \"name\": \"effective floor area\",\n  \"unit\": \"m²\",\n  \"uri\": \"https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea\"\n}\n```\n\n**Related Qualities:**\n- floor height, ground floor height, height, height low, height side\n- gap, entrance, heating energy demand, income, maintenance expenses, operational cost\n- All located in qualities array [L293759](semio/assets/semio/kit_metabolism.json#L293759)\n\n**Core Types:**\n- Capsule (isAbstract: true)\n  - Ellipsoid, Trapezoid, Balcony (children)\n- Tower components with connectors and ports\n\n---\n\n## 4. Quality Type Structure\n\n### Shared Fields Across Languages:\n- **guid** (string, required)\n- **key** (string, identifier like \"effective floor area\")\n- **name** (string, display name)\n- **unit** (string, optional - \"m²\", \"m\", \"kWh/a\", etc.)\n- **uri** (string optional - BuildingSmart IFC reference)\n- **description** (string, optional)\n- **scalable** (boolean)\n- **kind** (enumeration)\n- **SI** (SI unit definition)\n- **imperial** (imperial unit definition)\n- **min**, **minExcluded**, **max**, **maxExcluded** (bounds)\n- **default** (default value)\n- **formula** (calculation formula)\n- **folder**, **icon**, **image** (UI metadata)\n- **benchmarks**, **attributes** (additional collections)\n- **createdAt**, **updatedAt** (timestamps)\n\n### JSON Structure:\n```json\n{\n  \"guid\": \"7cfe065b-c0da-5e2c-8789-9f7a860773c2\",\n  \"key\": \"effective floor area\",\n  \"name\": \"effective floor area\",\n  \"unit\": \"m²\",\n  \"uri\": \"https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea\"\n}\n```\n\n### Rust Type:\n- `find_quality_in_kit\u003c'a\u003e(kit: \u0026'a Kit, guid: \u0026str) -\u003e Option\u003c\u0026'a Quality\u003e`\n- Returns Option wrapping reference to Quality struct\n\n---\n\n## 5. Grasshopper Component Architecture\n\n**Location:** `semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs`\n\n### Abstract Base Classes:\n\n1. **`Component : GH_Component`** [L1420](semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#L1420)\n   - Extends Grasshopper GH_Component\n   - Properties: `Icon`, `Prompt_Singular`, `Prompt_Plural`\n\n2. **`PassthroughComponent\u003cTParam, TGoo, TModel\u003e : Component`** [L1451](semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#L1451)\n   - Generic base for simple Pass-through patterns\n   - Methods: `RegisterInputParams`, `RegisterOutputParams`, `SolveInstance`\n   - Properties: `Icon`\n\n3. **`IdComponent\u003cTParam, TGoo, TModel\u003e : PassthroughComponent\u003c...\u003e`** [L1545](semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#L1545)\n   - For ID-based operations\n\n4. **`DiffComponent\u003cTParam, TGoo, TModel\u003e : PassthroughComponent\u003c...\u003e`** [L1573](semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#L1573)\n   - For diff generation\n\n5. **`ChangeComponent\u003c...\u003e` : Component** [L1667](semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#L1667)\n   - For change operations with 3 generic type sets\n\n6. **`ApplyDiffComponent\u003cTEntityParam, TEntityGoo, TEntity, TDiffParam, TDiffGoo, TDiff\u003e : ScriptingComponent`** [L1769](semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#L1769)\n   - Applies diffs to entities\n\n7. **`SerializeComponent\u003cTParam, TGoo, TModel\u003e : ScriptingComponent`** [L1908](semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#L1908)\n   - Serialization logic\n\n8. **`DeserializeComponent\u003cTParam, TGoo, TModel\u003e : ScriptingComponent`** [L1948](semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#L1948)\n   - Deserialization logic\n\n### Concrete Component Examples:\n- `ApplyAttributeDiffComponent` [L1815](semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#L1815)\n- `ApplyFolderDiffComponent` [L1825](semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#L1825)\n- `ApplyModelDiffComponent` [L1835](semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#L1835)\n- `ApplyConnectorDiffComponent` [L1845](semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#L1845)\n- `ApplyTypeDiffComponent` [L1855](semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#L1855)\n- `ApplyPieceDiffComponent` [L1865](semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#L1865)\n- `ApplySideDiffComponent` [L1875](semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#L1875)\n- `ApplyConnectionDiffComponent` [L1885](semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#L1885)\n- `ApplyDesignDiffComponent` [L1895](semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#L1895)\n\n---\n\n## 6. Sketchpad Quality App\n\n**Location:** `semio/js/sketchpad/Quality.tsx`\n\n### Architecture Pattern: Zustand Store + React Context\n\n**Type Definitions:**\n\n1. **`FormulaNode`** [L99](semio/js/sketchpad/Quality.tsx#L99)\n   ```typescript\n   interface FormulaNode {\n     id: Guid;\n     kind: \"function\" | \"quality\" | \"variable\" | \"unit\" | \"value\";\n     children?: Guid[];\n   }\n   ```\n\n2. **`QualityAppSelection`** [L113](semio/js/sketchpad/Quality.tsx#L113)\n   - Tracks selected elements\n\n3. **`QualityAppSelectionDiff`** [L132](semio/js/sketchpad/Quality.tsx#L132)\n   - Diff representation\n\n4. **`QualityAppHover`** [L162](semio/js/sketchpad/Quality.tsx#L162)\n   - Hover state\n\n5. **`QualityAppState`** [L188](semio/js/sketchpad/Quality.tsx#L188)\n   - Complete app state\n\n6. **`QualityAppCommandContext extends KitCommandContext`** [L203](semio/js/sketchpad/Quality.tsx#L203)\n   - Command execution context\n\n7. **`FormulaFunction`** [L223](semio/js/sketchpad/Quality.tsx#L223)\n   - Definition for formula functions with rendering\n\n### Hook Exports:\n- `useQuality()` - Get current quality\n- `useQualityScope()` - Quality scope provider\n- `useQualityApp()` - Full quality app state\n- `useQualityAppSelection()` - Selection state\n- `useQualityAppCommands()` - Command execution\n\n### Files in Sketchpad:\n- Quality.tsx, Design.tsx, Type.tsx, Kit.tsx, Home.tsx, Tutorials.tsx, Feedback.tsx, Docs.tsx\n- `apps/` (sub-apps)\n- `pages/` (showcase pages with metabolism example)\n- `locales/` (i18n translations)\n- Component utilities: elements, kitSelectionHelper, portColor, shared\n\n---\n\n## 7. Pattern Summary\n\n### Common Pattern Across All Languages:\n```\nHelper(container: Container, itemGuid: string) -\u003e Item | Item? | throws\n```\n\n**Go:** Returns pointer, nil if not found\n**TypeScript:** Returns item, throws if not found\n**Rust:** Returns Option\u003c\u0026Item\u003e with lifetime\n**Python:** Raises ValueError if not found\n**C#:** Uses static Find() methods with overloads\n\n### Design Patterns:\n1. **Immutable Functional Updates** - Return new diffs instead of mutations\n2. **Zustand Store** - React state management in TypeScript apps\n3. **Scope Providers** - KitScope, QualityScope for context isolation\n4. **Abstract Component Templates** - Grasshopper uses generic bases for code reuse\n5. **Kit-based Operation** - All operations work with Kit as root context\n\n"
+            "path": "/memories/repo/compose-comprehensive-exploration.md",
+            "file_text": "# Comprehensive Compose Monorepo Exploration\n\n## 1. Helper Functions Pattern - FindXInKit\n\n### Go (`compose/go/compose.go`)\n- `FindTypeInKit(kit *Kit, typeGuid string) *Type` [L1831](compose/go/compose.go#L1831)\n- `FindDesignInKit(kit *Kit, designGuid string) *Design` [L1843](compose/go/compose.go#L1843)\n- `FindPieceInDesign(design *Design, pieceGuid string) *Piece` [L1855](compose/go/compose.go#L1855)\n- `FindConnectionInDesign(design *Design, connectionGuid string) *Connection` [L1867](compose/go/compose.go#L1867)\n- `FindConnectorInType(typ *Type, connectorGuid string) *Connector` [L1879](compose/go/compose.go#L1879)\n- `FindFileInKit(kit *Kit, fileGuid string) *File` [L1891](compose/go/compose.go#L1891)\n- `FindFolderInKit(kit *Kit, folderGuid string) *Folder` [L1903](compose/go/compose.go#L1903)\n- `FindQualityInKit(kit *Kit, qualityGuid string) *Quality` [L1915](compose/go/compose.go#L1915)\n- `FindPortInKit(kit *Kit, interfaceGuid string) *Port` [L1927](compose/go/compose.go#L1927)\n- `FindTagInKit(kit *Kit, tagGuid string) *Tag` [L1939](compose/go/compose.go#L1939)\n- `FindConceptInKit(kit *Kit, conceptGuid string) *Concept` [L1951](compose/go/compose.go#L1951)\n- `FindAuthorInKit(kit *Kit, authorGuid string) *Author` [L1963](compose/go/compose.go#L1963)\n\n### TypeScript/JavaScript (`compose/js/compose.ts`)\n- `findTypeInKit(kit: Kit, typeGuid: string): Type` [L8026](compose/js/compose.ts#L8026)\n- `findDesignInKit(kit: Kit, designGuid: string): Design` [L8039](compose/js/compose.ts#L8039)\n- `findFileInKit(kit: Kit, fileGuid: string): File` [L7858](compose/js/compose.ts#L7858)\n- `findTagInKit(kit: Kit, tagGuid: string): Tag` [L7908](compose/js/compose.ts#L7908)\n- `findConceptInKit(kit: Kit, conceptGuid: string): Concept` [L7948](compose/js/compose.ts#L7948)\n- `findPortInKit(kit: Kit, portGuid: string): Port` [L8236](compose/js/compose.ts#L8236)\n\n**Design Family Helpers** (TS/JS):\n- `getPrimitiveDesign(kit: Kit, designGuid: string): Design` - traverses to root parent\n- `getDesignFamily(kit: Kit, designGuid: string): Design[]` - all descendants\n- `getDesignSiblings(kit: Kit, designGuid: string): Design[]`\n- `getDesignChildren(kit: Kit, designGuid: string): Design[]`\n- `areDesignsInSameFamily(kit: Kit, designGuidA: string, designGuidB: string): boolean`\n- `canUseDesignAsPiece(kit: Kit, containerDesignGuid: string, pieceDesignGuid: string): boolean`\n- `findSameFamilyDesignPieces(kit: Kit, designGuid: string): Piece[]`\n\n**Type Family Helpers** (TS/JS):\n- `getPrimitiveType()`, `getTypeFamily()`, `getTypeSiblings()`, `getTypeChildren()`, `areTypesInSameFamily()`\n\n### Rust (`compose/rs/compose.rs`)\n- `find_type_in_kit\u003c'a\u003e(kit: \u0026'a Kit, guid: \u0026str) -\u003e Option\u003c\u0026'a Type\u003e` [L1185](compose/rs/compose.rs#L1185)\n- `find_type_in_kit_mut\u003c'a\u003e(kit: \u0026'a mut Kit, guid: \u0026str) -\u003e Option\u003c\u0026'a mut Type\u003e` [L1195](compose/rs/compose.rs#L1195)\n- `find_design_in_kit\u003c'a\u003e(kit: \u0026'a Kit, guid: \u0026str) -\u003e Option\u003c\u0026'a Design\u003e` [L1205](compose/rs/compose.rs#L1205)\n- `find_design_in_kit_mut\u003c'a\u003e(kit: \u0026'a mut Kit, guid: \u0026str) -\u003e Option\u003c\u0026'a mut Design\u003e` [L1215](compose/rs/compose.rs#L1215)\n- `find_piece_in_design\u003c'a\u003e(design: \u0026'a Design, guid: \u0026str) -\u003e Option\u003c\u0026'a Piece\u003e` [L1225](compose/rs/compose.rs#L1225)\n- `find_piece_in_design_mut\u003c'a\u003e(design: \u0026'a mut Design, guid: \u0026str) -\u003e Option\u003c\u0026'a mut Piece\u003e` [L1235](compose/rs/compose.rs#L1235)\n- `find_connection_in_design\u003c'a\u003e(design: \u0026'a Design, guid: \u0026str) -\u003e Option\u003c\u0026'a Connection\u003e` [L1245](compose/rs/compose.rs#L1245)\n- `find_connector_in_type\u003c'a\u003e(t: \u0026'a Type, guid: \u0026str) -\u003e Option\u003c\u0026'a Connector\u003e` [L1255](compose/rs/compose.rs#L1255)\n- `find_model_in_type\u003c'a\u003e(t: \u0026'a Type, guid: \u0026str) -\u003e Option\u003c\u0026'a Model\u003e` [L1265](compose/rs/compose.rs#L1265)\n- `find_file_in_kit\u003c'a\u003e(kit: \u0026'a Kit, guid: \u0026str) -\u003e Option\u003c\u0026'a File\u003e` [L1275](compose/rs/compose.rs#L1275)\n- `find_folder_in_kit\u003c'a\u003e(kit: \u0026'a Kit, guid: \u0026str) -\u003e Option\u003c\u0026'a Folder\u003e` [L1284](compose/rs/compose.rs#L1284)\n- `find_author_in_kit\u003c'a\u003e(kit: \u0026'a Kit, guid: \u0026str) -\u003e Option\u003c\u0026'a Author\u003e` [L1295](compose/rs/compose.rs#L1295)\n- `find_tag_in_kit\u003c'a\u003e(kit: \u0026'a Kit, guid: \u0026str) -\u003e Option\u003c\u0026'a Tag\u003e` [L1305](compose/rs/compose.rs#L1305)\n- `find_concept_in_kit\u003c'a\u003e(kit: \u0026'a Kit, guid: \u0026str) -\u003e Option\u003c\u0026'a Concept\u003e` [L1315](compose/rs/compose.rs#L1315)\n- `find_quality_in_kit\u003c'a\u003e(kit: \u0026'a Kit, guid: \u0026str) -\u003e Option\u003c\u0026'a Quality\u003e` [L1325](compose/rs/compose.rs#L1325)\n- `find_interface_in_kit\u003c'a\u003e(kit: \u0026'a Kit, guid: \u0026str) -\u003e Option\u003c\u0026'a Port\u003e` [L1335](compose/rs/compose.rs#L1335)\n- `find_layer_in_design\u003c'a\u003e(design: \u0026'a Design, guid: \u0026str) -\u003e Option\u003c\u0026'a Layer\u003e` [L1355](compose/rs/compose.rs#L1355)\n- `find_group_in_design\u003c'a\u003e(design: \u0026'a Design, guid: \u0026str) -\u003e Option\u003c\u0026'a Group\u003e` [L1365](compose/rs/compose.rs#L1365)\n- `find_stat_in_design\u003c'a\u003e(design: \u0026'a Design, guid: \u0026str) -\u003e Option\u003c\u0026'a Stat\u003e` [L1375](compose/rs/compose.rs#L1375)\n\n### Python (`compose/py/compose.py`)\n- `_findDesignInKitDict(kit: dict, design_guid: str) -\u003e dict` [L7700](compose/py/compose.py#L7700) - raises ValueError if not found\n- `_findTypeInKitDict(kit: dict, type_guid: str) -\u003e dict` [L7707](compose/py/compose.py#L7707)\n- `_findPieceInDesignDict(design: dict, piece_guid: str) -\u003e dict` [L7714](compose/py/compose.py#L7714)\n- `_findPieceConnectionsInDesignDict(design: dict, piece_guid: str) -\u003e list[dict]`\n- `_findConnectorInTypeDict(type_dict: dict, connector_guid: str) -\u003e dict`\n\n**Quality-related Python classes:**\n- QualityKeyField, QualityNameField, QualityDescriptionField, QualityUriField, QualityScalableField\n- QualityKindField, QualitySiField, QualityImperialField, QualityMinField, QualityMinExcludedField\n- QualityMaxField, QualityMaxExcludedField, QualityDefaultField, QualityFormulaField\n- QualityFolderField, QualityIconField, QualityImageField, QualityUnitField\n- QualityCreatedField, QualityUpdatedField, QualityId [L2223-L2363](compose/py/compose.py#L2223-L2363)\n\n---\n\n## 2. Test File Patterns\n\n### Go Tests (`compose/go/compose_test.go`)\n\n**Test Structure:** Uses `testing.T` with nested `t.Run()` for test groups\n\n**Test Functions:**\n- `TestRoundtrip(t *testing.T)` [L239](compose/go/compose_test.go#L239) - Kit -\u003e JSON -\u003e Memory -\u003e ZIP roundtrip validation\n- `TestDesignModel(t *testing.T)` [L290](compose/go/compose_test.go#L290) - Model selection from assets\n- `TestFlatten(t *testing.T)` [L325](compose/go/compose_test.go#L325) - Design flattening for variants:\n  - \"Nakagin Capsule Tower\" [L329](compose/go/compose_test.go#L329)\n  - \"Slanted\" [L333](compose/go/compose_test.go#L333)\n  - \"Twisted\" [L338](compose/go/compose_test.go#L338)\n  - \"Dancing\" [L343](compose/go/compose_test.go#L343)\n  - \"Capsule Dream\" [L350](compose/go/compose_test.go#L350)\n- `TestChange(t *testing.T)` [L357](compose/go/compose_test.go#L357)\n- `TestValidation(t *testing.T)` [L396](compose/go/compose_test.go#L396)\n\n**Helper Functions:**\n- `loadJSON(t *testing.T, filename string, v interface{})` [L45](compose/go/compose_test.go#L45)\n- `findDesignByName(designs []Design, name string, parentGuid *string) *Design` [L160](compose/go/compose_test.go#L160)\n- `findPieceByName(pieces []Piece, name string) *Piece` [L179](compose/go/compose_test.go#L179)\n- `testFlattenDesign(t *testing.T, kit Kit, designPath []string)` [L188](compose/go/compose_test.go#L188)\n- `planesEqual(p1, p2 *Plane, tolerance float64) bool` [L135](compose/go/compose_test.go#L135)\n- `centersEqual(c1, c2 *Coord, tolerance float64) bool` [L150](compose/go/compose_test.go#L150)\n- `selectBestModelLikeComposeTS(models []Model, selectedTagGuids []string) *Model` [L102](compose/go/compose_test.go#L102)\n- `jaccardTagGuids(a []TagId, b []string) float64` [L72](compose/go/compose_test.go#L72)\n- `containsAllTags(model Model, selectedTagGuids []string) bool` [L56](compose/go/compose_test.go#L56)\n\n**Benchmark Functions:**\n- `BenchmarkFlattenDesign()` in compose_benchmark.go using `findDesign()` helper\n\n### TypeScript Tests (`compose/js/sketchpad.test.ts`)\n\n**Test Framework:** Playwright E2E tests\n\n**Test Setup:** [L1-L50](compose/js/sketchpad.test.ts#L1-L50)\n- Imports MetabolismKitData from JSON [L22](compose/js/sketchpad.test.ts#L22)\n- Extracts designs, finds Nakagin Capsule Tower and Flat variant\n- Creates array of expected flat pieces with plane and center data\n\n**Example Test:**\n```typescript\nconst designs = (MetabolismKitData as any).designs ?? [];\nconst nakaginCapsuleTowerDesign = designs.find((d: any) =\u003e d.name === \"Nakagin Capsule Tower\");\nconst nakaginCapsuleTowerFlatDesign = designs.find((d: any) =\u003e d.name === \"Flat\" \u0026\u0026 d.parent?.guid === nakaginCapsuleTowerDesign?.guid);\nconst MetabolismKitNakaginCapsuleTowerFlatPieces = nakaginCapsuleTowerFlatDesign?.pieces?.map((p: any) =\u003e ({...})) ?? [];\n```\n\n---\n\n## 3. Nakagin Capsule Tower Kit Data\n\n**Location:** `compose/assets/compose/kit_metabolism.json` [L293759+](compose/assets/compose/kit_metabolism.json#L293759)\n\n**Design Hierarchy:**\n```\n- Nakagin Capsule Tower (root)\n  - Flat (variant)\n  - Slanted (variant) \n  - Twisted (variant)\n  - Dancing (variant)\n- Capsule Dream (root)\n```\n\n**Key Quality - Effective Floor Area:**\n```json\n{\n  \"guid\": \"7cfe065b-c0da-5e2c-8789-9f7a860773c2\",\n  \"key\": \"effective floor area\",\n  \"name\": \"effective floor area\",\n  \"unit\": \"m²\",\n  \"uri\": \"https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea\"\n}\n```\n\n**Related Qualities:**\n- floor height, ground floor height, height, height low, height side\n- gap, entrance, heating energy demand, income, maintenance expenses, operational cost\n- All located in qualities array [L293759](compose/assets/compose/kit_metabolism.json#L293759)\n\n**Core Types:**\n- Capsule (isAbstract: true)\n  - Ellipsoid, Trapezoid, Balcony (children)\n- Tower components with connectors and ports\n\n---\n\n## 4. Quality Type Structure\n\n### Shared Fields Across Languages:\n- **guid** (string, required)\n- **key** (string, identifier like \"effective floor area\")\n- **name** (string, display name)\n- **unit** (string, optional - \"m²\", \"m\", \"kWh/a\", etc.)\n- **uri** (string optional - BuildingSmart IFC reference)\n- **description** (string, optional)\n- **scalable** (boolean)\n- **kind** (enumeration)\n- **SI** (SI unit definition)\n- **imperial** (imperial unit definition)\n- **min**, **minExcluded**, **max**, **maxExcluded** (bounds)\n- **default** (default value)\n- **formula** (calculation formula)\n- **folder**, **icon**, **image** (UI metadata)\n- **benchmarks**, **attributes** (additional collections)\n- **createdAt**, **updatedAt** (timestamps)\n\n### JSON Structure:\n```json\n{\n  \"guid\": \"7cfe065b-c0da-5e2c-8789-9f7a860773c2\",\n  \"key\": \"effective floor area\",\n  \"name\": \"effective floor area\",\n  \"unit\": \"m²\",\n  \"uri\": \"https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea\"\n}\n```\n\n### Rust Type:\n- `find_quality_in_kit\u003c'a\u003e(kit: \u0026'a Kit, guid: \u0026str) -\u003e Option\u003c\u0026'a Quality\u003e`\n- Returns Option wrapping reference to Quality struct\n\n---\n\n## 5. Grasshopper Component Architecture\n\n**Location:** `compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs`\n\n### Abstract Base Classes:\n\n1. **`Component : GH_Component`** [L1420](compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs#L1420)\n   - Extends Grasshopper GH_Component\n   - Properties: `Icon`, `Prompt_Singular`, `Prompt_Plural`\n\n2. **`PassthroughComponent\u003cTParam, TGoo, TModel\u003e : Component`** [L1451](compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs#L1451)\n   - Generic base for simple Pass-through patterns\n   - Methods: `RegisterInputParams`, `RegisterOutputParams`, `SolveInstance`\n   - Properties: `Icon`\n\n3. **`IdComponent\u003cTParam, TGoo, TModel\u003e : PassthroughComponent\u003c...\u003e`** [L1545](compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs#L1545)\n   - For ID-based operations\n\n4. **`DiffComponent\u003cTParam, TGoo, TModel\u003e : PassthroughComponent\u003c...\u003e`** [L1573](compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs#L1573)\n   - For diff generation\n\n5. **`ChangeComponent\u003c...\u003e` : Component** [L1667](compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs#L1667)\n   - For change operations with 3 generic type sets\n\n6. **`ApplyDiffComponent\u003cTEntityParam, TEntityGoo, TEntity, TDiffParam, TDiffGoo, TDiff\u003e : ScriptingComponent`** [L1769](compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs#L1769)\n   - Applies diffs to entities\n\n7. **`SerializeComponent\u003cTParam, TGoo, TModel\u003e : ScriptingComponent`** [L1908](compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs#L1908)\n   - Serialization logic\n\n8. **`DeserializeComponent\u003cTParam, TGoo, TModel\u003e : ScriptingComponent`** [L1948](compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs#L1948)\n   - Deserialization logic\n\n### Concrete Component Examples:\n- `ApplyAttributeDiffComponent` [L1815](compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs#L1815)\n- `ApplyFolderDiffComponent` [L1825](compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs#L1825)\n- `ApplyModelDiffComponent` [L1835](compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs#L1835)\n- `ApplyConnectorDiffComponent` [L1845](compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs#L1845)\n- `ApplyTypeDiffComponent` [L1855](compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs#L1855)\n- `ApplyPieceDiffComponent` [L1865](compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs#L1865)\n- `ApplySideDiffComponent` [L1875](compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs#L1875)\n- `ApplyConnectionDiffComponent` [L1885](compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs#L1885)\n- `ApplyDesignDiffComponent` [L1895](compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs#L1895)\n\n---\n\n## 6. Sketchpad Quality App\n\n**Location:** `compose/js/sketchpad/Quality.tsx`\n\n### Architecture Pattern: Zustand Store + React Context\n\n**Type Definitions:**\n\n1. **`FormulaNode`** [L99](compose/js/sketchpad/Quality.tsx#L99)\n   ```typescript\n   interface FormulaNode {\n     id: Guid;\n     kind: \"function\" | \"quality\" | \"variable\" | \"unit\" | \"value\";\n     children?: Guid[];\n   }\n   ```\n\n2. **`QualityAppSelection`** [L113](compose/js/sketchpad/Quality.tsx#L113)\n   - Tracks selected elements\n\n3. **`QualityAppSelectionDiff`** [L132](compose/js/sketchpad/Quality.tsx#L132)\n   - Diff representation\n\n4. **`QualityAppHover`** [L162](compose/js/sketchpad/Quality.tsx#L162)\n   - Hover state\n\n5. **`QualityAppState`** [L188](compose/js/sketchpad/Quality.tsx#L188)\n   - Complete app state\n\n6. **`QualityAppCommandContext extends KitCommandContext`** [L203](compose/js/sketchpad/Quality.tsx#L203)\n   - Command execution context\n\n7. **`FormulaFunction`** [L223](compose/js/sketchpad/Quality.tsx#L223)\n   - Definition for formula functions with rendering\n\n### Hook Exports:\n- `useQuality()` - Get current quality\n- `useQualityScope()` - Quality scope provider\n- `useQualityApp()` - Full quality app state\n- `useQualityAppSelection()` - Selection state\n- `useQualityAppCommands()` - Command execution\n\n### Files in Sketchpad:\n- Quality.tsx, Design.tsx, Type.tsx, Kit.tsx, Home.tsx, Tutorials.tsx, Feedback.tsx, Docs.tsx\n- `apps/` (sub-apps)\n- `pages/` (showcase pages with metabolism example)\n- `locales/` (i18n translations)\n- Component utilities: elements, kitSelectionHelper, portColor, shared\n\n---\n\n## 7. Pattern Summary\n\n### Common Pattern Across All Languages:\n```\nHelper(container: Container, itemGuid: string) -\u003e Item | Item? | throws\n```\n\n**Go:** Returns pointer, nil if not found\n**TypeScript:** Returns item, throws if not found\n**Rust:** Returns Option\u003c\u0026Item\u003e with lifetime\n**Python:** Raises ValueError if not found\n**C#:** Uses static Find() methods with overloads\n\n### Design Patterns:\n1. **Immutable Functional Updates** - Return new diffs instead of mutations\n2. **Zustand Store** - React state management in TypeScript apps\n3. **Scope Providers** - KitScope, QualityScope for context isolation\n4. **Abstract Component Templates** - Grasshopper uses generic bases for code reuse\n5. **Kit-based Operation** - All operations work with Kit as root context\n\n"
           },
           "tool_use_id": "toolu_01H63m6M4nZHfJ83iWnHwGGJ__vscode-1773233523877",
           "cwd": "/workspaces/semio"
@@ -3353,10 +3353,10 @@
           "tool_name": "memory",
           "tool_input": {
             "command": "create",
-            "path": "/memories/repo/semio-comprehensive-exploration.md",
-            "file_text": "# Comprehensive Semio Monorepo Exploration\n\n## 1. Helper Functions Pattern - FindXInKit\n\n### Go (`semio/go/semio.go`)\n- `FindTypeInKit(kit *Kit, typeGuid string) *Type` [L1831](semio/go/semio.go#L1831)\n- `FindDesignInKit(kit *Kit, designGuid string) *Design` [L1843](semio/go/semio.go#L1843)\n- `FindPieceInDesign(design *Design, pieceGuid string) *Piece` [L1855](semio/go/semio.go#L1855)\n- `FindConnectionInDesign(design *Design, connectionGuid string) *Connection` [L1867](semio/go/semio.go#L1867)\n- `FindConnectorInType(typ *Type, connectorGuid string) *Connector` [L1879](semio/go/semio.go#L1879)\n- `FindFileInKit(kit *Kit, fileGuid string) *File` [L1891](semio/go/semio.go#L1891)\n- `FindFolderInKit(kit *Kit, folderGuid string) *Folder` [L1903](semio/go/semio.go#L1903)\n- `FindQualityInKit(kit *Kit, qualityGuid string) *Quality` [L1915](semio/go/semio.go#L1915)\n- `FindPortInKit(kit *Kit, interfaceGuid string) *Port` [L1927](semio/go/semio.go#L1927)\n- `FindTagInKit(kit *Kit, tagGuid string) *Tag` [L1939](semio/go/semio.go#L1939)\n- `FindConceptInKit(kit *Kit, conceptGuid string) *Concept` [L1951](semio/go/semio.go#L1951)\n- `FindAuthorInKit(kit *Kit, authorGuid string) *Author` [L1963](semio/go/semio.go#L1963)\n\n### TypeScript/JavaScript (`semio/js/semio.ts`)\n- `findTypeInKit(kit: Kit, typeGuid: string): Type` [L8026](semio/js/semio.ts#L8026)\n- `findDesignInKit(kit: Kit, designGuid: string): Design` [L8039](semio/js/semio.ts#L8039)\n- `findFileInKit(kit: Kit, fileGuid: string): File` [L7858](semio/js/semio.ts#L7858)\n- `findTagInKit(kit: Kit, tagGuid: string): Tag` [L7908](semio/js/semio.ts#L7908)\n- `findConceptInKit(kit: Kit, conceptGuid: string): Concept` [L7948](semio/js/semio.ts#L7948)\n- `findPortInKit(kit: Kit, portGuid: string): Port` [L8236](semio/js/semio.ts#L8236)\n\n**Design Family Helpers** (TS/JS):\n- `getPrimitiveDesign(kit: Kit, designGuid: string): Design` - traverses to root parent\n- `getDesignFamily(kit: Kit, designGuid: string): Design[]` - all descendants\n- `getDesignSiblings(kit: Kit, designGuid: string): Design[]`\n- `getDesignChildren(kit: Kit, designGuid: string): Design[]`\n- `areDesignsInSameFamily(kit: Kit, designGuidA: string, designGuidB: string): boolean`\n- `canUseDesignAsPiece(kit: Kit, containerDesignGuid: string, pieceDesignGuid: string): boolean`\n- `findSameFamilyDesignPieces(kit: Kit, designGuid: string): Piece[]`\n\n**Type Family Helpers** (TS/JS):\n- `getPrimitiveType()`, `getTypeFamily()`, `getTypeSiblings()`, `getTypeChildren()`, `areTypesInSameFamily()`\n\n### Rust (`semio/rs/semio.rs`)\n- `find_type_in_kit\u003c'a\u003e(kit: \u0026'a Kit, guid: \u0026str) -\u003e Option\u003c\u0026'a Type\u003e` [L1185](semio/rs/semio.rs#L1185)\n- `find_type_in_kit_mut\u003c'a\u003e(kit: \u0026'a mut Kit, guid: \u0026str) -\u003e Option\u003c\u0026'a mut Type\u003e` [L1195](semio/rs/semio.rs#L1195)\n- `find_design_in_kit\u003c'a\u003e(kit: \u0026'a Kit, guid: \u0026str) -\u003e Option\u003c\u0026'a Design\u003e` [L1205](semio/rs/semio.rs#L1205)\n- `find_design_in_kit_mut\u003c'a\u003e(kit: \u0026'a mut Kit, guid: \u0026str) -\u003e Option\u003c\u0026'a mut Design\u003e` [L1215](semio/rs/semio.rs#L1215)\n- `find_piece_in_design\u003c'a\u003e(design: \u0026'a Design, guid: \u0026str) -\u003e Option\u003c\u0026'a Piece\u003e` [L1225](semio/rs/semio.rs#L1225)\n- `find_piece_in_design_mut\u003c'a\u003e(design: \u0026'a mut Design, guid: \u0026str) -\u003e Option\u003c\u0026'a mut Piece\u003e` [L1235](semio/rs/semio.rs#L1235)\n- `find_connection_in_design\u003c'a\u003e(design: \u0026'a Design, guid: \u0026str) -\u003e Option\u003c\u0026'a Connection\u003e` [L1245](semio/rs/semio.rs#L1245)\n- `find_connector_in_type\u003c'a\u003e(t: \u0026'a Type, guid: \u0026str) -\u003e Option\u003c\u0026'a Connector\u003e` [L1255](semio/rs/semio.rs#L1255)\n- `find_model_in_type\u003c'a\u003e(t: \u0026'a Type, guid: \u0026str) -\u003e Option\u003c\u0026'a Model\u003e` [L1265](semio/rs/semio.rs#L1265)\n- `find_file_in_kit\u003c'a\u003e(kit: \u0026'a Kit, guid: \u0026str) -\u003e Option\u003c\u0026'a File\u003e` [L1275](semio/rs/semio.rs#L1275)\n- `find_folder_in_kit\u003c'a\u003e(kit: \u0026'a Kit, guid: \u0026str) -\u003e Option\u003c\u0026'a Folder\u003e` [L1284](semio/rs/semio.rs#L1284)\n- `find_author_in_kit\u003c'a\u003e(kit: \u0026'a Kit, guid: \u0026str) -\u003e Option\u003c\u0026'a Author\u003e` [L1295](semio/rs/semio.rs#L1295)\n- `find_tag_in_kit\u003c'a\u003e(kit: \u0026'a Kit, guid: \u0026str) -\u003e Option\u003c\u0026'a Tag\u003e` [L1305](semio/rs/semio.rs#L1305)\n- `find_concept_in_kit\u003c'a\u003e(kit: \u0026'a Kit, guid: \u0026str) -\u003e Option\u003c\u0026'a Concept\u003e` [L1315](semio/rs/semio.rs#L1315)\n- `find_quality_in_kit\u003c'a\u003e(kit: \u0026'a Kit, guid: \u0026str) -\u003e Option\u003c\u0026'a Quality\u003e` [L1325](semio/rs/semio.rs#L1325)\n- `find_interface_in_kit\u003c'a\u003e(kit: \u0026'a Kit, guid: \u0026str) -\u003e Option\u003c\u0026'a Port\u003e` [L1335](semio/rs/semio.rs#L1335)\n- `find_layer_in_design\u003c'a\u003e(design: \u0026'a Design, guid: \u0026str) -\u003e Option\u003c\u0026'a Layer\u003e` [L1355](semio/rs/semio.rs#L1355)\n- `find_group_in_design\u003c'a\u003e(design: \u0026'a Design, guid: \u0026str) -\u003e Option\u003c\u0026'a Group\u003e` [L1365](semio/rs/semio.rs#L1365)\n- `find_stat_in_design\u003c'a\u003e(design: \u0026'a Design, guid: \u0026str) -\u003e Option\u003c\u0026'a Stat\u003e` [L1375](semio/rs/semio.rs#L1375)\n\n### Python (`semio/py/semio.py`)\n- `_findDesignInKitDict(kit: dict, design_guid: str) -\u003e dict` [L7700](semio/py/semio.py#L7700) - raises ValueError if not found\n- `_findTypeInKitDict(kit: dict, type_guid: str) -\u003e dict` [L7707](semio/py/semio.py#L7707)\n- `_findPieceInDesignDict(design: dict, piece_guid: str) -\u003e dict` [L7714](semio/py/semio.py#L7714)\n- `_findPieceConnectionsInDesignDict(design: dict, piece_guid: str) -\u003e list[dict]`\n- `_findConnectorInTypeDict(type_dict: dict, connector_guid: str) -\u003e dict`\n\n**Quality-related Python classes:**\n- QualityKeyField, QualityNameField, QualityDescriptionField, QualityUriField, QualityScalableField\n- QualityKindField, QualitySiField, QualityImperialField, QualityMinField, QualityMinExcludedField\n- QualityMaxField, QualityMaxExcludedField, QualityDefaultField, QualityFormulaField\n- QualityFolderField, QualityIconField, QualityImageField, QualityUnitField\n- QualityCreatedField, QualityUpdatedField, QualityId [L2223-L2363](semio/py/semio.py#L2223-L2363)\n\n---\n\n## 2. Test File Patterns\n\n### Go Tests (`semio/go/semio_test.go`)\n\n**Test Structure:** Uses `testing.T` with nested `t.Run()` for test groups\n\n**Test Functions:**\n- `TestRoundtrip(t *testing.T)` [L239](semio/go/semio_test.go#L239) - Kit -\u003e JSON -\u003e Memory -\u003e ZIP roundtrip validation\n- `TestDesignModel(t *testing.T)` [L290](semio/go/semio_test.go#L290) - Model selection from assets\n- `TestFlatten(t *testing.T)` [L325](semio/go/semio_test.go#L325) - Design flattening for variants:\n  - \"Nakagin Capsule Tower\" [L329](semio/go/semio_test.go#L329)\n  - \"Slanted\" [L333](semio/go/semio_test.go#L333)\n  - \"Twisted\" [L338](semio/go/semio_test.go#L338)\n  - \"Dancing\" [L343](semio/go/semio_test.go#L343)\n  - \"Capsule Dream\" [L350](semio/go/semio_test.go#L350)\n- `TestChange(t *testing.T)` [L357](semio/go/semio_test.go#L357)\n- `TestValidation(t *testing.T)` [L396](semio/go/semio_test.go#L396)\n\n**Helper Functions:**\n- `loadJSON(t *testing.T, filename string, v interface{})` [L45](semio/go/semio_test.go#L45)\n- `findDesignByName(designs []Design, name string, parentGuid *string) *Design` [L160](semio/go/semio_test.go#L160)\n- `findPieceByName(pieces []Piece, name string) *Piece` [L179](semio/go/semio_test.go#L179)\n- `testFlattenDesign(t *testing.T, kit Kit, designPath []string)` [L188](semio/go/semio_test.go#L188)\n- `planesEqual(p1, p2 *Plane, tolerance float64) bool` [L135](semio/go/semio_test.go#L135)\n- `centersEqual(c1, c2 *Coord, tolerance float64) bool` [L150](semio/go/semio_test.go#L150)\n- `selectBestModelLikeSemioTS(models []Model, selectedTagGuids []string) *Model` [L102](semio/go/semio_test.go#L102)\n- `jaccardTagGuids(a []TagId, b []string) float64` [L72](semio/go/semio_test.go#L72)\n- `containsAllTags(model Model, selectedTagGuids []string) bool` [L56](semio/go/semio_test.go#L56)\n\n**Benchmark Functions:**\n- `BenchmarkFlattenDesign()` in semio_benchmark.go using `findDesign()` helper\n\n### TypeScript Tests (`semio/js/sketchpad.test.ts`)\n\n**Test Framework:** Playwright E2E tests\n\n**Test Setup:** [L1-L50](semio/js/sketchpad.test.ts#L1-L50)\n- Imports MetabolismKitData from JSON [L22](semio/js/sketchpad.test.ts#L22)\n- Extracts designs, finds Nakagin Capsule Tower and Flat variant\n- Creates array of expected flat pieces with plane and center data\n\n**Example Test:**\n```typescript\nconst designs = (MetabolismKitData as any).designs ?? [];\nconst nakaginCapsuleTowerDesign = designs.find((d: any) =\u003e d.name === \"Nakagin Capsule Tower\");\nconst nakaginCapsuleTowerFlatDesign = designs.find((d: any) =\u003e d.name === \"Flat\" \u0026\u0026 d.parent?.guid === nakaginCapsuleTowerDesign?.guid);\nconst MetabolismKitNakaginCapsuleTowerFlatPieces = nakaginCapsuleTowerFlatDesign?.pieces?.map((p: any) =\u003e ({...})) ?? [];\n```\n\n---\n\n## 3. Nakagin Capsule Tower Kit Data\n\n**Location:** `semio/assets/semio/kit_metabolism.json` [L293759+](semio/assets/semio/kit_metabolism.json#L293759)\n\n**Design Hierarchy:**\n```\n- Nakagin Capsule Tower (root)\n  - Flat (variant)\n  - Slanted (variant) \n  - Twisted (variant)\n  - Dancing (variant)\n- Capsule Dream (root)\n```\n\n**Key Quality - Effective Floor Area:**\n```json\n{\n  \"guid\": \"7cfe065b-c0da-5e2c-8789-9f7a860773c2\",\n  \"key\": \"effective floor area\",\n  \"name\": \"effective floor area\",\n  \"unit\": \"m²\",\n  \"uri\": \"https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea\"\n}\n```\n\n**Related Qualities:**\n- floor height, ground floor height, height, height low, height side\n- gap, entrance, heating energy demand, income, maintenance expenses, operational cost\n- All located in qualities array [L293759](semio/assets/semio/kit_metabolism.json#L293759)\n\n**Core Types:**\n- Capsule (isAbstract: true)\n  - Ellipsoid, Trapezoid, Balcony (children)\n- Tower components with connectors and ports\n\n---\n\n## 4. Quality Type Structure\n\n### Shared Fields Across Languages:\n- **guid** (string, required)\n- **key** (string, identifier like \"effective floor area\")\n- **name** (string, display name)\n- **unit** (string, optional - \"m²\", \"m\", \"kWh/a\", etc.)\n- **uri** (string optional - BuildingSmart IFC reference)\n- **description** (string, optional)\n- **scalable** (boolean)\n- **kind** (enumeration)\n- **SI** (SI unit definition)\n- **imperial** (imperial unit definition)\n- **min**, **minExcluded**, **max**, **maxExcluded** (bounds)\n- **default** (default value)\n- **formula** (calculation formula)\n- **folder**, **icon**, **image** (UI metadata)\n- **benchmarks**, **attributes** (additional collections)\n- **createdAt**, **updatedAt** (timestamps)\n\n### JSON Structure:\n```json\n{\n  \"guid\": \"7cfe065b-c0da-5e2c-8789-9f7a860773c2\",\n  \"key\": \"effective floor area\",\n  \"name\": \"effective floor area\",\n  \"unit\": \"m²\",\n  \"uri\": \"https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea\"\n}\n```\n\n### Rust Type:\n- `find_quality_in_kit\u003c'a\u003e(kit: \u0026'a Kit, guid: \u0026str) -\u003e Option\u003c\u0026'a Quality\u003e`\n- Returns Option wrapping reference to Quality struct\n\n---\n\n## 5. Grasshopper Component Architecture\n\n**Location:** `semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs`\n\n### Abstract Base Classes:\n\n1. **`Component : GH_Component`** [L1420](semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#L1420)\n   - Extends Grasshopper GH_Component\n   - Properties: `Icon`, `Prompt_Singular`, `Prompt_Plural`\n\n2. **`PassthroughComponent\u003cTParam, TGoo, TModel\u003e : Component`** [L1451](semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#L1451)\n   - Generic base for simple Pass-through patterns\n   - Methods: `RegisterInputParams`, `RegisterOutputParams`, `SolveInstance`\n   - Properties: `Icon`\n\n3. **`IdComponent\u003cTParam, TGoo, TModel\u003e : PassthroughComponent\u003c...\u003e`** [L1545](semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#L1545)\n   - For ID-based operations\n\n4. **`DiffComponent\u003cTParam, TGoo, TModel\u003e : PassthroughComponent\u003c...\u003e`** [L1573](semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#L1573)\n   - For diff generation\n\n5. **`ChangeComponent\u003c...\u003e` : Component** [L1667](semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#L1667)\n   - For change operations with 3 generic type sets\n\n6. **`ApplyDiffComponent\u003cTEntityParam, TEntityGoo, TEntity, TDiffParam, TDiffGoo, TDiff\u003e : ScriptingComponent`** [L1769](semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#L1769)\n   - Applies diffs to entities\n\n7. **`SerializeComponent\u003cTParam, TGoo, TModel\u003e : ScriptingComponent`** [L1908](semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#L1908)\n   - Serialization logic\n\n8. **`DeserializeComponent\u003cTParam, TGoo, TModel\u003e : ScriptingComponent`** [L1948](semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#L1948)\n   - Deserialization logic\n\n### Concrete Component Examples:\n- `ApplyAttributeDiffComponent` [L1815](semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#L1815)\n- `ApplyFolderDiffComponent` [L1825](semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#L1825)\n- `ApplyModelDiffComponent` [L1835](semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#L1835)\n- `ApplyConnectorDiffComponent` [L1845](semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#L1845)\n- `ApplyTypeDiffComponent` [L1855](semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#L1855)\n- `ApplyPieceDiffComponent` [L1865](semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#L1865)\n- `ApplySideDiffComponent` [L1875](semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#L1875)\n- `ApplyConnectionDiffComponent` [L1885](semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#L1885)\n- `ApplyDesignDiffComponent` [L1895](semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#L1895)\n\n---\n\n## 6. Sketchpad Quality App\n\n**Location:** `semio/js/sketchpad/Quality.tsx`\n\n### Architecture Pattern: Zustand Store + React Context\n\n**Type Definitions:**\n\n1. **`FormulaNode`** [L99](semio/js/sketchpad/Quality.tsx#L99)\n   ```typescript\n   interface FormulaNode {\n     id: Guid;\n     kind: \"function\" | \"quality\" | \"variable\" | \"unit\" | \"value\";\n     children?: Guid[];\n   }\n   ```\n\n2. **`QualityAppSelection`** [L113](semio/js/sketchpad/Quality.tsx#L113)\n   - Tracks selected elements\n\n3. **`QualityAppSelectionDiff`** [L132](semio/js/sketchpad/Quality.tsx#L132)\n   - Diff representation\n\n4. **`QualityAppHover`** [L162](semio/js/sketchpad/Quality.tsx#L162)\n   - Hover state\n\n5. **`QualityAppState`** [L188](semio/js/sketchpad/Quality.tsx#L188)\n   - Complete app state\n\n6. **`QualityAppCommandContext extends KitCommandContext`** [L203](semio/js/sketchpad/Quality.tsx#L203)\n   - Command execution context\n\n7. **`FormulaFunction`** [L223](semio/js/sketchpad/Quality.tsx#L223)\n   - Definition for formula functions with rendering\n\n### Hook Exports:\n- `useQuality()` - Get current quality\n- `useQualityScope()` - Quality scope provider\n- `useQualityApp()` - Full quality app state\n- `useQualityAppSelection()` - Selection state\n- `useQualityAppCommands()` - Command execution\n\n### Files in Sketchpad:\n- Quality.tsx, Design.tsx, Type.tsx, Kit.tsx, Home.tsx, Tutorials.tsx, Feedback.tsx, Docs.tsx\n- `apps/` (sub-apps)\n- `pages/` (showcase pages with metabolism example)\n- `locales/` (i18n translations)\n- Component utilities: elements, kitSelectionHelper, portColor, shared\n\n---\n\n## 7. Pattern Summary\n\n### Common Pattern Across All Languages:\n```\nHelper(container: Container, itemGuid: string) -\u003e Item | Item? | throws\n```\n\n**Go:** Returns pointer, nil if not found\n**TypeScript:** Returns item, throws if not found\n**Rust:** Returns Option\u003c\u0026Item\u003e with lifetime\n**Python:** Raises ValueError if not found\n**C#:** Uses static Find() methods with overloads\n\n### Design Patterns:\n1. **Immutable Functional Updates** - Return new diffs instead of mutations\n2. **Zustand Store** - React state management in TypeScript apps\n3. **Scope Providers** - KitScope, QualityScope for context isolation\n4. **Abstract Component Templates** - Grasshopper uses generic bases for code reuse\n5. **Kit-based Operation** - All operations work with Kit as root context\n\n"
+            "path": "/memories/repo/compose-comprehensive-exploration.md",
+            "file_text": "# Comprehensive Compose Monorepo Exploration\n\n## 1. Helper Functions Pattern - FindXInKit\n\n### Go (`compose/go/compose.go`)\n- `FindTypeInKit(kit *Kit, typeGuid string) *Type` [L1831](compose/go/compose.go#L1831)\n- `FindDesignInKit(kit *Kit, designGuid string) *Design` [L1843](compose/go/compose.go#L1843)\n- `FindPieceInDesign(design *Design, pieceGuid string) *Piece` [L1855](compose/go/compose.go#L1855)\n- `FindConnectionInDesign(design *Design, connectionGuid string) *Connection` [L1867](compose/go/compose.go#L1867)\n- `FindConnectorInType(typ *Type, connectorGuid string) *Connector` [L1879](compose/go/compose.go#L1879)\n- `FindFileInKit(kit *Kit, fileGuid string) *File` [L1891](compose/go/compose.go#L1891)\n- `FindFolderInKit(kit *Kit, folderGuid string) *Folder` [L1903](compose/go/compose.go#L1903)\n- `FindQualityInKit(kit *Kit, qualityGuid string) *Quality` [L1915](compose/go/compose.go#L1915)\n- `FindPortInKit(kit *Kit, interfaceGuid string) *Port` [L1927](compose/go/compose.go#L1927)\n- `FindTagInKit(kit *Kit, tagGuid string) *Tag` [L1939](compose/go/compose.go#L1939)\n- `FindConceptInKit(kit *Kit, conceptGuid string) *Concept` [L1951](compose/go/compose.go#L1951)\n- `FindAuthorInKit(kit *Kit, authorGuid string) *Author` [L1963](compose/go/compose.go#L1963)\n\n### TypeScript/JavaScript (`compose/js/compose.ts`)\n- `findTypeInKit(kit: Kit, typeGuid: string): Type` [L8026](compose/js/compose.ts#L8026)\n- `findDesignInKit(kit: Kit, designGuid: string): Design` [L8039](compose/js/compose.ts#L8039)\n- `findFileInKit(kit: Kit, fileGuid: string): File` [L7858](compose/js/compose.ts#L7858)\n- `findTagInKit(kit: Kit, tagGuid: string): Tag` [L7908](compose/js/compose.ts#L7908)\n- `findConceptInKit(kit: Kit, conceptGuid: string): Concept` [L7948](compose/js/compose.ts#L7948)\n- `findPortInKit(kit: Kit, portGuid: string): Port` [L8236](compose/js/compose.ts#L8236)\n\n**Design Family Helpers** (TS/JS):\n- `getPrimitiveDesign(kit: Kit, designGuid: string): Design` - traverses to root parent\n- `getDesignFamily(kit: Kit, designGuid: string): Design[]` - all descendants\n- `getDesignSiblings(kit: Kit, designGuid: string): Design[]`\n- `getDesignChildren(kit: Kit, designGuid: string): Design[]`\n- `areDesignsInSameFamily(kit: Kit, designGuidA: string, designGuidB: string): boolean`\n- `canUseDesignAsPiece(kit: Kit, containerDesignGuid: string, pieceDesignGuid: string): boolean`\n- `findSameFamilyDesignPieces(kit: Kit, designGuid: string): Piece[]`\n\n**Type Family Helpers** (TS/JS):\n- `getPrimitiveType()`, `getTypeFamily()`, `getTypeSiblings()`, `getTypeChildren()`, `areTypesInSameFamily()`\n\n### Rust (`compose/rs/compose.rs`)\n- `find_type_in_kit\u003c'a\u003e(kit: \u0026'a Kit, guid: \u0026str) -\u003e Option\u003c\u0026'a Type\u003e` [L1185](compose/rs/compose.rs#L1185)\n- `find_type_in_kit_mut\u003c'a\u003e(kit: \u0026'a mut Kit, guid: \u0026str) -\u003e Option\u003c\u0026'a mut Type\u003e` [L1195](compose/rs/compose.rs#L1195)\n- `find_design_in_kit\u003c'a\u003e(kit: \u0026'a Kit, guid: \u0026str) -\u003e Option\u003c\u0026'a Design\u003e` [L1205](compose/rs/compose.rs#L1205)\n- `find_design_in_kit_mut\u003c'a\u003e(kit: \u0026'a mut Kit, guid: \u0026str) -\u003e Option\u003c\u0026'a mut Design\u003e` [L1215](compose/rs/compose.rs#L1215)\n- `find_piece_in_design\u003c'a\u003e(design: \u0026'a Design, guid: \u0026str) -\u003e Option\u003c\u0026'a Piece\u003e` [L1225](compose/rs/compose.rs#L1225)\n- `find_piece_in_design_mut\u003c'a\u003e(design: \u0026'a mut Design, guid: \u0026str) -\u003e Option\u003c\u0026'a mut Piece\u003e` [L1235](compose/rs/compose.rs#L1235)\n- `find_connection_in_design\u003c'a\u003e(design: \u0026'a Design, guid: \u0026str) -\u003e Option\u003c\u0026'a Connection\u003e` [L1245](compose/rs/compose.rs#L1245)\n- `find_connector_in_type\u003c'a\u003e(t: \u0026'a Type, guid: \u0026str) -\u003e Option\u003c\u0026'a Connector\u003e` [L1255](compose/rs/compose.rs#L1255)\n- `find_model_in_type\u003c'a\u003e(t: \u0026'a Type, guid: \u0026str) -\u003e Option\u003c\u0026'a Model\u003e` [L1265](compose/rs/compose.rs#L1265)\n- `find_file_in_kit\u003c'a\u003e(kit: \u0026'a Kit, guid: \u0026str) -\u003e Option\u003c\u0026'a File\u003e` [L1275](compose/rs/compose.rs#L1275)\n- `find_folder_in_kit\u003c'a\u003e(kit: \u0026'a Kit, guid: \u0026str) -\u003e Option\u003c\u0026'a Folder\u003e` [L1284](compose/rs/compose.rs#L1284)\n- `find_author_in_kit\u003c'a\u003e(kit: \u0026'a Kit, guid: \u0026str) -\u003e Option\u003c\u0026'a Author\u003e` [L1295](compose/rs/compose.rs#L1295)\n- `find_tag_in_kit\u003c'a\u003e(kit: \u0026'a Kit, guid: \u0026str) -\u003e Option\u003c\u0026'a Tag\u003e` [L1305](compose/rs/compose.rs#L1305)\n- `find_concept_in_kit\u003c'a\u003e(kit: \u0026'a Kit, guid: \u0026str) -\u003e Option\u003c\u0026'a Concept\u003e` [L1315](compose/rs/compose.rs#L1315)\n- `find_quality_in_kit\u003c'a\u003e(kit: \u0026'a Kit, guid: \u0026str) -\u003e Option\u003c\u0026'a Quality\u003e` [L1325](compose/rs/compose.rs#L1325)\n- `find_interface_in_kit\u003c'a\u003e(kit: \u0026'a Kit, guid: \u0026str) -\u003e Option\u003c\u0026'a Port\u003e` [L1335](compose/rs/compose.rs#L1335)\n- `find_layer_in_design\u003c'a\u003e(design: \u0026'a Design, guid: \u0026str) -\u003e Option\u003c\u0026'a Layer\u003e` [L1355](compose/rs/compose.rs#L1355)\n- `find_group_in_design\u003c'a\u003e(design: \u0026'a Design, guid: \u0026str) -\u003e Option\u003c\u0026'a Group\u003e` [L1365](compose/rs/compose.rs#L1365)\n- `find_stat_in_design\u003c'a\u003e(design: \u0026'a Design, guid: \u0026str) -\u003e Option\u003c\u0026'a Stat\u003e` [L1375](compose/rs/compose.rs#L1375)\n\n### Python (`compose/py/compose.py`)\n- `_findDesignInKitDict(kit: dict, design_guid: str) -\u003e dict` [L7700](compose/py/compose.py#L7700) - raises ValueError if not found\n- `_findTypeInKitDict(kit: dict, type_guid: str) -\u003e dict` [L7707](compose/py/compose.py#L7707)\n- `_findPieceInDesignDict(design: dict, piece_guid: str) -\u003e dict` [L7714](compose/py/compose.py#L7714)\n- `_findPieceConnectionsInDesignDict(design: dict, piece_guid: str) -\u003e list[dict]`\n- `_findConnectorInTypeDict(type_dict: dict, connector_guid: str) -\u003e dict`\n\n**Quality-related Python classes:**\n- QualityKeyField, QualityNameField, QualityDescriptionField, QualityUriField, QualityScalableField\n- QualityKindField, QualitySiField, QualityImperialField, QualityMinField, QualityMinExcludedField\n- QualityMaxField, QualityMaxExcludedField, QualityDefaultField, QualityFormulaField\n- QualityFolderField, QualityIconField, QualityImageField, QualityUnitField\n- QualityCreatedField, QualityUpdatedField, QualityId [L2223-L2363](compose/py/compose.py#L2223-L2363)\n\n---\n\n## 2. Test File Patterns\n\n### Go Tests (`compose/go/compose_test.go`)\n\n**Test Structure:** Uses `testing.T` with nested `t.Run()` for test groups\n\n**Test Functions:**\n- `TestRoundtrip(t *testing.T)` [L239](compose/go/compose_test.go#L239) - Kit -\u003e JSON -\u003e Memory -\u003e ZIP roundtrip validation\n- `TestDesignModel(t *testing.T)` [L290](compose/go/compose_test.go#L290) - Model selection from assets\n- `TestFlatten(t *testing.T)` [L325](compose/go/compose_test.go#L325) - Design flattening for variants:\n  - \"Nakagin Capsule Tower\" [L329](compose/go/compose_test.go#L329)\n  - \"Slanted\" [L333](compose/go/compose_test.go#L333)\n  - \"Twisted\" [L338](compose/go/compose_test.go#L338)\n  - \"Dancing\" [L343](compose/go/compose_test.go#L343)\n  - \"Capsule Dream\" [L350](compose/go/compose_test.go#L350)\n- `TestChange(t *testing.T)` [L357](compose/go/compose_test.go#L357)\n- `TestValidation(t *testing.T)` [L396](compose/go/compose_test.go#L396)\n\n**Helper Functions:**\n- `loadJSON(t *testing.T, filename string, v interface{})` [L45](compose/go/compose_test.go#L45)\n- `findDesignByName(designs []Design, name string, parentGuid *string) *Design` [L160](compose/go/compose_test.go#L160)\n- `findPieceByName(pieces []Piece, name string) *Piece` [L179](compose/go/compose_test.go#L179)\n- `testFlattenDesign(t *testing.T, kit Kit, designPath []string)` [L188](compose/go/compose_test.go#L188)\n- `planesEqual(p1, p2 *Plane, tolerance float64) bool` [L135](compose/go/compose_test.go#L135)\n- `centersEqual(c1, c2 *Coord, tolerance float64) bool` [L150](compose/go/compose_test.go#L150)\n- `selectBestModelLikeComposeTS(models []Model, selectedTagGuids []string) *Model` [L102](compose/go/compose_test.go#L102)\n- `jaccardTagGuids(a []TagId, b []string) float64` [L72](compose/go/compose_test.go#L72)\n- `containsAllTags(model Model, selectedTagGuids []string) bool` [L56](compose/go/compose_test.go#L56)\n\n**Benchmark Functions:**\n- `BenchmarkFlattenDesign()` in compose_benchmark.go using `findDesign()` helper\n\n### TypeScript Tests (`compose/js/sketchpad.test.ts`)\n\n**Test Framework:** Playwright E2E tests\n\n**Test Setup:** [L1-L50](compose/js/sketchpad.test.ts#L1-L50)\n- Imports MetabolismKitData from JSON [L22](compose/js/sketchpad.test.ts#L22)\n- Extracts designs, finds Nakagin Capsule Tower and Flat variant\n- Creates array of expected flat pieces with plane and center data\n\n**Example Test:**\n```typescript\nconst designs = (MetabolismKitData as any).designs ?? [];\nconst nakaginCapsuleTowerDesign = designs.find((d: any) =\u003e d.name === \"Nakagin Capsule Tower\");\nconst nakaginCapsuleTowerFlatDesign = designs.find((d: any) =\u003e d.name === \"Flat\" \u0026\u0026 d.parent?.guid === nakaginCapsuleTowerDesign?.guid);\nconst MetabolismKitNakaginCapsuleTowerFlatPieces = nakaginCapsuleTowerFlatDesign?.pieces?.map((p: any) =\u003e ({...})) ?? [];\n```\n\n---\n\n## 3. Nakagin Capsule Tower Kit Data\n\n**Location:** `compose/assets/compose/kit_metabolism.json` [L293759+](compose/assets/compose/kit_metabolism.json#L293759)\n\n**Design Hierarchy:**\n```\n- Nakagin Capsule Tower (root)\n  - Flat (variant)\n  - Slanted (variant) \n  - Twisted (variant)\n  - Dancing (variant)\n- Capsule Dream (root)\n```\n\n**Key Quality - Effective Floor Area:**\n```json\n{\n  \"guid\": \"7cfe065b-c0da-5e2c-8789-9f7a860773c2\",\n  \"key\": \"effective floor area\",\n  \"name\": \"effective floor area\",\n  \"unit\": \"m²\",\n  \"uri\": \"https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea\"\n}\n```\n\n**Related Qualities:**\n- floor height, ground floor height, height, height low, height side\n- gap, entrance, heating energy demand, income, maintenance expenses, operational cost\n- All located in qualities array [L293759](compose/assets/compose/kit_metabolism.json#L293759)\n\n**Core Types:**\n- Capsule (isAbstract: true)\n  - Ellipsoid, Trapezoid, Balcony (children)\n- Tower components with connectors and ports\n\n---\n\n## 4. Quality Type Structure\n\n### Shared Fields Across Languages:\n- **guid** (string, required)\n- **key** (string, identifier like \"effective floor area\")\n- **name** (string, display name)\n- **unit** (string, optional - \"m²\", \"m\", \"kWh/a\", etc.)\n- **uri** (string optional - BuildingSmart IFC reference)\n- **description** (string, optional)\n- **scalable** (boolean)\n- **kind** (enumeration)\n- **SI** (SI unit definition)\n- **imperial** (imperial unit definition)\n- **min**, **minExcluded**, **max**, **maxExcluded** (bounds)\n- **default** (default value)\n- **formula** (calculation formula)\n- **folder**, **icon**, **image** (UI metadata)\n- **benchmarks**, **attributes** (additional collections)\n- **createdAt**, **updatedAt** (timestamps)\n\n### JSON Structure:\n```json\n{\n  \"guid\": \"7cfe065b-c0da-5e2c-8789-9f7a860773c2\",\n  \"key\": \"effective floor area\",\n  \"name\": \"effective floor area\",\n  \"unit\": \"m²\",\n  \"uri\": \"https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea\"\n}\n```\n\n### Rust Type:\n- `find_quality_in_kit\u003c'a\u003e(kit: \u0026'a Kit, guid: \u0026str) -\u003e Option\u003c\u0026'a Quality\u003e`\n- Returns Option wrapping reference to Quality struct\n\n---\n\n## 5. Grasshopper Component Architecture\n\n**Location:** `compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs`\n\n### Abstract Base Classes:\n\n1. **`Component : GH_Component`** [L1420](compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs#L1420)\n   - Extends Grasshopper GH_Component\n   - Properties: `Icon`, `Prompt_Singular`, `Prompt_Plural`\n\n2. **`PassthroughComponent\u003cTParam, TGoo, TModel\u003e : Component`** [L1451](compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs#L1451)\n   - Generic base for simple Pass-through patterns\n   - Methods: `RegisterInputParams`, `RegisterOutputParams`, `SolveInstance`\n   - Properties: `Icon`\n\n3. **`IdComponent\u003cTParam, TGoo, TModel\u003e : PassthroughComponent\u003c...\u003e`** [L1545](compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs#L1545)\n   - For ID-based operations\n\n4. **`DiffComponent\u003cTParam, TGoo, TModel\u003e : PassthroughComponent\u003c...\u003e`** [L1573](compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs#L1573)\n   - For diff generation\n\n5. **`ChangeComponent\u003c...\u003e` : Component** [L1667](compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs#L1667)\n   - For change operations with 3 generic type sets\n\n6. **`ApplyDiffComponent\u003cTEntityParam, TEntityGoo, TEntity, TDiffParam, TDiffGoo, TDiff\u003e : ScriptingComponent`** [L1769](compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs#L1769)\n   - Applies diffs to entities\n\n7. **`SerializeComponent\u003cTParam, TGoo, TModel\u003e : ScriptingComponent`** [L1908](compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs#L1908)\n   - Serialization logic\n\n8. **`DeserializeComponent\u003cTParam, TGoo, TModel\u003e : ScriptingComponent`** [L1948](compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs#L1948)\n   - Deserialization logic\n\n### Concrete Component Examples:\n- `ApplyAttributeDiffComponent` [L1815](compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs#L1815)\n- `ApplyFolderDiffComponent` [L1825](compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs#L1825)\n- `ApplyModelDiffComponent` [L1835](compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs#L1835)\n- `ApplyConnectorDiffComponent` [L1845](compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs#L1845)\n- `ApplyTypeDiffComponent` [L1855](compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs#L1855)\n- `ApplyPieceDiffComponent` [L1865](compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs#L1865)\n- `ApplySideDiffComponent` [L1875](compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs#L1875)\n- `ApplyConnectionDiffComponent` [L1885](compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs#L1885)\n- `ApplyDesignDiffComponent` [L1895](compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs#L1895)\n\n---\n\n## 6. Sketchpad Quality App\n\n**Location:** `compose/js/sketchpad/Quality.tsx`\n\n### Architecture Pattern: Zustand Store + React Context\n\n**Type Definitions:**\n\n1. **`FormulaNode`** [L99](compose/js/sketchpad/Quality.tsx#L99)\n   ```typescript\n   interface FormulaNode {\n     id: Guid;\n     kind: \"function\" | \"quality\" | \"variable\" | \"unit\" | \"value\";\n     children?: Guid[];\n   }\n   ```\n\n2. **`QualityAppSelection`** [L113](compose/js/sketchpad/Quality.tsx#L113)\n   - Tracks selected elements\n\n3. **`QualityAppSelectionDiff`** [L132](compose/js/sketchpad/Quality.tsx#L132)\n   - Diff representation\n\n4. **`QualityAppHover`** [L162](compose/js/sketchpad/Quality.tsx#L162)\n   - Hover state\n\n5. **`QualityAppState`** [L188](compose/js/sketchpad/Quality.tsx#L188)\n   - Complete app state\n\n6. **`QualityAppCommandContext extends KitCommandContext`** [L203](compose/js/sketchpad/Quality.tsx#L203)\n   - Command execution context\n\n7. **`FormulaFunction`** [L223](compose/js/sketchpad/Quality.tsx#L223)\n   - Definition for formula functions with rendering\n\n### Hook Exports:\n- `useQuality()` - Get current quality\n- `useQualityScope()` - Quality scope provider\n- `useQualityApp()` - Full quality app state\n- `useQualityAppSelection()` - Selection state\n- `useQualityAppCommands()` - Command execution\n\n### Files in Sketchpad:\n- Quality.tsx, Design.tsx, Type.tsx, Kit.tsx, Home.tsx, Tutorials.tsx, Feedback.tsx, Docs.tsx\n- `apps/` (sub-apps)\n- `pages/` (showcase pages with metabolism example)\n- `locales/` (i18n translations)\n- Component utilities: elements, kitSelectionHelper, portColor, shared\n\n---\n\n## 7. Pattern Summary\n\n### Common Pattern Across All Languages:\n```\nHelper(container: Container, itemGuid: string) -\u003e Item | Item? | throws\n```\n\n**Go:** Returns pointer, nil if not found\n**TypeScript:** Returns item, throws if not found\n**Rust:** Returns Option\u003c\u0026Item\u003e with lifetime\n**Python:** Raises ValueError if not found\n**C#:** Uses static Find() methods with overloads\n\n### Design Patterns:\n1. **Immutable Functional Updates** - Return new diffs instead of mutations\n2. **Zustand Store** - React state management in TypeScript apps\n3. **Scope Providers** - KitScope, QualityScope for context isolation\n4. **Abstract Component Templates** - Grasshopper uses generic bases for code reuse\n5. **Kit-based Operation** - All operations work with Kit as root context\n\n"
           },
-          "tool_response": "File created successfully at: /memories/repo/semio-comprehensive-exploration.md",
+          "tool_response": "File created successfully at: /memories/repo/compose-comprehensive-exploration.md",
           "tool_use_id": "toolu_01H63m6M4nZHfJ83iWnHwGGJ__vscode-1773233523877",
           "cwd": "/workspaces/semio"
         },

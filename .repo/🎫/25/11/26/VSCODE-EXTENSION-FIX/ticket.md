@@ -4,7 +4,7 @@
 
 # Previously
 
-The VS Code extension for semio was not showing validation errors on invalid kit JSON files. The test infrastructure was also not properly set up.
+The VS Code extension for compose was not showing validation errors on invalid kit JSON files. The test infrastructure was also not properly set up.
 
 Problems identified:
 
@@ -16,14 +16,14 @@ Problems identified:
 
 # Plan
 
-1. Update `kit_invalid.json` fixture to match current Zod schema in `semio.ts`
-2. Add validation domain logic tests to `semio.test.ts`
+1. Update `kit_invalid.json` fixture to match current Zod schema in `compose.ts`
+2. Add validation domain logic tests to `compose.test.ts`
 3. Set up proper VS Code extension test infrastructure
 4. Fix the extension build and test configuration
 
 # Changes
 
-## 1. Fixed `assets/semio/kit_invalid.json`
+## 1. Fixed `assets/compose/kit_invalid.json`
 
 - Added `t` property to connectors (required)
 - Added `guid` and `file` properties to models (required)
@@ -34,9 +34,9 @@ Problems identified:
 - Changed `piece` and `connector` in connections to objects with `guid`
 - Moved `connections` inside the design (where they belong)
 
-## 2. Added validation tests to `js/semio/semio.test.ts`
+## 2. Added validation tests to `js/compose/compose.test.ts`
 
-- Added import for `InvalidKit`, `validateSemioKit`, `hasSemioErrors`
+- Added import for `InvalidKit`, `validateComposeKit`, `hasComposeErrors`
 - Added "Validation" test suite with 3 tests:
   - "Valid kit has no errors" - validates MetabolismKit has no errors
   - "Invalid kit has all expected errors" - validates InvalidKit triggers all 11 validation policies
@@ -45,7 +45,7 @@ Problems identified:
 ## 3. Updated `js/vscode/package.json`
 
 - Added test dependencies: `@types/mocha`, `@vscode/test-cli`, `@vscode/test-electron`
-- Added `uuid` dependency (needed by semio/js)
+- Added `uuid` dependency (needed by compose/js)
 - Added `test` script: `vscode-test`
 - Updated `build` script to also build tests
 
@@ -57,7 +57,7 @@ Problems identified:
 
 ## 5. Fixed `js/vscode/extension.test.ts`
 
-- Corrected path to fixture: `../../../../assets/semio/kit_invalid.json`
+- Corrected path to fixture: `../../../../assets/compose/kit_invalid.json`
 
 ## Changes
 

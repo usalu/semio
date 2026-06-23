@@ -1,6 +1,6 @@
 {
   "id": "9be535a5-7aa6-40ea-a54c-f78025a2fecc",
-  "uri": "semiorepo://s/9be535a5-7aa6-40ea-a54c-f78025a2fecc",
+  "uri": "composerepo://s/9be535a5-7aa6-40ea-a54c-f78025a2fecc",
   "contributor": "🧑‍💻ueli",
   "client": "copilot-chat",
   "second": "2026-03-09T09:49:52Z",
@@ -14,7 +14,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 4660,
-            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "filePath": "/workspaces/semio/compose/js/compose.ts",
             "startLine": 4615
           },
           "tool_response": "",
@@ -33,22 +33,22 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚js💻semio🛠️serializetype",
+            "id": "👤compose📚js💻compose🛠️serializetype",
             "loc": 7
           },
           {
-            "id": "👤semio📚js💻semio🛠️type",
+            "id": "👤compose📚js💻compose🛠️type",
             "loc": 8
           },
           {
-            "id": "👤semio📚js💻semio🪨typeschema",
+            "id": "👤compose📚js💻compose🪨typeschema",
             "loc": 22
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚js💻semio📌4615📌4660"
+          "👤compose📚js💻compose📌4615📌4660"
         ],
         "second": "🎆26🌙03☀️09⏰09⌚49⏱️52",
         "session": "⚪9be535a57aa640eaa54cf78025a2fecc"
@@ -66,7 +66,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/js/semio.ts",
+            "includePattern": "**/compose/js/compose.ts",
             "isRegexp": true,
             "query": "ConceptIdSchema.*=|AuthorIdSchema.*="
           },
@@ -102,7 +102,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/js/semio.ts",
+            "includePattern": "**/compose/js/compose.ts",
             "isRegexp": true,
             "query": "ConceptIdSchema.*=|AuthorIdSchema.*="
           },
@@ -138,7 +138,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/js/semio.ts",
+            "includePattern": "**/compose/js/compose.ts",
             "isRegexp": true,
             "query": "DesignSchema.*z\\.object|design.*concepts"
           },
@@ -174,7 +174,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/js/semio.ts",
+            "includePattern": "**/compose/js/compose.ts",
             "isRegexp": true,
             "query": "DesignSchema.*z\\.object|design.*concepts"
           },
@@ -210,7 +210,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 6010,
-            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "filePath": "/workspaces/semio/compose/js/compose.ts",
             "startLine": 5965
           },
           "tool_use_id": "toolu_018zFZhUYNYtVUzN6myk22qw__vscode-1772913893508",
@@ -229,26 +229,26 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚js💻semio✂️design",
+            "id": "👤compose📚js💻compose✂️design",
             "loc": 8
           },
           {
-            "id": "👤semio📚js💻semio🛠️deserializestat",
+            "id": "👤compose📚js💻compose🛠️deserializestat",
             "loc": 2
           },
           {
-            "id": "👤semio📚js💻semio🛠️serializedesign",
+            "id": "👤compose📚js💻compose🛠️serializedesign",
             "loc": 5
           },
           {
-            "id": "👤semio📚js💻semio🪨designschema",
+            "id": "👤compose📚js💻compose🪨designschema",
             "loc": 26
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚js💻semio📌5965📌6010"
+          "👤compose📚js💻compose📌5965📌6010"
         ],
         "second": "🎆26🌙03☀️09⏰09⌚50⏱️26",
         "session": "⚪9be535a57aa640eaa54cf78025a2fecc"
@@ -266,7 +266,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 6010,
-            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "filePath": "/workspaces/semio/compose/js/compose.ts",
             "startLine": 5965
           },
           "tool_response": "",
@@ -285,26 +285,26 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚js💻semio✂️design",
+            "id": "👤compose📚js💻compose✂️design",
             "loc": 8
           },
           {
-            "id": "👤semio📚js💻semio🛠️deserializestat",
+            "id": "👤compose📚js💻compose🛠️deserializestat",
             "loc": 2
           },
           {
-            "id": "👤semio📚js💻semio🛠️serializedesign",
+            "id": "👤compose📚js💻compose🛠️serializedesign",
             "loc": 5
           },
           {
-            "id": "👤semio📚js💻semio🪨designschema",
+            "id": "👤compose📚js💻compose🪨designschema",
             "loc": 26
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚js💻semio📌5965📌6010"
+          "👤compose📚js💻compose📌5965📌6010"
         ],
         "second": "🎆26🌙03☀️09⏰09⌚50⏱️37",
         "session": "⚪9be535a57aa640eaa54cf78025a2fecc"

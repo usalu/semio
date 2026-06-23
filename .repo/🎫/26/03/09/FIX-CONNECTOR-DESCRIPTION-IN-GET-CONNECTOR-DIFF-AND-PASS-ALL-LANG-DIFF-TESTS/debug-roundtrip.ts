@@ -1,5 +1,5 @@
-import { MetabolismKit } from "@semio/assets";
-import { deserializeKit, serializeKit, areKitsEqual, importKit, Kit } from "../../../semio/js/semio";
+import { MetabolismKit } from "@compose/assets";
+import { deserializeKit, serializeKit, areKitsEqual, importKit, Kit } from "../../../compose/js/compose";
 import * as fsModule from "node:fs";
 import * as pathModule from "node:path";
 
@@ -10,7 +10,7 @@ const serializedKit = serializeKit(kit);
 const deserializedKit = deserializeKit(serializedKit);
 console.log("kit === deserializedKit:", areKitsEqual(kit, deserializedKit));
 
-const zipPath = path.join("/workspaces/semio/semio/assets/semio/metabolism.zip");
+const zipPath = path.join("/workspaces/semio/compose/assets/compose/metabolism.zip");
 const zipBuffer = fs.readFileSync(zipPath);
 const result = await importKit(zipBuffer.buffer);
 const zipKit = result.kit;

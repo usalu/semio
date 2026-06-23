@@ -24,7 +24,7 @@ import { parseUnifiedDiff, buildScopesForFile } from "@/lib";
 import { readFileSync } from "fs";
 import { join } from "path";
 
-const REPO_ROOT = process.env.SEMIO_SERVER_REPO_ROOT || process.cwd();
+const REPO_ROOT = process.env.COMPOSE_SERVER_REPO_ROOT || process.cwd();
 
 const DiffIngestSchema = z.object({
   ticket_id: z.string().min(1),

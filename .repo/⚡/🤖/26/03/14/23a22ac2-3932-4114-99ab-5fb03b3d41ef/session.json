@@ -1,6 +1,6 @@
 {
   "id": "23a22ac2-3932-4114-99ab-5fb03b3d41ef",
-  "uri": "semiorepo://s/23a22ac2-3932-4114-99ab-5fb03b3d41ef",
+  "uri": "composerepo://s/23a22ac2-3932-4114-99ab-5fb03b3d41ef",
   "contributor": "🧑‍💻ueli",
   "client": "copilot-chat",
   "second": "2026-03-14T20:35:11Z",
@@ -85,7 +85,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 150,
-            "filePath": "/workspaces/semio/semio/sketchpad/sketchpad/Kit.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/sketchpad/Kit.tsx",
             "startLine": 1
           },
           "tool_use_id": "toolu_013fySp4NvtJPFTBfPZb817H__vscode-1773517456516",
@@ -105,7 +105,7 @@
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio🖱️sketchpad🗃️sketchpad💻kit📌1📌150"
+          "👤compose🖱️sketchpad🗃️sketchpad💻kit📌1📌150"
         ],
         "second": "🎆26🌙03☀️14⏰20⌚35⏱️15",
         "session": "⚪23a22ac23932411499ab5fb03b3d41ef"
@@ -123,7 +123,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 150,
-            "filePath": "/workspaces/semio/semio/sketchpad/sketchpad/Kit.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/sketchpad/Kit.tsx",
             "startLine": 1
           },
           "tool_response": "",
@@ -143,7 +143,7 @@
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio🖱️sketchpad🗃️sketchpad💻kit📌1📌150"
+          "👤compose🖱️sketchpad🗃️sketchpad💻kit📌1📌150"
         ],
         "second": "🎆26🌙03☀️14⏰20⌚35⏱️29",
         "session": "⚪23a22ac23932411499ab5fb03b3d41ef"
@@ -161,7 +161,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 5100,
-            "filePath": "/workspaces/semio/semio/sketchpad/sketchpad.test.ts",
+            "filePath": "/workspaces/semio/compose/sketchpad/sketchpad.test.ts",
             "startLine": 5084
           },
           "tool_use_id": "toolu_01KuFCZoTvPDS9gzcKwE4MXB__vscode-1773517456518",
@@ -181,7 +181,7 @@
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio🖱️sketchpad🥼sketchpadtest📌5084📌5100"
+          "👤compose🖱️sketchpad🥼sketchpadtest📌5084📌5100"
         ],
         "second": "🎆26🌙03☀️14⏰20⌚35⏱️33",
         "session": "⚪23a22ac23932411499ab5fb03b3d41ef"
@@ -199,7 +199,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 2000,
-            "filePath": "/workspaces/semio/semio/sketchpad/sketchpad/Type.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/sketchpad/Type.tsx",
             "startLine": 1
           },
           "tool_use_id": "toolu_01EasiUhLDEVQPHVEUbffBPz__vscode-1773517456517",
@@ -218,282 +218,282 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type✂️actionhookresult",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type✂️actionhookresult",
             "loc": 9
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type✂️transaction",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type✂️transaction",
             "loc": 5
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type✂️typeappcommandcontext",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type✂️typeappcommandcontext",
             "loc": 4
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type✂️typeappcommandresult",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type✂️typeappcommandresult",
             "loc": 4
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type✂️typeappdiff",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type✂️typeappdiff",
             "loc": 13
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type✂️typeappedit",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type✂️typeappedit",
             "loc": 1
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type✂️typeapphover",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type✂️typeapphover",
             "loc": 4
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type✂️typeapppresence",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type✂️typeapppresence",
             "loc": 4
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type✂️typeapppresenceother",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type✂️typeapppresenceother",
             "loc": 3
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type✂️typeappselection",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type✂️typeappselection",
             "loc": 4
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type✂️typeappselectiondiff",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type✂️typeappselectiondiff",
             "loc": 4
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type✂️typeappselectionmodelsdiff",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type✂️typeappselectionmodelsdiff",
             "loc": 4
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type✂️typeappselectionportsdiff",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type✂️typeappselectionportsdiff",
             "loc": 4
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type✂️typeappstate",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type✂️typeappstate",
             "loc": 14
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️connectorpreview",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️connectorpreview",
             "loc": 1
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️fbxmesh",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️fbxmesh",
             "loc": 1
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️getcomputedcolorformesh",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️getcomputedcolorformesh",
             "loc": 7
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️gltfmesh",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️gltfmesh",
             "loc": 1
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️objmesh",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️objmesh",
             "loc": 1
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️selecttypeconcepts",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️selecttypeconcepts",
             "loc": 7
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️selecttypeguid",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️selecttypeguid",
             "loc": 6
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️selecttypemeshguid",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️selecttypemeshguid",
             "loc": 6
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️selecttypemodels",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️selecttypemodels",
             "loc": 6
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️selecttypeports",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️selecttypeports",
             "loc": 6
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️typeappscopeprovider",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️typeappscopeprovider",
             "loc": 1
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeapp",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeapp",
             "loc": 14
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappactivetool",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappactivetool",
             "loc": 18
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappaddmodeltag",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappaddmodeltag",
             "loc": 12
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappcamera",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappcamera",
             "loc": 18
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappclearfocus",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappclearfocus",
             "loc": 8
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappclearhover",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappclearhover",
             "loc": 8
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappcommands",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappcommands",
             "loc": 70
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappdeselectall",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappdeselectall",
             "loc": 8
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappdeselectconnector",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappdeselectconnector",
             "loc": 12
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappdeselectmodel",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappdeselectmodel",
             "loc": 12
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappfocusedconnectorguid",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappfocusedconnectorguid",
             "loc": 22
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappfocusport",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappfocusport",
             "loc": 8
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeapphover",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeapphover",
             "loc": 24
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeapphovermodel",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeapphovermodel",
             "loc": 8
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeapphoverport",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeapphoverport",
             "loc": 8
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappisporthovered",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappisporthovered",
             "loc": 23
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappisportselected",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappisportselected",
             "loc": 23
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappothers",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappothers",
             "loc": 10
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeapppanelvisibility",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeapppanelvisibility",
             "loc": 18
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappremovemodeltag",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappremovemodeltag",
             "loc": 10
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappselectconnector",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappselectconnector",
             "loc": 9
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappselectedmodelguid",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappselectedmodelguid",
             "loc": 21
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappselectedmodeltags",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappselectedmodeltags",
             "loc": 16
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappselection",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappselection",
             "loc": 18
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappselectmodel",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappselectmodel",
             "loc": 9
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappsetactivetool",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappsetactivetool",
             "loc": 8
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappsetcamera",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappsetcamera",
             "loc": 8
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappsetselectedmodel",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappsetselectedmodel",
             "loc": 8
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeapptogglepanel",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeapptogglepanel",
             "loc": 10
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeapptransaction",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeapptransaction",
             "loc": 8
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🪨commands",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🪨commands",
             "loc": 153
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🪨connectorvisual",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🪨connectorvisual",
             "loc": 1
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🪨emptymodeltagarray",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🪨emptymodeltagarray",
             "loc": 13
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🪨emptytypeselection",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🪨emptytypeselection",
             "loc": 1
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🪨kitsectionlazy",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🪨kitsectionlazy",
             "loc": 1
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🪨loadedtypemesh",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🪨loadedtypemesh",
             "loc": 8
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🪨scenecontent",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🪨scenecontent",
             "loc": 120
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🪨typeappeventconfig",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🪨typeappeventconfig",
             "loc": 6
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🪨typeappfullscreenwindow",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🪨typeappfullscreenwindow",
             "loc": 5
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🪨typeappplugin",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🪨typeappplugin",
             "loc": 24
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🪨typeappscopecontext",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🪨typeappscopecontext",
             "loc": 1
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🪨typeappwindowkind",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🪨typeappwindowkind",
             "loc": 3
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🪨typemesh",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🪨typemesh",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio🖱️sketchpad🗃️sketchpad💻type📌1📌2000"
+          "👤compose🖱️sketchpad🗃️sketchpad💻type📌1📌2000"
         ],
         "second": "🎆26🌙03☀️14⏰20⌚35⏱️33",
         "session": "⚪23a22ac23932411499ab5fb03b3d41ef"
@@ -511,7 +511,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 5100,
-            "filePath": "/workspaces/semio/semio/sketchpad/sketchpad.test.ts",
+            "filePath": "/workspaces/semio/compose/sketchpad/sketchpad.test.ts",
             "startLine": 5084
           },
           "tool_response": "",
@@ -531,7 +531,7 @@
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio🖱️sketchpad🥼sketchpadtest📌5084📌5100"
+          "👤compose🖱️sketchpad🥼sketchpadtest📌5084📌5100"
         ],
         "second": "🎆26🌙03☀️14⏰20⌚35⏱️43",
         "session": "⚪23a22ac23932411499ab5fb03b3d41ef"
@@ -549,7 +549,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 2000,
-            "filePath": "/workspaces/semio/semio/sketchpad/sketchpad/Type.tsx",
+            "filePath": "/workspaces/semio/compose/sketchpad/sketchpad/Type.tsx",
             "startLine": 1
           },
           "tool_response": "",
@@ -568,282 +568,282 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type✂️actionhookresult",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type✂️actionhookresult",
             "loc": 9
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type✂️transaction",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type✂️transaction",
             "loc": 5
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type✂️typeappcommandcontext",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type✂️typeappcommandcontext",
             "loc": 4
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type✂️typeappcommandresult",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type✂️typeappcommandresult",
             "loc": 4
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type✂️typeappdiff",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type✂️typeappdiff",
             "loc": 13
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type✂️typeappedit",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type✂️typeappedit",
             "loc": 1
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type✂️typeapphover",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type✂️typeapphover",
             "loc": 4
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type✂️typeapppresence",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type✂️typeapppresence",
             "loc": 4
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type✂️typeapppresenceother",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type✂️typeapppresenceother",
             "loc": 3
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type✂️typeappselection",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type✂️typeappselection",
             "loc": 4
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type✂️typeappselectiondiff",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type✂️typeappselectiondiff",
             "loc": 4
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type✂️typeappselectionmodelsdiff",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type✂️typeappselectionmodelsdiff",
             "loc": 4
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type✂️typeappselectionportsdiff",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type✂️typeappselectionportsdiff",
             "loc": 4
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type✂️typeappstate",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type✂️typeappstate",
             "loc": 14
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️connectorpreview",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️connectorpreview",
             "loc": 1
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️fbxmesh",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️fbxmesh",
             "loc": 1
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️getcomputedcolorformesh",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️getcomputedcolorformesh",
             "loc": 7
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️gltfmesh",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️gltfmesh",
             "loc": 1
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️objmesh",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️objmesh",
             "loc": 1
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️selecttypeconcepts",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️selecttypeconcepts",
             "loc": 7
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️selecttypeguid",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️selecttypeguid",
             "loc": 6
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️selecttypemeshguid",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️selecttypemeshguid",
             "loc": 6
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️selecttypemodels",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️selecttypemodels",
             "loc": 6
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️selecttypeports",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️selecttypeports",
             "loc": 6
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️typeappscopeprovider",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️typeappscopeprovider",
             "loc": 1
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeapp",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeapp",
             "loc": 14
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappactivetool",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappactivetool",
             "loc": 18
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappaddmodeltag",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappaddmodeltag",
             "loc": 12
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappcamera",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappcamera",
             "loc": 18
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappclearfocus",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappclearfocus",
             "loc": 8
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappclearhover",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappclearhover",
             "loc": 8
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappcommands",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappcommands",
             "loc": 70
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappdeselectall",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappdeselectall",
             "loc": 8
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappdeselectconnector",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappdeselectconnector",
             "loc": 12
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappdeselectmodel",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappdeselectmodel",
             "loc": 12
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappfocusedconnectorguid",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappfocusedconnectorguid",
             "loc": 22
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappfocusport",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappfocusport",
             "loc": 8
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeapphover",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeapphover",
             "loc": 24
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeapphovermodel",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeapphovermodel",
             "loc": 8
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeapphoverport",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeapphoverport",
             "loc": 8
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappisporthovered",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappisporthovered",
             "loc": 23
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappisportselected",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappisportselected",
             "loc": 23
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappothers",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappothers",
             "loc": 10
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeapppanelvisibility",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeapppanelvisibility",
             "loc": 18
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappremovemodeltag",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappremovemodeltag",
             "loc": 10
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappselectconnector",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappselectconnector",
             "loc": 9
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappselectedmodelguid",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappselectedmodelguid",
             "loc": 21
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappselectedmodeltags",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappselectedmodeltags",
             "loc": 16
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappselection",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappselection",
             "loc": 18
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappselectmodel",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappselectmodel",
             "loc": 9
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappsetactivetool",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappsetactivetool",
             "loc": 8
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappsetcamera",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappsetcamera",
             "loc": 8
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappsetselectedmodel",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeappsetselectedmodel",
             "loc": 8
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeapptogglepanel",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeapptogglepanel",
             "loc": 10
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🛠️usetypeapptransaction",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🛠️usetypeapptransaction",
             "loc": 8
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🪨commands",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🪨commands",
             "loc": 153
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🪨connectorvisual",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🪨connectorvisual",
             "loc": 1
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🪨emptymodeltagarray",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🪨emptymodeltagarray",
             "loc": 13
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🪨emptytypeselection",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🪨emptytypeselection",
             "loc": 1
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🪨kitsectionlazy",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🪨kitsectionlazy",
             "loc": 1
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🪨loadedtypemesh",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🪨loadedtypemesh",
             "loc": 8
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🪨scenecontent",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🪨scenecontent",
             "loc": 120
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🪨typeappeventconfig",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🪨typeappeventconfig",
             "loc": 6
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🪨typeappfullscreenwindow",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🪨typeappfullscreenwindow",
             "loc": 5
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🪨typeappplugin",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🪨typeappplugin",
             "loc": 24
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🪨typeappscopecontext",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🪨typeappscopecontext",
             "loc": 1
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🪨typeappwindowkind",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🪨typeappwindowkind",
             "loc": 3
           },
           {
-            "id": "👤semio🖱️sketchpad🗃️sketchpad💻type🪨typemesh",
+            "id": "👤compose🖱️sketchpad🗃️sketchpad💻type🪨typemesh",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio🖱️sketchpad🗃️sketchpad💻type📌1📌2000"
+          "👤compose🖱️sketchpad🗃️sketchpad💻type📌1📌2000"
         ],
         "second": "🎆26🌙03☀️14⏰20⌚35⏱️45",
         "session": "⚪23a22ac23932411499ab5fb03b3d41ef"

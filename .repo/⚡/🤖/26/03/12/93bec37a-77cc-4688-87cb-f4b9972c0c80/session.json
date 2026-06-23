@@ -1,6 +1,6 @@
 {
   "id": "93bec37a-77cc-4688-87cb-f4b9972c0c80",
-  "uri": "semiorepo://s/93bec37a-77cc-4688-87cb-f4b9972c0c80",
+  "uri": "composerepo://s/93bec37a-77cc-4688-87cb-f4b9972c0c80",
   "contributor": "🧑‍💻ueli",
   "client": "copilot-chat",
   "second": "2026-03-12T13:32:07Z",
@@ -14,7 +14,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 5400,
-            "filePath": "/workspaces/semio/semio/py/semio.py",
+            "filePath": "/workspaces/semio/compose/py/compose.py",
             "startLine": 5268
           },
           "tool_response": "",
@@ -33,14 +33,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚py💻semio🛠️design",
+            "id": "👤compose📚py💻compose🛠️design",
             "loc": 18
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚py💻semio📌5268📌5400"
+          "👤compose📚py💻compose📌5268📌5400"
         ],
         "second": "🎆26🌙03☀️12⏰13⌚32⏱️07",
         "session": "⚪93bec37a77cc468887cbf4b9972c0c80"
@@ -58,7 +58,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/py/*.py",
+            "includePattern": "**/compose/py/*.py",
             "isRegexp": true,
             "query": "^class Author|^class.*Auth|uri.*=.*Field|remoteUrl"
           },
@@ -94,7 +94,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/py/*.py",
+            "includePattern": "**/compose/py/*.py",
             "isRegexp": true,
             "query": "class.*Not.*Found|class.*Invalid"
           },
@@ -130,7 +130,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 5530,
-            "filePath": "/workspaces/semio/semio/py/semio.py",
+            "filePath": "/workspaces/semio/compose/py/compose.py",
             "startLine": 5495
           },
           "tool_use_id": "toolu_017cCGemL8tuzeF1SndGmuFc__vscode-1773321376846",
@@ -149,34 +149,34 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚py💻semio🛠️kitdescriptionfield",
+            "id": "👤compose📚py💻compose🛠️kitdescriptionfield",
             "loc": 7
           },
           {
-            "id": "👤semio📚py💻semio🛠️kiticonfield",
+            "id": "👤compose📚py💻compose🛠️kiticonfield",
             "loc": 7
           },
           {
-            "id": "👤semio📚py💻semio🛠️kitimagefield",
+            "id": "👤compose📚py💻compose🛠️kitimagefield",
             "loc": 7
           },
           {
-            "id": "👤semio📚py💻semio🛠️kitnamefield",
+            "id": "👤compose📚py💻compose🛠️kitnamefield",
             "loc": 7
           },
           {
-            "id": "👤semio📚py💻semio🛠️kitpreviewfield",
+            "id": "👤compose📚py💻compose🛠️kitpreviewfield",
             "loc": 1
           },
           {
-            "id": "👤semio📚py💻semio🛠️kiturifield",
+            "id": "👤compose📚py💻compose🛠️kiturifield",
             "loc": 7
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚py💻semio📌5495📌5530"
+          "👤compose📚py💻compose📌5495📌5530"
         ],
         "second": "🎆26🌙03☀️12⏰13⌚32⏱️11",
         "session": "⚪93bec37a77cc468887cbf4b9972c0c80"
@@ -194,7 +194,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/py/*.py",
+            "includePattern": "**/compose/py/*.py",
             "isRegexp": true,
             "query": "^class Author|^class.*Auth|uri.*=.*Field|remoteUrl"
           },
@@ -230,7 +230,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/py/*.py",
+            "includePattern": "**/compose/py/*.py",
             "isRegexp": true,
             "query": "class.*Not.*Found|class.*Invalid"
           },
@@ -266,7 +266,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 5530,
-            "filePath": "/workspaces/semio/semio/py/semio.py",
+            "filePath": "/workspaces/semio/compose/py/compose.py",
             "startLine": 5495
           },
           "tool_response": "",
@@ -285,34 +285,34 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚py💻semio🛠️kitdescriptionfield",
+            "id": "👤compose📚py💻compose🛠️kitdescriptionfield",
             "loc": 7
           },
           {
-            "id": "👤semio📚py💻semio🛠️kiticonfield",
+            "id": "👤compose📚py💻compose🛠️kiticonfield",
             "loc": 7
           },
           {
-            "id": "👤semio📚py💻semio🛠️kitimagefield",
+            "id": "👤compose📚py💻compose🛠️kitimagefield",
             "loc": 7
           },
           {
-            "id": "👤semio📚py💻semio🛠️kitnamefield",
+            "id": "👤compose📚py💻compose🛠️kitnamefield",
             "loc": 7
           },
           {
-            "id": "👤semio📚py💻semio🛠️kitpreviewfield",
+            "id": "👤compose📚py💻compose🛠️kitpreviewfield",
             "loc": 1
           },
           {
-            "id": "👤semio📚py💻semio🛠️kiturifield",
+            "id": "👤compose📚py💻compose🛠️kiturifield",
             "loc": 7
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚py💻semio📌5495📌5530"
+          "👤compose📚py💻compose📌5495📌5530"
         ],
         "second": "🎆26🌙03☀️12⏰13⌚32⏱️22",
         "session": "⚪93bec37a77cc468887cbf4b9972c0c80"
@@ -330,7 +330,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 6350,
-            "filePath": "/workspaces/semio/semio/py/semio.py",
+            "filePath": "/workspaces/semio/compose/py/compose.py",
             "startLine": 6250
           },
           "tool_use_id": "toolu_01NfybgcPUeKVVfyp7QZ9Kbs__vscode-1773321376849",
@@ -349,54 +349,54 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚py💻semio🛠️designnode",
+            "id": "👤compose📚py💻compose🛠️designnode",
             "loc": 5
           },
           {
-            "id": "👤semio📚py💻semio🛠️kitalreadyexists",
+            "id": "👤compose📚py💻compose🛠️kitalreadyexists",
             "loc": 10
           },
           {
-            "id": "👤semio📚py💻semio🛠️kitnotfound",
+            "id": "👤compose📚py💻compose🛠️kitnotfound",
             "loc": 11
           },
           {
-            "id": "👤semio📚py💻semio🛠️kiturinotvalid",
+            "id": "👤compose📚py💻compose🛠️kiturinotvalid",
             "loc": 6
           },
           {
-            "id": "👤semio📚py💻semio🛠️kitzipdoesnotcontainsemiofolder",
+            "id": "👤compose📚py💻compose🛠️kitzipdoesnotcontaincomposefolder",
             "loc": 11
           },
           {
-            "id": "👤semio📚py💻semio🛠️localkituriisnotabsolute",
+            "id": "👤compose📚py💻compose🛠️localkituriisnotabsolute",
             "loc": 11
           },
           {
-            "id": "👤semio📚py💻semio🛠️localkituriisnotdirectory",
+            "id": "👤compose📚py💻compose🛠️localkituriisnotdirectory",
             "loc": 11
           },
           {
-            "id": "👤semio📚py💻semio🛠️localkiturinotvalid",
+            "id": "👤compose📚py💻compose🛠️localkiturinotvalid",
             "loc": 6
           },
           {
-            "id": "👤semio📚py💻semio🛠️nokitassigned",
+            "id": "👤compose📚py💻compose🛠️nokitassigned",
             "loc": 8
           },
           {
-            "id": "👤semio📚py💻semio🛠️nokittodelete",
+            "id": "👤compose📚py💻compose🛠️nokittodelete",
             "loc": 11
           },
           {
-            "id": "👤semio📚py💻semio🛠️onlyremotekitscanbecached",
+            "id": "👤compose📚py💻compose🛠️onlyremotekitscanbecached",
             "loc": 11
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚py💻semio📌6250📌6350"
+          "👤compose📚py💻compose📌6250📌6350"
         ],
         "second": "🎆26🌙03☀️12⏰13⌚32⏱️26",
         "session": "⚪93bec37a77cc468887cbf4b9972c0c80"
@@ -414,7 +414,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 6350,
-            "filePath": "/workspaces/semio/semio/py/semio.py",
+            "filePath": "/workspaces/semio/compose/py/compose.py",
             "startLine": 6250
           },
           "tool_response": "",
@@ -433,54 +433,54 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚py💻semio🛠️designnode",
+            "id": "👤compose📚py💻compose🛠️designnode",
             "loc": 5
           },
           {
-            "id": "👤semio📚py💻semio🛠️kitalreadyexists",
+            "id": "👤compose📚py💻compose🛠️kitalreadyexists",
             "loc": 10
           },
           {
-            "id": "👤semio📚py💻semio🛠️kitnotfound",
+            "id": "👤compose📚py💻compose🛠️kitnotfound",
             "loc": 11
           },
           {
-            "id": "👤semio📚py💻semio🛠️kiturinotvalid",
+            "id": "👤compose📚py💻compose🛠️kiturinotvalid",
             "loc": 6
           },
           {
-            "id": "👤semio📚py💻semio🛠️kitzipdoesnotcontainsemiofolder",
+            "id": "👤compose📚py💻compose🛠️kitzipdoesnotcontaincomposefolder",
             "loc": 11
           },
           {
-            "id": "👤semio📚py💻semio🛠️localkituriisnotabsolute",
+            "id": "👤compose📚py💻compose🛠️localkituriisnotabsolute",
             "loc": 11
           },
           {
-            "id": "👤semio📚py💻semio🛠️localkituriisnotdirectory",
+            "id": "👤compose📚py💻compose🛠️localkituriisnotdirectory",
             "loc": 11
           },
           {
-            "id": "👤semio📚py💻semio🛠️localkiturinotvalid",
+            "id": "👤compose📚py💻compose🛠️localkiturinotvalid",
             "loc": 6
           },
           {
-            "id": "👤semio📚py💻semio🛠️nokitassigned",
+            "id": "👤compose📚py💻compose🛠️nokitassigned",
             "loc": 8
           },
           {
-            "id": "👤semio📚py💻semio🛠️nokittodelete",
+            "id": "👤compose📚py💻compose🛠️nokittodelete",
             "loc": 11
           },
           {
-            "id": "👤semio📚py💻semio🛠️onlyremotekitscanbecached",
+            "id": "👤compose📚py💻compose🛠️onlyremotekitscanbecached",
             "loc": 11
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚py💻semio📌6250📌6350"
+          "👤compose📚py💻compose📌6250📌6350"
         ],
         "second": "🎆26🌙03☀️12⏰13⌚32⏱️33",
         "session": "⚪93bec37a77cc468887cbf4b9972c0c80"
@@ -498,7 +498,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/py/*.py",
+            "includePattern": "**/compose/py/*.py",
             "isRegexp": true,
             "query": "class.*Kit.*Error|class.*Remote|OnlyRemoteKits|KitUri"
           },
@@ -534,7 +534,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 325,
-            "filePath": "/workspaces/semio/semio/py/semio.py",
+            "filePath": "/workspaces/semio/compose/py/compose.py",
             "startLine": 313
           },
           "tool_use_id": "toolu_01HMY2CNMBPSFb3WySorsq4x__vscode-1773321376851",
@@ -553,18 +553,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚py💻semio🛠️notfound",
+            "id": "👤compose📚py💻compose🛠️notfound",
             "loc": 2
           },
           {
-            "id": "👤semio📚py💻semio🛠️remotekitsnotyetsupported",
+            "id": "👤compose📚py💻compose🛠️remotekitsnotyetsupported",
             "loc": 11
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚py💻semio📌313📌325"
+          "👤compose📚py💻compose📌313📌325"
         ],
         "second": "🎆26🌙03☀️12⏰13⌚32⏱️36",
         "session": "⚪93bec37a77cc468887cbf4b9972c0c80"
@@ -582,7 +582,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 325,
-            "filePath": "/workspaces/semio/semio/py/semio.py",
+            "filePath": "/workspaces/semio/compose/py/compose.py",
             "startLine": 313
           },
           "tool_response": "",
@@ -601,18 +601,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚py💻semio🛠️notfound",
+            "id": "👤compose📚py💻compose🛠️notfound",
             "loc": 2
           },
           {
-            "id": "👤semio📚py💻semio🛠️remotekitsnotyetsupported",
+            "id": "👤compose📚py💻compose🛠️remotekitsnotyetsupported",
             "loc": 11
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚py💻semio📌313📌325"
+          "👤compose📚py💻compose📌313📌325"
         ],
         "second": "🎆26🌙03☀️12⏰13⌚32⏱️43",
         "session": "⚪93bec37a77cc468887cbf4b9972c0c80"
@@ -630,7 +630,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/py/semio.py",
+            "includePattern": "**/compose/py/compose.py",
             "isRegexp": true,
             "query": "^__all__"
           },
@@ -666,7 +666,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/py/*.py",
+            "includePattern": "**/compose/py/*.py",
             "isRegexp": true,
             "query": "^class File|^class Folder"
           },
@@ -702,7 +702,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 50,
-            "filePath": "/workspaces/semio/semio/py/semio.py",
+            "filePath": "/workspaces/semio/compose/py/compose.py",
             "startLine": 10345
           },
           "tool_use_id": "toolu_01LMLBW1Z4UVhTiRkMj9zL7j__vscode-1773321376854",
@@ -722,7 +722,7 @@
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚py💻semio📌10345📌50"
+          "👤compose📚py💻compose📌10345📌50"
         ],
         "second": "🎆26🌙03☀️12⏰13⌚32⏱️46",
         "session": "⚪93bec37a77cc468887cbf4b9972c0c80"
@@ -740,7 +740,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/py/*.py",
+            "includePattern": "**/compose/py/*.py",
             "isRegexp": true,
             "query": "^class File|^class Folder"
           },
@@ -776,7 +776,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/py/semio.py",
+            "includePattern": "**/compose/py/compose.py",
             "isRegexp": true,
             "query": "^__all__"
           },
@@ -812,7 +812,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 50,
-            "filePath": "/workspaces/semio/semio/py/semio.py",
+            "filePath": "/workspaces/semio/compose/py/compose.py",
             "startLine": 10345
           },
           "tool_response": "",
@@ -832,7 +832,7 @@
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚py💻semio📌10345📌50"
+          "👤compose📚py💻compose📌10345📌50"
         ],
         "second": "🎆26🌙03☀️12⏰13⌚33⏱️07",
         "session": "⚪93bec37a77cc468887cbf4b9972c0c80"

@@ -216,7 +216,7 @@ Remove model bindings for removed metrics types.
 **Build Status:**
 
 - VS Code extension TypeScript compiles successfully
-- Errors in `semio.ts` are unrelated (Problem type structure changes from separate work)
+- Errors in `compose.ts` are unrelated (Problem type structure changes from separate work)
 
 **All Work Complete:**
 

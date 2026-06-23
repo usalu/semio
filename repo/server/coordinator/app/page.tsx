@@ -7,7 +7,7 @@
 export default function DashboardPage() {
   return (
     <main style={{ padding: "2rem", fontFamily: "system-ui" }}>
-      <h1>semio repo</h1>
+      <h1>compose repo</h1>
       <p>Monorepo management server</p>
       <nav>
         <ul>

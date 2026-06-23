@@ -2,8 +2,8 @@
   "title": "Scene Single Index Consolidation",
   "emoji": "📦",
   "status": "closed",
-  "description": "Consolidate @elements/scene into single react/index.tsx: merge play harness, remove bake scripts and semio plane modules, remove Z-up mesh correction; delete play/index.tsx; vitest single file; update Vite entry.",
-  "summary": "Consolidated @elements/scene into one `index.tsx` at package root: R3F scene, fixture parsing, play harness (former play/index.tsx), and guarded Vite mount. Removed nakagin bake pipeline and semio plane modules; deleted intermediate `nakagin-flat-layout.planes.v1.json`. Dropped per-mesh +90° X correction (GLBs assumed Three-native). Vite `root` is scene dir with `index.html` loading `/index.tsx`; build outputs to `play/dist`. Updated topology imports. Nx `bake` target removed. Vitest + Playwright (port 6045) and `bun ./script.ts build` verified.",
+  "description": "Consolidate @elements/scene into single react/index.tsx: merge play harness, remove bake scripts and compose plane modules, remove Z-up mesh correction; delete play/index.tsx; vitest single file; update Vite entry.",
+  "summary": "Consolidated @elements/scene into one `index.tsx` at package root: R3F scene, fixture parsing, play harness (former play/index.tsx), and guarded Vite mount. Removed nakagin bake pipeline and compose plane modules; deleted intermediate `nakagin-flat-layout.planes.v1.json`. Dropped per-mesh +90° X correction (GLBs assumed Three-native). Vite `root` is scene dir with `index.html` loading `/index.tsx`; build outputs to `play/dist`. Updated topology imports. Nx `bake` target removed. Vitest + Playwright (port 6045) and `bun ./script.ts build` verified.",
   "goal": "🎯r2602",
   "sessions": [
     "⚪16045ec36f6d4f9cb94e065751ec1c3e"

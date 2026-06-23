@@ -148,10 +148,10 @@
       }
     },
     {
-      "name": "🛠️dev📖storybook🏘️semio",
+      "name": "🛠️dev📖storybook🏘️compose",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun run dev:storybook:semio",
+      "command": "bun run dev:storybook:compose",
       "cwd": "${workspaceFolder}",
       "env": {
         "STORYBOOK_PORT": "6010"
@@ -167,10 +167,10 @@
       }
     },
     {
-      "name": "🛠️dev📖storybook🏘️semio🧪algorithms",
+      "name": "🛠️dev📖storybook🏘️compose🧪algorithms",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun run dev:storybook:semio:algorithms",
+      "command": "bun run dev:storybook:compose:algorithms",
       "cwd": "${workspaceFolder}",
       "env": {
         "STORYBOOK_PORT": "6010"
@@ -186,10 +186,10 @@
       }
     },
     {
-      "name": "🛠️dev📖storybook🏘️semio🖱️ui",
+      "name": "🛠️dev📖storybook🏘️compose🖱️ui",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun run dev:storybook:semio:ui",
+      "command": "bun run dev:storybook:compose:ui",
       "cwd": "${workspaceFolder}",
       "env": {
         "STORYBOOK_PORT": "6010"
@@ -205,12 +205,12 @@
       }
     },
     {
-      "name": "🛠️dev🏘️semio🌐hub",
+      "name": "🛠️dev🏘️compose🌐hub",
       "type": "node-terminal",
       "request": "launch",
-      "command": "cargo run -p semio-hub",
+      "command": "cargo run -p compose-hub",
       "env": {
-        "DATABASE_URL": "postgres://semio:semio@localhost:5432/semio",
+        "DATABASE_URL": "postgres://compose:compose@localhost:5432/compose",
         "RUST_LOG": "info",
         "PORT": "8080"
       },
@@ -223,10 +223,10 @@
       }
     },
     {
-      "name": "🛠️dev🏘️semio📐3dm",
+      "name": "🛠️dev🏘️compose📐3dm",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx dev @semio/3dm-ui",
+      "command": "bun nx dev @compose/3dm-ui",
       "isBackground": true,
       "problemMatcher": {
         "owner": "custom",
@@ -258,7 +258,7 @@
       }
     },
     {
-      "name": "🛠️dev🏘️semio🖱️desktop",
+      "name": "🛠️dev🏘️compose🖱️desktop",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev",
@@ -269,7 +269,7 @@
       }
     },
     {
-      "name": "🛠️dev🏘️semio⚙️engine🤖mcp",
+      "name": "🛠️dev🏘️compose⚙️engine🤖mcp",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun ./script.ts dev mcp engine",
@@ -305,10 +305,10 @@
       }
     },
     {
-      "name": "🛠️dev🏘️semio✍️sketchpad🎛️play",
+      "name": "🛠️dev🏘️compose✍️sketchpad🎛️play",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio/play:dev",
+      "command": "bun nx run @compose/play:dev",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -321,10 +321,10 @@
       }
     },
     {
-      "name": "🛠️dev🏘️semio🧮query🧪test",
+      "name": "🛠️dev🏘️compose🧮query🧪test",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio/query:test",
+      "command": "bun nx run @compose/query:test",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -376,10 +376,10 @@
       }
     },
     {
-      "name": "🛠️dev🏘️semio🧮query🦀build",
+      "name": "🛠️dev🏘️compose🧮query🦀build",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio/query:build",
+      "command": "bun nx run @compose/query:build",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -387,7 +387,7 @@
       }
     },
     {
-      "name": "🛠️dev🏘️semio🧮query🌐wasm",
+      "name": "🛠️dev🏘️compose🧮query🌐wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun ./script.ts query wasm",
@@ -398,13 +398,13 @@
       }
     },
     {
-      "name": "🛠️dev🏘️semio🏪store📊graphiql",
+      "name": "🛠️dev🏘️compose🏪store📊graphiql",
       "type": "node-terminal",
       "request": "launch",
-      "command": "cargo run -p semio-store",
+      "command": "cargo run -p compose-store",
       "env": {
         "RUST_LOG": "info",
-        "SEMIO_STORE_PORT": "4010"
+        "COMPOSE_STORE_PORT": "4010"
       },
       "cwd": "${workspaceFolder}",
       "presentation": {
@@ -418,10 +418,10 @@
       }
     },
     {
-      "name": "🛠️dev🏘️semio🧪fixtures🔄metabolism-light",
+      "name": "🛠️dev🏘️compose🧪fixtures🔄metabolism-light",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio/fixture:regenerate-metabolism-light",
+      "command": "bun nx run @compose/fixture:regenerate-metabolism-light",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -429,10 +429,10 @@
       }
     },
     {
-      "name": "🛠️dev🏘️semio✍️sketchpad",
+      "name": "🛠️dev🏘️compose✍️sketchpad",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx dev @semio/sketchpad",
+      "command": "bun nx dev @compose/sketchpad",
       "env": {
         "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.nx/workspace-data-terminal"
       },
@@ -465,14 +465,14 @@
       }
     },
     {
-      "name": "🛠️dev🏘️semio🎗️vscode",
+      "name": "🛠️dev🏘️compose🎗️vscode",
       "type": "extensionHost",
       "request": "launch",
       "args": [
-        "--extensionDevelopmentPath=${workspaceFolder}/semio/vscode"
+        "--extensionDevelopmentPath=${workspaceFolder}/compose/vscode"
       ],
       "outFiles": [
-        "${workspaceFolder}/semio/vscode/out/**/*.js"
+        "${workspaceFolder}/compose/vscode/out/**/*.js"
       ],
       "presentation": {
         "group": "3_dev",
@@ -480,10 +480,10 @@
       }
     },
     {
-      "name": "🛠️dev🏘️semio🎗️vscodeintegrated",
+      "name": "🛠️dev🏘️compose🎗️vscodeintegrated",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx dev @semio/vscode",
+      "command": "bun nx dev @compose/vscode",
       "isBackground": true,
       "problemMatcher": {
         "owner": "typescript",
@@ -1312,7 +1312,7 @@
       }
     },
     {
-      "name": "📦build🏘️semio📐3dm",
+      "name": "📦build🏘️compose📐3dm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run build -- 3dm",
@@ -1378,7 +1378,7 @@
       }
     },
     {
-      "name": "📦build🏘️semio🏪assets",
+      "name": "📦build🏘️compose🏪assets",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run build -- assets",
@@ -1389,7 +1389,7 @@
       }
     },
     {
-      "name": "📦build🏘️semio🖱️desktop",
+      "name": "📦build🏘️compose🖱️desktop",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run build -- desktop",
@@ -1400,7 +1400,7 @@
       }
     },
     {
-      "name": "📦build🏘️semio⚙️engine",
+      "name": "📦build🏘️compose⚙️engine",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run build -- engine",
@@ -1411,10 +1411,10 @@
       }
     },
     {
-      "name": "📦build🏘️semio🔗graphql",
+      "name": "📦build🏘️compose🔗graphql",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run semio/graphql:build",
+      "command": "bun nx run compose/graphql:build",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
@@ -1422,7 +1422,7 @@
       }
     },
     {
-      "name": "📦build🏘️semio✍️sketchpad",
+      "name": "📦build🏘️compose✍️sketchpad",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run build -- sites",
@@ -1501,7 +1501,7 @@
     // #endregion
     // #region ⬆️ Publish
     {
-      "name": "⬆️publish🏘️semio🖱️desktop",
+      "name": "⬆️publish🏘️compose🖱️desktop",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run publish -- desktop",
@@ -1512,7 +1512,7 @@
       }
     },
     {
-      "name": "⬆️publish🏘️semio✍️sketchpad🎛️play",
+      "name": "⬆️publish🏘️compose✍️sketchpad🎛️play",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run publish -- play",
@@ -1523,7 +1523,7 @@
       }
     },
     {
-      "name": "⬆️publish🏘️semio✍️sketchpad",
+      "name": "⬆️publish🏘️compose✍️sketchpad",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run publish -- sketchpad",
@@ -1534,7 +1534,7 @@
       }
     },
     {
-      "name": "⬆️publish🏘️semio✍️sketchpad📖docs",
+      "name": "⬆️publish🏘️compose✍️sketchpad📖docs",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run publish -- docs",

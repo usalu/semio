@@ -1,7 +1,7 @@
 /** @emoji 🔄 Wrap brep refs/records in export namespace kernelGeometry in core/index.ts. */
 import { readFileSync, writeFileSync } from "node:fs";
 
-const path = "c:/git/semio/spatial/js/core/index.ts";
+const path = "c:/git/compose/spatial/js/core/index.ts";
 let s = readFileSync(path, "utf8");
 
 if (!s.includes("export namespace kernelGeometry")) {

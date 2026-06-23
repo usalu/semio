@@ -1,5 +1,5 @@
 import { readFileSync } from "fs";
-const kitRaw = JSON.parse(readFileSync("/workspaces/semio/semio/assets/semio/kit_metabolism.json", "utf-8"));
+const kitRaw = JSON.parse(readFileSync("/workspaces/semio/compose/assets/compose/kit_metabolism.json", "utf-8"));
 
 function showEntity(name: string, entity: any) {
   console.log(`\n=== ${name} ===`);

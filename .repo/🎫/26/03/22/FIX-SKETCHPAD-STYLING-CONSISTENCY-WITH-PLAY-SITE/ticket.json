@@ -2,8 +2,8 @@
   "title": "Fix Sketchpad Styling Consistency With Play Site",
   "emoji": "🔧",
   "status": "closed",
-  "description": "semio sites play is styled properly but dev semio sketchpad looks terrible. Make sure sketchpad always looks consistent by investigating styling differences between play and sketchpad.",
-  "summary": "Added missing Tailwind CSS v4 @source directives to sketchpad/globals.css and desktop/globals.css. Without these directives, Tailwind was not scanning elements/ui, semio/ui, semio/js component files for class names, resulting in missing generated CSS. Now both sketchpad and play produce nearly identical CSS output (~184-185KB).",
+  "description": "compose sites play is styled properly but dev compose sketchpad looks terrible. Make sure sketchpad always looks consistent by investigating styling differences between play and sketchpad.",
+  "summary": "Added missing Tailwind CSS v4 @source directives to sketchpad/globals.css and desktop/globals.css. Without these directives, Tailwind was not scanning elements/ui, compose/ui, compose/js component files for class names, resulting in missing generated CSS. Now both sketchpad and play produce nearly identical CSS output (~184-185KB).",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1013"
   },

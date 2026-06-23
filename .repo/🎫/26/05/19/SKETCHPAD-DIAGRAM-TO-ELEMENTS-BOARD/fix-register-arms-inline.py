@@ -1,6 +1,6 @@
 from pathlib import Path
 
-p = Path(r"c:\git\semio\semio\client\lib\rs\lib.rs")
+p = Path(r"c:\git\compose\compose\client\lib\rs\lib.rs")
 text = p.read_text(encoding="utf-8")
 
 text = text.replace("#[macro_export]\n    #[macro_export]", "#[macro_export]")

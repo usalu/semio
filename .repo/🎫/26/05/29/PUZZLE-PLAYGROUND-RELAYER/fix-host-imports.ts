@@ -94,7 +94,7 @@ const {
 
 `;
 
-const path2d = "c:/git/semio/puzzle/2d/play/host.tsx";
+const path2d = "c:/git/compose/puzzle/2d/play/host.tsx";
 let h2 = readFileSync(path2d, "utf8");
 h2 = h2.replace(/^\/\*\* @emoji 🛝 Board play[\s\S]*?\/\/ #region 🛝PlayHost\n/, "");
 writeFileSync(path2d, boardHostHeader + h2);
@@ -159,7 +159,7 @@ import {
 
 `;
 
-const path3d = "c:/git/semio/puzzle/3d/play/host.tsx";
+const path3d = "c:/git/compose/puzzle/3d/play/host.tsx";
 let h3 = readFileSync(path3d, "utf8");
 h3 = h3.replace(/^\/\*\* @emoji 🛝 Scene play[\s\S]*?\/\/ #endregion 🧲Header\n\n/, "");
 h3 = h3.replace(/^\/\*\* @emoji 🛝 Scene play[\s\S]*?\/\/ #region 🛝PlayHost\n/, "");

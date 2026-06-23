@@ -12,7 +12,7 @@ QUERY = (
 
 assert QUERY.count("{") == QUERY.count("}"), (QUERY.count("{"), QUERY.count("}"))
 
-path = Path(r"c:\git\semio\semio\assets\semio\kit-store.comprehensive.semio.json")
+path = Path(r"c:\git\compose\compose\assets\compose\kit-store.comprehensive.compose.json")
 fixture = json.loads(path.read_text(encoding="utf-8"))
 for step in fixture["steps"]:
     if step.get("id") == "read-after-writes":

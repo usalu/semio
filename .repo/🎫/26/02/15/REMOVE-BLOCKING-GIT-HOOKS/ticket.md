@@ -10,7 +10,7 @@ Migrated monorepo pre-commit to pre-commit.com and validated install/run.
 
 ## Changes
 
-- Added root `.pre-commit-config.yaml` with local hook `semio-monorepo-preflight` that runs `./repo/cli/cli hook git.commit.starting`.
+- Added root `.pre-commit-config.yaml` with local hook `compose-monorepo-preflight` that runs `./repo/cli/cli hook git.commit.starting`.
 - Updated `package.json` scripts:
 - `pre-commit` now runs `uv run --group dev pre-commit run --all-files`.
 - `pre-commit:install` now runs `uv run --group dev pre-commit install --install-hooks`.

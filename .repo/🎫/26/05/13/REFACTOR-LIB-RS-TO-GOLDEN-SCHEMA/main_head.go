@@ -656,7 +656,7 @@ func NewRootWithConfig(factory EngineFactory) (*cobra.Command, *Config) {
 	config := Config{}
 	root := &cobra.Command{
 		Use:           "repo",
-		Short:         "Monorepo CLI for Semio",
+		Short:         "Monorepo CLI for Compose",
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
@@ -788,13 +788,13 @@ func authCommand(config *Config) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			addr := getServerAddr()
 			if addr == "" {
-				fmt.Println("Server: not configured (set SEMIO_SERVER_ADDR)")
+				fmt.Println("Server: not configured (set COMPOSE_SERVER_ADDR)")
 				return nil
 			}
 			fmt.Printf("Server: %s\n", addr)
 			token := getServerToken()
 			if token == "" {
-				fmt.Println("Token: not set (set SEMIO_SERVER_TOKEN)")
+				fmt.Println("Token: not set (set COMPOSE_SERVER_TOKEN)")
 				return nil
 			}
 			fmt.Println("Token: configured")
@@ -5241,7 +5241,7 @@ func renameCommand(factory EngineFactory, config *Config) *cobra.Command {
 	return &cobra.Command{
 		Use:   "rename <old> <new> [scope]",
 		Short: "Rename a token across non-gitignored files (all case variants)",
-		Long:  "Rewrite UPPER, Title and lower case variants of <old> to <new> in every non-gitignored file's contents and filenames (including folder names) under the optional scope directory (default: repo root). Example: repo rename model representation semio.",
+		Long:  "Rewrite UPPER, Title and lower case variants of <old> to <new> in every non-gitignored file's contents and filenames (including folder names) under the optional scope directory (default: repo root). Example: repo rename model representation compose.",
 		Args:  cobra.RangeArgs(2, 3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			_, err := factory(*config)
@@ -6976,18 +6976,18 @@ func computeCompositeFingerprint(repoRoot string) (fp string, meta *cacheMeta) {
 	for _, path := range paths {
 		subWork = append(subWork, path+"="+meta.SubmoduleHeads[path]+":"+meta.SubmoduleDirty[path])
 	}
-	semioMetaHash := hashSemioMetaState(repoRoot)
+	composeMetaHash := hashComposeMetaState(repoRoot)
 	meta.SubWorkingHash = hashString(strings.Join(subWork, "|"))
-	fp = hashString(meta.SuperHead + meta.SuperDirtyHash + meta.PointersHash + meta.SubWorkingHash + semioMetaHash + strconv.Itoa(cacheSchemaVersion))
+	fp = hashString(meta.SuperHead + meta.SuperDirtyHash + meta.PointersHash + meta.SubWorkingHash + composeMetaHash + strconv.Itoa(cacheSchemaVersion))
 	meta.Fingerprint = fp
 	return fp, meta
 }
 
-// ÔÖ╗´©ÅhashSemioMetaState MUST produce a stable hash for semio metadata state changes.
-// hashSemioMetaState computes and returns a hash for semio metadata content relevant to tree cache invalidation.
+// ÔÖ╗´©ÅhashComposeMetaState MUST produce a stable hash for compose metadata state changes.
+// hashComposeMetaState computes and returns a hash for compose metadata content relevant to tree cache invalidation.
 // Only structural changes (new goals, tickets, policies, drafts) invalidate the cache.
 // Ô£Å´©ÅEphemeral data (agent session logs, ticket agent tracking updates) is excluded.
-func hashSemioMetaState(repoRoot string) string {
+func hashComposeMetaState(repoRoot string) string {
 	metaRoot := filepath.Join(repoRoot, ".repo")
 	if !FileExists(metaRoot) {
 		return ""
@@ -9980,7 +9980,7 @@ func (e BundleKind) String() string {
 // ­ƒƒÑDeriveTechnologyKind infers and returns the technology kind from the given input.
 func DeriveTechnologyKind(name string) TechnologyKind {
 	switch name {
-	case "semio":
+	case "compose":
 		return TechnologyKindUser
 	case "repo":
 		return TechnologyKindInfrastructure
@@ -10140,7 +10140,7 @@ func normalizeBundleLabel(name string) string {
 	if name == "repo" {
 		return "repo/go"
 	}
-	return "semio/" + name
+	return "compose/" + name
 }
 
 // ­ƒƒñnormalizeBundleID holds the data fields for a normalizeBundleID record.
@@ -10156,8 +10156,8 @@ func bundlePathPrefix(name string) string {
 	if name == "repo" {
 		return ""
 	}
-	if strings.HasPrefix(name, "semio/") {
-		return strings.TrimPrefix(name, "semio/") + "/"
+	if strings.HasPrefix(name, "compose/") {
+		return strings.TrimPrefix(name, "compose/") + "/"
 	}
 	return name + "/"
 }
@@ -10241,7 +10241,7 @@ func IsGeneratedFolder(path string) bool {
 	}
 	generatedFolders := []string{
 		"js/vscode/generated",
-		"js/semio/generated",
+		"js/compose/generated",
 	}
 	normalized := filepath.ToSlash(path)
 	for _, gen := range generatedFolders {
@@ -10949,19 +10949,19 @@ func (t *Ticket) UnmarshalJSON(data []byte) error {
 	}
 
 	if t.Goal != "" && strings.Contains(t.Goal, emojiText(EmojiGoal)) {
-		t.Goal = semioIDToGoalPath(t.Goal)
+		t.Goal = composeIDToGoalPath(t.Goal)
 	}
 
 	contributorPrefix := emojiText(EmojiContributor)
 	for i := range t.Interactions {
 		if strings.HasPrefix(t.Interactions[i].Author, contributorPrefix) {
-			t.Interactions[i].Author = semioIDToContributorGithub(t.Interactions[i].Author)
+			t.Interactions[i].Author = composeIDToContributorGithub(t.Interactions[i].Author)
 		}
 	}
 
 	for i := range t.Agents {
 		if strings.HasPrefix(t.Agents[i].Contributor, contributorPrefix) {
-			t.Agents[i].Contributor = semioIDToContributorGithub(t.Agents[i].Contributor)
+			t.Agents[i].Contributor = composeIDToContributorGithub(t.Agents[i].Contributor)
 		}
 	}
 	return nil
@@ -10973,7 +10973,7 @@ func (t Ticket) MarshalJSON() ([]byte, error) {
 	alias := TicketAlias(t)
 
 	if alias.Goal != "" && !strings.Contains(alias.Goal, emojiText(EmojiGoal)) {
-		alias.Goal = goalPathToSemioID(alias.Goal)
+		alias.Goal = goalPathToComposeID(alias.Goal)
 	}
 	for i := range alias.Sessions {
 		alias.Sessions[i] = normalizeTicketSessionID(alias.Sessions[i])
@@ -13644,7 +13644,7 @@ func (l *BaseLanguage) ExtraOrphanDefinitions(lines []string) []DefinitionRange 
 
 // ­ƒƒ¿SkipDirectives MUST operate on the BaseLanguage receiver and return consistent results.
 func (l *BaseLanguage) SkipDirectives() []string {
-	builtIn := []string{"TODO", "semio-ignore-"}
+	builtIn := []string{"TODO", "compose-ignore-"}
 	return append(builtIn, l.skipDirectives...)
 }
 
@@ -14181,7 +14181,7 @@ func (l *TypeScriptLanguage) ScanComments(ctx *PolicyContext, file, content stri
 				if matched, _ := l.PolicySectionEndMatch(trimmed); matched {
 					break
 				}
-				if strings.HasPrefix(trimmed, "// eslint-") || strings.HasPrefix(trimmed, "// @ts-") || strings.HasPrefix(trimmed, "// noinspection") || strings.HasPrefix(trimmed, "// TODO") || strings.HasPrefix(trimmed, "// semio-ignore-") {
+				if strings.HasPrefix(trimmed, "// eslint-") || strings.HasPrefix(trimmed, "// @ts-") || strings.HasPrefix(trimmed, "// noinspection") || strings.HasPrefix(trimmed, "// TODO") || strings.HasPrefix(trimmed, "// compose-ignore-") {
 					if strings.HasPrefix(trimmed, "// TODO") {
 						scanState.InTodoBlock = true
 					}
@@ -15552,7 +15552,7 @@ func (g Goal) MarshalJSON() ([]byte, error) {
 	alias := GoalAlias(g)
 
 	if alias.Parent != "" && !strings.Contains(alias.Parent, emojiText(EmojiGoal)) {
-		alias.Parent = goalPathToSemioID(alias.Parent)
+		alias.Parent = goalPathToComposeID(alias.Parent)
 	}
 	return json.Marshal(alias)
 }
@@ -15641,9 +15641,9 @@ const (
 	BreachSystemDevcontainerVscodeExtensionsOutside    Statute = "system/devcontainer/vscode/extensions-outside-devcontainer"
 	BreachFolderIllegalEmpty                           Statute = "folder/illegal/empty"
 	BreachFileIllegalUseGodfile                        Statute = "file/illegal/use-godfile"
-	BreachSemioNoUiDependency                          Statute = "semio/import/no-ui-dependency"
-	BreachSemioDescriptionMissingEmoji                 Statute = "semio/description/missing-emoji"
-	BreachSemioDescriptionEmojiNotUnique               Statute = "semio/description/emoji-not-unique"
+	BreachComposeNoUiDependency                          Statute = "compose/import/no-ui-dependency"
+	BreachComposeDescriptionMissingEmoji                 Statute = "compose/description/missing-emoji"
+	BreachComposeDescriptionEmojiNotUnique               Statute = "compose/description/emoji-not-unique"
 	BreachCodeRustRegionComment                        Statute = "code/rust/region-comment-instead-of-mod"
 )
 
@@ -16033,22 +16033,22 @@ var statuteInfoTable = map[Statute]StatuteMeta{
 		Solution:    "Add the file to .repo/files.json or remove it",
 		Autofixable: false,
 	},
-	BreachSemioNoUiDependency: {
-		Kind:        BreachSemioNoUiDependency,
+	BreachComposeNoUiDependency: {
+		Kind:        BreachComposeNoUiDependency,
 		Priority:    BreachPriorityHigh,
-		Reason:      "semio.* files must be self-contained and not import from UI dependencies",
+		Reason:      "compose.* files must be self-contained and not import from UI dependencies",
 		Solution:    "Remove the UI dependency import and use only non-UI alternatives",
 		Autofixable: false,
 	},
-	BreachSemioDescriptionMissingEmoji: {
-		Kind:        BreachSemioDescriptionMissingEmoji,
+	BreachComposeDescriptionMissingEmoji: {
+		Kind:        BreachComposeDescriptionMissingEmoji,
 		Priority:    BreachPriorityMedium,
 		Reason:      "Every entity description must start with an emoji as the first symbol",
 		Solution:    "Add a leading emoji to the description",
 		Autofixable: false,
 	},
-	BreachSemioDescriptionEmojiNotUnique: {
-		Kind:        BreachSemioDescriptionEmojiNotUnique,
+	BreachComposeDescriptionEmojiNotUnique: {
+		Kind:        BreachComposeDescriptionEmojiNotUnique,
 		Priority:    BreachPriorityMedium,
 		Reason:      "Every entity must have a unique emoji among its siblings",
 		Solution:    "Change the leading emoji to one that is not already used by a sibling entity",
@@ -17343,8 +17343,8 @@ func WalkDir(dir string, fn func(path string, isDir bool) error) error {
 // ­ƒö¡ParseScope MUST return an error when the input is malformed.
 // ­ƒö┤ParseScope parses the input and returns the scope result.
 func ParseScope(raw string) Scope {
-	if raw == "" || raw == "semio" {
-		return Scope{Raw: "semio", Kind: ScopeRepo}
+	if raw == "" || raw == "compose" {
+		return Scope{Raw: "compose", Kind: ScopeRepo}
 	}
 	if strings.Contains(raw, "┬º") {
 		parts := strings.SplitN(raw, "┬º", 2)
@@ -17359,7 +17359,7 @@ func ParseScope(raw string) Scope {
 	if codeExtensions[ext] {
 		return Scope{Raw: raw, Kind: ScopeFile, FilePath: raw}
 	}
-	if strings.HasPrefix(raw, "semio/") {
+	if strings.HasPrefix(raw, "compose/") {
 		return Scope{Raw: raw, Kind: ScopeTechnology, TechnologyName: raw}
 	}
 	if strings.HasSuffix(raw, "/") {
@@ -18336,9 +18336,9 @@ var policies = []PolicyDef{
 		Run: filePolicy,
 	},
 	{
-		ID:          "semio",
-		Name:        "Semio",
-		Description: "Validates that semio.* files are self-contained and do not import UI dependencies",
+		ID:          "compose",
+		Name:        "Compose",
+		Description: "Validates that compose.* files are self-contained and do not import UI dependencies",
 		Scopes:      []string{"**/*.{ts,tsx}"},
 		Priority:    BreachPriorityHigh,
 		Groups: []Territory{
@@ -18348,15 +18348,15 @@ var policies = []PolicyDef{
 				Groups: []Territory{
 					{
 						Name:        "No Ui Dependency",
-						Description: "semio.* files must not import from UI dependencies",
+						Description: "compose.* files must not import from UI dependencies",
 						Kinds: []Statute{
-							BreachSemioNoUiDependency,
+							BreachComposeNoUiDependency,
 						},
 					},
 				},
 			},
 		},
-		Run: semioPolicy,
+		Run: composePolicy,
 	},
 }
 
@@ -18513,7 +18513,7 @@ func (ctx *PolicyContext) Sections(filePath string) []Section {
 func ParseIgnoreDirectives(content string) map[int][]string {
 	result := make(map[int][]string)
 	lines := strings.Split(content, "\n")
-	ignorePrefix := "// semio-ignore-"
+	ignorePrefix := "// compose-ignore-"
 	for i, line := range lines {
 		trimmed := strings.TrimSpace(line)
 		if strings.HasPrefix(trimmed, ignorePrefix) {
@@ -18959,7 +18959,7 @@ func matchesScope(policyScopes []string, targetScope Scope) bool {
 		if pattern == "*" || pattern == "**/*" {
 			return true
 		}
-		if strings.HasPrefix(pattern, "semio") {
+		if strings.HasPrefix(pattern, "compose") {
 			if targetScope.Kind == ScopeRepo || (targetScope.Kind == ScopeTechnology && strings.HasPrefix(targetScope.TechnologyName, pattern)) {
 				return true
 			}
@@ -20339,8 +20339,8 @@ func filePolicy(ctx *PolicyContext) []Breach {
 	return breachs
 }
 
-// ­ƒƒósemioPolicy validates that semio.* files do not import UI dependencies.
-func semioPolicy(ctx *PolicyContext) []Breach {
+// ­ƒƒócomposePolicy validates that compose.* files do not import UI dependencies.
+func composePolicy(ctx *PolicyContext) []Breach {
 	var breachs []Breach
 	files, err := ctx.Files()
 	if err != nil {
@@ -20358,7 +20358,7 @@ func semioPolicy(ctx *PolicyContext) []Breach {
 	}
 	for _, file := range files {
 		baseName := filepath.Base(file)
-		if !strings.HasPrefix(baseName, "semio.") {
+		if !strings.HasPrefix(baseName, "compose.") {
 			continue
 		}
 		if !strings.HasSuffix(file, ".ts") && !strings.HasSuffix(file, ".tsx") {
@@ -20378,8 +20378,8 @@ func semioPolicy(ctx *PolicyContext) []Breach {
 				importPattern := fmt.Sprintf(`from\s+['"].*%s`, regexp.QuoteMeta(pkg))
 				if matched, _ := regexp.MatchString(importPattern, line); matched {
 					breachs = append(breachs, ctx.CreateBreach(
-						fmt.Sprintf("UI dependency '%s' is not allowed in semio.* files", pkg),
-						BreachSemioNoUiDependency,
+						fmt.Sprintf("UI dependency '%s' is not allowed in compose.* files", pkg),
+						BreachComposeNoUiDependency,
 						file, lineNumber, 0, strings.TrimSpace(line)))
 					break
 				}
@@ -21120,8 +21120,8 @@ func BuildCodebaseBreachs(ctx *CodebaseContext) []CodebaseBreach {
 // ­ƒî│BuildCodebaseTree constructs and returns the codebase tree structure.
 func BuildCodebaseTree(ctx *CodebaseContext, bundles []CodebaseBundle, files []CodebaseFile, sections []CodebaseSection, definitions []CodebaseDefinition) map[string]*CbTreeNode {
 	tree := make(map[string]*CbTreeNode)
-	tree["semio"] = &CbTreeNode{Kind: CbTreeNodeRepo, Children: make(map[string]*CbTreeNode)}
-	root := tree["semio"]
+	tree["compose"] = &CbTreeNode{Kind: CbTreeNodeRepo, Children: make(map[string]*CbTreeNode)}
+	root := tree["compose"]
 
 	for _, bundle := range bundles {
 		root.Children[bundle.ID] = &CbTreeNode{Kind: CbTreeNodeBundle, Children: make(map[string]*CbTreeNode)}
@@ -22297,7 +22297,7 @@ func ghCreateRepoLabel(name string) error {
 	if strings.TrimSpace(name) == "" {
 		return fmt.Errorf("label name is required")
 	}
-	args := []string{"label", "create", name, "--color", "1d76db", "--description", "Semio technology or bundle"}
+	args := []string{"label", "create", name, "--color", "1d76db", "--description", "Compose technology or bundle"}
 	_, stderr, exitCode := ExecCommand("gh", args, "")
 	if exitCode != 0 {
 		return fmt.Errorf("gh label create failed: %s", strings.TrimSpace(stderr))
@@ -23533,7 +23533,7 @@ func StreamFolders(ctx context.Context, scope string, out chan<- Folder, opts ..
 	}
 
 	root := rootDir
-	if bundleName, found := strings.CutPrefix(scope, "semio/"); found {
+	if bundleName, found := strings.CutPrefix(scope, "compose/"); found {
 		bundles := GetTechnologies()
 		for _, b := range bundles {
 			if b.Name == bundleName || normalizeBundleLabel(b.Name) == bundleName {
@@ -23541,7 +23541,7 @@ func StreamFolders(ctx context.Context, scope string, out chan<- Folder, opts ..
 				break
 			}
 		}
-	} else if scope != "" && scope != "semio" {
+	} else if scope != "" && scope != "compose" {
 		if filepath.IsAbs(scope) {
 			root = scope
 		} else {
@@ -23641,7 +23641,7 @@ func StreamFiles(ctx context.Context, scope string, out chan<- File, opts ...Str
 	}
 
 	root := rootDir
-	if scope != "" && scope != "semio" {
+	if scope != "" && scope != "compose" {
 		bundles := GetTechnologies()
 		matched := false
 		for _, b := range bundles {
@@ -27534,7 +27534,7 @@ func (c *repoContext) GetStatutes() []*StatuteMeta {
 // ­ƒö¼Analyze MUST return a non-nil error when the operation fails.
 // ÔÜ¬Analyze performs the analyze operation on the repo context.
 func (c *repoContext) Analyze(scope *string) (*AnalyzeResult, error) {
-	scopeStr := "semio"
+	scopeStr := "compose"
 	if scope != nil {
 		scopeStr = *scope
 	}
@@ -27555,7 +27555,7 @@ func (c *repoContext) Analyze(scope *string) (*AnalyzeResult, error) {
 // ­ƒöºFix MUST return a non-nil error when the operation fails.
 // ­ƒöºFix performs the fix operation on the repo context.
 func (c *repoContext) Fix(scope *string) (*FixResult, error) {
-	scopeStr := "semio"
+	scopeStr := "compose"
 	if scope != nil {
 		scopeStr = *scope
 	}
@@ -32688,8 +32688,8 @@ func (r *queryResolver) Repo(ctx context.Context) (*Repo, error) {
 	}
 
 	return &Repo{
-		ID:           "repo:semio",
-		Name:         "semio",
+		ID:           "repo:compose",
+		Name:         "compose",
 		Path:         r.RootDir,
 		Technologies: technologyValues,
 		Bundles:      bundleValues,
@@ -32707,12 +32707,12 @@ func (r *queryResolver) Technologies(ctx context.Context, filter *FilterInput) (
 	for _, b := range allBundles {
 		name := normalizeBundleLabel(b.Name)
 		parts := strings.Split(name, "/")
-		projName := "semio"
+		projName := "compose"
 		if len(parts) > 1 && strings.HasPrefix(parts[0], "@") {
 			projName = strings.TrimPrefix(parts[0], "@")
 		} else if strings.HasPrefix(name, "@") {
-			if name == "semio" {
-				projName = "semio"
+			if name == "compose" {
+				projName = "compose"
 			}
 			if name == "@coda" {
 				projName = "coda"
@@ -33920,7 +33920,7 @@ func analyze(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolRes
 		return nil, err
 	}
 	if !ok {
-		scope = "semio"
+		scope = "compose"
 	}
 	result := ToolAnalyze(scope, nil)
 	return toolResultToMCP(result)
@@ -33933,7 +33933,7 @@ func fix(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult,
 		return nil, err
 	}
 	if !ok {
-		scope = "semio"
+		scope = "compose"
 	}
 	result := ToolFix(scope)
 	return toolResultToMCP(result)
@@ -33951,7 +33951,7 @@ func policyCheck(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToo
 		return nil, err
 	}
 	if !ok {
-		scope = "semio"
+		scope = "compose"
 	}
 	result := ToolPolicyCheck(id, scope)
 	return toolResultToMCP(result)
@@ -34870,7 +34870,7 @@ func handleGoalResource(ctx context.Context, request mcp.ReadResourceRequest) ([
 		return nil, fmt.Errorf("invalid goal URI: %s", request.Params.URI)
 	}
 	// Convert emoji goal ID back to goal path
-	goalPath := semioIDToGoalPath(id)
+	goalPath := composeIDToGoalPath(id)
 	goals, err := ListGoals()
 	if err != nil {
 		return nil, err
@@ -36343,7 +36343,7 @@ func ToolPolicyCheck(policyID, scopeRaw string) ToolResult {
 // ­ƒôïToolPolicyBreachList MUST complete the operation successfully.
 func ToolPolicyBreachList(policyID string) ToolResult {
 
-	return ToolAnalyze("semio", []string{policyID})
+	return ToolAnalyze("compose", []string{policyID})
 }
 
 // #endregion ­ƒûï´©ÅMissing Tool Functions
@@ -36388,36 +36388,36 @@ func runBenchmark(cmd *cobra.Command, args []string) error {
 		{
 			Name:    "Typescript",
 			Cmd:     "npx",
-			Args:    []string{"tsx", "semio.benchmark.ts"},
-			Dir:     filepath.Join(rootDir, "js", "semio"),
+			Args:    []string{"tsx", "compose.benchmark.ts"},
+			Dir:     filepath.Join(rootDir, "js", "compose"),
 			Enabled: true,
 		},
 		{
 			Name:    "Python",
 			Cmd:     "uv",
-			Args:    []string{"run", "semio.benchmark.py"},
-			Dir:     filepath.Join(rootDir, "py", "semio"),
+			Args:    []string{"run", "compose.benchmark.py"},
+			Dir:     filepath.Join(rootDir, "py", "compose"),
 			Enabled: true,
 		},
 		{
 			Name:    "Go",
 			Cmd:     "go",
-			Args:    []string{"run", "semio_benchmark.go"},
-			Dir:     filepath.Join(rootDir, "go", "semio"),
+			Args:    []string{"run", "compose_benchmark.go"},
+			Dir:     filepath.Join(rootDir, "go", "compose"),
 			Enabled: true,
 		},
 		{
 			Name:    "C#",
 			Cmd:     "dotnet",
-			Args:    []string{"run", "--technology", "Semio.Benchmark/Semio.Benchmark.csproj", "--configuration", "Release"},
+			Args:    []string{"run", "--technology", "Compose.Benchmark/Compose.Benchmark.csproj", "--configuration", "Release"},
 			Dir:     filepath.Join(rootDir, "net"),
 			Enabled: true,
 		},
 		{
 			Name:    "Rust",
 			Cmd:     "cargo",
-			Args:    []string{"run", "--release", "--bin", "semio-benchmark"},
-			Dir:     filepath.Join(rootDir, "rs", "semio"),
+			Args:    []string{"run", "--release", "--bin", "compose-benchmark"},
+			Dir:     filepath.Join(rootDir, "rs", "compose"),
 			Enabled: true,
 		},
 	}
@@ -38467,7 +38467,7 @@ func mergeCodexConfig(existing string, servers []codexMcpServerConfig) string {
 		serverNames[server.Name] = struct{}{}
 		switch server.Name {
 		case "repo":
-			serverNames["semio-repo"] = struct{}{}
+			serverNames["compose-repo"] = struct{}{}
 		}
 	}
 	base := stripCodexServerBlocks(existing, serverNames)
@@ -38595,11 +38595,11 @@ func generateKiroConfig(repoRoot string) (string, error) {
 	}
 	config := map[string]interface{}{
 		"name":           "repo",
-		"description":    "Interacts with the semio monorepo via repo CLI hooks and MCP tools",
+		"description":    "Interacts with the compose monorepo via repo CLI hooks and MCP tools",
 		"prompt":         "file://../../AGENTS.md",
 		"includeMcpJson": true,
 		"tools":          []string{"*"},
-		"allowedTools":   []string{"@repo", "@semio", "@coda"},
+		"allowedTools":   []string{"@repo", "@compose", "@coda"},
 		"hooks": map[string]interface{}{
 			"agentSpawn": []map[string]interface{}{
 				hook(fmt.Sprintf("%s hook agentSpawn kiro-cli", c)),
@@ -38658,13 +38658,13 @@ type DependabotConfig struct {
 			Versions       []string `yaml:"versions"`
 		} `yaml:"ignore"`
 	} `yaml:"updates"`
-	XSemioConfig struct {
+	XComposeConfig struct {
 		PreserveLocalVersions struct {
 			Npm struct {
 				Pattern string `yaml:"pattern"`
 			} `yaml:"npm"`
 		} `yaml:"preserveLocalVersions"`
-	} `yaml:"x-semio-config"`
+	} `yaml:"x-compose-config"`
 }
 
 // Ô¼øUpdateConfig holds the data fields for a update config record.
@@ -38789,8 +38789,8 @@ func loadUpdateConfig(rootDir string) (*UpdateConfig, error) {
 	config.Paths.Dotnet = []string{}
 
 	config.PreserveLocalVersions.Npm.Pattern = "*"
-	if dependabot.XSemioConfig.PreserveLocalVersions.Npm.Pattern != "" {
-		config.PreserveLocalVersions.Npm.Pattern = dependabot.XSemioConfig.PreserveLocalVersions.Npm.Pattern
+	if dependabot.XComposeConfig.PreserveLocalVersions.Npm.Pattern != "" {
+		config.PreserveLocalVersions.Npm.Pattern = dependabot.XComposeConfig.PreserveLocalVersions.Npm.Pattern
 	}
 
 	for _, update := range dependabot.Updates {
@@ -39051,9 +39051,9 @@ func CopyFile(sourcePath, destPath string) error {
 // #region ÔÜíServer Client
 // HTTP client for communicating with the Next.js repo server. Uses Bearer token auth with API keys.
 
-// ­ƒûÑ´©ÅgetServerAddr returns the server address from SEMIO_SERVER_ADDR env var.
+// ­ƒûÑ´©ÅgetServerAddr returns the server address from COMPOSE_SERVER_ADDR env var.
 func getServerAddr() string {
-	addr := strings.TrimSpace(os.Getenv("SEMIO_SERVER_ADDR"))
+	addr := strings.TrimSpace(os.Getenv("COMPOSE_SERVER_ADDR"))
 	if addr == "" {
 		return ""
 	}
@@ -39063,16 +39063,16 @@ func getServerAddr() string {
 	return strings.TrimSuffix(addr, "/")
 }
 
-// ­ƒÄƒ´©ÅgetServerToken returns the API key from SEMIO_SERVER_TOKEN env var.
+// ­ƒÄƒ´©ÅgetServerToken returns the API key from COMPOSE_SERVER_TOKEN env var.
 func getServerToken() string {
-	return strings.TrimSpace(os.Getenv("SEMIO_SERVER_TOKEN"))
+	return strings.TrimSpace(os.Getenv("COMPOSE_SERVER_TOKEN"))
 }
 
 // ­ƒô¿serverRequest sends an authenticated HTTP request to the server.
 func serverRequest(method, path string, body interface{}) (*http.Response, error) {
 	addr := getServerAddr()
 	if addr == "" {
-		return nil, fmt.Errorf("SEMIO_SERVER_ADDR not set")
+		return nil, fmt.Errorf("COMPOSE_SERVER_ADDR not set")
 	}
 	url := addr + path
 	var reqBody io.Reader
@@ -40694,24 +40694,24 @@ func goalArtifactID(rawGoalID string) string {
 	return result
 }
 
-// Ôø│goalPathToSemioID converts a filesystem goal path (e.g. "AI-OPTIMIZED-REPO/REPO-CLI")
+// Ôø│goalPathToComposeID converts a filesystem goal path (e.g. "AI-OPTIMIZED-REPO/REPO-CLI")
 // ­ƒûè´©Åto the repo emoji ID format (e.g. "­ƒÄ»aioptimizedrepo­ƒÄ»repocli").
-func goalPathToSemioID(goalPath string) string {
+func goalPathToComposeID(goalPath string) string {
 	if goalPath == "" {
 		return ""
 	}
 	return goalArtifactID(goalPath)
 }
 
-// ­ƒøñ´©ÅsemioIDToGoalPath converts a repo emoji goal ID (e.g. "­ƒÄ»aioptimizedrepo­ƒÄ»repocli")
+// ­ƒøñ´©ÅcomposeIDToGoalPath converts a repo emoji goal ID (e.g. "­ƒÄ»aioptimizedrepo­ƒÄ»repocli")
 // back to its filesystem goal path (e.g. "AI-OPTIMIZED-REPO/REPO-CLI") by scanning the
 // ­ƒöægoals directory and matching each segment's Flat() value.
-func semioIDToGoalPath(semioID string) string {
-	if semioID == "" {
+func composeIDToGoalPath(composeID string) string {
+	if composeID == "" {
 		return ""
 	}
 	goalEmoji := emojiText(EmojiGoal)
-	trimmed := semioID
+	trimmed := composeID
 	if strings.HasPrefix(trimmed, goalEmoji) {
 		trimmed = trimmed[len(goalEmoji):]
 	}
@@ -40730,7 +40730,7 @@ func semioIDToGoalPath(semioID string) string {
 		}
 		entries, err := os.ReadDir(currentDir)
 		if err != nil {
-			return semioID
+			return composeID
 		}
 		found := false
 		for _, entry := range entries {
@@ -40742,14 +40742,14 @@ func semioIDToGoalPath(semioID string) string {
 			}
 		}
 		if !found {
-			return semioID
+			return composeID
 		}
 	}
 	return strings.Join(pathParts, "/")
 }
 
-// ­ƒñØcontributorGithubToSemioID converts a contributor identifier (alias or github) to the semio contributor ID format.
-func contributorGithubToSemioID(identifier string) string {
+// ­ƒñØcontributorGithubToComposeID converts a contributor identifier (alias or github) to the compose contributor ID format.
+func contributorGithubToComposeID(identifier string) string {
 	if identifier == "" || identifier == "unknown" {
 		return identifier
 	}
@@ -40760,16 +40760,16 @@ func contributorGithubToSemioID(identifier string) string {
 	return prefix + Flat(identifier)
 }
 
-// ­ƒÉÖsemioIDToContributorGithub converts a semio contributor ID back to a contributor alias.
-func semioIDToContributorGithub(semioID string) string {
-	if semioID == "" || semioID == "unknown" {
-		return semioID
+// ­ƒÉÖcomposeIDToContributorGithub converts a compose contributor ID back to a contributor alias.
+func composeIDToContributorGithub(composeID string) string {
+	if composeID == "" || composeID == "unknown" {
+		return composeID
 	}
 	prefix := emojiText(EmojiContributor)
-	if !strings.HasPrefix(semioID, prefix) {
-		return semioID
+	if !strings.HasPrefix(composeID, prefix) {
+		return composeID
 	}
-	flat := semioID[len(prefix):]
+	flat := composeID[len(prefix):]
 	contributors, err := ListContributors()
 	if err == nil {
 		for _, c := range contributors {

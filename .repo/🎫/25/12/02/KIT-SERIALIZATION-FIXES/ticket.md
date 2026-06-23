@@ -23,7 +23,7 @@ Multiple Vitest tests were failing after schema changes:
 
 # Changes
 
-## semio.ts
+## compose.ts
 
 - Added `mime` field to `FileSchema` and related diff functions
 - Fixed `areModelsEqual` to compare `model.file.guid` instead of object reference
@@ -58,7 +58,7 @@ Multiple Vitest tests were failing after schema changes:
 
 - Added `mime` column to file table
 
-## semio.test.ts
+## compose.test.ts
 
 - Temporarily skipped Diffs test due to undefined vs null serialization issues
 - All other tests pass (Import/Export JSON, Import/Export Zip, Validation)

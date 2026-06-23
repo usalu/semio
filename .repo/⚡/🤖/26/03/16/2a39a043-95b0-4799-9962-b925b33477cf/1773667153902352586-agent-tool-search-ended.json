@@ -17,7 +17,7 @@
         "maxResults": 20,
         "query": "input.*type.*file|file.*input",
         "isRegexp": true,
-        "includePattern": "**/semio/sketchpad/sketchpad/**"
+        "includePattern": "**/compose/sketchpad/sketchpad/**"
       },
       "tool_response": "",
       "tool_use_id": "toolu_01SpzV4gB69Rcv2BMy3ySNK2__vscode-1773658270519",

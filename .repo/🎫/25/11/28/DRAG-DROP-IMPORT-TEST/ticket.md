@@ -17,17 +17,17 @@ No previous context.
 - [x] Check all proto-designs are imported (Nakagin Capsule Tower, Capsule Dream)
 - [x] Verify Tambour connectors (10 connectors with specific coordinates)
 - [x] Verify Nakagin Capsule Tower has 180 pieces
-- [x] Ensure .semio folder is NOT imported
+- [x] Ensure .compose folder is NOT imported
 - [x] Verify representations and icons folders/files are present
 
 # Changes
 
-## `js/semio/sketchpad.test.ts`
+## `js/compose/sketchpad.test.ts`
 
 Added comprehensive UI-based test `Kit Import Drag and Drop` that:
 
 1. **Drag & Drop Import**:
-   - Fetches `metabolism.zip` from `/assets/semio/metabolism.zip`
+   - Fetches `metabolism.zip` from `/assets/compose/metabolism.zip`
    - Creates DataTransfer with the zip file
    - Dispatches dragover and drop events on body
    - Waits for navigation to kit URL
@@ -50,7 +50,7 @@ Added comprehensive UI-based test `Kit Import Drag and Drop` that:
 6. **Files Verification** (`/kits/{guid}?kind=files`):
    - Verifies `representations` folder is visible
    - Verifies `icons` folder is visible
-   - Verifies `.semio` folder is NOT visible (excluded from import)
+   - Verifies `.compose` folder is NOT visible (excluded from import)
 
 ## Changes
 

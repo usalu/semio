@@ -1,6 +1,6 @@
 Hang / slowness findings (repo/client go test):
 
-1) GraphQL breachs with no scope -> Analyze defaults to technology scope "semio" -> full policy walk (TestBreachsNonEmpty, TestNodesAndEdgesQuick root breachs). Fixed by breachs(scope: "repo/client/main.go").
+1) GraphQL breachs with no scope -> Analyze defaults to technology scope "compose" -> full policy walk (TestBreachsNonEmpty, TestNodesAndEdgesQuick root breachs). Fixed by breachs(scope: "repo/client/main.go").
 
 2) ToolGoalList / ToolTicketList (unfiltered) / ToolPolicyList called BuildMonorepoTreeCached for markdown only. Replaced with direct list + render (or policy iterate).
 

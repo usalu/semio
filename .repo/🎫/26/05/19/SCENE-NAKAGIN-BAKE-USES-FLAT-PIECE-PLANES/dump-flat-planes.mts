@@ -1,14 +1,14 @@
 #!/usr/bin/env bun
-/** @emoji 🧾 Emits `elements/.../nakagin-capsule-tower.flat-planes.v1.json` via `@semio/js` flatten only (no algorithms UI barrel). */
+/** @emoji 🧾 Emits `elements/.../nakagin-capsule-tower.flat-planes.v1.json` via `@compose/js` flatten only (no algorithms UI barrel). */
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { openSession, type Store as JsStore } from "../../../../../../semio/client/lib/js/index.ts";
+import { openSession, type Store as JsStore } from "../../../../../../compose/client/lib/js/index.ts";
 
 type GqlWireObject = { readonly [k: string]: unknown };
 
 const repoRoot = join(import.meta.dir, "..", "..", "..", "..", "..", "..");
-const kitPath = join(repoRoot, "semio/assets/fixtures/metabolism.shallow.kit.semio.json");
-const nakaginShallowDesignPath = join(repoRoot, "semio/assets/fixtures/nakagin-capsule-tower.shallow.design.semio.json");
+const kitPath = join(repoRoot, "compose/assets/fixtures/metabolism.shallow.kit.compose.json");
+const nakaginShallowDesignPath = join(repoRoot, "compose/assets/fixtures/nakagin-capsule-tower.shallow.design.compose.json");
 const outPath = join(repoRoot, "elements/client/lib/scene/fixtures/nakagin-capsule-tower.flat-planes.v1.json");
 const nakaginDesignId = "9a890dd4-0a9c-48ac-920a-9e62666465ef";
 

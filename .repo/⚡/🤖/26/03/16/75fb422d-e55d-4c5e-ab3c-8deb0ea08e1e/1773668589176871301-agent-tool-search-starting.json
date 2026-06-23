@@ -14,7 +14,7 @@
       "session_id": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e",
       "tool_name": "list_dir",
       "tool_input": {
-        "path": "/workspaces/semio/semio/sketchpad/sketchpad"
+        "path": "/workspaces/semio/compose/sketchpad/sketchpad"
       },
       "tool_use_id": "toolu_bdrk_01GaU1jkBUgw3iuewdDTZVGq__vscode-1773658270560",
       "cwd": "/workspaces/semio"

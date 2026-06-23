@@ -10,7 +10,7 @@ Fixed all 170 code breachs in elements.tsx: 57 section summaries+requirements, 1
 
 ## Changes
 
-- `semio/js/sketchpad/elements.tsx`: Added 226 comment lines (57×2 section + 112 definition), moved orphan export
+- `compose/js/sketchpad/elements.tsx`: Added 226 comment lines (57×2 section + 112 definition), moved orphan export
 
 ## Log
 

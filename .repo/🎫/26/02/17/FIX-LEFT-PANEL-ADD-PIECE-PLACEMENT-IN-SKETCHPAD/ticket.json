@@ -1,7 +1,7 @@
 {
   "title": "Fix Left Panel Add Piece Placement in Sketchpad",
   "status": "closed",
-  "prompt": "Fix sketchpad left toggle panel + button so selecting a type adds/places a piece correctly. Extend semio/js/sketchpad.test.ts to cover this flow and keep all tests passing.",
+  "prompt": "Fix sketchpad left toggle panel + button so selecting a type adds/places a piece correctly. Extend compose/js/sketchpad.test.ts to cover this flow and keep all tests passing.",
   "summary": "Fixed Design workbench + actions to place type/design as pieces and extended Design e2e coverage for left panel add-piece flow.",
   "goal": "SKETCHPAD-IMPROVEMENTS",
   "started": "2026-02-17T00:34:28.632459992Z",
@@ -16,7 +16,7 @@
       "system": "linux",
       "client": "codex",
       "commit": "5381e7e37855734d6f0ff5e8679db01b8ad00a12",
-      "prompt": "Fix sketchpad left toggle panel + button so selecting a type adds/places a piece correctly. Extend semio/js/sketchpad.test.ts to cover this flow and keep all tests passing.",
+      "prompt": "Fix sketchpad left toggle panel + button so selecting a type adds/places a piece correctly. Extend compose/js/sketchpad.test.ts to cover this flow and keep all tests passing.",
       "llm": "gpt-5-3-codex",
       "diff": {
         "bundles": {
@@ -24,7 +24,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "semio/semio/semio/js",
+              "path": "compose/compose/compose/js",
               "lines": {
                 "added": 423,
                 "removed": 0
@@ -44,14 +44,14 @@
           "renamed": [],
           "modified": [
             {
-              "path": "🧪semio/js/sketchpad.test.ts",
+              "path": "🧪compose/js/sketchpad.test.ts",
               "lines": {
                 "added": 169,
                 "removed": 74
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx",
+              "path": "💻compose/js/sketchpad/Design.tsx",
               "lines": {
                 "added": 479,
                 "removed": 151
@@ -63,56 +63,56 @@
         "sections": {
           "deleted": [
             {
-              "path": "semio/js/sketchpad/Design.tsx#Components#Footer",
+              "path": "compose/js/sketchpad/Design.tsx#Components#Footer",
               "lines": {
                 "added": 0,
                 "removed": 115
               }
             },
             {
-              "path": "semio/js/sketchpad/Design.tsx#Components#Tools",
+              "path": "compose/js/sketchpad/Design.tsx#Components#Tools",
               "lines": {
                 "added": 0,
                 "removed": 82
               }
             },
             {
-              "path": "semio/js/sketchpad/Design.tsx#Internal State Management",
+              "path": "compose/js/sketchpad/Design.tsx#Internal State Management",
               "lines": {
                 "added": 0,
                 "removed": 53
               }
             },
             {
-              "path": "semio/js/sketchpad/Design.tsx#Components",
+              "path": "compose/js/sketchpad/Design.tsx#Components",
               "lines": {
                 "added": 0,
                 "removed": 7049
               }
             },
             {
-              "path": "semio/js/sketchpad/Design.tsx#Components#Canvas",
+              "path": "compose/js/sketchpad/Design.tsx#Components#Canvas",
               "lines": {
                 "added": 0,
                 "removed": 3338
               }
             },
             {
-              "path": "semio/js/sketchpad/Design.tsx#Components#Canvas#Diagram",
+              "path": "compose/js/sketchpad/Design.tsx#Components#Canvas#Diagram",
               "lines": {
                 "added": 0,
                 "removed": 2597
               }
             },
             {
-              "path": "semio/js/sketchpad/Design.tsx#Components#Canvas#Scene",
+              "path": "compose/js/sketchpad/Design.tsx#Components#Canvas#Scene",
               "lines": {
                 "added": 0,
                 "removed": 668
               }
             },
             {
-              "path": "semio/js/sketchpad/Design.tsx#Components#Panels",
+              "path": "compose/js/sketchpad/Design.tsx#Components#Panels",
               "lines": {
                 "added": 0,
                 "removed": 1513
@@ -121,32 +121,32 @@
           ],
           "renamed": [
             {
-              "from": "semio/js/sketchpad/Design.tsx#Components#Action Hooks",
-              "to": "semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks",
+              "from": "compose/js/sketchpad/Design.tsx#Components#Action Hooks",
+              "to": "compose/js/sketchpad/Design.tsx#Store#Components#Action Hooks",
               "lines": {
                 "added": 799,
                 "removed": 799
               }
             },
             {
-              "from": "semio/js/sketchpad/Design.tsx#Components#Canvas#Hover Intent Context",
-              "to": "semio/js/sketchpad/Design.tsx#Store#Canvas#Hover Intent Context",
+              "from": "compose/js/sketchpad/Design.tsx#Components#Canvas#Hover Intent Context",
+              "to": "compose/js/sketchpad/Design.tsx#Store#Canvas#Hover Intent Context",
               "lines": {
                 "added": 38,
                 "removed": 38
               }
             },
             {
-              "from": "semio/js/sketchpad/Design.tsx#Components#Panels#Details",
-              "to": "semio/js/sketchpad/Design.tsx#Store#Panels#Details",
+              "from": "compose/js/sketchpad/Design.tsx#Components#Panels#Details",
+              "to": "compose/js/sketchpad/Design.tsx#Store#Panels#Details",
               "lines": {
                 "added": 1367,
                 "removed": 1367
               }
             },
             {
-              "from": "semio/js/sketchpad/Design.tsx#Components#Panels#WindowLibrary",
-              "to": "semio/js/sketchpad/Design.tsx#Store#Panels#WindowLibrary",
+              "from": "compose/js/sketchpad/Design.tsx#Components#Panels#WindowLibrary",
+              "to": "compose/js/sketchpad/Design.tsx#Store#Panels#WindowLibrary",
               "lines": {
                 "added": 141,
                 "removed": 141
@@ -155,217 +155,217 @@
           ],
           "modified": [
             {
-              "path": "🧪semio/js/sketchpad.test.ts#Panel Toggles",
+              "path": "🧪compose/js/sketchpad.test.ts#Panel Toggles",
               "lines": {
                 "added": 7,
                 "removed": 9
               }
             },
             {
-              "path": "🧪semio/js/sketchpad.test.ts#Panel Toggles Check",
+              "path": "🧪compose/js/sketchpad.test.ts#Panel Toggles Check",
               "lines": {
                 "added": 2,
                 "removed": 2
               }
             },
             {
-              "path": "🧪semio/js/sketchpad.test.ts#Filters",
+              "path": "🧪compose/js/sketchpad.test.ts#Filters",
               "lines": {
                 "added": 109,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/sketchpad.test.ts#Diagram Node Drag",
+              "path": "🧪compose/js/sketchpad.test.ts#Diagram Node Drag",
               "lines": {
                 "added": 7,
                 "removed": 22
               }
             },
             {
-              "path": "🧪semio/js/sketchpad.test.ts#Home Panel Combinations",
+              "path": "🧪compose/js/sketchpad.test.ts#Home Panel Combinations",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio/js/sketchpad.test.ts#Panel Content Verification per App",
+              "path": "🧪compose/js/sketchpad.test.ts#Panel Content Verification per App",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#App",
+              "path": "💻compose/js/sketchpad/Design.tsx#App",
               "lines": {
                 "added": 85,
                 "removed": 55
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Config",
+              "path": "💻compose/js/sketchpad/Design.tsx#Config",
               "lines": {
                 "added": 8,
                 "removed": 1
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Scene",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Scene",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Components#Tools",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Components#Tools",
               "lines": {
                 "added": 176,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Components#Filters",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Components#Filters",
               "lines": {
                 "added": 32,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Panels#WindowLibrary",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Panels#WindowLibrary",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Header",
+              "path": "💻compose/js/sketchpad/Design.tsx#Header",
               "lines": {
                 "added": 3,
                 "removed": 2
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Hooks",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Hooks",
               "lines": {
                 "added": 5,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Components",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Components",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Components#Toolbar",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Components#Toolbar",
               "lines": {
                 "added": 52,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Panels",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Panels",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Hover Intent Context",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Hover Intent Context",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Diagram",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram",
               "lines": {
                 "added": 53,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Windows",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Windows",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Imports",
+              "path": "💻compose/js/sketchpad/Design.tsx#Imports",
               "lines": {
                 "added": 9,
                 "removed": 4
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Types",
+              "path": "💻compose/js/sketchpad/Design.tsx#Types",
               "lines": {
                 "added": 11,
                 "removed": 1
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Components#Footer",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Components#Footer",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Canvas",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Canvas",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Scene",
+              "path": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Scene",
               "lines": {
                 "added": 0,
                 "removed": 4
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Hover Intent Context",
+              "path": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Hover Intent Context",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Components#Tools",
+              "path": "💻compose/js/sketchpad/Design.tsx#Components#Tools",
               "lines": {
                 "added": 0,
                 "removed": 67
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Components#Panels#WindowLibrary",
+              "path": "💻compose/js/sketchpad/Design.tsx#Components#Panels#WindowLibrary",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Diagram",
+              "path": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Diagram",
               "lines": {
                 "added": 0,
                 "removed": 10
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Internal State Management",
+              "path": "💻compose/js/sketchpad/Design.tsx#Internal State Management",
               "lines": {
                 "added": 0,
                 "removed": 3
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Components",
+              "path": "💻compose/js/sketchpad/Design.tsx#Components",
               "lines": {
                 "added": 0,
                 "removed": 2
@@ -374,84 +374,84 @@
           ],
           "added": [
             {
-              "path": "semio/js/sketchpad/Design.tsx#Store#Components#Filters",
+              "path": "compose/js/sketchpad/Design.tsx#Store#Components#Filters",
               "lines": {
                 "added": 32,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/Design.tsx#Store#Canvas#Scene",
+              "path": "compose/js/sketchpad/Design.tsx#Store#Canvas#Scene",
               "lines": {
                 "added": 674,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/Design.tsx#Store#Windows",
+              "path": "compose/js/sketchpad/Design.tsx#Store#Windows",
               "lines": {
                 "added": 36,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/Design.tsx#Store#Panels",
+              "path": "compose/js/sketchpad/Design.tsx#Store#Panels",
               "lines": {
                 "added": 1515,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/Design.tsx#Store#Canvas",
+              "path": "compose/js/sketchpad/Design.tsx#Store#Canvas",
               "lines": {
                 "added": 3389,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/Design.tsx#Store#Components#Tools",
+              "path": "compose/js/sketchpad/Design.tsx#Store#Components#Tools",
               "lines": {
                 "added": 189,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/Design.tsx#Store#Hooks",
+              "path": "compose/js/sketchpad/Design.tsx#Store#Hooks",
               "lines": {
                 "added": 43,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/Design.tsx#Store#Components#Footer",
+              "path": "compose/js/sketchpad/Design.tsx#Store#Components#Footer",
               "lines": {
                 "added": 125,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/Design.tsx#Store#Canvas#Diagram",
+              "path": "compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram",
               "lines": {
                 "added": 2640,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/Design.tsx#Store#Components",
+              "path": "compose/js/sketchpad/Design.tsx#Store#Components",
               "lines": {
                 "added": 2378,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/Design.tsx#Store#Components#Toolbar",
+              "path": "compose/js/sketchpad/Design.tsx#Store#Components#Toolbar",
               "lines": {
                 "added": 52,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad.test.ts#Filters",
+              "path": "compose/js/sketchpad.test.ts#Filters",
               "lines": {
                 "added": 109,
                 "removed": 0
@@ -462,28 +462,28 @@
         "definitions": {
           "deleted": [
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Components#Tools§DesignAppTools",
+              "path": "💻compose/js/sketchpad/Design.tsx#Components#Tools§DesignAppTools",
               "lines": {
                 "added": 0,
                 "removed": 70
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Components#Tools§DesignSelectSettings",
+              "path": "💻compose/js/sketchpad/Design.tsx#Components#Tools§DesignSelectSettings",
               "lines": {
                 "added": 0,
                 "removed": 68
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Scene§ModelPiece",
+              "path": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Scene§ModelPiece",
               "lines": {
                 "added": 0,
                 "removed": 179
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Scene§ModelDesign",
+              "path": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Scene§ModelDesign",
               "lines": {
                 "added": 0,
                 "removed": 89
@@ -492,1592 +492,1592 @@
           ],
           "renamed": [
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppSelectAll",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppAddPieceToSelection",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppSelectAll",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppAddPieceToSelection",
               "lines": {
                 "added": 13,
                 "removed": 13
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Diagram§DesignNodeProps",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§useIsDesignPieceChangedInTransaction",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Diagram§DesignNodeProps",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§useIsDesignPieceChangedInTransaction",
               "lines": {
                 "added": 4,
                 "removed": 4
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§EMPTY_COMMANDS",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§EMPTY_COMMANDS",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§EMPTY_COMMANDS",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§EMPTY_COMMANDS",
               "lines": {
                 "added": 54,
                 "removed": 54
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§useDesignAppCameraField",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppSelectPieces",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§useDesignAppCameraField",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppSelectPieces",
               "lines": {
                 "added": 8,
                 "removed": 8
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppSelectPieces",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppFullscreenField",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppSelectPieces",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§useDesignAppFullscreenField",
               "lines": {
                 "added": 8,
                 "removed": 8
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Diagram§ConnectorHandle",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Diagram§ClusterMenu",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Diagram§ConnectorHandle",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram§ClusterMenu",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Diagram§DesignNode",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Diagram§DesignNodeProps",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Diagram§DesignNode",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram§DesignNodeProps",
               "lines": {
                 "added": 4,
                 "removed": 4
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Diagram§PieceNodeInner",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Diagram§ConnectorHandle",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Diagram§PieceNodeInner",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram§ConnectorHandle",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§useDesignStore",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Diagram§pieceToNode",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§useDesignStore",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram§pieceToNode",
               "lines": {
                 "added": 12,
                 "removed": 12
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppRemoveConnections",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppUpdatePiece",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppRemoveConnections",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppUpdatePiece",
               "lines": {
                 "added": 9,
                 "removed": 9
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppToggleAccesslFullscreen",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppToggleAccesslFullscreen",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppToggleAccesslFullscreen",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppToggleAccesslFullscreen",
               "lines": {
                 "added": 8,
                 "removed": 8
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Panels#Details§PiecesSectionForm",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Panels#Details§PiecesSectionForm",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Panels#Details§PiecesSectionForm",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Panels#Details§PiecesSectionForm",
               "lines": {
                 "added": 683,
                 "removed": 683
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppAddConnection",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppActiveToolField",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppAddConnection",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§useDesignAppActiveToolField",
               "lines": {
                 "added": 9,
                 "removed": 9
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Diagram§designToNode",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppScope",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Diagram§designToNode",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§useDesignAppScope",
               "lines": {
                 "added": 12,
                 "removed": 12
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§AppProps",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Filters§DesignFilterProvider",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§AppProps",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Filters§DesignFilterProvider",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§useDesignAppIsPortHovered",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppOthers",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§useDesignAppIsPortHovered",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§useDesignAppOthers",
               "lines": {
                 "added": 10,
                 "removed": 10
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§useDesignAppSelectionField",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Diagram§DiagramEdge",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§useDesignAppSelectionField",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram§DiagramEdge",
               "lines": {
                 "added": 8,
                 "removed": 8
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Action Hooks§DesignAppTransactionProvider",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppUpdatePieces",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Action Hooks§DesignAppTransactionProvider",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppUpdatePieces",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppAddPieces",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppRemovePiece",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppAddPieces",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppRemovePiece",
               "lines": {
                 "added": 9,
                 "removed": 9
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Diagram§ClusterMenu",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Diagram§ConnectionEdgeFallback",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Diagram§ClusterMenu",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram§ConnectionEdgeFallback",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Scene§PlaneThreeProps",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§areHoverContextsEqual",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Scene§PlaneThreeProps",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§areHoverContextsEqual",
               "lines": {
                 "added": 3,
                 "removed": 3
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§useDesignAppCamera",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Diagram§DiagramNode",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§useDesignAppCamera",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram§DiagramNode",
               "lines": {
                 "added": 3,
                 "removed": 3
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§HoverPiecesProvider",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Diagram§DesignNodeInner",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§HoverPiecesProvider",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram§DesignNodeInner",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Diagram§DesignNodeInner",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppConnectionColor",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Diagram§DesignNodeInner",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§useDesignAppConnectionColor",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas§EMPTY_PIECE_RENDER_DATA",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppRemoveConnections",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas§EMPTY_PIECE_RENDER_DATA",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppRemoveConnections",
               "lines": {
                 "added": 9,
                 "removed": 9
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§TransactionPiecesProviderInner",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Diagram§MiniMapNode",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§TransactionPiecesProviderInner",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram§MiniMapNode",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppRemoveConnection",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppUpdateConnection",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppRemoveConnection",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppUpdateConnection",
               "lines": {
                 "added": 9,
                 "removed": 9
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Diagram§sharedCommandsRef",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§ActionHookResult",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Diagram§sharedCommandsRef",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Action Hooks§ActionHookResult",
               "lines": {
                 "added": 17,
                 "removed": 17
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas§PieceRenderDataContext",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas§PieceRenderDataContext",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas§PieceRenderDataContext",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas§PieceRenderDataContext",
               "lines": {
                 "added": 6,
                 "removed": 6
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Panels#Details§SingleConnectionFields",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Panels#Details§SingleConnectionFields",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Panels#Details§SingleConnectionFields",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Panels#Details§SingleConnectionFields",
               "lines": {
                 "added": 63,
                 "removed": 63
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§useDesignAppOthers",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppIsPortHovered",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§useDesignAppOthers",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§useDesignAppIsPortHovered",
               "lines": {
                 "added": 10,
                 "removed": 10
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§useDesignAppPanelVisibility",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppFocusedPieceGuid",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§useDesignAppPanelVisibility",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§useDesignAppFocusedPieceGuid",
               "lines": {
                 "added": 3,
                 "removed": 3
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppClearHover",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppHoverDesigns",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppClearHover",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppHoverDesigns",
               "lines": {
                 "added": 8,
                 "removed": 8
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppSelectConnection",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppFocusedPieceGuidField",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppSelectConnection",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§useDesignAppFocusedPieceGuidField",
               "lines": {
                 "added": 8,
                 "removed": 8
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Diagram§ExpandMenu",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§HoverPiecesProviderInner",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Diagram§ExpandMenu",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§HoverPiecesProviderInner",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Diagram§getConnectorPositionStyle",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Scene§ModelPieceProps",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Diagram§getConnectorPositionStyle",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Scene§ModelPieceProps",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§TransactionPiecesContextValue",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§HoverPiecesContextValue",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§TransactionPiecesContextValue",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§HoverPiecesContextValue",
               "lines": {
                 "added": 4,
                 "removed": 4
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§useDesignAppPieceCenter",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppSelectionField",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§useDesignAppPieceCenter",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§useDesignAppSelectionField",
               "lines": {
                 "added": 8,
                 "removed": 8
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Panels#Details§ConnectorSection",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§EMPTY_SELECTION",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Panels#Details§ConnectorSection",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§EMPTY_SELECTION",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§GranularSelectorFactory",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppSelection",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§GranularSelectorFactory",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§useDesignAppSelection",
               "lines": {
                 "added": 3,
                 "removed": 3
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§useDesignAppFocusedPieceGuidField",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppClearFocus",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§useDesignAppFocusedPieceGuidField",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppClearFocus",
               "lines": {
                 "added": 8,
                 "removed": 8
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§DEFAULT_PANEL_VISIBILITY",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Diagram§ExpandMenu",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§DEFAULT_PANEL_VISIBILITY",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram§ExpandMenu",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§TransactionPiecesContext",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Filters§DesignFilterKind",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§TransactionPiecesContext",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Filters§DesignFilterKind",
               "lines": {
                 "added": 7,
                 "removed": 7
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppTransaction",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppTransaction",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppTransaction",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppTransaction",
               "lines": {
                 "added": 14,
                 "removed": 14
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppUpdatePiece",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppAddPieces",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppUpdatePiece",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppAddPieces",
               "lines": {
                 "added": 9,
                 "removed": 9
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Diagram§connectionToEdge",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Diagram§connectionToEdge",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Diagram§connectionToEdge",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram§connectionToEdge",
               "lines": {
                 "added": 72,
                 "removed": 72
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Diagram§pieceToNode",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Diagram§designToNode",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Diagram§pieceToNode",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram§designToNode",
               "lines": {
                 "added": 12,
                 "removed": 12
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppDeselectPiecePort",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Windows§SceneWindow",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppDeselectPiecePort",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Windows§SceneWindow",
               "lines": {
                 "added": 11,
                 "removed": 11
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppUpdatePieces",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Diagram§edgeComponents",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppUpdatePieces",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram§edgeComponents",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Diagram§HelperLines",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Diagram§DesignNode",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Diagram§HelperLines",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram§DesignNode",
               "lines": {
                 "added": 4,
                 "removed": 4
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Scene§applyHighlightToLoadedScene",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Diagram§sharedCommandsRef",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Scene§applyHighlightToLoadedScene",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram§sharedCommandsRef",
               "lines": {
                 "added": 17,
                 "removed": 17
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§DesignAppScopeProvider",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Diagram§getConnectorPositionStyle",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§DesignAppScopeProvider",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram§getConnectorPositionStyle",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Hover Intent Context§useHoverIntent",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Filters§DesignFilterState",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Hover Intent Context§useHoverIntent",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Filters§DesignFilterState",
               "lines": {
                 "added": 5,
                 "removed": 5
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§useDesignAppFocusedPieceGuid",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§GranularSelectorFactory",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§useDesignAppFocusedPieceGuid",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§GranularSelectorFactory",
               "lines": {
                 "added": 3,
                 "removed": 3
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§useDesignAppYjsToXStateSync",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppYjsToXStateSync",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§useDesignAppYjsToXStateSync",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§useDesignAppYjsToXStateSync",
               "lines": {
                 "added": 31,
                 "removed": 31
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§useDesignAppPieceColor",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Panels#Details§ConnectorSectionForm",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§useDesignAppPieceColor",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Panels#Details§ConnectorSectionForm",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Action Hooks§TransactionActions",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Tools§LassoFreeformTool",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Action Hooks§TransactionActions",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Tools§LassoFreeformTool",
               "lines": {
                 "added": 5,
                 "removed": 5
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Diagram§DesignNodeInnerProps",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Diagram§DesignNodeInnerProps",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Diagram§DesignNodeInnerProps",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram§DesignNodeInnerProps",
               "lines": {
                 "added": 13,
                 "removed": 13
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Diagram§DesignNodeComponent",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppField",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Diagram§DesignNodeComponent",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§useDesignAppField",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Diagram§ExpandMenuProps",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Tools§HandTool",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Diagram§ExpandMenuProps",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Tools§HandTool",
               "lines": {
                 "added": 5,
                 "removed": 5
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Footer§DesignAppFooter",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Footer§DesignAppFooter",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Footer§DesignAppFooter",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Footer§DesignAppFooter",
               "lines": {
                 "added": 111,
                 "removed": 111
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§useDesignAppIsPieceHovered",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Diagram§HelperLine",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§useDesignAppIsPieceHovered",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram§HelperLine",
               "lines": {
                 "added": 11,
                 "removed": 11
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppExpandDesign",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppAddConnections",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppExpandDesign",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppAddConnections",
               "lines": {
                 "added": 9,
                 "removed": 9
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppRemovePiece",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppExpandDesign",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppRemovePiece",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppExpandDesign",
               "lines": {
                 "added": 9,
                 "removed": 9
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Diagram§ConnectionConnectionLine",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Hover Intent Context§HoverIntentContextValue",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Diagram§ConnectionConnectionLine",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Hover Intent Context§HoverIntentContextValue",
               "lines": {
                 "added": 6,
                 "removed": 6
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Diagram§ConnectionEdgeInner",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Panels#Details§ConnectorSection",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Diagram§ConnectionEdgeInner",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Panels#Details§ConnectorSection",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Diagram§DiagramEdge",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppHoverPiece",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Diagram§DiagramEdge",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppHoverPiece",
               "lines": {
                 "added": 8,
                 "removed": 8
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Scene§FBXMesh",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§DEFAULT_PANEL_VISIBILITY",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Scene§FBXMesh",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§DEFAULT_PANEL_VISIBILITY",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Scene§ModelPieceProps",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§HoverPiecesProvider",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Scene§ModelPieceProps",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§HoverPiecesProvider",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Diagram§PieceNodeProps",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppPieceStatus",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Diagram§PieceNodeProps",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§useDesignAppPieceStatus",
               "lines": {
                 "added": 4,
                 "removed": 4
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§areHoverContextsEqual",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppActor",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§areHoverContextsEqual",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§useDesignAppActor",
               "lines": {
                 "added": 3,
                 "removed": 3
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§areSetsEqual",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§areMapsEqual",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§areSetsEqual",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§areMapsEqual",
               "lines": {
                 "added": 5,
                 "removed": 5
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Store§useDesignAppInitialize",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Hooks§useDesignAppInitialize",
+              "from": "💻compose/js/sketchpad/Design.tsx#Store§useDesignAppInitialize",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Hooks§useDesignAppInitialize",
               "lines": {
                 "added": 36,
                 "removed": 36
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppHoverConnection",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppSelectPiece",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppHoverConnection",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppSelectPiece",
               "lines": {
                 "added": 8,
                 "removed": 8
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppRemoveConnectionFromSelection",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppIsPiecePortSelected",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppRemoveConnectionFromSelection",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§useDesignAppIsPiecePortSelected",
               "lines": {
                 "added": 11,
                 "removed": 11
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Diagram§PieceNode",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Panels#Details§ConnectionsSection",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Diagram§PieceNode",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Panels#Details§ConnectionsSection",
               "lines": {
                 "added": 5,
                 "removed": 5
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Panels#Details§PiecesSection",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Diagram§PieceNode",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Panels#Details§PiecesSection",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram§PieceNode",
               "lines": {
                 "added": 5,
                 "removed": 5
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§HoverPiecesContextValue",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§EMPTY_TRANSACTION_CONTEXT",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§HoverPiecesContextValue",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§EMPTY_TRANSACTION_CONTEXT",
               "lines": {
                 "added": 4,
                 "removed": 4
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppHoverPieces",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppCameraField",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppHoverPieces",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§useDesignAppCameraField",
               "lines": {
                 "added": 8,
                 "removed": 8
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Diagram§SelectedConnectorContext",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Scene§getComputedColor",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Diagram§SelectedConnectorContext",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Scene§getComputedColor",
               "lines": {
                 "added": 18,
                 "removed": 18
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Panels#Details§DesignSectionForm",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Panels#Details§DesignSectionForm",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Panels#Details§DesignSectionForm",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Panels#Details§DesignSectionForm",
               "lines": {
                 "added": 404,
                 "removed": 404
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppAddPieceToSelection",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppAddConnectionToSelection",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppAddPieceToSelection",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppAddConnectionToSelection",
               "lines": {
                 "added": 13,
                 "removed": 13
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas§SemioConnection",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Diagram§ConnectionEdgeComponent",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas§ComposeConnection",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram§ConnectionEdgeComponent",
               "lines": {
                 "added": 11,
                 "removed": 11
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Panels#WindowLibrary§windowTemplates",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppPieceCenter",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Panels#WindowLibrary§windowTemplates",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§useDesignAppPieceCenter",
               "lines": {
                 "added": 8,
                 "removed": 8
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppAddPiece",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppAddPiece",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppAddPiece",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppAddPiece",
               "lines": {
                 "added": 9,
                 "removed": 9
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppClearFocus",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppSelectConnection",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppClearFocus",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppSelectConnection",
               "lines": {
                 "added": 8,
                 "removed": 8
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Diagram§ClusterMenuProps",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§TransactionActions",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Diagram§ClusterMenuProps",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Action Hooks§TransactionActions",
               "lines": {
                 "added": 5,
                 "removed": 5
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§areMapsEqual",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Tools§SelectionAdditiveTool",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§areMapsEqual",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Tools§SelectionAdditiveTool",
               "lines": {
                 "added": 5,
                 "removed": 5
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§useDesignAppIsPieceSelected",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppIsPieceHovered",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§useDesignAppIsPieceSelected",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§useDesignAppIsPieceHovered",
               "lines": {
                 "added": 11,
                 "removed": 11
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppUndo",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppRedo",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppUndo",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppRedo",
               "lines": {
                 "added": 9,
                 "removed": 9
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Diagram§designToNodesAndEdges",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Diagram§designToNodesAndEdges",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Diagram§designToNodesAndEdges",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram§designToNodesAndEdges",
               "lines": {
                 "added": 150,
                 "removed": 150
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§useDesignAppConnectionColor",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Hover Intent Context§HoverIntentProvider",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§useDesignAppConnectionColor",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Hover Intent Context§HoverIntentProvider",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§useDesignAppSelectedConnector",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppSelectedConnector",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§useDesignAppSelectedConnector",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§useDesignAppSelectedConnector",
               "lines": {
                 "added": 12,
                 "removed": 12
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppRemoveModelTagFromAllTypes",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Diagram§pieceNodeAreEqual",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppRemoveModelTagFromAllTypes",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram§pieceNodeAreEqual",
               "lines": {
                 "added": 15,
                 "removed": 15
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§useDesignAppIsTypeTransitiveHovered",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas§usePieceRenderData",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§useDesignAppIsTypeTransitiveHovered",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas§usePieceRenderData",
               "lines": {
                 "added": 4,
                 "removed": 4
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Scene§PieceMesh",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Diagram§PieceNodeComponent",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Scene§PieceMesh",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram§PieceNodeComponent",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§EMPTY_MODEL_TAGS",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Filters§DesignFilterContext",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§EMPTY_MODEL_TAGS",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Filters§DesignFilterContext",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§areTransactionContextsEqual",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppFullscreen",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§areTransactionContextsEqual",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§useDesignAppFullscreen",
               "lines": {
                 "added": 3,
                 "removed": 3
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§useDesignAppActor",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppActiveTool",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§useDesignAppActor",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§useDesignAppActiveTool",
               "lines": {
                 "added": 3,
                 "removed": 3
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§useDesignAppIsPiecePortSelected",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppIsPieceSelected",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§useDesignAppIsPiecePortSelected",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§useDesignAppIsPieceSelected",
               "lines": {
                 "added": 11,
                 "removed": 11
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppUpdateConnections",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Diagram§ConnectionEdgeInnerProps",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppUpdateConnections",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram§ConnectionEdgeInnerProps",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Hover Intent Context§HoverIntentContext",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§areTransactionContextsEqual",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Hover Intent Context§HoverIntentContext",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§areTransactionContextsEqual",
               "lines": {
                 "added": 3,
                 "removed": 3
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§HoverPiecesProviderInner",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Scene§PlaneThree",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§HoverPiecesProviderInner",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Scene§PlaneThree",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Hover Intent Context§HoverIntentContextValue",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Diagram§ConnectorHandleProps",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Hover Intent Context§HoverIntentContextValue",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram§ConnectorHandleProps",
               "lines": {
                 "added": 6,
                 "removed": 6
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§useDesignApp",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppRemoveModelTagFromAllTypes",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§useDesignApp",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppRemoveModelTagFromAllTypes",
               "lines": {
                 "added": 15,
                 "removed": 15
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§EMPTY_TRANSACTION_CONTEXT",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppConnectionStatus",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§EMPTY_TRANSACTION_CONTEXT",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§useDesignAppConnectionStatus",
               "lines": {
                 "added": 4,
                 "removed": 4
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§useDesignAppDiagramScale",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppDiagramScale",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§useDesignAppDiagramScale",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§useDesignAppDiagramScale",
               "lines": {
                 "added": 20,
                 "removed": 20
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§useDesignAppIsConnectionSelected",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas§SemioConnection",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§useDesignAppIsConnectionSelected",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas§ComposeConnection",
               "lines": {
                 "added": 11,
                 "removed": 11
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppAddConnections",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas§EMPTY_PIECE_RENDER_DATA",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppAddConnections",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas§EMPTY_PIECE_RENDER_DATA",
               "lines": {
                 "added": 9,
                 "removed": 9
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppHoverTypes",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppHoverPort",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppHoverTypes",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppHoverPort",
               "lines": {
                 "added": 8,
                 "removed": 8
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Panels#Details§ConnectionsSectionForm",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppIsTypeTransitiveHovered",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Panels#Details§ConnectionsSectionForm",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§useDesignAppIsTypeTransitiveHovered",
               "lines": {
                 "added": 4,
                 "removed": 4
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Panels#Details§DesignSection",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Diagram§ClusterMenuProps",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Panels#Details§DesignSection",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram§ClusterMenuProps",
               "lines": {
                 "added": 5,
                 "removed": 5
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§EMPTY_CONNECTOR",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppDiagramCenter",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§EMPTY_CONNECTOR",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§useDesignAppDiagramCenter",
               "lines": {
                 "added": 21,
                 "removed": 21
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§EMPTY_HOVER_CONTEXT",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Diagram§PieceNodeProps",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§EMPTY_HOVER_CONTEXT",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram§PieceNodeProps",
               "lines": {
                 "added": 4,
                 "removed": 4
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppHoverPort",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppDeselectAll",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppHoverPort",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppDeselectAll",
               "lines": {
                 "added": 8,
                 "removed": 8
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppRemovePieces",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppRemovePieces",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppRemovePieces",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppRemovePieces",
               "lines": {
                 "added": 9,
                 "removed": 9
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Diagram§PieceNodeComponent",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§SelectedConnector",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Diagram§PieceNodeComponent",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§SelectedConnector",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Diagram§extractPieceIdFromNodeId",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§EMPTY_MODEL_TAGS",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Diagram§extractPieceIdFromNodeId",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§EMPTY_MODEL_TAGS",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Panels#Details§ConnectorSectionForm",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Panels#WindowLibrary§DraggableWindowItem",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Panels#Details§ConnectorSectionForm",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Panels#WindowLibrary§DraggableWindowItem",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§DiagramWindow",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§TransactionPiecesProvider",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§DiagramWindow",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§TransactionPiecesProvider",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§HoverPiecesContext",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§HoverPiecesContext",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§HoverPiecesContext",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§HoverPiecesContext",
               "lines": {
                 "added": 37,
                 "removed": 37
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§useDesignAppScope",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§useDesignStore",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§useDesignAppScope",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§useDesignStore",
               "lines": {
                 "added": 12,
                 "removed": 12
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Scene§LoadedPieceMesh",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Windows§AppProps",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Scene§LoadedPieceMesh",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Windows§AppProps",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§useDesignAppActiveTool",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppPanelVisibility",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§useDesignAppActiveTool",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§useDesignAppPanelVisibility",
               "lines": {
                 "added": 3,
                 "removed": 3
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Action Hooks§ActionHookResult",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Scene§applyHighlightToLoadedScene",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Action Hooks§ActionHookResult",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Scene§applyHighlightToLoadedScene",
               "lines": {
                 "added": 17,
                 "removed": 17
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Diagram§ConnectionEdgeComponent",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppDeselectPiecePort",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Diagram§ConnectionEdgeComponent",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppDeselectPiecePort",
               "lines": {
                 "added": 11,
                 "removed": 11
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Scene§GLTFMesh",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Diagram§DesignDiagram",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Scene§GLTFMesh",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram§DesignDiagram",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§useDesignAppPieceStatus",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§EMPTY_HOVER_CONTEXT",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§useDesignAppPieceStatus",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§EMPTY_HOVER_CONTEXT",
               "lines": {
                 "added": 4,
                 "removed": 4
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Diagram§pieceNodeAreEqual",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Diagram§PieceNodeInnerProps",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Diagram§pieceNodeAreEqual",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram§PieceNodeInnerProps",
               "lines": {
                 "added": 15,
                 "removed": 15
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§getConnectionStatusFromTransactionStack",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§getConnectionStatusFromTransactionStack",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§getConnectionStatusFromTransactionStack",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§getConnectionStatusFromTransactionStack",
               "lines": {
                 "added": 28,
                 "removed": 28
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§getTransactionAffectedPieces",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Diagram§PieceNodeInner",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§getTransactionAffectedPieces",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram§PieceNodeInner",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§useDesignAppPiecePlane",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppClearHover",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§useDesignAppPiecePlane",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppClearHover",
               "lines": {
                 "added": 8,
                 "removed": 8
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§useDesignAppSelectedModelTags",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppSelectedModelTags",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§useDesignAppSelectedModelTags",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§useDesignAppSelectedModelTags",
               "lines": {
                 "added": 18,
                 "removed": 18
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppAddConnectionToSelection",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppSelectAll",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppAddConnectionToSelection",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppSelectAll",
               "lines": {
                 "added": 13,
                 "removed": 13
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Diagram§ConnectionEdgeInnerProps",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Scene§GLTFMesh",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Diagram§ConnectionEdgeInnerProps",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Scene§GLTFMesh",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Panels#WindowLibrary§WindowLibrary",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Panels#WindowLibrary§WindowLibrary",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Panels#WindowLibrary§WindowLibrary",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Panels#WindowLibrary§WindowLibrary",
               "lines": {
                 "added": 25,
                 "removed": 25
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppTogglePanel",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppTogglePanel",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppTogglePanel",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppTogglePanel",
               "lines": {
                 "added": 10,
                 "removed": 10
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Diagram§SelectedConnectorPortContext",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Diagram§SelectedConnectorPortContext",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Diagram§SelectedConnectorPortContext",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram§SelectedConnectorPortContext",
               "lines": {
                 "added": 17,
                 "removed": 17
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Scene§DesignAppScene",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Scene§DesignAppScene",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Scene§DesignAppScene",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Scene§DesignAppScene",
               "lines": {
                 "added": 138,
                 "removed": 138
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Scene§OBJMesh",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Diagram§ConnectionEdge",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Scene§OBJMesh",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram§ConnectionEdge",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§computeHoverData",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§computeHoverData",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§computeHoverData",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§computeHoverData",
               "lines": {
                 "added": 35,
                 "removed": 35
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§useDesignAppPanelVisibilityField",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppFocusPiece",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§useDesignAppPanelVisibilityField",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppFocusPiece",
               "lines": {
                 "added": 8,
                 "removed": 8
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Diagram§DiagramNode",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Hover Intent Context§HoverIntentContext",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Diagram§DiagramNode",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Hover Intent Context§HoverIntentContext",
               "lines": {
                 "added": 3,
                 "removed": 3
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§EMPTY_SELECTION",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Diagram§ConnectionEdgeInner",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§EMPTY_SELECTION",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram§ConnectionEdgeInner",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppRedo",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppAddConnection",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppRedo",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppAddConnection",
               "lines": {
                 "added": 9,
                 "removed": 9
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppUpdateConnection",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas§PieceRenderData",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppUpdateConnection",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas§PieceRenderData",
               "lines": {
                 "added": 9,
                 "removed": 9
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§useDesignAppFullscreen",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppDiff",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§useDesignAppFullscreen",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§useDesignAppDiff",
               "lines": {
                 "added": 3,
                 "removed": 3
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppClusterPieces",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppClusterPieces",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppClusterPieces",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppClusterPieces",
               "lines": {
                 "added": 9,
                 "removed": 9
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppHoverDesigns",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppHoverPieces",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppHoverDesigns",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppHoverPieces",
               "lines": {
                 "added": 8,
                 "removed": 8
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppHoverPiece",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Panels#WindowLibrary§windowTemplates",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppHoverPiece",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Panels#WindowLibrary§windowTemplates",
               "lines": {
                 "added": 8,
                 "removed": 8
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Scene§getComputedColor",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Diagram§SelectedConnectorContext",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Scene§getComputedColor",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram§SelectedConnectorContext",
               "lines": {
                 "added": 18,
                 "removed": 18
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppSelectPiece",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppPanelVisibilityField",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppSelectPiece",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§useDesignAppPanelVisibilityField",
               "lines": {
                 "added": 8,
                 "removed": 8
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Diagram§ConnectionEdge",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Scene§PresenceThree",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Diagram§ConnectionEdge",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Scene§PresenceThree",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas§usePieceRenderData",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§TransactionPiecesContextValue",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas§usePieceRenderData",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§TransactionPiecesContextValue",
               "lines": {
                 "added": 4,
                 "removed": 4
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Diagram§nodeComponents",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Scene§LoadedPieceMesh",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Diagram§nodeComponents",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Scene§LoadedPieceMesh",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Panels#Details§ConnectionsSection",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Panels#Details§PiecesSection",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Panels#Details§ConnectionsSection",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Panels#Details§PiecesSection",
               "lines": {
                 "added": 5,
                 "removed": 5
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§useDesignAppDiff",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Scene§PlaneThreeProps",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§useDesignAppDiff",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Scene§PlaneThreeProps",
               "lines": {
                 "added": 3,
                 "removed": 3
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Hover Intent Context§HoverIntentProvider",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§DesignAppScopeProvider",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Hover Intent Context§HoverIntentProvider",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§DesignAppScopeProvider",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppDeselectAll",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppToggleDiagramFullscreen",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppDeselectAll",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppToggleDiagramFullscreen",
               "lines": {
                 "added": 8,
                 "removed": 8
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Diagram§HelperLine",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppIsConnectionSelected",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Diagram§HelperLine",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§useDesignAppIsConnectionSelected",
               "lines": {
                 "added": 11,
                 "removed": 11
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Diagram§edgeComponents",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Diagram§nodeComponents",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Diagram§edgeComponents",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram§nodeComponents",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppRemovePieceFromSelection",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Tools§DesignHandSettings",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppRemovePieceFromSelection",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Tools§DesignHandSettings",
               "lines": {
                 "added": 11,
                 "removed": 11
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§SceneWindow",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppRemovePieceFromSelection",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§SceneWindow",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppRemovePieceFromSelection",
               "lines": {
                 "added": 11,
                 "removed": 11
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§useIsDesignPieceChangedInTransaction",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Panels#Details§ConnectionsSectionForm",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§useIsDesignPieceChangedInTransaction",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Panels#Details§ConnectionsSectionForm",
               "lines": {
                 "added": 4,
                 "removed": 4
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppAddModelTagForAllTypes",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppAddModelTagForAllTypes",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppAddModelTagForAllTypes",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppAddModelTagForAllTypes",
               "lines": {
                 "added": 15,
                 "removed": 15
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Diagram§ConnectionEdgeFallback",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Scene§PieceMesh",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Diagram§ConnectionEdgeFallback",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Scene§PieceMesh",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Panels#WindowLibrary§DraggableWindowItem",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§getTransactionAffectedPieces",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Panels#WindowLibrary§DraggableWindowItem",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§getTransactionAffectedPieces",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§TransactionPiecesProvider",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§TransactionPiecesProviderInner",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§TransactionPiecesProvider",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§TransactionPiecesProviderInner",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppSelectPiecePort",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppSelectPiecePort",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppSelectPiecePort",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppSelectPiecePort",
               "lines": {
                 "added": 10,
                 "removed": 10
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Diagram§PresenceDiagram",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppUpdateConnections",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Diagram§PresenceDiagram",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppUpdateConnections",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§EMPTY_OTHERS",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§EMPTY_OTHERS",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§EMPTY_OTHERS",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§EMPTY_OTHERS",
               "lines": {
                 "added": 2,
                 "removed": 2
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Diagram§DesignDiagramProps",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Diagram§getPieceIdFromNode",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Diagram§DesignDiagramProps",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram§getPieceIdFromNode",
               "lines": {
                 "added": 3,
                 "removed": 3
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Scene§PlaneThree",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Diagram§extractPieceIdFromNodeId",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Scene§PlaneThree",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram§extractPieceIdFromNodeId",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§SelectedConnector",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Windows§DiagramWindow",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§SelectedConnector",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Windows§DiagramWindow",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§useDesignAppConnectionStatus",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Diagram§HelperLines",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§useDesignAppConnectionStatus",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram§HelperLines",
               "lines": {
                 "added": 4,
                 "removed": 4
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§useDesignAppField",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Scene§OBJMesh",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§useDesignAppField",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Scene§OBJMesh",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§useDesignAppHover",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppHover",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§useDesignAppHover",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§useDesignAppHover",
               "lines": {
                 "added": 22,
                 "removed": 22
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§useDesignAppFullscreenField",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppHoverConnection",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§useDesignAppFullscreenField",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppHoverConnection",
               "lines": {
                 "added": 8,
                 "removed": 8
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Diagram§PieceNodeInnerProps",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§useDesignApp",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Diagram§PieceNodeInnerProps",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§useDesignApp",
               "lines": {
                 "added": 15,
                 "removed": 15
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Panels#Details§SingleConnectionInfo",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Panels#Details§SingleConnectionInfo",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Panels#Details§SingleConnectionInfo",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Panels#Details§SingleConnectionInfo",
               "lines": {
                 "added": 41,
                 "removed": 41
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§UseDesignAppFieldOptions",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppPieceColor",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§UseDesignAppFieldOptions",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§useDesignAppPieceColor",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas§PieceRenderData",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppRemoveConnection",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas§PieceRenderData",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppRemoveConnection",
               "lines": {
                 "added": 9,
                 "removed": 9
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Panels#WindowLibrary§WindowTemplate",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Panels#WindowLibrary§WindowTemplate",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Panels#WindowLibrary§WindowTemplate",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Panels#WindowLibrary§WindowTemplate",
               "lines": {
                 "added": 7,
                 "removed": 7
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppToggleDiagramFullscreen",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppHoverTypes",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppToggleDiagramFullscreen",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppHoverTypes",
               "lines": {
                 "added": 8,
                 "removed": 8
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Diagram§DesignDiagram",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§DesignAppTransactionProvider",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Diagram§DesignDiagram",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Action Hooks§DesignAppTransactionProvider",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Diagram§getPieceIdFromNode",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppCamera",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Diagram§getPieceIdFromNode",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§useDesignAppCamera",
               "lines": {
                 "added": 3,
                 "removed": 3
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Diagram§MiniMapNode",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Diagram§PresenceDiagram",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Diagram§MiniMapNode",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram§PresenceDiagram",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Diagram§ConnectorHandleProps",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Diagram§ConnectionConnectionLine",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Diagram§ConnectorHandleProps",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram§ConnectionConnectionLine",
               "lines": {
                 "added": 6,
                 "removed": 6
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Panels#WindowLibrary§DraggableWindowItemProps",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Diagram§DesignDiagramProps",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Panels#WindowLibrary§DraggableWindowItemProps",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram§DesignDiagramProps",
               "lines": {
                 "added": 3,
                 "removed": 3
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Tools§SelectionTool",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Tools§SelectionSubtractiveTool",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Tools§SelectionTool",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Tools§SelectionSubtractiveTool",
               "lines": {
                 "added": 5,
                 "removed": 5
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§useDesignAppIsConnectionHovered",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppIsConnectionHovered",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§useDesignAppIsConnectionHovered",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§useDesignAppIsConnectionHovered",
               "lines": {
                 "added": 11,
                 "removed": 11
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§useDesignAppSelection",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Panels#WindowLibrary§DraggableWindowItemProps",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§useDesignAppSelection",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Panels#WindowLibrary§DraggableWindowItemProps",
               "lines": {
                 "added": 3,
                 "removed": 3
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppDeleteSelected",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppUndo",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppDeleteSelected",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppUndo",
               "lines": {
                 "added": 9,
                 "removed": 9
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Scene§PresenceThree",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Scene§FBXMesh",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Scene§PresenceThree",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Scene§FBXMesh",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§useDesignAppActiveToolField",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppDeleteSelected",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§useDesignAppActiveToolField",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppDeleteSelected",
               "lines": {
                 "added": 9,
                 "removed": 9
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§useDesignAppCommands",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppCommands",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§useDesignAppCommands",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§useDesignAppCommands",
               "lines": {
                 "added": 99,
                 "removed": 99
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§useDesignAppDiagramCenter",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§EMPTY_CONNECTOR",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§useDesignAppDiagramCenter",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§EMPTY_CONNECTOR",
               "lines": {
                 "added": 21,
                 "removed": 21
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components§useDesignAppIsPieceTransitiveHovered",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§areSetsEqual",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components§useDesignAppIsPieceTransitiveHovered",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§areSetsEqual",
               "lines": {
                 "added": 5,
                 "removed": 5
               }
             },
             {
-              "from": "💻semio/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppFocusPiece",
-              "to": "💻semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppPiecePlane",
+              "from": "💻compose/js/sketchpad/Design.tsx#Components#Action Hooks§useDesignAppFocusPiece",
+              "to": "💻compose/js/sketchpad/Design.tsx#Store#Components§useDesignAppPiecePlane",
               "lines": {
                 "added": 8,
                 "removed": 8
@@ -2086,287 +2086,287 @@
           ],
           "modified": [
             {
-              "path": "🧪semio/js/sketchpad.test.ts§PANEL_GROUPS",
+              "path": "🧪compose/js/sketchpad.test.ts§PANEL_GROUPS",
               "lines": {
                 "added": 0,
                 "removed": 3
               }
             },
             {
-              "path": "🧪semio/js/sketchpad.test.ts§PANEL_GROUPS",
+              "path": "🧪compose/js/sketchpad.test.ts§PANEL_GROUPS",
               "lines": {
                 "added": 0,
                 "removed": 3
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Types§DesignAppDiff",
+              "path": "💻compose/js/sketchpad/Design.tsx#Types§DesignAppDiff",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Types§DesignAppEdit",
+              "path": "💻compose/js/sketchpad/Design.tsx#Types§DesignAppEdit",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppScope",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Components§useDesignAppScope",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Components§useDesignStore",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Components§useDesignStore",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Components#Footer§DesignAppFooter",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Components#Footer§DesignAppFooter",
               "lines": {
                 "added": 0,
                 "removed": 23
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Components#Filters§DesignFilterKind",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Components#Filters§DesignFilterKind",
               "lines": {
                 "added": 7,
                 "removed": 7
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Components#Filters§DesignFilterState",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Components#Filters§DesignFilterState",
               "lines": {
                 "added": 5,
                 "removed": 5
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Components#Filters§DesignFilterContext",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Components#Filters§DesignFilterContext",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Components#Filters§DesignFilterProvider",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Components#Filters§DesignFilterProvider",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Components§useDesignFilters",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Components§useDesignFilters",
               "lines": {
                 "added": 13,
                 "removed": 12
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Components#Tools§SelectionNormalTool",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Components#Tools§SelectionNormalTool",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Components#Tools§SelectionAdditiveTool",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Components#Tools§SelectionAdditiveTool",
               "lines": {
                 "added": 5,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Components#Tools§SelectionSubtractiveTool",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Components#Tools§SelectionSubtractiveTool",
               "lines": {
                 "added": 5,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Components#Tools§LassoRectangularTool",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Components#Tools§LassoRectangularTool",
               "lines": {
                 "added": 5,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Components#Tools§LassoFreeformTool",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Components#Tools§LassoFreeformTool",
               "lines": {
                 "added": 5,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Components#Tools§HandTool",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Components#Tools§HandTool",
               "lines": {
                 "added": 5,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Components#Tools§DesignAppTools",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Components#Tools§DesignAppTools",
               "lines": {
                 "added": 62,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Components#Tools§DesignSelectSettings",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Components#Tools§DesignSelectSettings",
               "lines": {
                 "added": 53,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Components#Tools§DesignHandSettings",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Components#Tools§DesignHandSettings",
               "lines": {
                 "added": 11,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Components#Tools§DesignLassoSettings",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Components#Tools§DesignLassoSettings",
               "lines": {
                 "added": 19,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Components#Toolbar§DesignToolbarFilters",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Components#Toolbar§DesignToolbarFilters",
               "lines": {
                 "added": 36,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Panels#Details§SingleConnectionInfo",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Panels#Details§SingleConnectionInfo",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Diagram§designToNodesAndEdges",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram§designToNodesAndEdges",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Scene§ModelPiece",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Scene§ModelPiece",
               "lines": {
                 "added": 8,
                 "removed": 1
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Scene§ModelDesign",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Scene§ModelDesign",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Windows§AppProps",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Windows§AppProps",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#App§App",
+              "path": "💻compose/js/sketchpad/Design.tsx#App§App",
               "lines": {
                 "added": 58,
                 "removed": 56
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#App§DesignApp",
+              "path": "💻compose/js/sketchpad/Design.tsx#App§DesignApp",
               "lines": {
                 "added": 27,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Types§DesignAppEdit",
+              "path": "💻compose/js/sketchpad/Design.tsx#Types§DesignAppEdit",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Components§useDesignStore",
+              "path": "💻compose/js/sketchpad/Design.tsx#Components§useDesignStore",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Components#Tools§SelectionTool",
+              "path": "💻compose/js/sketchpad/Design.tsx#Components#Tools§SelectionTool",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Components#Tools§DesignAppTools",
+              "path": "💻compose/js/sketchpad/Design.tsx#Components#Tools§DesignAppTools",
               "lines": {
                 "added": 0,
                 "removed": 66
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Components#Tools§DesignSelectSettings",
+              "path": "💻compose/js/sketchpad/Design.tsx#Components#Tools§DesignSelectSettings",
               "lines": {
                 "added": 0,
                 "removed": 65
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Scene§ModelPiece",
+              "path": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Scene§ModelPiece",
               "lines": {
                 "added": 0,
                 "removed": 3
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Components#Canvas#Scene§ModelDesign",
+              "path": "💻compose/js/sketchpad/Design.tsx#Components#Canvas#Scene§ModelDesign",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Components§AppProps",
+              "path": "💻compose/js/sketchpad/Design.tsx#Components§AppProps",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#App§App",
+              "path": "💻compose/js/sketchpad/Design.tsx#App§App",
               "lines": {
                 "added": 0,
                 "removed": 43
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#App§DesignApp",
+              "path": "💻compose/js/sketchpad/Design.tsx#App§DesignApp",
               "lines": {
                 "added": 0,
                 "removed": 12
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Config§config",
+              "path": "💻compose/js/sketchpad/Design.tsx#Config§config",
               "lines": {
                 "added": 0,
                 "removed": 1
@@ -2375,119 +2375,119 @@
           ],
           "added": [
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Components§useDesignFilters",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Components§useDesignFilters",
               "lines": {
                 "added": 19,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Components#Tools§DesignAppTools",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Components#Tools§DesignAppTools",
               "lines": {
                 "added": 65,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Scene§ModelPiece",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Scene§ModelPiece",
               "lines": {
                 "added": 184,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Components#Tools§DesignLassoSettings",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Components#Tools§DesignLassoSettings",
               "lines": {
                 "added": 19,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Scene§ModelDesign",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Scene§ModelDesign",
               "lines": {
                 "added": 90,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Components#Tools§LassoRectangularTool",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Components#Tools§LassoRectangularTool",
               "lines": {
                 "added": 5,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Components#Tools§SelectionNormalTool",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Components#Tools§SelectionNormalTool",
               "lines": {
                 "added": 5,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Hover Intent Context§useHoverIntent",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Hover Intent Context§useHoverIntent",
               "lines": {
                 "added": 5,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Components§TransactionPiecesContext",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Components§TransactionPiecesContext",
               "lines": {
                 "added": 7,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Components#Toolbar§DesignToolbarFilters",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Components#Toolbar§DesignToolbarFilters",
               "lines": {
                 "added": 36,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Components#Tools§DesignSelectSettings",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Components#Tools§DesignSelectSettings",
               "lines": {
                 "added": 56,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Diagram§ExpandMenuProps",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram§ExpandMenuProps",
               "lines": {
                 "added": 5,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Panels#Details§DesignSection",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Panels#Details§DesignSection",
               "lines": {
                 "added": 5,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppIsPieceTransitiveHovered",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Components§useDesignAppIsPieceTransitiveHovered",
               "lines": {
                 "added": 5,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Components§UseDesignAppFieldOptions",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Components§UseDesignAppFieldOptions",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Diagram§DesignNodeComponent",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram§DesignNodeComponent",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppRemoveConnectionFromSelection",
+              "path": "💻compose/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppRemoveConnectionFromSelection",
               "lines": {
                 "added": 11,
                 "removed": 0

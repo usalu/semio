@@ -50,23 +50,23 @@ Current ID system is inconsistent:
 
 ## New ID System
 
-Following semio's `@` naming convention:
+Following compose's `@` naming convention:
 
 ```
-semio                                          - repo
-semio/BUNDLE                                   - bundle
-semio/repo/FOLDER/...                          - folder outside bundle
-semio/BUNDLE/FOLDER/...                        - folder in bundle
-semio/repo/PATH/FILE                           - file outside bundle
-semio/BUNDLE/PATH/FILE                         - file in bundle
-semio/BUNDLE/PATH/FILE#SECTION#SUBSECTION      - section
-semio/BUNDLE/PATH/FILE#SECTION§DEFINITION      - definition
-semio/contributors/GITHUB                      - contributor
-semio/tickets/YYYY/MM/DD/SLUG                  - ticket
-semio/commits/SHA                              - commit
-semio/policies/POLICY                          - policy
-semio/policies/POLICY/breachs/KIND          - statute
-semio/breachs/SCOPE#LINE:COL                - breach
+compose                                          - repo
+compose/BUNDLE                                   - bundle
+compose/repo/FOLDER/...                          - folder outside bundle
+compose/BUNDLE/FOLDER/...                        - folder in bundle
+compose/repo/PATH/FILE                           - file outside bundle
+compose/BUNDLE/PATH/FILE                         - file in bundle
+compose/BUNDLE/PATH/FILE#SECTION#SUBSECTION      - section
+compose/BUNDLE/PATH/FILE#SECTION§DEFINITION      - definition
+compose/contributors/GITHUB                      - contributor
+compose/tickets/YYYY/MM/DD/SLUG                  - ticket
+compose/commits/SHA                              - commit
+compose/policies/POLICY                          - policy
+compose/policies/POLICY/breachs/KIND          - statute
+compose/breachs/SCOPE#LINE:COL                - breach
 ```
 
 Benefits:
@@ -75,7 +75,7 @@ Benefits:
 - Human-readable
 - Path-based (natural hierarchy)
 - Deterministic (except breachs which are ephemeral)
-- Consistent with semio naming
+- Consistent with compose naming
 
 ## Implementation Progress
 
@@ -83,15 +83,15 @@ Benefits:
 
 Updated GetID() methods for:
 
-- `Repo` → `"semio"`
-- `Bundle` → `"semio/" + name`
+- `Repo` → `"compose"`
+- `Bundle` → `"compose/" + name`
 - `Section` → `filePath + "#" + sectionPath` (with fallback)
 - `Definition` → `filePath + "#" + sectionPath + "§" + name` (with fallback)
-- `Contributor` → `"semio/contributors/" + github`
-- `Ticket` → `"semio/tickets/YYYY/MM/DD/SLUG"`
-- `Commit` → `"semio/commits/" + SHA`
-- `Policy` → `"semio/policies/" + name`
-- `StatuteMeta` → `"semio/policies/" + policyID + "/breachs/" + kind`
+- `Contributor` → `"compose/contributors/" + github`
+- `Ticket` → `"compose/tickets/YYYY/MM/DD/SLUG"`
+- `Commit` → `"compose/commits/" + SHA`
+- `Policy` → `"compose/policies/" + name`
+- `StatuteMeta` → `"compose/policies/" + policyID + "/breachs/" + kind`
 
 Added fields to support proper IDs:
 
@@ -162,18 +162,18 @@ Bulk close
 
 ## Completed
 
-Successfully refactored the Node ID system to use a consistent, globally unique format based on semio's `@` naming convention.
+Successfully refactored the Node ID system to use a consistent, globally unique format based on compose's `@` naming convention.
 
 ### Changes Made:
 
 1. **Updated all GetID() methods** to return new ID format:
-   - Repo: `semio`
-   - Bundle: `semio/BUNDLE`
-   - Contributor: `semio/contributors/GITHUB`
-   - Ticket: `semio/tickets/YYYY/MM/DD/SLUG`
-   - Commit: `semio/commits/SHA`
-   - Policy: `semio/policies/NAME`
-   - StatuteMeta: `semio/policies/POLICY/breachs/KIND`
+   - Repo: `compose`
+   - Bundle: `compose/BUNDLE`
+   - Contributor: `compose/contributors/GITHUB`
+   - Ticket: `compose/tickets/YYYY/MM/DD/SLUG`
+   - Commit: `compose/commits/SHA`
+   - Policy: `compose/policies/NAME`
+   - StatuteMeta: `compose/policies/POLICY/breachs/KIND`
 
 2. **Added new fields** for proper ID construction:
    - `Definition.FilePath` and `Definition.SectionPath`
@@ -210,7 +210,7 @@ Successfully refactored the Node ID system to use a consistent, globally unique 
 - **Human-readable**: IDs are clear and descriptive
 - **Deterministic**: Same codebase always generates same IDs (except ephemeral breachs)
 - **Path-based hierarchy**: Natural navigation structure
-- **Consistent**: All IDs follow the same `semio/...` pattern
+- **Consistent**: All IDs follow the same `compose/...` pattern
 
 ## Breaking Changes
 

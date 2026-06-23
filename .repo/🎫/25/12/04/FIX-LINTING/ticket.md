@@ -32,7 +32,7 @@ Linting errors across multiple languages:
 
 ### Quality.tsx
 
-- Added missing imports: icons from `semio/assets`, UI components from `./elements`, types from `./shared`, hooks from `./Sketchpad`
+- Added missing imports: icons from `compose/assets`, UI components from `./elements`, types from `./shared`, hooks from `./Sketchpad`
 - Fixed `createDefaultLayout` call (removed 4th argument)
 - Fixed quality update diff key
 
@@ -49,7 +49,7 @@ Linting errors across multiple languages:
 
 ### Design.tsx
 
-- Added `findModel` import from semio
+- Added `findModel` import from compose
 - Defined `TransformableModel` type locally
 - Commented out `setHelperLines` calls (helper lines disabled for performance)
 

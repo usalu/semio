@@ -11,7 +11,7 @@ function walk(dir: string, out: string[] = []): string[] {
 	return out;
 }
 
-const root = "c:/git/semio/spatial/assets/extension";
+const root = "c:/git/compose/spatial/assets/extension";
 const interactionRoot = path.join(root, "builtin", "interaction");
 
 for (const file of walk(interactionRoot)) {

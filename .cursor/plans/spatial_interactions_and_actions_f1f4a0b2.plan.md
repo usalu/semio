@@ -169,7 +169,7 @@ Extend `spatial/js/renderer-r3f/index.tsx` `🧪Tests` to rename + cover one ful
 ## 9. Out of scope
 
 - Persisting `ActionRegistry` / `InteractionRegistry` across sessions.
-- Touching `./elements`, `./semio`, `./coda`, `./reuse` (per AGENTS.md no-tech-mixing rule).
+- Touching `./elements`, `./compose`, `./coda`, `./reuse` (per AGENTS.md no-tech-mixing rule).
 - Backwards compatibility — all `Command*` symbols, `spatial.command/v1` schema string, and `*.command.json` filenames are removed outright.
 
 ## 10. Ticket close

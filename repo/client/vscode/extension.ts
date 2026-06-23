@@ -9,9 +9,9 @@
 // #endregion 🧲Header
 
 // #region 🔌Adapters
-// Imports MUST include VS Code API, Node.js utilities, and semio validation.
+// Imports MUST include VS Code API, Node.js utilities, and compose validation.
 
-// import { deserializeKit, Problem, validateKit } from "@semio/js/semio";
+// import { deserializeKit, Problem, validateKit } from "@compose/js/compose";
 import { exec, execFile } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
@@ -1217,13 +1217,13 @@ export const GoalsDocument = graphql(`
 // Constants MUST define static configuration for diagnostics and UI strings.
 
 /**
- * SEMIO_KIT_LANGUAGE holds the data fields for a SEMIO_KIT_LANGUAGE record.
+ * COMPOSE_KIT_LANGUAGE holds the data fields for a COMPOSE_KIT_LANGUAGE record.
  **/
-const SEMIO_KIT_LANGUAGE = "json";
+const COMPOSE_KIT_LANGUAGE = "json";
 /**
  * DIAGNOSTIC_SOURCE holds the data fields for a DIAGNOSTIC_SOURCE record.
  **/
-const DIAGNOSTIC_SOURCE = "semio";
+const DIAGNOSTIC_SOURCE = "compose";
 
 /**
  * UI_STRINGS holds the data fields for a UI_STRINGS record.
@@ -1808,7 +1808,7 @@ function runRepoCommand(args: string): void {
   }
   const fullCommand = `"${command}" ${args}`;
   log("runRepoCommand:", fullCommand, "cwd:", root);
-  const terminal = vscode.window.createTerminal({ name: "semio", cwd: root });
+  const terminal = vscode.window.createTerminal({ name: "compose", cwd: root });
   terminal.show();
   terminal.sendText(fullCommand);
 }
@@ -1979,7 +1979,7 @@ export function treeNodeContextValue(node: TreeNodeData): string {
  **/
 export function treeNodeCommand(node: TreeNodeData): vscode.Command | undefined {
   if (node.Kind === "category") return undefined;
-  if (node.URI) return { command: "semio.navigate", title: "Navigate", arguments: [node.URI] };
+  if (node.URI) return { command: "compose.navigate", title: "Navigate", arguments: [node.URI] };
   return undefined;
 }
 
@@ -2159,7 +2159,7 @@ async function navigateToUri(uri: string): Promise<void> {
 
   switch (parsed.type) {
     case "repo": {
-      return vscode.commands.executeCommand("semio.monorepo.focus") as any;
+      return vscode.commands.executeCommand("compose.monorepo.focus") as any;
     }
     case "cb":
     case "technologies":
@@ -2176,7 +2176,7 @@ async function navigateToUri(uri: string): Promise<void> {
     case "files":
     case "sections":
     case "definitions": {
-      return vscode.commands.executeCommand("semio.monorepo.focus") as any;
+      return vscode.commands.executeCommand("compose.monorepo.focus") as any;
     }
     case "ticket": {
       let ticketPath = "";
@@ -2188,7 +2188,7 @@ async function navigateToUri(uri: string): Promise<void> {
       }
 
       if (ticketPath && fs.existsSync(ticketPath)) {
-        return vscode.commands.executeCommand("semio.navigateToFile", ticketPath) as any;
+        return vscode.commands.executeCommand("compose.navigateToFile", ticketPath) as any;
       }
       break;
     }
@@ -2196,7 +2196,7 @@ async function navigateToUri(uri: string): Promise<void> {
       const goalId = node?.Data?.id || parsed.path;
       const goalJsonPath = path.join(wsRoot, ".repo", "🎯", goalId, "goal.json");
       if (fs.existsSync(goalJsonPath)) {
-        return vscode.commands.executeCommand("semio.navigateToFile", goalJsonPath) as any;
+        return vscode.commands.executeCommand("compose.navigateToFile", goalJsonPath) as any;
       }
       break;
     }
@@ -2263,7 +2263,7 @@ async function navigateToUri(uri: string): Promise<void> {
       const filePath = node?.Data?.path || parsed.path;
       const abs = path.join(wsRoot, filePath);
       if (fs.existsSync(abs)) {
-        return vscode.commands.executeCommand("semio.navigateToFile", filePath) as any;
+        return vscode.commands.executeCommand("compose.navigateToFile", filePath) as any;
       }
       break;
     }
@@ -2272,7 +2272,7 @@ async function navigateToUri(uri: string): Promise<void> {
         return openFileAtLine(node.Data.path, node.Data.startLine, node.Data.endLine);
       }
       if (node?.Data?.path) {
-        return vscode.commands.executeCommand("semio.navigateToFile", node.Data.path) as any;
+        return vscode.commands.executeCommand("compose.navigateToFile", node.Data.path) as any;
       }
       break;
     }
@@ -2281,7 +2281,7 @@ async function navigateToUri(uri: string): Promise<void> {
         return openFileAtLine(node.Data.path, node.Data.startLine, node.Data.endLine);
       }
       if (node?.Data?.path) {
-        return vscode.commands.executeCommand("semio.navigateToFile", node.Data.path) as any;
+        return vscode.commands.executeCommand("compose.navigateToFile", node.Data.path) as any;
       }
       break;
     }
@@ -2314,8 +2314,8 @@ async function navigateToUri(uri: string): Promise<void> {
  **/
 function extractFilePathFromScope(scope: string): string | undefined {
   let cleanScope = scope;
-  if (cleanScope.startsWith("@semio/breachs/")) {
-    cleanScope = cleanScope.replace("@semio/breachs/", "");
+  if (cleanScope.startsWith("@compose/breachs/")) {
+    cleanScope = cleanScope.replace("@compose/breachs/", "");
   }
 
   let bestBundle: BundleInfo | undefined;
@@ -2340,7 +2340,7 @@ function extractFilePathFromScope(scope: string): string | undefined {
     return filePath.endsWith("/") ? filePath.slice(0, -1) : filePath;
   }
 
-  if (cleanScope.startsWith("@semio/") || cleanScope.startsWith("@repo/")) {
+  if (cleanScope.startsWith("@compose/") || cleanScope.startsWith("@repo/")) {
     const parts = cleanScope.split("/");
     if (parts.length > 2) {
       cleanScope = parts.slice(2).join("/");
@@ -2503,8 +2503,8 @@ function updateFileDiagnostics(document: vscode.TextDocument, breachs: Breach[])
     const range = new vscode.Range(line, column, line, endColumn);
     const severity = vscode.DiagnosticSeverity.Warning;
     let kindId = breach.kind.id;
-    if (kindId.startsWith("@semio/policies//breachs/")) {
-      kindId = kindId.replace("@semio/policies//breachs/", "");
+    if (kindId.startsWith("@compose/policies//breachs/")) {
+      kindId = kindId.replace("@compose/policies//breachs/", "");
     }
     const diagnostic = new vscode.Diagnostic(range, breach.summary, severity);
     diagnostic.source = DIAGNOSTIC_SOURCE;
@@ -2553,7 +2553,7 @@ async function autofixBreach(relativePath: string): Promise<void> {
  * isKitDocument holds the data fields for a isKitDocument record.
  **/
 function isKitDocument(document: vscode.TextDocument): boolean {
-  if (document.languageId !== SEMIO_KIT_LANGUAGE) return false;
+  if (document.languageId !== COMPOSE_KIT_LANGUAGE) return false;
   const basename = document.uri.path.split("/").pop()?.toLowerCase() || "";
   return basename.startsWith("kit_") || basename.includes("_kit") || basename === "kit.json";
 }
@@ -2572,7 +2572,7 @@ function validateKitDocument(document: vscode.TextDocument): void {
     });
     kitDiagnosticCollection.set(document.uri, diagnostics);
   } catch (error) {
-    logError("Failed to validate semio kit:", error);
+    logError("Failed to validate compose kit:", error);
     kitDiagnosticCollection.delete(document.uri);
   }
 }
@@ -2644,7 +2644,7 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<FilterTre
   updateContextKeys(): void {
     for (const [kind, values] of Object.entries(this.filters)) {
       for (const [key, enabled] of Object.entries(values)) {
-        vscode.commands.executeCommand("setContext", `semio.filter.${kind}.${key}`, enabled);
+        vscode.commands.executeCommand("setContext", `compose.filter.${kind}.${key}`, enabled);
       }
     }
   }
@@ -2683,7 +2683,7 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<FilterTre
         const excluded = this.excludedYears.includes(y);
         const item = new FilterTreeItem(String(y), "timeValue", vscode.TreeItemCollapsibleState.Collapsed, "filter_time_year", "year", y);
         item.tooltip = excluded ? `Excluded year ${y}` : `Included year ${y}`;
-        item.command = { command: "semio.filter.toggleYear", title: "Toggle Year", arguments: [y] };
+        item.command = { command: "compose.filter.toggleYear", title: "Toggle Year", arguments: [y] };
         return item;
       });
     }
@@ -2695,7 +2695,7 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<FilterTre
         const label = new Date(2000, m - 1, 1).toLocaleString("default", { month: "long" });
         const item = new FilterTreeItem(label, "timeValue", vscode.TreeItemCollapsibleState.Collapsed, "filter_time_month", "month", m);
         item.tooltip = excluded ? `Excluded month ${label}` : `Included month ${label}`;
-        item.command = { command: "semio.filter.toggleMonth", title: "Toggle Month", arguments: [m] };
+        item.command = { command: "compose.filter.toggleMonth", title: "Toggle Month", arguments: [m] };
         return item;
       });
     }
@@ -2705,7 +2705,7 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<FilterTre
         const excluded = this.excludedDays.includes(d);
         const item = new FilterTreeItem(String(d).padStart(2, "0"), "timeValue", vscode.TreeItemCollapsibleState.None, "filter_time_day", "day", d);
         item.tooltip = excluded ? `Excluded day ${d}` : `Included day ${d}`;
-        item.command = { command: "semio.filter.toggleDay", title: "Toggle Day", arguments: [d] };
+        item.command = { command: "compose.filter.toggleDay", title: "Toggle Day", arguments: [d] };
         return item;
       });
     }
@@ -2717,7 +2717,7 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<FilterTre
     const item = new FilterTreeItem("🔍Search", "search", vscode.TreeItemCollapsibleState.None, "filter_search");
     const details = [this.searchQuery ? `Query: ${this.searchQuery}` : "No query set", this.matchCase ? "Match case on" : "Match case off", this.matchWholeWord ? "Whole word on" : "Whole word off", this.useRegex ? "Regex on" : "Regex off"];
     item.tooltip = `Search filter\n${details.join("\n")}`;
-    item.command = { command: "semio.filter.search", title: "Search" };
+    item.command = { command: "compose.filter.search", title: "Search" };
     return item;
   }
 
@@ -3064,7 +3064,7 @@ async function collectNativeDefinitionCodeLenses(document: vscode.TextDocument, 
     lenses.push(
       new vscode.CodeLens(range, {
         title: "Analyze",
-        command: "semio.analyze",
+        command: "compose.analyze",
         arguments: [scope],
       }),
     );
@@ -3097,10 +3097,10 @@ async function collectNativeDefinitionCodeLenses(document: vscode.TextDocument, 
 }
 
 /**
- * SemioCodeLensProvider provides Analyze and Navigate to CodeLenses for all entity IDs.
+ * ComposeCodeLensProvider provides Analyze and Navigate to CodeLenses for all entity IDs.
  * It uses the ENTITY_ID_REGEX built dynamically from the ENTITY_EMOJIS registry.
  **/
-class SemioCodeLensProvider implements vscode.CodeLensProvider {
+class ComposeCodeLensProvider implements vscode.CodeLensProvider {
   async provideCodeLenses(document: vscode.TextDocument, token: vscode.CancellationToken): Promise<vscode.CodeLens[]> {
     const lenses: vscode.CodeLens[] = [];
     const text = document.getText();
@@ -3119,7 +3119,7 @@ class SemioCodeLensProvider implements vscode.CodeLensProvider {
       lenses.push(
         new vscode.CodeLens(range, {
           title: "Analyze",
-          command: "semio.analyze",
+          command: "compose.analyze",
           arguments: [id],
         }),
       );
@@ -3127,7 +3127,7 @@ class SemioCodeLensProvider implements vscode.CodeLensProvider {
       lenses.push(
         new vscode.CodeLens(range, {
           title: "Navigate to",
-          command: "semio.navigate",
+          command: "compose.navigate",
           arguments: [uri || id],
         }),
       );
@@ -3140,14 +3140,14 @@ class SemioCodeLensProvider implements vscode.CodeLensProvider {
 }
 
 /**
- * semioGutterIcon holds the data fields for a semioGutterIcon record.
+ * composeGutterIcon holds the data fields for a composeGutterIcon record.
  **/
-let semioGutterIcon: vscode.TextEditorDecorationType;
+let composeGutterIcon: vscode.TextEditorDecorationType;
 
-/** updateSemioDecorations holds the data fields for a updateSemioDecorations record.
+/** updateComposeDecorations holds the data fields for a updateComposeDecorations record.
  **/
-function updateSemioDecorations(editor: vscode.TextEditor) {
-  if (!editor || !semioGutterIcon) return;
+function updateComposeDecorations(editor: vscode.TextEditor) {
+  if (!editor || !composeGutterIcon) return;
   const text = editor.document.getText();
   const regex = buildEntityIdRegex();
   const decorations: vscode.DecorationOptions[] = [];
@@ -3159,7 +3159,7 @@ function updateSemioDecorations(editor: vscode.TextEditor) {
     decorations.push({ range: new vscode.Range(startPos, endPos) });
   }
 
-  editor.setDecorations(semioGutterIcon, decorations);
+  editor.setDecorations(composeGutterIcon, decorations);
 }
 
 // #endregion 🪵Providers
@@ -3172,13 +3172,13 @@ function updateSemioDecorations(editor: vscode.TextEditor) {
  **/
 function registerSidebarViews(context: vscode.ExtensionContext): void {
   filterProvider = new FilterTreeDataProvider();
-  vscode.window.registerTreeDataProvider("semio.filter", filterProvider);
+  vscode.window.registerTreeDataProvider("compose.filter", filterProvider);
 
   monorepoProvider = new MonorepoTreeDataProvider(filterProvider);
-  vscode.window.registerTreeDataProvider("semio.monorepo", monorepoProvider);
+  vscode.window.registerTreeDataProvider("compose.monorepo", monorepoProvider);
 
   const sectionsProvider = new SectionsTreeDataProvider(context);
-  vscode.window.registerTreeDataProvider("semio.sections", sectionsProvider);
+  vscode.window.registerTreeDataProvider("compose.sections", sectionsProvider);
 }
 
 /**
@@ -3192,7 +3192,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
     context.subscriptions.push(vscode.commands.registerCommand(command, handler));
   };
 
-  register("semio.copyId", (item: MonorepoTreeItem) => {
+  register("compose.copyId", (item: MonorepoTreeItem) => {
     const id = item?.nodeId || (typeof item?.label === "string" ? item.label : "");
     if (id) {
       vscode.env.clipboard.writeText(id);
@@ -3200,28 +3200,28 @@ function registerCommands(context: vscode.ExtensionContext): void {
     }
   });
 
-  register("semio.mailto", (email: string) => {
+  register("compose.mailto", (email: string) => {
     if (email) vscode.env.openExternal(vscode.Uri.parse(`mailto:${email}`));
   });
 
-  register("semio.openLink", (url: string) => {
+  register("compose.openLink", (url: string) => {
     if (url) vscode.env.openExternal(vscode.Uri.parse(url));
   });
 
-  register("semio.refreshMonorepo", () => {
+  register("compose.refreshMonorepo", () => {
     monorepoProvider?.refresh();
   });
 
-  register("semio.refreshCodebase", () => {
+  register("compose.refreshCodebase", () => {
     filterProvider?.refresh();
     monorepoProvider?.refresh();
   });
 
-  register("semio.refreshItem", (item: MonorepoTreeItem) => {
+  register("compose.refreshItem", (item: MonorepoTreeItem) => {
     monorepoProvider?.refreshItem(item);
   });
 
-  register("semio.filter.search", async () => {
+  register("compose.filter.search", async () => {
     const q = await vscode.window.showInputBox({ prompt: "Search..." });
     if (q !== undefined && filterProvider) {
       filterProvider.searchQuery = q;
@@ -3230,7 +3230,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
     }
   });
 
-  register("semio.filter.toggle", (kind: string, key: string) => {
+  register("compose.filter.toggle", (kind: string, key: string) => {
     filterProvider?.toggle(kind, key);
   });
 
@@ -3250,7 +3250,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
   };
   for (const [kind, keys] of Object.entries(filterToggleEntries)) {
     for (const key of keys) {
-      register(`semio.filter.toggle.${kind}.${key}`, () => filterProvider?.toggle(kind, key));
+      register(`compose.filter.toggle.${kind}.${key}`, () => filterProvider?.toggle(kind, key));
     }
   }
 
@@ -3263,17 +3263,17 @@ function registerCommands(context: vscode.ExtensionContext): void {
     ["day", "all"],
   ];
   for (const [unit, mode] of timeModes) {
-    register(`semio.filter.time.${unit}.${mode}`, () => filterProvider?.setTimeMode(unit, mode));
+    register(`compose.filter.time.${unit}.${mode}`, () => filterProvider?.setTimeMode(unit, mode));
   }
 
-  register("semio.filter.toggleYear", (year: number) => filterProvider?.toggleYear(year));
-  register("semio.filter.toggleMonth", (month: number) => filterProvider?.toggleMonth(month));
-  register("semio.filter.toggleDay", (day: number) => filterProvider?.toggleDay(day));
+  register("compose.filter.toggleYear", (year: number) => filterProvider?.toggleYear(year));
+  register("compose.filter.toggleMonth", (month: number) => filterProvider?.toggleMonth(month));
+  register("compose.filter.toggleDay", (day: number) => filterProvider?.toggleDay(day));
 
   const searchToggles: Array<[string, keyof FilterTreeDataProvider]> = [
-    ["semio.filter.search.matchCase", "matchCase"],
-    ["semio.filter.search.wholeWord", "matchWholeWord"],
-    ["semio.filter.search.regex", "useRegex"],
+    ["compose.filter.search.matchCase", "matchCase"],
+    ["compose.filter.search.wholeWord", "matchWholeWord"],
+    ["compose.filter.search.regex", "useRegex"],
   ];
   for (const [cmd, prop] of searchToggles) {
     register(cmd, () => {
@@ -3291,10 +3291,10 @@ function registerCommands(context: vscode.ExtensionContext): void {
     const abs = path.isAbsolute(targetPath) ? targetPath : path.join(wsRoot, targetPath);
     return vscode.commands.executeCommand("revealInExplorer", vscode.Uri.file(abs));
   };
-  register("semio.navigateToBundle", revealInExplorer);
-  register("semio.navigateToFolder", revealInExplorer);
+  register("compose.navigateToBundle", revealInExplorer);
+  register("compose.navigateToFolder", revealInExplorer);
 
-  register("semio.navigateToFile", async (filePath: string) => {
+  register("compose.navigateToFile", async (filePath: string) => {
     const root = getWorkspaceRoot();
     if (root) {
       const abs = path.isAbsolute(filePath) ? filePath : path.join(root, filePath);
@@ -3314,10 +3314,10 @@ function registerCommands(context: vscode.ExtensionContext): void {
     if (!filePath || typeof item?.range?.start !== "number") return;
     return openFileAtLine(filePath, item.range.start, item.range.end ?? undefined);
   };
-  register("semio.navigateToSection", (s: any) => navigateToRangedItem(s, "section"));
-  register("semio.navigateToDefinition", (d: any) => navigateToRangedItem(d, "definition"));
+  register("compose.navigateToSection", (s: any) => navigateToRangedItem(s, "section"));
+  register("compose.navigateToDefinition", (d: any) => navigateToRangedItem(d, "definition"));
 
-  register("semio.navigate", async (target: string) => {
+  register("compose.navigate", async (target: string) => {
     if (!target) return;
     if (target.startsWith("repo://")) {
       return navigateToUri(target);
@@ -3330,7 +3330,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
     }
   });
 
-  register("semio.navigateTo", async () => {
+  register("compose.navigateTo", async () => {
     const cache = await getTreeNodeCache();
     const items: vscode.QuickPickItem[] = [];
     for (const [uri, node] of cache) {
@@ -3343,7 +3343,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
     }
   });
 
-  register("semio.ticketOpen", (item: MonorepoTreeItem) => {
+  register("compose.ticketOpen", (item: MonorepoTreeItem) => {
     const node = item?.data as TreeNodeData | undefined;
     if (!node) return;
     const year = node.Year ?? node.Data?.year;
@@ -3354,10 +3354,10 @@ function registerCommands(context: vscode.ExtensionContext): void {
     const t = { year, month, day, slug, folderPath: undefined as string | undefined };
     const p = resolveTicketPath(t);
     if (!p) return;
-    return vscode.commands.executeCommand("semio.navigateToFile", p);
+    return vscode.commands.executeCommand("compose.navigateToFile", p);
   });
 
-  register("semio.ticketClose", (item: MonorepoTreeItem) => {
+  register("compose.ticketClose", (item: MonorepoTreeItem) => {
     const node = item?.data as TreeNodeData | undefined;
     if (!node) return;
     const year = node.Year ?? node.Data?.year;
@@ -3377,7 +3377,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
     });
   });
 
-  register("semio.ticketReopen", (item: MonorepoTreeItem) => {
+  register("compose.ticketReopen", (item: MonorepoTreeItem) => {
     const node = item?.data as TreeNodeData | undefined;
     if (!node) return;
     const year = node.Year ?? node.Data?.year;
@@ -3396,7 +3396,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
     });
   });
 
-  register("semio.draftCreate", async () => {
+  register("compose.draftCreate", async () => {
     const title = await vscode.window.showInputBox({ prompt: "Draft title" });
     if (!title) return;
     const binaryPath = getRepoBinaryPath();
@@ -3406,7 +3406,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
     monorepoProvider?.refresh();
   });
 
-  register("semio.draftDelete", (item: MonorepoTreeItem) => {
+  register("compose.draftDelete", (item: MonorepoTreeItem) => {
     const node = item?.data as TreeNodeData | undefined;
     const slug = node?.Data?.slug ?? node?.Label;
     if (!slug) return;
@@ -3421,7 +3421,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
     });
   });
 
-  register("semio.copyCheckpointSha", (item: MonorepoTreeItem) => {
+  register("compose.copyCheckpointSha", (item: MonorepoTreeItem) => {
     const node = item?.data as TreeNodeData | undefined;
     const sha = node?.Data?.sha;
     if (sha) {
@@ -3430,13 +3430,13 @@ function registerCommands(context: vscode.ExtensionContext): void {
     }
   });
 
-  register("semio.openCheckpointInGitHub", (item: MonorepoTreeItem) => {
+  register("compose.openCheckpointInGitHub", (item: MonorepoTreeItem) => {
     const node = item?.data as TreeNodeData | undefined;
     const sha = node?.Data?.sha;
     if (sha) vscode.env.openExternal(vscode.Uri.parse(`https://github.com/usalu/semio/commit/${sha}`));
   });
 
-  register("semio.policyCheck", (item: MonorepoTreeItem) => {
+  register("compose.policyCheck", (item: MonorepoTreeItem) => {
     const node = item?.data as TreeNodeData | undefined;
     const policyId = node?.Data?.id || node?.Label;
     if (!policyId) return;
@@ -3446,13 +3446,13 @@ function registerCommands(context: vscode.ExtensionContext): void {
     cp.execSync(`${binaryPath} policy check ${policyId}`, { cwd: getWorkspaceRoot() });
   });
 
-  register("semio.open", (target: string) => {
+  register("compose.open", (target: string) => {
     if (target) {
-      vscode.commands.executeCommand("semio.navigate", target);
+      vscode.commands.executeCommand("compose.navigate", target);
     }
   });
 
-  register("semio.analyze", async (id: string) => {
+  register("compose.analyze", async (id: string) => {
     if (!id) return;
     const binaryPath = getRepoBinaryPath();
     if (!binaryPath) return;
@@ -3472,48 +3472,48 @@ function registerCommands(context: vscode.ExtensionContext): void {
   });
 
   const contributedCommands: string[] = [
-    "semio.analyze",
-    "semio.analyzeFile",
-    "semio.autofix",
-    "semio.autofixFile",
-    "semio.policyList",
-    "semio.policyTree",
-    "semio.ticketList",
-    "semio.ticketRead",
-    "semio.ticketTree",
-    "semio.technologyList",
-    "semio.technologyTree",
-    "semio.contributorAdd",
-    "semio.contributorList",
-    "semio.contributorRemove",
-    "semio.sectionTree",
-    "semio.sectionList",
-    "semio.sectionCreate",
-    "semio.sectionMove",
-    "semio.sectionDelete",
-    "semio.sectionOpen",
-    "semio.sectionRename",
-    "semio.sectionCreateChild",
-    "semio.sectionRemove",
-    "semio.sectionIntegrate",
-    "semio.definitionList",
-    "semio.definitionTree",
-    "semio.folderTree",
-    "semio.folderCreate",
-    "semio.folderMove",
-    "semio.folderDelete",
-    "semio.folderList",
-    "semio.fileCreate",
-    "semio.fileMove",
-    "semio.fileDelete",
-    "semio.fileList",
-    "semio.fileTree",
-    "semio.refreshDiagnostics",
-    "semio.autofixBreach",
-    "semio.navigateToRepo",
-    "semio.navigateTo",
-    "semio.goalOpen",
-    "semio.goalList",
+    "compose.analyze",
+    "compose.analyzeFile",
+    "compose.autofix",
+    "compose.autofixFile",
+    "compose.policyList",
+    "compose.policyTree",
+    "compose.ticketList",
+    "compose.ticketRead",
+    "compose.ticketTree",
+    "compose.technologyList",
+    "compose.technologyTree",
+    "compose.contributorAdd",
+    "compose.contributorList",
+    "compose.contributorRemove",
+    "compose.sectionTree",
+    "compose.sectionList",
+    "compose.sectionCreate",
+    "compose.sectionMove",
+    "compose.sectionDelete",
+    "compose.sectionOpen",
+    "compose.sectionRename",
+    "compose.sectionCreateChild",
+    "compose.sectionRemove",
+    "compose.sectionIntegrate",
+    "compose.definitionList",
+    "compose.definitionTree",
+    "compose.folderTree",
+    "compose.folderCreate",
+    "compose.folderMove",
+    "compose.folderDelete",
+    "compose.folderList",
+    "compose.fileCreate",
+    "compose.fileMove",
+    "compose.fileDelete",
+    "compose.fileList",
+    "compose.fileTree",
+    "compose.refreshDiagnostics",
+    "compose.autofixBreach",
+    "compose.navigateToRepo",
+    "compose.navigateTo",
+    "compose.goalOpen",
+    "compose.goalList",
   ];
 
   for (const command of contributedCommands) {
@@ -3576,25 +3576,25 @@ export function activate(context: vscode.ExtensionContext) {
     registerSidebarViews(context);
     registerCommands(context);
 
-    repoDiagnosticCollection = vscode.languages.createDiagnosticCollection("semio");
-    kitDiagnosticCollection = vscode.languages.createDiagnosticCollection("semio-kit");
+    repoDiagnosticCollection = vscode.languages.createDiagnosticCollection("compose");
+    kitDiagnosticCollection = vscode.languages.createDiagnosticCollection("compose-kit");
     context.subscriptions.push(repoDiagnosticCollection, kitDiagnosticCollection);
 
-    semioGutterIcon = vscode.window.createTextEditorDecorationType({
-      gutterIconPath: vscode.Uri.file(context.asAbsolutePath("semio_codeicon.svg")),
+    composeGutterIcon = vscode.window.createTextEditorDecorationType({
+      gutterIconPath: vscode.Uri.file(context.asAbsolutePath("compose_codeicon.svg")),
       gutterIconSize: "contain",
     });
 
-    context.subscriptions.push(vscode.languages.registerCodeLensProvider({ pattern: "**/*" }, new SemioCodeLensProvider()));
+    context.subscriptions.push(vscode.languages.registerCodeLensProvider({ pattern: "**/*" }, new ComposeCodeLensProvider()));
 
     context.subscriptions.push(
       vscode.window.onDidChangeActiveTextEditor((editor) => {
-        if (editor) updateSemioDecorations(editor);
+        if (editor) updateComposeDecorations(editor);
       }),
     );
 
     if (vscode.window.activeTextEditor) {
-      updateSemioDecorations(vscode.window.activeTextEditor);
+      updateComposeDecorations(vscode.window.activeTextEditor);
     }
 
     context.subscriptions.push(
@@ -3617,7 +3617,7 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
       vscode.workspace.onDidChangeTextDocument((event) => {
         if (vscode.window.activeTextEditor && event.document === vscode.window.activeTextEditor.document) {
-          updateSemioDecorations(vscode.window.activeTextEditor);
+          updateComposeDecorations(vscode.window.activeTextEditor);
         }
         const document = event.document;
         if (!shouldAnalyzeFile(document) && !isKitDocument(document)) return;
@@ -3639,7 +3639,7 @@ export function activate(context: vscode.ExtensionContext) {
       vscode.workspace.registerTextDocumentContentProvider("repo", {
         provideTextDocumentContent(uri: vscode.Uri): string {
           const repoUri = `repo://${uri.authority.toLowerCase()}${uri.path.toLowerCase()}`;
-          vscode.commands.executeCommand("semio.navigate", repoUri);
+          vscode.commands.executeCommand("compose.navigate", repoUri);
           return "";
         },
       }),
@@ -3649,7 +3649,7 @@ export function activate(context: vscode.ExtensionContext) {
       vscode.window.registerUriHandler({
         handleUri(uri: vscode.Uri) {
           const repoUri = `repo://${uri.authority.toLowerCase()}${uri.path.toLowerCase()}`;
-          vscode.commands.executeCommand("semio.navigate", repoUri);
+          vscode.commands.executeCommand("compose.navigate", repoUri);
         },
       }),
     );

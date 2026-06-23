@@ -11,5 +11,5 @@ startCommit: HEAD
 Fixed the Kit Diagram D3 simulation by updating the force configuration to use `forceX` and `forceY` for better stability and responsiveness, matching the requested example. Updated drag handlers to ensure the simulation reliably wakes up on interaction. Adjusted default force parameters to providing a more balanced layout.
 
 ## Files
-- js/semio/sketchpad/elements.tsx
-- js/semio/sketchpad/Kit.tsx
+- js/compose/sketchpad/elements.tsx
+- js/compose/sketchpad/Kit.tsx

@@ -70,7 +70,7 @@ if (kit.guid === "01936dc9-60a3-7505-be05-f4ba83d10d73") {
 }
 ```
 
-Files are added to the zip alongside .semio/kit.db, making the export self-contained.
+Files are added to the zip alongside .compose/kit.db, making the export self-contained.
 
 ## Key Architecture Improvements
 
@@ -129,10 +129,10 @@ Ensures `null`, `""`, and `undefined` are treated as equivalent during compariso
 
 ### Modified
 
-- `js/semio/semio.ts`:
+- `js/compose/compose.ts`:
   - Enhanced `exportKit()` with example file handling
   - Complete rewrite of `areKitsEqual()` with deep comparison
-- `js/semio/semio.test.ts`:
+- `js/compose/compose.test.ts`:
   - Updated test to validate structure (guid, name, counts)
   - Deep equality ready for full validation when persistence is complete
 

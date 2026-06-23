@@ -1,11 +1,11 @@
 import re
 
-filepath = "/workspaces/semio/semio/js/sketchpad.test.ts"
+filepath = "/workspaces/semio/compose/js/sketchpad.test.ts"
 with open(filepath, "r") as f:
     content = f.read()
 
 old = '''          const childApplied = await page.evaluate(({ pieceGuid }: { pieceGuid: string }) => {
-            const actor = (window as any).__SEMIO_ACTOR__;
+            const actor = (window as any).__COMPOSE_ACTOR__;
             if (!actor) return { applied: false, reason: "missing-actor" };
             const snapshot = actor.getSnapshot();
             const path = window.location.pathname;
@@ -24,7 +24,7 @@ old = '''          const childApplied = await page.evaluate(({ pieceGuid }: { pi
           await validatePieceDetails("child piece with parent connection", true);'''
 
 new = '''          const childApplied = await page.evaluate(({ pieceGuid }: { pieceGuid: string }) => {
-            const actor = (window as any).__SEMIO_ACTOR__;
+            const actor = (window as any).__COMPOSE_ACTOR__;
             if (!actor) return { applied: false, reason: "missing-actor" };
             const snapshot = actor.getSnapshot();
             const path = window.location.pathname;

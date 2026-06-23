@@ -2,14 +2,14 @@ import re
 import subprocess
 from pathlib import Path
 
-root = Path(r"c:\git\semio")
+root = Path(r"c:\git\compose")
 head = subprocess.check_output(
-    ["git", "show", "HEAD:semio/client/lib/rs/lib.rs"],
+    ["git", "show", "HEAD:compose/client/lib/rs/lib.rs"],
     cwd=root,
     text=True,
     encoding="utf-8",
 )
-cur_path = root / "semio/client/lib/rs/lib.rs"
+cur_path = root / "compose/client/lib/rs/lib.rs"
 cur = cur_path.read_text(encoding="utf-8")
 
 m_head = re.search(

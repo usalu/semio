@@ -119,7 +119,7 @@ The author table has a direct design_guid FK which is wrong - authors should be 
 -- However, for backwards compatibility, keep it but use design_author junction table instead
 ```
 
-## Required Code Changes in semio.ts
+## Required Code Changes in compose.ts
 
 ### 1. Fix `sqliteToKit` - Remove Side GUIDs
 
@@ -340,21 +340,21 @@ All changes have been successfully implemented and the test now passes with full
 - ✅ Created `design_author` junction table for design ↔ author many-to-many
 - ✅ Added `min_excluded`, `max_excluded` columns to stat table
 
-#### 2. Embedded Schema Updates (semio.ts embedded schema string)
+#### 2. Embedded Schema Updates (compose.ts embedded schema string)
 
 - ✅ Updated design table definition with new columns
 - ✅ Added design_prop table definition
 - ✅ Added design_author table definition
 - ✅ Updated stat table definition with excluded flags
 
-#### 3. Export Code Updates (kitToSqlite in semio.ts)
+#### 3. Export Code Updates (kitToSqlite in compose.ts)
 
 - ✅ Updated design INSERT to include is_abstract, folder, can_scale, can_mirror
 - ✅ Added design_prop export loop
 - ✅ Added design_author export loop with rank
 - ✅ Updated stat INSERT to include min_excluded, max_excluded
 
-#### 4. Import Code Updates (sqliteToKit in semio.ts)
+#### 4. Import Code Updates (sqliteToKit in compose.ts)
 
 - ✅ **CRITICAL**: Removed `guid: guid()` from connection sides (lines 4595, 4601)
 - ✅ Added design_prop query and mapping
@@ -381,7 +381,7 @@ Kit statistics:
   Qualities: 0
 
 1. Exporting kit to zip...
-   Exported to: C:\git\semio.tech\semio\assets\metabolism.zip
+   Exported to: C:\git\compose.tech\compose\assets\metabolism.zip
    File size: 2568.21 KB
 
 2. Importing kit from zip...
@@ -404,8 +404,8 @@ Roundtrip test passed:
 ### Files Modified
 
 1. `sql/sqlite/schema.sql` - Added columns and tables
-2. `js/semio/semio.ts` - Updated embedded schema, kitToSqlite, and sqliteToKit
-3. `js/semio/test-roundtrip.mjs` - Removed workarounds, enabled full equality check
+2. `js/compose/compose.ts` - Updated embedded schema, kitToSqlite, and sqliteToKit
+3. `js/compose/test-roundtrip.mjs` - Removed workarounds, enabled full equality check
 
 ### Verification
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** @emoji 🧾 One-off: bake human-readable labels and clean kind ids into nakagin scene fixture (no runtime semio links). */
+/** @emoji 🧾 One-off: bake human-readable labels and clean kind ids into nakagin scene fixture (no runtime compose links). */
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -20,8 +20,8 @@ type SceneObject = {
 function catalogText(row: CatalogRow): string {
 	const label = typeof row.label === "string" ? row.label.trim() : "";
 	const name = typeof row.name === "string" ? row.name.trim() : "";
-	if (label && !label.startsWith("semio.")) return label;
-	if (name && !name.startsWith("semio.")) return name;
+	if (label && !label.startsWith("compose.")) return label;
+	if (name && !name.startsWith("compose.")) return name;
 	return "";
 }
 

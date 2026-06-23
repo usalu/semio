@@ -33,7 +33,7 @@ isProject: false
 
 ## Why
 
-With the async command/operation architecture in place, dynamic per-event subscription fields add no expressive power: a single feed plus inline fragments is strictly more flexible than dozens of named fields. The flat block at L5979-6097 of [semio/graphql/target.schema.graphql](semio/graphql/target.schema.graphql) is replaced wholesale.
+With the async command/operation architecture in place, dynamic per-event subscription fields add no expressive power: a single feed plus inline fragments is strictly more flexible than dozens of named fields. The flat block at L5979-6097 of [compose/graphql/target.schema.graphql](compose/graphql/target.schema.graphql) is replaced wholesale.
 
 `Event` is introduced as a **top-level general-purpose** interface — not "the parent of operations". It captures any happening on the system feed: applied operations, failed operations, session/draft/transaction lifecycle ticks, sync notifications, and any future event kind. `Operation` becomes one family of `Event` (the kind that produces a `Modification`); `FailedOperation` is a sibling family (no modification, just a message). New event kinds can be added later by implementing `Event` directly without going through `Operation`.
 
@@ -57,7 +57,7 @@ graph TD
 
 `Event` carries only the fields common to every emission: `id`, `hash`, `owner`, `owns`, `involved: [Entity!]!`. `Operation` adds `modification: Modification!`. `FailedOperation` adds `message: String!`. Anything operation-specific lives on `Operation`, never on `Event`.
 
-## Schema Changes — [semio/graphql/target.schema.graphql](semio/graphql/target.schema.graphql)
+## Schema Changes — [compose/graphql/target.schema.graphql](compose/graphql/target.schema.graphql)
 
 ### 1. Add top-level `interface Event` next to `interface Operation` (around L956)
 
@@ -170,15 +170,15 @@ No other fields. No `commandSucceeded`, `operationSucceeded`, `operationFailed`,
 
 ## Verification
 
-- `node -e "require('graphql').parse(require('fs').readFileSync('semio/graphql/target.schema.graphql','utf8'))"` → parse OK
-- `node -e "require('graphql').buildSchema(require('fs').readFileSync('semio/graphql/target.schema.graphql','utf8'))"` → build OK
-- `rg -n "commandSucceeded|operationSucceeded|operationFailed|^\s*error: Error" semio/graphql/target.schema.graphql` → no matches
-- `rg -n "^\s*(renamedKit|createdTag|addedConnector|movedPiece|deletedDesign)" semio/graphql/target.schema.graphql` → no Subscription field matches
-- `rg -n "^type (Command|Error) " semio/graphql/target.schema.graphql` → no matches
-- `rg -n "interface Event\b|type Event(Edge|Connection)\b|FailedOperation" semio/graphql/target.schema.graphql` → new definitions only
-- `rg -n "implements Event" semio/graphql/target.schema.graphql` → at least `Operation` and `FailedOperation`
-- `rg -nc "^\s*scope: Entity!" semio/graphql/target.schema.graphql` → 0 matches
-- `rg -nc "^\s*involved: \[Entity!\]!" semio/graphql/target.schema.graphql` → 97 matches (1 Event + 1 Operation + 95 concrete ops + 1 FailedOperation = 98; allow ±1 if `Operation` interface omits the redundant redeclaration). Acceptable: between 96 and 98.
+- `node -e "require('graphql').parse(require('fs').readFileSync('compose/graphql/target.schema.graphql','utf8'))"` → parse OK
+- `node -e "require('graphql').buildSchema(require('fs').readFileSync('compose/graphql/target.schema.graphql','utf8'))"` → build OK
+- `rg -n "commandSucceeded|operationSucceeded|operationFailed|^\s*error: Error" compose/graphql/target.schema.graphql` → no matches
+- `rg -n "^\s*(renamedKit|createdTag|addedConnector|movedPiece|deletedDesign)" compose/graphql/target.schema.graphql` → no Subscription field matches
+- `rg -n "^type (Command|Error) " compose/graphql/target.schema.graphql` → no matches
+- `rg -n "interface Event\b|type Event(Edge|Connection)\b|FailedOperation" compose/graphql/target.schema.graphql` → new definitions only
+- `rg -n "implements Event" compose/graphql/target.schema.graphql` → at least `Operation` and `FailedOperation`
+- `rg -nc "^\s*scope: Entity!" compose/graphql/target.schema.graphql` → 0 matches
+- `rg -nc "^\s*involved: \[Entity!\]!" compose/graphql/target.schema.graphql` → 97 matches (1 Event + 1 Operation + 95 concrete ops + 1 FailedOperation = 98; allow ±1 if `Operation` interface omits the redundant redeclaration). Acceptable: between 96 and 98.
 
 ## Ticket Update
 

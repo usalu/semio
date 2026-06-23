@@ -24,21 +24,21 @@
           "renamed": [],
           "modified": [
             {
-              "path": "semio/semio/semio/go",
+              "path": "compose/compose/compose/go",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "semio/semio/semio/net",
+              "path": "compose/compose/compose/net",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "semio/semio/repo/cli",
+              "path": "compose/compose/repo/cli",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -58,35 +58,35 @@
           "renamed": [],
           "modified": [
             {
-              "path": "💻semio/assets/repo/some/folder/file_fixable_expected.tsx",
+              "path": "💻compose/assets/repo/some/folder/file_fixable_expected.tsx",
               "lines": {
                 "added": 3,
                 "removed": 3
               }
             },
             {
-              "path": "💻semio/assets/repo/some/folder/file_fixed.tsx",
+              "path": "💻compose/assets/repo/some/folder/file_fixed.tsx",
               "lines": {
                 "added": 4,
                 "removed": 4
               }
             },
             {
-              "path": "🧪semio/go/semio_benchmark.go",
+              "path": "🧪compose/go/compose_benchmark.go",
               "lines": {
                 "added": 3,
                 "removed": 1
               }
             },
             {
-              "path": "💻semio/rs/semio.rs",
+              "path": "💻compose/rs/compose.rs",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "🧪semio/rs/semio.benchmark.rs",
+              "path": "🧪compose/rs/compose.benchmark.rs",
               "lines": {
                 "added": 6,
                 "removed": 6
@@ -100,49 +100,49 @@
               }
             },
             {
-              "path": "💻semio/assets/repo/some/folder/file_fixed.go",
+              "path": "💻compose/assets/repo/some/folder/file_fixed.go",
               "lines": {
                 "added": 4,
                 "removed": 4
               }
             },
             {
-              "path": "🧪semio/engine/test.ts",
+              "path": "🧪compose/engine/test.ts",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "🧪semio/go/semio_test.go",
+              "path": "🧪compose/go/compose_test.go",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "💻semio/py/semio.py",
+              "path": "💻compose/py/compose.py",
               "lines": {
                 "added": 24,
                 "removed": 24
               }
             },
             {
-              "path": "💻semio/assets/repo/some/folder/file_fixed.cs",
+              "path": "💻compose/assets/repo/some/folder/file_fixed.cs",
               "lines": {
                 "added": 3,
                 "removed": 3
               }
             },
             {
-              "path": "💻semio/assets/repo/some/folder/file_fixed.py",
+              "path": "💻compose/assets/repo/some/folder/file_fixed.py",
               "lines": {
                 "added": 3,
                 "removed": 3
               }
             },
             {
-              "path": "💻semio/net/Semio.Tests/Tests.cs",
+              "path": "💻compose/net/Compose.Tests/Tests.cs",
               "lines": {
                 "added": 1,
                 "removed": 1
@@ -151,7 +151,7 @@
           ],
           "added": [
             {
-              "path": "💻semio/net/Semio/Semio.cs",
+              "path": "💻compose/net/Compose/Compose.cs",
               "lines": {
                 "added": 8366,
                 "removed": 0
@@ -178,77 +178,77 @@
               }
             },
             {
-              "path": "💻semio/assets/repo/some/folder/file_fixed.cs#Header",
+              "path": "💻compose/assets/repo/some/folder/file_fixed.cs#Header",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "💻semio/assets/repo/some/folder/file_fixed.cs#Classes",
+              "path": "💻compose/assets/repo/some/folder/file_fixed.cs#Classes",
               "lines": {
                 "added": 2,
                 "removed": 2
               }
             },
             {
-              "path": "💻semio/assets/repo/some/folder/file_fixed.py#Header",
+              "path": "💻compose/assets/repo/some/folder/file_fixed.py#Header",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "💻semio/assets/repo/some/folder/file_fixed.py#Functions",
+              "path": "💻compose/assets/repo/some/folder/file_fixed.py#Functions",
               "lines": {
                 "added": 2,
                 "removed": 2
               }
             },
             {
-              "path": "💻semio/assets/repo/some/folder/file_fixable_expected.tsx#Header",
+              "path": "💻compose/assets/repo/some/folder/file_fixable_expected.tsx#Header",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "💻semio/assets/repo/some/folder/file_fixable_expected.tsx#MissingEnd",
+              "path": "💻compose/assets/repo/some/folder/file_fixable_expected.tsx#MissingEnd",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "💻semio/assets/repo/some/folder/file_fixable_expected.tsx#Alpha",
+              "path": "💻compose/assets/repo/some/folder/file_fixable_expected.tsx#Alpha",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "💻semio/assets/repo/some/folder/file_fixed.tsx#Header",
+              "path": "💻compose/assets/repo/some/folder/file_fixed.tsx#Header",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "💻semio/assets/repo/some/folder/file_fixed.tsx#Types",
+              "path": "💻compose/assets/repo/some/folder/file_fixed.tsx#Types",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "💻semio/assets/repo/some/folder/file_fixed.tsx#Components",
+              "path": "💻compose/assets/repo/some/folder/file_fixed.tsx#Components",
               "lines": {
                 "added": 2,
                 "removed": 2
               }
             },
             {
-              "path": "💻semio/rs/semio.rs#SQLite Import/Export",
+              "path": "💻compose/rs/compose.rs#SQLite Import/Export",
               "lines": {
                 "added": 1,
                 "removed": 1
@@ -262,56 +262,56 @@
               }
             },
             {
-              "path": "💻semio/assets/repo/some/folder/file_fixed.go#Header",
+              "path": "💻compose/assets/repo/some/folder/file_fixed.go#Header",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "💻semio/assets/repo/some/folder/file_fixed.go#Package",
+              "path": "💻compose/assets/repo/some/folder/file_fixed.go#Package",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "💻semio/assets/repo/some/folder/file_fixed.go#Functions",
+              "path": "💻compose/assets/repo/some/folder/file_fixed.go#Functions",
               "lines": {
                 "added": 2,
                 "removed": 2
               }
             },
             {
-              "path": "🧪semio/engine/test.ts#Test Runner",
+              "path": "🧪compose/engine/test.ts#Test Runner",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "💻semio/net/Semio/Semio.cs#Entitying#KitExporter",
+              "path": "💻compose/net/Compose/Compose.cs#Entitying#KitExporter",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/py/semio.py#Domain#Design",
+              "path": "💻compose/py/compose.py#Domain#Design",
               "lines": {
                 "added": 4,
                 "removed": 4
               }
             },
             {
-              "path": "💻semio/py/semio.py#Domain#Quality",
+              "path": "💻compose/py/compose.py#Domain#Quality",
               "lines": {
                 "added": 16,
                 "removed": 16
               }
             },
             {
-              "path": "💻semio/py/semio.py#Domain#Type",
+              "path": "💻compose/py/compose.py#Domain#Type",
               "lines": {
                 "added": 4,
                 "removed": 4
@@ -325,77 +325,77 @@
           "renamed": [],
           "modified": [
             {
-              "path": "💻semio/assets/repo/some/folder/file_fixed.py#Functions§fixed_function",
+              "path": "💻compose/assets/repo/some/folder/file_fixed.py#Functions§fixed_function",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "💻semio/assets/repo/some/folder/file_fixed.py#Functions§fixed_function",
+              "path": "💻compose/assets/repo/some/folder/file_fixed.py#Functions§fixed_function",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "💻semio/assets/repo/some/folder/file_fixable_expected.tsx§missingEnd",
+              "path": "💻compose/assets/repo/some/folder/file_fixable_expected.tsx§missingEnd",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "💻semio/assets/repo/some/folder/file_fixable_expected.tsx§missingEnd",
+              "path": "💻compose/assets/repo/some/folder/file_fixable_expected.tsx§missingEnd",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "💻semio/assets/repo/some/folder/file_fixed.tsx§FixedKind",
+              "path": "💻compose/assets/repo/some/folder/file_fixed.tsx§FixedKind",
               "lines": {
                 "added": 2,
                 "removed": 2
               }
             },
             {
-              "path": "💻semio/assets/repo/some/folder/file_fixed.tsx§FixedKind",
+              "path": "💻compose/assets/repo/some/folder/file_fixed.tsx§FixedKind",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "🧪semio/go/semio_benchmark.go§main",
+              "path": "🧪compose/go/compose_benchmark.go§main",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "🧪semio/go/semio_benchmark.go§main",
+              "path": "🧪compose/go/compose_benchmark.go§main",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "💻semio/rs/semio.rs#SQLite Import/Export§sqlite",
+              "path": "💻compose/rs/compose.rs#SQLite Import/Export§sqlite",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "💻semio/rs/semio.rs#SQLite Import/Export§sqlite",
+              "path": "💻compose/rs/compose.rs#SQLite Import/Export§sqlite",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "🧪semio/rs/semio.benchmark.rs§main",
+              "path": "🧪compose/rs/compose.benchmark.rs§main",
               "lines": {
                 "added": 5,
                 "removed": 6
@@ -416,98 +416,98 @@
               }
             },
             {
-              "path": "🧪semio/go/semio_test.go§TestRoundtrip",
+              "path": "🧪compose/go/compose_test.go§TestRoundtrip",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "🧪semio/go/semio_test.go§TestRoundtrip",
+              "path": "🧪compose/go/compose_test.go§TestRoundtrip",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "💻semio/py/semio.py#Domain#Quality§QualityProps",
+              "path": "💻compose/py/compose.py#Domain#Quality§QualityProps",
               "lines": {
                 "added": 0,
                 "removed": 4
               }
             },
             {
-              "path": "💻semio/py/semio.py#Domain#Quality§QualityInput",
+              "path": "💻compose/py/compose.py#Domain#Quality§QualityInput",
               "lines": {
                 "added": 0,
                 "removed": 4
               }
             },
             {
-              "path": "💻semio/py/semio.py#Domain#Quality§QualityOutput",
+              "path": "💻compose/py/compose.py#Domain#Quality§QualityOutput",
               "lines": {
                 "added": 0,
                 "removed": 4
               }
             },
             {
-              "path": "💻semio/py/semio.py#Domain#Quality§Quality",
+              "path": "💻compose/py/compose.py#Domain#Quality§Quality",
               "lines": {
                 "added": 0,
                 "removed": 4
               }
             },
             {
-              "path": "💻semio/py/semio.py#Domain#Type§Type",
+              "path": "💻compose/py/compose.py#Domain#Type§Type",
               "lines": {
                 "added": 0,
                 "removed": 4
               }
             },
             {
-              "path": "💻semio/py/semio.py#Domain#Design§Design",
+              "path": "💻compose/py/compose.py#Domain#Design§Design",
               "lines": {
                 "added": 0,
                 "removed": 4
               }
             },
             {
-              "path": "💻semio/py/semio.py#Domain#Quality§QualityProps",
+              "path": "💻compose/py/compose.py#Domain#Quality§QualityProps",
               "lines": {
                 "added": 0,
                 "removed": 4
               }
             },
             {
-              "path": "💻semio/py/semio.py#Domain#Quality§QualityInput",
+              "path": "💻compose/py/compose.py#Domain#Quality§QualityInput",
               "lines": {
                 "added": 0,
                 "removed": 4
               }
             },
             {
-              "path": "💻semio/py/semio.py#Domain#Quality§QualityOutput",
+              "path": "💻compose/py/compose.py#Domain#Quality§QualityOutput",
               "lines": {
                 "added": 0,
                 "removed": 4
               }
             },
             {
-              "path": "💻semio/py/semio.py#Domain#Quality§Quality",
+              "path": "💻compose/py/compose.py#Domain#Quality§Quality",
               "lines": {
                 "added": 0,
                 "removed": 4
               }
             },
             {
-              "path": "💻semio/py/semio.py#Domain#Type§Type",
+              "path": "💻compose/py/compose.py#Domain#Type§Type",
               "lines": {
                 "added": 0,
                 "removed": 4
               }
             },
             {
-              "path": "💻semio/py/semio.py#Domain#Design§Design",
+              "path": "💻compose/py/compose.py#Domain#Design§Design",
               "lines": {
                 "added": 0,
                 "removed": 4
@@ -516,7 +516,7 @@
           ],
           "added": [
             {
-              "path": "🧪semio/rs/semio.benchmark.rs§main",
+              "path": "🧪compose/rs/compose.benchmark.rs§main",
               "lines": {
                 "added": 59,
                 "removed": 0

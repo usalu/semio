@@ -37,7 +37,7 @@ Create `scripts/generate-metabolism-diff.ts` to:
    - Modify nested properties (connectors, pieces, connections, etc.)
 3. Compute inverse diff
 4. Apply forward diff to get diffed kit
-5. Write all three assets to `assets/semio/`
+5. Write all three assets to `assets/compose/`
 
 ### 2. Fix Schema/Import/Export Problems
 

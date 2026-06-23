@@ -17,9 +17,9 @@
       "tool_name": "grep_search",
       "tool_input": {
         "maxResults": 20,
-        "includePattern": "**/semio/sketchpad/sketchpad/**",
+        "includePattern": "**/compose/sketchpad/sketchpad/**",
         "isRegexp": true,
-        "query": "__SEMIO_STORE__"
+        "query": "__COMPOSE_STORE__"
       },
       "tool_response": "",
       "tool_use_id": "toolu_bdrk_01SYMAhHfrAvXE2VufNG1kQQ__vscode-1773671759813",

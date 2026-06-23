@@ -5,34 +5,34 @@
 
 ## Summary
 
-Successfully implemented the complete diff system for the semio kit architecture. All diff functions now properly compute, apply, inverse, and merge diffs for Type, Design, Group, Stat, and all nested entities.
+Successfully implemented the complete diff system for the compose kit architecture. All diff functions now properly compute, apply, inverse, and merge diffs for Type, Design, Group, Stat, and all nested entities.
 
 ## Changes Made
 
 ### 1. Core Diff Functions Implemented
 
-**Type Diff** (`js/semio/semio.ts` lines ~1859-1920)
+**Type Diff** (`js/compose/compose.ts` lines ~1859-1920)
 
 - `getTypeDiff`: Computes diff between two Type objects
 - `applyTypeDiff`: Applies diff with conditional collection inclusion
 - `inverseTypeDiff`: Computes inverse diff for undo
 - `mergeTypeDiff`: Merges two Type diffs
 
-**Design Diff** (`js/semio/semio.ts` lines ~2544-2605)
+**Design Diff** (`js/compose/compose.ts` lines ~2544-2605)
 
 - `getDesignDiff`: Computes diff for designs with all collections
 - `applyDesignDiff`: Applies diff with conditional collection inclusion
 - `inverseDesignDiff`: Computes inverse diff
 - `mergeDesignDiff`: Merges design diffs using collection merge helpers
 
-**Group Diff** (`js/semio/semio.ts` lines ~2211-2248)
+**Group Diff** (`js/compose/compose.ts` lines ~2211-2248)
 
 - `getGroupDiff`: Computes diff for group pieces and attributes
 - `applyGroupDiff`: Applies group changes
 - `inverseGroupDiff`: Reverses group changes
 - `mergeGroupDiff`: Merges group diffs (newly created)
 
-**Stat Diff** (`js/semio/semio.ts` lines ~2424-2473)
+**Stat Diff** (`js/compose/compose.ts` lines ~2424-2473)
 
 - `getStatDiff`: Computes diff for stat fields
 - `applyStatDiff`: Applies stat changes
@@ -63,14 +63,14 @@ Replaced all reference equality checks (`!==`) with `deepEqual()` for complex ob
 
 ### 3. Fixed Empty Diff Filtering
 
-**AttributesDiff** (`js/semio/semio.ts` line ~311)
+**AttributesDiff** (`js/compose/compose.ts` line ~311)
 Added filter to remove empty attribute diffs:
 
 ```typescript
 .filter((u) => Object.keys(u.diff).length > 0)
 ```
 
-**Attribute Diff Computation** (`js/semio/semio.ts` line ~274)
+**Attribute Diff Computation** (`js/compose/compose.ts` line ~274)
 Changed from returning entire `after` object to only changed fields:
 
 ```typescript
@@ -83,11 +83,11 @@ return diff;
 
 ### 4. Schema Fixes
 
-**ConnectionsDiffSchema** (`js/semio/semio.ts` lines ~2377-2381)
+**ConnectionsDiffSchema** (`js/compose/compose.ts` lines ~2377-2381)
 
 - Changed `removed` from complex `{ connected: { piece: string }, connecting: { piece: string } }` objects to simple `string[]` (connection guids)
 
-**GroupsDiffSchema** (`js/semio/semio.ts` lines ~2242-2246)
+**GroupsDiffSchema** (`js/compose/compose.ts` lines ~2242-2246)
 
 - Changed `removed` from `z.array(z.array(z.string()))` to `z.array(z.string())` (group guids)
 
@@ -121,17 +121,17 @@ connection.guid;
 
 ### 7. Created Generic Helper Functions
 
-**mergeCollectionDiff** (`js/semio/semio.ts` lines ~3595-3619)
+**mergeCollectionDiff** (`js/compose/compose.ts` lines ~3595-3619)
 
 - Generic function to merge two collection diffs
 - Handles removed, added, and updated arrays
 - Merges individual item diffs using provided merge function
 
-**mergeStatDiff** (`js/semio/semio.ts`)
+**mergeStatDiff** (`js/compose/compose.ts`)
 
 - Simple spread merge for stat diffs
 
-**mergeGroupDiff** (`js/semio/semio.ts`)
+**mergeGroupDiff** (`js/compose/compose.ts`)
 
 - Merges group diffs with attribute merging
 
@@ -173,13 +173,13 @@ The diff system now properly supports:
 
 ## Files Modified
 
-- `js/semio/semio.ts` (~5932 lines)
+- `js/compose/compose.ts` (~5932 lines)
   - All diff functions implemented and fixed
   - Reference equality replaced with deepEqual
   - Schema fixes applied
   - Helper functions created
 
-- `js/semio/semio.test.ts` (~281 lines)
+- `js/compose/compose.test.ts` (~281 lines)
   - Updated to use JSON comparison (deepEqual has Date handling issues)
 
 - `temp/fix-equality.ps1`

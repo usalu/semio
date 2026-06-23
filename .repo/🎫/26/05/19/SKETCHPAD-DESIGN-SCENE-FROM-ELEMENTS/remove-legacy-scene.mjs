@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync } from "node:fs";
 
-const path = "c:/git/semio/semio/client/lib/sketchpad/react/index.tsx";
+const path = "c:/git/compose/compose/client/lib/sketchpad/react/index.tsx";
 const lines = readFileSync(path, "utf8").split("\n");
 const start = lines.findIndex(
   (line) => line === "// #region 📍Scene" && lines[lines.indexOf(line) + 1]?.includes("Scene MUST render"),

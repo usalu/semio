@@ -10,21 +10,21 @@ Fixed all test failures across the monorepo. Updated fixture files to use the ne
 
 ## Changes
 
-- semio/assets/repo/some/folder/file_fixable_expected.tsx: Updated file/section IDs to new emoji path format
-- semio/assets/repo/some/folder/file_fixed.tsx: Updated file/section/definition IDs to new emoji path format
-- semio/assets/repo/some/folder/file_fixed.py: Updated file/section/definition IDs to new emoji path format
-- semio/assets/repo/some/folder/file_fixed.go: Updated file/section/definition IDs to new emoji path format
-- semio/assets/repo/some/folder/file_fixed.cs: Updated file/section/definition IDs to new emoji path format
+- compose/assets/repo/some/folder/file_fixable_expected.tsx: Updated file/section IDs to new emoji path format
+- compose/assets/repo/some/folder/file_fixed.tsx: Updated file/section/definition IDs to new emoji path format
+- compose/assets/repo/some/folder/file_fixed.py: Updated file/section/definition IDs to new emoji path format
+- compose/assets/repo/some/folder/file_fixed.go: Updated file/section/definition IDs to new emoji path format
+- compose/assets/repo/some/folder/file_fixed.cs: Updated file/section/definition IDs to new emoji path format
 - repo/cli/main.go: Added "edited" case to interactionKindEmoji function
 - repo/cli/main_test.go: Fixed hardcoded minute emoji (⌛→⏳) in TestAllSpecIDExamples
-- semio/py/semio.py: Fixed 6 broken class definitions (docstrings inside inheritance parens)
-- semio/rs/semio.rs: Fixed schema.sql include path
-- semio/rs/semio.benchmark.rs: Added fn main(), removed broken diff benchmark
-- semio/engine/test.ts: Changed poetry to uv
-- semio/go/semio_benchmark.go: Added //go:build ignore tag, fixed schema path
-- semio/go/semio_test.go: Fixed schema.sql path
-- semio/net/Semio.Tests/Tests.cs: Fixed AssetsPath
-- semio/net/Semio/Semio.cs: Added sqlite/schema.sql search paths
+- compose/py/compose.py: Fixed 6 broken class definitions (docstrings inside inheritance parens)
+- compose/rs/compose.rs: Fixed schema.sql include path
+- compose/rs/compose.benchmark.rs: Added fn main(), removed broken diff benchmark
+- compose/engine/test.ts: Changed poetry to uv
+- compose/go/compose_benchmark.go: Added //go:build ignore tag, fixed schema path
+- compose/go/compose_test.go: Fixed schema.sql path
+- compose/net/Compose.Tests/Tests.cs: Fixed AssetsPath
+- compose/net/Compose/Compose.cs: Added sqlite/schema.sql search paths
 
 ## Log
 
@@ -37,7 +37,7 @@ Fixed all test failures across the monorepo. Updated fixture files to use the ne
 
 ## Todos
 
-- [x] Fix Python syntax errors in semio.py
+- [x] Fix Python syntax errors in compose.py
 - [x] Fix Rust schema path and benchmark
 - [x] Fix Go schema path and benchmark
 - [x] Fix .NET asset path and schema path

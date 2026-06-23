@@ -1,7 +1,7 @@
 {
   "title": "Realtime Drag Preview For All Pieces",
   "status": "closed",
-  "description": "Ensure sketchpad drag preview renders for all pieces with live updates during drag, and connection previews update in real time. Implement in semio/sketchpad without hacks, keep drag behavior intact, and extend existing tests in semio/sketchpad/index.tsx to cover the preview + connections. Run relevant tests and close ticket.",
+  "description": "Ensure sketchpad drag preview renders for all pieces with live updates during drag, and connection previews update in real time. Implement in compose/sketchpad without hacks, keep drag behavior intact, and extend existing tests in compose/sketchpad/index.tsx to cover the preview + connections. Run relevant tests and close ticket.",
   "summary": "Fixed FindReplaceableTypesAndDesigns story to use nativeFlatDesign + useAlgorithmLanguage (matching CopyAndPaste), so the SELECTION_INPUT window shows correctly positioned Nakagin Capsule Tower pieces instead of overlapping ones. Also matched the initial selection (omit sets + extra GUIDs) to CopyAndPaste.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1325"

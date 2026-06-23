@@ -17,7 +17,7 @@ User requested extending sketchpad tests for every app (Home, Kit, Type, Design,
 
 ## Helper Functions Added
 
-Added to `js/semio/sketchpad.test.ts`:
+Added to `js/compose/sketchpad.test.ts`:
 
 - `verifyToggleWorks(page, toggleId, panelKey, appName)` - Clicks toggle, verifies state changes or panel visibility
 - Enhanced panel helpers already existed: `togglePanelAndVerify`, `verifyPanelSection`, `verifyPanelHasContent`

@@ -64,11 +64,11 @@ After fixes:
 
 Panel toggles in the sketchpad are **dropdown toggle buttons** organized by groups:
 
-- `semio.sketchpad.navbar.panelToggle.workbench` - Contains workbench, tools panels
-- `semio.sketchpad.navbar.panelToggle.hud` - Contains hud, stats panels
-- `semio.sketchpad.navbar.panelToggle.right` - Contains details, settings, chat panels
+- `compose.sketchpad.navbar.panelToggle.workbench` - Contains workbench, tools panels
+- `compose.sketchpad.navbar.panelToggle.hud` - Contains hud, stats panels
+- `compose.sketchpad.navbar.panelToggle.right` - Contains details, settings, chat panels
 
-Individual panel items (e.g., `semio.sketchpad.navbar.panelToggle.settings.show`) are inside dropdowns and only visible when the dropdown is open.
+Individual panel items (e.g., `compose.sketchpad.navbar.panelToggle.settings.show`) are inside dropdowns and only visible when the dropdown is open.
 
 ## Changes
 

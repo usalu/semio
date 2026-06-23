@@ -13,15 +13,15 @@ After thorough review of both files:
 
 ## Key Findings
 
-1. **The new file is already complete** - It contains 5,148 more lines than the old version, primarily due to embedded semio code examples throughout all chapters.
+1. **The new file is already complete** - It contains 5,148 more lines than the old version, primarily due to embedded compose code examples throughout all chapters.
 
 2. **Chapter structure identical** - Both files contain Parts 1-6, Chapters 1-12 with the same section headings.
 
-3. **Semio examples integrated** - The new file already follows the pattern: Universal concept → Why it exists → How Semio implements it.
+3. **Compose examples integrated** - The new file already follows the pattern: Universal concept → Why it exists → How Compose implements it.
 
-4. **Chapter 12 comprehensive** - Dedicated "Understanding Semio" chapter with sections 12.1-12.12 covering:
-   - What Semio Is
-   - The Semio Architecture
+4. **Chapter 12 comprehensive** - Dedicated "Understanding Compose" chapter with sections 12.1-12.12 covering:
+   - What Compose Is
+   - The Compose Architecture
    - The Frontend: Sketchpad
    - The Backend: The Engine
    - Kits: The Core Data Model
@@ -42,6 +42,6 @@ After thorough review of both files:
 
 ## Conclusion
 
-The merge work has already been completed. The current `The-programming&systems-mind-atlas.md` file is the unified version that combines universal computing concepts with semio-specific implementations.
+The merge work has already been completed. The current `The-programming&systems-mind-atlas.md` file is the unified version that combines universal computing concepts with compose-specific implementations.
 
 **Recommendation**: The `.md.old` file can be archived or deleted as its content has been incorporated into the main document.

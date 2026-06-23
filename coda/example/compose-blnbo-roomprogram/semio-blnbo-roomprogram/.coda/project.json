@@ -1,0 +1,37 @@
+{
+    "name": "compose-blnbo-programming",
+    "mcp": {
+        "command": "../repo/cli/cli",
+        "args": [
+            "mcp"
+        ]
+    },
+    "design": {
+        "id": "usalu.compose",
+        "mcp": {
+            "command": "uv",
+            "args": [
+                "run",
+                "--directory",
+                "../../py/engine",
+                "run",
+                "main.py",
+                "--mcp-stdio"
+            ]
+        }
+    },
+    "targets": [
+        {
+            "id": "ldrbmrtv.blnbo",
+            "llm": [
+                "claude-opus-4-5",
+                "sonnet-4-5",
+                "gemini-3-pro",
+                "gemini-3-flash"
+            ]
+        },
+        {
+            "id": "programming"
+        }
+    ]
+}

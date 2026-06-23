@@ -10,21 +10,21 @@ Updated stale README resource links to current repo paths; verified all local ma
 
 ## Changes
 
-- Updated all stale local image/list paths from `/assets/...` to `semio/assets/...`.
+- Updated all stale local image/list paths from `/assets/...` to `compose/assets/...`.
 - Updated stale schema links:
-  - `./sqlite/schema.sql` -> `./semio/sqlite/schema.sql`
-  - `./jsonschema/kit.json` -> `./semio/jsonschema/kit.json`
+  - `./sqlite/schema.sql` -> `./compose/sqlite/schema.sql`
+  - `./jsonschema/kit.json` -> `./compose/jsonschema/kit.json`
 - Updated stale AI resource links:
-  - `.github/chatmodes` / `.github/chatmodes/*.chatmode.md` -> `.github/agents/semio.agent.md`
+  - `.github/chatmodes` / `.github/chatmodes/*.chatmode.md` -> `.github/agents/compose.agent.md`
   - removed stale `.claude/agents/*.md` references and replaced with current GitHub agent resource.
 - Updated examples links from old GitHub root paths to current repo-relative paths:
-  - `semio/examples`
-  - `semio/examples/starters`
-  - `semio/examples/hello-semio`
-  - `semio/examples/geometry`
-  - `semio/examples/metabolism`
+  - `compose/examples`
+  - `compose/examples/starters`
+  - `compose/examples/hello-compose`
+  - `compose/examples/geometry`
+  - `compose/examples/metabolism`
 - Updated typography resource link:
-  - `/assets/fonts/README.md` -> `semio/assets/README.md#fonts`
+  - `/assets/fonts/README.md` -> `compose/assets/README.md#fonts`
 - Removed stale commented studio image link pointing to a missing file.
 - Re-validated local markdown links in `README.md` against filesystem targets (fragments ignored for existence check): no missing local targets remain.
 

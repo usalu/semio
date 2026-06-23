@@ -2,7 +2,7 @@
   "title": "React Js Store Boundary Refactor",
   "emoji": "🎫",
   "status": "closed",
-  "description": "Refactor semio/react to be a pure consumer of semio/js stores (promise + subscribe only). Move command wire construction, LiveKitRoot reads, and kitEventAffects usage from react into semio/js. Internal RxJS stays in KitStore; KitStoreClient.subscribe delivers typed kit events.",
+  "description": "Refactor compose/react to be a pure consumer of compose/js stores (promise + subscribe only). Move command wire construction, LiveKitRoot reads, and kitEventAffects usage from react into compose/js. Internal RxJS stays in KitStore; KitStoreClient.subscribe delivers typed kit events.",
   "goal": "🎯r2602",
   "plan": {
     "client": "cursor",
@@ -12,13 +12,13 @@
   "sessions": [
     "⚪2ce2d35fc901465ebd3a37fea9630abc"
   ],
-  "closeSummary": "JS: piecePatchToWireCommands, connectionPatchToWireCommands, connectionDiffWireKeyForDataKey; expanded buildSchemaEntityChangeCommands (Piece/Connection); resolveDesignIdForPieceOrConnection; kitStoreClientUpdatePiece/Connection; kitStoreClientAddChildByKind/RemoveChildByKind/AddPiece/RemovePiece/AddConnection; tag orderIndex in oneChangeTagCommandForField. React: useKitAdd/Remove + piece/connection hooks use these; live-read hooks use KitStoreClient read* promises only; embedded test client stubs read*. Removed rxjs+zod deps from @semio/react. Tests: js +1 describe (4 tests), react stub surface test. Ran npm run build/test @semio/js, @semio/react, depcruise:layers (pass).",
+  "closeSummary": "JS: piecePatchToWireCommands, connectionPatchToWireCommands, connectionDiffWireKeyForDataKey; expanded buildSchemaEntityChangeCommands (Piece/Connection); resolveDesignIdForPieceOrConnection; kitStoreClientUpdatePiece/Connection; kitStoreClientAddChildByKind/RemoveChildByKind/AddPiece/RemovePiece/AddConnection; tag orderIndex in oneChangeTagCommandForField. React: useKitAdd/Remove + piece/connection hooks use these; live-read hooks use KitStoreClient read* promises only; embedded test client stubs read*. Removed rxjs+zod deps from @compose/react. Tests: js +1 describe (4 tests), react stub surface test. Ran npm run build/test @compose/js, @compose/react, depcruise:layers (pass).",
   "filesTouched": [
-    "semio/js/index.ts",
-    "semio/react/index.tsx",
-    "semio/react/package.json",
-    "semio/react/tsconfig.json",
-    "semio/react/vite.config.ts",
+    "compose/js/index.ts",
+    "compose/react/index.tsx",
+    "compose/react/package.json",
+    "compose/react/tsconfig.json",
+    "compose/react/vite.config.ts",
     ".repo/🎫/26/04/26/REACT-JS-STORE-BOUNDARY-REFACTOR/ticket.json"
   ]
 }

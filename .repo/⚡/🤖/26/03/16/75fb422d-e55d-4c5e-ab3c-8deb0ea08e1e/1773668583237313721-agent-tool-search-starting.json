@@ -15,9 +15,9 @@
       "tool_name": "grep_search",
       "tool_input": {
         "maxResults": 20,
-        "query": "semio.sketchpad.app.design.panel.details.section.connection",
+        "query": "compose.sketchpad.app.design.panel.details.section.connection",
         "isRegexp": false,
-        "includePattern": "**/semio/sketchpad/**"
+        "includePattern": "**/compose/sketchpad/**"
       },
       "tool_use_id": "toolu_bdrk_019gDurdjrb5FftMvYQ2sLGQ__vscode-1773658270557",
       "cwd": "/workspaces/semio"

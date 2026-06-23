@@ -9,7 +9,7 @@ import tseslint from "typescript-eslint";
 export default tseslint.config(eslint.configs.recommended, ...tseslint.configs.recommended, {
   ignores: ["**/node_modules/**", "**/dist/**", "**/pkg/**"],
 }, {
-  files: ["semio/client/lib/js/index.ts", "semio/client/lib/react/index.tsx"],
+  files: ["compose/client/lib/js/index.ts", "compose/client/lib/react/index.tsx"],
   plugins: {
     "react-hooks": reactHooks,
   },

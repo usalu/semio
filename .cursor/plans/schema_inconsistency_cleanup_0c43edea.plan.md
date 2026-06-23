@@ -1,6 +1,6 @@
 ---
 name: Schema Inconsistency Cleanup
-overview: "Fix a coherent batch of inconsistencies in `semio/graphql/target.schema.graphql`: wrong `implements` clauses, missing required `Artifact` fields, missing `Edge`/`Connection` for `Clump` and `TheKit`, ghost/duplicate/wrong-direction tokens in owner unions, narrowed per-type owner/owns unions, missing field tags, per-`<Op>Edge`/`<Op>Connection` for every concrete Operation, and a uniform `# Banner` rule attributing every field to the interface that introduces it."
+overview: "Fix a coherent batch of inconsistencies in `compose/graphql/target.schema.graphql`: wrong `implements` clauses, missing required `Artifact` fields, missing `Edge`/`Connection` for `Clump` and `TheKit`, ghost/duplicate/wrong-direction tokens in owner unions, narrowed per-type owner/owns unions, missing field tags, per-`<Op>Edge`/`<Op>Connection` for every concrete Operation, and a uniform `# Banner` rule attributing every field to the interface that introduces it."
 todos:
   - id: ghost_tokens
     content: Strip ghost names, dupe `AlternativeModification`, and wrong-direction `Edit` from every `owner`/`owns` union comment
@@ -34,7 +34,7 @@ isProject: false
 
 # Schema Inconsistency Cleanup
 
-All edits land in [semio/graphql/target.schema.graphql](semio/graphql/target.schema.graphql). Out of scope: regenerating resolvers / non-target schema / language bindings.
+All edits land in [compose/graphql/target.schema.graphql](compose/graphql/target.schema.graphql). Out of scope: regenerating resolvers / non-target schema / language bindings.
 
 ## 0. Banner taxonomy (ground truth for sections 1, 2, 7, 8)
 
@@ -102,7 +102,7 @@ This rule is enforced everywhere in section 8 (banner normalization).
 
 Six concrete types declare the wrong interface. Their bodies already use the WeakEntity id contract (`# computed // hash`), so the fix is just the `implements` clause and pruning the inherited Artifact fields they should not have.
 
-Example — before, [semio/graphql/target.schema.graphql](semio/graphql/target.schema.graphql) line 4843 onwards:
+Example — before, [compose/graphql/target.schema.graphql](compose/graphql/target.schema.graphql) line 4843 onwards:
 
 ```graphql
 type PieceDiff implements Artifact {
@@ -449,6 +449,6 @@ flowchart TB
 ## Out of scope
 
 - Regenerating resolvers / Rust / TS / Python types.
-- Touching [semio/graphql/schema.graphql](semio/graphql/schema.graphql) (current schema, not target).
+- Touching [compose/graphql/schema.graphql](compose/graphql/schema.graphql) (current schema, not target).
 - Defining the missing modification kinds (`AlternativeModification`, etc.) — they are removed, not added.
 - Adding actual ops for `Layer`/`Group`/`Stat`/`Representation`/`Benchmark` (only their `owner` placeholders are noted).

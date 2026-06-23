@@ -1,6 +1,6 @@
 {
   "id": "61198a04-6990-487c-9797-7f7efd15e1a4",
-  "uri": "semiorepo://s/61198a04-6990-487c-9797-7f7efd15e1a4",
+  "uri": "composerepo://s/61198a04-6990-487c-9797-7f7efd15e1a4",
   "contributor": "🧑‍💻ueli",
   "client": "windsurf-chat",
   "second": "2026-03-14T23:15:50Z",
@@ -67,7 +67,7 @@
           "timestamp": "2026-03-14T23:17:34.884367284Z",
           "execution_id": "bf4766ea-0850-457a-aee0-5380c2ad9aae",
           "tool_info": {
-            "mcp_result": "- [🎯Goals](semiorepo://gs)\n  - [🎯aioptimizedrepo](semiorepo://g/AI-OPTIMIZED-REPO) - `AI-optimized Repo` - `open` - `AI-optimized Repo goal`\n    - [🎯aioptimizedrepo🎫fixplatformhookconfigurations](semiorepo://y/26/m/02/d/18/tk/FIX-PLATFORM-HOOK-CONFIGURATIONS) - `Fix Platform Hook Configurations` - `closed` - `a long while ago` - `Fixed platform hook configurations to use only native hook event names per spec. Removed unsupported platforms (antigravity, codex). Fixed droid to use .factory/hooks.json with simple string dict format. Updated windsurf (removed post_run_command) and cursor (added afterAgentResponse, afterAgentThought, beforeTabFileRead, afterTabFileEdit). All tests pass.`\n",
+            "mcp_result": "- [🎯Goals](composerepo://gs)\n  - [🎯aioptimizedrepo](composerepo://g/AI-OPTIMIZED-REPO) - `AI-optimized Repo` - `open` - `AI-optimized Repo goal`\n    - [🎯aioptimizedrepo🎫fixplatformhookconfigurations](composerepo://y/26/m/02/d/18/tk/FIX-PLATFORM-HOOK-CONFIGURATIONS) - `Fix Platform Hook Configurations` - `closed` - `a long while ago` - `Fixed platform hook configurations to use only native hook event names per spec. Removed unsupported platforms (antigravity, codex). Fixed droid to use .factory/hooks.json with simple string dict format. Updated windsurf (removed post_run_command) and cursor (added afterAgentResponse, afterAgentThought, beforeTabFileRead, afterTabFileEdit). All tests pass.`\n",
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
               "query": "cursor tab hooks"

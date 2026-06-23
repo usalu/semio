@@ -25,12 +25,12 @@
           "transcript_path": "c:\\Users\\Kinosh\\AppData\\Roaming\\Code\\User\\workspaceStorage\\ca1089ecc1256ccb7509f779b1aec774\\GitHub.copilot-chat\\transcripts\\125bdd00-ac7f-4594-be11-a036552779d7.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "d:\\semio\\reuse\\research\\tragerksystem\\Stahl-Skelettbau\\index.md",
+            "filePath": "d:\\compose\\reuse\\research\\tragerksystem\\Stahl-Skelettbau\\index.md",
             "startLine": 1,
             "endLine": 100
           },
           "tool_use_id": "toolu_vrtx_01ExQDS96VxP9f9YYXFjCfGr__vscode-1776710584767",
-          "cwd": "d:\\semio"
+          "cwd": "d:\\compose"
         }
       },
       "response": {}
@@ -53,12 +53,12 @@
           "transcript_path": "c:\\Users\\Kinosh\\AppData\\Roaming\\Code\\User\\workspaceStorage\\ca1089ecc1256ccb7509f779b1aec774\\GitHub.copilot-chat\\transcripts\\125bdd00-ac7f-4594-be11-a036552779d7.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "d:\\semio\\reuse\\research\\tragerksystem\\Stahl-Skelettbau\\index.md",
+            "filePath": "d:\\compose\\reuse\\research\\tragerksystem\\Stahl-Skelettbau\\index.md",
             "startLine": 1,
             "endLine": 100
           },
           "tool_use_id": "toolu_vrtx_01ExQDS96VxP9f9YYXFjCfGr__vscode-1776710584767",
-          "cwd": "d:\\semio"
+          "cwd": "d:\\compose"
         }
       },
       "response": {}
@@ -81,12 +81,12 @@
           "transcript_path": "c:\\Users\\Kinosh\\AppData\\Roaming\\Code\\User\\workspaceStorage\\ca1089ecc1256ccb7509f779b1aec774\\GitHub.copilot-chat\\transcripts\\125bdd00-ac7f-4594-be11-a036552779d7.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "d:\\semio\\reuse\\research\\tragerksystem\\Betonfertigteile\\index.md",
+            "filePath": "d:\\compose\\reuse\\research\\tragerksystem\\Betonfertigteile\\index.md",
             "startLine": 1,
             "endLine": 100
           },
           "tool_use_id": "toolu_vrtx_011VCmu4iFkbBsRNU27HRo3s__vscode-1776710584770",
-          "cwd": "d:\\semio"
+          "cwd": "d:\\compose"
         }
       },
       "response": {}
@@ -109,13 +109,13 @@
           "transcript_path": "c:\\Users\\Kinosh\\AppData\\Roaming\\Code\\User\\workspaceStorage\\ca1089ecc1256ccb7509f779b1aec774\\GitHub.copilot-chat\\transcripts\\125bdd00-ac7f-4594-be11-a036552779d7.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "d:\\semio\\reuse\\research\\tragerksystem\\Stahl-Skelettbau\\index.md",
+            "filePath": "d:\\compose\\reuse\\research\\tragerksystem\\Stahl-Skelettbau\\index.md",
             "startLine": 1,
             "endLine": 100
           },
           "tool_response": "",
           "tool_use_id": "toolu_vrtx_01ExQDS96VxP9f9YYXFjCfGr__vscode-1776710584767",
-          "cwd": "d:\\semio"
+          "cwd": "d:\\compose"
         }
       },
       "response": {}
@@ -138,13 +138,13 @@
           "transcript_path": "c:\\Users\\Kinosh\\AppData\\Roaming\\Code\\User\\workspaceStorage\\ca1089ecc1256ccb7509f779b1aec774\\GitHub.copilot-chat\\transcripts\\125bdd00-ac7f-4594-be11-a036552779d7.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "d:\\semio\\reuse\\research\\tragerksystem\\Holztragwerk\\index.md",
+            "filePath": "d:\\compose\\reuse\\research\\tragerksystem\\Holztragwerk\\index.md",
             "startLine": 1,
             "endLine": 100
           },
           "tool_response": "",
           "tool_use_id": "toolu_vrtx_016jvoEAmJih6nFgQYkEnGYj__vscode-1776710584768",
-          "cwd": "d:\\semio"
+          "cwd": "d:\\compose"
         }
       },
       "response": {}
@@ -167,13 +167,13 @@
           "transcript_path": "c:\\Users\\Kinosh\\AppData\\Roaming\\Code\\User\\workspaceStorage\\ca1089ecc1256ccb7509f779b1aec774\\GitHub.copilot-chat\\transcripts\\125bdd00-ac7f-4594-be11-a036552779d7.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "d:\\semio\\reuse\\research\\tragerksystem\\Betonfertigteile\\index.md",
+            "filePath": "d:\\compose\\reuse\\research\\tragerksystem\\Betonfertigteile\\index.md",
             "startLine": 1,
             "endLine": 100
           },
           "tool_response": "",
           "tool_use_id": "toolu_vrtx_011VCmu4iFkbBsRNU27HRo3s__vscode-1776710584770",
-          "cwd": "d:\\semio"
+          "cwd": "d:\\compose"
         }
       },
       "response": {}
@@ -196,13 +196,13 @@
           "transcript_path": "c:\\Users\\Kinosh\\AppData\\Roaming\\Code\\User\\workspaceStorage\\ca1089ecc1256ccb7509f779b1aec774\\GitHub.copilot-chat\\transcripts\\125bdd00-ac7f-4594-be11-a036552779d7.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "d:\\semio\\reuse\\research\\tragerksystem\\Stahl-Skelettbau\\index.md",
+            "filePath": "d:\\compose\\reuse\\research\\tragerksystem\\Stahl-Skelettbau\\index.md",
             "startLine": 1,
             "endLine": 100
           },
           "tool_response": "",
           "tool_use_id": "toolu_vrtx_01ExQDS96VxP9f9YYXFjCfGr__vscode-1776710584767",
-          "cwd": "d:\\semio"
+          "cwd": "d:\\compose"
         }
       },
       "response": {}
@@ -225,13 +225,13 @@
           "transcript_path": "c:\\Users\\Kinosh\\AppData\\Roaming\\Code\\User\\workspaceStorage\\ca1089ecc1256ccb7509f779b1aec774\\GitHub.copilot-chat\\transcripts\\125bdd00-ac7f-4594-be11-a036552779d7.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "d:\\semio\\reuse\\research\\tragerksystem\\Holztragwerk\\index.md",
+            "filePath": "d:\\compose\\reuse\\research\\tragerksystem\\Holztragwerk\\index.md",
             "startLine": 1,
             "endLine": 100
           },
           "tool_response": "",
           "tool_use_id": "toolu_vrtx_016jvoEAmJih6nFgQYkEnGYj__vscode-1776710584768",
-          "cwd": "d:\\semio"
+          "cwd": "d:\\compose"
         }
       },
       "response": {}
@@ -254,13 +254,13 @@
           "transcript_path": "c:\\Users\\Kinosh\\AppData\\Roaming\\Code\\User\\workspaceStorage\\ca1089ecc1256ccb7509f779b1aec774\\GitHub.copilot-chat\\transcripts\\125bdd00-ac7f-4594-be11-a036552779d7.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "d:\\semio\\reuse\\research\\tragerksystem\\Betonfertigteile\\index.md",
+            "filePath": "d:\\compose\\reuse\\research\\tragerksystem\\Betonfertigteile\\index.md",
             "startLine": 1,
             "endLine": 100
           },
           "tool_response": "",
           "tool_use_id": "toolu_vrtx_011VCmu4iFkbBsRNU27HRo3s__vscode-1776710584770",
-          "cwd": "d:\\semio"
+          "cwd": "d:\\compose"
         }
       },
       "response": {}
@@ -282,7 +282,7 @@
           "session_id": "125bdd00-ac7f-4594-be11-a036552779d7",
           "transcript_path": "c:\\Users\\Kinosh\\AppData\\Roaming\\Code\\User\\workspaceStorage\\ca1089ecc1256ccb7509f779b1aec774\\GitHub.copilot-chat\\transcripts\\125bdd00-ac7f-4594-be11-a036552779d7.jsonl",
           "stop_hook_active": false,
-          "cwd": "d:\\semio"
+          "cwd": "d:\\compose"
         }
       },
       "response": {}
@@ -304,7 +304,7 @@
           "session_id": "125bdd00-ac7f-4594-be11-a036552779d7",
           "transcript_path": "c:\\Users\\Kinosh\\AppData\\Roaming\\Code\\User\\workspaceStorage\\ca1089ecc1256ccb7509f779b1aec774\\GitHub.copilot-chat\\transcripts\\125bdd00-ac7f-4594-be11-a036552779d7.jsonl",
           "stop_hook_active": false,
-          "cwd": "d:\\semio"
+          "cwd": "d:\\compose"
         }
       },
       "response": {}
@@ -326,7 +326,7 @@
           "session_id": "125bdd00-ac7f-4594-be11-a036552779d7",
           "transcript_path": "c:\\Users\\Kinosh\\AppData\\Roaming\\Code\\User\\workspaceStorage\\ca1089ecc1256ccb7509f779b1aec774\\GitHub.copilot-chat\\transcripts\\125bdd00-ac7f-4594-be11-a036552779d7.jsonl",
           "prompt": "THERE ARE THREE PROMPTS IN EACH. iw ant ti analyze teh difference between the three in each . no ticket",
-          "cwd": "d:\\semio"
+          "cwd": "d:\\compose"
         }
       },
       "response": {}
@@ -348,7 +348,7 @@
           "session_id": "125bdd00-ac7f-4594-be11-a036552779d7",
           "transcript_path": "c:\\Users\\Kinosh\\AppData\\Roaming\\Code\\User\\workspaceStorage\\ca1089ecc1256ccb7509f779b1aec774\\GitHub.copilot-chat\\transcripts\\125bdd00-ac7f-4594-be11-a036552779d7.jsonl",
           "prompt": "THERE ARE THREE PROMPTS IN EACH. iw ant ti analyze teh difference between the three in each . no ticket",
-          "cwd": "d:\\semio"
+          "cwd": "d:\\compose"
         }
       },
       "response": {}
@@ -371,12 +371,12 @@
           "transcript_path": "c:\\Users\\Kinosh\\AppData\\Roaming\\Code\\User\\workspaceStorage\\ca1089ecc1256ccb7509f779b1aec774\\GitHub.copilot-chat\\transcripts\\125bdd00-ac7f-4594-be11-a036552779d7.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "d:\\semio\\reuse\\research\\tragerksystem\\Holztragwerk\\index.md",
+            "filePath": "d:\\compose\\reuse\\research\\tragerksystem\\Holztragwerk\\index.md",
             "startLine": 1,
             "endLine": 60
           },
           "tool_use_id": "toolu_vrtx_01VhyY1o5HgP9Toe4aThfw2b__vscode-1776710584772",
-          "cwd": "d:\\semio"
+          "cwd": "d:\\compose"
         }
       },
       "response": {}
@@ -399,12 +399,12 @@
           "transcript_path": "c:\\Users\\Kinosh\\AppData\\Roaming\\Code\\User\\workspaceStorage\\ca1089ecc1256ccb7509f779b1aec774\\GitHub.copilot-chat\\transcripts\\125bdd00-ac7f-4594-be11-a036552779d7.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "d:\\semio\\reuse\\research\\tragerksystem\\Ortbeton\\index.md",
+            "filePath": "d:\\compose\\reuse\\research\\tragerksystem\\Ortbeton\\index.md",
             "startLine": 1,
             "endLine": 60
           },
           "tool_use_id": "toolu_vrtx_019WyfrzVxozMRTmQLj7DG84__vscode-1776710584773",
-          "cwd": "d:\\semio"
+          "cwd": "d:\\compose"
         }
       },
       "response": {}
@@ -427,12 +427,12 @@
           "transcript_path": "c:\\Users\\Kinosh\\AppData\\Roaming\\Code\\User\\workspaceStorage\\ca1089ecc1256ccb7509f779b1aec774\\GitHub.copilot-chat\\transcripts\\125bdd00-ac7f-4594-be11-a036552779d7.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "d:\\semio\\reuse\\research\\tragerksystem\\Holztragwerk\\index.md",
+            "filePath": "d:\\compose\\reuse\\research\\tragerksystem\\Holztragwerk\\index.md",
             "startLine": 1,
             "endLine": 60
           },
           "tool_use_id": "toolu_vrtx_01VhyY1o5HgP9Toe4aThfw2b__vscode-1776710584772",
-          "cwd": "d:\\semio"
+          "cwd": "d:\\compose"
         }
       },
       "response": {}
@@ -455,12 +455,12 @@
           "transcript_path": "c:\\Users\\Kinosh\\AppData\\Roaming\\Code\\User\\workspaceStorage\\ca1089ecc1256ccb7509f779b1aec774\\GitHub.copilot-chat\\transcripts\\125bdd00-ac7f-4594-be11-a036552779d7.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "d:\\semio\\reuse\\research\\tragerksystem\\Betonfertigteile\\index.md",
+            "filePath": "d:\\compose\\reuse\\research\\tragerksystem\\Betonfertigteile\\index.md",
             "startLine": 1,
             "endLine": 60
           },
           "tool_use_id": "toolu_vrtx_01HavGHMYMrEA399AT6kGN5m__vscode-1776710584774",
-          "cwd": "d:\\semio"
+          "cwd": "d:\\compose"
         }
       },
       "response": {}
@@ -483,12 +483,12 @@
           "transcript_path": "c:\\Users\\Kinosh\\AppData\\Roaming\\Code\\User\\workspaceStorage\\ca1089ecc1256ccb7509f779b1aec774\\GitHub.copilot-chat\\transcripts\\125bdd00-ac7f-4594-be11-a036552779d7.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "d:\\semio\\reuse\\research\\tragerksystem\\Stahl-Skelettbau\\index.md",
+            "filePath": "d:\\compose\\reuse\\research\\tragerksystem\\Stahl-Skelettbau\\index.md",
             "startLine": 1,
             "endLine": 60
           },
           "tool_use_id": "toolu_vrtx_01BJ9i9AD3Q4FEcV1h6U84KN__vscode-1776710584771",
-          "cwd": "d:\\semio"
+          "cwd": "d:\\compose"
         }
       },
       "response": {}
@@ -511,13 +511,13 @@
           "transcript_path": "c:\\Users\\Kinosh\\AppData\\Roaming\\Code\\User\\workspaceStorage\\ca1089ecc1256ccb7509f779b1aec774\\GitHub.copilot-chat\\transcripts\\125bdd00-ac7f-4594-be11-a036552779d7.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "d:\\semio\\reuse\\research\\tragerksystem\\Betonfertigteile\\index.md",
+            "filePath": "d:\\compose\\reuse\\research\\tragerksystem\\Betonfertigteile\\index.md",
             "startLine": 1,
             "endLine": 60
           },
           "tool_response": "",
           "tool_use_id": "toolu_vrtx_01HavGHMYMrEA399AT6kGN5m__vscode-1776710584774",
-          "cwd": "d:\\semio"
+          "cwd": "d:\\compose"
         }
       },
       "response": {}
@@ -540,13 +540,13 @@
           "transcript_path": "c:\\Users\\Kinosh\\AppData\\Roaming\\Code\\User\\workspaceStorage\\ca1089ecc1256ccb7509f779b1aec774\\GitHub.copilot-chat\\transcripts\\125bdd00-ac7f-4594-be11-a036552779d7.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "d:\\semio\\reuse\\research\\tragerksystem\\Ortbeton\\index.md",
+            "filePath": "d:\\compose\\reuse\\research\\tragerksystem\\Ortbeton\\index.md",
             "startLine": 1,
             "endLine": 60
           },
           "tool_response": "",
           "tool_use_id": "toolu_vrtx_019WyfrzVxozMRTmQLj7DG84__vscode-1776710584773",
-          "cwd": "d:\\semio"
+          "cwd": "d:\\compose"
         }
       },
       "response": {}
@@ -569,13 +569,13 @@
           "transcript_path": "c:\\Users\\Kinosh\\AppData\\Roaming\\Code\\User\\workspaceStorage\\ca1089ecc1256ccb7509f779b1aec774\\GitHub.copilot-chat\\transcripts\\125bdd00-ac7f-4594-be11-a036552779d7.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "d:\\semio\\reuse\\research\\tragerksystem\\Stahl-Skelettbau\\index.md",
+            "filePath": "d:\\compose\\reuse\\research\\tragerksystem\\Stahl-Skelettbau\\index.md",
             "startLine": 1,
             "endLine": 60
           },
           "tool_response": "",
           "tool_use_id": "toolu_vrtx_01BJ9i9AD3Q4FEcV1h6U84KN__vscode-1776710584771",
-          "cwd": "d:\\semio"
+          "cwd": "d:\\compose"
         }
       },
       "response": {}
@@ -598,13 +598,13 @@
           "transcript_path": "c:\\Users\\Kinosh\\AppData\\Roaming\\Code\\User\\workspaceStorage\\ca1089ecc1256ccb7509f779b1aec774\\GitHub.copilot-chat\\transcripts\\125bdd00-ac7f-4594-be11-a036552779d7.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "d:\\semio\\reuse\\research\\tragerksystem\\Holztragwerk\\index.md",
+            "filePath": "d:\\compose\\reuse\\research\\tragerksystem\\Holztragwerk\\index.md",
             "startLine": 1,
             "endLine": 60
           },
           "tool_response": "",
           "tool_use_id": "toolu_vrtx_01VhyY1o5HgP9Toe4aThfw2b__vscode-1776710584772",
-          "cwd": "d:\\semio"
+          "cwd": "d:\\compose"
         }
       },
       "response": {}
@@ -627,13 +627,13 @@
           "transcript_path": "c:\\Users\\Kinosh\\AppData\\Roaming\\Code\\User\\workspaceStorage\\ca1089ecc1256ccb7509f779b1aec774\\GitHub.copilot-chat\\transcripts\\125bdd00-ac7f-4594-be11-a036552779d7.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "d:\\semio\\reuse\\research\\tragerksystem\\Betonfertigteile\\index.md",
+            "filePath": "d:\\compose\\reuse\\research\\tragerksystem\\Betonfertigteile\\index.md",
             "startLine": 1,
             "endLine": 60
           },
           "tool_response": "",
           "tool_use_id": "toolu_vrtx_01HavGHMYMrEA399AT6kGN5m__vscode-1776710584774",
-          "cwd": "d:\\semio"
+          "cwd": "d:\\compose"
         }
       },
       "response": {}
@@ -656,13 +656,13 @@
           "transcript_path": "c:\\Users\\Kinosh\\AppData\\Roaming\\Code\\User\\workspaceStorage\\ca1089ecc1256ccb7509f779b1aec774\\GitHub.copilot-chat\\transcripts\\125bdd00-ac7f-4594-be11-a036552779d7.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "d:\\semio\\reuse\\research\\tragerksystem\\Stahl-Skelettbau\\index.md",
+            "filePath": "d:\\compose\\reuse\\research\\tragerksystem\\Stahl-Skelettbau\\index.md",
             "startLine": 1,
             "endLine": 60
           },
           "tool_response": "",
           "tool_use_id": "toolu_vrtx_01BJ9i9AD3Q4FEcV1h6U84KN__vscode-1776710584771",
-          "cwd": "d:\\semio"
+          "cwd": "d:\\compose"
         }
       },
       "response": {}
@@ -691,7 +691,7 @@
             "includePattern": "**/reuse/research/tragerksystem/**/*.md"
           },
           "tool_use_id": "toolu_vrtx_017nhue17X7jSmoMRpNndKSn__vscode-1776710584775",
-          "cwd": "d:\\semio"
+          "cwd": "d:\\compose"
         }
       },
       "response": {}
@@ -720,7 +720,7 @@
             "includePattern": "**/reuse/research/tragerksystem/**/*.md"
           },
           "tool_use_id": "toolu_vrtx_017nhue17X7jSmoMRpNndKSn__vscode-1776710584775",
-          "cwd": "d:\\semio"
+          "cwd": "d:\\compose"
         }
       },
       "response": {}
@@ -750,7 +750,7 @@
           },
           "tool_response": "",
           "tool_use_id": "toolu_vrtx_017nhue17X7jSmoMRpNndKSn__vscode-1776710584775",
-          "cwd": "d:\\semio"
+          "cwd": "d:\\compose"
         }
       },
       "response": {}
@@ -780,7 +780,7 @@
           },
           "tool_response": "",
           "tool_use_id": "toolu_vrtx_017nhue17X7jSmoMRpNndKSn__vscode-1776710584775",
-          "cwd": "d:\\semio"
+          "cwd": "d:\\compose"
         }
       },
       "response": {}
@@ -803,12 +803,12 @@
           "transcript_path": "c:\\Users\\Kinosh\\AppData\\Roaming\\Code\\User\\workspaceStorage\\ca1089ecc1256ccb7509f779b1aec774\\GitHub.copilot-chat\\transcripts\\125bdd00-ac7f-4594-be11-a036552779d7.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "d:\\semio\\reuse\\research\\tragerksystem\\Stahl-Skelettbau\\index.md",
+            "filePath": "d:\\compose\\reuse\\research\\tragerksystem\\Stahl-Skelettbau\\index.md",
             "startLine": 259,
             "endLine": 270
           },
           "tool_use_id": "toolu_vrtx_013bvJ2vrkeyDSajhP1dehfs__vscode-1776710584777",
-          "cwd": "d:\\semio"
+          "cwd": "d:\\compose"
         }
       },
       "response": {}
@@ -831,12 +831,12 @@
           "transcript_path": "c:\\Users\\Kinosh\\AppData\\Roaming\\Code\\User\\workspaceStorage\\ca1089ecc1256ccb7509f779b1aec774\\GitHub.copilot-chat\\transcripts\\125bdd00-ac7f-4594-be11-a036552779d7.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "d:\\semio\\reuse\\research\\tragerksystem\\Holztragwerk\\index.md",
+            "filePath": "d:\\compose\\reuse\\research\\tragerksystem\\Holztragwerk\\index.md",
             "startLine": 198,
             "endLine": 215
           },
           "tool_use_id": "toolu_vrtx_01Jv139XxdfQUvEnF5pG3tCh__vscode-1776710584778",
-          "cwd": "d:\\semio"
+          "cwd": "d:\\compose"
         }
       },
       "response": {}
@@ -859,12 +859,12 @@
           "transcript_path": "c:\\Users\\Kinosh\\AppData\\Roaming\\Code\\User\\workspaceStorage\\ca1089ecc1256ccb7509f779b1aec774\\GitHub.copilot-chat\\transcripts\\125bdd00-ac7f-4594-be11-a036552779d7.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "d:\\semio\\reuse\\research\\tragerksystem\\Ortbeton\\index.md",
+            "filePath": "d:\\compose\\reuse\\research\\tragerksystem\\Ortbeton\\index.md",
             "startLine": 294,
             "endLine": 305
           },
           "tool_use_id": "toolu_vrtx_01T7BeGHEybNoRn73N9mxEEr__vscode-1776710584781",
-          "cwd": "d:\\semio"
+          "cwd": "d:\\compose"
         }
       },
       "response": {}
@@ -887,12 +887,12 @@
           "transcript_path": "c:\\Users\\Kinosh\\AppData\\Roaming\\Code\\User\\workspaceStorage\\ca1089ecc1256ccb7509f779b1aec774\\GitHub.copilot-chat\\transcripts\\125bdd00-ac7f-4594-be11-a036552779d7.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "d:\\semio\\reuse\\research\\tragerksystem\\Betonfertigteile\\index.md",
+            "filePath": "d:\\compose\\reuse\\research\\tragerksystem\\Betonfertigteile\\index.md",
             "startLine": 139,
             "endLine": 170
           },
           "tool_use_id": "toolu_vrtx_01Qd8HURJvzfB8iB7eidXjzi__vscode-1776710584782",
-          "cwd": "d:\\semio"
+          "cwd": "d:\\compose"
         }
       },
       "response": {}
@@ -915,12 +915,12 @@
           "transcript_path": "c:\\Users\\Kinosh\\AppData\\Roaming\\Code\\User\\workspaceStorage\\ca1089ecc1256ccb7509f779b1aec774\\GitHub.copilot-chat\\transcripts\\125bdd00-ac7f-4594-be11-a036552779d7.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "d:\\semio\\reuse\\research\\tragerksystem\\Stahl-Skelettbau\\index.md",
+            "filePath": "d:\\compose\\reuse\\research\\tragerksystem\\Stahl-Skelettbau\\index.md",
             "startLine": 259,
             "endLine": 270
           },
           "tool_use_id": "toolu_vrtx_013bvJ2vrkeyDSajhP1dehfs__vscode-1776710584777",
-          "cwd": "d:\\semio"
+          "cwd": "d:\\compose"
         }
       },
       "response": {}
@@ -943,12 +943,12 @@
           "transcript_path": "c:\\Users\\Kinosh\\AppData\\Roaming\\Code\\User\\workspaceStorage\\ca1089ecc1256ccb7509f779b1aec774\\GitHub.copilot-chat\\transcripts\\125bdd00-ac7f-4594-be11-a036552779d7.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "d:\\semio\\reuse\\research\\tragerksystem\\Holztragwerk\\index.md",
+            "filePath": "d:\\compose\\reuse\\research\\tragerksystem\\Holztragwerk\\index.md",
             "startLine": 198,
             "endLine": 215
           },
           "tool_use_id": "toolu_vrtx_01Jv139XxdfQUvEnF5pG3tCh__vscode-1776710584778",
-          "cwd": "d:\\semio"
+          "cwd": "d:\\compose"
         }
       },
       "response": {}
@@ -971,12 +971,12 @@
           "transcript_path": "c:\\Users\\Kinosh\\AppData\\Roaming\\Code\\User\\workspaceStorage\\ca1089ecc1256ccb7509f779b1aec774\\GitHub.copilot-chat\\transcripts\\125bdd00-ac7f-4594-be11-a036552779d7.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "d:\\semio\\reuse\\research\\tragerksystem\\Ortbeton\\index.md",
+            "filePath": "d:\\compose\\reuse\\research\\tragerksystem\\Ortbeton\\index.md",
             "startLine": 294,
             "endLine": 305
           },
           "tool_use_id": "toolu_vrtx_01T7BeGHEybNoRn73N9mxEEr__vscode-1776710584781",
-          "cwd": "d:\\semio"
+          "cwd": "d:\\compose"
         }
       },
       "response": {}
@@ -999,12 +999,12 @@
           "transcript_path": "c:\\Users\\Kinosh\\AppData\\Roaming\\Code\\User\\workspaceStorage\\ca1089ecc1256ccb7509f779b1aec774\\GitHub.copilot-chat\\transcripts\\125bdd00-ac7f-4594-be11-a036552779d7.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "d:\\semio\\reuse\\research\\tragerksystem\\Betonfertigteile\\index.md",
+            "filePath": "d:\\compose\\reuse\\research\\tragerksystem\\Betonfertigteile\\index.md",
             "startLine": 284,
             "endLine": 296
           },
           "tool_use_id": "toolu_vrtx_01Gx3fUH4mtgH2t473zGzKts__vscode-1776710584783",
-          "cwd": "d:\\semio"
+          "cwd": "d:\\compose"
         }
       },
       "response": {}
@@ -1027,12 +1027,12 @@
           "transcript_path": "c:\\Users\\Kinosh\\AppData\\Roaming\\Code\\User\\workspaceStorage\\ca1089ecc1256ccb7509f779b1aec774\\GitHub.copilot-chat\\transcripts\\125bdd00-ac7f-4594-be11-a036552779d7.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "d:\\semio\\reuse\\research\\tragerksystem\\Betonfertigteile\\index.md",
+            "filePath": "d:\\compose\\reuse\\research\\tragerksystem\\Betonfertigteile\\index.md",
             "startLine": 139,
             "endLine": 170
           },
           "tool_use_id": "toolu_vrtx_01Qd8HURJvzfB8iB7eidXjzi__vscode-1776710584782",
-          "cwd": "d:\\semio"
+          "cwd": "d:\\compose"
         }
       },
       "response": {}
@@ -1055,13 +1055,13 @@
           "transcript_path": "c:\\Users\\Kinosh\\AppData\\Roaming\\Code\\User\\workspaceStorage\\ca1089ecc1256ccb7509f779b1aec774\\GitHub.copilot-chat\\transcripts\\125bdd00-ac7f-4594-be11-a036552779d7.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "d:\\semio\\reuse\\research\\tragerksystem\\Holztragwerk\\index.md",
+            "filePath": "d:\\compose\\reuse\\research\\tragerksystem\\Holztragwerk\\index.md",
             "startLine": 198,
             "endLine": 215
           },
           "tool_response": "",
           "tool_use_id": "toolu_vrtx_01Jv139XxdfQUvEnF5pG3tCh__vscode-1776710584778",
-          "cwd": "d:\\semio"
+          "cwd": "d:\\compose"
         }
       },
       "response": {}
@@ -1084,13 +1084,13 @@
           "transcript_path": "c:\\Users\\Kinosh\\AppData\\Roaming\\Code\\User\\workspaceStorage\\ca1089ecc1256ccb7509f779b1aec774\\GitHub.copilot-chat\\transcripts\\125bdd00-ac7f-4594-be11-a036552779d7.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "d:\\semio\\reuse\\research\\tragerksystem\\Holztragwerk\\index.md",
+            "filePath": "d:\\compose\\reuse\\research\\tragerksystem\\Holztragwerk\\index.md",
             "startLine": 349,
             "endLine": 360
           },
           "tool_response": "",
           "tool_use_id": "toolu_vrtx_0186EUfqCtjd5KDJ1BqhPYFG__vscode-1776710584779",
-          "cwd": "d:\\semio"
+          "cwd": "d:\\compose"
         }
       },
       "response": {}
@@ -1113,13 +1113,13 @@
           "transcript_path": "c:\\Users\\Kinosh\\AppData\\Roaming\\Code\\User\\workspaceStorage\\ca1089ecc1256ccb7509f779b1aec774\\GitHub.copilot-chat\\transcripts\\125bdd00-ac7f-4594-be11-a036552779d7.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "d:\\semio\\reuse\\research\\tragerksystem\\Betonfertigteile\\index.md",
+            "filePath": "d:\\compose\\reuse\\research\\tragerksystem\\Betonfertigteile\\index.md",
             "startLine": 284,
             "endLine": 296
           },
           "tool_response": "",
           "tool_use_id": "toolu_vrtx_01Gx3fUH4mtgH2t473zGzKts__vscode-1776710584783",
-          "cwd": "d:\\semio"
+          "cwd": "d:\\compose"
         }
       },
       "response": {}
@@ -1142,13 +1142,13 @@
           "transcript_path": "c:\\Users\\Kinosh\\AppData\\Roaming\\Code\\User\\workspaceStorage\\ca1089ecc1256ccb7509f779b1aec774\\GitHub.copilot-chat\\transcripts\\125bdd00-ac7f-4594-be11-a036552779d7.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "d:\\semio\\reuse\\research\\tragerksystem\\Stahl-Skelettbau\\index.md",
+            "filePath": "d:\\compose\\reuse\\research\\tragerksystem\\Stahl-Skelettbau\\index.md",
             "startLine": 141,
             "endLine": 165
           },
           "tool_response": "",
           "tool_use_id": "toolu_vrtx_019Xa9LAKMB8SEToggskfQzj__vscode-1776710584776",
-          "cwd": "d:\\semio"
+          "cwd": "d:\\compose"
         }
       },
       "response": {}
@@ -1171,13 +1171,13 @@
           "transcript_path": "c:\\Users\\Kinosh\\AppData\\Roaming\\Code\\User\\workspaceStorage\\ca1089ecc1256ccb7509f779b1aec774\\GitHub.copilot-chat\\transcripts\\125bdd00-ac7f-4594-be11-a036552779d7.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "d:\\semio\\reuse\\research\\tragerksystem\\Betonfertigteile\\index.md",
+            "filePath": "d:\\compose\\reuse\\research\\tragerksystem\\Betonfertigteile\\index.md",
             "startLine": 139,
             "endLine": 170
           },
           "tool_response": "",
           "tool_use_id": "toolu_vrtx_01Qd8HURJvzfB8iB7eidXjzi__vscode-1776710584782",
-          "cwd": "d:\\semio"
+          "cwd": "d:\\compose"
         }
       },
       "response": {}
@@ -1200,13 +1200,13 @@
           "transcript_path": "c:\\Users\\Kinosh\\AppData\\Roaming\\Code\\User\\workspaceStorage\\ca1089ecc1256ccb7509f779b1aec774\\GitHub.copilot-chat\\transcripts\\125bdd00-ac7f-4594-be11-a036552779d7.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "d:\\semio\\reuse\\research\\tragerksystem\\Ortbeton\\index.md",
+            "filePath": "d:\\compose\\reuse\\research\\tragerksystem\\Ortbeton\\index.md",
             "startLine": 127,
             "endLine": 155
           },
           "tool_response": "",
           "tool_use_id": "toolu_vrtx_01CVG6HtSJQ8o6jBWNw2nHcK__vscode-1776710584780",
-          "cwd": "d:\\semio"
+          "cwd": "d:\\compose"
         }
       },
       "response": {}
@@ -1229,13 +1229,13 @@
           "transcript_path": "c:\\Users\\Kinosh\\AppData\\Roaming\\Code\\User\\workspaceStorage\\ca1089ecc1256ccb7509f779b1aec774\\GitHub.copilot-chat\\transcripts\\125bdd00-ac7f-4594-be11-a036552779d7.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "d:\\semio\\reuse\\research\\tragerksystem\\Stahl-Skelettbau\\index.md",
+            "filePath": "d:\\compose\\reuse\\research\\tragerksystem\\Stahl-Skelettbau\\index.md",
             "startLine": 259,
             "endLine": 270
           },
           "tool_response": "",
           "tool_use_id": "toolu_vrtx_013bvJ2vrkeyDSajhP1dehfs__vscode-1776710584777",
-          "cwd": "d:\\semio"
+          "cwd": "d:\\compose"
         }
       },
       "response": {}
@@ -1258,13 +1258,13 @@
           "transcript_path": "c:\\Users\\Kinosh\\AppData\\Roaming\\Code\\User\\workspaceStorage\\ca1089ecc1256ccb7509f779b1aec774\\GitHub.copilot-chat\\transcripts\\125bdd00-ac7f-4594-be11-a036552779d7.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "d:\\semio\\reuse\\research\\tragerksystem\\Ortbeton\\index.md",
+            "filePath": "d:\\compose\\reuse\\research\\tragerksystem\\Ortbeton\\index.md",
             "startLine": 294,
             "endLine": 305
           },
           "tool_response": "",
           "tool_use_id": "toolu_vrtx_01T7BeGHEybNoRn73N9mxEEr__vscode-1776710584781",
-          "cwd": "d:\\semio"
+          "cwd": "d:\\compose"
         }
       },
       "response": {}
@@ -1287,13 +1287,13 @@
           "transcript_path": "c:\\Users\\Kinosh\\AppData\\Roaming\\Code\\User\\workspaceStorage\\ca1089ecc1256ccb7509f779b1aec774\\GitHub.copilot-chat\\transcripts\\125bdd00-ac7f-4594-be11-a036552779d7.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "d:\\semio\\reuse\\research\\tragerksystem\\Stahl-Skelettbau\\index.md",
+            "filePath": "d:\\compose\\reuse\\research\\tragerksystem\\Stahl-Skelettbau\\index.md",
             "startLine": 141,
             "endLine": 165
           },
           "tool_response": "",
           "tool_use_id": "toolu_vrtx_019Xa9LAKMB8SEToggskfQzj__vscode-1776710584776",
-          "cwd": "d:\\semio"
+          "cwd": "d:\\compose"
         }
       },
       "response": {}
@@ -1316,13 +1316,13 @@
           "transcript_path": "c:\\Users\\Kinosh\\AppData\\Roaming\\Code\\User\\workspaceStorage\\ca1089ecc1256ccb7509f779b1aec774\\GitHub.copilot-chat\\transcripts\\125bdd00-ac7f-4594-be11-a036552779d7.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "d:\\semio\\reuse\\research\\tragerksystem\\Ortbeton\\index.md",
+            "filePath": "d:\\compose\\reuse\\research\\tragerksystem\\Ortbeton\\index.md",
             "startLine": 127,
             "endLine": 155
           },
           "tool_response": "",
           "tool_use_id": "toolu_vrtx_01CVG6HtSJQ8o6jBWNw2nHcK__vscode-1776710584780",
-          "cwd": "d:\\semio"
+          "cwd": "d:\\compose"
         }
       },
       "response": {}
@@ -1344,7 +1344,7 @@
           "session_id": "125bdd00-ac7f-4594-be11-a036552779d7",
           "transcript_path": "c:\\Users\\Kinosh\\AppData\\Roaming\\Code\\User\\workspaceStorage\\ca1089ecc1256ccb7509f779b1aec774\\GitHub.copilot-chat\\transcripts\\125bdd00-ac7f-4594-be11-a036552779d7.jsonl",
           "stop_hook_active": false,
-          "cwd": "d:\\semio"
+          "cwd": "d:\\compose"
         }
       },
       "response": {}
@@ -1366,7 +1366,7 @@
           "session_id": "125bdd00-ac7f-4594-be11-a036552779d7",
           "transcript_path": "c:\\Users\\Kinosh\\AppData\\Roaming\\Code\\User\\workspaceStorage\\ca1089ecc1256ccb7509f779b1aec774\\GitHub.copilot-chat\\transcripts\\125bdd00-ac7f-4594-be11-a036552779d7.jsonl",
           "stop_hook_active": false,
-          "cwd": "d:\\semio"
+          "cwd": "d:\\compose"
         }
       },
       "response": {}

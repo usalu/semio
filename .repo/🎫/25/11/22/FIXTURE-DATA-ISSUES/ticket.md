@@ -164,11 +164,11 @@ Failing tests:
 
 ## Files Modified
 
-- `js/semio/semio.ts`:
+- `js/compose/compose.ts`:
   - Made `SideSchema.connector` optional
   - Updated `sqliteToKit` to read more Type fields
   - Changed Type import to use conditional property assignment
-- `js/semio/semio.test.ts`:
+- `js/compose/compose.test.ts`:
   - Added connection filtering in test setup
   - Imported `KitSchema` for validation
 

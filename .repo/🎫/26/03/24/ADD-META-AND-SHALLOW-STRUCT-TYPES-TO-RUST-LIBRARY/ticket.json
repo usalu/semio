@@ -3,7 +3,7 @@
   "emoji": "➕",
   "status": "closed",
   "description": "Add Meta And Shallow Struct Types To Rust Library",
-  "summary": "Added Meta and Shallow struct types to semio/rs/lib.rs for all entities with Diff equivalents. Added 16 sub-entity Meta structs (AttributeMeta, PropMeta, TagMeta, ConceptMeta, AuthorMeta, FileMeta, FolderMeta, QualityMeta, PortMeta, ModelMeta, ConnectorMeta, LayerMeta, PieceMeta, GroupMeta, ConnectionMeta, StatMeta), 3 main entity Meta structs (TypeMeta, DesignMeta, KitMeta), 3 Shallow structs (TypeShallow, DesignShallow, KitShallow), conversion functions (to_meta/to_shallow) on Type, Design, Kit and all sub-entities, and 7 tests. All 25 tests pass.",
+  "summary": "Added Meta and Shallow struct types to compose/rs/lib.rs for all entities with Diff equivalents. Added 16 sub-entity Meta structs (AttributeMeta, PropMeta, TagMeta, ConceptMeta, AuthorMeta, FileMeta, FolderMeta, QualityMeta, PortMeta, ModelMeta, ConnectorMeta, LayerMeta, PieceMeta, GroupMeta, ConnectionMeta, StatMeta), 3 main entity Meta structs (TypeMeta, DesignMeta, KitMeta), 3 Shallow structs (TypeShallow, DesignShallow, KitShallow), conversion functions (to_meta/to_shallow) on Type, Design, Kit and all sub-entities, and 7 tests. All 25 tests pass.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1067"
   },

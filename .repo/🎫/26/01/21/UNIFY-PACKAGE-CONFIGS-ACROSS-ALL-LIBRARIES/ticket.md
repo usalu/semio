@@ -13,26 +13,26 @@ Workspace and package configs are outdated. Every library (Go module, Rust crate
 ### Existing package.json files:
 
 1. `/package.json` - root workspace
-2. `assets/package.json` - semio/assets
-3. `assets/logo/package.json` - semio/logo
-4. `assets/icons/package.json` - semio/icons
-5. `js/semio/package.json` - semio/js
-6. `js/docs/package.json` - semio/docs
-7. `js/play/package.json` - semio/play
-8. `js/desktop/package.json` - semio/desktop
+2. `assets/package.json` - compose/assets
+3. `assets/logo/package.json` - compose/logo
+4. `assets/icons/package.json` - compose/icons
+5. `js/compose/package.json` - compose/js
+6. `js/docs/package.json` - compose/docs
+7. `js/play/package.json` - compose/play
+8. `js/desktop/package.json` - compose/desktop
 9. `js/vscode/package.json` - repo (VSCode extension)
-10. `py/semio/package.json` - semio/py
-11. `py/engine/package.json` - semio/engine
-12. `go/semio/package.json` - semio/go
+10. `py/compose/package.json` - compose/py
+11. `py/engine/package.json` - compose/engine
+12. `go/compose/package.json` - compose/go
 13. `./repo/cli/package.json` - repo/go
-14. `net/Semio/package.json` - semio/net
-15. `net/Semio.Grasshopper/package.json` - semio/grasshopper
-16. `yak/package.json` - semio/yak
+14. `net/Compose/package.json` - compose/net
+15. `net/Compose.Grasshopper/package.json` - compose/grasshopper
+16. `yak/package.json` - compose/yak
 
 ### Missing package.json files:
 
 1. `go/server/package.json` - needs to be created
-2. `rs/semio/package.json` - needs to be created
+2. `rs/compose/package.json` - needs to be created
 
 ### Issues Found:
 
@@ -40,7 +40,7 @@ Workspace and package configs are outdated. Every library (Go module, Rust crate
 2. Some packages lack `test` scripts
 3. Some packages lack `build` scripts
 4. `go/mcp` is listed in root workspaces but doesn't exist (needs removal)
-5. `go/server` and `rs/semio` are not in root workspaces (needs addition)
+5. `go/server` and `rs/compose` are not in root workspaces (needs addition)
 
 ## Changes to Implement
 
@@ -51,9 +51,9 @@ Workspace and package configs are outdated. Every library (Go module, Rust crate
 - Name: `repo/server`
 - Scripts: `dev`, `build`, `test`, `preflight`
 
-#### rs/semio/package.json
+#### rs/compose/package.json
 
-- Name: `semio/rs`
+- Name: `compose/rs`
 - Scripts: `build`, `test`, `preflight`
 
 ### 2. Update Existing package.json Files
@@ -62,7 +62,7 @@ Workspace and package configs are outdated. Every library (Go module, Rust crate
 
 - Rename `package` to `publish:vsix`
 
-#### go/semio/package.json
+#### go/compose/package.json
 
 - Add `build` script: `go build ./...`
 
@@ -70,15 +70,15 @@ Workspace and package configs are outdated. Every library (Go module, Rust crate
 
 - Fix incomplete `build` script
 
-#### py/semio/package.json
+#### py/compose/package.json
 
 - Add `test`, `build`, `preflight` scripts
 
-#### net/Semio/package.json
+#### net/Compose/package.json
 
 - Add `test` script
 
-#### net/Semio.Grasshopper/package.json
+#### net/Compose.Grasshopper/package.json
 
 - Add `test` script
 
@@ -86,7 +86,7 @@ Workspace and package configs are outdated. Every library (Go module, Rust crate
 
 - Remove `go/mcp` from workspaces (doesn't exist)
 - Add `go/server` to workspaces
-- Add `rs/semio` to workspaces
+- Add `rs/compose` to workspaces
 
 ## Standard Script Naming Convention
 
@@ -112,34 +112,34 @@ Analyzed existing package.json files across the monorepo:
 ### Existing package.json files found:
 
 - `/package.json` - root workspace
-- `assets/package.json` - semio/assets
-- `assets/logo/package.json` - semio/logo
-- `assets/icons/package.json` - semio/icons
-- `js/semio/package.json` - semio/js
-- `js/docs/package.json` - semio/docs
-- `js/play/package.json` - semio/play
-- `js/desktop/package.json` - semio/desktop
+- `assets/package.json` - compose/assets
+- `assets/logo/package.json` - compose/logo
+- `assets/icons/package.json` - compose/icons
+- `js/compose/package.json` - compose/js
+- `js/docs/package.json` - compose/docs
+- `js/play/package.json` - compose/play
+- `js/desktop/package.json` - compose/desktop
 - `js/vscode/package.json` - repo (VSCode extension)
-- `py/semio/package.json` - semio/py
-- `py/engine/package.json` - semio/engine
-- `go/semio/package.json` - semio/go
+- `py/compose/package.json` - compose/py
+- `py/engine/package.json` - compose/engine
+- `go/compose/package.json` - compose/go
 - `./repo/cli/package.json` - repo/go
-- `net/Semio/package.json` - semio/net
-- `net/Semio.Grasshopper/package.json` - semio/grasshopper
-- `yak/package.json` - semio/yak
+- `net/Compose/package.json` - compose/net
+- `net/Compose.Grasshopper/package.json` - compose/grasshopper
+- `yak/package.json` - compose/yak
 
 ### Missing package.json files:
 
 - `go/server/package.json` - created
-- `rs/semio/package.json` - created
+- `rs/compose/package.json` - created
 
 ### Issues found and fixed:
 
 1. `go/mcp` was in workspaces but doesn't exist - removed
 2. `js/vscode/package.json` had "package" script - renamed to "publish:vsix"
 3. `./repo/cli/package.json` had incomplete build script - fixed
-4. `go/semio/package.json` was missing build script - added
-5. `py/semio/package.json` was missing all scripts - added build, test, preflight
+4. `go/compose/package.json` was missing build script - added
+5. `py/compose/package.json` was missing all scripts - added build, test, preflight
 6. `.NET` packages were missing test scripts - added
 
 ## Implementation
@@ -147,15 +147,15 @@ Analyzed existing package.json files across the monorepo:
 ### Created files:
 
 1. `go/server/package.json` - with dev, build, test, preflight scripts
-2. `rs/semio/package.json` - with build, test, preflight scripts
+2. `rs/compose/package.json` - with build, test, preflight scripts
 
 ### Updated files:
 
 1. `./repo/cli/package.json` - fixed build script, added dev script
-2. `go/semio/package.json` - added build script
-3. `py/semio/package.json` - added build, test, preflight scripts, changed projectType to library
-4. `net/Semio/package.json` - added test script, updated preflight
-5. `net/Semio.Grasshopper/package.json` - added test script, updated preflight
+2. `go/compose/package.json` - added build script
+3. `py/compose/package.json` - added build, test, preflight scripts, changed projectType to library
+4. `net/Compose/package.json` - added test script, updated preflight
+5. `net/Compose.Grasshopper/package.json` - added test script, updated preflight
 6. `js/vscode/package.json` - renamed "package" to "publish:vsix"
 7. `package.json` (root) - updated workspaces list
 
@@ -181,16 +181,16 @@ Unified package.json configurations across all libraries in the monorepo (Go, Ru
 ### New Files Created
 
 - `go/server/package.json` - repo/server with dev, build, test, preflight scripts
-- `rs/semio/package.json` - semio/rs with build, test, preflight scripts
+- `rs/compose/package.json` - compose/rs with build, test, preflight scripts
 
 ### Files Updated
 
-- `package.json` (root) - Updated workspaces: removed non-existent `go/mcp`, added `go/server`, `rs/semio`, `py/semio`
+- `package.json` (root) - Updated workspaces: removed non-existent `go/mcp`, added `go/server`, `rs/compose`, `py/compose`
 - `./repo/cli/package.json` - Fixed incomplete build script, added dev script
-- `go/semio/package.json` - Added build script
-- `py/semio/package.json` - Added build, test, preflight scripts
-- `net/Semio/package.json` - Added test script, updated preflight to use dotnet build
-- `net/Semio.Grasshopper/package.json` - Added test script, updated preflight
+- `go/compose/package.json` - Added build script
+- `py/compose/package.json` - Added build, test, preflight scripts
+- `net/Compose/package.json` - Added test script, updated preflight to use dotnet build
+- `net/Compose.Grasshopper/package.json` - Added test script, updated preflight
 - `js/vscode/package.json` - Renamed "package" script to "publish:vsix"
 
 ## Script Naming Convention

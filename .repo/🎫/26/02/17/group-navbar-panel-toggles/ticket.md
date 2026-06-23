@@ -30,7 +30,7 @@ Group Chat, Setting, and Right panel together in the navbar following the existi
 
 ### Modified Files
 
-- `semio/js/sketchpad/Sketchpad.tsx` - Updated PanelToggles component to group Chat, Settings, and Right Panel toggles together while keeping Left Panel separate
+- `compose/js/sketchpad/Sketchpad.tsx` - Updated PanelToggles component to group Chat, Settings, and Right Panel toggles together while keeping Left Panel separate
 
 ### Implementation Details
 

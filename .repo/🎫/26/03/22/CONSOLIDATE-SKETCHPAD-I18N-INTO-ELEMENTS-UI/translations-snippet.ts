@@ -1,6 +1,6 @@
 const elementUiTranslationBundles = {
   de: { translation: JSON.parse(String.raw`{
-  "semio": {
+  "compose": {
     "label": {
       "normal": "",
       "beginner": ""
@@ -713,7 +713,7 @@ const elementUiTranslationBundles = {
         "feedback": {
           "label": {
             "normal": "Feedback",
-            "beginner": "Feedback senden, um semio zu verbessern"
+            "beginner": "Feedback senden, um compose zu verbessern"
           }
         }
       },
@@ -1014,8 +1014,8 @@ const elementUiTranslationBundles = {
               "beginner": "Legen Sie eine Zip-Datei hier ab, um sie als neues Kit zu importieren"
             },
             "description": {
-              "normal": "Nur Kits mit .semio-Ordner können importiert werden",
-              "beginner": "Die Zip-Datei muss einen .semio-Ordner mit kit.db enthalten, um als Kit importiert zu werden."
+              "normal": "Nur Kits mit .compose-Ordner können importiert werden",
+              "beginner": "Die Zip-Datei muss einen .compose-Ordner mit kit.db enthalten, um als Kit importiert zu werden."
             }
           },
           "noKits": {
@@ -1206,8 +1206,8 @@ const elementUiTranslationBundles = {
               "beginner": "Legen Sie eine Zip-Datei hier ab, um sie als Kit zu importieren oder Dateien zum aktuellen Kit hinzuzufuegen"
             },
             "description": {
-              "normal": "Kits mit .semio-Ordner werden importiert, andere als Dateien hinzugefuegt",
-              "beginner": "Wenn die Zip-Datei einen .semio-Ordner enthaelt, wird sie als vollstaendiges Kit importiert. Andernfalls werden die Dateien zum aktuellen Kit hinzugefuegt."
+              "normal": "Kits mit .compose-Ordner werden importiert, andere als Dateien hinzugefuegt",
+              "beginner": "Wenn die Zip-Datei einen .compose-Ordner enthaelt, wird sie als vollstaendiges Kit importiert. Andernfalls werden die Dateien zum aktuellen Kit hinzugefuegt."
             }
           },
           "versionPlaceholder": {
@@ -1286,8 +1286,8 @@ const elementUiTranslationBundles = {
                 "normal": "Nach Name filtern",
                 "beginner": "Klicken, um Artefakte nach diesem Namen zu filtern"
               },
-              "manual": "manuals/semio/kit",
-              "tutorial": "hello-semio/model-design",
+              "manual": "manuals/compose/kit",
+              "tutorial": "hello-compose/model-design",
               "hotkey": "Ctrl+N",
               "hide": {
                 "label": {
@@ -1323,8 +1323,8 @@ const elementUiTranslationBundles = {
               "normal": "Entwuerfe",
               "beginner": "Entwuerfe in diesem Kit"
             },
-            "manual": "manuals/semio/kit#designs",
-            "tutorial": "hello-semio/model-design",
+            "manual": "manuals/compose/kit#designs",
+            "tutorial": "hello-compose/model-design",
             "multipleSelected": {
               "label": {
                 "normal": "Mehrere ausgewählt",
@@ -1343,8 +1343,8 @@ const elementUiTranslationBundles = {
               "normal": "Typen",
               "beginner": "Typen in diesem Kit"
             },
-            "manual": "manuals/semio/kit#types",
-            "tutorial": "hello-semio/model-brick-set",
+            "manual": "manuals/compose/kit#types",
+            "tutorial": "hello-compose/model-brick-set",
             "multipleSelected": {
               "label": {
                 "normal": "Mehrere ausgewählt",
@@ -1396,39 +1396,39 @@ const elementUiTranslationBundles = {
                 "normal": "Entwuerfe anzeigen",
                 "beginner": "Klicken, um alle Entwuerfe in diesem Kit anzuzeigen"
               },
-              "manual": "manuals/semio/kit#designs",
-              "tutorial": "hello-semio/model-design"
+              "manual": "manuals/compose/kit#designs",
+              "tutorial": "hello-compose/model-design"
             },
             "createDesign": {
               "label": {
                 "normal": "Entwurf erstellen",
                 "beginner": "Klicken, um einen neuen Entwurf in diesem Kit zu erstellen"
               },
-              "manual": "manuals/semio/kit#designs",
-              "tutorial": "hello-semio/model-design"
+              "manual": "manuals/compose/kit#designs",
+              "tutorial": "hello-compose/model-design"
             },
             "showTypes": {
               "label": {
                 "normal": "Typen anzeigen",
                 "beginner": "Klicken, um alle Typen in diesem Kit anzuzeigen"
               },
-              "manual": "manuals/semio/kit#types",
-              "tutorial": "hello-semio/model-brick-set"
+              "manual": "manuals/compose/kit#types",
+              "tutorial": "hello-compose/model-brick-set"
             },
             "createType": {
               "label": {
                 "normal": "Typ erstellen",
                 "beginner": "Klicken, um einen neuen Typ in diesem Kit zu erstellen"
               },
-              "manual": "manuals/semio/kit#types",
-              "tutorial": "hello-semio/model-brick-set"
+              "manual": "manuals/compose/kit#types",
+              "tutorial": "hello-compose/model-brick-set"
             },
             "showQualities": {
               "label": {
                 "normal": "Qualitaeten anzeigen",
                 "beginner": "Klicken, um alle Qualitaeten in diesem Kit anzuzeigen"
               },
-              "manual": "manuals/semio/kit#qualities",
+              "manual": "manuals/compose/kit#qualities",
               "tutorial": "getting-started/intro#quality"
             },
             "createQuality": {
@@ -1436,7 +1436,7 @@ const elementUiTranslationBundles = {
                 "normal": "Qualitaet erstellen",
                 "beginner": "Klicken, um eine neue Qualitaetsdefinition in diesem Kit zu erstellen"
               },
-              "manual": "manuals/semio/kit#qualities",
+              "manual": "manuals/compose/kit#qualities",
               "tutorial": "getting-started/intro#quality"
             },
             "showPorts": {
@@ -1444,7 +1444,7 @@ const elementUiTranslationBundles = {
                 "normal": "Schnittstellen anzeigen",
                 "beginner": "Klicken, um alle Schnittstellen in diesem Kit anzuzeigen"
               },
-              "manual": "manuals/semio/kit#ports",
+              "manual": "manuals/compose/kit#ports",
               "tutorial": "getting-started/intro#port"
             },
             "createPort": {
@@ -1452,7 +1452,7 @@ const elementUiTranslationBundles = {
                 "normal": "Schnittstelle erstellen",
                 "beginner": "Klicken, um eine neue Schnittstellendefinition in diesem Kit zu erstellen"
               },
-              "manual": "manuals/semio/kit#ports",
+              "manual": "manuals/compose/kit#ports",
               "tutorial": "getting-started/intro#port"
             },
             "showFiles": {
@@ -1460,7 +1460,7 @@ const elementUiTranslationBundles = {
                 "normal": "Dateien anzeigen",
                 "beginner": "Klicken, um alle Dateien in diesem Kit anzuzeigen"
               },
-              "manual": "manuals/semio/kit#files",
+              "manual": "manuals/compose/kit#files",
               "tutorial": "getting-started/intro#files"
             },
             "createFile": {
@@ -1468,7 +1468,7 @@ const elementUiTranslationBundles = {
                 "normal": "Datei erstellen",
                 "beginner": "Klicken, um eine neue Datei zu diesem Kit hinzuzufuegen"
               },
-              "manual": "manuals/semio/kit#files",
+              "manual": "manuals/compose/kit#files",
               "tutorial": "getting-started/intro#files"
             },
             "showFolders": {
@@ -1476,23 +1476,23 @@ const elementUiTranslationBundles = {
                 "normal": "Ordner anzeigen",
                 "beginner": "Klicken, um alle Ordner in diesem Kit anzuzeigen"
               },
-              "manual": "manuals/semio/kit#folders",
-              "tutorial": "hello-semio/model-design"
+              "manual": "manuals/compose/kit#folders",
+              "tutorial": "hello-compose/model-design"
             },
             "createFolder": {
               "label": {
                 "normal": "Ordner erstellen",
                 "beginner": "Klicken, um einen neuen Ordner in diesem Kit zu erstellen"
               },
-              "manual": "manuals/semio/kit#folders",
-              "tutorial": "hello-semio/model-design"
+              "manual": "manuals/compose/kit#folders",
+              "tutorial": "hello-compose/model-design"
             },
             "showAuthors": {
               "label": {
                 "normal": "Autoren anzeigen",
                 "beginner": "Klicken, um alle Autoren dieses Kits anzuzeigen"
               },
-              "manual": "manuals/semio/kit#authors",
+              "manual": "manuals/compose/kit#authors",
               "tutorial": "getting-started/intro#authors"
             },
             "createAuthor": {
@@ -1500,7 +1500,7 @@ const elementUiTranslationBundles = {
                 "normal": "Autor erstellen",
                 "beginner": "Klicken, um einen neuen Autor zu diesem Kit hinzuzufuegen"
               },
-              "manual": "manuals/semio/kit#authors",
+              "manual": "manuals/compose/kit#authors",
               "tutorial": "getting-started/intro#authors"
             },
             "hideKind": {
@@ -1639,7 +1639,7 @@ const elementUiTranslationBundles = {
                       "beginner": "Der Name des Kits. Dies ist die primaere Kennung fuer Ihr Kit."
                     },
                     "manual": "kit#metadata",
-                    "tutorial": "hello-semio/save-kit"
+                    "tutorial": "hello-compose/save-kit"
                   },
                   "version": {
                     "label": {
@@ -1647,7 +1647,7 @@ const elementUiTranslationBundles = {
                       "beginner": "Die Version des Kits im semantischen Versionierungsformat (z.B. 1.0.0)."
                     },
                     "manual": "kit#metadata",
-                    "tutorial": "hello-semio/save-kit"
+                    "tutorial": "hello-compose/save-kit"
                   },
                   "description": {
                     "label": {
@@ -1655,7 +1655,7 @@ const elementUiTranslationBundles = {
                       "beginner": "Eine detaillierte Beschreibung dessen, was dieses Kit enthaelt und wie es verwendet werden sollte."
                     },
                     "manual": "kit#metadata",
-                    "tutorial": "hello-semio/save-kit"
+                    "tutorial": "hello-compose/save-kit"
                   },
                   "icon": {
                     "label": {
@@ -1663,7 +1663,7 @@ const elementUiTranslationBundles = {
                       "beginner": "Ein Icon zur Darstellung dieses Kits. Kann ein Emoji oder eine URL zu einem Bild sein."
                     },
                     "manual": "kit#metadata",
-                    "tutorial": "hello-semio/save-kit"
+                    "tutorial": "hello-compose/save-kit"
                   },
                   "image": {
                     "label": {
@@ -1671,7 +1671,7 @@ const elementUiTranslationBundles = {
                       "beginner": "URL zu einem Vorschaubild, das dieses Kit praesentiert."
                     },
                     "manual": "kit#metadata",
-                    "tutorial": "hello-semio/save-kit"
+                    "tutorial": "hello-compose/save-kit"
                   },
                   "homepage": {
                     "label": {
@@ -1679,7 +1679,7 @@ const elementUiTranslationBundles = {
                       "beginner": "URL zur Homepage oder Dokumentation fuer dieses Kit."
                     },
                     "manual": "kit#metadata",
-                    "tutorial": "hello-semio/save-kit"
+                    "tutorial": "hello-compose/save-kit"
                   },
                   "license": {
                     "label": {
@@ -1687,7 +1687,7 @@ const elementUiTranslationBundles = {
                       "beginner": "Die Lizenz, unter der dieses Kit verteilt wird (z.B. MIT, GPL)."
                     },
                     "manual": "kit#metadata",
-                    "tutorial": "hello-semio/save-kit"
+                    "tutorial": "hello-compose/save-kit"
                   }
                 },
                 "folder": {
@@ -1701,7 +1701,7 @@ const elementUiTranslationBundles = {
                       "beginner": "Der Anzeigename des Ordners."
                     },
                     "manual": "kit#folders",
-                    "tutorial": "hello-semio/save-kit"
+                    "tutorial": "hello-compose/save-kit"
                   },
                   "description": {
                     "label": {
@@ -1709,7 +1709,7 @@ const elementUiTranslationBundles = {
                       "beginner": "Optionale Beschreibung, die den Zweck dieses Ordners erlaeutert."
                     },
                     "manual": "kit#folders",
-                    "tutorial": "hello-semio/save-kit"
+                    "tutorial": "hello-compose/save-kit"
                   }
                 },
                 "port": {
@@ -2310,7 +2310,7 @@ const elementUiTranslationBundles = {
                       "beginner": "Der Name des Entwurfs. Dies ist die primaere Kennung fuer Ihre Komposition."
                     },
                     "manual": "design#metadata",
-                    "tutorial": "hello-semio/model-design"
+                    "tutorial": "hello-compose/model-design"
                   },
                   "description": {
                     "label": {
@@ -2318,7 +2318,7 @@ const elementUiTranslationBundles = {
                       "beginner": "Eine detaillierte Beschreibung dessen, was dieser Entwurf darstellt und wie er verwendet werden sollte."
                     },
                     "manual": "design#metadata",
-                    "tutorial": "hello-semio/model-design"
+                    "tutorial": "hello-compose/model-design"
                   },
                   "icon": {
                     "label": {
@@ -2326,7 +2326,7 @@ const elementUiTranslationBundles = {
                       "beginner": "URL oder Pfad zu einem Icon, das diesen Entwurf in Listen und Vorschauen darstellt."
                     },
                     "manual": "design#metadata",
-                    "tutorial": "hello-semio/model-design"
+                    "tutorial": "hello-compose/model-design"
                   },
                   "image": {
                     "label": {
@@ -2334,7 +2334,7 @@ const elementUiTranslationBundles = {
                       "beginner": "URL oder Pfad zu einem Vorschaubild, das diesen Entwurf praesentiert."
                     },
                     "manual": "design#metadata",
-                    "tutorial": "hello-semio/model-design"
+                    "tutorial": "hello-compose/model-design"
                   },
                   "variant": {
                     "label": {
@@ -2342,7 +2342,7 @@ const elementUiTranslationBundles = {
                       "beginner": "Eine Variantenkennung fuer verschiedene Versionen oder Konfigurationen dieses Entwurfs."
                     },
                     "manual": "design#variants",
-                    "tutorial": "hello-semio/model-design"
+                    "tutorial": "hello-compose/model-design"
                   },
                   "view": {
                     "label": {
@@ -2350,7 +2350,7 @@ const elementUiTranslationBundles = {
                       "beginner": "Die Ansichtsperspektive oder Kamerawinkel zur Anzeige dieses Entwurfs."
                     },
                     "manual": "design#views",
-                    "tutorial": "hello-semio/model-design"
+                    "tutorial": "hello-compose/model-design"
                   },
                   "unit": {
                     "label": {
@@ -2358,7 +2358,7 @@ const elementUiTranslationBundles = {
                       "beginner": "Die Masseinheit fuer alle Abmessungen in diesem Entwurf (z.B. mm, cm, m)."
                     },
                     "manual": "design#metadata",
-                    "tutorial": "hello-semio/model-design"
+                    "tutorial": "hello-compose/model-design"
                   },
                   "createdAt": {
                     "label": {
@@ -2590,7 +2590,7 @@ const elementUiTranslationBundles = {
                       "beginner": "Die 3D-Platzierungsebene fuer dieses Bauteil. Definiert Position und Ausrichtung im 3D-Raum."
                     },
                     "manual": "design#pieces",
-                    "tutorial": "hello-semio/model-design#pieces",
+                    "tutorial": "hello-compose/model-design#pieces",
                     "origin": {
                       "label": {
                         "normal": "Ursprung",
@@ -3299,8 +3299,8 @@ const elementUiTranslationBundles = {
             },
             "message": {
               "label": {
-                "normal": "Ihr Feedback wurde erfolgreich gesendet. Wir schätzen Ihren Beitrag zur Verbesserung von Semio.",
-                "beginner": "Ihr Feedback wurde erfolgreich gesendet. Wir schätzen Ihren Beitrag zur Verbesserung von Semio."
+                "normal": "Ihr Feedback wurde erfolgreich gesendet. Wir schätzen Ihren Beitrag zur Verbesserung von Compose.",
+                "beginner": "Ihr Feedback wurde erfolgreich gesendet. Wir schätzen Ihren Beitrag zur Verbesserung von Compose."
               }
             },
             "sendAnother": {
@@ -3458,7 +3458,7 @@ const elementUiTranslationBundles = {
               "beginner": "Verschiedene 3D-Modelle, Bilder und visuelle Darstellungen fuer diesen Typ verwalten."
             },
             "manual": "type#models",
-            "tutorial": "hello-semio/model-brick-set#models"
+            "tutorial": "hello-compose/model-brick-set#models"
           },
           "model": {
             "label": {
@@ -3488,7 +3488,7 @@ const elementUiTranslationBundles = {
               "beginner": "Verbindungsports fuer diesen Typ verwalten. Connectors definieren, wo und wie Bauteile verbunden werden koennen."
             },
             "manual": "type#connectors",
-            "tutorial": "hello-semio/model-brick-set#connectors"
+            "tutorial": "hello-compose/model-brick-set#connectors"
           },
           "connector": {
             "label": {
@@ -3530,7 +3530,7 @@ const elementUiTranslationBundles = {
               "beginner": "Die 3D-Position des Connectors in lokalen Koordinaten."
             },
             "manual": "type#connectors",
-            "tutorial": "hello-semio/model-brick-set#connectors"
+            "tutorial": "hello-compose/model-brick-set#connectors"
           },
           "connectorDirection": {
             "label": {
@@ -3538,7 +3538,7 @@ const elementUiTranslationBundles = {
               "beginner": "Der Auswaerts-Richtungsvektor des Connectors in lokalen Koordinaten."
             },
             "manual": "type#connectors",
-            "tutorial": "hello-semio/model-brick-set#connectors"
+            "tutorial": "hello-compose/model-brick-set#connectors"
           },
           "connectorCompatiblePortsPlaceholder": {
             "label": {
@@ -3626,7 +3626,7 @@ const elementUiTranslationBundles = {
                       "beginner": "Der Name des Typs. Dies ist die primaere Kennung fuer die Komponente."
                     },
                     "manual": "type#metadata",
-                    "tutorial": "hello-semio/model-brick-set"
+                    "tutorial": "hello-compose/model-brick-set"
                   },
                   "description": {
                     "label": {
@@ -3634,7 +3634,7 @@ const elementUiTranslationBundles = {
                       "beginner": "Eine detaillierte Beschreibung dessen, was dieser Typ darstellt und wie er verwendet werden sollte."
                     },
                     "manual": "type#metadata",
-                    "tutorial": "hello-semio/model-brick-set"
+                    "tutorial": "hello-compose/model-brick-set"
                   },
                   "icon": {
                     "label": {
@@ -3642,7 +3642,7 @@ const elementUiTranslationBundles = {
                       "beginner": "Ein Icon zur visuellen Darstellung dieses Typs. Kann ein Emoji, Iconname oder URL zu einem Bild sein."
                     },
                     "manual": "type#metadata",
-                    "tutorial": "hello-semio/model-brick-set"
+                    "tutorial": "hello-compose/model-brick-set"
                   },
                   "image": {
                     "label": {
@@ -3650,7 +3650,7 @@ const elementUiTranslationBundles = {
                       "beginner": "URL zu einem Bild, das diesen Typ darstellt. Wird fuer Vorschauen und visuelle Identifikation verwendet."
                     },
                     "manual": "type#metadata",
-                    "tutorial": "hello-semio/model-brick-set"
+                    "tutorial": "hello-compose/model-brick-set"
                   },
                   "unit": {
                     "label": {
@@ -3658,7 +3658,7 @@ const elementUiTranslationBundles = {
                       "beginner": "Die Masseinheit fuer diesen Typ (z.B. mm, m, ft)."
                     },
                     "manual": "type#metadata",
-                    "tutorial": "hello-semio/model-brick-set"
+                    "tutorial": "hello-compose/model-brick-set"
                   },
                   "parent": {
                     "label": {
@@ -3684,7 +3684,7 @@ const elementUiTranslationBundles = {
                       "beginner": "URL zu einem 3D-Modell, Bild oder einer anderen Ressource, die diesen Typ darstellt."
                     },
                     "manual": "type#models",
-                    "tutorial": "hello-semio/model-brick-set"
+                    "tutorial": "hello-compose/model-brick-set"
                   },
                   "description": {
                     "label": {
@@ -3692,7 +3692,7 @@ const elementUiTranslationBundles = {
                       "beginner": "Eine Beschreibung dessen, was diese Darstellung zeigt oder wie sie verwendet werden sollte."
                     },
                     "manual": "type#models",
-                    "tutorial": "hello-semio/model-brick-set"
+                    "tutorial": "hello-compose/model-brick-set"
                   },
                   "tags": {
                     "label": {
@@ -3700,7 +3700,7 @@ const elementUiTranslationBundles = {
                       "beginner": "Tags zum Kategorisieren und Filtern von Darstellungen (z.B. 'detailliert', 'vereinfacht', 'lod1')."
                     },
                     "manual": "type#models",
-                    "tutorial": "hello-semio/model-brick-set"
+                    "tutorial": "hello-compose/model-brick-set"
                   }
                 },
                 "connectors": {
@@ -3714,7 +3714,7 @@ const elementUiTranslationBundles = {
                       "beginner": "Connector-Familienname. Connectors derselben Familie koennen miteinander verbunden werden."
                     },
                     "manual": "type#connectors",
-                    "tutorial": "hello-semio/model-brick-set"
+                    "tutorial": "hello-compose/model-brick-set"
                   },
                   "compatiblePorts": {
                     "label": {
@@ -3722,7 +3722,7 @@ const elementUiTranslationBundles = {
                       "beginner": "Liste anderer Connector-Familien, mit denen dieser Connector verbunden werden kann. Leer lassen, um alle Familien zuzulassen."
                     },
                     "manual": "type#connectors",
-                    "tutorial": "hello-semio/model-brick-set"
+                    "tutorial": "hello-compose/model-brick-set"
                   },
                   "description": {
                     "label": {
@@ -3730,7 +3730,7 @@ const elementUiTranslationBundles = {
                       "beginner": "Eine Beschreibung dessen, was dieser Connector darstellt und wie er fuer Verbindungen verwendet werden sollte."
                     },
                     "manual": "type#connectors",
-                    "tutorial": "hello-semio/model-brick-set"
+                    "tutorial": "hello-compose/model-brick-set"
                   },
                   "t": {
                     "label": {
@@ -3738,7 +3738,7 @@ const elementUiTranslationBundles = {
                       "beginner": "Position auf dem Diagrammring (0-1). Steuert, wo der Connector in der 2D-Diagrammansicht erscheint."
                     },
                     "manual": "type#connectors",
-                    "tutorial": "hello-semio/model-brick-set"
+                    "tutorial": "hello-compose/model-brick-set"
                   },
                   "direction": {
                     "label": {
@@ -3751,7 +3751,7 @@ const elementUiTranslationBundles = {
                         "beginner": "X-Koordinate des Connector-Richtungsvektors. Dies definiert, in welche Richtung der Connector im 3D-Raum zeigt."
                       },
                       "manual": "type#connectors",
-                      "tutorial": "hello-semio/model-brick-set"
+                      "tutorial": "hello-compose/model-brick-set"
                     },
                     "y": {
                       "label": {
@@ -3759,7 +3759,7 @@ const elementUiTranslationBundles = {
                         "beginner": "Y-Koordinate des Connector-Richtungsvektors. Dies definiert, in welche Richtung der Connector im 3D-Raum zeigt."
                       },
                       "manual": "type#connectors",
-                      "tutorial": "hello-semio/model-brick-set"
+                      "tutorial": "hello-compose/model-brick-set"
                     },
                     "z": {
                       "label": {
@@ -3767,7 +3767,7 @@ const elementUiTranslationBundles = {
                         "beginner": "Z-Koordinate des Connector-Richtungsvektors. Dies definiert, in welche Richtung der Connector im 3D-Raum zeigt."
                       },
                       "manual": "type#connectors",
-                      "tutorial": "hello-semio/model-brick-set"
+                      "tutorial": "hello-compose/model-brick-set"
                     }
                   },
                   "point": {
@@ -3781,7 +3781,7 @@ const elementUiTranslationBundles = {
                         "beginner": "X-Position des Connectors im 3D-Raum relativ zum Ursprung des Typs."
                       },
                       "manual": "type#connectors",
-                      "tutorial": "hello-semio/model-brick-set"
+                      "tutorial": "hello-compose/model-brick-set"
                     },
                     "y": {
                       "label": {
@@ -3789,7 +3789,7 @@ const elementUiTranslationBundles = {
                         "beginner": "Y-Position des Connectors im 3D-Raum relativ zum Ursprung des Typs."
                       },
                       "manual": "type#connectors",
-                      "tutorial": "hello-semio/model-brick-set"
+                      "tutorial": "hello-compose/model-brick-set"
                     },
                     "z": {
                       "label": {
@@ -3797,7 +3797,7 @@ const elementUiTranslationBundles = {
                         "beginner": "Z-Position des Connectors im 3D-Raum relativ zum Ursprung des Typs."
                       },
                       "manual": "type#connectors",
-                      "tutorial": "hello-semio/model-brick-set"
+                      "tutorial": "hello-compose/model-brick-set"
                     }
                   }
                 },
@@ -3812,7 +3812,7 @@ const elementUiTranslationBundles = {
                       "beginner": "Der Name des Attributs im Kebab-Case (z.B. 'material.holz', 'kosten.arbeit')."
                     },
                     "manual": "type#attributes",
-                    "tutorial": "hello-semio/model-brick-set"
+                    "tutorial": "hello-compose/model-brick-set"
                   },
                   "value": {
                     "label": {
@@ -3820,7 +3820,7 @@ const elementUiTranslationBundles = {
                       "beginner": "Der Wert des Attributs. Leer lassen fuer boolesche Attribute (Anwesenheit = wahr)."
                     },
                     "manual": "type#attributes",
-                    "tutorial": "hello-semio/model-brick-set"
+                    "tutorial": "hello-compose/model-brick-set"
                   },
                   "definition": {
                     "label": {
@@ -3828,7 +3828,7 @@ const elementUiTranslationBundles = {
                       "beginner": "Optionale Definition oder Dokumentation fuer dieses Attribut. Kann Text oder eine URL sein."
                     },
                     "manual": "type#attributes",
-                    "tutorial": "hello-semio/model-brick-set"
+                    "tutorial": "hello-compose/model-brick-set"
                   }
                 },
                 "authors": {
@@ -3842,7 +3842,7 @@ const elementUiTranslationBundles = {
                       "beginner": "Vollstaendiger Name des Autors oder Mitwirkenden."
                     },
                     "manual": "type#authors",
-                    "tutorial": "hello-semio/model-brick-set"
+                    "tutorial": "hello-compose/model-brick-set"
                   },
                   "email": {
                     "label": {
@@ -3850,7 +3850,7 @@ const elementUiTranslationBundles = {
                       "beginner": "E-Mail-Adresse zur Kontaktaufnahme mit dem Autor."
                     },
                     "manual": "type#authors",
-                    "tutorial": "hello-semio/model-brick-set"
+                    "tutorial": "hello-compose/model-brick-set"
                   }
                 }
               }
@@ -4768,7 +4768,7 @@ const elementUiTranslationBundles = {
 }
 `) },
   en: { translation: JSON.parse(String.raw`{
-  "semio": {
+  "compose": {
     "label": {
       "normal": "",
       "beginner": ""
@@ -5489,7 +5489,7 @@ const elementUiTranslationBundles = {
         "feedback": {
           "label": {
             "normal": "Feedback",
-            "beginner": "Send feedback to help improve Semio"
+            "beginner": "Send feedback to help improve Compose"
           }
         }
       },
@@ -5958,8 +5958,8 @@ const elementUiTranslationBundles = {
               "beginner": "Drop a zip file here to import it as a new kit"
             },
             "description": {
-              "normal": "Only kits with .semio folder can be imported",
-              "beginner": "The zip file must contain a .semio folder with kit.db to be imported as a kit."
+              "normal": "Only kits with .compose folder can be imported",
+              "beginner": "The zip file must contain a .compose folder with kit.db to be imported as a kit."
             }
           },
           "noKits": {
@@ -6176,8 +6176,8 @@ const elementUiTranslationBundles = {
               "beginner": "Drop a zip file here to import it as a kit or add files to the current kit"
             },
             "description": {
-              "normal": "Kits with .semio folder will be imported, others will be added as files",
-              "beginner": "If the zip contains a .semio folder, it will be imported as a complete kit. Otherwise, the files will be added to the current kit."
+              "normal": "Kits with .compose folder will be imported, others will be added as files",
+              "beginner": "If the zip contains a .compose folder, it will be imported as a complete kit. Otherwise, the files will be added to the current kit."
             }
           },
           "versionPlaceholder": {
@@ -6256,8 +6256,8 @@ const elementUiTranslationBundles = {
                 "normal": "Filter by name",
                 "beginner": "Click to filter artifacts by this name"
               },
-              "manual": "manuals/semio/kit",
-              "tutorial": "hello-semio/model-design",
+              "manual": "manuals/compose/kit",
+              "tutorial": "hello-compose/model-design",
               "hotkey": "Ctrl+N",
               "hide": {
                 "label": {
@@ -6293,8 +6293,8 @@ const elementUiTranslationBundles = {
               "normal": "Designs",
               "beginner": "Designs in this kit"
             },
-            "manual": "manuals/semio/kit#designs",
-            "tutorial": "hello-semio/model-design",
+            "manual": "manuals/compose/kit#designs",
+            "tutorial": "hello-compose/model-design",
             "multipleSelected": {
               "label": {
                 "normal": "Multiple Selected",
@@ -6313,8 +6313,8 @@ const elementUiTranslationBundles = {
               "normal": "Types",
               "beginner": "Types in this kit"
             },
-            "manual": "manuals/semio/kit#types",
-            "tutorial": "hello-semio/model-brick-set",
+            "manual": "manuals/compose/kit#types",
+            "tutorial": "hello-compose/model-brick-set",
             "multipleSelected": {
               "label": {
                 "normal": "Multiple Selected",
@@ -6386,8 +6386,8 @@ const elementUiTranslationBundles = {
                 "normal": "Design",
                 "beginner": "Create Design"
               },
-              "manual": "manuals/semio/kit#designs",
-              "tutorial": "hello-semio/model-design"
+              "manual": "manuals/compose/kit#designs",
+              "tutorial": "hello-compose/model-design"
             },
             "showTypes": {
               "label": {
@@ -6400,8 +6400,8 @@ const elementUiTranslationBundles = {
                 "normal": "Type",
                 "beginner": "Create Type"
               },
-              "manual": "manuals/semio/kit#types",
-              "tutorial": "hello-semio/model-brick-set"
+              "manual": "manuals/compose/kit#types",
+              "tutorial": "hello-compose/model-brick-set"
             },
             "showQualities": {
               "label": {
@@ -6414,7 +6414,7 @@ const elementUiTranslationBundles = {
                 "normal": "Quality",
                 "beginner": "Create Quality"
               },
-              "manual": "manuals/semio/kit#qualities",
+              "manual": "manuals/compose/kit#qualities",
               "tutorial": "getting-started/intro#quality"
             },
             "showPorts": {
@@ -6428,7 +6428,7 @@ const elementUiTranslationBundles = {
                 "normal": "Port",
                 "beginner": "Create Port"
               },
-              "manual": "manuals/semio/kit#ports",
+              "manual": "manuals/compose/kit#ports",
               "tutorial": "getting-started/intro#port"
             },
             "showFiles": {
@@ -6442,7 +6442,7 @@ const elementUiTranslationBundles = {
                 "normal": "Create File",
                 "beginner": "Click to add a new file to this kit"
               },
-              "manual": "manuals/semio/kit#files",
+              "manual": "manuals/compose/kit#files",
               "tutorial": "getting-started/intro#files"
             },
             "showFolders": {
@@ -6456,8 +6456,8 @@ const elementUiTranslationBundles = {
                 "normal": "Folder",
                 "beginner": "Create Folder"
               },
-              "manual": "manuals/semio/kit#folders",
-              "tutorial": "hello-semio/model-design"
+              "manual": "manuals/compose/kit#folders",
+              "tutorial": "hello-compose/model-design"
             },
             "showAuthors": {
               "label": {
@@ -6470,7 +6470,7 @@ const elementUiTranslationBundles = {
                 "normal": "Create Author",
                 "beginner": "Click to add a new author to this kit"
               },
-              "manual": "manuals/semio/kit#authors",
+              "manual": "manuals/compose/kit#authors",
               "tutorial": "getting-started/intro#authors"
             },
             "hideKind": {
@@ -6621,7 +6621,7 @@ const elementUiTranslationBundles = {
                       "beginner": "The name of the kit. This is the primary identifier for your kit."
                     },
                     "manual": "kit#metadata",
-                    "tutorial": "hello-semio/save-kit"
+                    "tutorial": "hello-compose/save-kit"
                   },
                   "version": {
                     "label": {
@@ -6629,7 +6629,7 @@ const elementUiTranslationBundles = {
                       "beginner": "The version of the kit in semantic versioning format (e.g., 1.0.0)."
                     },
                     "manual": "kit#metadata",
-                    "tutorial": "hello-semio/save-kit"
+                    "tutorial": "hello-compose/save-kit"
                   },
                   "description": {
                     "label": {
@@ -6637,7 +6637,7 @@ const elementUiTranslationBundles = {
                       "beginner": "A detailed description of what this kit contains and how it should be used."
                     },
                     "manual": "kit#metadata",
-                    "tutorial": "hello-semio/save-kit"
+                    "tutorial": "hello-compose/save-kit"
                   },
                   "icon": {
                     "label": {
@@ -6645,7 +6645,7 @@ const elementUiTranslationBundles = {
                       "beginner": "An icon to represent this kit. Can be an emoji or URL to an image."
                     },
                     "manual": "kit#metadata",
-                    "tutorial": "hello-semio/save-kit"
+                    "tutorial": "hello-compose/save-kit"
                   },
                   "image": {
                     "label": {
@@ -6653,7 +6653,7 @@ const elementUiTranslationBundles = {
                       "beginner": "URL to a preview image that showcases this kit."
                     },
                     "manual": "kit#metadata",
-                    "tutorial": "hello-semio/save-kit"
+                    "tutorial": "hello-compose/save-kit"
                   },
                   "homepage": {
                     "label": {
@@ -6661,7 +6661,7 @@ const elementUiTranslationBundles = {
                       "beginner": "URL to the homepage or documentation for this kit."
                     },
                     "manual": "kit#metadata",
-                    "tutorial": "hello-semio/save-kit"
+                    "tutorial": "hello-compose/save-kit"
                   },
                   "license": {
                     "label": {
@@ -6669,7 +6669,7 @@ const elementUiTranslationBundles = {
                       "beginner": "The license under which this kit is distributed (e.g., MIT, GPL)."
                     },
                     "manual": "kit#metadata",
-                    "tutorial": "hello-semio/save-kit"
+                    "tutorial": "hello-compose/save-kit"
                   }
                 },
                 "folder": {
@@ -6683,7 +6683,7 @@ const elementUiTranslationBundles = {
                       "beginner": "The display name of the folder."
                     },
                     "manual": "kit#folders",
-                    "tutorial": "hello-semio/save-kit"
+                    "tutorial": "hello-compose/save-kit"
                   },
                   "description": {
                     "label": {
@@ -6691,7 +6691,7 @@ const elementUiTranslationBundles = {
                       "beginner": "Optional description that explains the purpose of this folder."
                     },
                     "manual": "kit#folders",
-                    "tutorial": "hello-semio/save-kit"
+                    "tutorial": "hello-compose/save-kit"
                   }
                 },
                 "port": {
@@ -7259,7 +7259,7 @@ const elementUiTranslationBundles = {
                       "beginner": "The name of the design. This is the primary identifier for your composition."
                     },
                     "manual": "design#metadata",
-                    "tutorial": "hello-semio/model-design"
+                    "tutorial": "hello-compose/model-design"
                   },
                   "description": {
                     "label": {
@@ -7267,7 +7267,7 @@ const elementUiTranslationBundles = {
                       "beginner": "A detailed description of what this design represents and how it should be used."
                     },
                     "manual": "design#metadata",
-                    "tutorial": "hello-semio/model-design"
+                    "tutorial": "hello-compose/model-design"
                   },
                   "icon": {
                     "label": {
@@ -7275,7 +7275,7 @@ const elementUiTranslationBundles = {
                       "beginner": "URL or path to an icon that represents this design in listings and previews."
                     },
                     "manual": "design#metadata",
-                    "tutorial": "hello-semio/model-design"
+                    "tutorial": "hello-compose/model-design"
                   },
                   "image": {
                     "label": {
@@ -7283,7 +7283,7 @@ const elementUiTranslationBundles = {
                       "beginner": "URL or path to a preview image that showcases this design."
                     },
                     "manual": "design#metadata",
-                    "tutorial": "hello-semio/model-design"
+                    "tutorial": "hello-compose/model-design"
                   },
                   "variant": {
                     "label": {
@@ -7291,7 +7291,7 @@ const elementUiTranslationBundles = {
                       "beginner": "A variant identifier for different versions or configurations of this design."
                     },
                     "manual": "design#variants",
-                    "tutorial": "hello-semio/model-design"
+                    "tutorial": "hello-compose/model-design"
                   },
                   "view": {
                     "label": {
@@ -7299,7 +7299,7 @@ const elementUiTranslationBundles = {
                       "beginner": "The viewing perspective or camera angle for displaying this design."
                     },
                     "manual": "design#views",
-                    "tutorial": "hello-semio/model-design"
+                    "tutorial": "hello-compose/model-design"
                   },
                   "unit": {
                     "label": {
@@ -7307,7 +7307,7 @@ const elementUiTranslationBundles = {
                       "beginner": "The measurement unit used for all dimensions in this design (e.g., mm, cm, m)."
                     },
                     "manual": "design#metadata",
-                    "tutorial": "hello-semio/model-design"
+                    "tutorial": "hello-compose/model-design"
                   },
                   "createdAt": {
                     "label": {
@@ -7539,7 +7539,7 @@ const elementUiTranslationBundles = {
                       "beginner": "The 3D placement plane for this piece. Defines position and orientation in 3D space."
                     },
                     "manual": "design#pieces",
-                    "tutorial": "hello-semio/model-design#pieces",
+                    "tutorial": "hello-compose/model-design#pieces",
                     "origin": {
                       "label": {
                         "normal": "Origin",
@@ -8187,7 +8187,7 @@ const elementUiTranslationBundles = {
               "beginner": "Manage different 3D models, images, and visual models for this type."
             },
             "manual": "type#models",
-            "tutorial": "hello-semio/model-brick-set#models"
+            "tutorial": "hello-compose/model-brick-set#models"
           },
           "model": {
             "label": {
@@ -8217,7 +8217,7 @@ const elementUiTranslationBundles = {
               "beginner": "Manage connection connectors for this type. Connectors define where and how pieces can connect."
             },
             "manual": "type#connectors",
-            "tutorial": "hello-semio/model-brick-set#connectors"
+            "tutorial": "hello-compose/model-brick-set#connectors"
           },
           "connector": {
             "label": {
@@ -8259,7 +8259,7 @@ const elementUiTranslationBundles = {
               "beginner": "The 3D position of the connector in local coordinates."
             },
             "manual": "type#connectors",
-            "tutorial": "hello-semio/model-brick-set#connectors"
+            "tutorial": "hello-compose/model-brick-set#connectors"
           },
           "connectorDirection": {
             "label": {
@@ -8267,7 +8267,7 @@ const elementUiTranslationBundles = {
               "beginner": "The outward direction vector of the connector in local coordinates."
             },
             "manual": "type#connectors",
-            "tutorial": "hello-semio/model-brick-set#connectors"
+            "tutorial": "hello-compose/model-brick-set#connectors"
           },
           "connectorCompatiblePortsPlaceholder": {
             "label": {
@@ -8355,7 +8355,7 @@ const elementUiTranslationBundles = {
                       "beginner": "The name of the type. This is the primary identifier for the component."
                     },
                     "manual": "type#metadata",
-                    "tutorial": "hello-semio/model-brick-set"
+                    "tutorial": "hello-compose/model-brick-set"
                   },
                   "description": {
                     "label": {
@@ -8363,7 +8363,7 @@ const elementUiTranslationBundles = {
                       "beginner": "A detailed description of what this type represents and how it should be used."
                     },
                     "manual": "type#metadata",
-                    "tutorial": "hello-semio/model-brick-set"
+                    "tutorial": "hello-compose/model-brick-set"
                   },
                   "icon": {
                     "label": {
@@ -8371,7 +8371,7 @@ const elementUiTranslationBundles = {
                       "beginner": "An icon to visually represent this type. Can be an emoji, icon name, or URL to an image."
                     },
                     "manual": "type#metadata",
-                    "tutorial": "hello-semio/model-brick-set"
+                    "tutorial": "hello-compose/model-brick-set"
                   },
                   "image": {
                     "label": {
@@ -8379,7 +8379,7 @@ const elementUiTranslationBundles = {
                       "beginner": "URL to an image that represents this type. Used for previews and visual identification."
                     },
                     "manual": "type#metadata",
-                    "tutorial": "hello-semio/model-brick-set"
+                    "tutorial": "hello-compose/model-brick-set"
                   },
                   "unit": {
                     "label": {
@@ -8387,7 +8387,7 @@ const elementUiTranslationBundles = {
                       "beginner": "The unit of measurement used for this type (e.g., mm, m, ft)."
                     },
                     "manual": "type#metadata",
-                    "tutorial": "hello-semio/model-brick-set"
+                    "tutorial": "hello-compose/model-brick-set"
                   },
                   "parent": {
                     "label": {
@@ -8413,7 +8413,7 @@ const elementUiTranslationBundles = {
                       "beginner": "URL to a 3D model, image, or other resource representing this type."
                     },
                     "manual": "type#models",
-                    "tutorial": "hello-semio/model-brick-set"
+                    "tutorial": "hello-compose/model-brick-set"
                   },
                   "description": {
                     "label": {
@@ -8421,7 +8421,7 @@ const elementUiTranslationBundles = {
                       "beginner": "A description of what this model shows or how it should be used."
                     },
                     "manual": "type#models",
-                    "tutorial": "hello-semio/model-brick-set"
+                    "tutorial": "hello-compose/model-brick-set"
                   },
                   "tags": {
                     "label": {
@@ -8429,7 +8429,7 @@ const elementUiTranslationBundles = {
                       "beginner": "Tags to categorize and filter models (e.g., 'detailed', 'simplified', 'lod1')."
                     },
                     "manual": "type#models",
-                    "tutorial": "hello-semio/model-brick-set"
+                    "tutorial": "hello-compose/model-brick-set"
                   }
                 },
                 "connectors": {
@@ -8443,7 +8443,7 @@ const elementUiTranslationBundles = {
                       "beginner": "Connector port name. Connectors of the same port can connect to each other."
                     },
                     "manual": "type#connectors",
-                    "tutorial": "hello-semio/model-brick-set"
+                    "tutorial": "hello-compose/model-brick-set"
                   },
                   "compatiblePorts": {
                     "label": {
@@ -8451,7 +8451,7 @@ const elementUiTranslationBundles = {
                       "beginner": "List of other connector ports this connector can connect to. Leave empty to allow all ports."
                     },
                     "manual": "type#connectors",
-                    "tutorial": "hello-semio/model-brick-set"
+                    "tutorial": "hello-compose/model-brick-set"
                   },
                   "description": {
                     "label": {
@@ -8459,7 +8459,7 @@ const elementUiTranslationBundles = {
                       "beginner": "A description of what this connector represents and how it should be used for connections."
                     },
                     "manual": "type#connectors",
-                    "tutorial": "hello-semio/model-brick-set"
+                    "tutorial": "hello-compose/model-brick-set"
                   },
                   "t": {
                     "label": {
@@ -8467,7 +8467,7 @@ const elementUiTranslationBundles = {
                       "beginner": "Position on the diagram ring (0-1). Controls where the connector appears in the 2D diagram view."
                     },
                     "manual": "type#connectors",
-                    "tutorial": "hello-semio/model-brick-set"
+                    "tutorial": "hello-compose/model-brick-set"
                   },
                   "direction": {
                     "label": {
@@ -8480,7 +8480,7 @@ const elementUiTranslationBundles = {
                         "beginner": "X coordinate of the connector direction vector. This defines which direction the connector points in 3D space."
                       },
                       "manual": "type#connectors",
-                      "tutorial": "hello-semio/model-brick-set"
+                      "tutorial": "hello-compose/model-brick-set"
                     },
                     "y": {
                       "label": {
@@ -8488,7 +8488,7 @@ const elementUiTranslationBundles = {
                         "beginner": "Y coordinate of the connector direction vector. This defines which direction the connector points in 3D space."
                       },
                       "manual": "type#connectors",
-                      "tutorial": "hello-semio/model-brick-set"
+                      "tutorial": "hello-compose/model-brick-set"
                     },
                     "z": {
                       "label": {
@@ -8496,7 +8496,7 @@ const elementUiTranslationBundles = {
                         "beginner": "Z coordinate of the connector direction vector. This defines which direction the connector points in 3D space."
                       },
                       "manual": "type#connectors",
-                      "tutorial": "hello-semio/model-brick-set"
+                      "tutorial": "hello-compose/model-brick-set"
                     }
                   },
                   "point": {
@@ -8510,7 +8510,7 @@ const elementUiTranslationBundles = {
                         "beginner": "X position of the connector in 3D space relative to the type's origin."
                       },
                       "manual": "type#connectors",
-                      "tutorial": "hello-semio/model-brick-set"
+                      "tutorial": "hello-compose/model-brick-set"
                     },
                     "y": {
                       "label": {
@@ -8518,7 +8518,7 @@ const elementUiTranslationBundles = {
                         "beginner": "Y position of the connector in 3D space relative to the type's origin."
                       },
                       "manual": "type#connectors",
-                      "tutorial": "hello-semio/model-brick-set"
+                      "tutorial": "hello-compose/model-brick-set"
                     },
                     "z": {
                       "label": {
@@ -8526,7 +8526,7 @@ const elementUiTranslationBundles = {
                         "beginner": "Z position of the connector in 3D space relative to the type's origin."
                       },
                       "manual": "type#connectors",
-                      "tutorial": "hello-semio/model-brick-set"
+                      "tutorial": "hello-compose/model-brick-set"
                     }
                   }
                 },
@@ -8541,7 +8541,7 @@ const elementUiTranslationBundles = {
                       "beginner": "The name of the attribute in kebab-case (e.g., 'material.wood', 'cost.labor')."
                     },
                     "manual": "type#attributes",
-                    "tutorial": "hello-semio/model-brick-set"
+                    "tutorial": "hello-compose/model-brick-set"
                   },
                   "value": {
                     "label": {
@@ -8549,7 +8549,7 @@ const elementUiTranslationBundles = {
                       "beginner": "The value of the attribute. Leave empty for boolean attributes (presence = true)."
                     },
                     "manual": "type#attributes",
-                    "tutorial": "hello-semio/model-brick-set"
+                    "tutorial": "hello-compose/model-brick-set"
                   },
                   "definition": {
                     "label": {
@@ -8557,7 +8557,7 @@ const elementUiTranslationBundles = {
                       "beginner": "Optional definition or documentation for this attribute. Can be text or a URL."
                     },
                     "manual": "type#attributes",
-                    "tutorial": "hello-semio/model-brick-set"
+                    "tutorial": "hello-compose/model-brick-set"
                   }
                 },
                 "authors": {
@@ -8571,7 +8571,7 @@ const elementUiTranslationBundles = {
                       "beginner": "Full name of the author or contributor."
                     },
                     "manual": "type#authors",
-                    "tutorial": "hello-semio/model-brick-set"
+                    "tutorial": "hello-compose/model-brick-set"
                   },
                   "email": {
                     "label": {
@@ -8579,7 +8579,7 @@ const elementUiTranslationBundles = {
                       "beginner": "Email address for contacting the author."
                     },
                     "manual": "type#authors",
-                    "tutorial": "hello-semio/model-brick-set"
+                    "tutorial": "hello-compose/model-brick-set"
                   }
                 }
               }
@@ -9054,7 +9054,7 @@ const elementUiTranslationBundles = {
         "feedback": {
           "label": {
             "normal": "Feedback",
-            "beginner": "Send feedback to help improve Semio"
+            "beginner": "Send feedback to help improve Compose"
           },
           "title": {
             "label": {
@@ -9064,8 +9064,8 @@ const elementUiTranslationBundles = {
           },
           "subtitle": {
             "label": {
-              "normal": "Help us improve semio by reporting bugs or sharing ideas.",
-              "beginner": "Help us improve semio by reporting bugs or sharing ideas."
+              "normal": "Help us improve compose by reporting bugs or sharing ideas.",
+              "beginner": "Help us improve compose by reporting bugs or sharing ideas."
             }
           },
           "form": {

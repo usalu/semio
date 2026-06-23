@@ -17,7 +17,7 @@
 - Force layout clamps `linkDistance` to `NODE_WIDTH * 2.2`, `collideRadius` to `NODE_WIDTH * 0.9`
 - `TableAvatar` uses `className="size-full"` to fill the node box
 - Circular intersection uses `radius = NODE_WIDTH / 2` for edge endpoints
-- Restarted @semio/js dev server to apply all changes
+- Restarted @compose/js dev server to apply all changes
 - Fixed part-of edge visibility: changed color from `--accent-secondary` to bright magenta (#ff00ff) with strokeWidth 4 for debugging
 - Reference edges remain gray/dashed (strokeWidth 1) for distinction
 - Fixed edge filtering logic: now automatically includes parent/child nodes needed for part-of edges even if collapsed in table view

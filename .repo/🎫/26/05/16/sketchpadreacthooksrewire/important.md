@@ -2,21 +2,21 @@
 
 ## Outcome
 
-- `semio/client/lib/react/index.tsx` is now a **barrel** that re-exports `./logic/index` so sketchpad’s `@semio/react` → `../react` resolves to the CQRS hook surface (`SemioStoreKitLineHost`, field reads, operation binds).
+- `compose/client/lib/react/index.tsx` is now a **barrel** that re-exports `./logic/index` so sketchpad’s `@compose/react` → `../react` resolves to the CQRS hook surface (`ComposeStoreKitLineHost`, field reads, operation binds).
 - **Sketchpad `tsconfig.json`**: fixed `extends` path (`../../js/tsconfig.json` was wrong as `../js`).
-- **`sketchpad/react/AGENTS.md`**: documented **reads vs operations** and when to use `SemioStoreKitLineHost` vs wasm registry snapshot path.
-- **Reverted**: importing a copied legacy `render-kit-wasm` bundle — current `@semio/js` no longer exports `KitStoreClient`, `createKitStoreClient`, `InMemoryKitStore`, etc., so that layer does not typecheck.
+- **`sketchpad/react/AGENTS.md`**: documented **reads vs operations** and when to use `ComposeStoreKitLineHost` vs wasm registry snapshot path.
+- **Reverted**: importing a copied legacy `render-kit-wasm` bundle — current `@compose/js` no longer exports `KitStoreClient`, `createKitStoreClient`, `InMemoryKitStore`, etc., so that layer does not typecheck.
 
 ## Blocker for full UI rewire
 
-Sketchpad still depends on **wasm kit registry** symbols (`KitStoreProvider`, `useKitStoreSnapshot`, `executeSemioKitCommand`, …) that lived in an older merged `@semio/react` + `@semio/js` API. Restoring sketchpad end-to-end requires either:
+Sketchpad still depends on **wasm kit registry** symbols (`KitStoreProvider`, `useKitStoreSnapshot`, `executeComposeKitCommand`, …) that lived in an older merged `@compose/react` + `@compose/js` API. Restoring sketchpad end-to-end requires either:
 
-1. Re-exporting / re-implementing those KitStore WASM APIs in `@semio/js` again, or  
-2. Replacing sketchpad call sites incrementally with CQRS hooks + `SemioStoreKitLineHost` (large change across `index.tsx`).
+1. Re-exporting / re-implementing those KitStore WASM APIs in `@compose/js` again, or  
+2. Replacing sketchpad call sites incrementally with CQRS hooks + `ComposeStoreKitLineHost` (large change across `index.tsx`).
 
 ## Files touched
 
-- `semio/client/lib/react/index.tsx`
-- `semio/client/lib/sketchpad/react/tsconfig.json`
-- `semio/client/lib/sketchpad/react/AGENTS.md`
-- `semio/client/lib/react/logic/index.tsx` (Camera re-export retained from earlier work)
+- `compose/client/lib/react/index.tsx`
+- `compose/client/lib/sketchpad/react/tsconfig.json`
+- `compose/client/lib/sketchpad/react/AGENTS.md`
+- `compose/client/lib/react/logic/index.tsx` (Camera re-export retained from earlier work)

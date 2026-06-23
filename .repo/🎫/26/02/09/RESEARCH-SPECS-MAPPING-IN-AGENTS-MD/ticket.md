@@ -53,18 +53,18 @@ Mapped all 33 Business Logic + 8 UI/UX spec subsections in AGENTS.md to their ow
 
 ### Engine (lines 156–159)
 
-- **Primary bundle/file:** `semio/engine/engine.py`
+- **Primary bundle/file:** `compose/engine/engine.py`
 - **Implementation-specific language:** MINIMAL — "dev/debug mode flag" and "stdio MCP server mode" are generic. No code identifiers.
 
 ### State Management (lines 161–163)
 
-- **Primary bundle/file:** `semio/js/sketchpad/Sketchpad.tsx` (XState state machine)
+- **Primary bundle/file:** `compose/js/sketchpad/Sketchpad.tsx` (XState state machine)
 - **Implementation-specific language:** MINIMAL — "Sketchpad state machine" is a conceptual name used consistently.
 
 ### Tooling (lines 165–201)
 
-- **Primary bundles:** `repo/cli/main.go` (CLI artifact IDs, `IdToUri`, `UriToId`, `sync github`, `--json` output, cobra), `repo/vscode/extension.ts` (sidebar views, `semio.navigate` command), `repo/cli/cli.go` (streaming registry)
-- **Implementation-specific language:** YES — heavy references to Go/CLI specifics: `IdToUri`, `UriToId`, cobra SilenceUsage/SilenceErrors, `semiorepo://` URI scheme, GraphQL TicketClient enum tokens, `YYYY/MM/DD/SLUG` identifiers, JSONL event stream. Also VS Code-specific: `semio.navigate` command name.
+- **Primary bundles:** `repo/cli/main.go` (CLI artifact IDs, `IdToUri`, `UriToId`, `sync github`, `--json` output, cobra), `repo/vscode/extension.ts` (sidebar views, `compose.navigate` command), `repo/cli/cli.go` (streaming registry)
+- **Implementation-specific language:** YES — heavy references to Go/CLI specifics: `IdToUri`, `UriToId`, cobra SilenceUsage/SilenceErrors, `composerepo://` URI scheme, GraphQL TicketClient enum tokens, `YYYY/MM/DD/SLUG` identifiers, JSONL event stream. Also VS Code-specific: `compose.navigate` command name.
 
 ### Ticket (lines 203–226)
 
@@ -105,13 +105,13 @@ Mapped all 33 Business Logic + 8 UI/UX spec subsections in AGENTS.md to their ow
 
 ### Kit (lines 330–338)
 
-- **Primary bundle/file:** `semio/js/semio.ts` (TypeScript Kit model), `semio/go/semio.go` (Go Kit model), `semio/net/Semio/Semio.cs` (C# Kit model), `semio/py/engine/engine.py` (Python Kit model)
-- **Secondary:** `sql/sqlite/schema.sql`, `semio/jsonschema/kit.json`
-- **Implementation-specific language:** MODERATE — references `.zip` file format, `.semio` folder, `kit.db` sqlite file, specific file paths for schemas.
+- **Primary bundle/file:** `compose/js/compose.ts` (TypeScript Kit model), `compose/go/compose.go` (Go Kit model), `compose/net/Compose/Compose.cs` (C# Kit model), `compose/py/engine/engine.py` (Python Kit model)
+- **Secondary:** `sql/sqlite/schema.sql`, `compose/jsonschema/kit.json`
+- **Implementation-specific language:** MODERATE — references `.zip` file format, `.compose` folder, `kit.db` sqlite file, specific file paths for schemas.
 
 ### Design (lines 340–352)
 
-- **Primary bundle/file:** Cross-platform domain model — `semio/js/semio.ts`, `semio/go/semio.go`, `semio/net/Semio/Semio.cs`, `semio/py/`
+- **Primary bundle/file:** Cross-platform domain model — `compose/js/compose.ts`, `compose/go/compose.go`, `compose/net/Compose/Compose.cs`, `compose/py/`
 - **Implementation-specific language:** NONE — pure domain language (proto, subdesigns, flat, hierarchical placement, components).
 
 ### Type (lines 354–362)
@@ -215,7 +215,7 @@ Mapped all 33 Business Logic + 8 UI/UX spec subsections in AGENTS.md to their ow
 
 ### Sketchpad (lines 534–534)
 
-- **Primary bundle/file:** `semio/js/sketchpad/` (all app files)
+- **Primary bundle/file:** `compose/js/sketchpad/` (all app files)
 - **Implementation-specific language:** N/A — empty section header
 
 ### Ticket UX (lines 536–538)
@@ -230,22 +230,22 @@ Mapped all 33 Business Logic + 8 UI/UX spec subsections in AGENTS.md to their ow
 
 ### Toolbar (lines 548–559)
 
-- **Primary bundle/file:** `semio/js/sketchpad/Sketchpad.tsx` (panel system), individual app files (`Home.tsx`, `Kit.tsx`, `Design.tsx`, `Type.tsx`, `Feedback.tsx`)
+- **Primary bundle/file:** `compose/js/sketchpad/Sketchpad.tsx` (panel system), individual app files (`Home.tsx`, `Kit.tsx`, `Design.tsx`, `Type.tsx`, `Feedback.tsx`)
 - **Implementation-specific language:** MODERATE — references `addSection("toolbar", { id, specificity, order, content })` function signature, `panelVisibility: { toolbar: true, ... }` state structure.
 
 ### Interaction State (lines 561–563)
 
-- **Primary bundle/file:** `semio/js/sketchpad/` (all app state machines)
+- **Primary bundle/file:** `compose/js/sketchpad/` (all app state machines)
 - **Implementation-specific language:** MINIMAL
 
 ### Borders (lines 565–576)
 
-- **Primary bundle/file:** `semio/js/globals.css`, `semio/js/sketchpad/elements.tsx`
+- **Primary bundle/file:** `compose/js/globals.css`, `compose/js/sketchpad/elements.tsx`
 - **Implementation-specific language:** MODERATE — references CSS-level concepts (border kinds, background levels, inset overlay strokes, Action UI elements).
 
 ### Windows (lines 578–584)
 
-- **Primary bundle/file:** `semio/js/sketchpad/Sketchpad.tsx` (window system)
+- **Primary bundle/file:** `compose/js/sketchpad/Sketchpad.tsx` (window system)
 - **Implementation-specific language:** MODERATE — references `windowLayout` state field, JSON string persistence.
 
 ### VS Code Extension (lines 586–612)
@@ -263,10 +263,10 @@ Mapped all 33 Business Logic + 8 UI/UX spec subsections in AGENTS.md to their ow
 | **repo/server/**                             | Repo Dev Server                                                                                                                                                                        | LOW            |
 | **repo/vscode/**                             | Tooling (partial), Ticket UX (UI/UX), VS Code Extension (UI/UX)                                                                                                                        | HIGH           |
 | **.devcontainer/**                           | Devcontainer                                                                                                                                                                           | MODERATE       |
-| **semio/engine/**                            | Engine                                                                                                                                                                                 | LOW            |
-| **semio/js/sketchpad/**                      | State Management, Toolbar (UI/UX), Interaction State (UI/UX), Borders (UI/UX), Windows (UI/UX)                                                                                         | MODERATE       |
-| **semio/js/semio.ts** + cross-platform       | Kit, Design, Type, Connection, Piece, Connector, Model, Attribute, Tag, Concept, Plane, Url, Quality, Benchmark, Port, Author, Layer, Group, Prop, Stat                                | NONE           |
-| **semio/go/**, **semio/net/**, **semio/py/** | (consumers of domain model requirements)                                                                                                                                               | NONE           |
+| **compose/engine/**                            | Engine                                                                                                                                                                                 | LOW            |
+| **compose/js/sketchpad/**                      | State Management, Toolbar (UI/UX), Interaction State (UI/UX), Borders (UI/UX), Windows (UI/UX)                                                                                         | MODERATE       |
+| **compose/js/compose.ts** + cross-platform       | Kit, Design, Type, Connection, Piece, Connector, Model, Attribute, Tag, Concept, Plane, Url, Quality, Benchmark, Port, Author, Layer, Group, Prop, Stat                                | NONE           |
+| **compose/go/**, **compose/net/**, **compose/py/** | (consumers of domain model requirements)                                                                                                                                               | NONE           |
 
 ## Implementation-Specificity Classification
 
@@ -286,7 +286,7 @@ Lines 340–530: Design, Type, Connection, Piece, Connector, Model, Attribute, T
 
 ### BORDERLINE (moderate implementation references)
 
-- **Kit** (lines 330–338): References `.zip`, `.semio` folder, `kit.db` — arguably spec-level format decisions
+- **Kit** (lines 330–338): References `.zip`, `.compose` folder, `kit.db` — arguably spec-level format decisions
 - **Devcontainer** (lines 96–110): References specific editors/tools by name — infrastructure naming
 - **Tree** (lines 132–154): References bleve, CLI flags — library name + UI choice
 - **Ticket** (lines 203–226): References `ticket.md`, `important.md` — storage format decisions

@@ -11,10 +11,10 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE
 for _ in range(14):
-    if (ROOT / "semio" / "graphql" / "target.schema.graphql").is_file():
+    if (ROOT / "compose" / "graphql" / "target.schema.graphql").is_file():
         break
     ROOT = ROOT.parent
-PATH = ROOT / "semio" / "graphql" / "target.schema.graphql"
+PATH = ROOT / "compose" / "graphql" / "target.schema.graphql"
 
 SKIP_ENTITY_PREFIXES = (
     "Modification",

@@ -12,9 +12,9 @@ Add Go (gomod) and Rust (cargo) package ecosystems to the dependabot configurati
 
 The `.github/dependabot.yml` currently includes:
 
-- npm (3 directories: /js/semio, /js/desktop, /js/docs)
+- npm (3 directories: /js/compose, /js/desktop, /js/docs)
 - uv (1 directory: /py/engine)
-- nuget (2 directories: /net/Semio, /net/Semio.Grasshopper)
+- nuget (2 directories: /net/Compose, /net/Compose.Grasshopper)
 
 ## Directories to Add
 
@@ -25,13 +25,13 @@ Found go.mod files in:
 - `/go/cli`
 - `/go/mcp`
 - `/repo/cli`
-- `/go/semio`
+- `/go/compose`
 
 ### Rust (cargo ecosystem)
 
 Found Cargo.toml in:
 
-- `/rs/semio`
+- `/rs/compose`
 
 ## Implementation Steps
 
@@ -58,8 +58,8 @@ Extend dependabot configuration to include Go and Rust package ecosystems.
 ### Investigation
 
 - Found existing dependabot.yml at `.github/dependabot.yml`
-- Identified Go modules in: `/go/cli`, `/go/mcp`, `/repo/cli`, `/go/semio`
-- Identified Rust crate in: `/rs/semio`
+- Identified Go modules in: `/go/cli`, `/go/mcp`, `/repo/cli`, `/go/compose`
+- Identified Rust crate in: `/rs/compose`
 
 ### Implementation
 
@@ -90,10 +90,10 @@ User still receiving dependency update PRs for:
 
 Checked current csproj files:
 
-- `Semio.csproj` has `System.Collections.Immutable` at 9.0.10 (already past 7.0.0)
-- `Semio.Grasshopper.csproj` has the other three packages
+- `Compose.csproj` has `System.Collections.Immutable` at 9.0.10 (already past 7.0.0)
+- `Compose.Grasshopper.csproj` has the other three packages
 
-Ignore rules exist in dependabot.yml for `/net/Semio` and `/net/Semio.Grasshopper`.
+Ignore rules exist in dependabot.yml for `/net/Compose` and `/net/Compose.Grasshopper`.
 
 ### Root Cause
 
@@ -111,8 +111,8 @@ User needs to manually close the stale PRs. The ignore rules are correctly confi
 
 Extended the dependabot configuration with:
 
-- **Go (gomod)**: `/go/cli`, `/go/mcp`, `/repo/cli`, `/go/semio`
-- **Rust (cargo)**: `/rs/semio`
+- **Go (gomod)**: `/go/cli`, `/go/mcp`, `/repo/cli`, `/go/compose`
+- **Rust (cargo)**: `/rs/compose`
 
 ## Follow-up: Stale PRs
 

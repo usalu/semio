@@ -15,15 +15,15 @@ Rename `connection.x` and `connection.y` to `connection.u` and `connection.v` to
 
 ## 2. Scope
 
-### 2.1 TypeScript (semio/js)
+### 2.1 TypeScript (compose/js)
 
-- [x] `js/semio/semio.ts` - Schema, types, and domain logic
-- [x] `js/semio/sketchpad/App.tsx` - ConnectionStore CRDT layer
-- [x] `js/semio/sketchpad/apps/design/App.tsx` - Design app components
+- [x] `js/compose/compose.ts` - Schema, types, and domain logic
+- [x] `js/compose/sketchpad/App.tsx` - ConnectionStore CRDT layer
+- [x] `js/compose/sketchpad/apps/design/App.tsx` - Design app components
 
-### 2.2 .NET (Semio.cs, Semio.Grasshopper.cs)
+### 2.2 .NET (Compose.cs, Compose.Grasshopper.cs)
 
-- [x] `net/Semio/Semio.cs` - Connection class and methods
+- [x] `net/Compose/Compose.cs` - Connection class and methods
 
 ### 2.3 Python (engine.py)
 
@@ -57,7 +57,7 @@ Rename `connection.x` and `connection.y` to `connection.u` and `connection.v` to
 
 ### Phase 1: TypeScript Core (START HERE)
 
-1. Update `semio.ts`: ✅
+1. Update `compose.ts`: ✅
    - ConnectionSchema: x → u, y → v
    - ConnectionDiffSchema: x → u, y → v
    - All connection-related functions
@@ -75,7 +75,7 @@ Rename `connection.x` and `connection.y` to `connection.u` and `connection.v` to
    - schema.sql: x → u, y → v
    - insert.sql: parameter comments updated
 5. Update .NET code: ✅
-   - Semio.cs: Connection class properties
+   - Compose.cs: Connection class properties
    - ConnectionDiff implicit operator
 6. Update Python code: ✅
    - engine.py: ConnectionXField → ConnectionUField
@@ -111,7 +111,7 @@ Since we don't care about backwards compatibility (per AGENTS.md), we proceed wi
 
 ### Completed:
 
-#### TypeScript (semio/js)
+#### TypeScript (compose/js)
 
 - ✅ ConnectionSchema updated (x → u, y → v)
 - ✅ ConnectionDiffSchema updated
@@ -133,7 +133,7 @@ Since we don't care about backwards compatibility (per AGENTS.md), we proceed wi
 - ✅ schema.sql: connection table (x → u, y → v)
 - ✅ insert.sql: parameter comments and INSERT statement
 
-#### .NET (Semio.cs)
+#### .NET (Compose.cs)
 
 - ✅ Connection class properties (X → U, Y → V)
 - ✅ Property attributes updated
@@ -158,12 +158,12 @@ Since we don't care about backwards compatibility (per AGENTS.md), we proceed wi
 
 ### Files Modified (13 total):
 
-1. `js/semio/semio.ts` - Core domain logic
-2. `js/semio/sketchpad/App.tsx` - ConnectionStore implementation
-3. `js/semio/sketchpad/apps/design/App.tsx` - Design app UI and logic
+1. `js/compose/compose.ts` - Core domain logic
+2. `js/compose/sketchpad/App.tsx` - ConnectionStore implementation
+3. `js/compose/sketchpad/apps/design/App.tsx` - Design app UI and logic
 4. `sql/sqlite/schema.sql` - Database schema
 5. `sql/sqlite/insert.sql` - Insert statements
-6. `net/Semio/Semio.cs` - .NET implementation
+6. `net/Compose/Compose.cs` - .NET implementation
 7. `py/engine/engine.py` - Python implementation
 8. `AGENTS.md` - Specification documentation
 9. `engineering/softwarearchitecture.pu` - UML class diagram (Coord, Vec, Connection, ConnectionDiff)
@@ -172,7 +172,7 @@ Since we don't care about backwards compatibility (per AGENTS.md), we proceed wi
 
 Successfully renamed `connection.x` and `connection.y` to `connection.u` and `connection.v` across the entire codebase:
 
-**TypeScript (8 modifications in `semio.ts`):**
+**TypeScript (8 modifications in `compose.ts`):**
 
 - Updated ConnectionSchema: `x: z.number().optional()` → `u: z.number().optional()`, `y` → `v`
 - Updated diff operations: getConnectionDiff, inverseConnectionDiff (u/v comparisons and inversions)
@@ -208,7 +208,7 @@ Successfully renamed `connection.x` and `connection.y` to `connection.u` and `co
 
 **Vec Schema Migration (Critical Fix):**
 
-- semio.ts VecSchema: `{ x, y }` → `{ u, v }`
+- compose.ts VecSchema: `{ x, y }` → `{ u, v }`
 - All Vec diff operations updated: getVecDiff, inverseVecDiff, mergeVecDiff, applyVecDiff
 - This was required because YVecStore in App.tsx depends on VecSchema type inference
 - Without this fix, compilation errors occurred in YVecStore constructor and methods

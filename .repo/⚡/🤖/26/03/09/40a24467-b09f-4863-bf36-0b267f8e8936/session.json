@@ -1,6 +1,6 @@
 {
   "id": "40a24467-b09f-4863-bf36-0b267f8e8936",
-  "uri": "semiorepo://s/40a24467-b09f-4863-bf36-0b267f8e8936",
+  "uri": "composerepo://s/40a24467-b09f-4863-bf36-0b267f8e8936",
   "contributor": "🧑‍💻ueli",
   "client": "copilot-chat",
   "second": "2026-03-09T09:57:42Z",
@@ -14,7 +14,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 5850,
-            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "filePath": "/workspaces/semio/compose/js/compose.ts",
             "startLine": 5644
           },
           "tool_response": "",
@@ -33,66 +33,66 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚js💻semio✂️connectionsdiff",
+            "id": "👤compose📚js💻compose✂️connectionsdiff",
             "loc": 8
           },
           {
-            "id": "👤semio📚js💻semio✂️stat",
+            "id": "👤compose📚js💻compose✂️stat",
             "loc": 1
           },
           {
-            "id": "👤semio📚js💻semio🛠️applyconnectiondiff",
+            "id": "👤compose📚js💻compose🛠️applyconnectiondiff",
             "loc": 22
           },
           {
-            "id": "👤semio📚js💻semio🛠️aresameconnection",
+            "id": "👤compose📚js💻compose🛠️aresameconnection",
             "loc": 14
           },
           {
-            "id": "👤semio📚js💻semio🛠️deserializeconnection",
+            "id": "👤compose📚js💻compose🛠️deserializeconnection",
             "loc": 9
           },
           {
-            "id": "👤semio📚js💻semio🛠️findconnection",
+            "id": "👤compose📚js💻compose🛠️findconnection",
             "loc": 5
           },
           {
-            "id": "👤semio📚js💻semio🛠️findconnectorforpieceinconnection",
+            "id": "👤compose📚js💻compose🛠️findconnectorforpieceinconnection",
             "loc": 5
           },
           {
-            "id": "👤semio📚js💻semio🛠️findpiececonnections",
+            "id": "👤compose📚js💻compose🛠️findpiececonnections",
             "loc": 3
           },
           {
-            "id": "👤semio📚js💻semio🛠️getconnectiondiff",
+            "id": "👤compose📚js💻compose🛠️getconnectiondiff",
             "loc": 16
           },
           {
-            "id": "👤semio📚js💻semio🛠️inverseconnectiondiff",
+            "id": "👤compose📚js💻compose🛠️inverseconnectiondiff",
             "loc": 16
           },
           {
-            "id": "👤semio📚js💻semio🛠️mergeconnectiondiff",
+            "id": "👤compose📚js💻compose🛠️mergeconnectiondiff",
             "loc": 9
           },
           {
-            "id": "👤semio📚js💻semio🛠️serializeconnection",
+            "id": "👤compose📚js💻compose🛠️serializeconnection",
             "loc": 8
           },
           {
-            "id": "👤semio📚js💻semio🪨connectionsdiffschema",
+            "id": "👤compose📚js💻compose🪨connectionsdiffschema",
             "loc": 5
           },
           {
-            "id": "👤semio📚js💻semio🪨statschema",
+            "id": "👤compose📚js💻compose🪨statschema",
             "loc": 9
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚js💻semio📌5644📌5850"
+          "👤compose📚js💻compose📌5644📌5850"
         ],
         "second": "🎆26🌙03☀️09⏰09⌚57⏱️42",
         "session": "⚪40a24467b09f4863bf360b267f8e8936"
@@ -110,7 +110,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/go/semio.go",
+            "includePattern": "**/compose/go/compose.go",
             "isRegexp": true,
             "query": "func.*getModelDiff|func.*getPieceDiff|func.*getConnectionDiff|func.*getConnectorDiff|func.*getTypeDiff"
           },
@@ -146,7 +146,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/go/semio.go",
+            "includePattern": "**/compose/go/compose.go",
             "isRegexp": true,
             "query": "func.*getModelDiff|func.*getPieceDiff|func.*getConnectionDiff|func.*getConnectorDiff|func.*getTypeDiff"
           },
@@ -182,7 +182,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/go/semio.go",
+            "includePattern": "**/compose/go/compose.go",
             "isRegexp": true,
             "query": "^func (get|apply|inverse)[A-Z].*Diff"
           },
@@ -218,7 +218,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/go/semio.go",
+            "includePattern": "**/compose/go/compose.go",
             "isRegexp": true,
             "query": "^func (get|apply|inverse)[A-Z].*Diff"
           },
@@ -254,7 +254,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/go/semio.go",
+            "includePattern": "**/compose/go/compose.go",
             "isRegexp": true,
             "query": "Diff.*func|func.*Connector|func.*Connection|func.*Model|func.*Piece"
           },
@@ -290,7 +290,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/go/semio.go",
+            "includePattern": "**/compose/go/compose.go",
             "isRegexp": true,
             "query": "Diff.*func|func.*Connector|func.*Connection|func.*Model|func.*Piece"
           },

@@ -19,7 +19,7 @@ import {
   formatBundleUlocSuffix,
 } from "../../../../../../repo/lib/js/src/uloc-metrics.ts";
 
-const root = "/Users/ueli/Documents/semio";
+const root = "/Users/ueli/Documents/compose";
 const wip = "8fd25bc8c6a8ee50ebc2951b9dc5ec7f2f5aa354";
 const head = "HEAD";
 const microHead = "🐙ueli🎆26🌙06☀️04🚩";
@@ -29,9 +29,9 @@ type DaySection = { dateLine: string; bullets: string[] };
 type BundleDef = { label: string; keywords: string[]; pathTokens: string[] };
 
 const BUNDLE_DEFS: BundleDef[] = [
-  { label: "🏘️semio🗃️fixtures", keywords: ["metabolism", "fixture", "initialkit", "kit diff", "neo4j", "validation snapshot", "hash cases", "diff corpora", "meshurl", "palette fixture"], pathTokens: ["fixtures", "metabolism"] },
-  { label: "🏘️semio✍️sketchpad", keywords: ["sketchpad", "design diagram", "diagram replacement", "boot.tsx", "us-00", "store workflow"], pathTokens: ["sketchpad"] },
-  { label: "🏘️semio", keywords: ["semio rust", "semio js", "semio/react", "graphql", "target schema", "golden-schema", "typology", "subscription", "kit store", "grasshopper", "rhino", "family entity", "lib.rs", "semio/client", "semio/rs", "semio/site"], pathTokens: ["semio"] },
+  { label: "🏘️compose🗃️fixtures", keywords: ["metabolism", "fixture", "initialkit", "kit diff", "neo4j", "validation snapshot", "hash cases", "diff corpora", "meshurl", "palette fixture"], pathTokens: ["fixtures", "metabolism"] },
+  { label: "🏘️compose✍️sketchpad", keywords: ["sketchpad", "design diagram", "diagram replacement", "boot.tsx", "us-00", "store workflow"], pathTokens: ["sketchpad"] },
+  { label: "🏘️compose", keywords: ["compose rust", "compose js", "compose/react", "graphql", "target schema", "golden-schema", "typology", "subscription", "kit store", "grasshopper", "rhino", "family entity", "lib.rs", "compose/client", "compose/rs", "compose/site"], pathTokens: ["compose"] },
   { label: "🎬presentation📽️", keywords: ["presentation", "projektetage", "reveal", "disposition", "morph", "slide", "chapter", "fullscreen tile", "embodiment"], pathTokens: ["presentation"] },
   { label: "🧩puzzle🎮play", keywords: ["puzzle", "board play", "board→puzzle", "marquee", "vortex", "topology board", "5d topology", "peer sync", "brush tool", "nakagin 2d", "nakagin 3d", "puzzle2d", "fill brush", "wires 5d"], pathTokens: ["puzzle"] },
   { label: "📐cad🪟spatial", keywords: ["cad", "spatial", "brep", "curve", "extrude", "scene package", "construct query", "model-definition", "elements scene", "elements geometry", "topologic", "spatial play", "spatial doctrine", "cell-complex", "chevrotain"], pathTokens: ["cad"] },
@@ -88,15 +88,15 @@ function assignBulletToBundle(bullet: string): string {
 
 function assignPathToBundle(path: string): number {
   const pl = path.toLowerCase();
-  if (pl.includes("fixtures") || pl.includes("metabolism")) return bundleIndexForLabel("🏘️semio🗃️fixtures");
-  if (pl.includes("sketchpad")) return bundleIndexForLabel("🏘️semio✍️sketchpad");
+  if (pl.includes("fixtures") || pl.includes("metabolism")) return bundleIndexForLabel("🏘️compose🗃️fixtures");
+  if (pl.includes("sketchpad")) return bundleIndexForLabel("🏘️compose✍️sketchpad");
   let best = BUNDLE_DEFS.length - 1;
   let bestScore = 0;
   for (let i = 0; i < BUNDLE_DEFS.length - 1; i++) {
     const tokens = BUNDLE_DEFS[i]!.pathTokens.length ? BUNDLE_DEFS[i]!.pathTokens : labelPathTokens(BUNDLE_DEFS[i]!.label);
     if (tokens.length === 0) continue;
     if (!tokens.every((t) => pl.includes(t))) continue;
-    if (tokens.length === 1 && tokens[0] === "semio" && (pl.includes("fixtures") || pl.includes("sketchpad"))) continue;
+    if (tokens.length === 1 && tokens[0] === "compose" && (pl.includes("fixtures") || pl.includes("sketchpad"))) continue;
     const score = tokens.length;
     if (score > bestScore) {
       bestScore = score;
@@ -312,5 +312,5 @@ for (const r of footer) {
 }
 console.error(`[build] bundles=${ranked.length} range ➕${fa}✏️${fe}➖${fr} sum headers ➕${sum.added}✏️${sum.edited}➖${sum.removed}`);
 
-writeFileSync(`${root}/.git/semio-commit-message`, message);
+writeFileSync(`${root}/.git/compose-commit-message`, message);
 process.stdout.write(message);

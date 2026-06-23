@@ -29,7 +29,7 @@ AGENTS.md specifies that all UI component hooks should be triadic `[value, sette
 
 - Replaced `useTheme()`, `useLanguage()`, `useMode()`, `useExpertise()`, `useLayout()` with triadic implementations
 - Added `useFullscreen()` triadic hook
-- Updated dependent hooks (`useTooltip()`, `useSemioTooltip()`, `useIsNavbarExpanded()`, `useIsFooterExpanded()`) to destructure
+- Updated dependent hooks (`useTooltip()`, `useComposeTooltip()`, `useIsNavbarExpanded()`, `useIsFooterExpanded()`) to destructure
 - Updated `LayoutWrapper` to use triadic destructuring pattern
 - Updated `Navigation` component to use `const [mode] = useMode()`
 - Created deprecated aliases: `useThemeTriadic = useTheme`, etc.

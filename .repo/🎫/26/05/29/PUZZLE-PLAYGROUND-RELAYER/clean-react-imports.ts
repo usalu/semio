@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 import { readFileSync, writeFileSync } from "node:fs";
 
-const path2d = "c:/git/semio/puzzle/2d/react/index.tsx";
+const path2d = "c:/git/compose/puzzle/2d/react/index.tsx";
 let c2 = readFileSync(path2d, "utf8");
 const marker2d = 'import { Expertise, ProductRuntime';
 const end2d = '} from "./play/index.ts";\n';
@@ -13,7 +13,7 @@ if (i2 >= 0 && j2 >= 0) {
 	console.log("[clean] 2d react imports removed");
 }
 
-const path3d = "c:/git/semio/puzzle/3d/react/index.tsx";
+const path3d = "c:/git/compose/puzzle/3d/react/index.tsx";
 let c3 = readFileSync(path3d, "utf8");
 c3 = c3.replace(/^import \{ CommandBus.*\n/m, "");
 const m3 = c3.indexOf('import { registerTabIcon');

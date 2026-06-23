@@ -34,9 +34,9 @@ When importing a kit from a zip file:
 
 ## Files Changed
 
-- `js/semio/sketchpad/Sketchpad.tsx`: Added `buildFilePathMap()` and `storeFileBlobs()` methods to KitStore
-- `js/semio/sketchpad/Home.tsx`: Simplified import handlers to store blobs for existing files, added error logging
-- `js/semio/sketchpad.test.ts`: Enhanced Type test to verify no model warnings appear
+- `js/compose/sketchpad/Sketchpad.tsx`: Added `buildFilePathMap()` and `storeFileBlobs()` methods to KitStore
+- `js/compose/sketchpad/Home.tsx`: Simplified import handlers to store blobs for existing files, added error logging
+- `js/compose/sketchpad.test.ts`: Enhanced Type test to verify no model warnings appear
 
 ## Verification
 

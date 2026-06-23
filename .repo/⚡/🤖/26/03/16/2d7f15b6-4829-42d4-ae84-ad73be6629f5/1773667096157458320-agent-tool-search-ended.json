@@ -17,7 +17,7 @@
       "tool_name": "read_file",
       "tool_input": {
         "endLine": 65,
-        "filePath": "/workspaces/semio/semio/sketchpad/playwright.config.ts",
+        "filePath": "/workspaces/semio/compose/sketchpad/playwright.config.ts",
         "startLine": 50
       },
       "tool_response": "",

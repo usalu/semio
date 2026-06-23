@@ -1,6 +1,6 @@
 {
   "id": "2b143329-37a3-409e-9417-9512355dda08",
-  "uri": "semiorepo://s/2b143329-37a3-409e-9417-9512355dda08",
+  "uri": "composerepo://s/2b143329-37a3-409e-9417-9512355dda08",
   "contributor": "🧑‍💻ueli",
   "client": "copilot-chat",
   "second": "2026-03-08T00:51:28Z",
@@ -14,7 +14,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 8070,
-            "filePath": "/workspaces/semio/semio/net/Semio/Semio.cs",
+            "filePath": "/workspaces/semio/compose/net/Compose/Compose.cs",
             "startLine": 7980
           },
           "tool_use_id": "toolu_01PJoSVcy265najoC1CdojV2__vscode-1772913891705",
@@ -34,7 +34,7 @@
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚net🛅semio💻semio📌7980📌8070"
+          "👤compose📚net🛅compose💻compose📌7980📌8070"
         ],
         "second": "🎆26🌙03☀️08⏰00⌚51⏱️28",
         "session": "⚪2b14332937a3409e94179512355dda08"
@@ -51,7 +51,7 @@
           "session_id": "2b143329-37a3-409e-9417-9512355dda08",
           "tool_name": "list_dir",
           "tool_input": {
-            "path": "/workspaces/semio/semio/assets/semio"
+            "path": "/workspaces/semio/compose/assets/compose"
           },
           "tool_response": "",
           "tool_use_id": "toolu_01YD7Tq622P8qXPfM4iEM8Zk__vscode-1772913891706",
@@ -85,7 +85,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 9500,
-            "filePath": "/workspaces/semio/semio/py/semio.py",
+            "filePath": "/workspaces/semio/compose/py/compose.py",
             "startLine": 9440
           },
           "tool_response": "",
@@ -104,18 +104,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️py💻semio🛠️importkit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️py💻compose🛠️importkit",
             "loc": 58
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️py💻semio🛠️parsedesignfromsqlite",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️py💻compose🛠️parsedesignfromsqlite",
             "loc": 3
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚py💻semio📌9440📌9500"
+          "👤compose📚py💻compose📌9440📌9500"
         ],
         "second": "🎆26🌙03☀️08⏰00⌚51⏱️36",
         "session": "⚪2b14332937a3409e94179512355dda08"
@@ -133,7 +133,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 8070,
-            "filePath": "/workspaces/semio/semio/net/Semio/Semio.cs",
+            "filePath": "/workspaces/semio/compose/net/Compose/Compose.cs",
             "startLine": 7980
           },
           "tool_response": "",
@@ -153,7 +153,7 @@
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚net🛅semio💻semio📌7980📌8070"
+          "👤compose📚net🛅compose💻compose📌7980📌8070"
         ],
         "second": "🎆26🌙03☀️08⏰00⌚51⏱️42",
         "session": "⚪2b14332937a3409e94179512355dda08"
@@ -171,7 +171,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/js/semio.ts",
+            "includePattern": "**/compose/js/compose.ts",
             "isRegexp": true,
             "query": "export function serializeKit|export function deserializeKit|export function importKit|export function exportKit"
           },
@@ -207,7 +207,7 @@
           "tool_name": "grep_search",
           "tool_input": {
             "maxResults": 20,
-            "includePattern": "**/semio/js/semio.ts",
+            "includePattern": "**/compose/js/compose.ts",
             "isRegexp": true,
             "query": "export function serializeKit|export function deserializeKit|export function importKit|export function exportKit"
           },
@@ -246,7 +246,7 @@
             "isRegexp": true,
             "query": "serializeKit|deserializeKit|importKit|exportKit",
             "includeIgnoredFiles": true,
-            "includePattern": "**/semio/js/semio.ts"
+            "includePattern": "**/compose/js/compose.ts"
           },
           "tool_use_id": "toolu_013bixx34PsSvg914SvsHKj5__vscode-1772913891708",
           "cwd": "/workspaces/semio"
@@ -283,7 +283,7 @@
             "isRegexp": true,
             "query": "serializeKit|deserializeKit|importKit|exportKit",
             "includeIgnoredFiles": true,
-            "includePattern": "**/semio/js/semio.ts"
+            "includePattern": "**/compose/js/compose.ts"
           },
           "tool_response": "",
           "tool_use_id": "toolu_013bixx34PsSvg914SvsHKj5__vscode-1772913891708",
@@ -317,7 +317,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 8760,
-            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "filePath": "/workspaces/semio/compose/js/compose.ts",
             "startLine": 7260
           },
           "tool_use_id": "toolu_01AhdFT4nWE4NtCoBJoMDzYU__vscode-1772913891709",
@@ -336,346 +336,346 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio✂️collectiondiff",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose✂️collectiondiff",
             "loc": 1
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio✂️entityidtype",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose✂️entityidtype",
             "loc": 1
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio✂️filetreenode",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose✂️filetreenode",
             "loc": 9
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio✂️kit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose✂️kit",
             "loc": 8
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio✂️kitdiff",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose✂️kitdiff",
             "loc": 3
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio✂️kitimportresult",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose✂️kitimportresult",
             "loc": 4
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio✂️kitshallow",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose✂️kitshallow",
             "loc": 8
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️addconcepttokit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️addconcepttokit",
             "loc": 1
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️adddesigntokit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️adddesigntokit",
             "loc": 5
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️addfiletokit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️addfiletokit",
             "loc": 1
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️addporttokit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️addporttokit",
             "loc": 5
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️addtagtokit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️addtagtokit",
             "loc": 1
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️addtypetokit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️addtypetokit",
             "loc": 5
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️applykitdiff",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️applykitdiff",
             "loc": 62
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️aredesignsinsamefamily",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️aredesignsinsamefamily",
             "loc": 5
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️arekitsequal",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️arekitsequal",
             "loc": 14
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️aresamekit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️aresamekit",
             "loc": 3
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️aretypesinsamefamily",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️aretypesinsamefamily",
             "loc": 5
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️buildfiletree",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️buildfiletree",
             "loc": 53
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️canusedesignaspiece",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️canusedesignaspiece",
             "loc": 3
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️colorportsfortypes",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️colorportsfortypes",
             "loc": 332
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️createfilefromdatauri",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️createfilefromdatauri",
             "loc": 28
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️deserializekit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️deserializekit",
             "loc": 7
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️deserializekitshallow",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️deserializekitshallow",
             "loc": 6
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findattributevalue",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️findattributevalue",
             "loc": 6
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findchildrenpiecesindesign",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️findchildrenpiecesindesign",
             "loc": 11
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findconceptinkit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️findconceptinkit",
             "loc": 5
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️finddesigninkit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️finddesigninkit",
             "loc": 5
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findfileinkit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️findfileinkit",
             "loc": 5
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findparentconnectionforpieceindesign",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️findparentconnectionforpieceindesign",
             "loc": 5
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findparentpieceindesign",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️findparentpieceindesign",
             "loc": 5
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findpiecetypeindesign",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️findpiecetypeindesign",
             "loc": 5
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findportinkit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️findportinkit",
             "loc": 5
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findreplacabledesignsfordesignpiece",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️findreplacabledesignsfordesignpiece",
             "loc": 12
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findreplacabletypesforpieceindesign",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️findreplacabletypesforpieceindesign",
             "loc": 28
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findreplacabletypesforpiecesindesign",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️findreplacabletypesforpiecesindesign",
             "loc": 36
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findsamefamilydesignpieces",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️findsamefamilydesignpieces",
             "loc": 7
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findtaginkit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️findtaginkit",
             "loc": 5
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findtypeinkit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️findtypeinkit",
             "loc": 5
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findusedconnectorsbypieceindesign",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️findusedconnectorsbypieceindesign",
             "loc": 8
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️getcolorfortext",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️getcolorfortext",
             "loc": 72
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️getdesignchildren",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️getdesignchildren",
             "loc": 3
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️getdesignfamily",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️getdesignfamily",
             "loc": 12
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️getdesignsiblings",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️getdesignsiblings",
             "loc": 5
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️getkitdiff",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️getkitdiff",
             "loc": 33
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️getprimitivedesign",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️getprimitivedesign",
             "loc": 7
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️getprimitivetype",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️getprimitivetype",
             "loc": 7
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️gettypechildren",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️gettypechildren",
             "loc": 3
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️gettypefamily",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️gettypefamily",
             "loc": 12
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️gettypesiblings",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️gettypesiblings",
             "loc": 5
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️hassamekit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️hassamekit",
             "loc": 9
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️inversekitdiff",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️inversekitdiff",
             "loc": 23
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️mergekitdiff",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️mergekitdiff",
             "loc": 17
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️parsedesignidfromvariant",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️parsedesignidfromvariant",
             "loc": 3
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️removeconceptfromkit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️removeconceptfromkit",
             "loc": 3
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️removedesignfromkit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️removedesignfromkit",
             "loc": 7
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️removefilefromkit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️removefilefromkit",
             "loc": 3
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️removeportfromkit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️removeportfromkit",
             "loc": 3
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️removetagfromkit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️removetagfromkit",
             "loc": 3
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️removetypefromkit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️removetypefromkit",
             "loc": 3
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️serializekit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️serializekit",
             "loc": 8
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️serializekitshallow",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️serializekitshallow",
             "loc": 8
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️setattributeinkit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️setattributeinkit",
             "loc": 3
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️setconceptinkit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️setconceptinkit",
             "loc": 1
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️setdesigninkit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️setdesigninkit",
             "loc": 5
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️setfileinkit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️setfileinkit",
             "loc": 1
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️setportinkit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️setportinkit",
             "loc": 5
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️settaginkit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️settaginkit",
             "loc": 1
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️settypeinkit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️settypeinkit",
             "loc": 5
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️updatedesigninkit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️updatedesigninkit",
             "loc": 5
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️updateportinkit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️updateportinkit",
             "loc": 5
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🪨applycollectiondiff",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🪨applycollectiondiff",
             "loc": 1
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🪨cachedsqljs",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🪨cachedsqljs",
             "loc": 3
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🪨exportkit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🪨exportkit",
             "loc": 21
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🪨flattenfiletree",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🪨flattenfiletree",
             "loc": 1
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🪨getcollectiondiff",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🪨getcollectiondiff",
             "loc": 1
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🪨getsqljs",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🪨getsqljs",
             "loc": 24
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🪨importkit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🪨importkit",
             "loc": 51
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🪨inversecollectiondiff",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🪨inversecollectiondiff",
             "loc": 1
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🪨kitdiffschema",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🪨kitdiffschema",
             "loc": 1
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🪨kitsdiffschema",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🪨kitsdiffschema",
             "loc": 5
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🪨kitshallowschema",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🪨kitshallowschema",
             "loc": 1
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🪨mergecollectiondiff",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🪨mergecollectiondiff",
             "loc": 1
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🪨piecesmetadata",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🪨piecesmetadata",
             "loc": 11
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚js💻semio📌7260📌8760"
+          "👤compose📚js💻compose📌7260📌8760"
         ],
         "second": "🎆26🌙03☀️08⏰00⌚52⏱️15",
         "session": "⚪2b14332937a3409e94179512355dda08"
@@ -693,7 +693,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 8760,
-            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "filePath": "/workspaces/semio/compose/js/compose.ts",
             "startLine": 7260
           },
           "tool_response": "",
@@ -712,346 +712,346 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio✂️collectiondiff",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose✂️collectiondiff",
             "loc": 1
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio✂️entityidtype",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose✂️entityidtype",
             "loc": 1
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio✂️filetreenode",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose✂️filetreenode",
             "loc": 9
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio✂️kit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose✂️kit",
             "loc": 8
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio✂️kitdiff",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose✂️kitdiff",
             "loc": 3
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio✂️kitimportresult",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose✂️kitimportresult",
             "loc": 4
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio✂️kitshallow",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose✂️kitshallow",
             "loc": 8
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️addconcepttokit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️addconcepttokit",
             "loc": 1
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️adddesigntokit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️adddesigntokit",
             "loc": 5
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️addfiletokit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️addfiletokit",
             "loc": 1
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️addporttokit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️addporttokit",
             "loc": 5
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️addtagtokit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️addtagtokit",
             "loc": 1
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️addtypetokit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️addtypetokit",
             "loc": 5
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️applykitdiff",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️applykitdiff",
             "loc": 62
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️aredesignsinsamefamily",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️aredesignsinsamefamily",
             "loc": 5
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️arekitsequal",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️arekitsequal",
             "loc": 14
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️aresamekit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️aresamekit",
             "loc": 3
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️aretypesinsamefamily",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️aretypesinsamefamily",
             "loc": 5
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️buildfiletree",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️buildfiletree",
             "loc": 53
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️canusedesignaspiece",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️canusedesignaspiece",
             "loc": 3
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️colorportsfortypes",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️colorportsfortypes",
             "loc": 332
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️createfilefromdatauri",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️createfilefromdatauri",
             "loc": 28
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️deserializekit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️deserializekit",
             "loc": 7
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️deserializekitshallow",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️deserializekitshallow",
             "loc": 6
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findattributevalue",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️findattributevalue",
             "loc": 6
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findchildrenpiecesindesign",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️findchildrenpiecesindesign",
             "loc": 11
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findconceptinkit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️findconceptinkit",
             "loc": 5
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️finddesigninkit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️finddesigninkit",
             "loc": 5
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findfileinkit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️findfileinkit",
             "loc": 5
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findparentconnectionforpieceindesign",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️findparentconnectionforpieceindesign",
             "loc": 5
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findparentpieceindesign",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️findparentpieceindesign",
             "loc": 5
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findpiecetypeindesign",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️findpiecetypeindesign",
             "loc": 5
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findportinkit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️findportinkit",
             "loc": 5
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findreplacabledesignsfordesignpiece",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️findreplacabledesignsfordesignpiece",
             "loc": 12
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findreplacabletypesforpieceindesign",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️findreplacabletypesforpieceindesign",
             "loc": 28
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findreplacabletypesforpiecesindesign",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️findreplacabletypesforpiecesindesign",
             "loc": 36
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findsamefamilydesignpieces",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️findsamefamilydesignpieces",
             "loc": 7
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findtaginkit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️findtaginkit",
             "loc": 5
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findtypeinkit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️findtypeinkit",
             "loc": 5
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findusedconnectorsbypieceindesign",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️findusedconnectorsbypieceindesign",
             "loc": 8
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️getcolorfortext",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️getcolorfortext",
             "loc": 72
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️getdesignchildren",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️getdesignchildren",
             "loc": 3
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️getdesignfamily",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️getdesignfamily",
             "loc": 12
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️getdesignsiblings",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️getdesignsiblings",
             "loc": 5
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️getkitdiff",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️getkitdiff",
             "loc": 33
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️getprimitivedesign",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️getprimitivedesign",
             "loc": 7
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️getprimitivetype",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️getprimitivetype",
             "loc": 7
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️gettypechildren",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️gettypechildren",
             "loc": 3
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️gettypefamily",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️gettypefamily",
             "loc": 12
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️gettypesiblings",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️gettypesiblings",
             "loc": 5
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️hassamekit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️hassamekit",
             "loc": 9
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️inversekitdiff",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️inversekitdiff",
             "loc": 23
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️mergekitdiff",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️mergekitdiff",
             "loc": 17
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️parsedesignidfromvariant",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️parsedesignidfromvariant",
             "loc": 3
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️removeconceptfromkit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️removeconceptfromkit",
             "loc": 3
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️removedesignfromkit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️removedesignfromkit",
             "loc": 7
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️removefilefromkit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️removefilefromkit",
             "loc": 3
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️removeportfromkit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️removeportfromkit",
             "loc": 3
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️removetagfromkit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️removetagfromkit",
             "loc": 3
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️removetypefromkit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️removetypefromkit",
             "loc": 3
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️serializekit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️serializekit",
             "loc": 8
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️serializekitshallow",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️serializekitshallow",
             "loc": 8
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️setattributeinkit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️setattributeinkit",
             "loc": 3
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️setconceptinkit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️setconceptinkit",
             "loc": 1
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️setdesigninkit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️setdesigninkit",
             "loc": 5
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️setfileinkit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️setfileinkit",
             "loc": 1
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️setportinkit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️setportinkit",
             "loc": 5
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️settaginkit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️settaginkit",
             "loc": 1
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️settypeinkit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️settypeinkit",
             "loc": 5
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️updatedesigninkit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️updatedesigninkit",
             "loc": 5
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️updateportinkit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🛠️updateportinkit",
             "loc": 5
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🪨applycollectiondiff",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🪨applycollectiondiff",
             "loc": 1
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🪨cachedsqljs",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🪨cachedsqljs",
             "loc": 3
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🪨exportkit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🪨exportkit",
             "loc": 21
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🪨flattenfiletree",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🪨flattenfiletree",
             "loc": 1
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🪨getcollectiondiff",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🪨getcollectiondiff",
             "loc": 1
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🪨getsqljs",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🪨getsqljs",
             "loc": 24
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🪨importkit",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🪨importkit",
             "loc": 51
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🪨inversecollectiondiff",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🪨inversecollectiondiff",
             "loc": 1
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🪨kitdiffschema",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🪨kitdiffschema",
             "loc": 1
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🪨kitsdiffschema",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🪨kitsdiffschema",
             "loc": 5
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🪨kitshallowschema",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🪨kitshallowschema",
             "loc": 1
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🪨mergecollectiondiff",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🪨mergecollectiondiff",
             "loc": 1
           },
           {
-            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🪨piecesmetadata",
+            "id": "🛅🗃️workspaces🗃️compose🗃️compose🗃️js💻compose🪨piecesmetadata",
             "loc": 11
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚js💻semio📌7260📌8760"
+          "👤compose📚js💻compose📌7260📌8760"
         ],
         "second": "🎆26🌙03☀️08⏰00⌚52⏱️25",
         "session": "⚪2b14332937a3409e94179512355dda08"

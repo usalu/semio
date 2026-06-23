@@ -2,5 +2,5 @@
   "id": "26/05/15/CONSOLIDATE-STORYBOOKS-INTO-MONOREPO-ROOT",
   "title": "Consolidate Storybooks Into Monorepo Root",
   "description": "Single root Storybook under .storybook with shared config and decorators; stories under .storybook/stories/<technology>/<bundle>/; remove per-bundle .storybook trees.",
-  "summary": "Single Storybook under .storybook: stories in .storybook/stories/<technology>/<bundle>/, fixtures/nakagin.ts, semio/algorithms/kit-store/, shared withLevel/withTheme/vitest.setup; main stories glob ./stories/**/*.stories.*; removed per-bundle .storybook; dev.script.ts bundles delegate to root -c .storybook; algorithms index uses openSession; kit-store semioWasm path + dropped generateId re-export."
+  "summary": "Single Storybook under .storybook: stories in .storybook/stories/<technology>/<bundle>/, fixtures/nakagin.ts, compose/algorithms/kit-store/, shared withLevel/withTheme/vitest.setup; main stories glob ./stories/**/*.stories.*; removed per-bundle .storybook; dev.script.ts bundles delegate to root -c .storybook; algorithms index uses openSession; kit-store composeWasm path + dropped generateId re-export."
 }

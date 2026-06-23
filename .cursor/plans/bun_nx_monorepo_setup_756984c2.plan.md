@@ -15,7 +15,7 @@ todos:
     content: Drop cross-env, tsx, jiti, concurrently from devDeps; verify nothing else needs them
     status: completed
   - id: project-jsons
-    content: "Add/align project.json for all buildable units: 32 Node workspaces, semio/hub crate, 9 Go modules, 4 .NET test/benchmark csprojs"
+    content: "Add/align project.json for all buildable units: 32 Node workspaces, compose/hub crate, 9 Go modules, 4 .NET test/benchmark csprojs"
     status: completed
   - id: workspace-project
     content: Add root `workspace` project.json with setup/lint/format/test/build/mcp-inspector/git-setup/depcruise targets
@@ -65,7 +65,7 @@ Open via `repo/client/client(.exe) ticket open` under the most appropriate goal 
 
 ## 2. Replace inline `node -e "..."` with `bun` TS scripts
 
-Every workspace currently has a `dev`/`build`/`postinstall` script with a long `node -e "...spawn npx vite..."` blob (root `postinstall`, root `git:setup`, root `mcp:inspector*`, all sites/play, sites/docs, ui, algorithms, 3dm/ui, elements/ui, repo/client, repo/server build, semio/desktop, etc.). Replace each with a small file under that workspace's `scripts/` directory (e.g. [semio/sites/doc/scripts/dev.ts](semio/sites/doc/scripts/dev.ts)) and call it via `bun scripts/dev.ts` from the matching Nx target.
+Every workspace currently has a `dev`/`build`/`postinstall` script with a long `node -e "...spawn npx vite..."` blob (root `postinstall`, root `git:setup`, root `mcp:inspector*`, all sites/play, sites/docs, ui, algorithms, 3dm/ui, elements/ui, repo/client, repo/server build, compose/desktop, etc.). Replace each with a small file under that workspace's `scripts/` directory (e.g. [compose/sites/doc/scripts/dev.ts](compose/sites/doc/scripts/dev.ts)) and call it via `bun scripts/dev.ts` from the matching Nx target.
 
 A single shared [scripts/run-vite-dev.ts](scripts/run-vite-dev.ts) at repo root handles the common pattern (host = `0.0.0.0` in devcontainer else `127.0.0.1`, optional polling, configurable port) so each ui workspace becomes a one-liner.
 
@@ -79,11 +79,11 @@ Add or update `project.json` for every buildable unit. Each project gets the sam
 Coverage matrix:
 
 - Already covered (align target naming + caching): all 32 Node workspaces and the 9 schema `project.json` files.
-- Missing — Cargo crates without `package.json`: `semio/hub` (add minimal `project.json` invoking `cargo build -p semio-hub` etc.).
+- Missing — Cargo crates without `package.json`: `compose/hub` (add minimal `project.json` invoking `cargo build -p compose-hub` etc.).
 - Missing — Go modules without `package.json`: `repo/mcp`, `repo/cursor`, `repo/copilot`, `repo/codex`, `repo/claude`, `repo/kiro`, `repo/go`, `coda/blnbo/go`, `coda/programming/go` (add `project.json` invoking `go build`/`go test`).
-- Missing — .NET projects without `package.json`: `semio/net/Semio.Tests`, `semio/net/Semio.Benchmark`, `semio/gh/Semio.Grasshopper.Tests`, `semio/3dm/Semio.Rhino.Tests` (add `project.json` invoking `dotnet build/test`).
+- Missing — .NET projects without `package.json`: `compose/net/Compose.Tests`, `compose/net/Compose.Benchmark`, `compose/gh/Compose.Grasshopper.Tests`, `compose/3dm/Compose.Rhino.Tests` (add `project.json` invoking `dotnet build/test`).
 
-All targets implement via `nx:run-commands` (no third-party Nx plugin churn). Keep `@nxlv/python` for `semio/py` + `semio/engine` since it already provides `update`/`lock` executors.
+All targets implement via `nx:run-commands` (no third-party Nx plugin churn). Keep `@nxlv/python` for `compose/py` + `compose/engine` since it already provides `update`/`lock` executors.
 
 ## 4. Root `workspace` project (orchestration)
 
@@ -171,8 +171,8 @@ bun nx run workspace:setup
 ```
 
 Per-toolchain build/install steps (uv sync, cargo wasm config, dotnet restore, go build, playwright install, vscode extension build, git hooks, antigravity MCP config, GitKraken install) all move into Nx targets:
-- Cargo wasm config writing → `semio/rs:setup` (writes `.cargo/config.toml` if missing)
-- Playwright browsers → `semio/sketchpad:setup`
+- Cargo wasm config writing → `compose/rs:setup` (writes `.cargo/config.toml` if missing)
+- Playwright browsers → `compose/sketchpad:setup`
 - VSCode extension build → `repo/vscode:build` (called by `workspace:setup`)
 - Git hooks via `repo/client` → `workspace:git-setup`
 - GitKraken/Antigravity → keep as opt-in `.devcontainer/post-attach.sh` only
@@ -193,7 +193,7 @@ Per-toolchain build/install steps (uv sync, cargo wasm config, dotnet restore, g
   with: { bun-version: latest }
 - run: bun install --frozen-lockfile
 - run: bun nx run workspace:setup
-- run: bun nx affected -t test     # or run @semio/docs:build for pages
+- run: bun nx affected -t test     # or run @compose/docs:build for pages
 ```
 
 Add Nx cache persistence via `actions/cache` keyed on `bun.lock`, `Cargo.lock`, `uv.lock`, `go.sum` aggregate hash.
@@ -205,7 +205,7 @@ Add Nx cache persistence via `actions/cache` keyed on `bun.lock`, `Cargo.lock`, 
 - `bun nx run-many -t build` produces all artifacts, second run reports `[local cache]` everywhere.
 - `bun nx run-many -t test` green on existing suites (we don't touch test logic).
 - Devcontainer rebuild + native PowerShell run both end with `workspace:setup` exit 0.
-- Verify Bun runs Electron-Forge (`bun nx run @semio/desktop:build`); fall back to a single `node` install in Dockerfile if blocked.
+- Verify Bun runs Electron-Forge (`bun nx run @compose/desktop:build`); fall back to a single `node` install in Dockerfile if blocked.
 
 ## Out of scope
 
@@ -217,6 +217,6 @@ Add Nx cache persistence via `actions/cache` keyed on `bun.lock`, `Cargo.lock`, 
 ## Notes
 
 - This is one focused refactor; no need to delegate. Estimated 4-6 hours of edits + verification.
-- `pnpm.overrides` (`@semio/asset`, `@semio/js` workspace pinning) becomes `overrides` at root (Bun supports the `overrides` field).
+- `pnpm.overrides` (`@compose/asset`, `@compose/js` workspace pinning) becomes `overrides` at root (Bun supports the `overrides` field).
 - `defaultBase = "⛳wip"` is unusual but kept.
 - The repo MCP `ticket_open` is unavailable in this Cursor session's MCP set; the ticket folder will be created via `repo/client/client(.exe) ticket open` once available, or scaffolded manually under `.repo/🎫/26/05/11/bun-nx-monorepo-setup/`.

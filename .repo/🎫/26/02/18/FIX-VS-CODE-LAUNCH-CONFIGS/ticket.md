@@ -19,12 +19,12 @@ Fix incorrect VSCode launch.json and tasks.json configs.
 
 nx projects and their actual roots:
 
-- `@semio/logo` → `semio/assets/logo` (configs say `semio/logo` — wrong)
-- `@semio/icons` → `semio/assets/icons` (configs say `semio/icons` — wrong)
-- `@semio/net` → `semio/net/Semio` (configs say `semio/net` — wrong)
-- `@semio/sketchpad` → `semio/sketchpad` (missing from configs)
-- `semio/grasshopper` → does NOT exist in nx (remove)
-- `semio/yak` → does NOT exist in nx (remove)
+- `@compose/logo` → `compose/assets/logo` (configs say `compose/logo` — wrong)
+- `@compose/icons` → `compose/assets/icons` (configs say `compose/icons` — wrong)
+- `@compose/net` → `compose/net/Compose` (configs say `compose/net` — wrong)
+- `@compose/sketchpad` → `compose/sketchpad` (missing from configs)
+- `compose/grasshopper` → does NOT exist in nx (remove)
+- `compose/yak` → does NOT exist in nx (remove)
 - `repo/vscode dev` task uses `"type": "npm", "path": "js/vscode"` — path is wrong (old path), should use shell `npx nx dev repo`
 
 ## Todos
@@ -35,6 +35,6 @@ nx projects and their actual roots:
 ## Plan
 
 1. Fix `repo/vscode dev` task: change from npm type with `js/vscode` path to shell `npx nx dev repo`
-2. Fix nx paths: `semio/logo` → `semio/assets/logo`, `semio/icons` → `semio/assets/icons`, `semio/net` → use `@semio/net`
-3. Remove non-existent: `semio/grasshopper`, `semio/yak`
-4. Add missing: `semio/sketchpad`
+2. Fix nx paths: `compose/logo` → `compose/assets/logo`, `compose/icons` → `compose/assets/icons`, `compose/net` → use `@compose/net`
+3. Remove non-existent: `compose/grasshopper`, `compose/yak`
+4. Add missing: `compose/sketchpad`

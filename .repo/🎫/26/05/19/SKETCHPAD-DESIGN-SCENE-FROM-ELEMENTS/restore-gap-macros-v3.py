@@ -1,7 +1,7 @@
 from pathlib import Path
 import re
 
-lib = Path(r"c:\git\semio\semio\client\lib\rs\lib.rs")
+lib = Path(r"c:\git\compose\compose\client\lib\rs\lib.rs")
 text = lib.read_text(encoding="utf-8")
 
 mod_start = text.index("pub mod schema_gap_surfaces {")

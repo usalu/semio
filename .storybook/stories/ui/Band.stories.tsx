@@ -1,6 +1,6 @@
 // #region 🧲Header
 
-// 🥼︎ semio/js/.storybook/story/elements/aggregation/Band.stories.tsx
+// 🥼︎ compose/js/.storybook/story/elements/aggregation/Band.stories.tsx
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -10,7 +10,7 @@
 
 // #region 🎩Band
 import { Band, Button, Input, Strip, Toggle } from "@ui/react";
-import { AddIcon, AwardIcon, DocumentIcon, FolderIcon, LayoutIcon, TypeIcon, UserIcon } from "@semio/asset";
+import { AddIcon, AwardIcon, DocumentIcon, FolderIcon, LayoutIcon, TypeIcon, UserIcon } from "@compose/asset";
 import type { Meta, StoryObj } from "@storybook/react";
 
 const meta = {
@@ -37,8 +37,8 @@ export const HorizontalWithToggles: Story = {
         onPressedChange={() => {}}
         actionIcon={<AddIcon className="size-tiny" />}
         onActionClick={() => {}}
-        id="semio.sketchpad.app.kit.kitApp.showDesigns"
-        actionId="semio.sketchpad.app.kit.kitApp.createDesign"
+        id="compose.sketchpad.app.kit.kitApp.showDesigns"
+        actionId="compose.sketchpad.app.kit.kitApp.createDesign"
         icon={<LayoutIcon className="size-tiny" />}
       />,
       <Toggle
@@ -48,8 +48,8 @@ export const HorizontalWithToggles: Story = {
         onPressedChange={() => {}}
         actionIcon={<AddIcon className="size-tiny" />}
         onActionClick={() => {}}
-        id="semio.sketchpad.app.kit.kitApp.showTypes"
-        actionId="semio.sketchpad.app.kit.kitApp.createType"
+        id="compose.sketchpad.app.kit.kitApp.showTypes"
+        actionId="compose.sketchpad.app.kit.kitApp.createType"
         icon={<TypeIcon className="size-tiny" />}
       />,
       <Toggle
@@ -59,8 +59,8 @@ export const HorizontalWithToggles: Story = {
         onPressedChange={() => {}}
         actionIcon={<AddIcon className="size-tiny" />}
         onActionClick={() => {}}
-        id="semio.sketchpad.app.kit.kitApp.showQualities"
-        actionId="semio.sketchpad.app.kit.kitApp.createQuality"
+        id="compose.sketchpad.app.kit.kitApp.showQualities"
+        actionId="compose.sketchpad.app.kit.kitApp.createQuality"
         icon={<AwardIcon className="size-tiny" />}
       />,
       <Toggle
@@ -70,8 +70,8 @@ export const HorizontalWithToggles: Story = {
         onPressedChange={() => {}}
         actionIcon={<AddIcon className="size-tiny" />}
         onActionClick={() => {}}
-        id="semio.sketchpad.app.kit.kitApp.showFiles"
-        actionId="semio.sketchpad.app.kit.kitApp.createFile"
+        id="compose.sketchpad.app.kit.kitApp.showFiles"
+        actionId="compose.sketchpad.app.kit.kitApp.createFile"
         icon={<DocumentIcon className="size-tiny" />}
       />,
       <Toggle
@@ -81,8 +81,8 @@ export const HorizontalWithToggles: Story = {
         onPressedChange={() => {}}
         actionIcon={<AddIcon className="size-tiny" />}
         onActionClick={() => {}}
-        id="semio.sketchpad.app.kit.kitApp.showFolders"
-        actionId="semio.sketchpad.app.kit.kitApp.createFolder"
+        id="compose.sketchpad.app.kit.kitApp.showFolders"
+        actionId="compose.sketchpad.app.kit.kitApp.createFolder"
         icon={<FolderIcon className="size-tiny" />}
       />,
       <Toggle
@@ -92,8 +92,8 @@ export const HorizontalWithToggles: Story = {
         onPressedChange={() => {}}
         actionIcon={<AddIcon className="size-tiny" />}
         onActionClick={() => {}}
-        id="semio.sketchpad.app.kit.kitApp.showAuthors"
-        actionId="semio.sketchpad.app.kit.kitApp.createAuthor"
+        id="compose.sketchpad.app.kit.kitApp.showAuthors"
+        actionId="compose.sketchpad.app.kit.kitApp.createAuthor"
         icon={<UserIcon className="size-tiny" />}
       />,
     ].map((content) => ({ content })),
@@ -136,8 +136,8 @@ export const VerticalWithToggles: Story = {
         onPressedChange={() => {}}
         actionIcon={<AddIcon className="size-tiny" />}
         onActionClick={() => {}}
-        id="semio.sketchpad.app.kit.kitApp.showDesigns"
-        actionId="semio.sketchpad.app.kit.kitApp.createDesign"
+        id="compose.sketchpad.app.kit.kitApp.showDesigns"
+        actionId="compose.sketchpad.app.kit.kitApp.createDesign"
         icon={<LayoutIcon className="size-tiny" />}
       />,
       <Toggle
@@ -147,8 +147,8 @@ export const VerticalWithToggles: Story = {
         onPressedChange={() => {}}
         actionIcon={<AddIcon className="size-tiny" />}
         onActionClick={() => {}}
-        id="semio.sketchpad.app.kit.kitApp.showTypes"
-        actionId="semio.sketchpad.app.kit.kitApp.createType"
+        id="compose.sketchpad.app.kit.kitApp.showTypes"
+        actionId="compose.sketchpad.app.kit.kitApp.createType"
         icon={<TypeIcon className="size-tiny" />}
       />,
       <Toggle
@@ -158,8 +158,8 @@ export const VerticalWithToggles: Story = {
         onPressedChange={() => {}}
         actionIcon={<AddIcon className="size-tiny" />}
         onActionClick={() => {}}
-        id="semio.sketchpad.app.kit.kitApp.showQualities"
-        actionId="semio.sketchpad.app.kit.kitApp.createQuality"
+        id="compose.sketchpad.app.kit.kitApp.showQualities"
+        actionId="compose.sketchpad.app.kit.kitApp.createQuality"
         icon={<AwardIcon className="size-tiny" />}
       />,
       <Toggle
@@ -169,8 +169,8 @@ export const VerticalWithToggles: Story = {
         onPressedChange={() => {}}
         actionIcon={<AddIcon className="size-tiny" />}
         onActionClick={() => {}}
-        id="semio.sketchpad.app.kit.kitApp.showFiles"
-        actionId="semio.sketchpad.app.kit.kitApp.createFile"
+        id="compose.sketchpad.app.kit.kitApp.showFiles"
+        actionId="compose.sketchpad.app.kit.kitApp.createFile"
         icon={<DocumentIcon className="size-tiny" />}
       />,
     ].map((content) => ({ content })),

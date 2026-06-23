@@ -1,12 +1,12 @@
 ---
 name: kit store backbone generalization
-overview: "Split the current blocking `KitStore` into a three-task async control plane in `semio/rs`: `wip` (local replica + sessions/drafts/transactions), `backbone kit stub` (RPC proxy to an authoritative out-of-process kit graph with three concrete flavors — Dev/Local/Remote), and a `coordinator` that owns a synchronizer graph and writes merge conflicts into a registry. `semio/store` becomes the full JSON-RPC surface over this new `KitStore`."
+overview: "Split the current blocking `KitStore` into a three-task async control plane in `compose/rs`: `wip` (local replica + sessions/drafts/transactions), `backbone kit stub` (RPC proxy to an authoritative out-of-process kit graph with three concrete flavors — Dev/Local/Remote), and a `coordinator` that owns a synchronizer graph and writes merge conflicts into a registry. `compose/store` becomes the full JSON-RPC surface over this new `KitStore`."
 todos:
  - id: rename_kitgraph
    content: Rename current `KitStore` → `KitGraph` in `pub mod kit` (→ `pub mod kit_graph`); keep transitional `pub use` alias so the crate still compiles
    status: completed
  - id: async_deps
-   content: Add `async-executor`, `async-channel`, `async-lock` deps to `semio/rs/Cargo.toml` and set up a shared executor thread
+   content: Add `async-executor`, `async-channel`, `async-lock` deps to `compose/rs/Cargo.toml` and set up a shared executor thread
    status: completed
  - id: wip_task
    content: Add `pub mod wip_kit` with async actor wrapping `KitGraph` and routing `KitStoreCommand::execute` via a channel
@@ -27,25 +27,25 @@ todos:
    content: Implement `DevBackbone` (JSON file sync) with tempfile-atomic writes and periodic pull
    status: completed
  - id: local_backbone
-   content: Implement `LocalBackbone` (`.semio/kit.db` + `.semio/files/BLOBHASH.EXT`) including `set_active_checkpoint` file materialization
+   content: Implement `LocalBackbone` (`.compose/kit.db` + `.compose/files/BLOBHASH.EXT`) including `set_active_checkpoint` file materialization
    status: completed
  - id: remote_backbone
-   content: Implement `RemoteBackbone` (websocket to semio/hub) with a thin JSON wire envelope, native + wasm cfg-gated
+   content: Implement `RemoteBackbone` (websocket to compose/hub) with a thin JSON wire envelope, native + wasm cfg-gated
    status: completed
  - id: command_routing
    content: Extend `KitStoreCommand` with `AttachBackbone`/`DetachBackbone`/`SetActiveCheckpoint`/`ListConflicts`/`ResolveConflict`/`BackboneStatus`/`SyncNow` variants + results
    status: completed
  - id: store_bin_jsonrpc
-   content: Update `semio/store/bin.rs` + `semio/store/jsonrpc.rs` to install the new `KitStore`, drive the executor, and add the new method catalog entries
+   content: Update `compose/store/bin.rs` + `compose/store/jsonrpc.rs` to install the new `KitStore`, drive the executor, and add the new method catalog entries
    status: completed
  - id: tests_rs
-   content: Extend existing `semio/rs/tests/` file with coverage for attach/detach, Dev/Local/Remote backbones, conflict recording, active-checkpoint swap, no-backbone mode
+   content: Extend existing `compose/rs/tests/` file with coverage for attach/detach, Dev/Local/Remote backbones, conflict recording, active-checkpoint swap, no-backbone mode
    status: completed
  - id: tests_store
-   content: Extend `semio/store/tests/rpc.rs` with NDJSON coverage for the new backbone + conflict methods (DevBackbone round-trip)
+   content: Extend `compose/store/tests/rpc.rs` with NDJSON coverage for the new backbone + conflict methods (DevBackbone round-trip)
    status: completed
  - id: docs
-   content: Update `semio/rs/AGENTS.md`, `semio/store/AGENTS.md`, and the version-control paragraph in `semio/AGENTS.md` + root `AGENTS.md`
+   content: Update `compose/rs/AGENTS.md`, `compose/store/AGENTS.md`, and the version-control paragraph in `compose/AGENTS.md` + root `AGENTS.md`
    status: completed
  - id: cleanup_alias
    content: Remove the transitional `pub use kit_graph::*` once all intra-crate callers reference `KitGraph` directly
@@ -55,15 +55,15 @@ isProject: false
 
 # Kit Store Backbone Generalization
 
-## 1. Terminology rename inside `semio/rs`
+## 1. Terminology rename inside `compose/rs`
 
 The current `KitStore` conflates three roles (live graph, VCS state, control plane). Split them:
 
-- Existing `KitStore` in [`semio/rs/lib.rs`](semio/rs/lib.rs) (line ~13998) is renamed `KitGraph` in a new `pub mod kit_graph`. Keeps the same fields (entity collections + VCS tables: `initial`, `checkpoints`, `alternatives`, `sessions`, `the_kit_head`, `children`) and event bus. `KitStoreRef` becomes `KitGraphRef`. All existing `impl KitStore` blocks (VCS, commands, wasm helpers, io) move to `impl KitGraph`. This is a mechanical rename; the internals keep working.
+- Existing `KitStore` in [`compose/rs/lib.rs`](compose/rs/lib.rs) (line ~13998) is renamed `KitGraph` in a new `pub mod kit_graph`. Keeps the same fields (entity collections + VCS tables: `initial`, `checkpoints`, `alternatives`, `sessions`, `the_kit_head`, `children`) and event bus. `KitStoreRef` becomes `KitGraphRef`. All existing `impl KitStore` blocks (VCS, commands, wasm helpers, io) move to `impl KitGraph`. This is a mechanical rename; the internals keep working.
 - Existing `pub mod kit_store_command` (line 4201) keeps its command enums (`KitStoreCommand`, `SessionCommand`, `KitDraftCommand`, `TransactionCommand`, `KitCheckpointCommand`, `KitAlternativeCommand`) but `.execute(kit: &KitGraphRef)` now runs against a `KitGraph`, not the new `KitStore`.
 - A new `pub mod kit_store` holds the new control-plane `KitStore` described below.
 
-No external bundle (py/net/js/react/go) talks to `KitStore` directly — they all go through `semio-store` JSON-RPC, so the rename is contained to `semio/rs` + `semio/store`.
+No external bundle (py/net/js/react/go) talks to `KitStore` directly — they all go through `compose-store` JSON-RPC, so the rename is contained to `compose/rs` + `compose/store`.
 
 ## 2. New control plane: `pub mod kit_store`
 
@@ -83,7 +83,7 @@ pub struct KitStore {
 
 ## 3. Async runtime
 
-Use `async-executor` (user-selected). Add to [`semio/rs/Cargo.toml`](semio/rs/Cargo.toml):
+Use `async-executor` (user-selected). Add to [`compose/rs/Cargo.toml`](compose/rs/Cargo.toml):
 
 ```toml
 async-executor = "1"
@@ -111,7 +111,7 @@ enum WipMsg {
 }
 ```
 
-- `Execute(KitStoreCommand)` routes to the existing `KitStoreCommand::execute(&KitGraphRef)` dispatcher ([`lib.rs:4304`](semio/rs/lib.rs)).
+- `Execute(KitStoreCommand)` routes to the existing `KitStoreCommand::execute(&KitGraphRef)` dispatcher ([`lib.rs:4304`](compose/rs/lib.rs)).
 - When a `FinalizeToKitCheckpoint` produces a new checkpoint, wip **also** sends it to the coordinator via `CoordinatorMsg::WipCheckpoint(cp)`.
 - `ApplyAuthoritative` is how the coordinator flows pulled/rebased history back into wip (overwrites `initial` + `checkpoints` + `the_kit_head` on the wip `KitGraph`).
 
@@ -137,8 +137,8 @@ The stub task holds a local cache (`KitGraph`) of the authoritative state and fo
 Three concrete impls in `pub mod backbone`:
 
 - **`DevBackbone`** (`native`): reads/writes a single JSON file. Uses `notify` (or periodic poll, to keep deps minimal — periodic every 500ms via `Timer::after` from `async-io`) to detect external changes. On `propose`, checks `current_tip == cp.parent`; on match, appends + rewrites JSON atomically via tempfile swap; else rejects with new tip.
-- **`LocalBackbone`** (`native`): owns `.semio/kit.db` (full kit graph via existing `io::sqlite`) and `.semio/files/BLOBHASH.EXT`. Tracks an `active_checkpoint`; `set_active_checkpoint(id)` materializes the files of that checkpoint onto disk (writing blobs from `.semio/files/` into their original relative paths and removing files not in that checkpoint). Same propose-or-reject semantics as Dev.
-- **`RemoteBackbone`** (`native + wasm`): websocket to `semio/hub`. Uses `async-tungstenite` on native and `ws_stream_wasm` on wasm (behind cfg). Wire protocol is a minimal JSON envelope `{ kind: "pull" | "propose" | "accepted" | "rejected" | "newTip" | "checkpoints", ... }` with `KitCheckpoint` / `Id` payloads (same serde shape used everywhere else).
+- **`LocalBackbone`** (`native`): owns `.compose/kit.db` (full kit graph via existing `io::sqlite`) and `.compose/files/BLOBHASH.EXT`. Tracks an `active_checkpoint`; `set_active_checkpoint(id)` materializes the files of that checkpoint onto disk (writing blobs from `.compose/files/` into their original relative paths and removing files not in that checkpoint). Same propose-or-reject semantics as Dev.
+- **`RemoteBackbone`** (`native + wasm`): websocket to `compose/hub`. Uses `async-tungstenite` on native and `ws_stream_wasm` on wasm (behind cfg). Wire protocol is a minimal JSON envelope `{ kind: "pull" | "propose" | "accepted" | "rejected" | "newTip" | "checkpoints", ... }` with `KitCheckpoint` / `Id` payloads (same serde shape used everywhere else).
 
 All three implement the same trait; `BackboneConfig` is a serde enum with variants `Dev { path }`, `Local { folder }`, `Remote { url, session_id }`, so `KitStore::attach_backbone(cfg)` can be driven purely from JSON-RPC.
 
@@ -179,7 +179,7 @@ pub struct ConflictRegistry { inner: async_lock::Mutex<HashMap<Id, KitConflict>>
 pub struct KitConflict { pub id: Id, pub wip_checkpoint: KitCheckpoint, pub backbone_tip: Option<Id>, pub reason: String, pub created_at: String }
 ```
 
-Simple in-memory registry today; persistence piggybacks on whichever backbone is attached (e.g., LocalBackbone stores conflicts as a side-table in `.semio/kit.db`) — out of scope for this pass, left as a follow-up.
+Simple in-memory registry today; persistence piggybacks on whichever backbone is attached (e.g., LocalBackbone stores conflicts as a side-table in `.compose/kit.db`) — out of scope for this pass, left as a follow-up.
 
 ## 5. Command routing
 
@@ -204,9 +204,9 @@ pub enum KitStoreCommand {
 
 Matching `KitStoreCommandResult` variants. Existing variants keep their current behavior.
 
-## 6. `semio/store` JSON-RPC surface
+## 6. `compose/store` JSON-RPC surface
 
-[`semio/store/jsonrpc.rs`](semio/store/jsonrpc.rs) changes:
+[`compose/store/jsonrpc.rs`](compose/store/jsonrpc.rs) changes:
 
 - `install_k` now installs a `KitStore` (new) instead of the bare `KitStoreRef`/`KitGraphRef`.
 - The event thread subscribes to `KitStore::subscribe_events()` which merges wip's `KitEvent` bus with coordinator events (`BackboneAttached`, `ConflictRecorded`, `CheckpointPushed`, etc., encoded as new `KitEvent::Sync(..)` variants to keep wire shape uniform).
@@ -219,8 +219,8 @@ Matching `KitStoreCommandResult` variants. Existing variants keep their current 
   - `conflicts.resolve` `{ id, strategy }`
   - `coordinator.syncNow`
 - Existing methods (`kit.execute`, `kit.executeChangeKitCommands`, `kit.snapshot`, `kit.theKitDto`, `kit.materializeAt`, `vcs.undo/redo`, `design.*`, `query.*`, `io.*`) now go through `KitStore` → `wip` via channels but keep identical wire shape.
-- Update [`semio/store/AGENTS.md`](semio/store/AGENTS.md) method catalog.
-- Update [`semio/store/bin.rs`](semio/store/bin.rs): replace `OnceLock<KitStoreRef>` with `OnceLock<KitStore>` and spawn the executor-driver thread at startup.
+- Update [`compose/store/AGENTS.md`](compose/store/AGENTS.md) method catalog.
+- Update [`compose/store/bin.rs`](compose/store/bin.rs): replace `OnceLock<KitStoreRef>` with `OnceLock<KitStore>` and spawn the executor-driver thread at startup.
 
 ## 7. WASM surface
 
@@ -228,11 +228,11 @@ Matching `KitStoreCommandResult` variants. Existing variants keep their current 
 
 - `KitStoreHandle` now wraps the new `KitStore`. Its existing methods (`executeChangeKitCommands`, `executeReadKitCommands`, `snapshot`, `theKit`, session/draft/transaction/alternative/checkpoint ops) are unchanged in name + JS-visible shape but internally post to the wip channel.
 - On wasm, Dev/LocalBackbone are unavailable (return an RPC error if selected). RemoteBackbone works (websocket via `ws_stream_wasm`).
-- Only the existing JS surface in [`semio/js/index.ts`](semio/js/index.ts) + [`semio/js/worker.ts`](semio/js/worker.ts) is kept compatible; no new JS code in this plan — new methods surface via the existing `kitStoreHandle.execute(cmd)` path.
+- Only the existing JS surface in [`compose/js/index.ts`](compose/js/index.ts) + [`compose/js/worker.ts`](compose/js/worker.ts) is kept compatible; no new JS code in this plan — new methods surface via the existing `kitStoreHandle.execute(cmd)` path.
 
 ## 8. File layout
 
-All inline modules inside [`semio/rs/lib.rs`](semio/rs/lib.rs) (per its AGENTS rule: single-file crate root). The module order:
+All inline modules inside [`compose/rs/lib.rs`](compose/rs/lib.rs) (per its AGENTS rule: single-file crate root). The module order:
 
 ```
 pub mod kit_graph         // renamed from pub mod kit
@@ -247,23 +247,23 @@ pub mod kit_conflict_registry
 pub mod kit_store         // new control plane
 ```
 
-`pub use kit_graph::*;` aliases are added so downstream `use semio::kit::*` keeps working during the transition (temporary; removed once `semio/store` is rewired).
+`pub use kit_graph::*;` aliases are added so downstream `use compose::kit::*` keeps working during the transition (temporary; removed once `compose/store` is rewired).
 
 ## 9. Tests (extend existing files only)
 
-- [`semio/rs/tests/`](semio/rs/tests/): add cases in the existing integration test file for:
+- [`compose/rs/tests/`](compose/rs/tests/): add cases in the existing integration test file for:
   - Attach/detach DevBackbone round-trip (wip → coordinator → file → pull).
   - LocalBackbone active-checkpoint swap puts the right files on disk.
   - RemoteBackbone against a minimal in-test mock hub over a loopback websocket.
   - Conflict path: wip commits A, external writer advances backbone to B, coordinator rejects → registry has one entry.
   - No-backbone mode: wip commits compile, no coordinator propose.
-- [`semio/store/tests/rpc.rs`](semio/store/tests/rpc.rs): add NDJSON coverage for `backbone.attach` (Dev variant on a temp file), `backbone.status`, `conflicts.list`, and a round-trip where two clients share a DevBackbone file.
+- [`compose/store/tests/rpc.rs`](compose/store/tests/rpc.rs): add NDJSON coverage for `backbone.attach` (Dev variant on a temp file), `backbone.status`, `conflicts.list`, and a round-trip where two clients share a DevBackbone file.
 
 ## 10. Docs
 
-- [`semio/rs/AGENTS.md`](semio/rs/AGENTS.md): add Systems section listing the four actors (`wip`, `backbone kit stub`, `coordinator`, `conflict registry`), and a small mermaid showing the data flow described in 4.3.
-- [`semio/store/AGENTS.md`](semio/store/AGENTS.md): add the new method catalog entries (section 6) and note that `semio-store` is a full RPC interface over `KitStore` (not a backbone).
-- [`AGENTS.md`](AGENTS.md) (repo root) and [`semio/AGENTS.md`](semio/AGENTS.md): one-paragraph entry in the version-control section on backbones.
+- [`compose/rs/AGENTS.md`](compose/rs/AGENTS.md): add Systems section listing the four actors (`wip`, `backbone kit stub`, `coordinator`, `conflict registry`), and a small mermaid showing the data flow described in 4.3.
+- [`compose/store/AGENTS.md`](compose/store/AGENTS.md): add the new method catalog entries (section 6) and note that `compose-store` is a full RPC interface over `KitStore` (not a backbone).
+- [`AGENTS.md`](AGENTS.md) (repo root) and [`compose/AGENTS.md`](compose/AGENTS.md): one-paragraph entry in the version-control section on backbones.
 
 ## 11. Execution order (keeps the tree compilable)
 
@@ -273,6 +273,6 @@ pub mod kit_store         // new control plane
 4. Add `pub mod backbone` trait + `DevBackbone` + `AttachBackbone` / `DetachBackbone` commands, wire into coordinator. Extend Rust tests.
 5. Add `LocalBackbone` (reuses existing sqlite io + new file-blob store), with active-checkpoint semantics. Extend tests.
 6. Add `RemoteBackbone` + minimal mock hub for tests. Extend tests.
-7. Update [`semio/store/jsonrpc.rs`](semio/store/jsonrpc.rs) method catalog and [`semio/store/bin.rs`](semio/store/bin.rs); add RPC-level tests in `rpc.rs`.
+7. Update [`compose/store/jsonrpc.rs`](compose/store/jsonrpc.rs) method catalog and [`compose/store/bin.rs`](compose/store/bin.rs); add RPC-level tests in `rpc.rs`.
 8. Remove the `pub use kit_graph::*` transitional alias once all intra-crate references are migrated.
 9. Docs pass (section 10).

@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-const sketchpad = join(import.meta.dirname, "../../../../../../semio/client/lib/sketchpad/react/index.tsx");
+const sketchpad = join(import.meta.dirname, "../../../../../../compose/client/lib/sketchpad/react/index.tsx");
 let text = readFileSync(sketchpad, "utf8");
 
 text = text.replace(

@@ -2,28 +2,28 @@
 
 ## Todos
 
-# semio Validation & Diff-Based Fix System
+# compose Validation & Diff-Based Fix System
 
 **Date:** 2025-11-23  
 **Status:** ✅ Complete
 
 ## Overview
 
-This document describes the implementation of a clean validation architecture for Semio:
+This document describes the implementation of a clean validation architecture for Compose:
 
-1. **Pure domain logic in `semio.ts`** - No JSON, no editor constructs, just `Kit` and `KitDiff`
+1. **Pure domain logic in `compose.ts`** - No JSON, no editor constructs, just `Kit` and `KitDiff`
 2. **Diff-based fixes** - Every suggestion is a `KitDiff` using existing tooling
 3. **Minimal VS Code extension** - JSON linter that uses domain logic
 
 ## Architecture
 
-### Layer 1: Domain Logic (`semio.ts`)
+### Layer 1: Domain Logic (`compose.ts`)
 
 Pure functions working only with `Kit` and `KitDiff`:
 
-- **Validation Core Types**: `Problem`, `Fix`, `SemioDomainLocation`
-- **Validation Engine**: `validateSemioKit`, `Constraint`
-- **Fix Helper**: `semioMakeFix` (generates `KitDiff` from mutations)
+- **Validation Core Types**: `Problem`, `Fix`, `ComposeDomainLocation`
+- **Validation Engine**: `validateComposeKit`, `Constraint`
+- **Fix Helper**: `composeMakeFix` (generates `KitDiff` from mutations)
 - **Default Constraints**:
   - GUID uniqueness
   - Design sibling name uniqueness
@@ -34,13 +34,13 @@ Pure functions working only with `Kit` and `KitDiff`:
 JSON-aware linter:
 
 - Parses JSON → `Kit` using `deserializeKit`
-- Runs `validateSemioKit`
-- Maps `SemioDomainLocation` → JSON ranges
+- Runs `validateComposeKit`
+- Maps `ComposeDomainLocation` → JSON ranges
 - Applies fixes via `applyKitDiff` + `serializeKit` + full document replacement
 
 ## Implementation Status
 
-1. ✅ Add validation core types to `semio.ts`
+1. ✅ Add validation core types to `compose.ts`
 2. ✅ Add validation context & engine
 3. ✅ Add fix helper
 4. ✅ Implement GUID uniqueness constraint
@@ -71,7 +71,7 @@ All implemented constraints follow the same pattern:
 - Collect entities by scope (global, siblings, within parent)
 - Group by name/path
 - Find duplicates
-- Generate fixes with `semioMakeFix` and `generateUniqueName`
+- Generate fixes with `composeMakeFix` and `generateUniqueName`
 
 | Constraint              | Scope         | Field | Status         |
 | ----------------------- | ------------- | ----- | -------------- |
@@ -91,7 +91,7 @@ All implemented constraints follow the same pattern:
 
 ### 100% JSON-Agnostic Domain Logic
 
-`semio.ts` contains **zero JSON logic**:
+`compose.ts` contains **zero JSON logic**:
 
 - No JSON paths
 - No JSON parsing/serialization (except internal cloning for diffs)
@@ -113,7 +113,7 @@ This ensures:
 
 ### Domain-Only Locations
 
-`SemioDomainLocation` describes "where" in domain terms:
+`ComposeDomainLocation` describes "where" in domain terms:
 
 ```typescript
 {
@@ -130,7 +130,7 @@ The VS Code extension translates this to JSON ranges.
 ### In Sketchpad UI
 
 ```typescript
-const result = validateSemioKit(currentKit);
+const result = validateComposeKit(currentKit);
 showProblems(result.issues);
 
 function applyFix(issue: Problem, fix: Fix) {
@@ -143,7 +143,7 @@ function applyFix(issue: Problem, fix: Fix) {
 
 ```typescript
 const kit = deserializeKit(jsonString);
-const result = validateSemioKit(kit);
+const result = validateComposeKit(kit);
 const diagnostics = result.issues.map(issueToDiagnostic);
 const codeActions = result.issues.flatMap(issueToCodeActions);
 ```
@@ -158,24 +158,24 @@ const codeActions = result.issues.flatMap(issueToCodeActions);
 
 ## Implementation Details
 
-### Domain Logic (`js/semio/semio.ts`)
+### Domain Logic (`js/compose/compose.ts`)
 
 Added ~550 lines of pure validation logic:
 
-- **Core Types** (7 types): `SemioEntityKind`, `Severity`, `SemioDomainLocation`, `Fix`, `Problem`, `ValidationResult`, `ValidationContext`
-- **Engine** (5 functions): `buildValidationContext`, `validateSemioKit`, `semioMakeFix`, `hasSemioErrors`, `updateGuidEverywhere`
+- **Core Types** (7 types): `ComposeEntityKind`, `Severity`, `ComposeDomainLocation`, `Fix`, `Problem`, `ValidationResult`, `ValidationContext`
+- **Engine** (5 functions): `buildValidationContext`, `validateComposeKit`, `composeMakeFix`, `hasComposeErrors`, `updateGuidEverywhere`
 - **Constraints** (11 constraints):
-  - `semioGuidUniquenessConstraint`
-  - `semioTypeNameUniquenessConstraint`
-  - `semioDesignNameUniquenessConstraint`
-  - `semioPieceNameUniquenessConstraint`
-  - `semioQualityNameUniquenessConstraint`
-  - `semioPortNameUniquenessConstraint`
-  - `semioFileNameUniquenessConstraint`
-  - `semioFolderNameUniquenessConstraint`
-  - `semioPortNameUniquenessConstraint`
-  - `semioModelNameUniquenessConstraint`
-  - `semioLayerPathUniquenessConstraint`
+  - `composeGuidUniquenessConstraint`
+  - `composeTypeNameUniquenessConstraint`
+  - `composeDesignNameUniquenessConstraint`
+  - `composePieceNameUniquenessConstraint`
+  - `composeQualityNameUniquenessConstraint`
+  - `composePortNameUniquenessConstraint`
+  - `composeFileNameUniquenessConstraint`
+  - `composeFolderNameUniquenessConstraint`
+  - `composePortNameUniquenessConstraint`
+  - `composeModelNameUniquenessConstraint`
+  - `composeLayerPathUniquenessConstraint`
 
 ### VS Code Extension (`js/vscode`)
 
@@ -188,7 +188,7 @@ Added ~280 lines of JSON-aware linting:
 
 ### Files Modified
 
-1. `js/semio/semio.ts` - Added validation system after Kit Import/Export section (~550 lines)
+1. `js/compose/compose.ts` - Added validation system after Kit Import/Export section (~550 lines)
 2. `js/vscode/src/extension.ts` - Complete rewrite with validation logic (~280 lines)
 3. `js/vscode/package.json` - Updated metadata and added dependencies
 4. `js/vscode/README.md` - Updated with references to central documentation
@@ -204,7 +204,7 @@ To test the VS Code extension:
 1. Open VS Code in `js/vscode` folder
 2. Run `npm install` to install dependencies (including `jsonc-parser`)
 3. Press `F5` to launch Extension Development Host
-4. Open a kit JSON file (e.g., `assets/semio/kit_metabolism.json`)
+4. Open a kit JSON file (e.g., `assets/compose/kit_metabolism.json`)
 5. Intentionally create validation errors:
    - Duplicate a GUID
    - Duplicate a design name among siblings

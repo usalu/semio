@@ -4,7 +4,7 @@
 
 # Previously
 
-The `metabolism.zip` asset contained SQL tables with the old "port" naming convention instead of "connector". The regeneration script (`scripts/regenerate-metabolism.tsx`) had import issues trying to use `MetabolismKit` from `semio/assets`, and only wrote the zip file to `assets/semio/metabolism.zip` without copying it to public folders where it's served for development (`js/semio/public/`, `js/sketchpad/public/`, `js/play/public/`).
+The `metabolism.zip` asset contained SQL tables with the old "port" naming convention instead of "connector". The regeneration script (`scripts/regenerate-metabolism.tsx`) had import issues trying to use `MetabolismKit` from `compose/assets`, and only wrote the zip file to `assets/compose/metabolism.zip` without copying it to public folders where it's served for development (`js/compose/public/`, `js/sketchpad/public/`, `js/play/public/`).
 
 # Plan
 
@@ -17,10 +17,10 @@ The `metabolism.zip` asset contained SQL tables with the old "port" naming conve
 
 ## Fixed Import Problem
 
-Changed from importing `MetabolismKit` from `semio/assets` (which had module resolution issues) to reading the JSON file directly:
+Changed from importing `MetabolismKit` from `compose/assets` (which had module resolution issues) to reading the JSON file directly:
 
 ```typescript
-const kitPath = join(__dirname, "..", "assets", "semio", "kit_metabolism.json");
+const kitPath = join(__dirname, "..", "assets", "compose", "kit_metabolism.json");
 const kitJson = readFileSync(kitPath, "utf-8");
 const kit = JSON.parse(kitJson) as Kit;
 ```
@@ -29,7 +29,7 @@ const kit = JSON.parse(kitJson) as Kit;
 
 Added automatic copying of the regenerated zip to all public folders:
 
-- `js/semio/public/metabolism.zip`
+- `js/compose/public/metabolism.zip`
 - `js/sketchpad/public/metabolism.zip`
 - `js/play/public/metabolism.zip`
 

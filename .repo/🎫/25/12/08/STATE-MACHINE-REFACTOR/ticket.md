@@ -81,7 +81,7 @@ Created in `Sketchpad.tsx`:
 
 - `OriginContext` - React context for tracking command origin
 - `OriginProvider` - Wraps children with specified origin id
-- `useOrigin()` - Returns current origin from context (defaults to "semio.sketchpad.unknown")
+- `useOrigin()` - Returns current origin from context (defaults to "compose.sketchpad.unknown")
 - `useOriginSafe()` - Returns origin or null if not in provider
 
 Components with an `id` should wrap their children in `<OriginProvider id={...}>` to provide origin for triadic hooks.

@@ -3,7 +3,7 @@ import json
 import re
 from pathlib import Path
 
-path = Path(r"c:\git\semio\semio\client\lib\rs\lib.rs")
+path = Path(r"c:\git\compose\compose\client\lib\rs\lib.rs")
 names_path = Path(__file__).with_name("gap_surface_names.json")
 text = path.read_text(encoding="utf-8")
 names = json.loads(names_path.read_text(encoding="utf-8"))

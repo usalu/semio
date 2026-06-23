@@ -8,12 +8,12 @@ async function main() {
   const page = await context.newPage();
 
   await page.addInitScript(() => {
-    (window as any).__SEMIO_PERFORMANCE__ = {
+    (window as any).__COMPOSE_PERFORMANCE__ = {
       longTaskSupported: false,
       longTasks: [],
       markers: [],
     };
-    const store = (window as any).__SEMIO_PERFORMANCE__;
+    const store = (window as any).__COMPOSE_PERFORMANCE__;
     const observerConstructor = (window as any).PerformanceObserver;
     const supportedEntryKinds = observerConstructor?.supportedEntryTypes ?? [];
     if (!observerConstructor || !supportedEntryKinds.includes("longtask")) return;
@@ -45,7 +45,7 @@ async function main() {
 
   await page.waitForTimeout(5000);
 
-  const leftPanelToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.leftSidePanel"]');
+  const leftPanelToggle = page.locator('[id="compose.sketchpad.navbar.panelToggle.leftSidePanel"]');
   if (await leftPanelToggle.isVisible().catch(() => false)) {
     const leftPanelOpen = await page.locator('[data-panel="leftSidePanel"]').isVisible().catch(() => false);
     if (leftPanelOpen) {
@@ -56,14 +56,14 @@ async function main() {
 
   // Clear long tasks
   await page.evaluate(() => {
-    const store = (window as any).__SEMIO_PERFORMANCE__;
+    const store = (window as any).__COMPOSE_PERFORMANCE__;
     store.longTasks = [];
     store.markers = [];
   });
 
   // Mark time before zoom
   await page.evaluate(() => {
-    (window as any).__SEMIO_PERFORMANCE__.markers.push({ event: 'before_zoom_in', time: performance.now() });
+    (window as any).__COMPOSE_PERFORMANCE__.markers.push({ event: 'before_zoom_in', time: performance.now() });
   });
 
   // Zoom in
@@ -76,7 +76,7 @@ async function main() {
   await page.waitForTimeout(500);
 
   await page.evaluate(() => {
-    (window as any).__SEMIO_PERFORMANCE__.markers.push({ event: 'after_zoom_in', time: performance.now() });
+    (window as any).__COMPOSE_PERFORMANCE__.markers.push({ event: 'after_zoom_in', time: performance.now() });
   });
 
   // Zoom out
@@ -84,7 +84,7 @@ async function main() {
   await page.waitForTimeout(500);
 
   await page.evaluate(() => {
-    (window as any).__SEMIO_PERFORMANCE__.markers.push({ event: 'after_zoom_out', time: performance.now() });
+    (window as any).__COMPOSE_PERFORMANCE__.markers.push({ event: 'after_zoom_out', time: performance.now() });
   });
 
   // Drag
@@ -99,24 +99,24 @@ async function main() {
   await page.waitForTimeout(50);
 
   await page.evaluate(() => {
-    (window as any).__SEMIO_PERFORMANCE__.markers.push({ event: 'before_drag', time: performance.now() });
+    (window as any).__COMPOSE_PERFORMANCE__.markers.push({ event: 'before_drag', time: performance.now() });
   });
 
   await page.mouse.move(startX + 100, startY, { steps: 20 });
 
   await page.evaluate(() => {
-    (window as any).__SEMIO_PERFORMANCE__.markers.push({ event: 'after_drag_move', time: performance.now() });
+    (window as any).__COMPOSE_PERFORMANCE__.markers.push({ event: 'after_drag_move', time: performance.now() });
   });
 
   await page.mouse.up();
 
   await page.evaluate(() => {
-    (window as any).__SEMIO_PERFORMANCE__.markers.push({ event: 'after_mouse_up', time: performance.now() });
+    (window as any).__COMPOSE_PERFORMANCE__.markers.push({ event: 'after_mouse_up', time: performance.now() });
   });
 
   // Read immediately
   const result = await page.evaluate(() => {
-    const store = (window as any).__SEMIO_PERFORMANCE__;
+    const store = (window as any).__COMPOSE_PERFORMANCE__;
     return {
       longTasks: store.longTasks,
       markers: store.markers,
@@ -182,7 +182,7 @@ async function main() {
   // Wait 10 seconds and check for post-drag cascades
   await page.waitForTimeout(10000);
   const laterResult = await page.evaluate(() => {
-    const store = (window as any).__SEMIO_PERFORMANCE__;
+    const store = (window as any).__COMPOSE_PERFORMANCE__;
     return store.longTasks;
   });
   

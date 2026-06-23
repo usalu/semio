@@ -2,7 +2,7 @@ import json
 import os
 
 root = "/workspaces/semio"
-scopes = ["semio", "coda", "repo"]
+scopes = ["compose", "coda", "repo"]
 
 for dirpath, dirnames, filenames in os.walk(root):
     if "node_modules" in dirpath or ".venv" in dirpath or ".git" in dirpath:

@@ -3,8 +3,8 @@ import path from "path";
 const browser = await chromium.launch({ headless: true, args: ['--no-sandbox'] });
 const page = await browser.newPage();
 await page.addInitScript(() => {
-  (window as any).__SEMIO_PERFORMANCE__ = { longTaskSupported: false, longTasks: [] };
-  const store = (window as any).__SEMIO_PERFORMANCE__;
+  (window as any).__COMPOSE_PERFORMANCE__ = { longTaskSupported: false, longTasks: [] };
+  const store = (window as any).__COMPOSE_PERFORMANCE__;
   const oc = (window as any).PerformanceObserver;
   const sek = oc?.supportedEntryTypes ?? [];
   if (!oc || !sek.includes("longtask")) return;
@@ -18,8 +18,8 @@ await page.addInitScript(() => {
 await page.goto("http://127.0.0.1:5173/");
 await page.waitForLoadState("domcontentloaded");
 await page.waitForTimeout(2000);
-const zipPath = path.resolve(process.cwd(), "semio/assets/semio/metabolism.zip");
-const fileInput = page.locator('[id="semio.sketchpad.app.home.importKit"]');
+const zipPath = path.resolve(process.cwd(), "compose/assets/compose/metabolism.zip");
+const fileInput = page.locator('[id="compose.sketchpad.app.home.importKit"]');
 await fileInput.waitFor({ state: 'attached', timeout: 10000 });
 const [fc] = await Promise.all([
   page.waitForEvent("filechooser", { timeout: 5000 }).catch(() => null),
@@ -41,7 +41,7 @@ if (nakaginRowId) {
 }
 await page.waitForLoadState("networkidle");
 await page.waitForTimeout(10000);
-const leftPanelToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.leftSidePanel"]');
+const leftPanelToggle = page.locator('[id="compose.sketchpad.navbar.panelToggle.leftSidePanel"]');
 if (await leftPanelToggle.isVisible().catch(() => false)) {
   const leftPanelOpen = await page.locator('[data-panel="leftSidePanel"]').isVisible().catch(() => false);
   if (leftPanelOpen) { await leftPanelToggle.click(); await page.waitForTimeout(500); }
@@ -51,13 +51,13 @@ await page.waitForTimeout(3000);
 const waitForStab = async () => {
   for (let i = 0; i < 20; i++) {
     const count = await page.evaluate(() => {
-      const store = (window as any).__SEMIO_PERFORMANCE__;
+      const store = (window as any).__COMPOSE_PERFORMANCE__;
       const tasks = store?.longTasks ?? [];
       return tasks.length;
     });
     await page.waitForTimeout(500);
     const count2 = await page.evaluate(() => {
-      const store = (window as any).__SEMIO_PERFORMANCE__;
+      const store = (window as any).__COMPOSE_PERFORMANCE__;
       return (store?.longTasks ?? []).length;
     });
     if (count === count2) break;
@@ -66,7 +66,7 @@ const waitForStab = async () => {
 await waitForStab();
 // Clear long tasks - exact same as test
 await page.evaluate(() => {
-  const store = (window as any).__SEMIO_PERFORMANCE__;
+  const store = (window as any).__COMPOSE_PERFORMANCE__;
   store.longTasks = [];
 });
 const getVT = async () => await page.evaluate(() => {
@@ -82,7 +82,7 @@ const cx = paneBox!.x + paneBox!.width / 2;
 const cy = paneBox!.y + paneBox!.height / 2;
 // Mark phase
 const markPhase = async (phase: string) => {
-  await page.evaluate((p) => { (window as any).__SEMIO_PERFORMANCE__.currentPhase = p; (window as any).__SEMIO_PERFORMANCE__.phaseStart = performance.now(); }, phase);
+  await page.evaluate((p) => { (window as any).__COMPOSE_PERFORMANCE__.currentPhase = p; (window as any).__COMPOSE_PERFORMANCE__.phaseStart = performance.now(); }, phase);
 };
 // ZOOM IN
 await markPhase("ZOOM_IN");
@@ -118,7 +118,7 @@ for (let i = 0; i < 50; i++) {
 }
 // Read long tasks NOW (same as test)
 const longTaskDurations: number[] = await page.evaluate(() => {
-  const store = (window as any).__SEMIO_PERFORMANCE__;
+  const store = (window as any).__COMPOSE_PERFORMANCE__;
   if (!store) return [];
   return (store.longTasks ?? []).map((e: any) => e.duration);
 });

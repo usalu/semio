@@ -19,8 +19,8 @@
     "framework/playground/renderer/react/vitest.config.ts",
     "ui/styling/vite-elements-assets.ts",
     "cad/js/renderer/vitest.config.ts",
-    "semio/client/lib/sketchpad/js/package.json",
-    "semio/client/lib/sketchpad/js/index.ts",
+    "compose/client/lib/sketchpad/js/package.json",
+    "compose/client/lib/sketchpad/js/index.ts",
     "bun.lock"
   ]
 }

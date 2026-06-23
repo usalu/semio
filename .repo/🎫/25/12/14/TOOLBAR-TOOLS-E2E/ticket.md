@@ -67,7 +67,7 @@ const type = typeScope?.guid;
 
 ## Fix 3: Added toolbar container ID (Sketchpad.tsx)
 
-Added `id="semio.sketchpad.toolbar"` to the toolbar container div for testability.
+Added `id="compose.sketchpad.toolbar"` to the toolbar container div for testability.
 
 ## Fix 4: E2E Test (sketchpad.test.ts)
 

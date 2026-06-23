@@ -2,7 +2,7 @@
   "title": "Fix Sketchpad 3D Model Loading Across Store Providers",
   "emoji": "🔧",
   "status": "closed",
-  "description": "Investigate semio sketchpad scene where 3d files do not show. Fix model URL resolution for all store providers and address related runtime issues discovered in the same flow, including React root reuse and sortable list key warnings when they affect sketchpad. Extend existing tests only; do not add new test files.",
+  "description": "Investigate compose sketchpad scene where 3d files do not show. Fix model URL resolution for all store providers and address related runtime issues discovered in the same flow, including React root reuse and sortable list key warnings when they affect sketchpad. Extend existing tests only; do not add new test files.",
   "summary": "Fixed sketchpad model asset resolution so scene meshes can recover URLs from cached blobs, provider URLs, and persisted remote file metadata across memory/local/remote stores. Also mapped collaborative fileUrls by storage path, reused React roots to prevent duplicate createRoot warnings, and keyed SortableTreeItems children to silence React key warnings. Extended the existing sketchpad provider-resolution test block with fileUrls-path assertions and remote-metadata fallback coverage.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1031"

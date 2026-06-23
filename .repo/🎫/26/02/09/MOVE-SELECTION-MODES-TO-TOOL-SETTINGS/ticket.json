@@ -2,7 +2,7 @@
   "title": "Move Selection Modes to Tool Settings",
   "emoji": "📦",
   "status": "closed",
-  "summary": "Added selection-composition functionality tests inside existing semio test structure by extending semio/js/semio.test.ts (no new test files). Verified with npm run test:unit (12/12).",
+  "summary": "Added selection-composition functionality tests inside existing compose test structure by extending compose/js/compose.test.ts (no new test files). Verified with npm run test:unit (12/12).",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/470"
   }

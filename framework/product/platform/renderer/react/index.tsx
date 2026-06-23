@@ -193,7 +193,7 @@ import {
 	collapseLayout,
 	insertWindowAtDropZone,
 	removeWindowFromLayout,
-	SEMIO_WINDOW_TEMPLATE_MIME,
+	COMPOSE_WINDOW_TEMPLATE_MIME,
 	windowTemplatePaletteTreeDragController,
 	type TreeDragAndDropController,
 	Ui,
@@ -820,7 +820,7 @@ function mapWindowTemplatesToTreeItems(windowKindId: string, templates: readonly
 		label: template.label,
 		draggable: true,
 		dragData: {
-			[SEMIO_WINDOW_TEMPLATE_MIME]: JSON.stringify({ windowKindId, templateId: template.id } satisfies WindowTemplateDropPayload),
+			[COMPOSE_WINDOW_TEMPLATE_MIME]: JSON.stringify({ windowKindId, templateId: template.id } satisfies WindowTemplateDropPayload),
 		},
 		...(template.children?.length ? { defaultOpen: false, items: mapWindowTemplatesToTreeItems(windowKindId, template.children) } : {}),
 	}));
@@ -1344,7 +1344,7 @@ function buildDisplayWindowsTree(host: DisplayHostApi): TreePanelConfig {
 				label: kind.label,
 				draggable: true,
 				dragData: {
-					[SEMIO_WINDOW_TEMPLATE_MIME]: JSON.stringify({ windowKindId: kind.id } satisfies WindowTemplateDropPayload),
+					[COMPOSE_WINDOW_TEMPLATE_MIME]: JSON.stringify({ windowKindId: kind.id } satisfies WindowTemplateDropPayload),
 				},
 			},
 			...mapWindowTemplatesToTreeItems(kind.id, kind.templates),
@@ -3464,10 +3464,10 @@ if (import.meta.vitest) {
 			const tree = new DisplayWindowsTreeDefinition(() => host).resolveTree();
 			const items = tree.sections[0]?.items ?? [];
 			expect(items).toHaveLength(2);
-			const kindRow = JSON.parse(items[0]!.dragData![SEMIO_WINDOW_TEMPLATE_MIME]!) as WindowTemplateDropPayload;
+			const kindRow = JSON.parse(items[0]!.dragData![COMPOSE_WINDOW_TEMPLATE_MIME]!) as WindowTemplateDropPayload;
 			expect(kindRow.windowKindId).toBe("cad-play-shape");
 			expect(kindRow.templateId).toBeUndefined();
-			const templateRow = JSON.parse(items[1]!.dragData![SEMIO_WINDOW_TEMPLATE_MIME]!) as WindowTemplateDropPayload;
+			const templateRow = JSON.parse(items[1]!.dragData![COMPOSE_WINDOW_TEMPLATE_MIME]!) as WindowTemplateDropPayload;
 			expect(templateRow.templateId).toBe("orthographic");
 			expect(items[1]?.defaultOpen).toBe(true);
 			expect(items[1]?.items?.[0]?.label).toBe("Top");
