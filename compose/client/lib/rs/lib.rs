@@ -1161,6 +1161,392 @@ pub mod geom {
         //#endregion
     }
     //#endregion 📐 entity
+
+    //#region 🌤️FlattenDesign
+    /// @emoji 🌤️ Computes absolute piece planes and centers from relative connections.
+    pub mod flatten {
+        use std::collections::{HashMap, HashSet, VecDeque};
+        use std::sync::Arc;
+
+        use crate::geom::{CoordinateInput, PlaneInput, PointInput, PositionInput, VectorInput};
+        use crate::id::Id;
+        use crate::kit::design::connection::Connection;
+        use crate::kit::design::piece::Piece;
+        use crate::kit::design::Design;
+        use crate::kit::r#type::{Connector, Type};
+        use crate::kit::Kit;
+
+        const TOLERANCE: f64 = 0.01;
+        const DIAGRAM_RADIUS: f64 = 2.697;
+        const DIAGRAM_VERTICAL_V_EXTRA: f64 = 1.0;
+        const DIAGRAM_HORIZONTAL_SCALE: f64 = 3.0633;
+
+        fn normalize(v: &mut [f64; 3]) {
+            let len = (v[0] * v[0] + v[1] * v[1] + v[2] * v[2]).sqrt();
+            if len > 0.0 {
+                v[0] /= len;
+                v[1] /= len;
+                v[2] /= len;
+            }
+        }
+
+        fn cross(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
+            [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
+        }
+
+        fn dot(a: [f64; 3], b: [f64; 3]) -> f64 {
+            a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
+        }
+
+        fn deg_to_rad(deg: f64) -> f64 {
+            deg * std::f64::consts::PI / 180.0
+        }
+
+        fn round_f(v: f64) -> f64 {
+            (v * 1_000_000.0).round() / 1_000_000.0
+        }
+
+        fn plane_input_to_matrix(p: PlaneInput) -> [f64; 16] {
+            let x = [p.x_axis.x, p.x_axis.y, p.x_axis.z];
+            let y = [p.y_axis.x, p.y_axis.y, p.y_axis.z];
+            let z = cross(x, y);
+            [
+                x[0], y[0], z[0], p.origin.x, x[1], y[1], z[1], p.origin.y, x[2], y[2], z[2], p.origin.z, 0.0, 0.0, 0.0, 1.0,
+            ]
+        }
+
+        fn matrix_to_plane(m: [f64; 16]) -> PlaneInput {
+            PlaneInput {
+                origin: PointInput { x: m[3], y: m[7], z: m[11] },
+                x_axis: VectorInput { x: m[0], y: m[4], z: m[8] },
+                y_axis: VectorInput { x: m[1], y: m[5], z: m[9] },
+            }
+        }
+
+        fn mul_mat(a: [f64; 16], b: [f64; 16]) -> [f64; 16] {
+            let mut out = [0.0; 16];
+            for col in 0..4 {
+                for row in 0..4 {
+                    out[col * 4 + row] = a[row] * b[col * 4]
+                        + a[4 + row] * b[col * 4 + 1]
+                        + a[8 + row] * b[col * 4 + 2]
+                        + a[12 + row] * b[col * 4 + 3];
+                }
+            }
+            out
+        }
+
+        fn translation(x: f64, y: f64, z: f64) -> [f64; 16] {
+            [1.0, 0.0, 0.0, x, 0.0, 1.0, 0.0, y, 0.0, 0.0, 1.0, z, 0.0, 0.0, 0.0, 1.0]
+        }
+
+        fn rotation_axis(axis: [f64; 3], angle: f64) -> [f64; 16] {
+            let (x, y, z) = (axis[0], axis[1], axis[2]);
+            let c = angle.cos();
+            let s = angle.sin();
+            let t = 1.0 - c;
+            [
+                t * x * x + c,
+                t * x * y + s * z,
+                t * x * z - s * y,
+                0.0,
+                t * x * y - s * z,
+                t * y * y + c,
+                t * y * z + s * x,
+                0.0,
+                t * x * z + s * y,
+                t * y * z - s * x,
+                t * z * z + c,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0,
+            ]
+        }
+
+        fn apply_mat_vec3(m: [f64; 16], v: [f64; 3]) -> [f64; 3] {
+            [
+                m[0] * v[0] + m[4] * v[1] + m[8] * v[2],
+                m[1] * v[0] + m[5] * v[1] + m[9] * v[2],
+                m[2] * v[0] + m[6] * v[1] + m[10] * v[2],
+            ]
+        }
+
+        fn quaternion_from_unit_vectors(from: [f64; 3], to: [f64; 3]) -> [f64; 4] {
+            let r = dot(from, to) + 1.0;
+            let quat = if r < 0.000_001 {
+                if from[0].abs() > from[2].abs() {
+                    [-from[1], from[0], 0.0, 0.0]
+                } else {
+                    [0.0, -from[2], from[1], 0.0]
+                }
+            } else {
+                let c = cross(from, to);
+                [c[0], c[1], c[2], r]
+            };
+            let len = (quat[0] * quat[0] + quat[1] * quat[1] + quat[2] * quat[2] + quat[3] * quat[3]).sqrt();
+            [quat[0] / len, quat[1] / len, quat[2] / len, quat[3] / len]
+        }
+
+        fn quaternion_to_matrix(q: [f64; 4]) -> [f64; 16] {
+            let (x, y, z, w) = (q[0], q[1], q[2], q[3]);
+            let (x2, y2, z2) = (x + x, y + y, z + z);
+            let (xx, xy, xz) = (x * x2, x * y2, x * z2);
+            let (yy, yz, zz) = (y * y2, y * z2, z * z2);
+            let (wx, wy, wz) = (w * x2, w * y2, w * z2);
+            [
+                1.0 - (yy + zz),
+                xy + wz,
+                xz - wy,
+                0.0,
+                xy - wz,
+                1.0 - (xx + zz),
+                yz + wx,
+                0.0,
+                xz + wy,
+                yz - wx,
+                1.0 - (xx + yy),
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0,
+            ]
+        }
+
+        async fn connector_geom(c: &Arc<Connector>) -> (PointInput, VectorInput, f64) {
+            let point = *c.point.read().await;
+            let mut direction = *c.direction.read().await;
+            let mut dir = [direction.x, direction.y, direction.z];
+            normalize(&mut dir);
+            direction = VectorInput { x: dir[0], y: dir[1], z: dir[2] };
+            let t = c.t_param.read().await.unwrap_or(0.0);
+            (point, direction, t)
+        }
+
+        async fn compute_child_plane(parent_plane: PlaneInput, parent_connector: &Arc<Connector>, child_connector: &Arc<Connector>, connection: &Arc<Connection>) -> PlaneInput {
+            let parent_matrix = plane_input_to_matrix(parent_plane);
+            let (parent_point, parent_direction, _) = connector_geom(parent_connector).await;
+            let (child_point, child_direction, _) = connector_geom(child_connector).await;
+            let mut parent_dir = [parent_direction.x, parent_direction.y, parent_direction.z];
+            let mut child_dir = [child_direction.x, child_direction.y, child_direction.z];
+            normalize(&mut parent_dir);
+            normalize(&mut child_dir);
+            let gap = connection.gap.read().await.unwrap_or(0.0);
+            let shift = connection.shift.read().await.unwrap_or(0.0);
+            let rise = connection.rise.read().await.unwrap_or(0.0);
+            let rotation_rad = deg_to_rad(connection.rotation.read().await.unwrap_or(0.0));
+            let turn_rad = deg_to_rad(connection.turn.read().await.unwrap_or(0.0));
+            let tilt_rad = deg_to_rad(connection.tilt.read().await.unwrap_or(0.0));
+            let reverse_child = [-child_dir[0], -child_dir[1], -child_dir[2]];
+            let cross_vec = cross(parent_dir, reverse_child);
+            let cross_len = (cross_vec[0] * cross_vec[0] + cross_vec[1] * cross_vec[1] + cross_vec[2] * cross_vec[2]).sqrt();
+            let align_quat = if cross_len < TOLERANCE {
+                if parent_dir[2].abs() < TOLERANCE {
+                    quaternion_from_unit_vectors([0.0, 1.0, 0.0], [0.0, 0.0, -1.0])
+                } else {
+                    let mut axis = cross([0.0, 0.0, 1.0], parent_dir);
+                    normalize(&mut axis);
+                    let half = std::f64::consts::PI / 2.0;
+                    [axis[0] * half.sin(), axis[1] * half.sin(), axis[2] * half.sin(), half.cos()]
+                }
+            } else {
+                quaternion_from_unit_vectors(reverse_child, parent_dir)
+            };
+            let direction_t = quaternion_to_matrix(align_quat);
+            let y_axis = [0.0, 1.0, 0.0];
+            let parent_rotation_t = quaternion_to_matrix(quaternion_from_unit_vectors(y_axis, parent_dir));
+            let gap_direction = apply_mat_vec3(parent_rotation_t, [0.0, 1.0, 0.0]);
+            let shift_direction = apply_mat_vec3(parent_rotation_t, [1.0, 0.0, 0.0]);
+            let raise_direction = apply_mat_vec3(parent_rotation_t, [0.0, 0.0, 1.0]);
+            let mut turn_axis = apply_mat_vec3(parent_rotation_t, [0.0, 0.0, 1.0]);
+            let mut tilt_axis = apply_mat_vec3(parent_rotation_t, [1.0, 0.0, 0.0]);
+            let mut orientation_t = direction_t;
+            let rotate_t = rotation_axis(parent_dir, -rotation_rad);
+            orientation_t = mul_mat(rotate_t, orientation_t);
+            turn_axis = apply_mat_vec3(rotate_t, turn_axis);
+            tilt_axis = apply_mat_vec3(rotate_t, tilt_axis);
+            orientation_t = mul_mat(rotation_axis(turn_axis, turn_rad), orientation_t);
+            orientation_t = mul_mat(rotation_axis(tilt_axis, tilt_rad), orientation_t);
+            let center_child_t = translation(-child_point.x, -child_point.y, -child_point.z);
+            let mut transform = mul_mat(orientation_t, center_child_t);
+            let gap_transform = translation(gap_direction[0] * gap, gap_direction[1] * gap, gap_direction[2] * gap);
+            let shift_transform = translation(shift_direction[0] * shift, shift_direction[1] * shift, shift_direction[2] * shift);
+            let raise_transform = translation(raise_direction[0] * rise, raise_direction[1] * rise, raise_direction[2] * rise);
+            transform = mul_mat(mul_mat(raise_transform, mul_mat(shift_transform, gap_transform)), transform);
+            transform = mul_mat(translation(parent_point.x, parent_point.y, parent_point.z), transform);
+            matrix_to_plane(mul_mat(parent_matrix, transform))
+        }
+
+        async fn resolve_connector(ty: Option<&Arc<Type>>, connector_id: Option<&Id>, kit: &Arc<Kit>) -> Option<Arc<Connector>> {
+            if let Some(id) = connector_id {
+                if let Some(c) = kit.find_connector(id).await {
+                    return Some(c);
+                }
+                if let Some(t) = ty {
+                    for c in t.has_connectors().await {
+                        if &c.id == id {
+                            return Some(c);
+                        }
+                    }
+                }
+            }
+            if let Some(t) = ty {
+                return t.has_connectors().await.into_iter().next();
+            }
+            None
+        }
+
+        async fn piece_stored_position(piece: &Arc<Piece>) -> Option<PositionInput> {
+            if let Some(n) = piece.position.read().await.as_ref() {
+                return Some(n.snapshot_input().await);
+            }
+            None
+        }
+
+        async fn piece_is_fixed(piece: &Arc<Piece>) -> bool {
+            matches!(*piece.connection_kind.read().await, Some(crate::kit::design::piece::PieceConnectionKind::Fixed))
+        }
+
+        /// @emoji 🌤️ Absolute positions for every piece in a design.
+        pub async fn flatten_design_positions(kit: &Arc<Kit>, design: &Arc<Design>) -> HashMap<Id, PositionInput> {
+            let pieces = design.has_pieces().await;
+            if pieces.is_empty() {
+                return HashMap::new();
+            }
+            let mut piece_map: HashMap<String, Arc<Piece>> = HashMap::new();
+            for p in &pieces {
+                piece_map.insert(p.id.as_str().to_string(), p.clone());
+            }
+            let connections = design.has_connections().await;
+            let mut adjacency: HashMap<String, Vec<(String, Arc<Connection>)>> = HashMap::new();
+            for conn in &connections {
+                let parent_id = conn.parent.read().await.references_piece().await.id.as_str().to_string();
+                let child_id = conn.child.read().await.references_piece().await.id.as_str().to_string();
+                if piece_map.contains_key(&parent_id) && piece_map.contains_key(&child_id) {
+                    adjacency.entry(parent_id.clone()).or_default().push((child_id.clone(), conn.clone()));
+                    adjacency.entry(child_id.clone()).or_default().push((parent_id.clone(), conn.clone()));
+                }
+            }
+            let mut original_centers: HashMap<String, CoordinateInput> = HashMap::new();
+            for p in &pieces {
+                if let Some(pos) = piece_stored_position(p).await {
+                    original_centers.insert(p.id.as_str().to_string(), pos.center);
+                }
+            }
+            let mut piece_planes: HashMap<String, PlaneInput> = HashMap::new();
+            let mut piece_centers: HashMap<String, CoordinateInput> = HashMap::new();
+            let mut visited: HashSet<String> = HashSet::new();
+
+            async fn bfs_root(
+                root_id: &str,
+                piece_map: &HashMap<String, Arc<Piece>>,
+                adjacency: &HashMap<String, Vec<(String, Arc<Connection>)>>,
+                kit: &Arc<Kit>,
+                visited: &mut HashSet<String>,
+                piece_planes: &mut HashMap<String, PlaneInput>,
+                piece_centers: &mut HashMap<String, CoordinateInput>,
+                _original_centers: &HashMap<String, CoordinateInput>,
+            ) {
+                let mut queue: VecDeque<String> = VecDeque::new();
+                queue.push_back(root_id.to_string());
+                visited.insert(root_id.to_string());
+                let root_piece = piece_map.get(root_id).unwrap();
+                if let Some(pos) = piece_stored_position(root_piece).await {
+                    if piece_is_fixed(root_piece).await {
+                        piece_planes.insert(root_id.to_string(), pos.plane);
+                        piece_centers.insert(root_id.to_string(), pos.center);
+                    } else {
+                        piece_planes.insert(root_id.to_string(), PlaneInput::default());
+                        piece_centers.insert(root_id.to_string(), pos.center);
+                    }
+                } else {
+                    piece_planes.insert(root_id.to_string(), PlaneInput::default());
+                    piece_centers.insert(root_id.to_string(), CoordinateInput::default());
+                }
+                while let Some(current_id) = queue.pop_front() {
+                    let current_plane = *piece_planes.get(&current_id).unwrap_or(&PlaneInput::default());
+                    let current_piece = piece_map.get(&current_id).unwrap().clone();
+                    let parent_center = piece_centers.get(&current_id).copied().unwrap_or_default();
+                    for (neighbor_id, conn) in adjacency.get(&current_id).into_iter().flatten() {
+                        if visited.contains(neighbor_id) {
+                            continue;
+                        }
+                        visited.insert(neighbor_id.clone());
+                        let neighbor_piece = piece_map.get(neighbor_id).unwrap().clone();
+                        let parent_side = conn.parent.read().await.clone();
+                        let child_side = conn.child.read().await.clone();
+                        let (parent_piece_id, _child_piece_id) = (
+                            parent_side.references_piece().await.id.as_str().to_string(),
+                            child_side.references_piece().await.id.as_str().to_string(),
+                        );
+                        let (parent_side_ref, child_side_ref) = if parent_piece_id == current_id {
+                            (&parent_side, &child_side)
+                        } else {
+                            (&child_side, &parent_side)
+                        };
+                        let parent_ty = current_piece.is_type().await;
+                        let child_ty = neighbor_piece.is_type().await;
+                        let parent_connector = resolve_connector(parent_ty.as_ref(), parent_side_ref.references_connector().await.as_ref().map(|c| &c.id), kit).await;
+                        let child_connector = resolve_connector(child_ty.as_ref(), child_side_ref.references_connector().await.as_ref().map(|c| &c.id), kit).await;
+                        if parent_connector.is_none() || child_connector.is_none() {
+                            piece_planes.insert(neighbor_id.clone(), PlaneInput::default());
+                            piece_centers.insert(neighbor_id.clone(), CoordinateInput::default());
+                            queue.push_back(neighbor_id.clone());
+                            continue;
+                        }
+                        let parent_connector = parent_connector.unwrap();
+                        let child_connector = child_connector.unwrap();
+                        let child_plane = compute_child_plane(current_plane, &parent_connector, &child_connector, conn).await;
+                        piece_planes.insert(neighbor_id.clone(), child_plane);
+                        let (_, parent_direction, parent_t) = connector_geom(&parent_connector).await;
+                        let connection_u = conn.u.read().await.unwrap_or(0.0);
+                        let connection_v = conn.v.read().await.unwrap_or(0.0);
+                        let (child_u, child_v) = if parent_center.u == 0.0 && parent_center.v == 0.0 {
+                            let angle = 2.0 * std::f64::consts::PI * parent_t;
+                            (DIAGRAM_RADIUS * angle.sin(), DIAGRAM_RADIUS * angle.cos())
+                        } else if parent_direction.z.abs() > 0.5 {
+                            (parent_center.u + connection_u, parent_center.v + connection_v + DIAGRAM_VERTICAL_V_EXTRA)
+                        } else {
+                            (
+                                parent_center.u + connection_u * DIAGRAM_HORIZONTAL_SCALE,
+                                parent_center.v + connection_v * DIAGRAM_HORIZONTAL_SCALE,
+                            )
+                        };
+                        piece_centers.insert(neighbor_id.clone(), CoordinateInput { u: round_f(child_u), v: round_f(child_v) });
+                        queue.push_back(neighbor_id.clone());
+                    }
+                }
+            }
+
+            for p in &pieces {
+                let pid = p.id.as_str().to_string();
+                if !visited.contains(&pid) {
+                    bfs_root(
+                        &pid,
+                        &piece_map,
+                        &adjacency,
+                        kit,
+                        &mut visited,
+                        &mut piece_planes,
+                        &mut piece_centers,
+                        &original_centers,
+                    )
+                    .await;
+                }
+            }
+            let mut out = HashMap::new();
+            for p in &pieces {
+                let pid = p.id.clone();
+                let plane = piece_planes.get(p.id.as_str()).copied().unwrap_or_default();
+                let center = piece_centers.get(p.id.as_str()).copied().or_else(|| original_centers.get(p.id.as_str()).copied()).unwrap_or_default();
+                out.insert(pid, PositionInput { center, plane });
+            }
+            out
+        }
+    }
+    //#endregion 🌤️FlattenDesign
 }
 
 //#endregion 📐 geom
@@ -2972,6 +3358,14 @@ pub mod kit {
             pub description: RwLock<String>,
             /// @emoji 🏷️ SDL `Connector.icon` (Artifact).
             pub icon: RwLock<String>,
+            /// @emoji 📍 Connector attachment point in type-local space.
+            pub point: RwLock<crate::geom::PointInput>,
+            /// @emoji ➡️ Connector outward direction in type-local space.
+            pub direction: RwLock<crate::geom::VectorInput>,
+            /// @emoji 🎯 Parametric position on connector arc for diagram layout.
+            pub t_param: RwLock<Option<f64>>,
+            /// @emoji ✅ Whether this connector must be connected.
+            pub mandatory: RwLock<Option<bool>>,
             /// @emoji 🔗 Resolved port pointer (`# data` on the wire).
             pub port: RwLock<Option<Arc<Port>>>,
             pub qualities: RwLock<Vec<Arc<Quality>>>,
@@ -2987,6 +3381,10 @@ pub mod kit {
                     code: RwLock::new(String::new()),
                     description: RwLock::new(String::new()),
                     icon: RwLock::new(String::new()),
+                    point: RwLock::new(crate::geom::PointInput::default()),
+                    direction: RwLock::new(crate::geom::VectorInput { x: 0.0, y: 0.0, z: 1.0 }),
+                    t_param: RwLock::new(None),
+                    mandatory: RwLock::new(None),
                     port: RwLock::new(None),
                     qualities: RwLock::new(Vec::new()),
                     attributes: RwLock::new(Vec::new()),
@@ -3003,6 +3401,10 @@ pub mod kit {
                     code: RwLock::new(code),
                     description: RwLock::new(String::new()),
                     icon: RwLock::new(String::new()),
+                    point: RwLock::new(crate::geom::PointInput::default()),
+                    direction: RwLock::new(crate::geom::VectorInput { x: 0.0, y: 0.0, z: 1.0 }),
+                    t_param: RwLock::new(None),
+                    mandatory: RwLock::new(None),
                     port: RwLock::new(None),
                     qualities: RwLock::new(Vec::new()),
                     attributes: RwLock::new(Vec::new()),
@@ -3017,6 +3419,10 @@ pub mod kit {
                     code: RwLock::new(code),
                     description: RwLock::new(String::new()),
                     icon: RwLock::new(String::new()),
+                    point: RwLock::new(crate::geom::PointInput::default()),
+                    direction: RwLock::new(crate::geom::VectorInput { x: 0.0, y: 0.0, z: 1.0 }),
+                    t_param: RwLock::new(None),
+                    mandatory: RwLock::new(None),
                     port: RwLock::new(None),
                     qualities: RwLock::new(Vec::new()),
                     attributes: RwLock::new(Vec::new()),
@@ -3060,6 +3466,20 @@ pub mod kit {
             }
             pub async fn port(&self) -> Option<Arc<Port>> {
                 self.port.read().await.clone()
+            }
+            pub async fn point(&self) -> Arc<crate::geom::entity::Point> {
+                let p = *self.point.read().await;
+                crate::geom::entity::Point::from_input(p)
+            }
+            pub async fn direction(&self) -> Arc<crate::geom::entity::Vector> {
+                let v = *self.direction.read().await;
+                crate::geom::entity::Vector::from_input(v)
+            }
+            pub async fn t(&self) -> Option<f64> {
+                *self.t_param.read().await
+            }
+            pub async fn mandatory(&self) -> Option<bool> {
+                *self.mandatory.read().await
             }
             pub async fn qualities(&self) -> crate::gql_relay::QualityConnection {
                 crate::gql_relay::QualityConnection::from_entities(self.qualities.read().await.clone()).await
@@ -3684,6 +4104,18 @@ pub mod kit {
                     Arc::new(Self { id, owner_design, position: RwLock::new(Some(pos_node)), blueprint: RwLock::new(blueprint), connection_kind: RwLock::new(Some(PieceConnectionKind::Fixed)), ..Default::default() })
                 }
 
+                /// @emoji 🔗 Linked piece without stored absolute pose (position resolved via flatten).
+                pub async fn new_connected_with_external_id(id: Id, owner_design: Weak<super::Design>, blueprint: super::super::r#type::Blueprint) -> Arc<Self> {
+                    Arc::new(Self {
+                        id,
+                        owner_design,
+                        position: RwLock::new(None),
+                        blueprint: RwLock::new(blueprint),
+                        connection_kind: RwLock::new(Some(PieceConnectionKind::Connected)),
+                        ..Default::default()
+                    })
+                }
+
                 pub async fn set_name(&self, name: Option<String>) {
                     *self.name.write().await = name;
                 }
@@ -3701,6 +4133,16 @@ pub mod kit {
                 }
 
                 pub async fn compute_flat_position(&self) -> PositionInput {
+                    if let Some(design) = self.owner_design.upgrade() {
+                        if let Some(topo) = design.owner_typology.upgrade() {
+                            if let Some(kit) = topo.owner_kit.upgrade() {
+                                let positions = crate::geom::flatten::flatten_design_positions(&kit, &design).await;
+                                if let Some(pos) = positions.get(&self.id) {
+                                    return *pos;
+                                }
+                            }
+                        }
+                    }
                     if let Some(n) = self.position.read().await.as_ref() {
                         return n.snapshot_input().await;
                     }
@@ -3902,10 +4344,7 @@ pub mod kit {
                 }
                 #[graphql(name = "flatPosition")]
                 pub async fn flat_position(&self) -> Arc<PositionEntity> {
-                    if let Some(n) = self.position.read().await.clone() {
-                        return n;
-                    }
-                    PositionEntity::from_position_input(PositionInput::default())
+                    PositionEntity::from_position_input(self.compute_flat_position().await)
                 }
                 #[graphql(name = "replaceableBlueprints")]
                 pub async fn replaceable_blueprints(&self) -> crate::gql_relay::BlueprintConnection {
@@ -11393,6 +11832,24 @@ pub mod kit_backbone {
         })
     }
 
+    pub(crate) fn point_input_from_json(v: &crate::external_adapters::serde_json::Value) -> Option<crate::geom::PointInput> {
+        let o = v.as_object()?;
+        Some(crate::geom::PointInput {
+            x: o.get("x").and_then(|x| x.as_f64()).unwrap_or(0.0),
+            y: o.get("y").and_then(|x| x.as_f64()).unwrap_or(0.0),
+            z: o.get("z").and_then(|x| x.as_f64()).unwrap_or(0.0),
+        })
+    }
+
+    pub(crate) fn vector_input_from_json(v: &crate::external_adapters::serde_json::Value) -> Option<crate::geom::VectorInput> {
+        let o = v.as_object()?;
+        Some(crate::geom::VectorInput {
+            x: o.get("x").and_then(|x| x.as_f64()).unwrap_or(0.0),
+            y: o.get("y").and_then(|x| x.as_f64()).unwrap_or(0.0),
+            z: o.get("z").and_then(|x| x.as_f64()).unwrap_or(0.0),
+        })
+    }
+
     fn kit_scope_from_json(v: &crate::external_adapters::serde_json::Value) -> Result<crate::operation::Scope, ComposeError> {
         use crate::operation::Scope;
         if let Some(s) = v.as_str() {
@@ -12103,6 +12560,18 @@ pub mod kit_backbone {
                 if let Some(desc) = c_json.get("description").and_then(|v| v.as_str()) {
                     *connector.description.write().await = desc.to_string();
                 }
+                if let Some(point) = c_json.get("point").and_then(point_input_from_json) {
+                    *connector.point.write().await = point;
+                }
+                if let Some(direction) = c_json.get("direction").and_then(vector_input_from_json) {
+                    *connector.direction.write().await = direction;
+                }
+                if let Some(t) = c_json.get("t").and_then(|v| v.as_f64()) {
+                    *connector.t_param.write().await = Some(t);
+                }
+                if let Some(mandatory) = c_json.get("mandatory").and_then(|v| v.as_bool()) {
+                    *connector.mandatory.write().await = Some(mandatory);
+                }
                 if let Some(port_json) = c_json.get("port") {
                     if let Some(pid) = crate::kit_backbone::json_entity_id_ref(port_json) {
                         if let Some(port) = lookup_port(pid) {
@@ -12237,6 +12706,7 @@ pub mod kit_backbone {
                 let dn = d.get("name").and_then(|x| x.as_str()).unwrap_or(ds);
                 let des = crate::kit::design::Design::with_id(topo_owner, ds.into(), dn.to_string()).await;
                 hydrate_design_pieces_from_snapshot_value(&des, kit, d).await?;
+                hydrate_design_connections_from_snapshot_value(&des, kit, d).await?;
                 kit.design_weak_by_id.write().await.insert(des.id.clone(), std::sync::Arc::downgrade(&des));
                 owner_topo.designs.write().await.push(des);
             }
@@ -12300,19 +12770,97 @@ pub mod kit_backbone {
             };
             let type_id = type_id_raw.into();
             let ty = kit.type_by_external_id(&type_id).await.ok_or_else(|| crate::error::ComposeError::not_found("Type", type_id.as_str()))?;
-            let pose = pj.get("pose");
-            let plane_val = pj.get("plane").cloned().or_else(|| pose.and_then(|p| p.get("plane")).cloned()).unwrap_or_else(|| crate::external_adapters::serde_json::json!({}));
-            let center_val = pj.get("center").cloned().or_else(|| pose.and_then(|p| p.get("center")).cloned()).unwrap_or_else(|| crate::external_adapters::serde_json::json!({"u":0.0,"v":0.0}));
-            let position = position_input_from_json(&crate::external_adapters::serde_json::json!({ "plane": plane_val, "center": center_val }))?;
-            let scale = pj.get("scale").and_then(|s| s.as_f64()).unwrap_or(1.0);
+            let has_pose = pj.get("pose").is_some() || pj.get("plane").is_some() || pj.get("center").is_some() || pj.get("position").is_some();
             let nm_opt = pj.get("name").and_then(|x| x.as_str());
             let bp = crate::kit::r#type::Blueprint::Type(ty.clone());
-            let piece = crate::kit::design::piece::Piece::new_fixed_with_external_id(pid.into(), owner_des.clone(), bp, position).await;
+            let scale = pj.get("scale").and_then(|s| s.as_f64()).unwrap_or(1.0);
+            let piece = if has_pose {
+                let pose = pj.get("pose");
+                let plane_val = pj.get("plane").cloned().or_else(|| pose.and_then(|p| p.get("plane")).cloned()).unwrap_or_else(|| crate::external_adapters::serde_json::json!({}));
+                let center_val = pj.get("center").cloned().or_else(|| pose.and_then(|p| p.get("center")).cloned()).unwrap_or_else(|| crate::external_adapters::serde_json::json!({"u":0.0,"v":0.0}));
+                let position = position_input_from_json(&crate::external_adapters::serde_json::json!({ "plane": plane_val, "center": center_val }))?;
+                crate::kit::design::piece::Piece::new_fixed_with_external_id(pid.into(), owner_des.clone(), bp, position).await
+            } else {
+                crate::kit::design::piece::Piece::new_connected_with_external_id(pid.into(), owner_des.clone(), bp).await
+            };
             if let Some(nm) = nm_opt {
                 piece.set_name(Some(nm.to_string())).await;
             }
             *piece.scale.write().await = Some(scale);
             let _ = des.insert_piece(piece).await;
+        }
+        Ok(())
+    }
+
+    /// @emoji 🔗 Hydrates design connections and wires parent/child piece graph links.
+    pub(crate) async fn hydrate_design_connections_from_snapshot_value(des: &std::sync::Arc<crate::kit::design::Design>, kit: &std::sync::Arc<crate::kit::Kit>, d_json: &crate::external_adapters::serde_json::Value) -> Result<(), crate::error::ComposeError> {
+        {
+            let mut conns = des.connections.write().await;
+            conns.clear();
+        }
+        let clist = d_json.get("connections").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned().unwrap_or_default();
+        let owner_des = std::sync::Arc::downgrade(des);
+        for cj in clist {
+            let cid = cj.get("id").and_then(|x| x.as_str()).ok_or_else(|| crate::error::ComposeError::invalid("connection missing id"))?;
+            let parent_piece_id = cj
+                .get("parent")
+                .or_else(|| cj.get("connecting"))
+                .and_then(|s| s.get("piece").or_else(|| s.get("referencesPiece")))
+                .and_then(crate::kit_backbone::json_entity_id_ref)
+                .ok_or_else(|| crate::error::ComposeError::invalid("connection parent piece"))?;
+            let child_piece_id = cj
+                .get("child")
+                .or_else(|| cj.get("connected"))
+                .and_then(|s| s.get("piece").or_else(|| s.get("referencesPiece")))
+                .and_then(crate::kit_backbone::json_entity_id_ref)
+                .ok_or_else(|| crate::error::ComposeError::invalid("connection child piece"))?;
+            let parent_piece = des.piece_by_external_id(&parent_piece_id.into()).await.ok_or_else(|| crate::error::ComposeError::not_found("Piece", parent_piece_id))?;
+            let child_piece = des.piece_by_external_id(&child_piece_id.into()).await.ok_or_else(|| crate::error::ComposeError::not_found("Piece", child_piece_id))?;
+            let parent_connector_id = cj
+                .get("parent")
+                .or_else(|| cj.get("connecting"))
+                .and_then(|s| s.get("connector").or_else(|| s.get("referencesConnector")))
+                .and_then(crate::kit_backbone::json_entity_id_ref);
+            let child_connector_id = cj
+                .get("child")
+                .or_else(|| cj.get("connected"))
+                .and_then(|s| s.get("connector").or_else(|| s.get("referencesConnector")))
+                .and_then(crate::kit_backbone::json_entity_id_ref);
+            let parent_side = crate::kit::design::connection::Side::new(parent_piece.clone()).await;
+            let child_side = crate::kit::design::connection::Side::new(child_piece.clone()).await;
+            if let Some(conn_id) = parent_connector_id {
+                if let Some(c) = kit.find_connector(&conn_id.into()).await {
+                    *parent_side.connector.write().await = Some(c);
+                }
+            }
+            if let Some(conn_id) = child_connector_id {
+                if let Some(c) = kit.find_connector(&conn_id.into()).await {
+                    *child_side.connector.write().await = Some(c);
+                }
+            }
+            let connection = std::sync::Arc::new(crate::kit::design::connection::Connection {
+                id: cid.into(),
+                owner_design: owner_des.clone(),
+                name: crate::external_adapters::async_lock::RwLock::new(String::new()),
+                description: crate::external_adapters::async_lock::RwLock::new(cj.get("description").and_then(|v| v.as_str()).unwrap_or("").to_string()),
+                icon: crate::external_adapters::async_lock::RwLock::new(String::new()),
+                parent: crate::external_adapters::async_lock::RwLock::new(parent_side),
+                child: crate::external_adapters::async_lock::RwLock::new(child_side),
+                gap: crate::external_adapters::async_lock::RwLock::new(cj.get("gap").and_then(|v| v.as_f64())),
+                shift: crate::external_adapters::async_lock::RwLock::new(cj.get("shift").and_then(|v| v.as_f64())),
+                rise: crate::external_adapters::async_lock::RwLock::new(cj.get("rise").and_then(|v| v.as_f64())),
+                rotation: crate::external_adapters::async_lock::RwLock::new(cj.get("rotation").and_then(|v| v.as_f64())),
+                turn: crate::external_adapters::async_lock::RwLock::new(cj.get("turn").and_then(|v| v.as_f64())),
+                tilt: crate::external_adapters::async_lock::RwLock::new(cj.get("tilt").and_then(|v| v.as_f64())),
+                u: crate::external_adapters::async_lock::RwLock::new(cj.get("u").and_then(|v| v.as_f64())),
+                v: crate::external_adapters::async_lock::RwLock::new(cj.get("v").and_then(|v| v.as_f64())),
+                attributes: crate::external_adapters::async_lock::RwLock::new(Vec::new()),
+            });
+            *child_piece.parent_piece.write().await = std::sync::Arc::downgrade(&parent_piece);
+            *child_piece.parent_connection.write().await = std::sync::Arc::downgrade(&connection);
+            parent_piece.child_connections.write().await.push(connection.clone());
+            parent_piece.child_pieces.write().await.push(child_piece.clone());
+            des.connections.write().await.push(connection);
         }
         Ok(())
     }
@@ -20528,6 +21076,71 @@ mod tests {
             let mat = graph.materialized_kit_for_workspace(&workspace_id).await;
             let design = mat.design_by_external_id(&crate::id::Id::from("design-scoped-1")).await.expect("design exists");
             assert!(design.piece_by_external_id(&crate::id::Id::from("piece-scoped-1")).await.is_some(), "piece should be addressable by scoped id");
+        });
+    }
+
+    #[test]
+    fn flatten_design_resolves_linked_piece_absolute_pose() {
+        block_on(async {
+            let kit_json = json!({
+                "id": "kit-flatten",
+                "name": "Flatten Kit",
+                "types": [{
+                    "id": "type-a",
+                    "name": "A",
+                    "connectors": [{
+                        "id": "conn-a",
+                        "name": "c0",
+                        "point": { "x": 0.0, "y": 0.0, "z": 0.0 },
+                        "direction": { "x": 0.0, "y": 0.0, "z": 1.0 },
+                        "t": 0.0
+                    }]
+                }],
+                "designs": [{
+                    "id": "design-1",
+                    "name": "D1",
+                    "pieces": [
+                        {
+                            "id": "fixed-root",
+                            "name": "root",
+                            "type": { "id": "type-a" },
+                            "pose": {
+                                "plane": {
+                                    "origin": { "x": 1.0, "y": 2.0, "z": 3.0 },
+                                    "xAxis": { "x": 1.0, "y": 0.0, "z": 0.0 },
+                                    "yAxis": { "x": 0.0, "y": 1.0, "z": 0.0 }
+                                },
+                                "center": { "u": 1.0, "v": 2.0 }
+                            }
+                        },
+                        {
+                            "id": "linked-child",
+                            "name": "child",
+                            "type": { "id": "type-a" }
+                        }
+                    ],
+                    "connections": [{
+                        "id": "link-1",
+                        "gap": 0.0,
+                        "shift": 0.0,
+                        "rise": 0.0,
+                        "rotation": 0.0,
+                        "turn": 0.0,
+                        "tilt": 0.0,
+                        "u": 0.5,
+                        "v": 0.25,
+                        "parent": { "piece": { "id": "fixed-root" }, "connector": { "id": "conn-a" } },
+                        "child": { "piece": { "id": "linked-child" }, "connector": { "id": "conn-a" } }
+                    }]
+                }]
+            });
+            let graph = crate::kit_backbone::graph_new_overlay_from_initial_projection_json(kit_json).await.expect("hydrate kit");
+            let kit = graph.mutable_kit.read().await.clone();
+            let design = kit.design_by_external_id(&crate::id::Id::from("design-1")).await.expect("design");
+            let child = design.piece_by_external_id(&crate::id::Id::from("linked-child")).await.expect("child piece");
+            let flat = child.compute_flat_position().await;
+            assert!((flat.plane.origin.x - 1.0).abs() < 0.01, "[DEBUG] flat plane origin x {}", flat.plane.origin.x);
+            assert!((flat.center.u - 1.5).abs() < 0.01, "[DEBUG] flat center u {}", flat.center.u);
         });
     }
 }

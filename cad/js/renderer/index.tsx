@@ -3395,20 +3395,24 @@ export function useHostState<T>(controlled: T | undefined, onChange: ((value: T)
   const [internal, setInternal] = reactHostPort.useState(initial);
   const isControlled = controlled !== undefined;
   const value = isControlled ? controlled : internal;
+  const valueRef = reactHostPort.useRef(value);
+  valueRef.current = value;
   const setValue = reactHostPort.useCallback(
     (next: T | ((prev: T) => T)) => {
       if (isControlled) {
-        const resolved = resolveHostStateNext(controlled as T, next);
+        const resolved = resolveHostStateNext(valueRef.current, next);
+        valueRef.current = resolved;
         onChange?.(resolved);
         return;
       }
       setInternal((prev) => {
         const resolved = resolveHostStateNext(prev, next);
+        valueRef.current = resolved;
         onChange?.(resolved);
         return resolved;
       });
     },
-    [controlled, isControlled, onChange],
+    [isControlled, onChange],
   );
   return [value, setValue] as const;
 }

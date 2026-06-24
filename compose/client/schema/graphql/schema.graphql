@@ -1340,6 +1340,10 @@ type Connector implements Entity & FileSystemNode & StrongEntity {
 	description: String!
 	icon: String!
 	port: Port
+	point: Point!
+	direction: Vector!
+	t: Float
+	mandatory: Boolean
 	qualities: QualityConnection!
 	attributes: AttributeConnection!
 	quality(id: ID!): Quality
@@ -3044,19 +3048,19 @@ type Kit implements Entity & Node & FileSystemNode & StrongEntity {
 	"""
 	hasTypes: TypeConnection!
 	"""
-	@emoji 📄 Files contained in this kit.
+	@emoji 📄 Kit-root VFS files only (excludes folder-placed and representation backing blobs).
 	"""
 	hasFiles: FileConnection!
 	"""
-	@emoji 📁 Folders contained in this kit.
+	@emoji 📁 Kit-root folders only (no {@code parent_folder_id}).
 	"""
 	hasFolders: FolderConnection!
 	"""
-	@emoji 👪 Families contained in this kit.
+	@emoji 👪 Kit-root families only (not placed in a folder).
 	"""
 	hasFamilies: FamilyConnection!
 	"""
-	@emoji 🏛️ Typologies contained in this kit.
+	@emoji 🏛️ Kit-root typologies only (not placed in a folder).
 	"""
 	hasTypologies: TypologyConnection!
 	"""

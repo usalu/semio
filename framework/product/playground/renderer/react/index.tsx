@@ -281,6 +281,7 @@ export class CallbackTreePanelDefinition implements TreePanelDefinition {
   private resolved: TreePanelConfig | null = null;
   private resolvedSectionsFingerprint: string | null = null;
   private resolvedHighlightedFingerprint: string | null = null;
+  private resolvedSelectedFingerprint: string | null = null;
 
   constructor(
     private readonly buildTree: () => TreeDataSection[] | TreePanelConfig,
@@ -299,7 +300,14 @@ export class CallbackTreePanelDefinition implements TreePanelDefinition {
           ? CALLBACK_TREE_PANEL_EMPTY_HIGHLIGHTS
           : (built.highlightedIds ?? CALLBACK_TREE_PANEL_EMPTY_HIGHLIGHTS);
     const highlightedFingerprint = highlightedIds.join("\0");
-    if (this.resolved && this.resolvedSectionsFingerprint === sectionsFingerprint && this.resolvedHighlightedFingerprint === highlightedFingerprint) {
+    const selectedIds = Array.isArray(built) ? undefined : built.selectedIds;
+    const selectedFingerprint = selectedIds?.join("\0") ?? "";
+    if (
+      this.resolved &&
+      this.resolvedSectionsFingerprint === sectionsFingerprint &&
+      this.resolvedHighlightedFingerprint === highlightedFingerprint &&
+      this.resolvedSelectedFingerprint === selectedFingerprint
+    ) {
       return this.resolved;
     }
     const config: TreePanelConfig = Array.isArray(built)
@@ -309,6 +317,7 @@ export class CallbackTreePanelDefinition implements TreePanelDefinition {
     this.resolved = config;
     this.resolvedSectionsFingerprint = sectionsFingerprint;
     this.resolvedHighlightedFingerprint = highlightedFingerprint;
+    this.resolvedSelectedFingerprint = selectedFingerprint;
     return config;
   }
 }
@@ -7702,6 +7711,19 @@ if (import.meta.vitest) {
       const first = panel.resolveTree();
       const second = panel.resolveTree();
       expect(second).toBe(first);
+    });
+
+    it("refreshes resolved config when selected rows change", () => {
+      let selectedIds = ["i"];
+      const panel = new CallbackTreePanelDefinition(() => ({
+        sections: [{ id: "a", items: [{ id: "i", label: "Item" }, { id: "j", label: "Other" }] }],
+        selectedIds,
+      }));
+      const first = panel.resolveTree();
+      selectedIds = ["j"];
+      const second = panel.resolveTree();
+      expect(second).not.toBe(first);
+      expect(second.selectedIds).toEqual(["j"]);
     });
   });
 

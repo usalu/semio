@@ -3437,18 +3437,18 @@ export const sliderRangeClassName = cn(
 
 /** @emoji 🎚 Slider thumb — element border at rest; hover fill; primary fill when dragging/focused. */
 export const sliderThumbClassName = cn(
-  "block size-small shrink-0 rounded-full border bg-panel ring-ring/50 transition-[color,border-color,background-color] outline-hidden",
-  borderElementClass,
-  interactiveHoverFillClass,
-  "hover:border-emphasized",
-  "group-hover:bg-hover-interactive-fill group-hover:border-emphasized",
-  "focus-visible:bg-active-base focus-visible:border-active-base focus-visible:ring-0",
-  "data-[dragging=true]:bg-active-base data-[dragging=true]:border-active-base",
+  "block size-small shrink-0 rounded-[9999px] bg-element transition-[background-color] outline-hidden",
+  "hover:bg-emphasized group-hover:bg-emphasized",
+  "focus-visible:bg-active-base focus-visible:ring-0",
+  "data-[dragging=true]:bg-active-base",
   "disabled:pointer-events-none disabled:opacity-50",
 );
 
 /** @emoji 🎚 Slider numeric readout — element gray at rest. */
-export const sliderValueClassName = "text-element w-[28px] text-right text-xs leading-none select-none";
+export const sliderValueClassName = cn(
+  "text-element w-[28px] text-right text-xs leading-none select-none transition-colors",
+  "hover:text-emphasized group-hover:text-emphasized",
+);
 
 /** @emoji 📏 Active window chrome line when that stack is globally active. */
 export const activeLineClass = "border-active-base";
@@ -6543,7 +6543,7 @@ function Slider({
     >
       <SliderPrimitive.Track
         data-slot="slider-track"
-        className={cn("bg-muted relative grow overflow-hidden rounded-full data-[orientation=horizontal]:h-single data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-single")}
+        className={cn("bg-muted relative grow overflow-hidden rounded-[9999px] data-[orientation=horizontal]:h-single data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-single")}
       >
         <SliderPrimitive.Range data-slot="slider-range" data-dragging={isDragging ? "true" : undefined} className={cn(sliderRangeClassName)} />
       </SliderPrimitive.Track>
@@ -12033,7 +12033,7 @@ const WindowMeasuresChrome: React.FC<WindowMeasuresChromeProps> = ({ windowId, f
         <ActionGroupItem
           id={`${windowId}-window-measures-unfold`}
           icon="chevron-left"
-          className={cn(windowMeasuresChromeActionClass, windowMeasuresChromeCornerRightClass)}
+          className={windowMeasuresChromeActionClass}
           onClick={onUnfold}
         />
       </div>
@@ -22533,9 +22533,9 @@ if (treeVitest) {
       expect(markup).toContain("h-full");
       expect(markup).not.toContain("bg-foreground");
       expect(markup).toContain('data-slot="slider-thumb"');
-      expect(markup).toContain("border-element");
-      expect(markup).toContain("hover:bg-hover-interactive-fill");
-      expect(markup).toContain("group-hover:border-emphasized");
+      expect(markup).toContain("rounded-[9999px]");
+      expect(markup).toContain("hover:bg-emphasized");
+      expect(markup).toContain("group-hover:bg-emphasized");
       expect(markup).toContain('data-slot="slider-value"');
       expect(markup).toContain("text-element");
     });

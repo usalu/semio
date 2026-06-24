@@ -4,7 +4,7 @@
   "type": "module",
   "name": "@semio-tech/compose-sketchpad-play",
   "version": "0.1.0",
-  "description": "compose ⋅ playground",
+  "description": "semio · compose · sketchpad",
   "dependencies": {
     "@semio-tech/ui-react": "workspace:*",
     "@semio-tech/compose-js": "*",

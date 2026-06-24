@@ -1,0 +1,15 @@
+{
+  "title": "Circle Slider Knobs",
+  "emoji": "🎨",
+  "status": "closed",
+  "description": "The sliders shouldnt have rectangular knob but full circle. No border just one color that changes on hover, active, etc",
+  "summary": "Added group-hover and hover text-emphasized styles to the slider numeric value readout so that it remains visible and correctly highlighted on hover.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1733"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪f1e4d04d6f5e4030b117d266bce2f176",
+    "⚪260dfa95f98a4da0b304396a0bdeabdf"
+  ]
+}

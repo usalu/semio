@@ -5251,6 +5251,10 @@ type Connector implements Artifact & RichStrongEntity & StrongEntity & Entity & 
   # Connector
   code: String! # data
   port: Port # data
+  point: Point! # data
+  direction: Vector! # data
+  t: Float # data
+  mandatory: Boolean # data
   qualities: QualityConnection! # computed
   quality(id: ID!): Quality # computed
   attributes: AttributeConnection! # computed

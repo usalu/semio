@@ -10987,6 +10987,7 @@ hasDesigns {
             id name
             blueprint { id }
             position { center { u v } plane { origin { x y z } xAxis { x y z } yAxis { x y z } } }
+            flatPosition { center { u v } plane { origin { x y z } xAxis { x y z } yAxis { x y z } } }
           }
         }
       }
@@ -10994,6 +10995,7 @@ hasDesigns {
         edges {
           node {
             id
+            gap shift rise rotation turn tilt u v
             parent { referencesPiece { id } referencesConnector { id } }
             child { referencesPiece { id } referencesConnector { id } }
           }
@@ -11235,8 +11237,8 @@ export function parseSketchpadRouteScopeFromPath(pathOrUri: string): {
 		return { kitId: null, designId: null, typeId: null, docsPath: "index", qualityId: null };
 	}
 	const kitId = pathParts[1] && isUuidPattern(pathParts[1]) ? pathParts[1] : null;
-	const designId = pathParts[2] === "designs" && pathParts[3] && isUuidPattern(pathParts[3]) ? pathParts[3] : null;
-	const typeId = pathParts[2] === "types" && pathParts[3] && isUuidPattern(pathParts[3]) ? pathParts[3] : null;
+	const designId = pathParts[2] === "design" && pathParts[3] && isUuidPattern(pathParts[3]) ? pathParts[3] : null;
+	const typeId = pathParts[2] === "type" && pathParts[3] && isUuidPattern(pathParts[3]) ? pathParts[3] : null;
 	const qualityParam = kitId && query.length > 0 ? new URLSearchParams(query).get("quality") : null;
 	const qualityId = qualityParam && qualityParam.length > 0 ? qualityParam : null;
 	return { kitId, designId, typeId, docsPath: "index", qualityId };
@@ -11249,8 +11251,8 @@ export function sketchpadAppIdFromPath(path: string): string {
 	if (pathParts[0] === "docs") return SKETCHPAD_DOCS_APP_ID;
 	if (pathParts[0] === "feedback") return SKETCHPAD_FEEDBACK_APP_ID;
 	if (pathParts[0] !== "kits") return SKETCHPAD_HOME_APP_ID;
-	if (pathParts.length >= 4 && pathParts[2] === "designs" && isUuidPattern(pathParts[3] ?? "")) return SKETCHPAD_DESIGN_APP_ID;
-	if (pathParts.length >= 4 && pathParts[2] === "types" && isUuidPattern(pathParts[3] ?? "")) return SKETCHPAD_TYPE_APP_ID;
+	if (pathParts.length >= 4 && pathParts[2] === "design" && isUuidPattern(pathParts[3] ?? "")) return SKETCHPAD_DESIGN_APP_ID;
+	if (pathParts.length >= 4 && pathParts[2] === "type" && isUuidPattern(pathParts[3] ?? "")) return SKETCHPAD_TYPE_APP_ID;
 	if (pathParts.length >= 2 && isUuidPattern(pathParts[1] ?? "")) return SKETCHPAD_KIT_APP_ID;
 	return SKETCHPAD_HOME_APP_ID;
 }
@@ -12759,31 +12761,88 @@ function sketchpadPieceLabel(piece: { readonly id: string; readonly name?: strin
 	return piece.name ?? type?.name ?? piece.id;
 }
 
-function sketchpadPieceDiagramUv(piece: { readonly id: string }, index: number): { readonly u: number; readonly v: number } {
-	const row = piece as {
-		readonly center?: { readonly u?: number; readonly v?: number };
-		readonly position?: { readonly center?: { readonly u?: number; readonly v?: number }; readonly plane?: { readonly origin?: { readonly x?: number; readonly y?: number } } };
-		readonly plane?: { readonly origin?: { readonly x?: number; readonly y?: number } };
+type SketchpadPiecePose = {
+	readonly center?: { readonly u?: number; readonly v?: number };
+	readonly plane?: {
+		readonly origin?: { readonly x?: number; readonly y?: number; readonly z?: number };
+		readonly xAxis?: { readonly x?: number; readonly y?: number; readonly z?: number };
+		readonly yAxis?: { readonly x?: number; readonly y?: number; readonly z?: number };
 	};
-	const center = row.center ?? row.position?.center;
+};
+
+function sketchpadPieceAbsolutePose(piece: { readonly id: string }): SketchpadPiecePose | undefined {
+	const row = piece as {
+		readonly flatPosition?: SketchpadPiecePose;
+		readonly position?: SketchpadPiecePose;
+		readonly center?: SketchpadPiecePose["center"];
+		readonly plane?: SketchpadPiecePose["plane"];
+	};
+	return row.flatPosition ?? row.position ?? (row.center || row.plane ? { center: row.center, plane: row.plane } : undefined);
+}
+
+function sketchpadPieceDiagramUv(piece: { readonly id: string }, index: number): { readonly u: number; readonly v: number } {
+	const pose = sketchpadPieceAbsolutePose(piece);
+	const center = pose?.center;
 	if (center && typeof center.u === "number") {
 		return { u: center.u, v: typeof center.v === "number" ? center.v : 0 };
-	}
-	const planeOrigin = row.plane?.origin ?? row.position?.plane?.origin;
-	if (planeOrigin) {
-		return { u: planeOrigin.x ?? index, v: planeOrigin.y ?? 0 };
 	}
 	return { u: (index % 8) * 1.2, v: Math.floor(index / 8) * 1.2 };
 }
 
 function sketchpadPieceSceneOrigin(piece: { readonly id: string }, index: number): [number, number, number] {
-	const row = piece as {
-		readonly position?: { readonly plane?: { readonly origin?: { readonly x?: number; readonly y?: number; readonly z?: number } } };
-		readonly plane?: { readonly origin?: { readonly x?: number; readonly y?: number; readonly z?: number } };
-	};
-	const o = row.plane?.origin ?? row.position?.plane?.origin;
+	const o = sketchpadPieceAbsolutePose(piece)?.plane?.origin;
 	if (o) return [o.x ?? 0, o.y ?? 0, o.z ?? 0];
 	return [index * 2, 0, 0];
+}
+
+/** @emoji 🧭 Converts compose absolute plane axes to a volume orientation quaternion. */
+export function sketchpadPlaneAxesToQuaternion(plane: NonNullable<SketchpadPiecePose["plane"]>): [number, number, number, number] {
+	const xAxis = plane.xAxis ?? { x: 1, y: 0, z: 0 };
+	const yAxis = plane.yAxis ?? { x: 0, y: 1, z: 0 };
+	const xx = xAxis.x ?? 1;
+	const xy = xAxis.y ?? 0;
+	const xz = xAxis.z ?? 0;
+	const yx = yAxis.x ?? 0;
+	const yy = yAxis.y ?? 1;
+	const yz = yAxis.z ?? 0;
+	const zx = xy * yz - xz * yy;
+	const zy = xz * yx - xx * yz;
+	const zz = xx * yy - xy * yx;
+	const m00 = xx;
+	const m01 = yx;
+	const m02 = zx;
+	const m10 = xy;
+	const m11 = yy;
+	const m12 = zy;
+	const m20 = xz;
+	const m21 = yz;
+	const m22 = zz;
+	const trace = m00 + m11 + m22;
+	if (trace > 0) {
+		const s = Math.sqrt(trace + 1) * 2;
+		return [(m21 - m12) / s, (m02 - m20) / s, (m10 - m01) / s, 0.25 * s];
+	}
+	if (m00 > m11 && m00 > m22) {
+		const s = Math.sqrt(1 + m00 - m11 - m22) * 2;
+		return [0.25 * s, (m01 + m10) / s, (m02 + m20) / s, (m21 - m12) / s];
+	}
+	if (m11 > m22) {
+		const s = Math.sqrt(1 + m11 - m00 - m22) * 2;
+		return [(m01 + m10) / s, 0.25 * s, (m12 + m21) / s, (m02 - m20) / s];
+	}
+	const s = Math.sqrt(1 + m22 - m00 - m11) * 2;
+	return [(m02 + m20) / s, (m12 + m21) / s, 0.25 * s, (m10 - m01) / s];
+}
+
+function sketchpadPieceSceneOrientation(piece: { readonly id: string }): [number, number, number, number] {
+	const plane = sketchpadPieceAbsolutePose(piece)?.plane;
+	return plane ? sketchpadPlaneAxesToQuaternion(plane) : [0, 0, 0, 1];
+}
+
+function sketchpadPieceSceneScale(piece: { readonly id: string }): [number, number, number] {
+	const scale = (piece as { readonly scale?: number }).scale;
+	const s = typeof scale === "number" && Number.isFinite(scale) ? scale : 1;
+	return [s, s, s];
 }
 
 /** @emoji 🧭 Maps kit wires node ids to sketchpad routes. */
@@ -12920,8 +12979,8 @@ export function sketchpadDesignVolumeFixtureFromDesign(design: Design, kit?: Kit
 		objectKind: "compose.design.piece",
 		meshUrl: kit ? sketchpadResolvePieceMeshUrl(piece, kit, fileUrls) : SKETCHPAD_PLACEHOLDER_MESH_URL,
 		origin: sketchpadPieceSceneOrigin(piece, index),
-		orientation: [0, 0, 0, 1] as [number, number, number, number],
-		scale: [1, 1, 1] as [number, number, number],
+		orientation: sketchpadPieceSceneOrientation(piece),
+		scale: sketchpadPieceSceneScale(piece),
 		label: sketchpadPieceLabel(piece, kit),
 		vortices: [],
 	}));
@@ -15890,14 +15949,24 @@ if (import.meta.vitest) {
 	});
 
 	describe("sketchpadAppIdFromPath", () => {
-		it("resolves design app from kit route", () => {
+		it("resolves type and design apps from singular kit routes", () => {
 			const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
 			const designId = "11111111-2222-3333-4444-555555555555";
+			const typeId = "22222222-3333-4444-5555-666666666666";
 			expect(sketchpadAppIdFromPath(`/kits/${kitId}/design/${designId}`)).toBe(SKETCHPAD_DESIGN_APP_ID);
+			expect(sketchpadAppIdFromPath(`/kits/${kitId}/type/${typeId}`)).toBe(SKETCHPAD_TYPE_APP_ID);
 		});
 	});
 
 	describe("parseSketchpadRouteScopeFromPath", () => {
+		it("parses type and design ids from singular kit routes", () => {
+			const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+			const designId = "11111111-2222-3333-4444-555555555555";
+			const typeId = "22222222-3333-4444-5555-666666666666";
+			expect(parseSketchpadRouteScopeFromPath(`/kits/${kitId}/design/${designId}`)).toMatchObject({ kitId, designId, typeId: null });
+			expect(parseSketchpadRouteScopeFromPath(`/kits/${kitId}/type/${typeId}`)).toMatchObject({ kitId, designId: null, typeId });
+		});
+
 		it("parses quality query on kit routes", () => {
 			const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
 			expect(parseSketchpadRouteScopeFromPath(`/kits/${kitId}?quality=q1`)).toMatchObject({
@@ -16809,6 +16878,52 @@ if (import.meta.vitest) {
 			expect(volume.objects).toHaveLength(1);
 			expect(volume.objects[0]?.origin).toEqual([1, 2, 3]);
 		});
+
+		it("uses flatPosition absolute pose for linked pieces", () => {
+			const design = {
+				id: "d",
+				pieces: [
+					{
+						id: "root",
+						flatPosition: {
+							center: { u: 4.8, v: 0.18 },
+							plane: {
+								origin: { x: 7.5, y: 7.7, z: -7.5 },
+								xAxis: { x: 0.766, y: 0.643, z: 0 },
+								yAxis: { x: -0.643, y: 0.766, z: 0 },
+							},
+						},
+					},
+					{
+						id: "child",
+						flatPosition: {
+							center: { u: 3.8, v: 1.2 },
+							plane: {
+								origin: { x: 12.1, y: 4.2, z: -5.0 },
+								xAxis: { x: 0.766, y: 0.643, z: 0 },
+								yAxis: { x: -0.643, y: 0.766, z: 0 },
+							},
+						},
+					},
+				],
+			} as Design;
+			const flat = sketchpadDesignPuzzle2dFixtureFromDesign(design);
+			const volume = sketchpadDesignVolumeFixtureFromDesign(design);
+			expect(flat.nodes.find((n) => n.id === "child")?.x).toBeCloseTo(3.8 * SKETCHPAD_TOPOLOGY_ICON_WIDTH, 4);
+			expect(volume.objects.find((o) => o.id === "child")?.origin).toEqual([12.1, 4.2, -5.0]);
+			expect(volume.objects.find((o) => o.id === "child")?.orientation?.[3]).toBeGreaterThan(0);
+		});
+	});
+
+	describe("sketchpadPlaneAxesToQuaternion", () => {
+		it("returns identity for world axes", () => {
+			const q = sketchpadPlaneAxesToQuaternion({
+				origin: { x: 0, y: 0, z: 0 },
+				xAxis: { x: 1, y: 0, z: 0 },
+				yAxis: { x: 0, y: 1, z: 0 },
+			});
+			expect(q[3]).toBeCloseTo(1, 4);
+		});
 	});
 
 	describe("sketchpadKitFileUrlById", () => {
@@ -17141,7 +17256,9 @@ if (import.meta.vitest) {
 		it("maps kit wires nodes to routes", () => {
 			const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
 			const typeId = "11111111-2222-3333-4444-555555555555";
+			const designId = "22222222-3333-4444-5555-666666666666";
 			expect(sketchpadPathFromWiresNodeId(kitId, typeId, "type")).toBe(`/kits/${kitId}/type/${typeId}`);
+			expect(sketchpadPathFromWiresNodeId(kitId, designId, "design")).toBe(`/kits/${kitId}/design/${designId}`);
 		});
 	});
 
@@ -17321,7 +17438,7 @@ if (typeof __COMPOSE_SKETCHPAD_RUN_EMBEDDED_TESTS__ !== "undefined" && __COMPOSE
 			await expect(page).toHaveURL(kitUrl, { timeout: 5_000 });
 			await expect(designRow).toHaveClass(/bg-active-base/);
 			await designRow.dblclick();
-			await expect(page).toHaveURL(/\/designs\/[0-9a-f-]{36}/i, { timeout: 120_000 });
+			await expect(page).toHaveURL(/\/design\/[0-9a-f-]{36}/i, { timeout: 120_000 });
 		});
 
 		test("type route opens representation tab stack", async ({ page }) => {
@@ -17332,10 +17449,10 @@ if (typeof __COMPOSE_SKETCHPAD_RUN_EMBEDDED_TESTS__ !== "undefined" && __COMPOSE
 			const baseRow = page.locator("tr[data-row-id]").filter({ has: page.getByRole("cell", { name: "Base", exact: true }) });
 			await expect(baseRow).toBeVisible({ timeout: 120_000 });
 			await baseRow.click();
-			await expect(page).not.toHaveURL(/\/types\/[0-9a-f-]{36}/i);
+			await expect(page).not.toHaveURL(/\/type\/[0-9a-f-]{36}/i);
 			await expect(baseRow).toHaveClass(/bg-active-base/);
 			await baseRow.dblclick();
-			await expect(page).toHaveURL(/\/types\/[0-9a-f-]{36}/i, { timeout: 120_000 });
+			await expect(page).toHaveURL(/\/type\/[0-9a-f-]{36}/i, { timeout: 120_000 });
 			await expect(page.getByText("Mesh unavailable")).toHaveCount(0, { timeout: 60_000 });
 			await expect(page.getByText("Topology loading")).toHaveCount(0, { timeout: 60_000 });
 		});

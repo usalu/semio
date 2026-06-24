@@ -263,11 +263,23 @@
     }
 
     .cursor-ew-resize,
+    .cursor-w-resize,
+    .cursor-e-resize,
     [style*="cursor: ew-resize"],
     [style*="cursor:ew-resize"],
+    [style*="cursor: w-resize"],
+    [style*="cursor:w-resize"],
+    [style*="cursor: e-resize"],
+    [style*="cursor:e-resize"],
     [class*="cursor-ew-resize"],
+    [class*="cursor-w-resize"],
+    [class*="cursor-e-resize"],
     [class*="before:cursor-ew-resize"]::before,
-    [class*="after:cursor-ew-resize"]::after {
+    [class*="before:cursor-w-resize"]::before,
+    [class*="before:cursor-e-resize"]::before,
+    [class*="after:cursor-ew-resize"]::after,
+    [class*="after:cursor-w-resize"]::after,
+    [class*="after:cursor-e-resize"]::after {
       cursor: var(--cursor-ew-resize) !important;
     }
 
@@ -281,29 +293,71 @@
     }
 
     .cursor-ns-resize,
+    .cursor-n-resize,
+    .cursor-s-resize,
+    .cursor-row-resize,
     [style*="cursor: ns-resize"],
     [style*="cursor:ns-resize"],
+    [style*="cursor: n-resize"],
+    [style*="cursor:n-resize"],
+    [style*="cursor: s-resize"],
+    [style*="cursor:s-resize"],
+    [style*="cursor: row-resize"],
+    [style*="cursor:row-resize"],
     [class*="cursor-ns-resize"],
+    [class*="cursor-n-resize"],
+    [class*="cursor-s-resize"],
+    [class*="cursor-row-resize"],
     [class*="before:cursor-ns-resize"]::before,
-    [class*="after:cursor-ns-resize"]::after {
+    [class*="before:cursor-n-resize"]::before,
+    [class*="before:cursor-s-resize"]::before,
+    [class*="before:cursor-row-resize"]::before,
+    [class*="after:cursor-ns-resize"]::after,
+    [class*="after:cursor-n-resize"]::after,
+    [class*="after:cursor-s-resize"]::after,
+    [class*="after:cursor-row-resize"]::after {
       cursor: var(--cursor-ns-resize) !important;
     }
 
     .cursor-nesw-resize,
+    .cursor-ne-resize,
+    .cursor-sw-resize,
     [style*="cursor: nesw-resize"],
     [style*="cursor:nesw-resize"],
+    [style*="cursor: ne-resize"],
+    [style*="cursor:ne-resize"],
+    [style*="cursor: sw-resize"],
+    [style*="cursor:sw-resize"],
     [class*="cursor-nesw-resize"],
+    [class*="cursor-ne-resize"],
+    [class*="cursor-sw-resize"],
     [class*="before:cursor-nesw-resize"]::before,
-    [class*="after:cursor-nesw-resize"]::after {
+    [class*="before:cursor-ne-resize"]::before,
+    [class*="before:cursor-sw-resize"]::before,
+    [class*="after:cursor-nesw-resize"]::after,
+    [class*="after:cursor-ne-resize"]::after,
+    [class*="after:cursor-sw-resize"]::after {
       cursor: var(--cursor-nesw-resize) !important;
     }
 
     .cursor-nwse-resize,
+    .cursor-nw-resize,
+    .cursor-se-resize,
     [style*="cursor: nwse-resize"],
     [style*="cursor:nwse-resize"],
+    [style*="cursor: nw-resize"],
+    [style*="cursor:nw-resize"],
+    [style*="cursor: se-resize"],
+    [style*="cursor:se-resize"],
     [class*="cursor-nwse-resize"],
+    [class*="cursor-nw-resize"],
+    [class*="cursor-se-resize"],
     [class*="before:cursor-nwse-resize"]::before,
-    [class*="after:cursor-nwse-resize"]::after {
+    [class*="before:cursor-nw-resize"]::before,
+    [class*="before:cursor-se-resize"]::before,
+    [class*="after:cursor-nwse-resize"]::after,
+    [class*="after:cursor-nw-resize"]::after,
+    [class*="after:cursor-se-resize"]::after {
       cursor: var(--cursor-nwse-resize) !important;
     }
 
@@ -459,7 +513,7 @@
 }
 
 [data-slot="toolbar-zone"] :is([data-slot="toggle-group"], [data-slot="button-group"]) {
-  border-style: none;
+  border-style: none !important;
   height: 100%;
   min-height: 0;
 }
@@ -476,7 +530,7 @@
 [data-slot="toolbar-zone"] :is([data-slot="toggle-group-item"], [data-slot="button-group-item"]) {
   position: relative;
   box-sizing: border-box;
-  border: 1px solid transparent;
+  border-style: none;
   height: 100%;
   line-height: 1;
   padding-block: var(--spacing-single);
@@ -492,9 +546,9 @@
 }
 
 [data-slot="toolbar-zone"] :is([data-slot="toggle-group-item"], [data-slot="button-group-item"]):focus-visible {
-  border-color: var(--accent);
+  outline: 1px solid var(--accent);
+  outline-offset: -1px;
   box-shadow: none;
-  outline: none;
 }
 
 [data-slot="toolbar-zone"] :is([data-slot="toggle-group-item"], [data-slot="button-group-item"]) > span {
