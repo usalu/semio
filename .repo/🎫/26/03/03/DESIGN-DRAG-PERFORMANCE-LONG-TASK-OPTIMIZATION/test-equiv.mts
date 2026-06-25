@@ -18,7 +18,7 @@ await page.addInitScript(() => {
 await page.goto("http://127.0.0.1:5173/");
 await page.waitForLoadState("domcontentloaded");
 await page.waitForTimeout(2000);
-const zipPath = path.resolve(process.cwd(), "compose/assets/compose/metabolism.zip");
+const zipPath = path.resolve(process.cwd(), "assets/compose/metabolism.zip");
 const fileInput = page.locator('[id="compose.sketchpad.app.home.importKit"]');
 await fileInput.waitFor({ state: 'attached', timeout: 10000 });
 const [fc] = await Promise.all([

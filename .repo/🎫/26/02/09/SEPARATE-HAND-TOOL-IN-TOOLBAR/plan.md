@@ -1,5 +1,5 @@
 - [ ] Update `js/compose/sketchpad/Sketchpad.tsx`:
-    - [ ] Import `HandIcon` from `@semio-tech/compose-assets`.
+    - [ ] Import `HandIcon` from `@semio-tech/semio-assets`.
     - [ ] Add `HandIcon` to `getGroupIcon` for "hand" group.
     - [ ] Update toolbar group rendering loop to include "hand" group.
 - [ ] Update `js/compose/sketchpad/Design.tsx`:

@@ -40,7 +40,7 @@ const puzzle3dReactDir = resolve(repoRootPath, "puzzle/3d/react");
 const puzzle5dReactDir = resolve(repoRootPath, "puzzle/5d/react");
 const composeJsDir = resolve(repoRootPath, "compose/client/lib/js");
 const composeRsWasmEntryPath = resolve(repoRootPath, "compose/client/lib/rs/pkg/compose.js");
-const composeAssetsDir = resolve(repoRootPath, "compose/asset");
+const composeAssetsDir = resolve(repoRootPath, "asset");
 const composeFixturesDir = resolve(repoRootPath, "compose/fixture");
 const puzzleAssetsDir = resolve(repoRootPath, "puzzle/asset");
 const composeAlgorithmsEntryPath = resolve(repoRootPath, "compose/dev/algorithm/index.ts");
@@ -106,7 +106,7 @@ function buildStorybookAliases(): Record<string, string> {
 		alias["@semio-tech/compose-react"] = toVitePath(composeJsDir);
 		alias["@semio-tech/compose-js"] = toVitePath(composeJsDir);
 		alias["@semio-tech/compose-rs-wasm"] = toVitePath(composeRsWasmEntryPath);
-		alias["@semio-tech/compose-asset"] = toVitePath(composeAssetsDir);
+		alias["@semio-tech/semio-asset"] = toVitePath(composeAssetsDir);
 		alias["@semio-tech/compose-fixture"] = toVitePath(composeFixturesDir);
 		alias["@semio-tech/compose-algorithm"] = toVitePath(composeAlgorithmsEntryPath);
 		alias["@semio-tech/ui-react"] = toVitePath(uiReactDir);
@@ -238,7 +238,7 @@ const config: StorybookConfig = {
 			optimizeExclude.add("@compose/ui");
 			optimizeExclude.add("@semio-tech/compose-react");
 			optimizeExclude.add("@semio-tech/compose-js");
-			optimizeExclude.add("@semio-tech/compose-asset");
+			optimizeExclude.add("@semio-tech/semio-asset");
 		}
 		config.optimizeDeps.exclude = Array.from(optimizeExclude);
 		config.optimizeDeps.esbuildOptions = {

@@ -5,9 +5,9 @@ import os
 import re
 
 SUMMARIES = {
-    "compose/assets/icons.ts": "Re-exports Lucide React icons with domain-specific semantic aliases.",
-    "compose/assets/index.ts": "Barrel export for all asset modules including icons, fonts, models and images.",
-    "compose/assets/logo/logo.ts": "Generates animated SVG logo from static SVG input with keyframe sequences.",
+    "assets/icons.ts": "Re-exports Lucide React icons with domain-specific semantic aliases.",
+    "assets/index.ts": "Barrel export for all asset modules including icons, fonts, models and images.",
+    "assets/logo/logo.ts": "Generates animated SVG logo from static SVG input with keyframe sequences.",
     "compose/desktop/forge.config.ts": "Electron Forge configuration for building and packaging the desktop app.",
     "compose/desktop/forge.env.d.ts": "Type declarations for Electron Forge environment variables.",
     "compose/desktop/main.ts": "Entry point for the Electron main process managing windows and lifecycle.",

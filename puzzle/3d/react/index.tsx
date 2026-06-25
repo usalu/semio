@@ -176,6 +176,7 @@ type Camera = import("three").Camera;
 type Object3D = import("three").Object3D;
 type ThreeScene = import("three").Scene;
 type WebGLRenderer = import("three").WebGLRenderer;
+export type { WorldReferenceProps, WorldVolumeProps };
 // #endregion 🔌PortWiring
 
 type SceneListenerTarget = Pick<EventTarget, "addEventListener" | "removeEventListener">;
@@ -375,7 +376,45 @@ export interface ObjectProps extends WorldEntityFlags {
   userData?: Record<string, unknown>;
 }
 
-export interface AttractionProps extends WorldEntityFlags {
+/** @emoji 🔗 Compose connection transform params shared with puzzle 2d edges and puzzle 5d fasteners. */
+export interface PuzzleConnectionTransformParams {
+  readonly gap?: number;
+  readonly shift?: number;
+  readonly rise?: number;
+  readonly rotation?: number;
+  readonly turn?: number;
+  readonly tilt?: number;
+  readonly u?: number;
+  readonly v?: number;
+}
+
+const PUZZLE_CONNECTION_TRANSFORM_PARAM_KEYS = ["gap", "shift", "rise", "rotation", "turn", "tilt", "u", "v"] as const;
+
+/** @emoji 🔗 Reads optional connection transform params from fixture JSON. */
+export function parsePuzzleConnectionTransformParams(record: Record<string, unknown>): PuzzleConnectionTransformParams {
+  const out: Record<string, number> = {};
+  for (const key of PUZZLE_CONNECTION_TRANSFORM_PARAM_KEYS) {
+    const value = record[key];
+    if (typeof value === "number" && Number.isFinite(value)) {
+      out[key] = value;
+    }
+  }
+  return out;
+}
+
+/** @emoji 🔗 Spreads defined connection transform params onto a fixture record. */
+export function spreadPuzzleConnectionTransformParams(params: PuzzleConnectionTransformParams): PuzzleConnectionTransformParams {
+  const out: Record<string, number> = {};
+  for (const key of PUZZLE_CONNECTION_TRANSFORM_PARAM_KEYS) {
+    const value = params[key];
+    if (typeof value === "number" && Number.isFinite(value)) {
+      out[key] = value;
+    }
+  }
+  return out;
+}
+
+export interface AttractionProps extends WorldEntityFlags, PuzzleConnectionTransformParams {
   id: string;
   attracting: `${string}:${string}`;
   attracted: `${string}:${string}`;
@@ -1751,6 +1790,7 @@ export function parseFixtureV1(raw: unknown): FixtureV1 | null {
       attracting: tr.attracting as AttractionProps["attracting"],
       attracted: tr.attracted as AttractionProps["attracted"],
       ...(typeof tr.attractionKind === "string" ? { attractionKind: tr.attractionKind } : {}),
+      ...spreadPuzzleConnectionTransformParams(parsePuzzleConnectionTransformParams(tr)),
       ...parseWorldEntityFlags(tr),
     });
   }
@@ -1824,6 +1864,299 @@ export function parseFixtureV1(raw: unknown): FixtureV1 | null {
       : [],
   };
 }
+
+//#region 🌤️Flatten
+
+const FLATTEN_3D_TOLERANCE = 0.01;
+
+type Flatten3dVec3 = readonly [number, number, number];
+type Flatten3dQuat = readonly [number, number, number, number];
+type Flatten3dMat4 = readonly [
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+];
+
+interface Flatten3dPlaneInput {
+  readonly origin: { readonly x: number; readonly y: number; readonly z: number };
+  readonly xAxis: { readonly x: number; readonly y: number; readonly z: number };
+  readonly yAxis: { readonly x: number; readonly y: number; readonly z: number };
+}
+
+function flatten3dNormalize(vector: Flatten3dVec3): Flatten3dVec3 {
+  const len = Math.sqrt(vector[0] * vector[0] + vector[1] * vector[1] + vector[2] * vector[2]);
+  return len > 0 ? [vector[0] / len, vector[1] / len, vector[2] / len] : [0, 0, 0];
+}
+
+function flatten3dCross(a: Flatten3dVec3, b: Flatten3dVec3): Flatten3dVec3 {
+  return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+}
+
+function flatten3dDot(a: Flatten3dVec3, b: Flatten3dVec3): number {
+  return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+}
+
+function flatten3dDefaultPlane(): Flatten3dPlaneInput {
+  return { origin: { x: 0, y: 0, z: 0 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } };
+}
+
+function flatten3dPlaneToMatrix(plane: Flatten3dPlaneInput): Flatten3dMat4 {
+  const x: Flatten3dVec3 = [plane.xAxis.x, plane.xAxis.y, plane.xAxis.z];
+  const y: Flatten3dVec3 = [plane.yAxis.x, plane.yAxis.y, plane.yAxis.z];
+  const z = flatten3dCross(x, y);
+  return [x[0], y[0], z[0], plane.origin.x, x[1], y[1], z[1], plane.origin.y, x[2], y[2], z[2], plane.origin.z, 0, 0, 0, 1];
+}
+
+function flatten3dMatrixToPlane(matrix: Flatten3dMat4): Flatten3dPlaneInput {
+  return {
+    origin: { x: matrix[3], y: matrix[7], z: matrix[11] },
+    xAxis: { x: matrix[0], y: matrix[4], z: matrix[8] },
+    yAxis: { x: matrix[1], y: matrix[5], z: matrix[9] },
+  };
+}
+
+function flatten3dMulMat(a: Flatten3dMat4, b: Flatten3dMat4): Flatten3dMat4 {
+  const out = new Array<number>(16).fill(0);
+  for (let col = 0; col < 4; col += 1) {
+    for (let row = 0; row < 4; row += 1) {
+      out[col * 4 + row] = a[row] * b[col * 4] + a[4 + row] * b[col * 4 + 1] + a[8 + row] * b[col * 4 + 2] + a[12 + row] * b[col * 4 + 3];
+    }
+  }
+  return out as Flatten3dMat4;
+}
+
+function flatten3dTranslation(x: number, y: number, z: number): Flatten3dMat4 {
+  return [1, 0, 0, x, 0, 1, 0, y, 0, 0, 1, z, 0, 0, 0, 1];
+}
+
+function flatten3dRotationAxis(axis: Flatten3dVec3, angle: number): Flatten3dMat4 {
+  const [x, y, z] = axis;
+  const c = Math.cos(angle);
+  const s = Math.sin(angle);
+  const t = 1 - c;
+  return [t * x * x + c, t * x * y + s * z, t * x * z - s * y, 0, t * x * y - s * z, t * y * y + c, t * y * z + s * x, 0, t * x * z + s * y, t * y * z - s * x, t * z * z + c, 0, 0, 0, 0, 1];
+}
+
+function flatten3dApplyMatVec3(matrix: Flatten3dMat4, vector: Flatten3dVec3): Flatten3dVec3 {
+  return [matrix[0] * vector[0] + matrix[4] * vector[1] + matrix[8] * vector[2], matrix[1] * vector[0] + matrix[5] * vector[1] + matrix[9] * vector[2], matrix[2] * vector[0] + matrix[6] * vector[1] + matrix[10] * vector[2]];
+}
+
+function flatten3dQuaternionFromUnitVectors(from: Flatten3dVec3, to: Flatten3dVec3): Flatten3dQuat {
+  const r = flatten3dDot(from, to) + 1;
+  let quat: Flatten3dQuat;
+  if (r < 0.000_001) {
+    quat = Math.abs(from[0]) > Math.abs(from[2]) ? [-from[1], from[0], 0, 0] : [0, -from[2], from[1], 0];
+  } else {
+    const c = flatten3dCross(from, to);
+    quat = [c[0], c[1], c[2], r];
+  }
+  const len = Math.sqrt(quat[0] * quat[0] + quat[1] * quat[1] + quat[2] * quat[2] + quat[3] * quat[3]);
+  return [quat[0] / len, quat[1] / len, quat[2] / len, quat[3] / len];
+}
+
+function flatten3dQuaternionToMatrix(quaternion: Flatten3dQuat): Flatten3dMat4 {
+  const [x, y, z, w] = quaternion;
+  const x2 = x + x;
+  const y2 = y + y;
+  const z2 = z + z;
+  const xx = x * x2;
+  const xy = x * y2;
+  const xz = x * z2;
+  const yy = y * y2;
+  const yz = y * z2;
+  const zz = z * z2;
+  const wx = w * x2;
+  const wy = w * y2;
+  const wz = w * z2;
+  return [1 - (yy + zz), xy + wz, xz - wy, 0, xy - wz, 1 - (xx + zz), yz + wx, 0, xz + wy, yz - wx, 1 - (xx + yy), 0, 0, 0, 0, 1];
+}
+
+function flatten3dPlaneToQuaternion(plane: Flatten3dPlaneInput): Flatten3dQuat {
+  const m00 = plane.xAxis.x;
+  const m01 = plane.yAxis.x;
+  const m02 = plane.xAxis.y * plane.yAxis.z - plane.xAxis.z * plane.yAxis.y;
+  const m10 = plane.xAxis.y;
+  const m11 = plane.yAxis.y;
+  const m12 = plane.xAxis.z * plane.yAxis.y - plane.xAxis.y * plane.yAxis.z;
+  const m20 = plane.xAxis.z;
+  const m21 = plane.yAxis.z;
+  const m22 = plane.xAxis.x * plane.yAxis.y - plane.xAxis.y * plane.yAxis.x;
+  const trace = m00 + m11 + m22;
+  if (trace > 0) {
+    const s = Math.sqrt(trace + 1) * 2;
+    return [(m21 - m12) / s, (m02 - m20) / s, (m10 - m01) / s, 0.25 * s];
+  }
+  if (m00 > m11 && m00 > m22) {
+    const s = Math.sqrt(1 + m00 - m11 - m22) * 2;
+    return [0.25 * s, (m01 + m10) / s, (m02 + m20) / s, (m21 - m12) / s];
+  }
+  if (m11 > m22) {
+    const s = Math.sqrt(1 + m11 - m00 - m22) * 2;
+    return [(m01 + m10) / s, 0.25 * s, (m12 + m21) / s, (m02 - m20) / s];
+  }
+  const s = Math.sqrt(1 + m22 - m00 - m11) * 2;
+  return [(m02 + m20) / s, (m12 + m21) / s, 0.25 * s, (m10 - m01) / s];
+}
+
+function flatten3dQuatToPlane(origin: Flatten3dVec3, quaternion: Flatten3dQuat): Flatten3dPlaneInput {
+  const matrix = flatten3dQuaternionToMatrix(quaternion);
+  return { origin: { x: origin[0], y: origin[1], z: origin[2] }, xAxis: { x: matrix[0], y: matrix[4], z: matrix[8] }, yAxis: { x: matrix[1], y: matrix[5], z: matrix[9] } };
+}
+
+function flatten3dConnectionParam(params: PuzzleConnectionTransformParams, key: keyof PuzzleConnectionTransformParams): number {
+  const value = params[key];
+  return typeof value === "number" && Number.isFinite(value) ? value : 0;
+}
+
+function flatten3dComputeChildPlane(
+  parentPlane: Flatten3dPlaneInput,
+  parentPoint: Flatten3dVec3,
+  parentDirection: Flatten3dVec3,
+  childPoint: Flatten3dVec3,
+  childDirection: Flatten3dVec3,
+  params: PuzzleConnectionTransformParams,
+): Flatten3dPlaneInput {
+  const parentMatrix = flatten3dPlaneToMatrix(parentPlane);
+  const parentDir = flatten3dNormalize(parentDirection);
+  const childDir = flatten3dNormalize(childDirection);
+  const gap = flatten3dConnectionParam(params, "gap");
+  const shift = flatten3dConnectionParam(params, "shift");
+  const rise = flatten3dConnectionParam(params, "rise");
+  const rotationRad = (flatten3dConnectionParam(params, "rotation") * Math.PI) / 180;
+  const turnRad = (flatten3dConnectionParam(params, "turn") * Math.PI) / 180;
+  const tiltRad = (flatten3dConnectionParam(params, "tilt") * Math.PI) / 180;
+  const reverseChild: Flatten3dVec3 = [-childDir[0], -childDir[1], -childDir[2]];
+  const crossVec = flatten3dCross(parentDir, reverseChild);
+  const crossLen = Math.sqrt(crossVec[0] * crossVec[0] + crossVec[1] * crossVec[1] + crossVec[2] * crossVec[2]);
+  const alignQuat =
+    crossLen < FLATTEN_3D_TOLERANCE
+      ? Math.abs(parentDir[2]) < FLATTEN_3D_TOLERANCE
+        ? flatten3dQuaternionFromUnitVectors([0, 1, 0], [0, 0, -1])
+        : (() => {
+            let axis = flatten3dCross([0, 0, 1], parentDir);
+            axis = flatten3dNormalize(axis);
+            const half = Math.PI / 2;
+            return [axis[0] * Math.sin(half), axis[1] * Math.sin(half), axis[2] * Math.sin(half), Math.cos(half)] as Flatten3dQuat;
+          })()
+      : flatten3dQuaternionFromUnitVectors(reverseChild, parentDir);
+  const directionT = flatten3dQuaternionToMatrix(alignQuat);
+  const parentRotationT = flatten3dQuaternionToMatrix(flatten3dQuaternionFromUnitVectors([0, 1, 0], parentDir));
+  const gapDirection = flatten3dApplyMatVec3(parentRotationT, [0, 1, 0]);
+  const shiftDirection = flatten3dApplyMatVec3(parentRotationT, [1, 0, 0]);
+  const raiseDirection = flatten3dApplyMatVec3(parentRotationT, [0, 0, 1]);
+  let turnAxis = flatten3dApplyMatVec3(parentRotationT, [0, 0, 1]);
+  let tiltAxis = flatten3dApplyMatVec3(parentRotationT, [1, 0, 0]);
+  let orientationT = directionT;
+  const rotateT = flatten3dRotationAxis(parentDir, -rotationRad);
+  orientationT = flatten3dMulMat(rotateT, orientationT);
+  turnAxis = flatten3dApplyMatVec3(rotateT, turnAxis);
+  tiltAxis = flatten3dApplyMatVec3(rotateT, tiltAxis);
+  orientationT = flatten3dMulMat(flatten3dRotationAxis(turnAxis, turnRad), orientationT);
+  orientationT = flatten3dMulMat(flatten3dRotationAxis(tiltAxis, tiltRad), orientationT);
+  let transform = flatten3dMulMat(orientationT, flatten3dTranslation(-childPoint[0], -childPoint[1], -childPoint[2]));
+  transform = flatten3dMulMat(flatten3dMulMat(flatten3dTranslation(raiseDirection[0] * rise, raiseDirection[1] * rise, raiseDirection[2] * rise), flatten3dMulMat(flatten3dTranslation(shiftDirection[0] * shift, shiftDirection[1] * shift, shiftDirection[2] * shift), flatten3dTranslation(gapDirection[0] * gap, gapDirection[1] * gap, gapDirection[2] * gap))), transform);
+  transform = flatten3dMulMat(flatten3dTranslation(parentPoint[0], parentPoint[1], parentPoint[2]), transform);
+  return flatten3dMatrixToPlane(flatten3dMulMat(parentMatrix, transform));
+}
+
+function flatten3dResolveVortex(object: FixtureObjectV1, vortexId: string): { readonly point: Flatten3dVec3; readonly direction: Flatten3dVec3 } | null {
+  const parsed = parseVortexFullId(vortexId);
+  const localId = parsed.vortexId;
+  const vortex = object.vortices.find((row) => row.id === vortexId || row.id.endsWith(`:${localId}`) || row.id === localId);
+  if (!vortex) {
+    return null;
+  }
+  const direction = vortex.direction ?? [0, 0, 1];
+  return { point: [vortex.position[0], vortex.position[1], vortex.position[2]], direction: flatten3dNormalize([direction[0], direction[1], direction[2]]) };
+}
+
+/** @emoji 🌤️ Computes absolute object origins and orientations from attractions and local vortex geometry. */
+export function flatten3d(fixture: FixtureV1): FixtureV1 {
+  const objectMap = new Map(fixture.objects.map((object) => [object.id, object]));
+  const adjacency = new Map<string, { readonly neighborId: string; readonly attraction: AttractionProps; readonly sourceOnCurrent: boolean }[]>();
+  for (const attraction of fixture.attractions) {
+    const source = parseVortexFullId(attraction.attracting);
+    const target = parseVortexFullId(attraction.attracted);
+    if (!objectMap.has(source.objectId) || !objectMap.has(target.objectId)) {
+      continue;
+    }
+    const push = (fromId: string, toId: string, sourceOnCurrent: boolean) => {
+      const row = adjacency.get(fromId) ?? [];
+      row.push({ neighborId: toId, attraction, sourceOnCurrent });
+      adjacency.set(fromId, row);
+    };
+    push(source.objectId, target.objectId, true);
+    push(target.objectId, source.objectId, false);
+  }
+  const objectPlanes = new Map<string, Flatten3dPlaneInput>();
+  const visited = new Set<string>();
+  const bfsRoot = (rootId: string) => {
+    const queue: string[] = [rootId];
+    visited.add(rootId);
+    const rootObject = objectMap.get(rootId);
+    if (!rootObject) {
+      return;
+    }
+    objectPlanes.set(rootId, flatten3dQuatToPlane([rootObject.origin[0], rootObject.origin[1], rootObject.origin[2]], rootObject.orientation ?? [0, 0, 0, 1]));
+    while (queue.length > 0) {
+      const currentId = queue.shift()!;
+      const currentPlane = objectPlanes.get(currentId) ?? flatten3dDefaultPlane();
+      const currentObject = objectMap.get(currentId);
+      if (!currentObject) {
+        continue;
+      }
+      for (const entry of adjacency.get(currentId) ?? []) {
+        if (visited.has(entry.neighborId)) {
+          continue;
+        }
+        visited.add(entry.neighborId);
+        const sourceVortex = entry.sourceOnCurrent ? entry.attraction.attracting : entry.attraction.attracted;
+        const targetVortex = entry.sourceOnCurrent ? entry.attraction.attracted : entry.attraction.attracting;
+        const parentGeom = flatten3dResolveVortex(currentObject, sourceVortex);
+        const neighborObject = objectMap.get(entry.neighborId);
+        const childGeom = neighborObject ? flatten3dResolveVortex(neighborObject, targetVortex) : null;
+        if (!parentGeom || !childGeom) {
+          objectPlanes.set(entry.neighborId, flatten3dDefaultPlane());
+          queue.push(entry.neighborId);
+          continue;
+        }
+        objectPlanes.set(entry.neighborId, flatten3dComputeChildPlane(currentPlane, parentGeom.point, parentGeom.direction, childGeom.point, childGeom.direction, entry.attraction));
+        queue.push(entry.neighborId);
+      }
+    }
+  };
+  for (const object of fixture.objects) {
+    if (!visited.has(object.id)) {
+      bfsRoot(object.id);
+    }
+  }
+  return {
+    ...fixture,
+    objects: fixture.objects.map((object) => {
+      const plane = objectPlanes.get(object.id) ?? flatten3dDefaultPlane();
+      return {
+        ...object,
+        origin: [plane.origin.x, plane.origin.y, plane.origin.z],
+        orientation: flatten3dPlaneToQuaternion(plane),
+      };
+    }),
+  };
+}
+
+//#endregion 🌤️Flatten
 
 export function encodeFixtureForDragV1(fixture: FixtureV1): string {
   return JSON.stringify(fixture);
@@ -2523,7 +2856,7 @@ export function fixtureAppearanceFingerprint(fixture: FixtureV1): string {
   const attractions = fixture.attractions
     .map((attraction) => {
       const flags = `${attraction.hidden === true ? "h" : ""}${attraction.locked === true ? "l" : ""}`;
-      return `${attraction.id}|${attraction.attractionKind ?? ""}|${attraction.attracting}|${attraction.attracted}|${flags}`;
+      return `${attraction.id}|${attraction.attractionKind ?? ""}|${attraction.attracting}|${attraction.attracted}|${attraction.gap ?? ""}|${attraction.shift ?? ""}|${attraction.rise ?? ""}|${attraction.rotation ?? ""}|${attraction.turn ?? ""}|${attraction.tilt ?? ""}|${attraction.u ?? ""}|${attraction.v ?? ""}|${flags}`;
     })
     .join("\0");
   return `${objects}\0${attractions}`;
@@ -5276,21 +5609,26 @@ export function readPuzzle3dFillWorkerSnapshot(): Promise<Puzzle3dFillWorkerSnap
 //#endregion 🧵Precompute
 
 //#region ­ƒÄ¿MeshPaint
-const CSS_SELECTED_MESH = "color-mix(in oklab, var(--color-primary) 28%, var(--color-panel))";
-const CSS_SELECTED_LINE = tokenVar("primary");
-const CSS_HIGHLIGHTED_MESH = "color-mix(in oklab, var(--color-secondary) 24%, var(--color-panel))";
-const CSS_HIGHLIGHTED_LINE = tokenVar("secondary");
-const CSS_HOVERED_MESH = themeColorVar("hover-panel");
-const CSS_HOVERED_LINE = themeColorVar("hover-base");
-const CSS_NEUTRAL_MESH = themeColorVar("panel");
-const CSS_NEUTRAL_LINE = WORLD_MESH_BORDER_CSS;
-const CSS_MESH_EDGE_BORDER = semanticVar("border-emphasized-color");
-const CSS_DISABLED_MESH = "color-mix(in oklab, var(--color-muted-foreground) 55%, var(--color-panel))";
-const CSS_DISABLED_LINE = themeColorVar("muted-foreground");
+export const PUZZLE_3D_MESH_PAINT = {
+  style: {
+    neutral: { mesh: themeColorVar("panel"), line: WORLD_MESH_BORDER_CSS, meshFallback: "l-l-l-g", lineFallback: "gray" },
+    hovered: { mesh: semanticVar("hover-interactive-fill"), line: semanticVar("border-emphasized-color"), meshFallback: "light-5-7", lineFallback: "dark" },
+    selected: { mesh: "color-mix(in oklab, var(--color-primary) 28%, var(--color-panel))", line: tokenVar("primary"), meshFallback: "primary", lineFallback: "primary" },
+    highlighted: { mesh: "color-mix(in oklab, var(--color-secondary) 24%, var(--color-panel))", line: tokenVar("secondary"), meshFallback: "secondary", lineFallback: "secondary" },
+    disabled: { mesh: "color-mix(in oklab, var(--color-muted-foreground) 55%, var(--color-panel))", line: themeColorVar("muted-foreground"), meshFallback: "light-gray", lineFallback: "gray" },
+  },
+  edgeBorder: {
+    normal: WORLD_MESH_BORDER_CSS,
+    emphasized: semanticVar("border-emphasized-color"),
+  },
+} as const satisfies {
+  readonly style: Record<Exclude<MeshStyleKind, "original">, { readonly mesh: string; readonly line: string; readonly meshFallback: string; readonly lineFallback: string }>;
+  readonly edgeBorder: { readonly normal: string; readonly emphasized: string };
+};
 const CSS_ATTRACTION_ENDPOINT_LINE = themeColorVar("muted-foreground");
 const CSS_ATTRACTION_LINE = themeColorVar("accent");
 
-interface MeshStyleColors {
+export interface MeshStyleColors {
   readonly meshColor: string;
   readonly lineColor: string;
   readonly emissiveColor: string;
@@ -5352,26 +5690,11 @@ export function meshStyleColors(style: MeshStyleKind): MeshStyleColors | null {
     return cached;
   }
   const fb = MESH_STYLE_HEADLESS[style];
-  const meshExprs: Record<Exclude<MeshStyleKind, "original">, string> = {
-    neutral: CSS_NEUTRAL_MESH,
-    hovered: CSS_HOVERED_MESH,
-    selected: CSS_SELECTED_MESH,
-    highlighted: CSS_HIGHLIGHTED_MESH,
-    disabled: CSS_DISABLED_MESH,
-  };
-  const lineExprs: Record<Exclude<MeshStyleKind, "original">, string> = {
-    neutral: CSS_NEUTRAL_LINE,
-    hovered: CSS_HOVERED_LINE,
-    selected: CSS_SELECTED_LINE,
-    highlighted: CSS_HIGHLIGHTED_LINE,
-    disabled: CSS_DISABLED_LINE,
-  };
-  const meshFallbackKey = style === "neutral" ? "l-l-l-g" : style === "selected" ? "primary" : style === "highlighted" ? "secondary" : style === "hovered" ? "light-5-7" : "light-gray";
-  const lineFallbackKey = style === "selected" ? "primary" : style === "highlighted" ? "secondary" : "gray";
+  const spec = PUZZLE_3D_MESH_PAINT.style[style];
   const resolved = {
-    meshColor: resolveCssColor("backgroundColor", meshExprs[style], meshFallbackKey),
-    lineColor: resolveCssColor("color", lineExprs[style], lineFallbackKey),
-    emissiveColor: resolveCssColor("color", lineExprs[style], lineFallbackKey),
+    meshColor: resolveCssColor("backgroundColor", spec.mesh, spec.meshFallback),
+    lineColor: resolveCssColor("color", spec.line, spec.lineFallback),
+    emissiveColor: resolveCssColor("color", spec.line, spec.lineFallback),
     emissiveIntensity: fb.emissiveIntensity,
     opacity: fb.opacity,
   };
@@ -5432,7 +5755,7 @@ function applyMeshStyleToObject3D(root: Object3D, style: MeshStyleKind, edgeOutl
     }
   });
   if (edgeOutlines) {
-    applyWorldMeshEdgeBorders(root, CSS_MESH_EDGE_BORDER);
+    applyWorldMeshEdgeBorders(root, style === "hovered" ? PUZZLE_3D_MESH_PAINT.edgeBorder.emphasized : PUZZLE_3D_MESH_PAINT.edgeBorder.normal);
   }
 }
 
@@ -6363,45 +6686,81 @@ function GlbMeshFrame(props: { readonly children: ReactNode }) {
   return <group rotation={[GLB_MESH_FRAME_ROTATION_X, 0, 0]}>{props.children}</group>;
 }
 
+/** @emoji 🛡️ Keeps one failed GLB fetch from unmounting the whole scene canvas. */
+class MeshLoadErrorBoundary extends React.Component<
+	{ readonly fallback: ReactNode; readonly children: ReactNode },
+	{ readonly hasError: boolean }
+> {
+	override state = { hasError: false };
+
+	static getDerivedStateFromError(): { hasError: boolean } {
+		return { hasError: true };
+	}
+
+	override render(): ReactNode {
+		return this.state.hasError ? this.props.fallback : this.props.children;
+	}
+}
+
+function MeshBodyLoaded(props: MeshProps) {
+	const style = props.style ?? DEFAULT_MESH_STYLE;
+	const renderRoot = usePooledStyledMesh(props.meshUrl, style, true);
+	if (!renderRoot) {
+		return null;
+	}
+	const scale = props.scale;
+	const outlineColor = meshStyleColors("selected")?.lineColor ?? "#ff344f";
+	const dimmedClone = reactHostPort.useMemo(() => {
+		if (!renderRoot || !props.dimmed) {
+			return renderRoot;
+		}
+		const clone = renderRoot.clone(true);
+		applyOpacityScaleToObject3D(clone, WORLD_LOCKED_OPACITY_SCALE);
+		return clone;
+	}, [props.dimmed, renderRoot]);
+	return (
+		<GlbMeshFrame>
+			<Clone
+				object={dimmedClone ?? renderRoot}
+				{...(scale !== undefined
+					? {
+							scale: typeof scale === "number" ? ([scale, scale, scale] as [number, number, number]) : (scale as [number, number, number]),
+						}
+					: {})}
+				onClick={props.onClick}
+				onPointerDown={props.onPointerDown}
+				onPointerOut={props.onPointerOut}
+				onPointerOver={props.onPointerOver}
+				userData={props.userData}
+			>
+				{props.showOutline ? <Outlines color={outlineColor} thickness={4} /> : null}
+			</Clone>
+		</GlbMeshFrame>
+	);
+}
+
 /** @emoji ­ƒºè Pooled GLB body with {@link MeshStyleKind} recoloring aligned to Elements tokens. */
 export const MeshBody = reactHostPort.memo(function MeshBody(props: MeshProps) {
-  if (!isLoadableMeshUrl(props.meshUrl)) {
-    return null;
-  }
-  const style = props.style ?? DEFAULT_MESH_STYLE;
-  const renderRoot = usePooledStyledMesh(props.meshUrl, style, true);
-  if (!renderRoot) {
-    return null;
-  }
-  const scale = props.scale;
-  const outlineColor = meshStyleColors("selected")?.lineColor ?? "#ff344f";
-  const dimmedClone = reactHostPort.useMemo(() => {
-    if (!renderRoot || !props.dimmed) {
-      return renderRoot;
-    }
-    const clone = renderRoot.clone(true);
-    applyOpacityScaleToObject3D(clone, WORLD_LOCKED_OPACITY_SCALE);
-    return clone;
-  }, [props.dimmed, renderRoot]);
-  return (
-    <GlbMeshFrame>
-      <Clone
-        object={dimmedClone ?? renderRoot}
-        {...(scale !== undefined
-          ? {
-              scale: typeof scale === "number" ? ([scale, scale, scale] as [number, number, number]) : (scale as [number, number, number]),
-            }
-          : {})}
-        onClick={props.onClick}
-        onPointerDown={props.onPointerDown}
-        onPointerOut={props.onPointerOut}
-        onPointerOver={props.onPointerOver}
-        userData={props.userData}
-      >
-        {props.showOutline ? <Outlines color={outlineColor} thickness={4} /> : null}
-      </Clone>
-    </GlbMeshFrame>
-  );
+	if (!isLoadableMeshUrl(props.meshUrl)) {
+		return null;
+	}
+	const style = props.style ?? DEFAULT_MESH_STYLE;
+	const placeholder = (
+		<PlaceholderMesh
+			dimmed={props.dimmed}
+			showOutline={props.showOutline}
+			style={style}
+			onClick={props.onClick}
+			onPointerDown={props.onPointerDown}
+			onPointerOut={props.onPointerOut}
+			onPointerOver={props.onPointerOver}
+		/>
+	);
+	return (
+		<MeshLoadErrorBoundary fallback={placeholder}>
+			<MeshBodyLoaded {...props} />
+		</MeshLoadErrorBoundary>
+	);
 });
 
 const PlaceholderMesh = reactHostPort.memo(function PlaceholderMesh(props: MeshPointerHandlers & { readonly style: MeshStyleKind; readonly showOutline?: boolean; readonly dimmed?: boolean }) {
@@ -6695,7 +7054,7 @@ function VortexDirectionArrow(props: {
     return [[0, 0, 0] as Vec3, tip];
   }, [dirThree, props.radius]);
   const color = reactHostPort.useMemo(
-    () => lineCssColor(props.selected ? CSS_HOVERED_LINE : CSS_ATTRACTION_ENDPOINT_LINE, props.selected ? "secondary" : "gray"),
+    () => lineCssColor(props.selected ? PUZZLE_3D_MESH_PAINT.style.hovered.line : CSS_ATTRACTION_ENDPOINT_LINE, props.selected ? "secondary" : "gray"),
     [props.selected],
   );
   return (
@@ -6990,8 +7349,8 @@ const CableBatch = reactHostPort.memo(function CableBatch(props: { readonly attr
   }, []);
   const geo = reactHostPort.useMemo(() => new BufferGeometry(), []);
   const normalColor = reactHostPort.useMemo(() => new Color(lineCssColor(CSS_ATTRACTION_ENDPOINT_LINE, "gray")), []);
-  const hoveredColor = reactHostPort.useMemo(() => new Color(lineCssColor(CSS_HOVERED_LINE, "gray")), []);
-  const selectedColor = reactHostPort.useMemo(() => new Color(lineCssColor(CSS_SELECTED_LINE, "primary")), []);
+  const hoveredColor = reactHostPort.useMemo(() => new Color(lineCssColor(PUZZLE_3D_MESH_PAINT.style.hovered.line, "gray")), []);
+  const selectedColor = reactHostPort.useMemo(() => new Color(lineCssColor(PUZZLE_3D_MESH_PAINT.style.selected.line, "primary")), []);
   reactHostPort.useLayoutEffect(() => {
     const vertexCount = Math.max(props.attractions.length * 2, 2);
     geo.setAttribute("position", new Float32BufferAttribute(new Float32Array(vertexCount * 3), 3));
@@ -12260,6 +12619,33 @@ if (import.meta.vitest) {
       expect(records.get("obj-1")?.vortices[0]?.locked).toBe(true);
     });
   });
+  describe("flatten3d", () => {
+    it("resolves linked object origin from local vortex geometry", () => {
+      const fixture = parseFixtureV1({
+        schema: "puzzle.3d.fixture/v1",
+        camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
+        objects: [
+          {
+            id: "root",
+            meshUrl: "/m.glb",
+            origin: [1, 2, 3],
+            orientation: [0, 0, 0, 1],
+            vortices: [{ id: "root:v1", position: [0, 0, 0], direction: [0, 0, 1] }],
+          },
+          {
+            id: "child",
+            meshUrl: "/m.glb",
+            origin: [0, 0, 0],
+            vortices: [{ id: "child:v1", position: [0, 0, 0], direction: [0, 0, 1] }],
+          },
+        ],
+        attractions: [{ id: "link", attracting: "root:v1", attracted: "child:v1" }],
+      });
+      expect(fixture).not.toBeNull();
+      const flattened = flatten3d(fixture!);
+      expect(flattened.objects.find((object) => object.id === "child")?.origin[0]).toBeCloseTo(1, 2);
+    });
+  });
   describe("chunkKey", () => {
     it("buckets origin", () => {
       expect(chunkKey([10, 10, 10], 256)).toBe("0|0|0");
@@ -12335,15 +12721,31 @@ if (import.meta.vitest) {
       expect(neutral?.meshColor.length).toBeGreaterThan(0);
       expect(neutral?.lineColor.length).toBeGreaterThan(0);
     });
-    it("uses primary only for selected mesh tokens", () => {
+    it("aligns hover and selection colors with UI element tokens", () => {
       const selected = meshStyleColors("selected");
       const hovered = meshStyleColors("hovered");
+      const neutral = meshStyleColors("neutral");
       const highlighted = meshStyleColors("highlighted");
+      expect(neutral?.lineColor).toBe(resolveColorHex(PUZZLE_3D_MESH_PAINT.edgeBorder.normal, "gray"));
+      expect(hovered?.meshColor).toBe(resolveBackgroundColorHex(PUZZLE_3D_MESH_PAINT.style.hovered.mesh, "gray"));
       expect(selected?.lineColor).toBe(tokenHex("primary"));
-      expect(hovered?.lineColor).toBe(tokenHex("gray"));
+      expect(hovered?.lineColor).toBe(resolveColorHex(PUZZLE_3D_MESH_PAINT.edgeBorder.emphasized, "dark"));
       expect(highlighted?.lineColor).toBe(tokenHex("secondary"));
       expect(hovered?.lineColor).not.toMatch(/primary/i);
       expect(highlighted?.lineColor).not.toMatch(/primary/i);
+    });
+    it("uses normal mesh edge borders by default and emphasized edge borders on hover", () => {
+      const materialColorHex = (style: MeshStyleKind): string => {
+        const mesh = new Mesh(new BoxGeometry(1, 1, 1));
+        const root = new Group();
+        root.add(mesh);
+        applyMeshStyleToObject3D(root, style);
+        const outline = mesh.children.find((child) => child.userData[WORLD_MESH_OUTLINE_USER_DATA_KEY]) as LineSegments | undefined;
+        const material = outline?.material as LineBasicMaterial | undefined;
+        return `#${material?.color.getHexString()}`;
+      };
+      expect(materialColorHex("neutral")).toBe(resolveColorHex(PUZZLE_3D_MESH_PAINT.edgeBorder.normal, "gray"));
+      expect(materialColorHex("hovered")).toBe(resolveColorHex(PUZZLE_3D_MESH_PAINT.edgeBorder.emphasized, "dark"));
     });
     it("returns srgb-compatible colors for Three.js", () => {
       for (const kind of ["neutral", "hovered", "selected", "highlighted", "disabled"] as const) {

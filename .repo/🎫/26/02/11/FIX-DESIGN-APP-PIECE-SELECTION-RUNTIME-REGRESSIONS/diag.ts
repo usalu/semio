@@ -22,7 +22,7 @@ import { chromium } from "playwright";
     page.waitForEvent("filechooser"),
     fileInput.first().click().catch(() => page.locator('button:has-text("Import"), button:has-text("Open"), [aria-label*="import"], [aria-label*="open"]').first().click()),
   ]);
-  await fileChooser.setFiles("/workspaces/semio/compose/assets/compose/metabolism.zip");
+  await fileChooser.setFiles("/workspaces/semio/assets/compose/metabolism.zip");
   await page.waitForTimeout(3000);
   
   // Navigate to design

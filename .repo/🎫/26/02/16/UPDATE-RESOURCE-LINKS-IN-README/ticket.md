@@ -10,7 +10,7 @@ Updated stale README resource links to current repo paths; verified all local ma
 
 ## Changes
 
-- Updated all stale local image/list paths from `/assets/...` to `compose/assets/...`.
+- Updated all stale local image/list paths from `/assets/...` to `assets/...`.
 - Updated stale schema links:
   - `./sqlite/schema.sql` -> `./compose/sqlite/schema.sql`
   - `./jsonschema/kit.json` -> `./compose/jsonschema/kit.json`
@@ -24,7 +24,7 @@ Updated stale README resource links to current repo paths; verified all local ma
   - `compose/examples/geometry`
   - `compose/examples/metabolism`
 - Updated typography resource link:
-  - `/assets/fonts/README.md` -> `compose/assets/README.md#fonts`
+  - `/assets/fonts/README.md` -> `assets/README.md#fonts`
 - Removed stale commented studio image link pointing to a missing file.
 - Re-validated local markdown links in `README.md` against filesystem targets (fragments ignored for existence check): no missing local targets remain.
 

@@ -21,7 +21,7 @@ Added section regions around orphan definitions and summary+spec comments for al
 - compose/desktop/vite.renderer.config.ts: added 🔖Configuration section, summary+spec on imports and export
 - compose/desktop/vite.preload.config.ts: added 🔖Configuration section, summary+spec on imports and export
 - compose/desktop/vite.main.config.ts: added 🔖Configuration section, summary+spec on imports and export
-- compose/assets/icons.ts: added 🔖Exports section, summary+spec on icon re-exports and LucideIcon type
+- assets/icons.ts: added 🔖Exports section, summary+spec on icon re-exports and LucideIcon type
 - repo/vscode/eslint.config.ts: added 🔖Configuration section, summary+spec on default export
 - compose/js/eslint.config.ts: added 🔖Configuration section, summary+spec on default export
 
@@ -49,6 +49,6 @@ Added section regions around orphan definitions and summary+spec comments for al
    - compose/desktop/vite.renderer.config.ts
    - compose/desktop/vite.preload.config.ts
    - compose/desktop/vite.main.config.ts
-   - compose/assets/icons.ts
+   - assets/icons.ts
    - repo/vscode/eslint.config.ts
    - compose/js/eslint.config.ts

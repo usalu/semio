@@ -6,7 +6,7 @@
 // #endregion 🧲Header
 
 import type { Kit as ComposeKit } from "@semio-tech/compose-react";
-import { MetabolismKit as metabolismFullKit } from "@semio-tech/compose-asset";
+import { MetabolismKit as metabolismFullKit } from "@semio-tech/semio-asset";
 import { MetabolismShallowKit as metabolismShallowKit } from "@semio-tech/compose-fixture";
 import { ComposeKit as Kit } from "@compose/ui";
 import type { Meta, StoryObj } from "@storybook/react";

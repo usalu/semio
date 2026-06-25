@@ -18,11 +18,11 @@
       "@semio-tech/compose-js": [
         "../../../compose/client/lib/js/index.ts"
       ],
-      "@semio-tech/compose-asset/*": [
-        "../../../compose/asset/*"
+      "@semio-tech/semio-asset/*": [
+        "../../../asset/*"
       ],
-      "@semio-tech/compose-asset": [
-        "../../../compose/asset/index.ts"
+      "@semio-tech/semio-asset": [
+        "../../../asset/index.ts"
       ]
     }
   },

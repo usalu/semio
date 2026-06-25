@@ -11,7 +11,7 @@ compose "github.com/usalu/semio/go/compose"
 )
 
 func main() {
-assetsDir := "compose/assets/compose/"
+assetsDir := "assets/compose/"
 
 origData, err := os.ReadFile(assetsDir + "kit_metabolism.json")
 if err != nil {

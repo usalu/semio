@@ -231,7 +231,7 @@ func applyAutofixes(file string, breachs []Breach) (int, error)
 
 **Pattern 1: Fixture-based end-to-end** (`TestFixApplyAutofixes` L1591):
 
-- Uses real fixture files: `compose/assets/repo/some/folder/file_fixable.tsx` and `file_fixable_expected.tsx`
+- Uses real fixture files: `assets/repo/some/folder/file_fixable.tsx` and `file_fixable_expected.tsx`
 - Sets `rootDir` to repo root, runs `CheckPoliciesWithContext`, then `applyAutofixes`, compares output to expected file.
 
 **Pattern 2: Temp dir unit tests** (`TestFixSectionMissingEndName` L1657, `TestFixSectionNameMismatch` L1690, `TestFixSectionEmpty` L1723, `TestFixInlineComment` L1756, `TestFixBlockComment` L1789, `TestFixJSDocComment` L1822, `TestFixMultipleBreachsSameFile` L1855):

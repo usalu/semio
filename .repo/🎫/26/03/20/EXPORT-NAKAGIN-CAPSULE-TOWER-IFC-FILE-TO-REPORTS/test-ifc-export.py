@@ -15,7 +15,7 @@ def test_ifc_export():
     print("🧪 Testing Nakagin Capsule Tower IFC export for reports...")
     
     # Check if IFC file exists
-    ifc_path = Path('/workspaces/semio/compose/assets/models/nakagin-capsule-tower.ifc')
+    ifc_path = Path('/workspaces/semio/assets/models/nakagin-capsule-tower.ifc')
     
     if not ifc_path.exists():
         print("❌ IFC file not found. Run export-to-ifc.py first.")
@@ -51,7 +51,7 @@ def test_ifc_export():
         return False
     
     # Compare with existing GLB export if available
-    glb_path = Path('/workspaces/semio/compose/assets/models/nakagin-capsule-tower.glb')
+    glb_path = Path('/workspaces/semio/assets/models/nakagin-capsule-tower.glb')
     if glb_path.exists():
         glb_size = glb_path.stat().st_size
         print(f"📊 GLB file size: {glb_size:,} bytes")

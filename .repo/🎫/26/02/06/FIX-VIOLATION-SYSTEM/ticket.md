@@ -12,8 +12,8 @@ Implemented Fix() method and applyAutofixes() function with full autofix logic f
 
 - `repo/cli/main.go`: Implemented `repoContext.Fix()` with full autofix logic, `applyAutofixes()` per-file fix application, `findMatchingSectionStartName()` helper for section end name resolution. Added blank line collapse post-processing.
 - `repo/cli/main_test.go`: Added 16 new fix tests (TestFixApplyAutofixes, TestFixSectionMissingEndName, TestFixSectionNameMismatch, TestFixSectionEmpty, TestFixInlineComment, TestFixBlockComment, TestFixJSDocComment, TestFixMultipleBreachsSameFile, TestFixNonAutofixableNotFixed, TestFixViaGraphQL, TestFixViaRepoContext, TestFixIdempotent, TestFixNestedSections, TestFixExtractFileFromScope, TestFixStatuteMeta, TestFindMatchingSectionStartName). Scoped existing GraphQL fix mutation test to avoid fixture side effects.
-- `compose/assets/repo/some/folder/file_fixable.tsx`: New fixture with all autofixable breachs.
-- `compose/assets/repo/some/folder/file_fixable_expected.tsx`: Expected output after autofix.
+- `assets/repo/some/folder/file_fixable.tsx`: New fixture with all autofixable breachs.
+- `assets/repo/some/folder/file_fixable_expected.tsx`: Expected output after autofix.
 
 ## Log
 

@@ -36,7 +36,7 @@ Refactored VSCode extension sideview to consolidate into Monorepo and Filter sec
   - Test the new `MonorepoTreeDataProvider` and `FilterTreeDataProvider`.
   - Fix TypeScript errors and type mismatches.
   - Remove tests for deleted views.
-- Updated `tsconfig.json` with path mappings for `compose/js` and `compose/assets`.
+- Updated `tsconfig.json` with path mappings for `compose/js` and `assets`.
 
 ## Log
 

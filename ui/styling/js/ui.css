@@ -952,9 +952,9 @@
   color: var(--border-emphasized-color);
 }
 
-[data-slot="navbar"] [data-level="base"]:hover:not([data-state="on"]):not(:disabled),
-[data-slot="footer"] [data-level="base"]:hover:not([data-state="on"]):not(:disabled),
-[data-slot="toolbar-zone"] [data-level="base"]:hover:not([data-state="on"]):not(:disabled),
+[data-slot="navbar"] [data-level="base"]:not([data-slot$="-group"]):hover:not([data-state="on"]):not(:disabled),
+[data-slot="footer"] [data-level="base"]:not([data-slot$="-group"]):hover:not([data-state="on"]):not(:disabled),
+[data-slot="toolbar-zone"] [data-level="base"]:not([data-slot$="-group"]):hover:not([data-state="on"]):not(:disabled),
 [data-slot="navbar"] [data-slot="toggle-group-item"]:hover:not([data-state="on"]):not(:disabled),
 [data-slot="navbar"] [data-slot="button-group-item"]:hover:not([data-state="on"]):not(:disabled),
 [data-slot="navbar"] [data-slot="action-group-item"]:hover:not([data-state="on"]):not(:disabled),
@@ -965,37 +965,37 @@
   color: var(--border-emphasized-color);
 }
 
-[data-slot="navbar"] [data-level="canvas"]:hover:not([data-state="on"]):not(:disabled),
-[data-slot="footer"] [data-level="canvas"]:hover:not([data-state="on"]):not(:disabled),
-[data-slot="toolbar-zone"] [data-level="canvas"]:hover:not([data-state="on"]):not(:disabled) {
+[data-slot="navbar"] [data-level="canvas"]:not([data-slot$="-group"]):hover:not([data-state="on"]):not(:disabled),
+[data-slot="footer"] [data-level="canvas"]:not([data-slot$="-group"]):hover:not([data-state="on"]):not(:disabled),
+[data-slot="toolbar-zone"] [data-level="canvas"]:not([data-slot$="-group"]):hover:not([data-state="on"]):not(:disabled) {
   background-color: var(--hover-interactive-fill);
   color: var(--border-emphasized-color);
 }
 
-[data-slot="navbar"] [data-level="window"]:hover:not([data-state="on"]):not(:disabled),
-[data-slot="footer"] [data-level="window"]:hover:not([data-state="on"]):not(:disabled),
-[data-slot="toolbar-zone"] [data-level="window"]:hover:not([data-state="on"]):not(:disabled) {
+[data-slot="navbar"] [data-level="window"]:not([data-slot$="-group"]):hover:not([data-state="on"]):not(:disabled),
+[data-slot="footer"] [data-level="window"]:not([data-slot$="-group"]):hover:not([data-state="on"]):not(:disabled),
+[data-slot="toolbar-zone"] [data-level="window"]:not([data-slot$="-group"]):hover:not([data-state="on"]):not(:disabled) {
   background-color: var(--hover-interactive-fill);
   color: var(--border-emphasized-color);
 }
 
-[data-slot="navbar"] [data-level="panel"]:hover:not([data-state="on"]):not(:disabled),
-[data-slot="footer"] [data-level="panel"]:hover:not([data-state="on"]):not(:disabled),
-[data-slot="toolbar-zone"] [data-level="panel"]:hover:not([data-state="on"]):not(:disabled) {
+[data-slot="navbar"] [data-level="panel"]:not([data-slot$="-group"]):hover:not([data-state="on"]):not(:disabled),
+[data-slot="footer"] [data-level="panel"]:not([data-slot$="-group"]):hover:not([data-state="on"]):not(:disabled),
+[data-slot="toolbar-zone"] [data-level="panel"]:not([data-slot$="-group"]):hover:not([data-state="on"]):not(:disabled) {
   background-color: var(--hover-interactive-fill);
   color: var(--border-emphasized-color);
 }
 
-[data-slot="navbar"] [data-level="overlay"]:hover:not([data-state="on"]):not(:disabled),
-[data-slot="footer"] [data-level="overlay"]:hover:not([data-state="on"]):not(:disabled),
-[data-slot="toolbar-zone"] [data-level="overlay"]:hover:not([data-state="on"]):not(:disabled) {
+[data-slot="navbar"] [data-level="overlay"]:not([data-slot$="-group"]):hover:not([data-state="on"]):not(:disabled),
+[data-slot="footer"] [data-level="overlay"]:not([data-slot$="-group"]):hover:not([data-state="on"]):not(:disabled),
+[data-slot="toolbar-zone"] [data-level="overlay"]:not([data-slot$="-group"]):hover:not([data-state="on"]):not(:disabled) {
   background-color: var(--hover-interactive-fill);
   color: var(--border-emphasized-color);
 }
 
-[data-slot="navbar"] [data-level="temporary"]:hover:not([data-state="on"]):not(:disabled),
-[data-slot="footer"] [data-level="temporary"]:hover:not([data-state="on"]):not(:disabled),
-[data-slot="toolbar-zone"] [data-level="temporary"]:hover:not([data-state="on"]):not(:disabled) {
+[data-slot="navbar"] [data-level="temporary"]:not([data-slot$="-group"]):hover:not([data-state="on"]):not(:disabled),
+[data-slot="footer"] [data-level="temporary"]:not([data-slot$="-group"]):hover:not([data-state="on"]):not(:disabled),
+[data-slot="toolbar-zone"] [data-level="temporary"]:not([data-slot$="-group"]):hover:not([data-state="on"]):not(:disabled) {
   background-color: var(--hover-interactive-fill);
   color: var(--border-emphasized-color);
 }

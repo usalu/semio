@@ -124,7 +124,7 @@
 - Progress: per-interaction diff migration complete; preparing ticket close.
 - Closing ticket with per-interaction diff migration summary and updated docs/tests/fixtures.
 - Ticket closing: per-interaction diff migration completed; docs and code updated.
-- Ticket closed via repo CLI. Warning: GitHub label add failed for compose/assets (label not found).
+- Ticket closed via repo CLI. Warning: GitHub label add failed for assets (label not found).
 - Message received; continued work while following user rules.
 
 ## Summary

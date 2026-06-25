@@ -68,7 +68,10 @@ export default defineConfig({
   webServer: {
     cwd: __dirname,
     command: `node "${viteBin}" --host ${previewHost} --port 4181 --strictPort`,
-    env: { NODE_OPTIONS: "", COMPOSE_SKETCHPAD_E2E: "1" },
+    env: {
+      NODE_OPTIONS: "",
+      COMPOSE_SKETCHPAD_PRELOAD_KITS: "/fixture/kit/dev/metabolism/wip/initialKit/kit.compose.json",
+    },
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 300000,

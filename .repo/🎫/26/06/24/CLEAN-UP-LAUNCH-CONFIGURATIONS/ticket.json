@@ -1,0 +1,16 @@
+{
+  "title": "Clean Up Launch Configurations",
+  "emoji": "🛠️",
+  "status": "closed",
+  "description": "Clean up launch configurations in .vscode/launch.json by removing duplicates, adjusting order, removing module/extension specific setups, and removing all tests.",
+  "summary": "Corrected order and grouped configurations by hierarchy (e.g. puzzle 2d, 3d, 5d are adjacent)",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1738"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪a88cb0cb1a3746de8f5e1171102a9c56",
+    "⚪5f18ff0d02964e9c973463e69842ef7d",
+    "⚪b6e55a4c525640fb9b16824e083a01fb"
+  ]
+}

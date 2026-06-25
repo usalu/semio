@@ -20,8 +20,12 @@ export function assembleSplitInitialKitFromDirectory(initialKitDir: string): Rec
 	const kit = JSON.parse(fs.readFileSync(shellPath, "utf8")) as Record<string, unknown>;
 	const typeById = new Map<string, Record<string, unknown>>();
 	const designById = new Map<string, Record<string, unknown>>();
-	const typesDir = path.join(initialKitDir, "types");
-	const designsDir = path.join(initialKitDir, "designs");
+	const typesDir = fs.existsSync(path.join(initialKitDir, "type"))
+		? path.join(initialKitDir, "type")
+		: path.join(initialKitDir, "types");
+	const designsDir = fs.existsSync(path.join(initialKitDir, "design"))
+		? path.join(initialKitDir, "design")
+		: path.join(initialKitDir, "designs");
 	if (fs.existsSync(typesDir)) {
 		for (const name of fs.readdirSync(typesDir)) {
 			if (!name.endsWith(".type.compose.json")) continue;
@@ -74,7 +78,10 @@ export function assembleSplitInitialKitFromDirectory(initialKitDir: string): Rec
 /** @emoji 📦 Reads split or monolithic `kit.compose.json` (assembles sidecars when `types/` exists). */
 export function readInitialKitFixtureFromPath(kitJsonPath: string): Record<string, unknown> {
 	const initialKitDir = path.dirname(kitJsonPath);
-	if (fs.existsSync(path.join(initialKitDir, "types"))) {
+	if (
+		fs.existsSync(path.join(initialKitDir, "type")) ||
+		fs.existsSync(path.join(initialKitDir, "types"))
+	) {
 		return assembleSplitInitialKitFromDirectory(initialKitDir);
 	}
 	return JSON.parse(fs.readFileSync(kitJsonPath, "utf8")) as Record<string, unknown>;

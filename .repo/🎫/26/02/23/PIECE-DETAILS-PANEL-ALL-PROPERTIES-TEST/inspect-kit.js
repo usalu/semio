@@ -1,5 +1,5 @@
 import { readFileSync } from 'fs';
-const d = JSON.parse(readFileSync('/workspaces/semio/compose/assets/compose/kit_metabolism.json', 'utf8'));
+const d = JSON.parse(readFileSync('/workspaces/semio/assets/compose/kit_metabolism.json', 'utf8'));
 const nct = d.designs.find(x => x.name === 'Nakagin Capsule Tower');
 const connectingGuids = new Set(nct.connections.map(c => c.connecting.piece.guid));
 const rootPieces = nct.pieces.filter(p => connectingGuids.has(p.guid) === false);

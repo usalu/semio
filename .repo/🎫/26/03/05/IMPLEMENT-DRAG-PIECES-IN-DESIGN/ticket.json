@@ -83,7 +83,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "compose/compose/compose/assets",
+              "path": "compose/compose/assets",
               "lines": {
                 "added": 5,
                 "removed": 0
@@ -168,7 +168,7 @@
           ],
           "added": [
             {
-              "path": "💻compose/assets/index.ts",
+              "path": "💻assets/index.ts",
               "lines": {
                 "added": 181,
                 "removed": 0
@@ -237,7 +237,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "💻compose/assets/index.ts#Exports",
+              "path": "💻assets/index.ts#Exports",
               "lines": {
                 "added": 5,
                 "removed": 0

@@ -47,7 +47,7 @@ await page.waitForLoadState("domcontentloaded");
 await page.waitForTimeout(3000);
 
 // Create kit with metabolism data in same page context, then SPA-navigate.
-const zipBytes = await readFile(path.resolve("compose/assets/compose/metabolism.zip"));
+const zipBytes = await readFile(path.resolve("assets/compose/metabolism.zip"));
 const zipB64 = zipBytes.toString("base64");
 
 const kitId = await page.evaluate(async (b64) => {

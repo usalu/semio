@@ -52,7 +52,7 @@ function monorepoWorkspaceTransformPlugin(workspaceRoot: string): Plugin {
         file.startsWith(`${root}/cad/`) ||
         file.startsWith(`${root}/compose/client/lib/sketchpad/`) ||
         file.startsWith(`${root}/compose/client/lib/react/`) ||
-        file.startsWith(`${root}/compose/asset/`) ||
+        file.startsWith(`${root}/asset/`) ||
         file.startsWith(`${root}/framework/product/playground/`) ||
         file.startsWith(`${root}/infinite/`) ||
         file.startsWith(`${root}/gis/`) ||
@@ -207,7 +207,7 @@ const RUNTIME_ASSET_DIRECTORIES = new Set(["badge", "cursor", "font", "icon", "i
 
 function attachWasmAndAssetsMiddleware(server: { middlewares: { use: (fn: (req: any, res: any, next: any) => void) => void } }, fsMod: typeof import("fs")) {
   const sketchpadPublicPath = path.resolve(__dirname, "public");
-  const assetsPath = path.resolve(__dirname, "../../../../asset");
+  const assetsPath = path.resolve(__dirname, "../../../../../asset");
   const fixturesPath = path.resolve(__dirname, "../../../../fixture");
   server.middlewares.use((req: any, res: any, next: any) => {
     if (req.url?.endsWith(".wasm")) {
@@ -226,7 +226,11 @@ function attachWasmAndAssetsMiddleware(server: { middlewares: { use: (fn: (req: 
           if (requestedFixturePath.endsWith(".json")) {
             res.setHeader("Content-Type", "application/json");
           }
-          if (requestedFixturePath.endsWith("/kit.compose.json") && fsMod.existsSync(path.join(path.dirname(filePath), "types"))) {
+          const kitDir = path.dirname(filePath);
+          if (
+            requestedFixturePath.endsWith("/kit.compose.json") &&
+            (fsMod.existsSync(path.join(kitDir, "type")) || fsMod.existsSync(path.join(kitDir, "types")))
+          ) {
             const assembled = readInitialKitFixtureFromPath(filePath);
             res.end(JSON.stringify(assembled));
             return;
@@ -279,8 +283,8 @@ export default defineConfig(async ({ mode }) => {
     { find: "@semio-tech/ui-asset", replacement: path.resolve(__dirname, "../../../../../ui/asset/index.ts") },
     { find: "@semio-tech/compose-sketchpad", replacement: path.resolve(__dirname) },
     { find: "@compose/studio", replacement: path.resolve(__dirname, "../../studio") },
-    { find: "@semio-tech/compose-asset/icon", replacement: path.resolve(__dirname, "../../../../asset/index.ts") },
-    { find: "@semio-tech/compose-asset", replacement: path.resolve(__dirname, "../../../../asset") },
+    { find: "@semio-tech/semio-asset/icon", replacement: path.resolve(__dirname, "../../../../../asset/index.ts") },
+    { find: "@semio-tech/semio-asset", replacement: path.resolve(__dirname, "../../../../../asset") },
     { find: "@semio-tech/framework-core", replacement: path.resolve(__dirname, "../../../../../framework/core/index.ts") },
     { find: "@semio-tech/framework-platform-core", replacement: path.resolve(__dirname, "../../../../../framework/product/platform/core/index.ts") },
     { find: "@semio-tech/framework-platform-renderer-react", replacement: path.resolve(__dirname, "../../../../../framework/product/platform/renderer/react/index.tsx") },
@@ -311,12 +315,15 @@ export default defineConfig(async ({ mode }) => {
     { find: "scheduler", replacement: schedulerEntry },
     { find: "vite/internal", replacement: viteInternalFallback },
   ];
+  const defaultPreloadKits =
+    process.env.COMPOSE_SKETCHPAD_PRELOAD_KITS ??
+    (process.env.NODE_ENV !== "production" ? "/fixture/kit/dev/metabolism/wip/initialKit/kit.compose.json" : "");
   return {
     define: {
       __COMPOSE_JS_RUN_BENCHMARKS__: "false",
       __COMPOSE_JS_RUN_EMBEDDED_TESTS__: "false",
       __COMPOSE_SKETCHPAD_RUN_EMBEDDED_TESTS__: "false",
-      "import.meta.env.COMPOSE_SKETCHPAD_E2E": JSON.stringify(process.env.COMPOSE_SKETCHPAD_E2E ?? ""),
+      "import.meta.env.COMPOSE_SKETCHPAD_PRELOAD_KITS": JSON.stringify(defaultPreloadKits),
     },
     resolve: {
       dedupe: ["react", "react-dom", "scheduler", "use-sync-external-store", "three", "@react-three/fiber", "@react-three/drei", "@radix-ui/react-compose-refs", "@radix-ui/react-slot"],

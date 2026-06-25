@@ -1,5 +1,5 @@
 // #region 🧲Header
-// 💻 Temporary ticket script: read `compose/assets/fixtures/metabolism.kit.compose.json` Nakagin family `ports` + `compatiblePorts`, emit `BoardKindCompatEntry[]` as `compose.metabolism.light.handle.<portId>` pairs (`specificity: handle`, `bidirectional: true`), deduped. Optional `--write-board` merges into `.storybook/fixtures/nakagin-capsule-tower.board.json` under `meta.kindCompatibility` for manual diff review.
+// 💻 Temporary ticket script: read `assets/fixtures/metabolism.kit.compose.json` Nakagin family `ports` + `compatiblePorts`, emit `BoardKindCompatEntry[]` as `compose.metabolism.light.handle.<portId>` pairs (`specificity: handle`, `bidirectional: true`), deduped. Optional `--write-board` merges into `.storybook/fixtures/nakagin-capsule-tower.board.json` under `meta.kindCompatibility` for manual diff review.
 // #endregion 🧲Header
 
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
@@ -25,7 +25,7 @@ function findRepoRoot(startDir: string): string {
 }
 
 const repoRoot = findRepoRoot(__dir);
-const kitPath = join(repoRoot, "compose/assets/fixtures/metabolism.kit.compose.json");
+const kitPath = join(repoRoot, "assets/fixtures/metabolism.kit.compose.json");
 const outExtracted = join(__dir, "kind-compatibility.extracted.json");
 const boardPath = join(repoRoot, ".storybook/fixtures/nakagin-capsule-tower.board.json");
 

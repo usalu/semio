@@ -8,7 +8,7 @@ import {
   DesignsDiff,
 } from "/workspaces/semio/compose/js/compose";
 
-const ASSETS = "/workspaces/semio/compose/assets/compose";
+const ASSETS = "/workspaces/semio/assets/compose";
 const kitRaw = JSON.parse(readFileSync(`${ASSETS}/kit_metabolism.json`, "utf-8"));
 const kitOriginal = { ...kitRaw, designs: (kitRaw.designs ?? []).filter((d: any) => !d.parent) };
 const kitDiffed = JSON.parse(readFileSync(`${ASSETS}/kit_metabolism_diffed.json`, "utf-8"));

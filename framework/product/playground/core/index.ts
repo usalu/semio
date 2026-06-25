@@ -126,6 +126,7 @@ export type UiNode =
   | UiPuzzle2dHostSurfaceNode
   | import("@semio-tech/framework-platform-core").UiPuzzle5dHostSurfaceNode
   | import("@semio-tech/framework-platform-core").UiCadHostSurfaceNode
+  | import("@semio-tech/framework-platform-core").UiShootingHostSurfaceNode
   | UiTableHostSurfaceNode
   | import("@semio-tech/framework-platform-core").UiTreeNode;
 
@@ -135,6 +136,7 @@ import {
   buildMapWindowBody,
   buildFlowWindowBody,
   buildDagWindowBody,
+  buildShootingWindowBody,
   isCanvasOnlyWindowBody,
 } from "@semio-tech/framework-platform-core";
 
@@ -146,6 +148,7 @@ export {
   buildMapWindowBody,
   buildFlowWindowBody,
   buildDagWindowBody,
+  buildShootingWindowBody,
   buildPanelWindowBody,
   isCanvasOnlyWindowBody,
 } from "@semio-tech/framework-platform-core";

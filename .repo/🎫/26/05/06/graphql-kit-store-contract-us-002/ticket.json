@@ -6,7 +6,7 @@
   "files": [
     "compose/rs/lib.rs",
     "compose/graphql/schema.graphql",
-    "compose/assets/compose/kit-store.contract.compose.json",
+    "assets/compose/kit-store.contract.compose.json",
     "package.json",
     ".ralph-tui/progress.md"
   ]

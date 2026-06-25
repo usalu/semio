@@ -2,7 +2,7 @@
   "title": "Collaborative Auto Save Kit Stores",
   "emoji": "🧰",
   "status": "closed",
-  "description": "All compose sketchpad stores MUST be collaborative and synchronized. When the desktop opens with a kit folder path (e.g. compose/assets/compose/metabolism), the kit should be loaded and every edit in the sketchpad MUST change the folder kit. Implement auto-save in SketchpadStore.registerKitStore() so that all entry points (desktop, web, VS Code) automatically persist kit edits. Add tests for auto-save behavior.",
+  "description": "All compose sketchpad stores MUST be collaborative and synchronized. When the desktop opens with a kit folder path (e.g. assets/compose/metabolism), the kit should be loaded and every edit in the sketchpad MUST change the folder kit. Implement auto-save in SketchpadStore.registerKitStore() so that all entry points (desktop, web, VS Code) automatically persist kit edits. Add tests for auto-save behavior.",
   "summary": "Added auto-save to SketchpadStore.registerKitStore() with 300ms debounce. Every kit store registered with the sketchpad (injected, created via factory, or loaded from persistence) now automatically saves when its dirty flag becomes true and status is ready. This ensures all entry points (desktop Electron with FolderKitStore, VS Code webview with JsonFileKitStore, standalone web) automatically persist kit edits to disk. Removed redundant per-entry-point auto-save from index.tsx (VS Code adapter). Added 4 unit tests: auto-save on apply, debounce of rapid changes, skip when status is not ready, auto-save of injected desktop kitStore. All 83 tests pass.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1025"

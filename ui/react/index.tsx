@@ -218,6 +218,133 @@ export let sceneHostPort: SceneHostPort = {
 };
 // #endregion 🔌PortWiring
 
+// #region 🔖IconRenderPort
+export type {
+  IconRenderCamera,
+  IconRenderFormat,
+  IconRenderLights,
+  IconRenderMaterial,
+  IconRenderPort,
+  IconRenderRequest,
+  IconRenderResult,
+} from "@semio-tech/ui-styling/icon-render-port";
+
+import type { IconRenderPort, IconRenderRequest, IconRenderResult } from "@semio-tech/ui-styling/icon-render-port";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { SVGRenderer } from "three/examples/jsm/renderers/SVGRenderer.js";
+
+const GLB_MESH_FRAME_ROTATION_X = Math.PI / 2;
+const ICON_RENDER_GLB_CACHE = new Map<string, Promise<THREE.Group>>();
+
+function sunPositionFromAzimuthElevation(azimuthDeg: number, elevationDeg: number, distance = 120): THREE.Vector3 {
+  const az = (azimuthDeg * Math.PI) / 180;
+  const el = (elevationDeg * Math.PI) / 180;
+  return new THREE.Vector3(Math.cos(el) * Math.cos(az), Math.cos(el) * Math.sin(az), Math.sin(el)).multiplyScalar(distance);
+}
+
+async function loadGlbGroup(url: string): Promise<THREE.Group> {
+  const cached = ICON_RENDER_GLB_CACHE.get(url);
+  if (cached) return cached.then((group) => group.clone(true));
+  const pending = new Promise<THREE.Group>((resolve, reject) => {
+    const loader = new GLTFLoader();
+    loader.load(
+      url,
+      (gltf) => {
+        const root = new THREE.Group();
+        const frame = new THREE.Group();
+        frame.rotation.x = GLB_MESH_FRAME_ROTATION_X;
+        frame.add(gltf.scene);
+        root.add(frame);
+        resolve(root);
+      },
+      undefined,
+      reject,
+    );
+  });
+  ICON_RENDER_GLB_CACHE.set(url, pending);
+  return pending.then((group) => group.clone(true));
+}
+
+function applyIconMaterial(group: THREE.Object3D, material?: IconRenderRequest["material"]): void {
+  if (!material) return;
+  group.traverse((obj) => {
+    if (!(obj instanceof THREE.Mesh)) return;
+    const mat = new THREE.MeshStandardMaterial({
+      color: material.color ?? "#9aa0ab",
+      metalness: material.metalness ?? 0,
+      roughness: material.roughness ?? 1,
+    });
+    if (material.emissive) {
+      mat.emissive.set(material.emissive);
+      mat.emissiveIntensity = material.emissiveIntensity ?? 1;
+    }
+    obj.material = mat;
+    obj.castShadow = true;
+    obj.receiveShadow = true;
+  });
+}
+
+function buildIconScene(request: IconRenderRequest, model: THREE.Group): THREE.Scene {
+  const scene = new THREE.Scene();
+  if (request.background) scene.background = new THREE.Color(request.background);
+  scene.add(model.clone(true));
+  applyIconMaterial(scene, request.material);
+  const ambient = new THREE.AmbientLight(request.lights.ambientColor, request.lights.ambientIntensity);
+  const sunPos = sunPositionFromAzimuthElevation(request.lights.sunAzimuth, request.lights.sunElevation);
+  const sun = new THREE.DirectionalLight(request.lights.sunColor, request.lights.sunIntensity);
+  sun.position.copy(sunPos);
+  if (request.shadowEnabled) {
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(1024, 1024);
+  }
+  scene.add(ambient, sun);
+  return scene;
+}
+
+function buildIconCamera(request: IconRenderRequest): THREE.PerspectiveCamera {
+  const camera = new THREE.PerspectiveCamera(request.camera.fov ?? 50, request.width / request.height, 0.1, 10_000);
+  const up = request.camera.up ?? [0, 0, 1];
+  camera.up.set(up[0], up[1], up[2]);
+  camera.position.set(request.camera.position[0], request.camera.position[1], request.camera.position[2]);
+  camera.lookAt(request.camera.target[0], request.camera.target[1], request.camera.target[2]);
+  camera.zoom = request.camera.zoom;
+  camera.updateProjectionMatrix();
+  return camera;
+}
+
+async function renderIconSvg(scene: THREE.Scene, camera: THREE.PerspectiveCamera, width: number, height: number): Promise<IconRenderResult> {
+  const renderer = new SVGRenderer();
+  renderer.setSize(width, height);
+  renderer.render(scene, camera);
+  const svgElement = renderer.domElement;
+  const svgMarkup = new XMLSerializer().serializeToString(svgElement);
+  const dataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgMarkup)}`;
+  return { dataUrl, svgMarkup };
+}
+
+async function renderIconPng(scene: THREE.Scene, camera: THREE.PerspectiveCamera, width: number, height: number, shadowEnabled: boolean): Promise<IconRenderResult> {
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+  renderer.setSize(width, height);
+  renderer.shadowMap.enabled = shadowEnabled;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.render(scene, camera);
+  const dataUrl = renderer.domElement.toDataURL("image/png");
+  renderer.dispose();
+  return { dataUrl };
+}
+
+/** @emoji 🖼️ Default three.js-backed icon render port (SVGRenderer + WebGL PNG). */
+export const iconRenderPort: IconRenderPort = {
+  async render(request: IconRenderRequest): Promise<IconRenderResult> {
+    const model = await loadGlbGroup(request.assetUrl);
+    const scene = buildIconScene(request, model);
+    const camera = buildIconCamera(request);
+    if (request.format === "svg") return renderIconSvg(scene, camera, request.width, request.height);
+    return renderIconPng(scene, camera, request.width, request.height, request.shadowEnabled === true);
+  },
+};
+// #endregion 🔖IconRenderPort
+
 // #region 🖼️ReferenceMedia
 /** @emoji 🖼️ Reference plane media kind for infinite-world grid underlays. */
 export type ReferenceMediaKind = "image" | "svg" | "pdf";
@@ -12033,7 +12160,8 @@ const WindowMeasuresChrome: React.FC<WindowMeasuresChromeProps> = ({ windowId, f
         <ActionGroupItem
           id={`${windowId}-window-measures-unfold`}
           icon="chevron-left"
-          className={windowMeasuresChromeActionClass}
+          text="Window Options"
+          className={cn(windowMeasuresChromeActionClass, "w-auto px-single")}
           onClick={onUnfold}
         />
       </div>
@@ -14203,13 +14331,18 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
       {(showControls || onOpenInNewWindow || onMaximize || onMinimize || onClose) && (
         <ActionGroup id={`${id}-window-controls`}>
           {onOpenInNewWindow && (
-            <ActionGroupItem id={`${id}-window-controls-external`} onClick={onOpenInNewWindow} icon={<ExternalLinkIcon />} />
+            <ActionGroupItem id={`${id}-window-controls-external`} onClick={onOpenInNewWindow} icon={<ExternalLinkIcon />} text="New Window" />
           )}
           {(onMaximize || onMinimize) && (
-            <ActionGroupItem id={`${id}-window-controls-maximize`} onClick={onMaximize ?? onMinimize} icon={<Maximize2Icon />} />
+            <ActionGroupItem
+              id={`${id}-window-controls-maximize`}
+              onClick={onMaximize ?? onMinimize}
+              icon={onMinimize ? <Minimize2Icon /> : <Maximize2Icon />}
+              text={onMinimize ? "Unfocus" : "Focus"}
+            />
           )}
           {onClose && (
-            <ActionGroupItem id={`${id}-window-controls-close`} onClick={onClose} icon={<CloseIcon />} />
+            <ActionGroupItem id={`${id}-window-controls-close`} onClick={onClose} icon={<CloseIcon />} text="Close" />
           )}
         </ActionGroup>
       )}
@@ -19171,19 +19304,27 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
       <button
         type="button"
         data-slot="mode-dock-maximize"
-        className={windowChromeControlButtonClass}
+        className={cn(
+          "flex h-medium w-auto items-center justify-center border-0 bg-transparent transition-colors px-single gap-single text-element",
+          interactiveHoverClass,
+        )}
         onClick={() => dock?.toggleMaximize(stackPath)}
       >
         {isMaximized ? <Minimize2Icon className="size-small" /> : <Maximize2Icon className="size-small" />}
+        <span className="text-tiny whitespace-nowrap">{isMaximized ? "Unfocus" : "Focus"}</span>
       </button>
       {activeId ? (
         <button
           type="button"
           data-slot="mode-dock-close"
-          className={windowChromeControlButtonClass}
+          className={cn(
+            "flex h-medium w-auto items-center justify-center border-0 bg-transparent transition-colors px-single gap-single text-element",
+            interactiveHoverClass,
+          )}
           onClick={() => dock?.closeWindow(activeId)}
         >
           <CloseIcon className="size-small" />
+          <span className="text-tiny whitespace-nowrap">Close</span>
         </button>
       ) : null}
     </div>
@@ -21795,6 +21936,41 @@ if (import.meta.vitest) {
       const inputRoot = container.querySelector('[data-slot="engagement-command-input"] [data-slot="input-root"]');
       expect(row?.className).toContain("w-full");
       expect(inputRoot?.className).toContain("w-full");
+    });
+
+    it("Window and ModeDock controls render with labels", () => {
+      const { container } = render(
+        <Window
+          id="labeled-window"
+          onOpenInNewWindow={() => {}}
+          onMaximize={() => {}}
+          onClose={() => {}}
+        >
+          <div>Body</div>
+        </Window>,
+      );
+      
+      const newWindowBtn = container.querySelector('[id="labeled-window-window-controls-external"]');
+      expect(newWindowBtn?.textContent?.trim()).toBe("New Window");
+
+      const closeBtn = container.querySelector('[id="labeled-window-window-controls-close"]');
+      expect(closeBtn?.textContent?.trim()).toBe("Close");
+
+      const maximizeBtn = container.querySelector('[id="labeled-window-window-controls-maximize"]');
+      expect(maximizeBtn?.textContent?.trim()).toBe("Focus");
+    });
+
+    it("Window maximize renders as Unfocus when onMinimize is provided", () => {
+      const { container } = render(
+        <Window
+          id="labeled-window-min"
+          onMinimize={() => {}}
+        >
+          <div>Body</div>
+        </Window>,
+      );
+      const maximizeBtn = container.querySelector('[id="labeled-window-min-window-controls-maximize"]');
+      expect(maximizeBtn?.textContent?.trim()).toBe("Unfocus");
     });
 
     it("Window engagement max width shrinks when measures rail is present", () => {

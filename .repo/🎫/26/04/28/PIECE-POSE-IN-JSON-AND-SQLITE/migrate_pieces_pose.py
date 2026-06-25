@@ -42,7 +42,7 @@ def main() -> int:
             root = cand
             break
     if root is None:
-        print("could not find compose/assets/compose from", here, file=sys.stderr)
+        print("could not find assets/compose from", here, file=sys.stderr)
         return 1
     for path in sorted(root.rglob("*.json")):
         text = path.read_text(encoding="utf-8")

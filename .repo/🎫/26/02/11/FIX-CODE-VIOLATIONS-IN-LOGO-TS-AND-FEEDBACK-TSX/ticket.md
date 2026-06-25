@@ -10,7 +10,7 @@ Fixed all breachs: logo.ts 72→0 (added Imports/Types/Logo Generation sections 
 
 ## Changes
 
-### compose/assets/logo/logo.ts (72 breachs fixed)
+### assets/logo/logo.ts (72 breachs fixed)
 
 - Moved `// #region 🔖Header` before shebang to fix orphan-block-1
 - Fixed file ID emoji from 📜 to 💻

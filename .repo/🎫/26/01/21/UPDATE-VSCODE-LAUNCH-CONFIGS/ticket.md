@@ -30,7 +30,7 @@ Update VSCode launch.json and tasks.json with:
 | js/vscode             | repo/vscode       |
 | net/Compose             | compose/net         |
 | net/Compose.Grasshopper | compose/grasshopper |
-| assets                | compose/assets      |
+| assets                | assets      |
 | assets/logo           | compose/logo        |
 | assets/icons          | compose/icons       |
 | yak                   | compose/yak         |
@@ -105,7 +105,7 @@ Changed from `verb subject` to `@scope/package verb`:
 - compose/desktop (dev, build, preflight)
 - compose/net (test, build, preflight)
 - compose/grasshopper (test, build, preflight)
-- compose/assets (build, preflight)
+- assets (build, preflight)
 - compose/logo (dev, build)
 - compose/icons (build)
 - compose/yak (build)

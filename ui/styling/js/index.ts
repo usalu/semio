@@ -34,3 +34,12 @@ export {
 	tokenHex,
 	tokenVar,
 } from "./resolve.ts";
+export type {
+	IconRenderCamera,
+	IconRenderFormat,
+	IconRenderLights,
+	IconRenderMaterial,
+	IconRenderPort,
+	IconRenderRequest,
+	IconRenderResult,
+} from "./icon-render-port.ts";

@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	assetsDir := "compose/assets/compose/"
+	assetsDir := "assets/compose/"
 
 	origData, _ := os.ReadFile(assetsDir + "kit_metabolism.json")
 	var orig compose.Kit

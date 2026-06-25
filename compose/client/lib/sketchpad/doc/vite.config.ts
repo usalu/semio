@@ -38,7 +38,7 @@ export default defineConfig(async () => {
       alias: {
         "@semio-tech/compose-js": path.resolve(__dirname, "../../js"),
         "@semio-tech/compose-sketchpad": path.resolve(__dirname, "../../sketchpad"),
-        "@semio-tech/compose-asset": path.resolve(__dirname, "../../asset"),
+        "@semio-tech/semio-asset": path.resolve(__dirname, "../../../../../asset"),
       },
     },
     plugins: [
@@ -59,7 +59,7 @@ export default defineConfig(async () => {
         enforce: "pre" as const,
         configureServer(server: any) {
           const sketchpadPublicPath = path.resolve(__dirname, "../../sketchpad/public");
-          const assetsPath = path.resolve(__dirname, "../../asset");
+          const assetsPath = path.resolve(__dirname, "../../../../../asset");
           server.middlewares.use((req: any, res: any, next: any) => {
             if (req.url?.endsWith(".wasm")) {
               const wasmFile = path.join(sketchpadPublicPath, req.url);

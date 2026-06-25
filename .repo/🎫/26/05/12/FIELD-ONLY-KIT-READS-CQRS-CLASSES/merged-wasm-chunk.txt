@@ -6859,7 +6859,7 @@ export function asKitInstance(input: KitLike): Kit {
  *  metabolism-shaped JSON file end-to-end: on first call we hydrate rs from the file's bytes (if any) and
  *  bootstrap the seed checkpoint + unsaved change; after every change we ask rs to serialize the bundle and atomically
  *  write it back through the host adapter. The file therefore always mirrors `wip.initialKit` + version changes / edits
- *  state and looks like `compose/assets/compose/metabolism.new.kit.compose.json`. */
+ *  state and looks like `assets/compose/metabolism.new.kit.compose.json`. */
 const KIT_BUNDLE_BOOTSTRAPPED = new WeakSet<KitHostStore>();
 export async function applyKitClientSnapshotToLocalStore(kitClient: KitStoreClient, store: KitHostStore): Promise<void> {
   const ks = kitStoreFromKitStoreClient(kitClient);
@@ -6943,7 +6943,7 @@ export class InMemoryKitStore implements KitHostStore {
   }
 }
 
-// NOTE 🚧 The on-disk kit-store bundle format (see `compose/assets/compose/metabolism.new.kit.compose.json`)
+// NOTE 🚧 The on-disk kit-store bundle format (see `assets/compose/metabolism.new.kit.compose.json`)
 // is owned exclusively by `compose/rs`. JS host stores MUST NOT parse, validate, generate, or
 // reshape that file format. The JS file/folder host stores below are transient bridges that
 // will be replaced once Rust drives the dev-json backbone end-to-end through a host adapter.

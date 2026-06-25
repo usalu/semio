@@ -10,7 +10,7 @@ Extended Design app toolbar filters to include piece, connection, and port toggl
 
 ## Changes
 
-- `compose/assets/icons.ts`: Added `Puzzle as PieceIcon` export
+- `assets/icons.ts`: Added `Puzzle as PieceIcon` export
 - `compose/js/sketchpad/locales/en.json`: Added `showPorts` i18n entries under `design.toolbar`
 - `compose/js/sketchpad/locales/de.json`: Added `showPorts` i18n entries under `design.toolbar`
 - `compose/js/sketchpad/Design.tsx`:

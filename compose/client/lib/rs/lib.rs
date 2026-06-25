@@ -4136,7 +4136,7 @@ pub mod kit {
                     if let Some(design) = self.owner_design.upgrade() {
                         if let Some(topo) = design.owner_typology.upgrade() {
                             if let Some(kit) = topo.owner_kit.upgrade() {
-                                let positions = crate::geom::flatten::flatten_design_positions(&kit, &design).await;
+                                let positions = design.flatten_positions(&kit).await;
                                 if let Some(pos) = positions.get(&self.id) {
                                     return *pos;
                                 }
@@ -4874,6 +4874,7 @@ pub mod kit {
             /// 🧷 Write-side only: external piece [`Id`] → `Weak` (GraphQL `piece(id:)` upgrades here; no vec index table).
             pub piece_weak_by_external_id: RwLock<HashMap<Id, Weak<piece::Piece>>>,
             pub connections: RwLock<Vec<Arc<connection::Connection>>>,
+            flat_positions_cache: RwLock<Option<HashMap<Id, crate::geom::PositionInput>>>,
             pub layers: RwLock<Vec<Layer>>,
             pub groups: RwLock<Vec<Group>>,
             pub authors: RwLock<Vec<Author>>,
@@ -4900,6 +4901,7 @@ pub mod kit {
                     pieces: RwLock::new(Vec::new()),
                     piece_weak_by_external_id: RwLock::new(HashMap::new()),
                     connections: RwLock::new(Vec::new()),
+                    flat_positions_cache: RwLock::new(None),
                     layers: RwLock::new(Vec::new()),
                     groups: RwLock::new(Vec::new()),
                     authors: RwLock::new(Vec::new()),
@@ -4930,8 +4932,24 @@ pub mod kit {
                 h(&[self.id.as_str(), name.as_str()])
             }
 
+            /// @emoji 🌤️ Cached absolute positions for every piece in this design.
+            pub async fn flatten_positions(self: &Arc<Self>, kit: &Arc<crate::kit::Kit>) -> HashMap<Id, crate::geom::PositionInput> {
+                if let Some(cached) = self.flat_positions_cache.read().await.clone() {
+                    return cached;
+                }
+                let computed = crate::geom::flatten::flatten_design_positions(kit, self).await;
+                *self.flat_positions_cache.write().await = Some(computed.clone());
+                computed
+            }
+
+            /// @emoji 🧹 Drops cached flatten output after topology edits.
+            pub async fn invalidate_flat_positions_cache(&self) {
+                *self.flat_positions_cache.write().await = None;
+            }
+
             /// 🆕 Push a piece into this design's pieces; returns the same Arc (refcount + 1) for the caller.
             pub async fn insert_piece(&self, piece: Arc<piece::Piece>) -> Arc<piece::Piece> {
+                self.invalidate_flat_positions_cache().await;
                 let mut pieces = self.pieces.write().await;
                 let mut weak_ix = self.piece_weak_by_external_id.write().await;
                 let pid = piece.id.clone();
@@ -4942,6 +4960,7 @@ pub mod kit {
 
             /// @emoji 🗑 Remove a piece from this design's ordered list and external-id index.
             pub async fn delete_piece_by_external_id(&self, piece_id: &Id) -> Result<(), crate::error::ComposeError> {
+                self.invalidate_flat_positions_cache().await;
                 let mut pieces = self.pieces.write().await;
                 let start_len = pieces.len();
                 pieces.retain(|piece| &piece.id != piece_id);
@@ -12862,6 +12881,7 @@ pub mod kit_backbone {
             parent_piece.child_pieces.write().await.push(child_piece.clone());
             des.connections.write().await.push(connection);
         }
+        des.invalidate_flat_positions_cache().await;
         Ok(())
     }
 
@@ -18513,7 +18533,7 @@ pub mod kit_store_comprehensive_e2e {
 
     /// @emoji 📎 US-001 replay fixtures (`kit-store.golden.*`) under `compose/asset/compose/`.
     pub fn kit_store_golden_fixture_paths() -> Option<(PathBuf, PathBuf)> {
-        let base = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../asset/compose");
+        let base = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../asset/compose");
         let ops = base.join("kit-store.golden.ops.compose.json");
         let exp = base.join("kit-store.golden.expected.compose.json");
         if ops.is_file() && exp.is_file() {
@@ -18525,7 +18545,7 @@ pub mod kit_store_comprehensive_e2e {
 
     /// @emoji 📋 Full store scenario catalog (`kit-store.comprehensive.compose.json`) under `compose/asset/compose/`.
     pub fn kit_store_comprehensive_fixture_path() -> Option<PathBuf> {
-        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../asset/compose/kit-store.comprehensive.compose.json");
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../asset/compose/kit-store.comprehensive.compose.json");
         if path.is_file() {
             Some(path)
         } else {
@@ -18848,7 +18868,7 @@ mod tests {
 
     /// @emoji 📎 US-001 replay fixtures (`kit-store.golden.*`) live under `compose/asset/compose/` when present in the checkout.
     fn kit_store_golden_fixture_paths() -> Option<(PathBuf, PathBuf)> {
-        let base = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../asset/compose");
+        let base = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../asset/compose");
         let ops = base.join("kit-store.golden.ops.compose.json");
         let exp = base.join("kit-store.golden.expected.compose.json");
         if ops.is_file() && exp.is_file() {
@@ -21076,6 +21096,36 @@ mod tests {
             let mat = graph.materialized_kit_for_workspace(&workspace_id).await;
             let design = mat.design_by_external_id(&crate::id::Id::from("design-scoped-1")).await.expect("design exists");
             assert!(design.piece_by_external_id(&crate::id::Id::from("piece-scoped-1")).await.is_some(), "piece should be addressable by scoped id");
+        });
+    }
+
+    #[test]
+    fn metabolism_nakagin_install_hydrates_connections() {
+        block_on(async {
+            let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../.repo/🎫/26/06/24/FIX-NAKAGIN-DESIGN-NOT-SHOWING-PIECES/assembled-metabolism.kit.json");
+            if !path.exists() {
+                return;
+            }
+            let json_v: crate::external_adapters::serde_json::Value =
+                crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(&path).expect("read assembled metabolism kit")).expect("parse");
+            let rt = crate::worker::ParentStore::spawn_wip_overlay_from_initial_kit_projection_json(json_v.clone())
+                .await
+                .expect("wip overlay");
+            let wip_kit = rt.wip_graph.mutable_kit.read().await.clone();
+            let wip_design = wip_kit
+                .design_by_external_id(&crate::id::Id::from("9a890dd4-0a9c-48ac-920a-9e62666465ef"))
+                .await
+                .expect("nakagin design on wip kit");
+            assert_eq!(wip_design.has_pieces().await.len(), 180, "wip nakagin piece count");
+            assert_eq!(wip_design.has_connections().await.len(), 179, "wip nakagin connection count");
+            let graph = crate::kit_backbone::graph_new_overlay_from_initial_projection_json(json_v).await.expect("overlay");
+            let kit = graph.materialized_kit_for_workspace(&graph.id.clone()).await;
+            let design = kit
+                .design_by_external_id(&crate::id::Id::from("9a890dd4-0a9c-48ac-920a-9e62666465ef"))
+                .await
+                .expect("nakagin design");
+            assert_eq!(design.has_pieces().await.len(), 180, "nakagin piece count");
+            assert_eq!(design.has_connections().await.len(), 179, "nakagin connection count");
         });
     }
 

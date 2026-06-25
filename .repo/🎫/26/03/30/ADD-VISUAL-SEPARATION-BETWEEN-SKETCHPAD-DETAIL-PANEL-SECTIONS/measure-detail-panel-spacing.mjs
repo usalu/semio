@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 
 const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage();
-const metabolismKit = JSON.parse(await readFile("/workspaces/semio/compose/assets/compose/kit_metabolism.json", "utf8"));
+const metabolismKit = JSON.parse(await readFile("/workspaces/semio/assets/compose/kit_metabolism.json", "utf8"));
 
 page.on("console", (msg) => {
   console.log(`[browser:${msg.type()}] ${msg.text()}`);

@@ -259,21 +259,21 @@
     "path": "compose/fixture/package.json",
     "newName": "@semio-tech/compose-fixture"
   },
-  "@compose/asset": {
-    "path": "compose/asset/package.json",
-    "newName": "@semio-tech/compose-asset"
+  "@asset": {
+    "path": "asset/package.json",
+    "newName": "@semio-tech/semio-asset"
   },
   "@compose/icon": {
-    "path": "compose/asset/icon/package.json",
-    "newName": "@semio-tech/compose-icon"
+    "path": "asset/icon/package.json",
+    "newName": "@semio-tech/semio-icon"
   },
   "@compose/logo": {
-    "path": "compose/asset/logo/package.json",
-    "newName": "@semio-tech/compose-logo"
+    "path": "asset/logo/package.json",
+    "newName": "@semio-tech/semio-logo"
   },
   "@compose/image": {
-    "path": "compose/asset/image/package.json",
-    "newName": "@semio-tech/compose-image"
+    "path": "asset/image/package.json",
+    "newName": "@semio-tech/semio-image"
   },
   "@puzzle/2d/react": {
     "path": "puzzle/2d/react/package.json",

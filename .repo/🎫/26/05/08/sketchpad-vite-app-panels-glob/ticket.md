@@ -76,7 +76,7 @@ A previous in-session attempt added a JS bundle codec
 (`KIT_STORE_BUNDLE_SCHEMA` / `encodeKitStoreBundle` / `decodeKitStoreBundle`) and used it
 in `JsonFileKitStore`, `FolderKitStore`, `importKitToDto`, and the sketchpad
 `importKit` to read/write `{ schema, wip: { id, root: <KitFullDto> } }` envelopes
-matching `compose/assets/compose/metabolism.new.kit.compose.json`. That violated the
+matching `assets/compose/metabolism.new.kit.compose.json`. That violated the
 layering: **JS reshaped/persisted the on-disk bundle** that is owned by `compose/rs`.
 
 In addition, the *real* dev-json backbone (Rust `DevJsonBackboneFile` in `compose/rs/lib.rs`)
@@ -121,7 +121,7 @@ both architecturally wrong and format-wrong.**
 
 ## Follow-up: Rust dev-json backbone refactored to the metabolism.new shape
 
-**Constraint:** *"compose/rs MUST be refactored to have the shape compose/assets/compose/metabolism.new.kit.compose.json"*
+**Constraint:** *"compose/rs MUST be refactored to have the shape assets/compose/metabolism.new.kit.compose.json"*
 
 ### What changed in `compose/rs/lib.rs`
 

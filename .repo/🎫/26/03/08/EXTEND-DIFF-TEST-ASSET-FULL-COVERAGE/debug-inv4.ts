@@ -6,7 +6,7 @@ import {
   areKitDiffsEqual,
 } from "/workspaces/semio/compose/js/compose";
 
-const kitBeforeRaw = JSON.parse(readFileSync("/workspaces/semio/compose/assets/compose/kit_metabolism.json", "utf-8"));
+const kitBeforeRaw = JSON.parse(readFileSync("/workspaces/semio/assets/compose/kit_metabolism.json", "utf-8"));
 const kitBefore = KitSchema.parse({
   ...kitBeforeRaw,
   designs: (kitBeforeRaw.designs ?? []).filter((d: any) => !d.parent),

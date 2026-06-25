@@ -4,7 +4,7 @@
 
 # Previously
 
-The `metabolism.zip` asset contained SQL tables with the old "port" naming convention instead of "connector". The regeneration script (`scripts/regenerate-metabolism.tsx`) had import issues trying to use `MetabolismKit` from `compose/assets`, and only wrote the zip file to `assets/compose/metabolism.zip` without copying it to public folders where it's served for development (`js/compose/public/`, `js/sketchpad/public/`, `js/play/public/`).
+The `metabolism.zip` asset contained SQL tables with the old "port" naming convention instead of "connector". The regeneration script (`scripts/regenerate-metabolism.tsx`) had import issues trying to use `MetabolismKit` from `assets`, and only wrote the zip file to `assets/compose/metabolism.zip` without copying it to public folders where it's served for development (`js/compose/public/`, `js/sketchpad/public/`, `js/play/public/`).
 
 # Plan
 
@@ -17,7 +17,7 @@ The `metabolism.zip` asset contained SQL tables with the old "port" naming conve
 
 ## Fixed Import Problem
 
-Changed from importing `MetabolismKit` from `compose/assets` (which had module resolution issues) to reading the JSON file directly:
+Changed from importing `MetabolismKit` from `assets` (which had module resolution issues) to reading the JSON file directly:
 
 ```typescript
 const kitPath = join(__dirname, "..", "assets", "compose", "kit_metabolism.json");

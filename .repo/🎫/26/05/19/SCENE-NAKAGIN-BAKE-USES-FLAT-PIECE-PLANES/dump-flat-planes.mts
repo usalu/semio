@@ -7,8 +7,8 @@ import { openSession, type Store as JsStore } from "../../../../../../compose/cl
 type GqlWireObject = { readonly [k: string]: unknown };
 
 const repoRoot = join(import.meta.dir, "..", "..", "..", "..", "..", "..");
-const kitPath = join(repoRoot, "compose/assets/fixtures/metabolism.shallow.kit.compose.json");
-const nakaginShallowDesignPath = join(repoRoot, "compose/assets/fixtures/nakagin-capsule-tower.shallow.design.compose.json");
+const kitPath = join(repoRoot, "assets/fixtures/metabolism.shallow.kit.compose.json");
+const nakaginShallowDesignPath = join(repoRoot, "assets/fixtures/nakagin-capsule-tower.shallow.design.compose.json");
 const outPath = join(repoRoot, "elements/client/lib/scene/fixtures/nakagin-capsule-tower.flat-planes.v1.json");
 const nakaginDesignId = "9a890dd4-0a9c-48ac-920a-9e62666465ef";
 

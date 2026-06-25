@@ -257,7 +257,7 @@
 
 ### Done
 
-- **Golden ops fixture**: tests pointed at non-existent `kit-store.golden.operations.compose.json`; repo ships **`compose/assets/compose/kit-store.golden.ops.compose.json`** with key **`ops`**. Added **`kit_backbone::golden_ops_records_ref`** (accepts `operations` or `ops`); all golden readers use **`kit-store.golden.ops.compose.json`** + helper / `stored_ops_from_golden_ops_json`.
+- **Golden ops fixture**: tests pointed at non-existent `kit-store.golden.operations.compose.json`; repo ships **`assets/compose/kit-store.golden.ops.compose.json`** with key **`ops`**. Added **`kit_backbone::golden_ops_records_ref`** (accepts `operations` or `ops`); all golden readers use **`kit-store.golden.ops.compose.json`** + helper / `stored_ops_from_golden_ops_json`.
 - **`KitOperation::to_diff` JSON**: fixed **`DragPieceInDesign`** / **`FixPieceInDesign`** `serde_json::json!` closing (`})` vs `),`) and **`}}]`** → **`}]`** so `cargo check` parses.
 - **`compose/algorithms` tsc**: `openKit(JSON.stringify(__toBootstrap(kit)))`; dropped removed **`KitBootstrapJson`** in favor of **`JsonObject`**.
 - **`compose/ui` tsc** (algorithms pulls ui): local **`Attribute` / `Coordinate` / `Plane` / `ComposeVector`** as **`JsonObject`** aliases; **`VectorValue`** explicit `{x,y,z}`; **`toSceneVector`** accepts **`JsonValue`** with numeric coercion.

@@ -1,5 +1,5 @@
 import { chromium } from "playwright";
-const zipPath = "/workspaces/semio/compose/assets/compose/metabolism.zip";
+const zipPath = "/workspaces/semio/assets/compose/metabolism.zip";
 const browser = await chromium.launch({ headless: true, args: ["--no-sandbox", "--disable-gpu"] });
 const ctx = await browser.newContext();
 const page = await ctx.newPage();

@@ -23,7 +23,7 @@ async function main() {
     const existing = (store.kitShallows?.() ?? []).find((kit) => String(kit?.name ?? "").toLowerCase().includes("metabolism"));
     if (existing?.guid) return existing.guid;
 
-    const kitModule = await import("/@fs/workspaces/semio/compose/assets/compose/kit_metabolism.json");
+    const kitModule = await import("/@fs/workspaces/semio/assets/compose/kit_metabolism.json");
     const kit = kitModule.default;
     await store.execute("compose.sketchpad.createKit", "compose.sketchpad.test.ensureMetabolismKitLoaded", kit, false, false);
 

@@ -34,11 +34,11 @@
       "@semio-tech/ui-react/*": [
         "../../../ui/react/*"
       ],
-      "@semio-tech/compose-asset": [
-        "../asset"
+      "@semio-tech/semio-asset": [
+        "../../../../asset"
       ],
-      "@semio-tech/compose-asset/*": [
-        "../asset/*"
+      "@semio-tech/semio-asset/*": [
+        "../../../../asset/*"
       ]
     },
     "types": [

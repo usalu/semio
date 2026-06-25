@@ -2,7 +2,7 @@ import { chromium } from "playwright";
 import { readFile } from "node:fs/promises";
 
 const baseUrl = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:4173";
-const kitFixturePath = "/workspaces/semio/compose/assets/compose/kit_metabolism.json";
+const kitFixturePath = "/workspaces/semio/assets/compose/kit_metabolism.json";
 
 const setTogglePressed = async (toggle, pressed) => {
   const currentState = (await toggle.getAttribute("aria-pressed").catch(() => null)) ?? (await toggle.getAttribute("data-state").catch(() => null));

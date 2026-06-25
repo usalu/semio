@@ -368,7 +368,7 @@ type DagSurfaceHost = React.ComponentType<{ readonly node: import("@semio-tech/f
 const dagSurfaceHosts = new Map<string, DagSurfaceHost>();
 const tableSurfaceHosts = new Map<string, TableSurfaceHost>();
 
-const PLAYGROUND_CANVAS_HOST_TYPES = new Set(["puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag"]);
+const PLAYGROUND_CANVAS_HOST_TYPES = new Set(["puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag", "shooting"]);
 
 function isPlaygroundCanvasHostChild(child: UiNode): boolean {
   return PLAYGROUND_CANVAS_HOST_TYPES.has(child.type);
@@ -470,6 +470,7 @@ function renderPlaygroundHostSurface(node: UiNode, layout: "canvas" | "panel"): 
     node.type === "puzzle5d" ||
     node.type === "flow" ||
     node.type === "dag" ||
+    node.type === "shooting" ||
     node.type === "panel" ||
     node.type === "table"
   ) {
@@ -2354,6 +2355,7 @@ import {
   puzzle5dBrushPlacementFromFlat,
   puzzle5dBrushPlacementFromVolume,
   puzzle5dCommitBrushPlacementToPlay,
+  puzzle5dCommitVolumeBrushPlacementToPlay,
   Puzzle5dBrushPairedSync,
   puzzle5dFlatRendererRef,
   type Store as Puzzle5dStore,
@@ -2814,7 +2816,7 @@ function Puzzle5d3dSurfaceHost({ node }: { readonly node: UiPuzzle3dHostSurfaceN
     controllerRef.current?.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "note3dProximity");
   }, []);
   const onBrushPlace = reactHostPort.useCallback((payload: Parameters<typeof puzzle5dBrushPlacementFromVolume>[0]) => {
-    if (storeRef.current.applyBrushPlacement(puzzle5dBrushPlacementFromVolume(payload))) {
+    if (puzzle5dCommitVolumeBrushPlacementToPlay(storeRef.current, payload)) {
       controllerRef.current?.setBrushEngagementPossibles([]);
     }
   }, []);
@@ -6841,6 +6843,202 @@ export function bootProceduralPlay(playground: Playground, rootId = "root"): voi
   bootPlayground(playground, proceduralPlayChromeBoot, rootId);
 }
 //#endregion 🔖ProceduralPlayHost
+
+//#region 🔖ShootingPlayHost
+import {
+	SHOOTING_PLAY_APP_ID,
+	SHOOTING_PLAY_CONTROLLER_ID,
+	SHOOTING_PLAY_SURFACE_ID_ICON,
+	SHOOTING_PLAY_SURFACE_ID_MODEL,
+	ShootingPlayController,
+	type ShootingPlayHostBridge,
+	registerShootingPlayDeclarativeBodies,
+} from "@semio-tech/shooting-play";
+import { ShootingIconCanvas, ShootingModelCanvas, renderShootingShot, resolveActiveShot } from "@semio-tech/shooting-react";
+import type { UiShootingHostSurfaceNode } from "@semio-tech/framework-platform-core";
+
+type ShootingSurfaceHost = React.ComponentType<{ readonly node: UiShootingHostSurfaceNode }>;
+const shootingSurfaceHosts = new Map<string, ShootingSurfaceHost>();
+
+export function registerUiShootingSurfaceHost(surfaceId: string, Component: ShootingSurfaceHost): void {
+	shootingSurfaceHosts.set(surfaceId, Component);
+	registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
+}
+
+function useShootingPlayController(runtimeOverride?: Platform): ShootingPlayController | undefined {
+	const appCtx = reactHostPort.useContext(PlaygroundContext);
+	const runtime = runtimeOverride ?? appCtx?.runtime;
+	reactHostPort.useSyncExternalStore(
+		(listener) => (runtime ? runtime.subscribe(listener) : () => {}),
+		() => runtime?.generation ?? 0,
+		() => 0,
+	);
+	return runtime?.getActiveApp()?.controller as ShootingPlayController | undefined;
+}
+
+function ShootingPlayFileBridge(): ReactElement | null {
+	const ctrl = useShootingPlayController();
+	const loadInputRef = reactHostPort.useRef<HTMLInputElement | null>(null);
+	const assetInputRef = reactHostPort.useRef<HTMLInputElement | null>(null);
+	const downloadFixture = reactHostPort.useCallback(async () => {
+		if (!ctrl) return;
+		const text = ctrl.getFixtureJson();
+		const blob = new Blob([`${text}\n`], { type: "application/json" });
+		const url = URL.createObjectURL(blob);
+		const anchor = document.createElement("a");
+		anchor.href = url;
+		anchor.download = "shooting.fixture.json";
+		anchor.click();
+		URL.revokeObjectURL(url);
+	}, [ctrl]);
+	const downloadShot = reactHostPort.useCallback(
+		async (shotId?: string) => {
+			if (!ctrl) return;
+			const fixture = ctrl.getFixture();
+			const shots = shotId ? fixture.shots.filter((shot) => shot.id === shotId) : fixture.shots;
+			for (const shot of shots) {
+				const result = await renderShootingShot(fixture, shot);
+				const extension = shot.format === "svg" ? "svg" : "png";
+				const anchor = document.createElement("a");
+				anchor.href = result.dataUrl;
+				anchor.download = `${shot.id}.${extension}`;
+				anchor.click();
+				console.log(`[DEBUG] shooting exported shot ${shot.id}.${extension}`);
+			}
+		},
+		[ctrl],
+	);
+	const handleLoadFile = reactHostPort.useCallback(
+		(event: React.ChangeEvent<HTMLInputElement>) => {
+			const file = event.target.files?.[0];
+			event.target.value = "";
+			if (!file || !ctrl) return;
+			void file.text().then((text) => {
+				ctrl.run("setFixtureJson", { json: text });
+				console.log("[DEBUG] shooting play loaded fixture from file");
+			});
+		},
+		[ctrl],
+	);
+	const handleImportAsset = reactHostPort.useCallback(
+		(event: React.ChangeEvent<HTMLInputElement>) => {
+			const file = event.target.files?.[0];
+			event.target.value = "";
+			if (!file || !ctrl) return;
+			const objectUrl = URL.createObjectURL(file);
+			const id = file.name.replace(/\.[^.]+$/, "").replace(/[^\w-]+/g, "-") || `asset_${Date.now()}`;
+			ctrl.run("importAsset", {
+				asset: { id, name: file.name, url: objectUrl, format: "glb" },
+			});
+		},
+		[ctrl],
+	);
+	reactHostPort.useEffect(() => {
+		if (!ctrl) return;
+		const bridge: ShootingPlayHostBridge = {
+			getToolbarState: () => ({
+				hasStoredFixture: ctrl.hasStoredFixture(),
+				activeShotId: ctrl.getFixture().activeShotId ?? resolveActiveShot(ctrl.getFixture())?.id ?? null,
+			}),
+			runHostCommand: (command) => {
+				if (command === "saveDownload") {
+					void downloadFixture();
+					return;
+				}
+				if (command === "loadRequest") {
+					loadInputRef.current?.click();
+					return;
+				}
+				if (command === "importAssetRequest") {
+					assetInputRef.current?.click();
+					return;
+				}
+				if (command === "exportActiveShot") {
+					const active = resolveActiveShot(ctrl.getFixture());
+					if (active) void downloadShot(active.id);
+					return;
+				}
+				if (command === "exportAllShots") {
+					void downloadShot();
+				}
+			},
+		};
+		ctrl.setHostBridge(bridge);
+		return () => ctrl.setHostBridge(null);
+	}, [ctrl, downloadFixture, downloadShot]);
+	return (
+		<>
+			<input ref={loadInputRef} type="file" accept=".json,application/json" className="hidden" onChange={handleLoadFile} />
+			<input ref={assetInputRef} type="file" accept=".glb,model/gltf-binary" className="hidden" onChange={handleImportAsset} />
+		</>
+	);
+}
+
+function ShootingModelSurfaceHost({ node }: { readonly node: UiShootingHostSurfaceNode }): ReactElement {
+	const ctrl = useShootingPlayController();
+	const fixture = ctrl?.getFixture();
+	if (!fixture || node.view !== "model") {
+		return <div className="absolute inset-0 min-h-0 min-w-0" />;
+	}
+	return (
+		<div className="absolute inset-0 min-h-0 min-w-0">
+			<ShootingModelCanvas
+				fixture={fixture}
+				className="h-full w-full"
+				onCamera={(camera) => ctrl?.run("setCamera", { camera })}
+			/>
+		</div>
+	);
+}
+
+function ShootingIconSurfaceHost({ node }: { readonly node: UiShootingHostSurfaceNode }): ReactElement {
+	const { runtime } = useApp();
+	const ctrl = useShootingPlayController();
+	const revision = ctrl?.getRenderRevision() ?? 0;
+	void runtime.generation;
+	const fixture = ctrl?.getFixture();
+	if (!fixture || node.view !== "icon") {
+		return <div className="absolute inset-0 min-h-0 min-w-0" />;
+	}
+	return (
+		<div className="absolute inset-0 min-h-0 min-w-0">
+			<ShootingIconCanvas fixture={fixture} className="h-full w-full" renderRevision={revision} />
+		</div>
+	);
+}
+
+let shootingPlayChromeRegistered = false;
+
+export function registerShootingPlaySurfaceHosts(): void {
+	if (shootingPlayChromeRegistered) return;
+	shootingPlayChromeRegistered = true;
+	registerUiShootingSurfaceHost(SHOOTING_PLAY_SURFACE_ID_MODEL, ShootingModelSurfaceHost);
+	registerUiShootingSurfaceHost(SHOOTING_PLAY_SURFACE_ID_ICON, ShootingIconSurfaceHost);
+	registerShootingPlayDeclarativeBodies();
+}
+
+function ShootingPlayChrome({ playground }: { readonly playground: Playground }): ReactElement {
+	return (
+		<>
+			<ShootingPlayFileBridge />
+			<PlaygroundView runtime={playground.runtime} defaultAppId={SHOOTING_PLAY_APP_ID} playgroundKeybindings={playground.keybindings} />
+		</>
+	);
+}
+
+export function mountShootingPlayChrome(playground: Playground, rootId = "root"): void {
+	mountPlaygroundApp(<ShootingPlayChrome playground={playground} />, rootId);
+}
+
+const shootingPlayChromeBoot: PlaygroundChromeBoot = {
+	registerHosts: registerShootingPlaySurfaceHosts,
+	mount: mountShootingPlayChrome,
+};
+
+export function bootShootingPlay(playground: Playground, rootId = "root"): void {
+	bootPlayground(playground, shootingPlayChromeBoot, rootId);
+}
+//#endregion 🔖ShootingPlayHost
 
 //#region 🔖PresentationPlayHost
 import {

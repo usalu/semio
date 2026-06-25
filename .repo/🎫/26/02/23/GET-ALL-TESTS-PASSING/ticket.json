@@ -58,14 +58,14 @@
           "renamed": [],
           "modified": [
             {
-              "path": "💻compose/assets/repo/some/folder/file_fixable_expected.tsx",
+              "path": "💻assets/repo/some/folder/file_fixable_expected.tsx",
               "lines": {
                 "added": 3,
                 "removed": 3
               }
             },
             {
-              "path": "💻compose/assets/repo/some/folder/file_fixed.tsx",
+              "path": "💻assets/repo/some/folder/file_fixed.tsx",
               "lines": {
                 "added": 4,
                 "removed": 4
@@ -100,7 +100,7 @@
               }
             },
             {
-              "path": "💻compose/assets/repo/some/folder/file_fixed.go",
+              "path": "💻assets/repo/some/folder/file_fixed.go",
               "lines": {
                 "added": 4,
                 "removed": 4
@@ -128,14 +128,14 @@
               }
             },
             {
-              "path": "💻compose/assets/repo/some/folder/file_fixed.cs",
+              "path": "💻assets/repo/some/folder/file_fixed.cs",
               "lines": {
                 "added": 3,
                 "removed": 3
               }
             },
             {
-              "path": "💻compose/assets/repo/some/folder/file_fixed.py",
+              "path": "💻assets/repo/some/folder/file_fixed.py",
               "lines": {
                 "added": 3,
                 "removed": 3
@@ -178,70 +178,70 @@
               }
             },
             {
-              "path": "💻compose/assets/repo/some/folder/file_fixed.cs#Header",
+              "path": "💻assets/repo/some/folder/file_fixed.cs#Header",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "💻compose/assets/repo/some/folder/file_fixed.cs#Classes",
+              "path": "💻assets/repo/some/folder/file_fixed.cs#Classes",
               "lines": {
                 "added": 2,
                 "removed": 2
               }
             },
             {
-              "path": "💻compose/assets/repo/some/folder/file_fixed.py#Header",
+              "path": "💻assets/repo/some/folder/file_fixed.py#Header",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "💻compose/assets/repo/some/folder/file_fixed.py#Functions",
+              "path": "💻assets/repo/some/folder/file_fixed.py#Functions",
               "lines": {
                 "added": 2,
                 "removed": 2
               }
             },
             {
-              "path": "💻compose/assets/repo/some/folder/file_fixable_expected.tsx#Header",
+              "path": "💻assets/repo/some/folder/file_fixable_expected.tsx#Header",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "💻compose/assets/repo/some/folder/file_fixable_expected.tsx#MissingEnd",
+              "path": "💻assets/repo/some/folder/file_fixable_expected.tsx#MissingEnd",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "💻compose/assets/repo/some/folder/file_fixable_expected.tsx#Alpha",
+              "path": "💻assets/repo/some/folder/file_fixable_expected.tsx#Alpha",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "💻compose/assets/repo/some/folder/file_fixed.tsx#Header",
+              "path": "💻assets/repo/some/folder/file_fixed.tsx#Header",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "💻compose/assets/repo/some/folder/file_fixed.tsx#Types",
+              "path": "💻assets/repo/some/folder/file_fixed.tsx#Types",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "💻compose/assets/repo/some/folder/file_fixed.tsx#Components",
+              "path": "💻assets/repo/some/folder/file_fixed.tsx#Components",
               "lines": {
                 "added": 2,
                 "removed": 2
@@ -262,21 +262,21 @@
               }
             },
             {
-              "path": "💻compose/assets/repo/some/folder/file_fixed.go#Header",
+              "path": "💻assets/repo/some/folder/file_fixed.go#Header",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "💻compose/assets/repo/some/folder/file_fixed.go#Package",
+              "path": "💻assets/repo/some/folder/file_fixed.go#Package",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "💻compose/assets/repo/some/folder/file_fixed.go#Functions",
+              "path": "💻assets/repo/some/folder/file_fixed.go#Functions",
               "lines": {
                 "added": 2,
                 "removed": 2
@@ -325,42 +325,42 @@
           "renamed": [],
           "modified": [
             {
-              "path": "💻compose/assets/repo/some/folder/file_fixed.py#Functions§fixed_function",
+              "path": "💻assets/repo/some/folder/file_fixed.py#Functions§fixed_function",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "💻compose/assets/repo/some/folder/file_fixed.py#Functions§fixed_function",
+              "path": "💻assets/repo/some/folder/file_fixed.py#Functions§fixed_function",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "💻compose/assets/repo/some/folder/file_fixable_expected.tsx§missingEnd",
+              "path": "💻assets/repo/some/folder/file_fixable_expected.tsx§missingEnd",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "💻compose/assets/repo/some/folder/file_fixable_expected.tsx§missingEnd",
+              "path": "💻assets/repo/some/folder/file_fixable_expected.tsx§missingEnd",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "💻compose/assets/repo/some/folder/file_fixed.tsx§FixedKind",
+              "path": "💻assets/repo/some/folder/file_fixed.tsx§FixedKind",
               "lines": {
                 "added": 2,
                 "removed": 2
               }
             },
             {
-              "path": "💻compose/assets/repo/some/folder/file_fixed.tsx§FixedKind",
+              "path": "💻assets/repo/some/folder/file_fixed.tsx§FixedKind",
               "lines": {
                 "added": 0,
                 "removed": 2

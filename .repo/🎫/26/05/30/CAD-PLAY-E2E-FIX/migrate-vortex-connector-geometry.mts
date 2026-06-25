@@ -4,7 +4,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 const repoRoot = join(import.meta.dir, "..", "..", "..", "..", "..", "..");
-const kitPath = join(repoRoot, "compose/assets/compose/metabolism/wip/initialKit/kit.compose.json");
+const kitPath = join(repoRoot, "assets/compose/metabolism/wip/initialKit/kit.compose.json");
 const boardPath = join(repoRoot, "puzzle/assets/nakagin-capsule-tower.board.json");
 const scenePath = join(repoRoot, "puzzle/assets/nakagin-capsule-tower.scene.json");
 const topologyPath = join(repoRoot, "puzzle/assets/nakagin-capsule-tower.topology.json");

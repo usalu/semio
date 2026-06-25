@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 
 repo = Path(__file__).resolve().parents[4]
-fixture = repo / "compose/assets/fixtures/metabolism.kit.compose.json"
+fixture = repo / "assets/fixtures/metabolism.kit.compose.json"
 out = Path(__file__).parent / "metabolism-install-dto.json"
 
 ps = r"""

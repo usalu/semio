@@ -5,7 +5,7 @@ import fs from 'fs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const logFile = path.join(__dirname, 'debug.log');
-const zipPath = '/workspaces/semio/compose/assets/compose/metabolism.zip';
+const zipPath = '/workspaces/semio/assets/compose/metabolism.zip';
 
 function log(msg) {
   const line = `${new Date().toISOString()} ${msg}\n`;

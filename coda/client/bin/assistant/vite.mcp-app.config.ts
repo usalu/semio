@@ -48,7 +48,7 @@ export default MeshoptDecoder;
   };
 }
 
-const STUBBED_PREFIXES = ["@semio-tech/compose-asset", "sql.js", "jszip", "dagre", "fuse.js", "golden-layout"];
+const STUBBED_PREFIXES = ["@semio-tech/semio-asset", "sql.js", "jszip", "dagre", "fuse.js", "golden-layout"];
 
 function stubHeavyDepsPlugin(): Plugin {
   return {

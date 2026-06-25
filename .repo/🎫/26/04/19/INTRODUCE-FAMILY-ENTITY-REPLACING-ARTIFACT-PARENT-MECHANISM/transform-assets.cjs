@@ -1,6 +1,6 @@
 const fs = require("fs");
 const path = require("path");
-const dir = "compose/assets/compose";
+const dir = "assets/compose";
 
 function buildFamilyMap(entities) {
   if (!entities || !Array.isArray(entities)) return new Map();

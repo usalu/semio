@@ -10,7 +10,7 @@ Researched autofix/policy system.
 
 ## Findings
 
-### 1. Fixture Files in compose/assets/repo/some/folder/
+### 1. Fixture Files in assets/repo/some/folder/
 
 14 files total:
 
@@ -217,7 +217,7 @@ No code changes — research only.
 
 ## Log
 
-- Read all 14 fixture files in compose/assets/repo/some/folder/
+- Read all 14 fixture files in assets/repo/some/folder/
 - Read headerPolicy (L14517-L14770)
 - Read sectionPolicy (L14773-L14950)
 - Read FileHeaderId (L20284), FileHeaderUri (L20324)

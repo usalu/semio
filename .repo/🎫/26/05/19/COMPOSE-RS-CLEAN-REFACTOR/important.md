@@ -33,4 +33,4 @@ $env:TEMP='E:\cargo-tmp-compose'
 $env:TMP='E:\cargo-tmp-compose'
 ```
 
-Golden fingerprint: `compose/assets/compose/kit-store.golden.expected.compose.json` → `1a9a217ca1ac63d89883abe5bc13e36268becf6cb4ef743105af0a11fcf3653a`.
+Golden fingerprint: `assets/compose/kit-store.golden.expected.compose.json` → `1a9a217ca1ac63d89883abe5bc13e36268becf6cb4ef743105af0a11fcf3653a`.

@@ -5,7 +5,7 @@
   "sourceRoot": "compose/client/bin/engine",
   "projectType": "application",
   "devDependencies": {
-    "@semio-tech/compose-asset": "*",
+    "@semio-tech/semio-asset": "*",
     "vite-plugin-singlefile": "*"
   },
   "author": {

@@ -1,5 +1,5 @@
 
-    /// @emoji 📋 Full store scenario catalog (`kit-store.comprehensive.compose.json`) under `compose/assets/compose/`.
+    /// @emoji 📋 Full store scenario catalog (`kit-store.comprehensive.compose.json`) under `assets/compose/`.
     fn kit_store_comprehensive_fixture_path() -> Option<PathBuf> {
         let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../assets/compose/kit-store.comprehensive.compose.json");
         if path.is_file() {

@@ -27,7 +27,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "compose/compose/compose/assets",
+              "path": "compose/compose/assets",
               "lines": {
                 "added": 1,
                 "removed": 0
@@ -70,7 +70,7 @@
           ],
           "added": [
             {
-              "path": "💻compose/assets/icons.ts",
+              "path": "💻assets/icons.ts",
               "lines": {
                 "added": 115,
                 "removed": 0
@@ -663,7 +663,7 @@
           ],
           "modified": [
             {
-              "path": "💻compose/assets/icons.ts#Exports",
+              "path": "💻assets/icons.ts#Exports",
               "lines": {
                 "added": 1,
                 "removed": 0

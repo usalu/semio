@@ -3045,6 +3045,23 @@ micro: icon and name
 
 ---
 
+## 📸shooting
+
+---
+
+create a new technology along with playground for: shooting
+A shooting is a parametric description of how to turn a set of 3d assets (.glb, .3dm, etc) into a set of icons (svg, png, etc).
+A shot is one icon for specific dimensions
+The playground has two windows side by side:
+Model and Icon
+In the model you can edit camera settings, save the camera, load the camera, etc
+The icon window displays the icon. You can
+Make sure to have extended settings for colors, sun, shadow, material etc being customizable.
+Use libraries such as threejs svg renderer etc.
+Add import, export functionality to toolbar, etc
+
+---
+
 ## 🧰repo
 
 ###

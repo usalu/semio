@@ -5,7 +5,7 @@
   "sourceRoot": "compose/client/lib/net/Compose",
   "projectType": "library",
   "devDependencies": {
-    "@semio-tech/compose-asset": "*"
+    "@semio-tech/semio-asset": "*"
   },
   "author": {
     "name": "Ueli Saluz",

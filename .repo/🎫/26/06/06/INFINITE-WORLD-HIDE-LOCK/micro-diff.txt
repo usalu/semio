@@ -9157,7 +9157,7 @@ index 92dfd9037..98245ba7d 100644
 +      resolve(repoRoot, "compose/fixtures/kit/folder/metabolism/representations"),
        resolve(repoRoot, "compose/fixtures/kit/folder/abbau-aufbau"),
      ],
-     placeholderMesh: resolve(repoRoot, "compose/assets/mesh/placeholder.glb"),
+     placeholderMesh: resolve(repoRoot, "assets/mesh/placeholder.glb"),
 @@ -790,6 +790,7 @@ if (import.meta.vitest) {
      it("points at metabolism and abbau-aufbau kit glbs plus shared placeholder", () => {
        const { meshRoots, placeholderMesh } = puzzle3dKitMeshRoots(repoRoot);

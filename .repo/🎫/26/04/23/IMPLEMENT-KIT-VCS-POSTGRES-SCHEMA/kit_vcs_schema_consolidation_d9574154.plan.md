@@ -33,7 +33,7 @@ todos:
    content: "Parallel subagents: compose/sketchpad, compose/desktop, compose/vscode, compose/hub, compose/gh, compose/3dm — UI + integrations to the new snapshot-based API"
    status: pending
  - id: assets
-   content: Regenerate compose/assets/compose/metabolism/.compose/kit.db and metabolism.zip against the new schema; update compose/examples kits; fix compose/assets/index.ts
+   content: Regenerate assets/compose/metabolism/.compose/kit.db and metabolism.zip against the new schema; update compose/examples kits; fix assets/index.ts
    status: pending
  - id: tests
    content: Extend existing test files across every bundle to cover family ops, snapshot(ref), session/draft/transaction, release, alternatives, checkpoint hashing, round-trips
@@ -228,10 +228,10 @@ Every client re-generates its DTOs from the canonical schema and routes mutation
 
 ## 8. Assets + examples
 
-- Regenerate [`compose/assets/compose/metabolism/.compose/kit.db`](compose/assets/compose/metabolism/.compose/kit.db) against the new [`compose/sqlite/schema.sql`](compose/sqlite/schema.sql). Remove all `variant`/`view`/`parent`/`version`/`release` columns.
-- Regenerate [`compose/assets/compose/metabolism.zip`](compose/assets/compose/metabolism.zip) from the folder.
+- Regenerate [`assets/compose/metabolism/.compose/kit.db`](assets/compose/metabolism/.compose/kit.db) against the new [`compose/sqlite/schema.sql`](compose/sqlite/schema.sql). Remove all `variant`/`view`/`parent`/`version`/`release` columns.
+- Regenerate [`assets/compose/metabolism.zip`](assets/compose/metabolism.zip) from the folder.
 - Update [`compose/examples/`](compose/examples/) kits to the new schema.
-- [`compose/assets/index.ts`](compose/assets/index.ts): update any exported asset helpers that assumed old fields.
+- [`assets/index.ts`](assets/index.ts): update any exported asset helpers that assumed old fields.
 
 ## 9. Tests (extend existing files only — no new test files)
 
@@ -243,7 +243,7 @@ Every client re-generates its DTOs from the canonical schema and routes mutation
 ## 10. Docs + agent rules
 
 - [`compose/AGENTS.md`](compose/AGENTS.md), [`compose/SPECS.md`](compose/SPECS.md), [`compose/DOCS.md`](compose/DOCS.md): rewritten to the new entity model (sections 1.1-1.2).
-- [`compose/rs/AGENTS.md`](compose/rs/AGENTS.md), [`compose/store/AGENTS.md`](compose/store/AGENTS.md), [`compose/sqlite/AGENTS.md`](compose/sqlite/AGENTS.md), [`compose/graphql/AGENTS.md`](compose/graphql/AGENTS.md), [`compose/py/AGENTS.md`](compose/py/AGENTS.md), [`compose/net/AGENTS.md`](compose/net/AGENTS.md), [`compose/gh/AGENTS.md`](compose/gh/AGENTS.md), [`compose/js/AGENTS.md`](compose/js/AGENTS.md), [`compose/react/AGENTS.md`](compose/react/AGENTS.md), [`compose/sketchpad/AGENTS.md`](compose/sketchpad/AGENTS.md), [`compose/assets/AGENTS.md`](compose/assets/AGENTS.md): update each `Systems / Mechanisms / Entities` sections.
+- [`compose/rs/AGENTS.md`](compose/rs/AGENTS.md), [`compose/store/AGENTS.md`](compose/store/AGENTS.md), [`compose/sqlite/AGENTS.md`](compose/sqlite/AGENTS.md), [`compose/graphql/AGENTS.md`](compose/graphql/AGENTS.md), [`compose/py/AGENTS.md`](compose/py/AGENTS.md), [`compose/net/AGENTS.md`](compose/net/AGENTS.md), [`compose/gh/AGENTS.md`](compose/gh/AGENTS.md), [`compose/js/AGENTS.md`](compose/js/AGENTS.md), [`compose/react/AGENTS.md`](compose/react/AGENTS.md), [`compose/sketchpad/AGENTS.md`](compose/sketchpad/AGENTS.md), [`assets/AGENTS.md`](assets/AGENTS.md): update each `Systems / Mechanisms / Entities` sections.
 - [`.repo/💬/ueli.md`](.repo/💬/ueli.md): leave untouched (it is the spec source).
 
 ## Execution order (to keep the tree compilable)

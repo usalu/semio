@@ -2279,7 +2279,9 @@ export function buildMicroCommitMessage(
   const { line1Base, nnn } = nextCounter(root, contributor);
   const now = new Date();
   const authored = diffBullets.length > 0 ? normalizeBulletLines(diffBullets.join("\n")) : readPreparedBullets(root);
-  const bullets = [...ticketBullets(root), ...authored].slice(0, 8);
+  const tickets = ticketBullets(root);
+  const authoredLower = new Set(authored.map((b) => b.toLowerCase()));
+  const bullets = [...authored, ...tickets.filter((t) => !authoredLower.has(t.toLowerCase()))].slice(0, 8);
   if (bullets.length === 0) {
     throw new Error("micro-commit: at least one description bullet is required");
   }

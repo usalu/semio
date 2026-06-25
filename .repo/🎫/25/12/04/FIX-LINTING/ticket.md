@@ -32,7 +32,7 @@ Linting errors across multiple languages:
 
 ### Quality.tsx
 
-- Added missing imports: icons from `compose/assets`, UI components from `./elements`, types from `./shared`, hooks from `./Sketchpad`
+- Added missing imports: icons from `assets`, UI components from `./elements`, types from `./shared`, hooks from `./Sketchpad`
 - Fixed `createDefaultLayout` call (removed 4th argument)
 - Fixed quality update diff key
 

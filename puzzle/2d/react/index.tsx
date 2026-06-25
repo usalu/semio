@@ -837,9 +837,49 @@ export interface CubicBezierCurve {
   p3: Point;
 }
 
+/** @emoji 🔗 Compose connection transform params shared with puzzle 3d attractions and puzzle 5d fasteners. */
+export interface PuzzleConnectionTransformParams {
+  readonly gap?: number;
+  readonly shift?: number;
+  readonly rise?: number;
+  readonly rotation?: number;
+  readonly turn?: number;
+  readonly tilt?: number;
+  readonly u?: number;
+  readonly v?: number;
+}
+
+const PUZZLE_CONNECTION_TRANSFORM_PARAM_KEYS = ["gap", "shift", "rise", "rotation", "turn", "tilt", "u", "v"] as const;
+
+/** @emoji 🔗 Reads optional connection transform params from fixture JSON. */
+export function parsePuzzleConnectionTransformParams(record: Record<string, unknown>): PuzzleConnectionTransformParams {
+  const out: Record<string, number> = {};
+  for (const key of PUZZLE_CONNECTION_TRANSFORM_PARAM_KEYS) {
+    const value = record[key];
+    if (typeof value === "number" && Number.isFinite(value)) {
+      out[key] = value;
+    }
+  }
+  return out;
+}
+
+/** @emoji 🔗 Spreads defined connection transform params onto a fixture record. */
+export function spreadPuzzleConnectionTransformParams(params: PuzzleConnectionTransformParams): PuzzleConnectionTransformParams {
+  const out: Record<string, number> = {};
+  for (const key of PUZZLE_CONNECTION_TRANSFORM_PARAM_KEYS) {
+    const value = params[key];
+    if (typeof value === "number" && Number.isFinite(value)) {
+      out[key] = value;
+    }
+  }
+  return out;
+}
+
 /** @emoji 📄 Handle record inside {@link Puzzle2dFixtureV1}; optional `radius` overrides default world-space hit/draw size. */
 export interface Puzzle2dFixtureHandleV1 {
   angle: number;
+  /** @emoji 📐 Optional port perimeter parameter (0–1); defaults from {@link angle} / 360 when absent. */
+  t?: number;
   /** @emoji 🔗 Required after {@link parsePuzzle2dFixtureV1}; JSON may omit it and receive {@link BUILTIN_PORT_HANDLE_KIND}. */
   handleKind: string;
   hidden?: boolean;
@@ -915,7 +955,7 @@ export interface Puzzle2dFixtureRectangleNodeV1 {
 export type Puzzle2dFixtureNodeV1 = Puzzle2dFixtureCircleNodeV1;
 
 /** @emoji 📄 Edge record inside {@link Puzzle2dFixtureV1}. */
-export interface Puzzle2dFixtureEdgeV1 {
+export interface Puzzle2dFixtureEdgeV1 extends PuzzleConnectionTransformParams {
   /** @emoji 🧩 Optional semantic edge-kind id for catalog defaults and compatibility. */
   edgeKind?: string;
   hidden?: boolean;
@@ -2264,6 +2304,7 @@ export function parsePuzzle2dFixtureV1(raw: unknown): Puzzle2dFixtureV1 | null {
       const withRadius = Number.isFinite(hradius) && hradius > 0;
       const iconRaw = hr.iconKind;
       const iconTrim = typeof iconRaw === "string" && iconRaw.trim() !== "" ? iconRaw.trim() : undefined;
+      const tRaw = Number(hr.t);
       const base: Puzzle2dFixtureHandleV1 = {
         angle,
         handleKind,
@@ -2271,6 +2312,7 @@ export function parsePuzzle2dFixtureV1(raw: unknown): Puzzle2dFixtureV1 | null {
         ...(colorTrim !== undefined ? { color: colorTrim } : {}),
         ...(withRadius ? { radius: hradius } : {}),
         ...(iconTrim !== undefined ? { iconKind: iconTrim } : {}),
+        ...(Number.isFinite(tRaw) ? { t: tRaw } : {}),
         ...puzzle2dFixtureOptionalEntityFlags(hr),
       };
       handles.push(base);
@@ -2376,12 +2418,119 @@ export function parsePuzzle2dFixtureV1(raw: unknown): Puzzle2dFixtureV1 | null {
       ...(edgeKind !== undefined ? { edgeKind } : {}),
       ...(sourceTip !== undefined ? { sourceTip } : {}),
       ...(targetTip !== undefined ? { targetTip } : {}),
+      ...spreadPuzzleConnectionTransformParams(parsePuzzleConnectionTransformParams(edge)),
       ...puzzle2dFixtureOptionalEntityFlags(edge),
     });
   }
   const meta = root.meta && typeof root.meta === "object" ? (root.meta as Record<string, unknown>) : undefined;
   return { camera, edges, meta, nodes: nodes.map(puzzle2dNormalizeFixtureNodeV1), schema: "puzzle.2d.fixture/v1" };
 }
+
+//#region 🌤️Flatten
+
+const FLATTEN_2D_DIAGRAM_RADIUS = 2.697;
+const FLATTEN_2D_DIAGRAM_VERTICAL_V_EXTRA = 1.0;
+const FLATTEN_2D_DIAGRAM_HORIZONTAL_SCALE = 3.0633;
+
+function flatten2dParseEndpoint(endpoint: string): { readonly nodeId: string; readonly handleId: string | null } {
+  const colon = endpoint.lastIndexOf(":");
+  if (colon <= 0 || colon >= endpoint.length - 1) {
+    return { nodeId: endpoint, handleId: null };
+  }
+  return { nodeId: endpoint.slice(0, colon), handleId: endpoint.slice(colon + 1) };
+}
+
+function flatten2dHandleT(handle: Puzzle2dFixtureHandleV1 | undefined): number {
+  if (!handle) {
+    return 0;
+  }
+  if (typeof handle.t === "number" && Number.isFinite(handle.t)) {
+    return handle.t;
+  }
+  if (typeof handle.angle === "number" && Number.isFinite(handle.angle)) {
+    return handle.angle / 360;
+  }
+  return 0;
+}
+
+function flatten2dRound6(value: number): number {
+  return Math.round(value * 1_000_000) / 1_000_000;
+}
+
+/** @emoji 🌤️ Computes absolute node centers from edges and handle perimeter parameters. */
+export function flatten2d(fixture: Puzzle2dFixtureV1): Puzzle2dFixtureV1 {
+  const nodeMap = new Map(fixture.nodes.map((node) => [node.id, node]));
+  const adjacency = new Map<string, { readonly neighborId: string; readonly edge: Puzzle2dFixtureEdgeV1; readonly sourceOnCurrent: boolean }[]>();
+  for (const edge of fixture.edges) {
+    const source = flatten2dParseEndpoint(edge.source);
+    const target = flatten2dParseEndpoint(edge.target);
+    if (!nodeMap.has(source.nodeId) || !nodeMap.has(target.nodeId)) {
+      continue;
+    }
+    const push = (fromId: string, toId: string, sourceOnCurrent: boolean) => {
+      const row = adjacency.get(fromId) ?? [];
+      row.push({ neighborId: toId, edge, sourceOnCurrent });
+      adjacency.set(fromId, row);
+    };
+    push(source.nodeId, target.nodeId, true);
+    push(target.nodeId, source.nodeId, false);
+  }
+  const centers = new Map<string, { readonly x: number; readonly y: number }>();
+  const visited = new Set<string>();
+  const bfsRoot = (rootId: string) => {
+    const queue: string[] = [rootId];
+    visited.add(rootId);
+    const rootNode = nodeMap.get(rootId);
+    centers.set(rootId, { x: rootNode?.x ?? 0, y: rootNode?.y ?? 0 });
+    while (queue.length > 0) {
+      const currentId = queue.shift()!;
+      const parentCenter = centers.get(currentId) ?? { x: 0, y: 0 };
+      const currentNode = nodeMap.get(currentId);
+      if (!currentNode) {
+        continue;
+      }
+      for (const entry of adjacency.get(currentId) ?? []) {
+        if (visited.has(entry.neighborId)) {
+          continue;
+        }
+        visited.add(entry.neighborId);
+        const sourceEndpoint = flatten2dParseEndpoint(entry.edge.source);
+        const targetEndpoint = flatten2dParseEndpoint(entry.edge.target);
+        const parentEndpoint = entry.sourceOnCurrent ? sourceEndpoint : targetEndpoint;
+        const parentHandle = currentNode.handles.find((handle) => handle.id === parentEndpoint.handleId || handle.id === entry.edge.source || handle.id === entry.edge.target);
+        const parentT = flatten2dHandleT(parentHandle);
+        const connectionU = entry.edge.u ?? 0;
+        const connectionV = entry.edge.v ?? 0;
+        let childX: number;
+        let childY: number;
+        if (parentCenter.x === 0 && parentCenter.y === 0) {
+          const angle = 2 * Math.PI * parentT;
+          childX = FLATTEN_2D_DIAGRAM_RADIUS * Math.sin(angle);
+          childY = FLATTEN_2D_DIAGRAM_RADIUS * Math.cos(angle);
+        } else {
+          childX = parentCenter.x + connectionU * FLATTEN_2D_DIAGRAM_HORIZONTAL_SCALE;
+          childY = parentCenter.y + connectionV * FLATTEN_2D_DIAGRAM_HORIZONTAL_SCALE;
+        }
+        centers.set(entry.neighborId, { x: flatten2dRound6(childX), y: flatten2dRound6(childY) });
+        queue.push(entry.neighborId);
+      }
+    }
+  };
+  for (const node of fixture.nodes) {
+    if (!visited.has(node.id)) {
+      bfsRoot(node.id);
+    }
+  }
+  return {
+    ...fixture,
+    nodes: fixture.nodes.map((node) => {
+      const center = centers.get(node.id);
+      return center ? { ...node, x: center.x, y: center.y } : node;
+    }),
+  };
+}
+
+//#endregion 🌤️Flatten
 
 /** @emoji 📌 MIME for in-app puzzle 2d fixture drags (not host filesystem file drops). */
 export const PUZZLE_2D_FIXTURE_DRAG_V1_MIME = "application/x-puzzle-2d-fixture-v1";
@@ -12035,7 +12184,11 @@ export function buildPuzzle2dSceneDescriptorFromFixture(fixture: Puzzle2dFixture
       x: node.x,
       y: node.y,
     };
-    nodes.push({ ...shared, radius: PUZZLE_2D_NODE_RADIUS_PX });
+    if (node.shape === "rectangle") {
+      nodes.push({ ...shared, shape: "rectangle", width: node.width, height: node.height });
+    } else {
+      nodes.push({ ...shared, shape: "circle", radius: node.radius ?? PUZZLE_2D_NODE_RADIUS_PX });
+    }
   }
   const edges: EdgeDescriptor[] = fixture.edges.map((edge) => ({
     id: edge.id,
@@ -12710,7 +12863,7 @@ export function puzzle2dSceneDescriptorFingerprint(descriptor: Puzzle2dSceneDesc
   const edgeParts = descriptor.edges
     .map(
       (e) =>
-        `e:${e.id}:${e.source}:${e.target},${e.visible !== false ? 1 : 0},${e.selected ? 1 : 0},${e.style ?? ""},${e.edgeKind ?? ""},${e.sourceTip ?? ""},${e.targetTip ?? ""}`,
+        `e:${e.id}:${e.source}:${e.target},${e.visible !== false ? 1 : 0},${e.selected ? 1 : 0},${e.style ?? ""},${e.edgeKind ?? ""},${e.sourceTip ?? ""},${e.targetTip ?? ""},${e.gap ?? ""},${e.shift ?? ""},${e.rise ?? ""},${e.rotation ?? ""},${e.turn ?? ""},${e.tilt ?? ""},${e.u ?? ""},${e.v ?? ""}`,
     )
     .sort()
     .join("|");
@@ -14810,6 +14963,21 @@ if (puzzle2dReactVitest) {
         puzzle2dFixturePalettePointerDragRef.active = false;
         puzzle2dFixturePalettePointerDragRef.encoded = null;
       }
+    });
+
+    it("flatten2d propagates connection u on linked nodes", () => {
+      const fixture = parsePuzzle2dFixtureV1({
+        schema: "puzzle.2d.fixture/v1",
+        camera: { x: 0, y: 0, zoom: 1 },
+        nodes: [
+          { id: "root", shape: "circle", x: 1, y: 2, radius: 10, handles: [{ id: "root:h", angle: 0, handleKind: "port", t: 0 }] },
+          { id: "child", shape: "circle", x: 0, y: 0, radius: 10, handles: [{ id: "child:h", angle: 0, handleKind: "port", t: 0 }] },
+        ],
+        edges: [{ id: "e1", source: "root:h", target: "child:h", u: 0.5, v: 0.25 }],
+      });
+      expect(fixture).not.toBeNull();
+      const flattened = flatten2d(fixture!);
+      expect(flattened.nodes.find((node) => node.id === "child")?.x).toBeCloseTo(2.53165, 3);
     });
 
     it("parsePuzzle2dFixtureV1 preserves edgeKind on edges", () => {

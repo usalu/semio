@@ -10,7 +10,7 @@
 
 // #region 🎩Band
 import { Band, Button, Input, Strip, Toggle } from "@semio-tech/ui-react";
-import { AddIcon, AwardIcon, DocumentIcon, FolderIcon, LayoutIcon, TypeIcon, UserIcon } from "@semio-tech/compose-asset";
+import { AddIcon, AwardIcon, DocumentIcon, FolderIcon, LayoutIcon, TypeIcon, UserIcon } from "@semio-tech/semio-asset";
 import type { Meta, StoryObj } from "@storybook/react";
 
 const meta = {

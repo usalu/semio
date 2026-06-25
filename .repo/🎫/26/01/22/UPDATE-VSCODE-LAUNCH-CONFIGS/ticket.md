@@ -27,7 +27,7 @@ The launch.json was updated to only include valid targets. However, some package
 | compose/desktop     | ✓   | -    | ✓     | ✓           | ✓       | -                                                                |
 | compose/net         | -   | ✓    | ✓     | ✓           | -       | -                                                                |
 | compose/grasshopper | -   | ✓    | ✓     | ✓           | -       | -                                                                |
-| compose/assets      | -   | -    | -     | ✓           | -       | -                                                                |
+| assets      | -   | -    | -     | ✓           | -       | -                                                                |
 | compose/logo        | ✓   | -    | ✓     | **MISSING** | -       | animate                                                          |
 | compose/icons       | -   | -    | ✓     | **MISSING** | -       | -                                                                |
 | compose/yak         | -   | -    | ✓     | **MISSING** | ✓       | -                                                                |

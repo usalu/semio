@@ -37,20 +37,20 @@ Completed comprehensive file/section/definition statutes with summary/requiremen
   - `TestDefinitionWithSummaryAndRequirements`: Verifies definitions with summary/requirements produce no breachs
   - `TestSectionDocLinesExemptsDocComments`: Verifies doc comments are not flagged as inline comments
 
-### compose/assets/repo/some/folder/file_fixed.tsx
+### assets/repo/some/folder/file_fixed.tsx
 
 - Added summary and spec comments to Types and Components sections
 - Added summary and spec comments to FixedType, FixedKind, and FixedComponent definitions
 
-### compose/assets/repo/some/folder/file_fixed.py
+### assets/repo/some/folder/file_fixed.py
 
 - Added summary and spec comments to Functions section and fixed_function definition
 
-### compose/assets/repo/some/folder/file_fixed.go
+### assets/repo/some/folder/file_fixed.go
 
 - Added summary and spec comments to Package and Functions sections and FixedValue definition
 
-### compose/assets/repo/some/folder/file_fixed.cs
+### assets/repo/some/folder/file_fixed.cs
 
 - Added summary and spec comments to Classes section and FixedClass definition
 - Changed FixedClass brace style to K&R (same line) for regex compatibility

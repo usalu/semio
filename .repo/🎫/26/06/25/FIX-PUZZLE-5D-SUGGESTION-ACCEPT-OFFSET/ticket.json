@@ -1,0 +1,11 @@
+{
+  "title": "Fix Puzzle 5d Suggestion Accept Offset",
+  "emoji": "🧩",
+  "status": "closed",
+  "description": "Fix puzzle 5d: accepting a highlighted 3d part suggestion must remove the suggestion highlight and create the new part at the exact suggestion position including offset.",
+  "summary": "Fixed puzzle 5d volume suggestion acceptance so accepted 3d brush payloads keep the exact preview pose and attraction id, and both paired suggestion previews are cleared after commit. Updated the 5d play host to use the shared volume commit helper. Verified with package-local Vitest, renderer Vitest, 5d play build, and browser smoke on the active 6014 dev server with clean console logs.",
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪88ca59cfe01c481bbe4c6bcafc430b15"
+  ]
+}

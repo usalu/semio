@@ -283,9 +283,9 @@ export function sidePanelTreeRootItems(
 
 //#region 🔖ComponentKind
 /** @emoji 🧩 Fixed platform component vocabulary wired by renderers (`table`, `virtualFileSystem`, `puzzle2d`, …). */
-export type ComponentKind = "table" | "virtualFileSystem" | "puzzle2d" | "puzzle3d" | "puzzle5d" | "cad" | "gismap" | "flow" | "dag" | "panel";
+export type ComponentKind = "table" | "virtualFileSystem" | "puzzle2d" | "puzzle3d" | "puzzle5d" | "cad" | "gismap" | "flow" | "dag" | "shooting" | "panel";
 
-const CANVAS_COMPONENT_KINDS: readonly ComponentKind[] = ["table", "virtualFileSystem", "puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag"];
+const CANVAS_COMPONENT_KINDS: readonly ComponentKind[] = ["table", "virtualFileSystem", "puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag", "shooting"];
 //#endregion 🔖ComponentKind
 
 /** @emoji 📊 Host-bound tabular surface; `paneId` disambiguates multiple table slots in one app. */
@@ -385,6 +385,16 @@ export interface UiPanelHostSurfaceNode {
 	readonly bindingId?: string;
 }
 
+/** @emoji 📸 Host-bound shooting surface (`model` interactive viewport or `icon` shot preview). */
+export interface UiShootingHostSurfaceNode {
+	readonly type: "shooting";
+	readonly componentKind: "shooting";
+	readonly surfaceId: string;
+	readonly controllerId: string;
+	readonly view: "model" | "icon";
+	readonly bindingId?: string;
+}
+
 export type UiComponentHostSurfaceNode =
 	| UiTableHostSurfaceNode
 	| UiVirtualFileSystemHostSurfaceNode
@@ -395,6 +405,7 @@ export type UiComponentHostSurfaceNode =
 	| UiFlowHostSurfaceNode
 	| UiDagHostSurfaceNode
 	| UiCadHostSurfaceNode
+	| UiShootingHostSurfaceNode
 	| UiPanelHostSurfaceNode;
 
 /** @emoji 🌲 Converts declarative form sections into a strict side-panel tree. */
@@ -566,6 +577,16 @@ export function buildPanelWindowBody(surfaceId: string, controllerId: string, bi
 	return { type: "panel", componentKind: "panel", surfaceId, controllerId, ...(bindingId ? { bindingId } : {}) };
 }
 
+/** @emoji 📸 Canonical shooting window body for model or icon viewport. */
+export function buildShootingWindowBody(
+	surfaceId: string,
+	controllerId: string,
+	view: "model" | "icon",
+	bindingId?: string,
+): UiShootingHostSurfaceNode {
+	return { type: "shooting", componentKind: "shooting", surfaceId, controllerId, view, ...(bindingId ? { bindingId } : {}) };
+}
+
 function isCanvasComponentNode(node: UiNode): boolean {
 	if (node.type === "text") return true;
 	if (node.type === "panel") return true;
@@ -584,7 +605,7 @@ export function isCanvasOnlyWindowBody(node: UiNode): boolean {
 function assertCanvasOnlyWindowBody(bodyKey: string, node: UiNode): void {
 	if (isCanvasOnlyWindowBody(node)) return;
 		throw new Error(
-			`Declarative window body "${bodyKey}" must be a single table, virtualFileSystem, puzzle2d, puzzle3d, puzzle5d, or cad surface (optional none padding stack wrapper). Found "${node.type}". Use ModeRuntime.tools, side tabs, or window measures for chrome.`,
+			`Declarative window body "${bodyKey}" must be a single table, virtualFileSystem, puzzle2d, puzzle3d, puzzle5d, cad, or shooting surface (optional none padding stack wrapper). Found "${node.type}". Use ModeRuntime.tools, side tabs, or window measures for chrome.`,
 		);
 }
 //#endregion 🔖UiNode

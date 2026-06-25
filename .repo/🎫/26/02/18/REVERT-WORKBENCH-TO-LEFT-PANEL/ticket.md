@@ -54,7 +54,7 @@ Migrated workbench to left toggle panel with panel-kind plumbing, app layout mig
   - `/bin/bash -lc "cd /workspaces/semio/compose/js && npx playwright test sketchpad.test.ts --grep \"Design\" --timeout 240000 --workers=1 --max-failures=1 --reporter=list"` ❌ `config.webServer` failed to start.
   - `/bin/bash -lc "cd /workspaces/semio/compose/js && PLAYWRIGHT_SKIP_WEBSERVER=1 timeout 360s npx playwright test sketchpad.test.ts --grep \"Design\" --timeout 240000 --workers=1 --max-failures=1 --reporter=line"` ❌ timed out (`exit 124`) after reaching known ReactFlow node attachment stall (`[Design Test] ReactFlow nodes not attached after 60s`).
   - `npm --prefix compose/js run test:e2e` ❌ failed before tests; Playwright `config.webServer` did not start.
-  - `npm --prefix compose/js exec tsc --noEmit` ❌ blocked by pre-existing syntax errors in `repo/vscode/codegen/*` and `compose/assets/logo/logo.ts`.
+  - `npm --prefix compose/js exec tsc --noEmit` ❌ blocked by pre-existing syntax errors in `repo/vscode/codegen/*` and `assets/logo/logo.ts`.
 
 ## Todos
 

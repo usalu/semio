@@ -87,7 +87,7 @@ isProject: false
 
 ## Canonical schema reference
 
-Ground truth: the hash functions in `compose/py/main.py` (lines 6365–7190), cross-checked with `compose/assets/compose/metabolism.kit.reference.compose.json` (kit top-level) and `metabolism.shallow.kit.compose.json` (types/designs referencing families).
+Ground truth: the hash functions in `compose/py/main.py` (lines 6365–7190), cross-checked with `assets/compose/metabolism.kit.reference.compose.json` (kit top-level) and `metabolism.shallow.kit.compose.json` (types/designs referencing families).
 
 Top-level Kit collections: `types`, `designs`, `files`, `folders`, `authors`, `concepts`, `tags`, `ports`, `qualities`, `families`, `locations`, `attributes` (plus scalar metadata: `id`, `name`, `version`, `description`, `icon`, `image`, `remote`, `homepage`, `license`, `preview`, `createdAt`, `updatedAt`).
 

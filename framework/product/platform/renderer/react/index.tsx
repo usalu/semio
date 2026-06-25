@@ -144,7 +144,7 @@ import Fuse, { type FuseResult } from "fuse.js";
 import { Puzzle2dCanvas, parsePuzzle2dFixtureV1, type Puzzle2dPreselectSnapshot, type Puzzle2dSelectionSnapshot } from "@semio-tech/puzzle-2d-react";
 import { parseFixtureV1, puzzle3dFixturePaletteTreeDragController, type SelectionSnapshot as Puzzle3dSelectionSnapshot } from "@semio-tech/puzzle-3d-react";
 import { PUZZLE_2D_FIXTURE_DRAG_V1_MIME, puzzle2dFixturePaletteTreeDragController, classifyPuzzle2dIconSelectorMode } from "@semio-tech/puzzle-2d-react";
-import { FiveD, StoreProvider, compose5d, createStore } from "@semio-tech/puzzle-5d-react";
+import { FiveD, StoreProvider, compose5d, createStore, prepareTopologyModel } from "@semio-tech/puzzle-5d-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import {
@@ -2832,7 +2832,7 @@ export function platformTopologyStructureKey(flat: Record<string, unknown>, volu
 		.map((edge) => `${edge.id}:${edge.source}:${edge.target}`)
 		.sort()
 		.join(";");
-	return `${nodes}|${edges}|${JSON.stringify(volume)}`;
+	return `${nodes}|${edges}|${JSON.stringify(parsed.camera)}|${JSON.stringify(volume)}`;
 }
 
 function usePlatformTopologyStore(
@@ -2865,7 +2865,7 @@ function usePlatformTopologyStore(
 		if (!flatPayload || !volumePayload) {
 			return;
 		}
-		const model = compose5d(parsePuzzle2dFixtureV1(flatPayload)!, parseFixtureV1(volumePayload)!);
+		const model = prepareTopologyModel(compose5d(parsePuzzle2dFixtureV1(flatPayload)!, parseFixtureV1(volumePayload)!));
 		const existing = topologyStoreRef.current;
 		if (existing) {
 			if (lastStructureKeyRef.current !== structureKey) {
@@ -2972,7 +2972,7 @@ const BuiltinPuzzle5dKindRenderer: ComponentKindRenderer = ({ component, node, c
 			<StoreProvider store={topologyStore}>
 				<FiveD
 					instanceId={instanceId}
-					graphPortMode={instanceId.endsWith(":kit:wires") ? "normal" : undefined}
+					graphPortMode={instanceId.endsWith(":kit:wires") || instanceId.endsWith(":diagram") ? "normal" : undefined}
 					liveForceGraph={instanceId.endsWith(":kit:wires")}
 					mode={fiveDMode}
 					puzzle2d={puzzle2dSelect}

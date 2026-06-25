@@ -47,7 +47,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "💻compose/assets/icons.ts",
+              "path": "💻assets/icons.ts",
               "lines": {
                 "added": 1,
                 "removed": 1
@@ -237,7 +237,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "💻compose/assets/icons.ts",
+              "path": "💻assets/icons.ts",
               "lines": {
                 "added": 1,
                 "removed": 1

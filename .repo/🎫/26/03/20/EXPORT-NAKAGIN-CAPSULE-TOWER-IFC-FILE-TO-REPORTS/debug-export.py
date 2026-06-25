@@ -20,7 +20,7 @@ def debug_export():
     """Debug the IFC export process"""
     try:
         # Load the kit
-        kit_path = Path('/workspaces/semio/compose/assets/compose/kit_metabolism.json')
+        kit_path = Path('/workspaces/semio/assets/compose/kit_metabolism.json')
         with open(kit_path, 'r', encoding='utf-8') as f:
             kit_data = json.load(f)
         

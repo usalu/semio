@@ -107,7 +107,7 @@ const TEXT_EXTENSIONS = new Set([
 ]);
 
 const TEXT_REPLACEMENTS: [string, string][] = [
-	["@semio-tech/compose-assets", "@semio-tech/compose-asset"],
+	["@semio-tech/semio-assets", "@semio-tech/semio-asset"],
 	["@semio-tech/compose-fixtures", "@semio-tech/compose-fixture"],
 	["@semio-tech/puzzle-assets", "@semio-tech/puzzle-asset"],
 	["@semio-tech/ui-assets", "@semio-tech/ui-asset"],
@@ -162,7 +162,7 @@ const TEXT_REPLACEMENTS: [string, string][] = [
 	["/skills/", "/skill/"],
 	["/meshes/", "/mesh/"],
 	["compose/fixtures", "compose/fixture"],
-	["compose/assets", "compose/asset"],
+	["assets", "asset"],
 	["puzzle/assets", "puzzle/asset"],
 	["cad/assets", "cad/asset"],
 	["ui/assets", "ui/asset"],
@@ -171,7 +171,7 @@ const TEXT_REPLACEMENTS: [string, string][] = [
 	[".storybook/fixtures", ".storybook/fixture"],
 	[".storybook/stories", ".storybook/story"],
 	["workspace:ui/assets", "workspace:ui/asset"],
-	["workspace:compose/assets", "workspace:compose/asset"],
+	["workspace:assets", "workspace:asset"],
 	["workspace:compose/fixtures", "workspace:compose/fixture"],
 	["workspace:puzzle/assets", "workspace:puzzle/asset"],
 ];

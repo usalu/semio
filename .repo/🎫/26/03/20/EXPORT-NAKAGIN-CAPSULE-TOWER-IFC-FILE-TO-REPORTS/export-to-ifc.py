@@ -29,7 +29,7 @@ except ImportError as e:
 def extract_nakagin_capsule_tower_design():
     """Extract Nakagin Capsule Tower design from Metabolism kit"""
     try:
-        kit_path = Path('/workspaces/semio/compose/assets/compose/kit_metabolism.json')
+        kit_path = Path('/workspaces/semio/assets/compose/kit_metabolism.json')
         
         if not kit_path.exists():
             print(f"❌ Metabolism kit file not found: {kit_path}")
@@ -100,7 +100,7 @@ def main():
     print(f"🧩 Pieces: {len(design.get('pieces', []))}")
     
     # Define output path
-    output_dir = Path('/workspaces/semio/compose/assets/models')
+    output_dir = Path('/workspaces/semio/assets/models')
     output_dir.mkdir(parents=True, exist_ok=True)
     output_path = output_dir / 'nakagin-capsule-tower.ifc'
     

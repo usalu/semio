@@ -1868,15 +1868,18 @@ impl FlowHost {
         if !widget_has_output(mid_id, &self.fixture.widgets, &self.fixture.synapses, &self.kind_infos) {
             return Err(format!("{mid_id} has no output port"));
         }
-        for synapse in &mut self.fixture.synapses {
-            if synapse.from == anchor_id && synapse.from_port == anchor_out_port {
-                synapse.from = mid_id.to_string();
-                synapse.from_port = mid_out_port.to_string();
-            }
-        }
         let existing: Vec<(String, String)> = self.fixture.synapses.iter().map(|synapse| (synapse.from.clone(), synapse.to.clone())).collect();
         if would_create_cycle(&existing, anchor_id, mid_id) {
             return Err("connection would create cycle".into());
+        }
+        let mid_has_input = self.fixture.synapses.iter().any(|synapse| synapse.to == mid_id);
+        if !mid_has_input {
+            for synapse in &mut self.fixture.synapses {
+                if synapse.from == anchor_id && synapse.from_port == anchor_out_port {
+                    synapse.from = mid_id.to_string();
+                    synapse.from_port = mid_out_port.to_string();
+                }
+            }
         }
         if self.fixture.synapses.iter().any(|synapse| synapse.from == anchor_id && synapse.from_port == anchor_out_port && synapse.to == mid_id && synapse.to_port == mid_in_port) {
             self.rebuild_dag();
@@ -3397,6 +3400,7 @@ mod tests {
     use super::*;
     use cavas::camera::{world_to_screen, Camera, Viewport};
     use cavas::vello::kurbo::Point;
+    use dag::HandleRole;
     use neural::{ChannelSpec as InputSpec, OperatorInfo as NeuronKindInfo, Registry};
     use std::sync::{Mutex, OnceLock};
 
@@ -4395,6 +4399,68 @@ mod tests {
     }
 
     #[test]
+    fn dag_bridge_keeps_same_named_brep_input_and_output_distinct() {
+        let mut host = FlowHost::default();
+        host.fixture.widgets = vec![
+            Widget::Neuron { id: "extrude".into(), neuronKind: "brep.solid.extrude".into(), params: Dictionary::new(), input_ports: vec!["wire".into(), "vector".into()], output_ports: vec![], preview: true },
+            Widget::Neuron { id: "brep".into(), neuronKind: "brep.brep".into(), params: Dictionary::new(), input_ports: vec!["brep".into(), "vertex".into(), "edge".into(), "face".into()], output_ports: vec![], preview: true },
+            Widget::Neuron { id: "get".into(), neuronKind: "list.get".into(), params: Dictionary::new(), input_ports: vec!["list".into(), "index".into(), "wrap".into()], output_ports: vec!["0".into()], preview: true },
+        ];
+        host.fixture.synapses = vec![
+            SynapseSpec { id: "e112".into(), from: "extrude".into(), to: "brep".into(), from_port: "solid".into(), to_port: "brep".into() },
+            SynapseSpec { id: "e113".into(), from: "brep".into(), to: "get".into(), from_port: "brep".into(), to_port: "list".into() },
+        ];
+        host.fixture.layout.insert("extrude".into(), WidgetLayout { x: 0.0, y: 0.0 });
+        host.fixture.layout.insert("brep".into(), WidgetLayout { x: 200.0, y: 0.0 });
+        host.fixture.layout.insert("get".into(), WidgetLayout { x: 400.0, y: 0.0 });
+        host.set_neuron_kind_infos_json(
+            &serde_json::to_string(&[
+                NeuronKindInfo {
+                    id: "brep.solid.extrude".into(),
+                    module: "brep".into(),
+                    name: "Extrude".into(),
+                    abbreviation: "Extr".into(),
+                    icon: "emoji:⬆️".into(),
+                    summary: "Extrude".into(),
+                    inputs: vec![InputSpec::requires("wire", &["geometry"]), InputSpec::requires("vector", &["vector"])],
+                    outputs: vec![InputSpec::named("S", "Sld", "solid", "Solid")],
+                    ..Default::default()
+                },
+                NeuronKindInfo {
+                    id: "brep.brep".into(),
+                    module: "brep".into(),
+                    name: "Brep".into(),
+                    abbreviation: "Brep".into(),
+                    icon: "emoji:🧊".into(),
+                    summary: "Brep".into(),
+                    inputs: vec![InputSpec::requires("brep", &["brep.brep"]), InputSpec::list("vertex", &["brep.brep"]), InputSpec::list("edge", &["brep.brep"]), InputSpec::list("face", &["brep.brep"])],
+                    outputs: vec![InputSpec::named("B", "Brp", "brep", "Brep")],
+                    ..Default::default()
+                },
+                NeuronKindInfo {
+                    id: "list.get".into(),
+                    module: "list".into(),
+                    name: "Get".into(),
+                    abbreviation: "Get".into(),
+                    icon: "emoji:📋".into(),
+                    summary: "Get".into(),
+                    inputs: vec![InputSpec::list("list", &["list.get"]), InputSpec::number_default("index", 0.0, &["list.get"]), InputSpec::boolean_default("wrap", false, &["list.get"])],
+                    outputs: vec![InputSpec::named("V", "Val", "value", "ListValue")],
+                    ..Default::default()
+                },
+            ])
+            .unwrap(),
+        );
+        host.rebuild_dag();
+        let incoming = host.dag.engine.edges.get(&112).expect("incoming brep edge");
+        let outgoing = host.dag.engine.edges.get(&113).expect("outgoing brep edge");
+        let incoming_target = host.dag.engine.handles.get(&incoming.target).expect("incoming target");
+        let outgoing_source = host.dag.engine.handles.get(&outgoing.source).expect("outgoing source");
+        assert_eq!(incoming_target.role, HandleRole::Target);
+        assert_eq!(outgoing_source.role, HandleRole::Source);
+    }
+
+    #[test]
     fn delete_selection_removes_selected_edge_from_fixture() {
         let mut host = host_with_test_bridge();
         let synapse_count_before = host.fixture.synapses.len();
@@ -4495,6 +4561,16 @@ mod tests {
         assert!(host.fixture.synapses.iter().any(|synapse| synapse.from == "mid" && synapse.to == "add"));
         assert!(host.fixture.synapses.iter().any(|synapse| synapse.from == "add" && synapse.to == "preview"));
         assert!(!host.fixture.synapses.iter().any(|synapse| synapse.from == "slider" && synapse.to == "add"));
+    }
+
+    #[test]
+    fn insert_between_preserves_existing_mid_inputs() {
+        let mut host = host_with_test_bridge();
+        let variable_id = host.add_widget(r#"{"kind":"variable","name":"width","schema":"number"}"#, 120.0, 0.0).unwrap();
+        host.connect_ports("slider", "number", &variable_id, "width").unwrap();
+        host.insert_between("slider", "number", &variable_id, "width", "width").unwrap();
+        assert!(host.fixture.synapses.iter().any(|synapse| synapse.from == "slider" && synapse.to == variable_id && synapse.to_port == "width"));
+        assert!(!host.fixture.synapses.iter().any(|synapse| synapse.from == variable_id && synapse.to == variable_id));
     }
 
     #[test]

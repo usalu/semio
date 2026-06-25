@@ -13,7 +13,7 @@ Workspace and package configs are outdated. Every library (Go module, Rust crate
 ### Existing package.json files:
 
 1. `/package.json` - root workspace
-2. `assets/package.json` - compose/assets
+2. `assets/package.json` - assets
 3. `assets/logo/package.json` - compose/logo
 4. `assets/icons/package.json` - compose/icons
 5. `js/compose/package.json` - compose/js
@@ -112,7 +112,7 @@ Analyzed existing package.json files across the monorepo:
 ### Existing package.json files found:
 
 - `/package.json` - root workspace
-- `assets/package.json` - compose/assets
+- `assets/package.json` - assets
 - `assets/logo/package.json` - compose/logo
 - `assets/icons/package.json` - compose/icons
 - `js/compose/package.json` - compose/js

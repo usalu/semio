@@ -90,7 +90,7 @@
     "@compose/docs",
     "@compose/js",
     "@compose/desktop",
-    "@compose/asset"
+    "@asset"
   ],
   ".cursor/plans/bvh_solid-overlap_brush_collision_32dd916b.plan.md": [
     "repo",
@@ -158,7 +158,7 @@
     "repo",
     "@compose/react",
     "@compose/algorithm",
-    "@compose/asset"
+    "@asset"
   ],
   ".cursor/plans/core_kernel_decoupling_94aae390.plan.md": [
     "repo",
@@ -329,7 +329,7 @@
   ],
   ".cursor/plans/framework_icon_interface_de631a59.plan.md": [
     "repo",
-    "@compose/asset",
+    "@asset",
     "@compose/icon",
     "@ui/react",
     "@ui/asset"
@@ -902,7 +902,7 @@
   ],
   ".repo/⚡/🤖/26/03/07/6e252a62-aaeb-4e91-ae79-40e129a3a191/session.json": [
     "repo",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/07/d1764ae5-b697-4abf-a2e3-1ffcc8955835/session.json": [
     "repo"
@@ -919,14 +919,14 @@
   ".repo/⚡/🤖/26/03/08/0f3901a5-4667-4f83-bbd3-8c6f249ff3ac/session.json": [
     "repo",
     "@compose/net",
-    "@compose/asset",
+    "@asset",
     "@compose/icon",
     "@compose/logo"
   ],
   ".repo/⚡/🤖/26/03/08/13b01489-82e2-4c87-882d-30dc08cfe1c1/session.json": [
     "repo",
     "@compose/js",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/08/2b143329-37a3-409e-9417-9512355dda08/session.json": [
     "repo"
@@ -949,7 +949,7 @@
   ".repo/⚡/🤖/26/03/08/5e3a5588-75ed-41ac-8770-86d0ff5cf733/session.json": [
     "repo",
     "@compose/js",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/08/6e252a62-aaeb-4e91-ae79-40e129a3a191/session.json": [
     "repo"
@@ -1073,7 +1073,7 @@
   ],
   ".repo/⚡/🤖/26/03/09/9e70e303-b9ae-4b0f-ad1b-517150847ba8/session.json": [
     "repo",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/09/9ea2ddd3-031f-45d4-8b59-2e9e87572e02/session.json": [
     "repo"
@@ -1217,7 +1217,7 @@
     "@compose/js",
     "@compose/py",
     "@compose/engine",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/11/03dc129b-5dc5-4c01-9a96-5b3646626c90/session.json": [
     "repo"
@@ -1237,7 +1237,7 @@
   ".repo/⚡/🤖/26/03/11/3b747c21-53e9-4893-9826-5e1f972d45cb/session.json": [
     "repo",
     "@compose/engine",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/11/3db2db9f-613d-4da6-ad1d-5d6d95b71f80/session.json": [
     "repo",
@@ -1275,7 +1275,7 @@
   ".repo/⚡/🤖/26/03/11/753f15d0-3143-4712-883b-4ce2b5e9cfe6/session.json": [
     "repo",
     "@compose/3dm-ui",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/11/7fba9b2d-8c65-48b8-9d81-09443266de3f/session.json": [
     "repo"
@@ -1293,7 +1293,7 @@
   ],
   ".repo/⚡/🤖/26/03/11/9916a30f-03b1-4670-b7b8-361490a6e5c0/session.json": [
     "repo",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/11/a31feb55-552f-42e8-b68c-92b449ce7e3f/session.json": [
     "repo",
@@ -1313,7 +1313,7 @@
     "@compose/net",
     "@compose/3dm-ui",
     "@compose/grasshopper",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/11/c758934c-3874-4a8a-af08-f6b71b995e82/session.json": [
     "repo"
@@ -1344,7 +1344,7 @@
   ],
   ".repo/⚡/🤖/26/03/12/059a56b0-b7f5-460f-aa89-36204d51b98d/session.json": [
     "repo",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/12/09b64a7c-40aa-49c0-a85d-d022cfba9221/session.json": [
     "repo"
@@ -1365,7 +1365,7 @@
     "@compose/go",
     "@compose/net",
     "@compose/py",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/12/1115ec01-af54-41f1-8afa-7136e5263dab/session.json": [
     "repo"
@@ -1390,7 +1390,7 @@
     "repo",
     "@compose/js",
     "@compose/3dm-ui",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/12/458f2bc7-2daa-4d3a-9ee9-62da95a06f4c/session.json": [
     "repo"
@@ -1424,7 +1424,7 @@
   ],
   ".repo/⚡/🤖/26/03/12/6bc3b8a6-f2a8-4e1f-995e-a031fe8f1efe/session.json": [
     "repo",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/12/6e3e92d9-5651-4b51-b12b-2feff03cd5dd/session.json": [
     "repo",
@@ -1465,13 +1465,13 @@
     "repo",
     "@compose/js",
     "@compose/desktop",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/12/9916a30f-03b1-4670-b7b8-361490a6e5c0/session.json": [
     "repo",
     "@compose/js",
     "@compose/3dm-ui",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/12/a502bfb3-4863-4afe-ae61-694785ba6232/session.json": [
     "repo",
@@ -1488,14 +1488,14 @@
   ],
   ".repo/⚡/🤖/26/03/12/b4e946d7-2bdb-4b00-94bf-59937313ad2c/session.json": [
     "repo",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/12/bb860385-9d99-4718-9e57-c2caa1d233c9/session.json": [
     "repo"
   ],
   ".repo/⚡/🤖/26/03/12/c728d40b-ef08-4008-acd3-927886030112/session.json": [
     "repo",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/12/c776d17f-c394-4514-8a17-921f1243ad74/session.json": [
     "repo"
@@ -1557,7 +1557,7 @@
   ".repo/⚡/🤖/26/03/13/10e4c604-138b-45e1-8630-fff6aa9f4394/session.json": [
     "repo",
     "@compose/js",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/13/1377f0ba-838c-4445-8c56-71eb88c17459/session.json": [
     "repo"
@@ -1629,7 +1629,7 @@
     "repo",
     "@compose/js",
     "@compose/net",
-    "@compose/asset",
+    "@asset",
     "@compose/icon",
     "@compose/logo"
   ],
@@ -1911,7 +1911,7 @@
     "@compose/desktop",
     "@compose/rhino",
     "@compose/3dm-ui",
-    "@compose/asset",
+    "@asset",
     "@compose/icon",
     "@compose/logo"
   ],
@@ -2100,7 +2100,7 @@
   ".repo/⚡/🤖/26/03/14/38a6eeb1-e6c4-4934-bd47-fceef108f5f0/session.json": [
     "repo",
     "@compose/js",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/14/3a529cba-c5d6-4ec1-807b-89f78871bdde/session.json": [
     "repo"
@@ -2113,12 +2113,12 @@
   ],
   ".repo/⚡/🤖/26/03/14/49a91038-10d1-4372-9aed-15436f605767/session.json": [
     "repo",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/14/512b17f7-5704-4ea2-b600-723db6eec8aa/session.json": [
     "repo",
     "@compose/js",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/14/53279b97-c4d8-46ad-ba8e-6fc69c42ad6d/session.json": [
     "@coda/desktop",
@@ -2130,7 +2130,7 @@
   ],
   ".repo/⚡/🤖/26/03/14/537857d9-e2be-4088-8ed1-6c81a87151e3/session.json": [
     "repo",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/14/5a85863f-8bb3-4313-bd50-e03187777ae1/session.json": [
     "repo"
@@ -2163,7 +2163,7 @@
     "@coda/desktop",
     "repo",
     "@compose/js",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/14/796fac90-c39a-4ed0-af61-f753388de288/session.json": [
     "repo",
@@ -2181,14 +2181,14 @@
   ],
   ".repo/⚡/🤖/26/03/14/7f9f306e-4fc8-486a-91d3-bac869454325/session.json": [
     "repo",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/14/8ff55660-172f-46cc-baac-a93310c1d688/session.json": [
     "repo"
   ],
   ".repo/⚡/🤖/26/03/14/9354aa9b-baac-4379-91e1-70a9c508c605/session.json": [
     "repo",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/14/93c9b114-1db0-4404-8880-e940af042651/session.json": [
     "repo"
@@ -2221,7 +2221,7 @@
     "repo",
     "@compose/sketchpad",
     "@compose/js",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/14/ba617e65-f5f0-4776-8988-fae8d4032351/session.json": [
     "repo",
@@ -2229,7 +2229,7 @@
     "@compose/docs",
     "@compose/sketchpad",
     "@compose/js",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/14/c2267d23-c4d1-4c64-963f-e89cb5b293f8/session.json": [
     "repo"
@@ -2275,7 +2275,7 @@
     "@compose/rhino",
     "@compose/3dm-ui",
     "@compose/grasshopper",
-    "@compose/asset",
+    "@asset",
     "@compose/icon",
     "@compose/logo"
   ],
@@ -2286,12 +2286,12 @@
     "@coda/desktop",
     "repo",
     "@compose/js",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/14/e1c47748-e1e3-44fd-ada7-096ecea62ffa/session.json": [
     "repo",
     "@compose/go",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/14/e5004efa-532b-41b5-ab8d-586a85a17791/session.json": [
     "repo"
@@ -2322,7 +2322,7 @@
     "@compose/sketchpad",
     "@compose/js",
     "@compose/net",
-    "@compose/asset",
+    "@asset",
     "@compose/icon",
     "@compose/logo"
   ],
@@ -2759,7 +2759,7 @@
   ".repo/⚡/🤖/26/03/16/7873b094-be79-42bb-9c2f-10baca5f6f8b/session.json": [
     "@coda/desktop",
     "repo",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/16/7e36aeb6-1ad1-43d9-a00f-199305232f06/session.json": [
     "repo"
@@ -2996,18 +2996,18 @@
   ],
   ".repo/⚡/🤖/26/03/16/9c9573bc-7742-46ae-9c04-b0ebf0657575/1773668774097435057-agent-tool-search-starting.json": [
     "repo",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/16/9c9573bc-7742-46ae-9c04-b0ebf0657575/1773668774502151190-agent-tool-code-edit-starting.json": [
     "repo",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/16/9c9573bc-7742-46ae-9c04-b0ebf0657575/1773668775653383701-agent-tool-code-edit-ended.json": [
     "repo"
   ],
   ".repo/⚡/🤖/26/03/16/9c9573bc-7742-46ae-9c04-b0ebf0657575/1773668776784331287-agent-tool-code-edit-ended.json": [
     "repo",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/16/9c9573bc-7742-46ae-9c04-b0ebf0657575/1773668791976884850-agent-tool-code-edit-starting.json": [
     "repo"
@@ -3032,11 +3032,11 @@
   ],
   ".repo/⚡/🤖/26/03/16/9c9573bc-7742-46ae-9c04-b0ebf0657575/1773668932275670691-agent-tool-code-edit-starting.json": [
     "repo",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/16/9c9573bc-7742-46ae-9c04-b0ebf0657575/1773668933659947560-agent-tool-code-edit-ended.json": [
     "repo",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/16/9c9573bc-7742-46ae-9c04-b0ebf0657575/1773668937029088227-agent-tool-code-edit-starting.json": [
     "repo"
@@ -3262,19 +3262,19 @@
   ],
   ".repo/⚡/🤖/26/03/16/9c9573bc-7742-46ae-9c04-b0ebf0657575/1773679217593258059-agent-tool-code-edit-starting.json": [
     "repo",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/16/9c9573bc-7742-46ae-9c04-b0ebf0657575/1773679218149534123-agent-tool-code-edit-ended.json": [
     "repo"
   ],
   ".repo/⚡/🤖/26/03/16/9c9573bc-7742-46ae-9c04-b0ebf0657575/1773679218906558532-agent-tool-code-edit-ended.json": [
     "repo",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/16/9c9573bc-7742-46ae-9c04-b0ebf0657575/session.json": [
     "repo",
     "@compose/js",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/16/a575b48c-2e0e-4012-901b-9c79a78eb66e/session.json": [
     "repo"
@@ -3521,7 +3521,7 @@
   ],
   ".repo/⚡/🤖/26/03/16/d930e4c2-9b45-490a-9301-30ba1a727ba3/1773672054048681515-agent-tool-code-edit-ended.json": [
     "repo",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/16/d930e4c2-9b45-490a-9301-30ba1a727ba3/1773672067673561555-agent-tool-search-ended.json": [
     "repo"
@@ -3534,34 +3534,34 @@
   ],
   ".repo/⚡/🤖/26/03/16/d930e4c2-9b45-490a-9301-30ba1a727ba3/1773672082308145745-agent-tool-code-edit-ended.json": [
     "repo",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/16/d930e4c2-9b45-490a-9301-30ba1a727ba3/1773672094663760778-agent-tool-search-ended.json": [
     "repo"
   ],
   ".repo/⚡/🤖/26/03/16/d930e4c2-9b45-490a-9301-30ba1a727ba3/1773672107278396614-agent-tool-code-edit-ended.json": [
     "repo",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/16/d930e4c2-9b45-490a-9301-30ba1a727ba3/1773672126126045917-agent-tool-code-edit-ended.json": [
     "repo",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/16/d930e4c2-9b45-490a-9301-30ba1a727ba3/1773672136637212632-agent-tool-search-ended.json": [
     "repo"
   ],
   ".repo/⚡/🤖/26/03/16/d930e4c2-9b45-490a-9301-30ba1a727ba3/1773672147641820779-agent-tool-code-edit-ended.json": [
     "repo",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/16/d930e4c2-9b45-490a-9301-30ba1a727ba3/1773672188964311933-agent-tool-code-edit-ended.json": [
     "repo",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/16/d930e4c2-9b45-490a-9301-30ba1a727ba3/session.json": [
     "repo",
     "@compose/js",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/16/db8a4a74-99f5-4ed1-9063-8ba3140e4c89/session.json": [
     "repo"
@@ -3672,7 +3672,7 @@
     "@compose/sketchpad",
     "@compose/js",
     "@compose/vscode",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/17/17602ba7-241b-4223-8158-67983a93fc38/session.json": [
     "repo"
@@ -3704,7 +3704,7 @@
     "repo",
     "@compose/sketchpad",
     "@compose/js",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/17/92a2efd7-b397-492c-917d-fda4dbefc0c5/session.json": [
     "repo",
@@ -3719,7 +3719,7 @@
     "repo",
     "@compose/js",
     "@compose/3dm-ui",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/17/9c9573bc-7742-46ae-9c04-b0ebf0657575/session.json": [
     "repo"
@@ -3752,7 +3752,7 @@
     "repo",
     "@compose/sketchpad",
     "@compose/js",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/17/fd4c4869-8974-4940-bafc-ad20858cebe5/session.json": [
     "@coda/desktop",
@@ -3777,7 +3777,7 @@
     "@compose/sketchpad",
     "@compose/js",
     "@compose/vscode",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/18/3446678b-1a4b-4ddb-85a5-9045ccaab707/session.json": [
     "repo"
@@ -3804,7 +3804,7 @@
     "@coda/desktop",
     "repo",
     "@compose/js",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/18/81d751b1-3012-4fcd-b985-c724d080e30f/session.json": [
     "@coda/desktop",
@@ -3870,7 +3870,7 @@
     "@compose/sketchpad",
     "@compose/js",
     "@compose/desktop",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/20/3f0024cd-c875-44ee-a6fc-d379390c5b2b/session.json": [
     "repo"
@@ -3899,7 +3899,7 @@
     "@compose/js",
     "@compose/engine",
     "@compose/algorithm",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/20/5a1722a5-f87d-49f9-b10b-9e6d928e4fd4/session.json": [
     "repo"
@@ -3917,7 +3917,7 @@
     "repo",
     "@compose/js",
     "@compose/algorithm",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/20/75e47d74-f752-4d99-a40c-b2647385a97c/session.json": [
     "repo"
@@ -3936,12 +3936,12 @@
     "@compose/js",
     "@compose/3dm-ui",
     "@compose/algorithm",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/20/91666a01-75df-4726-8a14-5eaf1e16f1cf/session.json": [
     "repo",
     "@compose/js",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/20/a575b48c-2e0e-4012-901b-9c79a78eb66e/session.json": [
     "repo"
@@ -3958,7 +3958,7 @@
     "@compose/js",
     "@compose/vscode",
     "@compose/desktop",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/20/b9dc6145-60c8-40bd-a398-2e7dd511ce57/session.json": [
     "repo"
@@ -4007,14 +4007,14 @@
     "repo",
     "@compose/sketchpad",
     "@compose/js",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/21/90e54583-9491-4efb-be25-b687cb01b413/session.json": [
     "repo",
     "@compose/sketchpad",
     "@compose/js",
     "@compose/vscode",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/21/ac7df170-0c40-49d1-afec-2d22d215c77a/session.json": [
     "repo"
@@ -4031,21 +4031,21 @@
     "@compose/sketchpad",
     "@compose/js",
     "@compose/vscode",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/22/440fed0a-9b53-4274-83c1-41bcfea86176/session.json": [
     "repo",
     "@compose/sketchpad",
     "@compose/js",
     "@compose/vscode",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/22/4a47c3d7-3058-4e98-a8d2-65bb5497ade6/session.json": [
     "repo",
     "@compose/sketchpad",
     "@compose/js",
     "@compose/desktop",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/22/4aaa9eaa-4222-48d8-a4d2-b27324a5ea7a/session.json": [
     "repo"
@@ -4055,7 +4055,7 @@
     "@compose/sketchpad",
     "@compose/js",
     "@compose/vscode",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/22/517b9888-5a58-4f05-9e34-19f5941a7ed5/session.json": [
     "repo"
@@ -4083,13 +4083,13 @@
     "@compose/sketchpad",
     "@compose/rs",
     "@compose/js",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/22/6fc6c63d-a9cc-4e1f-8d12-34492a40c6f7/session.json": [
     "repo",
     "@compose/sketchpad",
     "@compose/js",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/22/7384dc0c-55ea-4dcf-b087-c8eb76dd89d0/session.json": [
     "repo",
@@ -4097,7 +4097,7 @@
     "@compose/js",
     "@compose/desktop",
     "@compose/3dm-ui",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/22/76a3ea58-7d68-4425-ac74-230c31b71474/session.json": [
     "repo"
@@ -4140,7 +4140,7 @@
     "@compose/play",
     "@compose/sketchpad",
     "@compose/js",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/22/ed7e0c1b-cdfb-4097-923f-20365da64c44/session.json": [
     "repo"
@@ -4173,7 +4173,7 @@
     "@compose/sketchpad",
     "@compose/js",
     "@compose/vscode",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/23/4a47c3d7-3058-4e98-a8d2-65bb5497ade6/session.json": [
     "repo"
@@ -4186,7 +4186,7 @@
     "@compose/sketchpad",
     "@compose/js",
     "@compose/desktop",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/23/61a48813-6d9e-46dc-9f72-d6f9a6d12db6/session.json": [
     "repo"
@@ -4224,7 +4224,7 @@
     "@compose/js",
     "@compose/net",
     "@compose/vscode",
-    "@compose/asset",
+    "@asset",
     "@compose/icon",
     "@compose/logo"
   ],
@@ -4238,7 +4238,7 @@
     "@compose/js",
     "@compose/net",
     "@compose/vscode",
-    "@compose/asset",
+    "@asset",
     "@compose/icon",
     "@compose/logo"
   ],
@@ -4252,7 +4252,7 @@
     "@compose/js",
     "@compose/net",
     "@compose/vscode",
-    "@compose/asset",
+    "@asset",
     "@compose/icon",
     "@compose/logo"
   ],
@@ -4264,7 +4264,7 @@
     "@compose/js",
     "@compose/net",
     "@compose/vscode",
-    "@compose/asset",
+    "@asset",
     "@compose/icon",
     "@compose/logo"
   ],
@@ -4281,7 +4281,7 @@
     "@compose/js",
     "@compose/net",
     "@compose/vscode",
-    "@compose/asset",
+    "@asset",
     "@compose/icon",
     "@compose/logo"
   ],
@@ -4297,7 +4297,7 @@
     "@compose/js",
     "@compose/net",
     "@compose/vscode",
-    "@compose/asset",
+    "@asset",
     "@compose/icon",
     "@compose/logo"
   ],
@@ -4325,7 +4325,7 @@
   ".repo/⚡/🤖/26/03/24/e3dcbdae-fe22-4f1b-ae78-ed85098b8beb/session.json": [
     "repo",
     "@compose/js",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/25/03d11936-cc92-46f7-8556-1d417feecef0/session.json": [
     "repo"
@@ -4336,11 +4336,11 @@
   ".repo/⚡/🤖/26/03/25/158c8f10-9026-4b30-9097-c8a2187929a5/session.json": [
     "@coda/desktop",
     "repo",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/25/27de0150-20b2-4cf4-b72a-2c447bffc9d6/session.json": [
     "repo",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/25/2a13ee9a-f43d-4239-80e9-2fe684ade0c1/session.json": [
     "repo"
@@ -4361,7 +4361,7 @@
   ],
   ".repo/⚡/🤖/26/03/25/447c78d3-5131-4807-84d5-28c5a839051d/session.json": [
     "repo",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/25/45d26ebd-1355-47bc-90c7-c1e8ef265b9d/session.json": [
     "repo"
@@ -4380,11 +4380,11 @@
     "repo",
     "@compose/sketchpad",
     "@compose/js",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/25/4f37f1eb-7d66-46b0-992b-bcf610993c0a/session.json": [
     "repo",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/25/5119dcba-b026-470a-8279-b68391d3a129/session.json": [
     "repo"
@@ -4409,7 +4409,7 @@
     "@compose/net",
     "@compose/vscode",
     "@compose/algorithm",
-    "@compose/asset",
+    "@asset",
     "@compose/icon",
     "@compose/logo"
   ],
@@ -4445,7 +4445,7 @@
   ],
   ".repo/⚡/🤖/26/03/25/a185ef2a-c54a-49b1-bff7-c8490c47a491/session.json": [
     "repo",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/25/aba661bf-cdce-4810-808e-599ddd9cc673/session.json": [
     "repo"
@@ -4455,7 +4455,7 @@
     "repo",
     "@compose/js",
     "@compose/algorithm",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/25/bad29ed5-e612-443d-8aa0-e997bf1204d0/session.json": [
     "repo"
@@ -4507,7 +4507,7 @@
     "repo",
     "@compose/sketchpad",
     "@compose/js",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/25/fb39d871-5dbb-43f7-aef7-b1f35780f637/session.json": [
     "repo"
@@ -4525,7 +4525,7 @@
     "repo",
     "@compose/js",
     "@compose/engine",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/26/284eb4b5-8d74-41e7-99db-cf36d05bdef7/session.json": [
     "repo"
@@ -4537,7 +4537,7 @@
     "repo",
     "@compose/js",
     "@compose/engine",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/26/3d7d8e6a-ef32-4b58-aa71-3b4d41115ba9/session.json": [
     "repo"
@@ -4557,7 +4557,7 @@
     "@compose/net",
     "@compose/vscode",
     "@compose/algorithm",
-    "@compose/asset",
+    "@asset",
     "@compose/icon",
     "@compose/logo"
   ],
@@ -4572,7 +4572,7 @@
     "@compose/net",
     "@compose/vscode",
     "@compose/algorithm",
-    "@compose/asset",
+    "@asset",
     "@compose/icon",
     "@compose/logo"
   ],
@@ -4581,7 +4581,7 @@
     "repo",
     "@compose/sketchpad",
     "@compose/js",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/26/5c7beb3b-c8b7-4285-9e53-324b4fb502a0/session.json": [
     "repo"
@@ -4595,7 +4595,7 @@
     "repo",
     "@compose/sketchpad",
     "@compose/js",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/26/90b6cfeb-41ec-4be0-8442-41c5a717852d/session.json": [
     "repo"
@@ -4609,7 +4609,7 @@
     "@compose/engine",
     "@compose/3dm-ui",
     "@compose/algorithm",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/26/a9cb4a46-d50c-44c5-9436-22ebf797bbe1/session.json": [
     "repo"
@@ -4654,7 +4654,7 @@
     "repo",
     "@compose/js",
     "@compose/algorithm",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/27/1677775a-2943-40ad-8cbf-08ff46a30d77/session.json": [
     "repo",
@@ -4676,7 +4676,7 @@
     "repo",
     "@compose/sketchpad",
     "@compose/js",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/27/649ff0bb-b3be-466c-beca-19ca21d2e10f/session.json": [
     "@coda/desktop",
@@ -4687,7 +4687,7 @@
     "@compose/net",
     "@compose/vscode",
     "@compose/algorithm",
-    "@compose/asset",
+    "@asset",
     "@compose/icon",
     "@compose/logo"
   ],
@@ -4705,7 +4705,7 @@
     "repo",
     "@compose/sketchpad",
     "@compose/js",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/27/b5287216-2374-46a4-9ed4-44e2d4c7fd3d/session.json": [
     "repo",
@@ -4725,7 +4725,7 @@
     "@compose/net",
     "@compose/vscode",
     "@compose/algorithm",
-    "@compose/asset",
+    "@asset",
     "@compose/icon",
     "@compose/logo"
   ],
@@ -4783,7 +4783,7 @@
     "repo",
     "@compose/js",
     "@compose/algorithm",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/28/bda67833-f5f0-4196-8c3d-00ebbc850dd8/session.json": [
     "repo"
@@ -4810,7 +4810,7 @@
     "@compose/sketchpad",
     "@compose/js",
     "@compose/algorithm",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/30/239a4c87-4f08-4c0c-8537-09b6eaa37320/session.json": [
     "repo"
@@ -4828,7 +4828,7 @@
     "@compose/sketchpad",
     "@compose/js",
     "@compose/algorithm",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/30/70c41bbc-69d4-4878-9fa5-ef6d425242f4/session.json": [
     "repo",
@@ -4866,7 +4866,7 @@
     "@compose/net",
     "@compose/vscode",
     "@compose/algorithm",
-    "@compose/asset",
+    "@asset",
     "@compose/icon",
     "@compose/logo"
   ],
@@ -4914,7 +4914,7 @@
     "@compose/net",
     "@compose/vscode",
     "@compose/algorithm",
-    "@compose/asset",
+    "@asset",
     "@compose/icon",
     "@compose/logo"
   ],
@@ -4931,7 +4931,7 @@
     "repo",
     "@compose/sketchpad",
     "@compose/js",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/31/041f2515-aea3-466e-b6c3-54ff24f2ffeb/session.json": [
     "repo"
@@ -4996,7 +4996,7 @@
     "@compose/sketchpad",
     "@compose/js",
     "@compose/algorithm",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/31/8ee599ec-730f-4d1f-b6bc-4c187f9d1507/session.json": [
     "repo"
@@ -5022,7 +5022,7 @@
     "@compose/net",
     "@compose/vscode",
     "@compose/algorithm",
-    "@compose/asset",
+    "@asset",
     "@compose/icon",
     "@compose/logo"
   ],
@@ -5043,7 +5043,7 @@
     "@compose/js",
     "@compose/vscode",
     "@compose/algorithm",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/31/ca8bf3f2-b744-480f-b510-48e062bd5f45/session.json": [
     "repo"
@@ -5061,7 +5061,7 @@
   ],
   ".repo/⚡/🤖/26/03/31/dfa5f43c-9446-497d-9838-710cb5349699/session.json": [
     "repo",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/03/31/f3dc05b9-7ec7-4092-a298-5cb0c48303f4/session.json": [
     "repo"
@@ -5083,7 +5083,7 @@
     "@compose/sketchpad",
     "@compose/js",
     "@compose/algorithm",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/04/01/0f62e8d1-3163-4bb4-82b1-b43fd22974a8/session.json": [
     "@coda/desktop",
@@ -5094,7 +5094,7 @@
     "@compose/net",
     "@compose/vscode",
     "@compose/algorithm",
-    "@compose/asset",
+    "@asset",
     "@compose/icon",
     "@compose/logo"
   ],
@@ -5129,7 +5129,7 @@
     "@compose/rhino",
     "@compose/3dm-ui",
     "@compose/algorithm",
-    "@compose/asset",
+    "@asset",
     "@compose/icon",
     "@compose/logo"
   ],
@@ -5142,7 +5142,7 @@
     "repo",
     "@compose/sketchpad",
     "@compose/js",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/04/01/920b26c1-63ff-4cbe-a591-e68c64b3f151/session.json": [
     "repo"
@@ -5152,7 +5152,7 @@
   ],
   ".repo/⚡/🤖/26/04/01/9713bd79-a6ec-45d4-8d03-bd94714a3a3d/session.json": [
     "repo",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/04/01/979b1c3b-2648-4fd3-ab75-6d92f06050e5/session.json": [
     "repo",
@@ -5174,7 +5174,7 @@
     "repo",
     "@compose/sketchpad",
     "@compose/js",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/04/01/c48c9c8e-8bc1-489b-88f3-34956fbcfb64/session.json": [
     "repo"
@@ -5186,7 +5186,7 @@
     "repo",
     "@compose/sketchpad",
     "@compose/js",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/04/01/d95799ce-559d-4fe6-ada9-3b950a2613bf/session.json": [
     "repo"
@@ -5230,7 +5230,7 @@
     "@compose/net",
     "@compose/vscode",
     "@compose/algorithm",
-    "@compose/asset",
+    "@asset",
     "@compose/icon",
     "@compose/logo"
   ],
@@ -5243,7 +5243,7 @@
     "@compose/net",
     "@compose/vscode",
     "@compose/algorithm",
-    "@compose/asset",
+    "@asset",
     "@compose/icon",
     "@compose/logo"
   ],
@@ -5260,13 +5260,13 @@
     "repo",
     "@compose/sketchpad",
     "@compose/js",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/04/02/f147d4a0-c258-406d-81a4-f8bd5dabab93/session.json": [
     "repo",
     "@compose/sketchpad",
     "@compose/js",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/04/02/f82ffa60-129e-450f-a047-be4a5c4dbacb/session.json": [
     "repo",
@@ -5304,7 +5304,7 @@
     "@compose/net",
     "@compose/vscode",
     "@compose/algorithm",
-    "@compose/asset",
+    "@asset",
     "@compose/icon",
     "@compose/logo"
   ],
@@ -5315,7 +5315,7 @@
     "repo",
     "@compose/sketchpad",
     "@compose/js",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/04/04/0031b3ee-ba42-4453-8c27-47899a1a11e7/session.json": [
     "repo"
@@ -5376,7 +5376,7 @@
     "@compose/net",
     "@compose/vscode",
     "@compose/algorithm",
-    "@compose/asset",
+    "@asset",
     "@compose/icon",
     "@compose/logo"
   ],
@@ -5387,7 +5387,7 @@
     "repo",
     "@compose/sketchpad",
     "@compose/js",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/04/07/c0db5573-d268-4b41-9a04-2a480cc30c30/session.json": [
     "repo"
@@ -5413,7 +5413,7 @@
     "@compose/net",
     "@compose/vscode",
     "@compose/algorithm",
-    "@compose/asset",
+    "@asset",
     "@compose/icon",
     "@compose/logo"
   ],
@@ -5421,7 +5421,7 @@
     "repo",
     "@compose/sketchpad",
     "@compose/js",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/04/08/9e5aa47f-8318-46d0-b583-e0b084640a79/session.json": [
     "repo"
@@ -5483,7 +5483,7 @@
     "@compose/3dm-ui",
     "@compose/grasshopper",
     "@compose/algorithm",
-    "@compose/asset",
+    "@asset",
     "@compose/icon",
     "@compose/logo"
   ],
@@ -5502,7 +5502,7 @@
   ".repo/⚡/🤖/26/04/09/9b0a1ab1-8620-47cb-8848-ceb8b4010a72/session.json": [
     "repo",
     "@compose/js",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/04/09/a736df10-9e10-41a9-a4a7-ccdab2189f3a/session.json": [
     "repo",
@@ -5514,7 +5514,7 @@
   ".repo/⚡/🤖/26/04/09/b6f5a0ab-8533-4ace-9e40-6b7244c756c0/session.json": [
     "repo",
     "@compose/js",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/04/09/bc1045ac-fa76-4315-9e69-203f5d002faa/session.json": [
     "repo"
@@ -5546,7 +5546,7 @@
     "@compose/rhino",
     "@compose/3dm-ui",
     "@compose/algorithm",
-    "@compose/asset",
+    "@asset",
     "@compose/icon",
     "@compose/logo"
   ],
@@ -5587,7 +5587,7 @@
     "@compose/sketchpad",
     "@compose/js",
     "@compose/algorithm",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/04/12/f51af67f-86ac-414d-b4b1-c2fa85f8525c/session.json": [
     "repo",
@@ -5595,7 +5595,7 @@
     "@compose/js",
     "@compose/vscode",
     "@compose/algorithm",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/04/12/unknown/session.json": [
     "repo"
@@ -5610,7 +5610,7 @@
     "repo",
     "@compose/sketchpad",
     "@compose/js",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/04/13/333e0a8d-22f3-4709-ad92-0c3097213770/session.json": [
     "repo",
@@ -5621,7 +5621,7 @@
     "@compose/sketchpad",
     "@compose/js",
     "@compose/desktop",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/04/13/a3a9c2d4-6e55-47c1-a4df-97a5b4121a95/session.json": [
     "repo",
@@ -5659,7 +5659,7 @@
     "repo",
     "@compose/sketchpad",
     "@compose/js",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/04/13/unknown/session.json": [
     "repo"
@@ -5669,7 +5669,7 @@
     "@compose/sketchpad",
     "@compose/js",
     "@compose/algorithm",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/04/14/0f0c83a8-196e-4df1-b023-e2c6c0e89220/session.json": [
     "repo"
@@ -5683,7 +5683,7 @@
     "@compose/net",
     "@compose/vscode",
     "@compose/algorithm",
-    "@compose/asset",
+    "@asset",
     "@compose/icon",
     "@compose/logo"
   ],
@@ -5697,7 +5697,7 @@
     "@compose/sketchpad",
     "@compose/js",
     "@compose/desktop",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/04/14/8eb4c6d1-d654-483e-8dff-11db10b0bd55/session.json": [
     "repo"
@@ -5717,7 +5717,7 @@
     "repo",
     "@compose/sketchpad",
     "@compose/js",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/04/14/f6ad0994-897b-4dc2-9b78-a778dc15bec6/session.json": [
     "repo"
@@ -5761,7 +5761,7 @@
     "@compose/engine",
     "@compose/vscode",
     "@compose/algorithm",
-    "@compose/asset",
+    "@asset",
     "@compose/icon",
     "@compose/logo"
   ],
@@ -5776,7 +5776,7 @@
   ],
   ".repo/⚡/🤖/26/04/18/f681b145-6435-4abe-8a73-380342d33459/session.json": [
     "repo",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/04/19/09eb8728-9cbb-4ace-8cc9-25fa821adf38/session.json": [
     "@coda/desktop",
@@ -5788,14 +5788,14 @@
     "@compose/engine",
     "@compose/vscode",
     "@compose/algorithm",
-    "@compose/asset",
+    "@asset",
     "@compose/icon",
     "@compose/logo"
   ],
   ".repo/⚡/🤖/26/04/19/fa0c9e8f-539e-40e0-b093-9959d5b97ce7/session.json": [
     "repo",
     "@compose/vscode",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/04/20/09eb8728-9cbb-4ace-8cc9-25fa821adf38/session.json": [
     "repo"
@@ -5805,7 +5805,7 @@
     "@compose/sketchpad",
     "@compose/react",
     "@compose/js",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/04/21/0d2c6734-f28c-4097-88f9-67b98c136d63/session.json": [
     "repo"
@@ -5822,7 +5822,7 @@
   ".repo/⚡/🤖/26/04/21/229dfebe-efcc-4c93-b545-aa41e8393780/session.json": [
     "repo",
     "@compose/react",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/04/21/d73e7a74-cb1d-4016-8490-f7cd4d2777a2/session.json": [
     "repo"
@@ -5902,7 +5902,7 @@
     "@compose/vscode",
     "@compose/desktop",
     "@compose/algorithm",
-    "@compose/asset",
+    "@asset",
     "@compose/icon",
     "@compose/logo"
   ],
@@ -5956,7 +5956,7 @@
     "@compose/rhino",
     "@compose/3dm-ui",
     "@compose/algorithm",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/05/06/38bddf30-fd55-4fc6-91d8-b813cd688b18/session.json": [
     "repo",
@@ -5982,7 +5982,7 @@
     "@compose/rhino",
     "@compose/3dm-ui",
     "@compose/algorithm",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/05/06/6c3707b2-ee74-4329-bb5f-e0f33775ca77/session.json": [
     "repo"
@@ -6002,7 +6002,7 @@
     "@compose/rhino",
     "@compose/3dm-ui",
     "@compose/algorithm",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/05/06/93d7493d-d9dc-40a2-92b3-924540894f7e/session.json": [
     "@coda/desktop",
@@ -6019,7 +6019,7 @@
     "@compose/rhino",
     "@compose/3dm-ui",
     "@compose/algorithm",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/05/06/a6264a7d-151c-42b7-a263-0dcb5d405386/session.json": [
     "repo"
@@ -6041,7 +6041,7 @@
     "@compose/rhino",
     "@compose/3dm-ui",
     "@compose/algorithm",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/05/06/b278a8ef-b2ea-4583-b284-e18306e3181e/session.json": [
     "@coda/desktop",
@@ -6057,7 +6057,7 @@
     "@compose/rhino",
     "@compose/3dm-ui",
     "@compose/algorithm",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/05/06/c0aa8821-474d-4ab8-8f5f-64b4d599a976/session.json": [
     "@coda/assistant",
@@ -6076,7 +6076,7 @@
     "@compose/rhino",
     "@compose/3dm-ui",
     "@compose/algorithm",
-    "@compose/asset",
+    "@asset",
     "@compose/icon",
     "@compose/logo"
   ],
@@ -6107,7 +6107,7 @@
     "@compose/rhino",
     "@compose/3dm-ui",
     "@compose/algorithm",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/⚡/🤖/26/05/06/unknown/session.json": [
     "repo"
@@ -7955,7 +7955,7 @@
     "repo"
   ],
   ".repo/🎫/26/02/09/SEPARATE-HAND-TOOL-IN-TOOLBAR/plan.md": [
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/🎫/26/02/10/ADD-BLEVE-QUERY-TO-ALL-LIST-AND-TREE-COMMANDS/ticket.json": [
     "repo"
@@ -8055,7 +8055,7 @@
     "repo"
   ],
   ".repo/🎫/26/02/11/FIX-TEST-COMPILATION-ERRORS/ticket.md": [
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/🎫/26/02/11/FIX-TYPESCRIPT-BUILD-SCRIPT-FILE-VIOLATIONS/ticket.json": [
     "repo"
@@ -8448,7 +8448,7 @@
     "repo"
   ],
   ".repo/🎫/26/02/16/FIX-DESIGN-APP-SELECT-TOOL-SETTING-BAR-NAMES/ticket.md": [
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/🎫/26/02/16/FIX-TICKET-CLOSE-FILE-RESOLUTION/ticket.json": [
     "repo"
@@ -8518,7 +8518,7 @@
     "@compose/sqlite",
     "@compose/engine",
     "@compose/desktop",
-    "@compose/asset",
+    "@asset",
     "@compose/icon",
     "@compose/logo"
   ],
@@ -9027,7 +9027,7 @@
     "repo"
   ],
   ".repo/🎫/26/03/09/FIX-CONNECTOR-DESCRIPTION-IN-GET-CONNECTOR-DIFF-AND-PASS-ALL-LANG-DIFF-TESTS/debug-roundtrip.ts": [
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/🎫/26/03/09/FIX-MISSING-BLOB-PARAM-IN-FILE-PASSTHROUGH-COMPONENT/ticket.json": [
     "repo"
@@ -9055,7 +9055,7 @@
   ],
   ".repo/🎫/26/03/11/IMPLEMENT-COPY-JSON-CLIPBOARD-COMMAND/ticket.md": [
     "repo",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/🎫/26/03/11/MOVE-APPS-PACK-WINDOWS-TO-TOOLS-TAB/ticket.md": [
     "repo"
@@ -9222,7 +9222,7 @@
   ],
   ".repo/🎫/26/03/22/FIX-DESKTOP-WHITE-SCREEN-FROM-VITEST-MODULE-LEVEL-CALLS/ticket.json": [
     "@compose/js",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/🎫/26/03/22/FIX-PLAY-SITE-NODE-MODULE-EXTERNALIZATION-ERROR/ticket.json": [
     "@compose/js"
@@ -9288,7 +9288,7 @@
   ],
   ".repo/🎫/26/03/25/REMOVE-CODA-AND-COMPOSE-IMPORTS-FROM-ELEMENTS-UI/ticket.json": [
     "@coda/desktop",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/🎫/26/03/25/RESTORE-DESIGN-APP-SELECTION-HOOK-REGISTRATION/ticket.json": [
     "@compose/play",
@@ -9606,7 +9606,7 @@
   ],
   ".repo/🎫/26/04/14/FIX-ENGINE-MCP-APP-BUILD/ticket.json": [
     "@compose/engine",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/🎫/26/04/14/FIX-REPLACEMENT-CHAR-AND-EMOJI/ticket.json": [
     "repo"
@@ -10522,7 +10522,7 @@
     "repo",
     "@compose/react",
     "@compose/js",
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/🎫/26/05/24/SPATIAL-COMMANDS-GENERALIZATION/ticket.md": [
     "repo"
@@ -10609,7 +10609,7 @@
   ],
   ".repo/🎫/26/05/30/ASSETS-FIXTURES-SEPARATION/ticket.json": [
     "@compose/fixture",
-    "@compose/asset",
+    "@asset",
     "@puzzle/asset"
   ],
   ".repo/🎫/26/05/30/CAD-PLAY-E2E-FIX/migrate-vortex-connector-geometry.mts": [
@@ -11065,7 +11065,7 @@
     "@ui/react"
   ],
   ".repo/🎫/26/06/03/FRAMEWORK-ICON-INTERFACE/ticket.json": [
-    "@compose/asset",
+    "@asset",
     "@ui/react",
     "@ui/asset"
   ],
@@ -11100,7 +11100,7 @@
     "repo"
   ],
   ".repo/🎫/26/06/03/SPLIT-DEV-FIXTURES-PROPER-FILES/summary.md": [
-    "@compose/asset"
+    "@asset"
   ],
   ".repo/🎫/26/06/03/SPLIT-PUZZLE-2D-BUNDLES/ticket.json": [
     "@infinite/cavas/react-renderer"
@@ -11505,7 +11505,7 @@
   ".repo/🎫/26/06/11/SINGULAR-FOLDER-NAMES/rename-singular-folders.ts": [
     "repo",
     "@compose/fixture",
-    "@compose/asset",
+    "@asset",
     "@puzzle/asset",
     "@ui/asset"
   ],
@@ -11513,7 +11513,7 @@
     "repo",
     "@compose/algorithm",
     "@compose/fixture",
-    "@compose/asset",
+    "@asset",
     "@compose/icon",
     "@compose/image",
     "@puzzle/asset",
@@ -11797,7 +11797,7 @@
     "@compose/js",
     "@compose/algorithm",
     "@compose/fixture",
-    "@compose/asset",
+    "@asset",
     "@puzzle/2d/react",
     "@puzzle/5d/react",
     "@puzzle/asset",
@@ -11818,67 +11818,67 @@
   ".storybook/stories/compose/algorithm/Cluster.stories.tsx": [
     "@compose/react",
     "@compose/algorithm",
-    "@compose/asset"
+    "@asset"
   ],
   ".storybook/stories/compose/algorithm/CopyAndPaste.stories.tsx": [
     "@compose/react",
     "@compose/algorithm",
-    "@compose/asset"
+    "@asset"
   ],
   ".storybook/stories/compose/algorithm/Delete.stories.tsx": [
     "@compose/react",
     "@compose/algorithm",
-    "@compose/asset"
+    "@asset"
   ],
   ".storybook/stories/compose/algorithm/Drag.stories.tsx": [
     "@compose/react",
     "@compose/algorithm",
     "@compose/fixture",
-    "@compose/asset"
+    "@asset"
   ],
   ".storybook/stories/compose/algorithm/FindReplaceableTypesInDesigns.stories.tsx": [
     "@compose/algorithm",
-    "@compose/asset"
+    "@asset"
   ],
   ".storybook/stories/compose/algorithm/Flatten.stories.tsx": [
     "@compose/react",
     "@compose/algorithm",
-    "@compose/asset"
+    "@asset"
   ],
   ".storybook/stories/compose/algorithm/KitStore.stories.tsx": [
     "@compose/react",
     "@compose/algorithm",
-    "@compose/asset"
+    "@asset"
   ],
   ".storybook/stories/compose/algorithm/Move.stories.tsx": [
     "@compose/react",
     "@compose/algorithm",
     "@compose/fixture",
-    "@compose/asset"
+    "@asset"
   ],
   ".storybook/stories/compose/ui/Design.stories.tsx": [
     "@compose/react",
     "@compose/fixture",
-    "@compose/asset"
+    "@asset"
   ],
   ".storybook/stories/compose/ui/Diagram.stories.tsx": [
     "@compose/react",
     "@compose/fixture",
-    "@compose/asset"
+    "@asset"
   ],
   ".storybook/stories/compose/ui/Kit.stories.tsx": [
     "@compose/react",
     "@compose/fixture",
-    "@compose/asset"
+    "@asset"
   ],
   ".storybook/stories/compose/ui/Scene.stories.tsx": [
     "@compose/react",
     "@compose/fixture",
-    "@compose/asset"
+    "@asset"
   ],
   ".storybook/stories/compose/ui/Type.stories.tsx": [
     "@compose/react",
-    "@compose/asset"
+    "@asset"
   ],
   ".storybook/stories/puzzle/2d/Board.stories.tsx": [
     "@puzzle/2d/react"
@@ -11896,7 +11896,7 @@
     "@ui/react"
   ],
   ".storybook/stories/ui/Band.stories.tsx": [
-    "@compose/asset",
+    "@asset",
     "@ui/react"
   ],
   ".storybook/stories/ui/Breadcrumb.stories.tsx": [
@@ -12175,7 +12175,7 @@
     "@compose/grasshopper",
     "@compose/algorithm",
     "@compose/fixture",
-    "@compose/asset",
+    "@asset",
     "@compose/icon",
     "@compose/logo",
     "@compose/image",
@@ -12673,7 +12673,7 @@
   ],
   "coda/client/bin/assistant/package.json": [
     "@coda/assistant",
-    "@compose/asset",
+    "@asset",
     "@ui/react"
   ],
   "coda/client/bin/assistant/project.json": [
@@ -12684,7 +12684,7 @@
     "repo"
   ],
   "coda/client/bin/assistant/vite.mcp-app.config.ts": [
-    "@compose/asset",
+    "@asset",
     "@ui/react"
   ],
   "coda/client/lib/blnbo/README.md": [
@@ -12733,7 +12733,7 @@
     "@coda/desktop",
     "repo",
     "@compose/js",
-    "@compose/asset",
+    "@asset",
     "@ui/react"
   ],
   "coda/example/compose-blnbo-roomprogram/semio-blnbo-roomprogram/.coda/project.json": [
@@ -12752,59 +12752,59 @@
   "compose/README.md": [
     "repo"
   ],
-  "compose/asset/AGENTS.md": [
+  "asset/AGENTS.md": [
     "@compose/fixture"
   ],
-  "compose/asset/badge/repo-compose.shields": [
+  "asset/badge/repo-semio.shields": [
     "repo"
   ],
-  "compose/asset/badge/repo-compose.svg": [
+  "asset/badge/repo-semio.svg": [
     "repo"
   ],
-  "compose/asset/grasshopper/components.ghx": [
+  "asset/grasshopper/components.ghx": [
     "repo"
   ],
-  "compose/asset/grasshopper/components.json": [
+  "asset/grasshopper/components.json": [
     "repo"
   ],
-  "compose/asset/icon/package.json": [
+  "asset/icon/package.json": [
     "@compose/icon",
     "@compose/logo"
   ],
-  "compose/asset/icon/project.json": [
+  "asset/icon/project.json": [
     "@compose/icon",
     "@ui/asset"
   ],
-  "compose/asset/image/grasshopper-demo.png": [
+  "asset/image/grasshopper-demo.png": [
     "repo"
   ],
-  "compose/asset/image/package.json": [
+  "asset/image/package.json": [
     "@compose/image"
   ],
-  "compose/asset/index.ts": [
+  "asset/index.ts": [
     "@compose/fixture",
     "@ui/react",
     "@ui/asset"
   ],
-  "compose/asset/list/tags.json": [
+  "asset/list/tags.json": [
     "repo"
   ],
-  "compose/asset/logo/package.json": [
+  "asset/logo/package.json": [
     "@compose/logo"
   ],
-  "compose/asset/logo/project.json": [
+  "asset/logo/project.json": [
     "@compose/logo"
   ],
-  "compose/asset/logo/script.ts": [
+  "asset/logo/script.ts": [
     "repo"
   ],
-  "compose/asset/package.json": [
-    "@compose/asset",
+  "asset/package.json": [
+    "@asset",
     "@ui/react",
     "@ui/asset"
   ],
-  "compose/asset/project.json": [
-    "@compose/asset"
+  "asset/project.json": [
+    "@asset"
   ],
   "compose/client/bin/engine/main.py": [
     "repo",
@@ -12812,7 +12812,7 @@
   ],
   "compose/client/bin/engine/package.json": [
     "@compose/engine",
-    "@compose/asset"
+    "@asset"
   ],
   "compose/client/bin/engine/project.json": [
     "@compose/engine"
@@ -12825,7 +12825,7 @@
   ],
   "compose/client/bin/engine/vite.mcp-app.config.ts": [
     "@compose/rs",
-    "@compose/asset"
+    "@asset"
   ],
   "compose/client/bin/store/package.json": [
     "@compose/store"
@@ -12861,7 +12861,7 @@
   "compose/client/lib/js/package.json": [
     "repo",
     "@compose/js",
-    "@compose/asset"
+    "@asset"
   ],
   "compose/client/lib/js/project.json": [
     "@compose/rs",
@@ -12875,7 +12875,7 @@
     "@compose/sketchpad",
     "@compose/rs",
     "@compose/js",
-    "@compose/asset",
+    "@asset",
     "@ui/react"
   ],
   "compose/client/lib/js/vite.config.ts": [
@@ -12889,7 +12889,7 @@
   ],
   "compose/client/lib/net/Compose/package.json": [
     "@compose/net",
-    "@compose/asset"
+    "@asset"
   ],
   "compose/client/lib/net/Compose/project.json": [
     "@compose/net"
@@ -12962,7 +12962,7 @@
   "compose/client/lib/sketchpad/doc/vite.config.ts": [
     "@compose/sketchpad",
     "@compose/js",
-    "@compose/asset"
+    "@asset"
   ],
   "compose/client/lib/sketchpad/js/AGENTS.md": [
     "repo",
@@ -12996,7 +12996,7 @@
     "@compose/sketchpad",
     "@compose/react",
     "@compose/js",
-    "@compose/asset",
+    "@asset",
     "@framework/platform",
     "@framework/platform/core",
     "@framework/platform/renderer/react",
@@ -13046,7 +13046,7 @@
     "@compose/react",
     "@compose/rs",
     "@compose/js",
-    "@compose/asset",
+    "@asset",
     "@framework/platform",
     "@framework/platform/core",
     "@framework/platform/renderer/react",
@@ -13067,7 +13067,7 @@
     "@compose/react",
     "@compose/rs",
     "@compose/js",
-    "@compose/asset",
+    "@asset",
     "@puzzle/2d/react",
     "@puzzle/5d/react",
     "@puzzle/3d/react",
@@ -13112,7 +13112,7 @@
     "@compose/sketchpad",
     "@compose/rs",
     "@compose/js",
-    "@compose/asset"
+    "@asset"
   ],
   "compose/client/schema/graphql/project.json": [
     "@compose/rs"
@@ -13132,14 +13132,14 @@
   ],
   "compose/client/ui/3dm/ui/index.tsx": [
     "@compose/react",
-    "@compose/asset"
+    "@asset"
   ],
   "compose/client/ui/3dm/ui/package.json": [
     "repo",
     "@compose/react",
     "@compose/js",
     "@compose/3dm-ui",
-    "@compose/asset",
+    "@asset",
     "@ui/react"
   ],
   "compose/client/ui/3dm/ui/project.json": [
@@ -13175,7 +13175,7 @@
   "compose/client/ui/desktop/vite.renderer.config.ts": [
     "@compose/sketchpad",
     "@compose/js",
-    "@compose/asset"
+    "@asset"
   ],
   "compose/client/ui/gh/AGENTS.md": [
     "repo"
@@ -13215,13 +13215,13 @@
   "compose/client/ui/vscode/tsconfig.json": [
     "@compose/sketchpad",
     "@compose/js",
-    "@compose/asset",
+    "@asset",
     "@ui/react"
   ],
   "compose/client/ui/vscode/vite.config.ts": [
     "@compose/sketchpad",
     "@compose/js",
-    "@compose/asset",
+    "@asset",
     "@ui/react"
   ],
   "compose/client/ui/vscode/webview.tsx": [
@@ -13265,11 +13265,11 @@
     "@compose/rs",
     "@compose/algorithm",
     "@compose/fixture",
-    "@compose/asset"
+    "@asset"
   ],
   "compose/fixture/AGENTS.md": [
     "@compose/fixture",
-    "@compose/asset"
+    "@asset"
   ],
   "compose/fixture/index.ts": [
     "@compose/fixture"
@@ -14134,7 +14134,7 @@
     "@reasoning/mindmap/wires/play",
     "@compose/query",
     "@compose/js",
-    "@compose/asset",
+    "@asset",
     "@puzzle/5d/play",
     "@puzzle/3d/play"
   ],
@@ -14743,11 +14743,11 @@
   ],
   "repo/client/vscode/vite.config.ts": [
     "@compose/js",
-    "@compose/asset"
+    "@asset"
   ],
   "repo/client/vscode/vite.test.config.ts": [
     "@compose/js",
-    "@compose/asset"
+    "@asset"
   ],
   "repo/hook/post-checkout": [
     "repo"
@@ -14896,7 +14896,7 @@
     "@compose/engine",
     "@compose/desktop",
     "@compose/3dm-ui",
-    "@compose/asset",
+    "@asset",
     "@puzzle/2d/play",
     "@puzzle/5d/play",
     "@puzzle/3d/play"

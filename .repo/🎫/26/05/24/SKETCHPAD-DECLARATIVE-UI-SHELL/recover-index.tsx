@@ -425,7 +425,7 @@ import {
   TypeIcon,
   UserIcon,
   WorkbenchIcon,
-} from "@semio-tech/compose-assets/icons";
+} from "@semio-tech/semio-assets/icons";
 import { createPortal } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
 export type { LayoutColumn, LayoutNode, LayoutRow, LayoutStack } from "@compose/ui";
@@ -44766,7 +44766,7 @@ if (typeof document !== "undefined" && document.getElementById("root") && !isVsc
 // #region ­ƒôÉTests
 if (typeof process !== "undefined" && process.release && process.release.name === "node" && typeof (globalThis as any).__vitest_worker__ === "undefined") {
   const { expect, test } = await import(/* @vite-ignore */ "@playwright" + "/test");
-  const metabolismKitSpecifier = ["@semio-tech/compose-assets/compose/metabolism", "kit.compose.json"].join(".");
+  const metabolismKitSpecifier = ["@semio-tech/semio-assets/compose/metabolism", "kit.compose.json"].join(".");
   const MetabolismKitData = (await import(/* @vite-ignore */ metabolismKitSpecifier, { assert: { type: "json" } })).default;
   const { readFile } = await import(/* @vite-ignore */ "node" + ":fs/promises");
   const path = await import(/* @vite-ignore */ "node" + ":path");
@@ -52687,7 +52687,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
         await page.waitForTimeout(300);
       }
 
-      test("Metabolism folder kit compose/assets/compose/metabolism contains Nakagin Capsule Tower", async () => {
+      test("Metabolism folder kit assets/compose/metabolism contains Nakagin Capsule Tower", async () => {
         test.setTimeout(120000);
         await ensureMetabolismFolderKitDbFile();
         // createFolderKitStore is defined inline in this file, use it directly.

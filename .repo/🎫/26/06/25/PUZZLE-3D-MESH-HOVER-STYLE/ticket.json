@@ -1,0 +1,13 @@
+{
+  "title": "Puzzle 3D Mesh Hover Style",
+  "emoji": "🧩",
+  "status": "closed",
+  "description": "Make puzzle 3D mesh hover colors match UI element styling: default mesh borders use the UI border color, hovered mesh fill uses the same style as buttons, and hovered mesh edges use the emphasized color.",
+  "summary": "Fixed puzzle 5d volume projection so 3d parts preserve native puzzle 3d appearance data instead of rebuilding a reduced fixture. 5d now round-trips object mesh LODs, object hidden/locked flags, vortex mesh LODs, vortex hidden/locked flags, references, and target volumes back into the projected puzzle 3d fixture. Exported the puzzle 3d world reference and target volume fixture types and added tests covering the 5d projection round-trip.",
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪4905f4654cf14460aaa9f40127fc8d81",
+    "⚪2cf1699060f248b994f27385951f2614",
+    "⚪a3421d5be117438582619ce80b83a724"
+  ]
+}

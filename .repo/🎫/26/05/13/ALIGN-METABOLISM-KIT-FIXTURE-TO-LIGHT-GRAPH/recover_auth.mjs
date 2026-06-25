@@ -3,7 +3,7 @@ import fs from "fs";
 
 const r = spawnSync(
   "git",
-  ["show", "HEAD:compose/assets/fixtures/metabolism.kit.compose.json"],
+  ["show", "HEAD:assets/fixtures/metabolism.kit.compose.json"],
   { cwd: "c:/git/compose", encoding: "utf8", maxBuffer: 1024 * 1024 * 200 },
 );
 if (r.error) throw r.error;

@@ -2,7 +2,7 @@
   "title": "Fix Remaining Code Breachs in Four Files",
   "emoji": "🔧",
   "status": "closed",
-  "description": "Fix ALL remaining code breachs in compose/assets/index.ts (inline comments), compose/assets/grasshopper/build.py (orphan definitions + inline comments), repo/vscode/queries.ts (orphan definition), and compose/js/sketchpad/Home.tsx (remaining breachs)",
+  "description": "Fix ALL remaining code breachs in assets/index.ts (inline comments), assets/grasshopper/build.py (orphan definitions + inline comments), repo/vscode/queries.ts (orphan definition), and compose/js/sketchpad/Home.tsx (remaining breachs)",
   "summary": "Fixed 25 code breachs across 4 files to 0. assets/index.ts: added MUST to section summary, removed 8 non-definition import comments. build.py: removed shebang, added Build section with MUST summary, removed 4 non-definition variable comments, fixed file ID emoji. queries.ts: moved import inside Queries section, added MUST to summary. Home.tsx: removed 3 re-export comments.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/529"

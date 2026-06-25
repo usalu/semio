@@ -26,7 +26,7 @@ await page.goto("http://127.0.0.1:5173/", { waitUntil: "networkidle" });
 console.log("Page loaded, uploading kit...");
 
 const fileInput = page.locator('input[type="file"]');
-await fileInput.setInputFiles("/workspaces/semio/compose/assets/compose/metabolism.zip");
+await fileInput.setInputFiles("/workspaces/semio/assets/compose/metabolism.zip");
 await page.waitForTimeout(5000);
 await page.getByText("Metabolism").waitFor({ timeout: 30000 });
 console.log("Kit uploaded");

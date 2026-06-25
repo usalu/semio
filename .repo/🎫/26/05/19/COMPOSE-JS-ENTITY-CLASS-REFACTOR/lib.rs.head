@@ -8513,7 +8513,7 @@ pub mod kit_backbone {
 
     //#region ­ƒº¥ wire format
 
-    /// @emoji ­ƒ¬¬ On-disk schema marker stamped at the bundle root; matches `compose/assets/compose/metabolism.new.kit.compose.json`.
+    /// @emoji ­ƒ¬¬ On-disk schema marker stamped at the bundle root; matches `assets/compose/metabolism.new.kit.compose.json`.
     pub const KIT_STORE_BUNDLE_SCHEMA: &str = "­ƒÄå26­ƒîÖ06Ô¼å´©Å1";
 
     /// @emoji ­ƒº¥ Blake3 hex (empty-input digest) used on the wire until per-entity merkle is filled.
@@ -14491,7 +14491,7 @@ mod tests {
         out
     }
 
-    /// @emoji ­ƒôÄ US-001 replay fixtures (`kit-store.golden.*`) live under `compose/assets/compose/` when present in the checkout.
+    /// @emoji ­ƒôÄ US-001 replay fixtures (`kit-store.golden.*`) live under `assets/compose/` when present in the checkout.
     fn kit_store_golden_fixture_paths() -> Option<(PathBuf, PathBuf)> {
         let base = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../assets/compose");
         let ops = base.join("kit-store.golden.ops.compose.json");
@@ -15114,7 +15114,7 @@ mod tests {
     fn kit_store_golden_operations_replay_matches_expected_invariants() {
         block_on(async {
             let Some((path_ops, path_exp)) = kit_store_golden_fixture_paths() else {
-                eprintln!("[DEBUG] skip kit_store_golden_operations_replay_matches_expected_invariants: missing compose/assets/compose/kit-store.golden.*.json");
+                eprintln!("[DEBUG] skip kit_store_golden_operations_replay_matches_expected_invariants: missing assets/compose/kit-store.golden.*.json");
                 return;
             };
             let ops_json: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read kit-store.golden.ops")).expect("parse operations");
@@ -15175,7 +15175,7 @@ mod tests {
     fn kit_store_golden_operations_via_kit_graph_engine_match_fingerprint() {
         block_on(async {
             let Some((path_ops, path_exp)) = kit_store_golden_fixture_paths() else {
-                eprintln!("[DEBUG] skip kit_store_golden_operations_via_kit_graph_engine_match_fingerprint: missing compose/assets/compose/kit-store.golden.*.json");
+                eprintln!("[DEBUG] skip kit_store_golden_operations_via_kit_graph_engine_match_fingerprint: missing assets/compose/kit-store.golden.*.json");
                 return;
             };
             let ops_json: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read kit-store.golden.ops")).expect("parse operations");
@@ -15205,7 +15205,7 @@ mod tests {
     fn dev_json_backbone_persisted_operations_replay_matches_us001_projection_fingerprint() {
         block_on(async {
             let Some((path_ops, path_exp)) = kit_store_golden_fixture_paths() else {
-                eprintln!("[DEBUG] skip dev_json_backbone_persisted_operations_replay_matches_us001_projection_fingerprint: missing compose/assets/compose/kit-store.golden.*.json");
+                eprintln!("[DEBUG] skip dev_json_backbone_persisted_operations_replay_matches_us001_projection_fingerprint: missing assets/compose/kit-store.golden.*.json");
                 return;
             };
             let dir = tempfile::tempdir().expect("temp dir");
@@ -15242,7 +15242,7 @@ mod tests {
     fn local_compose_sqlite_backbone_persisted_operations_replay_matches_us001_projection_fingerprint() {
         block_on(async {
             let Some((path_ops, path_exp)) = kit_store_golden_fixture_paths() else {
-                eprintln!("[DEBUG] skip local_compose_sqlite_backbone_persisted_operations_replay_matches_us001_projection_fingerprint: missing compose/assets/compose/kit-store.golden.*.json");
+                eprintln!("[DEBUG] skip local_compose_sqlite_backbone_persisted_operations_replay_matches_us001_projection_fingerprint: missing assets/compose/kit-store.golden.*.json");
                 return;
             };
             let dir = tempfile::tempdir().expect("temp dir");

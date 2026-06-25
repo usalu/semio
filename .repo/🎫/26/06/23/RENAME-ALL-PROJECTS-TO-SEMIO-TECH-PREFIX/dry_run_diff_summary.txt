@@ -2455,31 +2455,31 @@ File: coda/client/ui/desktop/vite.renderer.config.ts
 File: compose/AGENTS.md
   Changed. Length: 11357
 
-File: compose/asset/AGENTS.md
+File: asset/AGENTS.md
   Changed. Length: 354
 
-File: compose/asset/icon/package.json
+File: asset/icon/package.json
   Changed. Length: 378
 
-File: compose/asset/icon/project.json
+File: asset/icon/project.json
   Changed. Length: 414
 
-File: compose/asset/image/package.json
+File: asset/image/package.json
   Changed. Length: 181
 
-File: compose/asset/index.ts
+File: asset/index.ts
   Changed. Length: 12715
 
-File: compose/asset/logo/package.json
+File: asset/logo/package.json
   Changed. Length: 472
 
-File: compose/asset/logo/project.json
+File: asset/logo/project.json
   Changed. Length: 537
 
-File: compose/asset/package.json
+File: asset/package.json
   Changed. Length: 453
 
-File: compose/asset/project.json
+File: asset/project.json
   Changed. Length: 412
 
 File: compose/client/bin/engine/package.json

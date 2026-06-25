@@ -23,7 +23,7 @@ const __dirname = dirname(__filename);
  */
 function extractNakaginCapsuleTowerDesign(): any | null {
   try {
-    const kitPath = '/workspaces/semio/compose/assets/compose/kit_metabolism.json';
+    const kitPath = '/workspaces/semio/assets/compose/kit_metabolism.json';
     const kitData = JSON.parse(readFileSync(kitPath, 'utf8'));
     
     const nakaginDesigns = kitData.designs?.filter((design: any) => design.name === "Nakagin Capsule Tower") || [];
@@ -125,7 +125,7 @@ function main(): void {
   const model = designToComposeModel(design);
   
   // Define output path
-  const outputPath = '/workspaces/semio/compose/assets/models/nakagin-capsule-tower-compose.json';
+  const outputPath = '/workspaces/semio/assets/models/nakagin-capsule-tower-compose.json';
   
   // Export the model
   exportModelToAssets(model, outputPath);

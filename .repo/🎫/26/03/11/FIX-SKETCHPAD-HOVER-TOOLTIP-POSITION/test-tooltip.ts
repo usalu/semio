@@ -6,7 +6,7 @@ async function testTooltipPositioning() {
   const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
   await page.goto("http://localhost:5173/", { waitUntil: "networkidle", timeout: 30000 });
   await page.waitForTimeout(3000);
-  const zipPath = path.resolve("/workspaces/semio/compose/assets/compose/metabolism.zip");
+  const zipPath = path.resolve("/workspaces/semio/assets/compose/metabolism.zip");
   const fileInput = page.locator('[id="compose.sketchpad.app.home.importKit"]');
   const isAttached = await fileInput.count() > 0;
   console.log(`[DEBUG] importKit input attached: ${isAttached}`);

@@ -46,7 +46,7 @@ else:
     if has_ops_fallback_in_lib_rs(text):
         errors.append("lib.rs: ops fallback (.get(\"ops\") outside absence asserts)")
 
-golden_ops = ROOT / "compose/assets/compose/kit-store.golden.ops.compose.json"
+golden_ops = ROOT / "assets/compose/kit-store.golden.ops.compose.json"
 if not golden_ops.is_file():
     errors.append(f"missing file: {golden_ops}")
 else:

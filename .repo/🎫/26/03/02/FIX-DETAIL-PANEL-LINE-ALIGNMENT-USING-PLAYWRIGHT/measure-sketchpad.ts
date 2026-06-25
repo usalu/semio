@@ -5,7 +5,7 @@ async function measure() {
   await page.goto("http://localhost:5173/");
   await page.waitForLoadState("domcontentloaded");
   await page.waitForTimeout(3000);
-  const zipPath = "/workspaces/semio/compose/assets/compose/metabolism.zip";
+  const zipPath = "/workspaces/semio/assets/compose/metabolism.zip";
   const fileInput = page.locator('[id="compose.sketchpad.app.home.importKit"]');
   await fileInput.waitFor({ state: "attached", timeout: 10000 });
   const [fileChooser] = await Promise.all([

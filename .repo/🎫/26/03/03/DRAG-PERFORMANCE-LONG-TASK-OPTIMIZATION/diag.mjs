@@ -3,7 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const BASE_URL = process.env.PLAYWRIGHT_BASE_URL || 'http://127.0.0.1:5173';
-const ZIP_PATH = path.resolve('/workspaces/semio/compose/assets/compose/metabolism.zip');
+const ZIP_PATH = path.resolve('/workspaces/semio/assets/compose/metabolism.zip');
 async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 (async () => {

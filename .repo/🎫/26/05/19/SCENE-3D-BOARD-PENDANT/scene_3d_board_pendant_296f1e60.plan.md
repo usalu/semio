@@ -66,7 +66,7 @@ Compatibility/connect rules reuse the board catalog format verbatim (`source`/`t
 
 - [elements/client/lib/scene/script.ts](elements/client/lib/scene/script.ts) modeled on board's `script.ts` (no cargo/wasm step): `dev` → vite, `build` → vite build, `test` → vitest + playwright. **No `bake-*` subcommands** — fixture generation is not part of this package's surface.
 
-- [elements/client/lib/scene/fixtures/meshes/](elements/client/lib/scene/fixtures/meshes/) — optional empty placeholder; play `vite.config.ts` aliases `/meshes/*` to repo `compose/assets/fixtures/metabolism/representations/*.glb` via `server.fs.allow` (static files only, no compose JavaScript).
+- [elements/client/lib/scene/fixtures/meshes/](elements/client/lib/scene/fixtures/meshes/) — optional empty placeholder; play `vite.config.ts` aliases `/meshes/*` to repo `assets/fixtures/metabolism/representations/*.glb` via `server.fs.allow` (static files only, no compose JavaScript).
 
 ## Coordinate system (fixture authoring only, not scene runtime)
 
@@ -94,7 +94,7 @@ Keys, ids, kindCatalogs and tie wiring are 1:1 with `nakagin-capsule-tower.board
 
 `@elements/scene` (runtime + play site + tests + `script.ts`) has **zero** compose dependency: no `@compose/*` in [elements/client/lib/scene/package.json](elements/client/lib/scene/package.json), no imports from `@compose/*` or `compose/` TypeScript modules anywhere under `elements/client/lib/scene/`.
 
-- Play site only `import`s checked-in JSON and loads glbs by URL; `vite.config.ts` `server.fs.allow` may include the repo path to `compose/assets/.../representations/` **for static `.glb` files only** (not for executing compose code).
+- Play site only `import`s checked-in JSON and loads glbs by URL; `vite.config.ts` `server.fs.allow` may include the repo path to `assets/.../representations/` **for static `.glb` files only** (not for executing compose code).
 
 ## One-time Nakagin fixture bake (ticket folder only, outside `elements/scene`)
 
@@ -102,7 +102,7 @@ Authoring `nakagin-capsule-tower.scene.json` is **not** implemented inside `@ele
 
 That script may:
 
-1. `readFileSync` shallow design + light kit JSON from `compose/assets/fixtures/...` (plain paths, no `@elements/scene` import required).
+1. `readFileSync` shallow design + light kit JSON from `assets/fixtures/...` (plain paths, no `@elements/scene` import required).
 2. `import { flattenDesign } from "@semio-tech/compose-js"` (or equivalent single entry the monorepo already resolves for one-off dev runs) to flatten pieces and connector geometry.
 3. Apply authoring-basis → three.js conversion locally inside the script (inline functions, ~15 lines of `three` math, or `import` from `three` only).
 4. `readFileSync` `.storybook/fixtures/nakagin-capsule-tower.board.json` and copy `kindCatalogs` + `edges` into the scene fixture for id parity.
@@ -396,8 +396,8 @@ const planeToThree = (plane: { origin: any; xAxis: any; yAxis: any }) => {
   return { origin: o, orientation: [q.x, q.y, q.z, q.w] as const };
 };
 
-const design = JSON.parse(readFileSync(repo("compose/assets/fixtures/nakagin-capsule-tower.shallow.design.compose.json"), "utf8"));
-const kit = JSON.parse(readFileSync(repo("compose/assets/fixtures/metabolism.kit.light.compose.json"), "utf8"));
+const design = JSON.parse(readFileSync(repo("assets/fixtures/nakagin-capsule-tower.shallow.design.compose.json"), "utf8"));
+const kit = JSON.parse(readFileSync(repo("assets/fixtures/metabolism.kit.light.compose.json"), "utf8"));
 const board = JSON.parse(readFileSync(repo(".storybook/fixtures/nakagin-capsule-tower.board.json"), "utf8"));
 const flat = flattenDesign(design, kit);
 

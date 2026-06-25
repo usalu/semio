@@ -54,7 +54,7 @@ await page.waitForLoadState("networkidle");
 await page.waitForTimeout(3000);
 
 // Load the metabolism kit fixture and ship raw bytes into the page for import.
-const metabolismZipPath = path.resolve("compose/assets/compose/metabolism.zip");
+const metabolismZipPath = path.resolve("assets/compose/metabolism.zip");
 const metabolismZipBytes = await readFile(metabolismZipPath);
 const zipB64 = metabolismZipBytes.toString("base64");
 

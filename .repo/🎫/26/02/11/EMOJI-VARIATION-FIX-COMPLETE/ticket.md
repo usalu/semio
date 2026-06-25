@@ -30,7 +30,7 @@ Complete emoji variation fix: emojiText preserves VS16 for text-default emojis, 
 4. **`TestFixtureBreachsByLanguage`**: Fixed clean file check to only assert on file-level breachs (line > 0), ignoring folder-level docs breachs.
 5. **`TestFixHeaderWithShebang`**: Already fixed (Logf for expected breachs, correct script emoji).
 
-### compose/assets/repo/some/folder/ (fixtures)
+### assets/repo/some/folder/ (fixtures)
 
 - Restored all fixture files (file.cs, file.py, file.tsx, file_empty_region.tsx, file_fixable.tsx, file_fixable_expected.tsx, file_invalid.cs, file_invalid.go, file_invalid.tsx) to their original state after `fix` command had modified them.
 

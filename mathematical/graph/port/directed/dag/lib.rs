@@ -2384,9 +2384,9 @@ impl DagHost {
                 let in_a = io_node_rect_port_angle_for_node(node, port_idx, true);
                 let hid = next_handle;
                 next_handle += 1;
-                let key = format!("{}:{}", node.id, port.id);
-                handle_map.insert(key.clone(), hid);
-                self.handle_key_map.insert(hid, key);
+                let public_key = format!("{}:{}", node.id, port.id);
+                handle_map.insert(Self::dag_port_handle_key(&node.id, &port.id, true), hid);
+                self.handle_key_map.insert(hid, public_key);
                 self.engine.create_handle(hid, nid, in_a);
                 if let Some(handle) = self.engine.handles.get_mut(&hid) {
                     handle.radius = DAG_HANDLE_WORLD_RADIUS;
@@ -2397,9 +2397,9 @@ impl DagHost {
                 let out_a = io_node_rect_port_angle_for_node(node, port_idx, false);
                 let hid = next_handle;
                 next_handle += 1;
-                let key = format!("{}:{}", node.id, port.id);
-                handle_map.insert(key.clone(), hid);
-                self.handle_key_map.insert(hid, key);
+                let public_key = format!("{}:{}", node.id, port.id);
+                handle_map.insert(Self::dag_port_handle_key(&node.id, &port.id, false), hid);
+                self.handle_key_map.insert(hid, public_key);
                 self.engine.create_handle(hid, nid, out_a);
                 if let Some(handle) = self.engine.handles.get_mut(&hid) {
                     handle.radius = DAG_HANDLE_WORLD_RADIUS;
@@ -2422,8 +2422,10 @@ impl DagHost {
             if would_create_cycle(&existing, edge.source.split(':').next().unwrap_or(""), edge.target.split(':').next().unwrap_or("")) {
                 continue;
             }
-            let src = handle_map.get(&edge.source).copied();
-            let tgt = handle_map.get(&edge.target).copied();
+            let (source_node, source_port) = Self::dag_port_endpoint_parts(&edge.source);
+            let (target_node, target_port) = Self::dag_port_endpoint_parts(&edge.target);
+            let src = handle_map.get(&Self::dag_port_handle_key(&source_node, &source_port, false)).copied();
+            let tgt = handle_map.get(&Self::dag_port_handle_key(&target_node, &target_port, true)).copied();
             if let (Some(s), Some(t)) = (src, tgt) {
                 let id = Self::parse_fixture_edge_numeric_id(&edge.id).unwrap_or(eid);
                 eid = eid.max(id).saturating_add(1);
@@ -2436,6 +2438,14 @@ impl DagHost {
 
     fn parse_fixture_edge_numeric_id(id: &str) -> Option<u64> {
         id.strip_prefix('e').and_then(|s| s.parse().ok())
+    }
+
+    fn dag_port_endpoint_parts(endpoint: &str) -> (String, String) {
+        endpoint.split_once(':').map(|(node, port)| (node.to_string(), port.to_string())).unwrap_or_else(|| (endpoint.to_string(), String::new()))
+    }
+
+    fn dag_port_handle_key(node_id: &str, port_id: &str, input: bool) -> String {
+        format!("{}:{}:{}", node_id, if input { "in" } else { "out" }, port_id)
     }
 
     fn screen_to_world_point(&self, sx: f64, sy: f64) -> cavas::vello::kurbo::Point {
@@ -4964,6 +4974,32 @@ mod tests {
         host.pointer_up_screen(sx - 180.0, sy, false, false, false);
         assert_eq!(host.engine.edges.len(), 2);
         assert_eq!(host.fixture.edges.len(), 2);
+    }
+
+    #[test]
+    fn dag_host_keeps_same_named_input_and_output_handles_distinct() {
+        let solid = vec![IoPortSpec { id: "solid".into(), label: "solid".into(), ..Default::default() }];
+        let brep = vec![IoPortSpec { id: "brep".into(), label: "brep".into(), ..Default::default() }];
+        let list = vec![IoPortSpec { id: "list".into(), label: "list".into(), ..Default::default() }];
+        let mut host = DagHost::from_fixture_without_layout(DagFixtureV1 {
+            schema: "dag.fixture/v1".into(),
+            camera: DagCameraV1 { x: 0.0, y: 0.0, zoom: 1.0 },
+            nodes: vec![
+                DagNodeSpec::computation("extrude".into(), "Extrude".into(), "Extrude".into(), "emoji:⬆️".into(), vec![], solid.clone(), false, false, 0.0, 0.0, computation_node_width("Extrude", &[], &solid), computation_node_height(0, 1, false, false)),
+                DagNodeSpec::computation("brep".into(), "Brep".into(), "Brep".into(), "emoji:🧊".into(), brep.clone(), brep.clone(), false, false, 200.0, 0.0, computation_node_width("Brep", &brep, &brep), computation_node_height(1, 1, false, false)),
+                DagNodeSpec::computation("get".into(), "Get".into(), "Get".into(), "emoji:📋".into(), list, vec![], false, false, 400.0, 0.0, computation_node_width("Get", &[IoPortSpec { id: "list".into(), label: "list".into(), ..Default::default() }], &[]), computation_node_height(1, 0, false, false)),
+            ],
+            edges: vec![DagFixtureEdgeV1 { id: "e100".into(), source: "extrude:solid".into(), target: "brep:brep".into() }, DagFixtureEdgeV1 { id: "e101".into(), source: "brep:brep".into(), target: "get:list".into() }],
+        });
+        host.sync_edges_from_engine();
+        let incoming = host.engine.edges.get(&100).expect("incoming brep edge");
+        let outgoing = host.engine.edges.get(&101).expect("outgoing brep edge");
+        let incoming_target = host.engine.handles.get(&incoming.target).expect("incoming target handle");
+        let outgoing_source = host.engine.handles.get(&outgoing.source).expect("outgoing source handle");
+        assert_eq!(incoming_target.role, HandleRole::Target);
+        assert_eq!(outgoing_source.role, HandleRole::Source);
+        assert_eq!(host.fixture.edges.iter().find(|edge| edge.id == "e100").map(|edge| edge.target.as_str()), Some("brep:brep"));
+        assert_eq!(host.fixture.edges.iter().find(|edge| edge.id == "e101").map(|edge| edge.source.as_str()), Some("brep:brep"));
     }
 
     #[test]

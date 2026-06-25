@@ -59,12 +59,15 @@ import {
   type Puzzle2dRenderer,
 } from "@semio-tech/puzzle-2d-react";
 import {
+  DEFAULT_MESH_STYLE as PUZZLE_3D_DEFAULT_MESH_STYLE,
   ObjectStateProvider as Puzzle3dPartStateProvider,
   Objects as Puzzle3dParts,
   Attractions as Puzzle3dTies,
   Canvas3D as Puzzle3dCanvas,
+  PUZZLE_3D_MESH_PAINT,
   blockedVortexFullIdsFromAttractions,
   cancelPuzzle3dFixturePalettePointerDrag,
+  meshStyleColors,
   parseFixtureV1,
   useObjectConnect as usePuzzle3dPartConnect,
   useObjectRelocate as usePuzzle3dPartRelocate,
@@ -80,12 +83,17 @@ import {
   type SelectionSnapshot as Puzzle3dSelectionSnapshot,
   type VortexKind as Puzzle3dGripKind,
   type CanvasProps as Puzzle3dCanvasProps,
+  type LodMeshEntry as Puzzle3dLodMeshEntry,
   type BrushPlacePayload,
   type Puzzle3dBrushKindWeights,
   type FixtureObjectV1 as Puzzle3dFixtureObjectV1,
   type HoverTarget,
+  type MeshStyleColors,
+  type MeshStyleKind,
   type Puzzle3dHoverPayload,
   type Puzzle3dKindHover,
+  type WorldReferenceProps as Puzzle3dWorldReferenceProps,
+  type WorldVolumeProps as Puzzle3dWorldVolumeProps,
   buildBrushFillSequence,
   brushCompatibleCandidates,
   brushPlacementUsesHostOrientation,
@@ -126,6 +134,17 @@ export const PUZZLE_5D_3D_PROXIMITY_GESTURE: ConnectGestureKind = "proximity";
 
 /** @emoji 🎯 Indirect link/attraction: start on one surface, finish on a compatible ring on either surface. */
 export const PUZZLE_5D_INDIRECT_CONNECT_GESTURE: ConnectGestureKind = "indirect";
+
+/** @emoji 🎨 5d uses the 3d package as the only source of truth for volume mesh colors. */
+export const PUZZLE_5D_3D_MESH_PAINT = PUZZLE_3D_MESH_PAINT;
+
+/** @emoji 🎨 Default 5d volume mesh style delegated to puzzle 3d. */
+export const PUZZLE_5D_3D_DEFAULT_MESH_STYLE = PUZZLE_3D_DEFAULT_MESH_STYLE;
+
+/** @emoji 🎨 Resolves 5d volume mesh colors through puzzle 3d tokens. */
+export const puzzle5d3dMeshStyleColors: (style: MeshStyleKind) => MeshStyleColors | null = meshStyleColors;
+
+export type Puzzle5d3dMeshStyleKind = MeshStyleKind;
 //#endregion 🔖PairedPolicy
 
 //#region 🔖Model
@@ -137,6 +156,8 @@ export interface Grip2dAspect {
   readonly color?: string;
   readonly iconKind?: string;
   readonly radius?: number;
+  /** @emoji 📐 Optional port perimeter parameter (0–1); defaults from {@link angle} / 360 when absent. */
+  readonly t?: number;
 }
 
 export interface Grip3dAspect {
@@ -145,6 +166,10 @@ export interface Grip3dAspect {
   readonly radius?: number;
   readonly label?: string;
   readonly handleMeshUrl?: string;
+  readonly vortexMeshUrl?: string;
+  readonly vortexMeshByLod?: readonly Puzzle3dLodMeshEntry[];
+  readonly hidden?: boolean;
+  readonly locked?: boolean;
 }
 
 export interface Grip {
@@ -175,8 +200,11 @@ export interface Part3dAspect {
   readonly orientation?: readonly [number, number, number, number];
   readonly scale?: number | readonly [number, number, number];
   readonly meshUrl: string;
+  readonly meshByLod?: readonly Puzzle3dLodMeshEntry[];
   readonly label?: string;
   readonly wormhole?: boolean;
+  readonly hidden?: boolean;
+  readonly locked?: boolean;
 }
 
 export interface Part {
@@ -187,11 +215,54 @@ export interface Part {
   readonly grips: readonly Grip[];
 }
 
-export interface Fastener {
+export interface Fastener extends PuzzleConnectionTransformParams {
   readonly id: string;
   readonly source: string;
   readonly target: string;
   readonly fastenerKind?: string;
+}
+
+/** @emoji 🔗 Compose connection transform params shared with puzzle 2d edges and puzzle 3d attractions. */
+export interface PuzzleConnectionTransformParams {
+  readonly gap?: number;
+  readonly shift?: number;
+  readonly rise?: number;
+  readonly rotation?: number;
+  readonly turn?: number;
+  readonly tilt?: number;
+  readonly u?: number;
+  readonly v?: number;
+}
+
+const PUZZLE_CONNECTION_TRANSFORM_PARAM_KEYS = ["gap", "shift", "rise", "rotation", "turn", "tilt", "u", "v"] as const;
+
+/** @emoji 🔗 Reads optional connection transform params from fixture JSON. */
+export function parsePuzzleConnectionTransformParams(record: Record<string, unknown>): PuzzleConnectionTransformParams {
+  const out: Record<string, number> = {};
+  for (const key of PUZZLE_CONNECTION_TRANSFORM_PARAM_KEYS) {
+    const value = record[key];
+    if (typeof value === "number" && Number.isFinite(value)) {
+      out[key] = value;
+    }
+  }
+  return out;
+}
+
+/** @emoji 🔗 Spreads defined connection transform params onto a fixture record. */
+export function spreadPuzzleConnectionTransformParams(params: PuzzleConnectionTransformParams): PuzzleConnectionTransformParams {
+  const out: Record<string, number> = {};
+  for (const key of PUZZLE_CONNECTION_TRANSFORM_PARAM_KEYS) {
+    const value = params[key];
+    if (typeof value === "number" && Number.isFinite(value)) {
+      out[key] = value;
+    }
+  }
+  return out;
+}
+
+function connectionTransformParam(params: PuzzleConnectionTransformParams, key: (typeof PUZZLE_CONNECTION_TRANSFORM_PARAM_KEYS)[number]): number {
+  const value = params[key];
+  return typeof value === "number" && Number.isFinite(value) ? value : 0;
 }
 
 /** @emoji 🔗 In-progress **indirect** connect only (never proximity); synced across 2d {@link Puzzle2dLinkSessionSnapshot} and 3d {@link AttractionSessionSnapshot}. */
@@ -426,6 +497,8 @@ export interface Model {
   readonly camera3d: Puzzle3dFixtureV1["camera"];
   readonly parts: readonly Part[];
   readonly fasteners: readonly Fastener[];
+  readonly references3d?: readonly Puzzle3dWorldReferenceProps[];
+  readonly targetVolumes3d?: readonly Puzzle3dWorldVolumeProps[];
 }
 
 export const PUZZLE_5D_GRIP_ID_SEPARATOR = ":";
@@ -459,6 +532,8 @@ export function parseModel(raw: unknown): Model | null {
     camera3d: volumeCam,
     parts: r.parts as Part[],
     fasteners: r.fasteners as Fastener[],
+    ...(Array.isArray(r.references3d) ? { references3d: r.references3d as Puzzle3dWorldReferenceProps[] } : {}),
+    ...(Array.isArray(r.targetVolumes3d) ? { targetVolumes3d: r.targetVolumes3d as Puzzle3dWorldVolumeProps[] } : {}),
     ...(typeof r.label === "string" ? { label: r.label } : {}),
     ...(r.meta && typeof r.meta === "object" ? { meta: r.meta as Record<string, unknown> } : {}),
     ...(r.kindCatalogs && typeof r.kindCatalogs === "object" ? { kindCatalogs: normalizeKindCatalogBundle(r.kindCatalogs) } : {}),
@@ -482,6 +557,7 @@ export function compose5d(fixture2d: Puzzle2dFixtureV1, fixture3d: Puzzle3dFixtu
           ...(h.color !== undefined ? { color: h.color } : {}),
           ...(h.iconKind !== undefined ? { iconKind: h.iconKind } : {}),
           ...(h.radius !== undefined ? { radius: h.radius } : {}),
+          ...(h.t !== undefined ? { t: h.t } : {}),
         },
       };
     });
@@ -525,8 +601,11 @@ export function compose5d(fixture2d: Puzzle2dFixtureV1, fixture3d: Puzzle3dFixtu
       meshUrl: obj.meshUrl,
       ...(obj.orientation !== undefined ? { orientation: obj.orientation } : {}),
       ...(obj.scale !== undefined ? { scale: obj.scale } : {}),
+      ...(obj.meshByLod !== undefined ? { meshByLod: obj.meshByLod } : {}),
       ...(obj.label !== undefined ? { label: obj.label } : {}),
       ...(obj.wormhole === true ? { wormhole: true } : {}),
+      ...(obj.hidden === true ? { hidden: true } : {}),
+      ...(obj.locked === true ? { locked: true } : {}),
     };
     const volumeGrips: Grip[] = obj.vortices.map((v) => {
       const parsed = parseGripFullId(v.id.includes(":") ? v.id : gripFullId(obj.id, v.id));
@@ -540,6 +619,10 @@ export function compose5d(fixture2d: Puzzle2dFixtureV1, fixture3d: Puzzle3dFixtu
           ...(v.radius !== undefined ? { radius: v.radius } : {}),
           ...(v.label !== undefined ? { label: v.label } : {}),
           ...(v.handleMeshUrl !== undefined ? { handleMeshUrl: v.handleMeshUrl } : {}),
+          ...(v.vortexMeshUrl !== undefined ? { vortexMeshUrl: v.vortexMeshUrl } : {}),
+          ...(v.vortexMeshByLod !== undefined ? { vortexMeshByLod: v.vortexMeshByLod } : {}),
+          ...(v.hidden === true ? { hidden: true } : {}),
+          ...(v.locked === true ? { locked: true } : {}),
         },
       };
     });
@@ -575,6 +658,7 @@ export function compose5d(fixture2d: Puzzle2dFixtureV1, fixture3d: Puzzle3dFixtu
       source: edge.source,
       target: edge.target,
       ...(edge.edgeKind !== undefined ? { fastenerKind: edge.edgeKind } : {}),
+      ...spreadPuzzleConnectionTransformParams(edge),
     });
   }
   for (const att of fixture3d.attractions) {
@@ -585,6 +669,7 @@ export function compose5d(fixture2d: Puzzle2dFixtureV1, fixture3d: Puzzle3dFixtu
       source: att.attracting,
       target: att.attracted,
       ...(att.attractionKind !== undefined ? { fastenerKind: att.attractionKind } : {}),
+      ...spreadPuzzleConnectionTransformParams(att),
     });
   }
   const meta = {
@@ -603,6 +688,8 @@ export function compose5d(fixture2d: Puzzle2dFixtureV1, fixture3d: Puzzle3dFixtu
     ...(Object.keys(meta).length > 0 ? { meta } : {}),
     ...(kindCatalogs ? { kindCatalogs } : {}),
     ...(kindCompatibility.length > 0 ? { kindCompatibility } : {}),
+    ...(fixture3d.references?.length ? { references3d: fixture3d.references } : {}),
+    ...(fixture3d.targetVolumes?.length ? { targetVolumes3d: fixture3d.targetVolumes } : {}),
   };
 }
 
@@ -621,6 +708,7 @@ export function project2d(model: Model): Puzzle2dFixtureV1 {
           ...(a["2d"]!.color !== undefined ? { color: a["2d"]!.color } : {}),
           ...(a["2d"]!.iconKind !== undefined ? { iconKind: a["2d"]!.iconKind } : {}),
           ...(a["2d"]!.radius !== undefined ? { radius: a["2d"]!.radius } : {}),
+          ...(a["2d"]!.t !== undefined ? { t: a["2d"]!.t } : {}),
         }));
       if (aspect2d.shape === "rectangle") {
         return {
@@ -665,6 +753,7 @@ export function project2d(model: Model): Puzzle2dFixtureV1 {
       source: b.source,
       target: b.target,
       ...(b.fastenerKind !== undefined ? { edgeKind: b.fastenerKind } : {}),
+      ...spreadPuzzleConnectionTransformParams(b),
     })),
     ...(model.meta ? { meta: model.meta } : {}),
   };
@@ -683,8 +772,11 @@ export function project3d(model: Model): Puzzle3dFixtureV1 {
         ...(p.partKind !== undefined ? { objectKind: p.partKind } : {}),
         ...(s.orientation !== undefined ? { orientation: s.orientation } : {}),
         ...(s.scale !== undefined ? { scale: s.scale } : {}),
+        ...(s.meshByLod !== undefined ? { meshByLod: s.meshByLod } : {}),
         ...(s.label !== undefined ? { label: s.label } : {}),
         ...(s.wormhole === true ? { wormhole: true } : {}),
+        ...(s.hidden === true ? { hidden: true } : {}),
+        ...(s.locked === true ? { locked: true } : {}),
         vortices: p.grips
           .filter((a) => a["3d"])
           .map((a) => ({
@@ -695,6 +787,10 @@ export function project3d(model: Model): Puzzle3dFixtureV1 {
             ...(a["3d"]!.radius !== undefined ? { radius: a["3d"]!.radius } : {}),
             ...(a["3d"]!.label !== undefined ? { label: a["3d"]!.label } : {}),
             ...(a["3d"]!.handleMeshUrl !== undefined ? { handleMeshUrl: a["3d"]!.handleMeshUrl } : {}),
+            ...(a["3d"]!.vortexMeshUrl !== undefined ? { vortexMeshUrl: a["3d"]!.vortexMeshUrl } : {}),
+            ...(a["3d"]!.vortexMeshByLod !== undefined ? { vortexMeshByLod: a["3d"]!.vortexMeshByLod } : {}),
+            ...(a["3d"]!.hidden === true ? { hidden: true } : {}),
+            ...(a["3d"]!.locked === true ? { locked: true } : {}),
           })),
       };
     });
@@ -708,10 +804,512 @@ export function project3d(model: Model): Puzzle3dFixtureV1 {
       attracting: b.source as `${string}:${string}`,
       attracted: b.target as `${string}:${string}`,
       ...(b.fastenerKind !== undefined ? { attractionKind: b.fastenerKind } : {}),
+      ...spreadPuzzleConnectionTransformParams(b),
     })),
+    references: [...(model.references3d ?? [])],
+    targetVolumes: [...(model.targetVolumes3d ?? [])],
     ...(model.meta ? { meta: model.meta } : {}),
   };
 }
+
+//#region 🌤️Flatten
+
+const FLATTEN_TOLERANCE = 0.01;
+const DIAGRAM_RADIUS = 2.697;
+const DIAGRAM_VERTICAL_V_EXTRA = 1.0;
+const DIAGRAM_HORIZONTAL_SCALE = 3.0633;
+
+type FlattenVec3 = readonly [number, number, number];
+type FlattenQuat = readonly [number, number, number, number];
+type FlattenMat4 = readonly [
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+];
+
+interface FlattenPlaneInput {
+  readonly origin: { readonly x: number; readonly y: number; readonly z: number };
+  readonly xAxis: { readonly x: number; readonly y: number; readonly z: number };
+  readonly yAxis: { readonly x: number; readonly y: number; readonly z: number };
+}
+
+interface FlattenCoordInput {
+  readonly u: number;
+  readonly v: number;
+}
+
+function flattenNormalize(v: FlattenVec3): FlattenVec3 {
+  const len = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+  if (len > 0) {
+    return [v[0] / len, v[1] / len, v[2] / len];
+  }
+  return [0, 0, 0];
+}
+
+function flattenCross(a: FlattenVec3, b: FlattenVec3): FlattenVec3 {
+  return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+}
+
+function flattenDot(a: FlattenVec3, b: FlattenVec3): number {
+  return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+}
+
+function flattenDegToRad(deg: number): number {
+  return (deg * Math.PI) / 180;
+}
+
+function flattenRound6(v: number): number {
+  return Math.round(v * 1_000_000) / 1_000_000;
+}
+
+function flattenDefaultPlane(): FlattenPlaneInput {
+  return {
+    origin: { x: 0, y: 0, z: 0 },
+    xAxis: { x: 1, y: 0, z: 0 },
+    yAxis: { x: 0, y: 1, z: 0 },
+  };
+}
+
+function flattenPlaneToMatrix(plane: FlattenPlaneInput): FlattenMat4 {
+  const x: FlattenVec3 = [plane.xAxis.x, plane.xAxis.y, plane.xAxis.z];
+  const y: FlattenVec3 = [plane.yAxis.x, plane.yAxis.y, plane.yAxis.z];
+  const z = flattenCross(x, y);
+  return [x[0], y[0], z[0], plane.origin.x, x[1], y[1], z[1], plane.origin.y, x[2], y[2], z[2], plane.origin.z, 0, 0, 0, 1];
+}
+
+function flattenMatrixToPlane(matrix: FlattenMat4): FlattenPlaneInput {
+  return {
+    origin: { x: matrix[3], y: matrix[7], z: matrix[11] },
+    xAxis: { x: matrix[0], y: matrix[4], z: matrix[8] },
+    yAxis: { x: matrix[1], y: matrix[5], z: matrix[9] },
+  };
+}
+
+function flattenMulMat(a: FlattenMat4, b: FlattenMat4): FlattenMat4 {
+  const out = new Array<number>(16).fill(0);
+  for (let col = 0; col < 4; col += 1) {
+    for (let row = 0; row < 4; row += 1) {
+      out[col * 4 + row] =
+        a[row] * b[col * 4] + a[4 + row] * b[col * 4 + 1] + a[8 + row] * b[col * 4 + 2] + a[12 + row] * b[col * 4 + 3];
+    }
+  }
+  return out as FlattenMat4;
+}
+
+function flattenTranslation(x: number, y: number, z: number): FlattenMat4 {
+  return [1, 0, 0, x, 0, 1, 0, y, 0, 0, 1, z, 0, 0, 0, 1];
+}
+
+function flattenRotationAxis(axis: FlattenVec3, angle: number): FlattenMat4 {
+  const [x, y, z] = axis;
+  const c = Math.cos(angle);
+  const s = Math.sin(angle);
+  const t = 1 - c;
+  return [
+    t * x * x + c,
+    t * x * y + s * z,
+    t * x * z - s * y,
+    0,
+    t * x * y - s * z,
+    t * y * y + c,
+    t * y * z + s * x,
+    0,
+    t * x * z + s * y,
+    t * y * z - s * x,
+    t * z * z + c,
+    0,
+    0,
+    0,
+    0,
+    1,
+  ];
+}
+
+function flattenApplyMatVec3(matrix: FlattenMat4, vector: FlattenVec3): FlattenVec3 {
+  return [
+    matrix[0] * vector[0] + matrix[4] * vector[1] + matrix[8] * vector[2],
+    matrix[1] * vector[0] + matrix[5] * vector[1] + matrix[9] * vector[2],
+    matrix[2] * vector[0] + matrix[6] * vector[1] + matrix[10] * vector[2],
+  ];
+}
+
+function flattenQuaternionFromUnitVectors(from: FlattenVec3, to: FlattenVec3): FlattenQuat {
+  const r = flattenDot(from, to) + 1;
+  let quat: FlattenQuat;
+  if (r < 0.000_001) {
+    if (Math.abs(from[0]) > Math.abs(from[2])) {
+      quat = [-from[1], from[0], 0, 0];
+    } else {
+      quat = [0, -from[2], from[1], 0];
+    }
+  } else {
+    const c = flattenCross(from, to);
+    quat = [c[0], c[1], c[2], r];
+  }
+  const len = Math.sqrt(quat[0] * quat[0] + quat[1] * quat[1] + quat[2] * quat[2] + quat[3] * quat[3]);
+  return [quat[0] / len, quat[1] / len, quat[2] / len, quat[3] / len];
+}
+
+function flattenQuaternionToMatrix(quaternion: FlattenQuat): FlattenMat4 {
+  const [x, y, z, w] = quaternion;
+  const x2 = x + x;
+  const y2 = y + y;
+  const z2 = z + z;
+  const xx = x * x2;
+  const xy = x * y2;
+  const xz = x * z2;
+  const yy = y * y2;
+  const yz = y * z2;
+  const zz = z * z2;
+  const wx = w * x2;
+  const wy = w * y2;
+  const wz = w * z2;
+  return [
+    1 - (yy + zz),
+    xy + wz,
+    xz - wy,
+    0,
+    xy - wz,
+    1 - (xx + zz),
+    yz + wx,
+    0,
+    xz + wy,
+    yz - wx,
+    1 - (xx + yy),
+    0,
+    0,
+    0,
+    0,
+    1,
+  ];
+}
+
+function flattenPlaneToQuaternion(plane: FlattenPlaneInput): FlattenQuat {
+  const m00 = plane.xAxis.x;
+  const m01 = plane.yAxis.x;
+  const m02 = plane.xAxis.y * plane.yAxis.z - plane.xAxis.z * plane.yAxis.y;
+  const m10 = plane.xAxis.y;
+  const m11 = plane.yAxis.y;
+  const m12 = plane.xAxis.z * plane.yAxis.y - plane.xAxis.y * plane.yAxis.z;
+  const m20 = plane.xAxis.z;
+  const m21 = plane.yAxis.z;
+  const m22 = plane.xAxis.x * plane.yAxis.y - plane.xAxis.y * plane.yAxis.x;
+  const trace = m00 + m11 + m22;
+  if (trace > 0) {
+    const s = Math.sqrt(trace + 1) * 2;
+    return [(m21 - m12) / s, (m02 - m20) / s, (m10 - m01) / s, 0.25 * s];
+  }
+  if (m00 > m11 && m00 > m22) {
+    const s = Math.sqrt(1 + m00 - m11 - m22) * 2;
+    return [0.25 * s, (m01 + m10) / s, (m02 + m20) / s, (m21 - m12) / s];
+  }
+  if (m11 > m22) {
+    const s = Math.sqrt(1 + m11 - m00 - m22) * 2;
+    return [(m01 + m10) / s, 0.25 * s, (m12 + m21) / s, (m02 - m20) / s];
+  }
+  const s = Math.sqrt(1 + m22 - m00 - m11) * 2;
+  return [(m02 + m20) / s, (m12 + m21) / s, 0.25 * s, (m10 - m01) / s];
+}
+
+function flattenQuatToPlane(origin: FlattenVec3, quaternion: FlattenQuat): FlattenPlaneInput {
+  const matrix = flattenQuaternionToMatrix(quaternion);
+  return {
+    origin: { x: origin[0], y: origin[1], z: origin[2] },
+    xAxis: { x: matrix[0], y: matrix[4], z: matrix[8] },
+    yAxis: { x: matrix[1], y: matrix[5], z: matrix[9] },
+  };
+}
+
+function flattenComputeChildPlane(
+  parentPlane: FlattenPlaneInput,
+  parentPoint: FlattenVec3,
+  parentDirection: FlattenVec3,
+  childPoint: FlattenVec3,
+  childDirection: FlattenVec3,
+  params: PuzzleConnectionTransformParams,
+): FlattenPlaneInput {
+  const parentMatrix = flattenPlaneToMatrix(parentPlane);
+  const parentDir = flattenNormalize(parentDirection);
+  const childDir = flattenNormalize(childDirection);
+  const gap = connectionTransformParam(params, "gap");
+  const shift = connectionTransformParam(params, "shift");
+  const rise = connectionTransformParam(params, "rise");
+  const rotationRad = flattenDegToRad(connectionTransformParam(params, "rotation"));
+  const turnRad = flattenDegToRad(connectionTransformParam(params, "turn"));
+  const tiltRad = flattenDegToRad(connectionTransformParam(params, "tilt"));
+  const reverseChild: FlattenVec3 = [-childDir[0], -childDir[1], -childDir[2]];
+  const crossVec = flattenCross(parentDir, reverseChild);
+  const crossLen = Math.sqrt(crossVec[0] * crossVec[0] + crossVec[1] * crossVec[1] + crossVec[2] * crossVec[2]);
+  let alignQuat: FlattenQuat;
+  if (crossLen < FLATTEN_TOLERANCE) {
+    if (Math.abs(parentDir[2]) < FLATTEN_TOLERANCE) {
+      alignQuat = flattenQuaternionFromUnitVectors([0, 1, 0], [0, 0, -1]);
+    } else {
+      let axis = flattenCross([0, 0, 1], parentDir);
+      axis = flattenNormalize(axis);
+      const half = Math.PI / 2;
+      alignQuat = [axis[0] * Math.sin(half), axis[1] * Math.sin(half), axis[2] * Math.sin(half), Math.cos(half)];
+    }
+  } else {
+    alignQuat = flattenQuaternionFromUnitVectors(reverseChild, parentDir);
+  }
+  const directionT = flattenQuaternionToMatrix(alignQuat);
+  const parentRotationT = flattenQuaternionToMatrix(flattenQuaternionFromUnitVectors([0, 1, 0], parentDir));
+  const gapDirection = flattenApplyMatVec3(parentRotationT, [0, 1, 0]);
+  const shiftDirection = flattenApplyMatVec3(parentRotationT, [1, 0, 0]);
+  const raiseDirection = flattenApplyMatVec3(parentRotationT, [0, 0, 1]);
+  let turnAxis = flattenApplyMatVec3(parentRotationT, [0, 0, 1]);
+  let tiltAxis = flattenApplyMatVec3(parentRotationT, [1, 0, 0]);
+  let orientationT = directionT;
+  const rotateT = flattenRotationAxis(parentDir, -rotationRad);
+  orientationT = flattenMulMat(rotateT, orientationT);
+  turnAxis = flattenApplyMatVec3(rotateT, turnAxis);
+  tiltAxis = flattenApplyMatVec3(rotateT, tiltAxis);
+  orientationT = flattenMulMat(flattenRotationAxis(turnAxis, turnRad), orientationT);
+  orientationT = flattenMulMat(flattenRotationAxis(tiltAxis, tiltRad), orientationT);
+  const centerChildT = flattenTranslation(-childPoint[0], -childPoint[1], -childPoint[2]);
+  let transform = flattenMulMat(orientationT, centerChildT);
+  const gapTransform = flattenTranslation(gapDirection[0] * gap, gapDirection[1] * gap, gapDirection[2] * gap);
+  const shiftTransform = flattenTranslation(shiftDirection[0] * shift, shiftDirection[1] * shift, shiftDirection[2] * shift);
+  const raiseTransform = flattenTranslation(raiseDirection[0] * rise, raiseDirection[1] * rise, raiseDirection[2] * rise);
+  transform = flattenMulMat(flattenMulMat(raiseTransform, flattenMulMat(shiftTransform, gapTransform)), transform);
+  transform = flattenMulMat(flattenTranslation(parentPoint[0], parentPoint[1], parentPoint[2]), transform);
+  return flattenMatrixToPlane(flattenMulMat(parentMatrix, transform));
+}
+
+function flattenGripTParam(grip: Grip): number {
+  const t = grip["2d"]?.t;
+  if (typeof t === "number" && Number.isFinite(t)) {
+    return t;
+  }
+  const angle = grip["2d"]?.angle;
+  if (typeof angle === "number" && Number.isFinite(angle)) {
+    return angle / 360;
+  }
+  return 0;
+}
+
+function flattenResolveGrip3d(grip: Grip): { readonly point: FlattenVec3; readonly direction: FlattenVec3; readonly t: number } {
+  const position = grip["3d"]?.position ?? [0, 0, 0];
+  const direction = grip["3d"]?.direction ?? [0, 0, 1];
+  return {
+    point: [position[0], position[1], position[2]],
+    direction: flattenNormalize([direction[0], direction[1], direction[2]]),
+    t: flattenGripTParam(grip),
+  };
+}
+
+function flattenStoredRootPlane(part: Part): FlattenPlaneInput {
+  const aspect3d = part["3d"];
+  if (!aspect3d) {
+    return flattenDefaultPlane();
+  }
+  const origin = aspect3d.origin ?? [0, 0, 0];
+  const orientation = aspect3d.orientation ?? [0, 0, 0, 1];
+  return flattenQuatToPlane([origin[0], origin[1], origin[2]], orientation);
+}
+
+function flattenStoredRootCenter(part: Part): FlattenCoordInput {
+  const aspect2d = part["2d"];
+  return {
+    u: aspect2d?.x ?? 0,
+    v: aspect2d?.y ?? 0,
+  };
+}
+
+/** @emoji 🌤️ Computes absolute part 3d origins/orientations and 2d centers from fasteners and local grip geometry. */
+export function flatten5d(model: Model): Model {
+  const partMap = new Map(model.parts.map((part) => [part.id, part]));
+  const adjacency = new Map<string, { readonly neighborId: string; readonly fastener: Fastener; readonly sourceOnCurrent: boolean }[]>();
+  for (const fastener of model.fasteners) {
+    const sourceGrip = parseGripFullId(fastener.source);
+    const targetGrip = parseGripFullId(fastener.target);
+    if (!sourceGrip || !targetGrip) {
+      continue;
+    }
+    if (!partMap.has(sourceGrip.partId) || !partMap.has(targetGrip.partId)) {
+      continue;
+    }
+    const push = (fromId: string, toId: string, sourceOnCurrent: boolean) => {
+      const row = adjacency.get(fromId) ?? [];
+      row.push({ neighborId: toId, fastener, sourceOnCurrent });
+      adjacency.set(fromId, row);
+    };
+    push(sourceGrip.partId, targetGrip.partId, true);
+    push(targetGrip.partId, sourceGrip.partId, false);
+  }
+  const piecePlanes = new Map<string, FlattenPlaneInput>();
+  const pieceCenters = new Map<string, FlattenCoordInput>();
+  const visited = new Set<string>();
+  const bfsRoot = (rootId: string) => {
+    const queue: string[] = [rootId];
+    visited.add(rootId);
+    const rootPart = partMap.get(rootId);
+    if (!rootPart) {
+      return;
+    }
+    piecePlanes.set(rootId, flattenStoredRootPlane(rootPart));
+    pieceCenters.set(rootId, flattenStoredRootCenter(rootPart));
+    while (queue.length > 0) {
+      const currentId = queue.shift()!;
+      const currentPlane = piecePlanes.get(currentId) ?? flattenDefaultPlane();
+      const parentCenter = pieceCenters.get(currentId) ?? { u: 0, v: 0 };
+      const currentPart = partMap.get(currentId);
+      if (!currentPart) {
+        continue;
+      }
+      for (const edge of adjacency.get(currentId) ?? []) {
+        if (visited.has(edge.neighborId)) {
+          continue;
+        }
+        visited.add(edge.neighborId);
+        const sourceGrip = parseGripFullId(edge.fastener.source);
+        const targetGrip = parseGripFullId(edge.fastener.target);
+        if (!sourceGrip || !targetGrip) {
+          piecePlanes.set(edge.neighborId, flattenDefaultPlane());
+          pieceCenters.set(edge.neighborId, { u: 0, v: 0 });
+          queue.push(edge.neighborId);
+          continue;
+        }
+        const parentGripId = edge.sourceOnCurrent ? sourceGrip : targetGrip;
+        const childGripId = edge.sourceOnCurrent ? targetGrip : sourceGrip;
+        const parentGrip = currentPart.grips.find((grip) => grip.id === parentGripId.gripId);
+        const neighborPart = partMap.get(edge.neighborId);
+        const childGrip = neighborPart?.grips.find((grip) => grip.id === childGripId.gripId);
+        if (!parentGrip?.["3d"] || !childGrip?.["3d"]) {
+          piecePlanes.set(edge.neighborId, flattenDefaultPlane());
+          pieceCenters.set(edge.neighborId, { u: 0, v: 0 });
+          queue.push(edge.neighborId);
+          continue;
+        }
+        const parentGeom = flattenResolveGrip3d(parentGrip);
+        const childGeom = flattenResolveGrip3d(childGrip);
+        const childPlane = flattenComputeChildPlane(currentPlane, parentGeom.point, parentGeom.direction, childGeom.point, childGeom.direction, edge.fastener);
+        piecePlanes.set(edge.neighborId, childPlane);
+        const connectionU = connectionTransformParam(edge.fastener, "u");
+        const connectionV = connectionTransformParam(edge.fastener, "v");
+        let childU: number;
+        let childV: number;
+        if (parentCenter.u === 0 && parentCenter.v === 0) {
+          const angle = 2 * Math.PI * parentGeom.t;
+          childU = DIAGRAM_RADIUS * Math.sin(angle);
+          childV = DIAGRAM_RADIUS * Math.cos(angle);
+        } else if (Math.abs(parentGeom.direction[2]) > 0.5) {
+          childU = parentCenter.u + connectionU;
+          childV = parentCenter.v + connectionV + DIAGRAM_VERTICAL_V_EXTRA;
+        } else {
+          childU = parentCenter.u + connectionU * DIAGRAM_HORIZONTAL_SCALE;
+          childV = parentCenter.v + connectionV * DIAGRAM_HORIZONTAL_SCALE;
+        }
+        pieceCenters.set(edge.neighborId, { u: flattenRound6(childU), v: flattenRound6(childV) });
+        queue.push(edge.neighborId);
+      }
+    }
+  };
+  for (const part of model.parts) {
+    if (!visited.has(part.id)) {
+      bfsRoot(part.id);
+    }
+  }
+  const parts = model.parts.map((part) => {
+    const plane = piecePlanes.get(part.id) ?? flattenDefaultPlane();
+    const center = pieceCenters.get(part.id) ?? { u: 0, v: 0 };
+    const origin: [number, number, number] = [plane.origin.x, plane.origin.y, plane.origin.z];
+    const orientation = flattenPlaneToQuaternion(plane);
+    return {
+      ...part,
+      ...(part["3d"] ? { "3d": { ...part["3d"], origin, orientation } } : {}),
+      ...(part["2d"] ? { "2d": { ...part["2d"], x: center.u, y: center.v } } : {}),
+    };
+  });
+  return { ...model, parts };
+}
+
+/** @emoji 📷 Frames a 2d camera around flattened part centers. */
+export function puzzle5dCamera2dFromModel(model: Model): Model["camera2d"] {
+  const centers = model.parts
+    .map((part) => part["2d"])
+    .filter((aspect): aspect is NonNullable<typeof aspect> => aspect != null)
+    .map((aspect) => ({ x: aspect.x, y: aspect.y }));
+  if (centers.length === 0) {
+    return { x: 0, y: 0, zoom: 1 };
+  }
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let minY = Infinity;
+  let maxY = -Infinity;
+  for (const point of centers) {
+    minX = Math.min(minX, point.x);
+    maxX = Math.max(maxX, point.x);
+    minY = Math.min(minY, point.y);
+    maxY = Math.max(maxY, point.y);
+  }
+  const cx = (minX + maxX) / 2;
+  const cy = (minY + maxY) / 2;
+  const halfSpan = Math.max((maxX - minX) / 2, (maxY - minY) / 2, 40, 1);
+  const refShort = 48 * 8;
+  const zoom = Math.min(1, refShort / (2 * halfSpan));
+  return { x: cx, y: cy, zoom };
+}
+
+/** @emoji 📷 Frames a 3d camera around flattened part origins. */
+export function puzzle5dCamera3dFromModel(model: Model): Model["camera3d"] {
+  const origins = model.parts
+    .map((part) => part["3d"]?.origin)
+    .filter((origin): origin is readonly [number, number, number] => origin != null);
+  if (origins.length === 0) {
+    return { position: [8, 8, 8], target: [0, 0, 0], zoom: 1 };
+  }
+  let sx = 0;
+  let sy = 0;
+  let sz = 0;
+  for (const origin of origins) {
+    sx += origin[0];
+    sy += origin[1];
+    sz += origin[2];
+  }
+  const target: [number, number, number] = [sx / origins.length, sy / origins.length, sz / origins.length];
+  return { position: [target[0] + 8, target[1] + 8, target[2] + 8], target, zoom: 1 };
+}
+
+/** @emoji 🌤️ Flattens, scales diagram coordinates, and reframes cameras for topology rendering. */
+export function prepareTopologyModel(model: Model, diagramScale = 48): Model {
+  const flattened = flatten5d(model);
+  const parts = flattened.parts.map((part) => {
+    if (!part["2d"]) {
+      return part;
+    }
+    return {
+      ...part,
+      "2d": {
+        ...part["2d"],
+        x: part["2d"].x * diagramScale,
+        y: -part["2d"].y * diagramScale,
+      },
+    };
+  });
+  const nextModel = { ...flattened, parts };
+  return {
+    ...nextModel,
+    camera2d: puzzle5dCamera2dFromModel(nextModel),
+    camera3d: puzzle5dCamera3dFromModel(nextModel),
+  };
+}
+
+//#endregion 🌤️Flatten
 //#endregion 🔖Model
 
 //#region 🔖Brush
@@ -1026,7 +1624,20 @@ export function puzzle5dBrushPlacementFromVolume(payload: BrushPlacePayload): Pu
     sourceGripFullId: payload.targetVortexFullId,
     aspect3d: payload,
     ...(payload.objectId ? { partId: payload.objectId } : {}),
+    ...(payload.attractionId ? { fastenerId: payload.attractionId } : {}),
   };
+}
+
+/** @emoji 🖌️ Commits a volume brush placement into the unified model and clears paired suggestion previews. */
+export function puzzle5dCommitVolumeBrushPlacementToPlay(store: Store, payload: BrushPlacePayload): boolean {
+  const placed = store.applyBrushPlacementDetailed(puzzle5dBrushPlacementFromVolume(payload));
+  if (!placed) {
+    return false;
+  }
+  puzzle5dBrushPairedSyncOrigin = null;
+  puzzle3dBrushPairedSyncRef.current.clear();
+  puzzle2dFinalizeBrushSuggestionsPlacement();
+  return true;
 }
 
 /** @emoji 🖌️ Appends one unified part and tie from a brush placement. */
@@ -1047,10 +1658,9 @@ export function applyBrushPlacementToModel(model: Model, placement: Puzzle5dBrus
   if (placement.aspect2d) {
     const payload = placement.aspect2d;
     const flatHandles = puzzle2dFixtureHandlesFromNodeKind(partId, payload.handles);
-    const targetHandle = flatHandles[payload.targetHandleIndex];
-    if (!targetHandle) return { kind: "unchanged" };
-    fastenerSource = payload.sourceHandleId;
-    fastenerTarget = targetHandle.id;
+    if (payload.targetHandleIndex < 0 || payload.targetHandleIndex >= flatHandles.length) {
+      return { kind: "unchanged" };
+    }
     const iconKind = payload.iconKind;
     flatAspect =
       payload.shape === "rectangle"
@@ -1073,6 +1683,8 @@ export function applyBrushPlacementToModel(model: Model, placement: Puzzle5dBrus
     if (!volume) return { kind: "unchanged" };
     volumeAspect = volume.aspect;
     grips = mergeGripsFlatAndVolume(volume.grips, flatHandles);
+    fastenerSource = payload.sourceHandleId;
+    fastenerTarget = gripFullId(partId, grips[payload.targetHandleIndex].id);
   } else if (placement.aspect3d) {
     const payload = placement.aspect3d;
     const volume = synthesizeVolumeAspectFromBrushPayload(model, payload, partKind, catalogs);
@@ -2352,6 +2964,13 @@ const FiveD3dInner = reactHostPort.memo(function FiveD3dInner(props: FiveDProps)
   const onCanvasHover = reactHostPort.useCallback((payload: Puzzle3dHoverPayload) => {
     storeRef.current.setHoverFocusFrom3d(payload);
   }, []);
+  const onBrushPlace = reactHostPort.useCallback((payload: BrushPlacePayload) => {
+    if (onBrushPlaceHost) {
+      onBrushPlaceHost(payload);
+      return;
+    }
+    puzzle5dCommitVolumeBrushPlacementToPlay(storeRef.current, payload);
+  }, [onBrushPlaceHost]);
   return (
     <Puzzle3dCanvas
       camera={rest3d.camera ?? camera}
@@ -2427,7 +3046,7 @@ const FiveD3dInner = reactHostPort.memo(function FiveD3dInner(props: FiveDProps)
       brushActive={brushActive}
       fillActive={fillActive}
       {...(brushPlacementOverlapBudget !== undefined ? { brushPlacementOverlapBudget } : {})}
-      {...(onBrushPlaceHost ? { onBrushPlace: onBrushPlaceHost } : {})}
+      onBrushPlace={onBrushPlace}
       {...(onFillMeshesReadyHost ? { onFillMeshesReady: onFillMeshesReadyHost } : {})}
       {...rest3d}
       hoverTarget={volumeHover.hoverTarget}
@@ -3195,6 +3814,17 @@ if (import.meta.vitest) {
     });
   });
 
+  describe("puzzle 5d 3d mesh paint", () => {
+    it("delegates volume mesh colors to puzzle 3d", () => {
+      expect(PUZZLE_5D_3D_MESH_PAINT).toBe(PUZZLE_3D_MESH_PAINT);
+      expect(PUZZLE_5D_3D_DEFAULT_MESH_STYLE).toBe(PUZZLE_3D_DEFAULT_MESH_STYLE);
+      expect(puzzle5d3dMeshStyleColors).toBe(meshStyleColors);
+      for (const style of ["neutral", "hovered", "selected", "highlighted", "disabled"] as const) {
+        expect(puzzle5d3dMeshStyleColors(style)).toBe(meshStyleColors(style));
+      }
+    });
+  });
+
   describe("parseModel", () => {
     it("accepts unified puzzle 5d model", () => {
       const t = parseModel({
@@ -3252,6 +3882,75 @@ if (import.meta.vitest) {
     });
   });
 
+  describe("flatten5d", () => {
+    it("resolves linked piece absolute pose from local grip geometry", () => {
+      const fixture2d: Puzzle2dFixtureV1 = {
+        schema: "puzzle.2d.fixture/v1",
+        camera: { x: 0, y: 0, zoom: 1 },
+        nodes: [
+          {
+            id: "fixed-root",
+            shape: "circle",
+            x: 1,
+            y: 2,
+            radius: 10,
+            handles: [{ id: "fixed-root:conn-a", angle: 0, handleKind: "port", t: 0 }],
+          },
+          {
+            id: "linked-child",
+            shape: "circle",
+            x: 0,
+            y: 0,
+            radius: 10,
+            handles: [{ id: "linked-child:conn-a", angle: 0, handleKind: "port", t: 0 }],
+          },
+        ],
+        edges: [
+          {
+            id: "link-1",
+            source: "fixed-root:conn-a",
+            target: "linked-child:conn-a",
+            u: 0.5,
+            v: 0.25,
+          },
+        ],
+      };
+      const fixture3d: Puzzle3dFixtureV1 = {
+        schema: "puzzle.3d.fixture/v1",
+        domain: "architecture",
+        camera: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 },
+        objects: [
+          {
+            id: "fixed-root",
+            meshUrl: "m.glb",
+            origin: [1, 2, 3],
+            orientation: [0, 0, 0, 1],
+            vortices: [{ id: "fixed-root:conn-a", position: [0, 0, 0], direction: [0, 0, 1] }],
+          },
+          {
+            id: "linked-child",
+            meshUrl: "m.glb",
+            origin: [0, 0, 0],
+            vortices: [{ id: "linked-child:conn-a", position: [0, 0, 0], direction: [0, 0, 1] }],
+          },
+        ],
+        attractions: [
+          {
+            id: "link-1",
+            attracting: "fixed-root:conn-a",
+            attracted: "linked-child:conn-a",
+            u: 0.5,
+            v: 0.25,
+          },
+        ],
+      };
+      const flattened = flatten5d(compose5d(fixture2d, fixture3d));
+      const child = flattened.parts.find((part) => part.id === "linked-child");
+      expect(child?.["3d"]?.origin?.[0]).toBeCloseTo(1, 2);
+      expect(child?.["2d"]?.x).toBeCloseTo(1.5, 2);
+    });
+  });
+
   describe("Store applyFastener", () => {
     it("ignores duplicate source-target pairs", () => {
       const store = createStore({
@@ -3287,6 +3986,59 @@ if (import.meta.vitest) {
       const fixture3d = project3d(model);
       expect(fixture3d.objects).toHaveLength(1);
       expect(fixture3d.objects[0]?.origin).toEqual([1, 2, 3]);
+    });
+
+    it("round-trips native 3d appearance fields through 5d", () => {
+      const fixture2d: Puzzle2dFixtureV1 = {
+        schema: "puzzle.2d.fixture/v1",
+        camera: { x: 0, y: 0, zoom: 1 },
+        nodes: [],
+        edges: [],
+      };
+      const fixture3d: Puzzle3dFixtureV1 = {
+        schema: "puzzle.3d.fixture/v1",
+        domain: "architecture",
+        camera: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 },
+        objects: [
+          {
+            id: "p1",
+            objectKind: "kind-a",
+            meshUrl: "/mesh/a.glb",
+            meshByLod: [{ lod: 1000, url: "/mesh/a-lod.glb" }],
+            origin: [1, 2, 3],
+            locked: true,
+            vortices: [
+              {
+                id: "p1:h",
+                vortexKind: "port-a",
+                position: [0, 0, 0],
+                vortexMeshUrl: "/mesh/port.glb",
+                vortexMeshByLod: [{ lod: 500, url: "/mesh/port-lod.glb" }],
+                hidden: true,
+              },
+            ],
+          },
+        ],
+        attractions: [],
+        references: [
+          {
+            id: "ref-a",
+            source: { url: "/reference/a.png", mediaKind: "image" },
+            origin: [0, 0, 0],
+            widthWorld: 10,
+            locked: true,
+          },
+        ],
+        targetVolumes: [{ id: "volume-a", origin: [0, 0, 0], scale: [1, 2, 3], color: "#123456", opacity: 0.5 }],
+      };
+      const projected = project3d(compose5d(fixture2d, fixture3d));
+      expect(projected.objects[0]?.meshByLod).toEqual(fixture3d.objects[0]?.meshByLod);
+      expect(projected.objects[0]?.locked).toBe(true);
+      expect(projected.objects[0]?.vortices[0]?.vortexMeshUrl).toBe("/mesh/port.glb");
+      expect(projected.objects[0]?.vortices[0]?.vortexMeshByLod).toEqual(fixture3d.objects[0]?.vortices[0]?.vortexMeshByLod);
+      expect(projected.objects[0]?.vortices[0]?.hidden).toBe(true);
+      expect(projected.references).toEqual(fixture3d.references);
+      expect(projected.targetVolumes).toEqual(fixture3d.targetVolumes);
     });
   });
 
@@ -3747,6 +4499,8 @@ if (import.meta.vitest) {
           sourceVortexIndex: 0,
           origin: [2, 0, 0],
           orientation: [0, 0, 0, 1],
+          scale: 1.5,
+          attractionId: "accepted-preview-fastener",
         }),
       );
       expect(result.kind).toBe("placed");
@@ -3754,6 +4508,10 @@ if (import.meta.vitest) {
       const placed = result.model.parts.find((part) => part.id === result.partId);
       expect(placed?.["2d"]).toBeTruthy();
       expect(placed?.["3d"]).toBeTruthy();
+      expect(placed?.["3d"]?.origin).toEqual([2, 0, 0]);
+      expect(placed?.["3d"]?.orientation).toEqual([0, 0, 0, 1]);
+      expect(placed?.["3d"]?.scale).toBe(1.5);
+      expect(result.model.fasteners.some((f) => f.id === "accepted-preview-fastener")).toBe(true);
       expect(result.model.fasteners.some((f) => f.source.endsWith(":mate") || f.source.includes("Capsule"))).toBe(true);
     });
 
@@ -3776,6 +4534,7 @@ if (import.meta.vitest) {
       const placed = result.model.parts.find((part) => part.id === result.partId);
       expect(placed?.["2d"]?.x).toBe(80);
       expect(placed?.["3d"]?.meshUrl).toBe("/mesh/capsule.glb");
+      expect(result.model.fasteners[0]?.target).toBe(`${result.partId}:mate`);
     });
 
     it("puzzle5dCommitBrushPlacementToPlay updates unified model and flat projection", () => {
@@ -3793,6 +4552,8 @@ if (import.meta.vitest) {
       expect(fixture.nodes).toHaveLength(3);
       expect(fixture.edges).toHaveLength(1);
       expect(fixture.nodes.some((node) => node.x === 80 && node.y === 0)).toBe(true);
+      const newPartId = fixture.nodes.find((n) => n.x === 80 && n.y === 0)?.id;
+      expect(fixture.edges[0]?.target).toBe(`${newPartId}:mate`);
     });
 
     it("keeps repeated brush grip kinds unique across flat and volume projections", () => {

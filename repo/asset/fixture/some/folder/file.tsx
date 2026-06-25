@@ -1,6 +1,6 @@
 // #region 🧲Header
 
-// 💻compose/asset/repo/some/folder/file.tsx
+// 💻asset/repo/some/folder/file.tsx
 
 // 2025 Test User <test@test.com>
 

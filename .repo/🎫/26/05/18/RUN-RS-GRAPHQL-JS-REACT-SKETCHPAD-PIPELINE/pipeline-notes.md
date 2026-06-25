@@ -2,7 +2,7 @@
 
 ## Golden schema vs `metabolism.kit.compose.json` (`wip.initialKit`)
 
-**Top-level keys on `wip.initialKit` in the fixture** (first lines of `compose/assets/fixtures/metabolism.kit.compose.json`): `id`, `name`, `version`, `createdAt`, `updatedAt`, `description`, `icon`, `image`, `remote`, `homepage`, `license`, `preview`, `types`, …
+**Top-level keys on `wip.initialKit` in the fixture** (first lines of `assets/fixtures/metabolism.kit.compose.json`): `id`, `name`, `version`, `createdAt`, `updatedAt`, `description`, `icon`, `image`, `remote`, `homepage`, `license`, `preview`, `types`, …
 
 **`type Kit` in `schema.golden.graphql`** already exposes the scalar/metadata surface (`name`, `description`, `icon`, `image`, `preview`, `remote`, `homepage`, `license`, `uri`, `createdAt`, …). The fixture field **`version`** was present in RS (`Kit::version`) but **missing from the golden SDL**; **`version: String # data`** was added so GraphQL matches RS and the fixture.
 

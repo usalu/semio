@@ -7,7 +7,7 @@ raw = Path(__file__).with_name("comprehensive_tests_snippet.rs").read_text(encod
 snippet = raw.split("    #[test]")[0].strip()
 
 golden_paths = '''
-    /// @emoji 📎 US-001 replay fixtures (`kit-store.golden.*`) under `compose/assets/compose/`.
+    /// @emoji 📎 US-001 replay fixtures (`kit-store.golden.*`) under `assets/compose/`.
     pub fn kit_store_golden_fixture_paths() -> Option<(PathBuf, PathBuf)> {
         let base = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../assets/compose");
         let ops = base.join("kit-store.golden.ops.compose.json");

@@ -115,7 +115,7 @@ func TestBundleListIDs(t *testing.T) {
 		"compose/desktop":      emojiText(EmojiProjectUser) + "compose" + emojiText(EmojiBundleUI) + "desktop",
 		"compose/docs":         emojiText(EmojiProjectUser) + "compose" + emojiText(EmojiBundleSite) + "docs",
 		"compose/play":         emojiText(EmojiProjectUser) + "compose" + emojiText(EmojiBundleSite) + "play",
-		"compose/assets":       emojiText(EmojiProjectUser) + "compose" + emojiText(EmojiBundleAssets) + "assets",
+		"assets":       emojiText(EmojiProjectUser) + "compose" + emojiText(EmojiBundleAssets) + "assets",
 		"repo/cli":     emojiText(EmojiProjectInfra) + "composerepo" + emojiText(EmojiBundleBinary) + "cli",
 		"repo/server":  emojiText(EmojiProjectInfra) + "composerepo" + emojiText(EmojiBundleBinary) + "server",
 		"repo/go":      emojiText(EmojiProjectInfra) + "composerepo" + emojiText(EmojiBundleLibrary) + "go",

@@ -68,7 +68,7 @@ Script structure:
 After running npm update:
 
 - Scan all package.json files in workspaces
-- Restore `"*"` versions for local packages like `compose/js`, `compose/assets`
+- Restore `"*"` versions for local packages like `compose/js`, `assets`
 
 ## Files to Create/Modify
 
@@ -135,7 +135,7 @@ Created initial version with basic support for all package managers.
 ### Fixes Applied v2
 
 1. **Dynamic workspace detection**: Now reads all workspace package.json files to detect names automatically
-   - Detected 15 packages: compose/logo, compose/icons, compose/assets, compose/engine, compose/js, compose/net, compose/grasshopper, etc.
+   - Detected 15 packages: compose/logo, compose/icons, assets, compose/engine, compose/js, compose/net, compose/grasshopper, etc.
 
 2. **Cargo.toml direct updates**: Added parser for Cargo.toml that fetches latest versions from crates.io API and updates the file directly
 
@@ -158,7 +158,7 @@ Created initial version with basic support for all package managers.
 **NPM** - All 15 workspace packages detected:
 
 ```
-  Detected 15 workspace packages: compose/logo, compose/icons, compose/assets, compose/engine, compose/js, compose/docs, compose/play, compose/desktop, repo/vscode, compose/net, compose/grasshopper, compose/go, repo/go, repo/mcp, compose/yak
+  Detected 15 workspace packages: compose/logo, compose/icons, assets, compose/engine, compose/js, compose/docs, compose/play, compose/desktop, repo/vscode, compose/net, compose/grasshopper, compose/go, repo/go, repo/mcp, compose/yak
   Will preserve local package versions:
     assets/icons/package.json: devDependencies.compose/logo = "*"
     net/Compose.Grasshopper/package.json: devDependencies.compose/net = "*"

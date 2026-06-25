@@ -53,7 +53,7 @@ Each hook now:
 
 ## 3. Fixed missing imports in Design.tsx
 
-- Added missing icon imports (MonitorIcon, MoonIcon, SunIcon) from compose/assets
+- Added missing icon imports (MonitorIcon, MoonIcon, SunIcon) from assets
 - Moved Theme import from Sketchpad to shared.ts (correct source)
 - Added useLanguage, useLayout imports from Sketchpad
 

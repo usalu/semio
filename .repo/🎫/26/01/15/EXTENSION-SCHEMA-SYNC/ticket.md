@@ -37,7 +37,7 @@
   - `npx playwright test compose/js/sketchpad.test.ts --grep "Design"`
   - Result: same environment-level browser launch failure before test execution.
 - Ran `npx tsc --noEmit`:
-  - Result: failed due pre-existing repository-wide TypeScript parse errors outside this change scope (e.g. `repo/vscode/codegen/*`, `compose/assets/logo/logo.ts`, `vitest.config.ts`).
+  - Result: failed due pre-existing repository-wide TypeScript parse errors outside this change scope (e.g. `repo/vscode/codegen/*`, `assets/logo/logo.ts`, `vitest.config.ts`).
 
 ## Summary
 

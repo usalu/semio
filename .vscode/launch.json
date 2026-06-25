@@ -167,25 +167,6 @@
       }
     },
     {
-      "name": "🛠️dev📖storybook🏘️compose🧪algorithms",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun run dev:storybook:compose:algorithms",
-      "cwd": "${workspaceFolder}",
-      "env": {
-        "STORYBOOK_PORT": "6010"
-      },
-      "presentation": {
-        "group": "3_dev",
-        "order": 60
-      },
-      "serverReadyAction": {
-        "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6010)",
-        "uriFormat": "%s"
-      }
-    },
-    {
       "name": "🛠️dev📖storybook🏘️compose🖱️ui",
       "type": "node-terminal",
       "request": "launch",
@@ -202,70 +183,6 @@
         "action": "openExternally",
         "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6010)",
         "uriFormat": "%s"
-      }
-    },
-    {
-      "name": "🛠️dev🏘️compose🌐hub",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "cargo run -p compose-hub",
-      "env": {
-        "DATABASE_URL": "postgres://compose:compose@localhost:5432/compose",
-        "RUST_LOG": "info",
-        "PORT": "8080"
-      },
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 80,
-        "reveal": "always",
-        "panel": "dedicated"
-      }
-    },
-    {
-      "name": "🛠️dev🏘️compose📐3dm",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx dev @semio-tech/compose-3dm-ui",
-      "isBackground": true,
-      "problemMatcher": {
-        "owner": "custom",
-        "pattern": [
-          {
-            "regexp": ".",
-            "file": 1,
-            "location": 2,
-            "message": 3
-          }
-        ],
-        "background": {
-          "activeOnStart": true,
-          "beginsPattern": "VITE",
-          "endsPattern": "http://localhost:5174/"
-        }
-      },
-      "presentation": {
-        "group": "3_dev",
-        "order": 90,
-        "reveal": "always",
-        "panel": "dedicated"
-      },
-      "cwd": "${workspaceFolder}",
-      "serverReadyAction": {
-        "action": "openExternally",
-        "pattern": "(http://localhost:5174)",
-        "uriFormat": "%s"
-      }
-    },
-    {
-      "name": "🛠️dev🏘️compose🖱️desktop",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun run dev",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 100
       }
     },
     {
@@ -321,61 +238,6 @@
       }
     },
     {
-      "name": "🛠️dev🏘️compose🧮query🧪test",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/compose-query:test",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 68
-      }
-    },
-    {
-      "name": "🛠️dev🥅framework🧪core",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/framework-core:test",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 70.1
-      }
-    },
-    {
-      "name": "🛠️dev🥅framework🧪platform",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/framework-platform-core:test",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 70.2
-      }
-    },
-    {
-      "name": "🛠️dev🥅framework🧪playground",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/framework-playground-core:test",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 70.3
-      }
-    },
-    {
-      "name": "🛠️dev🖱️ui🪁typecheck",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/ui-react:typecheck",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 70.4
-      }
-    },
-    {
       "name": "🛠️dev🏘️compose🧮query🦀build",
       "type": "node-terminal",
       "request": "launch",
@@ -418,14 +280,21 @@
       }
     },
     {
-      "name": "🛠️dev🏘️compose🧪fixtures🔄metabolism-light",
+      "name": "🛠️dev🏘️compose🌐hub",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/compose-fixture:regenerate-metabolism-light",
+      "command": "cargo run -p compose-hub",
+      "env": {
+        "DATABASE_URL": "postgres://compose:compose@localhost:5432/compose",
+        "RUST_LOG": "info",
+        "PORT": "8080"
+      },
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
-        "order": 69.9
+        "order": 80,
+        "reveal": "always",
+        "panel": "dedicated"
       }
     },
     {
@@ -465,50 +334,61 @@
       }
     },
     {
-      "name": "🛠️dev🏘️compose🎗️vscode",
-      "type": "extensionHost",
-      "request": "launch",
-      "args": [
-        "--extensionDevelopmentPath=${workspaceFolder}/compose/vscode"
-      ],
-      "outFiles": [
-        "${workspaceFolder}/compose/vscode/out/**/*.js"
-      ],
-      "presentation": {
-        "group": "3_dev",
-        "order": 90
-      }
-    },
-    {
-      "name": "🛠️dev🏘️compose🎗️vscodeintegrated",
+      "name": "🛠️dev🏘️compose📐3dm",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx dev @semio-tech/compose-vscode",
+      "command": "bun nx dev @semio-tech/compose-3dm-ui",
       "isBackground": true,
       "problemMatcher": {
-        "owner": "typescript",
-        "fileLocation": "relative",
-        "pattern": {
-          "regexp": "^([^\\s].*?):(\\d+):(\\d+):\\s+(error|warning):\\s+(.*)$",
-          "file": 1,
-          "line": 2,
-          "column": 3,
-          "severity": 4,
-          "message": 5
-        },
+        "owner": "custom",
+        "pattern": [
+          {
+            "regexp": ".",
+            "file": 1,
+            "location": 2,
+            "message": 3
+          }
+        ],
         "background": {
           "activeOnStart": true,
-          "beginsPattern": ".*vite.*building",
-          "endsPattern": ".*built in.*"
+          "beginsPattern": "VITE",
+          "endsPattern": "http://localhost:5174/"
         }
       },
       "presentation": {
         "group": "3_dev",
-        "order": 100,
+        "order": 90,
         "reveal": "always",
         "panel": "dedicated"
       },
-      "cwd": "${workspaceFolder}"
+      "cwd": "${workspaceFolder}",
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://localhost:5174)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🏘️compose🖱️desktop",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 100
+      }
+    },
+    {
+      "name": "🛠️dev🖱️ui🪁typecheck",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/ui-react:typecheck",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 70.4
+      }
     },
     {
       "name": "🛠️dev🔬coda🖱️desktop",
@@ -550,46 +430,6 @@
       }
     },
     {
-      "name": "🛠️dev🔬coda🤖mcpinspector",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun ./script.ts dev mcp",
-      "isBackground": true,
-      "options": {
-        "cwd": "${workspaceFolder}",
-        "env": {
-          "MCP_AUTO_OPEN_ENABLED": "false",
-          "MCP_PROXY_AUTH_TOKEN": "repo-mcp-token"
-        }
-      },
-      "problemMatcher": {
-        "owner": "custom",
-        "pattern": [
-          {
-            "regexp": ".",
-            "file": 1,
-            "location": 2,
-            "message": 3
-          }
-        ],
-        "background": {
-          "activeOnStart": true,
-          "beginsPattern": "Starting MCP Inspector",
-          "endsPattern": ":6274"
-        }
-      },
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 130
-      },
-      "serverReadyAction": {
-        "action": "openExternally",
-        "pattern": "(http://[^\\s]+:6274/\\?MCP_PROXY_AUTH_TOKEN=[^\\s]+)",
-        "uriFormat": "%s&transport=stdio&serverCommand=uv&serverArgs=--directory&serverArgs=coda/assistant&serverArgs=run&serverArgs=main.py&serverArgs=--mcp-stdio&MCP_PROXY_FULL_ADDRESS=http://127.0.0.1:6277"
-      }
-    },
-    {
       "name": "🛠️dev🧰repo🤖mcp",
       "type": "node-terminal",
       "request": "launch",
@@ -608,52 +448,6 @@
         "pattern": "(http://[^\\s]+:6274/\\?MCP_PROXY_AUTH_TOKEN=[^\\s]+)",
         "uriFormat": "%s&transport=stdio&serverCommand=go&serverArgs=run&serverArgs=./repo/client/mcp&MCP_PROXY_FULL_ADDRESS=http://127.0.0.1:6277"
       }
-    },
-    {
-      "name": "🛠️dev🧰repo🎗️vscode",
-      "type": "extensionHost",
-      "request": "launch",
-      "args": [
-        "--extensionDevelopmentPath=${workspaceFolder}/repo/vscode"
-      ],
-      "outFiles": [
-        "${workspaceFolder}/repo/vscode/out/**/*.js"
-      ],
-      "presentation": {
-        "group": "3_dev",
-        "order": 150
-      }
-    },
-    {
-      "name": "🛠️dev🧰repo🎗️vscodeintegrated",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx dev @semio-tech/repo-vscode",
-      "isBackground": true,
-      "problemMatcher": {
-        "owner": "typescript",
-        "fileLocation": "relative",
-        "pattern": {
-          "regexp": "^([^\\s].*?):(\\d+):(\\d+):\\s+(error|warning):\\s+(.*)$",
-          "file": 1,
-          "line": 2,
-          "column": 3,
-          "severity": 4,
-          "message": 5
-        },
-        "background": {
-          "activeOnStart": true,
-          "beginsPattern": ".*vite.*building",
-          "endsPattern": ".*built in.*"
-        }
-      },
-      "presentation": {
-        "group": "3_dev",
-        "order": 160,
-        "reveal": "always",
-        "panel": "dedicated"
-      },
-      "cwd": "${workspaceFolder}"
     },
     {
       "name": "🛠️dev📐cad",
@@ -694,105 +488,6 @@
       }
     },
     {
-      "name": "🛠️dev📐cad🧪kernel🪜fixture",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/cad-js-kernel-brepjs:fixture",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 165.5
-      }
-    },
-    {
-      "name": "🛠️dev📐cad🧪runtime",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/cad-js-runtime:test",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 165.6
-      }
-    },
-    {
-      "name": "🛠️dev📐cad🧪module🧭spatial-shape",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/cad-js-module-spatial-shape:test",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 165.7
-      }
-    },
-    {
-      "name": "🛠️dev📐cad🧪module🏗️aec-building",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/cad-js-module-aec-building:test",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 165.8
-      }
-    },
-    {
-      "name": "🛠️dev📐cad🧪module⚡aec-building-energy",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/cad-js-module-aec-building-energy:test",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 165.9
-      }
-    },
-    {
-      "name": "🛠️dev📐cad🧪module🏛️aec-building-structure",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/cad-js-module-aec-building-structure:test",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 166
-      }
-    },
-    {
-      "name": "🛠️dev♾️infinite✈️cavas🧪react",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/infinite-cavas-react-renderer:test",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 169.5
-      }
-    },
-    {
-      "name": "🛠️dev♾️infinite🏙️world🧪r3f",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/infinite-world-r3f:test",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 169.55
-      }
-    },
-    {
-      "name": "🛠️dev♾️infinite✈️cavas🦀vello",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "cargo test -p infinite_cavas -p mathematical_core -p mathematical_graph -p mathematical_graph_port -p mathematical_graph_normal_undirected -p mathematical_graph_normal_directed -p mathematical_graph_port_undirected -p mathematical_graph_port_directed -p mathematical_graph_port_directed_normal -p mathematical_graph_port_directed_dag -p gis_map -p reasoning_mindmap -p reasoning_mindmap_rs -p reasoning_mindmap_wires -p puzzle_2d",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 169.6
-      }
-    },
-    {
       "name": "🛠️dev🌊flow",
       "type": "node-terminal",
       "request": "launch",
@@ -812,130 +507,6 @@
       }
     },
     {
-      "name": "🛠️dev🌊flow🧪validate",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/flow-play:validate",
-      "cwd": "${workspaceFolder}",
-      "env": {
-        "FLOW_PLAY_PORT": "6016"
-      },
-      "presentation": {
-        "group": "3_dev",
-        "order": 171.25
-      }
-    },
-    {
-      "name": "🛠️dev🌊flow🦀rs",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/flow-core:wasm",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 171.5
-      }
-    },
-    {
-      "name": "🛠️dev🌊flow🦀module-core",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/flow-module-core:wasm",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 171.505
-      }
-    },
-    {
-      "name": "🛠️dev🌊flow🦀module-math",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/flow-module-math:wasm",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 171.51
-      }
-    },
-    {
-      "name": "🛠️dev🌊flow🦀module-text",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/flow-module-text:wasm",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 171.52
-      }
-    },
-    {
-      "name": "🛠️dev🌊flow🦀module-logic",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/flow-module-logic:wasm",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 171.53
-      }
-    },
-    {
-      "name": "🛠️dev🌊flow🦀module-dictionary",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/flow-module-dictionary:wasm",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 171.54
-      }
-    },
-    {
-      "name": "🛠️dev🌊flow🦀module-list",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/flow-module-list:wasm",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 171.55
-      }
-    },
-    {
-      "name": "🛠️dev🌊flow🦀module-brep",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/flow-module-brep:wasm",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 171.56
-      }
-    },
-    {
-      "name": "🛠️dev🌊flow🦀module-bim",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/flow-module-bim:wasm",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 171.565
-      }
-    },
-    {
-      "name": "🛠️dev🌊flow🦀test",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "cargo test -p neural_engine -p flow_module_wasm -p flow_module_core -p flow_module_math -p flow_module_text -p flow_module_logic -p flow_module_dictionary -p flow_module_list -p flow_module_brep -p flow_module_bim -p geometry_brep_engine -p geometry_brep_brepkit -p flow_core",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 171.6
-      }
-    },
-    {
       "name": "🛠️dev🌳dag",
       "type": "node-terminal",
       "request": "launch",
@@ -952,31 +523,6 @@
         "action": "openExternally",
         "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6017)",
         "uriFormat": "%s"
-      }
-    },
-    {
-      "name": "🛠️dev🌳dag🧪validate",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/dag-play:validate",
-      "cwd": "${workspaceFolder}",
-      "env": {
-        "DAG_PLAY_PORT": "6017"
-      },
-      "presentation": {
-        "group": "3_dev",
-        "order": 171.875
-      }
-    },
-    {
-      "name": "🛠️dev🌳dag🦀rs",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/dag-core:wasm",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 172
       }
     },
     {
@@ -1018,17 +564,6 @@
       }
     },
     {
-      "name": "🛠️dev🔧procedural🧪geometry-brep",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/geometry-brep-js:test",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 171.81
-      }
-    },
-    {
       "name": "🛠️dev🧩puzzle🩻2d",
       "type": "node-terminal",
       "request": "launch",
@@ -1044,6 +579,93 @@
       "serverReadyAction": {
         "action": "openExternally",
         "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6012)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🧩puzzle📷3d🦀rs",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/puzzle-3d-rs:wasm",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 179.5
+      }
+    },
+    {
+      "name": "🛠️dev🧩puzzle📷3d",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:puzzle:3d",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PUZZLE_3D_PLAY_PORT": "6013"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 180
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6013)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🧩puzzle📷3d🧩concrete-forest",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:puzzle:3d:concrete-forest",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PUZZLE_3D_PLAY_PORT": "6013"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 180.2
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6013)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🧩puzzle👯5d",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:puzzle:5d",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PUZZLE_5D_PLAY_PORT": "6014"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 185
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6014)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🧩puzzle👯5d🧩concrete-forest",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:puzzle:5d:concrete-forest",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PUZZLE_5D_PLAY_PORT": "6014"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 185.2
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6014)",
         "uriFormat": "%s"
       }
     },
@@ -1108,115 +730,6 @@
       }
     },
     {
-      "name": "📦build🌐gis📍map",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/gis-map-play:build",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_build",
-        "order": 122
-      }
-    },
-    {
-      "name": "📦build🌐gis📍map🧩tiles",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/gis-map-play:build-tiles",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_build",
-        "order": 123
-      }
-    },
-    {
-      "name": "🛠️dev🧩puzzle📷3d🦀rs",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/puzzle-3d-rs:wasm",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 179.5
-      }
-    },
-    {
-      "name": "🛠️dev🧩puzzle📷3d",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun run dev:puzzle:3d",
-      "cwd": "${workspaceFolder}",
-      "env": {
-        "PUZZLE_3D_PLAY_PORT": "6013"
-      },
-      "presentation": {
-        "group": "3_dev",
-        "order": 180
-      },
-      "serverReadyAction": {
-        "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6013)",
-        "uriFormat": "%s"
-      }
-    },
-    {
-      "name": "🛠️dev🧩puzzle👯5d",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun run dev:puzzle:5d",
-      "cwd": "${workspaceFolder}",
-      "env": {
-        "PUZZLE_5D_PLAY_PORT": "6014"
-      },
-      "presentation": {
-        "group": "3_dev",
-        "order": 185
-      },
-      "serverReadyAction": {
-        "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6014)",
-        "uriFormat": "%s"
-      }
-    },
-    {
-      "name": "🛠️dev🧩puzzle📷3d🧩concrete-forest",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun run dev:puzzle:3d:concrete-forest",
-      "cwd": "${workspaceFolder}",
-      "env": {
-        "PUZZLE_3D_PLAY_PORT": "6013"
-      },
-      "presentation": {
-        "group": "3_dev",
-        "order": 180.2
-      },
-      "serverReadyAction": {
-        "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6013)",
-        "uriFormat": "%s"
-      }
-    },
-    {
-      "name": "🛠️dev🧩puzzle👯5d🧩concrete-forest",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun run dev:puzzle:5d:concrete-forest",
-      "cwd": "${workspaceFolder}",
-      "env": {
-        "PUZZLE_5D_PLAY_PORT": "6014"
-      },
-      "presentation": {
-        "group": "3_dev",
-        "order": 185.2
-      },
-      "serverReadyAction": {
-        "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6014)",
-        "uriFormat": "%s"
-      }
-    },
-    {
       "name": "🛠️dev📽️projektetage",
       "type": "node-terminal",
       "request": "launch",
@@ -1257,50 +770,6 @@
     // #endregion
     // #region 📦 Build
     {
-      "name": "📦build📐cad🧩concrete-forest",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun run build:cad:concrete-forest",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_build",
-        "order": 118
-      }
-    },
-    {
-      "name": "📦build🧩puzzle📷3d🧩concrete-forest",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun run build:puzzle:3d:concrete-forest",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_build",
-        "order": 119
-      }
-    },
-    {
-      "name": "📦build🧩puzzle👯5d🧩concrete-forest",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun run build:puzzle:5d:concrete-forest",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_build",
-        "order": 120
-      }
-    },
-    {
-      "name": "📦build🔧procedural🧩hexagonal-column",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun run build:procedural:hexagonal-column",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_build",
-        "order": 121
-      }
-    },
-    {
       "name": "📦build📖storybook",
       "type": "node-terminal",
       "request": "launch",
@@ -1320,61 +789,6 @@
       "presentation": {
         "group": "4_build",
         "order": 20
-      }
-    },
-    {
-      "name": "📦build🖱️ui🎨styling",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun ./script.ts generate",
-      "cwd": "${workspaceFolder}/ui/styling",
-      "presentation": {
-        "group": "4_build",
-        "order": 28
-      }
-    },
-    {
-      "name": "🧪test🖱️ui🎨styling",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/ui-styling:test",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_build",
-        "order": 280
-      }
-    },
-    {
-      "name": "🧪test🖱️ui🎨styling-rs",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun ./script.ts test",
-      "cwd": "${workspaceFolder}/ui/styling/rs",
-      "presentation": {
-        "group": "4_build",
-        "order": 281
-      }
-    },
-    {
-      "name": "🧪test🖱️ui🎨styling-py",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun ./script.ts test",
-      "cwd": "${workspaceFolder}/ui/styling/py",
-      "presentation": {
-        "group": "4_build",
-        "order": 282
-      }
-    },
-    {
-      "name": "📦build🖱️ui🏪assets",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun ./script.ts generate all",
-      "cwd": "${workspaceFolder}/ui/asset",
-      "presentation": {
-        "group": "4_build",
-        "order": 29
       }
     },
     {
@@ -1433,6 +847,28 @@
       }
     },
     {
+      "name": "📦build🖱️ui🎨styling",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./script.ts generate",
+      "cwd": "${workspaceFolder}/ui/styling",
+      "presentation": {
+        "group": "4_build",
+        "order": 28
+      }
+    },
+    {
+      "name": "📦build🖱️ui🏪assets",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./script.ts generate all",
+      "cwd": "${workspaceFolder}/ui/asset",
+      "presentation": {
+        "group": "4_build",
+        "order": 29
+      }
+    },
+    {
       "name": "📦build🔬coda🖱️desktop",
       "type": "node-terminal",
       "request": "launch",
@@ -1466,14 +902,36 @@
       }
     },
     {
-      "name": "📦build🧰repo🎗️vscode",
+      "name": "📦build📐cad🧩concrete-forest",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun run build -- repo-vscode",
+      "command": "bun run build:cad:concrete-forest",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 110
+        "order": 118
+      }
+    },
+    {
+      "name": "📦build🧩puzzle📷3d🧩concrete-forest",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run build:puzzle:3d:concrete-forest",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 119
+      }
+    },
+    {
+      "name": "📦build🧩puzzle👯5d🧩concrete-forest",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run build:puzzle:5d:concrete-forest",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 120
       }
     },
     {
@@ -1488,6 +946,17 @@
       }
     },
     {
+      "name": "📦build🔧procedural🧩hexagonal-column",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run build:procedural:hexagonal-column",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 121
+      }
+    },
+    {
       "name": "📦build📽️presentationplay",
       "type": "node-terminal",
       "request": "launch",
@@ -1496,6 +965,28 @@
       "presentation": {
         "group": "4_build",
         "order": 121
+      }
+    },
+    {
+      "name": "📦build🌐gis📍map",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/gis-map-play:build",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 122
+      }
+    },
+    {
+      "name": "📦build🌐gis📍map🧩tiles",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/gis-map-play:build-tiles",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 123
       }
     },
     // #endregion

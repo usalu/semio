@@ -32,7 +32,7 @@ async function main() {
   await page.waitForTimeout(2000);
 
   console.log('[DIAG] Step 2: Import kit...');
-  const zipPath = path.resolve('/workspaces/semio/compose/assets/compose/metabolism.zip');
+  const zipPath = path.resolve('/workspaces/semio/assets/compose/metabolism.zip');
   const fileInput = page.locator('[id="compose.sketchpad.app.home.importKit"]');
   await fileInput.waitFor({ state: 'attached', timeout: 10000 });
   await fileInput.setInputFiles(zipPath);

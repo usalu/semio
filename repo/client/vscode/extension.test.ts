@@ -1963,12 +1963,12 @@ suite("CodeLens Behavior Test Suite", function () {
 
 suite("Compose VS Code Kit Editor Test Suite", () => {
   test("Kit file detection matches compose kit naming conventions", () => {
-    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/compose/asset/compose/metabolism.kit.json"), true);
-    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/compose/asset/compose/metabolism/wip/initialKit/kit.compose.json"), true);
-    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/compose/asset/compose/kit-metabolism.json"), true);
-    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/compose/asset/compose/metabolism.kit.embedded.compose.json"), true);
+    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/asset/compose/metabolism.kit.json"), true);
+    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/asset/compose/metabolism/wip/initialKit/kit.compose.json"), true);
+    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/asset/compose/kit-metabolism.json"), true);
+    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/asset/compose/metabolism.kit.embedded.compose.json"), true);
     assert.strictEqual(isLikelyKitJsonFilePath("/workspace/compose/jsonschema/kit.json"), false);
-    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/compose/asset/compose/metabolism.kit.diff.compose.json"), false);
+    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/asset/compose/metabolism.kit.diff.compose.json"), false);
   });
 
   test("Sketchpad dist resolution prefers bundled assets and falls back to workspace sketchpad dist", () => {

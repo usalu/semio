@@ -5898,7 +5898,7 @@ pub mod operation {
         pub definition: Option<String>,
     }
 
-    /// @emoji ­ƒôª Canonical sparse kit diff (camelCase) aligned with [`compose/assets/compose/metabolism.kit.diff.compose.json`]; `types` / `designs` / `files` / `folders` / `authors` keep raw JSON subtrees for full golden round-trip until every subtree has a typed apply path.
+    /// @emoji ­ƒôª Canonical sparse kit diff (camelCase) aligned with [`assets/compose/metabolism.kit.diff.compose.json`]; `types` / `designs` / `files` / `folders` / `authors` keep raw JSON subtrees for full golden round-trip until every subtree has a typed apply path.
     #[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq)]
     #[serde(rename_all = "camelCase", default)]
     pub struct CanonicalKitDiff {
@@ -7689,7 +7689,7 @@ pub mod kit_backbone {
 
     //#region ­ƒº¥ wire format
 
-    /// @emoji ­ƒ¬¬ On-disk schema marker stamped at the bundle root; matches `compose/assets/compose/metabolism.new.kit.compose.json`.
+    /// @emoji ­ƒ¬¬ On-disk schema marker stamped at the bundle root; matches `assets/compose/metabolism.new.kit.compose.json`.
     pub const KIT_STORE_BUNDLE_SCHEMA: &str = "­ƒÄå26­ƒîÖ06Ô¼å´©Å1";
 
     /// @emoji ­ƒº¥ Blake3 hex (empty-input digest) used on the wire until per-row merkle is filled.

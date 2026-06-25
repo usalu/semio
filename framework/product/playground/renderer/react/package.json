@@ -16,6 +16,7 @@
     "./reasoning/wires": "./index.tsx",
     "./flow": "./index.tsx",
     "./procedural": "./index.tsx",
+    "./shooting": "./index.tsx",
     "./presentation": "./index.tsx"
   },
   "dependencies": {
@@ -38,6 +39,8 @@
     "@semio-tech/flow-react": "workspace:*",
     "@semio-tech/procedural-play": "workspace:*",
     "@semio-tech/procedural-react": "workspace:*",
+    "@semio-tech/shooting-play": "workspace:*",
+    "@semio-tech/shooting-react": "workspace:*",
     "@semio-tech/ui-react": "workspace:*",
     "clsx": "^2.1.1",
     "react": "^19.2.3",

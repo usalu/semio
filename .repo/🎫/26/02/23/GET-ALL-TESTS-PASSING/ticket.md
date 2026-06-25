@@ -10,11 +10,11 @@ Fixed all test failures across the monorepo. Updated fixture files to use the ne
 
 ## Changes
 
-- compose/assets/repo/some/folder/file_fixable_expected.tsx: Updated file/section IDs to new emoji path format
-- compose/assets/repo/some/folder/file_fixed.tsx: Updated file/section/definition IDs to new emoji path format
-- compose/assets/repo/some/folder/file_fixed.py: Updated file/section/definition IDs to new emoji path format
-- compose/assets/repo/some/folder/file_fixed.go: Updated file/section/definition IDs to new emoji path format
-- compose/assets/repo/some/folder/file_fixed.cs: Updated file/section/definition IDs to new emoji path format
+- assets/repo/some/folder/file_fixable_expected.tsx: Updated file/section IDs to new emoji path format
+- assets/repo/some/folder/file_fixed.tsx: Updated file/section/definition IDs to new emoji path format
+- assets/repo/some/folder/file_fixed.py: Updated file/section/definition IDs to new emoji path format
+- assets/repo/some/folder/file_fixed.go: Updated file/section/definition IDs to new emoji path format
+- assets/repo/some/folder/file_fixed.cs: Updated file/section/definition IDs to new emoji path format
 - repo/cli/main.go: Added "edited" case to interactionKindEmoji function
 - repo/cli/main_test.go: Fixed hardcoded minute emoji (⌛→⏳) in TestAllSpecIDExamples
 - compose/py/compose.py: Fixed 6 broken class definitions (docstrings inside inheritance parens)

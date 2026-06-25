@@ -1,5 +1,5 @@
 /**
- * One-shot: align `compose/assets/fixtures/metabolism.kit.compose.json` bundle graph shell
+ * One-shot: align `assets/fixtures/metabolism.kit.compose.json` bundle graph shell
  * with `metabolism.kit.light.compose.json` (wip key order, no drafts, theKit present,
  * no checkpoint frozenRoot; authoritative/stage keep minimal graph heads + theKit, not drafts).
  */

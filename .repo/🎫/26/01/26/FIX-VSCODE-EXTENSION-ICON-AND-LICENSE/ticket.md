@@ -24,9 +24,9 @@
 
 ### Iteration 1
 
-- `js/vscode/package.json` - Updated activity bar icon path from `../../assets/icons/compose_codeicon.svg` to `./icons/compose_codeicon.svg`
+- `js/vscode/package.json` - Updated activity bar icon path from `../../assets/icons/semio_codeicon.svg` to `./icons/semio_codeicon.svg`
 - `js/vscode/.vscodeignore` - Added `!LICENSE.md` exception to include the license file
-- `js/vscode/icons/compose_codeicon.svg` - New file (copied from `assets/icons/`)
+- `js/vscode/icons/semio_codeicon.svg` - New file (copied from `assets/icons/`)
 
 ### Iteration 2
 
@@ -40,10 +40,10 @@
 
 ### Iteration 1
 
-1. Analyzed package.json: icon path `../../assets/icons/compose_codeicon.svg` points outside extension directory
+1. Analyzed package.json: icon path `../../assets/icons/semio_codeicon.svg` points outside extension directory
 2. Analyzed .vscodeignore: `*.md` pattern excludes LICENSE.md
 3. Created `js/vscode/icons/` directory and copied SVG icon
-4. Updated package.json icon path to `./icons/compose_codeicon.svg`
+4. Updated package.json icon path to `./icons/semio_codeicon.svg`
 5. Added `!LICENSE.md` exception in .vscodeignore
 6. Verified with `npm run package` - no LICENSE warning, both files included in VSIX
 
@@ -65,7 +65,7 @@
 
 Fixed two VS Code extension packaging issues:
 
-1. **Activity bar icon not showing**: The icon path `../../assets/icons/compose_codeicon.svg` pointed outside the extension package directory. Fixed by copying the icon to `js/vscode/icons/compose_codeicon.svg` and updating the path in package.json to `./icons/compose_codeicon.svg`.
+1. **Activity bar icon not showing**: The icon path `../../assets/icons/semio_codeicon.svg` pointed outside the extension package directory. Fixed by copying the icon to `js/vscode/icons/semio_codeicon.svg` and updating the path in package.json to `./icons/semio_codeicon.svg`.
 
 2. **LICENSE.md not recognized**: The `.vscodeignore` had `*.md` which excluded all markdown files including the license. Fixed by adding `!LICENSE.md` exception after the `*.md` pattern.
 

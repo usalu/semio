@@ -24,7 +24,8 @@ import remarkGfm from "remark-gfm";
 import remarkMdxFrontmatter from "remark-mdx-frontmatter";
 import { fileURLToPath } from "url";
 import { defineConfig, type Plugin } from "vite";
-import { playgroundIframeEmbedHeadersPlugin } from "../../../../../ui/styling/vite-elements-assets.ts";
+import { playgroundIframeEmbedHeadersPlugin, puzzle3dMeshesVitePlugin } from "../../../../../ui/styling/vite-elements-assets.ts";
+import { readInitialKitFixtureFromPath } from "../../../../fixture/script.ts";
 import topLevelAwait from "vite-plugin-top-level-await";
 import wasm from "vite-plugin-wasm";
 // #endregion 🔌Adapters
@@ -101,27 +102,30 @@ export default defineConfig(async () => {
   const tailwind = await import("@tailwindcss/vite");
   const fs = await import("fs");
   const viteInternalFallback = path.resolve(__dirname, "../../../node_modules/vite/dist/node/index.js");
+  const workspaceRoot = path.resolve(__dirname, "../../../../../");
   return {
     base: "./",
     define: {
       __COMPOSE_JS_RUN_BENCHMARKS__: "false",
       __COMPOSE_JS_RUN_EMBEDDED_TESTS__: "false",
       __COMPOSE_SKETCHPAD_RUN_EMBEDDED_TESTS__: "false",
-      "import.meta.env.COMPOSE_SKETCHPAD_E2E": JSON.stringify(process.env.COMPOSE_SKETCHPAD_E2E ?? ""),
+      "import.meta.env.COMPOSE_SKETCHPAD_PRELOAD_KITS": JSON.stringify(process.env.COMPOSE_SKETCHPAD_PRELOAD_KITS ?? ""),
     },
     resolve: {
       alias: [
         { find: "@semio-tech/compose-js", replacement: path.resolve(__dirname, "../../js") },
         { find: "@semio-tech/compose-rs-wasm", replacement: path.resolve(__dirname, "../../rs/pkg") },
         { find: "@compose/ui", replacement: path.resolve(__dirname, "../../../../../ui/react") },
+        { find: /^@semio-tech\/compose-sketchpad\/boot$/, replacement: path.resolve(__dirname, "../js/boot.tsx") },
         { find: "@semio-tech/compose-sketchpad", replacement: path.resolve(__dirname, "../react") },
         { find: "@compose/studio", replacement: path.resolve(__dirname, "../../studio") },
-        { find: "@semio-tech/compose-asset", replacement: path.resolve(__dirname, "../../../../asset") },
+        { find: "@semio-tech/semio-asset", replacement: path.resolve(__dirname, "../../../../../asset") },
         { find: /^@ui\/react$/, replacement: path.resolve(__dirname, "../../../../../ui/react/index.tsx") },
         { find: "vite/internal", replacement: viteInternalFallback },
       ],
     },
     plugins: [
+      ...puzzle3dMeshesVitePlugin(workspaceRoot),
       tailwind.default(),
       {
         ...mdx({
@@ -142,8 +146,8 @@ export default defineConfig(async () => {
         enforce: "pre" as const,
         configureServer(server: any) {
           const sketchpadPublicPath = path.resolve(__dirname, "../../sketchpad/public");
-          const assetsPath = path.resolve(__dirname, "../../../../asset");
-          const metabolismKitPath = path.resolve(assetsPath, "compose/metabolism.zip");
+          const assetsPath = path.resolve(__dirname, "../../../../../asset");
+          const fixturesPath = path.resolve(__dirname, "../../../../fixture");
           server.middlewares.use((req: any, res: any, next: any) => {
             if (req.url?.endsWith(".wasm")) {
               const wasmFile = path.join(sketchpadPublicPath, req.url);
@@ -153,11 +157,27 @@ export default defineConfig(async () => {
                 return;
               }
             }
-            const bareUrl = req.url?.split(/[?#]/, 1)[0];
-            if (bareUrl === "/metabolism.zip" && fs.existsSync(metabolismKitPath) && fs.statSync(metabolismKitPath).isFile()) {
-              res.setHeader("Content-Type", "application/zip");
-              fs.createReadStream(metabolismKitPath).pipe(res);
-              return;
+            if (req.url?.startsWith("/fixture/")) {
+              const requestedFixturePath = req.url.replace("/fixture/", "").split(/[?#]/, 1)[0];
+              if (requestedFixturePath && !requestedFixturePath.includes("..")) {
+                const filePath = path.join(fixturesPath, requestedFixturePath);
+                if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+                  if (requestedFixturePath.endsWith(".json")) {
+                    res.setHeader("Content-Type", "application/json");
+                  }
+                  const kitDir = path.dirname(filePath);
+                  if (
+                    requestedFixturePath.endsWith("/kit.compose.json") &&
+                    (fs.existsSync(path.join(kitDir, "type")) || fs.existsSync(path.join(kitDir, "types")))
+                  ) {
+                    const assembled = readInitialKitFixtureFromPath(filePath);
+                    res.end(JSON.stringify(assembled));
+                    return;
+                  }
+                  fs.createReadStream(filePath).pipe(res);
+                  return;
+                }
+              }
             }
             if (req.url?.startsWith("/asset/")) {
               const filePath = path.join(assetsPath, req.url.replace("/asset/", ""));
@@ -168,17 +188,6 @@ export default defineConfig(async () => {
             }
             next();
           });
-        },
-        generateBundle(this: { emitFile: (asset: { type: "asset"; fileName: string; source: Buffer }) => void }) {
-          const assetsPath = path.resolve(__dirname, "../../../../asset");
-          const metabolismKitPath = path.resolve(assetsPath, "compose/metabolism.zip");
-          if (fs.existsSync(metabolismKitPath) && fs.statSync(metabolismKitPath).isFile()) {
-            this.emitFile({
-              type: "asset",
-              fileName: "metabolism.zip",
-              source: fs.readFileSync(metabolismKitPath),
-            });
-          }
         },
       },
     ],

@@ -135,12 +135,14 @@ function createUiAssetsMiddleware(assetsRoot: string): Connect.NextHandleFunctio
 
 /** @emoji 📂 Kit fixture GLB roots for puzzle 3d `/mesh/*` URLs. */
 export function puzzle3dKitMeshRoots(repoRoot: string): { readonly meshRoots: readonly string[]; readonly placeholderMesh: string } {
+  const metabolismMeshCandidates = [
+    resolve(repoRoot, "compose/fixture/kit/folder/metabolism/representation"),
+    resolve(repoRoot, "compose/fixture/kit/folder/metabolism/representations"),
+  ];
+  const metabolismMeshRoot = metabolismMeshCandidates.find((candidate) => existsSync(candidate)) ?? metabolismMeshCandidates[0]!;
   return {
-    meshRoots: [
-      resolve(repoRoot, "compose/fixture/kit/folder/metabolism/representations"),
-      resolve(repoRoot, "compose/fixture/kit/folder/abbau-aufbau"),
-    ],
-    placeholderMesh: resolve(repoRoot, "compose/asset/mesh/placeholder.glb"),
+    meshRoots: [metabolismMeshRoot, resolve(repoRoot, "compose/fixture/kit/folder/abbau-aufbau")],
+    placeholderMesh: resolve(repoRoot, "asset/mesh/placeholder.glb"),
   };
 }
 
@@ -339,7 +341,7 @@ const PLAYGROUND_RENDERER_PUZZLE_HOSTS_START = "//#region 🔖Puzzle3dPlayHost";
 const PLAYGROUND_RENDERER_BOOT_START = "//#region 🔖Boot";
 const PLAYGROUND_RENDERER_VITEST_START = "//#region 🧪Tests";
 
-export type PlaygroundRendererPuzzleKind = "2d" | "3d" | "5d" | "map" | "flow" | "dag" | "procedural" | "presentation" | "wires";
+export type PlaygroundRendererPuzzleKind = "2d" | "3d" | "5d" | "map" | "flow" | "dag" | "procedural" | "presentation" | "wires" | "shooting";
 
 const PLAYGROUND_RENDERER_PUZZLE_BOOT_SUBPATHS: Readonly<Record<string, PlaygroundRendererPuzzleKind>> = {
   "@semio-tech/framework-playground-renderer-react/puzzle/2d": "2d",
@@ -349,6 +351,7 @@ const PLAYGROUND_RENDERER_PUZZLE_BOOT_SUBPATHS: Readonly<Record<string, Playgrou
   "@semio-tech/framework-playground-renderer-react/flow": "flow",
   "@semio-tech/framework-playground-renderer-react/dag": "dag",
   "@semio-tech/framework-playground-renderer-react/procedural": "procedural",
+  "@semio-tech/framework-playground-renderer-react/shooting": "shooting",
   "@semio-tech/framework-playground-renderer-react/presentation": "presentation",
   "@semio-tech/framework-playground-renderer-react/reasoning/wires": "wires",
 };
@@ -361,6 +364,7 @@ const PLAYGROUND_RENDERER_PUZZLE_HOST_MARKERS: Readonly<Record<PlaygroundRendere
   flow: { start: "//#region 🔖FlowPlayHost", end: "//#endregion 🔖FlowPlayHost" },
   dag: { start: "//#region 🔖DagPlayHost", end: "//#endregion 🔖DagPlayHost" },
   procedural: { start: "//#region 🔖ProceduralPlayHost", end: "//#endregion 🔖ProceduralPlayHost" },
+  shooting: { start: "//#region 🔖ShootingPlayHost", end: "//#endregion 🔖ShootingPlayHost" },
   presentation: { start: "//#region 🔖PresentationPlayHost", end: "//#endregion 🔖PresentationPlayHost" },
   wires: { start: "//#region 🔖Puzzle2dPlayHost", end: "//#endregion 🔖Puzzle2dPlayHost" },
 };
@@ -449,7 +453,7 @@ export function playgroundRendererShellEntryPlugin(rendererIndexPath: string): P
       if (id.includes("playgroundEntry=shell")) {
         return stripPlaygroundRendererPuzzleHosts(source, { includeVitest: false });
       }
-      const puzzleMatch = id.match(/playgroundEntry=puzzle-(2d|3d|5d|map|flow|dag|procedural|presentation|wires)/);
+      const puzzleMatch = id.match(/playgroundEntry=puzzle-(2d|3d|5d|map|flow|dag|procedural|presentation|wires|shooting)/);
       if (puzzleMatch) {
         return stripPlaygroundRendererForPuzzleKind(source, puzzleMatch[1] as PlaygroundRendererPuzzleKind, { includeVitest: false });
       }
@@ -948,6 +952,8 @@ export function playgroundRendererResolveAliases(repoRoot: string): ReadonlyArra
     { find: "@semio-tech/dag-react", replacement: resolve(repoRoot, "mathematical/graph/port/directed/dag/react/index.tsx") },
     { find: "@semio-tech/procedural-play", replacement: resolve(repoRoot, "procedural/play/index.ts") },
     { find: "@semio-tech/procedural-react", replacement: resolve(repoRoot, "procedural/react/index.tsx") },
+    { find: "@semio-tech/shooting-play", replacement: resolve(repoRoot, "shooting/play/index.ts") },
+    { find: "@semio-tech/shooting-react", replacement: resolve(repoRoot, "shooting/react/index.tsx") },
     { find: "@semio-tech/geometry-brep-js", replacement: resolve(repoRoot, "geometry/brep/js/index.ts") },
   ];
 }
@@ -1088,7 +1094,7 @@ export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOption
       ...uiAssetsVitePlugin(uiAssetsRoot),
       ...cadFixtureVitePlugin(repoRoot),
       infiniteFixtureVitePlugin(repoRoot),
-      ...(playEntryKind === "3d" || playEntryKind === "5d" ? puzzle3dMeshesVitePlugin(repoRoot) : []),
+      ...(playEntryKind === "3d" || playEntryKind === "5d" || playEntryKind === "shooting" ? puzzle3dMeshesVitePlugin(repoRoot) : []),
       ...(playEntryKind === "map"
         ? gisMapTilesVitePlugins(repoRoot, resolveGisMapTileServeMode(process.env[GIS_MAP_TILE_SERVE_MODE_ENV]))
         : []),

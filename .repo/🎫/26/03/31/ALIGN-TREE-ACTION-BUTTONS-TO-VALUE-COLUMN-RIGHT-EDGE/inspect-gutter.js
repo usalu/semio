@@ -7,7 +7,7 @@ async function openDetails(page) {
     const store = window.__COMPOSE_STORE__;
     const existing = (store.kitShallows?.() ?? []).find((kit) => String(kit?.name ?? '').toLowerCase().includes('metabolism'));
     if (existing?.guid) return existing.guid;
-    const kitModule = await import('/@fs/workspaces/semio/compose/assets/compose/kit_metabolism.json');
+    const kitModule = await import('/@fs/workspaces/semio/assets/compose/kit_metabolism.json');
     await store.execute('compose.sketchpad.createKit', 'compose.sketchpad.test.ensureMetabolismKitLoaded', kitModule.default, false, false);
     for (let attempt = 0; attempt < 30; attempt += 1) {
       const match = (store.kitShallows?.() ?? []).find((candidate) => String(candidate?.name ?? '').toLowerCase().includes('metabolism'));

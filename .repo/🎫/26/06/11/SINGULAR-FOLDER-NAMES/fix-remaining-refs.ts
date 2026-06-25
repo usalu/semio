@@ -9,9 +9,9 @@ const EXT = new Set([".ts", ".tsx", ".js", ".jsx", ".json", ".md", ".mdx", ".go"
 
 const REPLACEMENTS: [string, string][] = [
 	["@semio-tech/compose-algorithms", "@semio-tech/compose-algorithm"],
-	["@semio-tech/compose-icons", "@semio-tech/compose-icon"],
+	["@semio-tech/semio-icons", "@semio-tech/semio-icon"],
 	["compose/dev/algorithms", "compose/dev/algorithm"],
-	["compose/asset/icons", "compose/asset/icon"],
+	["asset/icons", "asset/icon"],
 	["../../../../assets", "../../../../asset"],
 	["../../../assets", "../../../asset"],
 	["../../assets", "../../asset"],

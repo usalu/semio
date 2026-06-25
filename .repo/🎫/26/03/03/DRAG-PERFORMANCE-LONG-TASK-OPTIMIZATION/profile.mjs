@@ -33,7 +33,7 @@ const BASE_URL = 'http://127.0.0.1:5173';
       page.locator('button:has-text("Open"), [aria-label*="open"], [data-testid*="open"]').first().click().catch(() => {}),
     ]).catch(() => [null]);
     if (fileChooser) {
-      await fileChooser.setFiles('/workspaces/semio/compose/assets/compose/metabolism.zip');
+      await fileChooser.setFiles('/workspaces/semio/assets/compose/metabolism.zip');
     }
   }
 

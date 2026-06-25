@@ -38,8 +38,8 @@ Implement dragPiecesInDesign function across all programming languages (JS/TS, P
 - [x] Run all tests
 
 ## Changes
-- compose/assets/index.ts: Added drag asset exports (DragDesign, DragPieces, DragOffset, DragDiffDesign, DragDiffDesignFree)
-- compose/assets/compose/drag/diff_design_free.json: Fixed empty file → `{}`
+- assets/index.ts: Added drag asset exports (DragDesign, DragPieces, DragOffset, DragDiffDesign, DragDiffDesignFree)
+- assets/compose/drag/diff_design_free.json: Fixed empty file → `{}`
 - compose/js/compose.ts: Added `dragPiecesInDesign(design, pieces, offset): DesignDiff` before `#endregion Design`
 - compose/js/compose.test.ts: Added Drag test describe block with test for design diff
 - compose/go/compose.go: Added `DragPiecesInDesign` function before `#endregion Flatten Design`

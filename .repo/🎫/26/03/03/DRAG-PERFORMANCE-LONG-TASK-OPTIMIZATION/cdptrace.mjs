@@ -2,7 +2,7 @@ import { chromium } from 'playwright';
 import path from 'node:path';
 import fs from 'node:fs';
 const BASE_URL = process.env.PLAYWRIGHT_BASE_URL || 'http://127.0.0.1:5173';
-const ZIP_PATH = path.resolve('/workspaces/semio/compose/assets/compose/metabolism.zip');
+const ZIP_PATH = path.resolve('/workspaces/semio/assets/compose/metabolism.zip');
 const TRACE_DIR = path.dirname(new URL(import.meta.url).pathname);
 async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 (async () => {

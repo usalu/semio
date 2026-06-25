@@ -10603,11 +10603,11 @@ export function sketchpadInstallHomeDropzone(): void {
 export function attachSketchpadKitStore(
 	kitId: string,
 	store: ComposeKitStore,
-	options?: { readonly kind?: SketchpadKitPersistenceKind; readonly navigate?: boolean },
+	options?: { readonly kind?: SketchpadKitPersistenceKind; readonly navigate?: boolean; readonly assetBaseUrl?: string },
 ): void {
 	const ctrl = getSketchpadShellController();
 	if (!ctrl) throw new Error("compose/sketchpad: platform not initialized — call ensureSketchpadPlatform first");
-	ctrl.registerKitStore(kitId, store, { kind: options?.kind });
+	ctrl.registerKitStore(kitId, store, { kind: options?.kind, assetBaseUrl: options?.assetBaseUrl });
 	if (options?.navigate !== false) {
 		navigateSketchpadTo(`/kits/${kitId}`);
 	}
@@ -10617,7 +10617,7 @@ export function attachSketchpadKitStore(
 export function attachSketchpadKit(
 	kitId: string,
 	backend: ComposeKitStoreBackend,
-	options?: { readonly kind?: SketchpadKitPersistenceKind; readonly navigate?: boolean },
+	options?: { readonly kind?: SketchpadKitPersistenceKind; readonly navigate?: boolean; readonly assetBaseUrl?: string },
 ): void {
 	attachSketchpadKitStore(kitId, new ComposeKitStore(backend), options);
 }
@@ -10638,7 +10638,7 @@ export function navigateSketchpadTo(uri: string): void {
 /** @emoji 📦 Imports kit bytes/URL and registers them on the active platform. */
 export async function openSketchpadKitFromImport(
 	data: ArrayBuffer | Blob | File | string,
-	options?: { readonly kind?: SketchpadKitPersistenceKind; readonly navigate?: boolean },
+	options?: { readonly kind?: SketchpadKitPersistenceKind; readonly navigate?: boolean; readonly assetBaseUrl?: string },
 ): Promise<string> {
 	const { kit, session, portCompatSource } = await importKit(data);
 	const jsStores = await session.stores();
@@ -10649,29 +10649,42 @@ export async function openSketchpadKitFromImport(
 				portCompatSource,
 			})
 		: new InMemoryComposeKitStore(kit);
-	attachSketchpadKitStore(kit.id, store, { kind: options?.kind ?? "fixture", navigate: options?.navigate });
+	const assetBaseUrl =
+		options?.assetBaseUrl ?? (typeof data === "string" ? sketchpadKitAssetBaseUrlFromImportUrl(data) : undefined);
+	attachSketchpadKitStore(kit.id, store, { kind: options?.kind ?? "fixture", navigate: options?.navigate, assetBaseUrl });
 	return kit.id;
 }
 
-/** @emoji 🧪 Full metabolism WIP kit (~19MB, served from `/fixture/` in sketchpad Vite). */
-const SKETCHPAD_DEV_FIXTURE_METABOLISM_WIP_PATH = "kit/dev/metabolism/wip/initialKit";
-const SKETCHPAD_DEV_FIXTURE_METABOLISM_WIP_URL = `/fixture/${SKETCHPAD_DEV_FIXTURE_METABOLISM_WIP_PATH}/kit.compose.json`;
+/** @emoji 📂 Derives the kit asset root directory from a kit import URL. */
+export function sketchpadKitAssetBaseUrlFromImportUrl(importUrl: string): string {
+	const pathOnly = importUrl.split(/[?#]/, 1)[0] ?? importUrl;
+	const slash = pathOnly.lastIndexOf("/");
+	return slash > 0 ? pathOnly.slice(0, slash) : "";
+}
 
-/** @emoji 🧪 Default dev auto-seed kit (served from `/fixture/` in sketchpad Vite). */
-const SKETCHPAD_DEV_FIXTURE_KIT_URL = SKETCHPAD_DEV_FIXTURE_METABOLISM_WIP_URL;
+/** @emoji 🔗 Parses `COMPOSE_SKETCHPAD_PRELOAD_KITS` (comma/whitespace-separated kit URLs). */
+export function sketchpadPreloadKitUrls(raw?: string): string[] {
+	const source =
+		raw ??
+		(typeof import.meta !== "undefined"
+			? ((import.meta as { env?: { COMPOSE_SKETCHPAD_PRELOAD_KITS?: string } }).env?.COMPOSE_SKETCHPAD_PRELOAD_KITS ?? "")
+			: "");
+	return source
+		.split(/[\s,]+/)
+		.map((entry) => entry.trim())
+		.filter(Boolean);
+}
 
-/** @emoji 🧪 Nakagin-filtered kit URL used for dev auto-seed. */
-export const SKETCHPAD_DEV_FIXTURE_NAKAGIN_FILTERED_URL = SKETCHPAD_DEV_FIXTURE_KIT_URL;
-
-/** @emoji 🧪 Preloads the dev fixture kit when none are open without leaving home (dev browser only). */
-export async function seedSketchpadDevFixtureKitIfEmpty(): Promise<string | null> {
+/** @emoji 📥 Preloads kits from env or an explicit URL list (skips navigation). */
+export async function preloadSketchpadKits(urls?: readonly string[]): Promise<void> {
 	const ctrl = getSketchpadShellController();
-	if (!ctrl || ctrl.listOpenKitIds().length > 0) return null;
-	try {
-		return await openSketchpadKitFromImport(SKETCHPAD_DEV_FIXTURE_KIT_URL, { kind: "fixture", navigate: false });
-	} catch (error) {
-		console.warn("[compose.sketchpad] dev fixture kit failed to load:", error);
-		return null;
+	if (!ctrl) return;
+	for (const url of urls ?? sketchpadPreloadKitUrls()) {
+		try {
+			await openSketchpadKitFromImport(url, { kind: "fixture", navigate: false });
+		} catch (error) {
+			console.warn("[compose.sketchpad] preload kit failed:", url, error);
+		}
 	}
 }
 //#endregion 🔖KitHost
@@ -10843,7 +10856,7 @@ const SKETCHPAD_MDX_MODULE_PATHS = Object.keys(SKETCHPAD_MDX_MODULE_LOADERS);
 export function sketchpadResolveMdxModuleKey(docsPath: string): string | null {
 	const clean = docsPath.replace(/^\/+/, "").replace(/\.mdx$/, "");
 	const matches = SKETCHPAD_MDX_MODULE_PATHS.filter((key) => {
-		const keyPath = key.replace(/^\.\/pages\//, "").replace(/\.mdx$/, "");
+		const keyPath = key.replace(/^\.\/page\//, "").replace(/\.mdx$/, "");
 		return keyPath === clean || keyPath === `${clean}/index`;
 	});
 	return matches[0] ?? null;
@@ -11008,7 +11021,7 @@ hasTypes {
   edges {
     node {
       id name description
-      hasConnectors { edges { node { id name port { id label code copatibleWith { edges { node { id } } } } } } }
+      hasConnectors { edges { node { id name point { x y z } direction { x y z } t port { id label code copatibleWith { edges { node { id } } } } } } }
       hasPorts { edges { node { id label code copatibleWith { edges { node { id } } } } } }
       hasRepresentations { edges { node { id name file { id } } } }
     }
@@ -11517,12 +11530,10 @@ function sketchpadKitVfsPushFileRow(
 	});
 }
 
-const SKETCHPAD_METABOLISM_KIT_ASSET_ROOT = `/fixture/${SKETCHPAD_DEV_FIXTURE_METABOLISM_WIP_PATH}`;
-
-/** @emoji 📍 Normalizes a path relative to the metabolism wip kit fixture root (supports `../representation/*.glb`). */
-export function sketchpadFixtureUrlFromKitRelativePath(relativePath: string): string {
+/** @emoji 📍 Normalizes a path relative to a kit asset root (supports `../representation/*.glb`). */
+export function sketchpadFixtureUrlFromKitRelativePath(relativePath: string, baseRoot: string): string {
 	if (relativePath.startsWith("/")) return relativePath;
-	const segments = SKETCHPAD_METABOLISM_KIT_ASSET_ROOT.split("/").filter(Boolean);
+	const segments = baseRoot.split("/").filter(Boolean);
 	for (const part of relativePath.replace(/^\.\//, "").split("/")) {
 		if (part === "..") segments.pop();
 		else if (part !== ".") segments.push(part);
@@ -11530,12 +11541,14 @@ export function sketchpadFixtureUrlFromKitRelativePath(relativePath: string): st
 	return `/${segments.join("/")}`;
 }
 
-/** @emoji 🧊 Maps metabolism representation GLBs to puzzle 3d `/mesh/*` URLs (see {@link puzzle3dMeshesVitePlugin}). */
+/** @emoji 🧊 Maps representation GLBs to puzzle 3d `/mesh/*` URLs (see {@link puzzle3dMeshesVitePlugin}). */
 export function sketchpadPuzzle3dMeshUrlForKitFile(row: { readonly name?: string; readonly path?: string }): string | undefined {
 	const path = row.path?.replace(/^\.\//, "") ?? "";
-	if (path.includes("representations/") && path.endsWith(".glb")) {
-		const base = path.split("/").pop();
-		return base ? `/mesh/${base}` : undefined;
+	if (path.includes("representations/") || path.includes("representation/")) {
+		if (path.endsWith(".glb")) {
+			const base = path.split("/").pop();
+			return base ? `/mesh/${base}` : undefined;
+		}
 	}
 	const name = row.name?.trim();
 	if (!path && name?.endsWith(".glb")) {
@@ -11544,9 +11557,10 @@ export function sketchpadPuzzle3dMeshUrlForKitFile(row: { readonly name?: string
 	return undefined;
 }
 
-/** @emoji 🗂️ Resolves kit file ids to fetchable mesh URLs (http, absolute, or metabolism assets). */
+/** @emoji 🗂️ Resolves kit file ids to fetchable mesh URLs (http, absolute, or kit-relative assets). */
 export function sketchpadKitFileUrlById(kit: Kit): ReadonlyMap<string, string> {
 	const map = new Map<string, string>();
+	const assetBaseUrl = getSketchpadShellController()?.getKitAssetBaseUrl(kit.id);
 	for (const file of kit.files ?? []) {
 		const row = file as { id: string; url?: string; uri?: string; path?: string; name?: string; blob?: string };
 		const puzzleMesh = sketchpadPuzzle3dMeshUrlForKitFile(row);
@@ -11564,7 +11578,7 @@ export function sketchpadKitFileUrlById(kit: Kit): ReadonlyMap<string, string> {
 			continue;
 		}
 		if (row.path) {
-			map.set(row.id, sketchpadFixtureUrlFromKitRelativePath(row.path));
+			map.set(row.id, assetBaseUrl ? sketchpadFixtureUrlFromKitRelativePath(row.path, assetBaseUrl) : row.path);
 		}
 	}
 	return map;
@@ -11608,6 +11622,19 @@ function sketchpadMergeKitTypeRepresentations(target: Type, source: Type | undef
 	return { ...target, representations: source.representations } as Type;
 }
 
+function sketchpadMergeKitDesignRows(target: Design, source: Design | undefined): Design {
+	if (!source) return target;
+	const targetPieces = sketchpadKitItemsOf(target.pieces);
+	const sourcePieces = sketchpadKitItemsOf(source.pieces);
+	const targetConnections = sketchpadKitItemsOf((target as { connections?: unknown }).connections);
+	const sourceConnections = sketchpadKitItemsOf((source as { connections?: unknown }).connections);
+	return {
+		...target,
+		pieces: (sourcePieces.length > targetPieces.length ? sourcePieces : targetPieces) as Design["pieces"],
+		connections: (sourceConnections.length > targetConnections.length ? sourceConnections : targetConnections) as Design["connections"],
+	} as Design;
+}
+
 /** @emoji 🔀 Overlays bundle projection types/files when GraphQL materialization omits representations. */
 export function sketchpadMergeKitDtoFromBundleProjection(target: Kit, source: Kit): Kit {
 	const sourceFiles = source.files ?? [];
@@ -11631,7 +11658,13 @@ export function sketchpadMergeKitDtoFromBundleProjection(target: Kit, source: Ki
 			: targetTypologies.length === 0
 				? (source as { typologies?: unknown }).typologies
 				: (target as { typologies?: unknown }).typologies;
-	return { ...target, files, types, typologies } as Kit;
+	const targetDesignRows = sketchpadKitDesignRows(target);
+	const sourceDesignRows = sketchpadKitDesignRows(source);
+	const designs =
+		targetDesignRows.length === 0
+			? sourceDesignRows
+			: targetDesignRows.map((design) => sketchpadMergeKitDesignRows(design, sourceDesignRows.find((row) => row.id === design.id)));
+	return { ...target, files, types, typologies, designs: designs.length > 0 ? designs : target.designs } as Kit;
 }
 
 /** @emoji 📋 Lists representation rows on a kit kind. */
@@ -11739,13 +11772,68 @@ function sketchpadFlatPartCenterFromTopLeft(
 
 function sketchpadFlatCameraFromPartCenters(centers: readonly { x: number; y: number }[]): SketchpadPuzzle2dFixtureV1["camera"] {
 	if (centers.length === 0) return { x: 0, y: 0, zoom: 1 };
-	const avgX = centers.reduce((sum, point) => sum + point.x, 0) / centers.length;
-	const avgY = centers.reduce((sum, point) => sum + point.y, 0) / centers.length;
-	return { x: -avgX, y: -avgY, zoom: 1 };
+	let minX = Infinity;
+	let maxX = -Infinity;
+	let minY = Infinity;
+	let maxY = -Infinity;
+	for (const point of centers) {
+		minX = Math.min(minX, point.x);
+		maxX = Math.max(maxX, point.x);
+		minY = Math.min(minY, point.y);
+		maxY = Math.max(maxY, point.y);
+	}
+	const cx = (minX + maxX) / 2;
+	const cy = (minY + maxY) / 2;
+	const halfSpan = Math.max((maxX - minX) / 2, (maxY - minY) / 2, 40, 1);
+	const refShort = SKETCHPAD_TOPOLOGY_ICON_WIDTH * 8;
+	const zoom = Math.min(1, refShort / (2 * halfSpan));
+	return { x: cx, y: cy, zoom };
 }
 
 function sketchpadFlatHandleCompoundId(left: string, right: string): string {
 	return `${left}${SKETCHPAD_FLAT_HANDLE_SEPARATOR}${right}`;
+}
+
+function sketchpadConnectionTransformParamsFromDto(connection: Record<string, unknown>): Record<string, number> {
+	const out: Record<string, number> = {};
+	for (const key of ["gap", "shift", "rise", "rotation", "turn", "tilt", "u", "v"] as const) {
+		const value = connection[key];
+		if (typeof value === "number" && Number.isFinite(value)) {
+			out[key] = value;
+		}
+	}
+	return out;
+}
+
+type SketchpadConnectorGeometry = {
+	readonly id: string;
+	readonly point: readonly [number, number, number];
+	readonly direction: readonly [number, number, number];
+	readonly t: number;
+};
+
+/** @emoji 🔌 Lists type-local connector geometry for a design piece. */
+function sketchpadPieceConnectorGeometry(
+	piece: { readonly id: string; readonly type?: unknown; readonly blueprint?: unknown },
+	kit?: Kit,
+): readonly SketchpadConnectorGeometry[] {
+	const typeId = sketchpadReadEntityId((piece as { type?: unknown; blueprint?: unknown }).type ?? piece.blueprint);
+	const type = typeId && kit ? findTypeInKit(kit, typeId) : undefined;
+	const connectors = ((type as { connectors?: readonly Record<string, unknown>[] } | undefined)?.connectors ?? []) as readonly Record<string, unknown>[];
+	return connectors
+		.map((connector) => {
+			const id = sketchpadReadEntityId(connector);
+			if (!id) return null;
+			const point = connector["point"] as { readonly x?: number; readonly y?: number; readonly z?: number } | undefined;
+			const direction = connector["direction"] as { readonly x?: number; readonly y?: number; readonly z?: number } | undefined;
+			return {
+				id,
+				point: [point?.x ?? 0, point?.y ?? 0, point?.z ?? 0] as const,
+				direction: [direction?.x ?? 0, direction?.y ?? 0, direction?.z ?? 1] as const,
+				t: typeof connector["t"] === "number" && Number.isFinite(connector["t"]) ? connector["t"] : 0,
+			};
+		})
+		.filter((row): row is SketchpadConnectorGeometry => row !== null);
 }
 
 function sketchpadTopologyAnchorFullId(partId: string, anchorId: string): string {
@@ -11918,12 +12006,12 @@ export function sketchpadKitEntityAvailableIcon(kit: Kit, nodeId: string, fileNo
 function sketchpadKitWiresCatalogIconKey(raw: string | undefined): string | undefined {
 	const icon = raw?.trim();
 	if (!icon) return undefined;
+	const svgMatch = icon.match(/(?:^|\/)([^/]+)\.svg$/i);
+	if (svgMatch) return svgMatch[1]!;
 	const decoded = decodeIcon(icon);
 	if (decoded) return encodeIcon(decoded);
 	if (icon.includes("<svg") || icon.startsWith("<?xml")) return icon;
 	if (iconSvgMarkup(icon)) return icon;
-	const svgMatch = icon.match(/(?:^|\/)([^/]+)\.svg$/i);
-	if (svgMatch) return svgMatch[1]!;
 	return encodeIcon({ kind: "catalog", key: icon });
 }
 
@@ -12315,7 +12403,7 @@ function sketchpadForEachKitPortRecord(kit: Kit, visit: (port: Record<string, un
 	}
 }
 
-/** @emoji 🔌 Collects unique ports on kit kinds, connectors, and kit-level families (metabolism). */
+/** @emoji 🔌 Collects unique ports on kit kinds, connectors, and kit-level families. */
 export function sketchpadCollectKitPorts(kit: Kit): readonly { readonly id: string; readonly name: string }[] {
 	const byId = new Map<string, { id: string; name: string }>();
 	const remember = (port: Record<string, unknown>) => {
@@ -12931,38 +13019,39 @@ export function parseSketchpadCadInstanceId(instanceId: string): { readonly kitI
 export function sketchpadDesignPuzzle2dFixtureFromDesign(design: Design, kit?: Kit): SketchpadPuzzle2dFixtureV1 {
 	const pieces = design.pieces ?? [];
 	const connections = ((design as { connections?: readonly SketchpadKitConnection[] }).connections ?? []) as readonly SketchpadKitConnection[];
-	const centers = pieces.map((piece, index) => {
-		const uv = sketchpadPieceDiagramUv(piece, index);
-		return { x: uv.u * SKETCHPAD_TOPOLOGY_ICON_WIDTH, y: -uv.v * SKETCHPAD_TOPOLOGY_ICON_WIDTH };
-	});
 	const edges = connections
 		.map((connection) => {
 			const { sourcePieceId, targetPieceId, sourceConnectorId, targetConnectorId } = sketchpadConnectionEndpoints(connection);
 			if (!sourcePieceId || !targetPieceId || !sourceConnectorId || !targetConnectorId) return null;
 			return {
 				id: connection.id ?? `${sourcePieceId}-${targetPieceId}`,
-				source: sketchpadFlatHandleCompoundId(sourcePieceId, sourceConnectorId),
-				target: sketchpadFlatHandleCompoundId(targetPieceId, targetConnectorId),
+				source: sketchpadTopologyAnchorFullId(sourcePieceId, sourceConnectorId),
+				target: sketchpadTopologyAnchorFullId(targetPieceId, targetConnectorId),
 				edgeKind: "compose.connection",
+				...sketchpadConnectionTransformParamsFromDto(connection as Record<string, unknown>),
 			};
 		})
 		.filter((edge): edge is NonNullable<typeof edge> => edge !== null);
 	return {
 		schema: "puzzle.2d.fixture/v1",
-		camera: sketchpadFlatCameraFromPartCenters(centers.length > 0 ? centers : [{ x: 0, y: 0 }]),
-		nodes: pieces.map((piece, index) => {
-			const uv = sketchpadPieceDiagramUv(piece, index);
+		camera: sketchpadFlatCameraFromPartCenters([{ x: 0, y: 0 }]),
+		nodes: pieces.map((piece) => {
+			const connectors = sketchpadPieceConnectorGeometry(piece, kit);
+			const storedCenter = (piece as { position?: { center?: { u?: number; v?: number } } }).position?.center;
 			return {
 				id: piece.id,
-				shape: "rectangle",
-				width: SKETCHPAD_DESIGN_DIAGRAM_NODE.width,
-				height: SKETCHPAD_DESIGN_DIAGRAM_NODE.height,
-				x: uv.u * SKETCHPAD_TOPOLOGY_ICON_WIDTH,
-				y: -uv.v * SKETCHPAD_TOPOLOGY_ICON_WIDTH,
+				shape: "circle",
+				radius: 20,
+				x: typeof storedCenter?.u === "number" ? storedCenter.u : 0,
+				y: typeof storedCenter?.v === "number" ? storedCenter.v : 0,
 				text: sketchpadPieceLabel(piece, kit),
 				nodeKind: "compose.design.piece",
-				root: true,
-				handles: [],
+				handles: connectors.map((connector) => ({
+					id: sketchpadTopologyAnchorFullId(piece.id, connector.id),
+					handleKind: "compose.connector",
+					angle: connector.t * 2 * Math.PI,
+					t: connector.t,
+				})),
 			};
 		}),
 		edges,
@@ -12974,16 +13063,32 @@ export function sketchpadDesignVolumeFixtureFromDesign(design: Design, kit?: Kit
 	const pieces = design.pieces ?? [];
 	const connections = ((design as { connections?: readonly SketchpadKitConnection[] }).connections ?? []) as readonly SketchpadKitConnection[];
 	const fileUrls = kit ? sketchpadKitFileUrlById(kit) : new Map<string, string>();
-	const objects = pieces.map((piece, index) => ({
-		id: piece.id,
-		objectKind: "compose.design.piece",
-		meshUrl: kit ? sketchpadResolvePieceMeshUrl(piece, kit, fileUrls) : SKETCHPAD_PLACEHOLDER_MESH_URL,
-		origin: sketchpadPieceSceneOrigin(piece, index),
-		orientation: sketchpadPieceSceneOrientation(piece),
-		scale: sketchpadPieceSceneScale(piece),
-		label: sketchpadPieceLabel(piece, kit),
-		vortices: [],
-	}));
+	const objects = pieces.map((piece) => {
+		const connectors = sketchpadPieceConnectorGeometry(piece, kit);
+		const storedPlane = (piece as { position?: SketchpadPiecePose["plane"] }).position?.plane;
+		const origin = storedPlane?.origin;
+		const storedOrigin: [number, number, number] = [
+			typeof origin?.x === "number" ? origin.x : 0,
+			typeof origin?.y === "number" ? origin.y : 0,
+			typeof origin?.z === "number" ? origin.z : 0,
+		];
+		const orientation = storedPlane ? sketchpadPieceSceneOrientation(piece) : ([0, 0, 0, 1] as [number, number, number, number]);
+		return {
+			id: piece.id,
+			objectKind: "compose.design.piece",
+			meshUrl: kit ? sketchpadResolvePieceMeshUrl(piece, kit, fileUrls) : SKETCHPAD_PLACEHOLDER_MESH_URL,
+			origin: storedOrigin,
+			orientation,
+			scale: sketchpadPieceSceneScale(piece),
+			label: sketchpadPieceLabel(piece, kit),
+			vortices: connectors.map((connector) => ({
+				id: sketchpadTopologyAnchorFullId(piece.id, connector.id),
+				position: connector.point,
+				direction: connector.direction,
+				vortexKind: "compose.connector",
+			})),
+		};
+	});
 	const attractions = connections
 		.map((connection) => {
 			const { sourcePieceId, targetPieceId, sourceConnectorId, targetConnectorId } = sketchpadConnectionEndpoints(connection);
@@ -12993,6 +13098,7 @@ export function sketchpadDesignVolumeFixtureFromDesign(design: Design, kit?: Kit
 				attracting: sketchpadTopologyAnchorFullId(sourcePieceId, sourceConnectorId),
 				attracted: sketchpadTopologyAnchorFullId(targetPieceId, targetConnectorId),
 				attractionKind: "compose.connection",
+				...sketchpadConnectionTransformParamsFromDto(connection as Record<string, unknown>),
 			};
 		})
 		.filter((attraction): attraction is NonNullable<typeof attraction> => attraction !== null);
@@ -13007,23 +13113,7 @@ export function sketchpadDesignVolumeFixtureFromDesign(design: Design, kit?: Kit
 }
 
 function sketchpadSceneCameraFromDesign(design: Design): SketchpadVolumeFixtureV1["camera"] {
-	const pieces = design.pieces ?? [];
-	if (pieces.length === 0) {
-		return { position: [8, 8, 8], target: [0, 0, 0], zoom: 1 };
-	}
-	let sx = 0;
-	let sy = 0;
-	let sz = 0;
-	let count = 0;
-	for (const piece of pieces) {
-		const [x, y, z] = sketchpadPieceSceneOrigin(piece, count);
-		sx += x;
-		sy += y;
-		sz += z;
-		count += 1;
-	}
-	const target: [number, number, number] = [sx / count, sy / count, sz / count];
-	return { position: [target[0] + 8, target[1] + 8, target[2] + 8], target, zoom: 1 };
+	return { position: [8, 8, 8], target: [0, 0, 0], zoom: 1 };
 }
 
 
@@ -13809,7 +13899,10 @@ abstract class SketchpadRoutedComponent<TSnapshot> extends Component<TSnapshot> 
 		});
 		const shellStore = getSketchpadShellController()?.getStore<SketchpadShellSnapshot>(SKETCHPAD_SHELL_STORE_SHELL);
 		if (shellStore) {
-			this.detachShellStore = shellStore.subscribe(() => this.refresh());
+			this.detachShellStore = shellStore.subscribe(() => {
+				this.attachActiveKitStore();
+				this.refresh();
+			});
 		}
 		this.attachActiveKitStore();
 	}
@@ -14015,7 +14108,10 @@ export class SketchpadDesignScene extends SketchpadRoutedComponent<Puzzle5dModel
 			return { presentation: "volume", instanceId: SKETCHPAD_SURFACE_DESIGN_SCENE, emptyMessage: "Open a design to view the scene" };
 		}
 		const kit = getSketchpadShellController()?.getKitStore(kitId)?.getSnapshot().kit;
-		const design = kit ? findDesignInKit(kit, designId) : undefined;
+		if (!kit) {
+			return { presentation: "volume", instanceId: sketchpadDesignSceneInstanceId(kitId, designId), emptyMessage: "Kit loading…" };
+		}
+		const design = findDesignInKit(kit, designId);
 		return {
 			presentation: "volume",
 			instanceId: sketchpadDesignSceneInstanceId(kitId, designId),
@@ -14042,7 +14138,10 @@ export class SketchpadDesignDiagram extends SketchpadRoutedComponent<Puzzle5dMod
 			return { presentation: "flat", instanceId: SKETCHPAD_SURFACE_DESIGN_DIAGRAM, emptyMessage: "Open a design to view the diagram" };
 		}
 		const kit = getSketchpadShellController()?.getKitStore(kitId)?.getSnapshot().kit;
-		const row = kit ? findDesignInKit(kit, designId) : undefined;
+		if (!kit) {
+			return { presentation: "flat", instanceId: sketchpadDesignDiagramInstanceId(kitId, designId), emptyMessage: "Kit loading…" };
+		}
+		const row = findDesignInKit(kit, designId);
 		return {
 			presentation: "flat",
 			instanceId: sketchpadDesignDiagramInstanceId(kitId, designId),
@@ -14169,8 +14268,6 @@ class SketchpadWorkbenchPanel extends SketchpadRoutedComponent<PanelModel> {
 						{ type: "text", value: `${open.length} kit(s) open` },
 						sketchpadPanelCommandButton("Import kit archive…", "importKitFromFile"),
 						sketchpadPanelCommandButton("Create empty kit", "createTemporaryKit", { name: "Untitled Kit" }),
-						sketchpadPanelCommandButton("Open metabolism fixture", "importFixtureKit"),
-						sketchpadPanelCommandButton("Open Nakagin filtered fixture", "importNakaginFilteredKit"),
 						{ type: "text", value: "Drag a .zip onto Home or use the command palette." },
 					],
 				},
@@ -14400,6 +14497,7 @@ export class SketchpadShellController extends VirtualFileSystemController {
 	private readonly vfsRouteRootByScope = new Map<string, string>();
 	private readonly shellStore: ObservableCell<SketchpadShellSnapshot>;
 	private readonly kitKinds = new Map<string, string>();
+	private readonly kitAssetBaseUrls = new Map<string, string>();
 	private readonly vfsNodeMetaByScope = new Map<
 		string,
 		Map<string, { readonly fileNodeKindId: string; readonly typeId?: string; readonly designId?: string }>
@@ -14466,9 +14564,10 @@ export class SketchpadShellController extends VirtualFileSystemController {
 	}
 
 	/** @emoji 🗄️ Registers a kit store on this controller (`kit:<id>`). */
-	registerKitStore(kitId: string, store: ComposeKitStore, options?: { readonly kind?: string }): void {
+	registerKitStore(kitId: string, store: ComposeKitStore, options?: { readonly kind?: string; readonly assetBaseUrl?: string }): void {
 		this.provideStore(sketchpadKitStoreId(kitId), store);
 		if (options?.kind) this.kitKinds.set(kitId, options.kind);
+		if (options?.assetBaseUrl) this.kitAssetBaseUrls.set(kitId, options.assetBaseUrl);
 		const openKitIds = this.shellStore.get().openKitIds;
 		if (!openKitIds.includes(kitId)) {
 			this.shellStore.set({ ...this.shellStore.get(), openKitIds: [...openKitIds, kitId] });
@@ -14561,6 +14660,11 @@ export class SketchpadShellController extends VirtualFileSystemController {
 	/** @emoji 🏷️ Persistence kind recorded when the kit was opened. */
 	getKitPersistenceKind(kitId: string): string | undefined {
 		return this.kitKinds.get(kitId);
+	}
+
+	/** @emoji 📂 Returns the asset root URL for kit-relative file paths. */
+	getKitAssetBaseUrl(kitId: string): string | undefined {
+		return this.kitAssetBaseUrls.get(kitId);
 	}
 
 	/** @emoji 🗺️ Refreshes topology stores for routed FiveD surfaces (kit diagram, design/type scene/diagram). */
@@ -14676,6 +14780,7 @@ export class SketchpadShellController extends VirtualFileSystemController {
 			}
 		}
 		this.kitKinds.delete(kitId);
+		this.kitAssetBaseUrls.delete(kitId);
 		const platform = getSketchpadPlatform();
 		const activePath = platform?.uri.split("?")[0] ?? shell.navigationPath;
 		if (activePath.startsWith(`/kits/${kitId}`)) {
@@ -15104,18 +15209,6 @@ export class SketchpadShellController extends VirtualFileSystemController {
 				});
 				break;
 			}
-			case "importFixtureKit": {
-				void openSketchpadKitFromImport(SKETCHPAD_DEV_FIXTURE_METABOLISM_WIP_URL, { kind: "fixture", navigate: true }).catch((error) => {
-					console.warn("[compose.sketchpad] importFixtureKit failed:", error);
-				});
-				break;
-			}
-			case "importNakaginFilteredKit": {
-				void openSketchpadKitFromImport(SKETCHPAD_DEV_FIXTURE_NAKAGIN_FILTERED_URL, { kind: "fixture", navigate: true }).catch((error) => {
-					console.warn("[compose.sketchpad] importNakaginFilteredKit failed:", error);
-				});
-				break;
-			}
 			case "importKitFromFile": {
 				sketchpadPromptHomeKitArchiveFile();
 				break;
@@ -15235,8 +15328,6 @@ function sketchpadShellCommand(
 
 function sketchpadHomeCommands(): readonly SearchItemSpec[] {
 	return [
-		sketchpadShellCommand("compose.sketchpad.home.openFixture", "Open metabolism fixture", "importFixtureKit"),
-		sketchpadShellCommand("compose.sketchpad.home.openNakaginFiltered", "Open Nakagin filtered fixture", "importNakaginFilteredKit"),
 		sketchpadShellCommand("compose.sketchpad.home.createKit", "Create empty kit", "createTemporaryKit", { name: "Untitled Kit" }),
 		sketchpadShellCommand("compose.sketchpad.home.importFile", "Import kit from file", "importKitFromFile"),
 		sketchpadShellCommand("compose.sketchpad.home.openFolder", "Open folder kit", "openKit", { kind: "folder" }),
@@ -15640,12 +15731,8 @@ export async function buildSketchpadPlatform(): Promise<Platform> {
 	if (typeof window !== "undefined") {
 		sketchpadInstallHomeDropzone();
 	}
-	if (
-		typeof import.meta !== "undefined" &&
-		(import.meta as { env?: { DEV?: boolean; COMPOSE_SKETCHPAD_E2E?: string } }).env?.DEV &&
-		!(import.meta as { env?: { COMPOSE_SKETCHPAD_E2E?: string } }).env?.COMPOSE_SKETCHPAD_E2E
-	) {
-		void seedSketchpadDevFixtureKitIfEmpty();
+	if (sketchpadPreloadKitUrls().length > 0) {
+		void preloadSketchpadKits();
 	}
 	return platform;
 }
@@ -15862,23 +15949,29 @@ if (import.meta.vitest) {
 		});
 	});
 
-	describe("sketchpad dev fixtures", () => {
-		it("auto-seeds from nakagin filtered fixture URL", () => {
-			expect(SKETCHPAD_DEV_FIXTURE_NAKAGIN_FILTERED_URL).toBe("/fixture/kit/dev/metabolism/wip/initialKit/kit.compose.json");
+	describe("sketchpad preload kits", () => {
+		it("parses comma- and whitespace-separated preload kit URLs", () => {
+			expect(sketchpadPreloadKitUrls("/a/kit.compose.json, /b/kit.compose.json")).toEqual([
+				"/a/kit.compose.json",
+				"/b/kit.compose.json",
+			]);
+			expect(sketchpadPreloadKitUrls("  ")).toEqual([]);
 		});
 
-		it("preloads dev fixture on home without navigating to kit app", async () => {
-			const { readFileSync } = await import("node:fs");
+		it(
+			"preloads kits on home without navigating to kit app",
+			async () => {
 			const { dirname, join } = await import("node:path");
 			const { fileURLToPath } = await import("node:url");
 			const { readInitialKitFixtureFromPath } = await import("../../../../fixture/script.ts");
 			const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../../../../fixture/kit/dev/metabolism/wip/initialKit/kit.compose.json");
+			const fixtureUrl = "/fixture/kit/dev/metabolism/wip/initialKit/kit.compose.json";
 			const fixtureJson = JSON.stringify(readInitialKitFixtureFromPath(fixturePath));
 			const previousFetch = globalThis.fetch;
 			globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
 				const url =
 					typeof input === "string" ? input : input instanceof URL ? input.href : input instanceof Request ? input.url : String(input);
-				if (url.includes("kit/dev/metabolism/wip/initialKit/kit.compose.json")) {
+				if (url.includes(fixtureUrl)) {
 					return new Response(fixtureJson, { status: 200, headers: { "Content-Type": "application/json" } });
 				}
 				return previousFetch(input, init);
@@ -15891,16 +15984,23 @@ if (import.meta.vitest) {
 					ctrl.closeKit(openKitId);
 				}
 				applySketchpadUri(platform, "/");
-				const kitId = await seedSketchpadDevFixtureKitIfEmpty();
+				await preloadSketchpadKits([fixtureUrl]);
+				const kitId = ctrl.listOpenKitIds()[0];
 				expect(kitId).toBeTruthy();
 				expect(platform.uri.split("?")[0]).toBe("/");
 				expect(platform.activeAppId).toBe(SKETCHPAD_HOME_APP_ID);
 				expect(ctrl.listOpenKitIds()).toContain(kitId);
+				expect(ctrl.getKitAssetBaseUrl(kitId!)).toBe("/fixture/kit/dev/metabolism/wip/initialKit");
 			} finally {
 				globalThis.fetch = previousFetch;
 				getSketchpadShellController()?.dispose();
+				sketchpadShellControllerSingleton = null;
+				sketchpadPlatformSingleton = null;
+				sketchpadPlatformReady = null;
 			}
-		});
+			},
+			120_000,
+		);
 	});
 
 	describe("sketchpadKitFromDecodedBundle", () => {
@@ -16030,25 +16130,47 @@ if (import.meta.vitest) {
 
 	describe("importKit", () => {
 		it("materializes type representations after projection install", async () => {
-			const { readFileSync } = await import("node:fs");
 			const { dirname, join } = await import("node:path");
 			const { fileURLToPath } = await import("node:url");
 			const { readInitialKitFixtureFromPath } = await import("../../../../fixture/script.ts");
 			const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../../../../fixture/kit/dev/metabolism/wip/initialKit/kit.compose.json");
-			const bundleKit = sketchpadKitFromDecodedBundle(readInitialKitFixtureFromPath(fixturePath));
-			const bundleType = bundleKit?.types?.find((t) => (t.representations?.length ?? 0) > 0);
+			const assembled = readInitialKitFixtureFromPath(fixturePath);
+			const bundleKit = sketchpadKitFromDecodedBundle(assembled);
+			const bundleType = sketchpadKitTypeRows(bundleKit!).find((t) => sketchpadListTypeRepresentations(t).length > 0);
 			expect(bundleType).toBeDefined();
 			const bundleRepCount = bundleType ? sketchpadListTypeRepresentations(bundleType).length : 0;
 			expect(bundleRepCount).toBeGreaterThan(0);
-			const { kit, session } = await importKit(new TextEncoder().encode(readFileSync(fixturePath, "utf8")));
+			const { kit, session } = await importKit(new TextEncoder().encode(JSON.stringify(assembled)));
 			try {
-				const liveType = kit.types?.find((t) => t.id === bundleType!.id);
+				const liveType = sketchpadKitTypeRows(kit).find((t) => t.id === bundleType!.id);
 				expect(liveType).toBeDefined();
 				expect(sketchpadListTypeRepresentations(liveType!)).toHaveLength(bundleRepCount);
 			} finally {
 				await session.dispose();
 			}
-		}, 120_000);
+		}, 300_000);
+
+		it("hydrates nakagin capsule tower with 180 pieces and 179 connections", async () => {
+			const { dirname, join } = await import("node:path");
+			const { fileURLToPath } = await import("node:url");
+			const { readInitialKitFixtureFromPath } = await import("../../../../fixture/script.ts");
+			const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../../../../fixture/kit/dev/metabolism/wip/initialKit/kit.compose.json");
+			const assembled = readInitialKitFixtureFromPath(fixturePath);
+			const { kit, session } = await importKit(new TextEncoder().encode(JSON.stringify(assembled)));
+			try {
+				const nak = findDesignInKit(kit, "9a890dd4-0a9c-48ac-920a-9e62666465ef");
+				expect(nak).toBeDefined();
+				expect(nak!.pieces?.length).toBe(180);
+				expect(nak!.connections?.length).toBe(179);
+				const flat = sketchpadDesignPuzzle2dFixtureFromDesign(nak!, kit);
+				expect(flat.nodes).toHaveLength(180);
+				expect(flat.edges.length).toBeGreaterThan(0);
+				expect(flat.edges[0]?.source).toContain(":");
+				expect(flat.nodes.some((node) => node.handles.length > 0)).toBe(true);
+			} finally {
+				await session.dispose();
+			}
+		}, 300_000);
 
 		it("hydrates family ports into live kit and diagram compat edges", async () => {
 			const payload = JSON.stringify({
@@ -16869,49 +16991,67 @@ if (import.meta.vitest) {
 	});
 
 	describe("sketchpadDesignVolumeFixtureFromDesign", () => {
-		it("creates placeholder mesh objects per piece", () => {
+		it("creates placeholder mesh objects at identity with local vortices", () => {
 			const design = {
 				id: "d",
-				pieces: [{ id: "p1", name: "A", plane: { origin: { x: 1, y: 2, z: 3 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } } }],
+				pieces: [{ id: "p1", name: "A", blueprint: { id: "t1" } }],
 			} as Design;
-			const volume = sketchpadDesignVolumeFixtureFromDesign(design);
+			const kit = {
+				id: "k",
+				types: [{ id: "t1", connectors: [{ id: "c1", point: { x: 1, y: 2, z: 3 }, direction: { x: 0, y: 0, z: 1 }, t: 0 }] }],
+			} as Kit;
+			const volume = sketchpadDesignVolumeFixtureFromDesign(design, kit);
 			expect(volume.objects).toHaveLength(1);
-			expect(volume.objects[0]?.origin).toEqual([1, 2, 3]);
+			expect(volume.objects[0]?.origin).toEqual([0, 0, 0]);
+			expect(volume.objects[0]?.vortices[0]?.position).toEqual([1, 2, 3]);
 		});
 
-		it("uses flatPosition absolute pose for linked pieces", () => {
+		it("emits relative fixtures flattened through puzzle 5d", async () => {
+			const { compose5d, prepareTopologyModel } = await import("@semio-tech/puzzle-5d-react");
 			const design = {
 				id: "d",
 				pieces: [
 					{
 						id: "root",
-						flatPosition: {
-							center: { u: 4.8, v: 0.18 },
-							plane: {
-								origin: { x: 7.5, y: 7.7, z: -7.5 },
-								xAxis: { x: 0.766, y: 0.643, z: 0 },
-								yAxis: { x: -0.643, y: 0.766, z: 0 },
-							},
-						},
+						blueprint: { id: "type-a" },
+						position: { center: { u: 1, v: 2 }, plane: { origin: { x: 1, y: 2, z: 3 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } } },
 					},
+					{ id: "child", blueprint: { id: "type-a" } },
+				],
+				connections: [
 					{
-						id: "child",
-						flatPosition: {
-							center: { u: 3.8, v: 1.2 },
-							plane: {
-								origin: { x: 12.1, y: 4.2, z: -5.0 },
-								xAxis: { x: 0.766, y: 0.643, z: 0 },
-								yAxis: { x: -0.643, y: 0.766, z: 0 },
-							},
-						},
+						id: "link-1",
+						u: 0.5,
+						v: 0.25,
+						parent: { piece: { id: "root" }, connector: { id: "conn-a" } },
+						child: { piece: { id: "child" }, connector: { id: "conn-a" } },
 					},
 				],
 			} as Design;
+			const kit = {
+				id: "k",
+				types: [
+					{
+						id: "type-a",
+						connectors: [{ id: "conn-a", point: { x: 0, y: 0, z: 0 }, direction: { x: 0, y: 0, z: 1 }, t: 0 }],
+					},
+				],
+			} as Kit;
+			const flat = sketchpadDesignPuzzle2dFixtureFromDesign(design, kit);
+			const volume = sketchpadDesignVolumeFixtureFromDesign(design, kit);
+			const prepared = prepareTopologyModel(compose5d(flat, volume));
+			const child = prepared.parts.find((part) => part.id === "child");
+			expect(child?.["3d"]?.origin?.[0]).toBeCloseTo(1, 2);
+			expect(child?.["2d"]?.x).toBeCloseTo(1.5 * SKETCHPAD_TOPOLOGY_ICON_WIDTH, 2);
+		});
+
+		it("frames diagram camera placeholder before flatten in host fixture", () => {
+			const design = {
+				id: "d",
+				pieces: [{ id: "a" }, { id: "b" }],
+			} as Design;
 			const flat = sketchpadDesignPuzzle2dFixtureFromDesign(design);
-			const volume = sketchpadDesignVolumeFixtureFromDesign(design);
-			expect(flat.nodes.find((n) => n.id === "child")?.x).toBeCloseTo(3.8 * SKETCHPAD_TOPOLOGY_ICON_WIDTH, 4);
-			expect(volume.objects.find((o) => o.id === "child")?.origin).toEqual([12.1, 4.2, -5.0]);
-			expect(volume.objects.find((o) => o.id === "child")?.orientation?.[3]).toBeGreaterThan(0);
+			expect(flat.camera.zoom).toBe(1);
 		});
 	});
 
@@ -16927,12 +17067,21 @@ if (import.meta.vitest) {
 	});
 
 	describe("sketchpadKitFileUrlById", () => {
-		it("resolves metabolism-relative file paths", () => {
+		it("resolves kit-relative file paths against registered asset base", async () => {
 			const kit = {
-				id: "k",
+				id: "asset-base-kit",
 				files: [{ id: "f1", path: "files/mesh.glb" }],
 			} as Kit;
+			await buildSketchpadPlatform();
+			const ctrl = getSketchpadShellController()!;
+			ctrl.registerKitStore("asset-base-kit", new InMemoryComposeKitStore(kit), {
+				assetBaseUrl: "/fixture/kit/dev/metabolism/wip/initialKit",
+			});
 			expect(sketchpadKitFileUrlById(kit).get("f1")).toBe("/fixture/kit/dev/metabolism/wip/initialKit/files/mesh.glb");
+			ctrl.dispose();
+			sketchpadShellControllerSingleton = null;
+			sketchpadPlatformSingleton = null;
+			sketchpadPlatformReady = null;
 		});
 
 		it("maps parent-relative representation paths to /meshes", () => {
@@ -17371,6 +17520,15 @@ if (typeof __COMPOSE_SKETCHPAD_RUN_EMBEDDED_TESTS__ !== "undefined" && __COMPOSE
 			await expect(dialog.getByPlaceholder("Search...")).toBeVisible({ timeout: 10_000 });
 		}
 
+		async function openPreloadedKitFromHome(page: import("@playwright/test").Page): Promise<void> {
+			await page.goto("/", { waitUntil: "networkidle" });
+			await expect(page.getByRole("columnheader", { name: "Name" })).toBeVisible({ timeout: 120_000 });
+			const kitRow = page.locator("tr[data-row-id]").filter({ hasText: /metabolism/i });
+			await expect(kitRow).toBeVisible({ timeout: 120_000 });
+			await kitRow.dblclick();
+			await expect(page).toHaveURL(/\/kits\/[0-9a-f-]{36}/i, { timeout: 120_000 });
+		}
+
 		test("home table mounts on root", async ({ page }) => {
 			await page.goto("/", { waitUntil: "networkidle" });
 			await expect(page.getByRole("columnheader", { name: "Name" })).toBeVisible({ timeout: 120_000 });
@@ -17382,23 +17540,17 @@ if (typeof __COMPOSE_SKETCHPAD_RUN_EMBEDDED_TESTS__ !== "undefined" && __COMPOSE
 			await expect(workbenchToggle).toBeVisible({ timeout: 120_000 });
 		});
 
-		test("command palette lists fixture import commands", async ({ page }) => {
+		test("command palette lists kit import commands", async ({ page }) => {
 			await page.goto("/", { waitUntil: "networkidle" });
 			await expect(page.getByRole("columnheader", { name: "Name" })).toBeVisible({ timeout: 120_000 });
 			await openSketchpadCommandPalette(page);
 			const dialog = page.getByRole("dialog");
-			await dialog.getByPlaceholder("Search...").fill("fixture");
-			await expect(dialog.getByText("Open metabolism fixture")).toBeVisible({ timeout: 30_000 });
-			await expect(dialog.getByText("Open Nakagin filtered fixture")).toBeVisible({ timeout: 30_000 });
+			await dialog.getByPlaceholder("Search...").fill("import kit");
+			await expect(dialog.getByText("Import kit from file")).toBeVisible({ timeout: 30_000 });
 		});
 
-		test("open nakagin fixture navigates to kit vfs", async ({ page }) => {
-			await page.goto("/", { waitUntil: "networkidle" });
-			await expect(page.getByRole("columnheader", { name: "Name" })).toBeVisible({ timeout: 120_000 });
-			await openSketchpadCommandPalette(page);
-			const dialog = page.getByRole("dialog");
-			await dialog.getByText("Open Nakagin filtered fixture").click();
-			await expect(page).toHaveURL(/\/kits\/[0-9a-f-]{36}/i, { timeout: 120_000 });
+		test("preloaded kit navigates to kit vfs from home", async ({ page }) => {
+			await openPreloadedKitFromHome(page);
 			await expect(page.getByRole("columnheader", { name: "Kind" })).toBeVisible({ timeout: 120_000 });
 			await expect(page.getByText("Nakagin Capsule Tower")).toBeVisible({ timeout: 120_000 });
 		});
@@ -17414,23 +17566,22 @@ if (typeof __COMPOSE_SKETCHPAD_RUN_EMBEDDED_TESTS__ !== "undefined" && __COMPOSE
 			await expect(page.getByRole("button", { name: "Send feedback" })).toBeVisible({ timeout: 30_000 });
 		});
 
-		test("home vfs double-click opens kit from metabolism row", async ({ page }) => {
+		test("home vfs double-click opens preloaded kit row", async ({ page }) => {
 			await page.goto("/", { waitUntil: "networkidle" });
-			await openSketchpadCommandPalette(page);
-			await page.getByRole("dialog").getByText("Open metabolism fixture").click();
+			await expect(page.getByRole("columnheader", { name: "Name" })).toBeVisible({ timeout: 120_000 });
+			const kitRow = page.locator("tr[data-row-id]").filter({ hasText: /metabolism/i });
+			await expect(kitRow).toBeVisible({ timeout: 120_000 });
+			await kitRow.dblclick();
 			await expect(page).toHaveURL(/\/kits\/[0-9a-f-]{36}/i, { timeout: 120_000 });
 			await page.goBack({ waitUntil: "networkidle" });
 			await expect(page.getByRole("columnheader", { name: "Name" })).toBeVisible({ timeout: 120_000 });
-			const metabolismRow = page.locator("tr[data-row-id]").filter({ hasText: /metabolism/i });
-			await expect(metabolismRow).toBeVisible({ timeout: 120_000 });
-			await metabolismRow.dblclick();
+			await expect(kitRow).toBeVisible({ timeout: 120_000 });
+			await kitRow.dblclick();
 			await expect(page).toHaveURL(/\/kits\/[0-9a-f-]{36}/i, { timeout: 120_000 });
 		});
 
 		test("kit vfs selects design row on click and navigates on double-click", async ({ page }) => {
-			await page.goto("/", { waitUntil: "networkidle" });
-			await openSketchpadCommandPalette(page);
-			await page.getByRole("dialog").getByText("Open Nakagin filtered fixture").click();
+			await openPreloadedKitFromHome(page);
 			await expect(page.getByText("Nakagin Capsule Tower")).toBeVisible({ timeout: 120_000 });
 			const kitUrl = page.url();
 			const designRow = page.locator("tr[data-row-id]").filter({ hasText: "Nakagin Capsule Tower" });
@@ -17442,9 +17593,7 @@ if (typeof __COMPOSE_SKETCHPAD_RUN_EMBEDDED_TESTS__ !== "undefined" && __COMPOSE
 		});
 
 		test("type route opens representation tab stack", async ({ page }) => {
-			await page.goto("/", { waitUntil: "networkidle" });
-			await openSketchpadCommandPalette(page);
-			await page.getByRole("dialog").getByText("Open Nakagin filtered fixture").click();
+			await openPreloadedKitFromHome(page);
 			await expect(page.getByRole("columnheader", { name: "Kind" })).toBeVisible({ timeout: 120_000 });
 			const baseRow = page.locator("tr[data-row-id]").filter({ has: page.getByRole("cell", { name: "Base", exact: true }) });
 			await expect(baseRow).toBeVisible({ timeout: 120_000 });

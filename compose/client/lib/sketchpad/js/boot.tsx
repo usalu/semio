@@ -7,7 +7,7 @@ import { MDXProvider } from "@mdx-js/react";
 import type { Platform } from "@semio-tech/framework-core";
 import type { UiPanelHostSurfaceNode } from "@semio-tech/framework-platform-core";
 import { mountReactApp, PlatformShell, PlatformViewWithHistory, registerUiPanelSurfaceHost } from "@semio-tech/framework-platform-renderer-react";
-import { Aside, Button, Card, CardGrid, FileTree, Input, NavbarFixtureSelect, NAVBAR_NO_FIXTURE_ID, Steps, Tabs, TabsContent, TabsList, TabsTrigger, Textarea } from "@semio-tech/ui-react";
+import { Aside, Button, Card, CardGrid, FileTree, Input, Steps, Tabs, TabsContent, TabsList, TabsTrigger, Textarea } from "@semio-tech/ui-react";
 import React, { Suspense, useEffect, useState } from "react";
 import {
 	SKETCHPAD_SHELL_CONTROLLER_ID,
@@ -178,46 +178,10 @@ function SketchpadFeedbackFormHost({
 registerUiPanelSurfaceHost(SKETCHPAD_SURFACE_DOCS_PAGE, SketchpadDocsMdxHost);
 registerUiPanelSurfaceHost(SKETCHPAD_SURFACE_FEEDBACK_FORM, SketchpadFeedbackFormHost);
 
-function SketchpadKitFixtureNavbar({ platform }: { readonly platform: Platform }): React.ReactElement {
-	const [tick, setTick] = useState(0);
-	useEffect(() => {
-		const ctrl = getSketchpadShellController();
-		const shellStore = ctrl?.getStore<SketchpadShellSnapshot>(SKETCHPAD_SHELL_STORE_SHELL);
-		if (!shellStore) return;
-		return shellStore.subscribe(() => setTick((n) => n + 1));
-	}, []);
-	void tick;
-	const ctrl = getSketchpadShellController();
-	const shell = ctrl?.getStore<SketchpadShellSnapshot>(SKETCHPAD_SHELL_STORE_SHELL)?.getSnapshot();
-	const openKitIds = shell?.openKitIds ?? [];
-	const pathOnly = platform.uri.split("?")[0] ?? "/";
-	const routeKitId = parseSketchpadRouteScopeFromPath(pathOnly).kitId;
-	const activeKitId = routeKitId ?? NAVBAR_NO_FIXTURE_ID;
-	const options = openKitIds.map((kitId) => {
-		const kit = ctrl?.getKitStore(kitId)?.getSnapshot().kit;
-		return { id: kitId, label: kit?.name ?? kitId };
-	});
-	return (
-		<NavbarFixtureSelect
-			id="compose.sketchpad.navbar.fixture"
-			label="Kit"
-			value={activeKitId}
-			options={options}
-			onValueChange={(kitId) => {
-				if (kitId === NAVBAR_NO_FIXTURE_ID) {
-					platform.commandBus.dispatch(SKETCHPAD_SHELL_CONTROLLER_ID, "navigate", { path: "/" });
-					return;
-				}
-				platform.commandBus.dispatch(SKETCHPAD_SHELL_CONTROLLER_ID, "navigate", { path: `/kits/${kitId}` });
-			}}
-		/>
-	);
-}
-
 void ensureSketchpadPlatform().then((platform) => {
 	mountReactApp(
 		<PlatformShell>
-			<PlatformViewWithHistory platform={platform} slotNavbarCenter={<SketchpadKitFixtureNavbar platform={platform} />} />
+			<PlatformViewWithHistory platform={platform} />
 		</PlatformShell>,
 	);
 });
