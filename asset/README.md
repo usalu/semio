@@ -6,7 +6,7 @@ Shared assets including badges, fonts, icons, logo, representations, and kit fix
 
 ## Badges
 
-Each badge is created with [shields.io](https://shields.io) with style `flat-square` and compose colors.
+Each badge is created with [shields.io](https://shields.io) with style `flat-square` and semio colors.
 
 1. Copy the `*.shields` file of an existing badge 📄
 1. Open and download the `*.svg` file ⬇

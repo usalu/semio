@@ -9,7 +9,7 @@ import {
   parseExtraNeo4jGraphDatabaseNamesFromEnv,
   partitionNeo4jGraphCliArgv,
 } from "../../../../generate.neo4j.gen.ts";
-import { BundleScript, ScriptRouter, dispatchSubcommand, findRepoRoot, isDevPortInUse, resolveDevPort } from "./index.ts";
+import { BundleScript, ScriptRouter, canReuseDevPort, describeDevPortOccupant, devServerUrl, dispatchSubcommand, findRepoRoot, isDevPortInUse, resolveDevPort } from "./index.ts";
 import { defineLint, type FileLinter } from "./index.ts";
 import {
   dependencyBoundaryBreachesForBundleDir,
@@ -74,6 +74,25 @@ describe("resolveDevPort", () => {
 
   test("honors skipPorts", () => {
     expect(resolveDevPort("127.0.0.1", 59_991, 5, new Set([59_991, 59_992]))).toBe(59_993);
+  });
+});
+
+describe("devServerUrl", () => {
+  test("maps 0.0.0.0 to loopback", () => {
+    expect(devServerUrl("0.0.0.0", 6019)).toBe("http://127.0.0.1:6019/");
+  });
+});
+
+describe("canReuseDevPort", () => {
+  test("returns true for an active dev HTTP server", () => {
+    if (!isDevPortInUse("127.0.0.1", 6019)) return;
+    expect(canReuseDevPort("127.0.0.1", 6019)).toBe(true);
+  });
+});
+
+describe("describeDevPortOccupant", () => {
+  test("returns undefined for a free port", () => {
+    expect(describeDevPortOccupant(59_998)).toBeUndefined();
   });
 });
 

@@ -1046,6 +1046,31 @@ socket.once("error", () => process.exit(1));
   return result.status === 0;
 }
 
+/** @emoji 🌐 Loopback URL for a dev server bound to `host`/`port`. */
+export function devServerUrl(host: string, port: number): string {
+  const probeHost = host === "0.0.0.0" ? "127.0.0.1" : host;
+  return `http://${probeHost}:${port}/`;
+}
+
+/** @emoji 🔎 Best-effort description of the process listening on `port` (Unix/macOS/Linux). */
+export function describeDevPortOccupant(port: number): string | undefined {
+  if (process.platform === "win32") return undefined;
+  const result = spawnSync("lsof", ["-nP", `-iTCP:${port}`, "-sTCP:LISTEN"], { encoding: "utf8" });
+  const line = result.stdout?.trim().split("\n").find((row, index) => index > 0 && row.trim().length > 0);
+  if (!line) return undefined;
+  const parts = line.trim().split(/\s+/);
+  return parts.length >= 2 ? `${parts[0]} (PID ${parts[1]})` : line.trim();
+}
+
+/** @emoji ♻️ True when an HTTP server on `port` already responds successfully (reuse existing dev). */
+export function canReuseDevPort(host: string, port: number): boolean {
+  const url = devServerUrl(host, port);
+  const probe = `const res = await fetch(${JSON.stringify(url)}, { signal: AbortSignal.timeout(2000) });
+process.exit(res.ok ? 0 : 1);`;
+  const result = spawnSync(process.execPath, ["--input-type=module", "-e", probe], { timeout: 3000 });
+  return result.status === 0;
+}
+
 /** @emoji 🔌 First free TCP port at or after `preferredPort` (up to `maxAttempts`), skipping `skipPorts`. */
 export function resolveDevPort(
   host: string,
@@ -1078,14 +1103,20 @@ export function runViteBunxDev(
 ): void {
   const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
   const preferredPort = Number(process.env[opts.portEnv ?? "VITE_PORT"] ?? opts.defaultPort ?? "5173");
+  if (opts.fixedPort && isDevPortInUse(host, preferredPort)) {
+    const url = devServerUrl(host, preferredPort);
+    if (canReuseDevPort(host, preferredPort)) {
+      console.log(`[dev] Port ${preferredPort} is already in use — dev server appears to be running at ${url}`);
+      return;
+    }
+    const occupant = describeDevPortOccupant(preferredPort);
+    console.error(
+      `[dev] Port ${preferredPort} is already in use${occupant ? ` by ${occupant}` : ""}. Stop that process or set ${opts.portEnv ?? "VITE_PORT"}.`,
+    );
+    process.exit(1);
+  }
   const port = (() => {
     if (opts.fixedPort) {
-      if (isDevPortInUse(host, preferredPort)) {
-        console.error(
-          `[dev] Port ${preferredPort} is already in use. Stop the other process or set ${opts.portEnv ?? "VITE_PORT"}.`,
-        );
-        process.exit(1);
-      }
       return preferredPort;
     }
     const skip = opts.reservedPorts ?? new Set<number>();

@@ -4,7 +4,7 @@
 
 // #region 🔌Adapters
 import { reactHostPort, type ContextMenuItem, type GumballConfig } from "@semio-tech/ui-react";
-import { PUZZLE_3D_GUMBALL_CONFIG, puzzle3dObjectGumballConfig } from "../../3d/react/index.tsx";
+import { PUZZLE_3D_GUMBALL_CONFIG } from "../../3d/react/index.tsx";
 import type { ReactElement } from "react";
 
 /** @emoji 🔗 Unified puzzle 5d model with 2d WASM + 3d R3F projections and a shared {@link Store}. */
@@ -61,16 +61,12 @@ import {
 import {
   DEFAULT_MESH_STYLE as PUZZLE_3D_DEFAULT_MESH_STYLE,
   ObjectStateProvider as Puzzle3dPartStateProvider,
-  Objects as Puzzle3dParts,
-  Attractions as Puzzle3dTies,
-  Canvas3D as Puzzle3dCanvas,
+  PlayCanvas as Puzzle3dPlayCanvas,
   PUZZLE_3D_MESH_PAINT,
   blockedVortexFullIdsFromAttractions,
   cancelPuzzle3dFixturePalettePointerDrag,
   meshStyleColors,
   parseFixtureV1,
-  useObjectConnect as usePuzzle3dPartConnect,
-  useObjectRelocate as usePuzzle3dPartRelocate,
   type AttractionKind as Puzzle3dFastenerKind,
   type AttractionSessionSnapshot,
   type CableKind as Puzzle3dRopeKind,
@@ -144,6 +140,11 @@ export const PUZZLE_5D_3D_DEFAULT_MESH_STYLE = PUZZLE_3D_DEFAULT_MESH_STYLE;
 /** @emoji 🎨 Resolves 5d volume mesh colors through puzzle 3d tokens. */
 export const puzzle5d3dMeshStyleColors: (style: MeshStyleKind) => MeshStyleColors | null = meshStyleColors;
 
+/** @emoji 🎨 Forwards only explicit 5d volume mesh styles so unset stays identical to puzzle 3d fixtures. */
+export function puzzle5d3dMeshStyleProps(style: MeshStyleKind | undefined): { readonly style?: MeshStyleKind } {
+  return style === undefined ? {} : { style };
+}
+
 export type Puzzle5d3dMeshStyleKind = MeshStyleKind;
 //#endregion 🔖PairedPolicy
 
@@ -201,6 +202,7 @@ export interface Part3dAspect {
   readonly scale?: number | readonly [number, number, number];
   readonly meshUrl: string;
   readonly meshByLod?: readonly Puzzle3dLodMeshEntry[];
+  readonly style?: MeshStyleKind;
   readonly label?: string;
   readonly wormhole?: boolean;
   readonly hidden?: boolean;
@@ -602,6 +604,7 @@ export function compose5d(fixture2d: Puzzle2dFixtureV1, fixture3d: Puzzle3dFixtu
       ...(obj.orientation !== undefined ? { orientation: obj.orientation } : {}),
       ...(obj.scale !== undefined ? { scale: obj.scale } : {}),
       ...(obj.meshByLod !== undefined ? { meshByLod: obj.meshByLod } : {}),
+      ...puzzle5d3dMeshStyleProps(obj.style),
       ...(obj.label !== undefined ? { label: obj.label } : {}),
       ...(obj.wormhole === true ? { wormhole: true } : {}),
       ...(obj.hidden === true ? { hidden: true } : {}),
@@ -773,6 +776,7 @@ export function project3d(model: Model): Puzzle3dFixtureV1 {
         ...(s.orientation !== undefined ? { orientation: s.orientation } : {}),
         ...(s.scale !== undefined ? { scale: s.scale } : {}),
         ...(s.meshByLod !== undefined ? { meshByLod: s.meshByLod } : {}),
+        ...puzzle5d3dMeshStyleProps(s.style),
         ...(s.label !== undefined ? { label: s.label } : {}),
         ...(s.wormhole === true ? { wormhole: true } : {}),
         ...(s.hidden === true ? { hidden: true } : {}),
@@ -1377,6 +1381,31 @@ function volumeTemplatesForPartKind(model: Model, partKind: string, catalogs: Ki
   return templates.length ? templates : undefined;
 }
 
+function flatTemplatesForPartKind(
+  model: Model,
+  partKind: string,
+  catalogs: KindCatalogBundle | undefined,
+): readonly { readonly angle: number; readonly handleKind: string; readonly radius?: number }[] | undefined {
+  const fromCatalog = catalogs?.parts
+    ?.find((row) => row.id === partKind)
+    ?.grips?.filter((grip) => grip["2d"])
+    .map((grip) => ({
+      angle: grip["2d"]!.angle,
+      handleKind: grip["2d"]!.gripKind,
+      ...(grip["2d"]!.radius !== undefined ? { radius: grip["2d"]!.radius } : {}),
+    }));
+  if (fromCatalog?.length) return fromCatalog;
+  const peer = peerPartForKind(model, partKind);
+  const fromPeer = peer?.grips
+    .filter((grip) => grip["2d"])
+    .map((grip) => ({
+      angle: grip["2d"]!.angle,
+      handleKind: grip["2d"]!.gripKind,
+      ...(grip["2d"]!.radius !== undefined ? { radius: grip["2d"]!.radius } : {}),
+    }));
+  return fromPeer?.length ? fromPeer : undefined;
+}
+
 function gripLocalIdFromIndex(index: number): string {
   return `v${index}`;
 }
@@ -1403,7 +1432,7 @@ function flatTemplatesFromObjectKind(kind: Puzzle3dPartKind | undefined): readon
   return Array.from({ length: count }, (_, index) => ({
     angle: flatHandleConnectorAngle(index, count),
     handleKind: kind?.vortices?.[index]?.vortexKind ?? BUILTIN_PORT_HANDLE_KIND,
-    radius: 3,
+    radius: kind?.vortices?.[index]?.radius ?? 3,
   }));
 }
 
@@ -1550,7 +1579,8 @@ function synthesizeVolumeAspectFromBrushPayload(
   const meshUrl = resolveObjectKindMeshUrl(partKind, cat3d, project3d(model));
   if (!meshUrl) return null;
   const templates = volumeTemplatesForPartKind(model, partKind, catalogs);
-  const grips = buildGripsUnified("", partKind, catalogs, undefined, templates);
+  const flatTemplates = flatTemplatesForPartKind(model, partKind, catalogs);
+  const grips = buildGripsUnified("", partKind, catalogs, flatTemplates, templates);
   return {
     aspect: {
       origin: payload.origin,
@@ -2033,6 +2063,7 @@ export function partFromPaletteNodeDrop(model: Model, node: Puzzle2dFixtureNodeV
       origin,
       meshUrl,
       orientation: peer?.["3d"]?.orientation ?? ([0, 0, 0, 1] as Quat),
+      ...puzzle5d3dMeshStyleProps(peer?.["3d"]?.style),
       ...(kind.scale !== undefined ? { scale: kind.scale } : peer?.["3d"]?.scale !== undefined ? { scale: peer["3d"].scale } : {}),
       ...(kind.label ?? kind.name ? { label: kind.label ?? kind.name } : {}),
     },
@@ -2047,7 +2078,7 @@ export function partFromPaletteObjectDrop(model: Model, object: Puzzle3dFixtureO
     return null;
   }
   const catalogs = model.kindCatalogs;
-  const template = buildPaletteNodeDragFixture(partKind, catalogs).nodes[0];
+  const template = buildPaletteNodeDragFixture(partKind, project2dKindCatalogs(catalogs)).nodes[0];
   if (!template) {
     return null;
   }
@@ -2089,6 +2120,7 @@ export function partFromPaletteObjectDrop(model: Model, object: Puzzle3dFixtureO
       meshUrl: object.meshUrl,
       ...(object.orientation !== undefined ? { orientation: object.orientation } : {}),
       ...(object.scale !== undefined ? { scale: object.scale } : {}),
+      ...puzzle5d3dMeshStyleProps(object.style),
       ...(object.label !== undefined ? { label: object.label } : {}),
       ...(object.wormhole === true ? { wormhole: true } : {}),
     },
@@ -2545,7 +2577,7 @@ export function useSnapshot(): StoreSnapshot {
 //#region 🔖FiveD
 export const FIVE_D_ROOT_CLASS = "flex h-full min-h-0 flex-1 flex-col";
 
-/** @emoji 📶 Flat-only LOD/grid defaults ({@link PUZZLE_5D_2D_LOD_TIER_COUNT} discrete tiers); do not pass to 3d {@link Puzzle3dCanvas}. */
+/** @emoji 📶 Flat-only LOD/grid defaults ({@link PUZZLE_5D_2D_LOD_TIER_COUNT} discrete tiers); do not pass to 3d {@link Puzzle3dPlayCanvas}. */
 export const FIVE_D_FLAT_LOD_DEFAULTS = {
   gridFactor: DEFAULT_PUZZLE_2D_GRID_FACTOR,
   gridSnapEnabled: true,
@@ -2933,10 +2965,8 @@ const FiveD3dInner = reactHostPort.memo(function FiveD3dInner(props: FiveDProps)
   const extra3d = props.puzzle3d ?? {};
   const {
     onSelect: onSelectHost,
-    onConnect: onConnectHost,
     onIndirectConnect: onIndirectConnectHost,
     onProximityConnect: onProximityConnectHost,
-    onRelocate: onRelocateHost,
     onAttractionCompatibleObjects: onAttractionCompatibleObjectsHost,
     onAttractionTargetRing: onAttractionTargetRingHost,
     onBrushPlace: onBrushPlaceHost,
@@ -2954,8 +2984,6 @@ const FiveD3dInner = reactHostPort.memo(function FiveD3dInner(props: FiveDProps)
   const canvasSelection = reactHostPort.useMemo(() => fiveD3dSelectionFromStore(snap.selection), [snap.selection.partIds, snap.selection.gripIds]);
   const volumeHover = reactHostPort.useMemo(() => fiveD3dHoverFromStore(snap.hoverFocus), [snap.hoverFocus]);
   const attractionSession = fiveDAttractionSessionFromStore(snap.connectSession);
-  const onRelocate = usePuzzle3dPartRelocate();
-  const onConnect = usePuzzle3dPartConnect();
   const storeRef = reactHostPort.useRef(store);
   storeRef.current = store;
   const onCamera = reactHostPort.useCallback((c: Puzzle3dFixtureV1["camera"]) => {
@@ -2972,7 +3000,11 @@ const FiveD3dInner = reactHostPort.memo(function FiveD3dInner(props: FiveDProps)
     puzzle5dCommitVolumeBrushPlacementToPlay(storeRef.current, payload);
   }, [onBrushPlaceHost]);
   return (
-    <Puzzle3dCanvas
+    <Puzzle3dPlayCanvas
+      fixture={fixture3d}
+      setSelectedId={(id) => {
+        store.setSelection({ partIds: id ? [id] : [], gripIds: [] });
+      }}
       camera={rest3d.camera ?? camera}
       className={["min-h-0 flex-1", props.className, rest3d.className].filter(Boolean).join(" ") || undefined}
       {...FIVE_D_3D_CHROME_DEFAULTS}
@@ -2984,14 +3016,6 @@ const FiveD3dInner = reactHostPort.memo(function FiveD3dInner(props: FiveDProps)
       kindCompatibility={snap.model.kindCompatibility as Puzzle3dKindCompatEntry[] | undefined}
       gumballConfig={props.gumballConfig ?? PUZZLE_3D_GUMBALL_CONFIG}
       onCamera={onCamera}
-      onConnect={(p) => {
-        onConnect?.(p);
-        onConnectHost?.(p);
-      }}
-      onRelocate={(p) => {
-        onRelocate?.(p);
-        onRelocateHost?.(p);
-      }}
       onAttractionCompatibleObjects={(p) => {
         if (!p.attracting) {
           store.setConnectSession(null);
@@ -3033,7 +3057,6 @@ const FiveD3dInner = reactHostPort.memo(function FiveD3dInner(props: FiveDProps)
       onIndirectConnect={(p) => {
         store.applyFastener(p.attracting, p.attracted);
         onIndirectConnectHost?.(p);
-        onConnect?.(p);
       }}
       onProximityConnect={(p) => {
         store.applyFastener(p.attracting, p.attracted);
@@ -3052,12 +3075,8 @@ const FiveD3dInner = reactHostPort.memo(function FiveD3dInner(props: FiveDProps)
       hoverTarget={volumeHover.hoverTarget}
       kindHover={volumeHover.kindHover}
       onHover={onCanvasHover}
-      sceneFixture={fixture3d}
       selection={canvasSelection}
-    >
-      <Puzzle3dParts relocate={puzzle3dObjectGumballConfig(props.gumballConfig)} />
-      <Puzzle3dTies />
-    </Puzzle3dCanvas>
+    />
   );
 });
 
@@ -3986,6 +4005,7 @@ if (import.meta.vitest) {
       const fixture3d = project3d(model);
       expect(fixture3d.objects).toHaveLength(1);
       expect(fixture3d.objects[0]?.origin).toEqual([1, 2, 3]);
+      expect(fixture3d.objects[0]?.style).toBeUndefined();
     });
 
     it("round-trips native 3d appearance fields through 5d", () => {
@@ -4005,6 +4025,7 @@ if (import.meta.vitest) {
             objectKind: "kind-a",
             meshUrl: "/mesh/a.glb",
             meshByLod: [{ lod: 1000, url: "/mesh/a-lod.glb" }],
+            style: "selected",
             origin: [1, 2, 3],
             locked: true,
             vortices: [
@@ -4033,12 +4054,26 @@ if (import.meta.vitest) {
       };
       const projected = project3d(compose5d(fixture2d, fixture3d));
       expect(projected.objects[0]?.meshByLod).toEqual(fixture3d.objects[0]?.meshByLod);
+      expect(projected.objects[0]?.style).toBe("selected");
       expect(projected.objects[0]?.locked).toBe(true);
       expect(projected.objects[0]?.vortices[0]?.vortexMeshUrl).toBe("/mesh/port.glb");
       expect(projected.objects[0]?.vortices[0]?.vortexMeshByLod).toEqual(fixture3d.objects[0]?.vortices[0]?.vortexMeshByLod);
       expect(projected.objects[0]?.vortices[0]?.hidden).toBe(true);
       expect(projected.references).toEqual(fixture3d.references);
       expect(projected.targetVolumes).toEqual(fixture3d.targetVolumes);
+    });
+
+    it("keeps unset concrete forest mesh style unset like native 3d", async () => {
+      const [{ default: fixture2dRaw }, { default: fixture3dRaw }] = await Promise.all([
+        import("../../2d/fixture/concrete-forest.2d.json"),
+        import("../../3d/fixture/concrete-forest.3d.json"),
+      ]);
+      const fixture2d = parsePuzzle2dFixtureV1(fixture2dRaw as unknown);
+      const fixture3d = parseFixtureV1(fixture3dRaw as unknown);
+      expect(fixture2d).toBeTruthy();
+      expect(fixture3d).toBeTruthy();
+      expect(fixture3d!.objects.every((object) => object.style === undefined)).toBe(true);
+      expect(project3d(compose5d(fixture2d!, fixture3d!)).objects.every((object) => object.style === undefined)).toBe(true);
     });
   });
 
@@ -4513,6 +4548,43 @@ if (import.meta.vitest) {
       expect(placed?.["3d"]?.scale).toBe(1.5);
       expect(result.model.fasteners.some((f) => f.id === "accepted-preview-fastener")).toBe(true);
       expect(result.model.fasteners.some((f) => f.source.endsWith(":mate") || f.source.includes("Capsule"))).toBe(true);
+    });
+
+    it("preserves unified catalog grip radii on accepted volume suggestions", () => {
+      const model: Model = {
+        ...brushHostModel(),
+        kindCatalogs: {
+          parts: [
+            {
+              id: "Capsule",
+              name: "Capsule",
+              meshUrl: "/mesh/capsule.glb",
+              grips: [
+                {
+                  gripKind: "b-l",
+                  "2d": { angle: Math.PI, gripKind: "b-l", radius: 0.36 },
+                  "3d": { position: [-1, 0, 0], direction: [1, 0, 0], radius: 0.36 },
+                },
+              ],
+            },
+          ],
+        },
+      };
+      const result = applyBrushPlacementToModel(
+        model,
+        puzzle5dBrushPlacementFromVolume({
+          targetVortexFullId: "host:port",
+          objectKindId: "Capsule",
+          sourceVortexIndex: 0,
+          origin: [2, 0, 0],
+          orientation: [0, 0, 0, 1],
+        }),
+      );
+      expect(result.kind).toBe("placed");
+      if (result.kind !== "placed") return;
+      const placed = result.model.parts.find((part) => part.id === result.partId);
+      expect(placed?.grips[0]?.["2d"]?.radius).toBe(0.36);
+      expect(placed?.grips[0]?.["3d"]?.radius).toBe(0.36);
     });
 
     it("appends a unified part with both aspects from a flat brush payload", () => {

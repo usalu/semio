@@ -3,11 +3,14 @@
   "emoji": "🧩",
   "status": "closed",
   "description": "Make puzzle 3D mesh hover colors match UI element styling: default mesh borders use the UI border color, hovered mesh fill uses the same style as buttons, and hovered mesh edges use the emphasized color.",
-  "summary": "Fixed puzzle 5d volume projection so 3d parts preserve native puzzle 3d appearance data instead of rebuilding a reduced fixture. 5d now round-trips object mesh LODs, object hidden/locked flags, vortex mesh LODs, vortex hidden/locked flags, references, and target volumes back into the projected puzzle 3d fixture. Exported the puzzle 3d world reference and target volume fixture types and added tests covering the 5d projection round-trip.",
+  "summary": "Concrete Forest parity fix: 5D no longer converts unset Puzzle 3D object mesh style into an explicit style. The 5D 3D aspect now forwards only explicit mesh styles, so Concrete Forest projects with propStyle unset just like native Puzzle 3D while still preserving explicit styles when present. Verified runtime debug before cleanup showed both Concrete Forest 3D and 5D resolving seed-left-001 as propStyle=\u003cunset\u003e meshStyle=neutral; removed debug logs after validation. Added a concrete-forest regression test and reran focused 5D/3D tests plus the 5D concrete-forest build.",
   "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
   "sessions": [
     "⚪4905f4654cf14460aaa9f40127fc8d81",
     "⚪2cf1699060f248b994f27385951f2614",
-    "⚪a3421d5be117438582619ce80b83a724"
+    "⚪a3421d5be117438582619ce80b83a724",
+    "⚪e32c559e4bd346c7987bebfcb74fe42d",
+    "⚪405831b1f8ab45b7b8834d23e88cc24c",
+    "⚪73d28624cb9c4e799dceb4309e1b1343"
   ]
 }

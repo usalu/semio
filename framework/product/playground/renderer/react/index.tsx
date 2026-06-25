@@ -52,6 +52,10 @@ import {
   Ring,
   type ContextMenuItem,
   type UiTranslationKey,
+  ButtonGroup,
+  ButtonGroupItem,
+  SemioLogo,
+  interactiveActiveFillClass,
   NavbarFixtureSelect,
   readStoredUiChromeCompact,
   readStoredUiChromeExpertise,
@@ -727,6 +731,7 @@ export function UiRenderer({ node, commandBus }: { readonly node: UiNode; readon
     case "gismap":
     case "flow":
     case "dag":
+    case "shooting":
     case "panel":
     case "table":
       return renderPlaygroundHostSurface(node, node.type === "table" || node.type === "panel" ? "panel" : "canvas");
@@ -1469,9 +1474,14 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, playgro
     }
     const items: NavbarItem[] = [
       {
-        key: "title",
-        className: "min-w-0 shrink-0 max-w-[40%]",
-        content: <span className={cn("px-single", shellChromeTitleClassName)}>{shell.activeApp.label}</span>,
+        key: "logoAndTitle",
+        className: "min-w-0 shrink-0 flex items-center gap-single",
+        content: (
+          <div className="flex items-center gap-single">
+            <SemioLogo className="h-6 w-6 shrink-0" />
+            <span className={cn("px-single", shellChromeTitleClassName)}>{shell.activeApp.label}</span>
+          </div>
+        ),
       },
     ];
     if (navbarFixtureSelect) {
@@ -1483,12 +1493,38 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, playgro
     } else {
       items.push(navbarFillItem());
     }
+    const modesList = shell.activeAppBase?.modes ?? [];
+    const resolvedModes = modesList.length > 0 ? modesList : [{ id: shell.activeApp.id, label: shell.activeApp.label, iconId: undefined }];
+    items.push({
+      key: "modes",
+      content: (
+        <ButtonGroup id="playground.navbar.modes">
+          {resolvedModes.map((mode) => {
+            const isActive = shell.activeModeId === mode.id || (modesList.length === 0 && (shell.activeModeId === null || shell.activeModeId === mode.id));
+            return (
+              <ButtonGroupItem
+                key={mode.id}
+                id={`playground.navbar.modes.${mode.id}`}
+                className={cn(isActive && interactiveActiveFillClass)}
+                data-state={isActive ? "on" : undefined}
+                onClick={() => {
+                  shell.activeAppBase?.setActiveModeId(mode.id);
+                  runtime.notifyChrome();
+                }}
+                icon={mode.iconId || <span className="hidden" />}
+                text={mode.label}
+              />
+            );
+          })}
+        </ButtonGroup>
+      ),
+    });
     items.push({
       key: "panelToggles",
       content: <PanelToggleGroup items={playgroundPanelToggleItems} />,
     });
     return items;
-  }, [navbarFixtureSelect, playgroundPanelToggleItems, shell.activeApp]);
+  }, [navbarFixtureSelect, playgroundPanelToggleItems, shell.activeApp, shell.activeAppBase, shell.activeModeId, runtime]);
 
   if (!shell.activeAppBase || !shell.activeApp || !shell.playgroundContextValue) return null;
 
@@ -6985,6 +7021,8 @@ function ShootingModelSurfaceHost({ node }: { readonly node: UiShootingHostSurfa
 			<ShootingModelCanvas
 				fixture={fixture}
 				className="h-full w-full"
+				centerModel={ctrl?.getCenterModel() ?? true}
+				fitRevision={ctrl?.getFitRevision() ?? 0}
 				onCamera={(camera) => ctrl?.run("setCamera", { camera })}
 			/>
 		</div>
@@ -6992,17 +7030,24 @@ function ShootingModelSurfaceHost({ node }: { readonly node: UiShootingHostSurfa
 }
 
 function ShootingIconSurfaceHost({ node }: { readonly node: UiShootingHostSurfaceNode }): ReactElement {
-	const { runtime } = useApp();
 	const ctrl = useShootingPlayController();
-	const revision = ctrl?.getRenderRevision() ?? 0;
-	void runtime.generation;
 	const fixture = ctrl?.getFixture();
 	if (!fixture || node.view !== "icon") {
 		return <div className="absolute inset-0 min-h-0 min-w-0" />;
 	}
+	const activeShot = resolveActiveShot(fixture);
 	return (
 		<div className="absolute inset-0 min-h-0 min-w-0">
-			<ShootingIconCanvas fixture={fixture} className="h-full w-full" renderRevision={revision} />
+			<ShootingIconCanvas
+				fixture={fixture}
+				className="h-full w-full"
+				centerModel={ctrl?.getCenterModel() ?? true}
+				fitRevision={ctrl?.getFitRevision() ?? 0}
+				onCamera={(camera) => {
+					if (!activeShot) return;
+					ctrl?.run("setShotCamera", { shotId: activeShot.id, camera });
+				}}
+			/>
 		</div>
 	);
 }
@@ -8073,6 +8118,25 @@ if (import.meta.vitest) {
         expect(html).not.toContain("Unsupported UiNode");
       } finally {
         flowSurfaceHosts.delete(surfaceId);
+        unregisterSurfaceBinding(surfaceId);
+      }
+    });
+
+    it("renders shooting nodes through shooting surface hosts", async () => {
+      const { renderToStaticMarkup } = await import("react-dom/server");
+      const { buildShootingWindowBody } = await import("@semio-tech/framework-playground-core");
+      const surfaceId = "playground.test/shooting-model";
+      function TestShootingHost(): React.ReactElement {
+        return <div data-host="shooting">shooting canvas</div>;
+      }
+      registerSurfaceBinding(surfaceId, TestShootingHost);
+      try {
+        const html = renderToStaticMarkup(
+          <UiRenderer node={buildShootingWindowBody(surfaceId, "ctrl", "model")} commandBus={new CommandBus()} />,
+        );
+        expect(html).toContain('data-host="shooting"');
+        expect(html).not.toContain("Unsupported UiNode");
+      } finally {
         unregisterSurfaceBinding(surfaceId);
       }
     });

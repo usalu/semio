@@ -11855,6 +11855,7 @@ function Inner(props: CanvasProps & {
 
 export interface PlayCanvasProps {
   readonly fixture: FixtureV1;
+  readonly className?: string;
   readonly camera?: CameraState;
   readonly cameraSeedKey?: string | number;
   readonly proximityRelocateEnabled?: boolean;
@@ -11882,12 +11883,14 @@ export interface PlayCanvasProps {
   readonly onVoxelBrushPaint?: (cad: Vec3, scale: Vec3) => void;
   readonly voxelBrushDimensions?: Vec3;
   readonly fillEditTargetVolumes?: boolean;
-  readonly onIndirectConnect?: () => void;
-  readonly onProximityConnect?: () => void;
+  readonly onConnect?: (payload: AttractionPayload) => void;
+  readonly onIndirectConnect?: (payload: AttractionPayload) => void;
+  readonly onProximityConnect?: (payload: AttractionPayload) => void;
   readonly onLodChange?: (lod: number) => void;
   readonly onCamera?: (s: CameraState) => void;
-  readonly onAttractionCompatibleObjects?: () => void;
-  readonly onAttractionTargetRing?: () => void;
+  readonly onAttractionCompatibleObjects?: (payload: AttractionCompatibleObjectsPayload) => void;
+  readonly onAttractionTargetRing?: (payload: AttractionTargetRingPayload) => void;
+  readonly attractionSession?: AttractionSessionSnapshot | null;
   readonly brushActive?: boolean;
   readonly fillActive?: boolean;
   readonly onFillMeshesReady?: () => void;
@@ -11952,29 +11955,36 @@ export function PlayCanvas(props: PlayCanvasProps): React.ReactElement {
   );
   const handleRelocate = useObjectRelocate();
   const handleConnect = useObjectConnect();
+  const onConnect = reactHostPort.useCallback(
+    (payload: AttractionPayload) => {
+      handleConnect(payload);
+      props.onConnect?.(payload);
+    },
+    [handleConnect, props.onConnect],
+  );
   const onIndirectConnect = reactHostPort.useCallback(
     (payload: AttractionPayload) => {
       handleConnect(payload);
-      props.onIndirectConnect?.();
+      props.onIndirectConnect?.(payload);
     },
     [handleConnect, props.onIndirectConnect],
   );
   const onProximityConnect = reactHostPort.useCallback(
     (payload: AttractionPayload) => {
       handleConnect(payload);
-      props.onProximityConnect?.();
+      props.onProximityConnect?.(payload);
     },
     [handleConnect, props.onProximityConnect],
   );
   const onAttractionCompatibleObjects = reactHostPort.useCallback(
-    (_payload: AttractionCompatibleObjectsPayload) => {
-      props.onAttractionCompatibleObjects?.();
+    (payload: AttractionCompatibleObjectsPayload) => {
+      props.onAttractionCompatibleObjects?.(payload);
     },
     [props.onAttractionCompatibleObjects],
   );
   const onAttractionTargetRing = reactHostPort.useCallback(
-    (_payload: AttractionTargetRingPayload) => {
-      props.onAttractionTargetRing?.();
+    (payload: AttractionTargetRingPayload) => {
+      props.onAttractionTargetRing?.(payload);
     },
     [props.onAttractionTargetRing],
   );
@@ -11997,7 +12007,7 @@ export function PlayCanvas(props: PlayCanvasProps): React.ReactElement {
   }, [props.onReferenceRelocate, props.onSelect, props.onTargetVolumeRelocate, props.onVoxelBrushPaint]);
   return (
     <Canvas3D
-      className="absolute inset-0"
+      className={props.className ?? "absolute inset-0"}
       camera={props.camera ?? props.fixture.camera}
       cameraSeedKey={props.cameraSeedKey}
       domain={props.fixture.domain}
@@ -12023,12 +12033,13 @@ export function PlayCanvas(props: PlayCanvasProps): React.ReactElement {
       onVoxelBrushPaint={props.onVoxelBrushPaint}
       voxelBrushDimensions={props.voxelBrushDimensions}
       fillEditTargetVolumes={props.fillEditTargetVolumes}
-      onConnect={handleConnect}
+      onConnect={onConnect}
       onRelocate={handleRelocate}
       onIndirectConnect={onIndirectConnect}
       onProximityConnect={onProximityConnect}
       onAttractionCompatibleObjects={onAttractionCompatibleObjects}
       onAttractionTargetRing={onAttractionTargetRing}
+      attractionSession={props.attractionSession}
       brushActive={props.brushActive}
       fillActive={props.fillActive}
       onFillMeshesReady={props.onFillMeshesReady}

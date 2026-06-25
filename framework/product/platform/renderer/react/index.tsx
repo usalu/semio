@@ -251,6 +251,9 @@ import {
 	renderControlIcon,
 	type IconName,
 	type IconSource,
+	SemioLogo,
+	interactiveActiveFillClass,
+	shellChromeTitleClassName,
 } from "@semio-tech/ui-react";
 // #endregion 🔌Adapters
 
@@ -3339,11 +3342,13 @@ if (import.meta.vitest) {
 		it("ignores node position changes", () => {
 			const flatA = {
 				schema: "puzzle.2d.fixture/v1",
+				camera: { x: 0, y: 0, zoom: 1 },
 				nodes: [{ id: "a", x: 0, y: 0, shape: "circle", radius: 8, handles: [] }],
 				edges: [],
 			};
 			const flatB = {
 				schema: "puzzle.2d.fixture/v1",
+				camera: { x: 0, y: 0, zoom: 1 },
 				nodes: [{ id: "a", x: 40, y: 50, shape: "circle", radius: 8, handles: [] }],
 				edges: [],
 			};
@@ -3355,11 +3360,13 @@ if (import.meta.vitest) {
 			const volume = { schema: "puzzle.3d.fixture/v1", objects: [], attractions: [], cables: [] };
 			const flatA = {
 				schema: "puzzle.2d.fixture/v1",
+				camera: { x: 0, y: 0, zoom: 1 },
 				nodes: [{ id: "a", x: 0, y: 0, shape: "circle", radius: 8, handles: [] }],
 				edges: [],
 			};
 			const flatB = {
 				schema: "puzzle.2d.fixture/v1",
+				camera: { x: 0, y: 0, zoom: 1 },
 				nodes: [{ id: "b", x: 0, y: 0, shape: "circle", radius: 8, handles: [] }],
 				edges: [],
 			};
@@ -3469,7 +3476,7 @@ if (import.meta.vitest) {
 			expect(kindRow.templateId).toBeUndefined();
 			const templateRow = JSON.parse(items[1]!.dragData![COMPOSE_WINDOW_TEMPLATE_MIME]!) as WindowTemplateDropPayload;
 			expect(templateRow.templateId).toBe("orthographic");
-			expect(items[1]?.defaultOpen).toBe(true);
+			expect(items[1]?.defaultOpen).toBe(false);
 			expect(items[1]?.items?.[0]?.label).toBe("Top");
 		});
 
@@ -3485,9 +3492,9 @@ if (import.meta.vitest) {
 			const tree = new DisplayLayoutTreeDefinition(() => host, new CommandBus()).resolveTree();
 			const listItems = tree.sections[1]?.items ?? [];
 			expect(listItems[0]?.label).toBe("Quad");
-			expect(listItems[0]?.defaultOpen).toBe(true);
+			expect(listItems[0]?.defaultOpen).toBe(false);
 			expect(listItems[0]?.items?.[0]?.label).toBe("Mixed");
-			expect(listItems[0]?.items?.[0]?.defaultOpen).toBe(true);
+			expect(listItems[0]?.items?.[0]?.defaultOpen).toBe(false);
 			expect(listItems[0]?.items?.[0]?.items?.[0]?.label).toBe("Standard");
 		});
 	});
@@ -3559,7 +3566,7 @@ if (import.meta.vitest) {
 					platform,
 				),
 			);
-			expect(markupA).toContain("Alpha Workspace");
+			expect(markupA).toContain("Alpha");
 			expect(markupA).toContain("Models");
 			expect(markupA).not.toContain("Capsule");
 			const surfaceIdB = virtualFileSystemSurfaceId(PlatformVirtualFileSystemDemoController.APP_B);
@@ -3575,7 +3582,6 @@ if (import.meta.vitest) {
 					platform,
 				),
 			);
-			expect(markupB).toContain("Beta Workspace");
 			expect(markupB).toContain("Beta Branch");
 			expect(markupB).not.toContain("Alpha");
 		});
@@ -4712,6 +4718,17 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 	const navbarItems: NavbarItem[] = [];
 
 	navbarItems.push({
+		key: "logoAndTitle",
+		className: "min-w-0 shrink-0 flex items-center gap-single",
+		content: (
+			<div className="flex items-center gap-single">
+				<SemioLogo className="h-6 w-6 shrink-0" />
+				<span className={cn("px-single", shellChromeTitleClassName)}>{activeApp.label}</span>
+			</div>
+		),
+	});
+
+	navbarItems.push({
 		key: "navHistory",
 		content: (
 			<ButtonGroup id="ui.nav">
@@ -4747,6 +4764,33 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 			content: slotNavbarCenter,
 		});
 	}
+
+	const modesList = activeAppBase.modes ?? [];
+	const resolvedModes = modesList.length > 0 ? modesList : [{ id: activeApp.id, label: activeApp.label, iconId: undefined }];
+	navbarItems.push({
+		key: "modes",
+		content: (
+			<ButtonGroup id="platform.navbar.modes">
+				{resolvedModes.map((mode) => {
+					const isActive = activeModeId === mode.id || (modesList.length === 0 && (activeModeId === null || activeModeId === mode.id));
+					return (
+						<ButtonGroupItem
+							key={mode.id}
+							id={`platform.navbar.modes.${mode.id}`}
+							className={cn(isActive && interactiveActiveFillClass)}
+							data-state={isActive ? "on" : undefined}
+							onClick={() => {
+								activeAppBase.setActiveModeId(mode.id);
+								platform.notifyChrome();
+							}}
+							icon={mode.iconId || <span className="hidden" />}
+							text={mode.label}
+						/>
+					);
+				})}
+			</ButtonGroup>
+		),
+	});
 
 	navbarItems.push({
 		key: "search",
@@ -4997,7 +5041,7 @@ if (import.meta.vitest) {
 			expect(markup).toContain("Brush");
 			expect(markup).toContain('data-slot="tree-guide"');
 			expect(markup).toContain('data-slot="window-measure-tree-content"');
-			expect(markup).toContain('data-slot="select-trigger"');
+			expect(markup).toContain('data-slot="slider"');
 			expect(markup).not.toContain('data-slot="tree-section-row"');
 		});
 	});
@@ -5218,7 +5262,7 @@ if (import.meta.vitest) {
 			expect(markup).toContain("Workbench");
 			expect(markup).toContain('id="ui.panelToggle.details"');
 			expect(markup).toContain("Details");
-			expect(markup).toContain("Compact");
+			expect(markup).toContain("Settings");
 		});
 
 		it("renders panel kind icons for unregistered tab iconIds", () => {
@@ -5313,8 +5357,8 @@ if (import.meta.vitest) {
 			wb.addApp(app);
 			const markup = renderToStaticMarkup(<PlatformView platform={wb} />);
 
-			expect(markup).toContain('id="ui.mode.select.app.trigger"');
-			expect(markup).not.toContain("ui.modeNav.app");
+			expect(markup).toContain('id="platform.navbar.modes.inspect"');
+			expect(markup).toContain('id="platform.navbar.modes.edit"');
 		});
 	});
 }

@@ -1,0 +1,134 @@
+const FiveD3dInner = reactHostPort.memo(function FiveD3dInner(props: FiveDProps) {
+  const store = useStore();
+  const snap = useSnapshot();
+  const fixture3d = reactHostPort.useMemo(() => project3d(snap.model), [snap.model]);
+  const extra3d = props.puzzle3d ?? {};
+  const {
+    onSelect: onSelectHost,
+    onConnect: onConnectHost,
+    onIndirectConnect: onIndirectConnectHost,
+    onProximityConnect: onProximityConnectHost,
+    onRelocate: onRelocateHost,
+    onAttractionCompatibleObjects: onAttractionCompatibleObjectsHost,
+    onAttractionTargetRing: onAttractionTargetRingHost,
+    onBrushPlace: onBrushPlaceHost,
+    onFillMeshesReady: onFillMeshesReadyHost,
+    brushActive: brushActiveHost,
+    fillActive: fillActiveHost,
+    brushPlacementOverlapBudget: brushOverlapHost,
+    ...rest3d
+  } = extra3d;
+  const activeTool = props.activeTool ?? "select";
+  const brushActive = brushActiveHost ?? activeTool === "brush";
+  const fillActive = fillActiveHost ?? activeTool === "fill";
+  const brushPlacementOverlapBudget = brushOverlapHost ?? props.brushOverlapBudget;
+  const camera = store.get3dCamera(props.instanceId);
+  const canvasSelection = reactHostPort.useMemo(() => fiveD3dSelectionFromStore(snap.selection), [snap.selection.partIds, snap.selection.gripIds]);
+  const volumeHover = reactHostPort.useMemo(() => fiveD3dHoverFromStore(snap.hoverFocus), [snap.hoverFocus]);
+  const attractionSession = fiveDAttractionSessionFromStore(snap.connectSession);
+  const onRelocate = usePuzzle3dPartRelocate();
+  const onConnect = usePuzzle3dPartConnect();
+  const storeRef = reactHostPort.useRef(store);
+  storeRef.current = store;
+  const onCamera = reactHostPort.useCallback((c: Puzzle3dFixtureV1["camera"]) => {
+    storeRef.current.set3dCamera(props.instanceId, c);
+  }, [props.instanceId]);
+  const onCanvasHover = reactHostPort.useCallback((payload: Puzzle3dHoverPayload) => {
+    storeRef.current.setHoverFocusFrom3d(payload);
+  }, []);
+  const onBrushPlace = reactHostPort.useCallback((payload: BrushPlacePayload) => {
+    if (onBrushPlaceHost) {
+      onBrushPlaceHost(payload);
+      return;
+    }
+    puzzle5dCommitVolumeBrushPlacementToPlay(storeRef.current, payload);
+  }, [onBrushPlaceHost]);
+  return (
+    <Puzzle3dCanvas
+      camera={rest3d.camera ?? camera}
+      className={["min-h-0 flex-1", props.className, rest3d.className].filter(Boolean).join(" ") || undefined}
+      {...FIVE_D_3D_CHROME_DEFAULTS}
+      attractionSession={attractionSession}
+      blockedVortexFullIds={blockedVortexFullIdsFromAttractions(fixture3d.attractions)}
+      gridFactor={FIVE_D_FLAT_LOD_DEFAULTS.gridFactor}
+      gridSnapEnabled={FIVE_D_FLAT_LOD_DEFAULTS.gridSnapEnabled}
+      kindCatalogs={project3dKindCatalogs(snap.model.kindCatalogs)}
+      kindCompatibility={snap.model.kindCompatibility as Puzzle3dKindCompatEntry[] | undefined}
+      gumballConfig={props.gumballConfig ?? PUZZLE_3D_GUMBALL_CONFIG}
+      onCamera={onCamera}
+      onConnect={(p) => {
+        onConnect?.(p);
+        onConnectHost?.(p);
+      }}
+      onRelocate={(p) => {
+        onRelocate?.(p);
+        onRelocateHost?.(p);
+      }}
+      onAttractionCompatibleObjects={(p) => {
+        if (!p.attracting) {
+          store.setConnectSession(null);
+          onAttractionCompatibleObjectsHost?.(p);
+          return;
+        }
+        const prev = store.getSnapshot().connectSession;
+        store.setConnectSession({
+          origin: "3d",
+          sourceGrip: p.attracting,
+          endX: prev?.endX ?? 0,
+          endY: prev?.endY ?? 0,
+          end3d: prev?.end3d ?? [0, 0, 0],
+          compatiblePartIds: [...p.objectIds],
+          ringPartId: prev?.ringPartId ?? null,
+          ringGripIds: prev?.ringGripIds ?? [],
+        });
+        onAttractionCompatibleObjectsHost?.(p);
+      }}
+      onAttractionTargetRing={(p) => {
+        const prev = store.getSnapshot().connectSession;
+        if (!p.attracting) {
+          store.setConnectSession(null);
+          onAttractionTargetRingHost?.(p);
+          return;
+        }
+        store.setConnectSession({
+          origin: prev?.origin ?? "3d",
+          sourceGrip: p.attracting,
+          endX: prev?.endX ?? 0,
+          endY: prev?.endY ?? 0,
+          end3d: prev?.end3d ?? [0, 0, 0],
+          compatiblePartIds: prev?.compatiblePartIds ?? [],
+          ringPartId: p.objectId,
+          ringGripIds: [...p.vortexFullIds],
+        });
+        onAttractionTargetRingHost?.(p);
+      }}
+      onIndirectConnect={(p) => {
+        store.applyFastener(p.attracting, p.attracted);
+        onIndirectConnectHost?.(p);
+        onConnect?.(p);
+      }}
+      onProximityConnect={(p) => {
+        store.applyFastener(p.attracting, p.attracted);
+        onProximityConnectHost?.(p);
+      }}
+      onSelect={(s: Puzzle3dSelectionSnapshot) => {
+        store.setSelection({ partIds: [...s.objectIds], gripIds: [...s.vortexIds] });
+        onSelectHost?.(s);
+      }}
+      brushActive={brushActive}
+      fillActive={fillActive}
+      {...(brushPlacementOverlapBudget !== undefined ? { brushPlacementOverlapBudget } : {})}
+      onBrushPlace={onBrushPlace}
+      {...(onFillMeshesReadyHost ? { onFillMeshesReady: onFillMeshesReadyHost } : {})}
+      {...rest3d}
+      hoverTarget={volumeHover.hoverTarget}
+      kindHover={volumeHover.kindHover}
+      onHover={onCanvasHover}
+      sceneFixture={fixture3d}
+      selection={canvasSelection}
+    >
+      <Puzzle3dParts relocate={puzzle3dObjectGumballConfig(props.gumballConfig)} />
+      <Puzzle3dTies />
+    </Puzzle3dCanvas>
+  );
+});

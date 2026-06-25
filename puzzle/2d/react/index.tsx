@@ -3027,7 +3027,7 @@ export function applyBrushPlacementToFixture(
   catalogs?: KindCatalogBundle,
 ): Puzzle2dBrushPlacementApplyResult {
   const nodeId = payload.nodeId?.trim() || `puzzle2d.brush.${crypto.randomUUID()}`;
-  const handles = puzzle2dFixtureHandlesFromNodeKind(nodeId, payload.handles);
+  const handles = puzzle2dBrushHandlesForNodeKind(nodeId, payload, catalogs);
   const targetHandle = handles[payload.targetHandleIndex];
   if (!targetHandle) {
     return { kind: "unchanged" };
@@ -4145,6 +4145,23 @@ export function puzzle2dIconKindForBrushNodeKind(fixture: Puzzle2dFixtureV1, cat
   }
   const peer = fixture.nodes.find((node) => node.nodeKind === kindId && node.iconKind?.trim());
   return peer?.iconKind?.trim();
+}
+
+function puzzle2dBrushHandlesForNodeKind(
+  nodeId: string,
+  payload: Puzzle2dBrushPlacePayload,
+  catalogs: KindCatalogBundle | undefined,
+): Puzzle2dFixtureHandleV1[] {
+  const kind = catalogs?.nodes?.find((row) => row.id === payload.nodeKind);
+  const templates = kind?.handles ?? [];
+  return puzzle2dFixtureHandlesFromNodeKind(
+    nodeId,
+    payload.handles.map((handle, index) => ({
+      angle: handle.angle,
+      handleKind: handle.handleKind,
+      ...(handle.radius !== undefined ? { radius: handle.radius } : templates[index]?.radius !== undefined ? { radius: templates[index]!.radius } : {}),
+    })),
+  );
 }
 
 function puzzle2dCatalogNameLooksLikeI18nKey(name: string): boolean {
@@ -10477,6 +10494,31 @@ if (puzzle2dVitest) {
       expect(list.every((row) => !["c-b", "c-t"].includes(
         catalogs?.nodes?.find((n) => n.id === row.nodeKind)?.handles?.[row.targetHandleIndex]?.handleKind ?? "",
       ))).toBe(true);
+    });
+
+    it("applyBrushPlacementToFixture preserves concrete forest catalog handle radii", async () => {
+      const raw = (await import("../fixture/concrete-forest.2d.json")).default as unknown;
+      const fixture = parsePuzzle2dFixtureV1(raw);
+      expect(fixture).toBeTruthy();
+      const catalogs = fixtureMetaKindCatalogBundle(fixture!.meta);
+      const kind = catalogs?.nodes?.find((row) => row.id === "Hexagonal Cut Concrete Forest Right");
+      expect(kind?.handles?.[0]?.radius).toBe(0.36);
+      const result = applyBrushPlacementToFixture(
+        fixture!,
+        {
+          handles: kind!.handles!.map((handle) => ({ angle: handle.angle, handleKind: handle.handleKind })),
+          nodeKind: kind!.id,
+          sourceHandleId: fixture!.nodes[0]!.handles[0]!.id,
+          targetHandleIndex: 0,
+          x: 80,
+          y: 0,
+        },
+        catalogs,
+      );
+      expect(result.kind).toBe("placed");
+      if (result.kind !== "placed") return;
+      const placed = result.fixture.nodes.find((node) => node.id === result.nodeId);
+      expect(placed?.handles.every((handle) => handle.radius === 0.36)).toBe(true);
     });
 
     it("puzzle2dBuildBrushSuggestionsPreview places node opposite source handle", async () => {

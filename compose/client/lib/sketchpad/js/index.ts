@@ -1,4 +1,4 @@
-﻿// #region 🧲Header
+// #region 🧲Header
 // 2024-2026 Ueli Saluz <ueli@semio-tech.com>
 // Render-agnostic sketchpad product: {@link Platform} apps, {@link Component} snapshots, controller-owned {@link Store}s.
 // #endregion 🧲Header
@@ -15387,6 +15387,7 @@ function buildSketchpadExtensionManifest(): PluginManifest {
 					id: SKETCHPAD_HOME_APP_ID,
 					label: "Home",
 					controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
+					modes: [{ id: "explore", label: "Explore" }],
 					windowKinds: [{ id: "home-main", label: "Home", bodyKey: SKETCHPAD_BODY_HOME }],
 					defaultLayout: createTabStackLayout(["home-main"], ["Home"]),
 					commands: sketchpadHomeCommands(),
@@ -15396,6 +15397,7 @@ function buildSketchpadExtensionManifest(): PluginManifest {
 					id: SKETCHPAD_KIT_APP_ID,
 					label: "Kit",
 					controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
+					modes: [{ id: "explore", label: "Explore" }],
 					windowKinds: [
 						{ id: "vfs", label: "File System", bodyKey: SKETCHPAD_BODY_KIT_VFS },
 						{ id: "wires", label: "Wires", bodyKey: SKETCHPAD_BODY_KIT_WIRES },
@@ -15408,6 +15410,7 @@ function buildSketchpadExtensionManifest(): PluginManifest {
 					id: SKETCHPAD_DESIGN_APP_ID,
 					label: "Design",
 					controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
+					modes: [{ id: "edit", label: "Edit" }],
 					windowKinds: [
 						{ id: "scene", label: "Scene", bodyKey: SKETCHPAD_BODY_DESIGN_SCENE },
 						{ id: "diagram", label: "Diagram", bodyKey: SKETCHPAD_BODY_DESIGN_DIAGRAM },
@@ -15419,6 +15422,7 @@ function buildSketchpadExtensionManifest(): PluginManifest {
 					id: SKETCHPAD_TYPE_APP_ID,
 					label: "Type",
 					controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
+					modes: [{ id: "edit", label: "Edit" }],
 					windowKinds: [{ id: "type-empty", label: "Type", bodyKey: SKETCHPAD_BODY_TYPE_REP }],
 					defaultLayout: createTabStackLayout(["type-empty"], ["Type"]),
 					panelTabs: sketchpadKitPanelTabs(),
@@ -15427,6 +15431,7 @@ function buildSketchpadExtensionManifest(): PluginManifest {
 					id: SKETCHPAD_DOCS_APP_ID,
 					label: "Docs",
 					controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
+					modes: [{ id: "explore", label: "Explore" }],
 					windowKinds: [{ id: "docs-main", label: "Docs", bodyKey: SKETCHPAD_BODY_DOCS }],
 					defaultLayout: createTabStackLayout(["docs-main"], ["Docs"]),
 				},
@@ -15434,6 +15439,7 @@ function buildSketchpadExtensionManifest(): PluginManifest {
 					id: SKETCHPAD_FEEDBACK_APP_ID,
 					label: "Feedback",
 					controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
+					modes: [{ id: "explore", label: "Explore" }],
 					windowKinds: [{ id: "feedback-main", label: "Feedback", bodyKey: SKETCHPAD_BODY_FEEDBACK }],
 					defaultLayout: createTabStackLayout(["feedback-main"], ["Feedback"]),
 				},

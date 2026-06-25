@@ -3,7 +3,7 @@
   "emoji": "📸",
   "status": "closed",
   "description": "Create a new shooting technology with playground: parametric description turning 3D assets (GLB) into icons (SVG/PNG). Two-window Model|Icon layout, camera save/load, extended scene settings (colors, sun, shadow, material), import/export toolbar, full monorepo wiring.",
-  "summary": "Implemented the shooting technology with Model|Icon dual-window playground. Added shooting.fixture/v1 schema, @semio-tech/shooting-react (WorldCanvas model view + IconRenderPort SVG/PNG icon preview), @semio-tech/shooting-play controller with camera save/load, scene measures (sun/ambient/shadow/material), toolbar import/export, and full monorepo wiring (platform shooting ComponentKind, renderer bootShootingPlay host, vite registry, dev port 6019, launch.json, root scripts). Sample fixture base-icon references /mesh/base.glb. Tests pass; dev server and build verified.",
+  "summary": "Models auto-center on load by default via ShootingAutoFit (bounds-based camera fit preserving view direction). Added Viewport \u003e Center Model toggle on Model and Icon window options; toggling on re-fits. Controller tracks centerModel and fitRevision; asset URL changes also trigger re-fit.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1740"
   },
@@ -14,6 +14,13 @@
     "local": "shooting_technology_playground_d28fdbe5.plan.md"
   },
   "sessions": [
-    "⚪a8866fae2afc4177a9bd01cd380c9a9b"
+    "⚪a8866fae2afc4177a9bd01cd380c9a9b",
+    "⚪2e27880e2f2645df8edc187530880e16",
+    "⚪db1aa3947f8848c290a70d96d456aea6",
+    "⚪904c95cc83104b5fa389ca92fca9110e",
+    "⚪821bccfd3ff7496dbdfed2ab894aa829",
+    "⚪f1ffc65e28f3450f86ecfb3f4e641e90",
+    "⚪a9a9c56458e548aea0c8b4a0b1e08071",
+    "⚪85148bd6a21d407ea7225d3caf4b9b85"
   ]
 }

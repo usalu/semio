@@ -545,6 +545,44 @@
       }
     },
     {
+      "name": "🛠️dev🔧shooting",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:shooting",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SHOOTING_PLAY_PORT": "6019"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 171.82
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6019)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🔧shooting🧩base-icon",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:shooting:base-icon",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SHOOTING_PLAY_PORT": "6019"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 171.83
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6019)",
+        "uriFormat": "%s"
+      }
+    },
+    {
       "name": "🛠️dev🔧procedural🧩hexagonal-column",
       "type": "node-terminal",
       "request": "launch",
@@ -954,6 +992,17 @@
       "presentation": {
         "group": "4_build",
         "order": 121
+      }
+    },
+    {
+      "name": "📦build🔧shooting🧩base-icon",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run build:shooting:base-icon",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 121.5
       }
     },
     {

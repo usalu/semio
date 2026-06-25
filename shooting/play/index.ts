@@ -33,6 +33,8 @@ import {
 	DEFAULT_SHOOTING_FIXTURE,
 	parseShootingFixture,
 	resolveActiveShot,
+	resolveActiveAsset,
+	applyShootingCameraToFixture,
 	shootingFixtureToJson,
 	type ShootingCameraV1,
 	type ShootingFixtureV1,
@@ -267,7 +269,10 @@ export class ShootingPlayController extends Controller implements PlaygroundFixt
 	private readonly fixtureStore: ShootingPlayFixtureStore;
 	private hostBridge: ShootingPlayHostBridge | null = null;
 	private renderRevision = 0;
+	private fitRevision = 0;
+	private centerModel = true;
 	private cameraDraftLabel = "Camera 1";
+	private readonly snapshotListeners = new Set<() => void>();
 
 	constructor(commandBus: CommandBus, hostNotify: () => void, fixtureStore: ShootingPlayFixtureStore = createShootingPlayFixtureStore()) {
 		super(SHOOTING_PLAY_CONTROLLER_ID, commandBus, hostNotify);
@@ -287,6 +292,14 @@ export class ShootingPlayController extends Controller implements PlaygroundFixt
 		return this.renderRevision;
 	}
 
+	getCenterModel(): boolean {
+		return this.centerModel;
+	}
+
+	getFitRevision(): number {
+		return this.fitRevision;
+	}
+
 	hasStoredFixture(): boolean {
 		return this.fixtureStore.load() != null;
 	}
@@ -299,6 +312,18 @@ export class ShootingPlayController extends Controller implements PlaygroundFixt
 	setHostBridge(bridge: ShootingPlayHostBridge | null): void {
 		this.hostBridge = bridge;
 		this.rebuildToolbarTools();
+	}
+
+	/** @emoji 🔔 Subscribes to fixture catalog updates for navbar fixture select refresh. */
+	subscribeSnapshot(listener: () => void): () => void {
+		this.snapshotListeners.add(listener);
+		return () => this.snapshotListeners.delete(listener);
+	}
+
+	private notifySnapshot(): void {
+		for (const listener of this.snapshotListeners) {
+			listener();
+		}
 	}
 
 	private toolbarState(): ShootingPlayToolbarState {
@@ -319,8 +344,14 @@ export class ShootingPlayController extends Controller implements PlaygroundFixt
 	}
 
 	private applyFixture(fixture: ShootingFixtureV1): void {
+		const previousAssetUrl = resolveActiveAsset(this.fixture)?.url;
 		this.fixture = fixture;
 		this.renderRevision += 1;
+		const nextAssetUrl = resolveActiveAsset(fixture)?.url;
+		if (this.centerModel && previousAssetUrl !== nextAssetUrl) {
+			this.fitRevision += 1;
+		}
+		this.notifySnapshot();
 		this.rebuildShellMode();
 		this.emit();
 	}
@@ -331,9 +362,39 @@ export class ShootingPlayController extends Controller implements PlaygroundFixt
 		this.applyFixture(parsed);
 	}
 
+	private loadFixtureById(fixtureId: string): void {
+		const nextId = isPlaygroundNoFixtureId(fixtureId) ? PLAYGROUND_NO_FIXTURE_ID : fixtureId;
+		const nextJson = shootingFixtureJsonForId(nextId);
+		if (nextId === this.activeFixtureId && nextJson === this.getFixtureJson()) return;
+		this.activeFixtureId = nextId;
+		this.applyFixtureJson(nextJson);
+	}
+
+	private viewportMeasures(): readonly WindowMeasure[] {
+		return [
+			{
+				kind: "group",
+				id: "shooting-viewport",
+				label: "Viewport",
+				defaultOpen: true,
+				children: [
+					{
+						kind: "toggle",
+						id: "shooting-center-model",
+						iconId: "focus",
+						label: "Center Model",
+						pressed: this.centerModel,
+						onChange: shootingPlayCmd("setCenterModel"),
+					},
+				],
+			},
+		];
+	}
+
 	private modelMeasures(): readonly WindowMeasure[] {
 		const scene = this.fixture.scene;
 		return [
+			...this.viewportMeasures(),
 			{
 				kind: "slider",
 				id: "shooting-sun-azimuth",
@@ -377,8 +438,9 @@ export class ShootingPlayController extends Controller implements PlaygroundFixt
 			{
 				kind: "toggle",
 				id: "shooting-shadow-enabled",
+				iconId: "sun",
 				label: "Shadow",
-				value: scene.shadow.enabled,
+				pressed: scene.shadow.enabled,
 				onChange: shootingPlayCmd("setShadowEnabled"),
 			},
 			{
@@ -397,6 +459,7 @@ export class ShootingPlayController extends Controller implements PlaygroundFixt
 	private iconMeasures(): readonly WindowMeasure[] {
 		const activeShot = resolveActiveShot(this.fixture);
 		return [
+			...this.viewportMeasures(),
 			{
 				kind: "select",
 				id: "shooting-active-shot",
@@ -491,14 +554,31 @@ export class ShootingPlayController extends Controller implements PlaygroundFixt
 		if (command === "setActiveFixture") {
 			if (isPlaygroundFixtureLocked()) return;
 			const fixtureId = (args as { fixtureId?: string }).fixtureId ?? "";
-			this.activeFixtureId = isPlaygroundNoFixtureId(fixtureId) ? PLAYGROUND_NO_FIXTURE_ID : fixtureId;
-			this.applyFixtureJson(shootingFixtureJsonForId(this.activeFixtureId));
+			this.loadFixtureById(fixtureId);
 			return;
 		}
 		if (command === "setCamera") {
 			const camera = (args as { camera?: ShootingCameraV1 }).camera;
 			if (!camera) return;
 			this.applyFixture({ ...this.fixture, camera });
+			return;
+		}
+		if (command === "setShotCamera") {
+			const camera = (args as { camera?: ShootingCameraV1 }).camera;
+			const shotId = (args as { shotId?: string }).shotId;
+			if (!camera) return;
+			const shot = shotId ? this.fixture.shots.find((entry) => entry.id === shotId) : resolveActiveShot(this.fixture);
+			if (!shot) return;
+			this.applyFixture(applyShootingCameraToFixture(this.fixture, shot, camera));
+			return;
+		}
+		if (command === "setCenterModel") {
+			const pressed = (args as { pressed?: boolean }).pressed;
+			if (typeof pressed !== "boolean") return;
+			this.centerModel = pressed;
+			if (pressed) this.fitRevision += 1;
+			this.rebuildShellMode();
+			this.emit();
 			return;
 		}
 		if (command === "setCameraDraftLabel") {
@@ -587,7 +667,7 @@ export class ShootingPlayController extends Controller implements PlaygroundFixt
 			return;
 		}
 		if (command === "setShadowEnabled") {
-			const value = (args as { value?: boolean }).value;
+			const value = (args as { value?: boolean; pressed?: boolean }).value ?? (args as { pressed?: boolean }).pressed;
 			if (typeof value !== "boolean") return;
 			this.patchScene({ shadow: { ...this.fixture.scene.shadow, enabled: value } });
 			return;
@@ -683,6 +763,36 @@ if (import.meta.vitest) {
 			const tools = buildShootingPlayToolbarTools({ hasStoredFixture: false, activeShotId: "overview-svg" }, SHOOTING_PLAY_CONTROLLER_ID);
 			expect(tools.open?.some((row) => row.id === "shooting.open.fixture")).toBe(true);
 			expect(tools.save?.some((row) => row.id === "shooting.save.shot")).toBe(true);
+		});
+
+		it("setActiveFixture loads file fixtures and updates catalog", () => {
+			const bus = new CommandBus();
+			const ctrl = new ShootingPlayController(bus, () => {});
+			ctrl.run("setActiveFixture", { fixtureId: "base-icon" });
+			expect(ctrl.getFixture().assets).toHaveLength(1);
+			expect(ctrl.getFixture().shots).toHaveLength(2);
+			expect(ctrl.getFixtureCatalog()?.activeFixtureId).toBe("base-icon");
+		});
+
+		it("setShotCamera updates active shot camera", () => {
+			const bus = new CommandBus();
+			const ctrl = new ShootingPlayController(bus, () => {});
+			ctrl.run("setFixtureJson", { json: shootingFixtureToJson(DEFAULT_SHOOTING_FIXTURE) });
+			ctrl.run("setShotCamera", { shotId: "overview-svg", camera: { ...DEFAULT_SHOOTING_FIXTURE.camera, zoom: 3 } });
+			expect(ctrl.getFixture().camera.zoom).toBe(3);
+		});
+
+		it("setCenterModel toggles centering and bumps fit revision when enabled", () => {
+			const bus = new CommandBus();
+			const ctrl = new ShootingPlayController(bus, () => {});
+			expect(ctrl.getCenterModel()).toBe(true);
+			const initialFit = ctrl.getFitRevision();
+			ctrl.run("setCenterModel", { pressed: false });
+			expect(ctrl.getCenterModel()).toBe(false);
+			expect(ctrl.getFitRevision()).toBe(initialFit);
+			ctrl.run("setCenterModel", { pressed: true });
+			expect(ctrl.getCenterModel()).toBe(true);
+			expect(ctrl.getFitRevision()).toBe(initialFit + 1);
 		});
 	});
 }

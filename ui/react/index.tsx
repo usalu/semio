@@ -8363,6 +8363,41 @@ function Navbar({ items, className }: NavbarProps) {
 
 export { Navbar };
 
+//#region 🩺SemioLogo
+/** @emoji 🎨 Semio SVG Logo component. */
+export function SemioLogo({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 200 200"
+      className={className}
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M1.25 196.933l35-35.808V43.75h-35z"
+        fill="#fa9500"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeMiterlimit="5"
+      />
+      <path
+        d="M1.25 38.75h155.563l37.66-37.5H1.25zm160.013 160l-.013-155.606 37.5-37.62V198.75z"
+        fill="#ff344f"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeMiterlimit="5"
+      />
+      <path
+        d="M85.467 198.75h70.783v-37.5h-34.169zm.001-80h70.782v-37.5h-34.169z"
+        fill="#34d1bf"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeMiterlimit="5"
+      />
+    </svg>
+  );
+}
+//#endregion 🩺SemioLogo
+
 /** @emoji ↔️ Flex grow class that pushes trailing navbar chrome to the right edge. */
 export const navbarFillClassName = "flex-1 min-w-0";
 
@@ -12161,7 +12196,10 @@ const WindowMeasuresChrome: React.FC<WindowMeasuresChromeProps> = ({ windowId, f
           id={`${windowId}-window-measures-unfold`}
           icon="chevron-left"
           text="Window Options"
-          className={cn(windowMeasuresChromeActionClass, "w-auto px-single")}
+          className={cn(
+            "flex h-medium w-auto items-center justify-center border-0 bg-transparent text-element px-single gap-single",
+            interactiveHoverClass,
+          )}
           onClick={onUnfold}
         />
       </div>
@@ -12177,16 +12215,23 @@ const WindowMeasuresChrome: React.FC<WindowMeasuresChromeProps> = ({ windowId, f
       <ActionGroupItem
         id={`${windowId}-window-measures-span`}
         icon={expanded ? "minimize-2" : "maximize-2"}
-        className={cn(windowMeasuresChromeActionClass, windowMeasuresChromeCornerLeftClass)}
+        text={expanded ? "Unfocus" : "Focus"}
+        className={cn(
+          "flex h-medium w-auto items-center justify-center border-0 bg-transparent text-element px-single gap-single",
+          windowMeasuresChromeCornerLeftClass,
+          interactiveHoverClass,
+        )}
         onClick={expanded ? onCollapseExpand : onExpand}
       />
-      <span data-slot="window-measures-title" className="text-tiny text-element group-hover:text-emphasized flex min-w-0 flex-1 items-center truncate px-tiny font-medium">
-        Window Options
-      </span>
       <ActionGroupItem
         id={`${windowId}-window-measures-fold`}
         icon="chevron-right"
-        className={cn(windowMeasuresChromeActionClass, windowMeasuresChromeCornerRightClass)}
+        text="Window Options"
+        className={cn(
+          "flex h-medium w-auto items-center justify-center border-0 bg-transparent text-element px-single gap-single",
+          windowMeasuresChromeCornerRightClass,
+          interactiveHoverClass,
+        )}
         onClick={onFold}
       />
     </div>
@@ -21945,6 +21990,7 @@ if (import.meta.vitest) {
           onOpenInNewWindow={() => {}}
           onMaximize={() => {}}
           onClose={() => {}}
+          measures={<div data-testid="measure-slot">LOD</div>}
         >
           <div>Body</div>
         </Window>,
@@ -21958,6 +22004,20 @@ if (import.meta.vitest) {
 
       const maximizeBtn = container.querySelector('[id="labeled-window-window-controls-maximize"]');
       expect(maximizeBtn?.textContent?.trim()).toBe("Focus");
+
+      // Verify folded state options label
+      const unfoldBtn = container.querySelector('[id="labeled-window-window-measures-unfold"]');
+      expect(unfoldBtn?.textContent?.trim()).toBe("Window Options");
+
+      // Unfold it
+      if (unfoldBtn) fireEvent.click(unfoldBtn);
+
+      // Verify unfolded state option labels (Enlarge/Span button & Fold button)
+      const spanBtn = container.querySelector('[id="labeled-window-window-measures-span"]');
+      expect(spanBtn?.textContent?.trim()).toBe("Focus");
+
+      const foldBtn = container.querySelector('[id="labeled-window-window-measures-fold"]');
+      expect(foldBtn?.textContent?.trim()).toBe("Window Options");
     });
 
     it("Window maximize renders as Unfocus when onMinimize is provided", () => {
@@ -22070,16 +22130,13 @@ if (import.meta.vitest) {
         </Window>,
       );
       const overlay = container.querySelector('[data-slot="window-measures-overlay"]') as HTMLElement;
-      const title = container.querySelector('[data-slot="window-measures-title"]') as HTMLElement;
       const span = container.querySelector(`#measures-fold-window-window-measures-span`) as HTMLElement;
       const fold = container.querySelector(`#measures-fold-window-window-measures-fold`) as HTMLElement;
-      expect(span.compareDocumentPosition(title) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-      expect(title.compareDocumentPosition(fold) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(span.compareDocumentPosition(fold) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
       expect(container.querySelector('[data-slot="window-measures-body"]')).toBeTruthy();
       fireEvent.click(container.querySelector(`#measures-fold-window-window-measures-fold`)!);
       expect(container.querySelector('[data-slot="window-measures-body"]')).toBeNull();
       expect(container.querySelector(`#measures-fold-window-window-measures-span`)).toBeNull();
-      expect(container.querySelector('[data-slot="window-measures-title"]')).toBeNull();
       expect(container.querySelector('[data-slot="window-measures-stack"]')?.getAttribute("data-folded")).toBe("true");
       expect(overlay.className).toContain("w-fit");
       fireEvent.click(container.querySelector(`#measures-fold-window-window-measures-unfold`)!);
