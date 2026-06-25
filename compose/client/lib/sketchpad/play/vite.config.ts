@@ -24,7 +24,7 @@ import remarkGfm from "remark-gfm";
 import remarkMdxFrontmatter from "remark-mdx-frontmatter";
 import { fileURLToPath } from "url";
 import { defineConfig, type Plugin } from "vite";
-import { playgroundIframeEmbedHeadersPlugin, puzzle3dMeshesVitePlugin } from "../../../../../ui/styling/vite-elements-assets.ts";
+import { playgroundIframeEmbedHeadersPlugin, puzzle3dMeshesVitePlugin, semioFaviconVitePlugin } from "../../../../../ui/styling/vite-elements-assets.ts";
 import { readInitialKitFixtureFromPath } from "../../../../fixture/script.ts";
 import topLevelAwait from "vite-plugin-top-level-await";
 import wasm from "vite-plugin-wasm";
@@ -125,6 +125,7 @@ export default defineConfig(async () => {
       ],
     },
     plugins: [
+      ...semioFaviconVitePlugin(workspaceRoot),
       ...puzzle3dMeshesVitePlugin(workspaceRoot),
       tailwind.default(),
       {

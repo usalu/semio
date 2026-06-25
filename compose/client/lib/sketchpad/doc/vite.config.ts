@@ -23,6 +23,7 @@ import remarkGfm from "remark-gfm";
 import remarkMdxFrontmatter from "remark-mdx-frontmatter";
 import { fileURLToPath } from "url";
 import { defineConfig } from "vite";
+import { semioFaviconVitePlugin } from "../../../../../ui/styling/vite-elements-assets.ts";
 import topLevelAwait from "vite-plugin-top-level-await";
 import wasm from "vite-plugin-wasm";
 // #endregion 🔌Adapters
@@ -33,6 +34,7 @@ const __dirname = path.dirname(__filename);
 export default defineConfig(async () => {
   const tailwind = await import("@tailwindcss/vite");
   const fs = await import("fs");
+  const workspaceRoot = path.resolve(__dirname, "../../../../../");
   return {
     resolve: {
       alias: {
@@ -42,6 +44,7 @@ export default defineConfig(async () => {
       },
     },
     plugins: [
+      ...semioFaviconVitePlugin(workspaceRoot),
       tailwind.default(),
       {
         ...mdx({

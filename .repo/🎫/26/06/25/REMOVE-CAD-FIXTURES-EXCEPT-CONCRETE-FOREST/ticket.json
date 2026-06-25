@@ -1,0 +1,14 @@
+{
+  "title": "Remove Cad Fixtures Except Concrete Forest",
+  "emoji": "🧹",
+  "status": "closed",
+  "description": "Remove all fixtures from cad but concrete forest.",
+  "summary": "Removed all CAD play fixtures except concrete forest (left and right). Deleted geometry.json, geometry-loom.json, geometry-routes.json, small-building.model.json, tall-building.model.json, large-building.model.json, and simple.spatial.json from cad/asset/play. Updated CAD play shape asset catalog and fixture slugs to only expose concrete-forest-left and concrete-forest-right. Migrated interaction e2e test geometry (loom, routes, building boolean) to inline test constants in cad/js/core/index.ts so tests no longer depend on asset/play fixture files. Updated renderer tests to use concrete forest fixtures instead of small-building.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1746"
+  },
+  "goal": "🎯cad",
+  "sessions": [
+    "⚪00b96fa936374f16a02695bb09d1215b"
+  ]
+}

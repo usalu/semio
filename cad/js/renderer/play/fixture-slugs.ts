@@ -1,14 +1,5 @@
 /** @emoji 🔒 CAD play shape fixture ids and slug resolution for locked playground hosts. */
-export const CAD_PLAY_SHAPE_ASSET_IDS = [
-  "nakagin-slice",
-  "geometry-loom",
-  "geometry-routes",
-  "small-building",
-  "tall-building",
-  "large-building",
-  "concrete-forest-left",
-  "concrete-forest-right",
-] as const;
+export const CAD_PLAY_SHAPE_ASSET_IDS = ["concrete-forest-left", "concrete-forest-right"] as const;
 
 /** @emoji 🔒 Resolves a playground fixture slug (e.g. `concrete`) to a CAD shape asset id. */
 export function resolveCadPlayFixtureSlug(slug: string): string | undefined {

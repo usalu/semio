@@ -1,0 +1,15 @@
+{
+  "title": "Update Favicon on All Pages",
+  "emoji": "🔖",
+  "status": "closed",
+  "description": "Ensure all pages (playgrounds, sketchpad, etc.) use the updated semio logo as favicon.",
+  "summary": "Switched favicon source from round emblem to compact `emblem.svg` (same geometry as `SemioLogo` in playground navbar). Updated `semioFaviconSources` to use `emblem.svg` + `favicon_32x32.ico`, regenerated the ICO from the compact emblem, and refreshed sketchpad `public/` favicon copies.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1747"
+  },
+  "goal": "🎯asset",
+  "sessions": [
+    "⚪cc0b72c827304094802cfc039d544634",
+    "⚪a0c638aae2754d30a2cebf54919923d2"
+  ]
+}

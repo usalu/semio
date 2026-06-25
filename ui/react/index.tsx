@@ -1968,6 +1968,9 @@ export function resolveControlLabelId(id: string): string {
   if (id === "ui.find.toggle") {
     return _controlLabelIdResolver("ui.find.toggle");
   }
+  if (id === "ui.fullscreen.toggle") {
+    return _controlLabelIdResolver("ui.fullscreen.toggle");
+  }
   if (id.startsWith("ui.panelToggle.")) {
     return _controlLabelIdResolver(`ui.panelToggle.${id.slice("ui.panelToggle.".length)}`);
   }
@@ -2377,6 +2380,14 @@ export const uiChromeTranslationBundles = {
         },
       },
     },
+    fullscreen: {
+      toggle: {
+        label: {
+          normal: "Vollbild",
+          beginner: "Vollbild",
+        },
+      },
+    },
     "panelToggle": {
       "display": {
         "label": {
@@ -2707,6 +2718,14 @@ export const uiChromeTranslationBundles = {
         label: {
           normal: "No results found.",
           beginner: "No results found.",
+        },
+      },
+    },
+    fullscreen: {
+      toggle: {
+        label: {
+          normal: "Fullscreen",
+          beginner: "Fullscreen",
         },
       },
     },
@@ -3921,6 +3940,22 @@ export const windowMeasuresStackExpandedClass = "h-full max-h-full min-h-0";
 /** @emoji 📐 Stack width when options are folded to the right edge. */
 export const windowMeasuresStackFoldedClass = "w-fit max-w-full";
 
+/** @emoji 📐 Outer overlay for floating window engagement along the top-left edge. */
+export const windowEngagementOverlayClass =
+  "pointer-events-none absolute top-0 left-0 z-panel flex max-h-full flex-col items-start p-single";
+
+/** @emoji 📐 Collapsed command chrome hugging the top-left corner. */
+export const windowEngagementOverlayFoldedClass = windowMeasuresOverlayFoldedClass;
+
+/** @emoji 📐 Command input body below the engagement chrome bar. */
+export const windowEngagementBodyClass = "flex min-h-0 min-w-0 flex-auto flex-col gap-half overflow-hidden p-tiny";
+
+/** @emoji 📐 Labelled icon action in window rail chrome bars (options + command). */
+export const windowRailChromeLabelActionClass = cn(
+  "flex h-medium w-auto items-center justify-center border-0 bg-transparent text-element px-single gap-single",
+  interactiveHoverClass,
+);
+
 /** @emoji 📐 Compact title bar on top of the window options stack. */
 export const windowMeasuresChromeClass =
   `pointer-events-auto flex h-medium shrink-0 items-stretch justify-between gap-0 border-b ${borderElementClass}/40 px-0 py-0`;
@@ -3969,9 +4004,9 @@ export const windowMeasureGroupChildrenClass =
 export const windowMeasureTileNestedClass =
   "pointer-events-auto select-none w-full min-w-0 shrink-0 px-0 py-0";
 
-/** @emoji 📐 Toggle sized to fit inside a measure tile. */
+/** @emoji 📐 Toggle sized to fill the measure tree row (active fill spans full width). */
 export const windowMeasureToggleClass =
-  "w-full max-w-full [&_[data-slot=toggle-group]]:w-full [&_[data-slot=toggle-group-item]]:min-w-0 [&_[data-slot=toggle-group-item]]:max-w-full [&_[data-slot=inline-label]]:max-w-full [&_[data-slot=inline-label]]:truncate";
+  "!w-full min-w-0 max-w-full [&_[data-slot=toggle-group-item]]:!flex-1 [&_[data-slot=toggle-group-item]]:min-w-0 [&_[data-slot=toggle-group-item]]:max-w-full [&_[data-slot=toggle-group-item]]:!aspect-auto [&_[data-slot=toggle-group-item]]:!shrink [&_[data-slot=inline-label]]:min-w-0 [&_[data-slot=inline-label]]:truncate";
 
 /** @emoji 📐 Dense toggle row for nested measure groups (shorter control chrome). */
 export const windowMeasureToggleCompactClass =
@@ -8415,6 +8450,79 @@ export { Strip };
 
 // #endregion 📢Strip
 
+// #region 🖥️Fullscreen
+
+const DOCUMENT_FULLSCREEN_CHANGE_EVENTS = ["fullscreenchange", "webkitfullscreenchange"] as const;
+
+type FullscreenDocument = Document & {
+  webkitFullscreenElement?: Element | null;
+  webkitExitFullscreen?: () => Promise<void> | void;
+};
+
+type FullscreenHTMLElement = HTMLElement & {
+  webkitRequestFullscreen?: () => Promise<void> | void;
+};
+
+/** @emoji 🖥️ Whether the browser document is in fullscreen mode. */
+export function readDocumentFullscreenActive(doc: Document = document): boolean {
+  const typed = doc as FullscreenDocument;
+  return !!(typed.fullscreenElement ?? typed.webkitFullscreenElement);
+}
+
+/** @emoji 🖥️ Enter or exit browser fullscreen for the shell document. */
+export async function toggleDocumentFullscreen(doc: Document = document): Promise<void> {
+  const typedDoc = doc as FullscreenDocument;
+  const root = doc.documentElement as FullscreenHTMLElement;
+  if (readDocumentFullscreenActive(doc)) {
+    if (typedDoc.exitFullscreen) await typedDoc.exitFullscreen();
+    else typedDoc.webkitExitFullscreen?.();
+    return;
+  }
+  if (root.requestFullscreen) await root.requestFullscreen();
+  else root.webkitRequestFullscreen?.();
+}
+
+/** @emoji 🖥️ Tracks browser fullscreen state for shell chrome. */
+export function useDocumentFullscreen(): { isFullscreen: boolean; toggle: () => void } {
+  const [isFullscreen, setIsFullscreen] = reactHostPort.useState(() =>
+    typeof document !== "undefined" ? readDocumentFullscreenActive() : false,
+  );
+
+  reactHostPort.useEffect(() => {
+    if (typeof document === "undefined") return;
+    const sync = () => setIsFullscreen(readDocumentFullscreenActive());
+    sync();
+    for (const event of DOCUMENT_FULLSCREEN_CHANGE_EVENTS) {
+      document.addEventListener(event, sync);
+    }
+    return () => {
+      for (const event of DOCUMENT_FULLSCREEN_CHANGE_EVENTS) {
+        document.removeEventListener(event, sync);
+      }
+    };
+  }, []);
+
+  const toggle = reactHostPort.useCallback(() => {
+    void toggleDocumentFullscreen();
+  }, []);
+
+  return { isFullscreen, toggle };
+}
+
+function NavbarFullscreenToggle() {
+  const { isFullscreen, toggle } = useDocumentFullscreen();
+  return (
+    <Toggle
+      id="ui.fullscreen.toggle"
+      pressed={isFullscreen}
+      onPressedChange={toggle}
+      icon={isFullscreen ? <Minimize2Icon className="size-small" /> : <Maximize2Icon className="size-small" />}
+    />
+  );
+}
+
+// #endregion 🖥️Fullscreen
+
 // #region 🩺Navbar
 // Top navigation bar with icon items.
 // Consumers MUST provide NavbarItem entries.
@@ -8436,12 +8544,13 @@ export interface NavbarItem {
 export interface NavbarProps {
   items: NavbarItem[];
   className?: string;
+  showFullscreenToggle?: boolean;
 }
 
 /**
  * Navbar holds the data fields for a Navbar record.
  **/
-function Navbar({ items, className }: NavbarProps) {
+function Navbar({ items, className, showFullscreenToggle = true }: NavbarProps) {
   const level = useLevel();
   const bgClass = getLevelBgClass(level);
   const normalItems = items.filter((item) => !item.centered);
@@ -8455,6 +8564,11 @@ function Navbar({ items, className }: NavbarProps) {
               {item.content}
             </div>
           ))}
+          {showFullscreenToggle ? (
+            <div key="fullscreenToggle" data-slot="navbar-fullscreen-toggle" className="h-medium flex shrink-0 items-center min-w-0 ml-auto">
+              <NavbarFullscreenToggle />
+            </div>
+          ) : null}
         </div>
         {centeredItems.map((item, index) => (
           <div
@@ -12321,10 +12435,7 @@ const WindowMeasuresChrome: React.FC<WindowMeasuresChromeProps> = ({ windowId, f
           id={`${windowId}-window-measures-unfold`}
           icon="chevron-left"
           text="Window Options"
-          className={cn(
-            "flex h-medium w-auto items-center justify-center border-0 bg-transparent text-element px-single gap-single",
-            interactiveHoverClass,
-          )}
+          className={windowRailChromeLabelActionClass}
           onClick={onUnfold}
         />
       </div>
@@ -12341,22 +12452,14 @@ const WindowMeasuresChrome: React.FC<WindowMeasuresChromeProps> = ({ windowId, f
         id={`${windowId}-window-measures-span`}
         icon={expanded ? "minimize-2" : "maximize-2"}
         text={expanded ? "Unfocus" : "Focus"}
-        className={cn(
-          "flex h-medium w-auto items-center justify-center border-0 bg-transparent text-element px-single gap-single",
-          windowMeasuresChromeCornerLeftClass,
-          interactiveHoverClass,
-        )}
+        className={cn(windowRailChromeLabelActionClass, windowMeasuresChromeCornerLeftClass)}
         onClick={expanded ? onCollapseExpand : onExpand}
       />
       <ActionGroupItem
         id={`${windowId}-window-measures-fold`}
         icon="chevron-right"
         text="Window Options"
-        className={cn(
-          "flex h-medium w-auto items-center justify-center border-0 bg-transparent text-element px-single gap-single",
-          windowMeasuresChromeCornerRightClass,
-          interactiveHoverClass,
-        )}
+        className={cn(windowRailChromeLabelActionClass, windowMeasuresChromeCornerRightClass)}
         onClick={onFold}
       />
     </div>
@@ -12364,6 +12467,45 @@ const WindowMeasuresChrome: React.FC<WindowMeasuresChromeProps> = ({ windowId, f
 };
 
 // #endregion 🪟WindowMeasuresChrome
+
+// #region 🪟WindowEngagementChrome
+
+interface WindowEngagementChromeProps {
+  windowId: string;
+  expanded: boolean;
+  onToggle: () => void;
+}
+
+/** @emoji ⌨️ Title bar for the window command rail (toggle left when expanded, unfold chip when folded). */
+const WindowEngagementChrome: React.FC<WindowEngagementChromeProps> = ({ windowId, expanded, onToggle }) => {
+  if (!expanded) {
+    return (
+      <div data-slot="window-engagement-chrome" data-folded="true" className={cn(windowMeasuresChromeClass, "justify-end border-b-0")}>
+        <ActionGroupItem
+          id={`${windowId}-window-engagement-toggle`}
+          icon="chevron-right"
+          text="Command"
+          className={windowRailChromeLabelActionClass}
+          onClick={onToggle}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div data-slot="window-engagement-chrome" data-expanded="true" className={windowMeasuresChromeClass}>
+      <ActionGroupItem
+        id={`${windowId}-window-engagement-toggle`}
+        icon="chevron-left"
+        text="Command"
+        className={cn(windowRailChromeLabelActionClass, windowMeasuresChromeCornerLeftClass)}
+        onClick={onToggle}
+      />
+    </div>
+  );
+};
+
+// #endregion 🪟WindowEngagementChrome
 
 // #region ↔️WindowMeasuresResize
 
@@ -13800,15 +13942,15 @@ export function focusActiveEngagementInput(): boolean {
   return true;
 }
 
-/** @emoji 👁 True when the window engagement chrome should render (active session, non-empty command, hover, click, or focus in the engagement zone). */
+/** @emoji 👁 True when the window engagement chrome should render (active session, non-empty command, or explicit activation via the command button / typing). */
 export function windowEngagementChromeVisible(
   engagement: EngagementSpec | undefined,
-  zone: { readonly hovered: boolean; readonly activated: boolean; readonly focused: boolean },
+  zone: { readonly activated: boolean },
 ): boolean {
   if (!engagement) return false;
   if (engagement.sessionActive) return true;
   if (engagement.input?.value?.trim()) return true;
-  return zone.hovered || zone.activated || zone.focused;
+  return zone.activated;
 }
 
 /** @emoji 👁 True when an empty engagement should hide after pointer or focus leaves its zone (ignores popover targets and active command). */
@@ -14422,17 +14564,22 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
   const engagementZoneSizeStyle = windowEngagementZoneMaxWidthStyle(measuresReservePx, !!measures);
   const engagementZoneRef = reactHostPort.useRef<HTMLDivElement>(null);
   const engagementDraftRef = reactHostPort.useRef("");
-  const [engagementZoneHovered, setEngagementZoneHovered] = reactHostPort.useState(false);
+  const engagementActivatedRef = reactHostPort.useRef(false);
+  const engagementPinnedRef = reactHostPort.useRef(false);
   const [engagementActivated, setEngagementActivated] = reactHostPort.useState(false);
   const [engagementZoneFocused, setEngagementZoneFocused] = reactHostPort.useState(false);
+  const setEngagementActivatedState = reactHostPort.useCallback((next: boolean) => {
+    engagementActivatedRef.current = next;
+    setEngagementActivated(next);
+  }, []);
   const engagementCommandActive = engagementActivated || engagementZoneFocused;
   const showEngagementChrome =
-    active && !measuresExpanded && windowEngagementChromeVisible(engagement, { hovered: engagementZoneHovered, activated: engagementActivated, focused: engagementZoneFocused });
+    active && !measuresExpanded && windowEngagementChromeVisible(engagement, { activated: engagementActivated });
 
   reactHostPort.useEffect(() => {
     if (!measuresExpanded) return;
-    setEngagementZoneHovered(false);
-    setEngagementActivated(false);
+    engagementPinnedRef.current = false;
+    setEngagementActivatedState(false);
     setEngagementZoneFocused(false);
   }, [measuresExpanded]);
 
@@ -14442,13 +14589,13 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
     const hasDraft = draft.trim().length > 0;
     engagementDraftRef.current = draft;
     if (!hasDraft || hadDraft) return;
-    setEngagementActivated(true);
+    setEngagementActivatedState(true);
     queueMicrotask(() => focusActiveEngagementInput());
   }, [engagement?.input?.value]);
 
   reactHostPort.useEffect(() => {
     if (!active || !engagement?.sessionActive) return;
-    setEngagementActivated(true);
+    setEngagementActivatedState(true);
   }, [active, engagement?.sessionActive]);
 
   reactHostPort.useEffect(() => {
@@ -14456,11 +14603,7 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
     const onKeyDown = (event: KeyboardEvent) => {
       if (
         routeWindowEngagementEscape(engagement, event, {
-          chromeVisible: windowEngagementChromeVisible(engagement, {
-            hovered: engagementZoneHovered,
-            activated: engagementActivated,
-            focused: engagementZoneFocused,
-          }),
+          chromeVisible: windowEngagementChromeVisible(engagement, { activated: engagementActivated }),
           commandActive: engagementCommandActive,
         })
       ) {
@@ -14470,26 +14613,38 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
     };
     document.addEventListener("keydown", onKeyDown, true);
     return () => document.removeEventListener("keydown", onKeyDown, true);
-  }, [active, engagement, engagementActivated, engagementCommandActive, engagementZoneFocused, engagementZoneHovered]);
+  }, [active, engagement, engagementActivated, engagementCommandActive, engagementZoneFocused]);
 
   reactHostPort.useEffect(() => {
     if (!active) {
       engagementDraftRef.current = "";
-      setEngagementZoneHovered(false);
-      setEngagementActivated(false);
+      engagementPinnedRef.current = false;
+      setEngagementActivatedState(false);
       setEngagementZoneFocused(false);
     }
   }, [active]);
 
   const dismissEngagementIfEmpty = reactHostPort.useCallback(
     (relatedTarget: EventTarget | null) => {
-      if (!shouldDismissEmptyWindowEngagement(engagement, relatedTarget, engagementZoneRef.current, { commandActive: engagementActivated })) return;
-      setEngagementZoneHovered(false);
-      setEngagementActivated(false);
+      if (engagementPinnedRef.current) return;
+      if (!shouldDismissEmptyWindowEngagement(engagement, relatedTarget, engagementZoneRef.current, { commandActive: engagementActivatedRef.current })) return;
+      setEngagementActivatedState(false);
       setEngagementZoneFocused(false);
     },
-    [engagement, engagementActivated],
+    [engagement, setEngagementActivatedState],
   );
+
+  const toggleEngagementChrome = reactHostPort.useCallback(() => {
+    if (showEngagementChrome) {
+      engagementPinnedRef.current = false;
+      setEngagementActivatedState(false);
+      setEngagementZoneFocused(false);
+      return;
+    }
+    engagementPinnedRef.current = true;
+    setEngagementActivatedState(true);
+    if (engagement?.input) queueMicrotask(() => focusActiveEngagementInput());
+  }, [engagement?.input, setEngagementActivatedState, showEngagementChrome]);
 
   if (!isVisible) return null;
 
@@ -14600,60 +14755,48 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
             </GlassTierProvider>
           ) : null}
           {engagement && active && !measuresExpanded ? (
-            <div
-              data-slot="window-engagement-overlay"
-              data-expanded={showEngagementChrome ? "true" : undefined}
-              className="pointer-events-none absolute inset-x-0 top-0 z-panel flex max-w-full flex-col items-start justify-start pl-1 pt-1"
-            >
+            <GlassTierProvider tier="windowOptions">
               <div
-                ref={engagementZoneRef}
-                data-slot="window-engagement-hover-zone"
-                style={engagementZoneSizeStyle}
-                className="pointer-events-auto flex w-full min-w-0 select-none flex-row items-stretch"
-                onPointerEnter={() => setEngagementZoneHovered(true)}
-                onPointerLeave={(event) => dismissEngagementIfEmpty(event.relatedTarget)}
-                onFocusCapture={() => {
-                  setEngagementActivated(true);
-                  setEngagementZoneFocused(true);
-                }}
-                onBlurCapture={(event) => {
-                  setEngagementZoneFocused(false);
-                  dismissEngagementIfEmpty(event.relatedTarget);
-                }}
+                data-slot="window-engagement-overlay"
+                data-expanded={showEngagementChrome ? "true" : undefined}
+                style={showEngagementChrome ? engagementZoneSizeStyle : undefined}
+                className={cn(
+                  windowEngagementOverlayClass,
+                  !showEngagementChrome && windowEngagementOverlayFoldedClass,
+                )}
               >
-                <ActionGroupItem
-                  id={`${id}-window-engagement-toggle`}
-                  icon={showEngagementChrome ? "chevron-left" : "chevron-right"}
-                  text="Command"
+                <div
+                  ref={engagementZoneRef}
+                  data-slot="window-engagement-zone"
+                  data-folded={showEngagementChrome ? undefined : "true"}
                   className={cn(
-                    "flex h-medium w-auto shrink-0 items-center justify-center border-0 bg-transparent text-element px-single gap-single",
-                    interactiveHoverClass,
+                    windowMeasuresStackClass,
+                    !showEngagementChrome && windowMeasuresStackFoldedClass,
                   )}
-                  onClick={() => {
-                    if (showEngagementChrome) {
-                      setEngagementActivated(false);
-                      setEngagementZoneHovered(false);
-                      setEngagementZoneFocused(false);
-                    } else {
-                      setEngagementActivated(true);
-                      if (engagement?.input) queueMicrotask(() => focusActiveEngagementInput());
-                    }
+                  onFocusCapture={() => {
+                    setEngagementZoneFocused(true);
                   }}
-                />
-                {showEngagementChrome ? (
-                  <div
-                    data-slot="window-engagement-chrome"
-                    className="min-w-0 flex-1"
-                    onPointerDownCapture={() => {
-                      setEngagementActivated(true);
-                      if (engagement?.input) queueMicrotask(() => focusActiveEngagementInput());
-                    }}
-                  >
-                    <Engagement {...engagement} active={engagementCommandActive} />
-                  </div>
-                ) : null}
+                  onBlurCapture={(event) => {
+                    setEngagementZoneFocused(false);
+                    dismissEngagementIfEmpty(event.relatedTarget);
+                  }}
+                >
+                  <WindowEngagementChrome windowId={id} expanded={showEngagementChrome} onToggle={toggleEngagementChrome} />
+                  {showEngagementChrome ? (
+                    <div
+                      data-slot="window-engagement-body"
+                      className={windowEngagementBodyClass}
+                      onPointerDownCapture={() => {
+                        setEngagementActivatedState(true);
+                        if (engagement?.input) queueMicrotask(() => focusActiveEngagementInput());
+                      }}
+                    >
+                      <Engagement {...engagement} active={engagementCommandActive} />
+                    </div>
+                  ) : null}
+                </div>
               </div>
-            </div>
+            </GlassTierProvider>
           ) : null}
         </div>
       </GhostRegionShell>
@@ -21699,13 +21842,12 @@ if (import.meta.vitest) {
       Element.prototype.scrollIntoView = scrollIntoView;
     });
 
-    it("windowEngagementChromeVisible hides until hover, click, focus, or draft", () => {
+    it("windowEngagementChromeVisible hides until button activation, typing, or draft", () => {
       const engagement = { input: { value: "" }, status: [{ id: "s", content: "Idle" }] };
-      expect(windowEngagementChromeVisible(engagement, { hovered: false, activated: false, focused: false })).toBe(false);
-      expect(windowEngagementChromeVisible(engagement, { hovered: true, activated: false, focused: false })).toBe(true);
-      expect(windowEngagementChromeVisible(engagement, { hovered: false, activated: true, focused: false })).toBe(true);
-      expect(windowEngagementChromeVisible({ input: { value: "box" } }, { hovered: false, activated: false, focused: false })).toBe(true);
-      expect(windowEngagementChromeVisible({ sessionActive: true, input: { value: "" } }, { hovered: false, activated: false, focused: false })).toBe(true);
+      expect(windowEngagementChromeVisible(engagement, { activated: false })).toBe(false);
+      expect(windowEngagementChromeVisible(engagement, { activated: true })).toBe(true);
+      expect(windowEngagementChromeVisible({ input: { value: "box" } }, { activated: false })).toBe(true);
+      expect(windowEngagementChromeVisible({ sessionActive: true, input: { value: "" } }, { activated: false })).toBe(true);
     });
 
     it("applyEngagementSpaceAction submits empty draft during sessionActive", () => {
@@ -22001,10 +22143,50 @@ if (import.meta.vitest) {
         </div>
       );
       const { container } = render(<Harness />);
-      fireEvent.pointerDown(container.querySelector('[data-slot="window-engagement-hover-zone"]')!);
+      fireEvent.click(container.querySelector('[id="engagement-window-window-engagement-toggle"]')!);
       await waitFor(() => expect(screen.getByPlaceholderText("Command")).toBeTruthy());
       fireEvent.keyDown(container.querySelector('[data-slot="mode"]')!, { key: "Escape", bubbles: true });
       expect(aborted).toEqual(["abort"]);
+    });
+
+    it("Window does not reveal engagement on hover", () => {
+      const { container } = render(
+        <Window id="engagement-window" active engagement={{ input: { placeholder: "Command" }, status: [{ id: "s", content: "Idle" }] }}>
+          <div>Body</div>
+        </Window>,
+      );
+      const zone = container.querySelector('[data-slot="window-engagement-zone"]') as HTMLElement;
+      fireEvent.pointerEnter(zone);
+      expect(screen.queryByPlaceholderText("Command")).toBeNull();
+      expect(screen.queryByText("Idle")).toBeNull();
+      expect(container.querySelector('[data-slot="window-engagement-overlay"]')?.getAttribute("data-expanded")).toBeNull();
+    });
+
+    it("Window engagement stays open through focus-then-click on command button", async () => {
+      const { container } = render(
+        <Window id="engagement-window" active engagement={{ input: { placeholder: "Command" }, status: [{ id: "s", content: "Idle" }] }}>
+          <div>Body</div>
+        </Window>,
+      );
+      const toggleBtn = container.querySelector('[id="engagement-window-window-engagement-toggle"]') as HTMLElement;
+      fireEvent.focus(toggleBtn);
+      fireEvent.click(toggleBtn);
+      await waitFor(() => expect(screen.getByPlaceholderText("Command")).toBeTruthy());
+      expect(screen.getByText("Idle")).toBeTruthy();
+    });
+
+    it("Window engagement stays open after command button click despite immediate blur", async () => {
+      const { container } = render(
+        <Window id="engagement-window" active engagement={{ input: { placeholder: "Command" }, status: [{ id: "s", content: "Idle" }] }}>
+          <div>Body</div>
+        </Window>,
+      );
+      const toggleBtn = container.querySelector('[id="engagement-window-window-engagement-toggle"]') as HTMLElement;
+      const zone = container.querySelector('[data-slot="window-engagement-zone"]') as HTMLElement;
+      fireEvent.click(toggleBtn);
+      fireEvent.blur(zone, { relatedTarget: null });
+      await waitFor(() => expect(screen.getByPlaceholderText("Command")).toBeTruthy());
+      expect(screen.getByText("Idle")).toBeTruthy();
     });
 
     it("Window reveals engagement on button click and activates on click", async () => {
@@ -22088,19 +22270,24 @@ if (import.meta.vitest) {
         </Window>,
       );
       const overlay = container.querySelector('[data-slot="window-engagement-overlay"]');
-      const zone = container.querySelector('[data-slot="window-engagement-hover-zone"]');
+      const zone = container.querySelector('[data-slot="window-engagement-zone"]');
+      const chrome = container.querySelector('[data-slot="window-engagement-chrome"]');
       const toggleBtn = container.querySelector('[id="engagement-window-window-engagement-toggle"]') as HTMLElement;
       expect(overlay).toBeTruthy();
       expect(overlay?.className).toContain("pointer-events-none");
-      expect(overlay?.className).toContain("inset-x-0");
-      expect(zone?.className).toContain("flex-row");
+      expect(overlay?.className).toContain("top-0");
+      expect(overlay?.className).toContain("left-0");
+      expect(overlay?.className).toContain("p-single");
       expect(zone?.className).toContain("pointer-events-auto");
+      expect(zone?.className).toContain("flex-col");
+      expect(chrome?.getAttribute("data-folded")).toBe("true");
       expect(toggleBtn).toBeTruthy();
       expect(toggleBtn?.textContent?.trim()).toBe("Command");
       expect(overlay?.getAttribute("data-expanded")).toBeNull();
       expect(screen.queryByText("Idle")).toBeNull();
       fireEvent.click(toggleBtn!);
       expect(overlay?.getAttribute("data-expanded")).toBe("true");
+      expect(chrome?.getAttribute("data-expanded")).toBe("true");
       expect(screen.getByText("Idle")).toBeTruthy();
     });
 
@@ -22110,13 +22297,12 @@ if (import.meta.vitest) {
           <div>Body</div>
         </Window>,
       );
-      const overlay = container.querySelector('[data-slot="window-engagement-overlay"]');
-      const zone = container.querySelector('[data-slot="window-engagement-hover-zone"]') as HTMLElement;
+      const overlay = container.querySelector('[data-slot="window-engagement-overlay"]') as HTMLElement;
+      const zone = container.querySelector('[data-slot="window-engagement-zone"]') as HTMLElement;
       const toggleBtn = container.querySelector('[id="engagement-window-window-engagement-toggle"]') as HTMLElement;
-      expect(overlay?.className).toContain("inset-x-0");
       expect(zone.className).toContain("w-full");
-      expect(zone.style.width).toBe("min(28rem, 100%)");
       fireEvent.click(toggleBtn);
+      expect(overlay.style.width).toBe("min(28rem, 100%)");
       const row = container.querySelector('[data-slot="engagement-command-row"]');
       const inputRoot = container.querySelector('[data-slot="engagement-command-input"] [data-slot="input-root"]');
       expect(row?.className).toContain("w-full");
@@ -22184,9 +22370,10 @@ if (import.meta.vitest) {
           <div data-testid="window-body">Body</div>
         </Window>,
       );
-      const zone = container.querySelector('[data-slot="window-engagement-hover-zone"]') as HTMLElement;
-      expect(zone.style.width).toContain("calc(100%");
-      expect(zone.style.width).toContain("min(28rem");
+      const overlay = container.querySelector('[data-slot="window-engagement-overlay"]') as HTMLElement;
+      fireEvent.click(container.querySelector('[id="layout-window-window-engagement-toggle"]')!);
+      expect(overlay.style.width).toContain("calc(100%");
+      expect(overlay.style.width).toContain("min(28rem");
       expect(windowEngagementZoneMaxWidthStyle(200, true).width).toContain("204px");
       expect(windowEngagementZoneMaxWidthStyle(0, false).width).toBe("min(28rem, 100%)");
     });
@@ -22225,8 +22412,8 @@ if (import.meta.vitest) {
           <div>Body</div>
         </Window>,
       );
-      const zone = container.querySelector('[data-slot="window-engagement-hover-zone"]') as HTMLElement;
-      fireEvent.pointerEnter(zone);
+      const toggleBtn = container.querySelector('[id="measures-engagement-window-window-engagement-toggle"]') as HTMLElement;
+      fireEvent.click(toggleBtn);
       fireEvent.click(container.querySelector("#measures-engagement-window-window-measures-unfold")!);
       expect(screen.getByPlaceholderText("Command")).toBeTruthy();
       fireEvent.click(container.querySelector(`#measures-engagement-window-window-measures-span`)!);
@@ -23674,6 +23861,27 @@ if (treeVitest) {
       expect(markup.match(/data-tree-guide-line="" class="w-px h-full bg-muted-foreground\/40 group-hover:bg-emphasized/g)?.length ?? 0).toBeGreaterThanOrEqual(1);
       expect(markup).toContain('data-slot="tree-branch-elbow"');
     });
+
+    it("stretches full-width measure toggles so active fill spans the tree row", () => {
+      const markup = renderToStaticMarkup(
+        <WindowMeasuresTree>
+          <WindowMeasureTreeLeaf fullWidth>
+            <Toggle
+              id="move-axes"
+              className={cn(windowMeasureToggleClass, windowMeasureToggleCompactClass)}
+              pressed
+              icon={<CheckIcon className="size-small" />}
+              text="Move Axes"
+            />
+          </WindowMeasureTreeLeaf>
+        </WindowMeasuresTree>,
+      );
+      expect(markup).toContain('data-slot="toggle-group"');
+      expect(markup).toContain("!w-full");
+      expect(markup).toContain("[&amp;_[data-slot=toggle-group-item]]:!flex-1");
+      expect(markup).toContain("[&amp;_[data-slot=toggle-group-item]]:!shrink");
+      expect(markup).toContain('data-state="on"');
+    });
   });
 
   describe("control chrome", () => {
@@ -23724,6 +23932,16 @@ if (treeVitest) {
       const markup = renderToStaticMarkup(<Navbar items={[navbarFillItem(), { key: "trailing", content: <span>Trailing</span> }]} />);
       expect(markup).toContain("flex-1 min-w-0");
       expect(markup).toContain("Trailing");
+    });
+
+    it("renders fullscreen toggle on the trailing navbar edge by default", () => {
+      const markup = renderToStaticMarkup(<Navbar items={[{ key: "title", content: <span>App</span> }]} />);
+      expect(markup).toContain('data-slot="navbar-fullscreen-toggle"');
+      expect(markup).toContain('id="ui.fullscreen.toggle"');
+    });
+
+    it("maps fullscreen toggle id to ui i18n key", () => {
+      expect(resolveControlLabelId("ui.fullscreen.toggle")).toBe("ui.fullscreen.toggle");
     });
 
     it("keeps emphasized label styling on pressed navbar toggles", () => {

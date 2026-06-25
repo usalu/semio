@@ -26,7 +26,7 @@ import { fileURLToPath } from "url";
 import { defineConfig, type Plugin } from "vite";
 import topLevelAwait from "vite-plugin-top-level-await";
 import wasm from "vite-plugin-wasm";
-import { puzzle3dMeshesVitePlugin, uiAssetsVitePlugin } from "../../../../../ui/styling/vite-elements-assets.ts";
+import { puzzle3dMeshesVitePlugin, semioFaviconVitePlugin, uiAssetsVitePlugin } from "../../../../../ui/styling/vite-elements-assets.ts";
 import { readInitialKitFixtureFromPath } from "../../../../fixture/script.ts";
 // #endregion 🔌Adapters
 
@@ -331,6 +331,7 @@ export default defineConfig(async ({ mode }) => {
     },
     plugins: [
       ...uiAssetsVitePlugin(path.resolve(workspaceRoot, "ui/asset")),
+      ...semioFaviconVitePlugin(workspaceRoot),
       ...puzzle3dMeshesVitePlugin(workspaceRoot),
       monorepoPlaywrightDevStubPlugin(),
       monorepoVitestDevStubPlugin(),

@@ -132,6 +132,12 @@ import {
   type WindowEngagementControl,
   type WindowLayout,
   type WindowMeasure,
+  FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
+  FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+  FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID,
+  FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+  FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
+  FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 } from "@semio-tech/framework-playground-core";
 // #endregion 🔌Adapters
 
@@ -6134,17 +6140,32 @@ import type { UiGisMapHostSurfaceNode } from "@semio-tech/framework-platform-cor
 let mapPlayChromeRegistered = false;
 const mapPlayControllerRef: { current: MapPlayController | null } = { current: null };
 
-function useMapPlayController(): MapPlayController | undefined {
-  const { runtime } = useApp();
-  const ctrl = runtime.getActiveApp()?.controller as MapPlayController | undefined;
+function useMapPlayController(runtimeOverride?: Platform): MapPlayController | undefined {
+  const appCtx = reactHostPort.useContext(PlaygroundContext);
+  const runtime = runtimeOverride ?? appCtx?.runtime;
+  reactHostPort.useSyncExternalStore(
+    (listener) => (runtime ? runtime.subscribeChrome(listener) : () => {}),
+    () => runtime?.chromeGeneration ?? 0,
+    () => 0,
+  );
+  const ctrl = runtime?.getActiveApp()?.controller as MapPlayController | undefined;
   mapPlayControllerRef.current = ctrl ?? null;
   return ctrl;
 }
 
-function useMapPlayInteractionRevision(): number {
-  const { runtime } = useApp();
+function useMapPlayInteractionRevision(runtime: Platform): number {
   return reactHostPort.useSyncExternalStore(
-    (listener) => runtime.subscribe(listener),
+    (listener) => {
+      const ctrl = runtime.getActiveApp()?.controller as MapPlayController | undefined;
+      mapPlayControllerRef.current = ctrl ?? null;
+      const unsubscribeRuntime = runtime.subscribe(listener);
+      const unsubscribeSnapshot =
+        ctrl && typeof ctrl.subscribeSnapshot === "function" ? ctrl.subscribeSnapshot(listener) : undefined;
+      return () => {
+        unsubscribeRuntime();
+        unsubscribeSnapshot?.();
+      };
+    },
     () => (runtime.getActiveApp()?.controller as MapPlayController | undefined)?.getInteractionRevision() ?? 0,
     () => 0,
   );
@@ -6274,9 +6295,8 @@ class MapPlayInspectionPanelDefinition extends PureSidePanelTabDefinition {
 }
 
 function MapPlayInner({ runtime }: { readonly runtime: Platform }): ReactElement {
-  const interactionRevision = useMapPlayInteractionRevision();
-  const snapshot = useMapPlaySnapshot();
-  void snapshot;
+  useMapPlayController(runtime);
+  const interactionRevision = useMapPlayInteractionRevision(runtime);
   const mapPlayHierarchyPanel = reactHostPort.useMemo(() => new MapPlayHierarchyPanelDefinition(), []);
   const mapPlayCataloguePanel = reactHostPort.useMemo(() => new MapPlayCataloguePanelDefinition(), []);
   const mapPlayInspectionPanel = reactHostPort.useMemo(() => new MapPlayInspectionPanelDefinition(), []);
@@ -6571,15 +6591,20 @@ import type { UiDagHostSurfaceNode } from "@semio-tech/framework-platform-core";
 let dagPlayChromeRegistered = false;
 const dagPlayControllerRef: { current: DagPlayController | null } = { current: null };
 
-function useDagPlayController(): DagPlayController | undefined {
-  const { runtime } = useApp();
-  const ctrl = runtime.getActiveApp()?.controller as DagPlayController | undefined;
+function useDagPlayController(runtimeOverride?: Platform): DagPlayController | undefined {
+  const appCtx = reactHostPort.useContext(PlaygroundContext);
+  const runtime = runtimeOverride ?? appCtx?.runtime;
+  reactHostPort.useSyncExternalStore(
+    (listener) => (runtime ? runtime.subscribeChrome(listener) : () => {}),
+    () => runtime?.chromeGeneration ?? 0,
+    () => 0,
+  );
+  const ctrl = runtime?.getActiveApp()?.controller as DagPlayController | undefined;
   dagPlayControllerRef.current = ctrl ?? null;
   return ctrl;
 }
 
-function useDagPlayInteractionRevision(): number {
-  const { runtime } = useApp();
+function useDagPlayInteractionRevision(runtime: Platform): number {
   return reactHostPort.useSyncExternalStore(
     (listener) => {
       const ctrl = runtime.getActiveApp()?.controller as DagPlayController | undefined;
@@ -6681,7 +6706,8 @@ class DagPlayInspectionPanelDefinition extends PureSidePanelTabDefinition {
 }
 
 function DagPlayInner({ runtime }: { readonly runtime: Platform }): ReactElement {
-  const interactionRevision = useDagPlayInteractionRevision();
+  useDagPlayController(runtime);
+  const interactionRevision = useDagPlayInteractionRevision(runtime);
   const dagPlayHierarchyPanel = reactHostPort.useMemo(() => new DagPlayHierarchyPanelDefinition(), []);
   const dagPlayCataloguePanel = reactHostPort.useMemo(() => new DagPlayCataloguePanelDefinition(), []);
   const dagPlayInspectionPanel = reactHostPort.useMemo(() => new DagPlayInspectionPanelDefinition(), []);

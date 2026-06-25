@@ -805,6 +805,9 @@ export class MapRenderer {
   }
 
   dispose(): void {
+    if (this.disposed) {
+      return;
+    }
     this.disposed = true;
     if (this.refreshTimer !== null) {
       clearTimeout(this.refreshTimer);
@@ -1027,7 +1030,7 @@ export function MapCanvas({
       }
       await renderer.attach(canvas, w, h, dpr);
       if (disposed) {
-        renderer.session.free();
+        renderer.dispose();
         return;
       }
       applySize();

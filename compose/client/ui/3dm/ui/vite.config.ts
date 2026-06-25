@@ -25,10 +25,12 @@ import { fileURLToPath } from "url";
 import { defineConfig } from "vite";
 import topLevelAwait from "vite-plugin-top-level-await";
 import wasm from "vite-plugin-wasm";
+import { semioFaviconVitePlugin } from "../../../../../ui/styling/vite-elements-assets.ts";
 // #endregion 🔌Adapters
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const repoRoot = path.resolve(__dirname, "../../../../..");
 
 export default defineConfig(async () => {
   const tailwind = await import("@tailwindcss/vite");
@@ -39,6 +41,7 @@ export default defineConfig(async () => {
       },
     },
     plugins: [
+      ...semioFaviconVitePlugin(repoRoot),
       tailwind.default(),
       {
         ...mdx({

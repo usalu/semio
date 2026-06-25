@@ -621,6 +621,7 @@ export class MapPlayController extends Controller implements PlaygroundFixtureHo
   private selectedFeatureId: string | null = null;
   private selectedFeatureKind: MapPlaySelectionKind | null = null;
   private interactionRevision = 0;
+  private readonly snapshotListeners = new Set<() => void>();
 
   constructor(commandBus: CommandBus, notify: () => void) {
     super(GIS_MAP_PLAY_CONTROLLER_ID, commandBus, notify);
@@ -688,9 +689,19 @@ export class MapPlayController extends Controller implements PlaygroundFixtureHo
     return this.interactionRevision;
   }
 
+  subscribeSnapshot(listener: () => void): () => void {
+    this.snapshotListeners.add(listener);
+    return () => this.snapshotListeners.delete(listener);
+  }
+
+  private notifySnapshot(): void {
+    for (const listener of this.snapshotListeners) {
+      listener();
+    }
+  }
+
   private patchActiveFixture(nextFixture: GisMapFixtureV1): void {
     this.activeFixture = nextFixture;
-    this.interactionRevision += 1;
     this.bumpSnapshot();
   }
 
@@ -732,6 +743,8 @@ export class MapPlayController extends Controller implements PlaygroundFixtureHo
   private bumpSnapshot(): void {
     this.rebuildSnapshotCache();
     this.snapshotStore.bump();
+    this.interactionRevision += 1;
+    this.notifySnapshot();
     this.emit();
   }
 
@@ -773,7 +786,6 @@ export class MapPlayController extends Controller implements PlaygroundFixtureHo
       if (this.selectedFeatureId === featureId && this.selectedFeatureKind === featureKind) return;
       this.selectedFeatureId = featureId;
       this.selectedFeatureKind = featureKind;
-      this.interactionRevision += 1;
       this.bumpSnapshot();
       return;
     }
@@ -1196,6 +1208,21 @@ if (import.meta.vitest) {
   });
 
   describe("MapPlayController fixtures", () => {
+    it("notifies snapshot listeners when render mode changes", () => {
+      const runtime = new Platform({ id: "test" });
+      const ctrl = new MapPlayController(runtime.commandBus, () => runtime.notify());
+      let revision = ctrl.getInteractionRevision();
+      let notifications = 0;
+      const unsubscribe = ctrl.subscribeSnapshot(() => {
+        notifications += 1;
+        revision = ctrl.getInteractionRevision();
+      });
+      ctrl.run("setRenderMode", { mode: "image" });
+      unsubscribe();
+      expect(notifications).toBe(1);
+      expect(revision).toBeGreaterThan(0);
+    });
+
     it("loads the reuse fixture by default", () => {
       const runtime = new Platform({ id: "test" });
       const ctrl = new MapPlayController(runtime.commandBus, () => runtime.notify());

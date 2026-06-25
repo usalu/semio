@@ -20,8 +20,10 @@ import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
 import type { UserConfig } from "vite";
+import { semioFaviconVitePlugin } from "../../../../ui/styling/vite-elements-assets.ts";
 // #endregion 🔌Adapters
 
+const repoRoot = path.resolve(__dirname, "../../../..");
 const configuration: UserConfig = {
   server: {
     // Pre-transform the renderer entry so all modules are cached before
@@ -119,7 +121,11 @@ const configuration: UserConfig = {
       "@semio-tech/coda-desktop": path.resolve(__dirname, "."),
     },
   },
-  plugins: [...(tailwindcss() as unknown as NonNullable<UserConfig["plugins"]>), react() as unknown as NonNullable<UserConfig["plugins"]>[number]],
+  plugins: [
+    ...semioFaviconVitePlugin(repoRoot),
+    ...(tailwindcss() as unknown as NonNullable<UserConfig["plugins"]>),
+    react() as unknown as NonNullable<UserConfig["plugins"]>[number],
+  ],
 };
 
 export default configuration;

@@ -1599,6 +1599,7 @@ dependencies = [
  "serde",
  "serde-wasm-bindgen",
  "serde_json",
+ "ui_styling",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",

@@ -300,6 +300,73 @@ export function puzzle3dMeshesVitePlugin(repoRoot: string): Plugin[] {
   ];
 }
 
+/** @emoji 🔖 Canonical semio emblem favicon `<link>` tags for playground and app `index.html` heads. */
+export const SEMIO_FAVICON_HEAD_HTML =
+  `<link rel="icon" href="./favicon.svg" type="image/svg+xml" />\n    <link rel="icon" href="./favicon.ico" sizes="any" />`;
+
+/** @emoji 🔖 Repo-root paths for the compact emblem SVG and ICO fallback (matches {@link SemioLogo}). */
+export function semioFaviconSources(repoRoot: string): { readonly svg: string; readonly ico: string } {
+  const logoRoot = resolve(repoRoot, "asset/logo");
+  return {
+    svg: resolve(logoRoot, "emblem.svg"),
+    ico: resolve(logoRoot, "favicon_32x32.ico"),
+  };
+}
+
+function createSemioFaviconMiddleware(favicons: { readonly svg: string; readonly ico: string }): Connect.NextHandleFunction {
+  return (req, res, next) => {
+    const url = req.url?.split(/[?#]/, 1)[0];
+    if (url === "/favicon.svg" && existsSync(favicons.svg)) {
+      res.setHeader("Content-Type", "image/svg+xml");
+      createReadStream(favicons.svg).pipe(res);
+      return;
+    }
+    if (url === "/favicon.ico" && existsSync(favicons.ico)) {
+      res.setHeader("Content-Type", "image/x-icon");
+      createReadStream(favicons.ico).pipe(res);
+      return;
+    }
+    next();
+  };
+}
+
+/** @emoji 🔖 Vite: serve and copy semio emblem favicons at `/favicon.svg` and `/favicon.ico`. */
+export function semioFaviconVitePlugin(repoRoot: string): Plugin[] {
+  const favicons = semioFaviconSources(repoRoot);
+  const serveFavicon = createSemioFaviconMiddleware(favicons);
+  let viteRoot = process.cwd();
+  return [
+    {
+      name: "semio-favicon-serve",
+      enforce: "pre",
+      configureServer(server) {
+        server.middlewares.use(serveFavicon);
+      },
+      configurePreviewServer(server) {
+        server.middlewares.use(serveFavicon);
+      },
+    },
+    {
+      name: "semio-favicon-build",
+      apply: "build",
+      enforce: "pre",
+      configResolved(config) {
+        viteRoot = config.root;
+      },
+      closeBundle() {
+        const dist = resolve(viteRoot, "dist");
+        mkdirSync(dist, { recursive: true });
+        if (existsSync(favicons.svg)) {
+          cpSync(favicons.svg, resolve(dist, "favicon.svg"));
+        }
+        if (existsSync(favicons.ico)) {
+          cpSync(favicons.ico, resolve(dist, "favicon.ico"));
+        }
+      },
+    },
+  ];
+}
+
 /** @emoji 🌐 Vite: serve and copy `ui/asset` at `/asset/*` for palette fonts and cursors. */
 export function uiAssetsVitePlugin(assetsRoot: string): Plugin[] {
   let viteRoot = process.cwd();
@@ -1092,6 +1159,7 @@ export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOption
     },
     plugins: [
       ...uiAssetsVitePlugin(uiAssetsRoot),
+      ...semioFaviconVitePlugin(repoRoot),
       ...cadFixtureVitePlugin(repoRoot),
       infiniteFixtureVitePlugin(repoRoot),
       ...(playEntryKind === "3d" || playEntryKind === "5d" || playEntryKind === "shooting" ? puzzle3dMeshesVitePlugin(repoRoot) : []),
@@ -1193,6 +1261,21 @@ if (import.meta.vitest) {
         const { unlinkSync } = await import("node:fs");
         unlinkSync(filePath);
       }
+    });
+  });
+
+  describe("semioFaviconVitePlugin", () => {
+    it("points at compact emblem svg and ico under asset/logo", () => {
+      const { svg, ico } = semioFaviconSources(repoRoot);
+      expect(svg).toBe(resolve(repoRoot, "asset/logo/emblem.svg"));
+      expect(ico).toBe(resolve(repoRoot, "asset/logo/favicon_32x32.ico"));
+      expect(existsSync(svg)).toBe(true);
+      expect(existsSync(ico)).toBe(true);
+    });
+
+    it("registers serve and build plugins", () => {
+      const plugins = semioFaviconVitePlugin(repoRoot);
+      expect(plugins.map((plugin) => plugin.name)).toEqual(["semio-favicon-serve", "semio-favicon-build"]);
     });
   });
 

@@ -1590,6 +1590,12 @@ table thead.border-b {
   background-color: color-mix(in srgb, var(--panel) calc(var(--glass-window-options-alpha) * 100%), transparent);
 }
 
+[data-slot="window-engagement-zone"] {
+  -webkit-backdrop-filter: blur(var(--glass-window-options-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-window-options-blur)) saturate(var(--glass-saturate));
+  background-color: color-mix(in srgb, var(--panel) calc(var(--glass-window-options-alpha) * 100%), transparent);
+}
+
 @utility text-tiny {
   font-size: var(--text-2xs);
   line-height: var(--text-2xs--line-height);

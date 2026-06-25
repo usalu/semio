@@ -1180,12 +1180,6 @@ import {
 import { uiDeclarativeSectionsToTree, type UiNode, type UiTreeNode } from "@semio-tech/framework-playground-core";
 import { registerSurfaceBinding, useShellWindowInstance, type UiCadHostSurfaceNode } from "@semio-tech/framework-platform-renderer-react";
 import { defaultConstructRunner } from "@semio-tech/cad-js-query";
-import geometryNakagin from "../../../asset/play/geometry.json";
-import geometryLoom from "../../../asset/play/geometry-loom.json";
-import geometryRoutes from "../../../asset/play/geometry-routes.json";
-import geometrySmallBuilding from "../../../asset/play/small-building.model.json";
-import geometryTallBuilding from "../../../asset/play/tall-building.model.json";
-import geometryLargeBuilding from "../../../asset/play/large-building.model.json";
 import geometryConcreteForestLeft from "../../../asset/play/hexagonal-cut-concrete-forest-left.model.json";
 import geometryConcreteForestRight from "../../../asset/play/hexagonal-cut-concrete-forest-right.model.json";
 import { BrepjsKernel, preciseSpatialKernelMath } from "@semio-tech/cad-js-kernel-brepjs";
@@ -1227,12 +1221,6 @@ function modelVertexCount(json: Record<string, unknown>): number {
 }
 
 const SHAPE_ASSETS = [
-  { id: "nakagin-slice", key: "a", label: "Nakagin capsule", json: geometryNakagin as Record<string, unknown> },
-  { id: "geometry-loom", key: "l", label: "Loom deck + pent loop + rail", json: geometryLoom as Record<string, unknown> },
-  { id: "geometry-routes", key: "r", label: "Multi-route lattice", json: geometryRoutes as Record<string, unknown> },
-  { id: "small-building", key: "s", label: "Small building", json: geometrySmallBuilding as Record<string, unknown> },
-  { id: "tall-building", key: "t", label: "Tall building", json: geometryTallBuilding as Record<string, unknown> },
-  { id: "large-building", key: "b", label: "Large building", json: geometryLargeBuilding as Record<string, unknown> },
   { id: "concrete-forest-left", key: "c", label: "Concrete forest (left)", json: { modelSpace: geometryConcreteForestLeft, activeModelDefinitionId: defaultModelDefinitionId() } as Record<string, unknown> },
   { id: "concrete-forest-right", key: "d", label: "Concrete forest (right)", json: geometryConcreteForestRight as Record<string, unknown> },
 ] as const;
@@ -3974,8 +3962,8 @@ if (import.meta.vitest) {
     it("cadPlayReferencesForFixture loads concrete forest reference in every model definition", () => {
       expect(cadPlayIsConcreteForestFixture("concrete-forest-left")).toBe(true);
       expect(cadPlayIsConcreteForestFixture("concrete-forest-right")).toBe(true);
-      expect(cadPlayIsConcreteForestFixture("nakagin-slice")).toBe(false);
-      expect(cadPlayReferencesForFixture("nakagin-slice")).toEqual({});
+      expect(cadPlayIsConcreteForestFixture("unknown-fixture")).toBe(false);
+      expect(cadPlayReferencesForFixture("unknown-fixture")).toEqual({});
       const references = cadPlayReferencesForFixture("concrete-forest-left");
       for (const row of CAD_PLAY_PANE_SPECS) {
         expect(references[row.modelDefinitionId]?.map((reference) => reference.id)).toEqual(["ref-concrete-forest"]);
@@ -4178,7 +4166,7 @@ if (import.meta.vitest) {
     });
 
     it("modelsFromCadJson loads fixture models under spatial.shape", () => {
-      const models = modelsFromCadJson(geometrySmallBuilding);
+      const models = modelsFromCadJson(geometryConcreteForestRight);
       expect(models[defaultModelDefinitionId()]?.objects).not.toEqual({});
     });
 

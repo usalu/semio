@@ -24,6 +24,7 @@ import rehypeSlug from "rehype-slug";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import wasm from "vite-plugin-wasm";
 import topLevelAwait from "vite-plugin-top-level-await";
+import { semioFaviconVitePlugin } from "../../../../ui/styling/vite-elements-assets.ts";
 // #endregion 🔌Adapters
 
 type CjsFacadeResolveOpts = {
@@ -198,6 +199,7 @@ export default defineConfig(async ({ mode }) => {
   const htmlParseStringifyEntry = path.resolve(__dirname, "../../node_modules/html-parse-stringify/dist/html-parse-stringify.js");
   const reactI18nextEntry = path.resolve(__dirname, "../../node_modules/react-i18next/dist/commonjs/index.js");
   const reactRouterEntry = path.resolve(__dirname, "../../node_modules/react-router/dist/development/index.js");
+  const repoRoot = path.resolve(__dirname, "../../../..");
   return {
     server: {
       watch: {
@@ -230,6 +232,7 @@ export default defineConfig(async ({ mode }) => {
       ],
     },
     plugins: [
+      ...semioFaviconVitePlugin(repoRoot),
       reactCjsFacadeResolvePlugin({ htmlParseStringifyEntry, reactI18nextEntry, reactRouterEntry, shimMain, shimWithSelector, schedulerEntry, statsEntry }),
       tailwind.default(),
       {
