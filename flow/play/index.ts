@@ -19,7 +19,13 @@ import {
   type CommandDescriptor,
   type WindowBodyViewContext,
   type WindowEngagement,
+  FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+  FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+  FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+  uiDeclarativeSectionsToTree,
   type UiNode,
+  type UiSectionNode,
+  type UiTreeItemNode,
   type UiTreeSectionNode,
 } from "@semio-tech/framework-playground-core";
 
@@ -46,6 +52,7 @@ import {
   type FlowExtensionEntry,
   type FlowFixtureV1,
   type FlowReorganizeRequest,
+  type FlowWidgetV1,
 } from "@semio-tech/flow-react";
 import type { ContextMenuItem } from "@semio-tech/ui-react";
 import type { WindowMeasure } from "@semio-tech/framework-playground-core";
@@ -72,6 +79,9 @@ export const FLOW_PLAY_LAYOUT = createStackLayout([FLOW_PLAY_WINDOW_KIND_ID], ["
 export const FLOW_PLAY_KINDS_BODY_KEY = "flow.play.kinds";
 export const FLOW_PLAY_KINDS_TAB_ID = "flow-play-kinds";
 export const FLOW_PLAY_EXTENSIONS_TAB_ID = "flow-play-extensions";
+export const FLOW_PLAY_HIERARCHY_TAB_ID = "framework.panel.hierarchy";
+export const FLOW_PLAY_CATALOGUE_TAB_ID = "framework.panel.catalogue";
+export const FLOW_PLAY_INSPECTION_TAB_ID = "framework.panel.inspection";
 
 /** @emoji 📚 Neuron module section ids expected in the flow play workbench catalogue. */
 export const FLOW_NEURON_MODULE_IDS = ["dictionary", "list", "logic", "math", "text"] as const;
@@ -137,6 +147,10 @@ function flowPlayCmd(command: string, args?: Record<string, unknown>): CommandDe
   return { controllerId: FLOW_PLAY_CONTROLLER_ID, command, args };
 }
 
+function flowPlayPanelCmd(controllerId: string, command: string, args?: Record<string, unknown>): CommandDescriptor {
+  return { controllerId, command, args };
+}
+
 function buildFlowLayoutOptionsJson(layerSpacing: number, siblingGap: number, orientation: FlowLayoutOrientation): string {
   return JSON.stringify({ layerSpacing, siblingGap, orientation });
 }
@@ -165,6 +179,288 @@ export function buildFlowPlayKindsTree(sections: readonly CatalogueSection[]): U
   return { type: "tree", sections: treeSections };
 }
 
+// #region 🔖FlowPlayPanels
+/** @emoji 🧩 Parses flow play fixture JSON. */
+export function parseFlowPlayFixtureJson(json: string): FlowFixtureV1 | null {
+  try {
+    const parsed = JSON.parse(json) as FlowFixtureV1;
+    if (parsed.schema !== "flow.fixture/v1" || !Array.isArray(parsed.widgets) || !Array.isArray(parsed.synapses)) {
+      return null;
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function flowPlayWidgetTreeLabel(widget: FlowWidgetV1): string {
+  switch (widget.kind) {
+    case "neuron":
+      return widget.neuronKind;
+    case "inputSlider":
+      return `Slider (${widget.value})`;
+    case "inputStepper":
+      return `Stepper (${widget.schema})`;
+    case "inputNote":
+      return widget.text?.trim() || widget.id;
+    case "inputImage":
+      return widget.id;
+    case "variable":
+      return widget.name || widget.id;
+    case "outputPreview":
+      return "Preview";
+    case "outputAction":
+      return widget.action;
+    case "cluster":
+      return widget.name || widget.id;
+    default:
+      return widget.id;
+  }
+}
+
+/** @emoji 🌳 Workbench hierarchy: widgets and synapses from the live fixture. */
+export function buildFlowPlayHierarchyTree(
+  fixtureJson: string,
+  selectedNodeIds: readonly string[],
+  controllerId: string = FLOW_PLAY_CONTROLLER_ID,
+): UiNode {
+  const fixture = parseFlowPlayFixtureJson(fixtureJson);
+  if (!fixture) {
+    return {
+      type: "tree",
+      sections: [
+        {
+          id: "flow-play-hierarchy.invalid",
+          label: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+          defaultOpen: true,
+          items: [{ id: "flow-play-hierarchy.invalid.msg", label: "Invalid flow fixture" }],
+        },
+      ],
+    };
+  }
+  const widgetItems: UiTreeItemNode[] = fixture.widgets.map((widget) => ({
+    id: `flow-play-hierarchy.widget.${widget.id}`,
+    label: flowPlayWidgetTreeLabel(widget),
+    description: widget.kind,
+    command: flowPlayPanelCmd(controllerId, "setSelection", { ids: [widget.id] }),
+  }));
+  const synapseItems: UiTreeItemNode[] = fixture.synapses.map((synapse) => ({
+    id: `flow-play-hierarchy.synapse.${synapse.id}`,
+    label: `${synapse.from} → ${synapse.to}`,
+    description: [synapse.fromPort, synapse.toPort].filter(Boolean).join(" → ") || synapse.id,
+  }));
+  return {
+    type: "tree",
+    sections: [
+      {
+        id: "flow-play-hierarchy.widgets",
+        label: "Widgets",
+        defaultOpen: true,
+        items: widgetItems.length ? widgetItems : [{ id: "flow-play-hierarchy.widgets.empty", label: "(none)" }],
+      },
+      {
+        id: "flow-play-hierarchy.synapses",
+        label: "Synapses",
+        defaultOpen: false,
+        items: synapseItems.length ? synapseItems : [{ id: "flow-play-hierarchy.synapses.empty", label: "(none)" }],
+      },
+    ],
+    selectedIds: selectedNodeIds.map((id) => `flow-play-hierarchy.widget.${id}`),
+  };
+}
+
+/** @emoji 📚 Workbench catalogue: neuron kinds plus extensions in one tab. */
+export function buildFlowPlayCatalogueTree(sections: readonly CatalogueSection[], extensionEntries: readonly FlowExtensionEntry[]): UiNode {
+  const kindsSections = buildFlowPlayKindsTree(sections).sections ?? [];
+  const extensionSections = buildFlowPlayExtensionsTree(extensionEntries).sections ?? [];
+  const merged = [...kindsSections, ...extensionSections];
+  if (!merged.length) {
+    return {
+      type: "tree",
+      sections: [
+        {
+          id: "flow-play-catalogue.empty",
+          label: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+          defaultOpen: false,
+          items: [{ id: "flow-play-catalogue.empty.msg", label: "Loading catalogue…" }],
+        },
+      ],
+    };
+  }
+  return { type: "tree", sections: merged };
+}
+
+function flowPlayInspectorWidgetFields(widget: FlowWidgetV1, controllerId: string): UiNode[] {
+  const widgetId = widget.id;
+  const fields: UiNode[] = [
+    {
+      type: "field",
+      id: "flow-play-inspector.id",
+      label: "Id",
+      child: {
+        type: "input",
+        id: "flow-play-inspector.id.input",
+        inputKind: "text",
+        value: widgetId,
+        commit: "blur",
+        onChange: flowPlayPanelCmd(controllerId, "renameFlowWidget", { oldId: widgetId }),
+      },
+    },
+    {
+      type: "field",
+      id: "flow-play-inspector.kind",
+      label: "Kind",
+      child: { type: "text", value: widget.kind },
+    },
+  ];
+  if (widget.kind === "neuron") {
+    fields.push({
+      type: "field",
+      id: "flow-play-inspector.neuron-kind",
+      label: "Neuron kind",
+      child: {
+        type: "input",
+        id: "flow-play-inspector.neuron-kind.input",
+        inputKind: "text",
+        value: widget.neuronKind,
+        onChange: flowPlayPanelCmd(controllerId, "patchFlowWidget", { widgetId, field: "neuronKind" }),
+      },
+    });
+  }
+  if (widget.kind === "inputSlider") {
+    fields.push(
+      {
+        type: "field",
+        id: "flow-play-inspector.slider-value",
+        label: "Value",
+        child: {
+          type: "input",
+          id: "flow-play-inspector.slider-value.input",
+          inputKind: "number",
+          value: String(widget.value),
+          onChange: flowPlayPanelCmd(controllerId, "patchFlowWidget", { widgetId, field: "value" }),
+        },
+      },
+      {
+        type: "field",
+        id: "flow-play-inspector.slider-min",
+        label: "Min",
+        child: {
+          type: "input",
+          id: "flow-play-inspector.slider-min.input",
+          inputKind: "number",
+          value: String(widget.min ?? 0),
+          onChange: flowPlayPanelCmd(controllerId, "patchFlowWidget", { widgetId, field: "min" }),
+        },
+      },
+      {
+        type: "field",
+        id: "flow-play-inspector.slider-max",
+        label: "Max",
+        child: {
+          type: "input",
+          id: "flow-play-inspector.slider-max.input",
+          inputKind: "number",
+          value: String(widget.max ?? 10),
+          onChange: flowPlayPanelCmd(controllerId, "patchFlowWidget", { widgetId, field: "max" }),
+        },
+      },
+    );
+  }
+  if (widget.kind === "inputNote") {
+    fields.push({
+      type: "field",
+      id: "flow-play-inspector.note-text",
+      label: "Text",
+      child: {
+        type: "input",
+        id: "flow-play-inspector.note-text.input",
+        inputKind: "text",
+        value: widget.text,
+        onChange: flowPlayPanelCmd(controllerId, "patchFlowWidget", { widgetId, field: "text" }),
+      },
+    });
+  }
+  if (widget.kind === "variable") {
+    fields.push(
+      {
+        type: "field",
+        id: "flow-play-inspector.variable-name",
+        label: "Name",
+        child: {
+          type: "input",
+          id: "flow-play-inspector.variable-name.input",
+          inputKind: "text",
+          value: widget.name,
+          onChange: flowPlayPanelCmd(controllerId, "patchFlowWidget", { widgetId, field: "name" }),
+        },
+      },
+      {
+        type: "field",
+        id: "flow-play-inspector.variable-schema",
+        label: "Schema",
+        child: {
+          type: "input",
+          id: "flow-play-inspector.variable-schema.input",
+          inputKind: "text",
+          value: widget.schema,
+          onChange: flowPlayPanelCmd(controllerId, "patchFlowWidget", { widgetId, field: "schema" }),
+        },
+      },
+    );
+  }
+  return fields;
+}
+
+/** @emoji 🔍 Details inspection: editable fields for the selected widget. */
+export function buildFlowPlayInspectorTree(
+  fixtureJson: string,
+  selectedNodeIds: readonly string[],
+  controllerId: string = FLOW_PLAY_CONTROLLER_ID,
+): UiNode {
+  const fixture = parseFlowPlayFixtureJson(fixtureJson);
+  if (!fixture) {
+    return uiDeclarativeSectionsToTree([
+      { type: "section", id: "flow-play-inspector.invalid", label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, children: [{ type: "text", value: "Invalid flow fixture" }] },
+    ]);
+  }
+  if (!selectedNodeIds.length) {
+    return uiDeclarativeSectionsToTree([
+      {
+        type: "section",
+        id: "flow-play-inspector.empty",
+        label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+        children: [{ type: "text", value: "Select a widget in the canvas or hierarchy." }],
+      },
+    ]);
+  }
+  if (selectedNodeIds.length > 1) {
+    return uiDeclarativeSectionsToTree([
+      {
+        type: "section",
+        id: "flow-play-inspector.multi",
+        label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+        children: [{ type: "text", value: `${selectedNodeIds.length} widgets selected` }],
+      },
+    ]);
+  }
+  const widget = fixture.widgets.find((entry) => entry.id === selectedNodeIds[0]);
+  if (!widget) {
+    return uiDeclarativeSectionsToTree([
+      { type: "section", id: "flow-play-inspector.missing", label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, children: [{ type: "text", value: "Widget not found" }] },
+    ]);
+  }
+  return uiDeclarativeSectionsToTree([
+    {
+      type: "section",
+      id: "flow-play-inspector.widget",
+      label: flowPlayWidgetTreeLabel(widget),
+      children: flowPlayInspectorWidgetFields(widget, controllerId),
+    },
+  ] as readonly UiSectionNode[]);
+}
+// #endregion 🔖FlowPlayPanels
+
 /** @emoji 🎛 Flow play shell controller. */
 export class FlowPlayController extends Controller {
   readonly mainMode = new ModeRuntime("main", "Flow", undefined);
@@ -182,6 +478,8 @@ export class FlowPlayController extends Controller {
   private commandRequestEpoch = 0;
   private commandRequestPayload: Omit<FlowCanvasCommandRequest, "epoch"> = { command: "" };
   private extensionRevision = 0;
+  private selectedNodeIds: string[] = [];
+  private interactionRevision = 0;
   private lodMode: DagLodModeKind = DAG_LOD_MODE_AUTOMATIC;
   private lodModeByInstance: Record<string, DagLodModeKind> = {};
   private effectiveLod: DagDrawLodKind = "normal";
@@ -214,6 +512,61 @@ export class FlowPlayController extends Controller {
 
   getExtensionEntries(): readonly FlowExtensionEntry[] {
     return flowExtensionHost.listEntries();
+  }
+
+  getSelectedNodeIds(): readonly string[] {
+    return this.selectedNodeIds;
+  }
+
+  getInteractionRevision(): number {
+    return this.interactionRevision;
+  }
+
+  private applyFixtureJson(json: string): void {
+    if (!json.includes("flow.fixture/v1") || json === this.fixtureJson) return;
+    this.fixtureJson = json;
+    this.interactionRevision += 1;
+    this.notifySnapshot();
+    this.emit();
+  }
+
+  private renameFlowWidget(oldId: string, newId: string): void {
+    const trimmed = newId.trim();
+    if (!trimmed || trimmed === oldId) return;
+    const fixture = parseFlowPlayFixtureJson(this.fixtureJson);
+    if (!fixture || fixture.widgets.some((widget) => widget.id === trimmed)) return;
+    const widgets = fixture.widgets.map((widget) => (widget.id === oldId ? ({ ...widget, id: trimmed } as FlowWidgetV1) : widget));
+    const synapses = fixture.synapses.map((synapse) => ({
+      ...synapse,
+      from: synapse.from === oldId ? trimmed : synapse.from,
+      to: synapse.to === oldId ? trimmed : synapse.to,
+    }));
+    this.selectedNodeIds = this.selectedNodeIds.map((id) => (id === oldId ? trimmed : id));
+    this.fixtureJson = flowFixtureToJson({ ...fixture, widgets, synapses });
+    this.interactionRevision += 1;
+    this.commandRequestPayload = { command: "setSelection", argsJson: JSON.stringify({ ids: [...this.selectedNodeIds] }) };
+    this.commandRequestEpoch += 1;
+    this.notifySnapshot();
+    this.emit();
+  }
+
+  private patchFlowWidget(widgetId: string, field: string, value: unknown): void {
+    const fixture = parseFlowPlayFixtureJson(this.fixtureJson);
+    if (!fixture) return;
+    const widgets = fixture.widgets.map((widget) => {
+      if (widget.id !== widgetId) return widget;
+      if (field === "value" || field === "min" || field === "max" || field === "step") {
+        const numeric = typeof value === "number" ? value : Number(value);
+        if (!Number.isFinite(numeric)) return widget;
+        return { ...widget, [field]: numeric } as FlowWidgetV1;
+      }
+      if (typeof value !== "string") return widget;
+      return { ...widget, [field]: value } as FlowWidgetV1;
+    });
+    this.fixtureJson = flowFixtureToJson({ ...fixture, widgets });
+    this.interactionRevision += 1;
+    this.notifySnapshot();
+    this.emit();
   }
 
   /** @emoji 🔔 Subscribes to catalogue updates for workbench kinds panel refresh. */
@@ -405,9 +758,38 @@ export class FlowPlayController extends Controller {
     }
     if (command === "setFixtureJson") {
       const json = (args as { json?: string }).json;
-      if (typeof json === "string" && json !== this.fixtureJson) {
-        this.fixtureJson = json;
-        this.emit();
+      if (typeof json === "string") {
+        this.applyFixtureJson(json);
+      }
+      return;
+    }
+    if (command === "setSelection") {
+      const ids = (args as { ids?: string[] }).ids;
+      if (!Array.isArray(ids)) return;
+      const next = [...new Set(ids.filter((id) => typeof id === "string"))];
+      if (JSON.stringify(next) === JSON.stringify(this.selectedNodeIds)) return;
+      this.selectedNodeIds = next;
+      this.interactionRevision += 1;
+      this.commandRequestPayload = { command: "setSelection", argsJson: JSON.stringify({ ids: next }) };
+      this.commandRequestEpoch += 1;
+      this.notifySnapshot();
+      this.emit();
+      return;
+    }
+    if (command === "renameFlowWidget") {
+      const oldId = (args as { oldId?: string }).oldId;
+      const value = (args as { value?: string }).value;
+      if (typeof oldId === "string" && typeof value === "string") {
+        this.renameFlowWidget(oldId, value);
+      }
+      return;
+    }
+    if (command === "patchFlowWidget") {
+      const widgetId = (args as { widgetId?: string }).widgetId;
+      const field = (args as { field?: string }).field;
+      const value = (args as { value?: unknown }).value;
+      if (typeof widgetId === "string" && typeof field === "string") {
+        this.patchFlowWidget(widgetId, field, value);
       }
       return;
     }
@@ -683,6 +1065,36 @@ if (import.meta.vitest) {
       if (updated?.kind === "slider") {
         expect(updated.value).toBe(0);
       }
+    });
+
+    it("hierarchy tree lists widgets and synapses", () => {
+      const tree = buildFlowPlayHierarchyTree(FLOW_PLAY_DEFAULT_FIXTURE_JSON, ["slider"]);
+      expect(tree.sections?.some((section) => section.label === "Widgets")).toBe(true);
+      expect(tree.sections?.some((section) => section.label === "Synapses")).toBe(true);
+      expect(tree.selectedIds).toContain("flow-play-hierarchy.widget.slider");
+    });
+
+    it("catalogue tree merges kinds and extensions sections", () => {
+      const tree = buildFlowPlayCatalogueTree(
+        [{ id: "math", title: "Math", items: [{ kind: "neuron", neuronKind: "math.add", name: "Add", summary: "Sum" }] }],
+        [],
+      );
+      expect((tree.sections?.length ?? 0) >= 1).toBe(true);
+    });
+
+    it("setSelection updates selected node ids and interaction revision", () => {
+      const bus = new CommandBus();
+      const ctrl = new FlowPlayController(bus, () => {});
+      ctrl.run("setSelection", { ids: ["slider"] });
+      expect(ctrl.getSelectedNodeIds()).toEqual(["slider"]);
+      expect(ctrl.getInteractionRevision()).toBeGreaterThan(0);
+    });
+
+    it("inspector tree exposes slider value field for single selection", () => {
+      const tree = buildFlowPlayInspectorTree(FLOW_PLAY_DEFAULT_FIXTURE_JSON, ["slider"]);
+      const serialized = JSON.stringify(tree);
+      expect(serialized).toContain("Value");
+      expect(serialized).toContain("patchFlowWidget");
     });
   });
 }

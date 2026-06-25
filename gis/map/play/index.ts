@@ -19,9 +19,16 @@ import {
   createProductPlaygroundPlatform,
   createStackLayout,
   registerWindowBody,
+  FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+  FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+  FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+  uiDeclarativeSectionsToTree,
   type CommandDescriptor,
   type WindowBodyViewContext,
   type UiNode,
+  type UiSectionNode,
+  type UiTreeItemNode,
+  type UiTreeSectionNode,
   type WindowMeasure,
   type WindowTemplate,
 } from "@semio-tech/framework-playground-core";
@@ -66,6 +73,11 @@ export const GIS_MAP_PLAY_BODY_KEY_MAIN = "gis.map.play.main";
 export const GIS_MAP_PLAY_STORE_ID = "gis-map-play.snapshot";
 export const GIS_MAP_PLAY_WINDOW_KIND_ID = "gis-map-main";
 export const GIS_MAP_PLAY_FIXTURE_REUSE_ID = "reuse";
+export const GIS_MAP_PLAY_HIERARCHY_TAB_ID = "framework.panel.hierarchy";
+export const GIS_MAP_PLAY_CATALOGUE_TAB_ID = "framework.panel.catalogue";
+export const GIS_MAP_PLAY_INSPECTION_TAB_ID = "framework.panel.inspection";
+
+export type MapPlaySelectionKind = "position" | "route";
 
 export interface GisMapFixturePositionV1 {
   readonly id: string;
@@ -252,6 +264,213 @@ function mapPlayCmd(command: string, args?: Record<string, unknown>): CommandDes
   return { controllerId: GIS_MAP_PLAY_CONTROLLER_ID, command, args: args as never };
 }
 
+// #region 🔖MapPlayPanels
+export function buildMapPlayHierarchyTree(fixture: GisMapFixtureV1 | null, selectedFeatureId: string | null, selectedFeatureKind: MapPlaySelectionKind | null): UiNode {
+  if (!fixture) {
+    return {
+      type: "tree",
+      sections: [
+        {
+          id: "gis-map-play-hierarchy.invalid",
+          label: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+          defaultOpen: true,
+          items: [{ id: "gis-map-play-hierarchy.invalid.msg", label: "No fixture loaded" }],
+        },
+      ],
+    };
+  }
+  const positionItems: UiTreeItemNode[] = fixture.positions.map((position) => ({
+    id: `gis-map-play-hierarchy.position.${position.id}`,
+    label: position.label || position.name || position.id,
+    description: `${position.kind} · ${position.lat.toFixed(4)}, ${position.lon.toFixed(4)}`,
+    command: mapPlayCmd("setSelection", { featureId: position.id, featureKind: "position" }),
+  }));
+  const routeItems: UiTreeItemNode[] = fixture.routes.map((route) => ({
+    id: `gis-map-play-hierarchy.route.${route.id}`,
+    label: route.label || route.id,
+    description: `${route.points.length} points`,
+    command: mapPlayCmd("setSelection", { featureId: route.id, featureKind: "route" }),
+  }));
+  const layerItems: UiTreeItemNode[] = GIS_MAP_LAYER_IDS.map((layer) => ({
+    id: `gis-map-play-hierarchy.layer.${layer}`,
+    label: GIS_MAP_LAYER_LABEL[layer],
+    description: layer,
+  }));
+  const selectedIds =
+    selectedFeatureId && selectedFeatureKind
+      ? [`gis-map-play-hierarchy.${selectedFeatureKind}.${selectedFeatureId}`]
+      : [];
+  return {
+    type: "tree",
+    sections: [
+      {
+        id: "gis-map-play-hierarchy.layers",
+        label: "Layers",
+        defaultOpen: false,
+        items: layerItems,
+      },
+      {
+        id: "gis-map-play-hierarchy.positions",
+        label: "Positions",
+        defaultOpen: true,
+        items: positionItems.length ? positionItems : [{ id: "gis-map-play-hierarchy.positions.empty", label: "(none)" }],
+      },
+      {
+        id: "gis-map-play-hierarchy.routes",
+        label: "Routes",
+        defaultOpen: false,
+        items: routeItems.length ? routeItems : [{ id: "gis-map-play-hierarchy.routes.empty", label: "(none)" }],
+      },
+    ],
+    selectedIds,
+  };
+}
+
+export function buildMapPlayCatalogueTree(): UiNode {
+  return {
+    type: "tree",
+    sections: [
+      {
+        id: "gis-map-play-catalogue.features",
+        label: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+        defaultOpen: true,
+        items: [
+          { id: "gis-map-play-catalogue.receiver", label: "Receiver position", description: "receiver" },
+          { id: "gis-map-play-catalogue.donor", label: "Donor position", description: "donor" },
+          { id: "gis-map-play-catalogue.route", label: "Reuse route", description: "route" },
+        ],
+      },
+    ],
+  };
+}
+
+export function buildMapPlayInspectorTree(fixture: GisMapFixtureV1 | null, selectedFeatureId: string | null, selectedFeatureKind: MapPlaySelectionKind | null): UiNode {
+  if (!fixture) {
+    return uiDeclarativeSectionsToTree([
+      { type: "section", id: "gis-map-play-inspector.invalid", label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, children: [{ type: "text", value: "No fixture loaded" }] },
+    ]);
+  }
+  if (!selectedFeatureId || !selectedFeatureKind) {
+    return uiDeclarativeSectionsToTree([
+      {
+        type: "section",
+        id: "gis-map-play-inspector.empty",
+        label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+        children: [{ type: "text", value: "Select a position or route in the hierarchy." }],
+      },
+    ]);
+  }
+  if (selectedFeatureKind === "position") {
+    const position = fixture.positions.find((entry) => entry.id === selectedFeatureId);
+    if (!position) {
+      return uiDeclarativeSectionsToTree([
+        { type: "section", id: "gis-map-play-inspector.missing", label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, children: [{ type: "text", value: "Position not found" }] },
+      ]);
+    }
+    return uiDeclarativeSectionsToTree([
+      {
+        type: "section",
+        id: "gis-map-play-inspector.position",
+        label: position.label || position.id,
+        children: [
+          {
+            type: "field",
+            id: "gis-map-play-inspector.position.label",
+            label: "Label",
+            child: {
+              type: "input",
+              id: "gis-map-play-inspector.position.label.input",
+              inputKind: "text",
+              value: position.label,
+              onChange: mapPlayCmd("patchPosition", { positionId: position.id, field: "label" }),
+            },
+          },
+          {
+            type: "field",
+            id: "gis-map-play-inspector.position.name",
+            label: "Name",
+            child: {
+              type: "input",
+              id: "gis-map-play-inspector.position.name.input",
+              inputKind: "text",
+              value: position.name,
+              onChange: mapPlayCmd("patchPosition", { positionId: position.id, field: "name" }),
+            },
+          },
+          {
+            type: "field",
+            id: "gis-map-play-inspector.position.lat",
+            label: "Latitude",
+            child: {
+              type: "input",
+              id: "gis-map-play-inspector.position.lat.input",
+              inputKind: "number",
+              value: String(position.lat),
+              onChange: mapPlayCmd("patchPosition", { positionId: position.id, field: "lat" }),
+            },
+          },
+          {
+            type: "field",
+            id: "gis-map-play-inspector.position.lon",
+            label: "Longitude",
+            child: {
+              type: "input",
+              id: "gis-map-play-inspector.position.lon.input",
+              inputKind: "number",
+              value: String(position.lon),
+              onChange: mapPlayCmd("patchPosition", { positionId: position.id, field: "lon" }),
+            },
+          },
+          {
+            type: "field",
+            id: "gis-map-play-inspector.position.kind",
+            label: "Kind",
+            child: {
+              type: "select",
+              id: "gis-map-play-inspector.position.kind.select",
+              value: position.kind,
+              items: [
+                { id: "receiver", value: "receiver", label: "Receiver" },
+                { id: "donor", value: "donor", label: "Donor" },
+              ],
+              onChange: mapPlayCmd("patchPosition", { positionId: position.id, field: "kind" }),
+            },
+          },
+        ],
+      },
+    ] as readonly UiSectionNode[]);
+  }
+  const route = fixture.routes.find((entry) => entry.id === selectedFeatureId);
+  if (!route) {
+    return uiDeclarativeSectionsToTree([
+      { type: "section", id: "gis-map-play-inspector.missing", label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, children: [{ type: "text", value: "Route not found" }] },
+    ]);
+  }
+  return uiDeclarativeSectionsToTree([
+    {
+      type: "section",
+      id: "gis-map-play-inspector.route",
+      label: route.label || route.id,
+      children: [
+        {
+          type: "field",
+          id: "gis-map-play-inspector.route.label",
+          label: "Label",
+          child: {
+            type: "input",
+            id: "gis-map-play-inspector.route.label.input",
+            inputKind: "text",
+            value: route.label ?? "",
+            onChange: mapPlayCmd("patchRoute", { routeId: route.id, field: "label" }),
+          },
+        },
+        { type: "field", id: "gis-map-play-inspector.route.points", label: "Points", child: { type: "text", value: String(route.points.length) } },
+      ],
+    },
+  ] as readonly UiSectionNode[]);
+}
+// #endregion 🔖MapPlayPanels
+
 class MapPlaySnapshotStore extends Store<MapPlaySnapshot> {
   constructor(private readonly controller: MapPlayController) {
     super();
@@ -399,6 +618,9 @@ export class MapPlayController extends Controller implements PlaygroundFixtureHo
   layerStrokeScaleByInstance: Record<string, MapLayerStrokeScale> = {};
   effectiveLodId: GisMapLodId = "world";
   effectiveLodByInstance: Record<string, GisMapLodId> = {};
+  private selectedFeatureId: string | null = null;
+  private selectedFeatureKind: MapPlaySelectionKind | null = null;
+  private interactionRevision = 0;
 
   constructor(commandBus: CommandBus, notify: () => void) {
     super(GIS_MAP_PLAY_CONTROLLER_ID, commandBus, notify);
@@ -454,6 +676,52 @@ export class MapPlayController extends Controller implements PlaygroundFixtureHo
     return this.activeFixture;
   }
 
+  getSelectedFeatureId(): string | null {
+    return this.selectedFeatureId;
+  }
+
+  getSelectedFeatureKind(): MapPlaySelectionKind | null {
+    return this.selectedFeatureKind;
+  }
+
+  getInteractionRevision(): number {
+    return this.interactionRevision;
+  }
+
+  private patchActiveFixture(nextFixture: GisMapFixtureV1): void {
+    this.activeFixture = nextFixture;
+    this.interactionRevision += 1;
+    this.bumpSnapshot();
+  }
+
+  private patchPosition(positionId: string, field: string, value: unknown): void {
+    if (!this.activeFixture) return;
+    const positions = this.activeFixture.positions.map((position) => {
+      if (position.id !== positionId) return position;
+      if (field === "lat" || field === "lon") {
+        const numeric = typeof value === "number" ? value : Number(value);
+        if (!Number.isFinite(numeric)) return position;
+        return { ...position, [field]: numeric };
+      }
+      if (field === "kind" && (value === "receiver" || value === "donor")) {
+        return { ...position, kind: value };
+      }
+      if (typeof value !== "string") return position;
+      return { ...position, [field]: value };
+    });
+    this.patchActiveFixture({ ...this.activeFixture, positions });
+  }
+
+  private patchRoute(routeId: string, field: string, value: unknown): void {
+    if (!this.activeFixture) return;
+    const routes = this.activeFixture.routes.map((route) => {
+      if (route.id !== routeId) return route;
+      if (typeof value !== "string") return route;
+      return { ...route, [field]: value };
+    });
+    this.patchActiveFixture({ ...this.activeFixture, routes });
+  }
+
   getSnapshot(): MapPlaySnapshot {
     if (!this.snapshotCache) {
       this.rebuildSnapshotCache();
@@ -499,6 +767,34 @@ export class MapPlayController extends Controller implements PlaygroundFixtureHo
   }
 
   run(command: string, args?: unknown): void {
+    if (command === "setSelection") {
+      const featureId = (args as { featureId?: string | null }).featureId ?? null;
+      const featureKind = (args as { featureKind?: MapPlaySelectionKind | null }).featureKind ?? null;
+      if (this.selectedFeatureId === featureId && this.selectedFeatureKind === featureKind) return;
+      this.selectedFeatureId = featureId;
+      this.selectedFeatureKind = featureKind;
+      this.interactionRevision += 1;
+      this.bumpSnapshot();
+      return;
+    }
+    if (command === "patchPosition") {
+      const positionId = (args as { positionId?: string }).positionId;
+      const field = (args as { field?: string }).field;
+      const value = (args as { value?: unknown }).value;
+      if (typeof positionId === "string" && typeof field === "string") {
+        this.patchPosition(positionId, field, value);
+      }
+      return;
+    }
+    if (command === "patchRoute") {
+      const routeId = (args as { routeId?: string }).routeId;
+      const field = (args as { field?: string }).field;
+      const value = (args as { value?: unknown }).value;
+      if (typeof routeId === "string" && typeof field === "string") {
+        this.patchRoute(routeId, field, value);
+      }
+      return;
+    }
     if (command === "setActiveFixture") {
       const fixtureId = (args as { fixtureId?: string }).fixtureId ?? "";
       const nextId = isPlaygroundNoFixtureId(fixtureId) ? PLAYGROUND_NO_FIXTURE_ID : fixtureId;

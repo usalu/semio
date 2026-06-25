@@ -2149,7 +2149,7 @@ function FlowParamOverlay({
           return (
             <label
               key={key}
-              className="pointer-events-auto absolute flex items-center gap-1 rounded border border-border bg-background/90 px-1 text-[10px] text-foreground shadow-sm"
+              className="pointer-events-auto absolute flex items-center gap-1 rounded border border-border bg-background/90 px-1 text-2xs text-foreground shadow-sm"
               style={{ left, top, width: w, height: h }}
             >
               <input
@@ -2165,7 +2165,7 @@ function FlowParamOverlay({
         return (
           <input
             key={key}
-            className="pointer-events-auto absolute rounded border border-border bg-background/90 px-1 text-[10px] text-foreground shadow-sm"
+            className="pointer-events-auto absolute rounded border border-border bg-background/90 px-1 text-2xs text-foreground shadow-sm"
             style={{ left, top, width: w, height: h }}
             type={editor.type === "text" ? "text" : "number"}
             value={typeof value === "string" ? value : String(value)}
@@ -2247,13 +2247,13 @@ function FlowVariableOverlay({
           style={{ left: editor.x, top: editor.y, width: editor.w, minHeight: editor.h }}
         >
           <input
-            className="w-full rounded border border-border bg-background px-1 text-[10px] text-foreground"
+            className="w-full rounded border border-border bg-background px-1 text-2xs text-foreground"
             value={editor.name}
             aria-label="Variable name"
             onChange={(event) => onNameChange(editor.id, event.target.value)}
           />
           <select
-            className="w-full rounded border border-border bg-background px-1 text-[10px] text-foreground"
+            className="w-full rounded border border-border bg-background px-1 text-2xs text-foreground"
             value={editor.schema}
             aria-label="Variable schema"
             onChange={(event) => onSchemaChange(editor.id, event.target.value)}
@@ -2324,17 +2324,17 @@ function FlowStepperOverlay({
               className="pointer-events-auto absolute flex items-center gap-0.5 overflow-hidden rounded border border-border bg-background/90 px-1 shadow-sm"
               style={{ left, top, width: w, height: h }}
             >
-              <span className="shrink-0 select-none text-[9px] text-muted-foreground">{field.label}</span>
+              <span className="shrink-0 select-none text-2xs text-muted-foreground">{field.label}</span>
               <button
                 type="button"
-                className="shrink-0 select-none px-0.5 text-[10px] leading-none text-muted-foreground hover:text-foreground"
+                className="shrink-0 select-none px-0.5 text-2xs leading-none text-muted-foreground hover:text-foreground"
                 onClick={() => onFieldChange(widgetId, field.key, field.value - field.step)}
               >
                 −
               </button>
               <input
                 type="number"
-                className="min-w-0 flex-1 bg-transparent text-center text-[10px] text-foreground outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                className="min-w-0 flex-1 bg-transparent text-center text-2xs text-foreground outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 value={field.value}
                 step={field.step}
                 onChange={(event) => {
@@ -2344,7 +2344,7 @@ function FlowStepperOverlay({
               />
               <button
                 type="button"
-                className="shrink-0 select-none px-0.5 text-[10px] leading-none text-muted-foreground hover:text-foreground"
+                className="shrink-0 select-none px-0.5 text-2xs leading-none text-muted-foreground hover:text-foreground"
                 onClick={() => onFieldChange(widgetId, field.key, field.value + field.step)}
               >
                 +

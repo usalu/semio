@@ -20,11 +20,18 @@ import {
 	PLAYGROUND_NO_FIXTURE_ID,
 	playgroundResolvedFixtureId,
 	registerWindowBody,
+	FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+	FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+	FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+	uiDeclarativeSectionsToTree,
 	type AppTools,
 	type CommandDescriptor,
 	type PlaygroundFixtureCatalog,
 	type PlaygroundFixtureHost,
 	type ToolItem,
+	type UiNode,
+	type UiSectionNode,
+	type UiTreeItemNode,
 	type WindowEngagement,
 	type WindowMeasure,
 } from "@semio-tech/framework-playground-core";
@@ -51,6 +58,11 @@ export const SHOOTING_PLAY_BODY_KEY_MODEL = "shooting.play.model";
 export const SHOOTING_PLAY_BODY_KEY_ICON = "shooting.play.icon";
 export const SHOOTING_PLAY_WINDOW_KIND_MODEL = "shooting-model";
 export const SHOOTING_PLAY_WINDOW_KIND_ICON = "shooting-icon";
+export const SHOOTING_PLAY_HIERARCHY_TAB_ID = "framework.panel.hierarchy";
+export const SHOOTING_PLAY_CATALOGUE_TAB_ID = "framework.panel.catalogue";
+export const SHOOTING_PLAY_INSPECTION_TAB_ID = "framework.panel.inspection";
+
+export type ShootingPlaySelectionKind = "shot" | "asset";
 
 export const SHOOTING_PLAY_LAYOUT = createDefaultLayout(
 	[SHOOTING_PLAY_WINDOW_KIND_MODEL, SHOOTING_PLAY_WINDOW_KIND_ICON],
@@ -148,6 +160,201 @@ export interface ShootingPlayHostBridge {
 function shootingPlayCmd(command: string, args?: Record<string, unknown>): CommandDescriptor {
 	return { controllerId: SHOOTING_PLAY_CONTROLLER_ID, command, args };
 }
+
+// #region 🔖ShootingPlayPanels
+export function buildShootingPlayHierarchyTree(fixture: ShootingFixtureV1, selectedId: string | null, selectedKind: ShootingPlaySelectionKind | null): UiNode {
+	const shotItems: UiTreeItemNode[] = fixture.shots.map((shot) => ({
+		id: `shooting-play-hierarchy.shot.${shot.id}`,
+		label: shot.label || shot.id,
+		description: `${shot.width}×${shot.height} ${shot.format.toUpperCase()}`,
+		command: shootingPlayCmd("setSelection", { selectedId: shot.id, selectedKind: "shot" }),
+	}));
+	const assetItems: UiTreeItemNode[] = fixture.assets.map((asset) => ({
+		id: `shooting-play-hierarchy.asset.${asset.id}`,
+		label: asset.name || asset.id,
+		description: asset.format,
+		command: shootingPlayCmd("setSelection", { selectedId: asset.id, selectedKind: "asset" }),
+	}));
+	const selectedIds = selectedId && selectedKind ? [`shooting-play-hierarchy.${selectedKind}.${selectedId}`] : [];
+	return {
+		type: "tree",
+		sections: [
+			{
+				id: "shooting-play-hierarchy.shots",
+				label: "Shots",
+				defaultOpen: true,
+				items: shotItems.length ? shotItems : [{ id: "shooting-play-hierarchy.shots.empty", label: "(none)" }],
+			},
+			{
+				id: "shooting-play-hierarchy.assets",
+				label: "Assets",
+				defaultOpen: false,
+				items: assetItems.length ? assetItems : [{ id: "shooting-play-hierarchy.assets.empty", label: "(none)" }],
+			},
+		],
+		selectedIds,
+	};
+}
+
+export function buildShootingPlayCatalogueTree(): UiNode {
+	return {
+		type: "tree",
+		sections: [
+			{
+				id: "shooting-play-catalogue.shots",
+				label: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+				defaultOpen: true,
+				items: [
+					{ id: "shooting-play-catalogue.svg", label: "SVG shot", description: "svg" },
+					{ id: "shooting-play-catalogue.png", label: "PNG shot", description: "png" },
+				],
+			},
+			{
+				id: "shooting-play-catalogue.assets",
+				label: "Assets",
+				defaultOpen: false,
+				items: [{ id: "shooting-play-catalogue.glb", label: "GLB asset", description: "glb" }],
+			},
+		],
+	};
+}
+
+export function buildShootingPlayInspectorTree(fixture: ShootingFixtureV1, selectedId: string | null, selectedKind: ShootingPlaySelectionKind | null): UiNode {
+	if (!selectedId || !selectedKind) {
+		return uiDeclarativeSectionsToTree([
+			{
+				type: "section",
+				id: "shooting-play-inspector.empty",
+				label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+				children: [{ type: "text", value: "Select a shot or asset in the hierarchy." }],
+			},
+		]);
+	}
+	if (selectedKind === "shot") {
+		const shot = fixture.shots.find((entry) => entry.id === selectedId);
+		if (!shot) {
+			return uiDeclarativeSectionsToTree([
+				{ type: "section", id: "shooting-play-inspector.missing", label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, children: [{ type: "text", value: "Shot not found" }] },
+			]);
+		}
+		return uiDeclarativeSectionsToTree([
+			{
+				type: "section",
+				id: "shooting-play-inspector.shot",
+				label: shot.label || shot.id,
+				children: [
+					{
+						type: "field",
+						id: "shooting-play-inspector.shot.label",
+						label: "Label",
+						child: {
+							type: "input",
+							id: "shooting-play-inspector.shot.label.input",
+							inputKind: "text",
+							value: shot.label,
+							onChange: shootingPlayCmd("patchShot", { shotId: shot.id, field: "label" }),
+						},
+					},
+					{
+						type: "field",
+						id: "shooting-play-inspector.shot.format",
+						label: "Format",
+						child: {
+							type: "select",
+							id: "shooting-play-inspector.shot.format.select",
+							value: shot.format,
+							items: [
+								{ id: "svg", value: "svg", label: "SVG" },
+								{ id: "png", value: "png", label: "PNG" },
+							],
+							onChange: shootingPlayCmd("patchShot", { shotId: shot.id, field: "format" }),
+						},
+					},
+					{
+						type: "field",
+						id: "shooting-play-inspector.shot.shape",
+						label: "Shape",
+						child: {
+							type: "select",
+							id: "shooting-play-inspector.shot.shape.select",
+							value: shot.shape ?? "rectangle",
+							items: [
+								{ id: "rectangle", value: "rectangle", label: "Rectangle" },
+								{ id: "ellipse", value: "ellipse", label: "Ellipse" },
+							],
+							onChange: shootingPlayCmd("patchShot", { shotId: shot.id, field: "shape" }),
+						},
+					},
+					{
+						type: "field",
+						id: "shooting-play-inspector.shot.width",
+						label: "Width",
+						child: {
+							type: "input",
+							id: "shooting-play-inspector.shot.width.input",
+							inputKind: "number",
+							value: String(shot.width),
+							onChange: shootingPlayCmd("patchShot", { shotId: shot.id, field: "width" }),
+						},
+					},
+					{
+						type: "field",
+						id: "shooting-play-inspector.shot.height",
+						label: "Height",
+						child: {
+							type: "input",
+							id: "shooting-play-inspector.shot.height.input",
+							inputKind: "number",
+							value: String(shot.height),
+							onChange: shootingPlayCmd("patchShot", { shotId: shot.id, field: "height" }),
+						},
+					},
+					{
+						type: "button",
+						id: "shooting-play-inspector.shot.activate",
+						label: "Set active shot",
+						command: shootingPlayCmd("setActiveShot", { value: shot.id }),
+					},
+				],
+			},
+		] as readonly UiSectionNode[]);
+	}
+	const asset = fixture.assets.find((entry) => entry.id === selectedId);
+	if (!asset) {
+		return uiDeclarativeSectionsToTree([
+			{ type: "section", id: "shooting-play-inspector.missing", label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, children: [{ type: "text", value: "Asset not found" }] },
+		]);
+	}
+	return uiDeclarativeSectionsToTree([
+		{
+			type: "section",
+			id: "shooting-play-inspector.asset",
+			label: asset.name || asset.id,
+			children: [
+				{
+					type: "field",
+					id: "shooting-play-inspector.asset.name",
+					label: "Name",
+					child: {
+						type: "input",
+						id: "shooting-play-inspector.asset.name.input",
+						inputKind: "text",
+						value: asset.name,
+						onChange: shootingPlayCmd("patchAsset", { assetId: asset.id, field: "name" }),
+					},
+				},
+				{ type: "field", id: "shooting-play-inspector.asset.url", label: "URL", child: { type: "text", value: asset.url } },
+				{
+					type: "button",
+					id: "shooting-play-inspector.asset.activate",
+					label: "Set active asset",
+					command: shootingPlayCmd("setActiveAsset", { value: asset.id }),
+				},
+			],
+		},
+	] as readonly UiSectionNode[]);
+}
+// #endregion 🔖ShootingPlayPanels
 
 function shootingFixtureJsonForId(fixtureId: string): string {
 	if (isPlaygroundNoFixtureId(fixtureId)) return SHOOTING_PLAY_EMPTY_FIXTURE_JSON;
@@ -273,6 +480,9 @@ export class ShootingPlayController extends Controller implements PlaygroundFixt
 	private centerModel = true;
 	private cameraDraftLabel = "Camera 1";
 	private readonly snapshotListeners = new Set<() => void>();
+	private selectedId: string | null = null;
+	private selectedKind: ShootingPlaySelectionKind | null = null;
+	private interactionRevision = 0;
 
 	constructor(commandBus: CommandBus, hostNotify: () => void, fixtureStore: ShootingPlayFixtureStore = createShootingPlayFixtureStore()) {
 		super(SHOOTING_PLAY_CONTROLLER_ID, commandBus, hostNotify);
@@ -298,6 +508,18 @@ export class ShootingPlayController extends Controller implements PlaygroundFixt
 
 	getFitRevision(): number {
 		return this.fitRevision;
+	}
+
+	getSelectedId(): string | null {
+		return this.selectedId;
+	}
+
+	getSelectedKind(): ShootingPlaySelectionKind | null {
+		return this.selectedKind;
+	}
+
+	getInteractionRevision(): number {
+		return this.interactionRevision;
 	}
 
 	hasStoredFixture(): boolean {
@@ -347,6 +569,7 @@ export class ShootingPlayController extends Controller implements PlaygroundFixt
 		const previousAssetUrl = resolveActiveAsset(this.fixture)?.url;
 		this.fixture = fixture;
 		this.renderRevision += 1;
+		this.interactionRevision += 1;
 		const nextAssetUrl = resolveActiveAsset(fixture)?.url;
 		if (this.centerModel && previousAssetUrl !== nextAssetUrl) {
 			this.fitRevision += 1;
@@ -459,7 +682,6 @@ export class ShootingPlayController extends Controller implements PlaygroundFixt
 	private iconMeasures(): readonly WindowMeasure[] {
 		const activeShot = resolveActiveShot(this.fixture);
 		return [
-			...this.viewportMeasures(),
 			{
 				kind: "select",
 				id: "shooting-active-shot",
@@ -478,6 +700,17 @@ export class ShootingPlayController extends Controller implements PlaygroundFixt
 					{ id: "png", value: "png", label: "PNG" },
 				],
 				onChange: shootingPlayCmd("setActiveShotFormat"),
+			},
+			{
+				kind: "select",
+				id: "shooting-shot-shape",
+				label: "Shape",
+				value: activeShot ? (activeShot.shape ?? "rectangle") : "rectangle",
+				items: [
+					{ id: "rectangle", value: "rectangle", label: "Rectangle" },
+					{ id: "ellipse", value: "ellipse", label: "Ellipse" },
+				],
+				onChange: shootingPlayCmd("setActiveShotShape"),
 			},
 		];
 	}
@@ -545,7 +778,71 @@ export class ShootingPlayController extends Controller implements PlaygroundFixt
 		this.applyFixture({ ...this.fixture, scene: { ...this.fixture.scene, ...patch } });
 	}
 
+	private patchShot(shotId: string, field: string, value: unknown): void {
+		const shots = this.fixture.shots.map((shot) => {
+			if (shot.id !== shotId) return shot;
+			if (field === "width" || field === "height") {
+				const numeric = typeof value === "number" ? value : Number(value);
+				if (!Number.isFinite(numeric)) return shot;
+				return { ...shot, [field]: Math.round(numeric) };
+			}
+			if (field === "format" && (value === "svg" || value === "png")) {
+				return { ...shot, format: value };
+			}
+			if (field === "shape" && (value === "rectangle" || value === "ellipse")) {
+				return { ...shot, shape: value };
+			}
+			if (typeof value !== "string") return shot;
+			return { ...shot, [field]: value };
+		});
+		this.applyFixture({ ...this.fixture, shots });
+	}
+
+	private patchAsset(assetId: string, field: string, value: unknown): void {
+		const assets = this.fixture.assets.map((asset) => {
+			if (asset.id !== assetId) return asset;
+			if (typeof value !== "string") return asset;
+			return { ...asset, [field]: value };
+		});
+		this.applyFixture({ ...this.fixture, assets });
+	}
+
 	override run(command: string, args?: unknown): void {
+		if (command === "setSelection") {
+			const selectedId = (args as { selectedId?: string | null }).selectedId ?? null;
+			const selectedKind = (args as { selectedKind?: ShootingPlaySelectionKind | null }).selectedKind ?? null;
+			if (this.selectedId === selectedId && this.selectedKind === selectedKind) return;
+			this.selectedId = selectedId;
+			this.selectedKind = selectedKind;
+			this.interactionRevision += 1;
+			this.notifySnapshot();
+			this.emit();
+			return;
+		}
+		if (command === "patchShot") {
+			const shotId = (args as { shotId?: string }).shotId;
+			const field = (args as { field?: string }).field;
+			const value = (args as { value?: unknown }).value;
+			if (typeof shotId === "string" && typeof field === "string") {
+				this.patchShot(shotId, field, value);
+			}
+			return;
+		}
+		if (command === "patchAsset") {
+			const assetId = (args as { assetId?: string }).assetId;
+			const field = (args as { field?: string }).field;
+			const value = (args as { value?: unknown }).value;
+			if (typeof assetId === "string" && typeof field === "string") {
+				this.patchAsset(assetId, field, value);
+			}
+			return;
+		}
+		if (command === "setActiveAsset") {
+			const value = (args as { value?: string }).value ?? (args as { id?: string }).id;
+			if (typeof value !== "string" || !value) return;
+			this.applyFixture({ ...this.fixture, activeAssetId: value });
+			return;
+		}
 		if (command === "setFixtureJson") {
 			const json = (args as { json?: string }).json;
 			if (typeof json === "string") this.applyFixtureJson(json);
@@ -625,6 +922,15 @@ export class ShootingPlayController extends Controller implements PlaygroundFixt
 			const active = resolveActiveShot(this.fixture);
 			if (!active) return;
 			const shots = this.fixture.shots.map((shot) => (shot.id === active.id ? { ...shot, format: value } : shot));
+			this.applyFixture({ ...this.fixture, shots });
+			return;
+		}
+		if (command === "setActiveShotShape") {
+			const value = (args as { value?: string }).value;
+			if (value !== "rectangle" && value !== "ellipse") return;
+			const active = resolveActiveShot(this.fixture);
+			if (!active) return;
+			const shots = this.fixture.shots.map((shot) => (shot.id === active.id ? { ...shot, shape: value } : shot));
 			this.applyFixture({ ...this.fixture, shots });
 			return;
 		}
@@ -793,6 +1099,14 @@ if (import.meta.vitest) {
 			ctrl.run("setCenterModel", { pressed: true });
 			expect(ctrl.getCenterModel()).toBe(true);
 			expect(ctrl.getFitRevision()).toBe(initialFit + 1);
+		});
+
+		it("setActiveShotShape updates active shot shape", () => {
+			const bus = new CommandBus();
+			const ctrl = new ShootingPlayController(bus, () => {});
+			ctrl.run("setFixtureJson", { json: shootingFixtureToJson(DEFAULT_SHOOTING_FIXTURE) });
+			ctrl.run("setActiveShotShape", { value: "ellipse" });
+			expect(ctrl.getFixture().shots[0]?.shape).toBe("ellipse");
 		});
 	});
 }

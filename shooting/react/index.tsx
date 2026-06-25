@@ -14,7 +14,7 @@ import {
 	WorldOrbitViewControls,
 	WorldOrbitViewSnapGateProvider,
 } from "@semio-tech/infinite-world-r3f";
-import type { IconRenderRequest } from "@semio-tech/ui-styling/icon-render-port";
+import type { IconRenderRequest, IconRenderShape } from "@semio-tech/ui-styling/icon-render-port";
 import { cn, iconRenderPort, reactHostPort, sceneHostPort } from "@semio-tech/ui-react";
 import type { Object3D } from "three";
 
@@ -85,12 +85,15 @@ export interface ShootingSceneV1 {
 
 export type ShootingShotFormat = "svg" | "png";
 
+export type ShootingShotShape = IconRenderShape;
+
 export interface ShootingShotV1 {
 	readonly id: string;
 	readonly label: string;
 	readonly width: number;
 	readonly height: number;
 	readonly format: ShootingShotFormat;
+	readonly shape?: ShootingShotShape;
 	readonly background?: string;
 	readonly cameraId?: string;
 }
@@ -107,7 +110,7 @@ export interface ShootingFixtureV1 {
 }
 
 export const DEFAULT_SHOOTING_SCENE: ShootingSceneV1 = {
-	background: "#e8eaed",
+	background: "",
 	sun: { azimuth: 45, elevation: 35, intensity: 2.4, color: "#ffffff" },
 	ambient: { intensity: 1.15, color: "#ffffff" },
 	shadow: { enabled: true, opacity: 0.35, softness: 1 },
@@ -128,8 +131,8 @@ export const DEFAULT_SHOOTING_FIXTURE: ShootingFixtureV1 = {
 	savedCameras: [],
 	scene: DEFAULT_SHOOTING_SCENE,
 	shots: [
-		{ id: "overview-svg", label: "Overview Svg", width: 256, height: 256, format: "svg" },
-		{ id: "overview-png", label: "Overview Png", width: 512, height: 512, format: "png" },
+		{ id: "overview-svg", label: "Overview Svg", width: 256, height: 256, format: "svg", shape: "rectangle" },
+		{ id: "overview-png", label: "Overview Png", width: 512, height: 512, format: "png", shape: "ellipse" },
 	],
 	activeShotId: "overview-svg",
 	activeAssetId: "base",
@@ -182,6 +185,10 @@ export function resolveActiveAsset(fixture: ShootingFixtureV1): ShootingAssetV1 
 	return active ?? fixture.assets[0] ?? null;
 }
 
+export function resolveShootingShotShape(shot: ShootingShotV1): ShootingShotShape {
+	return shot.shape ?? "rectangle";
+}
+
 export function resolveShotCamera(fixture: ShootingFixtureV1, shot: ShootingShotV1): ShootingCameraV1 {
 	if (!shot.cameraId) return fixture.camera;
 	const saved = fixture.savedCameras.find((entry) => entry.id === shot.cameraId);
@@ -198,6 +205,7 @@ export function applyShootingCameraToFixture(fixture: ShootingFixtureV1, shot: S
 
 export function shootingIconRenderRequest(fixture: ShootingFixtureV1, shot: ShootingShotV1, asset: ShootingAssetV1): IconRenderRequest {
 	const camera = resolveShotCamera(fixture, shot);
+	const background = shot.background ?? fixture.scene.background;
 	return {
 		assetUrl: asset.url,
 		camera: {
@@ -218,7 +226,8 @@ export function shootingIconRenderRequest(fixture: ShootingFixtureV1, shot: Shoo
 		width: shot.width,
 		height: shot.height,
 		format: shot.format,
-		background: shot.background ?? fixture.scene.background,
+		shape: resolveShootingShotShape(shot),
+		...(isShootingTransparentBackground(background) ? {} : { background }),
 		shadowEnabled: fixture.scene.shadow.enabled,
 		material: {
 			color: fixture.scene.material.color,
@@ -232,6 +241,18 @@ export function shootingIconRenderRequest(fixture: ShootingFixtureV1, shot: Shoo
 //#endregion 🔖Fixture
 
 //#region 🔖SceneHelpers
+export function isShootingTransparentBackground(background: string | undefined): boolean {
+	return !background || background === "transparent";
+}
+
+export function resolveShootingCanvasBackground(background: string | undefined): string | undefined {
+	return isShootingTransparentBackground(background) ? undefined : background;
+}
+
+export function shootingCanvasGl(background: string | undefined): { readonly antialias: true; readonly alpha: boolean } {
+	return { antialias: true, alpha: isShootingTransparentBackground(background) };
+}
+
 export function sunPositionFromAzimuthElevation(azimuthDeg: number, elevationDeg: number, distance = 120): [number, number, number] {
 	const az = (azimuthDeg * Math.PI) / 180;
 	const el = (elevationDeg * Math.PI) / 180;
@@ -400,9 +421,16 @@ export function ShootingModelCanvas({
 		},
 		[onCamera],
 	);
+	const shot = resolveActiveShot(fixture);
 	const onProjectionChange = reactHostPort.useCallback((next: OrbitCameraProjection) => {
 		handleCamera({ ...fixture.camera, projection: next });
 	}, [fixture.camera, handleCamera]);
+	const modelOverlay = (
+		<>
+			{shot ? <ShootingShotFrame height={shot.height} shape={resolveShootingShotShape(shot)} width={shot.width} /> : null}
+			<WorldOrbitProjectionSwitch projection={projection} onProjectionChange={onProjectionChange} />
+		</>
+	);
 	if (!asset) {
 		return <div className={cn("flex h-full items-center justify-center text-sm opacity-60", className)}>No asset</div>;
 	}
@@ -410,9 +438,10 @@ export function ShootingModelCanvas({
 		<div className={cn("absolute inset-0", className)} style={style}>
 			<WorldCanvas
 				className="h-full w-full"
-				background={fixture.scene.background}
+				background={resolveShootingCanvasBackground(fixture.scene.background)}
+				gl={shootingCanvasGl(fixture.scene.background)}
 				shadows={fixture.scene.shadow.enabled}
-				overlay={<WorldOrbitProjectionSwitch projection={projection} onProjectionChange={onProjectionChange} />}
+				overlay={modelOverlay}
 			>
 				<WorldOrbitViewSnapGateProvider>
 					<WorldOrbitCameraViewRig state={camera} seedKey={`${cameraSeed}`} perspectiveFov={fixture.camera.fov ?? 50} />
@@ -459,108 +488,129 @@ export function ShootingModelCanvas({
 }
 //#endregion 🔖ModelCanvas
 
+//#region 🔖ShotFrame
+export function shootingShotFrameStyle(width: number, height: number): CSSProperties {
+	const landscape = width >= height;
+	return {
+		aspectRatio: `${width} / ${height}`,
+		maxHeight: "100%",
+		maxWidth: "100%",
+		width: landscape ? "100%" : "auto",
+		height: landscape ? "auto" : "100%",
+	};
+}
+
+export function shootingShotFrameClass(shape: ShootingShotShape): string {
+	return shape === "ellipse" ? "rounded-full" : "rounded-none";
+}
+
+export function ShootingShotFrame({
+	width,
+	height,
+	shape = "rectangle",
+	className,
+	background,
+	children,
+}: {
+	readonly width: number;
+	readonly height: number;
+	readonly shape?: ShootingShotShape;
+	readonly className?: string;
+	readonly background?: string;
+	readonly children?: ReactNode;
+}): ReactNode {
+	return (
+		<div className={cn("pointer-events-none absolute inset-0 flex items-center justify-center", className)}>
+			<div
+				className={cn(
+					"relative box-border overflow-hidden border-2 border-accent shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_20%,transparent)]",
+					shootingShotFrameClass(shape),
+				)}
+				data-shooting-shot-frame
+				data-shooting-shot-shape={shape}
+				style={{
+					...shootingShotFrameStyle(width, height),
+					...(background ? { background } : {}),
+				}}
+			>
+				{children}
+				<span className="pointer-events-none absolute bottom-1 right-1 rounded-sm bg-background/80 px-1 font-mono text-[10px] text-muted-foreground">
+					{width}×{height} · {shape}
+				</span>
+			</div>
+		</div>
+	);
+}
+//#endregion 🔖ShotFrame
+
 //#region 🔖IconCanvas
-export interface ShootingIconCanvasProps extends ShootingViewportOptions {
+export interface ShootingIconCanvasProps {
 	readonly fixture: ShootingFixtureV1;
 	readonly className?: string;
 	readonly style?: CSSProperties;
-	readonly onCamera?: (camera: ShootingCameraV1) => void;
+	readonly renderRevision?: number;
 }
 
-export function ShootingIconCanvas({
-	fixture,
-	className,
-	style,
-	onCamera,
-	centerModel = true,
-	fitRevision = 0,
-}: ShootingIconCanvasProps): ReactNode {
+export function ShootingIconCanvas({ fixture, className, style, renderRevision = 0 }: ShootingIconCanvasProps): ReactNode {
 	const shot = resolveActiveShot(fixture);
 	const asset = resolveActiveAsset(fixture);
-	const shotCamera = shot ? resolveShotCamera(fixture, shot) : null;
-	const camera = shotCamera ? shootingCameraToWorldState(shotCamera) : null;
-	const projection = shotCamera?.projection ?? "perspective";
-	const [cameraSeed, setCameraSeed] = reactHostPort.useState(0);
-	const meshRef = reactHostPort.useRef<Object3D | null>(null);
-	const sunPos = sunPositionFromAzimuthElevation(fixture.scene.sun.azimuth, fixture.scene.sun.elevation);
-	const handleCamera = reactHostPort.useCallback(
-		(next: ShootingCameraV1) => {
-			onCamera?.(next);
-		},
-		[onCamera],
-	);
-	const onProjectionChange = reactHostPort.useCallback(
-		(next: OrbitCameraProjection) => {
-			if (!shotCamera) return;
-			handleCamera({ ...shotCamera, projection: next });
-		},
-		[handleCamera, shotCamera],
-	);
-	if (!shot || !asset || !shotCamera || !camera) {
+	const [preview, setPreview] = reactHostPort.useState<{ dataUrl: string; label: string } | null>(null);
+	const [error, setError] = reactHostPort.useState<string | null>(null);
+	reactHostPort.useEffect(() => {
+		if (!shot || !asset) {
+			setPreview(null);
+			return;
+		}
+		let cancelled = false;
+		void iconRenderPort
+			.render(shootingIconRenderRequest(fixture, shot, asset))
+			.then((result) => {
+				if (cancelled) return;
+				console.log(`[DEBUG] shooting icon rendered ${shot.id} ${shot.format} ${shot.width}x${shot.height}`);
+				setPreview({ dataUrl: result.dataUrl, label: shot.label });
+				setError(null);
+			})
+			.catch((err: unknown) => {
+				if (cancelled) return;
+				const message = err instanceof Error ? err.message : String(err);
+				console.log(`[DEBUG] shooting icon render failed ${shot.id}: ${message}`);
+				setError(message);
+				setPreview(null);
+			});
+		return () => {
+			cancelled = true;
+		};
+	}, [fixture, shot, asset, renderRevision]);
+	if (!shot || !asset) {
 		return <div className={cn("flex h-full items-center justify-center text-sm opacity-60", className)}>No shot</div>;
 	}
 	const shotBackground = shot.background ?? fixture.scene.background;
-	return (
+	const previewBackground = isShootingTransparentBackground(shotBackground) ? undefined : shotBackground;
+	const frame = (content: ReactNode) => (
 		<div className={cn("absolute inset-0 flex flex-col", className)} style={style}>
-			<div className="relative min-h-0 flex-1 p-3">
-				<div className="absolute inset-3 flex items-center justify-center">
-					<div
-						className="relative h-full w-full overflow-hidden shadow-sm ring-1 ring-border/40"
-						style={{ aspectRatio: `${shot.width} / ${shot.height}`, maxHeight: "100%", maxWidth: "100%" }}
-					>
-						<WorldCanvas
-							className="h-full w-full"
-							background={shotBackground}
-							shadows={fixture.scene.shadow.enabled}
-							overlay={<WorldOrbitProjectionSwitch projection={projection} onProjectionChange={onProjectionChange} />}
-						>
-							<WorldOrbitViewSnapGateProvider>
-								<WorldOrbitCameraViewRig state={camera} seedKey={`icon-${cameraSeed}`} perspectiveFov={shotCamera.fov ?? 50} />
-								<WorldOrbitGated
-									controlsKey={`icon-${cameraSeed}`}
-									projection={projection}
-									zoom={camera.zoom}
-									onCamera={(next) => handleCamera(worldStateToShootingCamera(next, shotCamera.fov))}
-								/>
-								<WorldOrbitViewControls
-									onCameraChange={(next) => {
-										handleCamera(worldStateToShootingCamera(next, shotCamera.fov));
-										setCameraSeed((seed) => seed + 1);
-									}}
-								/>
-								<ShootingAutoFit
-									assetKey={asset.url}
-									camera={shotCamera}
-									enabled={centerModel}
-									fitRevision={fitRevision}
-									meshRef={meshRef}
-									projection={projection}
-									onCamera={handleCamera}
-								/>
-								<ambientLight color={fixture.scene.ambient.color} intensity={fixture.scene.ambient.intensity} />
-								<directionalLight
-									color={fixture.scene.sun.color}
-									intensity={fixture.scene.sun.intensity}
-									position={sunPos}
-									castShadow={fixture.scene.shadow.enabled}
-								/>
-								<WorldLayer order={10} name="shooting.icon">
-									<ShootingGlbMesh
-										url={asset.url}
-										material={fixture.scene.material}
-										shadowEnabled={fixture.scene.shadow.enabled}
-										meshRef={meshRef}
-									/>
-								</WorldLayer>
-							</WorldOrbitViewSnapGateProvider>
-						</WorldCanvas>
-					</div>
-				</div>
+			<div className="relative min-h-0 flex-1">
+				<ShootingShotFrame
+					background={previewBackground}
+					height={shot.height}
+					shape={resolveShootingShotShape(shot)}
+					width={shot.width}
+				>
+					{content}
+				</ShootingShotFrame>
 			</div>
 			<div className="shrink-0 px-3 pb-2 text-center text-xs opacity-60">
 				{shot.label} · {shot.width}×{shot.height} · {shot.format.toUpperCase()}
 			</div>
 		</div>
+	);
+	if (error) {
+		return frame(<div className="flex h-full items-center justify-center p-4 text-sm text-red-500">{error}</div>);
+	}
+	if (!preview) {
+		return frame(<div className="flex h-full items-center justify-center text-sm opacity-60">Rendering…</div>);
+	}
+	return frame(
+		<img alt={preview.label} className="block h-full w-full" src={preview.dataUrl} />,
 	);
 }
 
@@ -615,6 +665,28 @@ if (import.meta.vitest) {
 			expect(fitted.target).toEqual([0, 0, 10]);
 			expect(fitted.position[0]).toBeGreaterThan(fitted.target[0]);
 			expect(fitted.position[1]).toBeLessThan(fitted.target[1]);
+		});
+
+		it("treats empty background as transparent for canvas and export", () => {
+			expect(isShootingTransparentBackground("")).toBe(true);
+			expect(resolveShootingCanvasBackground("")).toBeUndefined();
+			expect(shootingCanvasGl("").alpha).toBe(true);
+			const shot = DEFAULT_SHOOTING_FIXTURE.shots[0]!;
+			const asset = DEFAULT_SHOOTING_FIXTURE.assets[0]!;
+			expect(shootingIconRenderRequest(DEFAULT_SHOOTING_FIXTURE, shot, asset).background).toBeUndefined();
+		});
+
+		it("sizes shot frame from fixed width and height", () => {
+			expect(shootingShotFrameStyle(512, 256)).toMatchObject({ aspectRatio: "512 / 256", width: "100%" });
+			expect(shootingShotFrameStyle(256, 512)).toMatchObject({ aspectRatio: "256 / 512", height: "100%" });
+		});
+
+		it("resolves shot shape and passes it to icon render request", () => {
+			const shot = DEFAULT_SHOOTING_FIXTURE.shots[1]!;
+			expect(resolveShootingShotShape(shot)).toBe("ellipse");
+			expect(shootingShotFrameClass("ellipse")).toBe("rounded-full");
+			const asset = DEFAULT_SHOOTING_FIXTURE.assets[0]!;
+			expect(shootingIconRenderRequest(DEFAULT_SHOOTING_FIXTURE, shot, asset).shape).toBe("ellipse");
 		});
 	});
 }

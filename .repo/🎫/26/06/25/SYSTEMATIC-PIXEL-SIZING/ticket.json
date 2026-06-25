@@ -1,0 +1,9 @@
+{
+  "title": "Systematic Pixel Sizing Across Monorepo",
+  "emoji": "📐",
+  "status": "closed",
+  "summary": "Established systematic rem/ui-spacing sizing across DOM (extended ui.css layout ramp, stroke-hairline, rem glass blur, @utility classes), tokens.json metrics (dom/cad/puzzle3d/map/flow), sizing.ts helpers, and wired consumers (ui/react, presentation globals, framework renderers, cad/flow/coda/infinite, puzzle2d, flow core). Added check-no-px enforcement in ui/styling/script.ts with launch.json + project.json registration. 176/183 ui/react tests pass; 7 tree/SSR tests need follow-up for open-state markup.",
+  "description": "Eliminate all hardcoded pixel sizing across DOM/CSS and canvas/3D/map render code. Snap DOM to token scale, wire render literals to tokens.json, add enforcement lint.",
+  "goal": "🎯r2602",
+  "sessions": []
+}

@@ -1,0 +1,14 @@
+{
+  "title": "Add Persistent Command Chevron Button to Window Engagement",
+  "emoji": "⌨️",
+  "status": "closed",
+  "description": "The command line engagement for each window should have a persistent chevron button (like the window options fold/unfold button) that is always visible. The input should move to the right of the button. The button shows Command label with a chevron icon.",
+  "summary": "Added persistent 'Command' chevron button to window engagement overlay. Input now appears to the right of the button when expanded, matching the WindowMeasuresChrome fold/unfold UX pattern. Updated all engagement tests to reflect button-click-to-show behavior.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1743"
+  },
+  "goal": "🎯improveui🎯addlabels",
+  "sessions": [
+    "⚪3712f1ddc6b14270ba3c4dc99326db41"
+  ]
+}

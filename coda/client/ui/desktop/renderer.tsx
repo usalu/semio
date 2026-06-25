@@ -16,7 +16,39 @@
 // #region 🔌Adapters
 import React from "react";
 import { createRoot } from "react-dom/client";
-import { reactHostPort, setUiLocale, Tree, TreeItem, useCommandHotkey, useMediaQuery } from "@semio-tech/ui-react";
+import {
+  CommandBus,
+  Controller,
+  Platform,
+  AppRuntime,
+  ModeRuntime,
+  WindowKindRuntime,
+  buildPanelWindowBody,
+  createTabStackLayout,
+  registerSidePanelBody,
+  registerWindowBody,
+  uiDeclarativeSectionsToTree,
+  type UiPanelHostSurfaceNode,
+  type UiSectionNode,
+  type UiTreeItemNode,
+  type UiTreeNode,
+  type WindowBodyViewContext,
+} from "@semio-tech/framework-platform-core";
+import {
+  FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
+  FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+  FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+  FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID,
+  FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
+  FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+  FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
+  FRAMEWORK_PANEL_TAB_INSPECTION_ID,
+  FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+  PRODUCT_SHELL_DEFAULT_PANEL_VISIBILITY,
+  type CommandDescriptor,
+} from "@semio-tech/framework-core";
+import { PlatformView, registerUiPanelSurfaceHost } from "@semio-tech/framework-platform-renderer-react";
+import { reactHostPort, setUiLocale, Tree, TreeItem, useCommandHotkey } from "@semio-tech/ui-react";
 // #endregion 🔌Adapters
 
 import "./globals.css";
@@ -726,7 +758,7 @@ function OntologyTreeNodeView({ node, defaultExpanded = true }: { node: Ontology
       defaultOpen={defaultExpanded}
       label={
         <span className="flex min-w-0 items-center gap-2 overflow-hidden">
-          <span className="inline-flex items-center justify-center h-5 min-w-5 rounded bg-info-bg px-1 text-[10px] font-bold text-info-foreground shrink-0" title={node.kind}>
+          <span className="inline-flex items-center justify-center h-5 min-w-5 rounded bg-info-bg px-1 text-2xs font-bold text-info-foreground shrink-0" title={node.kind}>
             {descriptor.icon}
           </span>
           <span className="min-w-0 truncate text-sm">
@@ -734,7 +766,7 @@ function OntologyTreeNodeView({ node, defaultExpanded = true }: { node: Ontology
             {descriptor.secondaryText ? (
               <>
                 {" "}
-                <span className="text-[10px] leading-none text-muted-foreground">{descriptor.secondaryText}</span>
+                <span className="text-2xs leading-none text-muted-foreground">{descriptor.secondaryText}</span>
               </>
             ) : null}
           </span>
@@ -904,12 +936,12 @@ function ValidationTreeNodeView({ node, defaultExpanded = true }: { node: Valida
       label={
         <span className="flex min-w-0 flex-col gap-0.5 py-0.5" title={node.summary}>
           <span className="flex min-w-0 items-center gap-2">
-            <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium shrink-0 ${colors.bg} ${colors.text}`}>
+            <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-2xs font-medium shrink-0 ${colors.bg} ${colors.text}`}>
               <span>{truthEmoji(node.truth)}</span>
               <span>{node.truth}</span>
             </span>
             {descriptor.icon && (
-              <span className={`inline-flex items-center justify-center h-5 min-w-5 rounded px-1 text-[10px] font-bold shrink-0 ${colors.bg} ${colors.text}`} title={node.kind}>
+              <span className={`inline-flex items-center justify-center h-5 min-w-5 rounded px-1 text-2xs font-bold shrink-0 ${colors.bg} ${colors.text}`} title={node.kind}>
                 {descriptor.icon}
               </span>
             )}
@@ -917,7 +949,7 @@ function ValidationTreeNodeView({ node, defaultExpanded = true }: { node: Valida
             {descriptor.chips.map((chip) => (
               <span
                 key={`${node.id}-${chip}`}
-                className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium shrink-0 ${
+                className={`inline-flex items-center rounded px-1.5 py-0.5 text-2xs font-medium shrink-0 ${
                   chip === "counted" ? "bg-success-bg text-success-foreground" : chip === "not matching" ? "bg-info-bg text-info-foreground" : "bg-panel text-muted-foreground border border-border-window"
                 }`}
               >
@@ -925,7 +957,7 @@ function ValidationTreeNodeView({ node, defaultExpanded = true }: { node: Valida
               </span>
             ))}
           </span>
-          {(descriptor.secondaryText || node.summary) && <span className="pl-10 text-[11px] text-muted-foreground">{[descriptor.secondaryText, node.summary].filter(Boolean).join(" • ")}</span>}
+          {(descriptor.secondaryText || node.summary) && <span className="pl-10 text-xs text-muted-foreground">{[descriptor.secondaryText, node.summary].filter(Boolean).join(" • ")}</span>}
         </span>
       }
     >
@@ -2367,10 +2399,6 @@ function WelcomePage({ onProjectReady, onMinimize, onMaximize, onClose }: { onPr
 
 // #endregion 🧬Welcome
 
-// #region 🖲️App
-// Root application component with sidebar navigation, title bar, and page routing.
-// App MUST render the frameless window with custom title bar and navigation.
-
 /**
  * Navigation item configuration.
  *MUST define all navigable pages with icons and labels.
@@ -2385,6 +2413,373 @@ const navItems: Array<{ id: Page; label: string; icon: React.ComponentType<{ cla
   { id: "events", label: "Events", icon: IconEvents },
 ];
 
+// #region 🪨CodaProductShell
+
+const CODA_APP_ID = "coda";
+const CODA_CONTROLLER_ID = "coda.shell";
+const CODA_SURFACE_MAIN = "coda.surface.main/v1";
+const CODA_BODY_MAIN = "coda.window.main";
+const CODA_PANEL_HIERARCHY_BODY = "coda.panel.hierarchy";
+const CODA_PANEL_CATALOGUE_BODY = "coda.panel.catalogue";
+const CODA_PANEL_INSPECTION_BODY = "coda.panel.inspection";
+
+interface CodaShellSelection {
+  readonly id: string;
+  readonly label: string;
+  readonly kind: string;
+  readonly propertyId?: string;
+  readonly validationNode?: ValidationTreeNode;
+}
+
+interface CodaShellSnapshot {
+  readonly currentPage: Page;
+  readonly refreshKey: number;
+  readonly project: Project | null;
+  readonly run: Run | null;
+  readonly iteration: Iteration | null;
+  readonly frameworks: Framework[] | null;
+  readonly properties: Property[] | null;
+  readonly report: Report | null;
+  readonly selection: CodaShellSelection | null;
+}
+
+const CODA_EMPTY_SHELL_SNAPSHOT: CodaShellSnapshot = {
+  currentPage: "dashboard",
+  refreshKey: 0,
+  project: null,
+  run: null,
+  iteration: null,
+  frameworks: null,
+  properties: null,
+  report: null,
+  selection: null,
+};
+
+let codaPlatformSingleton: Platform | null = null;
+let codaShellControllerSingleton: CodaShellController | null = null;
+let codaBodiesRegistered = false;
+
+const codaMainHostBridge = {
+  refreshKey: 0,
+  events: [] as CodaEvent[],
+  onClearEvents: () => {},
+  onRefresh: () => {},
+};
+
+function codaShellCmd(command: string, args?: Record<string, unknown>): CommandDescriptor {
+  return { controllerId: CODA_CONTROLLER_ID, command, args: args as never };
+}
+
+function getCodaShellController(): CodaShellController | null {
+  return codaShellControllerSingleton;
+}
+
+function codaValidationTreeItems(nodes: readonly ValidationTreeNode[], prefix: string): UiTreeItemNode[] {
+  return nodes.map((node) => ({
+    id: `${prefix}:${node.id}`,
+    label: `${truthEmoji(node.truth)} ${node.label}`,
+    command: codaShellCmd("setSelection", {
+      id: `${prefix}:${node.id}`,
+      label: node.label,
+      kind: node.kind,
+      validationNode: node,
+    }),
+    items: node.children.length ? codaValidationTreeItems(node.children, `${prefix}:${node.id}`) : undefined,
+  }));
+}
+
+function buildCodaHierarchyPanelBody(_ctx: WindowBodyViewContext): UiTreeNode {
+  const snap = getCodaShellController()?.getSnapshot() ?? CODA_EMPTY_SHELL_SNAPSHOT;
+  const sections: UiSectionNode[] = [
+    {
+      type: "section",
+      id: "coda.hierarchy.project",
+      label: "Project",
+      children: [
+        { type: "text", value: snap.project?.design?.id ?? "—" },
+        { type: "text", value: `${snap.project?.targets?.length ?? 0} target(s)` },
+      ],
+    },
+    {
+      type: "section",
+      id: "coda.hierarchy.run",
+      label: "Run",
+      children: [{ type: "text", value: snap.run?.id ?? snap.run?.run_id ?? "—" }],
+    },
+    {
+      type: "section",
+      id: "coda.hierarchy.iteration",
+      label: "Iteration",
+      children: [{ type: "text", value: snap.iteration?.index != null ? String(snap.iteration.index) : "—" }],
+    },
+  ];
+  const validationItems: UiTreeItemNode[] = (snap.report?.validations ?? []).flatMap((validation, index) => [
+    {
+      id: `coda.hierarchy.validation.${index}`,
+      label: validation.instance,
+      command: codaShellCmd("setSelection", {
+        id: `coda.hierarchy.validation.${index}`,
+        label: validation.instance,
+        kind: "validation",
+      }),
+      items: codaValidationTreeItems([validation.tree], `coda.validation.${index}`),
+    },
+  ]);
+  sections.push({
+    type: "section",
+    id: "coda.hierarchy.validations",
+    label: "Validations",
+    children: validationItems.length
+      ? validationItems.map((item) => ({ type: "button", id: item.id, label: item.label, command: item.command }))
+      : [{ type: "text", value: "No validation report loaded" }],
+  });
+  const tree = uiDeclarativeSectionsToTree(sections);
+  return { ...tree, selectedIds: snap.selection ? [snap.selection.id] : [] };
+}
+
+function buildCodaCataloguePanelBody(_ctx: WindowBodyViewContext): UiTreeNode {
+  const snap = getCodaShellController()?.getSnapshot() ?? CODA_EMPTY_SHELL_SNAPSHOT;
+  const frameworkItems: UiTreeItemNode[] = (snap.frameworks ?? []).map((framework) => ({
+    id: `coda.catalogue.framework.${framework.id}`,
+    label: formatId(framework.id),
+    command: codaShellCmd("setSelection", { id: `coda.catalogue.framework.${framework.id}`, label: formatId(framework.id), kind: "framework" }),
+  }));
+  const propertyItems: UiTreeItemNode[] = (snap.properties ?? []).map((property) => ({
+    id: `coda.catalogue.property.${property.id}`,
+    label: property.name ?? formatId(property.id),
+    command: codaShellCmd("setSelection", {
+      id: `coda.catalogue.property.${property.id}`,
+      label: property.name ?? formatId(property.id),
+      kind: "property",
+      propertyId: property.id,
+    }),
+  }));
+  return uiDeclarativeSectionsToTree([
+    {
+      type: "section",
+      id: "coda.catalogue.frameworks",
+      label: `Frameworks (${frameworkItems.length})`,
+      children: frameworkItems.length
+        ? frameworkItems.map((item) => ({ type: "button", id: item.id, label: item.label, command: item.command }))
+        : [{ type: "text", value: "(none)" }],
+    },
+    {
+      type: "section",
+      id: "coda.catalogue.properties",
+      label: `Properties (${propertyItems.length})`,
+      children: propertyItems.length
+        ? propertyItems.map((item) => ({ type: "button", id: item.id, label: item.label, command: item.command }))
+        : [{ type: "text", value: "(none)" }],
+    },
+  ]);
+}
+
+function buildCodaInspectionPanelBody(_ctx: WindowBodyViewContext): UiTreeNode {
+  const snap = getCodaShellController()?.getSnapshot() ?? CODA_EMPTY_SHELL_SNAPSHOT;
+  const selection = snap.selection;
+  if (!selection) {
+    return uiDeclarativeSectionsToTree([
+      {
+        type: "section",
+        id: "coda.inspection.empty",
+        label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+        children: [{ type: "text", value: "Select a validation node, framework, or property in the hierarchy or catalogue." }],
+      },
+    ]);
+  }
+  const children: UiSectionNode["children"] = [
+    { type: "text", value: selection.label },
+    { type: "text", value: `Kind · ${selection.kind}` },
+  ];
+  if (selection.validationNode) {
+    children.push({ type: "text", value: `Truth · ${selection.validationNode.truth}` });
+    if (selection.validationNode.property) children.push({ type: "text", value: `Property · ${selection.validationNode.property}` });
+    if (selection.validationNode.value != null) {
+      children.push({
+        type: "field",
+        id: "coda.inspection.validation.value",
+        label: "Value",
+        child: {
+          type: "input",
+          id: "coda.inspection.validation.value.input",
+          inputKind: "text",
+          value: String(selection.validationNode.value),
+          onChange: codaShellCmd("invokeTool", { tool: "fix", args: { nodeId: selection.id, field: "value" } }),
+        },
+      });
+    }
+  }
+  if (selection.propertyId) {
+    const property = (snap.properties ?? []).find((row) => row.id === selection.propertyId);
+    if (property?.description) children.push({ type: "text", value: property.description });
+    children.push({
+      type: "field",
+      id: "coda.inspection.property.note",
+      label: "Inspection note",
+      child: {
+        type: "input",
+        id: "coda.inspection.property.note.input",
+        inputKind: "text",
+        value: "",
+        placeholder: "Describe a measure or fix attempt",
+        onChange: codaShellCmd("invokeTool", { tool: "fix", args: { propertyId: selection.propertyId } }),
+      },
+    });
+  }
+  return uiDeclarativeSectionsToTree([
+    { type: "section", id: "coda.inspection.selection", label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, children },
+  ]);
+}
+
+/** @emoji 🎛 Coda shell controller: single selection, page routing, MCP tool bridge. */
+class CodaShellController extends Controller {
+  private snapshot: CodaShellSnapshot = CODA_EMPTY_SHELL_SNAPSHOT;
+
+  constructor(commandBus: CommandBus, hostNotify: () => void) {
+    super(CODA_CONTROLLER_ID, commandBus, hostNotify);
+  }
+
+  getSnapshot(): CodaShellSnapshot {
+    return this.snapshot;
+  }
+
+  override run(command: string, args?: unknown): void {
+    switch (command) {
+      case "setShellData": {
+        this.snapshot = { ...this.snapshot, ...(args as Partial<CodaShellSnapshot>) };
+        break;
+      }
+      case "setPage": {
+        const page = (args as { page?: Page }).page;
+        if (page) this.snapshot = { ...this.snapshot, currentPage: page };
+        break;
+      }
+      case "setSelection": {
+        const payload = args as CodaShellSelection;
+        this.snapshot = { ...this.snapshot, selection: payload.id ? payload : null };
+        break;
+      }
+      case "invokeTool": {
+        const payload = args as { tool?: string; args?: Record<string, unknown>; value?: unknown };
+        if (typeof window !== "undefined" && payload.tool) {
+          const toolArgs = { ...(payload.args ?? {}), ...(payload.value !== undefined ? { value: payload.value } : {}) };
+          void window.coda.tool(payload.tool, toolArgs).catch((error) => {
+            console.error("[DEBUG] coda invokeTool failed:", error);
+          });
+        }
+        break;
+      }
+      default:
+        break;
+    }
+    this.emit();
+  }
+}
+
+function registerCodaShellBodies(): void {
+  if (codaBodiesRegistered) return;
+  codaBodiesRegistered = true;
+  registerUiPanelSurfaceHost(CODA_SURFACE_MAIN, CodaMainSurfaceHost);
+  registerWindowBody(CODA_BODY_MAIN, () => buildPanelWindowBody(CODA_SURFACE_MAIN, CODA_CONTROLLER_ID));
+  registerSidePanelBody(CODA_PANEL_HIERARCHY_BODY, buildCodaHierarchyPanelBody);
+  registerSidePanelBody(CODA_PANEL_CATALOGUE_BODY, buildCodaCataloguePanelBody);
+  registerSidePanelBody(CODA_PANEL_INSPECTION_BODY, buildCodaInspectionPanelBody);
+}
+
+function buildCodaAppRuntime(controller: CodaShellController): AppRuntime {
+  const app = new AppRuntime(
+    CODA_APP_ID,
+    "coda",
+    undefined,
+    controller,
+    createTabStackLayout(["main"], ["Main"]) as never,
+    [new WindowKindRuntime("main", "Main", CODA_BODY_MAIN)],
+  );
+  app.defaultModeId = "explore";
+  app.addMode(new ModeRuntime("explore", "Explore"));
+  app.panelTabs = [
+    { id: FRAMEWORK_PANEL_TAB_HIERARCHY_ID, iconId: FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, panel: "workbench", order: 0, bodyKey: CODA_PANEL_HIERARCHY_BODY, label: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL },
+    { id: FRAMEWORK_PANEL_TAB_CATALOGUE_ID, iconId: FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, panel: "workbench", order: 1, bodyKey: CODA_PANEL_CATALOGUE_BODY, label: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL },
+    { id: FRAMEWORK_PANEL_TAB_INSPECTION_ID, iconId: FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, panel: "details", order: 0, bodyKey: CODA_PANEL_INSPECTION_BODY, label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL },
+  ];
+  return app;
+}
+
+function ensureCodaPlatform(): Platform {
+  if (codaPlatformSingleton) return codaPlatformSingleton;
+  registerCodaShellBodies();
+  const platform = new Platform({ initialPanelVisibility: { leftSidePanel: true, rightSidePanel: true } });
+  const controller = new CodaShellController(platform.commandBus, () => platform.notify());
+  codaShellControllerSingleton = controller;
+  platform.addApp(buildCodaAppRuntime(controller));
+  platform.activeAppId = CODA_APP_ID;
+  codaPlatformSingleton = platform;
+  return platform;
+}
+
+function CodaMainSurfaceHost(_props: { readonly node: UiPanelHostSurfaceNode }): React.ReactElement {
+  const snap = getCodaShellController()?.getSnapshot() ?? CODA_EMPTY_SHELL_SNAPSHOT;
+  const page = snap.currentPage;
+  return (
+    <main className="h-full overflow-y-auto p-6">
+      {page === "dashboard" && <DashboardPage refreshKey={codaMainHostBridge.refreshKey} />}
+      {page === "config" && <ConfigPage refreshKey={codaMainHostBridge.refreshKey} />}
+      {page === "runs" && <RunsPage refreshKey={codaMainHostBridge.refreshKey} />}
+      {page === "report" && <ReportPage refreshKey={codaMainHostBridge.refreshKey} />}
+      {page === "translations" && <TranslationsPage refreshKey={codaMainHostBridge.refreshKey} />}
+      {page === "actions" && <ActionsPage refreshKey={codaMainHostBridge.refreshKey} onRefresh={codaMainHostBridge.onRefresh} />}
+      {page === "events" && <EventsPage events={codaMainHostBridge.events} onClear={codaMainHostBridge.onClearEvents} />}
+    </main>
+  );
+}
+
+function CodaPageNavbar({ currentPage, onPageChange }: { readonly currentPage: Page; readonly onPageChange: (page: Page) => void }): React.ReactElement {
+  return (
+    <div className="flex min-w-0 items-center gap-1 overflow-x-auto">
+      {navItems.map((item) => (
+        <button
+          key={item.id}
+          type="button"
+          onClick={() => onPageChange(item.id)}
+          className={`rounded px-2 py-1 text-xs whitespace-nowrap transition-colors ${currentPage === item.id ? "bg-active-base text-active-foreground" : "text-muted-foreground hover:bg-hover-window hover:text-foreground"}`}
+        >
+          {item.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// #endregion 🪨CodaProductShell
+
+function CodaShellDataSync({ refreshKey, currentPage }: { readonly refreshKey: number; readonly currentPage: Page }): null {
+  const { data: project } = useCodaResource<Project>("coda://project", refreshKey);
+  const { data: run } = useCodaResource<Run>("coda://current-run", refreshKey);
+  const { data: iteration } = useCodaResource<Iteration>("coda://current-iteration", refreshKey);
+  const { data: report } = useCodaResource<Report>("coda://report", refreshKey);
+  const { data: properties } = useCodaResource<Property[]>("coda://properties", refreshKey);
+  const { data: frameworks } = useCodaResource<Framework[]>("coda://frameworks", refreshKey);
+
+  reactHostPort.useEffect(() => {
+    const platform = ensureCodaPlatform();
+    platform.commandBus.dispatch(CODA_CONTROLLER_ID, "setShellData", {
+      currentPage,
+      refreshKey,
+      project: project ?? null,
+      run: run ?? null,
+      iteration: iteration ?? null,
+      report: report ?? null,
+      properties: properties ?? null,
+      frameworks: frameworks ?? null,
+    });
+  }, [currentPage, refreshKey, project, run, iteration, report, properties, frameworks]);
+
+  return null;
+}
+
+// #region 🖲️App
+// Root application component with title bar and ProductShell layout.
+
 /**
  * Root React component that renders the coda desktop app.
  *MUST show WelcomePage until a project is selected.
@@ -2396,10 +2791,9 @@ function App() {
   const [projectPath, setProjectPath] = reactHostPort.useState<string | null | undefined>(undefined);
   const [currentPage, setCurrentPage] = reactHostPort.useState<Page>("dashboard");
   const [refreshKey, setRefreshKey] = reactHostPort.useState(0);
-  const [sidebarCollapsed, setSidebarCollapsed] = reactHostPort.useState(false);
   const [sidecarConnected, setSidecarConnected] = reactHostPort.useState(false);
   const [events, setEvents] = reactHostPort.useState<CodaEvent[]>([]);
-  const isCompactWindow = useMediaQuery("(max-width: 1100px)");
+  const platform = reactHostPort.useMemo(() => ensureCodaPlatform(), []);
 
   reactHostPort.useEffect(() => {
     async function init() {
@@ -2449,18 +2843,18 @@ function App() {
   }, []);
 
   reactHostPort.useEffect(() => {
-    setSidebarCollapsed(isCompactWindow);
-  }, [isCompactWindow]);
+    codaMainHostBridge.refreshKey = refreshKey;
+    codaMainHostBridge.events = events;
+    codaMainHostBridge.onClearEvents = handleClearEvents;
+    codaMainHostBridge.onRefresh = handleRefresh;
+    platform.notify();
+  }, [refreshKey, events, handleClearEvents, handleRefresh, platform]);
+
+  reactHostPort.useEffect(() => {
+    platform.commandBus.dispatch(CODA_CONTROLLER_ID, "setPage", { page: currentPage });
+  }, [currentPage, platform]);
 
   useCommandHotkey("ctrl+r,meta+r", handleRefresh, { preventDefault: true }, [handleRefresh]);
-  useCommandHotkey(
-    "ctrl+b,meta+b",
-    () => {
-      setSidebarCollapsed((previousValue) => !previousValue);
-    },
-    { preventDefault: true },
-    [],
-  );
 
   if (projectPath === undefined) {
     return (
@@ -2516,49 +2910,22 @@ function App() {
       </div>
       {/* #endregion Title Bar */}
 
-      <div className="flex flex-1 overflow-hidden">
-        {/* #region Sidebar */}
-        <nav className={`flex flex-col border-r border-border-window bg-panel shrink-0 transition-all duration-200 ${sidebarCollapsed ? "w-12" : "w-48"}`}>
-          <div className="flex-1 py-2">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const active = currentPage === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setCurrentPage(item.id)}
-                  className={`flex w-full items-center gap-2.5 px-3 py-2 text-sm transition-colors cursor-pointer ${
-                    active ? "bg-info-bg text-active-base border-r-2 border-active-base" : "text-muted-foreground hover:bg-hover-window hover:text-foreground"
-                  }`}
-                  title={item.label}
-                >
-                  <Icon className="w-4 h-4 shrink-0" />
-                  {!sidebarCollapsed && <span className="truncate">{item.label}</span>}
-                </button>
-              );
-            })}
-          </div>
-          <button
-            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="border-t border-border-window p-2 text-muted-foreground hover:text-foreground hover:bg-hover-window transition-colors cursor-pointer"
-            title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-          >
-            <IconChevronRight className={`w-4 h-4 mx-auto transition-transform ${sidebarCollapsed ? "" : "rotate-180"}`} />
-          </button>
-        </nav>
-        {/* #endregion Sidebar */}
-
-        {/* #region Content */}
-        <main className="flex-1 overflow-y-auto p-6">
-          {currentPage === "dashboard" && <DashboardPage refreshKey={refreshKey} />}
-          {currentPage === "config" && <ConfigPage refreshKey={refreshKey} />}
-          {currentPage === "runs" && <RunsPage refreshKey={refreshKey} />}
-          {currentPage === "report" && <ReportPage refreshKey={refreshKey} />}
-          {currentPage === "translations" && <TranslationsPage refreshKey={refreshKey} />}
-          {currentPage === "actions" && <ActionsPage refreshKey={refreshKey} onRefresh={handleRefresh} />}
-          {currentPage === "events" && <EventsPage events={events} onClear={handleClearEvents} />}
-        </main>
-        {/* #endregion Content */}
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <CodaShellDataSync refreshKey={refreshKey} currentPage={currentPage} />
+        <PlatformView
+          platform={platform}
+          defaultAppId={CODA_APP_ID}
+          initialPanelVisibility={PRODUCT_SHELL_DEFAULT_PANEL_VISIBILITY}
+          className="min-h-0 flex-1"
+          slotNavbarCenter={
+            <CodaPageNavbar
+              currentPage={currentPage}
+              onPageChange={(page) => {
+                setCurrentPage(page);
+              }}
+            />
+          }
+        />
       </div>
     </div>
   );

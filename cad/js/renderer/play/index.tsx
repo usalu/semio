@@ -30,6 +30,12 @@ import {
   type CommandDescriptor,
   isPlaygroundFixtureLocked,
   playgroundLockedFixtureId,
+  FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
+  FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+  FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID,
+  FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+  FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
+  FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 } from "@semio-tech/framework-playground-core";
 import {
   ORBIT_CAMERA_VIEW_COMMAND,
@@ -89,6 +95,7 @@ import {
   CAD_GUMBALL_HIDDEN,
   cadGumballConfigVisible,
   type ModelDiff,
+  type ObjectRef,
   deleteObjectsFromModel,
   deletableObjectIdsFromSelection,
 } from "@semio-tech/cad-js-core";
@@ -105,8 +112,9 @@ bootstrapCadModules();
 /** @emoji ⚡ Per-window compute mode options for CAD play window measures. */
 export const CAD_PLAY_COMPUTE_MODES: readonly SpatialComputeMode[] = ["fast", "precise"];
 
-const ListTree = createIconComponent("list-tree");
-const Shapes = createIconComponent("shapes");
+const CadPlayHierarchyIcon = createIconComponent(FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID);
+const CadPlayCatalogueIcon = createIconComponent(FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID);
+const CadPlayInspectionIcon = createIconComponent(FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID);
 
 //#region 🔖Ids
 export const CAD_PLAY_APP_ID = "cad-play";
@@ -1064,6 +1072,7 @@ export class CadPlayShellController extends Controller {
       case "loadRawRequest":
       case "deleteSelection":
       case "patchCadPlayReference":
+      case "patchCadPlaySelection":
       case "engagementOption":
       case "engagementInput":
       case "engagementSubmit":
@@ -1619,8 +1628,8 @@ class CadPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
   buildTab(): SidePanelTabConfig {
     return {
       id: CAD_PLAY_HIERARCHY_TAB_ID,
-      icon: ListTree,
-      name: "Hierarchy",
+      icon: CadPlayHierarchyIcon,
+      name: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
       order: 0,
       tree: new CallbackTreePanelDefinition(() => {
         const snapshot = cadPlayChromeSnapshotRef.current;
@@ -2535,6 +2544,56 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
             });
             break;
           }
+          case "patchCadPlaySelection": {
+            const { modelDefinitionId, kind, id, targets, field, value } = args as {
+              modelDefinitionId?: string;
+              kind?: SelectionTarget["kind"];
+              id?: string;
+              targets?: readonly { readonly kind?: SelectionTarget["kind"]; readonly id?: string }[];
+              field?: CadPlaySelectionPatchField;
+              value?: unknown;
+            };
+            if (!modelDefinitionId || !field) {
+              break;
+            }
+            const selectionRows: SelectionTarget[] = Array.isArray(targets)
+              ? targets
+                  .filter((row): row is { readonly kind: SelectionTarget["kind"]; readonly id: string } => Boolean(row?.kind && row?.id))
+                  .map((row) => ({ kind: row.kind, id: row.id, editable: true }))
+              : kind && id
+                ? [{ kind, id, editable: true }]
+                : [];
+            if (!selectionRows.length) {
+              break;
+            }
+            let currentModel = modelDefinitionId === activeModelDefinitionId ? liveModel : flushedModelsByDefinitionId[modelDefinitionId];
+            if (!currentModel) {
+              break;
+            }
+            let patchedModel: Model | null = null;
+            for (const target of selectionRows) {
+              const patched = patchCadPlaySelectionTarget(currentModel, target, field, value);
+              if (!patched) {
+                break;
+              }
+              patchedModel = patched;
+              currentModel = patched;
+            }
+            if (!patchedModel) {
+              break;
+            }
+            commitModelForDefinition(modelDefinitionId, patchedModel);
+            if (field === "hidden" || field === "locked") {
+              setRendererSelectionByModel((prev) =>
+                replWithRendererSelectionTargets(
+                  prev,
+                  modelDefinitionId,
+                  pruneSelectionTargetsForEntityFlags(prev[modelDefinitionId] ?? [], (entityId) => patchedModel!.getEntityFlags(entityId)),
+                ),
+              );
+            }
+            break;
+          }
           case "engagementOption": {
             const pane = (args as { pane?: CadPlayPaneId })?.pane;
             const optionId = (args as { optionId?: string })?.optionId;
@@ -2604,7 +2663,7 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
     };
     shellController.setHostBridge(bridge);
     return () => shellController.setHostBridge(null);
-  }, [activeModelDefinitionId, focusModelDefinition, handleApplyTransformation, handleDeleteSelection, handleLoadRawRequest, handleSaveCurrent, handleSaveInPlay, handleSaveSelected, selectionInScope, shellController, setReferencesByModelDefinitionId]);
+  }, [activeModelDefinitionId, focusModelDefinition, handleApplyTransformation, handleDeleteSelection, handleLoadRawRequest, handleSaveCurrent, handleSaveInPlay, handleSaveSelected, selectionInScope, shellController, setReferencesByModelDefinitionId, flushedModelsByDefinitionId, liveModel, commitModelForDefinition]);
 
   const handleLoadRaw = reactHostPort.useCallback(async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -2988,6 +3047,133 @@ function cadPlayCmd(command: string, args?: Record<string, unknown>): CommandDes
 
 type CadPlayReferencePatchField = "origin" | "rotation" | "scale" | "scaleUniform" | "widthWorld" | "opacity";
 
+export type CadPlaySelectionPatchField = "typology" | "hidden" | "locked";
+
+function cadPlaySelectionFlagInputValue(value: unknown): boolean {
+  return value === true || value === "true";
+}
+
+function cadPlaySelectionAllEqual<T>(values: readonly T[]): boolean {
+  if (values.length <= 1) {
+    return true;
+  }
+  const first = values[0];
+  for (let index = 1; index < values.length; index += 1) {
+    if (values[index] !== first) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function cadPlaySelectionFlagSelectItems(): readonly { readonly id: string; readonly label: string; readonly value: string }[] {
+  return [
+    { id: "false", label: "false", value: "false" },
+    { id: "true", label: "true", value: "true" },
+  ];
+}
+
+/** @emoji 🎯 Patches one geometry selection target on a cloned model. */
+export function patchCadPlaySelectionTarget(
+  model: Model,
+  target: SelectionTarget,
+  field: CadPlaySelectionPatchField,
+  value: unknown,
+): Model | null {
+  if (target.editable === false && field === "typology") {
+    return null;
+  }
+  const next = Model.fromJSON(model.toJSON());
+  if (field === "typology") {
+    if (target.kind !== "object") {
+      return null;
+    }
+    const trimmed = typeof value === "string" ? value.trim() : "";
+    if (!trimmed) {
+      return null;
+    }
+    const object = next.objects[target.id as ObjectRef];
+    if (!object) {
+      return null;
+    }
+    next.objects[target.id as ObjectRef] = { ...object, typology: trimmed };
+    return next;
+  }
+  if (field === "hidden" || field === "locked") {
+    next.setEntityFlag(target.id, field, cadPlaySelectionFlagInputValue(value));
+    return next;
+  }
+  return null;
+}
+
+function cadPlaySelectionTargetRows(
+  snapshot: CadPlayChromeSnapshot,
+  targets: readonly SelectionTarget[],
+): readonly UiNode[] {
+  const model = snapshot.modelsByDefinitionId[snapshot.activeModelDefinitionId];
+  const modelDefinitionId = snapshot.activeModelDefinitionId;
+  const patch = (kind: SelectionTarget["kind"], id: string, field: CadPlaySelectionPatchField) =>
+    cadPlayCmd("patchCadPlaySelection", { modelDefinitionId, kind, id, field });
+  const rows: UiNode[] = [];
+  for (const [index, target] of targets.entries()) {
+    const flags = model?.getEntityFlags(target.id) ?? {};
+    const typology = target.kind === "object" ? (model?.objects[target.id as ObjectRef]?.typology ?? "") : "";
+    const prefix = `cad-play-details.selection.target.${index}`;
+    rows.push({
+      type: "field",
+      id: `${prefix}.kind`,
+      label: targets.length === 1 ? "Kind" : `Kind ${index + 1}`,
+      child: { type: "text", value: target.kind },
+    });
+    rows.push({
+      type: "field",
+      id: `${prefix}.id`,
+      label: targets.length === 1 ? "Id" : `Id ${index + 1}`,
+      child: { type: "text", value: target.id },
+    });
+    if (target.kind === "object") {
+      rows.push({
+        type: "field",
+        id: `${prefix}.typology`,
+        label: "Typology",
+        child: {
+          type: "input",
+          id: `${prefix}.typology.input`,
+          inputKind: "text",
+          value: typology,
+          commit: "blur",
+          onChange: patch(target.kind, target.id, "typology"),
+        },
+      });
+    }
+    rows.push({
+      type: "field",
+      id: `${prefix}.hidden`,
+      label: "Hidden",
+      child: {
+        type: "select",
+        id: `${prefix}.hidden.select`,
+        value: String(flags.hidden === true),
+        items: cadPlaySelectionFlagSelectItems(),
+        onChange: patch(target.kind, target.id, "hidden"),
+      },
+    });
+    rows.push({
+      type: "field",
+      id: `${prefix}.locked`,
+      label: "Locked",
+      child: {
+        type: "select",
+        id: `${prefix}.locked.select`,
+        value: String(flags.locked === true),
+        items: cadPlaySelectionFlagSelectItems(),
+        onChange: patch(target.kind, target.id, "locked"),
+      },
+    });
+  }
+  return rows;
+}
+
 /** @emoji 🖼️ Builds editable reference inspector rows matching puzzle 3d play. */
 export function buildCadPlayReferenceInspectorChildren(
   reference: WorldReferenceProps,
@@ -3117,7 +3303,7 @@ export function buildCadPlayReferenceInspectorChildren(
 
 function buildCadPlayCatalogTree(snapshot: CadPlayChromeSnapshot | null): UiTreeNode {
   if (!snapshot) {
-    return uiDeclarativeSectionsToTree([{ type: "section", id: "cad-play-catalog.loading", label: "Catalog", children: [{ type: "text", value: "…" }] }]);
+    return uiDeclarativeSectionsToTree([{ type: "section", id: "cad-play-catalog.loading", label: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, children: [{ type: "text", value: "…" }] }]);
   }
   const children: UiNode[] = [];
   if (!isShapeModelDefinition(snapshot.activeModelDefinitionId)) {
@@ -3132,12 +3318,12 @@ function buildCadPlayCatalogTree(snapshot: CadPlayChromeSnapshot | null): UiTree
   if (children.length === 0) {
     children.push({ type: "text", value: "Use the navbar fixture menu or toolbar save/load." });
   }
-  return uiDeclarativeSectionsToTree([{ type: "section", id: "cad-play-catalog.section", label: "Catalog", children }]);
+  return uiDeclarativeSectionsToTree([{ type: "section", id: "cad-play-catalog.section", label: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, children }]);
 }
 
 export function buildCadPlayDetailsTree(snapshot: CadPlayChromeSnapshot | null): UiTreeNode {
   if (!snapshot) {
-    return uiDeclarativeSectionsToTree([{ type: "section", id: "cad-play-details.loading", label: "Selection", children: [{ type: "text", value: "…" }] }]);
+    return uiDeclarativeSectionsToTree([{ type: "section", id: "cad-play-details.loading", label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, children: [{ type: "text", value: "…" }] }]);
   }
   const sections: UiNode[] = [];
   const selectedReference = snapshot.selectedReference;
@@ -3156,7 +3342,7 @@ export function buildCadPlayDetailsTree(snapshot: CadPlayChromeSnapshot | null):
     sections.push({
       type: "section",
       id: "cad-play-details.selection",
-      label: "Selection",
+      label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
       children: [...buildCadPlaySelectionInspectorChildren(snapshot)],
     });
   }
@@ -3165,7 +3351,7 @@ export function buildCadPlayDetailsTree(snapshot: CadPlayChromeSnapshot | null):
       {
         type: "section",
         id: "cad-play-details.empty",
-        label: "Selection",
+        label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
         children: [{ type: "text", value: "Select a primitive, object, or reference in the canvas or workbench hierarchy to edit details." }],
       },
     ]);
@@ -3173,8 +3359,9 @@ export function buildCadPlayDetailsTree(snapshot: CadPlayChromeSnapshot | null):
   return uiDeclarativeSectionsToTree(sections);
 }
 
-/** @emoji 🎯 Builds read-only selection rows for the CAD play details tree. */
+/** @emoji 🎯 Builds editable selection rows for the CAD play inspection tree. */
 export function buildCadPlaySelectionInspectorChildren(snapshot: CadPlayChromeSnapshot): readonly UiNode[] {
+  const editableTargets = snapshot.selection.filter((target) => target.editable !== false);
   const children: UiNode[] = [
     {
       type: "field",
@@ -3189,14 +3376,80 @@ export function buildCadPlaySelectionInspectorChildren(snapshot: CadPlayChromeSn
       child: { type: "text", value: String(snapshot.selection.length) },
     },
   ];
-  for (const [index, target] of snapshot.selection.entries()) {
-    const label = snapshot.selection.length === 1 ? "Target" : `Target ${index + 1}`;
-    const detail = target.editable === false ? `${target.kind} · ${target.id} · locked` : `${target.kind} · ${target.id}`;
+  if (editableTargets.length === 0) {
+    if (snapshot.selection.length > 0) {
+      children.push({ type: "text", value: "Selected targets are locked and cannot be edited here." });
+    }
+    return children;
+  }
+  if (editableTargets.length === 1) {
+    children.push(...cadPlaySelectionTargetRows(snapshot, editableTargets));
+    return children;
+  }
+  const model = snapshot.modelsByDefinitionId[snapshot.activeModelDefinitionId];
+  const typologies = editableTargets
+    .filter((target) => target.kind === "object")
+    .map((target) => model?.objects[target.id as ObjectRef]?.typology ?? "");
+  const hiddens = editableTargets.map((target) => model?.getEntityFlags(target.id).hidden === true);
+  const lockeds = editableTargets.map((target) => model?.getEntityFlags(target.id).locked === true);
+  const modelDefinitionId = snapshot.activeModelDefinitionId;
+  const patchAll = (field: CadPlaySelectionPatchField) =>
+    cadPlayCmd("patchCadPlaySelection", {
+      modelDefinitionId,
+      targets: editableTargets.map((target) => ({ kind: target.kind, id: target.id })),
+      field,
+    });
+  if (typologies.length > 0) {
+    const typologyUniform = cadPlaySelectionAllEqual(typologies);
     children.push({
       type: "field",
-      id: `cad-play-details.selection.target.${index}`,
-      label,
-      child: { type: "text", value: detail },
+      id: "cad-play-details.selection.typology",
+      label: "Typology",
+      child: {
+        type: "input",
+        id: "cad-play-details.selection.typology.input",
+        inputKind: "text",
+        value: typologyUniform ? (typologies[0] ?? "") : "",
+        placeholder: typologyUniform ? undefined : "Mixed",
+        commit: "blur",
+        onChange: patchAll("typology"),
+      },
+    });
+  }
+  children.push(
+    {
+      type: "field",
+      id: "cad-play-details.selection.hidden",
+      label: "Hidden",
+      child: {
+        type: "select",
+        id: "cad-play-details.selection.hidden.select",
+        value: cadPlaySelectionAllEqual(hiddens) ? String(hiddens[0] === true) : "",
+        placeholder: cadPlaySelectionAllEqual(hiddens) ? undefined : "Mixed",
+        items: cadPlaySelectionFlagSelectItems(),
+        onChange: patchAll("hidden"),
+      },
+    },
+    {
+      type: "field",
+      id: "cad-play-details.selection.locked",
+      label: "Locked",
+      child: {
+        type: "select",
+        id: "cad-play-details.selection.locked.select",
+        value: cadPlaySelectionAllEqual(lockeds) ? String(lockeds[0] === true) : "",
+        placeholder: cadPlaySelectionAllEqual(lockeds) ? undefined : "Mixed",
+        items: cadPlaySelectionFlagSelectItems(),
+        onChange: patchAll("locked"),
+      },
+    },
+  );
+  for (const [index, target] of editableTargets.entries()) {
+    children.push({
+      type: "section",
+      id: `cad-play-details.selection.target-section.${index}`,
+      label: `${target.kind} · ${target.id}`,
+      children: [...cadPlaySelectionTargetRows(snapshot, [target])],
     });
   }
   return children;
@@ -3206,8 +3459,8 @@ class CadPlayCatalogPanelDefinition extends PureSidePanelTabDefinition {
   buildTab(): SidePanelTabConfig {
     return {
       id: "cad-play-catalog",
-      icon: Shapes,
-      name: "Catalog",
+      icon: CadPlayCatalogueIcon,
+      name: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
       order: 1,
       tree: new CallbackTreePanelDefinition(() =>
         uiTreeNodeToTreePanelConfig(buildCadPlayCatalogTree(cadPlayChromeSnapshotRef.current), new CommandBus()),
@@ -3224,8 +3477,8 @@ class CadPlayDetailsPanelDefinition extends PureSidePanelTabDefinition {
   buildTab(): SidePanelTabConfig {
     return {
       id: "cad-play-details",
-      icon: ListTree,
-      name: "Selection",
+      icon: CadPlayInspectionIcon,
+      name: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
       order: 0,
       tree: new CallbackTreePanelDefinition(() =>
         uiTreeNodeToTreePanelConfig(buildCadPlayDetailsTree(cadPlayChromeSnapshotRef.current), this.commandBus),
@@ -3824,9 +4077,11 @@ if (import.meta.vitest) {
       const tree = buildCadPlayDetailsTree(snapshot);
       const selectionSection = tree.sections.find((section) => section.id === "cad-play-details.selection");
       expect(selectionSection).toBeDefined();
-      const targetField = selectionSection!.items.find((item) => item.id === "cad-play-details.selection.target.0");
-      expect(targetField?.label).toBe("Target");
-      expect(targetField?.description).toBe("object · wall-a");
+      const targetField = selectionSection!.items.find((item) => item.id === "cad-play-details.selection.target.0.kind");
+      expect(targetField?.label).toBe("Kind");
+      const typologyField = selectionSection!.items.find((item) => item.id === "cad-play-details.selection.target.0.typology");
+      expect(typologyField?.control?.type).toBe("input");
+      expect(typologyField?.control?.onChange?.command).toBe("patchCadPlaySelection");
     });
 
     it("updateCadPlayReferenceInMap toggles reference flags", () => {

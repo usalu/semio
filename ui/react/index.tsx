@@ -28,7 +28,7 @@ import * as ToggleGroupPrimitive from "@radix-ui/react-toggle-group";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, OnSelectionChangeParams, ReactFlowInstance } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { resolveColorHex, resolveSemanticColorHex, semanticVar, themeColorVar, tokenVar } from "@semio-tech/ui-styling";
+import { domSizePx, resolveColorHex, resolveSemanticColorHex, semanticVar, sizeVar, STYLING_COMPACT_ROOT_PX, STYLING_DOM, themeColorVar, tokenVar } from "@semio-tech/ui-styling";
 import * as dagre from "dagre";
 import { format, formatDistanceToNow } from "date-fns";
 import Fuse, { type FuseResult } from "fuse.js";
@@ -222,6 +222,7 @@ export let sceneHostPort: SceneHostPort = {
 export type {
   IconRenderCamera,
   IconRenderFormat,
+  IconRenderShape,
   IconRenderLights,
   IconRenderMaterial,
   IconRenderPort,
@@ -229,7 +230,7 @@ export type {
   IconRenderResult,
 } from "@semio-tech/ui-styling/icon-render-port";
 
-import type { IconRenderPort, IconRenderRequest, IconRenderResult } from "@semio-tech/ui-styling/icon-render-port";
+import type { IconRenderPort, IconRenderRequest, IconRenderResult, IconRenderShape } from "@semio-tech/ui-styling/icon-render-port";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { SVGRenderer } from "three/examples/jsm/renderers/SVGRenderer.js";
 
@@ -333,14 +334,72 @@ async function renderIconPng(scene: THREE.Scene, camera: THREE.PerspectiveCamera
   return { dataUrl };
 }
 
+/** @emoji ⭕ Clips rendered SVG markup to an axis-aligned ellipse inscribed in the shot bounds. */
+export function clipIconSvgMarkupToEllipse(svgMarkup: string, width: number, height: number): string {
+  const clipId = "semio-icon-ellipse-clip";
+  if (svgMarkup.includes(`id="${clipId}"`)) return svgMarkup;
+  const openMatch = svgMarkup.match(/^<svg([^>]*)>/i);
+  const closeIdx = svgMarkup.lastIndexOf("</svg>");
+  if (!openMatch || closeIdx < 0) return svgMarkup;
+  const clipDef = `<clipPath id="${clipId}"><ellipse cx="${width / 2}" cy="${height / 2}" rx="${width / 2}" ry="${height / 2}"/></clipPath>`;
+  let body = svgMarkup.slice(openMatch[0].length, closeIdx);
+  let defs = "";
+  const defsMatch = body.match(/^<defs[^>]*>[\s\S]*?<\/defs>/i);
+  if (defsMatch) {
+    defs = defsMatch[0].replace(/<defs([^>]*)>/i, `<defs$1>${clipDef}`);
+    body = body.slice(defsMatch[0].length);
+  } else {
+    defs = `<defs>${clipDef}</defs>`;
+  }
+  return `<svg${openMatch[1]}>${defs}<g clip-path="url(#${clipId})">${body}</g></svg>`;
+}
+
+async function clipIconPngDataUrlToEllipse(dataUrl: string, width: number, height: number): Promise<string> {
+  if (typeof document === "undefined") return dataUrl;
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const context = canvas.getContext("2d");
+      if (!context) {
+        reject(new Error("2d canvas unavailable"));
+        return;
+      }
+      context.clearRect(0, 0, width, height);
+      context.beginPath();
+      context.ellipse(width / 2, height / 2, width / 2, height / 2, 0, 0, Math.PI * 2);
+      context.clip();
+      context.drawImage(image, 0, 0, width, height);
+      resolve(canvas.toDataURL("image/png"));
+    };
+    image.onerror = () => reject(new Error("Failed to load icon png for ellipse mask"));
+    image.src = dataUrl;
+  });
+}
+
+async function applyIconRenderShape(result: IconRenderResult, shape: IconRenderShape | undefined, width: number, height: number): Promise<IconRenderResult> {
+  if (!shape || shape === "rectangle") return result;
+  if (result.svgMarkup) {
+    const svgMarkup = clipIconSvgMarkupToEllipse(result.svgMarkup, width, height);
+    return { dataUrl: `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgMarkup)}`, svgMarkup };
+  }
+  const dataUrl = await clipIconPngDataUrlToEllipse(result.dataUrl, width, height);
+  return { dataUrl };
+}
+
 /** @emoji 🖼️ Default three.js-backed icon render port (SVGRenderer + WebGL PNG). */
 export const iconRenderPort: IconRenderPort = {
   async render(request: IconRenderRequest): Promise<IconRenderResult> {
     const model = await loadGlbGroup(request.assetUrl);
     const scene = buildIconScene(request, model);
     const camera = buildIconCamera(request);
-    if (request.format === "svg") return renderIconSvg(scene, camera, request.width, request.height);
-    return renderIconPng(scene, camera, request.width, request.height, request.shadowEnabled === true);
+    const result =
+      request.format === "svg"
+        ? await renderIconSvg(scene, camera, request.width, request.height)
+        : await renderIconPng(scene, camera, request.width, request.height, request.shadowEnabled === true);
+    return applyIconRenderShape(result, request.shape, request.width, request.height);
   },
 };
 // #endregion 🔖IconRenderPort
@@ -643,10 +702,10 @@ export function screenRectFromPoints(points: readonly { readonly x: number; read
 export type IconSizeToken = "tiny" | "small" | "base" | "large";
 
 const ICON_SIZE_PX: Record<IconSizeToken, number> = {
-  tiny: 12,
-  small: 20,
-  base: 24,
-  large: 32,
+  tiny: domSizePx("iconTinyUiSpacing"),
+  small: domSizePx("iconSmallUiSpacing"),
+  base: domSizePx("iconBaseUiSpacing"),
+  large: domSizePx("iconLargeUiSpacing"),
 };
 
 /** @emoji 📐 Resolves {@link Icon} `size` to pixel dimensions. */
@@ -992,29 +1051,48 @@ export function iconSvgMarkup(name: string): string | undefined {
   return (ICONS as Record<string, string>)[name];
 }
 
+const ICON_SIZE_CLASS: Record<IconSizeToken, string> = {
+  tiny: "size-tiny",
+  small: "size-small",
+  base: "size-workbench",
+  large: "size-xl",
+};
+
+function iconBoxStyle(size: number | IconSizeToken): React.CSSProperties | undefined {
+  if (typeof size !== "number") {
+    return undefined;
+  }
+  return { width: uiSpacingLen(size / (STYLING_COMPACT_ROOT_PX * 0.2)), height: uiSpacingLen(size / (STYLING_COMPACT_ROOT_PX * 0.2)) };
+}
+
+function iconBoxClassName(size: number | IconSizeToken, className?: string): string {
+  return cn(typeof size === "string" ? ICON_SIZE_CLASS[size] : undefined, className);
+}
+
 /** @emoji 🖼 Renders canonical icons without depending on an external icon library. */
 export function Icon({ icon, size = "base", className, title }: IconProps): React.ReactElement {
-  const px = resolveIconSizePx(size);
+  const boxStyle = iconBoxStyle(size);
+  const boxClass = iconBoxClassName(size, className);
   let normalized = coerceIconSource(icon);
   if (normalized.kind === "shortcode") {
     normalized = resolveShortcodeIcon(normalized.code);
   }
   if (normalized.kind === "node") {
     return (
-      <span className={cn("inline-flex shrink-0 items-center justify-center", className)} style={{ width: px, height: px }} title={title}>
+      <span className={cn("inline-flex shrink-0 items-center justify-center", boxClass)} style={boxStyle} title={title}>
         {normalized.node}
       </span>
     );
   }
   if (normalized.kind === "url" || normalized.kind === "data") {
     const src = normalized.kind === "url" ? normalized.url : normalized.data;
-    return <img src={src} alt="" width={px} height={px} className={cn("shrink-0", className)} title={title} />;
+    return <img src={src} alt="" className={cn("shrink-0 object-contain", boxClass)} style={boxStyle} title={title} />;
   }
   if (normalized.kind === "emoji") {
     return (
       <span
-        className={cn("inline-flex shrink-0 items-center justify-center text-base leading-none", className)}
-        style={{ width: px, height: px, fontFamily: "'Noto Color Emoji','Segoe UI Emoji',sans-serif" }}
+        className={cn("inline-flex shrink-0 items-center justify-center text-base leading-none", boxClass)}
+        style={{ ...boxStyle, fontFamily: "'Noto Color Emoji','Segoe UI Emoji',sans-serif" }}
         title={title}
         aria-hidden={title ? undefined : true}
       >
@@ -1025,7 +1103,7 @@ export function Icon({ icon, size = "base", className, title }: IconProps): Reac
   if (normalized.kind === "text" || normalized.kind === "typst") {
     const label = normalized.kind === "text" ? normalized.text : normalized.src;
     return (
-      <span className={cn("inline-flex shrink-0 items-center justify-center font-mono text-xs", className)} style={{ width: px, height: px }} title={title}>
+      <span className={cn("inline-flex shrink-0 items-center justify-center font-mono text-xs", boxClass)} style={boxStyle} title={title}>
         {label}
       </span>
     );
@@ -1038,15 +1116,15 @@ export function Icon({ icon, size = "base", className, title }: IconProps): Reac
         : undefined;
   if (!svgMarkup) {
     return (
-      <span className={cn("inline-flex shrink-0 items-center justify-center font-mono text-[10px] text-muted-foreground", className)} style={{ width: px, height: px }} title={title}>
+      <span className={cn("inline-flex shrink-0 items-center justify-center font-mono text-2xs text-muted-foreground", boxClass)} style={boxStyle} title={title}>
         {normalized.kind === "catalog" ? normalized.key.slice(0, 3) : "?"}
       </span>
     );
   }
   return (
     <span
-      className={cn("inline-flex shrink-0 items-center justify-center [&>svg]:size-full", className)}
-      style={{ width: px, height: px }}
+      className={cn("inline-flex shrink-0 items-center justify-center [&>svg]:size-full", boxClass)}
+      style={boxStyle}
       title={title}
       data-icon={normalized.kind === "catalog" ? normalized.key : undefined}
       dangerouslySetInnerHTML={{ __html: svgMarkup }}
@@ -1766,6 +1844,23 @@ export function readStoredUiChromeExpertise(): Expertise {
 export function writeStoredUiChromeExpertise(expertise: Expertise): void {
   if (typeof localStorage === "undefined") return;
   localStorage.setItem(UI_CHROME_EXPERTISE_STORAGE_KEY, expertise);
+}
+
+/** @emoji 🌓 localStorage key for surface theme (system/light/dark). */
+export const UI_CHROME_THEME_STORAGE_KEY = "ui.chrome.theme";
+
+/** @emoji 🌓 Reads persisted surface theme from localStorage. */
+export function readStoredUiChromeTheme(): ElementsSurfaceTheme {
+  if (typeof localStorage === "undefined") return "system";
+  const raw = localStorage.getItem(UI_CHROME_THEME_STORAGE_KEY);
+  if (raw === "light" || raw === "dark" || raw === "system") return raw;
+  return "system";
+}
+
+/** @emoji 🌓 Persists surface theme to localStorage. */
+export function writeStoredUiChromeTheme(theme: ElementsSurfaceTheme): void {
+  if (typeof localStorage === "undefined") return;
+  localStorage.setItem(UI_CHROME_THEME_STORAGE_KEY, theme);
 }
 
 /** @emoji 🧵 localStorage key for WASM compute worker thread count. */
@@ -3439,8 +3534,9 @@ interface PanelGhostRootProps extends React.HTMLAttributes<HTMLDivElement> {
 
 /** @emoji 👻 Panel shell marked as a ghost region; dims when {@link GhostProvider} session is active. */
 function PanelGhostRoot({ children, className, style, ...props }: PanelGhostRootProps) {
+  const level = useLevel();
   return (
-    <GhostRegionShell clickThroughWhenGhost className={className} style={style} {...props}>
+    <GhostRegionShell clickThroughWhenGhost data-level={level} className={className} style={style} {...props}>
       {children}
     </GhostRegionShell>
   );
@@ -3573,7 +3669,7 @@ export const sliderThumbClassName = cn(
 
 /** @emoji 🎚 Slider numeric readout — element gray at rest. */
 export const sliderValueClassName = cn(
-  "text-element w-[28px] text-right text-xs leading-none select-none transition-colors",
+  "text-element w-large text-right text-xs leading-none select-none transition-colors",
   "hover:text-emphasized group-hover:text-emphasized",
 );
 
@@ -3758,7 +3854,7 @@ export const modeDockTabClassName =
 export const shellChromeTitleClassName = "truncate text-sm font-medium text-element";
 
 /** @emoji 🪧 Uppercase shell section title — element gray at rest. */
-export const shellChromeSectionTitleClassName = "text-[10px] font-semibold uppercase tracking-wide text-element";
+export const shellChromeSectionTitleClassName = "text-2xs font-semibold uppercase tracking-wide text-element";
 
 /** @emoji 📏 Globally active dock tab — primary fill + emphasized label. */
 export const modeDockActiveTabFillClass = interactiveActiveFillClass;
@@ -3785,14 +3881,14 @@ export const windowChromeControlButtonClass = cn(
   interactiveHoverClass,
 );
 
-/** @emoji 📐 Default unfolded width of the right-edge window options rail in pixels. */
-export const windowMeasuresDefaultWidthPx = 14 * 16;
+/** @emoji 📐 Default unfolded width of the right-edge window options rail (token-derived). */
+export const windowMeasuresDefaultWidthPx = domSizePx("layoutPanelRailUiSpacing");
 
-/** @emoji 📐 Minimum unfolded width of the window options rail in pixels. */
-export const windowMeasuresMinWidthPx = 150;
+/** @emoji 📐 Minimum unfolded width of the window options rail (token-derived). */
+export const windowMeasuresMinWidthPx = domSizePx("layoutPanelMinUiSpacing");
 
-/** @emoji 📐 Maximum unfolded width of the window options rail in pixels. */
-export const windowMeasuresMaxWidthPx = 480;
+/** @emoji 📐 Maximum unfolded width of the window options rail (token-derived). */
+export const windowMeasuresMaxWidthPx = domSizePx("layoutPanelMaxUiSpacing");
 
 /** @emoji 📐 Fixed width of the right-edge window measures column (never wider than the window body). */
 export const windowMeasuresRailWidthClass = "w-[min(14rem,calc(100%-0.5rem))]";
@@ -3800,8 +3896,8 @@ export const windowMeasuresRailWidthClass = "w-[min(14rem,calc(100%-0.5rem))]";
 /** @emoji ↔️ Left-edge resize handle for the unfolded window options rail. */
 export const windowMeasuresResizeHandleLeftClass = "absolute top-0 bottom-0 left-0 z-20 w-single cursor-ew-resize";
 
-/** @emoji 📐 Max width cap for window engagement (matches {@link Engagement} design target). */
-export const windowEngagementMaxWidthPx = 28 * 16;
+/** @emoji 📐 Max width cap for window engagement (token-derived). */
+export const windowEngagementMaxWidthPx = domSizePx("layoutEngagementMaxUiSpacing");
 
 /** @emoji 📐 Outer overlay for floating window measures along the top-right edge. */
 export const windowMeasuresOverlayClass =
@@ -3827,7 +3923,7 @@ export const windowMeasuresStackFoldedClass = "w-fit max-w-full";
 
 /** @emoji 📐 Compact title bar on top of the window options stack. */
 export const windowMeasuresChromeClass =
-  `pointer-events-auto flex h-small shrink-0 items-stretch justify-between gap-0 border-b ${borderElementClass}/40 px-0 py-0`;
+  `pointer-events-auto flex h-medium shrink-0 items-stretch justify-between gap-0 border-b ${borderElementClass}/40 px-0 py-0`;
 
 /** @emoji 📐 Square icon action in the window options chrome bar. */
 export const windowMeasuresChromeActionClass = cn(
@@ -3852,11 +3948,11 @@ export const windowMeasureTileClass =
 
 /** @emoji 📐 Optional measure caption above a control. */
 export const windowMeasureLabelClass =
-  "text-muted-foreground mb-tiny block min-w-0 truncate text-[10px] font-medium leading-none";
+  "text-muted-foreground mb-tiny block min-w-0 truncate text-2xs font-medium leading-none";
 
 /** @emoji 📐 Measure section title without a heavy chrome box. */
 export const windowMeasureSectionClass =
-  "text-muted-foreground w-full truncate px-single py-tiny text-center text-[10px] font-medium uppercase tracking-wide";
+  "text-muted-foreground w-full truncate px-single py-tiny text-center text-2xs font-medium uppercase tracking-wide";
 
 /** @emoji 📐 Constrains measure controls to the rail width. */
 export const windowMeasureControlClass = "w-full min-w-0 max-w-full";
@@ -4006,7 +4102,7 @@ function CommandInput({ className, ...props }: React.ComponentProps<typeof Comma
  * CommandList holds the data fields for a CommandList record.
  **/
 function CommandList({ className, ...props }: React.ComponentProps<typeof CommandPrimitive.List>) {
-  return <CommandPrimitive.List data-slot="command-list" className={cn("max-h-[300px] scroll-py-single overflow-x-hidden overflow-y-auto", className)} {...props} />;
+  return <CommandPrimitive.List data-slot="command-list" className={cn("max-h-layout-command scroll-py-single overflow-x-hidden overflow-y-auto", className)} {...props} />;
 }
 
 /**
@@ -4569,14 +4665,14 @@ export function Label({ id, rowId, label, labelElementId, className, children, l
 
   if (labelLayoutKind === "treeGroupHeader") {
     const treeGroupHeaderLabel = (
-      <span data-slot="tree-label" id={labelElementId} title={controlHint} className="flex min-w-0 flex-1 items-center text-xs font-normal text-left truncate h-[22px]" style={treeItemLabelStyle}>
+      <span data-slot="tree-label" id={labelElementId} title={controlHint} className="flex min-w-0 flex-1 items-center text-xs font-normal text-left truncate h-medium" style={treeItemLabelStyle}>
         {displayLabel}
       </span>
     );
 
     const treeGroupHeaderInner = (
       <div id={rowId} data-slot="tree-group-header-row" className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName, className)}>
-        <div className={cn(treeHeaderMainClassName, "min-h-[22px] items-center")}>
+        <div className={cn(treeHeaderMainClassName, "min-h-medium items-center")}>
           {treeGroupHeaderLabel}
           <div data-slot="tree-group-header-control" className="ml-auto flex min-w-0 shrink-0 items-center justify-end">
             {children}
@@ -4603,16 +4699,16 @@ export function Label({ id, rowId, label, labelElementId, className, children, l
   }
 
   const propertyLabelElement = isTree ? (
-    <div ref={propertyLabelRef} data-slot="property-label-tree" className="min-w-0" style={{ paddingLeft: `${treePropertyRowOffsetPx}px` }}>
-      <div className="inline-flex min-w-0 h-[22px]">
-        <span data-slot="property-label" id={labelElementId} title={controlHint} className="inline-flex items-center text-xs font-medium flex-shrink-0 text-left truncate cursor-pointer transition-colors h-[22px] pl-[4px]">
+    <div ref={propertyLabelRef} data-slot="property-label-tree" className="min-w-0" style={{ paddingLeft: detailPanelIndentLen(level, indentMultiplier) }}>
+      <div className="inline-flex min-w-0 h-medium">
+        <span data-slot="property-label" id={labelElementId} title={controlHint} className="inline-flex items-center text-xs font-medium flex-shrink-0 text-left truncate cursor-pointer transition-colors h-medium pl-single">
           {resolvedLabel}
         </span>
       </div>
     </div>
   ) : (
     <div ref={propertyLabelRef} data-slot="property-label-inline" className="min-w-0">
-      <span data-slot="property-label" id={labelElementId} title={controlHint} className="inline-flex items-center text-xs font-medium flex-shrink-0 text-left truncate cursor-pointer transition-colors text-element hover:bg-hover-interactive-fill hover:text-emphasized h-[22px]">
+      <span data-slot="property-label" id={labelElementId} title={controlHint} className="inline-flex items-center text-xs font-medium flex-shrink-0 text-left truncate cursor-pointer transition-colors text-element hover:bg-hover-interactive-fill hover:text-emphasized h-medium">
         {resolvedLabel}
       </span>
     </div>
@@ -4626,14 +4722,14 @@ export function Label({ id, rowId, label, labelElementId, className, children, l
       data-slot="property-row"
       data-property-layout={propertyRowStacked ? "stacked" : "inline"}
       style={{
-        ...(isTree ? { marginLeft: `${-treePropertyRowOffsetPx}px`, width: treePropertyRowOffsetPx > 0 ? `calc(100% + ${treePropertyRowOffsetPx}px)` : "100%" } : {}),
-        gridTemplateColumns: propertyRowStacked ? "minmax(0, 1fr)" : `${detailPanelPropertyLabelColumnWidthPx}px minmax(0, 1fr)`,
-        rowGap: `${propertyRowStacked ? detailPanelPropertyStackedRowGapPx : 0}px`,
+        ...(isTree ? { marginLeft: `calc(-1 * ${detailPanelIndentLen(level, indentMultiplier)})`, width: level > 0 ? `calc(100% + ${detailPanelIndentLen(level, indentMultiplier)})` : "100%" } : {}),
+        gridTemplateColumns: propertyRowStacked ? "minmax(0, 1fr)" : `${sizeVar("layoutLabel")} minmax(0, 1fr)`,
+        rowGap: propertyRowStacked ? sizeVar("spacingSingle") : "0",
       }}
       className={cn(detailPanelPropertyRowClassName, !isTree && "w-full", className)}
     >
       {propertyLabelElement}
-      <div ref={propertyControlRef} data-slot="property-control" className={detailPanelPropertyControlClassName} style={propertyRowStacked ? { paddingLeft: `${detailPanelPropertyLabelColumnWidthPx + detailPanelPropertyInlineGapPx}px` } : undefined}>
+      <div ref={propertyControlRef} data-slot="property-control" className={detailPanelPropertyControlClassName} style={propertyRowStacked ? { paddingLeft: `calc(${sizeVar("layoutLabel")} + ${sizeVar("spacingDouble")})` } : undefined}>
         <PropertyValueColumnContext.Provider value={true}>{children}</PropertyValueColumnContext.Provider>
       </div>
     </div>
@@ -5409,7 +5505,7 @@ function ActionDropdown({ className, id, options, value, onValueChange, startTra
           <ActionGroupItem id={id} icon={selectedOption?.icon ?? "chevron-down"} {...props} />
         </ActionGroup>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-single min-w-[120px]" align="start">
+      <PopoverContent className="w-auto p-single min-w-layout-popover" align="start">
         <div className="flex flex-col">
           {options.map((option) => (
             <button
@@ -6092,9 +6188,9 @@ function CollapsedFieldDisplay({ allowStackedOverflow = false, className, disabl
         )}
       </span>
       {showStackedOverflow ? (
-        <span data-slot="collapsed-field-overflow" aria-hidden="true" className="flex h-[10px] min-w-0 items-center justify-center overflow-hidden leading-none">
+        <span data-slot="collapsed-field-overflow" aria-hidden="true" className="flex h-tiny min-w-0 items-center justify-center overflow-hidden leading-none">
           <span data-slot="collapsed-field-indicator" className="inline-flex items-center justify-center text-muted-foreground/75 leading-none">
-            <ChevronDownIcon data-slot="collapsed-field-indicator-chevron" className="size-[10px] shrink-0 stroke-[2.5]" />
+            <ChevronDownIcon data-slot="collapsed-field-indicator-chevron" className="size-tiny shrink-0 stroke-[2.5]" />
           </span>
         </span>
       ) : null}
@@ -6687,7 +6783,7 @@ function Slider({
 
   const sliderContent = (
     <div data-slot="slider-content" data-detail-panel-control="fill" data-dim style={{ opacity: isInPropertyValueColumn && !hasBeenEdited ? 0.6 : 1, transition: "opacity 150ms" }} className="flex-1 min-w-0">
-      <div data-slot="slider-row" className="grid h-[22px] grid-cols-[minmax(0,1fr)_28px] items-center gap-x-[8px]">
+      <div data-slot="slider-row" className="grid h-medium grid-cols-[minmax(0,1fr)_var(--size-large)] items-center gap-x-tiny">
         <div data-slot="slider-track-cell" className="min-w-0">
           {sliderElement}
         </div>
@@ -6698,7 +6794,7 @@ function Slider({
             onChange={(e) => setEditValue(e.target.value)}
             onKeyDown={handleEditKeyDown}
             onBlur={handleEditBlur}
-            className="w-[28px] min-w-[28px] border-0 px-0 text-right text-xs"
+            className="w-large min-w-large border-0 px-0 text-right text-xs"
             min={min}
             max={max}
             autoFocus
@@ -6889,7 +6985,7 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
     <div
       data-slot="stepper-group"
       data-detail-panel-control="fill"
-      className={cn("flex h-[22px] w-full min-w-0 items-stretch overflow-hidden rounded-[3px] border transition-[border-color] focus-within:border-accent", borderClass)}
+      className={cn("flex h-medium w-full min-w-0 items-stretch overflow-hidden rounded-sm border transition-[border-color] focus-within:border-accent", borderClass)}
       style={{ opacity: stepperEmptyOpacity, transition: "opacity 150ms" }}
     >
       <button
@@ -6901,7 +6997,7 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
         onTouchStart={handleMouseDown(-step)}
         onTouchEnd={handleMouseUp}
         disabled={!canStepDown}
-        className={cn("flex h-[22px] w-[22px] shrink-0 cursor-pointer items-center justify-center border-r hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:bg-muted", borderClass)}
+        className={cn("flex h-medium w-medium shrink-0 cursor-pointer items-center justify-center border-r hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:bg-muted", borderClass)}
       >
         <RemoveIcon className="size-tiny" />
       </button>
@@ -6953,7 +7049,7 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
             }
           }
         }}
-        className="file:text-element placeholder:text-muted-foreground text-element flex h-[22px] min-w-0 flex-1 border-0 bg-transparent px-[6px] text-center text-base transition-[color,border-color] outline-none file:inline-flex file:h-[22px] file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:cursor-not-allowed disabled:opacity-50 focus-visible:border-0 md:text-sm [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
+        className="file:text-element placeholder:text-muted-foreground text-element flex h-medium min-w-0 flex-1 border-0 bg-transparent px-double text-center text-base transition-[color,border-color] outline-none file:inline-flex file:h-medium file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:cursor-not-allowed disabled:opacity-50 focus-visible:border-0 md:text-sm [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
         step={step}
         min={min}
         max={max}
@@ -6971,9 +7067,9 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
         onTouchStart={handleMouseDown(step)}
         onTouchEnd={handleMouseUp}
         disabled={!canStepUp}
-        className={cn("flex h-[22px] w-[22px] shrink-0 cursor-pointer items-center justify-center border-l hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:bg-muted", borderClass)}
+        className={cn("flex h-medium w-medium shrink-0 cursor-pointer items-center justify-center border-l hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:bg-muted", borderClass)}
       >
-        <AddIcon className="size-[10px]" />
+        <AddIcon className="size-tiny" />
       </button>
     </div>
   );
@@ -7090,7 +7186,7 @@ function Textarea({ className, lazy, value: externalValue, onChange, onLazyChang
             `placeholder:text-muted-foreground text-element flex w-full border bg-transparent text-base ${borderElementClass} disabled:cursor-not-allowed disabled:opacity-50 md:text-sm`,
             formControlFocusBorderClass,
             "flex-1",
-            useSingleRowPropertyEditor ? "h-medium min-h-[22px] max-h-[22px] resize-none overflow-y-auto px-single py-single leading-normal" : "field-sizing-content min-h-huge px-tiny py-single",
+            useSingleRowPropertyEditor ? "h-medium min-h-medium max-h-medium resize-none overflow-y-auto px-single py-single leading-normal" : "field-sizing-content min-h-huge px-tiny py-single",
             className,
           )}
           rows={useSingleRowPropertyEditor ? 1 : rows}
@@ -7456,7 +7552,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
           sideOffset={dropdownSideOffset}
           avoidCollisions={dropdownAvoidCollisions}
           className={cn(
-            "w-auto p-single min-w-[120px]",
+            "w-auto p-single min-w-layout-popover",
             dropdownInstant ? "data-[state=open]:animate-none data-[state=closed]:animate-none data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-100 data-[state=closed]:zoom-out-100" : "",
             dropdownContentClassName,
           )}
@@ -7716,7 +7812,7 @@ function Ring({ id, orbs, radius = 40, size = 100, onOrbChange, onOrbSelect, onO
       className={cn("w-fit shrink-0 touch-none select-none overflow-visible", className)}
       style={{ overflow: "visible" }}
     >
-      <circle data-slot="ring-track" cx={0} cy={0} r={radius} className="fill-none stroke-muted-foreground/30 stroke-[2px]" />
+      <circle data-slot="ring-track" cx={0} cy={0} r={radius} className="fill-none stroke-muted-foreground/30 stroke-[length:var(--stroke-default)]" />
       {orbs.map((orb) => (
         <Orb
           key={orb.id}
@@ -7964,7 +8060,7 @@ export const RESIZABLE_HIT_TARGET_MIN_FINE_PX = 20;
 export const RESIZABLE_HIT_TARGET_MIN_COARSE_PX = 28;
 
 /** @emoji ↔️ Corner grab square at perpendicular split intersections. */
-export const RESIZABLE_CORNER_GRAB_PX = 24;
+export const RESIZABLE_CORNER_GRAB_PX = domSizePx("resizableCornerGrabUiSpacing");
 
 const RESIZABLE_HIT_TARGET_MINIMUM_SIZE = {
   fine: RESIZABLE_HIT_TARGET_MIN_FINE_PX,
@@ -8194,7 +8290,7 @@ const Scrollable = reactHostPort.forwardRef<HTMLDivElement, React.ComponentProps
         ref={ref}
         data-slot="scroll-area"
         className={cn(
-          "relative min-h-0 min-w-0 size-full focus-visible:ring-ring/50 transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:outline-1",
+          "relative min-h-0 min-w-0 size-full focus-visible:ring-ring/50 transition-[color,box-shadow] outline-none focus-visible:ring-[length:var(--stroke-focus)] focus-visible:outline-1",
           orientation === "horizontal" ? "overflow-x-auto overflow-y-hidden" : orientation === "vertical" ? "overflow-y-auto overflow-x-hidden" : "overflow-auto",
           className,
         )}
@@ -8330,6 +8426,8 @@ export interface NavbarItem {
   content: React.ReactNode;
   className?: string;
   key?: React.Key;
+  /** @emoji 🎯 When true, positions the item absolutely so it is centered relative to the full navbar width, independent of sibling item widths. */
+  centered?: boolean;
 }
 
 /**
@@ -8346,16 +8444,28 @@ export interface NavbarProps {
 function Navbar({ items, className }: NavbarProps) {
   const level = useLevel();
   const bgClass = getLevelBgClass(level);
+  const normalItems = items.filter((item) => !item.centered);
+  const centeredItems = items.filter((item) => item.centered);
   return (
-    <nav id="ui.navbar" data-slot="navbar" className={cn(borderNormalBottomClass, "h-large z-navbar", bgClass, className)}>
+    <nav id="ui.navbar" data-slot="navbar" className={cn(borderNormalBottomClass, "relative h-large z-navbar", bgClass, className)}>
       <UiChromeLabelPolicyProvider policy="always">
-        <div className="p-single flex gap-single items-center min-w-0">
-          {items.map((item, index) => (
+        <div className="p-single flex gap-single items-center min-w-0 h-full">
+          {normalItems.map((item, index) => (
             <div key={item.key ?? index} className={cn("h-medium flex items-center min-w-0", item.className)}>
               {item.content}
             </div>
           ))}
         </div>
+        {centeredItems.map((item, index) => (
+          <div
+            key={item.key ?? index}
+            className="pointer-events-none absolute inset-0 flex items-center justify-center"
+          >
+            <div className={cn("pointer-events-auto h-medium flex items-center", item.className)}>
+              {item.content}
+            </div>
+          </div>
+        ))}
       </UiChromeLabelPolicyProvider>
     </nav>
   );
@@ -8365,11 +8475,12 @@ export { Navbar };
 
 //#region 🩺SemioLogo
 /** @emoji 🎨 Semio SVG Logo component. */
-export function SemioLogo({ className }: { className?: string }) {
+export function SemioLogo({ className, style }: { className?: string, style?: React.CSSProperties }) {
   return (
     <svg
-      viewBox="0 0 200 200"
+      viewBox="-10 -10 220 220"
       className={className}
+      style={style}
       xmlns="http://www.w3.org/2000/svg"
     >
       <path
@@ -8520,7 +8631,7 @@ function TabsTrigger({ className, ...props }: React.ComponentProps<typeof TabsPr
     <TabsPrimitive.Trigger
       data-slot="tabs-trigger"
       className={cn(
-        "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring text-element inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-single border border-transparent p-single text-sm font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring text-element inline-flex h-[calc(100%-var(--stroke-hairline))] flex-1 items-center justify-center gap-single border border-transparent p-single text-sm font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[length:var(--stroke-focus)] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         activeHoverClass,
         hoverClass,
         className,
@@ -8752,7 +8863,7 @@ export function IconSelector({
         </SelectContent>
       </Select>
       <Textarea
-        className={cn("min-h-[72px] font-mono text-xs", (activeMode === "data" || activeMode === "vector") && "min-h-[88px]")}
+        className={cn("min-h-layout-preview font-mono text-xs", (activeMode === "data" || activeMode === "vector") && "min-h-layout-preview-md")}
         id={`${id}.field`}
         key={activeMode}
         mixed={!uniform}
@@ -8762,7 +8873,7 @@ export function IconSelector({
         rows={activeMode === "data" || activeMode === "vector" ? 5 : 4}
         value={editorValue}
       />
-      <div className="bg-muted/30 flex min-h-[56px] items-center justify-center overflow-hidden rounded-sm border px-1 py-2">{preview}</div>
+      <div className="bg-muted/30 flex min-h-peta items-center justify-center overflow-hidden rounded-sm border px-1 py-2">{preview}</div>
       <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
         <Button className="h-7 shrink-0 gap-1 px-2 text-xs" disabled={locked} onClick={() => fileInputRef.current?.click()} type="button" variant="outline" icon="folder-open" text="Import file…" />
         <Button className="h-7 shrink-0 px-2 text-xs whitespace-nowrap" disabled={locked} onClick={() => onChange("")} type="button" variant="ghost" icon="x" text="Clear" />
@@ -8893,29 +9004,34 @@ const TreeContext = reactHostPort.createContext<{ level: number; isLastAtLevel: 
 const TreeRowAlignmentContext = reactHostPort.createContext(false);
 // True when children are rendered inside the value column of a Label property row.
 const PropertyValueColumnContext = reactHostPort.createContext(false);
-const detailPanelIndentPx = (level: number, multiplier = 1): number => level * 10 * multiplier;
-const treeRowHeightPx = 24;
+const uiSpacingLen = (multiplier: number): string => `calc(${multiplier} * var(--ui-spacing))`;
+const detailPanelIndentLen = (level: number, multiplier = 1): string => uiSpacingLen(level * STYLING_DOM.treeIndentPerLevelUiSpacing * multiplier);
+const detailPanelIndentPx = (level: number, multiplier = 1): number => domSizePx("treeIndentPerLevelUiSpacing") * level * multiplier;
+const treeRowHeightPx = domSizePx("treeRowUiSpacing");
 const detailPanelHeaderLineCenterPx = treeRowHeightPx / 2;
-const treeRowShellClassName = "relative h-[24px] min-h-[24px] max-h-[24px] select-none overflow-hidden min-w-0";
+const treeRowShellClassName = "relative h-workbench min-h-workbench max-h-workbench select-none overflow-hidden min-w-0";
 const treeRowLayoutClassName = "grid min-w-0 h-full w-full";
 const treeRowContentClassName = "min-w-0 h-full flex items-center";
-const detailPanelPropertyLabelColumnWidthPx = 96;
-const detailPanelPropertyInlineGapPx = 8;
-const detailPanelPropertyStackedRowGapPx = 4;
-const detailPanelPropertyStackedToInlineHysteresisPx = 24;
-const detailPanelPropertyRowClassName = "group grid min-w-0 items-start gap-x-[8px] min-h-[24px]";
+const detailPanelPropertyLabelColumnWidthPx = domSizePx("propertyLabelColumnUiSpacing");
+const detailPanelPropertyInlineGapPx = domSizePx("propertyInlineGapUiSpacing");
+const detailPanelPropertyStackedRowGapPx = domSizePx("propertyStackedGapUiSpacing");
+const detailPanelPropertyStackedToInlineHysteresisPx = domSizePx("propertyStackedHysteresisUiSpacing");
+const detailPanelPropertyRowClassName = "group grid min-w-0 items-start gap-x-tiny min-h-workbench";
 const detailPanelPropertyControlClassName =
   "min-w-0 w-full self-start flex items-stretch justify-end [&_[data-detail-panel-control='fill']]:min-w-0 [&_[data-detail-panel-control='fill']]:w-full [&_[data-detail-panel-control='fit']]:ml-auto [&_[data-detail-panel-control='fit']]:max-w-full [&_[data-detail-panel-control='fit']]:shrink-0";
 const treeInspectorInnerRowClassName = "min-w-0 w-full";
-const treeHeaderRowClassName = "flex h-full min-w-0 w-full items-center gap-[6px]";
-const treeHeaderMainClassName = "flex h-full min-w-0 flex-1 items-center gap-[6px]";
+const treeHeaderRowClassName = "flex h-full min-w-0 w-full items-center gap-double";
+const treeHeaderMainClassName = "flex h-full min-w-0 flex-1 items-center gap-double";
 const treeHeaderActionsClassName = "flex flex-shrink-0 items-center gap-single";
-const indentationLinePx = (i: number, multiplier = 1): number => detailPanelIndentPx(i, multiplier) + 7;
+const indentationLineLen = (i: number, multiplier = 1): string =>
+  `calc(${detailPanelIndentLen(i, multiplier)} + ${uiSpacingLen(STYLING_DOM.treeIndentLineExtraUiSpacing)})`;
+const indentationLinePx = (i: number, multiplier = 1): number =>
+  detailPanelIndentPx(i, multiplier) + domSizePx("treeIndentLineExtraUiSpacing");
 /** @emoji 🌳 Ancestor guide indices for a branch at {@link level}: parent level always continues through expanded children; deeper ancestors stop after last siblings. */
 const treeBranchGuideIndices = (level: number, isLastAtLevel: readonly boolean[]): number[] =>
   Array.from({ length: level }, (_, index) => index).filter((index) => index === level - 1 || !isLastAtLevel[index]);
-const treeRowInlineGapPx = 6;
-const treeToggleSlotWidthPx = 14;
+const treeRowInlineGapPx = domSizePx("propertyInlineGapUiSpacing");
+const treeToggleSlotWidthPx = domSizePx("treeToggleUiSpacing");
 const treeRowVerticalPaddingPx = 0;
 const treeBranchRowGapPx = 0;
 const treeSectionContentPaddingTopPx = 0;
@@ -8926,10 +9042,10 @@ const treeGutterToContentGapPx = treeRowInlineGapPx;
 const treeItemLabelStyle: React.CSSProperties = {};
 const treeGuideLineStrokeClassName = "bg-muted-foreground/40 group-hover:bg-emphasized transition-[width,background-color] duration-150";
 const treeItemLabelSlotClassName = "flex h-full min-w-0 flex-1 items-center overflow-hidden text-xs font-normal leading-none select-text";
-const treeItemSecondaryTextClassName = "text-[10px] leading-none text-muted-foreground";
+const treeItemSecondaryTextClassName = "text-2xs leading-none text-muted-foreground";
 const treeSectionLabelSlotClassName = "flex h-full min-w-0 flex-1 items-center truncate text-xs font-semibold uppercase leading-none tracking-wide text-element transition-colors select-text";
-const treeSectionChevronClassName = "size-[14px] flex-shrink-0 text-element transition-colors";
-const treeRowDefaultIconClassName = "size-[12px] flex-shrink-0 text-element transition-colors";
+const treeSectionChevronClassName = "size-small flex-shrink-0 text-element transition-colors";
+const treeRowDefaultIconClassName = "size-tiny flex-shrink-0 text-element transition-colors";
 
 /** @emoji 🖼️ Renders a tree row glyph before the label; uses {@link DefaultIcon} when `icon` is omitted. */
 const renderTreeRowIcon = (icon: React.ReactNode | undefined, defaultIcon: IconName) => (
@@ -8937,21 +9053,30 @@ const renderTreeRowIcon = (icon: React.ReactNode | undefined, defaultIcon: IconN
     {icon ?? <Icon icon={defaultIcon} size={12} className={treeRowDefaultIconClassName} />}
   </span>
 );
+const treeGutterSlotLeftLen = (level: number, extraMultiplier = 0, multiplier = 1): string =>
+  extraMultiplier > 0
+    ? `calc(${detailPanelIndentLen(level, multiplier)} + ${uiSpacingLen(extraMultiplier)})`
+    : detailPanelIndentLen(level, multiplier);
 const treeGutterSlotLeftPx = (level: number, extraLeftPx = 0, multiplier = 1): number => detailPanelIndentPx(level, multiplier) + extraLeftPx;
-const treeGutterAnchorTop = (anchorOffsetPx?: number): string => (anchorOffsetPx === undefined ? "50%" : `${anchorOffsetPx}px`);
+const treeGutterAnchorTop = (anchorOffsetPx?: number): string => (anchorOffsetPx === undefined ? "50%" : "calc(var(--size-workbench) / 2)");
 const treeGutterSlotStyle = (level: number, extraLeftPx = 0, multiplier = 1, anchorOffsetPx?: number): React.CSSProperties => ({
   top: treeGutterAnchorTop(anchorOffsetPx),
-  left: `${treeGutterSlotLeftPx(level, extraLeftPx, multiplier)}px`,
+  left:
+    extraLeftPx > 0
+      ? `calc(${detailPanelIndentLen(level, multiplier)} + ${uiSpacingLen(extraLeftPx / (STYLING_COMPACT_ROOT_PX * 0.2))})`
+      : detailPanelIndentLen(level, multiplier),
 });
+const treeGutterWidthLen = (level: number, multiplier = 1): string =>
+  `calc(${detailPanelIndentLen(level, multiplier)} + ${uiSpacingLen(STYLING_DOM.treeToggleUiSpacing)})`;
 const treeGutterWidthPx = (level: number, multiplier = 1): number => detailPanelIndentPx(level, multiplier) + treeToggleSlotWidthPx;
 const treeBranchContentStyle = (topPaddingPx = 0): React.CSSProperties => ({
-  rowGap: `${treeBranchRowGapPx}px`,
-  ...(topPaddingPx > 0 ? { paddingTop: `${topPaddingPx}px` } : {}),
+  rowGap: treeBranchRowGapPx > 0 ? uiSpacingLen(treeBranchRowGapPx / (STYLING_COMPACT_ROOT_PX * 0.2)) : "0",
+  ...(topPaddingPx > 0 ? { paddingTop: uiSpacingLen(topPaddingPx / (STYLING_COMPACT_ROOT_PX * 0.2)) } : {}),
 });
 const getTreeSiblingGapPx = (_previousKind: string, _currentKind: string): number => treeCompactSiblingGapPx;
 const treeAlignedRowStyle = (level: number, multiplier = 1): React.CSSProperties => ({
-  gridTemplateColumns: `${treeGutterWidthPx(level, multiplier)}px minmax(0, 1fr)`,
-  columnGap: `${treeGutterToContentGapPx}px`,
+  gridTemplateColumns: `${treeGutterWidthLen(level, multiplier)} minmax(0, 1fr)`,
+  columnGap: sizeVar("spacingDouble"),
 });
 
 /** IndentationLines holds the data fields for a IndentationLines record.
@@ -8966,7 +9091,7 @@ const IndentationLines: React.FC<{ level: number; showLines: boolean }> = ({ lev
   return (
     <div data-slot="tree-guide" className="absolute left-0 top-0 bottom-0 pointer-events-none">
       {guideIndices.map((guideIndex) => (
-        <div key={guideIndex} className="absolute top-0 bottom-0" style={{ left: `${indentationLinePx(guideIndex, indentMultiplier) - 0.5}px` }}>
+        <div key={guideIndex} className="absolute top-0 bottom-0" style={{ left: `calc(${indentationLineLen(guideIndex, indentMultiplier)} - var(--stroke-hairline) / 2)` }}>
           <div data-tree-guide-line="" className={cn("w-px h-full", treeGuideLineStrokeClassName)} />
         </div>
       ))}
@@ -9000,19 +9125,19 @@ const TreeHierarchyGutter: React.FC<TreeHierarchyGutterProps> = ({ level, showLi
   ) : null;
 
   return (
-    <div data-slot="tree-gutter" className="relative min-h-full" style={{ width: `${gutterWidthPx}px`, minWidth: `${gutterWidthPx}px` }}>
+    <div data-slot="tree-gutter" className="relative min-h-full" style={{ width: treeGutterWidthLen(level, indentMultiplier), minWidth: treeGutterWidthLen(level, indentMultiplier) }}>
       {showLines && level > 0 && connectCurrentLevel && (
         <div
           data-slot="tree-branch-elbow"
           className={cn("pointer-events-none absolute h-px -translate-y-1/2", treeGuideLineStrokeClassName)}
-          style={{ top: treeGutterAnchorTop(anchorOffsetPx), left: `${parentGuidePx}px`, width: `${elbowWidthPx}px` }}
+          style={{ top: treeGutterAnchorTop(anchorOffsetPx), left: indentationLineLen(level - 1, indentMultiplier), width: `calc(${uiSpacingLen(elbowWidthPx / (STYLING_COMPACT_ROOT_PX * 0.2))})` }}
         />
       )}
       {showLines && level > 0 && extendCurrentLevelToBottom && (
         <div
           data-slot="tree-branch-stem"
           className={cn("pointer-events-none absolute w-px", treeGuideLineStrokeClassName)}
-          style={{ top: treeGutterAnchorTop(anchorOffsetPx), left: `${currentGuidePx - 0.5}px`, bottom: "0px" }}
+          style={{ top: treeGutterAnchorTop(anchorOffsetPx), left: `calc(${indentationLineLen(level, indentMultiplier)} - var(--stroke-hairline) / 2)`, bottom: 0 }}
         />
       )}
       {positionedSlot}
@@ -9199,7 +9324,7 @@ const renderTreeHeaderActions = (actions: TreeHeaderAction[]) => (
         <label
           key={action.id ?? index}
           data-slot="tree-action-checkbox-wrapper"
-          className="inline-flex h-[22px] min-w-[14px] flex-shrink-0 cursor-pointer items-center justify-center"
+          className="inline-flex h-medium min-w-tiny flex-shrink-0 cursor-pointer items-center justify-center"
           title={action.title}
           onClick={(event) => {
             event.preventDefault();
@@ -9210,7 +9335,7 @@ const renderTreeHeaderActions = (actions: TreeHeaderAction[]) => (
             data-slot="tree-action-checkbox"
             id={action.id}
             type="checkbox"
-            className="m-0 size-[12px] cursor-pointer accent-foreground"
+            className="m-0 size-tiny cursor-pointer accent-foreground"
             aria-label={action.ariaLabel ?? action.title ?? action.id ?? "Toggle tree item"}
             checked={action.checked}
             disabled={action.disabled}
@@ -9246,7 +9371,7 @@ const TreeDragHandle: React.FC<{
   <button
     type="button"
     data-slot="tree-drag-handle"
-    className="text-muted-foreground inline-flex h-[22px] min-w-[14px] flex-shrink-0 cursor-grab items-center justify-center border-0 bg-transparent p-0 outline-none active:cursor-grabbing"
+    className="text-muted-foreground inline-flex h-medium min-w-tiny flex-shrink-0 cursor-grab items-center justify-center border-0 bg-transparent p-0 outline-none active:cursor-grabbing"
     onClick={onClick}
     {...(attributes as React.ComponentProps<"button">)}
     {...(listeners as React.ComponentProps<"button">)}
@@ -10019,7 +10144,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
                     setOpen(!open);
                   }}
                 >
-                  {open ? <ChevronDownIcon className="size-[14px] flex-shrink-0" /> : <ChevronRightIcon className="size-[14px] flex-shrink-0" />}
+                  {open ? <ChevronDownIcon className="size-small flex-shrink-0" /> : <ChevronRightIcon className="size-small flex-shrink-0" />}
                 </button>
               }
               contentClassName="min-w-0"
@@ -10092,7 +10217,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
                   setOpen(!open);
                 }}
               >
-                {open ? <ChevronDownIcon className="size-[14px] flex-shrink-0" /> : <ChevronRightIcon className="size-[14px] flex-shrink-0" />}
+                {open ? <ChevronDownIcon className="size-small flex-shrink-0" /> : <ChevronRightIcon className="size-small flex-shrink-0" />}
               </button>
             }
             contentClassName="min-w-0"
@@ -10388,7 +10513,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
                   setOpen(!open);
                 }}
               >
-                {loading ? <Spinner size="small" className="text-muted-foreground" /> : open ? <ChevronDownIcon className="size-[14px] flex-shrink-0" /> : <ChevronRightIcon className="size-[14px] flex-shrink-0" />}
+                {loading ? <Spinner size="small" className="text-muted-foreground" /> : open ? <ChevronDownIcon className="size-small flex-shrink-0" /> : <ChevronRightIcon className="size-small flex-shrink-0" />}
               </button>
             ) : undefined
           }
@@ -10480,7 +10605,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
                   setOpen(!open);
                 }}
               >
-                {loading ? <Spinner size="small" className="text-muted-foreground" /> : open ? <ChevronDownIcon className="size-[14px] flex-shrink-0" /> : <ChevronRightIcon className="size-[14px] flex-shrink-0" />}
+                {loading ? <Spinner size="small" className="text-muted-foreground" /> : open ? <ChevronDownIcon className="size-small flex-shrink-0" /> : <ChevronRightIcon className="size-small flex-shrink-0" />}
               </button>
             }
             contentClassName="min-w-0"
@@ -10505,7 +10630,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
               </div>
               {actions.length > 0 ? renderTreeHeaderActions(actions) : null}
               {branchCount > 0 && (
-                <div data-slot="tree-branch-nav" className="flex items-center gap-[2px] flex-shrink-0">
+                <div data-slot="tree-branch-nav" className="flex items-center gap-single flex-shrink-0">
                   <button
                     data-slot="tree-branch-prev"
                     className="p-0 border-0 bg-transparent cursor-selectable hover:bg-hover-interactive-fill disabled:opacity-30 disabled:cursor-default"
@@ -10516,9 +10641,9 @@ export const TreeItem: React.FC<TreeItemProps> = ({
                       onBranchChange?.(activeBranchIndex - 1);
                     }}
                   >
-                    <ChevronLeftIcon className="size-[12px] text-muted-foreground" />
+                    <ChevronLeftIcon className="size-tiny text-muted-foreground" />
                   </button>
-                  <span data-slot="tree-branch-indicator" className="text-[10px] text-muted-foreground tabular-nums select-none">
+                  <span data-slot="tree-branch-indicator" className="text-2xs text-muted-foreground tabular-nums select-none">
                     {activeBranchIndex + 1}/{branchCount}
                   </span>
                   <button
@@ -10531,7 +10656,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
                       onBranchChange?.(activeBranchIndex + 1);
                     }}
                   >
-                    <ChevronRightIcon className="size-[12px] text-muted-foreground" />
+                    <ChevronRightIcon className="size-tiny text-muted-foreground" />
                   </button>
                 </div>
               )}
@@ -10592,7 +10717,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
           </div>
           {actions.length > 0 ? renderTreeHeaderActions(actions) : null}
           {branchCount > 0 && (
-            <div data-slot="tree-branch-nav" className="flex items-center gap-[2px] flex-shrink-0">
+            <div data-slot="tree-branch-nav" className="flex items-center gap-single flex-shrink-0">
               <button
                 data-slot="tree-branch-prev"
                 className="p-0 border-0 bg-transparent cursor-selectable disabled:opacity-30 disabled:cursor-default"
@@ -10603,9 +10728,9 @@ export const TreeItem: React.FC<TreeItemProps> = ({
                   onBranchChange?.(activeBranchIndex - 1);
                 }}
               >
-                <ChevronLeftIcon className="size-[12px] text-muted-foreground" />
+                <ChevronLeftIcon className="size-tiny text-muted-foreground" />
               </button>
-              <span data-slot="tree-branch-indicator" className="text-[10px] text-muted-foreground tabular-nums select-none">
+              <span data-slot="tree-branch-indicator" className="text-2xs text-muted-foreground tabular-nums select-none">
                 {activeBranchIndex + 1}/{branchCount}
               </span>
               <button
@@ -10618,7 +10743,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
                   onBranchChange?.(activeBranchIndex + 1);
                 }}
               >
-                <ChevronRightIcon className="size-[12px] text-muted-foreground" />
+                <ChevronRightIcon className="size-tiny text-muted-foreground" />
               </button>
             </div>
           )}
@@ -10708,7 +10833,7 @@ export const TreeRow: React.FC<{
 export const HelperRow: React.FC<{ children: React.ReactNode; className?: string; propertyAligned?: boolean }> = ({ children, className, propertyAligned = false }) => {
   const { level, isLastAtLevel, showLines, isTree, indentMultiplier } = reactHostPort.useContext(TreeContext);
   const helperContent = (
-    <div data-slot="helper-row" data-detail-panel-control="fill" className={cn("text-xs text-muted-foreground leading-tight py-[2px]", className)}>
+    <div data-slot="helper-row" data-detail-panel-control="fill" className={cn("text-xs text-muted-foreground leading-tight py-single", className)}>
       {children}
     </div>
   );
@@ -10719,8 +10844,8 @@ export const HelperRow: React.FC<{ children: React.ReactNode; className?: string
         <div
           data-dim
           data-slot="property-row"
-          style={{ marginLeft: `${-treePropertyRowOffsetPx}px`, width: treePropertyRowOffsetPx > 0 ? `calc(100% + ${treePropertyRowOffsetPx}px)` : "100%" }}
-          className={cn(detailPanelPropertyRowClassName, "grid-cols-[96px_minmax(0,1fr)]")}
+          style={{ marginLeft: `calc(-1 * ${detailPanelIndentLen(level, indentMultiplier)})`, width: level > 0 ? `calc(100% + ${detailPanelIndentLen(level, indentMultiplier)})` : "100%" }}
+          className={cn(detailPanelPropertyRowClassName, "grid-cols-[var(--layout-label)_minmax(0,1fr)]")}
         >
           <div />
           <div data-slot="property-control" className={detailPanelPropertyControlClassName}>
@@ -11299,7 +11424,7 @@ export const Tree = (({
         const ghost = document.createElement("div");
         ghost.textContent = labelText;
         ghost.setAttribute("data-puzzle3d-fixture-drag-ghost", "true");
-        ghost.className = "border-primary bg-panel text-foreground pointer-events-none fixed left-[-9999px] top-0 z-[9999] rounded-md border px-2 py-1 text-xs shadow-md";
+        ghost.className = "border-primary bg-panel text-foreground pointer-events-none fixed left-offscreen top-0 z-tutorial rounded-md border px-2 py-1 text-xs shadow-md";
         document.body.appendChild(ghost);
         event.dataTransfer.setDragImage(ghost, ghost.offsetWidth / 2, ghost.offsetHeight / 2);
         requestAnimationFrame(() => ghost.remove());
@@ -11578,12 +11703,12 @@ export const BasicChatPanel: React.FC<BasicChatPanelProps> = ({ id, title }) => 
   return (
     <div data-testid="basic-chat-panel" className="flex h-full min-h-0 flex-col gap-single">
       <HelperRow>{`Local chat for ${title}. Use Enter to send and Shift+Enter for a new line.`}</HelperRow>
-      <div data-testid="basic-chat-feed" className={cn("min-h-0 flex-1 overflow-y-auto rounded-[3px] border", borderClass)}>
+      <div data-testid="basic-chat-feed" className={cn("min-h-0 flex-1 overflow-y-auto rounded-sm border", borderClass)}>
         <div className="flex min-w-0 flex-col p-single">
           {messages.map((message) => (
             <TreeRow key={message.id}>
-              <div data-testid="basic-chat-message" data-chat-role={message.role} className="flex min-w-0 flex-col gap-[2px]">
-                <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{message.role}</span>
+              <div data-testid="basic-chat-message" data-chat-role={message.role} className="flex min-w-0 flex-col gap-single">
+                <span className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">{message.role}</span>
                 <p className="text-xs text-foreground whitespace-pre-wrap break-words">{message.body}</p>
               </div>
             </TreeRow>
@@ -11879,14 +12004,14 @@ interface ControlTreeFolderProps {
   renderControl: (def: ControlDef) => React.ReactNode;
   classNames?: ControlTreeClassNames;
 }
-const controlTreeValueColumnWidthPx = 160;
+const controlTreeValueColumnWidthPx = domSizePx("controlValueColumnUiSpacing");
 interface ControlTreeRowProps {
   className?: string;
   left: React.ReactNode;
   right?: React.ReactNode;
 }
 const ControlTreeRow: React.FC<ControlTreeRowProps> = ({ className, left, right }) => (
-  <div data-dim data-slot="control-tree-row" className={cn("grid min-w-0 w-full items-center gap-x-[8px] min-h-[20px]", className)} style={{ gridTemplateColumns: `minmax(0, 1fr) ${controlTreeValueColumnWidthPx}px` }}>
+  <div data-dim data-slot="control-tree-row" className={cn("grid min-w-0 w-full items-center gap-x-tiny min-h-small", className)} style={{ gridTemplateColumns: `minmax(0, 1fr) ${uiSpacingLen(STYLING_DOM.controlValueColumnUiSpacing)}` }}>
     <div data-slot="control-tree-row-left" className="relative min-w-0">
       {left}
     </div>
@@ -11931,11 +12056,11 @@ const ControlTreeFolderRow: React.FC<ControlTreeFolderRowProps> = ({ node, class
                     onToggleFolder?.(node.path, !nextOpen);
                   }}
                 >
-                  {open ? <ChevronDownIcon className={cn("size-[14px] flex-shrink-0", classNames?.folderChevron)} /> : <ChevronRightIcon className={cn("size-[14px] flex-shrink-0", classNames?.folderChevron)} />}
+                  {open ? <ChevronDownIcon className={cn("size-small flex-shrink-0", classNames?.folderChevron)} /> : <ChevronRightIcon className={cn("size-small flex-shrink-0", classNames?.folderChevron)} />}
                 </button>
               ) : undefined
             }
-            contentClassName="flex min-w-0 items-center gap-[6px]"
+            contentClassName="flex min-w-0 items-center gap-double"
           >
             <span data-slot="control-tree-folder-label" className={cn("text-xs font-semibold uppercase tracking-wide truncate text-element group-hover:text-emphasized transition-colors", classNames?.folderTitle)} style={treeItemLabelStyle}>
               {node.key}
@@ -11964,7 +12089,7 @@ const ControlTreeLeafRow: React.FC<ControlTreeLeafRowProps> = ({ node, renderCon
     <ControlTreeRow
       className={cn("hover:bg-hover-interactive-fill select-none overflow-hidden group", classNames?.controlRow)}
       left={
-        <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} slotOffsetPx={2} contentClassName="flex min-w-0 items-center gap-[6px]">
+        <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} slotOffsetPx={2} contentClassName="flex min-w-0 items-center gap-double">
           <span data-slot="control-tree-control-label" className={cn("text-xs font-normal truncate text-element group-hover:text-emphasized", classNames?.controlLabel)} style={treeItemLabelStyle}>
             {node.key}
           </span>
@@ -12036,9 +12161,9 @@ export const ControlTree: React.FC<ControlTreeProps> = ({ controls, filterText =
 
 // #region 🌳WindowMeasuresTree
 
-const windowMeasureTreeValueColumnWidthPx = 104;
+const windowMeasureTreeValueColumnWidthPx = domSizePx("windowMeasureValueColumnUiSpacing");
 const windowMeasureTreeChromeClass = "text-tiny [&_[data-slot=select-trigger]]:h-small";
-const windowMeasureTreeRowClassName = "group hover:bg-hover-interactive-fill select-none min-h-[18px] w-full min-w-0";
+const windowMeasureTreeRowClassName = "group hover:bg-hover-interactive-fill select-none min-h-tiny w-full min-w-0";
 
 interface WindowMeasureTreeRowProps {
   left: React.ReactNode;
@@ -12049,8 +12174,8 @@ const WindowMeasureTreeRow: React.FC<WindowMeasureTreeRowProps> = ({ left, right
   <div
     data-dim
     data-slot="window-measure-tree-row"
-    className={cn("grid min-w-0 w-full items-center gap-x-[6px]", windowMeasureTreeRowClassName)}
-    style={{ gridTemplateColumns: right === undefined ? "minmax(0, 1fr)" : `minmax(0, 1fr) ${windowMeasureTreeValueColumnWidthPx}px` }}
+    className={cn("grid min-w-0 w-full items-center gap-double", windowMeasureTreeRowClassName)}
+    style={{ gridTemplateColumns: right === undefined ? "minmax(0, 1fr)" : `minmax(0, 1fr) ${uiSpacingLen(STYLING_DOM.windowMeasureValueColumnUiSpacing)}` }}
   >
     <div data-slot="window-measure-tree-row-left" className="relative min-w-0">
       {left}
@@ -12113,11 +12238,11 @@ export const WindowMeasureTreeGroup: React.FC<WindowMeasureTreeGroupProps> = ({ 
                     setOpen(!open);
                   }}
                 >
-                  {open ? <ChevronDownIcon className="size-[10px] flex-shrink-0 text-muted-foreground" /> : <ChevronRightIcon className="size-[10px] flex-shrink-0 text-muted-foreground" />}
+                  {open ? <ChevronDownIcon className="size-tiny flex-shrink-0 text-muted-foreground" /> : <ChevronRightIcon className="size-tiny flex-shrink-0 text-muted-foreground" />}
                 </button>
               ) : undefined
             }
-            contentClassName="flex min-w-0 items-center gap-[6px]"
+            contentClassName="flex min-w-0 items-center gap-double"
           >
             <span data-slot="tree-label" className={cn("flex-1 truncate select-none", windowMeasureTreeGroupLabelClass)} style={treeItemLabelStyle}>
               {label}
@@ -12164,7 +12289,7 @@ export const WindowMeasureTreeLeaf: React.FC<WindowMeasureTreeLeafProps> = ({ la
   return (
     <WindowMeasureTreeRow
       left={
-        <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} slotOffsetPx={2} contentClassName="flex min-w-0 items-center gap-[6px]">
+        <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} slotOffsetPx={2} contentClassName="flex min-w-0 items-center gap-double">
           {labelNode}
         </TreeAlignedRow>
       }
@@ -12435,7 +12560,7 @@ function BreadcrumbSeparatorItem({ hasOptions, isOpen, onOpenChange, id, options
   };
 
   const separatorControlClassName = cn(
-    "text-element inline-flex h-full aspect-square items-center justify-center shrink-0 p-single cursor-selectable overflow-hidden outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive rounded-none [&_svg]:pointer-events-none [&_svg]:size-tiny [&_svg]:shrink-0",
+    "text-element inline-flex h-full aspect-square items-center justify-center shrink-0 p-single cursor-selectable overflow-hidden outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[length:var(--stroke-focus)] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive rounded-none [&_svg]:pointer-events-none [&_svg]:size-tiny [&_svg]:shrink-0",
     interactiveControlTransitionClass,
     hoverClass,
   );
@@ -14484,16 +14609,9 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
                 ref={engagementZoneRef}
                 data-slot="window-engagement-hover-zone"
                 style={engagementZoneSizeStyle}
-                className={cn(
-                  "pointer-events-auto flex w-full min-w-0 select-none flex-col items-stretch",
-                  !showEngagementChrome && "h-large min-w-[6rem]",
-                )}
+                className="pointer-events-auto flex w-full min-w-0 select-none flex-row items-stretch"
                 onPointerEnter={() => setEngagementZoneHovered(true)}
                 onPointerLeave={(event) => dismissEngagementIfEmpty(event.relatedTarget)}
-                onPointerDownCapture={() => {
-                  setEngagementActivated(true);
-                  if (engagement?.input) queueMicrotask(() => focusActiveEngagementInput());
-                }}
                 onFocusCapture={() => {
                   setEngagementActivated(true);
                   setEngagementZoneFocused(true);
@@ -14503,7 +14621,37 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
                   dismissEngagementIfEmpty(event.relatedTarget);
                 }}
               >
-                {showEngagementChrome ? <Engagement {...engagement} active={engagementCommandActive} /> : null}
+                <ActionGroupItem
+                  id={`${id}-window-engagement-toggle`}
+                  icon={showEngagementChrome ? "chevron-left" : "chevron-right"}
+                  text="Command"
+                  className={cn(
+                    "flex h-medium w-auto shrink-0 items-center justify-center border-0 bg-transparent text-element px-single gap-single",
+                    interactiveHoverClass,
+                  )}
+                  onClick={() => {
+                    if (showEngagementChrome) {
+                      setEngagementActivated(false);
+                      setEngagementZoneHovered(false);
+                      setEngagementZoneFocused(false);
+                    } else {
+                      setEngagementActivated(true);
+                      if (engagement?.input) queueMicrotask(() => focusActiveEngagementInput());
+                    }
+                  }}
+                />
+                {showEngagementChrome ? (
+                  <div
+                    data-slot="window-engagement-chrome"
+                    className="min-w-0 flex-1"
+                    onPointerDownCapture={() => {
+                      setEngagementActivated(true);
+                      if (engagement?.input) queueMicrotask(() => focusActiveEngagementInput());
+                    }}
+                  >
+                    <Engagement {...engagement} active={engagementCommandActive} />
+                  </div>
+                ) : null}
               </div>
             </div>
           ) : null}
@@ -19196,7 +19344,7 @@ function resolveModeTabInsertPreview(drag: ModeDragState | null, zone: ModeDropZ
 }
 
 const modeDockTabInsertPreviewClass =
-  "mx-half my-half flex h-[calc(100%-4px)] min-w-[5.5rem] max-w-[12rem] shrink-0 items-center rounded-sm border-2 border-accent bg-accent/20 px-single text-xs text-foreground/80 select-none";
+  "mx-half my-half flex h-[calc(100%-var(--spacing-single))] min-w-[5.5rem] max-w-[12rem] shrink-0 items-center rounded-sm border-2 border-accent bg-accent/20 px-single text-xs text-foreground/80 select-none";
 
 //#endregion 🧭ModeDockDrag
 
@@ -20642,7 +20790,7 @@ if (import.meta.vitest) {
 
     it("Mode lays out all windows and marks the active one", () => {
       const { container } = render(
-        <div className="h-[400px] w-[600px]">
+        <div className="h-layout-story w-layout-story-md">
           <Mode
             windows={[
               { id: "left", title: "Left", children: <div>Left Pane</div> },
@@ -20713,7 +20861,7 @@ if (import.meta.vitest) {
 
     it("Mode clears multi-tab active chrome on inactive stacks", () => {
       const { container } = render(
-        <div className="h-[400px] w-[800px]">
+        <div className="h-layout-story w-layout-story-lg">
           <Mode
             windows={[
               { id: "a1", title: "A1", children: <div>A1 Body</div> },
@@ -20765,7 +20913,7 @@ if (import.meta.vitest) {
 
     it("Mode keeps one canvas inset and one gutter between adjacent stacks", () => {
       const { container } = render(
-        <div className="h-[400px] w-[600px]">
+        <div className="h-layout-story w-layout-story-md">
           <Mode
             windows={[
               { id: "left", title: "Left", children: <div>Left Pane</div> },
@@ -20802,7 +20950,7 @@ if (import.meta.vitest) {
 
     it("Mode uses the same gutter for vertical splits as canvas inset", () => {
       const { container } = render(
-        <div className="h-[400px] w-[600px]">
+        <div className="h-layout-story w-layout-story-md">
           <Mode
             windows={[
               { id: "top", title: "Top", children: <div>Top Pane</div> },
@@ -20833,7 +20981,7 @@ if (import.meta.vitest) {
 
     it("Mode renders corner grabs at perpendicular split intersections", () => {
       const { container } = render(
-        <div className="h-[400px] w-[600px]">
+        <div className="h-layout-story w-layout-story-md">
           <Mode
             windows={[
               { id: "lt", title: "Left Top", children: <div>Left Top</div> },
@@ -20872,7 +21020,7 @@ if (import.meta.vitest) {
 
     it("Mode tab stack shows only the active window body", () => {
       const { container } = render(
-        <div className="h-[400px] w-[600px]">
+        <div className="h-layout-story w-layout-story-md">
           <Mode
             windows={[
               { id: "a", title: "Alpha", children: <div>Alpha Body</div> },
@@ -20921,7 +21069,7 @@ if (import.meta.vitest) {
 
     it("Mode tab stack places body under active tab and gap only", () => {
       const { container } = render(
-        <div className="h-[400px] w-[600px]">
+        <div className="h-layout-story w-layout-story-md">
           <Mode
             windows={[
               { id: "shape", title: "Shape", children: <div>Shape Body</div> },
@@ -20974,7 +21122,7 @@ if (import.meta.vitest) {
 
     it("Mode close removes a tab and collapses an emptied stack", () => {
       const { container } = render(
-        <div className="h-[400px] w-[600px]">
+        <div className="h-layout-story w-layout-story-md">
           <Mode
             windows={[
               { id: "solo", title: "Solo", children: <div>Solo Body</div> },
@@ -21348,7 +21496,7 @@ if (import.meta.vitest) {
 
     it("Mode maximize shows only one stack", () => {
       const { container } = render(
-        <div className="h-[400px] w-[600px]">
+        <div className="h-layout-story w-layout-story-md">
           <Mode
             windows={[
               { id: "a", title: "A", children: <div>A Body</div> },
@@ -21667,7 +21815,7 @@ if (import.meta.vitest) {
       const Harness = () => {
         const [value, setValue] = reactHostPort.useState("");
         return (
-          <div className="h-[240px] w-[360px]">
+          <div className="h-layout-preview-md w-layout-cad-menu-lg">
             <Mode
               activeWindowId="engagement-window"
               windows={[
@@ -21834,7 +21982,7 @@ if (import.meta.vitest) {
     it("Mode Escape aborts active window engagement", async () => {
       const aborted: string[] = [];
       const Harness = () => (
-        <div className="h-[240px] w-[360px]">
+        <div className="h-layout-preview-md w-layout-cad-menu-lg">
           <Mode
             activeWindowId="engagement-window"
             windows={[
@@ -21859,7 +22007,7 @@ if (import.meta.vitest) {
       expect(aborted).toEqual(["abort"]);
     });
 
-    it("Window reveals engagement on hover but activates only on click or typing", async () => {
+    it("Window reveals engagement on button click and activates on click", async () => {
       const Harness = () => {
         const [value, setValue] = reactHostPort.useState("");
         return (
@@ -21869,26 +22017,17 @@ if (import.meta.vitest) {
         );
       };
       const { container } = render(<Harness />);
-      const zone = container.querySelector('[data-slot="window-engagement-hover-zone"]')!;
+      const toggleBtn = container.querySelector('[id="engagement-window-window-engagement-toggle"]') as HTMLElement;
+      expect(toggleBtn).toBeTruthy();
       expect(screen.queryByPlaceholderText("Command")).toBeNull();
-      fireEvent.pointerEnter(zone);
+      fireEvent.click(toggleBtn);
       await waitFor(() => expect(screen.getByPlaceholderText("Command")).toBeTruthy());
-      const field = screen.getByPlaceholderText("Command") as HTMLInputElement;
-      expect(field.tabIndex).toBe(-1);
-      expect(document.querySelector('[data-slot="engagement"]')?.getAttribute("data-active")).toBeNull();
-      fireEvent.pointerLeave(zone, { relatedTarget: document.body });
-      await waitFor(() => expect(screen.queryByPlaceholderText("Command")).toBeNull());
-      fireEvent.pointerEnter(zone);
-      await waitFor(() => expect(screen.getByPlaceholderText("Command")).toBeTruthy());
-      fireEvent.pointerDown(zone, { bubbles: true });
       const activeField = await waitFor(() => {
         const next = screen.getByPlaceholderText("Command") as HTMLInputElement;
         expect(document.activeElement).toBe(next);
         return next;
       });
       expect(activeField.tabIndex).toBe(0);
-      fireEvent.pointerLeave(zone, { relatedTarget: document.body });
-      expect(screen.getByPlaceholderText("Command")).toBeTruthy();
       expect(document.querySelector('[data-slot="engagement"]')?.getAttribute("data-active")).toBe("true");
       fireEvent.change(activeField, { target: { value: "b" } });
       await waitFor(() => {
@@ -21950,17 +22089,17 @@ if (import.meta.vitest) {
       );
       const overlay = container.querySelector('[data-slot="window-engagement-overlay"]');
       const zone = container.querySelector('[data-slot="window-engagement-hover-zone"]');
+      const toggleBtn = container.querySelector('[id="engagement-window-window-engagement-toggle"]') as HTMLElement;
       expect(overlay).toBeTruthy();
       expect(overlay?.className).toContain("pointer-events-none");
       expect(overlay?.className).toContain("inset-x-0");
-      expect(zone?.className).toContain("h-large");
+      expect(zone?.className).toContain("flex-row");
       expect(zone?.className).toContain("pointer-events-auto");
+      expect(toggleBtn).toBeTruthy();
+      expect(toggleBtn?.textContent?.trim()).toBe("Command");
       expect(overlay?.getAttribute("data-expanded")).toBeNull();
       expect(screen.queryByText("Idle")).toBeNull();
-      fireEvent.pointerEnter(zone!);
-      expect(overlay?.getAttribute("data-expanded")).toBe("true");
-      expect(screen.getByText("Idle")).toBeTruthy();
-      fireEvent.pointerDown(zone!, { bubbles: true });
+      fireEvent.click(toggleBtn!);
       expect(overlay?.getAttribute("data-expanded")).toBe("true");
       expect(screen.getByText("Idle")).toBeTruthy();
     });
@@ -21973,10 +22112,11 @@ if (import.meta.vitest) {
       );
       const overlay = container.querySelector('[data-slot="window-engagement-overlay"]');
       const zone = container.querySelector('[data-slot="window-engagement-hover-zone"]') as HTMLElement;
+      const toggleBtn = container.querySelector('[id="engagement-window-window-engagement-toggle"]') as HTMLElement;
       expect(overlay?.className).toContain("inset-x-0");
       expect(zone.className).toContain("w-full");
       expect(zone.style.width).toBe("min(28rem, 100%)");
-      fireEvent.pointerEnter(zone);
+      fireEvent.click(toggleBtn);
       const row = container.querySelector('[data-slot="engagement-command-row"]');
       const inputRoot = container.querySelector('[data-slot="engagement-command-input"] [data-slot="input-root"]');
       expect(row?.className).toContain("w-full");
@@ -22087,6 +22227,7 @@ if (import.meta.vitest) {
       );
       const zone = container.querySelector('[data-slot="window-engagement-hover-zone"]') as HTMLElement;
       fireEvent.pointerEnter(zone);
+      fireEvent.click(container.querySelector("#measures-engagement-window-window-measures-unfold")!);
       expect(screen.getByPlaceholderText("Command")).toBeTruthy();
       fireEvent.click(container.querySelector(`#measures-engagement-window-window-measures-span`)!);
       expect(container.querySelector('[data-slot="window-measures-overlay"]')?.getAttribute("data-expanded")).toBe("true");
@@ -22112,6 +22253,7 @@ if (import.meta.vitest) {
           <div>Body</div>
         </Window>,
       );
+      fireEvent.click(container.querySelector("#measures-window-window-measures-unfold")!);
       const overlay = container.querySelector('[data-slot="window-measures-overlay"]') as HTMLElement;
       expect(overlay.style.width).toBe(`${windowMeasuresDefaultWidthPx}px`);
       expect(overlay.className).toContain("top-0");
@@ -22129,6 +22271,7 @@ if (import.meta.vitest) {
           <div>Body</div>
         </Window>,
       );
+      fireEvent.click(container.querySelector("#measures-fold-window-window-measures-unfold")!);
       const overlay = container.querySelector('[data-slot="window-measures-overlay"]') as HTMLElement;
       const span = container.querySelector(`#measures-fold-window-window-measures-span`) as HTMLElement;
       const fold = container.querySelector(`#measures-fold-window-window-measures-fold`) as HTMLElement;
@@ -22153,6 +22296,7 @@ if (import.meta.vitest) {
           <div>Body</div>
         </Window>,
       );
+      fireEvent.click(container.querySelector("#measures-span-window-window-measures-unfold")!);
       const overlay = container.querySelector('[data-slot="window-measures-overlay"]') as HTMLElement;
       expect(overlay.getAttribute("data-expanded")).toBeNull();
       expect(container.querySelector('[data-slot="window-measures-resize-left"]')).toBeTruthy();
@@ -22172,6 +22316,7 @@ if (import.meta.vitest) {
           <div>Body</div>
         </Window>,
       );
+      fireEvent.click(container.querySelector("#measures-fold-expanded-window-window-measures-unfold")!);
       const overlay = container.querySelector('[data-slot="window-measures-overlay"]') as HTMLElement;
       fireEvent.click(container.querySelector(`#measures-fold-expanded-window-window-measures-span`)!);
       expect(overlay.getAttribute("data-expanded")).toBe("true");
@@ -22188,6 +22333,7 @@ if (import.meta.vitest) {
           <div className="h-64 w-96">Body</div>
         </Window>,
       );
+      fireEvent.click(container.querySelector("#measures-resize-window-window-measures-unfold")!);
       const overlay = container.querySelector('[data-slot="window-measures-overlay"]') as HTMLElement;
       const stack = container.querySelector('[data-slot="window-measures-stack"]') as HTMLElement;
       const leftHandle = container.querySelector('[data-slot="window-measures-resize-left"]') as HTMLElement;
@@ -22216,6 +22362,7 @@ if (import.meta.vitest) {
           <div className="h-32 w-96">Body</div>
         </Window>,
       );
+      fireEvent.click(container.querySelector("#measures-content-window-window-measures-unfold")!);
       const overlay = container.querySelector('[data-slot="window-measures-overlay"]') as HTMLElement;
       const stack = container.querySelector('[data-slot="window-measures-stack"]') as HTMLElement;
       const body = container.querySelector('[data-slot="window-measures-body"]') as HTMLElement;
@@ -22529,21 +22676,20 @@ if (treeVitest) {
       expect(markup).toContain('data-slot="property-label-tree"');
       expect(markup).toContain('data-slot="tree-row-layout"');
       expect(markup).toContain('data-slot="tree-gutter"');
-      expect(markup).toContain("grid-template-columns:24px minmax(0, 1fr)");
+      expect(markup).toContain("grid-template-columns:calc(");
+      expect(markup).toContain("minmax(0, 1fr)");
       expect(markup).toContain('data-slot="property-label-tree" class="min-w-0"');
       expect(markup).toContain('data-slot="property-row"');
-      expect(markup).toContain("margin-left:-10px");
-      expect(markup).toContain("width:calc(100% + 10px)");
-      expect(markup).toContain("grid-template-columns:96px minmax(0, 1fr)");
+      expect(markup).toContain("margin-left:calc(-1 *");
+      expect(markup).toContain("var(--layout-label)");
       expect(markup).toContain('data-slot="property-control"');
       expect(markup).toContain("justify-end");
       expect(markup).toContain("self-start");
       expect(markup).toContain("data-detail-panel-control");
-      expect(markup).toContain("padding-left:10px");
+      expect(markup).toContain("var(--spacing-double)");
       expect(markup).not.toContain("margin-left:13px");
-      expect(markup).not.toContain("gap-[6px]");
       expect(markup).toContain('data-slot="tree-branch-elbow"');
-      expect(markup).toContain('data-slot="tree-branch-elbow" class="pointer-events-none absolute h-px -translate-y-1/2 bg-muted-foreground/40 group-hover:bg-emphasized transition-[width,background-color] duration-150" style="top:12px;left:7px;width:10px"');
+      expect(markup).toContain("calc(var(--size-workbench) / 2)");
       expect(markup).not.toContain('style="top:50%;left:7px;width:10px"');
     });
 
@@ -22578,7 +22724,7 @@ if (treeVitest) {
       expect(markup).toContain('data-slot="tree-row"');
       expect(markup).toContain('data-tree-row-kind="property"');
       expect(markup).toContain('data-slot="property-row"');
-      expect(markup).toContain('data-slot="tree-branch-elbow" class="pointer-events-none absolute h-px -translate-y-1/2 bg-muted-foreground/40 group-hover:bg-emphasized transition-[width,background-color] duration-150" style="top:12px;left:7px;width:10px"');
+      expect(markup).toContain("calc(var(--size-workbench) / 2)");
       expect(markup).not.toContain('style="top:50%;left:7px;width:10px"');
     });
 
@@ -22636,11 +22782,11 @@ if (treeVitest) {
 
       expect(markup).toContain('data-slot="tree-property-item"');
       expect(markup).toContain('data-slot="tree-row-content"');
-      expect(markup).toContain('class="flex h-full items-center gap-[6px] min-w-0 w-full"');
+      expect(markup).toContain('class="flex h-full items-center gap-double min-w-0 w-full"');
       expect(markup).toContain('data-slot="tree-row-layout"');
       expect(markup).toContain('data-slot="tree-gutter"');
-      expect(markup).toContain("grid-template-columns:14px minmax(0, 1fr)");
-      expect(markup).toContain("column-gap:6px");
+      expect(markup).toContain("grid-template-columns:calc(");
+      expect(markup).toContain("var(--spacing-double)");
       expect(markup).toContain('data-slot="tree-property-content"');
       expect(markup).not.toContain('data-slot="tree-header-actions"');
       expect(markup).toContain('data-slot="property-row"');
@@ -22660,7 +22806,7 @@ if (treeVitest) {
         </TreeContext.Provider>,
       );
 
-      expect(markup.match(/grid-template-columns:24px minmax\(0, 1fr\)/g)?.length ?? 0).toBeGreaterThanOrEqual(1);
+      expect(markup.match(/grid-template-columns:calc\(/g)?.length ?? 0).toBeGreaterThanOrEqual(1);
       expect(markup).not.toContain("margin-left:-10px");
       expect(markup).not.toContain("padding-left:10px");
     });
@@ -22668,7 +22814,7 @@ if (treeVitest) {
     it("renders default icons before tree section and item labels when icon is omitted", () => {
       const markup = renderToStaticMarkup(
         <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: true, isTree: true, indentMultiplier: 1 }}>
-          <TreeSection id="tooltip.manual" label="Section">
+          <TreeSection id="tooltip.manual" label="Section" defaultOpen={true}>
             <TreeItem id="tooltip.tutorial" label="Folder">
               <TreeItem id="tooltip.docs" label="Leaf" />
             </TreeItem>
@@ -22700,7 +22846,7 @@ if (treeVitest) {
       expect(markup).toContain("Capsule J");
       expect(markup).toContain("capsule-j");
       expect(markup).toContain('data-slot="tree-item-row"');
-      expect(markup).toContain("h-[24px]");
+      expect(markup).toContain("h-workbench");
       expect(markup).toContain('data-slot="tree-row-layout"');
       expect(markup).toMatch(/data-slot="tree-row-layout"[^>]*class="[^"]*\bh-full\b[^"]*\bw-full\b/);
       expect(markup).toMatch(/data-slot="tree-row-content"[^>]*class="[^"]*\bh-full\b[^"]*\bflex\b[^"]*\bitems-center\b/);
@@ -22908,15 +23054,16 @@ if (treeVitest) {
       expect(markup).toContain('data-slot="tree-gutter"');
       expect(markup).toContain('data-slot="tree-branch-elbow"');
       expect(markup).toContain('data-slot="tree-gutter-slot"');
-      expect(markup).toContain("grid-template-columns:24px minmax(0, 1fr)");
-      expect(markup).toContain("grid-template-columns:34px minmax(0, 1fr)");
-      expect(markup).toContain("column-gap:6px");
+      expect(markup).toContain("grid-template-columns:calc(");
+      expect(markup).toContain("minmax(0, 1fr)");
+      expect(markup).toContain("var(--spacing-double)");
       expect(markup).not.toMatch(/data-slot="tree-gutter"[^>]*><div class="absolute left-0 top-0 bottom-0 pointer-events-none"/);
       expect(markup).not.toContain('data-slot="tree-gutter-slot" class="absolute inset-y-0 left-0 flex items-center justify-center"');
       expect(markup).toContain('data-slot="tree-gutter-slot"');
       expect(markup).toContain('data-slot="tree-gutter-slot" class="absolute flex -translate-y-1/2 items-center justify-center"');
-      expect(markup).toContain('style="top:50%;left:0px"');
-      expect(markup).toContain('data-slot="tree-branch-elbow" class="pointer-events-none absolute h-px -translate-y-1/2 bg-muted-foreground/40 group-hover:bg-emphasized transition-[width,background-color] duration-150" style="top:50%;left:7px;width:3px"');
+      expect(markup).toContain("calc(var(--size-workbench) / 2)");
+      expect(markup).toContain('data-slot="tree-branch-elbow"');
+      expect(markup).not.toContain('style="top:50%;left:7px;width:3px"');
       expect(markup).toContain('data-slot="tree-branch-stem"');
       expect(markup.match(/data-tree-guide-line="" class="w-px h-full bg-muted-foreground\/40 group-hover:bg-emphasized/g)?.length ?? 0).toBeGreaterThanOrEqual(3);
       expect(markup).not.toContain('data-slot="tree-content" class="relative" style="padding-top:3px;padding-bottom:3px;padding-left:');
@@ -22958,9 +23105,9 @@ if (treeVitest) {
       expect(markup).toContain('data-slot="control-tree-control-label"');
       expect(markup).toContain('data-slot="tree-row-layout"');
       expect(markup).toContain('data-slot="tree-gutter"');
-      expect(markup).toContain("grid-template-columns:14px minmax(0, 1fr)");
-      expect(markup).toContain("grid-template-columns:24px minmax(0, 1fr)");
-      expect(markup).toContain("column-gap:6px");
+      expect(markup).toContain("grid-template-columns:calc(");
+      expect(markup).toContain("minmax(0, 1fr)");
+      expect(markup).toContain("var(--spacing-double)");
       expect(markup).not.toContain("margin-left:13px");
     });
 
@@ -23052,7 +23199,7 @@ if (treeVitest) {
         </TreeContext.Provider>,
       );
 
-      expect(markup).toContain('class="flex h-full items-center gap-[6px] min-w-0 w-full"');
+      expect(markup).toContain('class="flex h-full items-center gap-double min-w-0 w-full"');
       expect(markup).toContain('data-slot="tree-header-actions"');
       expect(markup).not.toContain('data-slot="property-control"');
       const rowContentIdx = markup.indexOf('data-slot="tree-row-content"');
@@ -23069,7 +23216,7 @@ if (treeVitest) {
         </TreeContext.Provider>,
       );
 
-      expect(markup).toContain('class="flex h-full items-center gap-[6px] min-w-0 w-full"');
+      expect(markup).toContain('class="flex h-full items-center gap-double min-w-0 w-full"');
       expect(markup).toContain('data-slot="tree-header-actions"');
       expect(markup).not.toContain('data-slot="property-control"');
       expect(markup).toContain('data-testid="remove-icon"');
@@ -23515,7 +23662,7 @@ if (treeVitest) {
     it("renders nested measure groups with branch guide lines", () => {
       const markup = renderToStaticMarkup(
         <WindowMeasuresTree>
-          <WindowMeasureTreeGroup id="display" label="Display">
+          <WindowMeasureTreeGroup id="display" label="Display" defaultOpen={true}>
             <WindowMeasureTreeLeaf label="LOD">
               <span>Auto</span>
             </WindowMeasureTreeLeaf>

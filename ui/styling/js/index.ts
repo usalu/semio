@@ -17,6 +17,16 @@ export {
 	type StylingTokenKey,
 } from "./tokens.generated.ts";
 export {
+	STYLING_SIZE_VAR,
+	STYLING_COMPACT_ROOT_PX,
+	STYLING_DOM,
+	domSizePx,
+	readSizeVarPx,
+	sizeVar,
+	uiSpacingPx,
+	uiSpacingRem,
+} from "./sizing.ts";
+export {
 	blendTokenHex,
 	clearColorResolveCache,
 	hexToThreeColor,
@@ -37,6 +47,7 @@ export {
 export type {
 	IconRenderCamera,
 	IconRenderFormat,
+	IconRenderShape,
 	IconRenderLights,
 	IconRenderMaterial,
 	IconRenderPort,

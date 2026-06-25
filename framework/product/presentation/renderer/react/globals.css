@@ -1,9 +1,9 @@
 :root {
 	--r-background-color: var(--base);
 	--r-main-font: var(--font-sans);
-	--r-main-font-size: 42px;
-	--r-block-margin: 20px;
-	--r-heading-margin: 0 0 20px 0;
+	--r-main-font-size: 2.625rem;
+	--r-block-margin: 1.25rem;
+	--r-heading-margin: 0 0 1.25rem 0;
 	--r-heading-line-height: 1.2;
 	--r-heading-font-weight: 400;
 	--r-heading1-size: 2.5em;
@@ -445,12 +445,12 @@
 .reveal .presentation-interaction-handle {
 	position: absolute;
 	z-index: 4;
-	width: 10px;
-	height: 10px;
-	margin: -5px 0 0 -5px;
-	border-radius: 2px;
+	width: var(--size-tiny);
+	height: var(--size-tiny);
+	margin: calc(-1 * var(--spacing-single)) 0 0 calc(-1 * var(--spacing-single));
+	border-radius: var(--spacing-single);
 	background: var(--color-primary);
-	border: 1px solid var(--base);
+	border: var(--stroke-hairline) solid var(--base);
 	pointer-events: auto;
 	box-sizing: border-box;
 }
@@ -521,13 +521,13 @@
 
 .reveal .presentation-interactive-disposition > .presentation-interaction-actions {
 	position: absolute;
-	top: 4px;
-	right: 4px;
+	top: var(--spacing-single);
+	right: var(--spacing-single);
 	z-index: 90;
 	display: flex;
 	flex-direction: row;
 	align-items: center;
-	gap: 4px;
+	gap: var(--spacing-single);
 	pointer-events: none;
 }
 
@@ -542,8 +542,8 @@
 	width: 1.5rem;
 	height: 1.5rem;
 	padding: 0;
-	border: 1px solid var(--border-normal-color);
-	border-radius: 4px;
+	border: var(--stroke-hairline) solid var(--border-normal-color);
+	border-radius: var(--spacing-single);
 	background: var(--panel);
 	color: var(--foreground);
 	font-size: 0.75rem;
@@ -590,8 +590,8 @@
 	width: 2rem;
 	height: 2rem;
 	padding: 0;
-	border: 1px solid var(--border-normal-color);
-	border-radius: 4px;
+	border: var(--stroke-hairline) solid var(--border-normal-color);
+	border-radius: var(--spacing-single);
 	background: color-mix(in oklab, var(--panel) 92%, transparent);
 	color: var(--foreground);
 	font-size: 1.125rem;
@@ -627,14 +627,14 @@
 
 .reveal .presentation-interaction-slide-reset {
 	position: absolute;
-	top: 4px;
-	right: 4px;
+	top: var(--spacing-single);
+	right: var(--spacing-single);
 	z-index: 1;
 	width: 1.5rem;
 	height: 1.5rem;
 	padding: 0;
-	border: 1px solid var(--border-normal-color);
-	border-radius: 4px;
+	border: var(--stroke-hairline) solid var(--border-normal-color);
+	border-radius: var(--spacing-single);
 	background: var(--panel);
 	color: var(--foreground);
 	font-size: 0.75rem;
@@ -692,8 +692,8 @@
 
 .reveal .presentation-arrangement-canvas {
 	position: relative;
-	width: var(--presentation-slide-width, 960px);
-	height: var(--presentation-slide-height, 700px);
+	width: var(--layout-deck-width);
+	height: var(--layout-deck-height);
 	max-width: 100%;
 	max-height: 100%;
 	flex: 0 0 auto;
@@ -870,8 +870,8 @@
 	align-items: center;
 	justify-content: center;
 	pointer-events: auto;
-	-webkit-backdrop-filter: blur(24px) saturate(1.45);
-	backdrop-filter: blur(24px) saturate(1.45);
+	-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+	backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
 	background-color: color-mix(in srgb, var(--panel, var(--color-background)) 42%, transparent);
 }
 
@@ -945,14 +945,14 @@
 	top: 0;
 	right: 0;
 	bottom: 0;
-	width: var(--scrollbar-size, var(--spacing-double, 8px));
+	width: var(--scrollbar-size, var(--spacing-double));
 }
 
 .reveal .presentation-figure-scroll-bar--axis-x {
 	left: 0;
 	right: 0;
 	bottom: 0;
-	height: var(--scrollbar-size, var(--spacing-double, 8px));
+	height: var(--scrollbar-size, var(--spacing-double));
 }
 
 .reveal .presentation-figure-scroll-bar-thumb {

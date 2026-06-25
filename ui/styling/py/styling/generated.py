@@ -87,6 +87,23 @@ STYLING_STROKES: Final[dict[str, float | list[float]]] = {
     "mapRoadPath": 0.55,
     "mapRoadClampMin": 0.35,
     "mapRoadClampMax": 2.8,
+    "mapRoadMotorwayMult": 2.1,
+    "mapRoadTrunkMult": 1.8,
+    "mapRoadPrimaryMult": 1.45,
+    "mapRoadSecondaryMult": 1.2,
+    "mapRoadTertiaryMult": 0.95,
+    "mapRoadResidentialMult": 0.78,
+    "mapRoadServiceMult": 0.9,
+    "puzzle3dOutline": 4,
+    "cadConstruction": 1,
+    "cadGuide": 1.5,
+    "cadDimension": 2,
+    "cadPick": 4,
+    "cadHighlight": 5,
+    "cadEmphasis": 7,
+    "cadEmphasisStrong": 8,
+    "cadEmphasisMax": 9,
+    "cadEmphasisLine": 12,
     "mapBoundaryAdmin2": 1.75,
     "mapBoundaryDefault": 0.65,
     "mapBoundaryClampMin": 0.45,
@@ -135,6 +152,7 @@ STYLING_METRICS: Final[dict[str, dict[str, float | list[float]]]] = {
     "camera": {
         "zoomMin": 0.05,
         "zoomMax": 32,
+        "flowZoomMax": 8,
         "wheelZoomInFactor": 1.1,
         "wheelZoomOutFactor": 0.9,
         "lodZoomFloor": 0.05
@@ -165,7 +183,9 @@ STYLING_METRICS: Final[dict[str, dict[str, float | list[float]]]] = {
         "dagLabelScaleMult": 1.05,
         "dagLabelGapRatio": 0.35,
         "dagLabelGapCompactRatio": 0.2,
-        "dagKindHintGapRatio": 0.85
+        "dagKindHintGapRatio": 0.85,
+        "handleOffsetPx": 10,
+        "puzzle2dDefaultPx": 14
     },
     "icon": {
         "fitInset": 0.76,
@@ -249,9 +269,53 @@ STYLING_METRICS: Final[dict[str, dict[str, float | list[float]]]] = {
         "layerWeightMin": 0.25,
         "layerWeightMax": 3,
         "layerWeightDefault": 1,
+        "layerWeightStep": 0.05,
         "tileBleed": 1,
         "lineScaleDampMin": 0.44,
-        "lineScaleDampMax": 1
+        "lineScaleDampMax": 1,
+        "wheelZoomFactor": 1.12,
+        "wheelDeltaMult": 2.5
+    },
+    "cad": {
+        "dimensionFontWorld": 0.22,
+        "dragPlaneOffset": 0.06,
+        "meshFaceOpacity": 0.72,
+        "cameraFitPadding": 1.25,
+        "cameraFitMinDistance": 2,
+        "hatchSpacing": 0.4,
+        "hatchLineWidth": 0.02,
+        "hatchDirectionDeg": 30,
+        "chunkSize": 256,
+        "chunkMaxDistance": 8000
+    },
+    "puzzle3d": {
+        "outlineThickness": 4,
+        "vortexDragThresholdPx": 6,
+        "lineWidthSelected": 3,
+        "lineWidthDefault": 2
+    },
+    "dom": {
+        "iconTinyUiSpacing": 3.75,
+        "iconSmallUiSpacing": 6.25,
+        "iconBaseUiSpacing": 7.5,
+        "iconLargeUiSpacing": 10,
+        "treeRowUiSpacing": 7.5,
+        "treeToggleUiSpacing": 4.375,
+        "treeIndentPerLevelUiSpacing": 3.125,
+        "treeIndentLineExtraUiSpacing": 2.1875,
+        "propertyLabelColumnUiSpacing": 30,
+        "propertyInlineGapUiSpacing": 2.5,
+        "propertyStackedGapUiSpacing": 1.25,
+        "propertyStackedHysteresisUiSpacing": 7.5,
+        "controlValueColumnUiSpacing": 50,
+        "windowMeasureValueColumnUiSpacing": 32.5,
+        "resizableCornerGrabUiSpacing": 7.5,
+        "layoutPanelRailUiSpacing": 70,
+        "layoutPanelMinUiSpacing": 46.875,
+        "layoutPanelMaxUiSpacing": 150,
+        "layoutEngagementMaxUiSpacing": 140,
+        "controlTreeRowMinUiSpacing": 6.25,
+        "windowMeasureRowMinUiSpacing": 5.625
     }
 }
 

@@ -112,7 +112,7 @@
   )
   > [data-slot="tree-guide"]
   [data-tree-guide-line] {
-  width: 1.5px !important;
+  width: calc(1.5 * var(--stroke-hairline)) !important;
   background-color: var(--border-emphasized-color) !important;
 }
 
@@ -121,11 +121,11 @@
 }
 
 [data-tree-hover-path="row"] [data-slot="tree-branch-elbow"] {
-  height: 1.5px !important;
+  height: calc(1.5 * var(--stroke-hairline)) !important;
 }
 
 [data-tree-hover-path="row"] [data-slot="tree-branch-stem"] {
-  width: 1.5px !important;
+  width: calc(1.5 * var(--stroke-hairline)) !important;
 }
 
 :is([data-tree-hover-path="row"], [data-tree-selection-path="row"]) :is(

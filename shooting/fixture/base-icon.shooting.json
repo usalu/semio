@@ -16,7 +16,7 @@
   },
   "savedCameras": [],
   "scene": {
-    "background": "#e8eaed",
+    "background": "",
     "sun": {
       "azimuth": 45,
       "elevation": 35,
@@ -46,14 +46,16 @@
       "label": "Overview Svg",
       "width": 256,
       "height": 256,
-      "format": "svg"
+      "format": "svg",
+      "shape": "rectangle"
     },
     {
       "id": "overview-png",
       "label": "Overview Png",
       "width": 512,
       "height": 512,
-      "format": "png"
+      "format": "png",
+      "shape": "ellipse"
     }
   ],
   "activeShotId": "overview-svg",

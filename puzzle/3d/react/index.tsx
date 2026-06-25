@@ -2740,6 +2740,8 @@ export interface ObjectRecord extends WorldEntityFlags {
   readonly id: string;
   readonly objectKind?: string;
   readonly meshUrl: string;
+  readonly meshByLod?: readonly LodMeshEntry[];
+  readonly style?: MeshStyleKind;
   readonly origin: Vec3;
   readonly orientation?: Quat;
   readonly scale?: number | Vec3;
@@ -2771,6 +2773,8 @@ function fixtureToRecords(objects: readonly FixtureObjectV1[]): Map<string, Obje
       meshUrl: o.meshUrl,
       origin: o.origin,
       ...(o.objectKind ? { objectKind: o.objectKind } : {}),
+      ...(o.meshByLod?.length ? { meshByLod: o.meshByLod } : {}),
+      ...(o.style ? { style: o.style } : {}),
       ...(o.orientation ? { orientation: o.orientation } : {}),
       ...(o.scale !== undefined ? { scale: o.scale } : {}),
       ...(o.label ? { label: o.label } : {}),
@@ -3506,6 +3510,8 @@ const ObjectItemById = reactHostPort.memo(function ObjectItemById(props: {
       id={record.id}
       objectKind={record.objectKind}
       meshUrl={record.meshUrl}
+      meshByLod={record.meshByLod}
+      style={record.style}
       origin={record.origin}
       orientation={record.orientation}
       scale={record.scale}
@@ -5609,13 +5615,16 @@ export function readPuzzle3dFillWorkerSnapshot(): Promise<Puzzle3dFillWorkerSnap
 //#endregion 🧵Precompute
 
 //#region ­ƒÄ¿MeshPaint
+/** @emoji 🎨 Base-layer panel surface ref ({@link themeColorVar} `panel` needs Tailwind `@theme` scan). */
+const MESH_PANEL_SURFACE_CSS = "var(--panel)";
+
 export const PUZZLE_3D_MESH_PAINT = {
   style: {
-    neutral: { mesh: themeColorVar("panel"), line: WORLD_MESH_BORDER_CSS, meshFallback: "l-l-l-g", lineFallback: "gray" },
+    neutral: { mesh: MESH_PANEL_SURFACE_CSS, line: WORLD_MESH_BORDER_CSS, meshFallback: "l-l-l-g", lineFallback: "gray" },
     hovered: { mesh: semanticVar("hover-interactive-fill"), line: semanticVar("border-emphasized-color"), meshFallback: "light-5-7", lineFallback: "dark" },
-    selected: { mesh: "color-mix(in oklab, var(--color-primary) 28%, var(--color-panel))", line: tokenVar("primary"), meshFallback: "primary", lineFallback: "primary" },
-    highlighted: { mesh: "color-mix(in oklab, var(--color-secondary) 24%, var(--color-panel))", line: tokenVar("secondary"), meshFallback: "secondary", lineFallback: "secondary" },
-    disabled: { mesh: "color-mix(in oklab, var(--color-muted-foreground) 55%, var(--color-panel))", line: themeColorVar("muted-foreground"), meshFallback: "light-gray", lineFallback: "gray" },
+    selected: { mesh: `color-mix(in oklab, var(--color-primary) 28%, ${MESH_PANEL_SURFACE_CSS})`, line: tokenVar("primary"), meshFallback: "primary", lineFallback: "primary" },
+    highlighted: { mesh: `color-mix(in oklab, var(--color-secondary) 24%, ${MESH_PANEL_SURFACE_CSS})`, line: tokenVar("secondary"), meshFallback: "secondary", lineFallback: "secondary" },
+    disabled: { mesh: `color-mix(in oklab, var(--color-muted-foreground) 55%, ${MESH_PANEL_SURFACE_CSS})`, line: themeColorVar("muted-foreground"), meshFallback: "light-gray", lineFallback: "gray" },
   },
   edgeBorder: {
     normal: WORLD_MESH_BORDER_CSS,
@@ -12731,6 +12740,7 @@ if (import.meta.vitest) {
       const neutral = meshStyleColors("neutral");
       expect(neutral?.meshColor.length).toBeGreaterThan(0);
       expect(neutral?.lineColor.length).toBeGreaterThan(0);
+      expect(PUZZLE_3D_MESH_PAINT.style.neutral.mesh).toBe("var(--panel)");
     });
     it("aligns hover and selection colors with UI element tokens", () => {
       const selected = meshStyleColors("selected");

@@ -7907,10 +7907,10 @@ if (import.meta.vitest) {
 			const focus = document.createElement("section");
 			focus.setAttribute("title", "catalogue-focus");
 			focus.setAttribute("data-settle-before-morph-to", "catalogue-labels");
-			focus.style.cssText = "position:relative;width:960px;height:540px;";
+			focus.style.cssText = "position:relative;width:var(--layout-deck-width);height:33.75rem;";
 			const labels = document.createElement("section");
 			labels.setAttribute("title", "catalogue-labels");
-			labels.style.cssText = "position:relative;width:960px;height:540px;";
+			labels.style.cssText = "position:relative;width:var(--layout-deck-width);height:33.75rem;";
 			const source = document.createElement("div");
 			source.className =
 				"presentation-interactive-disposition presentation-interactive-disposition--canvas-framed";
@@ -8424,8 +8424,8 @@ if (import.meta.vitest) {
 			expect(isFlowPixelOffsetTransform(offset, undefined)).toBe(true);
 			expect(isFlowPixelOffsetTransform({ ...offset, width: 0.3 }, measured)).toBe(false);
 			const section = document.createElement("section");
-			section.style.width = "960px";
-			section.style.height = "700px";
+			section.style.width = "var(--layout-deck-width)";
+			section.style.height = "var(--layout-deck-height)";
 			document.body.appendChild(section);
 			section.getBoundingClientRect = () => new DOMRect(0, 0, 960, 700);
 			const sectionRect = flowPixelOffsetToSectionRect(measured, offset, section);

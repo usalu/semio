@@ -29,7 +29,6 @@ import {
   type EngagementSpec,
   type FooterItem,
   type NavbarItem,
-  navbarFillClassName,
   navbarFillItem,
   PanelToggleGroup,
   type PanelToggleItem,
@@ -59,11 +58,14 @@ import {
   NavbarFixtureSelect,
   readStoredUiChromeCompact,
   readStoredUiChromeExpertise,
+  readStoredUiChromeTheme,
   readStoredComputeWorkerCount,
   writeStoredUiChromeCompact,
   writeStoredUiChromeExpertise,
+  writeStoredUiChromeTheme,
   writeStoredComputeWorkerCount,
   isCrossOriginIsolatedRuntime,
+  type ElementsSurfaceTheme,
 } from "@semio-tech/ui-react";
 import { clsx, type ClassValue } from "clsx";
 
@@ -90,6 +92,7 @@ import {
   getSidePanelBodyFactory,
   getWindowBodyFactory,
   registerWindowBody,
+  registerSidePanelBody,
   buildCadWindowBody,
   type AppToolCategory,
   type AppTools,
@@ -157,6 +160,12 @@ export {
   PLAYGROUND_NO_FIXTURE_OPTION,
   playgroundFixtureCatalogWithNoOption,
   resolvePlaygroundFixtureCatalog,
+  FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
+  FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+  FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID,
+  FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+  FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
+  FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 } from "@semio-tech/framework-playground-core";
 
 export {
@@ -752,7 +761,7 @@ export function UiRenderer({ node, commandBus }: { readonly node: UiNode; readon
       const field = node as UiFieldNode;
       return (
         <div className="flex flex-col gap-half" data-ui-field={field.id}>
-          <label className="text-muted-foreground text-[11px]" htmlFor={field.child.type === "input" || field.child.type === "select" ? (field.child as UiInputNode | UiSelectNode).id : field.id}>
+          <label className="text-muted-foreground text-xs" htmlFor={field.child.type === "input" || field.child.type === "select" ? (field.child as UiInputNode | UiSelectNode).id : field.id}>
             {field.label}
           </label>
           <UiRenderer node={field.child} commandBus={commandBus} />
@@ -1101,7 +1110,7 @@ export interface PlaygroundViewProps {
   /** @emoji 🧪 Overrides controller-backed navbar fixture dropdown (React-held fixture state). */
   readonly slotNavbarCenter?: React.ReactNode;
   readonly extraFooterItems?: readonly FooterItem[];
-  readonly augmentPanelTabs?: Partial<Record<"workbench" | "details", readonly (SidePanelTabConfig | SidePanelTabDefinition)[]>>;
+  readonly augmentPanelTabs?: Partial<Record<"workbench" | "details" | "settings", readonly (SidePanelTabConfig | SidePanelTabDefinition)[]>>;
   readonly onActiveWindowChange?: (windowKindId: string) => void;
 }
 
@@ -1211,6 +1220,20 @@ function usePlaygroundViewShellData(runtime: Platform, options: Pick<PlaygroundV
         : [],
     [activeApp, augmentPanelTabs?.details, bus, shellDataGeneration],
   );
+  const settingsTabs = reactHostPort.useMemo(
+    () =>
+      activeApp
+        ? mergePanelTabs(
+            sideTabsToPlaygroundPanelTabs(
+              activeApp.panelTabs.filter((tab) => tab.panel === "settings"),
+              runtime,
+              bus,
+            ),
+            augmentPanelTabs?.settings,
+          )
+        : [],
+    [activeApp, augmentPanelTabs?.settings, bus, shellDataGeneration],
+  );
 
   const mergedTools = reactHostPort.useMemo(() => (activeApp ? declareToolsToViewTools(activeApp.tools, bus) : undefined), [activeApp, bus, shellDataGeneration]);
   const hasToolbarTools = listPopulatedToolbarViewCategories(mergedTools ?? {}).length > 0;
@@ -1285,6 +1308,7 @@ function usePlaygroundViewShellData(runtime: Platform, options: Pick<PlaygroundV
     bus,
     detailsIcon,
     detailsTabs,
+    settingsTabs,
     footerItems,
     goldenWindowKinds,
     playgroundContextValue,
@@ -1327,8 +1351,9 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, playgro
   const [activeRightPanelKind, setActiveRightPanelKind] = reactHostPort.useState<"details" | "settings">("details");
   const [uiCompact, setUiCompact] = reactHostPort.useState(readStoredUiChromeCompact);
   const [uiExpertise, setUiExpertise] = reactHostPort.useState(readStoredUiChromeExpertise);
+  const [uiTheme, setUiTheme] = reactHostPort.useState(readStoredUiChromeTheme);
   const [computeWorkerCount, setComputeWorkerCount] = reactHostPort.useState(readStoredComputeWorkerCount);
-  useElementsSurfaceChrome({ ...PLAYGROUND_SYSTEM_SURFACE_CHROME, compact: uiCompact, expertise: uiExpertise });
+  useElementsSurfaceChrome({ ...PLAYGROUND_SYSTEM_SURFACE_CHROME, theme: uiTheme, compact: uiCompact, expertise: uiExpertise });
 
   const namedLayoutStore = reactHostPort.useMemo(
     () => (shell.activeApp ? new NamedLayoutStore(shell.activeApp.id, createBrowserStoragePort()) : null),
@@ -1374,14 +1399,29 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, playgro
         writeStoredComputeWorkerCount(clamped);
       },
       computeThreadsAvailable: isCrossOriginIsolatedRuntime(),
+      theme: uiTheme,
+      setTheme: (theme: ElementsSurfaceTheme) => {
+        setUiTheme(theme);
+        writeStoredUiChromeTheme(theme);
+      },
+      appId: shell.activeApp?.id ?? "",
+      appLabel: shell.activeApp?.label ?? "",
+      appIconId: shell.activeApp?.iconId,
       modes: (shell.activeAppBase?.modes ?? []).map((mode) => ({ id: mode.id, label: mode.label, iconId: mode.iconId })),
       activeModeId: shell.activeModeId,
       setActiveModeId,
       hasModeNav,
     }),
-    [computeWorkerCount, hasModeNav, setActiveModeId, shell.activeAppBase?.modes, shell.activeModeId, uiCompact, uiExpertise],
+    [computeWorkerCount, hasModeNav, setActiveModeId, shell.activeApp?.iconId, shell.activeApp?.id, shell.activeApp?.label, shell.activeAppBase?.modes, shell.activeModeId, uiCompact, uiExpertise, uiTheme],
   );
-  const settingsTabs = reactHostPort.useMemo(() => createFrameworkSettingsPanelTabs(() => settingsHostApi, shell.bus), [settingsHostApi, shell.bus]);
+  const frameworkSettingsTabs = reactHostPort.useMemo(
+    () => createFrameworkSettingsPanelTabs(() => settingsHostApi, () => displayHost, () => runtime, shell.bus),
+    [displayHost, runtime, settingsHostApi, shell.bus],
+  );
+  const settingsTabs = reactHostPort.useMemo(
+    () => mergePanelTabs(frameworkSettingsTabs, shell.settingsTabs),
+    [frameworkSettingsTabs, shell.settingsTabs],
+  );
   const settingsIcon = reactHostPort.useMemo(() => <Icon icon="settings-2" size={16} />, []);
 
   const leftSidePanelTabs = activeLeftPanelKind === "display" ? displayTabs : shell.workbenchTabs;
@@ -1478,7 +1518,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, playgro
         className: "min-w-0 shrink-0 flex items-center gap-single",
         content: (
           <div className="flex items-center gap-single">
-            <SemioLogo className="h-6 w-6 shrink-0" />
+            <SemioLogo className="shrink-0 size-workbench" />
             <span className={cn("px-single", shellChromeTitleClassName)}>{shell.activeApp.label}</span>
           </div>
         ),
@@ -1487,12 +1527,17 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, playgro
     if (navbarFixtureSelect) {
       items.push({
         key: "fixture",
-        className: cn(navbarFillClassName, "flex justify-center"),
+        centered: true,
         content: navbarFixtureSelect,
       });
+      items.push(navbarFillItem());
     } else {
       items.push(navbarFillItem());
     }
+    items.push({
+      key: "panelToggles",
+      content: <PanelToggleGroup items={playgroundPanelToggleItems} />,
+    });
     const modesList = shell.activeAppBase?.modes ?? [];
     const resolvedModes = modesList.length > 0 ? modesList : [{ id: shell.activeApp.id, label: shell.activeApp.label, iconId: undefined }];
     items.push({
@@ -1518,10 +1563,6 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, playgro
           })}
         </ButtonGroup>
       ),
-    });
-    items.push({
-      key: "panelToggles",
-      content: <PanelToggleGroup items={playgroundPanelToggleItems} />,
     });
     return items;
   }, [navbarFixtureSelect, playgroundPanelToggleItems, shell.activeApp, shell.activeAppBase, shell.activeModeId, runtime]);
@@ -2413,6 +2454,7 @@ import {
   type Puzzle5dPlayHostBridge,
   buildPuzzle5d2dDeclarativeBody,
   buildPuzzle5dPlayHierarchySections,
+  buildPuzzle5dPlayInspectorTree,
   buildPuzzle5dPlayKindsTree,
   buildPuzzle5dPlayRuntime,
   buildPuzzle5d3dDeclarativeBody,
@@ -2612,34 +2654,13 @@ function usePuzzle5dPlayStore(): Puzzle5dStore {
 
 const puzzle5dPlayControllerRef: { current: Puzzle5dPlayShellController | null } = { current: null };
 
-function buildPuzzle5dPlayStatusTree(): UiTreeNode {
-  const snapshot = puzzle5dPlayControllerRef.current?.getSnapshot() ?? null;
+function buildPuzzle5dPlayInspectorTreePanel(snapshot: Puzzle5dPlaySnapshot | null): UiTreeNode {
   if (!snapshot) {
     return uiDeclarativeSectionsToTree([
-      { type: "section", id: "puzzle-5d-play-status.empty", label: "Paired play", children: [{ type: "text", value: "No puzzle 5d snapshot" }] },
+      { type: "section", id: "puzzle-5d-play-inspector.empty", label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, children: [{ type: "text", value: "No puzzle 5d snapshot" }] },
     ]);
   }
-  return uiDeclarativeSectionsToTree([
-    {
-      type: "section",
-      id: "puzzle-5d-play-status.section",
-      label: "Paired play",
-      children: [
-        {
-          type: "keyValue",
-          entries: [
-            { label: "Manifest", value: snapshot.manifestLabel ?? "—" },
-            { label: "2d selection", value: `${snapshot.selected2d.size} id(s)` },
-            { label: "3d selection", value: snapshot.selected3d ?? "—" },
-            { label: "Relocate", value: JSON.stringify(snapshot.gumballConfig) },
-            { label: "Connect events", value: `2d ${snapshot.connect2d} · 3d ${snapshot.connect3d}` },
-            { label: "Proximity events", value: `2d ${snapshot.proximity2d} · 3d ${snapshot.proximity3d}` },
-            { label: "Tool", value: `${snapshot.activeTool} · fill ${snapshot.fillCount}` },
-          ],
-        },
-      ],
-    },
-  ]);
+  return buildPuzzle5dPlayInspectorTree(snapshot);
 }
 
 //#region 🔖DetailsPanel
@@ -2654,8 +2675,8 @@ class Puzzle5dPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
   buildTab(): SidePanelTabConfig {
     return {
       id: PUZZLE_5D_PLAY_HIERARCHY_TAB_ID,
-      icon: createIconComponent("list-tree"),
-      name: "Hierarchy",
+      icon: createIconComponent(FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID),
+      name: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
       order: 0,
       tree: new CallbackTreePanelDefinition(() => {
         const treeNode = this.buildTree();
@@ -2676,8 +2697,8 @@ class Puzzle5dPlayKindsPanelDefinition extends PureSidePanelTabDefinition {
   buildTab(): SidePanelTabConfig {
     return {
       id: PUZZLE_5D_PLAY_KINDS_TAB_ID,
-      icon: createIconComponent("tags"),
-      name: "Kinds",
+      icon: createIconComponent(FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID),
+      name: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
       order: 1,
       tree: new CallbackTreePanelDefinition(() => {
         const treeNode = this.buildTree();
@@ -2691,18 +2712,21 @@ class Puzzle5dPlayKindsPanelDefinition extends PureSidePanelTabDefinition {
   }
 }
 
-class Puzzle5dPlayStatusPanelDefinition extends PureSidePanelTabDefinition {
-  constructor(private readonly commandBus: CommandBus) {
+class Puzzle5dPlayInspectorPanelDefinition extends PureSidePanelTabDefinition {
+  constructor(
+    private readonly buildTree: () => import("@semio-tech/framework-playground-core").UiTreeNode,
+    private readonly commandBus: CommandBus,
+  ) {
     super();
   }
 
   buildTab(): SidePanelTabConfig {
     return {
-      id: "puzzle-5d-play-status",
-      icon: createIconComponent("clipboard-list"),
-      name: "Status",
+      id: "puzzle-5d-play-inspector",
+      icon: createIconComponent(FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID),
+      name: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
       order: 0,
-      tree: new CallbackTreePanelDefinition(() => uiTreeNodeToTreePanelConfig(buildPuzzle5dPlayStatusTree(), this.commandBus)),
+      tree: new CallbackTreePanelDefinition(() => uiTreeNodeToTreePanelConfig(this.buildTree(), this.commandBus)),
     };
   }
 }
@@ -2811,7 +2835,7 @@ function Puzzle5d3dSurfaceHost({ node }: { readonly node: UiPuzzle3dHostSurfaceN
   brushOverlapBudgetRef.current = snapshot?.brushOverlapBudget ?? 0;
   reactHostPort.useEffect(() => {
     if (!bindingValid) return;
-    const urls = [...new Set(store.read().parts.flatMap((part) => (part.puzzle3d ? [part.puzzle3d.meshUrl] : [])))];
+    const urls = [...new Set(store.read().parts.flatMap((part) => (part["3d"] ? [part["3d"].meshUrl] : [])))];
     for (const url of urls) sceneHostPort.drei.useGLTF.preload(url);
   }, [bindingValid, modelPartCount, store]);
   reactHostPort.useLayoutEffect(() => {
@@ -2998,7 +3022,10 @@ function Puzzle5dPlayChrome({
         : [],
     [snapshot, snapshotKey, controller, bus, puzzle5dStore],
   );
-  const detailTabs = reactHostPort.useMemo(() => [new Puzzle5dPlayStatusPanelDefinition(bus).resolveTab()], [bus]);
+  const detailTabs = reactHostPort.useMemo(
+    () => (snapshot ? [new Puzzle5dPlayInspectorPanelDefinition(() => buildPuzzle5dPlayInspectorTreePanel(snapshot), bus).resolveTab()] : []),
+    [snapshot, snapshotKey, bus],
+  );
   const shell = (
     <PlaygroundView
       runtime={runtime}
@@ -3094,6 +3121,7 @@ import {
   buildPuzzle2dPlayDetailDeclarativeBody,
   buildPuzzle2dPlaySelectionDeclarativeBody,
   buildPuzzle2dPlayRuntime,
+  PUZZLE_2D_PLAY_SETTINGS_BODY_KEY,
   flushPuzzle2dPlayStructuralDeleteBatch,
   puzzle2dPlayForwardsCanvasStructuralDelete,
   puzzle2dPlayApplyNodeStructuralDeleteToFixture,
@@ -3486,7 +3514,7 @@ class Puzzle2dPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
     return {
       id: PUZZLE_2D_PLAY_IS_WIRES ? WIRES_PLAY_HIERARCHY_TAB_ID : PUZZLE_2D_PLAY_HIERARCHY_TAB_ID,
       icon: createIconComponent("list-tree"),
-      name: "Hierarchy",
+      name: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
       order: 0,
       tree: new CallbackTreePanelDefinition(
         () => {
@@ -3495,7 +3523,7 @@ class Puzzle2dPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
           const bus = puzzle2dPlayRuntimeRef.current?.commandBus ?? new CommandBus();
           if (!shell || !selection) {
             const loadingId = PUZZLE_2D_PLAY_IS_WIRES ? "wires-play-hierarchy.loading" : "puzzle-2d-play-hierarchy.loading";
-            return [{ id: loadingId, label: "Hierarchy", items: [{ id: "loading", label: "…" }] }];
+            return [{ id: loadingId, label: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, items: [{ id: "loading", label: "…" }] }];
           }
           const onHierarchySelect = (id: string) => selection.setSelectionIds([id]);
           const onHierarchyHover = (payload: Puzzle2dHoverPayload) => shell.setHierarchyHover(payload);
@@ -3557,14 +3585,14 @@ class Puzzle2dPlayKindsPanelDefinition extends PureSidePanelTabDefinition {
     return {
       id: PUZZLE_2D_PLAY_IS_WIRES ? WIRES_PLAY_KINDS_TAB_ID : PUZZLE_2D_PLAY_KINDS_TAB_ID,
       icon: createIconComponent("tags"),
-      name: "Kinds",
+      name: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
       order: 1,
       tree: new CallbackTreePanelDefinition(() => {
         const shell = puzzle2dPlayShellRef.current;
         const bus = puzzle2dPlayRuntimeRef.current?.commandBus ?? new CommandBus();
         if (!shell) {
           const loadingId = PUZZLE_2D_PLAY_IS_WIRES ? "wires-play-kinds.loading" : "puzzle-2d-play-kinds.loading";
-          return [{ id: loadingId, label: "Kinds", items: [{ id: "loading", label: "…" }] }];
+          return [{ id: loadingId, label: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, items: [{ id: "loading", label: "…" }] }];
         }
         const treeNode = PUZZLE_2D_PLAY_IS_WIRES
           ? buildWiresPlayKindsTree(WIRES_PLAY_FIXTURE.kindCatalogs)
@@ -3583,7 +3611,7 @@ class Puzzle2dPlayInspectorPanelDefinition extends PureSidePanelTabDefinition {
     return {
       id: "puzzle-2d-play-inspector",
       icon: createIconComponent("clipboard-list"),
-      name: "Inspector",
+      name: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
       order: 0,
       tree: new CallbackTreePanelDefinition(() => {
         const shell = puzzle2dPlayShellRef.current;
@@ -3596,28 +3624,6 @@ class Puzzle2dPlayInspectorPanelDefinition extends PureSidePanelTabDefinition {
           );
         }
         return uiTreeNodeToTreePanelConfig(buildPuzzle2dPlayInspectorTree(shell.fixture, selection.selectionIds), bus);
-      }),
-    };
-  }
-}
-
-class Puzzle2dPlaySettingsPanelDefinition extends PureSidePanelTabDefinition {
-  buildTab(): SidePanelTabConfig {
-    return {
-      id: "puzzle-2d-play-settings",
-      icon: createIconComponent("settings"),
-      name: "Settings",
-      order: 1,
-      tree: new CallbackTreePanelDefinition(() => {
-        const shell = puzzle2dPlayShellRef.current;
-        const bus = puzzle2dPlayRuntimeRef.current?.commandBus ?? new CommandBus();
-        if (!shell) {
-          return uiTreeNodeToTreePanelConfig(
-            uiDeclarativeSectionsToTree([{ type: "section", id: "puzzle-2d-play-settings.loading", label: "Settings", children: [{ type: "text", value: "…" }] }]),
-            bus,
-          );
-        }
-        return uiTreeNodeToTreePanelConfig(buildPuzzle2dPlaySettingsTree(shell), bus);
       }),
     };
   }
@@ -3976,6 +3982,16 @@ function buildPuzzle2dPlaySettingsTree(shell: Puzzle2dPlayShellValue): UiTreeNod
   });
   return uiDeclarativeSectionsToTree(sections);
 }
+
+registerSidePanelBody(PUZZLE_2D_PLAY_SETTINGS_BODY_KEY, (ctx) => {
+  const shell = puzzle2dPlayShellRef.current;
+  if (!shell) {
+    return uiDeclarativeSectionsToTree([
+      { type: "section", id: "puzzle-2d-play-settings.loading", label: "Settings", children: [{ type: "text", value: "…" }] },
+    ]);
+  }
+  return buildPuzzle2dPlaySettingsTree(shell);
+});
 // #endregion 🔖SettingsPanel
 
 // #region 🔖Scene
@@ -6001,14 +6017,13 @@ function Puzzle2dPlayInner({
 
   const puzzle2dPlayHierarchyPanel = reactHostPort.useMemo(() => new Puzzle2dPlayHierarchyPanelDefinition(), []);
   const puzzle2dPlayKindsPanel = reactHostPort.useMemo(() => new Puzzle2dPlayKindsPanelDefinition(), []);
-  const puzzle2dPlaySettingsPanel = reactHostPort.useMemo(() => new Puzzle2dPlaySettingsPanelDefinition(), []);
   const puzzle2dPlayInspectorPanel = reactHostPort.useMemo(() => new Puzzle2dPlayInspectorPanelDefinition(), []);
   const augmentPanelTabs = reactHostPort.useMemo(
     () => ({
       workbench: [puzzle2dPlayHierarchyPanel, puzzle2dPlayKindsPanel],
-      details: [puzzle2dPlayInspectorPanel, puzzle2dPlaySettingsPanel],
+      details: [puzzle2dPlayInspectorPanel],
     }),
-    [puzzle2dPlayHierarchyPanel, puzzle2dPlayKindsPanel, puzzle2dPlayInspectorPanel, puzzle2dPlaySettingsPanel],
+    [puzzle2dPlayHierarchyPanel, puzzle2dPlayKindsPanel, puzzle2dPlayInspectorPanel],
   );
 
   const applyNavbarFixtureId = reactHostPort.useCallback(
@@ -6104,6 +6119,12 @@ import {
   GIS_MAP_PLAY_STORE_ID,
   GIS_MAP_PLAY_SURFACE_ID,
   GIS_MAP_PLAY_WINDOW_KIND_ID,
+  GIS_MAP_PLAY_CATALOGUE_TAB_ID,
+  GIS_MAP_PLAY_HIERARCHY_TAB_ID,
+  GIS_MAP_PLAY_INSPECTION_TAB_ID,
+  buildMapPlayCatalogueTree,
+  buildMapPlayHierarchyTree,
+  buildMapPlayInspectorTree,
   buildMapPlayMainDeclarativeBody,
   type MapPlayController,
 } from "@semio-tech/gis-map-play";
@@ -6111,10 +6132,22 @@ import { MapCanvas, Position, Route, type GisMapLodId } from "@semio-tech/gis-ma
 import type { UiGisMapHostSurfaceNode } from "@semio-tech/framework-platform-core";
 
 let mapPlayChromeRegistered = false;
+const mapPlayControllerRef: { current: MapPlayController | null } = { current: null };
 
 function useMapPlayController(): MapPlayController | undefined {
   const { runtime } = useApp();
-  return runtime.getActiveApp()?.controller as MapPlayController | undefined;
+  const ctrl = runtime.getActiveApp()?.controller as MapPlayController | undefined;
+  mapPlayControllerRef.current = ctrl ?? null;
+  return ctrl;
+}
+
+function useMapPlayInteractionRevision(): number {
+  const { runtime } = useApp();
+  return reactHostPort.useSyncExternalStore(
+    (listener) => runtime.subscribe(listener),
+    () => (runtime.getActiveApp()?.controller as MapPlayController | undefined)?.getInteractionRevision() ?? 0,
+    () => 0,
+  );
 }
 
 function useMapPlaySnapshot() {
@@ -6183,8 +6216,82 @@ export function registerMapPlaySurfaceHosts(): void {
   registerWindowBody(GIS_MAP_PLAY_BODY_KEY_MAIN, buildMapPlayMainDeclarativeBody);
 }
 
+class MapPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
+  buildTab(): SidePanelTabConfig {
+    return {
+      id: GIS_MAP_PLAY_HIERARCHY_TAB_ID,
+      icon: shellTabIconComponent(FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, "workbench"),
+      name: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+      order: 0,
+      tree: new CallbackTreePanelDefinition(() => {
+        const ctrl = mapPlayControllerRef.current;
+        const bus = new CommandBus();
+        const treeNode = buildMapPlayHierarchyTree(
+          ctrl?.getActiveFixture() ?? null,
+          ctrl?.getSelectedFeatureId() ?? null,
+          ctrl?.getSelectedFeatureKind() ?? null,
+        );
+        return uiTreeNodeToTreePanelConfig(treeNode, bus);
+      }),
+    };
+  }
+}
+
+class MapPlayCataloguePanelDefinition extends PureSidePanelTabDefinition {
+  buildTab(): SidePanelTabConfig {
+    return {
+      id: GIS_MAP_PLAY_CATALOGUE_TAB_ID,
+      icon: shellTabIconComponent(FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, "workbench"),
+      name: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+      order: 1,
+      tree: new CallbackTreePanelDefinition(() => {
+        const bus = new CommandBus();
+        return uiTreeNodeToTreePanelConfig(buildMapPlayCatalogueTree(), bus);
+      }),
+    };
+  }
+}
+
+class MapPlayInspectionPanelDefinition extends PureSidePanelTabDefinition {
+  buildTab(): SidePanelTabConfig {
+    return {
+      id: GIS_MAP_PLAY_INSPECTION_TAB_ID,
+      icon: shellTabIconComponent(FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, "details"),
+      name: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+      order: 0,
+      tree: new CallbackTreePanelDefinition(() => {
+        const ctrl = mapPlayControllerRef.current;
+        const bus = new CommandBus();
+        const treeNode = buildMapPlayInspectorTree(
+          ctrl?.getActiveFixture() ?? null,
+          ctrl?.getSelectedFeatureId() ?? null,
+          ctrl?.getSelectedFeatureKind() ?? null,
+        );
+        return uiTreeNodeToTreePanelConfig(treeNode, bus);
+      }),
+    };
+  }
+}
+
+function MapPlayInner({ runtime }: { readonly runtime: Platform }): ReactElement {
+  const interactionRevision = useMapPlayInteractionRevision();
+  const snapshot = useMapPlaySnapshot();
+  void snapshot;
+  const mapPlayHierarchyPanel = reactHostPort.useMemo(() => new MapPlayHierarchyPanelDefinition(), []);
+  const mapPlayCataloguePanel = reactHostPort.useMemo(() => new MapPlayCataloguePanelDefinition(), []);
+  const mapPlayInspectionPanel = reactHostPort.useMemo(() => new MapPlayInspectionPanelDefinition(), []);
+  const augmentPanelTabs = reactHostPort.useMemo(
+    () => ({
+      workbench: [mapPlayHierarchyPanel, mapPlayCataloguePanel],
+      details: [mapPlayInspectionPanel],
+    }),
+    [interactionRevision, mapPlayCataloguePanel, mapPlayHierarchyPanel, mapPlayInspectionPanel],
+  );
+  return <PlaygroundView runtime={runtime} defaultAppId={GIS_MAP_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} />;
+}
+
 function MapPlayChrome({ runtime }: { readonly runtime: Platform }): ReactElement {
-  return <PlaygroundView runtime={runtime} defaultAppId={GIS_MAP_PLAY_APP_ID} />;
+  return <MapPlayInner runtime={runtime} />;
 }
 
 export function mountMapPlayChrome(playground: Playground, rootId = "root"): void {
@@ -6207,14 +6314,16 @@ import {
   FLOW_PLAY_BODY_KEY_MAIN,
   FLOW_PLAY_CONTROLLER_ID,
   FLOW_PLAY_DEFAULT_FIXTURE_JSON,
-  FLOW_PLAY_EXTENSIONS_TAB_ID,
-  FLOW_PLAY_KINDS_TAB_ID,
+  FLOW_PLAY_CATALOGUE_TAB_ID,
+  FLOW_PLAY_HIERARCHY_TAB_ID,
+  FLOW_PLAY_INSPECTION_TAB_ID,
   FLOW_PLAY_SURFACE_ID,
   FLOW_PLAY_WINDOW_KIND_ID,
   FlowPlayController,
   buildFlowPlayCanvasContextMenu,
-  buildFlowPlayExtensionsTree,
-  buildFlowPlayKindsTree,
+  buildFlowPlayCatalogueTree,
+  buildFlowPlayHierarchyTree,
+  buildFlowPlayInspectorTree,
   registerFlowPlayDeclarativeBodies,
 } from "@semio-tech/flow-play";
 import {
@@ -6258,6 +6367,10 @@ function useFlowPlayCatalogueRevision(runtime: Platform): number {
 
 function useFlowPlayExtensionRevision(runtime: Platform): number {
   return useFlowPlaySnapshotRevision(runtime, (c) => c.getExtensionRevision());
+}
+
+function useFlowPlayInteractionRevision(runtime: Platform): number {
+  return useFlowPlaySnapshotRevision(runtime, (c) => c.getInteractionRevision());
 }
 
 function useFlowPlayController(runtimeOverride?: Platform): FlowPlayController | undefined {
@@ -6311,6 +6424,12 @@ function FlowPlayPaneSurfaceHost({ node }: { readonly node: UiFlowHostSurfaceNod
     },
     [ctrl],
   );
+  const onSelectionChange = reactHostPort.useCallback(
+    (ids: readonly string[]) => {
+      ctrl?.run("setSelection", { ids: [...ids] });
+    },
+    [ctrl],
+  );
   return (
     <FlowCanvas
       fixtureJson={ctrl?.getFixtureJson() ?? FLOW_PLAY_DEFAULT_FIXTURE_JSON}
@@ -6322,6 +6441,8 @@ function FlowPlayPaneSurfaceHost({ node }: { readonly node: UiFlowHostSurfaceNod
       onCatalogueReady={onCatalogueReady}
       onFixtureChange={onFixtureChange}
       contextMenu={(ctx) => buildFlowPlayCanvasContextMenu(ctx, onCanvasCommand)}
+      selectedNodeIds={ctrl?.getSelectedNodeIds()}
+      onSelectionChange={onSelectionChange}
       {...lodProps}
       onLodChange={onLodChange}
       proximityDistance={proximityDistance}
@@ -6329,17 +6450,34 @@ function FlowPlayPaneSurfaceHost({ node }: { readonly node: UiFlowHostSurfaceNod
   );
 }
 
-class FlowPlayKindsPanelDefinition extends PureSidePanelTabDefinition {
+class FlowPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
   buildTab(): SidePanelTabConfig {
     return {
-      id: FLOW_PLAY_KINDS_TAB_ID,
-      icon: createIconComponent("tags"),
-      name: "Kinds",
+      id: FLOW_PLAY_HIERARCHY_TAB_ID,
+      icon: shellTabIconComponent(FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, "workbench"),
+      name: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
       order: 0,
       tree: new CallbackTreePanelDefinition(() => {
         const ctrl = flowPlayControllerRef.current;
         const bus = new CommandBus();
-        const treeNode = buildFlowPlayKindsTree(ctrl?.getCatalogueSections() ?? []);
+        const treeNode = buildFlowPlayHierarchyTree(ctrl?.getFixtureJson() ?? FLOW_PLAY_DEFAULT_FIXTURE_JSON, ctrl?.getSelectedNodeIds() ?? []);
+        return uiTreeNodeToTreePanelConfig(treeNode, bus);
+      }),
+    };
+  }
+}
+
+class FlowPlayCataloguePanelDefinition extends PureSidePanelTabDefinition {
+  buildTab(): SidePanelTabConfig {
+    return {
+      id: FLOW_PLAY_CATALOGUE_TAB_ID,
+      icon: shellTabIconComponent(FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, "workbench"),
+      name: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+      order: 1,
+      tree: new CallbackTreePanelDefinition(() => {
+        const ctrl = flowPlayControllerRef.current;
+        const bus = new CommandBus();
+        const treeNode = buildFlowPlayCatalogueTree(ctrl?.getCatalogueSections() ?? [], ctrl?.getExtensionEntries() ?? []);
         const config = uiTreeNodeToTreePanelConfig(treeNode, bus);
         return {
           ...config,
@@ -6350,17 +6488,17 @@ class FlowPlayKindsPanelDefinition extends PureSidePanelTabDefinition {
   }
 }
 
-class FlowPlayExtensionsPanelDefinition extends PureSidePanelTabDefinition {
+class FlowPlayInspectionPanelDefinition extends PureSidePanelTabDefinition {
   buildTab(): SidePanelTabConfig {
     return {
-      id: FLOW_PLAY_EXTENSIONS_TAB_ID,
-      icon: createIconComponent("puzzle"),
-      name: "Extensions",
-      order: 1,
+      id: FLOW_PLAY_INSPECTION_TAB_ID,
+      icon: shellTabIconComponent(FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, "details"),
+      name: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+      order: 0,
       tree: new CallbackTreePanelDefinition(() => {
         const ctrl = flowPlayControllerRef.current;
         const bus = new CommandBus();
-        const treeNode = buildFlowPlayExtensionsTree(ctrl?.getExtensionEntries() ?? []);
+        const treeNode = buildFlowPlayInspectorTree(ctrl?.getFixtureJson() ?? FLOW_PLAY_DEFAULT_FIXTURE_JSON, ctrl?.getSelectedNodeIds() ?? []);
         return uiTreeNodeToTreePanelConfig(treeNode, bus);
       }),
     };
@@ -6371,11 +6509,16 @@ function FlowPlayInner({ runtime }: { readonly runtime: Platform }): ReactElemen
   useFlowPlayController(runtime);
   const catalogueRevision = useFlowPlayCatalogueRevision(runtime);
   const extensionRevision = useFlowPlayExtensionRevision(runtime);
+  const interactionRevision = useFlowPlayInteractionRevision(runtime);
+  const flowPlayHierarchyPanel = reactHostPort.useMemo(() => new FlowPlayHierarchyPanelDefinition(), []);
+  const flowPlayCataloguePanel = reactHostPort.useMemo(() => new FlowPlayCataloguePanelDefinition(), []);
+  const flowPlayInspectionPanel = reactHostPort.useMemo(() => new FlowPlayInspectionPanelDefinition(), []);
   const augmentPanelTabs = reactHostPort.useMemo(
     () => ({
-      workbench: [new FlowPlayKindsPanelDefinition().resolveTab(), new FlowPlayExtensionsPanelDefinition().resolveTab()],
+      workbench: [flowPlayHierarchyPanel, flowPlayCataloguePanel],
+      details: [flowPlayInspectionPanel],
     }),
-    [catalogueRevision, extensionRevision],
+    [catalogueRevision, extensionRevision, interactionRevision, flowPlayCataloguePanel, flowPlayHierarchyPanel, flowPlayInspectionPanel],
   );
   return <PlaygroundView runtime={runtime} defaultAppId={FLOW_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} />;
 }
@@ -6411,19 +6554,46 @@ import {
   DAG_PLAY_BODY_KEY_MAIN,
   DAG_PLAY_CONTROLLER_ID,
   DAG_PLAY_DEFAULT_FIXTURE_JSON,
+  DAG_PLAY_CATALOGUE_TAB_ID,
+  DAG_PLAY_HIERARCHY_TAB_ID,
+  DAG_PLAY_INSPECTION_TAB_ID,
   DAG_PLAY_SURFACE_ID,
   DAG_PLAY_WINDOW_KIND_ID,
   DagPlayController,
+  buildDagPlayCatalogueTree,
+  buildDagPlayHierarchyTree,
+  buildDagPlayInspectorTree,
   registerDagPlayDeclarativeBodies,
 } from "@semio-tech/dag-play";
 import { DAG_LOD_MODE_AUTOMATIC as DAG_HOST_LOD_AUTOMATIC, DagCanvas, dagLodCanvasProps } from "@semio-tech/dag-react";
 import type { UiDagHostSurfaceNode } from "@semio-tech/framework-platform-core";
 
 let dagPlayChromeRegistered = false;
+const dagPlayControllerRef: { current: DagPlayController | null } = { current: null };
 
 function useDagPlayController(): DagPlayController | undefined {
   const { runtime } = useApp();
-  return runtime.getActiveApp()?.controller as DagPlayController | undefined;
+  const ctrl = runtime.getActiveApp()?.controller as DagPlayController | undefined;
+  dagPlayControllerRef.current = ctrl ?? null;
+  return ctrl;
+}
+
+function useDagPlayInteractionRevision(): number {
+  const { runtime } = useApp();
+  return reactHostPort.useSyncExternalStore(
+    (listener) => {
+      const ctrl = runtime.getActiveApp()?.controller as DagPlayController | undefined;
+      dagPlayControllerRef.current = ctrl ?? null;
+      const unsubscribeRuntime = runtime.subscribe(listener);
+      const unsubscribeSnapshot = ctrl?.subscribeSnapshot(listener);
+      return () => {
+        unsubscribeRuntime();
+        unsubscribeSnapshot?.();
+      };
+    },
+    () => (runtime.getActiveApp()?.controller as DagPlayController | undefined)?.getInteractionRevision() ?? 0,
+    () => 0,
+  );
 }
 
 function DagPlayPaneSurfaceHost({ node }: { readonly node: UiDagHostSurfaceNode }): ReactElement {
@@ -6461,8 +6631,72 @@ export function registerDagPlaySurfaceHosts(): void {
   registerDagPlayDeclarativeBodies();
 }
 
+class DagPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
+  buildTab(): SidePanelTabConfig {
+    return {
+      id: DAG_PLAY_HIERARCHY_TAB_ID,
+      icon: shellTabIconComponent(FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, "workbench"),
+      name: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+      order: 0,
+      tree: new CallbackTreePanelDefinition(() => {
+        const ctrl = dagPlayControllerRef.current;
+        const bus = new CommandBus();
+        const treeNode = buildDagPlayHierarchyTree(ctrl?.getFixtureJson() ?? DAG_PLAY_DEFAULT_FIXTURE_JSON, ctrl?.getSelectedNodeIds() ?? []);
+        return uiTreeNodeToTreePanelConfig(treeNode, bus);
+      }),
+    };
+  }
+}
+
+class DagPlayCataloguePanelDefinition extends PureSidePanelTabDefinition {
+  buildTab(): SidePanelTabConfig {
+    return {
+      id: DAG_PLAY_CATALOGUE_TAB_ID,
+      icon: shellTabIconComponent(FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, "workbench"),
+      name: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+      order: 1,
+      tree: new CallbackTreePanelDefinition(() => {
+        const bus = new CommandBus();
+        return uiTreeNodeToTreePanelConfig(buildDagPlayCatalogueTree(), bus);
+      }),
+    };
+  }
+}
+
+class DagPlayInspectionPanelDefinition extends PureSidePanelTabDefinition {
+  buildTab(): SidePanelTabConfig {
+    return {
+      id: DAG_PLAY_INSPECTION_TAB_ID,
+      icon: shellTabIconComponent(FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, "details"),
+      name: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+      order: 0,
+      tree: new CallbackTreePanelDefinition(() => {
+        const ctrl = dagPlayControllerRef.current;
+        const bus = new CommandBus();
+        const treeNode = buildDagPlayInspectorTree(ctrl?.getFixtureJson() ?? DAG_PLAY_DEFAULT_FIXTURE_JSON, ctrl?.getSelectedNodeIds() ?? []);
+        return uiTreeNodeToTreePanelConfig(treeNode, bus);
+      }),
+    };
+  }
+}
+
+function DagPlayInner({ runtime }: { readonly runtime: Platform }): ReactElement {
+  const interactionRevision = useDagPlayInteractionRevision();
+  const dagPlayHierarchyPanel = reactHostPort.useMemo(() => new DagPlayHierarchyPanelDefinition(), []);
+  const dagPlayCataloguePanel = reactHostPort.useMemo(() => new DagPlayCataloguePanelDefinition(), []);
+  const dagPlayInspectionPanel = reactHostPort.useMemo(() => new DagPlayInspectionPanelDefinition(), []);
+  const augmentPanelTabs = reactHostPort.useMemo(
+    () => ({
+      workbench: [dagPlayHierarchyPanel, dagPlayCataloguePanel],
+      details: [dagPlayInspectionPanel],
+    }),
+    [interactionRevision, dagPlayCataloguePanel, dagPlayHierarchyPanel, dagPlayInspectionPanel],
+  );
+  return <PlaygroundView runtime={runtime} defaultAppId={DAG_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} />;
+}
+
 function DagPlayChrome({ runtime }: { readonly runtime: Platform }): ReactElement {
-  return <PlaygroundView runtime={runtime} defaultAppId={DAG_PLAY_APP_ID} />;
+  return <DagPlayInner runtime={runtime} />;
 }
 
 export function mountDagPlayChrome(playground: Playground, rootId = "root"): void {
@@ -6483,14 +6717,16 @@ export function bootDagPlay(playground: Playground, rootId = "root"): void {
 import {
   PROCEDURAL_PLAY_APP_ID,
   PROCEDURAL_PLAY_EMPTY_FIXTURE_JSON,
-  PROCEDURAL_PLAY_EXTENSIONS_TAB_ID,
-  PROCEDURAL_PLAY_KINDS_TAB_ID,
+  PROCEDURAL_PLAY_CATALOGUE_TAB_ID,
+  PROCEDURAL_PLAY_HIERARCHY_TAB_ID,
+  PROCEDURAL_PLAY_INSPECTION_TAB_ID,
   PROCEDURAL_PLAY_SURFACE_ID,
   PROCEDURAL_PLAY_SURFACE_ID_PREVIEW,
   ProceduralPlayController,
   buildProceduralPlayCanvasContextMenu,
-  buildProceduralPlayExtensionsTree,
-  buildProceduralPlayKindsTree,
+  buildProceduralPlayCatalogueTree,
+  buildProceduralPlayHierarchyTree,
+  buildProceduralPlayInspectorTree,
   registerProceduralPlayDeclarativeBodies,
   type ProceduralPlayHostBridge,
 } from "@semio-tech/procedural-play";
@@ -6798,17 +7034,34 @@ function ProceduralPreviewSurfaceHost({ node: _node }: { readonly node: UiPuzzle
   );
 }
 
-class ProceduralPlayKindsPanelDefinition extends PureSidePanelTabDefinition {
+class ProceduralPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
   buildTab(): SidePanelTabConfig {
     return {
-      id: PROCEDURAL_PLAY_KINDS_TAB_ID,
-      icon: createIconComponent("tags"),
-      name: "Kinds",
+      id: PROCEDURAL_PLAY_HIERARCHY_TAB_ID,
+      icon: shellTabIconComponent(FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, "workbench"),
+      name: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
       order: 0,
       tree: new CallbackTreePanelDefinition(() => {
         const ctrl = proceduralPlayControllerRef.current;
         const bus = new CommandBus();
-        const treeNode = buildProceduralPlayKindsTree(ctrl?.getCatalogueSections() ?? []);
+        const treeNode = buildProceduralPlayHierarchyTree(ctrl?.getFixtureJson() ?? PROCEDURAL_PLAY_EMPTY_FIXTURE_JSON, ctrl?.getSelectedNodeIds() ?? []);
+        return uiTreeNodeToTreePanelConfig(treeNode, bus);
+      }),
+    };
+  }
+}
+
+class ProceduralPlayCataloguePanelDefinition extends PureSidePanelTabDefinition {
+  buildTab(): SidePanelTabConfig {
+    return {
+      id: PROCEDURAL_PLAY_CATALOGUE_TAB_ID,
+      icon: shellTabIconComponent(FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, "workbench"),
+      name: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+      order: 1,
+      tree: new CallbackTreePanelDefinition(() => {
+        const ctrl = proceduralPlayControllerRef.current;
+        const bus = new CommandBus();
+        const treeNode = buildProceduralPlayCatalogueTree(ctrl?.getCatalogueSections() ?? [], ctrl?.getExtensionEntries() ?? []);
         const config = uiTreeNodeToTreePanelConfig(treeNode, bus);
         return {
           ...config,
@@ -6819,17 +7072,17 @@ class ProceduralPlayKindsPanelDefinition extends PureSidePanelTabDefinition {
   }
 }
 
-class ProceduralPlayExtensionsPanelDefinition extends PureSidePanelTabDefinition {
+class ProceduralPlayInspectionPanelDefinition extends PureSidePanelTabDefinition {
   buildTab(): SidePanelTabConfig {
     return {
-      id: PROCEDURAL_PLAY_EXTENSIONS_TAB_ID,
-      icon: createIconComponent("puzzle"),
-      name: "Extensions",
-      order: 1,
+      id: PROCEDURAL_PLAY_INSPECTION_TAB_ID,
+      icon: shellTabIconComponent(FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, "details"),
+      name: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+      order: 0,
       tree: new CallbackTreePanelDefinition(() => {
         const ctrl = proceduralPlayControllerRef.current;
         const bus = new CommandBus();
-        const treeNode = buildProceduralPlayExtensionsTree(ctrl?.getExtensionEntries() ?? []);
+        const treeNode = buildProceduralPlayInspectorTree(ctrl?.getFixtureJson() ?? PROCEDURAL_PLAY_EMPTY_FIXTURE_JSON, ctrl?.getSelectedNodeIds() ?? []);
         return uiTreeNodeToTreePanelConfig(treeNode, bus);
       }),
     };
@@ -6840,11 +7093,16 @@ function ProceduralPlayInner({ runtime }: { readonly runtime: Platform }): React
   const ctrl = useProceduralPlayController(runtime);
   const catalogueRevision = useProceduralPlayCatalogueRevision(runtime);
   const extensionRevision = useProceduralPlayExtensionRevision(runtime);
+  const interactionRevision = useProceduralPlayInteractionRevision(runtime);
+  const proceduralPlayHierarchyPanel = reactHostPort.useMemo(() => new ProceduralPlayHierarchyPanelDefinition(), []);
+  const proceduralPlayCataloguePanel = reactHostPort.useMemo(() => new ProceduralPlayCataloguePanelDefinition(), []);
+  const proceduralPlayInspectionPanel = reactHostPort.useMemo(() => new ProceduralPlayInspectionPanelDefinition(), []);
   const augmentPanelTabs = reactHostPort.useMemo(
     () => ({
-      workbench: [new ProceduralPlayKindsPanelDefinition().resolveTab(), new ProceduralPlayExtensionsPanelDefinition().resolveTab()],
+      workbench: [proceduralPlayHierarchyPanel, proceduralPlayCataloguePanel],
+      details: [proceduralPlayInspectionPanel],
     }),
-    [catalogueRevision, extensionRevision],
+    [catalogueRevision, extensionRevision, interactionRevision, proceduralPlayCataloguePanel, proceduralPlayHierarchyPanel, proceduralPlayInspectionPanel],
   );
   return (
     <>
@@ -6886,7 +7144,13 @@ import {
 	SHOOTING_PLAY_CONTROLLER_ID,
 	SHOOTING_PLAY_SURFACE_ID_ICON,
 	SHOOTING_PLAY_SURFACE_ID_MODEL,
+	SHOOTING_PLAY_CATALOGUE_TAB_ID,
+	SHOOTING_PLAY_HIERARCHY_TAB_ID,
+	SHOOTING_PLAY_INSPECTION_TAB_ID,
 	ShootingPlayController,
+	buildShootingPlayCatalogueTree,
+	buildShootingPlayHierarchyTree,
+	buildShootingPlayInspectorTree,
 	type ShootingPlayHostBridge,
 	registerShootingPlayDeclarativeBodies,
 } from "@semio-tech/shooting-play";
@@ -6895,6 +7159,8 @@ import type { UiShootingHostSurfaceNode } from "@semio-tech/framework-platform-c
 
 type ShootingSurfaceHost = React.ComponentType<{ readonly node: UiShootingHostSurfaceNode }>;
 const shootingSurfaceHosts = new Map<string, ShootingSurfaceHost>();
+const shootingPlayControllerRef: { current: ShootingPlayController | null } = { current: null };
+let shootingPlayChromeRegistered = false;
 
 export function registerUiShootingSurfaceHost(surfaceId: string, Component: ShootingSurfaceHost): void {
 	shootingSurfaceHosts.set(surfaceId, Component);
@@ -6909,7 +7175,9 @@ function useShootingPlayController(runtimeOverride?: Platform): ShootingPlayCont
 		() => runtime?.generation ?? 0,
 		() => 0,
 	);
-	return runtime?.getActiveApp()?.controller as ShootingPlayController | undefined;
+	const ctrl = runtime?.getActiveApp()?.controller as ShootingPlayController | undefined;
+	shootingPlayControllerRef.current = ctrl ?? null;
+	return ctrl;
 }
 
 function ShootingPlayFileBridge(): ReactElement | null {
@@ -7030,29 +7298,116 @@ function ShootingModelSurfaceHost({ node }: { readonly node: UiShootingHostSurfa
 }
 
 function ShootingIconSurfaceHost({ node }: { readonly node: UiShootingHostSurfaceNode }): ReactElement {
+	const { runtime } = useApp();
 	const ctrl = useShootingPlayController();
+	const revision = ctrl?.getRenderRevision() ?? 0;
+	void runtime.generation;
 	const fixture = ctrl?.getFixture();
 	if (!fixture || node.view !== "icon") {
 		return <div className="absolute inset-0 min-h-0 min-w-0" />;
 	}
-	const activeShot = resolveActiveShot(fixture);
 	return (
 		<div className="absolute inset-0 min-h-0 min-w-0">
-			<ShootingIconCanvas
-				fixture={fixture}
-				className="h-full w-full"
-				centerModel={ctrl?.getCenterModel() ?? true}
-				fitRevision={ctrl?.getFitRevision() ?? 0}
-				onCamera={(camera) => {
-					if (!activeShot) return;
-					ctrl?.run("setShotCamera", { shotId: activeShot.id, camera });
-				}}
-			/>
+			<ShootingIconCanvas fixture={fixture} className="h-full w-full" renderRevision={revision} />
 		</div>
 	);
 }
 
-let shootingPlayChromeRegistered = false;
+function useShootingPlayInteractionRevision(runtime: Platform): number {
+	return reactHostPort.useSyncExternalStore(
+		(listener) => {
+			const ctrl = runtime.getActiveApp()?.controller as ShootingPlayController | undefined;
+			shootingPlayControllerRef.current = ctrl ?? null;
+			const unsubscribeRuntime = runtime.subscribe(listener);
+			const unsubscribeSnapshot = ctrl?.subscribeSnapshot(listener);
+			return () => {
+				unsubscribeRuntime();
+				unsubscribeSnapshot?.();
+			};
+		},
+		() => (runtime.getActiveApp()?.controller as ShootingPlayController | undefined)?.getInteractionRevision() ?? 0,
+		() => 0,
+	);
+}
+
+class ShootingPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
+	buildTab(): SidePanelTabConfig {
+		return {
+			id: SHOOTING_PLAY_HIERARCHY_TAB_ID,
+			icon: shellTabIconComponent(FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, "workbench"),
+			name: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+			order: 0,
+			tree: new CallbackTreePanelDefinition(() => {
+				const ctrl = shootingPlayControllerRef.current;
+				const bus = new CommandBus();
+				const fixture = ctrl?.getFixture();
+				if (!fixture) {
+					return [{ id: "shooting-play-hierarchy.loading", label: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, items: [{ id: "loading", label: "…" }] }];
+				}
+				const treeNode = buildShootingPlayHierarchyTree(fixture, ctrl?.getSelectedId() ?? null, ctrl?.getSelectedKind() ?? null);
+				return uiTreeNodeToTreePanelConfig(treeNode, bus);
+			}),
+		};
+	}
+}
+
+class ShootingPlayCataloguePanelDefinition extends PureSidePanelTabDefinition {
+	buildTab(): SidePanelTabConfig {
+		return {
+			id: SHOOTING_PLAY_CATALOGUE_TAB_ID,
+			icon: shellTabIconComponent(FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, "workbench"),
+			name: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+			order: 1,
+			tree: new CallbackTreePanelDefinition(() => {
+				const bus = new CommandBus();
+				return uiTreeNodeToTreePanelConfig(buildShootingPlayCatalogueTree(), bus);
+			}),
+		};
+	}
+}
+
+class ShootingPlayInspectionPanelDefinition extends PureSidePanelTabDefinition {
+	buildTab(): SidePanelTabConfig {
+		return {
+			id: SHOOTING_PLAY_INSPECTION_TAB_ID,
+			icon: shellTabIconComponent(FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, "details"),
+			name: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+			order: 0,
+			tree: new CallbackTreePanelDefinition(() => {
+				const ctrl = shootingPlayControllerRef.current;
+				const bus = new CommandBus();
+				const fixture = ctrl?.getFixture();
+				if (!fixture) {
+					return [{ id: "shooting-play-inspector.loading", label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, items: [{ id: "loading", label: "…" }] }];
+				}
+				const treeNode = buildShootingPlayInspectorTree(fixture, ctrl?.getSelectedId() ?? null, ctrl?.getSelectedKind() ?? null);
+				return uiTreeNodeToTreePanelConfig(treeNode, bus);
+			}),
+		};
+	}
+}
+
+function ShootingPlayInner({ playground }: { readonly playground: Playground }): ReactElement {
+	const interactionRevision = useShootingPlayInteractionRevision(playground.runtime);
+	const ctrl = useShootingPlayController(playground.runtime);
+	shootingPlayControllerRef.current = ctrl ?? null;
+	const shootingPlayHierarchyPanel = reactHostPort.useMemo(() => new ShootingPlayHierarchyPanelDefinition(), []);
+	const shootingPlayCataloguePanel = reactHostPort.useMemo(() => new ShootingPlayCataloguePanelDefinition(), []);
+	const shootingPlayInspectionPanel = reactHostPort.useMemo(() => new ShootingPlayInspectionPanelDefinition(), []);
+	const augmentPanelTabs = reactHostPort.useMemo(
+		() => ({
+			workbench: [shootingPlayHierarchyPanel, shootingPlayCataloguePanel],
+			details: [shootingPlayInspectionPanel],
+		}),
+		[interactionRevision, shootingPlayCataloguePanel, shootingPlayHierarchyPanel, shootingPlayInspectionPanel],
+	);
+	return (
+		<>
+			<ShootingPlayFileBridge />
+			<PlaygroundView runtime={playground.runtime} defaultAppId={SHOOTING_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} playgroundKeybindings={playground.keybindings} />
+		</>
+	);
+}
 
 export function registerShootingPlaySurfaceHosts(): void {
 	if (shootingPlayChromeRegistered) return;
@@ -7063,12 +7418,7 @@ export function registerShootingPlaySurfaceHosts(): void {
 }
 
 function ShootingPlayChrome({ playground }: { readonly playground: Playground }): ReactElement {
-	return (
-		<>
-			<ShootingPlayFileBridge />
-			<PlaygroundView runtime={playground.runtime} defaultAppId={SHOOTING_PLAY_APP_ID} playgroundKeybindings={playground.keybindings} />
-		</>
-	);
+	return <ShootingPlayInner playground={playground} />;
 }
 
 export function mountShootingPlayChrome(playground: Playground, rootId = "root"): void {
@@ -7674,7 +8024,7 @@ function FigureTilesSurfaceHost({ node }: { readonly node: UiPanelHostSurfaceNod
 								}}
 								onPointerDown={onTilePointerDown(tile.id, tile.crop)}
 							>
-								<span className={cn("pointer-events-none absolute left-0 top-0 max-w-full truncate px-1 text-[10px]", floatingMenuSurfaceClass)}>{tile.name}</span>
+								<span className={cn("pointer-events-none absolute left-0 top-0 max-w-full truncate px-1 text-2xs", floatingMenuSurfaceClass)}>{tile.name}</span>
 								{selected
 									? PRESENTATION_TILE_HANDLES.map((handle) => (
 											<button

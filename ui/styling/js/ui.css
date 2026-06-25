@@ -72,11 +72,17 @@
     --hover-panel: var(--color-gray-600);
     --hover-overlay: var(--color-gray-600);
     --hover-temporary: var(--color-light-gray-gray);
+    --element-base: var(--color-gray);
+    --element-canvas: var(--color-gray);
+    --element-window: var(--color-gray);
+    --element-panel: var(--color-dark-5-9);
+    --element-overlay: var(--color-gray);
+    --element-temporary: var(--color-gray);
     --active-base: var(--color-primary);
     --active-foreground: var(--color-dark);
     --border-normal-color: var(--color-gray);
     --border-emphasized-color: var(--foreground);
-    --border-element-color: var(--border-normal-color);
+    --border-element-color: var(--element-base);
     --border-color: var(--border-normal-color);
     --hover-interactive-fill: var(--border-normal-color);
     --plaster: var(--color-gray);
@@ -520,7 +526,7 @@
 
 [data-slot="toolbar-zone"] :is([data-slot="toggle-group"], [data-slot="button-group"]) > :not(:first-child) {
   border-inline-start-width: 0;
-  margin-inline-start: -1px;
+  margin-inline-start: calc(-1 * var(--stroke-hairline));
 }
 
 [data-slot="toolbar-zone"] :is([data-slot="toggle-group"].divide-x, [data-slot="button-group"].divide-x) > :not(:last-child) {
@@ -546,8 +552,8 @@
 }
 
 [data-slot="toolbar-zone"] :is([data-slot="toggle-group-item"], [data-slot="button-group-item"]):focus-visible {
-  outline: 1px solid var(--accent);
-  outline-offset: -1px;
+  outline: var(--stroke-hairline) solid var(--accent);
+  outline-offset: calc(-1 * var(--stroke-hairline));
   box-shadow: none;
 }
 
@@ -620,6 +626,12 @@
   --hover-panel: var(--color-gray-400);
   --hover-overlay: var(--color-gray-400);
   --hover-temporary: var(--color-dark-dark-gray-2);
+  --element-base: var(--color-gray);
+  --element-canvas: var(--color-gray);
+  --element-window: var(--color-gray);
+  --element-panel: var(--color-gray-600);
+  --element-overlay: var(--color-gray);
+  --element-temporary: var(--color-gray);
   --cursor-default: url("../../../asset/cursor/cursor_dark.svg") 0 0, default;
   --cursor-pointer: url("../../../asset/cursor/cursor_pointer_dark_inkscape.svg") 0 0, pointer;
   --cursor-grab: url("../../../asset/cursor/cursor_grab_dark.svg") 0 0, grab;
@@ -685,14 +697,14 @@
 }
 
 .touch .lm_header {
-  height: 28px !important;
-  min-height: 28px !important;
-  max-height: 28px !important;
+  height: var(--size-large) !important;
+  min-height: var(--size-large) !important;
+  max-height: var(--size-large) !important;
 }
 
 .touch .lm_tab {
-  padding: 4px 12px !important;
-  padding-bottom: 5px !important;
+  padding: var(--spacing-single) var(--size-workbench) !important;
+  padding-bottom: calc(var(--spacing-single) + var(--stroke-hairline)) !important;
 }
 
 .touch .lm_title {
@@ -701,7 +713,7 @@
 }
 
 .touch [data-slot="mobile-panel-tab-button"] {
-  min-height: 44px;
+  min-height: var(--layout-touch-min);
 }
 
 @layer base {
@@ -734,7 +746,7 @@
     background-color: transparent;
   }
   .prose blockquote {
-    border: 1px solid var(--border-color);
+    border: var(--stroke-hairline) solid var(--border-color);
     border-radius: 0;
     padding: var(--ui-spacing);
   }
@@ -753,6 +765,33 @@
   --size-huge: calc(11 * var(--ui-spacing));
   --size-mega: calc(13 * var(--ui-spacing));
   --size-giga: calc(15 * var(--ui-spacing));
+  --size-xl: calc(10 * var(--ui-spacing));
+  --size-tera: calc(17 * var(--ui-spacing));
+  --size-peta: calc(19 * var(--ui-spacing));
+  --layout-touch-min: 2.75rem;
+  --layout-label: calc(30 * var(--ui-spacing));
+  --layout-popover-min: calc(37.5 * var(--ui-spacing));
+  --layout-panel-min: calc(46.875 * var(--ui-spacing));
+  --layout-panel-rail: calc(70 * var(--ui-spacing));
+  --layout-panel-max: calc(150 * var(--ui-spacing));
+  --layout-command-max: calc(93.75 * var(--ui-spacing));
+  --layout-engagement-max: calc(140 * var(--ui-spacing));
+  --layout-deck-width: 60rem;
+  --layout-deck-height: 43.75rem;
+  --layout-story-height: 25rem;
+  --layout-story-width-sm: 37.5rem;
+  --layout-story-width-md: 50rem;
+  --layout-story-width-lg: 60rem;
+  --layout-cad-menu-sm: calc(68.75 * var(--ui-spacing));
+  --layout-cad-menu-md: calc(87.5 * var(--ui-spacing));
+  --layout-cad-menu-lg: calc(112.5 * var(--ui-spacing));
+  --layout-cad-overlay: calc(131.25 * var(--ui-spacing));
+  --layout-preview-min: 4.5rem;
+  --layout-preview-md: 5.5rem;
+  --layout-offscreen: -100vw;
+  --stroke-hairline: 1px;
+  --stroke-default: calc(2 * var(--stroke-hairline));
+  --stroke-focus: calc(3 * var(--stroke-hairline));
   --radius: 0rem;
   --radius-xs: 0rem;
   --radius-sm: 0rem;
@@ -822,9 +861,9 @@
   --z-navbar: 100;
   --z-modal: 1000;
   --z-tutorial: 10000;
-  --glass-blur: 24px;
-  --glass-panel-blur: 40px;
-  --glass-window-options-blur: 14px;
+  --glass-blur: 1.5rem;
+  --glass-panel-blur: 2.5rem;
+  --glass-window-options-blur: 0.875rem;
   --glass-saturate: 1.45;
   --glass-panel-alpha: 0.58;
   --glass-window-options-alpha: 0.22;
@@ -863,6 +902,31 @@
   --color-element: var(--border-element-color);
   --color-emphasized: var(--border-emphasized-color);
   --color-hover-interactive-fill: var(--hover-interactive-fill);
+}
+
+/* Per-level element foreground — mirrors the --hover-* family. */
+[data-level="base"] {
+  --border-element-color: var(--element-base);
+}
+
+[data-level="canvas"] {
+  --border-element-color: var(--element-canvas);
+}
+
+[data-level="window"] {
+  --border-element-color: var(--element-window);
+}
+
+[data-level="panel"] {
+  --border-element-color: var(--element-panel);
+}
+
+[data-level="overlay"] {
+  --border-element-color: var(--element-overlay);
+}
+
+[data-level="temporary"] {
+  --border-element-color: var(--element-temporary);
 }
 
 @utility border-normal {
@@ -1192,6 +1256,18 @@
   width: var(--size-workbench);
   height: var(--size-workbench);
 }
+@utility w-workbench {
+  width: var(--size-workbench);
+}
+@utility h-workbench {
+  height: var(--size-workbench);
+}
+@utility min-h-workbench {
+  min-height: var(--size-workbench);
+}
+@utility max-h-workbench {
+  max-height: var(--size-workbench);
+}
 
 @utility size-medium {
   width: var(--size-medium);
@@ -1248,8 +1324,105 @@
   height: var(--size-giga);
 }
 
+@utility size-xl {
+  width: var(--size-xl);
+  height: var(--size-xl);
+}
+@utility w-xl {
+  width: var(--size-xl);
+}
+@utility h-xl {
+  height: var(--size-xl);
+}
+
+@utility size-tera {
+  width: var(--size-tera);
+  height: var(--size-tera);
+}
+@utility w-tera {
+  width: var(--size-tera);
+}
+@utility h-tera {
+  height: var(--size-tera);
+}
+@utility min-h-tera {
+  min-height: var(--size-tera);
+}
+
+@utility size-peta {
+  width: var(--size-peta);
+  height: var(--size-peta);
+}
+
+@utility min-w-layout-label {
+  min-width: var(--layout-label);
+}
+@utility w-layout-label {
+  width: var(--layout-label);
+}
+@utility min-w-layout-popover {
+  min-width: var(--layout-popover-min);
+}
+@utility min-w-layout-panel {
+  min-width: var(--layout-panel-min);
+}
+@utility w-layout-rail {
+  width: var(--layout-panel-rail);
+}
+@utility max-w-layout-panel {
+  max-width: var(--layout-panel-max);
+}
+@utility max-h-layout-command {
+  max-height: var(--layout-command-max);
+}
+@utility max-w-layout-engagement {
+  max-width: var(--layout-engagement-max);
+}
+@utility w-layout-deck {
+  width: var(--layout-deck-width);
+}
+@utility h-layout-deck {
+  height: var(--layout-deck-height);
+}
+@utility h-layout-story {
+  height: var(--layout-story-height);
+}
+@utility w-layout-story-sm {
+  width: var(--layout-story-width-sm);
+}
+@utility w-layout-story-md {
+  width: var(--layout-story-width-md);
+}
+@utility w-layout-story-lg {
+  width: var(--layout-story-width-lg);
+}
+@utility w-layout-cad-menu-sm {
+  width: var(--layout-cad-menu-sm);
+}
+@utility w-layout-cad-menu-md {
+  width: var(--layout-cad-menu-md);
+}
+@utility w-layout-cad-menu-lg {
+  width: var(--layout-cad-menu-lg);
+}
+@utility w-layout-cad-overlay {
+  width: var(--layout-cad-overlay);
+}
+@utility min-h-layout-preview {
+  min-height: var(--layout-preview-min);
+}
+@utility min-h-layout-preview-md {
+  min-height: var(--layout-preview-md);
+}
+@utility left-offscreen {
+  left: var(--layout-offscreen);
+}
+
 @utility min-w-tiny {
   min-width: var(--size-tiny);
+}
+@utility min-h-tiny {
+  min-height: var(--size-tiny);
 }
 @utility min-w-small {
   min-width: var(--size-small);
@@ -1364,11 +1537,11 @@
 /* Panel frame stroke is on [data-slot="panel-chrome-frame"]; inset scroll hosts so scrollbars stay inside. */
 [data-panel] [data-slot="scroll-area"] {
   box-sizing: border-box;
-  padding: 1px;
+  padding: var(--stroke-hairline);
 }
 
 [data-slot="panel-chrome-frame"] {
-  border-width: 1px;
+  border-width: var(--stroke-hairline);
   border-style: solid;
   border-color: var(--border-normal-color) !important;
   transition: border-color 120ms ease;

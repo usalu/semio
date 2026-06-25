@@ -1549,14 +1549,14 @@ impl FlowHost {
     }
 
     pub fn set_camera(&mut self, x: f64, y: f64, zoom: f64) {
-        self.fixture.camera = CameraJson { x, y, zoom: zoom.clamp(0.05, 8.0) };
+        self.fixture.camera = CameraJson { x, y, zoom: zoom.clamp(ui_styling::metrics::camera::ZOOM_MIN, ui_styling::metrics::camera::FLOW_ZOOM_MAX) };
         self.dag.set_camera(x, y, self.fixture.camera.zoom);
     }
 
     pub fn wheel_zoom_screen(&mut self, sx: f64, sy: f64, delta_y: f64) {
         let before = self.screen_to_world_point(sx, sy);
-        let factor = if delta_y < 0.0 { 1.1 } else { 0.9 };
-        let zoom = (self.fixture.camera.zoom * factor).clamp(0.05, 8.0);
+        let factor = if delta_y < 0.0 { ui_styling::metrics::camera::WHEEL_ZOOM_IN_FACTOR } else { ui_styling::metrics::camera::WHEEL_ZOOM_OUT_FACTOR };
+        let zoom = (self.fixture.camera.zoom * factor).clamp(ui_styling::metrics::camera::ZOOM_MIN, ui_styling::metrics::camera::FLOW_ZOOM_MAX);
         self.fixture.camera.zoom = zoom;
         self.dag.set_camera(self.fixture.camera.x, self.fixture.camera.y, zoom);
         let after = self.screen_to_world_point(sx, sy);

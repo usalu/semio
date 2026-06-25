@@ -73,6 +73,12 @@ import {
 	type ProceduralPreviewShowMode,
 	type ProceduralTransformGranularity,
 } from "@semio-tech/procedural-react";
+import {
+	buildFlowPlayCatalogueTree,
+	buildFlowPlayHierarchyTree,
+	buildFlowPlayInspectorTree,
+	parseFlowPlayFixtureJson,
+} from "@semio-tech/flow-play";
 import { meshTransferFromPreviewPayload } from "@semio-tech/geometry-brep-js";
 
 function previewItemKey(item: ProceduralPreviewItem): string {
@@ -115,6 +121,9 @@ export const PROCEDURAL_PLAY_LAYOUT = createDefaultLayout(
 );
 export const PROCEDURAL_PLAY_KINDS_TAB_ID = "procedural-play-kinds";
 export const PROCEDURAL_PLAY_EXTENSIONS_TAB_ID = "procedural-play-extensions";
+export const PROCEDURAL_PLAY_HIERARCHY_TAB_ID = "framework.panel.hierarchy";
+export const PROCEDURAL_PLAY_CATALOGUE_TAB_ID = "framework.panel.catalogue";
+export const PROCEDURAL_PLAY_INSPECTION_TAB_ID = "framework.panel.inspection";
 export const PROCEDURAL_PLAY_FIXTURE_DEFAULT_ID = "procedural-default";
 
 import {
@@ -446,6 +455,18 @@ export function buildProceduralPlayKindsTree(sections: readonly CatalogueSection
 	}
 	const treeSections: UiTreeSectionNode[] = buildCatalogueKindsTreeSections(sections, "procedural-play-kinds", flowPlayCatalogueItemDragData);
 	return { type: "tree", sections: treeSections };
+}
+
+export function buildProceduralPlayHierarchyTree(fixtureJson: string, selectedNodeIds: readonly string[]): UiNode {
+	return buildFlowPlayHierarchyTree(fixtureJson, selectedNodeIds, PROCEDURAL_PLAY_CONTROLLER_ID);
+}
+
+export function buildProceduralPlayCatalogueTree(sections: readonly CatalogueSection[], extensionEntries: readonly FlowExtensionEntry[]): UiNode {
+	return buildFlowPlayCatalogueTree(sections, extensionEntries);
+}
+
+export function buildProceduralPlayInspectorTree(fixtureJson: string, selectedNodeIds: readonly string[]): UiNode {
+	return buildFlowPlayInspectorTree(fixtureJson, selectedNodeIds, PROCEDURAL_PLAY_CONTROLLER_ID);
 }
 
 /** @emoji 🧰 Snapshot read by {@link buildProceduralPlayToolbarTools}. */
@@ -802,6 +823,37 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 		this.notifySnapshot();
 		this.rebuildShellMode();
 		this.emit();
+	}
+
+	private renameFlowWidget(oldId: string, newId: string): void {
+		const trimmed = newId.trim();
+		if (!trimmed || trimmed === oldId) return;
+		const fixture = parseFlowPlayFixtureJson(this.fixtureJson);
+		if (!fixture || fixture.widgets.some((widget) => widget.id === trimmed)) return;
+		const widgets = fixture.widgets.map((widget) => (widget.id === oldId ? ({ ...widget, id: trimmed } as import("@semio-tech/flow-react").FlowWidgetV1) : widget));
+		const synapses = fixture.synapses.map((synapse) => ({
+			...synapse,
+			from: synapse.from === oldId ? trimmed : synapse.from,
+			to: synapse.to === oldId ? trimmed : synapse.to,
+		}));
+		this.selectedNodeIds = this.selectedNodeIds.map((id) => (id === oldId ? trimmed : id));
+		this.applyFixtureJson(proceduralFixtureToJson({ ...fixture, widgets, synapses }));
+	}
+
+	private patchFlowWidget(widgetId: string, field: string, value: unknown): void {
+		const fixture = parseFlowPlayFixtureJson(this.fixtureJson);
+		if (!fixture) return;
+		const widgets = fixture.widgets.map((widget) => {
+			if (widget.id !== widgetId) return widget;
+			if (field === "value" || field === "min" || field === "max" || field === "step") {
+				const numeric = typeof value === "number" ? value : Number(value);
+				if (!Number.isFinite(numeric)) return widget;
+				return { ...widget, [field]: numeric } as import("@semio-tech/flow-react").FlowWidgetV1;
+			}
+			if (typeof value !== "string") return widget;
+			return { ...widget, [field]: value } as import("@semio-tech/flow-react").FlowWidgetV1;
+		});
+		this.applyFixtureJson(proceduralFixtureToJson({ ...fixture, widgets }));
 	}
 
 	private loadFixtureById(fixtureId: string): void {
@@ -1488,6 +1540,23 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 			this.notifySnapshot();
 			this.rebuildToolbarTools();
 			this.emit();
+			return;
+		}
+		if (command === "renameFlowWidget") {
+			const oldId = (args as { oldId?: string }).oldId;
+			const value = (args as { value?: string }).value;
+			if (typeof oldId === "string" && typeof value === "string") {
+				this.renameFlowWidget(oldId, value);
+			}
+			return;
+		}
+		if (command === "patchFlowWidget") {
+			const widgetId = (args as { widgetId?: string }).widgetId;
+			const field = (args as { field?: string }).field;
+			const value = (args as { value?: unknown }).value;
+			if (typeof widgetId === "string" && typeof field === "string") {
+				this.patchFlowWidget(widgetId, field, value);
+			}
 			return;
 		}
 		if (command === "setPreselect") {

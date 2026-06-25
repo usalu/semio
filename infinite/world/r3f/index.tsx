@@ -1556,7 +1556,7 @@ export interface WorldOrbitProjectionSwitchProps {
 
 /** @emoji 🔀 Small orthographic / perspective toggle for infinite-world viewports. */
 export function WorldOrbitProjectionSwitch(props: WorldOrbitProjectionSwitchProps): ReactElement {
-  const shellClass = props.className ?? cn("pointer-events-auto absolute bottom-[4.75rem] right-3 z-10 flex text-[10px] font-medium", floatingToolbarSurfaceClass);
+  const shellClass = props.className ?? cn("pointer-events-auto absolute bottom-[4.75rem] right-3 z-10 flex text-2xs font-medium", floatingToolbarSurfaceClass);
   const buttonClass = (active: boolean) =>
     cn("px-2 py-1 transition-colors", active ? "bg-active-base text-emphasized" : cn(menuListItemClassName, "text-muted-foreground"));
   return (

@@ -33,6 +33,12 @@ import {
 	type WindowBodyViewContext,
 	type WindowEngagement,
 	uiDeclarativeSectionsToTree,
+	FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
+	FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+	FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID,
+	FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+	FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
+	FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 } from "@semio-tech/framework-playground-core";
 import { Store } from "@semio-tech/framework-core";
 import {
@@ -53,6 +59,7 @@ export const PRESENTATION_PLAY_CONTROLLER_ID = "presentation-tile-play";
 export const PRESENTATION_PLAY_SURFACE_ID = "presentation.tile.play/v1";
 export const PRESENTATION_PLAY_BODY_KEY_MAIN = "presentation.tile.play.main";
 export const PRESENTATION_PLAY_BODY_KEY_HIERARCHY = "presentation.tile.play.hierarchy";
+export const PRESENTATION_PLAY_BODY_KEY_CATALOGUE = "presentation.tile.play.catalogue";
 export const PRESENTATION_PLAY_BODY_KEY_DETAILS = "presentation.tile.play.details";
 export const PRESENTATION_PLAY_STORE_ID = "presentation-tile-play.snapshot";
 export const PRESENTATION_PLAY_ICON_HIERARCHY = "presentation.play.icon.hierarchy";
@@ -521,7 +528,7 @@ export function buildPresentationPlayDetailsBody(ctx: SidePanelBodyViewContext):
 	const controller = presentationPlayControllerFromContext(ctx);
 	if (!controller) {
 		return uiDeclarativeSectionsToTree([
-			{ type: "section", id: "presentation.play.details.missing", label: "Tile", children: [{ type: "text", value: "Missing presentation play controller" }] },
+			{ type: "section", id: "presentation.play.details.missing", label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, children: [{ type: "text", value: "Missing presentation play controller" }] },
 		]);
 	}
 	const snapshot = controller.getSnapshot();
@@ -530,7 +537,7 @@ export function buildPresentationPlayDetailsBody(ctx: SidePanelBodyViewContext):
 			{
 				type: "section",
 				id: "presentation.play.details.empty",
-				label: "Tile",
+				label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 				children: [
 					{
 						type: "text",
@@ -546,7 +553,7 @@ export function buildPresentationPlayDetailsBody(ctx: SidePanelBodyViewContext):
 	const tile = snapshot.tiles.find((row) => row.id === snapshot.selectedIds[0]);
 	if (!tile) {
 		return uiDeclarativeSectionsToTree([
-			{ type: "section", id: "presentation.play.details.not-found", label: "Tile", children: [{ type: "text", value: "Selected tile not found." }] },
+			{ type: "section", id: "presentation.play.details.not-found", label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, children: [{ type: "text", value: "Selected tile not found." }] },
 		]);
 	}
 	return uiDeclarativeSectionsToTree([
@@ -590,9 +597,79 @@ export function buildPresentationPlayDetailsBody(ctx: SidePanelBodyViewContext):
 	]);
 }
 
+function buildPresentationPlayCatalogueBody(ctx: SidePanelBodyViewContext): UiTreeNode {
+	const controller = presentationPlayControllerFromContext(ctx);
+	if (!controller) {
+		return uiDeclarativeSectionsToTree([
+			{ type: "section", id: "presentation.play.catalogue.missing", label: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, children: [{ type: "text", value: "Missing presentation play controller" }] },
+		]);
+	}
+	const snapshot = controller.getSnapshot();
+	return uiDeclarativeSectionsToTree([
+		{
+			type: "section",
+			id: "presentation.play.catalogue.templates",
+			label: "Tile templates",
+			children: [
+				{ type: "text", value: "Seed morph tiles from figure templates." },
+				{
+					type: "button",
+					id: "presentation.play.catalogue.seed-2x2",
+					label: "Split 2×2 grid",
+					command: presentationPlayCmd("seedGrid", { rows: 2, columns: 2 }),
+				},
+				{
+					type: "button",
+					id: "presentation.play.catalogue.seed-3x5",
+					label: "Split 3×5 catalogue grid",
+					command: presentationPlayCmd("seedGrid", { rows: 3, columns: 5 }),
+				},
+				{
+					type: "button",
+					id: "presentation.play.catalogue.add-tile",
+					label: "Add single tile",
+					command: presentationPlayCmd("addTile"),
+				},
+				{
+					type: "button",
+					id: "presentation.play.catalogue.clear",
+					label: "Clear tiles",
+					command: presentationPlayCmd("clearTiles"),
+				},
+			],
+		},
+		{
+			type: "section",
+			id: "presentation.play.catalogue.figure",
+			label: "Figure templates",
+			children: [
+				{
+					type: "button",
+					id: "presentation.play.catalogue.figure.catalogue",
+					label: "Use catalogue figure",
+					command: presentationPlayCmd("setSource", { ...PRESENTATION_PLAY_DEFAULT_SOURCE }),
+				},
+				{
+					type: "field",
+					id: "presentation.play.catalogue.figure.src",
+					label: "Active source",
+					child: { type: "text", value: snapshot.source.src },
+				},
+				{
+					type: "field",
+					id: "presentation.play.catalogue.figure.kind",
+					label: "Media kind",
+					child: { type: "text", value: snapshot.source.kind ?? "figure" },
+				},
+			],
+		},
+	]);
+}
+
 export function registerPresentationPlayDeclarativeBodies(): void {
 	registerWindowBody(PRESENTATION_PLAY_BODY_KEY_MAIN, buildPresentationPlayMainBody);
 	registerSidePanelBody(PRESENTATION_PLAY_BODY_KEY_HIERARCHY, buildPresentationPlayHierarchyBody);
+	registerSidePanelBody(PRESENTATION_PLAY_BODY_KEY_CATALOGUE, buildPresentationPlayCatalogueBody);
 	registerSidePanelBody(PRESENTATION_PLAY_BODY_KEY_DETAILS, buildPresentationPlayDetailsBody);
 }
 
@@ -602,19 +679,27 @@ function buildPresentationPlayAppRuntime(controller: PresentationPlayController)
 	app.panelTabs = [
 		{
 			id: `${PRESENTATION_PLAY_APP_ID}.hierarchy`,
-			iconId: PRESENTATION_PLAY_ICON_HIERARCHY,
+			iconId: FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID,
 			panel: "workbench",
 			order: 0,
 			bodyKey: PRESENTATION_PLAY_BODY_KEY_HIERARCHY,
-			label: "Hierarchy",
+			label: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+		},
+		{
+			id: `${PRESENTATION_PLAY_APP_ID}.catalogue`,
+			iconId: FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
+			panel: "workbench",
+			order: 1,
+			bodyKey: PRESENTATION_PLAY_BODY_KEY_CATALOGUE,
+			label: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
 		},
 		{
 			id: `${PRESENTATION_PLAY_APP_ID}.details`,
-			iconId: PRESENTATION_PLAY_ICON_DETAILS,
+			iconId: FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
 			panel: "details",
 			order: 0,
 			bodyKey: PRESENTATION_PLAY_BODY_KEY_DETAILS,
-			label: "Tile",
+			label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 		},
 	];
 	return app;
@@ -712,6 +797,24 @@ if (import.meta.vitest) {
 			}) as UiTreeNode;
 			expect(body.type).toBe("tree");
 			expect(body.sections[0]?.items).toHaveLength(1);
+		});
+
+		it("builds catalogue workbench tab with tile templates", () => {
+			const bus = new CommandBus();
+			const runtime = new Platform({ id: PRESENTATION_PLAY_APP_ID });
+			const ctrl = new PresentationPlayController(bus, () => runtime.notify());
+			runtime.addApp(buildPresentationPlayAppRuntime(ctrl));
+			const body = buildPresentationPlayCatalogueBody({
+				runtime,
+				windowKindId: `${PRESENTATION_PLAY_APP_ID}.catalogue`,
+				bodyKey: PRESENTATION_PLAY_BODY_KEY_CATALOGUE,
+				activeModeId: null,
+				generation: runtime.generation,
+			});
+			expect(body.type).toBe("tree");
+			const templateSection = body.sections.find((section) => section.id === "presentation.play.catalogue.templates");
+			expect(templateSection).toBeDefined();
+			expect(templateSection!.items.some((item) => item.id === "presentation.play.catalogue.seed-3x5")).toBe(true);
 		});
 
 		it("builds details inspector for the selected tile", () => {

@@ -2203,6 +2203,115 @@ function pruneSelectionAfterModelEdit(selection: SelectionSnapshot, _prevModel: 
 }
 //#endregion 🔖StructuralDelete
 
+//#region 🔖InspectorPatch
+export type Puzzle5dPartPatchField = "partKind" | "text" | "label" | "x" | "y" | "origin";
+export type Puzzle5dGripPatchField = "gripKind" | "angle" | "radius" | "position" | "direction" | "label";
+
+function puzzle5dPatchNumber(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+  if (typeof value === "string") {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+  }
+  return null;
+}
+
+function puzzle5dPatchVec3(value: unknown): [number, number, number] | null {
+  if (!Array.isArray(value) || value.length !== 3) {
+    return null;
+  }
+  const x = Number(value[0]);
+  const y = Number(value[1]);
+  const z = Number(value[2]);
+  if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(z)) {
+    return null;
+  }
+  return [x, y, z];
+}
+
+function patchPuzzle5dPartRow(part: Part, field: Puzzle5dPartPatchField, value: unknown): Part {
+  if (field === "partKind" && typeof value === "string") {
+    return { ...part, partKind: value.trim() || undefined };
+  }
+  if (field === "text" && typeof value === "string" && part["2d"]) {
+    return { ...part, "2d": { ...part["2d"], text: value } };
+  }
+  if (field === "label" && typeof value === "string" && part["3d"]) {
+    return { ...part, "3d": { ...part["3d"], label: value } };
+  }
+  if (field === "x") {
+    const next = puzzle5dPatchNumber(value);
+    if (next === null || !part["2d"]) {
+      return part;
+    }
+    return { ...part, "2d": { ...part["2d"], x: next } };
+  }
+  if (field === "y") {
+    const next = puzzle5dPatchNumber(value);
+    if (next === null || !part["2d"]) {
+      return part;
+    }
+    return { ...part, "2d": { ...part["2d"], y: next } };
+  }
+  if (field === "origin") {
+    const next = puzzle5dPatchVec3(value);
+    if (!next || !part["3d"]) {
+      return part;
+    }
+    return { ...part, "3d": { ...part["3d"], origin: next } };
+  }
+  return part;
+}
+
+function patchPuzzle5dGripRow(grip: Grip, field: Puzzle5dGripPatchField, value: unknown): Grip {
+  if (field === "gripKind" && typeof value === "string") {
+    return { ...grip, gripKind: value.trim() || grip.gripKind };
+  }
+  if (field === "label" && typeof value === "string" && grip["3d"]) {
+    return { ...grip, "3d": { ...grip["3d"], label: value } };
+  }
+  if (field === "angle") {
+    const next = puzzle5dPatchNumber(value);
+    if (next === null || !grip["2d"]) {
+      return grip;
+    }
+    return { ...grip, "2d": { ...grip["2d"], angle: next } };
+  }
+  if (field === "radius") {
+    const next = puzzle5dPatchNumber(value);
+    if (next === null) {
+      return grip;
+    }
+    if (grip["2d"]) {
+      return { ...grip, "2d": { ...grip["2d"], radius: next }, ...(grip["3d"] ? { "3d": { ...grip["3d"], radius: next } } : {}) };
+    }
+    if (grip["3d"]) {
+      return { ...grip, "3d": { ...grip["3d"], radius: next } };
+    }
+    return grip;
+  }
+  if (field === "position") {
+    const next = puzzle5dPatchVec3(value);
+    if (!next || !grip["3d"]) {
+      return grip;
+    }
+    return { ...grip, "3d": { ...grip["3d"], position: next } };
+  }
+  if (field === "direction") {
+    const next = puzzle5dPatchVec3(value);
+    if (!next || !grip["3d"]) {
+      return grip;
+    }
+    return { ...grip, "3d": { ...grip["3d"], direction: next } };
+  }
+  return grip;
+}
+//#endregion 🔖InspectorPatch
+
 //#region 🔖Store
 export interface StoreSnapshot {
   readonly model: Model;
@@ -2549,6 +2658,42 @@ export class Store {
       fillBuildDone: true,
     });
     this.fillSession = null;
+  }
+
+  /** @emoji ✏️ Patches editable fields on one or more unified parts. */
+  patchParts(partIds: readonly string[], field: Puzzle5dPartPatchField, value: unknown): void {
+    if (!partIds.length) {
+      return;
+    }
+    const idSet = new Set(partIds);
+    const parts = this.snapshot.model.parts.map((part) => {
+      if (!idSet.has(part.id)) {
+        return part;
+      }
+      return patchPuzzle5dPartRow(part, field, value);
+    });
+    this.setSnapshot({ ...this.snapshot, model: { ...this.snapshot.model, parts } });
+  }
+
+  /** @emoji ✏️ Patches editable fields on one or more unified grips. */
+  patchGrips(gripFullIds: readonly string[], field: Puzzle5dGripPatchField, value: unknown): void {
+    if (!gripFullIds.length) {
+      return;
+    }
+    const idSet = new Set(gripFullIds);
+    const parts = this.snapshot.model.parts.map((part) => {
+      let changed = false;
+      const grips = part.grips.map((grip) => {
+        const fullId = gripFullId(part.id, grip.id);
+        if (!idSet.has(fullId)) {
+          return grip;
+        }
+        changed = true;
+        return patchPuzzle5dGripRow(grip, field, value);
+      });
+      return changed ? { ...part, grips } : part;
+    });
+    this.setSnapshot({ ...this.snapshot, model: { ...this.snapshot.model, parts } });
   }
 }
 
@@ -3841,6 +3986,7 @@ if (import.meta.vitest) {
       for (const style of ["neutral", "hovered", "selected", "highlighted", "disabled"] as const) {
         expect(puzzle5d3dMeshStyleColors(style)).toBe(meshStyleColors(style));
       }
+      expect(PUZZLE_5D_3D_MESH_PAINT.style.neutral.mesh).toBe("var(--panel)");
     });
   });
 

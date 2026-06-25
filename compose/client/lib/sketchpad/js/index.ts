@@ -54,13 +54,31 @@ import {
 	type Puzzle5dModel,
 	type SideTabSpec,
 	type UiNode,
+	type UiSectionNode,
+	type UiTreeItemNode,
 	type UiTreeNode,
 	type WindowBodyViewContext,
+	uiDeclarativeSectionsToTree,
 	getPlatformControllerById,
 	WindowKindRuntime,
 	AppRuntime,
 } from "@semio-tech/framework-platform-core";
-import { PRODUCT_SHELL_DEFAULT_PANEL_VISIBILITY, type NavigationDestination, type NavigationLevel, type SearchItemSpec } from "@semio-tech/framework-core";
+import {
+	FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
+	FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+	FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+	FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID,
+	FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
+	FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+	FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
+	FRAMEWORK_PANEL_TAB_INSPECTION_ID,
+	FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+	PRODUCT_SHELL_DEFAULT_PANEL_VISIBILITY,
+	type CommandDescriptor,
+	type NavigationDestination,
+	type NavigationLevel,
+	type SearchItemSpec,
+} from "@semio-tech/framework-core";
 import {
 	type RelationshipKind,
 	type WiresFixtureV1,
@@ -13806,14 +13824,13 @@ const SKETCHPAD_SURFACE_DESIGN_VFS = virtualFileSystemSurfaceId(SKETCHPAD_DESIGN
 const SKETCHPAD_SURFACE_KIT_WIRES = "compose.sketchpad.surface.kit.wires/v1";
 const SKETCHPAD_SURFACE_DESIGN_SCENE = "compose.sketchpad.surface.design.scene/v1";
 const SKETCHPAD_SURFACE_DESIGN_DIAGRAM = "compose.sketchpad.surface.design.diagram/v1";
-const SKETCHPAD_SURFACE_WORKBENCH = "compose.sketchpad.surface.workbench/v1";
-const SKETCHPAD_SURFACE_DETAILS = "compose.sketchpad.surface.details/v1";
 const SKETCHPAD_SURFACE_TYPE_SCENE = "compose.sketchpad.surface.type.scene/v1";
 export const SKETCHPAD_SURFACE_DOCS_PAGE = "compose.sketchpad.surface.docs.page/v1";
 export const SKETCHPAD_SURFACE_FEEDBACK_FORM = "compose.sketchpad.surface.feedback.form/v1";
 const SKETCHPAD_PANEL_WINDOWS_BODY = "compose.sketchpad.panel.windows";
-const SKETCHPAD_PANEL_WORKBENCH_BODY = "compose.sketchpad.panel.workbench";
-const SKETCHPAD_PANEL_DETAILS_BODY = "compose.sketchpad.panel.details";
+const SKETCHPAD_PANEL_HIERARCHY_BODY = "compose.sketchpad.panel.hierarchy";
+const SKETCHPAD_PANEL_CATALOGUE_BODY = "compose.sketchpad.panel.catalogue";
+const SKETCHPAD_PANEL_INSPECTION_BODY = "compose.sketchpad.panel.inspection";
 
 const sketchpadRegisteredTypeRepSurfaces = new Set<string>();
 
@@ -14185,284 +14202,406 @@ export class SketchpadTypeRepresentationScene extends SketchpadRoutedComponent<P
 	}
 }
 
-/** @emoji 🧩 Workbench side panel for the active route. */
-class SketchpadWorkbenchPanel extends SketchpadRoutedComponent<PanelModel> {
-	constructor(platform: Platform) {
-		super("panel", SKETCHPAD_SURFACE_WORKBENCH, SKETCHPAD_SHELL_CONTROLLER_ID, { body: { type: "text", value: "" } }, platform);
-	}
+function sketchpadShellCmd(command: string, args?: Record<string, unknown>): CommandDescriptor {
+	return { controllerId: SKETCHPAD_SHELL_CONTROLLER_ID, command, args: args as never };
+}
 
-	override buildSnapshot(): PanelModel {
-		const ctrl = getSketchpadShellController();
-		const routeUri = ctrl?.navigationPath ?? getSketchpadPlatform()?.uri ?? "/";
-		const path = routeUri.split("?")[0] ?? "/";
-		const { kitId, designId, typeId, qualityId } = parseSketchpadRouteScopeFromPath(routeUri);
-		if (!kitId) {
-			if (path.startsWith("/docs")) {
-				const docsPath = parseSketchpadRouteScopeFromPath(path).docsPath;
-				const children: UiNode[] = [
-					{ type: "text", value: "Documentation", emphasize: true },
-					{ type: "text", value: sketchpadTitleFromDocPath(docsPath) },
-				];
-				for (const section of sketchpadBuildDocsRegistry()) {
-					const inSection = section.pages.some((entry) => entry.path === docsPath);
-					if (!inSection) continue;
-					children.push({ type: "text", value: `Section · ${section.label}`, emphasize: true });
-					for (const page of section.pages) {
-						children.push({
-							type: "button",
-							label: page.title,
-							command: {
-								controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
-								command: "navigate",
-								args: { path: `/doc/${page.path}` },
-							},
-							style: page.path === docsPath ? { variant: "success" } : { variant: "subtle" },
-						});
-					}
-					break;
-				}
-				return { body: { type: "stack", direction: "vertical", padding: "standard", gap: "tight", children } };
-			}
-			const open = ctrl?.listOpenKitIds() ?? [];
-			const shell = ctrl?.getStore<SketchpadShellSnapshot>(SKETCHPAD_SHELL_STORE_SHELL)?.getSnapshot();
-			const importStatus = shell?.importStatus ?? sketchpadEmptyImportStatus();
-			if (importStatus.phase === "importing") {
-				return sketchpadPanelTextStack([
-					{ text: "Importing kit", emphasize: true },
-					{ text: importStatus.label ?? "…" },
-				]);
-			}
-			if (importStatus.phase === "error") {
-				return sketchpadPanelTextStack([
-					{ text: "Import failed", emphasize: true },
-					{ text: importStatus.error ?? "Unknown error" },
-				]);
-			}
-			if (importStatus.phase === "success") {
-				return sketchpadPanelTextStack([
-					{ text: "Import complete", emphasize: true },
-					{ text: importStatus.label ?? "Kit ready" },
-				]);
-			}
-			const selected = shell?.home.selectedKitIds ?? [];
-			if (selected.length > 0) {
-				const lines: { text: string; emphasize?: boolean }[] = [
-					{ text: "Home", emphasize: true },
-					{ text: `${selected.length} kit(s) selected` },
-				];
-				for (const id of selected.slice(0, 5)) {
-					const kit = ctrl?.getKitStore(id)?.getSnapshot().kit;
-					lines.push({ text: kit?.name ?? id });
-				}
-				if (selected.length > 5) lines.push({ text: "…" });
-				return sketchpadPanelTextStack(lines);
-			}
+function sketchpadAllEqual<T>(values: readonly T[]): boolean {
+	if (values.length <= 1) return true;
+	const first = values[0];
+	for (let index = 1; index < values.length; index += 1) {
+		if (values[index] !== first) return false;
+	}
+	return true;
+}
+
+function sketchpadHierarchySelectedIds(selection: SketchpadRouteSelection): string[] {
+	return [
+		...selection.pieceIds.map((id) => `sketchpad.hierarchy.piece.${id}`),
+		...selection.connectionIds.map((id) => `sketchpad.hierarchy.connection.${id}`),
+		...selection.kitWiresNodeIds.map((id) => `sketchpad.hierarchy.kit-node.${id}`),
+	];
+}
+
+/** @emoji 🌳 Workbench hierarchy for the active sketchpad route. */
+function buildSketchpadHierarchyPanelBody(ctx: WindowBodyViewContext): UiTreeNode {
+	const ctrl = getSketchpadShellController();
+	const routeUri = ctrl?.navigationPath ?? ctx.platform.uri ?? "/";
+	const pathOnly = routeUri.split("?")[0] ?? "/";
+	const { kitId, designId, typeId, qualityId } = parseSketchpadRouteScopeFromPath(routeUri);
+	const selection = ctrl?.routeSelection ?? sketchpadEmptyRouteSelection();
+	const sections: UiSectionNode[] = [];
+	if (!kitId) {
+		const open = ctrl?.listOpenKitIds() ?? [];
+		const shell = ctrl?.getStore<SketchpadShellSnapshot>(SKETCHPAD_SHELL_STORE_SHELL)?.getSnapshot();
+		const homeSelected = shell?.home.selectedKitIds ?? [];
+		if (pathOnly.startsWith("/docs")) {
+			sections.push({
+				type: "section",
+				id: "sketchpad.hierarchy.docs",
+				label: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+				children: [{ type: "text", value: sketchpadTitleFromDocPath(parseSketchpadRouteScopeFromPath(pathOnly).docsPath) }],
+			});
+			return uiDeclarativeSectionsToTree(sections);
+		}
+		const kitItems: UiTreeItemNode[] = open.map((id) => {
+			const kit = ctrl?.getKitStore(id)?.getSnapshot().kit;
 			return {
-				body: {
-					type: "stack",
-					direction: "vertical",
-					padding: "standard",
-					gap: "tight",
-					children: [
-						{ type: "text", value: "Workbench", emphasize: true },
+				id: `sketchpad.hierarchy.kit.${id}`,
+				label: kit?.name ?? id,
+				command: sketchpadShellCmd("navigate", { path: `/kits/${id}` }),
+			};
+		});
+		if (homeSelected.length > 0) {
+			sections.push({
+				type: "section",
+				id: "sketchpad.hierarchy.home-selected",
+				label: "Selected kits",
+				children: homeSelected.map((id) => {
+					const kit = ctrl?.getKitStore(id)?.getSnapshot().kit;
+					return {
+						type: "button",
+						id: `sketchpad.hierarchy.home-kit.${id}`,
+						label: kit?.name ?? id,
+						command: sketchpadShellCmd("navigate", { path: `/kits/${id}` }),
+					};
+				}),
+			});
+		}
+		sections.push({
+			type: "section",
+			id: "sketchpad.hierarchy.open-kits",
+			label: "Open kits",
+			children: kitItems.length
+				? kitItems.map((item) => ({ type: "button", id: item.id, label: item.label, command: item.command }))
+				: [
 						{ type: "text", value: `${open.length} kit(s) open` },
 						sketchpadPanelCommandButton("Import kit archive…", "importKitFromFile"),
 						sketchpadPanelCommandButton("Create empty kit", "createTemporaryKit", { name: "Untitled Kit" }),
-						{ type: "text", value: "Drag a .zip onto Home or use the command palette." },
 					],
-				},
-			};
-		}
-		const kitStore = ctrl?.getKitStore(kitId);
-		const kit = kitStore?.getSnapshot().kit;
-		const kind = ctrl?.getKitPersistenceKind(kitId) ?? "";
-		if (designId && kit) {
-			const design = findDesignInKit(kit, designId);
-			const pieceCount = design?.pieces?.length ?? 0;
-			const selected = ctrl?.routeSelection.pieceIds ?? [];
-			const lines: { text: string; emphasize?: boolean }[] = [
-				{ text: "Design", emphasize: true },
-				{ text: design?.name ?? designId },
-				{ text: `${pieceCount} piece(s) · ${selected.length} selected` },
-				{ text: `Kit · ${kit.name ?? kitId} (${kind})` },
-			];
-			if (selected.length > 0) {
-				const names = selected
-					.map((id) => findPieceInDesign(design!, id)?.name ?? id)
-					.slice(0, 4)
-					.join(", ");
-				lines.push({ text: `Selection · ${names}${selected.length > 4 ? "…" : ""}` });
-			}
-			return sketchpadPanelTextStack(lines);
-		}
-		if (typeId && kit) {
-			const type = findTypeInKit(kit, typeId);
-			return sketchpadPanelTextStack([
-				{ text: "Type", emphasize: true },
-				{ text: type?.name ?? typeId },
-				{ text: `Kit · ${kit.name ?? kitId} (${kind})` },
-			]);
-		}
-		if (qualityId && kit) {
-			const quality = findQualityInKit(kit, qualityId);
-			const key = quality?.key ?? qualityId;
-			const value = quality?.value;
-			return sketchpadPanelTextStack([
-				{ text: "Quality", emphasize: true },
-				{ text: value != null && value !== "" ? `${key} · ${value}` : key },
-				{ text: `Kit · ${kit.name ?? kitId} (${kind})` },
-			]);
-		}
-		const diagramSelected = ctrl?.routeSelection.kitWiresNodeIds ?? [];
-		if (diagramSelected.length > 0 && kit) {
-			const lines: { text: string; emphasize?: boolean }[] = [
-				{ text: "Kit wires", emphasize: true },
-				{ text: `${diagramSelected.length} node(s) selected` },
-			];
-			for (const diagramId of diagramSelected.slice(0, 6)) {
-				lines.push({ text: diagramId });
-			}
-			if (diagramSelected.length > 6) lines.push({ text: "…" });
-			return sketchpadPanelTextStack(lines);
-		}
-		if (kit) {
-			const types = kit.types?.length ?? 0;
-			const designs = kit.designs?.length ?? 0;
-			const lines: { text: string; emphasize?: boolean }[] = [
-				{ text: "Kit", emphasize: true },
-				{ text: kit.name ?? kitId },
-				{ text: `${types} type(s) · ${designs} design(s)` },
-				{ text: kind ? `Persistence · ${kind}` : "Persistence · unknown" },
-			];
-			if (kit.version) lines.push({ text: `Version · ${kit.version}` });
-			const updated = sketchpadFormatKitTimestamp(kit.updatedAt ?? kit.createdAt);
-			if (updated) lines.push({ text: `Updated · ${updated}` });
-			if (kit.description) lines.push({ text: kit.description });
-			return sketchpadPanelTextStack(lines);
-		}
-		return sketchpadPanelTextStack([{ text: "Kit loading…" }]);
+		});
+		return { ...uiDeclarativeSectionsToTree(sections), selectedIds: sketchpadHierarchySelectedIds(selection) };
 	}
+	const kit = ctrl?.getKitStore(kitId)?.getSnapshot().kit;
+	if (!kit) {
+		return uiDeclarativeSectionsToTree([
+			{ type: "section", id: "sketchpad.hierarchy.loading", label: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, children: [{ type: "text", value: "Kit loading…" }] },
+		]);
+	}
+	const designItems: UiTreeItemNode[] = sketchpadKitItemsOf<Design>(kit.designs).map((design) => ({
+		id: `sketchpad.hierarchy.design.${design.id}`,
+		label: design.name ?? design.id ?? "",
+		command: sketchpadShellCmd("navigate", { path: `/kits/${kitId}/design/${design.id}` }),
+	}));
+	const typeItems: UiTreeItemNode[] = sketchpadKitTypeRows(kit).map((type) => ({
+		id: `sketchpad.hierarchy.type.${type.id}`,
+		label: type.name ?? type.id ?? "",
+		command: sketchpadShellCmd("navigate", { path: `/kits/${kitId}/type/${type.id}` }),
+	}));
+	sections.push({
+		type: "section",
+		id: "sketchpad.hierarchy.kit",
+		label: kit.name ?? kitId,
+		children: [
+			{ type: "text", value: `${designItems.length} design(s) · ${typeItems.length} type(s)` },
+			sketchpadPanelCommandButton("Create design", "createDesignInActiveKit", { name: "New design" }),
+		],
+	});
+	if (designId) {
+		const design = findDesignInKit(kit, designId);
+		const pieceItems: UiTreeItemNode[] = (design?.pieces ?? []).map((piece) => ({
+			id: `sketchpad.hierarchy.piece.${piece.id}`,
+			label: sketchpadPieceLabel(piece, kit),
+			command: sketchpadShellCmd("setRouteSelection", {
+				pieceIds: [piece.id!],
+				connectionIds: [],
+				kitWiresNodeIds: [],
+				kitWiresHoveredNodeId: null,
+			}),
+		}));
+		const connections = ((design as { connections?: readonly SketchpadKitConnection[] } | undefined)?.connections ?? []) as readonly SketchpadKitConnection[];
+		const connectionItems: UiTreeItemNode[] = connections
+			.filter((connection) => Boolean(connection.id))
+			.map((connection) => ({
+				id: `sketchpad.hierarchy.connection.${connection.id}`,
+				label: connection.id!,
+				command: sketchpadShellCmd("setRouteSelection", {
+					pieceIds: [],
+					connectionIds: [connection.id!],
+					kitWiresNodeIds: [],
+					kitWiresHoveredNodeId: null,
+				}),
+			}));
+		sections.push({
+			type: "section",
+			id: "sketchpad.hierarchy.design",
+			label: design?.name ?? designId,
+			children: [
+				{ type: "text", value: `${pieceItems.length} piece(s) · ${connectionItems.length} connection(s)` },
+				...pieceItems.map((item) => ({ type: "button" as const, id: item.id, label: item.label, command: item.command })),
+				...connectionItems.map((item) => ({ type: "button" as const, id: item.id, label: item.label, command: item.command })),
+			],
+		});
+	} else if (typeId) {
+		const type = findTypeInKit(kit, typeId);
+		sections.push({
+			type: "section",
+			id: "sketchpad.hierarchy.type",
+			label: type?.name ?? typeId,
+			children: [{ type: "text", value: `${type?.representations?.length ?? 0} representation(s)` }],
+		});
+	} else if (qualityId) {
+		const quality = findQualityInKit(kit, qualityId);
+		sections.push({
+			type: "section",
+			id: "sketchpad.hierarchy.quality",
+			label: quality?.key ?? qualityId,
+			children: [{ type: "text", value: quality?.value ?? "" }],
+		});
+	} else {
+		sections.push(
+			{
+				type: "section",
+				id: "sketchpad.hierarchy.designs",
+				label: "Designs",
+				children: designItems.length
+					? designItems.map((item) => ({ type: "button", id: item.id, label: item.label, command: item.command }))
+					: [{ type: "text", value: "(none)" }],
+			},
+			{
+				type: "section",
+				id: "sketchpad.hierarchy.types",
+				label: "Types",
+				children: typeItems.length
+					? typeItems.map((item) => ({ type: "button", id: item.id, label: item.label, command: item.command }))
+					: [{ type: "text", value: "(none)" }],
+			},
+		);
+	}
+	return { ...uiDeclarativeSectionsToTree(sections), selectedIds: sketchpadHierarchySelectedIds(selection) };
 }
 
-/** @emoji 🔎 Details side panel for the active route. */
-class SketchpadDetailsPanel extends SketchpadRoutedComponent<PanelModel> {
-	constructor(platform: Platform) {
-		super("panel", SKETCHPAD_SURFACE_DETAILS, SKETCHPAD_SHELL_CONTROLLER_ID, { body: { type: "text", value: "" } }, platform);
+/** @emoji 📚 Workbench catalogue of kit types for the active route. */
+function buildSketchpadCataloguePanelBody(ctx: WindowBodyViewContext): UiTreeNode {
+	const ctrl = getSketchpadShellController();
+	const routeUri = ctrl?.navigationPath ?? ctx.platform.uri ?? "/";
+	const { kitId } = parseSketchpadRouteScopeFromPath(routeUri);
+	if (!kitId) {
+		return uiDeclarativeSectionsToTree([
+			{
+				type: "section",
+				id: "sketchpad.catalogue.empty",
+				label: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+				children: [{ type: "text", value: "Open a kit to browse types." }],
+			},
+		]);
 	}
+	const kit = ctrl?.getKitStore(kitId)?.getSnapshot().kit;
+	if (!kit) {
+		return uiDeclarativeSectionsToTree([
+			{ type: "section", id: "sketchpad.catalogue.loading", label: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, children: [{ type: "text", value: "Kit loading…" }] },
+		]);
+	}
+	const typeRows = sketchpadKitTypeRows(kit);
+	return uiDeclarativeSectionsToTree([
+		{
+			type: "section",
+			id: "sketchpad.catalogue.types",
+			label: `Types (${typeRows.length})`,
+			children: typeRows.length
+				? typeRows.map((type) => ({
+						type: "button",
+						id: `sketchpad.catalogue.type.${type.id}`,
+						label: type.name ?? type.id ?? "",
+						command: sketchpadShellCmd("navigate", { path: `/kits/${kitId}/type/${type.id}` }),
+					}))
+				: [{ type: "text", value: "(none)" }],
+		},
+	]);
+}
 
-	override buildSnapshot(): PanelModel {
-		const ctrl = getSketchpadShellController();
-		const routeUri = ctrl?.navigationPath ?? getSketchpadPlatform()?.uri ?? "/";
-		const pathOnly = routeUri.split("?")[0] ?? "/";
-		const { kitId, designId, typeId, qualityId } = parseSketchpadRouteScopeFromPath(routeUri);
-		if (!kitId) {
-			if (pathOnly === "/") {
-				const shell = ctrl?.getStore<SketchpadShellSnapshot>(SKETCHPAD_SHELL_STORE_SHELL)?.getSnapshot();
-				const selected = shell?.home.selectedKitIds ?? [];
-				if (selected.length > 0) {
-					const lines: { text: string; emphasize?: boolean }[] = [
-						{ text: "Details", emphasize: true },
-						{ text: `${selected.length} kit(s) selected` },
-					];
-					for (const id of selected.slice(0, 8)) {
-						const kit = ctrl?.getKitStore(id)?.getSnapshot().kit;
-						lines.push({ text: kit?.name ?? id });
-					}
-					if (selected.length > 8) lines.push({ text: "…" });
-					return sketchpadPanelTextStack(lines);
-				}
-			}
-			return sketchpadPanelTextStack([
-				{ text: "Details", emphasize: true },
-				{ text: "Select a kit on Home to see details." },
-			]);
+/** @emoji 🔎 Editable inspection panel bound to {@link SketchpadRouteSelection}. */
+function buildSketchpadInspectionPanelBody(ctx: WindowBodyViewContext): UiTreeNode {
+	const ctrl = getSketchpadShellController();
+	const routeUri = ctrl?.navigationPath ?? ctx.platform.uri ?? "/";
+	const { kitId, designId, typeId, qualityId } = parseSketchpadRouteScopeFromPath(routeUri);
+	const selection = ctrl?.routeSelection ?? sketchpadEmptyRouteSelection();
+	const children: UiNode[] = [
+		{
+			type: "section",
+			id: "sketchpad.inspection.header",
+			label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+			children: [
+				{
+					type: "text",
+					value: `${selection.pieceIds.length} piece(s) · ${selection.connectionIds.length} connection(s) · ${selection.kitWiresNodeIds.length} kit node(s)`,
+				},
+			],
+		},
+	];
+	if (!kitId) {
+		const shell = ctrl?.getStore<SketchpadShellSnapshot>(SKETCHPAD_SHELL_STORE_SHELL)?.getSnapshot();
+		const homeSelected = shell?.home.selectedKitIds ?? [];
+		if (homeSelected.length > 0) {
+			children.push({
+				type: "section",
+				id: "sketchpad.inspection.home",
+				label: "Home selection",
+				children: homeSelected.map((id) => {
+					const kit = ctrl?.getKitStore(id)?.getSnapshot().kit;
+					return { type: "text", id: `sketchpad.inspection.home.${id}`, value: kit?.name ?? id };
+				}),
+			});
+		} else {
+			children[0]!.children!.push({ type: "text", value: "Select a kit on Home or open a design to inspect pieces and connections." });
 		}
-		const kit = ctrl?.getKitStore(kitId)?.getSnapshot().kit;
-		if (!kit) {
-			return sketchpadPanelTextStack([{ text: "Details", emphasize: true }, { text: "Kit loading…" }]);
+		return uiDeclarativeSectionsToTree(children);
+	}
+	const kit = ctrl?.getKitStore(kitId)?.getSnapshot().kit;
+	if (!kit) {
+		return uiDeclarativeSectionsToTree([
+			{ type: "section", id: "sketchpad.inspection.loading", label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, children: [{ type: "text", value: "Kit loading…" }] },
+		]);
+	}
+	if (designId && selection.pieceIds.length > 0) {
+		const design = findDesignInKit(kit, designId);
+		const pieces = selection.pieceIds
+			.map((pieceId) => findPieceInDesign(design!, pieceId))
+			.filter((piece): piece is NonNullable<typeof piece> => piece != null);
+		const names = pieces.map((piece) => piece.name ?? "");
+		const descriptions = pieces.map((piece) => piece.description ?? "");
+		const nameUniform = sketchpadAllEqual(names);
+		const descriptionUniform = sketchpadAllEqual(descriptions);
+		const pieceFields: UiNode[] = [];
+		if (selection.pieceIds.length === 1) {
+			pieceFields.push({
+				type: "field",
+				id: "sketchpad.inspection.piece.id",
+				label: "Id",
+				child: { type: "text", value: selection.pieceIds[0]! },
+			});
 		}
-		if (designId) {
-			const design = findDesignInKit(kit, designId);
-			const lines: { text: string; emphasize?: boolean }[] = [
-				{ text: "Design details", emphasize: true },
-				{ text: `Id · ${designId}` },
-			];
-			if (design?.description) lines.push({ text: design.description });
-			if (design?.unit) lines.push({ text: `Unit · ${design.unit}` });
-			lines.push({ text: `Pieces · ${design?.pieces?.length ?? 0}` });
-			const pieceIds = ctrl?.routeSelection.pieceIds ?? [];
-			const connectionIds = ctrl?.routeSelection.connectionIds ?? [];
-			if (pieceIds.length === 1) {
-				const piece = findPieceInDesign(design!, pieceIds[0]!);
-				if (piece) {
-					lines.push({ text: `Selected · ${piece.name ?? piece.id}` });
-					const selectedTypeId = sketchpadReadEntityId((piece as { type?: unknown }).type);
-					if (selectedTypeId) lines.push({ text: `Type · ${findTypeInKit(kit, selectedTypeId)?.name ?? selectedTypeId}` });
-				}
-			} else if (pieceIds.length > 1) {
-				lines.push({ text: `${pieceIds.length} pieces selected` });
-			}
-			if (connectionIds.length === 1) {
-				lines.push({ text: `Connection · ${connectionIds[0]}` });
-			} else if (connectionIds.length > 1) {
-				lines.push({ text: `${connectionIds.length} connections selected` });
-			}
-			return sketchpadPanelTextStack(lines);
+		pieceFields.push(
+			{
+				type: "field",
+				id: "sketchpad.inspection.piece.name",
+				label: "Name",
+				child: {
+					type: "input",
+					id: "sketchpad.inspection.piece.name.input",
+					inputKind: "text",
+					value: nameUniform ? (names[0] ?? "") : "",
+					placeholder: nameUniform ? undefined : "Mixed",
+					onChange: sketchpadShellCmd("patchRoutePieces", { kitId, designId, pieceIds: selection.pieceIds, field: "name" }),
+				},
+			},
+			{
+				type: "field",
+				id: "sketchpad.inspection.piece.description",
+				label: "Description",
+				child: {
+					type: "input",
+					id: "sketchpad.inspection.piece.description.input",
+					inputKind: "text",
+					value: descriptionUniform ? (descriptions[0] ?? "") : "",
+					placeholder: descriptionUniform ? undefined : "Mixed",
+					onChange: sketchpadShellCmd("patchRoutePieces", { kitId, designId, pieceIds: selection.pieceIds, field: "description" }),
+				},
+			},
+		);
+		children.push({
+			type: "section",
+			id: "sketchpad.inspection.pieces",
+			label: `Pieces (${selection.pieceIds.length})`,
+			children: pieceFields,
+		});
+	}
+	if (designId && selection.connectionIds.length > 0) {
+		const design = findDesignInKit(kit, designId);
+		const connections = ((design as { connections?: readonly SketchpadKitConnection[] } | undefined)?.connections ?? []) as readonly SketchpadKitConnection[];
+		const selected = connections.filter((connection) => connection.id && selection.connectionIds.includes(connection.id));
+		const gaps = selected
+			.map((connection) => (connection as Record<string, unknown>).gap)
+			.filter((value): value is number => typeof value === "number");
+		const gapUniform = sketchpadAllEqual(gaps);
+		const connectionFields: UiNode[] = [];
+		if (selection.connectionIds.length === 1) {
+			connectionFields.push({
+				type: "field",
+				id: "sketchpad.inspection.connection.id",
+				label: "Id",
+				child: { type: "text", value: selection.connectionIds[0]! },
+			});
 		}
-		if (typeId) {
-			const type = findTypeInKit(kit, typeId);
-			const lines: { text: string; emphasize?: boolean }[] = [
-				{ text: "Type details", emphasize: true },
-				{ text: `Id · ${typeId}` },
-			];
-			if (type?.description) lines.push({ text: type.description });
-			if (type?.unit) lines.push({ text: `Unit · ${type.unit}` });
-			const reps = type?.representations?.length ?? 0;
-			const connectors = type?.connectors?.length ?? 0;
-			lines.push({ text: `Representations · ${reps} · Connectors · ${connectors}` });
-			return sketchpadPanelTextStack(lines);
+		if (gaps.length > 0) {
+			connectionFields.push({
+				type: "field",
+				id: "sketchpad.inspection.connection.gap",
+				label: "Gap",
+				child: {
+					type: "text",
+					value: gapUniform ? String(gaps[0] ?? 0) : "Mixed",
+				},
+			});
 		}
-		if (qualityId) {
-			const quality = findQualityInKit(kit, qualityId);
-			const lines: { text: string; emphasize?: boolean }[] = [
-				{ text: "Quality details", emphasize: true },
-				{ text: `Id · ${qualityId}` },
-			];
-			if (quality?.key) lines.push({ text: `Key · ${quality.key}` });
-			if (quality?.value) lines.push({ text: `Value · ${quality.value}` });
-			return sketchpadPanelTextStack(lines);
-		}
-		const vfsSelected = ctrl?.routeSelection.kitWiresNodeIds ?? [];
-		if (vfsSelected.length > 0) {
-			const meta = ctrl?.kitWiresNodeMetaForKit(kitId) ?? new Map();
-			const lines: { text: string; emphasize?: boolean }[] = [
-				{ text: "Selection", emphasize: true },
-				{ text: `${vfsSelected.length} item(s) selected` },
-			];
-			for (const nodeId of vfsSelected.slice(0, 8)) {
+		children.push({
+			type: "section",
+			id: "sketchpad.inspection.connections",
+			label: `Connections (${selection.connectionIds.length})`,
+			children: connectionFields.length ? connectionFields : [{ type: "text", value: "No editable connection fields" }],
+		});
+	}
+	if (selection.kitWiresNodeIds.length > 0) {
+		const meta = ctrl?.kitWiresNodeMetaForKit(kitId) ?? new Map();
+		children.push({
+			type: "section",
+			id: "sketchpad.inspection.kit-wires",
+			label: `Kit wires (${selection.kitWiresNodeIds.length})`,
+			children: selection.kitWiresNodeIds.slice(0, 12).map((nodeId) => {
 				const kind = meta.get(nodeId)?.fileNodeKindId;
 				let label = nodeId;
 				if (kind === "type") label = findTypeInKit(kit, nodeId)?.name ?? nodeId;
 				else if (kind === "design") label = findDesignInKit(kit, nodeId)?.name ?? nodeId;
-				else if (kind === "folder") {
-					const folder = (kit.folders ?? []).find((row) => String((row as { id?: unknown }).id ?? "") === nodeId);
-					label = folder && typeof (folder as { path?: unknown }).path === "string" ? (folder as { path: string }).path : nodeId;
-				} else if (kind === "file") {
-					const file = (kit.files ?? []).find((row) => String((row as { id?: unknown }).id ?? "") === nodeId);
-					label = file ? sketchpadKitFileBasename(file as Record<string, unknown>) : nodeId;
-				}
-				lines.push({ text: kind ? `${kind} · ${label}` : label });
-			}
-			if (vfsSelected.length > 8) lines.push({ text: "…" });
-			return sketchpadPanelTextStack(lines);
-		}
-		return sketchpadPanelTextStack([
-			{ text: "Kit details", emphasize: true },
-			{ text: `Id · ${kitId}` },
-			{ text: kit.description ?? kit.name ?? kitId },
-			{ text: `Authors · ${kit.authors?.length ?? 0} · Tags · ${kit.tags?.length ?? 0}` },
-		]);
+				return { type: "text", id: `sketchpad.inspection.kit-node.${nodeId}`, value: kind ? `${kind} · ${label}` : label };
+			}),
+		});
 	}
+	if (typeId && selection.pieceIds.length === 0 && selection.connectionIds.length === 0 && selection.kitWiresNodeIds.length === 0) {
+		const type = findTypeInKit(kit, typeId);
+		children.push({
+			type: "section",
+			id: "sketchpad.inspection.type",
+			label: "Type",
+			children: [
+				{ type: "text", value: type?.name ?? typeId },
+				{ type: "text", value: type?.description ?? "" },
+				{ type: "text", value: `${type?.representations?.length ?? 0} representation(s)` },
+			],
+		});
+	}
+	if (qualityId && selection.pieceIds.length === 0 && selection.connectionIds.length === 0) {
+		const quality = findQualityInKit(kit, qualityId);
+		children.push({
+			type: "section",
+			id: "sketchpad.inspection.quality",
+			label: "Quality",
+			children: [
+				{ type: "text", value: quality?.key ?? qualityId },
+				{ type: "text", value: quality?.value ?? "" },
+			],
+		});
+	}
+	if (
+		children.length === 1 &&
+		selection.pieceIds.length === 0 &&
+		selection.connectionIds.length === 0 &&
+		selection.kitWiresNodeIds.length === 0 &&
+		!typeId &&
+		!qualityId
+	) {
+		children[0]!.children!.push({ type: "text", value: "Select pieces or connections in the canvas or hierarchy." });
+	}
+	return uiDeclarativeSectionsToTree(children);
 }
 
 class SketchpadPlatformComponents {
@@ -14476,8 +14615,6 @@ class SketchpadPlatformComponents {
 			new SketchpadKitWires(platform),
 			new SketchpadDesignScene(platform),
 			new SketchpadDesignDiagram(platform),
-			new SketchpadWorkbenchPanel(platform),
-			new SketchpadDetailsPanel(platform),
 		];
 		for (const component of this.components) {
 			registerPlatformComponent(platform, component);
@@ -15295,6 +15432,35 @@ export class SketchpadShellController extends VirtualFileSystemController {
 					.catch((error) => console.error("[compose.sketchpad] createDesignInActiveKit failed:", error));
 				break;
 			}
+			case "patchRoutePieces": {
+				const payload = args as {
+					kitId: string;
+					designId: string;
+					pieceIds: readonly string[];
+					field: "name" | "description";
+					value?: unknown;
+				};
+				if (!payload.kitId || !payload.designId || !payload.pieceIds.length) break;
+				const value = String(payload.value ?? "");
+				void executeSketchpadJsKitMutation(payload.kitId, async (kit) => {
+					const design = kit.design(payload.designId);
+					let last: SetResult = { ok: true };
+					for (const pieceId of payload.pieceIds) {
+						const piece = design.piece(pieceId);
+						last =
+							payload.field === "name"
+								? await piece.rename(value)
+								: await piece.changeDescription(value);
+						if (!last.ok) return last;
+					}
+					return last;
+				})
+					.then((result) => {
+						if (!result.ok) console.error("[compose.sketchpad] patchRoutePieces failed:", result.error?.message);
+					})
+					.catch((error) => console.error("[compose.sketchpad] patchRoutePieces failed:", error));
+				break;
+			}
 			case "closeKit": {
 				this.closeKit((args as { kitId: string }).kitId);
 				break;
@@ -15364,16 +15530,17 @@ function sketchpadKitAppCommands(): readonly SearchItemSpec[] {
 
 function sketchpadHomePanelTabs(): readonly SideTabSpec[] {
 	return [
-		{ id: "workbench", iconId: "compose.sketchpad.icon.workbench", panel: "workbench", bodyKey: SKETCHPAD_PANEL_WORKBENCH_BODY, label: "Workbench" },
-		{ id: "details", iconId: "compose.sketchpad.icon.details", panel: "details", bodyKey: SKETCHPAD_PANEL_DETAILS_BODY, label: "Details" },
+		{ id: FRAMEWORK_PANEL_TAB_HIERARCHY_ID, iconId: FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, panel: "workbench", order: 0, bodyKey: SKETCHPAD_PANEL_HIERARCHY_BODY, label: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL },
+		{ id: FRAMEWORK_PANEL_TAB_INSPECTION_ID, iconId: FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, panel: "details", order: 0, bodyKey: SKETCHPAD_PANEL_INSPECTION_BODY, label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL },
 	];
 }
 
 function sketchpadKitPanelTabs(): readonly SideTabSpec[] {
 	return [
 		{ id: "display", iconId: "compose.sketchpad.icon.windows", panel: "display", bodyKey: SKETCHPAD_PANEL_WINDOWS_BODY, label: "Display" },
-		{ id: "workbench", iconId: "compose.sketchpad.icon.workbench", panel: "workbench", bodyKey: SKETCHPAD_PANEL_WORKBENCH_BODY, label: "Workbench" },
-		{ id: "details", iconId: "compose.sketchpad.icon.details", panel: "details", bodyKey: SKETCHPAD_PANEL_DETAILS_BODY, label: "Details" },
+		{ id: FRAMEWORK_PANEL_TAB_HIERARCHY_ID, iconId: FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, panel: "workbench", order: 0, bodyKey: SKETCHPAD_PANEL_HIERARCHY_BODY, label: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL },
+		{ id: FRAMEWORK_PANEL_TAB_CATALOGUE_ID, iconId: FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, panel: "workbench", order: 1, bodyKey: SKETCHPAD_PANEL_CATALOGUE_BODY, label: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL },
+		{ id: FRAMEWORK_PANEL_TAB_INSPECTION_ID, iconId: FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, panel: "details", order: 0, bodyKey: SKETCHPAD_PANEL_INSPECTION_BODY, label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL },
 	];
 }
 
@@ -15496,40 +15663,9 @@ function registerSketchpadWindowBodies(): void {
 		};
 		return tree;
 	});
-	registerSidePanelBody(SKETCHPAD_PANEL_WORKBENCH_BODY, () => ({
-		type: "tree",
-		sections: [
-			{
-				id: "sketchpad.workbench.panel",
-				label: "Workbench",
-				defaultOpen: false,
-				items: [
-					{
-						id: "sketchpad.workbench.host",
-						label: "",
-						control: buildPanelWindowBody(SKETCHPAD_SURFACE_WORKBENCH, SKETCHPAD_SHELL_CONTROLLER_ID, "workbench"),
-					},
-				],
-			},
-		],
-	}));
-	registerSidePanelBody(SKETCHPAD_PANEL_DETAILS_BODY, () => ({
-		type: "tree",
-		sections: [
-			{
-				id: "sketchpad.details.panel",
-				label: "Details",
-				defaultOpen: false,
-				items: [
-					{
-						id: "sketchpad.details.host",
-						label: "",
-						control: buildPanelWindowBody(SKETCHPAD_SURFACE_DETAILS, SKETCHPAD_SHELL_CONTROLLER_ID, "details"),
-					},
-				],
-			},
-		],
-	}));
+	registerSidePanelBody(SKETCHPAD_PANEL_HIERARCHY_BODY, buildSketchpadHierarchyPanelBody);
+	registerSidePanelBody(SKETCHPAD_PANEL_CATALOGUE_BODY, buildSketchpadCataloguePanelBody);
+	registerSidePanelBody(SKETCHPAD_PANEL_INSPECTION_BODY, buildSketchpadInspectionPanelBody);
 }
 
 function applySketchpadUri(platform: Platform, uri: string): void {
@@ -16733,8 +16869,8 @@ if (import.meta.vitest) {
 		});
 	});
 
-	describe("Sketchpad details panel", () => {
-		it("reflects home kit selection in the panel snapshot", async () => {
+	describe("Sketchpad inspection panel", () => {
+		it("reflects home kit selection in the inspection tree", async () => {
 			const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
 			const platform = await buildSketchpadPlatform();
 			const ctrl = getSketchpadShellController()!;
@@ -16742,12 +16878,9 @@ if (import.meta.vitest) {
 			ctrl.navigateTo("/");
 			platform.uri = "/";
 			ctrl.updateHome({ ...sketchpadEmptyHomeUiState(), selectedKitIds: [kitId] });
-			const details = platform.getComponent(SKETCHPAD_SURFACE_DETAILS);
-			details?.refresh();
-			const body = (details?.getSnapshot() as PanelModel).body;
-			const values =
-				body.type === "stack" ? body.children.flatMap((child) => (child.type === "text" ? [child.value] : [])) : [];
-			expect(values.some((value) => value.includes("Selected Kit"))).toBe(true);
+			const tree = buildSketchpadInspectionPanelBody({ platform, windowKindId: "home-main", bus: platform.commandBus });
+			const text = JSON.stringify(tree);
+			expect(text).toContain("Selected Kit");
 			ctrl.dispose();
 		});
 
@@ -16764,12 +16897,9 @@ if (import.meta.vitest) {
 			platform.uri = `/kits/${kitId}`;
 			ctrl.buildVirtualFileSystemModel(sketchpadVfsScope(SKETCHPAD_KIT_APP_ID));
 			ctrl.setRouteSelection({ pieceIds: [], connectionIds: [], kitWiresNodeIds: [typeId], kitWiresHoveredNodeId: null });
-			const details = platform.getComponent(SKETCHPAD_SURFACE_DETAILS);
-			details?.refresh();
-			const body = (details?.getSnapshot() as PanelModel).body;
-			const values =
-				body.type === "stack" ? body.children.flatMap((child) => (child.type === "text" ? [child.value] : [])) : [];
-			expect(values.some((value) => value.includes("Column"))).toBe(true);
+			const tree = buildSketchpadInspectionPanelBody({ platform, windowKindId: "vfs", bus: platform.commandBus });
+			const text = JSON.stringify(tree);
+			expect(text).toContain("Column");
 			ctrl.dispose();
 		});
 	});

@@ -896,6 +896,17 @@
       }
     },
     {
+      "name": "🧪test🖱️ui🎨styling🚫no-px",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./script.ts check-no-px",
+      "cwd": "${workspaceFolder}/ui/styling",
+      "presentation": {
+        "group": "5_test",
+        "order": 28
+      }
+    },
+    {
       "name": "📦build🖱️ui🏪assets",
       "type": "node-terminal",
       "request": "launch",

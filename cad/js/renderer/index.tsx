@@ -5907,7 +5907,7 @@ export function InteractionRepl({
         {selectionMenu ? (
           <div
             onPointerDown={(e) => e.stopPropagation()}
-            className={cn("fixed z-[10080] w-[220px] max-h-[210px] overflow-y-auto p-single", floatingMenuSurfaceClass)}
+            className={cn("fixed z-tutorial w-layout-cad-menu-sm max-h-layout-preview-md overflow-y-auto p-single", floatingMenuSurfaceClass)}
             style={{
               left: Math.min(selectionMenu.client.x + 8, window.innerWidth - 230),
               top: Math.min(selectionMenu.client.y + 8, window.innerHeight - 220),
@@ -5940,7 +5940,7 @@ export function InteractionRepl({
       </div>
       {showAside ? (
         <aside
-          className={cn(floatingPanelAsideClass, fillHost ? "max-h-[45%] w-full shrink-0 border-l-0 border-t" : "w-[360px] shrink-0")}
+          className={cn(floatingPanelAsideClass, fillHost ? "max-h-[45%] w-full shrink-0 border-l-0 border-t" : "w-layout-cad-menu-lg shrink-0")}
           style={asideStyle}
         >
           <strong className="text-sm font-semibold">Editor</strong>
@@ -5965,13 +5965,13 @@ export function InteractionRepl({
               onKeyDown={onInputKeyDown}
               placeholder={ENGAGEMENT_USER.commandPlaceholder}
               aria-label={ENGAGEMENT_USER.commandPlaceholder}
-              className="col-start-1 row-start-1 border-0 bg-transparent pr-[34px] shadow-none focus-visible:ring-0"
+              className="col-start-1 row-start-1 border-0 bg-transparent pr-large shadow-none focus-visible:ring-0"
             />
             <Button
               type="button"
               variant="outline"
               size="sm"
-              className={cn("col-start-1 row-start-1 z-[1] mr-single size-[22px] justify-self-end self-center p-0 text-2xs", interactionMenuOpen && "bg-accent text-accent-foreground")}
+              className={cn("col-start-1 row-start-1 z-[1] mr-single size-medium justify-self-end self-center p-0 text-2xs", interactionMenuOpen && "bg-accent text-accent-foreground")}
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => {
                 setInteractionMenuOpen((open) => !open);
@@ -5982,13 +5982,13 @@ export function InteractionRepl({
               v
             </Button>
             {completionSuffix ? (
-              <div aria-hidden className="text-element pointer-events-none col-start-1 row-start-1 overflow-hidden pr-[34px] pl-[9px] py-[8px] text-sm leading-normal whitespace-pre">
+              <div aria-hidden className="text-element pointer-events-none col-start-1 row-start-1 overflow-hidden pr-large pl-double py-tiny text-sm leading-normal whitespace-pre">
                 <span className="text-transparent">{cmdLine}</span>
                 <span className="text-muted-foreground">{completionSuffix}</span>
               </div>
             ) : null}
             {interactionMenuOpen ? (
-              <div onPointerDown={(e) => e.stopPropagation()} className={cn("absolute top-[calc(100%+6px)] right-0 z-[3] max-h-[220px] w-[280px] max-w-[calc(100vw-32px)] overflow-y-auto p-single", floatingMenuSurfaceClass)}>
+              <div onPointerDown={(e) => e.stopPropagation()} className={cn("absolute top-[calc(100%+var(--spacing-double))] right-0 z-[3] max-h-layout-cad-menu-sm w-layout-cad-menu-md max-w-[calc(100vw-var(--size-xl))] overflow-y-auto p-single", floatingMenuSurfaceClass)}>
                 {interactionMatches.length ? (
                   interactionMatches.map((suggestion) => (
                     <button key={`${suggestion.kind}:${suggestion.key}:${suggestion.detail}`} type="button" className={floatingMenuItemClass} onClick={() => runSuggestion(suggestion)}>
@@ -6240,7 +6240,7 @@ export function InteractionRepl({
           </div>
           <div className="border-border text-xs border-t pt-single">
             <strong className="text-foreground">Last response</strong>
-            <pre className="text-muted-foreground mt-half mb-0 max-h-[120px] overflow-auto text-2xs">{lr ? JSON.stringify(lr, null, 2) : "—"}</pre>
+            <pre className="text-muted-foreground mt-half mb-0 max-h-layout-popover overflow-auto text-2xs">{lr ? JSON.stringify(lr, null, 2) : "—"}</pre>
             {snapshot.diagnostics.length ? (
               <ul className="text-muted-foreground m-0 list-inside list-disc text-2xs">
                 {snapshot.diagnostics.map((d, i) => (

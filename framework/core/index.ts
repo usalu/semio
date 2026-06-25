@@ -516,6 +516,25 @@ export interface SideTabSpec {
 	/** @emoji 🏷️ Tab label shown after the icon in panel chrome. */
 	readonly label: string;
 }
+
+/** @emoji 🌳 Canonical workbench hierarchy tab id shared by all products. */
+export const FRAMEWORK_PANEL_TAB_HIERARCHY_ID = "framework.panel.hierarchy";
+/** @emoji 📚 Canonical workbench catalogue tab id shared by all products. */
+export const FRAMEWORK_PANEL_TAB_CATALOGUE_ID = "framework.panel.catalogue";
+/** @emoji 🔍 Canonical details inspection tab id shared by all products. */
+export const FRAMEWORK_PANEL_TAB_INSPECTION_ID = "framework.panel.inspection";
+/** @emoji 🌳 Canonical workbench hierarchy tab label. */
+export const FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL = "Hierarchy";
+/** @emoji 📚 Canonical workbench catalogue tab label. */
+export const FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL = "Catalogue";
+/** @emoji 🔍 Canonical details inspection tab label. */
+export const FRAMEWORK_PANEL_TAB_INSPECTION_LABEL = "Inspection";
+/** @emoji 🌳 Canonical workbench hierarchy tab icon id. */
+export const FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID = "framework.panel.hierarchy";
+/** @emoji 📚 Canonical workbench catalogue tab icon id. */
+export const FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID = "framework.panel.catalogue";
+/** @emoji 🔍 Canonical details inspection tab icon id. */
+export const FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID = "framework.panel.inspection";
 //#endregion 🔖SideTab
 
 //#region 🔖Footer
@@ -956,6 +975,7 @@ export interface ResolvedAppState {
 	readonly defaultLayout: WindowLayout;
 	readonly panelTabs: SideTabSpec[];
 	readonly footerItems: FooterItem[];
+	readonly appSettingsBodyKey?: string;
 }
 
 /** @emoji 🧮 Merges app-level and active-mode overlays into {@link ResolvedAppState}. */
@@ -974,6 +994,7 @@ export function resolveBaseAppState(app: BaseAppRuntime, requestedModeId?: strin
 		defaultLayout: mode?.defaultLayout ?? app.defaultLayout,
 		panelTabs: mergedPanelTabs,
 		footerItems: mergeById(app.footerItems, mode?.footerItems) ?? app.footerItems,
+		appSettingsBodyKey: app.appSettingsBodyKey,
 	};
 }
 //#endregion 🔖ResolvedState
@@ -990,6 +1011,7 @@ export class BaseAppRuntime {
 	tools: AppTools = {};
 	panelTabs: SideTabSpec[] = [];
 	footerItems: FooterItem[] = [];
+	appSettingsBodyKey?: string;
 	readonly controller: Controller;
 
 	constructor(

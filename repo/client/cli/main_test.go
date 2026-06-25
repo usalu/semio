@@ -2242,8 +2242,8 @@ func TestFixApplyAutofixes(t *testing.T) {
 	rootDir = findTestRepoRoot(cwd)
 	defer func() { rootDir = oldRoot }()
 
-	fixtureSrc := "compose/asset/repo/some/folder/file_fixable.tsx"
-	expectedSrc := "compose/asset/repo/some/folder/file_fixable_expected.tsx"
+	fixtureSrc := "repo/asset/fixture/some/folder/file_fixable.tsx"
+	expectedSrc := "repo/asset/fixture/some/folder/file_fixable_expected.tsx"
 
 	srcAbs := filepath.Join(rootDir, fixtureSrc)
 	expectedAbs := filepath.Join(rootDir, expectedSrc)
@@ -3414,7 +3414,7 @@ func TestFixNonAutofixableNotFixed(t *testing.T) {
 	defer func() { rootDir = oldRoot }()
 
 	bundles := LoadBundles()
-	path := "compose/asset/repo/some/folder/file_invalid.tsx"
+	path := "repo/asset/fixture/some/folder/file_invalid.tsx"
 	scope := Scope{Kind: ScopeFile, FilePath: path}
 	ctx := NewPolicyContextWithFiles(scope, bundles, []string{path})
 	breachs, err := CheckPoliciesWithContext(ctx, nil)
@@ -4507,7 +4507,7 @@ func TestPolicyBreachListCommand(t *testing.T) {
 }
 
 func TestFixtureBreachsGroupedInline(t *testing.T) {
-	path := "compose/asset/repo/some/folder/file_invalid.tsx"
+	path := "repo/asset/fixture/some/folder/file_invalid.tsx"
 	bundles := LoadBundles()
 	scope := Scope{Kind: ScopeFile, FilePath: path}
 	ctx := NewPolicyContextWithFiles(scope, bundles, []string{path})
@@ -4540,15 +4540,15 @@ func TestFixtureBreachsByLanguage(t *testing.T) {
 		requiredKinds []Statute
 	}{
 		{
-			path:          "compose/asset/repo/some/folder/file_invalid.py",
+			path:          "repo/asset/fixture/some/folder/file_invalid.py",
 			requiredKinds: []Statute{BreachCodeDefMissingSummary},
 		},
 		{
-			path:          "compose/asset/repo/some/folder/file_invalid.cs",
+			path:          "repo/asset/fixture/some/folder/file_invalid.cs",
 			requiredKinds: []Statute{BreachCodeSectionMissingSummary},
 		},
 		{
-			path:          "compose/asset/repo/some/folder/file_invalid.go",
+			path:          "repo/asset/fixture/some/folder/file_invalid.go",
 			requiredKinds: []Statute{BreachCodeSectionMissingSummary},
 		},
 	}
@@ -4573,10 +4573,10 @@ func TestFixtureBreachsByLanguage(t *testing.T) {
 		}
 	}
 	clean := []string{
-		"compose/asset/repo/some/folder/file_fixed.tsx",
-		"compose/asset/repo/some/folder/file_fixed.py",
-		"compose/asset/repo/some/folder/file_fixed.cs",
-		"compose/asset/repo/some/folder/file_fixed.go",
+		"repo/asset/fixture/some/folder/file_fixed.tsx",
+		"repo/asset/fixture/some/folder/file_fixed.py",
+		"repo/asset/fixture/some/folder/file_fixed.cs",
+		"repo/asset/fixture/some/folder/file_fixed.go",
 	}
 	for _, path := range clean {
 		scope := Scope{Kind: ScopeFile, FilePath: path}
@@ -6937,7 +6937,7 @@ func TestGetArtifactID_Bundle(t *testing.T) {
 		{"ui bundle", map[string]interface{}{"name": "repo/vscode", "kind": "ui"}, emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleUI) + "vscode"},
 		{"example bundle", map[string]interface{}{"name": "coda/example", "kind": "example"}, emojiText(EmojiTechnologyResearch) + "coda" + emojiText(EmojiBundleExample) + "examples"},
 		{"site bundle", map[string]interface{}{"name": "compose/desktop", "kind": "site"}, emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleSite) + "desktop"},
-		{"assets bundle", map[string]interface{}{"name": "compose/asset", "kind": "assets"}, emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleAssets) + "assets"},
+		{"assets bundle", map[string]interface{}{"name": "asset", "kind": "assets"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleAssets) + "asset"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -8025,7 +8025,7 @@ func TestBundleListIDs(t *testing.T) {
 		"compose/desktop":    emojiText(EmojiTechnologyUser) + "compose" + emojiText("🖥️") + "desktop",
 		"compose/docs":       emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleSite) + "docs",
 		"compose/play":       emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleSite) + "play",
-		"compose/asset":     emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleAssets) + "assets",
+		"asset":     emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleAssets) + "asset",
 		"repo/client":      emojiText(EmojiTechnologyInfra) + "repo" + emojiText("⌨️") + "client",
 		"repo/server":      emojiText(EmojiTechnologyInfra) + "repo" + emojiText("🌍") + "server",
 		"repo/go":          emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleLibrary) + "go",
@@ -8240,7 +8240,7 @@ func TestMonorepoTreeFullIDHierarchy(t *testing.T) {
 		"compose/js":      emojiText(EmojiTechnologyUser) + "compose" + emojiText("📜") + "js",
 		"compose/go":      emojiText(EmojiTechnologyUser) + "compose" + emojiText("🐹") + "go",
 		"compose/engine":  emojiText(EmojiTechnologyUser) + "compose" + emojiText("⚙️") + "engine",
-		"compose/asset":  emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleAssets) + "assets",
+		"asset":  emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleAssets) + "asset",
 		"compose/desktop": emojiText(EmojiTechnologyUser) + "compose" + emojiText("🖥️") + "desktop",
 		"compose/docs":    emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleSite) + "docs",
 		"repo/client":   emojiText(EmojiTechnologyInfra) + "repo" + emojiText("⌨️") + "client",
@@ -8436,7 +8436,7 @@ func TestAllSpecIDExamples(t *testing.T) {
 		{"binary bundle repo/client", "bundle", map[string]interface{}{"name": "repo/client", "kind": "binary"}, emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleBinary) + "client"},
 		{"ui bundle repo/vscode", "bundle", map[string]interface{}{"name": "repo/vscode", "kind": "ui"}, emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleUI) + "vscode"},
 		{"example bundle coda/example", "bundle", map[string]interface{}{"name": "coda/example", "kind": "example"}, emojiText(EmojiTechnologyResearch) + "coda" + emojiText(EmojiBundleExample) + "examples"},
-		{"assets bundle compose/asset", "bundle", map[string]interface{}{"name": "compose/asset", "kind": "assets"}, emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleAssets) + "assets"},
+		{"assets bundle asset", "bundle", map[string]interface{}{"name": "asset", "kind": "assets"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleAssets) + "asset"},
 		{"root folders", "folders", map[string]interface{}{"parentId": ""}, emojiText(EmojiFolders)},
 		{"bundle sketchpad folders", "folders", map[string]interface{}{"parentId": emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad"}, emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFolders)},
 		{"required folder .github folders", "folders", map[string]interface{}{"parentId": emojiText(EmojiFolderRequired) + "github"}, emojiText(EmojiFolderRequired) + "github" + emojiText(EmojiFolders)},
@@ -8570,7 +8570,7 @@ func TestGraphQLAnalyzeQuery(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow analyze query test in short mode")
 	}
-	result, err := executor.ExecuteJSON(context.Background(), `{ analyze(scope: "compose/asset/repo/some/folder/file_fixed.go") { metrics { total } } }`, nil)
+	result, err := executor.ExecuteJSON(context.Background(), `{ analyze(scope: "repo/asset/fixture/some/folder/file_fixed.go") { metrics { total } } }`, nil)
 	if err != nil {
 		t.Errorf("ExecuteGraphQL analyze returned error: %v", err)
 	}
@@ -22020,7 +22020,7 @@ func TestIsHeaderMetaLine(t *testing.T) {
 	if !isHeaderMetaLine("2025 Ueli Saluz <ueli@semio-tech.com>") {
 		t.Error("should detect contributor line starting with year")
 	}
-	if !isHeaderMetaLine("💻compose/asset/repo/some/folder/file.py") {
+	if !isHeaderMetaLine("💻repo/asset/fixture/some/folder/file.py") {
 		t.Error("should detect file ID emoji prefix")
 	}
 	if isHeaderMetaLine("This function handles parsing.") {
@@ -22049,7 +22049,7 @@ func TestExtractMarkdownSection(t *testing.T) {
 }
 
 func TestExtractFileHeaderSummary(t *testing.T) {
-	summary := ExtractFileHeaderSummary("compose/asset/repo/some/folder/file_empty_region.tsx")
+	summary := ExtractFileHeaderSummary("repo/asset/fixture/some/folder/file_empty_region.tsx")
 	if strings.Contains(summary, "GNU") || strings.Contains(summary, "license") || strings.Contains(summary, "redistribute") {
 		t.Errorf("should not contain license text, got: %q", summary)
 	}
@@ -22059,14 +22059,14 @@ func TestExtractFileHeaderSummary(t *testing.T) {
 }
 
 func TestExtractFileHeaderSummaryReturnsActualSummary(t *testing.T) {
-	summary := ExtractFileHeaderSummary("compose/asset/repo/some/folder/file_empty_region.tsx")
+	summary := ExtractFileHeaderSummary("repo/asset/fixture/some/folder/file_empty_region.tsx")
 	if strings.Contains(summary, "free software") {
 		t.Errorf("should not return license as summary, got: %q", summary)
 	}
 }
 
 func TestExtractFileHeaderRequirementsNoLicense(t *testing.T) {
-	requirements := ExtractFileHeaderRequirements("compose/asset/repo/some/folder/file.py")
+	requirements := ExtractFileHeaderRequirements("repo/asset/fixture/some/folder/file.py")
 	if strings.Contains(requirements, "GNU") || strings.Contains(requirements, "license") || strings.Contains(requirements, "redistribute") {
 		t.Errorf("should not contain license text, got: %q", requirements)
 	}

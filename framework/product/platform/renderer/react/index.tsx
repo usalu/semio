@@ -215,6 +215,7 @@ import {
 	getLevelBgClass,
 	readStoredUiChromeCompact,
 	readStoredUiChromeExpertise,
+	readStoredUiChromeTheme,
 	readStoredComputeWorkerCount,
 	writeStoredComputeWorkerCount,
 	isCrossOriginIsolatedRuntime,
@@ -224,6 +225,8 @@ import {
 	useElementsSurfaceChrome,
 	writeStoredUiChromeCompact,
 	writeStoredUiChromeExpertise,
+	writeStoredUiChromeTheme,
+	type ElementsSurfaceTheme,
 	reactHostPort,
 	VirtualFileSystem as VirtualFileSystemView,
 	type VirtualFileSystemRow,
@@ -1223,7 +1226,7 @@ export function renderUiControl(control: UiControlNode, commandBus: CommandBus, 
 		case "field":
 			return (
 				<div className="flex flex-col gap-half" data-ui-field={control.id}>
-					<label className="text-muted-foreground text-[11px]">{control.label}</label>
+					<label className="text-muted-foreground text-xs">{control.label}</label>
 					{renderUiControl(control.child, commandBus, platform)}
 				</div>
 			);
@@ -1491,6 +1494,11 @@ export interface SettingsHostApi {
 	readonly computeWorkerCount: number;
 	setComputeWorkerCount: (count: number) => void;
 	readonly computeThreadsAvailable: boolean;
+	readonly theme: ElementsSurfaceTheme;
+	setTheme: (theme: ElementsSurfaceTheme) => void;
+	readonly appId: string;
+	readonly appLabel: string;
+	readonly appIconId?: string;
 	readonly modes: readonly SettingsHostModeEntry[];
 	readonly activeModeId: string | null;
 	setActiveModeId: (modeId: string) => void;
@@ -1503,7 +1511,22 @@ export function useSettingsHost(): SettingsHostApi | null {
 	return reactHostPort.useContext(SettingsHostContext);
 }
 
+const FRAMEWORK_SETTINGS_MODE_TAB_ID = "framework.settings.mode";
+const FRAMEWORK_SETTINGS_APP_TAB_ID = "framework.settings.app";
 const FRAMEWORK_SETTINGS_GENERAL_TAB_ID = "framework.settings.general";
+
+const SETTINGS_THEME_OPTIONS: readonly ElementsSurfaceTheme[] = ["system", "light", "dark"];
+
+function settingsThemeLabel(theme: ElementsSurfaceTheme): string {
+	switch (theme) {
+		case "light":
+			return resolveTranslationLabel("ui.settings.theme.light");
+		case "dark":
+			return resolveTranslationLabel("ui.settings.theme.dark");
+		default:
+			return resolveTranslationLabel("ui.settings.theme.system");
+	}
+}
 
 const SETTINGS_EXPERTISE_OPTIONS: readonly Expertise[] = [Expertise.BEGINNER, Expertise.NORMAL, Expertise.EXPERT];
 
@@ -1573,26 +1596,6 @@ function buildFrameworkSettingsGeneralTree(host: SettingsHostApi): TreePanelConf
 			),
 		},
 	];
-	if (host.hasModeNav && host.modes.length > 1) {
-		items.push({
-			id: "framework.settings.general.mode",
-			label: resolveTranslationLabel("ui.settings.tab.mode"),
-			control: (
-				<Select value={host.activeModeId ?? undefined} onValueChange={(modeId) => host.setActiveModeId(modeId)}>
-					<SelectTrigger id="framework.settings.mode" className="h-medium w-full min-w-0" size="sm">
-						<SelectValue placeholder={resolveTranslationLabel("ui.settings.tab.mode")} />
-					</SelectTrigger>
-					<SelectContent>
-						{host.modes.map((mode) => (
-							<SelectItem key={mode.id} id={`framework.settings.mode.${mode.id}`} value={mode.id}>
-								{mode.label}
-							</SelectItem>
-						))}
-					</SelectContent>
-				</Select>
-			),
-		});
-	}
 	return {
 		sections: [
 			{
@@ -1603,6 +1606,141 @@ function buildFrameworkSettingsGeneralTree(host: SettingsHostApi): TreePanelConf
 			},
 		],
 	};
+}
+
+function resolveSettingsHostModes(host: SettingsHostApi): readonly SettingsHostModeEntry[] {
+	if (host.modes.length > 0) return host.modes;
+	return [{ id: host.appId, label: host.appLabel, iconId: host.appIconId }];
+}
+
+function buildFrameworkSettingsModeTree(host: SettingsHostApi): TreePanelConfig {
+	const modes = resolveSettingsHostModes(host);
+	const activeModeId = host.activeModeId ?? modes[0]?.id ?? host.appId;
+	return {
+		sections: [
+			{
+				id: "framework.settings.mode.section",
+				label: resolveTranslationLabel("ui.settings.tab.mode"),
+				defaultOpen: false,
+				items: [
+					{
+						id: "framework.settings.mode.select",
+						label: resolveTranslationLabel("ui.settings.tab.mode"),
+						control: (
+							<Select value={activeModeId} onValueChange={(modeId) => host.setActiveModeId(modeId)}>
+								<SelectTrigger id="framework.settings.mode" className="h-medium w-full min-w-0" size="sm">
+									<SelectValue placeholder={resolveTranslationLabel("ui.settings.tab.mode")} />
+								</SelectTrigger>
+								<SelectContent>
+									{modes.map((mode) => (
+										<SelectItem key={mode.id} id={`framework.settings.mode.${mode.id}`} value={mode.id}>
+											{mode.label}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+						),
+					},
+				],
+			},
+		],
+	};
+}
+
+function buildFrameworkSettingsAppTree(host: SettingsHostApi, displayHost: DisplayHostApi | null, bus: CommandBus): TreePanelConfig {
+	const identityItems: TreeDataItem[] = [
+		{
+			id: "framework.settings.app.id",
+			label: "App id",
+			control: <Input id="framework.settings.app.id" value={host.appId} readOnly className="h-medium w-full min-w-0" />,
+		},
+		{
+			id: "framework.settings.app.label",
+			label: "App label",
+			control: <Input id="framework.settings.app.label" value={host.appLabel} readOnly className="h-medium w-full min-w-0" />,
+		},
+		{
+			id: "framework.settings.app.theme",
+			label: resolveTranslationLabel("ui.settings.tab.theme"),
+			control: (
+				<Select value={host.theme} onValueChange={(value) => host.setTheme(value as ElementsSurfaceTheme)}>
+					<SelectTrigger id="framework.settings.theme" className="h-medium w-full min-w-0" size="sm">
+						<SelectValue />
+					</SelectTrigger>
+					<SelectContent>
+						{SETTINGS_THEME_OPTIONS.map((theme) => (
+							<SelectItem key={theme} id={`framework.settings.theme.${theme}`} value={theme}>
+								{settingsThemeLabel(theme)}
+							</SelectItem>
+						))}
+					</SelectContent>
+				</Select>
+			),
+		},
+	];
+	const layoutSections = displayHost ? buildDisplayLayoutTree(displayHost, bus).sections : [];
+	return {
+		sections: [
+			{
+				id: "framework.settings.app.identity",
+				label: resolveTranslationLabel("ui.settings.tab.app"),
+				defaultOpen: false,
+				items: identityItems,
+			},
+			...layoutSections,
+		],
+	};
+}
+
+class FrameworkSettingsModeTreeDefinition implements TreePanelDefinition {
+	constructor(private readonly getHost: () => SettingsHostApi | null) {}
+
+	resolveTree(): TreePanelConfig {
+		const host = this.getHost();
+		if (!host) {
+			return { sections: [{ id: "framework.settings.unavailable", items: [{ id: "unavailable", label: "Settings unavailable" }] }] };
+		}
+		return buildFrameworkSettingsModeTree(host);
+	}
+}
+
+class FrameworkSettingsAppTreeDefinition implements TreePanelDefinition {
+	constructor(
+		private readonly getHost: () => SettingsHostApi | null,
+		private readonly getDisplayHost: () => DisplayHostApi | null,
+		private readonly getPlatform: () => Platform | null,
+		private readonly bus: CommandBus,
+	) {}
+
+	resolveTree(): TreePanelConfig {
+		const host = this.getHost();
+		if (!host) {
+			return { sections: [{ id: "framework.settings.unavailable", items: [{ id: "unavailable", label: "Settings unavailable" }] }] };
+		}
+		const base = buildFrameworkSettingsAppTree(host, this.getDisplayHost(), this.bus);
+		const platform = this.getPlatform();
+		const app = platform?.getActiveApp();
+		if (!app?.appSettingsBodyKey || !platform) {
+			return base;
+		}
+		const factory = getSidePanelBodyFactory(app.appSettingsBodyKey);
+		if (!factory) {
+			return base;
+		}
+		const ctx: SidePanelBodyViewContext = {
+			platform,
+			windowKindId: app.id,
+			bodyKey: app.appSettingsBodyKey,
+			activeModeId: app.getActiveModeId(),
+			generation: platform.generation,
+		};
+		const node = factory(ctx);
+		if (!node || node.type !== "tree") {
+			return base;
+		}
+		const productConfig = uiTreeNodeToTreePanelConfig(node, this.bus, platform);
+		return { sections: [...base.sections, ...productConfig.sections] };
+	}
 }
 
 class FrameworkSettingsGeneralTreeDefinition implements TreePanelDefinition {
@@ -1617,13 +1755,32 @@ class FrameworkSettingsGeneralTreeDefinition implements TreePanelDefinition {
 	}
 }
 
-/** @emoji ⚙️ Framework settings panel tabs (general chrome options). */
-export function createFrameworkSettingsPanelTabs(getHost: () => SettingsHostApi | null, _bus: CommandBus): SidePanelTabConfig[] {
+/** @emoji ⚙️ Framework settings panel tabs (mode, app, general chrome options). */
+export function createFrameworkSettingsPanelTabs(
+	getHost: () => SettingsHostApi | null,
+	getDisplayHost: () => DisplayHostApi | null,
+	getPlatform: () => Platform | null,
+	bus: CommandBus,
+): SidePanelTabConfig[] {
 	return [
+		{
+			id: FRAMEWORK_SETTINGS_MODE_TAB_ID,
+			icon: shellTabIconComponent("framework.settings.mode", "settings"),
+			name: resolveTranslationLabel("ui.settings.tab.mode"),
+			order: -300,
+			tree: new FrameworkSettingsModeTreeDefinition(getHost),
+		},
+		{
+			id: FRAMEWORK_SETTINGS_APP_TAB_ID,
+			icon: shellTabIconComponent("framework.settings.app", "settings"),
+			name: resolveTranslationLabel("ui.settings.tab.app"),
+			order: -200,
+			tree: new FrameworkSettingsAppTreeDefinition(getHost, getDisplayHost, getPlatform, bus),
+		},
 		{
 			id: FRAMEWORK_SETTINGS_GENERAL_TAB_ID,
 			icon: shellTabIconComponent("framework.settings.general", "settings"),
-			name: "General",
+			name: resolveTranslationLabel("ui.settings.tab.general"),
 			order: -100,
 			tree: new FrameworkSettingsGeneralTreeDefinition(getHost),
 		},
@@ -4051,7 +4208,7 @@ function resolveAppPanelTabsByKind(
 		const displayTabs = createFrameworkDisplayPanelTabs(getDisplayHost, bus);
 		result.display = mergeConfigEntries(result.display, displayTabs) ?? displayTabs;
 	}
-	const settingsTabs = createFrameworkSettingsPanelTabs(getSettingsHost, bus);
+	const settingsTabs = createFrameworkSettingsPanelTabs(getSettingsHost, getDisplayHost, () => platform, bus);
 	result.settings = mergeConfigEntries(result.settings, settingsTabs) ?? settingsTabs;
 	return result;
 }
@@ -4514,11 +4671,12 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 	const [findOpen, setFindOpen] = reactHostPort.useState(false);
 	const [uiCompact, setUiCompact] = reactHostPort.useState(readStoredUiChromeCompact);
 	const [uiExpertise, setUiExpertise] = reactHostPort.useState(readStoredUiChromeExpertise);
+	const [uiTheme, setUiTheme] = reactHostPort.useState(readStoredUiChromeTheme);
 	const [computeWorkerCount, setComputeWorkerCount] = reactHostPort.useState(readStoredComputeWorkerCount);
 	const detectedMobile = useMediaQuery(mobileQuery);
 	const resolvedMobile = mobile ?? detectedMobile ?? platform.mobile;
 
-	useElementsSurfaceChrome({ ...PLATFORM_SYSTEM_SURFACE_CHROME, compact: uiCompact, expertise: uiExpertise });
+	useElementsSurfaceChrome({ ...PLATFORM_SYSTEM_SURFACE_CHROME, theme: uiTheme, compact: uiCompact, expertise: uiExpertise });
 
 	const togglePanel = reactHostPort.useCallback((panel: keyof UIPanelVisibility) => {
 		setPanelVisibility((prev) => ({ ...prev, [panel]: !prev[panel] }));
@@ -4574,12 +4732,20 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 				writeStoredComputeWorkerCount(clamped);
 			},
 			computeThreadsAvailable: isCrossOriginIsolatedRuntime(),
+			theme: uiTheme,
+			setTheme: (theme: ElementsSurfaceTheme) => {
+				setUiTheme(theme);
+				writeStoredUiChromeTheme(theme);
+			},
+			appId: activeApp.id,
+			appLabel: activeApp.label,
+			appIconId: activeApp.iconId,
 			modes: activeAppBase.modes.map((mode) => ({ id: mode.id, label: mode.label, iconId: mode.iconId })),
 			activeModeId,
 			setActiveModeId,
 			hasModeNav,
 		}),
-		[activeModeId, activeAppBase.modes, computeWorkerCount, hasModeNav, setActiveModeId, uiCompact, uiExpertise],
+		[activeApp.iconId, activeApp.id, activeApp.label, activeModeId, activeAppBase.modes, computeWorkerCount, hasModeNav, setActiveModeId, uiCompact, uiExpertise, uiTheme],
 	);
 
 	const panelTabsByKind = reactHostPort.useMemo(
@@ -4722,8 +4888,8 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 		className: "min-w-0 shrink-0 flex items-center gap-single",
 		content: (
 			<div className="flex items-center gap-single">
-				<SemioLogo className="h-6 w-6 shrink-0" />
-				<span className={cn("px-single", shellChromeTitleClassName)}>{activeApp.label}</span>
+				<SemioLogo className="shrink-0 size-workbench" />
+				<span className={cn("px-single", shellChromeTitleClassName)}>{platform.name}</span>
 			</div>
 		),
 	});
@@ -4764,33 +4930,6 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 			content: slotNavbarCenter,
 		});
 	}
-
-	const modesList = activeAppBase.modes ?? [];
-	const resolvedModes = modesList.length > 0 ? modesList : [{ id: activeApp.id, label: activeApp.label, iconId: undefined }];
-	navbarItems.push({
-		key: "modes",
-		content: (
-			<ButtonGroup id="platform.navbar.modes">
-				{resolvedModes.map((mode) => {
-					const isActive = activeModeId === mode.id || (modesList.length === 0 && (activeModeId === null || activeModeId === mode.id));
-					return (
-						<ButtonGroupItem
-							key={mode.id}
-							id={`platform.navbar.modes.${mode.id}`}
-							className={cn(isActive && interactiveActiveFillClass)}
-							data-state={isActive ? "on" : undefined}
-							onClick={() => {
-								activeAppBase.setActiveModeId(mode.id);
-								platform.notifyChrome();
-							}}
-							icon={mode.iconId || <span className="hidden" />}
-							text={mode.label}
-						/>
-					);
-				})}
-			</ButtonGroup>
-		),
-	});
 
 	navbarItems.push({
 		key: "search",
@@ -4857,6 +4996,33 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 			content: <PanelToggleGroup items={panelToggleItems} />,
 		});
 	}
+
+	const modesList = activeAppBase.modes ?? [];
+	const resolvedModes = modesList.length > 0 ? modesList : [{ id: activeApp.id, label: activeApp.label, iconId: undefined }];
+	navbarItems.push({
+		key: "modes",
+		content: (
+			<ButtonGroup id="platform.navbar.modes">
+				{resolvedModes.map((mode) => {
+					const isActive = activeModeId === mode.id || (modesList.length === 0 && (activeModeId === null || activeModeId === mode.id));
+					return (
+						<ButtonGroupItem
+							key={mode.id}
+							id={`platform.navbar.modes.${mode.id}`}
+							className={cn(isActive && interactiveActiveFillClass)}
+							data-state={isActive ? "on" : undefined}
+							onClick={() => {
+								activeAppBase.setActiveModeId(mode.id);
+								platform.notifyChrome();
+							}}
+							icon={mode.iconId || <span className="hidden" />}
+							text={mode.label}
+						/>
+					);
+				})}
+			</ButtonGroup>
+		),
+	});
 
 	const mergedFooterItems = reactHostPort.useMemo(
 		() => mergePlatformFooterChromeRows(platform, activeApp, [...(extraFooterItems ?? [])]),

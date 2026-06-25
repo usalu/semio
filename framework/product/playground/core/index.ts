@@ -435,6 +435,7 @@ export function resolveAppState(app: AppRuntime, requestedModeId?: string | null
     defaultLayout: mode?.defaultLayout ?? app.defaultLayout,
     panelTabs: mergedPanelTabs,
     footerItems: mergeById(app.footerItems, mode?.footerItems) ?? app.footerItems,
+    appSettingsBodyKey: app.appSettingsBodyKey,
   };
 }
 //#endregion 🔖ResolvedState

@@ -101,6 +101,7 @@ export const PUZZLE_2D_PLAY_SURFACE_ID = "puzzle.2d.play/v1";
 export const PUZZLE_2D_PLAY_BODY_KEY_OVERVIEW = "puzzle.2d.play.overview";
 export const PUZZLE_2D_PLAY_BODY_KEY_DETAIL = "puzzle.2d.play.detail";
 export const PUZZLE_2D_PLAY_BODY_KEY_SELECTION = "puzzle.2d.play.selection";
+export const PUZZLE_2D_PLAY_SETTINGS_BODY_KEY = "puzzle.2d.play.settings";
 
 export const PUZZLE_2D_PLAY_LOD_TIERS: Puzzle2dDrawLodKind[] = getPuzzle2dLodScale().map((lod) => lod.id);
 
@@ -2102,6 +2103,7 @@ export function buildPuzzle2dPlayAppRuntime(controller: Puzzle2dPlayShellControl
 	const app = attachPuzzle2dPlayWindowKinds(controller, PUZZLE_2D_PLAY_LAYOUT);
 	controller.mainMode.namedLayouts = [createNamedLayout("puzzle-2d-default", "Default trio", PUZZLE_2D_PLAY_LAYOUT)];
 	app.panelTabs = [];
+	app.appSettingsBodyKey = PUZZLE_2D_PLAY_SETTINGS_BODY_KEY;
 	return app;
 }
 
@@ -2644,6 +2646,11 @@ if (import.meta.vitest) {
 			const app = runtime.getActiveApp();
 			expect(app?.panelTabs).toEqual([]);
 			expect(app?.controller.mainMode.tools ?? {}).toEqual({});
+		});
+
+		it("buildPuzzle2dPlayAppRuntime wires appSettingsBodyKey for framework App settings tab", () => {
+			const runtime = buildPuzzle2dPlayRuntime();
+			expect(runtime.getActiveApp()?.appSettingsBodyKey).toBe(PUZZLE_2D_PLAY_SETTINGS_BODY_KEY);
 		});
 
 		it("engagementAbort exits brush and clears command line", () => {

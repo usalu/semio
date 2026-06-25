@@ -5,6 +5,8 @@
 //#region 🔖IconRenderPort
 export type IconRenderFormat = "svg" | "png";
 
+export type IconRenderShape = "rectangle" | "ellipse";
+
 export interface IconRenderCamera {
 	readonly position: readonly [number, number, number];
 	readonly target: readonly [number, number, number];
@@ -37,6 +39,7 @@ export interface IconRenderRequest {
 	readonly width: number;
 	readonly height: number;
 	readonly format: IconRenderFormat;
+	readonly shape?: IconRenderShape;
 	readonly background?: string;
 	readonly shadowEnabled?: boolean;
 	readonly material?: IconRenderMaterial;

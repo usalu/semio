@@ -57,10 +57,22 @@ describe("styling resolve", () => {
 		expect(uiCss).toContain("--ui-spacing: var(--spacing-compact)");
 		expect(uiCss).toContain("--spacing-single: calc(1 * var(--ui-spacing))");
 		expect(uiCss).toContain("--spacing-double: calc(2 * var(--ui-spacing))");
-		expect(uiCss).toContain("--glass-panel-blur: 40px");
+		expect(uiCss).toContain("--glass-panel-blur: 2.5rem");
 		expect(uiCss).toContain("--radius-sm: 0rem");
 		expect(uiCss).toContain("--toolbar-footer-offset: calc(2 * var(--spacing-double))");
 		expect(uiCss).not.toMatch(/@layer base\s*\{[^}]*:root[^}]*--spacing:\s*var\(--spacing-compact\)/s);
+	});
+
+	it("ui.css defines per-level element foreground tokens and panel scoping", async () => {
+		const { readFile } = await import("node:fs/promises");
+		const { resolve } = await import("node:path");
+		const uiCss = await readFile(resolve(import.meta.dir, "ui.css"), "utf8");
+		expect(uiCss).toContain("--element-base: var(--color-gray);");
+		expect(uiCss).toContain("--element-panel: var(--color-dark-5-9);");
+		expect(uiCss).toContain("--border-element-color: var(--element-base);");
+		expect(uiCss).toContain('[data-level="panel"] {\n  --border-element-color: var(--element-panel);');
+		expect(uiCss).toContain(".dark {\n  --base: var(--color-dark);");
+		expect(uiCss).toContain("--element-panel: var(--color-gray-600);");
 	});
 });
 

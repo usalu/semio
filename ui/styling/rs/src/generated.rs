@@ -35,6 +35,23 @@ pub mod strokes {
     pub const MAP_ROAD_PATH: f64 = 0.55;
     pub const MAP_ROAD_CLAMP_MIN: f64 = 0.35;
     pub const MAP_ROAD_CLAMP_MAX: f64 = 2.8;
+    pub const MAP_ROAD_MOTORWAY_MULT: f64 = 2.1;
+    pub const MAP_ROAD_TRUNK_MULT: f64 = 1.8;
+    pub const MAP_ROAD_PRIMARY_MULT: f64 = 1.45;
+    pub const MAP_ROAD_SECONDARY_MULT: f64 = 1.2;
+    pub const MAP_ROAD_TERTIARY_MULT: f64 = 0.95;
+    pub const MAP_ROAD_RESIDENTIAL_MULT: f64 = 0.78;
+    pub const MAP_ROAD_SERVICE_MULT: f64 = 0.9;
+    pub const PUZZLE3D_OUTLINE: f64 = 4.0;
+    pub const CAD_CONSTRUCTION: f64 = 1.0;
+    pub const CAD_GUIDE: f64 = 1.5;
+    pub const CAD_DIMENSION: f64 = 2.0;
+    pub const CAD_PICK: f64 = 4.0;
+    pub const CAD_HIGHLIGHT: f64 = 5.0;
+    pub const CAD_EMPHASIS: f64 = 7.0;
+    pub const CAD_EMPHASIS_STRONG: f64 = 8.0;
+    pub const CAD_EMPHASIS_MAX: f64 = 9.0;
+    pub const CAD_EMPHASIS_LINE: f64 = 12.0;
     pub const MAP_BOUNDARY_ADMIN2: f64 = 1.75;
     pub const MAP_BOUNDARY_DEFAULT: f64 = 0.65;
     pub const MAP_BOUNDARY_CLAMP_MIN: f64 = 0.45;
@@ -86,6 +103,7 @@ pub mod metrics {
     pub mod camera {
         pub const ZOOM_MIN: f64 = 0.05;
         pub const ZOOM_MAX: f64 = 32.0;
+        pub const FLOW_ZOOM_MAX: f64 = 8.0;
         pub const WHEEL_ZOOM_IN_FACTOR: f64 = 1.1;
         pub const WHEEL_ZOOM_OUT_FACTOR: f64 = 0.9;
         pub const LOD_ZOOM_FLOOR: f64 = 0.05;
@@ -117,6 +135,8 @@ pub mod metrics {
         pub const DAG_LABEL_GAP_RATIO: f64 = 0.35;
         pub const DAG_LABEL_GAP_COMPACT_RATIO: f64 = 0.2;
         pub const DAG_KIND_HINT_GAP_RATIO: f64 = 0.85;
+        pub const HANDLE_OFFSET_PX: f64 = 10.0;
+        pub const PUZZLE2D_DEFAULT_PX: f64 = 14.0;
     }
     pub mod icon {
         pub const FIT_INSET: f64 = 0.76;
@@ -184,9 +204,53 @@ pub mod metrics {
         pub const LAYER_WEIGHT_MIN: f64 = 0.25;
         pub const LAYER_WEIGHT_MAX: f64 = 3.0;
         pub const LAYER_WEIGHT_DEFAULT: f64 = 1.0;
+        pub const LAYER_WEIGHT_STEP: f64 = 0.05;
         pub const TILE_BLEED: f64 = 1.0;
         pub const LINE_SCALE_DAMP_MIN: f64 = 0.44;
         pub const LINE_SCALE_DAMP_MAX: f64 = 1.0;
+        pub const WHEEL_ZOOM_FACTOR: f64 = 1.12;
+        pub const WHEEL_DELTA_MULT: f64 = 2.5;
+    }
+    pub mod cad {
+        pub const DIMENSION_FONT_WORLD: f64 = 0.22;
+        pub const DRAG_PLANE_OFFSET: f64 = 0.06;
+        pub const MESH_FACE_OPACITY: f64 = 0.72;
+        pub const CAMERA_FIT_PADDING: f64 = 1.25;
+        pub const CAMERA_FIT_MIN_DISTANCE: f64 = 2.0;
+        pub const HATCH_SPACING: f64 = 0.4;
+        pub const HATCH_LINE_WIDTH: f64 = 0.02;
+        pub const HATCH_DIRECTION_DEG: f64 = 30.0;
+        pub const CHUNK_SIZE: f64 = 256.0;
+        pub const CHUNK_MAX_DISTANCE: f64 = 8000.0;
+    }
+    pub mod puzzle3d {
+        pub const OUTLINE_THICKNESS: f64 = 4.0;
+        pub const VORTEX_DRAG_THRESHOLD_PX: f64 = 6.0;
+        pub const LINE_WIDTH_SELECTED: f64 = 3.0;
+        pub const LINE_WIDTH_DEFAULT: f64 = 2.0;
+    }
+    pub mod dom {
+        pub const ICON_TINY_UI_SPACING: f64 = 3.75;
+        pub const ICON_SMALL_UI_SPACING: f64 = 6.25;
+        pub const ICON_BASE_UI_SPACING: f64 = 7.5;
+        pub const ICON_LARGE_UI_SPACING: f64 = 10.0;
+        pub const TREE_ROW_UI_SPACING: f64 = 7.5;
+        pub const TREE_TOGGLE_UI_SPACING: f64 = 4.375;
+        pub const TREE_INDENT_PER_LEVEL_UI_SPACING: f64 = 3.125;
+        pub const TREE_INDENT_LINE_EXTRA_UI_SPACING: f64 = 2.1875;
+        pub const PROPERTY_LABEL_COLUMN_UI_SPACING: f64 = 30.0;
+        pub const PROPERTY_INLINE_GAP_UI_SPACING: f64 = 2.5;
+        pub const PROPERTY_STACKED_GAP_UI_SPACING: f64 = 1.25;
+        pub const PROPERTY_STACKED_HYSTERESIS_UI_SPACING: f64 = 7.5;
+        pub const CONTROL_VALUE_COLUMN_UI_SPACING: f64 = 50.0;
+        pub const WINDOW_MEASURE_VALUE_COLUMN_UI_SPACING: f64 = 32.5;
+        pub const RESIZABLE_CORNER_GRAB_UI_SPACING: f64 = 7.5;
+        pub const LAYOUT_PANEL_RAIL_UI_SPACING: f64 = 70.0;
+        pub const LAYOUT_PANEL_MIN_UI_SPACING: f64 = 46.875;
+        pub const LAYOUT_PANEL_MAX_UI_SPACING: f64 = 150.0;
+        pub const LAYOUT_ENGAGEMENT_MAX_UI_SPACING: f64 = 140.0;
+        pub const CONTROL_TREE_ROW_MIN_UI_SPACING: f64 = 6.25;
+        pub const WINDOW_MEASURE_ROW_MIN_UI_SPACING: f64 = 5.625;
     }
 }
 

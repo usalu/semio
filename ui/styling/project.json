@@ -18,6 +18,13 @@
 				"forwardAllArgs": true
 			}
 		},
+		"check-no-px": {
+			"executor": "nx:run-commands",
+			"options": {
+				"cwd": "ui/styling",
+				"command": "bun ./script.ts check-no-px"
+			}
+		},
 		"test-rs": {
 			"executor": "nx:run-commands",
 			"options": {

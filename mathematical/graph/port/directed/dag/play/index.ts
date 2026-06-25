@@ -16,10 +16,17 @@ import {
   createStackLayout,
   enforcePlaygroundWindowEngagementInput,
   registerWindowBody,
+  FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+  FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+  FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+  uiDeclarativeSectionsToTree,
   type CommandDescriptor,
   type WindowBodyViewContext,
   type WindowEngagement,
   type UiNode,
+  type UiSectionNode,
+  type UiTreeItemNode,
+  type UiTreeSectionNode,
 } from "@semio-tech/framework-playground-core";
 
 import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
@@ -34,6 +41,7 @@ import {
   type DagDrawLodKind,
   type DagFixtureV1,
   type DagLodModeKind,
+  type DagNodeV1,
   type DagReorganizeRequest,
 } from "@semio-tech/dag-react";
 import type { WindowMeasure } from "@semio-tech/framework-playground-core";
@@ -57,6 +65,16 @@ export const DAG_PLAY_DEFAULT_FIXTURE: DagFixtureV1 = DAG_DEFAULT_FIXTURE;
 export const DAG_PLAY_DEFAULT_FIXTURE_JSON = dagFixtureToJson(DAG_PLAY_DEFAULT_FIXTURE);
 
 export const DAG_PLAY_LAYOUT = createStackLayout([DAG_PLAY_WINDOW_KIND_ID], ["DAG"]);
+export const DAG_PLAY_HIERARCHY_TAB_ID = "framework.panel.hierarchy";
+export const DAG_PLAY_CATALOGUE_TAB_ID = "framework.panel.catalogue";
+export const DAG_PLAY_INSPECTION_TAB_ID = "framework.panel.inspection";
+
+const DAG_PLAY_CATALOGUE_NODE_KINDS = [
+  { kind: "computation", label: "Computation" },
+  { kind: "slider", label: "Slider" },
+  { kind: "select", label: "Select" },
+  { kind: "screen", label: "Screen" },
+] as const;
 
 function dagPlayCmd(command: string, args?: Record<string, unknown>): CommandDescriptor {
   return { controllerId: DAG_PLAY_CONTROLLER_ID, command, args };
@@ -65,6 +83,219 @@ function dagPlayCmd(command: string, args?: Record<string, unknown>): CommandDes
 function buildDagLayoutOptionsJson(layerSpacing: number, siblingGap: number, orientation: DagLayoutOrientation): string {
   return JSON.stringify({ layerSpacing, siblingGap, orientation });
 }
+
+// #region 🔖DagPlayPanels
+export function parseDagPlayFixtureJson(json: string): DagFixtureV1 | null {
+  try {
+    const parsed = JSON.parse(json) as DagFixtureV1;
+    if (parsed.schema !== "dag.fixture/v1" || !Array.isArray(parsed.nodes) || !Array.isArray(parsed.edges)) {
+      return null;
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+export function buildDagPlayHierarchyTree(fixtureJson: string, selectedNodeIds: readonly string[]): UiNode {
+  const fixture = parseDagPlayFixtureJson(fixtureJson);
+  if (!fixture) {
+    return {
+      type: "tree",
+      sections: [
+        {
+          id: "dag-play-hierarchy.invalid",
+          label: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+          defaultOpen: true,
+          items: [{ id: "dag-play-hierarchy.invalid.msg", label: "Invalid DAG fixture" }],
+        },
+      ],
+    };
+  }
+  const nodeItems: UiTreeItemNode[] = fixture.nodes.map((node) => ({
+    id: `dag-play-hierarchy.node.${node.id}`,
+    label: node.name || node.id,
+    description: node.kind,
+    command: dagPlayCmd("setSelection", { ids: [node.id] }),
+  }));
+  const edgeItems: UiTreeItemNode[] = fixture.edges.map((edge) => ({
+    id: `dag-play-hierarchy.edge.${edge.id}`,
+    label: `${edge.source} → ${edge.target}`,
+    description: edge.id,
+  }));
+  return {
+    type: "tree",
+    sections: [
+      {
+        id: "dag-play-hierarchy.nodes",
+        label: "Nodes",
+        defaultOpen: true,
+        items: nodeItems.length ? nodeItems : [{ id: "dag-play-hierarchy.nodes.empty", label: "(none)" }],
+      },
+      {
+        id: "dag-play-hierarchy.edges",
+        label: "Edges",
+        defaultOpen: false,
+        items: edgeItems.length ? edgeItems : [{ id: "dag-play-hierarchy.edges.empty", label: "(none)" }],
+      },
+    ],
+    selectedIds: selectedNodeIds.map((id) => `dag-play-hierarchy.node.${id}`),
+  };
+}
+
+export function buildDagPlayCatalogueTree(): UiNode {
+  return {
+    type: "tree",
+    sections: [
+      {
+        id: "dag-play-catalogue.node-kinds",
+        label: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+        defaultOpen: true,
+        items: DAG_PLAY_CATALOGUE_NODE_KINDS.map((entry) => ({
+          id: `dag-play-catalogue.kind.${entry.kind}`,
+          label: entry.label,
+          description: entry.kind,
+        })),
+      },
+    ],
+  };
+}
+
+function dagPlayInspectorNodeFields(node: DagNodeV1): UiNode[] {
+  const nodeId = node.id;
+  const fields: UiNode[] = [
+    {
+      type: "field",
+      id: "dag-play-inspector.id",
+      label: "Id",
+      child: {
+        type: "input",
+        id: "dag-play-inspector.id.input",
+        inputKind: "text",
+        value: nodeId,
+        commit: "blur",
+        onChange: dagPlayCmd("renameDagNode", { oldId: nodeId }),
+      },
+    },
+    {
+      type: "field",
+      id: "dag-play-inspector.name",
+      label: "Name",
+      child: {
+        type: "input",
+        id: "dag-play-inspector.name.input",
+        inputKind: "text",
+        value: node.name,
+        onChange: dagPlayCmd("patchDagNode", { nodeId, field: "name" }),
+      },
+    },
+    {
+      type: "field",
+      id: "dag-play-inspector.kind",
+      label: "Kind",
+      child: { type: "text", value: node.kind },
+    },
+  ];
+  if (node.kind === "slider") {
+    fields.push(
+      {
+        type: "field",
+        id: "dag-play-inspector.slider-value",
+        label: "Value",
+        child: {
+          type: "input",
+          id: "dag-play-inspector.slider-value.input",
+          inputKind: "number",
+          value: String(node.value),
+          onChange: dagPlayCmd("patchDagNode", { nodeId, field: "value" }),
+        },
+      },
+      {
+        type: "field",
+        id: "dag-play-inspector.slider-min",
+        label: "Min",
+        child: {
+          type: "input",
+          id: "dag-play-inspector.slider-min.input",
+          inputKind: "number",
+          value: String(node.min),
+          onChange: dagPlayCmd("patchDagNode", { nodeId, field: "min" }),
+        },
+      },
+      {
+        type: "field",
+        id: "dag-play-inspector.slider-max",
+        label: "Max",
+        child: {
+          type: "input",
+          id: "dag-play-inspector.slider-max.input",
+          inputKind: "number",
+          value: String(node.max),
+          onChange: dagPlayCmd("patchDagNode", { nodeId, field: "max" }),
+        },
+      },
+    );
+  }
+  if (node.kind === "select") {
+    fields.push({
+      type: "field",
+      id: "dag-play-inspector.select-index",
+      label: "Selected option",
+      child: {
+        type: "input",
+        id: "dag-play-inspector.select-index.input",
+        inputKind: "number",
+        value: String(node.selected),
+        onChange: dagPlayCmd("patchDagNode", { nodeId, field: "selected" }),
+      },
+    });
+  }
+  return fields;
+}
+
+export function buildDagPlayInspectorTree(fixtureJson: string, selectedNodeIds: readonly string[]): UiNode {
+  const fixture = parseDagPlayFixtureJson(fixtureJson);
+  if (!fixture) {
+    return uiDeclarativeSectionsToTree([
+      { type: "section", id: "dag-play-inspector.invalid", label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, children: [{ type: "text", value: "Invalid DAG fixture" }] },
+    ]);
+  }
+  if (!selectedNodeIds.length) {
+    return uiDeclarativeSectionsToTree([
+      {
+        type: "section",
+        id: "dag-play-inspector.empty",
+        label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+        children: [{ type: "text", value: "Select a node in the hierarchy." }],
+      },
+    ]);
+  }
+  if (selectedNodeIds.length > 1) {
+    return uiDeclarativeSectionsToTree([
+      {
+        type: "section",
+        id: "dag-play-inspector.multi",
+        label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+        children: [{ type: "text", value: `${selectedNodeIds.length} nodes selected` }],
+      },
+    ]);
+  }
+  const node = fixture.nodes.find((entry) => entry.id === selectedNodeIds[0]);
+  if (!node) {
+    return uiDeclarativeSectionsToTree([
+      { type: "section", id: "dag-play-inspector.missing", label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, children: [{ type: "text", value: "Node not found" }] },
+    ]);
+  }
+  return uiDeclarativeSectionsToTree([
+    {
+      type: "section",
+      id: "dag-play-inspector.node",
+      label: node.name || node.id,
+      children: dagPlayInspectorNodeFields(node),
+    },
+  ] as readonly UiSectionNode[]);
+}
+// #endregion 🔖DagPlayPanels
 
 /** @emoji 🎛 DAG play shell controller. */
 export class DagPlayController extends Controller {
@@ -79,6 +310,9 @@ export class DagPlayController extends Controller {
   private lodMode: DagLodModeKind = DAG_LOD_MODE_AUTOMATIC;
   private lodModeByInstance: Record<string, DagLodModeKind> = {};
   private effectiveLod: DagDrawLodKind = "normal";
+  private selectedNodeIds: string[] = [];
+  private interactionRevision = 0;
+  private readonly snapshotListeners = new Set<() => void>();
 
   constructor(commandBus: CommandBus, hostNotify: () => void) {
     super(DAG_PLAY_CONTROLLER_ID, commandBus, hostNotify);
@@ -95,6 +329,71 @@ export class DagPlayController extends Controller {
 
   lodModeForScope(scopeId: string): DagLodModeKind {
     return this.lodModeByInstance[scopeId] ?? this.lodMode;
+  }
+
+  getSelectedNodeIds(): readonly string[] {
+    return this.selectedNodeIds;
+  }
+
+  getInteractionRevision(): number {
+    return this.interactionRevision;
+  }
+
+  subscribeSnapshot(listener: () => void): () => void {
+    this.snapshotListeners.add(listener);
+    return () => this.snapshotListeners.delete(listener);
+  }
+
+  private notifySnapshot(): void {
+    for (const listener of this.snapshotListeners) {
+      listener();
+    }
+  }
+
+  private applyFixtureJson(json: string): void {
+    if (!json.includes("dag.fixture/v1") || json === this.fixtureJson) return;
+    this.fixtureJson = json;
+    this.interactionRevision += 1;
+    this.notifySnapshot();
+    this.emit();
+  }
+
+  private renameDagNode(oldId: string, newId: string): void {
+    const trimmed = newId.trim();
+    if (!trimmed || trimmed === oldId) return;
+    const fixture = parseDagPlayFixtureJson(this.fixtureJson);
+    if (!fixture || fixture.nodes.some((node) => node.id === trimmed)) return;
+    const nodes = fixture.nodes.map((node) => (node.id === oldId ? ({ ...node, id: trimmed } as DagNodeV1) : node));
+    const remapPort = (port: string) => (port.startsWith(`${oldId}:`) ? `${trimmed}:${port.slice(oldId.length + 1)}` : port);
+    const edges = fixture.edges.map((edge) => ({
+      ...edge,
+      source: remapPort(edge.source),
+      target: remapPort(edge.target),
+    }));
+    this.selectedNodeIds = this.selectedNodeIds.map((id) => (id === oldId ? trimmed : id));
+    this.fixtureJson = dagFixtureToJson({ ...fixture, nodes, edges });
+    this.interactionRevision += 1;
+    this.notifySnapshot();
+    this.emit();
+  }
+
+  private patchDagNode(nodeId: string, field: string, value: unknown): void {
+    const fixture = parseDagPlayFixtureJson(this.fixtureJson);
+    if (!fixture) return;
+    const nodes = fixture.nodes.map((node) => {
+      if (node.id !== nodeId) return node;
+      if (field === "value" || field === "min" || field === "max" || field === "step" || field === "selected") {
+        const numeric = typeof value === "number" ? value : Number(value);
+        if (!Number.isFinite(numeric)) return node;
+        return { ...node, [field]: numeric } as DagNodeV1;
+      }
+      if (typeof value !== "string") return node;
+      return { ...node, [field]: value } as DagNodeV1;
+    });
+    this.fixtureJson = dagFixtureToJson({ ...fixture, nodes });
+    this.interactionRevision += 1;
+    this.notifySnapshot();
+    this.emit();
   }
 
   private lodMeasure(scopeId: string): WindowMeasure {
@@ -218,9 +517,36 @@ export class DagPlayController extends Controller {
     }
     if (command === "setFixtureJson") {
       const json = (args as { json?: string }).json;
-      if (typeof json === "string" && json !== this.fixtureJson) {
-        this.fixtureJson = json;
-        this.emit();
+      if (typeof json === "string") {
+        this.applyFixtureJson(json);
+      }
+      return;
+    }
+    if (command === "setSelection") {
+      const ids = (args as { ids?: string[] }).ids;
+      if (!Array.isArray(ids)) return;
+      const next = [...new Set(ids.filter((id) => typeof id === "string"))];
+      if (JSON.stringify(next) === JSON.stringify(this.selectedNodeIds)) return;
+      this.selectedNodeIds = next;
+      this.interactionRevision += 1;
+      this.notifySnapshot();
+      this.emit();
+      return;
+    }
+    if (command === "renameDagNode") {
+      const oldId = (args as { oldId?: string }).oldId;
+      const value = (args as { value?: string }).value;
+      if (typeof oldId === "string" && typeof value === "string") {
+        this.renameDagNode(oldId, value);
+      }
+      return;
+    }
+    if (command === "patchDagNode") {
+      const nodeId = (args as { nodeId?: string }).nodeId;
+      const field = (args as { field?: string }).field;
+      const value = (args as { value?: unknown }).value;
+      if (typeof nodeId === "string" && typeof field === "string") {
+        this.patchDagNode(nodeId, field, value);
       }
       return;
     }
@@ -328,6 +654,20 @@ if (import.meta.vitest) {
       const ctrl = new DagPlayController(bus, () => {});
       const measures = ctrl.mainMode.windowKinds[0]?.measures ?? [];
       expect(measures.some((measure) => measure.kind === "select" && measure.label === "LOD")).toBe(true);
+    });
+
+    it("hierarchy tree lists nodes from default fixture", () => {
+      const tree = buildDagPlayHierarchyTree(DAG_PLAY_DEFAULT_FIXTURE_JSON, ["slider"]);
+      expect(tree.sections?.some((section) => section.label === "Nodes")).toBe(true);
+      expect(tree.selectedIds).toContain("dag-play-hierarchy.node.slider");
+    });
+
+    it("setSelection updates interaction revision", () => {
+      const bus = new CommandBus();
+      const ctrl = new DagPlayController(bus, () => {});
+      ctrl.run("setSelection", { ids: ["slider"] });
+      expect(ctrl.getSelectedNodeIds()).toEqual(["slider"]);
+      expect(ctrl.getInteractionRevision()).toBeGreaterThan(0);
     });
   });
 }

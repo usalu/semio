@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** @emoji ⚙️ Reads `ui/styling/tokens.json`; emits palette CSS, TS, C#, Rust, and Python styling artifacts. */
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../repo/lib/js/src/index.ts";
 
@@ -538,7 +538,130 @@ class FontsScript extends BundleScript {
 	}
 }
 
+const PX_SCAN_ROOTS = [
+	"ui/react",
+	"ui/styling/js",
+	"framework/product",
+	"coda/client/ui",
+	"flow/react",
+	"cad/js",
+	"puzzle",
+	"infinite/world",
+	"gis/map",
+] as const;
+
+const PX_SCAN_SKIP = ["/.repo/", "/node_modules/", "/.storybook/", "/fixture/", "tokens.generated.", "session.json", ".plan.md"];
+
+const PX_PATTERNS: { name: string; re: RegExp }[] = [
+	{ name: "tailwind-arbitrary-px", re: /\[(?!9999px)[-0-9]*\.?[0-9]+px\]/ },
+];
+
+function isPxScanExemptLine(line: string): boolean {
+	if (line.includes("--stroke-hairline: 1px")) {
+		return true;
+	}
+	if (line.includes("expect(") || line.includes("toContain(")) {
+		return true;
+	}
+	if (line.includes("@media") && line.includes("px")) {
+		return true;
+	}
+	if (/\b(h|w|min-h|min-w|max-h|max-w)-px\b/.test(line)) {
+		return true;
+	}
+	if (line.includes("rounded-[9999px]")) {
+		return true;
+	}
+	if (line.includes("cursor:") && line.includes("url(")) {
+		return true;
+	}
+	if (/font=["'`]\d/.test(line) && line.includes("px")) {
+		return true;
+	}
+	if (line.includes("transform:") && line.includes("px")) {
+		return true;
+	}
+	if (line.includes("translate3d") || line.includes("translate(")) {
+		return true;
+	}
+	if (line.includes("patchAutoAnimate") || line.includes("innerHTML")) {
+		return true;
+	}
+	return false;
+}
+
+function shouldPxScanFile(path: string): boolean {
+	if (!/\.(tsx?|css)$/.test(path)) {
+		return false;
+	}
+	return !PX_SCAN_SKIP.some((skip) => path.includes(skip));
+}
+
+function collectPxViolations(repoRoot: string): { file: string; line: number; kind: string; text: string }[] {
+	const violations: { file: string; line: number; kind: string; text: string }[] = [];
+
+	const walk = (dir: string): void => {
+		for (const entry of readdirSync(dir, { withFileTypes: true })) {
+			const full = join(dir, entry.name);
+			if (entry.isDirectory()) {
+				if (entry.name === "node_modules" || entry.name === ".repo") {
+					continue;
+				}
+				walk(full);
+				continue;
+			}
+			const rel = full.slice(repoRoot.length + 1);
+			if (!shouldPxScanFile(rel)) {
+				continue;
+			}
+			const lines = readFileSync(full, "utf8").split("\n");
+			for (let i = 0; i < lines.length; i++) {
+				const line = lines[i]!;
+				if (isPxScanExemptLine(line)) {
+					continue;
+				}
+				for (const { name, re } of PX_PATTERNS) {
+					if (re.test(line)) {
+						violations.push({ file: rel, line: i + 1, kind: name, text: line.trim() });
+						break;
+					}
+				}
+			}
+		}
+	};
+
+	for (const root of PX_SCAN_ROOTS) {
+		const abs = join(repoRoot, root);
+		if (existsSync(abs)) {
+			walk(abs);
+		}
+	}
+	return violations;
+}
+
+/** @emoji 🚫 Fails when hardcoded `px` sizing literals remain in scanned source roots. */
+class CheckNoPxScript extends BundleScript {
+	run(): void {
+		const violations = collectPxViolations(repoRoot);
+		if (violations.length === 0) {
+			console.log("ui/styling: no hardcoded px sizing violations");
+			return;
+		}
+		console.error(`ui/styling: found ${violations.length} hardcoded px sizing violation(s):`);
+		for (const v of violations.slice(0, 80)) {
+			console.error(`  ${v.file}:${v.line} [${v.kind}] ${v.text}`);
+		}
+		if (violations.length > 80) {
+			console.error(`  … and ${violations.length - 80} more`);
+		}
+		process.exit(1);
+	}
+}
+
 if (import.meta.main) {
-	const router = new ScriptRouter(import.meta.dir).register("generate", GenerateScript).register("fonts", FontsScript);
+	const router = new ScriptRouter(import.meta.dir)
+		.register("generate", GenerateScript)
+		.register("fonts", FontsScript)
+		.register("check-no-px", CheckNoPxScript);
 	await runBundleScriptMain(router, import.meta.url);
 }

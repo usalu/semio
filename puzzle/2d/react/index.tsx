@@ -33,6 +33,8 @@ import {
   themeColorVar,
   tokenHex,
   tokenVar,
+  STYLING_METRICS,
+  STYLING_STROKES,
 } from "@semio-tech/ui-styling";
 
 /** @emoji 🧩 Puzzle 2d alias for the generic canvas event binding controller. */
@@ -1209,7 +1211,7 @@ export type Puzzle2dBrushFillSessionStep = {
 };
 
 /** @emoji 📐 Default brush node span in world units (play authoring uses the same value). */
-export const DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX = 40;
+export const DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX = STYLING_METRICS.board.brushNodeSize;
 
 /** @emoji ⭕ Fixed puzzle 2d node radius in layout px (not overridable per node or kind). */
 export const PUZZLE_2D_NODE_RADIUS_PX = DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX / 2;
@@ -1809,9 +1811,9 @@ type Puzzle2dCanvasContext = Pick<
 //#region 🔖Utilities
 const DEFAULT_CAMERA: CameraState = { x: 0, y: 0, zoom: 1 };
 /** @emoji 🔍 Smallest allowed world scale (most zoomed-out). */
-export const PUZZLE_2D_CAMERA_ZOOM_MIN = 0.05;
+export const PUZZLE_2D_CAMERA_ZOOM_MIN = STYLING_METRICS.camera.zoomMin;
 /** @emoji 🔎 Largest allowed world scale (most zoomed-in). */
-export const PUZZLE_2D_CAMERA_ZOOM_MAX = 32;
+export const PUZZLE_2D_CAMERA_ZOOM_MAX = STYLING_METRICS.camera.zoomMax;
 
 const MIN_ZOOM = PUZZLE_2D_CAMERA_ZOOM_MIN;
 const MAX_ZOOM = PUZZLE_2D_CAMERA_ZOOM_MAX;

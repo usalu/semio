@@ -49,6 +49,9 @@ const configuration: UserConfig = {
     // deps at runtime, which triggers re-optimization and invalidates the
     // module graph mid-load — causing the white screen in Electron.
     include: [
+      "@semio-tech/framework-core",
+      "@semio-tech/framework-platform-core",
+      "@semio-tech/framework-platform-renderer-react",
       "react",
       "react-dom",
       "react-dom/client",
@@ -103,6 +106,16 @@ const configuration: UserConfig = {
       "@semio-tech/compose-js": path.resolve(__dirname, "../../../../compose/client/lib/js"),
       "@semio-tech/semio-asset": path.resolve(__dirname, "../../../../asset"),
       "@semio-tech/ui-react": path.resolve(__dirname, "../../../../ui/react"),
+      "@semio-tech/ui-styling": path.resolve(__dirname, "../../../../ui/styling/js/index.ts"),
+      "@semio-tech/framework-core": path.resolve(__dirname, "../../../../framework/core/index.ts"),
+      "@semio-tech/framework-platform-core": path.resolve(__dirname, "../../../../framework/product/platform/core/index.ts"),
+      "@semio-tech/framework-platform-renderer-react": path.resolve(__dirname, "../../../../framework/product/platform/renderer/react/index.tsx"),
+      "@semio-tech/framework-playground-core": path.resolve(__dirname, "../../../../framework/product/playground/core/index.ts"),
+      "@semio-tech/framework-playground-renderer-react": path.resolve(__dirname, "../../../../framework/product/playground/renderer/react/index.tsx"),
+      "@semio-tech/puzzle-2d-react": path.resolve(__dirname, "../../../../puzzle/2d/react/index.tsx"),
+      "@semio-tech/puzzle-3d-react": path.resolve(__dirname, "../../../../puzzle/3d/react/index.tsx"),
+      "@semio-tech/puzzle-5d-react": path.resolve(__dirname, "../../../../puzzle/5d/react/index.tsx"),
+      "@semio-tech/infinite-world-r3f": path.resolve(__dirname, "../../../../infinite/world/r3f/index.tsx"),
       "@semio-tech/coda-desktop": path.resolve(__dirname, "."),
     },
   },
