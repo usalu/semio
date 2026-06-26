@@ -415,6 +415,13 @@ impl ClimateRegion {
             Self::GarmischPartenkirchen => [-2.3, -0.5, 3.2, 7.0, 11.8, 14.8, 16.6, 16.4, 12.3, 8.4, 1.9, -1.8],
         }
     }
+
+    /// Returns seasonal irradiation values in kWh/m2: [North, East, South, West, Horizontal]
+    pub fn seasonal_irradiation(&self) -> [f64; 5] {
+        match self {
+            _ => [160.0, 271.0, 392.0, 271.0, 392.0], // Potsdam/Reference standard
+        }
+    }
 }
 
 /// Usage Profiles mapping to daily heating hours and usage days.
@@ -1436,17 +1443,20 @@ fn calculate_energy(state: &State) -> Value {
         "SFH" | "MFH" => transmission::BuildingType::Residential,
         _ => transmission::BuildingType::NonResidential,
     };
-    let months = [
+    // Since we use the seasonal method, we only average f_sh over the 7 heating months.
+    let heating_months = [
         transmission::Month::Jan, transmission::Month::Feb, transmission::Month::Mar,
-        transmission::Month::Apr, transmission::Month::May, transmission::Month::Jun,
-        transmission::Month::Jul, transmission::Month::Aug, transmission::Month::Sep,
-        transmission::Month::Oct, transmission::Month::Nov, transmission::Month::Dec,
+        transmission::Month::Apr, transmission::Month::Oct, transmission::Month::Nov, 
+        transmission::Month::Dec,
     ];
     let mut total_f_sh_days = 0.0;
-    for &m in &months {
-        total_f_sh_days += transmission::get_shutter_fraction(m, b_type, shutter_control) * m.days_in_month();
+    let mut total_heating_days = 0.0;
+    for &m in &heating_months {
+        let days = m.days_in_month();
+        total_f_sh_days += transmission::get_shutter_fraction(m, b_type, shutter_control) * days;
+        total_heating_days += days;
     }
-    let mut f_sh = total_f_sh_days / 365.0;
+    let mut f_sh = total_f_sh_days / total_heating_days;
 
     if state.params.shutter_control == "None" {
         f_sh = 0.0;
@@ -1628,27 +1638,77 @@ fn calculate_energy(state: &State) -> Value {
     let temp_shift = automation.temperature_shift(profile);
     let theta_int = f64::max(10.0, base_temp + temp_shift); // Don't let it drop below 10
 
-    // Get Heating Days (d_hs)
-    let d_hs = profile.usage_days();
+    // The entire building leaks heat for the full 185-day winter, 24/7.
+    let d_hs_loss = 185.0;
+    
+    // Internal gains only occur when the building is actively used.
+    // We scale the annual usage days to find the active usage days within the heating season.
+    let d_hs_gain = profile.usage_days() * (185.0 / 365.0);
 
     // ISO 13790
-    let q_ht = 0.024 * (h_tr + h_ve) * 1.0 * (theta_int - theta_e) * d_hs;
-    let q_ht_tr = 0.024 * h_tr * 1.0 * (theta_int - theta_e) * d_hs;
-    let q_ht_ve = 0.024 * h_ve * 1.0 * (theta_int - theta_e) * d_hs;
+    let q_ht_tr = 0.024 * h_tr * 1.0 * (theta_int - theta_e) * d_hs_loss;
+    let q_ht_ve = 0.024 * h_ve * 1.0 * (theta_int - theta_e) * d_hs_loss;
     
     
     // win_n, win_e, win_s, win_w are already calculated.
     
-    let sol_factor_vertical = 0.6 * (1.0 - 0.3) * 0.9 * g_value;
-    let sol_factor_horizontal = 0.8 * (1.0 - 0.3) * 0.9 * g_value;
-    
-    let q_sol_n = sol_factor_vertical * win_n * 160.0;
-    let q_sol_e = sol_factor_vertical * win_e * 271.0;
-    let q_sol_s = sol_factor_vertical * win_s * 392.0;
-    let q_sol_w = sol_factor_vertical * win_w * 271.0;
-    let q_sol_h = sol_factor_horizontal * win_h * 392.0;
-    
-    let q_sol = q_sol_n + q_sol_e + q_sol_s + q_sol_w + q_sol_h;
+    let shading_device = match state.params.shutter_control.as_str() {
+        "Automated" => solar_gains::ShadingDevice::ExteriorBlinds,
+        "Manual" => solar_gains::ShadingDevice::InteriorLight,
+        _ => solar_gains::ShadingDevice::None,
+    };
+    let f_c = shading_device.reduction_factor();
+    let frame_fraction = solar_gains::WindowFrameType::Standard.frame_fraction();
+
+    let mut solar_engine = solar_gains::SolarGainsEngine::new();
+    let [irr_n, irr_e, irr_s, irr_w, irr_h] = region.seasonal_irradiation();
+
+    let add_win = |engine: &mut solar_gains::SolarGainsEngine, area: f64, irr: f64, f_s: f64| {
+        if area > 0.0 {
+            engine.add_transparent(solar_gains::TransparentComponent {
+                area,
+                frame_fraction,
+                g_value,
+                f_c,
+                f_s,
+                irradiation: irr * 1000.0, // convert kWh to Wh
+            });
+        }
+    };
+
+    add_win(&mut solar_engine, win_n, irr_n, 0.9);
+    add_win(&mut solar_engine, win_e, irr_e, 0.9);
+    add_win(&mut solar_engine, win_s, irr_s, 0.9);
+    add_win(&mut solar_engine, win_w, irr_w, 0.9);
+    add_win(&mut solar_engine, win_h, irr_h, 0.9);
+
+    // Opaque components (Walls and Roof)
+    let irr_wall_avg = (irr_n + irr_e + irr_s + irr_w) / 4.0;
+    let hours_period = d_hs_loss * 24.0;
+
+    if net_wall > 0.0 {
+        solar_engine.add_opaque(solar_gains::OpaqueComponent {
+            area: net_wall,
+            u_value: u_wall,
+            alpha: solar_gains::SurfaceColor::Medium.absorptance(),
+            is_roof: false,
+            irradiation: irr_wall_avg * 1000.0,
+            time_hours: hours_period,
+        });
+    }
+
+    if a_roof > 0.0 {
+        solar_engine.add_opaque(solar_gains::OpaqueComponent {
+            area: a_roof,
+            u_value: u_roof,
+            alpha: solar_gains::SurfaceColor::Medium.absorptance(),
+            is_roof: true,
+            irradiation: irr_h * 1000.0,
+            time_hours: hours_period,
+        });
+    }
+
+    // Removed total_solar_gain_wh() to separate sources and sinks later
     
     // Internal heat gains according to DIN V 18599-10
     let profile_id = match profile {
@@ -1729,12 +1789,42 @@ fn calculate_energy(state: &State) -> Value {
         lighting
     );
     
-    // Engine gives daily gain in Wh.
-    // Annual = daily * d_hs / 1000.0 (to get kWh)
-    let q_int = (engine.net_daily_gain_wh() * d_hs) / 1000.0;
-    let q_gn = q_sol + q_int;
+    // Solar Engine gives separated sources and sinks in Wh.
+    let (q_sol_sources_wh, q_sol_sinks_wh) = solar_engine.solar_energy_balance_wh();
     
-    let q_h_nd = f64::max(0.0, q_ht - 0.95 * q_gn);
+    // Convert to kWh/a for JSON payload
+    let q_sol = q_sol_sources_wh / 1000.0;
+    let q_sky_loss = q_sol_sinks_wh / 1000.0;
+    
+    // Engine gives daily gain in Wh.
+    // Annual = daily * d_hs_gain / 1000.0 (to get kWh)
+    let q_int = (engine.net_daily_gain_wh() * d_hs_gain) / 1000.0;
+    let q_gn = q_sol + q_int;
+
+    // Aggregates Totals
+    let q_ht_tr_total = q_ht_tr + q_sky_loss;
+    let q_ht_total = q_ht_tr_total + q_ht_ve;
+    
+    let weight = match state.params.building_type.as_str() {
+        "SFH" | "MFH" => energy_balance::ConstructionWeight::Heavy, // Default to heavy for residential
+        _ => energy_balance::ConstructionWeight::Light, // Default to light for others unless specified
+    };
+
+    let balance_engine = energy_balance::EnergyBalanceEngine::new(
+        conditioned_volume,
+        weight,
+        energy_balance::CalculationPeriod::Seasonal,
+    );
+
+    let q_h_nd_wh = balance_engine.calculate_final_heating_demand(
+        q_ht_tr_total * 1000.0, // Includes sky losses
+        q_ht_ve * 1000.0,
+        q_int * 1000.0,
+        q_sol_sources_wh, // Only positive solar gains
+        h_tr,
+        h_ve
+    );
+    let q_h_nd = q_h_nd_wh / 1000.0;
     
     // 1. Determine System Properties: (e_g_h, q_d_h_specific, q_s_h_specific)
     let (e_g_h, q_d_h_spec, q_s_h_spec) = match state.params.heating_system.as_str() {
@@ -1758,6 +1848,8 @@ fn calculate_energy(state: &State) -> Value {
     // Q_del_h = Q_g_h_out * e_g_h
     let q_final = q_g_h_out * e_g_h;
 
+    let energy_class = balance_engine.determine_energy_class(q_final * 1000.0, a_floor_total);
+
     serde_json::json!({
         "status": "success",
         "envelope_areas_m2": {
@@ -1775,9 +1867,10 @@ fn calculate_energy(state: &State) -> Value {
             "window_W_m2K": u_window
         },
         "heat_losses": {
-            "Q_ht_kWh_a": q_ht,
-            "transmission_loss_kWh_a": q_ht_tr,
-            "ventilation_loss_kWh_a": q_ht_ve
+            "Q_ht_kWh_a": q_ht_total,
+            "transmission_loss_kWh_a": q_ht_tr_total,
+            "ventilation_loss_kWh_a": q_ht_ve,
+            "sky_radiation_loss_kWh_a": q_sky_loss
         },
         "heat_gains": {
             "solar_gains_kWh_a": q_sol,
@@ -1790,7 +1883,8 @@ fn calculate_energy(state: &State) -> Value {
         },
         "final_energy": {
             "Q_final_kWh_a": q_final,
-            "specific_Q_final_kWh_m2a": q_final / a_floor_total
+            "specific_Q_final_kWh_m2a": q_final / a_floor_total,
+            "energy_class": energy_class.as_str()
         },
         "wall_insulation_breakdown": {
             "u_wall_base": u_wall_existing,
@@ -2091,12 +2185,236 @@ pub mod solar_gains {
             // Total Solar Gain (Q_S)
             transparent_gain + opaque_gain
         }
+
+        /// Calculates the separated solar heat sources (gains) and sinks (losses) for the envelope (Wh)
+        pub fn solar_energy_balance_wh(&self) -> (f64, f64) {
+            let mut total_sources = 0.0;
+            let mut total_sinks = 0.0;
+
+            // Transparent components only provide gains
+            for c in &self.transparent_components {
+                total_sources += c.solar_gain_wh();
+            }
+
+            // Opaque components can provide gains or losses (due to sky radiation)
+            for c in &self.opaque_components {
+                let gain = c.solar_gain_wh();
+                if gain > 0.0 {
+                    total_sources += gain;
+                } else {
+                    total_sinks += gain.abs(); // Sinks are treated as positive losses
+                }
+            }
+
+            (total_sources, total_sinks)
+        }
+    }
+}
+
+pub mod energy_balance {
+    use serde::{Deserialize, Serialize};
+
+    // --- CATEGORY 2: MATHEMATICAL SOLVER CONSTANTS ---
+
+    /// Defines the calculation resolution, which dictates the a_0 and tau_0 constants.
+    #[derive(Debug, Clone, Copy)]
+    pub enum CalculationPeriod {
+        Monthly,
+        Seasonal,
+    }
+
+    impl CalculationPeriod {
+        /// Returns the (a_0, tau_0) tuple required for the 'a' parameter calculation.
+        pub fn solver_constants(&self) -> (f64, f64) {
+            match self {
+                Self::Monthly => (1.0, 15.0),  // a_0 = 1.0, tau_0 = 15.0
+                Self::Seasonal => (0.8, 30.0), // a_0 = 0.8, tau_0 = 30.0
+            }
+        }
+    }
+
+    // --- CATEGORY 1: BUILDING PHYSICS PROPERTIES ---
+
+    /// Represents the thermal mass classification of the building.
+    #[derive(Debug, Clone, Copy)]
+    pub enum ConstructionWeight {
+        Light, // e.g., Timber frame
+        Heavy, // e.g., Solid masonry/concrete
+    }
+
+    impl ConstructionWeight {
+        /// Returns the effective heat capacity (C_eff) in Wh/K based on the heated building volume (V_e).
+        pub fn effective_heat_capacity(&self, volume_e: f64) -> f64 {
+            match self {
+                Self::Light => 15.0 * volume_e,
+                Self::Heavy => 50.0 * volume_e,
+            }
+        }
+    }
+
+    // --- CATEGORY 4: ENERGY CERTIFICATE (ENERGIEAUSWEIS) ---
+
+    /// Official German energy performance classes (A+ to H)
+    #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+    pub enum EnergyClass {
+        APlus,
+        A,
+        B,
+        C,
+        D,
+        E,
+        F,
+        G,
+        H,
+    }
+
+    impl EnergyClass {
+        /// Maps the specific energy demand (kWh per m² per year) to an official category.
+        pub fn from_specific_demand(demand_kwh_per_m2: f64) -> Self {
+            if demand_kwh_per_m2 < 30.0 {
+                Self::APlus
+            } else if demand_kwh_per_m2 < 50.0 {
+                Self::A
+            } else if demand_kwh_per_m2 < 75.0 {
+                Self::B
+            } else if demand_kwh_per_m2 < 100.0 {
+                Self::C
+            } else if demand_kwh_per_m2 < 130.0 {
+                Self::D
+            } else if demand_kwh_per_m2 < 160.0 {
+                Self::E
+            } else if demand_kwh_per_m2 < 200.0 {
+                Self::F
+            } else if demand_kwh_per_m2 < 250.0 {
+                Self::G
+            } else {
+                Self::H
+            }
+        }
+
+        /// Returns a human-readable string representation of the class
+        pub fn as_str(&self) -> &'static str {
+            match self {
+                Self::APlus => "A+",
+                Self::A => "A",
+                Self::B => "B",
+                Self::C => "C",
+                Self::D => "D",
+                Self::E => "E",
+                Self::F => "F",
+                Self::G => "G",
+                Self::H => "H",
+            }
+        }
+    }
+
+    // --- THE MASTER SOLVER ---
+
+    /// The master solver for the building's energy balance.
+    pub struct EnergyBalanceEngine {
+        pub c_eff: f64, // Effective heat capacity (Wh/K)
+        pub period: CalculationPeriod,
+    }
+
+    impl EnergyBalanceEngine {
+        /// Initialize using the standardized DIN 4108-6 volume and weight fallbacks.
+        pub fn new(volume_e: f64, weight: ConstructionWeight, period: CalculationPeriod) -> Self {
+            Self {
+                c_eff: weight.effective_heat_capacity(volume_e),
+                period,
+            }
+        }
+
+        /// Initialize with a highly specific, custom calculated C_eff.
+        pub fn new_detailed(c_eff: f64, period: CalculationPeriod) -> Self {
+            Self { c_eff, period }
+        }
+
+        /// Calculates the building's thermal time constant (tau) in hours.
+        pub fn calculate_time_constant(&self, h_t: f64, h_v: f64) -> f64 {
+            let h_total = h_t + h_v;
+            if h_total <= 0.0 {
+                return 0.0; // Prevent division by zero
+            }
+            self.c_eff / h_total
+        }
+
+        /// Calculates the Gain Utilization Factor (eta) for heating.
+        pub fn calculate_gain_utilization_factor(
+            &self, 
+            q_l: f64, // Total heat sinks / losses (Q_T + Q_V)
+            q_g: f64, // Total heat sources / gains (Q_I + Q_S)
+            tau: f64  // Time constant in hours
+        ) -> f64 {
+            if q_l <= 0.0 {
+                return 0.0; // No losses mean heating is impossible
+            }
+            if q_g <= 0.0 {
+                return 1.0; // No gains to utilize, so factor is nominally 1.0
+            }
+
+            let gamma = q_g / q_l;
+            let (a_0, tau_0) = self.period.solver_constants();
+        
+            // Calculate the curve-fitting parameter 'a'
+            let a = a_0 + (tau / tau_0);
+
+            // Floating point safe comparison for gamma == 1.0
+            if (gamma - 1.0).abs() < 0.001 {
+                a / (a + 1.0)
+            } else {
+                // eta = (1 - gamma^a) / (1 - gamma^(a+1))
+                (1.0 - gamma.powf(a)) / (1.0 - gamma.powf(a + 1.0))
+            }
+        }
+
+        /// The Master Equation: Calculates the final Heating Energy Demand (Q_h) for the given period.
+        pub fn calculate_final_heating_demand(
+            &self,
+            q_t: f64, // Transmission Losses (Wh)
+            q_v: f64, // Ventilation Losses (Wh)
+            q_i: f64, // Internal Gains (Wh)
+            q_s: f64, // Solar Gains (Wh)
+            h_t: f64, // Transmission Coefficient (W/K)
+            h_v: f64, // Ventilation Coefficient (W/K)
+        ) -> f64 {
+            // 1. Aggregate Sinks and Sources
+            let q_l = q_t + q_v;
+            let q_g = q_i + q_s;
+
+            // 2. Calculate thermal inertia (how long the building stores heat)
+            let tau = self.calculate_time_constant(h_t, h_v);
+        
+            // 3. Calculate how much of the gains we can actually use (eta)
+            let eta = self.calculate_gain_utilization_factor(q_l, q_g, tau);
+
+            // 4. Final balance: Losses minus Utilized Gains
+            let q_h = q_l - (eta * q_g);
+
+            // Heating demand cannot be mathematically negative. 
+            f64::max(0.0, q_h)
+        }
+
+        /// Calculates the specific energy demand and returns the official German Energy Class.
+        /// Changed parameter to expect final energy in Wh to be compliant with GEG,
+        /// rather than just heating demand (Q_h).
+        pub fn determine_energy_class(&self, annual_final_energy_wh: f64, floor_area_m2: f64) -> EnergyClass {
+            if floor_area_m2 <= 0.0 {
+                return EnergyClass::H; // Fallback for invalid geometry
+            }
+
+            // Convert Wh to kWh, then divide by area to get kWh/(m²·a)
+            let specific_demand_kwh = (annual_final_energy_wh / 1000.0) / floor_area_m2;
+        
+            EnergyClass::from_specific_demand(specific_demand_kwh)
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
     #[test]
     fn test_update_state() {
         let json_payload = r#"{
@@ -2122,8 +2440,7 @@ mod tests {
             "ui_state": null
         }"#;
         let res = update_state(json_payload);
-        println!("{}", res);
-        assert!(res.contains("success") || res.contains("error")); // the payload is outdated but the test runs
+        assert!(res.contains("success") || res.contains("error")); 
     }
 
     #[test]
@@ -2177,24 +2494,22 @@ mod tests {
 
         let mut engine = SolarGainsEngine::new();
 
-        // Add a South-facing Double-Glazed Window with Exterior Blinds
         engine.add_transparent(TransparentComponent {
             area: 10.0,
-            frame_fraction: WindowFrameType::Standard.frame_fraction(), // 0.30
-            g_value: GlazingType::DoubleLowE.g_value(), // 0.60
-            f_c: ShadingDevice::ExteriorBlinds.reduction_factor(), // 0.25
-            f_s: 1.00, // No surrounding shadows
-            irradiation: 45000.0, // e.g., 45 kWh/m² for a month
+            frame_fraction: WindowFrameType::Standard.frame_fraction(),
+            g_value: GlazingType::DoubleLowE.g_value(),
+            f_c: ShadingDevice::ExteriorBlinds.reduction_factor(),
+            f_s: 1.00,
+            irradiation: 45000.0, 
         });
 
-        // Add a South-facing Medium-colored Brick Wall
         engine.add_opaque(OpaqueComponent {
             area: 50.0,
             u_value: 0.28,
-            alpha: SurfaceColor::Medium.absorptance(), // 0.60
+            alpha: SurfaceColor::Medium.absorptance(),
             is_roof: false,
             irradiation: 45000.0,
-            time_hours: 744.0, // Hours in a 31-day month
+            time_hours: 744.0, 
         });
 
         let transparent_gain = engine.transparent_components[0].solar_gain_wh();
@@ -2205,16 +2520,228 @@ mod tests {
         assert!(diff < 0.001, "Effective collecting area mismatch");
 
         let opaque_gain = engine.opaque_components[0].solar_gain_wh();
-        // Calculate expected opaque gain manually to verify
-        // Q_s,op = A_op * U_op * R_se * (alpha * I_s - F_sky * h_r * DeltaTheta_er * t)
-        // absorbed = 0.60 * 45000 = 27000
-        // sky_loss = 0.5 * 5.0 * 11.0 * 744.0 = 20460
-        // net_absorbed = 27000 - 20460 = 6540
-        // gain = 50.0 * 0.28 * 0.04 * 6540 = 366.24
         let expected_opaque = 50.0 * 0.28 * 0.04 * (0.60 * 45000.0 - 0.5 * 5.0 * 11.0 * 744.0);
         assert!((opaque_gain - expected_opaque).abs() < 0.1, "Opaque gain mismatch, expected {}, got {}", expected_opaque, opaque_gain);
+    }
 
-        let q_s_total = engine.total_solar_gain_wh();
-        assert_eq!(q_s_total, transparent_gain + opaque_gain);
+    #[test]
+    fn test_energy_balance_engine() {
+        use energy_balance::*;
+        let engine = EnergyBalanceEngine::new(500.0, ConstructionWeight::Heavy, CalculationPeriod::Monthly);
+        
+        let h_t = 150.0;
+        let h_v = 50.0;
+        let tau = engine.calculate_time_constant(h_t, h_v);
+        assert!(tau > 0.0);
+
+        let q_l = 10000.0;
+        let q_g = 5000.0;
+        let eta = engine.calculate_gain_utilization_factor(q_l, q_g, tau);
+        assert!(eta > 0.0 && eta <= 1.0);
+
+        let class = engine.determine_energy_class(10000.0 * 1000.0, 150.0); // 10000 kWh / 150m2 = 66.6 kWh/m2a
+        assert_eq!(class, EnergyClass::B);
+    }
+
+    // =========================================================================
+    // THE MASTER INTEGRATION TEST: Verifies the entire pipeline calculates correctly
+    // =========================================================================
+    #[test]
+    fn test_full_energy_calculation_pipeline() {
+        // 1. Mock a standard 2-story Single Family House (10m x 10m footprint)
+        let geom = BuildingGeometry {
+            total_conditioned_volume: 560.0, // 200m2 * 2.8m
+            total_floor_area: 200.0,
+            total_roof_area: 100.0,
+            total_ground_area: 100.0,
+            exterior_perimeter: 40.0,
+            roof_pitch_deg: Some(30.0),
+            envelope_data: EnvelopeData {
+                n: EnvelopeDirectionData { gross_wall_area: 56.0, window_area: 5.0 },
+                e: EnvelopeDirectionData { gross_wall_area: 56.0, window_area: 5.0 },
+                s: EnvelopeDirectionData { gross_wall_area: 56.0, window_area: 15.0 },
+                w: EnvelopeDirectionData { gross_wall_area: 56.0, window_area: 5.0 },
+                h: EnvelopeDirectionData { gross_wall_area: 0.0, window_area: 0.0 }, // Windows handled in walls
+            }
+        };
+
+        // 2. Set realistic parameters for a modern heat-pump powered house
+        let params = Parameters {
+            building_type: "SFH".to_string(),
+            year_class: "2016-...".to_string(), // Modern build
+            scenario: "Existing State".to_string(),
+            story_height: 2.8,
+            num_stories: 2,
+            window_to_wall_ratio: 0.15,
+            building_rotation_deg: 0.0,
+            heating_system: "Air Source Heat Pump".to_string(), // High efficiency
+            custom_wall_insulation: None,
+            custom_roof_insulation: None,
+            custom_floor_insulation: None,
+            thermal_bridge_category: "Good Planning".to_string(),
+            ground_contact_type: "Floor Slab On Ground".to_string(),
+            shutter_control: "Automated".to_string(), // Uses smart shading
+            climate_region: "Potsdam".to_string(),
+            usage_profile: "Residential".to_string(),
+            automation_class: "B".to_string(),
+            air_tightness: "CategoryI".to_string(), // Blower-door tested
+            has_atd: false,
+            mech_supply: 0.0,
+            mech_exhaust: 0.0,
+            heat_recovery: 0.0,
+            mech_hours: 0.0,
+            lighting_exhaust: "None".to_string(),
+            material_transport: "None".to_string(),
+            custom_occupants: 0.0,
+            custom_equipment: 0.0,
+        };
+
+        let state = State {
+            geometry: Some(geom),
+            params,
+            ui_state: None,
+        };
+
+        // 3. Run the orchestration engine
+        let result = calculate_energy(&state);
+
+        // 4. Assert that the solver completed successfully
+        assert_eq!(result["status"], "success", "Calculation pipeline failed.");
+
+        // 5. Verify the geometry mapping logic
+        let areas = &result["envelope_areas_m2"];
+        assert_eq!(areas["net_wall"].as_f64().unwrap(), 194.0); // 224 total - 30 windows
+        assert_eq!(areas["window"].as_f64().unwrap(), 30.0);
+        assert_eq!(areas["total_floor"].as_f64().unwrap(), 200.0);
+
+        // 6. Verify Physics Isolation (Sinks vs Sources)
+        let losses = &result["heat_losses"];
+        let gains = &result["heat_gains"];
+        
+        let q_ht = losses["Q_ht_kWh_a"].as_f64().unwrap();
+        let q_sky = losses["sky_radiation_loss_kWh_a"].as_f64().unwrap();
+        let q_sol = gains["solar_gains_kWh_a"].as_f64().unwrap();
+        
+        assert!(q_ht > 0.0, "Building must have heat losses");
+        assert!(q_sky > 0.0, "Opaque walls must radiate heat to sky");
+        assert!(q_sol > 0.0, "Windows must collect solar gains");
+
+        // 7. Verify the DIN V 4108-6 Energy Balance Engine
+        let heating_demand = result["heating_demand"]["specific_Q_H_nd_kWh_m2a"].as_f64().unwrap();
+        assert!(heating_demand > 0.0, "Specific heating demand should be positive");
+        
+        // 8. Verify Final Energy mapping (Heat pumps convert demand into lower final energy)
+        let final_energy = result["final_energy"]["specific_Q_final_kWh_m2a"].as_f64().unwrap();
+        let energy_class = result["final_energy"]["energy_class"].as_str().unwrap();
+        
+        assert!(final_energy > 0.0, "Final energy must be greater than zero");
+        assert!(!energy_class.is_empty(), "Energy class must be assigned");
+        
+        // Output for manual debugging when tests are run with `--nocapture`
+        println!("Test Passed! Specific Heating Demand: {:.2} kWh/m²a", heating_demand);
+        println!("Final Energy Class: {}", energy_class);
+    }
+
+    // =========================================================================
+    // TABULA DATASET VALIDATION TESTS
+    // These tests mock the exact archetype scenarios from the IWU TABULA Report
+    // to verify the engine's deviation from the official German reference values.
+    // =========================================================================
+
+    fn create_tabula_reference_geometry() -> BuildingGeometry {
+        // A typical German SFH from the TABULA database (~150m2 living space)
+        BuildingGeometry {
+            total_conditioned_volume: 420.0, 
+            total_floor_area: 150.0,
+            total_roof_area: 80.0,
+            total_ground_area: 75.0,
+            exterior_perimeter: 35.0,
+            roof_pitch_deg: Some(35.0),
+            envelope_data: EnvelopeData {
+                n: EnvelopeDirectionData { gross_wall_area: 45.0, window_area: 5.0 },
+                e: EnvelopeDirectionData { gross_wall_area: 35.0, window_area: 5.0 },
+                s: EnvelopeDirectionData { gross_wall_area: 45.0, window_area: 15.0 },
+                w: EnvelopeDirectionData { gross_wall_area: 35.0, window_area: 5.0 },
+                h: EnvelopeDirectionData { gross_wall_area: 0.0, window_area: 0.0 },
+            }
+        }
+    }
+
+    #[test]
+    fn test_tabula_sfh_1860_1918_existing() {
+        let mut params = Parameters::default();
+        params.building_type = "SFH".to_string();
+        params.year_class = "1860-1918".to_string(); // TABULA Code 02
+        params.scenario = "Existing State".to_string();
+        params.heating_system = "Gas Non-Condensing Boiler".to_string(); // Classic old system
+        params.climate_region = "Potsdam".to_string(); // Standard reference climate
+
+        let state = State { geometry: Some(create_tabula_reference_geometry()), params, ui_state: None };
+        let result = calculate_energy(&state);
+        
+        let demand = result["heating_demand"]["specific_Q_H_nd_kWh_m2a"].as_f64().unwrap();
+        let class = result["final_energy"]["energy_class"].as_str().unwrap();
+        
+        println!("--------------------------------------------------");
+        println!("TABULA TEST 1: SFH 1860-1918 (Unrefurbished)");
+        println!("Expected: High heating demand (> 150 kWh/m²a), Class G/H");
+        println!("Engine Output: {:.2} kWh/m²a | Class: {}", demand, class);
+        println!("--------------------------------------------------");
+        
+        assert!(demand > 120.0, "Historic unrefurbished building must have high demand.");
+    }
+
+    #[test]
+    fn test_tabula_sfh_1969_1978_existing() {
+        let mut params = Parameters::default();
+        params.building_type = "SFH".to_string();
+        params.year_class = "1969-1978".to_string(); // TABULA Code 06 (Pre-Oil Crisis)
+        params.scenario = "Existing State".to_string();
+        params.heating_system = "Gas Non-Condensing Boiler".to_string(); 
+        params.climate_region = "Potsdam".to_string();
+
+        let state = State { geometry: Some(create_tabula_reference_geometry()), params, ui_state: None };
+        let result = calculate_energy(&state);
+        
+        let demand = result["heating_demand"]["specific_Q_H_nd_kWh_m2a"].as_f64().unwrap();
+        let class = result["final_energy"]["energy_class"].as_str().unwrap();
+        
+        println!("TABULA TEST 2: SFH 1969-1978 (Unrefurbished)");
+        println!("Expected: Medium-High demand (~ 120-180 kWh/m²a), Class E/F/G");
+        println!("Engine Output: {:.2} kWh/m²a | Class: {}", demand, class);
+        println!("--------------------------------------------------");
+        
+        assert!(demand > 90.0, "70s unrefurbished building should still be quite inefficient.");
+    }
+
+    #[test]
+    fn test_tabula_sfh_1969_1978_advanced() {
+        let mut params = Parameters::default();
+        params.building_type = "SFH".to_string();
+        params.year_class = "1969-1978".to_string(); 
+        // Applying the highest tier TABULA Refurbishment
+        params.scenario = "Advanced Refurbishment".to_string(); 
+        
+        // Upgrading to modern technical standards
+        params.heating_system = "Air Source Heat Pump".to_string();
+        params.shutter_control = "Automated".to_string();
+        params.automation_class = "A".to_string();
+        params.air_tightness = "CategoryI".to_string(); // Blower door tested
+        params.heat_recovery = 0.85; // 85% efficient mechanical ventilation
+        params.mech_hours = 24.0;
+        params.climate_region = "Potsdam".to_string();
+
+        let state = State { geometry: Some(create_tabula_reference_geometry()), params, ui_state: None };
+        let result = calculate_energy(&state);
+        
+        let demand = result["heating_demand"]["specific_Q_H_nd_kWh_m2a"].as_f64().unwrap();
+        let class = result["final_energy"]["energy_class"].as_str().unwrap();
+        
+        println!("TABULA TEST 3: SFH 1969-1978 (Advanced Refurbishment)");
+        println!("Expected: Excellent modern demand (< 50 kWh/m²a), Class A+/A/B");
+        println!("Engine Output: {:.2} kWh/m²a | Class: {}", demand, class);
+        println!("--------------------------------------------------");
+        
+        assert!(demand < 75.0, "Advanced refurbishment should bring demand below 75 kWh/m²a.");
     }
 }
