@@ -3808,7 +3808,7 @@ export function InteractionSpatialView({
         gridFactor={DEFAULT_LOD_GRID_FACTOR}
         gridSnapEnabled={false}
         showLodGrid={false}
-        automaticLod
+        automaticLod={false}
         depthVariableLod={false}
         manualLod={DEFAULT_MANUAL_LOD}
         gridDatum={[0, 0, 0]}
@@ -4737,7 +4737,7 @@ export function InteractionRepl({
   captureGlobalKeys = true,
   asideHost = null,
   hideModelDefinitionControls = false,
-  frameloop = "always",
+  frameloop,
   canvas: canvasOverrides,
   spatialView: spatialViewOverrides,
   transformGumballConfig = null,
@@ -4837,8 +4837,10 @@ export function InteractionRepl({
   const dragSelectionRef = reactHostPort.useRef<SpatialDragSelectionState | null>(null);
   const dragCleanupRef = reactHostPort.useRef<(() => void) | null>(null);
   const cameraNavigatingRef = reactHostPort.useRef(false);
+  const [cameraNavigating, setCameraNavigating] = reactHostPort.useState(false);
   const interactionActive = isInteractionSessionActive(spec, snapshot.state);
   const boundInteractionSession = Boolean(interactionId) && interactionActive;
+  const canvasFrameloop = frameloop ?? (boundInteractionSession || cameraNavigating ? "always" : "demand");
   const activeTransformGumballConfig = !boundInteractionSession && cadGumballConfigVisible(transformGumballConfig) ? transformGumballConfig : null;
   const displayedSelectionTargets = reactHostPort.useMemo(
     () => replDisplayedSelectionTargets(boundInteractionSession, activeModelDefinitionId, snapshot.state, rendererSelectionByModel, interactionSelectionByState),
@@ -5141,6 +5143,7 @@ export function InteractionRepl({
   const onCameraNavigate = reactHostPort.useCallback(
     (active: boolean) => {
       cameraNavigatingRef.current = active;
+      setCameraNavigating((prev) => (prev === active ? prev : active));
       if (active) onHoverTarget(null);
       onCameraNavigateProp?.(active);
     },
@@ -5827,7 +5830,7 @@ export function InteractionRepl({
         <InteractionCanvas
           {...canvasOverrides}
           managedCamera={spatialViewOverrides?.cameraView !== undefined}
-          frameloop={frameloop}
+          frameloop={canvasFrameloop}
           className={cn("bg-canvas", canvasOverrides?.className)}
           onCanvasReady={handleCanvasReady}
           overlay={

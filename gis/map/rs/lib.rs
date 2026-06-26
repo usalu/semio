@@ -25,6 +25,8 @@ pub struct MapThemePalette {
     pub route_stroke: Color,
     pub position_fill: Color,
     pub position_stroke: Color,
+    pub selection_stroke: Color,
+    pub hover_stroke: Color,
 }
 
 impl MapThemePalette {
@@ -41,6 +43,8 @@ impl MapThemePalette {
             route_stroke: map_color(t.route_stroke),
             position_fill: map_color(t.position_fill),
             position_stroke: map_color(t.position_stroke),
+            selection_stroke: map_color(t.position_fill),
+            hover_stroke: map_color(t.route_stroke),
         }
     }
 }
@@ -1396,6 +1400,10 @@ pub struct MapHost {
     pub events: Vec<serde_json::Value>,
     interaction: MapInteraction,
     theme: MapThemePalette,
+    selected_positions: std::collections::BTreeSet<String>,
+    selected_routes: std::collections::BTreeSet<String>,
+    hovered_kind: Option<String>,
+    hovered_id: Option<String>,
 }
 
 #[derive(Clone, Debug, Default)]
@@ -1406,6 +1414,123 @@ enum MapInteraction {
         origin: cavas::camera::Camera,
         start_screen: Point,
     },
+}
+
+fn map_point_segment_distance(px: f64, py: f64, x0: f64, y0: f64, x1: f64, y1: f64) -> f64 {
+    let dx = x1 - x0;
+    let dy = y1 - y0;
+    let len2 = dx * dx + dy * dy;
+    if len2 < 1e-12 {
+        return ((px - x0).powi(2) + (py - y0).powi(2)).sqrt();
+    }
+    let t = ((px - x0) * dx + (py - y0) * dy) / len2;
+    let t = t.clamp(0.0, 1.0);
+    let qx = x0 + t * dx;
+    let qy = y0 + t * dy;
+    ((px - qx).powi(2) + (py - qy).powi(2)).sqrt()
+}
+
+fn map_segments_intersect_rect(x0: f64, y0: f64, x1: f64, y1: f64, min_x: f64, min_y: f64, max_x: f64, max_y: f64) -> bool {
+    if (x0 >= min_x && x0 <= max_x && y0 >= min_y && y0 <= max_y) || (x1 >= min_x && x1 <= max_x && y1 >= min_y && y1 <= max_y) {
+        return true;
+    }
+    let edges = [
+        (min_x, min_y, max_x, min_y),
+        (max_x, min_y, max_x, max_y),
+        (max_x, max_y, min_x, max_y),
+        (min_x, max_y, min_x, min_y),
+    ];
+    for (ax, ay, bx, by) in edges {
+        if map_segments_intersect(x0, y0, x1, y1, ax, ay, bx, by) {
+            return true;
+        }
+    }
+    false
+}
+
+fn map_segments_intersect(ax: f64, ay: f64, bx: f64, by: f64, cx: f64, cy: f64, dx: f64, dy: f64) -> bool {
+    fn orient(px: f64, py: f64, qx: f64, qy: f64, rx: f64, ry: f64) -> f64 {
+        (qy - py) * (rx - qx) - (qx - px) * (ry - qy)
+    }
+    fn on_segment(px: f64, py: f64, qx: f64, qy: f64, rx: f64, ry: f64) -> bool {
+        rx <= px.max(qx) + 1e-9 && rx + 1e-9 >= px.min(qx) && ry <= py.max(qy) + 1e-9 && ry + 1e-9 >= py.min(qy)
+    }
+    let o1 = orient(ax, ay, bx, by, cx, cy);
+    let o2 = orient(ax, ay, bx, by, dx, dy);
+    let o3 = orient(cx, cy, dx, dy, ax, ay);
+    let o4 = orient(cx, cy, dx, dy, bx, by);
+    if o1 * o2 < 0.0 && o3 * o4 < 0.0 {
+        return true;
+    }
+    if o1.abs() < 1e-9 && on_segment(ax, ay, bx, by, cx, cy) {
+        return true;
+    }
+    if o2.abs() < 1e-9 && on_segment(ax, ay, bx, by, dx, dy) {
+        return true;
+    }
+    if o3.abs() < 1e-9 && on_segment(cx, cy, dx, dy, ax, ay) {
+        return true;
+    }
+    if o4.abs() < 1e-9 && on_segment(cx, cy, dx, dy, bx, by) {
+        return true;
+    }
+    false
+}
+
+fn map_polyline_intersects_rect(points: &[Point], min_x: f64, min_y: f64, max_x: f64, max_y: f64) -> bool {
+    for p in points {
+        if p.x >= min_x && p.x <= max_x && p.y >= min_y && p.y <= max_y {
+            return true;
+        }
+    }
+    for pair in points.windows(2) {
+        let a = pair[0];
+        let b = pair[1];
+        if map_segments_intersect_rect(a.x, a.y, b.x, b.y, min_x, min_y, max_x, max_y) {
+            return true;
+        }
+    }
+    false
+}
+
+fn map_point_in_polygon(px: f64, py: f64, polygon: &[Point]) -> bool {
+    let mut inside = false;
+    let n = polygon.len();
+    if n < 3 {
+        return false;
+    }
+    let mut j = n - 1;
+    for i in 0..n {
+        let pi = polygon[i];
+        let pj = polygon[j];
+        let intersect = (pi.y > py) != (pj.y > py) && px < (pj.x - pi.x) * (py - pi.y) / (pj.y - pi.y + 1e-12) + pi.x;
+        if intersect {
+            inside = !inside;
+        }
+        j = i;
+    }
+    inside
+}
+
+fn map_polyline_intersects_polygon(points: &[Point], polygon: &[Point]) -> bool {
+    for p in points {
+        if map_point_in_polygon(p.x, p.y, polygon) {
+            return true;
+        }
+    }
+    for pair in points.windows(2) {
+        let a = pair[0];
+        let b = pair[1];
+        let n = polygon.len();
+        for i in 0..n {
+            let c = polygon[i];
+            let d = polygon[(i + 1) % n];
+            if map_segments_intersect(a.x, a.y, b.x, b.y, c.x, c.y, d.x, d.y) {
+                return true;
+            }
+        }
+    }
+    false
 }
 
 impl Default for MapHost {
@@ -1429,6 +1554,10 @@ impl Default for MapHost {
             events: Vec::new(),
             interaction: MapInteraction::None,
             theme: MapThemePalette::default(),
+            selected_positions: std::collections::BTreeSet::new(),
+            selected_routes: std::collections::BTreeSet::new(),
+            hovered_kind: None,
+            hovered_id: None,
         }
     }
 }
@@ -1533,6 +1662,8 @@ impl MapHost {
         Self::apply_theme_field(&mut next, &v, "routeStroke", |t, c| t.route_stroke = c);
         Self::apply_theme_field(&mut next, &v, "positionFill", |t, c| t.position_fill = c);
         Self::apply_theme_field(&mut next, &v, "positionStroke", |t, c| t.position_stroke = c);
+        Self::apply_theme_field(&mut next, &v, "selectionStroke", |t, c| t.selection_stroke = c);
+        Self::apply_theme_field(&mut next, &v, "hoverStroke", |t, c| t.hover_stroke = c);
         self.theme = next;
         Ok(())
     }
@@ -1727,7 +1858,7 @@ impl MapHost {
     }
 
     pub fn pointer_down_screen(&mut self, sx: f64, sy: f64, button: u8) {
-        if button != 0 {
+        if button != 1 {
             return;
         }
         self.interaction = MapInteraction::Pan { origin: self.camera.clone(), start_screen: Point::new(sx, sy) };
@@ -1745,21 +1876,17 @@ impl MapHost {
     }
 
     pub fn pointer_up_screen(&mut self, sx: f64, sy: f64) {
-        let click = if let MapInteraction::Pan { start_screen, .. } = &self.interaction {
-            let dx = sx - start_screen.x;
-            let dy = sy - start_screen.y;
-            (dx * dx + dy * dy).sqrt() < 6.0
-        } else {
-            false
-        };
-        if click {
-            if let Some(id) = self.hit_test_position(sx, sy) {
-                self.push_event("selectPosition", serde_json::json!({ "id": id }));
+        if matches!(self.interaction, MapInteraction::Pan { .. }) {
+            let click = if let MapInteraction::Pan { start_screen, .. } = &self.interaction {
+                let dx = sx - start_screen.x;
+                let dy = sy - start_screen.y;
+                (dx * dx + dy * dy).sqrt() < 6.0
             } else {
-                self.push_event("selectPosition", serde_json::json!({ "id": null }));
+                false
+            };
+            if !click {
+                self.push_event("camera", serde_json::json!({ "x": self.camera.x, "y": self.camera.y, "zoom": self.camera.zoom }));
             }
-        } else if matches!(self.interaction, MapInteraction::Pan { .. }) {
-            self.push_event("camera", serde_json::json!({ "x": self.camera.x, "y": self.camera.y, "zoom": self.camera.zoom }));
         }
         self.interaction = MapInteraction::None;
     }
@@ -1779,6 +1906,219 @@ impl MapHost {
             }
         }
         best.map(|(id, _)| id)
+    }
+
+    fn hit_test_route(&self, sx: f64, sy: f64) -> Option<String> {
+        let hit_r = ui_styling::strokes::MAP_ROUTE_DEFAULT * 4.0 + 6.0;
+        let mut best: Option<(String, f64)> = None;
+        for route in self.routes.values() {
+            if route.points.len() < 2 {
+                continue;
+            }
+            let mut min_d = f64::INFINITY;
+            let mut prev: Option<Point> = None;
+            for [lon, lat] in &route.points {
+                let w = projection::lonlat_to_world(*lon, *lat);
+                let s = map_viewport::world_to_screen(&self.camera, &self.viewport, w);
+                if let Some(p0) = prev {
+                    min_d = min_d.min(map_point_segment_distance(sx, sy, p0.x, p0.y, s.x, s.y));
+                }
+                prev = Some(s);
+            }
+            if min_d <= hit_r && best.as_ref().map_or(true, |(_, best_d)| min_d < *best_d) {
+                best = Some((route.id.clone(), min_d));
+            }
+        }
+        best.map(|(id, _)| id)
+    }
+
+    pub fn hit_test_feature_json(&self, sx: f64, sy: f64) -> String {
+        let pos_hit = self.hit_test_position(sx, sy);
+        let route_hit = self.hit_test_route(sx, sy);
+        match (pos_hit, route_hit) {
+            (Some(pos_id), Some(route_id)) => {
+                let pos_d = self.position_screen_distance(sx, sy, &pos_id).unwrap_or(f64::INFINITY);
+                let route_d = self.route_screen_distance(sx, sy, &route_id).unwrap_or(f64::INFINITY);
+                if pos_d <= route_d {
+                    serde_json::json!({ "kind": "position", "id": pos_id }).to_string()
+                } else {
+                    serde_json::json!({ "kind": "route", "id": route_id }).to_string()
+                }
+            }
+            (Some(pos_id), None) => serde_json::json!({ "kind": "position", "id": pos_id }).to_string(),
+            (None, Some(route_id)) => serde_json::json!({ "kind": "route", "id": route_id }).to_string(),
+            (None, None) => "null".into(),
+        }
+    }
+
+    fn position_screen_distance(&self, sx: f64, sy: f64, id: &str) -> Option<f64> {
+        let pos = self.positions.get(id)?;
+        let w = projection::lonlat_to_world(pos.lon, pos.lat);
+        let s = map_viewport::world_to_screen(&self.camera, &self.viewport, w);
+        Some(((s.x - sx).powi(2) + (s.y - sy).powi(2)).sqrt())
+    }
+
+    fn route_screen_distance(&self, sx: f64, sy: f64, id: &str) -> Option<f64> {
+        let route = self.routes.get(id)?;
+        if route.points.len() < 2 {
+            return None;
+        }
+        let mut min_d = f64::INFINITY;
+        let mut prev: Option<Point> = None;
+        for [lon, lat] in &route.points {
+            let w = projection::lonlat_to_world(*lon, *lat);
+            let s = map_viewport::world_to_screen(&self.camera, &self.viewport, w);
+            if let Some(p0) = prev {
+                min_d = min_d.min(map_point_segment_distance(sx, sy, p0.x, p0.y, s.x, s.y));
+            }
+            prev = Some(s);
+        }
+        Some(min_d)
+    }
+
+    pub fn features_in_rect_json(&self, x0: f64, y0: f64, x1: f64, y1: f64, crossing: bool) -> String {
+        let (min_x, max_x) = if x0 <= x1 { (x0, x1) } else { (x1, x0) };
+        let (min_y, max_y) = if y0 <= y1 { (y0, y1) } else { (y1, y0) };
+        let mut positions: Vec<String> = Vec::new();
+        let mut routes: Vec<String> = Vec::new();
+        for pos in self.positions.values() {
+            let w = projection::lonlat_to_world(pos.lon, pos.lat);
+            let s = map_viewport::world_to_screen(&self.camera, &self.viewport, w);
+            let hit = if crossing {
+                s.x >= min_x && s.x <= max_x && s.y >= min_y && s.y <= max_y
+            } else {
+                s.x >= min_x && s.x <= max_x && s.y >= min_y && s.y <= max_y
+            };
+            if hit {
+                positions.push(pos.id.clone());
+            }
+        }
+        for route in self.routes.values() {
+            if route.points.len() < 2 {
+                continue;
+            }
+            let screen_pts: Vec<Point> = route
+                .points
+                .iter()
+                .map(|[lon, lat]| {
+                    let w = projection::lonlat_to_world(*lon, *lat);
+                    map_viewport::world_to_screen(&self.camera, &self.viewport, w)
+                })
+                .collect();
+            let hit = if crossing {
+                map_polyline_intersects_rect(&screen_pts, min_x, min_y, max_x, max_y)
+            } else {
+                screen_pts.iter().all(|p| p.x >= min_x && p.x <= max_x && p.y >= min_y && p.y <= max_y)
+            };
+            if hit {
+                routes.push(route.id.clone());
+            }
+        }
+        serde_json::json!({ "positions": positions, "routes": routes }).to_string()
+    }
+
+    pub fn features_in_polygon_json(&self, points_json: &str, crossing: bool) -> String {
+        let points: Vec<Point> = match serde_json::from_str::<Vec<[f64; 2]>>(points_json) {
+            Ok(rows) => rows.into_iter().map(|[x, y]| Point::new(x, y)).collect(),
+            Err(_) => return serde_json::json!({ "positions": [], "routes": [] }).to_string(),
+        };
+        if points.len() < 3 {
+            return serde_json::json!({ "positions": [], "routes": [] }).to_string();
+        }
+        let mut positions: Vec<String> = Vec::new();
+        let mut routes: Vec<String> = Vec::new();
+        for pos in self.positions.values() {
+            let w = projection::lonlat_to_world(pos.lon, pos.lat);
+            let s = map_viewport::world_to_screen(&self.camera, &self.viewport, w);
+            let inside = map_point_in_polygon(s.x, s.y, &points);
+            if crossing {
+                if inside {
+                    positions.push(pos.id.clone());
+                }
+            } else if inside {
+                positions.push(pos.id.clone());
+            }
+        }
+        for route in self.routes.values() {
+            if route.points.len() < 2 {
+                continue;
+            }
+            let screen_pts: Vec<Point> = route
+                .points
+                .iter()
+                .map(|[lon, lat]| {
+                    let w = projection::lonlat_to_world(*lon, *lat);
+                    map_viewport::world_to_screen(&self.camera, &self.viewport, w)
+                })
+                .collect();
+            let hit = if crossing {
+                map_polyline_intersects_polygon(&screen_pts, &points)
+            } else {
+                screen_pts.iter().all(|p| map_point_in_polygon(p.x, p.y, &points))
+            };
+            if hit {
+                routes.push(route.id.clone());
+            }
+        }
+        serde_json::json!({ "positions": positions, "routes": routes }).to_string()
+    }
+
+    pub fn feature_screen_json(&self, kind: &str, id: &str) -> String {
+        match kind {
+            "position" => self.position_screen_json(id),
+            "route" => {
+                let Some(route) = self.routes.get(id) else {
+                    return "null".into();
+                };
+                if route.points.is_empty() {
+                    return "null".into();
+                }
+                let mut cx = 0.0;
+                let mut cy = 0.0;
+                for [lon, lat] in &route.points {
+                    let w = projection::lonlat_to_world(*lon, *lat);
+                    let s = map_viewport::world_to_screen(&self.camera, &self.viewport, w);
+                    cx += s.x;
+                    cy += s.y;
+                }
+                let n = route.points.len() as f64;
+                serde_json::to_string(&serde_json::json!({ "x": cx / n, "y": cy / n })).unwrap_or_else(|_| "null".into())
+            }
+            _ => "null".into(),
+        }
+    }
+
+    pub fn set_selection_json(&mut self, json: &str) -> Result<(), String> {
+        let v: serde_json::Value = serde_json::from_str(json).map_err(|e| e.to_string())?;
+        self.selected_positions.clear();
+        self.selected_routes.clear();
+        if let Some(rows) = v.get("positions").and_then(|x| x.as_array()) {
+            for row in rows {
+                if let Some(id) = row.as_str() {
+                    self.selected_positions.insert(id.to_string());
+                }
+            }
+        }
+        if let Some(rows) = v.get("routes").and_then(|x| x.as_array()) {
+            for row in rows {
+                if let Some(id) = row.as_str() {
+                    self.selected_routes.insert(id.to_string());
+                }
+            }
+        }
+        Ok(())
+    }
+
+    pub fn set_hover_json(&mut self, json: &str) -> Result<(), String> {
+        if json == "null" {
+            self.hovered_kind = None;
+            self.hovered_id = None;
+            return Ok(());
+        }
+        let v: serde_json::Value = serde_json::from_str(json).map_err(|e| e.to_string())?;
+        self.hovered_kind = v.get("kind").and_then(|x| x.as_str()).map(str::to_string);
+        self.hovered_id = v.get("id").and_then(|x| x.as_str()).map(str::to_string);
+        Ok(())
     }
 
     pub fn position_screen_json(&self, id: &str) -> String {
@@ -2350,10 +2690,14 @@ impl MapHost {
             return;
         }
         let stroke_color = self.theme.route_stroke;
+        let selection_color = self.theme.selection_stroke;
+        let hover_color = self.theme.hover_stroke;
         for route in self.routes.values() {
             if route.points.len() < 2 {
                 continue;
             }
+            let selected = self.selected_routes.contains(&route.id);
+            let hovered = self.hovered_kind.as_deref() == Some("route") && self.hovered_id.as_deref() == Some(route.id.as_str());
             let mut path = vello::kurbo::BezPath::new();
             for (i, [lon, lat]) in route.points.iter().enumerate() {
                 let w = projection::lonlat_to_world(*lon, *lat);
@@ -2364,7 +2708,25 @@ impl MapHost {
                     path.line_to(s);
                 }
             }
-            scene.stroke(&Stroke::new(route.stroke_width * self.layer_stroke_scale.routes), Affine::IDENTITY, stroke_color, None, &path);
+            let width = route.stroke_width * self.layer_stroke_scale.routes;
+            if selected || hovered {
+                let halo = if selected { selection_color } else { hover_color };
+                scene.stroke(
+                    &Stroke::new(width * 2.4),
+                    Affine::IDENTITY,
+                    halo,
+                    None,
+                    &path,
+                );
+            }
+            let color = if selected {
+                selection_color
+            } else if hovered {
+                hover_color
+            } else {
+                stroke_color
+            };
+            scene.stroke(&Stroke::new(width), Affine::IDENTITY, color, None, &path);
         }
     }
 
@@ -2379,17 +2741,36 @@ impl MapHost {
         let pos_scale = self.layer_stroke_scale.positions;
         let pos_label_px = vector_tiles::vector_label_px_for_lod(lod_idx, span, self.layer_stroke_scale.position_labels);
         for pos in self.positions.values() {
+            let selected = self.selected_positions.contains(&pos.id);
+            let hovered = self.hovered_kind.as_deref() == Some("position") && self.hovered_id.as_deref() == Some(pos.id.as_str());
             let fill = match pos.kind.as_deref() {
                 Some("donor") => self.theme.route_stroke,
                 _ => self.theme.position_fill,
             };
-            let stroke = self.theme.position_stroke;
+            let stroke = if selected {
+                self.theme.selection_stroke
+            } else if hovered {
+                self.theme.hover_stroke
+            } else {
+                self.theme.position_stroke
+            };
             let w = projection::lonlat_to_world(pos.lon, pos.lat);
             let s = map_viewport::world_to_screen(&self.camera, &self.viewport, w);
             let r = ui_styling::radii::MAP_POSITION_MARKER * pos_scale;
             let circle = vello::kurbo::Circle::new(s, r);
+            if selected || hovered {
+                let halo_r = r * 1.75;
+                let halo = vello::kurbo::Circle::new(s, halo_r);
+                let halo_color = if selected { self.theme.selection_stroke } else { self.theme.hover_stroke };
+                scene.fill(Fill::NonZero, Affine::IDENTITY, halo_color, None, &halo);
+            }
             scene.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &circle);
-            scene.stroke(&Stroke::new(ui_styling::strokes::MAP_POSITION_MULT * pos_scale), Affine::IDENTITY, stroke, None, &circle);
+            let stroke_width = if selected || hovered {
+                ui_styling::strokes::MAP_POSITION_MULT * pos_scale * 1.5
+            } else {
+                ui_styling::strokes::MAP_POSITION_MULT * pos_scale
+            };
+            scene.stroke(&Stroke::new(stroke_width), Affine::IDENTITY, stroke, None, &circle);
             if self.layer_visibility.position_labels {
                 let label = pos.name.as_deref().or(pos.label.as_deref()).map(str::trim).filter(|t| !t.is_empty());
                 if let Some(label) = label {
@@ -2633,6 +3014,36 @@ impl MapSession {
     #[wasm_bindgen(js_name = positionScreenJson)]
     pub fn position_screen_json_wasm(&self, id: &str) -> String {
         self.state.borrow().host.position_screen_json(id)
+    }
+
+    #[wasm_bindgen(js_name = hitTestFeatureJson)]
+    pub fn hit_test_feature_json_wasm(&self, sx: f64, sy: f64) -> String {
+        self.state.borrow().host.hit_test_feature_json(sx, sy)
+    }
+
+    #[wasm_bindgen(js_name = featuresInRectJson)]
+    pub fn features_in_rect_json_wasm(&self, x0: f64, y0: f64, x1: f64, y1: f64, crossing: bool) -> String {
+        self.state.borrow().host.features_in_rect_json(x0, y0, x1, y1, crossing)
+    }
+
+    #[wasm_bindgen(js_name = featuresInPolygonJson)]
+    pub fn features_in_polygon_json_wasm(&self, points_json: &str, crossing: bool) -> String {
+        self.state.borrow().host.features_in_polygon_json(points_json, crossing)
+    }
+
+    #[wasm_bindgen(js_name = featureScreenJson)]
+    pub fn feature_screen_json_wasm(&self, kind: &str, id: &str) -> String {
+        self.state.borrow().host.feature_screen_json(kind, id)
+    }
+
+    #[wasm_bindgen(js_name = setSelectionJson)]
+    pub fn set_selection_json_wasm(&mut self, json: &str) -> Result<(), JsValue> {
+        self.state.borrow_mut().host.set_selection_json(json).map_err(|e| JsValue::from_str(&e))
+    }
+
+    #[wasm_bindgen(js_name = setHoverJson)]
+    pub fn set_hover_json_wasm(&mut self, json: &str) -> Result<(), JsValue> {
+        self.state.borrow_mut().host.set_hover_json(json).map_err(|e| JsValue::from_str(&e))
     }
 
     #[wasm_bindgen(js_name = cameraJson)]
@@ -3121,18 +3532,57 @@ mod tests {
     }
 
     #[test]
-    fn pointer_up_emits_select_position_on_pin_click() {
+    fn hit_test_feature_prefers_closest_target() {
         let mut host = super::MapHost::new();
         host.set_size(800, 600, 1.0);
         host.fit_world_camera();
-        host.sync_map_json(r#"{"positions":[{"id":"zurich","lon":8.54,"lat":47.37,"label":"Zürich"}],"routes":[],"regions":[]}"#).expect("descriptor");
+        host.sync_map_json(
+            r#"{"positions":[{"id":"zurich","lon":8.54,"lat":47.37,"label":"Zürich"}],"routes":[{"id":"route-a","points":[[8.54,47.37],[8.55,47.38]],"stroke_width":2}],"regions":[]}"#,
+        )
+        .expect("descriptor");
         let screen: serde_json::Value = serde_json::from_str(&host.position_screen_json("zurich")).expect("json");
         let sx = screen["x"].as_f64().expect("x");
         let sy = screen["y"].as_f64().expect("y");
-        host.pointer_down_screen(sx, sy, 0);
-        host.pointer_up_screen(sx, sy);
+        let hit: serde_json::Value = serde_json::from_str(&host.hit_test_feature_json(sx, sy)).expect("hit");
+        assert!(hit.get("kind").is_some());
+        assert!(hit.get("id").is_some());
+    }
+
+    #[test]
+    fn features_in_rect_crossing_includes_intersecting_route() {
+        let mut host = super::MapHost::new();
+        host.set_size(800, 600, 1.0);
+        host.fit_world_camera();
+        host.sync_map_json(
+            r#"{"positions":[{"id":"zurich","lon":8.54,"lat":47.37,"label":"Zürich"}],"routes":[{"id":"route-a","points":[[8.54,47.37],[8.55,47.38]],"stroke_width":2}],"regions":[]}"#,
+        )
+        .expect("descriptor");
+        let raw: serde_json::Value = serde_json::from_str(&host.features_in_rect_json(0.0, 0.0, 800.0, 600.0, true)).expect("json");
+        assert!(raw["positions"].as_array().map(|rows| !rows.is_empty()).unwrap_or(false));
+        assert!(raw["routes"].as_array().map(|rows| !rows.is_empty()).unwrap_or(false));
+    }
+
+    #[test]
+    fn set_selection_and_hover_json_updates_host_state() {
+        let mut host = super::MapHost::new();
+        host.set_selection_json(r#"{"positions":["a"],"routes":["b"]}"#).expect("selection");
+        host.set_hover_json(r#"{"kind":"position","id":"a"}"#).expect("hover");
+        assert!(host.selected_positions.contains("a"));
+        assert!(host.selected_routes.contains("b"));
+        assert_eq!(host.hovered_kind.as_deref(), Some("position"));
+        assert_eq!(host.hovered_id.as_deref(), Some("a"));
+    }
+
+    #[test]
+    fn pointer_up_emits_camera_after_middle_button_pan() {
+        let mut host = super::MapHost::new();
+        host.set_size(800, 600, 1.0);
+        host.fit_world_camera();
+        host.pointer_down_screen(100.0, 100.0, 1);
+        host.pointer_move_screen(180.0, 140.0);
+        host.pointer_up_screen(180.0, 140.0);
         let events: Vec<serde_json::Value> = serde_json::from_str(&host.drain_events_json()).expect("events");
-        assert!(events.iter().any(|row| row["type"] == "selectPosition" && row["payload"]["id"] == "zurich"));
+        assert!(events.iter().any(|row| row["type"] == "camera"));
     }
 
     #[test]

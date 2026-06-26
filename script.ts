@@ -253,6 +253,14 @@ export class DevScript extends Script {
       runCmd("bun", ["nx", "run", "@semio-tech/dag-play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
       return;
     }
+    if (segments[0] === "trinity-jack") {
+      runCmd("bun", ["nx", "run", "@semio-tech/trinity-jack-play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
+      return;
+    }
+    if (segments[0] === "trinity-rewrite") {
+      runCmd("bun", ["nx", "run", "@semio-tech/trinity-rewrite-play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
+      return;
+    }
     if (segments[0] === "procedural-3d") {
       runCmd("bun", ["nx", "run", "@semio-tech/procedural-3d-play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
       return;

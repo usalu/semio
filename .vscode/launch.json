@@ -526,6 +526,110 @@
       }
     },
     {
+      "name": "🛠️dev🔺trinity🃏jack",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:trinity:jack",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "TRINITY_JACK_PLAY_PORT": "6054"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 171.8
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6054)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🔺trinity♻️rewrite",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:trinity:rewrite",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "TRINITY_REWRITE_PLAY_PORT": "6056"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 171.85
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6056)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🔺trinity🃏jack🦀shell",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "cargo run -p trinity_jack_shell -- trinity/fixture/nakagin-capsule-tower.trinity.json \"MATCH (a:Piece) RETURN a.name\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 171.82
+      }
+    },
+    {
+      "name": "📦build🔺trinity-core",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/trinity-core:wasm",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 171.8
+      }
+    },
+    {
+      "name": "🧪test🔺trinity-core",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./script.ts test",
+      "cwd": "${workspaceFolder}/trinity/rewrite/engine",
+      "presentation": {
+        "group": "5_test",
+        "order": 171.8
+      }
+    },
+    {
+      "name": "🧪test🔺trinity⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./script.ts test",
+      "cwd": "${workspaceFolder}/trinity/react",
+      "presentation": {
+        "group": "5_test",
+        "order": 171.82
+      }
+    },
+    {
+      "name": "🧪test🔺trinity🃏jack",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./script.ts test",
+      "cwd": "${workspaceFolder}/trinity/jack/play",
+      "presentation": {
+        "group": "5_test",
+        "order": 171.85
+      }
+    },
+    {
+      "name": "🧪test🔺trinity♻️rewrite",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./script.ts test",
+      "cwd": "${workspaceFolder}/trinity/rewrite/play",
+      "presentation": {
+        "group": "5_test",
+        "order": 171.87
+      }
+    },
+    {
       "name": "🛠️dev🔧procedural-3d",
       "type": "node-terminal",
       "request": "launch",

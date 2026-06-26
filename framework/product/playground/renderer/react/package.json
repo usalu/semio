@@ -18,6 +18,9 @@
     "./procedural-3d": "./index.tsx",
     "./procedural-2d": "./index.tsx",
     "./shooting": "./index.tsx",
+    "./dag": "./index.tsx",
+    "./trinity-jack": "./index.tsx",
+    "./trinity-rewrite": "./index.tsx",
     "./presentation": "./index.tsx"
   },
   "dependencies": {
@@ -44,6 +47,9 @@
     "@semio-tech/procedural-2d-react": "workspace:*",
     "@semio-tech/shooting-play": "workspace:*",
     "@semio-tech/shooting-react": "workspace:*",
+    "@semio-tech/trinity-jack-play": "workspace:*",
+    "@semio-tech/trinity-rewrite-play": "workspace:*",
+    "@semio-tech/trinity-react": "workspace:*",
     "@semio-tech/ui-react": "workspace:*",
     "clsx": "^2.1.1",
     "react": "^19.2.3",

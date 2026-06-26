@@ -1,0 +1,167 @@
+{
+  "schema": "trinity.graph/v1",
+  "name": "Nakagin Capsule Tower",
+  "manifest": {
+    "nodeKinds": [
+      {
+        "name": "Piece",
+        "properties": [
+          { "name": "position", "kind": "data", "valueType": "object" },
+          { "name": "flatPosition", "kind": "derived", "valueType": "object", "expr": "flatFromConnections" }
+        ],
+        "portKinds": ["Connector"]
+      }
+    ],
+    "edgeKinds": [
+      {
+        "name": "Connection",
+        "properties": [
+          { "name": "gap", "kind": "data", "valueType": "number" },
+          { "name": "rotation", "kind": "data", "valueType": "number" },
+          { "name": "tilt", "kind": "data", "valueType": "number" },
+          { "name": "rise", "kind": "data", "valueType": "number" },
+          { "name": "turn", "kind": "data", "valueType": "number" },
+          { "name": "shift", "kind": "data", "valueType": "number" },
+          { "name": "u", "kind": "data", "valueType": "number" },
+          { "name": "v", "kind": "data", "valueType": "number" }
+        ]
+      }
+    ],
+    "portKinds": [{ "name": "Connector", "direction": "out" }]
+  },
+  "camera": { "x": 0, "y": 0, "zoom": 1 },
+  "rootNodeId": "7dc5b737-3b6b-4068-b315-b7bacc91c2e1",
+  "nodes": [
+    {
+      "id": "7dc5b737-3b6b-4068-b315-b7bacc91c2e1",
+      "kind": "Piece",
+      "name": "b",
+      "x": 0,
+      "y": 0,
+      "width": 96,
+      "height": 48,
+      "properties": {
+        "position": { "x": 0, "y": 0, "z": 0 }
+      },
+      "ports": [
+        { "id": "c5465220-19ba-4443-8f1d-617c832dd13c", "kind": "Connector", "direction": "out" },
+        { "id": "d25a91ed-b124-4e5b-8e7e-af832541c953", "kind": "Connector", "direction": "out" }
+      ]
+    },
+    {
+      "id": "5f0266bc-856b-4ef2-9eb0-16ef5e1fb952",
+      "kind": "Piece",
+      "name": "t_f0_b_c0",
+      "x": -140,
+      "y": 80,
+      "width": 88,
+      "height": 40,
+      "properties": {
+        "position": { "x": -1.2, "y": 1.2, "z": 0 }
+      },
+      "ports": [
+        { "id": "7be6cfda-db1b-47e4-bcea-cd011e516e2e", "kind": "Connector", "direction": "in" },
+        { "id": "e0fb5d49-9286-4a6d-88b0-043f389c6898", "kind": "Connector", "direction": "out" }
+      ]
+    },
+    {
+      "id": "17d5dec8-87b2-44a9-84ff-93b7e7419bdd",
+      "kind": "Piece",
+      "name": "t_f0_b_c1",
+      "x": 140,
+      "y": 80,
+      "width": 88,
+      "height": 40,
+      "properties": {
+        "position": { "x": 1.2, "y": 1.2, "z": 0 }
+      },
+      "ports": [
+        { "id": "7be6cfda-db1b-47e4-bcea-cd011e516e2e", "kind": "Connector", "direction": "in" }
+      ]
+    },
+    {
+      "id": "596f3f60-b634-467b-8acc-7d5b649ae0d1",
+      "kind": "Piece",
+      "name": "t_f1_b_c0",
+      "x": -140,
+      "y": 180,
+      "width": 88,
+      "height": 40,
+      "properties": {
+        "position": { "x": -1.2, "y": 2.4, "z": 0 }
+      },
+      "ports": [
+        { "id": "7be6cfda-db1b-47e4-bcea-cd011e516e2e", "kind": "Connector", "direction": "in" },
+        { "id": "e0fb5d49-9286-4a6d-88b0-043f389c6898", "kind": "Connector", "direction": "out" }
+      ]
+    },
+    {
+      "id": "f2edea5c-960e-46bd-932d-aae5ecad72d8",
+      "kind": "Piece",
+      "name": "t_f8_b_c0",
+      "x": -140,
+      "y": 280,
+      "width": 88,
+      "height": 40,
+      "properties": {
+        "position": { "x": -1.2, "y": 9.6, "z": 0 }
+      },
+      "ports": [
+        { "id": "e0fb5d49-9286-4a6d-88b0-043f389c6898", "kind": "Connector", "direction": "in" },
+        { "id": "c5465220-19ba-4443-8f1d-617c832dd13c", "kind": "Connector", "direction": "out" }
+      ]
+    },
+    {
+      "id": "6947a41b-8c6d-4291-bdd8-96cd535c78fc",
+      "kind": "Piece",
+      "name": "ci_t_f8_b_c0",
+      "x": -140,
+      "y": 380,
+      "width": 96,
+      "height": 44,
+      "properties": {
+        "position": { "x": -1.2, "y": 11.2, "z": 0 }
+      },
+      "ports": [
+        { "id": "4ba51a88-2a7f-4b78-b119-0f02eacdb702", "kind": "Connector", "direction": "in" }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "id": "cc0d14f5-11b2-4258-ac52-287d0d46b23b",
+      "kind": "Connection",
+      "source": "7dc5b737-3b6b-4068-b315-b7bacc91c2e1:c5465220-19ba-4443-8f1d-617c832dd13c",
+      "target": "5f0266bc-856b-4ef2-9eb0-16ef5e1fb952:7be6cfda-db1b-47e4-bcea-cd011e516e2e",
+      "properties": { "gap": 0, "rotation": 270, "tilt": 0, "rise": 0, "turn": 0, "shift": 0, "u": -1.2, "v": 1.2 }
+    },
+    {
+      "id": "8684b51c-94f5-4a50-be16-526ac8e0892a",
+      "kind": "Connection",
+      "source": "7dc5b737-3b6b-4068-b315-b7bacc91c2e1:d25a91ed-b124-4e5b-8e7e-af832541c953",
+      "target": "17d5dec8-87b2-44a9-84ff-93b7e7419bdd:7be6cfda-db1b-47e4-bcea-cd011e516e2e",
+      "properties": { "gap": 0, "rotation": 90, "tilt": 0, "rise": 0, "turn": 0, "shift": 0, "u": 1.2, "v": 1.2 }
+    },
+    {
+      "id": "e-shaft-1",
+      "kind": "Connection",
+      "source": "5f0266bc-856b-4ef2-9eb0-16ef5e1fb952:e0fb5d49-9286-4a6d-88b0-043f389c6898",
+      "target": "596f3f60-b634-467b-8acc-7d5b649ae0d1:7be6cfda-db1b-47e4-bcea-cd011e516e2e",
+      "properties": { "gap": 0, "rotation": 0, "tilt": 0, "rise": 0, "turn": 0, "shift": 0, "u": 0, "v": 1.2 }
+    },
+    {
+      "id": "e-shaft-8",
+      "kind": "Connection",
+      "source": "596f3f60-b634-467b-8acc-7d5b649ae0d1:e0fb5d49-9286-4a6d-88b0-043f389c6898",
+      "target": "f2edea5c-960e-46bd-932d-aae5ecad72d8:e0fb5d49-9286-4a6d-88b0-043f389c6898",
+      "properties": { "gap": 0, "rotation": 0, "tilt": 0, "rise": 0, "turn": 0, "shift": 0, "u": 0, "v": 7.2 }
+    },
+    {
+      "id": "fdae9f64-398f-45ad-8496-453e72c31512",
+      "kind": "Connection",
+      "source": "f2edea5c-960e-46bd-932d-aae5ecad72d8:c5465220-19ba-4443-8f1d-617c832dd13c",
+      "target": "6947a41b-8c6d-4291-bdd8-96cd535c78fc:4ba51a88-2a7f-4b78-b119-0f02eacdb702",
+      "properties": { "gap": 0, "rotation": 90, "tilt": 0, "rise": 0, "turn": 0, "shift": 0, "u": 0, "v": 1.6 }
+    }
+  ]
+}

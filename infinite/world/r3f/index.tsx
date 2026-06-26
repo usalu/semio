@@ -795,6 +795,13 @@ export function lodProgressiveGridLayers(lod: number, gridFactor: number): reado
   return layers;
 }
 
+/** @emoji 🔑 Stable identity for progressive grid topology (ignores continuous camera LOD drift). */
+export function lodProgressiveGridLayerKey(lod: number, gridFactor: number): string {
+  const layers = lodProgressiveGridLayers(lod, gridFactor);
+  if (!layers.length) return "";
+  return layers.map((layer) => layer.stepWorld).join("|");
+}
+
 /** @emoji 📐 Finest visible LOD grid step in world units. */
 export function lodGridStepWorld(lod: number, gridFactor: number): number | null {
   const layers = lodProgressiveGridLayers(lod, gridFactor);
@@ -853,7 +860,8 @@ export function WorldLodGridHelper(props: { readonly gridDatum?: Vec3 }): ReactE
   const invalidate = useThree((s) => s.invalidate);
   const controls = useThree((s) => s.controls as { target?: Vector3 } | null);
   const anchor = controls?.target;
-  const layers = reactHostPort.useMemo(() => lodProgressiveGridLayers(lod.lod, lod.gridFactor), [lod.lod, lod.gridFactor]);
+  const gridLayerKey = reactHostPort.useMemo(() => lodProgressiveGridLayerKey(lod.lod, lod.gridFactor), [lod.lod, lod.gridFactor]);
+  const layers = reactHostPort.useMemo(() => lodProgressiveGridLayers(lod.lod, lod.gridFactor), [gridLayerKey, lod.gridFactor]);
   const grids = reactHostPort.useMemo(() => {
     const size = 12_000;
     return layers.map(({ stepWorld, opacity }) => {
@@ -902,7 +910,6 @@ function LodFrameRunner(props: {
   const controls = useThree((s) => s.controls as { target?: Vector3 } | null);
   const invalidate = useThree((s) => s.invalidate);
   const tmpT = reactHostPort.useMemo(() => new Vector3(), []);
-  const prevLod = reactHostPort.useRef<number | null>(null);
   const ctxSig = reactHostPort.useRef("");
   useFrame(() => {
     const tgt = controls?.target ?? tmpT.set(0, 0, 0);
@@ -916,14 +923,11 @@ function LodFrameRunner(props: {
     runtime.distanceReference = props.distanceReference;
     runtime.camera = cam;
     const gridStep = lodGridStepWorld(sceneLod, props.gridFactor);
-    const sig = `${sceneLod}|${props.depthVariableLod ? 1 : 0}|${gridStep ?? "x"}|${props.gridFactor}|${props.gridSnapEnabled}`;
+    const gridLayerKey = lodProgressiveGridLayerKey(sceneLod, props.gridFactor);
+    const sig = `${gridLayerKey}|${props.depthVariableLod ? 1 : 0}|${gridStep ?? "x"}|${props.gridFactor}|${props.gridSnapEnabled}`;
     if (ctxSig.current !== sig) {
       ctxSig.current = sig;
       props.onLod({ sceneLod, depthVariable: props.depthVariableLod, gridStepWorld: gridStep });
-      invalidate();
-    }
-    if (prevLod.current === null || Math.abs(prevLod.current - sceneLod) > WORLD_LOD_EPSILON) {
-      prevLod.current = sceneLod;
       props.onLodChange?.(sceneLod);
       invalidate();
     }
@@ -2979,6 +2983,18 @@ if (import.meta.vitest) {
       expect(lodProgressiveGridLayers(500, 10).map((l) => l.stepWorld)).toEqual([100]);
       expect(lodProgressiveGridLayers(50, 10).map((l) => l.stepWorld)).toEqual([100, 25]);
       expect(lodProgressiveGridLayers(2, 10).map((l) => l.stepWorld)).toEqual([100, 25, 5, 1]);
+    });
+  });
+
+  describe("lodProgressiveGridLayerKey", () => {
+    it("is stable across continuous lod drift inside one band", () => {
+      const keyA = lodProgressiveGridLayerKey(50, 10);
+      const keyB = lodProgressiveGridLayerKey(49.2, 10);
+      const keyC = lodProgressiveGridLayerKey(11.4, 10);
+      expect(keyA).toBe("100|25");
+      expect(keyB).toBe(keyA);
+      expect(keyC).toBe(keyA);
+      expect(lodProgressiveGridLayerKey(9.8, 10)).toBe("100|25|5");
     });
   });
 

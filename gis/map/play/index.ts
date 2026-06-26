@@ -31,10 +31,12 @@ import {
   type UiTreeSectionNode,
   type WindowMeasure,
   type WindowTemplate,
+  type AppTools,
+  type ToolItem,
 } from "@semio-tech/framework-playground-core";
 import { Store } from "@semio-tech/framework-core";
 
-import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
+import { bootstrapElementsSurfaceChromeDocument, selectionMergeIds, type SelectionMarqueeMethod, type SelectionMergeMode } from "@semio-tech/ui-react";
 
 import type { IconName } from "@semio-tech/ui-react";
 
@@ -62,6 +64,8 @@ import {
   type MapRenderMode,
   type MapRouteProps,
   type MapVectorStyle,
+  type MapHoveredFeature,
+  type MapFeatureKind,
 } from "@semio-tech/gis-map-react";
 
 import reuseMapFixtureJson from "../fixture/reuse.map.gis.json";
@@ -77,7 +81,11 @@ export const GIS_MAP_PLAY_HIERARCHY_TAB_ID = "framework.panel.hierarchy";
 export const GIS_MAP_PLAY_CATALOGUE_TAB_ID = "framework.panel.catalogue";
 export const GIS_MAP_PLAY_INSPECTION_TAB_ID = "framework.panel.inspection";
 
-export type MapPlaySelectionKind = "position" | "route";
+export type MapPlaySelectionKind = MapFeatureKind;
+
+export type MapPlaySelectionMethod = SelectionMarqueeMethod;
+
+export type MapPlaySelectionMode = SelectionMergeMode;
 
 export interface GisMapFixturePositionV1 {
   readonly id: string;
@@ -240,6 +248,12 @@ export interface MapPlaySnapshot {
   readonly layerStrokeScale: MapLayerStrokeScale;
   readonly layerStrokeScaleByInstance: Readonly<Record<string, MapLayerStrokeScale>>;
   readonly activeFixture: GisMapFixtureV1 | null;
+  readonly selectedPositionIds: readonly string[];
+  readonly selectedRouteIds: readonly string[];
+  readonly hoveredFeature: MapHoveredFeature | null;
+  readonly selectionMode: MapPlaySelectionMode;
+  readonly selectionMethod: MapPlaySelectionMethod;
+  readonly fitWorldRevision: number;
 }
 
 export const GIS_MAP_PLAY_IDLE_SNAPSHOT: MapPlaySnapshot = {
@@ -254,6 +268,12 @@ export const GIS_MAP_PLAY_IDLE_SNAPSHOT: MapPlaySnapshot = {
   layerStrokeScale: defaultMapLayerStrokeScale(),
   layerStrokeScaleByInstance: {},
   activeFixture: null,
+  selectedPositionIds: [],
+  selectedRouteIds: [],
+  hoveredFeature: null,
+  selectionMode: "default",
+  selectionMethod: "rectangle",
+  fitWorldRevision: 0,
 };
 
 function mapPlayLayerWeightLabel(scale: number): string {
@@ -265,7 +285,13 @@ function mapPlayCmd(command: string, args?: Record<string, unknown>): CommandDes
 }
 
 // #region 🔖MapPlayPanels
-export function buildMapPlayHierarchyTree(fixture: GisMapFixtureV1 | null, selectedFeatureId: string | null, selectedFeatureKind: MapPlaySelectionKind | null): UiNode {
+export function buildMapPlayHierarchyTree(
+  fixture: GisMapFixtureV1 | null,
+  selectedPositionIds: readonly string[],
+  selectedRouteIds: readonly string[],
+  hoveredFeature: MapHoveredFeature | null,
+  hoverSink?: (payload: { featureId: string | null; featureKind: MapPlaySelectionKind | null }) => void,
+): UiNode {
   if (!fixture) {
     return {
       type: "tree",
@@ -283,23 +309,29 @@ export function buildMapPlayHierarchyTree(fixture: GisMapFixtureV1 | null, selec
     id: `gis-map-play-hierarchy.position.${position.id}`,
     label: position.label || position.name || position.id,
     description: `${position.kind} · ${position.lat.toFixed(4)}, ${position.lon.toFixed(4)}`,
-    command: mapPlayCmd("setSelection", { featureId: position.id, featureKind: "position" }),
+    command: mapPlayCmd("setSelection", { positions: [position.id], routes: [], mode: "default" }),
+    onPointerEnter: hoverSink ? () => hoverSink({ featureId: position.id, featureKind: "position" }) : undefined,
+    onPointerLeave: hoverSink ? () => hoverSink({ featureId: null, featureKind: null }) : undefined,
   }));
   const routeItems: UiTreeItemNode[] = fixture.routes.map((route) => ({
     id: `gis-map-play-hierarchy.route.${route.id}`,
     label: route.label || route.id,
     description: `${route.points.length} points`,
-    command: mapPlayCmd("setSelection", { featureId: route.id, featureKind: "route" }),
+    command: mapPlayCmd("setSelection", { positions: [], routes: [route.id], mode: "default" }),
+    onPointerEnter: hoverSink ? () => hoverSink({ featureId: route.id, featureKind: "route" }) : undefined,
+    onPointerLeave: hoverSink ? () => hoverSink({ featureId: null, featureKind: null }) : undefined,
   }));
   const layerItems: UiTreeItemNode[] = GIS_MAP_LAYER_IDS.map((layer) => ({
     id: `gis-map-play-hierarchy.layer.${layer}`,
     label: GIS_MAP_LAYER_LABEL[layer],
     description: layer,
   }));
-  const selectedIds =
-    selectedFeatureId && selectedFeatureKind
-      ? [`gis-map-play-hierarchy.${selectedFeatureKind}.${selectedFeatureId}`]
-      : [];
+  const selectedIds = [
+    ...selectedPositionIds.map((id) => `gis-map-play-hierarchy.position.${id}`),
+    ...selectedRouteIds.map((id) => `gis-map-play-hierarchy.route.${id}`),
+  ];
+  const highlightedIds =
+    hoveredFeature != null ? [`gis-map-play-hierarchy.${hoveredFeature.kind}.${hoveredFeature.id}`] : [];
   return {
     type: "tree",
     sections: [
@@ -323,6 +355,7 @@ export function buildMapPlayHierarchyTree(fixture: GisMapFixtureV1 | null, selec
       },
     ],
     selectedIds,
+    highlightedIds,
   };
 }
 
@@ -344,13 +377,18 @@ export function buildMapPlayCatalogueTree(): UiNode {
   };
 }
 
-export function buildMapPlayInspectorTree(fixture: GisMapFixtureV1 | null, selectedFeatureId: string | null, selectedFeatureKind: MapPlaySelectionKind | null): UiNode {
+export function buildMapPlayInspectorTree(
+  fixture: GisMapFixtureV1 | null,
+  selectedPositionIds: readonly string[],
+  selectedRouteIds: readonly string[],
+): UiNode {
   if (!fixture) {
     return uiDeclarativeSectionsToTree([
       { type: "section", id: "gis-map-play-inspector.invalid", label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, children: [{ type: "text", value: "No fixture loaded" }] },
     ]);
   }
-  if (!selectedFeatureId || !selectedFeatureKind) {
+  const totalSelected = selectedPositionIds.length + selectedRouteIds.length;
+  if (totalSelected === 0) {
     return uiDeclarativeSectionsToTree([
       {
         type: "section",
@@ -360,7 +398,20 @@ export function buildMapPlayInspectorTree(fixture: GisMapFixtureV1 | null, selec
       },
     ]);
   }
-  if (selectedFeatureKind === "position") {
+  if (totalSelected > 1) {
+    return uiDeclarativeSectionsToTree([
+      {
+        type: "section",
+        id: "gis-map-play-inspector.multi",
+        label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+        children: [
+          { type: "text", value: `${selectedPositionIds.length} position(s), ${selectedRouteIds.length} route(s) selected` },
+        ],
+      },
+    ]);
+  }
+  if (selectedPositionIds.length === 1) {
+    const selectedFeatureId = selectedPositionIds[0]!;
     const position = fixture.positions.find((entry) => entry.id === selectedFeatureId);
     if (!position) {
       return uiDeclarativeSectionsToTree([
@@ -440,6 +491,7 @@ export function buildMapPlayInspectorTree(fixture: GisMapFixtureV1 | null, selec
       },
     ] as readonly UiSectionNode[]);
   }
+  const selectedFeatureId = selectedRouteIds[0]!;
   const route = fixture.routes.find((entry) => entry.id === selectedFeatureId);
   if (!route) {
     return uiDeclarativeSectionsToTree([
@@ -468,6 +520,95 @@ export function buildMapPlayInspectorTree(fixture: GisMapFixtureV1 | null, selec
       ],
     },
   ] as readonly UiSectionNode[]);
+}
+
+export interface MapPlayToolbarState {
+  readonly selectionMethod: MapPlaySelectionMethod;
+  readonly selectionMode: MapPlaySelectionMode;
+  readonly selectionCount: number;
+}
+
+/** @emoji 🧰 Playground toolbar tools for GIS map selection. */
+export function buildMapPlayToolbarTools(state: MapPlayToolbarState, controllerId: string): AppTools {
+  const selectionTools: ToolItem[] = [
+    {
+      id: "gis-map.select.rectangle",
+      kind: "toggle",
+      iconId: "square",
+      text: "Rectangle",
+      order: 0,
+      pressed: state.selectionMethod === "rectangle",
+      controllerId,
+      command: "setSelectionMethod",
+      args: { method: "rectangle" },
+    },
+    {
+      id: "gis-map.select.lasso",
+      kind: "toggle",
+      iconId: "lasso",
+      text: "Lasso",
+      order: 1,
+      pressed: state.selectionMethod === "lasso",
+      controllerId,
+      command: "setSelectionMethod",
+      args: { method: "lasso" },
+    },
+    {
+      id: "gis-map.select.mode.default",
+      kind: "toggle",
+      iconId: "mouse-pointer-2",
+      text: "Default",
+      order: 2,
+      pressed: state.selectionMode === "default",
+      controllerId,
+      command: "setSelectionMode",
+      args: { mode: "default" },
+    },
+    {
+      id: "gis-map.select.mode.additive",
+      kind: "toggle",
+      iconId: "plus",
+      text: "Add",
+      order: 3,
+      pressed: state.selectionMode === "additive",
+      controllerId,
+      command: "setSelectionMode",
+      args: { mode: "additive" },
+    },
+    {
+      id: "gis-map.select.mode.subtractive",
+      kind: "toggle",
+      iconId: "minus",
+      text: "Subtract",
+      order: 4,
+      pressed: state.selectionMode === "subtractive",
+      controllerId,
+      command: "setSelectionMode",
+      args: { mode: "subtractive" },
+    },
+    {
+      id: "gis-map.select.mode.invertive",
+      kind: "toggle",
+      iconId: "arrow-right-left",
+      text: "Invert",
+      order: 5,
+      pressed: state.selectionMode === "invertive",
+      controllerId,
+      command: "setSelectionMode",
+      args: { mode: "invertive" },
+    },
+    {
+      id: "gis-map.selection.clear",
+      kind: "button",
+      iconId: "x",
+      label: "Clear",
+      order: 6,
+      disabled: state.selectionCount === 0,
+      controllerId,
+      command: "clearSelection",
+    },
+  ];
+  return { selection: selectionTools };
 }
 // #endregion 🔖MapPlayPanels
 
@@ -618,8 +759,12 @@ export class MapPlayController extends Controller implements PlaygroundFixtureHo
   layerStrokeScaleByInstance: Record<string, MapLayerStrokeScale> = {};
   effectiveLodId: GisMapLodId = "world";
   effectiveLodByInstance: Record<string, GisMapLodId> = {};
-  private selectedFeatureId: string | null = null;
-  private selectedFeatureKind: MapPlaySelectionKind | null = null;
+  private selectedPositionIds: string[] = [];
+  private selectedRouteIds: string[] = [];
+  private hoveredFeature: MapHoveredFeature | null = null;
+  selectionMode: MapPlaySelectionMode = "default";
+  selectionMethod: MapPlaySelectionMethod = "rectangle";
+  fitWorldRevision = 0;
   private interactionRevision = 0;
   private readonly snapshotListeners = new Set<() => void>();
 
@@ -630,6 +775,7 @@ export class MapPlayController extends Controller implements PlaygroundFixtureHo
     this.applyFixtureLayersForData();
     this.rebuildSnapshotCache();
     this.rebuildShellMode();
+    this.rebuildToolbarTools();
   }
 
   /** @emoji 🗺️ Resolves tile render mode for a shell window instance (or the default window kind id). */
@@ -670,7 +816,80 @@ export class MapPlayController extends Controller implements PlaygroundFixtureHo
       layerStrokeScale: { ...this.layerStrokeScale },
       layerStrokeScaleByInstance: { ...this.layerStrokeScaleByInstance },
       activeFixture: this.activeFixture,
+      selectedPositionIds: [...this.selectedPositionIds],
+      selectedRouteIds: [...this.selectedRouteIds],
+      hoveredFeature: this.hoveredFeature,
+      selectionMode: this.selectionMode,
+      selectionMethod: this.selectionMethod,
+      fitWorldRevision: this.fitWorldRevision,
     };
+  }
+
+  getFitWorldRevision(): number {
+    return this.fitWorldRevision;
+  }
+
+  getSelectedPositionIds(): readonly string[] {
+    return this.selectedPositionIds;
+  }
+
+  getSelectedRouteIds(): readonly string[] {
+    return this.selectedRouteIds;
+  }
+
+  getHoveredFeature(): MapHoveredFeature | null {
+    return this.hoveredFeature;
+  }
+
+  getSelectionMode(): MapPlaySelectionMode {
+    return this.selectionMode;
+  }
+
+  getSelectionMethod(): MapPlaySelectionMethod {
+    return this.selectionMethod;
+  }
+
+  /** @emoji 🧰 Rebuilds toolbar selection tools from controller state. */
+  rebuildToolbarTools(): void {
+    this.mainMode.tools = buildMapPlayToolbarTools(
+      {
+        selectionMethod: this.selectionMethod,
+        selectionMode: this.selectionMode,
+        selectionCount: this.selectedPositionIds.length + this.selectedRouteIds.length,
+      },
+      this.id,
+    );
+  }
+
+  private mergeSelection(positions: readonly string[], routes: readonly string[], mode: MapPlaySelectionMode): void {
+    this.selectedPositionIds = selectionMergeIds(mode, this.selectedPositionIds, positions);
+    this.selectedRouteIds = selectionMergeIds(mode, this.selectedRouteIds, routes);
+  }
+
+  private selectionCount(): number {
+    return this.selectedPositionIds.length + this.selectedRouteIds.length;
+  }
+
+  private focusFeature(featureKind: MapPlaySelectionKind, featureId: string): void {
+    const fixture = this.activeFixture;
+    if (!fixture) return;
+    if (featureKind === "position") {
+      const position = fixture.positions.find((row) => row.id === featureId);
+      if (!position) return;
+      console.log(`[DEBUG] gis map focus position ${featureId} at ${position.lon},${position.lat}`);
+      return;
+    }
+    const route = fixture.routes.find((row) => row.id === featureId);
+    if (!route || route.points.length === 0) return;
+    let lon = 0;
+    let lat = 0;
+    for (const [plon, plat] of route.points) {
+      lon += plon;
+      lat += plat;
+    }
+    lon /= route.points.length;
+    lat /= route.points.length;
+    console.log(`[DEBUG] gis map focus route ${featureId} at ${lon},${lat}`);
   }
 
   getActiveFixture(): GisMapFixtureV1 | null {
@@ -678,11 +897,23 @@ export class MapPlayController extends Controller implements PlaygroundFixtureHo
   }
 
   getSelectedFeatureId(): string | null {
-    return this.selectedFeatureId;
+    if (this.selectedPositionIds.length === 1 && this.selectedRouteIds.length === 0) {
+      return this.selectedPositionIds[0] ?? null;
+    }
+    if (this.selectedRouteIds.length === 1 && this.selectedPositionIds.length === 0) {
+      return this.selectedRouteIds[0] ?? null;
+    }
+    return null;
   }
 
   getSelectedFeatureKind(): MapPlaySelectionKind | null {
-    return this.selectedFeatureKind;
+    if (this.selectedPositionIds.length === 1 && this.selectedRouteIds.length === 0) {
+      return "position";
+    }
+    if (this.selectedRouteIds.length === 1 && this.selectedPositionIds.length === 0) {
+      return "route";
+    }
+    return null;
   }
 
   getInteractionRevision(): number {
@@ -745,6 +976,7 @@ export class MapPlayController extends Controller implements PlaygroundFixtureHo
     this.snapshotStore.bump();
     this.interactionRevision += 1;
     this.notifySnapshot();
+    this.rebuildToolbarTools();
     this.emit();
   }
 
@@ -781,12 +1013,103 @@ export class MapPlayController extends Controller implements PlaygroundFixtureHo
 
   run(command: string, args?: unknown): void {
     if (command === "setSelection") {
+      const positions = (args as { positions?: string[] }).positions ?? [];
+      const routes = (args as { routes?: string[] }).routes ?? [];
+      const mode = (args as { mode?: MapPlaySelectionMode }).mode ?? "default";
+      const featureId = (args as { featureId?: string | null }).featureId;
+      const featureKind = (args as { featureKind?: MapPlaySelectionKind | null }).featureKind;
+      if (typeof featureId === "string" && featureKind) {
+        this.mergeSelection(
+          featureKind === "position" ? [featureId] : [],
+          featureKind === "route" ? [featureId] : [],
+          mode,
+        );
+      } else {
+        this.mergeSelection(positions, routes, mode);
+      }
+      this.bumpSnapshot();
+      console.log(
+        `[DEBUG] gis map selection positions=[${this.selectedPositionIds.join(", ")}] routes=[${this.selectedRouteIds.join(", ")}] mode=${mode}`,
+      );
+      return;
+    }
+    if (command === "setSelectionMode") {
+      const mode = (args as { mode?: MapPlaySelectionMode }).mode;
+      if (mode !== "default" && mode !== "additive" && mode !== "subtractive" && mode !== "invertive") return;
+      if (this.selectionMode === mode) return;
+      this.selectionMode = mode;
+      this.bumpSnapshot();
+      return;
+    }
+    if (command === "setSelectionMethod") {
+      const method = (args as { method?: MapPlaySelectionMethod }).method;
+      if (method !== "rectangle" && method !== "lasso") return;
+      if (this.selectionMethod === method) return;
+      this.selectionMethod = method;
+      this.bumpSnapshot();
+      return;
+    }
+    if (command === "clearSelection") {
+      if (this.selectionCount() === 0) return;
+      this.selectedPositionIds = [];
+      this.selectedRouteIds = [];
+      this.bumpSnapshot();
+      return;
+    }
+    if (command === "setHover") {
       const featureId = (args as { featureId?: string | null }).featureId ?? null;
       const featureKind = (args as { featureKind?: MapPlaySelectionKind | null }).featureKind ?? null;
-      if (this.selectedFeatureId === featureId && this.selectedFeatureKind === featureKind) return;
-      this.selectedFeatureId = featureId;
-      this.selectedFeatureKind = featureKind;
+      const next =
+        featureId && featureKind ? ({ kind: featureKind, id: featureId } satisfies MapHoveredFeature) : null;
+      if (
+        this.hoveredFeature?.id === next?.id &&
+        this.hoveredFeature?.kind === next?.kind
+      ) {
+        return;
+      }
+      this.hoveredFeature = next;
       this.bumpSnapshot();
+      return;
+    }
+    if (command === "deselect") {
+      const featureId = (args as { featureId?: string }).featureId;
+      const featureKind = (args as { featureKind?: MapPlaySelectionKind }).featureKind;
+      if (!featureId || !featureKind) return;
+      if (featureKind === "position") {
+        this.selectedPositionIds = this.selectedPositionIds.filter((id) => id !== featureId);
+      } else {
+        this.selectedRouteIds = this.selectedRouteIds.filter((id) => id !== featureId);
+      }
+      this.bumpSnapshot();
+      return;
+    }
+    if (command === "selectAll") {
+      const fixture = this.activeFixture;
+      if (!fixture) return;
+      this.selectedPositionIds = fixture.positions.map((row) => row.id);
+      this.selectedRouteIds = fixture.routes.map((row) => row.id);
+      this.bumpSnapshot();
+      return;
+    }
+    if (command === "focusFeature") {
+      const featureId = (args as { featureId?: string }).featureId;
+      const featureKind = (args as { featureKind?: MapPlaySelectionKind }).featureKind;
+      if (!featureId || !featureKind) return;
+      this.focusFeature(featureKind, featureId);
+      return;
+    }
+    if (command === "fitWorld") {
+      this.fitWorldRevision += 1;
+      this.bumpSnapshot();
+      console.log("[DEBUG] gis map fit world requested");
+      return;
+    }
+    if (command === "openSource") {
+      const featureId = (args as { featureId?: string }).featureId;
+      const position = this.activeFixture?.positions.find((row) => row.id === featureId);
+      if (position?.sourceUrl && typeof window !== "undefined") {
+        window.open(position.sourceUrl, "_blank", "noopener,noreferrer");
+      }
       return;
     }
     if (command === "patchPosition") {
@@ -1243,6 +1566,23 @@ if (import.meta.vitest) {
       const descriptor = gisMapFixtureToDescriptor(GIS_MAP_PLAY_DEFAULT_FIXTURE);
       expect(descriptor.positions[0]?.sourceUrl).toBeTruthy();
       expect(descriptor.routes.length).toBe(GIS_MAP_PLAY_DEFAULT_FIXTURE.routes.length);
+    });
+
+    it("merges multi-kind selection with additive mode", () => {
+      const runtime = new Platform({ id: "test" });
+      const ctrl = new MapPlayController(runtime.commandBus, () => runtime.notify());
+      ctrl.run("setSelection", { positions: ["a"], routes: [], mode: "default" });
+      ctrl.run("setSelection", { positions: ["b"], routes: ["r1"], mode: "additive" });
+      expect(ctrl.getSelectedPositionIds()).toEqual(["a", "b"]);
+      expect(ctrl.getSelectedRouteIds()).toEqual(["r1"]);
+    });
+
+    it("buildMapPlayToolbarTools registers selection controls", () => {
+      const tools = buildMapPlayToolbarTools(
+        { selectionMethod: "rectangle", selectionMode: "default", selectionCount: 0 },
+        GIS_MAP_PLAY_CONTROLLER_ID,
+      );
+      expect(tools.selection?.length).toBeGreaterThan(0);
     });
   });
 }

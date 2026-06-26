@@ -6318,6 +6318,50 @@ dependencies = [
 ]
 
 [[package]]
+name = "trinity_jack"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "trinity_ram",
+]
+
+[[package]]
+name = "trinity_jack_shell"
+version = "0.1.0"
+dependencies = [
+ "trinity_jack",
+ "trinity_ram",
+]
+
+[[package]]
+name = "trinity_ram"
+version = "0.1.0"
+dependencies = [
+ "mathematical_core",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "trinity_rewrite"
+version = "0.1.0"
+dependencies = [
+ "infinite_cavas",
+ "js-sys",
+ "mathematical_core",
+ "mathematical_graph_port_directed",
+ "serde",
+ "serde_json",
+ "trinity_jack",
+ "trinity_ram",
+ "ui_styling",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+]
+
+[[package]]
 name = "try-lock"
 version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"

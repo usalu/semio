@@ -4,7 +4,21 @@
 
 // #region 🔌Adapters
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { cn, floatingMenuSurfaceClass, Icon, type IconName } from "@semio-tech/ui-react";
+import {
+  cn,
+  ContextMenuController,
+  floatingMenuSurfaceClass,
+  Icon,
+  marqueeCoverageFromGesture,
+  marqueeModeFromModifiers,
+  SelectionMarquee,
+  type ContextMenuItem,
+  type IconName,
+  type SelectionMarqueeCoverage,
+  type SelectionMarqueePoint,
+  type SelectionMergeMode,
+  type SelectionMarqueeMethod,
+} from "@semio-tech/ui-react";
 import initGisMapWasm, { MapSession } from "../rs/pkg/gis_map.js";
 
 const gisMapWasmLoadedSync = Boolean(import.meta.vitest || (typeof process !== "undefined" && process.env.VITEST));
@@ -224,7 +238,42 @@ export interface MapCanvasProps {
   lodMode?: MapLodModeKind;
   layerVisibility?: MapLayerVisibility;
   layerStrokeScale?: MapLayerStrokeScale;
+  selectedPositionIds?: readonly string[];
+  selectedRouteIds?: readonly string[];
+  hoveredFeature?: MapHoveredFeature | null;
+  selectionMethod?: SelectionMarqueeMethod;
+  onSelect?: (payload: MapSelectPayload) => void;
+  onHoverChange?: (feature: MapHoveredFeature | null) => void;
+  getContextMenuItems?: (context: MapContextMenuContext) => ContextMenuItem[];
+  fitWorldRevision?: number;
 }
+
+export type MapFeatureKind = "position" | "route";
+
+export interface MapHoveredFeature {
+  readonly kind: MapFeatureKind;
+  readonly id: string;
+}
+
+export interface MapFeatureHit {
+  readonly positions: readonly string[];
+  readonly routes: readonly string[];
+}
+
+export interface MapSelectPayload {
+  readonly positions: readonly string[];
+  readonly routes: readonly string[];
+  readonly mode: SelectionMergeMode;
+  readonly crossing: boolean;
+}
+
+export interface MapContextMenuContext {
+  readonly clientX: number;
+  readonly clientY: number;
+  readonly feature: MapHoveredFeature | null;
+}
+
+const MAP_MARQUEE_THRESHOLD_PX = 6;
 // #endregion 🔖Types
 
 // #region 🔖LodScale
@@ -369,12 +418,54 @@ function parseMapPositionScreen(raw: string): { x: number; y: number } | null {
   }
 }
 
-function isMapSelectPositionEvent(value: unknown): value is { type: "selectPosition"; payload: { id: string | null } } {
-  if (!value || typeof value !== "object") {
-    return false;
+function parseMapFeatureHit(raw: string): MapFeatureHit {
+  try {
+    const v = JSON.parse(raw) as { positions?: string[]; routes?: string[] };
+    const positions = Array.isArray(v.positions) ? v.positions.filter((id): id is string => typeof id === "string") : [];
+    const routes = Array.isArray(v.routes) ? v.routes.filter((id): id is string => typeof id === "string") : [];
+    return { positions, routes };
+  } catch {
+    return { positions: [], routes: [] };
   }
-  const row = value as { type?: string; payload?: { id?: string | null } };
-  return row.type === "selectPosition" && row.payload != null && ("id" in row.payload);
+}
+
+function parseMapHoveredFeature(raw: string): MapHoveredFeature | null {
+  if (raw === "null") {
+    return null;
+  }
+  try {
+    const v = JSON.parse(raw) as { kind?: string; id?: string };
+    if ((v.kind === "position" || v.kind === "route") && typeof v.id === "string") {
+      return { kind: v.kind, id: v.id };
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+function mapSelectionToJson(positions: readonly string[], routes: readonly string[]): string {
+  return JSON.stringify({ positions: [...positions], routes: [...routes] });
+}
+
+function mapHoverToJson(feature: MapHoveredFeature | null): string {
+  if (!feature) {
+    return "null";
+  }
+  return JSON.stringify(feature);
+}
+
+function screenRectFromPoints(points: readonly SelectionMarqueePoint[]): { x: number; y: number; width: number; height: number } | null {
+  if (!points.length) {
+    return null;
+  }
+  const xs = points.map((point) => point.x);
+  const ys = points.map((point) => point.y);
+  const minX = Math.min(...xs);
+  const minY = Math.min(...ys);
+  const maxX = Math.max(...xs);
+  const maxY = Math.max(...ys);
+  return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
 }
 // #endregion 🔖Descriptor
 
@@ -437,6 +528,8 @@ const MAP_VELLO_THEME_FALLBACK_RGBA = {
   routeStroke: [250, 149, 0, 235] as [number, number, number, number],
   positionFill: [255, 52, 79, 255] as [number, number, number, number],
   positionStroke: [247, 243, 227, 255] as [number, number, number, number],
+  selectionStroke: [255, 52, 79, 255] as [number, number, number, number],
+  hoverStroke: [52, 209, 191, 235] as [number, number, number, number],
 };
 
 function mapParseCssColorToRgba8888(css: string, fallback: [number, number, number, number]): [number, number, number, number] {
@@ -494,6 +587,8 @@ export function serializeMapVelloThemeJson(): string {
     routeStroke: pc("color", "var(--color-tertiary)", fb.routeStroke),
     positionFill: pc("backgroundColor", "var(--color-active-base)", fb.positionFill),
     positionStroke: pc("color", "var(--color-active-foreground)", fb.positionStroke),
+    selectionStroke: pc("color", "var(--color-active-base)", fb.selectionStroke),
+    hoverStroke: pc("color", "var(--color-secondary)", fb.hoverStroke),
   });
 }
 // #endregion 🔖MapTheme
@@ -847,6 +942,14 @@ export function MapCanvas({
   lodMode = GIS_MAP_LOD_MODE_AUTOMATIC,
   layerVisibility = defaultMapLayerVisibility(),
   layerStrokeScale = defaultMapLayerStrokeScale(),
+  selectedPositionIds = [],
+  selectedRouteIds = [],
+  hoveredFeature = null,
+  selectionMethod = "rectangle",
+  onSelect,
+  onHoverChange,
+  getContextMenuItems,
+  fitWorldRevision = 0,
 }: MapCanvasProps): React.JSX.Element {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -859,8 +962,31 @@ export function MapCanvas({
   const positionMetaById = useMemo(() => new Map(descriptor.positions.map((row) => [row.id, row])), [descriptor]);
   const layerVisibilityJson = useMemo(() => mapLayerVisibilityToJson(layerVisibility), [layerVisibility]);
   const layerStrokeScaleJson = useMemo(() => mapLayerStrokeScaleToJson(layerStrokeScale), [layerStrokeScale]);
-  const [selectedPositionId, setSelectedPositionId] = useState<string | null>(null);
+  const selectionJson = useMemo(() => mapSelectionToJson(selectedPositionIds, selectedRouteIds), [selectedPositionIds, selectedRouteIds]);
+  const hoverJson = useMemo(() => mapHoverToJson(hoveredFeature), [hoveredFeature]);
   const popupRef = useRef<HTMLDivElement>(null);
+  const [marqueeOverlay, setMarqueeOverlay] = useState<
+    | { coverage: SelectionMarqueeCoverage; shape: "rect"; rect: { x: number; y: number; width: number; height: number } }
+    | { coverage: SelectionMarqueeCoverage; shape: "polygon"; points: readonly SelectionMarqueePoint[] }
+    | null
+  >(null);
+  const [contextMenu, setContextMenu] = useState<{ open: boolean; position: { x: number; y: number } | null; items: ContextMenuItem[] }>({
+    open: false,
+    position: null,
+    items: [],
+  });
+  const onSelectRef = useRef(onSelect);
+  const onHoverChangeRef = useRef(onHoverChange);
+  const getContextMenuItemsRef = useRef(getContextMenuItems);
+  const selectionMethodRef = useRef(selectionMethod);
+  const selectedPositionIdsRef = useRef(selectedPositionIds);
+  const selectedRouteIdsRef = useRef(selectedRouteIds);
+  onSelectRef.current = onSelect;
+  onHoverChangeRef.current = onHoverChange;
+  getContextMenuItemsRef.current = getContextMenuItems;
+  selectionMethodRef.current = selectionMethod;
+  selectedPositionIdsRef.current = selectedPositionIds;
+  selectedRouteIdsRef.current = selectedRouteIds;
 
   const clampMapZoom = useCallback((zoom: number): number => {
     const { min, max } = getGisMapCameraLimits(rendererRef.current?.session);
@@ -896,14 +1022,37 @@ export function MapCanvas({
 
   mirrorSessionCameraToReactRef.current = mirrorSessionCameraToReact;
 
-  const drainMapSelectionEvents = useCallback(() => {
-    const events = rendererRef.current?.drainEvents() ?? [];
-    for (const event of events) {
-      if (!isMapSelectPositionEvent(event)) {
-        continue;
-      }
-      setSelectedPositionId(event.payload.id);
+  const clientToLocal = useCallback((clientX: number, clientY: number): SelectionMarqueePoint => {
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect) {
+      return { x: 0, y: 0 };
     }
+    return { x: clientX - rect.left, y: clientY - rect.top };
+  }, []);
+
+  const queryFeatureHits = useCallback((points: readonly SelectionMarqueePoint[], crossing: boolean): MapFeatureHit => {
+    const session = rendererRef.current?.session;
+    if (!session) {
+      return { positions: [], routes: [] };
+    }
+    if (selectionMethodRef.current === "lasso" && points.length >= 3) {
+      return parseMapFeatureHit(session.featuresInPolygonJson(JSON.stringify(points.map((point) => [point.x, point.y])), crossing));
+    }
+    const rect = screenRectFromPoints(points);
+    if (!rect) {
+      return { positions: [], routes: [] };
+    }
+    return parseMapFeatureHit(
+      session.featuresInRectJson(rect.x, rect.y, rect.x + rect.width, rect.y + rect.height, crossing),
+    );
+  }, []);
+
+  const queryHitFeature = useCallback((point: SelectionMarqueePoint): MapHoveredFeature | null => {
+    const session = rendererRef.current?.session;
+    if (!session) {
+      return null;
+    }
+    return parseMapHoveredFeature(session.hitTestFeatureJson(point.x, point.y));
   }, []);
 
   const applyCameraToSession = useCallback(
@@ -1093,22 +1242,46 @@ export function MapCanvas({
   }, [descriptorJson]);
 
   useEffect(() => {
-    if (!selectedPositionId) {
+    rendererRef.current?.session.setSelectionJson(selectionJson);
+  }, [selectionJson]);
+
+  useEffect(() => {
+    rendererRef.current?.session.setHoverJson(hoverJson);
+  }, [hoverJson]);
+
+  useEffect(() => {
+    const tooltipFeature = hoveredFeature?.kind === "position" ? hoveredFeature : null;
+    if (!tooltipFeature) {
       return undefined;
     }
     let raf = 0;
     const tick = () => {
-      const screen = rendererRef.current?.positionScreen(selectedPositionId);
+      const screen = rendererRef.current?.session.featureScreenJson("position", tooltipFeature.id);
+      const parsed = parseMapPositionScreen(screen ?? "null");
       const popup = popupRef.current;
-      if (screen && popup) {
-        popup.style.left = `${screen.x}px`;
-        popup.style.top = `${screen.y}px`;
+      if (parsed && popup) {
+        popup.style.left = `${parsed.x}px`;
+        popup.style.top = `${parsed.y}px`;
       }
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [selectedPositionId]);
+  }, [hoveredFeature]);
+
+  useEffect(() => {
+    if (!fitWorldRevision) {
+      return;
+    }
+    const renderer = rendererRef.current;
+    if (!renderer) {
+      return;
+    }
+    renderer.session.fitWorldCamera();
+    mirrorSessionCameraToReact();
+    renderer.scheduleRefreshTiles();
+    console.log("[DEBUG] gis map canvas fit world applied");
+  }, [fitWorldRevision, mirrorSessionCameraToReact]);
 
   useEffect(() => {
     if (!camera || panningRef.current) {
@@ -1151,7 +1324,184 @@ export function MapCanvas({
     return () => element.removeEventListener("wheel", applyWheelZoom);
   }, [applyWheelZoom]);
 
-  const pointer = useRef<{ down: boolean }>({ down: false });
+  const pointer = useRef<{
+    leftDown: boolean;
+    middleDown: boolean;
+    marqueeTracking: boolean;
+    marqueeActive: boolean;
+    start: SelectionMarqueePoint;
+    points: SelectionMarqueePoint[];
+  }>({
+    leftDown: false,
+    middleDown: false,
+    marqueeTracking: false,
+    marqueeActive: false,
+    start: { x: 0, y: 0 },
+    points: [],
+  });
+
+  const resetMarquee = useCallback(() => {
+    pointer.current.marqueeTracking = false;
+    pointer.current.marqueeActive = false;
+    pointer.current.points = [];
+    setMarqueeOverlay(null);
+  }, []);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) {
+      return undefined;
+    }
+    const onPointerDown = (event: PointerEvent): void => {
+      event.stopPropagation();
+      const point = clientToLocal(event.clientX, event.clientY);
+      if (event.button === 0) {
+        pointer.current.leftDown = true;
+        pointer.current.marqueeTracking = true;
+        pointer.current.marqueeActive = false;
+        pointer.current.start = point;
+        pointer.current.points = [point];
+        if (typeof canvas.setPointerCapture === "function") {
+          canvas.setPointerCapture(event.pointerId);
+        }
+        return;
+      }
+      if (event.button === 1) {
+        event.preventDefault();
+        pointer.current.middleDown = true;
+        panningRef.current = true;
+        userAdjustedCameraRef.current = true;
+        if (typeof canvas.setPointerCapture === "function") {
+          canvas.setPointerCapture(event.pointerId);
+        }
+        rendererRef.current?.session.pointerDownScreen(point.x, point.y, 1);
+      }
+    };
+    const onPointerMove = (event: PointerEvent): void => {
+      const point = clientToLocal(event.clientX, event.clientY);
+      if (pointer.current.middleDown) {
+        event.stopPropagation();
+        rendererRef.current?.session.pointerMoveScreen(point.x, point.y);
+        mirrorSessionCameraToReact();
+        rendererRef.current?.scheduleRefreshTiles();
+        return;
+      }
+      if (!pointer.current.marqueeTracking) {
+        const hit = queryHitFeature(point);
+        onHoverChangeRef.current?.(hit);
+        return;
+      }
+      event.stopPropagation();
+      const distance = Math.hypot(point.x - pointer.current.start.x, point.y - pointer.current.start.y);
+      if (!pointer.current.marqueeActive && distance >= MAP_MARQUEE_THRESHOLD_PX) {
+        pointer.current.marqueeActive = true;
+      }
+      if (!pointer.current.marqueeActive) {
+        return;
+      }
+      const method = selectionMethodRef.current;
+      const points =
+        method === "lasso" ? [...pointer.current.points, point] : [pointer.current.start, point];
+      pointer.current.points = points;
+      const coverage = marqueeCoverageFromGesture({
+        method,
+        startX: pointer.current.start.x,
+        endX: point.x,
+        path: points,
+      });
+      const rect = screenRectFromPoints(points);
+      setMarqueeOverlay(
+        method === "lasso"
+          ? { coverage, shape: "polygon", points }
+          : { coverage, shape: "rect", rect: rect ?? { x: 0, y: 0, width: 0, height: 0 } },
+      );
+      queryFeatureHits(points, coverage === "partial");
+    };
+    const onPointerUp = (event: PointerEvent): void => {
+      event.stopPropagation();
+      const point = clientToLocal(event.clientX, event.clientY);
+      if (event.button === 1 && pointer.current.middleDown) {
+        pointer.current.middleDown = false;
+        panningRef.current = false;
+        rendererRef.current?.session.pointerUpScreen(point.x, point.y);
+        if (typeof canvas.releasePointerCapture === "function" && canvas.hasPointerCapture(event.pointerId)) {
+          canvas.releasePointerCapture(event.pointerId);
+        }
+        mirrorSessionCameraToReact();
+        rendererRef.current?.scheduleRefreshTiles();
+        return;
+      }
+      if (event.button !== 0 || !pointer.current.leftDown) {
+        return;
+      }
+      pointer.current.leftDown = false;
+      if (typeof canvas.releasePointerCapture === "function" && canvas.hasPointerCapture(event.pointerId)) {
+        canvas.releasePointerCapture(event.pointerId);
+      }
+      const distance = Math.hypot(point.x - pointer.current.start.x, point.y - pointer.current.start.y);
+      const mode = marqueeModeFromModifiers(event);
+      const method = selectionMethodRef.current;
+      if (pointer.current.marqueeActive && distance >= MAP_MARQUEE_THRESHOLD_PX) {
+        const points = method === "lasso" ? [...pointer.current.points, point] : [pointer.current.start, point];
+        const coverage = marqueeCoverageFromGesture({
+          method,
+          startX: pointer.current.start.x,
+          endX: point.x,
+          path: points,
+        });
+        const hits = queryFeatureHits(points, coverage === "partial");
+        onSelectRef.current?.({
+          positions: [...hits.positions],
+          routes: [...hits.routes],
+          mode,
+          crossing: coverage === "partial",
+        });
+      } else if (distance < MAP_MARQUEE_THRESHOLD_PX) {
+        const hit = queryHitFeature(point);
+        onSelectRef.current?.({
+          positions: hit?.kind === "position" ? [hit.id] : [],
+          routes: hit?.kind === "route" ? [hit.id] : [],
+          mode,
+          crossing: false,
+        });
+      }
+      resetMarquee();
+    };
+    const onPointerCancel = (event: PointerEvent): void => {
+      pointer.current.leftDown = false;
+      pointer.current.middleDown = false;
+      panningRef.current = false;
+      resetMarquee();
+      if (typeof canvas.releasePointerCapture === "function" && canvas.hasPointerCapture(event.pointerId)) {
+        canvas.releasePointerCapture(event.pointerId);
+      }
+      mirrorSessionCameraToReact();
+    };
+    const onContextMenu = (event: MouseEvent): void => {
+      event.preventDefault();
+      event.stopPropagation();
+      const point = clientToLocal(event.clientX, event.clientY);
+      const feature = queryHitFeature(point);
+      const items = getContextMenuItemsRef.current?.({
+        clientX: event.clientX,
+        clientY: event.clientY,
+        feature,
+      }) ?? [];
+      setContextMenu({ open: items.length > 0, position: { x: event.clientX, y: event.clientY }, items });
+    };
+    canvas.addEventListener("pointerdown", onPointerDown);
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerUp);
+    window.addEventListener("pointercancel", onPointerCancel);
+    canvas.addEventListener("contextmenu", onContextMenu);
+    return () => {
+      canvas.removeEventListener("pointerdown", onPointerDown);
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp);
+      window.removeEventListener("pointercancel", onPointerCancel);
+      canvas.removeEventListener("contextmenu", onContextMenu);
+    };
+  }, [clientToLocal, mirrorSessionCameraToReact, queryFeatureHits, queryHitFeature, resetMarquee]);
 
   return (
     <div
@@ -1159,89 +1509,35 @@ export function MapCanvas({
       className={["absolute inset-0 box-border min-h-0 min-w-0 overflow-hidden select-none", className].filter(Boolean).join(" ") || undefined}
       style={{ touchAction: "none" }}
     >
-      <canvas
-        ref={canvasRef}
-        className="absolute inset-0 block size-full touch-none outline-none focus:outline-none"
-        onPointerDown={(e) => {
-          e.stopPropagation();
-          pointer.current.down = true;
-          panningRef.current = true;
-          userAdjustedCameraRef.current = true;
-          const canvas = canvasRef.current;
-          const rect = canvas?.getBoundingClientRect();
-          if (!canvas || !rect) {
-            return;
-          }
-          if (typeof canvas.setPointerCapture === "function") {
-            canvas.setPointerCapture(e.pointerId);
-          }
-          rendererRef.current?.session.pointerDownScreen(e.clientX - rect.left, e.clientY - rect.top, e.button);
-        }}
-        onPointerMove={(e) => {
-          if (!pointer.current.down) {
-            return;
-          }
-          e.stopPropagation();
-          const rect = canvasRef.current?.getBoundingClientRect();
-          if (!rect) {
-            return;
-          }
-          const r = rendererRef.current;
-          r?.session.pointerMoveScreen(e.clientX - rect.left, e.clientY - rect.top);
-          mirrorSessionCameraToReact();
-          r?.scheduleRefreshTiles();
-        }}
-        onPointerUp={(e) => {
-          e.stopPropagation();
-          pointer.current.down = false;
-          panningRef.current = false;
-          const canvas = canvasRef.current;
-          const rect = canvas?.getBoundingClientRect();
-          if (!canvas || !rect) {
-            return;
-          }
-          const r = rendererRef.current;
-          r?.session.pointerUpScreen(e.clientX - rect.left, e.clientY - rect.top);
-          if (typeof canvas.releasePointerCapture === "function" && canvas.hasPointerCapture(e.pointerId)) {
-            canvas.releasePointerCapture(e.pointerId);
-          }
-          mirrorSessionCameraToReact();
-          drainMapSelectionEvents();
-          r?.scheduleRefreshTiles();
-        }}
-        onPointerCancel={(e) => {
-          pointer.current.down = false;
-          panningRef.current = false;
-          const canvas = canvasRef.current;
-          if (canvas && typeof canvas.releasePointerCapture === "function" && canvas.hasPointerCapture(e.pointerId)) {
-            canvas.releasePointerCapture(e.pointerId);
-          }
-          mirrorSessionCameraToReact();
-        }}
+      <canvas ref={canvasRef} className="absolute inset-0 block size-full touch-none outline-none focus:outline-none" />
+      {marqueeOverlay?.shape === "rect" ? (
+        <SelectionMarquee coverage={marqueeOverlay.coverage} shape="rect" rect={marqueeOverlay.rect} />
+      ) : null}
+      {marqueeOverlay?.shape === "polygon" ? (
+        <SelectionMarquee coverage={marqueeOverlay.coverage} shape="polygon" points={marqueeOverlay.points} />
+      ) : null}
+      <ContextMenuController
+        open={contextMenu.open}
+        position={contextMenu.position}
+        items={contextMenu.items}
+        onOpenChange={(open) => setContextMenu((prev) => ({ ...prev, open }))}
       />
-      {selectedPositionId ? (
+      {hoveredFeature?.kind === "position" ? (
         <div
           ref={popupRef}
-          className={cn("pointer-events-auto absolute z-10 max-w-56 -translate-x-1/2 -translate-y-[calc(100%+12px)] px-2 py-1.5", floatingMenuSurfaceClass)}
+          className={cn("pointer-events-none absolute z-10 max-w-56 -translate-x-1/2 -translate-y-[calc(100%+12px)] px-2 py-1.5", floatingMenuSurfaceClass)}
           style={{ left: 0, top: 0 }}
         >
           {(() => {
-            const meta = positionMetaById.get(selectedPositionId);
-            const title = meta?.name ?? meta?.label ?? selectedPositionId;
+            const meta = positionMetaById.get(hoveredFeature.id);
+            const title = meta?.name ?? meta?.label ?? hoveredFeature.id;
             return (
               <div className="flex items-start gap-1.5">
                 {meta?.icon ? <Icon icon={meta.icon} size="small" className="mt-0.5 shrink-0" /> : null}
                 <div className="min-w-0">
                   <div className="truncate text-sm font-medium">{title}</div>
                   {meta?.sourceUrl ? (
-                    <a
-                      href={meta.sourceUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-xs text-secondary underline-offset-2 hover:underline"
-                    >
-                      Source
-                    </a>
+                    <span className="text-xs text-secondary underline-offset-2">Source available</span>
                   ) : null}
                 </div>
               </div>
@@ -1356,6 +1652,21 @@ if (import.meta.vitest) {
     it("includes landStroke with zero alpha to avoid tile seams", () => {
       const parsed = JSON.parse(serializeMapVelloThemeJson()) as { landStroke: number[] };
       expect(parsed.landStroke[3]).toBe(0);
+    });
+
+    it("includes selection and hover stroke colors", () => {
+      const parsed = JSON.parse(serializeMapVelloThemeJson()) as { selectionStroke: number[]; hoverStroke: number[] };
+      expect(parsed.selectionStroke.length).toBe(4);
+      expect(parsed.hoverStroke.length).toBe(4);
+    });
+  });
+
+  describe("mapSelectionToJson", () => {
+    it("serializes positions and routes", () => {
+      const json = mapSelectionToJson(["a"], ["b"]);
+      const parsed = JSON.parse(json) as { positions: string[]; routes: string[] };
+      expect(parsed.positions).toEqual(["a"]);
+      expect(parsed.routes).toEqual(["b"]);
     });
   });
 

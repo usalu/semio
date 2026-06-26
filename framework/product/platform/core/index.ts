@@ -283,9 +283,9 @@ export function sidePanelTreeRootItems(
 
 //#region 🔖ComponentKind
 /** @emoji 🧩 Fixed platform component vocabulary wired by renderers (`table`, `virtualFileSystem`, `puzzle2d`, …). */
-export type ComponentKind = "table" | "virtualFileSystem" | "puzzle2d" | "puzzle3d" | "puzzle5d" | "cad" | "gismap" | "flow" | "dag" | "shooting" | "panel";
+export type ComponentKind = "table" | "virtualFileSystem" | "puzzle2d" | "puzzle3d" | "puzzle5d" | "cad" | "gismap" | "flow" | "dag" | "trinity" | "shooting" | "panel";
 
-const CANVAS_COMPONENT_KINDS: readonly ComponentKind[] = ["table", "virtualFileSystem", "puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag", "shooting"];
+const CANVAS_COMPONENT_KINDS: readonly ComponentKind[] = ["table", "virtualFileSystem", "puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag", "trinity", "shooting"];
 //#endregion 🔖ComponentKind
 
 /** @emoji 📊 Host-bound tabular surface; `paneId` disambiguates multiple table slots in one app. */
@@ -367,6 +367,16 @@ export interface UiDagHostSurfaceNode {
 	readonly bindingId?: string;
 }
 
+/** @emoji 🔺 Host-bound trinity directed property port graph surface. */
+export interface UiTrinityHostSurfaceNode {
+	readonly type: "trinity";
+	readonly componentKind: "trinity";
+	readonly surfaceId: string;
+	readonly controllerId: string;
+	readonly paneId?: string;
+	readonly bindingId?: string;
+}
+
 /** @emoji 📐 Host-bound CAD spatial surface. */
 export interface UiCadHostSurfaceNode {
 	readonly type: "cad";
@@ -404,6 +414,7 @@ export type UiComponentHostSurfaceNode =
 	| UiGisMapHostSurfaceNode
 	| UiFlowHostSurfaceNode
 	| UiDagHostSurfaceNode
+	| UiTrinityHostSurfaceNode
 	| UiCadHostSurfaceNode
 	| UiShootingHostSurfaceNode
 	| UiPanelHostSurfaceNode;
@@ -560,6 +571,18 @@ export function buildDagWindowBody(surfaceId: string, controllerId: string, pane
 	return {
 		type: "dag",
 		componentKind: "dag",
+		surfaceId,
+		controllerId,
+		...(paneId ? { paneId } : {}),
+		...(bindingId ? { bindingId } : {}),
+	};
+}
+
+/** @emoji 🔺 Canonical trinity window body. */
+export function buildTrinityWindowBody(surfaceId: string, controllerId: string, paneId?: string, bindingId?: string): UiTrinityHostSurfaceNode {
+	return {
+		type: "trinity",
+		componentKind: "trinity",
 		surfaceId,
 		controllerId,
 		...(paneId ? { paneId } : {}),

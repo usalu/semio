@@ -360,9 +360,11 @@ type FlowSurfaceHost = React.ComponentType<{ readonly node: import("@semio-tech/
 const flowSurfaceHosts = new Map<string, FlowSurfaceHost>();
 type DagSurfaceHost = React.ComponentType<{ readonly node: import("@semio-tech/framework-platform-core").UiDagHostSurfaceNode }>;
 const dagSurfaceHosts = new Map<string, DagSurfaceHost>();
+type TrinitySurfaceHost = React.ComponentType<{ readonly node: import("@semio-tech/framework-platform-core").UiTrinityHostSurfaceNode }>;
+const trinitySurfaceHosts = new Map<string, TrinitySurfaceHost>();
 const tableSurfaceHosts = new Map<string, TableSurfaceHost>();
 
-const PLAYGROUND_CANVAS_HOST_TYPES = new Set(["puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag", "shooting"]);
+const PLAYGROUND_CANVAS_HOST_TYPES = new Set(["puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag", "trinity", "shooting"]);
 
 function isPlaygroundCanvasHostChild(child: UiNode): boolean {
   return PLAYGROUND_CANVAS_HOST_TYPES.has(child.type);
@@ -397,6 +399,12 @@ export function registerUiFlowSurfaceHost(surfaceId: string, Component: FlowSurf
 /** @emoji 🌳 Binds `surfaceId` from {@link UiDagHostSurfaceNode} to a DAG canvas. */
 export function registerUiDagSurfaceHost(surfaceId: string, Component: DagSurfaceHost): void {
   dagSurfaceHosts.set(surfaceId, Component);
+  registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
+}
+
+/** @emoji 🔺 Binds `surfaceId` from {@link UiTrinityHostSurfaceNode} to a trinity canvas. */
+export function registerUiTrinitySurfaceHost(surfaceId: string, Component: TrinitySurfaceHost): void {
+  trinitySurfaceHosts.set(surfaceId, Component);
   registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
 }
 
@@ -447,6 +455,16 @@ function renderPlaygroundHostSurface(node: UiNode, layout: "canvas" | "panel"): 
       );
     }
   }
+  if (node.type === "trinity") {
+    const Host = trinitySurfaceHosts.get(node.surfaceId);
+    if (Host) {
+      return (
+        <div className="absolute inset-0 min-h-0 min-w-0">
+          <Host node={node} />
+        </div>
+      );
+    }
+  }
   if (node.type === "table") {
     const Host = tableSurfaceHosts.get(node.surfaceId);
     if (Host) {
@@ -464,6 +482,7 @@ function renderPlaygroundHostSurface(node: UiNode, layout: "canvas" | "panel"): 
     node.type === "puzzle5d" ||
     node.type === "flow" ||
     node.type === "dag" ||
+    node.type === "trinity" ||
     node.type === "shooting" ||
     node.type === "panel" ||
     node.type === "table"
@@ -6077,7 +6096,8 @@ import {
     buildMapPlayMainDeclarativeBody,
     type MapPlayController
 } from "@semio-tech/gis-map-play";
-import { MapCanvas, Position, Route, type GisMapLodId } from "@semio-tech/gis-map-react";
+import { MapCanvas, Position, Route, type GisMapLodId, type MapContextMenuContext, type MapHoveredFeature, type MapSelectPayload } from "@semio-tech/gis-map-react";
+import type { ContextMenuItem } from "@semio-tech/ui-react";
 
 let mapPlayChromeRegistered = false;
 const mapPlayControllerRef: { current: MapPlayController | null } = { current: null };
@@ -6118,12 +6138,78 @@ function useMapPlaySnapshot() {
   return useControllerStore(ctrl, GIS_MAP_PLAY_STORE_ID) ?? GIS_MAP_PLAY_IDLE_SNAPSHOT;
 }
 
+function buildMapPlayContextMenuItems(ctrl: MapPlayController | null | undefined, context: MapContextMenuContext): ContextMenuItem[] {
+  if (!ctrl) {
+    return [];
+  }
+  const { feature } = context;
+  if (feature) {
+    const selected =
+      feature.kind === "position"
+        ? ctrl.getSelectedPositionIds().includes(feature.id)
+        : ctrl.getSelectedRouteIds().includes(feature.id);
+    const items: ContextMenuItem[] = [
+      {
+        id: "gis-map.ctx.select",
+        label: "Select",
+        onSelect: () => ctrl.run("setSelection", { positions: feature.kind === "position" ? [feature.id] : [], routes: feature.kind === "route" ? [feature.id] : [], mode: "default" }),
+      },
+    ];
+    if (selected) {
+      items.push({
+        id: "gis-map.ctx.deselect",
+        label: "Deselect",
+        onSelect: () => ctrl.run("deselect", { featureId: feature.id, featureKind: feature.kind }),
+      });
+    }
+    items.push({
+      id: "gis-map.ctx.focus",
+      label: "Focus / zoom to",
+      onSelect: () => ctrl.run("focusFeature", { featureId: feature.id, featureKind: feature.kind }),
+    });
+    if (feature.kind === "position") {
+      const position = ctrl.getActiveFixture()?.positions.find((row) => row.id === feature.id);
+      if (position?.sourceUrl) {
+        items.push({
+          id: "gis-map.ctx.source",
+          label: "Open source",
+          onSelect: () => ctrl.run("openSource", { featureId: feature.id }),
+        });
+      }
+    }
+    return items;
+  }
+  return [
+    {
+      id: "gis-map.ctx.select-all",
+      label: "Select all",
+      onSelect: () => ctrl.run("selectAll"),
+    },
+    {
+      id: "gis-map.ctx.clear",
+      label: "Clear selection",
+      disabled: ctrl.getSelectedPositionIds().length + ctrl.getSelectedRouteIds().length === 0,
+      onSelect: () => ctrl.run("clearSelection"),
+    },
+    {
+      id: "gis-map.ctx.fit-world",
+      label: "Fit world",
+      onSelect: () => ctrl.run("fitWorld"),
+    },
+  ];
+}
+
 function MapPlayPaneSurfaceHost({ node: _node }: { readonly node: UiGisMapHostSurfaceNode }): ReactElement {
   const shellInstance = useShellWindowInstance();
   const scopeId = shellWindowScopeId(shellInstance, GIS_MAP_PLAY_WINDOW_KIND_ID);
   const ctrl = useMapPlayController();
   const snapshot = useMapPlaySnapshot();
   const activeFixture = snapshot.activeFixture ?? ctrl?.getActiveFixture() ?? null;
+  const selectedPositionIds = snapshot.selectedPositionIds ?? ctrl?.getSelectedPositionIds() ?? [];
+  const selectedRouteIds = snapshot.selectedRouteIds ?? ctrl?.getSelectedRouteIds() ?? [];
+  const hoveredFeature = snapshot.hoveredFeature ?? ctrl?.getHoveredFeature() ?? null;
+  const selectionMethod = snapshot.selectionMethod ?? ctrl?.getSelectionMethod() ?? "rectangle";
+  const fitWorldRevision = snapshot.fitWorldRevision ?? ctrl?.getFitWorldRevision() ?? 0;
   const renderMode = ctrl?.getRenderModeForScope(scopeId) ?? snapshot.renderModeByInstance[scopeId] ?? snapshot.renderMode;
   const vectorStyle = ctrl?.getVectorStyleForScope(scopeId) ?? snapshot.vectorStyleByInstance[scopeId] ?? snapshot.vectorStyle;
   const lodMode = ctrl?.getLodModeForScope(scopeId) ?? snapshot.lodModeByInstance[scopeId] ?? snapshot.lodMode;
@@ -6134,6 +6220,29 @@ function MapPlayPaneSurfaceHost({ node: _node }: { readonly node: UiGisMapHostSu
       ctrl?.run("setEffectiveLod", { lod: lodId, instanceId: scopeId });
     },
     [ctrl, scopeId],
+  );
+  const handleSelect = reactHostPort.useCallback(
+    (payload: MapSelectPayload) => {
+      ctrl?.run("setSelection", {
+        positions: [...payload.positions],
+        routes: [...payload.routes],
+        mode: payload.mode,
+      });
+    },
+    [ctrl],
+  );
+  const handleHoverChange = reactHostPort.useCallback(
+    (feature: MapHoveredFeature | null) => {
+      ctrl?.run("setHover", {
+        featureId: feature?.id ?? null,
+        featureKind: feature?.kind ?? null,
+      });
+    },
+    [ctrl],
+  );
+  const getContextMenuItems = reactHostPort.useCallback(
+    (context: MapContextMenuContext) => buildMapPlayContextMenuItems(ctrl, context),
+    [ctrl],
   );
   reactHostPort.useEffect(() => {
     if (!activeFixture) {
@@ -6151,6 +6260,14 @@ function MapPlayPaneSurfaceHost({ node: _node }: { readonly node: UiGisMapHostSu
       layerVisibility={layerVisibility}
       layerStrokeScale={layerStrokeScale}
       onEffectiveLodChange={reportEffectiveLod}
+      selectedPositionIds={selectedPositionIds}
+      selectedRouteIds={selectedRouteIds}
+      hoveredFeature={hoveredFeature}
+      selectionMethod={selectionMethod}
+      onSelect={handleSelect}
+      onHoverChange={handleHoverChange}
+      getContextMenuItems={getContextMenuItems}
+      fitWorldRevision={fitWorldRevision}
     >
       {activeFixture?.positions.map((position) => (
         <Position
@@ -6191,8 +6308,10 @@ class MapPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
         const bus = new CommandBus();
         const treeNode = buildMapPlayHierarchyTree(
           ctrl?.getActiveFixture() ?? null,
-          ctrl?.getSelectedFeatureId() ?? null,
-          ctrl?.getSelectedFeatureKind() ?? null,
+          ctrl?.getSelectedPositionIds() ?? [],
+          ctrl?.getSelectedRouteIds() ?? [],
+          ctrl?.getHoveredFeature() ?? null,
+          (payload) => ctrl?.run("setHover", payload),
         );
         return uiTreeNodeToTreePanelConfig(treeNode, bus);
       }),
@@ -6227,8 +6346,8 @@ class MapPlayInspectionPanelDefinition extends PureSidePanelTabDefinition {
         const bus = new CommandBus();
         const treeNode = buildMapPlayInspectorTree(
           ctrl?.getActiveFixture() ?? null,
-          ctrl?.getSelectedFeatureId() ?? null,
-          ctrl?.getSelectedFeatureKind() ?? null,
+          ctrl?.getSelectedPositionIds() ?? [],
+          ctrl?.getSelectedRouteIds() ?? [],
         );
         return uiTreeNodeToTreePanelConfig(treeNode, bus);
       }),
@@ -6676,6 +6795,207 @@ export function bootDagPlay(playground: Playground, rootId = "root"): void {
   bootPlayground(playground, dagPlayChromeBoot, rootId);
 }
 //#endregion 🔖DagPlayHost
+
+//#region 🔖TrinityPlayHost
+import {
+  TRINITY_JACK_PLAY_APP_ID,
+  TRINITY_JACK_PLAY_CATALOGUE_TAB_ID,
+  TRINITY_JACK_PLAY_DEFAULT_FIXTURE_JSON,
+  TRINITY_JACK_PLAY_HIERARCHY_TAB_ID,
+  TRINITY_JACK_PLAY_INSPECTION_TAB_ID,
+  TRINITY_JACK_PLAY_SURFACE_ID,
+  TRINITY_JACK_PLAY_WINDOW_KIND_ID,
+  TrinityJackPlayController,
+  buildTrinityPlayCatalogueTree,
+  buildTrinityPlayHierarchyTree,
+  buildTrinityPlayInspectorTree,
+  registerTrinityJackPlayDeclarativeBodies,
+} from "@semio-tech/trinity-jack-play";
+import {
+  TRINITY_REWRITE_PLAY_APP_ID,
+  TRINITY_REWRITE_PLAY_SURFACE_ID,
+  TRINITY_REWRITE_PLAY_WINDOW_KIND_ID,
+  TrinityRewritePlayController,
+  registerTrinityRewritePlayDeclarativeBodies,
+} from "@semio-tech/trinity-rewrite-play";
+import { TRINITY_DEFAULT_FIXTURE_JSON, TrinityCanvas } from "@semio-tech/trinity-react";
+import type { UiTrinityHostSurfaceNode } from "@semio-tech/framework-platform-core";
+
+let trinityPlayChromeRegistered = false;
+const trinityJackControllerRef: { current: TrinityJackPlayController | null } = { current: null };
+const trinityRewriteControllerRef: { current: TrinityRewritePlayController | null } = { current: null };
+
+function useTrinityJackController(runtimeOverride?: Platform): TrinityJackPlayController | undefined {
+  const appCtx = reactHostPort.useContext(PlaygroundContext);
+  const runtime = runtimeOverride ?? appCtx?.runtime;
+  reactHostPort.useSyncExternalStore(
+    (listener) => (runtime ? runtime.subscribeChrome(listener) : () => {}),
+    () => runtime?.chromeGeneration ?? 0,
+    () => 0,
+  );
+  const ctrl = runtime?.getActiveApp()?.controller as TrinityJackPlayController | undefined;
+  trinityJackControllerRef.current = ctrl ?? null;
+  return ctrl;
+}
+
+function useTrinityRewriteController(runtimeOverride?: Platform): TrinityRewritePlayController | undefined {
+  const appCtx = reactHostPort.useContext(PlaygroundContext);
+  const runtime = runtimeOverride ?? appCtx?.runtime;
+  reactHostPort.useSyncExternalStore(
+    (listener) => (runtime ? runtime.subscribeChrome(listener) : () => {}),
+    () => runtime?.chromeGeneration ?? 0,
+    () => 0,
+  );
+  const ctrl = runtime?.getActiveApp()?.controller as TrinityRewritePlayController | undefined;
+  trinityRewriteControllerRef.current = ctrl ?? null;
+  return ctrl;
+}
+
+function TrinityJackPlaySurfaceHost({ node }: { readonly node: UiTrinityHostSurfaceNode }): ReactElement {
+  const ctrl = useTrinityJackController();
+  const onFixtureChange = reactHostPort.useCallback((json: string) => ctrl?.run("setFixtureJson", { json }), [ctrl]);
+  console.log("[DEBUG] trinity jack play surface mount");
+  return (
+    <TrinityCanvas
+      fixtureJson={ctrl?.getFixtureJson() ?? TRINITY_JACK_PLAY_DEFAULT_FIXTURE_JSON}
+      reorganize={ctrl?.getReorganize()}
+      onFixtureChange={onFixtureChange}
+    />
+  );
+}
+
+function TrinityRewritePlaySurfaceHost({ node }: { readonly node: UiTrinityHostSurfaceNode }): ReactElement {
+  const ctrl = useTrinityRewriteController();
+  const onFixtureChange = reactHostPort.useCallback((json: string) => ctrl?.run("setFixtureJson", { json }), [ctrl]);
+  console.log("[DEBUG] trinity rewrite play surface mount");
+  return (
+    <TrinityCanvas
+      fixtureJson={ctrl?.getFixtureJson() ?? TRINITY_DEFAULT_FIXTURE_JSON}
+      reorganize={ctrl?.getReorganize()}
+      onFixtureChange={onFixtureChange}
+    />
+  );
+}
+
+export function registerTrinityJackPlaySurfaceHosts(): void {
+  if (trinityPlayChromeRegistered) return;
+  trinityPlayChromeRegistered = true;
+  registerUiTrinitySurfaceHost(TRINITY_JACK_PLAY_SURFACE_ID, TrinityJackPlaySurfaceHost);
+  registerTrinityJackPlayDeclarativeBodies();
+}
+
+export function registerTrinityRewritePlaySurfaceHosts(): void {
+  registerUiTrinitySurfaceHost(TRINITY_REWRITE_PLAY_SURFACE_ID, TrinityRewritePlaySurfaceHost);
+  registerTrinityRewritePlayDeclarativeBodies();
+}
+
+class TrinityJackHierarchyPanelDefinition extends PureSidePanelTabDefinition {
+  buildTab(): SidePanelTabConfig {
+    return {
+      id: TRINITY_JACK_PLAY_HIERARCHY_TAB_ID,
+      icon: shellTabIconComponent(FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, "workbench"),
+      name: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+      order: 0,
+      tree: new CallbackTreePanelDefinition(() => {
+        const ctrl = trinityJackControllerRef.current;
+        const bus = new CommandBus();
+        return uiTreeNodeToTreePanelConfig(
+          buildTrinityPlayHierarchyTree(ctrl?.getFixtureJson() ?? TRINITY_JACK_PLAY_DEFAULT_FIXTURE_JSON, ctrl?.getSelectedNodeIds() ?? []),
+          bus,
+        );
+      }),
+    };
+  }
+}
+
+class TrinityJackCataloguePanelDefinition extends PureSidePanelTabDefinition {
+  buildTab(): SidePanelTabConfig {
+    return {
+      id: TRINITY_JACK_PLAY_CATALOGUE_TAB_ID,
+      icon: shellTabIconComponent(FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, "workbench"),
+      name: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+      order: 1,
+      tree: new CallbackTreePanelDefinition(() => {
+        const bus = new CommandBus();
+        return uiTreeNodeToTreePanelConfig(buildTrinityPlayCatalogueTree(), bus);
+      }),
+    };
+  }
+}
+
+class TrinityJackInspectionPanelDefinition extends PureSidePanelTabDefinition {
+  buildTab(): SidePanelTabConfig {
+    return {
+      id: TRINITY_JACK_PLAY_INSPECTION_TAB_ID,
+      icon: shellTabIconComponent(FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, "details"),
+      name: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+      order: 0,
+      tree: new CallbackTreePanelDefinition(() => {
+        const ctrl = trinityJackControllerRef.current;
+        const bus = new CommandBus();
+        return uiTreeNodeToTreePanelConfig(
+          buildTrinityPlayInspectorTree(ctrl?.getFixtureJson() ?? TRINITY_JACK_PLAY_DEFAULT_FIXTURE_JSON, ctrl?.getSelectedNodeIds() ?? []),
+          bus,
+        );
+      }),
+    };
+  }
+}
+
+function TrinityJackPlayInner({ runtime }: { readonly runtime: Platform }): ReactElement {
+  useTrinityJackController(runtime);
+  const hierarchy = reactHostPort.useMemo(() => new TrinityJackHierarchyPanelDefinition(), []);
+  const catalogue = reactHostPort.useMemo(() => new TrinityJackCataloguePanelDefinition(), []);
+  const inspection = reactHostPort.useMemo(() => new TrinityJackInspectionPanelDefinition(), []);
+  return (
+    <PlaygroundView
+      runtime={runtime}
+      defaultAppId={TRINITY_JACK_PLAY_APP_ID}
+      augmentPanelTabs={{ workbench: [hierarchy, catalogue], details: [inspection] }}
+    />
+  );
+}
+
+function TrinityRewritePlayInner({ runtime }: { readonly runtime: Platform }): ReactElement {
+  useTrinityRewriteController(runtime);
+  const hierarchy = reactHostPort.useMemo(() => new TrinityJackHierarchyPanelDefinition(), []);
+  const catalogue = reactHostPort.useMemo(() => new TrinityJackCataloguePanelDefinition(), []);
+  const inspection = reactHostPort.useMemo(() => new TrinityJackInspectionPanelDefinition(), []);
+  return (
+    <PlaygroundView
+      runtime={runtime}
+      defaultAppId={TRINITY_REWRITE_PLAY_APP_ID}
+      augmentPanelTabs={{ workbench: [hierarchy, catalogue], details: [inspection] }}
+    />
+  );
+}
+
+export function mountTrinityJackPlayChrome(playground: Playground, rootId = "root"): void {
+  mountPlaygroundApp(<TrinityJackPlayInner runtime={playground.runtime} />, rootId);
+}
+
+export function mountTrinityRewritePlayChrome(playground: Playground, rootId = "root"): void {
+  mountPlaygroundApp(<TrinityRewritePlayInner runtime={playground.runtime} />, rootId);
+}
+
+const trinityJackPlayChromeBoot: PlaygroundChromeBoot = {
+  registerHosts: registerTrinityJackPlaySurfaceHosts,
+  mount: mountTrinityJackPlayChrome,
+};
+
+const trinityRewritePlayChromeBoot: PlaygroundChromeBoot = {
+  registerHosts: registerTrinityRewritePlaySurfaceHosts,
+  mount: mountTrinityRewritePlayChrome,
+};
+
+export function bootTrinityJackPlay(playground: Playground, rootId = "root"): void {
+  bootPlayground(playground, trinityJackPlayChromeBoot, rootId);
+}
+
+export function bootTrinityRewritePlay(playground: Playground, rootId = "root"): void {
+  bootPlayground(playground, trinityRewritePlayChromeBoot, rootId);
+}
+//#endregion 🔖TrinityPlayHost
 
 //#region 🔖ProceduralPlayHost
 import type { UiPanelHostSurfaceNode } from "@semio-tech/framework-platform-core";

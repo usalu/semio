@@ -9542,6 +9542,26 @@ Make sure that in dev setup the dev url is used and when building the public lin
 
 ---
 
+## gis
+
+### map
+
+map:
+Make sure to introduce hover, selection (same as other playgrounds with left and right distinction, partial, invertive, etc) on Positions and routers.
+Panning should be mousewheel and right click context menu
+
+## trinity
+
+###
+
+---
+
+---
+
+### jack
+
+### ram
+
 ## 📜history
 
 Sketchpad.tsx, elements.tsx and APP.tsx (Home.tsx, Kit.tsx, Design.tsx, Type.tsx, Quality.tsx, Docs.tsx, Feedback.tsx) should be refactored to follow the open/closed principle. All app specific logic should be part of the APP.tsx files. elements.tsx should not import anything from sketchpad or any app. There should be no design, type, etc logic part of Sketchpad.tsx file. If the file is deleted then sketchpad should work, if a new file is added, the new app should work.

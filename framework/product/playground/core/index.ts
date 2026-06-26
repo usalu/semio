@@ -136,6 +136,7 @@ import {
   buildMapWindowBody,
   buildFlowWindowBody,
   buildDagWindowBody,
+  buildTrinityWindowBody,
   buildShootingWindowBody,
   isCanvasOnlyWindowBody,
 } from "@semio-tech/framework-platform-core";
@@ -148,6 +149,7 @@ export {
   buildMapWindowBody,
   buildFlowWindowBody,
   buildDagWindowBody,
+  buildTrinityWindowBody,
   buildShootingWindowBody,
   buildPanelWindowBody,
   isCanvasOnlyWindowBody,

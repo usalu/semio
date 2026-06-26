@@ -34,6 +34,10 @@ members = [
     "compose/client/bin/store",
     "compose/server/hub", "geometry/brep/engine", "geometry/brep/rs",
     "geometry/drawing/engine", "geometry/drawing/rs",
+    "trinity/ram",
+    "trinity/jack/core",
+    "trinity/jack/shell",
+    "trinity/rewrite/engine",
 ]
 
 resolver = "2"

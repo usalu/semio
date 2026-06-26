@@ -430,7 +430,7 @@ const PLAYGROUND_RENDERER_PUZZLE_HOSTS_START = "//#region 🔖Puzzle3dPlayHost";
 const PLAYGROUND_RENDERER_BOOT_START = "//#region 🔖Boot";
 const PLAYGROUND_RENDERER_VITEST_START = "//#region 🧪Tests";
 
-export type PlaygroundRendererPuzzleKind = "2d" | "3d" | "5d" | "map" | "flow" | "dag" | "procedural-3d" | "procedural-2d" | "presentation" | "wires" | "shooting";
+export type PlaygroundRendererPuzzleKind = "2d" | "3d" | "5d" | "map" | "flow" | "dag" | "trinity-jack" | "trinity-rewrite" | "procedural-3d" | "procedural-2d" | "presentation" | "wires" | "shooting";
 
 const PLAYGROUND_RENDERER_PUZZLE_BOOT_SUBPATHS: Readonly<Record<string, PlaygroundRendererPuzzleKind>> = {
   "@semio-tech/framework-playground-renderer-react/puzzle/2d": "2d",
@@ -439,6 +439,8 @@ const PLAYGROUND_RENDERER_PUZZLE_BOOT_SUBPATHS: Readonly<Record<string, Playgrou
   "@semio-tech/framework-playground-renderer-react/puzzle/map": "map",
   "@semio-tech/framework-playground-renderer-react/flow": "flow",
   "@semio-tech/framework-playground-renderer-react/dag": "dag",
+  "@semio-tech/framework-playground-renderer-react/trinity-jack": "trinity-jack",
+  "@semio-tech/framework-playground-renderer-react/trinity-rewrite": "trinity-rewrite",
   "@semio-tech/framework-playground-renderer-react/procedural-3d": "procedural-3d",
   "@semio-tech/framework-playground-renderer-react/procedural-2d": "procedural-2d",
   "@semio-tech/framework-playground-renderer-react/shooting": "shooting",
@@ -453,6 +455,8 @@ const PLAYGROUND_RENDERER_PUZZLE_HOST_MARKERS: Readonly<Record<PlaygroundRendere
   map: { start: "//#region 🔖MapPlayHost", end: "//#endregion 🔖MapPlayHost" },
   flow: { start: "//#region 🔖FlowPlayHost", end: "//#endregion 🔖FlowPlayHost" },
   dag: { start: "//#region 🔖DagPlayHost", end: "//#endregion 🔖DagPlayHost" },
+  "trinity-jack": { start: "//#region 🔖TrinityPlayHost", end: "//#endregion 🔖TrinityPlayHost" },
+  "trinity-rewrite": { start: "//#region 🔖TrinityPlayHost", end: "//#endregion 🔖TrinityPlayHost" },
   "procedural-3d": { start: "//#region 🔖ProceduralPlayHost", end: "//#endregion 🔖ProceduralPlayHost" },
   "procedural-2d": { start: "//#region 🔖Procedural2dPlayHost", end: "//#endregion 🔖Procedural2dPlayHost" },
   shooting: { start: "//#region 🔖ShootingPlayHost", end: "//#endregion 🔖ShootingPlayHost" },
@@ -544,7 +548,7 @@ export function playgroundRendererShellEntryPlugin(rendererIndexPath: string): P
       if (id.includes("playgroundEntry=shell")) {
         return stripPlaygroundRendererPuzzleHosts(source, { includeVitest: false });
       }
-      const puzzleMatch = id.match(/playgroundEntry=puzzle-(2d|3d|5d|map|flow|dag|procedural-3d|procedural-2d|presentation|wires|shooting)/);
+      const puzzleMatch = id.match(/playgroundEntry=puzzle-(2d|3d|5d|map|flow|dag|trinity-jack|trinity-rewrite|procedural-3d|procedural-2d|presentation|wires|shooting)/);
       if (puzzleMatch) {
         return stripPlaygroundRendererForPuzzleKind(source, puzzleMatch[1] as PlaygroundRendererPuzzleKind, { includeVitest: false });
       }
@@ -1043,6 +1047,9 @@ export function playgroundRendererResolveAliases(repoRoot: string): ReadonlyArra
     { find: "@semio-tech/flow-module-list", replacement: resolve(repoRoot, "flow/module/list/pkg/flow_module_list.js") },
     { find: "@semio-tech/dag-play", replacement: resolve(repoRoot, "mathematical/graph/port/directed/dag/play/index.ts") },
     { find: "@semio-tech/dag-react", replacement: resolve(repoRoot, "mathematical/graph/port/directed/dag/react/index.tsx") },
+    { find: "@semio-tech/trinity-jack-play", replacement: resolve(repoRoot, "trinity/jack/play/index.ts") },
+    { find: "@semio-tech/trinity-rewrite-play", replacement: resolve(repoRoot, "trinity/rewrite/play/index.ts") },
+    { find: "@semio-tech/trinity-react", replacement: resolve(repoRoot, "trinity/react/index.tsx") },
     { find: "@semio-tech/procedural-3d-play", replacement: resolve(repoRoot, "procedural/3d/play/index.ts") },
     { find: "@semio-tech/procedural-3d-react", replacement: resolve(repoRoot, "procedural/3d/react/index.tsx") },
     { find: "@semio-tech/procedural-2d-play", replacement: resolve(repoRoot, "procedural/2d/play/index.ts") },
