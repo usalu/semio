@@ -4219,17 +4219,18 @@ export interface FooterProps {
   items?: FooterItem[];
   className?: string;
   isVisible?: boolean;
+  toolbar?: React.ReactNode;
 }
 
 /**
  * Footer holds the data fields for a Footer record.
  **/
-const Footer: React.FC<FooterProps> = ({ items = [], className = "", isVisible = true }) => {
+const Footer: React.FC<FooterProps> = ({ items = [], className = "", isVisible = true, toolbar }) => {
   const level = useLevel();
   const sortedItems = [...items].sort((a, b) => (a.order || 0) - (b.order || 0));
   const bgClass = getLevelBgClass(level);
   return (
-    <footer id="ui.footer" data-slot="footer" className={cn(borderNormalTopClass, "flex items-center h-medium transition-transform duration-200", bgClass, isVisible ? "translate-y-0" : "translate-y-full", className)}>
+    <footer id="ui.footer" data-slot="footer" className={cn(borderNormalTopClass, "relative flex items-center h-medium transition-transform duration-200", bgClass, isVisible ? "translate-y-0" : "translate-y-full", className)}>
       <div className="flex items-center h-full px-single min-w-0">
         <ActionGroup className="border">
           {sortedItems.map((item) => (
@@ -4237,6 +4238,7 @@ const Footer: React.FC<FooterProps> = ({ items = [], className = "", isVisible =
           ))}
         </ActionGroup>
       </div>
+      {toolbar ? <div data-slot="toolbar-anchor">{toolbar}</div> : null}
     </footer>
   );
 };
@@ -4260,12 +4262,11 @@ export interface LayoutProps {
   rightSidePanel?: SidePanelProps;
   mobilePanel?: MobilePanelProps;
   canvas: React.ReactNode;
-  toolbar?: React.ReactNode;
   mobile?: boolean;
   className?: string;
 }
 
-const Layout: React.FC<LayoutProps> = ({ navbar, footer, bottomPanel, leftSidePanel, rightSidePanel, mobilePanel, canvas, toolbar, mobile = false, className = "" }) => (
+const Layout: React.FC<LayoutProps> = ({ navbar, footer, bottomPanel, leftSidePanel, rightSidePanel, mobilePanel, canvas, mobile = false, className = "" }) => (
   <GhostProvider>
     <div className={cn("flex flex-col overflow-hidden", mobile ? "touch h-full w-full" : "h-screen w-screen", className)}>
       {navbar && <div className="flex-shrink-0">{navbar}</div>}
@@ -4286,12 +4287,7 @@ const Layout: React.FC<LayoutProps> = ({ navbar, footer, bottomPanel, leftSidePa
           </div>
         </div>
       )}
-      {(footer || toolbar) && (
-        <div className="flex-shrink-0 relative">
-          {toolbar ? <div data-slot="toolbar-anchor">{toolbar}</div> : null}
-          {footer}
-        </div>
-      )}
+      {footer && <div className="flex-shrink-0">{footer}</div>}
     </div>
   </GhostProvider>
 );
@@ -8588,36 +8584,32 @@ function Navbar({ items, className, showFullscreenToggle = true }: NavbarProps) 
 export { Navbar };
 
 //#region 🩺SemioLogo
-/** @emoji 🎨 Semio SVG Logo component. */
+/** @emoji 🎨 Round dark semio emblem for navbar and chrome. */
 export function SemioLogo({ className, style }: { className?: string, style?: React.CSSProperties }) {
   return (
     <svg
-      viewBox="-10 -10 220 220"
+      viewBox="0 0 350 350"
       className={className}
       style={style}
       xmlns="http://www.w3.org/2000/svg"
     >
       <path
-        d="M1.25 196.933l35-35.808V43.75h-35z"
+        d="M270.589 28.413a175 175 0 0151.24 241.804A175 175 0 0180.155 322.07 175 175 0 0127.691 80.528a175 175 0 01241.408-53.076"
+        fill="#001117"
+      />
+      <path
+        d="M76.25 271.933l35-35.808V118.75h-35z"
         fill="#fa9500"
-        stroke="currentColor"
+        stroke="#f7f3e3"
         strokeWidth="2.5"
         strokeMiterlimit="5"
       />
-      <path
-        d="M1.25 38.75h155.563l37.66-37.5H1.25zm160.013 160l-.013-155.606 37.5-37.62V198.75z"
-        fill="#ff344f"
-        stroke="currentColor"
-        strokeWidth="2.5"
-        strokeMiterlimit="5"
-      />
-      <path
-        d="M85.467 198.75h70.783v-37.5h-34.169zm.001-80h70.782v-37.5h-34.169z"
-        fill="#34d1bf"
-        stroke="currentColor"
-        strokeWidth="2.5"
-        strokeMiterlimit="5"
-      />
+      <g fill="#ff344f" stroke="#f7f3e3" strokeWidth="2.5" strokeMiterlimit="5">
+        <path d="M76.25 113.75h155.563l37.66-37.5H76.25zM236.263 273.75l-.013-155.606 37.5-37.62V273.75z" />
+      </g>
+      <g fill="#34d1bf" stroke="#f7f3e3" strokeWidth="2.5" strokeMiterlimit="5">
+        <path d="M160.467 273.75h70.783v-37.5h-34.169zM160.468 193.75h70.782v-37.5h-34.169z" />
+      </g>
     </svg>
   );
 }
@@ -20549,14 +20541,13 @@ export interface UiProps {
   onActiveAppChange?: (appId: string) => void;
   navbar?: React.ReactNode;
   footer?: React.ReactNode;
-  toolbar?: React.ReactNode;
   children?: React.ReactNode;
   className?: string;
   chrome?: boolean;
 }
 
 /** @emoji 🖥️ Top-level UI shell with optional app switcher and one active app body. */
-const Ui: React.FC<UiProps> = ({ apps, activeAppId, onActiveAppChange, navbar, footer, toolbar, children, className = "", chrome = true }) => {
+const Ui: React.FC<UiProps> = ({ apps, activeAppId, onActiveAppChange, navbar, footer, children, className = "", chrome = true }) => {
   const activeApp = apps.find((app) => app.id === activeAppId) ?? apps[0];
   const body = children ?? activeApp?.children;
   const showAppNav = chrome && apps.length > 1 && !!onActiveAppChange;
@@ -20592,12 +20583,7 @@ const Ui: React.FC<UiProps> = ({ apps, activeAppId, onActiveAppChange, navbar, f
       <div data-slot="ui-body" className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         {body}
       </div>
-      {(footer || toolbar) && (
-        <div data-slot="ui-footer" className="relative shrink-0">
-          {toolbar ? <div data-slot="toolbar-anchor">{toolbar}</div> : null}
-          {footer}
-        </div>
-      )}
+      {footer && <div data-slot="ui-footer" className="shrink-0">{footer}</div>}
     </div>
   );
 };

@@ -1121,7 +1121,8 @@ export function renderUiControl(control: UiControlNode, commandBus: CommandBus, 
 		case "toggle":
 			return <Toggle id={control.id} pressed={control.pressed} text={control.text} icon={resolveDeclarativeControlIcon(control.iconId)} onPressedChange={(pressed) => dispatchUiCommand(commandBus, control.onChange, { pressed })} />;
 		case "vec3": {
-			const mixed = control.value === null;
+			const tuple = control.value;
+			const mixed = tuple == null || !Array.isArray(tuple) || tuple.length < 3;
 			const axes = ["x", "y", "z"] as const;
 			return (
 				<div className="grid grid-cols-3 gap-1">
@@ -1131,14 +1132,14 @@ export function renderUiControl(control: UiControlNode, commandBus: CommandBus, 
 							id={`${control.id}.${axis}`}
 							type="number"
 							className="h-medium w-full min-w-0"
-							value={mixed ? "" : String(control.value![index] ?? 0)}
+							value={mixed ? "" : String(tuple[index] ?? 0)}
 							placeholder={mixed ? "—" : axis}
 							disabled={mixed}
 							onChange={(event) => {
 								if (mixed) return;
 								const parsed = Number(event.target.value);
 								if (!Number.isFinite(parsed)) return;
-								const next: [number, number, number] = [...control.value!];
+								const next: [number, number, number] = [tuple[0] ?? 0, tuple[1] ?? 0, tuple[2] ?? 0];
 								next[index] = parsed;
 								dispatchUiCommand(commandBus, control.onChange, { value: next });
 							}}
@@ -4482,8 +4483,7 @@ export const ProductShell: React.FC<ProductShellProps> = ({
 				className={className}
 				mobile={resolvedMobile}
 				navbar={<Navbar items={navbarItems} />}
-				footer={<Footer items={footerItems ?? []} />}
-				toolbar={slotToolbar}
+				footer={<Footer items={footerItems ?? []} toolbar={slotToolbar} />}
 				mobilePanel={
 					resolvedMobile && mobilePanel
 						? {

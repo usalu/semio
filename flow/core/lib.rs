@@ -3389,6 +3389,30 @@ pub fn tessellate(handle: &str, tolerance: f64) -> String {
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
+pub fn render_drawing_scene(handle: &str) -> String {
+    flow_module_draw::render_scene_json(handle)
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
+pub fn export_drawing_svg(handle: &str) -> String {
+    flow_module_draw::export_svg_json(handle)
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
+pub fn export_drawing_pdf(handle: &str) -> String {
+    flow_module_draw::export_pdf_json(handle)
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
+pub fn dispose_drawing(handle: &str) {
+    flow_module_draw::dispose_drawing(handle);
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
 pub fn dispose(handle: &str) {
     flow_module_brep::dispose_geometry(handle);
 }

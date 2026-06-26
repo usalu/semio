@@ -1,0 +1,527 @@
+//! 🖊️ In-process [`geometry_drawing_engine::DrawingKernel`] store with SVG/PDF export.
+
+#[cfg(feature = "booleans")]
+mod booleans;
+
+use async_trait::async_trait;
+use geometry_drawing_engine::{
+    Affine2D, DrawingError, DrawingHandle, DrawingKernel, DrawingKind, DrawingNode, DrawingScene, FillStyle, GradientStop, PathSegment, SceneNode, StrokeStyle, Vec2,
+};
+
+// #region 🔖Store
+#[derive(Clone)]
+struct StoredNode {
+    kind: DrawingKind,
+    node: DrawingNode,
+    transform: Affine2D,
+    fill: Option<FillStyle>,
+    stroke: Option<StrokeStyle>,
+    clip: Option<Vec<PathSegment>>,
+    opacity: f64,
+}
+
+/// 🗄️ Scene-graph drawing store with `drawing-*` handles.
+pub struct DrawingStore {
+    seq: u32,
+    registry: std::collections::HashMap<String, StoredNode>,
+}
+
+impl Default for DrawingStore {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl DrawingStore {
+    pub fn new() -> Self {
+        Self { seq: 0, registry: std::collections::HashMap::new() }
+    }
+
+    fn register(&mut self, kind: DrawingKind, node: DrawingNode) -> DrawingHandle {
+        self.seq += 1;
+        let handle = DrawingHandle::new(kind, self.seq);
+        self.registry.insert(
+            handle.as_str().to_string(),
+            StoredNode { kind, node, transform: Affine2D::identity(), fill: None, stroke: None, clip: None, opacity: 1.0 },
+        );
+        handle
+    }
+
+    fn fork(&mut self, source: &DrawingHandle) -> Result<DrawingHandle, DrawingError> {
+        let entry = self.entry(source)?.clone();
+        self.seq += 1;
+        let handle = DrawingHandle::new(entry.kind, self.seq);
+        self.registry.insert(handle.as_str().to_string(), entry);
+        Ok(handle)
+    }
+
+    fn entry(&self, handle: &DrawingHandle) -> Result<&StoredNode, DrawingError> {
+        self.registry.get(handle.as_str()).ok_or_else(|| DrawingError::MissingHandle(handle.as_str().to_string()))
+    }
+
+    fn entry_mut(&mut self, handle: &DrawingHandle) -> Result<&mut StoredNode, DrawingError> {
+        self.registry.get_mut(handle.as_str()).ok_or_else(|| DrawingError::MissingHandle(handle.as_str().to_string()))
+    }
+
+    pub fn registry_len(&self) -> usize {
+        self.registry.len()
+    }
+
+    pub fn dispose_sync(&mut self, handle: &DrawingHandle) {
+        self.registry.remove(handle.as_str());
+    }
+
+    pub fn retain_sync(&mut self, live: &std::collections::HashSet<String>) {
+        self.registry.retain(|handle, _| live.contains(handle));
+    }
+
+    fn node_to_segments(node: &DrawingNode) -> Vec<PathSegment> {
+        match node {
+            DrawingNode::Rect { x, y, width, height } => rect_segments(*x, *y, *width, *height),
+            DrawingNode::Ellipse { cx, cy, rx, ry } => ellipse_segments(*cx, *cy, *rx, *ry),
+            DrawingNode::Circle { cx, cy, r } => ellipse_segments(*cx, *cy, *r, *r),
+            DrawingNode::Line { x1, y1, x2, y2 } => vec![PathSegment::Move { to: [*x1, *y1] }, PathSegment::Line { to: [*x2, *y2] }],
+            DrawingNode::Polygon { points } => polygon_segments(points),
+            DrawingNode::Path { segments } => segments.clone(),
+            DrawingNode::Text { .. } => Vec::new(),
+            DrawingNode::Group { .. } => Vec::new(),
+        }
+    }
+
+    fn flatten_handle(&self, handle: &DrawingHandle, parent: Affine2D) -> Result<Vec<SceneNode>, DrawingError> {
+        let entry = self.entry(handle)?;
+        let transform = parent.multiply(entry.transform);
+        match &entry.node {
+            DrawingNode::Group { children } => children.iter().try_fold(Vec::new(), |mut acc, child| {
+                let nested = self.flatten_handle(&DrawingHandle(child.clone()), transform)?;
+                acc.extend(nested);
+                Ok::<_, DrawingError>(acc)
+            }),
+            _ => Ok(vec![SceneNode {
+                transform,
+                node: entry.node.clone(),
+                fill: entry.fill.clone(),
+                stroke: entry.stroke.clone(),
+                opacity: entry.opacity,
+                clip: entry.clip.clone(),
+            }]),
+        }
+    }
+
+    pub fn flatten_scene_sync(&self, handle: &DrawingHandle) -> Result<DrawingScene, DrawingError> {
+        let nodes = self.flatten_handle(handle, Affine2D::identity())?;
+        let (width, height) = scene_bounds(&nodes);
+        Ok(DrawingScene { width, height, nodes })
+    }
+
+    pub fn export_svg_sync(&self, handle: &DrawingHandle) -> Result<String, DrawingError> {
+        let scene = self.flatten_scene_sync(handle)?;
+        Ok(serialize_svg(&scene))
+    }
+
+    pub fn export_pdf_sync(&self, handle: &DrawingHandle) -> Result<Vec<u8>, DrawingError> {
+        let scene = self.flatten_scene_sync(handle)?;
+        Ok(serialize_pdf(&scene))
+    }
+}
+// #endregion 🔖Store
+
+// #region 🔖Geometry
+fn rect_segments(x: f64, y: f64, width: f64, height: f64) -> Vec<PathSegment> {
+    vec![
+        PathSegment::Move { to: [x, y] },
+        PathSegment::Line { to: [x + width, y] },
+        PathSegment::Line { to: [x + width, y + height] },
+        PathSegment::Line { to: [x, y + height] },
+        PathSegment::Close,
+    ]
+}
+
+fn polygon_segments(points: &[Vec2]) -> Vec<PathSegment> {
+    let mut segments = Vec::new();
+    if let Some(first) = points.first() {
+        segments.push(PathSegment::Move { to: *first });
+        for point in points.iter().skip(1) {
+            segments.push(PathSegment::Line { to: *point });
+        }
+        if points.len() > 2 {
+            segments.push(PathSegment::Close);
+        }
+    }
+    segments
+}
+
+fn ellipse_segments(cx: f64, cy: f64, rx: f64, ry: f64) -> Vec<PathSegment> {
+    const K: f64 = 0.5522847498;
+    let ox = rx * K;
+    let oy = ry * K;
+    vec![
+        PathSegment::Move { to: [cx, cy - ry] },
+        PathSegment::Cubic { ctrl1: [cx + ox, cy - ry], ctrl2: [cx + rx, cy - oy], to: [cx + rx, cy] },
+        PathSegment::Cubic { ctrl1: [cx + rx, cy + oy], ctrl2: [cx + ox, cy + ry], to: [cx, cy + ry] },
+        PathSegment::Cubic { ctrl1: [cx - ox, cy + ry], ctrl2: [cx - rx, cy + oy], to: [cx - rx, cy] },
+        PathSegment::Cubic { ctrl1: [cx - rx, cy - oy], ctrl2: [cx - ox, cy - ry], to: [cx, cy - ry] },
+        PathSegment::Close,
+    ]
+}
+
+fn polyline_segments(points: &[Vec2]) -> Vec<PathSegment> {
+    let mut segments = Vec::new();
+    if let Some(first) = points.first() {
+        segments.push(PathSegment::Move { to: *first });
+        for point in points.iter().skip(1) {
+            segments.push(PathSegment::Line { to: *point });
+        }
+    }
+    segments
+}
+
+fn scene_bounds(nodes: &[SceneNode]) -> (f64, f64) {
+    let mut max_x = 512.0_f64;
+    let mut max_y = 512.0_f64;
+    for node in nodes {
+        match &node.node {
+            DrawingNode::Rect { x, y, width, height } => {
+                max_x = max_x.max(x + width);
+                max_y = max_y.max(y + height);
+            }
+            DrawingNode::Circle { cx, cy, r } => {
+                max_x = max_x.max(cx + r);
+                max_y = max_y.max(cy + r);
+            }
+            DrawingNode::Ellipse { cx, cy, rx, ry } => {
+                max_x = max_x.max(cx + rx);
+                max_y = max_y.max(cy + ry);
+            }
+            DrawingNode::Text { x, y, size, .. } => {
+                max_x = max_x.max(x + size * 4.0);
+                max_y = max_y.max(y + size);
+            }
+            _ => {}
+        }
+    }
+    (max_x.max(1.0), max_y.max(1.0))
+}
+// #endregion 🔖Geometry
+
+// #region 🔖Export
+fn color_css(color: [f64; 4]) -> String {
+    let r = (color[0] * 255.0).round().clamp(0.0, 255.0) as u8;
+    let g = (color[1] * 255.0).round().clamp(0.0, 255.0) as u8;
+    let b = (color[2] * 255.0).round().clamp(0.0, 255.0) as u8;
+    let a = color[3].clamp(0.0, 1.0);
+    if (a - 1.0).abs() < f64::EPSILON {
+        format!("#{:02x}{:02x}{:02x}", r, g, b)
+    } else {
+        format!("rgba({r},{g},{b},{a:.3})")
+    }
+}
+
+fn segments_to_svg_d(segments: &[PathSegment]) -> String {
+    let mut out = String::new();
+    for segment in segments {
+        match segment {
+            PathSegment::Move { to } => out.push_str(&format!("M {} {} ", to[0], to[1])),
+            PathSegment::Line { to } => out.push_str(&format!("L {} {} ", to[0], to[1])),
+            PathSegment::Quad { ctrl, to } => out.push_str(&format!("Q {} {} {} {} ", ctrl[0], ctrl[1], to[0], to[1])),
+            PathSegment::Cubic { ctrl1, ctrl2, to } => out.push_str(&format!("C {} {} {} {} {} {} ", ctrl1[0], ctrl1[1], ctrl2[0], ctrl2[1], to[0], to[1])),
+            PathSegment::Arc { rx, ry, rotation, large_arc, sweep, to } => {
+                out.push_str(&format!("A {} {} {} {} {} {} {} ", rx, ry, rotation, if *large_arc { 1 } else { 0 }, if *sweep { 1 } else { 0 }, to[0], to[1]));
+            }
+            PathSegment::Close => out.push('Z'),
+        }
+    }
+    out.trim().to_string()
+}
+
+fn serialize_svg(scene: &DrawingScene) -> String {
+    let mut body = String::new();
+    for node in &scene.nodes {
+        match &node.node {
+            DrawingNode::Text { x, y, content, size } => {
+                let [tx, ty] = node.transform.transform_point([*x, *y]);
+                let fill = node.fill.as_ref().map(|f| match f {
+                    FillStyle::Solid { color } => color_css(*color),
+                    _ => "black".into(),
+                }).unwrap_or_else(|| "black".into());
+                body.push_str(&format!(r#"<text x="{tx}" y="{ty}" font-size="{size}" fill="{fill}">{content}</text>"#));
+            }
+            _ => {
+                let segments = DrawingStore::node_to_segments(&node.node);
+                if segments.is_empty() {
+                    continue;
+                }
+                let d = segments_to_svg_d(&segments);
+                let mut attrs = format!(r#"d="{d}""#);
+                if let Some(fill) = &node.fill {
+                    match fill {
+                        FillStyle::Solid { color } => attrs.push_str(&format!(r#" fill="{}""#, color_css(*color))),
+                        FillStyle::LinearGradient { x1, y1, x2, y2, stops } => {
+                            let id = format!("lg{}", body.len());
+                            body.push_str(&format!(r#"<defs><linearGradient id="{id}" x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}">"#));
+                            for stop in stops {
+                                body.push_str(&format!(r#"<stop offset="{}" stop-color="{}"/>"#, stop.offset, color_css(stop.color)));
+                            }
+                            body.push_str("</linearGradient></defs>");
+                            attrs.push_str(&format!(r#" fill="url(#{id})""#));
+                        }
+                        FillStyle::RadialGradient { cx, cy, r, stops } => {
+                            let id = format!("rg{}", body.len());
+                            body.push_str(&format!(r#"<defs><radialGradient id="{id}" cx="{cx}" cy="{cy}" r="{r}">"#));
+                            for stop in stops {
+                                body.push_str(&format!(r#"<stop offset="{}" stop-color="{}"/>"#, stop.offset, color_css(stop.color)));
+                            }
+                            body.push_str("</radialGradient></defs>");
+                            attrs.push_str(&format!(r#" fill="url(#{id})""#));
+                        }
+                    }
+                } else {
+                    attrs.push_str(r#" fill="none""#);
+                }
+                if let Some(stroke) = &node.stroke {
+                    attrs.push_str(&format!(r#" stroke="{}" stroke-width="{}""#, color_css(stroke.color), stroke.width));
+                }
+                body.push_str(&format!("<path {attrs}/>"));
+            }
+        }
+    }
+    format!(r#"<svg xmlns="http://www.w3.org/2000/svg" width="{}" height="{}" viewBox="0 0 {} {}">{body}</svg>"#, scene.width, scene.height, scene.width, scene.height)
+}
+
+fn segments_to_pdf_ops(segments: &[PathSegment]) -> String {
+    let mut out = String::new();
+    for segment in segments {
+        match segment {
+            PathSegment::Move { to } => out.push_str(&format!("{} {} m\n", to[0], to[1])),
+            PathSegment::Line { to } => out.push_str(&format!("{} {} l\n", to[0], to[1])),
+            PathSegment::Close => out.push_str("h\n"),
+            _ => {}
+        }
+    }
+    out
+}
+
+fn serialize_pdf(scene: &DrawingScene) -> Vec<u8> {
+    let mut stream = String::new();
+    stream.push_str("0.1 0.1 0.1 rg\n");
+    for node in &scene.nodes {
+        let segments = DrawingStore::node_to_segments(&node.node);
+        if segments.is_empty() {
+            continue;
+        }
+        stream.push_str(&segments_to_pdf_ops(&segments));
+        if node.fill.is_some() {
+            stream.push_str("f\n");
+        } else if node.stroke.is_some() {
+            stream.push_str("S\n");
+        }
+    }
+    let content = stream.as_bytes();
+    let objects = [
+        "1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n",
+        "2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n",
+        &format!("3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {} {}] /Contents 4 0 R /Resources << >> >>\nendobj\n", scene.width, scene.height),
+        &format!("4 0 obj\n<< /Length {} >>\nstream\n", content.len()),
+    ];
+    let mut pdf = String::from("%PDF-1.4\n");
+    let mut offsets = Vec::new();
+    for object in &objects[..3] {
+        offsets.push(pdf.len());
+        pdf.push_str(object);
+    }
+    offsets.push(pdf.len());
+    pdf.push_str(&objects[3]);
+    pdf.push_str(std::str::from_utf8(content).unwrap_or(""));
+    pdf.push_str("\nendstream\nendobj\n");
+    let xref = pdf.len();
+    pdf.push_str(&format!("xref\n0 5\n0000000000 65535 f \n"));
+    for offset in offsets {
+        pdf.push_str(&format!("{:010} 00000 n \n", offset));
+    }
+    pdf.push_str(&format!("trailer\n<< /Size 5 /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n"));
+    pdf.into_bytes()
+}
+// #endregion 🔖Export
+
+// #region 🔖Kernel
+#[async_trait(?Send)]
+impl DrawingKernel for DrawingStore {
+    async fn rect(&mut self, x: f64, y: f64, width: f64, height: f64) -> Result<DrawingHandle, DrawingError> {
+        Ok(self.register(DrawingKind::Rect, DrawingNode::Rect { x, y, width, height }))
+    }
+
+    async fn ellipse(&mut self, cx: f64, cy: f64, rx: f64, ry: f64) -> Result<DrawingHandle, DrawingError> {
+        Ok(self.register(DrawingKind::Ellipse, DrawingNode::Ellipse { cx, cy, rx, ry }))
+    }
+
+    async fn circle(&mut self, cx: f64, cy: f64, r: f64) -> Result<DrawingHandle, DrawingError> {
+        Ok(self.register(DrawingKind::Circle, DrawingNode::Circle { cx, cy, r }))
+    }
+
+    async fn line(&mut self, x1: f64, y1: f64, x2: f64, y2: f64) -> Result<DrawingHandle, DrawingError> {
+        Ok(self.register(DrawingKind::Line, DrawingNode::Line { x1, y1, x2, y2 }))
+    }
+
+    async fn polygon(&mut self, points: &[Vec2]) -> Result<DrawingHandle, DrawingError> {
+        if points.len() < 3 {
+            return Err(DrawingError::InvalidInput("polygon needs at least 3 points".into()));
+        }
+        Ok(self.register(DrawingKind::Polygon, DrawingNode::Polygon { points: points.to_vec() }))
+    }
+
+    async fn polyline_path(&mut self, points: &[Vec2]) -> Result<DrawingHandle, DrawingError> {
+        if points.len() < 2 {
+            return Err(DrawingError::InvalidInput("polyline needs at least 2 points".into()));
+        }
+        Ok(self.register(DrawingKind::Path, DrawingNode::Path { segments: polyline_segments(points) }))
+    }
+
+    async fn rect_path(&mut self, x: f64, y: f64, width: f64, height: f64) -> Result<DrawingHandle, DrawingError> {
+        Ok(self.register(DrawingKind::Path, DrawingNode::Path { segments: rect_segments(x, y, width, height) }))
+    }
+
+    async fn set_fill(&mut self, handle: &DrawingHandle, fill: FillStyle) -> Result<DrawingHandle, DrawingError> {
+        let next = self.fork(handle)?;
+        self.entry_mut(&next)?.fill = Some(fill);
+        Ok(next)
+    }
+
+    async fn set_stroke(&mut self, handle: &DrawingHandle, stroke: StrokeStyle) -> Result<DrawingHandle, DrawingError> {
+        let next = self.fork(handle)?;
+        self.entry_mut(&next)?.stroke = Some(stroke);
+        Ok(next)
+    }
+
+    async fn linear_gradient_fill(&mut self, handle: &DrawingHandle, x1: f64, y1: f64, x2: f64, y2: f64, stops: &[GradientStop]) -> Result<DrawingHandle, DrawingError> {
+        self.set_fill(handle, FillStyle::LinearGradient { x1, y1, x2, y2, stops: stops.to_vec() }).await
+    }
+
+    async fn translate(&mut self, handle: &DrawingHandle, dx: f64, dy: f64) -> Result<DrawingHandle, DrawingError> {
+        let next = self.fork(handle)?;
+        let transform = self.entry(&next)?.transform;
+        self.entry_mut(&next)?.transform = transform.multiply(Affine2D::translate(dx, dy));
+        Ok(next)
+    }
+
+    async fn rotate(&mut self, handle: &DrawingHandle, angle: f64) -> Result<DrawingHandle, DrawingError> {
+        let next = self.fork(handle)?;
+        let transform = self.entry(&next)?.transform;
+        self.entry_mut(&next)?.transform = transform.multiply(Affine2D::rotate(angle));
+        Ok(next)
+    }
+
+    async fn scale(&mut self, handle: &DrawingHandle, sx: f64, sy: f64) -> Result<DrawingHandle, DrawingError> {
+        let next = self.fork(handle)?;
+        let transform = self.entry(&next)?.transform;
+        self.entry_mut(&next)?.transform = transform.multiply(Affine2D::scale(sx, sy));
+        Ok(next)
+    }
+
+    async fn group(&mut self, children: &[DrawingHandle]) -> Result<DrawingHandle, DrawingError> {
+        if children.is_empty() {
+            return Err(DrawingError::InvalidInput("group needs children".into()));
+        }
+        let handles: Vec<String> = children.iter().map(|h| h.as_str().to_string()).collect();
+        Ok(self.register(DrawingKind::Group, DrawingNode::Group { children: handles }))
+    }
+
+    async fn bool_union(&mut self, a: &DrawingHandle, b: &DrawingHandle) -> Result<DrawingHandle, DrawingError> {
+        self.bool_op(a, b, "union").await
+    }
+
+    async fn bool_difference(&mut self, a: &DrawingHandle, b: &DrawingHandle) -> Result<DrawingHandle, DrawingError> {
+        self.bool_op(a, b, "difference").await
+    }
+
+    async fn bool_intersection(&mut self, a: &DrawingHandle, b: &DrawingHandle) -> Result<DrawingHandle, DrawingError> {
+        self.bool_op(a, b, "intersection").await
+    }
+
+    async fn text(&mut self, x: f64, y: f64, content: &str, size: f64) -> Result<DrawingHandle, DrawingError> {
+        Ok(self.register(DrawingKind::Text, DrawingNode::Text { x, y, content: content.to_string(), size }))
+    }
+
+    async fn apply_clip(&mut self, target: &DrawingHandle, clip: &DrawingHandle) -> Result<DrawingHandle, DrawingError> {
+        let clip_segments = DrawingStore::node_to_segments(&self.entry(clip)?.node);
+        let next = self.fork(target)?;
+        self.entry_mut(&next)?.clip = Some(clip_segments);
+        Ok(next)
+    }
+
+    async fn flatten_scene(&self, handle: &DrawingHandle) -> Result<DrawingScene, DrawingError> {
+        self.flatten_scene_sync(handle)
+    }
+
+    async fn export_svg(&self, handle: &DrawingHandle) -> Result<String, DrawingError> {
+        self.export_svg_sync(handle)
+    }
+
+    async fn export_pdf(&self, handle: &DrawingHandle) -> Result<Vec<u8>, DrawingError> {
+        self.export_pdf_sync(handle)
+    }
+
+    async fn kind(&self, handle: &DrawingHandle) -> Result<DrawingKind, DrawingError> {
+        Ok(self.entry(handle)?.kind)
+    }
+
+    async fn dispose(&mut self, handle: &DrawingHandle) {
+        self.dispose_sync(handle);
+    }
+
+    fn retain_sync(&mut self, live: &std::collections::HashSet<String>) {
+        DrawingStore::retain_sync(self, live);
+    }
+}
+
+impl DrawingStore {
+    async fn bool_op(&mut self, a: &DrawingHandle, b: &DrawingHandle, op: &str) -> Result<DrawingHandle, DrawingError> {
+        let a_segments = DrawingStore::node_to_segments(&self.entry(a)?.node);
+        let b_segments = DrawingStore::node_to_segments(&self.entry(b)?.node);
+        #[cfg(feature = "booleans")]
+        {
+            let merged = booleans::boolean_paths(&a_segments, &b_segments, op)?;
+            return Ok(self.register(DrawingKind::Path, DrawingNode::Path { segments: merged }));
+        }
+        #[cfg(not(feature = "booleans"))]
+        {
+            let _ = (a_segments, b_segments, op);
+            Err(DrawingError::Operation("boolean ops require booleans feature".into()))
+        }
+    }
+}
+// #endregion 🔖Kernel
+
+// #region 🔖Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use geometry_drawing_engine::block_on;
+
+    #[test]
+    fn rect_exports_svg() {
+        let mut store = DrawingStore::new();
+        let rect = block_on(store.rect(0.0, 0.0, 10.0, 20.0)).expect("rect");
+        let svg = store.export_svg_sync(&rect).expect("svg");
+        assert!(svg.contains("<svg"));
+        assert!(svg.contains("10"));
+    }
+
+    #[test]
+    fn rect_exports_pdf() {
+        let mut store = DrawingStore::new();
+        let rect = block_on(store.rect(0.0, 0.0, 10.0, 20.0)).expect("rect");
+        let pdf = store.export_pdf_sync(&rect).expect("pdf");
+        assert!(pdf.starts_with(b"%PDF"));
+    }
+
+    #[test]
+    fn group_flattens_children() {
+        let mut store = DrawingStore::new();
+        let a = block_on(store.rect(0.0, 0.0, 5.0, 5.0)).unwrap();
+        let b = block_on(store.circle(10.0, 10.0, 3.0)).unwrap();
+        let group = block_on(store.group(&[a, b])).unwrap();
+        let scene = store.flatten_scene_sync(&group).unwrap();
+        assert_eq!(scene.nodes.len(), 2);
+    }
+}
+// #endregion 🔖Tests

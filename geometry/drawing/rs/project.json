@@ -1,0 +1,13 @@
+{
+  "name": "@geometry/drawing-rs",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "geometry/drawing/rs",
+        "command": "bun ./script.ts test"
+      }
+    }
+  }
+}

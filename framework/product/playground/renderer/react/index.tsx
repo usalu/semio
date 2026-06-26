@@ -4,68 +4,63 @@
 
 // #region 🔌Adapters
 import {
-  Button,
-  Input,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Slider,
-  Toggle,
-  Tree,
-  cn,
-  getLevelBgClass,
-  Label,
-  engagementCommandTokenEquals,
-  normalizeEngagementCommandText,
-  LevelProvider,
-  staticTreePanelDefinition,
-  useCommandHotkey,
-  bootstrapElementsSurfaceChromeDocument,
-  useElementsSurfaceChrome,
-  useMediaQuery,
-  type EngagementControl,
-  type EngagementSpec,
-  type FooterItem,
-  type NavbarItem,
-  navbarFillItem,
-  PanelToggleGroup,
-  type PanelToggleItem,
-  floatingFieldSurfaceClass,
-  floatingMenuSurfaceClass,
-  shellChromeSectionTitleClassName,
-  shellChromeTitleClassName,
-  type SidePanelTabConfig,
-  type SidePanelTabDefinition,
-  type TreeDataItem,
-  type TreeDataSection,
-  type TreeDragAndDropController,
-  type TreePanelConfig,
-  type TreePanelDefinition,
-  type TreePanelSource,
-  reactHostPort,
-  Icon,
-  IconSelector,
-  createIconComponent,
-  Ring,
-  type ContextMenuItem,
-  type UiTranslationKey,
-  ButtonGroup,
-  ButtonGroupItem,
-  SemioLogo,
-  interactiveActiveFillClass,
-  NavbarFixtureSelect,
-  readStoredUiChromeCompact,
-  readStoredUiChromeExpertise,
-  readStoredUiChromeTheme,
-  readStoredComputeWorkerCount,
-  writeStoredUiChromeCompact,
-  writeStoredUiChromeExpertise,
-  writeStoredUiChromeTheme,
-  writeStoredComputeWorkerCount,
-  isCrossOriginIsolatedRuntime,
-  type ElementsSurfaceTheme,
+    Button,
+    ButtonGroup,
+    ButtonGroupItem,
+    Icon,
+    Input,
+    LevelProvider,
+    NavbarFixtureSelect,
+    PanelToggleGroup,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+    SemioLogo,
+    Toggle,
+    Tree,
+    bootstrapElementsSurfaceChromeDocument,
+    cn,
+    createIconComponent,
+    engagementCommandTokenEquals,
+    floatingFieldSurfaceClass,
+    floatingMenuSurfaceClass,
+    getLevelBgClass,
+    interactiveActiveFillClass,
+    isCrossOriginIsolatedRuntime,
+    navbarFillItem,
+    normalizeEngagementCommandText,
+    reactHostPort,
+    readStoredComputeWorkerCount,
+    readStoredUiChromeCompact,
+    readStoredUiChromeExpertise,
+    readStoredUiChromeTheme,
+    shellChromeSectionTitleClassName,
+    shellChromeTitleClassName,
+    useCommandHotkey,
+    useElementsSurfaceChrome,
+    useMediaQuery,
+    writeStoredComputeWorkerCount,
+    writeStoredUiChromeCompact,
+    writeStoredUiChromeExpertise,
+    writeStoredUiChromeTheme,
+    type ContextMenuItem,
+    type ElementsSurfaceTheme,
+    type EngagementControl,
+    type EngagementSpec,
+    type FooterItem,
+    type NavbarItem,
+    type PanelToggleItem,
+    type SidePanelTabConfig,
+    type SidePanelTabDefinition,
+    type TreeDataItem,
+    type TreeDataSection,
+    type TreeDragAndDropController,
+    type TreePanelConfig,
+    type TreePanelDefinition,
+    type TreePanelSource,
+    type UiTranslationKey
 } from "@semio-tech/ui-react";
 import { clsx, type ClassValue } from "clsx";
 
@@ -77,156 +72,136 @@ const _playgroundCadToolbarI18nKeys = [
   "ui.toolbar.parent.transfer",
 ] as const satisfies readonly UiTranslationKey[];
 //#endregion 🪁I18n Compile Gate
-import * as React from "react";
+import { NamedLayoutStore } from "@semio-tech/framework-core";
+import {
+    DisplayHostContext,
+    ProductShell,
+    SettingsHostContext,
+    UIToolbar,
+    createBrowserStoragePort,
+    createFrameworkDisplayPanelTabs,
+    createFrameworkSettingsPanelTabs,
+    declareToolsToViewTools,
+    findDefaultActiveWindowKindId,
+    listPopulatedToolbarViewCategories,
+    mergePlatformFooterChromeRows,
+    registerSurfaceBinding,
+    registerUiPanelSurfaceHost,
+    renderComponentHostSurface,
+    renderUiControl,
+    resolveDeclarativeControlIcon,
+    shellTabIconComponent,
+    shellWindowScopeId,
+    sideTabsToPanelTabs,
+    uiTreeNodeToTreePanelConfig,
+    unregisterSurfaceBinding,
+    useControllerStore,
+    useShellWindowInstance,
+    windowMeasuresToGolden,
+    type DisplayHostApi,
+    type SettingsHostApi,
+    type UIWindowMeasure,
+    type UiComponentHostSurfaceNode
+} from "@semio-tech/framework-platform-renderer-react";
+import {
+    CommandBus,
+    Expertise,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+    FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID,
+    FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+    FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
+    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    PLAYGROUND_NO_FIXTURE_ID,
+    PRODUCT_SHELL_DEFAULT_PANEL_VISIBILITY,
+    Platform,
+    WindowKindRuntime,
+    buildCadWindowBody,
+    collectUiTreeItemDragData,
+    enforcePlaygroundWindowEngagementInput,
+    enforceWindowKindsEngagementInput,
+    getSidePanelBodyFactory,
+    getWindowBodyFactory,
+    isPlaygroundFixtureLocked,
+    isPlaygroundNoFixtureId,
+    playgroundResolvedFixtureId,
+    registerSidePanelBody,
+    registerWindowBody,
+    resolveInitialPanelVisibility,
+    resolvePlaygroundFixtureCatalog,
+    uiDeclarativeSectionsToTree,
+    type CommandDescriptor,
+    type Playground,
+    type PlaygroundFixtureCatalog,
+    type PlaygroundKeybinding,
+    type ResolvedAppState,
+    type SidePanelBodyViewContext,
+    type SideTabSpec,
+    type UiFieldNode,
+    type UiInputNode,
+    type UiKeyValueNode,
+    type UiNode,
+    type UiPuzzle2dHostSurfaceNode,
+    type UiPuzzle3dHostSurfaceNode,
+    type UiSectionNode,
+    type UiSelectNode,
+    type UiTableHostSurfaceNode,
+    type UiToggleNode,
+    type UiTreeItemNode,
+    type UiTreeNode,
+    type UiTreeSectionNode,
+    type UiVec3Node,
+    type WindowBodyViewContext,
+    type WindowEngagement,
+    type WindowEngagementControl
+} from "@semio-tech/framework-playground-core";
+import { renderControlIcon } from "@semio-tech/ui-react";
 import type { ReactElement } from "react";
+import * as React from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { twMerge } from "tailwind-merge";
-import {
-  APP_TOOL_CATEGORY_ORDER,
-  CommandBus,
-  Expertise,
-  Platform,
-  PRODUCT_SHELL_DEFAULT_PANEL_VISIBILITY,
-  resolveInitialPanelVisibility,
-  WindowKindRuntime,
-  getSidePanelBodyFactory,
-  getWindowBodyFactory,
-  registerWindowBody,
-  registerSidePanelBody,
-  buildCadWindowBody,
-  type AppToolCategory,
-  type AppTools,
-  type CommandDescriptor,
-  type Playground,
-  type PlaygroundKeybinding,
-  type ResolvedAppState,
-  type SidePanelBodyViewContext,
-  type SideTabSpec,
-  type UiPuzzle2dHostSurfaceNode,
-  type UiFieldNode,
-  type UiInputNode,
-  type UiKeyValueNode,
-  type UiNode,
-  type UiSectionNode,
-  type UiSelectNode,
-  type UiToggleNode,
-  type UiTreeItemNode,
-  type UiTreeNode,
-  type UiTreeSectionNode,
-  type UiVec3Node,
-  collectUiTreeItemDragData,
-  uiDeclarativeSectionsToTree,
-  type UiPuzzle3dHostSurfaceNode,
-  type UiTableHostSurfaceNode,
-  enforcePlaygroundWindowEngagementInput,
-  enforceWindowKindsEngagementInput,
-  isPlaygroundFixtureLocked,
-  isPlaygroundNoFixtureId,
-  playgroundLockedFixtureId,
-  playgroundResolvedFixtureId,
-  PLAYGROUND_NO_FIXTURE_ID,
-  resolvePlaygroundFixtureCatalog,
-  type PlaygroundFixtureCatalog,
-  type WindowBodyViewContext,
-  type WindowEngagement,
-  type WindowEngagementControl,
-  type WindowLayout,
-  type WindowMeasure,
-  FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
-  FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-  FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID,
-  FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
-  FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
-  FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-} from "@semio-tech/framework-playground-core";
 // #endregion 🔌Adapters
 
 export type {
-  AppRuntime,
-  AppTools,
-  CommandBus,
-  Controller,
-  ModeRuntime,
-  FooterItem as PlaygroundDeclarativeFooterItem,
-  Platform,
-  ResolvedAppState,
-  SidePanelBodyViewContext,
-  SideTabSpec,
-  ToolItem,
-  UiNode,
-  WindowBodyViewContext,
-  WindowKindRuntime,
-  WindowLayout,
+    AppRuntime,
+    AppTools,
+    CommandBus,
+    Controller,
+    ModeRuntime, Platform, FooterItem as PlaygroundDeclarativeFooterItem, ResolvedAppState,
+    SidePanelBodyViewContext,
+    SideTabSpec,
+    ToolItem,
+    UiNode,
+    WindowBodyViewContext,
+    WindowKindRuntime,
+    WindowLayout
 } from "@semio-tech/framework-playground-core";
 
+export {
+    FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+    FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID,
+    FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+    FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
+    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, PLAYGROUND_NO_FIXTURE_ID,
+    PLAYGROUND_NO_FIXTURE_OPTION, isPlaygroundNoFixtureId, playgroundFixtureCatalogWithNoOption,
+    resolvePlaygroundFixtureCatalog
+} from "@semio-tech/framework-playground-core";
 export type { PlaygroundFixtureCatalog, PlaygroundFixtureHost, PlaygroundFixtureOption } from "@semio-tech/framework-playground-core";
-export {
-  isPlaygroundNoFixtureId,
-  PLAYGROUND_NO_FIXTURE_ID,
-  PLAYGROUND_NO_FIXTURE_OPTION,
-  playgroundFixtureCatalogWithNoOption,
-  resolvePlaygroundFixtureCatalog,
-  FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
-  FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-  FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID,
-  FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
-  FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
-  FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-} from "@semio-tech/framework-playground-core";
 
 export {
-  APP_TOOL_CATEGORY_ORDER,
-  AppRuntime,
-  CommandBus,
-  ModeRuntime,
-  PlaygroundController,
-  Platform,
-  WindowKindRuntime,
-  buildPuzzle3dWindowBody,
-  createDefaultLayout,
-  createStackLayout,
-  createWindowLayout,
-  getSidePanelBodyFactory,
-  getWindowBodyFactory,
-  registerSidePanelBody,
-  registerWindowBody,
-  resolveAppState,
-  playgroundTreePanelRootItems,
-  buildCadWindowBody,
+    APP_TOOL_CATEGORY_ORDER,
+    AppRuntime,
+    CommandBus,
+    ModeRuntime, Platform, PlaygroundController, WindowKindRuntime, buildCadWindowBody, buildPuzzle3dWindowBody,
+    createDefaultLayout,
+    createStackLayout,
+    createWindowLayout,
+    getSidePanelBodyFactory,
+    getWindowBodyFactory, playgroundTreePanelRootItems, registerSidePanelBody,
+    registerWindowBody,
+    resolveAppState
 } from "@semio-tech/framework-playground-core";
-import { renderControlIcon } from "@semio-tech/ui-react";
-import {
-  ProductShell,
-  createBrowserStoragePort,
-  createFrameworkDisplayPanelTabs,
-  createFrameworkSettingsPanelTabs,
-  sideTabsToPanelTabs,
-  uiTreeNodeToTreePanelConfig,
-  renderUiControl,
-  resolveDeclarativeControlIcon,
-  declareToolsToViewTools,
-  DisplayHostContext,
-  SettingsHostContext,
-  findDefaultActiveWindowKindId,
-  listPopulatedToolbarViewCategories,
-  mergePlatformFooterChromeRows,
-  registerSurfaceBinding,
-  renderComponentHostSurface,
-  unregisterSurfaceBinding,
-  registerUiPanelSurfaceHost,
-  UIToolbar,
-  useControllerStore,
-  shellWindowScopeId,
-  useShellWindowInstance,
-  useStore,
-  windowMeasuresToGolden,
-  shellTabIconComponent,
-  type DisplayHostApi,
-  type SettingsHostApi,
-  type UiComponentHostSurfaceNode,
-  type UIWindowMeasure,
-} from "@semio-tech/framework-platform-renderer-react";
-import { NamedLayoutStore } from "@semio-tech/framework-core";
 
 export { uiTreeNodeToTreePanelConfig, useControllerStore, useStore } from "@semio-tech/framework-platform-renderer-react";
 export type { Store } from "@semio-tech/framework-playground-core";
@@ -1662,67 +1637,65 @@ export const mountReactApp = mountPlaygroundApp;
 
 //#region 🔖Puzzle3dPlayHost
 // #region 🔌Adapters
-import { sceneHostPort } from "@semio-tech/ui-react";
 import {
-  PlayCanvas,
-  ObjectStateProvider,
-  parseFixtureV1,
-  applyConnectToFixture,
-  applyPaletteObjectDropToFixture,
-  blockedVortexFullIdsFromAttractions,
-  resolvePuzzle3dFixtureDrop,
-  puzzle3dFixturePaletteTreeDragController,
-  buildPuzzle3dPlayEngagement,
-  getPuzzle3dBrushEngagementEpoch,
-  puzzle3dBrushEngagementSourceRef,
-  requestPuzzle3dZoomToSelection,
-  subscribePuzzle3dBrushEngagementSource,
-  brushMeshUrlsForFillSession,
-  isLoadableMeshUrl,
-  resolveObjectKindMeshUrl,
-  type FixtureV1,
-  type CameraState,
-  computeOrbitCameraViewState,
-  orbitCameraDistance,
-  orbitCameraProjectionForView,
-  ORBIT_CAMERA_VIEW_COMMAND,
-  resolveOrbitCameraViewFromTemplateId,
-  type Puzzle3dFixtureDropDetail,
-  type Puzzle3dHoverPayload,
-  type RelocatePayload,
-} from "@semio-tech/puzzle-3d-react";
-import {
-  PUZZLE_3D_PLAY_BODY_KEY,
-  PUZZLE_3D_PLAY_CONTROLLER_ID,
-  PUZZLE_3D_PLAY_IDLE_SNAPSHOT,
-  PUZZLE_3D_PLAY_ICON_HIERARCHY,
-  PUZZLE_3D_PLAY_ICON_INSPECTOR,
-  PUZZLE_3D_PLAY_ICON_KINDS,
-  PUZZLE_3D_PLAY_ICON_SETTINGS,
-  PUZZLE_3D_PLAY_VIEWPORT_SURFACE_ID,
-  PUZZLE_3D_PLAY_APP_ID,
-  PUZZLE_3D_PLAY_STORE_ID,
-  PUZZLE_3D_PLAY_SNAPSHOT_PANEL_BODY_KEYS,
-  PUZZLE_3D_PLAY_FIXTURE_CONCRETE_FOREST_ID,
-  puzzle3dPlayFixtureJson,
-  Puzzle3dPlayShellController,
-  installPuzzle3dPlayBrushHost,
-  clearPuzzle3dFillSession,
-  preparePuzzle3dFillSession,
-  rerollPuzzle3dFillTail,
-  puzzle3dFillBuildProgressRef,
-  puzzle3dFillPendingCountRef,
-  puzzle3dFillSessionRef,
-  PUZZLE_3D_FILL_COUNT_MAX,
-  subscribePuzzle3dFillSessionReady,
-  subscribePuzzle3dFillDistributionInvalidated,
-  subscribePuzzle3dFillTargetVolumesInvalidated,
-  getPuzzle3dFillSessionReadyEpoch,
-  parseKindCatalogs,
-  parseKindCompatibility,
-  type Puzzle3dPlayHostBridge,
-  type Puzzle3dPlaySnapshot,
+    PUZZLE_3D_FILL_COUNT_MAX,
+    PUZZLE_3D_PLAY_APP_ID,
+    PUZZLE_3D_PLAY_CONTROLLER_ID,
+    PUZZLE_3D_PLAY_FIXTURE_CONCRETE_FOREST_ID,
+    PUZZLE_3D_PLAY_ICON_HIERARCHY,
+    PUZZLE_3D_PLAY_ICON_INSPECTOR,
+    PUZZLE_3D_PLAY_ICON_KINDS,
+    PUZZLE_3D_PLAY_ICON_SETTINGS,
+    PUZZLE_3D_PLAY_IDLE_SNAPSHOT,
+    PUZZLE_3D_PLAY_SNAPSHOT_PANEL_BODY_KEYS,
+    PUZZLE_3D_PLAY_STORE_ID,
+    PUZZLE_3D_PLAY_VIEWPORT_SURFACE_ID,
+    Puzzle3dPlayShellController,
+    clearPuzzle3dFillSession,
+    getPuzzle3dFillSessionReadyEpoch,
+    installPuzzle3dPlayBrushHost,
+    parseKindCatalogs,
+    parseKindCompatibility,
+    preparePuzzle3dFillSession,
+    puzzle3dFillBuildProgressRef,
+    puzzle3dFillPendingCountRef,
+    puzzle3dFillSessionRef,
+    puzzle3dPlayFixtureJson,
+    rerollPuzzle3dFillTail,
+    subscribePuzzle3dFillDistributionInvalidated,
+    subscribePuzzle3dFillSessionReady,
+    subscribePuzzle3dFillTargetVolumesInvalidated,
+    type Puzzle3dPlayHostBridge,
+    type Puzzle3dPlaySnapshot
 } from "@semio-tech/puzzle-3d-play";
+import {
+    ORBIT_CAMERA_VIEW_COMMAND,
+    ObjectStateProvider,
+    PlayCanvas,
+    applyConnectToFixture,
+    applyPaletteObjectDropToFixture,
+    blockedVortexFullIdsFromAttractions,
+    brushMeshUrlsForFillSession,
+    buildPuzzle3dPlayEngagement,
+    computeOrbitCameraViewState,
+    getPuzzle3dBrushEngagementEpoch,
+    isLoadableMeshUrl,
+    orbitCameraDistance,
+    orbitCameraProjectionForView,
+    parseFixtureV1,
+    puzzle3dBrushEngagementSourceRef,
+    puzzle3dFixturePaletteTreeDragController,
+    requestPuzzle3dZoomToSelection,
+    resolveOrbitCameraViewFromTemplateId,
+    resolvePuzzle3dFixtureDrop,
+    subscribePuzzle3dBrushEngagementSource,
+    type CameraState,
+    type FixtureV1,
+    type Puzzle3dFixtureDropDetail,
+    type Puzzle3dHoverPayload,
+    type RelocatePayload
+} from "@semio-tech/puzzle-3d-react";
+import { sceneHostPort } from "@semio-tech/ui-react";
 // #endregion 🔌Adapters
 
 function usePuzzle3dPlayController(): Puzzle3dPlayShellController | undefined {
@@ -2428,62 +2401,55 @@ export function bootPuzzle3dPlay(playground: Playground, rootId = "root"): void 
 //#region 🔖Puzzle5dPlayHost
 // #region 🔌Adapters
 import {
-  FiveD,
-  StoreProvider,
-  useStore as usePuzzle5dStore,
-  buildPuzzle5dFillSequence,
-  project2dKindCatalogs,
-  project3d,
-  project3dKindCatalogs,
-  puzzle5dBrushPlacementFromFlat,
-  puzzle5dBrushPlacementFromVolume,
-  puzzle5dCommitBrushPlacementToPlay,
-  puzzle5dCommitVolumeBrushPlacementToPlay,
-  Puzzle5dBrushPairedSync,
-  puzzle5dFlatRendererRef,
-  type Store as Puzzle5dStore,
-} from "@semio-tech/puzzle-5d-react";
-import { puzzle2dSetBrushPlaceCommitHandler, type Puzzle2dBrushPlacePayload } from "@semio-tech/puzzle-2d-react";
-import type { Playground } from "@semio-tech/framework-playground-core";
+    puzzle2dActiveRenderer,
+    puzzle2dBrushCandidateDisplayLabels,
+    puzzle2dGetBrushSessionSnapshot,
+    puzzle2dNodeKindOverlayLabel, puzzle2dSetBrushPlaceCommitHandler, type Puzzle2dBrushCandidatesPayload, type Puzzle2dBrushPlacePayload, type Puzzle2dDrawLodKind,
+    type Puzzle2dFixtureDropDetail,
+    type Puzzle2dSelectionMethod,
+    type Puzzle2dSelectionMode,
+    type Puzzle2dSelectionTargets
+} from "@semio-tech/puzzle-2d-react";
+import { puzzle3dBrushMeshRootForFill } from "@semio-tech/puzzle-3d-play";
 import {
-  PUZZLE_5D_PLAY_APP_ID,
-  PUZZLE_5D_PLAY_2D_BODY_KEY,
-  PUZZLE_5D_PLAY_2D_SURFACE_ID,
-  PUZZLE_5D_PLAY_2D_WINDOW_ID,
-  PUZZLE_5D_PLAY_CONTROLLER_ID,
-  PUZZLE_5D_PLAY_STORE_ID,
-  PUZZLE_5D_PLAY_3D_BODY_KEY,
-  PUZZLE_5D_PLAY_3D_SURFACE_ID,
-  PUZZLE_5D_PLAY_HIERARCHY_TAB_ID,
-  Puzzle5dPlayShellController,
-  Puzzle5dStoreBridge,
-  type Puzzle5dPlayHostBridge,
-  buildPuzzle5d2dDeclarativeBody,
-  buildPuzzle5dPlayHierarchySections,
-  buildPuzzle5dPlayInspectorTree,
-  buildPuzzle5dPlayKindsTree,
-  buildPuzzle5dPlayRuntime,
-  buildPuzzle5d3dDeclarativeBody,
-  puzzle5dFixturePaletteTreeDragController,
-  PUZZLE_5D_PLAY_KINDS_TAB_ID,
-  PUZZLE_5D_PLAY_ICON_KINDS,
-  type Puzzle5dPlaySnapshot,
+    PUZZLE_5D_PLAY_2D_BODY_KEY,
+    PUZZLE_5D_PLAY_2D_SURFACE_ID,
+    PUZZLE_5D_PLAY_2D_WINDOW_ID,
+    PUZZLE_5D_PLAY_3D_BODY_KEY,
+    PUZZLE_5D_PLAY_3D_SURFACE_ID,
+    PUZZLE_5D_PLAY_APP_ID,
+    PUZZLE_5D_PLAY_CONTROLLER_ID,
+    PUZZLE_5D_PLAY_HIERARCHY_TAB_ID,
+    PUZZLE_5D_PLAY_ICON_KINDS,
+    PUZZLE_5D_PLAY_KINDS_TAB_ID,
+    PUZZLE_5D_PLAY_STORE_ID,
+    Puzzle5dPlayShellController,
+    Puzzle5dStoreBridge,
+    buildPuzzle5d2dDeclarativeBody,
+    buildPuzzle5d3dDeclarativeBody,
+    buildPuzzle5dPlayHierarchySections,
+    buildPuzzle5dPlayInspectorTree,
+    buildPuzzle5dPlayKindsTree,
+    puzzle5dFixturePaletteTreeDragController,
+    type Puzzle5dPlayHostBridge,
+    type Puzzle5dPlaySnapshot
 } from "@semio-tech/puzzle-5d-play";
 import {
-  puzzle2dActiveRenderer,
-  puzzle2dBrushCandidateDisplayLabels,
-  puzzle2dGetBrushSessionSnapshot,
-  puzzle2dNodeKindOverlayLabel,
-  type Puzzle2dBrushCandidatesPayload,
-  type Puzzle2dDrawLodKind,
-  type Puzzle2dFixtureDropDetail,
-  type Puzzle2dSelectionMethod,
-  type Puzzle2dSelectionMode,
-  type Puzzle2dSelectionTargets,
-} from "@semio-tech/puzzle-2d-react";
-import { installPuzzle3dPlayBrushHost, puzzle3dBrushMeshRootForFill } from "@semio-tech/puzzle-3d-play";
-import { puzzle3dBrushEngagementSourceRef, resolvePuzzle3dFixtureDrop, type Puzzle3dFixtureDropDetail } from "@semio-tech/puzzle-3d-react";
-import { sceneHostPort } from "@semio-tech/ui-react";
+    FiveD,
+    Puzzle5dBrushPairedSync,
+    StoreProvider,
+    buildPuzzle5dFillSequence,
+    project2dKindCatalogs,
+    project3d,
+    project3dKindCatalogs,
+    puzzle5dBrushPlacementFromFlat,
+    puzzle5dBrushPlacementFromVolume,
+    puzzle5dCommitBrushPlacementToPlay,
+    puzzle5dCommitVolumeBrushPlacementToPlay,
+    puzzle5dFlatRendererRef,
+    useStore as usePuzzle5dStore,
+    type Store as Puzzle5dStore,
+} from "@semio-tech/puzzle-5d-react";
 // #endregion 🔌Adapters
 
 //#region 🔖Snapshot
@@ -3076,154 +3042,131 @@ export function boot5dPlay(playground: Playground, rootId = "root"): void {
 
 //#region 🔖Puzzle2dPlayHost
 // #region 🔌Adapters
-import type { ReactElement, ReactNode } from "react";
 import {
-  PUZZLE_2D_PLAY_APP_ID,
-  PUZZLE_2D_PLAY_SURFACE_ID,
-  PUZZLE_2D_PLAY_BODY_KEY_DETAIL,
-  PUZZLE_2D_PLAY_BODY_KEY_OVERVIEW,
-  PUZZLE_2D_PLAY_BODY_KEY_SELECTION,
-  PUZZLE_2D_PLAY_CONTROLLER_ID,
-  PUZZLE_2D_PLAY_DEFAULT_FIXTURE,
-  PUZZLE_2D_PLAY_EMPTY_FIXTURE,
-  PUZZLE_2D_PLAY_FIXTURE_CONCRETE_FOREST_ID,
-  PUZZLE_2D_PLAY_FIXTURE_NAKAGIN_ID,
-  PUZZLE_2D_PLAY_FIXTURE_OPTIONS,
-  puzzle2dPlayFixtureForId,
-  puzzle2dPlayFixtureJson,
-  puzzle2dPlayTriptychCamerasFromFixture,
+    PUZZLE_2D_FILL_COUNT_MAX,
+    PUZZLE_2D_PLAY_APP_ID,
+    PUZZLE_2D_PLAY_BODY_KEY_DETAIL,
+    PUZZLE_2D_PLAY_BODY_KEY_OVERVIEW,
+    PUZZLE_2D_PLAY_BODY_KEY_SELECTION,
+    PUZZLE_2D_PLAY_CONTROLLER_ID,
+    PUZZLE_2D_PLAY_DEFAULT_FIXTURE,
+    PUZZLE_2D_PLAY_EMPTY_FIXTURE,
+    PUZZLE_2D_PLAY_FIXTURE_CONCRETE_FOREST_ID,
+    PUZZLE_2D_PLAY_FIXTURE_NAKAGIN_ID,
+    PUZZLE_2D_PLAY_FIXTURE_OPTIONS,
+    PUZZLE_2D_PLAY_HIERARCHY_TAB_ID,
+    PUZZLE_2D_PLAY_ICON_KINDS,
+    PUZZLE_2D_PLAY_KINDS_TAB_ID,
+    PUZZLE_2D_PLAY_SETTINGS_BODY_KEY,
+    PUZZLE_2D_PLAY_SURFACE_ID,
+    Puzzle2dPlayShellController,
+    applyPuzzle2dFillCount,
+    buildPuzzle2dPlayDetailDeclarativeBody,
+    buildPuzzle2dPlayHierarchySections,
+    buildPuzzle2dPlayKindsTree,
+    buildPuzzle2dPlayOverviewDeclarativeBody,
+    buildPuzzle2dPlaySelectionDeclarativeBody,
+    clearPuzzle2dFillSession,
+    flushPuzzle2dPlayStructuralDeleteBatch,
+    getPuzzle2dFillSessionReadyEpoch,
+    preparePuzzle2dFillSession,
+    puzzle2dFillBuildProgressRef,
+    puzzle2dPlayAllSelectionFromFixture,
+    puzzle2dPlayApplyNodeStructuralDeleteToFixture,
+    puzzle2dPlayApplySelectionFlag,
+    puzzle2dPlayCmd,
+    puzzle2dPlayDeleteSelectionFromFixture,
+    puzzle2dPlayDuplicateSelection,
+    puzzle2dPlayFixtureForId,
+    puzzle2dPlayFixtureJson,
+    puzzle2dPlayForwardsCanvasStructuralDelete,
+    puzzle2dPlayHierarchyGraphIdFromTreeItemId,
+    puzzle2dPlayHierarchyTreeHighlightedIds,
+    puzzle2dPlayHierarchyTreeSelectedIds,
+    puzzle2dPlayInspectorKindSectionLabel,
+    puzzle2dPlayKindCatalogSelectItems,
+    puzzle2dPlayKindsTreeHighlightedIds,
+    puzzle2dPlayPaneFromShellWindowId,
+    puzzle2dPlayRehydrateFixtureEdgesIfMissing,
+    puzzle2dPlaySelectSameKindIds,
+    puzzle2dPlayToggleEntityFlag,
+    puzzle2dPlayTriptychCamerasFromFixture,
+    subscribePuzzle2dFillSessionReady,
+    type Puzzle2dPlayHostBridge,
+    type Puzzle2dPlayPaneId,
+    type Puzzle2dPlayStructuralDeleteItem,
 } from "@semio-tech/puzzle-2d-play";
 import {
-  buildWiresPlayHierarchySections,
-  buildWiresPlayKindsTree,
-  WIRES_PLAY_DEFAULT_FIXTURE,
-  WIRES_PLAY_FIXTURE,
-  WIRES_PLAY_FIXTURE_METABOLISM_ID,
-  WIRES_PLAY_FIXTURE_OPTIONS,
-  WIRES_PLAY_HIERARCHY_TAB_ID,
-  WIRES_PLAY_KINDS_TAB_ID,
-  WIRES_PLAY_LIVE_FORCE_GRAPH_DEFAULTS,
-  wiresPlayHierarchyGraphIdFromTreeItemId,
-  wiresPlayHierarchyTreeHighlightedIds,
-  wiresPlayHierarchyTreeSelectedIds,
-  wiresPlayIdentityLabelForNodeId,
-  wiresPlayRelationshipKindDisplayName,
-} from "@semio-tech/reasoning-mindmap-wires-play";
-import {
-  PUZZLE_2D_PLAY_HIERARCHY_TAB_ID,
-  Puzzle2dPlayShellController,
-  puzzle2dPlayPaneFromShellWindowId,
-  PUZZLE_2D_ENGAGEMENT_TOOL_BRUSH_ID,
-  buildPuzzle2dPlayHierarchySections,
-  buildPuzzle2dPlayKindsTree,
-  PUZZLE_2D_PLAY_KINDS_TAB_ID,
-  PUZZLE_2D_PLAY_ICON_KINDS,
-  puzzle2dPlayAllSelectionFromFixture,
-  puzzle2dPlayHierarchyGraphIdFromTreeItemId,
-  puzzle2dPlayHierarchyTreeHighlightedIds,
-  puzzle2dPlayKindsTreeHighlightedIds,
-  puzzle2dPlayHierarchyTreeSelectedIds,
-  buildPuzzle2dPlayOverviewDeclarativeBody,
-  buildPuzzle2dPlayDetailDeclarativeBody,
-  buildPuzzle2dPlaySelectionDeclarativeBody,
-  buildPuzzle2dPlayRuntime,
-  PUZZLE_2D_PLAY_SETTINGS_BODY_KEY,
-  flushPuzzle2dPlayStructuralDeleteBatch,
-  puzzle2dPlayForwardsCanvasStructuralDelete,
-  puzzle2dPlayApplyNodeStructuralDeleteToFixture,
-  puzzle2dPlayRehydrateFixtureEdgesIfMissing,
-  puzzle2dPlayInspectorKindSectionLabel,
-  puzzle2dPlayKindCatalogSelectItems,
-  puzzle2dPlayApplySelectionFlag,
-  puzzle2dPlayDeleteSelectionFromFixture,
-  puzzle2dPlayDuplicateSelection,
-  puzzle2dPlaySelectSameKindIds,
-  puzzle2dPlayToggleEntityFlag,
-  puzzle2dPlayCmd,
-  applyPuzzle2dFillCount,
-  clearPuzzle2dFillSession,
-  getPuzzle2dFillSessionReadyEpoch,
-  preparePuzzle2dFillSession,
-  puzzle2dFillBuildProgressRef,
-  PUZZLE_2D_FILL_COUNT_MAX,
-  subscribePuzzle2dFillSessionReady,
-  type Puzzle2dPlayHostBridge,
-  type Puzzle2dPlayPaneId,
-  type Puzzle2dPlayStructuralDeleteItem,
-} from "@semio-tech/puzzle-2d-play";
-import {
-  DEFAULT_KIND_CATALOG_BUNDLE,
-  BUILTIN_PORT_HANDLE_KIND,
-  PUZZLE_2D_CAMERA_ZOOM_MIN,
-  PUZZLE_2D_CAMERA_ZOOM_MAX,
-  PUZZLE_2D_PRESELECT_EMPTY,
-  PUZZLE_2D_SELECTION_TARGETS_DEFAULT,
-  puzzle2dFixtureMetaKindCompatibility,
-  puzzle2dFixtureNodeCaption,
-  puzzle2dFixtureHandleEndpointDisplayLabel,
-  puzzle2dFixtureMergedKindCatalogs,
-  puzzle2dFixtureObjectDisplayLabel,
-  puzzle2dNodeKindOverlayLabel,
-  puzzle2dHandleKindOverlayLabel,
-  puzzle2dEdgeKindOverlayLabel,
-  puzzle2dApplyNodeKindToFixtureNode,
-  puzzle2dHandleAngleFromRingT,
-  puzzle2dHandleAngleToRingT,
-  classifyPuzzle2dIconSelectorMode,
-  parsePuzzle2dFixtureV1,
-  Puzzle2dCanvas,
-  puzzle2dIsBrushPlacementStructuralDeleteGuarded,
-  puzzle2dSyncFixtureDescriptorToAllAuthoringPeers,
-  puzzle2dApplyLiveForceGraphLayoutTick,
-  puzzle2dFinalizeLiveForceGraphLayoutTick,
-  puzzle2dFixtureWithDragAnchors,
-  puzzle2dBrushSuggestionsMenuOpen,
-  puzzle2dSyncBrushSessionToAllAuthoringPeers,
-  puzzle2dCommitBrushPlacementToPlay,
-  puzzle2dSetBrushPlaceCommitHandler,
-  puzzle2dActiveRenderer,
-  DEFAULT_PUZZLE_2D_SUGGESTION_OFFSET_PX,
-  DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX,
-  puzzle2dSyncSelectionToAllAuthoringPeers,
-  buildPuzzle2dSceneDescriptorFromFixture,
-  clonePuzzle2dFixtureV1,
-  puzzle2dFixtureSceneMarkers,
-  type Puzzle2dLiveForceGraphDragState,
-  type Puzzle2dStructureDeletePayload,
-  mergePaletteNodeFromDrop,
-  puzzle2dCommitPaletteNodeDropToPlay,
-  puzzle2dFixturePaletteTreeDragController,
-  PUZZLE_2D_FIXTURE_DRAG_V1_MIME,
-  PUZZLE_2D_LOD_MODE_AUTOMATIC,
-  layoutPuzzle2dFixtureRedrawHandles,
-  layoutPuzzle2dFixtureRedrawNodes,
-  normalizePuzzle2dSelectionProp,
-  type Puzzle2dFixtureV1,
-  type Puzzle2dFixtureNodeV1,
-  type Puzzle2dFixtureCircleNodeV1,
-  type Puzzle2dFixtureHandleV1,
-  type Puzzle2dFixtureEdgeV1,
-  type Puzzle2dFixtureDropDetail,
-  type Puzzle2dDrawLodKind,
-  type Puzzle2dLodModeKind,
-  type Puzzle2dSelectionMethod,
-  type Puzzle2dSelectionMode,
-  type Puzzle2dSelectionTargets,
-  type Puzzle2dActiveTool,
-  type Puzzle2dBrushPlacePayload,
-  type Puzzle2dBrushCandidatesPayload,
-  type Puzzle2dSelectionSnapshot,
-  type Puzzle2dPreselectSnapshot,
-  type Puzzle2dRedrawModeKind,
-  type Puzzle2dHierarchicalTreeDirectionKind,
-  type Puzzle2dRedrawLayoutOptions,
-  type Puzzle2dKindHover,
-  type Puzzle2dHoverPayload,
-  type KindCatalogBundle,
-  type CameraState,
-  puzzle2dSelectionActionsRef,
+    BUILTIN_PORT_HANDLE_KIND,
+    DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX,
+    DEFAULT_PUZZLE_2D_SUGGESTION_OFFSET_PX,
+    PUZZLE_2D_CAMERA_ZOOM_MAX,
+    PUZZLE_2D_CAMERA_ZOOM_MIN,
+    PUZZLE_2D_FIXTURE_DRAG_V1_MIME,
+    PUZZLE_2D_LOD_MODE_AUTOMATIC,
+    PUZZLE_2D_PRESELECT_EMPTY,
+    PUZZLE_2D_SELECTION_TARGETS_DEFAULT,
+    Puzzle2dCanvas,
+    buildPuzzle2dSceneDescriptorFromFixture,
+    clonePuzzle2dFixtureV1,
+    layoutPuzzle2dFixtureRedrawHandles,
+    layoutPuzzle2dFixtureRedrawNodes,
+    puzzle2dApplyLiveForceGraphLayoutTick,
+    puzzle2dApplyNodeKindToFixtureNode,
+    puzzle2dBrushSuggestionsMenuOpen,
+    puzzle2dCommitBrushPlacementToPlay,
+    puzzle2dCommitPaletteNodeDropToPlay,
+    puzzle2dEdgeKindOverlayLabel,
+    puzzle2dFinalizeLiveForceGraphLayoutTick,
+    puzzle2dFixtureHandleEndpointDisplayLabel,
+    puzzle2dFixtureMergedKindCatalogs,
+    puzzle2dFixtureMetaKindCompatibility,
+    puzzle2dFixtureNodeCaption,
+    puzzle2dFixtureObjectDisplayLabel,
+    puzzle2dFixturePaletteTreeDragController,
+    puzzle2dFixtureSceneMarkers,
+    puzzle2dHandleAngleFromRingT,
+    puzzle2dHandleAngleToRingT,
+    puzzle2dHandleKindOverlayLabel,
+    puzzle2dIsBrushPlacementStructuralDeleteGuarded,
+    puzzle2dSelectionActionsRef,
+    puzzle2dSyncBrushSessionToAllAuthoringPeers,
+    puzzle2dSyncFixtureDescriptorToAllAuthoringPeers,
+    puzzle2dSyncSelectionToAllAuthoringPeers,
+    type Puzzle2dActiveTool,
+    type Puzzle2dFixtureCircleNodeV1,
+    type Puzzle2dFixtureEdgeV1,
+    type Puzzle2dFixtureHandleV1,
+    type Puzzle2dFixtureNodeV1,
+    type Puzzle2dFixtureV1,
+    type Puzzle2dHierarchicalTreeDirectionKind,
+    type Puzzle2dHoverPayload,
+    type Puzzle2dKindHover,
+    type Puzzle2dLiveForceGraphDragState,
+    type Puzzle2dLodModeKind,
+    type Puzzle2dPreselectSnapshot,
+    type Puzzle2dRedrawLayoutOptions,
+    type Puzzle2dRedrawModeKind,
+    type Puzzle2dSelectionSnapshot,
+    type Puzzle2dStructureDeletePayload
 } from "@semio-tech/puzzle-2d-react";
-import type { Playground } from "@semio-tech/framework-playground-core";
+import {
+    WIRES_PLAY_DEFAULT_FIXTURE,
+    WIRES_PLAY_FIXTURE,
+    WIRES_PLAY_FIXTURE_METABOLISM_ID,
+    WIRES_PLAY_FIXTURE_OPTIONS,
+    WIRES_PLAY_HIERARCHY_TAB_ID,
+    WIRES_PLAY_KINDS_TAB_ID,
+    WIRES_PLAY_LIVE_FORCE_GRAPH_DEFAULTS,
+    buildWiresPlayHierarchySections,
+    buildWiresPlayKindsTree,
+    wiresPlayHierarchyGraphIdFromTreeItemId,
+    wiresPlayHierarchyTreeHighlightedIds,
+    wiresPlayHierarchyTreeSelectedIds,
+    wiresPlayIdentityLabelForNodeId,
+    wiresPlayRelationshipKindDisplayName,
+} from "@semio-tech/reasoning-mindmap-wires-play";
+import type { ReactNode } from "react";
 // #endregion 🔌Adapters
 
 const PUZZLE_2D_PLAY_IS_WIRES = import.meta.env.PUZZLE_PLAY_ENTRY === "wires";
@@ -6117,25 +6060,24 @@ export function bootWiresPlay(playground: Playground, rootId = "root"): void {
 //#endregion 🔖Puzzle2dPlayHost
 
 //#region 🔖MapPlayHost
+import type { UiGisMapHostSurfaceNode } from "@semio-tech/framework-platform-core";
 import {
-  GIS_MAP_PLAY_APP_ID,
-  GIS_MAP_PLAY_BODY_KEY_MAIN,
-  GIS_MAP_PLAY_CONTROLLER_ID,
-  GIS_MAP_PLAY_IDLE_SNAPSHOT,
-  GIS_MAP_PLAY_STORE_ID,
-  GIS_MAP_PLAY_SURFACE_ID,
-  GIS_MAP_PLAY_WINDOW_KIND_ID,
-  GIS_MAP_PLAY_CATALOGUE_TAB_ID,
-  GIS_MAP_PLAY_HIERARCHY_TAB_ID,
-  GIS_MAP_PLAY_INSPECTION_TAB_ID,
-  buildMapPlayCatalogueTree,
-  buildMapPlayHierarchyTree,
-  buildMapPlayInspectorTree,
-  buildMapPlayMainDeclarativeBody,
-  type MapPlayController,
+    GIS_MAP_PLAY_APP_ID,
+    GIS_MAP_PLAY_BODY_KEY_MAIN,
+    GIS_MAP_PLAY_CATALOGUE_TAB_ID,
+    GIS_MAP_PLAY_HIERARCHY_TAB_ID,
+    GIS_MAP_PLAY_IDLE_SNAPSHOT,
+    GIS_MAP_PLAY_INSPECTION_TAB_ID,
+    GIS_MAP_PLAY_STORE_ID,
+    GIS_MAP_PLAY_SURFACE_ID,
+    GIS_MAP_PLAY_WINDOW_KIND_ID,
+    buildMapPlayCatalogueTree,
+    buildMapPlayHierarchyTree,
+    buildMapPlayInspectorTree,
+    buildMapPlayMainDeclarativeBody,
+    type MapPlayController
 } from "@semio-tech/gis-map-play";
 import { MapCanvas, Position, Route, type GisMapLodId } from "@semio-tech/gis-map-react";
-import type { UiGisMapHostSurfaceNode } from "@semio-tech/framework-platform-core";
 
 let mapPlayChromeRegistered = false;
 const mapPlayControllerRef: { current: MapPlayController | null } = { current: null };
@@ -6330,29 +6272,27 @@ export function bootMapPlay(playground: Playground, rootId = "root"): void {
 
 //#region 🔖FlowPlayHost
 import {
-  FLOW_PLAY_APP_ID,
-  FLOW_PLAY_BODY_KEY_MAIN,
-  FLOW_PLAY_CONTROLLER_ID,
-  FLOW_PLAY_DEFAULT_FIXTURE_JSON,
-  FLOW_PLAY_CATALOGUE_TAB_ID,
-  FLOW_PLAY_HIERARCHY_TAB_ID,
-  FLOW_PLAY_INSPECTION_TAB_ID,
-  FLOW_PLAY_SURFACE_ID,
-  FLOW_PLAY_WINDOW_KIND_ID,
-  FlowPlayController,
-  buildFlowPlayCanvasContextMenu,
-  buildFlowPlayCatalogueTree,
-  buildFlowPlayHierarchyTree,
-  buildFlowPlayInspectorTree,
-  registerFlowPlayDeclarativeBodies,
+    FLOW_PLAY_APP_ID,
+    FLOW_PLAY_CATALOGUE_TAB_ID,
+    FLOW_PLAY_DEFAULT_FIXTURE_JSON,
+    FLOW_PLAY_HIERARCHY_TAB_ID,
+    FLOW_PLAY_INSPECTION_TAB_ID,
+    FLOW_PLAY_SURFACE_ID,
+    FLOW_PLAY_WINDOW_KIND_ID,
+    FlowPlayController,
+    buildFlowPlayCanvasContextMenu,
+    buildFlowPlayCatalogueTree,
+    buildFlowPlayHierarchyTree,
+    buildFlowPlayInspectorTree,
+    registerFlowPlayDeclarativeBodies
 } from "@semio-tech/flow-play";
 import {
-  DAG_LOD_MODE_AUTOMATIC,
-  FLOW_DEFAULT_PROXIMITY_DISTANCE,
-  FLOW_WIDGET_DRAG_V1_MIME,
-  FlowCanvas,
-  dagLodCanvasProps,
-  flowWidgetPaletteTreeDragController,
+    DAG_LOD_MODE_AUTOMATIC,
+    FLOW_DEFAULT_PROXIMITY_DISTANCE,
+    FLOW_WIDGET_DRAG_V1_MIME,
+    FlowCanvas,
+    dagLodCanvasProps,
+    flowWidgetPaletteTreeDragController,
 } from "@semio-tech/flow-react";
 import type { UiFlowHostSurfaceNode } from "@semio-tech/framework-platform-core";
 
@@ -6570,22 +6510,20 @@ export function bootFlowPlay(playground: Playground, rootId = "root"): void {
 
 //#region 🔖DagPlayHost
 import {
-  DAG_PLAY_APP_ID,
-  DAG_PLAY_BODY_KEY_MAIN,
-  DAG_PLAY_CONTROLLER_ID,
-  DAG_PLAY_DEFAULT_FIXTURE_JSON,
-  DAG_PLAY_CATALOGUE_TAB_ID,
-  DAG_PLAY_HIERARCHY_TAB_ID,
-  DAG_PLAY_INSPECTION_TAB_ID,
-  DAG_PLAY_SURFACE_ID,
-  DAG_PLAY_WINDOW_KIND_ID,
-  DagPlayController,
-  buildDagPlayCatalogueTree,
-  buildDagPlayHierarchyTree,
-  buildDagPlayInspectorTree,
-  registerDagPlayDeclarativeBodies,
+    DAG_PLAY_APP_ID,
+    DAG_PLAY_CATALOGUE_TAB_ID,
+    DAG_PLAY_DEFAULT_FIXTURE_JSON,
+    DAG_PLAY_HIERARCHY_TAB_ID,
+    DAG_PLAY_INSPECTION_TAB_ID,
+    DAG_PLAY_SURFACE_ID,
+    DAG_PLAY_WINDOW_KIND_ID,
+    DagPlayController,
+    buildDagPlayCatalogueTree,
+    buildDagPlayHierarchyTree,
+    buildDagPlayInspectorTree,
+    registerDagPlayDeclarativeBodies
 } from "@semio-tech/dag-play";
-import { DAG_LOD_MODE_AUTOMATIC as DAG_HOST_LOD_AUTOMATIC, DagCanvas, dagLodCanvasProps } from "@semio-tech/dag-react";
+import { DAG_LOD_MODE_AUTOMATIC as DAG_HOST_LOD_AUTOMATIC, DagCanvas } from "@semio-tech/dag-react";
 import type { UiDagHostSurfaceNode } from "@semio-tech/framework-platform-core";
 
 let dagPlayChromeRegistered = false;
@@ -6740,25 +6678,24 @@ export function bootDagPlay(playground: Playground, rootId = "root"): void {
 //#endregion 🔖DagPlayHost
 
 //#region 🔖ProceduralPlayHost
-import {
-  PROCEDURAL_PLAY_APP_ID,
-  PROCEDURAL_PLAY_EMPTY_FIXTURE_JSON,
-  PROCEDURAL_PLAY_CATALOGUE_TAB_ID,
-  PROCEDURAL_PLAY_HIERARCHY_TAB_ID,
-  PROCEDURAL_PLAY_INSPECTION_TAB_ID,
-  PROCEDURAL_PLAY_SURFACE_ID,
-  PROCEDURAL_PLAY_SURFACE_ID_PREVIEW,
-  ProceduralPlayController,
-  buildProceduralPlayCanvasContextMenu,
-  buildProceduralPlayCatalogueTree,
-  buildProceduralPlayHierarchyTree,
-  buildProceduralPlayInspectorTree,
-  registerProceduralPlayDeclarativeBodies,
-  type ProceduralPlayHostBridge,
-} from "@semio-tech/procedural-play";
-import { DAG_LOD_MODE_AUTOMATIC, dagLodCanvasProps, FLOW_DEFAULT_PROXIMITY_DISTANCE, flowWidgetPaletteTreeDragController } from "@semio-tech/flow-react";
-import { ProceduralFlowEditor, ProceduralPreview, useProceduralBrepBridge } from "@semio-tech/procedural-react";
 import type { UiPanelHostSurfaceNode } from "@semio-tech/framework-platform-core";
+import { ProceduralFlowEditor, ProceduralPreview, useProceduralBrepBridge } from "@semio-tech/procedural-3d-react";
+import {
+    PROCEDURAL_PLAY_APP_ID,
+    PROCEDURAL_PLAY_CATALOGUE_TAB_ID,
+    PROCEDURAL_PLAY_EMPTY_FIXTURE_JSON,
+    PROCEDURAL_PLAY_HIERARCHY_TAB_ID,
+    PROCEDURAL_PLAY_INSPECTION_TAB_ID,
+    PROCEDURAL_PLAY_SURFACE_ID,
+    PROCEDURAL_PLAY_SURFACE_ID_PREVIEW,
+    ProceduralPlayController,
+    buildProceduralPlayCanvasContextMenu,
+    buildProceduralPlayCatalogueTree,
+    buildProceduralPlayHierarchyTree,
+    buildProceduralPlayInspectorTree,
+    registerProceduralPlayDeclarativeBodies,
+    type ProceduralPlayHostBridge,
+} from "../../../../../procedural/3d/play/index.js";
 
 let proceduralPlayChromeRegistered = false;
 const proceduralPlayControllerRef: { current: ProceduralPlayController | null } = { current: null };
@@ -6944,13 +6881,13 @@ function ProceduralPlayPaneSurfaceHost({ node }: { readonly node: UiFlowHostSurf
     [ctrl],
   );
   const onChannelHoverChange = reactHostPort.useCallback(
-    (channel: import("@semio-tech/procedural-react").ProceduralChannelRef | null) => {
+    (channel: import("@semio-tech/procedural-3d-react").ProceduralChannelRef | null) => {
       ctrl?.run("setHover", { id: channel?.widgetId ?? null, channel });
     },
     [ctrl],
   );
   const onSelectedChannelsChange = reactHostPort.useCallback(
-    (channels: readonly import("@semio-tech/procedural-react").ProceduralChannelRef[]) => {
+    (channels: readonly import("@semio-tech/procedural-3d-react").ProceduralChannelRef[]) => {
       ctrl?.run("setSelectedChannels", { channels: [...channels] });
     },
     [ctrl],
@@ -7008,25 +6945,25 @@ function ProceduralPreviewSurfaceHost({ node: _node }: { readonly node: UiPuzzle
   const interactionRevision = useProceduralPlayInteractionRevision(runtime);
   void interactionRevision;
   const onHover = reactHostPort.useCallback(
-    (channel: import("@semio-tech/procedural-react").ProceduralChannelRef | null) => {
+    (channel: import("@semio-tech/procedural-3d-react").ProceduralChannelRef | null) => {
       ctrl?.run("setHover", { id: channel?.widgetId ?? null, channel });
     },
     [ctrl],
   );
   const onSelect = reactHostPort.useCallback(
-    (channel: import("@semio-tech/procedural-react").ProceduralChannelRef) => {
+    (channel: import("@semio-tech/procedural-3d-react").ProceduralChannelRef) => {
       ctrl?.run("setSelectChannels", { channels: [channel] });
     },
     [ctrl],
   );
   const onSelectionChange = reactHostPort.useCallback(
-    (ids: readonly string[], mode: import("@semio-tech/procedural-react").ProceduralSelectionMode) => {
+    (ids: readonly string[], mode: import("@semio-tech/procedural-3d-react").ProceduralSelectionMode) => {
       ctrl?.run("setSelection", { ids: [...ids], mode });
     },
     [ctrl],
   );
   const onGumballTransform = reactHostPort.useCallback(
-    (request: import("@semio-tech/procedural-react").ProceduralGumballTransformRequest) => {
+    (request: import("@semio-tech/procedural-3d-react").ProceduralGumballTransformRequest) => {
       ctrl?.run("applyGumballTransform", request);
     },
     [ctrl],
@@ -7164,24 +7101,452 @@ export function bootProceduralPlay(playground: Playground, rootId = "root"): voi
 }
 //#endregion 🔖ProceduralPlayHost
 
-//#region 🔖ShootingPlayHost
+//#region 🔖Procedural2dPlayHost
+import { Procedural2dFlowEditor, Procedural2dPreview, useProcedural2dDrawingBridge } from "@semio-tech/procedural-2d-react";
 import {
-	SHOOTING_PLAY_APP_ID,
-	SHOOTING_PLAY_CONTROLLER_ID,
-	SHOOTING_PLAY_SURFACE_ID_ICON,
-	SHOOTING_PLAY_SURFACE_ID_MODEL,
-	SHOOTING_PLAY_CATALOGUE_TAB_ID,
-	SHOOTING_PLAY_HIERARCHY_TAB_ID,
-	SHOOTING_PLAY_INSPECTION_TAB_ID,
-	ShootingPlayController,
-	buildShootingPlayCatalogueTree,
-	buildShootingPlayHierarchyTree,
-	buildShootingPlayInspectorTree,
-	type ShootingPlayHostBridge,
-	registerShootingPlayDeclarativeBodies,
+    PROCEDURAL_2D_PLAY_APP_ID,
+    PROCEDURAL_2D_PLAY_CATALOGUE_TAB_ID,
+    PROCEDURAL_2D_PLAY_EMPTY_FIXTURE_JSON,
+    PROCEDURAL_2D_PLAY_HIERARCHY_TAB_ID,
+    PROCEDURAL_2D_PLAY_INSPECTION_TAB_ID,
+    PROCEDURAL_2D_PLAY_SURFACE_ID,
+    PROCEDURAL_2D_PLAY_SURFACE_ID_PREVIEW,
+    PROCEDURAL_2D_PLAY_WINDOW_KIND_ID,
+    Procedural2dPlayController,
+    buildProcedural2dPlayCanvasContextMenu,
+    buildProcedural2dPlayCatalogueTree,
+    buildProcedural2dPlayHierarchyTree,
+    buildProcedural2dPlayInspectorTree,
+    registerProcedural2dPlayDeclarativeBodies,
+    type Procedural2dPlayHostBridge,
+} from "../../../../../procedural/2d/play/index.js";
+
+let procedural2dPlayChromeRegistered = false;
+const procedural2dPlayControllerRef: { current: Procedural2dPlayController | null } = { current: null };
+
+function useProcedural2dPlaySnapshotRevision(runtime: Platform, selector: (ctrl: Procedural2dPlayController) => number): number {
+  return reactHostPort.useSyncExternalStore(
+    (listener) => {
+      const ctrl = runtime.getActiveApp()?.controller as Procedural2dPlayController | undefined;
+      procedural2dPlayControllerRef.current = ctrl ?? null;
+      const unsubscribeChrome = runtime.subscribeChrome(listener);
+      const unsubscribeSnapshot = ctrl?.subscribeSnapshot(listener);
+      return () => {
+        unsubscribeChrome();
+        unsubscribeSnapshot?.();
+      };
+    },
+    () => {
+      const ctrl = runtime.getActiveApp()?.controller as Procedural2dPlayController | undefined;
+      procedural2dPlayControllerRef.current = ctrl ?? null;
+      return ctrl ? selector(ctrl) : 0;
+    },
+    () => 0,
+  );
+}
+
+function useProcedural2dPlayCatalogueRevision(runtime: Platform): number {
+  return useProcedural2dPlaySnapshotRevision(runtime, (c) => c.getCatalogueRevision());
+}
+
+function useProcedural2dPlayExtensionRevision(runtime: Platform): number {
+  return useProcedural2dPlaySnapshotRevision(runtime, (c) => c.getExtensionRevision());
+}
+
+function useProcedural2dPlayInteractionRevision(runtime: Platform): number {
+  return useProcedural2dPlaySnapshotRevision(runtime, (c) => c.getInteractionRevision());
+}
+
+function useProcedural2dPlayController(runtimeOverride?: Platform): Procedural2dPlayController | undefined {
+  const appCtx = reactHostPort.useContext(PlaygroundContext);
+  const runtime = runtimeOverride ?? appCtx?.runtime;
+  reactHostPort.useSyncExternalStore(
+    (listener) => (runtime ? runtime.subscribeChrome(listener) : () => {}),
+    () => runtime?.chromeGeneration ?? 0,
+    () => 0,
+  );
+  const ctrl = runtime?.getActiveApp()?.controller as Procedural2dPlayController | undefined;
+  procedural2dPlayControllerRef.current = ctrl ?? null;
+  return ctrl;
+}
+
+async function downloadProcedural2dExport(name: string, text: string, mime: string): Promise<void> {
+  const pickerWindow = window as Window & { showSaveFilePicker?: (options?: { suggestedName?: string; types?: { description: string; accept: Record<string, string[]> }[] }) => Promise<FileSystemFileHandle> };
+  const ext = name.includes(".") ? name.slice(name.lastIndexOf(".")) : "";
+  if (pickerWindow.showSaveFilePicker) {
+    const handle = await pickerWindow.showSaveFilePicker({
+      suggestedName: name,
+      types: [{ description: "Export", accept: { [mime]: [ext] } }],
+    });
+    const writable = await handle.createWritable();
+    await writable.write(text);
+    await writable.close();
+    return;
+  }
+  const href = URL.createObjectURL(new Blob([text], { type: mime }));
+  const link = document.createElement("a");
+  link.href = href;
+  link.download = name;
+  link.click();
+  URL.revokeObjectURL(href);
+}
+
+function Procedural2dPlayToolbarHostBridge({ runtime, ctrl }: { readonly runtime: Platform; readonly ctrl: Procedural2dPlayController | undefined }): ReactElement {
+  const interactionRevision = useProcedural2dPlayInteractionRevision(runtime);
+  const loadInputRef = reactHostPort.useRef<HTMLInputElement>(null);
+  const drawingBridge = useProcedural2dDrawingBridge();
+  const downloadFixture = reactHostPort.useCallback(async () => {
+    const json = ctrl?.getFixtureJson() ?? PROCEDURAL_2D_PLAY_EMPTY_FIXTURE_JSON;
+    try {
+      await downloadProcedural2dExport("procedural2d.fixture.json", `${json}\n`, "application/json");
+      console.log("[DEBUG] procedural 2d play downloaded fixture");
+    } catch (error) {
+      console.log(`[DEBUG] procedural 2d play download failed: ${String(error)}`);
+    }
+  }, [ctrl]);
+  const handleLoadFile = reactHostPort.useCallback(
+    (event: reactHostPort.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      event.target.value = "";
+      if (!file || !ctrl) return;
+      void file.text().then((text) => {
+        if (!text.includes("flow.fixture/v1")) {
+          console.log("[DEBUG] procedural 2d play load rejected: not a flow fixture");
+          return;
+        }
+        ctrl.run("setFixtureJson", { json: text, resetInteraction: true });
+        console.log("[DEBUG] procedural 2d play loaded fixture from file");
+      });
+    },
+    [ctrl],
+  );
+  reactHostPort.useEffect(() => {
+    if (!ctrl) return;
+    const bridge: Procedural2dPlayHostBridge = {
+      getToolbarState: () => ({
+        selectionMethod: ctrl.getSelectionMethod(),
+        selectionMode: ctrl.getSelectionMode(),
+        showMode: ctrl.getShowMode(),
+        selectionCount: ctrl.getSelectedNodeIds().length,
+        hasStoredFixture: ctrl.hasStoredFixture(),
+      }),
+      runHostCommand: (command, args) => {
+        if (command === "saveDownload") {
+          void downloadFixture();
+          return;
+        }
+        if (command === "loadRequest") {
+          loadInputRef.current?.click();
+          return;
+        }
+        if (command === "exportSvg" || command === "exportPdf" || command === "exportPng") {
+          const handle = (args as { handle?: string } | undefined)?.handle ?? ctrl.getPrimaryDrawingHandle();
+          if (!handle || !drawingBridge) {
+            console.log(`[DEBUG] procedural 2d play ${command} skipped: no drawing handle or bridge`);
+            return;
+          }
+          void (async () => {
+            try {
+              if (command === "exportSvg") {
+                const svg = drawingBridge.exportSvg(handle);
+                await downloadProcedural2dExport("procedural2d.export.svg", svg, "image/svg+xml");
+              } else if (command === "exportPdf") {
+                const pdf = drawingBridge.exportPdf(handle);
+                await downloadProcedural2dExport("procedural2d.export.pdf", pdf, "application/pdf");
+              } else {
+                const png = drawingBridge.exportPng(handle);
+                await downloadProcedural2dExport("procedural2d.export.png", png, "image/png");
+              }
+              console.log(`[DEBUG] procedural 2d play ${command} completed`);
+            } catch (error) {
+              console.log(`[DEBUG] procedural 2d play ${command} failed: ${String(error)}`);
+            }
+          })();
+        }
+      },
+    };
+    ctrl.setHostBridge(bridge);
+    return () => ctrl.setHostBridge(null);
+  }, [ctrl, downloadFixture, drawingBridge, interactionRevision]);
+  return <input ref={loadInputRef} type="file" accept=".json,application/json" className="hidden" onChange={handleLoadFile} />;
+}
+
+function Procedural2dPlayPaneSurfaceHost({ node }: { readonly node: UiFlowHostSurfaceNode }): ReactElement {
+  const { runtime } = useApp();
+  const ctrl = useProcedural2dPlayController();
+  const extensionRevision = useProcedural2dPlayExtensionRevision(runtime);
+  const interactionRevision = useProcedural2dPlayInteractionRevision(runtime);
+  void interactionRevision;
+  const onPreviewText = reactHostPort.useCallback(
+    (text: string) => {
+      console.log(`[DEBUG] procedural 2d play preview: ${text}`);
+      ctrl?.run("setPreviewText", { text });
+    },
+    [ctrl],
+  );
+  const onEvalOutputs = reactHostPort.useCallback(
+    (outputsJson: string) => {
+      console.log(`[DEBUG] procedural 2d play eval outputs: ${outputsJson.slice(0, 120)}`);
+      ctrl?.run("setEvalOutputs", { outputsJson });
+    },
+    [ctrl],
+  );
+  const onCatalogueReady = reactHostPort.useCallback(
+    (sections: readonly import("@semio-tech/flow-react").CatalogueSection[]) => {
+      ctrl?.run("setCatalogueSections", { sections: [...sections] });
+    },
+    [ctrl],
+  );
+  const onFixtureChange = reactHostPort.useCallback(
+    (json: string) => {
+      ctrl?.run("setFixtureJson", { json });
+    },
+    [ctrl],
+  );
+  const onSelectionChange = reactHostPort.useCallback(
+    (ids: readonly string[]) => {
+      ctrl?.run("setSelection", { ids: [...ids], mode: "default", fromFlow: true });
+    },
+    [ctrl],
+  );
+  const onPreselectChange = reactHostPort.useCallback(
+    (snapshot: { readonly ids: readonly string[]; readonly removedIds: readonly string[] }) => {
+      ctrl?.run("setPreselect", { ids: [...snapshot.ids], removedIds: [...snapshot.removedIds] });
+    },
+    [ctrl],
+  );
+  const onHoverChange = reactHostPort.useCallback(
+    (id: string | null) => {
+      ctrl?.run("setHover", { id, channel: null });
+    },
+    [ctrl],
+  );
+  const onChannelHoverChange = reactHostPort.useCallback(
+    (channel: import("@semio-tech/procedural-2d-react").ProceduralChannelRef | null) => {
+      ctrl?.run("setHover", { id: channel?.widgetId ?? null, channel });
+    },
+    [ctrl],
+  );
+  const onSelectedChannelsChange = reactHostPort.useCallback(
+    (channels: readonly import("@semio-tech/procedural-2d-react").ProceduralChannelRef[]) => {
+      ctrl?.run("setSelectedChannels", { channels: [...channels] });
+    },
+    [ctrl],
+  );
+  const onPreviewOffChange = reactHostPort.useCallback(
+    (ids: readonly string[]) => {
+      ctrl?.run("setPreviewOff", { ids: [...ids], fromFlow: true });
+    },
+    [ctrl],
+  );
+  const onCanvasCommand = reactHostPort.useCallback(
+    (command: string, args?: Record<string, unknown>) => {
+      ctrl?.run(command, args);
+    },
+    [ctrl],
+  );
+  return (
+    <Procedural2dFlowEditor
+      fixtureJson={ctrl?.getFixtureJson() ?? PROCEDURAL_2D_PLAY_EMPTY_FIXTURE_JSON}
+      reorganize={ctrl?.getReorganize()}
+      commandRequest={ctrl?.getCommandRequest()}
+      extensionRevision={extensionRevision}
+      onPreviewText={onPreviewText}
+      onEvalOutputs={onEvalOutputs}
+      onCatalogueReady={onCatalogueReady}
+      onFixtureChange={onFixtureChange}
+      onSelectionChange={onSelectionChange}
+      onPreselectChange={onPreselectChange}
+      onHoverChange={onHoverChange}
+      onChannelHoverChange={onChannelHoverChange}
+      onSelectedChannelsChange={onSelectedChannelsChange}
+      onPreviewOffChange={onPreviewOffChange}
+      selectedNodeIds={ctrl?.getSelectedNodeIds()}
+      selectedChannels={ctrl?.getSelectedChannels()}
+      preselectNodeIds={ctrl?.getPreselectNodeIds()}
+      preselectRemovedNodeIds={ctrl?.getPreselectRemovedNodeIds()}
+      hoveredNodeId={ctrl?.getHoveredNodeId()}
+      hoveredChannel={ctrl?.getHoveredChannel()}
+      previewOffNodeIds={ctrl?.getPreviewOffNodeIds()}
+      selectionMode={ctrl?.getSelectionMode()}
+      selectionMethod={ctrl?.getSelectionMethod()}
+      contextMenu={(ctx) => buildProcedural2dPlayCanvasContextMenu(ctx, onCanvasCommand)}
+      className="h-full w-full"
+    />
+  );
+}
+
+function Procedural2dPreviewSurfaceHost({ node: _node }: { readonly node: UiPuzzle2dHostSurfaceNode }): ReactElement {
+  const { runtime } = useApp();
+  const ctrl = useProcedural2dPlayController();
+  const drawingBridge = useProcedural2dDrawingBridge();
+  const interactionRevision = useProcedural2dPlayInteractionRevision(runtime);
+  void interactionRevision;
+  const onHover = reactHostPort.useCallback(
+    (channel: import("@semio-tech/procedural-2d-react").ProceduralChannelRef | null) => {
+      ctrl?.run("setHover", { id: channel?.widgetId ?? null, channel });
+    },
+    [ctrl],
+  );
+  const onSelect = reactHostPort.useCallback(
+    (channel: import("@semio-tech/procedural-2d-react").ProceduralChannelRef) => {
+      ctrl?.run("setSelectChannels", { channels: [channel] });
+    },
+    [ctrl],
+  );
+  const onSelectionChange = reactHostPort.useCallback(
+    (ids: readonly string[], mode: import("@semio-tech/procedural-2d-react").ProceduralSelectionMode) => {
+      ctrl?.run("setSelection", { ids: [...ids], mode });
+    },
+    [ctrl],
+  );
+  return (
+    <div className="absolute inset-0 min-h-0 min-w-0">
+      <Procedural2dPreview
+        items={ctrl?.getPreviewItems() ?? []}
+        selectedNodeIds={ctrl?.getSelectedNodeIds()}
+        preselectNodeIds={ctrl?.getPreselectNodeIds()}
+        preselectRemovedNodeIds={ctrl?.getPreselectRemovedNodeIds()}
+        hoveredNodeId={ctrl?.getHoveredNodeId()}
+        hoveredChannel={ctrl?.getHoveredChannel()}
+        hoveredGeometryTargets={ctrl?.getHoveredGeometryTargets()}
+        selectedChannels={ctrl?.getSelectedChannels()}
+        selectedGeometryTargets={ctrl?.getSelectedGeometryTargets()}
+        previewOffNodeIds={ctrl?.getPreviewOffNodeIds()}
+        showMode={ctrl?.getShowMode() ?? "everything"}
+        selectionMode={ctrl?.getSelectionMode()}
+        selectionMethod={ctrl?.getSelectionMethod()}
+        onHover={onHover}
+        onSelect={onSelect}
+        onSelectionChange={onSelectionChange}
+        kernel={drawingBridge ?? undefined}
+        className="h-full w-full"
+      />
+    </div>
+  );
+}
+
+class Procedural2dPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
+  buildTab(): SidePanelTabConfig {
+    return {
+      id: PROCEDURAL_2D_PLAY_HIERARCHY_TAB_ID,
+      icon: shellTabIconComponent(FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, "workbench"),
+      name: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+      order: 0,
+      tree: new CallbackTreePanelDefinition(() => {
+        const ctrl = procedural2dPlayControllerRef.current;
+        const bus = new CommandBus();
+        const treeNode = buildProcedural2dPlayHierarchyTree(ctrl?.getFixtureJson() ?? PROCEDURAL_2D_PLAY_EMPTY_FIXTURE_JSON, ctrl?.getSelectedNodeIds() ?? []);
+        return uiTreeNodeToTreePanelConfig(treeNode, bus);
+      }),
+    };
+  }
+}
+
+class Procedural2dPlayCataloguePanelDefinition extends PureSidePanelTabDefinition {
+  buildTab(): SidePanelTabConfig {
+    return {
+      id: PROCEDURAL_2D_PLAY_CATALOGUE_TAB_ID,
+      icon: shellTabIconComponent(FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, "workbench"),
+      name: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+      order: 1,
+      tree: new CallbackTreePanelDefinition(() => {
+        const ctrl = procedural2dPlayControllerRef.current;
+        const bus = new CommandBus();
+        const treeNode = buildProcedural2dPlayCatalogueTree(ctrl?.getCatalogueSections() ?? [], ctrl?.getExtensionEntries() ?? []);
+        const config = uiTreeNodeToTreePanelConfig(treeNode, bus);
+        return {
+          ...config,
+          dragAndDropController: flowWidgetPaletteTreeDragController(collectUiTreeItemDragData(treeNode.sections)),
+        };
+      }),
+    };
+  }
+}
+
+class Procedural2dPlayInspectionPanelDefinition extends PureSidePanelTabDefinition {
+  buildTab(): SidePanelTabConfig {
+    return {
+      id: PROCEDURAL_2D_PLAY_INSPECTION_TAB_ID,
+      icon: shellTabIconComponent(FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, "details"),
+      name: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+      order: 0,
+      tree: new CallbackTreePanelDefinition(() => {
+        const ctrl = procedural2dPlayControllerRef.current;
+        const bus = new CommandBus();
+        const treeNode = buildProcedural2dPlayInspectorTree(ctrl?.getFixtureJson() ?? PROCEDURAL_2D_PLAY_EMPTY_FIXTURE_JSON, ctrl?.getSelectedNodeIds() ?? []);
+        return uiTreeNodeToTreePanelConfig(treeNode, bus);
+      }),
+    };
+  }
+}
+
+function Procedural2dPlayInner({ runtime }: { readonly runtime: Platform }): ReactElement {
+  const ctrl = useProcedural2dPlayController(runtime);
+  const catalogueRevision = useProcedural2dPlayCatalogueRevision(runtime);
+  const extensionRevision = useProcedural2dPlayExtensionRevision(runtime);
+  const interactionRevision = useProcedural2dPlayInteractionRevision(runtime);
+  const procedural2dPlayHierarchyPanel = reactHostPort.useMemo(() => new Procedural2dPlayHierarchyPanelDefinition(), []);
+  const procedural2dPlayCataloguePanel = reactHostPort.useMemo(() => new Procedural2dPlayCataloguePanelDefinition(), []);
+  const procedural2dPlayInspectionPanel = reactHostPort.useMemo(() => new Procedural2dPlayInspectionPanelDefinition(), []);
+  const augmentPanelTabs = reactHostPort.useMemo(
+    () => ({
+      workbench: [procedural2dPlayHierarchyPanel, procedural2dPlayCataloguePanel],
+      details: [procedural2dPlayInspectionPanel],
+    }),
+    [catalogueRevision, extensionRevision, interactionRevision, procedural2dPlayCataloguePanel, procedural2dPlayHierarchyPanel, procedural2dPlayInspectionPanel],
+  );
+  return (
+    <>
+      <Procedural2dPlayToolbarHostBridge runtime={runtime} ctrl={ctrl} />
+      <PlaygroundView runtime={runtime} defaultAppId={PROCEDURAL_2D_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} />
+    </>
+  );
+}
+
+export function registerProcedural2dPlaySurfaceHosts(): void {
+  if (procedural2dPlayChromeRegistered) return;
+  procedural2dPlayChromeRegistered = true;
+  registerUiFlowSurfaceHost(PROCEDURAL_2D_PLAY_SURFACE_ID, Procedural2dPlayPaneSurfaceHost);
+  registerUiPuzzle2dSurfaceHost(PROCEDURAL_2D_PLAY_SURFACE_ID_PREVIEW, Procedural2dPreviewSurfaceHost);
+  registerProcedural2dPlayDeclarativeBodies();
+}
+
+function Procedural2dPlayChrome({ runtime }: { readonly runtime: Platform }): ReactElement {
+  return <Procedural2dPlayInner runtime={runtime} />;
+}
+
+export function mountProcedural2dPlayChrome(playground: Playground, rootId = "root"): void {
+  mountPlaygroundApp(<Procedural2dPlayChrome runtime={playground.runtime} />, rootId);
+}
+
+const procedural2dPlayChromeBoot: PlaygroundChromeBoot = {
+  registerHosts: registerProcedural2dPlaySurfaceHosts,
+  mount: mountProcedural2dPlayChrome,
+};
+
+export function bootProcedural2dPlay(playground: Playground, rootId = "root"): void {
+  bootPlayground(playground, procedural2dPlayChromeBoot, rootId);
+}
+//#endregion 🔖Procedural2dPlayHost
+
+//#region 🔖ShootingPlayHost
+import type { UiShootingHostSurfaceNode } from "@semio-tech/framework-platform-core";
+import {
+    SHOOTING_PLAY_APP_ID,
+    SHOOTING_PLAY_CATALOGUE_TAB_ID,
+    SHOOTING_PLAY_HIERARCHY_TAB_ID,
+    SHOOTING_PLAY_INSPECTION_TAB_ID,
+    SHOOTING_PLAY_SURFACE_ID_ICON,
+    SHOOTING_PLAY_SURFACE_ID_MODEL,
+    ShootingPlayController,
+    buildShootingPlayCatalogueTree,
+    buildShootingPlayHierarchyTree,
+    buildShootingPlayInspectorTree,
+    registerShootingPlayDeclarativeBodies,
+    type ShootingPlayHostBridge
 } from "@semio-tech/shooting-play";
 import { ShootingIconCanvas, ShootingModelCanvas, renderShootingShot, resolveActiveShot } from "@semio-tech/shooting-react";
-import type { UiShootingHostSurfaceNode } from "@semio-tech/framework-platform-core";
 
 type ShootingSurfaceHost = React.ComponentType<{ readonly node: UiShootingHostSurfaceNode }>;
 const shootingSurfaceHosts = new Map<string, ShootingSurfaceHost>();
@@ -7463,28 +7828,27 @@ export function bootShootingPlay(playground: Playground, rootId = "root"): void 
 
 //#region 🔖PresentationPlayHost
 import {
-	PRESENTATION_PLAY_BODY_KEY_MAIN,
-	PRESENTATION_PLAY_CONTROLLER_ID,
-	PRESENTATION_PLAY_ICON_DETAILS,
-	PRESENTATION_PLAY_ICON_HIERARCHY,
-	PRESENTATION_PLAY_IDLE_SNAPSHOT,
-	PRESENTATION_PLAY_STORE_ID,
-	PRESENTATION_PLAY_SURFACE_ID,
-	PresentationPlayController,
-	registerPresentationPlayDeclarativeBodies,
-	type PresentationPlaySnapshot,
-} from "@semio-tech/framework-presentation-play";
-import {
-	moveNormalizedRect,
-	resizeNormalizedRect,
-	NORMALIZED_RECT_MIN_FRACTION,
-	FIGURE_TILE_PDF_PAGE_ASPECT,
-	figureTileMediaKindFromFile,
-	type FigureTileMediaKind,
-	type NormalizedRectHandle,
-	type DispositionPosition,
-	type FigureTileSource,
+    FIGURE_TILE_PDF_PAGE_ASPECT,
+    NORMALIZED_RECT_MIN_FRACTION,
+    figureTileMediaKindFromFile,
+    moveNormalizedRect,
+    resizeNormalizedRect,
+    type DispositionPosition,
+    type FigureTileMediaKind,
+    type FigureTileSource,
+    type NormalizedRectHandle,
 } from "@semio-tech/framework-presentation-core";
+import {
+    PRESENTATION_PLAY_CONTROLLER_ID,
+    PRESENTATION_PLAY_ICON_DETAILS,
+    PRESENTATION_PLAY_ICON_HIERARCHY,
+    PRESENTATION_PLAY_IDLE_SNAPSHOT,
+    PRESENTATION_PLAY_STORE_ID,
+    PRESENTATION_PLAY_SURFACE_ID,
+    PresentationPlayController,
+    registerPresentationPlayDeclarativeBodies,
+    type PresentationPlaySnapshot
+} from "@semio-tech/framework-presentation-play";
 
 const PRESENTATION_TILE_HANDLES: readonly NormalizedRectHandle[] = ["nw", "n", "ne", "e", "se", "s", "sw", "w"];
 const PRESENTATION_TILE_VIEWPORT_MIN_ZOOM = 0.2;
@@ -8125,7 +8489,6 @@ export function bootPresentationPlay(playground: Playground, rootId = "root"): v
 //#endregion 🔖PresentationPlayHost
 
 //#region 🔖Boot
-import type { Playground } from "@semio-tech/framework-playground-core";
 
 /** @emoji 🧩 Play package supplies host registration + React mount (one puzzle surface per boot). */
 export interface PlaygroundChromeBoot {

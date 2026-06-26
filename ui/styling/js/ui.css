@@ -497,15 +497,18 @@
   }
 }
 
-/* Floating toolbar anchor: twice the window canvas inset (--spacing-double) above the footer. */
+/* Toolbar anchor: centered overlay within the footer bar. */
 [data-slot="toolbar-anchor"] {
   position: absolute;
-  inset-inline: 0;
-  bottom: calc(100% + var(--toolbar-footer-offset));
-  z-index: var(--z-panel);
+  inset: 0;
   display: flex;
   justify-content: center;
+  align-items: center;
   pointer-events: none;
+}
+
+[data-slot="toolbar-anchor"] > * {
+  pointer-events: auto;
 }
 
 /* Toolbar zone interactive element normalization.
@@ -823,7 +826,6 @@
   --toolbar-group-gap: var(--spacing-double);
   --toolbar-padding-inline: var(--spacing-single);
   --toolbar-divider-height: var(--size-small);
-  --toolbar-footer-offset: calc(2 * var(--spacing-double));
   --text-2xs: 0.6rem;
   --text-2xs--line-height: calc(0.9 / 0.6);
   --text-xs: 0.7rem;

@@ -59,7 +59,6 @@ describe("styling resolve", () => {
 		expect(uiCss).toContain("--spacing-double: calc(2 * var(--ui-spacing))");
 		expect(uiCss).toContain("--glass-panel-blur: 2.5rem");
 		expect(uiCss).toContain("--radius-sm: 0rem");
-		expect(uiCss).toContain("--toolbar-footer-offset: calc(2 * var(--spacing-double))");
 		expect(uiCss).not.toMatch(/@layer base\s*\{[^}]*:root[^}]*--spacing:\s*var\(--spacing-compact\)/s);
 	});
 

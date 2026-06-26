@@ -1,0 +1,19 @@
+{
+  "title": "Procedural 2D Split And Vector Export",
+  "emoji": "✏️",
+  "status": "closed",
+  "description": "Split procedural into parallel 2d and 3d packages, add full 2D vector-graphics flow kernel/module, render 2D procedural preview on infinite canvas, keep 3D on infinite world, add SVG PDF PNG exporters.",
+  "summary": "Split procedural into parallel 3d/2d packages; built geometry/drawing kernel (engine + rs + js bridge), flow draw WASM module with full vector operators, procedural-2d-react preview on infinite-cavas with pan/zoom/marquee, procedural-2d-play with puzzle2d preview surface and SVG/PDF/PNG export toolbar wired through DrawingExportBridge ports; renamed 3d packages to @semio-tech/procedural-3d-*, added dev ports 6021/6033 for 2d, launch.json entries, vite aliases and playground host regions. Tests: geometry_drawing_engine (2), geometry_drawing_rs (4), flow_module_draw (3), procedural-2d-react (3), procedural-2d-play (30), procedural-3d-react (11).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1751"
+  },
+  "goal": "🎯🎬r2602🎯🎬runningsketchpad",
+  "plan": {
+    "client": "cursor",
+    "id": "543aba6f",
+    "local": "procedural_2d_split_543aba6f.plan.md"
+  },
+  "sessions": [
+    "⚪77ebc470b5494e328c5c4230a71ca2f2"
+  ]
+}

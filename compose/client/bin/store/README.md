@@ -1,6 +1,6 @@
-# semio-store
+# compose-store
 
-`semio-store` is a small **HTTP** service that holds one native [`kit_store::KitStore`](../rs) (WIP + coordinator + optional backbone) and serves the same **GraphQL** control-plane schema as `semio::kit_graphql` (used by `compose/js` and the Rust kit).
+`compose-store` is a small **HTTP** service that holds one native [`ParentStore`](../../lib/rs/lib.rs) and serves the same **GraphQL** control-plane schema as the Rust kit.
 
 - **`POST /install`**: first call installs the sole in-memory kit. Body is exactly one of `create`, `importFile`, `importFromFolder`, `importFromZip`, `importFromRemote`. **`create.dto`** may be either a bare **`initialKit` projection** (id, name, types, designs, …) or a full **`DevBackboneBundleDoc`** JSON whose `schema` matches the kit-store bundle marker. The split metabolism fixture now uses `stores/metabolism/wip/initialKit/kit.semio.json` as the canonical JSON entrypoint. **`importFile`** reads UTF-8 JSON from `path` and uses the same rules. Later calls return `409`.
 - **`POST /graphql`**: standard GraphQL JSON body (`query`, optional `variables`, `operationName`). Mutations are nested under `kitStore { batch(input: …) { … } }` (no JSON-RPC surface).
@@ -8,22 +8,21 @@
 - **`GET /healthz`**: liveness.
 - **`POST /server/shutdown`**: best-effort process exit (dev/tests).
 
-On startup, the first line of **stdout** is a single JSON object with `port`, `semioStoreReady`, and `graphiql` (so tools can discover the bound port when `SEMIO_STORE_PORT=0`).
+On startup, the first line of **stdout** is a single JSON object with `port`, `composeStoreReady`, and `graphiql` (so tools can discover the bound port when `COMPOSE_STORE_PORT=0`).
 
 ## Build
 
 ```bash
-cargo build --release -p semio-store
+cargo build --release -p compose-store
 ```
 
-Binary: `target/release/semio-store` (or `semio-store.exe` on Windows).
+Binary: `target/release/compose-store` (or `compose-store.exe` on Windows).
 
 ## Environment
 
 | Variable                 | Description                                                                 |
 | ------------------------ | ----------------------------------------------------------------------------- |
-| `RUST_LOG`               | `tracing` filter (e.g. `info`, `semio_store=debug`)                        |
-| `SEMIO_STORE_PORT`       | TCP port (default `4000`; use `0` to bind an ephemeral port)                |
-| `SEMIO_STORE_NO_EVENTS`  | `1` / `true` / `yes` — do not attach the event log thread to the graph        |
+| `RUST_LOG`               | `tracing` filter (e.g. `info`, `compose_store=debug`)                      |
+| `COMPOSE_STORE_PORT`     | TCP port (default `4000`; use `0` to bind an ephemeral port)                |
 
 See [`AGENTS.md`](AGENTS.md) for architecture notes.

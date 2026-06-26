@@ -1,5 +1,5 @@
 import { BrepjsGeometryKernel, ensureBrepWasmLoaded } from "../../../../../../geometry/brep/js/index.ts";
-import { evaluateBrepFlowKind } from "../../../../../../procedural/react/index.tsx";
+import { evaluateBrepFlowKind } from "../../../../../../procedural/3d/react/index.tsx";
 
 await ensureBrepWasmLoaded();
 const kernel = new BrepjsGeometryKernel();

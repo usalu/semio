@@ -49,6 +49,8 @@ import {
   puzzle2dSubscribeBrushSession,
   puzzle2dGetBrushSessionSnapshot,
   puzzle2dApplyBrushSuggestionsCandidateIndex,
+  puzzle2dBrushPlacePayloadFromSessionSnapshot,
+  puzzle2dBrushSlotCenterFromNode,
   puzzle2dSyncBrushSessionToAllAuthoringPeers,
   puzzle2dSyncFixtureDescriptorToAllAuthoringPeers,
   puzzle2dPushAuthoritativeSceneToAllAuthoringPeers,
@@ -1593,16 +1595,33 @@ function synthesizeVolumeAspectFromBrushPayload(
   };
 }
 
-function synthesizeFlatAspectFromVolume(model: Model, payload: BrushPlacePayload, partKind: string): Part2dAspect | null {
+function synthesizeFlatAspectFromVolume(
+  model: Model,
+  payload: BrushPlacePayload,
+  partKind: string,
+  suggestionOffset = DEFAULT_PUZZLE_2D_SUGGESTION_OFFSET_PX,
+): Part2dAspect | null {
   const parsed = parseGripFullId(payload.targetVortexFullId);
   if (!parsed) return null;
   const sourcePart = partById(model, parsed.partId);
   if (!sourcePart?.["2d"]) return null;
+  const source2d = sourcePart["2d"];
   const sourceGrip = sourcePart.grips.find((grip) => grip.id === parsed.gripId);
   const angle = sourceGrip?.["2d"]?.angle ?? flatHandleConnectorAngle(0, 1);
-  const gap = DEFAULT_PUZZLE_2D_SUGGESTION_OFFSET_PX / 2;
-  const x = sourcePart["2d"].x + gap * Math.cos(angle);
-  const y = sourcePart["2d"].y + gap * Math.sin(angle);
+  const center = puzzle2dBrushSlotCenterFromNode(
+    {
+      x: source2d.x,
+      y: source2d.y,
+      shape: source2d.shape,
+      ...(source2d.radius !== undefined ? { radius: source2d.radius } : {}),
+      ...(source2d.width !== undefined ? { width: source2d.width } : {}),
+      ...(source2d.height !== undefined ? { height: source2d.height } : {}),
+    },
+    angle,
+    suggestionOffset,
+  );
+  const x = center.x;
+  const y = center.y;
   const peer = peerPartForKind(model, partKind);
   const iconKind = peer?.["2d"]?.iconKind;
   if ((peer?.["2d"]?.shape ?? "rectangle") === "rectangle") {
@@ -1660,12 +1679,19 @@ export function puzzle5dBrushPlacementFromVolume(payload: BrushPlacePayload): Pu
 
 /** @emoji 🖌️ Commits a volume brush placement into the unified model and clears paired suggestion previews. */
 export function puzzle5dCommitVolumeBrushPlacementToPlay(store: Store, payload: BrushPlacePayload): boolean {
-  const placed = store.applyBrushPlacementDetailed(puzzle5dBrushPlacementFromVolume(payload));
+  const session = puzzle2dGetBrushSessionSnapshot();
+  const flatPayload = session ? puzzle2dBrushPlacePayloadFromSessionSnapshot(session) : null;
+  const placement = flatPayload
+    ? { ...puzzle5dBrushPlacementFromVolume(payload), aspect2d: flatPayload }
+    : puzzle5dBrushPlacementFromVolume(payload);
+  const placed = store.applyBrushPlacementDetailed(placement);
   if (!placed) {
     return false;
   }
   puzzle5dBrushPairedSyncOrigin = null;
   puzzle3dBrushPairedSyncRef.current.clear();
+  puzzle2dSyncFixtureDescriptorToAllAuthoringPeers(project2d(store.read()));
+  puzzle2dPushAuthoritativeSceneToAllAuthoringPeers();
   puzzle2dFinalizeBrushSuggestionsPlacement();
   return true;
 }
@@ -1685,7 +1711,40 @@ export function applyBrushPlacementToModel(model: Model, placement: Puzzle5dBrus
   let fastenerSource = "";
   let fastenerTarget = "";
 
-  if (placement.aspect2d) {
+  if (placement.aspect2d && placement.aspect3d) {
+    const flatPayload = placement.aspect2d;
+    const volumePayload = placement.aspect3d;
+    const flatHandles = puzzle2dFixtureHandlesFromNodeKind(partId, flatPayload.handles);
+    if (flatPayload.targetHandleIndex < 0 || flatPayload.targetHandleIndex >= flatHandles.length) {
+      return { kind: "unchanged" };
+    }
+    const iconKind = flatPayload.iconKind;
+    flatAspect =
+      flatPayload.shape === "rectangle"
+        ? {
+            x: flatPayload.x,
+            y: flatPayload.y,
+            shape: "rectangle",
+            width: flatPayload.width ?? DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX,
+            height: flatPayload.height ?? DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX,
+            ...(iconKind ? { iconKind } : {}),
+          }
+        : {
+            x: flatPayload.x,
+            y: flatPayload.y,
+            shape: "circle",
+            radius: flatPayload.radius ?? DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX / 2,
+            ...(iconKind ? { iconKind } : {}),
+          };
+    const volume = synthesizeVolumeAspectFromBrushPayload(model, volumePayload, partKind, catalogs);
+    if (!volume) return { kind: "unchanged" };
+    volumeAspect = volume.aspect;
+    grips = mergeGripsFlatAndVolume(volume.grips, flatHandles);
+    const matingLocal = grips[volumePayload.sourceVortexIndex]?.id;
+    if (!matingLocal) return { kind: "unchanged" };
+    fastenerSource = gripFullId(partId, matingLocal);
+    fastenerTarget = volumePayload.targetVortexFullId;
+  } else if (placement.aspect2d) {
     const payload = placement.aspect2d;
     const flatHandles = puzzle2dFixtureHandlesFromNodeKind(partId, payload.handles);
     if (payload.targetHandleIndex < 0 || payload.targetHandleIndex >= flatHandles.length) {
@@ -4692,8 +4751,44 @@ if (import.meta.vitest) {
       expect(placed?.["3d"]?.origin).toEqual([2, 0, 0]);
       expect(placed?.["3d"]?.orientation).toEqual([0, 0, 0, 1]);
       expect(placed?.["3d"]?.scale).toBe(1.5);
+      expect(placed?.["2d"]?.y).toBeLessThan(-DEFAULT_PUZZLE_2D_SUGGESTION_OFFSET_PX);
+      expect(Math.abs(placed?.["2d"]?.x ?? 0)).toBeLessThan(1e-6);
       expect(result.model.fasteners.some((f) => f.id === "accepted-preview-fastener")).toBe(true);
       expect(result.model.fasteners.some((f) => f.source.endsWith(":mate") || f.source.includes("Capsule"))).toBe(true);
+    });
+
+    it("puzzle5dCommitVolumeBrushPlacementToPlay uses paired flat session preview coordinates", () => {
+      const store = createStore(brushHostModel());
+      const previewX = 12;
+      const previewY = -96;
+      puzzle2dSyncBrushSessionToAllAuthoringPeers({
+        candidateIndex: 0,
+        candidates: [{ nodeKind: "Capsule", targetHandleIndex: 0 }],
+        preview: {
+          edge: { sourceHandleId: "host:port", targetHandleIndex: 0 },
+          node: {
+            handles: [{ angle: Math.PI, handleKind: "port" }],
+            nodeKind: "Capsule",
+            radius: DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX / 2,
+            shape: "circle",
+            x: previewX,
+            y: previewY,
+          },
+        },
+        sourceHandleId: "host:port",
+        suggestionsActive: true,
+      });
+      const placed = puzzle5dCommitVolumeBrushPlacementToPlay(store, {
+        targetVortexFullId: "host:port",
+        objectKindId: "Capsule",
+        sourceVortexIndex: 0,
+        origin: [2, 0, 0],
+        orientation: [0, 0, 0, 1],
+      });
+      expect(placed).toBe(true);
+      const fixture = project2d(store.read());
+      const node = fixture.nodes.find((row) => row.x === previewX && row.y === previewY);
+      expect(node?.nodeKind).toBe("Capsule");
     });
 
     it("preserves unified catalog grip radii on accepted volume suggestions", () => {

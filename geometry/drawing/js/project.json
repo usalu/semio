@@ -1,0 +1,13 @@
+{
+  "name": "@semio-tech/geometry-drawing-js",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "geometry/drawing/js",
+        "command": "bun vitest run --config vitest.config.ts"
+      }
+    }
+  }
+}

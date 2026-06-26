@@ -263,7 +263,7 @@
       "name": "🛠️dev🏘️compose🏪store📊graphiql",
       "type": "node-terminal",
       "request": "launch",
-      "command": "cargo run -p compose-store",
+      "command": "bun nx run @semio-tech/compose-store:dev",
       "env": {
         "RUST_LOG": "info",
         "COMPOSE_STORE_PORT": "4010"
@@ -526,13 +526,13 @@
       }
     },
     {
-      "name": "🛠️dev🔧procedural",
+      "name": "🛠️dev🔧procedural-3d",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun run dev:procedural",
+      "command": "bun run dev:procedural-3d",
       "cwd": "${workspaceFolder}",
       "env": {
-        "PROCEDURAL_PLAY_PORT": "6018"
+        "PROCEDURAL_3D_PLAY_PORT": "6018"
       },
       "presentation": {
         "group": "3_dev",
@@ -541,6 +541,25 @@
       "serverReadyAction": {
         "action": "openExternally",
         "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6018)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🔧procedural-2d",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:procedural-2d",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PROCEDURAL_2D_PLAY_PORT": "6021"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 171.81
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6021)",
         "uriFormat": "%s"
       }
     },
@@ -583,13 +602,13 @@
       }
     },
     {
-      "name": "🛠️dev🔧procedural🧩hexagonal-column",
+      "name": "🛠️dev🔧procedural-3d🧩hexagonal-column",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun run dev:procedural:hexagonal-column",
+      "command": "bun run dev:procedural-3d:hexagonal-column",
       "cwd": "${workspaceFolder}",
       "env": {
-        "PROCEDURAL_PLAY_PORT": "6018"
+        "PROCEDURAL_3D_PLAY_PORT": "6018"
       },
       "presentation": {
         "group": "3_dev",
@@ -995,14 +1014,53 @@
       }
     },
     {
-      "name": "📦build🔧procedural🧩hexagonal-column",
+      "name": "📦build🔧procedural-3d🧩hexagonal-column",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun run build:procedural:hexagonal-column",
+      "command": "bun run build:procedural-3d:hexagonal-column",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
         "order": 121
+      }
+    },
+    {
+      "name": "📦build🔧procedural-2d",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/procedural-2d-play:build",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 121.25
+      }
+    },
+    {
+      "name": "🧪test🔧procedural-3d",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/procedural-3d-play:test",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PROCEDURAL_3D_PLAY_PORT": "6031"
+      },
+      "presentation": {
+        "group": "5_test",
+        "order": 121
+      }
+    },
+    {
+      "name": "🧪test🔧procedural-2d",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/procedural-2d-play:test",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PROCEDURAL_2D_PLAY_PORT": "6033"
+      },
+      "presentation": {
+        "group": "5_test",
+        "order": 121.25
       }
     },
     {

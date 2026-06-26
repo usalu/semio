@@ -6,7 +6,15 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "compose/client/bin/store",
-        "command": "cargo build --release -p semio-store",
+        "command": "bun script.ts build",
+        "forwardAllArgs": true
+      }
+    },
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "compose/client/bin/store",
+        "command": "bun script.ts dev",
         "forwardAllArgs": true
       }
     },
@@ -14,7 +22,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "compose/client/bin/store",
-        "command": "cargo test -p semio-store",
+        "command": "bun script.ts test",
         "forwardAllArgs": true
       }
     }

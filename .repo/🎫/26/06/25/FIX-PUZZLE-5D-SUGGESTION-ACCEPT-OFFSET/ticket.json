@@ -3,9 +3,13 @@
   "emoji": "🧩",
   "status": "closed",
   "description": "Fix puzzle 5d: accepting a highlighted 3d part suggestion must remove the suggestion highlight and create the new part at the exact suggestion position including offset.",
-  "summary": "Fixed puzzle 5d volume suggestion acceptance so accepted 3d brush payloads keep the exact preview pose and attraction id, and both paired suggestion previews are cleared after commit. Updated the 5d play host to use the shared volume commit helper. Verified with package-local Vitest, renderer Vitest, 5d play build, and browser smoke on the active 6014 dev server with clean console logs.",
+  "summary": "Fixed puzzle 5d volume suggestion acceptance so 2D parts land on the highlight spot instead of too close to the host. Volume commits now prefer the paired flat brush session preview coordinates, sync the flat fixture to all authoring peers after commit, and support combined aspect2d+aspect3d placements. Fallback volume-to-flat synthesis uses puzzle2dBrushSlotCenterFromNode with the full suggestion offset from handle world position (not half-offset from node center). Added puzzle2dBrushSlotCenterFromNode for rectangle and circle hosts. Verified with package-local Vitest in puzzle/5d/react.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1749"
+  },
   "goal": "🎯aioptimizedrepo",
   "sessions": [
-    "⚪88ca59cfe01c481bbe4c6bcafc430b15"
+    "⚪88ca59cfe01c481bbe4c6bcafc430b15",
+    "⚪83f7e75253854810a2eb14095bd29cc1"
   ]
 }

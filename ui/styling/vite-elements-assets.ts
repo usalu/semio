@@ -304,22 +304,43 @@ export function puzzle3dMeshesVitePlugin(repoRoot: string): Plugin[] {
 export const SEMIO_FAVICON_HEAD_HTML =
   `<link rel="icon" href="./favicon.svg" type="image/svg+xml" />\n    <link rel="icon" href="./favicon.ico" sizes="any" />`;
 
-/** @emoji 🔖 Repo-root paths for the compact emblem SVG and ICO fallback (matches {@link SemioLogo}). */
+/** @emoji 🔖 Repo-root paths for the round dark emblem SVG and ICO fallback (matches {@link SemioLogo}). */
 export function semioFaviconSources(repoRoot: string): { readonly svg: string; readonly ico: string } {
   const logoRoot = resolve(repoRoot, "asset/logo");
   return {
-    svg: resolve(logoRoot, "emblem.svg"),
-    ico: resolve(logoRoot, "favicon_32x32.ico"),
+    svg: resolve(logoRoot, "emblem_dark_round.svg"),
+    ico: resolve(logoRoot, "favicon_dark_round_32x32.ico"),
   };
+}
+
+const SEMIO_FAVICON_BLEED_RECT = '<rect width="350" height="350" fill="#001117"/>';
+
+/** @emoji 🔖 Favicon SVG with opaque bleed so ICO rasterization avoids white matte outside the round emblem. */
+export function semioFaviconSvgMarkup(svgPath: string): string | undefined {
+  if (!existsSync(svgPath)) {
+    return undefined;
+  }
+  const raw = readFileSync(svgPath, "utf8");
+  if (raw.includes(SEMIO_FAVICON_BLEED_RECT)) {
+    return raw;
+  }
+  const open = raw.match(/<svg[^>]*>/)?.[0];
+  if (!open) {
+    return raw;
+  }
+  return raw.replace(open, `${open}${SEMIO_FAVICON_BLEED_RECT}`);
 }
 
 function createSemioFaviconMiddleware(favicons: { readonly svg: string; readonly ico: string }): Connect.NextHandleFunction {
   return (req, res, next) => {
     const url = req.url?.split(/[?#]/, 1)[0];
-    if (url === "/favicon.svg" && existsSync(favicons.svg)) {
-      res.setHeader("Content-Type", "image/svg+xml");
-      createReadStream(favicons.svg).pipe(res);
-      return;
+    if (url === "/favicon.svg") {
+      const markup = semioFaviconSvgMarkup(favicons.svg);
+      if (markup) {
+        res.setHeader("Content-Type", "image/svg+xml");
+        res.end(markup);
+        return;
+      }
     }
     if (url === "/favicon.ico" && existsSync(favicons.ico)) {
       res.setHeader("Content-Type", "image/x-icon");
@@ -356,8 +377,9 @@ export function semioFaviconVitePlugin(repoRoot: string): Plugin[] {
       closeBundle() {
         const dist = resolve(viteRoot, "dist");
         mkdirSync(dist, { recursive: true });
-        if (existsSync(favicons.svg)) {
-          cpSync(favicons.svg, resolve(dist, "favicon.svg"));
+        const markup = semioFaviconSvgMarkup(favicons.svg);
+        if (markup) {
+          writeFileSync(resolve(dist, "favicon.svg"), markup);
         }
         if (existsSync(favicons.ico)) {
           cpSync(favicons.ico, resolve(dist, "favicon.ico"));
@@ -408,7 +430,7 @@ const PLAYGROUND_RENDERER_PUZZLE_HOSTS_START = "//#region 🔖Puzzle3dPlayHost";
 const PLAYGROUND_RENDERER_BOOT_START = "//#region 🔖Boot";
 const PLAYGROUND_RENDERER_VITEST_START = "//#region 🧪Tests";
 
-export type PlaygroundRendererPuzzleKind = "2d" | "3d" | "5d" | "map" | "flow" | "dag" | "procedural" | "presentation" | "wires" | "shooting";
+export type PlaygroundRendererPuzzleKind = "2d" | "3d" | "5d" | "map" | "flow" | "dag" | "procedural-3d" | "procedural-2d" | "presentation" | "wires" | "shooting";
 
 const PLAYGROUND_RENDERER_PUZZLE_BOOT_SUBPATHS: Readonly<Record<string, PlaygroundRendererPuzzleKind>> = {
   "@semio-tech/framework-playground-renderer-react/puzzle/2d": "2d",
@@ -417,7 +439,8 @@ const PLAYGROUND_RENDERER_PUZZLE_BOOT_SUBPATHS: Readonly<Record<string, Playgrou
   "@semio-tech/framework-playground-renderer-react/puzzle/map": "map",
   "@semio-tech/framework-playground-renderer-react/flow": "flow",
   "@semio-tech/framework-playground-renderer-react/dag": "dag",
-  "@semio-tech/framework-playground-renderer-react/procedural": "procedural",
+  "@semio-tech/framework-playground-renderer-react/procedural-3d": "procedural-3d",
+  "@semio-tech/framework-playground-renderer-react/procedural-2d": "procedural-2d",
   "@semio-tech/framework-playground-renderer-react/shooting": "shooting",
   "@semio-tech/framework-playground-renderer-react/presentation": "presentation",
   "@semio-tech/framework-playground-renderer-react/reasoning/wires": "wires",
@@ -430,7 +453,8 @@ const PLAYGROUND_RENDERER_PUZZLE_HOST_MARKERS: Readonly<Record<PlaygroundRendere
   map: { start: "//#region 🔖MapPlayHost", end: "//#endregion 🔖MapPlayHost" },
   flow: { start: "//#region 🔖FlowPlayHost", end: "//#endregion 🔖FlowPlayHost" },
   dag: { start: "//#region 🔖DagPlayHost", end: "//#endregion 🔖DagPlayHost" },
-  procedural: { start: "//#region 🔖ProceduralPlayHost", end: "//#endregion 🔖ProceduralPlayHost" },
+  "procedural-3d": { start: "//#region 🔖ProceduralPlayHost", end: "//#endregion 🔖ProceduralPlayHost" },
+  "procedural-2d": { start: "//#region 🔖Procedural2dPlayHost", end: "//#endregion 🔖Procedural2dPlayHost" },
   shooting: { start: "//#region 🔖ShootingPlayHost", end: "//#endregion 🔖ShootingPlayHost" },
   presentation: { start: "//#region 🔖PresentationPlayHost", end: "//#endregion 🔖PresentationPlayHost" },
   wires: { start: "//#region 🔖Puzzle2dPlayHost", end: "//#endregion 🔖Puzzle2dPlayHost" },
@@ -520,7 +544,7 @@ export function playgroundRendererShellEntryPlugin(rendererIndexPath: string): P
       if (id.includes("playgroundEntry=shell")) {
         return stripPlaygroundRendererPuzzleHosts(source, { includeVitest: false });
       }
-      const puzzleMatch = id.match(/playgroundEntry=puzzle-(2d|3d|5d|map|flow|dag|procedural|presentation|wires|shooting)/);
+      const puzzleMatch = id.match(/playgroundEntry=puzzle-(2d|3d|5d|map|flow|dag|procedural-3d|procedural-2d|presentation|wires|shooting)/);
       if (puzzleMatch) {
         return stripPlaygroundRendererForPuzzleKind(source, puzzleMatch[1] as PlaygroundRendererPuzzleKind, { includeVitest: false });
       }
@@ -976,6 +1000,7 @@ export const FLOW_WASM_MODULE_OPTIMIZE_DEPS_EXCLUDE = [
   "@semio-tech/flow-module-dictionary",
   "@semio-tech/flow-module-list",
   "@semio-tech/flow-module-brep",
+  "@semio-tech/flow-module-draw",
 ] as const;
 
 /** @emoji 🔀 Vite resolve aliases shared by playground play hosts and renderer vitest graphs. */
@@ -1010,6 +1035,7 @@ export function playgroundRendererResolveAliases(repoRoot: string): ReadonlyArra
     { find: "@semio-tech/flow-react", replacement: resolve(repoRoot, "flow/react/index.tsx") },
     { find: "@semio-tech/flow-module-core", replacement: resolve(repoRoot, "flow/module/core/pkg/flow_module_core.js") },
     { find: "@semio-tech/flow-module-brep", replacement: resolve(repoRoot, "flow/module/brep/pkg/flow_module_brep.js") },
+    { find: "@semio-tech/flow-module-draw", replacement: resolve(repoRoot, "flow/module/draw/pkg/flow_module_draw.js") },
     { find: "@semio-tech/flow-module-math", replacement: resolve(repoRoot, "flow/module/math/pkg/flow_module_math.js") },
     { find: "@semio-tech/flow-module-text", replacement: resolve(repoRoot, "flow/module/text/pkg/flow_module_text.js") },
     { find: "@semio-tech/flow-module-logic", replacement: resolve(repoRoot, "flow/module/logic/pkg/flow_module_logic.js") },
@@ -1017,11 +1043,14 @@ export function playgroundRendererResolveAliases(repoRoot: string): ReadonlyArra
     { find: "@semio-tech/flow-module-list", replacement: resolve(repoRoot, "flow/module/list/pkg/flow_module_list.js") },
     { find: "@semio-tech/dag-play", replacement: resolve(repoRoot, "mathematical/graph/port/directed/dag/play/index.ts") },
     { find: "@semio-tech/dag-react", replacement: resolve(repoRoot, "mathematical/graph/port/directed/dag/react/index.tsx") },
-    { find: "@semio-tech/procedural-play", replacement: resolve(repoRoot, "procedural/play/index.ts") },
-    { find: "@semio-tech/procedural-react", replacement: resolve(repoRoot, "procedural/react/index.tsx") },
+    { find: "@semio-tech/procedural-3d-play", replacement: resolve(repoRoot, "procedural/3d/play/index.ts") },
+    { find: "@semio-tech/procedural-3d-react", replacement: resolve(repoRoot, "procedural/3d/react/index.tsx") },
+    { find: "@semio-tech/procedural-2d-play", replacement: resolve(repoRoot, "procedural/2d/play/index.ts") },
+    { find: "@semio-tech/procedural-2d-react", replacement: resolve(repoRoot, "procedural/2d/react/index.tsx") },
     { find: "@semio-tech/shooting-play", replacement: resolve(repoRoot, "shooting/play/index.ts") },
     { find: "@semio-tech/shooting-react", replacement: resolve(repoRoot, "shooting/react/index.tsx") },
     { find: "@semio-tech/geometry-brep-js", replacement: resolve(repoRoot, "geometry/brep/js/index.ts") },
+    { find: "@semio-tech/geometry-drawing-js", replacement: resolve(repoRoot, "geometry/drawing/js/index.ts") },
   ];
 }
 
@@ -1265,10 +1294,10 @@ if (import.meta.vitest) {
   });
 
   describe("semioFaviconVitePlugin", () => {
-    it("points at compact emblem svg and ico under asset/logo", () => {
+    it("points at round dark emblem svg and ico under asset/logo", () => {
       const { svg, ico } = semioFaviconSources(repoRoot);
-      expect(svg).toBe(resolve(repoRoot, "asset/logo/emblem.svg"));
-      expect(ico).toBe(resolve(repoRoot, "asset/logo/favicon_32x32.ico"));
+      expect(svg).toBe(resolve(repoRoot, "asset/logo/emblem_dark_round.svg"));
+      expect(ico).toBe(resolve(repoRoot, "asset/logo/favicon_dark_round_32x32.ico"));
       expect(existsSync(svg)).toBe(true);
       expect(existsSync(ico)).toBe(true);
     });
@@ -1276,6 +1305,12 @@ if (import.meta.vitest) {
     it("registers serve and build plugins", () => {
       const plugins = semioFaviconVitePlugin(repoRoot);
       expect(plugins.map((plugin) => plugin.name)).toEqual(["semio-favicon-serve", "semio-favicon-build"]);
+    });
+
+    it("injects opaque bleed into round dark favicon svg", () => {
+      const { svg } = semioFaviconSources(repoRoot);
+      const markup = semioFaviconSvgMarkup(svg);
+      expect(markup).toContain('<rect width="350" height="350" fill="#001117"/>');
     });
   });
 

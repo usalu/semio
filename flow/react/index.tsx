@@ -26,6 +26,7 @@ if (import.meta.env.VITEST) {
     { initSync: initListSync },
     { initSync: initBrepSync },
     { initSync: initBimSync },
+    { initSync: initDrawSync },
   ] = await Promise.all([
     import("../module/core/pkg/flow_module_core.js"),
     import("../module/math/pkg/flow_module_math.js"),
@@ -35,6 +36,7 @@ if (import.meta.env.VITEST) {
     import("../module/list/pkg/flow_module_list.js"),
     import("../module/brep/pkg/flow_module_brep.js"),
     import("../module/bim/pkg/flow_module_bim.js"),
+    import("../module/draw/pkg/flow_module_draw.js"),
   ]);
   initCoreSync({ module: readFileSync(join(reactDir, "../module/core/pkg/flow_module_core_bg.wasm")) });
   initMathSync({ module: readFileSync(join(reactDir, "../module/math/pkg/flow_module_math_bg.wasm")) });
@@ -44,6 +46,7 @@ if (import.meta.env.VITEST) {
   initListSync({ module: readFileSync(join(reactDir, "../module/list/pkg/flow_module_list_bg.wasm")) });
   initBrepSync({ module: readFileSync(join(reactDir, "../module/brep/pkg/flow_module_brep_bg.wasm")) });
   initBimSync({ module: readFileSync(join(reactDir, "../module/bim/pkg/flow_module_bim_bg.wasm")) });
+  initDrawSync({ module: readFileSync(join(reactDir, "../module/draw/pkg/flow_module_draw_bg.wasm")) });
 } else {
   await initFlowWasm({ module_or_path: flowCoreWasmUrl });
 }
@@ -275,10 +278,11 @@ const FLOW_MODULE_LOADERS: Record<string, FlowModuleLoader> = {
     loadFlowWasmModule(import("../module/dictionary/pkg/flow_module_dictionary.js"), import("../module/dictionary/pkg/flow_module_dictionary_bg.wasm?url")),
   list: () => loadFlowWasmModule(import("../module/list/pkg/flow_module_list.js"), import("../module/list/pkg/flow_module_list_bg.wasm?url")),
   brep: () => loadFlowWasmModule(import("../module/brep/pkg/flow_module_brep.js"), import("../module/brep/pkg/flow_module_brep_bg.wasm?url")),
+  draw: () => loadFlowWasmModule(import("../module/draw/pkg/flow_module_draw.js"), import("../module/draw/pkg/flow_module_draw_bg.wasm?url")),
   bim: () => loadFlowWasmModule(import("../module/bim/pkg/flow_module_bim.js"), import("../module/bim/pkg/flow_module_bim_bg.wasm?url")),
 };
 
-export const FLOW_DEFAULT_MODULE_IDS = ["core", "math", "text", "logic", "dictionary", "list", "brep", "bim"] as const;
+export const FLOW_DEFAULT_MODULE_IDS = ["core", "math", "text", "logic", "dictionary", "list", "brep", "draw", "bim"] as const;
 export type FlowModuleId = (typeof FLOW_DEFAULT_MODULE_IDS)[number];
 
 export const FLOW_INSTALLED_MODULE_IDS = Object.keys(FLOW_MODULE_LOADERS);

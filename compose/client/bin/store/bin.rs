@@ -1,4 +1,4 @@
-//! 🏪 `semio-store`: HTTP GraphQL sidecar over native [`semio::worker::ParentStore`] (same schema as WASM `KitStoreHandle`). `POST /graphql` accepts JSON `{ "query", "variables?", "operationName?" }` and serves the same kit materialization fields as the golden schema (`initialKit`, `theKit.kit`, `checkpoints.node.initial` / `kit`).
+//! 🏪 `compose-store`: HTTP GraphQL sidecar over native [`compose::worker::ParentStore`] (same schema as WASM `KitStoreHandle`). `POST /graphql` accepts JSON `{ "query", "variables?", "operationName?" }` and serves the same kit materialization fields as the golden schema (`initialKit`, `theKit.kit`, `checkpoints.node.initial` / `kit`).
 
 //#region 🏪State
 
@@ -12,8 +12,8 @@ use axum::http::StatusCode;
 use axum::response::{Html, IntoResponse, Response};
 use axum::routing::{get, post};
 use axum::{Json, Router};
-use semio::gql;
-use semio::worker::ParentStore;
+use compose::gql;
+use compose::worker::ParentStore;
 use serde::Deserialize;
 use tokio::net::TcpListener;
 use tokio::sync::Mutex;
@@ -58,7 +58,6 @@ struct RemoteIn {
 
 impl InstallBody {
     async fn into_runtime(self) -> std::result::Result<Arc<ParentStore>, String> {
-        use semio::error::SemioError;
         let mut n = 0u8;
         if self.create.is_some() {
             n += 1;
@@ -79,21 +78,21 @@ impl InstallBody {
             return Err("expected exactly one of: create, importFile, importFromFolder, importFromZip, importFromRemote".to_string());
         }
         if let Some(c) = self.create {
-            return ParentStore::spawn_from_install_json_value(c.dto).await.map_err(|e: SemioError| e.to_string());
+            return ParentStore::spawn_from_install_json_value(c.dto).await.map_err(|e| e.to_string());
         }
         if let Some(p) = self.import_file {
             let txt = std::fs::read_to_string(&p.path).map_err(|e| e.to_string())?;
             let v: serde_json::Value = serde_json::from_str(&txt).map_err(|e| e.to_string())?;
-            return ParentStore::spawn_from_install_json_value(v).await.map_err(|e: SemioError| e.to_string());
+            return ParentStore::spawn_from_install_json_value(v).await.map_err(|e| e.to_string());
         }
         if self.import_from_folder.is_some() {
-            return Err("importFromFolder: not wired in semio-store yet".to_string());
+            return Err("importFromFolder: not wired in compose-store yet".to_string());
         }
         if self.import_from_zip.is_some() {
-            return Err("importFromZip: not wired in semio-store yet".to_string());
+            return Err("importFromZip: not wired in compose-store yet".to_string());
         }
         if self.import_from_remote.is_some() {
-            return Err("importFromRemote: not wired in semio-store yet".to_string());
+            return Err("importFromRemote: not wired in compose-store yet".to_string());
         }
         Err("no install field".to_string())
     }
@@ -151,7 +150,7 @@ fn is_mutation_request(body: &str) -> std::result::Result<bool, String> {
     Ok(false)
 }
 
-/// @emoji 🌐 GraphQL-over-HTTP POST: JSON body `query`, optional `variables`, optional `operationName` (same contract as `semio::gql::graphql_request_from_json_str`).
+/// @emoji 🌐 GraphQL-over-HTTP POST: JSON body `query`, optional `variables`, optional `operationName` (same contract as `compose::gql::graphql_request_from_json_str`).
 async fn post_graphql(State(state): State<Arc<AppState>>, body: String) -> impl IntoResponse {
     let (rt, installed): (Arc<ParentStore>, bool) = {
         let l = state.runtime.lock().await;
@@ -177,12 +176,12 @@ async fn post_graphql(State(state): State<Arc<AppState>>, body: String) -> impl 
 }
 
 async fn get_graphiql() -> Html<String> {
-    let html: String = GraphiQLSource::build().title("semio-store GraphiQL").endpoint("/graphql").finish();
+    let html: String = GraphiQLSource::build().title("compose-store GraphiQL").endpoint("/graphql").finish();
     Html(html)
 }
 
 async fn get_health() -> impl IntoResponse {
-    "semio-store\n"
+    "compose-store\n"
 }
 
 async fn post_shutdown() -> StatusCode {
@@ -219,7 +218,7 @@ async fn serve(listener: TcpListener, app: Router) {
     {
         use std::io::Write;
         let ready: serde_json::Value = serde_json::json!({
-            "semioStoreReady": true,
+            "composeStoreReady": true,
             "port": actual_port,
             "graphiql": format!("http://127.0.0.1:{}/graphiql", actual_port),
         });
@@ -227,19 +226,19 @@ async fn serve(listener: TcpListener, app: Router) {
         let _ = std::io::stdout().lock().flush();
     }
     let base = format!("http://127.0.0.1:{}", actual_port);
-    tracing::info!(target: "semio_store", "┌ post /install, post /graphql, get /graphiql, get /healthz, post /server/shutdown");
-    tracing::info!(target: "semio_store", "└ {base}/graphiql  (GraphiQL)  →  POST {base}/graphql", base = base);
+    tracing::info!(target: "compose_store", "┌ post /install, post /graphql, get /graphiql, get /healthz, post /server/shutdown");
+    tracing::info!(target: "compose_store", "└ {base}/graphiql  (GraphiQL)  →  POST {base}/graphql", base = base);
 
     if let Err(e) = axum::serve(listener, app.into_make_service()).with_graceful_shutdown(shutdown_signal()).await {
-        tracing::error!(target: "semio_store", "server: {e}");
+        tracing::error!(target: "compose_store", "server: {e}");
     }
 }
 
-/// 🌐 Axum + GraphQL; binds `0.0.0.0` on `SEMIO_STORE_PORT` (default `4000`).
+/// 🌐 Axum + GraphQL; binds `0.0.0.0` on `COMPOSE_STORE_PORT` (default `4000`).
 async fn run() {
-    let port: u16 = std::env::var("SEMIO_STORE_PORT").ok().and_then(|s| s.parse().ok()).unwrap_or(4000);
+    let port: u16 = std::env::var("COMPOSE_STORE_PORT").ok().and_then(|s| s.parse().ok()).unwrap_or(4000);
     let addr: SocketAddr = format!("0.0.0.0:{}", port).parse().expect("port");
-    let listener: TcpListener = TcpListener::bind(&addr).await.unwrap_or_else(|e| panic!("semio-store bind {addr}: {e}"));
+    let listener: TcpListener = TcpListener::bind(&addr).await.unwrap_or_else(|e| panic!("compose-store bind {addr}: {e}"));
     let state = Arc::new(build_state().await);
     serve(listener, app_with_state(state)).await;
 }
@@ -252,7 +251,7 @@ async fn shutdown_signal() {
 #[tokio::main]
 async fn main() {
     let _ = tracing_subscriber::fmt()
-        .with_env_filter(std::env::var("RUST_LOG").or_else(|_| std::env::var("RUST_TRACING")).unwrap_or_else(|_| "error,semio_store=info,semio_store_event=off".to_string()))
+        .with_env_filter(std::env::var("RUST_LOG").or_else(|_| std::env::var("RUST_TRACING")).unwrap_or_else(|_| "error,compose_store=info,compose_store_event=off".to_string()))
         .with_target(false)
         .with_writer(io::stderr)
         .try_init();
@@ -275,7 +274,7 @@ mod tests {
         let state = Arc::new(build_state().await);
         let handle = tokio::spawn(async move {
             if let Err(e) = axum::serve(listener, app_with_state(state).into_make_service()).await {
-                tracing::error!(target: "semio_store", "test server: {e}");
+                tracing::error!(target: "compose_store", "test server: {e}");
             }
         });
         Ok((handle, format!("http://127.0.0.1:{port}")))
@@ -306,7 +305,7 @@ mod tests {
         let client = reqwest::Client::new();
         let html = client.get(format!("{base}/graphiql")).send().await?.error_for_status()?.text().await?;
 
-        assert!(html.contains("semio-store GraphiQL"));
+        assert!(html.contains("compose-store GraphiQL"));
         assert!(html.contains("/graphql"));
         assert!(html.contains("graphiql@4"));
         assert!(!html.contains("catch(() => response.text())"));
@@ -392,7 +391,7 @@ mod tests {
         if q2.get("errors").is_some() {
             return Err(format!("query: {q2}").into());
         }
-        let wip = "/data/session/store/edges/0/node/wip";
+        let wip = "/data/session/stores/edges/0/node/wip";
         assert_eq!(q2.pointer(&format!("{wip}/initialKit/name")).and_then(|n| n.as_str()), Some("SeedName"), "initialKit stays install baseline");
         assert_eq!(q2.pointer(&format!("{wip}/theKit/kit/name")).and_then(|n| n.as_str()), Some("RenamedKit"), "theKit.kit materialized head");
         assert_eq!(q2.pointer(&format!("{wip}/checkpoints/edges/0/node/initial/name")).and_then(|n| n.as_str()), Some("SeedName"), "checkpoint.initial is graph baseline");
@@ -404,7 +403,7 @@ mod tests {
 
     #[tokio::test]
     async fn sidecar_install_create_accepts_full_kit_store_bundle_doc() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-        use semio::kit_backbone::{DevBackboneBundleDoc, KIT_BUNDLE_HASH_STUB};
+        use compose::kit_backbone::{DevBackboneBundleDoc, KIT_BUNDLE_HASH_STUB};
 
         let (server, base) = spawn_server().await?;
         let client = reqwest::Client::new();
@@ -443,7 +442,7 @@ mod tests {
         if q.get("errors").is_some() {
             return Err(format!("bundle install query: {q}").into());
         }
-        let wip = "/data/session/store/edges/0/node/wip";
+        let wip = "/data/session/stores/edges/0/node/wip";
         assert_eq!(q.pointer(&format!("{wip}/initialKit/name")).and_then(|n| n.as_str()), Some("BundleInstallName"));
         assert_eq!(q.pointer(&format!("{wip}/initialKit/version")).and_then(|n| n.as_str()), Some("v-bundle-smoke"));
         assert_eq!(q.pointer(&format!("{wip}/theKit/kit/name")).and_then(|n| n.as_str()), Some("BundleInstallName"));
@@ -484,7 +483,7 @@ mod tests {
         assert_eq!(r.status(), reqwest::StatusCode::OK);
         let v: Value = r.json().await?;
         assert!(v.get("errors").is_none(), "preview wip query errors: {v:?}");
-        let wip = "/data/session/store/edges/0/node/wip";
+        let wip = "/data/session/stores/edges/0/node/wip";
         assert_eq!(v.pointer(&format!("{wip}/initialKit/name")).and_then(|n| n.as_str()), Some("the kit"));
         assert_eq!(v.pointer(&format!("{wip}/theKit/kit/name")).and_then(|n| n.as_str()), Some("the kit"));
         assert_eq!(v.pointer(&format!("{wip}/checkpoints/edges/0/node/initial/name")).and_then(|n| n.as_str()), Some("the kit"));
@@ -494,7 +493,7 @@ mod tests {
     }
 
     fn comprehensive_fixture_path() -> Option<std::path::PathBuf> {
-        semio::kit_store_comprehensive_e2e::kit_store_comprehensive_fixture_path()
+        compose::kit_store_comprehensive_e2e::kit_store_comprehensive_fixture_path()
     }
 
     async fn run_comprehensive_fixture_sidecar_steps(fixture: &Value, client: &reqwest::Client, base: &str) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -547,7 +546,7 @@ mod tests {
                     if q2.get("errors").is_some() {
                         return Err(format!("materialization query: {q2}").into());
                     }
-                    assert_eq!(q2.pointer("/data/session/store/edges/0/node/wip/theKit/kit/name").and_then(|n| n.as_str()), Some(renamed));
+                    assert_eq!(q2.pointer("/data/session/stores/edges/0/node/wip/theKit/kit/name").and_then(|n| n.as_str()), Some(renamed));
                 }
                 other => return Err(format!("unknown sidecar step kind: {other}").into()),
             }
@@ -569,7 +568,7 @@ mod tests {
         Ok(())
     }
 
-    /// @emoji 🧪 Full catalog E2E: in-process GraphQL + backbone replay, then live semio-store HTTP sidecar steps.
+    /// @emoji 🧪 Full catalog E2E: in-process GraphQL + backbone replay, then live compose-store HTTP sidecar steps.
     #[tokio::test]
     async fn comprehensive_fixture_end_to_end() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let Some(path) = comprehensive_fixture_path() else {
@@ -577,7 +576,7 @@ mod tests {
             return Ok(());
         };
         let fixture: Value = serde_json::from_str(&std::fs::read_to_string(path)?)?;
-        semio::kit_store_comprehensive_e2e::run_in_process(&fixture).await;
+        compose::kit_store_comprehensive_e2e::run_in_process(&fixture).await;
         let (server, base) = spawn_server().await?;
         let client = reqwest::Client::new();
         run_comprehensive_fixture_sidecar_steps(&fixture, &client, &base).await?;

@@ -1,0 +1,13 @@
+{
+  "schema": "flow.fixture/v1",
+  "camera": { "x": 0, "y": 0, "zoom": 1 },
+  "widgets": [
+    { "kind": "neuron", "id": "rect", "neuronKind": "draw.shape.rect" },
+    { "kind": "neuron", "id": "fill", "neuronKind": "draw.style.fill" },
+    { "kind": "outputPreview", "id": "preview" }
+  ],
+  "synapses": [
+    { "id": "s1", "from": "rect", "to": "fill", "fromPort": "drawing", "toPort": "drawing" },
+    { "id": "s2", "from": "fill", "to": "preview", "fromPort": "drawing", "toPort": "" }
+  ]
+}

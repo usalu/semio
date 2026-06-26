@@ -253,8 +253,12 @@ export class DevScript extends Script {
       runCmd("bun", ["nx", "run", "@semio-tech/dag-play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
       return;
     }
-    if (segments[0] === "procedural") {
-      runCmd("bun", ["nx", "run", "@semio-tech/procedural-play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
+    if (segments[0] === "procedural-3d") {
+      runCmd("bun", ["nx", "run", "@semio-tech/procedural-3d-play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
+      return;
+    }
+    if (segments[0] === "procedural-2d") {
+      runCmd("bun", ["nx", "run", "@semio-tech/procedural-2d-play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
       return;
     }
     if (segments[0] === "shooting") {

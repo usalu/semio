@@ -1,16 +1,16 @@
 [package]
-name = "semio-store"
+name = "compose-store"
 version = "0.1.0"
 edition = "2021"
-description = "HTTP GraphQL sidecar for semio native KitStore (semio::kit_graphql control plane)"
+description = "HTTP GraphQL sidecar for compose native KitStore"
 publish = false
 
 [[bin]]
-name = "semio-store"
+name = "compose-store"
 path = "bin.rs"
 
 [dependencies]
-semio = { package = "compose", path = "../../lib/rs" }
+compose = { path = "../../lib/rs" }
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.149"
 futures-lite = "2.6.0"

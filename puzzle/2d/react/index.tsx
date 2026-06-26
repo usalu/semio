@@ -1506,6 +1506,39 @@ export function puzzle2dBrushSlotCenterWorld(
   return { x: handleWorld.x + nx * offset, y: handleWorld.y + ny * offset };
 }
 
+/** @emoji 📐 World center for a brushed node opposite a source handle on circle or rectangle fixture nodes. */
+export function puzzle2dBrushSlotCenterFromNode(
+  sourceNode: {
+    readonly height?: number;
+    readonly radius?: number;
+    readonly shape?: "circle" | "rectangle";
+    readonly width?: number;
+    readonly x: number;
+    readonly y: number;
+  },
+  sourceHandleAngle: number,
+  offset = DEFAULT_PUZZLE_2D_SUGGESTION_OFFSET_PX,
+): Point {
+  if (sourceNode.shape === "rectangle") {
+    const width = sourceNode.width ?? DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX;
+    const height = sourceNode.height ?? DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX;
+    const flat = boardHandlePositionRectangle(sourceNode.x, sourceNode.y, width, height, sourceHandleAngle);
+    const hx = flat[0]!;
+    const hy = flat[1]!;
+    const dx = hx - sourceNode.x;
+    const dy = hy - sourceNode.y;
+    const len = Math.hypot(dx, dy);
+    const nx = len > 1e-9 ? dx / len : 0;
+    const ny = len > 1e-9 ? dy / len : -1;
+    return { x: hx + nx * offset, y: hy + ny * offset };
+  }
+  return puzzle2dBrushSlotCenterWorld(
+    { radius: sourceNode.radius ?? PUZZLE_2D_NODE_RADIUS_PX, x: sourceNode.x, y: sourceNode.y },
+    sourceHandleAngle,
+    offset,
+  );
+}
+
 /** @emoji 🖌️ Builds a brush slot preview for the suggestions menu without waiting on WASM drain. */
 export function puzzle2dBuildBrushSuggestionsPreview(
   driving: Puzzle2dRenderer | null | undefined,
@@ -10539,6 +10572,16 @@ if (puzzle2dVitest) {
       expect(preview?.node?.nodeKind).toBe("Right");
       expect(Number(preview?.node?.x)).toBeGreaterThan(0);
       renderer.dispose();
+    });
+
+    it("puzzle2dBrushSlotCenterFromNode offsets rectangle hosts along handle normal", () => {
+      const center = puzzle2dBrushSlotCenterFromNode(
+        { shape: "rectangle", x: 0, y: 0, width: 40, height: 40 },
+        0,
+        DEFAULT_PUZZLE_2D_SUGGESTION_OFFSET_PX,
+      );
+      expect(center.y).toBeLessThan(-DEFAULT_PUZZLE_2D_SUGGESTION_OFFSET_PX);
+      expect(Math.abs(center.x)).toBeLessThan(1e-6);
     });
 
     it("puzzle2dApplyBrushSuggestionsCandidateIndex updates shared session preview", async () => {
