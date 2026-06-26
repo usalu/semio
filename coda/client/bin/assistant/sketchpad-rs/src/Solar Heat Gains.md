@@ -70,20 +70,20 @@ To accurately calculate solar gains, the UI must gather geometry and component p
 
 ### A. Window Parameters (Transparent)
 
-| UI Prompt                       | Determines                          | DIN Variable                             |
-| ------------------------------- | ----------------------------------- | ---------------------------------------- |
-| **"Window Area"**         | Total size of the opening ($m^2$) | $A_w$                                  |
-| **"Orientation & Tilt"**  | Dictates the sun exposure           | $I_s$                                  |
-| **"Glazing Type"**        | Double, Triple, Solar Control       | $g$-value (Total Energy Transmittance) |
-| **"Frame Material/Type"** | Thick vs. Thin frames               | $F_F$(Frame Fraction)                  |
-| **"Shading Devices"**     | Exterior Blinds, Interior Curtains  | $F_C$(Shading Reduction Factor)        |
-| **"Surrounding Shadows"** | Overhangs, Neighboring Buildings    | $F_S$(Surroundings Shading Factor)     |
+| UI Prompt                 | Determines                         | DIN Variable                           |
+| ------------------------- | ---------------------------------- | -------------------------------------- |
+| **"Window Area"**         | Total size of the opening ($m^2$)  | $A_w$                                  |
+| **"Orientation & Tilt"**  | Dictates the sun exposure          | $I_s$                                  |
+| **"Glazing Type"**        | Double, Triple, Solar Control      | $g$-value (Total Energy Transmittance) |
+| **"Frame Material/Type"** | Thick vs. Thin frames              | $F_F$(Frame Fraction)                  |
+| **"Shading Devices"**     | Exterior Blinds, Interior Curtains | $F_C$(Shading Reduction Factor)        |
+| **"Surrounding Shadows"** | Overhangs, Neighboring Buildings   | $F_S$(Surroundings Shading Factor)     |
 
 ### B. Wall/Roof Parameters (Opaque)
 
-| UI Prompt                  | Determines                                 | DIN Variable                  |
-| -------------------------- | ------------------------------------------ | ----------------------------- |
-| **"Wall/Roof Area"** | Total exposed surface ($m^2$)            | $A_{op}$                    |
+| UI Prompt            | Determines                                 | DIN Variable                |
+| -------------------- | ------------------------------------------ | --------------------------- |
+| **"Wall/Roof Area"** | Total exposed surface ($m^2$)              | $A_{op}$                    |
 | **"Surface Color"**  | Light (White), Medium (Brick), Dark (Grey) | $\alpha$(Solar Absorptance) |
 
 ## 3. Core Calculations (DIN/TS 18599-2 Section 6.4)
@@ -95,13 +95,13 @@ This is the primary source of solar heating. The standard calculates the "Effect
 **Formula:**
 $Q_{s,w} = I_s \cdot A_w \cdot (1 - F_F) \cdot F_w \cdot g \cdot F_C \cdot F_S$
 
-* $I_s$: Solar irradiation for the given orientation and time period ($Wh/m^2$ or $kWh/m^2$).
-* $A_w$: Total area of the window ($m^2$).
-* $(1 - F_F)$: Transparent glass fraction (subtracting the opaque frame $F_F$).
-* $F_w$: Correction factor for non-perpendicular radiation (Standard default is `0.90`).
-* $g$: Total solar energy transmittance of the glass.
-* $F_C$: Shading factor from operable blinds/shades.
-* $F_S$: Shading factor from fixed obstacles.
+- $I_s$: Solar irradiation for the given orientation and time period ($Wh/m^2$ or $kWh/m^2$).
+- $A_w$: Total area of the window ($m^2$).
+- $(1 - F_F)$: Transparent glass fraction (subtracting the opaque frame $F_F$).
+- $F_w$: Correction factor for non-perpendicular radiation (Standard default is `0.90`).
+- $g$: Total solar energy transmittance of the glass.
+- $F_C$: Shading factor from operable blinds/shades.
+- $F_S$: Shading factor from fixed obstacles.
 
 ### 3.2 Opaque Solar Gains & Sky Radiation ($Q_{s,op}$)
 
@@ -110,16 +110,16 @@ The exterior envelope absorbs solar heat during the day, reducing transmission l
 **Formula:**
 $Q_{s,op} = A_{op} \cdot U_{op} \cdot R_{se} \cdot (\alpha \cdot I_s - F_{sky} \cdot h_r \cdot \Delta\theta_{er} \cdot t)$
 
-* $A_{op}$: Area of the opaque component (Wall/Roof).
-* $U_{op}$: Thermal transmittance (U-value) of the component.
-* $R_{se}$: External surface thermal resistance (Standard is `0.04` $m^2K/W$).
-* $\alpha$: Solar absorptance coefficient of the surface color.
-* $F_{sky}$: Form factor to the sky (`1.0` for horizontal roofs, `0.5` for vertical walls).
-* $h_r$: External radiative heat transfer coefficient (Standard is `5.0` $W/m^2K$).
-* $\Delta\theta_{er}$: Temperature difference between external air and apparent sky (Standard is `11 K`).
-* $t$: Time period duration (hours).
+- $A_{op}$: Area of the opaque component (Wall/Roof).
+- $U_{op}$: Thermal transmittance (U-value) of the component.
+- $R_{se}$: External surface thermal resistance (Standard is `0.04` $m^2K/W$).
+- $\alpha$: Solar absorptance coefficient of the surface color.
+- $F_{sky}$: Form factor to the sky (`1.0` for horizontal roofs, `0.5` for vertical walls).
+- $h_r$: External radiative heat transfer coefficient (Standard is `5.0` $W/m^2K$).
+- $\Delta\theta_{er}$: Temperature difference between external air and apparent sky (Standard is `11 K`).
+- $t$: Time period duration (hours).
 
- *(Note: Because this requires the U-value (* $U_{op}$*), opaque solar gains are intrinsically linked to the Transmission calculations).*
+  _(Note: Because this requires the U-value (_ $U_{op}$_), opaque solar gains are intrinsically linked to the Transmission calculations)._
 
 ## 4. Reference Data & Standard Values
 
@@ -129,12 +129,12 @@ To execute the logic, the engine relies on strict fallback parameters provided b
 
 If exact manufacturer data is missing, DIN defaults apply:
 
-| Glazing Type                     | $g$-value         |
-| -------------------------------- | ------------------- |
-| Single Glazing                   | `0.85`            |
-| Double Glazing (Standard)        | `0.75`            |
-| Double Glazing (Low-E / Thermal) | `0.60`            |
-| Triple Glazing (Low-E / Thermal) | `0.50`            |
+| Glazing Type                     | $g$-value       |
+| -------------------------------- | --------------- |
+| Single Glazing                   | `0.85`          |
+| Double Glazing (Standard)        | `0.75`          |
+| Double Glazing (Low-E / Thermal) | `0.60`          |
+| Triple Glazing (Low-E / Thermal) | `0.50`          |
 | Solar Control Glass              | `0.30`to `0.40` |
 
 ### Table B: Frame Fraction ($F_F$)
@@ -142,7 +142,7 @@ If exact manufacturer data is missing, DIN defaults apply:
 The percentage of the window area that is opaque frame.
 
 | Window Description                              | Frame Fraction ($F_F$)       |
-| ----------------------------------------------- | ------------------------------ |
+| ----------------------------------------------- | ---------------------------- |
 | Standard Window                                 | `0.30`(30% Frame, 70% Glass) |
 | Very Large Windows / Glass Facades              | `0.20`                       |
 | Small Windows / Divided panes (Sprossenfenster) | `0.40`                       |
@@ -152,7 +152,7 @@ The percentage of the window area that is opaque frame.
 Operable shading heavily reduces solar penetration.
 
 | Shading Device                         | Reduction Factor ($F_C$) |
-| -------------------------------------- | -------------------------- |
+| -------------------------------------- | ------------------------ |
 | No Shading                             | `1.00`                   |
 | Interior Curtains (White / Light)      | `0.80`                   |
 | Interior Curtains (Dark)               | `0.60`                   |
@@ -164,7 +164,7 @@ Operable shading heavily reduces solar penetration.
 How much sun the exterior walls/roof absorb based on color.
 
 | Surface Color                      | Solar Absorptance ($\alpha$) |
-| ---------------------------------- | ------------------------------ |
+| ---------------------------------- | ---------------------------- |
 | Light (White, very light grey)     | `0.30`                       |
 | Medium (Red brick, concrete, wood) | `0.60`                       |
 | Dark (Dark grey, black roof tiles) | `0.90`                       |
@@ -220,13 +220,13 @@ impl OpaqueComponent {
     /// Calculates the net solar gain (which is often negative due to sky radiation) in Wh
     pub fn solar_gain_wh(&self) -> f64 {
         let f_sky = if self.is_roof { 1.0 } else { 0.5 };
-    
+
         // Solar energy absorbed by the surface
         let absorbed_solar = self.alpha * self.irradiation;
-    
+
         // Energy lost to the cold night sky
         let sky_radiation_loss = f_sky * H_R_STANDARD * DELTA_THETA_ER * self.time_hours;
-    
+
         // Net gain is converted into a building heat load via U-value and R_se
         self.area * self.u_value * R_SE_STANDARD * (absorbed_solar - sky_radiation_loss)
     }
@@ -261,7 +261,7 @@ impl SolarGainsEngine {
         let transparent_gain: f64 = self.transparent_components.iter()
             .map(|c| c.solar_gain_wh())
             .sum();
-        
+
         let opaque_gain: f64 = self.opaque_components.iter()
             .map(|c| c.solar_gain_wh())
             .sum();

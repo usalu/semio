@@ -1141,6 +1141,10 @@ impl Default for Parameters {
             mech_exhaust: 0.0,
             heat_recovery: 0.0,
             mech_hours: 0.0,
+            lighting_exhaust: "None".to_string(),
+            material_transport: "None".to_string(),
+            custom_occupants: 0.0,
+            custom_equipment: 0.0,
             // (Removed graph parameters)
         }
     }
@@ -1913,6 +1917,183 @@ pub fn redo() -> String {
     })
 }
 
+pub mod solar_gains {
+    use serde::{Deserialize, Serialize};
+
+    // --- CONSTANTS FROM DIN 18599 ---
+    pub const F_W_STANDARD: f64 = 0.90; // Correction for non-perpendicular radiation
+    pub const R_SE_STANDARD: f64 = 0.04; // External surface resistance (m²K/W)
+    pub const H_R_STANDARD: f64 = 5.0; // External radiative heat transfer coeff (W/m²K)
+    pub const DELTA_THETA_ER: f64 = 11.0; // Sky temperature difference (K)
+
+    #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+    pub enum GlazingType {
+        Single,
+        DoubleStandard,
+        DoubleLowE,
+        TripleLowE,
+        SolarControl,
+    }
+
+    impl GlazingType {
+        pub fn g_value(&self) -> f64 {
+            match self {
+                Self::Single => 0.85,
+                Self::DoubleStandard => 0.75,
+                Self::DoubleLowE => 0.60,
+                Self::TripleLowE => 0.50,
+                Self::SolarControl => 0.35,
+            }
+        }
+    }
+
+    #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+    pub enum WindowFrameType {
+        Standard,
+        VeryLarge,
+        SmallDivided,
+    }
+
+    impl WindowFrameType {
+        pub fn frame_fraction(&self) -> f64 {
+            match self {
+                Self::Standard => 0.30,
+                Self::VeryLarge => 0.20,
+                Self::SmallDivided => 0.40,
+            }
+        }
+    }
+
+    #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+    pub enum ShadingDevice {
+        None,
+        InteriorLight,
+        InteriorDark,
+        ExteriorBlinds,
+        ExteriorAwnings,
+    }
+
+    impl ShadingDevice {
+        pub fn reduction_factor(&self) -> f64 {
+            match self {
+                Self::None => 1.00,
+                Self::InteriorLight => 0.80,
+                Self::InteriorDark => 0.60,
+                Self::ExteriorBlinds => 0.25,
+                Self::ExteriorAwnings => 0.40,
+            }
+        }
+    }
+
+    #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+    pub enum SurfaceColor {
+        Light,
+        Medium,
+        Dark,
+    }
+
+    impl SurfaceColor {
+        pub fn absorptance(&self) -> f64 {
+            match self {
+                Self::Light => 0.30,
+                Self::Medium => 0.60,
+                Self::Dark => 0.90,
+            }
+        }
+    }
+
+    // --- DATA MODELS ---
+
+    /// Represents a window or transparent surface.
+    #[derive(Debug, Clone, Serialize, Deserialize)]
+    pub struct TransparentComponent {
+        pub area: f64,          // A_w (m²)
+        pub frame_fraction: f64, // F_F (e.g., 0.30)
+        pub g_value: f64,       // Total energy transmittance (e.g., 0.60)
+        pub f_c: f64,           // Shading device factor (e.g., 0.25 for ext. blinds)
+        pub f_s: f64,           // Surroundings shading (e.g., 0.90)
+        pub irradiation: f64,   // I_s (Wh/m² for the calculated time period)
+    }
+
+    impl TransparentComponent {
+        /// Calculates the effective solar collecting area (m²)
+        pub fn effective_collecting_area(&self) -> f64 {
+            self.area * (1.0 - self.frame_fraction) * F_W_STANDARD * self.g_value * self.f_c * self.f_s
+        }
+
+        /// Calculates the total solar heat gain (Wh) for this time period
+        pub fn solar_gain_wh(&self) -> f64 {
+            self.irradiation * self.effective_collecting_area()
+        }
+    }
+
+    /// Represents a wall or roof (opaque surface).
+    #[derive(Debug, Clone, Serialize, Deserialize)]
+    pub struct OpaqueComponent {
+        pub area: f64,          // A_op (m²)
+        pub u_value: f64,       // U-value (W/m²K)
+        pub alpha: f64,         // Solar absorptance (e.g., 0.60 for medium color)
+        pub is_roof: bool,      // Determines F_sky (1.0 for roof, 0.5 for walls)
+        pub irradiation: f64,   // I_s (Wh/m² for the calculated time period)
+        pub time_hours: f64,    // Duration of the time period (h)
+    }
+
+    impl OpaqueComponent {
+        /// Calculates the net solar gain (which is often negative due to sky radiation) in Wh
+        pub fn solar_gain_wh(&self) -> f64 {
+            let f_sky = if self.is_roof { 1.0 } else { 0.5 };
+        
+            // Solar energy absorbed by the surface
+            let absorbed_solar = self.alpha * self.irradiation;
+        
+            // Energy lost to the cold night sky
+            let sky_radiation_loss = f_sky * H_R_STANDARD * DELTA_THETA_ER * self.time_hours;
+        
+            // Net gain is converted into a building heat load via U-value and R_se
+            self.area * self.u_value * R_SE_STANDARD * (absorbed_solar - sky_radiation_loss)
+        }
+    }
+
+    // --- ENGINE ---
+
+    /// The core engine struct to calculate total solar gains
+    pub struct SolarGainsEngine {
+        pub transparent_components: Vec<TransparentComponent>,
+        pub opaque_components: Vec<OpaqueComponent>,
+    }
+
+    impl SolarGainsEngine {
+        pub fn new() -> Self {
+            Self {
+                transparent_components: Vec::new(),
+                opaque_components: Vec::new(),
+            }
+        }
+
+        pub fn add_transparent(&mut self, comp: TransparentComponent) {
+            self.transparent_components.push(comp);
+        }
+
+        pub fn add_opaque(&mut self, comp: OpaqueComponent) {
+            self.opaque_components.push(comp);
+        }
+
+        /// Calculates the total solar heat gain (Q_S) for the entire envelope (Wh)
+        pub fn total_solar_gain_wh(&self) -> f64 {
+            let transparent_gain: f64 = self.transparent_components.iter()
+                .map(|c| c.solar_gain_wh())
+                .sum();
+            
+            let opaque_gain: f64 = self.opaque_components.iter()
+                .map(|c| c.solar_gain_wh())
+                .sum();
+
+            // Total Solar Gain (Q_S)
+            transparent_gain + opaque_gain
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1988,5 +2169,52 @@ mod tests {
         
         let h_t = transmission::calculate_h_t_d(&vec![comp], &vec![]);
         assert!(h_t > 0.0);
+    }
+
+    #[test]
+    fn test_solar_gains_calculation() {
+        use solar_gains::*;
+
+        let mut engine = SolarGainsEngine::new();
+
+        // Add a South-facing Double-Glazed Window with Exterior Blinds
+        engine.add_transparent(TransparentComponent {
+            area: 10.0,
+            frame_fraction: WindowFrameType::Standard.frame_fraction(), // 0.30
+            g_value: GlazingType::DoubleLowE.g_value(), // 0.60
+            f_c: ShadingDevice::ExteriorBlinds.reduction_factor(), // 0.25
+            f_s: 1.00, // No surrounding shadows
+            irradiation: 45000.0, // e.g., 45 kWh/m² for a month
+        });
+
+        // Add a South-facing Medium-colored Brick Wall
+        engine.add_opaque(OpaqueComponent {
+            area: 50.0,
+            u_value: 0.28,
+            alpha: SurfaceColor::Medium.absorptance(), // 0.60
+            is_roof: false,
+            irradiation: 45000.0,
+            time_hours: 744.0, // Hours in a 31-day month
+        });
+
+        let transparent_gain = engine.transparent_components[0].solar_gain_wh();
+        assert!(transparent_gain > 0.0, "Transparent gain should be positive");
+        
+        let expected_eff_area = 10.0 * (1.0 - 0.30) * 0.90 * 0.60 * 0.25 * 1.0;
+        let diff = (engine.transparent_components[0].effective_collecting_area() - expected_eff_area).abs();
+        assert!(diff < 0.001, "Effective collecting area mismatch");
+
+        let opaque_gain = engine.opaque_components[0].solar_gain_wh();
+        // Calculate expected opaque gain manually to verify
+        // Q_s,op = A_op * U_op * R_se * (alpha * I_s - F_sky * h_r * DeltaTheta_er * t)
+        // absorbed = 0.60 * 45000 = 27000
+        // sky_loss = 0.5 * 5.0 * 11.0 * 744.0 = 20460
+        // net_absorbed = 27000 - 20460 = 6540
+        // gain = 50.0 * 0.28 * 0.04 * 6540 = 366.24
+        let expected_opaque = 50.0 * 0.28 * 0.04 * (0.60 * 45000.0 - 0.5 * 5.0 * 11.0 * 744.0);
+        assert!((opaque_gain - expected_opaque).abs() < 0.1, "Opaque gain mismatch, expected {}, got {}", expected_opaque, opaque_gain);
+
+        let q_s_total = engine.total_solar_gain_wh();
+        assert_eq!(q_s_total, transparent_gain + opaque_gain);
     }
 }
