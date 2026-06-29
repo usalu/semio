@@ -7001,7 +7001,13 @@ export function bootTrinityRewritePlay(playground: Playground, rootId = "root"):
 import type { UiPanelHostSurfaceNode } from "@semio-tech/framework-platform-core";
 import { ProceduralFlowEditor, ProceduralPreview, useProceduralBrepBridge } from "@semio-tech/procedural-3d-react";
 import {
-    PROCEDURAL_PLAY_APP_ID,
+    DAG_LOD_MODE_AUTOMATIC as PROCEDURAL_3D_DAG_LOD_MODE_AUTOMATIC,
+    FLOW_DEFAULT_PROXIMITY_DISTANCE as PROCEDURAL_3D_DEFAULT_PROXIMITY_DISTANCE,
+    dagLodCanvasProps as procedural3dDagLodCanvasProps,
+    flowWidgetPaletteTreeDragController as procedural3dWidgetPaletteTreeDragController,
+} from "@semio-tech/flow-react";
+import {
+    PROCEDURAL_3D_PLAY_APP_ID,
     PROCEDURAL_PLAY_CATALOGUE_TAB_ID,
     PROCEDURAL_PLAY_EMPTY_FIXTURE_JSON,
     PROCEDURAL_PLAY_HIERARCHY_TAB_ID,
@@ -7148,8 +7154,8 @@ function ProceduralPlayPaneSurfaceHost({ node }: { readonly node: UiFlowHostSurf
   const interactionRevision = useProceduralPlayInteractionRevision(runtime);
   void interactionRevision;
   const scopeId = node.paneId ?? PROCEDURAL_PLAY_WINDOW_KIND_ID;
-  const lodProps = dagLodCanvasProps(ctrl?.lodModeForScope(scopeId) ?? DAG_LOD_MODE_AUTOMATIC);
-  const proximityDistance = ctrl?.proximityDistanceValue() ?? FLOW_DEFAULT_PROXIMITY_DISTANCE;
+  const lodProps = procedural3dDagLodCanvasProps(ctrl?.lodModeForScope(scopeId) ?? PROCEDURAL_3D_DAG_LOD_MODE_AUTOMATIC);
+  const proximityDistance = ctrl?.proximityDistanceValue() ?? PROCEDURAL_3D_DEFAULT_PROXIMITY_DISTANCE;
   const onLodChange = reactHostPort.useCallback(
     (lod: import("@semio-tech/flow-react").DagDrawLodKind) => {
       ctrl?.run("setEffectiveLod", { lod, instanceId: scopeId });
@@ -7348,7 +7354,7 @@ class ProceduralPlayCataloguePanelDefinition extends PureSidePanelTabDefinition 
         const config = uiTreeNodeToTreePanelConfig(treeNode, bus);
         return {
           ...config,
-          dragAndDropController: flowWidgetPaletteTreeDragController(collectUiTreeItemDragData(treeNode.sections)),
+          dragAndDropController: procedural3dWidgetPaletteTreeDragController(collectUiTreeItemDragData(treeNode.sections)),
         };
       }),
     };
@@ -7390,7 +7396,7 @@ function ProceduralPlayInner({ runtime }: { readonly runtime: Platform }): React
   return (
     <>
       <ProceduralPlayToolbarHostBridge runtime={runtime} ctrl={ctrl} />
-      <PlaygroundView runtime={runtime} defaultAppId={PROCEDURAL_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} />
+      <PlaygroundView runtime={runtime} defaultAppId={PROCEDURAL_3D_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} />
     </>
   );
 }
@@ -7423,6 +7429,7 @@ export function bootProceduralPlay(playground: Playground, rootId = "root"): voi
 
 //#region 🔖Procedural2dPlayHost
 import { Procedural2dFlowEditor, Procedural2dPreview, useProcedural2dDrawingBridge } from "@semio-tech/procedural-2d-react";
+import { flowWidgetPaletteTreeDragController as procedural2dWidgetPaletteTreeDragController } from "@semio-tech/flow-react";
 import {
     PROCEDURAL_2D_PLAY_APP_ID,
     PROCEDURAL_2D_PLAY_CATALOGUE_TAB_ID,
@@ -7777,7 +7784,7 @@ class Procedural2dPlayCataloguePanelDefinition extends PureSidePanelTabDefinitio
         const config = uiTreeNodeToTreePanelConfig(treeNode, bus);
         return {
           ...config,
-          dragAndDropController: flowWidgetPaletteTreeDragController(collectUiTreeItemDragData(treeNode.sections)),
+          dragAndDropController: procedural2dWidgetPaletteTreeDragController(collectUiTreeItemDragData(treeNode.sections)),
         };
       }),
     };

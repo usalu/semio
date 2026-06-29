@@ -155,7 +155,11 @@ function collectDrawingRefsFromValue(value: unknown, refs: string[]): void {
 		refs.push(value);
 		return;
 	}
-	if (!value || typeof value !== "object" || Array.isArray(value)) return;
+	if (Array.isArray(value)) {
+		for (const nested of value) collectDrawingRefsFromValue(nested, refs);
+		return;
+	}
+	if (!value || typeof value !== "object") return;
 	for (const nested of Object.values(value as Record<string, unknown>)) {
 		collectDrawingRefsFromValue(nested, refs);
 	}
@@ -753,6 +757,15 @@ if (import.meta.vitest) {
 			);
 			expect(items).toEqual([
 				{ widgetId: "preview", port: "", direction: "out", kind: "drawing", handle: "drawing-42" },
+			]);
+		});
+
+		it("extractChannelPreviewItems collects drawings nested in list outputs", () => {
+			const items = extractChannelPreviewItems(
+				JSON.stringify({ get: { out: { value: [{ $schema: "draw.drawing", handle: "drawing-42" }] } } }),
+			);
+			expect(items).toEqual([
+				{ widgetId: "get", port: "value", direction: "out", kind: "drawing", handle: "drawing-42" },
 			]);
 		});
 

@@ -253,21 +253,25 @@ export class DevScript extends Script {
       runCmd("bun", ["nx", "run", "@semio-tech/dag-play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
       return;
     }
-    if (segments[0] === "trinity-jack") {
-      runCmd("bun", ["nx", "run", "@semio-tech/trinity-jack-play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
-      return;
+    if (segments[0] === "trinity") {
+      if (segments[1] === "jack") {
+        runCmd("bun", ["nx", "run", "@semio-tech/trinity-jack-play:dev", ...segments.slice(2)], { cwd: this.root, env: devToolingEnv() });
+        return;
+      }
+      if (segments[1] === "rewrite") {
+        runCmd("bun", ["nx", "run", "@semio-tech/trinity-rewrite-play:dev", ...segments.slice(2)], { cwd: this.root, env: devToolingEnv() });
+        return;
+      }
     }
-    if (segments[0] === "trinity-rewrite") {
-      runCmd("bun", ["nx", "run", "@semio-tech/trinity-rewrite-play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
-      return;
-    }
-    if (segments[0] === "procedural-3d") {
-      runCmd("bun", ["nx", "run", "@semio-tech/procedural-3d-play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
-      return;
-    }
-    if (segments[0] === "procedural-2d") {
-      runCmd("bun", ["nx", "run", "@semio-tech/procedural-2d-play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
-      return;
+    if (segments[0] === "procedural") {
+      if (segments[1] === "3d") {
+        runCmd("bun", ["nx", "run", "@semio-tech/procedural-3d-play:dev", ...segments.slice(2)], { cwd: this.root, env: devToolingEnv() });
+        return;
+      }
+      if (segments[1] === "2d") {
+        runCmd("bun", ["nx", "run", "@semio-tech/procedural-2d-play:dev", ...segments.slice(2)], { cwd: this.root, env: devToolingEnv() });
+        return;
+      }
     }
     if (segments[0] === "shooting") {
       runCmd("bun", ["nx", "run", "@semio-tech/shooting-play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });

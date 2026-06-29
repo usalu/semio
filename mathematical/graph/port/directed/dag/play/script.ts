@@ -5,13 +5,14 @@ import {
   BundleScript,
   ScriptRouter,
   playPollingEnv,
+  playgroundDevPortString,
+  playgroundPortEnv,
   runBun,
   runBundleScriptMain,
   runCargo,
   runViteBunxDev,
   runVitest,
 } from "../../../../../../repo/lib/js/src/index.ts";
-import { playgroundDevPortString, playgroundPortEnv } from "../../../../../../ui/styling/playground-dev-ports.ts";
 
 const wasmScript = join(import.meta.dir, "../script.ts");
 const validateRuntimeScript = join(

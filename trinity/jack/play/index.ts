@@ -119,6 +119,9 @@ export class TrinityJackPlayController extends Controller {
     this.mainMode.windowKinds = [
       new WindowKindRuntime(TRINITY_JACK_PLAY_WINDOW_KIND_ID, "Nakagin Graph", TRINITY_JACK_PLAY_BODY_KEY_MAIN, undefined, [], engagement),
     ];
+    for (const windowKind of this.mainMode.windowKinds) {
+      enforcePlaygroundWindowEngagementInput(windowKind.engagement, `Trinity jack play window "${windowKind.id}"`);
+    }
   }
 
   run(command: string, args?: unknown): void {
@@ -131,7 +134,7 @@ export class TrinityJackPlayController extends Controller {
       return;
     }
     if (command === "setJackQuery") {
-      const value = enforcePlaygroundWindowEngagementInput(args);
+      const value = (args as { value?: string }).value;
       if (typeof value === "string") {
         this.jackQuery = value;
         this.bump();
@@ -139,7 +142,7 @@ export class TrinityJackPlayController extends Controller {
       return;
     }
     if (command === "runJackQuery") {
-      const value = enforcePlaygroundWindowEngagementInput(args);
+      const value = (args as { value?: string }).value;
       const query = typeof value === "string" && value.trim() ? value : this.jackQuery;
       this.jackQuery = query;
       console.log(`[DEBUG] trinity jack query: ${query}`);

@@ -3,7 +3,7 @@
 use base64::Engine;
 use geometry_brep_brepkit::BrepkitKernel;
 use geometry_brep_engine::{block_on, BrepKernel, GeometryHandle, GeometryKind, ParamDomain, PointClassification, Vec3};
-use neural_engine::{channel_output, Atom, ChannelSpec, Dictionary, EvalError, FieldSpec, Operation, OperatorImpl, OperatorInfo, Registry, Schema, Value, ValueType};
+use neural_engine::{channel_output, Atom, Cardinality, ChannelSpec, Dictionary, EvalError, FieldSpec, Operation, OperatorImpl, OperatorInfo, Registry, Schema, Value, ValueType};
 use std::collections::{HashMap, HashSet};
 use std::sync::{Mutex, OnceLock};
 
@@ -376,6 +376,36 @@ fn brep_schema() -> Schema {
             FieldSpec::new("face", ValueType::List(Box::new(ValueType::Schema("face".into())))).with_default(empty_list_value()),
         ],
     }
+}
+
+fn topology_list(schema: &str, handles: Vec<GeometryHandle>) -> Dictionary {
+    handles.into_iter().enumerate().fold(Dictionary::with_schema("list"), |list, (index, handle)| {
+        list.insert(
+            index.to_string(),
+            Value::Dictionary(Dictionary::with_schema(schema).insert("handle", Value::Atom(Atom::String(handle.as_str().to_string())))),
+        )
+    })
+}
+
+struct BrepDeconstruct;
+
+impl Operation for BrepDeconstruct {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+        with_kernel(|kernel| {
+            let shape = read_geometry(input, "brep")?;
+            let topology = block_on(kernel.deconstruct(&shape)).map_err(map_kernel_error)?;
+            Ok(Dictionary::new()
+                .insert("brep", Value::Dictionary(geometry_dict(kernel, &shape)?))
+                .insert("vertex", Value::Dictionary(topology_list("vertex", topology.vertices)))
+                .insert("edge", Value::Dictionary(topology_list("edge", topology.edges)))
+                .insert("face", Value::Dictionary(topology_list("face", topology.faces)))
+                .insert("errors", Value::Dictionary(Dictionary::with_schema("list"))))
+        })
+    }
+}
+
+fn topology_output(code: &str, abbreviation: &str, name: &str, schema: &str) -> ChannelSpec {
+    ChannelSpec::named(code, abbreviation, name, name).with_operators(vec![schema.to_string()]).with_cardinality(Cardinality::ZeroOrMore)
 }
 
 fn text_schema() -> Schema {
@@ -922,6 +952,28 @@ pub fn register(registry: &mut Registry) {
     registry.register_schema(topology_element_schema("face", "Face", "emoji:⬜"));
     registry.register_schema(brep_schema());
     registry.register_schema(text_schema());
+    registry.register_operator(
+        OperatorInfo {
+            id: "brep.brep".into(),
+            module: "brep".into(),
+            name: "Brep".into(),
+            abbreviation: "Brep".into(),
+            icon: "emoji:🧊".into(),
+            summary: "Deconstructs B-Rep geometry into vertices, edges, and faces".into(),
+            inputs: vec![geometry_channel("brep", "brep.brep")],
+            outputs: vec![
+                ChannelSpec::named("B", "Brep", "brep", "BrepGeometry").with_operators(vec!["brep.brep".into()]),
+                topology_output("V", "Vtx", "vertex", "vertex"),
+                topology_output("E", "Edg", "edge", "edge"),
+                topology_output("F", "Fce", "face", "face"),
+                ChannelSpec::list_output("errors", vec![]),
+            ],
+            group: vec!["Schemas".into()],
+            ..Default::default()
+        },
+        vec![OperatorImpl { schemas: vec!["geometry".into()], operation: Box::new(BrepDeconstruct) }],
+        &["geometry", "list"],
+    );
 
     reg_geo(
         registry,
@@ -1877,21 +1929,29 @@ mod tests {
     }
 
     #[test]
-    fn schema_component_round_trips_brep() {
+    fn brep_component_deconstructs_solid_topology() {
+        let _serial = test_serial();
+        reset_test_kernel();
         let mut reg = Registry::new();
         register(&mut reg);
-        let vertex = Dictionary::with_schema("vertex").insert("handle", Value::Atom(Atom::String("v0".into())));
-        let edge = Dictionary::with_schema("edge").insert("handle", Value::Atom(Atom::String("e0".into())));
-        let face = Dictionary::with_schema("face").insert("handle", Value::Atom(Atom::String("f0".into())));
-        let vertex_list = Dictionary::with_schema("list").insert("0", Value::Dictionary(vertex));
-        let edge_list = Dictionary::with_schema("list").insert("0", Value::Dictionary(edge));
-        let face_list = Dictionary::with_schema("list").insert("0", Value::Dictionary(face));
-        let built = reg.dispatch("brep.brep", &Dictionary::new().insert("vertex", Value::Dictionary(vertex_list)).insert("edge", Value::Dictionary(edge_list)).insert("face", Value::Dictionary(face_list))).unwrap();
-        let brep = built.get("brep").and_then(|value| value.as_dictionary()).expect("brep");
-        assert_eq!(brep.schema(), Some("brep"));
-        let deconstructed = reg.dispatch("brep.brep", &Dictionary::new().insert("brep", Value::Dictionary(brep.clone()))).unwrap();
-        let vertices = deconstructed.get("vertex").and_then(|value| value.as_dictionary()).expect("vertex list");
-        assert!(vertices.get("0").is_some());
+        let solid = channel_payload(
+            &reg.dispatch(
+                "brep.prim3d.box",
+                &Dictionary::new()
+                    .insert("width", Value::Dictionary(number_dictionary(1.0)))
+                    .insert("depth", Value::Dictionary(number_dictionary(1.0)))
+                    .insert("height", Value::Dictionary(number_dictionary(1.0))),
+            )
+            .unwrap(),
+            "solid",
+        );
+        let deconstructed = reg.dispatch("brep.brep", &Dictionary::new().insert("brep", Value::Dictionary(solid))).unwrap();
+        let vertices = deconstructed.get("vertex").and_then(Value::as_dictionary).expect("vertex list");
+        let edges = deconstructed.get("edge").and_then(Value::as_dictionary).expect("edge list");
+        let faces = deconstructed.get("face").and_then(Value::as_dictionary).expect("face list");
+        assert_eq!(list_indices(vertices).len(), 8);
+        assert_eq!(list_indices(edges).len(), 12);
+        assert_eq!(list_indices(faces).len(), 6);
     }
 
     #[test]

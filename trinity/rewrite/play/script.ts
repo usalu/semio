@@ -1,8 +1,7 @@
 #!/usr/bin/env bun
 /** 🧭 `@semio-tech/trinity-rewrite-play` task router. */
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, playPollingEnv, runBun, runBundleScriptMain, runCargo, runViteBunxDev, runVitest } from "../../../repo/lib/js/src/index.ts";
-import { playgroundDevPortString, playgroundPortEnv } from "../../../ui/styling/playground-dev-ports.ts";
+import { BundleScript, ScriptRouter, playPollingEnv, playgroundDevPortString, playgroundPortEnv, runBun, runBundleScriptMain, runCargo, runViteBunxDev, runVitest } from "../../../repo/lib/js/src/index.ts";
 
 const wasmScript = join(import.meta.dir, "../engine/script.ts");
 

@@ -6,6 +6,8 @@ import {
   ScriptRouter,
   consumePlaygroundFixtureArgv,
   playPollingEnv,
+  playgroundDevPortString,
+  playgroundPortEnv,
   runBun,
   runBundleScriptMain,
   runCargo,
@@ -13,7 +15,6 @@ import {
   runViteBunxDev,
   runVitest,
 } from "../../../repo/lib/js/src/index.ts";
-import { playgroundDevPortString, playgroundPortEnv } from "../../../ui/styling/playground-dev-ports.ts";
 import { resolvePuzzle2dPlayFixtureSlug } from "./index.ts";
 
 const wasmScript = join(import.meta.dir, "../rs/script.ts");

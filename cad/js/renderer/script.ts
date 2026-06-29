@@ -8,13 +8,14 @@ import {
   ScriptRouter,
   consumePlaygroundFixtureArgv,
   playPollingEnv,
+  playgroundDevPortString,
+  playgroundPortEnv,
   runBun,
   runBundleScriptMain,
   runViteBuild,
   runViteDev,
   runVitest,
 } from "../../../repo/lib/js/src/index.ts";
-import { playgroundDevPortString, playgroundPortEnv } from "../../../ui/styling/playground-dev-ports.ts";
 import { defineLint } from "../../../repo/lib/js/src/index.ts";
 import { resolveCadPlayFixtureSlug } from "./play/fixture-slugs.ts";
 

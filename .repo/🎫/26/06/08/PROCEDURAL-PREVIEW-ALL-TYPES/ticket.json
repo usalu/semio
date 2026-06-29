@@ -1,9 +1,9 @@
 {
   "title": "Procedural Preview All Types",
   "emoji": "👁️",
-  "status": "open",
+  "status": "closed",
   "description": "Extend procedural preview pipeline so point and vector outputs are rendered alongside geometry (curves, surfaces, solids). Unify into ProceduralPreviewItem model.",
-  "summary": "Fixed 3D preview disappearing on any flow interaction. Root cause: pointer-up runs evaluate() then persistFixture(); evaluate updates output preview widget dicts, persistFixture syncs fixture via setFixtureJson which cleared previewItems after they were set. applyFixtureJson now only resets preview/selection when resetInteraction:true (fixture load/reset/preset); flow sync updates fixtureJson without clearing preview state.",
+  "summary": "Fixed procedural 2D and 3D nested-list previews and the concrete BRep face extraction path. The BRep kernel now deconstructs solids into retained vertex, edge, and face handles; flow retains both topology and drawing handles; worker meshes are keyed by handle identity; 2D/3D extractors traverse arrays; and Hexagonal Mushroom Column connects BRep.face to list.get. Also repaired procedural split fallout in fixture paths, renderer app/flow imports, and the 3D play Vitest aliases. Verified with 68 flow-core tests, 11 BRep module tests, procedural 3D React 12 tests, procedural 3D Play 47 tests, procedural 2D React 4 tests, procedural 2D Play 30 tests, the registered hexagonal production build, and a live browser run selecting list_get_4.out.0 with a clean console.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1602"
   },

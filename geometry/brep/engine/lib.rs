@@ -85,6 +85,14 @@ pub struct MeshTransfer {
     pub face_groups: Vec<FaceGroup>,
 }
 
+/// 🧩 Topology handles extracted from a B-Rep shape.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct BrepTopology {
+    pub vertices: Vec<GeometryHandle>,
+    pub edges: Vec<GeometryHandle>,
+    pub faces: Vec<GeometryHandle>,
+}
+
 impl Default for MeshTransfer {
     fn default() -> Self {
         Self { position: Vec::new(), normal: Vec::new(), index: Vec::new(), edges: Vec::new(), points: Vec::new(), face_groups: Vec::new() }
@@ -240,6 +248,7 @@ pub trait BrepKernel {
     async fn sew_faces(&mut self, faces: &[GeometryHandle], tolerance: f64) -> Result<GeometryHandle, BrepError>;
     async fn heal_solid(&mut self, shape: &GeometryHandle, tolerance: f64) -> Result<GeometryHandle, BrepError>;
     async fn convert_to_nurbs(&mut self, shape: &GeometryHandle) -> Result<GeometryHandle, BrepError>;
+    async fn deconstruct(&mut self, shape: &GeometryHandle) -> Result<BrepTopology, BrepError>;
     // #endregion Construct
 
     // #region IO

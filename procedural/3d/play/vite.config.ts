@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 import { createPlaygroundPlayViteConfig, FLOW_WASM_MODULE_OPTIMIZE_DEPS_EXCLUDE } from "../../../ui/styling/vite-elements-assets.js";
 
 const playDir = path.dirname(fileURLToPath(import.meta.url));
-const repoRoot = path.resolve(playDir, "../..");
+const repoRoot = path.resolve(playDir, "../../..");
 const threeModule = path.resolve(repoRoot, "node_modules/three/build/three.module.js");
 
 export default createPlaygroundPlayViteConfig({
@@ -39,9 +39,9 @@ export default createPlaygroundPlayViteConfig({
 		esbuildOptions: { target: "esnext" },
 	},
 	watchIgnored: [
-		"../../flow/core/lib.rs",
-		"../../flow/core/target/**",
-		"../../flow/module/**/lib.rs",
-		"../../flow/module/**/target/**",
+		"../../../flow/core/lib.rs",
+		"../../../flow/core/target/**",
+		"../../../flow/module/**/lib.rs",
+		"../../../flow/module/**/target/**",
 	],
 });

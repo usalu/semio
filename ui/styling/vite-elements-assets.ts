@@ -11,20 +11,23 @@ import { isAbsolute, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Connect, Plugin } from "vite";
 import { defineConfig, type UserConfig } from "vite";
-import { PLAYGROUND_SITE_DEV_PORTS, PLAYGROUND_SITE_HOSTS, playgroundEmbedUrl, type PlaygroundSiteKind } from "./playground-embed-url.ts";
 import {
   PLAYGROUND_LOCKED_FIXTURE_ENV,
   PLAYGROUND_PORTS,
+  PLAYGROUND_SITE_DEV_PORTS,
+  PLAYGROUND_SITE_HOSTS,
   allPlaygroundReservedPorts,
   playgroundDevPort,
   playgroundDevPortString,
+  playgroundEmbedUrl,
   playgroundLockedFixtureIdFromEnv,
   playgroundPlayViteDefine,
   playgroundPortEnv,
   playgroundTestPort,
   playgroundTestPortString,
   type PlaygroundHostKind,
-} from "./playground-dev-ports.ts";
+  type PlaygroundSiteKind,
+} from "../../repo/lib/js/src/index.ts";
 // #endregion 🔌Adapters
 
 export {

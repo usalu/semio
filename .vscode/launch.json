@@ -469,7 +469,7 @@
       }
     },
     {
-      "name": "🛠️dev📐cad🧩concrete-forest",
+      "name": "🛠️dev📐cad🧩concrete🌲forest",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:cad:concrete-forest",
@@ -575,7 +575,7 @@
       }
     },
     {
-      "name": "📦build🔺trinity-core",
+      "name": "📦build🔺trinity⚙️core",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/trinity-core:wasm",
@@ -586,54 +586,10 @@
       }
     },
     {
-      "name": "🧪test🔺trinity-core",
+      "name": "🛠️dev🔧procedural📷3d",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./script.ts test",
-      "cwd": "${workspaceFolder}/trinity/rewrite/engine",
-      "presentation": {
-        "group": "5_test",
-        "order": 171.8
-      }
-    },
-    {
-      "name": "🧪test🔺trinity⚛️react",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun ./script.ts test",
-      "cwd": "${workspaceFolder}/trinity/react",
-      "presentation": {
-        "group": "5_test",
-        "order": 171.82
-      }
-    },
-    {
-      "name": "🧪test🔺trinity🃏jack",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun ./script.ts test",
-      "cwd": "${workspaceFolder}/trinity/jack/play",
-      "presentation": {
-        "group": "5_test",
-        "order": 171.85
-      }
-    },
-    {
-      "name": "🧪test🔺trinity♻️rewrite",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun ./script.ts test",
-      "cwd": "${workspaceFolder}/trinity/rewrite/play",
-      "presentation": {
-        "group": "5_test",
-        "order": 171.87
-      }
-    },
-    {
-      "name": "🛠️dev🔧procedural-3d",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun run dev:procedural-3d",
+      "command": "bun run dev:procedural:3d",
       "cwd": "${workspaceFolder}",
       "env": {
         "PROCEDURAL_3D_PLAY_PORT": "6018"
@@ -649,10 +605,10 @@
       }
     },
     {
-      "name": "🛠️dev🔧procedural-2d",
+      "name": "🛠️dev🔧procedural🩻2d",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun run dev:procedural-2d",
+      "command": "bun run dev:procedural:2d",
       "cwd": "${workspaceFolder}",
       "env": {
         "PROCEDURAL_2D_PLAY_PORT": "6021"
@@ -668,7 +624,7 @@
       }
     },
     {
-      "name": "🛠️dev🔧shooting",
+      "name": "🛠️dev🏹shooting",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:shooting",
@@ -687,7 +643,7 @@
       }
     },
     {
-      "name": "🛠️dev🔧shooting🧩base-icon",
+      "name": "🛠️dev🏹shooting🧩base🎨icon",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:shooting:base-icon",
@@ -706,10 +662,10 @@
       }
     },
     {
-      "name": "🛠️dev🔧procedural-3d🧩hexagonal-column",
+      "name": "🛠️dev🔧procedural📷3d🧩hexagonal🧱column",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun run dev:procedural-3d:hexagonal-column",
+      "command": "bun run dev:procedural:3d:hexagonal-column",
       "cwd": "${workspaceFolder}",
       "env": {
         "PROCEDURAL_3D_PLAY_PORT": "6018"
@@ -774,7 +730,7 @@
       }
     },
     {
-      "name": "🛠️dev🧩puzzle📷3d🧩concrete-forest",
+      "name": "🛠️dev🧩puzzle📷3d🧩concrete🌲forest",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:puzzle:3d:concrete-forest",
@@ -812,7 +768,7 @@
       }
     },
     {
-      "name": "🛠️dev🧩puzzle👯5d🧩concrete-forest",
+      "name": "🛠️dev🧩puzzle👯5d🧩concrete🌲forest",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:puzzle:5d:concrete-forest",
@@ -1019,17 +975,6 @@
       }
     },
     {
-      "name": "🧪test🖱️ui🎨styling🚫no-px",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun ./script.ts check-no-px",
-      "cwd": "${workspaceFolder}/ui/styling",
-      "presentation": {
-        "group": "5_test",
-        "order": 28
-      }
-    },
-    {
       "name": "📦build🖱️ui🏪assets",
       "type": "node-terminal",
       "request": "launch",
@@ -1074,7 +1019,7 @@
       }
     },
     {
-      "name": "📦build📐cad🧩concrete-forest",
+      "name": "📦build📐cad🧩concrete🌲forest",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run build:cad:concrete-forest",
@@ -1085,7 +1030,7 @@
       }
     },
     {
-      "name": "📦build🧩puzzle📷3d🧩concrete-forest",
+      "name": "📦build🧩puzzle📷3d🧩concrete🌲forest",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run build:puzzle:3d:concrete-forest",
@@ -1096,7 +1041,7 @@
       }
     },
     {
-      "name": "📦build🧩puzzle👯5d🧩concrete-forest",
+      "name": "📦build🧩puzzle👯5d🧩concrete🌲forest",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run build:puzzle:5d:concrete-forest",
@@ -1118,10 +1063,10 @@
       }
     },
     {
-      "name": "📦build🔧procedural-3d🧩hexagonal-column",
+      "name": "📦build🔧procedural📷3d🧩hexagonal🧱column",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun run build:procedural-3d:hexagonal-column",
+      "command": "bun run build:procedural:3d:hexagonal-column",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
@@ -1129,10 +1074,10 @@
       }
     },
     {
-      "name": "📦build🔧procedural-2d",
+      "name": "📦build🔧procedural🩻2d",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/procedural-2d-play:build",
+      "command": "bun run build:procedural:2d",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
@@ -1140,35 +1085,7 @@
       }
     },
     {
-      "name": "🧪test🔧procedural-3d",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/procedural-3d-play:test",
-      "cwd": "${workspaceFolder}",
-      "env": {
-        "PROCEDURAL_3D_PLAY_PORT": "6031"
-      },
-      "presentation": {
-        "group": "5_test",
-        "order": 121
-      }
-    },
-    {
-      "name": "🧪test🔧procedural-2d",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/procedural-2d-play:test",
-      "cwd": "${workspaceFolder}",
-      "env": {
-        "PROCEDURAL_2D_PLAY_PORT": "6033"
-      },
-      "presentation": {
-        "group": "5_test",
-        "order": 121.25
-      }
-    },
-    {
-      "name": "📦build🔧shooting🧩base-icon",
+      "name": "📦build🏹shooting🧩base🎨icon",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run build:shooting:base-icon",

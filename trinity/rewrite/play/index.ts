@@ -107,6 +107,9 @@ export class TrinityRewritePlayController extends Controller {
     this.mainMode.windowKinds = [
       new WindowKindRuntime(TRINITY_REWRITE_PLAY_WINDOW_KIND_ID, "Rewrite Graph", TRINITY_REWRITE_PLAY_BODY_KEY_MAIN, undefined, [], engagement),
     ];
+    for (const windowKind of this.mainMode.windowKinds) {
+      enforcePlaygroundWindowEngagementInput(windowKind.engagement, `Trinity rewrite play window "${windowKind.id}"`);
+    }
   }
 
   run(command: string, args?: unknown): void {
@@ -119,7 +122,7 @@ export class TrinityRewritePlayController extends Controller {
       return;
     }
     if (command === "setRuleJson") {
-      const value = enforcePlaygroundWindowEngagementInput(args);
+      const value = (args as { value?: string }).value;
       if (typeof value === "string") {
         this.ruleJson = value;
         this.bump();
@@ -127,7 +130,7 @@ export class TrinityRewritePlayController extends Controller {
       return;
     }
     if (command === "applyRule") {
-      const value = enforcePlaygroundWindowEngagementInput(args);
+      const value = (args as { value?: string }).value;
       const rule = typeof value === "string" && value.trim() ? value : this.ruleJson;
       this.ruleJson = rule;
       console.log(`[DEBUG] trinity rewrite apply: ${rule}`);
@@ -202,6 +205,16 @@ if (import.meta.vitest) {
         generation: 0,
       });
       expect(node.type).toBe("trinity");
+    });
+  });
+
+  describe("TrinityRewritePlayController", () => {
+    it("applyRule updates fixture via wasm", () => {
+      const bus = new CommandBus();
+      const ctrl = new TrinityRewritePlayController(bus, () => {});
+      const before = ctrl.getFixtureJson();
+      ctrl.run("applyRule", { value: TRINITY_REWRITE_PLAY_DEFAULT_RULE_JSON });
+      expect(ctrl.getFixtureJson()).not.toBe(before);
     });
   });
 }

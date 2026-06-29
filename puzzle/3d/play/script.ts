@@ -5,13 +5,14 @@ import {
   ScriptRouter,
   consumePlaygroundFixtureArgv,
   playPollingEnv,
+  playgroundDevPortString,
+  playgroundPortEnv,
   runBun,
   runBundleScriptMain,
   runPlaywright,
   runViteBunxDev,
   runVitest,
 } from "../../../repo/lib/js/src/index.ts";
-import { playgroundDevPortString, playgroundPortEnv } from "../../../ui/styling/playground-dev-ports.ts";
 import { resolvePuzzle3dPlayFixtureSlug } from "./index.ts";
 
 class DevScript extends BundleScript {

@@ -1,8 +1,9 @@
 {
   "title": "Implement Trinity Technology",
   "emoji": "🔺",
-  "status": "open",
+  "status": "closed",
   "description": "Implement trinity technology end-to-end: ram (in-memory graph + manifest), jack (query language + shell CLI), rewrite (engine + play), WASM session reusing directed port graph vello canvas, React components, jack + rewrite playgrounds, Nakagin Capsule Tower fixture.",
+  "summary": "Implemented Trinity technology end-to-end: trinity_ram (manifest + graph + derived flatPosition BFS + trinity.graph/v1 fixture serde), trinity_jack (MATCH/WHERE/RETURN + CREATE/DELETE/SET/MERGE), trinity_jack_shell REPL CLI, trinity_rewrite (Lhs/Rhs/Rule + TrinityHost + wasm-bindgen TrinitySession with runJackJson/applyRewriteJson), Nakagin Capsule Tower fixture, @semio-tech/trinity-react (TrinityCanvas + runJackOnFixture/applyRewriteOnFixture + panel builders), jack + rewrite playgrounds with framework componentKind trinity, vite/launch.json wiring. Validated: cargo test (14), vitest (react 6, jack-play 4, rewrite-play 4), jack shell query, dev servers on :6054/:6056.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1754"
   },

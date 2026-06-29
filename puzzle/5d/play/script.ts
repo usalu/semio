@@ -1,7 +1,6 @@
 #!/usr/bin/env bun
 /** 🧭 `@semio-tech/puzzle-5d-play` task router: `bun ./script.ts <dev|build|test|regenerate-fixture> [fixture <id>] [args…]`. */
-import { BundleScript, ScriptRouter, consumePlaygroundFixtureArgv, playPollingEnv, runBun, runBundleScriptMain, runPlaywright, runViteBunxDev, runVitest } from "../../../repo/lib/js/src/index.ts";
-import { playgroundDevPortString, playgroundPortEnv } from "../../../ui/styling/playground-dev-ports.ts";
+import { BundleScript, ScriptRouter, consumePlaygroundFixtureArgv, playPollingEnv, playgroundDevPortString, playgroundPortEnv, runBun, runBundleScriptMain, runPlaywright, runViteBunxDev, runVitest } from "../../../repo/lib/js/src/index.ts";
 import { resolvePuzzle5dPlayFixtureSlug } from "./index.ts";
 
 class DevScript extends BundleScript {

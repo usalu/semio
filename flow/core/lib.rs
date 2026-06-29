@@ -1343,6 +1343,10 @@ fn build_channel_eval_json(fixture: &FlowFixtureV1, channels: &EvalChannels, kin
     serde_json::to_string(&widgets).unwrap_or_else(|_| "{}".into())
 }
 
+fn is_brep_geometry_handle(handle: &str) -> bool {
+    ["vertex-", "edge-", "wire-", "face-", "shell-", "solid-", "compound-", "curve-", "surface-"].iter().any(|prefix| handle.starts_with(prefix))
+}
+
 fn collect_geometry_handles_from_value(value: &NeuralValue, handles: &mut Vec<String>) {
     if let Some(dict) = value.as_dictionary() {
         collect_geometry_handles_from_dictionary(dict, handles);
@@ -1350,10 +1354,9 @@ fn collect_geometry_handles_from_value(value: &NeuralValue, handles: &mut Vec<St
 }
 
 fn collect_geometry_handles_from_dictionary(dict: &Dictionary, handles: &mut Vec<String>) {
-    if dict.schema() == Some("geometry") {
-        if let Some(handle) = dict.get("handle").and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()) {
+    if let Some(handle) = dict.get("handle").and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()) {
+        if is_brep_geometry_handle(handle) {
             handles.push(handle.to_string());
-            return;
         }
     }
     for key in dict.keys() {
@@ -1377,6 +1380,35 @@ fn collect_live_geometry_handles_from_channels(channels: &EvalChannels) -> Vec<S
     let mut handles = Vec::new();
     for dict in channels.outputs.values().chain(channels.inputs.values()) {
         collect_geometry_handles_from_dictionary(dict, &mut handles);
+    }
+    handles.sort();
+    handles.dedup();
+    handles
+}
+
+fn collect_drawing_handles_from_value(value: &NeuralValue, handles: &mut Vec<String>) {
+    if let Some(dict) = value.as_dictionary() {
+        collect_drawing_handles_from_dictionary(dict, handles);
+    }
+}
+
+fn collect_drawing_handles_from_dictionary(dict: &Dictionary, handles: &mut Vec<String>) {
+    if let Some(handle) = dict.get("handle").and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()) {
+        if handle.starts_with("drawing-") {
+            handles.push(handle.to_string());
+        }
+    }
+    for key in dict.keys() {
+        if let Some(value) = dict.get(key) {
+            collect_drawing_handles_from_value(value, handles);
+        }
+    }
+}
+
+fn collect_live_drawing_handles_from_channels(channels: &EvalChannels) -> Vec<String> {
+    let mut handles = Vec::new();
+    for dict in channels.outputs.values().chain(channels.inputs.values()) {
+        collect_drawing_handles_from_dictionary(dict, &mut handles);
     }
     handles.sort();
     handles.dedup();
@@ -2062,6 +2094,8 @@ impl FlowHost {
                 self.last_eval_json = build_channel_eval_json(&self.fixture, &channels, &self.kind_infos);
                 let live_handles = collect_live_geometry_handles_from_channels(&channels);
                 flow_module_brep::retain_geometry_handles(&live_handles);
+                let live_drawing_handles = collect_live_drawing_handles_from_channels(&channels);
+                flow_module_draw::retain_drawing_handles(&live_drawing_handles);
             }
             Err(err) => {
                 if self.last_eval_json.is_empty() || is_global_eval_error_json(&self.last_eval_json) {
@@ -3672,9 +3706,28 @@ mod tests {
     fn collect_live_geometry_handles_traverses_nested_dictionaries() {
         let mut outputs = HashMap::new();
         outputs.insert("box".into(), Dictionary::with_schema("geometry").insert("handle", NeuralValue::Atom(Atom::String("solid-1".into()))).insert("kind", NeuralValue::Atom(Atom::String("solid".into()))));
-        outputs.insert("nested".into(), Dictionary::new().insert("child", NeuralValue::Dictionary(Dictionary::with_schema("geometry").insert("handle", NeuralValue::Atom(Atom::String("solid-2".into()))))));
+        outputs.insert("nested".into(), Dictionary::new().insert("child", NeuralValue::Dictionary(Dictionary::with_schema("face").insert("handle", NeuralValue::Atom(Atom::String("face-2".into()))))));
         let handles = collect_live_geometry_handles(&outputs);
-        assert_eq!(handles, vec![String::from("solid-1"), String::from("solid-2")]);
+        assert_eq!(handles, vec![String::from("face-2"), String::from("solid-1")]);
+    }
+
+    #[test]
+    fn collect_live_drawing_handles_traverses_list_values() {
+        let mut outputs = HashMap::new();
+        outputs.insert(
+            "get".into(),
+            Dictionary::new().insert(
+                "value",
+                NeuralValue::Dictionary(
+                    Dictionary::with_schema("list").insert(
+                        "0",
+                        NeuralValue::Dictionary(Dictionary::with_schema("draw.drawing").insert("handle", NeuralValue::Atom(Atom::String("drawing-2".into())))),
+                    ),
+                ),
+            ),
+        );
+        let channels = EvalChannels { outputs, inputs: HashMap::new() };
+        assert_eq!(collect_live_drawing_handles_from_channels(&channels), vec![String::from("drawing-2")]);
     }
 
     #[test]
@@ -4687,7 +4740,7 @@ mod tests {
     #[test]
     fn rectangle_extrude_fixture_port_labels_follow_draw_lod() {
         let _guard = RECTANGLE_EXTRUDE_FIXTURE_TEST_LOCK.get_or_init(|| Mutex::new(())).lock().unwrap_or_else(|error| error.into_inner());
-        let json = include_str!("../../procedural/fixture/rectangle-extrude-volume.procedural.json");
+        let json = include_str!("../../procedural/3d/fixture/rectangle-extrude-volume.procedural.json");
         let fixture = FlowHost::parse_fixture_json(json).expect("fixture json");
         let mut host = FlowHost::from_fixture(fixture);
         host.set_neuron_kind_infos_json(&fixture_kind_infos_json());
@@ -4714,7 +4767,7 @@ mod tests {
     #[test]
     fn rectangle_extrude_fixture_evaluates_solid_output() {
         let _guard = RECTANGLE_EXTRUDE_FIXTURE_TEST_LOCK.get_or_init(|| Mutex::new(())).lock().unwrap_or_else(|error| error.into_inner());
-        let json = include_str!("../../procedural/fixture/rectangle-extrude-volume.procedural.json");
+        let json = include_str!("../../procedural/3d/fixture/rectangle-extrude-volume.procedural.json");
         let fixture = FlowHost::parse_fixture_json(json).expect("fixture json");
         let mut host = FlowHost::from_fixture(fixture);
         host.set_neuron_kind_infos_json(&fixture_kind_infos_json());
@@ -4727,6 +4780,27 @@ mod tests {
             .expect("extrude solid output");
         assert_eq!(solid.get("$schema").and_then(|v| v.as_str()), Some("geometry"));
         assert_eq!(solid.get("kind").and_then(|v| v.as_str()), Some("solid"));
+    }
+
+    #[test]
+    fn hexagonal_mushroom_fixture_reports_face_list_outputs() {
+        let json = include_str!("../../procedural/3d/fixture/hexagonal-mushroom-column.procedural.json");
+        let fixture = FlowHost::parse_fixture_json(json).expect("fixture json");
+        let mut host = FlowHost::from_fixture(fixture);
+        host.set_neuron_kind_infos_json(&fixture_kind_infos_json());
+        let eval_json = host.evaluate().expect("evaluate");
+        let parsed: serde_json::Value = serde_json::from_str(&eval_json).expect("eval json");
+        let face = parsed
+            .get("list_get_4")
+            .and_then(|entry| entry.get("out"))
+            .and_then(|out| out.get("0"))
+            .expect("list get face output");
+        assert_eq!(face.get("$schema").and_then(serde_json::Value::as_str), Some("face"));
+        let handle = face.get("handle").and_then(serde_json::Value::as_str).expect("face handle");
+        assert!(handle.starts_with("face-"));
+        let mesh: serde_json::Value = serde_json::from_str(&flow_module_brep::tessellate_geometry_json(handle, 0.05)).expect("face mesh json");
+        assert!(mesh.get("error").is_none(), "face tessellation: {mesh}");
+        assert!(mesh.get("position").and_then(serde_json::Value::as_array).is_some_and(|positions| !positions.is_empty()));
     }
 }
 // #endregion 🔖Tests

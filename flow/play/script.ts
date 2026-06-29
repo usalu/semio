@@ -5,13 +5,14 @@ import {
   BundleScript,
   ScriptRouter,
   playPollingEnv,
+  playgroundDevPortString,
+  playgroundPortEnv,
   runBun,
   runBundleScriptMain,
   runCargo,
   runViteBunxDev,
   runVitest,
 } from "../../repo/lib/js/src/index.ts";
-import { playgroundDevPortString, playgroundPortEnv } from "../../ui/styling/playground-dev-ports.ts";
 
 const wasmScript = join(import.meta.dir, "../core/script.ts");
 const moduleWasmScripts = ["core", "math", "text", "logic", "dictionary", "list", "brep", "bim"].map((name) => join(import.meta.dir, `../module/${name}/script.ts`));

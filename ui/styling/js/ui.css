@@ -511,6 +511,10 @@
   pointer-events: auto;
 }
 
+[data-slot="toolbar-anchor"] [role="toolbar"] {
+  max-height: 100%;
+}
+
 /* Toolbar zone interactive element normalization.
  * Placed outside @layer so it overrides Tailwind utility classes (border, divide, etc.)
  * which live in @layer utilities and beat @layer base by cascade priority.
@@ -965,6 +969,7 @@
 }
 
 [data-slot="footer"] {
+  --toolbar-item-height: var(--size-medium);
   border-top-color: var(--border-normal-color);
   transition: border-color 120ms ease;
 }

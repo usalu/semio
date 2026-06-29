@@ -40541,7 +40541,7 @@ func isEmojiRune(r rune) bool {
 // 🛠️resolveTechnologyEmoji looks up the emoji for a technology by name.
 // 📺Falls back to kind-derived emoji.
 func resolveTechnologyEmoji(techName string) string {
-	techs := GetTechnologies()
+	techs := LoadTechnologies()
 	for _, t := range techs {
 		if t.Name == techName {
 			if t.Emoji != "" {
@@ -41338,8 +41338,8 @@ func GetArtifactID(kind string, data map[string]interface{}) string {
 		if len(parts) > 1 {
 			bundleCode = parts[1]
 		}
-		pKind := DeriveTechnologyKind(technologyCode)
-		return emojiText(string(pKind)) + Flat(technologyCode) + bundleKindEmoji(data) + Flat(bundleCode)
+		techEmoji := resolveTechnologyEmoji(technologyCode)
+		return emojiText(techEmoji) + Flat(technologyCode) + bundleKindEmoji(data) + Flat(bundleCode)
 	case "folders":
 		return parentId + emojiText(EmojiFolders)
 	case "folder":

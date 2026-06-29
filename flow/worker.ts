@@ -51,7 +51,11 @@ function collectGeometryHandles(value: unknown, out: Array<{ readonly key: strin
     out.push({ key, handle: value });
     return;
   }
-  if (!value || typeof value !== "object" || Array.isArray(value)) return;
+  if (Array.isArray(value)) {
+    value.forEach((nested, index) => collectGeometryHandles(nested, out, `${key}.${index}`));
+    return;
+  }
+  if (!value || typeof value !== "object") return;
   const dict = value as Record<string, unknown>;
   if (dict.$schema === "geometry" && typeof dict.handle === "string") {
     out.push({ key, handle: dict.handle });
@@ -77,7 +81,7 @@ function tessellatePreviewMeshes(outputsJson: string, tolerance: number): Record
       for (const ref of refs) {
         try {
           const raw = JSON.parse(tessellate(ref.handle, tolerance)) as RawMeshTransfer;
-          if (!raw.error) meshes[ref.key] = raw;
+          if (!raw.error) meshes[ref.handle] = raw;
         } catch {
           /* skip invalid handle */
         }

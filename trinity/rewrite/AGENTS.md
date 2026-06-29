@@ -1,3 +1,13 @@
+---
+technology: trinity
+path: 🔺trinity♻️rewrite
+bundle:
+  name: rewrite
+  emoji: ♻️
+  description: A parametric graph rewriting framework for trinity based on jack.
+  kind: library
+---
+
 A parametric graph rewriting framework for trinity based on jack.
 
 # Lhs

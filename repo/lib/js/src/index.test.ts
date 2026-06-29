@@ -21,11 +21,13 @@ import {
   PLAYGROUND_PORTS,
   PLAYGROUND_SITE_DEV_PORTS,
   PLAYGROUND_SITE_HOSTS,
+  PLAYGROUND_LOCKED_FIXTURE_ENV,
   allPlaygroundReservedPorts,
   playgroundDevPort,
   playgroundEmbedUrl,
-  playgroundStaticSiteBuildOptions,
-} from "../../../../ui/styling/vite-elements-assets.ts";
+  playgroundPlayViteDefine,
+} from "./index.ts";
+import { playgroundStaticSiteBuildOptions } from "../../../../ui/styling/vite-elements-assets.ts";
 describe("Neo4j graph database registry", () => {
   test("joins name segments with hyphen", () => {
     expect(joinNeo4jGraphDatabaseName(["compose", "kit"])).toBe("compose-kit");
@@ -521,6 +523,31 @@ describe("playground static sites", () => {
     expect(playgroundDevPort("cad")).toBe(6020);
     expect(playgroundDevPort("dag")).toBe(6017);
     expect(allPlaygroundReservedPorts().size).toBeGreaterThanOrEqual(Object.keys(PLAYGROUND_PORTS).length);
+  });
+
+  test("assigns a unique port per dev and test slot", () => {
+    const seen = new Set<number>();
+    for (const spec of Object.values(PLAYGROUND_PORTS)) {
+      expect(seen.has(spec.dev)).toBe(false);
+      seen.add(spec.dev);
+      if (spec.test !== undefined) {
+        expect(seen.has(spec.test)).toBe(false);
+        seen.add(spec.test);
+      }
+    }
+  });
+
+  test("playgroundPlayViteDefine embeds locked fixture env", () => {
+    const prev = process.env[PLAYGROUND_LOCKED_FIXTURE_ENV];
+    try {
+      delete process.env[PLAYGROUND_LOCKED_FIXTURE_ENV];
+      expect(playgroundPlayViteDefine()["import.meta.env.PLAYGROUND_LOCKED_FIXTURE_ID"]).toBe('""');
+      process.env[PLAYGROUND_LOCKED_FIXTURE_ENV] = "concrete-forest";
+      expect(playgroundPlayViteDefine()["import.meta.env.PLAYGROUND_LOCKED_FIXTURE_ID"]).toBe('"concrete-forest"');
+    } finally {
+      if (prev === undefined) delete process.env[PLAYGROUND_LOCKED_FIXTURE_ENV];
+      else process.env[PLAYGROUND_LOCKED_FIXTURE_ENV] = prev;
+    }
   });
 
   test("playgroundStaticSiteBuildOptions uses relative-base dist output", () => {

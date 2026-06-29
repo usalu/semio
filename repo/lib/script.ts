@@ -2,10 +2,8 @@
 /** 🧭 `@semio-tech/repo-lib` folder policy router: `bun ./script.ts policy`. */
 import { readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
-import type { FolderLinter } from "./js/src/linter.ts";
-import { getWorkspaceRoot } from "./js/src/cli.ts";
-import { runPolicyOnlyMain } from "./js/src/index.ts";
-import { defineLint } from "./js/src/script.ts";
+import type { FolderLinter } from "./js/src/index.ts";
+import { getWorkspaceRoot, runPolicyOnlyMain, defineLint } from "./js/src/index.ts";
 
 export const policy = defineLint("repo-lib-folder", (l: FolderLinter) => {
   const root = getWorkspaceRoot();

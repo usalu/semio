@@ -21,7 +21,7 @@ export default createPlaygroundPlayViteConfig({
 	],
 	resolveDedupe: ["react", "react-dom", "scheduler", "@semio-tech/flow-react", "@semio-tech/procedural-2d-react"],
 	optimizeDeps: {
-		include: ["react", "react-dom", "@semio-tech/flow-react", "@semio-tech/procedural-2d-react"],
+		include: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime", "@semio-tech/infinite-cavas-react-renderer"],
 		exclude: [...FLOW_WASM_MODULE_OPTIMIZE_DEPS_EXCLUDE],
 		esbuildOptions: { target: "esnext" },
 	},

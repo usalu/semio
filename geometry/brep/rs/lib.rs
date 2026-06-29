@@ -54,7 +54,7 @@ use brepkit_topology::solid::SolidId;
 use brepkit_topology::vertex::{Vertex, VertexId};
 use brepkit_topology::wire::{OrientedEdge, Wire, WireId};
 use brepkit_topology::{Topology, TopologyError};
-use geometry_brep_engine::{BrepError, BrepKernel, ClosestPoint, FaceGroup, GeometryHandle, GeometryKind, MeshTransfer, ParamDomain, PointClassification, Vec3};
+use geometry_brep_engine::{BrepError, BrepKernel, BrepTopology, ClosestPoint, FaceGroup, GeometryHandle, GeometryKind, MeshTransfer, ParamDomain, PointClassification, Vec3};
 
 // #region Helpers
 const TOL: f64 = 1e-6;
@@ -1224,6 +1224,38 @@ impl BrepkitKernel {
         Ok(shape.clone())
     }
 
+    pub fn deconstruct_sync(&mut self, shape: &GeometryHandle) -> Result<BrepTopology, BrepError> {
+        let solids = self.solid_ids_from_handle(shape)?;
+        let mut vertex_ids = Vec::new();
+        let mut edge_ids = Vec::new();
+        let mut face_ids = Vec::new();
+        let mut seen_vertices = std::collections::HashSet::new();
+        let mut seen_edges = std::collections::HashSet::new();
+        let mut seen_faces = std::collections::HashSet::new();
+        for solid in solids {
+            for vertex in explorer::solid_vertices(&self.topo, solid).map_err(Self::map_topo_err)? {
+                if seen_vertices.insert(vertex.index()) {
+                    vertex_ids.push(vertex);
+                }
+            }
+            for edge in explorer::solid_edges(&self.topo, solid).map_err(Self::map_topo_err)? {
+                if seen_edges.insert(edge.index()) {
+                    edge_ids.push(edge);
+                }
+            }
+            for face in explorer::solid_faces(&self.topo, solid).map_err(Self::map_topo_err)? {
+                if seen_faces.insert(face.index()) {
+                    face_ids.push(face);
+                }
+            }
+        }
+        Ok(BrepTopology {
+            vertices: vertex_ids.into_iter().map(|id| self.register_entity(GeometryKind::Vertex, Entity::Vertex(id))).collect(),
+            edges: edge_ids.into_iter().map(|id| self.register_entity(GeometryKind::Edge, Entity::Edge(id))).collect(),
+            faces: face_ids.into_iter().map(|id| self.register_entity(GeometryKind::Face, Entity::Face(id))).collect(),
+        })
+    }
+
     pub fn export_step_sync(&self, shapes: &[GeometryHandle]) -> Result<String, BrepError> {
         let mut solids = Vec::new();
         for h in shapes {
@@ -1623,6 +1655,9 @@ impl BrepKernel for BrepkitKernel {
     }
     async fn convert_to_nurbs(&mut self, shape: &GeometryHandle) -> Result<GeometryHandle, BrepError> {
         self.convert_to_nurbs_sync(shape)
+    }
+    async fn deconstruct(&mut self, shape: &GeometryHandle) -> Result<BrepTopology, BrepError> {
+        self.deconstruct_sync(shape)
     }
     async fn export_step(&self, shapes: &[GeometryHandle]) -> Result<String, BrepError> {
         self.export_step_sync(shapes)

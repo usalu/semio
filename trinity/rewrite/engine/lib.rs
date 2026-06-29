@@ -414,6 +414,7 @@ pub fn trinity_lod_scale_json() -> String {
 #[cfg(target_arch = "wasm32")]
 mod wasm_session {
     use super::*;
+    use trinity_ram::GraphFixtureV1;
     use std::cell::RefCell;
     use std::rc::Rc;
     use wasm_bindgen::prelude::*;

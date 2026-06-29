@@ -606,7 +606,11 @@ function collectGeometryRefsFromValue(value: unknown, refs: GeometryRef[]): void
 		refs.push(value as GeometryRef);
 		return;
 	}
-	if (!value || typeof value !== "object" || Array.isArray(value)) return;
+	if (Array.isArray(value)) {
+		for (const nested of value) collectGeometryRefsFromValue(nested, refs);
+		return;
+	}
+	if (!value || typeof value !== "object") return;
 	for (const nested of Object.values(value as Record<string, unknown>)) {
 		collectGeometryRefsFromValue(nested, refs);
 	}
@@ -1620,6 +1624,20 @@ if (import.meta.vitest) {
 				}),
 			);
 			expect(items).toContainEqual({ widgetId: "box", port: "solid", direction: "out", kind: "geometry", handle: box.handle });
+		});
+
+		it("extractChannelPreviewItems collects faces nested in list outputs", () => {
+			const items = extractPreviewItems(
+				JSON.stringify({
+					get: {
+						in: {},
+						out: {
+							value: [{ $schema: "face", handle: "face-42" }],
+						},
+					},
+				}),
+			);
+			expect(items).toContainEqual({ widgetId: "get", port: "value", direction: "out", kind: "geometry", handle: "face-42" });
 		});
 
 		it("extractChannelPreviewItems collects schema point and vector outputs", () => {

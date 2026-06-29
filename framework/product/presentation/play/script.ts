@@ -4,12 +4,13 @@ import {
 	BundleScript,
 	ScriptRouter,
 	playPollingEnv,
+	playgroundDevPortString,
+	playgroundPortEnv,
 	runBun,
 	runBundleScriptMain,
 	runVitest,
 	runViteBunxDev,
 } from "../../../../repo/lib/js/src/index.ts";
-import { playgroundDevPortString, playgroundPortEnv } from "../../../../ui/styling/playground-dev-ports.ts";
 
 class DevScript extends BundleScript {
 	run(segments: string[]): void {

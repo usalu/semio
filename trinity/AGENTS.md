@@ -1,3 +1,7 @@
+---
+emoji: 🔺
+---
+
 Trinity is for working directed property port graphs where edges connect on ports.
 Nodes, Edges and Ports can have properties (data and derived).
 

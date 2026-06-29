@@ -12,7 +12,7 @@ import {
 } from "./resolve.ts";
 import { STYLING_BOARD_THEMES } from "./tokens.generated.ts";
 import { puzzle3dLockedFixtureMeshBasenames, puzzle3dMeshBasenamesInJson } from "../vite-elements-assets.ts";
-import { PLAYGROUND_LOCKED_FIXTURE_ENV } from "../playground-dev-ports.ts";
+import { PLAYGROUND_LOCKED_FIXTURE_ENV } from "../../../repo/lib/js/src/index.ts";
 
 const repoRoot = resolve(import.meta.dir, "../../..");
 
@@ -72,6 +72,14 @@ describe("styling resolve", () => {
 		expect(uiCss).toContain('[data-level="panel"] {\n  --border-element-color: var(--element-panel);');
 		expect(uiCss).toContain(".dark {\n  --base: var(--color-dark);");
 		expect(uiCss).toContain("--element-panel: var(--color-gray-600);");
+	});
+
+	it("ui.css keeps footer toolbar height inside the footer bar", async () => {
+		const { readFile } = await import("node:fs/promises");
+		const { resolve } = await import("node:path");
+		const uiCss = await readFile(resolve(import.meta.dir, "ui.css"), "utf8");
+		expect(uiCss).toContain('[data-slot="footer"] {\n  --toolbar-item-height: var(--size-medium);');
+		expect(uiCss).toContain('[data-slot="toolbar-anchor"] [role="toolbar"] {\n  max-height: 100%;\n}');
 	});
 });
 

@@ -93,10 +93,9 @@ function previewItemsWithMeshes(
 	const previousByKey = new Map(previous.map((item) => [previewItemKey(item), item]));
 	return items.map((item) => {
 		if (item.kind !== "geometry" || item.direction !== "out") return item;
-		const meshKey = `${item.widgetId}:${item.port}`;
 		const previousItem = previousByKey.get(previewItemKey(item));
 		const mesh =
-			meshTransferFromPreviewPayload(previewMeshes?.[meshKey]) ??
+			meshTransferFromPreviewPayload(previewMeshes?.[item.handle]) ??
 			(previousItem?.handle === item.handle ? previousItem.mesh : undefined);
 		return mesh ? { ...item, mesh } : item;
 	});
@@ -2069,6 +2068,29 @@ if (import.meta.vitest) {
 			expect(ctrl.getPreviewItems()).toEqual([
 				{ widgetId: "box", port: "solid", direction: "out", kind: "geometry", handle: "solid-1" },
 			]);
+		});
+
+		it("setEvalOutputs attaches nested face meshes by handle", () => {
+			const bus = new CommandBus();
+			const ctrl = new ProceduralPlayController(bus, () => {});
+			ctrl.run("setEvalOutputs", {
+				outputsJson: JSON.stringify({
+					get: { in: {}, out: { value: { 0: { $schema: "face", handle: "face-42" } } } },
+				}),
+				previewMeshes: {
+					"face-42": {
+						position: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+						normal: [0, 0, 1, 0, 0, 1, 0, 0, 1],
+						index: [0, 1, 2],
+						edges: [],
+						faceGroups: [{ start: 0, count: 3, entityId: "face-42" }],
+					},
+				},
+			});
+			expect(ctrl.getPreviewItems()).toHaveLength(1);
+			const item = ctrl.getPreviewItems()[0];
+			expect(item?.kind).toBe("geometry");
+			expect(item?.kind === "geometry" ? item.mesh?.position.length : 0).toBe(9);
 		});
 
 		it("setEvalOutputs stores point and vector preview items", () => {
