@@ -10,19 +10,19 @@ todos:
     status: completed
   - id: react-bridge
     content: Add tokenizeJackOnFixture/completeJackOnFixture + token/completion types and vitest in trinity/react/index.tsx
-    status: in_progress
+    status: completed
   - id: editor-component
     content: Add generic 'editor' ComponentKind, UiEditorHostSurfaceNode, buildEditorWindowBody, and renderer surface-binding/registration across framework platform+playground core and renderers
-    status: pending
+    status: completed
   - id: code-editor
     content: Implement handcrafted language-agnostic CodeEditor React primitive (textarea+highlight overlay, gutter, autocomplete popup, Cmd+Enter submit) with theme color mapping and a vitest
-    status: pending
+    status: completed
   - id: jack-windows
     content: Rewire trinity/jack/play into graph+editor+results windows with nested split layout; drop engagement input; wire editor/results surface hosts in the playground renderer; update vitests
-    status: pending
+    status: completed
   - id: validate
     content: Run cargo tests, vitest, and the trinity jack dev server; confirm highlighting/completion/run/results at runtime via [DEBUG] logs
-    status: pending
+    status: completed
 isProject: false
 ---
 

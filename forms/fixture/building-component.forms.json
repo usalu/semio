@@ -1,0 +1,42 @@
+{
+  "schema": "forms.form/v1",
+  "id": "building-component",
+  "version": "1",
+  "title": "Building Component",
+  "steps": [
+    {
+      "id": "component",
+      "title": "Component",
+      "description": "Configure a parametric building component.",
+      "questions": [
+        {
+          "id": "name",
+          "kind": "text",
+          "label": "Component Name",
+          "required": true,
+          "placeholder": "Column A"
+        },
+        {
+          "id": "material",
+          "kind": "single",
+          "label": "Material",
+          "required": true,
+          "options": [
+            { "value": "concrete", "label": "Concrete" },
+            { "value": "steel", "label": "Steel" },
+            { "value": "timber", "label": "Timber" }
+          ],
+          "default": "concrete"
+        },
+        {
+          "id": "geometry",
+          "kind": "buildingComponent",
+          "label": "Hexagonal Column",
+          "description": "Parametric column geometry from procedural flow.",
+          "required": true,
+          "fixtureSlug": "hexagonal-mushroom-column"
+        }
+      ]
+    }
+  ]
+}

@@ -240,6 +240,18 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+The neural, flow, procedural, forms technologies are still adhoc.
+neural is headless dictionary in dictionary out technology for computation.
+flow is the ui extension for neural (introduces channels for named keys, input widgets such as sliders for interactive construction of the in dictionary for neural).
+flow must build a neural dag and keep all ui information separate with different root keys so any flow can be evaluated headlessly.
+Add new output nodes to flow in order to define dictionary out.
+The preview node is shown during interaction such as in forms.
+Forms build up a dictionary from questions (e.g. the 3d data from procedural input).
+Everything is non-desctructive by default.
+Refactor and extend everything cleanly.
+
+---
+
 We are splitting puzzle 2d into general reusable bundles.
 It must be extendable on multiple levels.
 every extension is just a rust file.@semio-tech/infinite-cavas-react-renderer/index.tsx @infinite/cavas/vello/lib.rs @infinite/cavas/AGENTS.md @infinite @infinite/cavas @semio-tech/infinite-cavas-react-renderer @infinite/cavas/vello @gis/map/AGENTS.md @gis/map/lib.rs @gis @gis/map @mathematical/graph/AGENTS.md @mathematical/graph/lib.rs @mathematical/graph @reasoning/mindmap/AGENTS.md @reasoning/mindmap/lib.rs @reasoning/mindmap 

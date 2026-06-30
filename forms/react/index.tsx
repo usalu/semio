@@ -5,16 +5,39 @@
 // #endregion 🧲Header
 
 import {
+	applyGenerationValuesToFixture,
 	createFormId,
+	flowFixtureToFormSpec,
 	formSpecToJson,
 	FormRuntime,
+	formsExtensionHost,
+	isExtensionFormQuestion,
 	parseFormSpec,
+	questionKindContribution,
+	registerFormsFlowFixtureResolver,
+	resolveFormsFlowFixtureJson,
+	resolveQuestionFixtureSlug,
 	type FormQuestion,
+	type FormQuestionExtension,
 	type FormSpec,
 	type FormStep,
 	type FormValue,
 	type FormValues,
 } from "@semio-tech/forms-core";
+export {
+	applyGenerationValuesToFixture,
+	flowFixtureToFormSpec,
+	formsExtensionHost,
+	type FormsExtensionEntry,
+	type FormsQuestionKindContribution,
+} from "@semio-tech/forms-core";
+import { FlowOrchestratorClient } from "@semio-tech/flow-react";
+import {
+	ensureProceduralBrepBridge,
+	extractChannelPreviewItems,
+	ProceduralPreview,
+	type ProceduralPreviewItem,
+} from "@semio-tech/procedural-3d-react";
 import {
 	Button,
 	Field,
@@ -32,6 +55,24 @@ import {
 	cn,
 } from "@semio-tech/ui-react";
 import React from "react";
+import { createPortal } from "react-dom";
+import hexColumnFixture from "../../procedural/3d/fixture/hexagonal-mushroom-column.procedural.json";
+
+function registerDefaultFormsFlowFixtures(): void {
+	registerFormsFlowFixtureResolver("hexagonal-mushroom-column", () =>
+		typeof hexColumnFixture === "string" ? hexColumnFixture : JSON.stringify(hexColumnFixture),
+	);
+}
+
+registerDefaultFormsFlowFixtures();
+void formsExtensionHost.activateDefaults();
+
+let formsFlowEvalClient: FlowOrchestratorClient | null = null;
+
+function getFormsFlowEvalClient(): FlowOrchestratorClient {
+	if (!formsFlowEvalClient) formsFlowEvalClient = new FlowOrchestratorClient();
+	return formsFlowEvalClient;
+}
 
 // #region 📐Contracts
 export const FORMS_QUESTION_DRAG_MIME = "application/x-semio-forms-question-kind";
@@ -41,6 +82,7 @@ export interface FormRendererProps {
 	readonly values?: FormValues;
 	readonly onChange?: (values: FormValues) => void;
 	readonly onSubmit?: (values: FormValues) => void;
+	readonly interactive?: boolean;
 	readonly className?: string;
 }
 
@@ -87,10 +129,72 @@ export function defaultFormSpec(id = "default"): FormSpec {
 	};
 }
 
+function Flow3dQuestionControl({
+	question,
+	value,
+	onValue,
+	interactive,
+}: {
+	readonly question: FormQuestionExtension;
+	readonly value: FormValue;
+	readonly onValue: (next: FormValue) => void;
+	readonly interactive: boolean;
+}): React.ReactElement {
+	const slug = resolveQuestionFixtureSlug(question);
+	const fixtureJson = slug ? resolveFormsFlowFixtureJson(slug) : undefined;
+	const paramSpec = React.useMemo(
+		() => (fixtureJson ? flowFixtureToFormSpec(fixtureJson, `${question.id}-params`) : null),
+		[fixtureJson, question.id],
+	);
+	const paramValues = (typeof value === "object" && value != null && !Array.isArray(value) ? value : {}) as FormValues;
+	const paramValuesKey = React.useMemo(() => JSON.stringify(paramValues), [paramValues]);
+	const [previewItems, setPreviewItems] = React.useState<readonly ProceduralPreviewItem[]>([]);
+	const [kernel, setKernel] = React.useState<Awaited<ReturnType<typeof ensureProceduralBrepBridge>>>();
+	const evalGenRef = React.useRef(0);
+
+	React.useEffect(() => {
+		void ensureProceduralBrepBridge().then(setKernel);
+	}, []);
+
+	React.useEffect(() => {
+		if (!fixtureJson || !interactive) return;
+		const gen = ++evalGenRef.current;
+		const timer = globalThis.setTimeout(() => {
+			void (async () => {
+				try {
+					const client = getFormsFlowEvalClient();
+					const patched = applyGenerationValuesToFixture(fixtureJson, paramValues);
+					await client.loadFixtureJson(patched);
+					const result = await client.evaluate();
+					if (gen !== evalGenRef.current) return;
+					setPreviewItems(extractChannelPreviewItems(result.outputsJson));
+				} catch (error) {
+					console.log("[DEBUG] forms flow3d preview eval failed", error);
+				}
+			})();
+		}, 200);
+		return () => globalThis.clearTimeout(timer);
+	}, [fixtureJson, interactive, paramValuesKey]);
+
+	if (!paramSpec || !fixtureJson) {
+		return <p className="text-xs text-muted-foreground">Flow fixture unavailable.</p>;
+	}
+
+	return (
+		<div className="grid min-h-0 gap-double lg:grid-cols-[minmax(0,1fr)_minmax(12rem,18rem)]" data-slot="forms-flow3d-question">
+			<FormRenderer spec={paramSpec} values={paramValues} interactive={interactive} onChange={(next) => onValue(next)} />
+			<div className="min-h-[12rem] rounded-md border border-border">
+				<ProceduralPreview items={previewItems} kernel={kernel ?? undefined} className="h-full min-h-[12rem]" />
+			</div>
+		</div>
+	);
+}
+
 function questionControl(
 	question: FormQuestion,
 	value: FormValue,
 	onValue: (next: FormValue) => void,
+	interactive = true,
 ): React.ReactNode {
 	const id = `form-${question.id}`;
 	switch (question.kind) {
@@ -189,8 +293,212 @@ function questionControl(
 		case "file":
 			return <Input id={id} type="file" accept={question.accept} onChange={(event) => onValue(event.target.files?.[0]?.name ?? "")} />;
 		default:
+			if (isExtensionFormQuestion(question) && questionKindContribution(question)?.preview?.surface === "flow3d") {
+				return <Flow3dQuestionControl question={question} value={value} onValue={onValue} interactive={interactive} />;
+			}
 			return null;
 	}
+}
+
+/** @emoji 🖱️ Forms question palette drag session (workbench catalogue → hierarchy / builder). */
+export const formsQuestionPaletteDragRef = { active: false };
+export const formsQuestionPalettePointerDragRef = { active: false, encoded: null as string | null };
+export const formsQuestionPaletteDragEncodedRef = { current: null as string | null };
+export const formsQuestionPaletteDragClientRef = { clientX: 0, clientY: 0 };
+export const formsQuestionPaletteDropCommittedRef = { current: false };
+
+let formsQuestionPaletteDragPreviewRafId: number | null = null;
+
+function formsStopQuestionPaletteDragPreviewLoop(): void {
+	if (formsQuestionPaletteDragPreviewRafId !== null) {
+		globalThis.cancelAnimationFrame?.(formsQuestionPaletteDragPreviewRafId);
+		formsQuestionPaletteDragPreviewRafId = null;
+	}
+}
+
+function formsTickQuestionPaletteDragPreview(): void {
+	if (!formsReadActiveQuestionPaletteDragEncoded()) {
+		formsStopQuestionPaletteDragPreviewLoop();
+		return;
+	}
+	window.dispatchEvent(new CustomEvent("forms-question-drag-preview", { detail: { clientX: formsQuestionPaletteDragClientRef.clientX, clientY: formsQuestionPaletteDragClientRef.clientY } }));
+	const requestFrame = globalThis.requestAnimationFrame?.bind(globalThis);
+	if (!requestFrame) {
+		formsQuestionPaletteDragPreviewRafId = null;
+		return;
+	}
+	formsQuestionPaletteDragPreviewRafId = requestFrame(formsTickQuestionPaletteDragPreview);
+}
+
+function formsStartQuestionPaletteDragPreviewLoop(): void {
+	if (formsQuestionPaletteDragPreviewRafId !== null) return;
+	formsTickQuestionPaletteDragPreview();
+}
+
+/** @emoji 📦 Reads the encoded palette drag payload when a catalogue question drag is active. */
+export function formsReadActiveQuestionPaletteDragEncoded(): string | null {
+	const pointer = formsQuestionPalettePointerDragRef.encoded?.trim();
+	if (pointer) return pointer;
+	const shared = formsQuestionPaletteDragEncodedRef.current?.trim();
+	return shared ? shared : null;
+}
+
+/** @emoji 🔍 Parses a catalogue drag payload into a question kind. */
+export function parseFormsQuestionDragPayload(encoded: string): { kind?: string } | null {
+	try {
+		return JSON.parse(encoded) as { kind?: string };
+	} catch {
+		return null;
+	}
+}
+
+/** @emoji 🏷️ Preview label for the floating palette drag ghost. */
+export function formsQuestionPaletteDragPreviewLabel(encoded: string): string {
+	const payload = parseFormsQuestionDragPayload(encoded);
+	return payload?.kind ?? "Question";
+}
+
+/** @emoji 👻 Notes palette-drag client coordinates for preview refresh. */
+export function formsNoteQuestionPaletteDragClient(clientX: number, clientY: number): void {
+	formsQuestionPaletteDragClientRef.clientX = clientX;
+	formsQuestionPaletteDragClientRef.clientY = clientY;
+	if (!formsReadActiveQuestionPaletteDragEncoded()) return;
+	formsStartQuestionPaletteDragPreviewLoop();
+}
+
+/** @emoji ⎋ Aborts an in-flight catalogue question palette drag. */
+export function abortFormsQuestionPaletteDrag(): void {
+	const wasActive = formsQuestionPalettePointerDragRef.active || formsQuestionPaletteDragRef.active;
+	formsQuestionPalettePointerDragRef.active = false;
+	formsQuestionPalettePointerDragRef.encoded = null;
+	formsQuestionPaletteDragEncodedRef.current = null;
+	formsQuestionPaletteDragRef.active = false;
+	if (wasActive) {
+		window.dispatchEvent(new CustomEvent("forms-question-drag-session", { detail: null }));
+	}
+	formsStopQuestionPaletteDragPreviewLoop();
+	window.dispatchEvent(new CustomEvent("forms-question-drag-preview", { detail: null }));
+}
+
+/** @emoji 🖱️ Begins pointer palette drag with an encoded question kind payload. */
+export function beginFormsQuestionPalettePointerDrag(encoded: string): void {
+	formsQuestionPaletteDropCommittedRef.current = false;
+	formsQuestionPalettePointerDragRef.active = true;
+	formsQuestionPalettePointerDragRef.encoded = encoded;
+	formsQuestionPaletteDragEncodedRef.current = encoded;
+	formsQuestionPaletteDragRef.active = true;
+	window.dispatchEvent(new CustomEvent("forms-question-drag-session", { detail: { encoded } }));
+	formsStartQuestionPaletteDragPreviewLoop();
+}
+
+/** @emoji 🖱️ Ends pointer palette drag without committing a drop. */
+export function cancelFormsQuestionPalettePointerDrag(): void {
+	if (!formsQuestionPalettePointerDragRef.active && !formsQuestionPaletteDragRef.active) return;
+	formsQuestionPalettePointerDragRef.active = false;
+	formsQuestionPalettePointerDragRef.encoded = null;
+	formsQuestionPaletteDragEncodedRef.current = null;
+	formsQuestionPaletteDragRef.active = false;
+	formsStopQuestionPaletteDragPreviewLoop();
+	window.dispatchEvent(new CustomEvent("forms-question-drag-session", { detail: null }));
+	window.dispatchEvent(new CustomEvent("forms-question-drag-preview", { detail: null }));
+}
+
+/** @emoji 🔍 Whether a drag gesture carries a forms question palette payload. */
+export function formsQuestionDragAcceptsTransfer(types: readonly string[]): boolean {
+	if (formsQuestionPalettePointerDragRef.active || formsQuestionPaletteDragRef.active) return true;
+	return types.includes(FORMS_QUESTION_DRAG_MIME);
+}
+
+/** @emoji 📥 Commits a palette question drop at client coordinates. */
+export function endFormsQuestionPalettePointerDrag(
+	clientX: number,
+	clientY: number,
+	onDrop: (detail: { kind: string; clientX: number; clientY: number }) => boolean,
+): void {
+	if (!formsQuestionPalettePointerDragRef.active) return;
+	const encoded = formsQuestionPalettePointerDragRef.encoded;
+	cancelFormsQuestionPalettePointerDrag();
+	if (!encoded) return;
+	const payload = parseFormsQuestionDragPayload(encoded);
+	if (!payload?.kind) return;
+	if (onDrop({ kind: payload.kind, clientX, clientY })) {
+		formsQuestionPaletteDropCommittedRef.current = true;
+	}
+}
+
+/** @emoji 👻 Floating label following the cursor during catalogue question drags. */
+export const FormsQuestionPaletteDragGhost: React.FC = () => {
+	const [tick, setTick] = React.useState(0);
+	React.useEffect(() => {
+		const onPreview = () => setTick((value) => value + 1);
+		const onSession = () => setTick((value) => value + 1);
+		window.addEventListener("forms-question-drag-preview", onPreview);
+		window.addEventListener("forms-question-drag-session", onSession);
+		return () => {
+			window.removeEventListener("forms-question-drag-preview", onPreview);
+			window.removeEventListener("forms-question-drag-session", onSession);
+		};
+	}, []);
+	const encoded = formsReadActiveQuestionPaletteDragEncoded();
+	if (!encoded || typeof document === "undefined" || !document.body) return null;
+	const { clientX, clientY } = formsQuestionPaletteDragClientRef;
+	return createPortal(
+		<div
+			className="border-primary bg-panel text-foreground pointer-events-none fixed z-tutorial rounded-md border px-2 py-1 text-xs shadow-md"
+			style={{ left: clientX + 12, top: clientY + 12 }}
+		>
+			{formsQuestionPaletteDragPreviewLabel(encoded)}
+		</div>,
+		document.body,
+	);
+};
+
+/** @emoji 📍 Global pointer / HTML5 drag bridge for catalogue question drops. */
+export function FormsQuestionPaletteDragBridge(props: {
+	readonly enabled?: boolean;
+	readonly onCommitDrop: (detail: { kind: string; clientX: number; clientY: number }) => boolean;
+}): null {
+	const enabled = props.enabled ?? true;
+	const onCommitDrop = props.onCommitDrop;
+	React.useEffect(() => {
+		if (!enabled) return;
+		const onDragOver = (event: DragEvent): void => {
+			if (!formsQuestionDragAcceptsTransfer([...event.dataTransfer!.types])) return;
+			formsNoteQuestionPaletteDragClient(event.clientX, event.clientY);
+		};
+		window.addEventListener("dragover", onDragOver);
+		return () => window.removeEventListener("dragover", onDragOver);
+	}, [enabled]);
+	React.useEffect(() => {
+		if (!enabled) return;
+		const onPointerMove = (event: PointerEvent): void => {
+			if (!formsQuestionPalettePointerDragRef.active) return;
+			formsNoteQuestionPaletteDragClient(event.clientX, event.clientY);
+		};
+		const onPointerUp = (event: PointerEvent): void => {
+			endFormsQuestionPalettePointerDrag(event.clientX, event.clientY, onCommitDrop);
+		};
+		const onPointerCancel = (): void => {
+			if (!formsQuestionPalettePointerDragRef.active) return;
+			abortFormsQuestionPaletteDrag();
+		};
+		const onKeyDown = (event: KeyboardEvent): void => {
+			if (event.key !== "Escape" || !formsReadActiveQuestionPaletteDragEncoded()) return;
+			event.preventDefault();
+			abortFormsQuestionPaletteDrag();
+		};
+		window.addEventListener("pointermove", onPointerMove);
+		window.addEventListener("pointerup", onPointerUp, true);
+		window.addEventListener("pointercancel", onPointerCancel);
+		window.addEventListener("keydown", onKeyDown, true);
+		return () => {
+			window.removeEventListener("pointermove", onPointerMove);
+			window.removeEventListener("pointerup", onPointerUp, true);
+			window.removeEventListener("pointercancel", onPointerCancel);
+			window.removeEventListener("keydown", onKeyDown, true);
+		};
+	}, [enabled, onCommitDrop]);
+	return null;
 }
 
 /** @emoji 🖱️ {@link TreeDragAndDropController} for workbench rows that carry forms question palette `dragData`. */
@@ -205,18 +513,38 @@ export function formsQuestionPaletteTreeDragController(
 		getDragData: ({ sourceItem }) => dragDataByItemId.get(sourceItem.id),
 		pointerPaletteDrag: {
 			readEncodedDragPayload: readEncoded,
-			begin: () => {},
-			cancel: () => {},
+			begin: beginFormsQuestionPalettePointerDrag,
+			cancel: cancelFormsQuestionPalettePointerDrag,
 		},
-		onDragStart: () => {},
-		onDragEnd: () => {},
+		onDragStart: ({ sourceItem }) => {
+			if (formsQuestionPalettePointerDragRef.active) return;
+			formsQuestionPaletteDropCommittedRef.current = false;
+			formsQuestionPaletteDragRef.active = true;
+			const payload = readEncoded(dragDataByItemId.get(sourceItem.id));
+			if (payload) {
+				formsQuestionPaletteDragEncodedRef.current = payload;
+				window.dispatchEvent(new CustomEvent("forms-question-drag-session", { detail: { encoded: payload } }));
+				formsStartQuestionPaletteDragPreviewLoop();
+			}
+		},
+		onDragEnd: () => {
+			if (formsQuestionPalettePointerDragRef.active) return;
+			formsQuestionPaletteDragEncodedRef.current = null;
+			formsQuestionPaletteDragRef.active = false;
+			if (!formsQuestionPaletteDropCommittedRef.current) {
+				formsStopQuestionPaletteDragPreviewLoop();
+				window.dispatchEvent(new CustomEvent("forms-question-drag-preview", { detail: null }));
+			}
+			formsQuestionPaletteDropCommittedRef.current = false;
+			window.dispatchEvent(new CustomEvent("forms-question-drag-session", { detail: null }));
+		},
 	};
 }
 // #endregion 🔧Helpers
 
 // #region 🖼️FormRenderer
 /** @emoji 🖼️ Interactive multi-step form renderer. */
-export const FormRenderer: React.FC<FormRendererProps> = ({ spec, values, onChange, onSubmit, className }) => {
+export const FormRenderer: React.FC<FormRendererProps> = ({ spec, values, onChange, onSubmit, interactive = true, className }) => {
 	const runtimeRef = React.useRef<FormRuntime | null>(null);
 	const [, bump] = React.useState(0);
 	if (!runtimeRef.current || runtimeRef.current.getSpec() !== spec) {
@@ -245,38 +573,42 @@ export const FormRenderer: React.FC<FormRendererProps> = ({ spec, values, onChan
 				<h3 className="text-base font-medium">{step.title}</h3>
 				{step.description ? <p className="text-sm text-muted-foreground">{step.description}</p> : null}
 			</div>
-			<div className="flex flex-col gap-medium">
+			<div className={cn("flex flex-col gap-medium", !interactive && "pointer-events-none opacity-90")}>
 				{runtime.getVisibleQuestions().map((question) => (
 					<Field key={question.id} id={question.id} label={question.label} description={question.description} required={question.required} error={errorById[question.id]}>
-						{questionControl(question, runtime.getValues()[question.id] ?? null, (value) => setValue(question.id, value))}
+						{questionControl(question, runtime.getValues()[question.id] ?? null, (next) => setValue(question.id, next), interactive)}
 					</Field>
 				))}
 			</div>
-			<div className="flex items-center gap-single">
-				<Button icon="chevron-left" text="Back" disabled={runtime.getCurrentStepIndex() <= 0} onClick={() => { runtime.previousStep(); bump((value) => value + 1); }} />
-				{runtime.getCurrentStepIndex() < spec.steps.length - 1 ? (
-					<Button
-						icon="chevron-right"
-						text="Next"
-						disabled={!runtime.canAdvance()}
-						onClick={() => {
-							runtime.nextStep();
-							bump((value) => value + 1);
-						}}
-					/>
-				) : (
-					<Button
-						icon="check"
-						text="Submit"
-						disabled={!runtime.canAdvance()}
-						onClick={() => {
-							const result = runtime.submit();
-							if (result.ok) onSubmit?.(result.values);
-							bump((value) => value + 1);
-						}}
-					/>
-				)}
-			</div>
+			{interactive ? (
+				<div className="flex items-center gap-single">
+					<Button icon="chevron-left" text="Back" disabled={runtime.getCurrentStepIndex() <= 0} onClick={() => { runtime.previousStep(); bump((value) => value + 1); }} />
+					{runtime.getCurrentStepIndex() < spec.steps.length - 1 ? (
+						<Button
+							icon="chevron-right"
+							text="Next"
+							disabled={!runtime.canAdvance()}
+							onClick={() => {
+								runtime.nextStep();
+								bump((value) => value + 1);
+							}}
+						/>
+					) : (
+						<Button
+							icon="check"
+							text="Submit"
+							disabled={!runtime.canAdvance()}
+							onClick={() => {
+								const result = runtime.submit();
+								if (result.ok) onSubmit?.(result.values);
+								bump((value) => value + 1);
+							}}
+						/>
+					)}
+				</div>
+			) : (
+				<p className="text-xs text-muted-foreground">Switch to Try mode to fill out this form.</p>
+			)}
 		</div>
 	);
 };
@@ -288,7 +620,7 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({ spec, onChange, classN
 	void onChange;
 	return (
 		<div className={cn("min-h-0 min-w-0", className)} data-slot="form-builder">
-			<FormRenderer spec={spec} />
+			<FormRenderer spec={spec} interactive={false} />
 		</div>
 	);
 };
@@ -341,79 +673,6 @@ export const FlowGenerateSurface: React.FC<FlowGenerateSurfaceProps> = ({
 	);
 };
 
-/** @emoji 🔀 Maps flow input widgets into a {@link FormSpec}. */
-export function flowFixtureToFormSpec(fixtureJson: string, formId = "flow-generate"): FormSpec {
-	const fixture = JSON.parse(fixtureJson) as { readonly widgets?: readonly Record<string, unknown>[] };
-	const questions: FormQuestion[] = [];
-	for (const widget of fixture.widgets ?? []) {
-		const kind = widget.kind;
-		const id = String(widget.id ?? createFormId("widget"));
-		if (kind === "inputSlider") {
-			questions.push({
-				id,
-				kind: "slider",
-				label: id,
-				min: typeof widget.min === "number" ? widget.min : 0,
-				max: typeof widget.max === "number" ? widget.max : 100,
-				step: typeof widget.step === "number" ? widget.step : 1,
-				default: typeof widget.value === "number" ? widget.value : 0,
-			});
-		} else if (kind === "inputStepper") {
-			const fields = Array.isArray(widget.fields)
-				? widget.fields.map((field: Record<string, unknown>) => ({
-						key: String(field.key ?? "v"),
-						label: String(field.key ?? "v"),
-						value: typeof field.value === "number" ? field.value : 0,
-					}))
-				: [{ key: "x", label: "X", value: 0 }];
-			questions.push({ id, kind: "vector", label: id, schema: String(widget.schema ?? "vec"), fields, step: typeof widget.step === "number" ? widget.step : 0.1 });
-		} else if (kind === "inputNote") {
-			questions.push({ id, kind: "note", label: id, text: String(widget.text ?? "") });
-		} else if (kind === "inputImage") {
-			questions.push({ id, kind: "image", label: id, src: typeof widget.src === "string" ? widget.src : undefined });
-		} else if (kind === "variable") {
-			const schema = String(widget.schema ?? "text");
-			if (schema.includes("enum") && Array.isArray((widget as { options?: unknown }).options)) {
-				const options = ((widget as { options: readonly { value: string; label: string }[] }).options ?? []).map((option) => ({
-					value: option.value,
-					label: option.label,
-				}));
-				questions.push({ id, kind: "single", label: String(widget.name ?? id), options, default: options[0]?.value });
-			} else {
-				questions.push({ id, kind: "text", label: String(widget.name ?? id), default: "" });
-			}
-		}
-	}
-	return {
-		schema: "forms.form/v1",
-		id: formId,
-		version: "1",
-		title: "Generate",
-		steps: [{ id: "inputs", title: "Inputs", questions }],
-	};
-}
-
-/** @emoji 🔧 Applies generation values back onto a flow fixture JSON blob. */
-export function applyGenerationValuesToFixture(fixtureJson: string, values: FormValues): string {
-	const fixture = JSON.parse(fixtureJson) as { readonly widgets?: Record<string, unknown>[] };
-	const widgets = (fixture.widgets ?? []).map((widget) => {
-		const id = String(widget.id ?? "");
-		if (!(id in values)) return widget;
-		const value = values[id];
-		if (widget.kind === "inputSlider" && typeof value === "number") return { ...widget, value };
-		if (widget.kind === "inputStepper" && Array.isArray(value)) {
-			const fields = Array.isArray(widget.fields)
-				? widget.fields.map((field: Record<string, unknown>, index: number) => ({ ...field, value: Number(value[index] ?? field.value ?? 0) }))
-				: [];
-			return { ...widget, fields };
-		}
-		if (widget.kind === "inputNote" && typeof value === "string") return { ...widget, text: value };
-		if (widget.kind === "inputImage" && typeof value === "string") return { ...widget, src: value };
-		if (widget.kind === "variable" && typeof value === "string") return { ...widget, name: value };
-		return widget;
-	});
-	return JSON.stringify({ ...fixture, widgets });
-}
 // #endregion ⚡FlowGenerate
 
 // #region 🧪Tests
@@ -440,6 +699,16 @@ if (import.meta.vitest) {
 
 	it("serializes default form spec", () => {
 		expect(formSpecFromJson(formSpecToJson(defaultFormSpec())).id).toBe("default");
+	});
+
+	it("parses question palette drag payloads", () => {
+		const encoded = JSON.stringify({ kind: "slider" });
+		expect(parseFormsQuestionDragPayload(encoded)?.kind).toBe("slider");
+		expect(formsQuestionDragAcceptsTransfer([FORMS_QUESTION_DRAG_MIME])).toBe(true);
+	});
+
+	it("registers procedural building component kind", () => {
+		expect(formsExtensionHost.findQuestionKind("buildingComponent")?.preview?.surface).toBe("flow3d");
 	});
 	});
 }

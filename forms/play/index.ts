@@ -34,16 +34,17 @@ import {
 	type UiTreeItemNode,
 	type UiTreeNode,
 } from "@semio-tech/framework-playground-core";
-import { bootstrapElementsSurfaceChromeDocument, treeReorderDragController, type TreeDataItem, type TreeDragAndDropController, type TreeDropPosition } from "@semio-tech/ui-react";
+import { bootstrapElementsSurfaceChromeDocument, type TreeDataItem, type TreeDragAndDropController, type TreeDropPosition } from "@semio-tech/ui-react";
 import {
-	QUESTION_KIND_CATALOGUE,
 	applyFormEditOp,
 	createFormId,
 	defaultQuestionForKind,
 	findQuestionLocation,
 	formSpecToJson,
+	formsExtensionHost,
+	isExtensionFormQuestion,
+	questionKindContribution,
 	type FormQuestion,
-	type FormQuestionKind,
 	type FormSpec,
 	type FormValues,
 } from "@semio-tech/forms-core";
@@ -60,7 +61,6 @@ export const FORMS_PLAY_BODY_KEY_PREVIEW = "forms.play.preview";
 export const FORMS_PLAY_BODY_KEY_TRY = "forms.play.try";
 export const FORMS_PLAY_WINDOW_KIND_BUILDER = "forms-builder";
 export const FORMS_PLAY_WINDOW_KIND_PREVIEW = "forms-preview";
-export const FORMS_PLAY_WINDOW_KIND_TRY = "forms-try";
 export const FORMS_PLAY_EDIT_MODE_ID = "main";
 export const FORMS_PLAY_TRY_MODE_ID = "try";
 export const FORMS_PLAY_HIERARCHY_TAB_ID = "framework.panel.hierarchy";
@@ -100,10 +100,9 @@ const FORMS_PLAY_FILE_FIXTURE_JSON_BY_ID: Record<string, string> = Object.fromEn
 );
 
 export const FORMS_PLAY_FIXTURE_OPTIONS: ReadonlyArray<{ readonly id: string; readonly label: string }> = [
-	{ id: FORMS_PLAY_FIXTURE_DEFAULT_ID, label: "Default Contact" },
 	...Object.keys(FORMS_PLAY_FILE_FIXTURE_JSON_BY_ID)
 		.sort()
-		.map((id) => ({ id, label: formsFixtureLabelFromId(id) })),
+		.map((id) => ({ id: id === "building-component" ? FORMS_PLAY_FIXTURE_DEFAULT_ID : id, label: formsFixtureLabelFromId(id) })),
 ];
 
 function formsPlayCmd(command: string, args?: Record<string, unknown>): CommandDescriptor {
@@ -133,45 +132,98 @@ function resolveQuestionInsertIndex(spec: FormSpec, stepId: string, targetId: st
 	return step.questions.length;
 }
 
+/** @emoji 📍 Resolves a hierarchy tree row under client coordinates for palette drops. */
+export function resolveFormsPlayDropTargetFromPoint(clientX: number, clientY: number): { targetId: string; dropPosition: TreeDropPosition } | null {
+	if (typeof document === "undefined") return null;
+	const element = document.elementFromPoint(clientX, clientY);
+	if (!element) return null;
+	const row = element.closest('[data-slot="tree-item-row"]') as HTMLElement | null;
+	if (!row?.id || row.id.startsWith("forms-play-catalogue.")) return null;
+	const rect = row.getBoundingClientRect();
+	const y = clientY - rect.top;
+	let dropPosition: TreeDropPosition = "inside";
+	if (y < rect.height * 0.25) dropPosition = "before";
+	else if (y > rect.height * 0.75) dropPosition = "after";
+	return { targetId: row.id, dropPosition };
+}
+
+/** @emoji 📍 Default drop target when releasing over the builder preview. */
+export function resolveFormsPlayDefaultDropTarget(spec: FormSpec, selectedIds: readonly string[]): { targetId: string; dropPosition: TreeDropPosition } {
+	const selectedId = selectedIds[0];
+	if (selectedId) {
+		const location = findQuestionLocation(spec, selectedId);
+		if (location) return { targetId: location.question.id, dropPosition: "after" };
+		if (selectedId.startsWith("step:")) return { targetId: selectedId, dropPosition: "inside" };
+	}
+	const stepId = spec.steps[0]?.id;
+	return { targetId: formsPlayStepTreeId(stepId ?? "step-1"), dropPosition: "inside" };
+}
+
+/** @emoji 📥 Commits a catalogue question drop at pointer coordinates. */
+export function commitFormsPlayQuestionDropAtClient(
+	ctrl: FormsPlayController | undefined,
+	clientX: number,
+	clientY: number,
+	kind: string,
+): boolean {
+	if (!ctrl) return false;
+	const treeTarget = resolveFormsPlayDropTargetFromPoint(clientX, clientY);
+	const target = treeTarget ?? resolveFormsPlayDefaultDropTarget(ctrl.getSpec(), ctrl.getSelectedIds());
+	ctrl.run("dropQuestionKind", { kind, targetId: target.targetId, dropPosition: target.dropPosition });
+	return true;
+}
+
+function formsPlayParseCatalogueDrop(data: Record<string, string>): string | null {
+	const cataloguePayload = data[FORMS_QUESTION_DRAG_MIME];
+	if (!cataloguePayload) return null;
+	try {
+		const payload = JSON.parse(cataloguePayload) as { kind?: string };
+		return payload.kind ?? null;
+	} catch {
+		return null;
+	}
+}
+
+function formsPlayCommitCatalogueDrop(
+	getController: () => FormsPlayController | undefined,
+	targetId: string,
+	dropPosition: TreeDropPosition | undefined,
+	kind: string,
+): void {
+	getController()?.run("dropQuestionKind", { kind, targetId, dropPosition });
+}
+
 /** @emoji 🖱️ Side-panel hierarchy drag: reorder questions and accept catalogue drops. */
 export function createFormsPlayHierarchyTreeDragController(getController: () => FormsPlayController | undefined): TreeDragAndDropController {
-	const reorder = treeReorderDragController({
-		resolveParentId: (item) => {
-			if (item.id.startsWith("step:")) return item.id;
-			const spec = getController()?.getSpec();
-			if (!spec) return undefined;
-			const location = findQuestionLocation(spec, item.id);
-			return location ? formsPlayStepTreeId(location.stepId) : undefined;
-		},
-		onMove: (move) => {
-			getController()?.run("moveQuestion", {
-				questionId: move.itemId,
-				toStepId: move.toParentId.startsWith("step:") ? move.toParentId.slice(5) : move.toParentId,
-				targetId: move.toParentId,
-				position: move.position,
-			});
-		},
-	});
 	return {
-		...reorder,
-		handleDrop: (context) => {
-			const cataloguePayload = context.data[FORMS_QUESTION_DRAG_MIME];
-			if (cataloguePayload && context.targetKind === "item") {
-				try {
-					const payload = JSON.parse(cataloguePayload) as { kind?: FormQuestionKind };
-					if (payload.kind) {
-						getController()?.run("dropQuestionKind", {
-							kind: payload.kind,
-							targetId: (context.target as TreeDataItem).id,
-							dropPosition: context.dropPosition,
-						});
+		handleDrop: ({ target, targetKind, data, sourceItems, dropPosition }) => {
+			const catalogueKind = formsPlayParseCatalogueDrop(data);
+			if (catalogueKind) {
+				if (targetKind === "item") {
+					formsPlayCommitCatalogueDrop(getController, (target as TreeDataItem).id, dropPosition, catalogueKind);
+				} else if (targetKind === "section") {
+					const spec = getController()?.getSpec();
+					const stepId = spec?.steps[0]?.id;
+					if (stepId) {
+						formsPlayCommitCatalogueDrop(getController, formsPlayStepTreeId(stepId), "inside", catalogueKind);
 					}
-				} catch {
-					/* ignore malformed catalogue payload */
 				}
 				return;
 			}
-			reorder.handleDrop?.(context);
+			const sourceItem = sourceItems[0];
+			if (!sourceItem || targetKind !== "item") return;
+			if (sourceItem.id.startsWith("forms-play-catalogue.") || sourceItem.id.startsWith("forms-play-hierarchy.")) return;
+			const targetItem = target as TreeDataItem;
+			const spec = getController()?.getSpec();
+			if (!spec) return;
+			const toStepId = resolveStepIdFromTreeTarget(spec, targetItem.id);
+			if (!toStepId || sourceItem.id.startsWith("step:")) return;
+			getController()?.run("moveQuestion", {
+				questionId: sourceItem.id,
+				toStepId,
+				targetId: targetItem.id,
+				position: dropPosition ?? "inside",
+			});
 		},
 	};
 }
@@ -210,7 +262,7 @@ export function buildFormsPlayHierarchyTree(spec: FormSpec, selectedIds: readonl
 
 /** @emoji 📚 Workbench catalogue: draggable question kinds and quick actions. */
 export function buildFormsPlayCatalogueTree(): UiTreeNode {
-	const kindItems: UiTreeItemNode[] = QUESTION_KIND_CATALOGUE.map((entry) => ({
+	const kindItems: UiTreeItemNode[] = formsExtensionHost.catalogueEntries().map((entry) => ({
 		id: `forms-play-catalogue.${entry.kind}`,
 		label: entry.label,
 		description: entry.kind,
@@ -319,6 +371,18 @@ function formsPlayInspectorFields(question: FormQuestion): UiNode[] {
 			},
 		);
 	}
+	if (isExtensionFormQuestion(question)) {
+		const contribution = questionKindContribution(question);
+		const fixtureSlug = question.fixtureSlug ?? contribution?.controls?.fixtureSlug ?? contribution?.preview?.fixtureSlug;
+		if (fixtureSlug) {
+			fields.push({
+				type: "field",
+				id: "forms-play-inspector.fixtureSlug",
+				label: "Flow Fixture",
+				child: { type: "text", value: fixtureSlug },
+			});
+		}
+	}
 	return fields;
 }
 
@@ -378,14 +442,24 @@ export function buildFormsPlayToolbarTools(controllerId: string): AppTools {
 export class FormsPlayController extends Controller implements PlaygroundFixtureHost {
 	readonly mainMode = new ModeRuntime(FORMS_PLAY_EDIT_MODE_ID, "Edit", undefined);
 	readonly tryMode = new ModeRuntime(FORMS_PLAY_TRY_MODE_ID, "Try", undefined);
-	private spec: FormSpec = defaultFormSpec();
+	private spec: FormSpec = (() => {
+		const json = FORMS_PLAY_FILE_FIXTURE_JSON_BY_ID["building-component"];
+		return json ? formSpecFromJson(json) : defaultFormSpec();
+	})();
 	private selectedIds: string[] = [];
 	private tryValues: FormValues = {};
 	private interactionRevision = 0;
+	private extensionRevision = 0;
 	private readonly snapshotListeners = new Set<() => void>();
 
 	constructor(commandBus: CommandBus, hostNotify: () => void) {
 		super(FORMS_PLAY_CONTROLLER_ID, commandBus, hostNotify);
+		formsExtensionHost.subscribe(() => {
+			this.extensionRevision += 1;
+			this.notifySnapshot();
+			this.emit();
+		});
+		void formsExtensionHost.activateDefaults();
 		this.rebuildShellMode();
 		this.rebuildTryMode();
 	}
@@ -410,6 +484,10 @@ export class FormsPlayController extends Controller implements PlaygroundFixture
 		return this.interactionRevision;
 	}
 
+	getExtensionRevision(): number {
+		return this.extensionRevision;
+	}
+
 	subscribeSnapshot(listener: () => void): () => void {
 		this.snapshotListeners.add(listener);
 		return () => this.snapshotListeners.delete(listener);
@@ -430,8 +508,8 @@ export class FormsPlayController extends Controller implements PlaygroundFixture
 	}
 
 	private rebuildTryMode(): void {
-		this.tryMode.windowKinds = [new WindowKindRuntime(FORMS_PLAY_WINDOW_KIND_TRY, "Try", FORMS_PLAY_BODY_KEY_TRY)];
-		this.tryMode.defaultLayout = createStackLayout([FORMS_PLAY_WINDOW_KIND_TRY], ["Try"]);
+		this.tryMode.windowKinds = [new WindowKindRuntime(FORMS_PLAY_WINDOW_KIND_BUILDER, "Try", FORMS_PLAY_BODY_KEY_TRY)];
+		this.tryMode.defaultLayout = createStackLayout([FORMS_PLAY_WINDOW_KIND_BUILDER], ["Try"]);
 	}
 
 	getFixtureCatalog(): PlaygroundFixtureCatalog {
@@ -459,7 +537,8 @@ export class FormsPlayController extends Controller implements PlaygroundFixture
 				this.setSpec(defaultFormSpec());
 				return;
 			}
-			const json = FORMS_PLAY_FILE_FIXTURE_JSON_BY_ID[fixtureId];
+			const resolvedId = resolveFormsPlayFixtureSlug(fixtureId) ?? fixtureId;
+			const json = FORMS_PLAY_FILE_FIXTURE_JSON_BY_ID[resolvedId];
 			if (json) this.setSpec(formSpecFromJson(json));
 			return;
 		}
@@ -490,7 +569,7 @@ export class FormsPlayController extends Controller implements PlaygroundFixture
 			return;
 		}
 		if (command === "addQuestion") {
-			const kind = ((args as { kind?: FormQuestionKind }).kind ?? "text") as FormQuestionKind;
+			const kind = (args as { kind?: string }).kind ?? "text";
 			const stepId = (args as { stepId?: string }).stepId ?? this.spec.steps[0]?.id;
 			if (!stepId) return;
 			this.setSpec(
@@ -503,7 +582,7 @@ export class FormsPlayController extends Controller implements PlaygroundFixture
 			return;
 		}
 		if (command === "dropQuestionKind") {
-			const kind = (args as { kind?: FormQuestionKind }).kind;
+			const kind = (args as { kind?: string }).kind;
 			const targetId = (args as { targetId?: string }).targetId;
 			const dropPosition = (args as { dropPosition?: TreeDropPosition }).dropPosition;
 			if (!kind || !targetId) return;
@@ -590,13 +669,20 @@ function buildFormsPlayPreviewBody(_ctx: unknown): UiNode {
 	return buildFormsWindowBody(FORMS_PLAY_SURFACE_ID_PREVIEW, FORMS_PLAY_CONTROLLER_ID, "preview");
 }
 
+function buildFormsPlayTryBody(_ctx: unknown): UiNode {
+	return buildFormsWindowBody(FORMS_PLAY_SURFACE_ID_TRY, FORMS_PLAY_CONTROLLER_ID, "preview");
+}
+
 export function registerFormsPlayDeclarativeBodies(): void {
 	registerWindowBody(FORMS_PLAY_BODY_KEY_BUILDER, buildFormsPlayBuilderBody);
 	registerWindowBody(FORMS_PLAY_BODY_KEY_PREVIEW, buildFormsPlayPreviewBody);
+	registerWindowBody(FORMS_PLAY_BODY_KEY_TRY, buildFormsPlayTryBody);
 }
 
 export function buildFormsPlayAppRuntime(controller: FormsPlayController): AppRuntime {
-	return createPlayAppRuntime(FORMS_PLAY_APP_ID, "Forms", controller, FORMS_PLAY_LAYOUT, controller.mainMode);
+	const app = createPlayAppRuntime(FORMS_PLAY_APP_ID, "Forms", controller, FORMS_PLAY_LAYOUT, controller.mainMode);
+	app.addMode(controller.tryMode);
+	return app;
 }
 
 export class PlaygroundForms extends Playground {
@@ -626,8 +712,14 @@ if (import.meta.vitest) {
 		it("controller loads file fixtures", () => {
 			const bus = new CommandBus();
 			const ctrl = new FormsPlayController(bus, () => {});
-			ctrl.run("setActiveFixture", { fixtureId: "onboarding" });
-			expect(ctrl.getSpec().steps.length).toBeGreaterThan(1);
+			ctrl.run("setActiveFixture", { fixtureId: "building-component" });
+			expect(ctrl.getSpec().id).toBe("building-component");
+			expect(ctrl.getSpec().steps[0]?.questions.some((question) => question.kind === "buildingComponent")).toBe(true);
+		});
+
+		it("catalogue includes extension question kinds", () => {
+			const catalogue = buildFormsPlayCatalogueTree();
+			expect(catalogue.sections?.[0]?.items?.some((item) => item.description === "buildingComponent")).toBe(true);
 		});
 
 		it("adds steps and questions", () => {
@@ -646,6 +738,32 @@ if (import.meta.vitest) {
 			expect(catalogue.type).toBe("tree");
 			expect(hierarchy.sections?.[0]?.items?.[0]?.items?.length).toBeGreaterThan(0);
 			expect(catalogue.sections?.[0]?.items?.some((item) => item.draggable)).toBe(true);
+		});
+
+		it("exposes edit and try modes", () => {
+			const bus = new CommandBus();
+			const ctrl = new FormsPlayController(bus, () => {});
+			expect(ctrl.mainMode.id).toBe(FORMS_PLAY_EDIT_MODE_ID);
+			expect(ctrl.tryMode.id).toBe(FORMS_PLAY_TRY_MODE_ID);
+			expect(ctrl.tryMode.windowKinds).toHaveLength(1);
+			const app = buildFormsPlayAppRuntime(ctrl);
+			expect(app.modes.map((mode) => mode.id)).toEqual([FORMS_PLAY_EDIT_MODE_ID, FORMS_PLAY_TRY_MODE_ID]);
+		});
+
+		it("stores try values separately from the spec", () => {
+			const bus = new CommandBus();
+			const ctrl = new FormsPlayController(bus, () => {});
+			ctrl.run("setTryValues", { values: { "q-text": "Ada" } });
+			expect(ctrl.getTryValues()["q-text"]).toBe("Ada");
+			ctrl.run("addStep");
+			expect(ctrl.getTryValues()).toEqual({});
+		});
+
+		it("resolves default and point drop targets", () => {
+			const spec = defaultFormSpec();
+			const fallback = resolveFormsPlayDefaultDropTarget(spec, []);
+			expect(fallback.targetId.startsWith("step:")).toBe(true);
+			expect(resolveFormsPlayDropTargetFromPoint(0, 0)).toBeNull();
 		});
 	});
 }

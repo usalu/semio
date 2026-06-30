@@ -30,7 +30,10 @@ enum LayerNodeJson {
         clip_to_below: bool,
         width: Option<u32>,
         height: Option<u32>,
+        #[serde(default)]
         image_key: Option<String>,
+        #[serde(default)]
+        filters: Vec<FilterJson>,
     },
     #[serde(rename = "group", rename_all = "camelCase")]
     Group {
@@ -101,6 +104,14 @@ struct MaskJson {
     invert: bool,
     width: Option<u32>,
     height: Option<u32>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct FilterJson {
+    kind: String,
+    radius: Option<f32>,
+    amount: Option<f32>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize)]
@@ -550,6 +561,17 @@ impl RasterHost {
         Ok(())
     }
 
+    pub fn upload_raster_image_key(&mut self, key: &str, bytes: &[u8]) -> Result<(), String> {
+        let img = image::load_from_memory(bytes).map_err(|e| e.to_string())?;
+        let rgba = img.to_rgba8();
+        let width = rgba.width();
+        let height = rgba.height();
+        self.paint_buffers.insert(key.to_string(), rgba.into_raw());
+        let image = image_from_rgba(width, height, self.paint_buffers.get(key).unwrap().clone());
+        self.images.insert(key.to_string(), image);
+        Ok(())
+    }
+
     pub fn set_active_tool(&mut self, tool: &str) {
         self.active_tool = tool.to_string();
     }
@@ -884,6 +906,15 @@ impl RasterSession {
             .map_err(|e| JsValue::from_str(&e))
     }
 
+    #[wasm_bindgen(js_name = uploadRasterImageKey)]
+    pub fn upload_raster_image_key(&mut self, key: &str, bytes: &[u8]) -> Result<(), JsValue> {
+        self.state
+            .borrow_mut()
+            .host
+            .upload_raster_image_key(key, bytes)
+            .map_err(|e| JsValue::from_str(&e))
+    }
+
     #[wasm_bindgen(js_name = setActiveTool)]
     pub fn set_active_tool(&mut self, tool: &str) {
         self.state.borrow_mut().host.set_active_tool(tool);
@@ -932,6 +963,13 @@ mod tests {
     #[test]
     fn blend_mapping() {
         assert!(matches!(blend_from_str("multiply"), Mix::Multiply));
+    }
+
+    #[test]
+    fn parse_play_fixtures() {
+        let json = include_str!("../fixture/semio.raster.json");
+        let doc = parse_document(json).expect("parse semio fixture");
+        assert!(!doc.layers.is_empty(), "semio should have layers");
     }
 }
 // #endregion 🧪Tests

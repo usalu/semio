@@ -1,8 +1,9 @@
 {
   "title": "Jack Text Editor",
   "emoji": "🔺",
-  "status": "open",
+  "status": "closed",
   "description": "Replace adhoc Jack engagement input with handcrafted code editor (syntax highlighting + autocomplete from Rust jack core via WASM), generic framework editor component, split layout: graph canvas + Jack editor + results table.",
+  "summary": "Implemented proper Jack text editor end-to-end: Rust jack core tokenize/complete with span lexer; WASM tokenizeJackJson/completeJackJson on TrinitySession; trinity-react bridge helpers; new generic framework editor component with handcrafted CodeEditor (highlight overlay, gutter, autocomplete, Cmd/Ctrl+Enter run); trinity jack play split layout (graph + editor + results table windows) replacing adhoc engagement input. Validated: cargo test trinity_jack (10) + trinity_rewrite (7), vitest trinity-react (10), jack-play (8), platform renderer (42), playwright runtime smoke on :6057.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1765"
   },

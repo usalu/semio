@@ -116,6 +116,11 @@ export interface FormQuestionFile extends FormQuestionBase {
 	readonly accept?: string;
 }
 
+export interface FormQuestionExtension extends FormQuestionBase {
+	readonly kind: string;
+	readonly fixtureSlug?: string;
+}
+
 export type FormQuestion =
 	| FormQuestionText
 	| FormQuestionLongText
@@ -129,7 +134,8 @@ export type FormQuestion =
 	| FormQuestionVector
 	| FormQuestionNote
 	| FormQuestionImage
-	| FormQuestionFile;
+	| FormQuestionFile
+	| FormQuestionExtension;
 
 export interface FormStep {
 	readonly id: string;
@@ -146,15 +152,57 @@ export interface FormSpec {
 	readonly steps: readonly FormStep[];
 }
 
-export type FormValue = string | number | boolean | readonly string[] | readonly number[] | null;
+export type FormScalarValue = string | number | boolean | readonly string[] | readonly number[];
+
+export type FormValue = FormScalarValue | FormValues | null;
 
 export type FormValues = Readonly<Record<string, FormValue>>;
 
 export interface QuestionKindCatalogueEntry {
-	readonly kind: FormQuestionKind;
+	readonly kind: string;
 	readonly label: string;
 	readonly iconId: string;
 	readonly defaults: Omit<FormQuestion, "id" | "label">;
+}
+
+export type FormsQuestionValueShape = "scalar" | "list" | "record";
+
+export interface FormsQuestionKindPreview {
+	readonly surface: "flow3d";
+	readonly fixtureSlug: string;
+}
+
+export interface FormsQuestionKindControls {
+	readonly source: "flowFixture";
+	readonly fixtureSlug: string;
+}
+
+export interface FormsQuestionKindContribution {
+	readonly kind: string;
+	readonly label: string;
+	readonly iconId: string;
+	readonly group?: string;
+	readonly value: FormsQuestionValueShape;
+	readonly defaults: Record<string, unknown>;
+	readonly preview?: FormsQuestionKindPreview;
+	readonly controls?: FormsQuestionKindControls;
+}
+
+export interface FormsExtensionManifestV1 {
+	readonly schema: "forms.module/v1";
+	readonly id: string;
+	readonly name: string;
+	readonly version: string;
+	readonly activationEvents: readonly string[];
+	readonly contributes: {
+		readonly questionKinds: readonly FormsQuestionKindContribution[];
+	};
+}
+
+export interface FormsExtensionEntry {
+	readonly id: string;
+	readonly manifest: FormsExtensionManifestV1;
+	readonly active: boolean;
 }
 
 export type FormExpr =
@@ -247,15 +295,185 @@ export const QUESTION_KIND_CATALOGUE: readonly QuestionKindCatalogueEntry[] = [
 	{ kind: "file", label: "File", iconId: "ui.input.file", defaults: { kind: "file" } },
 ];
 
-export function questionKindCatalogueEntry(kind: FormQuestionKind): QuestionKindCatalogueEntry {
-	const entry = QUESTION_KIND_CATALOGUE.find((item) => item.kind === kind);
+const BUILTIN_FORM_QUESTION_KINDS = new Set<string>(QUESTION_KIND_CATALOGUE.map((entry) => entry.kind));
+
+function contributionValueShape(kind: FormQuestionKind): FormsQuestionValueShape {
+	if (kind === "multi" || kind === "vector") return "list";
+	if (kind === "note" || kind === "image" || kind === "file") return "scalar";
+	return "scalar";
+}
+
+function buildBuiltinFormsExtensionManifest(): FormsExtensionManifestV1 {
+	return {
+		schema: "forms.module/v1",
+		id: "builtin",
+		name: "Built-in",
+		version: "1.0.0",
+		activationEvents: ["*"],
+		contributes: {
+			questionKinds: QUESTION_KIND_CATALOGUE.map((entry) => ({
+				kind: entry.kind,
+				label: entry.label,
+				iconId: entry.iconId,
+				value: contributionValueShape(entry.kind),
+				defaults: entry.defaults as Record<string, unknown>,
+			})),
+		},
+	};
+}
+
+/** @emoji 🏗 Procedural forms extension manifest contributing flow-backed question kinds. */
+export const PROCEDURAL_FORMS_EXTENSION_MANIFEST: FormsExtensionManifestV1 = {
+	schema: "forms.module/v1",
+	id: "procedural",
+	name: "Procedural",
+	version: "1.0.0",
+	activationEvents: ["*"],
+	contributes: {
+		questionKinds: [
+			{
+				kind: "buildingComponent",
+				label: "Building Component",
+				iconId: "ui.input.3d",
+				group: "Procedural",
+				value: "record",
+				defaults: { kind: "buildingComponent", fixtureSlug: "hexagonal-mushroom-column" },
+				preview: { surface: "flow3d", fixtureSlug: "hexagonal-mushroom-column" },
+				controls: { source: "flowFixture", fixtureSlug: "hexagonal-mushroom-column" },
+			},
+		],
+	},
+};
+
+export const FORMS_DEFAULT_EXTENSION_IDS = ["builtin", "procedural"] as const;
+
+interface ActiveFormsExtension {
+	readonly manifest: FormsExtensionManifestV1;
+}
+
+/** @emoji 🧩 Controlled, DOM-free forms extension host. */
+export class FormsExtensionHost {
+	private readonly active = new Map<string, ActiveFormsExtension>();
+	private readonly kinds = new Map<string, FormsQuestionKindContribution & { readonly moduleId: string }>();
+	private revision = 0;
+	private readonly listeners = new Set<() => void>();
+
+	constructor() {
+		this.registerManifest(buildBuiltinFormsExtensionManifest());
+		this.registerManifest(PROCEDURAL_FORMS_EXTENSION_MANIFEST);
+	}
+
+	getRevision(): number {
+		return this.revision;
+	}
+
+	subscribe(listener: () => void): () => void {
+		this.listeners.add(listener);
+		return () => this.listeners.delete(listener);
+	}
+
+	private notify(): void {
+		this.revision += 1;
+		for (const listener of this.listeners) {
+			listener();
+		}
+	}
+
+	registerManifest(manifest: FormsExtensionManifestV1): void {
+		this.active.set(manifest.id, { manifest });
+		for (const kind of manifest.contributes.questionKinds) {
+			this.kinds.set(kind.kind, { ...kind, moduleId: manifest.id });
+		}
+		this.notify();
+	}
+
+	async activateDefaults(): Promise<void> {
+		for (const id of FORMS_DEFAULT_EXTENSION_IDS) {
+			if (!this.active.has(id)) {
+				throw new Error(`forms extension not registered: ${id}`);
+			}
+		}
+	}
+
+	async setActive(id: string, enabled: boolean): Promise<void> {
+		if (!enabled) {
+			const entry = this.active.get(id);
+			if (!entry) return;
+			for (const kind of entry.manifest.contributes.questionKinds) {
+				this.kinds.delete(kind.kind);
+			}
+			this.active.delete(id);
+			this.notify();
+			return;
+		}
+		if (id === "builtin") this.registerManifest(buildBuiltinFormsExtensionManifest());
+		else if (id === "procedural") this.registerManifest(PROCEDURAL_FORMS_EXTENSION_MANIFEST);
+		else throw new Error(`unknown forms extension: ${id}`);
+	}
+
+	listEntries(): readonly FormsExtensionEntry[] {
+		return FORMS_DEFAULT_EXTENSION_IDS.map((id) => ({
+			id,
+			manifest: this.active.get(id)?.manifest ?? buildBuiltinFormsExtensionManifest(),
+			active: this.active.has(id),
+		}));
+	}
+
+	findQuestionKind(kind: string): (FormsQuestionKindContribution & { readonly moduleId: string }) | undefined {
+		return this.kinds.get(kind);
+	}
+
+	catalogueEntries(): readonly QuestionKindCatalogueEntry[] {
+		return [...this.kinds.values()].map((contribution) => ({
+			kind: contribution.kind,
+			label: contribution.label,
+			iconId: contribution.iconId,
+			defaults: contribution.defaults as Omit<FormQuestion, "id" | "label">,
+		}));
+	}
+}
+
+export const formsExtensionHost = new FormsExtensionHost();
+
+const formsFlowFixtureResolvers = new Map<string, () => string>();
+
+/** @emoji 📦 Registers a resolver for flow fixture JSON referenced by extension question kinds. */
+export function registerFormsFlowFixtureResolver(slug: string, resolver: () => string): void {
+	formsFlowFixtureResolvers.set(slug, resolver);
+}
+
+/** @emoji 📦 Resolves flow fixture JSON for a registered slug. */
+export function resolveFormsFlowFixtureJson(slug: string): string | undefined {
+	return formsFlowFixtureResolvers.get(slug)?.();
+}
+
+export function isBuiltinFormQuestionKind(kind: string): kind is FormQuestionKind {
+	return BUILTIN_FORM_QUESTION_KINDS.has(kind);
+}
+
+export function isExtensionFormQuestion(question: FormQuestion): question is FormQuestionExtension {
+	return !isBuiltinFormQuestionKind(question.kind);
+}
+
+export function questionKindContribution(question: FormQuestion): FormsQuestionKindContribution | undefined {
+	return formsExtensionHost.findQuestionKind(question.kind);
+}
+
+export function resolveQuestionFixtureSlug(question: FormQuestion): string | undefined {
+	if (!isExtensionFormQuestion(question)) return undefined;
+	const contribution = formsExtensionHost.findQuestionKind(question.kind);
+	return question.fixtureSlug ?? contribution?.controls?.fixtureSlug ?? contribution?.preview?.fixtureSlug;
+}
+
+export function questionKindCatalogueEntry(kind: string): QuestionKindCatalogueEntry {
+	const entry = formsExtensionHost.catalogueEntries().find((item) => item.kind === kind);
 	if (!entry) throw new Error(`Unknown question kind: ${kind}`);
 	return entry;
 }
 
-export function defaultQuestionForKind(kind: FormQuestionKind, id: string, label?: string): FormQuestion {
+export function defaultQuestionForKind(kind: string, id: string, label?: string): FormQuestion {
 	const entry = questionKindCatalogueEntry(kind);
-	return { id, label: label ?? entry.label, ...entry.defaults } as FormQuestion;
+	return { id, label: label ?? entry.label, ...entry.defaults, kind } as FormQuestion;
 }
 // #endregion 📚Catalogue
 
@@ -361,8 +579,17 @@ function parseFormQuestion(raw: unknown, stepIndex: number, questionIndex: numbe
 			return { ...base, kind: "image", src: typeof obj.src === "string" ? obj.src : undefined };
 		case "file":
 			return { ...base, kind: "file", accept: typeof obj.accept === "string" ? obj.accept : undefined };
-		default:
-			throw new Error(`Unknown question kind: ${String(obj.kind)}`);
+		default: {
+			const contribution = formsExtensionHost.findQuestionKind(obj.kind);
+			if (!contribution) throw new Error(`Unknown question kind: ${String(obj.kind)}`);
+			const fixtureSlug =
+				typeof obj.fixtureSlug === "string"
+					? obj.fixtureSlug
+					: typeof contribution.defaults.fixtureSlug === "string"
+						? contribution.defaults.fixtureSlug
+						: contribution.controls?.fixtureSlug ?? contribution.preview?.fixtureSlug;
+			return { ...base, kind: obj.kind, fixtureSlug };
+		}
 	}
 }
 
@@ -427,6 +654,80 @@ function assertNoForbiddenKeys(obj: Record<string, unknown>): void {
 	}
 }
 
+/** @emoji 🔀 Maps flow input widgets into a {@link FormSpec}. */
+export function flowFixtureToFormSpec(fixtureJson: string, formId = "flow-generate"): FormSpec {
+	const fixture = JSON.parse(fixtureJson) as { readonly widgets?: readonly Record<string, unknown>[] };
+	const questions: FormQuestion[] = [];
+	for (const widget of fixture.widgets ?? []) {
+		const kind = widget.kind;
+		const id = String(widget.id ?? createFormId("widget"));
+		if (kind === "inputSlider") {
+			questions.push({
+				id,
+				kind: "slider",
+				label: id,
+				min: typeof widget.min === "number" ? widget.min : 0,
+				max: typeof widget.max === "number" ? widget.max : 100,
+				step: typeof widget.step === "number" ? widget.step : 1,
+				default: typeof widget.value === "number" ? widget.value : 0,
+			});
+		} else if (kind === "inputStepper") {
+			const fields = Array.isArray(widget.fields)
+				? widget.fields.map((field: Record<string, unknown>) => ({
+						key: String(field.key ?? "v"),
+						label: String(field.key ?? "v"),
+						value: typeof field.value === "number" ? field.value : 0,
+					}))
+				: [{ key: "x", label: "X", value: 0 }];
+			questions.push({ id, kind: "vector", label: id, schema: String(widget.schema ?? "vec"), fields, step: typeof widget.step === "number" ? widget.step : 0.1 });
+		} else if (kind === "inputNote") {
+			questions.push({ id, kind: "note", label: id, text: String(widget.text ?? "") });
+		} else if (kind === "inputImage") {
+			questions.push({ id, kind: "image", label: id, src: typeof widget.src === "string" ? widget.src : undefined });
+		} else if (kind === "variable") {
+			const schema = String(widget.schema ?? "text");
+			if (schema.includes("enum") && Array.isArray((widget as { options?: unknown }).options)) {
+				const options = ((widget as { options: readonly { value: string; label: string }[] }).options ?? []).map((option) => ({
+					value: option.value,
+					label: option.label,
+				}));
+				questions.push({ id, kind: "single", label: String(widget.name ?? id), options, default: options[0]?.value });
+			} else {
+				questions.push({ id, kind: "text", label: String(widget.name ?? id), default: "" });
+			}
+		}
+	}
+	return {
+		schema: "forms.form/v1",
+		id: formId,
+		version: "1",
+		title: "Generate",
+		steps: [{ id: "inputs", title: "Inputs", questions }],
+	};
+}
+
+/** @emoji 🔧 Applies generation values back onto a flow fixture JSON blob. */
+export function applyGenerationValuesToFixture(fixtureJson: string, values: FormValues): string {
+	const fixture = JSON.parse(fixtureJson) as { readonly widgets?: Record<string, unknown>[] };
+	const widgets = (fixture.widgets ?? []).map((widget) => {
+		const id = String(widget.id ?? "");
+		if (!(id in values)) return widget;
+		const value = values[id];
+		if (widget.kind === "inputSlider" && typeof value === "number") return { ...widget, value };
+		if (widget.kind === "inputStepper" && Array.isArray(value)) {
+			const fields = Array.isArray(widget.fields)
+				? widget.fields.map((field: Record<string, unknown>, index: number) => ({ ...field, value: Number(value[index] ?? field.value ?? 0) }))
+				: [];
+			return { ...widget, fields };
+		}
+		if (widget.kind === "inputNote" && typeof value === "string") return { ...widget, text: value };
+		if (widget.kind === "inputImage" && typeof value === "string") return { ...widget, src: value };
+		if (widget.kind === "variable" && typeof value === "string") return { ...widget, name: value };
+		return widget;
+	});
+	return JSON.stringify({ ...fixture, widgets });
+}
+
 export function defaultValueForQuestion(question: FormQuestion): FormValue {
 	switch (question.kind) {
 		case "text":
@@ -450,8 +751,17 @@ export function defaultValueForQuestion(question: FormQuestion): FormValue {
 		case "image":
 		case "file":
 			return null;
-		default:
-			return null;
+		default: {
+			if (!isExtensionFormQuestion(question)) return null;
+			const contribution = formsExtensionHost.findQuestionKind(question.kind);
+			if (contribution?.value !== "record") return null;
+			const slug = resolveQuestionFixtureSlug(question);
+			if (!slug) return {};
+			const fixtureJson = resolveFormsFlowFixtureJson(slug);
+			if (!fixtureJson) return {};
+			const subSpec = flowFixtureToFormSpec(fixtureJson, `${question.id}-params`);
+			return new FormRuntime(subSpec).getValues();
+		}
 	}
 }
 
@@ -628,6 +938,15 @@ export class FormRuntime {
 			if (question.kind === "note" || question.kind === "image") continue;
 			if (!question.required) continue;
 			const value = this.values[question.id];
+			if (isExtensionFormQuestion(question)) {
+				const contribution = formsExtensionHost.findQuestionKind(question.kind);
+				if (contribution?.value === "record") {
+					if (value == null || typeof value !== "object" || Array.isArray(value) || Object.keys(value).length === 0) {
+						errors.push({ questionId: question.id, message: `${question.label} is required` });
+					}
+					continue;
+				}
+			}
 			if (value == null || value === "" || (Array.isArray(value) && value.length === 0)) {
 				errors.push({ questionId: question.id, message: `${question.label} is required` });
 			}
@@ -747,8 +1066,45 @@ if (import.meta.vitest) {
 	});
 
 	it("exposes question kind catalogue", () => {
-		expect(QUESTION_KIND_CATALOGUE.map((entry) => entry.kind)).toContain("slider");
+		expect(formsExtensionHost.catalogueEntries().map((entry) => entry.kind)).toContain("slider");
 		expect(defaultQuestionForKind("boolean", "q1").kind).toBe("boolean");
+	});
+
+	it("parses extension question kinds", () => {
+		const spec = parseFormSpec({
+			schema: "forms.form/v1",
+			id: "ext",
+			version: "1",
+			steps: [
+				{
+					id: "s1",
+					title: "Step",
+					questions: [{ id: "col", kind: "buildingComponent", label: "Column", fixtureSlug: "hexagonal-mushroom-column" }],
+				},
+			],
+		});
+		expect(spec.steps[0]?.questions[0]?.kind).toBe("buildingComponent");
+	});
+
+	it("registers extension kinds in the host", () => {
+		expect(formsExtensionHost.findQuestionKind("buildingComponent")?.preview?.surface).toBe("flow3d");
+	});
+
+	it("maps flow fixture widgets to form spec", () => {
+		const json = JSON.stringify({
+			schema: "flow.fixture/v1",
+			widgets: [{ kind: "inputSlider", id: "width", value: 4, min: 0, max: 10 }],
+			synapses: [],
+		});
+		const mapped = flowFixtureToFormSpec(json);
+		expect(mapped.steps[0]?.questions[0]?.kind).toBe("slider");
+	});
+
+	it("applies generation values to fixture", () => {
+		const json = JSON.stringify({ schema: "flow.fixture/v1", widgets: [{ kind: "inputSlider", id: "width", value: 1 }], synapses: [] });
+		const next = applyGenerationValuesToFixture(json, { width: 7 });
+		const parsed = JSON.parse(next) as { widgets: { value: number }[] };
+		expect(parsed.widgets[0]?.value).toBe(7);
 	});
 	});
 }

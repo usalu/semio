@@ -637,7 +637,9 @@
       "name": "@semio-tech/forms-react",
       "version": "0.1.0",
       "dependencies": {
+        "@semio-tech/flow-react": "workspace:*",
         "@semio-tech/forms-core": "workspace:*",
+        "@semio-tech/procedural-3d-react": "workspace:*",
         "@semio-tech/ui-react": "workspace:*",
       },
       "devDependencies": {
@@ -727,6 +729,9 @@
         "@semio-tech/puzzle-3d-react": "workspace:*",
         "@semio-tech/puzzle-5d-play": "workspace:*",
         "@semio-tech/puzzle-5d-react": "workspace:*",
+        "@semio-tech/raster-core": "workspace:*",
+        "@semio-tech/raster-play": "workspace:*",
+        "@semio-tech/raster-react": "workspace:*",
         "@semio-tech/reasoning-mindmap-react": "workspace:*",
         "@semio-tech/reasoning-mindmap-wires-play": "workspace:*",
         "@semio-tech/shooting-play": "workspace:*",
@@ -1137,6 +1142,51 @@
     "puzzle/asset": {
       "name": "@semio-tech/puzzle-asset",
       "version": "0.1.0",
+    },
+    "raster/core": {
+      "name": "@semio-tech/raster-core",
+      "version": "0.1.0",
+      "devDependencies": {
+        "typescript": "^5.9.3",
+        "vitest": "^4.0.17",
+      },
+    },
+    "raster/play": {
+      "name": "@semio-tech/raster-play",
+      "version": "0.1.0",
+      "dependencies": {
+        "@semio-tech/framework-playground-core": "workspace:*",
+        "@semio-tech/raster-core": "workspace:*",
+        "@semio-tech/raster-react": "workspace:*",
+      },
+      "devDependencies": {
+        "@semio-tech/framework-playground-renderer-react": "workspace:*",
+        "@semio-tech/ui-react": "workspace:*",
+        "@tailwindcss/vite": "^4.1.18",
+        "@vitejs/plugin-react": "^5.1.2",
+        "typescript": "^5.9.3",
+        "vite": "^7.3.1",
+        "vitest": "^4.0.17",
+      },
+    },
+    "raster/react": {
+      "name": "@semio-tech/raster-react",
+      "version": "0.1.0",
+      "dependencies": {
+        "@semio-tech/infinite-cavas-react-renderer": "workspace:*",
+        "@semio-tech/raster-core": "workspace:*",
+        "@semio-tech/ui-react": "workspace:*",
+      },
+      "devDependencies": {
+        "@types/react": "^19.2.8",
+        "@types/react-dom": "^19.2.3",
+        "@vitejs/plugin-react": "^5.1.2",
+        "react": "^19.2.3",
+        "react-dom": "^19.2.3",
+        "typescript": "^5.9.3",
+        "vite": "^7.3.1",
+        "vitest": "^4.0.17",
+      },
     },
     "reasoning/mindmap/play": {
       "name": "@semio-tech/reasoning-mindmap-play",
@@ -2480,6 +2530,12 @@
     "@semio-tech/puzzle-5d-react": ["@semio-tech/puzzle-5d-react@workspace:puzzle/5d/react"],
 
     "@semio-tech/puzzle-asset": ["@semio-tech/puzzle-asset@workspace:puzzle/asset"],
+
+    "@semio-tech/raster-core": ["@semio-tech/raster-core@workspace:raster/core"],
+
+    "@semio-tech/raster-play": ["@semio-tech/raster-play@workspace:raster/play"],
+
+    "@semio-tech/raster-react": ["@semio-tech/raster-react@workspace:raster/react"],
 
     "@semio-tech/reasoning-mindmap-play": ["@semio-tech/reasoning-mindmap-play@workspace:reasoning/mindmap/play"],
 

@@ -131,6 +131,7 @@ export type UiNode =
   | import("@semio-tech/framework-platform-core").UiShootingHostSurfaceNode
   | import("@semio-tech/framework-platform-core").UiFormsHostSurfaceNode
   | import("@semio-tech/framework-platform-core").UiRasterHostSurfaceNode
+  | import("@semio-tech/framework-platform-core").UiEditorHostSurfaceNode
   | UiTableHostSurfaceNode
   | import("@semio-tech/framework-platform-core").UiTreeNode;
 
@@ -144,6 +145,8 @@ import {
   buildShootingWindowBody,
   buildFormsWindowBody,
   buildRasterWindowBody,
+  buildEditorWindowBody,
+  buildTableWindowBody,
   isCanvasOnlyWindowBody,
 } from "@semio-tech/framework-platform-core";
 
@@ -159,6 +162,8 @@ export {
   buildShootingWindowBody,
   buildFormsWindowBody,
   buildRasterWindowBody,
+  buildEditorWindowBody,
+  buildTableWindowBody,
   buildPanelWindowBody,
   isCanvasOnlyWindowBody,
 } from "@semio-tech/framework-platform-core";

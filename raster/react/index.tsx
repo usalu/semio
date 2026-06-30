@@ -9,12 +9,19 @@ import {
 	marqueeCoverageFromGesture,
 	marqueeModeFromModifiers,
 	SelectionMarquee,
+	selectionMergeIds,
+	screenRectFromPoints,
 	type SelectionMarqueeCoverage,
 	type SelectionMarqueePoint,
+	type SelectionMarqueeMethod,
+	type SelectionMarqueeRect,
 	type SelectionMergeMode,
 } from "@semio-tech/ui-react";
 import {
-	rasterDocumentToJson,
+	decodeRasterImageAsset,
+	rasterDocumentToSyncJson,
+	resolveRasterLayerAtScreenPoint,
+	resolveRasterMarqueeLayerHits,
 	type RasterCamera,
 	type RasterDocument,
 	type RasterHoverPayload,
@@ -40,7 +47,32 @@ export async function ensureRasterWasmLoaded(): Promise<void> {
 }
 
 export { RasterSession };
+
+const RASTER_MARQUEE_THRESHOLD_PX = 4;
+const RASTER_MIN_ATTACH_PX = 64;
+
+type RasterMarqueeOverlay =
+	| { readonly coverage: SelectionMarqueeCoverage; readonly shape: "rect"; readonly rect: SelectionMarqueeRect }
+	| { readonly coverage: SelectionMarqueeCoverage; readonly shape: "polygon"; readonly points: readonly SelectionMarqueePoint[] };
+
+function rasterSelectionMethod(activeTool: RasterToolId | undefined): SelectionMarqueeMethod | null {
+	if (activeTool === "selectMarquee") return "rectangle";
+	if (activeTool === "selectLasso") return "lasso";
+	return null;
+}
+
+function isRasterSelectionTool(activeTool: RasterToolId | undefined): boolean {
+	return activeTool === "selectMarquee" || activeTool === "selectLasso" || activeTool === "selectWand";
+}
 // #endregion 🔌Adapters
+
+function uploadRasterDocumentAssets(session: RasterSession, doc: RasterDocument): void {
+	if (!doc.assets) return;
+	for (const [key, asset] of Object.entries(doc.assets)) {
+		const bytes = decodeRasterImageAsset(asset);
+		session.uploadRasterImageKey(key, bytes);
+	}
+}
 
 // #region 📐Contracts
 export type RasterViewMode = "composite" | "layer" | "mask" | "navigator";
@@ -99,10 +131,11 @@ export class RasterRenderer {
 	}
 
 	syncDocument(doc: RasterDocument): void {
-		const json = rasterDocumentToJson(doc);
+		const json = rasterDocumentToSyncJson(doc);
 		if (json !== this.documentJson) {
 			this.documentJson = json;
 			this.session.syncDocumentJson(json);
+			uploadRasterDocumentAssets(this.session, doc);
 		}
 	}
 
@@ -154,6 +187,12 @@ export class RasterRenderer {
 				this.setSize(width, height, dpr);
 				return;
 			}
+			const pw = Math.max(1, Math.round(width * dpr));
+			const ph = Math.max(1, Math.round(height * dpr));
+			if (canvas.width !== pw || canvas.height !== ph) {
+				canvas.width = pw;
+				canvas.height = ph;
+			}
 			await this.session.attachCanvas(canvas, width, height, dpr);
 			this.mounted = true;
 			this.boundCanvas = canvas;
@@ -168,6 +207,14 @@ export class RasterRenderer {
 	}
 
 	setSize(width: number, height: number, dpr: number): void {
+		if (this.boundCanvas) {
+			const pw = Math.max(1, Math.round(width * dpr));
+			const ph = Math.max(1, Math.round(height * dpr));
+			if (this.boundCanvas.width !== pw || this.boundCanvas.height !== ph) {
+				this.boundCanvas.width = pw;
+				this.boundCanvas.height = ph;
+			}
+		}
 		this.session.setSize(width, height, dpr);
 		this.invalidate();
 	}
@@ -196,174 +243,276 @@ export const RasterCanvas: React.FC<RasterCanvasProps> = ({
 	onHover,
 	onSelect,
 }) => {
+	const renderer = React.useMemo(() => new RasterRenderer(), []);
 	const canvasRef = useRef<HTMLCanvasElement | null>(null);
-	const rendererRef = useRef<RasterRenderer | null>(null);
 	const containerRef = useRef<HTMLDivElement | null>(null);
-	const panningRef = useRef(false);
-	const marqueeRef = useRef<{ start: SelectionMarqueePoint; end: SelectionMarqueePoint } | null>(null);
-	const [marqueeCoverage, setMarqueeCoverage] = useState<SelectionMarqueeCoverage | null>(null);
+	const viewportRef = useRef({ width: 1, height: 1 });
+	const marqueeRef = useRef({
+		tracking: false,
+		active: false,
+		start: { x: 0, y: 0 } as SelectionMarqueePoint,
+		points: [] as SelectionMarqueePoint[],
+		mergeMode: "default" as SelectionMergeMode,
+	});
+	const [marqueeOverlay, setMarqueeOverlay] = useState<RasterMarqueeOverlay | null>(null);
 	const [attachError, setAttachError] = useState<string | null>(null);
+	const [gpuAttached, setGpuAttached] = useState(false);
+	const selectionMethod = rasterSelectionMethod(activeTool);
 
-	useEffect(() => {
-		const renderer = new RasterRenderer();
-		rendererRef.current = renderer;
-		return () => renderer.dispose();
-	}, []);
+	useEffect(() => () => renderer.dispose(), [renderer]);
 
 	useLayoutEffect(() => {
-		rendererRef.current?.setViewMode(viewMode, isolatedLayerId);
-		rendererRef.current?.invalidate();
-	}, [viewMode, isolatedLayerId]);
+		renderer.setViewMode(viewMode, isolatedLayerId);
+		renderer.invalidate();
+	}, [renderer, viewMode, isolatedLayerId]);
 
 	useEffect(() => {
-		const renderer = rendererRef.current;
-		if (!renderer) return;
 		renderer.syncDocument(document);
 		renderer.invalidate();
-	}, [document]);
+	}, [renderer, document]);
 
 	useEffect(() => {
-		rendererRef.current?.syncSelection(selectedIds);
-		rendererRef.current?.invalidate();
-	}, [selectedIds]);
+		if (!gpuAttached) return;
+		renderer.syncDocument(document);
+		if (camera) renderer.syncCamera(camera);
+		renderer.invalidate();
+	}, [gpuAttached, renderer, document, camera]);
 
 	useEffect(() => {
-		rendererRef.current?.syncHover(hoveredId, kindHover);
-		rendererRef.current?.invalidate();
-	}, [hoveredId, kindHover]);
+		renderer.syncSelection(selectedIds);
+		renderer.invalidate();
+	}, [renderer, selectedIds]);
 
 	useEffect(() => {
-		if (activeTool) rendererRef.current?.syncTool(activeTool);
-	}, [activeTool]);
+		renderer.syncHover(hoveredId, kindHover);
+		renderer.invalidate();
+	}, [renderer, hoveredId, kindHover]);
+
+	useEffect(() => {
+		if (activeTool) renderer.syncTool(activeTool);
+	}, [renderer, activeTool]);
 
 	useEffect(() => {
 		if (!camera) return;
-		rendererRef.current?.syncCamera(camera);
-		rendererRef.current?.invalidate();
-	}, [camera]);
+		renderer.syncCamera(camera);
+		renderer.invalidate();
+	}, [renderer, camera]);
 
 	useLayoutEffect(() => {
 		const canvas = canvasRef.current;
 		const container = containerRef.current;
-		const renderer = rendererRef.current;
-		if (!canvas || !container || !renderer) return;
+		if (!canvas || !container) return;
 
 		let disposed = false;
+		let attachStarted = false;
 		const resize = () => {
 			const rect = container.getBoundingClientRect();
 			const dpr = window.devicePixelRatio || 1;
 			const w = Math.max(1, Math.floor(rect.width));
 			const h = Math.max(1, Math.floor(rect.height));
+			viewportRef.current = { width: w, height: h };
 			if (renderer.session.gpuReady()) {
 				renderer.setSize(w, h, dpr);
 			}
 		};
 
-		void (async () => {
+		const tryAttach = async () => {
 			const rect = container.getBoundingClientRect();
 			const dpr = window.devicePixelRatio || 1;
 			const w = Math.max(1, Math.floor(rect.width));
 			const h = Math.max(1, Math.floor(rect.height));
-			if (disposed) return;
+			viewportRef.current = { width: w, height: h };
+			if (w < RASTER_MIN_ATTACH_PX || h < RASTER_MIN_ATTACH_PX) return;
+			if (disposed || attachStarted || renderer.session.gpuReady()) return;
+			attachStarted = true;
 			try {
 				await renderer.attachCanvas(canvas, w, h, dpr);
 				if (disposed) return;
 				setAttachError(null);
-				if (camera) renderer.syncCamera(camera);
-				renderer.syncDocument(document);
+				setGpuAttached(true);
+				renderer.invalidate();
 			} catch (error) {
+				attachStarted = false;
 				const message = error instanceof Error ? error.message : String(error);
 				if (message.includes("already attached")) {
 					setAttachError(null);
+					setGpuAttached(true);
 					resize();
-					if (camera) renderer.syncCamera(camera);
-					renderer.syncDocument(document);
+					renderer.invalidate();
 					return;
 				}
 				setAttachError(message);
 				console.error("[DEBUG] raster canvas attach failed", error);
 			}
-		})();
+		};
 
-		const observer = new ResizeObserver(resize);
+		const observer = new ResizeObserver(() => {
+			resize();
+			void tryAttach();
+		});
 		observer.observe(container);
+		resize();
+		void tryAttach();
 		return () => {
 			disposed = true;
+			setGpuAttached(false);
 			observer.disconnect();
 		};
+	}, [renderer]);
+
+	const clientPoint = useCallback((event: React.PointerEvent): { x: number; y: number } => {
+		return clientPointFromCanvas(canvasRef.current, event);
 	}, []);
 
-	const clientPoint = useCallback((event: React.PointerEvent | React.WheelEvent): { x: number; y: number } => {
-		const canvas = canvasRef.current;
+	function clientPointFromCanvas(
+		canvas: HTMLCanvasElement | null,
+		event: { clientX: number; clientY: number },
+	): { x: number; y: number } {
 		if (!canvas) return { x: 0, y: 0 };
 		const rect = canvas.getBoundingClientRect();
 		return { x: event.clientX - rect.left, y: event.clientY - rect.top };
-	}, []);
+	}
 
 	const handleWheel = useCallback(
-		(event: React.WheelEvent) => {
+		(event: WheelEvent) => {
 			event.preventDefault();
-			const renderer = rendererRef.current;
-			if (!renderer) return;
-			const point = clientPoint(event);
+			const point = clientPointFromCanvas(canvasRef.current, event);
 			renderer.session.wheelScreen(point.x, point.y, event.deltaY);
 			onCameraChange?.(renderer.mirrorCameraFromSession());
 			renderer.invalidate();
 		},
-		[clientPoint, onCameraChange],
+		[renderer, onCameraChange],
 	);
+
+	useEffect(() => {
+		const canvas = canvasRef.current;
+		if (!canvas) return;
+		canvas.addEventListener("wheel", handleWheel, { passive: false });
+		return () => canvas.removeEventListener("wheel", handleWheel);
+	}, [handleWheel]);
 
 	const handlePointerDown = useCallback(
 		(event: React.PointerEvent) => {
-			const renderer = rendererRef.current;
-			if (!renderer) return;
 			const point = clientPoint(event);
-			if (event.button === 1 || (activeTool !== "selectMarquee" && event.button === 0)) {
-				panningRef.current = event.button === 1;
+			if (selectionMethod && event.button === 0) {
+				marqueeRef.current = {
+					tracking: true,
+					active: false,
+					start: point,
+					points: [point],
+					mergeMode: marqueeModeFromModifiers(event),
+				};
+				setMarqueeOverlay(null);
+				(event.target as HTMLElement).setPointerCapture(event.pointerId);
+				return;
+			}
+			if (event.button === 1 || (!isRasterSelectionTool(activeTool) && event.button === 0)) {
 				renderer.session.pointerDownScreen(point.x, point.y, event.button);
 				(event.target as HTMLElement).setPointerCapture(event.pointerId);
 			}
-			if (activeTool === "selectMarquee" && event.button === 0) {
-				marqueeRef.current = { start: point, end: point };
-				setMarqueeCoverage(marqueeCoverageFromGesture(point, point, "replace"));
-			}
 		},
-		[activeTool, clientPoint],
+		[activeTool, clientPoint, renderer, selectionMethod],
+	);
+
+	const updateMarqueeOverlay = useCallback(
+		(point: SelectionMarqueePoint, mergeMode: SelectionMergeMode) => {
+			if (!selectionMethod) return;
+			const marquee = marqueeRef.current;
+			const points = selectionMethod === "lasso" ? marquee.points : [marquee.start, point];
+			const coverage = marqueeCoverageFromGesture({
+				method: selectionMethod,
+				startX: marquee.start.x,
+				endX: point.x,
+				path: points,
+			});
+			if (selectionMethod === "lasso") {
+				setMarqueeOverlay({ coverage, shape: "polygon", points });
+				return;
+			}
+			const rect = screenRectFromPoints(points);
+			if (!rect) return;
+			setMarqueeOverlay({ coverage, shape: "rect", rect });
+		},
+		[selectionMethod],
+	);
+
+	const commitMarqueeSelection = useCallback(
+		(point: SelectionMarqueePoint, mergeMode: SelectionMergeMode) => {
+			const marquee = marqueeRef.current;
+			const points = selectionMethod === "lasso" ? [...marquee.points, point] : [marquee.start, point];
+			const coverage = marqueeCoverageFromGesture({
+				method: selectionMethod ?? "rectangle",
+				startX: marquee.start.x,
+				endX: point.x,
+				path: points,
+			});
+			const rect = screenRectFromPoints(points);
+			if (!rect) return;
+			const hits = resolveRasterMarqueeLayerHits(document, camera ?? document.camera, viewportRef.current, rect, coverage === "partial");
+			onSelect?.(selectionMergeIds(mergeMode, selectedIds, hits));
+		},
+		[camera, document, onSelect, selectedIds, selectionMethod],
 	);
 
 	const handlePointerMove = useCallback(
 		(event: React.PointerEvent) => {
-			const renderer = rendererRef.current;
-			if (!renderer) return;
 			const point = clientPoint(event);
-			if (marqueeRef.current) {
-				marqueeRef.current.end = point;
-				setMarqueeCoverage(
-					marqueeCoverageFromGesture(marqueeRef.current.start, point, marqueeModeFromModifiers(event) as SelectionMergeMode),
-				);
+			const marquee = marqueeRef.current;
+			if (marquee.tracking) {
+				const distance = Math.hypot(point.x - marquee.start.x, point.y - marquee.start.y);
+				if (!marquee.active && distance >= RASTER_MARQUEE_THRESHOLD_PX) marquee.active = true;
+				if (marquee.active) {
+					if (selectionMethod === "lasso") marquee.points = [...marquee.points, point];
+					marquee.mergeMode = marqueeModeFromModifiers(event);
+					updateMarqueeOverlay(point, marquee.mergeMode);
+				}
+				return;
 			}
 			renderer.session.pointerMoveScreen(point.x, point.y);
 			onCameraChange?.(renderer.mirrorCameraFromSession());
 			renderer.invalidate();
 		},
-		[clientPoint, onCameraChange],
+		[clientPoint, onCameraChange, renderer, selectionMethod, updateMarqueeOverlay],
 	);
 
 	const handlePointerUp = useCallback(
 		(event: React.PointerEvent) => {
-			const renderer = rendererRef.current;
-			if (!renderer) return;
 			const point = clientPoint(event);
-			renderer.session.pointerUpScreen(point.x, point.y);
-			panningRef.current = false;
-			if (marqueeRef.current) {
-				marqueeRef.current = null;
-				setMarqueeCoverage(null);
+			const marquee = marqueeRef.current;
+			if (marquee.tracking) {
+				const distance = Math.hypot(point.x - marquee.start.x, point.y - marquee.start.y);
+				const mergeMode = marqueeModeFromModifiers(event);
+				if (marquee.active && distance >= RASTER_MARQUEE_THRESHOLD_PX) {
+					commitMarqueeSelection(point, mergeMode);
+				} else if (activeTool === "selectWand") {
+					const hit = resolveRasterLayerAtScreenPoint(document, camera ?? document.camera, viewportRef.current, point);
+					onSelect?.(selectionMergeIds(mergeMode, selectedIds, hit ? [hit] : []));
+				} else if (distance < RASTER_MARQUEE_THRESHOLD_PX && selectionMethod) {
+					const hit = resolveRasterLayerAtScreenPoint(document, camera ?? document.camera, viewportRef.current, point);
+					onSelect?.(selectionMergeIds(mergeMode, selectedIds, hit ? [hit] : []));
+				}
+				marquee.tracking = false;
+				marquee.active = false;
+				marquee.points = [];
+				setMarqueeOverlay(null);
+				return;
 			}
+			renderer.session.pointerUpScreen(point.x, point.y);
 			onCameraChange?.(renderer.mirrorCameraFromSession());
 			renderer.invalidate();
 		},
-		[clientPoint, onCameraChange],
+		[
+			activeTool,
+			camera,
+			clientPoint,
+			commitMarqueeSelection,
+			document,
+			onCameraChange,
+			onSelect,
+			renderer,
+			selectedIds,
+			selectionMethod,
+		],
 	);
 
 	return (
@@ -371,7 +520,6 @@ export const RasterCanvas: React.FC<RasterCanvasProps> = ({
 			<canvas
 				ref={canvasRef}
 				className="absolute inset-0 h-full w-full touch-none"
-				onWheel={handleWheel}
 				onPointerDown={handlePointerDown}
 				onPointerMove={handlePointerMove}
 				onPointerUp={handlePointerUp}
@@ -382,7 +530,12 @@ export const RasterCanvas: React.FC<RasterCanvasProps> = ({
 					Canvas unavailable: {attachError}
 				</div>
 			) : null}
-			{marqueeCoverage ? <SelectionMarquee coverage={marqueeCoverage} /> : null}
+			{marqueeOverlay?.shape === "rect" ? (
+				<SelectionMarquee coverage={marqueeOverlay.coverage} shape="rect" rect={marqueeOverlay.rect} />
+			) : null}
+			{marqueeOverlay?.shape === "polygon" ? (
+				<SelectionMarquee coverage={marqueeOverlay.coverage} shape="polygon" points={marqueeOverlay.points} />
+			) : null}
 		</div>
 	);
 };

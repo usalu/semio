@@ -114,6 +114,7 @@ import {
 	type UiSeparatorNode,
 	type UiStackNode,
 	type UiTableHostSurfaceNode,
+	type UiEditorHostSurfaceNode,
 	type UiVirtualFileSystemHostSurfaceNode,
 	type UiTextNode,
 	type UiTreeNode,
@@ -3288,6 +3289,312 @@ function ensureBuiltinComponentKindRenderers(): void {
 ensureBuiltinComponentKindRenderers();
 //#endregion 🔖ComponentKindRenderer
 
+//#region 🔖CodeEditor
+export interface CodeEditorToken {
+	readonly class: string;
+	readonly start: number;
+	readonly end: number;
+}
+
+export interface CodeEditorCompletion {
+	readonly label: string;
+	readonly kind: string;
+	readonly detail?: string;
+	readonly insert: string;
+}
+
+export interface CodeEditorProps {
+	readonly value: string;
+	readonly onChange: (value: string) => void;
+	readonly onSubmit?: () => void;
+	readonly tokenize: (text: string) => readonly CodeEditorToken[];
+	readonly complete: (text: string, cursor: number) => readonly CodeEditorCompletion[];
+	readonly className?: string;
+	readonly placeholder?: string;
+}
+
+/** @emoji 🎨 Maps editor token classes to semantic surface colors. */
+export function codeEditorTokenClassName(tokenClass: string): string {
+	switch (tokenClass) {
+		case "keyword":
+			return "text-accent";
+		case "string":
+			return "text-emphasized";
+		case "number":
+			return "text-accent";
+		case "operator":
+			return "text-muted-foreground";
+		case "punctuation":
+			return "text-muted-foreground";
+		case "error":
+			return "text-destructive";
+		default:
+			return "text-foreground";
+	}
+}
+
+function escapeHtml(text: string): string {
+	return text.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+}
+
+function renderHighlightedMarkup(value: string, tokens: readonly CodeEditorToken[]): string {
+	if (!value) return "\n";
+	let html = "";
+	let cursor = 0;
+	for (const token of tokens) {
+		if (token.start > cursor) {
+			html += escapeHtml(value.slice(cursor, token.start));
+		}
+		html += `<span class="${codeEditorTokenClassName(token.class)}">${escapeHtml(value.slice(token.start, token.end))}</span>`;
+		cursor = token.end;
+	}
+	if (cursor < value.length) {
+		html += escapeHtml(value.slice(cursor));
+	}
+	return `${html}\n`;
+}
+
+function caretOffsetCoordinates(textarea: HTMLTextAreaElement, position: number): { top: number; left: number } {
+	const mirror = document.createElement("div");
+	const style = window.getComputedStyle(textarea);
+	const properties = [
+		"boxSizing",
+		"width",
+		"height",
+		"overflowX",
+		"overflowY",
+		"borderTopWidth",
+		"borderRightWidth",
+		"borderBottomWidth",
+		"borderLeftWidth",
+		"paddingTop",
+		"paddingRight",
+		"paddingBottom",
+		"paddingLeft",
+		"fontStyle",
+		"fontVariant",
+		"fontWeight",
+		"fontStretch",
+		"fontSize",
+		"fontFamily",
+		"lineHeight",
+		"letterSpacing",
+		"textTransform",
+		"textIndent",
+		"whiteSpace",
+		"wordBreak",
+		"wordWrap",
+	] as const;
+	for (const key of properties) {
+		mirror.style.setProperty(key, style.getPropertyValue(key.replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`)));
+	}
+	mirror.style.position = "absolute";
+	mirror.style.visibility = "hidden";
+	mirror.style.whiteSpace = "pre-wrap";
+	mirror.style.wordWrap = "break-word";
+	mirror.style.top = "0";
+	mirror.style.left = "0";
+	mirror.textContent = textarea.value.slice(0, position);
+	const marker = document.createElement("span");
+	marker.textContent = textarea.value.slice(position) || ".";
+	mirror.appendChild(marker);
+	document.body.appendChild(mirror);
+	const top = marker.offsetTop - textarea.scrollTop;
+	const left = marker.offsetLeft - textarea.scrollLeft;
+	document.body.removeChild(mirror);
+	return { top, left };
+}
+
+/** @emoji ✍️ Handcrafted overlay code editor with syntax highlighting and autocomplete. */
+export function CodeEditor({ value, onChange, onSubmit, tokenize, complete, className, placeholder }: CodeEditorProps): React.ReactElement {
+	const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+	const preRef = React.useRef<HTMLPreElement>(null);
+	const [suggestions, setSuggestions] = React.useState<readonly CodeEditorCompletion[]>([]);
+	const [activeSuggestion, setActiveSuggestion] = React.useState(0);
+	const [popup, setPopup] = React.useState<{ top: number; left: number } | null>(null);
+	const tokens = React.useMemo(() => tokenize(value), [tokenize, value]);
+	const lineCount = Math.max(1, value.split("\n").length);
+
+	const syncScroll = React.useCallback(() => {
+		const textarea = textareaRef.current;
+		const pre = preRef.current;
+		if (!textarea || !pre) return;
+		pre.scrollTop = textarea.scrollTop;
+		pre.scrollLeft = textarea.scrollLeft;
+	}, []);
+
+	const refreshSuggestions = React.useCallback(
+		(nextValue: string, nextCursor: number) => {
+			const items = complete(nextValue, nextCursor);
+			setSuggestions(items);
+			setActiveSuggestion(0);
+			const textarea = textareaRef.current;
+			if (!textarea || items.length === 0) {
+				setPopup(null);
+				return;
+			}
+			const coords = caretOffsetCoordinates(textarea, nextCursor);
+			setPopup({ top: coords.top + 20, left: coords.left });
+		},
+		[complete],
+	);
+
+	const applySuggestion = React.useCallback(
+		(item: CodeEditorCompletion) => {
+			const textarea = textareaRef.current;
+			if (!textarea) return;
+			const start = textarea.selectionStart;
+			let scan = start;
+			while (scan > 0) {
+				const ch = value[scan - 1];
+				if (/[A-Za-z0-9_]/.test(ch)) scan -= 1;
+				else break;
+			}
+			const next = `${value.slice(0, scan)}${item.insert}${value.slice(start)}`;
+			onChange(next);
+			const nextCursor = scan + item.insert.length;
+			window.requestAnimationFrame(() => {
+				textarea.focus();
+				textarea.setSelectionRange(nextCursor, nextCursor);
+				refreshSuggestions(next, nextCursor);
+			});
+			setSuggestions([]);
+			setPopup(null);
+		},
+		[onChange, refreshSuggestions, value],
+	);
+
+	const onKeyDown = React.useCallback(
+		(event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+			if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+				event.preventDefault();
+				setSuggestions([]);
+				setPopup(null);
+				onSubmit?.();
+				return;
+			}
+			if (suggestions.length > 0) {
+				if (event.key === "ArrowDown") {
+					event.preventDefault();
+					setActiveSuggestion((row) => (row + 1) % suggestions.length);
+					return;
+				}
+				if (event.key === "ArrowUp") {
+					event.preventDefault();
+					setActiveSuggestion((row) => (row - 1 + suggestions.length) % suggestions.length);
+					return;
+				}
+				if (event.key === "Enter" || event.key === "Tab") {
+					event.preventDefault();
+					applySuggestion(suggestions[activeSuggestion]!);
+					return;
+				}
+				if (event.key === "Escape") {
+					event.preventDefault();
+					setSuggestions([]);
+					setPopup(null);
+					return;
+				}
+			}
+			if (event.key === "Tab" && !event.shiftKey) {
+				event.preventDefault();
+				const textarea = event.currentTarget;
+				const start = textarea.selectionStart;
+				const end = textarea.selectionEnd;
+				const next = `${value.slice(0, start)}  ${value.slice(end)}`;
+				onChange(next);
+				window.requestAnimationFrame(() => {
+					textarea.setSelectionRange(start + 2, start + 2);
+				});
+			}
+		},
+		[activeSuggestion, applySuggestion, onChange, onSubmit, suggestions, value],
+	);
+
+	return (
+		<div className={cn("relative flex h-full min-h-0 w-full min-w-0 bg-canvas font-mono text-xs", className)} data-code-editor>
+			<div className="select-none border-r border-border px-2 py-2 text-right text-muted-foreground tabular-nums">
+				{Array.from({ length: lineCount }, (_, index) => (
+					<div key={index}>{index + 1}</div>
+				))}
+			</div>
+			<div className="relative min-h-0 min-w-0 flex-1">
+				<pre
+					ref={preRef}
+					className="pointer-events-none absolute inset-0 m-0 overflow-hidden whitespace-pre-wrap break-words p-2"
+					aria-hidden
+					dangerouslySetInnerHTML={{ __html: renderHighlightedMarkup(value, tokens) }}
+				/>
+				<textarea
+					ref={textareaRef}
+					className="absolute inset-0 m-0 resize-none overflow-auto bg-transparent p-2 text-transparent caret-foreground outline-none"
+					value={value}
+					placeholder={placeholder}
+					spellCheck={false}
+					onChange={(event) => {
+						onChange(event.target.value);
+						const nextCursor = event.target.selectionStart ?? event.target.value.length;
+						refreshSuggestions(event.target.value, nextCursor);
+					}}
+					onKeyDown={onKeyDown}
+					onScroll={syncScroll}
+					onClick={(event) => {
+						const nextCursor = event.currentTarget.selectionStart ?? value.length;
+						refreshSuggestions(value, nextCursor);
+					}}
+					onKeyUp={(event) => {
+						const nextCursor = event.currentTarget.selectionStart ?? value.length;
+						refreshSuggestions(value, nextCursor);
+					}}
+				/>
+				{popup && suggestions.length > 0 ? (
+					<div
+						className="absolute z-20 max-h-48 min-w-40 overflow-auto rounded-md border border-border bg-popover shadow-md"
+						style={{ top: popup.top, left: popup.left }}
+					>
+						{suggestions.map((item, index) => (
+							<button
+								key={`${item.label}-${index}`}
+								type="button"
+								className={cn(
+									"flex w-full flex-col items-start px-2 py-1 text-left text-xs",
+									index === activeSuggestion ? "bg-accent text-accent-foreground" : "text-foreground hover:bg-muted",
+								)}
+								onMouseDown={(event) => {
+									event.preventDefault();
+									applySuggestion(item);
+								}}
+							>
+								<span>{item.label}</span>
+								{item.detail ? <span className="text-muted-foreground">{item.detail}</span> : null}
+							</button>
+						))}
+					</div>
+				) : null}
+			</div>
+		</div>
+	);
+}
+
+if (import.meta.vitest) {
+	const { describe, expect, it } = import.meta.vitest;
+
+	describe("codeEditorTokenClassName", () => {
+		it("maps keyword tokens", () => {
+			expect(codeEditorTokenClassName("keyword")).toBe("text-accent");
+		});
+	});
+
+	describe("renderHighlightedMarkup", () => {
+		it("wraps token spans", () => {
+			const html = renderHighlightedMarkup("MATCH", [{ class: "keyword", start: 0, end: 5 }]);
+			expect(html).toContain('class="text-accent"');
+			expect(html).toContain("MATCH");
+		});
+	});
+}
+//#endregion 🔖CodeEditor
+
 //#region 🔖SurfaceBinding
 type SurfaceBindingHost = React.ComponentType<{ readonly node: UiComponentHostSurfaceNode; readonly platform?: Platform }>;
 
@@ -3421,6 +3728,15 @@ export function unregisterUiTableSurfaceHost(surfaceId: string): void {
 	unregisterSurfaceBinding(surfaceId);
 }
 
+/** @emoji ✍️ Binds an editor `surfaceId` (alias for {@link registerSurfaceBinding}). */
+export function registerUiEditorSurfaceHost(surfaceId: string, Component: React.ComponentType<{ readonly node: UiEditorHostSurfaceNode }>): void {
+	registerSurfaceBinding(surfaceId, Component as SurfaceBindingHost);
+}
+
+export function unregisterUiEditorSurfaceHost(surfaceId: string): void {
+	unregisterSurfaceBinding(surfaceId);
+}
+
 /** @emoji 📁 Binds a virtual file system `surfaceId` (alias for {@link registerSurfaceBinding}). */
 export function registerUiVirtualFileSystemSurfaceHost(
 	surfaceId: string,
@@ -3526,6 +3842,10 @@ function renderTable(node: UiTableHostSurfaceNode, platform: Platform | undefine
 	return renderBoundComponent(node, "panel", platform, commandBus);
 }
 
+function renderEditor(node: UiEditorHostSurfaceNode, platform: Platform | undefined, commandBus: CommandBus): React.ReactElement {
+	return renderBoundComponent(node, "panel", platform, commandBus);
+}
+
 function renderVirtualFileSystem(
 	node: UiVirtualFileSystemHostSurfaceNode,
 	platform: Platform | undefined,
@@ -3579,6 +3899,8 @@ function renderNode(node: UiNode, commandBus: CommandBus, horizontalParent: bool
 			return renderSeparator(node, horizontalParent);
 		case "table":
 			return renderTable(node, platform, commandBus);
+		case "editor":
+			return renderEditor(node, platform, commandBus);
 		case "virtualFileSystem":
 			return renderVirtualFileSystem(node, platform, commandBus);
 		case "panel":

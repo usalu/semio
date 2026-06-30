@@ -10,19 +10,19 @@ import {
   Platform,
   Playground,
   WindowKindRuntime,
+  buildEditorWindowBody,
+  buildTableWindowBody,
   buildTrinityWindowBody,
   createPlayAppRuntime,
   createProductPlaygroundPlatform,
-  createStackLayout,
-  enforcePlaygroundWindowEngagementInput,
+  createWindowLayout,
   registerWindowBody,
   FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
   FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
   FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-  type CommandDescriptor,
   type UiNode,
   type WindowBodyViewContext,
-  type WindowEngagement,
+  type WindowLayout,
 } from "@semio-tech/framework-playground-core";
 import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
 import {
@@ -39,23 +39,66 @@ import {
 export const TRINITY_JACK_PLAY_APP_ID = "trinity-jack-play";
 export const TRINITY_JACK_PLAY_CONTROLLER_ID = "trinity-jack-play";
 export const TRINITY_JACK_PLAY_SURFACE_ID = "trinity.jack.play/v1";
+export const TRINITY_JACK_PLAY_EDITOR_SURFACE_ID = "trinity.jack.editor/v1";
+export const TRINITY_JACK_PLAY_RESULTS_SURFACE_ID = "trinity.jack.results/v1";
 export const TRINITY_JACK_PLAY_BODY_KEY_MAIN = "trinity.jack.play.main";
-export const TRINITY_JACK_PLAY_WINDOW_KIND_ID = "trinity-jack-main";
+export const TRINITY_JACK_PLAY_BODY_KEY_EDITOR = "trinity.jack.play.editor";
+export const TRINITY_JACK_PLAY_BODY_KEY_RESULTS = "trinity.jack.play.results";
+export const TRINITY_JACK_PLAY_WINDOW_KIND_ID = "trinity-jack-graph";
+export const TRINITY_JACK_PLAY_EDITOR_WINDOW_KIND_ID = "trinity-jack-editor";
+export const TRINITY_JACK_PLAY_RESULTS_WINDOW_KIND_ID = "trinity-jack-results";
 export const TRINITY_JACK_PLAY_HIERARCHY_TAB_ID = "framework.panel.hierarchy";
 export const TRINITY_JACK_PLAY_CATALOGUE_TAB_ID = "framework.panel.catalogue";
 export const TRINITY_JACK_PLAY_INSPECTION_TAB_ID = "framework.panel.inspection";
 export const TRINITY_JACK_PLAY_DEFAULT_FIXTURE_JSON = TRINITY_DEFAULT_FIXTURE_JSON;
 
-function trinityJackCmd(command: string, args?: Record<string, unknown>): CommandDescriptor {
-  return { controllerId: TRINITY_JACK_PLAY_CONTROLLER_ID, command, args };
-}
-
 export function buildTrinityJackPlayMainDeclarativeBody(_ctx: WindowBodyViewContext): UiNode {
   return buildTrinityWindowBody(TRINITY_JACK_PLAY_SURFACE_ID, TRINITY_JACK_PLAY_CONTROLLER_ID, TRINITY_JACK_PLAY_WINDOW_KIND_ID);
 }
 
+export function buildTrinityJackPlayEditorDeclarativeBody(_ctx: WindowBodyViewContext): UiNode {
+  return buildEditorWindowBody(TRINITY_JACK_PLAY_EDITOR_SURFACE_ID, TRINITY_JACK_PLAY_CONTROLLER_ID, TRINITY_JACK_PLAY_EDITOR_WINDOW_KIND_ID);
+}
+
+export function buildTrinityJackPlayResultsDeclarativeBody(_ctx: WindowBodyViewContext): UiNode {
+  return buildTableWindowBody(TRINITY_JACK_PLAY_RESULTS_SURFACE_ID, TRINITY_JACK_PLAY_CONTROLLER_ID, TRINITY_JACK_PLAY_RESULTS_WINDOW_KIND_ID);
+}
+
 export function registerTrinityJackPlayDeclarativeBodies(): void {
   registerWindowBody(TRINITY_JACK_PLAY_BODY_KEY_MAIN, buildTrinityJackPlayMainDeclarativeBody);
+  registerWindowBody(TRINITY_JACK_PLAY_BODY_KEY_EDITOR, buildTrinityJackPlayEditorDeclarativeBody);
+  registerWindowBody(TRINITY_JACK_PLAY_BODY_KEY_RESULTS, buildTrinityJackPlayResultsDeclarativeBody);
+}
+
+export function buildTrinityJackPlayLayout(): WindowLayout {
+  return {
+    root: {
+      kind: "row",
+      children: [
+        {
+          kind: "stack",
+          size: 0.6,
+          children: [createWindowLayout(TRINITY_JACK_PLAY_WINDOW_KIND_ID, "Nakagin Graph")],
+        },
+        {
+          kind: "column",
+          size: 0.4,
+          children: [
+            {
+              kind: "stack",
+              size: 0.55,
+              children: [createWindowLayout(TRINITY_JACK_PLAY_EDITOR_WINDOW_KIND_ID, "Jack Query")],
+            },
+            {
+              kind: "stack",
+              size: 0.45,
+              children: [createWindowLayout(TRINITY_JACK_PLAY_RESULTS_WINDOW_KIND_ID, "Results")],
+            },
+          ],
+        },
+      ],
+    },
+  };
 }
 
 export class TrinityJackPlayController extends Controller {
@@ -98,30 +141,15 @@ export class TrinityJackPlayController extends Controller {
 
   private bump(): void {
     this.interactionRevision += 1;
-    this.rebuildShellMode();
     this.emit();
   }
 
   private rebuildShellMode(): void {
-    const engagement: WindowEngagement = {
-      input: {
-        id: "trinity-jack-query",
-        value: this.jackQuery,
-        placeholder: "MATCH (a:Piece) RETURN a.name",
-        onChange: trinityJackCmd("setJackQuery"),
-        onSubmit: trinityJackCmd("runJackQuery"),
-      },
-      options: [
-        { id: "trinity-jack.reorganize", label: "Reorganize", command: trinityJackCmd("reorganize") },
-        { id: "trinity-jack.run", label: "Run Jack", command: trinityJackCmd("runJackQuery") },
-      ],
-    };
     this.mainMode.windowKinds = [
-      new WindowKindRuntime(TRINITY_JACK_PLAY_WINDOW_KIND_ID, "Nakagin Graph", TRINITY_JACK_PLAY_BODY_KEY_MAIN, undefined, [], engagement),
+      new WindowKindRuntime(TRINITY_JACK_PLAY_WINDOW_KIND_ID, "Nakagin Graph", TRINITY_JACK_PLAY_BODY_KEY_MAIN),
+      new WindowKindRuntime(TRINITY_JACK_PLAY_EDITOR_WINDOW_KIND_ID, "Jack Query", TRINITY_JACK_PLAY_BODY_KEY_EDITOR),
+      new WindowKindRuntime(TRINITY_JACK_PLAY_RESULTS_WINDOW_KIND_ID, "Results", TRINITY_JACK_PLAY_BODY_KEY_RESULTS),
     ];
-    for (const windowKind of this.mainMode.windowKinds) {
-      enforcePlaygroundWindowEngagementInput(windowKind.engagement, `Trinity jack play window "${windowKind.id}"`);
-    }
   }
 
   run(command: string, args?: unknown): void {
@@ -142,7 +170,7 @@ export class TrinityJackPlayController extends Controller {
       return;
     }
     if (command === "runJackQuery") {
-      const value = (args as { value?: string }).value;
+      const value = (args as { value?: string } | undefined)?.value;
       const query = typeof value === "string" && value.trim() ? value : this.jackQuery;
       this.jackQuery = query;
       console.log(`[DEBUG] trinity jack query: ${query}`);
@@ -172,8 +200,7 @@ export class TrinityJackPlayController extends Controller {
 }
 
 function buildTrinityJackPlayAppRuntime(ctrl: TrinityJackPlayController): AppRuntime {
-  const layout = createStackLayout([TRINITY_JACK_PLAY_WINDOW_KIND_ID], ["Nakagin Graph"]);
-  return createPlayAppRuntime(TRINITY_JACK_PLAY_APP_ID, "Trinity Jack", ctrl, layout, ctrl.mainMode);
+  return createPlayAppRuntime(TRINITY_JACK_PLAY_APP_ID, "Trinity Jack", ctrl, buildTrinityJackPlayLayout(), ctrl.mainMode);
 }
 
 export class PlaygroundTrinityJack extends Playground {
@@ -230,6 +257,26 @@ if (import.meta.vitest) {
     });
   });
 
+  describe("registerTrinityJackPlayDeclarativeBodies", () => {
+    it("registers graph, editor, and results bodies", () => {
+      registerTrinityJackPlayDeclarativeBodies();
+      expect(buildTrinityJackPlayEditorDeclarativeBody({
+        runtime: new Platform({ id: "test" }),
+        windowKindId: TRINITY_JACK_PLAY_EDITOR_WINDOW_KIND_ID,
+        bodyKey: TRINITY_JACK_PLAY_BODY_KEY_EDITOR,
+        activeModeId: "explore",
+        generation: 0,
+      }).type).toBe("editor");
+      expect(buildTrinityJackPlayResultsDeclarativeBody({
+        runtime: new Platform({ id: "test" }),
+        windowKindId: TRINITY_JACK_PLAY_RESULTS_WINDOW_KIND_ID,
+        bodyKey: TRINITY_JACK_PLAY_BODY_KEY_RESULTS,
+        activeModeId: "explore",
+        generation: 0,
+      }).type).toBe("table");
+    });
+  });
+
   describe("TrinityJackPlayController", () => {
     it("runJackQuery returns nakagin core row", () => {
       const bus = new CommandBus();
@@ -237,6 +284,16 @@ if (import.meta.vitest) {
       ctrl.run("runJackQuery", { value: "MATCH (a:Piece) WHERE a.name = 'b' RETURN a.name" });
       const result = JSON.parse(ctrl.getJackResultJson()) as { rows: unknown[][] };
       expect(result.rows.length).toBe(1);
+    });
+
+    it("exposes three window kinds", () => {
+      const bus = new CommandBus();
+      const ctrl = new TrinityJackPlayController(bus, () => {});
+      expect(ctrl.mainMode.windowKinds?.map((row) => row.id)).toEqual([
+        TRINITY_JACK_PLAY_WINDOW_KIND_ID,
+        TRINITY_JACK_PLAY_EDITOR_WINDOW_KIND_ID,
+        TRINITY_JACK_PLAY_RESULTS_WINDOW_KIND_ID,
+      ]);
     });
   });
 }

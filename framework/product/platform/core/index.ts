@@ -283,9 +283,9 @@ export function sidePanelTreeRootItems(
 
 //#region 🔖ComponentKind
 /** @emoji 🧩 Fixed platform component vocabulary wired by renderers (`table`, `virtualFileSystem`, `puzzle2d`, …). */
-export type ComponentKind = "table" | "virtualFileSystem" | "puzzle2d" | "puzzle3d" | "puzzle5d" | "cad" | "gismap" | "flow" | "dag" | "trinity" | "shooting" | "forms" | "raster" | "panel";
+export type ComponentKind = "table" | "virtualFileSystem" | "puzzle2d" | "puzzle3d" | "puzzle5d" | "cad" | "gismap" | "flow" | "dag" | "trinity" | "shooting" | "forms" | "raster" | "panel" | "editor";
 
-const CANVAS_COMPONENT_KINDS: readonly ComponentKind[] = ["table", "virtualFileSystem", "puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag", "trinity", "shooting", "forms", "raster"];
+const CANVAS_COMPONENT_KINDS: readonly ComponentKind[] = ["table", "virtualFileSystem", "puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag", "trinity", "shooting", "forms", "raster", "editor"];
 //#endregion 🔖ComponentKind
 
 /** @emoji 📊 Host-bound tabular surface; `paneId` disambiguates multiple table slots in one app. */
@@ -427,6 +427,16 @@ export interface UiRasterHostSurfaceNode {
 	readonly bindingId?: string;
 }
 
+/** @emoji ✍️ Host-bound code editor surface. */
+export interface UiEditorHostSurfaceNode {
+	readonly type: "editor";
+	readonly componentKind: "editor";
+	readonly surfaceId: string;
+	readonly controllerId: string;
+	readonly paneId?: string;
+	readonly bindingId?: string;
+}
+
 export type UiComponentHostSurfaceNode =
 	| UiTableHostSurfaceNode
 	| UiVirtualFileSystemHostSurfaceNode
@@ -441,7 +451,8 @@ export type UiComponentHostSurfaceNode =
 	| UiShootingHostSurfaceNode
 	| UiFormsHostSurfaceNode
 	| UiRasterHostSurfaceNode
-	| UiPanelHostSurfaceNode;
+	| UiPanelHostSurfaceNode
+	| UiEditorHostSurfaceNode;
 
 /** @emoji 🌲 Converts declarative form sections into a strict side-panel tree. */
 export function uiDeclarativeSectionsToTree(sections: readonly UiSectionNode[]): UiTreeNode {
@@ -513,6 +524,18 @@ export function buildTableWindowBody(surfaceId: string, controllerId: string, pa
 	return {
 		type: "table",
 		componentKind: "table",
+		surfaceId,
+		controllerId,
+		...(paneId ? { paneId } : {}),
+		...(bindingId ? { bindingId } : {}),
+	};
+}
+
+/** @emoji ✍️ Canonical editor window body. */
+export function buildEditorWindowBody(surfaceId: string, controllerId: string, paneId?: string, bindingId?: string): UiEditorHostSurfaceNode {
+	return {
+		type: "editor",
+		componentKind: "editor",
 		surfaceId,
 		controllerId,
 		...(paneId ? { paneId } : {}),
@@ -683,7 +706,7 @@ export function isCanvasOnlyWindowBody(node: UiNode): boolean {
 function assertCanvasOnlyWindowBody(bodyKey: string, node: UiNode): void {
 	if (isCanvasOnlyWindowBody(node)) return;
 		throw new Error(
-			`Declarative window body "${bodyKey}" must be a single table, virtualFileSystem, puzzle2d, puzzle3d, puzzle5d, cad, shooting, forms, or raster surface (optional none padding stack wrapper). Found "${node.type}". Use ModeRuntime.tools, side tabs, or window measures for chrome.`,
+			`Declarative window body "${bodyKey}" must be a single table, virtualFileSystem, puzzle2d, puzzle3d, puzzle5d, cad, shooting, forms, raster, or editor surface (optional none padding stack wrapper). Found "${node.type}". Use ModeRuntime.tools, side tabs, or window measures for chrome.`,
 		);
 }
 //#endregion 🔖UiNode

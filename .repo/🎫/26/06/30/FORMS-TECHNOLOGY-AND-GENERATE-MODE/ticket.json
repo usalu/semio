@@ -1,9 +1,9 @@
 {
   "title": "Forms Technology And Generate Mode",
   "emoji": "📋",
-  "status": "open",
+  "status": "closed",
   "description": "Introduce forms technology (declarative form data, question kinds, multi-step builder playground) and flow Generate mode where input widgets become forms and generations are saved submissions evaluated through the worker pipeline. Extend ui with Catalogue, cross-container tree reorder, and Field primitives.",
-  "summary": "Refactored forms playground to use framework side-panel infrastructure (Workbench: Hierarchy + Catalogue tabs; Details: Inspection tab) instead of duplicating hierarchy/catalogue/inspector inside FormBuilder. FormBuilder and FormsBuilderSurfaceHost now render FormRenderer only; tree builders, drag controllers, and controller commands live in forms/play; playground renderer wires PureSidePanelTabDefinition panels matching flow/shooting pattern. Verified in browser on port 6062: side panels show correct trees, center windows show form preview only, no console errors. Tests pass for forms/play and forms/react.",
+  "summary": "Fixed forms playground drag-and-drop to match flow/puzzle2d patterns. Catalogue palette now uses full pointer+HTML5 drag session with floating ghost preview, global drop bridge, and accent ring on builder preview. Drops commit to hierarchy tree rows (before/after/inside) or builder preview default target. Hierarchy reorder uses correct target item ids. ui-react Tree handleDragOver now allows copy drops for application/* palette MIME types so catalogue→hierarchy HTML5 drag works.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1763"
   },
@@ -16,6 +16,7 @@
   "sessions": [
     "⚪99deb9cb75da44ffbc6132757b80f678",
     "⚪93e295c079714973a239572446ea2803",
-    "⚪119cc2513df04739962e47048f749d77"
+    "⚪119cc2513df04739962e47048f749d77",
+    "⚪3cfc452c028c4d57ab7380e723c54028"
   ]
 }

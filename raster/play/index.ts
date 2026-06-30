@@ -38,7 +38,7 @@ import {
 	flattenRasterLayers,
 	parseRasterDocument,
 	rasterDocumentFromJson,
-	rasterDocumentToJson,
+	rasterDocumentToExportJson,
 	rasterPlayBlendModeTreeRowId,
 	rasterPlayHoverPayloadFromTreeRowId,
 	rasterPlayLayersTreeHighlightedIds,
@@ -100,12 +100,11 @@ const RASTER_PLAY_FILE_FIXTURE_JSON_BY_ID: Record<string, string> = Object.fromE
 	}),
 );
 
-export const RASTER_PLAY_FIXTURE_OPTIONS: ReadonlyArray<{ readonly id: string; readonly label: string }> = [
-	{ id: RASTER_PLAY_FIXTURE_DEFAULT_ID, label: "Default Composite" },
-	...Object.keys(RASTER_PLAY_FILE_FIXTURE_JSON_BY_ID)
-		.sort()
-		.map((id) => ({ id, label: rasterFixtureLabelFromId(id) })),
-];
+export const RASTER_PLAY_FIXTURE_OPTIONS: ReadonlyArray<{ readonly id: string; readonly label: string }> = Object.keys(
+	RASTER_PLAY_FILE_FIXTURE_JSON_BY_ID,
+)
+	.sort()
+	.map((id) => ({ id, label: rasterFixtureLabelFromId(id) }));
 
 export const RASTER_PLAY_EMPTY_DOCUMENT: RasterDocument = defaultRasterDocument("empty");
 
@@ -250,6 +249,10 @@ export function buildRasterPlayBlendCatalogueTree(hoverSink?: (payload: RasterHo
 	};
 }
 
+export interface RasterPlayHostBridge {
+	runHostCommand(command: string, args?: unknown): void;
+}
+
 export class RasterPlayController extends Controller implements PlaygroundFixtureHost {
 	readonly mainMode = new ModeRuntime("main", "Raster", undefined);
 	private document: RasterDocument = RASTER_PLAY_EMPTY_DOCUMENT;
@@ -258,6 +261,7 @@ export class RasterPlayController extends Controller implements PlaygroundFixtur
 	private hoveredKind: RasterKindHover | null = null;
 	private interactionRevision = 0;
 	private listeners = new Set<() => void>();
+	private hostBridge: RasterPlayHostBridge | null = null;
 
 	constructor(bus: CommandBus, notifyPlatform: () => void) {
 		super(RASTER_PLAY_CONTROLLER_ID, bus, notifyPlatform);
@@ -289,6 +293,22 @@ export class RasterPlayController extends Controller implements PlaygroundFixtur
 
 	getDocument(): RasterDocument {
 		return this.document;
+	}
+
+	getDocumentJson(): string {
+		return rasterDocumentToExportJson(this.document);
+	}
+
+	setHostBridge(bridge: RasterPlayHostBridge | null): void {
+		this.hostBridge = bridge;
+	}
+
+	private applyDocument(doc: RasterDocument, resetSelection = false): void {
+		this.document = doc;
+		if (resetSelection) {
+			this.selectedIds = doc.layers[0] ? [doc.layers[0].id] : [];
+		}
+		this.bump();
 	}
 
 	getSelectedIds(): readonly string[] {
@@ -326,11 +346,24 @@ export class RasterPlayController extends Controller implements PlaygroundFixtur
 				}
 				const json = RASTER_PLAY_FILE_FIXTURE_JSON_BY_ID[fixtureId];
 				if (json) {
-					this.document = rasterDocumentFromJson(json);
-					this.selectedIds = this.document.layers[0] ? [this.document.layers[0].id] : [];
+					this.applyDocument(rasterDocumentFromJson(json), true);
 					console.log("[DEBUG] raster fixture loaded", fixtureId);
-					this.bump();
 				}
+				return;
+			}
+			case "setFixtureJson": {
+				const json = typeof args.json === "string" ? args.json : "";
+				if (!json.includes("raster.document/v1")) {
+					console.log("[DEBUG] raster import rejected: not a raster document");
+					return;
+				}
+				this.applyDocument(rasterDocumentFromJson(json), args.resetInteraction !== false);
+				console.log("[DEBUG] raster document imported");
+				return;
+			}
+			case "saveDownload":
+			case "loadRequest": {
+				this.hostBridge?.runHostCommand(command, args);
 				return;
 			}
 			case "setSelection": {
@@ -417,6 +450,12 @@ function transformTools(): readonly ToolLeaf[] {
 }
 
 export const RASTER_PLAY_TOOLS: AppTools = [
+	toolCollection("open", "folder-open", [
+		rasterPlayTool("raster-import", "Import Raster", "folder-open", "loadRequest"),
+	]),
+	toolCollection("save", "save", [
+		rasterPlayTool("raster-export", "Export Raster", "save", "saveDownload"),
+	]),
 	toolCollection("selection", "mouse-pointer-2", selectionTools()),
 	toolCollection("paint", "paintbrush", paintTools()),
 	toolCollection("transform", "move", transformTools()),
@@ -446,7 +485,7 @@ export class PlaygroundRaster extends Playground {
 	createRuntime(): Platform {
 		const runtime = createProductPlaygroundPlatform(this.id);
 		const ctrl = new RasterPlayController(runtime.commandBus, () => runtime.notify());
-		const resolved = playgroundResolvedFixtureId("default");
+		const resolved = playgroundResolvedFixtureId(RASTER_PLAY_FIXTURE_DEFAULT_ID);
 		const fixtureJson = RASTER_PLAY_FILE_FIXTURE_JSON_BY_ID[resolved];
 		if (fixtureJson) {
 			ctrl.run("setActiveFixture", { fixtureId: resolved });
@@ -474,8 +513,8 @@ if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
 
 	describe("RASTER_PLAY_FIXTURE_OPTIONS", () => {
-		it("includes default fixture", () => {
-			expect(RASTER_PLAY_FIXTURE_OPTIONS.some((row) => row.id === RASTER_PLAY_FIXTURE_DEFAULT_ID)).toBe(true);
+		it("includes semio fixture", () => {
+			expect(RASTER_PLAY_FIXTURE_OPTIONS.some((row) => row.id === "semio")).toBe(true);
 		});
 	});
 
@@ -491,20 +530,30 @@ if (import.meta.vitest) {
 		});
 	});
 	describe("buildRasterPlayMasksTree", () => {
-		it("keeps a placeholder row when the fixture has no masks", () => {
-			const doc = rasterDocumentFromJson(RASTER_PLAY_FILE_FIXTURE_JSON_BY_ID.paint!);
+		it("lists mask rows from the semio fixture", () => {
+			const doc = rasterDocumentFromJson(RASTER_PLAY_FILE_FIXTURE_JSON_BY_ID.semio!);
 			const tree = buildRasterPlayMasksTree(doc, [], null, null);
-			expect(tree.sections[0]?.items).toEqual([
-				expect.objectContaining({ id: "raster-play-masks.empty", label: "No layer masks" }),
-			]);
+			expect(tree.sections[0]?.items.some((item) => item.id.includes(".mask."))).toBe(true);
 		});
 	});
 
 	describe("buildRasterPlayLayersTree", () => {
 		it("builds layer rows", () => {
-			const doc = rasterDocumentFromJson(RASTER_PLAY_FILE_FIXTURE_JSON_BY_ID.default!);
+			const doc = rasterDocumentFromJson(RASTER_PLAY_FILE_FIXTURE_JSON_BY_ID.semio!);
 			const tree = buildRasterPlayLayersTree(doc, [], null, null);
 			expect(tree.sections[0]?.items.length).toBeGreaterThan(0);
+		});
+	});
+
+	describe("RasterPlayController import export", () => {
+		it("round-trips fixture json", () => {
+			const bus = new CommandBus();
+			const ctrl = new RasterPlayController(bus, () => {});
+			ctrl.run("setActiveFixture", { fixtureId: "semio" });
+			const exported = ctrl.getDocumentJson();
+			ctrl.run("setFixtureJson", { json: exported, resetInteraction: true });
+			expect(ctrl.getDocument().id).toBe("semio");
+			expect(ctrl.getDocument().assets?.["semio-emblem"]?.mime).toBe("image/png");
 		});
 	});
 

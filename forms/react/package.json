@@ -12,7 +12,9 @@
     "test": "bun nx run @semio-tech/forms-react:test"
   },
   "dependencies": {
+    "@semio-tech/flow-react": "workspace:*",
     "@semio-tech/forms-core": "workspace:*",
+    "@semio-tech/procedural-3d-react": "workspace:*",
     "@semio-tech/ui-react": "workspace:*"
   },
   "devDependencies": {

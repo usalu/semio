@@ -368,8 +368,10 @@ type FormsSurfaceHost = React.ComponentType<{ readonly node: import("@semio-tech
 const formsSurfaceHosts = new Map<string, FormsSurfaceHost>();
 type RasterSurfaceHost = React.ComponentType<{ readonly node: import("@semio-tech/framework-platform-core").UiRasterHostSurfaceNode }>;
 const rasterSurfaceHosts = new Map<string, RasterSurfaceHost>();
+type EditorSurfaceHost = React.ComponentType<{ readonly node: import("@semio-tech/framework-platform-core").UiEditorHostSurfaceNode }>;
+const editorSurfaceHosts = new Map<string, EditorSurfaceHost>();
 
-const PLAYGROUND_CANVAS_HOST_TYPES = new Set(["puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag", "trinity", "shooting", "forms", "raster"]);
+const PLAYGROUND_CANVAS_HOST_TYPES = new Set(["puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag", "trinity", "shooting", "forms", "raster", "editor"]);
 
 function isPlaygroundCanvasHostChild(child: UiNode): boolean {
   return PLAYGROUND_CANVAS_HOST_TYPES.has(child.type);
@@ -428,6 +430,12 @@ export function registerUiFormsSurfaceHost(surfaceId: string, Component: FormsSu
 /** @emoji 🖼️ Binds `surfaceId` from {@link UiRasterHostSurfaceNode} to a raster canvas. */
 export function registerUiRasterSurfaceHost(surfaceId: string, Component: RasterSurfaceHost): void {
   rasterSurfaceHosts.set(surfaceId, Component);
+  registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
+}
+
+/** @emoji ✍️ Binds `surfaceId` from {@link UiEditorHostSurfaceNode} to a code editor body. */
+export function registerUiEditorSurfaceHost(surfaceId: string, Component: EditorSurfaceHost): void {
+  editorSurfaceHosts.set(surfaceId, Component);
   registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
 }
 
@@ -522,6 +530,16 @@ function renderPlaygroundHostSurface(node: UiNode, layout: "canvas" | "panel"): 
       );
     }
   }
+  if (node.type === "editor") {
+    const Host = editorSurfaceHosts.get(node.surfaceId);
+    if (Host) {
+      return (
+        <div className="relative min-h-0 min-w-0 flex-1 overflow-hidden">
+          <Host node={node} />
+        </div>
+      );
+    }
+  }
   if (
     node.type === "cad" ||
     node.type === "puzzle2d" ||
@@ -534,7 +552,8 @@ function renderPlaygroundHostSurface(node: UiNode, layout: "canvas" | "panel"): 
     node.type === "forms" ||
     node.type === "raster" ||
     node.type === "panel" ||
-    node.type === "table"
+    node.type === "table" ||
+    node.type === "editor"
   ) {
     return renderComponentHostSurface(node as UiComponentHostSurfaceNode, layout);
   }
@@ -795,7 +814,8 @@ export function UiRenderer({ node, commandBus }: { readonly node: UiNode; readon
     case "raster":
     case "panel":
     case "table":
-      return renderPlaygroundHostSurface(node, node.type === "table" || node.type === "panel" ? "panel" : "canvas");
+    case "editor":
+      return renderPlaygroundHostSurface(node, node.type === "table" || node.type === "panel" || node.type === "editor" ? "panel" : "canvas");
     case "section": {
       const section = node as UiSectionNode;
       return (
@@ -6888,8 +6908,10 @@ import {
   TRINITY_JACK_PLAY_APP_ID,
   TRINITY_JACK_PLAY_CATALOGUE_TAB_ID,
   TRINITY_JACK_PLAY_DEFAULT_FIXTURE_JSON,
+  TRINITY_JACK_PLAY_EDITOR_SURFACE_ID,
   TRINITY_JACK_PLAY_HIERARCHY_TAB_ID,
   TRINITY_JACK_PLAY_INSPECTION_TAB_ID,
+  TRINITY_JACK_PLAY_RESULTS_SURFACE_ID,
   TRINITY_JACK_PLAY_SURFACE_ID,
   TRINITY_JACK_PLAY_WINDOW_KIND_ID,
   TrinityJackPlayController,
@@ -6905,8 +6927,9 @@ import {
   TrinityRewritePlayController,
   registerTrinityRewritePlayDeclarativeBodies,
 } from "@semio-tech/trinity-rewrite-play";
-import { TRINITY_DEFAULT_FIXTURE_JSON, TrinityCanvas } from "@semio-tech/trinity-react";
-import type { UiTrinityHostSurfaceNode } from "@semio-tech/framework-platform-core";
+import { TRINITY_DEFAULT_FIXTURE_JSON, TrinityCanvas, completeJackOnFixture, tokenizeJackOnFixture } from "@semio-tech/trinity-react";
+import { CodeEditor } from "@semio-tech/framework-platform-renderer-react";
+import type { UiEditorHostSurfaceNode, UiTableHostSurfaceNode, UiTrinityHostSurfaceNode } from "@semio-tech/framework-platform-core";
 
 let trinityPlayChromeRegistered = false;
 const trinityJackControllerRef: { current: TrinityJackPlayController | null } = { current: null };
@@ -6951,6 +6974,71 @@ function TrinityJackPlaySurfaceHost({ node }: { readonly node: UiTrinityHostSurf
   );
 }
 
+function TrinityJackEditorSurfaceHost({ node }: { readonly node: UiEditorHostSurfaceNode }): ReactElement {
+  const ctrl = useTrinityJackController();
+  const fixtureJson = ctrl?.getFixtureJson() ?? TRINITY_JACK_PLAY_DEFAULT_FIXTURE_JSON;
+  const tokenize = reactHostPort.useCallback((text: string) => tokenizeJackOnFixture(fixtureJson, text), [fixtureJson]);
+  const complete = reactHostPort.useCallback((text: string, cursor: number) => completeJackOnFixture(fixtureJson, text, cursor), [fixtureJson]);
+  const onChange = reactHostPort.useCallback((value: string) => trinityJackControllerRef.current?.run("setJackQuery", { value }), []);
+  const onSubmit = reactHostPort.useCallback(() => {
+    trinityJackControllerRef.current?.run("runJackQuery");
+  }, []);
+  console.log("[DEBUG] trinity jack editor surface mount");
+  return (
+    <CodeEditor
+      value={ctrl?.getJackQuery() ?? "MATCH (a:Piece) RETURN a.name"}
+      onChange={onChange}
+      onSubmit={onSubmit}
+      tokenize={tokenize}
+      complete={complete}
+      placeholder="MATCH (a:Piece) RETURN a.name"
+      className="h-full"
+    />
+  );
+}
+
+function TrinityJackResultsSurfaceHost({ node }: { readonly node: UiTableHostSurfaceNode }): ReactElement {
+  const ctrl = useTrinityJackController();
+  const result = reactHostPort.useMemo(() => {
+    try {
+      return JSON.parse(ctrl?.getJackResultJson() || '{"columns":[],"rows":[]}') as { columns: string[]; rows: unknown[][] };
+    } catch {
+      return { columns: ["error"], rows: [["Invalid result json"]] };
+    }
+  }, [ctrl?.getJackResultJson(), ctrl?.getInteractionRevision()]);
+  console.log(`[DEBUG] trinity jack results surface rows=${result.rows.length}`);
+  return (
+    <div className="h-full min-h-0 overflow-auto p-2">
+      {result.columns.length === 0 ? (
+        <div className="text-xs text-muted-foreground">Run a Jack query to see results.</div>
+      ) : (
+        <table className="w-full border-collapse text-xs">
+          <thead>
+            <tr>
+              {result.columns.map((column) => (
+                <th key={column} className="border-b border-border px-2 py-1 text-left font-medium text-muted-foreground">
+                  {column}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {result.rows.map((row, rowIndex) => (
+              <tr key={rowIndex}>
+                {row.map((cell, cellIndex) => (
+                  <td key={cellIndex} className="border-b border-border px-2 py-1 font-mono text-foreground">
+                    {cell == null ? "" : String(cell)}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  );
+}
+
 function TrinityRewritePlaySurfaceHost({ node }: { readonly node: UiTrinityHostSurfaceNode }): ReactElement {
   const ctrl = useTrinityRewriteController();
   const onFixtureChange = reactHostPort.useCallback((json: string) => ctrl?.run("setFixtureJson", { json }), [ctrl]);
@@ -6968,6 +7056,8 @@ export function registerTrinityJackPlaySurfaceHosts(): void {
   if (trinityPlayChromeRegistered) return;
   trinityPlayChromeRegistered = true;
   registerUiTrinitySurfaceHost(TRINITY_JACK_PLAY_SURFACE_ID, TrinityJackPlaySurfaceHost);
+  registerUiEditorSurfaceHost(TRINITY_JACK_PLAY_EDITOR_SURFACE_ID, TrinityJackEditorSurfaceHost);
+  registerUiTableSurfaceHost(TRINITY_JACK_PLAY_RESULTS_SURFACE_ID, TrinityJackResultsSurfaceHost);
   registerTrinityJackPlayDeclarativeBodies();
 }
 
@@ -8317,14 +8407,25 @@ import {
   FORMS_PLAY_INSPECTION_TAB_ID,
   FORMS_PLAY_SURFACE_ID_BUILDER,
   FORMS_PLAY_SURFACE_ID_PREVIEW,
+  FORMS_PLAY_SURFACE_ID_TRY,
+  FORMS_PLAY_TRY_MODE_ID,
   FormsPlayController,
   buildFormsPlayCatalogueTree,
   buildFormsPlayHierarchyTree,
   buildFormsPlayInspectorTree,
+  commitFormsPlayQuestionDropAtClient,
   createFormsPlayHierarchyTreeDragController,
   registerFormsPlayDeclarativeBodies,
 } from "@semio-tech/forms-play";
-import { FormRenderer, defaultFormSpec, formsQuestionPaletteTreeDragController } from "@semio-tech/forms-react";
+import {
+  FormRenderer,
+  FormsQuestionPaletteDragBridge,
+  FormsQuestionPaletteDragGhost,
+  FORMS_QUESTION_DRAG_MIME,
+  defaultFormSpec,
+  formsQuestionDragAcceptsTransfer,
+  formsQuestionPaletteTreeDragController,
+} from "@semio-tech/forms-react";
 
 let formsPlayChromeRegistered = false;
 const formsPlayControllerRef: { current: FormsPlayController | null } = { current: null };
@@ -8359,17 +8460,100 @@ function useFormsPlayInteractionRevision(runtime: Platform): number {
   );
 }
 
+function useFormsPlayExtensionRevision(runtime: Platform): number {
+  return reactHostPort.useSyncExternalStore(
+    (listener) => {
+      const ctrl = runtime.getActiveApp()?.controller as FormsPlayController | undefined;
+      formsPlayControllerRef.current = ctrl ?? null;
+      const unsubscribeRuntime = runtime.subscribe(listener);
+      const unsubscribeSnapshot = ctrl?.subscribeSnapshot(listener);
+      return () => {
+        unsubscribeRuntime();
+        unsubscribeSnapshot?.();
+      };
+    },
+    () => (runtime.getActiveApp()?.controller as FormsPlayController | undefined)?.getExtensionRevision() ?? 0,
+    () => 0,
+  );
+}
+
 function FormsBuilderSurfaceHost({ node }: { readonly node: UiFormsHostSurfaceNode }): ReactElement {
   const ctrl = useFormsPlayController();
   const spec = ctrl?.getSpec() ?? defaultFormSpec("empty");
-  return <FormRenderer spec={spec} className="h-full" />;
+  const hostRef = reactHostPort.useRef<HTMLDivElement>(null);
+  const [paletteDragActive, setPaletteDragActive] = reactHostPort.useState(false);
+  reactHostPort.useEffect(() => {
+    const onSession = (event: Event): void => {
+      setPaletteDragActive(Boolean((event as CustomEvent<{ encoded?: string } | null>).detail));
+    };
+    window.addEventListener("forms-question-drag-session", onSession);
+    return () => window.removeEventListener("forms-question-drag-session", onSession);
+  }, []);
+  const onDragEnter = reactHostPort.useCallback((event: React.DragEvent<HTMLDivElement>) => {
+    if (!formsQuestionDragAcceptsTransfer([...event.dataTransfer.types])) return;
+    setPaletteDragActive(true);
+  }, []);
+  const onDragLeave = reactHostPort.useCallback((event: React.DragEvent<HTMLDivElement>) => {
+    if (!formsQuestionDragAcceptsTransfer([...event.dataTransfer.types])) return;
+    if (event.currentTarget.contains(event.relatedTarget as Node | null)) return;
+    setPaletteDragActive(false);
+  }, []);
+  const onDrop = reactHostPort.useCallback(
+    (event: React.DragEvent<HTMLDivElement>) => {
+      event.preventDefault();
+      setPaletteDragActive(false);
+      const raw = event.dataTransfer.getData(FORMS_QUESTION_DRAG_MIME);
+      if (!raw) return;
+      try {
+        const payload = JSON.parse(raw) as { kind?: string };
+        if (payload.kind) {
+          commitFormsPlayQuestionDropAtClient(ctrl, event.clientX, event.clientY, payload.kind);
+        }
+      } catch {
+        /* ignore malformed catalogue payload */
+      }
+    },
+    [ctrl],
+  );
+  return (
+    <div
+      ref={hostRef}
+      className={cn("h-full min-h-0", paletteDragActive && "ring-2 ring-inset ring-accent")}
+      onDragEnter={onDragEnter}
+      onDragLeave={onDragLeave}
+      onDragOver={(event) => {
+        if (!formsQuestionDragAcceptsTransfer([...event.dataTransfer.types])) return;
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "copy";
+      }}
+      onDrop={onDrop}
+    >
+      <FormRenderer spec={spec} interactive={false} className="h-full" />
+    </div>
+  );
 }
 
 function FormsPreviewSurfaceHost({ node }: { readonly node: UiFormsHostSurfaceNode }): ReactElement {
   const ctrl = useFormsPlayController();
   const spec = ctrl?.getSpec();
   if (!spec) return <div className="p-double text-sm text-muted-foreground">No form loaded</div>;
-  return <FormRenderer spec={spec} className="h-full" onSubmit={(values) => console.log("[DEBUG] forms preview submit", values)} />;
+  return <FormRenderer spec={spec} interactive={false} className="h-full" />;
+}
+
+function FormsTrySurfaceHost({ node }: { readonly node: UiFormsHostSurfaceNode }): ReactElement {
+  const ctrl = useFormsPlayController();
+  const spec = ctrl?.getSpec();
+  const tryValues = ctrl?.getTryValues() ?? {};
+  if (!spec) return <div className="p-double text-sm text-muted-foreground">No form loaded</div>;
+  return (
+    <FormRenderer
+      spec={spec}
+      values={tryValues}
+      className="h-full"
+      onChange={(values) => ctrl?.run("setTryValues", { values })}
+      onSubmit={(values) => console.log("[DEBUG] forms try submit", values)}
+    />
+  );
 }
 
 class FormsPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
@@ -8430,20 +8614,48 @@ class FormsPlayInspectionPanelDefinition extends PureSidePanelTabDefinition {
   }
 }
 
+function useFormsPlayActiveModeId(runtime: Platform): string | null {
+  return reactHostPort.useSyncExternalStore(
+    (listener) => runtime.subscribeChrome(listener),
+    () => runtime.getActiveApp()?.getActiveModeId() ?? null,
+    () => null,
+  );
+}
+
 function FormsPlayInner({ playground }: { readonly playground: Playground }): ReactElement {
   useFormsPlayController(playground.runtime);
+  const activeModeId = useFormsPlayActiveModeId(playground.runtime);
   const interactionRevision = useFormsPlayInteractionRevision(playground.runtime);
+  const extensionRevision = useFormsPlayExtensionRevision(playground.runtime);
   const formsPlayHierarchyPanel = reactHostPort.useMemo(() => new FormsPlayHierarchyPanelDefinition(), []);
   const formsPlayCataloguePanel = reactHostPort.useMemo(() => new FormsPlayCataloguePanelDefinition(), []);
   const formsPlayInspectionPanel = reactHostPort.useMemo(() => new FormsPlayInspectionPanelDefinition(), []);
   const augmentPanelTabs = reactHostPort.useMemo(
-    () => ({
-      workbench: [formsPlayHierarchyPanel, formsPlayCataloguePanel],
-      details: [formsPlayInspectionPanel],
-    }),
-    [interactionRevision, formsPlayCataloguePanel, formsPlayHierarchyPanel, formsPlayInspectionPanel],
+    () =>
+      activeModeId === FORMS_PLAY_TRY_MODE_ID
+        ? undefined
+        : {
+            workbench: [formsPlayHierarchyPanel, formsPlayCataloguePanel],
+            details: [formsPlayInspectionPanel],
+          },
+    [activeModeId, interactionRevision, extensionRevision, formsPlayCataloguePanel, formsPlayHierarchyPanel, formsPlayInspectionPanel],
   );
-  return <PlaygroundView runtime={playground.runtime} defaultAppId={FORMS_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} playgroundKeybindings={playground.keybindings} />;
+  const onPaletteDrop = reactHostPort.useCallback(
+    (detail: { kind: string; clientX: number; clientY: number }) =>
+      commitFormsPlayQuestionDropAtClient(formsPlayControllerRef.current ?? undefined, detail.clientX, detail.clientY, detail.kind),
+    [],
+  );
+  return (
+    <>
+      {activeModeId !== FORMS_PLAY_TRY_MODE_ID ? (
+        <>
+          <FormsQuestionPaletteDragBridge enabled onCommitDrop={onPaletteDrop} />
+          <FormsQuestionPaletteDragGhost />
+        </>
+      ) : null}
+      <PlaygroundView runtime={playground.runtime} defaultAppId={FORMS_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} playgroundKeybindings={playground.keybindings} />
+    </>
+  );
 }
 
 export function registerFormsPlaySurfaceHosts(): void {
@@ -8451,6 +8663,7 @@ export function registerFormsPlaySurfaceHosts(): void {
   formsPlayChromeRegistered = true;
   registerUiFormsSurfaceHost(FORMS_PLAY_SURFACE_ID_BUILDER, FormsBuilderSurfaceHost);
   registerUiFormsSurfaceHost(FORMS_PLAY_SURFACE_ID_PREVIEW, FormsPreviewSurfaceHost);
+  registerUiFormsSurfaceHost(FORMS_PLAY_SURFACE_ID_TRY, FormsTrySurfaceHost);
   registerFormsPlayDeclarativeBodies();
 }
 
@@ -8488,6 +8701,7 @@ import {
   buildRasterPlayMasksTree,
   buildRasterPlayPropertiesTree,
   registerRasterPlayDeclarativeBodies,
+  type RasterPlayHostBridge,
 } from "@semio-tech/raster-play";
 import { RasterCanvas, RasterLayerView, RasterMaskView } from "@semio-tech/raster-react";
 
@@ -8643,6 +8857,52 @@ class RasterPlayPropertiesPanelDefinition extends PureSidePanelTabDefinition {
   }
 }
 
+function RasterPlayFileBridge(): ReactElement | null {
+  const ctrl = useRasterPlayController();
+  const loadInputRef = reactHostPort.useRef<HTMLInputElement | null>(null);
+  const downloadFixture = reactHostPort.useCallback(async () => {
+    if (!ctrl) return;
+    const text = ctrl.getDocumentJson();
+    const blob = new Blob([text], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "semio.raster.json";
+    anchor.click();
+    URL.revokeObjectURL(url);
+    console.log("[DEBUG] raster play exported document");
+  }, [ctrl]);
+  const handleLoadFile = reactHostPort.useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      event.target.value = "";
+      if (!file || !ctrl) return;
+      void file.text().then((text) => {
+        ctrl.run("setFixtureJson", { json: text, resetInteraction: true });
+        console.log("[DEBUG] raster play imported document from file");
+      });
+    },
+    [ctrl],
+  );
+  reactHostPort.useEffect(() => {
+    if (!ctrl) return;
+    const bridge: RasterPlayHostBridge = {
+      runHostCommand: (command) => {
+        if (command === "saveDownload") {
+          void downloadFixture();
+          return;
+        }
+        if (command === "loadRequest") {
+          loadInputRef.current?.click();
+        }
+      },
+    };
+    ctrl.setHostBridge(bridge);
+    return () => ctrl.setHostBridge(null);
+  }, [ctrl, downloadFixture]);
+  return <input ref={loadInputRef} type="file" accept=".json,.raster.json,application/json" className="hidden" onChange={handleLoadFile} />;
+}
+
 function RasterPlayInner({ playground }: { readonly playground: Playground }): ReactElement {
   useRasterPlayController(playground.runtime);
   useRasterPlayInteractionRevision(playground.runtime);
@@ -8650,14 +8910,17 @@ function RasterPlayInner({ playground }: { readonly playground: Playground }): R
   const rasterMasksPanel = reactHostPort.useMemo(() => new RasterPlayMasksPanelDefinition(), []);
   const rasterPropertiesPanel = reactHostPort.useMemo(() => new RasterPlayPropertiesPanelDefinition(), []);
   return (
-    <PlaygroundView
-      runtime={playground.runtime}
-      defaultAppId={RASTER_PLAY_APP_ID}
-      augmentPanelTabs={{
-        workbench: [rasterLayersPanel, rasterMasksPanel],
-        details: [rasterPropertiesPanel],
-      }}
-    />
+    <>
+      <RasterPlayFileBridge />
+      <PlaygroundView
+        runtime={playground.runtime}
+        defaultAppId={RASTER_PLAY_APP_ID}
+        augmentPanelTabs={{
+          workbench: [rasterLayersPanel, rasterMasksPanel],
+          details: [rasterPropertiesPanel],
+        }}
+      />
+    </>
   );
 }
 

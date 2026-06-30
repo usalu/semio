@@ -97,9 +97,15 @@ export interface RasterLayerBase {
 	readonly height?: number;
 }
 
+export interface RasterImageAsset {
+	readonly mime: string;
+	readonly data: string;
+}
+
 export interface RasterPixelLayer extends RasterLayerBase {
 	readonly kind: "pixel";
 	readonly imageKey?: string;
+	readonly filters?: readonly RasterFilterEntry[];
 }
 
 export interface RasterGroupLayer extends RasterLayerBase {
@@ -121,6 +127,7 @@ export interface RasterDocument {
 	readonly title?: string;
 	readonly camera: RasterCamera;
 	readonly layers: readonly RasterLayerNode[];
+	readonly assets?: Readonly<Record<string, RasterImageAsset>>;
 	readonly activeTool?: RasterToolId;
 	readonly brushSize?: number;
 	readonly brushOpacity?: number;
@@ -227,6 +234,28 @@ function parseMask(raw: unknown): RasterLayerMask | undefined {
 	};
 }
 
+function parseFilterEntry(raw: unknown): RasterFilterEntry | null {
+	if (!isRecord(raw)) return null;
+	const kind = raw.kind;
+	if (typeof kind !== "string" || !(RASTER_FILTER_KINDS as readonly string[]).includes(kind)) return null;
+	return {
+		kind: kind as RasterFilterKind,
+		radius: typeof raw.radius === "number" ? raw.radius : undefined,
+		amount: typeof raw.amount === "number" ? raw.amount : undefined,
+	};
+}
+
+function parseAssets(raw: unknown): Readonly<Record<string, RasterImageAsset>> | undefined {
+	if (!isRecord(raw)) return undefined;
+	const out: Record<string, RasterImageAsset> = {};
+	for (const [key, value] of Object.entries(raw)) {
+		if (!isRecord(value)) continue;
+		if (typeof value.mime !== "string" || typeof value.data !== "string") continue;
+		out[key] = { mime: value.mime, data: value.data };
+	}
+	return Object.keys(out).length > 0 ? out : undefined;
+}
+
 function parseLayerBase(raw: Record<string, unknown>): Omit<RasterLayerBase, never> {
 	return {
 		id: typeof raw.id === "string" ? raw.id : createRasterId(),
@@ -262,6 +291,10 @@ function parseLayerNode(raw: unknown): RasterLayerNode {
 				? (raw.adjustmentKind as RasterAdjustmentKind)
 				: "brightnessContrast";
 		const paramsRaw = isRecord(raw.params) ? raw.params : {};
+		const curvesRaw = Array.isArray(paramsRaw.curves) ? paramsRaw.curves : [];
+		const curves = curvesRaw
+			.map((point) => (Array.isArray(point) && point.length === 2 && typeof point[0] === "number" && typeof point[1] === "number" ? ([point[0], point[1]] as const) : null))
+			.filter((point): point is readonly [number, number] => point !== null);
 		return {
 			...base,
 			kind: "adjustment",
@@ -273,13 +306,17 @@ function parseLayerNode(raw: unknown): RasterLayerNode {
 				saturation: typeof paramsRaw.saturation === "number" ? paramsRaw.saturation : undefined,
 				levelsBlack: typeof paramsRaw.levelsBlack === "number" ? paramsRaw.levelsBlack : undefined,
 				levelsWhite: typeof paramsRaw.levelsWhite === "number" ? paramsRaw.levelsWhite : undefined,
+				curves: curves.length > 0 ? curves : undefined,
 			},
 		};
 	}
+	const filtersRaw = Array.isArray(raw.filters) ? raw.filters : [];
+	const filters = filtersRaw.map(parseFilterEntry).filter((entry): entry is RasterFilterEntry => entry !== null);
 	return {
 		...base,
 		kind: "pixel",
 		imageKey: typeof raw.imageKey === "string" ? raw.imageKey : undefined,
+		filters: filters.length > 0 ? filters : undefined,
 	};
 }
 
@@ -303,6 +340,7 @@ export function parseRasterDocument(raw: unknown): RasterDocument {
 			zoom: typeof cameraRaw.zoom === "number" ? cameraRaw.zoom : 1,
 		},
 		layers: layersRaw.map(parseLayerNode),
+		assets: parseAssets(raw.assets),
 		activeTool:
 			typeof raw.activeTool === "string" && (RASTER_TOOL_IDS as readonly string[]).includes(raw.activeTool)
 				? (raw.activeTool as RasterToolId)
@@ -315,6 +353,30 @@ export function parseRasterDocument(raw: unknown): RasterDocument {
 /** @emoji 📤 Serializes a raster document to JSON. */
 export function rasterDocumentToJson(doc: RasterDocument): string {
 	return JSON.stringify(doc);
+}
+
+/** @emoji 📤 Serializes a raster document for file export. */
+export function rasterDocumentToExportJson(doc: RasterDocument): string {
+	return `${JSON.stringify(doc, null, 2)}\n`;
+}
+
+/** @emoji 📡 Serializes document JSON for the WASM compositor (omits embedded assets). */
+export function rasterDocumentToSyncJson(doc: RasterDocument): string {
+	const { assets: _assets, ...syncDoc } = doc;
+	return JSON.stringify(syncDoc);
+}
+
+/** @emoji 🧩 Decodes a base64 raster image asset payload. */
+export function decodeRasterImageAsset(asset: RasterImageAsset): Uint8Array {
+	if (typeof Buffer !== "undefined") {
+		return new Uint8Array(Buffer.from(asset.data, "base64"));
+	}
+	const binary = atob(asset.data);
+	const bytes = new Uint8Array(binary.length);
+	for (let index = 0; index < binary.length; index += 1) {
+		bytes[index] = binary.charCodeAt(index);
+	}
+	return bytes;
 }
 
 /** @emoji 📥 Parses JSON text into a raster document. */
@@ -433,6 +495,123 @@ export function rasterPlayLayersTreeHighlightedIdsForKind(doc: RasterDocument, k
 		}
 	}
 	return ids;
+}
+
+export interface RasterViewport {
+	readonly width: number;
+	readonly height: number;
+}
+
+export interface RasterScreenRect {
+	readonly x: number;
+	readonly y: number;
+	readonly width: number;
+	readonly height: number;
+}
+
+/** @emoji 📐 Maps world coordinates to viewport screen space (matches infinite_cavas camera). */
+export function rasterWorldToScreen(
+	camera: RasterCamera,
+	viewport: RasterViewport,
+	world: { readonly x: number; readonly y: number },
+): { x: number; y: number } {
+	return {
+		x: (world.x - camera.x) * camera.zoom + viewport.width / 2,
+		y: (world.y - camera.y) * camera.zoom + viewport.height / 2,
+	};
+}
+
+/** @emoji 📐 Applies layer transform to a local point (translate → rotate → scale). */
+export function rasterTransformWorldPoint(
+	transform: RasterTransform,
+	local: { readonly x: number; readonly y: number },
+): { x: number; y: number } {
+	const sx = local.x * transform.scaleX;
+	const sy = local.y * transform.scaleY;
+	const cos = Math.cos(transform.rotation);
+	const sin = Math.sin(transform.rotation);
+	return {
+		x: transform.x + sx * cos - sy * sin,
+		y: transform.y + sx * sin + sy * cos,
+	};
+}
+
+/** @emoji 📐 Axis-aligned screen bounds for a pixel layer. */
+export function rasterPixelLayerScreenBounds(
+	layer: RasterPixelLayer,
+	camera: RasterCamera,
+	viewport: RasterViewport,
+): RasterScreenRect | null {
+	if (!layer.visible) return null;
+	const w = layer.width ?? 512;
+	const h = layer.height ?? 512;
+	const corners = [
+		{ x: -w / 2, y: -h / 2 },
+		{ x: w / 2, y: -h / 2 },
+		{ x: w / 2, y: h / 2 },
+		{ x: -w / 2, y: h / 2 },
+	].map((local) => rasterWorldToScreen(camera, viewport, rasterTransformWorldPoint(layer.transform, local)));
+	const xs = corners.map((point) => point.x);
+	const ys = corners.map((point) => point.y);
+	const minX = Math.min(...xs);
+	const minY = Math.min(...ys);
+	const maxX = Math.max(...xs);
+	const maxY = Math.max(...ys);
+	return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+}
+
+function rasterScreenRectContains(outer: RasterScreenRect, inner: RasterScreenRect): boolean {
+	return (
+		inner.x >= outer.x &&
+		inner.y >= outer.y &&
+		inner.x + inner.width <= outer.x + outer.width &&
+		inner.y + inner.height <= outer.y + outer.height
+	);
+}
+
+function rasterScreenRectIntersects(a: RasterScreenRect, b: RasterScreenRect): boolean {
+	return a.x <= b.x + b.width && a.x + a.width >= b.x && a.y <= b.y + b.height && a.y + a.height >= b.y;
+}
+
+function rasterScreenRectContainsPoint(rect: RasterScreenRect, point: { readonly x: number; readonly y: number }): boolean {
+	return point.x >= rect.x && point.x <= rect.x + rect.width && point.y >= rect.y && point.y <= rect.y + rect.height;
+}
+
+/** @emoji 🖱️ Resolves pixel layer ids hit by a screen-space marquee. */
+export function resolveRasterMarqueeLayerHits(
+	doc: RasterDocument,
+	camera: RasterCamera,
+	viewport: RasterViewport,
+	marquee: RasterScreenRect,
+	crossing: boolean,
+): string[] {
+	const hits: string[] = [];
+	for (const layer of flattenRasterLayers(doc.layers)) {
+		if (layer.kind !== "pixel") continue;
+		const bounds = rasterPixelLayerScreenBounds(layer, camera, viewport);
+		if (!bounds) continue;
+		if (crossing ? rasterScreenRectIntersects(marquee, bounds) : rasterScreenRectContains(marquee, bounds)) {
+			hits.push(layer.id);
+		}
+	}
+	return hits;
+}
+
+/** @emoji 🖱️ Topmost pixel layer under a screen point. */
+export function resolveRasterLayerAtScreenPoint(
+	doc: RasterDocument,
+	camera: RasterCamera,
+	viewport: RasterViewport,
+	point: { readonly x: number; readonly y: number },
+): string | null {
+	const layers = flattenRasterLayers(doc.layers);
+	for (let index = layers.length - 1; index >= 0; index -= 1) {
+		const layer = layers[index]!;
+		if (layer.kind !== "pixel") continue;
+		const bounds = rasterPixelLayerScreenBounds(layer, camera, viewport);
+		if (bounds && rasterScreenRectContainsPoint(bounds, point)) return layer.id;
+	}
+	return null;
 }
 
 /** @emoji 🌳 Combined hierarchy highlight ids for hover focus. */
@@ -565,6 +744,32 @@ if (import.meta.vitest) {
 		it("rejects wrong schema", () => {
 			expect(() => parseRasterDocument({ schema: "other" })).toThrow();
 		});
+
+		it("round-trips assets and filters", () => {
+			const raw = {
+				schema: "raster.document/v1",
+				id: "semio",
+				camera: { x: 0, y: 0, zoom: 1 },
+				assets: { emblem: { mime: "image/png", data: "aGVsbG8=" } },
+				layers: [
+					{
+						kind: "pixel",
+						id: "logo",
+						name: "Logo",
+						visible: true,
+						opacity: 1,
+						blendMode: "normal",
+						imageKey: "emblem",
+						filters: [{ kind: "gaussianBlur", radius: 8 }],
+						transform: defaultRasterTransform(),
+					},
+				],
+			};
+			const doc = parseRasterDocument(raw);
+			const restored = parseRasterDocument(JSON.parse(rasterDocumentToExportJson(doc)));
+			expect(restored.assets?.emblem?.data).toBe("aGVsbG8=");
+			expect(restored.layers[0]?.kind === "pixel" && restored.layers[0].filters?.[0]?.kind).toBe("gaussianBlur");
+		});
 	});
 
 	describe("applyRasterEditOp", () => {
@@ -573,6 +778,31 @@ if (import.meta.vitest) {
 			const layerId = doc.layers[0]!.id;
 			const next = applyRasterEditOp(doc, { op: "setLayerVisible", layerId, visible: false });
 			expect(next.layers[0]?.visible).toBe(false);
+		});
+	});
+
+	describe("resolveRasterMarqueeLayerHits", () => {
+		it("selects layers inside a full marquee", () => {
+			const doc = parseRasterDocument({
+				schema: "raster.document/v1",
+				id: "test",
+				camera: { x: 0, y: 0, zoom: 1 },
+				layers: [
+					{
+						kind: "pixel",
+						id: "a",
+						name: "A",
+						visible: true,
+						opacity: 1,
+						blendMode: "normal",
+						width: 100,
+						height: 100,
+						transform: { x: 0, y: 0, scaleX: 1, scaleY: 1, rotation: 0 },
+					},
+				],
+			});
+			const hits = resolveRasterMarqueeLayerHits(doc, doc.camera, { width: 800, height: 600 }, { x: 350, y: 250, width: 100, height: 100 }, false);
+			expect(hits).toEqual(["a"]);
 		});
 	});
 

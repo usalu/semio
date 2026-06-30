@@ -11696,7 +11696,9 @@ export const Tree = (({
 
   const handleDragOver = reactHostPort.useCallback((event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
-    event.dataTransfer.dropEffect = "move";
+    const types = [...event.dataTransfer.types];
+    const acceptsCopy = types.some((kind) => kind !== treeDefaultDragMimeKind && kind.startsWith("application/"));
+    event.dataTransfer.dropEffect = acceptsCopy ? "copy" : "move";
   }, []);
 
   const handleSelectItem = reactHostPort.useCallback(
