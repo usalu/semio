@@ -10,9 +10,9 @@ import {
   Platform,
   Playground,
   WindowKindRuntime,
-  buildEditorWindowBody,
   buildTableWindowBody,
   buildTrinityWindowBody,
+  buildWriterWindowBody,
   createPlayAppRuntime,
   createProductPlaygroundPlatform,
   createWindowLayout,
@@ -25,6 +25,7 @@ import {
   type WindowLayout,
 } from "@semio-tech/framework-playground-core";
 import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
+import { createWriterDocument, type WriterDocumentV1 } from "@semio-tech/writer-core";
 import {
   TRINITY_DEFAULT_FIXTURE_JSON,
   buildTrinityPlayCatalogueTree,
@@ -57,7 +58,7 @@ export function buildTrinityJackPlayMainDeclarativeBody(_ctx: WindowBodyViewCont
 }
 
 export function buildTrinityJackPlayEditorDeclarativeBody(_ctx: WindowBodyViewContext): UiNode {
-  return buildEditorWindowBody(TRINITY_JACK_PLAY_EDITOR_SURFACE_ID, TRINITY_JACK_PLAY_CONTROLLER_ID, TRINITY_JACK_PLAY_EDITOR_WINDOW_KIND_ID);
+  return buildWriterWindowBody(TRINITY_JACK_PLAY_EDITOR_SURFACE_ID, TRINITY_JACK_PLAY_CONTROLLER_ID, TRINITY_JACK_PLAY_EDITOR_WINDOW_KIND_ID);
 }
 
 export function buildTrinityJackPlayResultsDeclarativeBody(_ctx: WindowBodyViewContext): UiNode {
@@ -121,6 +122,15 @@ export class TrinityJackPlayController extends Controller {
 
   getJackQuery(): string {
     return this.jackQuery;
+  }
+
+  getWriterDocument(): WriterDocumentV1 {
+    return createWriterDocument({
+      id: "jack-query",
+      languageId: "jack",
+      uri: "writer://jack-query",
+      text: this.jackQuery,
+    });
   }
 
   getJackResultJson(): string {
@@ -266,7 +276,7 @@ if (import.meta.vitest) {
         bodyKey: TRINITY_JACK_PLAY_BODY_KEY_EDITOR,
         activeModeId: "explore",
         generation: 0,
-      }).type).toBe("editor");
+      }).type).toBe("writer");
       expect(buildTrinityJackPlayResultsDeclarativeBody({
         runtime: new Platform({ id: "test" }),
         windowKindId: TRINITY_JACK_PLAY_RESULTS_WINDOW_KIND_ID,

@@ -498,6 +498,11 @@ mod wasm_session {
             self.state.borrow().gpu.gpu_ready()
         }
 
+        #[wasm_bindgen(js_name = detachGpu)]
+        pub fn detach_gpu(&mut self) {
+            self.state.borrow_mut().gpu.detach();
+        }
+
         #[wasm_bindgen(js_name = setSize)]
         pub fn set_size(&mut self, width: u32, height: u32, dpr: f64) {
             let mut inner = self.state.borrow_mut();

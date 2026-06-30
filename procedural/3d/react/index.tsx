@@ -1389,6 +1389,12 @@ export function extractChannelPreviewItems(channelJson: string): ProceduralPrevi
 	return items;
 }
 
+/** @emoji 🎯 Prefers solid/face geometry preview items over auxiliary vectors and points. */
+export function preferGeometryPreviewItems(items: readonly ProceduralPreviewItem[]): readonly ProceduralPreviewItem[] {
+	const geometry = items.filter((item) => item.kind === "geometry");
+	return geometry.length > 0 ? geometry : items.filter((item) => item.kind !== "vector");
+}
+
 /** @emoji 🔍 Back-compat alias for channel preview extraction. */
 export const extractPreviewItems = extractChannelPreviewItems;
 // #endregion 🔖ProceduralPreview
@@ -1611,6 +1617,15 @@ if (import.meta.vitest) {
 			);
 			expect((cut as { error?: string }).error).toBeUndefined();
 			expect(cut.handle).toMatch(/^solid-/);
+		});
+
+		it("preferGeometryPreviewItems keeps geometry and drops vectors", async () => {
+			const { preferGeometryPreviewItems } = await import("./index.js");
+			const items = [
+				{ widgetId: "axis", port: "vector", direction: "out" as const, kind: "vector" as const, directionVec: [0, 0, 6] as [number, number, number] },
+				{ widgetId: "extrude", port: "solid", direction: "out" as const, kind: "geometry" as const, handle: "solid-1" },
+			];
+			expect(preferGeometryPreviewItems(items)).toEqual([items[1]]);
 		});
 
 		it("extractChannelPreviewItems collects geometry outputs", () => {

@@ -8,8 +8,9 @@ rust-version = "1.88"
 path = "lib.rs"
 
 [features]
-default = ["booleans"]
+default = ["booleans", "trace"]
 booleans = ["dep:geo"]
+trace = []
 
 [dependencies]
 async-trait = "0.1.88"

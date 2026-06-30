@@ -3,7 +3,7 @@
   "emoji": "📋",
   "status": "closed",
   "description": "Introduce forms technology (declarative form data, question kinds, multi-step builder playground) and flow Generate mode where input widgets become forms and generations are saved submissions evaluated through the worker pipeline. Extend ui with Catalogue, cross-container tree reorder, and Field primitives.",
-  "summary": "Fixed forms playground drag-and-drop to match flow/puzzle2d patterns. Catalogue palette now uses full pointer+HTML5 drag session with floating ghost preview, global drop bridge, and accent ring on builder preview. Drops commit to hierarchy tree rows (before/after/inside) or builder preview default target. Hierarchy reorder uses correct target item ids. ui-react Tree handleDragOver now allows copy drops for application/* palette MIME types so catalogue→hierarchy HTML5 drag works.",
+  "summary": "Fixed hexagonal column preview and semantic parameter labels. Rewrote hexagonal-mushroom-column.procedural.json with semantic sliders (height, radius, sides), explicit labels/units, extrude output wired to outputPreview node, and removed the brep/list-get face chain. flowFixtureToFormSpec reads widget label/name and infers labels from synapse ports for legacy slider_N ids. Forms Flow3dQuestionControl uses preferGeometryPreviewItems so BRep solids render instead of extrusion vectors. Updated building-component.forms.json params and tests. forms-core and forms-react tests pass.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1763"
   },
@@ -17,6 +17,11 @@
     "⚪99deb9cb75da44ffbc6132757b80f678",
     "⚪93e295c079714973a239572446ea2803",
     "⚪119cc2513df04739962e47048f749d77",
-    "⚪3cfc452c028c4d57ab7380e723c54028"
+    "⚪3cfc452c028c4d57ab7380e723c54028",
+    "⚪b5eb86dad51a4ad089de05bf590ce1a4",
+    "⚪a5aea97588914a9eb1143919fe16fd10",
+    "⚪4cb322a701284386beb0e2145dbbf938",
+    "⚪7d94b0aa220f4a11ba35c51c1d66bf96",
+    "⚪bfd7213eb67c4aea8a7cb5732e330d53"
   ]
 }

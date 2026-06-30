@@ -3917,6 +3917,7 @@ function renderNode(node: UiNode, commandBus: CommandBus, horizontalParent: bool
 			return renderBoundComponent(node, "canvas", platform, commandBus);
 		case "forms":
 		case "raster":
+		case "writer":
 		case "flow":
 		case "dag":
 		case "trinity":

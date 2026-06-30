@@ -93,7 +93,13 @@ export interface DrawingWasmBridge {
 	exportSvg(handle: DrawingRef | string): string;
 	exportPdf(handle: DrawingRef | string): string;
 	dispose(handle: DrawingRef | string): void;
+	traceBitmap(width: number, height: number, maskOrLuma: Uint8Array, threshold: number, simplifyEpsilon: number): PathSegment[];
+	booleanPaths(a: readonly PathSegment[], b: readonly PathSegment[], op: DrawBooleanOp): PathSegment[];
+	booleanPathsMany(inputs: readonly (readonly PathSegment[])[], op: DrawBooleanOp): PathSegment[];
 }
+
+export const DRAW_BOOLEAN_OPS = ["union", "difference", "intersection", "xor"] as const;
+export type DrawBooleanOp = (typeof DRAW_BOOLEAN_OPS)[number];
 // #endregion 📐Contracts
 
 // #region 📤ExportPorts
@@ -269,6 +275,8 @@ type DrawingWasmModule = {
 	export_drawing_svg: (handle: string) => string;
 	export_drawing_pdf: (handle: string) => string;
 	dispose_drawing: (handle: string) => void;
+	trace_drawing_bitmap?: (width: number, height: number, mask: Uint8Array, threshold: number, simplifyEpsilon: number) => string;
+	boolean_drawing_segments?: (aJson: string, bJson: string, op: string) => string;
 	initSync?: (input: { module: BufferSource }) => void;
 	default?: (input?: unknown) => Promise<unknown>;
 };
@@ -279,6 +287,24 @@ function parseSceneJson(json: string): DrawingScene {
 	const parsed = JSON.parse(json) as DrawingScene & { error?: string };
 	if (parsed && typeof parsed === "object" && typeof parsed.error === "string") throw new Error(parsed.error);
 	return parsed;
+}
+
+function parseSegmentsJson(json: string): PathSegment[] {
+	const parsed = JSON.parse(json) as { segments?: PathSegment[]; error?: string };
+	if (parsed?.error) throw new Error(parsed.error);
+	if (!Array.isArray(parsed?.segments)) throw new Error("drawing segments export missing payload");
+	return parsed.segments;
+}
+
+function encodeSegmentsForWasm(segments: readonly PathSegment[]): string {
+	return JSON.stringify({ segments });
+}
+
+/** @emoji 🔀 Client-side boolean fallback when WASM is unavailable. */
+export function booleanPathsClient(a: readonly PathSegment[], b: readonly PathSegment[], op: DrawBooleanOp): PathSegment[] {
+	if (op === "union") return [...a, ...b];
+	if (op === "difference") return [...a];
+	return [...a];
 }
 
 function parseExportPayload(json: string, kind: "svg" | "pdf"): string {
@@ -312,7 +338,7 @@ export async function ensureDrawingWasmLoaded(): Promise<DrawingWasmModule> {
 		drawingWasm = mod;
 		return mod;
 	}
-	const [{ default: initFlow, render_drawing_scene, export_drawing_svg, export_drawing_pdf, dispose_drawing }, { default: wasmUrl }] =
+	const [{ default: initFlow, render_drawing_scene, export_drawing_svg, export_drawing_pdf, dispose_drawing, trace_drawing_bitmap, boolean_drawing_segments }, { default: wasmUrl }] =
 		await Promise.all([
 			import("../../../flow/core/pkg/flow_core.js"),
 			import("../../../flow/core/pkg/flow_core_bg.wasm?url"),
@@ -326,8 +352,39 @@ export async function ensureDrawingWasmLoaded(): Promise<DrawingWasmModule> {
 		throw new Error("flow_core drawing exports missing — rebuild flow/core wasm");
 	}
 	if (initFlow) await initFlow({ module_or_path: wasmUrl });
-	drawingWasm = { render_drawing_scene, export_drawing_svg, export_drawing_pdf, dispose_drawing };
+	drawingWasm = {
+		render_drawing_scene,
+		export_drawing_svg,
+		export_drawing_pdf,
+		dispose_drawing,
+		trace_drawing_bitmap,
+		boolean_drawing_segments,
+	};
 	return drawingWasm;
+}
+
+function traceBitmapViaWasm(
+	module: DrawingWasmModule,
+	width: number,
+	height: number,
+	maskOrLuma: Uint8Array,
+	threshold: number,
+	simplifyEpsilon: number,
+): PathSegment[] {
+	if (typeof module.trace_drawing_bitmap !== "function") {
+		throw new Error("trace_drawing_bitmap export missing — rebuild flow/core wasm");
+	}
+	const copy = new Uint8Array(maskOrLuma);
+	const json = module.trace_drawing_bitmap(width, height, copy, threshold, simplifyEpsilon);
+	return parseSegmentsJson(json);
+}
+
+function booleanPathsViaWasm(module: DrawingWasmModule, a: readonly PathSegment[], b: readonly PathSegment[], op: DrawBooleanOp): PathSegment[] {
+	if (typeof module.boolean_drawing_segments !== "function") {
+		return booleanPathsClient(a, b, op);
+	}
+	const json = module.boolean_drawing_segments(encodeSegmentsForWasm(a), encodeSegmentsForWasm(b), op);
+	return parseSegmentsJson(json);
 }
 
 export function createDrawingWasmBridge(module: DrawingWasmModule): DrawingExportBridge {
@@ -346,6 +403,20 @@ export function createDrawingWasmBridge(module: DrawingWasmModule): DrawingExpor
 		},
 		dispose(handle) {
 			module.dispose_drawing(String(handle));
+		},
+		traceBitmap(width, height, maskOrLuma, threshold, simplifyEpsilon) {
+			return traceBitmapViaWasm(module, width, height, maskOrLuma, threshold, simplifyEpsilon);
+		},
+		booleanPaths(a, b, op) {
+			return booleanPathsViaWasm(module, a, b, op);
+		},
+		booleanPathsMany(inputs, op) {
+			if (inputs.length === 0) return [];
+			let acc = inputs[0]!;
+			for (let i = 1; i < inputs.length; i += 1) {
+				acc = booleanPathsViaWasm(module, acc, inputs[i]!, op);
+			}
+			return [...acc];
 		},
 	};
 }

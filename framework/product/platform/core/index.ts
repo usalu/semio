@@ -283,9 +283,9 @@ export function sidePanelTreeRootItems(
 
 //#region 🔖ComponentKind
 /** @emoji 🧩 Fixed platform component vocabulary wired by renderers (`table`, `virtualFileSystem`, `puzzle2d`, …). */
-export type ComponentKind = "table" | "virtualFileSystem" | "puzzle2d" | "puzzle3d" | "puzzle5d" | "cad" | "gismap" | "flow" | "dag" | "trinity" | "shooting" | "forms" | "raster" | "panel" | "editor";
+export type ComponentKind = "table" | "virtualFileSystem" | "puzzle2d" | "puzzle3d" | "puzzle5d" | "cad" | "gismap" | "flow" | "dag" | "trinity" | "shooting" | "forms" | "raster" | "draw" | "writer" | "panel" | "editor";
 
-const CANVAS_COMPONENT_KINDS: readonly ComponentKind[] = ["table", "virtualFileSystem", "puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag", "trinity", "shooting", "forms", "raster", "editor"];
+const CANVAS_COMPONENT_KINDS: readonly ComponentKind[] = ["table", "virtualFileSystem", "puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag", "trinity", "shooting", "forms", "raster", "draw", "writer", "editor"];
 //#endregion 🔖ComponentKind
 
 /** @emoji 📊 Host-bound tabular surface; `paneId` disambiguates multiple table slots in one app. */
@@ -427,6 +427,27 @@ export interface UiRasterHostSurfaceNode {
 	readonly bindingId?: string;
 }
 
+/** @emoji ✏️ Host-bound draw surface (`composite` or `navigator`). */
+export interface UiDrawHostSurfaceNode {
+	readonly type: "draw";
+	readonly componentKind: "draw";
+	readonly surfaceId: string;
+	readonly controllerId: string;
+	readonly paneId?: string;
+	readonly view: "composite" | "navigator";
+	readonly bindingId?: string;
+}
+
+/** @emoji ✍️ Host-bound writer infinite-canvas editor surface. */
+export interface UiWriterHostSurfaceNode {
+	readonly type: "writer";
+	readonly componentKind: "writer";
+	readonly surfaceId: string;
+	readonly controllerId: string;
+	readonly paneId?: string;
+	readonly bindingId?: string;
+}
+
 /** @emoji ✍️ Host-bound code editor surface. */
 export interface UiEditorHostSurfaceNode {
 	readonly type: "editor";
@@ -451,6 +472,8 @@ export type UiComponentHostSurfaceNode =
 	| UiShootingHostSurfaceNode
 	| UiFormsHostSurfaceNode
 	| UiRasterHostSurfaceNode
+	| UiDrawHostSurfaceNode
+	| UiWriterHostSurfaceNode
 	| UiPanelHostSurfaceNode
 	| UiEditorHostSurfaceNode;
 
@@ -524,6 +547,18 @@ export function buildTableWindowBody(surfaceId: string, controllerId: string, pa
 	return {
 		type: "table",
 		componentKind: "table",
+		surfaceId,
+		controllerId,
+		...(paneId ? { paneId } : {}),
+		...(bindingId ? { bindingId } : {}),
+	};
+}
+
+/** @emoji ✍️ Canonical writer window body for infinite-canvas editor surfaces. */
+export function buildWriterWindowBody(surfaceId: string, controllerId: string, paneId?: string, bindingId?: string): UiWriterHostSurfaceNode {
+	return {
+		type: "writer",
+		componentKind: "writer",
 		surfaceId,
 		controllerId,
 		...(paneId ? { paneId } : {}),
@@ -684,6 +719,25 @@ export function buildRasterWindowBody(
 		view,
 		...(paneId ? { paneId } : {}),
 		...(layerId ? { layerId } : {}),
+		...(bindingId ? { bindingId } : {}),
+	};
+}
+
+/** @emoji ✏️ Canonical draw window body for composite or navigator surfaces. */
+export function buildDrawWindowBody(
+	surfaceId: string,
+	controllerId: string,
+	view: "composite" | "navigator",
+	paneId?: string,
+	bindingId?: string,
+): UiDrawHostSurfaceNode {
+	return {
+		type: "draw",
+		componentKind: "draw",
+		surfaceId,
+		controllerId,
+		view,
+		...(paneId ? { paneId } : {}),
 		...(bindingId ? { bindingId } : {}),
 	};
 }

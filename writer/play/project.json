@@ -1,0 +1,23 @@
+{
+  "name": "@semio-tech/writer-play",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "writer/play",
+        "command": "bun ./script.ts dev",
+        "env": {
+          "WRITER_PLAY_PORT": "6062"
+        }
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "writer/play",
+        "command": "bun ./script.ts test"
+      }
+    }
+  }
+}

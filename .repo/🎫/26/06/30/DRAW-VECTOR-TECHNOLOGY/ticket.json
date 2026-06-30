@@ -1,0 +1,18 @@
+{
+  "title": "Draw Vector Technology",
+  "emoji": "✏️",
+  "status": "open",
+  "description": "Introduce a new draw technology: non-destructive vector graphics with layers, visibility, paths, booleans, trace, attributes, infinite canvas, playground with semio logo fixture, using hierarchy/details infrastructure.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1768"
+  },
+  "goal": "🎯semio🎯product",
+  "plan": {
+    "client": "cursor",
+    "id": "8ac78722",
+    "source": "/Users/ueli/Documents/semio/.cursor/plans/draw_vector_technology_8ac78722.plan.md"
+  },
+  "sessions": [
+    "⚪97f6055c00a84f54bd83eedc8647d2d0"
+  ]
+}

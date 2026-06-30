@@ -15,14 +15,177 @@ use dag::{
 use neural::{channel_output, cluster_operator_info, Atom, ChannelSpec, Dictionary, EvalChannels, EvalError, Evaluator, NeuralCache, Neuron, OperatorInfo, Synapse, Tree, Value as NeuralValue, CLUSTER_KIND, INPUT_KIND, OUTPUT_KIND};
 use serde::{Deserialize, Serialize};
 
-// #region 🔖Widget
-/// 📏 One named numeric field inside a stepper input widget.
+// #region 🔖Document
+/// 📏 One named numeric field inside a stepper input chrome.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StepperFieldSpec {
     pub key: String,
     #[serde(default)]
     pub value: f64,
+}
+
+fn default_slider_value() -> f64 {
+    3.0
+}
+
+fn default_slider_min() -> f64 {
+    FLOW_SLIDER_MIN
+}
+
+fn default_slider_max() -> f64 {
+    FLOW_SLIDER_MAX
+}
+
+fn default_slider_step() -> f64 {
+    FLOW_SLIDER_STEP
+}
+
+fn default_stepper_schema() -> String {
+    "vector".into()
+}
+
+fn default_stepper_step() -> f64 {
+    0.1
+}
+
+fn default_stepper_fields_for_schema(schema: &str) -> Vec<StepperFieldSpec> {
+    match schema {
+        "vector" | "point" => vec![
+            StepperFieldSpec { key: "x".into(), value: 0.0 },
+            StepperFieldSpec { key: "y".into(), value: 0.0 },
+            StepperFieldSpec { key: "z".into(), value: 0.0 },
+        ],
+        _ => vec![],
+    }
+}
+
+fn stepper_output_port(schema: &str) -> IoPortSpec {
+    match schema {
+        "vector" => IoPortSpec::named("V", "Vec", "vector", "Vector"),
+        "point" => IoPortSpec::named("P", "Pnt", "point", "Point"),
+        other => {
+            let code: String = other.chars().take(1).map(|c| c.to_ascii_uppercase()).collect();
+            let abbrev: String = other.chars().take(3).collect();
+            IoPortSpec::named(&code, &abbrev, other, other)
+        }
+    }
+}
+
+fn effective_stepper_fields<'a>(schema: &str, fields: &'a [StepperFieldSpec]) -> Vec<StepperFieldSpec> {
+    if fields.is_empty() {
+        default_stepper_fields_for_schema(schema)
+    } else {
+        fields.to_vec()
+    }
+}
+
+fn default_neuron_preview() -> bool {
+    true
+}
+
+fn default_variable_name() -> String {
+    "value".into()
+}
+
+fn default_variable_schema() -> String {
+    "dictionary".into()
+}
+
+/// 📍 Persisted node position on the canvas.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct WidgetLayout {
+    pub x: f64,
+    pub y: f64,
+}
+
+/// 🧾 Serializable flow document with authoritative neural tree and strippable UI.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FlowDocumentV1 {
+    pub schema: String,
+    pub tree: Tree,
+    pub ui: FlowUiV1,
+}
+
+/// 🖼️ GUI-only flow data that can be removed without destroying logic.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FlowUiV1 {
+    pub camera: CameraJson,
+    pub nodes: BTreeMap<String, FlowNodeGui>,
+    #[serde(default)]
+    pub previews: Vec<FlowPreviewGui>,
+}
+
+/// 🖼️ Alias retained for cluster widget serde compatibility.
+pub type FlowGuiV1 = FlowUiV1;
+
+/// 🧩 GUI-only node presentation.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FlowNodeGui {
+    pub layout: WidgetLayout,
+    pub chrome: NodeChrome,
+}
+
+/// 🪟 GUI-only node chrome.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum NodeChrome {
+    Plain { #[serde(default = "default_neuron_preview")] preview: bool },
+    Slider { min: f64, max: f64, step: f64, #[serde(default = "default_slider_value")] value: f64 },
+    Stepper { schema: String, fields: Vec<StepperFieldSpec>, step: f64 },
+    Note { #[serde(default)] text: String },
+    Image { #[serde(default)] src: String },
+    Variable { name: String, schema: String },
+}
+
+/// 👁️ GUI-only preview binding.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FlowPreviewGui {
+    pub id: String,
+    pub source: Option<FlowChannelRefV1>,
+    pub mode: String,
+    #[serde(default)] pub preview: Dictionary,
+    #[serde(default)] pub expanded: BTreeSet<String>,
+    #[serde(default)] pub layout: Option<WidgetLayout>,
+}
+
+/// 📡 Serializable channel reference.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FlowChannelRefV1 {
+    pub neuron: String,
+    pub channel: String,
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+pub struct CameraJson {
+    pub x: f64,
+    pub y: f64,
+    pub zoom: f64,
+}
+
+fn default_from_port() -> String {
+    String::new()
+}
+
+fn default_to_port() -> String {
+    String::new()
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SynapseSpec {
+    pub id: String,
+    pub from: String,
+    pub to: String,
+    #[serde(default = "default_from_port")]
+    pub from_port: String,
+    #[serde(default = "default_to_port")]
+    pub to_port: String,
 }
 
 /// 🎛️ Flow widget discriminant.
@@ -100,81 +263,7 @@ pub enum Widget {
     },
 }
 
-fn default_slider_value() -> f64 {
-    3.0
-}
-
-fn default_slider_min() -> f64 {
-    FLOW_SLIDER_MIN
-}
-
-fn default_slider_max() -> f64 {
-    FLOW_SLIDER_MAX
-}
-
-fn default_slider_step() -> f64 {
-    FLOW_SLIDER_STEP
-}
-
-fn default_stepper_schema() -> String {
-    "vector".into()
-}
-
-fn default_stepper_step() -> f64 {
-    0.1
-}
-
-fn default_stepper_fields_for_schema(schema: &str) -> Vec<StepperFieldSpec> {
-    match schema {
-        "vector" | "point" => vec![
-            StepperFieldSpec { key: "x".into(), value: 0.0 },
-            StepperFieldSpec { key: "y".into(), value: 0.0 },
-            StepperFieldSpec { key: "z".into(), value: 0.0 },
-        ],
-        _ => vec![],
-    }
-}
-
-fn stepper_output_port(schema: &str) -> IoPortSpec {
-    match schema {
-        "vector" => IoPortSpec::named("V", "Vec", "vector", "Vector"),
-        "point" => IoPortSpec::named("P", "Pnt", "point", "Point"),
-        other => {
-            let code: String = other.chars().take(1).map(|c| c.to_ascii_uppercase()).collect();
-            let abbrev: String = other.chars().take(3).collect();
-            IoPortSpec::named(&code, &abbrev, other, other)
-        }
-    }
-}
-
-fn effective_stepper_fields<'a>(schema: &str, fields: &'a [StepperFieldSpec]) -> Vec<StepperFieldSpec> {
-    if fields.is_empty() {
-        default_stepper_fields_for_schema(schema)
-    } else {
-        fields.to_vec()
-    }
-}
-
-fn default_neuron_preview() -> bool {
-    true
-}
-
-fn default_variable_name() -> String {
-    "value".into()
-}
-
-fn default_variable_schema() -> String {
-    "dictionary".into()
-}
-
-/// 📍 Persisted widget position on the canvas.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-pub struct WidgetLayout {
-    pub x: f64,
-    pub y: f64,
-}
-
-/// 🧩 Serializable flow document.
+/// 🧩 Legacy fixture format still used by {@link FlowHost} retained state.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FlowFixtureV1 {
@@ -184,88 +273,6 @@ pub struct FlowFixtureV1 {
     pub synapses: Vec<SynapseSpec>,
     #[serde(default)]
     pub layout: BTreeMap<String, WidgetLayout>,
-}
-
-/// 🧾 Serializable flow document with strippable GUI data and authoritative neural tree.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct FlowDocumentV1 {
-    pub schema: String,
-    pub flow: FlowGuiV1,
-    pub tree: Tree,
-}
-
-/// 🖼️ GUI-only flow data that can be removed without destroying logic.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct FlowGuiV1 {
-    pub camera: CameraJson,
-    pub nodes: BTreeMap<String, FlowNodeGui>,
-    #[serde(default)]
-    pub previews: Vec<FlowPreviewGui>,
-}
-
-/// 🧩 GUI-only node presentation.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct FlowNodeGui {
-    pub layout: WidgetLayout,
-    pub chrome: NodeChrome,
-}
-
-/// 🪟 GUI-only node chrome.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
-pub enum NodeChrome {
-    Plain,
-    Slider { min: f64, max: f64, step: f64 },
-    Note,
-    Image,
-    Variable,
-}
-
-/// 👁️ GUI-only preview binding.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct FlowPreviewGui {
-    pub id: String,
-    pub source: Option<FlowChannelRefV1>,
-    pub mode: String,
-}
-
-/// 📡 Serializable channel reference.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct FlowChannelRefV1 {
-    pub neuron: String,
-    pub channel: String,
-}
-
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-pub struct CameraJson {
-    pub x: f64,
-    pub y: f64,
-    pub zoom: f64,
-}
-
-fn default_from_port() -> String {
-    String::new()
-}
-
-fn default_to_port() -> String {
-    String::new()
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct SynapseSpec {
-    pub id: String,
-    pub from: String,
-    pub to: String,
-    #[serde(default = "default_from_port")]
-    pub from_port: String,
-    #[serde(default = "default_to_port")]
-    pub to_port: String,
 }
 
 impl Default for FlowFixtureV1 {
@@ -294,23 +301,25 @@ impl FlowFixtureV1 {
         for widget in &self.widgets {
             let id = widget_id_for(widget).to_string();
             nodes.insert(id.clone(), FlowNodeGui { layout: self.layout.get(id.as_str()).cloned().unwrap_or(WidgetLayout { x: 0.0, y: 0.0 }), chrome: widget_chrome(widget) });
-            if let Widget::OutputPreview { id, .. } = widget {
+            if let Widget::OutputPreview { id, preview, expanded } = widget {
                 let source = self.synapses.iter().find(|synapse| synapse.to == *id).map(|synapse| FlowChannelRefV1 { neuron: synapse.from.clone(), channel: synapse.from_port.clone() });
-                previews.push(FlowPreviewGui { id: id.clone(), source, mode: "text".into() });
+                previews.push(FlowPreviewGui { id: id.clone(), source, mode: "text".into(), preview: preview.clone(), expanded: expanded.clone(), layout: self.layout.get(id).cloned() });
             }
         }
-        FlowDocumentV1 { schema: "flow.document/v1".into(), flow: FlowGuiV1 { camera: self.camera.clone(), nodes, previews }, tree: tree_from_fixture(self, &HashMap::new()) }
+        FlowDocumentV1 { schema: "flow.document/v1".into(), tree: tree_from_fixture(self, &HashMap::new()), ui: FlowUiV1 { camera: self.camera.clone(), nodes, previews } }
     }
 }
 
 fn widget_chrome(widget: &Widget) -> NodeChrome {
     match widget {
-        Widget::InputSlider { min, max, step, .. } => NodeChrome::Slider { min: *min, max: *max, step: *step },
-        Widget::InputNote { .. } => NodeChrome::Note,
-        Widget::InputImage { .. } => NodeChrome::Image,
-        Widget::Variable { .. } => NodeChrome::Variable,
-        Widget::Cluster { .. } => NodeChrome::Plain,
-        _ => NodeChrome::Plain,
+        Widget::InputSlider { value, min, max, step, .. } => NodeChrome::Slider { min: *min, max: *max, step: *step, value: *value },
+        Widget::InputStepper { schema, fields, step, .. } => NodeChrome::Stepper { schema: schema.clone(), fields: fields.clone(), step: *step },
+        Widget::InputNote { text, .. } => NodeChrome::Note { text: text.clone() },
+        Widget::InputImage { src, .. } => NodeChrome::Image { src: src.clone() },
+        Widget::Variable { name, schema, .. } => NodeChrome::Variable { name: name.clone(), schema: schema.clone() },
+        Widget::Neuron { preview, .. } => NodeChrome::Plain { preview: *preview },
+        Widget::Cluster { .. } => NodeChrome::Plain { preview: true },
+        Widget::OutputPreview { .. } | Widget::OutputAction { .. } => NodeChrome::Plain { preview: false },
     }
 }
 
@@ -352,6 +361,140 @@ fn tree_from_fixture(fixture: &FlowFixtureV1, kind_infos: &HashMap<String, Opera
     let synapses = fixture.synapses.iter().map(|s| Synapse { id: s.id.clone(), from: s.from.clone(), to: s.to.clone(), from_port: s.from_port.clone(), to_port: s.to_port.clone() }).collect();
     Tree { neurons, synapses }
 }
+
+const FLOW_INPUT_PORTS_KEY: &str = "_flowInputPorts";
+const FLOW_OUTPUT_PORTS_KEY: &str = "_flowOutputPorts";
+
+impl Default for FlowDocumentV1 {
+    fn default() -> Self {
+        Self {
+            schema: "flow.document/v1".into(),
+            tree: Tree {
+                neurons: vec![
+                    Neuron::with_kind("slider", INPUT_KIND, Dictionary::new().insert("channel", NeuralValue::Atom(Atom::String("number".into())))),
+                    Neuron::with_kind("add", "math.add", Dictionary::new()),
+                    Neuron::with_kind("out_sum", OUTPUT_KIND, Dictionary::new().insert("channel", NeuralValue::Atom(Atom::String("sum".into())))),
+                ],
+                synapses: vec![
+                    Synapse { id: "s1".into(), from: "slider".into(), to: "add".into(), from_port: String::new(), to_port: "a".into() },
+                    Synapse { id: "s2".into(), from: "add".into(), to: "out_sum".into(), from_port: "sum".into(), to_port: String::new() },
+                ],
+            },
+            ui: FlowUiV1 {
+                camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
+                nodes: BTreeMap::from([
+                    ("slider".into(), FlowNodeGui { layout: WidgetLayout { x: 0.0, y: 0.0 }, chrome: NodeChrome::Slider { min: FLOW_SLIDER_MIN, max: FLOW_SLIDER_MAX, step: FLOW_SLIDER_STEP, value: 3.0 } }),
+                    ("add".into(), FlowNodeGui { layout: WidgetLayout { x: 200.0, y: 0.0 }, chrome: NodeChrome::Plain { preview: true } }),
+                    ("out_sum".into(), FlowNodeGui { layout: WidgetLayout { x: 400.0, y: 0.0 }, chrome: NodeChrome::Plain { preview: false } }),
+                ]),
+                previews: vec![FlowPreviewGui { id: "preview".into(), source: Some(FlowChannelRefV1 { neuron: "add".into(), channel: "sum".into() }), mode: "text".into(), preview: Dictionary::new(), expanded: BTreeSet::new(), layout: Some(WidgetLayout { x: 400.0, y: 0.0 }) }],
+            },
+        }
+    }
+}
+
+// #region DocumentHelpers
+fn document_synapse_specs(tree: &Tree) -> Vec<SynapseSpec> {
+    tree.synapses.iter().map(|s| SynapseSpec { id: s.id.clone(), from: s.from.clone(), to: s.to.clone(), from_port: s.from_port.clone(), to_port: s.to_port.clone() }).collect()
+}
+
+fn find_neuron<'a>(tree: &'a Tree, id: &str) -> Option<&'a Neuron> {
+    tree.neurons.iter().find(|n| n.id == id)
+}
+
+fn find_neuron_mut<'a>(tree: &'a mut Tree, id: &str) -> Option<&'a mut Neuron> {
+    tree.neurons.iter_mut().find(|n| n.id == id)
+}
+
+fn boundary_channel(neuron: &Neuron) -> String {
+    neuron.params.get("channel").and_then(|v| v.as_atom()).and_then(|a| a.as_str()).unwrap_or(neuron.id.as_str()).to_string()
+}
+
+fn stored_port_ids(params: &Dictionary, key: &str) -> Vec<String> {
+    let Some(dict) = params.get(key).and_then(|v| v.as_dictionary()) else {
+        return vec![];
+    };
+    let mut ids: Vec<_> = dict.keys().cloned().collect();
+    ids.sort();
+    ids
+}
+
+fn set_stored_port_ids(params: Dictionary, key: &str, ports: &[String]) -> Dictionary {
+    let mut list = Dictionary::new();
+    for port in ports {
+        list = list.insert(port, NeuralValue::Atom(Atom::String(port.clone())));
+    }
+    params.insert(key, NeuralValue::Dictionary(list))
+}
+
+fn neuron_input_port_ids(neuron: &Neuron, kind_infos: &HashMap<String, OperatorInfo>) -> Vec<String> {
+    let stored = stored_port_ids(&neuron.params, FLOW_INPUT_PORTS_KEY);
+    if !stored.is_empty() {
+        return stored;
+    }
+    default_neuron_input_ports(&neuron.kind, &[], kind_infos)
+}
+
+fn neuron_output_port_ids(neuron: &Neuron, kind_infos: &HashMap<String, OperatorInfo>) -> Vec<String> {
+    let stored = stored_port_ids(&neuron.params, FLOW_OUTPUT_PORTS_KEY);
+    if !stored.is_empty() {
+        return stored;
+    }
+    default_neuron_output_ports(&neuron.kind, &[], kind_infos)
+}
+
+fn neuron_preview_enabled(document: &FlowDocumentV1, neuron_id: &str) -> bool {
+    document.ui.nodes.get(neuron_id).map(|node| match &node.chrome {
+        NodeChrome::Plain { preview } => *preview,
+        _ => true,
+    }).unwrap_or(true)
+}
+
+fn chrome_for_neuron(neuron: &Neuron) -> NodeChrome {
+    match neuron.kind.as_str() {
+        INPUT_KIND => {
+            let channel = boundary_channel(neuron);
+            match channel.as_str() {
+                "number" => NodeChrome::Slider { min: FLOW_SLIDER_MIN, max: FLOW_SLIDER_MAX, step: FLOW_SLIDER_STEP, value: 3.0 },
+                "text" => NodeChrome::Note { text: String::new() },
+                "image" => NodeChrome::Image { src: String::new() },
+                "vector" | "point" => NodeChrome::Stepper { schema: channel.clone(), fields: default_stepper_fields_for_schema(&channel), step: default_stepper_step() },
+                name => NodeChrome::Variable { name: name.into(), schema: boundary_schema_from_params(&neuron.params) },
+            }
+        }
+        OUTPUT_KIND => NodeChrome::Plain { preview: false },
+        CLUSTER_KIND => NodeChrome::Plain { preview: true },
+        _ => NodeChrome::Plain { preview: true },
+    }
+}
+
+fn ensure_ui_node(document: &mut FlowDocumentV1, neuron_id: &str) {
+    if document.ui.nodes.contains_key(neuron_id) {
+        return;
+    }
+    let layout = WidgetLayout { x: 0.0, y: 0.0 };
+    let chrome = find_neuron(&document.tree, neuron_id).map(chrome_for_neuron).unwrap_or(NodeChrome::Plain { preview: true });
+    document.ui.nodes.insert(neuron_id.to_string(), FlowNodeGui { layout, chrome });
+}
+
+fn dedupe_document_neurons(document: &mut FlowDocumentV1) {
+    let mut seen = BTreeSet::new();
+    document.tree.neurons.retain(|neuron| seen.insert(neuron.id.clone()));
+}
+
+fn node_layout(document: &FlowDocumentV1, id: &str) -> WidgetLayout {
+    document.ui.nodes.get(id).map(|n| n.layout.clone()).or_else(|| document.ui.previews.iter().find(|p| p.id == id).and_then(|p| p.layout.clone())).unwrap_or(WidgetLayout { x: 0.0, y: 0.0 })
+}
+
+fn set_node_layout(document: &mut FlowDocumentV1, id: &str, layout: WidgetLayout) {
+    if let Some(preview) = document.ui.previews.iter_mut().find(|p| p.id == id) {
+        preview.layout = Some(layout.clone());
+    }
+    if let Some(node) = document.ui.nodes.get_mut(id) {
+        node.layout = layout;
+    }
+}
+// #endregion DocumentHelpers
 
 fn tree_signature(tree: &Tree, seeds: &HashMap<String, Dictionary>) -> u64 {
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
@@ -2687,7 +2830,7 @@ impl FlowHost {
             id: cluster_id.clone(),
             name: "Cluster".into(),
             tree: inner_tree,
-            flow: FlowGuiV1 { camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: inner_layout.into_iter().map(|(id, layout)| (id, FlowNodeGui { layout, chrome: NodeChrome::Plain })).collect(), previews: vec![] },
+            flow: FlowGuiV1 { camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: inner_layout.into_iter().map(|(id, layout)| (id, FlowNodeGui { layout, chrome: NodeChrome::Plain { preview: true } })).collect(), previews: vec![] },
         };
         self.fixture.widgets.retain(|widget| !selected.contains(&widget_id_for(widget).to_string()));
         self.fixture.widgets.push(cluster);
@@ -3443,6 +3586,18 @@ pub fn export_drawing_pdf(handle: &str) -> String {
 #[wasm_bindgen]
 pub fn dispose_drawing(handle: &str) {
     flow_module_draw::dispose_drawing(handle);
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
+pub fn trace_drawing_bitmap(width: u32, height: u32, mask: &[u8], threshold: f64, simplify_epsilon: f64) -> String {
+    flow_module_draw::trace_bitmap_json(width, height, mask, threshold, simplify_epsilon)
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
+pub fn boolean_drawing_segments(a_json: &str, b_json: &str, op: &str) -> String {
+    flow_module_draw::boolean_segments_json(a_json, b_json, op)
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -4783,23 +4938,24 @@ mod tests {
     }
 
     #[test]
-    fn hexagonal_mushroom_fixture_reports_face_list_outputs() {
+    fn hexagonal_mushroom_fixture_reports_extruded_solid_output() {
         let json = include_str!("../../procedural/3d/fixture/hexagonal-mushroom-column.procedural.json");
         let fixture = FlowHost::parse_fixture_json(json).expect("fixture json");
         let mut host = FlowHost::from_fixture(fixture);
         host.set_neuron_kind_infos_json(&fixture_kind_infos_json());
         let eval_json = host.evaluate().expect("evaluate");
         let parsed: serde_json::Value = serde_json::from_str(&eval_json).expect("eval json");
-        let face = parsed
-            .get("list_get_4")
+        let solid = parsed
+            .get("extrude")
             .and_then(|entry| entry.get("out"))
-            .and_then(|out| out.get("0"))
-            .expect("list get face output");
-        assert_eq!(face.get("$schema").and_then(serde_json::Value::as_str), Some("face"));
-        let handle = face.get("handle").and_then(serde_json::Value::as_str).expect("face handle");
-        assert!(handle.starts_with("face-"));
-        let mesh: serde_json::Value = serde_json::from_str(&flow_module_brep::tessellate_geometry_json(handle, 0.05)).expect("face mesh json");
-        assert!(mesh.get("error").is_none(), "face tessellation: {mesh}");
+            .and_then(|out| out.get("solid").or_else(|| out.get("S")))
+            .expect("extrude solid output");
+        assert_eq!(solid.get("$schema").and_then(serde_json::Value::as_str), Some("geometry"));
+        assert_eq!(solid.get("kind").and_then(serde_json::Value::as_str), Some("solid"));
+        let handle = solid.get("handle").and_then(serde_json::Value::as_str).expect("solid handle");
+        assert!(handle.starts_with("solid-"));
+        let mesh: serde_json::Value = serde_json::from_str(&flow_module_brep::tessellate_geometry_json(handle, 0.05)).expect("solid mesh json");
+        assert!(mesh.get("error").is_none(), "solid tessellation: {mesh}");
         assert!(mesh.get("position").and_then(serde_json::Value::as_array).is_some_and(|positions| !positions.is_empty()));
     }
 }

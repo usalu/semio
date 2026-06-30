@@ -1313,6 +1313,38 @@ impl<'a> Evaluator<'a> {
         Ok(EvalChannels { outputs, inputs })
     }
 
+    /// 🧮 Evaluates a tree as a function: in dictionary to out dictionary via boundary neurons.
+    pub fn evaluate_function(&self, tree: &Tree, in_dict: &Dictionary) -> Result<Dictionary, EvalError> {
+        self.evaluate_function_with(tree, in_dict, &HashMap::new(), &|kind, input| self.registry.dispatch(kind, input))
+    }
+
+    /// 🧮 Evaluates a tree as a function with custom dispatch and operator metadata.
+    pub fn evaluate_function_with(
+        &self,
+        tree: &Tree,
+        in_dict: &Dictionary,
+        operator_infos: &HashMap<String, OperatorInfo>,
+        dispatch: &(dyn Fn(&str, &Dictionary) -> Result<Dictionary, EvalError> + Sync),
+    ) -> Result<Dictionary, EvalError> {
+        let seeds = seed_input_boundaries(tree, in_dict);
+        let channels = self.evaluate_channels_with(tree, &seeds, operator_infos, dispatch)?;
+        collect_output_boundaries(tree, &channels)
+    }
+
+    /// 🧮 Evaluates a tree as a function with caching and custom dispatch.
+    pub fn evaluate_function_cached(
+        &self,
+        tree: &Tree,
+        in_dict: &Dictionary,
+        operator_infos: &HashMap<String, OperatorInfo>,
+        dispatch: &(dyn Fn(&str, &Dictionary) -> Result<Dictionary, EvalError> + Sync),
+        cache: &NeuralCache,
+    ) -> Result<Dictionary, EvalError> {
+        let seeds = seed_input_boundaries(tree, in_dict);
+        let channels = self.evaluate_channels_cached(tree, &seeds, operator_infos, dispatch, cache)?;
+        collect_output_boundaries(tree, &channels)
+    }
+
     fn evaluate_cluster_sequential(
         &self,
         sub_tree: &Tree,
@@ -1321,31 +1353,9 @@ impl<'a> Evaluator<'a> {
         dispatch: &mut dyn FnMut(&str, &Dictionary) -> Result<Dictionary, EvalError>,
         cache: &NeuralCache,
     ) -> Result<Dictionary, EvalError> {
-        let mut sub_seeds = HashMap::new();
-        for neuron in &sub_tree.neurons {
-            if neuron.kind != INPUT_KIND {
-                continue;
-            }
-            let (channel_id, _) = contract_channel(neuron);
-            let Some(value) = parent_input.get(&channel_id) else { continue };
-            sub_seeds.insert(neuron.id.clone(), boundary_seed_dictionary(value));
-        }
+        let sub_seeds = seed_input_boundaries(sub_tree, parent_input);
         let sub_channels = self.evaluate_channels_sequential_cached(sub_tree, &sub_seeds, operator_infos, dispatch, cache)?;
-        let mut out = Dictionary::new();
-        for neuron in &sub_tree.neurons {
-            if neuron.kind != OUTPUT_KIND {
-                continue;
-            }
-            let (channel_id, _) = contract_channel(neuron);
-            let Some(neuron_input) = sub_channels.inputs.get(&neuron.id) else {
-                return Err(EvalError::MissingInput(format!("cluster output boundary {channel_id}")));
-            };
-            let Some(value) = boundary_output_value(neuron_input) else {
-                return Err(EvalError::MissingInput(format!("cluster output boundary {channel_id}")));
-            };
-            out = out.insert(channel_id, value);
-        }
-        Ok(out)
+        collect_output_boundaries(sub_tree, &sub_channels)
     }
 
     fn evaluate_cluster(
@@ -1356,31 +1366,9 @@ impl<'a> Evaluator<'a> {
         dispatch: &(dyn Fn(&str, &Dictionary) -> Result<Dictionary, EvalError> + Sync),
         cache: &NeuralCache,
     ) -> Result<Dictionary, EvalError> {
-        let mut sub_seeds = HashMap::new();
-        for neuron in &sub_tree.neurons {
-            if neuron.kind != INPUT_KIND {
-                continue;
-            }
-            let (channel_id, _) = contract_channel(neuron);
-            let Some(value) = parent_input.get(&channel_id) else { continue };
-            sub_seeds.insert(neuron.id.clone(), boundary_seed_dictionary(value));
-        }
+        let sub_seeds = seed_input_boundaries(sub_tree, parent_input);
         let sub_channels = self.evaluate_channels_cached(sub_tree, &sub_seeds, operator_infos, dispatch, cache)?;
-        let mut out = Dictionary::new();
-        for neuron in &sub_tree.neurons {
-            if neuron.kind != OUTPUT_KIND {
-                continue;
-            }
-            let (channel_id, _) = contract_channel(neuron);
-            let Some(neuron_input) = sub_channels.inputs.get(&neuron.id) else {
-                return Err(EvalError::MissingInput(format!("cluster output boundary {channel_id}")));
-            };
-            let Some(value) = boundary_output_value(neuron_input) else {
-                return Err(EvalError::MissingInput(format!("cluster output boundary {channel_id}")));
-            };
-            out = out.insert(channel_id, value);
-        }
-        Ok(out)
+        collect_output_boundaries(sub_tree, &sub_channels)
     }
 }
 
@@ -1406,6 +1394,41 @@ fn boundary_output_value(input: &Dictionary) -> Option<Value> {
         return None;
     }
     Some(Value::Dictionary(input.clone()))
+}
+
+/// 🌱 Seeds input boundary neurons from an in dictionary keyed by channel name.
+pub fn seed_input_boundaries(tree: &Tree, in_dict: &Dictionary) -> HashMap<String, Dictionary> {
+    let mut seeds = HashMap::new();
+    for neuron in &tree.neurons {
+        if neuron.kind != INPUT_KIND {
+            continue;
+        }
+        let (channel_id, _) = contract_channel(neuron);
+        let Some(value) = in_dict.get(&channel_id) else {
+            continue;
+        };
+        seeds.insert(neuron.id.clone(), boundary_seed_dictionary(value));
+    }
+    seeds
+}
+
+/// 📤 Collects output boundary neuron values into an out dictionary keyed by channel name.
+pub fn collect_output_boundaries(tree: &Tree, channels: &EvalChannels) -> Result<Dictionary, EvalError> {
+    let mut out = Dictionary::new();
+    for neuron in &tree.neurons {
+        if neuron.kind != OUTPUT_KIND {
+            continue;
+        }
+        let (channel_id, _) = contract_channel(neuron);
+        let Some(neuron_input) = channels.inputs.get(&neuron.id) else {
+            return Err(EvalError::MissingInput(format!("output boundary {channel_id}")));
+        };
+        let Some(value) = boundary_output_value(neuron_input) else {
+            return Err(EvalError::MissingInput(format!("output boundary {channel_id}")));
+        };
+        out = out.insert(channel_id, value);
+    }
+    Ok(out)
 }
 
 fn synapse_source_value(src_out: &Dictionary, from_port: &str) -> Value {
@@ -1905,6 +1928,31 @@ mod tests {
         seeds.insert("b_src".into(), channel_output("number", number_dictionary(3.0)));
         let out = Evaluator::new(&reg).evaluate(&tree, &seeds).unwrap();
         assert_eq!(out.get("cluster").and_then(|d| d.get("sum")).and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(5.0));
+    }
+
+    #[test]
+    fn evaluate_function_top_level() {
+        let tree = Tree {
+            neurons: vec![
+                input_boundary("in_a", "a"),
+                input_boundary("in_b", "b"),
+                Neuron::with_kind("add", "math.add", Dictionary::new()),
+                output_boundary("out_sum", "sum"),
+            ],
+            synapses: vec![
+                Synapse { id: "s1".into(), from: "in_a".into(), to: "add".into(), from_port: String::new(), to_port: "a".into() },
+                Synapse { id: "s2".into(), from: "in_b".into(), to: "add".into(), from_port: String::new(), to_port: "b".into() },
+                Synapse { id: "s3".into(), from: "add".into(), to: "out_sum".into(), from_port: "sum".into(), to_port: String::new() },
+            ],
+        };
+        let mut reg = Registry::new();
+        reg.register_schema(number_schema());
+        reg.register_operator(add_info(), vec![OperatorImpl { schemas: vec!["number".into(), "number".into()], operation: Box::new(AddNumbers) }], &["number"]);
+        let in_dict = Dictionary::new()
+            .insert("a", Value::Dictionary(number_dictionary(2.0)))
+            .insert("b", Value::Dictionary(number_dictionary(3.0)));
+        let out = Evaluator::new(&reg).evaluate_function(&tree, &in_dict).unwrap();
+        assert_eq!(out.get("sum").and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(5.0));
     }
 
     #[test]

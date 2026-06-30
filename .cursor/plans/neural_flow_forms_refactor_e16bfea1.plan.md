@@ -4,13 +4,13 @@ overview: Promote neural's boundary-neuron "tree as function" model to the top l
 todos:
   - id: ticket
     content: Read repo://goals and reopen/open the governing ticket via repo MCP
-    status: in_progress
+    status: completed
   - id: neural-fn
     content: "neural/engine: extract boundary seed/collect helpers and add top-level Evaluator::evaluate_function (in-dict -> out-dict) + tests"
-    status: pending
+    status: completed
   - id: neural-bridge
     content: "flow/module/wasm: add evaluate_function_json headless bridge"
-    status: pending
+    status: in_progress
   - id: flow-core
     content: "flow/core: make flow.document/v1 (tree + ui) canonical; delete FlowFixtureV1/tree_from_fixture; add output boundary nodes + UI-only preview nodes; update DAG node mapping, ports, eval, Rust tests"
     status: pending

@@ -823,6 +823,13 @@ pub mod gpu_session {
             }
         }
 
+        pub fn detach(&mut self) {
+            self.canvas = None;
+            self.render_ctx = None;
+            self.renderer = None;
+            self.surface = None;
+        }
+
         pub fn render_frame(&mut self, scene: &Scene, clear_color: Color) -> Result<(), JsValue> {
             for _attempt in 0..3u8 {
                 let (surface, renderer, render_ctx) = match (self.surface.as_mut(), self.renderer.as_mut(), self.render_ctx.as_mut()) {

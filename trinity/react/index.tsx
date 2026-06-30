@@ -112,6 +112,12 @@ export function completeJackOnFixture(fixtureJson: string, source: string, curso
   return JSON.parse(session.completeJackJson(source, cursor)) as readonly TrinityJackCompletionV1[];
 }
 
+export function createJackLspWorker(fixtureJson?: string): Worker {
+  const worker = new Worker(new URL("../jack/lsp/worker.ts", import.meta.url), { type: "module" });
+  worker.postMessage({ op: "init", fixtureJson });
+  return worker;
+}
+
 export function applyRewriteOnFixture(fixtureJson: string, ruleJson: string): string {
   const session = new TrinitySession();
   session.loadFixtureJson(fixtureJson);
@@ -199,6 +205,26 @@ export interface TrinityCanvasProps {
   readonly onFixtureChange?: (fixtureJson: string) => void;
 }
 
+function waitForLayoutSize(container: HTMLElement, min = 8): Promise<void> {
+  return new Promise((resolve) => {
+    let attempts = 0;
+    const probe = () => {
+      const rect = container.getBoundingClientRect();
+      if (rect.width >= min && rect.height >= min) {
+        resolve();
+        return;
+      }
+      attempts += 1;
+      if (attempts > 120) {
+        resolve();
+        return;
+      }
+      requestAnimationFrame(probe);
+    };
+    probe();
+  });
+}
+
 export function TrinityCanvas({ fixtureJson, className, reorganize, onFixtureChange }: TrinityCanvasProps): React.JSX.Element {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -219,6 +245,7 @@ export function TrinityCanvas({ fixtureJson, className, reorganize, onFixtureCha
 
   const renderFrame = useCallback(() => {
     try {
+      if (!sessionRef.current?.gpuReady()) return;
       syncVelloTheme();
       sessionRef.current?.renderFrame();
     } catch {
@@ -246,35 +273,56 @@ export function TrinityCanvas({ fixtureJson, className, reorganize, onFixtureCha
     const canvas = canvasRef.current;
     const container = containerRef.current;
     if (!canvas || !container) return;
+    let cancelled = false;
+    let cleanupInner: (() => void) | undefined;
     const session = new TrinitySession();
     sessionRef.current = session;
     session.loadFixtureJson(fixtureJson ?? TRINITY_DEFAULT_FIXTURE_JSON);
-    console.log("[DEBUG] trinity canvas loaded fixture");
-    const rect = container.getBoundingClientRect();
-    const dpr = globalThis.devicePixelRatio || 1;
-    const initW = Math.max(1, Math.round(rect.width));
-    const initH = Math.max(1, Math.round(rect.height));
-    canvas.width = Math.round(initW * dpr);
-    canvas.height = Math.round(initH * dpr);
-    canvas.style.width = `${initW}px`;
-    canvas.style.height = `${initH}px`;
-    void session.attachCanvas(canvas, initW, initH, dpr).then(() => {
-      const resize = () => {
-        const r = container.getBoundingClientRect();
-        const nextDpr = globalThis.devicePixelRatio || 1;
-        const w = Math.max(1, Math.round(r.width));
-        const h = Math.max(1, Math.round(r.height));
-        canvas.width = Math.round(w * nextDpr);
-        canvas.height = Math.round(h * nextDpr);
-        canvas.style.width = `${w}px`;
-        canvas.style.height = `${h}px`;
-        session.setSize(w, h, nextDpr);
-        renderFrame();
-      };
+
+    const resize = () => {
+      if (cancelled) return;
+      const r = container.getBoundingClientRect();
+      const nextDpr = globalThis.devicePixelRatio || 1;
+      const w = Math.max(8, Math.round(r.width));
+      const h = Math.max(8, Math.round(r.height));
+      const pw = Math.max(1, Math.round(w * nextDpr));
+      const ph = Math.max(1, Math.round(h * nextDpr));
+      if (canvas.width !== pw || canvas.height !== ph) {
+        canvas.width = pw;
+        canvas.height = ph;
+      }
+      canvas.style.width = `${w}px`;
+      canvas.style.height = `${h}px`;
+      session.setSize(w, h, nextDpr);
+      renderFrame();
+    };
+
+    void (async () => {
+      await new Promise<void>((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+      });
+      if (cancelled) return;
+      await waitForLayoutSize(container);
+      if (cancelled) return;
+      resize();
+      const rect = container.getBoundingClientRect();
+      const dpr = globalThis.devicePixelRatio || 1;
+      const initW = Math.max(8, Math.round(rect.width));
+      const initH = Math.max(8, Math.round(rect.height));
+      try {
+        await session.attachCanvas(canvas, initW, initH, dpr);
+      } catch {
+        return;
+      }
+      if (cancelled) {
+        session.detachGpu();
+        return;
+      }
       resize();
       const ro = new ResizeObserver(resize);
       ro.observe(container);
       const tick = () => {
+        if (cancelled) return;
         renderFrame();
         rafRef.current = requestAnimationFrame(tick);
       };
@@ -303,7 +351,7 @@ export function TrinityCanvas({ fixtureJson, className, reorganize, onFixtureCha
       canvas.addEventListener("pointermove", onPointerMove);
       canvas.addEventListener("pointerup", onPointerUp);
       canvas.addEventListener("pointerleave", onPointerUp);
-      return () => {
+      cleanupInner = () => {
         ro.disconnect();
         canvas.removeEventListener("pointerdown", onPointerDown);
         canvas.removeEventListener("pointermove", onPointerMove);
@@ -311,9 +359,13 @@ export function TrinityCanvas({ fixtureJson, className, reorganize, onFixtureCha
         canvas.removeEventListener("pointerleave", onPointerUp);
         if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
       };
-    });
+    })();
+
     return () => {
+      cancelled = true;
+      cleanupInner?.();
       if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
+      session.detachGpu();
       sessionRef.current = null;
     };
   }, [fixtureJson, renderFrame]);

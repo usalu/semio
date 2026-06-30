@@ -2,32 +2,29 @@
   "schema": "flow.fixture/v1",
   "camera": { "x": 94.75581571737445, "y": -97.50833134679668, "zoom": 1.7844325616011099 },
   "widgets": [
-    { "kind": "neuron", "id": "brep_solid_extrude_4", "neuronKind": "brep.solid.extrude", "params": {}, "input_ports": ["wire", "vector"], "output_ports": [], "preview": true },
-    { "kind": "neuron", "id": "math_constructVector_6", "neuronKind": "math.vector", "params": {}, "input_ports": ["x", "y", "z"], "output_ports": [], "preview": false },
-    { "kind": "inputSlider", "id": "slider_7", "value": 6.0, "min": 0.0, "max": 10.0, "step": 1.0 },
-    { "kind": "inputSlider", "id": "slider_8", "value": 0.5, "min": 0.0, "max": 1.0, "step": 0.1 },
-    { "kind": "neuron", "id": "brep_curve_polygon_9", "neuronKind": "brep.curve.polygon", "params": {}, "input_ports": ["radius", "sides"], "output_ports": [], "preview": true },
-    { "kind": "inputSlider", "id": "slider_10", "value": 6.0, "min": 0.0, "max": 10.0, "step": 1.0 },
-    { "kind": "neuron", "id": "brep_brep_3", "neuronKind": "brep.brep", "params": {}, "input_ports": ["brep", "vertex", "edge", "face"], "output_ports": [], "preview": true },
-    { "kind": "neuron", "id": "list_get_4", "neuronKind": "list.get", "params": {}, "input_ports": ["list", "index", "wrap"], "output_ports": ["0"], "preview": true }
+    { "kind": "inputSlider", "id": "height", "label": "Column Height", "value": 6.0, "min": 0.0, "max": 10.0, "step": 0.5, "unit": "m" },
+    { "kind": "inputSlider", "id": "radius", "label": "Profile Radius", "value": 0.5, "min": 0.1, "max": 2.0, "step": 0.05, "unit": "m" },
+    { "kind": "inputSlider", "id": "sides", "label": "Side Count", "value": 6.0, "min": 3.0, "max": 12.0, "step": 1.0 },
+    { "kind": "neuron", "id": "profile", "neuronKind": "brep.curve.polygon", "params": {}, "input_ports": ["radius", "sides"], "preview": false },
+    { "kind": "neuron", "id": "extrusion-axis", "neuronKind": "math.vector", "params": {}, "input_ports": ["x", "y", "z"], "preview": false },
+    { "kind": "neuron", "id": "extrude", "neuronKind": "brep.solid.extrude", "params": {}, "input_ports": ["wire", "vector"], "preview": true },
+    { "kind": "outputPreview", "id": "column-preview", "preview": {}, "expanded": [] }
   ],
   "synapses": [
-    { "id": "e103", "from": "slider_7", "to": "math_constructVector_6", "fromPort": "number", "toPort": "z" },
-    { "id": "e104", "from": "math_constructVector_6", "to": "brep_solid_extrude_4", "fromPort": "vector", "toPort": "vector" },
-    { "id": "e108", "from": "slider_10", "to": "brep_curve_polygon_9", "fromPort": "number", "toPort": "sides" },
-    { "id": "e110", "from": "slider_8", "to": "brep_curve_polygon_9", "fromPort": "number", "toPort": "radius" },
-    { "id": "e111", "from": "brep_curve_polygon_9", "to": "brep_solid_extrude_4", "fromPort": "wire", "toPort": "wire" },
-    { "id": "e112", "from": "brep_solid_extrude_4", "to": "brep_brep_3", "fromPort": "solid", "toPort": "brep" },
-    { "id": "e113", "from": "brep_brep_3", "to": "list_get_4", "fromPort": "face", "toPort": "list" }
+    { "id": "e1", "from": "height", "to": "extrusion-axis", "fromPort": "number", "toPort": "z" },
+    { "id": "e2", "from": "radius", "to": "profile", "fromPort": "number", "toPort": "radius" },
+    { "id": "e3", "from": "sides", "to": "profile", "fromPort": "number", "toPort": "sides" },
+    { "id": "e4", "from": "profile", "to": "extrude", "fromPort": "wire", "toPort": "wire" },
+    { "id": "e5", "from": "extrusion-axis", "to": "extrude", "fromPort": "vector", "toPort": "vector" },
+    { "id": "e6", "from": "extrude", "to": "column-preview", "fromPort": "solid", "toPort": "" }
   ],
   "layout": {
-    "brep_brep_3": { "x": 132.5826340026422, "y": -98.91262930342643 },
-    "brep_curve_polygon_9": { "x": -64.49671116929301, "y": -163.40310309861746 },
-    "brep_solid_extrude_4": { "x": 34.842068675720895, "y": -154.18083645790136 },
-    "list_get_4": { "x": 237.4197774877085, "y": -103.14518978933415 },
-    "math_constructVector_6": { "x": -65.26327021036892, "y": -116.45687403531778 },
-    "slider_10": { "x": -156.43467044109153, "y": -155.28679730672846 },
-    "slider_7": { "x": -197.1913555449187, "y": -102.70789997839545 },
-    "slider_8": { "x": -156.03796288966, "y": -177.3373596163105 }
+    "height": { "x": -197.1913555449187, "y": -102.70789997839545 },
+    "radius": { "x": -156.03796288966, "y": -177.3373596163105 },
+    "sides": { "x": -156.43467044109153, "y": -155.28679730672846 },
+    "profile": { "x": -64.49671116929301, "y": -163.40310309861746 },
+    "extrusion-axis": { "x": -65.26327021036892, "y": -116.45687403531778 },
+    "extrude": { "x": 34.842068675720895, "y": -154.18083645790136 },
+    "column-preview": { "x": 237.4197774877085, "y": -103.14518978933415 }
   }
 }

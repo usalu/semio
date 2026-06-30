@@ -6344,6 +6344,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "trinity_jack_lsp"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "trinity_jack",
+ "trinity_ram",
+ "wasm-bindgen",
+]
+
+[[package]]
 name = "trinity_jack_shell"
 version = "0.1.0"
 dependencies = [
@@ -8008,6 +8019,21 @@ name = "writeable"
 version = "0.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1ffae5123b2d3fc086436f8834ae3ab053a283cfac8fe0a0b8eaae044768a4c4"
+
+[[package]]
+name = "writer"
+version = "0.1.0"
+dependencies = [
+ "infinite_cavas",
+ "js-sys",
+ "serde",
+ "serde_json",
+ "ui_styling",
+ "vello",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+]
 
 [[package]]
 name = "xattr"

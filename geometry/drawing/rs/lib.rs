@@ -2,6 +2,8 @@
 
 #[cfg(feature = "booleans")]
 mod booleans;
+#[cfg(feature = "trace")]
+mod trace;
 
 use async_trait::async_trait;
 use geometry_drawing_engine::{
@@ -435,6 +437,58 @@ impl DrawingKernel for DrawingStore {
 
     async fn bool_intersection(&mut self, a: &DrawingHandle, b: &DrawingHandle) -> Result<DrawingHandle, DrawingError> {
         self.bool_op(a, b, "intersection").await
+    }
+
+    async fn bool_xor(&mut self, a: &DrawingHandle, b: &DrawingHandle) -> Result<DrawingHandle, DrawingError> {
+        self.bool_op(a, b, "xor").await
+    }
+
+    async fn bool_op_many(&mut self, op: &str, handles: &[DrawingHandle]) -> Result<DrawingHandle, DrawingError> {
+        if handles.is_empty() {
+            return Err(DrawingError::InvalidInput("boolean op needs at least one handle".into()));
+        }
+        if handles.len() == 1 {
+            return self.fork(&handles[0]);
+        }
+        let mut segments_list: Vec<Vec<PathSegment>> = Vec::new();
+        for handle in handles {
+            segments_list.push(DrawingStore::node_to_segments(&self.entry(handle)?.node));
+        }
+        #[cfg(feature = "booleans")]
+        {
+            let merged = booleans::boolean_paths_many(&segments_list, op)?;
+            return Ok(self.register(DrawingKind::Path, DrawingNode::Path { segments: merged }));
+        }
+        #[cfg(not(feature = "booleans"))]
+        {
+            let _ = (segments_list, op);
+            Err(DrawingError::Operation("boolean ops require booleans feature".into()))
+        }
+    }
+
+    async fn boolean_segments(&self, a: &[PathSegment], b: &[PathSegment], op: &str) -> Result<Vec<PathSegment>, DrawingError> {
+        #[cfg(feature = "booleans")]
+        {
+            return booleans::boolean_paths(a, b, op);
+        }
+        #[cfg(not(feature = "booleans"))]
+        {
+            let _ = (a, b, op);
+            Err(DrawingError::Operation("boolean ops require booleans feature".into()))
+        }
+    }
+
+    async fn trace_bitmap(&mut self, width: u32, height: u32, mask_or_luma: &[u8], threshold: f64, simplify_epsilon: f64) -> Result<DrawingHandle, DrawingError> {
+        #[cfg(feature = "trace")]
+        {
+            let segments = trace::trace_bitmap_paths(width, height, mask_or_luma, threshold, simplify_epsilon)?;
+            return Ok(self.register(DrawingKind::Path, DrawingNode::Path { segments }));
+        }
+        #[cfg(not(feature = "trace"))]
+        {
+            let _ = (width, height, mask_or_luma, threshold, simplify_epsilon);
+            Err(DrawingError::Operation("trace requires trace feature".into()))
+        }
     }
 
     async fn text(&mut self, x: f64, y: f64, content: &str, size: f64) -> Result<DrawingHandle, DrawingError> {

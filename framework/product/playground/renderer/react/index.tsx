@@ -265,8 +265,17 @@ export class StaticTreePanelDefinition implements TreePanelDefinition {
   }
 }
 
+function treeItemFingerprint(items: readonly TreeDataItem[]): string {
+  return items
+    .map((item) => {
+      const nested = item.items?.length ? `[${treeItemFingerprint(item.items)}]` : "";
+      return `${item.id}${nested}`;
+    })
+    .join(",");
+}
+
 function treePanelSectionsFingerprint(sections: readonly TreeDataSection[]): string {
-  return sections.map((section) => `${section.id}:${(section.items ?? []).map((item) => item.id).join(",")}`).join("|");
+  return sections.map((section) => `${section.id}:${treeItemFingerprint(section.items ?? [])}`).join("|");
 }
 
 const CALLBACK_TREE_PANEL_EMPTY_HIGHLIGHTS: readonly string[] = [];
@@ -368,10 +377,14 @@ type FormsSurfaceHost = React.ComponentType<{ readonly node: import("@semio-tech
 const formsSurfaceHosts = new Map<string, FormsSurfaceHost>();
 type RasterSurfaceHost = React.ComponentType<{ readonly node: import("@semio-tech/framework-platform-core").UiRasterHostSurfaceNode }>;
 const rasterSurfaceHosts = new Map<string, RasterSurfaceHost>();
+type DrawSurfaceHost = React.ComponentType<{ readonly node: import("@semio-tech/framework-platform-core").UiDrawHostSurfaceNode }>;
+const drawSurfaceHosts = new Map<string, DrawSurfaceHost>();
 type EditorSurfaceHost = React.ComponentType<{ readonly node: import("@semio-tech/framework-platform-core").UiEditorHostSurfaceNode }>;
 const editorSurfaceHosts = new Map<string, EditorSurfaceHost>();
+type WriterSurfaceHost = React.ComponentType<{ readonly node: import("@semio-tech/framework-platform-core").UiWriterHostSurfaceNode }>;
+const writerSurfaceHosts = new Map<string, WriterSurfaceHost>();
 
-const PLAYGROUND_CANVAS_HOST_TYPES = new Set(["puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag", "trinity", "shooting", "forms", "raster", "editor"]);
+const PLAYGROUND_CANVAS_HOST_TYPES = new Set(["puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag", "trinity", "shooting", "forms", "raster", "draw", "writer", "editor"]);
 
 function isPlaygroundCanvasHostChild(child: UiNode): boolean {
   return PLAYGROUND_CANVAS_HOST_TYPES.has(child.type);
@@ -433,9 +446,21 @@ export function registerUiRasterSurfaceHost(surfaceId: string, Component: Raster
   registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
 }
 
+/** @emoji ✏️ Binds `surfaceId` from {@link UiDrawHostSurfaceNode} to a draw canvas. */
+export function registerUiDrawSurfaceHost(surfaceId: string, Component: DrawSurfaceHost): void {
+  drawSurfaceHosts.set(surfaceId, Component);
+  registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
+}
+
 /** @emoji ✍️ Binds `surfaceId` from {@link UiEditorHostSurfaceNode} to a code editor body. */
 export function registerUiEditorSurfaceHost(surfaceId: string, Component: EditorSurfaceHost): void {
   editorSurfaceHosts.set(surfaceId, Component);
+  registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
+}
+
+/** @emoji ✍️ Binds `surfaceId` from {@link UiWriterHostSurfaceNode} to a writer canvas body. */
+export function registerUiWriterSurfaceHost(surfaceId: string, Component: WriterSurfaceHost): void {
+  writerSurfaceHosts.set(surfaceId, Component);
   registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
 }
 
@@ -520,6 +545,26 @@ function renderPlaygroundHostSurface(node: UiNode, layout: "canvas" | "panel"): 
       );
     }
   }
+  if (node.type === "draw") {
+    const Host = drawSurfaceHosts.get(node.surfaceId);
+    if (Host) {
+      return (
+        <div className="absolute inset-0 min-h-0 min-w-0">
+          <Host node={node} />
+        </div>
+      );
+    }
+  }
+  if (node.type === "writer") {
+    const Host = writerSurfaceHosts.get(node.surfaceId);
+    if (Host) {
+      return (
+        <div className="absolute inset-0 min-h-0 min-w-0">
+          <Host node={node} />
+        </div>
+      );
+    }
+  }
   if (node.type === "table") {
     const Host = tableSurfaceHosts.get(node.surfaceId);
     if (Host) {
@@ -551,6 +596,7 @@ function renderPlaygroundHostSurface(node: UiNode, layout: "canvas" | "panel"): 
     node.type === "shooting" ||
     node.type === "forms" ||
     node.type === "raster" ||
+    node.type === "draw" ||
     node.type === "panel" ||
     node.type === "table" ||
     node.type === "editor"
@@ -812,6 +858,8 @@ export function UiRenderer({ node, commandBus }: { readonly node: UiNode; readon
     case "shooting":
     case "forms":
     case "raster":
+    case "draw":
+    case "writer":
     case "panel":
     case "table":
     case "editor":
@@ -1746,6 +1794,7 @@ import {
     parseKindCatalogs,
     parseKindCompatibility,
     preparePuzzle3dFillSession,
+    puzzle3dBrushMeshRootForFill,
     puzzle3dFillBuildProgressRef,
     puzzle3dFillPendingCountRef,
     puzzle3dFillSessionRef,
@@ -2490,24 +2539,6 @@ export function bootPuzzle3dPlay(playground: Playground, rootId = "root"): void 
 //#region 🔖Puzzle5dPlayHost
 // #region 🔌Adapters
 import {
-    puzzle2dActiveRenderer,
-    puzzle2dBrushCandidateDisplayLabels,
-    puzzle2dGetBrushSessionSnapshot,
-    puzzle2dNodeKindOverlayLabel, puzzle2dSetBrushPlaceCommitHandler, type Puzzle2dBrushCandidatesPayload, type Puzzle2dBrushPlacePayload, type Puzzle2dDrawLodKind,
-    type Puzzle2dFixtureDropDetail,
-    type Puzzle2dSelectionMethod,
-    type Puzzle2dSelectionMode,
-    type Puzzle2dSelectionTargets
-} from "@semio-tech/puzzle-2d-react";
-import { installPuzzle3dPlayBrushHost, puzzle3dBrushMeshRootForFill } from "@semio-tech/puzzle-3d-play";
-import {
-    brushMeshUrlsForFillSession,
-    isLoadableMeshUrl,
-    resolvePuzzle3dFixtureDrop,
-    type Puzzle3dFixtureDropDetail,
-} from "@semio-tech/puzzle-3d-react";
-import { sceneHostPort } from "@semio-tech/ui-react";
-import {
     PUZZLE_5D_PLAY_2D_BODY_KEY,
     PUZZLE_5D_PLAY_2D_SURFACE_ID,
     PUZZLE_5D_PLAY_2D_WINDOW_ID,
@@ -3207,9 +3238,11 @@ import {
     clonePuzzle2dFixtureV1,
     layoutPuzzle2dFixtureRedrawHandles,
     layoutPuzzle2dFixtureRedrawNodes,
+    puzzle2dActiveRenderer,
     puzzle2dApplyLiveForceGraphLayoutTick,
     puzzle2dApplyNodeKindToFixtureNode,
     puzzle2dBrushSuggestionsMenuOpen,
+    puzzle2dBrushCandidateDisplayLabels,
     puzzle2dCommitBrushPlacementToPlay,
     puzzle2dCommitPaletteNodeDropToPlay,
     puzzle2dEdgeKindOverlayLabel,
@@ -3221,9 +3254,11 @@ import {
     puzzle2dFixtureObjectDisplayLabel,
     puzzle2dFixturePaletteTreeDragController,
     puzzle2dFixtureSceneMarkers,
+    puzzle2dGetBrushSessionSnapshot,
     puzzle2dHandleAngleFromRingT,
     puzzle2dHandleAngleToRingT,
     puzzle2dHandleKindOverlayLabel,
+    puzzle2dNodeKindOverlayLabel,
     puzzle2dIsBrushPlacementStructuralDeleteGuarded,
     puzzle2dSetBrushPlaceCommitHandler,
     puzzle2dSelectionActionsRef,
@@ -3231,8 +3266,12 @@ import {
     puzzle2dSyncFixtureDescriptorToAllAuthoringPeers,
     puzzle2dSyncSelectionToAllAuthoringPeers,
     type Puzzle2dActiveTool,
+    type Puzzle2dBrushCandidatesPayload,
+    type Puzzle2dBrushPlacePayload,
+    type Puzzle2dDrawLodKind,
     type Puzzle2dFixtureCircleNodeV1,
     type Puzzle2dFixtureEdgeV1,
+    type Puzzle2dFixtureDropDetail,
     type Puzzle2dFixtureHandleV1,
     type Puzzle2dFixtureNodeV1,
     type Puzzle2dFixtureV1,
@@ -3242,6 +3281,9 @@ import {
     type Puzzle2dLiveForceGraphDragState,
     type Puzzle2dLodModeKind,
     type Puzzle2dPreselectSnapshot,
+    type Puzzle2dSelectionMethod,
+    type Puzzle2dSelectionMode,
+    type Puzzle2dSelectionTargets,
     type Puzzle2dRedrawLayoutOptions,
     type Puzzle2dRedrawModeKind,
     type Puzzle2dSelectionSnapshot,
@@ -6175,7 +6217,6 @@ import {
     type MapPlayController
 } from "@semio-tech/gis-map-play";
 import { MapCanvas, Position, Route, type GisMapLodId, type MapContextMenuContext, type MapHoveredFeature, type MapSelectPayload } from "@semio-tech/gis-map-react";
-import type { ContextMenuItem } from "@semio-tech/ui-react";
 
 let mapPlayChromeRegistered = false;
 const mapPlayControllerRef: { current: MapPlayController | null } = { current: null };
@@ -6927,9 +6968,11 @@ import {
   TrinityRewritePlayController,
   registerTrinityRewritePlayDeclarativeBodies,
 } from "@semio-tech/trinity-rewrite-play";
-import { TRINITY_DEFAULT_FIXTURE_JSON, TrinityCanvas, completeJackOnFixture, tokenizeJackOnFixture } from "@semio-tech/trinity-react";
+import { TRINITY_DEFAULT_FIXTURE_JSON, TrinityCanvas, createJackLspWorker } from "@semio-tech/trinity-react";
+import { createWorkerLspTransport, createWriterDocument } from "@semio-tech/writer-core";
+import { WriterCanvas } from "@semio-tech/writer-react";
 import { CodeEditor } from "@semio-tech/framework-platform-renderer-react";
-import type { UiEditorHostSurfaceNode, UiTableHostSurfaceNode, UiTrinityHostSurfaceNode } from "@semio-tech/framework-platform-core";
+import type { UiEditorHostSurfaceNode, UiTrinityHostSurfaceNode } from "@semio-tech/framework-platform-core";
 
 let trinityPlayChromeRegistered = false;
 const trinityJackControllerRef: { current: TrinityJackPlayController | null } = { current: null };
@@ -6974,23 +7017,24 @@ function TrinityJackPlaySurfaceHost({ node }: { readonly node: UiTrinityHostSurf
   );
 }
 
-function TrinityJackEditorSurfaceHost({ node }: { readonly node: UiEditorHostSurfaceNode }): ReactElement {
+function TrinityJackEditorSurfaceHost({ node }: { readonly node: import("@semio-tech/framework-platform-core").UiWriterHostSurfaceNode }): ReactElement {
   const ctrl = useTrinityJackController();
   const fixtureJson = ctrl?.getFixtureJson() ?? TRINITY_JACK_PLAY_DEFAULT_FIXTURE_JSON;
-  const tokenize = reactHostPort.useCallback((text: string) => tokenizeJackOnFixture(fixtureJson, text), [fixtureJson]);
-  const complete = reactHostPort.useCallback((text: string, cursor: number) => completeJackOnFixture(fixtureJson, text, cursor), [fixtureJson]);
-  const onChange = reactHostPort.useCallback((value: string) => trinityJackControllerRef.current?.run("setJackQuery", { value }), []);
+  const document = ctrl?.getWriterDocument() ?? createWriterDocument({ id: "jack-query", languageId: "jack", text: "MATCH (a:Piece) RETURN a.name" });
+  const createLspTransport = reactHostPort.useCallback(() => createWorkerLspTransport(createJackLspWorker(fixtureJson)), [fixtureJson]);
+  const onChange = reactHostPort.useCallback((next: import("@semio-tech/writer-core").WriterDocumentV1) => {
+    trinityJackControllerRef.current?.run("setJackQuery", { value: next.text });
+  }, []);
   const onSubmit = reactHostPort.useCallback(() => {
     trinityJackControllerRef.current?.run("runJackQuery");
   }, []);
-  console.log("[DEBUG] trinity jack editor surface mount");
   return (
-    <CodeEditor
-      value={ctrl?.getJackQuery() ?? "MATCH (a:Piece) RETURN a.name"}
+    <WriterCanvas
+      document={document}
       onChange={onChange}
       onSubmit={onSubmit}
-      tokenize={tokenize}
-      complete={complete}
+      createLspTransport={createLspTransport}
+      fixtureJsonForLsp={fixtureJson}
       placeholder="MATCH (a:Piece) RETURN a.name"
       className="h-full"
     />
@@ -7056,7 +7100,7 @@ export function registerTrinityJackPlaySurfaceHosts(): void {
   if (trinityPlayChromeRegistered) return;
   trinityPlayChromeRegistered = true;
   registerUiTrinitySurfaceHost(TRINITY_JACK_PLAY_SURFACE_ID, TrinityJackPlaySurfaceHost);
-  registerUiEditorSurfaceHost(TRINITY_JACK_PLAY_EDITOR_SURFACE_ID, TrinityJackEditorSurfaceHost);
+  registerUiWriterSurfaceHost(TRINITY_JACK_PLAY_EDITOR_SURFACE_ID, TrinityJackEditorSurfaceHost);
   registerUiTableSurfaceHost(TRINITY_JACK_PLAY_RESULTS_SURFACE_ID, TrinityJackResultsSurfaceHost);
   registerTrinityJackPlayDeclarativeBodies();
 }
@@ -7177,8 +7221,6 @@ export function bootTrinityRewritePlay(playground: Playground, rootId = "root"):
 //#region 🔖ProceduralPlayHost
 import type { UiPanelHostSurfaceNode } from "@semio-tech/framework-platform-core";
 import { ProceduralFlowEditor, ProceduralPreview, useProceduralBrepBridge } from "@semio-tech/procedural-3d-react";
-import { FlowGenerateSurface } from "@semio-tech/forms-react";
-import { parseFormSpec } from "@semio-tech/forms-core";
 import {
     DAG_LOD_MODE_AUTOMATIC as PROCEDURAL_3D_DAG_LOD_MODE_AUTOMATIC,
     FLOW_DEFAULT_PROXIMITY_DISTANCE as PROCEDURAL_3D_DEFAULT_PROXIMITY_DISTANCE,
@@ -7635,8 +7677,6 @@ export function bootProceduralPlay(playground: Playground, rootId = "root"): voi
 
 //#region 🔖Procedural2dPlayHost
 import { Procedural2dFlowEditor, Procedural2dPreview, useProcedural2dDrawingBridge, canvasDrawingPngExportPort } from "@semio-tech/procedural-2d-react";
-import { FlowGenerateSurface } from "@semio-tech/forms-react";
-import { parseFormSpec } from "@semio-tech/forms-core";
 import { flowWidgetPaletteTreeDragController as procedural2dWidgetPaletteTreeDragController } from "@semio-tech/flow-react";
 import {
     PROCEDURAL_2D_PLAY_APP_ID,
@@ -8398,17 +8438,14 @@ export function bootShootingPlay(playground: Playground, rootId = "root"): void 
 //#endregion 🔖ShootingPlayHost
 
 //#region 🔖FormsPlayHost
-import type { UiFormsHostSurfaceNode } from "@semio-tech/framework-platform-core";
 import {
   FORMS_PLAY_APP_ID,
   FORMS_PLAY_CATALOGUE_TAB_ID,
   FORMS_PLAY_CONTROLLER_ID,
   FORMS_PLAY_HIERARCHY_TAB_ID,
   FORMS_PLAY_INSPECTION_TAB_ID,
-  FORMS_PLAY_SURFACE_ID_BUILDER,
-  FORMS_PLAY_SURFACE_ID_PREVIEW,
+  FORMS_PLAY_SURFACE_ID_EDIT,
   FORMS_PLAY_SURFACE_ID_TRY,
-  FORMS_PLAY_TRY_MODE_ID,
   FormsPlayController,
   buildFormsPlayCatalogueTree,
   buildFormsPlayHierarchyTree,
@@ -8418,6 +8455,7 @@ import {
   registerFormsPlayDeclarativeBodies,
 } from "@semio-tech/forms-play";
 import {
+  FormEditSurface,
   FormRenderer,
   FormsQuestionPaletteDragBridge,
   FormsQuestionPaletteDragGhost,
@@ -8477,67 +8515,19 @@ function useFormsPlayExtensionRevision(runtime: Platform): number {
   );
 }
 
-function FormsBuilderSurfaceHost({ node }: { readonly node: UiFormsHostSurfaceNode }): ReactElement {
+function FormsEditSurfaceHost({ node: _node }: { readonly node: UiFormsHostSurfaceNode }): ReactElement {
   const ctrl = useFormsPlayController();
   const spec = ctrl?.getSpec() ?? defaultFormSpec("empty");
-  const hostRef = reactHostPort.useRef<HTMLDivElement>(null);
-  const [paletteDragActive, setPaletteDragActive] = reactHostPort.useState(false);
-  reactHostPort.useEffect(() => {
-    const onSession = (event: Event): void => {
-      setPaletteDragActive(Boolean((event as CustomEvent<{ encoded?: string } | null>).detail));
-    };
-    window.addEventListener("forms-question-drag-session", onSession);
-    return () => window.removeEventListener("forms-question-drag-session", onSession);
-  }, []);
-  const onDragEnter = reactHostPort.useCallback((event: React.DragEvent<HTMLDivElement>) => {
-    if (!formsQuestionDragAcceptsTransfer([...event.dataTransfer.types])) return;
-    setPaletteDragActive(true);
-  }, []);
-  const onDragLeave = reactHostPort.useCallback((event: React.DragEvent<HTMLDivElement>) => {
-    if (!formsQuestionDragAcceptsTransfer([...event.dataTransfer.types])) return;
-    if (event.currentTarget.contains(event.relatedTarget as Node | null)) return;
-    setPaletteDragActive(false);
-  }, []);
-  const onDrop = reactHostPort.useCallback(
-    (event: React.DragEvent<HTMLDivElement>) => {
-      event.preventDefault();
-      setPaletteDragActive(false);
-      const raw = event.dataTransfer.getData(FORMS_QUESTION_DRAG_MIME);
-      if (!raw) return;
-      try {
-        const payload = JSON.parse(raw) as { kind?: string };
-        if (payload.kind) {
-          commitFormsPlayQuestionDropAtClient(ctrl, event.clientX, event.clientY, payload.kind);
-        }
-      } catch {
-        /* ignore malformed catalogue payload */
-      }
-    },
-    [ctrl],
-  );
+  const selectedIds = ctrl?.getSelectedIds() ?? [];
   return (
-    <div
-      ref={hostRef}
-      className={cn("h-full min-h-0", paletteDragActive && "ring-2 ring-inset ring-accent")}
-      onDragEnter={onDragEnter}
-      onDragLeave={onDragLeave}
-      onDragOver={(event) => {
-        if (!formsQuestionDragAcceptsTransfer([...event.dataTransfer.types])) return;
-        event.preventDefault();
-        event.dataTransfer.dropEffect = "copy";
-      }}
-      onDrop={onDrop}
-    >
-      <FormRenderer spec={spec} interactive={false} className="h-full" />
-    </div>
+    <FormEditSurface
+      spec={spec}
+      className="h-full"
+      selectedIds={selectedIds}
+      onSelectionChange={(ids) => ctrl?.run("setSelection", { ids: [...ids] })}
+      onChange={(next) => ctrl?.run("setSpecJson", { json: JSON.stringify(next) })}
+    />
   );
-}
-
-function FormsPreviewSurfaceHost({ node }: { readonly node: UiFormsHostSurfaceNode }): ReactElement {
-  const ctrl = useFormsPlayController();
-  const spec = ctrl?.getSpec();
-  if (!spec) return <div className="p-double text-sm text-muted-foreground">No form loaded</div>;
-  return <FormRenderer spec={spec} interactive={false} className="h-full" />;
 }
 
 function FormsTrySurfaceHost({ node }: { readonly node: UiFormsHostSurfaceNode }): ReactElement {
@@ -8614,31 +8604,19 @@ class FormsPlayInspectionPanelDefinition extends PureSidePanelTabDefinition {
   }
 }
 
-function useFormsPlayActiveModeId(runtime: Platform): string | null {
-  return reactHostPort.useSyncExternalStore(
-    (listener) => runtime.subscribeChrome(listener),
-    () => runtime.getActiveApp()?.getActiveModeId() ?? null,
-    () => null,
-  );
-}
-
 function FormsPlayInner({ playground }: { readonly playground: Playground }): ReactElement {
   useFormsPlayController(playground.runtime);
-  const activeModeId = useFormsPlayActiveModeId(playground.runtime);
   const interactionRevision = useFormsPlayInteractionRevision(playground.runtime);
   const extensionRevision = useFormsPlayExtensionRevision(playground.runtime);
   const formsPlayHierarchyPanel = reactHostPort.useMemo(() => new FormsPlayHierarchyPanelDefinition(), []);
   const formsPlayCataloguePanel = reactHostPort.useMemo(() => new FormsPlayCataloguePanelDefinition(), []);
   const formsPlayInspectionPanel = reactHostPort.useMemo(() => new FormsPlayInspectionPanelDefinition(), []);
   const augmentPanelTabs = reactHostPort.useMemo(
-    () =>
-      activeModeId === FORMS_PLAY_TRY_MODE_ID
-        ? undefined
-        : {
-            workbench: [formsPlayHierarchyPanel, formsPlayCataloguePanel],
-            details: [formsPlayInspectionPanel],
-          },
-    [activeModeId, interactionRevision, extensionRevision, formsPlayCataloguePanel, formsPlayHierarchyPanel, formsPlayInspectionPanel],
+    () => ({
+      workbench: [formsPlayHierarchyPanel, formsPlayCataloguePanel],
+      details: [formsPlayInspectionPanel],
+    }),
+    [interactionRevision, extensionRevision, formsPlayCataloguePanel, formsPlayHierarchyPanel, formsPlayInspectionPanel],
   );
   const onPaletteDrop = reactHostPort.useCallback(
     (detail: { kind: string; clientX: number; clientY: number }) =>
@@ -8647,12 +8625,8 @@ function FormsPlayInner({ playground }: { readonly playground: Playground }): Re
   );
   return (
     <>
-      {activeModeId !== FORMS_PLAY_TRY_MODE_ID ? (
-        <>
-          <FormsQuestionPaletteDragBridge enabled onCommitDrop={onPaletteDrop} />
-          <FormsQuestionPaletteDragGhost />
-        </>
-      ) : null}
+      <FormsQuestionPaletteDragBridge enabled onCommitDrop={onPaletteDrop} />
+      <FormsQuestionPaletteDragGhost />
       <PlaygroundView runtime={playground.runtime} defaultAppId={FORMS_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} playgroundKeybindings={playground.keybindings} />
     </>
   );
@@ -8661,8 +8635,7 @@ function FormsPlayInner({ playground }: { readonly playground: Playground }): Re
 export function registerFormsPlaySurfaceHosts(): void {
   if (formsPlayChromeRegistered) return;
   formsPlayChromeRegistered = true;
-  registerUiFormsSurfaceHost(FORMS_PLAY_SURFACE_ID_BUILDER, FormsBuilderSurfaceHost);
-  registerUiFormsSurfaceHost(FORMS_PLAY_SURFACE_ID_PREVIEW, FormsPreviewSurfaceHost);
+  registerUiFormsSurfaceHost(FORMS_PLAY_SURFACE_ID_EDIT, FormsEditSurfaceHost);
   registerUiFormsSurfaceHost(FORMS_PLAY_SURFACE_ID_TRY, FormsTrySurfaceHost);
   registerFormsPlayDeclarativeBodies();
 }
@@ -8689,6 +8662,7 @@ export function bootFormsPlay(playground: Playground, rootId = "root"): void {
 import type { UiRasterHostSurfaceNode } from "@semio-tech/framework-platform-core";
 import {
   RASTER_PLAY_APP_ID,
+  RASTER_PLAY_CATALOGUE_TAB_ID,
   RASTER_PLAY_CONTROLLER_ID,
   RASTER_PLAY_LAYERS_TAB_ID,
   RASTER_PLAY_MASKS_TAB_ID,
@@ -8696,11 +8670,13 @@ import {
   RASTER_PLAY_SURFACE_ID_COMPOSITE,
   RASTER_PLAY_SURFACE_ID_NAVIGATOR,
   RasterPlayController,
-  buildRasterPlayBlendCatalogueTree,
+  buildRasterPlayCatalogueTree,
+  buildRasterPlayInspectorTree,
   buildRasterPlayLayersTree,
   buildRasterPlayMasksTree,
-  buildRasterPlayPropertiesTree,
+  createRasterPlayHierarchyTreeDragController,
   registerRasterPlayDeclarativeBodies,
+  type RasterPlayHierarchyBuildOptions,
   type RasterPlayHostBridge,
 } from "@semio-tech/raster-play";
 import { RasterCanvas, RasterLayerView, RasterMaskView } from "@semio-tech/raster-react";
@@ -8719,6 +8695,15 @@ function useRasterPlayController(runtimeOverride?: Platform): RasterPlayControll
   const ctrl = runtime?.getActiveApp()?.controller as RasterPlayController | undefined;
   rasterPlayControllerRef.current = ctrl ?? null;
   return ctrl;
+}
+
+function rasterPlayHierarchyOptions(ctrl: RasterPlayController | undefined): RasterPlayHierarchyBuildOptions {
+  return {
+    onToggleVisible: (layerId) => ctrl?.run("toggleLayerVisible", { layerId }),
+    onDeleteLayer: (layerId) => ctrl?.run("deleteLayer", { layerId }),
+    onDuplicateLayer: (layerId) => ctrl?.run("duplicateLayer", { layerId }),
+    onAddMask: (layerId) => ctrl?.run("addLayerMask", { layerId }),
+  };
 }
 
 function useRasterPlayInteractionRevision(runtime: Platform): number {
@@ -8791,8 +8776,13 @@ class RasterPlayLayersPanelDefinition extends PureSidePanelTabDefinition {
             ctrl?.getHoveredId() ?? null,
             ctrl?.getHoveredKind() ?? null,
             (payload) => ctrl?.run("setHover", { id: payload.id, kind: payload.kind }),
+            rasterPlayHierarchyOptions(ctrl),
           );
-          return uiTreeNodeToTreePanelConfig(treeNode, bus);
+          const config = uiTreeNodeToTreePanelConfig(treeNode, bus);
+          return {
+            ...config,
+            dragAndDropController: createRasterPlayHierarchyTreeDragController(() => rasterPlayControllerRef.current ?? undefined),
+          };
         },
         () => {
           const ctrl = rasterPlayControllerRef.current;
@@ -8801,6 +8791,26 @@ class RasterPlayLayersPanelDefinition extends PureSidePanelTabDefinition {
           return [...(buildRasterPlayLayersTree(doc, [], ctrl?.getHoveredId() ?? null, ctrl?.getHoveredKind() ?? null).highlightedIds ?? [])];
         },
       ),
+    };
+  }
+}
+
+class RasterPlayCataloguePanelDefinition extends PureSidePanelTabDefinition {
+  buildTab(): SidePanelTabConfig {
+    return {
+      id: RASTER_PLAY_CATALOGUE_TAB_ID,
+      icon: shellTabIconComponent(FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, "workbench"),
+      name: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+      order: 1,
+      tree: new CallbackTreePanelDefinition(() => {
+        const ctrl = rasterPlayControllerRef.current;
+        const bus = new CommandBus();
+        const treeNode = buildRasterPlayCatalogueTree(
+          ctrl?.getSelectedIds() ?? [],
+          (payload) => ctrl?.run("setHover", { id: payload.id, kind: payload.kind }),
+        );
+        return uiTreeNodeToTreePanelConfig(treeNode, bus);
+      }),
     };
   }
 }
@@ -8850,7 +8860,7 @@ class RasterPlayPropertiesPanelDefinition extends PureSidePanelTabDefinition {
         const doc = ctrl?.getDocument();
         const bus = new CommandBus();
         if (!doc) return { sections: [{ id: "raster-props-empty", items: [{ id: "empty", label: "No document" }] }] };
-        const treeNode = buildRasterPlayPropertiesTree(doc, ctrl?.getSelectedIds() ?? []);
+        const treeNode = buildRasterPlayInspectorTree(doc, ctrl?.getSelectedIds() ?? []);
         return uiTreeNodeToTreePanelConfig(treeNode, bus);
       }),
     };
@@ -8907,6 +8917,7 @@ function RasterPlayInner({ playground }: { readonly playground: Playground }): R
   useRasterPlayController(playground.runtime);
   useRasterPlayInteractionRevision(playground.runtime);
   const rasterLayersPanel = reactHostPort.useMemo(() => new RasterPlayLayersPanelDefinition(), []);
+  const rasterCataloguePanel = reactHostPort.useMemo(() => new RasterPlayCataloguePanelDefinition(), []);
   const rasterMasksPanel = reactHostPort.useMemo(() => new RasterPlayMasksPanelDefinition(), []);
   const rasterPropertiesPanel = reactHostPort.useMemo(() => new RasterPlayPropertiesPanelDefinition(), []);
   return (
@@ -8916,7 +8927,7 @@ function RasterPlayInner({ playground }: { readonly playground: Playground }): R
         runtime={playground.runtime}
         defaultAppId={RASTER_PLAY_APP_ID}
         augmentPanelTabs={{
-          workbench: [rasterLayersPanel, rasterMasksPanel],
+          workbench: [rasterLayersPanel, rasterCataloguePanel, rasterMasksPanel],
           details: [rasterPropertiesPanel],
         }}
       />
@@ -8949,6 +8960,402 @@ export function bootRasterPlay(playground: Playground, rootId = "root"): void {
   bootPlayground(playground, rasterPlayChromeBoot, rootId);
 }
 //#endregion 🔖RasterPlayHost
+
+//#region 🔖DrawPlayHost
+import type { UiDrawHostSurfaceNode } from "@semio-tech/framework-platform-core";
+import {
+  DRAW_PLAY_APP_ID,
+  DRAW_PLAY_CATALOGUE_TAB_ID,
+  DRAW_PLAY_CONTROLLER_ID,
+  DRAW_PLAY_LAYERS_TAB_ID,
+  DRAW_PLAY_PROPERTIES_TAB_ID,
+  DRAW_PLAY_SURFACE_ID_COMPOSITE,
+  DRAW_PLAY_SURFACE_ID_NAVIGATOR,
+  DrawPlayController,
+  buildDrawPlayCatalogueTree,
+  buildDrawPlayInspectorTree,
+  buildDrawPlayLayersTree,
+  createDrawPlayHierarchyTreeDragController,
+  registerDrawPlayDeclarativeBodies,
+  type DrawPlayHierarchyBuildOptions,
+  type DrawPlayHostBridge,
+} from "@semio-tech/draw-play";
+import { DrawCanvas } from "@semio-tech/draw-react";
+
+let drawPlayChromeRegistered = false;
+const drawPlayControllerRef: { current: DrawPlayController | null } = { current: null };
+
+function useDrawPlayController(runtimeOverride?: Platform): DrawPlayController | undefined {
+  const appCtx = reactHostPort.useContext(PlaygroundContext);
+  const runtime = runtimeOverride ?? appCtx?.runtime;
+  reactHostPort.useSyncExternalStore(
+    (listener) => (runtime ? runtime.subscribe(listener) : () => {}),
+    () => runtime?.generation ?? 0,
+    () => 0,
+  );
+  const ctrl = runtime?.getActiveApp()?.controller as DrawPlayController | undefined;
+  drawPlayControllerRef.current = ctrl ?? null;
+  return ctrl;
+}
+
+function drawPlayHierarchyOptions(ctrl: DrawPlayController | undefined): DrawPlayHierarchyBuildOptions {
+  return {
+    onToggleVisible: (layerId) => ctrl?.run("toggleLayerVisible", { layerId }),
+    onDeleteLayer: (layerId) => ctrl?.run("deleteLayer", { layerId }),
+    onDuplicateLayer: (layerId) => ctrl?.run("duplicateLayer", { layerId }),
+  };
+}
+
+function useDrawPlayInteractionRevision(runtime: Platform): number {
+  return reactHostPort.useSyncExternalStore(
+    (listener) => {
+      const ctrl = runtime.getActiveApp()?.controller as DrawPlayController | undefined;
+      drawPlayControllerRef.current = ctrl ?? null;
+      const unsubscribeRuntime = runtime.subscribe(listener);
+      const unsubscribeCtrl = ctrl?.subscribe(listener);
+      return () => {
+        unsubscribeRuntime();
+        unsubscribeCtrl?.();
+      };
+    },
+    () => (runtime.getActiveApp()?.controller as DrawPlayController | undefined)?.getInteractionRevision() ?? 0,
+    () => 0,
+  );
+}
+
+function DrawPlayPaneSurfaceHost({ node }: { readonly node: UiDrawHostSurfaceNode }): ReactElement {
+  const ctrl = useDrawPlayController();
+  const doc = ctrl?.getDocument();
+  if (!doc) return <div className="p-double text-sm text-muted-foreground">No draw document</div>;
+  const selectedIds = ctrl?.getSelectedIds() ?? [];
+  const hoveredId = ctrl?.getHoveredId() ?? null;
+  const kindHover = ctrl?.getHoveredKind() ?? null;
+  const onHover = reactHostPort.useCallback((payload: import("@semio-tech/draw-core").DrawHoverPayload) => {
+    ctrl?.run("setHover", { id: payload.id, kind: payload.kind });
+  }, [ctrl]);
+  const common = {
+    document: doc,
+    selectedIds,
+    hoveredId,
+    kindHover,
+    activeTool: doc.activeTool,
+    camera: doc.camera,
+    onHover,
+    onSelect: (ids: readonly string[]) => ctrl?.run("setSelection", { ids: [...ids] }),
+    onCameraChange: (camera: typeof doc.camera) => ctrl?.run("setCamera", { camera }),
+    className: "h-full",
+  };
+  if (node.view === "navigator") return <DrawCanvas {...common} viewMode="navigator" />;
+  return <DrawCanvas {...common} viewMode="composite" />;
+}
+
+class DrawPlayLayersPanelDefinition extends PureSidePanelTabDefinition {
+  buildTab(): SidePanelTabConfig {
+    return {
+      id: DRAW_PLAY_LAYERS_TAB_ID,
+      icon: shellTabIconComponent(FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, "workbench"),
+      name: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+      order: 0,
+      tree: new CallbackTreePanelDefinition(
+        () => {
+          const ctrl = drawPlayControllerRef.current;
+          const doc = ctrl?.getDocument();
+          const bus = new CommandBus();
+          if (!doc) return { sections: [{ id: "draw-empty", items: [{ id: "empty", label: "No document" }] }] };
+          const treeNode = buildDrawPlayLayersTree(
+            doc,
+            ctrl?.getSelectedIds() ?? [],
+            ctrl?.getHoveredId() ?? null,
+            ctrl?.getHoveredKind() ?? null,
+            (payload) => ctrl?.run("setHover", { id: payload.id, kind: payload.kind }),
+            drawPlayHierarchyOptions(ctrl),
+          );
+          const config = uiTreeNodeToTreePanelConfig(treeNode, bus);
+          return {
+            ...config,
+            dragAndDropController: createDrawPlayHierarchyTreeDragController(() => drawPlayControllerRef.current ?? undefined),
+          };
+        },
+        () => {
+          const ctrl = drawPlayControllerRef.current;
+          const doc = ctrl?.getDocument();
+          if (!doc) return [];
+          return [...(buildDrawPlayLayersTree(doc, [], ctrl?.getHoveredId() ?? null, ctrl?.getHoveredKind() ?? null).highlightedIds ?? [])];
+        },
+      ),
+    };
+  }
+}
+
+class DrawPlayCataloguePanelDefinition extends PureSidePanelTabDefinition {
+  buildTab(): SidePanelTabConfig {
+    return {
+      id: DRAW_PLAY_CATALOGUE_TAB_ID,
+      icon: shellTabIconComponent(FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, "workbench"),
+      name: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+      order: 1,
+      tree: new CallbackTreePanelDefinition(() => {
+        const ctrl = drawPlayControllerRef.current;
+        const bus = new CommandBus();
+        const treeNode = buildDrawPlayCatalogueTree(
+          ctrl?.getSelectedIds() ?? [],
+          (payload) => ctrl?.run("setHover", { id: payload.id, kind: payload.kind }),
+        );
+        return uiTreeNodeToTreePanelConfig(treeNode, bus);
+      }),
+    };
+  }
+}
+
+class DrawPlayPropertiesPanelDefinition extends PureSidePanelTabDefinition {
+  buildTab(): SidePanelTabConfig {
+    return {
+      id: DRAW_PLAY_PROPERTIES_TAB_ID,
+      icon: shellTabIconComponent(FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, "details"),
+      name: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+      order: 0,
+      tree: new CallbackTreePanelDefinition(() => {
+        const ctrl = drawPlayControllerRef.current;
+        const doc = ctrl?.getDocument();
+        const bus = new CommandBus();
+        if (!doc) return { sections: [{ id: "draw-props-empty", items: [{ id: "empty", label: "No document" }] }] };
+        const treeNode = buildDrawPlayInspectorTree(doc, ctrl?.getSelectedIds() ?? []);
+        return uiTreeNodeToTreePanelConfig(treeNode, bus);
+      }),
+    };
+  }
+}
+
+function DrawPlayFileBridge(): ReactElement | null {
+  const ctrl = useDrawPlayController();
+  const loadInputRef = reactHostPort.useRef<HTMLInputElement | null>(null);
+  const downloadFixture = reactHostPort.useCallback(async () => {
+    if (!ctrl) return;
+    const text = ctrl.getDocumentJson();
+    const blob = new Blob([text], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "semio.draw.json";
+    anchor.click();
+    URL.revokeObjectURL(url);
+    console.log("[DEBUG] draw play exported document");
+  }, [ctrl]);
+  const handleLoadFile = reactHostPort.useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      event.target.value = "";
+      if (!file || !ctrl) return;
+      void file.text().then((text) => {
+        ctrl.run("setFixtureJson", { json: text, resetInteraction: true });
+        console.log("[DEBUG] draw play imported document from file");
+      });
+    },
+    [ctrl],
+  );
+  reactHostPort.useEffect(() => {
+    if (!ctrl) return;
+    const bridge: DrawPlayHostBridge = {
+      runHostCommand: (command) => {
+        if (command === "saveDownload") {
+          void downloadFixture();
+          return;
+        }
+        if (command === "loadRequest") {
+          loadInputRef.current?.click();
+        }
+      },
+    };
+    ctrl.setHostBridge(bridge);
+    return () => ctrl.setHostBridge(null);
+  }, [ctrl, downloadFixture]);
+  return <input ref={loadInputRef} type="file" accept=".json,.draw.json,application/json" className="hidden" onChange={handleLoadFile} />;
+}
+
+function DrawPlayInner({ playground }: { readonly playground: Playground }): ReactElement {
+  useDrawPlayController(playground.runtime);
+  useDrawPlayInteractionRevision(playground.runtime);
+  const drawLayersPanel = reactHostPort.useMemo(() => new DrawPlayLayersPanelDefinition(), []);
+  const drawCataloguePanel = reactHostPort.useMemo(() => new DrawPlayCataloguePanelDefinition(), []);
+  const drawPropertiesPanel = reactHostPort.useMemo(() => new DrawPlayPropertiesPanelDefinition(), []);
+  return (
+    <>
+      <DrawPlayFileBridge />
+      <PlaygroundView
+        runtime={playground.runtime}
+        defaultAppId={DRAW_PLAY_APP_ID}
+        augmentPanelTabs={{
+          workbench: [drawLayersPanel, drawCataloguePanel],
+          details: [drawPropertiesPanel],
+        }}
+      />
+    </>
+  );
+}
+
+export function registerDrawPlaySurfaceHosts(): void {
+  if (drawPlayChromeRegistered) return;
+  drawPlayChromeRegistered = true;
+  registerUiDrawSurfaceHost(DRAW_PLAY_SURFACE_ID_COMPOSITE, DrawPlayPaneSurfaceHost);
+  registerUiDrawSurfaceHost(DRAW_PLAY_SURFACE_ID_NAVIGATOR, DrawPlayPaneSurfaceHost);
+  registerDrawPlayDeclarativeBodies();
+}
+
+function DrawPlayChrome({ playground }: { readonly playground: Playground }): ReactElement {
+  return <DrawPlayInner playground={playground} />;
+}
+
+export function mountDrawPlayChrome(playground: Playground, rootId = "root"): void {
+  mountPlaygroundApp(<DrawPlayChrome playground={playground} />, rootId);
+}
+
+const drawPlayChromeBoot: PlaygroundChromeBoot = {
+  registerHosts: registerDrawPlaySurfaceHosts,
+  mount: mountDrawPlayChrome,
+};
+
+export function bootDrawPlay(playground: Playground, rootId = "root"): void {
+  bootPlayground(playground, drawPlayChromeBoot, rootId);
+}
+//#endregion 🔖DrawPlayHost
+
+//#region 🔖WriterPlayHost
+import type { UiWriterHostSurfaceNode } from "@semio-tech/framework-platform-core";
+import {
+  WRITER_PLAY_APP_ID,
+  WRITER_PLAY_CONTROLLER_ID,
+  WRITER_PLAY_SURFACE_ID,
+  WriterPlayController,
+  buildWriterPlayCatalogueTree,
+  buildWriterPlayHierarchyTree,
+  buildWriterPlayInspectorTree,
+  registerWriterPlayDeclarativeBodies,
+} from "@semio-tech/writer-play";
+
+let writerPlayChromeRegistered = false;
+const writerPlayControllerRef: { current: WriterPlayController | null } = { current: null };
+
+function useWriterPlayController(runtimeOverride?: Platform): WriterPlayController | undefined {
+  const appCtx = reactHostPort.useContext(PlaygroundContext);
+  const runtime = runtimeOverride ?? appCtx?.runtime;
+  reactHostPort.useSyncExternalStore(
+    (listener) => (runtime ? runtime.subscribe(listener) : () => {}),
+    () => runtime?.generation ?? 0,
+    () => 0,
+  );
+  const ctrl = runtime?.getActiveApp()?.controller as WriterPlayController | undefined;
+  writerPlayControllerRef.current = ctrl ?? null;
+  return ctrl;
+}
+
+function WriterPlaySurfaceHost({ node: _node }: { readonly node: UiWriterHostSurfaceNode }): ReactElement {
+  const ctrl = useWriterPlayController();
+  const document = ctrl?.getDocument() ?? createWriterDocument({ id: "jack", languageId: "jack", text: "" });
+  const formatSignal = ctrl?.getFormatSignal() ?? 0;
+  const lintSignal = ctrl?.getLintSignal() ?? 0;
+  const createLspTransport = reactHostPort.useCallback(() => createWorkerLspTransport(createJackLspWorker()), []);
+  const onChange = reactHostPort.useCallback((next: import("@semio-tech/writer-core").WriterDocumentV1) => {
+    writerPlayControllerRef.current?.run("setDocument", { document: next });
+  }, []);
+  const onLintMessages = reactHostPort.useCallback((messages: readonly string[]) => {
+    writerPlayControllerRef.current?.setLintMessages(messages);
+  }, []);
+  return (
+    <WriterCanvas
+      document={document}
+      onChange={onChange}
+      createLspTransport={createLspTransport}
+      formatSignal={formatSignal}
+      lintSignal={lintSignal}
+      onLintMessages={onLintMessages}
+      className="h-full"
+    />
+  );
+}
+
+export function registerWriterPlaySurfaceHosts(): void {
+  if (writerPlayChromeRegistered) return;
+  writerPlayChromeRegistered = true;
+  registerUiWriterSurfaceHost(WRITER_PLAY_SURFACE_ID, WriterPlaySurfaceHost);
+  registerWriterPlayDeclarativeBodies();
+}
+
+class WriterPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
+  buildTab(): SidePanelTabConfig {
+    return {
+      id: "framework.panel.hierarchy",
+      icon: shellTabIconComponent(FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, "workbench"),
+      name: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+      order: 0,
+      tree: new CallbackTreePanelDefinition(() => {
+        const ctrl = writerPlayControllerRef.current;
+        const bus = new CommandBus();
+        return uiTreeNodeToTreePanelConfig(
+          buildWriterPlayHierarchyTree(ctrl?.getDocument() ?? createWriterDocument({ id: "jack", languageId: "jack" })),
+          bus,
+        );
+      }),
+    };
+  }
+}
+
+class WriterPlayCataloguePanelDefinition extends PureSidePanelTabDefinition {
+  buildTab(): SidePanelTabConfig {
+    return {
+      id: "framework.panel.catalogue",
+      icon: shellTabIconComponent(FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, "workbench"),
+      name: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+      order: 1,
+      tree: new CallbackTreePanelDefinition(() => uiTreeNodeToTreePanelConfig(buildWriterPlayCatalogueTree(), new CommandBus())),
+    };
+  }
+}
+
+class WriterPlayInspectionPanelDefinition extends PureSidePanelTabDefinition {
+  buildTab(): SidePanelTabConfig {
+    return {
+      id: "framework.panel.inspection",
+      icon: shellTabIconComponent(FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, "details"),
+      name: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+      order: 0,
+      tree: new CallbackTreePanelDefinition(() => {
+        const ctrl = writerPlayControllerRef.current;
+        const bus = new CommandBus();
+        return uiTreeNodeToTreePanelConfig(
+          buildWriterPlayInspectorTree(
+            ctrl?.getDocument() ?? createWriterDocument({ id: "jack", languageId: "jack" }),
+            ctrl?.getLintMessages() ?? [],
+          ),
+          bus,
+        );
+      }),
+    };
+  }
+}
+
+function WriterPlayInner({ runtime }: { readonly runtime: Platform }): ReactElement {
+  useWriterPlayController(runtime);
+  const hierarchy = reactHostPort.useMemo(() => new WriterPlayHierarchyPanelDefinition(), []);
+  const catalogue = reactHostPort.useMemo(() => new WriterPlayCataloguePanelDefinition(), []);
+  const inspection = reactHostPort.useMemo(() => new WriterPlayInspectionPanelDefinition(), []);
+  return (
+    <PlaygroundView runtime={runtime} defaultAppId={WRITER_PLAY_APP_ID} augmentPanelTabs={{ workbench: [hierarchy, catalogue], details: [inspection] }} />
+  );
+}
+
+export function mountWriterPlayChrome(playground: Playground, rootId = "root"): void {
+  mountPlaygroundApp(<WriterPlayInner runtime={playground.runtime} />, rootId);
+}
+
+const writerPlayChromeBoot: PlaygroundChromeBoot = {
+  registerHosts: registerWriterPlaySurfaceHosts,
+  mount: mountWriterPlayChrome,
+};
+
+export function bootWriterPlay(playground: Playground, rootId = "root"): void {
+  bootPlayground(playground, writerPlayChromeBoot, rootId);
+}
+//#endregion 🔖WriterPlayHost
 
 //#region 🔖PresentationPlayHost
 import {
@@ -9847,17 +10254,19 @@ if (import.meta.vitest) {
       expect(second).toBe(first);
     });
 
-    it("refreshes resolved config when selected rows change", () => {
-      let selectedIds = ["i"];
-      const panel = new CallbackTreePanelDefinition(() => ({
-        sections: [{ id: "a", items: [{ id: "i", label: "Item" }, { id: "j", label: "Other" }] }],
-        selectedIds,
-      }));
+    it("refreshes resolved config when nested item order changes", () => {
+      let nestedIds = ["q-a", "q-b"];
+      const panel = new CallbackTreePanelDefinition(() => [
+        {
+          id: "forms",
+          items: [{ id: "step:one", label: "Step", items: nestedIds.map((id) => ({ id, label: id })) }],
+        },
+      ]);
       const first = panel.resolveTree();
-      selectedIds = ["j"];
+      nestedIds = ["q-b", "q-a"];
       const second = panel.resolveTree();
       expect(second).not.toBe(first);
-      expect(second.selectedIds).toEqual(["j"]);
+      expect(second.sections[0]?.items[0]?.items?.map((item) => item.id)).toEqual(["q-b", "q-a"]);
     });
   });
 

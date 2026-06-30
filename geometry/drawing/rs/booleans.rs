@@ -1,7 +1,7 @@
 //! 🔀 Planar path boolean operations (optional `booleans` feature).
 
 use geometry_drawing_engine::{DrawingError, PathSegment};
-use geo::{BooleanOps, Coord, LineString, Polygon};
+use geo::{BooleanOps, Coord, LineString, MultiPolygon, Polygon};
 
 fn segments_to_polygon(segments: &[PathSegment]) -> Result<Polygon<f64>, DrawingError> {
     let mut coords: Vec<Coord<f64>> = Vec::new();
@@ -46,10 +46,37 @@ pub fn boolean_paths(a: &[PathSegment], b: &[PathSegment], op: &str) -> Result<V
         "union" => poly_a.union(&poly_b),
         "difference" => poly_a.difference(&poly_b),
         "intersection" => poly_a.intersection(&poly_b),
+        "xor" => poly_a.xor(&poly_b),
         _ => return Err(DrawingError::InvalidInput(format!("unknown boolean op: {op}"))),
     };
     let mut segments = Vec::new();
     for polygon in result {
+        segments.extend(polygon_to_segments(&polygon));
+    }
+    if segments.is_empty() {
+        return Err(DrawingError::Operation("boolean produced empty path".into()));
+    }
+    Ok(segments)
+}
+
+pub fn boolean_paths_many(inputs: &[Vec<PathSegment>], op: &str) -> Result<Vec<PathSegment>, DrawingError> {
+    if inputs.is_empty() {
+        return Err(DrawingError::InvalidInput("boolean op needs at least one path".into()));
+    }
+    let first = segments_to_polygon(&inputs[0])?;
+    let mut acc = MultiPolygon::new(vec![first]);
+    for next in inputs.iter().skip(1) {
+        let poly_b = segments_to_polygon(next)?;
+        acc = match op {
+            "union" => acc.union(&poly_b),
+            "difference" => acc.difference(&poly_b),
+            "intersection" => acc.intersection(&poly_b),
+            "xor" => acc.xor(&poly_b),
+            _ => return Err(DrawingError::InvalidInput(format!("unknown boolean op: {op}"))),
+        };
+    }
+    let mut segments = Vec::new();
+    for polygon in acc.into_iter() {
         segments.extend(polygon_to_segments(&polygon));
     }
     if segments.is_empty() {

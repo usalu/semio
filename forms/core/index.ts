@@ -119,6 +119,12 @@ export interface FormQuestionFile extends FormQuestionBase {
 export interface FormQuestionExtension extends FormQuestionBase {
 	readonly kind: string;
 	readonly fixtureSlug?: string;
+	readonly params?: FormValues;
+}
+
+export interface FormsQuestionKindEdit {
+	readonly surface: "flow3d";
+	readonly fixtureSlug: string;
 }
 
 export type FormQuestion =
@@ -185,6 +191,7 @@ export interface FormsQuestionKindContribution {
 	readonly value: FormsQuestionValueShape;
 	readonly defaults: Record<string, unknown>;
 	readonly preview?: FormsQuestionKindPreview;
+	readonly edit?: FormsQuestionKindEdit;
 	readonly controls?: FormsQuestionKindControls;
 }
 
@@ -339,6 +346,7 @@ export const PROCEDURAL_FORMS_EXTENSION_MANIFEST: FormsExtensionManifestV1 = {
 				value: "record",
 				defaults: { kind: "buildingComponent", fixtureSlug: "hexagonal-mushroom-column" },
 				preview: { surface: "flow3d", fixtureSlug: "hexagonal-mushroom-column" },
+				edit: { surface: "flow3d", fixtureSlug: "hexagonal-mushroom-column" },
 				controls: { source: "flowFixture", fixtureSlug: "hexagonal-mushroom-column" },
 			},
 		],
@@ -462,7 +470,7 @@ export function questionKindContribution(question: FormQuestion): FormsQuestionK
 export function resolveQuestionFixtureSlug(question: FormQuestion): string | undefined {
 	if (!isExtensionFormQuestion(question)) return undefined;
 	const contribution = formsExtensionHost.findQuestionKind(question.kind);
-	return question.fixtureSlug ?? contribution?.controls?.fixtureSlug ?? contribution?.preview?.fixtureSlug;
+	return question.fixtureSlug ?? contribution?.controls?.fixtureSlug ?? contribution?.edit?.fixtureSlug ?? contribution?.preview?.fixtureSlug;
 }
 
 export function questionKindCatalogueEntry(kind: string): QuestionKindCatalogueEntry {
@@ -519,6 +527,20 @@ function parseFormStep(raw: unknown, index: number): FormStep {
 		description: typeof obj.description === "string" ? obj.description : undefined,
 		questions: obj.questions.map((q, qi) => parseFormQuestion(q, index, qi)),
 	};
+}
+
+function parseFormValues(raw: unknown): FormValues {
+	if (raw == null || typeof raw !== "object" || Array.isArray(raw)) return {};
+	const obj = raw as Record<string, unknown>;
+	const values: Record<string, FormValue> = {};
+	for (const [key, value] of Object.entries(obj)) {
+		if (typeof value === "string" || typeof value === "number" || typeof value === "boolean" || value == null) {
+			values[key] = value;
+		} else if (Array.isArray(value)) {
+			values[key] = value as readonly string[] | readonly number[];
+		}
+	}
+	return values;
 }
 
 function parseFormQuestion(raw: unknown, stepIndex: number, questionIndex: number): FormQuestion {
@@ -588,7 +610,12 @@ function parseFormQuestion(raw: unknown, stepIndex: number, questionIndex: numbe
 					: typeof contribution.defaults.fixtureSlug === "string"
 						? contribution.defaults.fixtureSlug
 						: contribution.controls?.fixtureSlug ?? contribution.preview?.fixtureSlug;
-			return { ...base, kind: obj.kind, fixtureSlug };
+			return {
+				...base,
+				kind: obj.kind,
+				fixtureSlug,
+				params: obj.params != null ? parseFormValues(obj.params) : undefined,
+			};
 		}
 	}
 }
@@ -654,9 +681,44 @@ function assertNoForbiddenKeys(obj: Record<string, unknown>): void {
 	}
 }
 
+const FLOW_SLIDER_PORT_LABELS: Readonly<Record<string, string>> = {
+	height: "Height",
+	radius: "Radius",
+	sides: "Side Count",
+	width: "Width",
+	distance: "Extrusion Distance",
+	z: "Height",
+};
+
+function humanizeFlowWidgetId(id: string): string {
+	return id
+		.replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+		.replace(/[_-]+/g, " ")
+		.replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function flowInputSliderLabel(
+	id: string,
+	widget: Record<string, unknown>,
+	fixture: { readonly synapses?: readonly { readonly from?: string; readonly toPort?: string }[] },
+): string {
+	if (typeof widget.label === "string" && widget.label.trim()) return widget.label.trim();
+	if (typeof widget.name === "string" && widget.name.trim()) return widget.name.trim();
+	if (/^slider_\d+$/i.test(id)) {
+		const synapse = fixture.synapses?.find((entry) => entry.from === id);
+		if (synapse?.toPort) {
+			return FLOW_SLIDER_PORT_LABELS[synapse.toPort] ?? humanizeFlowWidgetId(synapse.toPort);
+		}
+	}
+	return humanizeFlowWidgetId(id);
+}
+
 /** @emoji 🔀 Maps flow input widgets into a {@link FormSpec}. */
 export function flowFixtureToFormSpec(fixtureJson: string, formId = "flow-generate"): FormSpec {
-	const fixture = JSON.parse(fixtureJson) as { readonly widgets?: readonly Record<string, unknown>[] };
+	const fixture = JSON.parse(fixtureJson) as {
+		readonly widgets?: readonly Record<string, unknown>[];
+		readonly synapses?: readonly { readonly from?: string; readonly toPort?: string }[];
+	};
 	const questions: FormQuestion[] = [];
 	for (const widget of fixture.widgets ?? []) {
 		const kind = widget.kind;
@@ -665,7 +727,8 @@ export function flowFixtureToFormSpec(fixtureJson: string, formId = "flow-genera
 			questions.push({
 				id,
 				kind: "slider",
-				label: id,
+				label: flowInputSliderLabel(id, widget, fixture),
+				unit: typeof widget.unit === "string" ? widget.unit : undefined,
 				min: typeof widget.min === "number" ? widget.min : 0,
 				max: typeof widget.max === "number" ? widget.max : 100,
 				step: typeof widget.step === "number" ? widget.step : 1,
@@ -755,6 +818,7 @@ export function defaultValueForQuestion(question: FormQuestion): FormValue {
 			if (!isExtensionFormQuestion(question)) return null;
 			const contribution = formsExtensionHost.findQuestionKind(question.kind);
 			if (contribution?.value !== "record") return null;
+			if (question.params && Object.keys(question.params).length > 0) return question.params;
 			const slug = resolveQuestionFixtureSlug(question);
 			if (!slug) return {};
 			const fixtureJson = resolveFormsFlowFixtureJson(slug);
@@ -1070,7 +1134,7 @@ if (import.meta.vitest) {
 		expect(defaultQuestionForKind("boolean", "q1").kind).toBe("boolean");
 	});
 
-	it("parses extension question kinds", () => {
+	it("parses extension question params", () => {
 		const spec = parseFormSpec({
 			schema: "forms.form/v1",
 			id: "ext",
@@ -1079,11 +1143,15 @@ if (import.meta.vitest) {
 				{
 					id: "s1",
 					title: "Step",
-					questions: [{ id: "col", kind: "buildingComponent", label: "Column", fixtureSlug: "hexagonal-mushroom-column" }],
+					questions: [{ id: "col", kind: "buildingComponent", label: "Column", fixtureSlug: "hexagonal-mushroom-column", params: { height: 8 } }],
 				},
 			],
 		});
-		expect(spec.steps[0]?.questions[0]?.kind).toBe("buildingComponent");
+		const question = spec.steps[0]?.questions[0];
+		expect(question?.kind).toBe("buildingComponent");
+		if (question && isExtensionFormQuestion(question)) {
+			expect(question.params?.height).toBe(8);
+		}
 	});
 
 	it("registers extension kinds in the host", () => {
@@ -1093,11 +1161,26 @@ if (import.meta.vitest) {
 	it("maps flow fixture widgets to form spec", () => {
 		const json = JSON.stringify({
 			schema: "flow.fixture/v1",
-			widgets: [{ kind: "inputSlider", id: "width", value: 4, min: 0, max: 10 }],
+			widgets: [{ kind: "inputSlider", id: "width", label: "Span Width", value: 4, min: 0, max: 10, unit: "m" }],
 			synapses: [],
 		});
 		const mapped = flowFixtureToFormSpec(json);
-		expect(mapped.steps[0]?.questions[0]?.kind).toBe("slider");
+		const question = mapped.steps[0]?.questions[0];
+		expect(question?.kind).toBe("slider");
+		if (question?.kind === "slider") {
+			expect(question.label).toBe("Span Width");
+			expect(question.unit).toBe("m");
+		}
+	});
+
+	it("infers slider labels from synapse target ports", () => {
+		const json = JSON.stringify({
+			schema: "flow.fixture/v1",
+			widgets: [{ kind: "inputSlider", id: "slider_7", value: 6, min: 0, max: 10 }],
+			synapses: [{ id: "e1", from: "slider_7", to: "vector", fromPort: "number", toPort: "z" }],
+		});
+		const mapped = flowFixtureToFormSpec(json);
+		expect(mapped.steps[0]?.questions[0]?.label).toBe("Height");
 	});
 
 	it("applies generation values to fixture", () => {

@@ -29,6 +29,7 @@ members = [
     "reasoning/mindmap",
     "puzzle/2d/rs",
     "raster/rs",
+    "writer/rs",
     "puzzle/3d/rs",
     "compose/client/lib/rs",
     "compose/client/lib/query",
@@ -37,6 +38,7 @@ members = [
     "geometry/drawing/engine", "geometry/drawing/rs",
     "trinity/ram",
     "trinity/jack/core",
+    "trinity/jack/lsp",
     "trinity/jack/shell",
     "trinity/rewrite/engine",
 ]

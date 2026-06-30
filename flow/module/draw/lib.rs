@@ -585,6 +585,50 @@ pub fn dispose_drawing(handle: &str) {
     }
 }
 
+/// 🔍 Autotraces a bitmap mask into path segments JSON.
+pub fn trace_bitmap_json(width: u32, height: u32, mask: &[u8], threshold: f64, simplify_epsilon: f64) -> String {
+    kernel()
+        .lock()
+        .ok()
+        .and_then(|mut store| match block_on(store.trace_bitmap(width, height, mask, threshold, simplify_epsilon)) {
+            Ok(handle) => match block_on(store.flatten_scene(&handle)) {
+                Ok(scene) => {
+                    let segments = scene
+                        .nodes
+                        .into_iter()
+                        .find_map(|node| if let geometry_drawing_engine::DrawingNode::Path { segments } = node.node { Some(segments) } else { None });
+                    segments.map(|segs| serde_json::json!({ "segments": segs }).to_string())
+                }
+                Err(error) => Some(serde_json::json!({ "error": error.to_string() }).to_string()),
+            },
+            Err(error) => Some(serde_json::json!({ "error": error.to_string() }).to_string()),
+        })
+        .unwrap_or_else(|| serde_json::json!({ "error": "draw kernel unavailable" }).to_string())
+}
+
+/// 🔀 Boolean-combines two path segment arrays.
+pub fn boolean_segments_json(a_json: &str, b_json: &str, op: &str) -> String {
+    let parse = |json: &str| -> Result<Vec<geometry_drawing_engine::PathSegment>, String> {
+        let parsed: serde_json::Value = serde_json::from_str(json).map_err(|e| e.to_string())?;
+        if let Some(error) = parsed.get("error").and_then(|v| v.as_str()) {
+            return Err(error.to_string());
+        }
+        let segments_value = parsed.get("segments").cloned().ok_or_else(|| "missing segments".to_string())?;
+        serde_json::from_value(segments_value).map_err(|e| e.to_string())
+    };
+    kernel()
+        .lock()
+        .ok()
+        .and_then(|store| match (parse(a_json), parse(b_json)) {
+            (Ok(a), Ok(b)) => match block_on(store.boolean_segments(&a, &b, op)) {
+                Ok(segments) => Some(serde_json::json!({ "segments": segments }).to_string()),
+                Err(error) => Some(serde_json::json!({ "error": error.to_string() }).to_string()),
+            },
+            (Err(error), _) | (_, Err(error)) => Some(serde_json::json!({ "error": error }).to_string()),
+        })
+        .unwrap_or_else(|| serde_json::json!({ "error": "draw kernel unavailable" }).to_string())
+}
+
 fn base64_encode(data: &[u8]) -> String {
     const TABLE: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     let mut out = String::new();

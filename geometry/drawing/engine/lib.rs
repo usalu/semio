@@ -258,7 +258,14 @@ pub trait DrawingKernel {
     async fn bool_union(&mut self, a: &DrawingHandle, b: &DrawingHandle) -> Result<DrawingHandle, DrawingError>;
     async fn bool_difference(&mut self, a: &DrawingHandle, b: &DrawingHandle) -> Result<DrawingHandle, DrawingError>;
     async fn bool_intersection(&mut self, a: &DrawingHandle, b: &DrawingHandle) -> Result<DrawingHandle, DrawingError>;
+    async fn bool_xor(&mut self, a: &DrawingHandle, b: &DrawingHandle) -> Result<DrawingHandle, DrawingError>;
+    async fn bool_op_many(&mut self, op: &str, handles: &[DrawingHandle]) -> Result<DrawingHandle, DrawingError>;
+    async fn boolean_segments(&self, a: &[PathSegment], b: &[PathSegment], op: &str) -> Result<Vec<PathSegment>, DrawingError>;
     // #endregion Booleans
+
+    // #region Trace
+    async fn trace_bitmap(&mut self, width: u32, height: u32, mask_or_luma: &[u8], threshold: f64, simplify_epsilon: f64) -> Result<DrawingHandle, DrawingError>;
+    // #endregion Trace
 
     // #region Text
     async fn text(&mut self, x: f64, y: f64, content: &str, size: f64) -> Result<DrawingHandle, DrawingError>;

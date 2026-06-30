@@ -7,6 +7,7 @@
 import {
 	applyGenerationValuesToFixture,
 	createFormId,
+	defaultValueForQuestion,
 	flowFixtureToFormSpec,
 	formSpecToJson,
 	FormRuntime,
@@ -19,10 +20,12 @@ import {
 	resolveQuestionFixtureSlug,
 	type FormQuestion,
 	type FormQuestionExtension,
+	type FormSelectOption,
 	type FormSpec,
 	type FormStep,
 	type FormValue,
 	type FormValues,
+	type FormVectorField,
 } from "@semio-tech/forms-core";
 export {
 	applyGenerationValuesToFixture,
@@ -35,6 +38,7 @@ import { FlowOrchestratorClient } from "@semio-tech/flow-react";
 import {
 	ensureProceduralBrepBridge,
 	extractChannelPreviewItems,
+	preferGeometryPreviewItems,
 	ProceduralPreview,
 	type ProceduralPreviewItem,
 } from "@semio-tech/procedural-3d-react";
@@ -86,6 +90,14 @@ export interface FormRendererProps {
 	readonly className?: string;
 }
 
+export interface FormEditSurfaceProps {
+	readonly spec: FormSpec;
+	readonly onChange: (spec: FormSpec) => void;
+	readonly selectedIds?: readonly string[];
+	readonly onSelectionChange?: (selectedIds: readonly string[]) => void;
+	readonly className?: string;
+}
+
 export interface FormBuilderProps {
 	readonly spec: FormSpec;
 	readonly onChange: (spec: FormSpec) => void;
@@ -129,6 +141,392 @@ export function defaultFormSpec(id = "default"): FormSpec {
 	};
 }
 
+function FormBooleanToggle({
+	id,
+	pressed,
+	onPressedChange,
+	text,
+}: {
+	readonly id?: string;
+	readonly pressed: boolean;
+	onPressedChange: (pressed: boolean) => void;
+	readonly text?: string;
+}): React.ReactElement {
+	return <Toggle id={id} icon="check" text={text ?? (pressed ? "Yes" : "No")} pressed={pressed} onPressedChange={onPressedChange} />;
+}
+
+function FormMultiSelectControl({
+	id,
+	options,
+	value,
+	onValue,
+}: {
+	readonly id: string;
+	readonly options: readonly FormSelectOption[];
+	readonly value: FormValue;
+	onValue: (next: FormValue) => void;
+}): React.ReactElement {
+	const selected = Array.isArray(value) ? value : [];
+	return (
+		<div className="flex flex-wrap gap-single">
+			{options.map((option) => {
+				const active = selected.includes(option.value);
+				return (
+					<Toggle
+						key={option.value}
+						id={`${id}-${option.value}`}
+						icon="hash"
+						text={option.label}
+						pressed={active}
+						onPressedChange={(pressed) => {
+							const current = [...selected];
+							onValue(pressed ? [...current, option.value] : current.filter((entry) => entry !== option.value));
+						}}
+					/>
+				);
+			})}
+		</div>
+	);
+}
+
+function patchStepInSpec(spec: FormSpec, stepId: string, patch: Partial<FormStep>): FormSpec {
+	return {
+		...spec,
+		steps: spec.steps.map((step) => (step.id === stepId ? { ...step, ...patch } : step)),
+	};
+}
+
+function editorGridClass(): string {
+	return "grid gap-single sm:grid-cols-2 lg:grid-cols-3";
+}
+
+function EditorMetaField({
+	label,
+	children,
+	className,
+}: {
+	readonly label: string;
+	readonly children: React.ReactNode;
+	readonly className?: string;
+}): React.ReactElement {
+	return (
+		<label className={cn("flex flex-col gap-half text-xs", className)}>
+			<span className="font-medium text-muted-foreground">{label}</span>
+			{children}
+		</label>
+	);
+}
+
+function FormSelectOptionsEditor({
+	options,
+	onChange,
+}: {
+	readonly options: readonly FormSelectOption[];
+	onChange: (options: FormSelectOption[]) => void;
+}): React.ReactElement {
+	return (
+		<div className="flex flex-col gap-single">
+			<div className="flex items-center justify-between gap-single">
+				<span className="text-xs font-medium text-muted-foreground">Options</span>
+				<Button
+					icon="plus"
+					text="Add Option"
+					onClick={() => onChange([...options, { value: createFormId("opt"), label: "New Option" }])}
+				/>
+			</div>
+			{options.length === 0 ? <p className="text-xs text-muted-foreground">No options yet.</p> : null}
+			{options.map((option, index) => (
+				<div key={`${option.value}-${index}`} className="grid gap-single rounded-md border border-border p-single sm:grid-cols-[1fr_1fr_auto]">
+					<EditorMetaField label="Value">
+						<Input
+							value={option.value}
+							onChange={(event) => {
+								const next = [...options];
+								next[index] = { ...option, value: event.target.value };
+								onChange(next);
+							}}
+						/>
+					</EditorMetaField>
+					<EditorMetaField label="Label">
+						<Input
+							value={option.label}
+							onChange={(event) => {
+								const next = [...options];
+								next[index] = { ...option, label: event.target.value };
+								onChange(next);
+							}}
+						/>
+					</EditorMetaField>
+					<div className="flex items-end">
+						<Button
+							icon="trash-2"
+							text="Remove"
+							disabled={options.length <= 1}
+							onClick={() => onChange(options.filter((_, entryIndex) => entryIndex !== index))}
+						/>
+					</div>
+				</div>
+			))}
+		</div>
+	);
+}
+
+function FormVectorFieldsEditor({
+	fields,
+	onChange,
+}: {
+	readonly fields: readonly FormVectorField[];
+	onChange: (fields: FormVectorField[]) => void;
+}): React.ReactElement {
+	return (
+		<div className="flex flex-col gap-single">
+			<div className="flex items-center justify-between gap-single">
+				<span className="text-xs font-medium text-muted-foreground">Vector Fields</span>
+				<Button icon="plus" text="Add Field" onClick={() => onChange([...fields, { key: createFormId("axis"), label: "Axis", value: 0 }])} />
+			</div>
+			{fields.map((field, index) => (
+				<div key={`${field.key}-${index}`} className="grid gap-single rounded-md border border-border p-single sm:grid-cols-[1fr_1fr_1fr_auto]">
+					<EditorMetaField label="Key">
+						<Input
+							value={field.key}
+							onChange={(event) => {
+								const next = [...fields];
+								next[index] = { ...field, key: event.target.value };
+								onChange(next);
+							}}
+						/>
+					</EditorMetaField>
+					<EditorMetaField label="Label">
+						<Input
+							value={field.label ?? ""}
+							onChange={(event) => {
+								const next = [...fields];
+								next[index] = { ...field, label: event.target.value };
+								onChange(next);
+							}}
+						/>
+					</EditorMetaField>
+					<EditorMetaField label="Default">
+						<Input
+							type="number"
+							value={String(field.value ?? 0)}
+							onChange={(event) => {
+								const next = [...fields];
+								next[index] = { ...field, value: Number(event.target.value) };
+								onChange(next);
+							}}
+						/>
+					</EditorMetaField>
+					<div className="flex items-end">
+						<Button icon="trash-2" text="Remove" disabled={fields.length <= 1} onClick={() => onChange(fields.filter((_, entryIndex) => entryIndex !== index))} />
+					</div>
+				</div>
+			))}
+		</div>
+	);
+}
+
+function FormQuestionEditorCard({
+	question,
+	selected,
+	onSelect,
+	onPatch,
+	onPatchParams,
+}: {
+	readonly question: FormQuestion;
+	readonly selected: boolean;
+	onSelect: () => void;
+	onPatch: (patch: Partial<FormQuestion>) => void;
+	onPatchParams: (params: FormValues) => void;
+}): React.ReactElement {
+	const contribution = isExtensionFormQuestion(question) ? questionKindContribution(question) : undefined;
+
+	return (
+		<div
+			className={cn(
+				"flex flex-col gap-medium rounded-md border border-border bg-background p-double transition-shadow",
+				selected && "ring-2 ring-primary border-primary",
+			)}
+			data-slot="form-question-editor-card"
+			onClick={onSelect}
+			onKeyDown={(event) => {
+				if (event.key === "Enter" || event.key === " ") {
+					event.preventDefault();
+					onSelect();
+				}
+			}}
+			role="button"
+			tabIndex={0}
+		>
+			<div className="flex flex-wrap items-center justify-between gap-single">
+				<div className="flex flex-wrap items-center gap-single">
+					<span className="rounded-md bg-muted px-single py-half text-xs font-medium uppercase tracking-wide">{question.kind}</span>
+					<span className="text-xs text-muted-foreground">{question.id}</span>
+				</div>
+				<div className="flex items-center gap-single" onClick={(event) => event.stopPropagation()}>
+					<span className="text-xs text-muted-foreground">Required</span>
+					<FormBooleanToggle pressed={Boolean(question.required)} text="Required" onPressedChange={(pressed) => onPatch({ required: pressed || undefined })} />
+				</div>
+			</div>
+
+			<div className={editorGridClass()} onClick={(event) => event.stopPropagation()}>
+				<EditorMetaField label="Label" className="sm:col-span-2 lg:col-span-3">
+					<Input value={question.label} onChange={(event) => onPatch({ label: event.target.value })} />
+				</EditorMetaField>
+				<EditorMetaField label="Description" className="sm:col-span-2 lg:col-span-3">
+					<Textarea value={question.description ?? ""} onChange={(event) => onPatch({ description: event.target.value || undefined })} />
+				</EditorMetaField>
+			</div>
+
+			<div onClick={(event) => event.stopPropagation()}>
+				{question.kind === "text" || question.kind === "longText" ? (
+					<div className={editorGridClass()}>
+						<EditorMetaField label="Placeholder">
+							<Input value={question.placeholder ?? ""} onChange={(event) => onPatch({ placeholder: event.target.value || undefined })} />
+						</EditorMetaField>
+						<EditorMetaField label="Default">
+							{question.kind === "longText" ? (
+								<Textarea value={String(question.default ?? "")} onChange={(event) => onPatch({ default: event.target.value })} />
+							) : (
+								<Input value={String(question.default ?? "")} onChange={(event) => onPatch({ default: event.target.value })} />
+							)}
+						</EditorMetaField>
+					</div>
+				) : null}
+
+				{question.kind === "number" || question.kind === "slider" ? (
+					<div className={editorGridClass()}>
+						<EditorMetaField label="Min">
+							<Input type="number" value={String(question.min ?? 0)} onChange={(event) => onPatch({ min: Number(event.target.value) })} />
+						</EditorMetaField>
+						<EditorMetaField label="Max">
+							<Input type="number" value={String(question.max ?? 100)} onChange={(event) => onPatch({ max: Number(event.target.value) })} />
+						</EditorMetaField>
+						<EditorMetaField label="Step">
+							<Input type="number" value={String(question.step ?? 1)} onChange={(event) => onPatch({ step: Number(event.target.value) })} />
+						</EditorMetaField>
+						<EditorMetaField label="Default">
+							<Input type="number" value={String(question.default ?? question.min ?? 0)} onChange={(event) => onPatch({ default: Number(event.target.value) })} />
+						</EditorMetaField>
+						{question.kind === "slider" ? (
+							<EditorMetaField label="Unit">
+								<Input value={question.unit ?? ""} onChange={(event) => onPatch({ unit: event.target.value || undefined })} />
+							</EditorMetaField>
+						) : null}
+					</div>
+				) : null}
+
+				{question.kind === "boolean" ? (
+					<EditorMetaField label="Default">
+						<FormBooleanToggle pressed={Boolean(question.default)} onPressedChange={(pressed) => onPatch({ default: pressed })} />
+					</EditorMetaField>
+				) : null}
+
+				{question.kind === "single" || question.kind === "multi" ? (
+					<div className="flex flex-col gap-medium">
+						<FormSelectOptionsEditor options={[...question.options]} onChange={(options) => onPatch({ options })} />
+						{question.kind === "single" ? (
+							<EditorMetaField label="Default">
+								<Select value={String(question.default ?? question.options[0]?.value ?? "")} onValueChange={(value) => onPatch({ default: value })}>
+									<SelectTrigger>
+										<SelectValue placeholder="Default option" />
+									</SelectTrigger>
+									<SelectContent>
+										{question.options.map((option) => (
+											<SelectItem key={option.value} value={option.value}>
+												{option.label}
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
+							</EditorMetaField>
+						) : (
+							<EditorMetaField label="Default selections">
+								<FormMultiSelectControl
+									id={`${question.id}-default`}
+									options={question.options}
+									value={question.default ?? []}
+									onValue={(next) => onPatch({ default: next as string[] })}
+								/>
+							</EditorMetaField>
+						)}
+					</div>
+				) : null}
+
+				{question.kind === "date" || question.kind === "color" ? (
+					<EditorMetaField label="Default">
+						<Input type={question.kind} value={String(question.default ?? "")} onChange={(event) => onPatch({ default: event.target.value })} />
+					</EditorMetaField>
+				) : null}
+
+				{question.kind === "vector" ? (
+					<div className="flex flex-col gap-medium">
+						<div className={editorGridClass()}>
+							<EditorMetaField label="Schema">
+								<Input value={question.schema ?? ""} onChange={(event) => onPatch({ schema: event.target.value || undefined })} />
+							</EditorMetaField>
+							<EditorMetaField label="Step">
+								<Input type="number" value={String(question.step ?? 0.1)} onChange={(event) => onPatch({ step: Number(event.target.value) })} />
+							</EditorMetaField>
+						</div>
+						<FormVectorFieldsEditor fields={[...question.fields]} onChange={(fields) => onPatch({ fields })} />
+					</div>
+				) : null}
+
+				{question.kind === "note" ? (
+					<EditorMetaField label="Note text">
+						<Textarea value={question.text} onChange={(event) => onPatch({ text: event.target.value })} />
+					</EditorMetaField>
+				) : null}
+
+				{question.kind === "image" ? (
+					<EditorMetaField label="Image URL">
+						<Input value={question.src ?? ""} onChange={(event) => onPatch({ src: event.target.value || undefined })} />
+					</EditorMetaField>
+				) : null}
+
+				{question.kind === "file" ? (
+					<EditorMetaField label="Accept">
+						<Input value={question.accept ?? ""} onChange={(event) => onPatch({ accept: event.target.value || undefined })} placeholder=".pdf,.png" />
+					</EditorMetaField>
+				) : null}
+
+				{isExtensionFormQuestion(question) && usesFlow3dQuestionSurface(question, "edit") ? (
+					<div className="mt-medium flex flex-col gap-medium border-t border-border pt-medium">
+						<div className="flex flex-wrap items-center justify-between gap-single">
+							<span className="text-xs font-medium text-muted-foreground">Procedural parameters</span>
+							<span className="text-xs text-muted-foreground">{resolveQuestionFixtureSlug(question) ?? contribution?.edit?.fixtureSlug}</span>
+						</div>
+						<Flow3dQuestionControl
+							question={question}
+							value={question.params ?? (defaultValueForQuestion(question) as FormValues)}
+							onValue={(next) => onPatchParams(next as FormValues)}
+							interactive
+						/>
+					</div>
+				) : null}
+			</div>
+		</div>
+	);
+}
+
+function patchQuestionInSpec(spec: FormSpec, questionId: string, patch: Partial<FormQuestion>): FormSpec {
+	return {
+		...spec,
+		steps: spec.steps.map((step) => ({
+			...step,
+			questions: step.questions.map((question) => (question.id === questionId ? ({ ...question, ...patch } as FormQuestion) : question)),
+		})),
+	};
+}
+
+function usesFlow3dQuestionSurface(question: FormQuestion, surface: "edit" | "try"): boolean {
+	if (!isExtensionFormQuestion(question)) return false;
+	const contribution = questionKindContribution(question);
+	if (surface === "edit") return contribution?.edit?.surface === "flow3d" || contribution?.preview?.surface === "flow3d";
+	return contribution?.preview?.surface === "flow3d";
+}
+
 function Flow3dQuestionControl({
 	question,
 	value,
@@ -167,7 +565,7 @@ function Flow3dQuestionControl({
 					await client.loadFixtureJson(patched);
 					const result = await client.evaluate();
 					if (gen !== evalGenRef.current) return;
-					setPreviewItems(extractChannelPreviewItems(result.outputsJson));
+					setPreviewItems(preferGeometryPreviewItems(extractChannelPreviewItems(result.outputsJson)));
 				} catch (error) {
 					console.log("[DEBUG] forms flow3d preview eval failed", error);
 				}
@@ -195,6 +593,7 @@ function questionControl(
 	value: FormValue,
 	onValue: (next: FormValue) => void,
 	interactive = true,
+	surface: "edit" | "try" = "try",
 ): React.ReactNode {
 	const id = `form-${question.id}`;
 	switch (question.kind) {
@@ -216,17 +615,24 @@ function questionControl(
 			);
 		case "slider":
 			return (
-				<Slider
-					id={id}
-					min={question.min ?? 0}
-					max={question.max ?? 100}
-					step={question.step ?? 1}
-					value={[typeof value === "number" ? value : Number(value ?? 0)]}
-					onValueChange={(values) => onValue(values[0] ?? 0)}
-				/>
+				<div className="flex flex-col gap-single">
+					<Slider
+						id={id}
+						min={question.min ?? 0}
+						max={question.max ?? 100}
+						step={question.step ?? 1}
+						value={[typeof value === "number" ? value : Number(value ?? 0)]}
+						onValueChange={(values) => onValue(values[0] ?? 0)}
+					/>
+					{question.unit ? (
+						<span className="text-xs text-muted-foreground tabular-nums">
+							{typeof value === "number" ? value : Number(value ?? 0)} {question.unit}
+						</span>
+					) : null}
+				</div>
 			);
 		case "boolean":
-			return <Toggle id={id} pressed={Boolean(value)} onPressedChange={(pressed) => onValue(pressed)} />;
+			return <FormBooleanToggle id={id} pressed={Boolean(value)} onPressedChange={(pressed) => onValue(pressed)} />;
 		case "single":
 			return (
 				<Select id={id} value={String(value ?? "")} onValueChange={(next) => onValue(next)}>
@@ -243,25 +649,7 @@ function questionControl(
 				</Select>
 			);
 		case "multi":
-			return (
-				<div className="flex flex-wrap gap-single">
-					{question.options.map((option) => {
-						const selected = Array.isArray(value) ? value.includes(option.value) : false;
-						return (
-							<Toggle
-								key={option.value}
-								pressed={selected}
-								onPressedChange={(pressed) => {
-									const current = Array.isArray(value) ? [...value] : [];
-									onValue(pressed ? [...current, option.value] : current.filter((entry) => entry !== option.value));
-								}}
-							>
-								{option.label}
-							</Toggle>
-						);
-					})}
-				</div>
-			);
+			return <FormMultiSelectControl id={id} options={question.options} value={value} onValue={onValue} />;
 		case "date":
 			return <Input id={id} type="date" value={String(value ?? "")} onChange={(event) => onValue(event.target.value)} />;
 		case "color":
@@ -271,17 +659,18 @@ function questionControl(
 			return (
 				<div className="flex flex-col gap-single">
 					{question.fields.map((field, index) => (
-						<Stepper
-							key={field.key}
-							id={`${id}-${field.key}`}
-							value={numbers[index] ?? 0}
-							step={question.step ?? 0.1}
-							onChange={(next) => {
-								const copy = [...numbers];
-								copy[index] = next;
-								onValue(copy);
-							}}
-						/>
+						<EditorMetaField key={field.key} label={field.label ?? field.key.toUpperCase()}>
+							<Stepper
+								id={`${id}-${field.key}`}
+								value={numbers[index] ?? 0}
+								step={question.step ?? 0.1}
+								onChange={(next) => {
+									const copy = [...numbers];
+									copy[index] = next;
+									onValue(copy);
+								}}
+							/>
+						</EditorMetaField>
 					))}
 				</div>
 			);
@@ -293,8 +682,8 @@ function questionControl(
 		case "file":
 			return <Input id={id} type="file" accept={question.accept} onChange={(event) => onValue(event.target.files?.[0]?.name ?? "")} />;
 		default:
-			if (isExtensionFormQuestion(question) && questionKindContribution(question)?.preview?.surface === "flow3d") {
-				return <Flow3dQuestionControl question={question} value={value} onValue={onValue} interactive={interactive} />;
+			if (usesFlow3dQuestionSurface(question, surface)) {
+				return <Flow3dQuestionControl question={question as FormQuestionExtension} value={value} onValue={onValue} interactive={interactive} />;
 			}
 			return null;
 	}
@@ -405,8 +794,9 @@ export function cancelFormsQuestionPalettePointerDrag(): void {
 
 /** @emoji 🔍 Whether a drag gesture carries a forms question palette payload. */
 export function formsQuestionDragAcceptsTransfer(types: readonly string[]): boolean {
-	if (formsQuestionPalettePointerDragRef.active || formsQuestionPaletteDragRef.active) return true;
-	return types.includes(FORMS_QUESTION_DRAG_MIME);
+	if (formsQuestionPalettePointerDragRef.active) return true;
+	if (types.includes(FORMS_QUESTION_DRAG_MIME)) return true;
+	return Boolean(formsQuestionPaletteDragRef.active && formsReadActiveQuestionPaletteDragEncoded());
 }
 
 /** @emoji 📥 Commits a palette question drop at client coordinates. */
@@ -519,13 +909,12 @@ export function formsQuestionPaletteTreeDragController(
 		onDragStart: ({ sourceItem }) => {
 			if (formsQuestionPalettePointerDragRef.active) return;
 			formsQuestionPaletteDropCommittedRef.current = false;
-			formsQuestionPaletteDragRef.active = true;
 			const payload = readEncoded(dragDataByItemId.get(sourceItem.id));
-			if (payload) {
-				formsQuestionPaletteDragEncodedRef.current = payload;
-				window.dispatchEvent(new CustomEvent("forms-question-drag-session", { detail: { encoded: payload } }));
-				formsStartQuestionPaletteDragPreviewLoop();
-			}
+			if (!payload) return;
+			formsQuestionPaletteDragRef.active = true;
+			formsQuestionPaletteDragEncodedRef.current = payload;
+			window.dispatchEvent(new CustomEvent("forms-question-drag-session", { detail: { encoded: payload } }));
+			formsStartQuestionPaletteDragPreviewLoop();
 		},
 		onDragEnd: () => {
 			if (formsQuestionPalettePointerDragRef.active) return;
@@ -576,7 +965,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({ spec, values, onChan
 			<div className={cn("flex flex-col gap-medium", !interactive && "pointer-events-none opacity-90")}>
 				{runtime.getVisibleQuestions().map((question) => (
 					<Field key={question.id} id={question.id} label={question.label} description={question.description} required={question.required} error={errorById[question.id]}>
-						{questionControl(question, runtime.getValues()[question.id] ?? null, (next) => setValue(question.id, next), interactive)}
+						{questionControl(question, runtime.getValues()[question.id] ?? null, (next) => setValue(question.id, next), interactive, "try")}
 					</Field>
 				))}
 			</div>
@@ -614,13 +1003,53 @@ export const FormRenderer: React.FC<FormRendererProps> = ({ spec, values, onChan
 };
 // #endregion 🖼️FormRenderer
 
+// #region ✏️FormEditSurface
+/** @emoji ✏️ Structural form editor with inline label, option, and range editing. */
+export const FormEditSurface: React.FC<FormEditSurfaceProps> = ({ spec, onChange, selectedIds = [], onSelectionChange, className }) => {
+	const patchQuestion = (questionId: string, patch: Partial<FormQuestion>) => {
+		onChange(patchQuestionInSpec(spec, questionId, patch));
+	};
+
+	return (
+		<div className={cn("flex flex-col gap-double p-double min-w-0 overflow-auto", className)} data-slot="form-edit-surface">
+			<div className="flex flex-col gap-single border-b border-border pb-medium">
+				<span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Form</span>
+				<Input value={spec.title ?? spec.id} onChange={(event) => onChange({ ...spec, title: event.target.value || undefined })} />
+			</div>
+			{spec.steps.map((step) => (
+				<section key={step.id} className="flex flex-col gap-medium">
+					<div className="flex flex-col gap-single rounded-md border border-border bg-muted/20 p-double">
+						<span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Step</span>
+						<Input value={step.title} onChange={(event) => onChange(patchStepInSpec(spec, step.id, { title: event.target.value }))} />
+						<Textarea
+							value={step.description ?? ""}
+							placeholder="Step description"
+							onChange={(event) => onChange(patchStepInSpec(spec, step.id, { description: event.target.value || undefined }))}
+						/>
+					</div>
+					{step.questions.map((question) => (
+						<FormQuestionEditorCard
+							key={question.id}
+							question={question}
+							selected={selectedIds.includes(question.id)}
+							onSelect={() => onSelectionChange?.([question.id])}
+							onPatch={(patch) => patchQuestion(question.id, patch)}
+							onPatchParams={(params) => patchQuestion(question.id, { params } as Partial<FormQuestion>)}
+						/>
+					))}
+				</section>
+			))}
+		</div>
+	);
+};
+// #endregion ✏️FormEditSurface
+
 // #region 🛠️FormBuilder
 /** @emoji 🛠️ Embeddable form builder canvas; playground hosts use side-panel hierarchy, catalogue, and inspection tabs. */
-export const FormBuilder: React.FC<FormBuilderProps> = ({ spec, onChange, className }) => {
-	void onChange;
+export const FormBuilder: React.FC<FormBuilderProps> = ({ spec, onChange, selectedIds, onSelectionChange, className }) => {
 	return (
 		<div className={cn("min-h-0 min-w-0", className)} data-slot="form-builder">
-			<FormRenderer spec={spec} interactive={false} />
+			<FormEditSurface spec={spec} onChange={onChange} selectedIds={selectedIds} onSelectionChange={onSelectionChange} />
 		</div>
 	);
 };

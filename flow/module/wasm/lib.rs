@@ -88,6 +88,23 @@ pub fn evaluate_json(registry: &Registry, kind_id: &str, input_json: &str) -> St
         Err(err) => serde_json::json!({ "error": err.to_string() }).to_string(),
     }
 }
+
+/// 🧮 Evaluates a neural tree as a function and returns the out dictionary JSON or `{ "error": ... }`.
+pub fn evaluate_function_json(registry: &Registry, tree_json: &str, in_dict_json: &str) -> String {
+    let tree: neural_engine::Tree = match serde_json::from_str(tree_json) {
+        Ok(tree) => tree,
+        Err(err) => return serde_json::json!({ "error": err.to_string() }).to_string(),
+    };
+    let in_dict: Dictionary = match serde_json::from_str(in_dict_json) {
+        Ok(dict) => dict,
+        Err(err) => return serde_json::json!({ "error": err.to_string() }).to_string(),
+    };
+    let evaluator = neural_engine::Evaluator::new(registry);
+    match evaluator.evaluate_function(&tree, &in_dict) {
+        Ok(out) => serde_json::to_string(&out).unwrap_or_else(|_| "{}".into()),
+        Err(err) => serde_json::json!({ "error": err.to_string() }).to_string(),
+    }
+}
 // #endregion 🔖Evaluate
 
 // #region 🔖Command

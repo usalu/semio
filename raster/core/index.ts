@@ -150,9 +150,14 @@ export type RasterEditOp =
 	| { readonly op: "setLayerOpacity"; readonly layerId: string; readonly opacity: number }
 	| { readonly op: "setLayerBlendMode"; readonly layerId: string; readonly blendMode: RasterBlendMode }
 	| { readonly op: "setLayerName"; readonly layerId: string; readonly name: string }
-	| { readonly op: "addPixelLayer"; readonly parentId?: string; readonly layer: RasterPixelLayer }
-	| { readonly op: "addGroupLayer"; readonly parentId?: string; readonly layer: RasterGroupLayer }
-	| { readonly op: "addAdjustmentLayer"; readonly parentId?: string; readonly layer: RasterAdjustmentLayer }
+	| { readonly op: "addPixelLayer"; readonly parentId?: string; readonly index?: number; readonly layer: RasterPixelLayer }
+	| { readonly op: "addGroupLayer"; readonly parentId?: string; readonly index?: number; readonly layer: RasterGroupLayer }
+	| { readonly op: "addAdjustmentLayer"; readonly parentId?: string; readonly index?: number; readonly layer: RasterAdjustmentLayer }
+	| { readonly op: "duplicateLayer"; readonly layerId: string }
+	| { readonly op: "setLayerMask"; readonly layerId: string; readonly mask: RasterLayerMask | undefined }
+	| { readonly op: "setLayerSize"; readonly layerId: string; readonly width?: number; readonly height?: number }
+	| { readonly op: "setAdjustmentKind"; readonly layerId: string; readonly adjustmentKind: RasterAdjustmentKind }
+	| { readonly op: "appendLayerFilter"; readonly layerId: string; readonly filter: RasterFilterEntry }
 	| { readonly op: "removeLayer"; readonly layerId: string }
 	| { readonly op: "reorderLayer"; readonly layerId: string; readonly parentId?: string; readonly index: number }
 	| { readonly op: "setActiveTool"; readonly tool: RasterToolId }
@@ -172,6 +177,74 @@ export function createRasterId(prefix = "layer"): string {
 /** @emoji 📐 Default infinite-canvas transform at origin. */
 export function defaultRasterTransform(): RasterTransform {
 	return { x: 0, y: 0, scaleX: 1, scaleY: 1, rotation: 0 };
+}
+
+/** @emoji 📍 Parent group id and sibling index for a layer in the document tree. */
+export interface RasterLayerLocation {
+	readonly parentId?: string;
+	readonly index: number;
+}
+
+/** @emoji 🆕 Default pixel layer sized for painting. */
+export function createRasterPixelLayer(name = "Layer", width = 512, height = 512): RasterPixelLayer {
+	const id = createRasterId("layer");
+	return {
+		kind: "pixel",
+		id,
+		name,
+		visible: true,
+		opacity: 1,
+		blendMode: "normal",
+		transform: defaultRasterTransform(),
+		width,
+		height,
+	};
+}
+
+/** @emoji 📁 Empty group layer. */
+export function createRasterGroupLayer(name = "Group"): RasterGroupLayer {
+	return {
+		kind: "group",
+		id: createRasterId("group"),
+		name,
+		visible: true,
+		opacity: 1,
+		blendMode: "normal",
+		transform: defaultRasterTransform(),
+		children: [],
+	};
+}
+
+/** @emoji 🎚️ Default brightness/contrast adjustment layer. */
+export function createRasterAdjustmentLayer(name = "Adjustment"): RasterAdjustmentLayer {
+	return {
+		kind: "adjustment",
+		id: createRasterId("adjust"),
+		name,
+		visible: true,
+		opacity: 1,
+		blendMode: "normal",
+		transform: defaultRasterTransform(),
+		adjustmentKind: "brightnessContrast",
+		params: { brightness: 0, contrast: 0 },
+	};
+}
+
+/** @emoji 📋 Deep-clones a layer subtree with fresh ids. */
+export function cloneRasterLayerNode(node: RasterLayerNode, nameSuffix = " copy"): RasterLayerNode {
+	const id = createRasterId(node.kind === "group" ? "group" : node.kind === "adjustment" ? "adjust" : "layer");
+	if (node.kind === "group") {
+		return {
+			...node,
+			id,
+			name: `${node.name}${nameSuffix}`,
+			children: node.children.map((child) => cloneRasterLayerNode(child, "")),
+		};
+	}
+	if (node.kind === "adjustment") {
+		return { ...node, id, name: `${node.name}${nameSuffix}` };
+	}
+	return { ...node, id, name: `${node.name}${nameSuffix}` };
 }
 
 /** @emoji 🖼️ Empty raster document with one paintable layer. */
@@ -393,6 +466,52 @@ export function rasterKindHoversEqual(a: RasterKindHover | null, b: RasterKindHo
 
 // #region 🌳TreeIds
 export const RASTER_PLAY_TREE_PREFIX = "raster-play-layers";
+
+/** @emoji 🔍 Locates a layer's parent group id and sibling index. */
+export function findRasterLayerLocation(doc: RasterDocument, layerId: string): RasterLayerLocation | null {
+	const search = (layers: readonly RasterLayerNode[], parentId?: string): RasterLayerLocation | null => {
+		for (let index = 0; index < layers.length; index += 1) {
+			const layer = layers[index]!;
+			if (layer.id === layerId) return { parentId, index };
+			if (layer.kind === "group") {
+				const nested = search(layer.children, layer.id);
+				if (nested) return nested;
+			}
+		}
+		return null;
+	};
+	return search(doc.layers);
+}
+
+/** @emoji 🌳 Parses a hierarchy tree row id back to a layer id. */
+export function rasterPlayLayerIdFromTreeRowId(rowId: string): string | null {
+	const layerMatch = rowId.match(/^raster-play-layers\.(layer|group|adjustment)\.(.+)$/);
+	return layerMatch?.[2] ?? null;
+}
+
+/** @emoji 📍 Resolves a tree drop gesture into a layer insert location. */
+export function resolveRasterPlayReorderTarget(
+	doc: RasterDocument,
+	targetRowId: string,
+	dropPosition: "before" | "after" | "inside",
+): RasterLayerLocation | null {
+	if (targetRowId.includes(".mask.")) return null;
+	const layerId = rasterPlayLayerIdFromTreeRowId(targetRowId);
+	if (!layerId) {
+		if (dropPosition === "inside") return { index: doc.layers.length };
+		return null;
+	}
+	const layer = findRasterLayer(doc, layerId);
+	if (!layer) return null;
+	if (dropPosition === "inside" && layer.kind === "group") {
+		return { parentId: layer.id, index: layer.children.length };
+	}
+	const location = findRasterLayerLocation(doc, layerId);
+	if (!location) return null;
+	if (dropPosition === "before") return location;
+	if (dropPosition === "after") return { parentId: location.parentId, index: location.index + 1 };
+	return { parentId: location.parentId, index: location.index + 1 };
+}
 
 /** @emoji 🌳 Stable hierarchy tree row id for a layer node. */
 export function rasterPlayLayersTreeRowId(layer: RasterLayerNode): string {
@@ -699,13 +818,54 @@ export function applyRasterEditOp(doc: RasterDocument, edit: RasterEditOp): Rast
 			return { ...doc, layers: updateLayerInTree(doc.layers, edit.layerId, (layer) => ({ ...layer, blendMode: edit.blendMode })) };
 		case "setLayerName":
 			return { ...doc, layers: updateLayerInTree(doc.layers, edit.layerId, (layer) => ({ ...layer, name: edit.name })) };
+		case "setLayerMask":
+			return { ...doc, layers: updateLayerInTree(doc.layers, edit.layerId, (layer) => ({ ...layer, mask: edit.mask })) };
+		case "setLayerSize":
+			return {
+				...doc,
+				layers: updateLayerInTree(doc.layers, edit.layerId, (layer) =>
+					layer.kind === "pixel"
+						? {
+								...layer,
+								width: typeof edit.width === "number" ? edit.width : layer.width,
+								height: typeof edit.height === "number" ? edit.height : layer.height,
+							}
+						: layer,
+				),
+			};
+		case "setAdjustmentKind":
+			return {
+				...doc,
+				layers: updateLayerInTree(doc.layers, edit.layerId, (layer) =>
+					layer.kind === "adjustment" ? { ...layer, adjustmentKind: edit.adjustmentKind } : layer,
+				),
+			};
+		case "appendLayerFilter":
+			return {
+				...doc,
+				layers: updateLayerInTree(doc.layers, edit.layerId, (layer) => {
+					if (layer.kind !== "pixel") return layer;
+					const filters = [...(layer.filters ?? []), edit.filter];
+					return { ...layer, filters };
+				}),
+			};
 		case "addPixelLayer":
 		case "addGroupLayer":
 		case "addAdjustmentLayer":
 			return {
 				...doc,
-				layers: insertLayer(doc.layers, edit.parentId, Number.MAX_SAFE_INTEGER, edit.layer),
+				layers: insertLayer(doc.layers, edit.parentId, edit.index ?? Number.MAX_SAFE_INTEGER, edit.layer),
 			};
+		case "duplicateLayer": {
+			const layer = findRasterLayer(doc, edit.layerId);
+			if (!layer) return doc;
+			const location = findRasterLayerLocation(doc, edit.layerId);
+			const clone = cloneRasterLayerNode(layer);
+			return {
+				...doc,
+				layers: insertLayer(doc.layers, location?.parentId, (location?.index ?? doc.layers.length) + 1, clone),
+			};
+		}
 		case "removeLayer":
 			return { ...doc, layers: removeLayerFromTree(doc.layers, edit.layerId) };
 		case "reorderLayer": {
@@ -778,6 +938,28 @@ if (import.meta.vitest) {
 			const layerId = doc.layers[0]!.id;
 			const next = applyRasterEditOp(doc, { op: "setLayerVisible", layerId, visible: false });
 			expect(next.layers[0]?.visible).toBe(false);
+		});
+
+		it("reorders layers", () => {
+			const doc = parseRasterDocument({
+				schema: "raster.document/v1",
+				id: "t",
+				camera: { x: 0, y: 0, zoom: 1 },
+				layers: [
+					{ kind: "pixel", id: "a", name: "A", visible: true, opacity: 1, blendMode: "normal", transform: defaultRasterTransform() },
+					{ kind: "pixel", id: "b", name: "B", visible: true, opacity: 1, blendMode: "normal", transform: defaultRasterTransform() },
+				],
+			});
+			const next = applyRasterEditOp(doc, { op: "reorderLayer", layerId: "a", index: 1 });
+			expect(next.layers.map((layer) => layer.id)).toEqual(["b", "a"]);
+		});
+
+		it("duplicates a layer", () => {
+			const doc = defaultRasterDocument();
+			const layerId = doc.layers[0]!.id;
+			const next = applyRasterEditOp(doc, { op: "duplicateLayer", layerId });
+			expect(next.layers).toHaveLength(2);
+			expect(next.layers[1]?.name).toContain("copy");
 		});
 	});
 

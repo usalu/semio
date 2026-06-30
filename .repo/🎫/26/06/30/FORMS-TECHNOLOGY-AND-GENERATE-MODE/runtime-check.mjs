@@ -20,7 +20,7 @@ registerFormsFlowFixtureResolver("hexagonal-mushroom-column", () => flowJson);
 await formsExtensionHost.activateDefaults();
 
 const spec = parseFormSpec(JSON.parse(fixtureJson));
-const geometry = spec.steps[0]?.questions.find((question) => question.kind === "buildingComponent");
+const geometry = spec.steps.flatMap((step) => step.questions).find((question) => question.kind === "buildingComponent");
 if (!geometry) throw new Error("buildingComponent question missing");
 
 const defaults = defaultValueForQuestion(geometry);

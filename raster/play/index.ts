@@ -21,36 +21,47 @@ import {
 	registerWindowBody,
 	FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
 	FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+	FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
 	type AppTools,
 	type PlaygroundFixtureCatalog,
 	type PlaygroundFixtureHost,
 	type ToolLeaf,
 	toolCollection,
+	uiDeclarativeSectionsToTree,
 	type UiNode,
 	type UiSectionNode,
+	type UiTreeContextMenuItem,
 	type UiTreeItemNode,
 	type UiTreeNode,
 } from "@semio-tech/framework-playground-core";
-import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
+import { bootstrapElementsSurfaceChromeDocument, type TreeDataItem, type TreeDragAndDropController, type TreeDropPosition } from "@semio-tech/ui-react";
 import {
 	applyRasterEditOp,
+	createRasterAdjustmentLayer,
+	createRasterGroupLayer,
+	createRasterPixelLayer,
 	defaultRasterDocument,
+	findRasterLayer,
 	flattenRasterLayers,
 	parseRasterDocument,
 	rasterDocumentFromJson,
 	rasterDocumentToExportJson,
 	rasterPlayBlendModeTreeRowId,
 	rasterPlayHoverPayloadFromTreeRowId,
+	rasterPlayLayerIdFromTreeRowId,
 	rasterPlayLayersTreeHighlightedIds,
 	rasterPlayLayersTreeRowId,
 	rasterPlayMaskTreeRowId,
+	resolveRasterPlayReorderTarget,
 	type RasterBlendMode,
 	type RasterDocument,
 	type RasterHoverPayload,
 	type RasterKindHover,
 	type RasterLayerNode,
 	type RasterToolId,
+	RASTER_ADJUSTMENT_KINDS,
 	RASTER_BLEND_MODES,
+	RASTER_FILTER_KINDS,
 } from "@semio-tech/raster-core";
 import { RASTER_PLAY_FIXTURE_DEFAULT_ID, resolveRasterPlayFixtureSlug } from "./fixture-slugs.ts";
 
@@ -65,8 +76,13 @@ export const RASTER_PLAY_BODY_KEY_NAVIGATOR = "raster.play.navigator";
 export const RASTER_PLAY_WINDOW_KIND_COMPOSITE = "raster-composite";
 export const RASTER_PLAY_WINDOW_KIND_NAVIGATOR = "raster-navigator";
 export const RASTER_PLAY_LAYERS_TAB_ID = "framework.panel.hierarchy";
+export const RASTER_PLAY_CATALOGUE_TAB_ID = "framework.panel.catalogue";
 export const RASTER_PLAY_MASKS_TAB_ID = "raster.panel.masks";
 export const RASTER_PLAY_PROPERTIES_TAB_ID = "framework.panel.inspection";
+
+export const RASTER_LAYER_KIND_DRAG_MIME = "application/x-semio-raster-layer-kind";
+
+type RasterCatalogueLayerKind = "pixel" | "group" | "adjustment";
 
 export const RASTER_PLAY_LAYOUT = createDefaultLayout(
 	[RASTER_PLAY_WINDOW_KIND_COMPOSITE, RASTER_PLAY_WINDOW_KIND_NAVIGATOR],
@@ -124,34 +140,105 @@ function rasterPlayHierarchyHoverHandlers(
 	};
 }
 
+export interface RasterPlayHierarchyBuildOptions {
+	readonly onToggleVisible?: (layerId: string) => void;
+	readonly onDeleteLayer?: (layerId: string) => void;
+	readonly onDuplicateLayer?: (layerId: string) => void;
+	readonly onAddMask?: (layerId: string) => void;
+}
+
+function rasterPlayLayerChrome(
+	layer: RasterLayerNode,
+	options?: RasterPlayHierarchyBuildOptions,
+): Pick<UiTreeItemNode, "isHidden" | "actions" | "contextMenu"> {
+	const contextMenu: UiTreeContextMenuItem[] = [];
+	if (options?.onToggleVisible) {
+		contextMenu.push({
+			id: "visible",
+			label: layer.visible ? "Hide" : "Show",
+			icon: layer.visible ? "eye-off" : "eye",
+			onSelect: () => options.onToggleVisible!(layer.id),
+		});
+	}
+	if (options?.onDuplicateLayer) {
+		contextMenu.push({
+			id: "duplicate",
+			label: "Duplicate",
+			icon: "copy",
+			onSelect: () => options.onDuplicateLayer!(layer.id),
+		});
+	}
+	if (layer.kind === "pixel" && !layer.mask?.enabled && options?.onAddMask) {
+		contextMenu.push({
+			id: "add-mask",
+			label: "Add Mask",
+			icon: "square-dashed",
+			onSelect: () => options.onAddMask!(layer.id),
+		});
+	}
+	if (options?.onDeleteLayer) {
+		contextMenu.push({
+			id: "delete",
+			label: "Delete",
+			icon: "trash-2",
+			onSelect: () => options.onDeleteLayer!(layer.id),
+		});
+	}
+	return {
+		isHidden: !layer.visible,
+		actions: options?.onToggleVisible
+			? [
+					{
+						id: "visible",
+						icon: layer.visible ? "eye" : "eye-off",
+						title: layer.visible ? "Hide" : "Show",
+						onClick: () => options.onToggleVisible!(layer.id),
+						revealOnHover: layer.visible,
+					},
+				]
+			: undefined,
+		contextMenu: contextMenu.length > 0 ? contextMenu : undefined,
+	};
+}
+
 function rasterPlayLayerTreeItem(
 	doc: RasterDocument,
 	layer: RasterLayerNode,
-	selectedIds: readonly string[],
+	options?: RasterPlayHierarchyBuildOptions,
 	hoverSink?: (payload: RasterHoverPayload) => void,
 ): UiTreeItemNode {
 	const rowId = rasterPlayLayersTreeRowId(layer);
+	const nestedItems =
+		layer.kind === "group"
+			? layer.children.map((child) => rasterPlayLayerTreeItem(doc, child, options, hoverSink))
+			: layer.mask?.enabled
+				? [
+						{
+							id: rasterPlayMaskTreeRowId(layer.id),
+							label: "Mask",
+							icon: "square-dashed",
+							command: rasterPlayCmd("setSelection", { ids: [layer.id], focus: "mask" }),
+							...rasterPlayHierarchyHoverHandlers(hoverSink, doc, rasterPlayMaskTreeRowId(layer.id)),
+						},
+					]
+				: undefined;
 	return {
 		id: rowId,
 		label: layer.name,
+		description: layer.kind === "adjustment" ? layer.adjustmentKind : layer.blendMode,
 		icon: layer.kind === "group" ? "folder" : layer.kind === "adjustment" ? "sliders-horizontal" : "image",
+		defaultOpen: layer.kind === "group",
+		draggable: true,
+		dragData: { "application/x-semio-raster-layer-id": layer.id },
 		command: rasterPlayCmd("setSelection", { ids: [layer.id] }),
-		children:
-			layer.kind === "group"
-				? layer.children.map((child) => rasterPlayLayerTreeItem(doc, child, selectedIds, hoverSink))
-				: layer.mask?.enabled
-					? [
-							{
-								id: rasterPlayMaskTreeRowId(layer.id),
-								label: "Mask",
-								icon: "square-dashed",
-								command: rasterPlayCmd("setSelection", { ids: [layer.id], focus: "mask" }),
-								...rasterPlayHierarchyHoverHandlers(hoverSink, doc, rasterPlayMaskTreeRowId(layer.id)),
-							},
-						]
-					: undefined,
+		items: nestedItems,
+		...rasterPlayLayerChrome(layer, options),
 		...rasterPlayHierarchyHoverHandlers(hoverSink, doc, rowId),
 	};
+}
+
+function rasterPlayCatalogueLayerDragData(kind: RasterCatalogueLayerKind): Record<string, string> {
+	return { [RASTER_LAYER_KIND_DRAG_MIME]: JSON.stringify({ kind }) };
 }
 
 export function buildRasterPlayLayersTree(
@@ -160,22 +247,45 @@ export function buildRasterPlayLayersTree(
 	hoveredId: string | null,
 	kindHover: RasterKindHover | null,
 	hoverSink?: (payload: RasterHoverPayload) => void,
+	options?: RasterPlayHierarchyBuildOptions,
 ): UiTreeNode {
 	const highlightedIds = rasterPlayLayersTreeHighlightedIds(doc, hoveredId, kindHover);
 	const selectedTreeIds = selectedIds
-		.map((id) => flattenRasterLayers(doc.layers).find((layer) => layer.id === id))
+		.map((id) => findRasterLayer(doc, id))
 		.filter((layer): layer is RasterLayerNode => Boolean(layer))
 		.map((layer) => rasterPlayLayersTreeRowId(layer));
+	const toolbarItems: UiTreeItemNode[] = [
+		{
+			id: "raster-play-layers.add.pixel",
+			label: "Add Pixel Layer",
+			icon: "plus",
+			command: rasterPlayCmd("addLayer", { kind: "pixel" }),
+		},
+		{
+			id: "raster-play-layers.add.group",
+			label: "Add Group",
+			icon: "folder-plus",
+			command: rasterPlayCmd("addLayer", { kind: "group" }),
+		},
+		{
+			id: "raster-play-layers.add.adjustment",
+			label: "Add Adjustment",
+			icon: "sliders-horizontal",
+			command: rasterPlayCmd("addLayer", { kind: "adjustment" }),
+		},
+	];
+	const layerItems =
+		doc.layers.length > 0
+			? doc.layers.map((layer) => rasterPlayLayerTreeItem(doc, layer, options, hoverSink))
+			: [{ id: "raster-play-layers.empty", label: "Drop layers here", icon: "image" as const }];
 	return {
 		type: "tree",
 		sections: [
 			{
 				id: "raster-play-layers",
 				label: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
-				items:
-					doc.layers.length > 0
-						? doc.layers.map((layer) => rasterPlayLayerTreeItem(doc, layer, selectedIds, hoverSink))
-						: [{ id: "raster-play-layers.empty", label: "No layers", icon: "image" as const }],
+				defaultOpen: true,
+				items: [...toolbarItems, ...layerItems],
 			},
 		],
 		selectedIds: selectedTreeIds,
@@ -215,37 +325,248 @@ export function buildRasterPlayMasksTree(
 	};
 }
 
-export function buildRasterPlayPropertiesTree(doc: RasterDocument, selectedIds: readonly string[]): UiTreeNode {
-	const layer = selectedIds[0] ? flattenRasterLayers(doc.layers).find((row) => row.id === selectedIds[0]) : undefined;
-	const items: UiTreeItemNode[] = layer
-		? [
-				{ id: "raster-play-prop.name", label: `Name: ${layer.name}`, icon: "tag" },
-				{ id: "raster-play-prop.opacity", label: `Opacity: ${Math.round(layer.opacity * 100)}%`, icon: "droplet" },
-				{ id: "raster-play-prop.blend", label: `Blend: ${layer.blendMode}`, icon: "layers" },
-			]
-		: [{ id: "raster-play-prop.empty", label: "Select a layer", icon: "mouse-pointer-2" }];
-	return {
-		type: "tree",
-		sections: [{ id: "raster-play-properties", label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, items }],
-	};
+export function buildRasterPlayInspectorTree(doc: RasterDocument, selectedIds: readonly string[]): UiNode {
+	const layerId = selectedIds[0];
+	const layer = layerId ? findRasterLayer(doc, layerId) : undefined;
+	if (!layer) {
+		return uiDeclarativeSectionsToTree([
+			{
+				type: "section",
+				id: "raster-play-inspector.empty",
+				label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+				children: [{ type: "text", value: "Select a layer in the hierarchy." }],
+			},
+		]);
+	}
+	const children: UiSectionNode["children"] = [
+		{
+			type: "field",
+			id: "raster-play-inspector.name",
+			label: "Name",
+			child: {
+				type: "input",
+				id: "raster-play-inspector.name.input",
+				inputKind: "text",
+				value: layer.name,
+				onChange: rasterPlayCmd("patchLayer", { layerId: layer.id, field: "name" }),
+			},
+		},
+		{
+			type: "field",
+			id: "raster-play-inspector.opacity",
+			label: "Opacity",
+			child: {
+				type: "slider",
+				id: "raster-play-inspector.opacity.slider",
+				min: 0,
+				max: 1,
+				step: 0.01,
+				value: layer.opacity,
+				onChange: rasterPlayCmd("patchLayer", { layerId: layer.id, field: "opacity" }),
+			},
+		},
+		{
+			type: "field",
+			id: "raster-play-inspector.blend",
+			label: "Blend Mode",
+			child: {
+				type: "select",
+				id: "raster-play-inspector.blend.select",
+				value: layer.blendMode,
+				items: RASTER_BLEND_MODES.map((mode) => ({ id: mode, value: mode, label: mode })),
+				onChange: rasterPlayCmd("patchLayer", { layerId: layer.id, field: "blendMode" }),
+			},
+		},
+		{
+			type: "field",
+			id: "raster-play-inspector.visible",
+			label: "Visible",
+			child: {
+				type: "toggle",
+				id: "raster-play-inspector.visible.toggle",
+				pressed: layer.visible,
+				onChange: rasterPlayCmd("patchLayer", { layerId: layer.id, field: "visible" }),
+			},
+		},
+	];
+	if (layer.kind === "pixel") {
+		children.push(
+			{
+				type: "field",
+				id: "raster-play-inspector.width",
+				label: "Width",
+				child: {
+					type: "input",
+					id: "raster-play-inspector.width.input",
+					inputKind: "number",
+					value: String(layer.width ?? 512),
+					onChange: rasterPlayCmd("patchLayer", { layerId: layer.id, field: "width" }),
+				},
+			},
+			{
+				type: "field",
+				id: "raster-play-inspector.height",
+				label: "Height",
+				child: {
+					type: "input",
+					id: "raster-play-inspector.height.input",
+					inputKind: "number",
+					value: String(layer.height ?? 512),
+					onChange: rasterPlayCmd("patchLayer", { layerId: layer.id, field: "height" }),
+				},
+			},
+		);
+	}
+	if (layer.kind === "adjustment") {
+		children.push({
+			type: "field",
+			id: "raster-play-inspector.adjustmentKind",
+			label: "Adjustment",
+			child: {
+				type: "select",
+				id: "raster-play-inspector.adjustmentKind.select",
+				value: layer.adjustmentKind,
+				items: RASTER_ADJUSTMENT_KINDS.map((kind) => ({ id: kind, value: kind, label: kind })),
+				onChange: rasterPlayCmd("patchLayer", { layerId: layer.id, field: "adjustmentKind" }),
+			},
+		});
+	}
+	children.push(
+		{ type: "button", id: "raster-play-inspector.duplicate", label: "Duplicate Layer", command: rasterPlayCmd("duplicateLayer", { layerId: layer.id }) },
+		{ type: "button", id: "raster-play-inspector.delete", label: "Delete Layer", command: rasterPlayCmd("deleteLayer", { layerId: layer.id }) },
+	);
+	return uiDeclarativeSectionsToTree([
+		{
+			type: "section",
+			id: "raster-play-inspector.layer",
+			label: layer.name,
+			children,
+		},
+	] as readonly UiSectionNode[]);
 }
 
-export function buildRasterPlayBlendCatalogueTree(hoverSink?: (payload: RasterHoverPayload) => void): UiTreeNode {
+/** @emoji 🔍 Alias for the details / inspection panel tree. */
+export function buildRasterPlayPropertiesTree(doc: RasterDocument, selectedIds: readonly string[]): UiTreeNode {
+	const inspector = buildRasterPlayInspectorTree(doc, selectedIds);
+	return inspector.type === "tree" ? inspector : { type: "tree", sections: [{ id: "raster-play-properties", label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, items: [] }] };
+}
+
+export function buildRasterPlayCatalogueTree(
+	selectedIds: readonly string[],
+	hoverSink?: (payload: RasterHoverPayload) => void,
+): UiTreeNode {
+	const selectedLayerId = selectedIds[0];
 	return {
 		type: "tree",
 		sections: [
 			{
-				id: "raster-play-blend-catalogue",
+				id: "raster-play-catalogue.layers",
+				label: "New Layers",
+				defaultOpen: true,
+				items: [
+					{
+						id: "raster-play-catalogue.layer.pixel",
+						label: "Pixel Layer",
+						description: "paintable bitmap",
+						icon: "image",
+						draggable: true,
+						dragData: rasterPlayCatalogueLayerDragData("pixel"),
+						command: rasterPlayCmd("addLayer", { kind: "pixel" }),
+					},
+					{
+						id: "raster-play-catalogue.layer.group",
+						label: "Group",
+						description: "nested stack",
+						icon: "folder",
+						draggable: true,
+						dragData: rasterPlayCatalogueLayerDragData("group"),
+						command: rasterPlayCmd("addLayer", { kind: "group" }),
+					},
+					{
+						id: "raster-play-catalogue.layer.adjustment",
+						label: "Adjustment",
+						description: "non-destructive",
+						icon: "sliders-horizontal",
+						draggable: true,
+						dragData: rasterPlayCatalogueLayerDragData("adjustment"),
+						command: rasterPlayCmd("addLayer", { kind: "adjustment" }),
+					},
+				],
+			},
+			{
+				id: "raster-play-catalogue.blend",
 				label: "Blend Modes",
 				items: RASTER_BLEND_MODES.map((mode) => ({
 					id: rasterPlayBlendModeTreeRowId(mode),
 					label: mode,
 					icon: "blend" as const,
+					command: selectedLayerId ? rasterPlayCmd("setLayerBlendMode", { layerId: selectedLayerId, blendMode: mode }) : undefined,
 					onPointerEnter: hoverSink ? () => hoverSink({ id: null, kind: { domain: "blendMode", kindId: mode } }) : undefined,
 					onPointerLeave: hoverSink ? () => hoverSink({ id: null, kind: null }) : undefined,
 				})),
 			},
+			{
+				id: "raster-play-catalogue.filters",
+				label: "Filters",
+				defaultOpen: false,
+				items: RASTER_FILTER_KINDS.map((kind) => ({
+					id: `raster-play-catalogue.filter.${kind}`,
+					label: kind,
+					icon: "sparkles" as const,
+					description: selectedLayerId ? "append to selected pixel layer" : "select a pixel layer",
+					command: selectedLayerId ? rasterPlayCmd("appendFilter", { layerId: selectedLayerId, filterKind: kind }) : undefined,
+				})),
+			},
 		],
+	};
+}
+
+export function buildRasterPlayBlendCatalogueTree(hoverSink?: (payload: RasterHoverPayload) => void): UiTreeNode {
+	return buildRasterPlayCatalogueTree([], hoverSink);
+}
+
+function rasterPlayParseCatalogueLayerKind(data: Record<string, string>): RasterCatalogueLayerKind | null {
+	const raw = data[RASTER_LAYER_KIND_DRAG_MIME];
+	if (!raw) return null;
+	try {
+		const payload = JSON.parse(raw) as { kind?: string };
+		if (payload.kind === "pixel" || payload.kind === "group" || payload.kind === "adjustment") return payload.kind;
+	} catch {
+		return null;
+	}
+	return null;
+}
+
+function rasterPlayCreateLayerByKind(kind: RasterCatalogueLayerKind): RasterLayerNode {
+	if (kind === "group") return createRasterGroupLayer();
+	if (kind === "adjustment") return createRasterAdjustmentLayer();
+	return createRasterPixelLayer();
+}
+
+/** @emoji 🖱️ Hierarchy drag: reorder layers and accept catalogue drops. */
+export function createRasterPlayHierarchyTreeDragController(getController: () => RasterPlayController | undefined): TreeDragAndDropController {
+	return {
+		handleDrop: ({ target, targetKind, data, sourceItems, dropPosition }) => {
+			const catalogueKind = rasterPlayParseCatalogueLayerKind(data);
+			if (catalogueKind) {
+				const targetRowId = targetKind === "item" ? (target as TreeDataItem).id : "raster-play-layers";
+				getController()?.run("dropLayerKind", {
+					kind: catalogueKind,
+					targetRowId,
+					dropPosition: dropPosition ?? "inside",
+				});
+				return;
+			}
+			const sourceItem = sourceItems[0];
+			if (!sourceItem || targetKind !== "item") return;
+			const layerId = sourceItem.dragData?.["application/x-semio-raster-layer-id"] ?? rasterPlayLayerIdFromTreeRowId(sourceItem.id);
+			if (!layerId) return;
+			getController()?.run("moveLayer", {
+				layerId,
+				targetRowId: (target as TreeDataItem).id,
+				dropPosition: dropPosition ?? "after",
+			});
+		},
 	};
 }
 
@@ -334,6 +655,27 @@ export class RasterPlayController extends Controller implements PlaygroundFixtur
 		};
 	}
 
+	private patchDocument(edit: (doc: RasterDocument) => RasterDocument, selectLayerId?: string): void {
+		this.document = edit(this.document);
+		if (selectLayerId) this.selectedIds = [selectLayerId];
+		this.bump();
+	}
+
+	private insertLayerAt(kind: RasterCatalogueLayerKind, targetRowId: string, dropPosition: TreeDropPosition): string {
+		const layer = rasterPlayCreateLayerByKind(kind);
+		const target = resolveRasterPlayReorderTarget(this.document, targetRowId, dropPosition === "before" || dropPosition === "after" ? dropPosition : "inside");
+		const parentId = target?.parentId;
+		const index = target?.index ?? this.document.layers.length;
+		const op =
+			kind === "group"
+				? ({ op: "addGroupLayer", parentId, index, layer } as const)
+				: kind === "adjustment"
+					? ({ op: "addAdjustmentLayer", parentId, index, layer } as const)
+					: ({ op: "addPixelLayer", parentId, index, layer } as const);
+		this.document = applyRasterEditOp(this.document, op);
+		return layer.id;
+	}
+
 	run(command: string, args: Record<string, unknown> = {}): void {
 		switch (command) {
 			case "setActiveFixture": {
@@ -391,6 +733,125 @@ export class RasterPlayController extends Controller implements PlaygroundFixtur
 					visible: args.visible !== false,
 				});
 				this.bump();
+				return;
+			}
+			case "addLayer": {
+				const kind = String(args.kind ?? "pixel") as RasterCatalogueLayerKind;
+				const parentId = typeof args.parentId === "string" ? args.parentId : undefined;
+				const layer = rasterPlayCreateLayerByKind(kind);
+				const op =
+					kind === "group"
+						? ({ op: "addGroupLayer", parentId, layer } as const)
+						: kind === "adjustment"
+							? ({ op: "addAdjustmentLayer", parentId, layer } as const)
+							: ({ op: "addPixelLayer", parentId, layer } as const);
+				this.patchDocument((doc) => applyRasterEditOp(doc, op), layer.id);
+				return;
+			}
+			case "dropLayerKind": {
+				const kind = String(args.kind ?? "") as RasterCatalogueLayerKind;
+				const targetRowId = String(args.targetRowId ?? "raster-play-layers");
+				const dropPosition = (args.dropPosition ?? "inside") as TreeDropPosition;
+				if (kind !== "pixel" && kind !== "group" && kind !== "adjustment") return;
+				const layerId = this.insertLayerAt(kind, targetRowId, dropPosition);
+				this.selectedIds = [layerId];
+				this.bump();
+				return;
+			}
+			case "moveLayer": {
+				const layerId = String(args.layerId ?? "");
+				const targetRowId = String(args.targetRowId ?? "");
+				const dropPosition = (args.dropPosition ?? "after") as TreeDropPosition;
+				const target = resolveRasterPlayReorderTarget(this.document, targetRowId, dropPosition);
+				if (!target || !layerId) return;
+				this.patchDocument((doc) => applyRasterEditOp(doc, { op: "reorderLayer", layerId, parentId: target.parentId, index: target.index }));
+				return;
+			}
+			case "deleteLayer": {
+				const layerId = String(args.layerId ?? "");
+				if (!layerId) return;
+				this.document = applyRasterEditOp(this.document, { op: "removeLayer", layerId });
+				this.selectedIds = this.selectedIds.filter((id) => id !== layerId);
+				if (this.selectedIds.length === 0) {
+					this.selectedIds = flattenRasterLayers(this.document.layers).map((layer) => layer.id).slice(0, 1);
+				}
+				this.bump();
+				return;
+			}
+			case "duplicateLayer": {
+				const layerId = String(args.layerId ?? "");
+				const source = findRasterLayer(this.document, layerId);
+				if (!source) return;
+				this.document = applyRasterEditOp(this.document, { op: "duplicateLayer", layerId });
+				const duplicate = flattenRasterLayers(this.document.layers).find((layer) => layer.id !== layerId && layer.name === `${source.name} copy`);
+				this.selectedIds = duplicate ? [duplicate.id] : this.selectedIds;
+				this.bump();
+				return;
+			}
+			case "toggleLayerVisible": {
+				const layerId = String(args.layerId ?? "");
+				const layer = findRasterLayer(this.document, layerId);
+				if (!layer) return;
+				this.patchDocument((doc) => applyRasterEditOp(doc, { op: "setLayerVisible", layerId, visible: !layer.visible }));
+				return;
+			}
+			case "addLayerMask": {
+				const layerId = String(args.layerId ?? "");
+				const layer = findRasterLayer(this.document, layerId);
+				if (!layer || layer.kind !== "pixel") return;
+				const width = layer.width ?? 512;
+				const height = layer.height ?? 512;
+				this.patchDocument((doc) =>
+					applyRasterEditOp(doc, {
+						op: "setLayerMask",
+						layerId,
+						mask: { enabled: true, linked: true, invert: false, width, height },
+					}),
+				);
+				return;
+			}
+			case "appendFilter": {
+				const layerId = String(args.layerId ?? "");
+				const filterKind = String(args.filterKind ?? "");
+				if (!(RASTER_FILTER_KINDS as readonly string[]).includes(filterKind)) return;
+				this.patchDocument((doc) =>
+					applyRasterEditOp(doc, {
+						op: "appendLayerFilter",
+						layerId,
+						filter: { kind: filterKind as (typeof RASTER_FILTER_KINDS)[number], radius: 8 },
+					}),
+				);
+				return;
+			}
+			case "patchLayer": {
+				const layerId = String(args.layerId ?? "");
+				const field = String(args.field ?? "");
+				const value = args.value ?? args.pressed;
+				if (!layerId || !field) return;
+				this.patchDocument((doc) => {
+					switch (field) {
+						case "name":
+							return applyRasterEditOp(doc, { op: "setLayerName", layerId, name: String(value ?? "") });
+						case "opacity":
+							return applyRasterEditOp(doc, { op: "setLayerOpacity", layerId, opacity: Number(value) });
+						case "blendMode":
+							return applyRasterEditOp(doc, { op: "setLayerBlendMode", layerId, blendMode: String(value) as RasterBlendMode });
+						case "visible":
+							return applyRasterEditOp(doc, { op: "setLayerVisible", layerId, visible: Boolean(value) });
+						case "width":
+							return applyRasterEditOp(doc, { op: "setLayerSize", layerId, width: Number(value) });
+						case "height":
+							return applyRasterEditOp(doc, { op: "setLayerSize", layerId, height: Number(value) });
+						case "adjustmentKind":
+							return applyRasterEditOp(doc, {
+								op: "setAdjustmentKind",
+								layerId,
+								adjustmentKind: String(value) as (typeof RASTER_ADJUSTMENT_KINDS)[number],
+							});
+						default:
+							return doc;
+					}
+				});
 				return;
 			}
 			case "setLayerBlendMode": {
@@ -538,10 +999,25 @@ if (import.meta.vitest) {
 	});
 
 	describe("buildRasterPlayLayersTree", () => {
-		it("builds layer rows", () => {
+		it("builds nested layer rows", () => {
 			const doc = rasterDocumentFromJson(RASTER_PLAY_FILE_FIXTURE_JSON_BY_ID.semio!);
 			const tree = buildRasterPlayLayersTree(doc, [], null, null);
-			expect(tree.sections[0]?.items.length).toBeGreaterThan(0);
+			const emblem = tree.sections[0]?.items.find((item) => item.id.includes("logo-group"));
+			expect(emblem?.items?.length).toBeGreaterThan(0);
+		});
+	});
+
+	describe("RasterPlayController layer edits", () => {
+		it("adds and deletes layers", () => {
+			const bus = new CommandBus();
+			const ctrl = new RasterPlayController(bus, () => {});
+			ctrl.run("setActiveFixture", { fixtureId: "semio" });
+			const before = flattenRasterLayers(ctrl.getDocument().layers).length;
+			ctrl.run("addLayer", { kind: "pixel" });
+			expect(flattenRasterLayers(ctrl.getDocument().layers).length).toBe(before + 1);
+			const addedId = ctrl.getSelectedIds()[0]!;
+			ctrl.run("deleteLayer", { layerId: addedId });
+			expect(flattenRasterLayers(ctrl.getDocument().layers).length).toBe(before);
 		});
 	});
 
@@ -563,10 +1039,10 @@ if (import.meta.vitest) {
 				const doc = rasterDocumentFromJson(RASTER_PLAY_FILE_FIXTURE_JSON_BY_ID[fixtureId]!);
 				const layers = buildRasterPlayLayersTree(doc, [], null, null);
 				const masks = buildRasterPlayMasksTree(doc, [], null, null);
-				const properties = buildRasterPlayPropertiesTree(doc, doc.layers[0] ? [doc.layers[0].id] : []);
+				const properties = buildRasterPlayInspectorTree(doc, doc.layers[0] ? [doc.layers[0].id] : []);
 				expect(layers.sections[0]?.items.length).toBeGreaterThan(0);
 				expect(masks.sections[0]?.items.length).toBeGreaterThan(0);
-				expect(properties.sections[0]?.items.length).toBeGreaterThan(0);
+				expect(properties.type).toBe("tree");
 			});
 		}
 	});

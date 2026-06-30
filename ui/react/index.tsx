@@ -9617,6 +9617,47 @@ export function resolveTreeDropPosition(event: React.DragEvent<HTMLElement>): Tr
   return "inside";
 }
 
+/** @emoji 🔀 True when a drag carries only internal tree reorder data (not palette payloads). */
+export function isTreeReorderDragEvent(event: React.DragEvent): boolean {
+  const types = [...event.dataTransfer.types];
+  if (!types.includes("application/vnd.code.tree.item")) return false;
+  return !types.some((kind) => kind !== "application/vnd.code.tree.item" && kind.startsWith("application/"));
+}
+
+/** @emoji 👁 Fixed overlay showing where a tree reorder drop will land. */
+function TreeReorderDropPreview(props: { readonly preview: { readonly targetId: string; readonly position: TreeDropPosition } | null }): React.ReactElement | null {
+  const [frame, setFrame] = reactHostPort.useState<DOMRect | null>(null);
+  reactHostPort.useLayoutEffect(() => {
+    if (!props.preview || typeof document === "undefined") {
+      setFrame(null);
+      return;
+    }
+    const row = document.getElementById(props.preview.targetId);
+    setFrame(row?.getBoundingClientRect() ?? null);
+  }, [props.preview]);
+  if (!props.preview || !frame || typeof document === "undefined" || !document.body) return null;
+  if (props.preview.position === "before") {
+    return createPortal(
+      <div data-slot="tree-drop-preview" className="pointer-events-none fixed z-tutorial h-0.5 bg-primary" style={{ left: frame.left, top: frame.top, width: frame.width }} />,
+      document.body,
+    );
+  }
+  if (props.preview.position === "after") {
+    return createPortal(
+      <div data-slot="tree-drop-preview" className="pointer-events-none fixed z-tutorial h-0.5 bg-primary" style={{ left: frame.left, top: frame.bottom - 2, width: frame.width }} />,
+      document.body,
+    );
+  }
+  return createPortal(
+    <div
+      data-slot="tree-drop-preview"
+      className="pointer-events-none fixed z-tutorial border-2 border-primary/80 bg-primary/10"
+      style={{ left: frame.left, top: frame.top, width: frame.width, height: frame.height }}
+    />,
+    document.body,
+  );
+}
+
 export interface TreeReorderMove {
   readonly itemId: string;
   readonly fromParentId: string;
@@ -9878,6 +9919,7 @@ interface TreeItemProps {
   loading?: boolean;
   isLastItem?: boolean;
   actions?: TreeHeaderAction[];
+  isDragging?: boolean;
   onDoubleClick?: (event: React.MouseEvent) => void;
   draggable?: boolean;
   onDragStart?: React.DragEventHandler<HTMLDivElement>;
@@ -10067,6 +10109,9 @@ interface TreeDataRenderingContextValue {
   readonly handleDropOnItem: (event: React.DragEvent<HTMLDivElement>, item: TreeDataItem, section: TreeDataSection) => void;
   readonly handleDropOnSection: (event: React.DragEvent<HTMLDivElement>, section: TreeDataSection) => void;
   readonly handleDragOver: (event: React.DragEvent<HTMLDivElement>) => void;
+  readonly handleDragOverItem: (event: React.DragEvent<HTMLDivElement>, item: TreeDataItem) => void;
+  readonly draggedIds: readonly string[];
+  readonly dropPreview: { readonly targetId: string; readonly position: TreeDropPosition } | null;
   readonly buildPalettePointerProps: (item: TreeDataItem, section: TreeDataSection) => Pick<TreeItemProps, "onPointerDown">;
 }
 
@@ -10693,6 +10738,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   layoutKind = "default",
   isHidden = false,
   contextMenu,
+  isDragging = false,
 }) => {
   const localizedLabel = id ? useLabel(id) : undefined;
   const resolvedLabel = label !== undefined ? label : localizedLabel;
@@ -10752,6 +10798,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
     "w-full",
     isExpandable ? "cursor-foldable" : "cursor-selectable",
     draggable ? "cursor-grab active:cursor-grabbing" : "",
+    isDragging ? "opacity-40" : "",
     className,
   );
   const itemContentFillClassName = treeRowChromeContentFillClasses(isSelected, isHighlighted);
@@ -11438,12 +11485,14 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: {
     handleDoubleClickItem,
     handleDragStart,
     handleDragEnd,
-    handleDragOver,
+    handleDragOverItem,
     handleDropOnItem,
     buildPalettePointerProps,
+    draggedIds,
   } = useTreeDataRendering();
   const isRowSelected = useTreeItemRowSelected(item.id, item.isSelected);
   const isRowHighlighted = useTreeItemRowHighlighted(item.id, item.isHighlighted);
+  const isDragging = draggedIds.includes(item.id);
   const baseChildItems = getTreeItemItems(item, itemItemsById);
   const alternatives = item.alternatives ?? [];
   const branchCount = alternatives.length;
@@ -11479,6 +11528,7 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: {
       isSelected={isRowSelected}
       isHighlighted={isRowHighlighted}
       isHidden={item.isHidden}
+      isDragging={isDragging}
       isDragHandle={item.isDragHandle}
       defaultOpen={defaultOpen}
       open={treeOpenState.open}
@@ -11488,13 +11538,13 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: {
       isLastItem={isLastItem}
       actions={item.actions}
       contextMenu={item.contextMenu}
-      draggable={Boolean(item.draggable) || Boolean(item.dragData) || Boolean(dragAndDropController)}
+      draggable={Boolean(item.draggable) || Boolean(item.dragData)}
       layoutKind={propertyLayout ? "property" : undefined}
       onClick={(event) => handleSelectItem(event, item, section, [...path])}
       onDoubleClick={(event) => handleDoubleClickItem(event, item, section, [...path])}
       onDragStart={(event) => handleDragStart(event, item, section)}
       onDragEnd={(event) => handleDragEnd(event, item, section)}
-      onDragOver={handleDragOver}
+      onDragOver={(event) => handleDragOverItem(event, item)}
       onDrop={(event) => handleDropOnItem(event, item, section)}
       onPointerEnter={item.onPointerEnter}
       onPointerLeave={item.onPointerLeave}
@@ -11603,6 +11653,7 @@ export const Tree = (({
   const [loadingById, setLoadingById] = reactHostPort.useState<Record<string, boolean>>({});
   const [uncontrolledSelectedIds, setUncontrolledSelectedIds] = reactHostPort.useState<string[]>(() => normalizeTreeSelectedIds(defaultSelectedIds, selectionMode));
   const [draggedIds, setDraggedIds] = reactHostPort.useState<string[]>([]);
+  const [dropPreview, setDropPreview] = reactHostPort.useState<{ targetId: string; position: TreeDropPosition } | null>(null);
   const resolvedSections = sections ?? EMPTY_TREE_SECTIONS;
   const suppressPaletteClickRef = reactHostPort.useRef(false);
   const palettePointerGestureRef = reactHostPort.useRef<{ pending: boolean; dragging: boolean; encoded: string | null; startX: number; startY: number; target: EventTarget | null }>({
@@ -11701,6 +11752,19 @@ export const Tree = (({
     event.dataTransfer.dropEffect = acceptsCopy ? "copy" : "move";
   }, []);
 
+  const handleDragOverItem = reactHostPort.useCallback(
+    (event: React.DragEvent<HTMLDivElement>, item: TreeDataItem) => {
+      handleDragOver(event);
+      if (isTreeReorderDragEvent(event)) {
+        const position = resolveTreeDropPosition(event);
+        setDropPreview((previous) => (previous?.targetId === item.id && previous.position === position ? previous : { targetId: item.id, position }));
+        return;
+      }
+      setDropPreview(null);
+    },
+    [handleDragOver],
+  );
+
   const handleSelectItem = reactHostPort.useCallback(
     (event: React.MouseEvent, item: TreeDataItem, section: TreeDataSection, path: string[]) => {
       if (suppressPaletteClickRef.current) {
@@ -11755,8 +11819,8 @@ export const Tree = (({
         document.body.appendChild(ghost);
         event.dataTransfer.setDragImage(ghost, ghost.offsetWidth / 2, ghost.offsetHeight / 2);
         requestAnimationFrame(() => ghost.remove());
+        panelGhost?.begin(event.currentTarget);
       }
-      panelGhost?.begin(event.currentTarget);
       dragAndDropController?.onDragStart?.({ items: sourceItems, sourceItem: item, section });
     },
     [dragAndDropController, itemMap, panelGhost],
@@ -11768,6 +11832,7 @@ export const Tree = (({
       const sourceItems = sourceIds.map((id) => itemMap[id]).filter(Boolean);
       dragAndDropController?.onDragEnd?.({ items: sourceItems, sourceItem: item, section });
       setDraggedIds([]);
+      setDropPreview(null);
       panelGhost?.end();
     },
     [dragAndDropController, draggedIds, itemMap, panelGhost],
@@ -11787,6 +11852,7 @@ export const Tree = (({
         dropPosition,
       });
       setDraggedIds([]);
+      setDropPreview(null);
     },
     [dragAndDropController, draggedIds, itemMap],
   );
@@ -11913,14 +11979,20 @@ export const Tree = (({
       handleDropOnItem,
       handleDropOnSection,
       handleDragOver,
+      handleDragOverItem,
+      draggedIds,
+      dropPreview,
       buildPalettePointerProps,
     }),
     [
       buildPalettePointerProps,
       dragAndDropController,
+      draggedIds,
+      dropPreview,
       handleDoubleClickItem,
       handleDragEnd,
       handleDragOver,
+      handleDragOverItem,
       handleDragStart,
       handleDropOnItem,
       handleDropOnSection,
@@ -11939,6 +12011,7 @@ export const Tree = (({
   return (
     <TreeStateProvider>
       <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines, isTree: true, indentMultiplier }}>
+        <TreeReorderDropPreview preview={dropPreview} />
         <div ref={treeRootRef} className={`w-full min-w-0 overflow-hidden ${className}`} onPointerOver={handleTreePointerOver} onPointerLeave={handleTreePointerLeave}>
           <TreeHoverPathRefreshContext.Provider value={refreshTreeHoverPath}>
             <TreeSelectionContext.Provider value={selectionStore}>
@@ -22876,6 +22949,13 @@ if (treeVitest) {
         currentTarget: { getBoundingClientRect: () => ({ top: 0, height: 100 }) },
       } as unknown as React.DragEvent<HTMLElement>;
       expect(resolveTreeDropPosition(event)).toBe("before");
+    });
+
+    it("detects internal tree reorder drags without palette mime", () => {
+      const reorder = { dataTransfer: { types: ["application/vnd.code.tree.item"] } } as unknown as React.DragEvent;
+      const palette = { dataTransfer: { types: ["application/vnd.code.tree.item", "application/x-semio-forms-question"] } } as unknown as React.DragEvent;
+      expect(isTreeReorderDragEvent(reorder)).toBe(true);
+      expect(isTreeReorderDragEvent(palette)).toBe(false);
     });
 
     it("builds catalogue drag payloads", () => {

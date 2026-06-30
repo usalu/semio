@@ -1015,6 +1015,8 @@ export type PlaygroundHostKind =
 	| "shooting"
 	| "forms"
 	| "raster"
+	| "draw"
+	| "writer"
 	| "cad"
 	| "gis-map"
 	| "projektetage"
@@ -1040,6 +1042,8 @@ export const PLAYGROUND_PORTS: Record<PlaygroundHostKind, PlaygroundPortSpec> = 
 	"trinity-rewrite": { dev: 6056, test: 6057, env: "TRINITY_REWRITE_PLAY_PORT" },
 	forms: { dev: 6058, test: 6059, env: "FORMS_PLAY_PORT" },
 	raster: { dev: 6060, test: 6061, env: "RASTER_PLAY_PORT" },
+	draw: { dev: 6064, test: 6065, env: "DRAW_PLAY_PORT" },
+	writer: { dev: 6062, test: 6063, env: "WRITER_PLAY_PORT" },
 	"procedural-3d": { dev: 6018, test: 6031, env: "PROCEDURAL_3D_PLAY_PORT" },
 	"procedural-2d": { dev: 6021, test: 6033, env: "PROCEDURAL_2D_PLAY_PORT" },
 	shooting: { dev: 6019, test: 6032, env: "SHOOTING_PLAY_PORT" },

@@ -849,6 +849,44 @@
       }
     },
     {
+      "name": "🛠️dev✏️draw",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:draw",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "DRAW_PLAY_PORT": "6064"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 387
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6064)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev✍️writer",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:writer",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "WRITER_PLAY_PORT": "6062"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 387
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6062)",
+        "uriFormat": "%s"
+      }
+    },
+    {
       "name": "🛠️dev🖱️ui🪁typecheck",
       "type": "node-terminal",
       "request": "launch",

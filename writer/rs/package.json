@@ -1,0 +1,8 @@
+{
+  "name": "@semio-tech/writer-rs",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./pkg/writer.js"
+  }
+}
