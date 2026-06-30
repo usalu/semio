@@ -646,19 +646,19 @@ pub mod vector_tiles {
         }
 
         #[test]
-        fn continent_water_filter_drops_small_inland_polygons() {
-            let extent = 4096;
+        fn continent_water_filter_drops_inland_polygons() {
             let mut props = std::collections::BTreeMap::new();
             props.insert("class".to_string(), "lake".to_string());
-            let small = vec![vec![(100.0, 100.0), (140.0, 100.0), (140.0, 130.0), (100.0, 130.0)]];
-            let large = vec![vec![(0.0, 0.0), (900.0, 0.0), (900.0, 900.0), (0.0, 900.0)]];
-            assert!(super::water_polygon_visible_for_lod(0, &props, &small, extent));
-            assert!(!super::water_polygon_visible_for_lod(1, &props, &small, extent));
-            assert!(super::water_polygon_visible_for_lod(1, &props, &large, extent));
+            assert!(super::water_polygon_visible_for_lod(0, &props));
+            assert!(!super::water_polygon_visible_for_lod(1, &props));
+            assert!(super::water_polygon_visible_for_lod(2, &props));
             props.insert("class".to_string(), "ocean".to_string());
-            assert!(super::water_polygon_visible_for_lod(1, &props, &small, extent));
+            assert!(super::water_polygon_visible_for_lod(1, &props));
             assert!(!super::waterway_visible_for_lod(1));
             assert!(super::waterway_visible_for_lod(2));
+            assert!(super::country_polygon_holes_visible_for_lod(0));
+            assert!(!super::country_polygon_holes_visible_for_lod(1));
+            assert!(super::country_polygon_holes_visible_for_lod(2));
         }
 
         #[test]
@@ -1041,51 +1041,22 @@ pub mod vector_tiles {
         line.len() >= 2 && line.iter().all(|&(x, y)| mvt_point_on_tile_bbox_edge(extent, x, y))
     }
 
-    pub fn mvt_rings_bbox_area(rings: &[Vec<(f64, f64)>]) -> f64 {
-        if rings.is_empty() {
-            return 0.0;
-        }
-        let mut min_x = f64::INFINITY;
-        let mut min_y = f64::INFINITY;
-        let mut max_x = f64::NEG_INFINITY;
-        let mut max_y = f64::NEG_INFINITY;
-        for ring in rings {
-            for &(x, y) in ring {
-                min_x = min_x.min(x);
-                min_y = min_y.min(y);
-                max_x = max_x.max(x);
-                max_y = max_y.max(y);
-            }
-        }
-        (max_x - min_x).max(0.0) * (max_y - min_y).max(0.0)
-    }
-
     fn water_class_is_open_sea(class: &str) -> bool {
         matches!(class, "ocean" | "sea" | "bay" | "strait" | "fjord" | "lagoon" | "sound" | "gulf")
     }
 
-    /// @emoji 🌊 Drop continent-zoom river/lake speckle; keep oceans and large seas/lakes.
-    pub fn water_polygon_visible_for_lod(lod_idx: usize, properties: &std::collections::BTreeMap<String, String>, rings: &[Vec<(f64, f64)>], extent: u32) -> bool {
-        if lod_idx == 0 {
-            return true;
-        }
-        if lod_idx != 1 {
-            return true;
-        }
-        let class = property_class(properties);
-        if water_class_is_open_sea(class) {
-            return true;
-        }
-        if property_flag(properties, "intermittent") {
-            return false;
-        }
-        let e = f64::from(extent.max(1));
-        let tile_area = e * e;
-        mvt_rings_bbox_area(rings) >= tile_area * 0.0015
+    /// @emoji 🌊 Keep continent zoom free of inland water while preserving adjacent LODs.
+    pub fn water_polygon_visible_for_lod(lod_idx: usize, properties: &std::collections::BTreeMap<String, String>) -> bool {
+        lod_idx != 1 || water_class_is_open_sea(property_class(properties))
     }
 
     pub fn waterway_visible_for_lod(lod_idx: usize) -> bool {
         lod_idx >= 2
+    }
+
+    /// @emoji 🗺️ Suppress country-polygon lake holes only at continent zoom.
+    pub fn country_polygon_holes_visible_for_lod(lod_idx: usize) -> bool {
+        lod_idx != 1
     }
 
     pub fn mvt_ring_is_tile_bbox_cover(extent: u32, ring: &[(f64, f64)]) -> bool {
@@ -2313,6 +2284,12 @@ impl MapHost {
         self.append_vector_tile_polygon(scene, tz, tx, ty, extent, rings, fill, Color::from_rgba8(0, 0, 0, 0), 0.0);
     }
 
+    fn append_vector_tile_polygon_filled_rings(&self, scene: &mut Scene, tz: u32, tx: u32, ty: u32, extent: u32, rings: &[Vec<(f64, f64)>], fill: Color) {
+        for ring in rings {
+            self.append_vector_tile_polygon(scene, tz, tx, ty, extent, std::slice::from_ref(ring), fill, Color::from_rgba8(0, 0, 0, 0), 0.0);
+        }
+    }
+
     fn append_vector_tile_lines(&self, scene: &mut Scene, tz: u32, tx: u32, ty: u32, extent: u32, lines: &[Vec<(f64, f64)>], stroke: Color, width: f64) {
         if lines.is_empty() || stroke.to_rgba8().a <= 5 || width <= 0.0 {
             return;
@@ -2496,7 +2473,7 @@ impl MapHost {
                 for feat in &layer.features {
                     match lname {
                         "water" if draw_water => {
-                            if !feat.rings.is_empty() && vector_tiles::water_polygon_visible_for_lod(lod_idx, &feat.properties, &feat.rings, extent) {
+                            if !feat.rings.is_empty() && vector_tiles::water_polygon_visible_for_lod(lod_idx, &feat.properties) {
                                 self.append_vector_tile_polygon(scene, *tz, *tx, *ty, extent, &feat.rings, water_fill, Color::from_rgba8(0, 0, 0, 0), 0.0);
                             }
                         }
@@ -2553,7 +2530,11 @@ impl MapHost {
                         }
                         "countries" if draw_tile_countries => {
                             if !feat.rings.is_empty() {
-                                self.append_vector_tile_polygon(scene, *tz, *tx, *ty, extent, &feat.rings, land_fill, Color::from_rgba8(0, 0, 0, 0), 0.0);
+                                if vector_tiles::country_polygon_holes_visible_for_lod(lod_idx) {
+                                    self.append_vector_tile_polygon(scene, *tz, *tx, *ty, extent, &feat.rings, land_fill, Color::from_rgba8(0, 0, 0, 0), 0.0);
+                                } else {
+                                    self.append_vector_tile_polygon_filled_rings(scene, *tz, *tx, *ty, extent, &feat.rings, land_fill);
+                                }
                             }
                         }
                         _ => {}
@@ -2567,6 +2548,7 @@ impl MapHost {
         let vis = self.layer_visibility;
         let transparent_stroke = Color::from_rgba8(0, 0, 0, 0);
         let profile = vector_tiles::vector_detail_profile(span, render_z, forced_lod);
+        let lod_idx = resolve_detail_lod_index(span, forced_lod);
         let draw_land_backdrop = profile.draw_land_backdrop && vis.land;
         let draw_coastline = profile.draw_coastline && vis.water;
         let draw_buildings = profile.draw_buildings && vis.buildings;
@@ -2621,11 +2603,15 @@ impl MapHost {
                         }
                         "countries" if draw_countries => {
                             if !feat.rings.is_empty() {
-                                self.append_vector_tile_polygon_rings_nonzero(scene, *tz, *tx, *ty, extent, &feat.rings, ink);
+                                if vector_tiles::country_polygon_holes_visible_for_lod(lod_idx) {
+                                    self.append_vector_tile_polygon_rings_nonzero(scene, *tz, *tx, *ty, extent, &feat.rings, ink);
+                                } else {
+                                    self.append_vector_tile_polygon_filled_rings(scene, *tz, *tx, *ty, extent, &feat.rings, ink);
+                                }
                             }
                         }
                         "water" if draw_water => {
-                            if !feat.rings.is_empty() {
+                            if !feat.rings.is_empty() && vector_tiles::water_polygon_visible_for_lod(lod_idx, &feat.properties) {
                                 self.append_vector_tile_polygon(scene, *tz, *tx, *ty, extent, &feat.rings, paper, transparent_stroke, 0.0);
                             }
                         }

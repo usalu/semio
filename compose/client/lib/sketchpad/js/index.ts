@@ -116,6 +116,10 @@ export const composeSketchpadToolbarParentDe: ComposeSketchpadToolbarParentEntri
 	view: { label: { normal: "Ansicht", beginner: "Ansicht" } },
 	actions: { label: { normal: "Aktionen", beginner: "Aktionen" } },
 	settings: { label: { normal: "Einstellungen", beginner: "Einstellungen" } },
+	methods: { label: { normal: "Methoden", beginner: "Methoden" } },
+	mode: { label: { normal: "Modus", beginner: "Modus" } },
+	targets: { label: { normal: "Ziele", beginner: "Ziele" } },
+	export: { label: { normal: "Export", beginner: "Export" } },
 };
 
 export const composeSketchpadToolbarParentEn: ComposeSketchpadToolbarParentEntries = {
@@ -132,6 +136,10 @@ export const composeSketchpadToolbarParentEn: ComposeSketchpadToolbarParentEntri
 	view: { label: { normal: "View", beginner: "View" } },
 	actions: { label: { normal: "Actions", beginner: "Actions" } },
 	settings: { label: { normal: "Settings", beginner: "Settings" } },
+	methods: { label: { normal: "Methods", beginner: "Methods" } },
+	mode: { label: { normal: "Mode", beginner: "Mode" } },
+	targets: { label: { normal: "Targets", beginner: "Targets" } },
+	export: { label: { normal: "Export", beginner: "Export" } },
 };
 
 /** @emoji 🪁 Compose sketchpad i18n keys resolved from shell control ids. */
@@ -142,7 +150,7 @@ export type ComposeSketchpadControlTranslationKey =
 	| "compose.sketchpad.navbar.search.open"
 	| "compose.sketchpad.navbar.find.open"
 	| `compose.sketchpad.navbar.panelToggle.${string}`
-	| `compose.sketchpad.toolbar.parent.${UiToolbarParentCategory}`;
+	| `compose.sketchpad.toolbar.parent.${string}`;
 
 type ComposeSketchpadTranslationTree = {
 	readonly compose: {
@@ -10262,6 +10270,9 @@ export function sketchpadResolveControlLabelId(id: string): ComposeSketchpadCont
 	}
 	if (id.startsWith("ui.panelToggle.")) {
 		return `compose.sketchpad.navbar.panelToggle.${id.slice("ui.panelToggle.".length)}`;
+	}
+	if (id.startsWith("ui.toolbar.parent.")) {
+		return `compose.sketchpad.toolbar.parent.${id.slice("ui.toolbar.parent.".length)}`;
 	}
 	if (id.startsWith("ui.toolbar.group.")) {
 		return `compose.sketchpad.toolbar.parent.${id.slice("ui.toolbar.group.".length)}`;

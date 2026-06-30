@@ -83,7 +83,7 @@ import {
     createFrameworkSettingsPanelTabs,
     declareToolsToViewTools,
     findDefaultActiveWindowKindId,
-    listPopulatedToolbarViewCategories,
+    hasToolbarViewTools,
     mergePlatformFooterChromeRows,
     registerSurfaceBinding,
     registerUiPanelSurfaceHost,
@@ -170,7 +170,8 @@ export type {
     ModeRuntime, Platform, FooterItem as PlaygroundDeclarativeFooterItem, ResolvedAppState,
     SidePanelBodyViewContext,
     SideTabSpec,
-    ToolItem,
+    ToolLeaf,
+    ToolNode,
     UiNode,
     WindowBodyViewContext,
     WindowKindRuntime,
@@ -190,10 +191,10 @@ export {
 export type { PlaygroundFixtureCatalog, PlaygroundFixtureHost, PlaygroundFixtureOption } from "@semio-tech/framework-playground-core";
 
 export {
-    APP_TOOL_CATEGORY_ORDER,
     AppRuntime,
     CommandBus,
     ModeRuntime, Platform, PlaygroundController, WindowKindRuntime, buildCadWindowBody, buildPuzzle3dWindowBody,
+    toolCollection,
     createDefaultLayout,
     createStackLayout,
     createWindowLayout,
@@ -363,8 +364,10 @@ const dagSurfaceHosts = new Map<string, DagSurfaceHost>();
 type TrinitySurfaceHost = React.ComponentType<{ readonly node: import("@semio-tech/framework-platform-core").UiTrinityHostSurfaceNode }>;
 const trinitySurfaceHosts = new Map<string, TrinitySurfaceHost>();
 const tableSurfaceHosts = new Map<string, TableSurfaceHost>();
+type FormsSurfaceHost = React.ComponentType<{ readonly node: import("@semio-tech/framework-platform-core").UiFormsHostSurfaceNode }>;
+const formsSurfaceHosts = new Map<string, FormsSurfaceHost>();
 
-const PLAYGROUND_CANVAS_HOST_TYPES = new Set(["puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag", "trinity", "shooting"]);
+const PLAYGROUND_CANVAS_HOST_TYPES = new Set(["puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag", "trinity", "shooting", "forms"]);
 
 function isPlaygroundCanvasHostChild(child: UiNode): boolean {
   return PLAYGROUND_CANVAS_HOST_TYPES.has(child.type);
@@ -411,6 +414,12 @@ export function registerUiTrinitySurfaceHost(surfaceId: string, Component: Trini
 /** @emoji 📊 Binds `surfaceId` from {@link UiTableHostSurfaceNode} to a host table body. */
 export function registerUiTableSurfaceHost(surfaceId: string, Component: TableSurfaceHost): void {
   tableSurfaceHosts.set(surfaceId, Component);
+  registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
+}
+
+/** @emoji 📋 Binds `surfaceId` from {@link UiFormsHostSurfaceNode} to a forms surface. */
+export function registerUiFormsSurfaceHost(surfaceId: string, Component: FormsSurfaceHost): void {
+  formsSurfaceHosts.set(surfaceId, Component);
   registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
 }
 
@@ -465,6 +474,26 @@ function renderPlaygroundHostSurface(node: UiNode, layout: "canvas" | "panel"): 
       );
     }
   }
+  if (node.type === "shooting") {
+    const Host = shootingSurfaceHosts.get(node.surfaceId);
+    if (Host) {
+      return (
+        <div className="absolute inset-0 min-h-0 min-w-0">
+          <Host node={node} />
+        </div>
+      );
+    }
+  }
+  if (node.type === "forms") {
+    const Host = formsSurfaceHosts.get(node.surfaceId);
+    if (Host) {
+      return (
+        <div className="absolute inset-0 min-h-0 min-w-0 overflow-auto">
+          <Host node={node} />
+        </div>
+      );
+    }
+  }
   if (node.type === "table") {
     const Host = tableSurfaceHosts.get(node.surfaceId);
     if (Host) {
@@ -484,6 +513,7 @@ function renderPlaygroundHostSurface(node: UiNode, layout: "canvas" | "panel"): 
     node.type === "dag" ||
     node.type === "trinity" ||
     node.type === "shooting" ||
+    node.type === "forms" ||
     node.type === "panel" ||
     node.type === "table"
   ) {
@@ -1236,7 +1266,7 @@ function usePlaygroundViewShellData(runtime: Platform, options: Pick<PlaygroundV
   );
 
   const mergedTools = reactHostPort.useMemo(() => (activeApp ? declareToolsToViewTools(activeApp.tools, bus) : undefined), [activeApp, bus, shellDataGeneration]);
-  const hasToolbarTools = listPopulatedToolbarViewCategories(mergedTools ?? {}).length > 0;
+  const hasToolbarTools = hasToolbarViewTools(mergedTools);
 
   const [activeWindowKindId, setActiveWindowKindId] = reactHostPort.useState<string | null>(() =>
     activeApp ? findDefaultActiveWindowKindId(activeApp.defaultLayout, activeApp.windowKinds) : null,
@@ -1519,7 +1549,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, playgro
         content: (
           <div className="flex items-center gap-single">
             <SemioLogo className="shrink-0 size-workbench" />
-            <span className={cn("px-single", shellChromeTitleClassName)}>{shell.activeApp.label}</span>
+            <span data-slot="app-name" className={cn("px-single", shellChromeTitleClassName)}>{shell.activeAppBase?.label}</span>
           </div>
         ),
       },
@@ -1538,14 +1568,12 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, playgro
       key: "panelToggles",
       content: <PanelToggleGroup items={playgroundPanelToggleItems} />,
     });
-    const modesList = shell.activeAppBase?.modes ?? [];
-    const resolvedModes = modesList.length > 0 ? modesList : [{ id: shell.activeApp.id, label: shell.activeApp.label, iconId: undefined }];
     items.push({
       key: "modes",
       content: (
         <ButtonGroup id="playground.navbar.modes">
-          {resolvedModes.map((mode) => {
-            const isActive = shell.activeModeId === mode.id || (modesList.length === 0 && (shell.activeModeId === null || shell.activeModeId === mode.id));
+          {shell.activeAppBase?.modes.map((mode) => {
+            const isActive = shell.activeModeId === mode.id;
             return (
               <ButtonGroupItem
                 key={mode.id}
@@ -2429,7 +2457,14 @@ import {
     type Puzzle2dSelectionMode,
     type Puzzle2dSelectionTargets
 } from "@semio-tech/puzzle-2d-react";
-import { puzzle3dBrushMeshRootForFill } from "@semio-tech/puzzle-3d-play";
+import { installPuzzle3dPlayBrushHost, puzzle3dBrushMeshRootForFill } from "@semio-tech/puzzle-3d-play";
+import {
+    brushMeshUrlsForFillSession,
+    isLoadableMeshUrl,
+    resolvePuzzle3dFixtureDrop,
+    type Puzzle3dFixtureDropDetail,
+} from "@semio-tech/puzzle-3d-react";
+import { sceneHostPort } from "@semio-tech/ui-react";
 import {
     PUZZLE_5D_PLAY_2D_BODY_KEY,
     PUZZLE_5D_PLAY_2D_SURFACE_ID,
@@ -3148,6 +3183,7 @@ import {
     puzzle2dHandleAngleToRingT,
     puzzle2dHandleKindOverlayLabel,
     puzzle2dIsBrushPlacementStructuralDeleteGuarded,
+    puzzle2dSetBrushPlaceCommitHandler,
     puzzle2dSelectionActionsRef,
     puzzle2dSyncBrushSessionToAllAuthoringPeers,
     puzzle2dSyncFixtureDescriptorToAllAuthoringPeers,
@@ -6397,6 +6433,7 @@ import {
     FLOW_PLAY_HIERARCHY_TAB_ID,
     FLOW_PLAY_INSPECTION_TAB_ID,
     FLOW_PLAY_SURFACE_ID,
+    FLOW_PLAY_SURFACE_ID_GENERATE,
     FLOW_PLAY_WINDOW_KIND_ID,
     FlowPlayController,
     buildFlowPlayCanvasContextMenu,
@@ -6413,7 +6450,9 @@ import {
     dagLodCanvasProps,
     flowWidgetPaletteTreeDragController,
 } from "@semio-tech/flow-react";
-import type { UiFlowHostSurfaceNode } from "@semio-tech/framework-platform-core";
+import { FlowGenerateSurface } from "@semio-tech/forms-react";
+import { parseFormSpec } from "@semio-tech/forms-core";
+import type { UiFlowHostSurfaceNode, UiFormsHostSurfaceNode } from "@semio-tech/framework-platform-core";
 
 let flowPlayChromeRegistered = false;
 const flowPlayControllerRef: { current: FlowPlayController | null } = { current: null };
@@ -6584,6 +6623,31 @@ class FlowPlayInspectionPanelDefinition extends PureSidePanelTabDefinition {
   }
 }
 
+function FlowPlayGenerateSurfaceHost({ node }: { readonly node: UiFormsHostSurfaceNode }): ReactElement {
+  const ctrl = useFlowPlayController();
+  const spec = reactHostPort.useMemo(() => {
+    try {
+      return parseFormSpec(JSON.parse(ctrl?.getGenerateFormSpecJson() ?? "{}"));
+    } catch {
+      return parseFormSpec({ schema: "forms.form/v1", id: "empty", version: "1", steps: [{ id: "s", title: "Inputs", questions: [] }] });
+    }
+  }, [ctrl]);
+  return (
+    <FlowGenerateSurface
+      formSpec={spec}
+      generations={[...(ctrl?.getGenerations() ?? [])]}
+      selectedGenerationId={ctrl?.getSelectedGenerationId() ?? null}
+      previewText={ctrl?.getGeneratePreviewText() ?? "—"}
+      onSelectGeneration={(id) => ctrl?.run("selectGeneration", { id })}
+      onAddGeneration={() => ctrl?.run("addGeneration")}
+      onRemoveGeneration={(id) => ctrl?.run("removeGeneration", { id })}
+      onGenerationValuesChange={(id, values) => ctrl?.run("updateGenerationValues", { id, values })}
+      onRenameGeneration={(id, name) => ctrl?.run("renameGeneration", { id, name })}
+      className="h-full"
+    />
+  );
+}
+
 function FlowPlayInner({ runtime }: { readonly runtime: Platform }): ReactElement {
   useFlowPlayController(runtime);
   const catalogueRevision = useFlowPlayCatalogueRevision(runtime);
@@ -6606,6 +6670,7 @@ export function registerFlowPlaySurfaceHosts(): void {
   if (flowPlayChromeRegistered) return;
   flowPlayChromeRegistered = true;
   registerUiFlowSurfaceHost(FLOW_PLAY_SURFACE_ID, FlowPlayPaneSurfaceHost);
+  registerUiFormsSurfaceHost(FLOW_PLAY_SURFACE_ID_GENERATE, FlowPlayGenerateSurfaceHost);
   registerFlowPlayDeclarativeBodies();
 }
 
@@ -7000,6 +7065,8 @@ export function bootTrinityRewritePlay(playground: Playground, rootId = "root"):
 //#region 🔖ProceduralPlayHost
 import type { UiPanelHostSurfaceNode } from "@semio-tech/framework-platform-core";
 import { ProceduralFlowEditor, ProceduralPreview, useProceduralBrepBridge } from "@semio-tech/procedural-3d-react";
+import { FlowGenerateSurface } from "@semio-tech/forms-react";
+import { parseFormSpec } from "@semio-tech/forms-core";
 import {
     DAG_LOD_MODE_AUTOMATIC as PROCEDURAL_3D_DAG_LOD_MODE_AUTOMATIC,
     FLOW_DEFAULT_PROXIMITY_DISTANCE as PROCEDURAL_3D_DEFAULT_PROXIMITY_DISTANCE,
@@ -7013,6 +7080,7 @@ import {
     PROCEDURAL_PLAY_HIERARCHY_TAB_ID,
     PROCEDURAL_PLAY_INSPECTION_TAB_ID,
     PROCEDURAL_PLAY_SURFACE_ID,
+    PROCEDURAL_PLAY_SURFACE_ID_GENERATE,
     PROCEDURAL_PLAY_SURFACE_ID_PREVIEW,
     ProceduralPlayController,
     buildProceduralPlayCanvasContextMenu,
@@ -7401,11 +7469,37 @@ function ProceduralPlayInner({ runtime }: { readonly runtime: Platform }): React
   );
 }
 
+function Procedural3dGenerateSurfaceHost({ node }: { readonly node: UiFormsHostSurfaceNode }): ReactElement {
+  const ctrl = useProceduralPlayController();
+  const spec = reactHostPort.useMemo(() => {
+    try {
+      return parseFormSpec(JSON.parse(ctrl?.getGenerateFormSpecJson() ?? "{}"));
+    } catch {
+      return parseFormSpec({ schema: "forms.form/v1", id: "empty", version: "1", steps: [{ id: "s", title: "Inputs", questions: [] }] });
+    }
+  }, [ctrl]);
+  return (
+    <FlowGenerateSurface
+      formSpec={spec}
+      generations={[...(ctrl?.getGenerations() ?? [])]}
+      selectedGenerationId={ctrl?.getSelectedGenerationId() ?? null}
+      previewText={ctrl?.getGeneratePreviewText() ?? "—"}
+      onSelectGeneration={(id) => ctrl?.run("selectGeneration", { id })}
+      onAddGeneration={() => ctrl?.run("addGeneration")}
+      onRemoveGeneration={(id) => ctrl?.run("removeGeneration", { id })}
+      onGenerationValuesChange={(id, values) => ctrl?.run("updateGenerationValues", { id, values })}
+      onRenameGeneration={(id, name) => ctrl?.run("renameGeneration", { id, name })}
+      className="h-full"
+    />
+  );
+}
+
 export function registerProceduralPlaySurfaceHosts(): void {
   if (proceduralPlayChromeRegistered) return;
   proceduralPlayChromeRegistered = true;
   registerUiFlowSurfaceHost(PROCEDURAL_PLAY_SURFACE_ID, ProceduralPlayPaneSurfaceHost);
   registerUiPuzzle3dSurfaceHost(PROCEDURAL_PLAY_SURFACE_ID_PREVIEW, ProceduralPreviewSurfaceHost);
+  registerUiFormsSurfaceHost(PROCEDURAL_PLAY_SURFACE_ID_GENERATE, Procedural3dGenerateSurfaceHost);
   registerProceduralPlayDeclarativeBodies();
 }
 
@@ -7428,7 +7522,9 @@ export function bootProceduralPlay(playground: Playground, rootId = "root"): voi
 //#endregion 🔖ProceduralPlayHost
 
 //#region 🔖Procedural2dPlayHost
-import { Procedural2dFlowEditor, Procedural2dPreview, useProcedural2dDrawingBridge } from "@semio-tech/procedural-2d-react";
+import { Procedural2dFlowEditor, Procedural2dPreview, useProcedural2dDrawingBridge, canvasDrawingPngExportPort } from "@semio-tech/procedural-2d-react";
+import { FlowGenerateSurface } from "@semio-tech/forms-react";
+import { parseFormSpec } from "@semio-tech/forms-core";
 import { flowWidgetPaletteTreeDragController as procedural2dWidgetPaletteTreeDragController } from "@semio-tech/flow-react";
 import {
     PROCEDURAL_2D_PLAY_APP_ID,
@@ -7437,6 +7533,7 @@ import {
     PROCEDURAL_2D_PLAY_HIERARCHY_TAB_ID,
     PROCEDURAL_2D_PLAY_INSPECTION_TAB_ID,
     PROCEDURAL_2D_PLAY_SURFACE_ID,
+    PROCEDURAL_2D_PLAY_SURFACE_ID_GENERATE,
     PROCEDURAL_2D_PLAY_SURFACE_ID_PREVIEW,
     PROCEDURAL_2D_PLAY_WINDOW_KIND_ID,
     Procedural2dPlayController,
@@ -7497,7 +7594,7 @@ function useProcedural2dPlayController(runtimeOverride?: Platform): Procedural2d
   return ctrl;
 }
 
-async function downloadProcedural2dExport(name: string, text: string, mime: string): Promise<void> {
+async function downloadProcedural2dExport(name: string, data: BlobPart, mime: string): Promise<void> {
   const pickerWindow = window as Window & { showSaveFilePicker?: (options?: { suggestedName?: string; types?: { description: string; accept: Record<string, string[]> }[] }) => Promise<FileSystemFileHandle> };
   const ext = name.includes(".") ? name.slice(name.lastIndexOf(".")) : "";
   if (pickerWindow.showSaveFilePicker) {
@@ -7506,11 +7603,11 @@ async function downloadProcedural2dExport(name: string, text: string, mime: stri
       types: [{ description: "Export", accept: { [mime]: [ext] } }],
     });
     const writable = await handle.createWritable();
-    await writable.write(text);
+    await writable.write(data);
     await writable.close();
     return;
   }
-  const href = URL.createObjectURL(new Blob([text], { type: mime }));
+  const href = URL.createObjectURL(new Blob([data], { type: mime }));
   const link = document.createElement("a");
   link.href = href;
   link.download = name;
@@ -7568,18 +7665,27 @@ function Procedural2dPlayToolbarHostBridge({ runtime, ctrl }: { readonly runtime
         }
         if (command === "exportSvg" || command === "exportPdf" || command === "exportPng") {
           const handle = (args as { handle?: string } | undefined)?.handle ?? ctrl.getPrimaryDrawingHandle();
-          if (!handle || !drawingBridge) {
-            console.log(`[DEBUG] procedural 2d play ${command} skipped: no drawing handle or bridge`);
+          const primaryItem = ctrl.getPreviewItems().find((item) => item.kind === "drawing" && (!handle || item.handle === handle));
+          if (!handle && !primaryItem?.scene) {
+            console.log(`[DEBUG] procedural 2d play ${command} skipped: no drawing handle or scene`);
             return;
           }
           void (async () => {
             try {
-              if (command === "exportSvg") {
+              if (command === "exportPng" && primaryItem?.scene) {
+                const png = canvasDrawingPngExportPort.exportPng(primaryItem.scene);
+                await downloadProcedural2dExport("procedural2d.export.png", png, "image/png");
+              } else if (!drawingBridge || !handle) {
+                console.log(`[DEBUG] procedural 2d play ${command} skipped: no drawing bridge`);
+                return;
+              } else if (command === "exportSvg") {
                 const svg = drawingBridge.exportSvg(handle);
                 await downloadProcedural2dExport("procedural2d.export.svg", svg, "image/svg+xml");
               } else if (command === "exportPdf") {
-                const pdf = drawingBridge.exportPdf(handle);
-                await downloadProcedural2dExport("procedural2d.export.pdf", pdf, "application/pdf");
+                const pdfBase64 = drawingBridge.exportPdf(handle);
+                const binary = atob(pdfBase64);
+                const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+                await downloadProcedural2dExport("procedural2d.export.pdf", bytes, "application/pdf");
               } else {
                 const png = drawingBridge.exportPng(handle);
                 await downloadProcedural2dExport("procedural2d.export.png", png, "image/png");
@@ -7612,9 +7718,9 @@ function Procedural2dPlayPaneSurfaceHost({ node }: { readonly node: UiFlowHostSu
     [ctrl],
   );
   const onEvalOutputs = reactHostPort.useCallback(
-    (outputsJson: string) => {
+    (outputsJson: string, previewMeshes?: Readonly<Record<string, unknown>>) => {
       console.log(`[DEBUG] procedural 2d play eval outputs: ${outputsJson.slice(0, 120)}`);
-      ctrl?.run("setEvalOutputs", { outputsJson });
+      ctrl?.run("setEvalOutputs", { outputsJson, previewMeshes });
     },
     [ctrl],
   );
@@ -7831,11 +7937,37 @@ function Procedural2dPlayInner({ runtime }: { readonly runtime: Platform }): Rea
   );
 }
 
+function Procedural2dGenerateSurfaceHost({ node }: { readonly node: UiFormsHostSurfaceNode }): ReactElement {
+  const ctrl = useProcedural2dPlayController();
+  const spec = reactHostPort.useMemo(() => {
+    try {
+      return parseFormSpec(JSON.parse(ctrl?.getGenerateFormSpecJson() ?? "{}"));
+    } catch {
+      return parseFormSpec({ schema: "forms.form/v1", id: "empty", version: "1", steps: [{ id: "s", title: "Inputs", questions: [] }] });
+    }
+  }, [ctrl]);
+  return (
+    <FlowGenerateSurface
+      formSpec={spec}
+      generations={[...(ctrl?.getGenerations() ?? [])]}
+      selectedGenerationId={ctrl?.getSelectedGenerationId() ?? null}
+      previewText={ctrl?.getGeneratePreviewText() ?? "—"}
+      onSelectGeneration={(id) => ctrl?.run("selectGeneration", { id })}
+      onAddGeneration={() => ctrl?.run("addGeneration")}
+      onRemoveGeneration={(id) => ctrl?.run("removeGeneration", { id })}
+      onGenerationValuesChange={(id, values) => ctrl?.run("updateGenerationValues", { id, values })}
+      onRenameGeneration={(id, name) => ctrl?.run("renameGeneration", { id, name })}
+      className="h-full"
+    />
+  );
+}
+
 export function registerProcedural2dPlaySurfaceHosts(): void {
   if (procedural2dPlayChromeRegistered) return;
   procedural2dPlayChromeRegistered = true;
   registerUiFlowSurfaceHost(PROCEDURAL_2D_PLAY_SURFACE_ID, Procedural2dPlayPaneSurfaceHost);
   registerUiPuzzle2dSurfaceHost(PROCEDURAL_2D_PLAY_SURFACE_ID_PREVIEW, Procedural2dPreviewSurfaceHost);
+  registerUiFormsSurfaceHost(PROCEDURAL_2D_PLAY_SURFACE_ID_GENERATE, Procedural2dGenerateSurfaceHost);
   registerProcedural2dPlayDeclarativeBodies();
 }
 
@@ -8149,9 +8281,176 @@ const shootingPlayChromeBoot: PlaygroundChromeBoot = {
 };
 
 export function bootShootingPlay(playground: Playground, rootId = "root"): void {
-	bootPlayground(playground, shootingPlayChromeBoot, rootId);
+  bootPlayground(playground, shootingPlayChromeBoot, rootId);
 }
 //#endregion 🔖ShootingPlayHost
+
+//#region 🔖FormsPlayHost
+import type { UiFormsHostSurfaceNode } from "@semio-tech/framework-platform-core";
+import {
+  FORMS_PLAY_APP_ID,
+  FORMS_PLAY_CATALOGUE_TAB_ID,
+  FORMS_PLAY_CONTROLLER_ID,
+  FORMS_PLAY_HIERARCHY_TAB_ID,
+  FORMS_PLAY_INSPECTION_TAB_ID,
+  FORMS_PLAY_SURFACE_ID_BUILDER,
+  FORMS_PLAY_SURFACE_ID_PREVIEW,
+  FormsPlayController,
+  buildFormsPlayCatalogueTree,
+  buildFormsPlayHierarchyTree,
+  buildFormsPlayInspectorTree,
+  registerFormsPlayDeclarativeBodies,
+} from "@semio-tech/forms-play";
+import { FormBuilder, FormRenderer, defaultFormSpec, formSpecFromJson } from "@semio-tech/forms-react";
+
+let formsPlayChromeRegistered = false;
+const formsPlayControllerRef: { current: FormsPlayController | null } = { current: null };
+
+function useFormsPlayController(runtimeOverride?: Platform): FormsPlayController | undefined {
+  const appCtx = reactHostPort.useContext(PlaygroundContext);
+  const runtime = runtimeOverride ?? appCtx?.runtime;
+  reactHostPort.useSyncExternalStore(
+    (listener) => (runtime ? runtime.subscribe(listener) : () => {}),
+    () => runtime?.generation ?? 0,
+    () => 0,
+  );
+  const ctrl = runtime?.getActiveApp()?.controller as FormsPlayController | undefined;
+  formsPlayControllerRef.current = ctrl ?? null;
+  return ctrl;
+}
+
+function useFormsPlayInteractionRevision(runtime: Platform): number {
+  return reactHostPort.useSyncExternalStore(
+    (listener) => {
+      const ctrl = runtime.getActiveApp()?.controller as FormsPlayController | undefined;
+      formsPlayControllerRef.current = ctrl ?? null;
+      const unsubscribeRuntime = runtime.subscribe(listener);
+      const unsubscribeSnapshot = ctrl?.subscribeSnapshot(listener);
+      return () => {
+        unsubscribeRuntime();
+        unsubscribeSnapshot?.();
+      };
+    },
+    () => (runtime.getActiveApp()?.controller as FormsPlayController | undefined)?.getInteractionRevision() ?? 0,
+    () => 0,
+  );
+}
+
+function FormsBuilderSurfaceHost({ node }: { readonly node: UiFormsHostSurfaceNode }): ReactElement {
+  const ctrl = useFormsPlayController();
+  const spec = ctrl?.getSpec() ?? defaultFormSpec("empty");
+  const [selectedIds, setSelectedIds] = reactHostPort.useState<string[]>([]);
+  return (
+    <FormBuilder
+      spec={spec}
+      selectedIds={selectedIds}
+      onSelectionChange={(ids) => {
+        setSelectedIds([...ids]);
+        ctrl?.run("setSelection", { ids: [...ids] });
+      }}
+      onChange={(next) => ctrl?.run("setSpecJson", { json: JSON.stringify(next) })}
+      className="h-full"
+    />
+  );
+}
+
+function FormsPreviewSurfaceHost({ node }: { readonly node: UiFormsHostSurfaceNode }): ReactElement {
+  const ctrl = useFormsPlayController();
+  const spec = ctrl?.getSpec();
+  if (!spec) return <div className="p-double text-sm text-muted-foreground">No form loaded</div>;
+  return <FormRenderer spec={spec} className="h-full" onSubmit={(values) => console.log("[DEBUG] forms preview submit", values)} />;
+}
+
+class FormsPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
+  buildTab(): SidePanelTabConfig {
+    return {
+      id: FORMS_PLAY_HIERARCHY_TAB_ID,
+      icon: shellTabIconComponent(FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, "workbench"),
+      name: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+      order: 0,
+      tree: new CallbackTreePanelDefinition(() => {
+        const ctrl = formsPlayControllerRef.current;
+        const bus = new CommandBus();
+        const treeNode = buildFormsPlayHierarchyTree(ctrl?.getSpec() ?? defaultFormSpec("empty"), ctrl?.getSelectedIds() ?? []);
+        return uiTreeNodeToTreePanelConfig(treeNode, bus);
+      }),
+    };
+  }
+}
+
+class FormsPlayCataloguePanelDefinition extends PureSidePanelTabDefinition {
+  buildTab(): SidePanelTabConfig {
+    return {
+      id: FORMS_PLAY_CATALOGUE_TAB_ID,
+      icon: shellTabIconComponent(FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, "workbench"),
+      name: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+      order: 1,
+      tree: new CallbackTreePanelDefinition(() => {
+        const bus = new CommandBus();
+        return uiTreeNodeToTreePanelConfig(buildFormsPlayCatalogueTree(), bus);
+      }),
+    };
+  }
+}
+
+class FormsPlayInspectionPanelDefinition extends PureSidePanelTabDefinition {
+  buildTab(): SidePanelTabConfig {
+    return {
+      id: FORMS_PLAY_INSPECTION_TAB_ID,
+      icon: shellTabIconComponent(FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, "details"),
+      name: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+      order: 0,
+      tree: new CallbackTreePanelDefinition(() => {
+        const ctrl = formsPlayControllerRef.current;
+        const bus = new CommandBus();
+        const treeNode = buildFormsPlayInspectorTree(ctrl?.getSpec() ?? defaultFormSpec("empty"), ctrl?.getSelectedIds() ?? []);
+        return uiTreeNodeToTreePanelConfig(treeNode, bus);
+      }),
+    };
+  }
+}
+
+function FormsPlayInner({ playground }: { readonly playground: Playground }): ReactElement {
+  useFormsPlayController(playground.runtime);
+  useFormsPlayInteractionRevision(playground.runtime);
+  const formsPlayHierarchyPanel = reactHostPort.useMemo(() => new FormsPlayHierarchyPanelDefinition(), []);
+  const formsPlayCataloguePanel = reactHostPort.useMemo(() => new FormsPlayCataloguePanelDefinition(), []);
+  const formsPlayInspectionPanel = reactHostPort.useMemo(() => new FormsPlayInspectionPanelDefinition(), []);
+  const augmentPanelTabs = reactHostPort.useMemo(
+    () => ({
+      workbench: [formsPlayHierarchyPanel, formsPlayCataloguePanel],
+      details: [formsPlayInspectionPanel],
+    }),
+    [formsPlayCataloguePanel, formsPlayHierarchyPanel, formsPlayInspectionPanel],
+  );
+  return <PlaygroundView runtime={playground.runtime} defaultAppId={FORMS_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} playgroundKeybindings={playground.keybindings} />;
+}
+
+export function registerFormsPlaySurfaceHosts(): void {
+  if (formsPlayChromeRegistered) return;
+  formsPlayChromeRegistered = true;
+  registerUiFormsSurfaceHost(FORMS_PLAY_SURFACE_ID_BUILDER, FormsBuilderSurfaceHost);
+  registerUiFormsSurfaceHost(FORMS_PLAY_SURFACE_ID_PREVIEW, FormsPreviewSurfaceHost);
+  registerFormsPlayDeclarativeBodies();
+}
+
+function FormsPlayChrome({ playground }: { readonly playground: Playground }): ReactElement {
+  return <FormsPlayInner playground={playground} />;
+}
+
+export function mountFormsPlayChrome(playground: Playground, rootId = "root"): void {
+  mountPlaygroundApp(<FormsPlayChrome playground={playground} />, rootId);
+}
+
+const formsPlayChromeBoot: PlaygroundChromeBoot = {
+  registerHosts: registerFormsPlaySurfaceHosts,
+  mount: mountFormsPlayChrome,
+};
+
+export function bootFormsPlay(playground: Playground, rootId = "root"): void {
+  bootPlayground(playground, formsPlayChromeBoot, rootId);
+}
+//#endregion 🔖FormsPlayHost
 
 //#region 🔖PresentationPlayHost
 import {
@@ -8836,6 +9135,28 @@ export function bootPlayground(playground: Playground, boot: PlaygroundChromeBoo
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
 
+  describe("playground renderer slices", () => {
+    it("keeps cross-dimensional brush host imports with their consumers", async () => {
+      const { readFileSync } = await import("node:fs");
+      const source = readFileSync("index.tsx", "utf8");
+      const hostRegion = (kind: "2d" | "5d") => {
+        const start = `//#region 🔖Puzzle${kind}PlayHost`;
+        return source.slice(source.indexOf(start), source.indexOf(`//#endregion 🔖Puzzle${kind}PlayHost`));
+      };
+      const puzzle2d = hostRegion("2d");
+      const puzzle5d = hostRegion("5d");
+      expect(puzzle2d).toMatch(
+        /import\s*\{[^}]*puzzle2dSetBrushPlaceCommitHandler[^}]*\}\s*from\s*["']@semio-tech\/puzzle-2d-react["']/,
+      );
+      expect(puzzle5d).toMatch(
+        /import\s*\{[^}]*installPuzzle3dPlayBrushHost[^}]*\}\s*from\s*["']@semio-tech\/puzzle-3d-play["']/,
+      );
+      expect(puzzle5d).toMatch(
+        /import\s*\{[^}]*puzzle2dSetBrushPlaceCommitHandler[^}]*\}\s*from\s*["']@semio-tech\/puzzle-2d-react["']/,
+      );
+    });
+  });
+
   describe("PlaygroundView shell notify", () => {
     it("panel visibility uses chrome generation without bumping data generation", () => {
       const runtime = new Platform({ id: "p", name: "P" });
@@ -8861,6 +9182,10 @@ if (import.meta.vitest) {
       registerWindowBody("playground.navbar.align.main", () => buildPanelWindowBody("playground.navbar.align", "playground-navbar-align-test"));
       runtime.addApp(app);
       const markup = renderToStaticMarkup(<PlaygroundView runtime={runtime} defaultAppId="playground-navbar-align-test" />);
+      expect(markup).toContain('data-slot="app-name"');
+      expect(markup).toContain(">Navbar Align Test</span>");
+      expect(markup).toContain('id="playground.navbar.modes.edit"');
+      expect(markup).toContain(">Edit</span>");
       expect(markup).toContain('data-slot="app-panel-toggle-group"');
       expect(markup).toContain("flex-1 min-w-0");
       expect(markup.indexOf("flex-1 min-w-0")).toBeLessThan(markup.indexOf('data-slot="app-panel-toggle-group"'));
@@ -8896,14 +9221,16 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("Toolbar categories", () => {
-    it("lists populated categories and omits separator-only groups", () => {
+  describe("Toolbar tree", () => {
+    it("detects interactive toolbar nodes and omits separator-only groups", () => {
       expect(
-        listPopulatedToolbarViewCategories({
-          save: [{ id: "save.selected", label: "Selected" }],
-          filter: [{ id: "sep", kind: "separator" }],
-        }),
-      ).toEqual(["save"]);
+        hasToolbarViewTools([
+          { id: "save", kind: "collection", icon: null, children: [{ id: "save.selected", label: "Selected" }] },
+        ]),
+      ).toBe(true);
+      expect(
+        hasToolbarViewTools([{ id: "filter", kind: "collection", icon: null, children: [{ id: "sep", kind: "separator" }] }]),
+      ).toBe(false);
     });
   });
 

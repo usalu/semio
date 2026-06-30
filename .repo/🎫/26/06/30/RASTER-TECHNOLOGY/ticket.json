@@ -1,0 +1,18 @@
+{
+  "title": "Raster Technology",
+  "emoji": "🖼️",
+  "status": "open",
+  "description": "Introduce a new top-level raster technology for non-destructive, multi-windowed image editing on an infinite canvas. Built on infinite_cavas Rust/WASM/Vello. Layers, masks, blend modes, adjustment layers, painting, filters. Integrated with shared hover/selection, side-panel-tree, ribbon-tool-tree, multi-window shell. Sophisticated playground.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1764"
+  },
+  "goal": "🎯r2603",
+  "plan": {
+    "client": "cursor",
+    "id": "5dd4bffd",
+    "source": "/Users/ueli/Documents/semio/.cursor/plans/raster_technology_5dd4bffd.plan.md"
+  },
+  "sessions": [
+    "⚪c73827bd6e9b41e1b9115ed48368695d"
+  ]
+}

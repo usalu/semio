@@ -283,9 +283,9 @@ export function sidePanelTreeRootItems(
 
 //#region 🔖ComponentKind
 /** @emoji 🧩 Fixed platform component vocabulary wired by renderers (`table`, `virtualFileSystem`, `puzzle2d`, …). */
-export type ComponentKind = "table" | "virtualFileSystem" | "puzzle2d" | "puzzle3d" | "puzzle5d" | "cad" | "gismap" | "flow" | "dag" | "trinity" | "shooting" | "panel";
+export type ComponentKind = "table" | "virtualFileSystem" | "puzzle2d" | "puzzle3d" | "puzzle5d" | "cad" | "gismap" | "flow" | "dag" | "trinity" | "shooting" | "forms" | "panel";
 
-const CANVAS_COMPONENT_KINDS: readonly ComponentKind[] = ["table", "virtualFileSystem", "puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag", "trinity", "shooting"];
+const CANVAS_COMPONENT_KINDS: readonly ComponentKind[] = ["table", "virtualFileSystem", "puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag", "trinity", "shooting", "forms"];
 //#endregion 🔖ComponentKind
 
 /** @emoji 📊 Host-bound tabular surface; `paneId` disambiguates multiple table slots in one app. */
@@ -405,6 +405,16 @@ export interface UiShootingHostSurfaceNode {
 	readonly bindingId?: string;
 }
 
+/** @emoji 📋 Host-bound forms surface (`builder`, `preview`, or flow `generate`). */
+export interface UiFormsHostSurfaceNode {
+	readonly type: "forms";
+	readonly componentKind: "forms";
+	readonly surfaceId: string;
+	readonly controllerId: string;
+	readonly view: "builder" | "preview" | "generate";
+	readonly bindingId?: string;
+}
+
 export type UiComponentHostSurfaceNode =
 	| UiTableHostSurfaceNode
 	| UiVirtualFileSystemHostSurfaceNode
@@ -417,6 +427,7 @@ export type UiComponentHostSurfaceNode =
 	| UiTrinityHostSurfaceNode
 	| UiCadHostSurfaceNode
 	| UiShootingHostSurfaceNode
+	| UiFormsHostSurfaceNode
 	| UiPanelHostSurfaceNode;
 
 /** @emoji 🌲 Converts declarative form sections into a strict side-panel tree. */
@@ -610,6 +621,16 @@ export function buildShootingWindowBody(
 	return { type: "shooting", componentKind: "shooting", surfaceId, controllerId, view, ...(bindingId ? { bindingId } : {}) };
 }
 
+/** @emoji 📋 Canonical forms window body for builder, preview, or generate surfaces. */
+export function buildFormsWindowBody(
+	surfaceId: string,
+	controllerId: string,
+	view: "builder" | "preview" | "generate",
+	bindingId?: string,
+): UiFormsHostSurfaceNode {
+	return { type: "forms", componentKind: "forms", surfaceId, controllerId, view, ...(bindingId ? { bindingId } : {}) };
+}
+
 function isCanvasComponentNode(node: UiNode): boolean {
 	if (node.type === "text") return true;
 	if (node.type === "panel") return true;
@@ -628,7 +649,7 @@ export function isCanvasOnlyWindowBody(node: UiNode): boolean {
 function assertCanvasOnlyWindowBody(bodyKey: string, node: UiNode): void {
 	if (isCanvasOnlyWindowBody(node)) return;
 		throw new Error(
-			`Declarative window body "${bodyKey}" must be a single table, virtualFileSystem, puzzle2d, puzzle3d, puzzle5d, cad, or shooting surface (optional none padding stack wrapper). Found "${node.type}". Use ModeRuntime.tools, side tabs, or window measures for chrome.`,
+			`Declarative window body "${bodyKey}" must be a single table, virtualFileSystem, puzzle2d, puzzle3d, puzzle5d, cad, shooting, or forms surface (optional none padding stack wrapper). Found "${node.type}". Use ModeRuntime.tools, side tabs, or window measures for chrome.`,
 		);
 }
 //#endregion 🔖UiNode
@@ -1753,7 +1774,7 @@ export class AppRuntime extends BaseAppRuntime {
 		layout: WindowLayout,
 		windowKinds: readonly WindowKindRuntime[],
 	) {
-		super(id, label, iconId, controller, layout, windowKinds);
+		super(id, label, iconId, controller, layout, windowKinds, (modeId, modeLabel, modeIconId) => new ModeRuntime(modeId, modeLabel, modeIconId));
 	}
 
 	override addMode(mode: ModeRuntime): void {
@@ -2611,7 +2632,7 @@ if (import.meta.vitest) {
 				id: "pl",
 				target: { product: "p", api: "^1" },
 				surfaces: {
-					[`framework.window:app:default:w`]: async () => {
+					[`framework.window:app:edit:w`]: async () => {
 						surfaceActivations++;
 						return { dispose: () => undefined };
 					},

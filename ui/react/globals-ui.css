@@ -145,7 +145,7 @@
 
 /* #region 👻PanelGhost */
 [data-ghost="true"] [data-dim]:not([data-active-interaction]):not([data-active-ancestor]) {
-  opacity: 0.05;
+  opacity: 0 !important;
   pointer-events: none;
   transition: opacity 150ms;
   scrollbar-width: none;
@@ -164,11 +164,11 @@
 }
 
 [data-ghost="true"] [data-dim][data-active-ancestor] {
-  opacity: 1;
+  opacity: 1 !important;
 }
 
 [data-ghost="true"] [data-active-interaction] {
-  opacity: 1;
+  opacity: 1 !important;
   pointer-events: auto;
 }
 
@@ -176,8 +176,4 @@
   border-color: transparent !important;
 }
 
-[data-ghost="true"] [data-slot="panel-chrome-frame"] {
-  opacity: 1;
-}
 /* #endregion 👻PanelGhost */
-

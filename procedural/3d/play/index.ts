@@ -6,8 +6,12 @@ import {
     buildFlowPlayCatalogueTree,
     buildFlowPlayHierarchyTree,
     buildFlowPlayInspectorTree,
+    createDefaultGenerations,
     parseFlowPlayFixtureJson,
+    runGenerationCommand,
 } from "@semio-tech/flow-play";
+import { flowFixtureToFormSpec, type FlowGeneration } from "@semio-tech/forms-react";
+import { FlowOrchestratorClient } from "../../../flow/worker-client.ts";
 import {
     buildCatalogueKindsTreeSections,
     buildFlowContextMenuItems,
@@ -33,6 +37,7 @@ import type { WindowMeasure } from "@semio-tech/framework-playground-core";
 import {
     AppRuntime,
     buildFlowWindowBody,
+    buildFormsWindowBody,
     buildPuzzle3dWindowBody,
     CommandBus,
     Controller,
@@ -53,7 +58,8 @@ import {
     type CommandDescriptor,
     type PlaygroundFixtureCatalog,
     type PlaygroundFixtureHost,
-    type ToolItem,
+    type ToolLeaf,
+    toolCollection,
     type UiNode,
     type UiTreeSectionNode,
     type WindowBodyViewContext,
@@ -108,7 +114,9 @@ export const PROCEDURAL_PLAY_BODY_KEY_MAIN = "procedural.play.main";
 export const PROCEDURAL_PLAY_WINDOW_KIND_ID = "procedural-main";
 export const PROCEDURAL_PLAY_WINDOW_KIND_PREVIEW = "procedural-preview";
 export const PROCEDURAL_PLAY_BODY_KEY_PREVIEW = "procedural.play.preview";
+export const PROCEDURAL_PLAY_BODY_KEY_GENERATE = "procedural.play.generate";
 export const PROCEDURAL_PLAY_SURFACE_ID_PREVIEW = "procedural.play.preview/v1";
+export const PROCEDURAL_PLAY_SURFACE_ID_GENERATE = "procedural.play.generate/v1";
 
 export const PROCEDURAL_PLAY_DEFAULT_FIXTURE: FlowFixtureV1 = PROCEDURAL_DEFAULT_FIXTURE;
 export const PROCEDURAL_PLAY_DEFAULT_FIXTURE_JSON = proceduralFixtureToJson(PROCEDURAL_DEFAULT_FIXTURE);
@@ -485,7 +493,7 @@ export interface ProceduralPlayHostBridge {
 
 /** @emoji 🧰 Playground {@link AppTools} for procedural play (selection, save, view, actions). */
 export function buildProceduralPlayToolbarTools(state: ProceduralPlayToolbarState, controllerId: string): AppTools {
-	const selectionTools: ToolItem[] = [
+	const selectionTools: ToolLeaf[] = [
 		{
 			id: "procedural.select.rectangle",
 			kind: "toggle",
@@ -563,7 +571,7 @@ export function buildProceduralPlayToolbarTools(state: ProceduralPlayToolbarStat
 			command: "clearSelection",
 		},
 	];
-	const saveTools: ToolItem[] = [
+	const saveTools: ToolLeaf[] = [
 		{
 			id: "procedural.save.stored",
 			kind: "button",
@@ -611,10 +619,10 @@ export function buildProceduralPlayToolbarTools(state: ProceduralPlayToolbarStat
 			command: "resetFixture",
 		},
 	];
-	return {
-		selection: selectionTools,
-		save: saveTools,
-		view: [
+	return [
+		toolCollection("selection", "mouse-pointer-2", selectionTools),
+		toolCollection("save", "save", saveTools),
+		toolCollection("view", "layout-grid", [
 			{
 				id: "procedural.view.everything",
 				kind: "toggle",
@@ -637,8 +645,8 @@ export function buildProceduralPlayToolbarTools(state: ProceduralPlayToolbarStat
 				command: "setShowMode",
 				args: { id: "selected" },
 			},
-		],
-		actions: [
+		]),
+		toolCollection("actions", "more-horizontal", [
 			{
 				id: "procedural.action.reorganize",
 				kind: "button",
@@ -658,8 +666,8 @@ export function buildProceduralPlayToolbarTools(state: ProceduralPlayToolbarStat
 				controllerId,
 				command: "deleteSelection",
 			},
-		],
-	};
+		]),
+	];
 }
 
 function proceduralFixtureJsonForId(fixtureId: string): string {
@@ -681,9 +689,14 @@ export function proceduralPlayFixtureJson(fixtureId: string = PROCEDURAL_PLAY_FI
 
 /** @emoji 🎛 Procedural play shell controller. */
 export class ProceduralPlayController extends Controller implements PlaygroundFixtureHost {
-	readonly mainMode = new ModeRuntime("main", "Procedural", undefined);
+	readonly mainMode = new ModeRuntime("main", "Edit", undefined);
+	readonly generateMode = new ModeRuntime("generate", "Generate", undefined);
 	private activeFixtureId = playgroundResolvedFixtureId(PLAYGROUND_NO_FIXTURE_ID);
 	private fixtureJson = proceduralFixtureJsonForId(playgroundResolvedFixtureId(PLAYGROUND_NO_FIXTURE_ID));
+	private generations: FlowGeneration[] = createDefaultGenerations();
+	private selectedGenerationId: string | null = null;
+	private generatePreviewText = "—";
+	private evalClient: FlowOrchestratorClient | null = null;
 	private readonly fixtureStore: ProceduralPlayFixtureStore;
 	private hostBridge: ProceduralPlayHostBridge | null = null;
 	private previewText = "—";
@@ -726,7 +739,9 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 		super(PROCEDURAL_3D_PLAY_CONTROLLER_ID, commandBus, hostNotify);
 		this.fixtureStore = fixtureStore;
 		this.fixtureEdges = this.parseFixtureEdges(this.fixtureJson);
+		this.selectedGenerationId = this.generations[0]?.id ?? null;
 		this.rebuildShellMode();
+		this.rebuildGenerateMode();
 	}
 
 	hasStoredFixture(): boolean {
@@ -869,6 +884,27 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 
 	getPreviewText(): string {
 		return this.previewText;
+	}
+
+	getGenerations(): readonly FlowGeneration[] {
+		return this.generations;
+	}
+
+	getSelectedGenerationId(): string | null {
+		return this.selectedGenerationId;
+	}
+
+	getGeneratePreviewText(): string {
+		return this.generatePreviewText;
+	}
+
+	getGenerateFormSpecJson(): string {
+		return JSON.stringify(flowFixtureToFormSpec(this.fixtureJson));
+	}
+
+	private getEvalClient(): FlowOrchestratorClient {
+		if (!this.evalClient) this.evalClient = new FlowOrchestratorClient();
+		return this.evalClient;
 	}
 
 	getCatalogueSections(): readonly CatalogueSection[] {
@@ -1381,6 +1417,10 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 		this.rebuildToolbarTools();
 	}
 
+	private rebuildGenerateMode(): void {
+		this.generateMode.windowKinds = [new WindowKindRuntime(PROCEDURAL_PLAY_WINDOW_KIND_ID, "Generate", PROCEDURAL_PLAY_BODY_KEY_GENERATE)];
+	}
+
 	override run(command: string, args?: unknown): void {
 		if (command === "engagementInput") {
 			const value = (args as { value?: string }).value;
@@ -1733,6 +1773,24 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 			this.emit();
 			return;
 		}
+		if (command === "addGeneration" || command === "removeGeneration" || command === "selectGeneration" || command === "renameGeneration" || command === "updateGenerationValues") {
+			void runGenerationCommand({
+				command,
+				args,
+				generations: this.generations,
+				selectedGenerationId: this.selectedGenerationId,
+				fixtureJson: this.fixtureJson,
+				client: this.getEvalClient(),
+			}).then((next) => {
+				if (!next) return;
+				this.generations = [...next.generations];
+				this.selectedGenerationId = next.selectedGenerationId;
+				if (next.generatePreviewText) this.generatePreviewText = next.generatePreviewText;
+				this.interactionRevision += 1;
+				this.emit();
+			});
+			return;
+		}
 	}
 
 	private applyEngagement(value: string): void {
@@ -1768,10 +1826,14 @@ export function registerProceduralPlayDeclarativeBodies(): void {
 		buildFlowWindowBody(PROCEDURAL_PLAY_SURFACE_ID, PROCEDURAL_3D_PLAY_CONTROLLER_ID, PROCEDURAL_PLAY_WINDOW_KIND_ID));
 	registerWindowBody(PROCEDURAL_PLAY_BODY_KEY_PREVIEW, (_ctx: WindowBodyViewContext) =>
 		buildPuzzle3dWindowBody(PROCEDURAL_PLAY_SURFACE_ID_PREVIEW, PROCEDURAL_3D_PLAY_CONTROLLER_ID));
+	registerWindowBody(PROCEDURAL_PLAY_BODY_KEY_GENERATE, (_ctx: WindowBodyViewContext) =>
+		buildFormsWindowBody(PROCEDURAL_PLAY_SURFACE_ID_GENERATE, PROCEDURAL_3D_PLAY_CONTROLLER_ID, "generate"));
 }
 
 export function buildProceduralPlayAppRuntime(controller: ProceduralPlayController): AppRuntime {
-	return createPlayAppRuntime(PROCEDURAL_3D_PLAY_APP_ID, "semio · procedural", controller, PROCEDURAL_PLAY_LAYOUT, controller.mainMode);
+	const app = createPlayAppRuntime(PROCEDURAL_3D_PLAY_APP_ID, "Procedural 3D", controller, PROCEDURAL_PLAY_LAYOUT, controller.mainMode);
+	app.addMode(controller.generateMode);
+	return app;
 }
 
 /** @emoji 🛝 Procedural playground app. */
@@ -2311,7 +2373,7 @@ if (import.meta.vitest) {
 				}),
 				runHostCommand: () => {},
 			});
-			expect(ctrl.mainMode.tools?.selection?.length).toBeGreaterThan(0);
+			expect(ctrl.mainMode.tools?.find((node) => node.kind === "collection" && node.id === "selection")?.kind === "collection").toBe(true);
 		});
 
 		it("fixture store round-trips json", () => {

@@ -19,7 +19,7 @@ Background Web Worker + Rust/WASM (`parry3d`) precomputes brush collision-free c
 - `puzzle/3d/react/index.tsx` (precompute region, brush/fill wiring)
 - `puzzle/3d/play/index.ts` (fill session + host rules)
 - `Cargo.toml` (workspace member)
-- `.vscode/launch.json` (`🛠️dev🧩puzzle📷3d🦀rs`)
+- `.vscode/launch.json` (`🛠️dev🧩puzzle🏙️3d🦀rs`)
 - `puzzle/3d/react/vitest.config.ts`, `project.json`
 
 ## Tests

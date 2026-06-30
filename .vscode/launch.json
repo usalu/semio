@@ -72,13 +72,13 @@
     // #endregion
     // #region 🛠️ Dev
     {
-      "name": "🛠️dev📖storybook",
+      "name": "🛠️dev📐cad",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun run dev:storybook",
+      "command": "bun run dev:cad",
       "cwd": "${workspaceFolder}",
       "env": {
-        "STORYBOOK_PORT": "6010"
+        "CAD_JS_RENDERER_PLAY_PORT": "6020"
       },
       "presentation": {
         "group": "3_dev",
@@ -86,18 +86,18 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6010)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6020)",
         "uriFormat": "%s"
       }
     },
     {
-      "name": "🛠️dev📖storybook🖱️ui",
+      "name": "🛠️dev📐cad🧩concrete🌲forest",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun run dev:storybook:ui",
+      "command": "bun run dev:cad:concrete-forest",
       "cwd": "${workspaceFolder}",
       "env": {
-        "STORYBOOK_PORT": "6010"
+        "CAD_JS_RENDERER_PLAY_PORT": "6020"
       },
       "presentation": {
         "group": "3_dev",
@@ -105,84 +105,93 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6010)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6020)",
         "uriFormat": "%s"
       }
     },
     {
-      "name": "🛠️dev📖storybook🧩puzzle🩻2d",
+      "name": "🛠️dev🔬coda🖱️desktop",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun run dev:storybook:puzzle:2d",
+      "command": "bun nx run @semio-tech/coda-desktop:dev",
       "cwd": "${workspaceFolder}",
-      "env": {
-        "STORYBOOK_PORT": "6010"
-      },
       "presentation": {
         "group": "3_dev",
         "order": 30
-      },
-      "serverReadyAction": {
-        "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6010)",
-        "uriFormat": "%s"
       }
     },
     {
-      "name": "🛠️dev📖storybook🧩puzzle",
-      "type": "node-terminal",
+      "name": "🛠️dev🔬coda🤖mcp",
+      "type": "node",
       "request": "launch",
-      "command": "bun run dev:storybook:puzzle",
-      "cwd": "${workspaceFolder}",
+      "runtimeExecutable": "uv",
+      "runtimeArgs": [
+        "--directory",
+        "coda/assistant",
+        "run",
+        "main.py",
+        "--mcp-stdio"
+      ],
       "env": {
-        "STORYBOOK_PORT": "6010"
+        "MCP_AUTO_OPEN_ENABLED": "false",
+        "MCP_PROXY_AUTH_TOKEN": "repo-mcp-token"
       },
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
       "presentation": {
         "group": "3_dev",
         "order": 40
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6010)",
+        "pattern": "(http://[^\\s]+:6274/\\?MCP_PROXY_AUTH_TOKEN=[^\\s]+)",
+        "uriFormat": "%s&transport=stdio&serverCommand=uv&serverArgs=--directory&serverArgs=coda/assistant&serverArgs=run&serverArgs=main.py&serverArgs=--mcp-stdio&MCP_PROXY_FULL_ADDRESS=http://127.0.0.1:6277"
+      }
+    },
+    {
+      "name": "🛠️dev🏘️compose📐3dm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx dev @semio-tech/compose-3dm-ui",
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "custom",
+        "pattern": [
+          {
+            "regexp": ".",
+            "file": 1,
+            "location": 2,
+            "message": 3
+          }
+        ],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "VITE",
+          "endsPattern": "http://localhost:5174/"
+        }
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 50,
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "cwd": "${workspaceFolder}",
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://localhost:5174)",
         "uriFormat": "%s"
       }
     },
     {
-      "name": "🛠️dev📖storybook🏘️compose",
+      "name": "🛠️dev🏘️compose🖱️desktop",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun run dev:storybook:compose",
+      "command": "bun run dev",
       "cwd": "${workspaceFolder}",
-      "env": {
-        "STORYBOOK_PORT": "6010"
-      },
       "presentation": {
         "group": "3_dev",
-        "order": 50
-      },
-      "serverReadyAction": {
-        "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6010)",
-        "uriFormat": "%s"
-      }
-    },
-    {
-      "name": "🛠️dev📖storybook🏘️compose🖱️ui",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun run dev:storybook:compose:ui",
-      "cwd": "${workspaceFolder}",
-      "env": {
-        "STORYBOOK_PORT": "6010"
-      },
-      "presentation": {
-        "group": "3_dev",
-        "order": 70
-      },
-      "serverReadyAction": {
-        "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6010)",
-        "uriFormat": "%s"
+        "order": 60
       }
     },
     {
@@ -213,69 +222,11 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
-        "order": 50
-      },
-      "serverReadyAction": {
-        "action": "openExternally",
-        "pattern": "(http://[^\\s]+:6274)",
-        "uriFormat": "%s"
-      }
-    },
-    {
-      "name": "🛠️dev🏘️compose✍️sketchpad🎛️play",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/compose-sketchpad-play:dev",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 60
-      },
-      "serverReadyAction": {
-        "action": "openExternally",
-        "pattern": "(http://localhost:4000)",
-        "uriFormat": "%s"
-      }
-    },
-    {
-      "name": "🛠️dev🏘️compose🧮query🦀build",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/compose-query:build",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 69
-      }
-    },
-    {
-      "name": "🛠️dev🏘️compose🧮query🌐wasm",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun ./script.ts query wasm",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 69.5
-      }
-    },
-    {
-      "name": "🛠️dev🏘️compose🏪store📊graphiql",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/compose-store:dev",
-      "env": {
-        "RUST_LOG": "info",
-        "COMPOSE_STORE_PORT": "4010"
-      },
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
         "order": 70
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://127\\.0\\.0\\.1:4010/graphiql)",
+        "pattern": "(http://[^\\s]+:6274)",
         "uriFormat": "%s"
       }
     },
@@ -295,6 +246,28 @@
         "order": 80,
         "reveal": "always",
         "panel": "dedicated"
+      }
+    },
+    {
+      "name": "🛠️dev🏘️compose🧮query🦀build",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/compose-query:build",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 90
+      }
+    },
+    {
+      "name": "🛠️dev🏘️compose🧮query🌐wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./script.ts query wasm",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 100
       }
     },
     {
@@ -325,7 +298,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
-        "order": 80
+        "order": 110
       },
       "serverReadyAction": {
         "action": "openExternally",
@@ -334,175 +307,38 @@
       }
     },
     {
-      "name": "🛠️dev🏘️compose📐3dm",
+      "name": "🛠️dev🏘️compose✍️sketchpad🎛️play",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx dev @semio-tech/compose-3dm-ui",
-      "isBackground": true,
-      "problemMatcher": {
-        "owner": "custom",
-        "pattern": [
-          {
-            "regexp": ".",
-            "file": 1,
-            "location": 2,
-            "message": 3
-          }
-        ],
-        "background": {
-          "activeOnStart": true,
-          "beginsPattern": "VITE",
-          "endsPattern": "http://localhost:5174/"
-        }
-      },
-      "presentation": {
-        "group": "3_dev",
-        "order": 90,
-        "reveal": "always",
-        "panel": "dedicated"
-      },
+      "command": "bun nx run @semio-tech/compose-sketchpad-play:dev",
       "cwd": "${workspaceFolder}",
-      "serverReadyAction": {
-        "action": "openExternally",
-        "pattern": "(http://localhost:5174)",
-        "uriFormat": "%s"
-      }
-    },
-    {
-      "name": "🛠️dev🏘️compose🖱️desktop",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun run dev",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 100
-      }
-    },
-    {
-      "name": "🛠️dev🖱️ui🪁typecheck",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/ui-react:typecheck",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 70.4
-      }
-    },
-    {
-      "name": "🛠️dev🔬coda🖱️desktop",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/coda-desktop:dev",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 110
-      }
-    },
-    {
-      "name": "🛠️dev🔬coda🤖mcp",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "uv",
-      "runtimeArgs": [
-        "--directory",
-        "coda/assistant",
-        "run",
-        "main.py",
-        "--mcp-stdio"
-      ],
-      "env": {
-        "MCP_AUTO_OPEN_ENABLED": "false",
-        "MCP_PROXY_AUTH_TOKEN": "repo-mcp-token"
-      },
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal",
       "presentation": {
         "group": "3_dev",
         "order": 120
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://[^\\s]+:6274/\\?MCP_PROXY_AUTH_TOKEN=[^\\s]+)",
-        "uriFormat": "%s&transport=stdio&serverCommand=uv&serverArgs=--directory&serverArgs=coda/assistant&serverArgs=run&serverArgs=main.py&serverArgs=--mcp-stdio&MCP_PROXY_FULL_ADDRESS=http://127.0.0.1:6277"
-      }
-    },
-    {
-      "name": "🛠️dev🧰repo🤖mcp",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun run dev -- mcp repo",
-      "env": {
-        "MCP_AUTO_OPEN_ENABLED": "false",
-        "MCP_PROXY_AUTH_TOKEN": "repo-mcp-token"
-      },
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 140
-      },
-      "serverReadyAction": {
-        "action": "openExternally",
-        "pattern": "(http://[^\\s]+:6274/\\?MCP_PROXY_AUTH_TOKEN=[^\\s]+)",
-        "uriFormat": "%s&transport=stdio&serverCommand=go&serverArgs=run&serverArgs=./repo/client/mcp&MCP_PROXY_FULL_ADDRESS=http://127.0.0.1:6277"
-      }
-    },
-    {
-      "name": "🛠️dev📐cad",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun run dev:cad",
-      "cwd": "${workspaceFolder}",
-      "env": {
-        "CAD_JS_RENDERER_PLAY_PORT": "6020"
-      },
-      "presentation": {
-        "group": "3_dev",
-        "order": 165
-      },
-      "serverReadyAction": {
-        "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6020)",
+        "pattern": "(http://localhost:4000)",
         "uriFormat": "%s"
       }
     },
     {
-      "name": "🛠️dev📐cad🧩concrete🌲forest",
+      "name": "🛠️dev🏘️compose🏪store📊graphiql",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun run dev:cad:concrete-forest",
-      "cwd": "${workspaceFolder}",
+      "command": "bun nx run @semio-tech/compose-store:dev",
       "env": {
-        "CAD_JS_RENDERER_PLAY_PORT": "6020"
+        "RUST_LOG": "info",
+        "COMPOSE_STORE_PORT": "4010"
       },
+      "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
-        "order": 165.2
+        "order": 130
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6020)",
-        "uriFormat": "%s"
-      }
-    },
-    {
-      "name": "🛠️dev🌊flow",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun run dev:flow",
-      "cwd": "${workspaceFolder}",
-      "env": {
-        "FLOW_PLAY_PORT": "6016"
-      },
-      "presentation": {
-        "group": "3_dev",
-        "order": 171
-      },
-      "serverReadyAction": {
-        "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6016)",
+        "pattern": "(http://127\\.0\\.0\\.1:4010/graphiql)",
         "uriFormat": "%s"
       }
     },
@@ -517,7 +353,7 @@
       },
       "presentation": {
         "group": "3_dev",
-        "order": 171.75
+        "order": 140
       },
       "serverReadyAction": {
         "action": "openExternally",
@@ -526,81 +362,59 @@
       }
     },
     {
-      "name": "🛠️dev🔺trinity🃏jack",
+      "name": "🛠️dev🌊flow",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun run dev:trinity:jack",
+      "command": "bun run dev:flow",
       "cwd": "${workspaceFolder}",
       "env": {
-        "TRINITY_JACK_PLAY_PORT": "6054"
+        "FLOW_PLAY_PORT": "6016"
       },
       "presentation": {
         "group": "3_dev",
-        "order": 171.8
+        "order": 150
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6054)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6016)",
         "uriFormat": "%s"
       }
     },
     {
-      "name": "🛠️dev🔺trinity♻️rewrite",
+      "name": "🛠️dev🌐gis📍map",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun run dev:trinity:rewrite",
+      "command": "bun run dev:gis:map",
       "cwd": "${workspaceFolder}",
       "env": {
-        "TRINITY_REWRITE_PLAY_PORT": "6056"
+        "GIS_MAP_PLAY_PORT": "6040"
       },
       "presentation": {
         "group": "3_dev",
-        "order": 171.85
+        "order": 160
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6056)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6040)",
         "uriFormat": "%s"
       }
     },
     {
-      "name": "🛠️dev🔺trinity🃏jack🦀shell",
+      "name": "🛠️dev📽️presentationplay",
       "type": "node-terminal",
       "request": "launch",
-      "command": "cargo run -p trinity_jack_shell -- trinity/fixture/nakagin-capsule-tower.trinity.json \"MATCH (a:Piece) RETURN a.name\"",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 171.82
-      }
-    },
-    {
-      "name": "📦build🔺trinity⚙️core",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/trinity-core:wasm",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_build",
-        "order": 171.8
-      }
-    },
-    {
-      "name": "🛠️dev🔧procedural📷3d",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun run dev:procedural:3d",
+      "command": "bun nx run @semio-tech/framework-presentation-play:dev",
       "cwd": "${workspaceFolder}",
       "env": {
-        "PROCEDURAL_3D_PLAY_PORT": "6018"
+        "PRESENTATION_PLAY_PORT": "6051"
       },
       "presentation": {
         "group": "3_dev",
-        "order": 171.8
+        "order": 170
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6018)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6051)",
         "uriFormat": "%s"
       }
     },
@@ -615,7 +429,7 @@
       },
       "presentation": {
         "group": "3_dev",
-        "order": 171.81
+        "order": 180
       },
       "serverReadyAction": {
         "action": "openExternally",
@@ -624,45 +438,26 @@
       }
     },
     {
-      "name": "🛠️dev🏹shooting",
+      "name": "🛠️dev🔧procedural🏙️3d",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun run dev:shooting",
+      "command": "bun run dev:procedural:3d",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SHOOTING_PLAY_PORT": "6019"
+        "PROCEDURAL_3D_PLAY_PORT": "6018"
       },
       "presentation": {
         "group": "3_dev",
-        "order": 171.82
+        "order": 190
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6019)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6018)",
         "uriFormat": "%s"
       }
     },
     {
-      "name": "🛠️dev🏹shooting🧩base🎨icon",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun run dev:shooting:base-icon",
-      "cwd": "${workspaceFolder}",
-      "env": {
-        "SHOOTING_PLAY_PORT": "6019"
-      },
-      "presentation": {
-        "group": "3_dev",
-        "order": 171.83
-      },
-      "serverReadyAction": {
-        "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6019)",
-        "uriFormat": "%s"
-      }
-    },
-    {
-      "name": "🛠️dev🔧procedural📷3d🧩hexagonal🧱column",
+      "name": "🛠️dev🔧procedural🏙️3d🧩hexagonal🧱column",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:procedural:3d:hexagonal-column",
@@ -672,11 +467,30 @@
       },
       "presentation": {
         "group": "3_dev",
-        "order": 171.85
+        "order": 200
       },
       "serverReadyAction": {
         "action": "openExternally",
         "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6018)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev📽️projektetage",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/mit-bestand-praesentation-projektetage:dev",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PRAESENTATION_PROJEKTETAGE_PORT": "6050"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 210
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6050)",
         "uriFormat": "%s"
       }
     },
@@ -691,7 +505,7 @@
       },
       "presentation": {
         "group": "3_dev",
-        "order": 170
+        "order": 220
       },
       "serverReadyAction": {
         "action": "openExternally",
@@ -700,18 +514,7 @@
       }
     },
     {
-      "name": "🛠️dev🧩puzzle📷3d🦀rs",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/puzzle-3d-rs:wasm",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 179.5
-      }
-    },
-    {
-      "name": "🛠️dev🧩puzzle📷3d",
+      "name": "🛠️dev🧩puzzle🏙️3d",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:puzzle:3d",
@@ -721,7 +524,7 @@
       },
       "presentation": {
         "group": "3_dev",
-        "order": 180
+        "order": 230
       },
       "serverReadyAction": {
         "action": "openExternally",
@@ -730,7 +533,7 @@
       }
     },
     {
-      "name": "🛠️dev🧩puzzle📷3d🧩concrete🌲forest",
+      "name": "🛠️dev🧩puzzle🏙️3d🎛️concrete🌲forest",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:puzzle:3d:concrete-forest",
@@ -740,7 +543,7 @@
       },
       "presentation": {
         "group": "3_dev",
-        "order": 180.2
+        "order": 240
       },
       "serverReadyAction": {
         "action": "openExternally",
@@ -759,7 +562,7 @@
       },
       "presentation": {
         "group": "3_dev",
-        "order": 185
+        "order": 250
       },
       "serverReadyAction": {
         "action": "openExternally",
@@ -768,7 +571,7 @@
       }
     },
     {
-      "name": "🛠️dev🧩puzzle👯5d🧩concrete🌲forest",
+      "name": "🛠️dev🧩puzzle👯5d🎛️concrete🌲forest",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:puzzle:5d:concrete-forest",
@@ -778,7 +581,7 @@
       },
       "presentation": {
         "group": "3_dev",
-        "order": 185.2
+        "order": 260
       },
       "serverReadyAction": {
         "action": "openExternally",
@@ -797,7 +600,7 @@
       },
       "presentation": {
         "group": "3_dev",
-        "order": 172
+        "order": 270
       },
       "serverReadyAction": {
         "action": "openExternally",
@@ -806,183 +609,248 @@
       }
     },
     {
-      "name": "🛠️dev🌐gis📍map",
+      "name": "🛠️dev🧰repo🤖mcp",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun run dev:gis:map",
-      "cwd": "${workspaceFolder}",
+      "command": "bun run dev -- mcp repo",
       "env": {
-        "GIS_MAP_PLAY_PORT": "6040"
+        "MCP_AUTO_OPEN_ENABLED": "false",
+        "MCP_PROXY_AUTH_TOKEN": "repo-mcp-token"
       },
+      "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
-        "order": 175
+        "order": 280
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6040)",
+        "pattern": "(http://[^\\s]+:6274/\\?MCP_PROXY_AUTH_TOKEN=[^\\s]+)",
+        "uriFormat": "%s&transport=stdio&serverCommand=go&serverArgs=run&serverArgs=./repo/client/mcp&MCP_PROXY_FULL_ADDRESS=http://127.0.0.1:6277"
+      }
+    },
+    {
+      "name": "🛠️dev📸shooting",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:shooting",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SHOOTING_PLAY_PORT": "6019"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 290
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6019)",
         "uriFormat": "%s"
       }
     },
     {
-      "name": "🛠️dev🌐gis📍map🧩tiles",
+      "name": "🛠️dev📸shooting🎛️base",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/gis-map-play:tiles",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 176
-      }
-    },
-    {
-      "name": "🛠️dev🌐gis📍map🧩fixture",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/gis-map-play:fixture",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 177
-      }
-    },
-    {
-      "name": "🛠️dev📽️projektetage",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/mit-bestand-praesentation-projektetage:dev",
+      "command": "bun run dev:shooting:base-icon",
       "cwd": "${workspaceFolder}",
       "env": {
-        "PRAESENTATION_PROJEKTETAGE_PORT": "6050"
+        "SHOOTING_PLAY_PORT": "6019"
       },
       "presentation": {
         "group": "3_dev",
-        "order": 190
+        "order": 300
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6050)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6019)",
         "uriFormat": "%s"
       }
     },
     {
-      "name": "🛠️dev📽️presentationplay",
+      "name": "🛠️dev📖storybook",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-presentation-play:dev",
+      "command": "bun run dev:storybook",
       "cwd": "${workspaceFolder}",
       "env": {
-        "PRESENTATION_PLAY_PORT": "6051"
+        "STORYBOOK_PORT": "6010"
       },
       "presentation": {
         "group": "3_dev",
-        "order": 191
+        "order": 310
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6051)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6010)",
         "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev📖storybook🏘️compose",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:storybook:compose",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "STORYBOOK_PORT": "6010"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 320
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6010)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev📖storybook🏘️compose🖱️ui",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:storybook:compose:ui",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "STORYBOOK_PORT": "6010"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 330
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6010)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev📖storybook🧩puzzle🩻2d",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:storybook:puzzle:2d",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "STORYBOOK_PORT": "6010"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 340
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6010)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev📖storybook🖱️ui",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:storybook:ui",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "STORYBOOK_PORT": "6010"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 350
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6010)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🔺trinity🃏jack",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:trinity:jack",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "TRINITY_JACK_PLAY_PORT": "6054"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 360
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6054)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🔺trinity🃏jack🦀shell",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "cargo run -p trinity_jack_shell -- trinity/fixture/nakagin-capsule-tower.trinity.json \"MATCH (a:Piece) RETURN a.name\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 370
+      }
+    },
+    {
+      "name": "🛠️dev🔺trinity♻️rewrite",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:trinity:rewrite",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "TRINITY_REWRITE_PLAY_PORT": "6056"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 380
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6056)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev📋forms",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:forms",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "FORMS_PLAY_PORT": "6058"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 385
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6058)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🖱️ui🪁typecheck",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/ui-react:typecheck",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 390
       }
     },
     // #endregion
     // #region 📦 Build
     {
-      "name": "📦build📖storybook",
+      "name": "📦build📐cad🎛️concrete🌲forest",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun run build:storybook",
+      "command": "bun run build:cad:concrete-forest",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
         "order": 10
-      }
-    },
-    {
-      "name": "📦build🏘️compose📐3dm",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun run build -- 3dm",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_build",
-        "order": 20
-      }
-    },
-    {
-      "name": "📦build🏘️compose🏪assets",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun run build -- assets",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_build",
-        "order": 30
-      }
-    },
-    {
-      "name": "📦build🏘️compose🖱️desktop",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun run build -- desktop",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_build",
-        "order": 40
-      }
-    },
-    {
-      "name": "📦build🏘️compose⚙️engine",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun run build -- engine",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_build",
-        "order": 50
-      }
-    },
-    {
-      "name": "📦build🏘️compose🔗graphql",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run compose/graphql:build",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_build",
-        "order": 60
-      }
-    },
-    {
-      "name": "📦build🏘️compose✍️sketchpad",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun run build -- sites",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_build",
-        "order": 70
-      }
-    },
-    {
-      "name": "📦build🖱️ui🎨styling",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun ./script.ts generate",
-      "cwd": "${workspaceFolder}/ui/styling",
-      "presentation": {
-        "group": "4_build",
-        "order": 28
-      }
-    },
-    {
-      "name": "📦build🖱️ui🏪assets",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun ./script.ts generate all",
-      "cwd": "${workspaceFolder}/ui/asset",
-      "presentation": {
-        "group": "4_build",
-        "order": 29
       }
     },
     {
@@ -993,14 +861,80 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
+        "order": 20
+      }
+    },
+    {
+      "name": "📦build🏘️compose📐3dm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run build -- 3dm",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 30
+      }
+    },
+    {
+      "name": "📦build🏘️compose🏪assets",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run build -- assets",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 40
+      }
+    },
+    {
+      "name": "📦build🏘️compose🖱️desktop",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run build -- desktop",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 50
+      }
+    },
+    {
+      "name": "📦build🏘️compose⚙️engine",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run build -- engine",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 60
+      }
+    },
+    {
+      "name": "📦build🏘️compose🔗graphql",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run compose/graphql:build",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 70
+      }
+    },
+    {
+      "name": "📦build🏘️compose✍️sketchpad",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run build -- sites",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
         "order": 80
       }
     },
     {
-      "name": "📦build🧰repo⌨️client",
+      "name": "📦build🌐gis📍map",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun run build -- repo-cli",
+      "command": "bun nx run @semio-tech/gis-map-play:build",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
@@ -1008,10 +942,10 @@
       }
     },
     {
-      "name": "📦build🧰repo⌨️server",
+      "name": "📦build📽️presentationplay",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun run build -- repo-server",
+      "command": "bun nx run @semio-tech/framework-presentation-play:build",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
@@ -1019,32 +953,21 @@
       }
     },
     {
-      "name": "📦build📐cad🧩concrete🌲forest",
+      "name": "📦build🔧procedural🩻2d",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun run build:cad:concrete-forest",
+      "command": "bun run build:procedural:2d",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 118
+        "order": 110
       }
     },
     {
-      "name": "📦build🧩puzzle📷3d🧩concrete🌲forest",
+      "name": "📦build🔧procedural🏙️3d🎛️column",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun run build:puzzle:3d:concrete-forest",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_build",
-        "order": 119
-      }
-    },
-    {
-      "name": "📦build🧩puzzle👯5d🧩concrete🌲forest",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun run build:puzzle:5d:concrete-forest",
+      "command": "bun run build:procedural:3d:hexagonal-column",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
@@ -1059,82 +982,115 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 120
+        "order": 130
       }
     },
     {
-      "name": "📦build🔧procedural📷3d🧩hexagonal🧱column",
+      "name": "📦build🧩puzzle🏙️3d🎛️concrete",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun run build:procedural:3d:hexagonal-column",
+      "command": "bun run build:puzzle:3d:concrete-forest",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 121
+        "order": 140
       }
     },
     {
-      "name": "📦build🔧procedural🩻2d",
+      "name": "📦build🧩puzzle👯5d🎛️concrete",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun run build:procedural:2d",
+      "command": "bun run build:puzzle:5d:concrete-forest",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 121.25
+        "order": 150
       }
     },
     {
-      "name": "📦build🏹shooting🧩base🎨icon",
+      "name": "📦build🧰repo⌨️client",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run build -- repo-cli",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 160
+      }
+    },
+    {
+      "name": "📦build🧰repo⌨️server",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run build -- repo-server",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 170
+      }
+    },
+    {
+      "name": "📦build📸shooting🎛️base",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run build:shooting:base-icon",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 121.5
+        "order": 180
       }
     },
     {
-      "name": "📦build📽️presentationplay",
+      "name": "📦build📖storybook",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-presentation-play:build",
+      "command": "bun run build:storybook",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 121
+        "order": 190
       }
     },
     {
-      "name": "📦build🌐gis📍map",
+      "name": "📦build🔺trinity⚙️core",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/gis-map-play:build",
+      "command": "bun nx run @semio-tech/trinity-core:wasm",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 122
+        "order": 200
       }
     },
     {
-      "name": "📦build🌐gis📍map🧩tiles",
+      "name": "📦build🖱️ui🏪assets",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/gis-map-play:build-tiles",
-      "cwd": "${workspaceFolder}",
+      "command": "bun ./script.ts generate all",
+      "cwd": "${workspaceFolder}/ui/asset",
       "presentation": {
         "group": "4_build",
-        "order": 123
+        "order": 210
+      }
+    },
+    {
+      "name": "📦build🖱️ui🎨styling",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./script.ts generate",
+      "cwd": "${workspaceFolder}/ui/styling",
+      "presentation": {
+        "group": "4_build",
+        "order": 220
       }
     },
     // #endregion
     // #region ⬆️ Publish
     {
-      "name": "⬆️publish🏘️compose🖱️desktop",
+      "name": "⬆️publish🔬coda🖱️desktop",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun run publish -- desktop",
+      "command": "bun run publish -- coda-desktop",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "5_publish",
@@ -1142,10 +1098,10 @@
       }
     },
     {
-      "name": "⬆️publish🏘️compose✍️sketchpad🎛️play",
+      "name": "⬆️publish🏘️compose🖱️desktop",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun run publish -- play",
+      "command": "bun run publish -- desktop",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "5_publish",
@@ -1175,10 +1131,10 @@
       }
     },
     {
-      "name": "⬆️publish🔬coda🖱️desktop",
+      "name": "⬆️publish🏘️compose✍️sketchpad🎛️play",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun run publish -- coda-desktop",
+      "command": "bun run publish -- play",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "5_publish",

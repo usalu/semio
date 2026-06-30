@@ -10,7 +10,7 @@ Human-facing labels (launch.json, Storybook sidebar, docs headings) use **concat
 | `gis/map` | 🌐gis📍map |
 | `gis/terrain` | 🌐gis⛰️terrain |
 | `puzzle/2d` | 🧩puzzle🩻2d |
-| `puzzle/3d` | 🧩puzzle📷3d |
+| `puzzle/3d` | 🧩puzzle🏙️3d |
 | `puzzle/5d` | 🧩puzzle👯5d |
 | `infinite/cavas` | ♾️infinite✈️cavas |
 | `infinite/world` | ♾️infinite🏙️world |

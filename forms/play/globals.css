@@ -1,0 +1,7 @@
+@import "@semio-tech/ui-react/globals.css";
+
+html,
+body,
+#root {
+  height: 100%;
+}

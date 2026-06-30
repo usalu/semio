@@ -221,8 +221,9 @@ export function rasterizeDrawingSceneToPng(scene: DrawingScene): string {
 }
 
 /** @emoji 🎨 Paints a {@link DrawingScene} onto a 2D canvas context. */
-export function paintDrawingScene(ctx: CanvasRenderingContext2D, scene: DrawingScene): void {
-	ctx.clearRect(0, 0, Math.max(1, scene.width), Math.max(1, scene.height));
+export function paintDrawingScene(ctx: CanvasRenderingContext2D, scene: DrawingScene, options?: { readonly clear?: boolean }): void {
+	const clear = options?.clear ?? true;
+	if (clear) ctx.clearRect(0, 0, Math.max(1, scene.width), Math.max(1, scene.height));
 	for (const entry of scene.nodes) {
 		ctx.save();
 		applyTransform(ctx, entry.transform);
@@ -280,11 +281,22 @@ function parseSceneJson(json: string): DrawingScene {
 	return parsed;
 }
 
-function parseExportPayload(json: string): string {
-	const parsed = JSON.parse(json) as { data?: string; error?: string };
+function parseExportPayload(json: string, kind: "svg" | "pdf"): string {
+	const parsed = JSON.parse(json) as { data?: string; svg?: string; pdf?: string; error?: string };
 	if (parsed?.error) throw new Error(parsed.error);
-	if (typeof parsed?.data !== "string") throw new Error("drawing export missing data");
-	return parsed.data;
+	if (kind === "svg" && typeof parsed?.svg === "string") return parsed.svg;
+	if (kind === "pdf" && typeof parsed?.pdf === "string") return parsed.pdf;
+	if (typeof parsed?.data === "string") return parsed.data;
+	throw new Error(`drawing ${kind} export missing payload`);
+}
+
+/** @emoji 🎬 Parses a worker preview payload into a {@link DrawingScene}. */
+export function drawingSceneFromPreviewPayload(payload: unknown): DrawingScene | undefined {
+	if (!payload || typeof payload !== "object" || Array.isArray(payload)) return undefined;
+	const record = payload as DrawingScene & { error?: string };
+	if (typeof record.error === "string" || !Array.isArray(record.nodes)) return undefined;
+	if (typeof record.width !== "number" || typeof record.height !== "number") return undefined;
+	return record;
 }
 
 /** @emoji ⏳ Loads flow-core drawing WASM exports. */
@@ -324,10 +336,10 @@ export function createDrawingWasmBridge(module: DrawingWasmModule): DrawingExpor
 			return parseSceneJson(module.render_drawing_scene(String(handle)));
 		},
 		exportSvg(handle) {
-			return parseExportPayload(module.export_drawing_svg(String(handle)));
+			return parseExportPayload(module.export_drawing_svg(String(handle)), "svg");
 		},
 		exportPdf(handle) {
-			return parseExportPayload(module.export_drawing_pdf(String(handle)));
+			return parseExportPayload(module.export_drawing_pdf(String(handle)), "pdf");
 		},
 		exportPng(handle) {
 			return canvasDrawingPngExportPort.exportPng(this.renderScene(handle));
@@ -353,6 +365,12 @@ if (import.meta.vitest) {
 		it("recognizes drawing refs", () => {
 			expect(isDrawingRef("drawing-1")).toBe(true);
 			expect(isDrawingRef("solid-1")).toBe(false);
+		});
+
+		it("parses drawing scene preview payloads", () => {
+			const scene = drawingSceneFromPreviewPayload({ width: 10, height: 20, nodes: [] });
+			expect(scene).toEqual({ width: 10, height: 20, nodes: [] });
+			expect(drawingSceneFromPreviewPayload({ error: "missing" })).toBeUndefined();
 		});
 
 		it("rasterizes a rect scene to png data url", () => {

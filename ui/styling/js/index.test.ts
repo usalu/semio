@@ -74,11 +74,13 @@ describe("styling resolve", () => {
 		expect(uiCss).toContain("--element-panel: var(--color-gray-600);");
 	});
 
-	it("ui.css keeps footer toolbar height inside the footer bar", async () => {
+	it("ui.css left-aligns the footer toolbar and grows it through the remaining width", async () => {
 		const { readFile } = await import("node:fs/promises");
 		const { resolve } = await import("node:path");
 		const uiCss = await readFile(resolve(import.meta.dir, "ui.css"), "utf8");
-		expect(uiCss).toContain('[data-slot="footer"] {\n  --toolbar-item-height: var(--size-medium);');
+		expect(uiCss).toContain('[data-slot="toolbar-anchor"] {\n  flex: 1 1 0%;\n  min-width: 0;\n  height: 100%;');
+		expect(uiCss).toContain("justify-content: flex-start;");
+		expect(uiCss).toContain('[data-slot="toolbar-anchor"] > * {\n  flex: 0 1 auto;\n  width: fit-content;\n  max-width: 100%;\n  min-width: 0;');
 		expect(uiCss).toContain('[data-slot="toolbar-anchor"] [role="toolbar"] {\n  max-height: 100%;\n}');
 	});
 });

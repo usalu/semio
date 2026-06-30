@@ -107,8 +107,8 @@ export const PROCEDURAL_DEFAULT_FIXTURE: FlowFixtureV1 = {
 		{ kind: "outputPreview", id: "preview" },
 	],
 	synapses: [
-		{ id: "s1", from: "rect", to: "fill", fromPort: "drawing", toPort: "drawing" },
-		{ id: "s2", from: "fill", to: "preview", fromPort: "drawing", toPort: "" },
+		{ id: "s1", from: "rect", to: "fill", fromPort: "draw.drawing", toPort: "drawing" },
+		{ id: "s2", from: "fill", to: "preview", fromPort: "draw.drawing", toPort: "" },
 	],
 };
 
@@ -160,7 +160,12 @@ function collectDrawingRefsFromValue(value: unknown, refs: string[]): void {
 		return;
 	}
 	if (!value || typeof value !== "object") return;
-	for (const nested of Object.values(value as Record<string, unknown>)) {
+	const record = value as Record<string, unknown>;
+	if (record.$schema === "draw.drawing" && typeof record.handle === "string" && DRAWING_REF_PATTERN.test(record.handle)) {
+		refs.push(record.handle);
+		return;
+	}
+	for (const nested of Object.values(record)) {
 		collectDrawingRefsFromValue(nested, refs);
 	}
 }
@@ -354,8 +359,21 @@ function paintSceneOnCanvas(ctx: CanvasRenderingContext2D, scene: DrawingScene, 
 		ctx.shadowColor = "rgba(59,130,246,0.8)";
 		ctx.shadowBlur = 8 / camera.zoom;
 	}
-	paintDrawingScene(ctx, scene);
+	paintDrawingScene(ctx, scene, { clear: false });
 	ctx.restore();
+}
+
+function zoomCameraAtScreenPoint(camera: Camera2d, screen: { x: number; y: number }, width: number, height: number, factor: number): Camera2d {
+	const cx = width * 0.5;
+	const cy = height * 0.5;
+	const worldX = camera.x + (screen.x - cx) / camera.zoom;
+	const worldY = camera.y + (screen.y - cy) / camera.zoom;
+	const zoom = Math.min(32, Math.max(0.05, camera.zoom * factor));
+	return {
+		x: worldX - (screen.x - cx) / zoom,
+		y: worldY - (screen.y - cy) / zoom,
+		zoom,
+	};
 }
 
 export interface Procedural2dPreviewProps {
@@ -454,10 +472,14 @@ export function Procedural2dPreview({
 	);
 
 	const scenes = reactHostPort.useMemo(() => {
-		if (!resolvedKernel) return new Map<string, DrawingScene>();
 		const map = new Map<string, DrawingScene>();
 		for (const item of visibleItems) {
 			if (item.kind !== "drawing") continue;
+			if (item.scene) {
+				map.set(item.widgetId, item.scene);
+				continue;
+			}
+			if (!resolvedKernel) continue;
 			try {
 				map.set(item.widgetId, resolvedKernel.renderScene(item.handle));
 			} catch {
@@ -505,11 +527,50 @@ export function Procedural2dPreview({
 		if (!container) return;
 		const onWheel = (event: WheelEvent) => {
 			event.preventDefault();
+			const rect = container.getBoundingClientRect();
 			const factor = event.deltaY < 0 ? 1.1 : 0.9;
-			setCamera((prev) => ({ ...prev, zoom: Math.min(32, Math.max(0.05, prev.zoom * factor)) }));
+			const screen = { x: event.clientX - rect.left, y: event.clientY - rect.top };
+			setCamera((prev) => zoomCameraAtScreenPoint(prev, screen, rect.width, rect.height, factor));
 		};
 		container.addEventListener("wheel", onWheel, { passive: false });
 		return () => container.removeEventListener("wheel", onWheel);
+	}, []);
+
+	reactHostPort.useEffect(() => {
+		const container = containerRef.current;
+		if (!container) return;
+		const panRef = { active: false, lastX: 0, lastY: 0 };
+		const onPointerDown = (event: PointerEvent) => {
+			if (event.button !== 1) return;
+			event.preventDefault();
+			panRef.active = true;
+			panRef.lastX = event.clientX;
+			panRef.lastY = event.clientY;
+			container.setPointerCapture(event.pointerId);
+		};
+		const onPointerMove = (event: PointerEvent) => {
+			if (!panRef.active) return;
+			const dx = event.clientX - panRef.lastX;
+			const dy = event.clientY - panRef.lastY;
+			panRef.lastX = event.clientX;
+			panRef.lastY = event.clientY;
+			setCamera((prev) => ({
+				...prev,
+				x: prev.x - dx / prev.zoom,
+				y: prev.y - dy / prev.zoom,
+			}));
+		};
+		const onPointerUp = (event: PointerEvent) => {
+			if (!panRef.active) return;
+			panRef.active = false;
+			container.releasePointerCapture(event.pointerId);
+		};
+		const bindings = new CavasEventBindingController();
+		bindings.listen(container, "pointerdown", onPointerDown as EventListener);
+		bindings.listen(container, "pointermove", onPointerMove as EventListener);
+		bindings.listen(container, "pointerup", onPointerUp as EventListener);
+		bindings.listen(container, "pointercancel", onPointerUp as EventListener);
+		return () => bindings.dispose();
 	}, []);
 
 	const clientToLocal = reactHostPort.useCallback((clientX: number, clientY: number) => {
@@ -757,6 +818,15 @@ if (import.meta.vitest) {
 			);
 			expect(items).toEqual([
 				{ widgetId: "preview", port: "", direction: "out", kind: "drawing", handle: "drawing-42" },
+			]);
+		});
+
+		it("extractChannelPreviewItems collects draw.drawing schema outputs", () => {
+			const items = extractChannelPreviewItems(
+				JSON.stringify({ fill: { out: { "draw.drawing": { $schema: "draw.drawing", handle: "drawing-42", kind: "rect" } } } }),
+			);
+			expect(items).toEqual([
+				{ widgetId: "fill", port: "draw.drawing", direction: "out", kind: "drawing", handle: "drawing-42" },
 			]);
 		});
 

@@ -158,7 +158,7 @@ export class TrinityRewritePlayController extends Controller {
 
 function buildTrinityRewritePlayAppRuntime(ctrl: TrinityRewritePlayController): AppRuntime {
   const layout = createStackLayout([TRINITY_REWRITE_PLAY_WINDOW_KIND_ID], ["Rewrite Graph"]);
-  return createPlayAppRuntime(TRINITY_REWRITE_PLAY_APP_ID, "semio · trinity · rewrite", ctrl, layout, ctrl.mainMode);
+  return createPlayAppRuntime(TRINITY_REWRITE_PLAY_APP_ID, "Trinity Rewrite", ctrl, layout, ctrl.mainMode);
 }
 
 export class PlaygroundTrinityRewrite extends Playground {

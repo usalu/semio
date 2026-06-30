@@ -1,0 +1,14 @@
+{
+  "name": "@semio-tech/forms-react",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "cwd": "forms/react",
+        "command": "bun ./script.ts test"
+      }
+    }
+  }
+}

@@ -111,7 +111,21 @@ export const WithUndoRedo: Story = {
 export const MultipleZones: Story = {
   args: { children: null },
   render: () => (
-    <div className="flex gap-4 items-stretch">
+    <div className="flex gap-single items-stretch">
+      <ToolbarZone>
+        <ToolbarGroup>
+          <ToolbarItem>
+            <ToggleGroup
+              kind="single"
+              defaultValue="selection"
+              items={[
+                { value: "selection", id: "ui.toolbar.group.selection", icon: <MousePointer className="size-tiny" aria-hidden />, text: "Selection" },
+                { value: "view", id: "ui.toolbar.group.view", icon: <Eye className="size-tiny" aria-hidden />, text: "View" },
+              ]}
+            />
+          </ToolbarItem>
+        </ToolbarGroup>
+      </ToolbarZone>
       <ToolbarZone>
         <ToolbarGroup>
           <ToolbarItem>

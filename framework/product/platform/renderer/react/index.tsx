@@ -5,7 +5,6 @@
 export {
 	Platform,
 	Store,
-	APP_TOOL_CATEGORY_ORDER,
 	Table,
 	VirtualFileSystem,
 	buildVirtualFileSystemWindowBody,
@@ -20,7 +19,6 @@ export {
 	Panel,
 	registerPlatformComponent,
 	type WindowLayout,
-	type AppToolCategory,
 	type ComponentKind,
 	type TableModel,
 	type VirtualFileSystemModel,
@@ -33,6 +31,8 @@ export {
 	PlatformTopologyStore,
 	getPlatformControllerById,
 	platformTopologyStoreId,
+	registerSidePanelBody,
+	unregisterSidePanelBody,
 } from "@semio-tech/framework-platform-core";
 
 export type { Level } from "@semio-tech/ui-react";
@@ -49,8 +49,8 @@ export {
 
 // #region 🔌Adapters
 import {
-	APP_TOOL_CATEGORY_ORDER,
-	countAppTools,
+	mergeAppTools,
+	toolCollection,
 	CommandBus,
 	Controller,
 	Store,
@@ -71,12 +71,14 @@ import {
 	createWindowLayout,
 	getSidePanelBodyFactory,
 	getWindowBodyFactory,
+	registerSidePanelBody,
+	unregisterSidePanelBody,
 	type ResolvedAppState,
 	type AppTools as FrameworkAppTools,
 	type FooterItem as DeclarativeFooterItem,
 	type SidePanelBodyViewContext,
 	type SideTabSpec,
-	type ToolItem,
+	type ToolNode,
 	type WindowBodyViewContext,
 	type WindowMeasure,
 	type NamedLayout,
@@ -260,10 +262,7 @@ import {
 } from "@semio-tech/ui-react";
 // #endregion 🔌Adapters
 
-import type { AppToolCategory } from "@semio-tech/framework-core";
 import { ICONS } from "@semio-tech/ui-asset";
-
-const _assertFrameworkToolbarParentKeys: AssertUiToolbarParentKeysCovered<AppToolCategory> = true;
 
 //#region 📦shell-chrome-types.tsx
 
@@ -2274,222 +2273,303 @@ const UIFind: React.FC<{
 
 // #region 📔UIToolbar
 
-/**
- * A toolbar action item registered by an app or the UI.
- **/
-export type UIToolbarItem =
-  | { id: string; kind: "separator"; order?: number }
-  | {
-      id: string;
-      icon: React.ReactNode;
-      label?: string;
-      text?: string;
-      onClick?: () => void;
-      kind?: "button";
-      order?: number;
-    }
-  | {
-      id: string;
-      icon: React.ReactNode;
-      label?: string;
-      text?: string;
-      kind: "toggle";
-      pressed?: boolean;
-      onPressedChange?: (pressed: boolean) => void;
-      order?: number;
-    };
+/** @emoji 🎛 Resolved toolbar leaf for React rendering. */
+export type UIToolLeaf =
+	| { id: string; kind: "separator"; order?: number }
+	| {
+			id: string;
+			icon: React.ReactNode;
+			label?: string;
+			text?: string;
+			onClick?: () => void;
+			kind?: "button";
+			order?: number;
+	  }
+	| {
+			id: string;
+			icon: React.ReactNode;
+			label?: string;
+			text?: string;
+			kind: "toggle";
+			pressed?: boolean;
+			onPressedChange?: (pressed: boolean) => void;
+			order?: number;
+	  };
 
-/** @emoji 🗂️ Per-category toolbar tools registered by an app or global UI shell (React view layer). */
-export type ToolbarViewTools = Partial<Record<AppToolCategory, UIToolbarItem[]>>;
+/** @emoji 🌳 Resolved toolbar node for React rendering. */
+export type UIToolNode =
+	| UIToolLeaf
+	| {
+			id: string;
+			kind: "collection";
+			icon: React.ReactNode;
+			label?: string;
+			text?: string;
+			order?: number;
+			children: readonly UIToolNode[];
+	  };
 
-function sortToolbarItems(items: readonly UIToolbarItem[]): UIToolbarItem[] {
-  return [...items].sort((left, right) => (left.order ?? 0) - (right.order ?? 0));
+/** @emoji 🗂️ Root toolbar tree registered by an app or global UI shell (React view layer). */
+export type ToolbarViewTools = readonly UIToolNode[];
+
+function sortViewToolNodes(nodes: readonly UIToolNode[]): UIToolNode[] {
+	return [...nodes].sort((left, right) => (left.order ?? 0) - (right.order ?? 0));
 }
 
-function hasAppToolCategoryItems(items: readonly UIToolbarItem[] | undefined): boolean {
-  return Boolean(items?.some((item) => item.kind !== "separator"));
+function isInteractiveViewToolNode(node: UIToolNode): boolean {
+	if (node.kind === "separator") return false;
+	if (node.kind === "collection") return hasInteractiveViewToolNodes(node.children);
+	return true;
 }
 
-/** @emoji 🔢 Counts registered toolbar items across all populated categories. */
+function hasInteractiveViewToolNodes(nodes?: readonly UIToolNode[]): boolean {
+	return Boolean(nodes?.some((node) => isInteractiveViewToolNode(node)));
+}
+
+/** @emoji 🔢 Counts registered toolbar nodes recursively. */
 export function countToolbarViewTools(tools?: ToolbarViewTools): number {
-  if (!tools) return 0;
-  return APP_TOOL_CATEGORY_ORDER.reduce((sum, category) => sum + (tools[category]?.length ?? 0), 0);
+	if (!tools?.length) return 0;
+	return tools.reduce((sum, node) => sum + (node.kind === "collection" ? 1 + countToolbarViewTools(node.children) : 1), 0);
 }
 
-/** @emoji 🔀 Merges base and extension tool maps per category (extension appends within each category). */
+function mergeViewToolSiblingLists(base: readonly UIToolNode[], extension: readonly UIToolNode[]): UIToolNode[] {
+	const merged = new Map<string, UIToolNode>();
+	for (const node of base) merged.set(node.id, node);
+	for (const node of extension) {
+		const existing = merged.get(node.id);
+		if (existing?.kind === "collection" && node.kind === "collection") {
+			merged.set(node.id, { ...node, children: mergeViewToolSiblingLists(existing.children, node.children) });
+			continue;
+		}
+		merged.set(node.id, node);
+	}
+	return sortViewToolNodes([...merged.values()]);
+}
+
+/** @emoji 🔀 Merges toolbar trees by sibling id (collection children merge recursively). */
 export function mergeToolbarViewTools(base?: ToolbarViewTools, extension?: ToolbarViewTools): ToolbarViewTools | undefined {
-  if (!base && !extension) return undefined;
-  const merged: ToolbarViewTools = {};
-  for (const category of APP_TOOL_CATEGORY_ORDER) {
-    const combined = [...(base?.[category] ?? []), ...(extension?.[category] ?? [])];
-    if (combined.length > 0) merged[category] = combined;
-  }
-  return Object.keys(merged).length > 0 ? merged : undefined;
+	if (!base?.length && !extension?.length) return undefined;
+	const merged = mergeViewToolSiblingLists(base ?? [], extension ?? []);
+	return merged.length > 0 ? merged : undefined;
 }
 
-/** @emoji 📂 Lists categories that have at least one non-separator tool. */
-export function listPopulatedToolbarViewCategories(tools?: ToolbarViewTools): AppToolCategory[] {
-  if (!tools) return [];
-  return APP_TOOL_CATEGORY_ORDER.filter((category) => hasAppToolCategoryItems(tools[category]));
+function isLeafOnlyViewCollection(node: UIToolNode): boolean {
+	if (node.kind !== "collection") return false;
+	return node.children.every((child) => child.kind !== "collection");
 }
 
-function resolveAppToolCategoryIcon(category: AppToolCategory): React.ReactNode {
-  const icons: Record<AppToolCategory, IconName> = {
-    hand: "hand",
-    selection: "mouse-pointer-2",
-    lasso: "lasso",
-    filter: "filter",
-    open: "folder-open",
-    save: "save",
-    transfer: "arrow-right-left",
-    transform: "move-3d",
-    create: "plus",
-    view: "layout-grid",
-    actions: "more-horizontal",
-    settings: "settings-2",
-  };
-  return <Icon icon={icons[category] ?? "search"} size="tiny" />;
+function hasInteractiveViewToolLeaves(items: readonly UIToolLeaf[]): boolean {
+	return items.some((node) => node.kind !== "separator");
 }
 
-const UIToolbarItems: React.FC<{ items: readonly UIToolbarItem[] }> = ({ items }) => {
-  const sorted = reactHostPort.useMemo(() => sortToolbarItems(items), [items]);
-  const nodes = reactHostPort.useMemo(() => {
-    const rendered: React.ReactNode[] = [];
-    let buttonRun: UIToolbarItem[] = [];
-    let toggleRun: UIToolbarItem[] = [];
+function viewToolLeaves(nodes: readonly UIToolNode[]): UIToolLeaf[] {
+	return sortViewToolNodes(nodes).filter((node): node is UIToolLeaf => node.kind !== "collection");
+}
 
-    const flushButtons = () => {
-      if (buttonRun.length === 0) return;
-      const run = buttonRun;
-      buttonRun = [];
-      rendered.push(
-        <ToolbarItem key={`buttons-${run.map((entry) => entry.id).join("-")}`}>
-          <ButtonGroup>
-            {run.map((entry) => (
-              <ButtonGroupItem key={entry.id} id={entry.id} icon={entry.icon} text={entry.text ?? entry.label} onClick={entry.onClick} />
-            ))}
-          </ButtonGroup>
-        </ToolbarItem>,
-      );
-    };
+type ViewToolCollection = Extract<UIToolNode, { kind: "collection" }>;
 
-    const flushToggles = () => {
-      if (toggleRun.length === 0) return;
-      const run = toggleRun;
-      toggleRun = [];
-      rendered.push(
-        <ToolbarItem key={`toggles-${run.map((entry) => entry.id).join("-")}`}>
-          <ToggleGroup
-            kind="multiple"
-            value={run.filter((entry) => entry.pressed).map((entry) => entry.id)}
-            onValueChange={(values) => {
-              for (const entry of run) {
-                const pressed = values.includes(entry.id);
-                if ((entry.pressed ?? false) !== pressed) entry.onPressedChange?.(pressed);
-              }
-            }}
-            items={run.map((entry) => ({
-              value: entry.id,
-              id: entry.id,
-              icon: entry.icon,
-              text: entry.text ?? entry.label,
-            }))}
-          />
-        </ToolbarItem>,
-      );
-    };
+type ToolbarRibbonSegment =
+	| { kind: "picker"; collections: readonly ViewToolCollection[]; depth: number }
+	| { kind: "tools"; items: readonly UIToolLeaf[] };
 
-    const flushRuns = () => {
-      flushButtons();
-      flushToggles();
-    };
+function buildToolbarRibbonSegments(nodes: readonly UIToolNode[], path: readonly string[], depth = 0): ToolbarRibbonSegment[] {
+	const sorted = sortViewToolNodes(nodes);
+	const collections = sorted.filter((node): node is ViewToolCollection => node.kind === "collection" && !node.disabled);
+	const looseLeaves = sorted.filter((node): node is UIToolLeaf => node.kind !== "collection");
+	const segments: ToolbarRibbonSegment[] = [];
 
-    for (const item of sorted) {
-      if (item.kind === "separator") {
-        flushRuns();
-        rendered.push(<ToolbarDivider key={item.id} />);
-        continue;
-      }
-      if (item.kind === "toggle") {
-        flushButtons();
-        toggleRun.push(item);
-        continue;
-      }
-      flushToggles();
-      buttonRun.push(item);
-    }
-    flushRuns();
-    return rendered;
-  }, [sorted]);
+	if (collections.length === 0) {
+		if (hasInteractiveViewToolLeaves(looseLeaves)) segments.push({ kind: "tools", items: looseLeaves });
+		return segments;
+	}
 
-  return <ToolbarGroup>{nodes}</ToolbarGroup>;
+	if (collections.length === 1) {
+		if (hasInteractiveViewToolLeaves(looseLeaves)) segments.push({ kind: "tools", items: looseLeaves });
+		segments.push(...buildToolbarRibbonSegments(collections[0].children, path, depth));
+		return segments;
+	}
+
+	if (collections.every(isLeafOnlyViewCollection)) {
+		for (const collection of collections) {
+			const leaves = viewToolLeaves(collection.children);
+			if (hasInteractiveViewToolLeaves(leaves)) segments.push({ kind: "tools", items: leaves });
+		}
+		if (hasInteractiveViewToolLeaves(looseLeaves)) segments.push({ kind: "tools", items: looseLeaves });
+		return segments;
+	}
+
+	segments.push({ kind: "picker", collections, depth });
+	const activeId = path[depth] ?? collections[0]?.id;
+	const active = collections.find((node) => node.id === activeId) ?? collections[0];
+	if (!active) return segments;
+	segments.push(...buildToolbarRibbonSegments(active.children, path, depth + 1));
+	return segments;
+}
+
+function reconcileViewToolPath(nodes: readonly UIToolNode[], path: readonly string[]): readonly string[] {
+	let current = nodes;
+	const reconciled: string[] = [];
+	let pathIndex = 0;
+
+	while (true) {
+		const collections = sortViewToolNodes(current).filter(
+			(node): node is ViewToolCollection => node.kind === "collection" && !node.disabled,
+		);
+		if (collections.length === 0) break;
+		if (collections.length > 1 && collections.every(isLeafOnlyViewCollection)) break;
+		if (collections.length === 1) {
+			current = collections[0].children;
+			continue;
+		}
+
+		let collectionId = path[pathIndex];
+		if (!collectionId || !collections.some((node) => node.id === collectionId)) {
+			collectionId = collections[0]?.id;
+		}
+		if (!collectionId) break;
+		reconciled.push(collectionId);
+		const active = collections.find((node) => node.id === collectionId);
+		if (!active || active.kind !== "collection") break;
+		current = active.children;
+		pathIndex++;
+	}
+
+	return reconciled;
+}
+
+const UIToolbarItems: React.FC<{ items: readonly UIToolLeaf[] }> = ({ items }) => {
+	const sorted = reactHostPort.useMemo(() => sortViewToolNodes(items) as UIToolLeaf[], [items]);
+	const nodes = reactHostPort.useMemo(() => {
+		const rendered: React.ReactNode[] = [];
+		let buttonRun: UIToolLeaf[] = [];
+		let toggleRun: UIToolLeaf[] = [];
+
+		const flushButtons = () => {
+			if (buttonRun.length === 0) return;
+			const run = buttonRun;
+			buttonRun = [];
+			rendered.push(
+				<ToolbarItem key={`buttons-${run.map((entry) => entry.id).join("-")}`}>
+					<ButtonGroup>
+						{run.map((entry) => (
+							<ButtonGroupItem key={entry.id} id={entry.id} icon={entry.icon} text={entry.text ?? entry.label} onClick={entry.onClick} />
+						))}
+					</ButtonGroup>
+				</ToolbarItem>,
+			);
+		};
+
+		const flushToggles = () => {
+			if (toggleRun.length === 0) return;
+			const run = toggleRun;
+			toggleRun = [];
+			rendered.push(
+				<ToolbarItem key={`toggles-${run.map((entry) => entry.id).join("-")}`}>
+					<ToggleGroup
+						kind="multiple"
+						value={run.filter((entry) => entry.pressed).map((entry) => entry.id)}
+						onValueChange={(values) => {
+							for (const entry of run) {
+								const pressed = values.includes(entry.id);
+								if ((entry.pressed ?? false) !== pressed) entry.onPressedChange?.(pressed);
+							}
+						}}
+						items={run.map((entry) => ({
+							value: entry.id,
+							id: entry.id,
+							icon: entry.icon,
+							text: entry.text ?? entry.label,
+						}))}
+					/>
+				</ToolbarItem>,
+			);
+		};
+
+		const flushRuns = () => {
+			flushButtons();
+			flushToggles();
+		};
+
+		for (const item of sorted) {
+			if (item.kind === "separator") {
+				flushRuns();
+				rendered.push(<ToolbarDivider key={item.id} />);
+				continue;
+			}
+			if (item.kind === "toggle") {
+				flushButtons();
+				toggleRun.push(item);
+				continue;
+			}
+			flushToggles();
+			buttonRun.push(item);
+		}
+		flushRuns();
+		return rendered;
+	}, [sorted]);
+
+	return <ToolbarGroup>{nodes}</ToolbarGroup>;
 };
 
-/**
- * Renders a floating toolbar with category toggles; only categories with registered tools are shown.
- **/
+/** @emoji ✅ True when the toolbar tree has at least one interactive leaf. */
+export function hasToolbarViewTools(tools?: ToolbarViewTools): boolean {
+	return hasInteractiveViewToolNodes(tools);
+}
+
+/** @emoji 🎀 Renders a drill-down ribbon: picker zones plus one zone per flattened leaf-only collection group. */
 const UIToolbar: React.FC<{
-  tools: ToolbarViewTools;
-  className?: string;
+	tools: ToolbarViewTools;
+	className?: string;
 }> = ({ tools, className }) => {
-  const { t } = useUiTranslation();
-  const populatedCategories = reactHostPort.useMemo(() => listPopulatedToolbarViewCategories(tools), [tools]);
-  const [activeCategory, setActiveCategory] = reactHostPort.useState<AppToolCategory | null>(null);
+	const [activePath, setActivePath] = reactHostPort.useState<readonly string[]>([]);
 
-  reactHostPort.useEffect(() => {
-    if (populatedCategories.length === 0) {
-      setActiveCategory(null);
-      return;
-    }
-    setActiveCategory((previousValue) => {
-      if (previousValue && populatedCategories.includes(previousValue)) return previousValue;
-      return populatedCategories.find((category) => category !== "history" && category !== "hand") ?? populatedCategories[0] ?? null;
-    });
-  }, [populatedCategories]);
+	reactHostPort.useEffect(() => {
+		setActivePath((previousPath) => reconcileViewToolPath(tools, previousPath));
+	}, [tools]);
 
-  if (populatedCategories.length === 0) return null;
+	const segments = reactHostPort.useMemo(() => buildToolbarRibbonSegments(tools, activePath), [tools, activePath]);
 
-  const activeItems = activeCategory ? (tools[activeCategory] ?? []) : [];
-  const showCategoryNav = populatedCategories.length > 1;
+	if (!hasInteractiveViewToolNodes(tools)) return null;
 
-  return (
-    <div className={cn("flex items-center justify-center pointer-events-none", className)}>
-      <UiChromeLabelPolicyProvider policy="always">
-        <div
-          role="toolbar"
-          id="ui.toolbar"
-          className={cn("pointer-events-auto flex max-w-full items-stretch gap-single", showCategoryNav && "w-full max-w-[min(100%,48rem)] px-2")}
-        >
-        {showCategoryNav ? (
-          <>
-            <ToolbarZone id="ui.toolbar.zone.categories" className="shrink-0">
-              <ToggleGroup
-                kind="single"
-                value={activeCategory ?? ""}
-                onValueChange={(value) => setActiveCategory(value ? (value as AppToolCategory) : null)}
-                items={populatedCategories.map((category) => ({
-                  value: category,
-                  id: `ui.toolbar.group.${category}`,
-                  icon: resolveAppToolCategoryIcon(category),
-                  text: resolveTranslationLabel(t(`ui.toolbar.parent.${category}` as const)),
-                }))}
-              />
-            </ToolbarZone>
-            {activeCategory && hasAppToolCategoryItems(activeItems) ? (
-              <ToolbarZone id="ui.toolbar.zone.tools" className="min-w-0 flex-1">
-                <UIToolbarItems items={activeItems} />
-              </ToolbarZone>
-            ) : null}
-          </>
-        ) : (
-          <ToolbarZone className="max-w-full">
-            <UIToolbarItems items={tools[populatedCategories[0]!] ?? []} />
-          </ToolbarZone>
-        )}
-        </div>
-      </UiChromeLabelPolicyProvider>
-    </div>
-  );
+	return (
+		<UiChromeLabelPolicyProvider policy="always">
+			<div
+				role="toolbar"
+				id="ui.toolbar"
+				className={cn("pointer-events-auto flex w-fit max-w-full shrink-0 items-center justify-start gap-single", className)}
+			>
+				{segments.map((segment, index) => (
+					<ToolbarZone
+						key={
+							segment.kind === "picker"
+								? `picker-${segment.depth}-${segment.collections.map((entry) => entry.id).join("-")}`
+								: `tools-${index}-${segment.items.map((entry) => entry.id).join("-")}`
+						}
+					>
+						{segment.kind === "picker" ? (
+							<ToolbarItem>
+								<ToggleGroup
+									kind="single"
+									value={activePath[segment.depth] ?? ""}
+									onValueChange={(value) => {
+										if (value) setActivePath(reconcileViewToolPath(tools, [...activePath.slice(0, segment.depth), value]));
+									}}
+									items={segment.collections.map((entry) => ({
+										value: entry.id,
+										id: `ui.toolbar.group.${entry.id}`,
+										icon: entry.icon,
+										text: entry.text ?? entry.label,
+									}))}
+								/>
+							</ToolbarItem>
+						) : (
+							<UIToolbarItems items={segment.items} />
+						)}
+					</ToolbarZone>
+				))}
+			</div>
+		</UiChromeLabelPolicyProvider>
+	);
 };
 
 export { UISearch, UIFind, UIToolbar };
@@ -2500,6 +2580,42 @@ export { App, Mode, Ui } from "@semio-tech/ui-react";
 //#region 🧪ShellCanvasTests
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
+
+	describe("toolbar ribbon", () => {
+		const puzzle2dLike: ToolbarViewTools = [
+			{
+				id: "selection",
+				kind: "collection",
+				icon: null,
+				children: [
+					{ id: "methods", kind: "collection", icon: null, order: 0, children: [{ id: "rect", kind: "toggle", icon: null, pressed: true }] },
+					{ id: "mode", kind: "collection", icon: null, order: 1, children: [{ id: "default", kind: "toggle", icon: null, pressed: true }] },
+					{ id: "clear", kind: "button", icon: null, order: 20, onClick: () => undefined },
+				],
+			},
+			{ id: "view", kind: "collection", icon: null, children: [{ id: "grid", kind: "toggle", icon: null, pressed: false }] },
+		];
+
+		it("flattens sibling leaf-only collections into separate tool zones", () => {
+			const segments = buildToolbarRibbonSegments(puzzle2dLike, ["selection"]);
+			expect(segments.map((segment) => segment.kind)).toEqual(["picker", "tools", "tools", "tools"]);
+			expect(segments[1]?.kind === "tools" && segments[1].items.map((item) => item.id)).toEqual(["rect"]);
+			expect(segments[2]?.kind === "tools" && segments[2].items.map((item) => item.id)).toEqual(["default"]);
+			expect(segments[3]?.kind === "tools" && segments[3].items.map((item) => item.id)).toEqual(["clear"]);
+		});
+
+		it("reconciles picker path only through levels that need a collection choice", () => {
+			expect(reconcileViewToolPath(puzzle2dLike, [])).toEqual(["selection"]);
+			expect(reconcileViewToolPath(puzzle2dLike, ["view"])).toEqual(["view"]);
+		});
+
+		it("replaces downstream segments when a root collection changes", () => {
+			const selectionSegments = buildToolbarRibbonSegments(puzzle2dLike, ["selection"]);
+			const viewSegments = buildToolbarRibbonSegments(puzzle2dLike, ["view"]);
+			expect(selectionSegments.length).toBeGreaterThan(viewSegments.length);
+			expect(viewSegments.map((segment) => segment.kind)).toEqual(["picker", "tools"]);
+		});
+	});
 
 	describe("layout helpers", () => {
 		it("converts abstract layout nodes to GoldenLayout config", () => {
@@ -2530,13 +2646,13 @@ if (import.meta.vitest) {
 			});
 		});
 
-		it("merges categorized tools and omits empty categories", () => {
-			expect(mergeToolbarViewTools({ selection: [{ id: "a", onClick: () => undefined }] }, { filter: [{ id: "b", onClick: () => undefined }] })).toEqual({
-				selection: [{ id: "a", onClick: expect.any(Function) }],
-				filter: [{ id: "b", onClick: expect.any(Function) }],
-			});
-			expect(listPopulatedToolbarViewCategories({ selection: [], filter: [{ id: "b", onClick: () => undefined }] })).toEqual(["filter"]);
-			expect(listPopulatedToolbarViewCategories({ filter: [{ id: "sep", kind: "separator" }] })).toEqual([]);
+		it("merges toolbar trees and omits empty roots", () => {
+			const merged = mergeToolbarViewTools(
+				[{ id: "selection", kind: "collection", icon: null, children: [{ id: "a", onClick: () => undefined }] }],
+				[{ id: "filter", kind: "collection", icon: null, children: [{ id: "b", onClick: () => undefined }] }],
+			);
+			expect(merged?.length).toBe(2);
+			expect(hasInteractiveViewToolNodes([{ id: "filter", kind: "collection", icon: null, children: [{ id: "sep", kind: "separator" }] }])).toBe(false);
 		});
 	});
 }
@@ -3658,7 +3774,7 @@ if (import.meta.vitest) {
 	});
 
 	describe("settings general tree", () => {
-		it("exposes compact and expertise rows and optional mode row", () => {
+		it("exposes compact, expertise, and compute worker rows", () => {
 			const host: SettingsHostApi = {
 				compact: false,
 				setCompact: () => {},
@@ -3677,10 +3793,46 @@ if (import.meta.vitest) {
 			};
 			const tree = new FrameworkSettingsGeneralTreeDefinition(() => host).resolveTree();
 			const items = tree.sections[0]?.items ?? [];
-			expect(items.length).toBeGreaterThanOrEqual(2);
+			expect(items.length).toBeGreaterThanOrEqual(3);
 			expect(items.some((item) => item.id === "framework.settings.general.compact")).toBe(true);
 			expect(items.some((item) => item.id === "framework.settings.general.expertise")).toBe(true);
-			expect(items.some((item) => item.id === "framework.settings.general.mode")).toBe(true);
+			expect(items.some((item) => item.id === "framework.settings.general.workers")).toBe(true);
+			const modeTree = new FrameworkSettingsModeTreeDefinition(() => host).resolveTree();
+			const modeItems = modeTree.sections[0]?.items ?? [];
+			expect(modeItems.some((item) => item.id === "framework.settings.mode.select")).toBe(true);
+		});
+
+		it("registers mode, app, and general settings tabs as tree definitions", () => {
+			const host: SettingsHostApi = {
+				compact: false,
+				setCompact: () => {},
+				expertise: Expertise.NORMAL,
+				setExpertise: () => {},
+				computeWorkerCount: 4,
+				setComputeWorkerCount: () => {},
+				computeThreadsAvailable: true,
+				appId: "demo",
+				appLabel: "Demo",
+				modes: [{ id: "edit", label: "Edit" }],
+				activeModeId: "edit",
+				setActiveModeId: () => {},
+				hasModeNav: true,
+			};
+			const wb = new Platform();
+			const tabs = createFrameworkSettingsPanelTabs(() => host, () => null, () => wb, wb.commandBus);
+			expect(tabs.map((tab) => tab.id)).toEqual([
+				"framework.settings.mode",
+				"framework.settings.app",
+				"framework.settings.general",
+			]);
+			for (const tab of tabs) {
+				expect(tab.tree && typeof tab.tree === "object" && "resolveTree" in tab.tree).toBe(true);
+				if (tab.tree && typeof tab.tree === "object" && "resolveTree" in tab.tree) {
+					const config = tab.tree.resolveTree();
+					expect(config.sections.length).toBeGreaterThan(0);
+					expect(config.sections[0]?.items?.length).toBeGreaterThan(0);
+				}
+			}
 		});
 	});
 
@@ -3876,8 +4028,6 @@ export function registerWindowBody(bodyKey: string, Component: React.ComponentTy
 	windowBodyByKey.set(bodyKey, Component);
 }
 
-const sidePanelBodyByKey = new Map<string, React.ComponentType<unknown>>();
-
 /** @emoji 🎯 Picks the initial active window kind from layout or the first registered kind. */
 export function findDefaultActiveWindowKindId(layout: WindowLayout | undefined, windowKinds: readonly { readonly id: string }[]): string | null {
 	const allowed = new Set(windowKinds.map((windowKind) => windowKind.id));
@@ -3899,11 +4049,6 @@ export function findDefaultActiveWindowKindId(layout: WindowLayout | undefined, 
 		if (match) return match;
 	}
 	return windowKinds[0]?.id ?? null;
-}
-
-/** @emoji 📑 Binds a `bodyKey` from {@link SideTabSpec} to a React panel body component. */
-export function registerSidePanelBody(bodyKey: string, Component: React.ComponentType<unknown>): void {
-	sidePanelBodyByKey.set(bodyKey, Component);
 }
 
 const declarativeWindowBodyComponents = new Map<string, React.FC>();
@@ -4054,23 +4199,6 @@ export function sideTabsToPanelTabs(tabs: readonly SideTabSpec[], platform: Plat
 				tree: new DeclarativeSidePanelTreeDefinition(platform, tab.id, tab.bodyKey, bus),
 			};
 		}
-		const ReactBody = sidePanelBodyByKey.get(tab.bodyKey);
-		if (ReactBody) {
-			return {
-				id: tab.id,
-				icon: shellTabIconComponent(tab.iconId, tab.panel),
-				name: tab.label,
-				order: tab.order ?? orderIndex,
-				tree: {
-					sections: [
-						{
-							id: `${tab.id}.legacy`,
-							items: [{ id: `${tab.id}.legacy.body`, label: "", control: <ReactBody /> }],
-						},
-					],
-				},
-			};
-		}
 		return {
 			id: tab.id,
 			icon: shellTabIconComponent(tab.iconId, tab.panel),
@@ -4117,7 +4245,18 @@ function resolveToolItemIcon(iconId: string, size = 16): React.ReactNode {
 	return resolveDeclarativeControlIcon(iconId, size);
 }
 
-function shellToolToToolbarItem(item: ToolItem, bus: CommandBus): UIToolbarItem {
+function shellToolToToolNode(item: ToolNode, bus: CommandBus): UIToolNode {
+	if (item.kind === "collection") {
+		return {
+			id: item.id,
+			kind: "collection",
+			icon: resolveToolItemIcon(item.iconId),
+			label: item.label,
+			text: item.text,
+			order: item.order,
+			children: item.children.map((child) => shellToolToToolNode(child, bus)),
+		};
+	}
 	if (item.kind === "separator") {
 		return { id: item.id, kind: "separator", order: item.order };
 	}
@@ -4146,16 +4285,11 @@ function shellToolToToolbarItem(item: ToolItem, bus: CommandBus): UIToolbarItem 
 	};
 }
 
-/** @emoji 🎛 Converts declarative {@link FrameworkAppTools} into mounted toolbar items. */
+/** @emoji 🎛 Converts declarative {@link FrameworkAppTools} into mounted toolbar nodes. */
 export function declareToolsToViewTools(tools: FrameworkAppTools | undefined, bus: CommandBus): ToolbarViewTools | undefined {
-	if (!tools) return undefined;
-	const merged: ToolbarViewTools = {};
-	for (const category of APP_TOOL_CATEGORY_ORDER) {
-		const list = tools[category];
-		if (!list?.length) continue;
-		merged[category] = list.map((entry) => shellToolToToolbarItem(entry, bus));
-	}
-	return Object.keys(merged).length > 0 ? merged : undefined;
+	if (!tools?.length) return undefined;
+	const mapped = tools.map((entry) => shellToolToToolNode(entry, bus));
+	return mapped.length > 0 ? mapped : undefined;
 }
 
 /** @emoji ­ƒöÇ Merges config rows by `id` (extension overrides base). */
@@ -4798,7 +4932,7 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 		() => mergeToolbarViewTools(declareToolsToViewTools(platform.globalTools, platform.commandBus), declareToolsToViewTools(activeApp.tools, platform.commandBus)),
 		[activeApp.tools, platform, shellGen],
 	);
-	const hasToolbarTools = listPopulatedToolbarViewCategories(mergedTools).length > 0;
+	const hasToolbarTools = hasToolbarViewTools(mergedTools);
 
 	const openDesktopLeftPanel = reactHostPort.useCallback(
 		(kind: PanelKind, pressed: boolean) => {
@@ -4889,7 +5023,7 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 		content: (
 			<div className="flex items-center gap-single">
 				<SemioLogo className="shrink-0 size-workbench" />
-				<span className={cn("px-single", shellChromeTitleClassName)}>{platform.name}</span>
+				<span data-slot="app-name" className={cn("px-single", shellChromeTitleClassName)}>{activeAppBase.label}</span>
 			</div>
 		),
 	});
@@ -4997,14 +5131,12 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 		});
 	}
 
-	const modesList = activeAppBase.modes ?? [];
-	const resolvedModes = modesList.length > 0 ? modesList : [{ id: activeApp.id, label: activeApp.label, iconId: undefined }];
 	navbarItems.push({
 		key: "modes",
 		content: (
 			<ButtonGroup id="platform.navbar.modes">
-				{resolvedModes.map((mode) => {
-					const isActive = activeModeId === mode.id || (modesList.length === 0 && (activeModeId === null || activeModeId === mode.id));
+				{activeAppBase.modes.map((mode) => {
+					const isActive = activeModeId === mode.id;
 					return (
 						<ButtonGroupItem
 							key={mode.id}
@@ -5144,9 +5276,63 @@ if (import.meta.vitest) {
 			{ id: "workbench", iconId: "folder", panel: "workbench", order: 0, bodyKey: "test.platform.panel.workbench", label: "Workbench" },
 			{ id: "details", iconId: "info", panel: "details", order: 0, bodyKey: "test.platform.panel.details", label: "Details" },
 		];
-		registerSidePanelBody("test.platform.panel.workbench", () => <div data-testid="test-panel.workbench" />);
-		registerSidePanelBody("test.platform.panel.details", () => <div data-testid="test-panel.details" />);
+		registerSidePanelBody("test.platform.panel.workbench", () => ({
+			type: "tree",
+			sections: [{ id: "workbench", items: [{ id: "item", label: "Workbench" }] }],
+		}));
+		registerSidePanelBody("test.platform.panel.details", () => ({
+			type: "tree",
+			sections: [{ id: "details", items: [{ id: "item", label: "Details" }] }],
+		}));
 	}
+
+	describe("registerSidePanelBody", () => {
+		it("rejects non-tree declarative bodies when the factory is invoked", () => {
+			const key = "test.side-panel.non-tree";
+			registerSidePanelBody(key, () => ({ type: "text", value: "x" }) as UiTreeNode);
+			const factory = getSidePanelBodyFactory(key);
+			expect(factory).toBeDefined();
+			expect(() =>
+				factory?.({
+					platform: new Platform(),
+					windowKindId: "tab",
+					bodyKey: key,
+					activeModeId: null,
+					generation: 0,
+				}),
+			).toThrow(/must be type "tree"/);
+			unregisterSidePanelBody(key);
+		});
+	});
+
+	describe("sideTabsToPanelTabs", () => {
+		it("maps registered declarative bodies to tree definitions", () => {
+			const key = "test.side-tabs.declarative";
+			registerSidePanelBody(key, () => ({
+				type: "tree",
+				sections: [{ id: "section", items: [{ id: "item", label: "Panel item" }] }],
+			}));
+			const wb = new Platform();
+			const tabs = sideTabsToPanelTabs([{ id: "tab", iconId: "folder", panel: "workbench", order: 0, bodyKey: key, label: "Tab" }], wb, wb.commandBus);
+			expect(tabs).toHaveLength(1);
+			expect(tabs[0]?.tree && typeof tabs[0].tree === "object" && "resolveTree" in tabs[0].tree).toBe(true);
+			unregisterSidePanelBody(key);
+		});
+
+		it("falls back to a missing-panel tree when no factory is registered", () => {
+			const wb = new Platform();
+			const tabs = sideTabsToPanelTabs(
+				[{ id: "tab", iconId: "folder", panel: "workbench", order: 0, bodyKey: "test.side-tabs.missing", label: "Tab" }],
+				wb,
+				wb.commandBus,
+			);
+			const tree = tabs[0]?.tree;
+			expect(tree && typeof tree === "object" && "sections" in tree).toBe(true);
+			if (tree && typeof tree === "object" && "sections" in tree) {
+				expect(tree.sections[0]?.items[0]?.label).toContain("Missing panel");
+			}
+		});
+	});
 
 	describe("UIWindowMeasures", () => {
 		it("renders compact measure tiles that fill the rail width", () => {
@@ -5293,6 +5479,8 @@ if (import.meta.vitest) {
 			const markup = renderToStaticMarkup(<PlatformView platform={wb} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} />);
 
 			expect(markup).toContain('data-panel="leftSidePanel"');
+			expect(markup).toContain('data-slot="side-panel-tabs"');
+			expect(markup).toContain('data-slot="tree-section-wrapper"');
 		});
 
 		it("hides panel toggles when the active app registers no panel tabs", () => {
@@ -5447,8 +5635,14 @@ if (import.meta.vitest) {
 				{ id: "workbench", iconId: "lucide.folder", panel: "workbench", order: 0, bodyKey: "test.platform.panel.workbench", label: "Workbench" },
 				{ id: "details", iconId: "lucide.info", panel: "details", order: 0, bodyKey: "test.platform.panel.details", label: "Details" },
 			];
-			registerSidePanelBody("test.platform.panel.workbench", () => <div />);
-			registerSidePanelBody("test.platform.panel.details", () => <div />);
+			registerSidePanelBody("test.platform.panel.workbench", () => ({
+				type: "tree",
+				sections: [{ id: "workbench", items: [{ id: "item", label: "Workbench" }] }],
+			}));
+			registerSidePanelBody("test.platform.panel.details", () => ({
+				type: "tree",
+				sections: [{ id: "details", items: [{ id: "item", label: "Details" }] }],
+			}));
 			wb.addApp(app);
 			const markup = renderToStaticMarkup(<PlatformView platform={wb} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} />);
 
@@ -5468,11 +5662,11 @@ if (import.meta.vitest) {
 			const app = new AppRuntime("app", "App", undefined, new TCtrl(), createTabStackLayout(["base"], ["Base"]), [
 				new WindowKindRuntime("base", "Base", "test.workbench-view.base"),
 			]);
-			app.tools = { selection: [{ id: "base-tool", kind: "button", iconId: "circle-dot", label: "Base", controllerId: "tctrl", command: "x" }] };
+			app.tools = [toolCollection("selection", "mouse-pointer-2", [{ id: "base-tool", kind: "button", iconId: "circle-dot", label: "Base", controllerId: "tctrl", command: "x" }])];
 			app.selection = { base: true };
 			app.options = { snap: true };
 			const inspect = new ModeRuntime("inspect", "Inspect", undefined);
-			inspect.tools = { actions: [{ id: "mode-tool", kind: "button", iconId: "circle-dot", label: "Mode", controllerId: "tctrl", command: "y" }] };
+			inspect.tools = [toolCollection("actions", "more-horizontal", [{ id: "mode-tool", kind: "button", iconId: "circle-dot", label: "Mode", controllerId: "tctrl", command: "y" }])];
 			inspect.selection = { mode: true };
 			inspect.options = { isolate: true };
 			inspect.windowKinds = [new WindowKindRuntime("mode", "Mode", "test.workbench-view.mode")];
@@ -5481,8 +5675,10 @@ if (import.meta.vitest) {
 			const resolved = app.resolve("inspect");
 
 			expect(resolved.activeModeId).toBe("inspect");
-			expect(resolved.tools?.selection?.map((tool) => tool.id)).toEqual(["base-tool"]);
-			expect(resolved.tools?.actions?.map((tool) => tool.id)).toEqual(["mode-tool"]);
+			const selectionCollection = resolved.tools?.find((node) => node.kind === "collection" && node.id === "selection");
+			const actionsCollection = resolved.tools?.find((node) => node.kind === "collection" && node.id === "actions");
+			expect(selectionCollection?.kind === "collection" ? selectionCollection.children.map((tool) => tool.id) : []).toEqual(["base-tool"]);
+			expect(actionsCollection?.kind === "collection" ? actionsCollection.children.map((tool) => tool.id) : []).toEqual(["mode-tool"]);
 			expect(resolved.selection).toEqual({ base: true, mode: true });
 			expect(resolved.options).toEqual({ snap: true, isolate: true });
 			expect(resolved.windowKinds.map((windowKind) => windowKind.id)).toEqual(["base", "mode"]);
@@ -5523,6 +5719,8 @@ if (import.meta.vitest) {
 			wb.addApp(app);
 			const markup = renderToStaticMarkup(<PlatformView platform={wb} />);
 
+			expect(markup).toContain('data-slot="app-name"');
+			expect(markup).toContain(">App</span>");
 			expect(markup).toContain('id="platform.navbar.modes.inspect"');
 			expect(markup).toContain('id="platform.navbar.modes.edit"');
 		});

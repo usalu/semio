@@ -8,7 +8,7 @@
 
 // #endregion 🧲Header
 
-import { Footer } from "@semio-tech/ui-react";
+import { Footer, ToolbarItem, ToolbarZone } from "@semio-tech/ui-react";
 import { createIconComponent } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 
@@ -47,6 +47,13 @@ export const Default: Story = {
       { id: "language", content: "TypeScript", order: 4 },
     ],
     isVisible: true,
+    toolbar: (
+      <div role="toolbar" className="flex w-fit max-w-full shrink-0 items-center justify-start gap-single">
+        <ToolbarZone>
+          <ToolbarItem>Toolbar</ToolbarItem>
+        </ToolbarZone>
+      </div>
+    ),
   },
 };
 

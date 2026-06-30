@@ -18,7 +18,8 @@ import {
 	type WindowTemplate,
 	platformFromViewContext,
 	type AppTools,
-	type ToolItem,
+	type ToolLeaf,
+	toolCollection,
 	type WindowBodyViewContext,
 	type CommandDescriptor,
 	type WindowEngagement,
@@ -1345,7 +1346,7 @@ export function buildPuzzle2dPlayToolbarTools(state: Puzzle2dPlayToolbarState, c
 		edges: state.puzzle2dSelectionTargets.edges,
 		handles: state.puzzle2dSelectionTargets.handles,
 	};
-	const selectionTools: ToolItem[] = [
+	const methodTools: ToolLeaf[] = [
 		{
 			id: "puzzle2d.select.rectangle",
 			kind: "toggle",
@@ -1368,12 +1369,14 @@ export function buildPuzzle2dPlayToolbarTools(state: Puzzle2dPlayToolbarState, c
 			command: "setSelectionMethod",
 			args: { method: "lasso" },
 		},
+	];
+	const modeTools: ToolLeaf[] = [
 		{
 			id: "puzzle2d.select.mode.default",
 			kind: "toggle",
 			iconId: "mouse-pointer-2",
 			text: "Default",
-			order: 2,
+			order: 0,
 			pressed: state.puzzle2dSelectionMode === "default",
 			controllerId,
 			command: "setSelectionMode",
@@ -1384,7 +1387,7 @@ export function buildPuzzle2dPlayToolbarTools(state: Puzzle2dPlayToolbarState, c
 			kind: "toggle",
 			iconId: "plus",
 			text: "Add",
-			order: 3,
+			order: 1,
 			pressed: state.puzzle2dSelectionMode === "additive",
 			controllerId,
 			command: "setSelectionMode",
@@ -1395,7 +1398,7 @@ export function buildPuzzle2dPlayToolbarTools(state: Puzzle2dPlayToolbarState, c
 			kind: "toggle",
 			iconId: "minus",
 			text: "Subtract",
-			order: 4,
+			order: 2,
 			pressed: state.puzzle2dSelectionMode === "subtractive",
 			controllerId,
 			command: "setSelectionMode",
@@ -1406,26 +1409,29 @@ export function buildPuzzle2dPlayToolbarTools(state: Puzzle2dPlayToolbarState, c
 			kind: "toggle",
 			iconId: "arrow-right-left",
 			text: "Invert",
-			order: 5,
+			order: 3,
 			pressed: state.puzzle2dSelectionMode === "invertive",
 			controllerId,
 			command: "setSelectionMode",
 			args: { mode: "invertive" },
 		},
-		...buildPlaygroundKindToggleTools("selection", PUZZLE_2D_PLAY_TARGET_KINDS, puzzle2dPlayTargetLabel, targetRecord, controllerId, "toggleSelectionTarget"),
-		{
-			id: "puzzle2d.selection.clear",
-			kind: "button",
-			iconId: "x",
-			label: "Clear",
-			order: 20,
-			controllerId,
-			command: "clearSelection",
-		},
 	];
-	return {
-		selection: selectionTools,
-		view: [
+	return [
+		toolCollection("selection", "mouse-pointer-2", [
+			toolCollection("methods", "square", methodTools, 0),
+			toolCollection("mode", "mouse-pointer-2", modeTools, 1),
+			toolCollection("targets", "layers", buildPlaygroundKindToggleTools("selection", PUZZLE_2D_PLAY_TARGET_KINDS, puzzle2dPlayTargetLabel, targetRecord, controllerId, "toggleSelectionTarget"), 2),
+			{
+				id: "puzzle2d.selection.clear",
+				kind: "button",
+				iconId: "x",
+				label: "Clear",
+				order: 20,
+				controllerId,
+				command: "clearSelection",
+			},
+		]),
+		toolCollection("view", "layout-grid", [
 			{
 				id: "puzzle2d.grid.snap",
 				kind: "toggle",
@@ -1436,9 +1442,9 @@ export function buildPuzzle2dPlayToolbarTools(state: Puzzle2dPlayToolbarState, c
 				controllerId,
 				command: "toggleGridSnap",
 			},
-		],
-		create: [{ id: "puzzle2d.create.circle", kind: "button", iconId: "circle", label: "Circle", order: 0, controllerId, command: "appendCircle" }],
-		actions: [
+		]),
+		toolCollection("create", "plus", [{ id: "puzzle2d.create.circle", kind: "button", iconId: "circle", label: "Circle", order: 0, controllerId, command: "appendCircle" }]),
+		toolCollection("actions", "more-horizontal", [
 			{
 				id: "puzzle2d.redraw.play",
 				kind: "toggle",
@@ -1450,13 +1456,13 @@ export function buildPuzzle2dPlayToolbarTools(state: Puzzle2dPlayToolbarState, c
 				command: "toggleRedrawPlaying",
 			},
 			{ id: "puzzle2d.redraw.handles", kind: "button", iconId: "grip-vertical", label: "Handles", title: "Redraw handles once", order: 1, controllerId, command: "redrawHandlesOnce" },
-		],
-	};
+		]),
+	];
 }
 
 /** @emoji 🎛 Puzzle 2d play shell controller: per-pane LOD modes + playground toolbar tools. */
 export class Puzzle2dPlayShellController extends Controller {
-	readonly mainMode = new ModeRuntime("main", "Puzzle 2D", undefined);
+	readonly mainMode = new ModeRuntime("main", "Edit", undefined);
 	private lodModeByPane: Record<Puzzle2dPlayPaneId, Puzzle2dLodModeKind>;
 	private lodModeByInstance: Record<string, Puzzle2dLodModeKind>;
 	private effectiveLodByPane: Record<Puzzle2dPlayPaneId, Puzzle2dDrawLodKind>;
@@ -2087,7 +2093,7 @@ export function attachPuzzle2dPlayWindowKinds(controller: Puzzle2dPlayShellContr
 	const isWires = import.meta.env?.PUZZLE_PLAY_ENTRY === "wires";
 	const app = new AppRuntime(
 		PUZZLE_2D_PLAY_APP_ID,
-		isWires ? "semio · reasoning · mindmap · wires" : "semio · puzzle · 2d",
+		isWires ? "Wires" : "Puzzle 2D",
 		undefined,
 		controller,
 		layout as never,
@@ -2645,7 +2651,7 @@ if (import.meta.vitest) {
 			const runtime = buildPuzzle2dPlayRuntime();
 			const app = runtime.getActiveApp();
 			expect(app?.panelTabs).toEqual([]);
-			expect(app?.controller.mainMode.tools ?? {}).toEqual({});
+			expect(app?.controller.mainMode.tools ?? []).toEqual([]);
 		});
 
 		it("buildPuzzle2dPlayAppRuntime wires appSettingsBodyKey for framework App settings tab", () => {

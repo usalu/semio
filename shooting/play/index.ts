@@ -28,7 +28,8 @@ import {
 	type CommandDescriptor,
 	type PlaygroundFixtureCatalog,
 	type PlaygroundFixtureHost,
-	type ToolItem,
+	type ToolLeaf,
+	toolCollection,
 	type UiNode,
 	type UiSectionNode,
 	type UiTreeItemNode,
@@ -363,8 +364,8 @@ function shootingFixtureJsonForId(fixtureId: string): string {
 }
 
 export function buildShootingPlayToolbarTools(state: ShootingPlayToolbarState, controllerId: string): AppTools {
-	return {
-		open: [
+	return [
+		toolCollection("open", "folder-open", [
 			{
 				id: "shooting.open.fixture",
 				kind: "button",
@@ -383,8 +384,8 @@ export function buildShootingPlayToolbarTools(state: ShootingPlayToolbarState, c
 				controllerId,
 				command: "importAssetRequest",
 			},
-		],
-		save: [
+		]),
+		toolCollection("save", "save", [
 			{
 				id: "shooting.save.stored",
 				kind: "button",
@@ -441,8 +442,8 @@ export function buildShootingPlayToolbarTools(state: ShootingPlayToolbarState, c
 				controllerId,
 				command: "resetFixture",
 			},
-		],
-		actions: [
+		]),
+		toolCollection("actions", "more-horizontal", [
 			{
 				id: "shooting.camera.save",
 				kind: "button",
@@ -461,12 +462,12 @@ export function buildShootingPlayToolbarTools(state: ShootingPlayToolbarState, c
 				controllerId,
 				command: "loadCameraMenu",
 			},
-		],
-	};
+		]),
+	];
 }
 
 export class ShootingPlayController extends Controller implements PlaygroundFixtureHost {
-	readonly mainMode = new ModeRuntime("main", "Shooting", undefined);
+	readonly mainMode = new ModeRuntime("main", "Edit", undefined);
 	private activeFixtureId = playgroundResolvedFixtureId(PLAYGROUND_NO_FIXTURE_ID);
 	private fixture: ShootingFixtureV1 = parseShootingFixture(shootingFixtureJsonForId(playgroundResolvedFixtureId(PLAYGROUND_NO_FIXTURE_ID))) ?? {
 		...DEFAULT_SHOOTING_FIXTURE,
@@ -1027,7 +1028,7 @@ export function registerShootingPlayDeclarativeBodies(): void {
 }
 
 export function buildShootingPlayAppRuntime(controller: ShootingPlayController): AppRuntime {
-	return createPlayAppRuntime(SHOOTING_PLAY_APP_ID, "semio · shooting", controller, SHOOTING_PLAY_LAYOUT, controller.mainMode);
+	return createPlayAppRuntime(SHOOTING_PLAY_APP_ID, "Shooting", controller, SHOOTING_PLAY_LAYOUT, controller.mainMode);
 }
 
 export class PlaygroundShooting extends Playground {

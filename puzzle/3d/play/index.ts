@@ -38,7 +38,8 @@ import {
   registerWindowBody,
   type CommandDescriptor,
   type SideTabSpec,
-  type ToolItem,
+  type ToolLeaf,
+  toolCollection,
   type UiNode,
   type UiSectionNode,
   type UiTreeItemNode,
@@ -1694,7 +1695,7 @@ function puzzle3dPlayPickKindLabel(kind: Puzzle3dPlayPickKind): string {
 /** @emoji 🎬 Playground puzzle 3D play controller: fixture, LOD, selection/filter tools, and interaction counters. */
 export class Puzzle3dPlayShellController extends Controller implements PlaygroundFixtureHost {
   private activeFixtureId = playgroundResolvedFixtureId(PUZZLE_3D_PLAY_FIXTURE_CONCRETE_FOREST_ID);
-  readonly mainMode = new ModeRuntime("main", "Puzzle 3D", undefined);
+  readonly mainMode = new ModeRuntime("main", "Edit", undefined);
   readonly selectableKinds: Record<Puzzle3dPlayPickKind, boolean> = { object: true, vortex: true, attraction: true };
   readonly visibleKinds: Record<Puzzle3dPlayPickKind, boolean> = { object: true, vortex: true, attraction: true };
   private fixture: FixtureV1 | null;
@@ -2419,7 +2420,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
     this.mainMode.windowKinds = [
       new WindowKindRuntime(PUZZLE_3D_PLAY_WINDOW_ID, PUZZLE_3D_PLAY_WINDOW_LABEL, PUZZLE_3D_PLAY_BODY_KEY, undefined, this.windowMeasures(), this.windowEngagement, PUZZLE_3D_VIEW_TEMPLATES),
     ];
-    const relocateTools: ToolItem[] = PUZZLE_3D_GUMBALL_GROUPS.map(({ key, label, iconId }, order) => ({
+    const relocateTools: ToolLeaf[] = PUZZLE_3D_GUMBALL_GROUPS.map(({ key, label, iconId }, order) => ({
       id: `puzzle3d.gumball.${key}`,
       kind: "toggle" as const,
       iconId,
@@ -2430,11 +2431,11 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
       command: "setGumballConfigToggle",
       args: { key },
     }));
-    this.mainMode.tools = {
-      selection: buildPlaygroundBrowseSelectionTools(PUZZLE_3D_PLAY_KINDS, puzzle3dPlayPickKindLabel, this.selectableKinds, PUZZLE_3D_PLAY_CONTROLLER_ID),
-      filter: buildPlaygroundBrowseFilterTools(PUZZLE_3D_PLAY_KINDS, puzzle3dPlayPickKindLabel, this.visibleKinds, PUZZLE_3D_PLAY_CONTROLLER_ID),
-      actions: relocateTools,
-    };
+    this.mainMode.tools = [
+      toolCollection("selection", "mouse-pointer-2", buildPlaygroundBrowseSelectionTools(PUZZLE_3D_PLAY_KINDS, puzzle3dPlayPickKindLabel, this.selectableKinds, PUZZLE_3D_PLAY_CONTROLLER_ID)),
+      toolCollection("filter", "filter", buildPlaygroundBrowseFilterTools(PUZZLE_3D_PLAY_KINDS, puzzle3dPlayPickKindLabel, this.visibleKinds, PUZZLE_3D_PLAY_CONTROLLER_ID)),
+      toolCollection("actions", "more-horizontal", relocateTools),
+    ];
   }
 
   private filterSelectionByPlaygroundKinds(selection: Puzzle3dPlaySelection): Puzzle3dPlaySelection {
@@ -3263,7 +3264,7 @@ class Puzzle3dPlaySnapshotStore extends Store<Puzzle3dPlaySnapshot> {
 }
 
 export function buildPuzzle3dPlayAppRuntime(controller: Puzzle3dPlayShellController): AppRuntime {
-  const app = new AppRuntime(PUZZLE_3D_PLAY_APP_ID, "semio · puzzle · 3d", undefined, controller, createStackLayout([PUZZLE_3D_PLAY_WINDOW_ID], [PUZZLE_3D_PLAY_WINDOW_LABEL]) as never, [
+  const app = new AppRuntime(PUZZLE_3D_PLAY_APP_ID, "Puzzle 3D", undefined, controller, createStackLayout([PUZZLE_3D_PLAY_WINDOW_ID], [PUZZLE_3D_PLAY_WINDOW_LABEL]) as never, [
     new WindowKindRuntime(PUZZLE_3D_PLAY_WINDOW_ID, PUZZLE_3D_PLAY_WINDOW_LABEL, PUZZLE_3D_PLAY_BODY_KEY, undefined, [], controller.placeholderWindowEngagement(), PUZZLE_3D_VIEW_TEMPLATES),
   ]);
   app.defaultModeId = controller.mainMode.id;

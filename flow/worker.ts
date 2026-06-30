@@ -1,6 +1,6 @@
 /** @emoji 👷 Dedicated flow orchestrator worker — runs FlowSession WASM off the UI thread. */
 
-import initFlowWasm, { FlowSession, initSync, tessellate } from "./core/pkg/flow_core.js";
+import initFlowWasm, { FlowSession, initSync, render_drawing_scene, tessellate } from "./core/pkg/flow_core.js";
 import flowCoreWasmUrl from "./core/pkg/flow_core_bg.wasm?url";
 
 type FlowWorkerRequest =
@@ -44,51 +44,67 @@ async function ensureSession(): Promise<FlowSession> {
   return session;
 }
 
-const GEOMETRY_HANDLE_PATTERN = /^(vertex|edge|wire|face|shell|solid|compound|curve|surface|drawing)-/;
+const GEOMETRY_HANDLE_PATTERN = /^(vertex|edge|wire|face|shell|solid|compound|curve|surface)-/;
+const DRAWING_HANDLE_PATTERN = /^drawing-/;
 
-function collectGeometryHandles(value: unknown, out: Array<{ readonly key: string; readonly handle: string }>, key: string): void {
-  if (typeof value === "string" && GEOMETRY_HANDLE_PATTERN.test(value)) {
-    out.push({ key, handle: value });
-    return;
-  }
-  if (Array.isArray(value)) {
-    value.forEach((nested, index) => collectGeometryHandles(nested, out, `${key}.${index}`));
-    return;
-  }
-  if (!value || typeof value !== "object") return;
-  const dict = value as Record<string, unknown>;
-  if (dict.$schema === "geometry" && typeof dict.handle === "string") {
-    out.push({ key, handle: dict.handle });
-    return;
-  }
-  for (const [nestedKey, nested] of Object.entries(dict)) {
-    collectGeometryHandles(nested, out, `${key}.${nestedKey}`);
-  }
+function collectPreviewHandles(value: unknown, out: Array<{ readonly key: string; readonly handle: string }>, key: string): void {
+	if (typeof value === "string") {
+		if (GEOMETRY_HANDLE_PATTERN.test(value) || DRAWING_HANDLE_PATTERN.test(value)) {
+			out.push({ key, handle: value });
+		}
+		return;
+	}
+	if (Array.isArray(value)) {
+		value.forEach((nested, index) => collectPreviewHandles(nested, out, `${key}.${index}`));
+		return;
+	}
+	if (!value || typeof value !== "object") return;
+	const dict = value as Record<string, unknown>;
+	if (dict.$schema === "geometry" && typeof dict.handle === "string") {
+		out.push({ key, handle: dict.handle });
+		return;
+	}
+	if (dict.$schema === "draw.drawing" && typeof dict.handle === "string") {
+		out.push({ key, handle: dict.handle });
+		return;
+	}
+	for (const [nestedKey, nested] of Object.entries(dict)) {
+		collectPreviewHandles(nested, out, `${key}.${nestedKey}`);
+	}
 }
 
 function tessellatePreviewMeshes(outputsJson: string, tolerance: number): Record<string, RawMeshTransfer> {
-  const meshes: Record<string, RawMeshTransfer> = {};
-  let parsed: Record<string, { readonly in?: Record<string, unknown>; readonly out?: Record<string, unknown> }> = {};
-  try {
-    parsed = JSON.parse(outputsJson) as typeof parsed;
-  } catch {
-    return meshes;
-  }
-  for (const [widgetId, entry] of Object.entries(parsed)) {
-    for (const [port, value] of Object.entries(entry.out ?? {})) {
-      const refs: Array<{ readonly key: string; readonly handle: string }> = [];
-      collectGeometryHandles(value, refs, `${widgetId}:${port}`);
-      for (const ref of refs) {
-        try {
-          const raw = JSON.parse(tessellate(ref.handle, tolerance)) as RawMeshTransfer;
-          if (!raw.error) meshes[ref.handle] = raw;
-        } catch {
-          /* skip invalid handle */
-        }
-      }
-    }
-  }
-  return meshes;
+	const meshes: Record<string, RawMeshTransfer> = {};
+	let parsed: Record<string, { readonly in?: Record<string, unknown>; readonly out?: Record<string, unknown> }> = {};
+	try {
+		parsed = JSON.parse(outputsJson) as typeof parsed;
+	} catch {
+		return meshes;
+	}
+	for (const [widgetId, entry] of Object.entries(parsed)) {
+		for (const [port, value] of Object.entries(entry.out ?? {})) {
+			const refs: Array<{ readonly key: string; readonly handle: string }> = [];
+			collectPreviewHandles(value, refs, `${widgetId}:${port}`);
+			for (const ref of refs) {
+				if (DRAWING_HANDLE_PATTERN.test(ref.handle)) {
+					try {
+						const scene = JSON.parse(render_drawing_scene(ref.handle)) as RawMeshTransfer;
+						if (!scene.error) meshes[ref.handle] = scene;
+					} catch {
+						/* skip invalid handle */
+					}
+					continue;
+				}
+				try {
+					const raw = JSON.parse(tessellate(ref.handle, tolerance)) as RawMeshTransfer;
+					if (!raw.error) meshes[ref.handle] = raw;
+				} catch {
+					/* skip invalid handle */
+				}
+			}
+		}
+	}
+	return meshes;
 }
 
 self.onmessage = async (event: MessageEvent<FlowWorkerRequest>) => {

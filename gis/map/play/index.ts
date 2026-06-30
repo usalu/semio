@@ -32,7 +32,8 @@ import {
   type WindowMeasure,
   type WindowTemplate,
   type AppTools,
-  type ToolItem,
+  type ToolLeaf,
+  toolCollection,
 } from "@semio-tech/framework-playground-core";
 import { Store } from "@semio-tech/framework-core";
 
@@ -530,7 +531,7 @@ export interface MapPlayToolbarState {
 
 /** @emoji 🧰 Playground toolbar tools for GIS map selection. */
 export function buildMapPlayToolbarTools(state: MapPlayToolbarState, controllerId: string): AppTools {
-  const selectionTools: ToolItem[] = [
+  const selectionTools: ToolLeaf[] = [
     {
       id: "gis-map.select.rectangle",
       kind: "toggle",
@@ -608,7 +609,7 @@ export function buildMapPlayToolbarTools(state: MapPlayToolbarState, controllerI
       command: "clearSelection",
     },
   ];
-  return { selection: selectionTools };
+  return [toolCollection("selection", "mouse-pointer-2", selectionTools)];
 }
 // #endregion 🔖MapPlayPanels
 
@@ -1278,7 +1279,7 @@ export class MapPlayController extends Controller implements PlaygroundFixtureHo
 
 function buildMapPlayAppRuntime(ctrl: MapPlayController): AppRuntime {
   const layout = createStackLayout(["gis-map-main"], ["World Map"]);
-  return createPlayAppRuntime(GIS_MAP_PLAY_APP_ID, "semio · gis · map", ctrl, layout, ctrl.mainMode);
+  return createPlayAppRuntime(GIS_MAP_PLAY_APP_ID, "Map", ctrl, layout, ctrl.mainMode);
 }
 
 export class PlaygroundMap extends Playground {

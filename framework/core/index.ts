@@ -371,41 +371,8 @@ export enum Expertise {
 //#endregion 🔖Expertise
 
 //#region 🔖Toolbar
-/** @emoji 🧰 Toolbar category ids shared by every app registration surface. */
-export type AppToolCategory =
-	| "history"
-	| "hand"
-	| "selection"
-	| "lasso"
-	| "filter"
-	| "open"
-	| "save"
-	| "transfer"
-	| "transform"
-	| "create"
-	| "view"
-	| "actions"
-	| "settings";
-
-/** @emoji 📋 Default toolbar category order. */
-export const APP_TOOL_CATEGORY_ORDER: readonly AppToolCategory[] = [
-	"history",
-	"hand",
-	"selection",
-	"lasso",
-	"filter",
-	"open",
-	"save",
-	"transfer",
-	"transform",
-	"create",
-	"view",
-	"actions",
-	"settings",
-];
-
-/** @emoji 🎛 Declarative toolbar item; interactions route through {@link CommandBus}. */
-export type ToolItem =
+/** @emoji 🎛 Declarative toolbar leaf; interactions route through {@link CommandBus}. */
+export type ToolLeaf =
 	| {
 			readonly id: string;
 			readonly kind: "separator";
@@ -440,34 +407,114 @@ export type ToolItem =
 			readonly args?: unknown;
 	  };
 
-/** @emoji 🗂️ Per-category toolbar maps. */
-export type AppTools = Partial<Record<AppToolCategory, readonly ToolItem[]>>;
+/** @emoji 🌳 Declarative toolbar node: leaf control or nested collection. */
+export type ToolNode =
+	| ToolLeaf
+	| {
+			readonly id: string;
+			readonly kind: "collection";
+			readonly iconId: string;
+			readonly label?: string;
+			readonly text?: string;
+			readonly title?: string;
+			readonly order?: number;
+			readonly disabled?: boolean;
+			readonly children: readonly ToolNode[];
+	  };
 
-/** @emoji 🔀 Merges toolbar tool maps per category (extension appends within each category). */
-export function mergeAppTools(base?: AppTools, extension?: AppTools): AppTools | undefined {
-	if (!base && !extension) return undefined;
-	const merged: AppTools = {};
-	for (const category of APP_TOOL_CATEGORY_ORDER) {
-		const combined = [...(base?.[category] ?? []), ...(extension?.[category] ?? [])];
-		if (combined.length > 0) (merged as Record<string, readonly ToolItem[]>)[category] = combined;
-	}
-	return Object.keys(merged).length > 0 ? merged : undefined;
+/** @emoji 🗂️ Root toolbar tree (ordered sibling list). */
+export type AppTools = readonly ToolNode[];
+
+/** @emoji 📁 Builds a toolbar collection node. */
+export function toolCollection(
+	id: string,
+	iconId: string,
+	children: readonly ToolNode[],
+	order?: number,
+	opts?: { readonly label?: string; readonly text?: string; readonly title?: string; readonly disabled?: boolean },
+): ToolNode {
+	return {
+		id,
+		kind: "collection",
+		iconId,
+		children,
+		order,
+		label: opts?.label,
+		text: opts?.text,
+		title: opts?.title,
+		disabled: opts?.disabled,
+	};
 }
 
-/** @emoji 🧮 Counts toolbar items across populated categories. */
+function sortToolNodes(nodes: readonly ToolNode[]): ToolNode[] {
+	return [...nodes].sort((left, right) => (left.order ?? 0) - (right.order ?? 0));
+}
+
+function isInteractiveToolNode(node: ToolNode): boolean {
+	if (node.kind === "separator") return false;
+	if (node.kind === "collection") return hasInteractiveToolNodes(node.children);
+	return true;
+}
+
+/** @emoji ✅ True when the tree has at least one non-separator leaf. */
+export function hasInteractiveToolNodes(nodes?: readonly ToolNode[]): boolean {
+	return Boolean(nodes?.some((node) => isInteractiveToolNode(node)));
+}
+
+/** @emoji 🧮 Counts toolbar nodes recursively. */
 export function countAppTools(tools?: AppTools): number {
-	if (!tools) return 0;
-	return APP_TOOL_CATEGORY_ORDER.reduce((sum, category) => sum + (tools[category]?.length ?? 0), 0);
+	if (!tools?.length) return 0;
+	return tools.reduce((sum, node) => sum + (node.kind === "collection" ? 1 + countAppTools(node.children) : 1), 0);
 }
 
-function hasAppToolCategoryItems(items: readonly ToolItem[] | undefined): boolean {
-	return Boolean(items?.some((item) => item.kind !== "separator"));
+function mergeToolSiblingLists(base: readonly ToolNode[], extension: readonly ToolNode[]): ToolNode[] {
+	const merged = new Map<string, ToolNode>();
+	for (const node of base) merged.set(node.id, node);
+	for (const node of extension) {
+		const existing = merged.get(node.id);
+		if (existing?.kind === "collection" && node.kind === "collection") {
+			merged.set(node.id, { ...node, children: mergeToolSiblingLists(existing.children, node.children) });
+			continue;
+		}
+		merged.set(node.id, node);
+	}
+	return sortToolNodes([...merged.values()]);
 }
 
-/** @emoji 📂 Lists categories that have at least one non-separator tool. */
-export function listPopulatedToolCategories(tools?: AppTools): AppToolCategory[] {
-	if (!tools) return [];
-	return APP_TOOL_CATEGORY_ORDER.filter((category) => hasAppToolCategoryItems(tools[category]));
+/** @emoji 🔀 Merges toolbar trees by sibling id (collection children merge recursively). */
+export function mergeAppTools(base?: AppTools, extension?: AppTools): AppTools | undefined {
+	if (!base?.length && !extension?.length) return undefined;
+	const merged = mergeToolSiblingLists(base ?? [], extension ?? []);
+	return merged.length > 0 ? merged : undefined;
+}
+
+/** @emoji 🍃 True when a collection's children are all leaves (no nested collections). */
+export function isLeafOnlyToolCollection(node: ToolNode): boolean {
+	if (node.kind !== "collection") return false;
+	return node.children.every((child) => child.kind !== "collection");
+}
+
+/** @emoji 🪄 Auto-opens through single-collection levels; stops before flattened leaf-only sibling groups. */
+export function resolveDefaultToolPath(nodes?: readonly ToolNode[]): readonly string[] {
+	if (!nodes?.length) return [];
+	const sorted = sortToolNodes(nodes);
+	const collections = sorted.filter((node): node is Extract<ToolNode, { kind: "collection" }> => node.kind === "collection" && !node.disabled);
+	if (collections.length === 0) return [];
+	if (collections.length > 1 && collections.every(isLeafOnlyToolCollection)) return [];
+	if (collections.length === 1) return resolveDefaultToolPath(collections[0].children);
+	const firstCollection = collections[0];
+	return [firstCollection.id, ...resolveDefaultToolPath(firstCollection.children)];
+}
+
+/** @emoji 📂 Lists collection ids in document order (depth-first). */
+export function listToolCollectionIds(nodes?: readonly ToolNode[]): string[] {
+	if (!nodes?.length) return [];
+	const ids: string[] = [];
+	for (const node of sortToolNodes(nodes)) {
+		if (node.kind !== "collection") continue;
+		ids.push(node.id, ...listToolCollectionIds(node.children));
+	}
+	return ids;
 }
 //#endregion 🔖Toolbar
 
@@ -929,9 +976,12 @@ export class BaseWindowKindRuntime {
 //#endregion 🔖WindowKindRuntime
 
 //#region 🔖ModeRuntime
+export const DEFAULT_APP_MODE_ID = "edit";
+export const DEFAULT_APP_MODE_LABEL = "Edit";
+
 /** @emoji 🎚 Single app mode: toolbars, window kinds, and side tab specs. */
 export class BaseModeRuntime {
-	tools: AppTools = {};
+	tools?: AppTools;
 	windowKinds: BaseWindowKindRuntime[] = [];
 	namedLayouts: NamedLayout[] = [];
 	defaultLayout?: WindowLayout;
@@ -1004,11 +1054,12 @@ export function resolveBaseAppState(app: BaseAppRuntime, requestedModeId?: strin
 export class BaseAppRuntime {
 	readonly modes: BaseModeRuntime[] = [];
 	defaultModeId?: string;
+	private hasImplicitDefaultMode = true;
 	private activeModeIdOverride: string | null = null;
 	windowKinds: BaseWindowKindRuntime[] = [];
 	namedLayouts: NamedLayout[] = [];
 	defaultLayout!: WindowLayout;
-	tools: AppTools = {};
+	tools?: AppTools;
 	panelTabs: SideTabSpec[] = [];
 	footerItems: FooterItem[] = [];
 	appSettingsBodyKey?: string;
@@ -1021,13 +1072,22 @@ export class BaseAppRuntime {
 		controller: Controller,
 		layout: WindowLayout,
 		windowKinds: readonly BaseWindowKindRuntime[],
+		createDefaultMode: (id: string, label: string, iconId: string | undefined) => BaseModeRuntime = (id, label, iconId) =>
+			new BaseModeRuntime(id, label, iconId),
 	) {
 		this.controller = controller;
 		this.defaultLayout = layout;
 		this.windowKinds = [...windowKinds];
+		const defaultMode = createDefaultMode(DEFAULT_APP_MODE_ID, DEFAULT_APP_MODE_LABEL, undefined);
+		this.modes.push(defaultMode);
+		this.defaultModeId = defaultMode.id;
 	}
 
 	addMode(mode: BaseModeRuntime): void {
+		if (this.hasImplicitDefaultMode) {
+			this.modes.length = 0;
+			this.hasImplicitDefaultMode = false;
+		}
 		this.modes.push(mode);
 		this.invalidateResolvedState();
 	}
@@ -1195,6 +1255,9 @@ export class Platform {
 	}
 
 	addApp(app: BaseAppRuntime): void {
+		if (!app.defaultModeId || !app.modes.some((mode) => mode.id === app.defaultModeId)) {
+			app.defaultModeId = app.modes[0]?.id;
+		}
 		this.apps.push(app);
 		if (!this.activeAppId) this.activeAppId = app.id;
 		this.notify();
@@ -1309,11 +1372,30 @@ if (import.meta.vitest) {
 	});
 
 	describe("mergeAppTools", () => {
-		it("merges tools per category", () => {
-			const base: AppTools = { view: [{ id: "a", kind: "button", iconId: "circle-dot", label: "A" }] };
-			const ext: AppTools = { view: [{ id: "b", kind: "button", iconId: "circle-dot", label: "B" }] };
+		it("merges sibling tools and collection children recursively", () => {
+			const base: AppTools = [
+				toolCollection("view", "layout-grid", [{ id: "a", kind: "button", iconId: "circle-dot", label: "A" }]),
+			];
+			const ext: AppTools = [
+				toolCollection("view", "layout-grid", [{ id: "b", kind: "button", iconId: "circle-dot", label: "B" }]),
+				toolCollection("save", "save", [{ id: "c", kind: "button", iconId: "circle-dot", label: "C" }]),
+			];
 			const merged = mergeAppTools(base, ext);
-			expect(merged?.view?.length).toBe(2);
+			expect(merged?.find((node) => node.id === "view" && node.kind === "collection")?.kind === "collection" && (merged?.find((node) => node.id === "view") as { children: ToolNode[] }).children.length).toBe(2);
+			expect(merged?.some((node) => node.id === "save")).toBe(true);
+		});
+	});
+
+	describe("resolveDefaultToolPath", () => {
+		it("walks the first collection at each picker level and stops before flattened groups", () => {
+			const tools: AppTools = [
+				toolCollection("selection", "mouse-pointer-2", [
+					toolCollection("methods", "square", [{ id: "rect", kind: "toggle", iconId: "square", pressed: true }]),
+					toolCollection("targets", "layers", [{ id: "nodes", kind: "toggle", iconId: "circle-dot", pressed: true }]),
+				]),
+				toolCollection("view", "layout-grid", [{ id: "grid", kind: "toggle", iconId: "grid-3x3", pressed: false }]),
+			];
+			expect(resolveDefaultToolPath(tools)).toEqual(["selection"]);
 		});
 	});
 
@@ -1631,6 +1713,30 @@ if (import.meta.vitest) {
 	});
 
 	describe("resolveBaseAppState", () => {
+		it("gives every app a named default mode and replaces the implicit mode with explicit modes", () => {
+			class TCtrl extends Controller {
+				run(): void {}
+			}
+			const platform = new Platform();
+			const app = new BaseAppRuntime(
+				"app",
+				"App",
+				undefined,
+				new TCtrl("c", platform.commandBus, () => platform.notify()),
+				createTabStackLayout(["main"]),
+				[new BaseWindowKindRuntime("main", "Main", "main.body")],
+			);
+
+			expect(app.modes.map((mode) => [mode.id, mode.label])).toEqual([["edit", "Edit"]]);
+			expect(app.defaultModeId).toBe("edit");
+
+			app.addMode(new BaseModeRuntime("explore", "Explore", undefined));
+			platform.addApp(app);
+
+			expect(app.modes.map((mode) => mode.id)).toEqual(["explore"]);
+			expect(app.defaultModeId).toBe("explore");
+		});
+
 		it("merges mode window kinds over app window kinds", () => {
 			class TCtrl extends Controller {
 				run(): void {}

@@ -299,7 +299,7 @@ export function buildDagPlayInspectorTree(fixtureJson: string, selectedNodeIds: 
 
 /** @emoji 🎛 DAG play shell controller. */
 export class DagPlayController extends Controller {
-  readonly mainMode = new ModeRuntime("main", "DAG", undefined);
+  readonly mainMode = new ModeRuntime("main", "Edit", undefined);
   private fixtureJson = DAG_PLAY_DEFAULT_FIXTURE_JSON;
   private engagementInput = "";
   private layerSpacing = DEFAULT_LAYER_SPACING;
@@ -612,7 +612,7 @@ export function registerDagPlayDeclarativeBodies(): void {
 }
 
 export function buildDagPlayAppRuntime(controller: DagPlayController): AppRuntime {
-  return createPlayAppRuntime(DAG_PLAY_APP_ID, "semio · mathematical · graph · port · directed · dag", controller, DAG_PLAY_LAYOUT, controller.mainMode);
+  return createPlayAppRuntime(DAG_PLAY_APP_ID, "DAG", controller, DAG_PLAY_LAYOUT, controller.mainMode);
 }
 
 export class PlaygroundDag extends Playground {

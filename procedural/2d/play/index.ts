@@ -6,8 +6,12 @@ import {
     buildFlowPlayCatalogueTree,
     buildFlowPlayHierarchyTree,
     buildFlowPlayInspectorTree,
+    createDefaultGenerations,
     parseFlowPlayFixtureJson,
+    runGenerationCommand,
 } from "@semio-tech/flow-play";
+import { flowFixtureToFormSpec, type FlowGeneration } from "@semio-tech/forms-react";
+import { FlowOrchestratorClient } from "../../../flow/worker-client.ts";
 import {
     buildCatalogueKindsTreeSections,
     buildFlowContextMenuItems,
@@ -24,6 +28,7 @@ import type { WindowMeasure } from "@semio-tech/framework-playground-core";
 import {
     AppRuntime,
     buildFlowWindowBody,
+    buildFormsWindowBody,
     buildPuzzle2dWindowBody,
     CommandBus,
     Controller,
@@ -44,12 +49,14 @@ import {
     type CommandDescriptor,
     type PlaygroundFixtureCatalog,
     type PlaygroundFixtureHost,
-    type ToolItem,
+    type ToolLeaf,
+    toolCollection,
     type UiNode,
     type UiTreeSectionNode,
     type WindowBodyViewContext,
     type WindowEngagement,
 } from "@semio-tech/framework-playground-core";
+import { drawingSceneFromPreviewPayload } from "@semio-tech/geometry-drawing-js";
 import {
     extractChannelPreviewItems,
     filterVisiblePreviewItems,
@@ -66,6 +73,26 @@ import {
 import type { ContextMenuItem } from "@semio-tech/ui-react";
 import { bootstrapElementsSurfaceChromeDocument, selectionMergeIds, type SelectionMergeMode } from "@semio-tech/ui-react";
 
+function previewItemKey(item: ProceduralPreviewItem): string {
+	return `${item.widgetId}:${item.port}:${item.direction}`;
+}
+
+function previewItemsWithScenes(
+	items: ProceduralPreviewItem[],
+	previewMeshes?: Readonly<Record<string, unknown>>,
+	previous: readonly ProceduralPreviewItem[] = [],
+): ProceduralPreviewItem[] {
+	const previousByKey = new Map(previous.map((item) => [previewItemKey(item), item]));
+	return items.map((item) => {
+		if (item.kind !== "drawing" || item.direction !== "out") return item;
+		const previousItem = previousByKey.get(previewItemKey(item));
+		const scene =
+			drawingSceneFromPreviewPayload(previewMeshes?.[item.handle]) ??
+			(previousItem?.handle === item.handle ? previousItem.scene : undefined);
+		return scene ? { ...item, scene } : item;
+	});
+}
+
 export const PROCEDURAL_2D_PLAY_APP_ID = "procedural-2d-play";
 export const PROCEDURAL_2D_PLAY_CONTROLLER_ID = "procedural-2d-play";
 export const PROCEDURAL_2D_PLAY_SURFACE_ID = "procedural2d.play/v1";
@@ -73,7 +100,9 @@ export const PROCEDURAL_2D_PLAY_BODY_KEY_MAIN = "procedural2d.play.main";
 export const PROCEDURAL_2D_PLAY_WINDOW_KIND_ID = "procedural2d-main";
 export const PROCEDURAL_2D_PLAY_WINDOW_KIND_PREVIEW = "procedural2d-preview";
 export const PROCEDURAL_2D_PLAY_BODY_KEY_PREVIEW = "procedural2d.play.preview";
+export const PROCEDURAL_2D_PLAY_BODY_KEY_GENERATE = "procedural2d.play.generate";
 export const PROCEDURAL_2D_PLAY_SURFACE_ID_PREVIEW = "procedural2d.play.preview/v1";
+export const PROCEDURAL_2D_PLAY_SURFACE_ID_GENERATE = "procedural2d.play.generate/v1";
 
 export const PROCEDURAL_2D_PLAY_DEFAULT_FIXTURE: FlowFixtureV1 = PROCEDURAL_DEFAULT_FIXTURE;
 export const PROCEDURAL_2D_PLAY_DEFAULT_FIXTURE_JSON = proceduralFixtureToJson(PROCEDURAL_DEFAULT_FIXTURE);
@@ -305,7 +334,7 @@ export interface Procedural2dPlayHostBridge {
 
 /** @emoji 🧰 Playground {@link AppTools} for procedural play (selection, save, view, actions). */
 export function buildProcedural2dPlayToolbarTools(state: Procedural2dPlayToolbarState, controllerId: string): AppTools {
-	const selectionTools: ToolItem[] = [
+	const selectionTools: ToolLeaf[] = [
 		{
 			id: "procedural2d.select.rectangle",
 			kind: "toggle",
@@ -383,7 +412,7 @@ export function buildProcedural2dPlayToolbarTools(state: Procedural2dPlayToolbar
 			command: "clearSelection",
 		},
 	];
-	const saveTools: ToolItem[] = [
+	const saveTools: ToolLeaf[] = [
 		{
 			id: "procedural2d.save.stored",
 			kind: "button",
@@ -432,7 +461,7 @@ export function buildProcedural2dPlayToolbarTools(state: Procedural2dPlayToolbar
 		},
 	];
 
-	const exportTools: ToolItem[] = [
+	const exportTools: ToolLeaf[] = [
 		{
 			id: "procedural2d.export.svg",
 			kind: "button",
@@ -461,11 +490,10 @@ export function buildProcedural2dPlayToolbarTools(state: Procedural2dPlayToolbar
 			command: "exportPng",
 		},
 	];
-	return {
-		selection: selectionTools,
-		save: saveTools,
-		view: [
-
+	return [
+		toolCollection("selection", "mouse-pointer-2", selectionTools),
+		toolCollection("save", "save", saveTools),
+		toolCollection("view", "layout-grid", [
 			{
 				id: "procedural2d.view.everything",
 				kind: "toggle",
@@ -488,9 +516,9 @@ export function buildProcedural2dPlayToolbarTools(state: Procedural2dPlayToolbar
 				command: "setShowMode",
 				args: { id: "selected" },
 			},
-		],
-		export: exportTools,
-		actions: [
+		]),
+		toolCollection("export", "download", exportTools),
+		toolCollection("actions", "more-horizontal", [
 			{
 				id: "procedural2d.action.reorganize",
 				kind: "button",
@@ -510,8 +538,8 @@ export function buildProcedural2dPlayToolbarTools(state: Procedural2dPlayToolbar
 				controllerId,
 				command: "deleteSelection",
 			},
-		],
-	};
+		]),
+	];
 }
 
 function proceduralFixtureJsonForId(fixtureId: string): string {
@@ -533,9 +561,14 @@ export function procedural2dPlayFixtureJson(fixtureId: string = PROCEDURAL_2D_PL
 
 /** @emoji 🎛 Procedural play shell controller. */
 export class Procedural2dPlayController extends Controller implements PlaygroundFixtureHost {
-	readonly mainMode = new ModeRuntime("main", "Procedural", undefined);
+	readonly mainMode = new ModeRuntime("main", "Edit", undefined);
+	readonly generateMode = new ModeRuntime("generate", "Generate", undefined);
 	private activeFixtureId = playgroundResolvedFixtureId(PLAYGROUND_NO_FIXTURE_ID);
 	private fixtureJson = proceduralFixtureJsonForId(playgroundResolvedFixtureId(PLAYGROUND_NO_FIXTURE_ID));
+	private generations: FlowGeneration[] = createDefaultGenerations();
+	private selectedGenerationId: string | null = null;
+	private generatePreviewText = "—";
+	private evalClient: FlowOrchestratorClient | null = null;
 	private readonly fixtureStore: Procedural2dPlayFixtureStore;
 	private hostBridge: Procedural2dPlayHostBridge | null = null;
 	private previewText = "—";
@@ -569,7 +602,9 @@ export class Procedural2dPlayController extends Controller implements Playground
 		super(PROCEDURAL_2D_PLAY_CONTROLLER_ID, commandBus, hostNotify);
 		this.fixtureStore = fixtureStore;
 		this.fixtureEdges = this.parseFixtureEdges(this.fixtureJson);
+		this.selectedGenerationId = this.generations[0]?.id ?? null;
 		this.rebuildShellMode();
+		this.rebuildGenerateMode();
 	}
 
 	hasStoredFixture(): boolean {
@@ -709,6 +744,27 @@ export class Procedural2dPlayController extends Controller implements Playground
 
 	getPreviewText(): string {
 		return this.previewText;
+	}
+
+	getGenerations(): readonly FlowGeneration[] {
+		return this.generations;
+	}
+
+	getSelectedGenerationId(): string | null {
+		return this.selectedGenerationId;
+	}
+
+	getGeneratePreviewText(): string {
+		return this.generatePreviewText;
+	}
+
+	getGenerateFormSpecJson(): string {
+		return JSON.stringify(flowFixtureToFormSpec(this.fixtureJson));
+	}
+
+	private getEvalClient(): FlowOrchestratorClient {
+		if (!this.evalClient) this.evalClient = new FlowOrchestratorClient();
+		return this.evalClient;
 	}
 
 	getCatalogueSections(): readonly CatalogueSection[] {
@@ -932,6 +988,10 @@ export class Procedural2dPlayController extends Controller implements Playground
 		this.rebuildToolbarTools();
 	}
 
+	private rebuildGenerateMode(): void {
+		this.generateMode.windowKinds = [new WindowKindRuntime(PROCEDURAL_2D_PLAY_WINDOW_KIND_ID, "Generate", PROCEDURAL_2D_PLAY_BODY_KEY_GENERATE)];
+	}
+
 	override run(command: string, args?: unknown): void {
 		if (command === "engagementInput") {
 			const value = (args as { value?: string }).value;
@@ -1025,8 +1085,13 @@ export class Procedural2dPlayController extends Controller implements Playground
 		}
 		if (command === "setEvalOutputs") {
 			const outputsJson = (args as { outputsJson?: string }).outputsJson;
+			const previewMeshes = (args as { previewMeshes?: Readonly<Record<string, unknown>> }).previewMeshes;
 			if (typeof outputsJson === "string") {
-				this.previewItems = extractChannelPreviewItems(outputsJson);
+				this.previewItems = previewItemsWithScenes(
+					extractChannelPreviewItems(outputsJson),
+					previewMeshes,
+					this.previewItems,
+				);
 				this.interactionRevision += 1;
 				this.notifySnapshot();
 				this.rebuildShellMode();
@@ -1220,6 +1285,24 @@ export class Procedural2dPlayController extends Controller implements Playground
 			this.emit();
 			return;
 		}
+		if (command === "addGeneration" || command === "removeGeneration" || command === "selectGeneration" || command === "renameGeneration" || command === "updateGenerationValues") {
+			void runGenerationCommand({
+				command,
+				args,
+				generations: this.generations,
+				selectedGenerationId: this.selectedGenerationId,
+				fixtureJson: this.fixtureJson,
+				client: this.getEvalClient(),
+			}).then((next) => {
+				if (!next) return;
+				this.generations = [...next.generations];
+				this.selectedGenerationId = next.selectedGenerationId;
+				if (next.generatePreviewText) this.generatePreviewText = next.generatePreviewText;
+				this.interactionRevision += 1;
+				this.emit();
+			});
+			return;
+		}
 	}
 
 	private applyEngagement(value: string): void {
@@ -1255,10 +1338,14 @@ export function registerProcedural2dPlayDeclarativeBodies(): void {
 		buildFlowWindowBody(PROCEDURAL_2D_PLAY_SURFACE_ID, PROCEDURAL_2D_PLAY_CONTROLLER_ID, PROCEDURAL_2D_PLAY_WINDOW_KIND_ID));
 	registerWindowBody(PROCEDURAL_2D_PLAY_BODY_KEY_PREVIEW, (_ctx: WindowBodyViewContext) =>
 		buildPuzzle2dWindowBody(PROCEDURAL_2D_PLAY_SURFACE_ID_PREVIEW, PROCEDURAL_2D_PLAY_CONTROLLER_ID));
+	registerWindowBody(PROCEDURAL_2D_PLAY_BODY_KEY_GENERATE, (_ctx: WindowBodyViewContext) =>
+		buildFormsWindowBody(PROCEDURAL_2D_PLAY_SURFACE_ID_GENERATE, PROCEDURAL_2D_PLAY_CONTROLLER_ID, "generate"));
 }
 
 export function buildProcedural2dPlayAppRuntime(controller: Procedural2dPlayController): AppRuntime {
-	return createPlayAppRuntime(PROCEDURAL_2D_PLAY_APP_ID, "semio · procedural 2d", controller, PROCEDURAL_2D_PLAY_LAYOUT, controller.mainMode);
+	const app = createPlayAppRuntime(PROCEDURAL_2D_PLAY_APP_ID, "Procedural 2D", controller, PROCEDURAL_2D_PLAY_LAYOUT, controller.mainMode);
+	app.addMode(controller.generateMode);
+	return app;
 }
 
 /** @emoji 🛝 Procedural playground app. */
@@ -1483,7 +1570,9 @@ if (import.meta.vitest) {
 			const bus = new CommandBus();
 			const ctrl = new Procedural2dPlayController(bus, () => {});
 			ctrl.run("setEvalOutputs", {
-				outputsJson: JSON.stringify({ rect: { in: {}, out: { drawing: { drawing: "drawing-1" } } } }),
+				outputsJson: JSON.stringify({
+					rect: { in: {}, out: { "draw.drawing": { $schema: "draw.drawing", handle: "drawing-1", kind: "rect" } } },
+				}),
 			});
 			const base = ctrl.getFixtureJson();
 			const interacted = JSON.stringify({
@@ -1497,7 +1586,7 @@ if (import.meta.vitest) {
 			});
 			ctrl.run("setFixtureJson", { json: interacted });
 			expect(ctrl.getPreviewItems()).toEqual([
-				{ widgetId: "rect", port: "drawing", direction: "out", kind: "drawing", handle: "drawing-1" },
+				{ widgetId: "rect", port: "draw.drawing", direction: "out", kind: "drawing", handle: "drawing-1" },
 			]);
 		});
 
@@ -1505,7 +1594,9 @@ if (import.meta.vitest) {
 			const bus = new CommandBus();
 			const ctrl = new Procedural2dPlayController(bus, () => {});
 			ctrl.run("setEvalOutputs", {
-				outputsJson: JSON.stringify({ rect: { in: {}, out: { drawing: { drawing: "drawing-1" } } } }),
+				outputsJson: JSON.stringify({
+					preview: { out: { "": { $schema: "draw.drawing", handle: "drawing-1", kind: "rect" } } },
+				}),
 			});
 			ctrl.run("setFixtureJson", {
 				json: '{"schema":"flow.fixture/v1","camera":{"x":0,"y":0,"zoom":1},"widgets":[],"synapses":[]}',
@@ -1518,11 +1609,26 @@ if (import.meta.vitest) {
 			const bus = new CommandBus();
 			const ctrl = new Procedural2dPlayController(bus, () => {});
 			ctrl.run("setEvalOutputs", {
-				outputsJson: JSON.stringify({ rect: { in: {}, out: { drawing: { drawing: "drawing-1" } } } }),
+				outputsJson: JSON.stringify({
+					preview: { out: { "": { $schema: "draw.drawing", handle: "drawing-1", kind: "rect" } } },
+				}),
 			});
 			expect(ctrl.getPreviewItems()).toEqual([
-				{ widgetId: "rect", port: "drawing", direction: "out", kind: "drawing", handle: "drawing-1" },
+				{ widgetId: "preview", port: "", direction: "out", kind: "drawing", handle: "drawing-1" },
 			]);
+		});
+
+		it("setEvalOutputs merges worker drawing scenes into preview items", () => {
+			const bus = new CommandBus();
+			const ctrl = new Procedural2dPlayController(bus, () => {});
+			const scene = { width: 10, height: 20, nodes: [] };
+			ctrl.run("setEvalOutputs", {
+				outputsJson: JSON.stringify({
+					preview: { out: { "": { $schema: "draw.drawing", handle: "drawing-1", kind: "rect" } } },
+				}),
+				previewMeshes: { "drawing-1": scene },
+			});
+			expect(ctrl.getPreviewItems()[0]).toMatchObject({ handle: "drawing-1", scene });
 		});
 
 
@@ -1615,7 +1721,7 @@ if (import.meta.vitest) {
 				}),
 				runHostCommand: () => {},
 			});
-			expect(ctrl.mainMode.tools?.selection?.length).toBeGreaterThan(0);
+			expect(ctrl.mainMode.tools?.find((node) => node.kind === "collection" && node.id === "selection")?.kind === "collection").toBe(true);
 		});
 
 		it("fixture store round-trips json", () => {

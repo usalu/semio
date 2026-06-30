@@ -1,6 +1,6 @@
 ---
 technology: puzzle
-path: 🧩puzzle📷3d
+path: 🧩puzzle🏙️3d
 bundle:
  name: 3d
  emoji: 📷

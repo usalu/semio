@@ -14,7 +14,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "asset/logo",
-        "command": "bun ./script.ts generate",
+        "command": "bun ./script.ts generate && bun ./script.ts export",
         "forwardAllArgs": true
       }
     }

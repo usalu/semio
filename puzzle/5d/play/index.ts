@@ -13,7 +13,9 @@ import {
   buildPuzzle2dWindowBody,
   buildPuzzle3dWindowBody,
   createDefaultLayout,
-  type ToolItem,
+  type ToolLeaf,
+  type ToolNode,
+  toolCollection,
   type WindowBodyViewContext,
   type CommandDescriptor,
   type WindowEngagement,
@@ -872,7 +874,7 @@ export class Puzzle5dStoreBridge extends Store<Puzzle5dStoreSnapshot> {
 
 /** @emoji 🎛 Puzzle 5d play shell controller shared by declarative 2d and 3d windows. */
 export class Puzzle5dPlayShellController extends Controller implements PlaygroundFixtureHost {
-  readonly mainMode = new ModeRuntime("main", "Puzzle 5d", undefined);
+  readonly mainMode = new ModeRuntime("main", "Edit", undefined);
   private activeFixtureId = playgroundResolvedFixtureId(PUZZLE_5D_PLAY_FIXTURE_CONCRETE_FOREST_ID);
   readonly puzzle5dStore: Puzzle5dStore = createStore(puzzle5dPlayEmptyModel());
   readonly puzzle5dStoreBridge: Puzzle5dStoreBridge;
@@ -989,7 +991,7 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
   }
 
   private rebuildShellMode(): void {
-    const relocateTools: ToolItem[] = PUZZLE_3D_GUMBALL_GROUPS.map(({ key, label, iconId }, order) => ({
+    const relocateTools: ToolLeaf[] = PUZZLE_3D_GUMBALL_GROUPS.map(({ key, label, iconId }, order) => ({
       id: `puzzle5d.gumball.${key}`,
       kind: "toggle" as const,
       iconId,
@@ -1001,12 +1003,12 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
       args: { key },
     }));
     const flatTools = buildPuzzle2dPlayToolbarTools(this.toolbarState(), PUZZLE_5D_PLAY_CONTROLLER_ID);
-    this.mainMode.tools = {
-      selection: flatTools.selection,
-      view: flatTools.view,
-      create: flatTools.create,
-      actions: [...(flatTools.actions ?? []), ...relocateTools],
-    };
+    this.mainMode.tools = flatTools.map((node) => {
+      if (node.kind === "collection" && node.id === "actions") {
+        return { ...node, children: [...node.children, ...relocateTools] };
+      }
+      return node;
+    }) satisfies ToolNode[];
     this.mainMode.windowKinds = this.getWindowKinds();
   }
 
@@ -1567,7 +1569,7 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
 export function buildPuzzle5dPlayAppRuntime(controller: Puzzle5dPlayShellController): AppRuntime {
   const app = new AppRuntime(
     PUZZLE_5D_PLAY_APP_ID,
-    "semio · puzzle · 5d",
+    "Puzzle 5D",
     undefined,
     controller,
     createDefaultLayout([PUZZLE_5D_PLAY_2D_WINDOW_ID, PUZZLE_5D_PLAY_3D_WINDOW_ID], "row", [50, 50], [PUZZLE_5D_PLAY_2D_WINDOW_LABEL, PUZZLE_5D_PLAY_3D_WINDOW_LABEL]) as never,

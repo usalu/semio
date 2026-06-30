@@ -3,7 +3,7 @@
   "emoji": "🛠️",
   "status": "closed",
   "description": "Clean up launch configurations in .vscode/launch.json by removing duplicates, adjusting order, removing module/extension specific setups, and removing all tests.",
-  "summary": "Removed all remaining test entries (trinity, ui styling, procedural). VSCode test explorer is the proper UI for running tests.",
+  "summary": "Sorted launch configurations strictly alphabetically (ignoring emojis) and assigned matching sequential presentation.order values to match source order with presented order",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1738"
   },
@@ -12,6 +12,9 @@
     "⚪a88cb0cb1a3746de8f5e1171102a9c56",
     "⚪5f18ff0d02964e9c973463e69842ef7d",
     "⚪b6e55a4c525640fb9b16824e083a01fb",
-    "⚪28f9500656bb42939b400bb91b417365"
+    "⚪28f9500656bb42939b400bb91b417365",
+    "⚪45bc44e4ae4d4f6d8e4e53a51277e19c",
+    "⚪dba961e21fc447e48cad6dec351b0e06",
+    "⚪2c0d65478eeb4771ace7df9ea0872306"
   ]
 }

@@ -18,7 +18,7 @@
 import * as fs from "fs";
 import { JSDOM } from "jsdom";
 import * as path from "path";
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../repo/lib/js/src/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, exportAnimatedSvgToMp4 } from "../../repo/lib/js/src/index.ts";
 
 // #endregion 🔌Adapters
 
@@ -369,7 +369,20 @@ class GenerateScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("generate", GenerateScript);
+class ExportScript extends BundleScript {
+  async run(): Promise<void> {
+    const logoDir = import.meta.dir;
+    const inputPath = path.join(logoDir, "logo_generated.svg");
+    const outputPath = path.join(logoDir, "logo.mp4");
+    console.log(`Exporting ${inputPath} to ${outputPath}...`);
+    await exportAnimatedSvgToMp4(inputPath, outputPath);
+    console.log(`Successfully exported logo to MP4: ${outputPath}`);
+  }
+}
+
+const router = new ScriptRouter(import.meta.dir)
+  .register("generate", GenerateScript)
+  .register("export", ExportScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "generate" });
 

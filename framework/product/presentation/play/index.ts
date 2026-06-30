@@ -26,7 +26,8 @@ import {
 	windowEngagementsEqual,
 	type CommandDescriptor,
 	type SidePanelBodyViewContext,
-	type ToolItem,
+	type ToolLeaf,
+	toolCollection,
 	type UiNode,
 	type UiTreeItemNode,
 	type UiTreeNode,
@@ -128,7 +129,7 @@ function newTileId(prefix = "tile"): string {
 
 /** @emoji 🎛 Presentation tile play controller: grid seed, tile edits, LLM prompt export. */
 export class PresentationPlayController extends Controller implements PlaygroundFixtureHost {
-	readonly mainMode = new ModeRuntime("main", "Tile Morph", undefined);
+	readonly mainMode = new ModeRuntime("main", "Edit", undefined);
 	private activeFixtureId = PLAYGROUND_NO_FIXTURE_ID;
 	private readonly snapshotStore: PresentationPlaySnapshotStore;
 	private snapshotCache: PresentationPlaySnapshot | null = null;
@@ -198,8 +199,8 @@ export class PresentationPlayController extends Controller implements Playground
 	}
 
 	private rebuildShellMode(): void {
-		this.mainMode.tools = {
-			create: [
+		this.mainMode.tools = [
+			toolCollection("create", "plus", [
 				{
 					id: "presentation.play.seed-3x5",
 					kind: "button",
@@ -228,8 +229,8 @@ export class PresentationPlayController extends Controller implements Playground
 					controllerId: PRESENTATION_PLAY_CONTROLLER_ID,
 					command: "clearTiles",
 				},
-			],
-			actions: [
+			]),
+			toolCollection("actions", "more-horizontal", [
 				{
 					id: "presentation.play.copy",
 					kind: "button",
@@ -248,8 +249,8 @@ export class PresentationPlayController extends Controller implements Playground
 					controllerId: PRESENTATION_PLAY_CONTROLLER_ID,
 					command: "deleteSelection",
 				},
-			],
-		};
+			]),
+		];
 		this.mainMode.windowKinds = [
 			new WindowKindRuntime(
 				"tile-editor",
@@ -675,7 +676,7 @@ export function registerPresentationPlayDeclarativeBodies(): void {
 
 function buildPresentationPlayAppRuntime(controller: PresentationPlayController): AppRuntime {
 	const layout = createStackLayout(["tile-editor"], ["Tile editor"]);
-	const app = createPlayAppRuntime(PRESENTATION_PLAY_APP_ID, "semio · framework · product · presentation", controller, layout, controller.mainMode);
+	const app = createPlayAppRuntime(PRESENTATION_PLAY_APP_ID, "Presentation", controller, layout, controller.mainMode);
 	app.panelTabs = [
 		{
 			id: `${PRESENTATION_PLAY_APP_ID}.hierarchy`,

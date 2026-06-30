@@ -7,7 +7,7 @@
     { "kind": "outputPreview", "id": "preview" }
   ],
   "synapses": [
-    { "id": "s1", "from": "rect", "to": "fill", "fromPort": "drawing", "toPort": "drawing" },
-    { "id": "s2", "from": "fill", "to": "preview", "fromPort": "drawing", "toPort": "" }
+    { "id": "s1", "from": "rect", "to": "fill", "fromPort": "draw.drawing", "toPort": "drawing" },
+    { "id": "s2", "from": "fill", "to": "preview", "fromPort": "draw.drawing", "toPort": "" }
   ]
 }

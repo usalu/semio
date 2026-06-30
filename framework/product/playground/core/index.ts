@@ -27,7 +27,9 @@ import {
   type FooterItem,
   type NamedLayout,
   type SideTabSpec,
-  type ToolItem,
+  type ToolLeaf,
+  type ToolNode,
+  toolCollection,
   type WindowLayout,
   type WindowLayoutWindowNode,
   type WindowMeasure,
@@ -127,6 +129,7 @@ export type UiNode =
   | import("@semio-tech/framework-platform-core").UiPuzzle5dHostSurfaceNode
   | import("@semio-tech/framework-platform-core").UiCadHostSurfaceNode
   | import("@semio-tech/framework-platform-core").UiShootingHostSurfaceNode
+  | import("@semio-tech/framework-platform-core").UiFormsHostSurfaceNode
   | UiTableHostSurfaceNode
   | import("@semio-tech/framework-platform-core").UiTreeNode;
 
@@ -138,6 +141,7 @@ import {
   buildDagWindowBody,
   buildTrinityWindowBody,
   buildShootingWindowBody,
+  buildFormsWindowBody,
   isCanvasOnlyWindowBody,
 } from "@semio-tech/framework-platform-core";
 
@@ -151,6 +155,7 @@ export {
   buildDagWindowBody,
   buildTrinityWindowBody,
   buildShootingWindowBody,
+  buildFormsWindowBody,
   buildPanelWindowBody,
   isCanvasOnlyWindowBody,
 } from "@semio-tech/framework-platform-core";
@@ -688,7 +693,7 @@ function createAllKindsEnabled<K extends string>(kinds: readonly K[]): Record<K,
 }
 
 /** @emoji 🎚 Kind toggle row for playground `selection` or `filter` toolbar zones. */
-export function buildPlaygroundKindToggleTools<K extends string>(prefix: "selection" | "filter", kinds: readonly K[], labels: (kind: K) => string, values: Readonly<Record<K, boolean>>, controllerId: string, command: string): ToolItem[] {
+export function buildPlaygroundKindToggleTools<K extends string>(prefix: "selection" | "filter", kinds: readonly K[], labels: (kind: K) => string, values: Readonly<Record<K, boolean>>, controllerId: string, command: string): ToolLeaf[] {
   return kinds.map((kind, order) => ({
     id: `playground.${prefix}.${kind}`,
     kind: "toggle" as const,
@@ -703,7 +708,7 @@ export function buildPlaygroundKindToggleTools<K extends string>(prefix: "select
 }
 
 /** @emoji 🧹 Clear-selection button for the playground `selection` toolbar zone. */
-export function buildPlaygroundClearSelectionTool(controllerId: string, order: number): ToolItem {
+export function buildPlaygroundClearSelectionTool(controllerId: string, order: number): ToolLeaf {
   return {
     id: "playground.selection.clear",
     kind: "button",
@@ -717,13 +722,13 @@ export function buildPlaygroundClearSelectionTool(controllerId: string, order: n
 }
 
 /** @emoji 🎯 Standard playground browse selection tools (kind toggles + clear). */
-export function buildPlaygroundBrowseSelectionTools<K extends string>(kinds: readonly K[], labels: (kind: K) => string, selectableKinds: Readonly<Record<K, boolean>>, controllerId: string): ToolItem[] {
+export function buildPlaygroundBrowseSelectionTools<K extends string>(kinds: readonly K[], labels: (kind: K) => string, selectableKinds: Readonly<Record<K, boolean>>, controllerId: string): ToolLeaf[] {
   const toggles = buildPlaygroundKindToggleTools("selection", kinds, labels, selectableKinds, controllerId, "toggleSelectableKind");
   return [...toggles, { id: "playground.selection.separator", kind: "separator", order: kinds.length }, buildPlaygroundClearSelectionTool(controllerId, kinds.length + 1)];
 }
 
 /** @emoji 👁️ Standard playground browse filter tools (visibility kind toggles). */
-export function buildPlaygroundBrowseFilterTools<K extends string>(kinds: readonly K[], labels: (kind: K) => string, visibleKinds: Readonly<Record<K, boolean>>, controllerId: string): ToolItem[] {
+export function buildPlaygroundBrowseFilterTools<K extends string>(kinds: readonly K[], labels: (kind: K) => string, visibleKinds: Readonly<Record<K, boolean>>, controllerId: string): ToolLeaf[] {
   return buildPlaygroundKindToggleTools("filter", kinds, labels, visibleKinds, controllerId, "toggleVisibleKind");
 }
 //#endregion 🔖Toolbar
@@ -763,10 +768,10 @@ export abstract class PlaygroundController<K extends string> extends Controller 
   }
 
   protected rebuildBrowseModeTools(): void {
-    this.browseMode.tools = {
-      selection: buildPlaygroundBrowseSelectionTools(this.kinds, this.kindLabel, this.selectableKinds, this.id),
-      filter: buildPlaygroundBrowseFilterTools(this.kinds, this.kindLabel, this.visibleKinds, this.id),
-    };
+    this.browseMode.tools = [
+      toolCollection("selection", "mouse-pointer-2", buildPlaygroundBrowseSelectionTools(this.kinds, this.kindLabel, this.selectableKinds, this.id)),
+      toolCollection("filter", "filter", buildPlaygroundBrowseFilterTools(this.kinds, this.kindLabel, this.visibleKinds, this.id)),
+    ];
   }
 
   protected syncShell(): void {

@@ -15,6 +15,8 @@
   },
   "dependencies": {
     "@semio-tech/flow-react": "workspace:*",
+    "@semio-tech/forms-core": "workspace:*",
+    "@semio-tech/forms-react": "workspace:*",
     "@semio-tech/framework-playground-core": "workspace:*"
   },
   "devDependencies": {

@@ -1013,6 +1013,7 @@ export type PlaygroundHostKind =
 	| "procedural-3d"
 	| "procedural-2d"
 	| "shooting"
+	| "forms"
 	| "cad"
 	| "gis-map"
 	| "projektetage"
@@ -1036,6 +1037,7 @@ export const PLAYGROUND_PORTS: Record<PlaygroundHostKind, PlaygroundPortSpec> = 
 	dag: { dev: 6017, test: 6030, env: "DAG_PLAY_PORT" },
 	"trinity-jack": { dev: 6054, test: 6055, env: "TRINITY_JACK_PLAY_PORT" },
 	"trinity-rewrite": { dev: 6056, test: 6057, env: "TRINITY_REWRITE_PLAY_PORT" },
+	forms: { dev: 6058, test: 6059, env: "FORMS_PLAY_PORT" },
 	"procedural-3d": { dev: 6018, test: 6031, env: "PROCEDURAL_3D_PLAY_PORT" },
 	"procedural-2d": { dev: 6021, test: 6033, env: "PROCEDURAL_2D_PLAY_PORT" },
 	shooting: { dev: 6019, test: 6032, env: "SHOOTING_PLAY_PORT" },
@@ -3945,3 +3947,92 @@ export function runCommit(root: string, segments: string[]): void {
 }
 
 //#endregion 🔖commit
+
+//#region 📻SVG Export
+/** 📻Exports an animated SVG to MP4 using Playwright and FFmpeg */
+export async function exportAnimatedSvgToMp4(
+  inputSvgPath: string,
+  outputMp4Path: string,
+  options?: { fps?: number; durationSeconds?: number; width?: number; height?: number }
+): Promise<void> {
+  const fps = options?.fps ?? 60;
+  let durationSeconds = options?.durationSeconds;
+  const { readFileSync } = await import("node:fs");
+  const { resolve } = await import("node:path");
+
+  if (!durationSeconds) {
+    const content = readFileSync(inputSvgPath, "utf-8");
+    const durMatch = content.match(/dur="([^"]+)s"/);
+    if (durMatch) {
+      durationSeconds = parseFloat(durMatch[1]);
+    } else {
+      durationSeconds = 10;
+    }
+  }
+
+  const { chromium } = await import("playwright");
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage();
+  
+  const svgUrl = `file://${resolve(inputSvgPath)}`;
+  await page.goto(svgUrl);
+  await page.waitForSelector("svg");
+
+  const bbox = await page.evaluate(() => {
+    const svg = document.querySelector("svg");
+    if (!svg) return { width: 1920, height: 1080 };
+    return { 
+      width: svg.viewBox.baseVal?.width || svg.width.baseVal?.value || 1920, 
+      height: svg.viewBox.baseVal?.height || svg.height.baseVal?.value || 1080 
+    };
+  });
+
+  const width = options?.width ?? Math.round(bbox.width);
+  const height = options?.height ?? Math.round(bbox.height);
+
+  const w = width % 2 === 0 ? width : width + 1;
+  const h = height % 2 === 0 ? height : height + 1;
+
+  await page.setViewportSize({ width: w, height: h });
+  
+  await page.evaluate(() => {
+    const svg = document.querySelector("svg") as any;
+    if (svg && svg.pauseAnimations) svg.pauseAnimations();
+  });
+
+  const totalFrames = fps * durationSeconds;
+
+  const { spawn } = await import("node:child_process");
+  const ffmpeg = spawn("ffmpeg", [
+    "-y",
+    "-f", "image2pipe",
+    "-vcodec", "png",
+    "-r", fps.toString(),
+    "-i", "-",
+    "-c:v", "libx264",
+    "-pix_fmt", "yuv420p",
+    outputMp4Path
+  ]);
+
+  for (let i = 0; i <= totalFrames; i++) {
+    const time = i / fps;
+    await page.evaluate((t) => {
+      const svg = document.querySelector("svg") as any;
+      if (svg && svg.setCurrentTime) svg.setCurrentTime(t);
+    }, time);
+    const buffer = await page.screenshot({ omitBackground: true });
+    ffmpeg.stdin.write(buffer);
+  }
+  ffmpeg.stdin.end();
+
+  await new Promise<void>((resolve, reject) => {
+    ffmpeg.on("close", (code) => {
+      if (code === 0) resolve();
+      else reject(new Error(`ffmpeg exited with code ${code}`));
+    });
+    ffmpeg.on("error", reject);
+  });
+  
+  await browser.close();
+}
+//#endregion 📻SVG Export

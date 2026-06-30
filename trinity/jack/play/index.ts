@@ -173,7 +173,7 @@ export class TrinityJackPlayController extends Controller {
 
 function buildTrinityJackPlayAppRuntime(ctrl: TrinityJackPlayController): AppRuntime {
   const layout = createStackLayout([TRINITY_JACK_PLAY_WINDOW_KIND_ID], ["Nakagin Graph"]);
-  return createPlayAppRuntime(TRINITY_JACK_PLAY_APP_ID, "semio · trinity · jack", ctrl, layout, ctrl.mainMode);
+  return createPlayAppRuntime(TRINITY_JACK_PLAY_APP_ID, "Trinity Jack", ctrl, layout, ctrl.mainMode);
 }
 
 export class PlaygroundTrinityJack extends Playground {

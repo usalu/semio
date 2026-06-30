@@ -1,0 +1,19 @@
+{
+  "title": "Forms Technology And Generate Mode",
+  "emoji": "📋",
+  "status": "closed",
+  "description": "Introduce forms technology (declarative form data, question kinds, multi-step builder playground) and flow Generate mode where input widgets become forms and generations are saved submissions evaluated through the worker pipeline. Extend ui with Catalogue, cross-container tree reorder, and Field primitives.",
+  "summary": "Implemented the forms technology stack and flow Generate mode:\n\n- **forms/core** (`@semio-tech/forms-core`): FormSpec/FormStep/FormQuestion types, QUESTION_KIND_CATALOGUE, parseFormSpec, FormRuntime, FormEditOp + applyFormEditOp, in-file vitest (6 tests).\n- **ui/react**: Field primitive, Catalogue palette + catalogueTreeDragController, cross-container tree reorder (dropPosition, resolveTreeDropPosition, treeReorderDragController, useTreeReorder), extended tree handleDrop, in-file vitest for reorder/catalogue helpers.\n- **forms/react** (`@semio-tech/forms-react`): FormRenderer, FormBuilder, FlowGenerateSurface, flowFixtureToFormSpec, applyGenerationValuesToFixture (9 tests).\n- **forms/fixture**: default.forms.json + onboarding.forms.json exercising all question kinds, steps, conditions, validation.\n- **forms/play** (`@semio-tech/forms-play`): Builder + Preview windows, FormsPlayController, fixture catalog, vitest (12 tests). Dev server verified at http://127.0.0.1:6058/ (HTTP 200).\n- **flow Generate mode**: generateMode on FlowPlayController with generations CRUD, worker evaluation via lazy FlowOrchestratorClient, FlowPlayGenerateSurfaceHost, shared runGenerationCommand/evaluateGenerationFixture.\n- **procedural 2d/3d**: inherit Generate mode with Procedural*GenerateSurfaceHost and generation commands.\n- **Registration**: root workspaces/scripts, script.ts routing, PLAYGROUND_PORTS (6058/6059), launch.json dev:forms, framework renderer ./forms export + bootFormsPlay, platform core forms surface kinds.\n\nTests run: forms-core, forms-react, forms-play, flow-play (52+ tests including generate mode). Runtime: forms play dev server confirmed.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1763"
+  },
+  "goal": "🎯r2603",
+  "plan": {
+    "client": "cursor",
+    "id": "0e2485cb",
+    "local": "forms_technology_and_generate_mode_0e2485cb.plan.md"
+  },
+  "sessions": [
+    "⚪99deb9cb75da44ffbc6132757b80f678"
+  ]
+}

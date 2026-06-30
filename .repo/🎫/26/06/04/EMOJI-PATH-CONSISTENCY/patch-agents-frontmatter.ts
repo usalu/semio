@@ -22,7 +22,7 @@ const areaPath: Record<string, string> = {
   "ui/react": "🖱️ui⚛️react",
   "gis/map": "🌐gis📍map",
   "gis/terrain": "🌐gis⛰️terrain",
-  "puzzle/3d": "🧩puzzle📷3d",
+  "puzzle/3d": "🧩puzzle🏙️3d",
   "puzzle/5d": "🧩puzzle👯5d",
   "infinite/cavas": "♾️infinite✈️cavas",
   "infinite/world": "♾️infinite🏙️world",

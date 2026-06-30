@@ -2689,7 +2689,7 @@ function registerCodaShellBodies(): void {
 function buildCodaAppRuntime(controller: CodaShellController): AppRuntime {
   const app = new AppRuntime(
     CODA_APP_ID,
-    "coda",
+    "Coda",
     undefined,
     controller,
     createTabStackLayout(["main"], ["Main"]) as never,

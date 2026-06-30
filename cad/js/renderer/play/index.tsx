@@ -18,7 +18,8 @@ import {
   namedLayoutsFromOrbitViewDescriptors,
   registerWindowBody,
   type AppTools,
-  type ToolItem,
+  type ToolLeaf,
+  toolCollection,
   type WindowBodyViewContext,
   type WindowEngagement,
   type WindowMeasure,
@@ -723,7 +724,7 @@ const CAD_GUMBALL_GROUP_ICON: Record<CadGumballGroupKey, string> = {
 
 /** @emoji 🧰 Playground {@link AppTools} for CAD play (view, save, transfer). */
 export function buildCadPlayToolbarTools(state: CadPlayToolbarState, controllerId: string): AppTools {
-  const viewTools: ToolItem[] = listModelDefinitionManifests().map((row, index) => ({
+  const viewTools: ToolLeaf[] = listModelDefinitionManifests().map((row, index) => ({
     id: `cad.play.view.${row.id}`,
     kind: "toggle",
     iconId: "box",
@@ -735,7 +736,7 @@ export function buildCadPlayToolbarTools(state: CadPlayToolbarState, controllerI
     command: "focusModelDefinition",
     args: { modelDefinitionId: row.id },
   }));
-  const saveTools: ToolItem[] = [
+  const saveTools: ToolLeaf[] = [
     {
       id: "cad.play.save.selected",
       kind: "button",
@@ -774,7 +775,7 @@ export function buildCadPlayToolbarTools(state: CadPlayToolbarState, controllerI
       command: "loadRawRequest",
     },
   ];
-  const transferTools: ToolItem[] = [
+  const transferTools: ToolLeaf[] = [
     ...state.transfersTo.map((spec, index) => ({
       id: `cad.play.transfer.to.${qualifiedTransformationId(spec.modelDefinitionId, spec.id)}`,
       kind: "button" as const,
@@ -799,11 +800,11 @@ export function buildCadPlayToolbarTools(state: CadPlayToolbarState, controllerI
       args: { qid: qualifiedTransformationId(spec.modelDefinitionId, spec.id) },
     })),
   ];
-  return {
-    view: viewTools,
-    save: saveTools,
-    ...(transferTools.length > 0 ? { transfer: transferTools } : {}),
-  };
+  return [
+    toolCollection("view", "layout-grid", viewTools),
+    toolCollection("save", "save", saveTools),
+    ...(transferTools.length > 0 ? [toolCollection("transfer", "arrow-right-left", transferTools)] : []),
+  ];
 }
 
 /** @emoji 💬 Mirrors a live ui {@link EngagementSpec} into a React-neutral {@link WindowEngagement} whose option/input commands route back through the host bridge to the InteractionRepl callbacks. */
@@ -868,7 +869,7 @@ export function cadPlayResolvePaneEngagement(pane: CadPlayPaneId, stored?: Windo
 //#region 🔖Controller
 /** @emoji 🎛 CAD play shell controller: quad viewports + playground toolbar categories. */
 export class CadPlayShellController extends Controller {
-  readonly mainMode = new ModeRuntime("main", "CAD", undefined);
+  readonly mainMode = new ModeRuntime("main", "Edit", undefined);
   private hostBridge: CadPlayHostBridge | null = null;
   private computeModeByPane: Record<CadPlayPaneId, SpatialComputeMode>;
   private gumballConfigByPane: Record<CadPlayPaneId, CadGumballConfig>;
@@ -1113,7 +1114,7 @@ export const buildCadPlayEnergyDeclarativeBody = buildCadPlayDeclarativeBodyForP
 export const buildCadPlayStructureClassicDeclarativeBody = buildCadPlayDeclarativeBodyForPane("structure-classic");
 
 export function buildCadPlayAppRuntime(controller: CadPlayShellController): AppRuntime {
-  const app = createPlayAppRuntime(CAD_PLAY_APP_ID, "semio · cad · js · renderer", controller, CAD_PLAY_LAYOUT as never, controller.mainMode);
+  const app = createPlayAppRuntime(CAD_PLAY_APP_ID, "CAD", controller, CAD_PLAY_LAYOUT as never, controller.mainMode);
   app.panelTabs = [];
   app.onActiveWindowChange = (shellWindowId) => {
     const pane = cadPlayPaneFromShellWindowId(shellWindowId);

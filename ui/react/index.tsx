@@ -1975,7 +1975,7 @@ export function resolveControlLabelId(id: string): string {
     return _controlLabelIdResolver(`ui.panelToggle.${id.slice("ui.panelToggle.".length)}`);
   }
   if (id.startsWith("ui.toolbar.group.")) {
-    return _controlLabelIdResolver(`ui.toolbar.group.${id.slice("ui.toolbar.group.".length)}`);
+    return _controlLabelIdResolver(`ui.toolbar.parent.${id.slice("ui.toolbar.group.".length)}`);
   }
   if (id === "engagement-possibles-toggle" || id === "ui.engagement.suggestions") {
     return _controlLabelIdResolver("ui.engagement.suggestions");
@@ -2090,7 +2090,7 @@ export type UiLabelValue = {
   readonly hotkey?: string;
 };
 
-/** @emoji 🪁 Toolbar parent category ids mirrored from {@link @semio-tech/framework-core AppToolCategory}. */
+/** @emoji 🪁 Toolbar collection ids for ribbon collection toggles. */
 export type UiToolbarParentCategory =
   | "history"
   | "hand"
@@ -2104,10 +2104,14 @@ export type UiToolbarParentCategory =
   | "create"
   | "view"
   | "actions"
-  | "settings";
+  | "settings"
+  | "methods"
+  | "mode"
+  | "targets"
+  | "export";
 
-/** @emoji 🪁 i18n key for a toolbar parent category toggle. */
-export type UiToolbarParentKey = `ui.toolbar.parent.${UiToolbarParentCategory}`;
+/** @emoji 🪁 i18n key for a toolbar collection toggle. */
+export type UiToolbarParentKey = `ui.toolbar.parent.${string}`;
 
 type UiToolbarParentEntries = { readonly [K in UiToolbarParentCategory]: UiLabelValue };
 
@@ -2233,9 +2237,9 @@ export type UiTranslationSchema = {
 /** @emoji 🪁 Dot-path union of keys in {@link UiTranslationSchema}. */
 export type UiTranslationKey = DeepUiTranslationKeys<UiTranslationSchema>;
 
-/** @emoji 🪁 Compile-time check that every toolbar category has a chrome translation key. */
+/** @emoji 🪁 Compile-time check that toolbar collection ids have chrome translation keys. */
 export type AssertUiToolbarParentKeysCovered<Categories extends string> = {
-  readonly [K in Categories]: `ui.toolbar.parent.${K & UiToolbarParentCategory}` extends UiTranslationKey ? true : false;
+  readonly [K in Categories]: `ui.toolbar.parent.${K}` extends UiTranslationKey ? true : false;
 }[Categories] extends true
   ? true
   : false;
@@ -2266,6 +2270,10 @@ const uiToolbarParentDe: UiToolbarParentEntries = {
   view: { label: { normal: "Ansicht", beginner: "Ansicht" } },
   actions: { label: { normal: "Aktionen", beginner: "Aktionen" } },
   settings: { label: { normal: "Einstellungen", beginner: "Einstellungen" } },
+  methods: { label: { normal: "Methoden", beginner: "Methoden" } },
+  mode: { label: { normal: "Modus", beginner: "Modus" } },
+  targets: { label: { normal: "Ziele", beginner: "Ziele" } },
+  export: { label: { normal: "Export", beginner: "Export" } },
 };
 
 const uiToolbarParentEn: UiToolbarParentEntries = {
@@ -2282,6 +2290,10 @@ const uiToolbarParentEn: UiToolbarParentEntries = {
   view: { label: { normal: "View", beginner: "View" } },
   actions: { label: { normal: "Actions", beginner: "Actions" } },
   settings: { label: { normal: "Settings", beginner: "Settings" } },
+  methods: { label: { normal: "Methods", beginner: "Methods" } },
+  mode: { label: { normal: "Mode", beginner: "Mode" } },
+  targets: { label: { normal: "Targets", beginner: "Targets" } },
+  export: { label: { normal: "Export", beginner: "Export" } },
 };
 
 const _assertUiToolbarParentKeys: AssertUiToolbarParentKeysCovered<UiToolbarParentCategory> = true;
@@ -3338,7 +3350,7 @@ export enum SectionSpecificity {
 // #endregion 🔊Section Specificity
 
 // #region 🔤Interaction Context
-// Global ghost mode dims all panel chrome to 5% on any interaction; the active control stays visible.
+// Global ghost mode hides panel chrome during interactions; only an active tree path stays visible.
 
 const PANEL_GHOST_MOVE_THRESHOLD_PX = 4;
 
@@ -3411,26 +3423,7 @@ function useGhostController(): GhostController {
       if (!target || !(target instanceof Element)) return;
       const region = findGhostRegionAncestor(target);
       if (!region) return;
-      const dimNodes: HTMLElement[] = [];
-      let node: Element | null = target;
-      while (node && node !== region) {
-        if (node.hasAttribute("data-dim")) dimNodes.push(node as HTMLElement);
-        node = node.parentElement;
-      }
-      const marked: HTMLElement[] = [];
-      if (dimNodes.length === 0) {
-        const fallback = target as HTMLElement;
-        fallback.setAttribute("data-active-interaction", "");
-        marked.push(fallback);
-      } else {
-        dimNodes[0].setAttribute("data-active-interaction", "");
-        marked.push(dimNodes[0]);
-        for (let i = 1; i < dimNodes.length; i++) {
-          dimNodes[i].setAttribute("data-active-ancestor", "");
-          marked.push(dimNodes[i]);
-        }
-      }
-      activeMarkedRefs.current = marked;
+      activeMarkedRefs.current = markGhostTreeInteraction(target, region);
     },
     [clearActiveMarks],
   );
@@ -4230,15 +4223,19 @@ const Footer: React.FC<FooterProps> = ({ items = [], className = "", isVisible =
   const sortedItems = [...items].sort((a, b) => (a.order || 0) - (b.order || 0));
   const bgClass = getLevelBgClass(level);
   return (
-    <footer id="ui.footer" data-slot="footer" className={cn(borderNormalTopClass, "relative flex items-center h-medium transition-transform duration-200", bgClass, isVisible ? "translate-y-0" : "translate-y-full", className)}>
-      <div className="flex items-center h-full px-single min-w-0">
-        <ActionGroup className="border">
-          {sortedItems.map((item) => (
-            <ActionGroupItem key={item.id} as={item.onClick ? "button" : "div"} id={item.id} icon={item.icon} text={item.text} onClick={item.onClick} disabled={item.disabled} className={item.className} />
-          ))}
-        </ActionGroup>
+    <footer id="ui.footer" data-slot="footer" className={cn(borderNormalTopClass, "relative h-large transition-transform duration-200", bgClass, isVisible ? "translate-y-0" : "translate-y-full", className)}>
+      <div className="p-single flex gap-single items-center min-w-0 h-full w-full">
+        {sortedItems.length > 0 ? (
+          <div className="h-medium flex shrink-0 items-center min-w-0">
+            <ActionGroup className="border">
+              {sortedItems.map((item) => (
+                <ActionGroupItem key={item.id} as={item.onClick ? "button" : "div"} id={item.id} icon={item.icon} text={item.text} onClick={item.onClick} disabled={item.disabled} className={item.className} />
+              ))}
+            </ActionGroup>
+          </div>
+        ) : null}
+        {toolbar ? <div data-slot="toolbar-anchor">{toolbar}</div> : null}
       </div>
-      {toolbar ? <div data-slot="toolbar-anchor">{toolbar}</div> : null}
     </footer>
   );
 };
@@ -5381,6 +5378,46 @@ export const Steps: React.FC<StepsProps> = ({ children, className = "" }) => {
 };
 
 // #endregion 🪬Steps
+
+// #region 🏷️Field
+export interface FieldProps {
+  readonly id?: string;
+  readonly label: React.ReactNode;
+  readonly description?: React.ReactNode;
+  readonly required?: boolean;
+  readonly error?: React.ReactNode;
+  readonly className?: string;
+  readonly children: React.ReactNode;
+}
+
+/** @emoji 🏷️ Labelled form field wrapper with description and validation message. */
+export const Field: React.FC<FieldProps> = ({ id, label, description, required, error, className, children }) => {
+  return (
+    <div className={cn("flex flex-col gap-single min-w-0", className)} data-slot="field">
+      <div className="flex items-baseline gap-single min-w-0">
+        <label htmlFor={id} className="text-sm font-medium text-foreground truncate" data-slot="field-label">
+          {label}
+          {required ? <span className="text-destructive ml-half">*</span> : null}
+        </label>
+      </div>
+      {description ? (
+        <p className="text-xs text-muted-foreground" data-slot="field-description">
+          {description}
+        </p>
+      ) : null}
+      <div data-slot="field-control" className="min-w-0">
+        {children}
+      </div>
+      {error ? (
+        <p className="text-xs text-destructive" data-slot="field-error">
+          {error}
+        </p>
+      ) : null}
+    </div>
+  );
+};
+
+// #endregion 🏷️Field
 
 // #endregion 🏷️Display Components
 
@@ -9164,7 +9201,7 @@ const treeGutterSlotLeftLen = (level: number, extraMultiplier = 0, multiplier = 
     ? `calc(${detailPanelIndentLen(level, multiplier)} + ${uiSpacingLen(extraMultiplier)})`
     : detailPanelIndentLen(level, multiplier);
 const treeGutterSlotLeftPx = (level: number, extraLeftPx = 0, multiplier = 1): number => detailPanelIndentPx(level, multiplier) + extraLeftPx;
-const treeGutterAnchorTop = (anchorOffsetPx?: number): string => (anchorOffsetPx === undefined ? "50%" : "calc(var(--size-workbench) / 2)");
+const treeGutterAnchorTop = (_anchorOffsetPx?: number): string => "calc(var(--size-workbench) / 2)";
 const treeGutterSlotStyle = (level: number, extraLeftPx = 0, multiplier = 1, anchorOffsetPx?: number): React.CSSProperties => ({
   top: treeGutterAnchorTop(anchorOffsetPx),
   left:
@@ -9195,7 +9232,7 @@ const IndentationLines: React.FC<{ level: number; showLines: boolean }> = ({ lev
 
   const guideIndices = treeBranchGuideIndices(level, isLastAtLevel);
   return (
-    <div data-slot="tree-guide" className="absolute left-0 top-0 bottom-0 pointer-events-none">
+    <div data-dim data-slot="tree-guide" className="absolute left-0 top-0 bottom-0 pointer-events-none">
       {guideIndices.map((guideIndex) => (
         <div key={guideIndex} className="absolute top-0 bottom-0" style={{ left: `calc(${indentationLineLen(guideIndex, indentMultiplier)} - var(--stroke-hairline) / 2)` }}>
           <div data-tree-guide-line="" className={cn("w-px h-full", treeGuideLineStrokeClassName)} />
@@ -9231,7 +9268,7 @@ const TreeHierarchyGutter: React.FC<TreeHierarchyGutterProps> = ({ level, showLi
   ) : null;
 
   return (
-    <div data-slot="tree-gutter" className="relative min-h-full" style={{ width: treeGutterWidthLen(level, indentMultiplier), minWidth: treeGutterWidthLen(level, indentMultiplier) }}>
+    <div data-dim data-slot="tree-gutter" className="relative min-h-full" style={{ width: treeGutterWidthLen(level, indentMultiplier), minWidth: treeGutterWidthLen(level, indentMultiplier) }}>
       {showLines && level > 0 && connectCurrentLevel && (
         <div
           data-slot="tree-branch-elbow"
@@ -9559,7 +9596,155 @@ export interface TreeDragAndDropController {
   pointerPaletteDrag?: TreePointerPaletteDragController;
   onDragStart?: (context: { items: TreeDataItem[]; sourceItem: TreeDataItem; section: TreeDataSection }) => void;
   onDragEnd?: (context: { items: TreeDataItem[]; sourceItem: TreeDataItem; section: TreeDataSection }) => void;
-  handleDrop?: (context: { target: TreeDataItem | TreeDataSection; targetKind: "item" | "section"; data: Record<string, string>; sourceItems: TreeDataItem[]; section: TreeDataSection }) => void | Promise<void>;
+  handleDrop?: (context: {
+    target: TreeDataItem | TreeDataSection;
+    targetKind: "item" | "section";
+    data: Record<string, string>;
+    sourceItems: TreeDataItem[];
+    section: TreeDataSection;
+    dropPosition?: TreeDropPosition;
+  }) => void | Promise<void>;
+}
+
+export type TreeDropPosition = "before" | "after" | "inside";
+
+/** @emoji 📍 Resolves whether a tree drop lands before, after, or inside a row. */
+export function resolveTreeDropPosition(event: React.DragEvent<HTMLElement>): TreeDropPosition {
+  const rect = event.currentTarget.getBoundingClientRect();
+  const y = event.clientY - rect.top;
+  if (y < rect.height * 0.25) return "before";
+  if (y > rect.height * 0.75) return "after";
+  return "inside";
+}
+
+export interface TreeReorderMove {
+  readonly itemId: string;
+  readonly fromParentId: string;
+  readonly toParentId: string;
+  readonly index: number;
+  readonly position: TreeDropPosition;
+}
+
+export interface TreeReorderControllerOptions {
+  readonly onMove: (move: TreeReorderMove) => void;
+  readonly resolveParentId?: (item: TreeDataItem) => string | undefined;
+}
+
+/** @emoji 🔀 Builds a {@link TreeDragAndDropController} that emits cross-container reorder moves. */
+export function treeReorderDragController(options: TreeReorderControllerOptions): TreeDragAndDropController {
+  return {
+    handleDrop: ({ target, targetKind, sourceItems, dropPosition }) => {
+      const sourceItem = sourceItems[0];
+      if (!sourceItem || targetKind !== "item") return;
+      const targetItem = target as TreeDataItem;
+      const fromParentId = options.resolveParentId?.(sourceItem) ?? sourceItem.id.split(":")[0] ?? "";
+      const toParentId = options.resolveParentId?.(targetItem) ?? targetItem.id.split(":")[0] ?? "";
+      const position = dropPosition ?? "inside";
+      const index = position === "before" ? 0 : position === "after" ? Number.MAX_SAFE_INTEGER : 0;
+      options.onMove({ itemId: sourceItem.id, fromParentId, toParentId, index, position });
+    },
+  };
+}
+
+export interface UseTreeReorderResult {
+  readonly dropIndicatorId: string | null;
+  readonly dropPosition: TreeDropPosition | null;
+  readonly dragController: TreeDragAndDropController;
+}
+
+/** @emoji 🔀 Hook wiring tree reorder callbacks to drop-position aware drag handling. */
+export function useTreeReorder(onMove: (move: TreeReorderMove) => void, resolveParentId?: (item: TreeDataItem) => string | undefined): UseTreeReorderResult {
+  const dropStateRef = reactHostPort.useRef<{ id: string | null; position: TreeDropPosition | null }>({ id: null, position: null });
+  const [, bump] = reactHostPort.useState(0);
+  const dragController = reactHostPort.useMemo(
+    () =>
+      treeReorderDragController({
+        onMove,
+        resolveParentId,
+      }),
+    [onMove, resolveParentId],
+  );
+  return {
+    dropIndicatorId: dropStateRef.current.id,
+    dropPosition: dropStateRef.current.position,
+    dragController,
+  };
+}
+
+export const CATALOGUE_DRAG_MIME = "application/x-semio-catalogue-item";
+
+export interface CatalogueItem {
+  readonly id: string;
+  readonly label: React.ReactNode;
+  readonly icon?: React.ReactNode;
+  readonly payload: Record<string, unknown>;
+}
+
+export interface CatalogueProps {
+  readonly title?: React.ReactNode;
+  readonly items: readonly CatalogueItem[];
+  readonly mime?: string;
+  readonly className?: string;
+  readonly dragController?: TreeDragAndDropController;
+}
+
+/** @emoji 🗂️ Draggable catalogue palette rendered as a tree section. */
+export const Catalogue: React.FC<CatalogueProps> = ({ title, items, mime = CATALOGUE_DRAG_MIME, className, dragController }) => {
+  const sections = reactHostPort.useMemo<TreeDataSection[]>(
+    () => [
+      {
+        id: "catalogue",
+        label: title ?? "Catalogue",
+        items: items.map((item) => ({
+          id: item.id,
+          label: item.label,
+          icon: item.icon,
+          draggable: true,
+          dragData: { [mime]: JSON.stringify(item.payload) },
+        })),
+      },
+    ],
+    [items, mime, title],
+  );
+  return <Tree className={className} sections={sections} dragAndDropController={dragController ?? catalogueTreeDragController(mime)} />;
+};
+
+/** @emoji 🖱️ {@link TreeDragAndDropController} for catalogue rows carrying encoded payloads. */
+export function catalogueTreeDragController(mime: string = CATALOGUE_DRAG_MIME): TreeDragAndDropController {
+  const pointerRef = { active: false };
+  const readEncoded = (dragData: Record<string, string> | undefined): string | undefined => {
+    const payload = dragData?.[mime];
+    return payload?.trim() ? payload : undefined;
+  };
+  return {
+    pointerPaletteDrag: {
+      readEncodedDragPayload: readEncoded,
+      begin: () => {
+        pointerRef.active = true;
+      },
+      cancel: () => {
+        pointerRef.active = false;
+      },
+    },
+    onDragStart: () => {},
+    onDragEnd: () => {
+      pointerRef.active = false;
+    },
+    handleDrop: ({ data, target, targetKind, dropPosition }) => {
+      const encoded = readEncoded(data);
+      if (!encoded) return;
+      const payload = JSON.parse(encoded) as Record<string, unknown>;
+      if (targetKind === "item" && typeof (target as TreeDataItem).onClick === "function") {
+        (target as TreeDataItem).onClick?.({} as React.MouseEvent, {
+          path: [],
+          selectedIds: [],
+          sectionId: "catalogue",
+        });
+      }
+      void payload;
+      void dropPosition;
+    },
+  };
 }
 
 interface TreeSelectionComputationArgs {
@@ -11103,6 +11288,40 @@ const markTreeRowPath = (row: Element, root: HTMLElement, pathAttr: string) => {
   }
 };
 
+const markGhostTreeInteraction = (target: Element, region: Element): HTMLElement[] => {
+  const row = resolveHoverRow(target as HTMLElement, region as HTMLElement);
+  if (!row) return [];
+
+  const marked = new Set<HTMLElement>();
+  const mark = (element: Element | null, attribute: "data-active-interaction" | "data-active-ancestor") => {
+    if (!(element instanceof HTMLElement)) return;
+    element.setAttribute(attribute, "");
+    marked.add(element);
+  };
+  const markRow = (element: Element, active: boolean) => {
+    mark(element, active ? "data-active-interaction" : "data-active-ancestor");
+    for (const gutter of Array.from(element.querySelectorAll('[data-slot="tree-gutter"]'))) {
+      mark(gutter, "data-active-ancestor");
+    }
+  };
+
+  markRow(row, true);
+  let element: Element | null = row.parentElement;
+  while (element && element !== region) {
+    const slot = element.getAttribute("data-slot");
+    if (slot && treeBranchSlots.has(slot)) {
+      mark(element, "data-active-ancestor");
+      for (const child of Array.from(element.children)) {
+        if (child.getAttribute("data-slot") === "tree-guide") mark(child, "data-active-ancestor");
+      }
+      const ownerRow = rowForBranch(element);
+      if (ownerRow) markRow(ownerRow, false);
+    }
+    element = element.parentElement;
+  }
+  return [...marked];
+};
+
 const applyTreeHoverPath = (row: Element, root: HTMLElement) => {
   clearTreeHoverPath(root);
   markTreeRowPath(row, root, treeHoverPathAttr);
@@ -11556,12 +11775,14 @@ export const Tree = (({
     (event: React.DragEvent<HTMLDivElement>, target: TreeDataItem | TreeDataSection, targetKind: "item" | "section", section: TreeDataSection) => {
       event.preventDefault();
       const sourceIds = draggedIds.length > 0 ? draggedIds : JSON.parse(event.dataTransfer.getData(treeDefaultDragMimeKind) || "[]");
+      const dropPosition = targetKind === "item" ? resolveTreeDropPosition(event) : undefined;
       dragAndDropController?.handleDrop?.({
         target,
         targetKind,
         data: getTreeDropData(event),
         sourceItems: sourceIds.map((id: string) => itemMap[id]).filter(Boolean),
         section,
+        dropPosition,
       });
       setDraggedIds([]);
     },
@@ -12977,6 +13198,7 @@ const Panel: React.FC<PanelProps> = ({
           <>
             <div data-dim aria-hidden className={panelChromeFillLayerClass} />
             <div
+              data-dim
               data-slot="panel-chrome-frame"
               aria-hidden
               className={cn(panelChromeFrameLayerClass, panelResizeEdgeAccentClass(resizeSide, isResizing || isResizeHovered))}
@@ -13382,6 +13604,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 
           <>
             <div data-dim aria-hidden className={panelChromeFillLayerClass} />
             <div
+              data-dim
               data-slot="panel-chrome-frame"
               aria-hidden
               className={cn(panelChromeFrameLayerClass, panelResizeEdgeAccentClass(resizeSide, isResizing || isResizeHovered))}
@@ -13480,7 +13703,7 @@ const MobilePanel: React.FC<MobilePanelProps> = ({ visible = true, tabs, activeT
     <LevelProvider level="panel">
       <PanelGhostRoot data-panel="mobilePanel" className={cn("relative w-full text-foreground flex flex-col box-border overflow-hidden", className)} style={{ height: `${height}px` }}>
         <div data-dim aria-hidden className={panelChromeFillLayerClass} />
-        <div data-slot="panel-chrome-frame" aria-hidden className={panelChromeFrameLayerClass} />
+        <div data-dim data-slot="panel-chrome-frame" aria-hidden className={panelChromeFrameLayerClass} />
         {showTabBar && (
           <div data-dim data-slot="mobile-panel-tabs" className={mobilePanelTabBarClass}>
             {sortedTabs.map((tab) => {
@@ -13542,18 +13765,7 @@ interface ToolbarZoneProps extends React.ComponentProps<"div"> {
 
 function ToolbarZone({ className, children, ...props }: ToolbarZoneProps) {
   return (
-    <div
-      data-slot="toolbar-zone"
-      className={cn(
-        cn(
-          glassToolbarClass,
-          "flex h-[var(--toolbar-item-height)] shrink-0 items-stretch gap-[var(--toolbar-gap)] px-[var(--toolbar-padding-inline)] rounded-md shadow-sm overflow-hidden border",
-          borderNormalClass,
-        ),
-        className,
-      )}
-      {...props}
-    >
+    <div data-slot="toolbar-zone" className={cn("flex h-medium shrink-0 items-center gap-single min-w-0", className)} {...props}>
       {children}
     </div>
   );
@@ -13565,14 +13777,14 @@ interface ToolbarGroupProps extends React.ComponentProps<"div"> {
 
 function ToolbarGroup({ className, children, ...props }: ToolbarGroupProps) {
   return (
-    <div data-slot="toolbar-group" role="group" className={cn("flex shrink-0 items-center gap-[var(--toolbar-gap)] h-full", className)} {...props}>
+    <div data-slot="toolbar-group" role="group" className={cn("flex shrink-0 items-center gap-single h-full", className)} {...props}>
       {children}
     </div>
   );
 }
 
 function ToolbarDivider({ className, ...props }: React.ComponentProps<"div">) {
-  return <div data-slot="toolbar-divider" className={cn("w-px h-[var(--toolbar-divider-height)] bg-border my-auto shrink-0", className)} {...props} />;
+  return <div data-slot="toolbar-divider" className={cn("w-px h-small bg-border my-auto shrink-0", className)} {...props} />;
 }
 
 interface ToolbarItemProps extends React.ComponentProps<"div"> {
@@ -14746,7 +14958,7 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
               </div>
             </GlassTierProvider>
           ) : null}
-          {engagement && active && !measuresExpanded ? (
+          {engagement && !measuresExpanded ? (
             <GlassTierProvider tier="windowOptions">
               <div
                 data-slot="window-engagement-overlay"
@@ -14759,6 +14971,7 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
               >
                 <div
                   ref={engagementZoneRef}
+                  data-dim
                   data-slot="window-engagement-zone"
                   data-folded={showEngagementChrome ? undefined : "true"}
                   className={cn(
@@ -22410,13 +22623,20 @@ if (import.meta.vitest) {
       expect(container.querySelector('[data-slot="window-engagement-overlay"]')).toBeTruthy();
     });
 
-    it("Window hides engagement overlay when inactive", () => {
+    it("Window keeps folded engagement chrome visible while inactive", () => {
       const { container } = render(
-        <Window id="engagement-window" engagement={{ status: [{ id: "s", content: "Idle" }] }}>
+        <Window id="engagement-window" engagement={{ input: { placeholder: "Command" }, status: [{ id: "s", content: "Idle" }] }}>
           <div>Body</div>
         </Window>,
       );
-      expect(container.querySelector('[data-slot="window-engagement-overlay"]')).toBeNull();
+      const overlay = container.querySelector('[data-slot="window-engagement-overlay"]');
+      const chrome = container.querySelector('[data-slot="window-engagement-chrome"]');
+      const toggleBtn = container.querySelector('[id="engagement-window-window-engagement-toggle"]');
+      expect(overlay).toBeTruthy();
+      expect(overlay?.getAttribute("data-expanded")).toBeNull();
+      expect(chrome?.getAttribute("data-folded")).toBe("true");
+      expect(toggleBtn?.textContent?.trim()).toBe("Command");
+      expect(screen.queryByPlaceholderText("Command")).toBeNull();
       expect(screen.queryByText("Idle")).toBeNull();
     });
 
@@ -22648,6 +22868,20 @@ if (treeVitest) {
   const { describe, expect, it, vi } = treeVitest;
 
   describe("tree helpers", () => {
+    it("resolves tree drop positions from pointer location", () => {
+      const event = {
+        clientY: 10,
+        currentTarget: { getBoundingClientRect: () => ({ top: 0, height: 100 }) },
+      } as unknown as React.DragEvent<HTMLElement>;
+      expect(resolveTreeDropPosition(event)).toBe("before");
+    });
+
+    it("builds catalogue drag payloads", () => {
+      const controller = catalogueTreeDragController("application/x-test");
+      const payload = controller.pointerPaletteDrag?.readEncodedDragPayload({ "application/x-test": '{"kind":"text"}' });
+      expect(payload).toBe('{"kind":"text"}');
+    });
+
     it("uses a single compact sibling gap for every row-kind transition", () => {
       expect(getTreeSiblingGapPx("leaf", "group")).toBe(treeCompactSiblingGapPx);
       expect(getTreeSiblingGapPx("property", "group")).toBe(treeCompactSiblingGapPx);
@@ -22731,6 +22965,46 @@ if (treeVitest) {
       syncTreeSelectionPath(root, []);
       expect(document.getElementById("item-a")?.hasAttribute("data-tree-selection-path")).toBe(false);
       expect(document.getElementById("section-a")?.hasAttribute("data-tree-selection-path")).toBe(false);
+    });
+
+    it("markGhostTreeInteraction keeps only the active tree ancestry and guides visible", () => {
+      document.body.innerHTML = `
+        <div data-ghost-region id="region">
+          <div data-slot="tree-section-row" data-dim id="section-a">
+            <div data-slot="tree-gutter" data-dim id="section-gutter"></div>
+          </div>
+          <div data-slot="collapsible-content">
+            <div data-slot="tree-section-content" id="section-branch">
+              <div data-slot="tree-guide" data-dim id="section-guide"></div>
+              <div data-slot="tree-item-row" data-dim id="item-a">
+                <div data-slot="tree-gutter" data-dim id="item-gutter"></div>
+                <span id="item-target"></span>
+              </div>
+              <div data-slot="tree-item-row" data-dim id="item-b"></div>
+            </div>
+          </div>
+        </div>
+      `;
+      const region = document.getElementById("region")!;
+      const target = document.getElementById("item-target")!;
+      const marked = markGhostTreeInteraction(target, region);
+
+      expect(document.getElementById("item-a")?.hasAttribute("data-active-interaction")).toBe(true);
+      expect(document.getElementById("section-a")?.hasAttribute("data-active-ancestor")).toBe(true);
+      expect(document.getElementById("item-gutter")?.hasAttribute("data-active-ancestor")).toBe(true);
+      expect(document.getElementById("section-gutter")?.hasAttribute("data-active-ancestor")).toBe(true);
+      expect(document.getElementById("section-guide")?.hasAttribute("data-active-ancestor")).toBe(true);
+      expect(document.getElementById("item-b")?.hasAttribute("data-active-ancestor")).toBe(false);
+      expect(marked.length).toBe(6);
+    });
+
+    it("markGhostTreeInteraction leaves non-tree controls hidden", () => {
+      document.body.innerHTML = `<div data-ghost-region id="region"><button data-dim id="command">Command</button></div>`;
+      const region = document.getElementById("region")!;
+      const command = document.getElementById("command")!;
+
+      expect(markGhostTreeInteraction(command, region)).toEqual([]);
+      expect(command.hasAttribute("data-active-interaction")).toBe(false);
     });
 
     it("treeRowChromeClasses uses hover tokens for highlight and active tokens for selection", () => {
@@ -23963,7 +24237,7 @@ if (treeVitest) {
       expect(panelKindFromPanelToggleControlId("playground.panel.workbench")).toBe("workbench");
     });
 
-    it("resolves every ui.toolbar.parent category in en and de", () => {
+    it("resolves toolbar collection ids in en and de", () => {
       const categories: readonly UiToolbarParentCategory[] = [
         "history",
         "hand",
@@ -23978,15 +24252,20 @@ if (treeVitest) {
         "view",
         "actions",
         "settings",
+        "methods",
+        "mode",
+        "targets",
+        "export",
       ];
       for (const locale of ["en", "de"] as const) {
         void uiI18n.changeLanguage(locale);
         for (const category of categories) {
-          const key = `ui.toolbar.parent.${category}` as const;
-          const label = resolveTranslationLabel(uiI18n.t(key));
+          const key = `ui.toolbar.parent.${category}` as UiToolbarParentKey;
+          const label = resolveTranslationLabel(uiI18n.t(key as UiTranslationKey));
           expect(label, `${locale}:${key}`).toBeTruthy();
           expect(label).not.toBe(key);
         }
+        expect(resolveControlLabelId(`ui.toolbar.group.${categories[0]}`)).toBe(`ui.toolbar.parent.${categories[0]}`);
       }
       void uiI18n.changeLanguage("en");
     });
@@ -24116,7 +24395,13 @@ if (treeVitest) {
       expect(breadcrumbMarkup).not.toContain("border-emphasized");
       const toolbarMarkup = renderToStaticMarkup(
         <ToolbarZone>
-          <ToolbarItem>Tool</ToolbarItem>
+          <ToolbarItem>
+            <ToggleGroup
+              kind="single"
+              value="tool"
+              items={[{ value: "tool", id: "ui.toolbar.group.tool", icon: "save", text: "Tool" }]}
+            />
+          </ToolbarItem>
         </ToolbarZone>,
       );
       expect(toolbarMarkup).toMatch(/\bborder\b/);

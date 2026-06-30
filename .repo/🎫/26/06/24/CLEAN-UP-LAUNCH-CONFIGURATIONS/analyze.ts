@@ -219,43 +219,26 @@ for (const config of toKeep) {
   }
 }
 
-// Hierarchy matching product/area domains
-const getCategoryIndex = (name: string): number => {
-  const n = name.toLowerCase();
-  if (n.includes('storybook')) return 0;
-  if (n.includes('compose')) return 1;
-  if (n.includes('ui')) return 2;
-  if (n.includes('coda')) return 3;
-  if (n.includes('repo')) return 4;
-  if (n.includes('cad')) return 5;
-  if (n.includes('flow')) return 6;
-  if (n.includes('dag')) return 7;
-  if (n.includes('procedural')) return 8;
-  if (n.includes('puzzle')) return 9;
-  if (n.includes('reasoning') || n.includes('wires')) return 10;
-  if (n.includes('gis') || n.includes('map')) return 11;
-  if (n.includes('projektetage')) return 12;
-  if (n.includes('presentationplay')) return 13;
-  return 99;
+// Helper to strip emojis for clean alphabetical comparison
+const stripEmojis = (str: string): string => {
+  return str
+    .replace(/[\u2000-\u32FF]|[\ud800-\udbff][\udc00-\udfff]/g, '')
+    .replace(/[^a-zA-Z0-9\s]/g, '')
+    .trim();
 };
 
-// Sort each group by product category index, then by original order/presentation.order
-const sortByHierarchyAndOrder = (a: ConfigBlock, b: ConfigBlock) => {
-  const catA = getCategoryIndex(a.name);
-  const catB = getCategoryIndex(b.name);
-  if (catA !== catB) {
-    return catA - catB;
-  }
-  const orderA = a.parsed.presentation?.order ?? 999999;
-  const orderB = b.parsed.presentation?.order ?? 999999;
-  return orderA - orderB;
+// Sort each group strictly alphabetically by name (excluding emojis)
+const sortAlphabetically = (a: ConfigBlock, b: ConfigBlock) => {
+  const nameA = stripEmojis(a.name);
+  const nameB = stripEmojis(b.name);
+  return nameA.localeCompare(nameB, 'en', { sensitivity: 'base', numeric: true });
 };
 
-keyboard.sort(sortByHierarchyAndOrder);
-mouse.sort(sortByHierarchyAndOrder);
-dev.sort(sortByHierarchyAndOrder);
-build.sort(sortByHierarchyAndOrder);
-publish.sort(sortByHierarchyAndOrder);
+keyboard.sort(sortAlphabetically);
+mouse.sort(sortAlphabetically);
+dev.sort(sortAlphabetically);
+build.sort(sortAlphabetically);
+publish.sort(sortAlphabetically);
 
 // Construct the new launch.json content
 const prefix = content.substring(0, idx + 1); // Up to the opening '['
@@ -265,11 +248,17 @@ const formattedConfigs: string[] = [];
 const addRegion = (regionName: string, items: ConfigBlock[]) => {
   if (items.length === 0) return;
   formattedConfigs.push(`    // #region ${regionName}`);
-  for (const item of items) {
+  items.forEach((item, index) => {
+    // Assign sequential presentation.order to match the source JSON order
+    if (!item.parsed.presentation) {
+      item.parsed.presentation = {};
+    }
+    item.parsed.presentation.order = (index + 1) * 10;
+
     const stringified = JSON.stringify(item.parsed, null, 2);
     const indented = stringified.split('\n').map(line => '    ' + line).join('\n');
     formattedConfigs.push(indented + ',');
-  }
+  });
   formattedConfigs.push('    // #endregion');
 };
 

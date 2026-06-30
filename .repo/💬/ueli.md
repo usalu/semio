@@ -409,6 +409,18 @@ This MUST NOT happen.
 
 ---
 
+On window interactions such as group selection etc all panels should be hidden. currently e.g. command is not hidden, the border of side panels are not hidden, vertical tree indentation lines are not hidden, etc Make sure they are all hidden (only exception is when a tree item from the tree is interacted with, then the tree item along with all parent tree items and indentation lines are shown)
+
+---
+‚
+Introduce a tree of buttons, toggles and collections which is displayed in a ribbon.
+e.g. toolbar on the bottom of the footer is a tree.
+Either an item is a leaf or a collection. Only one collection within siblings can be active. leave a small gap between the hierachies.
+e.g. as soon as a new sibliling collections everything downstream of the right of the ribbon is replaced with the new children.
+Make sure implement clean mechanisms and replace it everywhere (playgrounds, sketchpad, etc)
+
+---
+
 We are starting a new a new architecture.
 @elements/lib/react/core MUST be pure react components, no classes.
 @elements/lib/framework/core MUST be pure typescript, no react, just classes.
@@ -9556,11 +9568,45 @@ Panning should be mousewheel and right click context menu
 
 ---
 
+Implement trinity technology.
+As a fixture take the nakagin capsule tower design (graph) with pieces (nodes e.g. position as data property, flat position as derived propery) and connections (edges) and connectors (ports).
+@trinity/jack/core/lib.rs @trinity/jack/play/index.ts @trinity/jack/shell/bin.rs @trinity/jack/AGENTS.md @trinity/ram/AGENTS.md @trinity/ram/lib.rs @trinity/rewrite/engine/lib.rs @trinity/rewrite/play/index.ts @trinity/rewrite/AGENTS.md @trinity/AGENTS.md @trinity @trinity/jack @trinity/jack/core @trinity/jack/play @trinity/jack/shell @trinity/ram @trinity/rewrite @trinity/rewrite/engine @trinity/rewrite/play
+
 ---
 
 ### jack
 
 ### ram
+
+## forms
+
+---
+
+Introduce a new technology: forms
+forms is for other to frameworks to create rich interactive decalarative form experiences.
+Every form is just data, same as interactive commands in cad.
+Forms have predefined question kinds.
+Forms can have multiple steps.
+Make a sophisticated playground with a complex fixture that uses all the features.
+Add hierachy with all steps and questions, catalogue (question kinds), drag and drop, reorder of tree items to move across steps, etc.
+Extend ui with the necessary components a general mechanisms.
+Extend flow (and hence procedural etc) with a second mode: Generate
+In generate, all input widgets such as slider, dropdown, etc are turned into a form.
+Make sure that generations can be added, removed, updated and all inputs are editable, previewed etc.
+
+---
+
+## raster
+
+Introduce a new technology: raster
+raster is for non-destructive image manipulation.
+Add layers, masks, blend modes, etc
+Use gimp as reference for
+Unlike regular raster graphics software, think it multi-windowed (every layer/mask, etc can be shown on a different window)
+Make sure to integrate it with our ui system (shared, bidirectional and transitive hover, selection)
+Raster is an infinite canvas
+Create a sophisticated playground.
+
 
 ## 📜history
 

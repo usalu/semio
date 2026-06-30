@@ -11,6 +11,7 @@ import {
   Playground,
   WindowKindRuntime,
   buildFlowWindowBody,
+  buildFormsWindowBody,
   createPlayAppRuntime,
   createProductPlaygroundPlatform,
   createStackLayout,
@@ -54,6 +55,9 @@ import {
   type FlowReorganizeRequest,
   type FlowWidgetV1,
 } from "@semio-tech/flow-react";
+import { createFormId } from "@semio-tech/forms-core";
+import { applyGenerationValuesToFixture, flowFixtureToFormSpec, type FlowGeneration } from "@semio-tech/forms-react";
+import { FlowOrchestratorClient } from "../worker-client.ts";
 import type { ContextMenuItem } from "@semio-tech/ui-react";
 import type { WindowMeasure } from "@semio-tech/framework-playground-core";
 
@@ -61,6 +65,8 @@ export const FLOW_PLAY_APP_ID = "flow-play";
 export const FLOW_PLAY_CONTROLLER_ID = "flow-play";
 export const FLOW_PLAY_SURFACE_ID = "flow.play/v1";
 export const FLOW_PLAY_BODY_KEY_MAIN = "flow.play.main";
+export const FLOW_PLAY_BODY_KEY_GENERATE = "flow.play.generate";
+export const FLOW_PLAY_SURFACE_ID_GENERATE = "flow.play.generate/v1";
 export const FLOW_PLAY_WINDOW_KIND_ID = "flow-main";
 
 export const FLOW_ENGAGEMENT_REORGANIZE_ID = "flow.tool.reorganize";
@@ -463,9 +469,14 @@ export function buildFlowPlayInspectorTree(
 
 /** @emoji 🎛 Flow play shell controller. */
 export class FlowPlayController extends Controller {
-  readonly mainMode = new ModeRuntime("main", "Flow", undefined);
+  readonly mainMode = new ModeRuntime("main", "Edit", undefined);
+  readonly generateMode = new ModeRuntime("generate", "Generate", undefined);
   private fixtureJson = FLOW_PLAY_DEFAULT_FIXTURE_JSON;
   private previewText = "—";
+  private generatePreviewText = "—";
+  private generations: FlowGeneration[] = [{ id: createFormId("generation"), name: "Generation 1", values: {} }];
+  private selectedGenerationId: string | null = null;
+  private evalClient: FlowOrchestratorClient | null = null;
   private catalogueSections: CatalogueSection[] = [];
   private catalogueRevision = 0;
   private readonly snapshotListeners = new Set<() => void>();
@@ -487,7 +498,14 @@ export class FlowPlayController extends Controller {
 
   constructor(commandBus: CommandBus, hostNotify: () => void) {
     super(FLOW_PLAY_CONTROLLER_ID, commandBus, hostNotify);
+    this.selectedGenerationId = this.generations[0]?.id ?? null;
     this.rebuildShellMode();
+    this.rebuildGenerateMode();
+  }
+
+  private getEvalClient(): FlowOrchestratorClient {
+    if (!this.evalClient) this.evalClient = new FlowOrchestratorClient();
+    return this.evalClient;
   }
 
   getFixtureJson(): string {
@@ -496,6 +514,22 @@ export class FlowPlayController extends Controller {
 
   getPreviewText(): string {
     return this.previewText;
+  }
+
+  getGenerations(): readonly FlowGeneration[] {
+    return this.generations;
+  }
+
+  getSelectedGenerationId(): string | null {
+    return this.selectedGenerationId;
+  }
+
+  getGeneratePreviewText(): string {
+    return this.generatePreviewText;
+  }
+
+  getGenerateFormSpecJson(): string {
+    return JSON.stringify(flowFixtureToFormSpec(this.fixtureJson));
   }
 
   getCatalogueSections(): readonly CatalogueSection[] {
@@ -689,6 +723,10 @@ export class FlowPlayController extends Controller {
     }
   }
 
+  private rebuildGenerateMode(): void {
+    this.generateMode.windowKinds = [new WindowKindRuntime(FLOW_PLAY_WINDOW_KIND_ID, "Generate", FLOW_PLAY_BODY_KEY_GENERATE)];
+  }
+
   override run(command: string, args?: unknown): void {
     if (command === "engagementInput") {
       const value = (args as { value?: string }).value;
@@ -844,6 +882,25 @@ export class FlowPlayController extends Controller {
       const result = flowExtensionHost.executeCommand(commandId);
       console.log(`[DEBUG] flow extension command ${commandId}: ${result}`);
       this.emit();
+      return;
+    }
+    if (command === "addGeneration" || command === "removeGeneration" || command === "selectGeneration" || command === "renameGeneration" || command === "updateGenerationValues") {
+      void runGenerationCommand({
+        command,
+        args,
+        generations: this.generations,
+        selectedGenerationId: this.selectedGenerationId,
+        fixtureJson: this.fixtureJson,
+        client: this.getEvalClient(),
+      }).then((next) => {
+        if (!next) return;
+        this.generations = [...next.generations];
+        this.selectedGenerationId = next.selectedGenerationId;
+        if (next.generatePreviewText) this.generatePreviewText = next.generatePreviewText;
+        this.notifySnapshot();
+        this.emit();
+      });
+      return;
     }
   }
 
@@ -878,13 +935,94 @@ function buildFlowPlayMainDeclarativeBody(_ctx: WindowBodyViewContext): UiNode {
   return buildFlowWindowBody(FLOW_PLAY_SURFACE_ID, FLOW_PLAY_CONTROLLER_ID, FLOW_PLAY_WINDOW_KIND_ID);
 }
 
+function buildFlowPlayGenerateDeclarativeBody(_ctx: WindowBodyViewContext): UiNode {
+  return buildFormsWindowBody(FLOW_PLAY_SURFACE_ID_GENERATE, FLOW_PLAY_CONTROLLER_ID, "generate");
+}
+
 export function registerFlowPlayDeclarativeBodies(): void {
   registerWindowBody(FLOW_PLAY_BODY_KEY_MAIN, buildFlowPlayMainDeclarativeBody);
+  registerWindowBody(FLOW_PLAY_BODY_KEY_GENERATE, buildFlowPlayGenerateDeclarativeBody);
 }
 
 export function buildFlowPlayAppRuntime(controller: FlowPlayController): AppRuntime {
-  return createPlayAppRuntime(FLOW_PLAY_APP_ID, "semio · flow", controller, FLOW_PLAY_LAYOUT, controller.mainMode);
+  const app = createPlayAppRuntime(FLOW_PLAY_APP_ID, "Flow", controller, FLOW_PLAY_LAYOUT, controller.mainMode);
+  app.addMode(controller.generateMode);
+  return app;
 }
+
+// #region GenerateHelpers
+/** @emoji ⚡ Shared generation evaluation for flow and procedural generate modes. */
+export async function evaluateGenerationFixture(
+  client: FlowOrchestratorClient,
+  baseFixtureJson: string,
+  values: FlowGeneration["values"],
+): Promise<string> {
+  const json = applyGenerationValuesToFixture(baseFixtureJson, values);
+  await client.loadFixtureJson(json);
+  const result = await client.evaluate();
+  try {
+    const preview = await client.previewText();
+    return preview || result.outputsJson.slice(0, 4000);
+  } catch {
+    return result.outputsJson.slice(0, 4000);
+  }
+}
+
+export function createDefaultGenerations(): FlowGeneration[] {
+  return [{ id: createFormId("generation"), name: "Generation 1", values: {} }];
+}
+
+export async function runGenerationCommand(input: {
+  readonly command: string;
+  readonly args?: unknown;
+  readonly generations: readonly FlowGeneration[];
+  readonly selectedGenerationId: string | null;
+  readonly fixtureJson: string;
+  readonly client: FlowOrchestratorClient;
+}): Promise<{ readonly generations: FlowGeneration[]; readonly selectedGenerationId: string | null; readonly generatePreviewText: string } | null> {
+  const generations = [...input.generations];
+  let selectedGenerationId = input.selectedGenerationId;
+  if (input.command === "addGeneration") {
+    const id = createFormId("generation");
+    generations.push({ id, name: `Generation ${generations.length + 1}`, values: {} });
+    selectedGenerationId = id;
+  } else if (input.command === "removeGeneration") {
+    const id = (input.args as { id?: string }).id;
+    if (typeof id !== "string") return null;
+    const next = generations.filter((generation) => generation.id !== id);
+    generations.splice(0, generations.length, ...next);
+    if (selectedGenerationId === id) selectedGenerationId = generations[0]?.id ?? null;
+  } else if (input.command === "selectGeneration") {
+    const id = (input.args as { id?: string }).id;
+    if (typeof id !== "string") return null;
+    selectedGenerationId = id;
+  } else if (input.command === "renameGeneration") {
+    const id = (input.args as { id?: string }).id;
+    const name = (input.args as { name?: string }).name;
+    if (typeof id !== "string" || typeof name !== "string") return null;
+    for (let index = 0; index < generations.length; index += 1) {
+      if (generations[index]?.id === id) generations[index] = { ...generations[index]!, name };
+    }
+    return { generations, selectedGenerationId, generatePreviewText: "" };
+  } else if (input.command === "updateGenerationValues") {
+    const id = (input.args as { id?: string }).id;
+    const values = (input.args as { values?: FlowGeneration["values"] }).values;
+    if (typeof id !== "string" || values == null) return null;
+    for (let index = 0; index < generations.length; index += 1) {
+      if (generations[index]?.id === id) generations[index] = { ...generations[index]!, values };
+    }
+    selectedGenerationId = id;
+  } else {
+    return null;
+  }
+  const active = generations.find((generation) => generation.id === selectedGenerationId) ?? generations[0];
+  const generatePreviewText = active
+    ? await evaluateGenerationFixture(input.client, input.fixtureJson, active.values)
+    : "—";
+  console.log("[DEBUG] generation command", input.command, generatePreviewText.slice(0, 120));
+  return { generations, selectedGenerationId, generatePreviewText };
+}
+// #endregion GenerateHelpers
 
 export class PlaygroundFlow extends Playground {
   readonly id = FLOW_PLAY_APP_ID;
@@ -1095,6 +1233,23 @@ if (import.meta.vitest) {
       const serialized = JSON.stringify(tree);
       expect(serialized).toContain("Value");
       expect(serialized).toContain("patchFlowWidget");
+    });
+
+    it("registers generate mode and maps fixture widgets to form spec", () => {
+      const bus = new CommandBus();
+      const ctrl = new FlowPlayController(bus, () => {});
+      expect(ctrl.generateMode.id).toBe("generate");
+      const spec = JSON.parse(ctrl.getGenerateFormSpecJson()) as { schema: string; steps: { questions: unknown[] }[] };
+      expect(spec.schema).toBe("forms.form/v1");
+      expect(spec.steps[0]?.questions.length).toBeGreaterThan(0);
+    });
+
+    it("adds generations without starting worker", () => {
+      const bus = new CommandBus();
+      const ctrl = new FlowPlayController(bus, () => {});
+      const initial = ctrl.getGenerations().length;
+      ctrl.run("addGeneration");
+      expect(ctrl.getGenerations().length).toBe(initial + 1);
     });
   });
 }
