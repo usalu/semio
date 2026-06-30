@@ -4,7 +4,8 @@ import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../repo/l
 
 class TestScript extends BundleScript {
   run(): void {
-    Bun.spawnSync(["cargo", "test", "-p", "geometry_drawing_rs"], { cwd: this.root, stdio: "inherit" });
+    const result = Bun.spawnSync(["cargo", "test", "-p", "geometry_drawing_rs"], { cwd: this.root, stdio: ["inherit", "inherit", "inherit"] });
+    if (result.exitCode !== 0) throw new Error(`cargo test failed with exit code ${result.exitCode}`);
   }
 }
 

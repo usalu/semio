@@ -77,6 +77,7 @@ export type DrawShapeKind = (typeof DRAW_SHAPE_KINDS)[number];
 
 export const DRAW_TOOL_IDS = [
 	"selectMarquee",
+	"selectLasso",
 	"selectDirect",
 	"pen",
 	"shapeRect",
@@ -188,6 +189,11 @@ export type DrawLayerNode =
 	| DrawBooleanLayer
 	| DrawTraceLayer;
 
+export interface DrawArtboard {
+	readonly width: number;
+	readonly height: number;
+}
+
 export interface DrawDocument {
 	readonly schema: "draw.document/v1";
 	readonly id: string;
@@ -195,6 +201,7 @@ export interface DrawDocument {
 	readonly camera: DrawCamera;
 	readonly layers: readonly DrawLayerNode[];
 	readonly assets?: Readonly<Record<string, DrawImageAsset>>;
+	readonly artboard?: DrawArtboard;
 	readonly activeTool?: DrawToolId;
 }
 
@@ -318,6 +325,63 @@ export function createDrawTraceLayer(name = "Trace", sourceKey: string, params =
 	};
 }
 
+export type DrawShapeGeometry =
+	| { readonly shapeKind: "rect"; readonly rect: { readonly x: number; readonly y: number; readonly width: number; readonly height: number } }
+	| { readonly shapeKind: "ellipse"; readonly ellipse: { readonly cx: number; readonly cy: number; readonly rx: number; readonly ry: number } }
+	| { readonly shapeKind: "circle"; readonly circle: { readonly cx: number; readonly cy: number; readonly r: number } }
+	| { readonly shapeKind: "line"; readonly line: { readonly x1: number; readonly y1: number; readonly x2: number; readonly y2: number } }
+	| { readonly shapeKind: "polygon"; readonly polygon: { readonly points: readonly Vec2[] } };
+
+export function createDrawShapeLayer(name = "Shape", geometry: DrawShapeGeometry): DrawShapeLayer {
+	return {
+		kind: "shape",
+		id: createDrawId("shape"),
+		name,
+		visible: true,
+		locked: false,
+		opacity: 1,
+		blendMode: "normal",
+		transform: defaultDrawTransform(),
+		attributes: {},
+		...geometry,
+	};
+}
+
+export function createDrawTextLayer(name = "Text", content = "Text", size = 24, x = 0, y = 0): DrawTextLayer {
+	return {
+		kind: "text",
+		id: createDrawId("text"),
+		name,
+		visible: true,
+		locked: false,
+		opacity: 1,
+		blendMode: "normal",
+		transform: defaultDrawTransform(),
+		attributes: { fill: { kind: "solid", color: [0, 0, 0, 1] } },
+		x,
+		y,
+		content,
+		size,
+	};
+}
+
+export function createDrawImageLayer(name = "Image", imageKey: string, width = 256, height = 256): DrawImageLayer {
+	return {
+		kind: "image",
+		id: createDrawId("image"),
+		name,
+		visible: true,
+		locked: false,
+		opacity: 1,
+		blendMode: "normal",
+		transform: defaultDrawTransform(),
+		attributes: {},
+		imageKey,
+		width,
+		height,
+	};
+}
+
 export function defaultDrawDocument(id = "empty", title?: string): DrawDocument {
 	return {
 		schema: "draw.document/v1",
@@ -382,6 +446,37 @@ export function hexToRgba(hex: string, alpha = 1): [number, number, number, numb
 	return [r, g, b, alpha];
 }
 
+export function rgbaToHex(color: readonly [number, number, number, number]): string {
+	const r = Math.round(Math.max(0, Math.min(1, color[0])) * 255)
+		.toString(16)
+		.padStart(2, "0");
+	const g = Math.round(Math.max(0, Math.min(1, color[1])) * 255)
+		.toString(16)
+		.padStart(2, "0");
+	const b = Math.round(Math.max(0, Math.min(1, color[2])) * 255)
+		.toString(16)
+		.padStart(2, "0");
+	return `#${r}${g}${b}`;
+}
+
+function ellipsePathSegments(cx: number, cy: number, rx: number, ry: number): PathSegment[] {
+	const k = 0.5522847498;
+	const crx = rx * k;
+	const cry = ry * k;
+	return [
+		{ kind: "move", to: [cx, cy - ry] },
+		{ kind: "cubic", ctrl1: [cx + crx, cy - ry], ctrl2: [cx + rx, cy - cry], to: [cx + rx, cy] },
+		{ kind: "cubic", ctrl1: [cx + rx, cy + cry], ctrl2: [cx + crx, cy + ry], to: [cx, cy + ry] },
+		{ kind: "cubic", ctrl1: [cx - crx, cy + ry], ctrl2: [cx - rx, cy + cry], to: [cx - rx, cy] },
+		{ kind: "cubic", ctrl1: [cx - rx, cy - cry], ctrl2: [cx - crx, cy - ry], to: [cx, cy - ry] },
+		{ kind: "close" },
+	];
+}
+
+export function drawImageAssetDataUrl(asset: DrawImageAsset): string {
+	return asset.data.startsWith("data:") ? asset.data : `data:${asset.mime};base64,${asset.data}`;
+}
+
 export function layerToPathSegments(layer: DrawLayerNode): PathSegment[] {
 	if (layer.kind === "path") return [...layer.segments];
 	if (layer.kind === "shape") {
@@ -409,6 +504,12 @@ export function layerToPathSegments(layer: DrawLayerNode): PathSegment[] {
 			segments.push({ kind: "close" });
 			return segments;
 		}
+		if (layer.shapeKind === "ellipse" && layer.ellipse) {
+			return ellipsePathSegments(layer.ellipse.cx, layer.ellipse.cy, layer.ellipse.rx, layer.ellipse.ry);
+		}
+		if (layer.shapeKind === "circle" && layer.circle) {
+			return ellipsePathSegments(layer.circle.cx, layer.circle.cy, layer.circle.r, layer.circle.r);
+		}
 	}
 	return [];
 }
@@ -425,6 +526,8 @@ export interface DrawSceneNode {
 	readonly needsKernel: boolean;
 	readonly kernelKind?: "boolean" | "trace";
 	readonly kernelPayload?: unknown;
+	readonly text?: { readonly content: string; readonly size: number };
+	readonly image?: { readonly src: string; readonly width: number; readonly height: number };
 }
 
 export function drawTransformToMatrix(transform: DrawTransform): [number, number, number, number, number, number] {
@@ -435,6 +538,83 @@ export function drawTransformToMatrix(transform: DrawTransform): [number, number
 	const c = -transform.scaleY * sin;
 	const d = transform.scaleY * cos;
 	return [a, b, c, d, transform.x, transform.y];
+}
+
+/** 🧭 Best-effort inverse of {@link drawTransformToMatrix}; shear is not represented in {@link DrawTransform}. */
+export function drawMatrixToTransform(matrix: readonly [number, number, number, number, number, number]): DrawTransform {
+	const [a, b, c, d, e, f] = matrix;
+	const scaleX = Math.hypot(a, b);
+	const rotation = Math.atan2(b, a);
+	const det = a * d - b * c;
+	const scaleY = scaleX !== 0 ? det / scaleX : 0;
+	return { x: e, y: f, scaleX, scaleY, rotation };
+}
+
+function drawMapPointByMatrix(matrix: readonly [number, number, number, number, number, number], point: Vec2): Vec2 {
+	const [a, b, c, d, e, f] = matrix;
+	return [a * point[0] + c * point[1] + e, b * point[0] + d * point[1] + f];
+}
+
+export function transformPathSegments(segments: readonly PathSegment[], transform: DrawTransform): PathSegment[] {
+	const matrix = drawTransformToMatrix(transform);
+	return segments.map((segment) => {
+		if (segment.kind === "close") return segment;
+		if (segment.kind === "move" || segment.kind === "line") return { ...segment, to: drawMapPointByMatrix(matrix, segment.to) };
+		if (segment.kind === "quad") return { ...segment, ctrl: drawMapPointByMatrix(matrix, segment.ctrl), to: drawMapPointByMatrix(matrix, segment.to) };
+		if (segment.kind === "cubic")
+			return {
+				...segment,
+				ctrl1: drawMapPointByMatrix(matrix, segment.ctrl1),
+				ctrl2: drawMapPointByMatrix(matrix, segment.ctrl2),
+				to: drawMapPointByMatrix(matrix, segment.to),
+			};
+		return { ...segment, to: drawMapPointByMatrix(matrix, segment.to) };
+	});
+}
+
+export function scalePathSegments(segments: readonly PathSegment[], scaleX: number, scaleY: number): PathSegment[] {
+	if (scaleX === 1 && scaleY === 1) return [...segments];
+	return transformPathSegments(segments, { x: 0, y: 0, scaleX, scaleY, rotation: 0 });
+}
+
+export function splitPathSegmentsByContour(segments: readonly PathSegment[]): PathSegment[][] {
+	const contours: PathSegment[][] = [];
+	let current: PathSegment[] = [];
+	for (const segment of segments) {
+		if (segment.kind === "move" && current.length > 0) {
+			contours.push(current);
+			current = [];
+		}
+		current.push(segment);
+	}
+	if (current.length > 0) contours.push(current);
+	return contours.length > 0 ? contours : [[]];
+}
+
+export function filterPathSegmentsByContourArea(segments: readonly PathSegment[], minArea: number): PathSegment[] {
+	if (minArea <= 0) return [...segments];
+	const kept: PathSegment[] = [];
+	for (const contour of splitPathSegmentsByContour(segments)) {
+		const bounds = pathBounds(contour);
+		if (!bounds || bounds.width * bounds.height < minArea) continue;
+		kept.push(...contour);
+	}
+	return kept;
+}
+
+export function resolveDrawDocumentArtboard(doc: DrawDocument): DrawArtboard | null {
+	if (doc.artboard && doc.artboard.width > 0 && doc.artboard.height > 0) return doc.artboard;
+	let maxX = 0;
+	let maxY = 0;
+	for (const layer of flattenDrawLayers(doc.layers)) {
+		if (layer.kind === "trace" || layer.kind === "boolean" || layer.kind === "group") continue;
+		const bounds = drawLayerWorldBounds(layer);
+		if (!bounds) continue;
+		maxX = Math.max(maxX, bounds.x + bounds.width);
+		maxY = Math.max(maxY, bounds.y + bounds.height);
+	}
+	if (maxX <= 0 || maxY <= 0) return null;
+	return { width: maxX, height: maxY };
 }
 
 export function flattenDrawDocumentToSceneNodes(doc: DrawDocument): DrawSceneNode[] {
@@ -478,8 +658,41 @@ export function flattenDrawDocumentToSceneNodes(doc: DrawDocument): DrawSceneNod
 				});
 				continue;
 			}
+			if (layer.kind === "text") {
+				out.push({
+					id: layer.id,
+					transform: drawTransformToMatrix(layer.transform),
+					segments: [],
+					fill: layer.attributes.fill,
+					stroke: layer.attributes.stroke,
+					opacity: layer.opacity,
+					blendMode: layer.blendMode,
+					visible: layer.visible,
+					needsKernel: false,
+					text: { content: layer.content, size: layer.size },
+				});
+				continue;
+			}
+			if (layer.kind === "image") {
+				const asset = doc.assets?.[layer.imageKey];
+				out.push({
+					id: layer.id,
+					transform: drawTransformToMatrix(layer.transform),
+					segments: [],
+					fill: layer.attributes.fill,
+					stroke: layer.attributes.stroke,
+					opacity: layer.opacity,
+					blendMode: layer.blendMode,
+					visible: layer.visible,
+					needsKernel: false,
+					image: asset
+						? { src: drawImageAssetDataUrl(asset), width: layer.width, height: layer.height }
+						: { src: "", width: layer.width, height: layer.height },
+				});
+				continue;
+			}
 			const segments = layerToPathSegments(layer);
-			if (segments.length === 0 && layer.kind !== "text") continue;
+			if (segments.length === 0) continue;
 			out.push({
 				id: layer.id,
 				transform: drawTransformToMatrix(layer.transform),
@@ -516,7 +729,18 @@ export function findDrawLayerLocation(doc: DrawDocument, layerId: string): DrawL
 	return search(doc.layers);
 }
 
+export function drawPlayBooleanChildRowId(booleanId: string, childId: string): string {
+	return `${DRAW_PLAY_TREE_PREFIX}.ref.${booleanId}::${childId}`;
+}
+
+export function drawPlayLayerIdFromBooleanChildRowId(rowId: string): string | null {
+	const refMatch = rowId.match(/^draw-play-layers\.ref\.[^:]+::(.+)$/);
+	return refMatch?.[1] ?? null;
+}
+
 export function drawPlayLayerIdFromTreeRowId(rowId: string): string | null {
+	const refId = drawPlayLayerIdFromBooleanChildRowId(rowId);
+	if (refId) return refId;
 	const layerMatch = rowId.match(/^draw-play-layers\.(layer|group|boolean|trace|path|shape|text|image)\.(.+)$/);
 	return layerMatch?.[2] ?? null;
 }
@@ -579,6 +803,21 @@ function findDrawLayerInNode(node: DrawLayerNode, layerId: string): DrawLayerNod
 	return null;
 }
 
+export function drawLayerDescendantLeafIds(doc: DrawDocument, layerId: string): string[] {
+	const layer = findDrawLayer(doc, layerId);
+	if (!layer) return [];
+	if (layer.kind !== "group") return [layerId];
+	const out: string[] = [];
+	const walk = (layers: readonly DrawLayerNode[]) => {
+		for (const child of layers) {
+			if (child.kind === "group") walk(child.children);
+			else out.push(child.id);
+		}
+	};
+	walk(layer.children);
+	return out;
+}
+
 export function flattenDrawLayers(layers: readonly DrawLayerNode[]): DrawLayerNode[] {
 	const out: DrawLayerNode[] = [];
 	const walk = (nodes: readonly DrawLayerNode[]) => {
@@ -591,39 +830,53 @@ export function flattenDrawLayers(layers: readonly DrawLayerNode[]): DrawLayerNo
 	return out;
 }
 
+function drawKindHoverDomainForLayer(layer: DrawLayerNode): DrawKindHoverDomain {
+	if (layer.kind === "group") return "group";
+	if (layer.kind === "boolean") return "boolean";
+	if (layer.kind === "trace") return "trace";
+	if (layer.kind === "shape") return "shape";
+	return "layer";
+}
+
 export function drawPlayHoverPayloadFromTreeRowId(doc: DrawDocument, rowId: string | null): DrawHoverPayload {
 	if (!rowId) return { id: null, kind: null };
+	const refId = drawPlayLayerIdFromBooleanChildRowId(rowId);
+	if (refId) {
+		const layer = findDrawLayer(doc, refId);
+		if (layer) return { id: layer.id, kind: { domain: drawKindHoverDomainForLayer(layer), kindId: layer.id } };
+	}
 	const layerMatch = rowId.match(/^draw-play-layers\.(layer|group|boolean|trace|path|shape|text|image)\.(.+)$/);
 	if (layerMatch) {
 		const layer = findDrawLayer(doc, layerMatch[2]!);
-		if (layer) {
-			const domain: DrawKindHoverDomain =
-				layer.kind === "group"
-					? "group"
-					: layer.kind === "boolean"
-						? "boolean"
-						: layer.kind === "trace"
-							? "trace"
-							: layer.kind === "shape"
-								? "shape"
-								: "layer";
-			return { id: layer.id, kind: { domain, kindId: layer.id } };
-		}
+		if (layer) return { id: layer.id, kind: { domain: drawKindHoverDomainForLayer(layer), kindId: layer.id } };
 	}
 	return { id: null, kind: null };
 }
 
 export function drawPlayLayersTreeHighlightedIds(doc: DrawDocument, hoveredId: string | null, kindHover: DrawKindHover | null): readonly string[] {
+	const out: string[] = [];
+	const pushLayer = (layer: DrawLayerNode) => {
+		out.push(drawPlayLayersTreeRowId(layer));
+		for (const root of doc.layers) {
+			const walk = (node: DrawLayerNode) => {
+				if (node.kind === "boolean") {
+					if (node.children.includes(layer.id)) out.push(drawPlayBooleanChildRowId(node.id, layer.id));
+				}
+				if (node.kind === "group") node.children.forEach(walk);
+			};
+			walk(root);
+		}
+	};
 	if (hoveredId) {
 		const layer = findDrawLayer(doc, hoveredId);
-		if (layer) return [drawPlayLayersTreeRowId(layer)];
+		if (layer) pushLayer(layer);
 	}
 	if (kindHover?.kindId) {
 		for (const layer of flattenDrawLayers(doc.layers)) {
-			if (layer.id === kindHover.kindId) return [drawPlayLayersTreeRowId(layer)];
+			if (layer.id === kindHover.kindId) pushLayer(layer);
 		}
 	}
-	return [];
+	return out;
 }
 
 export interface DrawViewport {
@@ -688,10 +941,20 @@ function pathBounds(segments: readonly PathSegment[]): DrawScreenRect | null {
 	return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
 }
 
-export function drawLayerWorldBounds(layer: DrawLayerNode): DrawScreenRect | null {
+function drawLayerLocalBounds(layer: DrawLayerNode): DrawScreenRect | null {
+	if (layer.kind === "text") {
+		const width = Math.max(8, layer.content.length * layer.size * 0.6);
+		const height = Math.max(8, layer.size * 1.2);
+		return { x: layer.x, y: layer.y, width, height };
+	}
+	if (layer.kind === "image") return { x: 0, y: 0, width: layer.width, height: layer.height };
 	const segments = layerToPathSegments(layer);
 	if (!segments.length) return { x: -64, y: -64, width: 128, height: 128 };
-	const local = pathBounds(segments);
+	return pathBounds(segments);
+}
+
+export function drawLayerWorldBounds(layer: DrawLayerNode): DrawScreenRect | null {
+	const local = drawLayerLocalBounds(layer);
 	if (!local) return null;
 	const corners = [
 		{ x: local.x, y: local.y },
@@ -817,6 +1080,10 @@ function insertLayer(
 	});
 }
 
+export function mutateDrawLayer(doc: DrawDocument, layerId: string, mutate: (layer: DrawLayerNode) => DrawLayerNode): DrawDocument {
+	return { ...doc, layers: updateLayerInTree(doc.layers, layerId, mutate) };
+}
+
 export function applyDrawEditOp(doc: DrawDocument, edit: DrawEditOp): DrawDocument {
 	switch (edit.op) {
 		case "setLayerVisible":
@@ -931,6 +1198,65 @@ if (import.meta.vitest) {
 			const nodes = flattenDrawDocumentToSceneNodes(doc);
 			expect(nodes[0]?.needsKernel).toBe(true);
 			expect(nodes[0]?.kernelKind).toBe("boolean");
+		});
+
+		it("creates shape text and image layers", () => {
+			const shape = createDrawShapeLayer("R", { shapeKind: "rect", rect: { x: 0, y: 0, width: 10, height: 10 } });
+			const text = createDrawTextLayer();
+			const image = createDrawImageLayer("I", "key");
+			expect(shape.shapeKind).toBe("rect");
+			expect(text.kind).toBe("text");
+			expect(image.imageKey).toBe("key");
+		});
+
+		it("maps boolean child row ids", () => {
+			expect(drawPlayLayerIdFromBooleanChildRowId(drawPlayBooleanChildRowId("b1", "c1"))).toBe("c1");
+		});
+
+		it("converts ellipse shapes to segments", () => {
+			const layer = createDrawShapeLayer("E", { shapeKind: "ellipse", ellipse: { cx: 0, cy: 0, rx: 10, ry: 5 } });
+			expect(layerToPathSegments(layer).length).toBeGreaterThan(4);
+		});
+
+		it("splits and scales path segments", () => {
+			const segments: PathSegment[] = [
+				{ kind: "move", to: [0, 0] },
+				{ kind: "line", to: [10, 0] },
+				{ kind: "close" },
+				{ kind: "move", to: [20, 20] },
+				{ kind: "line", to: [30, 20] },
+				{ kind: "close" },
+			];
+			expect(splitPathSegmentsByContour(segments)).toHaveLength(2);
+			const scaled = scalePathSegments(segments, 0.5, 0.5);
+			expect(scaled[1]?.kind === "line" ? scaled[1].to[0] : 0).toBe(5);
+		});
+
+		it("resolves document artboard from vector bounds", () => {
+			const doc: DrawDocument = {
+				...defaultDrawDocument("art"),
+				layers: [createDrawShapeLayer("R", { shapeKind: "rect", rect: { x: 0, y: 0, width: 120, height: 80 } })],
+			};
+			expect(resolveDrawDocumentArtboard(doc)).toEqual({ width: 120, height: 80 });
+		});
+
+		it("round-trips draw transform matrix decomposition", () => {
+			const transform = { x: 12, y: -4, scaleX: 2, scaleY: 1.5, rotation: 0.5 };
+			const matrix = drawTransformToMatrix(transform);
+			const restored = drawMatrixToTransform(matrix);
+			expect(restored.x).toBeCloseTo(transform.x);
+			expect(restored.y).toBeCloseTo(transform.y);
+			expect(restored.scaleX).toBeCloseTo(transform.scaleX);
+			expect(restored.scaleY).toBeCloseTo(transform.scaleY);
+			expect(restored.rotation).toBeCloseTo(transform.rotation);
+		});
+
+		it("collects descendant leaf ids for groups", () => {
+			const child = createDrawPathLayer("Child");
+			const group: DrawGroupLayer = { ...createDrawGroupLayer("Group"), children: [child] };
+			const doc: DrawDocument = { ...defaultDrawDocument("group"), layers: [group] };
+			expect(drawLayerDescendantLeafIds(doc, group.id)).toEqual([child.id]);
+			expect(drawLayerDescendantLeafIds(doc, child.id)).toEqual([child.id]);
 		});
 	});
 }

@@ -413,12 +413,17 @@ export function grammarForLanguage(languageId: string): Grammar | undefined {
 }
 
 export function tokenizeWithGrammar(text: string, grammar: Grammar): readonly GrammarToken[] {
+	const occupied = new Array<boolean>(text.length).fill(false);
 	const tokens: GrammarToken[] = [];
 	for (const rule of grammar.rules) {
 		const pattern = new RegExp(rule.pattern.source, rule.pattern.flags.includes("g") ? rule.pattern.flags : `${rule.pattern.flags}g`);
 		for (const match of text.matchAll(pattern)) {
 			if (match.index == null) continue;
-			tokens.push({ class: rule.class, start: match.index, end: match.index + match[0].length });
+			const start = match.index;
+			const end = start + match[0].length;
+			if (occupied.slice(start, end).some(Boolean)) continue;
+			for (let i = start; i < end; i++) occupied[i] = true;
+			tokens.push({ class: rule.class, start, end });
 		}
 	}
 	return tokens.sort((a, b) => a.start - b.start || b.end - a.end);
@@ -469,6 +474,13 @@ if (import.meta.vitest) {
 		it("highlights jack keywords", () => {
 			const tokens = tokenizeWithGrammar("MATCH (a:Piece)", grammarForLanguage("jack")!);
 			expect(tokens.some((t) => t.class === "keyword")).toBe(true);
+		});
+
+		it("does not emit overlapping keyword and ident spans", () => {
+			const tokens = tokenizeWithGrammar("MATCH (a:Piece)", grammarForLanguage("jack")!);
+			const matchTokens = tokens.filter((t) => t.start === 0 && t.end === 5);
+			expect(matchTokens).toHaveLength(1);
+			expect(matchTokens[0]?.class).toBe("keyword");
 		});
 	});
 

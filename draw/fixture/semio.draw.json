@@ -1,11 +1,15 @@
 {
   "schema": "draw.document/v1",
   "id": "semio",
-  "title": "Semio Brand Showcase",
+  "title": "Semio Emblem",
   "camera": {
     "x": 100,
     "y": 100,
     "zoom": 1.2
+  },
+  "artboard": {
+    "width": 200,
+    "height": 200
   },
   "activeTool": "selectDirect",
   "assets": {
@@ -308,83 +312,6 @@
           ]
         }
       ]
-    },
-    {
-      "kind": "boolean",
-      "id": "emblem-union",
-      "name": "Emblem Union",
-      "visible": true,
-      "locked": false,
-      "opacity": 1,
-      "blendMode": "normal",
-      "transform": {
-        "x": 0,
-        "y": 0,
-        "scaleX": 1,
-        "scaleY": 1,
-        "rotation": 0
-      },
-      "attributes": {
-        "fill": {
-          "kind": "solid",
-          "color": [
-            0.9,
-            0.9,
-            0.9,
-            0.35
-          ]
-        },
-        "stroke": {
-          "color": [
-            1,
-            1,
-            1,
-            0.8
-          ],
-          "width": 1,
-          "cap": "round",
-          "join": "round"
-        }
-      },
-      "op": "union",
-      "children": [
-        "emblem-orange",
-        "emblem-teal"
-      ]
-    },
-    {
-      "kind": "trace",
-      "id": "emblem-trace",
-      "name": "Emblem Trace",
-      "visible": true,
-      "locked": false,
-      "opacity": 0.9,
-      "blendMode": "screen",
-      "transform": {
-        "x": 0,
-        "y": 0,
-        "scaleX": 1,
-        "scaleY": 1,
-        "rotation": 0
-      },
-      "attributes": {
-        "stroke": {
-          "color": [
-            1,
-            1,
-            1,
-            0.9
-          ],
-          "width": 1.5,
-          "cap": "round",
-          "join": "round"
-        }
-      },
-      "sourceKey": "emblem-trace-source",
-      "params": {
-        "threshold": 0.45,
-        "simplifyEpsilon": 2
-      }
     }
   ]
 }

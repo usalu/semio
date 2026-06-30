@@ -7,36 +7,55 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
 	cn,
 	marqueeCoverageFromGesture,
+	marqueeModeFromModifiers,
 	SelectionMarquee,
 	selectionMergeIds,
 	screenRectFromPoints,
 	type SelectionMarqueeCoverage,
+	type SelectionMarqueeMethod,
 	type SelectionMarqueePoint,
 	type SelectionMarqueeRect,
 	type SelectionMergeMode,
 } from "@semio-tech/ui-react";
+import { resolveSemanticColorHex } from "@semio-tech/ui-styling";
 import {
 	createDefaultDrawingWasmBridge,
 	type DrawingExportBridge,
 	type PathSegment as KernelPathSegment,
 } from "@semio-tech/geometry-drawing-js";
 import {
+	applyDrawEditOp,
+	createDrawPathLayer,
+	createDrawShapeLayer,
+	createDrawGroupLayer,
+	createDrawTraceLayer,
+	defaultDrawTraceParams,
+	defaultDrawDocument,
 	findDrawLayer,
 	flattenDrawDocumentToSceneNodes,
+	drawLayerDescendantLeafIds,
 	layerToPathSegments,
 	resolveDrawLayerAtScreenPoint,
 	resolveDrawMarqueeLayerHits,
+	filterPathSegmentsByContourArea,
+	scalePathSegments,
+	splitPathSegmentsByContour,
+	resolveDrawDocumentArtboard,
+	transformPathSegments,
 	type DrawBooleanOp,
+	type DrawBlendMode,
 	type DrawCamera,
 	type DrawDocument,
 	type DrawHoverPayload,
 	type DrawImageAsset,
 	type DrawKindHover,
 	type DrawSceneNode,
+	type DrawScreenRect,
 	type DrawToolId,
 	type FillStyle,
 	type PathSegment,
 	type StrokeStyle,
+	type Vec2,
 } from "@semio-tech/draw-core";
 
 const DRAW_MARQUEE_THRESHOLD_PX = 4;
@@ -61,7 +80,7 @@ function segmentsToPathD(segments: readonly PathSegment[]): string {
 }
 
 function decodeDrawImageAsset(asset: DrawImageAsset): Promise<{ width: number; height: number; luma: Uint8Array } | null> {
-	if (typeof document === "undefined") return null;
+	if (typeof document === "undefined") return Promise.resolve(null);
 	return new Promise((resolve) => {
 		const img = new Image();
 		const dataUrl = asset.data.startsWith("data:") ? asset.data : `data:${asset.mime};base64,${asset.data}`;
@@ -117,7 +136,8 @@ async function resolveSceneNodeSegments(
 		for (const childId of payload.children) {
 			const childLayer = findDrawLayer(doc, childId);
 			if (!childLayer) continue;
-			childSegments.push(layerToPathSegments(childLayer) as KernelPathSegment[]);
+			const localSegments = layerToPathSegments(childLayer) as KernelPathSegment[];
+			childSegments.push(transformPathSegments(localSegments, childLayer.transform) as KernelPathSegment[]);
 		}
 		if (childSegments.length === 0) return [];
 		let acc = childSegments[0]!;
@@ -141,9 +161,15 @@ async function resolveSceneNodeSegments(
 			payload.params.threshold,
 			payload.params.simplifyEpsilon,
 		) as PathSegment[];
-		cache.set(node.id, traced);
-		console.log("[DEBUG] draw trace resolved", { id: node.id, segments: traced.length });
-		return traced;
+		const artboard = resolveDrawDocumentArtboard(doc);
+		const scaled =
+			artboard && decoded.width > 0 && decoded.height > 0
+				? scalePathSegments(traced, artboard.width / decoded.width, artboard.height / decoded.height)
+				: traced;
+		const filtered = filterPathSegmentsByContourArea(scaled, 6);
+		cache.set(node.id, filtered);
+		console.log("[DEBUG] draw trace resolved", { id: node.id, segments: filtered.length });
+		return filtered;
 	}
 	return [];
 }
@@ -163,6 +189,58 @@ export interface DrawCanvasProps {
 	readonly onHover?: (payload: DrawHoverPayload) => void;
 	readonly onSelect?: (ids: readonly string[]) => void;
 	readonly onDocumentChange?: (document: DrawDocument) => void;
+	readonly onCommit?: (document: DrawDocument, selectLayerId?: string) => void;
+}
+
+function drawSelectionMethod(activeTool: DrawToolId | undefined): SelectionMarqueeMethod | null {
+	if (activeTool === "selectMarquee") return "rectangle";
+	if (activeTool === "selectLasso") return "lasso";
+	return null;
+}
+
+function isDrawSelectionTool(activeTool: DrawToolId | undefined): boolean {
+	return activeTool === "selectMarquee" || activeTool === "selectLasso" || activeTool === "selectDirect";
+}
+
+function isDrawAuthoringTool(activeTool: DrawToolId | undefined): boolean {
+	return (
+		activeTool === "pen" ||
+		activeTool === "shapeRect" ||
+		activeTool === "shapeEllipse" ||
+		activeTool === "shapeLine" ||
+		activeTool === "shapePolygon" ||
+		activeTool === "trace"
+	);
+}
+
+function drawKindHoverForLayerId(doc: DrawDocument, layerId: string): DrawKindHover {
+	const layer = findDrawLayer(doc, layerId);
+	const domain =
+		layer?.kind === "group"
+			? "group"
+			: layer?.kind === "boolean"
+				? "boolean"
+				: layer?.kind === "trace"
+					? "trace"
+					: layer?.kind === "shape"
+						? "shape"
+						: "layer";
+	return { domain, kindId: layerId };
+}
+
+function drawBlendModeCss(mode: DrawBlendMode): React.CSSProperties["mixBlendMode"] {
+	switch (mode) {
+		case "colorDodge":
+			return "color-dodge";
+		case "colorBurn":
+			return "color-burn";
+		case "hardLight":
+			return "hard-light";
+		case "softLight":
+			return "soft-light";
+		default:
+			return mode;
+	}
 }
 
 function DrawPathShape({
@@ -172,6 +250,9 @@ function DrawPathShape({
 	opacity,
 	selected,
 	hovered,
+	kernelKind,
+	activeColor,
+	hoverColor,
 }: {
 	readonly segments: readonly PathSegment[];
 	readonly fill?: FillStyle;
@@ -179,23 +260,138 @@ function DrawPathShape({
 	readonly opacity: number;
 	readonly selected: boolean;
 	readonly hovered: boolean;
+	readonly kernelKind?: "boolean" | "trace";
+	readonly activeColor: string;
+	readonly hoverColor: string;
+}): React.JSX.Element | null {
+	const contours = splitPathSegmentsByContour(segments);
+	const traceFillFromStroke = kernelKind === "trace" && !fill && stroke;
+	const fillValue =
+		fill?.kind === "solid" ? rgbaCss(fill.color) : traceFillFromStroke && stroke ? rgbaCss(stroke.color) : "none";
+	const strokeValue = traceFillFromStroke ? "none" : stroke ? rgbaCss(stroke.color) : selected ? activeColor : hovered ? hoverColor : "none";
+	const strokeWidth = traceFillFromStroke ? 0 : stroke?.width ?? (selected || hovered ? 2 : 0);
+	const paint = { fill: fillValue, stroke: strokeValue, strokeWidth, opacity, vectorEffect: "non-scaling-stroke" as const, fillRule: "evenodd" as const };
+	const paths = contours
+		.map((contour, index) => {
+			const d = segmentsToPathD(contour);
+			if (!d) return null;
+			return <path key={index} d={d} {...paint} />;
+		})
+		.filter((node): node is React.JSX.Element => node !== null);
+	if (paths.length === 0) return null;
+	return <g>{paths}</g>;
+}
+
+function DrawTextShape({
+	content,
+	size,
+	fill,
+	opacity,
+	selected,
+	hovered,
+	activeColor,
+	hoverColor,
+}: {
+	readonly content: string;
+	readonly size: number;
+	readonly fill?: FillStyle;
+	readonly opacity: number;
+	readonly selected: boolean;
+	readonly hovered: boolean;
+	readonly activeColor: string;
+	readonly hoverColor: string;
+}): React.JSX.Element {
+	const fillValue = fill?.kind === "solid" ? rgbaCss(fill.color) : "#e2e8f0";
+	const width = Math.max(8, content.length * size * 0.6);
+	const height = Math.max(8, size * 1.2);
+	return (
+		<g opacity={opacity}>
+			<text x={0} y={size} fontSize={size} fill={fillValue} fontFamily="ui-monospace, monospace">
+				{content}
+			</text>
+			{(selected || hovered) && (
+				<rect
+					x={0}
+					y={0}
+					width={width}
+					height={height}
+					fill="none"
+					stroke={selected ? activeColor : hoverColor}
+					strokeWidth={2}
+					strokeDasharray={hovered && !selected ? "4 2" : undefined}
+					vectorEffect="non-scaling-stroke"
+				/>
+			)}
+		</g>
+	);
+}
+
+function DrawImageShape({
+	src,
+	width,
+	height,
+	opacity,
+	selected,
+	hovered,
+	activeColor,
+	hoverColor,
+}: {
+	readonly src: string;
+	readonly width: number;
+	readonly height: number;
+	readonly opacity: number;
+	readonly selected: boolean;
+	readonly hovered: boolean;
+	readonly activeColor: string;
+	readonly hoverColor: string;
+}): React.JSX.Element | null {
+	if (!src) return null;
+	return (
+		<g opacity={opacity}>
+			<image href={src} x={0} y={0} width={width} height={height} />
+			{(selected || hovered) && (
+				<rect
+					x={0}
+					y={0}
+					width={width}
+					height={height}
+					fill="none"
+					stroke={selected ? activeColor : hoverColor}
+					strokeWidth={2}
+					strokeDasharray={hovered && !selected ? "4 2" : undefined}
+					vectorEffect="non-scaling-stroke"
+				/>
+			)}
+		</g>
+	);
+}
+
+function DrawPreviewPath({
+	segments,
+	stroke,
+}: {
+	readonly segments: readonly PathSegment[];
+	readonly stroke: string;
 }): React.JSX.Element | null {
 	const d = segmentsToPathD(segments);
 	if (!d) return null;
-	const fillValue = fill?.kind === "solid" ? rgbaCss(fill.color) : "none";
-	const strokeValue = stroke ? rgbaCss(stroke.color) : selected ? "#3b82f6" : hovered ? "#60a5fa" : "none";
-	const strokeWidth = stroke?.width ?? (selected || hovered ? 2 : 0);
-	return (
-		<path
-			d={d}
-			fill={fillValue}
-			stroke={strokeValue}
-			strokeWidth={strokeWidth}
-			opacity={opacity}
-			vectorEffect="non-scaling-stroke"
-		/>
-	);
+	return <path d={d} fill={`${stroke}26`} stroke={stroke} strokeWidth={1.5} vectorEffect="non-scaling-stroke" />;
 }
+
+type DrawDragState =
+	| { readonly kind: "pan"; readonly startX: number; readonly startY: number }
+	| {
+			readonly kind: "marquee";
+			readonly method: SelectionMarqueeMethod;
+			readonly startX: number;
+			readonly startY: number;
+			readonly points: SelectionMarqueePoint[];
+			readonly merge: SelectionMergeMode;
+			readonly active: boolean;
+	  }
+	| { readonly kind: "shapeRect" | "shapeEllipse" | "shapeLine"; readonly startWorld: Vec2 }
+	| { readonly kind: "pen" | "shapePolygon"; readonly points: Vec2[] }
+	| null;
 
 export function DrawCanvas({
 	document: doc,
@@ -203,11 +399,13 @@ export function DrawCanvas({
 	camera: cameraProp,
 	selectedIds = [],
 	hoveredId = null,
+	kindHover = null,
 	activeTool = "selectDirect",
 	className,
 	onCameraChange,
 	onHover,
 	onSelect,
+	onCommit,
 }: DrawCanvasProps): React.JSX.Element {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const [camera, setCamera] = useState<DrawCamera>(cameraProp ?? doc.camera);
@@ -217,7 +415,22 @@ export function DrawCanvas({
 		| { readonly coverage: SelectionMarqueeCoverage; readonly shape: "polygon"; readonly points: readonly SelectionMarqueePoint[] }
 		| null
 	>(null);
-	const dragRef = useRef<{ kind: "pan" | "marquee"; startX: number; startY: number; merge: SelectionMergeMode } | null>(null);
+	const [previewSegments, setPreviewSegments] = useState<PathSegment[]>([]);
+	const dragRef = useRef<DrawDragState>(null);
+	const selectionMethod = drawSelectionMethod(activeTool);
+
+	const effectiveHoveredId = hoveredId ?? kindHover?.kindId ?? null;
+	const activeColor = useMemo(() => resolveSemanticColorHex("--active-base", "gray"), []);
+	const hoverColor = useMemo(() => resolveSemanticColorHex("--hover-base", "gray"), []);
+	const selectedLeafIds = useMemo(() => {
+		const ids = new Set<string>();
+		for (const layerId of selectedIds) for (const leafId of drawLayerDescendantLeafIds(doc, layerId)) ids.add(leafId);
+		return ids;
+	}, [doc, selectedIds]);
+	const hoveredLeafIds = useMemo(() => {
+		if (!effectiveHoveredId) return new Set<string>();
+		return new Set(drawLayerDescendantLeafIds(doc, effectiveHoveredId));
+	}, [doc, effectiveHoveredId]);
 
 	useEffect(() => {
 		if (cameraProp) setCamera(cameraProp);
@@ -242,12 +455,166 @@ export function DrawCanvas({
 		};
 	}, [doc, sceneNodes]);
 
+	const viewport = useCallback((): { width: number; height: number } => {
+		const rect = containerRef.current?.getBoundingClientRect();
+		return { width: rect?.width ?? 1024, height: rect?.height ?? 768 };
+	}, []);
+
+	const screenPoint = useCallback((event: React.PointerEvent | PointerEvent): SelectionMarqueePoint => {
+		const rect = containerRef.current?.getBoundingClientRect();
+		return { x: event.clientX - (rect?.left ?? 0), y: event.clientY - (rect?.top ?? 0) };
+	}, []);
+
+	const screenToWorld = useCallback(
+		(point: SelectionMarqueePoint): Vec2 => {
+			const vp = viewport();
+			return [
+				(point.x - vp.width / 2) / camera.zoom + camera.x,
+				(point.y - vp.height / 2) / camera.zoom + camera.y,
+			];
+		},
+		[camera, viewport],
+	);
+
 	const emitCamera = useCallback(
 		(next: DrawCamera) => {
 			setCamera(next);
 			onCameraChange?.(next);
 		},
 		[onCameraChange],
+	);
+
+	const commitDocument = useCallback(
+		(next: DrawDocument, selectLayerId?: string) => {
+			const withTool = applyDrawEditOp(next, { op: "setActiveTool", tool: "selectDirect" });
+			onCommit?.(withTool, selectLayerId);
+		},
+		[onCommit],
+	);
+
+	const updateMarqueeOverlay = useCallback(
+		(point: SelectionMarqueePoint, method: SelectionMarqueeMethod, startX: number, startY: number, points: SelectionMarqueePoint[]) => {
+			const pathPoints = method === "lasso" ? points : [{ x: startX, y: startY }, point];
+			const coverage = marqueeCoverageFromGesture({ method, startX, endX: point.x, path: pathPoints });
+			if (method === "lasso") {
+				setMarquee({ coverage, shape: "polygon", points });
+				return;
+			}
+			const rect = screenRectFromPoints(pathPoints);
+			if (!rect) return;
+			setMarquee({ coverage, shape: "rect", rect });
+		},
+		[],
+	);
+
+	const commitMarqueeSelection = useCallback(
+		(point: SelectionMarqueePoint, drag: Extract<DrawDragState, { kind: "marquee" }>) => {
+			const vp = viewport();
+			const pathPoints = drag.method === "lasso" ? [...drag.points, point] : [{ x: drag.startX, y: drag.startY }, point];
+			const coverage = marqueeCoverageFromGesture({
+				method: drag.method,
+				startX: drag.startX,
+				endX: point.x,
+				path: pathPoints,
+			});
+			const rect = screenRectFromPoints(pathPoints);
+			if (!rect) return;
+			const hits = resolveDrawMarqueeLayerHits(doc, camera, vp, rect, coverage === "partial");
+			onSelect?.(selectionMergeIds(drag.merge, selectedIds, hits));
+		},
+		[camera, doc, onSelect, selectedIds, viewport],
+	);
+
+	const shapePreviewFromWorld = useCallback((kind: "shapeRect" | "shapeEllipse" | "shapeLine", start: Vec2, end: Vec2): PathSegment[] => {
+		if (kind === "shapeLine") {
+			return [
+				{ kind: "move", to: start },
+				{ kind: "line", to: end },
+			];
+		}
+		const x = Math.min(start[0], end[0]);
+		const y = Math.min(start[1], end[1]);
+		const width = Math.abs(end[0] - start[0]);
+		const height = Math.abs(end[1] - start[1]);
+		if (kind === "shapeRect") {
+			return [
+				{ kind: "move", to: [x, y] },
+				{ kind: "line", to: [x + width, y] },
+				{ kind: "line", to: [x + width, y + height] },
+				{ kind: "line", to: [x, y + height] },
+				{ kind: "close" },
+			];
+		}
+		const cx = x + width / 2;
+		const cy = y + height / 2;
+		const rx = width / 2;
+		const ry = height / 2;
+		const k = 0.5522847498;
+		return [
+			{ kind: "move", to: [cx, cy - ry] },
+			{ kind: "cubic", ctrl1: [cx + rx * k, cy - ry], ctrl2: [cx + rx, cy - ry * k], to: [cx + rx, cy] },
+			{ kind: "cubic", ctrl1: [cx + rx, cy + ry * k], ctrl2: [cx + rx * k, cy + ry], to: [cx, cy + ry] },
+			{ kind: "cubic", ctrl1: [cx - rx * k, cy + ry], ctrl2: [cx - rx, cy + ry * k], to: [cx - rx, cy] },
+			{ kind: "cubic", ctrl1: [cx - rx, cy - ry * k], ctrl2: [cx - rx * k, cy - ry], to: [cx, cy - ry] },
+			{ kind: "close" },
+		];
+	}, []);
+
+	const commitShapeDrag = useCallback(
+		(kind: "shapeRect" | "shapeEllipse" | "shapeLine", start: Vec2, end: Vec2) => {
+			const x = Math.min(start[0], end[0]);
+			const y = Math.min(start[1], end[1]);
+			const width = Math.abs(end[0] - start[0]);
+			const height = Math.abs(end[1] - start[1]);
+			if (width < 1 && height < 1) return;
+			let layer;
+			if (kind === "shapeLine") {
+				layer = createDrawShapeLayer("Line", { shapeKind: "line", line: { x1: start[0], y1: start[1], x2: end[0], y2: end[1] } });
+			} else if (kind === "shapeEllipse") {
+				layer = createDrawShapeLayer("Ellipse", {
+					shapeKind: "ellipse",
+					ellipse: { cx: x + width / 2, cy: y + height / 2, rx: width / 2, ry: height / 2 },
+				});
+			} else {
+				layer = createDrawShapeLayer("Rectangle", { shapeKind: "rect", rect: { x, y, width, height } });
+			}
+			const next = applyDrawEditOp(doc, { op: "addShapeLayer", layer });
+			commitDocument(next, layer.id);
+		},
+		[commitDocument, doc],
+	);
+
+	const commitPolyline = useCallback(
+		(kind: "pen" | "shapePolygon", points: Vec2[]) => {
+			if (points.length < 2) return;
+			if (kind === "pen") {
+				const segments: PathSegment[] = [{ kind: "move", to: points[0]! }];
+				for (let i = 1; i < points.length; i += 1) segments.push({ kind: "line", to: points[i]! });
+				const layer = createDrawPathLayer("Path", segments);
+				const next = applyDrawEditOp(doc, { op: "addPathLayer", layer });
+				commitDocument(next, layer.id);
+				return;
+			}
+			const layer = createDrawShapeLayer("Polygon", { shapeKind: "polygon", polygon: { points } });
+			const next = applyDrawEditOp(doc, { op: "addShapeLayer", layer });
+			commitDocument(next, layer.id);
+		},
+		[commitDocument, doc],
+	);
+
+	const commitTraceAt = useCallback(
+		(screen: SelectionMarqueePoint) => {
+			const hit = resolveDrawLayerAtScreenPoint(doc, camera, viewport(), screen);
+			const hitLayer = hit ? findDrawLayer(doc, hit) : null;
+			let sourceKey: string | undefined;
+			if (hitLayer?.kind === "image") sourceKey = hitLayer.imageKey;
+			else sourceKey = Object.keys(doc.assets ?? {})[0];
+			if (!sourceKey) return;
+			const layer = createDrawTraceLayer("Trace", sourceKey, defaultDrawTraceParams());
+			const next = applyDrawEditOp(doc, { op: "addTraceLayer", layer });
+			commitDocument(next, layer.id);
+		},
+		[camera, commitDocument, doc, viewport],
 	);
 
 	const onWheel = useCallback(
@@ -261,82 +628,159 @@ export function DrawCanvas({
 
 	const onPointerDown = useCallback(
 		(event: React.PointerEvent) => {
-			const rect = containerRef.current?.getBoundingClientRect();
-			if (!rect) return;
-			const x = event.clientX - rect.left;
-			const y = event.clientY - rect.top;
+			const point = screenPoint(event);
 			if (event.button === 1 || activeTool === "transformMove") {
-				dragRef.current = { kind: "pan", startX: event.clientX, startY: event.clientY, merge: "default" };
+				dragRef.current = { kind: "pan", startX: event.clientX, startY: event.clientY };
 				return;
 			}
-			if (activeTool === "selectMarquee") {
+			if (selectionMethod && event.button === 0) {
 				dragRef.current = {
 					kind: "marquee",
-					startX: x,
-					startY: y,
-					merge: event.shiftKey ? "add" : event.altKey ? "subtract" : "default",
+					method: selectionMethod,
+					startX: point.x,
+					startY: point.y,
+					points: [point],
+					merge: marqueeModeFromModifiers(event),
+					active: false,
 				};
-				setMarquee({ coverage: "partial", shape: "rect", rect: screenRectFromPoints({ x, y }, { x, y }) });
+				setMarquee(null);
 				return;
 			}
-			const hit = resolveDrawLayerAtScreenPoint(doc, camera, { width: rect.width, height: rect.height }, { x, y });
-			onSelect?.(hit ? [hit] : []);
-			console.log("[DEBUG] draw canvas select", { hit, x, y });
+			if (activeTool === "shapeRect" || activeTool === "shapeEllipse" || activeTool === "shapeLine") {
+				dragRef.current = { kind: activeTool, startWorld: screenToWorld(point) };
+				setPreviewSegments([]);
+				return;
+			}
+			if (activeTool === "pen" || activeTool === "shapePolygon") {
+				const world = screenToWorld(point);
+				const existing = dragRef.current;
+				if (existing && (existing.kind === "pen" || existing.kind === "shapePolygon") && existing.kind === activeTool) {
+					const points = [...existing.points, world];
+					dragRef.current = { kind: activeTool, points };
+					const segments: PathSegment[] = [{ kind: "move", to: points[0]! }];
+					for (let i = 1; i < points.length; i += 1) segments.push({ kind: "line", to: points[i]! });
+					if (activeTool === "shapePolygon" && points.length > 2) segments.push({ kind: "close" });
+					setPreviewSegments(segments);
+					return;
+				}
+				dragRef.current = { kind: activeTool, points: [world] };
+				setPreviewSegments([{ kind: "move", to: world }]);
+				return;
+			}
+			if (activeTool === "trace" && event.button === 0) {
+				commitTraceAt(point);
+				return;
+			}
+			if (activeTool === "selectDirect" && event.button === 0) {
+				const hit = resolveDrawLayerAtScreenPoint(doc, camera, viewport(), point);
+				const merge = marqueeModeFromModifiers(event);
+				onSelect?.(selectionMergeIds(merge, selectedIds, hit ? [hit] : []));
+				console.log("[DEBUG] draw canvas select", { hit, merge, x: point.x, y: point.y });
+			}
 		},
-		[activeTool, camera, doc, onSelect],
+		[activeTool, camera, commitTraceAt, doc, onSelect, screenPoint, screenToWorld, selectedIds, selectionMethod, viewport],
 	);
 
 	const onPointerMove = useCallback(
 		(event: React.PointerEvent) => {
-			const rect = containerRef.current?.getBoundingClientRect();
-			if (!rect) return;
+			const point = screenPoint(event);
 			const drag = dragRef.current;
 			if (!drag) {
-				const x = event.clientX - rect.left;
-				const y = event.clientY - rect.top;
-				const hit = resolveDrawLayerAtScreenPoint(doc, camera, { width: rect.width, height: rect.height }, { x, y });
-				onHover?.({ id: hit, kind: hit ? { domain: "layer", kindId: hit } : null });
+				const hit = resolveDrawLayerAtScreenPoint(doc, camera, viewport(), point);
+				onHover?.({ id: hit, kind: hit ? drawKindHoverForLayerId(doc, hit) : null });
 				return;
 			}
 			if (drag.kind === "pan") {
 				const dx = (event.clientX - drag.startX) / camera.zoom;
 				const dy = (event.clientY - drag.startY) / camera.zoom;
 				emitCamera({ ...camera, x: camera.x - dx, y: camera.y - dy });
-				dragRef.current = { ...drag, startX: event.clientX, startY: event.clientY };
+				dragRef.current = { kind: "pan", startX: event.clientX, startY: event.clientY };
 				return;
 			}
-			const x = event.clientX - rect.left;
-			const y = event.clientY - rect.top;
-			setMarquee({ coverage: "partial", shape: "rect", rect: screenRectFromPoints({ x: drag.startX, y: drag.startY }, { x, y }) });
+			if (drag.kind === "marquee") {
+				const distance = Math.hypot(point.x - drag.startX, point.y - drag.startY);
+				const active = drag.active || distance >= DRAW_MARQUEE_THRESHOLD_PX;
+				const points = drag.method === "lasso" && active ? [...drag.points, point] : drag.points;
+				const nextDrag = { ...drag, active, points, merge: marqueeModeFromModifiers(event) };
+				dragRef.current = nextDrag;
+				if (active) updateMarqueeOverlay(point, drag.method, drag.startX, drag.startY, points);
+				return;
+			}
+			if (drag.kind === "shapeRect" || drag.kind === "shapeEllipse" || drag.kind === "shapeLine") {
+				const end = screenToWorld(point);
+				setPreviewSegments(shapePreviewFromWorld(drag.kind, drag.startWorld, end));
+				return;
+			}
+			if (drag.kind === "pen" || drag.kind === "shapePolygon") {
+				const segments: PathSegment[] = [{ kind: "move", to: drag.points[0]! }];
+				for (let i = 1; i < drag.points.length; i += 1) segments.push({ kind: "line", to: drag.points[i]! });
+				const world = screenToWorld(point);
+				segments.push({ kind: "line", to: world });
+				if (drag.kind === "shapePolygon" && drag.points.length > 1) segments.push({ kind: "close" });
+				setPreviewSegments(segments);
+			}
 		},
-		[camera, doc, emitCamera, onHover],
+		[camera, doc, emitCamera, onHover, screenPoint, screenToWorld, shapePreviewFromWorld, updateMarqueeOverlay, viewport],
 	);
 
 	const onPointerUp = useCallback(
 		(event: React.PointerEvent) => {
-			const rect = containerRef.current?.getBoundingClientRect();
+			const point = screenPoint(event);
 			const drag = dragRef.current;
+			if (!drag) return;
+			if (drag.kind === "pen" || drag.kind === "shapePolygon") return;
 			dragRef.current = null;
-			if (!rect || !drag || drag.kind !== "marquee" || !marquee || marquee.shape !== "rect") {
+			if (drag.kind === "marquee") {
+				const distance = Math.hypot(point.x - drag.startX, point.y - drag.startY);
+				const merge = marqueeModeFromModifiers(event);
+				if (drag.active && distance >= DRAW_MARQUEE_THRESHOLD_PX) {
+					commitMarqueeSelection(point, drag);
+				} else if (activeTool === "selectDirect" || selectionMethod) {
+					const hit = resolveDrawLayerAtScreenPoint(doc, camera, viewport(), point);
+					onSelect?.(selectionMergeIds(merge, selectedIds, hit ? [hit] : []));
+				}
 				setMarquee(null);
 				return;
 			}
-			const x = event.clientX - rect.left;
-			const y = event.clientY - rect.top;
-			const width = Math.abs(x - drag.startX);
-			const height = Math.abs(y - drag.startY);
-			if (width < DRAW_MARQUEE_THRESHOLD_PX && height < DRAW_MARQUEE_THRESHOLD_PX) {
-				setMarquee(null);
+			if (drag.kind === "shapeRect" || drag.kind === "shapeEllipse" || drag.kind === "shapeLine") {
+				commitShapeDrag(drag.kind, drag.startWorld, screenToWorld(point));
+				setPreviewSegments([]);
 				return;
 			}
-			const rectMarquee = screenRectFromPoints({ x: drag.startX, y: drag.startY }, { x, y });
-			const crossing = marqueeCoverageFromGesture(rectMarquee, { x: drag.startX, y: drag.startY }, { x, y }) === "crossing";
-			const hits = resolveDrawMarqueeLayerHits(doc, camera, { width: rect.width, height: rect.height }, rectMarquee, crossing);
-			onSelect?.(selectionMergeIds(selectedIds, hits, drag.merge));
-			setMarquee(null);
 		},
-		[camera, doc, marquee, onSelect, selectedIds],
+		[activeTool, camera, commitMarqueeSelection, commitShapeDrag, doc, onSelect, screenPoint, screenToWorld, selectedIds, selectionMethod, viewport],
 	);
+
+	const onDoubleClick = useCallback(
+		(event: React.MouseEvent) => {
+			const drag = dragRef.current;
+			if (!drag || (drag.kind !== "pen" && drag.kind !== "shapePolygon")) return;
+			event.preventDefault();
+			commitPolyline(drag.kind, drag.points);
+			dragRef.current = null;
+			setPreviewSegments([]);
+		},
+		[commitPolyline],
+	);
+
+	useEffect(() => {
+		const onKeyDown = (event: KeyboardEvent) => {
+			const drag = dragRef.current;
+			if (event.key === "Escape") {
+				dragRef.current = null;
+				setPreviewSegments([]);
+				setMarquee(null);
+				return;
+			}
+			if (event.key === "Enter" && drag && (drag.kind === "pen" || drag.kind === "shapePolygon")) {
+				commitPolyline(drag.kind, drag.points);
+				dragRef.current = null;
+				setPreviewSegments([]);
+			}
+		};
+		window.addEventListener("keydown", onKeyDown);
+		return () => window.removeEventListener("keydown", onKeyDown);
+	}, [commitPolyline]);
 
 	const transform = `translate(${camera.x * -camera.zoom + (containerRef.current?.clientWidth ?? 0) / 2}, ${camera.y * -camera.zoom + (containerRef.current?.clientHeight ?? 0) / 2}) scale(${camera.zoom})`;
 
@@ -348,28 +792,63 @@ export function DrawCanvas({
 			onPointerDown={onPointerDown}
 			onPointerMove={onPointerMove}
 			onPointerUp={onPointerUp}
+			onDoubleClick={onDoubleClick}
 			onPointerLeave={() => onHover?.({ id: null, kind: null })}
 		>
 			<svg className="h-full w-full" viewBox={`0 0 ${containerRef.current?.clientWidth ?? 1024} ${containerRef.current?.clientHeight ?? 768}`}>
 				<g transform={transform}>
 					{viewMode === "composite" ? (
-						resolved.map(({ node, segments }) => (
-							<DrawPathShape
-								key={node.id}
-								segments={segments}
-								fill={node.fill}
-								stroke={node.stroke}
-								opacity={node.opacity}
-								selected={selectedIds.includes(node.id)}
-								hovered={hoveredId === node.id}
-							/>
-						))
+						resolved.map(({ node, segments }) => {
+							const selected = selectedLeafIds.has(node.id);
+							const hovered = hoveredLeafIds.has(node.id);
+							const matrix = `matrix(${node.transform.join(" ")})`;
+							return (
+								<g key={node.id} transform={matrix} style={{ mixBlendMode: drawBlendModeCss(node.blendMode) }} opacity={node.opacity}>
+									{node.text ? (
+										<DrawTextShape
+											content={node.text.content}
+											size={node.text.size}
+											fill={node.fill}
+											opacity={1}
+											selected={selected}
+											hovered={hovered}
+											activeColor={activeColor}
+											hoverColor={hoverColor}
+										/>
+									) : node.image ? (
+										<DrawImageShape
+											src={node.image.src}
+											width={node.image.width}
+											height={node.image.height}
+											opacity={1}
+											selected={selected}
+											hovered={hovered}
+											activeColor={activeColor}
+											hoverColor={hoverColor}
+										/>
+									) : (
+										<DrawPathShape
+											segments={segments}
+											fill={node.fill}
+											stroke={node.stroke}
+											opacity={1}
+											selected={selected}
+											hovered={hovered}
+											kernelKind={node.kernelKind}
+											activeColor={activeColor}
+											hoverColor={hoverColor}
+										/>
+									)}
+								</g>
+							);
+						})
 					) : (
 						<rect x={-512} y={-512} width={1024} height={1024} fill="none" stroke="#334155" strokeWidth={1} vectorEffect="non-scaling-stroke" />
 					)}
+					{previewSegments.length > 0 ? <DrawPreviewPath segments={previewSegments} stroke={hoverColor} /> : null}
 				</g>
 			</svg>
-			{marquee ? <SelectionMarquee marquee={marquee} /> : null}
+			{marquee ? <SelectionMarquee {...marquee} /> : null}
 		</div>
 	);
 }
@@ -387,6 +866,14 @@ if (import.meta.vitest) {
 			]);
 			expect(d).toContain("M 0 0");
 			expect(d).toContain("Z");
+		});
+
+		it("highlights group descendants via leaf id expansion", () => {
+			const child = createDrawPathLayer("Child");
+			const group = { ...createDrawGroupLayer("Group"), children: [child] };
+			const doc = { ...defaultDrawDocument("group"), layers: [group] };
+			const leaves = drawLayerDescendantLeafIds(doc, group.id);
+			expect(leaves).toEqual([child.id]);
 		});
 	});
 }

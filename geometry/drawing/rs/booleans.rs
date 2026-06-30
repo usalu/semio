@@ -3,28 +3,49 @@
 use geometry_drawing_engine::{DrawingError, PathSegment};
 use geo::{BooleanOps, Coord, LineString, MultiPolygon, Polygon};
 
-fn segments_to_polygon(segments: &[PathSegment]) -> Result<Polygon<f64>, DrawingError> {
-    let mut coords: Vec<Coord<f64>> = Vec::new();
-    for segment in segments {
-        match segment {
-            PathSegment::Move { to } | PathSegment::Line { to } => coords.push(Coord { x: to[0], y: to[1] }),
-            PathSegment::Close => {}
-            _ => {}
-        }
-    }
+fn close_polygon(coords: &mut Vec<Coord<f64>>) -> Result<Polygon<f64>, DrawingError> {
     if coords.len() < 3 {
         return Err(DrawingError::InvalidInput("boolean input needs a closed polygon".into()));
     }
     if coords.first() != coords.last() {
         coords.push(coords[0]);
     }
-    Ok(Polygon::new(LineString(coords), vec![]))
+    Ok(Polygon::new(LineString(std::mem::take(coords)), vec![]))
 }
 
-fn polygon_to_segments(polygon: &Polygon<f64>) -> Vec<PathSegment> {
+fn segments_to_multipolygon(segments: &[PathSegment]) -> Result<MultiPolygon<f64>, DrawingError> {
+    let mut polygons = Vec::new();
+    let mut coords = Vec::new();
+    for segment in segments {
+        match segment {
+            PathSegment::Move { to } => {
+                if !coords.is_empty() {
+                    polygons.push(close_polygon(&mut coords)?);
+                }
+                coords.push(Coord { x: to[0], y: to[1] });
+            }
+            PathSegment::Line { to } => coords.push(Coord { x: to[0], y: to[1] }),
+            PathSegment::Close => {
+                if !coords.is_empty() {
+                    polygons.push(close_polygon(&mut coords)?);
+                }
+            }
+            _ => {}
+        }
+    }
+    if !coords.is_empty() {
+        polygons.push(close_polygon(&mut coords)?);
+    }
+    if polygons.is_empty() {
+        return Err(DrawingError::InvalidInput("boolean input needs a closed polygon".into()));
+    }
+    Ok(MultiPolygon::new(polygons))
+}
+
+fn ring_to_segments(ring: &LineString<f64>) -> Vec<PathSegment> {
     let mut segments = Vec::new();
     let mut first = true;
-    for coord in polygon.exterior().0.iter() {
+    for coord in &ring.0 {
         let point = [coord.x, coord.y];
         if first {
             segments.push(PathSegment::Move { to: point });
@@ -39,9 +60,17 @@ fn polygon_to_segments(polygon: &Polygon<f64>) -> Vec<PathSegment> {
     segments
 }
 
+fn polygon_to_segments(polygon: &Polygon<f64>) -> Vec<PathSegment> {
+    let mut segments = ring_to_segments(polygon.exterior());
+    for interior in polygon.interiors() {
+        segments.extend(ring_to_segments(interior));
+    }
+    segments
+}
+
 pub fn boolean_paths(a: &[PathSegment], b: &[PathSegment], op: &str) -> Result<Vec<PathSegment>, DrawingError> {
-    let poly_a = segments_to_polygon(a)?;
-    let poly_b = segments_to_polygon(b)?;
+    let poly_a = segments_to_multipolygon(a)?;
+    let poly_b = segments_to_multipolygon(b)?;
     let result = match op {
         "union" => poly_a.union(&poly_b),
         "difference" => poly_a.difference(&poly_b),
@@ -63,10 +92,9 @@ pub fn boolean_paths_many(inputs: &[Vec<PathSegment>], op: &str) -> Result<Vec<P
     if inputs.is_empty() {
         return Err(DrawingError::InvalidInput("boolean op needs at least one path".into()));
     }
-    let first = segments_to_polygon(&inputs[0])?;
-    let mut acc = MultiPolygon::new(vec![first]);
+    let mut acc = segments_to_multipolygon(&inputs[0])?;
     for next in inputs.iter().skip(1) {
-        let poly_b = segments_to_polygon(next)?;
+        let poly_b = segments_to_multipolygon(next)?;
         acc = match op {
             "union" => acc.union(&poly_b),
             "difference" => acc.difference(&poly_b),
@@ -103,5 +131,13 @@ mod tests {
     fn union_overlapping_rects() {
         let merged = boolean_paths(&square([0.0, 0.0], 10.0), &square([5.0, 5.0], 10.0), "union").expect("union");
         assert!(!merged.is_empty());
+    }
+
+    #[test]
+    fn union_preserves_disconnected_input_contours() {
+        let mut disconnected = square([20.0, 0.0], 5.0);
+        disconnected.extend(square([30.0, 0.0], 5.0));
+        let merged = boolean_paths(&square([0.0, 0.0], 5.0), &disconnected, "union").expect("union");
+        assert_eq!(merged.iter().filter(|segment| matches!(segment, PathSegment::Move { .. })).count(), 3);
     }
 }

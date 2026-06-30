@@ -1,6 +1,7 @@
 //! 🔍 Bitmap autotrace: marching squares contours + Douglas-Peucker simplification.
 
 use geometry_drawing_engine::{DrawingError, PathSegment, Vec2};
+use std::collections::HashMap;
 
 fn pixel_on(mask: &[u8], width: u32, x: i32, y: i32, threshold: u8) -> bool {
     if x < 0 || y < 0 {
@@ -16,55 +17,78 @@ fn pixel_on(mask: &[u8], width: u32, x: i32, y: i32, threshold: u8) -> bool {
 }
 
 fn marching_squares_contours(mask: &[u8], width: u32, height: u32, threshold: u8) -> Vec<Vec<Vec2>> {
+    fn direction(start: [i32; 2], end: [i32; 2]) -> i32 {
+        match [end[0] - start[0], end[1] - start[1]] {
+            [1, 0] => 0,
+            [0, 1] => 1,
+            [-1, 0] => 2,
+            _ => 3,
+        }
+    }
+
     let w = width as i32;
     let h = height as i32;
-    let mut contours: Vec<Vec<Vec2>> = Vec::new();
-    let mut visited = vec![false; (width as usize).saturating_mul(height as usize)];
+    let mut edges: Vec<([i32; 2], [i32; 2])> = Vec::new();
     for y in 0..h {
         for x in 0..w {
-            let idx = (y as usize) * (width as usize) + (x as usize);
-            if visited.get(idx).copied().unwrap_or(true) || !pixel_on(mask, width, x, y, threshold) {
+            if !pixel_on(mask, width, x, y, threshold) {
                 continue;
             }
-            let mut contour: Vec<Vec2> = Vec::new();
-            let mut cx = x;
-            let mut cy = y;
-            let start = [cx as f64 + 0.5, cy as f64 + 0.5];
-            contour.push(start);
-            visited[idx] = true;
-            let mut guard = 0;
-            while guard < 4096 {
-                guard += 1;
-                let mut moved = false;
-                for (dx, dy) in [(1, 0), (0, 1), (-1, 0), (0, -1)] {
-                    let nx = cx + dx;
-                    let ny = cy + dy;
-                    if nx < 0 || ny < 0 || nx >= w || ny >= h {
-                        continue;
-                    }
-                    let nidx = (ny as usize) * (width as usize) + (nx as usize);
-                    if pixel_on(mask, width, nx, ny, threshold) && !visited[nidx] {
-                        cx = nx;
-                        cy = ny;
-                        visited[nidx] = true;
-                        contour.push([cx as f64 + 0.5, cy as f64 + 0.5]);
-                        moved = true;
-                        break;
-                    }
-                }
-                if !moved {
-                    break;
-                }
-                if contour.len() > 3 {
-                    let last = contour[contour.len() - 1];
-                    if (last[0] - start[0]).abs() < f64::EPSILON && (last[1] - start[1]).abs() < f64::EPSILON {
-                        break;
-                    }
-                }
+            if !pixel_on(mask, width, x, y - 1, threshold) {
+                edges.push(([x, y], [x + 1, y]));
             }
-            if contour.len() >= 3 {
-                contours.push(contour);
+            if !pixel_on(mask, width, x + 1, y, threshold) {
+                edges.push(([x + 1, y], [x + 1, y + 1]));
             }
+            if !pixel_on(mask, width, x, y + 1, threshold) {
+                edges.push(([x + 1, y + 1], [x, y + 1]));
+            }
+            if !pixel_on(mask, width, x - 1, y, threshold) {
+                edges.push(([x, y + 1], [x, y]));
+            }
+        }
+    }
+
+    let mut outgoing: HashMap<[i32; 2], Vec<usize>> = HashMap::new();
+    for (index, (start, _)) in edges.iter().enumerate() {
+        outgoing.entry(*start).or_default().push(index);
+    }
+    let mut used = vec![false; edges.len()];
+    let mut contours: Vec<Vec<Vec2>> = Vec::new();
+    for first in 0..edges.len() {
+        if used[first] {
+            continue;
+        }
+        let start = edges[first].0;
+        let mut edge_index = first;
+        let mut contour = vec![[start[0] as f64, start[1] as f64]];
+        loop {
+            used[edge_index] = true;
+            let end = edges[edge_index].1;
+            if end == start {
+                break;
+            }
+            contour.push([end[0] as f64, end[1] as f64]);
+            let incoming_direction = direction(edges[edge_index].0, end);
+            let Some(next) = outgoing.get(&end).and_then(|indices| {
+                indices
+                    .iter()
+                    .copied()
+                    .filter(|index| !used[*index])
+                    .min_by_key(|index| match (direction(end, edges[*index].1) - incoming_direction).rem_euclid(4) {
+                        1 => 0,
+                        0 => 1,
+                        3 => 2,
+                        _ => 3,
+                    })
+            }) else {
+                contour.clear();
+                break;
+            };
+            edge_index = next;
+        }
+        if contour.len() >= 3 {
+            contours.push(contour);
         }
     }
     contours
@@ -138,18 +162,15 @@ pub fn trace_bitmap_paths(width: u32, height: u32, mask_or_luma: &[u8], threshol
     if contours.is_empty() {
         return Err(DrawingError::Operation("trace produced no contours".into()));
     }
-    let mut merged: Vec<Vec2> = Vec::new();
+    let mut segments: Vec<PathSegment> = Vec::new();
     for contour in contours {
         let simplified = douglas_peucker(&contour, simplify_epsilon.max(0.0));
-        if merged.is_empty() {
-            merged = simplified;
-        } else {
-            for point in simplified.iter().skip(1) {
-                merged.push(*point);
-            }
-        }
+        segments.extend(contour_to_segments(&simplified));
     }
-    Ok(contour_to_segments(&merged))
+    if segments.is_empty() {
+        return Err(DrawingError::Operation("trace produced no segments".into()));
+    }
+    Ok(segments)
 }
 
 #[cfg(test)]
@@ -167,6 +188,37 @@ mod tests {
             }
         }
         let segments = trace_bitmap_paths(width, height, &mask, 0.5, 0.5).expect("trace");
-        assert!(!segments.is_empty());
+        assert_eq!(segments.iter().filter(|segment| matches!(segment, PathSegment::Move { .. })).count(), 1);
+        assert!(segments.len() <= 6, "a solid square must trace its boundary without interior scanlines");
+    }
+
+    #[test]
+    fn traces_disjoint_regions_with_move_per_contour() {
+        let width = 10_u32;
+        let height = 10_u32;
+        let mut mask = vec![0_u8; (width * height) as usize];
+        for y in 1..3 {
+            for x in 1..3 {
+                mask[(y * width + x) as usize] = 255;
+            }
+        }
+        for y in 6..8 {
+            for x in 6..8 {
+                mask[(y * width + x) as usize] = 255;
+            }
+        }
+        let segments = trace_bitmap_paths(width, height, &mask, 0.5, 0.5).expect("trace");
+        let moves = segments
+            .iter()
+            .filter(|segment| matches!(segment, PathSegment::Move { .. }))
+            .count();
+        assert!(moves >= 2, "each disjoint contour must start with its own move");
+    }
+
+    #[test]
+    fn traces_corner_touching_regions_as_separate_contours() {
+        let mask = [255_u8, 0, 0, 255];
+        let segments = trace_bitmap_paths(2, 2, &mask, 0.5, 0.0).expect("trace");
+        assert_eq!(segments.iter().filter(|segment| matches!(segment, PathSegment::Move { .. })).count(), 2);
     }
 }

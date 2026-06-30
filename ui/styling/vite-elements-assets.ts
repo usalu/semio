@@ -1391,6 +1391,17 @@ if (import.meta.vitest) {
       expect(stripped).not.toContain("//#region 🔖ShootingPlayHost");
       expect(stripped).not.toContain("//#region 🔖Puzzle3dPlayHost");
     });
+
+    it("writer virtual entry imports WriterCanvas in the host slice", () => {
+      const rendererIndex = resolve(repoRoot, "framework/product/playground/renderer/react/index.tsx");
+      const stripped = stripPlaygroundRendererForPuzzleKind(readFileSync(rendererIndex, "utf8"), "writer");
+      expect(stripped).toContain("//#region 🔖WriterPlayHost");
+      expect(stripped).toContain("bootWriterPlay");
+      expect(stripped).toMatch(/import\s*\{[^}]*WriterCanvas[^}]*\}\s*from\s*["']@semio-tech\/writer-react["']/);
+      expect(stripped).toMatch(/import\s*\{[^}]*createWriterDocument[^}]*\}\s*from\s*["']@semio-tech\/writer-core["']/);
+      expect(stripped).toMatch(/import\s*\{[^}]*createJackLspWorker[^}]*\}\s*from\s*["']@semio-tech\/trinity-react["']/);
+      expect(stripped).not.toContain("//#region 🔖RasterPlayHost");
+    });
   });
 }
 //#endregion 🔖ViteElementsAssets

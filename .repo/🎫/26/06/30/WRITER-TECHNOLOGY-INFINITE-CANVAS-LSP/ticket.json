@@ -1,14 +1,18 @@
 {
   "title": "Writer Technology Infinite Canvas Lsp",
   "emoji": "✍️",
-  "status": "closed",
+  "status": "open",
   "description": "Create a new writer technology: full-blown text editor on infinite canvas (Vello/WebGPU via infinite/cavas), real JSON-RPC LSP client/server in Web Worker, writer playground with jack fixture, jack language server (lint/format/hover/completion), integrate WriterCanvas into trinity/jack shell replacing CodeEditor.",
-  "summary": "Implemented the writer technology: infinite-canvas GPU editor (writer/rs on infinite_cavas), language-agnostic LSP client (writer/core), WriterCanvas React component (writer/react), writer playground with jack fixture (writer/play), Jack language service extensions (lint/format/hover/semantic_tokens in trinity/jack/core), Jack LSP WASM server (trinity/jack/lsp), framework integration (UiWriterHostSurfaceNode, bootWriterPlay), and replaced CodeEditor in trinity/jack shell with WriterCanvas + jack LSP. Registered dev port 6062, launch.json, workspaces. Tests: trinity_jack 16, trinity_jack_lsp 2, writer 3, writer-core 4, writer-react 6, writer-play 5, trinity-jack-play 16.",
+  "summary": "Fixed hover/selection highlight width: highlights now use label_byte_world_x/label_span_world_x from usvg-measured glyph layout with the same scale transform as append_label_tspans (previous CHAR_WIDTH_RATIO estimate was ~2x too wide). Selection now draws selection_preview_fill plus selection_preview_stroke border. Hit-testing uses per-character midpoint boundaries aligned to measured glyph positions.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1767"
   },
   "goal": "🎯trinity",
   "sessions": [
-    "⚪fe6009dd8e7e45d8b2d33547eea506a4"
+    "⚪fe6009dd8e7e45d8b2d33547eea506a4",
+    "⚪d038a351a56b4c72b006bcbc815c7c10",
+    "⚪7afb1ad9c7f8485f91e0c426ff5feb83",
+    "⚪07fbd7b20b2e4c6ca81a36c2167cbcb3",
+    "⚪cc65a24a41d44e69b02dfed217b5cc25"
   ]
 }

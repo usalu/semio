@@ -569,6 +569,7 @@
         "@semio-tech/draw-core": "workspace:*",
         "@semio-tech/geometry-drawing-js": "workspace:*",
         "@semio-tech/ui-react": "workspace:*",
+        "@semio-tech/ui-styling": "workspace:*",
       },
       "devDependencies": {
         "@types/react": "^19.2.8",

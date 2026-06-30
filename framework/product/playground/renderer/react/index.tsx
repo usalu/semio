@@ -9042,6 +9042,7 @@ function DrawPlayPaneSurfaceHost({ node }: { readonly node: UiDrawHostSurfaceNod
     camera: doc.camera,
     onHover,
     onSelect: (ids: readonly string[]) => ctrl?.run("setSelection", { ids: [...ids] }),
+    onCommit: (document: typeof doc, selectLayerId?: string) => ctrl?.run("commitDocument", { document, selectLayerId }),
     onCameraChange: (camera: typeof doc.camera) => ctrl?.run("setCamera", { camera }),
     className: "h-full",
   };
@@ -9221,6 +9222,9 @@ export function bootDrawPlay(playground: Playground, rootId = "root"): void {
 
 //#region 🔖WriterPlayHost
 import type { UiWriterHostSurfaceNode } from "@semio-tech/framework-platform-core";
+import { createJackLspWorker as createWriterJackLspWorker } from "@semio-tech/trinity-react";
+import { createWorkerLspTransport as createWriterPlayWorkerLspTransport, createWriterDocument as createWriterPlayDocument } from "@semio-tech/writer-core";
+import { WriterCanvas as WriterPlayCanvas } from "@semio-tech/writer-react";
 import {
   WRITER_PLAY_APP_ID,
   WRITER_PLAY_CONTROLLER_ID,
@@ -9250,10 +9254,10 @@ function useWriterPlayController(runtimeOverride?: Platform): WriterPlayControll
 
 function WriterPlaySurfaceHost({ node: _node }: { readonly node: UiWriterHostSurfaceNode }): ReactElement {
   const ctrl = useWriterPlayController();
-  const document = ctrl?.getDocument() ?? createWriterDocument({ id: "jack", languageId: "jack", text: "" });
+  const document = ctrl?.getDocument() ?? createWriterPlayDocument({ id: "jack", languageId: "jack", text: "" });
   const formatSignal = ctrl?.getFormatSignal() ?? 0;
   const lintSignal = ctrl?.getLintSignal() ?? 0;
-  const createLspTransport = reactHostPort.useCallback(() => createWorkerLspTransport(createJackLspWorker()), []);
+  const createLspTransport = reactHostPort.useCallback(() => createWriterPlayWorkerLspTransport(createWriterJackLspWorker()), []);
   const onChange = reactHostPort.useCallback((next: import("@semio-tech/writer-core").WriterDocumentV1) => {
     writerPlayControllerRef.current?.run("setDocument", { document: next });
   }, []);
@@ -9261,7 +9265,7 @@ function WriterPlaySurfaceHost({ node: _node }: { readonly node: UiWriterHostSur
     writerPlayControllerRef.current?.setLintMessages(messages);
   }, []);
   return (
-    <WriterCanvas
+    <WriterPlayCanvas
       document={document}
       onChange={onChange}
       createLspTransport={createLspTransport}
@@ -9291,7 +9295,7 @@ class WriterPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
         const ctrl = writerPlayControllerRef.current;
         const bus = new CommandBus();
         return uiTreeNodeToTreePanelConfig(
-          buildWriterPlayHierarchyTree(ctrl?.getDocument() ?? createWriterDocument({ id: "jack", languageId: "jack" })),
+          buildWriterPlayHierarchyTree(ctrl?.getDocument() ?? createWriterPlayDocument({ id: "jack", languageId: "jack" })),
           bus,
         );
       }),
@@ -9323,7 +9327,7 @@ class WriterPlayInspectionPanelDefinition extends PureSidePanelTabDefinition {
         const bus = new CommandBus();
         return uiTreeNodeToTreePanelConfig(
           buildWriterPlayInspectorTree(
-            ctrl?.getDocument() ?? createWriterDocument({ id: "jack", languageId: "jack" }),
+            ctrl?.getDocument() ?? createWriterPlayDocument({ id: "jack", languageId: "jack" }),
             ctrl?.getLintMessages() ?? [],
           ),
           bus,

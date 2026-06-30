@@ -1336,19 +1336,33 @@ function wasmPackSnippetFiles(pkgDir: string): string[] {
   return out;
 }
 
-/** 📦Collects `lib.rs` / `Cargo.toml` paths from `[dependencies]` path crates. */
-function wasmPackPathDependencyInputs(rsDir: string): string[] {
+/** 📦Collects Rust sources beneath a crate without descending into generated output. */
+function rustSourceInputs(root: string): string[] {
+	const out: string[] = [];
+	const walk = (dir: string) => {
+		for (const entry of readdirSync(dir, { withFileTypes: true })) {
+			if (entry.isDirectory() && !["target", "pkg", ".git"].includes(entry.name)) walk(join(dir, entry.name));
+			else if (entry.isFile() && entry.name.endsWith(".rs")) out.push(join(dir, entry.name));
+		}
+	};
+	walk(root);
+	return out;
+}
+
+/** 📦Collects sources and manifests from transitive `[dependencies]` path crates. */
+function wasmPackPathDependencyInputs(rsDir: string, visited = new Set<string>()): string[] {
 	const cargoToml = join(rsDir, "Cargo.toml");
-	if (!existsSync(cargoToml)) return [];
+	const root = resolve(rsDir);
+	if (!existsSync(cargoToml) || visited.has(root)) return [];
+	visited.add(root);
 	const out: string[] = [];
 	for (const m of readFileSync(cargoToml, "utf8").matchAll(/path\s*=\s*"([^"]+)"/gu)) {
-		const depRoot = join(rsDir, m[1]!);
-		const libRs = join(depRoot, "lib.rs");
+		const depRoot = resolve(rsDir, m[1]!);
 		const depCargo = join(depRoot, "Cargo.toml");
-		if (existsSync(libRs)) out.push(libRs);
-		if (existsSync(depCargo)) out.push(depCargo);
+		if (!existsSync(depCargo)) continue;
+		out.push(depCargo, ...rustSourceInputs(depRoot), ...wasmPackPathDependencyInputs(depRoot, visited));
 	}
-	return out;
+	return [...new Set(out)];
 }
 
 /** 📦True when any wasm-pack input is newer than the built `.wasm` artifact. */
@@ -1357,7 +1371,7 @@ function wasmPackInputsStale(rsDir: string, wasmPath: string): boolean {
 	const wasmMtime = statSync(wasmPath).mtimeMs;
 	const repoRoot = getWorkspaceRoot();
 	const inputs = [
-		join(rsDir, "lib.rs"),
+		...rustSourceInputs(rsDir),
 		join(rsDir, "Cargo.toml"),
 		join(rsDir, "Cargo.lock"),
 		join(repoRoot, "Cargo.toml"),

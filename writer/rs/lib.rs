@@ -1,17 +1,78 @@
 //! ✍️ Infinite-canvas code editor engine on Vello/WebGPU.
 
 pub use infinite_cavas::{self as cavas, *};
-use cavas::camera::{screen_to_world, world_to_screen, Camera, Viewport};
+use cavas::camera::{camera_content_affine, screen_to_world, world_to_screen, Camera, Viewport};
 use cavas::text as canvas_text;
 use serde::Deserialize;
 use vello::kurbo::{Affine, Point, Rect};
 use vello::peniko::Color;
 use vello::Scene;
 
+// #region 🔖Theme
+#[derive(Clone, Copy, Debug)]
+struct WriterVelloTheme {
+    raster_clear: Color,
+    grid_minor_stroke: Color,
+    label_fill: Color,
+    label_fill_hovered: Color,
+    label_halo: Color,
+    hover_fill: Color,
+}
+
+impl Default for WriterVelloTheme {
+    fn default() -> Self {
+        Self::from_board(&ui_styling::BOARD_LIGHT)
+    }
+}
+
+impl WriterVelloTheme {
+    fn from_board(t: &ui_styling::BoardTheme) -> Self {
+        Self {
+            raster_clear: Color::new(t.raster_clear),
+            grid_minor_stroke: Color::new(t.grid_minor_stroke),
+            label_fill: Color::new(t.label_fill),
+            label_fill_hovered: Color::new(t.label_fill_hovered),
+            label_halo: Color::new(t.label_halo),
+            hover_fill: Color::new(t.node_fill_hovered),
+        }
+    }
+
+    fn color_from_json_rgba8(arr: &[serde_json::Value]) -> Option<Color> {
+        let r = u8::try_from(arr.first()?.as_u64().unwrap_or(0).min(255)).ok()?;
+        let g = u8::try_from(arr.get(1)?.as_u64().unwrap_or(0).min(255)).ok()?;
+        let b = u8::try_from(arr.get(2)?.as_u64().unwrap_or(0).min(255)).ok()?;
+        let a = u8::try_from(arr.get(3).and_then(|x| x.as_u64()).unwrap_or(255).min(255)).ok()?;
+        Some(Color::from_rgba8(r, g, b, a))
+    }
+
+    fn merge_color_field(next: &mut Color, v: &serde_json::Value, key: &str) {
+        if let Some(arr) = v.get(key).and_then(|x| x.as_array()) {
+            if let Some(c) = Self::color_from_json_rgba8(arr) {
+                *next = c;
+            }
+        }
+    }
+
+    fn merge_from_json(&mut self, json: &str) -> Result<(), String> {
+        let v: serde_json::Value = serde_json::from_str(json).map_err(|e| e.to_string())?;
+        let mut next = *self;
+        Self::merge_color_field(&mut next.raster_clear, &v, "rasterClear");
+        Self::merge_color_field(&mut next.grid_minor_stroke, &v, "gridMinorStroke");
+        Self::merge_color_field(&mut next.label_fill, &v, "labelFill");
+        Self::merge_color_field(&mut next.label_fill_hovered, &v, "labelFillHovered");
+        Self::merge_color_field(&mut next.label_halo, &v, "labelHalo");
+        Self::merge_color_field(&mut next.hover_fill, &v, "nodeFillHovered");
+        *self = next;
+        Ok(())
+    }
+}
+// #endregion 🔖Theme
+
 // #region 🔖EditorState
 const LINE_HEIGHT: f64 = 22.0;
 const GUTTER_WIDTH: f64 = 56.0;
 const PAD_X: f64 = 12.0;
+const LINE_ORIGIN_X: f64 = GUTTER_WIDTH + PAD_X;
 const FONT_PX: f64 = 14.0;
 
 #[derive(Clone, Debug, Deserialize)]
@@ -61,6 +122,11 @@ pub struct WriterHost {
     diagnostics: Vec<DiagnosticJson>,
     panning: bool,
     pan_last: Option<Point>,
+    drag_selecting: bool,
+    hover_token_start: Option<usize>,
+    hover_token_end: Option<usize>,
+    theme: WriterVelloTheme,
+    caret_visible: bool,
 }
 
 impl Default for WriterHost {
@@ -81,10 +147,52 @@ impl WriterHost {
             diagnostics: Vec::new(),
             panning: false,
             pan_last: None,
+            drag_selecting: false,
+            hover_token_start: None,
+            hover_token_end: None,
+            theme: WriterVelloTheme::default(),
+            caret_visible: true,
         }
     }
 
+    pub fn set_vello_theme_from_json(&mut self, json: &str) -> Result<(), String> {
+        self.theme.merge_from_json(json)
+    }
+
+    pub fn set_caret_visible(&mut self, visible: bool) {
+        self.caret_visible = visible;
+    }
+
+    pub fn anchor(&self) -> usize {
+        self.anchor
+    }
+
+    #[cfg(test)]
+    fn set_caret_anchor(&mut self, offset: usize) {
+        self.caret = offset;
+        self.anchor = offset;
+    }
+
+    #[cfg(test)]
+    fn set_selection(&mut self, anchor: usize, caret: usize) {
+        self.anchor = anchor;
+        self.caret = caret;
+        if self.caret != self.anchor {
+            let (start, end) = self.normalize_edit_range(self.caret.min(self.anchor), self.caret.max(self.anchor));
+            self.anchor = start;
+            self.caret = end;
+        }
+    }
+
+    pub fn select_all(&mut self) {
+        self.anchor = 0;
+        self.caret = self.text.len();
+    }
+
     pub fn set_text(&mut self, text: String) {
+        if self.text == text {
+            return;
+        }
         self.text = text;
         self.caret = self.caret.min(self.text.len());
         self.anchor = self.anchor.min(self.text.len());
@@ -142,19 +250,22 @@ impl WriterHost {
     pub fn pointer_down_screen(&mut self, sx: f64, sy: f64, button: i32) {
         if button == 1 {
             self.panning = true;
+            self.drag_selecting = false;
             self.pan_last = Some(Point::new(sx, sy));
             return;
         }
         if button == 0 {
+            self.drag_selecting = true;
             let world = screen_to_world(&self.camera, &self.viewport, Point::new(sx, sy));
-            let offset = self.hit_test_offset(world);
+            let offset = self.snap_offset_for_atomic(self.hit_test_offset(world));
             self.caret = offset;
             self.anchor = offset;
+            self.set_hover_at_offset(offset);
         }
     }
 
     pub fn pointer_move_screen(&mut self, sx: f64, sy: f64, buttons: i32) {
-        if self.panning || buttons == 4 {
+        if self.panning || (buttons & 4) != 0 {
             if let Some(last) = self.pan_last {
                 let dx = (sx - last.x) / self.camera.zoom;
                 let dy = (sy - last.y) / self.camera.zoom;
@@ -164,20 +275,41 @@ impl WriterHost {
             self.pan_last = Some(Point::new(sx, sy));
             return;
         }
-        if buttons == 1 {
+        if self.drag_selecting {
             let world = screen_to_world(&self.camera, &self.viewport, Point::new(sx, sy));
-            self.caret = self.hit_test_offset(world);
+            self.caret = self.snap_offset_for_atomic(self.hit_test_offset(world));
+            return;
         }
+        let world = screen_to_world(&self.camera, &self.viewport, Point::new(sx, sy));
+        self.set_hover_at_offset(self.hit_test_offset(world));
     }
 
-    pub fn pointer_up_screen(&mut self, _sx: f64, _sy: f64, _button: i32) {
+    pub fn pointer_up_screen(&mut self, _sx: f64, _sy: f64, button: i32) {
+        if button == 0 {
+            self.drag_selecting = false;
+            if self.caret != self.anchor {
+                let (start, end) = self.normalize_edit_range(self.caret.min(self.anchor), self.caret.max(self.anchor));
+                self.anchor = start;
+                self.caret = end;
+            }
+        }
         self.panning = false;
         self.pan_last = None;
     }
 
     pub fn insert_text(&mut self, chunk: &str) {
-        let start = self.caret.min(self.anchor);
-        let end = self.caret.max(self.anchor);
+        let mut start = self.caret.min(self.anchor);
+        let mut end = self.caret.max(self.anchor);
+        if start == end {
+            for token in &self.semantic_tokens {
+                if is_fixed_token_class(&token.class) && start > token.start && start < token.end {
+                    start = token.start;
+                    end = token.end;
+                    break;
+                }
+            }
+        }
+        let (start, end) = self.normalize_edit_range(start, end);
         self.text.replace_range(start..end, chunk);
         self.caret = start + chunk.len();
         self.anchor = self.caret;
@@ -185,11 +317,22 @@ impl WriterHost {
 
     pub fn backspace(&mut self) {
         if self.caret != self.anchor {
+            let (start, end) = self.normalize_edit_range(self.caret.min(self.anchor), self.caret.max(self.anchor));
+            self.caret = start;
+            self.anchor = end;
             self.insert_text("");
             return;
         }
         if self.caret == 0 {
             return;
+        }
+        for token in &self.semantic_tokens {
+            if is_fixed_token_class(&token.class) && self.caret > token.start && self.caret <= token.end {
+                self.text.replace_range(token.start..token.end, "");
+                self.caret = token.start;
+                self.anchor = self.caret;
+                return;
+            }
         }
         let prev = prev_char_boundary(&self.text, self.caret);
         self.text.replace_range(prev..self.caret, "");
@@ -199,19 +342,48 @@ impl WriterHost {
 
     pub fn delete_forward(&mut self) {
         if self.caret != self.anchor {
+            let (start, end) = self.normalize_edit_range(self.caret.min(self.anchor), self.caret.max(self.anchor));
+            self.caret = start;
+            self.anchor = end;
             self.insert_text("");
             return;
         }
         if self.caret >= self.text.len() {
             return;
         }
+        for token in &self.semantic_tokens {
+            if is_fixed_token_class(&token.class) && self.caret >= token.start && self.caret < token.end {
+                self.text.replace_range(token.start..token.end, "");
+                self.anchor = self.caret;
+                return;
+            }
+        }
         let next = next_char_boundary(&self.text, self.caret);
         self.text.replace_range(self.caret..next, "");
         self.anchor = self.caret;
     }
 
+    pub fn move_line_start(&mut self, extend: bool) {
+        let (line, _) = offset_line_col(&self.text, self.caret);
+        self.caret = offset_at_line_col(&self.text, line, 0);
+        if !extend {
+            self.anchor = self.caret;
+        }
+    }
+
+    pub fn move_line_end(&mut self, extend: bool) {
+        let (line, _) = offset_line_col(&self.text, self.caret);
+        let line_len = self.text.split('\n').nth(line).map(str::len).unwrap_or(0);
+        self.caret = offset_at_line_col(&self.text, line, line_len);
+        if !extend {
+            self.anchor = self.caret;
+        }
+    }
+
     pub fn move_left(&mut self, extend: bool) {
-        let next = if self.caret == 0 { 0 } else { prev_char_boundary(&self.text, self.caret) };
+        let next = self
+            .fixed_token_left_boundary(self.caret)
+            .unwrap_or_else(|| if self.caret == 0 { 0 } else { prev_char_boundary(&self.text, self.caret) });
         self.caret = next;
         if !extend {
             self.anchor = self.caret;
@@ -219,11 +391,13 @@ impl WriterHost {
     }
 
     pub fn move_right(&mut self, extend: bool) {
-        let next = if self.caret >= self.text.len() {
-            self.text.len()
-        } else {
-            next_char_boundary(&self.text, self.caret)
-        };
+        let next = self.fixed_token_right_boundary(self.caret).unwrap_or_else(|| {
+            if self.caret >= self.text.len() {
+                self.text.len()
+            } else {
+                next_char_boundary(&self.text, self.caret)
+            }
+        });
         self.caret = next;
         if !extend {
             self.anchor = self.caret;
@@ -261,48 +435,177 @@ impl WriterHost {
         serde_json::json!({ "x": x, "y": y }).to_string()
     }
 
+    fn set_hover_at_offset(&mut self, offset: usize) {
+        self.hover_token_start = None;
+        self.hover_token_end = None;
+        for token in &self.semantic_tokens {
+            if offset >= token.start && offset < token.end {
+                self.hover_token_start = Some(token.start);
+                self.hover_token_end = Some(token.end);
+                return;
+            }
+        }
+    }
+
+    fn snap_offset_for_atomic(&self, offset: usize) -> usize {
+        for token in &self.semantic_tokens {
+            if is_fixed_token_class(&token.class) && offset > token.start && offset < token.end {
+                let mid = token.start + (token.end - token.start) / 2;
+                return if offset < mid { token.start } else { token.end };
+            }
+        }
+        offset
+    }
+
+    fn normalize_edit_range(&self, start: usize, end: usize) -> (usize, usize) {
+        let mut s = start;
+        let mut e = end;
+        for token in &self.semantic_tokens {
+            if !is_fixed_token_class(&token.class) {
+                continue;
+            }
+            if ranges_overlap(s, e, token.start, token.end) {
+                s = s.min(token.start);
+                e = e.max(token.end);
+            }
+        }
+        (s, e)
+    }
+
+    fn fixed_token_left_boundary(&self, offset: usize) -> Option<usize> {
+        for token in &self.semantic_tokens {
+            if is_fixed_token_class(&token.class) && offset > token.start && offset <= token.end {
+                return Some(token.start);
+            }
+        }
+        None
+    }
+
+    fn fixed_token_right_boundary(&self, offset: usize) -> Option<usize> {
+        for token in &self.semantic_tokens {
+            if is_fixed_token_class(&token.class) && offset >= token.start && offset < token.end {
+                return Some(token.end);
+            }
+        }
+        None
+    }
+
+    fn selection_range(&self) -> (usize, usize) {
+        self.normalize_edit_range(self.caret.min(self.anchor), self.caret.max(self.anchor))
+    }
+
+    fn text_fill_for_abs_range(&self, start: usize, end: usize) -> Color {
+        let (sel_s, sel_e) = self.selection_range();
+        if sel_s != sel_e && ranges_overlap(start, end, sel_s, sel_e) {
+            return self.theme.label_fill_hovered;
+        }
+        if let (Some(hs), Some(he)) = (self.hover_token_start, self.hover_token_end) {
+            if ranges_overlap(start, end, hs, he) {
+                return self.theme.label_fill_hovered;
+            }
+        }
+        self.theme.label_fill
+    }
+
+    fn render_abs_range_highlight(&self, scene: &mut Scene, start: usize, end: usize, color: Color) {
+        if start >= end {
+            return;
+        }
+        let (s_line, s_byte) = offset_line_col(&self.text, start);
+        let (e_line, e_byte) = offset_line_col(&self.text, end);
+        if s_line == e_line {
+            let line_text = self.text.split('\n').nth(s_line).unwrap_or("");
+            let y = s_line as f64 * LINE_HEIGHT + LINE_HEIGHT * 0.75;
+            let (x0, x1) = canvas_text::label_span_world_x(line_text, s_byte, e_byte, LINE_ORIGIN_X, FONT_PX);
+            self.fill_highlight_rect(scene, x0, x1, y, color);
+            return;
+        }
+        for line in s_line..=e_line {
+            let line_text = self.text.split('\n').nth(line).unwrap_or("");
+            let y = line as f64 * LINE_HEIGHT + LINE_HEIGHT * 0.75;
+            let byte_start = if line == s_line { s_byte } else { 0 };
+            let byte_end = if line == e_line {
+                e_byte
+            } else {
+                line_text.len()
+            };
+            let (x0, x1) = canvas_text::label_span_world_x(line_text, byte_start, byte_end, LINE_ORIGIN_X, FONT_PX);
+            self.fill_highlight_rect(scene, x0, x1, y, color);
+        }
+    }
+
+    fn fill_highlight_rect(&self, scene: &mut Scene, x0: f64, x1: f64, y: f64, fill: Color) {
+        let left = x0.min(x1);
+        let right = x0.max(x1);
+        if right <= left {
+            return;
+        }
+        let rect = Rect::new(left, y - LINE_HEIGHT * 0.8, right, y + LINE_HEIGHT * 0.2);
+        scene.fill(vello::peniko::Fill::NonZero, Affine::IDENTITY, fill, None, &rect);
+    }
+
     fn hit_test_offset(&self, world: Point) -> usize {
-        let rel_x = world.x - GUTTER_WIDTH;
+        let rel_x = world.x;
         let rel_y = world.y;
         if rel_y < 0.0 {
             return 0;
         }
         let line = (rel_y / LINE_HEIGHT).floor().max(0.0) as usize;
-        let col = ((rel_x - PAD_X) / (FONT_PX * 0.6)).round().max(0.0) as usize;
+        let line_text = self.text.split('\n').nth(line).unwrap_or("");
+        let col = hit_byte_in_line(line_text, rel_x);
         offset_at_line_col(&self.text, line, col)
     }
 
     pub fn build_scene(&self) -> Scene {
-        let mut scene = Scene::new();
-        let bg = Color::from_rgba8(18, 18, 20, 255);
-        scene.fill(vello::peniko::Fill::NonZero, Affine::IDENTITY, bg, None, &Rect::new(-10_000.0, -10_000.0, 10_000.0, 10_000.0));
+        let mut world_scene = Scene::new();
+        let bg = self.theme.raster_clear;
+        world_scene.fill(
+            vello::peniko::Fill::NonZero,
+            Affine::IDENTITY,
+            bg,
+            None,
+            &Rect::new(-10_000.0, -10_000.0, 10_000.0, 10_000.0),
+        );
         let lines: Vec<&str> = if self.text.is_empty() { vec![""] } else { self.text.split('\n').collect() };
+        let (sel_start, sel_end) = self.selection_range();
+        if sel_start != sel_end {
+            self.render_abs_range_highlight(&mut world_scene, sel_start, sel_end, self.theme.hover_fill);
+        }
         for (i, line) in lines.iter().enumerate() {
             let y = i as f64 * LINE_HEIGHT + LINE_HEIGHT * 0.75;
             let gutter = format!("{}", i + 1);
             canvas_text::append_label(
-                &mut scene,
+                &mut world_scene,
                 &gutter,
                 Point::new(PAD_X, y),
                 FONT_PX,
-                Color::from_rgba8(120, 120, 130, 255),
-                bg,
+                self.theme.grid_minor_stroke,
+                self.theme.label_halo,
             );
-            self.render_colored_line(&mut scene, line, i, y, bg);
+            if let (Some(hs), Some(he)) = (self.hover_token_start, self.hover_token_end) {
+                let line_start = offset_at_line_col(&self.text, i, 0);
+                let line_end = line_start + line.len();
+                if hs < line_end && he > line_start {
+                    let start = hs.max(line_start) - line_start;
+                    let end = he.min(line_end) - line_start;
+                    let abs_s = line_start + start;
+                    let abs_e = line_start + end;
+                    self.render_abs_range_highlight(&mut world_scene, abs_s, abs_e, self.theme.hover_fill);
+                }
+            }
+            self.render_colored_line(&mut world_scene, line, i, y);
         }
-        let sel_start = self.caret.min(self.anchor);
-        let sel_end = self.caret.max(self.anchor);
-        if sel_start != sel_end {
-            self.render_selection(&mut scene, sel_start, sel_end);
-        }
-        self.render_caret(&mut scene, self.caret);
+        self.render_caret(&mut world_scene, self.caret);
         for diag in &self.diagnostics {
-            self.render_diagnostic(&mut scene, diag, bg);
+            self.render_diagnostic(&mut world_scene, diag);
         }
+        let aff = camera_content_affine(&self.camera, &self.viewport);
+        let mut scene = Scene::new();
+        scene.append(&world_scene, Some(aff));
         cavas::render::scale_scene_for_device_pixel_ratio(scene, self.viewport.dpr)
     }
 
-    fn render_colored_line(&self, scene: &mut Scene, line: &str, line_index: usize, y: f64, bg: Color) {
+    fn render_colored_line(&self, scene: &mut Scene, line: &str, line_index: usize, y: f64) {
         if line.is_empty() {
             return;
         }
@@ -326,80 +629,92 @@ impl WriterHost {
             spans.push((cursor, line.len(), "plain"));
         }
         if spans.is_empty() {
-            canvas_text::append_label(scene, line, Point::new(GUTTER_WIDTH + PAD_X, y), FONT_PX, token_color("plain"), bg);
+            canvas_text::append_label(
+                scene,
+                line,
+                Point::new(LINE_ORIGIN_X, y),
+                FONT_PX,
+                self.theme.label_fill,
+                self.theme.label_halo,
+            );
             return;
         }
-        let mut x = GUTTER_WIDTH + PAD_X;
-        for (start, end, class) in spans {
-            let slice = &line[start..end];
-            canvas_text::append_label(scene, slice, Point::new(x, y), FONT_PX, token_color(class), bg);
-            let (w, _) = canvas_text::label_extent(slice, FONT_PX);
-            x += w;
-        }
-    }
-
-    fn render_selection(&self, scene: &mut Scene, start: usize, end: usize) {
-        let color = Color::from_rgba8(60, 100, 180, 90);
-        let (s_line, s_col) = offset_line_col(&self.text, start);
-        let (e_line, e_col) = offset_line_col(&self.text, end);
-        if s_line == e_line {
-            let (x, y) = col_to_world(s_line, s_col);
-            let (x2, _) = col_to_world(s_line, e_col);
-            let rect = Rect::new(x, y - LINE_HEIGHT * 0.8, x2.max(x + 1.0), y + LINE_HEIGHT * 0.2);
-            scene.fill(vello::peniko::Fill::NonZero, Affine::IDENTITY, color, None, &rect);
-            return;
-        }
-        for line in s_line..=e_line {
-            let (x, y) = if line == s_line {
-                col_to_world(line, s_col)
-            } else {
-                col_to_world(line, 0)
-            };
-            let (x2, _) = if line == e_line {
-                col_to_world(line, e_col)
-            } else {
-                let len = self.text.split('\n').nth(line).map(str::len).unwrap_or(0);
-                col_to_world(line, len)
-            };
-            let rect = Rect::new(x, y - LINE_HEIGHT * 0.8, x2.max(x + 1.0), y + LINE_HEIGHT * 0.2);
-            scene.fill(vello::peniko::Fill::NonZero, Affine::IDENTITY, color, None, &rect);
-        }
+        let color_spans: Vec<(usize, usize, Color)> = spans
+            .iter()
+            .map(|(start, end, _class)| {
+                let abs_s = line_start + start;
+                let abs_e = line_start + end;
+                (*start, *end, self.text_fill_for_abs_range(abs_s, abs_e))
+            })
+            .collect();
+        canvas_text::append_label_tspans(
+            scene,
+            line,
+            &color_spans,
+            Point::new(GUTTER_WIDTH + PAD_X, y),
+            FONT_PX,
+            self.theme.label_halo,
+        );
     }
 
     fn render_caret(&self, scene: &mut Scene, offset: usize) {
+        if self.caret == self.anchor && !self.caret_visible {
+            return;
+        }
         let (x, y) = offset_to_world(self, offset);
         let rect = Rect::new(x, y - LINE_HEIGHT * 0.8, x + 1.5, y + LINE_HEIGHT * 0.2);
         scene.fill(
             vello::peniko::Fill::NonZero,
             Affine::IDENTITY,
-            Color::from_rgba8(240, 240, 245, 255),
+            self.theme.label_fill,
             None,
             &rect,
         );
     }
 
-    fn render_diagnostic(&self, scene: &mut Scene, diag: &DiagnosticJson, bg: Color) {
+    fn render_diagnostic(&self, scene: &mut Scene, diag: &DiagnosticJson) {
         let (x, y) = offset_to_world(self, diag.start);
         let (x2, _) = offset_to_world(self, diag.end.max(diag.start + 1));
         let color = match diag.severity.as_deref() {
-            Some("warning") => Color::from_rgba8(220, 180, 40, 255),
-            _ => Color::from_rgba8(220, 70, 70, 255),
+            Some("warning") => self.theme.grid_minor_stroke,
+            _ => self.theme.label_fill_hovered,
         };
         let rect = Rect::new(x, y + 2.0, x2.max(x + 8.0), y + 4.0);
         scene.fill(vello::peniko::Fill::NonZero, Affine::IDENTITY, color, None, &rect);
-        let _ = bg;
     }
 }
 
-fn token_color(class: &str) -> Color {
-    match class {
-        "keyword" => Color::from_rgba8(120, 170, 255, 255),
-        "string" => Color::from_rgba8(180, 220, 140, 255),
-        "number" => Color::from_rgba8(220, 160, 120, 255),
-        "operator" | "punctuation" => Color::from_rgba8(180, 180, 190, 255),
-        "error" => Color::from_rgba8(255, 120, 120, 255),
-        _ => Color::from_rgba8(230, 230, 235, 255),
+fn ranges_overlap(a_start: usize, a_end: usize, b_start: usize, b_end: usize) -> bool {
+    a_start < b_end && b_start < a_end
+}
+
+fn is_fixed_token_class(class: &str) -> bool {
+    class == "keyword"
+}
+
+fn hit_byte_in_line(line: &str, world_x: f64) -> usize {
+    if line.is_empty() {
+        return 0;
     }
+    let mut boundaries = vec![0usize];
+    for (index, _) in line.char_indices() {
+        if index > 0 {
+            boundaries.push(index);
+        }
+    }
+    if boundaries.last().copied() != Some(line.len()) {
+        boundaries.push(line.len());
+    }
+    for pair in boundaries.windows(2) {
+        let start = pair[0];
+        let end = pair[1];
+        let x0 = canvas_text::label_byte_world_x(line, start, LINE_ORIGIN_X, FONT_PX);
+        let x1 = canvas_text::label_byte_world_x(line, end, LINE_ORIGIN_X, FONT_PX);
+        if world_x < (x0 + x1) * 0.5 {
+            return start;
+        }
+    }
+    line.len()
 }
 
 fn offset_line_col(text: &str, offset: usize) -> (usize, usize) {
@@ -441,12 +756,9 @@ fn offset_at_line_col(text: &str, line: usize, col: usize) -> usize {
 }
 
 fn offset_to_world(host: &WriterHost, offset: usize) -> (f64, f64) {
-    let (line, col) = offset_line_col(&host.text, offset);
-    col_to_world(line, col)
-}
-
-fn col_to_world(line: usize, col: usize) -> (f64, f64) {
-    let x = GUTTER_WIDTH + PAD_X + col as f64 * FONT_PX * 0.6;
+    let (line, byte) = offset_line_col(&host.text, offset);
+    let line_text = host.text.split('\n').nth(line).unwrap_or("");
+    let x = canvas_text::label_byte_world_x(line_text, byte, LINE_ORIGIN_X, FONT_PX);
     let y = line as f64 * LINE_HEIGHT + LINE_HEIGHT * 0.75;
     (x, y)
 }
@@ -492,7 +804,7 @@ impl WriterSessionInner {
     fn render_frame_gpu(&mut self) -> Result<(), JsValue> {
         let scene = self.host.build_scene();
         self.gpu
-            .render_frame(&scene, Color::from_rgba8(18, 18, 20, 255))
+            .render_frame(&scene, self.host.theme.raster_clear)
     }
 }
 
@@ -603,6 +915,26 @@ impl WriterSession {
         self.state.borrow().host.camera_json()
     }
 
+    #[wasm_bindgen(js_name = setVelloThemeJson)]
+    pub fn set_vello_theme_json(&mut self, json: &str) {
+        let _ = self.state.borrow_mut().host.set_vello_theme_from_json(json);
+    }
+
+    #[wasm_bindgen(js_name = setCaretVisible)]
+    pub fn set_caret_visible(&mut self, visible: bool) {
+        self.state.borrow_mut().host.set_caret_visible(visible);
+    }
+
+    #[wasm_bindgen(js_name = anchor)]
+    pub fn anchor(&self) -> usize {
+        self.state.borrow().host.anchor()
+    }
+
+    #[wasm_bindgen(js_name = selectAll)]
+    pub fn select_all(&mut self) {
+        self.state.borrow_mut().host.select_all();
+    }
+
     #[wasm_bindgen(js_name = wheelScreen)]
     pub fn wheel_screen(&mut self, sx: f64, sy: f64, delta_y: f64) {
         self.state.borrow_mut().host.wheel_screen(sx, sy, delta_y);
@@ -636,6 +968,16 @@ impl WriterSession {
     #[wasm_bindgen(js_name = deleteForward)]
     pub fn delete_forward(&mut self) {
         self.state.borrow_mut().host.delete_forward();
+    }
+
+    #[wasm_bindgen(js_name = moveLineStart)]
+    pub fn move_line_start(&mut self, extend: bool) {
+        self.state.borrow_mut().host.move_line_start(extend);
+    }
+
+    #[wasm_bindgen(js_name = moveLineEnd)]
+    pub fn move_line_end(&mut self, extend: bool) {
+        self.state.borrow_mut().host.move_line_end(extend);
     }
 
     #[wasm_bindgen(js_name = moveLeft)]
@@ -684,11 +1026,85 @@ mod tests {
     }
 
     #[test]
+    fn theme_merge_from_json_updates_clear() {
+        let mut host = WriterHost::new();
+        let json = r#"{"rasterClear":[240,236,221,255],"labelFill":[0,17,23,255]}"#;
+        host.set_vello_theme_from_json(json).expect("theme json");
+        let scene = host.build_scene();
+        assert!(!scene.encoding().is_empty());
+    }
+
+    #[test]
+    fn select_all_sets_range() {
+        let mut host = WriterHost::new();
+        host.set_text("abc".into());
+        host.select_all();
+        assert_eq!(host.anchor(), 0);
+        assert_eq!(host.caret(), 3);
+    }
+
+    #[test]
+    fn selection_snaps_fixed_keywords() {
+        let mut host = WriterHost::new();
+        host.set_text("MATCH x".into());
+        host.set_semantic_tokens_json(r#"[{"start":0,"end":5,"class":"keyword"}]"#);
+        host.set_selection(2, 4);
+        assert_eq!(host.anchor(), 0);
+        assert_eq!(host.caret(), 5);
+    }
+
+    #[test]
+    fn drag_select_extends_range() {
+        let mut host = WriterHost::new();
+        host.set_size(800, 600, 1.0);
+        host.set_text("hello world".into());
+        host.pointer_down_screen(468.0, 317.0, 0);
+        host.pointer_move_screen(560.0, 317.0, 1);
+        host.pointer_up_screen(560.0, 317.0, 0);
+        assert_ne!(host.caret(), host.anchor());
+        assert_eq!(host.anchor(), 0);
+        assert!(host.caret() > host.anchor());
+    }
+
+    #[test]
+    fn punctuated_token_line_builds_scene() {
+        let mut host = WriterHost::new();
+        host.set_text("MATCH (a:Piece)".into());
+        host.set_semantic_tokens_json(
+            r#"[{"start":0,"end":5,"class":"keyword"},{"start":5,"end":6,"class":"operator"},{"start":6,"end":7,"class":"operator"},{"start":7,"end":8,"class":"plain"},{"start":8,"end":9,"class":"operator"},{"start":9,"end":14,"class":"plain"}]"#,
+        );
+        let scene = host.build_scene();
+        assert!(!scene.encoding().path_tags.is_empty());
+    }
+
+    #[test]
     fn build_scene_has_content() {
         let mut host = WriterHost::new();
         host.set_text("MATCH (a:Piece)\nRETURN a.name".into());
         let scene = host.build_scene();
         assert!(!scene.encoding().path_tags.is_empty());
+    }
+
+    #[test]
+    fn backspace_deletes_fixed_keyword_tokenwise() {
+        let mut host = WriterHost::new();
+        host.set_text("MATCH (a:Piece)".into());
+        host.set_semantic_tokens_json(
+            r#"[{"start":0,"end":5,"class":"keyword"},{"start":5,"end":6,"class":"operator"}]"#,
+        );
+        host.set_caret_anchor(3);
+        host.backspace();
+        assert_eq!(host.text(), " (a:Piece)");
+        assert_eq!(host.caret(), 0);
+    }
+
+    #[test]
+    fn label_span_world_x_matches_scaled_render() {
+        let line = "MATCH (a:Piece)";
+        let (x0, x5) = canvas_text::label_span_world_x(line, 0, 5, LINE_ORIGIN_X, FONT_PX);
+        let estimate = canvas_text::label_advance("MATCH", FONT_PX);
+        assert!(x5 - x0 < estimate);
+        assert!(x5 > x0);
     }
 
     #[test]

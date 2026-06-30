@@ -184,31 +184,44 @@ export class WriterPlayController extends Controller implements PlaygroundFixtur
 		this.emit();
 	}
 
-	override run(command: string, args?: Record<string, unknown>): unknown {
+	run(command: string, args?: Record<string, unknown>): void {
 		switch (command) {
 			case "setDocumentJson": {
 				const json = String(args?.json ?? "");
 				this.loadFixtureJson(json);
-				return undefined;
+				return;
 			}
 			case "setDocument": {
 				this.document = args?.document as WriterDocumentV1;
 				this.revision += 1;
 				this.emit();
-				return undefined;
+				return;
+			}
+			case "setActiveFixture": {
+				const fixtureId = String(args?.fixtureId ?? "");
+				if (isPlaygroundNoFixtureId(fixtureId)) {
+					this.document = createWriterDocument({ id: "empty", languageId: "plaintext", text: "" });
+					this.revision += 1;
+					this.emit();
+					return;
+				}
+				const json = WRITER_PLAY_FILE_FIXTURE_JSON_BY_ID[fixtureId];
+				if (json) {
+					this.loadFixtureJson(json);
+					console.log("[DEBUG] writer fixture loaded", fixtureId);
+				}
+				return;
 			}
 			case "formatDocument":
 				this.formatSignal += 1;
 				this.revision += 1;
 				this.emit();
-				return undefined;
+				return;
 			case "lintDocument":
 				this.lintSignal += 1;
 				this.revision += 1;
 				this.emit();
-				return undefined;
-			default:
-				return super.run(command, args);
+				return;
 		}
 	}
 
@@ -252,6 +265,10 @@ export class PlaygroundWriter extends Playground {
 		}
 		const runtime = createProductPlaygroundPlatform(this.id);
 		const ctrl = new WriterPlayController(runtime.commandBus, () => runtime.notify(), json);
+		const resolved = playgroundResolvedFixtureId(WRITER_PLAY_FIXTURE_DEFAULT_ID, resolveWriterPlayFixtureSlug);
+		if (!locked && !noFixture) {
+			ctrl.run("setActiveFixture", { fixtureId: resolved });
+		}
 		runtime.addApp(buildWriterPlayAppRuntime(ctrl));
 		return runtime;
 	}
@@ -296,6 +313,14 @@ if (import.meta.vitest) {
 			expect(ctrl.getFormatSignal()).toBe(1);
 			ctrl.run("lintDocument");
 			expect(ctrl.getLintSignal()).toBe(1);
+		});
+
+		it("loads fixture via setActiveFixture", () => {
+			const bus = new CommandBus();
+			const ctrl = new WriterPlayController(bus, () => {}, writerDocumentToJson(createWriterDocument({ id: "empty", languageId: "plaintext", text: "" })));
+			ctrl.run("setActiveFixture", { fixtureId: "jack" });
+			expect(ctrl.getDocument().id).toBe("jack");
+			expect(ctrl.getDocument().languageId).toBe("jack");
 		});
 	});
 }

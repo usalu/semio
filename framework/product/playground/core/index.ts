@@ -111,7 +111,14 @@ export type {
   SidePanelTreeSelection,
 } from "@semio-tech/framework-platform-core";
 
-export { collectUiTreeItemDragData, sidePanelTreeRootItems, uiDeclarativeSectionsToTree } from "@semio-tech/framework-platform-core";
+export {
+	collectUiTreeItemDragData,
+	sidePanelTreeRootItems,
+	uiDeclarativeSectionsToTree,
+	uiInspectorGroupsToTree,
+	uiInspectorReadonlyField,
+	type UiInspectorFieldGroup,
+} from "@semio-tech/framework-platform-core";
 
 /** @emoji 🎯 Playground alias for {@link SidePanelTreeSelection}. */
 export type PlaygroundTreePanelSelection = import("@semio-tech/framework-platform-core").SidePanelTreeSelection;

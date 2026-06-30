@@ -3,6 +3,7 @@
 // #endregion 🧲Header
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { clearColorResolveCache, serializeGraphVelloThemePaletteJson } from "@semio-tech/ui-styling";
 import { canvasViewportClass, reactHostPort } from "@semio-tech/ui-react";
 import {
 	applyTextEdits,
@@ -15,7 +16,6 @@ import {
 	tokenizeWithGrammar,
 	type LspCompletionItem,
 	type LspDiagnostic,
-	type LspHover,
 	type LspTransport,
 	type WriterDocumentV1,
 } from "@semio-tech/writer-core";
@@ -103,7 +103,6 @@ export function WriterCanvas({
 	const lastLocalTextRef = useRef(document.text);
 	const [completions, setCompletions] = useState<readonly LspCompletionItem[]>([]);
 	const [completionIndex, setCompletionIndex] = useState(0);
-	const [hover, setHover] = useState<LspHover | null>(null);
 	const [diagnostics, setDiagnostics] = useState<readonly LspDiagnostic[]>([]);
 	const [caretScreen, setCaretScreen] = useState<{ readonly x: number; readonly y: number } | null>(null);
 
@@ -115,27 +114,54 @@ export function WriterCanvas({
 		return grammar ? tokenizeWithGrammar(document.text, grammar) : [];
 	}, [document.languageId, document.text]);
 
+	const syncTextareaSelection = useCallback(() => {
+		const session = sessionRef.current;
+		const input = inputRef.current;
+		if (!session || !input) return;
+		const caret = session.caret();
+		const anchor = session.anchor();
+		const start = Math.min(caret, anchor);
+		const end = Math.max(caret, anchor);
+		if (input.selectionStart !== start || input.selectionEnd !== end) {
+			input.setSelectionRange(start, end);
+		}
+	}, []);
+
 	const renderFrame = useCallback(() => {
 		const session = sessionRef.current;
 		if (!session?.gpuReady()) return;
 		try {
+			clearColorResolveCache();
+			session.setVelloThemeJson(serializeGraphVelloThemePaletteJson());
+			const blinkOn = Math.floor(performance.now() / 530) % 2 === 0;
+			session.setCaretVisible(blinkOn);
 			session.renderFrame();
 			const world = JSON.parse(session.caretWorldJson()) as { x: number; y: number };
 			const screen = JSON.parse(session.worldToScreenJson(world.x, world.y)) as { x: number; y: number };
 			setCaretScreen(screen);
+			syncTextareaSelection();
 		} catch {
 			/* gpu frame not ready */
 		}
-	}, []);
+	}, [syncTextareaSelection]);
 
 	const scheduleFrame = useCallback(() => {
 		renderFrame();
 	}, [renderFrame]);
 
-	const pushDocument = useCallback(
+	const focusEditor = useCallback(() => {
+		containerRef.current?.focus({ preventScroll: true });
+	}, []);
+
+	const syncCaret = useCallback(() => {
+		scheduleFrame();
+		syncTextareaSelection();
+	}, [scheduleFrame, syncTextareaSelection]);
+
+	const applySessionEdit = useCallback(
 		(nextText: string, syncLsp = true) => {
 			const session = sessionRef.current;
-			if (session) {
+			if (session && session.text() !== nextText) {
 				session.setText(nextText);
 				const grammar = grammarForLanguage(documentRef.current.languageId);
 				const tokens = grammar ? tokenizeWithGrammar(nextText, grammar) : [];
@@ -151,8 +177,8 @@ export function WriterCanvas({
 						})),
 					),
 				);
-				scheduleFrame();
 			}
+			scheduleFrame();
 			onChange?.({ ...documentRef.current, text: nextText });
 			lastLocalTextRef.current = nextText;
 			if (syncLsp && lspRef.current) {
@@ -161,6 +187,14 @@ export function WriterCanvas({
 			}
 		},
 		[onChange, scheduleFrame],
+	);
+
+	const pushDocument = useCallback(
+		(nextText: string, syncLsp = true) => {
+			applySessionEdit(nextText, syncLsp);
+			syncTextareaSelection();
+		},
+		[applySessionEdit, syncTextareaSelection],
 	);
 
 	const runFormat = useCallback(async () => {
@@ -181,6 +215,10 @@ export function WriterCanvas({
 		let cleanupResize: (() => void) | undefined;
 		const session = new WriterSession();
 		sessionRef.current = session;
+		session.setText(documentRef.current.text);
+		const grammar = grammarForLanguage(documentRef.current.languageId);
+		const tokens = grammar ? tokenizeWithGrammar(documentRef.current.text, grammar) : [];
+		session.setSemanticTokensJson(JSON.stringify(tokens));
 
 		const resize = () => {
 			if (cancelled) return;
@@ -240,6 +278,7 @@ export function WriterCanvas({
 			ro.observe(container);
 			cleanupResize = () => ro.disconnect();
 			startLoop();
+			focusEditor();
 		})();
 
 		return () => {
@@ -250,7 +289,7 @@ export function WriterCanvas({
 			session.detachGpu();
 			sessionRef.current = null;
 		};
-	}, [renderFrame]);
+	}, [focusEditor, renderFrame]);
 
 	useEffect(() => {
 		const session = sessionRef.current;
@@ -297,15 +336,8 @@ export function WriterCanvas({
 			);
 			scheduleFrame();
 		});
-		const unsubSem = client.subscribeSemanticTokens((tokens) => {
-			if (tokens.length > 0) {
-				sessionRef.current?.setSemanticTokensJson(JSON.stringify(tokens));
-				scheduleFrame();
-			}
-		});
 		return () => {
 			unsubDiag();
-			unsubSem();
 			client.dispose();
 			lspRef.current = null;
 		};
@@ -366,6 +398,21 @@ export function WriterCanvas({
 				onSubmit?.();
 				return;
 			}
+			if ((event.metaKey || event.ctrlKey) && !event.shiftKey) {
+				const key = event.key.toLowerCase();
+				if (key === "a") {
+					event.preventDefault();
+					session.selectAll();
+					syncCaret();
+					return;
+				}
+				if (key === "c" || key === "x") {
+					return;
+				}
+				if (key === "v") {
+					return;
+				}
+			}
 			if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key.toLowerCase() === "f") {
 				event.preventDefault();
 				void runFormat();
@@ -415,28 +462,40 @@ export function WriterCanvas({
 				pushDocument(session.text());
 				return;
 			}
+			if (event.key === "Home") {
+				event.preventDefault();
+				session.moveLineStart(extend);
+				syncCaret();
+				return;
+			}
+			if (event.key === "End") {
+				event.preventDefault();
+				session.moveLineEnd(extend);
+				syncCaret();
+				return;
+			}
 			if (event.key === "ArrowLeft") {
 				event.preventDefault();
 				session.moveLeft(extend);
-				pushDocument(session.text(), false);
+				syncCaret();
 				return;
 			}
 			if (event.key === "ArrowRight") {
 				event.preventDefault();
 				session.moveRight(extend);
-				pushDocument(session.text(), false);
+				syncCaret();
 				return;
 			}
 			if (event.key === "ArrowUp") {
 				event.preventDefault();
 				session.moveUp(extend);
-				pushDocument(session.text(), false);
+				syncCaret();
 				return;
 			}
 			if (event.key === "ArrowDown") {
 				event.preventDefault();
 				session.moveDown(extend);
-				pushDocument(session.text(), false);
+				syncCaret();
 				return;
 			}
 			if (event.key.length === 1 && !event.metaKey && !event.ctrlKey) {
@@ -447,7 +506,7 @@ export function WriterCanvas({
 			}
 			await refreshCompletions();
 		},
-		[applyCompletion, completionIndex, completions, onSubmit, pushDocument, refreshCompletions, runFormat],
+		[applyCompletion, completionIndex, completions, onSubmit, pushDocument, refreshCompletions, runFormat, syncCaret],
 	);
 
 	const onWheel = useCallback(
@@ -465,50 +524,99 @@ export function WriterCanvas({
 	);
 
 	return (
-		<div ref={containerRef} className={`relative h-full min-h-0 w-full bg-canvas ${className ?? ""}`}>
+		<div
+			ref={containerRef}
+			tabIndex={0}
+			role="textbox"
+			aria-multiline="true"
+			aria-label="Writer editor"
+			className={`relative h-full min-h-0 w-full bg-canvas outline-none ${className ?? ""}`}
+			onKeyDown={onKeyDown}
+			onPaste={(event) => {
+				event.preventDefault();
+				const session = sessionRef.current;
+				if (!session) return;
+				const text = event.clipboardData.getData("text/plain");
+				if (!text) return;
+				session.insertText(text);
+				pushDocument(session.text());
+			}}
+			onCut={(event) => {
+				const session = sessionRef.current;
+				if (!session) return;
+				const start = Math.min(session.caret(), session.anchor());
+				const end = Math.max(session.caret(), session.anchor());
+				if (start === end) return;
+				event.preventDefault();
+				event.clipboardData.setData("text/plain", session.text().slice(start, end));
+				session.insertText("");
+				pushDocument(session.text());
+			}}
+			onCopy={(event) => {
+				const session = sessionRef.current;
+				if (!session) return;
+				const start = Math.min(session.caret(), session.anchor());
+				const end = Math.max(session.caret(), session.anchor());
+				if (start === end) return;
+				event.preventDefault();
+				event.clipboardData.setData("text/plain", session.text().slice(start, end));
+			}}
+		>
 			<canvas
 				ref={canvasRef}
-				className={`${canvasViewportClass} block h-full w-full touch-none`}
+				className={`${canvasViewportClass} block h-full w-full cursor-text touch-none`}
 				onWheel={onWheel}
 				onPointerDown={(e) => {
-					inputRef.current?.focus();
+					if (e.button !== 0) return;
+					e.preventDefault();
+					focusEditor();
+					e.currentTarget.setPointerCapture(e.pointerId);
 					const session = sessionRef.current;
 					if (!session) return;
 					const rect = e.currentTarget.getBoundingClientRect();
 					session.pointerDownScreen(e.clientX - rect.left, e.clientY - rect.top, e.button);
-					scheduleFrame();
+					syncCaret();
 				}}
 				onPointerMove={(e) => {
 					const session = sessionRef.current;
 					if (!session) return;
 					const rect = e.currentTarget.getBoundingClientRect();
 					session.pointerMoveScreen(e.clientX - rect.left, e.clientY - rect.top, e.buttons);
-					scheduleFrame();
+					syncCaret();
 				}}
 				onPointerUp={(e) => {
 					const session = sessionRef.current;
 					if (!session) return;
+					if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+						e.currentTarget.releasePointerCapture(e.pointerId);
+					}
 					const rect = e.currentTarget.getBoundingClientRect();
 					session.pointerUpScreen(e.clientX - rect.left, e.clientY - rect.top, e.button);
-					scheduleFrame();
+					syncCaret();
+				}}
+				onPointerCancel={(e) => {
+					const session = sessionRef.current;
+					if (!session) return;
+					if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+						e.currentTarget.releasePointerCapture(e.pointerId);
+					}
+					session.pointerUpScreen(0, 0, 0);
+					syncCaret();
 				}}
 			/>
 			<textarea
 				ref={inputRef}
-				className="pointer-events-auto absolute h-px w-px opacity-0"
+				tabIndex={-1}
+				aria-hidden
+				className="pointer-events-none absolute left-0 top-0 h-px w-px opacity-0"
 				value={document.text}
 				placeholder={placeholder}
+				spellCheck={false}
+				autoComplete="off"
+				autoCorrect="off"
+				autoCapitalize="off"
+				readOnly
 				onChange={() => {}}
-				onKeyDown={onKeyDown}
-				onKeyUp={() => {
-					void refreshCompletions();
-					const client = lspRef.current;
-					const session = sessionRef.current;
-					if (client && session) {
-						void client.hover(offsetToPosition(document.text, session.caret())).then(setHover);
-					}
-				}}
-				aria-label="Writer editor input"
 			/>
 			{caretScreen && completions.length > 0 ? (
 				<div
@@ -529,14 +637,6 @@ export function WriterCanvas({
 							{item.detail ? <span className="ml-2 text-muted-foreground">{item.detail}</span> : null}
 						</button>
 					))}
-				</div>
-			) : null}
-			{caretScreen && hover && typeof hover.contents === "string" ? (
-				<div
-					className="pointer-events-none absolute z-10 max-w-sm rounded border border-border bg-popover px-2 py-1 text-xs shadow"
-					style={{ left: caretScreen.x, top: caretScreen.y - 28 }}
-				>
-					{hover.contents}
 				</div>
 			) : null}
 			{diagnostics.length > 0 ? (

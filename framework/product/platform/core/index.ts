@@ -477,6 +477,34 @@ export type UiComponentHostSurfaceNode =
 	| UiPanelHostSurfaceNode
 	| UiEditorHostSurfaceNode;
 
+/** @emoji 🧩 Inspector field group ordered most-specific first, most-general last. */
+export interface UiInspectorFieldGroup {
+	readonly id: string;
+	readonly label: string;
+	readonly defaultOpen?: boolean;
+	readonly fields: readonly UiNode[];
+}
+
+/** @emoji 📋 Read-only inspector field row. */
+export function uiInspectorReadonlyField(id: string, label: string, value: string): UiFieldNode {
+	return { type: "field", id, label, child: { type: "text", value } };
+}
+
+/** @emoji 🌲 Builds an inspector tree from groups ordered most-specific first. */
+export function uiInspectorGroupsToTree(groups: readonly UiInspectorFieldGroup[]): UiTreeNode {
+	return uiDeclarativeSectionsToTree(
+		groups
+			.filter((group) => group.fields.length > 0)
+			.map((group) => ({
+				type: "section" as const,
+				id: group.id,
+				label: group.label,
+				defaultOpen: group.defaultOpen ?? true,
+				children: group.fields,
+			})),
+	);
+}
+
 /** @emoji 🌲 Converts declarative form sections into a strict side-panel tree. */
 export function uiDeclarativeSectionsToTree(sections: readonly UiSectionNode[]): UiTreeNode {
 	const treeSections: UiTreeSectionNode[] = sections.map((section) => ({

@@ -536,6 +536,109 @@ pub mod text {
         (w, h)
     }
 
+    /// @emoji ↔️ Horizontal text advance inside a label box (excludes outer padding).
+    pub fn label_advance(label: &str, px: f64) -> f64 {
+        if label.is_empty() || px < ui_styling::metrics::label::MIN_PX {
+            return 0.0;
+        }
+        label.len() as f64 * px * ui_styling::metrics::label::CHAR_WIDTH_RATIO
+    }
+
+    /// @emoji 📏 Left inset from label origin to first glyph baseline start.
+    pub fn label_text_inset(px: f64) -> f64 {
+        if px < ui_styling::metrics::label::MIN_PX {
+            return 0.0;
+        }
+        px * ui_styling::metrics::label::PAD_RATIO
+    }
+
+    #[derive(Clone, Copy, Debug)]
+    struct LabelLineLayout {
+        bx: f64,
+        scale: f64,
+        pad: f64,
+    }
+
+    fn label_line_layout(line: &str, px: f64) -> Option<LabelLineLayout> {
+        if px < ui_styling::metrics::label::MIN_PX {
+            return None;
+        }
+        let pad = px * ui_styling::metrics::label::PAD_RATIO;
+        let extent_line = if line.is_empty() { " " } else { line };
+        let (w, h) = label_extent(extent_line, px);
+        let text_y = pad + px;
+        let family = usvg_options_map_labels().font_family.clone();
+        let body = if line.is_empty() { " " } else { line };
+        let svg = format!(
+            r##"<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}"><text x="{pad}" y="{text_y}" font-size="{px}" font-family="{family}">{text}</text></svg>"##,
+            w = w,
+            h = h,
+            pad = pad,
+            text_y = text_y,
+            px = px,
+            family = escape_xml_attr(&family),
+            text = escape_xml_attr(body),
+        );
+        let tree = usvg::Tree::from_str(&svg, usvg_options_map_labels()).ok()?;
+        let (bx, _, bw, bh) = crate::svg_icon_vello09::svg_icon_content_bounds(&tree);
+        if bw <= 0.0 || bh <= 0.0 {
+            return None;
+        }
+        let scale = (px * ui_styling::metrics::label::SCALE_RATIO / bh).min(ui_styling::metrics::label::SCALE_MAX);
+        Some(LabelLineLayout { bx, scale, pad })
+    }
+
+    fn label_prefix_advance_svg(line: &str, byte_end: usize, px: f64) -> f64 {
+        let end = byte_end.min(line.len());
+        if end == 0 {
+            return 0.0;
+        }
+        if !line.is_char_boundary(end) {
+            let prev = line[..end].char_indices().next_back().map(|(i, _)| i).unwrap_or(0);
+            return label_prefix_advance_svg(line, prev, px);
+        }
+        let prefix = &line[..end];
+        let pad = px * ui_styling::metrics::label::PAD_RATIO;
+        let (w, h) = label_extent(prefix, px);
+        let text_y = pad + px;
+        let family = usvg_options_map_labels().font_family.clone();
+        let svg = format!(
+            r##"<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}"><text x="{pad}" y="{text_y}" font-size="{px}" font-family="{family}">{text}</text></svg>"##,
+            w = w,
+            h = h,
+            pad = pad,
+            text_y = text_y,
+            px = px,
+            family = escape_xml_attr(&family),
+            text = escape_xml_attr(prefix),
+        );
+        let Ok(tree) = usvg::Tree::from_str(&svg, usvg_options_map_labels()) else {
+            return label_advance(prefix, px);
+        };
+        let (bx, _, bw, bh) = crate::svg_icon_vello09::svg_icon_content_bounds(&tree);
+        if bw <= 0.0 || bh <= 0.0 {
+            return label_advance(prefix, px);
+        }
+        (bx + bw) - pad
+    }
+
+    /// @emoji ↔️ World x for a byte offset in a code line (matches `append_label_tspans` layout).
+    pub fn label_byte_world_x(line: &str, byte_offset: usize, origin_x: f64, px: f64) -> f64 {
+        let Some(layout) = label_line_layout(line, px) else {
+            return origin_x;
+        };
+        let advance = label_prefix_advance_svg(line, byte_offset, px);
+        origin_x + (layout.pad + advance - layout.bx) * layout.scale
+    }
+
+    /// @emoji ↔️ World x range for a byte span in a code line.
+    pub fn label_span_world_x(line: &str, byte_start: usize, byte_end: usize, origin_x: f64, px: f64) -> (f64, f64) {
+        (
+            label_byte_world_x(line, byte_start, origin_x, px),
+            label_byte_world_x(line, byte_end, origin_x, px),
+        )
+    }
+
     /// @emoji 🏷️ Renders a single map label via SVG text at `origin` (screen px, baseline).
     pub fn append_label(scene: &mut Scene, label: &str, origin: Point, px: f64, fill: Color, halo: Color) {
         let trimmed = label.trim();
@@ -558,6 +661,57 @@ pub mod text {
             halo = color_to_svg(halo),
             stroke = (px * ui_styling::metrics::label::HALO_STROKE_RATIO).max(ui_styling::metrics::label::HALO_STROKE_MIN),
             text = escape_xml_attr(trimmed),
+        );
+        let Ok(tree) = usvg::Tree::from_str(&svg, usvg_options_map_labels()) else {
+            return;
+        };
+        let (bx, by, bw, bh) = crate::svg_icon_vello09::svg_icon_content_bounds(&tree);
+        if bw <= 0.0 || bh <= 0.0 {
+            return;
+        }
+        let scale = (px * ui_styling::metrics::label::SCALE_RATIO / bh).min(ui_styling::metrics::label::SCALE_MAX);
+        let mut label_scene = Scene::new();
+        render_svg_tree_literal(&mut label_scene, &tree);
+        let aff = vello::kurbo::Affine::translate((origin.x - bx * scale, origin.y - by * scale - px * ui_styling::metrics::label::VERTICAL_OFFSET_RATIO)) * vello::kurbo::Affine::scale(scale);
+        scene.append(&label_scene, Some(aff));
+    }
+
+    /// @emoji 🏷️ Renders one label with colored inline tspans (single padding box, no per-span gaps).
+    pub fn append_label_tspans(scene: &mut Scene, line: &str, spans: &[(usize, usize, Color)], origin: Point, px: f64, _halo: Color) {
+        if line.is_empty() || spans.is_empty() || px < ui_styling::metrics::label::MIN_PX {
+            return;
+        }
+        let pad = px * ui_styling::metrics::label::PAD_RATIO;
+        let (w, h) = label_extent(line, px);
+        let text_y = pad + px;
+        let family = usvg_options_map_labels().font_family.clone();
+        let mut inner = String::new();
+        for &(start, end, fill) in spans {
+            if start >= end || end > line.len() {
+                continue;
+            }
+            let slice = &line[start..end];
+            if slice.is_empty() {
+                continue;
+            }
+            inner.push_str(&format!(
+                r#"<tspan fill="{fill}">{text}</tspan>"#,
+                fill = color_to_svg(fill),
+                text = escape_xml_attr(slice),
+            ));
+        }
+        if inner.is_empty() {
+            return;
+        }
+        let svg = format!(
+            r##"<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}"><text x="{pad}" y="{text_y}" font-size="{px}" font-family="{family}">{inner}</text></svg>"##,
+            w = w,
+            h = h,
+            pad = pad,
+            text_y = text_y,
+            px = px,
+            family = escape_xml_attr(&family),
+            inner = inner,
         );
         let Ok(tree) = usvg::Tree::from_str(&svg, usvg_options_map_labels()) else {
             return;
@@ -1438,6 +1592,24 @@ mod tests {
         let mut empty = Scene::new();
         text::append_label(&mut empty, "  ", Point::new(0.0, 0.0), 14.0, theme::default_icon_fg(), theme::default_icon_bg());
         assert!(empty.encoding().path_tags.is_empty());
+    }
+
+    #[test]
+    fn label_advance_excludes_outer_padding() {
+        let px = 14.0;
+        let (box_w, _) = text::label_extent("MATCH", px);
+        let advance = text::label_advance("MATCH", px);
+        assert!(box_w > advance);
+        assert_eq!(advance, "MATCH".len() as f64 * px * ui_styling::metrics::label::CHAR_WIDTH_RATIO);
+    }
+
+    #[test]
+    fn label_byte_world_x_is_narrower_than_char_width_estimate() {
+        let line = "MATCH";
+        let x0 = text::label_byte_world_x(line, 0, 0.0, 14.0);
+        let x5 = text::label_byte_world_x(line, 5, 0.0, 14.0);
+        let estimate = text::label_advance("MATCH", 14.0);
+        assert!(x5 - x0 < estimate * 0.85);
     }
 
     #[test]
