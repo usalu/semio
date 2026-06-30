@@ -5,17 +5,11 @@
 // #endregion 🧲Header
 
 import {
-	applyFormEditOp,
 	createFormId,
-	defaultQuestionForKind,
-	findQuestionLocation,
 	formSpecToJson,
 	FormRuntime,
 	parseFormSpec,
-	QUESTION_KIND_CATALOGUE,
-	type FormEditOp,
 	type FormQuestion,
-	type FormQuestionKind,
 	type FormSpec,
 	type FormStep,
 	type FormValue,
@@ -23,8 +17,6 @@ import {
 } from "@semio-tech/forms-core";
 import {
 	Button,
-	Catalogue,
-	CATALOGUE_DRAG_MIME,
 	Field,
 	Input,
 	Select,
@@ -36,15 +28,8 @@ import {
 	Stepper,
 	Textarea,
 	Toggle,
-	Tree,
-	type CatalogueItem,
-	type TreeDataItem,
-	type TreeDataSection,
 	type TreeDragAndDropController,
-	type TreeDropPosition,
-	type TreeReorderMove,
 	cn,
-	treeReorderDragController,
 } from "@semio-tech/ui-react";
 import React from "react";
 
@@ -208,84 +193,24 @@ function questionControl(
 	}
 }
 
-function resolveDropIndex(position: TreeDropPosition, siblingCount: number): number {
-	if (position === "before") return 0;
-	if (position === "after") return siblingCount;
-	return siblingCount;
-}
-
-function applyTreeReorder(spec: FormSpec, move: TreeReorderMove): FormSpec {
-	const source = findQuestionLocation(spec, move.itemId);
-	if (!source) return spec;
-	const targetStepId = move.toParentId.startsWith("step:") ? move.toParentId.slice(5) : move.toParentId;
-	const targetStep = spec.steps.find((step) => step.id === targetStepId);
-	if (!targetStep) return spec;
-	const index = resolveDropIndex(move.position, targetStep.questions.length);
-	return applyFormEditOp(spec, {
-		op: "moveQuestion",
-		questionId: move.itemId,
-		fromStepId: source.stepId,
-		toStepId: targetStepId,
-		index,
-	});
-}
-
-function applyCatalogueDrop(spec: FormSpec, stepId: string, kind: FormQuestionKind, index?: number): FormSpec {
-	const question = defaultQuestionForKind(kind, createFormId("q"));
-	return applyFormEditOp(spec, { op: "addQuestion", stepId, question, index });
-}
-
-function buildHierarchySections(spec: FormSpec, selectedIds: readonly string[]): TreeDataSection[] {
-	return [
-		{
-			id: "forms-hierarchy",
-			label: "Steps",
-			items: spec.steps.map((step) => ({
-				id: `step:${step.id}`,
-				label: step.title,
-				defaultOpen: true,
-				draggable: true,
-				items: step.questions.map((question) => ({
-					id: question.id,
-					label: question.label,
-					description: question.kind,
-					draggable: true,
-					isSelected: selectedIds.includes(question.id),
-				})),
-			})),
+/** @emoji 🖱️ {@link TreeDragAndDropController} for workbench rows that carry forms question palette `dragData`. */
+export function formsQuestionPaletteTreeDragController(
+	dragDataByItemId: ReadonlyMap<string, Record<string, string>>,
+): TreeDragAndDropController {
+	const readEncoded = (dragData: Record<string, string> | undefined): string | undefined => {
+		const payload = dragData?.[FORMS_QUESTION_DRAG_MIME];
+		return payload?.trim() ? payload : undefined;
+	};
+	return {
+		getDragData: ({ sourceItem }) => dragDataByItemId.get(sourceItem.id),
+		pointerPaletteDrag: {
+			readEncodedDragPayload: readEncoded,
+			begin: () => {},
+			cancel: () => {},
 		},
-	];
-}
-
-function buildInspectorSections(spec: FormSpec, selectedIds: readonly string[]): TreeDataSection[] {
-	const questionId = selectedIds[0];
-	if (!questionId) {
-		return [{ id: "forms-inspector-empty", label: "Inspection", items: [{ id: "empty", label: "Select a question" }] }];
-	}
-	const location = findQuestionLocation(spec, questionId);
-	if (!location) {
-		return [{ id: "forms-inspector-missing", label: "Inspection", items: [{ id: "missing", label: "Question not found" }] }];
-	}
-	const question = location.question;
-	return [
-		{
-			id: "forms-inspector",
-			label: "Inspection",
-			items: [
-				{ id: "label", label: "Label", control: <Input value={question.label} readOnly /> },
-				{ id: "kind", label: "Kind", control: <Input value={question.kind} readOnly /> },
-				{ id: "required", label: "Required", control: <Toggle pressed={Boolean(question.required)} disabled /> },
-			],
-		},
-	];
-}
-
-function catalogueItems(): readonly CatalogueItem[] {
-	return QUESTION_KIND_CATALOGUE.map((entry) => ({
-		id: `catalogue-${entry.kind}`,
-		label: entry.label,
-		payload: { kind: entry.kind },
-	}));
+		onDragStart: () => {},
+		onDragEnd: () => {},
+	};
 }
 // #endregion 🔧Helpers
 
@@ -328,30 +253,28 @@ export const FormRenderer: React.FC<FormRendererProps> = ({ spec, values, onChan
 				))}
 			</div>
 			<div className="flex items-center gap-single">
-				<Button variant="outline" disabled={runtime.getCurrentStepIndex() <= 0} onClick={() => { runtime.previousStep(); bump((value) => value + 1); }}>
-					Back
-				</Button>
+				<Button icon="chevron-left" text="Back" disabled={runtime.getCurrentStepIndex() <= 0} onClick={() => { runtime.previousStep(); bump((value) => value + 1); }} />
 				{runtime.getCurrentStepIndex() < spec.steps.length - 1 ? (
 					<Button
+						icon="chevron-right"
+						text="Next"
 						disabled={!runtime.canAdvance()}
 						onClick={() => {
 							runtime.nextStep();
 							bump((value) => value + 1);
 						}}
-					>
-						Next
-					</Button>
+					/>
 				) : (
 					<Button
+						icon="check"
+						text="Submit"
 						disabled={!runtime.canAdvance()}
 						onClick={() => {
 							const result = runtime.submit();
 							if (result.ok) onSubmit?.(result.values);
 							bump((value) => value + 1);
 						}}
-					>
-						Submit
-					</Button>
+					/>
 				)}
 			</div>
 		</div>
@@ -360,55 +283,12 @@ export const FormRenderer: React.FC<FormRendererProps> = ({ spec, values, onChan
 // #endregion 🖼️FormRenderer
 
 // #region 🛠️FormBuilder
-/** @emoji 🛠️ Declarative form builder with hierarchy, catalogue, and preview. */
-export const FormBuilder: React.FC<FormBuilderProps> = ({ spec, onChange, selectedIds = [], onSelectionChange, className }) => {
-	const hierarchySections = React.useMemo(() => buildHierarchySections(spec, selectedIds), [spec, selectedIds]);
-	const inspectorSections = React.useMemo(() => buildInspectorSections(spec, selectedIds), [spec, selectedIds]);
-
-	const reorderController = React.useMemo<TreeDragAndDropController>(
-		() => ({
-			...treeReorderDragController({
-				resolveParentId: (item) => (item.id.startsWith("step:") ? item.id : findQuestionLocation(spec, item.id)?.stepId ? `step:${findQuestionLocation(spec, item.id)!.stepId}` : undefined),
-				onMove: (move) => onChange(applyTreeReorder(spec, move)),
-			}),
-			handleDrop: (context) => {
-				const cataloguePayload = context.data[CATALOGUE_DRAG_MIME] ?? context.data[FORMS_QUESTION_DRAG_MIME];
-				if (cataloguePayload) {
-					const payload = JSON.parse(cataloguePayload) as { kind?: FormQuestionKind };
-					if (payload.kind && context.targetKind === "item") {
-						const targetId = (context.target as TreeDataItem).id;
-						const stepId = targetId.startsWith("step:") ? targetId.slice(5) : findQuestionLocation(spec, targetId)?.stepId;
-						if (stepId) {
-							onChange(applyCatalogueDrop(spec, stepId, payload.kind));
-							return;
-						}
-					}
-				}
-				treeReorderDragController({
-					resolveParentId: (item) => (item.id.startsWith("step:") ? item.id : findQuestionLocation(spec, item.id)?.stepId ? `step:${findQuestionLocation(spec, item.id)!.stepId}` : undefined),
-					onMove: (move) => onChange(applyTreeReorder(spec, move)),
-				}).handleDrop?.(context);
-			},
-		}),
-		[onChange, spec],
-	);
-
+/** @emoji 🛠️ Embeddable form builder canvas; playground hosts use side-panel hierarchy, catalogue, and inspection tabs. */
+export const FormBuilder: React.FC<FormBuilderProps> = ({ spec, onChange, className }) => {
+	void onChange;
 	return (
-		<div className={cn("grid min-h-0 min-w-0 grid-cols-[minmax(12rem,16rem)_minmax(0,1fr)_minmax(12rem,16rem)] gap-double p-double", className)} data-slot="form-builder">
-			<Catalogue title="Question Kinds" items={catalogueItems()} mime={FORMS_QUESTION_DRAG_MIME} className="min-h-0 overflow-auto border border-border rounded-md" />
-			<Tree
-				className="min-h-0 overflow-auto border border-border rounded-md p-single"
-				sections={hierarchySections}
-				selectedIds={[...selectedIds]}
-				onSelectionChange={(ids) => onSelectionChange?.(ids)}
-				dragAndDropController={reorderController}
-			/>
-			<div className="flex min-h-0 flex-col gap-double overflow-auto">
-				<Tree className="border border-border rounded-md p-single" sections={inspectorSections} />
-				<div className="border border-border rounded-md min-h-0 overflow-auto">
-					<FormRenderer spec={spec} />
-				</div>
-			</div>
+		<div className={cn("min-h-0 min-w-0", className)} data-slot="form-builder">
+			<FormRenderer spec={spec} />
 		</div>
 	);
 };
@@ -434,9 +314,7 @@ export const FlowGenerateSurface: React.FC<FlowGenerateSurfaceProps> = ({
 			<div className="flex min-h-0 flex-col gap-single border border-border rounded-md p-single overflow-auto">
 				<div className="flex items-center justify-between gap-single">
 					<h3 className="text-sm font-medium">Generations</h3>
-					<Button size="sm" onClick={onAddGeneration}>
-						Add
-					</Button>
+					<Button icon="plus" text="Add" onClick={onAddGeneration} />
 				</div>
 				{generations.map((generation) => (
 					<div key={generation.id} className={cn("flex flex-col gap-half rounded-md border p-single", selected?.id === generation.id ? "border-primary" : "border-border")}>
@@ -444,9 +322,7 @@ export const FlowGenerateSurface: React.FC<FlowGenerateSurfaceProps> = ({
 							{generation.name}
 						</button>
 						<Input value={generation.name} onChange={(event) => onRenameGeneration(generation.id, event.target.value)} />
-						<Button size="sm" variant="outline" onClick={() => onRemoveGeneration(generation.id)}>
-							Remove
-						</Button>
+						<Button icon="trash-2" text="Remove" onClick={() => onRemoveGeneration(generation.id)} />
 					</div>
 				))}
 			</div>
@@ -541,9 +417,10 @@ export function applyGenerationValuesToFixture(fixtureJson: string, values: Form
 // #endregion ⚡FlowGenerate
 
 // #region 🧪Tests
-import { describe, expect, it } from "vitest";
+if (import.meta.vitest) {
+	const { describe, expect, it } = import.meta.vitest;
 
-describe("forms-react", () => {
+	describe("forms-react", () => {
 	it("maps flow fixture widgets to form spec", () => {
 		const json = JSON.stringify({
 			schema: "flow.fixture/v1",
@@ -564,5 +441,6 @@ describe("forms-react", () => {
 	it("serializes default form spec", () => {
 		expect(formSpecFromJson(formSpecToJson(defaultFormSpec())).id).toBe("default");
 	});
-});
+	});
+}
 // #endregion 🧪Tests

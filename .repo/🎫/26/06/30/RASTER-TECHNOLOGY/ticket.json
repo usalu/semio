@@ -1,8 +1,9 @@
 {
   "title": "Raster Technology",
   "emoji": "🖼️",
-  "status": "open",
+  "status": "closed",
   "description": "Introduce a new top-level raster technology for non-destructive, multi-windowed image editing on an infinite canvas. Built on infinite_cavas Rust/WASM/Vello. Layers, masks, blend modes, adjustment layers, painting, filters. Integrated with shared hover/selection, side-panel-tree, ribbon-tool-tree, multi-window shell. Sophisticated playground.",
+  "summary": "Introduced the raster technology stack for non-destructive, multi-windowed image editing on the infinite canvas.\n\n**Core (`raster/core`)**: `raster.document/v1` schema with pixel/group/adjustment layers, blend modes, masks, transforms, edit ops, and bidirectional/transitive hover tree-id mapping.\n\n**Rust WASM (`raster/rs`)**: `RasterHost` compositor on `infinite_cavas` using Vello `push_layer` blend/opacity, paint buffers, mask clips, `RasterSession` with attach/render/camera/paint/sync/upload APIs.\n\n**React (`raster/react`)**: `RasterRenderer`, `RasterCanvas`, `RasterLayerView`, `RasterMaskView` with controlled hover/selection/camera and marquee selection helpers.\n\n**Play (`raster/play`)**: `PlaygroundRaster` with composite+navigator windows, ribbon tool tree (selection/paint/transform/adjust/filter), Layers/Masks/Properties side panels, fixture catalog, hover plumbing via `CallbackTreePanelDefinition`.\n\n**Framework wiring**: `RasterKindHover`, `UiRasterHostSurfaceNode`, `buildRasterWindowBody`, `registerUiRasterSurfaceHost`, `bootRasterPlay` host region.\n\n**Fixtures**: default, photo-edit, paint.\n\n**Monorepo**: ports 6060/6061, workspaces, launch config, vite play-entry kind `raster`.\n\n**Validation**: raster-core (4 tests), raster-react (1 test), raster-play (2 tests) pass; WASM builds; dev server on :6060; production build succeeds.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1764"
   },
@@ -10,7 +11,7 @@
   "plan": {
     "client": "cursor",
     "id": "5dd4bffd",
-    "source": "/Users/ueli/Documents/semio/.cursor/plans/raster_technology_5dd4bffd.plan.md"
+    "local": "raster_technology_5dd4bffd.plan.md"
   },
   "sessions": [
     "⚪c73827bd6e9b41e1b9115ed48368695d"

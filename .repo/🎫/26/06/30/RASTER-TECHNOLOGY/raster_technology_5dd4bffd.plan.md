@@ -7,34 +7,34 @@ todos:
     status: completed
   - id: core
     content: "Create raster/core (TS): RasterDocument schema raster.document/v1, layer/group/adjustment/mask types, BlendMode enum, parse/serialize, RasterEditOp + applyRasterEditOp, id factories, hover/selection tree-id mapping + transitive RasterKindHover helpers; copy package.json/project.json/script.ts/vitest.config.ts from forms/core; co-located tests."
-    status: in_progress
+    status: completed
   - id: rs
     content: "Create raster/rs Rust crate 'raster' (rlib+cdylib) depending on infinite_cavas: RasterHost (layer-tree compositing via Vello push_layer blend/opacity/clip-mask, paint buffers, adjustment/filter eval, hit-test) impl CanvasContent; RasterSession wasm_bindgen (attach/size/render, camera/wheel, syncDocumentJson, uploadLayerImage, pointer paint, setActiveTool, hover/selection, renderLayerFrame/renderMaskFrame). script.ts via runWasmPackWebBuild; add to Cargo workspace."
-    status: pending
+    status: completed
   - id: react
     content: "Create raster/react: load rs/pkg/raster.js, RasterRenderer (one session + JSON sync + RAF + event drain), RasterCanvas (controlled camera/selection/hover/tool props + callbacks), isolated RasterLayerView/RasterMaskView for per-window rendering."
-    status: pending
+    status: completed
   - id: fw-core
     content: "Wire framework cores: add RasterKindHover to framework/core; add UiRasterHostSurfaceNode (+ per-layer/mask variants) to playground core UiNode union; add buildRasterWindowBody to platform core; export from playground core."
-    status: pending
+    status: completed
   - id: fw-renderer
     content: "Wire framework renderer: RasterPlayPaneSurfaceHost (per-window via useShellWindowInstance), registerRasterPlaySurfaceHosts, bootRasterPlay, registerUiRasterSurfaceHost, augment Layers/Masks/Properties panels with CallbackTreePanelDefinition + shared hover plumbing (applyHoverFocus, kind→instances), package.json './raster' export."
-    status: pending
+    status: completed
   - id: play
     content: "Create raster/play: PlaygroundRaster + RasterPlayController (PlaygroundFixtureHost), multi-window WindowLayout (canvas + Layers/Mask/Navigator + dynamic per-layer/mask windows), ribbon tool tree (selection/paint/transform/adjust/filter), side panels via registerSidePanelBody, fixtures glob + fixture-slugs.ts, boot guard; index.html, globals.css, vite.config.ts via createPlaygroundPlayViteConfig."
-    status: pending
+    status: completed
   - id: fixtures
     content: "Author raster/fixture: default.raster.json (layers+mask+adjustment), photo-edit.raster.json (groups+blend modes), paint.raster.json (paintable layers)."
-    status: pending
+    status: completed
   - id: monorepo
     content: "Monorepo wiring: PLAYGROUND_PORTS raster entry, vite-elements-assets play-entry kind+boot map, root package.json workspaces+scripts, root script.ts route, .vscode/launch.json dev config."
-    status: pending
+    status: completed
   - id: scope
     content: "Implement full-scope features in phases: (3) painting tools + marquee/lasso/wand selections using ui-react helpers, (4) adjustment layers + clipping masks, (5) non-destructive filters."
-    status: pending
+    status: completed
   - id: validate
     content: "Validate: run core/react vitest, build WASM, run play dev server, confirm runtime via [DEBUG] logs (attach, sync, blend compositing, bidirectional/transitive hover across canvas/windows/trees, per-layer/mask windows); then ticket_close with file list."
-    status: pending
+    status: completed
 isProject: false
 ---
 

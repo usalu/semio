@@ -673,9 +673,10 @@ export class FormRuntime {
 // #endregion 🏃Runtime
 
 // #region 🧪Tests
-import { describe, expect, it } from "vitest";
+if (import.meta.vitest) {
+	const { describe, expect, it } = import.meta.vitest;
 
-describe("forms-core", () => {
+	describe("forms-core", () => {
 	const sampleSpec: FormSpec = {
 		schema: "forms.form/v1",
 		id: "sample",
@@ -749,5 +750,6 @@ describe("forms-core", () => {
 		expect(QUESTION_KIND_CATALOGUE.map((entry) => entry.kind)).toContain("slider");
 		expect(defaultQuestionForKind("boolean", "q1").kind).toBe("boolean");
 	});
-});
+	});
+}
 // #endregion 🧪Tests

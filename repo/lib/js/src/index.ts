@@ -1014,6 +1014,7 @@ export type PlaygroundHostKind =
 	| "procedural-2d"
 	| "shooting"
 	| "forms"
+	| "raster"
 	| "cad"
 	| "gis-map"
 	| "projektetage"
@@ -1038,6 +1039,7 @@ export const PLAYGROUND_PORTS: Record<PlaygroundHostKind, PlaygroundPortSpec> = 
 	"trinity-jack": { dev: 6054, test: 6055, env: "TRINITY_JACK_PLAY_PORT" },
 	"trinity-rewrite": { dev: 6056, test: 6057, env: "TRINITY_REWRITE_PLAY_PORT" },
 	forms: { dev: 6058, test: 6059, env: "FORMS_PLAY_PORT" },
+	raster: { dev: 6060, test: 6061, env: "RASTER_PLAY_PORT" },
 	"procedural-3d": { dev: 6018, test: 6031, env: "PROCEDURAL_3D_PLAY_PORT" },
 	"procedural-2d": { dev: 6021, test: 6033, env: "PROCEDURAL_2D_PLAY_PORT" },
 	shooting: { dev: 6019, test: 6032, env: "SHOOTING_PLAY_PORT" },

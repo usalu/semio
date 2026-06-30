@@ -433,7 +433,7 @@ const PLAYGROUND_RENDERER_PUZZLE_HOSTS_START = "//#region 🔖Puzzle3dPlayHost";
 const PLAYGROUND_RENDERER_BOOT_START = "//#region 🔖Boot";
 const PLAYGROUND_RENDERER_VITEST_START = "//#region 🧪Tests";
 
-export type PlaygroundRendererPuzzleKind = "2d" | "3d" | "5d" | "map" | "flow" | "dag" | "trinity-jack" | "trinity-rewrite" | "procedural-3d" | "procedural-2d" | "presentation" | "wires" | "shooting";
+export type PlaygroundRendererPuzzleKind = "2d" | "3d" | "5d" | "map" | "flow" | "dag" | "trinity-jack" | "trinity-rewrite" | "procedural-3d" | "procedural-2d" | "presentation" | "wires" | "shooting" | "forms" | "raster";
 
 const PLAYGROUND_RENDERER_PUZZLE_BOOT_SUBPATHS: Readonly<Record<string, PlaygroundRendererPuzzleKind>> = {
   "@semio-tech/framework-playground-renderer-react/puzzle/2d": "2d",
@@ -448,6 +448,8 @@ const PLAYGROUND_RENDERER_PUZZLE_BOOT_SUBPATHS: Readonly<Record<string, Playgrou
   "@semio-tech/framework-playground-renderer-react/procedural-2d": "procedural-2d",
   "@semio-tech/framework-playground-renderer-react/shooting": "shooting",
   "@semio-tech/framework-playground-renderer-react/presentation": "presentation",
+  "@semio-tech/framework-playground-renderer-react/forms": "forms",
+  "@semio-tech/framework-playground-renderer-react/raster": "raster",
   "@semio-tech/framework-playground-renderer-react/reasoning/wires": "wires",
 };
 
@@ -464,6 +466,8 @@ const PLAYGROUND_RENDERER_PUZZLE_HOST_MARKERS: Readonly<Record<PlaygroundRendere
   "procedural-2d": { start: "//#region 🔖Procedural2dPlayHost", end: "//#endregion 🔖Procedural2dPlayHost" },
   shooting: { start: "//#region 🔖ShootingPlayHost", end: "//#endregion 🔖ShootingPlayHost" },
   presentation: { start: "//#region 🔖PresentationPlayHost", end: "//#endregion 🔖PresentationPlayHost" },
+  forms: { start: "//#region 🔖FormsPlayHost", end: "//#endregion 🔖FormsPlayHost" },
+  raster: { start: "//#region 🔖RasterPlayHost", end: "//#endregion 🔖RasterPlayHost" },
   wires: { start: "//#region 🔖Puzzle2dPlayHost", end: "//#endregion 🔖Puzzle2dPlayHost" },
 };
 
@@ -551,8 +555,8 @@ export function playgroundRendererShellEntryPlugin(rendererIndexPath: string): P
       if (id.includes("playgroundEntry=shell")) {
         return stripPlaygroundRendererPuzzleHosts(source, { includeVitest: false });
       }
-      const puzzleMatch = id.match(/playgroundEntry=puzzle-(2d|3d|5d|map|flow|dag|trinity-jack|trinity-rewrite|procedural-3d|procedural-2d|presentation|wires|shooting)/);
-      if (puzzleMatch) {
+      const puzzleMatch = id.match(/playgroundEntry=puzzle-([^&?]+)/);
+      if (puzzleMatch && puzzleMatch[1] in PLAYGROUND_RENDERER_PUZZLE_HOST_MARKERS) {
         return stripPlaygroundRendererForPuzzleKind(source, puzzleMatch[1] as PlaygroundRendererPuzzleKind, { includeVitest: false });
       }
     },
@@ -1375,6 +1379,15 @@ if (import.meta.vitest) {
       expect(stripped).toMatch(
         /import\s*\{[^}]*registerTabIcon[^}]*\}\s*from\s*["']@framework\/platform\/renderer\/react["']/,
       );
+    });
+
+    it("forms virtual entry keeps only the forms host slice", () => {
+      const rendererIndex = resolve(repoRoot, "framework/product/playground/renderer/react/index.tsx");
+      const stripped = stripPlaygroundRendererForPuzzleKind(readFileSync(rendererIndex, "utf8"), "forms");
+      expect(stripped).toContain("//#region 🔖FormsPlayHost");
+      expect(stripped).toContain("bootFormsPlay");
+      expect(stripped).not.toContain("//#region 🔖ShootingPlayHost");
+      expect(stripped).not.toContain("//#region 🔖Puzzle3dPlayHost");
     });
   });
 }

@@ -28,6 +28,7 @@ members = [
     "gis/map/rs",
     "reasoning/mindmap",
     "puzzle/2d/rs",
+    "raster/rs",
     "puzzle/3d/rs",
     "compose/client/lib/rs",
     "compose/client/lib/query",

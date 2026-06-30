@@ -890,6 +890,28 @@ export function puzzle3dKindHoversEqual(a: Puzzle3dKindHover | null, b: Puzzle3d
 }
 //#endregion 🔖PuzzlePlayHover
 
+//#region 🔖RasterPlayHover
+/** @emoji 🖼️ Raster catalog-kind hover domain (instance → kind "is a"). */
+export type RasterKindHoverDomain = "layer" | "group" | "mask" | "adjustment" | "blendMode";
+
+/** @emoji 🖱️ Active transitive hover kind for raster instances. */
+export interface RasterKindHover {
+	readonly domain: RasterKindHoverDomain;
+	readonly kindId: string;
+}
+
+/** @emoji 🖱️ Compares two raster kind hovers for equality. */
+export function rasterKindHoversEqual(a: RasterKindHover | null, b: RasterKindHover | null): boolean {
+	if (a === b) {
+		return true;
+	}
+	if (!a || !b) {
+		return false;
+	}
+	return a.domain === b.domain && a.kindId === b.kindId;
+}
+//#endregion 🔖RasterPlayHover
+
 //#region 🔖CommandBus
 /** @emoji 🚦 Routes toolbar/footer commands to {@link Controller} instances by id. */
 export class CommandBus {

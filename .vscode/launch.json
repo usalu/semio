@@ -830,6 +830,25 @@
       }
     },
     {
+      "name": "🛠️dev🖼️raster",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:raster",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "RASTER_PLAY_PORT": "6060"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 386
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6060)",
+        "uriFormat": "%s"
+      }
+    },
+    {
       "name": "🛠️dev🖱️ui🪁typecheck",
       "type": "node-terminal",
       "request": "launch",

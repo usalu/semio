@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🛝 Vite dev/build for `@semio-tech/forms-play`. */
+/** @emoji 🛝 Vite dev/build for `@semio-tech/raster-play`. */
 // #endregion 🧲Header
 
 import path from "node:path";
@@ -13,15 +13,16 @@ const threeModule = path.resolve(repoRoot, "node_modules/three/build/three.modul
 export default createPlaygroundPlayViteConfig({
 	playDir,
 	repoRoot,
-	playEntryKind: "forms",
+	playEntryKind: "raster",
 	extraAliases: [
-		{ find: "@semio-tech/forms-react", replacement: path.resolve(playDir, "../react/index.tsx") },
-		{ find: "@semio-tech/forms-core", replacement: path.resolve(playDir, "../core/index.ts") },
+		{ find: "@semio-tech/raster-play", replacement: path.resolve(playDir, "./index.ts") },
+		{ find: "@semio-tech/raster-react", replacement: path.resolve(playDir, "../react/index.tsx") },
+		{ find: "@semio-tech/raster-core", replacement: path.resolve(playDir, "../core/index.ts") },
 		{ find: /^three$/, replacement: threeModule },
 	],
-	resolveDedupe: ["react", "react-dom", "three", "@react-three/fiber", "@react-three/drei", "@semio-tech/forms-react"],
+	resolveDedupe: ["react", "react-dom", "@semio-tech/raster-react", "three"],
 	optimizeDeps: {
-		include: ["react", "react-dom"],
+		include: ["react", "react-dom", "@semio-tech/raster-react"],
 		esbuildOptions: { target: "esnext" },
 	},
 });

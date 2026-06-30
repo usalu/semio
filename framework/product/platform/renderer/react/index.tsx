@@ -3593,6 +3593,13 @@ function renderNode(node: UiNode, commandBus: CommandBus, horizontalParent: bool
 			return renderCad(node, platform, commandBus);
 		case "gismap":
 			return renderBoundComponent(node, "canvas", platform, commandBus);
+		case "forms":
+		case "raster":
+		case "flow":
+		case "dag":
+		case "trinity":
+		case "shooting":
+			return renderBoundComponent(node, "canvas", platform, commandBus);
 		default:
 			return (
 				<div className="p-2 text-xs text-destructive">

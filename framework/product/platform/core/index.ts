@@ -283,9 +283,9 @@ export function sidePanelTreeRootItems(
 
 //#region 🔖ComponentKind
 /** @emoji 🧩 Fixed platform component vocabulary wired by renderers (`table`, `virtualFileSystem`, `puzzle2d`, …). */
-export type ComponentKind = "table" | "virtualFileSystem" | "puzzle2d" | "puzzle3d" | "puzzle5d" | "cad" | "gismap" | "flow" | "dag" | "trinity" | "shooting" | "forms" | "panel";
+export type ComponentKind = "table" | "virtualFileSystem" | "puzzle2d" | "puzzle3d" | "puzzle5d" | "cad" | "gismap" | "flow" | "dag" | "trinity" | "shooting" | "forms" | "raster" | "panel";
 
-const CANVAS_COMPONENT_KINDS: readonly ComponentKind[] = ["table", "virtualFileSystem", "puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag", "trinity", "shooting", "forms"];
+const CANVAS_COMPONENT_KINDS: readonly ComponentKind[] = ["table", "virtualFileSystem", "puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag", "trinity", "shooting", "forms", "raster"];
 //#endregion 🔖ComponentKind
 
 /** @emoji 📊 Host-bound tabular surface; `paneId` disambiguates multiple table slots in one app. */
@@ -415,6 +415,18 @@ export interface UiFormsHostSurfaceNode {
 	readonly bindingId?: string;
 }
 
+/** @emoji 🖼️ Host-bound raster surface (`composite`, `navigator`, `layer`, or `mask`). */
+export interface UiRasterHostSurfaceNode {
+	readonly type: "raster";
+	readonly componentKind: "raster";
+	readonly surfaceId: string;
+	readonly controllerId: string;
+	readonly paneId?: string;
+	readonly view: "composite" | "navigator" | "layer" | "mask";
+	readonly layerId?: string;
+	readonly bindingId?: string;
+}
+
 export type UiComponentHostSurfaceNode =
 	| UiTableHostSurfaceNode
 	| UiVirtualFileSystemHostSurfaceNode
@@ -428,6 +440,7 @@ export type UiComponentHostSurfaceNode =
 	| UiCadHostSurfaceNode
 	| UiShootingHostSurfaceNode
 	| UiFormsHostSurfaceNode
+	| UiRasterHostSurfaceNode
 	| UiPanelHostSurfaceNode;
 
 /** @emoji 🌲 Converts declarative form sections into a strict side-panel tree. */
@@ -631,6 +644,27 @@ export function buildFormsWindowBody(
 	return { type: "forms", componentKind: "forms", surfaceId, controllerId, view, ...(bindingId ? { bindingId } : {}) };
 }
 
+/** @emoji 🖼️ Canonical raster window body for composite, navigator, layer, or mask surfaces. */
+export function buildRasterWindowBody(
+	surfaceId: string,
+	controllerId: string,
+	view: "composite" | "navigator" | "layer" | "mask",
+	paneId?: string,
+	layerId?: string,
+	bindingId?: string,
+): UiRasterHostSurfaceNode {
+	return {
+		type: "raster",
+		componentKind: "raster",
+		surfaceId,
+		controllerId,
+		view,
+		...(paneId ? { paneId } : {}),
+		...(layerId ? { layerId } : {}),
+		...(bindingId ? { bindingId } : {}),
+	};
+}
+
 function isCanvasComponentNode(node: UiNode): boolean {
 	if (node.type === "text") return true;
 	if (node.type === "panel") return true;
@@ -649,7 +683,7 @@ export function isCanvasOnlyWindowBody(node: UiNode): boolean {
 function assertCanvasOnlyWindowBody(bodyKey: string, node: UiNode): void {
 	if (isCanvasOnlyWindowBody(node)) return;
 		throw new Error(
-			`Declarative window body "${bodyKey}" must be a single table, virtualFileSystem, puzzle2d, puzzle3d, puzzle5d, cad, shooting, or forms surface (optional none padding stack wrapper). Found "${node.type}". Use ModeRuntime.tools, side tabs, or window measures for chrome.`,
+			`Declarative window body "${bodyKey}" must be a single table, virtualFileSystem, puzzle2d, puzzle3d, puzzle5d, cad, shooting, forms, or raster surface (optional none padding stack wrapper). Found "${node.type}". Use ModeRuntime.tools, side tabs, or window measures for chrome.`,
 		);
 }
 //#endregion 🔖UiNode

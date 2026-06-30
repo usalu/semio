@@ -1,7 +1,7 @@
 //! 🃏 Cypher-inspired query language for trinity graphs.
 
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use trinity_ram::{
     Edge, EntityRef, Graph, Node, Port, PortDirection, PropertyBag, PropertyValue, port_key,
 };
@@ -74,6 +74,26 @@ pub struct QueryResult {
 // #endregion 🔖Ast
 
 // #region 🔖Lexer
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum TokenClass {
+    Keyword,
+    Ident,
+    Number,
+    String,
+    Operator,
+    Punctuation,
+    Error,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TokenSpan {
+    pub class: TokenClass,
+    pub start: usize,
+    pub end: usize,
+}
+
 #[derive(Clone, Debug, PartialEq)]
 enum Token {
     KwMatch,
@@ -102,11 +122,49 @@ enum Token {
     Eof,
 }
 
-fn lex(input: &str) -> Result<Vec<Token>, String> {
+#[derive(Clone, Debug, PartialEq)]
+struct SpannedToken {
+    token: Token,
+    start: usize,
+    end: usize,
+}
+
+fn token_class(token: &Token) -> TokenClass {
+    match token {
+        Token::KwMatch
+        | Token::KwWhere
+        | Token::KwReturn
+        | Token::KwCreate
+        | Token::KwDelete
+        | Token::KwSet
+        | Token::KwMerge
+        | Token::And
+        | Token::Or => TokenClass::Keyword,
+        Token::Ident(_) => TokenClass::Ident,
+        Token::Number(_) => TokenClass::Number,
+        Token::StringLit(_) => TokenClass::String,
+        Token::Eq | Token::Ne | Token::Dash | Token::Arrow => TokenClass::Operator,
+        Token::LParen
+        | Token::RParen
+        | Token::LBracket
+        | Token::RBracket
+        | Token::Colon
+        | Token::Comma
+        | Token::Dot => TokenClass::Punctuation,
+        Token::Eof => TokenClass::Punctuation,
+    }
+}
+
+fn push_spanned(tokens: &mut Vec<SpannedToken>, token: Token, start: usize, end: usize) {
+    tokens.push(SpannedToken { token, start, end });
+}
+
+fn lex_spanned(input: &str, forgiving: bool) -> Result<Vec<SpannedToken>, String> {
     let mut tokens = Vec::new();
     let bytes = input.as_bytes();
     let mut i = 0;
     while i < bytes.len() {
+        let start = i;
         let c = bytes[i];
         if c.is_ascii_whitespace() {
             i += 1;
@@ -114,76 +172,90 @@ fn lex(input: &str) -> Result<Vec<Token>, String> {
         }
         match c {
             b'(' => {
-                tokens.push(Token::LParen);
+                push_spanned(&mut tokens, Token::LParen, start, start + 1);
                 i += 1;
             }
             b')' => {
-                tokens.push(Token::RParen);
+                push_spanned(&mut tokens, Token::RParen, start, start + 1);
                 i += 1;
             }
             b'[' => {
-                tokens.push(Token::LBracket);
+                push_spanned(&mut tokens, Token::LBracket, start, start + 1);
                 i += 1;
             }
             b']' => {
-                tokens.push(Token::RBracket);
+                push_spanned(&mut tokens, Token::RBracket, start, start + 1);
                 i += 1;
             }
             b':' => {
-                tokens.push(Token::Colon);
+                push_spanned(&mut tokens, Token::Colon, start, start + 1);
                 i += 1;
             }
             b',' => {
-                tokens.push(Token::Comma);
+                push_spanned(&mut tokens, Token::Comma, start, start + 1);
                 i += 1;
             }
             b'.' => {
-                tokens.push(Token::Dot);
+                push_spanned(&mut tokens, Token::Dot, start, start + 1);
                 i += 1;
             }
             b'=' => {
-                tokens.push(Token::Eq);
+                push_spanned(&mut tokens, Token::Eq, start, start + 1);
                 i += 1;
             }
             b'\'' | b'"' => {
                 let quote = c;
                 i += 1;
-                let start = i;
+                let lit_start = i;
                 while i < bytes.len() && bytes[i] != quote {
                     i += 1;
                 }
                 if i >= bytes.len() {
+                    if forgiving {
+                        let s = String::from_utf8_lossy(&bytes[lit_start..i]).into_owned();
+                        push_spanned(&mut tokens, Token::StringLit(s), start, i);
+                        break;
+                    }
                     return Err("unterminated string".into());
                 }
-                let s = String::from_utf8_lossy(&bytes[start..i]).into_owned();
+                let s = String::from_utf8_lossy(&bytes[lit_start..i]).into_owned();
                 i += 1;
-                tokens.push(Token::StringLit(s));
+                push_spanned(&mut tokens, Token::StringLit(s), start, i);
             }
             b'-' if i + 1 < bytes.len() && bytes[i + 1] == b'>' => {
-                tokens.push(Token::Arrow);
-                i += 2;
-            }
-            b'-' => {
-                tokens.push(Token::Dash);
-                i += 1;
-            }
-            b'!' if i + 1 < bytes.len() && bytes[i + 1] == b'=' => {
-                tokens.push(Token::Ne);
+                push_spanned(&mut tokens, Token::Arrow, start, start + 2);
                 i += 2;
             }
             b'0'..=b'9' | b'-' if i + 1 < bytes.len() && bytes[i + 1].is_ascii_digit() => {
-                let start = i;
+                let num_start = i;
                 if bytes[i] == b'-' {
                     i += 1;
                 }
                 while i < bytes.len() && (bytes[i].is_ascii_digit() || bytes[i] == b'.') {
                     i += 1;
                 }
-                let num: f64 = std::str::from_utf8(&bytes[start..i]).map_err(|e| e.to_string())?.parse().map_err(|e: std::num::ParseFloatError| e.to_string())?;
-                tokens.push(Token::Number(num));
+                let num: f64 = match std::str::from_utf8(&bytes[num_start..i]) {
+                    Ok(s) => match s.parse() {
+                        Ok(n) => n,
+                        Err(_e) if forgiving => {
+                            push_spanned(&mut tokens, Token::Ident(s.to_string()), num_start, i);
+                            continue;
+                        }
+                        Err(e) => return Err(e.to_string()),
+                    },
+                    Err(_e) if forgiving => {
+                        push_spanned(&mut tokens, Token::Ident(String::new()), num_start, i);
+                        continue;
+                    }
+                    Err(e) => return Err(e.to_string()),
+                };
+                push_spanned(&mut tokens, Token::Number(num), num_start, i);
+            }
+            b'-' => {
+                push_spanned(&mut tokens, Token::Dash, start, start + 1);
+                i += 1;
             }
             b'a'..=b'z' | b'A'..=b'Z' | b'_' => {
-                let start = i;
                 while i < bytes.len() && (bytes[i].is_ascii_alphanumeric() || bytes[i] == b'_') {
                     i += 1;
                 }
@@ -200,15 +272,297 @@ fn lex(input: &str) -> Result<Vec<Token>, String> {
                     "OR" => Token::Or,
                     _ => Token::Ident(std::str::from_utf8(&bytes[start..i]).unwrap().to_string()),
                 };
-                tokens.push(tok);
+                push_spanned(&mut tokens, tok, start, i);
+            }
+            _ if forgiving => {
+                push_spanned(&mut tokens, Token::Ident(String::from(c as char)), start, start + 1);
+                i += 1;
             }
             _ => return Err(format!("unexpected char {}", c as char)),
         }
     }
-    tokens.push(Token::Eof);
+    push_spanned(&mut tokens, Token::Eof, input.len(), input.len());
     Ok(tokens)
 }
+
+fn lex(input: &str) -> Result<Vec<Token>, String> {
+    lex_spanned(input, false)
+        .map(|spanned| spanned.into_iter().map(|row| row.token).collect())
+}
+
+/// 🎨 Tokenize jack source for editor highlighting (never fails).
+pub fn tokenize(input: &str) -> Vec<TokenSpan> {
+    lex_spanned(input, true)
+        .unwrap_or_default()
+        .into_iter()
+        .filter(|row| !matches!(row.token, Token::Eof))
+        .map(|row| {
+            let mut class = token_class(&row.token);
+            if matches!(row.token, Token::StringLit(_)) {
+                let quote = input.as_bytes().get(row.start);
+                if quote == Some(&b'\'') || quote == Some(&b'"') {
+                    let closed = input.as_bytes().get(row.end.saturating_sub(1)) == quote;
+                    if !closed {
+                        class = TokenClass::Error;
+                    }
+                }
+            }
+            TokenSpan {
+                class,
+                start: row.start,
+                end: row.end,
+            }
+        })
+        .collect()
+}
 // #endregion 🔖Lexer
+
+// #region 🔖Language
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Completion {
+    pub label: String,
+    pub kind: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub detail: Option<String>,
+    pub insert: String,
+}
+
+const CLAUSE_KEYWORDS: &[&str] = &["MATCH", "WHERE", "RETURN", "CREATE", "DELETE", "SET", "MERGE"];
+const LOGIC_KEYWORDS: &[&str] = &["AND", "OR"];
+
+fn completion_prefix(source: &str, cursor: usize) -> String {
+    let cursor = cursor.min(source.len());
+    let bytes = source.as_bytes();
+    let mut start = cursor;
+    while start > 0 {
+        let c = bytes[start - 1];
+        if c.is_ascii_alphanumeric() || c == b'_' {
+            start -= 1;
+        } else {
+            break;
+        }
+    }
+    source[start..cursor].to_string()
+}
+
+fn tokens_before_cursor<'a>(tokens: &'a [SpannedToken], cursor: usize) -> &'a [SpannedToken] {
+    let mut end = tokens.len();
+    for (i, row) in tokens.iter().enumerate() {
+        if row.start >= cursor && !matches!(row.token, Token::Eof) {
+            end = i;
+            break;
+        }
+    }
+    &tokens[..end]
+}
+
+fn after_colon_kind_context(source: &str, cursor: usize) -> Option<bool> {
+    let cursor = cursor.min(source.len());
+    let before = &source[..cursor];
+    let colon = before.rfind(':')?;
+    let after = &before[colon + 1..];
+    if after.chars().any(|c| c.is_whitespace() || matches!(c, '(' | ')' | '[' | ']' | ',')) {
+        return None;
+    }
+    let left = &before[..colon];
+    let bracket = left.rfind('[');
+    let paren = left.rfind('(');
+    let in_bracket = match (bracket, paren) {
+        (Some(b), Some(p)) => b > p,
+        (Some(_), None) => true,
+        _ => false,
+    };
+    Some(in_bracket)
+}
+
+fn after_dot_property_context(source: &str, cursor: usize) -> bool {
+    let cursor = cursor.min(source.len());
+    let before = &source[..cursor];
+    let Some(dot) = before.rfind('.') else {
+        return false;
+    };
+    let after = &before[dot + 1..];
+    !after.chars().any(|c| c.is_whitespace() || matches!(c, '(' | ')' | '[' | ']' | ',' | ':'))
+}
+fn open_bracket_kind(tokens: &[SpannedToken]) -> Option<char> {
+    let mut paren = 0i32;
+    let mut bracket = 0i32;
+    for row in tokens.iter().rev() {
+        match row.token {
+            Token::RParen => paren += 1,
+            Token::LParen if paren > 0 => paren -= 1,
+            Token::LParen if paren == 0 && bracket == 0 => return Some('('),
+            Token::RBracket => bracket += 1,
+            Token::LBracket if bracket > 0 => bracket -= 1,
+            Token::LBracket if bracket == 0 && paren == 0 => return Some('['),
+            _ => {}
+        }
+    }
+    None
+}
+
+fn collect_bound_vars(tokens: &[SpannedToken]) -> BTreeSet<String> {
+    let mut vars = BTreeSet::new();
+    let mut i = 0;
+    while i + 2 < tokens.len() {
+        if matches!(tokens[i].token, Token::LParen | Token::LBracket) {
+            if let Token::Ident(var) = &tokens[i + 1].token {
+                if matches!(tokens[i + 2].token, Token::Colon) {
+                    vars.insert(var.clone());
+                }
+            }
+        }
+        i += 1;
+    }
+    vars
+}
+
+fn in_where_clause(tokens: &[SpannedToken]) -> bool {
+    let mut seen_where = false;
+    let mut seen_return = false;
+    for row in tokens {
+        match row.token {
+            Token::KwWhere => seen_where = true,
+            Token::KwReturn => seen_return = true,
+            _ => {}
+        }
+    }
+    seen_where && !seen_return
+}
+
+fn graph_node_kinds(graph: &Graph) -> Vec<String> {
+    let mut kinds = BTreeSet::new();
+    for node in graph.nodes.values() {
+        kinds.insert(node.kind.clone());
+    }
+    for def in &graph.manifest.node_kinds {
+        kinds.insert(def.name.clone());
+    }
+    kinds.into_iter().collect()
+}
+
+fn graph_edge_kinds(graph: &Graph) -> Vec<String> {
+    let mut kinds = BTreeSet::new();
+    for edge in graph.edges.values() {
+        kinds.insert(edge.kind.clone());
+    }
+    for def in &graph.manifest.edge_kinds {
+        kinds.insert(def.name.clone());
+    }
+    kinds.into_iter().collect()
+}
+
+fn graph_property_names(graph: &Graph) -> Vec<String> {
+    let mut props = BTreeSet::from(["id".to_string(), "name".to_string(), "kind".to_string()]);
+    for node in graph.nodes.values() {
+        for key in node.properties.keys() {
+            props.insert(key.clone());
+        }
+    }
+    props.into_iter().collect()
+}
+
+fn filter_completions(candidates: impl IntoIterator<Item = (String, String, Option<String>)>, prefix: &str) -> Vec<Completion> {
+    let prefix_lower = prefix.to_ascii_lowercase();
+    let mut out = Vec::new();
+    for (label, kind, detail) in candidates {
+        if prefix.is_empty() || label.to_ascii_lowercase().starts_with(&prefix_lower) {
+            out.push(Completion {
+                insert: label.clone(),
+                label,
+                kind,
+                detail,
+            });
+        }
+    }
+    out.sort_by(|a, b| a.label.cmp(&b.label));
+    out
+}
+
+/// 🔎 Context-aware jack completions for the editor.
+pub fn complete(graph: &Graph, source: &str, cursor: usize) -> Vec<Completion> {
+    let cursor = cursor.min(source.len());
+    let prefix = completion_prefix(source, cursor);
+    let tokens = lex_spanned(source, true).unwrap_or_default();
+    let before = tokens_before_cursor(&tokens, cursor);
+
+    if let Some(in_bracket) = after_colon_kind_context(source, cursor) {
+        let kinds = if in_bracket {
+            graph_edge_kinds(graph)
+                .into_iter()
+                .map(|name| (name, "edgeKind".into(), None))
+                .collect::<Vec<_>>()
+        } else {
+            graph_node_kinds(graph)
+                .into_iter()
+                .map(|name| (name, "nodeKind".into(), None))
+                .collect::<Vec<_>>()
+        };
+        return filter_completions(kinds, &prefix);
+    }
+
+    if after_dot_property_context(source, cursor) {
+        let props = graph_property_names(graph)
+            .into_iter()
+            .map(|name| (name, "property".into(), None))
+            .collect::<Vec<_>>();
+        return filter_completions(props, &prefix);
+    }
+
+    if let Some(last) = before.last() {
+        if matches!(last.token, Token::Colon) {
+            let kinds = if open_bracket_kind(before) == Some('[') {
+                graph_edge_kinds(graph)
+                    .into_iter()
+                    .map(|name| (name, "edgeKind".into(), None))
+                    .collect::<Vec<_>>()
+            } else {
+                graph_node_kinds(graph)
+                    .into_iter()
+                    .map(|name| (name, "nodeKind".into(), None))
+                    .collect::<Vec<_>>()
+            };
+            return filter_completions(kinds, &prefix);
+        }
+        if matches!(last.token, Token::Dot) {
+            let props = graph_property_names(graph)
+                .into_iter()
+                .map(|name| (name, "property".into(), None))
+                .collect::<Vec<_>>();
+            return filter_completions(props, &prefix);
+        }
+    }
+
+    if in_where_clause(before) {
+        let logic = filter_completions(
+            LOGIC_KEYWORDS
+                .iter()
+                .map(|kw| (kw.to_string(), "keyword".into(), None)),
+            &prefix,
+        );
+        if !logic.is_empty() {
+            return logic;
+        }
+    }
+
+    let vars = collect_bound_vars(before);
+    if !vars.is_empty() && prefix.chars().next().is_some_and(|c| c.is_ascii_alphabetic() || c == '_') {
+        let var_items = vars.into_iter().map(|name| (name, "variable".into(), None)).collect::<Vec<_>>();
+        let filtered = filter_completions(var_items, &prefix);
+        if !filtered.is_empty() {
+            return filtered;
+        }
+    }
+
+    filter_completions(
+        CLAUSE_KEYWORDS
+            .iter()
+            .map(|kw| (kw.to_string(), "keyword".into(), None)),
+        &prefix,
+    )
+}
+// #endregion 🔖Language
 
 // #region 🔖Parser
 struct Parser {
@@ -748,6 +1102,47 @@ mod tests {
         run(&mut g, "MATCH (a:Piece) WHERE a.name = 'core' SET a.label = 'root-core'").unwrap();
         let node = g.node("root").unwrap();
         assert_eq!(node.properties.get("label"), Some(&PropertyValue::String("root-core".into())));
+    }
+
+    #[test]
+    fn tokenize_keywords_and_strings() {
+        let spans = tokenize("MATCH (a:Piece) WHERE a.name = 'core'");
+        assert!(spans.iter().any(|s| s.class == TokenClass::Keyword && s.start == 0));
+        assert!(spans.iter().any(|s| s.class == TokenClass::String));
+    }
+
+    #[test]
+    fn tokenize_unterminated_string_is_error() {
+        let spans = tokenize("MATCH (a:Piece) WHERE a.name = 'core");
+        assert!(spans.iter().any(|s| s.class == TokenClass::Error));
+    }
+
+    #[test]
+    fn complete_clause_keywords() {
+        let g = mini_graph();
+        let items = complete(&g, "MAT", 3);
+        assert!(items.iter().any(|row| row.label == "MATCH"));
+    }
+
+    #[test]
+    fn complete_node_kinds_after_colon() {
+        let g = mini_graph();
+        let items = complete(&g, "MATCH (a:P", 11);
+        assert!(items.iter().any(|row| row.label == "Piece"));
+    }
+
+    #[test]
+    fn complete_properties_after_dot() {
+        let g = mini_graph();
+        let items = complete(&g, "MATCH (a:Piece) WHERE a.n", 25);
+        assert!(items.iter().any(|row| row.label == "name"));
+    }
+
+    #[test]
+    fn complete_bound_variables() {
+        let g = mini_graph();
+        let items = complete(&g, "MATCH (a:Piece) RETURN a", 24);
+        assert!(items.iter().any(|row| row.label == "a"));
     }
 }
 // #endregion 🔖Tests

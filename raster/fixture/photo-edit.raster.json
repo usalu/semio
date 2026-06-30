@@ -1,0 +1,65 @@
+{
+  "schema": "raster.document/v1",
+  "id": "photo-edit",
+  "title": "Photo Edit Stack",
+  "camera": { "x": 0, "y": 0, "zoom": 0.9 },
+  "activeTool": "paintBrush",
+  "brushSize": 18,
+  "layers": [
+    {
+      "kind": "group",
+      "id": "photo",
+      "name": "Photo",
+      "visible": true,
+      "opacity": 1,
+      "blendMode": "normal",
+      "transform": { "x": 0, "y": 0, "scaleX": 1, "scaleY": 1, "rotation": 0 },
+      "children": [
+        {
+          "kind": "pixel",
+          "id": "base",
+          "name": "Base",
+          "visible": true,
+          "opacity": 1,
+          "blendMode": "normal",
+          "width": 640,
+          "height": 480,
+          "transform": { "x": 0, "y": 0, "scaleX": 1, "scaleY": 1, "rotation": 0 }
+        },
+        {
+          "kind": "pixel",
+          "id": "glow",
+          "name": "Glow",
+          "visible": true,
+          "opacity": 0.6,
+          "blendMode": "screen",
+          "width": 640,
+          "height": 480,
+          "transform": { "x": 20, "y": 10, "scaleX": 1, "scaleY": 1, "rotation": 0 }
+        }
+      ]
+    },
+    {
+      "kind": "adjustment",
+      "id": "levels",
+      "name": "Levels",
+      "visible": true,
+      "opacity": 1,
+      "blendMode": "normal",
+      "adjustmentKind": "levels",
+      "params": { "levelsBlack": 0.05, "levelsWhite": 0.95 },
+      "transform": { "x": 0, "y": 0, "scaleX": 1, "scaleY": 1, "rotation": 0 }
+    },
+    {
+      "kind": "pixel",
+      "id": "vignette",
+      "name": "Vignette",
+      "visible": true,
+      "opacity": 0.35,
+      "blendMode": "multiply",
+      "width": 700,
+      "height": 520,
+      "transform": { "x": 0, "y": 0, "scaleX": 1, "scaleY": 1, "rotation": 0 }
+    }
+  ]
+}

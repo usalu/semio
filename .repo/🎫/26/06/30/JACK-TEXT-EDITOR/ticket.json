@@ -1,0 +1,13 @@
+{
+  "title": "Jack Text Editor",
+  "emoji": "🔺",
+  "status": "open",
+  "description": "Replace adhoc Jack engagement input with handcrafted code editor (syntax highlighting + autocomplete from Rust jack core via WASM), generic framework editor component, split layout: graph canvas + Jack editor + results table.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1765"
+  },
+  "goal": "🎯trinity",
+  "sessions": [
+    "⚪3d9149ec092843fcbf3b4344d0c09b3b"
+  ]
+}

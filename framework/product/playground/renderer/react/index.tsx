@@ -366,8 +366,10 @@ const trinitySurfaceHosts = new Map<string, TrinitySurfaceHost>();
 const tableSurfaceHosts = new Map<string, TableSurfaceHost>();
 type FormsSurfaceHost = React.ComponentType<{ readonly node: import("@semio-tech/framework-platform-core").UiFormsHostSurfaceNode }>;
 const formsSurfaceHosts = new Map<string, FormsSurfaceHost>();
+type RasterSurfaceHost = React.ComponentType<{ readonly node: import("@semio-tech/framework-platform-core").UiRasterHostSurfaceNode }>;
+const rasterSurfaceHosts = new Map<string, RasterSurfaceHost>();
 
-const PLAYGROUND_CANVAS_HOST_TYPES = new Set(["puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag", "trinity", "shooting", "forms"]);
+const PLAYGROUND_CANVAS_HOST_TYPES = new Set(["puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag", "trinity", "shooting", "forms", "raster"]);
 
 function isPlaygroundCanvasHostChild(child: UiNode): boolean {
   return PLAYGROUND_CANVAS_HOST_TYPES.has(child.type);
@@ -420,6 +422,12 @@ export function registerUiTableSurfaceHost(surfaceId: string, Component: TableSu
 /** @emoji 📋 Binds `surfaceId` from {@link UiFormsHostSurfaceNode} to a forms surface. */
 export function registerUiFormsSurfaceHost(surfaceId: string, Component: FormsSurfaceHost): void {
   formsSurfaceHosts.set(surfaceId, Component);
+  registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
+}
+
+/** @emoji 🖼️ Binds `surfaceId` from {@link UiRasterHostSurfaceNode} to a raster canvas. */
+export function registerUiRasterSurfaceHost(surfaceId: string, Component: RasterSurfaceHost): void {
+  rasterSurfaceHosts.set(surfaceId, Component);
   registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
 }
 
@@ -494,6 +502,16 @@ function renderPlaygroundHostSurface(node: UiNode, layout: "canvas" | "panel"): 
       );
     }
   }
+  if (node.type === "raster") {
+    const Host = rasterSurfaceHosts.get(node.surfaceId);
+    if (Host) {
+      return (
+        <div className="absolute inset-0 min-h-0 min-w-0">
+          <Host node={node} />
+        </div>
+      );
+    }
+  }
   if (node.type === "table") {
     const Host = tableSurfaceHosts.get(node.surfaceId);
     if (Host) {
@@ -514,6 +532,7 @@ function renderPlaygroundHostSurface(node: UiNode, layout: "canvas" | "panel"): 
     node.type === "trinity" ||
     node.type === "shooting" ||
     node.type === "forms" ||
+    node.type === "raster" ||
     node.type === "panel" ||
     node.type === "table"
   ) {
@@ -770,7 +789,10 @@ export function UiRenderer({ node, commandBus }: { readonly node: UiNode; readon
     case "gismap":
     case "flow":
     case "dag":
+    case "trinity":
     case "shooting":
+    case "forms":
+    case "raster":
     case "panel":
     case "table":
       return renderPlaygroundHostSurface(node, node.type === "table" || node.type === "panel" ? "panel" : "canvas");
@@ -8299,9 +8321,10 @@ import {
   buildFormsPlayCatalogueTree,
   buildFormsPlayHierarchyTree,
   buildFormsPlayInspectorTree,
+  createFormsPlayHierarchyTreeDragController,
   registerFormsPlayDeclarativeBodies,
 } from "@semio-tech/forms-play";
-import { FormBuilder, FormRenderer, defaultFormSpec, formSpecFromJson } from "@semio-tech/forms-react";
+import { FormRenderer, defaultFormSpec, formsQuestionPaletteTreeDragController } from "@semio-tech/forms-react";
 
 let formsPlayChromeRegistered = false;
 const formsPlayControllerRef: { current: FormsPlayController | null } = { current: null };
@@ -8339,19 +8362,7 @@ function useFormsPlayInteractionRevision(runtime: Platform): number {
 function FormsBuilderSurfaceHost({ node }: { readonly node: UiFormsHostSurfaceNode }): ReactElement {
   const ctrl = useFormsPlayController();
   const spec = ctrl?.getSpec() ?? defaultFormSpec("empty");
-  const [selectedIds, setSelectedIds] = reactHostPort.useState<string[]>([]);
-  return (
-    <FormBuilder
-      spec={spec}
-      selectedIds={selectedIds}
-      onSelectionChange={(ids) => {
-        setSelectedIds([...ids]);
-        ctrl?.run("setSelection", { ids: [...ids] });
-      }}
-      onChange={(next) => ctrl?.run("setSpecJson", { json: JSON.stringify(next) })}
-      className="h-full"
-    />
-  );
+  return <FormRenderer spec={spec} className="h-full" />;
 }
 
 function FormsPreviewSurfaceHost({ node }: { readonly node: UiFormsHostSurfaceNode }): ReactElement {
@@ -8372,7 +8383,11 @@ class FormsPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
         const ctrl = formsPlayControllerRef.current;
         const bus = new CommandBus();
         const treeNode = buildFormsPlayHierarchyTree(ctrl?.getSpec() ?? defaultFormSpec("empty"), ctrl?.getSelectedIds() ?? []);
-        return uiTreeNodeToTreePanelConfig(treeNode, bus);
+        const config = uiTreeNodeToTreePanelConfig(treeNode, bus);
+        return {
+          ...config,
+          dragAndDropController: createFormsPlayHierarchyTreeDragController(() => formsPlayControllerRef.current ?? undefined),
+        };
       }),
     };
   }
@@ -8387,7 +8402,12 @@ class FormsPlayCataloguePanelDefinition extends PureSidePanelTabDefinition {
       order: 1,
       tree: new CallbackTreePanelDefinition(() => {
         const bus = new CommandBus();
-        return uiTreeNodeToTreePanelConfig(buildFormsPlayCatalogueTree(), bus);
+        const treeNode = buildFormsPlayCatalogueTree();
+        const config = uiTreeNodeToTreePanelConfig(treeNode, bus);
+        return {
+          ...config,
+          dragAndDropController: formsQuestionPaletteTreeDragController(collectUiTreeItemDragData(treeNode.sections)),
+        };
       }),
     };
   }
@@ -8412,7 +8432,7 @@ class FormsPlayInspectionPanelDefinition extends PureSidePanelTabDefinition {
 
 function FormsPlayInner({ playground }: { readonly playground: Playground }): ReactElement {
   useFormsPlayController(playground.runtime);
-  useFormsPlayInteractionRevision(playground.runtime);
+  const interactionRevision = useFormsPlayInteractionRevision(playground.runtime);
   const formsPlayHierarchyPanel = reactHostPort.useMemo(() => new FormsPlayHierarchyPanelDefinition(), []);
   const formsPlayCataloguePanel = reactHostPort.useMemo(() => new FormsPlayCataloguePanelDefinition(), []);
   const formsPlayInspectionPanel = reactHostPort.useMemo(() => new FormsPlayInspectionPanelDefinition(), []);
@@ -8421,7 +8441,7 @@ function FormsPlayInner({ playground }: { readonly playground: Playground }): Re
       workbench: [formsPlayHierarchyPanel, formsPlayCataloguePanel],
       details: [formsPlayInspectionPanel],
     }),
-    [formsPlayCataloguePanel, formsPlayHierarchyPanel, formsPlayInspectionPanel],
+    [interactionRevision, formsPlayCataloguePanel, formsPlayHierarchyPanel, formsPlayInspectionPanel],
   );
   return <PlaygroundView runtime={playground.runtime} defaultAppId={FORMS_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} playgroundKeybindings={playground.keybindings} />;
 }
@@ -8451,6 +8471,221 @@ export function bootFormsPlay(playground: Playground, rootId = "root"): void {
   bootPlayground(playground, formsPlayChromeBoot, rootId);
 }
 //#endregion 🔖FormsPlayHost
+
+//#region 🔖RasterPlayHost
+import type { UiRasterHostSurfaceNode } from "@semio-tech/framework-platform-core";
+import {
+  RASTER_PLAY_APP_ID,
+  RASTER_PLAY_CONTROLLER_ID,
+  RASTER_PLAY_LAYERS_TAB_ID,
+  RASTER_PLAY_MASKS_TAB_ID,
+  RASTER_PLAY_PROPERTIES_TAB_ID,
+  RASTER_PLAY_SURFACE_ID_COMPOSITE,
+  RASTER_PLAY_SURFACE_ID_NAVIGATOR,
+  RasterPlayController,
+  buildRasterPlayBlendCatalogueTree,
+  buildRasterPlayLayersTree,
+  buildRasterPlayMasksTree,
+  buildRasterPlayPropertiesTree,
+  registerRasterPlayDeclarativeBodies,
+} from "@semio-tech/raster-play";
+import { RasterCanvas, RasterLayerView, RasterMaskView } from "@semio-tech/raster-react";
+
+let rasterPlayChromeRegistered = false;
+const rasterPlayControllerRef: { current: RasterPlayController | null } = { current: null };
+
+function useRasterPlayController(runtimeOverride?: Platform): RasterPlayController | undefined {
+  const appCtx = reactHostPort.useContext(PlaygroundContext);
+  const runtime = runtimeOverride ?? appCtx?.runtime;
+  reactHostPort.useSyncExternalStore(
+    (listener) => (runtime ? runtime.subscribe(listener) : () => {}),
+    () => runtime?.generation ?? 0,
+    () => 0,
+  );
+  const ctrl = runtime?.getActiveApp()?.controller as RasterPlayController | undefined;
+  rasterPlayControllerRef.current = ctrl ?? null;
+  return ctrl;
+}
+
+function useRasterPlayInteractionRevision(runtime: Platform): number {
+  return reactHostPort.useSyncExternalStore(
+    (listener) => {
+      const ctrl = runtime.getActiveApp()?.controller as RasterPlayController | undefined;
+      rasterPlayControllerRef.current = ctrl ?? null;
+      const unsubscribeRuntime = runtime.subscribe(listener);
+      const unsubscribeCtrl = ctrl?.subscribe(listener);
+      return () => {
+        unsubscribeRuntime();
+        unsubscribeCtrl?.();
+      };
+    },
+    () => (runtime.getActiveApp()?.controller as RasterPlayController | undefined)?.getInteractionRevision() ?? 0,
+    () => 0,
+  );
+}
+
+function RasterPlayPaneSurfaceHost({ node }: { readonly node: UiRasterHostSurfaceNode }): ReactElement {
+  const ctrl = useRasterPlayController();
+  const doc = ctrl?.getDocument();
+  if (!doc) return <div className="p-double text-sm text-muted-foreground">No raster document</div>;
+  const selectedIds = ctrl?.getSelectedIds() ?? [];
+  const hoveredId = ctrl?.getHoveredId() ?? null;
+  const kindHover = ctrl?.getHoveredKind() ?? null;
+  const onHover = reactHostPort.useCallback((payload: import("@semio-tech/raster-core").RasterHoverPayload) => {
+    ctrl?.run("setHover", { id: payload.id, kind: payload.kind });
+  }, [ctrl]);
+  const common = {
+    document: doc,
+    selectedIds,
+    hoveredId,
+    kindHover,
+    activeTool: doc.activeTool,
+    camera: doc.camera,
+    onHover,
+    onSelect: (ids: readonly string[]) => ctrl?.run("setSelection", { ids: [...ids] }),
+    onCameraChange: (camera: typeof doc.camera) => ctrl?.run("setCamera", { camera }),
+    className: "h-full",
+  };
+  if (node.view === "layer") {
+    return <RasterLayerView {...common} isolatedLayerId={node.layerId ?? selectedIds[0] ?? null} />;
+  }
+  if (node.view === "mask") {
+    return <RasterMaskView {...common} isolatedLayerId={node.layerId ?? selectedIds[0] ?? null} />;
+  }
+  if (node.view === "navigator") {
+    return <RasterCanvas {...common} viewMode="navigator" />;
+  }
+  return <RasterCanvas {...common} viewMode="composite" />;
+}
+
+class RasterPlayLayersPanelDefinition extends PureSidePanelTabDefinition {
+  buildTab(): SidePanelTabConfig {
+    return {
+      id: RASTER_PLAY_LAYERS_TAB_ID,
+      icon: shellTabIconComponent(FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, "workbench"),
+      name: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+      order: 0,
+      tree: new CallbackTreePanelDefinition(
+        () => {
+          const ctrl = rasterPlayControllerRef.current;
+          const doc = ctrl?.getDocument();
+          const bus = new CommandBus();
+          if (!doc) return { sections: [{ id: "raster-empty", items: [{ id: "empty", label: "No document" }] }] };
+          const treeNode = buildRasterPlayLayersTree(
+            doc,
+            ctrl?.getSelectedIds() ?? [],
+            ctrl?.getHoveredId() ?? null,
+            ctrl?.getHoveredKind() ?? null,
+            (payload) => ctrl?.run("setHover", { id: payload.id, kind: payload.kind }),
+          );
+          return uiTreeNodeToTreePanelConfig(treeNode, bus);
+        },
+        () => {
+          const ctrl = rasterPlayControllerRef.current;
+          const doc = ctrl?.getDocument();
+          if (!doc) return [];
+          return [...(buildRasterPlayLayersTree(doc, [], ctrl?.getHoveredId() ?? null, ctrl?.getHoveredKind() ?? null).highlightedIds ?? [])];
+        },
+      ),
+    };
+  }
+}
+
+class RasterPlayMasksPanelDefinition extends PureSidePanelTabDefinition {
+  buildTab(): SidePanelTabConfig {
+    return {
+      id: RASTER_PLAY_MASKS_TAB_ID,
+      icon: shellTabIconComponent("square-dashed", "workbench"),
+      name: "Masks",
+      order: 1,
+      tree: new CallbackTreePanelDefinition(
+        () => {
+          const ctrl = rasterPlayControllerRef.current;
+          const doc = ctrl?.getDocument();
+          const bus = new CommandBus();
+          if (!doc) return { sections: [{ id: "raster-masks-empty", items: [{ id: "empty", label: "No masks" }] }] };
+          const treeNode = buildRasterPlayMasksTree(
+            doc,
+            ctrl?.getSelectedIds() ?? [],
+            ctrl?.getHoveredId() ?? null,
+            ctrl?.getHoveredKind() ?? null,
+            (payload) => ctrl?.run("setHover", { id: payload.id, kind: payload.kind }),
+          );
+          return uiTreeNodeToTreePanelConfig(treeNode, bus);
+        },
+        () => {
+          const ctrl = rasterPlayControllerRef.current;
+          const doc = ctrl?.getDocument();
+          if (!doc) return [];
+          return [...(buildRasterPlayMasksTree(doc, [], ctrl?.getHoveredId() ?? null, ctrl?.getHoveredKind() ?? null).highlightedIds ?? [])];
+        },
+      ),
+    };
+  }
+}
+
+class RasterPlayPropertiesPanelDefinition extends PureSidePanelTabDefinition {
+  buildTab(): SidePanelTabConfig {
+    return {
+      id: RASTER_PLAY_PROPERTIES_TAB_ID,
+      icon: shellTabIconComponent(FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, "details"),
+      name: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+      order: 0,
+      tree: new CallbackTreePanelDefinition(() => {
+        const ctrl = rasterPlayControllerRef.current;
+        const doc = ctrl?.getDocument();
+        const bus = new CommandBus();
+        if (!doc) return { sections: [{ id: "raster-props-empty", items: [{ id: "empty", label: "No document" }] }] };
+        const treeNode = buildRasterPlayPropertiesTree(doc, ctrl?.getSelectedIds() ?? []);
+        return uiTreeNodeToTreePanelConfig(treeNode, bus);
+      }),
+    };
+  }
+}
+
+function RasterPlayInner({ playground }: { readonly playground: Playground }): ReactElement {
+  useRasterPlayController(playground.runtime);
+  useRasterPlayInteractionRevision(playground.runtime);
+  const rasterLayersPanel = reactHostPort.useMemo(() => new RasterPlayLayersPanelDefinition(), []);
+  const rasterMasksPanel = reactHostPort.useMemo(() => new RasterPlayMasksPanelDefinition(), []);
+  const rasterPropertiesPanel = reactHostPort.useMemo(() => new RasterPlayPropertiesPanelDefinition(), []);
+  return (
+    <PlaygroundView
+      runtime={playground.runtime}
+      defaultAppId={RASTER_PLAY_APP_ID}
+      augmentPanelTabs={{
+        workbench: [rasterLayersPanel, rasterMasksPanel],
+        details: [rasterPropertiesPanel],
+      }}
+    />
+  );
+}
+
+export function registerRasterPlaySurfaceHosts(): void {
+  if (rasterPlayChromeRegistered) return;
+  rasterPlayChromeRegistered = true;
+  registerUiRasterSurfaceHost(RASTER_PLAY_SURFACE_ID_COMPOSITE, RasterPlayPaneSurfaceHost);
+  registerUiRasterSurfaceHost(RASTER_PLAY_SURFACE_ID_NAVIGATOR, RasterPlayPaneSurfaceHost);
+  registerRasterPlayDeclarativeBodies();
+}
+
+function RasterPlayChrome({ playground }: { readonly playground: Playground }): ReactElement {
+  return <RasterPlayInner playground={playground} />;
+}
+
+export function mountRasterPlayChrome(playground: Playground, rootId = "root"): void {
+  mountPlaygroundApp(<RasterPlayChrome playground={playground} />, rootId);
+}
+
+const rasterPlayChromeBoot: PlaygroundChromeBoot = {
+  registerHosts: registerRasterPlaySurfaceHosts,
+  mount: mountRasterPlayChrome,
+};
+
+export function bootRasterPlay(playground: Playground, rootId = "root"): void {
+  bootPlayground(playground, rasterPlayChromeBoot, rootId);
+}
+//#endregion 🔖RasterPlayHost
 
 //#region 🔖PresentationPlayHost
 import {
@@ -9530,6 +9765,26 @@ if (import.meta.vitest) {
         expect(html).toContain('data-host="shooting"');
         expect(html).not.toContain("Unsupported UiNode");
       } finally {
+        unregisterSurfaceBinding(surfaceId);
+      }
+    });
+
+    it("renders raster nodes through raster surface hosts", async () => {
+      const { renderToStaticMarkup } = await import("react-dom/server");
+      const { buildRasterWindowBody } = await import("@semio-tech/framework-playground-core");
+      const surfaceId = "playground.test/raster-composite";
+      function TestRasterHost(): React.ReactElement {
+        return <div data-host="raster">raster canvas</div>;
+      }
+      registerUiRasterSurfaceHost(surfaceId, TestRasterHost);
+      try {
+        const html = renderToStaticMarkup(
+          <UiRenderer node={buildRasterWindowBody(surfaceId, "ctrl", "composite", "composite")} commandBus={new CommandBus()} />,
+        );
+        expect(html).toContain('data-host="raster"');
+        expect(html).not.toContain("Unsupported UiNode");
+      } finally {
+        rasterSurfaceHosts.delete(surfaceId);
         unregisterSurfaceBinding(surfaceId);
       }
     });

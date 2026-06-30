@@ -11,7 +11,10 @@ use std::collections::HashMap;
 use trinity_jack::{execute, parse};
 use trinity_ram::{Graph, PortDirection, PropertyValue, port_key};
 
-pub use trinity_jack::{parse as parse_jack, run as run_jack, run_json as run_jack_json, Pattern, QueryResult};
+pub use trinity_jack::{
+    complete as complete_jack, parse as parse_jack, run as run_jack, run_json as run_jack_json, tokenize as tokenize_jack,
+    Completion as JackCompletion, Pattern, QueryResult, TokenSpan as JackTokenSpan,
+};
 pub use trinity_ram::{self, CameraV1, Manifest};
 
 type TrinityBoardEngine = BoardEngine;
@@ -255,6 +258,16 @@ impl TrinityHost {
 
     pub fn run_jack_json(&mut self, query: &str) -> Result<String, String> {
         run_jack_json(&mut self.graph, query)
+    }
+
+    pub fn tokenize_jack_json(&self, source: &str) -> Result<String, String> {
+        let tokens = tokenize_jack(source);
+        serde_json::to_string(&tokens).map_err(|e| e.to_string())
+    }
+
+    pub fn complete_jack_json(&self, source: &str, cursor: usize) -> Result<String, String> {
+        let items = complete_jack(&self.graph, source, cursor);
+        serde_json::to_string(&items).map_err(|e| e.to_string())
     }
 
     pub fn apply_rewrite_json(&mut self, rule_json: &str) -> Result<String, String> {
@@ -564,6 +577,20 @@ mod wasm_session {
             self.state.borrow_mut().host.run_jack_json(query).map_err(|e| JsValue::from_str(&e))
         }
 
+        #[wasm_bindgen(js_name = tokenizeJackJson)]
+        pub fn tokenize_jack_json(&self, source: &str) -> Result<String, JsValue> {
+            self.state.borrow().host.tokenize_jack_json(source).map_err(|e| JsValue::from_str(&e))
+        }
+
+        #[wasm_bindgen(js_name = completeJackJson)]
+        pub fn complete_jack_json(&self, source: &str, cursor: usize) -> Result<String, JsValue> {
+            self.state
+                .borrow()
+                .host
+                .complete_jack_json(source, cursor)
+                .map_err(|e| JsValue::from_str(&e))
+        }
+
         #[wasm_bindgen(js_name = applyRewriteJson)]
         pub fn apply_rewrite_json(&self, rule_json: &str) -> Result<String, JsValue> {
             self.state.borrow_mut().host.apply_rewrite_json(rule_json).map_err(|e| JsValue::from_str(&e))
@@ -630,6 +657,22 @@ mod tests {
         let host = TrinityHost::from_graph(nakagin_graph());
         assert_eq!(host.engine.nodes.len(), 6);
         assert!(!host.engine.edges.is_empty());
+    }
+
+    #[test]
+    fn trinity_host_tokenize_jack_json() {
+        let host = TrinityHost::from_graph(nakagin_graph());
+        let json = host.tokenize_jack_json("MATCH (a:Piece)").unwrap();
+        let tokens: Vec<JackTokenSpan> = serde_json::from_str(&json).unwrap();
+        assert!(tokens.iter().any(|row| row.start == 0));
+    }
+
+    #[test]
+    fn trinity_host_complete_jack_json() {
+        let host = TrinityHost::from_graph(nakagin_graph());
+        let json = host.complete_jack_json("MAT", 3).unwrap();
+        let items: Vec<JackCompletion> = serde_json::from_str(&json).unwrap();
+        assert!(items.iter().any(|row| row.label == "MATCH"));
     }
 }
 // #endregion 🔖Tests

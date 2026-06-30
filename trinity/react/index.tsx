@@ -81,10 +81,35 @@ export interface TrinityJackResultV1 {
   readonly rows: readonly (readonly unknown[])[];
 }
 
+export interface TrinityJackTokenV1 {
+  readonly class: "keyword" | "ident" | "number" | "string" | "operator" | "punctuation" | "error";
+  readonly start: number;
+  readonly end: number;
+}
+
+export interface TrinityJackCompletionV1 {
+  readonly label: string;
+  readonly kind: string;
+  readonly detail?: string;
+  readonly insert: string;
+}
+
 export function runJackOnFixture(fixtureJson: string, query: string): TrinityJackResultV1 {
   const session = new TrinitySession();
   session.loadFixtureJson(fixtureJson);
   return JSON.parse(session.runJackJson(query)) as TrinityJackResultV1;
+}
+
+export function tokenizeJackOnFixture(fixtureJson: string, source: string): readonly TrinityJackTokenV1[] {
+  const session = new TrinitySession();
+  session.loadFixtureJson(fixtureJson);
+  return JSON.parse(session.tokenizeJackJson(source)) as readonly TrinityJackTokenV1[];
+}
+
+export function completeJackOnFixture(fixtureJson: string, source: string, cursor: number): readonly TrinityJackCompletionV1[] {
+  const session = new TrinitySession();
+  session.loadFixtureJson(fixtureJson);
+  return JSON.parse(session.completeJackJson(source, cursor)) as readonly TrinityJackCompletionV1[];
 }
 
 export function applyRewriteOnFixture(fixtureJson: string, ruleJson: string): string {
@@ -320,6 +345,16 @@ if (import.meta.vitest) {
     it("runJackOnFixture returns nakagin core name", () => {
       const result = runJackOnFixture(TRINITY_DEFAULT_FIXTURE_JSON, "MATCH (a:Piece) WHERE a.name = 'b' RETURN a.name");
       expect(result.rows.length).toBe(1);
+    });
+
+    it("tokenizeJackOnFixture highlights keywords", () => {
+      const tokens = tokenizeJackOnFixture(TRINITY_DEFAULT_FIXTURE_JSON, "MATCH (a:Piece)");
+      expect(tokens.some((row) => row.class === "keyword" && row.start === 0)).toBe(true);
+    });
+
+    it("completeJackOnFixture suggests MATCH", () => {
+      const items = completeJackOnFixture(TRINITY_DEFAULT_FIXTURE_JSON, "MAT", 3);
+      expect(items.some((row) => row.label === "MATCH")).toBe(true);
     });
   });
 }
