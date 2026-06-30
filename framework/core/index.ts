@@ -848,6 +848,133 @@ export class AppPointerFocusStore<TKey> extends Store<AppPointerFocusSnapshot<TK
 }
 //#endregion 🔖AppPointerFocus
 
+//#region 🔖CanvasPick
+/** @emoji 🎯 Known hover source ids for {@link AppPointerFocusStore} arbitration. */
+export const CANVAS_HOVER_SOURCE_CANVAS = "canvas";
+export const CANVAS_HOVER_SOURCE_PICK_MENU = "pick-menu";
+export const CANVAS_HOVER_SOURCE_HIERARCHY = "hierarchy";
+export const CANVAS_HOVER_SOURCE_CATALOG = "catalog";
+
+/** @emoji 🎯 Transitive kind hover carried alongside a concrete pick target. */
+export interface CanvasKindHover {
+	readonly domain: string;
+	readonly kindId: string;
+}
+
+/** @emoji 🎯 One pickable canvas target with generality rank (lower = more general). */
+export interface CanvasPickTarget {
+	readonly domain: string;
+	readonly id: string;
+	readonly generality: number;
+	readonly label?: string;
+	readonly meta?: Readonly<Record<string, unknown>>;
+}
+
+/** @emoji 🎯 Client-space pick request when multiple targets overlap at a point. */
+export interface CanvasPickRequest {
+	readonly targets: readonly CanvasPickTarget[];
+	readonly client: { readonly x: number; readonly y: number };
+	readonly modifiers?: Readonly<Record<string, boolean>>;
+	readonly world?: { readonly x: number; readonly y: number };
+}
+
+/** @emoji 🖱️ Unified hover focus: one concrete target plus optional transitive kind hover. */
+export interface CanvasHoverFocus {
+	readonly targetKey: string | null;
+	readonly kindHover: CanvasKindHover | null;
+	readonly sourceId: string | null;
+}
+
+export const CANVAS_HOVER_FOCUS_EMPTY: CanvasHoverFocus = { targetKey: null, kindHover: null, sourceId: null };
+
+/** @emoji 🪪 Stable key for a {@link CanvasPickTarget}. */
+export function canvasPickTargetKey(target: CanvasPickTarget): string {
+	return `${target.domain}:${target.id}`;
+}
+
+/** @emoji 🪪 Parses a pick target key into domain and id. */
+export function parseCanvasPickTargetKey(key: string): { readonly domain: string; readonly id: string } | null {
+	const colon = key.indexOf(":");
+	if (colon < 0) return null;
+	return { domain: key.slice(0, colon), id: key.slice(colon + 1) };
+}
+
+/** @emoji 🖱️ Compares two kind hovers for equality. */
+export function canvasKindHoversEqual(a: CanvasKindHover | null, b: CanvasKindHover | null): boolean {
+	if (a === b) return true;
+	if (!a || !b) return false;
+	return a.domain === b.domain && a.kindId === b.kindId;
+}
+
+/** @emoji 🖱️ Compares two hover focus snapshots. */
+export function canvasHoverFocusEqual(a: CanvasHoverFocus, b: CanvasHoverFocus): boolean {
+	return a.targetKey === b.targetKey && canvasKindHoversEqual(a.kindHover, b.kindHover) && a.sourceId === b.sourceId;
+}
+
+/** @emoji 📋 Sorts pick targets most-general-first for disambiguation menus. */
+export function sortCanvasPickTargetsGeneralFirst(targets: readonly CanvasPickTarget[]): CanvasPickTarget[] {
+	return [...targets].sort((a, b) => {
+		if (a.generality !== b.generality) return a.generality - b.generality;
+		const domainCmp = a.domain.localeCompare(b.domain);
+		if (domainCmp !== 0) return domainCmp;
+		return a.id.localeCompare(b.id);
+	});
+}
+
+/** @emoji 🎯 Returns the most-specific target for canvas pointer-move hover. */
+export function pickMostSpecificCanvasTarget(targets: readonly CanvasPickTarget[]): CanvasPickTarget | null {
+	if (targets.length === 0) return null;
+	let best = targets[0]!;
+	for (let index = 1; index < targets.length; index += 1) {
+		const candidate = targets[index]!;
+		if (candidate.generality > best.generality) best = candidate;
+		else if (candidate.generality === best.generality) {
+			const domainCmp = candidate.domain.localeCompare(best.domain);
+			if (domainCmp > 0) best = candidate;
+			else if (domainCmp === 0 && candidate.id.localeCompare(best.id) > 0) best = candidate;
+		}
+	}
+	return best;
+}
+
+/** @emoji 🖱️ Builds hover focus from a concrete pick target. */
+export function canvasHoverFocusFromTarget(sourceId: string, target: CanvasPickTarget | null, kindHover?: CanvasKindHover | null): CanvasHoverFocus {
+	if (!target) return { targetKey: null, kindHover: kindHover ?? null, sourceId };
+	return {
+		targetKey: canvasPickTargetKey(target),
+		kindHover: kindHover ?? { domain: target.domain, kindId: target.id },
+		sourceId,
+	};
+}
+
+/** @emoji 🖱️ Extends {@link AppPointerFocusStore} with unified canvas hover focus. */
+export class CanvasHoverFocusStore extends AppPointerFocusStore<string> {
+	private hoverFocus: CanvasHoverFocus = CANVAS_HOVER_FOCUS_EMPTY;
+
+	getHoverFocus(): CanvasHoverFocus {
+		return this.hoverFocus;
+	}
+
+	setHoverFocus(sourceId: string, focus: CanvasHoverFocus): void {
+		const next: CanvasHoverFocus = { ...focus, sourceId };
+		if (canvasHoverFocusEqual(this.hoverFocus, next)) return;
+		this.hoverFocus = next;
+		this.setHoverFromSource(sourceId, focus.targetKey);
+	}
+
+	clearHoverFocusFromSource(sourceId: string): void {
+		if (this.getSnapshot().hoverSourceId !== sourceId) return;
+		this.hoverFocus = CANVAS_HOVER_FOCUS_EMPTY;
+		this.clearHoverFromSource(sourceId);
+	}
+
+	override clearHover(): void {
+		this.hoverFocus = CANVAS_HOVER_FOCUS_EMPTY;
+		super.clearHover();
+	}
+}
+//#endregion 🔖CanvasPick
+
 //#region 🔖PuzzlePlayHover
 /** @emoji 🧩 Puzzle 2D catalog-kind hover domain (instance → kind "is a"). */
 export type Puzzle2dKindHoverDomain = "node" | "handle" | "edge" | "wire";
@@ -1616,6 +1743,32 @@ if (import.meta.vitest) {
 			const second = store.getSnapshot();
 			expect(second).not.toBe(first);
 			expect(store.getSnapshot()).toBe(second);
+		});
+	});
+
+	describe("CanvasPick", () => {
+		const group: CanvasPickTarget = { domain: "group", id: "g1", generality: 0 };
+		const path: CanvasPickTarget = { domain: "path", id: "p1", generality: 2 };
+		const control: CanvasPickTarget = { domain: "controlPoint", id: "c1", generality: 4 };
+
+		it("sorts pick targets general-first", () => {
+			expect(sortCanvasPickTargetsGeneralFirst([control, group, path]).map((t) => t.domain)).toEqual(["group", "path", "controlPoint"]);
+		});
+
+		it("picks most specific target for canvas hover", () => {
+			expect(pickMostSpecificCanvasTarget([group, path, control])?.domain).toBe("controlPoint");
+		});
+
+		it("canvasHoverFocusStore arbitrates pick-menu hover", () => {
+			const store = new CanvasHoverFocusStore();
+			store.setHoverFocus(CANVAS_HOVER_SOURCE_CANVAS, canvasHoverFocusFromTarget(CANVAS_HOVER_SOURCE_CANVAS, path));
+			expect(store.getHoverFocus().targetKey).toBe("path:p1");
+			store.setHoverFocus(CANVAS_HOVER_SOURCE_PICK_MENU, canvasHoverFocusFromTarget(CANVAS_HOVER_SOURCE_PICK_MENU, group));
+			expect(store.getHoverFocus().targetKey).toBe("group:g1");
+			store.clearHoverFocusFromSource(CANVAS_HOVER_SOURCE_HIERARCHY);
+			expect(store.getHoverFocus().targetKey).toBe("group:g1");
+			store.clearHoverFocusFromSource(CANVAS_HOVER_SOURCE_PICK_MENU);
+			expect(store.getHoverFocus().targetKey).toBeNull();
 		});
 	});
 

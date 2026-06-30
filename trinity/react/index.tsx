@@ -47,7 +47,8 @@ export interface TrinityNodeV1 {
 export interface TrinityFixtureV1 {
   readonly schema: "trinity.graph/v1";
   readonly name: string;
-  readonly manifest: Record<string, unknown>;
+  readonly manifestId?: string;
+  readonly manifest?: Record<string, unknown>;
   readonly camera: { readonly x: number; readonly y: number; readonly zoom: number };
   readonly rootNodeId?: string;
   readonly nodes: readonly TrinityNodeV1[];

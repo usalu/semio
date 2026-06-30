@@ -27,13 +27,19 @@ import {
 	type PlaygroundFixtureHost,
 	toolCollection,
 	type UiNode,
+	type UiTreeItemNode,
 	type UiTreeNode,
 } from "@semio-tech/framework-playground-core";
 import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
 import {
 	createWriterDocument,
+	findDeepestJackAstNodeAt,
+	jackAstNodeById,
+	jackAstNodeForSelection,
+	parseJackAst,
 	parseWriterDocumentJson,
 	writerDocumentToJson,
+	type JackAstNode,
 	type WriterDocumentV1,
 } from "@semio-tech/writer-core";
 import { WRITER_PLAY_FIXTURE_DEFAULT_ID, resolveWriterPlayFixtureSlug } from "./fixture-slugs.ts";
@@ -72,18 +78,106 @@ export const WRITER_PLAY_FIXTURE_OPTIONS: ReadonlyArray<{ readonly id: string; r
 	.sort()
 	.map((id) => ({ id: id === "jack" ? WRITER_PLAY_FIXTURE_DEFAULT_ID : id, label: id === "jack" ? "Jack" : id }));
 
-export function buildWriterPlayHierarchyTree(doc: WriterDocumentV1): UiTreeNode {
-	return uiDeclarativeSectionsToTree([
-		{
-			type: "section",
-			id: "writer-hierarchy",
-			label: "Document",
-			children: [
-				{ type: "text", value: doc.id },
-				{ type: "text", value: doc.languageId },
-			],
-		},
-	]);
+function writerPlayCmd(command: string, args: Record<string, unknown> = {}): { controllerId: string; command: string; args: Record<string, unknown> } {
+	return { controllerId: WRITER_PLAY_CONTROLLER_ID, command, args };
+}
+
+function writerPlayAstTreeIcon(kind: string): string | undefined {
+	switch (kind) {
+		case "query":
+			return "file-code";
+		case "match":
+		case "create":
+		case "merge":
+			return "git-branch";
+		case "where":
+			return "filter";
+		case "return":
+			return "corner-down-left";
+		case "pattern":
+		case "patternNode":
+			return "box";
+		case "edge":
+			return "arrow-right";
+		case "var":
+			return "variable";
+		case "label":
+		case "property":
+			return "tag";
+		case "string":
+			return "quote";
+		case "number":
+		case "bool":
+		case "null":
+			return "hash";
+		case "error":
+			return "alert-circle";
+		default:
+			return undefined;
+	}
+}
+
+function writerPlayAstHoverHandlers(
+	hoverSink: ((id: string | null) => void) | undefined,
+	nodeId: string,
+): Pick<UiTreeItemNode, "onPointerEnter" | "onPointerLeave"> {
+	if (!hoverSink) return {};
+	return {
+		onPointerEnter: () => hoverSink(nodeId),
+		onPointerLeave: () => hoverSink(null),
+	};
+}
+
+function writerPlayAstToTreeItem(node: JackAstNode, hoverSink?: (id: string | null) => void): UiTreeItemNode {
+	const children = node.children.map((child) => writerPlayAstToTreeItem(child, hoverSink));
+	return {
+		id: node.id,
+		label: node.label,
+		description: node.kind,
+		icon: writerPlayAstTreeIcon(node.kind),
+		defaultOpen: node.kind === "query" || node.kind === "match" || node.kind === "pattern" || node.kind === "return",
+		command: writerPlayCmd("selectAstNode", { id: node.id, start: node.start, end: node.end }),
+		items: children.length > 0 ? children : undefined,
+		...writerPlayAstHoverHandlers(hoverSink, node.id),
+	};
+}
+
+/** @emoji 🌳 Workbench hierarchy: jack AST tree with synchronized selection and hover. */
+export function buildWriterPlayHierarchyTree(
+	doc: WriterDocumentV1,
+	selectedAstIds: readonly string[],
+	hoveredAstId: string | null,
+	hoverSink?: (id: string | null) => void,
+): UiTreeNode {
+	if (doc.languageId !== "jack") {
+		return uiDeclarativeSectionsToTree([
+			{
+				type: "section",
+				id: "writer-hierarchy",
+				label: "Document",
+				children: [
+					{ type: "text", value: doc.id },
+					{ type: "text", value: doc.languageId },
+				],
+			},
+		]) as UiTreeNode;
+	}
+	const root = parseJackAst(doc.text);
+	const items = root.kind === "error" ? [{ id: root.id, label: root.label, description: root.kind }] : [writerPlayAstToTreeItem(root, hoverSink)];
+	return {
+		type: "tree",
+		sections: [
+			{
+				id: "writer-play-hierarchy.ast",
+				label: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+				defaultOpen: true,
+				items: items.length > 0 ? items : [{ id: "writer-play-hierarchy.empty", label: "(empty query)" }],
+			},
+		],
+		selectedIds: [...selectedAstIds],
+		highlightedIds: hoveredAstId ? [hoveredAstId] : [],
+		selectionChange: writerPlayCmd("setAstSelection"),
+	};
 }
 
 export function buildWriterPlayCatalogueTree(): UiTreeNode {
@@ -133,11 +227,62 @@ export class WriterPlayController extends Controller implements PlaygroundFixtur
 	private formatSignal = 0;
 	private lintSignal = 0;
 	private lintMessages: string[] = [];
+	private astRoot: JackAstNode | null = null;
+	private selectedAstIds: string[] = [];
+	private treeHoveredAstId: string | null = null;
+	private editorHoveredAstId: string | null = null;
+	private editorSelection: { start: number; end: number } = { start: 0, end: 0 };
+	private editorSelectionSignal = 0;
+	private externalHoverSignal = 0;
 
 	constructor(commandBus: CommandBus, hostNotify: () => void, initialJson: string) {
 		super(WRITER_PLAY_CONTROLLER_ID, commandBus, hostNotify);
 		this.document = parseWriterDocumentJson(initialJson);
+		this.refreshAst();
 		this.rebuildShellMode();
+	}
+
+	private refreshAst(): void {
+		this.astRoot = this.document.languageId === "jack" ? parseJackAst(this.document.text) : null;
+		if (this.astRoot && this.selectedAstIds.length > 0) {
+			const id = this.selectedAstIds[0]!;
+			const node = jackAstNodeById(this.astRoot, id);
+			if (!node) this.selectedAstIds = [];
+		}
+	}
+
+	getAstRoot(): JackAstNode | null {
+		return this.astRoot;
+	}
+
+	getSelectedAstIds(): readonly string[] {
+		return this.selectedAstIds;
+	}
+
+	getHoveredAstId(): string | null {
+		return this.treeHoveredAstId ?? this.editorHoveredAstId;
+	}
+
+	getTreeHoveredAstSpan(): { readonly start: number; readonly end: number } | null {
+		if (!this.treeHoveredAstId || !this.astRoot) return null;
+		const node = jackAstNodeById(this.astRoot, this.treeHoveredAstId);
+		return node ? { start: node.start, end: node.end } : null;
+	}
+
+	getEditorSelection(): { readonly start: number; readonly end: number } {
+		return this.editorSelection;
+	}
+
+	getEditorSelectionSignal(): number {
+		return this.editorSelectionSignal;
+	}
+
+	getHoveredAstSpan(): { readonly start: number; readonly end: number } | null {
+		return this.getTreeHoveredAstSpan();
+	}
+
+	getExternalHoverSignal(): number {
+		return this.externalHoverSignal;
 	}
 
 	getRevision(): number {
@@ -180,6 +325,7 @@ export class WriterPlayController extends Controller implements PlaygroundFixtur
 
 	loadFixtureJson(json: string): void {
 		this.document = parseWriterDocumentJson(json);
+		this.refreshAst();
 		this.revision += 1;
 		this.emit();
 	}
@@ -193,6 +339,7 @@ export class WriterPlayController extends Controller implements PlaygroundFixtur
 			}
 			case "setDocument": {
 				this.document = args?.document as WriterDocumentV1;
+				this.refreshAst();
 				this.revision += 1;
 				this.emit();
 				return;
@@ -222,6 +369,70 @@ export class WriterPlayController extends Controller implements PlaygroundFixtur
 				this.revision += 1;
 				this.emit();
 				return;
+			case "setAstSelection": {
+				const ids = Array.isArray(args?.ids) ? args.ids.map(String) : [];
+				this.selectedAstIds = ids;
+				const id = ids[0];
+				if (id && this.astRoot) {
+					const node = jackAstNodeById(this.astRoot, id);
+					if (node) {
+						this.editorSelection = { start: node.start, end: node.end };
+						this.editorSelectionSignal += 1;
+					}
+				}
+				this.revision += 1;
+				this.emit();
+				return;
+			}
+			case "setAstHover": {
+				this.treeHoveredAstId = typeof args?.id === "string" ? args.id : null;
+				this.externalHoverSignal += 1;
+				this.revision += 1;
+				this.emit();
+				return;
+			}
+			case "selectAstNode": {
+				const id = String(args?.id ?? "");
+				const start = Number(args?.start ?? 0);
+				const end = Number(args?.end ?? 0);
+				this.selectedAstIds = id ? [id] : [];
+				this.editorSelection = { start, end };
+				this.editorSelectionSignal += 1;
+				this.revision += 1;
+				this.emit();
+				return;
+			}
+			case "setEditorSelection": {
+				const start = Number(args?.start ?? 0);
+				const end = Number(args?.end ?? 0);
+				this.editorSelection = { start, end };
+				if (this.astRoot) {
+					const node = jackAstNodeForSelection(this.astRoot, start, end);
+					this.selectedAstIds = node ? [node.id] : [];
+				} else {
+					this.selectedAstIds = [];
+				}
+				this.revision += 1;
+				this.emit();
+				return;
+			}
+			case "setEditorHover": {
+				const offset = typeof args?.offset === "number" ? args.offset : null;
+				if (this.astRoot && offset != null) {
+					const node = findDeepestJackAstNodeAt(this.astRoot, offset);
+					this.editorHoveredAstId = node?.id ?? null;
+				} else {
+					this.editorHoveredAstId = null;
+				}
+				if (this.treeHoveredAstId) {
+					this.revision += 1;
+					this.emit();
+					return;
+				}
+				this.revision += 1;
+				this.emit();
+				return;
+			}
 		}
 	}
 
@@ -321,6 +532,26 @@ if (import.meta.vitest) {
 			ctrl.run("setActiveFixture", { fixtureId: "jack" });
 			expect(ctrl.getDocument().id).toBe("jack");
 			expect(ctrl.getDocument().languageId).toBe("jack");
+		});
+	});
+
+	describe("buildWriterPlayHierarchyTree", () => {
+		it("builds ast tree for jack documents", () => {
+			const doc = createWriterDocument({ id: "jack", languageId: "jack", text: "MATCH (a:Piece) RETURN a.name" });
+			const tree = buildWriterPlayHierarchyTree(doc, [], null);
+			expect(tree.type).toBe("tree");
+			expect(tree.sections[0]?.items[0]?.items?.some((item) => item.description === "match")).toBe(true);
+		});
+
+		it("syncs ast selection from editor range", () => {
+			const bus = new CommandBus();
+			const ctrl = new WriterPlayController(
+				bus,
+				() => {},
+				writerDocumentToJson(createWriterDocument({ id: "jack", languageId: "jack", text: "MATCH (a:Piece) RETURN a.name" })),
+			);
+			ctrl.run("setEditorSelection", { start: 7, end: 15 });
+			expect(ctrl.getSelectedAstIds().length).toBeGreaterThan(0);
 		});
 	});
 }

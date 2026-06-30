@@ -6,17 +6,20 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
 	cn,
+	CanvasPickMenu,
 	marqueeCoverageFromGesture,
 	marqueeModeFromModifiers,
 	SelectionMarquee,
 	selectionMergeIds,
 	screenRectFromPoints,
+	useCanvasPickInteraction,
 	type SelectionMarqueeCoverage,
 	type SelectionMarqueeMethod,
 	type SelectionMarqueePoint,
 	type SelectionMarqueeRect,
 	type SelectionMergeMode,
 } from "@semio-tech/ui-react";
+import { parseCanvasPickTargetKey, type CanvasPickTarget } from "@semio-tech/framework-core";
 import { resolveSemanticColorHex } from "@semio-tech/ui-styling";
 import {
 	createDefaultDrawingWasmBridge,
@@ -36,6 +39,7 @@ import {
 	drawLayerDescendantLeafIds,
 	layerToPathSegments,
 	resolveDrawLayerAtScreenPoint,
+	resolveDrawPickTargetsAtScreenPoint,
 	resolveDrawMarqueeLayerHits,
 	filterPathSegmentsByContourArea,
 	scalePathSegments,
@@ -52,6 +56,7 @@ import {
 	type DrawSceneNode,
 	type DrawScreenRect,
 	type DrawToolId,
+	type DrawPickTarget,
 	type FillStyle,
 	type PathSegment,
 	type StrokeStyle,
@@ -213,6 +218,32 @@ function isDrawAuthoringTool(activeTool: DrawToolId | undefined): boolean {
 	);
 }
 
+function drawHoverPayloadFromPickTarget(doc: DrawDocument, target: DrawPickTarget | null): DrawHoverPayload {
+	if (!target) return { id: null, kind: null };
+	const layerId = target.layerId ?? target.id;
+	return { id: layerId, kind: drawKindHoverForLayerId(doc, layerId) };
+}
+
+function drawPickTargetToCanvas(target: DrawPickTarget): CanvasPickTarget {
+	return { domain: target.domain, id: target.id, generality: target.generality, label: target.label, meta: target.layerId ? { layerId: target.layerId } : undefined };
+}
+
+function drawLayerIdFromCanvasPickTarget(target: CanvasPickTarget): string {
+	const layerId = target.meta?.layerId;
+	return typeof layerId === "string" ? layerId : target.id;
+}
+
+function drawHoverPayloadFromFocusKey(doc: DrawDocument, key: string | null): DrawHoverPayload {
+	if (!key) return { id: null, kind: null };
+	const parsed = parseCanvasPickTargetKey(key);
+	if (!parsed) return { id: null, kind: null };
+	if (parsed.domain === "controlPoint") {
+		const layerId = key.split(":")[0] ?? parsed.id;
+		return drawHoverPayloadFromPickTarget(doc, { domain: parsed.domain, id: parsed.id, generality: 4, layerId });
+	}
+	return drawHoverPayloadFromPickTarget(doc, { domain: parsed.domain, id: parsed.id, generality: 0 });
+}
+
 function drawKindHoverForLayerId(doc: DrawDocument, layerId: string): DrawKindHover {
 	const layer = findDrawLayer(doc, layerId);
 	const domain =
@@ -248,28 +279,20 @@ function DrawPathShape({
 	fill,
 	stroke,
 	opacity,
-	selected,
-	hovered,
 	kernelKind,
-	activeColor,
-	hoverColor,
 }: {
 	readonly segments: readonly PathSegment[];
 	readonly fill?: FillStyle;
 	readonly stroke?: StrokeStyle;
 	readonly opacity: number;
-	readonly selected: boolean;
-	readonly hovered: boolean;
 	readonly kernelKind?: "boolean" | "trace";
-	readonly activeColor: string;
-	readonly hoverColor: string;
 }): React.JSX.Element | null {
 	const contours = splitPathSegmentsByContour(segments);
 	const traceFillFromStroke = kernelKind === "trace" && !fill && stroke;
 	const fillValue =
 		fill?.kind === "solid" ? rgbaCss(fill.color) : traceFillFromStroke && stroke ? rgbaCss(stroke.color) : "none";
-	const strokeValue = traceFillFromStroke ? "none" : stroke ? rgbaCss(stroke.color) : selected ? activeColor : hovered ? hoverColor : "none";
-	const strokeWidth = traceFillFromStroke ? 0 : stroke?.width ?? (selected || hovered ? 2 : 0);
+	const strokeValue = traceFillFromStroke ? "none" : stroke ? rgbaCss(stroke.color) : "none";
+	const strokeWidth = traceFillFromStroke ? 0 : stroke?.width ?? 0;
 	const paint = { fill: fillValue, stroke: strokeValue, strokeWidth, opacity, vectorEffect: "non-scaling-stroke" as const, fillRule: "evenodd" as const };
 	const paths = contours
 		.map((contour, index) => {
@@ -282,46 +305,87 @@ function DrawPathShape({
 	return <g>{paths}</g>;
 }
 
+function DrawLayerInteractionHighlight({
+	node,
+	segments,
+	selected,
+	hovered,
+	stroke,
+	activeColor,
+	hoverColor,
+	haloColor,
+}: {
+	readonly node: DrawSceneNode;
+	readonly segments: readonly PathSegment[];
+	readonly selected: boolean;
+	readonly hovered: boolean;
+	readonly stroke?: StrokeStyle;
+	readonly activeColor: string;
+	readonly hoverColor: string;
+	readonly haloColor: string;
+}): React.JSX.Element | null {
+	const accent = selected ? activeColor : hovered ? hoverColor : null;
+	if (!accent) return null;
+	const dash = hovered && !selected ? "4 2" : undefined;
+	const strokeWidth = Math.max(2.5, (stroke?.width ?? 0) + 2);
+	const haloWidth = strokeWidth + 2.5;
+	if (node.text) {
+		const width = Math.max(8, node.text.content.length * node.text.size * 0.6);
+		const height = Math.max(8, node.text.size * 1.2);
+		return (
+			<g pointerEvents="none">
+				{selected ? <rect x={0} y={0} width={width} height={height} fill={activeColor} fillOpacity={0.12} stroke="none" /> : null}
+				<rect x={0} y={0} width={width} height={height} fill="none" stroke={haloColor} strokeWidth={haloWidth} vectorEffect="non-scaling-stroke" />
+				<rect x={0} y={0} width={width} height={height} fill="none" stroke={accent} strokeWidth={strokeWidth} strokeDasharray={dash} vectorEffect="non-scaling-stroke" />
+			</g>
+		);
+	}
+	if (node.image) {
+		const width = node.image.width;
+		const height = node.image.height;
+		return (
+			<g pointerEvents="none">
+				{selected ? <rect x={0} y={0} width={width} height={height} fill={activeColor} fillOpacity={0.12} stroke="none" /> : null}
+				<rect x={0} y={0} width={width} height={height} fill="none" stroke={haloColor} strokeWidth={haloWidth} vectorEffect="non-scaling-stroke" />
+				<rect x={0} y={0} width={width} height={height} fill="none" stroke={accent} strokeWidth={strokeWidth} strokeDasharray={dash} vectorEffect="non-scaling-stroke" />
+			</g>
+		);
+	}
+	const contours = splitPathSegmentsByContour(segments);
+	const paths = contours
+		.map((contour, index) => {
+			const d = segmentsToPathD(contour);
+			if (!d) return null;
+			return (
+				<g key={index} pointerEvents="none">
+					{selected ? <path d={d} fill={activeColor} fillOpacity={0.12} stroke="none" fillRule="evenodd" /> : null}
+					<path d={d} fill="none" stroke={haloColor} strokeWidth={haloWidth} vectorEffect="non-scaling-stroke" fillRule="evenodd" />
+					<path d={d} fill="none" stroke={accent} strokeWidth={strokeWidth} strokeDasharray={dash} vectorEffect="non-scaling-stroke" fillRule="evenodd" />
+				</g>
+			);
+		})
+		.filter((node): node is React.JSX.Element => node !== null);
+	if (paths.length === 0) return null;
+	return <g>{paths}</g>;
+}
+
 function DrawTextShape({
 	content,
 	size,
 	fill,
 	opacity,
-	selected,
-	hovered,
-	activeColor,
-	hoverColor,
 }: {
 	readonly content: string;
 	readonly size: number;
 	readonly fill?: FillStyle;
 	readonly opacity: number;
-	readonly selected: boolean;
-	readonly hovered: boolean;
-	readonly activeColor: string;
-	readonly hoverColor: string;
 }): React.JSX.Element {
 	const fillValue = fill?.kind === "solid" ? rgbaCss(fill.color) : "#e2e8f0";
-	const width = Math.max(8, content.length * size * 0.6);
-	const height = Math.max(8, size * 1.2);
 	return (
 		<g opacity={opacity}>
 			<text x={0} y={size} fontSize={size} fill={fillValue} fontFamily="ui-monospace, monospace">
 				{content}
 			</text>
-			{(selected || hovered) && (
-				<rect
-					x={0}
-					y={0}
-					width={width}
-					height={height}
-					fill="none"
-					stroke={selected ? activeColor : hoverColor}
-					strokeWidth={2}
-					strokeDasharray={hovered && !selected ? "4 2" : undefined}
-					vectorEffect="non-scaling-stroke"
-				/>
-			)}
 		</g>
 	);
 }
@@ -331,37 +395,16 @@ function DrawImageShape({
 	width,
 	height,
 	opacity,
-	selected,
-	hovered,
-	activeColor,
-	hoverColor,
 }: {
 	readonly src: string;
 	readonly width: number;
 	readonly height: number;
 	readonly opacity: number;
-	readonly selected: boolean;
-	readonly hovered: boolean;
-	readonly activeColor: string;
-	readonly hoverColor: string;
 }): React.JSX.Element | null {
 	if (!src) return null;
 	return (
 		<g opacity={opacity}>
 			<image href={src} x={0} y={0} width={width} height={height} />
-			{(selected || hovered) && (
-				<rect
-					x={0}
-					y={0}
-					width={width}
-					height={height}
-					fill="none"
-					stroke={selected ? activeColor : hoverColor}
-					strokeWidth={2}
-					strokeDasharray={hovered && !selected ? "4 2" : undefined}
-					vectorEffect="non-scaling-stroke"
-				/>
-			)}
 		</g>
 	);
 }
@@ -421,7 +464,8 @@ export function DrawCanvas({
 
 	const effectiveHoveredId = hoveredId ?? kindHover?.kindId ?? null;
 	const activeColor = useMemo(() => resolveSemanticColorHex("--active-base", "gray"), []);
-	const hoverColor = useMemo(() => resolveSemanticColorHex("--hover-base", "gray"), []);
+	const hoverColor = useMemo(() => resolveSemanticColorHex("--color-changed-hovered", "gray"), []);
+	const haloColor = useMemo(() => resolveSemanticColorHex("--foreground", "gray"), []);
 	const selectedLeafIds = useMemo(() => {
 		const ids = new Set<string>();
 		for (const layerId of selectedIds) for (const leafId of drawLayerDescendantLeafIds(doc, layerId)) ids.add(leafId);
@@ -459,6 +503,37 @@ export function DrawCanvas({
 		const rect = containerRef.current?.getBoundingClientRect();
 		return { width: rect?.width ?? 1024, height: rect?.height ?? 768 };
 	}, []);
+
+	const clientFromScreen = useCallback((screen: SelectionMarqueePoint): { x: number; y: number } => {
+		const rect = containerRef.current?.getBoundingClientRect();
+		return { x: (rect?.left ?? 0) + screen.x, y: (rect?.top ?? 0) + screen.y };
+	}, []);
+
+	const resolveTargetsAtClient = useCallback(
+		(client: { readonly x: number; readonly y: number }): readonly CanvasPickTarget[] => {
+			const rect = containerRef.current?.getBoundingClientRect();
+			const screen = { x: client.x - (rect?.left ?? 0), y: client.y - (rect?.top ?? 0) };
+			return resolveDrawPickTargetsAtScreenPoint(doc, camera, viewport(), screen, {
+				includeControlPoints: activeTool === "selectDirect",
+			}).map(drawPickTargetToCanvas);
+		},
+		[activeTool, camera, doc, viewport],
+	);
+
+	const canvasPick = useCanvasPickInteraction({
+		resolveTargetsAtClient,
+		onHoverFocus: (focus) => onHover?.(drawHoverPayloadFromFocusKey(doc, focus.targetKey)),
+		onSelectTarget: (target, request) => {
+			const layerId = drawLayerIdFromCanvasPickTarget(target);
+			const merge = marqueeModeFromModifiers({
+				shiftKey: request.modifiers?.shift === true,
+				ctrlKey: request.modifiers?.ctrl === true,
+				metaKey: request.modifiers?.meta === true,
+				altKey: request.modifiers?.alt === true,
+			});
+			onSelect?.(selectionMergeIds(merge, selectedIds, [layerId]));
+		},
+	});
 
 	const screenPoint = useCallback((event: React.PointerEvent | PointerEvent): SelectionMarqueePoint => {
 		const rect = containerRef.current?.getBoundingClientRect();
@@ -672,13 +747,11 @@ export function DrawCanvas({
 				return;
 			}
 			if (activeTool === "selectDirect" && event.button === 0) {
-				const hit = resolveDrawLayerAtScreenPoint(doc, camera, viewport(), point);
-				const merge = marqueeModeFromModifiers(event);
-				onSelect?.(selectionMergeIds(merge, selectedIds, hit ? [hit] : []));
-				console.log("[DEBUG] draw canvas select", { hit, merge, x: point.x, y: point.y });
+				canvasPick.onCanvasPointerDown(clientFromScreen(point));
+				return;
 			}
 		},
-		[activeTool, camera, commitTraceAt, doc, onSelect, screenPoint, screenToWorld, selectedIds, selectionMethod, viewport],
+		[activeTool, canvasPick, clientFromScreen, commitTraceAt, screenPoint, screenToWorld, selectionMethod],
 	);
 
 	const onPointerMove = useCallback(
@@ -686,8 +759,7 @@ export function DrawCanvas({
 			const point = screenPoint(event);
 			const drag = dragRef.current;
 			if (!drag) {
-				const hit = resolveDrawLayerAtScreenPoint(doc, camera, viewport(), point);
-				onHover?.({ id: hit, kind: hit ? drawKindHoverForLayerId(doc, hit) : null });
+				if (!canvasPick.pickMenuOpen) canvasPick.onCanvasPointerMove(clientFromScreen(point));
 				return;
 			}
 			if (drag.kind === "pan") {
@@ -720,13 +792,22 @@ export function DrawCanvas({
 				setPreviewSegments(segments);
 			}
 		},
-		[camera, doc, emitCamera, onHover, screenPoint, screenToWorld, shapePreviewFromWorld, updateMarqueeOverlay, viewport],
+		[camera, canvasPick, clientFromScreen, emitCamera, screenPoint, screenToWorld, shapePreviewFromWorld, updateMarqueeOverlay],
 	);
 
 	const onPointerUp = useCallback(
 		(event: React.PointerEvent) => {
 			const point = screenPoint(event);
 			const drag = dragRef.current;
+			if (activeTool === "selectDirect" && !drag) {
+				canvasPick.onCanvasPointerUp(clientFromScreen(point), {
+					shift: event.shiftKey,
+					ctrl: event.ctrlKey,
+					meta: event.metaKey,
+					alt: event.altKey,
+				});
+				return;
+			}
 			if (!drag) return;
 			if (drag.kind === "pen" || drag.kind === "shapePolygon") return;
 			dragRef.current = null;
@@ -736,8 +817,12 @@ export function DrawCanvas({
 				if (drag.active && distance >= DRAW_MARQUEE_THRESHOLD_PX) {
 					commitMarqueeSelection(point, drag);
 				} else if (activeTool === "selectDirect" || selectionMethod) {
-					const hit = resolveDrawLayerAtScreenPoint(doc, camera, viewport(), point);
-					onSelect?.(selectionMergeIds(merge, selectedIds, hit ? [hit] : []));
+					canvasPick.onCanvasPointerUp(clientFromScreen(point), {
+						shift: event.shiftKey,
+						ctrl: event.ctrlKey,
+						meta: event.metaKey,
+						alt: event.altKey,
+					});
 				}
 				setMarquee(null);
 				return;
@@ -748,7 +833,7 @@ export function DrawCanvas({
 				return;
 			}
 		},
-		[activeTool, camera, commitMarqueeSelection, commitShapeDrag, doc, onSelect, screenPoint, screenToWorld, selectedIds, selectionMethod, viewport],
+		[activeTool, camera, canvasPick, clientFromScreen, commitMarqueeSelection, commitShapeDrag, screenPoint, screenToWorld, selectionMethod],
 	);
 
 	const onDoubleClick = useCallback(
@@ -793,55 +878,50 @@ export function DrawCanvas({
 			onPointerMove={onPointerMove}
 			onPointerUp={onPointerUp}
 			onDoubleClick={onDoubleClick}
-			onPointerLeave={() => onHover?.({ id: null, kind: null })}
+			onPointerLeave={() => {
+				canvasPick.onCanvasPointerLeave();
+				if (!canvasPick.pickMenuOpen) onHover?.({ id: null, kind: null });
+			}}
 		>
 			<svg className="h-full w-full" viewBox={`0 0 ${containerRef.current?.clientWidth ?? 1024} ${containerRef.current?.clientHeight ?? 768}`}>
 				<g transform={transform}>
 					{viewMode === "composite" ? (
-						resolved.map(({ node, segments }) => {
-							const selected = selectedLeafIds.has(node.id);
-							const hovered = hoveredLeafIds.has(node.id);
-							const matrix = `matrix(${node.transform.join(" ")})`;
-							return (
-								<g key={node.id} transform={matrix} style={{ mixBlendMode: drawBlendModeCss(node.blendMode) }} opacity={node.opacity}>
-									{node.text ? (
-										<DrawTextShape
-											content={node.text.content}
-											size={node.text.size}
-											fill={node.fill}
-											opacity={1}
-											selected={selected}
-											hovered={hovered}
-											activeColor={activeColor}
-											hoverColor={hoverColor}
-										/>
-									) : node.image ? (
-										<DrawImageShape
-											src={node.image.src}
-											width={node.image.width}
-											height={node.image.height}
-											opacity={1}
-											selected={selected}
-											hovered={hovered}
-											activeColor={activeColor}
-											hoverColor={hoverColor}
-										/>
-									) : (
-										<DrawPathShape
+						<>
+							{resolved.map(({ node, segments }) => {
+								const matrix = `matrix(${node.transform.join(" ")})`;
+								return (
+									<g key={node.id} transform={matrix} style={{ mixBlendMode: drawBlendModeCss(node.blendMode) }} opacity={node.opacity}>
+										{node.text ? (
+											<DrawTextShape content={node.text.content} size={node.text.size} fill={node.fill} opacity={1} />
+										) : node.image ? (
+											<DrawImageShape src={node.image.src} width={node.image.width} height={node.image.height} opacity={1} />
+										) : (
+											<DrawPathShape segments={segments} fill={node.fill} stroke={node.stroke} opacity={1} kernelKind={node.kernelKind} />
+										)}
+									</g>
+								);
+							})}
+							{resolved.map(({ node, segments }) => {
+								const selected = selectedLeafIds.has(node.id);
+								const hovered = hoveredLeafIds.has(node.id);
+								if (!selected && !hovered) return null;
+								const matrix = `matrix(${node.transform.join(" ")})`;
+								return (
+									<g key={`hl-${node.id}`} transform={matrix} opacity={node.opacity} pointerEvents="none">
+										<DrawLayerInteractionHighlight
+											node={node}
 											segments={segments}
-											fill={node.fill}
-											stroke={node.stroke}
-											opacity={1}
 											selected={selected}
 											hovered={hovered}
-											kernelKind={node.kernelKind}
+											stroke={node.stroke}
 											activeColor={activeColor}
 											hoverColor={hoverColor}
+											haloColor={haloColor}
 										/>
-									)}
-								</g>
-							);
-						})
+									</g>
+								);
+							})}
+						</>
 					) : (
 						<rect x={-512} y={-512} width={1024} height={1024} fill="none" stroke="#334155" strokeWidth={1} vectorEffect="non-scaling-stroke" />
 					)}
@@ -849,6 +929,13 @@ export function DrawCanvas({
 				</g>
 			</svg>
 			{marquee ? <SelectionMarquee {...marquee} /> : null}
+			<CanvasPickMenu
+				request={canvasPick.pickMenu}
+				hoveredKey={canvasPick.menuHoveredKey}
+				onHoverKey={canvasPick.onMenuHoverKey}
+				onPick={canvasPick.onMenuPick}
+				onDismiss={canvasPick.dismissPickMenu}
+			/>
 		</div>
 	);
 }

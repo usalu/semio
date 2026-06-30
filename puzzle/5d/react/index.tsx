@@ -4,6 +4,11 @@
 
 // #region 🔌Adapters
 import { reactHostPort, type ContextMenuItem, type GumballConfig } from "@semio-tech/ui-react";
+import {
+  mergeManifestCatalogBundles,
+  puzzle2d_defaultManifestCatalogBundle,
+  puzzle3d_defaultManifestCatalogBundle,
+} from "@semio-tech/graph-manifest";
 import { PUZZLE_3D_GUMBALL_CONFIG } from "../../3d/react/index.tsx";
 import type { ReactElement } from "react";
 
@@ -3775,6 +3780,10 @@ export function kindCompatibilityRowsFromMeta(meta: Record<string, unknown> | un
   return out;
 }
 
+export function puzzle5dDefaultManifestCatalogBundle(): KindCatalogBundle | undefined {
+  return normalizeKindCatalogBundle(mergeManifestCatalogBundles(puzzle2d_defaultManifestCatalogBundle(), puzzle3d_defaultManifestCatalogBundle()));
+}
+
 export function kindCatalogsFromMetas(inp: { readonly meta2d: Record<string, unknown> | undefined; readonly meta3d: Record<string, unknown> | undefined }): KindCatalogBundle | undefined {
   const fromFlat = kindCatalogFrom2dMeta(inp.meta2d);
   const fromVolume = kindCatalogFrom3dMeta(inp.meta3d);
@@ -3782,12 +3791,12 @@ export function kindCatalogsFromMetas(inp: { readonly meta2d: Record<string, unk
     return mergeKindCatalogBundles(fromFlat, fromVolume);
   }
   if (fromFlat) {
-    return normalizeKindCatalogBundle(fromFlat);
+    return normalizeKindCatalogBundle(fromFlat) ?? mergeKindCatalogBundles(fromFlat, undefined);
   }
   if (fromVolume) {
     return normalizeKindCatalogBundle(fromVolume);
   }
-  return undefined;
+  return puzzle5dDefaultManifestCatalogBundle();
 }
 
 export function kindCompatibilityFromMetas(inp: { readonly meta2d: Record<string, unknown> | undefined; readonly meta3d: Record<string, unknown> | undefined }): readonly KindCompatEntry[] {

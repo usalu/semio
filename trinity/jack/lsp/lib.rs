@@ -104,6 +104,7 @@ impl JackLanguageServer {
         let fixture = GraphFixtureV1 {
             schema: GraphFixtureV1::SCHEMA.into(),
             name: "jack-lsp".into(),
+            manifest_id: Some("nakagin".into()),
             manifest: Manifest::nakagin_default(),
             camera: CameraV1::default(),
             root_node_id: Some("root".into()),
@@ -139,8 +140,7 @@ impl JackLanguageServer {
     }
 
     pub fn load_fixture_json(&mut self, json: &str) -> Result<(), String> {
-        let fixture: GraphFixtureV1 = serde_json::from_str(json).map_err(|e| e.to_string())?;
-        self.graph = Graph::from_fixture(fixture)?;
+        self.graph = Graph::load_json(json)?;
         self.refresh_all();
         Ok(())
     }

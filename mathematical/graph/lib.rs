@@ -535,6 +535,14 @@ enum HitObject<E> {
     Node(NodeId),
 }
 
+/// @emoji 🎯 One graph pick target with generality rank (lower = more general).
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize)]
+pub struct GraphPickTarget {
+    pub domain: String,
+    pub id: u64,
+    pub generality: u32,
+}
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum InteractionMode {
     DragNode { node_id: NodeId, offset: Vec2 },
@@ -1986,6 +1994,37 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         }
         None
     }
+
+    /// @emoji 🎯 Returns every graph entity under a world point for pick disambiguation menus.
+    pub fn hit_test_pick_targets(&self, point: Point) -> Vec<GraphPickTarget> {
+        let mut out = Vec::new();
+        for node in self.nodes.values().rev() {
+            if node_contains_point(node, point) {
+                out.push(GraphPickTarget { domain: "node".into(), id: node.id, generality: 0 });
+            }
+        }
+        for edge in self.edges.values().rev() {
+            if let Some(curve) = self.edge_curve(edge.id) {
+                if distance_point_to_cubic_bezier(point, curve, 18) <= 8.0 {
+                    out.push(GraphPickTarget { domain: "edge".into(), id: edge.id, generality: 1 });
+                }
+            }
+        }
+        if P::HAS_PORTS && self.handle_pointer_picking {
+            for handle in self.handles.values().rev() {
+                let node = match self.nodes.get(&handle.node_id) {
+                    Some(node) => node,
+                    None => continue,
+                };
+                if distance(point, handle_position(node, handle)) <= handle.radius + 6.0 {
+                    if let Some(ep) = P::try_handle_endpoint(handle.id) {
+                        out.push(GraphPickTarget { domain: "handle".into(), id: P::endpoint_as_u64(ep), generality: 2 });
+                    }
+                }
+            }
+        }
+        out
+    }
 }
 // #endregion 🔖Engine
 
@@ -2027,6 +2066,21 @@ mod tests {
         let edge = engine.edges.get(&100).unwrap();
         assert_eq!(edge.source, 1);
         assert_eq!(edge.target, 2);
+    }
+
+    #[test]
+    fn hit_test_pick_targets_collects_node_and_handle() {
+        use cavas::vello::kurbo::Point;
+
+        let mut engine = GraphEngine::<Ported, Directed>::new();
+        engine.create_rect_node(1, 0.0, 0.0, 80.0, 56.0, true);
+        engine.create_handle(10, 1, 0.0);
+        let node = engine.nodes.get(&1).unwrap().clone();
+        let handle = engine.handles.get(&10).unwrap().clone();
+        let point = handle_position(&node, &handle);
+        let targets = engine.hit_test_pick_targets(point);
+        assert!(targets.iter().any(|row| row.domain == "node"));
+        assert!(targets.iter().any(|row| row.domain == "handle"));
     }
 
     #[test]

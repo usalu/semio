@@ -5,6 +5,16 @@
 export * from "@semio-tech/framework-core";
 
 import {
+	type PlatformBuiltinDescriptorKindId,
+	type PlatformBuiltinFileNodeKindId,
+	type PlatformBuiltinSurfaceKindId,
+	PLATFORMBUILTIN_DESCRIPTOR_IDS,
+	PLATFORMBUILTIN_FILENODE_IDS,
+	PLATFORMBUILTIN_SURFACE_IDS,
+	validateGraphManifestDocument,
+} from "@semio-tech/graph-manifest";
+
+import {
 	BaseAppRuntime,
 	BaseModeRuntime,
 	BaseWindowKindRuntime,
@@ -30,6 +40,17 @@ import {
 	type WindowLayout,
 	type WindowMeasure,
 } from "@semio-tech/framework-core";
+
+export type {
+	PlatformBuiltinDescriptorKindId,
+	PlatformBuiltinFileNodeKindId,
+	PlatformBuiltinSurfaceKindId,
+};
+export {
+	PLATFORMBUILTIN_DESCRIPTOR_IDS,
+	PLATFORMBUILTIN_FILENODE_IDS,
+	PLATFORMBUILTIN_SURFACE_IDS,
+};
 
 //#region 🔖UiNode
 export interface UiStackNode {
@@ -2361,6 +2382,25 @@ export interface PluginManifest {
 	readonly contributes: PluginManifestContributes;
 }
 
+/** @emoji 🛡️ Validates a runtime plugin manifest and optional embedded graph manifest documents. */
+export function validatePluginManifest(raw: unknown): PluginManifest {
+	if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+		throw new Error("plugin manifest must be an object");
+	}
+	const record = raw as Record<string, unknown>;
+	if (typeof record.id !== "string" || !record.id.trim()) {
+		throw new Error("plugin manifest requires id");
+	}
+	if (!record.contributes || typeof record.contributes !== "object" || Array.isArray(record.contributes)) {
+		throw new Error("plugin manifest requires contributes");
+	}
+	const graphManifest = record.manifest;
+	if (graphManifest !== undefined) {
+		validateGraphManifestDocument(graphManifest);
+	}
+	return raw as PluginManifest;
+}
+
 /** @emoji 🧩 Runtime plugin module (`activate` / `deactivate`). */
 export interface PluginModule {
 	readonly id: string;
@@ -2377,6 +2417,7 @@ export class PluginHost {
 	constructor(readonly platform: Platform) {}
 
 	register(manifest: PluginManifest, module?: PluginModule): void {
+		validatePluginManifest(manifest);
 		if (module && module.id !== manifest.id) {
 			throw new Error(`Plugin module id "${module.id}" does not match manifest id "${manifest.id}".`);
 		}

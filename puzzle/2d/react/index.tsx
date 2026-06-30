@@ -19,7 +19,8 @@ import {
   type GraphWasmSession,
   type RenderMode,
 } from "@semio-tech/infinite-cavas-react-renderer";
-import { type TreeDragAndDropController, cn, glassMenuClass, normalizeEngagementCommandText, resolveIconUrlsInBoardJson } from "@semio-tech/ui-react";
+import { parseCanvasPickTargetKey } from "@semio-tech/framework-core";
+import { type TreeDragAndDropController, CanvasPickMenu, cn, glassMenuClass, normalizeEngagementCommandText, resolveIconUrlsInBoardJson, useCanvasPickInteraction, type CanvasPickTarget } from "@semio-tech/ui-react";
 import { createPortal } from "react-dom";
 import {
   blendTokenHex,
@@ -73,6 +74,20 @@ export type Puzzle2dGraphPortMode = "normal" | "ported";
 // #endregion 🔖GpuWasmBridge
 
 //#region 🔖Kinds
+import {
+	type EdgeKind,
+	type EdgeTip,
+	type HandleKind,
+	type KindCatalogBundle,
+	type NodeKind,
+	type NodeKindHandleTemplate,
+	type WireKind,
+  nakaginManifestCatalogBundle,
+  puzzle2d_defaultManifestCatalogBundle,
+} from "@semio-tech/graph-manifest";
+
+export type { EdgeKind, EdgeTip, HandleKind, KindCatalogBundle, NodeKind, NodeKindHandleTemplate, WireKind };
+
 export type Puzzle2dSceneObjectKind = "node" | "handle" | "edge" | "wire";
 export type { RenderMode };
 export type Puzzle2dSelectionMethod = "lasso" | "rectangle";
@@ -104,70 +119,12 @@ export interface KindCompatEntry {
 }
 
 /** @emoji 🎨 Handle-kind catalog row: defaults for new handles plus optional gesture {@link WireKind} id. */
-export interface HandleKind {
-  color: string;
-  defaultWireKind?: string;
-  id: string;
-  name: string;
-}
-
 /** @emoji 🧵 Wire-kind catalog row for link gestures and default promoted {@link EdgeKind} id. */
-export interface WireKind {
-  defaultEdgeKind?: string;
-  id: string;
-  name: string;
-}
-
 /** @emoji 🎯 Local handle template on a {@link NodeKind} (perimeter angle in board space). */
-export interface NodeKindHandleTemplate {
-  readonly handleKind: string;
-  readonly angle: number;
-  readonly radius?: number;
-}
-
 /** @emoji 🟠 Node-kind catalog row (defaults for instances; richer fields reserved for future paint). */
-export interface NodeKind {
-  color?: string;
-  defaultHandleKind?: string;
-  defaultShapeProps?: Record<string, unknown>;
-  icon?: string;
-  id: string;
-  name: string;
-  stroke?: string;
-  /** @emoji 🎯 Local handle templates for palette / brush instantiation on this node kind. */
-  handles?: readonly NodeKindHandleTemplate[];
-}
-
 /** @emoji 🔺 Edge tip shape registry row (referenced by {@link EdgeKind} and per-edge overrides). */
-export interface EdgeTip {
-  filled?: boolean;
-  geometry?: "arrow" | "fine-arrow" | "diamond" | "circle" | "bar";
-  id: string;
-  scale?: number;
-}
-
 /** @emoji 🪢 Edge-kind catalog row (defaults for instances; stroke + source/target tips). */
-export interface EdgeKind {
-  color?: string;
-  defaultShapeProps?: Record<string, unknown>;
-  directed?: boolean;
-  id: string;
-  name: string;
-  pattern?: string;
-  shape?: "bezier" | "line";
-  sourceTip?: string;
-  stroke?: string;
-  targetTip?: string;
-}
-
-/** @emoji 📚 Central WASM+host registries for semantic puzzle 2d kinds (omit slices to leave prior catalog entries untouched when pushing partial updates is not supported — always send full merged bundle from callers). */
-export interface KindCatalogBundle {
-  edgeTips?: readonly EdgeTip[];
-  edges?: readonly EdgeKind[];
-  handles?: readonly HandleKind[];
-  nodes?: readonly NodeKind[];
-  wires?: readonly WireKind[];
-}
+/** @emoji 📚 Central WASM+host registries for semantic puzzle 2d kinds. */
 
 /** @emoji 🧷 Builtin handle kind id used when fixture JSON omits `handleKind` (aligned with Rust `parse_fixture_v1`). */
 export const BUILTIN_PORT_HANDLE_KIND = "port";
@@ -178,28 +135,11 @@ export const BUILTIN_LINK_WIRE_KIND = "wire.link";
 /** @emoji 🧷 Default edge kind id assigned to WASM-created link edges when a wire catalog omits `defaultEdgeKind`. */
 export const BUILTIN_LINK_EDGE_KIND = "edge.link";
 
-/** @emoji 🎨 Default WASM handle catalog so `port` resolves a fill color and gesture wire kind without host configuration. */
-export const DEFAULT_HANDLE_KIND_CATALOG: readonly HandleKind[] = [
-  {
-    color: themeColorVar("muted-foreground"),
-    defaultWireKind: BUILTIN_LINK_WIRE_KIND,
-    id: BUILTIN_PORT_HANDLE_KIND,
-    name: "Port",
-  },
-];
-
-/** @emoji 🎨 Default wire catalog entry paired with {@link DEFAULT_HANDLE_KIND_CATALOG}. */
-export const DEFAULT_WIRE_KIND_CATALOG: readonly WireKind[] = [{ defaultEdgeKind: BUILTIN_LINK_EDGE_KIND, id: BUILTIN_LINK_WIRE_KIND, name: "Link wire" }];
-
-/** @emoji 🎨 Default edge catalog entry paired with {@link DEFAULT_WIRE_KIND_CATALOG}. */
-export const DEFAULT_EDGE_KIND_CATALOG: readonly EdgeKind[] = [{ id: BUILTIN_LINK_EDGE_KIND, name: "Link edge" }];
-
 /** @emoji 📚 Default {@link KindCatalogBundle} for {@link Puzzle2dCanvas} when callers omit `kindCatalogs`. */
-export const DEFAULT_KIND_CATALOG_BUNDLE: KindCatalogBundle = {
-  edges: DEFAULT_EDGE_KIND_CATALOG,
-  handles: DEFAULT_HANDLE_KIND_CATALOG,
-  wires: DEFAULT_WIRE_KIND_CATALOG,
-};
+export const DEFAULT_KIND_CATALOG_BUNDLE: KindCatalogBundle = puzzle2d_defaultManifestCatalogBundle();
+
+/** @emoji 📚 Nakagin compile-time {@link KindCatalogBundle} from {@link manifestId} `nakagin`. */
+export const NAKAGIN_KIND_CATALOG_BUNDLE: KindCatalogBundle = nakaginManifestCatalogBundle();
 
 /** @emoji 🔀 Merges catalog slices by stable row `id` (patch rows replace same-id base rows); empty patch slices keep the base slice. */
 export function mergeKindCatalogBundleByRowId(base: KindCatalogBundle, patch: KindCatalogBundle): KindCatalogBundle {
@@ -565,11 +505,18 @@ function puzzle2dFixtureMetaRecord(raw: unknown): Record<string, unknown> | unde
   return undefined;
 }
 
-/** @emoji 🗂️ Returns `meta.kindCatalogs` from raw puzzle 2d fixture JSON when present. */
+/** @emoji 🗂️ Resolves compile-time kind catalogs from fixture `meta.manifestId` or legacy `meta.kindCatalogs`. */
 export function fixtureMetaKindCatalogBundle(raw: unknown): KindCatalogBundle | undefined {
   const meta = puzzle2dFixtureMetaRecord(raw);
   if (!meta) {
     return undefined;
+  }
+  const manifestId = typeof meta.manifestId === "string" ? meta.manifestId.trim() : "";
+  if (manifestId === "nakagin") {
+    return nakaginManifestCatalogBundle();
+  }
+  if (manifestId === "puzzle2d-default") {
+    return puzzle2d_defaultManifestCatalogBundle();
   }
   const kc = meta.kindCatalogs;
   if (!kc || typeof kc !== "object") {
@@ -4876,6 +4823,8 @@ export class Puzzle2dRenderer {
   private lastAppliedChromeSelectedIds = new Set<string>();
   private lastAppliedChromeHighlightedIds = new Set<string>();
   private pointerGestureCameraAtStart: CameraState | null = null;
+  private pickGestureDefer: { readonly sx: number; readonly sy: number; readonly shift: boolean; readonly ctrl: boolean; readonly alt: boolean } | null = null;
+  private canvasPickDelegate: Puzzle2dCanvasPickDelegate | null = null;
   private scheduledSelectEmitRafId: number | null = null;
   private pendingSelectEmitSnapshot: Puzzle2dSelectionSnapshot | null = null;
   private kindCompatJson = "[]";
@@ -5111,6 +5060,19 @@ export class Puzzle2dRenderer {
 
   getSelectionOptions(): ResolvedPuzzle2dSelectionOptions {
     return { ...this.selectionOptions, targets: { ...this.selectionOptions.targets } };
+  }
+
+  /** @emoji 🎯 Host canvas element for pick disambiguation bridges. */
+  canvasElement(): HTMLCanvasElement | null {
+    return this.canvas;
+  }
+
+  /** @emoji 🎯 Registers React pick-menu delegate (see {@link Puzzle2dPickDisambiguationBridge}). */
+  setCanvasPickDelegate(delegate: Puzzle2dCanvasPickDelegate | null): void {
+    this.canvasPickDelegate = delegate;
+    if (!delegate) {
+      this.pickGestureDefer = null;
+    }
   }
 
   /** @emoji 🎯 Updates area-selection behavior for left-button drag gestures. */
@@ -7793,6 +7755,13 @@ export class Puzzle2dRenderer {
     const sy = event.clientY - rect.top;
     this.recordPointerClient(event.clientX, event.clientY, sx, sy, event.altKey);
     this.pointerGestureCameraAtStart = { ...this.camera };
+    this.pickGestureDefer = null;
+    if (event.button === 0 && this.canvasPickDelegate && !event.shiftKey && !event.ctrlKey && !event.metaKey) {
+      if (this.canvasPickDelegate.shouldDeferPointerDown(sx, sy)) {
+        this.pickGestureDefer = { sx, sy, shift: event.shiftKey, ctrl: event.ctrlKey || event.metaKey, alt: event.altKey };
+        return;
+      }
+    }
     this.session.pointerDownScreen(sx, sy, event.button, event.shiftKey, event.ctrlKey || event.metaKey);
     this.applyWasmDrainToScene(this.session.drainEventsJson());
     this.scheduleInputInvalidate();
@@ -7806,11 +7775,27 @@ export class Puzzle2dRenderer {
       this.queuePendingBrushWasmFlush("move");
       return;
     }
+    if (this.canvasPickDelegate?.isPickMenuOpen()) {
+      return;
+    }
     this.pendingBrushWasmFlush = null;
     const rect = this.canvas.getBoundingClientRect();
     const sx = event.clientX - rect.left;
     const sy = event.clientY - rect.top;
     this.recordPointerClient(event.clientX, event.clientY, sx, sy, event.altKey);
+    if (this.pickGestureDefer && this.canvasPickDelegate) {
+      const defer = this.pickGestureDefer;
+      const distance = Math.hypot(sx - defer.sx, sy - defer.sy);
+      if (distance > 4) {
+        this.pickGestureDefer = null;
+        this.session.pointerDownScreen(defer.sx, defer.sy, 0, defer.shift, defer.ctrl);
+        this.applyWasmDrainToScene(this.session.drainEventsJson());
+      } else {
+        this.canvasPickDelegate.onDeferredPointerMove(event.clientX, event.clientY);
+        this.scheduleInputInvalidate();
+        return;
+      }
+    }
     this.session.pointerMoveScreen(sx, sy, event.shiftKey, event.ctrlKey || event.metaKey, event.altKey);
     const silentCamera = this.session.defersDescriptorSyncFromJs();
     this.applyWasmDrainToScene(this.session.drainEventsJson(), { silentCamera });
@@ -7843,6 +7828,20 @@ export class Puzzle2dRenderer {
     const sx = event.clientX - rect.left;
     const sy = event.clientY - rect.top;
     this.recordPointerClient(event.clientX, event.clientY, sx, sy, event.altKey);
+    if (this.pickGestureDefer && this.canvasPickDelegate) {
+      this.canvasPickDelegate.onDeferredPointerUp(event.clientX, event.clientY, event.shiftKey, event.ctrlKey || event.metaKey, event.altKey);
+      this.pickGestureDefer = null;
+      const gestureStart = this.pointerGestureCameraAtStart;
+      this.pointerGestureCameraAtStart = null;
+      if (gestureStart !== null && (!pointsEqual(gestureStart, this.camera) || !nearlyEqual(gestureStart.zoom, this.camera.zoom))) {
+        this.emitPublicCameraChange();
+      }
+      this.scheduleInputInvalidate();
+      if (typeof event.pointerId === "number") {
+        this.canvas.releasePointerCapture?.(event.pointerId);
+      }
+      return;
+    }
     this.session.pointerUpScreen(sx, sy, event.shiftKey, event.ctrlKey || event.metaKey, event.altKey);
     this.applyWasmDrainToScene(this.session.drainEventsJson());
     const gestureStart = this.pointerGestureCameraAtStart;
@@ -7863,6 +7862,11 @@ export class Puzzle2dRenderer {
       const sx = event.clientX - rect.left;
       const sy = event.clientY - rect.top;
       this.recordPointerClient(event.clientX, event.clientY, sx, sy, event.altKey);
+    }
+    if (this.pickGestureDefer && this.canvasPickDelegate) {
+      this.canvasPickDelegate.onPointerLeaveWhileDeferred();
+      this.pickGestureDefer = null;
+      return;
     }
     if (this.wasmSessionCallBlockedForReentry()) {
       this.queuePendingBrushWasmFlush("leave");
@@ -13701,6 +13705,106 @@ export function buildPuzzle2dSelectionMenuItems(
 
 //#endregion 🖱️SelectionContextMenu
 
+//#region 🔖CanvasPick
+type Puzzle2dSessionPickApi = BoardSession & { pickTargetsAtScreenJson(sx: number, sy: number): string };
+
+type Puzzle2dPickTargetRow = { readonly domain: string; readonly id: string; readonly generality: number; readonly label?: string };
+
+export type Puzzle2dCanvasPickDelegate = {
+  readonly isPickMenuOpen: () => boolean;
+  shouldDeferPointerDown: (screenX: number, screenY: number) => boolean;
+  onDeferredPointerMove: (clientX: number, clientY: number) => void;
+  onDeferredPointerUp: (clientX: number, clientY: number, shift: boolean, ctrl: boolean, alt: boolean) => void;
+  onPointerLeaveWhileDeferred: () => void;
+};
+
+function parsePuzzle2dPickTargetsJson(json: string): Puzzle2dPickTargetRow[] {
+  try {
+    const parsed = JSON.parse(json) as Puzzle2dPickTargetRow[];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function puzzle2dPickRowToCanvas(target: Puzzle2dPickTargetRow): CanvasPickTarget {
+  return { domain: target.domain, id: target.id, generality: target.generality, label: target.label ?? target.id };
+}
+
+function Puzzle2dPickDisambiguationBridge({ renderer }: { readonly renderer: Puzzle2dRenderer }): React.ReactElement {
+  const resolveTargetsAtClient = reactHostPort.useCallback(
+    (client: { readonly x: number; readonly y: number }): CanvasPickTarget[] => {
+      const canvas = renderer.canvasElement();
+      if (!canvas) {
+        return [];
+      }
+      const rect = canvas.getBoundingClientRect();
+      const sx = client.x - rect.left;
+      const sy = client.y - rect.top;
+      try {
+        const pickApi = renderer.session as Puzzle2dSessionPickApi;
+        return parsePuzzle2dPickTargetsJson(pickApi.pickTargetsAtScreenJson(sx, sy)).map(puzzle2dPickRowToCanvas);
+      } catch {
+        return [];
+      }
+    },
+    [renderer],
+  );
+
+  const canvasPick = useCanvasPickInteraction({
+    resolveTargetsAtClient,
+    onHoverFocus: (focus) => {
+      if (focus.targetKey) {
+        const parsed = parseCanvasPickTargetKey(focus.targetKey);
+        renderer.syncHoveredIdSilent(parsed?.id ?? null);
+      } else {
+        renderer.syncHoveredIdSilent(null);
+      }
+    },
+    onSelectTarget: (target) => {
+      renderer.setSelectionIds([target.id]);
+    },
+  });
+
+  reactHostPort.useLayoutEffect(() => {
+    renderer.setCanvasPickDelegate({
+      isPickMenuOpen: () => canvasPick.pickMenuOpen,
+      shouldDeferPointerDown: (screenX, screenY) => {
+        try {
+          const pickApi = renderer.session as Puzzle2dSessionPickApi;
+          return parsePuzzle2dPickTargetsJson(pickApi.pickTargetsAtScreenJson(screenX, screenY)).length > 1;
+        } catch {
+          return false;
+        }
+      },
+      onDeferredPointerMove: (clientX, clientY) => {
+        if (!canvasPick.pickMenuOpen) {
+          canvasPick.onCanvasPointerMove({ x: clientX, y: clientY });
+        }
+      },
+      onDeferredPointerUp: (clientX, clientY, shift, ctrl, alt) => {
+        canvasPick.onCanvasPointerUp({ x: clientX, y: clientY }, { shift, ctrl, meta: ctrl, alt });
+      },
+      onPointerLeaveWhileDeferred: () => {
+        canvasPick.onCanvasPointerLeave();
+      },
+    });
+    return () => renderer.setCanvasPickDelegate(null);
+  }, [canvasPick, renderer]);
+
+  return (
+    <CanvasPickMenu
+      hoveredKey={canvasPick.hoveredPickKey}
+      onDismiss={canvasPick.dismissPickMenu}
+      onHoverKey={canvasPick.onMenuHoverKey}
+      onPick={canvasPick.onMenuPick}
+      renderRow={(target) => target.label ?? `${target.domain}:${target.id}`}
+      request={canvasPick.pickMenu}
+    />
+  );
+}
+//#endregion 🔖CanvasPick
+
 //#region 🔖Canvas
 /** 🖼️ React puzzle 2d root that keeps the hot path inside the imperative renderer. */
 export function Puzzle2dCanvas({
@@ -14697,6 +14801,7 @@ export function Puzzle2dCanvas({
           position={surfaceContextMenu ? { x: surfaceContextMenu.clientX, y: surfaceContextMenu.clientY } : null}
         />
         <Puzzle2dBrushCandidateMenu />
+        {contextRenderer ? <Puzzle2dPickDisambiguationBridge renderer={contextRenderer} /> : null}
       </div>
     </Puzzle2dContext.Provider>
   );

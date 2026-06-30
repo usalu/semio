@@ -72,7 +72,7 @@ const _playgroundCadToolbarI18nKeys = [
   "ui.toolbar.parent.transfer",
 ] as const satisfies readonly UiTranslationKey[];
 //#endregion 🪁I18n Compile Gate
-import { NamedLayoutStore } from "@semio-tech/framework-core";
+import { CANVAS_HOVER_SOURCE_CANVAS, CANVAS_HOVER_SOURCE_HIERARCHY, NamedLayoutStore } from "@semio-tech/framework-core";
 import {
     DisplayHostContext,
     ProductShell,
@@ -8731,7 +8731,7 @@ function RasterPlayPaneSurfaceHost({ node }: { readonly node: UiRasterHostSurfac
   const hoveredId = ctrl?.getHoveredId() ?? null;
   const kindHover = ctrl?.getHoveredKind() ?? null;
   const onHover = reactHostPort.useCallback((payload: import("@semio-tech/raster-core").RasterHoverPayload) => {
-    ctrl?.run("setHover", { id: payload.id, kind: payload.kind });
+    ctrl?.run("setHover", { id: payload.id, kind: payload.kind, sourceId: CANVAS_HOVER_SOURCE_CANVAS });
   }, [ctrl]);
   const common = {
     document: doc,
@@ -8775,7 +8775,7 @@ class RasterPlayLayersPanelDefinition extends PureSidePanelTabDefinition {
             ctrl?.getSelectedIds() ?? [],
             ctrl?.getHoveredId() ?? null,
             ctrl?.getHoveredKind() ?? null,
-            (payload) => ctrl?.run("setHover", { id: payload.id, kind: payload.kind }),
+            (payload) => ctrl?.run("setHover", { id: payload.id, kind: payload.kind, sourceId: CANVAS_HOVER_SOURCE_HIERARCHY }),
             rasterPlayHierarchyOptions(ctrl),
           );
           const config = uiTreeNodeToTreePanelConfig(treeNode, bus);
@@ -8807,7 +8807,7 @@ class RasterPlayCataloguePanelDefinition extends PureSidePanelTabDefinition {
         const bus = new CommandBus();
         const treeNode = buildRasterPlayCatalogueTree(
           ctrl?.getSelectedIds() ?? [],
-          (payload) => ctrl?.run("setHover", { id: payload.id, kind: payload.kind }),
+          (payload) => ctrl?.run("setHover", { id: payload.id, kind: payload.kind, sourceId: CANVAS_HOVER_SOURCE_HIERARCHY }),
         );
         return uiTreeNodeToTreePanelConfig(treeNode, bus);
       }),
@@ -8833,7 +8833,7 @@ class RasterPlayMasksPanelDefinition extends PureSidePanelTabDefinition {
             ctrl?.getSelectedIds() ?? [],
             ctrl?.getHoveredId() ?? null,
             ctrl?.getHoveredKind() ?? null,
-            (payload) => ctrl?.run("setHover", { id: payload.id, kind: payload.kind }),
+            (payload) => ctrl?.run("setHover", { id: payload.id, kind: payload.kind, sourceId: CANVAS_HOVER_SOURCE_HIERARCHY }),
           );
           return uiTreeNodeToTreePanelConfig(treeNode, bus);
         },
@@ -8989,8 +8989,20 @@ function useDrawPlayController(runtimeOverride?: Platform): DrawPlayController |
   const appCtx = reactHostPort.useContext(PlaygroundContext);
   const runtime = runtimeOverride ?? appCtx?.runtime;
   reactHostPort.useSyncExternalStore(
-    (listener) => (runtime ? runtime.subscribe(listener) : () => {}),
-    () => runtime?.generation ?? 0,
+    (listener) => {
+      const unsubscribeRuntime = runtime ? runtime.subscribe(listener) : () => {};
+      const ctrl = runtime?.getActiveApp()?.controller as DrawPlayController | undefined;
+      const unsubscribeCtrl = ctrl?.subscribe(listener);
+      return () => {
+        unsubscribeRuntime();
+        unsubscribeCtrl?.();
+      };
+    },
+    () => {
+      const generation = runtime?.generation ?? 0;
+      const revision = (runtime?.getActiveApp()?.controller as DrawPlayController | undefined)?.getInteractionRevision() ?? 0;
+      return generation * 1_000_000 + revision;
+    },
     () => 0,
   );
   const ctrl = runtime?.getActiveApp()?.controller as DrawPlayController | undefined;
@@ -9031,7 +9043,7 @@ function DrawPlayPaneSurfaceHost({ node }: { readonly node: UiDrawHostSurfaceNod
   const hoveredId = ctrl?.getHoveredId() ?? null;
   const kindHover = ctrl?.getHoveredKind() ?? null;
   const onHover = reactHostPort.useCallback((payload: import("@semio-tech/draw-core").DrawHoverPayload) => {
-    ctrl?.run("setHover", { id: payload.id, kind: payload.kind });
+    ctrl?.run("setHover", { id: payload.id, kind: payload.kind, sourceId: CANVAS_HOVER_SOURCE_CANVAS });
   }, [ctrl]);
   const common = {
     document: doc,
@@ -9068,7 +9080,7 @@ class DrawPlayLayersPanelDefinition extends PureSidePanelTabDefinition {
             ctrl?.getSelectedIds() ?? [],
             ctrl?.getHoveredId() ?? null,
             ctrl?.getHoveredKind() ?? null,
-            (payload) => ctrl?.run("setHover", { id: payload.id, kind: payload.kind }),
+            (payload) => ctrl?.run("setHover", { id: payload.id, kind: payload.kind, sourceId: CANVAS_HOVER_SOURCE_HIERARCHY }),
             drawPlayHierarchyOptions(ctrl),
           );
           const config = uiTreeNodeToTreePanelConfig(treeNode, bus);
@@ -9100,7 +9112,7 @@ class DrawPlayCataloguePanelDefinition extends PureSidePanelTabDefinition {
         const bus = new CommandBus();
         const treeNode = buildDrawPlayCatalogueTree(
           ctrl?.getSelectedIds() ?? [],
-          (payload) => ctrl?.run("setHover", { id: payload.id, kind: payload.kind }),
+          (payload) => ctrl?.run("setHover", { id: payload.id, kind: payload.kind, sourceId: CANVAS_HOVER_SOURCE_HIERARCHY }),
         );
         return uiTreeNodeToTreePanelConfig(treeNode, bus);
       }),
@@ -9257,12 +9269,22 @@ function WriterPlaySurfaceHost({ node: _node }: { readonly node: UiWriterHostSur
   const document = ctrl?.getDocument() ?? createWriterPlayDocument({ id: "jack", languageId: "jack", text: "" });
   const formatSignal = ctrl?.getFormatSignal() ?? 0;
   const lintSignal = ctrl?.getLintSignal() ?? 0;
+  const editorSelection = ctrl?.getEditorSelection();
+  const editorSelectionSignal = ctrl?.getEditorSelectionSignal() ?? 0;
+  const externalHoverRange = ctrl?.getHoveredAstSpan() ?? null;
+  const externalHoverSignal = ctrl?.getExternalHoverSignal() ?? 0;
   const createLspTransport = reactHostPort.useCallback(() => createWriterPlayWorkerLspTransport(createWriterJackLspWorker()), []);
   const onChange = reactHostPort.useCallback((next: import("@semio-tech/writer-core").WriterDocumentV1) => {
     writerPlayControllerRef.current?.run("setDocument", { document: next });
   }, []);
   const onLintMessages = reactHostPort.useCallback((messages: readonly string[]) => {
     writerPlayControllerRef.current?.setLintMessages(messages);
+  }, []);
+  const onSelectionChange = reactHostPort.useCallback((range: { readonly start: number; readonly end: number }) => {
+    writerPlayControllerRef.current?.run("setEditorSelection", range);
+  }, []);
+  const onHoverChange = reactHostPort.useCallback((offset: number | null) => {
+    writerPlayControllerRef.current?.run("setEditorHover", { offset });
   }, []);
   return (
     <WriterPlayCanvas
@@ -9272,6 +9294,12 @@ function WriterPlaySurfaceHost({ node: _node }: { readonly node: UiWriterHostSur
       formatSignal={formatSignal}
       lintSignal={lintSignal}
       onLintMessages={onLintMessages}
+      externalSelection={editorSelection}
+      externalSelectionSignal={editorSelectionSignal}
+      externalHoverRange={externalHoverRange}
+      externalHoverSignal={externalHoverSignal}
+      onSelectionChange={onSelectionChange}
+      onHoverChange={onHoverChange}
       className="h-full"
     />
   );
@@ -9291,14 +9319,26 @@ class WriterPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
       icon: shellTabIconComponent(FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, "workbench"),
       name: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
       order: 0,
-      tree: new CallbackTreePanelDefinition(() => {
-        const ctrl = writerPlayControllerRef.current;
-        const bus = new CommandBus();
-        return uiTreeNodeToTreePanelConfig(
-          buildWriterPlayHierarchyTree(ctrl?.getDocument() ?? createWriterPlayDocument({ id: "jack", languageId: "jack" })),
-          bus,
-        );
-      }),
+      tree: new CallbackTreePanelDefinition(
+        () => {
+          const ctrl = writerPlayControllerRef.current;
+          const bus = new CommandBus();
+          return uiTreeNodeToTreePanelConfig(
+            buildWriterPlayHierarchyTree(
+              ctrl?.getDocument() ?? createWriterPlayDocument({ id: "jack", languageId: "jack" }),
+              ctrl?.getSelectedAstIds() ?? [],
+              ctrl?.getHoveredAstId() ?? null,
+              (id) => ctrl?.run("setAstHover", { id }),
+            ),
+            bus,
+          );
+        },
+        () => {
+          const ctrl = writerPlayControllerRef.current;
+          const hovered = ctrl?.getHoveredAstId();
+          return hovered ? [hovered] : [];
+        },
+      ),
     };
   }
 }

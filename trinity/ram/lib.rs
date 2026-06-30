@@ -1,171 +1,13 @@
 //! 🔺 In-memory trinity directed property port graph with compile-time manifest.
 
+use mathematical_graph_manifest::{manifest_by_id, GraphManifest, ManifestValidationError, TrinityManifest};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
-// #region 🔖Property
-/// 📊 Runtime property value.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum PropertyValue {
-    Null,
-    Bool(bool),
-    Number(f64),
-    String(String),
-    Array(Vec<PropertyValue>),
-    Object(BTreeMap<String, PropertyValue>),
-}
+pub use mathematical_graph_manifest::{ManifestValidator, PropertyBag, PropertyDef, PropertyKind, PropertyValue, PortDirection};
 
-impl Default for PropertyValue {
-    fn default() -> Self {
-        Self::Null
-    }
-}
-
-impl PropertyValue {
-    pub fn as_f64(&self) -> Option<f64> {
-        match self {
-            Self::Number(n) => Some(*n),
-            _ => None,
-        }
-    }
-
-    pub fn as_str(&self) -> Option<&str> {
-        match self {
-            Self::String(s) => Some(s.as_str()),
-            _ => None,
-        }
-    }
-
-    pub fn as_object(&self) -> Option<&BTreeMap<String, PropertyValue>> {
-        match self {
-            Self::Object(m) => Some(m),
-            _ => None,
-        }
-    }
-}
-
-/// 🏷️ Compile-time property kind.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum PropertyKind {
-    Data,
-    Derived,
-}
-
-/// 📋 Property definition on a kind.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct PropertyDef {
-    pub name: String,
-    pub kind: PropertyKind,
-    #[serde(default = "default_value_type")]
-    pub value_type: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub expr: Option<String>,
-}
-
-fn default_value_type() -> String {
-    "any".into()
-}
-
-/// 🧮 Property bag keyed by name.
-pub type PropertyBag = BTreeMap<String, PropertyValue>;
-// #endregion 🔖Property
-
-// #region 🔖Manifest
-/// 🔌 Port direction on a node.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum PortDirection {
-    In,
-    Out,
-}
-
-/// 🏷️ Port kind in the manifest.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct PortKindDef {
-    pub name: String,
-    pub direction: PortDirection,
-    #[serde(default)]
-    pub properties: Vec<PropertyDef>,
-}
-
-/// 🏷️ Node kind in the manifest.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct NodeKindDef {
-    pub name: String,
-    #[serde(default)]
-    pub properties: Vec<PropertyDef>,
-    #[serde(default)]
-    pub port_kinds: Vec<String>,
-}
-
-/// 🏷️ Edge kind in the manifest.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct EdgeKindDef {
-    pub name: String,
-    #[serde(default)]
-    pub properties: Vec<PropertyDef>,
-}
-
-/// 📜 Compile-time schema for a trinity graph.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Manifest {
-    #[serde(default)]
-    pub node_kinds: Vec<NodeKindDef>,
-    #[serde(default)]
-    pub edge_kinds: Vec<EdgeKindDef>,
-    #[serde(default)]
-    pub port_kinds: Vec<PortKindDef>,
-}
-
-impl Manifest {
-    pub fn nakagin_default() -> Self {
-        serde_json::from_value(serde_json::json!({
-            "nodeKinds": [{
-                "name": "Piece",
-                "properties": [
-                    { "name": "position", "kind": "data", "valueType": "object" },
-                    { "name": "flatPosition", "kind": "derived", "valueType": "object", "expr": "flatFromConnections" }
-                ],
-                "portKinds": ["Connector"]
-            }],
-            "edgeKinds": [{
-                "name": "Connection",
-                "properties": [
-                    { "name": "gap", "kind": "data", "valueType": "number" },
-                    { "name": "rotation", "kind": "data", "valueType": "number" },
-                    { "name": "tilt", "kind": "data", "valueType": "number" },
-                    { "name": "rise", "kind": "data", "valueType": "number" },
-                    { "name": "turn", "kind": "data", "valueType": "number" },
-                    { "name": "shift", "kind": "data", "valueType": "number" },
-                    { "name": "u", "kind": "data", "valueType": "number" },
-                    { "name": "v", "kind": "data", "valueType": "number" }
-                ]
-            }],
-            "portKinds": [{ "name": "Connector", "direction": "out" }]
-        }))
-        .unwrap()
-    }
-
-    pub fn node_kind(&self, name: &str) -> Option<&NodeKindDef> {
-        self.node_kinds.iter().find(|k| k.name == name)
-    }
-
-    pub fn edge_kind(&self, name: &str) -> Option<&EdgeKindDef> {
-        self.edge_kinds.iter().find(|k| k.name == name)
-    }
-
-    pub fn port_kind(&self, name: &str) -> Option<&PortKindDef> {
-        self.port_kinds.iter().find(|k| k.name == name)
-    }
-}
-// #endregion 🔖Manifest
+/// 📜 Compile-time trinity manifest (projection of {@link GraphManifest}).
+pub type Manifest = TrinityManifest;
 
 // #region 🔖Runtime
 /// 🔌 Runtime port on a node.
@@ -231,6 +73,9 @@ impl Default for CameraV1 {
 pub struct GraphFixtureV1 {
     pub schema: String,
     pub name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub manifest_id: Option<String>,
+    #[serde(default)]
     pub manifest: Manifest,
     pub camera: CameraV1,
     pub nodes: Vec<Node>,
@@ -253,9 +98,26 @@ impl GraphFixtureV1 {
         serde_json::to_string_pretty(self).map_err(|e| e.to_string())
     }
 
+    pub fn resolve_manifest(&mut self) -> Result<(), String> {
+        if let Some(id) = self.manifest_id.as_deref() {
+            self.manifest = manifest_by_id(id)
+                .ok_or_else(|| format!("unknown manifest id {id}"))?
+                .to_trinity_manifest();
+            return Ok(());
+        }
+        if self.manifest.node_kinds.is_empty()
+            && self.manifest.edge_kinds.is_empty()
+            && self.manifest.port_kinds.is_empty()
+        {
+            return Err("fixture missing manifest or manifestId".into());
+        }
+        Ok(())
+    }
+
     pub fn from_json(json: &str) -> Result<Self, String> {
-        let fixture: Self = serde_json::from_str(json).map_err(|e| e.to_string())?;
+        let mut fixture: Self = serde_json::from_str(json).map_err(|e| e.to_string())?;
         fixture.validate_schema()?;
+        fixture.resolve_manifest()?;
         Ok(fixture)
     }
 }
@@ -272,8 +134,14 @@ pub struct Graph {
 }
 
 impl Graph {
-    pub fn from_fixture(fixture: GraphFixtureV1) -> Result<Self, String> {
+    pub fn from_fixture(mut fixture: GraphFixtureV1) -> Result<Self, String> {
         fixture.validate_schema()?;
+        fixture.resolve_manifest()?;
+        if let Some(id) = fixture.manifest_id.as_deref() {
+            if let Some(gm) = manifest_by_id(id) {
+                validate_trinity_fixture(&gm, &fixture)?;
+            }
+        }
         let mut nodes = BTreeMap::new();
         for node in fixture.nodes {
             nodes.insert(node.id.clone(), node);
@@ -296,6 +164,7 @@ impl Graph {
         GraphFixtureV1 {
             schema: GraphFixtureV1::SCHEMA.to_string(),
             name: self.name.clone(),
+            manifest_id: Some("nakagin".into()),
             manifest: self.manifest.clone(),
             camera: self.camera.clone(),
             nodes: self.nodes.values().cloned().collect(),
@@ -412,6 +281,35 @@ impl Graph {
     }
 }
 
+/// 🛡️ Validates trinity fixture instances against a compile-time graph manifest.
+fn validate_trinity_fixture(gm: &GraphManifest, fixture: &GraphFixtureV1) -> Result<(), String> {
+    let validator = ManifestValidator::new(gm);
+    for node in &fixture.nodes {
+        validator.validate_node_kind(&node.kind).map_err(manifest_err)?;
+        validator.validate_node_properties(&node.kind, &node.properties).map_err(manifest_err)?;
+        if let Some(node_def) = gm.node_kind(&node.kind) {
+            for port in &node.ports {
+                validator.validate_port_kind(&port.kind).map_err(manifest_err)?;
+                if !node_def.ports.is_empty() && !node_def.ports.iter().any(|p| p == &port.kind) {
+                    return Err(format!(
+                        "nodes/{}/ports/{}: port kind {} not declared on node kind {}",
+                        node.id, port.kind, port.kind, node.kind
+                    ));
+                }
+            }
+        }
+    }
+    for edge in &fixture.edges {
+        validator.validate_edge_kind(&edge.kind).map_err(manifest_err)?;
+        validator.validate_edge_properties(&edge.kind, &edge.properties).map_err(manifest_err)?;
+    }
+    Ok(())
+}
+
+fn manifest_err(error: ManifestValidationError) -> String {
+    format!("{}: {}", error.path, error.message)
+}
+
 /// 🎯 Entity reference for mutations.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum EntityRef {
@@ -453,6 +351,7 @@ mod tests {
         GraphFixtureV1 {
             schema: GraphFixtureV1::SCHEMA.into(),
             name: "mini".into(),
+            manifest_id: Some("nakagin".into()),
             manifest: Manifest::nakagin_default(),
             camera: CameraV1::default(),
             root_node_id: Some("root".into()),
@@ -523,6 +422,13 @@ mod tests {
         assert_eq!(root_flat.get("u").and_then(PropertyValue::as_f64), Some(0.0));
         assert_eq!(child_flat.get("u").and_then(PropertyValue::as_f64), Some(1.2));
         assert_eq!(child_flat.get("v").and_then(PropertyValue::as_f64), Some(-0.6));
+    }
+
+    #[test]
+    fn fixture_loads_manifest_id_only() {
+        let json = r#"{"schema":"trinity.graph/v1","name":"mini","manifestId":"nakagin","camera":{"x":0,"y":0,"zoom":1},"nodes":[],"edges":[]}"#;
+        let graph = Graph::load_json(json).unwrap();
+        assert!(graph.manifest.node_kind("Piece").is_some());
     }
 
     #[test]

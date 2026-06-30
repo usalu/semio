@@ -723,14 +723,107 @@ export function resolveRasterLayerAtScreenPoint(
 	viewport: RasterViewport,
 	point: { readonly x: number; readonly y: number },
 ): string | null {
+	const targets = resolveRasterPickTargetsAtScreenPoint(doc, camera, viewport, point);
+	if (targets.length === 0) return null;
+	let best = targets[0]!;
+	for (const target of targets) {
+		if (target.generality > best.generality) best = target;
+	}
+	return best.id;
+}
+
+/** @emoji 🎯 Raster pick-target domain generality (lower = more general). */
+export const RASTER_PICK_GENERALITY: Readonly<Record<string, number>> = {
+	group: 0,
+	adjustment: 1,
+	mask: 1,
+	pixel: 2,
+	layer: 2,
+};
+
+export interface RasterPickTarget {
+	readonly domain: string;
+	readonly id: string;
+	readonly generality: number;
+	readonly label?: string;
+}
+
+function rasterPickTargetForLayer(layer: RasterLayerNode): RasterPickTarget {
+	if (layer.kind === "group") {
+		return { domain: "group", id: layer.id, generality: RASTER_PICK_GENERALITY.group!, label: layer.name };
+	}
+	if (layer.kind === "adjustment") {
+		return { domain: "adjustment", id: layer.id, generality: RASTER_PICK_GENERALITY.adjustment!, label: layer.name };
+	}
+	return { domain: "pixel", id: layer.id, generality: RASTER_PICK_GENERALITY.pixel!, label: layer.name };
+}
+
+function rasterAncestorGroupTargets(doc: RasterDocument, layerId: string): RasterPickTarget[] {
+	const out: RasterPickTarget[] = [];
+	const walk = (layers: readonly RasterLayerNode[], ancestors: readonly RasterGroupLayer[]): void => {
+		for (const layer of layers) {
+			const nextAncestors = layer.kind === "group" ? [...ancestors, layer] : ancestors;
+			if (layer.id === layerId) {
+				for (const group of nextAncestors) {
+					if (group.visible) out.push(rasterPickTargetForLayer(group));
+				}
+				return;
+			}
+			if (layer.kind === "group") walk(layer.children, nextAncestors);
+		}
+	};
+	walk(doc.layers, []);
+	return out;
+}
+
+/** @emoji 🎯 All pick targets under a screen point (groups and pixel layers). */
+export function resolveRasterPickTargetsAtScreenPoint(
+	doc: RasterDocument,
+	camera: RasterCamera,
+	viewport: RasterViewport,
+	point: { readonly x: number; readonly y: number },
+): RasterPickTarget[] {
+	const hits: RasterPickTarget[] = [];
 	const layers = flattenRasterLayers(doc.layers);
 	for (let index = layers.length - 1; index >= 0; index -= 1) {
 		const layer = layers[index]!;
+		if (!layer.visible) continue;
+		if (layer.kind === "group") {
+			const bounds = rasterGroupScreenBounds(layer, camera, viewport);
+			if (bounds && rasterScreenRectContainsPoint(bounds, point)) hits.push(rasterPickTargetForLayer(layer));
+			continue;
+		}
 		if (layer.kind !== "pixel") continue;
 		const bounds = rasterPixelLayerScreenBounds(layer, camera, viewport);
-		if (bounds && rasterScreenRectContainsPoint(bounds, point)) return layer.id;
+		if (!bounds || !rasterScreenRectContainsPoint(bounds, point)) continue;
+		hits.push(rasterPickTargetForLayer(layer));
+		for (const groupTarget of rasterAncestorGroupTargets(doc, layer.id)) {
+			if (!hits.some((row) => row.id === groupTarget.id)) hits.push(groupTarget);
+		}
 	}
-	return null;
+	return hits;
+}
+
+function rasterGroupScreenBounds(
+	group: RasterGroupLayer,
+	camera: RasterCamera,
+	viewport: RasterViewport,
+): RasterScreenRect | null {
+	let minX = Number.POSITIVE_INFINITY;
+	let minY = Number.POSITIVE_INFINITY;
+	let maxX = Number.NEGATIVE_INFINITY;
+	let maxY = Number.NEGATIVE_INFINITY;
+	for (const child of flattenRasterLayers(group.children)) {
+		if (child.kind !== "pixel") continue;
+		const bounds = rasterPixelLayerScreenBounds(child, camera, viewport);
+		if (!bounds) continue;
+		minX = Math.min(minX, bounds.x);
+		minY = Math.min(minY, bounds.y);
+		maxX = Math.max(maxX, bounds.x + bounds.width);
+		maxY = Math.max(maxY, bounds.y + bounds.height);
+	}
+	if (!Number.isFinite(minX)) return null;
+	return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
 }
 
 /** @emoji 🌳 Combined hierarchy highlight ids for hover focus. */

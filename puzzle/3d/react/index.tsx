@@ -23,10 +23,14 @@ import {
   marqueeIsCrossingFromPath,
   marqueeModeFromModifiers,
   ContextMenuController,
+  CanvasPickMenu,
   cn,
   glassMenuClass,
+  useCanvasPickInteraction,
+  type CanvasPickTarget,
   type ContextMenuItem,
 } from "@semio-tech/ui-react";
+import { parseCanvasPickTargetKey } from "@semio-tech/framework-core";
 import {
   blendTokenHex,
   resolveBackgroundColorHex,
@@ -438,6 +442,60 @@ export function isLoadableMeshUrl(meshUrl: string | undefined): boolean {
   return !url.includes("://") || url.startsWith("/") || url.startsWith("http://") || url.startsWith("https://");
 }
 
+//#region 🔖Kinds
+import {
+  type KindCatalogBundle as GraphManifestKindCatalogBundle,
+  type Puzzle3dDefaultEdgeKindId,
+  type Puzzle3dDefaultPortKindId,
+  type Puzzle3dDefaultWireKindId,
+  puzzle3d_defaultManifestCatalogBundle,
+} from "@semio-tech/graph-manifest";
+
+export type { Puzzle3dDefaultEdgeKindId as AttractionKindId, Puzzle3dDefaultPortKindId as VortexKindId, Puzzle3dDefaultWireKindId as CableKindId };
+
+function puzzle3dKindCatalogBundleFromManifest(bundle: GraphManifestKindCatalogBundle): KindCatalogBundle {
+  return {
+    ...(bundle.handles
+      ? {
+          vortices: bundle.handles.map((row) => ({
+            id: row.id,
+            name: row.name,
+            color: row.color,
+            ...(row.defaultWireKind !== undefined ? { defaultCableKind: row.defaultWireKind } : {}),
+          })),
+        }
+      : {}),
+    ...(bundle.wires
+      ? {
+          cables: bundle.wires.map((row) => ({
+            id: row.id,
+            name: row.name,
+            ...(row.defaultEdgeKind !== undefined ? { defaultAttractionKind: row.defaultEdgeKind } : {}),
+          })),
+        }
+      : {}),
+    ...(bundle.edges
+      ? {
+          attractions: bundle.edges.map((row) => ({
+            id: row.id,
+            name: row.name,
+          })),
+        }
+      : {}),
+    ...(bundle.nodes
+      ? {
+          objects: bundle.nodes.map((row) => ({
+            id: row.id,
+            name: row.name,
+            ...(row.color !== undefined ? { color: row.color } : {}),
+          })),
+        }
+      : {}),
+  };
+}
+
+//#endregion 🔖Kinds
+
 export interface AttractionKind {
   id: string;
   label?: string;
@@ -528,6 +586,9 @@ export interface KindCompatEntry {
   important?: boolean;
   specificity?: "general" | "object" | "vortex" | "cable" | "attraction";
 }
+
+/** @emoji 📚 Default {@link KindCatalogBundle} from compile-time `puzzle3d-default` manifest. */
+export const DEFAULT_KIND_CATALOG_BUNDLE: KindCatalogBundle = puzzle3dKindCatalogBundleFromManifest(puzzle3d_defaultManifestCatalogBundle());
 
 export interface SelectionSnapshot {
   readonly objectIds: readonly string[];
@@ -6935,7 +6996,7 @@ export const ObjectItem = reactHostPort.memo(function ObjectItem(props: ObjectPr
               e.stopPropagation();
             },
             onClick: (e: ThreeEvent<MouseEvent>) => {
-              if (e.nativeEvent.button !== 0 || puzzle3dMarqueeSuppressClickRef.current) {
+              if (e.nativeEvent.button !== 0 || puzzle3dMarqueeSuppressClickRef.current || puzzle3dPickDisambiguationSuppressClickRef.current) {
                 return;
               }
               e.stopPropagation();
@@ -7242,7 +7303,7 @@ export const Vortex = reactHostPort.memo(function Vortex(
       }
       e.stopPropagation();
       vortexPointerGestureRef.current = null;
-      if (!gesture.dragStarted && !puzzle3dMarqueeSuppressClickRef.current && !puzzle3dRelocateDragActiveRef.current && !puzzle3dBrushToolActiveRef.current) {
+      if (!gesture.dragStarted && !puzzle3dMarqueeSuppressClickRef.current && !puzzle3dPickDisambiguationSuppressClickRef.current && !puzzle3dRelocateDragActiveRef.current && !puzzle3dBrushToolActiveRef.current) {
         selectVortex();
       }
     },
@@ -7430,7 +7491,7 @@ const CableBatch = reactHostPort.memo(function CableBatch(props: { readonly attr
   );
   const onClick = reactHostPort.useCallback(
     (e: ThreeEvent<MouseEvent>) => {
-      if (e.nativeEvent.button !== 0 || puzzle3dMarqueeSuppressClickRef.current || puzzle3dRelocateDragActiveRef.current) {
+      if (e.nativeEvent.button !== 0 || puzzle3dMarqueeSuppressClickRef.current || puzzle3dPickDisambiguationSuppressClickRef.current || puzzle3dRelocateDragActiveRef.current) {
         return;
       }
       e.stopPropagation();
@@ -7486,6 +7547,12 @@ export const puzzle3dHoverTargetRef: { current: HoverTarget | null } = { current
 
 /** @emoji 🖱️ True after a marquee gesture consumed the click (mesh picks skip onClick). */
 export const puzzle3dMarqueeSuppressClickRef = { current: false };
+
+/** @emoji 🎯 True while click pick disambiguation defers mesh selection (multi-hit menu). */
+export const puzzle3dPickDisambiguationSuppressClickRef = { current: false };
+
+/** @emoji 🎯 True while a multi-hit pick gesture is active (marquee defers). */
+export const puzzle3dPickDisambiguationActiveRef = { current: false };
 
 /** @emoji ✋ True while transform controls (relocate tool) are dragging — blocks marquee and picks. */
 export const puzzle3dRelocateDragActiveRef = { current: false };
@@ -10090,6 +10157,213 @@ function AttractionWindowBridge() {
   return null;
 }
 
+//#region 🔖SelectionPickDisambiguation
+type Intersection = import("three").Intersection;
+
+const PUZZLE_3D_PICK_GENERALITY = { object: 0, attraction: 1, vortex: 2 } as const;
+
+function puzzle3dHoverTargetFromCanvasPick(target: CanvasPickTarget): HoverTarget | null {
+  switch (target.domain) {
+    case "object":
+      return { kind: "object", id: target.id };
+    case "vortex":
+      return { kind: "vortex", fullId: target.id };
+    case "attraction":
+      return { kind: "attraction", id: target.id };
+    default:
+      return null;
+  }
+}
+
+function puzzle3dSelectionPickFromCanvasTarget(target: CanvasPickTarget): SelectionPick | null {
+  const hover = puzzle3dHoverTargetFromCanvasPick(target);
+  return hover ? hoverTargetToSelectionPick(hover) : null;
+}
+
+function puzzle3dPickTargetFromIntersection(hit: Intersection, attractions: readonly AttractionProps[]): CanvasPickTarget | null {
+  let node: Object3D | null = hit.object;
+  while (node) {
+    const data = node.userData as Record<string, unknown>;
+    if (typeof data.puzzle3dObjectId === "string") {
+      return { domain: "object", id: data.puzzle3dObjectId, generality: PUZZLE_3D_PICK_GENERALITY.object };
+    }
+    if (typeof data.puzzle3dVortexFullId === "string") {
+      return { domain: "vortex", id: data.puzzle3dVortexFullId, generality: PUZZLE_3D_PICK_GENERALITY.vortex, label: data.puzzle3dVortexFullId };
+    }
+    node = node.parent;
+  }
+  const data = hit.object.userData as Record<string, unknown>;
+  if (data.puzzle3dAttractionPick === true && hit.faceIndex != null) {
+    const attraction = attractions[hit.faceIndex];
+    if (attraction) {
+      return { domain: "attraction", id: attraction.id, generality: PUZZLE_3D_PICK_GENERALITY.attraction, label: attraction.id };
+    }
+  }
+  return null;
+}
+
+function resolvePuzzle3dPickTargetsAtClient(
+  clientX: number,
+  clientY: number,
+  gl: WebGLRenderer,
+  camera: Camera,
+  collectRoots: () => readonly Object3D[],
+  attractions: readonly AttractionProps[],
+): CanvasPickTarget[] {
+  const canvas = gl.domElement;
+  const rect = canvas.getBoundingClientRect();
+  const ndc = new Vector2(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1);
+  const raycaster = new Raycaster();
+  raycaster.setFromCamera(ndc, camera);
+  const hits = raycaster.intersectObjects([...collectRoots()], true);
+  const out: CanvasPickTarget[] = [];
+  const seen = new Set<string>();
+  for (const hit of hits) {
+    const row = puzzle3dPickTargetFromIntersection(hit, attractions);
+    if (!row) {
+      continue;
+    }
+    const key = `${row.domain}:${row.id}`;
+    if (seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    out.push(row);
+  }
+  return out;
+}
+
+function SelectionPickDisambiguationBridge(): React.ReactElement {
+  const reg = useRegistryCore();
+  const { store } = useObjectState();
+  const { commitSelection } = useRegistryInteraction();
+  const { setHover, clearHoverAll } = useRegistryHover();
+  const { camera, gl } = useThree();
+  const pickDeferRef = reactHostPort.useRef<{ readonly pointerId: number; readonly sx: number; readonly sy: number } | null>(null);
+
+  const collectPickRoots = reactHostPort.useCallback((): Object3D[] => {
+    const out: Object3D[] = [];
+    for (const group of reg.collectObjectGroups()) {
+      if (group) {
+        out.push(group);
+      }
+    }
+    return out;
+  }, [reg]);
+
+  const resolveTargetsAtClient = reactHostPort.useCallback(
+    (client: { readonly x: number; readonly y: number }) =>
+      resolvePuzzle3dPickTargetsAtClient(client.x, client.y, gl, camera, collectPickRoots, store.getAttractions()),
+    [camera, collectPickRoots, gl, store],
+  );
+
+  const canvasPick = useCanvasPickInteraction({
+    resolveTargetsAtClient,
+    onHoverFocus: (focus) => {
+      if (!focus.targetKey) {
+        clearHoverAll();
+        return;
+      }
+      const parsed = parseCanvasPickTargetKey(focus.targetKey);
+      if (!parsed) {
+        return;
+      }
+      const hover = puzzle3dHoverTargetFromCanvasPick(parsed);
+      if (hover) {
+        setHover(hover);
+      }
+    },
+    onSelectTarget: (target) => {
+      const pick = puzzle3dSelectionPickFromCanvasTarget(target);
+      if (pick) {
+        commitSelection(pick);
+      }
+    },
+  });
+
+  reactHostPort.useEffect(() => {
+    const canvas = gl.domElement;
+    if (!canvas) {
+      return undefined;
+    }
+    const reset = (): void => {
+      puzzle3dPickDisambiguationActiveRef.current = false;
+      puzzle3dPickDisambiguationSuppressClickRef.current = false;
+      pickDeferRef.current = null;
+    };
+    const onPointerDown = (event: PointerEvent): void => {
+      if (
+        event.button !== 0 ||
+        reg.attractionDragActive ||
+        reg.attractionIndirectPickAwait !== null ||
+        puzzle3dRelocateDragActiveRef.current ||
+        gumballPointerConsumesCanvasEventRef.current ||
+        puzzle3dBrushToolActiveRef.current ||
+        puzzle3dTargetVolumeToolActiveRef.current ||
+        event.shiftKey ||
+        event.ctrlKey ||
+        event.metaKey
+      ) {
+        return;
+      }
+      const targets = resolvePuzzle3dPickTargetsAtClient(event.clientX, event.clientY, gl, camera, collectPickRoots, store.getAttractions());
+      if (targets.length <= 1) {
+        return;
+      }
+      puzzle3dPickDisambiguationActiveRef.current = true;
+      puzzle3dPickDisambiguationSuppressClickRef.current = true;
+      pickDeferRef.current = { pointerId: event.pointerId, sx: event.clientX, sy: event.clientY };
+      canvasPick.onCanvasPointerDown({ x: event.clientX, y: event.clientY });
+    };
+    const onPointerMove = (event: PointerEvent): void => {
+      const defer = pickDeferRef.current;
+      if (!defer || defer.pointerId !== event.pointerId) {
+        return;
+      }
+      const dist = Math.hypot(event.clientX - defer.sx, event.clientY - defer.sy);
+      if (dist > PUZZLE_3D_MARQUEE_DRAG_THRESHOLD_PX) {
+        reset();
+        return;
+      }
+      if (!canvasPick.pickMenuOpen) {
+        canvasPick.onCanvasPointerMove({ x: event.clientX, y: event.clientY });
+      }
+    };
+    const onPointerUp = (event: PointerEvent): void => {
+      const defer = pickDeferRef.current;
+      if (!defer || defer.pointerId !== event.pointerId) {
+        return;
+      }
+      canvasPick.onCanvasPointerUp(
+        { x: event.clientX, y: event.clientY },
+        { shift: event.shiftKey, ctrl: event.ctrlKey, meta: event.metaKey, alt: event.altKey },
+      );
+      reset();
+    };
+    const bindings = new EventBindingController();
+    bindings.listen(canvas, "pointerdown", onPointerDown as EventListener, true);
+    bindings.listen(window, "pointermove", onPointerMove as EventListener);
+    bindings.listen(window, "pointerup", onPointerUp as EventListener, true);
+    bindings.listen(window, "pointercancel", onPointerUp as EventListener, true);
+    return () => {
+      bindings.dispose();
+      reset();
+    };
+  }, [camera, canvasPick, collectPickRoots, gl, reg, store]);
+
+  return (
+    <CanvasPickMenu
+      hoveredKey={canvasPick.hoveredPickKey}
+      onDismiss={canvasPick.dismissPickMenu}
+      onHoverKey={canvasPick.onMenuHoverKey}
+      onPick={canvasPick.onMenuPick}
+      renderRow={(target) => target.label ?? `${target.domain}:${target.id}`}
+      request={canvasPick.pickMenu}
+    />
+  );
+}
+//#endregion 🔖SelectionPickDisambiguation
+
 function MarqueeBridge() {
   const reg = useRegistry();
   const { captureMarqueeCandidates, previewMarqueeSelection, cancelMarqueePreview, commitMarqueeSelection } = useRegistryInteraction();
@@ -10130,6 +10404,9 @@ function MarqueeBridge() {
     };
     puzzle3dMarqueeGestureCancel = cancelGesture;
     const onPointerDown = (event: PointerEvent) => {
+      if (puzzle3dPickDisambiguationActiveRef.current) {
+        return;
+      }
       if (event.button !== 0 || reg.attractionDragActive || reg.attractionIndirectPickAwait !== null || puzzle3dRelocateDragActiveRef.current || gumballPointerConsumesCanvasEventRef.current || puzzle3dBrushToolActiveRef.current || puzzle3dTargetVolumeToolActiveRef.current) {
         return;
       }
@@ -11748,6 +12025,7 @@ function Inner(props: CanvasProps & {
         <AttractionThreeBinder />
         <AttractionWindowBridge />
         <MarqueeBridge />
+        <SelectionPickDisambiguationBridge />
         <SelectionContextMenuBinder />
         {fixtureDropEnabled ? (
           <FixtureDropPointerBridge

@@ -9,7 +9,8 @@
 		".": "./index.ts"
 	},
 	"dependencies": {
-		"@semio-tech/framework-core": "workspace:*"
+		"@semio-tech/framework-core": "workspace:*",
+		"@semio-tech/graph-manifest": "workspace:*"
 	},
 	"devDependencies": {
 		"typescript": "^5.9.3"

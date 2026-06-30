@@ -1,0 +1,19 @@
+{
+  "title": "Canvas Pick Disambiguation",
+  "emoji": "🎯",
+  "status": "closed",
+  "description": "Unified canvas pick disambiguation: shared protocol, DOM pick menu, multi-hit resolvers across draw/raster/flow/puzzle/writer/cad, transitive hover focus.",
+  "summary": "Implemented unified canvas pick disambiguation across all canvas apps: shared CanvasPickTarget protocol and CanvasHoverFocusStore in framework/core; CanvasPickMenu + useCanvasPickInteraction in ui/react; multi-hit resolvers and pick-menu wiring for draw, raster, flow, puzzle2d, writer, puzzle3d, and CAD; WASM pickTargetsAtScreenJson for graph/flow/puzzle2d/writer; playground draw/raster hosts use AppPointerFocusStore source arbitration for canvas vs hierarchy hover.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1770"
+  },
+  "goal": "🎯infinite🎯canvas",
+  "plan": {
+    "client": "cursor",
+    "id": "6591da0a",
+    "local": "canvas_pick_disambiguation_6591da0a.plan.md"
+  },
+  "sessions": [
+    "⚪287d799259064d9b9f0f3574076379db"
+  ]
+}

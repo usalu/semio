@@ -1,9 +1,9 @@
 {
   "title": "Writer Technology Infinite Canvas Lsp",
   "emoji": "✍️",
-  "status": "open",
+  "status": "closed",
   "description": "Create a new writer technology: full-blown text editor on infinite canvas (Vello/WebGPU via infinite/cavas), real JSON-RPC LSP client/server in Web Worker, writer playground with jack fixture, jack language server (lint/format/hover/completion), integrate WriterCanvas into trinity/jack shell replacing CodeEditor.",
-  "summary": "Fixed hover/selection highlight width: highlights now use label_byte_world_x/label_span_world_x from usvg-measured glyph layout with the same scale transform as append_label_tspans (previous CHAR_WIDTH_RATIO estimate was ~2x too wide). Selection now draws selection_preview_fill plus selection_preview_stroke border. Hit-testing uses per-character midpoint boundaries aligned to measured glyph positions.",
+  "summary": "Semantic token-wise selection: selectableSpansForJack builds atomic lexer spans plus varLabel and propertyAccess composites (a1, a1:Piece, name, a1.name). WASM normalizes selection/drag/edit to token boundaries and expands partial composite overlaps. All tokens are atomic for caret/delete/arrows. Double-click selects semantic span at pointer; F2 opens inline rename input. Spans synced from react to WASM each edit.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1767"
   },
@@ -13,6 +13,8 @@
     "⚪d038a351a56b4c72b006bcbc815c7c10",
     "⚪7afb1ad9c7f8485f91e0c426ff5feb83",
     "⚪07fbd7b20b2e4c6ca81a36c2167cbcb3",
-    "⚪cc65a24a41d44e69b02dfed217b5cc25"
+    "⚪cc65a24a41d44e69b02dfed217b5cc25",
+    "⚪6d23984bda2745529f6b3054b908a963",
+    "⚪aeebe5bde69648719d07fd8242fc2bb5"
   ]
 }

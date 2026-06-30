@@ -80,6 +80,7 @@ mod tests {
         let fixture = GraphFixtureV1 {
             schema: GraphFixtureV1::SCHEMA.into(),
             name: "mini".into(),
+            manifest_id: Some("nakagin".into()),
             manifest: Manifest::nakagin_default(),
             camera: CameraV1::default(),
             root_node_id: Some("root".into()),

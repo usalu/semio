@@ -3515,6 +3515,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "mathematical_graph_manifest"
+version = "0.1.0"
+dependencies = [
+ "neural_engine",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "mathematical_graph_normal_directed"
 version = "0.1.0"
 dependencies = [
@@ -3565,6 +3574,7 @@ dependencies = [
  "infinite_cavas",
  "js-sys",
  "mathematical_core",
+ "mathematical_graph_manifest",
  "mathematical_graph_port_directed",
  "serde",
  "serde_json",
@@ -3580,6 +3590,7 @@ version = "0.1.0"
 dependencies = [
  "infinite_cavas",
  "mathematical_core",
+ "mathematical_graph_manifest",
  "mathematical_graph_normal_undirected",
  "mathematical_graph_port_directed",
  "serde",
@@ -6367,6 +6378,7 @@ name = "trinity_ram"
 version = "0.1.0"
 dependencies = [
  "mathematical_core",
+ "mathematical_graph_manifest",
  "serde",
  "serde_json",
 ]

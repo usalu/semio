@@ -3,7 +3,8 @@
 // #endregion 🧲Header
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { borderNormalBottomClass, canvasViewportClass, cn, ContextMenuController, floatingMenuItemClass, floatingMenuSurfaceClass, floatingToolbarSurfaceClass, Icon, menuListItemClassName, SelectionMarquee, type ContextMenuItem, type ScreenRect, type SelectionMarqueeCoverage } from "@semio-tech/ui-react";
+import { borderNormalBottomClass, canvasViewportClass, cn, CanvasPickMenu, ContextMenuController, floatingMenuItemClass, floatingMenuSurfaceClass, floatingToolbarSurfaceClass, Icon, menuListItemClassName, SelectionMarquee, useCanvasPickInteraction, type CanvasPickTarget, type ContextMenuItem, type ScreenRect, type SelectionMarqueeCoverage } from "@semio-tech/ui-react";
+import { parseCanvasPickTargetKey } from "@semio-tech/framework-core";
 import { clearColorResolveCache, resolveColorHex, resolveSemanticColorHex, serializeGraphVelloThemePaletteJson, tokenVar } from "@semio-tech/ui-styling";
 import { isDagDrawLodKind, type DagDrawLodKind } from "@semio-tech/dag-react";
 import initFlowWasm, { FlowSession, initSync } from "../core/pkg/flow_core.js";
@@ -2899,6 +2900,23 @@ export function flowWheelGestureIsZoom(_event?: Pick<WheelEvent, "ctrlKey" | "me
   return true;
 }
 
+type FlowSessionPickApi = FlowSession & { pickTargetsAtScreenJson(sx: number, sy: number): string };
+
+type FlowPickTargetRow = { readonly domain: string; readonly id: string; readonly generality: number; readonly label?: string };
+
+function parseFlowPickTargetsJson(json: string): FlowPickTargetRow[] {
+  try {
+    const parsed = JSON.parse(json) as FlowPickTargetRow[];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function flowPickRowToCanvas(target: FlowPickTargetRow): CanvasPickTarget {
+  return { domain: target.domain, id: target.id, generality: target.generality, label: target.label };
+}
+
 export function FlowCanvas({
   fixtureJson,
   className,
@@ -3745,6 +3763,55 @@ export function FlowCanvas({
     return { x: clientX - rect.left, y: clientY - rect.top };
   }, []);
 
+  const resolveFlowPickTargetsAtClient = useCallback(
+    (client: { readonly x: number; readonly y: number }) => {
+      const session = sessionRef.current as FlowSessionPickApi | null;
+      if (!session) return [];
+      const { x, y } = clientToCanvas(client.x, client.y);
+      return parseFlowPickTargetsJson(session.pickTargetsAtScreenJson(x, y)).map(flowPickRowToCanvas);
+    },
+    [clientToCanvas],
+  );
+
+  const applyFlowHoverPickKey = useCallback(
+    (key: string | null) => {
+      const session = sessionRef.current;
+      if (!session) return;
+      if (!key) {
+        session.setHover(null);
+        emitInteractionState(session);
+        renderFrame();
+        return;
+      }
+      const parsed = parseCanvasPickTargetKey(key);
+      if (parsed?.domain === "handle") {
+        const [widgetId, port] = key.split(":");
+        (session as FlowSessionChannelApi).setHoverChannel?.(widgetId ?? null, port ?? null);
+      } else {
+        session.setHover(key);
+      }
+      emitInteractionState(session);
+      renderFrame();
+    },
+    [emitInteractionState, renderFrame],
+  );
+
+  const canvasPick = useCanvasPickInteraction({
+    resolveTargetsAtClient: resolveFlowPickTargetsAtClient,
+    onHoverFocus: (focus) => applyFlowHoverPickKey(focus.targetKey),
+    onSelectTarget: (target) => {
+      const session = sessionRef.current;
+      if (!session) return;
+      session.setSelectionJson(JSON.stringify([target.id]));
+      emitInteractionState(session);
+      evaluate();
+      persistFixture();
+      renderFrame();
+    },
+  });
+
+  const pickDeferRef = useRef<{ readonly sx: number; readonly sy: number; readonly shift: boolean; readonly ctrl: boolean; readonly alt: boolean } | null>(null);
+
   const onPointerDown = useCallback(
     (e: React.PointerEvent<HTMLCanvasElement>) => {
       const session = sessionRef.current;
@@ -3752,6 +3819,15 @@ export function FlowCanvas({
       if (e.button === 2) return;
       e.currentTarget.setPointerCapture(e.pointerId);
       const { x, y } = clientToCanvas(e.clientX, e.clientY);
+      canvasPick.onCanvasPointerDown({ x: e.clientX, y: e.clientY });
+      const pickApi = session as FlowSessionPickApi;
+      const targets = parseFlowPickTargetsJson(pickApi.pickTargetsAtScreenJson(x, y));
+      if (e.button === 0 && targets.length > 1 && !e.shiftKey && !e.metaKey && !e.ctrlKey) {
+        pickDeferRef.current = { sx: x, sy: y, shift: e.shiftKey, ctrl: e.metaKey || e.ctrlKey, alt: e.altKey };
+        pointerRef.current = { active: true, pan: false, id: e.pointerId, shift: e.shiftKey, ctrl: e.metaKey || e.ctrlKey, alt: e.altKey, x, y };
+        return;
+      }
+      pickDeferRef.current = null;
       pointerRef.current = { active: true, pan: false, id: e.pointerId, shift: e.shiftKey, ctrl: e.metaKey || e.ctrlKey, alt: e.altKey, x, y };
       try {
         pointerGestureFixtureRef.current = session.fixtureJson();
@@ -3762,7 +3838,7 @@ export function FlowCanvas({
       emitInteractionState(session);
       renderFrame();
     },
-    [clientToCanvas, emitInteractionState, renderFrame],
+    [canvasPick, clientToCanvas, emitInteractionState, renderFrame],
   );
 
   const onPointerMove = useCallback(
@@ -3776,6 +3852,20 @@ export function FlowCanvas({
       pointerRef.current.shift = e.shiftKey;
       pointerRef.current.ctrl = e.metaKey || e.ctrlKey;
       pointerRef.current.alt = e.altKey;
+      if (pickDeferRef.current) {
+        const defer = pickDeferRef.current;
+        const distance = Math.hypot(x - defer.sx, y - defer.sy);
+        if (distance > 4) {
+          pickDeferRef.current = null;
+          session.pointerDownScreen(defer.sx, defer.sy, 0, defer.shift, defer.ctrl, defer.alt, false);
+        } else if (!canvasPick.pickMenuOpen) {
+          canvasPick.onCanvasPointerMove({ x: e.clientX, y: e.clientY });
+        }
+        return;
+      }
+      if (!canvasPick.pickMenuOpen) {
+        canvasPick.onCanvasPointerMove({ x: e.clientX, y: e.clientY });
+      }
       session.pointerMoveScreen(x, y, e.shiftKey, e.metaKey || e.ctrlKey, e.altKey);
       emitInteractionState(session);
       if (pointerRef.current.active) {
@@ -3785,17 +3875,18 @@ export function FlowCanvas({
         renderFrame();
       }
     },
-    [clientToCanvas, emitInteractionState, evaluate, renderFrame],
+    [canvasPick, clientToCanvas, emitInteractionState, evaluate, renderFrame],
   );
 
   const onPointerLeave = useCallback(
     (e: React.PointerEvent<HTMLCanvasElement>) => {
       const session = sessionRef.current;
       if (!session || pointerRef.current.active) return;
+      canvasPick.onCanvasPointerLeave();
       session.setHover(null);
       emitInteractionState(session);
     },
-    [emitInteractionState],
+    [canvasPick, emitInteractionState],
   );
 
   const onPointerUp = useCallback(
@@ -3803,6 +3894,15 @@ export function FlowCanvas({
       const session = sessionRef.current;
       if (!session || pointerRef.current.id !== e.pointerId) return;
       const { x, y } = clientToCanvas(e.clientX, e.clientY);
+      if (pickDeferRef.current) {
+        canvasPick.onCanvasPointerUp(
+          { x: e.clientX, y: e.clientY },
+          { shift: e.shiftKey, ctrl: e.ctrlKey, meta: e.metaKey, alt: e.altKey },
+        );
+        pickDeferRef.current = null;
+        pointerRef.current = { active: false, pan: false, id: -1, shift: false, ctrl: false, alt: false, x: 0, y: 0 };
+        return;
+      }
       session.pointerUpScreen(x, y, e.shiftKey, e.metaKey || e.ctrlKey, e.altKey);
       const clusterApi = session as FlowSessionClusterApi;
       const explodeId = clusterApi.takePendingClusterExplode?.();
@@ -3829,7 +3929,7 @@ export function FlowCanvas({
       if (shouldPersist) persistFixture();
       renderFrame();
     },
-    [clientToCanvas, emitInteractionState, evaluate, persistFixture, renderFrame],
+    [canvasPick, clientToCanvas, emitInteractionState, evaluate, persistFixture, renderFrame],
   );
 
   useEffect(() => {
@@ -4318,6 +4418,13 @@ export function FlowCanvas({
         }}
         open={surfaceContextMenu !== null}
         position={surfaceContextMenu ? { x: surfaceContextMenu.clientX, y: surfaceContextMenu.clientY } : null}
+      />
+      <CanvasPickMenu
+        request={canvasPick.pickMenu}
+        hoveredKey={canvasPick.menuHoveredKey}
+        onHoverKey={canvasPick.onMenuHoverKey}
+        onPick={canvasPick.onMenuPick}
+        onDismiss={canvasPick.dismissPickMenu}
       />
       {selectionBounds ? (
         <FlowSelectionBoundsOverlay rect={selectionBounds} selectionCount={selectionBoundsCount} onAlign={alignSelection} />

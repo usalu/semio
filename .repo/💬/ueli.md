@@ -240,6 +240,27 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+Introduce a new technology: semios
+semios is like a collaborative operating system for designers.
+It is the ultimate technology that combines all the other technologies.
+At the heart of semios are programs.
+A program is a collection of apps.
+An app has different modes etc.
+The container units for data in semios are studios.
+A studio is always local first but optioanally an authorative backbone can be added.
+In semios nothing is edited with CRUD and all is based on CRQS event sourcing architecture with version control built in (see compose lib.rs) 
+Implement the embbedded studio with a single json first.
+semios generalizes sketchpad.
+sketchpad just becomes a program.
+Another core concept are resources.
+A resource is an interface e.g. resource(2d(drawing, raster, map, procedural 2d, shooting, etc), 3d (puzzle5d, puzzle3d, procedural 3d, etc)
+resource of the same kind are interchangeable.
+Every studio has a dag media graph.
+All apps yield a resource and have source format.
+All apps are non destructive and event sourced with CRQS and versioniong.
+
+---
+
 The neural, flow, procedural, forms technologies are still adhoc.
 neural is headless dictionary in dictionary out technology for computation.
 flow is the ui extension for neural (introduces channels for named keys, input widgets such as sliders for interactive construction of the in dictionary for neural).

@@ -34,6 +34,12 @@ import {
 	type UiTreeItemNode,
 	type UiTreeNode,
 } from "@semio-tech/framework-playground-core";
+import {
+	AppPointerFocusStore,
+	CANVAS_HOVER_SOURCE_CANVAS,
+	CANVAS_HOVER_SOURCE_HIERARCHY,
+	CANVAS_HOVER_SOURCE_PICK_MENU,
+} from "@semio-tech/framework-core";
 import { bootstrapElementsSurfaceChromeDocument, type TreeDataItem, type TreeDragAndDropController, type TreeDropPosition } from "@semio-tech/ui-react";
 import {
 	applyRasterEditOp,
@@ -580,6 +586,7 @@ export class RasterPlayController extends Controller implements PlaygroundFixtur
 	private selectedIds: string[] = [];
 	private hoveredId: string | null = null;
 	private hoveredKind: RasterKindHover | null = null;
+	private readonly pointerFocus = new AppPointerFocusStore<string>();
 	private interactionRevision = 0;
 	private listeners = new Set<() => void>();
 	private hostBridge: RasterPlayHostBridge | null = null;
@@ -637,7 +644,7 @@ export class RasterPlayController extends Controller implements PlaygroundFixtur
 	}
 
 	getHoveredId(): string | null {
-		return this.hoveredId;
+		return this.pointerFocus.getSnapshot().hover ?? this.hoveredId;
 	}
 
 	getHoveredKind(): RasterKindHover | null {
@@ -715,8 +722,22 @@ export class RasterPlayController extends Controller implements PlaygroundFixtur
 				return;
 			}
 			case "setHover": {
-				this.hoveredId = typeof args.id === "string" ? args.id : null;
+				const sourceId =
+					typeof args.sourceId === "string"
+						? args.sourceId
+						: args.fromPickMenu === true
+							? CANVAS_HOVER_SOURCE_PICK_MENU
+							: args.fromHierarchy === true
+								? CANVAS_HOVER_SOURCE_HIERARCHY
+								: CANVAS_HOVER_SOURCE_CANVAS;
+				const id = typeof args.id === "string" ? args.id : null;
+				this.hoveredId = id;
 				this.hoveredKind = (args.kind as RasterKindHover | null) ?? null;
+				if (id) {
+					this.pointerFocus.setHoverFromSource(sourceId, id);
+				} else {
+					this.pointerFocus.clearHoverFromSource(sourceId);
+				}
 				this.bump();
 				return;
 			}

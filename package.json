@@ -54,6 +54,7 @@
     "writer/react",
     "writer/play",
     "writer/rs",
+    "mathematical/graph/manifest",
     "mathematical/graph/port/directed/dag/react",
     "mathematical/graph/port/directed/dag/play",
     "trinity/react",

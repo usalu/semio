@@ -10,6 +10,10 @@ import {
 	Platform,
 	Playground,
 	WindowKindRuntime,
+	AppPointerFocusStore,
+	CANVAS_HOVER_SOURCE_CANVAS,
+	CANVAS_HOVER_SOURCE_HIERARCHY,
+	CANVAS_HOVER_SOURCE_PICK_MENU,
 	buildDrawWindowBody,
 	createDefaultLayout,
 	createPlayAppRuntime,
@@ -73,7 +77,9 @@ import {
 	type DrawToolId,
 	DRAW_BLEND_MODES,
 	DRAW_BOOLEAN_OPS,
+	type DrawLayerKindId,
 } from "@semio-tech/draw-core";
+import type { DrawShapeKind } from "@semio-tech/draw-core";
 import { DRAW_PLAY_FIXTURE_DEFAULT_ID, resolveDrawPlayFixtureSlug } from "./fixture-slugs.ts";
 
 export const DRAW_PLAY_APP_ID = "draw-play";
@@ -90,17 +96,7 @@ export const DRAW_PLAY_PROPERTIES_TAB_ID = "framework.panel.inspection";
 
 export const DRAW_LAYER_KIND_DRAG_MIME = "application/x-semio-draw-layer-kind";
 
-type DrawCatalogueLayerKind =
-	| "path"
-	| "group"
-	| "boolean"
-	| "trace"
-	| "shape:rect"
-	| "shape:ellipse"
-	| "shape:line"
-	| "shape:polygon"
-	| "text"
-	| "image";
+type DrawCatalogueLayerKind = DrawLayerKindId | `shape:${DrawShapeKind}`;
 
 export const DRAW_PLAY_LAYOUT = createDefaultLayout(
 	[DRAW_PLAY_WINDOW_KIND_COMPOSITE, DRAW_PLAY_WINDOW_KIND_NAVIGATOR],
@@ -776,6 +772,7 @@ export class DrawPlayController extends Controller implements PlaygroundFixtureH
 	private selectedIds: string[] = [];
 	private hoveredId: string | null = null;
 	private hoveredKind: DrawKindHover | null = null;
+	private readonly pointerFocus = new AppPointerFocusStore<string>();
 	private interactionRevision = 0;
 	private listeners = new Set<() => void>();
 	private hostBridge: DrawPlayHostBridge | null = null;
@@ -867,7 +864,7 @@ export class DrawPlayController extends Controller implements PlaygroundFixtureH
 	}
 
 	getHoveredId(): string | null {
-		return this.hoveredId;
+		return this.pointerFocus.getSnapshot().hover ?? this.hoveredId;
 	}
 
 	getHoveredKind(): DrawKindHover | null {
@@ -929,8 +926,19 @@ export class DrawPlayController extends Controller implements PlaygroundFixtureH
 				return;
 			}
 			case "setHover": {
-				this.hoveredId = typeof args.id === "string" ? args.id : null;
+				const sourceId =
+					typeof args.sourceId === "string"
+						? args.sourceId
+						: args.fromPickMenu === true
+							? CANVAS_HOVER_SOURCE_PICK_MENU
+							: args.fromHierarchy === true
+								? CANVAS_HOVER_SOURCE_HIERARCHY
+								: CANVAS_HOVER_SOURCE_CANVAS;
+				const id = typeof args.id === "string" ? args.id : null;
+				this.hoveredId = id;
 				this.hoveredKind = (args.kind as DrawKindHover | null) ?? null;
+				if (id) this.pointerFocus.setHoverFromSource(sourceId, id);
+				else this.pointerFocus.clearHoverFromSource(sourceId);
 				this.bump();
 				return;
 			}

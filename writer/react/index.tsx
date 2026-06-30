@@ -4,19 +4,25 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { clearColorResolveCache, serializeGraphVelloThemePaletteJson } from "@semio-tech/ui-styling";
-import { canvasViewportClass, reactHostPort } from "@semio-tech/ui-react";
+import { CanvasPickMenu, canvasViewportClass, reactHostPort, useCanvasPickInteraction, type CanvasPickTarget } from "@semio-tech/ui-react";
+import { parseCanvasPickTargetKey } from "@semio-tech/framework-core";
 import {
 	applyTextEdits,
+	applyJackRename,
 	createWriterDocument,
 	createWorkerLspTransport,
+	jackEditorPlaceholders,
+	jackSymbolAtOffset,
 	grammarForLanguage,
 	LspClient,
 	offsetToPosition,
 	positionToOffset,
+	selectableSpansForLanguage,
 	tokenizeWithGrammar,
 	type LspCompletionItem,
 	type LspDiagnostic,
 	type LspTransport,
+	type JackSymbolOccurrence,
 	type WriterDocumentV1,
 } from "@semio-tech/writer-core";
 import initWriterWasm, { WriterSession, initSync } from "../rs/pkg/writer.js";
@@ -48,6 +54,12 @@ export interface WriterCanvasProps {
 	readonly formatSignal?: number;
 	readonly lintSignal?: number;
 	readonly onLintMessages?: (messages: readonly string[]) => void;
+	readonly externalSelection?: { readonly start: number; readonly end: number };
+	readonly externalSelectionSignal?: number;
+	readonly externalHoverRange?: { readonly start: number; readonly end: number } | null;
+	readonly externalHoverSignal?: number;
+	readonly onSelectionChange?: (range: { readonly start: number; readonly end: number }) => void;
+	readonly onHoverChange?: (offset: number | null) => void;
 	readonly className?: string;
 	readonly placeholder?: string;
 }
@@ -88,6 +100,12 @@ export function WriterCanvas({
 	formatSignal = 0,
 	lintSignal = 0,
 	onLintMessages,
+	externalSelection,
+	externalSelectionSignal = 0,
+	externalHoverRange,
+	externalHoverSignal = 0,
+	onSelectionChange,
+	onHoverChange,
 	className,
 	placeholder,
 }: WriterCanvasProps): React.ReactElement {
@@ -105,6 +123,17 @@ export function WriterCanvas({
 	const [completionIndex, setCompletionIndex] = useState(0);
 	const [diagnostics, setDiagnostics] = useState<readonly LspDiagnostic[]>([]);
 	const [caretScreen, setCaretScreen] = useState<{ readonly x: number; readonly y: number } | null>(null);
+	const [caretOffset, setCaretOffset] = useState(0);
+	const [rename, setRename] = useState<{
+		readonly baseText: string;
+		readonly originalOccurrences: readonly JackSymbolOccurrence[];
+		readonly text: string;
+		readonly x: number;
+		readonly y: number;
+	} | null>(null);
+	const lastReportedSelectionRef = useRef<{ readonly start: number; readonly end: number } | null>(null);
+	const lastReportedHoverRef = useRef<number | null>(null);
+	const suppressSelectionReportRef = useRef(false);
 
 	documentRef.current = document;
 	diagnosticsRef.current = diagnostics;
@@ -113,6 +142,73 @@ export function WriterCanvas({
 		const grammar = grammarForLanguage(document.languageId);
 		return grammar ? tokenizeWithGrammar(document.text, grammar) : [];
 	}, [document.languageId, document.text]);
+
+	const selectableSpans = useMemo(() => {
+		return selectableSpansForLanguage(document.text, document.languageId, grammarTokens);
+	}, [document.languageId, document.text, grammarTokens]);
+
+	const editorPlaceholders = useMemo(() => {
+		if (document.languageId !== "jack") return [];
+		return jackEditorPlaceholders(document.text, caretOffset);
+	}, [caretOffset, document.languageId, document.text]);
+
+	const syncSemanticVisuals = useCallback((session: WriterSession, inRename = rename != null) => {
+		const { languageId, text } = documentRef.current;
+		if (languageId !== "jack") {
+			session.setHoverOccurrencesJson("[]");
+			session.setSelectionOccurrencesJson("[]");
+			session.setExtraCaretsJson("[]");
+			return;
+		}
+		if (inRename) return;
+		const caret = session.caret();
+		const anchor = session.anchor();
+		const hoverRaw = session.hoverTokenRangeJson();
+		if (hoverRaw !== "null") {
+			const range = JSON.parse(hoverRaw) as { start: number; end: number };
+			const hoverOffset = Math.floor((range.start + range.end) / 2);
+			const hoverSymbol = jackSymbolAtOffset(text, hoverOffset);
+			session.setHoverOccurrencesJson(JSON.stringify(hoverSymbol?.kind === "variable" ? hoverSymbol.occurrences : []));
+		} else {
+			session.setHoverOccurrencesJson("[]");
+		}
+		if (caret === anchor) {
+			const selectSymbol = jackSymbolAtOffset(text, caret);
+			if (selectSymbol?.kind === "variable") {
+				session.setSelectionOccurrencesJson(JSON.stringify(selectSymbol.occurrences));
+				session.setExtraCaretsJson(JSON.stringify(selectSymbol.occurrences.map((occ) => occ.start)));
+				return;
+			}
+		}
+		session.setSelectionOccurrencesJson("[]");
+		session.setExtraCaretsJson("[]");
+	}, [rename]);
+
+	const applySemanticSelectionAt = useCallback(
+		(session: WriterSession, offset: number) => {
+			const { languageId, text } = documentRef.current;
+			if (languageId !== "jack") return;
+			const symbol = jackSymbolAtOffset(text, offset);
+			if (symbol?.kind !== "variable" || symbol.occurrences.length === 0) return;
+			const primary = symbol.occurrences.find((occ) => offset >= occ.start && offset < occ.end) ?? symbol.occurrences[0]!;
+			session.setSelectionRange(primary.start, primary.end);
+			session.setSelectionOccurrencesJson(JSON.stringify(symbol.occurrences));
+			session.setExtraCaretsJson(JSON.stringify(symbol.occurrences.map((occ) => occ.start)));
+		},
+		[],
+	);
+
+	const syncEditorSpans = useCallback(
+		(text: string, languageId: string, session: WriterSession, caret = session.caret()) => {
+			const grammar = grammarForLanguage(languageId);
+			const tokens = grammar ? tokenizeWithGrammar(text, grammar) : [];
+			const spans = selectableSpansForLanguage(text, languageId, tokens);
+			session.setSemanticTokensJson(JSON.stringify(tokens));
+			session.setSelectableSpansJson(JSON.stringify(spans));
+			session.setPlaceholdersJson(JSON.stringify(languageId === "jack" ? jackEditorPlaceholders(text, caret) : []));
+		},
+		[],
+	);
 
 	const syncTextareaSelection = useCallback(() => {
 		const session = sessionRef.current;
@@ -127,6 +223,87 @@ export function WriterCanvas({
 		}
 	}, []);
 
+	const reportEditorInteraction = useCallback(
+		(session: WriterSession) => {
+			if (!suppressSelectionReportRef.current) {
+				const start = Math.min(session.caret(), session.anchor());
+				const end = Math.max(session.caret(), session.anchor());
+				const prev = lastReportedSelectionRef.current;
+				if (!prev || prev.start !== start || prev.end !== end) {
+					lastReportedSelectionRef.current = { start, end };
+					onSelectionChange?.({ start, end });
+				}
+			}
+			const hoverRaw = session.hoverTokenRangeJson();
+			const hoverOffset =
+				hoverRaw === "null"
+					? null
+					: (() => {
+							const range = JSON.parse(hoverRaw) as { start: number; end: number };
+							return Math.floor((range.start + range.end) / 2);
+						})();
+			if (lastReportedHoverRef.current !== hoverOffset) {
+				lastReportedHoverRef.current = hoverOffset;
+				onHoverChange?.(hoverOffset);
+			}
+		},
+		[onHoverChange, onSelectionChange],
+	);
+
+	type WriterPickRow = { readonly domain: string; readonly id: string; readonly generality: number; readonly label?: string };
+	type WriterSessionPickApi = WriterSession & { pickTargetsAtScreenJson(sx: number, sy: number): string };
+
+	const resolveWriterPickTargetsAtClient = useCallback((client: { readonly x: number; readonly y: number }) => {
+		const session = sessionRef.current as WriterSessionPickApi | null;
+		const canvas = canvasRef.current;
+		if (!session || !canvas) return [];
+		const rect = canvas.getBoundingClientRect();
+		const sx = client.x - rect.left;
+		const sy = client.y - rect.top;
+		try {
+			const rows = JSON.parse(session.pickTargetsAtScreenJson(sx, sy)) as WriterPickRow[];
+			return Array.isArray(rows) ? rows.map((row) => ({ domain: row.domain, id: row.id, generality: row.generality, label: row.label } satisfies CanvasPickTarget)) : [];
+		} catch {
+			return [];
+		}
+	}, []);
+
+	const canvasPick = useCanvasPickInteraction({
+		resolveTargetsAtClient: resolveWriterPickTargetsAtClient,
+		onHoverFocus: (focus) => {
+			const session = sessionRef.current;
+			if (!session || !focus.targetKey) {
+				session?.setHoverRange(0, 0);
+				session?.setHoverOccurrencesJson("[]");
+				return;
+			}
+			const parsed = parseCanvasPickTargetKey(focus.targetKey);
+			if (parsed?.domain === "token") {
+				const [start, end] = parsed.id.split(":").map(Number);
+				if (Number.isFinite(start) && Number.isFinite(end)) {
+					session.setHoverRange(start!, end!);
+					const hoverOffset = Math.floor((start! + end!) / 2);
+					const symbol = jackSymbolAtOffset(documentRef.current.text, hoverOffset);
+					session.setHoverOccurrencesJson(JSON.stringify(symbol?.kind === "variable" ? symbol.occurrences : []));
+				}
+			}
+			syncCaret();
+		},
+		onSelectTarget: (target) => {
+			const session = sessionRef.current;
+			if (!session) return;
+			if (target.domain === "token") {
+				const [start, end] = target.id.split(":").map(Number);
+				if (Number.isFinite(start) && Number.isFinite(end)) {
+					applySemanticSelectionAt(session, Math.floor((start! + end!) / 2));
+				}
+			} else {
+				session.selectSpanAtScreen(0, 0);
+			}
+			syncCaret();
+		},
+	});
+
 	const renderFrame = useCallback(() => {
 		const session = sessionRef.current;
 		if (!session?.gpuReady()) return;
@@ -135,15 +312,18 @@ export function WriterCanvas({
 			session.setVelloThemeJson(serializeGraphVelloThemePaletteJson());
 			const blinkOn = Math.floor(performance.now() / 530) % 2 === 0;
 			session.setCaretVisible(blinkOn);
+			syncSemanticVisuals(session);
 			session.renderFrame();
 			const world = JSON.parse(session.caretWorldJson()) as { x: number; y: number };
 			const screen = JSON.parse(session.worldToScreenJson(world.x, world.y)) as { x: number; y: number };
 			setCaretScreen(screen);
 			syncTextareaSelection();
+			setCaretOffset(session.caret());
+			reportEditorInteraction(session);
 		} catch {
 			/* gpu frame not ready */
 		}
-	}, [syncTextareaSelection]);
+	}, [reportEditorInteraction, syncSemanticVisuals, syncTextareaSelection]);
 
 	const scheduleFrame = useCallback(() => {
 		renderFrame();
@@ -163,9 +343,7 @@ export function WriterCanvas({
 			const session = sessionRef.current;
 			if (session && session.text() !== nextText) {
 				session.setText(nextText);
-				const grammar = grammarForLanguage(documentRef.current.languageId);
-				const tokens = grammar ? tokenizeWithGrammar(nextText, grammar) : [];
-				session.setSemanticTokensJson(JSON.stringify(tokens));
+				syncEditorSpans(nextText, documentRef.current.languageId, session);
 				const text = nextText;
 				session.setDiagnosticsJson(
 					JSON.stringify(
@@ -186,7 +364,7 @@ export function WriterCanvas({
 				void lspRef.current.changeDocument(nextText, versionRef.current);
 			}
 		},
-		[onChange, scheduleFrame],
+		[onChange, scheduleFrame, syncEditorSpans],
 	);
 
 	const pushDocument = useCallback(
@@ -216,9 +394,7 @@ export function WriterCanvas({
 		const session = new WriterSession();
 		sessionRef.current = session;
 		session.setText(documentRef.current.text);
-		const grammar = grammarForLanguage(documentRef.current.languageId);
-		const tokens = grammar ? tokenizeWithGrammar(documentRef.current.text, grammar) : [];
-		session.setSemanticTokensJson(JSON.stringify(tokens));
+		syncEditorSpans(documentRef.current.text, documentRef.current.languageId, session);
 
 		const resize = () => {
 			if (cancelled) return;
@@ -270,9 +446,7 @@ export function WriterCanvas({
 			}
 			session.setCamera(documentRef.current.camera.x, documentRef.current.camera.y, documentRef.current.camera.zoom);
 			session.setText(documentRef.current.text);
-			const grammar = grammarForLanguage(documentRef.current.languageId);
-			const tokens = grammar ? tokenizeWithGrammar(documentRef.current.text, grammar) : [];
-			session.setSemanticTokensJson(JSON.stringify(tokens));
+			syncEditorSpans(documentRef.current.text, documentRef.current.languageId, session);
 			resize();
 			const ro = new ResizeObserver(resize);
 			ro.observe(container);
@@ -300,8 +474,31 @@ export function WriterCanvas({
 			lastLocalTextRef.current = document.text;
 		}
 		session.setSemanticTokensJson(JSON.stringify(grammarTokens));
+		session.setSelectableSpansJson(JSON.stringify(selectableSpans));
+		session.setPlaceholdersJson(JSON.stringify(editorPlaceholders));
 		renderFrame();
-	}, [document.camera.x, document.camera.y, document.camera.zoom, document.text, grammarTokens, renderFrame]);
+	}, [document.camera.x, document.camera.y, document.camera.zoom, document.text, editorPlaceholders, grammarTokens, selectableSpans, renderFrame]);
+
+	useEffect(() => {
+		const session = sessionRef.current;
+		if (!session?.gpuReady() || !externalSelection) return;
+		suppressSelectionReportRef.current = true;
+		session.setSelectionRange(externalSelection.start, externalSelection.end);
+		lastReportedSelectionRef.current = { start: externalSelection.start, end: externalSelection.end };
+		scheduleFrame();
+		queueMicrotask(() => {
+			suppressSelectionReportRef.current = false;
+		});
+	}, [externalSelectionSignal, externalSelection, scheduleFrame]);
+
+	useEffect(() => {
+		const session = sessionRef.current;
+		if (!session?.gpuReady()) return;
+		if (externalHoverRange) {
+			session.setHoverRange(externalHoverRange.start, externalHoverRange.end);
+			scheduleFrame();
+		}
+	}, [externalHoverSignal, externalHoverRange, scheduleFrame]);
 
 	useEffect(() => {
 		if (!createLspTransport) return;
@@ -444,6 +641,36 @@ export function WriterCanvas({
 					return;
 				}
 			}
+			if (event.key === "F2") {
+				event.preventDefault();
+				const start = Math.min(session.caret(), session.anchor());
+				const end = Math.max(session.caret(), session.anchor());
+				if (start === end) {
+					session.selectSpanAt(start);
+				}
+				const focus = Math.min(session.caret(), session.anchor());
+				const symbol = documentRef.current.languageId === "jack" ? jackSymbolAtOffset(documentRef.current.text, focus) : null;
+				if (!symbol || symbol.kind !== "variable") return;
+				syncCaret();
+				const world = JSON.parse(session.caretWorldJson()) as { x: number; y: number };
+				const screen = JSON.parse(session.worldToScreenJson(world.x, world.y)) as { x: number; y: number };
+				session.setSelectionOccurrencesJson(JSON.stringify(symbol.occurrences));
+				session.setExtraCaretsJson(JSON.stringify(symbol.occurrences.map((occ) => occ.start)));
+				setRename({
+					baseText: documentRef.current.text,
+					originalOccurrences: symbol.occurrences,
+					text: symbol.name,
+					x: screen.x,
+					y: screen.y,
+				});
+				return;
+			}
+			if (event.key === " ") {
+				event.preventDefault();
+				session.insertText(" ");
+				pushDocument(session.text());
+				return;
+			}
 			if (event.key === "Tab") {
 				event.preventDefault();
 				session.insertText("  ");
@@ -570,17 +797,29 @@ export function WriterCanvas({
 					if (e.button !== 0) return;
 					e.preventDefault();
 					focusEditor();
-					e.currentTarget.setPointerCapture(e.pointerId);
 					const session = sessionRef.current;
 					if (!session) return;
 					const rect = e.currentTarget.getBoundingClientRect();
-					session.pointerDownScreen(e.clientX - rect.left, e.clientY - rect.top, e.button);
+					const sx = e.clientX - rect.left;
+					const sy = e.clientY - rect.top;
+					canvasPick.onCanvasPointerDown({ x: e.clientX, y: e.clientY });
+					if (e.detail >= 2) {
+						session.selectSpanAtScreen(sx, sy);
+						applySemanticSelectionAt(session, session.caret());
+						syncCaret();
+						return;
+					}
+					e.currentTarget.setPointerCapture(e.pointerId);
+					session.pointerDownScreen(sx, sy, e.button);
 					syncCaret();
 				}}
 				onPointerMove={(e) => {
 					const session = sessionRef.current;
 					if (!session) return;
 					const rect = e.currentTarget.getBoundingClientRect();
+					if (!canvasPick.pickMenuOpen) {
+						canvasPick.onCanvasPointerMove({ x: e.clientX, y: e.clientY });
+					}
 					session.pointerMoveScreen(e.clientX - rect.left, e.clientY - rect.top, e.buttons);
 					syncCaret();
 				}}
@@ -591,6 +830,7 @@ export function WriterCanvas({
 						e.currentTarget.releasePointerCapture(e.pointerId);
 					}
 					const rect = e.currentTarget.getBoundingClientRect();
+					canvasPick.onCanvasPointerUp({ x: e.clientX, y: e.clientY });
 					session.pointerUpScreen(e.clientX - rect.left, e.clientY - rect.top, e.button);
 					syncCaret();
 				}}
@@ -603,6 +843,13 @@ export function WriterCanvas({
 					session.pointerUpScreen(0, 0, 0);
 					syncCaret();
 				}}
+			/>
+			<CanvasPickMenu
+				request={canvasPick.pickMenu}
+				hoveredKey={canvasPick.menuHoveredKey}
+				onHoverKey={canvasPick.onMenuHoverKey}
+				onPick={canvasPick.onMenuPick}
+				onDismiss={canvasPick.dismissPickMenu}
 			/>
 			<textarea
 				ref={inputRef}
@@ -618,6 +865,63 @@ export function WriterCanvas({
 				readOnly
 				onChange={() => {}}
 			/>
+			{rename ? (
+				<input
+					autoFocus
+					className="pointer-events-auto absolute z-30 min-w-24 rounded border border-border bg-popover px-2 py-1 font-mono text-sm text-foreground shadow-md outline-none"
+					style={{ left: rename.x, top: rename.y - 4 }}
+					value={rename.text}
+					onChange={(e) => {
+						const session = sessionRef.current;
+						if (!session) return;
+						const nextName = e.target.value;
+						const { text: preview, occurrences } = applyJackRename(rename.baseText, rename.originalOccurrences, nextName);
+						session.setText(preview);
+						syncEditorSpans(preview, documentRef.current.languageId, session);
+						session.setSelectionOccurrencesJson(JSON.stringify(occurrences));
+						session.setExtraCaretsJson(JSON.stringify(occurrences.map((occ) => occ.start)));
+						lastLocalTextRef.current = preview;
+						onChange?.({ ...documentRef.current, text: preview });
+						setRename({ ...rename, text: nextName });
+						scheduleFrame();
+					}}
+					onKeyDown={(e) => {
+						const session = sessionRef.current;
+						if (!session) return;
+						if (e.key === "Enter") {
+							e.preventDefault();
+							const { text: preview } = applyJackRename(rename.baseText, rename.originalOccurrences, rename.text);
+							pushDocument(preview);
+							syncEditorSpans(preview, documentRef.current.languageId, session);
+							session.setSelectionOccurrencesJson("[]");
+							session.setExtraCaretsJson("[]");
+							setRename(null);
+							syncCaret();
+							return;
+						}
+						if (e.key === "Escape") {
+							e.preventDefault();
+							applySessionEdit(rename.baseText, false);
+							session.setSelectionOccurrencesJson("[]");
+							session.setExtraCaretsJson("[]");
+							setRename(null);
+							focusEditor();
+						}
+					}}
+					onBlur={() => {
+						const session = sessionRef.current;
+						if (!session) {
+							setRename(null);
+							return;
+						}
+						const { text: preview } = applyJackRename(rename.baseText, rename.originalOccurrences, rename.text);
+						pushDocument(preview);
+						session.setSelectionOccurrencesJson("[]");
+						session.setExtraCaretsJson("[]");
+						setRename(null);
+					}}
+				/>
+			) : null}
 			{caretScreen && completions.length > 0 ? (
 				<div
 					className="pointer-events-auto absolute z-20 max-h-48 overflow-auto rounded-md border border-border bg-popover p-1 text-sm shadow-md"

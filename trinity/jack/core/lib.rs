@@ -687,7 +687,7 @@ fn semantic_lints(graph: &Graph, query: &Query, source: &str) -> Vec<Diagnostic>
                                 out.push(Diagnostic {
                                     start,
                                     end,
-                                    severity: DiagnosticSeverity::Warning,
+                                    severity: DiagnosticSeverity::Error,
                                     message: format!("unknown node kind '{}'", node.kind),
                                     code: Some("jack/unknown-node-kind".into()),
                                 });
@@ -701,7 +701,7 @@ fn semantic_lints(graph: &Graph, query: &Query, source: &str) -> Vec<Diagnostic>
                                     out.push(Diagnostic {
                                         start,
                                         end,
-                                        severity: DiagnosticSeverity::Warning,
+                                        severity: DiagnosticSeverity::Error,
                                         message: format!("unknown edge kind '{}'", kind),
                                         code: Some("jack/unknown-edge-kind".into()),
                                     });
@@ -718,7 +718,7 @@ fn semantic_lints(graph: &Graph, query: &Query, source: &str) -> Vec<Diagnostic>
                             out.push(Diagnostic {
                                 start,
                                 end,
-                                severity: DiagnosticSeverity::Warning,
+                                severity: DiagnosticSeverity::Error,
                                 message: format!("unknown node kind '{}'", node.kind),
                                 code: Some("jack/unknown-node-kind".into()),
                             });
@@ -1424,6 +1424,7 @@ mod tests {
         let fixture = GraphFixtureV1 {
             schema: GraphFixtureV1::SCHEMA.into(),
             name: "mini".into(),
+            manifest_id: Some("nakagin".into()),
             manifest: Manifest::nakagin_default(),
             camera: CameraV1::default(),
             root_node_id: Some("root".into()),

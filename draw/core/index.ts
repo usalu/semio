@@ -4,6 +4,8 @@
 /** @emoji ✏️ `@semio-tech/draw-core` — non-destructive vector document model, edit ops, hover/selection mapping. */
 // #endregion 🧲Header
 
+import { DRAWLAYERS_LAYER_IDS, type DrawLayersLayerKindId } from "@semio-tech/graph-manifest";
+
 // #region 📐Types
 export type Vec2 = readonly [number, number];
 
@@ -74,6 +76,9 @@ export type DrawBooleanOp = (typeof DRAW_BOOLEAN_OPS)[number];
 
 export const DRAW_SHAPE_KINDS = ["rect", "ellipse", "circle", "line", "polygon"] as const;
 export type DrawShapeKind = (typeof DRAW_SHAPE_KINDS)[number];
+
+export type DrawLayerKindId = DrawLayersLayerKindId;
+export { DRAWLAYERS_LAYER_IDS as DRAW_LAYER_KIND_IDS };
 
 export const DRAW_TOOL_IDS = [
 	"selectMarquee",
@@ -414,7 +419,19 @@ export function parseDrawDocument(raw: unknown): DrawDocument {
 	const record = raw as DrawDocument;
 	if (record.schema !== "draw.document/v1") throw new Error(`unsupported draw schema: ${String((raw as { schema?: string }).schema)}`);
 	if (!Array.isArray(record.layers)) throw new Error("draw document layers must be an array");
+	validateDrawLayerNodes(record.layers);
 	return record;
+}
+
+function validateDrawLayerNodes(layers: readonly DrawLayerNode[]): void {
+	for (const layer of layers) {
+		if (!(DRAWLAYERS_LAYER_IDS as readonly string[]).includes(layer.kind)) {
+			throw new Error(`unknown draw layer kind: ${String(layer.kind)}`);
+		}
+		if (layer.kind === "group") {
+			validateDrawLayerNodes(layer.children);
+		}
+	}
 }
 
 export function drawDocumentToJson(doc: DrawDocument): string {
@@ -1017,15 +1034,131 @@ export function resolveDrawLayerAtScreenPoint(
 	viewport: DrawViewport,
 	point: { readonly x: number; readonly y: number },
 ): string | null {
+	const targets = resolveDrawPickTargetsAtScreenPoint(doc, camera, viewport, point);
+	if (targets.length === 0) return null;
+	let best = targets[0]!;
+	for (const target of targets) {
+		if (target.generality > best.generality) best = target;
+	}
+	return best.id;
+}
+
+/** @emoji 🎯 Draw pick-target domain generality (lower = more general). */
+export const DRAW_PICK_GENERALITY: Readonly<Record<string, number>> = {
+	group: 0,
+	boolean: 1,
+	trace: 1,
+	shape: 2,
+	path: 2,
+	text: 2,
+	image: 2,
+	layer: 2,
+	controlPoint: 4,
+};
+
+export interface DrawPickTarget {
+	readonly domain: string;
+	readonly id: string;
+	readonly generality: number;
+	readonly label?: string;
+	readonly layerId?: string;
+}
+
+function drawPickTargetForLayer(layer: DrawLayerNode): DrawPickTarget {
+	const domain = drawKindHoverDomainForLayer(layer);
+	return {
+		domain,
+		id: layer.id,
+		generality: DRAW_PICK_GENERALITY[domain] ?? 2,
+		label: layer.name,
+		layerId: layer.id,
+	};
+}
+
+function drawAncestorGroupTargets(doc: DrawDocument, layerId: string): DrawPickTarget[] {
+	const out: DrawPickTarget[] = [];
+	const walk = (layers: readonly DrawLayerNode[], ancestors: readonly DrawGroupLayer[]): void => {
+		for (const layer of layers) {
+			const nextAncestors = layer.kind === "group" ? [...ancestors, layer] : ancestors;
+			if (layer.id === layerId) {
+				for (const group of nextAncestors) {
+					if (group.visible && !group.locked) out.push(drawPickTargetForLayer(group));
+				}
+				return;
+			}
+			if (layer.kind === "group") walk(layer.children, nextAncestors);
+		}
+	};
+	walk(doc.layers, []);
+	return out;
+}
+
+function drawControlPointTargets(
+	layer: DrawLayerNode,
+	world: { readonly x: number; readonly y: number },
+	toleranceWorld: number,
+): DrawPickTarget[] {
+	if (layer.locked || !layer.visible) return [];
+	const segments = layerToPathSegments(layer);
+	if (!segments.length) return [];
+	const out: DrawPickTarget[] = [];
+	const pushPoint = (id: string, point: readonly [number, number], label: string) => {
+		const worldPoint = drawTransformWorldPoint(layer.transform ?? defaultDrawTransform(), { x: point[0], y: point[1] });
+		if (Math.hypot(world.x - worldPoint.x, world.y - worldPoint.y) <= toleranceWorld) {
+			out.push({
+				domain: "controlPoint",
+				id,
+				generality: DRAW_PICK_GENERALITY.controlPoint!,
+				label,
+				layerId: layer.id,
+			});
+		}
+	};
+	let pointIndex = 0;
+	for (const segment of segments) {
+		if ("to" in segment) {
+			pushPoint(`${layer.id}:pt:${pointIndex}`, segment.to, `Point ${pointIndex + 1}`);
+			pointIndex += 1;
+		}
+		if (segment.kind === "quad") pushPoint(`${layer.id}:ctrl:${pointIndex}`, segment.ctrl, `Control ${pointIndex}`);
+		if (segment.kind === "cubic") {
+			pushPoint(`${layer.id}:ctrl1:${pointIndex}`, segment.ctrl1, `Control 1`);
+			pushPoint(`${layer.id}:ctrl2:${pointIndex}`, segment.ctrl2, `Control 2`);
+		}
+	}
+	return out;
+}
+
+/** @emoji 🎯 All pick targets under a screen point (groups, layers, optional control points). */
+export function resolveDrawPickTargetsAtScreenPoint(
+	doc: DrawDocument,
+	camera: DrawCamera,
+	viewport: DrawViewport,
+	point: { readonly x: number; readonly y: number },
+	options: { readonly includeControlPoints?: boolean } = {},
+): DrawPickTarget[] {
 	const world = drawScreenToWorld(camera, viewport, point);
+	const toleranceWorld = 8 / Math.max(camera.zoom, 1e-6);
+	const hits: DrawPickTarget[] = [];
 	const layers = flattenDrawLayers(doc.layers);
 	for (let index = layers.length - 1; index >= 0; index -= 1) {
 		const layer = layers[index]!;
-		if (!layer.visible || layer.kind === "group") continue;
+		if (!layer.visible || layer.locked) continue;
 		const bounds = drawLayerWorldBounds(layer);
-		if (bounds && drawScreenRectContainsPoint(bounds, world)) return layer.id;
+		if (!bounds || !drawScreenRectContainsPoint(bounds, world)) continue;
+		if (layer.kind === "group") {
+			hits.push(drawPickTargetForLayer(layer));
+			continue;
+		}
+		hits.push(drawPickTargetForLayer(layer));
+		for (const groupTarget of drawAncestorGroupTargets(doc, layer.id)) {
+			if (!hits.some((row) => row.id === groupTarget.id)) hits.push(groupTarget);
+		}
+		if (options.includeControlPoints && (layer.kind === "path" || layer.kind === "shape")) {
+			for (const cp of drawControlPointTargets(layer, world, toleranceWorld)) hits.push(cp);
+		}
 	}
-	return null;
+	return hits;
 }
 // #endregion 🌳TreeIds
 
@@ -1178,6 +1311,14 @@ if (import.meta.vitest) {
 			expect(parseDrawDocument(doc).schema).toBe("draw.document/v1");
 		});
 
+		it("rejects unknown layer kinds", () => {
+			const doc = {
+				...defaultDrawDocument("bad"),
+				layers: [{ ...createDrawPathLayer("X"), kind: "unknown" }],
+			};
+			expect(() => parseDrawDocument(doc)).toThrow(/unknown draw layer kind/u);
+		});
+
 		it("applies visibility edits", () => {
 			const doc = defaultDrawDocument("test");
 			const layerId = doc.layers[0]!.id;
@@ -1230,6 +1371,19 @@ if (import.meta.vitest) {
 			expect(splitPathSegmentsByContour(segments)).toHaveLength(2);
 			const scaled = scalePathSegments(segments, 0.5, 0.5);
 			expect(scaled[1]?.kind === "line" ? scaled[1].to[0] : 0).toBe(5);
+		});
+
+		it("resolves overlapping pick targets with group before leaf", () => {
+			const child = createDrawPathLayer("Child");
+			const group = { ...createDrawGroupLayer("Group"), children: [child] };
+			const doc: DrawDocument = { ...defaultDrawDocument("pick"), layers: [group] };
+			const viewport = { width: 1024, height: 768 };
+			const camera = doc.camera;
+			const targets = resolveDrawPickTargetsAtScreenPoint(doc, camera, viewport, { x: 512, y: 384 });
+			expect(targets.some((row) => row.domain === "group")).toBe(true);
+			expect(targets.some((row) => row.id === child.id)).toBe(true);
+			const sorted = [...targets].sort((a, b) => a.generality - b.generality);
+			expect(sorted[0]?.domain).toBe("group");
 		});
 
 		it("resolves document artboard from vector bounds", () => {

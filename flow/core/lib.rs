@@ -2373,6 +2373,11 @@ impl FlowHost {
         self.dag.hovered_node_id()
     }
 
+    /// @emoji 🎯 All pick targets under a screen point as JSON for DOM disambiguation menus.
+    pub fn pick_targets_at_screen_json(&self, sx: f64, sy: f64) -> String {
+        self.dag.pick_targets_at_screen_json(sx, sy)
+    }
+
     /// 🔌 Hovered widget channel when the pointer is over a port row or handle.
     pub fn hovered_channel_json(&self) -> String {
         self.dag.hovered_channel_json()
@@ -3495,6 +3500,11 @@ impl FlowSession {
     #[wasm_bindgen(js_name = pointerMoveScreen)]
     pub fn pointer_move_screen(&self, sx: f64, sy: f64, shift: bool, ctrl_or_meta: bool, alt: bool) {
         self.state.borrow_mut().host.pointer_move_screen(sx, sy, shift, ctrl_or_meta, alt);
+    }
+
+    #[wasm_bindgen(js_name = pickTargetsAtScreenJson)]
+    pub fn pick_targets_at_screen_json(&self, sx: f64, sy: f64) -> String {
+        self.state.borrow().host.pick_targets_at_screen_json(sx, sy)
     }
 
     #[wasm_bindgen(js_name = widgetDragActive)]

@@ -4,6 +4,7 @@ members = [
     "infinite/cavas/rs",
     "mathematical/core",
     "mathematical/graph",
+    "mathematical/graph/manifest",
     "mathematical/graph/port",
     "mathematical/graph/port/directed",
     "mathematical/graph/normal/directed",

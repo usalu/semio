@@ -12,6 +12,8 @@
     "test": "bun nx run @semio-tech/puzzle-2d-react:test"
   },
 	"dependencies": {
+		"@semio-tech/framework-core": "workspace:*",
+		"@semio-tech/graph-manifest": "workspace:*",
 		"@semio-tech/infinite-cavas-react-renderer": "workspace:*",
 		"@semio-tech/ui-react": "workspace:*",
 		"@semio-tech/ui-styling": "workspace:*",

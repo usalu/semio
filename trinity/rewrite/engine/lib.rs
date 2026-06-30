@@ -452,7 +452,7 @@ mod wasm_session {
         #[wasm_bindgen(constructor)]
         pub fn new() -> Self {
             let fixture = include_str!("../../fixture/nakagin-capsule-tower.trinity.json");
-            let host = TrinityHost::load_fixture_json(fixture).unwrap_or_else(|_| TrinityHost::from_graph(Graph::from_fixture(GraphFixtureV1 { schema: GraphFixtureV1::SCHEMA.into(), name: "empty".into(), manifest: Manifest::nakagin_default(), camera: CameraV1::default(), nodes: vec![], edges: vec![], root_node_id: None }).unwrap()));
+            let host = TrinityHost::load_fixture_json(fixture).unwrap_or_else(|_| TrinityHost::from_graph(Graph::from_fixture(GraphFixtureV1 { schema: GraphFixtureV1::SCHEMA.into(), name: "empty".into(), manifest_id: Some("nakagin".into()), manifest: Manifest::nakagin_default(), camera: CameraV1::default(), nodes: vec![], edges: vec![], root_node_id: None }).unwrap()));
             Self { state: Rc::new(RefCell::new(TrinitySessionInner { host, gpu: cavas::gpu_session::CanvasGpuSession::default(), width: 1, height: 1, dpr: 1.0 })) }
         }
 

@@ -4,6 +4,8 @@ use std::cell::Cell;
 
 use serde::{Deserialize, Serialize};
 
+use mathematical_graph_manifest::{flow_dag::flow_dag_manifest, ManifestValidator};
+
 use graph::{handle_position, world_box_from_points, BoardEvent, WorldBox};
 pub use infinite_cavas as cavas;
 pub use mathematical_graph_port_directed::{
@@ -563,6 +565,33 @@ pub enum DagNodeKind {
         inputs: Vec<IoPortSpec>,
         outputs: Vec<IoPortSpec>,
     },
+}
+
+/// 🏷️ Serialized `kind` tag for a {@link DagNodeKind} variant.
+pub fn dag_node_kind_tag(kind: &DagNodeKind) -> &'static str {
+    match kind {
+        DagNodeKind::Computation { .. } => "computation",
+        DagNodeKind::Slider { .. } => "slider",
+        DagNodeKind::Stepper { .. } => "stepper",
+        DagNodeKind::Select { .. } => "select",
+        DagNodeKind::Screen { .. } => "screen",
+        DagNodeKind::Note { .. } => "note",
+        DagNodeKind::Image { .. } => "image",
+        DagNodeKind::Preview { .. } => "preview",
+        DagNodeKind::Action { .. } => "action",
+        DagNodeKind::Cluster { .. } => "cluster",
+    }
+}
+
+fn validate_dag_fixture_node_kinds(nodes: &[DagNodeSpec]) -> Result<(), String> {
+    let manifest = flow_dag_manifest();
+    let validator = ManifestValidator::new(&manifest);
+    for node in nodes {
+        validator
+            .validate_node_kind(dag_node_kind_tag(&node.kind))
+            .map_err(|error| format!("{}: {}", error.path, error.message))?;
+    }
+    Ok(())
 }
 
 fn uses_computation_layout(kind: &DagNodeKind) -> bool {
@@ -1866,6 +1895,48 @@ impl DagHost {
         }
     }
 
+    /// @emoji 🎯 All pick targets under a screen point as JSON (`domain`, `id`, `generality`).
+    pub fn pick_targets_at_screen_json(&self, sx: f64, sy: f64) -> String {
+        #[derive(serde::Serialize)]
+        struct Row {
+            domain: String,
+            id: String,
+            generality: u32,
+            #[serde(skip_serializing_if = "Option::is_none")]
+            label: Option<String>,
+        }
+        let world = self.screen_to_world_point(sx, sy);
+        let targets = self.engine.hit_test_pick_targets(world);
+        let rows: Vec<Row> = targets
+            .into_iter()
+            .filter_map(|target| {
+                let row = match target.domain.as_str() {
+                    "node" => self.widget_id_for_node_id(target.id).map(|id| Row {
+                        domain: target.domain,
+                        id,
+                        generality: target.generality,
+                        label: None,
+                    }),
+                    "edge" => self.edge_id_map.get(&target.id).cloned().map(|id| Row {
+                        domain: target.domain,
+                        id,
+                        generality: target.generality,
+                        label: None,
+                    }),
+                    "handle" => self.decode_channel_ref(target.id).map(|channel| Row {
+                        domain: "handle".into(),
+                        id: format!("{}:{}", channel.widget_id, channel.port),
+                        generality: target.generality,
+                        label: Some(format!("{} · {}", channel.widget_id, channel.port)),
+                    }),
+                    _ => None,
+                };
+                row
+            })
+            .collect();
+        serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into())
+    }
+
     /// ✅ Replaces node selection from fixture widget ids.
     pub fn set_selection(&mut self, widget_ids: &[String]) {
         self.engine.selection = Selection::default();
@@ -2336,6 +2407,7 @@ impl DagHost {
         if fixture.schema != "dag.fixture/v1" {
             return Err("schema must be dag.fixture/v1".into());
         }
+        validate_dag_fixture_node_kinds(&fixture.nodes)?;
         Ok(Self::from_fixture(fixture))
     }
 

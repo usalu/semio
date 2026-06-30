@@ -17,6 +17,7 @@ struct WriterVelloTheme {
     label_fill_hovered: Color,
     label_halo: Color,
     hover_fill: Color,
+    selection_fill: Color,
 }
 
 impl Default for WriterVelloTheme {
@@ -34,6 +35,7 @@ impl WriterVelloTheme {
             label_fill_hovered: Color::new(t.label_fill_hovered),
             label_halo: Color::new(t.label_halo),
             hover_fill: Color::new(t.node_fill_hovered),
+            selection_fill: Color::new(t.node_fill_selected),
         }
     }
 
@@ -62,6 +64,7 @@ impl WriterVelloTheme {
         Self::merge_color_field(&mut next.label_fill_hovered, &v, "labelFillHovered");
         Self::merge_color_field(&mut next.label_halo, &v, "labelHalo");
         Self::merge_color_field(&mut next.hover_fill, &v, "nodeFillHovered");
+        Self::merge_color_field(&mut next.selection_fill, &v, "nodeFillSelected");
         *self = next;
         Ok(())
     }
@@ -81,6 +84,30 @@ struct SemanticTokenJson {
     start: usize,
     end: usize,
     class: String,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct SelectableSpanJson {
+    start: usize,
+    end: usize,
+    kind: String,
+    head_end: Option<usize>,
+    tail_start: Option<usize>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ByteRangeJson {
+    start: usize,
+    end: usize,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct PlaceholderJson {
+    offset: usize,
+    label: String,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -119,7 +146,12 @@ pub struct WriterHost {
     camera: Camera,
     viewport: Viewport,
     semantic_tokens: Vec<SemanticTokenJson>,
+    selectable_spans: Vec<SelectableSpanJson>,
     diagnostics: Vec<DiagnosticJson>,
+    placeholders: Vec<PlaceholderJson>,
+    hover_occurrences: Vec<ByteRangeJson>,
+    selection_occurrences: Vec<ByteRangeJson>,
+    extra_carets: Vec<usize>,
     panning: bool,
     pan_last: Option<Point>,
     drag_selecting: bool,
@@ -144,7 +176,12 @@ impl WriterHost {
             camera: Camera { x: 0.0, y: 0.0, zoom: 1.0 },
             viewport: Viewport { width: 800, height: 600, dpr: 1.0 },
             semantic_tokens: Vec::new(),
+            selectable_spans: Vec::new(),
             diagnostics: Vec::new(),
+            placeholders: Vec::new(),
+            hover_occurrences: Vec::new(),
+            selection_occurrences: Vec::new(),
+            extra_carets: Vec::new(),
             panning: false,
             pan_last: None,
             drag_selecting: false,
@@ -175,13 +212,29 @@ impl WriterHost {
 
     #[cfg(test)]
     fn set_selection(&mut self, anchor: usize, caret: usize) {
-        self.anchor = anchor;
-        self.caret = caret;
+        self.set_selection_range(anchor, caret);
+    }
+
+    pub fn set_selection_range(&mut self, anchor: usize, caret: usize) {
+        self.anchor = anchor.min(self.text.len());
+        self.caret = caret.min(self.text.len());
         if self.caret != self.anchor {
             let (start, end) = self.normalize_edit_range(self.caret.min(self.anchor), self.caret.max(self.anchor));
             self.anchor = start;
             self.caret = end;
         }
+    }
+
+    pub fn hover_token_range(&self) -> Option<(usize, usize)> {
+        match (self.hover_token_start, self.hover_token_end) {
+            (Some(start), Some(end)) => Some((start, end)),
+            _ => None,
+        }
+    }
+
+    pub fn set_hover_range(&mut self, start: Option<usize>, end: Option<usize>) {
+        self.hover_token_start = start;
+        self.hover_token_end = end;
     }
 
     pub fn select_all(&mut self) {
@@ -210,8 +263,85 @@ impl WriterHost {
         self.semantic_tokens = serde_json::from_str(json).unwrap_or_default();
     }
 
+    pub fn set_selectable_spans_json(&mut self, json: &str) {
+        self.selectable_spans = serde_json::from_str(json).unwrap_or_default();
+    }
+
+    pub fn select_span_at(&mut self, offset: usize) {
+        let offset = offset.min(self.text.len());
+        if let Some(ch) = self.text[offset..].chars().next() {
+            if ch == ':' || ch == '.' {
+                for span in &self.selectable_spans {
+                    if span.kind != "atomic" && offset >= span.start && offset < span.end {
+                        self.anchor = span.start;
+                        self.caret = span.end;
+                        return;
+                    }
+                }
+            }
+        }
+        let probe = if offset > 0 && (!self.text.is_char_boundary(offset) || offset == self.text.len()) {
+            prev_char_boundary(&self.text, offset)
+        } else {
+            offset
+        };
+        let mut best: Option<&SelectableSpanJson> = None;
+        for span in &self.selectable_spans {
+            if span.kind != "atomic" || probe < span.start || probe >= span.end {
+                continue;
+            }
+            let size = span.end - span.start;
+            if best.map(|current| size < current.end - current.start).unwrap_or(true) {
+                best = Some(span);
+            }
+        }
+        if let Some(span) = best {
+            self.anchor = span.start;
+            self.caret = span.end;
+            return;
+        }
+        let snapped = self.snap_offset_for_atomic(offset);
+        self.anchor = snapped;
+        self.caret = snapped;
+    }
+
+    pub fn selection_text(&self) -> String {
+        let (start, end) = self.selection_range();
+        if start >= end {
+            return String::new();
+        }
+        self.text[start..end].to_string()
+    }
+
+    pub fn replace_selection(&mut self, next: &str) {
+        let (start, end) = self.selection_range();
+        if start >= end {
+            self.insert_text(next);
+            return;
+        }
+        self.text.replace_range(start..end, next);
+        self.caret = start + next.len();
+        self.anchor = self.caret;
+    }
+
     pub fn set_diagnostics_json(&mut self, json: &str) {
         self.diagnostics = serde_json::from_str(json).unwrap_or_default();
+    }
+
+    pub fn set_placeholders_json(&mut self, json: &str) {
+        self.placeholders = serde_json::from_str(json).unwrap_or_default();
+    }
+
+    pub fn set_hover_occurrences_json(&mut self, json: &str) {
+        self.hover_occurrences = serde_json::from_str(json).unwrap_or_default();
+    }
+
+    pub fn set_selection_occurrences_json(&mut self, json: &str) {
+        self.selection_occurrences = serde_json::from_str(json).unwrap_or_default();
+    }
+
+    pub fn set_extra_carets_json(&mut self, json: &str) {
+        self.extra_carets = serde_json::from_str(json).unwrap_or_default();
     }
 
     pub fn apply_text_edits_json(&mut self, json: &str) {
@@ -300,9 +430,20 @@ impl WriterHost {
     pub fn insert_text(&mut self, chunk: &str) {
         let mut start = self.caret.min(self.anchor);
         let mut end = self.caret.max(self.anchor);
-        if start == end {
+        let collapsed = start == end;
+        let mut insert = chunk.to_string();
+        if collapsed && self.should_prefix_auto_space(start, &insert) {
+            insert = format!(" {insert}");
+        }
+        if collapsed && is_insert_whitespace(&insert) {
+            self.text.insert_str(start, &insert);
+            self.caret = start + insert.len();
+            self.anchor = self.caret;
+            return;
+        }
+        if collapsed {
             for token in &self.semantic_tokens {
-                if is_fixed_token_class(&token.class) && start > token.start && start < token.end {
+                if start > token.start && start < token.end {
                     start = token.start;
                     end = token.end;
                     break;
@@ -310,9 +451,38 @@ impl WriterHost {
             }
         }
         let (start, end) = self.normalize_edit_range(start, end);
-        self.text.replace_range(start..end, chunk);
-        self.caret = start + chunk.len();
+        self.text.replace_range(start..end, &insert);
+        self.caret = start + insert.len();
         self.anchor = self.caret;
+    }
+
+    fn should_prefix_auto_space(&self, offset: usize, chunk: &str) -> bool {
+        let first = match chunk.chars().next() {
+            Some(ch) => ch,
+            None => return false,
+        };
+        if is_insert_whitespace(chunk) {
+            return false;
+        }
+        if matches!(first, ':' | '.' | ',' | ')' | ']' | '-' | '!' | '=') {
+            return false;
+        }
+        if self.token_ending_at(offset).is_none() {
+            return false;
+        }
+        if offset < self.text.len() {
+            let next = self.text[offset..].chars().next().unwrap_or(' ');
+            if next.is_whitespace() {
+                return false;
+            }
+        }
+        true
+    }
+
+    fn token_ending_at(&self, offset: usize) -> Option<&SemanticTokenJson> {
+        self.semantic_tokens
+            .iter()
+            .find(|token| token.end == offset && token.start < offset)
     }
 
     pub fn backspace(&mut self) {
@@ -327,7 +497,7 @@ impl WriterHost {
             return;
         }
         for token in &self.semantic_tokens {
-            if is_fixed_token_class(&token.class) && self.caret > token.start && self.caret <= token.end {
+            if self.caret > token.start && self.caret <= token.end {
                 self.text.replace_range(token.start..token.end, "");
                 self.caret = token.start;
                 self.anchor = self.caret;
@@ -352,7 +522,7 @@ impl WriterHost {
             return;
         }
         for token in &self.semantic_tokens {
-            if is_fixed_token_class(&token.class) && self.caret >= token.start && self.caret < token.end {
+            if self.caret >= token.start && self.caret < token.end {
                 self.text.replace_range(token.start..token.end, "");
                 self.anchor = self.caret;
                 return;
@@ -382,7 +552,7 @@ impl WriterHost {
 
     pub fn move_left(&mut self, extend: bool) {
         let next = self
-            .fixed_token_left_boundary(self.caret)
+            .token_left_boundary(self.caret)
             .unwrap_or_else(|| if self.caret == 0 { 0 } else { prev_char_boundary(&self.text, self.caret) });
         self.caret = next;
         if !extend {
@@ -391,7 +561,7 @@ impl WriterHost {
     }
 
     pub fn move_right(&mut self, extend: bool) {
-        let next = self.fixed_token_right_boundary(self.caret).unwrap_or_else(|| {
+        let next = self.token_right_boundary(self.caret).unwrap_or_else(|| {
             if self.caret >= self.text.len() {
                 self.text.len()
             } else {
@@ -438,18 +608,24 @@ impl WriterHost {
     fn set_hover_at_offset(&mut self, offset: usize) {
         self.hover_token_start = None;
         self.hover_token_end = None;
+        if let Some(span) = self.token_span_at_offset(offset) {
+            self.hover_token_start = Some(span.0);
+            self.hover_token_end = Some(span.1);
+        }
+    }
+
+    fn token_span_at_offset(&self, offset: usize) -> Option<(usize, usize)> {
         for token in &self.semantic_tokens {
             if offset >= token.start && offset < token.end {
-                self.hover_token_start = Some(token.start);
-                self.hover_token_end = Some(token.end);
-                return;
+                return Some((token.start, token.end));
             }
         }
+        None
     }
 
     fn snap_offset_for_atomic(&self, offset: usize) -> usize {
         for token in &self.semantic_tokens {
-            if is_fixed_token_class(&token.class) && offset > token.start && offset < token.end {
+            if offset > token.start && offset < token.end {
                 let mid = token.start + (token.end - token.start) / 2;
                 return if offset < mid { token.start } else { token.end };
             }
@@ -458,32 +634,74 @@ impl WriterHost {
     }
 
     fn normalize_edit_range(&self, start: usize, end: usize) -> (usize, usize) {
-        let mut s = start;
-        let mut e = end;
-        for token in &self.semantic_tokens {
-            if !is_fixed_token_class(&token.class) {
-                continue;
+        let (mut s, mut e) = if start <= end { (start, end) } else { (end, start) };
+        loop {
+            let mut changed = false;
+            for token in &self.semantic_tokens {
+                if s < token.end && e > token.start && (s > token.start || e < token.end) {
+                    if s > token.start {
+                        s = token.start;
+                        changed = true;
+                    }
+                    if e < token.end {
+                        e = token.end;
+                        changed = true;
+                    }
+                }
             }
-            if ranges_overlap(s, e, token.start, token.end) {
-                s = s.min(token.start);
-                e = e.max(token.end);
+            for span in &self.selectable_spans {
+                if span.kind == "atomic" || !ranges_overlap(s, e, span.start, span.end) {
+                    continue;
+                }
+                if self.allowed_composite_selection(s, e, span) {
+                    continue;
+                }
+                if s > span.start {
+                    s = span.start;
+                    changed = true;
+                }
+                if e < span.end {
+                    e = span.end;
+                    changed = true;
+                }
+            }
+            if !changed {
+                break;
             }
         }
-        (s, e)
+        if start <= end { (s, e) } else { (e, s) }
     }
 
-    fn fixed_token_left_boundary(&self, offset: usize) -> Option<usize> {
+    fn allowed_composite_selection(&self, start: usize, end: usize, span: &SelectableSpanJson) -> bool {
+        if start == span.start && end == span.end {
+            return true;
+        }
+        match span.kind.as_str() {
+            "varLabel" => {
+                let head_end = span.head_end.unwrap_or(span.end);
+                start == span.start && end == head_end
+            }
+            "propertyAccess" => {
+                let head_end = span.head_end.unwrap_or(span.start);
+                let tail_start = span.tail_start.unwrap_or(span.end);
+                (start == span.start && end == head_end) || (start == tail_start && end == span.end)
+            }
+            _ => false,
+        }
+    }
+
+    fn token_left_boundary(&self, offset: usize) -> Option<usize> {
         for token in &self.semantic_tokens {
-            if is_fixed_token_class(&token.class) && offset > token.start && offset <= token.end {
+            if offset > token.start && offset <= token.end {
                 return Some(token.start);
             }
         }
         None
     }
 
-    fn fixed_token_right_boundary(&self, offset: usize) -> Option<usize> {
+    fn token_right_boundary(&self, offset: usize) -> Option<usize> {
         for token in &self.semantic_tokens {
-            if is_fixed_token_class(&token.class) && offset >= token.start && offset < token.end {
+            if offset >= token.start && offset < token.end {
                 return Some(token.end);
             }
         }
@@ -556,6 +774,38 @@ impl WriterHost {
         offset_at_line_col(&self.text, line, col)
     }
 
+    pub fn hit_test_offset_screen(&self, sx: f64, sy: f64) -> usize {
+        let world = screen_to_world(&self.camera, &self.viewport, Point::new(sx, sy));
+        self.hit_test_offset(world)
+    }
+
+    /// @emoji 🎯 Returns pick-target rows at a screen point for DOM disambiguation menus.
+    pub fn pick_targets_at_screen_json(&self, sx: f64, sy: f64) -> String {
+        let offset = self.hit_test_offset_screen(sx, sy);
+        let (line, col) = offset_line_col(&self.text, offset);
+        let mut rows = Vec::new();
+        rows.push(serde_json::json!({
+            "domain": "line",
+            "id": line.to_string(),
+            "generality": 0,
+            "label": format!("Line {}", line + 1),
+        }));
+        if let Some((start, end)) = self.token_span_at_offset(offset) {
+            rows.push(serde_json::json!({
+                "domain": "token",
+                "id": format!("{start}:{end}"),
+                "generality": 2,
+                "label": self.text.get(start..end).unwrap_or("").to_string(),
+            }));
+        }
+        serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into())
+    }
+
+    pub fn select_span_at_screen(&mut self, sx: f64, sy: f64) {
+        let offset = self.hit_test_offset_screen(sx, sy);
+        self.select_span_at(offset);
+    }
+
     pub fn build_scene(&self) -> Scene {
         let mut world_scene = Scene::new();
         let bg = self.theme.raster_clear;
@@ -568,8 +818,17 @@ impl WriterHost {
         );
         let lines: Vec<&str> = if self.text.is_empty() { vec![""] } else { self.text.split('\n').collect() };
         let (sel_start, sel_end) = self.selection_range();
-        if sel_start != sel_end {
-            self.render_abs_range_highlight(&mut world_scene, sel_start, sel_end, self.theme.hover_fill);
+        if !self.selection_occurrences.is_empty() {
+            for range in &self.selection_occurrences {
+                self.render_abs_range_highlight(&mut world_scene, range.start, range.end, self.theme.selection_fill);
+            }
+        } else if sel_start != sel_end {
+            self.render_abs_range_highlight(&mut world_scene, sel_start, sel_end, self.theme.selection_fill);
+        }
+        if !self.hover_occurrences.is_empty() {
+            for range in &self.hover_occurrences {
+                self.render_abs_range_highlight(&mut world_scene, range.start, range.end, self.theme.hover_fill);
+            }
         }
         for (i, line) in lines.iter().enumerate() {
             let y = i as f64 * LINE_HEIGHT + LINE_HEIGHT * 0.75;
@@ -582,18 +841,28 @@ impl WriterHost {
                 self.theme.grid_minor_stroke,
                 self.theme.label_halo,
             );
-            if let (Some(hs), Some(he)) = (self.hover_token_start, self.hover_token_end) {
-                let line_start = offset_at_line_col(&self.text, i, 0);
-                let line_end = line_start + line.len();
-                if hs < line_end && he > line_start {
-                    let start = hs.max(line_start) - line_start;
-                    let end = he.min(line_end) - line_start;
-                    let abs_s = line_start + start;
-                    let abs_e = line_start + end;
-                    self.render_abs_range_highlight(&mut world_scene, abs_s, abs_e, self.theme.hover_fill);
+            if self.hover_occurrences.is_empty() {
+                if let (Some(hs), Some(he)) = (self.hover_token_start, self.hover_token_end) {
+                    if sel_start == sel_end || he <= sel_start || hs >= sel_end {
+                        let line_start = offset_at_line_col(&self.text, i, 0);
+                        let line_end = line_start + line.len();
+                        if hs < line_end && he > line_start {
+                            let start = hs.max(line_start) - line_start;
+                            let end = he.min(line_end) - line_start;
+                            let abs_s = line_start + start;
+                            let abs_e = line_start + end;
+                            self.render_abs_range_highlight(&mut world_scene, abs_s, abs_e, self.theme.hover_fill);
+                        }
+                    }
                 }
             }
             self.render_colored_line(&mut world_scene, line, i, y);
+        }
+        self.render_placeholders(&mut world_scene);
+        for offset in &self.extra_carets {
+            if *offset != self.caret {
+                self.render_caret_bar(&mut world_scene, *offset);
+            }
         }
         self.render_caret(&mut world_scene, self.caret);
         for diag in &self.diagnostics {
@@ -657,10 +926,21 @@ impl WriterHost {
         );
     }
 
-    fn render_caret(&self, scene: &mut Scene, offset: usize) {
-        if self.caret == self.anchor && !self.caret_visible {
-            return;
+    fn render_placeholders(&self, scene: &mut Scene) {
+        for placeholder in &self.placeholders {
+            let (x, y) = offset_to_world(self, placeholder.offset);
+            canvas_text::append_label(
+                scene,
+                &placeholder.label,
+                Point::new(x, y),
+                FONT_PX,
+                self.theme.grid_minor_stroke,
+                self.theme.label_halo,
+            );
         }
+    }
+
+    fn render_caret_bar(&self, scene: &mut Scene, offset: usize) {
         let (x, y) = offset_to_world(self, offset);
         let rect = Rect::new(x, y - LINE_HEIGHT * 0.8, x + 1.5, y + LINE_HEIGHT * 0.2);
         scene.fill(
@@ -670,6 +950,13 @@ impl WriterHost {
             None,
             &rect,
         );
+    }
+
+    fn render_caret(&self, scene: &mut Scene, offset: usize) {
+        if self.caret == self.anchor && !self.caret_visible {
+            return;
+        }
+        self.render_caret_bar(scene, offset);
     }
 
     fn render_diagnostic(&self, scene: &mut Scene, diag: &DiagnosticJson) {
@@ -684,12 +971,12 @@ impl WriterHost {
     }
 }
 
-fn ranges_overlap(a_start: usize, a_end: usize, b_start: usize, b_end: usize) -> bool {
-    a_start < b_end && b_start < a_end
+fn is_insert_whitespace(chunk: &str) -> bool {
+    !chunk.is_empty() && chunk.chars().all(|ch| matches!(ch, ' ' | '\t' | '\n' | '\r'))
 }
 
-fn is_fixed_token_class(class: &str) -> bool {
-    class == "keyword"
+fn ranges_overlap(a_start: usize, a_end: usize, b_start: usize, b_end: usize) -> bool {
+    a_start < b_end && b_start < a_end
 }
 
 fn hit_byte_in_line(line: &str, world_x: f64) -> usize {
@@ -890,6 +1177,11 @@ impl WriterSession {
         self.state.borrow().host.caret()
     }
 
+    #[wasm_bindgen(js_name = setSelectableSpansJson)]
+    pub fn set_selectable_spans_json(&mut self, json: &str) {
+        self.state.borrow_mut().host.set_selectable_spans_json(json);
+    }
+
     #[wasm_bindgen(js_name = setSemanticTokensJson)]
     pub fn set_semantic_tokens_json(&mut self, json: &str) {
         self.state.borrow_mut().host.set_semantic_tokens_json(json);
@@ -898,6 +1190,26 @@ impl WriterSession {
     #[wasm_bindgen(js_name = setDiagnosticsJson)]
     pub fn set_diagnostics_json(&mut self, json: &str) {
         self.state.borrow_mut().host.set_diagnostics_json(json);
+    }
+
+    #[wasm_bindgen(js_name = setPlaceholdersJson)]
+    pub fn set_placeholders_json(&mut self, json: &str) {
+        self.state.borrow_mut().host.set_placeholders_json(json);
+    }
+
+    #[wasm_bindgen(js_name = setHoverOccurrencesJson)]
+    pub fn set_hover_occurrences_json(&mut self, json: &str) {
+        self.state.borrow_mut().host.set_hover_occurrences_json(json);
+    }
+
+    #[wasm_bindgen(js_name = setSelectionOccurrencesJson)]
+    pub fn set_selection_occurrences_json(&mut self, json: &str) {
+        self.state.borrow_mut().host.set_selection_occurrences_json(json);
+    }
+
+    #[wasm_bindgen(js_name = setExtraCaretsJson)]
+    pub fn set_extra_carets_json(&mut self, json: &str) {
+        self.state.borrow_mut().host.set_extra_carets_json(json);
     }
 
     #[wasm_bindgen(js_name = applyTextEditsJson)]
@@ -928,6 +1240,53 @@ impl WriterSession {
     #[wasm_bindgen(js_name = anchor)]
     pub fn anchor(&self) -> usize {
         self.state.borrow().host.anchor()
+    }
+
+    #[wasm_bindgen(js_name = selectSpanAtScreen)]
+    pub fn select_span_at_screen(&mut self, sx: f64, sy: f64) {
+        self.state.borrow_mut().host.select_span_at_screen(sx, sy);
+    }
+
+    #[wasm_bindgen(js_name = pickTargetsAtScreenJson)]
+    pub fn pick_targets_at_screen_json(&self, sx: f64, sy: f64) -> String {
+        self.state.borrow().host.pick_targets_at_screen_json(sx, sy)
+    }
+
+    #[wasm_bindgen(js_name = selectSpanAt)]
+    pub fn select_span_at(&mut self, offset: usize) {
+        self.state.borrow_mut().host.select_span_at(offset);
+    }
+
+    #[wasm_bindgen(js_name = setSelectionRange)]
+    pub fn set_selection_range(&mut self, anchor: usize, caret: usize) {
+        self.state.borrow_mut().host.set_selection_range(anchor, caret);
+    }
+
+    #[wasm_bindgen(js_name = hoverTokenRangeJson)]
+    pub fn hover_token_range_json(&self) -> String {
+        match self.state.borrow().host.hover_token_range() {
+            Some((start, end)) => serde_json::json!({ "start": start, "end": end }).to_string(),
+            None => "null".into(),
+        }
+    }
+
+    #[wasm_bindgen(js_name = setHoverRange)]
+    pub fn set_hover_range(&mut self, start: usize, end: usize) {
+        if start >= end {
+            self.state.borrow_mut().host.set_hover_range(None, None);
+        } else {
+            self.state.borrow_mut().host.set_hover_range(Some(start), Some(end));
+        }
+    }
+
+    #[wasm_bindgen(js_name = selectionText)]
+    pub fn selection_text(&self) -> String {
+        self.state.borrow().host.selection_text()
+    }
+
+    #[wasm_bindgen(js_name = replaceSelection)]
+    pub fn replace_selection(&mut self, next: &str) {
+        self.state.borrow_mut().host.replace_selection(next);
     }
 
     #[wasm_bindgen(js_name = selectAll)]
@@ -1018,6 +1377,38 @@ mod tests {
     use super::*;
 
     #[test]
+    fn insert_space_inside_token_inserts_without_replacing() {
+        let mut host = WriterHost::new();
+        host.set_text("MATCH".into());
+        host.set_semantic_tokens_json(r#"[{"start":0,"end":5,"class":"keyword"}]"#);
+        host.set_caret_anchor(3);
+        host.insert_text(" ");
+        assert_eq!(host.text(), "MAT CH");
+        assert_eq!(host.caret(), 4);
+    }
+
+    #[test]
+    fn insert_space_at_token_end_appends() {
+        let mut host = WriterHost::new();
+        host.set_text("MATCH".into());
+        host.set_semantic_tokens_json(r#"[{"start":0,"end":5,"class":"keyword"}]"#);
+        host.set_caret_anchor(5);
+        host.insert_text(" ");
+        assert_eq!(host.text(), "MATCH ");
+        assert_eq!(host.caret(), 6);
+    }
+
+    #[test]
+    fn auto_space_before_next_token_at_token_end() {
+        let mut host = WriterHost::new();
+        host.set_text("MATCH".into());
+        host.set_semantic_tokens_json(r#"[{"start":0,"end":5,"class":"keyword"}]"#);
+        host.set_caret_anchor(5);
+        host.insert_text("(");
+        assert_eq!(host.text(), "MATCH (");
+    }
+
+    #[test]
     fn insert_and_caret() {
         let mut host = WriterHost::new();
         host.insert_text("MATCH");
@@ -1041,6 +1432,36 @@ mod tests {
         host.select_all();
         assert_eq!(host.anchor(), 0);
         assert_eq!(host.caret(), 3);
+    }
+
+    #[test]
+    fn selection_snaps_var_label_composite() {
+        let mut host = WriterHost::new();
+        host.set_text("MATCH (a1:Piece)".into());
+        host.set_semantic_tokens_json(
+            r#"[{"start":0,"end":5,"class":"keyword"},{"start":7,"end":9,"class":"ident"},{"start":9,"end":10,"class":"operator"},{"start":10,"end":15,"class":"ident"}]"#,
+        );
+        host.set_selectable_spans_json(
+            r#"[{"start":7,"end":9,"kind":"atomic"},{"start":7,"end":15,"kind":"varLabel","headEnd":9},{"start":10,"end":15,"kind":"atomic"}]"#,
+        );
+        host.set_selection(8, 12);
+        assert_eq!(host.anchor(), 7);
+        assert_eq!(host.caret(), 15);
+    }
+
+    #[test]
+    fn select_span_at_picks_ident() {
+        let mut host = WriterHost::new();
+        host.set_text("RETURN a1.name".into());
+        host.set_semantic_tokens_json(
+            r#"[{"start":0,"end":6,"class":"keyword"},{"start":7,"end":9,"class":"ident"},{"start":9,"end":10,"class":"operator"},{"start":10,"end":14,"class":"ident"}]"#,
+        );
+        host.set_selectable_spans_json(
+            r#"[{"start":7,"end":9,"kind":"atomic"},{"start":10,"end":14,"kind":"atomic"},{"start":7,"end":14,"kind":"propertyAccess","headEnd":9,"tailStart":10}]"#,
+        );
+        host.select_span_at(11);
+        assert_eq!(host.anchor(), 10);
+        assert_eq!(host.caret(), 14);
     }
 
     #[test]

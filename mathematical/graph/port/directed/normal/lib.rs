@@ -22,6 +22,7 @@ use crate::{
     NodeShape, SceneDescriptorJson, SelectionOptions, VelloThemePalette, WireData, WireKindDef,
 };
 use infinite_cavas::camera::Camera;
+use mathematical_graph_manifest::manifest_by_id;
 use infinite_cavas::geom_sel::{
     cubic_bezier_axis_bounds, cubic_bezier_point, inflate_world_box, point_in_polygon, polygon_contains_world_box, polygon_intersects_world_box, segment_intersects_polygon, segment_intersects_world_box, world_box_contains_box,
     world_box_contains_point, world_box_from_points, world_boxes_overlap, WorldBox,
@@ -213,6 +214,15 @@ struct FixtureDropPreviewSnapshot {
     width: f64,
     height: f64,
     icon_kind: Option<String>,
+}
+
+#[derive(Clone, Debug, serde::Serialize)]
+struct BoardPickTargetJson {
+    domain: String,
+    id: String,
+    generality: u32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    label: Option<String>,
 }
 
 #[derive(Clone)]
@@ -732,6 +742,36 @@ impl BoardHost {
                 next.insert(id.to_string(), EdgeKindDef { name, color, stroke_width, pattern, source_tip, target_tip, directed });
             }
             self.edge_kinds = next;
+        }
+        Ok(())
+    }
+
+    /// @emoji 🛡️ Ensures runtime catalogs declare every kind from a compile-time manifest.
+    pub fn validate_against_manifest_id(&self, manifest_id: &str) -> Result<(), String> {
+        let gm = manifest_by_id(manifest_id).ok_or_else(|| format!("unknown manifest id {manifest_id}"))?;
+        for row in &gm.port_kinds {
+            let visual = row.presentation.as_ref().is_some_and(|p| p.get("color").is_some());
+            if visual && !self.handle_kinds.contains_key(&row.id) {
+                return Err(format!("catalog missing handle kind {:?}", row.id));
+            }
+        }
+        for row in &gm.wire_kinds {
+            if !self.wire_kinds.contains_key(&row.id) {
+                return Err(format!("catalog missing wire kind {:?}", row.id));
+            }
+        }
+        for row in &gm.edge_kinds {
+            if row.presentation.is_some() && !self.edge_kinds.contains_key(&row.id) {
+                return Err(format!("catalog missing edge kind {:?}", row.id));
+            }
+        }
+        for row in &gm.node_kinds {
+            if row.id == "Piece" {
+                continue;
+            }
+            if !self.node_kinds.contains_key(&row.id) {
+                return Err(format!("catalog missing node kind {:?}", row.id));
+            }
         }
         Ok(())
     }
@@ -3461,6 +3501,76 @@ impl BoardHost {
             }
         }
         None
+    }
+
+    fn push_pick_target(out: &mut Vec<BoardPickTargetJson>, domain: &str, id: String, generality: u32, label: Option<String>) {
+        if out.iter().any(|row| row.domain == domain && row.id == id) {
+            return;
+        }
+        out.push(BoardPickTargetJson { domain: domain.to_string(), id, generality, label });
+    }
+
+    fn resolve_pick_targets_world(&self, point: Point) -> Vec<BoardPickTargetJson> {
+        let mut out = Vec::new();
+        let lod = self.current_draw_lod();
+        let zoom = self.camera.zoom;
+        if self.has_ports() && !matches!(lod, BoardDrawLod::Minimap) {
+            if matches!(lod, BoardDrawLod::Normal | BoardDrawLod::Detail | BoardDrawLod::Micro) {
+                for h in self.handles.values().rev() {
+                    if !self.handle_selectable(h.id.as_str()) {
+                        continue;
+                    }
+                    let Some(pos) = self.handle_world_pos(h) else { continue };
+                    let tol = (HANDLE_HIT_TOLERANCE_PX / zoom) + self.effective_handle_radius(h);
+                    if distance_between(point, pos) <= tol {
+                        Self::push_pick_target(&mut out, "handle", h.id.clone(), 2, Some(h.id.clone()));
+                    }
+                }
+            }
+        }
+        for n in self.nodes.values().rev() {
+            if !self.node_selectable(n.id.as_str()) {
+                continue;
+            }
+            let hit = match n.shape {
+                NodeShape::Rectangle => {
+                    let hw = self.scaled_node_width(n) / 2.0;
+                    let hh = self.scaled_node_height(n) / 2.0;
+                    (point.x - n.x).abs() <= hw && (point.y - n.y).abs() <= hh
+                }
+                NodeShape::Circle => distance_between(point, Point::new(n.x, n.y)) <= self.scaled_node_radius(n),
+            };
+            if hit {
+                Self::push_pick_target(&mut out, "node", n.id.clone(), 0, n.text.clone());
+            }
+        }
+        for w in self.wires.values().rev() {
+            if !self.wire_selectable(w) {
+                continue;
+            }
+            if let Some(c) = self.wire_curve(w) {
+                if distance_point_to_cubic_bezier(point, c, 18) <= EDGE_HIT_TOLERANCE_PX / zoom {
+                    Self::push_pick_target(&mut out, "wire", w.id.clone(), 1, Some(w.id.clone()));
+                }
+            }
+        }
+        for e in self.edges.values().rev() {
+            if !self.edge_selectable(e) {
+                continue;
+            }
+            if let Some(c) = self.edge_curve(e) {
+                if distance_point_to_cubic_bezier(point, c, 18) <= EDGE_HIT_TOLERANCE_PX / zoom {
+                    Self::push_pick_target(&mut out, "edge", e.id.clone(), 1, Some(e.id.clone()));
+                }
+            }
+        }
+        out
+    }
+
+    /// @emoji 🎯 All pick targets under a screen point as JSON (`domain`, `id`, `generality`).
+    pub fn pick_targets_at_screen_json(&self, sx: f64, sy: f64) -> String {
+        let world = self.screen_to_world_point(sx, sy);
+        serde_json::to_string(&self.resolve_pick_targets_world(world)).unwrap_or_else(|_| "[]".into())
     }
 
     pub fn resolve_hit_world(&self, point: Point) -> Option<String> {

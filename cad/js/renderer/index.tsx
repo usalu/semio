@@ -5,7 +5,8 @@
 // #endregion 🧲Header
 
 // #region 🔌Adapters
-import { Button, borderNormalClass, canvasHostRootClass, cn, editorShellRootClass, ENGAGEMENT_USER, floatingFieldSurfaceClass, floatingMenuItemClass, floatingMenuSurfaceClass, floatingPanelAsideClass, floatingTagClass, floatingTagOffClass, floatingTagOnClass, focusActiveEngagementInput, humanizeEngagementStepId, Input, isUiTypingTarget, marqueeCoverageFromGesture, normalizeEngagementCommandText, queryWindowEngagementInput, reactHostPort, sceneHostPort, SelectionMarquee, UnifiedGumball, gumballPointerConsumesCanvasEventRef, type EngagementControl, type EngagementSpec, type GumballConfig, type GumballPose, type ThreeEvent } from "@semio-tech/ui-react";
+import { Button, borderNormalClass, canvasHostRootClass, cn, CanvasPickMenu, editorShellRootClass, ENGAGEMENT_USER, floatingFieldSurfaceClass, floatingMenuItemClass, floatingMenuSurfaceClass, floatingPanelAsideClass, floatingTagClass, floatingTagOffClass, floatingTagOnClass, focusActiveEngagementInput, humanizeEngagementStepId, Input, isUiTypingTarget, marqueeCoverageFromGesture, normalizeEngagementCommandText, queryWindowEngagementInput, reactHostPort, sceneHostPort, SelectionMarquee, sortCanvasPickTargetsGeneralFirst, UnifiedGumball, gumballPointerConsumesCanvasEventRef, type CanvasPickRequest, type CanvasPickTarget, type EngagementControl, type EngagementSpec, type GumballConfig, type GumballPose, type ThreeEvent } from "@semio-tech/ui-react";
+import { canvasPickTargetKey } from "@semio-tech/framework-core";
 import { clearColorResolveCache, resolveSemanticColorHex, tokenHex } from "@semio-tech/ui-styling";
 import { Fragment, type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
 // #endregion 🔌Adapters
@@ -594,6 +595,27 @@ export type SpatialGeometryPickTargetKind = "object" | "face" | "edge" | "vertex
 export type SpatialPickTargetKind = SpatialGeometryPickTargetKind;
 
 export const SPATIAL_PICK_TARGET_KINDS: readonly SpatialPickTargetKind[] = ["object", "face", "edge", "vertex"];
+
+const CAD_PICK_GENERALITY: Readonly<Record<SpatialPickTargetKind, number>> = {
+  object: 0,
+  face: 1,
+  edge: 2,
+  vertex: 3,
+};
+
+function spatialPickTargetToCanvas(target: SpatialPickTarget): CanvasPickTarget {
+  return { domain: target.kind, id: target.id, generality: CAD_PICK_GENERALITY[target.kind], label: target.id };
+}
+
+function spatialPickCanvasRequest(request: SpatialSelectionRequest | null): CanvasPickRequest | null {
+  if (!request) return null;
+  return {
+    targets: sortCanvasPickTargetsGeneralFirst(request.targets.map(spatialPickTargetToCanvas)),
+    client: request.client,
+    modifiers: request.modifiers,
+    world: { x: request.point[0], y: request.point[1] },
+  };
+}
 
 const GEOMETRY_KIND_TO_OBJECT_PICK: Partial<Record<ModelEntityKind, SpatialGeometryPickTargetKind>> = {
   vertex: "vertex",
@@ -5908,37 +5930,26 @@ export function InteractionRepl({
           )
         ) : null}
         {selectionMenu ? (
-          <div
-            onPointerDown={(e) => e.stopPropagation()}
-            className={cn("fixed z-tutorial w-layout-cad-menu-sm max-h-layout-preview-md overflow-y-auto p-single", floatingMenuSurfaceClass)}
-            style={{
-              left: Math.min(selectionMenu.client.x + 8, window.innerWidth - 230),
-              top: Math.min(selectionMenu.client.y + 8, window.innerHeight - 220),
+          <CanvasPickMenu
+            request={spatialPickCanvasRequest(selectionMenu)}
+            hoveredKey={hoveredPickKey}
+            onHoverKey={(key) => setHoveredPickKey(key)}
+            onPick={(target) => {
+              const spatial = selectionMenu.targets.find((row) => spatialPickTargetKey(row) === canvasPickTargetKey(target));
+              if (spatial) dispatchSelectionTargets([spatial], selectionMenu.modifiers, selectionMenu.point);
             }}
-          >
-            <div className="text-muted-foreground px-single py-half text-2xs">Select target</div>
-            {selectionMenu.targets.map((target) => {
-              const key = spatialPickTargetKey(target);
-              const active = hoveredPickKey === key;
+            onDismiss={() => setSelectionMenu(null)}
+            renderRow={(target, active) => {
+              const spatial = selectionMenu.targets.find((row) => spatialPickTargetKey(row) === canvasPickTargetKey(target));
+              if (!spatial) return <span>{target.label}</span>;
               return (
-                <button
-                  key={key}
-                  type="button"
-                  className={cn(floatingMenuItemClass, active && "bg-active-base text-emphasized")}
-                  onPointerEnter={() => setHoveredPickKey(effectiveSelectionKindToggles[target.kind] !== false ? key : null)}
-                  onPointerLeave={() => setHoveredPickKey(null)}
-                  onPointerDown={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    dispatchSelectionTargets([target], selectionMenu.modifiers, selectionMenu.point);
-                  }}
-                >
-                  <span className="mr-single inline-block size-2 rounded-xs" style={{ background: targetStyle(target, false, false).color }} />
-                  <span className="text-muted-foreground">{target.kind}</span> <code className="text-foreground">{target.id}</code>
-                </button>
+                <>
+                  <span className="mr-single inline-block size-2 rounded-xs" style={{ background: targetStyle(spatial, false, false).color }} />
+                  <span className="text-muted-foreground">{target.domain}</span> <code className="text-foreground">{target.label}</code>
+                </>
               );
-            })}
-          </div>
+            }}
+          />
         ) : null}
       </div>
       {showAside ? (

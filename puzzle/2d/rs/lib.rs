@@ -316,6 +316,11 @@ impl BoardSession {
         self.state.borrow_mut().host.pointer_move_screen(sx, sy, shift, ctrl_or_meta, alt);
     }
 
+    #[wasm_bindgen(js_name = pickTargetsAtScreenJson)]
+    pub fn pick_targets_at_screen_json_wasm(&self, sx: f64, sy: f64) -> String {
+        self.state.borrow().host.pick_targets_at_screen_json(sx, sy)
+    }
+
     #[wasm_bindgen(js_name = pointerUpScreen)]
     pub fn pointer_up_screen_wasm(&mut self, sx: f64, sy: f64, shift: bool, ctrl_or_meta: bool, alt: bool) {
         self.state.borrow_mut().host.pointer_up_screen(sx, sy, shift, ctrl_or_meta, alt);

@@ -6,26 +6,30 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import {
 	cn,
+	CanvasPickMenu,
 	marqueeCoverageFromGesture,
 	marqueeModeFromModifiers,
 	SelectionMarquee,
 	selectionMergeIds,
 	screenRectFromPoints,
+	useCanvasPickInteraction,
 	type SelectionMarqueeCoverage,
 	type SelectionMarqueePoint,
 	type SelectionMarqueeMethod,
 	type SelectionMarqueeRect,
 	type SelectionMergeMode,
 } from "@semio-tech/ui-react";
+import { parseCanvasPickTargetKey, type CanvasPickTarget } from "@semio-tech/framework-core";
 import {
 	decodeRasterImageAsset,
 	rasterDocumentToSyncJson,
-	resolveRasterLayerAtScreenPoint,
+	resolveRasterPickTargetsAtScreenPoint,
 	resolveRasterMarqueeLayerHits,
 	type RasterCamera,
 	type RasterDocument,
 	type RasterHoverPayload,
 	type RasterKindHover,
+	type RasterPickTarget,
 	type RasterToolId,
 } from "@semio-tech/raster-core";
 import initRasterWasm, { RasterSession } from "../rs/pkg/raster.js";
@@ -63,6 +67,18 @@ function rasterSelectionMethod(activeTool: RasterToolId | undefined): SelectionM
 
 function isRasterSelectionTool(activeTool: RasterToolId | undefined): boolean {
 	return activeTool === "selectMarquee" || activeTool === "selectLasso" || activeTool === "selectWand";
+}
+
+function rasterPickTargetToCanvas(target: RasterPickTarget): CanvasPickTarget {
+	return { domain: target.domain, id: target.id, generality: target.generality, label: target.label };
+}
+
+function rasterHoverPayloadFromFocusKey(key: string | null): RasterHoverPayload {
+	if (!key) return { id: null, kind: null };
+	const parsed = parseCanvasPickTargetKey(key);
+	if (!parsed) return { id: null, kind: null };
+	const domain = parsed.domain === "pixel" ? "layer" : parsed.domain;
+	return { id: parsed.id, kind: { domain: domain as RasterKindHover["domain"], kindId: parsed.id } };
 }
 // #endregion 🔌Adapters
 
@@ -373,6 +389,30 @@ export const RasterCanvas: React.FC<RasterCanvasProps> = ({
 		return { x: event.clientX - rect.left, y: event.clientY - rect.top };
 	}
 
+	const resolveTargetsAtClient = useCallback(
+		(client: { readonly x: number; readonly y: number }) => {
+			const screen = clientPointFromCanvas(canvasRef.current, client);
+			return resolveRasterPickTargetsAtScreenPoint(document, camera ?? document.camera, viewportRef.current, screen).map(
+				rasterPickTargetToCanvas,
+			);
+		},
+		[camera, document],
+	);
+
+	const canvasPick = useCanvasPickInteraction({
+		resolveTargetsAtClient,
+		onHoverFocus: (focus) => onHover?.(rasterHoverPayloadFromFocusKey(focus.targetKey)),
+		onSelectTarget: (target, request) => {
+			const mergeMode = marqueeModeFromModifiers({
+				shiftKey: request.modifiers?.shift === true,
+				ctrlKey: request.modifiers?.ctrl === true,
+				metaKey: request.modifiers?.meta === true,
+				altKey: request.modifiers?.alt === true,
+			});
+			onSelect?.(selectionMergeIds(mergeMode, selectedIds, [target.id]));
+		},
+	});
+
 	const handleWheel = useCallback(
 		(event: WheelEvent) => {
 			event.preventDefault();
@@ -402,8 +442,13 @@ export const RasterCanvas: React.FC<RasterCanvasProps> = ({
 					points: [point],
 					mergeMode: marqueeModeFromModifiers(event),
 				};
+				canvasPick.onCanvasPointerDown({ x: event.clientX, y: event.clientY });
 				setMarqueeOverlay(null);
 				(event.target as HTMLElement).setPointerCapture(event.pointerId);
+				return;
+			}
+			if (activeTool === "selectWand" && event.button === 0) {
+				canvasPick.onCanvasPointerDown({ x: event.clientX, y: event.clientY });
 				return;
 			}
 			if (event.button === 1 || (!isRasterSelectionTool(activeTool) && event.button === 0)) {
@@ -411,7 +456,7 @@ export const RasterCanvas: React.FC<RasterCanvasProps> = ({
 				(event.target as HTMLElement).setPointerCapture(event.pointerId);
 			}
 		},
-		[activeTool, clientPoint, renderer, selectionMethod],
+		[activeTool, canvasPick, clientPoint, renderer, selectionMethod],
 	);
 
 	const updateMarqueeOverlay = useCallback(
@@ -468,28 +513,36 @@ export const RasterCanvas: React.FC<RasterCanvasProps> = ({
 				}
 				return;
 			}
+			if (!canvasPick.pickMenuOpen && isRasterSelectionTool(activeTool)) {
+				canvasPick.onCanvasPointerMove({ x: event.clientX, y: event.clientY });
+			}
 			renderer.session.pointerMoveScreen(point.x, point.y);
 			onCameraChange?.(renderer.mirrorCameraFromSession());
 			renderer.invalidate();
 		},
-		[clientPoint, onCameraChange, renderer, selectionMethod, updateMarqueeOverlay],
+		[activeTool, canvasPick, clientPoint, onCameraChange, onHover, renderer, selectionMethod, updateMarqueeOverlay],
 	);
 
 	const handlePointerUp = useCallback(
 		(event: React.PointerEvent) => {
 			const point = clientPoint(event);
 			const marquee = marqueeRef.current;
+			if (activeTool === "selectWand" && !marquee.tracking) {
+				canvasPick.onCanvasPointerUp(
+					{ x: event.clientX, y: event.clientY },
+					{ shift: event.shiftKey, ctrl: event.ctrlKey, meta: event.metaKey, alt: event.altKey },
+				);
+			}
 			if (marquee.tracking) {
 				const distance = Math.hypot(point.x - marquee.start.x, point.y - marquee.start.y);
 				const mergeMode = marqueeModeFromModifiers(event);
 				if (marquee.active && distance >= RASTER_MARQUEE_THRESHOLD_PX) {
 					commitMarqueeSelection(point, mergeMode);
-				} else if (activeTool === "selectWand") {
-					const hit = resolveRasterLayerAtScreenPoint(document, camera ?? document.camera, viewportRef.current, point);
-					onSelect?.(selectionMergeIds(mergeMode, selectedIds, hit ? [hit] : []));
-				} else if (distance < RASTER_MARQUEE_THRESHOLD_PX && selectionMethod) {
-					const hit = resolveRasterLayerAtScreenPoint(document, camera ?? document.camera, viewportRef.current, point);
-					onSelect?.(selectionMergeIds(mergeMode, selectedIds, hit ? [hit] : []));
+				} else if (distance < RASTER_MARQUEE_THRESHOLD_PX && (activeTool === "selectWand" || selectionMethod)) {
+					canvasPick.onCanvasPointerUp(
+						{ x: event.clientX, y: event.clientY },
+						{ shift: event.shiftKey, ctrl: event.ctrlKey, meta: event.metaKey, alt: event.altKey },
+					);
 				}
 				marquee.tracking = false;
 				marquee.active = false;
@@ -504,6 +557,7 @@ export const RasterCanvas: React.FC<RasterCanvasProps> = ({
 		[
 			activeTool,
 			camera,
+			canvasPick,
 			clientPoint,
 			commitMarqueeSelection,
 			document,
@@ -536,6 +590,13 @@ export const RasterCanvas: React.FC<RasterCanvasProps> = ({
 			{marqueeOverlay?.shape === "polygon" ? (
 				<SelectionMarquee coverage={marqueeOverlay.coverage} shape="polygon" points={marqueeOverlay.points} />
 			) : null}
+			<CanvasPickMenu
+				request={canvasPick.pickMenu}
+				hoveredKey={canvasPick.menuHoveredKey}
+				onHoverKey={canvasPick.onMenuHoverKey}
+				onPick={canvasPick.onMenuPick}
+				onDismiss={canvasPick.dismissPickMenu}
+			/>
 		</div>
 	);
 };

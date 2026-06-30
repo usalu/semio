@@ -3,7 +3,8 @@
 // #endregion 🧲Header
 
 import metabolismWiresJson from "../fixture/metabolism.wires.json";
-import type { CameraState, EdgeKind, KindCatalogBundle, NodeKind, Puzzle2dFixtureEdgeV1, Puzzle2dFixtureNodeV1, Puzzle2dFixtureV1 } from "@semio-tech/puzzle-2d-react";
+import { mergeKindCatalogBundleByRowId, type CameraState, type KindCatalogBundle, type Puzzle2dFixtureEdgeV1, type Puzzle2dFixtureNodeV1, type Puzzle2dFixtureV1 } from "@semio-tech/puzzle-2d-react";
+import { mergeManifestCatalogBundles, type WiresEdgeKindId, wiresManifestCatalogBundle } from "@semio-tech/graph-manifest";
 import type { MindmapFixtureEdgeV1, MindmapFixtureNodeV1, MindmapFixtureV1 } from "@semio-tech/reasoning-mindmap-react";
 
 /** @emoji 🧩 Board slice embedded in {@link WiresFixtureV1}. */
@@ -13,6 +14,8 @@ export type { MindmapFixtureEdgeV1, MindmapFixtureNodeV1, MindmapFixtureV1 };
 
 // #region 🔖RelationshipKind
 export type RelationshipKind = "owns" | "is" | "references" | "has";
+
+export type { WiresEdgeKindId };
 
 const RELATIONSHIP_KINDS: readonly RelationshipKind[] = ["owns", "is", "references", "has"];
 
@@ -91,32 +94,35 @@ export interface WiresFixtureKindCatalogsV1 {
   readonly relationshipKinds?: readonly WiresRelationshipKindCatalogRowV1[];
 }
 
-export function wiresKindCatalogsToPuzzle2d(catalogs: WiresFixtureKindCatalogsV1 | undefined): KindCatalogBundle | undefined {
+export function wiresFixtureKindCatalogsToPuzzle2d(catalogs: WiresFixtureKindCatalogsV1 | undefined): KindCatalogBundle {
+  const base = wiresManifestCatalogBundle();
   if (catalogs == null) {
-    return undefined;
+    return base;
   }
-  const nodes: NodeKind[] | undefined = catalogs.identityKinds?.map((row) => ({
-    id: row.id,
-    name: row.name,
-    ...(row.color !== undefined ? { color: row.color } : {}),
-    ...(row.shape !== undefined ? { shape: row.shape } : {}),
-    ...(row.icon !== undefined ? { icon: row.icon } : {}),
-    ...(row.stroke !== undefined ? { stroke: row.stroke } : {}),
-  }));
-  const edges: EdgeKind[] | undefined = catalogs.relationshipKinds?.map((row) => ({
-    id: row.id,
-    name: row.name,
-    directed: row.directed ?? false,
-    ...(row.color !== undefined ? { color: row.color } : {}),
-    ...(row.stroke !== undefined ? { stroke: row.stroke } : {}),
-    ...(row.pattern !== undefined ? { pattern: row.pattern } : {}),
-    ...(row.sourceTip !== undefined ? { sourceTip: row.sourceTip } : {}),
-    ...(row.targetTip !== undefined ? { targetTip: row.targetTip } : {}),
-  }));
-  if (nodes == null && edges == null) {
-    return undefined;
+  const patch: KindCatalogBundle = {};
+  if (catalogs.identityKinds) {
+    patch.nodes = catalogs.identityKinds.map((row) => ({
+      id: row.id,
+      name: row.name,
+      ...(row.color !== undefined ? { color: row.color } : {}),
+      ...(row.shape !== undefined ? { shape: row.shape } : {}),
+      ...(row.icon !== undefined ? { icon: row.icon } : {}),
+      ...(row.stroke !== undefined ? { stroke: row.stroke } : {}),
+    }));
   }
-  return { ...(nodes != null ? { nodes } : {}), ...(edges != null ? { edges } : {}) };
+  if (catalogs.relationshipKinds) {
+    patch.edges = catalogs.relationshipKinds.map((row) => ({
+      id: row.id,
+      name: row.name,
+      directed: row.directed ?? false,
+      ...(row.color !== undefined ? { color: row.color } : {}),
+      ...(row.stroke !== undefined ? { stroke: row.stroke } : {}),
+      ...(row.pattern !== undefined ? { pattern: row.pattern } : {}),
+      ...(row.sourceTip !== undefined ? { sourceTip: row.sourceTip } : {}),
+      ...(row.targetTip !== undefined ? { targetTip: row.targetTip } : {}),
+    }));
+  }
+  return mergeKindCatalogBundleByRowId(mergeManifestCatalogBundles(base), patch);
 }
 
 function parseWiresFixtureKindCatalogs(meta: Record<string, unknown> | undefined): WiresFixtureKindCatalogsV1 | undefined {
@@ -428,13 +434,15 @@ export function mindmapBoardToPuzzle2dFixtureV1(board: MindmapFixtureV1, kindCat
     target: edge.target,
     ...(edge.edgeKind !== undefined ? { edgeKind: edge.edgeKind } : {}),
   }));
-  const puzzleCatalogs = wiresKindCatalogsToPuzzle2d(kindCatalogs);
+  const puzzleCatalogs = wiresFixtureKindCatalogsToPuzzle2d(kindCatalogs);
   return {
     schema: "puzzle.2d.fixture/v1",
     camera: board.camera as CameraState,
     nodes,
     edges,
-    ...(puzzleCatalogs !== undefined ? { meta: { kindCatalogs: puzzleCatalogs } } : board.meta !== undefined ? { meta: board.meta } : {}),
+    ...(kindCatalogs !== undefined || board.meta !== undefined
+      ? { meta: { ...(board.meta ?? {}), kindCatalogs: puzzleCatalogs } }
+      : {}),
   };
 }
 

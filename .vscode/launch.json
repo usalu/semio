@@ -1120,6 +1120,17 @@
       }
     },
     {
+      "name": "📦build🧮graph📜manifest",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/graph-manifest:generate",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 205
+      }
+    },
+    {
       "name": "📦build🖱️ui🏪assets",
       "type": "node-terminal",
       "request": "launch",
