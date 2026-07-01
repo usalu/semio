@@ -21,6 +21,11 @@ import {
   type UiNode,
   type WindowBodyViewContext,
   type WindowLayout,
+  type WindowMeasure,
+  type WindowEngagement,
+  type AppTools,
+  toolCollection,
+  enforcePlaygroundWindowEngagementInput,
 } from "@semio-tech/framework-playground-core";
 import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
 import {
@@ -87,6 +92,19 @@ export const TRINITY_REWRITE_PLAY_BODY_KEY_JACK = "trinity.rewrite.play.jack";
 export const TRINITY_REWRITE_PLAY_BODY_KEY_PARAMETERS = "trinity.rewrite.play.parameters";
 export const TRINITY_REWRITE_PLAY_WINDOW_KIND_BEFORE = "trinity-rewrite-before";
 export const TRINITY_REWRITE_PLAY_WINDOW_KIND_AFTER = "trinity-rewrite-after";
+
+function trinityRewritePlayCmd(command: string, args?: Record<string, unknown>) {
+  return { controllerId: TRINITY_REWRITE_PLAY_CONTROLLER_ID, command, args };
+}
+
+/** @emoji 🧰 Trinity rewrite play footer toolbar. */
+export function buildTrinityRewritePlayToolbarTools(controllerId: string): AppTools {
+  return [
+    toolCollection("rewrite", "repeat", [
+      { kind: "button", id: "trinity-rewrite.reorganize", label: "Reorganize", iconId: "refresh-cw", controllerId, command: "reorganize" },
+    ]),
+  ];
+}
 export const TRINITY_REWRITE_PLAY_WINDOW_KIND_LHS = "trinity-rewrite-lhs";
 export const TRINITY_REWRITE_PLAY_WINDOW_KIND_RHS = "trinity-rewrite-rhs";
 export const TRINITY_REWRITE_PLAY_WINDOW_KIND_JACK = "trinity-rewrite-jack";
@@ -371,12 +389,29 @@ export class TrinityRewritePlayController extends Controller {
   private bump(): void {
     this.interactionRevision += 1;
     this.recomputeDerived();
+    this.rebuildShellMode();
     this.notifySnapshot();
     this.emit();
   }
 
+  private rewriteEngagement(scopeId: string): WindowEngagement {
+    return {
+      sessionActive: false,
+      input: {
+        id: `${scopeId}-engagement-input`,
+        value: "",
+        placeholder: "Reorganize",
+        onChange: trinityRewritePlayCmd("rewriteEngagementInput", { scopeId }),
+        onSubmit: trinityRewritePlayCmd("reorganize"),
+      },
+      possibleEngagements: [
+        { id: `${scopeId}-reorganize`, label: "Reorganize", command: trinityRewritePlayCmd("reorganize") },
+      ],
+    };
+  }
+
   private rebuildShellMode(): void {
-    const lodMeasure = (scopeId: string) => ({
+    const lodMeasure = (scopeId: string): WindowMeasure => ({
       kind: "select" as const,
       id: `${scopeId}-lod`,
       label: "LOD",
@@ -387,14 +422,18 @@ export class TrinityRewritePlayController extends Controller {
       ],
       onChange: { controllerId: TRINITY_REWRITE_PLAY_CONTROLLER_ID, command: "setLodMode", args: { instanceId: scopeId } },
     });
+    this.mainMode.tools = buildTrinityRewritePlayToolbarTools(TRINITY_REWRITE_PLAY_CONTROLLER_ID);
     this.mainMode.windowKinds = [
-      new WindowKindRuntime(TRINITY_REWRITE_PLAY_WINDOW_KIND_LHS, "LHS", TRINITY_REWRITE_PLAY_BODY_KEY_LHS),
-      new WindowKindRuntime(TRINITY_REWRITE_PLAY_WINDOW_KIND_RHS, "RHS", TRINITY_REWRITE_PLAY_BODY_KEY_RHS),
-      new WindowKindRuntime(TRINITY_REWRITE_PLAY_WINDOW_KIND_JACK, "Jack", TRINITY_REWRITE_PLAY_BODY_KEY_JACK),
-      new WindowKindRuntime(TRINITY_REWRITE_PLAY_WINDOW_KIND_PARAMETERS, "Parameters", TRINITY_REWRITE_PLAY_BODY_KEY_PARAMETERS),
-      new WindowKindRuntime(TRINITY_REWRITE_PLAY_WINDOW_KIND_BEFORE, "Before", TRINITY_REWRITE_PLAY_BODY_KEY_BEFORE, undefined, [lodMeasure(TRINITY_REWRITE_PLAY_WINDOW_KIND_BEFORE)]),
-      new WindowKindRuntime(TRINITY_REWRITE_PLAY_WINDOW_KIND_AFTER, "After", TRINITY_REWRITE_PLAY_BODY_KEY_AFTER, undefined, [lodMeasure(TRINITY_REWRITE_PLAY_WINDOW_KIND_AFTER)]),
+      new WindowKindRuntime(TRINITY_REWRITE_PLAY_WINDOW_KIND_LHS, "LHS", TRINITY_REWRITE_PLAY_BODY_KEY_LHS, undefined, [lodMeasure(TRINITY_REWRITE_PLAY_WINDOW_KIND_LHS)], this.rewriteEngagement(TRINITY_REWRITE_PLAY_WINDOW_KIND_LHS)),
+      new WindowKindRuntime(TRINITY_REWRITE_PLAY_WINDOW_KIND_RHS, "RHS", TRINITY_REWRITE_PLAY_BODY_KEY_RHS, undefined, [lodMeasure(TRINITY_REWRITE_PLAY_WINDOW_KIND_RHS)], this.rewriteEngagement(TRINITY_REWRITE_PLAY_WINDOW_KIND_RHS)),
+      new WindowKindRuntime(TRINITY_REWRITE_PLAY_WINDOW_KIND_JACK, "Jack", TRINITY_REWRITE_PLAY_BODY_KEY_JACK, undefined, [lodMeasure(TRINITY_REWRITE_PLAY_WINDOW_KIND_JACK)], this.rewriteEngagement(TRINITY_REWRITE_PLAY_WINDOW_KIND_JACK)),
+      new WindowKindRuntime(TRINITY_REWRITE_PLAY_WINDOW_KIND_PARAMETERS, "Parameters", TRINITY_REWRITE_PLAY_BODY_KEY_PARAMETERS, undefined, [{ kind: "slider", id: "trinity-rewrite-parameters-count", label: "Parameters", value: Object.keys(this.parameterValues).length, min: 0, max: Math.max(Object.keys(this.parameterValues).length, 1), step: 1, onChange: trinityRewritePlayCmd("reorganize") }], this.rewriteEngagement(TRINITY_REWRITE_PLAY_WINDOW_KIND_PARAMETERS)),
+      new WindowKindRuntime(TRINITY_REWRITE_PLAY_WINDOW_KIND_BEFORE, "Before", TRINITY_REWRITE_PLAY_BODY_KEY_BEFORE, undefined, [lodMeasure(TRINITY_REWRITE_PLAY_WINDOW_KIND_BEFORE)], this.rewriteEngagement(TRINITY_REWRITE_PLAY_WINDOW_KIND_BEFORE)),
+      new WindowKindRuntime(TRINITY_REWRITE_PLAY_WINDOW_KIND_AFTER, "After", TRINITY_REWRITE_PLAY_BODY_KEY_AFTER, undefined, [lodMeasure(TRINITY_REWRITE_PLAY_WINDOW_KIND_AFTER)], this.rewriteEngagement(TRINITY_REWRITE_PLAY_WINDOW_KIND_AFTER)),
     ];
+    for (const windowKind of this.mainMode.windowKinds) {
+      enforcePlaygroundWindowEngagementInput(windowKind.engagement, `Trinity rewrite play window "${windowKind.id}"`);
+    }
   }
 
   run(command: string, args?: unknown): void {

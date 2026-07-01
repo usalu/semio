@@ -15,7 +15,7 @@ export default createPlaygroundPlayViteConfig({
 	playEntryKind: "procedural-2d",
 	extraAliases: [
 		{ find: "@semio-tech/procedural-2d-react", replacement: path.resolve(playDir, "../react/index.tsx") },
-		{ find: "@semio-tech/geometry-drawing-js", replacement: path.resolve(repoRoot, "geometry/drawing/js/index.ts") },
+		{ find: "@semio-tech/kernel-2d-js", replacement: path.resolve(repoRoot, "kernel/2d/js/index.ts") },
 		{ find: "@semio-tech/flow-react", replacement: path.resolve(repoRoot, "flow/react/index.tsx") },
 		{ find: "@semio-tech/flow-module-draw", replacement: path.resolve(repoRoot, "flow/module/draw/pkg/flow_module_draw.js") },
 	],

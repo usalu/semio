@@ -41,6 +41,9 @@ import {
 	type UiTreeContextMenuItem,
 	type UiTreeItemNode,
 	type UiTreeNode,
+	type WindowMeasure,
+	type WindowEngagement,
+	enforcePlaygroundWindowEngagementInput,
 } from "@semio-tech/framework-playground-core";
 import {
 	AppPointerFocusStore,
@@ -740,12 +743,96 @@ export class RasterPlayController extends Controller implements PlaygroundFixtur
 		this.rebuildShellMode();
 	}
 
+	private compositeMeasures(): readonly WindowMeasure[] {
+		const doc = this.projection();
+		return [
+			{
+				kind: "slider",
+				id: "raster-composite-zoom",
+				label: "Zoom",
+				value: doc.camera.zoom,
+				min: 0.1,
+				max: 8,
+				step: 0.05,
+				onChange: rasterPlayCmd("setCameraZoom"),
+			},
+			{
+				kind: "slider",
+				id: "raster-composite-brush",
+				label: "Brush",
+				value: doc.brushSize ?? 24,
+				min: 1,
+				max: 128,
+				step: 1,
+				onChange: rasterPlayCmd("setBrushSize"),
+			},
+		];
+	}
+
+	private navigatorMeasures(): readonly WindowMeasure[] {
+		const doc = this.projection();
+		return [
+			{
+				kind: "slider",
+				id: "raster-navigator-zoom",
+				label: "Navigator zoom",
+				value: doc.camera.zoom,
+				min: 0.05,
+				max: 2,
+				step: 0.05,
+				onChange: rasterPlayCmd("setCameraZoom"),
+			},
+			{
+				kind: "slider",
+				id: "raster-navigator-brush-opacity",
+				label: "Brush opacity",
+				value: doc.brushOpacity ?? 1,
+				min: 0,
+				max: 1,
+				step: 0.01,
+				onChange: rasterPlayCmd("setBrushOpacity"),
+			},
+		];
+	}
+
+	private compositeEngagement(): WindowEngagement {
+		const doc = this.projection();
+		return {
+			sessionActive: false,
+			input: {
+				id: "raster-composite-engagement",
+				value: "",
+				placeholder: "Select all",
+				onChange: rasterPlayCmd("compositeEngagementInput"),
+				onSubmit: rasterPlayCmd("selectAll"),
+			},
+			status: [{ id: "raster-layer-count", text: `${flattenRasterLayers(doc.layers).length} layers · tool ${doc.activeTool ?? "selectMarquee"}` }],
+		};
+	}
+
+	private navigatorEngagement(): WindowEngagement {
+		return {
+			sessionActive: false,
+			input: {
+				id: "raster-navigator-engagement",
+				value: "",
+				placeholder: "Import raster",
+				onChange: rasterPlayCmd("navigatorEngagementInput"),
+				onSubmit: rasterPlayCmd("loadRequest"),
+			},
+			status: [{ id: "raster-selection-count", text: `${this.selectedIds.length} selected` }],
+		};
+	}
+
 	private rebuildShellMode(): void {
 		this.mainMode.tools = RASTER_PLAY_TOOLS;
 		this.mainMode.windowKinds = [
-			new WindowKindRuntime(RASTER_PLAY_WINDOW_KIND_COMPOSITE, "Composite", RASTER_PLAY_BODY_KEY_COMPOSITE),
-			new WindowKindRuntime(RASTER_PLAY_WINDOW_KIND_NAVIGATOR, "Navigator", RASTER_PLAY_BODY_KEY_NAVIGATOR),
+			new WindowKindRuntime(RASTER_PLAY_WINDOW_KIND_COMPOSITE, "Composite", RASTER_PLAY_BODY_KEY_COMPOSITE, undefined, this.compositeMeasures(), this.compositeEngagement()),
+			new WindowKindRuntime(RASTER_PLAY_WINDOW_KIND_NAVIGATOR, "Navigator", RASTER_PLAY_BODY_KEY_NAVIGATOR, undefined, this.navigatorMeasures(), this.navigatorEngagement()),
 		];
+		for (const windowKind of this.mainMode.windowKinds) {
+			enforcePlaygroundWindowEngagementInput(windowKind.engagement, `Raster play window "${windowKind.id}"`);
+		}
 	}
 
 	subscribe(listener: () => void): () => void {
@@ -755,6 +842,7 @@ export class RasterPlayController extends Controller implements PlaygroundFixtur
 
 	private bump(): void {
 		this.interactionRevision += 1;
+		this.rebuildShellMode();
 		for (const listener of this.listeners) listener();
 		this.emit();
 	}
@@ -844,6 +932,28 @@ export class RasterPlayController extends Controller implements PlaygroundFixtur
 
 	run(command: string, args: Record<string, unknown> = {}): void {
 		switch (command) {
+			case "compositeEngagementInput":
+			case "navigatorEngagementInput":
+				return;
+			case "setCameraZoom": {
+				const zoom = typeof args.value === "number" ? args.value : Number(args.value);
+				if (!Number.isFinite(zoom)) return;
+				const camera = { ...this.projection().camera, zoom };
+				this.commitDocument(applyRasterEditOp(this.projection(), { op: "setCamera", camera }));
+				return;
+			}
+			case "setBrushSize": {
+				const size = typeof args.value === "number" ? args.value : Number(args.value);
+				if (!Number.isFinite(size)) return;
+				this.commitDocument(applyRasterEditOp(this.projection(), { op: "setBrushSize", size }));
+				return;
+			}
+			case "setBrushOpacity": {
+				const opacity = typeof args.value === "number" ? args.value : Number(args.value);
+				if (!Number.isFinite(opacity)) return;
+				this.commitDocument({ ...this.projection(), brushOpacity: opacity });
+				return;
+			}
 			case "setActiveFixture": {
 				const fixtureId = String(args.fixtureId ?? "");
 				if (isPlaygroundNoFixtureId(fixtureId)) {

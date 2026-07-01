@@ -39,6 +39,9 @@ import {
 	type UiNode,
 	type UiTreeItemNode,
 	type UiTreeNode,
+	type WindowMeasure,
+	type WindowEngagement,
+	enforcePlaygroundWindowEngagementInput,
 } from "@semio-tech/framework-playground-core";
 import {
 	DocumentVcsStore,
@@ -638,6 +641,7 @@ export class FormsPlayController extends Controller implements PlaygroundFixture
 		const previous = this.projection();
 		recordProjectionChange(this.docStore, [{ op: "setDocument", document: next }]);
 		this.tryValues = {};
+		this.rebuildShellMode();
 		this.notifySnapshot();
 		this.emit();
 	}
@@ -690,12 +694,79 @@ export class FormsPlayController extends Controller implements PlaygroundFixture
 		this.commitDocument(spec);
 	}
 
+	private editMeasures(): readonly WindowMeasure[] {
+		const spec = this.projection();
+		return [
+			{
+				kind: "slider",
+				id: "forms-edit-steps",
+				label: "Steps",
+				value: spec.steps.length,
+				min: 1,
+				max: Math.max(spec.steps.length, 1),
+				step: 1,
+				onChange: formsPlayCmd("addStep"),
+			},
+		];
+	}
+
+	private tryMeasures(): readonly WindowMeasure[] {
+		const spec = this.projection();
+		const questionCount = spec.steps.reduce((count, step) => count + step.questions.length, 0);
+		return [
+			{
+				kind: "slider",
+				id: "forms-try-questions",
+				label: "Questions",
+				value: questionCount,
+				min: 0,
+				max: Math.max(questionCount, 1),
+				step: 1,
+				onChange: formsPlayCmd("exportFixture"),
+			},
+		];
+	}
+
+	private editEngagement(): WindowEngagement {
+		return {
+			sessionActive: false,
+			input: {
+				id: "forms-edit-engagement",
+				value: "",
+				placeholder: "Add step",
+				onChange: formsPlayCmd("editEngagementInput"),
+				onSubmit: formsPlayCmd("addStep"),
+			},
+			possibleEngagements: [
+				{ id: "forms-add-step", label: "Add step", command: formsPlayCmd("addStep") },
+				{ id: "forms-add-question", label: "Add question", command: formsPlayCmd("addQuestion", { kind: "text" }) },
+			],
+		};
+	}
+
+	private tryEngagement(): WindowEngagement {
+		return {
+			sessionActive: false,
+			input: {
+				id: "forms-try-engagement",
+				value: "",
+				placeholder: "Export JSON",
+				onChange: formsPlayCmd("tryEngagementInput"),
+				onSubmit: formsPlayCmd("exportFixture"),
+			},
+			status: [{ id: "forms-try-values", text: `${Object.keys(this.tryValues).length} answered` }],
+		};
+	}
+
 	private rebuildShellMode(): void {
 		this.mainMode.tools = buildFormsPlayToolbarTools(this.id);
 		this.mainMode.windowKinds = [
-			new WindowKindRuntime(FORMS_PLAY_WINDOW_KIND_EDIT, "Edit", FORMS_PLAY_BODY_KEY_EDIT),
-			new WindowKindRuntime(FORMS_PLAY_WINDOW_KIND_TRY, "Try", FORMS_PLAY_BODY_KEY_TRY),
+			new WindowKindRuntime(FORMS_PLAY_WINDOW_KIND_EDIT, "Edit", FORMS_PLAY_BODY_KEY_EDIT, undefined, this.editMeasures(), this.editEngagement()),
+			new WindowKindRuntime(FORMS_PLAY_WINDOW_KIND_TRY, "Try", FORMS_PLAY_BODY_KEY_TRY, undefined, this.tryMeasures(), this.tryEngagement()),
 		];
+		for (const windowKind of this.mainMode.windowKinds) {
+			enforcePlaygroundWindowEngagementInput(windowKind.engagement, `Forms play window "${windowKind.id}"`);
+		}
 	}
 
 	private patchQuestionField(questionId: string, field: string, rawValue: unknown): void {
@@ -935,6 +1006,7 @@ export class FormsPlayController extends Controller implements PlaygroundFixture
 			const values = (args as { values?: FormValues }).values;
 			if (values && typeof values === "object") {
 				this.tryValues = values;
+				this.rebuildShellMode();
 				this.notifySnapshot();
 				this.emit();
 			}
@@ -942,6 +1014,7 @@ export class FormsPlayController extends Controller implements PlaygroundFixture
 		}
 		if (command === "resetTry") {
 			this.tryValues = {};
+			this.rebuildShellMode();
 			this.notifySnapshot();
 			this.emit();
 			return;

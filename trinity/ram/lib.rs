@@ -256,17 +256,58 @@ impl Graph {
     }
 
     pub fn recompute_derived(&mut self) {
-        let root = self
-            .root_node_id
-            .clone()
-            .or_else(|| self.nodes.keys().next().cloned());
-        let Some(root_id) = root else { return };
+        if self.nodes.is_empty() {
+            return;
+        }
         let mut flat: BTreeMap<String, (f64, f64)> = BTreeMap::new();
-        flat.insert(root_id.clone(), (0.0, 0.0));
-        let mut queue = vec![root_id];
+        if let Some(root_id) = self.root_node_id.clone().or_else(|| self.nodes.keys().next().cloned()) {
+            Self::extend_flat_positions_from_seed(self, &mut flat, root_id);
+        }
+        while flat.len() < self.nodes.len() {
+            let remaining: BTreeSet<String> = self.nodes.keys().filter(|id| !flat.contains_key(*id)).cloned().collect();
+            if remaining.is_empty() {
+                break;
+            }
+            let seed = remaining
+                .iter()
+                .find(|id| !Self::has_incoming_from_remaining(self, id, &remaining))
+                .cloned()
+                .unwrap_or_else(|| remaining.iter().next().expect("remaining non-empty").clone());
+            Self::extend_flat_positions_from_seed(self, &mut flat, seed);
+        }
+        for (node_id, (u, v)) in flat {
+            if let Some(node) = self.nodes.get_mut(&node_id) {
+                let mut obj = BTreeMap::new();
+                obj.insert("u".into(), PropertyValue::Number(u));
+                obj.insert("v".into(), PropertyValue::Number(v));
+                node.properties.insert("flatPosition".into(), PropertyValue::Object(obj));
+            }
+        }
+    }
+
+    fn has_incoming_from_remaining(graph: &Graph, node_id: &str, remaining: &BTreeSet<String>) -> bool {
+        graph.edges.values().any(|e| {
+            let Some(tgt_node) = port_node_id(&e.target) else {
+                return false;
+            };
+            if tgt_node != node_id {
+                return false;
+            }
+            port_node_id(&e.source)
+                .map(|src_node| remaining.contains(src_node))
+                .unwrap_or(false)
+        })
+    }
+
+    fn extend_flat_positions_from_seed(graph: &Graph, flat: &mut BTreeMap<String, (f64, f64)>, seed_id: String) {
+        if flat.contains_key(&seed_id) {
+            return;
+        }
+        flat.insert(seed_id.clone(), (0.0, 0.0));
+        let mut queue = vec![seed_id];
         while let Some(parent_id) = queue.pop() {
             let (pu, pv) = flat.get(&parent_id).copied().unwrap_or((0.0, 0.0));
-            let child_edges: Vec<(String, f64, f64)> = self
+            let child_edges: Vec<(String, f64, f64)> = graph
                 .edges
                 .values()
                 .filter_map(|e| {
@@ -285,14 +326,6 @@ impl Graph {
                     flat.insert(child_id.clone(), (cu, cv));
                     queue.push(child_id);
                 }
-            }
-        }
-        for (node_id, (u, v)) in flat {
-            if let Some(node) = self.nodes.get_mut(&node_id) {
-                let mut obj = BTreeMap::new();
-                obj.insert("u".into(), PropertyValue::Number(u));
-                obj.insert("v".into(), PropertyValue::Number(v));
-                node.properties.insert("flatPosition".into(), PropertyValue::Object(obj));
             }
         }
     }
@@ -463,6 +496,100 @@ mod tests {
         assert!(g.remove_node("root"));
         assert!(g.edges.is_empty());
         assert!(g.nodes.contains_key("child"));
+    }
+
+    #[test]
+    fn derived_flat_position_covers_disconnected_components() {
+        let fixture = GraphFixtureV1 {
+            schema: GraphFixtureV1::SCHEMA.into(),
+            name: "disconnected".into(),
+            manifest_id: Some("nakagin".into()),
+            manifest: Manifest::nakagin_default(),
+            camera: CameraV1::default(),
+            root_node_id: Some("root-a".into()),
+            nodes: vec![
+                Node {
+                    id: "root-a".into(),
+                    kind: "Piece".into(),
+                    name: "a".into(),
+                    x: 0.0,
+                    y: 0.0,
+                    width: 80.0,
+                    height: 40.0,
+                    properties: PropertyBag::new(),
+                    ports: vec![Port { id: "out".into(), kind: "Connector".into(), direction: PortDirection::Out, properties: PropertyBag::new() }],
+                },
+                Node {
+                    id: "child-a".into(),
+                    kind: "Piece".into(),
+                    name: "a-child".into(),
+                    x: 100.0,
+                    y: 0.0,
+                    width: 80.0,
+                    height: 40.0,
+                    properties: PropertyBag::new(),
+                    ports: vec![Port { id: "in".into(), kind: "Connector".into(), direction: PortDirection::In, properties: PropertyBag::new() }],
+                },
+                Node {
+                    id: "root-b".into(),
+                    kind: "Piece".into(),
+                    name: "b".into(),
+                    x: 300.0,
+                    y: 200.0,
+                    width: 80.0,
+                    height: 40.0,
+                    properties: PropertyBag::new(),
+                    ports: vec![Port { id: "out".into(), kind: "Connector".into(), direction: PortDirection::Out, properties: PropertyBag::new() }],
+                },
+                Node {
+                    id: "child-b".into(),
+                    kind: "Piece".into(),
+                    name: "b-child".into(),
+                    x: 400.0,
+                    y: 200.0,
+                    width: 80.0,
+                    height: 40.0,
+                    properties: PropertyBag::new(),
+                    ports: vec![Port { id: "in".into(), kind: "Connector".into(), direction: PortDirection::In, properties: PropertyBag::new() }],
+                },
+            ],
+            edges: vec![
+                Edge {
+                    id: "e-a".into(),
+                    kind: "Connection".into(),
+                    source: "root-a:out".into(),
+                    target: "child-a:in".into(),
+                    properties: {
+                        let mut p = PropertyBag::new();
+                        p.insert("u".into(), PropertyValue::Number(2.0));
+                        p.insert("v".into(), PropertyValue::Number(1.0));
+                        p
+                    },
+                },
+                Edge {
+                    id: "e-b".into(),
+                    kind: "Connection".into(),
+                    source: "root-b:out".into(),
+                    target: "child-b:in".into(),
+                    properties: {
+                        let mut p = PropertyBag::new();
+                        p.insert("u".into(), PropertyValue::Number(3.0));
+                        p.insert("v".into(), PropertyValue::Number(-1.0));
+                        p
+                    },
+                },
+            ],
+        };
+        let mut g = Graph::from_fixture(fixture).unwrap();
+        g.recompute_derived();
+        let child_a = g.node("child-a").unwrap();
+        let child_b = g.node("child-b").unwrap();
+        let flat_a = child_a.properties.get("flatPosition").unwrap().as_object().unwrap();
+        let flat_b = child_b.properties.get("flatPosition").unwrap().as_object().unwrap();
+        assert_eq!(flat_a.get("u").and_then(PropertyValue::as_f64), Some(2.0));
+        assert_eq!(flat_a.get("v").and_then(PropertyValue::as_f64), Some(1.0));
+        assert_eq!(flat_b.get("u").and_then(PropertyValue::as_f64), Some(3.0));
+        assert_eq!(flat_b.get("v").and_then(PropertyValue::as_f64), Some(-1.0));
     }
 }
 // #endregion 🔖Tests

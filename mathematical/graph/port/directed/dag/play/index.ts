@@ -32,6 +32,9 @@ import {
   type UiNode,
   type UiTreeItemNode,
   type UiTreeSectionNode,
+  type AppTools,
+  type ToolLeaf,
+  toolCollection,
 } from "@semio-tech/framework-playground-core";
 
 import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
@@ -94,6 +97,27 @@ const DAG_PLAY_CATALOGUE_NODE_KINDS = [
 
 function dagPlayCmd(command: string, args?: Record<string, unknown>): CommandDescriptor {
   return { controllerId: DAG_PLAY_CONTROLLER_ID, command, args };
+}
+
+/** @emoji 🧰 DAG play footer toolbar. */
+export function buildDagPlayToolbarTools(controllerId: string, orientation: DagLayoutOrientation): AppTools {
+  const layoutToggle = (id: string, label: string, value: DagLayoutOrientation): ToolLeaf => ({
+    id,
+    kind: "toggle",
+    label,
+    iconId: value === "leftRight" ? "arrow-right" : "arrow-down",
+    pressed: orientation === value,
+    controllerId,
+    command: "setOrientation",
+    args: { orientation: value },
+  });
+  return [
+    toolCollection("layout", "layout-grid", [
+      { kind: "button", id: "dag.reorganize", label: "Reorganize", iconId: "refresh-cw", controllerId, command: "reorganize" },
+      layoutToggle("dag.orientation.lr", "Left to right", "leftRight"),
+      layoutToggle("dag.orientation.tb", "Top to bottom", "topBottom"),
+    ]),
+  ];
 }
 
 function buildDagLayoutOptionsJson(layerSpacing: number, siblingGap: number, orientation: DagLayoutOrientation): string {
@@ -494,6 +518,7 @@ export class DagPlayController extends Controller {
   }
 
   private rebuildShellMode(): void {
+    this.mainMode.tools = buildDagPlayToolbarTools(DAG_PLAY_CONTROLLER_ID, this.orientation);
     this.mainMode.windowKinds = [
       new WindowKindRuntime(DAG_PLAY_WINDOW_KIND_ID, "DAG", DAG_PLAY_BODY_KEY_MAIN, undefined, this.windowMeasures(), this.windowEngagement()),
     ];

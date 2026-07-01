@@ -4,4 +4,4 @@ emoji: 🔧
 
 # Procedural
 
-Procedural is a [flow-based](../flow/AGENTS.md) editor for [breps](../geometry/brep/AGENTS.md)
+Procedural is a [flow-based](../flow/AGENTS.md) editor for [breps](../kernel/3d/AGENTS.md)

@@ -9,7 +9,7 @@
     "test": "bun nx run @semio-tech/cad-js-core:test"
   },
   "dependencies": {
-    "@semio-tech/geometry-brep-js": "workspace:*"
+    "@semio-tech/kernel-3d-js": "workspace:*"
   },
   "devDependencies": {
     "@semio-tech/cad-js-kernel-brepjs": "workspace:*",

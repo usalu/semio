@@ -15,7 +15,7 @@ export default defineConfig({
 			"@semio-tech/procedural-3d-react": resolve(root, "../react/index.tsx"),
 			"@semio-tech/flow-react": resolve(root, "../../../flow/react/index.tsx"),
 			"@semio-tech/flow-core": resolve(root, "../../../flow/core/pkg/flow_core.js"),
-			"@semio-tech/geometry-brep-js": resolve(root, "../../../geometry/brep/js/index.ts"),
+			"@semio-tech/kernel-3d-js": resolve(root, "../../../kernel/3d/js/index.ts"),
 			"@semio-tech/flow-module-brep": resolve(root, "../../../flow/module/brep/pkg/flow_module_brep.js"),
 			"@semio-tech/flow-module-bim": resolve(root, "../../../flow/module/bim/pkg/flow_module_bim.js"),
 			"@semio-tech/flow-module-core": resolve(root, "../../../flow/module/core/pkg/flow_module_core.js"),

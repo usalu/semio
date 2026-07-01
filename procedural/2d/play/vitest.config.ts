@@ -15,7 +15,7 @@ export default defineConfig({
 			"@semio-tech/procedural-2d-react": resolve(root, "../react/index.tsx"),
 			"@semio-tech/flow-react": resolve(root, "../../../flow/react/index.tsx"),
 			"@semio-tech/flow-core": resolve(root, "../../../flow/core/pkg/flow_core.js"),
-			"@semio-tech/geometry-drawing-js": resolve(root, "../../../geometry/drawing/js/index.ts"),
+			"@semio-tech/kernel-2d-js": resolve(root, "../../../kernel/2d/js/index.ts"),
 			"@semio-tech/flow-module-draw": resolve(root, "../../../flow/module/draw/pkg/flow_module_draw.js"),
 			"@semio-tech/flow-module-core": resolve(root, "../../../flow/module/core/pkg/flow_module_core.js"),
 			"@semio-tech/flow-module-math": resolve(root, "../../../flow/module/math/pkg/flow_module_math.js"),

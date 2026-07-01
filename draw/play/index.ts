@@ -45,6 +45,9 @@ import {
 	type UiNode,
 	type UiTreeItemNode,
 	type UiTreeNode,
+	type WindowMeasure,
+	type WindowEngagement,
+	enforcePlaygroundWindowEngagementInput,
 } from "@semio-tech/framework-playground-core";
 import {
 	DocumentVcsStore,
@@ -1023,12 +1026,88 @@ export class DrawPlayController extends Controller implements PlaygroundFixtureH
 		this.rebuildShellMode();
 	}
 
+	private engagementInput = "";
+
+	private canvasMeasures(): readonly WindowMeasure[] {
+		const doc = this.projection();
+		const selected = this.selectedIds.length === 1 ? findDrawLayer(doc, this.selectedIds[0]!) : null;
+		return [
+			{
+				kind: "slider",
+				id: "draw-canvas-zoom",
+				label: "Zoom",
+				value: doc.camera.zoom,
+				min: 0.1,
+				max: 8,
+				step: 0.05,
+				onChange: drawPlayCmd("setCameraZoom"),
+			},
+			{
+				kind: "slider",
+				id: "draw-canvas-opacity",
+				label: "Opacity",
+				value: selected?.opacity ?? 1,
+				min: 0,
+				max: 1,
+				step: 0.01,
+				onChange: drawPlayCmd("setSelectedOpacity"),
+			},
+		];
+	}
+
+	private navigatorMeasures(): readonly WindowMeasure[] {
+		return [
+			{
+				kind: "slider",
+				id: "draw-navigator-zoom",
+				label: "Navigator zoom",
+				value: this.projection().camera.zoom,
+				min: 0.05,
+				max: 2,
+				step: 0.05,
+				onChange: drawPlayCmd("setCameraZoom"),
+			},
+		];
+	}
+
+	private canvasEngagement(): WindowEngagement {
+		const doc = this.projection();
+		return {
+			sessionActive: false,
+			input: {
+				id: "draw-canvas-engagement",
+				value: this.engagementInput,
+				placeholder: "Layer name",
+				onChange: drawPlayCmd("engagementInput"),
+				onSubmit: drawPlayCmd("engagementSubmit"),
+			},
+			status: [{ id: "draw-layer-count", text: `${flattenDrawLayers(doc.layers).length} layers · ${this.selectedIds.length} selected` }],
+		};
+	}
+
+	private navigatorEngagement(): WindowEngagement {
+		return {
+			sessionActive: false,
+			input: {
+				id: "draw-navigator-engagement",
+				value: "",
+				placeholder: "Select all",
+				onChange: drawPlayCmd("navigatorEngagementInput"),
+				onSubmit: drawPlayCmd("selectAll"),
+			},
+			status: [{ id: "draw-active-tool", text: this.projection().activeTool ?? "selectDirect" }],
+		};
+	}
+
 	private rebuildShellMode(): void {
 		this.mainMode.tools = this.buildTools();
 		this.mainMode.windowKinds = [
-			new WindowKindRuntime(DRAW_PLAY_WINDOW_KIND_COMPOSITE, "Canvas", DRAW_PLAY_BODY_KEY_COMPOSITE),
-			new WindowKindRuntime(DRAW_PLAY_WINDOW_KIND_NAVIGATOR, "Navigator", DRAW_PLAY_BODY_KEY_NAVIGATOR),
+			new WindowKindRuntime(DRAW_PLAY_WINDOW_KIND_COMPOSITE, "Canvas", DRAW_PLAY_BODY_KEY_COMPOSITE, undefined, this.canvasMeasures(), this.canvasEngagement()),
+			new WindowKindRuntime(DRAW_PLAY_WINDOW_KIND_NAVIGATOR, "Navigator", DRAW_PLAY_BODY_KEY_NAVIGATOR, undefined, this.navigatorMeasures(), this.navigatorEngagement()),
 		];
+		for (const windowKind of this.mainMode.windowKinds) {
+			enforcePlaygroundWindowEngagementInput(windowKind.engagement, `Draw play window "${windowKind.id}"`);
+		}
 	}
 
 	private projection(): DrawDocument {
@@ -1143,6 +1222,37 @@ export class DrawPlayController extends Controller implements PlaygroundFixtureH
 
 	run(command: string, args: Record<string, unknown> = {}): void {
 		switch (command) {
+			case "engagementInput": {
+				const value = String(args.value ?? "");
+				if (value !== this.engagementInput) {
+					this.engagementInput = value;
+					this.rebuildShellMode();
+					this.emit();
+				}
+				return;
+			}
+			case "engagementSubmit": {
+				const value = String(args.value ?? this.engagementInput).trim();
+				if (value && this.selectedIds.length === 1) {
+					this.run("patchLayers", { layerIds: this.selectedIds, field: "name", value });
+				}
+				return;
+			}
+			case "navigatorEngagementInput":
+				return;
+			case "setCameraZoom": {
+				const zoom = typeof args.value === "number" ? args.value : Number(args.value);
+				if (!Number.isFinite(zoom)) return;
+				const camera = { ...this.projection().camera, zoom };
+				this.patchDocument((doc) => applyDrawEditOp(doc, { op: "setCamera", camera }));
+				return;
+			}
+			case "setSelectedOpacity": {
+				const opacity = typeof args.value === "number" ? args.value : Number(args.value);
+				if (!Number.isFinite(opacity) || !this.selectedIds.length) return;
+				this.run("patchLayers", { layerIds: this.selectedIds, field: "opacity", value: opacity });
+				return;
+			}
 			case "setActiveFixture": {
 				const fixtureId = String(args.fixtureId ?? "");
 				if (isPlaygroundNoFixtureId(fixtureId)) {

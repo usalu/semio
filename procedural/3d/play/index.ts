@@ -6,6 +6,9 @@ import {
     buildFlowPlayCatalogueTree,
     buildFlowPlayHierarchyTree,
     buildFlowPlayInspectorTree,
+    buildFlowGeneratePlayToolbarTools,
+    buildGeneratePlayWindowEngagement,
+    buildGeneratePlayWindowMeasures,
     createDefaultGenerations,
     parseFlowPlayFixtureJson,
     runGenerationCommand,
@@ -741,6 +744,7 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 	private fixtureEdges: ProceduralFixtureEdge[] = [];
 	private previewOffNodeIds: string[] = [];
 	private showMode: ProceduralPreviewShowMode = "everything";
+	private generateEngagementInput = "";
 	private selectionMode: ProceduralPlaySelectionMode = "default";
 	private selectionMethod: ProceduralPlaySelectionMethod = "rectangle";
 	private interactionRevision = 0;
@@ -792,10 +796,6 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 
 	/** @emoji 🔄 Rebuilds {@link ModeRuntime.tools} from the latest toolbar snapshot. */
 	rebuildToolbarTools(): void {
-		if (!this.hostBridge) {
-			this.mainMode.tools = undefined;
-			return;
-		}
 		this.mainMode.tools = buildProceduralPlayToolbarTools(this.toolbarState(), this.id);
 	}
 
@@ -1451,10 +1451,46 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 	}
 
 	private rebuildGenerateMode(): void {
-		this.generateMode.windowKinds = [new WindowKindRuntime(PROCEDURAL_PLAY_WINDOW_KIND_ID, "Generate", PROCEDURAL_PLAY_BODY_KEY_GENERATE)];
+		this.generateMode.tools = buildFlowGeneratePlayToolbarTools(PROCEDURAL_3D_PLAY_CONTROLLER_ID);
+		this.generateMode.windowKinds = [
+			new WindowKindRuntime(
+				PROCEDURAL_PLAY_WINDOW_KIND_ID,
+				"Generate",
+				PROCEDURAL_PLAY_BODY_KEY_GENERATE,
+				undefined,
+				buildGeneratePlayWindowMeasures(PROCEDURAL_PLAY_WINDOW_KIND_ID, PROCEDURAL_3D_PLAY_CONTROLLER_ID, this.generations, this.selectedGenerationId),
+				buildGeneratePlayWindowEngagement(
+					PROCEDURAL_3D_PLAY_CONTROLLER_ID,
+					this.generateEngagementInput,
+					this.generatePreviewText,
+					proceduralPlayCmd("generateEngagementInput"),
+					proceduralPlayCmd("generateEngagementSubmit"),
+				),
+			),
+		];
+		for (const windowKind of this.generateMode.windowKinds) {
+			enforcePlaygroundWindowEngagementInput(windowKind.engagement, `Procedural 3D play generate window "${windowKind.id}"`);
+		}
 	}
 
 	override run(command: string, args?: unknown): void {
+		if (command === "generateEngagementInput") {
+			const value = (args as { value?: string }).value;
+			if (typeof value === "string" && value !== this.generateEngagementInput) {
+				this.generateEngagementInput = value;
+				this.rebuildGenerateMode();
+				this.emit();
+			}
+			return;
+		}
+		if (command === "generateEngagementSubmit") {
+			const name = (args as { value?: string }).value ?? this.generateEngagementInput;
+			const id = this.selectedGenerationId;
+			if (typeof name === "string" && name.trim() && id) {
+				this.run("renameGeneration", { id, name: name.trim() });
+			}
+			return;
+		}
 		if (command === "engagementInput") {
 			const value = (args as { value?: string }).value;
 			if (typeof value === "string" && value !== this.engagementInput) {
@@ -1819,6 +1855,7 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 				this.generations = [...next.generations];
 				this.selectedGenerationId = next.selectedGenerationId;
 				if (next.generatePreviewText) this.generatePreviewText = next.generatePreviewText;
+				this.rebuildGenerateMode();
 				this.interactionRevision += 1;
 				this.emit();
 			});

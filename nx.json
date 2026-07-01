@@ -64,7 +64,7 @@
       "cache": false
     },
     "test": {
-      "dependsOn": ["^test"],
+      "dependsOn": [],
       "inputs": ["default", "^default"],
       "cache": true
     },

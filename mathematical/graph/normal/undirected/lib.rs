@@ -101,8 +101,21 @@ pub mod fixture_layout {
         }
     }
 
+    const FORCE_GRAPH_COMPATIBLE_SCHEMAS: &[&str] = &[
+        "puzzle.2d.fixture/v1",
+        "reasoning.mindmap.fixture/v1",
+        "trinity.graph/v1",
+    ];
+
     fn fixture_schema_ok(schema: Option<&str>) -> bool {
-        matches!(schema, Some("puzzle.2d.fixture/v1") | Some("reasoning.mindmap.fixture/v1"))
+        matches!(schema, Some(s) if FORCE_GRAPH_COMPATIBLE_SCHEMAS.contains(&s))
+    }
+
+    fn fixture_schema_error_message() -> String {
+        format!(
+            "schema must be one of: {}",
+            FORCE_GRAPH_COMPATIBLE_SCHEMAS.join(", ")
+        )
     }
 
     fn node_repulsion_radius(node: &Value) -> f64 {
@@ -157,7 +170,7 @@ pub mod fixture_layout {
             return Err("fixture root must be object".into());
         };
         if !fixture_schema_ok(root.get("schema").and_then(|v| v.as_str())) {
-            return Err("schema must be puzzle.2d.fixture/v1 or reasoning.mindmap.fixture/v1".into());
+            return Err(fixture_schema_error_message());
         }
         let edges = root.get("edges").and_then(|v| v.as_array()).cloned().unwrap_or_default();
         let Some(nodes) = root.get_mut("nodes").and_then(|v| v.as_array_mut()) else {

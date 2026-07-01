@@ -1649,9 +1649,9 @@ dependencies = [
  "flow_module_math",
  "flow_module_text",
  "framework_vcs",
- "geometry_brep_engine",
  "infinite_cavas",
  "js-sys",
+ "kernel_3d_engine",
  "mathematical_graph_port_directed_dag",
  "neural_engine",
  "serde",
@@ -1682,10 +1682,10 @@ version = "0.1.0"
 dependencies = [
  "base64",
  "flow_module_wasm",
- "geometry_brep_brepkit",
- "geometry_brep_engine",
  "getrandom 0.3.4",
  "js-sys",
+ "kernel_3d_brepkit",
+ "kernel_3d_engine",
  "neural_engine",
  "serde",
  "serde_json",
@@ -1718,9 +1718,9 @@ name = "flow_module_draw"
 version = "0.1.0"
 dependencies = [
  "flow_module_wasm",
- "geometry_drawing_engine",
- "geometry_drawing_rs",
  "getrandom 0.3.4",
+ "kernel_2d_engine",
+ "kernel_2d_rs",
  "neural_engine",
  "serde",
  "serde_json",
@@ -2079,53 +2079,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "geometry_brep_brepkit"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "base64",
- "brepkit-check",
- "brepkit-geometry",
- "brepkit-io",
- "brepkit-math",
- "brepkit-operations",
- "brepkit-topology",
- "geometry_brep_engine",
-]
-
-[[package]]
-name = "geometry_brep_engine"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "futures",
- "pollster",
- "rayon",
- "serde",
-]
-
-[[package]]
-name = "geometry_drawing_engine"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "futures",
- "pollster",
- "rayon",
- "serde",
-]
-
-[[package]]
-name = "geometry_drawing_rs"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "geo",
- "geometry_drawing_engine",
- "serde",
-]
-
-[[package]]
 name = "getrandom"
 version = "0.2.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2176,7 +2129,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "gis_map"
+name = "gis_2d"
 version = "0.1.0"
 dependencies = [
  "framework_vcs",
@@ -3337,6 +3290,53 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1130d80c7374efad55a117d715a3af9368f0fa7a2c54573afc15a188cd984837"
 dependencies = [
  "mutate_once",
+]
+
+[[package]]
+name = "kernel_2d_engine"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "futures",
+ "pollster",
+ "rayon",
+ "serde",
+]
+
+[[package]]
+name = "kernel_2d_rs"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "geo",
+ "kernel_2d_engine",
+ "serde",
+]
+
+[[package]]
+name = "kernel_3d_brepkit"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "base64",
+ "brepkit-check",
+ "brepkit-geometry",
+ "brepkit-io",
+ "brepkit-math",
+ "brepkit-operations",
+ "brepkit-topology",
+ "kernel_3d_engine",
+]
+
+[[package]]
+name = "kernel_3d_engine"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "futures",
+ "pollster",
+ "rayon",
+ "serde",
 ]
 
 [[package]]
@@ -4591,7 +4591,7 @@ dependencies = [
  "ecow",
  "fontdb",
  "framework_vcs",
- "gis_map",
+ "gis_2d",
  "image",
  "js-sys",
  "mathematical_graph_port_directed_normal",
@@ -6467,6 +6467,7 @@ dependencies = [
 name = "trinity_jack"
 version = "0.1.0"
 dependencies = [
+ "framework_vcs",
  "serde",
  "serde_json",
  "trinity_ram",

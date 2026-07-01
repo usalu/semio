@@ -658,10 +658,6 @@ export class ShootingPlayController extends Controller implements PlaygroundFixt
 	}
 
 	rebuildToolbarTools(): void {
-		if (!this.hostBridge) {
-			this.mainMode.tools = undefined;
-			return;
-		}
 		this.mainMode.tools = buildShootingPlayToolbarTools(this.toolbarState(), this.id);
 	}
 

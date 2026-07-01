@@ -1667,7 +1667,6 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, playgro
     if (navbarFixtureSelect) {
       items.push({
         key: "fixture",
-        centered: true,
         content: navbarFixtureSelect,
       });
       items.push(navbarFillItem());

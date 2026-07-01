@@ -10,7 +10,7 @@ export default defineConfig({
 	root,
 	resolve: {
 		alias: [
-			{ find: "@semio-tech/geometry-brep-js", replacement: resolve(root, "../../../geometry/brep/js/index.ts") },
+			{ find: "@semio-tech/kernel-3d-js", replacement: resolve(root, "../../../kernel/3d/js/index.ts") },
 			{ find: "@semio-tech/flow-core", replacement: resolve(root, "../../../flow/core/pkg/flow_core.js") },
 			{ find: "@semio-tech/flow-react", replacement: resolve(root, "../../../flow/react/index.tsx") },
 			{ find: "@semio-tech/flow-module-brep", replacement: resolve(root, "../../../flow/module/brep/pkg/flow_module_brep.js") },

@@ -26,6 +26,11 @@ import {
   type WindowBodyViewContext,
   type WindowLayout,
   type WindowMeasure,
+  type WindowEngagement,
+  type AppTools,
+  type ToolLeaf,
+  toolCollection,
+  enforcePlaygroundWindowEngagementInput,
 } from "@semio-tech/framework-playground-core";
 import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
 import {
@@ -197,6 +202,16 @@ export function buildTrinityJackPlayLayout(): WindowLayout {
   };
 }
 
+/** @emoji 🧰 Trinity jack play footer toolbar. */
+export function buildTrinityJackPlayToolbarTools(controllerId: string): AppTools {
+  return [
+    toolCollection("query", "terminal", [
+      { kind: "button", id: "trinity-jack.run", label: "Run query", iconId: "play", controllerId, command: "runJackQuery" },
+      { kind: "button", id: "trinity-jack.reorganize", label: "Reorganize", iconId: "refresh-cw", controllerId, command: "reorganize" },
+    ]),
+  ];
+}
+
 export class TrinityJackPlayController extends Controller implements PlaygroundFixtureHost {
   readonly mainMode = new ModeRuntime("explore", "Explore", undefined);
   private readonly docStore = new DocumentVcsStore<TrinityFixtureV1, TrinityFixtureEditOp>({
@@ -306,22 +321,96 @@ export class TrinityJackPlayController extends Controller implements PlaygroundF
     };
   }
 
-  private windowMeasures(): readonly WindowMeasure[] {
-    return [this.lodMeasure(TRINITY_JACK_PLAY_WINDOW_KIND_ID)];
+  private windowMeasures(scopeId: string): readonly WindowMeasure[] {
+    return [this.lodMeasure(scopeId)];
+  }
+
+  private graphEngagement(): WindowEngagement {
+    return {
+      sessionActive: false,
+      input: {
+        id: "trinity-jack-graph-input",
+        value: "",
+        placeholder: "Reorganize graph",
+        onChange: { controllerId: TRINITY_JACK_PLAY_CONTROLLER_ID, command: "graphEngagementInput" },
+        onSubmit: { controllerId: TRINITY_JACK_PLAY_CONTROLLER_ID, command: "reorganize" },
+      },
+      possibleEngagements: [
+        { id: "trinity-jack-reorganize", label: "Reorganize", command: { controllerId: TRINITY_JACK_PLAY_CONTROLLER_ID, command: "reorganize" } },
+      ],
+    };
+  }
+
+  private editorEngagement(): WindowEngagement {
+    return {
+      sessionActive: false,
+      input: {
+        id: "trinity-jack-query-input",
+        value: this.jackQuery,
+        placeholder: "Jack query",
+        onChange: { controllerId: TRINITY_JACK_PLAY_CONTROLLER_ID, command: "setJackQuery" },
+        onSubmit: { controllerId: TRINITY_JACK_PLAY_CONTROLLER_ID, command: "runJackQuery" },
+      },
+      possibleEngagements: TRINITY_JACK_PLAY_FIXTURE_OPTIONS.map((row) => ({
+        id: `trinity-jack-preset-${row.id}`,
+        label: row.label,
+        command: { controllerId: TRINITY_JACK_PLAY_CONTROLLER_ID, command: "setActiveFixture", args: { fixtureId: row.id } },
+      })),
+    };
+  }
+
+  private resultsEngagement(): WindowEngagement {
+    return {
+      sessionActive: false,
+      input: {
+        id: "trinity-jack-results-input",
+        value: "",
+        placeholder: "Run query",
+        onChange: { controllerId: TRINITY_JACK_PLAY_CONTROLLER_ID, command: "resultsEngagementInput" },
+        onSubmit: { controllerId: TRINITY_JACK_PLAY_CONTROLLER_ID, command: "runJackQuery" },
+      },
+      status: [{ id: "trinity-jack-results-status", text: `${this.selectedNodeIds.length} selected` }],
+    };
   }
 
   private bump(): void {
     this.interactionRevision += 1;
+    this.rebuildShellMode();
     this.notifySnapshot();
     this.emit();
   }
 
   private rebuildShellMode(): void {
+    this.mainMode.tools = buildTrinityJackPlayToolbarTools(TRINITY_JACK_PLAY_CONTROLLER_ID);
     this.mainMode.windowKinds = [
-      new WindowKindRuntime(TRINITY_JACK_PLAY_WINDOW_KIND_ID, "Nakagin Graph", TRINITY_JACK_PLAY_BODY_KEY_MAIN, undefined, this.windowMeasures()),
-      new WindowKindRuntime(TRINITY_JACK_PLAY_EDITOR_WINDOW_KIND_ID, "Jack Query", TRINITY_JACK_PLAY_BODY_KEY_EDITOR),
-      new WindowKindRuntime(TRINITY_JACK_PLAY_RESULTS_WINDOW_KIND_ID, "Results", TRINITY_JACK_PLAY_BODY_KEY_RESULTS),
+      new WindowKindRuntime(
+        TRINITY_JACK_PLAY_WINDOW_KIND_ID,
+        "Nakagin Graph",
+        TRINITY_JACK_PLAY_BODY_KEY_MAIN,
+        undefined,
+        this.windowMeasures(TRINITY_JACK_PLAY_WINDOW_KIND_ID),
+        this.graphEngagement(),
+      ),
+      new WindowKindRuntime(
+        TRINITY_JACK_PLAY_EDITOR_WINDOW_KIND_ID,
+        "Jack Query",
+        TRINITY_JACK_PLAY_BODY_KEY_EDITOR,
+        undefined,
+        this.windowMeasures(TRINITY_JACK_PLAY_EDITOR_WINDOW_KIND_ID),
+        this.editorEngagement(),
+      ),
+      new WindowKindRuntime(
+        TRINITY_JACK_PLAY_RESULTS_WINDOW_KIND_ID,
+        "Results",
+        TRINITY_JACK_PLAY_BODY_KEY_RESULTS,
+        undefined,
+        [{ kind: "toggle", id: "trinity-jack-results-wrap", label: "Auto-run", iconId: "play", pressed: true, onChange: { controllerId: TRINITY_JACK_PLAY_CONTROLLER_ID, command: "runJackQuery" } }],
+        this.resultsEngagement(),
+      ),
     ];
+    for (const windowKind of this.mainMode.windowKinds) {
+      enforcePlaygroundWindowEngagementInput(windowKind.engagement, `Trinity jack play window "${windowKind.id}"`);
+    }
   }
 
   run(command: string, args?: unknown): void {

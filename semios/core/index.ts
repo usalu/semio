@@ -403,6 +403,7 @@ export interface AppVcsHandler<TProjection = unknown, TOp = unknown> {
 	readonly format: string;
 	readonly createEnvelope: (id: string) => DocumentVcsEnvelope<TProjection, TOp>;
 	readonly applyOp: (projection: TProjection, operation: TOp) => TProjection;
+	readonly backwardsOp?: (projection: TProjection, operation: TOp) => readonly TOp[];
 	readonly serializeEnvelope: (envelope: DocumentVcsEnvelope<TProjection, TOp>) => string;
 	readonly deserializeEnvelope: (json: string) => DocumentVcsEnvelope<TProjection, TOp>;
 	readonly materializeProjection: (source: SemiosSourceDocument) => TProjection;
@@ -425,6 +426,7 @@ export function createTypedAppVcsHandler<TProjection, TOp>(
 	schema: string,
 	empty: () => TProjection,
 	applyOp: (projection: TProjection, operation: TOp) => TProjection,
+	backwardsOp?: (projection: TProjection, operation: TOp) => readonly TOp[],
 ): AppVcsHandler<TProjection, TOp> {
 	return {
 		format,
@@ -441,6 +443,7 @@ export function createTypedAppVcsHandler<TProjection, TOp>(
 			if (source.inline) return JSON.parse(source.inline) as TProjection;
 			return empty();
 		},
+		...(backwardsOp ? { backwardsOp } : {}),
 	};
 }
 
@@ -670,8 +673,9 @@ export function applyAppOperationToSource(
 	const store = new DocumentVcsStore({
 		envelope,
 		applyOp: handler.applyOp as (projection: unknown, operation: unknown) => unknown,
+		backwardsOp: handler.backwardsOp as ((projection: unknown, operation: unknown) => readonly unknown[]) | undefined,
 	});
-	store.dispatch({ kind: "apply", forwards: forwards as never[], backwards: backwards as never[] });
+	store.dispatch({ kind: "apply", operations: forwards as never[] });
 	return { ...source, vcsJson: handler.serializeEnvelope(store.getEnvelope()) };
 }
 //#endregion 🔖AppVcsRegistry

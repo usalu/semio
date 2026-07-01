@@ -2,6 +2,7 @@
 
 pub use infinite_cavas as cavas;
 use mathematical_graph_port_directed::{
+    force_graph::{apply_force_graph_layout_to_fixture_v1_value, ForceGraphLayoutOptions},
     geometry::{compute_edge_bezier_points, distance_between, handle_outward_at_node_rim, handle_exterior_cap_fill_path, handle_exterior_cap_stroke_path},
     BoardEngine, HandleRole, VelloThemePalette,
 };
@@ -9,7 +10,7 @@ use serde::{Deserialize, Serialize};
 use std::cell::Cell;
 use std::collections::HashMap;
 use trinity_jack::{execute, parse};
-use trinity_ram::{Graph, PortDirection, PropertyValue, port_key};
+use trinity_ram::{Graph, GraphFixtureV1, PortDirection, PropertyValue, port_key};
 
 pub use trinity_jack::{
     complete as complete_jack, parse as parse_jack, run as run_jack, run_json as run_jack_json, tokenize as tokenize_jack,
@@ -349,6 +350,72 @@ pub fn trinity_lod_scale_json() -> String {
         .collect();
     serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into())
 }
+
+fn trinity_graph_to_force_layout_fixture(graph: &Graph) -> serde_json::Value {
+    let nodes: Vec<serde_json::Value> = graph
+        .nodes
+        .values()
+        .map(|node| {
+            let w = if node.width > 0.0 { node.width } else { 88.0 };
+            let h = if node.height > 0.0 { node.height } else { 40.0 };
+            let handles: Vec<serde_json::Value> = node
+                .ports
+                .iter()
+                .map(|port| serde_json::json!({ "id": port_key(&node.id, &port.id) }))
+                .collect();
+            serde_json::json!({
+                "id": node.id,
+                "x": node.x,
+                "y": node.y,
+                "width": w,
+                "height": h,
+                "shape": "rectangle",
+                "handles": handles,
+            })
+        })
+        .collect();
+    let edges: Vec<serde_json::Value> = graph
+        .edges
+        .values()
+        .map(|edge| serde_json::json!({ "source": edge.source, "target": edge.target }))
+        .collect();
+    serde_json::json!({
+        "schema": GraphFixtureV1::SCHEMA,
+        "nodes": nodes,
+        "edges": edges,
+    })
+}
+
+fn apply_force_layout_positions_to_trinity_graph(graph: &mut Graph, fixture: &serde_json::Value) -> Result<(), String> {
+    let nodes = fixture
+        .get("nodes")
+        .and_then(|v| v.as_array())
+        .ok_or_else(|| "force layout fixture missing nodes".to_string())?;
+    for node in nodes {
+        let Some(obj) = node.as_object() else {
+            continue;
+        };
+        let Some(id) = obj.get("id").and_then(|v| v.as_str()) else {
+            continue;
+        };
+        let Some(entry) = graph.nodes.get_mut(id) else {
+            continue;
+        };
+        if let Some(x) = obj.get("x").and_then(|v| v.as_f64()) {
+            entry.x = x;
+        }
+        if let Some(y) = obj.get("y").and_then(|v| v.as_f64()) {
+            entry.y = y;
+        }
+    }
+    Ok(())
+}
+
+fn apply_force_layout_to_trinity_graph(graph: &mut Graph) -> Result<(), String> {
+    let mut fixture = trinity_graph_to_force_layout_fixture(graph);
+    apply_force_graph_layout_to_fixture_v1_value(&mut fixture, &ForceGraphLayoutOptions::default())?;
+    apply_force_layout_positions_to_trinity_graph(graph, &fixture)
+}
 // #endregion 🔖Lod
 
 // #region 🔖TrinityHost
@@ -433,9 +500,9 @@ impl TrinityHost {
     }
 
     pub fn reorganize(&mut self) {
-        for (i, node) in self.graph.nodes.values_mut().enumerate() {
-            node.x = i as f64 * 140.0 - 200.0;
-            node.y = (i % 3) as f64 * 100.0;
+        if let Err(err) = apply_force_layout_to_trinity_graph(&mut self.graph) {
+            eprintln!("[DEBUG] trinity reorganize force layout failed: {err}");
+            return;
         }
         self.rebuild_engine();
     }
@@ -550,7 +617,6 @@ impl TrinityHost {
     fn rebuild_engine(&mut self) {
         self.graph.recompute_derived();
         self.engine = TrinityBoardEngine::new();
-        self.engine.enforce_acyclic = true;
         self.node_id_map.clear();
         self.handle_key_map.clear();
         self.edge_id_map.clear();
@@ -1002,6 +1068,16 @@ mod tests {
         let host = TrinityHost::from_graph(nakagin_graph());
         assert_eq!(host.engine.nodes.len(), 6);
         assert!(!host.engine.edges.is_empty());
+        assert!(!host.engine.enforce_acyclic);
+    }
+
+    #[test]
+    fn trinity_host_reorganize_moves_nodes() {
+        let mut host = TrinityHost::from_graph(nakagin_graph());
+        let before: Vec<(f64, f64)> = host.graph.nodes.values().map(|n| (n.x, n.y)).collect();
+        host.reorganize();
+        let after: Vec<(f64, f64)> = host.graph.nodes.values().map(|n| (n.x, n.y)).collect();
+        assert_ne!(before, after);
     }
 
     #[test]

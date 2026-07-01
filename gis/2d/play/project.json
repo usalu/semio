@@ -1,0 +1,62 @@
+{
+  "name": "@semio-tech/gis-2d-play",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "gis/2d/play",
+        "command": "bun ./script.ts dev",
+        "env": {
+          "GIS_2D_PLAY_PORT": "6040",
+          "NODE_OPTIONS": "",
+          "NX_NATIVE_COMMAND_RUNNER": "false",
+          "NX_TASKS_RUNNER_DYNAMIC_OUTPUT": "false",
+          "NX_TUI": "false",
+          "VSCODE_INSPECTOR_OPTIONS": ""
+        },
+        "forwardAllArgs": true
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "gis/2d/play",
+        "command": "bun ./script.ts build",
+        "forwardAllArgs": true
+      }
+    },
+    "build-tiles": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "gis/2d/play",
+        "command": "bun ./script.ts build-tiles",
+        "forwardAllArgs": true
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "gis/2d/play",
+        "command": "bun ./script.ts test",
+        "forwardAllArgs": true
+      }
+    },
+    "tiles": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "gis/2d/play",
+        "command": "bun ./script.ts tiles",
+        "forwardAllArgs": true
+      }
+    },
+    "fixture": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "gis/2d/play",
+        "command": "bun ./script.ts fixture",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

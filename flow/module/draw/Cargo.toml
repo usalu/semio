@@ -14,8 +14,8 @@ standalone-wasm = ["dep:wasm-bindgen"]
 
 [dependencies]
 flow_module_wasm = { path = "../wasm" }
-geometry_drawing_engine = { path = "../../../geometry/drawing/engine" }
-geometry_drawing_rs = { path = "../../../geometry/drawing/rs" }
+kernel_2d_engine = { path = "../../../kernel/2d/engine" }
+kernel_2d_rs = { path = "../../../kernel/2d/rs" }
 neural_engine = { path = "../../../neural/engine" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"

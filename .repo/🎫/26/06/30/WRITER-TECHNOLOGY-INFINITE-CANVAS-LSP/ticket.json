@@ -1,9 +1,9 @@
 {
   "title": "Writer Technology Infinite Canvas Lsp",
   "emoji": "✍️",
-  "status": "open",
+  "status": "closed",
   "description": "Create a new writer technology: full-blown text editor on infinite canvas (Vello/WebGPU via infinite/cavas), real JSON-RPC LSP client/server in Web Worker, writer playground with jack fixture, jack language server (lint/format/hover/completion), integrate WriterCanvas into trinity/jack shell replacing CodeEditor.",
-  "summary": "Enter now inserts newlines where jack syntax allows readability breaks (after keywords, commas, closing parens, complete identifiers) instead of only opening completions. Added jackNewlineAllowedAt/writerNewlineAllowedAt in writer-core with tests. React handles Enter explicitly: newline when allowed, Tab accepts completions, Ctrl/Cmd+Space still triggers suggestions.",
+  "summary": "Fixed writer layout: replaced infinite-canvas center-origin camera with top-left editor viewport (scroll via camera.y only). Text and caret now start at top-left with PAD_Y padding. Line numbers use right-aligned gutter column with visible tint, gutter background, and separator. Hit-testing accounts for PAD_Y. 17 Rust tests pass; WASM rebuilt.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1767"
   },

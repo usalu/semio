@@ -3691,9 +3691,7 @@ function useGhostController(): GhostController {
       const dx = pointerEvent.clientX - pending.x;
       const dy = pointerEvent.clientY - pending.y;
       if (dx * dx + dy * dy < PANEL_GHOST_MOVE_THRESHOLD_PX * PANEL_GHOST_MOVE_THRESHOLD_PX) return;
-      const shouldBegin = shouldBeginAutomaticGhostInteraction(pending.target);
-      console.debug("[DEBUG] panel ghost automatic drag", { shouldBegin });
-      if (!shouldBegin) {
+      if (!shouldBeginAutomaticGhostInteraction(pending.target)) {
         pendingRef.current = null;
         return;
       }
@@ -23509,6 +23507,31 @@ if (treeVitest) {
       expect(shouldBeginAutomaticGhostInteraction(document.getElementById("row-label"))).toBe(true);
       expect(shouldBeginAutomaticGhostInteraction(document.getElementById("slider"))).toBe(false);
       expect(shouldBeginAutomaticGhostInteraction(document.getElementById("window-option"))).toBe(false);
+    });
+
+    it("GhostProvider keeps sibling window UI visible while a nested slider moves", async () => {
+      const { fireEvent, render } = await import("@testing-library/react");
+      render(
+        <GhostProvider>
+          <GhostRegionShell>
+            <div data-dim id="window-ui">Window UI</div>
+            <div data-slot="control-tree-row" data-dim>
+              <div data-slot="slider-content" data-dim>
+                <div data-slot="slider" id="nested-slider"></div>
+              </div>
+            </div>
+          </GhostRegionShell>
+        </GhostProvider>,
+      );
+      const slider = document.getElementById("nested-slider")!;
+      const region = slider.closest("[data-ghost-region]")!;
+
+      fireEvent.pointerDown(slider, { button: 0, clientX: 10, clientY: 10 });
+      fireEvent.pointerMove(document, { clientX: 20, clientY: 10 });
+
+      expect(region.hasAttribute("data-ghost")).toBe(false);
+      expect(document.getElementById("window-ui")).not.toBeNull();
+      fireEvent.pointerUp(document);
     });
 
     it("treeRowChromeClasses uses hover tokens for highlight and active tokens for selection", () => {

@@ -1802,12 +1802,22 @@ export class Puzzle2dPlayShellController extends Controller {
 	}
 
 	/** @emoji 🔄 Rebuilds {@link ModeRuntime.tools} from the latest host toolbar snapshot. */
+	private toolbarState(): Puzzle2dPlayToolbarState {
+		return (
+			this.hostBridge?.getToolbarState() ?? {
+				puzzle2dActiveTool: this.activeTool,
+				puzzle2dSuggestionOffset: this.suggestionOffset,
+				puzzle2dGridSnapEnabled: false,
+				puzzle2dRedrawPlaying: false,
+				puzzle2dSelectionMethod: "rectangle",
+				puzzle2dSelectionMode: "default",
+				puzzle2dSelectionTargets: { nodes: true, edges: true, handles: true },
+			}
+		);
+	}
+
 	rebuildToolbarTools(): void {
-		if (!this.hostBridge) {
-			this.mainMode.tools = undefined;
-			return;
-		}
-		this.mainMode.tools = buildPuzzle2dPlayToolbarTools(this.hostBridge.getToolbarState(), this.id);
+		this.mainMode.tools = buildPuzzle2dPlayToolbarTools(this.toolbarState(), this.id);
 	}
 
 	private windowMeasuresForPane(paneId: Puzzle2dPlayPaneId): readonly WindowMeasure[] {
@@ -1844,6 +1854,7 @@ export class Puzzle2dPlayShellController extends Controller {
 		for (const windowKind of this.mainMode.windowKinds) {
 			enforcePlaygroundWindowEngagementInput(windowKind.engagement, `Puzzle 2D play window "${windowKind.id}"`);
 		}
+		this.rebuildToolbarTools();
 	}
 
 	override run(command: string, args?: unknown): void {

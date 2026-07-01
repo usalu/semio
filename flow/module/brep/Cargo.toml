@@ -14,8 +14,8 @@ standalone-wasm = ["dep:wasm-bindgen"]
 
 [dependencies]
 flow_module_wasm = { path = "../wasm" }
-geometry_brep_brepkit = { path = "../../../geometry/brep/rs" }
-geometry_brep_engine = { path = "../../../geometry/brep/engine" }
+kernel_3d_brepkit = { path = "../../../kernel/3d/rs" }
+kernel_3d_engine = { path = "../../../kernel/3d/engine" }
 neural_engine = { path = "../../../neural/engine" }
 base64 = "0.22"
 serde = { version = "1.0.219", features = ["derive"] }

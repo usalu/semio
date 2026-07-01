@@ -1,0 +1,13 @@
+{
+  "name": "@semio-tech/kernel-2d-js",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "kernel/2d/js",
+        "command": "bun vitest run --config vitest.config.ts"
+      }
+    }
+  }
+}

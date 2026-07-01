@@ -1657,3 +1657,103 @@ mod tests {
     }
 }
 // #endregion 🔖Tests
+
+// #region 🔖DocumentVcs
+use framework_vcs::{
+    create_document_vcs_envelope, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff,
+};
+
+pub const TRINITY_FIXTURE_SCHEMA: &str = "trinity.fixture/v1";
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TrinityFixtureDocument {
+    pub fixture: GraphFixtureV1,
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TrinityFixtureDiff {
+    pub fixture: Option<GraphFixtureV1>,
+}
+
+impl OperationDiff<TrinityFixtureDocument> for TrinityFixtureDiff {
+    fn apply(&self, projection: &TrinityFixtureDocument) -> TrinityFixtureDocument {
+        TrinityFixtureDocument {
+            fixture: self.fixture.clone().unwrap_or_else(|| projection.fixture.clone()),
+        }
+    }
+
+    fn absorb(&mut self, other: Self) {
+        if other.fixture.is_some() {
+            self.fixture = other.fixture;
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "op", rename_all = "camelCase")]
+pub enum TrinityFixtureOp {
+    SetDocument { fixture: GraphFixtureV1 },
+}
+
+impl Operation<TrinityFixtureDocument> for TrinityFixtureOp {
+    type Diff = TrinityFixtureDiff;
+
+    fn diff(&self, _projection: &TrinityFixtureDocument) -> TrinityFixtureDiff {
+        match self {
+            TrinityFixtureOp::SetDocument { fixture } => TrinityFixtureDiff {
+                fixture: Some(fixture.clone()),
+            },
+        }
+    }
+
+    fn backwards(&self, projection: &TrinityFixtureDocument) -> Vec<Self> {
+        vec![TrinityFixtureOp::SetDocument {
+            fixture: projection.fixture.clone(),
+        }]
+    }
+}
+
+pub type TrinityFixtureEnvelope = DocumentVcsEnvelope<TrinityFixtureDocument, TrinityFixtureOp>;
+pub type TrinityFixtureStore = DocumentVcsStore<TrinityFixtureDocument, TrinityFixtureOp>;
+
+pub fn empty_trinity_fixture_projection() -> TrinityFixtureDocument {
+    TrinityFixtureDocument {
+        fixture: GraphFixtureV1 {
+            schema: GraphFixtureV1::SCHEMA.into(),
+            name: "jack".into(),
+            manifest_id: None,
+            manifest: trinity_ram::Manifest::nakagin_default(),
+            camera: trinity_ram::CameraV1::default(),
+            nodes: Vec::new(),
+            edges: Vec::new(),
+            root_node_id: None,
+        },
+    }
+}
+
+#[cfg(test)]
+mod trinity_fixture_vcs_tests {
+    use super::*;
+
+    #[test]
+    fn trinity_fixture_document_vcs_replays_ops() {
+        let mut store = TrinityFixtureStore::new(create_document_vcs_envelope(
+            TRINITY_FIXTURE_SCHEMA,
+            "jack",
+            empty_trinity_fixture_projection(),
+            None,
+        ));
+        let mut fixture = empty_trinity_fixture_projection().fixture;
+        fixture.name = "patched".into();
+        store
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![TrinityFixtureOp::SetDocument { fixture }],
+                description: None,
+            })
+            .expect("apply");
+        assert_eq!(store.projection().expect("projection").fixture.name, "patched");
+    }
+}
+// #endregion 🔖DocumentVcs

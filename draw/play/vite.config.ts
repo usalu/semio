@@ -17,7 +17,7 @@ export default createPlaygroundPlayViteConfig({
 		{ find: "@semio-tech/draw-play", replacement: path.resolve(playDir, "./index.ts") },
 		{ find: "@semio-tech/draw-react", replacement: path.resolve(playDir, "../react/index.tsx") },
 		{ find: "@semio-tech/draw-core", replacement: path.resolve(playDir, "../core/index.ts") },
-		{ find: "@semio-tech/geometry-drawing-js", replacement: path.resolve(playDir, "../../geometry/drawing/js/index.ts") },
+		{ find: "@semio-tech/kernel-2d-js", replacement: path.resolve(playDir, "../../kernel/2d/js/index.ts") },
 	],
 	resolveDedupe: ["react", "react-dom", "@semio-tech/draw-react"],
 	optimizeDeps: {

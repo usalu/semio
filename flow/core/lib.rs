@@ -4212,7 +4212,7 @@ mod tests {
         let host = host_with_test_bridge();
         let document = host.document();
         assert_eq!(document.schema, "flow.document/v1");
-        assert!(!document.flow.nodes.is_empty());
+        assert!(!document.tree.neurons.is_empty());
         let registry = neural::Registry::new();
         let evaluator = Evaluator::new(&registry);
         let mut dispatch = |kind: &str, input: &Dictionary| test_math_bridge(kind, input);

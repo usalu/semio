@@ -1,9 +1,9 @@
 {
   "title": "Panel Ghost Interaction Mode",
   "emoji": "👻",
-  "status": "open",
+  "status": "closed",
   "description": "When UI interaction starts in a panel, active element stays visible, rest dims to 5% opacity, panel becomes click-through to canvas.",
-  "summary": "Completed global panel hiding for window and panel interactions. Ghosted controls now resolve to fully hidden opacity even when inline opacity is present; window command chrome, desktop/mobile panel frames, tree gutters, and vertical guides participate in ghost visibility. Only a directly interacted tree row remains active, with its logical parent rows and connecting indentation guides preserved. Added regression coverage for tree ancestry and non-tree controls. Focused Nx tests and lint pass; the full package suite retains six unrelated existing tree-render failures, typecheck retains the package's existing broad error set, and Storybook's Layout preview is blocked by its current empty-root/docgen failure.",
+  "summary": "Refined automatic panel ghosting so nested dimmed UI controls in side panels and window options do not trigger global hiding. Canvas/content drags and direct tree-row interactions retain ghost behavior, including tree ancestry visibility. Added helper and GhostProvider regression coverage for sliders and window options. Focused Nx tests pass (4 relevant tests), ui-react lint passes, and the live Forms fixture kept both windows populated with no data-ghost state while the Height Factor slider value changed; browser console reported no errors.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1759"
   },

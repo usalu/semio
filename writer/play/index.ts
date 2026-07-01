@@ -14,6 +14,7 @@ import {
 	createDefaultLayout,
 	createPlayAppRuntime,
 	createProductPlaygroundPlatform,
+	enforcePlaygroundWindowEngagementInput,
 	isPlaygroundFixtureLocked,
 	isPlaygroundNoFixtureId,
 	playgroundResolvedFixtureId,
@@ -30,6 +31,7 @@ import {
 	type UiTreeItemNode,
 	type UiTreeNode,
 	type WindowEngagement,
+	type WindowMeasure,
 } from "@semio-tech/framework-playground-core";
 import {
 	DocumentVcsStore,
@@ -250,6 +252,7 @@ export class WriterPlayController extends Controller implements PlaygroundFixtur
 	private editorSelectionSignal = 0;
 	private externalHoverSignal = 0;
 	private editorSettings: WriterEditorSettings = { ...WRITER_DEFAULT_EDITOR_SETTINGS };
+	private engagementInput = "";
 
 	constructor(commandBus: CommandBus, hostNotify: () => void, initialJson: string) {
 		super(WRITER_PLAY_CONTROLLER_ID, commandBus, hostNotify);
@@ -368,6 +371,20 @@ export class WriterPlayController extends Controller implements PlaygroundFixtur
 
 	run(command: string, args?: Record<string, unknown>): void {
 		switch (command) {
+			case "engagementInput": {
+				const value = String(args?.value ?? "");
+				if (value !== this.engagementInput) {
+					this.engagementInput = value;
+					this.rebuildShellMode();
+					this.emit();
+				}
+				return;
+			}
+			case "engagementSubmit": {
+				const value = String(args?.value ?? this.engagementInput);
+				this.applyEngagement(value);
+				return;
+			}
 			case "setDocumentJson": {
 				const json = String(args?.json ?? "");
 				this.loadFixtureJson(json);
@@ -493,10 +510,56 @@ export class WriterPlayController extends Controller implements PlaygroundFixtur
 		}
 	}
 
+	private windowMeasures(): readonly WindowMeasure[] {
+		const settings = this.editorSettings;
+		return [
+			{
+				kind: "slider",
+				id: "writer-font-size-measure",
+				label: "Font size",
+				value: settings.fontPx,
+				min: 10,
+				max: 24,
+				step: 1,
+				onChange: writerPlayCmd("setEditorSetting", { field: "fontPx" }),
+			},
+			{
+				kind: "slider",
+				id: "writer-line-height-measure",
+				label: "Line height",
+				value: settings.lineHeight,
+				min: 16,
+				max: 40,
+				step: 1,
+				onChange: writerPlayCmd("setEditorSetting", { field: "lineHeight" }),
+			},
+			{
+				kind: "toggle",
+				id: "writer-line-numbers-measure",
+				label: "Line numbers",
+				iconId: "list-ordered",
+				pressed: settings.showLineNumbers,
+				onChange: writerPlayCmd("toggleLineNumbers"),
+			},
+		];
+	}
+
 	private windowEngagement(): WindowEngagement {
 		const settings = this.editorSettings;
 		return {
 			sessionActive: false,
+			input: {
+				id: "writer-engagement-input",
+				value: this.engagementInput,
+				placeholder: "Format, lint, line numbers",
+				onChange: writerPlayCmd("engagementInput"),
+				onSubmit: writerPlayCmd("engagementSubmit"),
+			},
+			possibleEngagements: [
+				{ id: "writer-format", label: "Format", command: writerPlayCmd("formatDocument") },
+				{ id: "writer-lint", label: "Lint", command: writerPlayCmd("lintDocument") },
+				{ id: "writer-line-numbers", label: "Line numbers", command: writerPlayCmd("toggleLineNumbers") },
+			],
 			options: [
 				{
 					id: "writer-line-numbers",
@@ -545,8 +608,51 @@ export class WriterPlayController extends Controller implements PlaygroundFixtur
 	private rebuildShellMode(): void {
 		this.mainMode.tools = buildWriterPlayToolbarTools();
 		this.mainMode.windowKinds = [
-			new WindowKindRuntime(WRITER_PLAY_WINDOW_KIND, "Jack", WRITER_PLAY_BODY_KEY, undefined, [], this.windowEngagement()),
+			new WindowKindRuntime(WRITER_PLAY_WINDOW_KIND, "Jack", WRITER_PLAY_BODY_KEY, undefined, this.windowMeasures(), this.windowEngagement()),
 		];
+		for (const windowKind of this.mainMode.windowKinds) {
+			enforcePlaygroundWindowEngagementInput(windowKind.engagement, `Writer play window "${windowKind.id}"`);
+		}
+	}
+
+	private applyEngagement(value: string): void {
+		const trimmed = value.trim().toLowerCase();
+		if (!trimmed) return;
+		if (trimmed === "format") {
+			this.run("formatDocument");
+			this.engagementInput = "";
+			this.rebuildShellMode();
+			return;
+		}
+		if (trimmed === "lint") {
+			this.run("lintDocument");
+			this.engagementInput = "";
+			this.rebuildShellMode();
+			return;
+		}
+		if (trimmed === "line numbers" || trimmed === "numbers" || trimmed === "gutter") {
+			this.run("toggleLineNumbers");
+			this.engagementInput = "";
+			this.rebuildShellMode();
+			return;
+		}
+		const fontMatch = trimmed.match(/^font(?:\s+size)?\s+(\d{2})$/);
+		if (fontMatch) {
+			this.run("setEditorSetting", { field: "fontPx", value: Number(fontMatch[1]) });
+			this.engagementInput = "";
+			this.rebuildShellMode();
+			return;
+		}
+		const tabMatch = trimmed.match(/^tab(?:\s+size)?\s+(\d)$/);
+		if (tabMatch) {
+			this.run("setEditorSetting", { field: "tabSize", value: Number(tabMatch[1]) });
+			this.engagementInput = "";
+			this.rebuildShellMode();
+			return;
+		}
+		this.engagementInput = "";
+		this.rebuildShellMode();
+		this.emit();
 	}
 }
 
@@ -640,6 +746,14 @@ if (import.meta.vitest) {
 			ctrl.run("setActiveFixture", { fixtureId: "jack" });
 			expect(ctrl.getDocument().id).toBe("jack");
 			expect(ctrl.getDocument().languageId).toBe("jack");
+		});
+
+		it("requires engagement.input on the main window", () => {
+			const bus = new CommandBus();
+			const ctrl = new WriterPlayController(bus, () => {}, writerDocumentToJson(createWriterDocument({ id: "jack", languageId: "jack", text: "" })));
+			const engagement = ctrl.mainMode.windowKinds[0]?.engagement;
+			expect(() => enforcePlaygroundWindowEngagementInput(engagement, "Writer play window")).not.toThrow();
+			expect(engagement?.input?.placeholder).toContain("Format");
 		});
 	});
 

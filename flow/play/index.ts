@@ -33,6 +33,9 @@ import {
   type UiNode,
   type UiTreeItemNode,
   type UiTreeSectionNode,
+  type AppTools,
+  type ToolLeaf,
+  toolCollection,
 } from "@semio-tech/framework-playground-core";
 
 import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
@@ -167,6 +170,81 @@ export function buildFlowPlayExtensionsTree(entries: readonly FlowExtensionEntry
 
 function flowPlayCmd(command: string, args?: Record<string, unknown>): CommandDescriptor {
   return { controllerId: FLOW_PLAY_CONTROLLER_ID, command, args };
+}
+
+/** @emoji 🧰 Flow edit-mode footer toolbar. */
+export function buildFlowPlayToolbarTools(controllerId: string, orientation: FlowLayoutOrientation): AppTools {
+  const layoutToggle = (id: string, label: string, value: FlowLayoutOrientation): ToolLeaf => ({
+    id,
+    kind: "toggle",
+    label,
+    iconId: value === "leftRight" ? "arrow-right" : "arrow-down",
+    pressed: orientation === value,
+    controllerId,
+    command: "setOrientation",
+    args: { orientation: value },
+  });
+  return [
+    toolCollection("layout", "layout-grid", [
+      { kind: "button", id: "flow.reorganize", label: "Reorganize", iconId: "refresh-cw", controllerId, command: "reorganize" },
+      layoutToggle("flow.orientation.lr", "Left to right", "leftRight"),
+      layoutToggle("flow.orientation.tb", "Top to bottom", "topBottom"),
+    ]),
+  ];
+}
+
+/** @emoji 🧰 Flow generate-mode footer toolbar. */
+export function buildFlowGeneratePlayToolbarTools(controllerId: string): AppTools {
+  return [
+    toolCollection("generations", "layers", [
+      { kind: "button", id: "flow.generate.add", label: "Add generation", iconId: "plus", controllerId, command: "addGeneration" },
+      { kind: "button", id: "flow.generate.remove", label: "Remove generation", iconId: "minus", controllerId, command: "removeGeneration" },
+    ]),
+  ];
+}
+
+/** @emoji 📏 Shared generate-window measures for flow and procedural playgrounds. */
+export function buildGeneratePlayWindowMeasures(
+  scopeId: string,
+  controllerId: string,
+  generations: readonly FlowGeneration[],
+  selectedGenerationId: string | null,
+): readonly WindowMeasure[] {
+  return [
+    {
+      kind: "select",
+      id: `${scopeId}-generation`,
+      label: "Generation",
+      value: selectedGenerationId ?? "",
+      items: generations.map((generation) => ({ id: generation.id, value: generation.id, label: generation.name })),
+      onChange: { controllerId, command: "selectGeneration" },
+    },
+  ];
+}
+
+/** @emoji 💬 Shared generate-window engagement for flow and procedural playgrounds. */
+export function buildGeneratePlayWindowEngagement(
+  controllerId: string,
+  inputValue: string,
+  previewText: string,
+  onInputChange: CommandDescriptor,
+  onRenameSubmit: CommandDescriptor,
+): WindowEngagement {
+  return {
+    sessionActive: false,
+    input: {
+      id: `${controllerId}-generate-rename`,
+      value: inputValue,
+      placeholder: "Rename generation",
+      onChange: onInputChange,
+      onSubmit: onRenameSubmit,
+    },
+    possibleEngagements: [
+      { id: "generate-add", label: "Add", command: { controllerId, command: "addGeneration" } },
+      { id: "generate-remove", label: "Remove", command: { controllerId, command: "removeGeneration" } },
+    ],
+    status: [{ id: "generate-preview", text: previewText || "—" }],
+  };
 }
 
 function flowPlayPanelCmd(controllerId: string, command: string, args?: Record<string, unknown>): CommandDescriptor {
@@ -509,6 +587,7 @@ export class FlowPlayController extends Controller {
   private lodModeByInstance: Record<string, DagLodModeKind> = {};
   private effectiveLod: DagDrawLodKind = "normal";
   private proximityDistance = FLOW_DEFAULT_PROXIMITY_DISTANCE;
+  private generateEngagementInput = "";
 
   constructor(commandBus: CommandBus, hostNotify: () => void) {
     super(FLOW_PLAY_CONTROLLER_ID, commandBus, hostNotify);
@@ -741,7 +820,22 @@ export class FlowPlayController extends Controller {
     };
   }
 
+  private generateWindowMeasures(): readonly WindowMeasure[] {
+    return buildGeneratePlayWindowMeasures(FLOW_PLAY_WINDOW_KIND_ID, FLOW_PLAY_CONTROLLER_ID, this.generations, this.selectedGenerationId);
+  }
+
+  private generateWindowEngagement(): WindowEngagement {
+    return buildGeneratePlayWindowEngagement(
+      FLOW_PLAY_CONTROLLER_ID,
+      this.generateEngagementInput,
+      this.generatePreviewText,
+      flowPlayCmd("generateEngagementInput"),
+      flowPlayCmd("generateEngagementSubmit"),
+    );
+  }
+
   private rebuildShellMode(): void {
+    this.mainMode.tools = buildFlowPlayToolbarTools(FLOW_PLAY_CONTROLLER_ID, this.orientation);
     this.mainMode.windowKinds = [
       new WindowKindRuntime(FLOW_PLAY_WINDOW_KIND_ID, "Flow", FLOW_PLAY_BODY_KEY_MAIN, undefined, this.windowMeasures(), this.windowEngagement()),
     ];
@@ -751,10 +845,40 @@ export class FlowPlayController extends Controller {
   }
 
   private rebuildGenerateMode(): void {
-    this.generateMode.windowKinds = [new WindowKindRuntime(FLOW_PLAY_WINDOW_KIND_ID, "Generate", FLOW_PLAY_BODY_KEY_GENERATE)];
+    this.generateMode.tools = buildFlowGeneratePlayToolbarTools(FLOW_PLAY_CONTROLLER_ID);
+    this.generateMode.windowKinds = [
+      new WindowKindRuntime(
+        FLOW_PLAY_WINDOW_KIND_ID,
+        "Generate",
+        FLOW_PLAY_BODY_KEY_GENERATE,
+        undefined,
+        this.generateWindowMeasures(),
+        this.generateWindowEngagement(),
+      ),
+    ];
+    for (const windowKind of this.generateMode.windowKinds) {
+      enforcePlaygroundWindowEngagementInput(windowKind.engagement, `Flow play generate window "${windowKind.id}"`);
+    }
   }
 
   override run(command: string, args?: unknown): void {
+    if (command === "generateEngagementInput") {
+      const value = (args as { value?: string }).value;
+      if (typeof value === "string" && value !== this.generateEngagementInput) {
+        this.generateEngagementInput = value;
+        this.rebuildGenerateMode();
+        this.emit();
+      }
+      return;
+    }
+    if (command === "generateEngagementSubmit") {
+      const name = (args as { value?: string }).value ?? this.generateEngagementInput;
+      const id = this.selectedGenerationId;
+      if (typeof name === "string" && name.trim() && id) {
+        this.run("renameGeneration", { id, name: name.trim() });
+      }
+      return;
+    }
     if (command === "engagementInput") {
       const value = (args as { value?: string }).value;
       if (typeof value === "string" && value !== this.engagementInput) {
@@ -949,6 +1073,7 @@ export class FlowPlayController extends Controller {
         this.generations = [...next.generations];
         this.selectedGenerationId = next.selectedGenerationId;
         if (next.generatePreviewText) this.generatePreviewText = next.generatePreviewText;
+        this.rebuildGenerateMode();
         this.notifySnapshot();
         this.emit();
       });

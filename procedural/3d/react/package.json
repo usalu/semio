@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@semio-tech/flow-react": "workspace:*",
-    "@semio-tech/geometry-brep-js": "workspace:*",
+    "@semio-tech/kernel-3d-js": "workspace:*",
     "@semio-tech/infinite-world-r3f": "workspace:*",
     "@semio-tech/puzzle-3d-react": "workspace:*",
     "@semio-tech/ui-react": "workspace:*",

@@ -7859,6 +7859,155 @@ pub mod vcs {
     }
     //#endregion 🌱 alternative
 
+    //#region 🔖kit_vcs
+    pub mod kit_vcs {
+        use framework_vcs::{
+            create_document_vcs_envelope, materialize_document_projection, DocumentVcsCommand, DocumentVcsEnvelope,
+            DocumentVcsStore, Operation as VcsOperation, OperationDiff,
+        };
+        use crate::external_adapters::futures_lite::future::block_on;
+        use crate::external_adapters::serde::{Deserialize, Serialize};
+        use crate::external_adapters::serde_json::Value;
+
+        pub const KIT_SNAPSHOT_SCHEMA: &str = "compose.kit/v1";
+
+        #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+        pub struct KitSnapshot(pub Value);
+
+        #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+        pub struct ComposeKitDiff(pub Value);
+
+        impl OperationDiff<KitSnapshot> for ComposeKitDiff {
+            fn apply(&self, projection: &KitSnapshot) -> KitSnapshot {
+                block_on(async {
+                    let graph = crate::kit_backbone::graph_new_overlay_from_initial_projection_json(projection.0.clone())
+                        .await
+                        .expect("overlay");
+                    let kit = graph.mutable_kit.read().await.clone();
+                    if let Some(diff) = wire_json_to_canonical_kit_diff(&self.0) {
+                        let _ = kit.apply_diff(&crate::operation::KitDiff(diff)).await;
+                    }
+                    KitSnapshot(crate::kit_backbone::initial_kit_projection_value(&kit).await)
+                })
+            }
+
+            fn absorb(&mut self, other: Self) {
+                if other.0.is_object() && !other.0.as_object().is_some_and(|o| o.is_empty()) {
+                    self.0 = other.0;
+                }
+            }
+        }
+
+        #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+        pub struct ComposeWireOperation {
+            pub kind: String,
+            pub input: Value,
+        }
+
+        impl ComposeWireOperation {
+            pub fn from_operation(op: &crate::operation::Operation) -> Self {
+                Self {
+                    kind: op.kind().to_string(),
+                    input: crate::kit_backbone::kit_operation_step_input_json(op),
+                }
+            }
+        }
+
+        impl VcsOperation<KitSnapshot> for ComposeWireOperation {
+            type Diff = ComposeKitDiff;
+
+            fn diff(&self, projection: &KitSnapshot) -> ComposeKitDiff {
+                block_on(async {
+                    let graph = crate::kit_backbone::graph_new_overlay_from_initial_projection_json(projection.0.clone())
+                        .await
+                        .expect("overlay");
+                    let kit = graph.mutable_kit.read().await.clone();
+                    let op = crate::kit_backbone::kit_operation_from_stored(&self.kind, &self.input)
+                        .await
+                        .expect("op");
+                    let diff = op.to_diff(&kit).await.expect("diff");
+                    ComposeKitDiff(crate::kit_backbone::canonical_kit_diff_to_wire_json(&diff.0))
+                })
+            }
+
+            fn backwards(&self, projection: &KitSnapshot) -> Vec<Self> {
+                block_on(async {
+                    let graph = crate::kit_backbone::graph_new_overlay_from_initial_projection_json(projection.0.clone())
+                        .await
+                        .expect("overlay");
+                    let kit = graph.mutable_kit.read().await.clone();
+                    let op = crate::kit_backbone::kit_operation_from_stored(&self.kind, &self.input)
+                        .await
+                        .expect("op");
+                    op.to_backwards(&kit)
+                        .await
+                        .expect("backwards")
+                        .into_iter()
+                        .map(|row| ComposeWireOperation::from_operation(&row))
+                        .collect()
+                })
+            }
+        }
+
+        fn wire_json_to_canonical_kit_diff(wire: &Value) -> Option<crate::operation::CanonicalKitDiff> {
+            let o = wire.as_object()?;
+            let mut diff = crate::operation::CanonicalKitDiff::default();
+            macro_rules! opt_str {
+                ($field:ident) => {
+                    if let Some(s) = o.get(stringify!($field)).and_then(|v| v.as_str()) {
+                        diff.$field = Some(s.to_string());
+                    }
+                };
+            }
+            opt_str!(name);
+            opt_str!(version);
+            opt_str!(description);
+            opt_str!(icon);
+            opt_str!(image);
+            opt_str!(remote);
+            opt_str!(homepage);
+            opt_str!(license);
+            opt_str!(preview);
+            Some(diff)
+        }
+
+        pub type KitSnapshotStore = DocumentVcsStore<KitSnapshot, ComposeWireOperation>;
+        pub type KitSnapshotEnvelope = DocumentVcsEnvelope<KitSnapshot, ComposeWireOperation>;
+
+        pub fn create_kit_snapshot_store(id: &crate::id::Id, initial: Value) -> KitSnapshotStore {
+            DocumentVcsStore::new(create_document_vcs_envelope(KIT_SNAPSHOT_SCHEMA, id.as_str(), KitSnapshot(initial), None))
+        }
+
+        pub fn materialize_kit_snapshot(envelope: &KitSnapshotEnvelope, applied: &[String]) -> KitSnapshot {
+            materialize_document_projection(envelope, applied).expect("materialize kit snapshot")
+        }
+
+        #[cfg(test)]
+        mod tests {
+            use super::*;
+            use crate::operation::{Input, Operation, Scope};
+
+            #[test]
+            fn kit_snapshot_vcs_rename_roundtrip() {
+                let baseline = Value::Object(Default::default());
+                let mut store = create_kit_snapshot_store(&crate::id::Id::from("ws-test"), baseline);
+                let op = Operation::RenameKit {
+                    scope: Scope::Kit,
+                    input: Input::Name { name: "patched".into() },
+                };
+                store
+                    .dispatch(DocumentVcsCommand::Apply {
+                        operations: vec![ComposeWireOperation::from_operation(&op)],
+                        description: None,
+                    })
+                    .expect("apply");
+                let snap = store.projection().expect("projection");
+                assert_eq!(snap.0.get("name").and_then(|v| v.as_str()), Some("patched"));
+            }
+        }
+    }
+    //#endregion 🔖kit_vcs
+
     /// @emoji 📦 Cached materialized [`Kit`] for a [`Workspace`](../../../schema/graphql/schema.golden.graphql) (`workspace_id` + `change_seq`).
     pub struct MaterializedSlot {
         pub workspace_id: Id,
@@ -7884,6 +8033,8 @@ pub mod vcs {
         pub the_kit_unsaved_edits: RwLock<Vec<Arc<Edit>>>,
         pub the_kit_workspace_seq: AtomicU64,
         pub op_history: RwLock<Vec<Arc<crate::operation::OperationInterface>>>,
+        /// @emoji 🗄️ Authoritative [`framework_vcs`] engine for [`TheKit`](../../../schema/graphql/schema.golden.graphql) kit projection replay.
+        pub the_kit_snapshot_store: std::sync::Mutex<kit_vcs::KitSnapshotStore>,
     }
 
     impl Default for Graph {
@@ -7905,11 +8056,21 @@ pub mod vcs {
                 the_kit_unsaved_edits: RwLock::new(Vec::new()),
                 the_kit_workspace_seq: AtomicU64::new(0),
                 op_history: RwLock::new(Vec::new()),
+                the_kit_snapshot_store: std::sync::Mutex::new(kit_vcs::create_kit_snapshot_store(
+                    &Id::default(),
+                    crate::external_adapters::serde_json::Value::Object(Default::default()),
+                )),
             }
         }
     }
 
     impl Graph {
+        fn placeholder_kit_snapshot_store() -> kit_vcs::KitSnapshotStore {
+            kit_vcs::create_kit_snapshot_store(
+                &Id::default(),
+                crate::external_adapters::serde_json::Value::Object(Default::default()),
+            )
+        }
         /// 🆕 Build a brand-new Graph; seeds [`Graph::mutable_kit`] from a deep-cloned empty [`Kit`] so [`Graph::initial_kit`] baselines never alias live mutation.
         pub async fn new() -> Arc<Self> {
             let id = Id::new().await;
@@ -7932,11 +8093,15 @@ pub mod vcs {
                     the_kit_unsaved_edits: RwLock::new(Vec::new()),
                     the_kit_workspace_seq: AtomicU64::new(0),
                     op_history: RwLock::new(Vec::new()),
+                    the_kit_snapshot_store: std::sync::Mutex::new(Self::placeholder_kit_snapshot_store()),
                 }
             });
             let baseline = g.mutable_kit.read().await.clone().deep_clone().await;
             *g.initial_kit.write().await = baseline.clone();
-            *g.mutable_kit.write().await = baseline;
+            *g.mutable_kit.write().await = baseline.clone();
+            let snap = crate::kit_backbone::initial_kit_projection_value(&baseline).await;
+            *g.the_kit_snapshot_store.lock().expect("kit vcs store") =
+                kit_vcs::create_kit_snapshot_store(&g.id, snap);
             g
         }
 
@@ -8040,21 +8205,33 @@ pub mod vcs {
                 }
             }
             let base = self.mutable_kit.read().await.clone();
-            let mat = base.deep_clone().await;
-            let mut edits: Vec<Arc<Edit>> = Vec::new();
-            edits.extend(saved);
-            edits.extend(unsaved);
-            for ed in edits {
-                let changes = ed.changes.read().await.clone();
-                for ch in changes {
-                    let forwards = ch.forwards.read().await.clone();
-                    for op in forwards {
-                        let diff = match op.to_diff(&mat).await {
-                            Ok(d) => d,
-                            Err(_) => continue,
-                        };
-                        if mat.apply_diff(&diff).await.is_err() {
-                            continue;
+            let mat = if ws == self.id {
+                let snap = {
+                    let store = self.the_kit_snapshot_store.lock().expect("kit vcs store");
+                    kit_vcs::materialize_kit_snapshot(store.envelope(), store.applied_change_ids())
+                };
+                let mat = base.deep_clone().await;
+                let _ = crate::kit_backbone::hydrate_kit_from_initial_projection_value(&mat, &snap.0).await;
+                mat
+            } else {
+                base.deep_clone().await
+            };
+            if ws != self.id {
+                let mut edits: Vec<Arc<Edit>> = Vec::new();
+                edits.extend(saved);
+                edits.extend(unsaved);
+                for ed in edits {
+                    let changes = ed.changes.read().await.clone();
+                    for ch in changes {
+                        let forwards = ch.forwards.read().await.clone();
+                        for op in forwards {
+                            let diff = match op.to_diff(&mat).await {
+                                Ok(d) => d,
+                                Err(_) => continue,
+                            };
+                            if mat.apply_diff(&diff).await.is_err() {
+                                continue;
+                            }
                         }
                     }
                 }
@@ -8128,6 +8305,7 @@ pub mod vcs {
                 },
             };
             *change.owner.write().await = change_owner;
+            let wire = kit_vcs::ComposeWireOperation::from_operation(&forward);
             change.forwards.write().await.push(forward);
             change.forward_record_ids.write().await.push(Id::new().await);
             let backward_count = backwards.len();
@@ -8137,6 +8315,14 @@ pub mod vcs {
             }
             if ws == self.id {
                 self.the_kit_workspace_seq.fetch_add(1, Ordering::Relaxed);
+                self.the_kit_snapshot_store
+                    .lock()
+                    .map_err(|_| ComposeError::invalid("kit vcs store lock poisoned"))?
+                    .dispatch(framework_vcs::DocumentVcsCommand::Apply {
+                        operations: vec![wire],
+                        description: None,
+                    })
+                    .map_err(|e| ComposeError::invalid(e.to_string()))?;
             } else if let Some(alt) = self.workspace_alternative(&ws).await {
                 alt.change_seq.fetch_add(1, Ordering::Relaxed);
             }

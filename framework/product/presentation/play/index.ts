@@ -33,6 +33,7 @@ import {
 	type UiTreeNode,
 	type WindowBodyViewContext,
 	type WindowEngagement,
+	type WindowMeasure,
 	uiDeclarativeSectionsToTree,
 	FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
 	FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
@@ -216,6 +217,32 @@ export class PresentationPlayController extends Controller implements Playground
 		this.syncPresentationState();
 	}
 
+	private windowMeasures(): readonly WindowMeasure[] {
+		const deck = this.projection();
+		return [
+			{
+				kind: "slider",
+				id: "presentation-tile-count",
+				label: "Tiles",
+				value: deck.tiles.length,
+				min: 0,
+				max: Math.max(deck.tiles.length, 1),
+				step: 1,
+				onChange: presentationPlayCmd("addTile"),
+			},
+			{
+				kind: "slider",
+				id: "presentation-selected-count",
+				label: "Selected",
+				value: this.selectedIds.length,
+				min: 0,
+				max: Math.max(this.selectedIds.length, 1),
+				step: 1,
+				onChange: presentationPlayCmd("deleteSelection"),
+			},
+		];
+	}
+
 	private windowEngagement(): WindowEngagement {
 		return {
 			input: {
@@ -294,7 +321,7 @@ export class PresentationPlayController extends Controller implements Playground
 				"Tile editor",
 				PRESENTATION_PLAY_BODY_KEY_MAIN,
 				undefined,
-				[],
+				this.windowMeasures(),
 				this.windowEngagement(),
 			),
 		];

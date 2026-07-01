@@ -17,6 +17,12 @@ import {
 	playgroundResolvedFixtureId,
 	registerWindowBody,
 	type CommandDescriptor,
+	type AppTools,
+	type ToolLeaf,
+	type WindowEngagement,
+	type WindowMeasure,
+	toolCollection,
+	enforcePlaygroundWindowEngagementInput,
 	type UiNode,
 	type UiTreeNode,
 	uiDeclarativeSectionsToTree,
@@ -159,19 +165,184 @@ export class SemiosPlayController extends Controller {
 	private selectedMediaNodeIds: string[] = [];
 	private selectedAppInstanceIds: string[] = [];
 	private fixtureId = SEMIOS_PLAY_FIXTURE_DEFAULT_ID;
+	private launcherProgramId = listSemiosPrograms()[0]?.id ?? "";
+	private launcherEngagementInput = "";
+	private historyEngagementInput = "";
+	private appHostEngagementInput = "";
+	private mediaGraphEngagementInput = "";
 	readonly mainMode = new ModeRuntime("main", "Semios", undefined);
 
 	constructor(commandBus: CommandBus, notify: () => void) {
 		super(SEMIOS_PLAY_CONTROLLER_ID, commandBus, notify);
-		this.mainMode.windowKinds = [
-			new WindowKindRuntime(SEMIOS_PLAY_WINDOW_MEDIA_GRAPH, "Media Graph", SEMIOS_PLAY_BODY_MEDIA_GRAPH),
-			new WindowKindRuntime(SEMIOS_PLAY_WINDOW_APP_HOST, "App Host", SEMIOS_PLAY_BODY_APP_HOST),
-			new WindowKindRuntime(SEMIOS_PLAY_WINDOW_LAUNCHER, "Launcher", SEMIOS_PLAY_BODY_LAUNCHER),
-			new WindowKindRuntime(SEMIOS_PLAY_WINDOW_HISTORY, "History", SEMIOS_PLAY_BODY_HISTORY),
-		];
 		this.store = createStudioStore(loadStudioDocument(SEMIOS_PLAY_FIXTURE_DEFAULT_ID));
 		const projection = this.store.projection();
 		this.activeInstanceId = projection.appInstances[0]?.id ?? null;
+		this.rebuildShellMode();
+	}
+
+	private mediaGraphMeasures(): readonly WindowMeasure[] {
+		const projection = this.store.projection();
+		return [
+			{
+				kind: "select",
+				id: "semios-media-active-instance",
+				label: "Active app",
+				value: this.activeInstanceId ?? "",
+				items: projection.appInstances.map((instance) => ({ id: instance.id, value: instance.id, label: instance.label })),
+				onChange: semiosPlayCmd("selectInstance"),
+			},
+		];
+	}
+
+	private mediaGraphEngagement(): WindowEngagement {
+		const projection = this.store.projection();
+		return {
+			sessionActive: false,
+			input: {
+				id: "semios-media-spawn",
+				value: "",
+				placeholder: "programId appId",
+				onChange: semiosPlayCmd("mediaGraphEngagementInput"),
+				onSubmit: semiosPlayCmd("mediaGraphEngagementSubmit"),
+			},
+			status: [{ id: "semios-media-count", text: `${projection.mediaGraph.nodes.length} nodes · ${projection.appInstances.length} apps` }],
+		};
+	}
+
+	private appHostMeasures(): readonly WindowMeasure[] {
+		const projection = this.store.projection();
+		return [
+			{
+				kind: "select",
+				id: "semios-app-host-instance",
+				label: "Instance",
+				value: this.activeInstanceId ?? "",
+				items: projection.appInstances.map((instance) => ({ id: instance.id, value: instance.id, label: instance.label })),
+				onChange: semiosPlayCmd("selectInstance"),
+			},
+		];
+	}
+
+	private appHostEngagement(): WindowEngagement {
+		const active = this.getActiveInstance();
+		return {
+			sessionActive: false,
+			input: {
+				id: "semios-app-host-label",
+				value: this.appHostEngagementInput || active?.label || "",
+				placeholder: "Instance label",
+				onChange: semiosPlayCmd("appHostEngagementInput"),
+				onSubmit: semiosPlayCmd("appHostEngagementSubmit"),
+			},
+			status: active ? [{ id: "semios-app-host-program", text: `${active.programId} · ${active.appId}` }] : [],
+		};
+	}
+
+	private launcherMeasures(): readonly WindowMeasure[] {
+		const programs = listSemiosPrograms();
+		return [
+			{
+				kind: "select",
+				id: "semios-launcher-program",
+				label: "Program",
+				value: this.launcherProgramId,
+				items: programs.map((program) => ({ id: program.id, value: program.id, label: program.name })),
+				onChange: semiosPlayCmd("setLauncherProgram"),
+			},
+		];
+	}
+
+	private launcherEngagement(): WindowEngagement {
+		const programs = listSemiosPrograms();
+		return {
+			sessionActive: false,
+			input: {
+				id: "semios-launcher-spawn",
+				value: this.launcherEngagementInput,
+				placeholder: "appId to spawn",
+				onChange: semiosPlayCmd("launcherEngagementInput"),
+				onSubmit: semiosPlayCmd("launcherEngagementSubmit"),
+			},
+			possibleEngagements: programs.slice(0, 4).map((program) => ({
+				id: `semios-launcher-${program.id}`,
+				label: program.name,
+				command: semiosPlayCmd("spawnApp", { programId: program.id, appId: program.apps[0]?.id ?? program.id }),
+			})),
+		};
+	}
+
+	private historyMeasures(): readonly WindowMeasure[] {
+		const checkpoints = this.store.getDocument().vcs.checkpoints.length;
+		return [
+			{
+				kind: "slider",
+				id: "semios-history-checkpoints",
+				label: "Checkpoints",
+				value: checkpoints,
+				min: 0,
+				max: Math.max(checkpoints, 1),
+				step: 1,
+				onChange: semiosPlayCmd("commitCheckpoint"),
+			},
+		];
+	}
+
+	private historyEngagement(): WindowEngagement {
+		return {
+			sessionActive: false,
+			input: {
+				id: "semios-history-checkpoint",
+				value: this.historyEngagementInput,
+				placeholder: "Checkpoint message",
+				onChange: semiosPlayCmd("historyEngagementInput"),
+				onSubmit: semiosPlayCmd("historyEngagementSubmit"),
+			},
+			possibleEngagements: [
+				{ id: "semios-history-undo", label: "Undo", command: semiosPlayCmd("undo") },
+				{ id: "semios-history-redo", label: "Redo", command: semiosPlayCmd("redo") },
+			],
+		};
+	}
+
+	private rebuildShellMode(): void {
+		this.mainMode.tools = buildSemiosPlayToolbarTools(this.id);
+		this.mainMode.windowKinds = [
+			new WindowKindRuntime(
+				SEMIOS_PLAY_WINDOW_MEDIA_GRAPH,
+				"Media Graph",
+				SEMIOS_PLAY_BODY_MEDIA_GRAPH,
+				undefined,
+				this.mediaGraphMeasures(),
+				this.mediaGraphEngagement(),
+			),
+			new WindowKindRuntime(
+				SEMIOS_PLAY_WINDOW_APP_HOST,
+				"App Host",
+				SEMIOS_PLAY_BODY_APP_HOST,
+				undefined,
+				this.appHostMeasures(),
+				this.appHostEngagement(),
+			),
+			new WindowKindRuntime(
+				SEMIOS_PLAY_WINDOW_LAUNCHER,
+				"Launcher",
+				SEMIOS_PLAY_BODY_LAUNCHER,
+				undefined,
+				this.launcherMeasures(),
+				this.launcherEngagement(),
+			),
+			new WindowKindRuntime(
+				SEMIOS_PLAY_WINDOW_HISTORY,
+				"History",
+				SEMIOS_PLAY_BODY_HISTORY,
+				undefined,
+				this.historyMeasures(),
+				this.historyEngagement(),
+			),
+		];
+		for (const windowKind of this.mainMode.windowKinds) {
+			enforcePlaygroundWindowEngagementInput(windowKind.engagement, `Semios play window "${windowKind.id}"`);
+		}
 	}
 
 	getStore(): StudioStore {
@@ -206,6 +377,78 @@ export class SemiosPlayController extends Controller {
 
 	run(command: string, args?: Record<string, unknown>): void {
 		switch (command) {
+			case "mediaGraphEngagementInput": {
+				const value = typeof args?.value === "string" ? args.value : "";
+				if (value !== this.mediaGraphEngagementInput) {
+					this.mediaGraphEngagementInput = value;
+					this.rebuildShellMode();
+					this.emit();
+				}
+				return;
+			}
+			case "mediaGraphEngagementSubmit": {
+				const raw = String(args?.value ?? this.mediaGraphEngagementInput).trim();
+				const [programId, appId] = raw.split(/\s+/u);
+				if (programId && appId) this.run("spawnApp", { programId, appId });
+				return;
+			}
+			case "appHostEngagementInput": {
+				const value = typeof args?.value === "string" ? args.value : "";
+				if (value !== this.appHostEngagementInput) {
+					this.appHostEngagementInput = value;
+					this.rebuildShellMode();
+					this.emit();
+				}
+				return;
+			}
+			case "appHostEngagementSubmit": {
+				const value = String(args?.value ?? this.appHostEngagementInput).trim();
+				if (this.activeInstanceId && value) {
+					this.store.dispatch({ kind: "patchAppInstances", instanceIds: [this.activeInstanceId], field: "label", value });
+					this.appHostEngagementInput = value;
+					this.rebuildShellMode();
+					this.emit();
+				}
+				return;
+			}
+			case "launcherEngagementInput": {
+				const value = typeof args?.value === "string" ? args.value : "";
+				if (value !== this.launcherEngagementInput) {
+					this.launcherEngagementInput = value;
+					this.rebuildShellMode();
+					this.emit();
+				}
+				return;
+			}
+			case "launcherEngagementSubmit": {
+				const appId = String(args?.value ?? this.launcherEngagementInput).trim();
+				if (this.launcherProgramId && appId) this.run("spawnApp", { programId: this.launcherProgramId, appId });
+				return;
+			}
+			case "historyEngagementInput": {
+				const value = typeof args?.value === "string" ? args.value : "";
+				if (value !== this.historyEngagementInput) {
+					this.historyEngagementInput = value;
+					this.rebuildShellMode();
+					this.emit();
+				}
+				return;
+			}
+			case "historyEngagementSubmit": {
+				this.run("commitCheckpoint", { message: String(args?.value ?? this.historyEngagementInput).trim() || undefined });
+				this.historyEngagementInput = "";
+				this.rebuildShellMode();
+				return;
+			}
+			case "setLauncherProgram": {
+				const programId = String(args?.value ?? "");
+				if (programId && programId !== this.launcherProgramId) {
+					this.launcherProgramId = programId;
+					this.rebuildShellMode();
+					this.emit();
+				}
+				return;
+			}
 			case "setMediaNodeSelection": {
 				const nodeIds = Array.isArray(args?.nodeIds) ? args!.nodeIds.map((id) => String(id)) : [];
 				this.selectedMediaNodeIds = nodeIds;
@@ -268,6 +511,7 @@ export class SemiosPlayController extends Controller {
 					this.selectedAppInstanceIds = [];
 					this.selectedMediaNodeIds = [];
 				}
+				this.rebuildShellMode();
 				this.emit();
 				return;
 			}
@@ -278,19 +522,23 @@ export class SemiosPlayController extends Controller {
 				this.store.dispatch({ kind: "spawnAppInstance", programId, appId, position: { x: 80, y: 80 } });
 				const created = this.store.projection().appInstances.at(-1);
 				if (created) this.activeInstanceId = created.id;
+				this.rebuildShellMode();
 				this.emit();
 				return;
 			}
 			case "undo":
 				this.store.dispatch({ kind: "undo" });
+				this.rebuildShellMode();
 				this.emit();
 				return;
 			case "redo":
 				this.store.dispatch({ kind: "redo" });
+				this.rebuildShellMode();
 				this.emit();
 				return;
 			case "commitCheckpoint":
 				this.store.dispatch({ kind: "commitCheckpoint", message: typeof args?.message === "string" ? args.message : undefined });
+				this.rebuildShellMode();
 				this.emit();
 				return;
 			case "setActiveFixture": {
@@ -299,6 +547,7 @@ export class SemiosPlayController extends Controller {
 				this.store = createStudioStore(loadStudioDocument(fixtureId));
 				const projection = this.store.projection();
 				this.activeInstanceId = projection.appInstances[0]?.id ?? null;
+				this.rebuildShellMode();
 				this.emit();
 				return;
 			}
@@ -314,6 +563,17 @@ export function buildSemiosPlayAppRuntime(ctrl: SemiosPlayController): AppRuntim
 
 function semiosPlayCmd(command: string, args?: Record<string, unknown>): CommandDescriptor {
 	return { controllerId: SEMIOS_PLAY_CONTROLLER_ID, command, args };
+}
+
+/** @emoji 🧰 Semios play footer toolbar. */
+export function buildSemiosPlayToolbarTools(controllerId: string): AppTools {
+	return [
+		toolCollection("history", "history", [
+			{ kind: "button", id: "semios.undo", label: "Undo", iconId: "undo-2", controllerId, command: "undo" },
+			{ kind: "button", id: "semios.redo", label: "Redo", iconId: "redo-2", controllerId, command: "redo" },
+			{ kind: "button", id: "semios.checkpoint", label: "Checkpoint", iconId: "git-commit", controllerId, command: "commitCheckpoint" },
+		]),
+	];
 }
 
 /** @emoji 🔎 Declarative inspection tree for semios play media graph and app instances. */

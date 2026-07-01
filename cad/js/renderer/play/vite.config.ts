@@ -26,7 +26,7 @@ export default createPlaygroundPlayViteConfig({
 	extraAliases: [
 		{ find: "@semio-tech/cad-js-core", replacement: coreEntry },
 		{ find: "@semio-tech/cad-js-kernel-brepjs", replacement: kernelEntry },
-		{ find: "@semio-tech/geometry-brep-js", replacement: resolve(repoRoot, "geometry/brep/js/index.ts") },
+		{ find: "@semio-tech/kernel-3d-js", replacement: resolve(repoRoot, "kernel/3d/js/index.ts") },
 		{ find: "@semio-tech/cad-js-machine-stately", replacement: machineStatelyEntry },
 		{ find: "@semio-tech/cad-js-query", replacement: queryEntry },
 		{ find: "@semio-tech/cad-js-runtime", replacement: runtimeEntry },

@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@semio-tech/cad-js-core": "workspace:*",
-    "@semio-tech/geometry-brep-js": "workspace:*",
+    "@semio-tech/kernel-3d-js": "workspace:*",
     "brepjs": "^18.20.3",
     "brepjs-opencascade": "^0.15.6"
   },

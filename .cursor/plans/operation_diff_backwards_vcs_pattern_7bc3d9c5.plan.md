@@ -34,37 +34,37 @@ todos:
     status: completed
   - id: phase3-flow
     content: Create Rust crate for flow with Operation/Diff pattern, replace TS applyFlowEditOp reducer with WASM client
-    status: in_progress
+    status: completed
   - id: phase3-dag
     content: Port mathematical/graph/port/directed/dag onto framework_vcs Operation/Diff pattern
-    status: pending
+    status: completed
   - id: phase3-gis-map
     content: Port gis/map/rs onto framework_vcs Operation/Diff pattern
-    status: pending
+    status: completed
   - id: phase3-reasoning-mindmap
     content: Port reasoning/mindmap/rs onto framework_vcs Operation/Diff pattern
-    status: pending
+    status: completed
   - id: phase3-trinity
     content: Create Rust crates for trinity/rewrite and trinity/jack graph documents on the Operation/Diff pattern
-    status: pending
+    status: completed
   - id: phase3-puzzle3d
     content: Port puzzle/3d/rs onto framework_vcs Operation/Diff pattern
-    status: pending
+    status: completed
   - id: phase3-puzzle5d-procedural
     content: Create Rust crates for puzzle/5d, procedural/2d, procedural/3d on the Operation/Diff pattern
-    status: pending
+    status: completed
   - id: phase3-retire-ts-mirror
     content: Retire framework/core/vcs-sync.ts TS mirror and semios/core ad-hoc typed handlers once every technology is Rust-backed
-    status: pending
+    status: completed
   - id: phase4-compose-traits
     content: Introduce KitSnapshot projection value; implement framework_vcs::Operation<KitSnapshot> and OperationDiff<KitSnapshot> wrapping compose's existing to_diff/to_backwards/apply_diff/absorb
-    status: pending
+    status: completed
   - id: phase4-compose-store
     content: Rewire compose's Workspace/Edit/Change/Checkpoint/Alternative bookkeeping onto framework_vcs::DocumentVcsStore<KitSnapshot, Operation>; rebuild materialized_kit_for_workspace to hydrate the live Kit view from the engine projection; keep GraphQL schema/resolvers as thin views
-    status: pending
+    status: completed
   - id: phase5-regression
     content: Run cargo test + nx test across all touched crates/packages; manually verify undo/redo, checkpoint/alternative switching, and backbone round-trip for a representative technology, semios_studio, and compose
-    status: pending
+    status: completed
 isProject: false
 ---
 

@@ -889,10 +889,12 @@ impl WriterHost {
     fn hit_test_offset(&self, world: Point) -> usize {
         let rel_x = world.x;
         let rel_y = world.y;
-        if rel_y < 0.0 {
+        if rel_y < PAD_Y {
             return 0;
         }
-        let line = (rel_y / self.line_height).floor().max(0.0) as usize;
+        let line = ((rel_y - PAD_Y) / self.line_height).floor().max(0.0) as usize;
+        let max_line = self.text.matches('\n').count();
+        let line = line.min(max_line);
         let line_text = self.text.split('\n').nth(line).unwrap_or("");
         let col = hit_byte_in_line(line_text, rel_x, self.line_origin_x(), self.font_px);
         offset_at_line_col(&self.text, line, col)
@@ -1630,13 +1632,26 @@ mod tests {
     }
 
     #[test]
+    fn editor_viewport_maps_text_to_top_left() {
+        let mut host = WriterHost::new();
+        host.set_size(400, 300, 1.0);
+        host.set_text("hello".into());
+        let (wx, wy) = offset_to_world(&host, 0);
+        let screen: serde_json::Value = serde_json::from_str(&host.world_to_screen_json(wx, wy)).unwrap();
+        let sx = screen["x"].as_f64().unwrap();
+        let sy = screen["y"].as_f64().unwrap();
+        assert!(sx > 50.0 && sx < 90.0);
+        assert!(sy > PAD_Y && sy < PAD_Y + DEFAULT_LINE_HEIGHT);
+    }
+
+    #[test]
     fn drag_select_extends_range() {
         let mut host = WriterHost::new();
         host.set_size(800, 600, 1.0);
         host.set_text("hello world".into());
-        host.pointer_down_screen(468.0, 317.0, 0);
-        host.pointer_move_screen(560.0, 317.0, 1);
-        host.pointer_up_screen(560.0, 317.0, 0);
+        host.pointer_down_screen(68.0, 24.5, 0);
+        host.pointer_move_screen(250.0, 24.5, 1);
+        host.pointer_up_screen(250.0, 24.5, 0);
         assert_ne!(host.caret(), host.anchor());
         assert_eq!(host.anchor(), 0);
         assert!(host.caret() > host.anchor());

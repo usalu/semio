@@ -1,8 +1,8 @@
 //! 🔷 Flow brep module: brepkit-backed geometry operators.
 
 use base64::Engine;
-use geometry_brep_brepkit::BrepkitKernel;
-use geometry_brep_engine::{block_on, BrepKernel, GeometryHandle, GeometryKind, ParamDomain, PointClassification, Vec3};
+use kernel_3d_brepkit::BrepkitKernel;
+use kernel_3d_engine::{block_on, BrepKernel, GeometryHandle, GeometryKind, ParamDomain, PointClassification, Vec3};
 use neural_engine::{channel_output, Atom, Cardinality, ChannelSpec, Dictionary, EvalError, FieldSpec, Operation, OperatorImpl, OperatorInfo, Registry, Schema, Value, ValueType};
 use std::collections::{HashMap, HashSet};
 use std::sync::{Mutex, OnceLock};
@@ -205,7 +205,7 @@ fn encode_base64(data: &[u8]) -> String {
     base64::engine::general_purpose::STANDARD.encode(data)
 }
 
-fn map_kernel_error(error: geometry_brep_engine::BrepError) -> EvalError {
+fn map_kernel_error(error: kernel_3d_engine::BrepError) -> EvalError {
     EvalError::InvalidInput(error.to_string())
 }
 

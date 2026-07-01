@@ -808,11 +808,11 @@ export async function prefetchMapTiles(options: PrefetchMapTilesOptions): Promis
       })
     : jobs;
   log(
-    `[gis/map/play] prefetch ${jobs.length} tiles ${zoomLabel}` +
+    `[gis/2d/play] prefetch ${jobs.length} tiles ${zoomLabel}` +
       (skipExisting ? ` (${skipped} cached, ${pending.length} to fetch)` : ""),
   );
   if (pending.length === 0) {
-    log(`[gis/map/play] prefetch done: downloaded=0 skipped=${skipped} failed=0`);
+    log(`[gis/2d/play] prefetch done: downloaded=0 skipped=${skipped} failed=0`);
     return { downloaded: 0, skipped, failed: 0 };
   }
   let downloaded = 0;
@@ -838,7 +838,7 @@ export async function prefetchMapTiles(options: PrefetchMapTilesOptions): Promis
       await sleep(delayMs);
     }
   }
-  log(`[gis/map/play] prefetch done: downloaded=${downloaded} skipped=${skipped} failed=${failed}`);
+  log(`[gis/2d/play] prefetch done: downloaded=${downloaded} skipped=${skipped} failed=${failed}`);
   return { downloaded, skipped, failed };
 }
 //#endregion 🔖MapTileCache
@@ -933,7 +933,7 @@ export function gisMapTilesVitePlugins(repoRoot: string, mode: GisMapTileServeMo
   let viteRoot = process.cwd();
   const plugins: Plugin[] = [
     {
-      name: "gis-map-osm-tiles",
+      name: "gis-2d-osm-tiles",
       enforce: "pre",
       configureServer(server) {
         server.middlewares.use(serveOsm);
@@ -943,7 +943,7 @@ export function gisMapTilesVitePlugins(repoRoot: string, mode: GisMapTileServeMo
       },
     },
     {
-      name: "gis-map-vt-tiles",
+      name: "gis-2d-vt-tiles",
       enforce: "pre",
       configureServer(server) {
         server.middlewares.use(serveVt);
@@ -955,7 +955,7 @@ export function gisMapTilesVitePlugins(repoRoot: string, mode: GisMapTileServeMo
   ];
   if (mode === "bundle") {
     plugins.push({
-      name: "gis-map-tiles-build",
+      name: "gis-2d-tiles-build",
       apply: "build",
       enforce: "pre",
       configResolved(config) {
@@ -1040,8 +1040,8 @@ export function playgroundRendererResolveAliases(repoRoot: string): ReadonlyArra
     { find: "@semio-tech/puzzle-2d-react", replacement: resolve(repoRoot, "puzzle/2d/react/index.tsx") },
     { find: "@semio-tech/puzzle-3d-react", replacement: resolve(repoRoot, "puzzle/3d/react/index.tsx") },
     { find: "@semio-tech/puzzle-5d-react", replacement: resolve(repoRoot, "puzzle/5d/react/index.tsx") },
-    { find: "@semio-tech/gis-map-play", replacement: resolve(repoRoot, "gis/map/play/index.ts") },
-    { find: "@semio-tech/gis-map-react", replacement: resolve(repoRoot, "gis/map/react/index.tsx") },
+    { find: "@semio-tech/gis-2d-play", replacement: resolve(repoRoot, "gis/2d/play/index.ts") },
+    { find: "@semio-tech/gis-2d-react", replacement: resolve(repoRoot, "gis/2d/react/index.tsx") },
     { find: "@semio-tech/reasoning-mindmap-wires-play", replacement: resolve(repoRoot, "reasoning/mindmap/wires/play/index.ts") },
     { find: "@semio-tech/reasoning-mindmap-wires-react", replacement: resolve(repoRoot, "reasoning/mindmap/wires/react/index.ts") },
     { find: "@semio-tech/reasoning-mindmap-react", replacement: resolve(repoRoot, "reasoning/mindmap/react/index.tsx") },
@@ -1069,8 +1069,8 @@ export function playgroundRendererResolveAliases(repoRoot: string): ReadonlyArra
     { find: "@semio-tech/procedural-2d-react", replacement: resolve(repoRoot, "procedural/2d/react/index.tsx") },
     { find: "@semio-tech/shooting-play", replacement: resolve(repoRoot, "shooting/play/index.ts") },
     { find: "@semio-tech/shooting-react", replacement: resolve(repoRoot, "shooting/react/index.tsx") },
-    { find: "@semio-tech/geometry-brep-js", replacement: resolve(repoRoot, "geometry/brep/js/index.ts") },
-    { find: "@semio-tech/geometry-drawing-js", replacement: resolve(repoRoot, "geometry/drawing/js/index.ts") },
+    { find: "@semio-tech/kernel-3d-js", replacement: resolve(repoRoot, "kernel/3d/js/index.ts") },
+    { find: "@semio-tech/kernel-2d-js", replacement: resolve(repoRoot, "kernel/2d/js/index.ts") },
   ];
 }
 
@@ -1263,8 +1263,8 @@ if (import.meta.vitest) {
     it("adds a build copy plugin only for bundle mode", () => {
       const fetchPlugins = gisMapTilesVitePlugins(repoRoot, "fetch");
       const bundlePlugins = gisMapTilesVitePlugins(repoRoot, "bundle");
-      expect(fetchPlugins.some((plugin) => plugin.name === "gis-map-tiles-build")).toBe(false);
-      expect(bundlePlugins.some((plugin) => plugin.name === "gis-map-tiles-build")).toBe(true);
+      expect(fetchPlugins.some((plugin) => plugin.name === "gis-2d-tiles-build")).toBe(false);
+      expect(bundlePlugins.some((plugin) => plugin.name === "gis-2d-tiles-build")).toBe(true);
     });
   });
 

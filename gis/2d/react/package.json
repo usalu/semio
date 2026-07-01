@@ -1,0 +1,33 @@
+{
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "@semio-tech/gis-2d-react",
+  "version": "0.1.0",
+  "description": "gis · 2d react",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "bun nx run @semio-tech/gis-2d-react:test"
+  },
+  "dependencies": {
+    "@semio-tech/infinite-cavas-react-renderer": "workspace:*",
+    "@semio-tech/ui-react": "workspace:*",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.18",
+    "@types/react": "^19.2.8",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.2",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1",
+    "vitest": "^3.2.4"
+  },
+  "license": "LGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/usalu/semio.git",
+    "directory": "gis/2d/react"
+  },
+  "bundleKind": "library"
+}

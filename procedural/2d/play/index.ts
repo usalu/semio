@@ -6,6 +6,9 @@ import {
     buildFlowPlayCatalogueTree,
     buildFlowPlayHierarchyTree,
     buildFlowPlayInspectorTree,
+    buildFlowGeneratePlayToolbarTools,
+    buildGeneratePlayWindowEngagement,
+    buildGeneratePlayWindowMeasures,
     createDefaultGenerations,
     parseFlowPlayFixtureJson,
     runGenerationCommand,
@@ -613,6 +616,7 @@ export class Procedural2dPlayController extends Controller implements Playground
 	private fixtureEdges: ProceduralFixtureEdge[] = [];
 	private previewOffNodeIds: string[] = [];
 	private showMode: ProceduralPreviewShowMode = "everything";
+	private generateEngagementInput = "";
 	private selectionMode: ProceduralPlaySelectionMode = "default";
 	private selectionMethod: ProceduralPlaySelectionMethod = "rectangle";
 	private interactionRevision = 0;
@@ -655,10 +659,6 @@ export class Procedural2dPlayController extends Controller implements Playground
 
 	/** @emoji 🔄 Rebuilds {@link ModeRuntime.tools} from the latest toolbar snapshot. */
 	rebuildToolbarTools(): void {
-		if (!this.hostBridge) {
-			this.mainMode.tools = undefined;
-			return;
-		}
 		this.mainMode.tools = buildProcedural2dPlayToolbarTools(this.toolbarState(), this.id);
 	}
 
@@ -898,7 +898,19 @@ export class Procedural2dPlayController extends Controller implements Playground
 	}
 
 	private flowWindowMeasures(): readonly WindowMeasure[] {
-		return [];
+		return [
+			{
+				kind: "select",
+				id: `${PROCEDURAL_2D_PLAY_WINDOW_KIND_ID}-show`,
+				label: "Show",
+				value: this.showMode,
+				items: [
+					{ id: "everything", value: "everything", label: "Everything" },
+					{ id: "selected", value: "selected", label: "Selected" },
+				],
+				onChange: { controllerId: PROCEDURAL_2D_PLAY_CONTROLLER_ID, command: "setShowMode" },
+			},
+		];
 	}
 
 	private previewWindowMeasures(): readonly WindowMeasure[] {
@@ -1022,10 +1034,46 @@ export class Procedural2dPlayController extends Controller implements Playground
 	}
 
 	private rebuildGenerateMode(): void {
-		this.generateMode.windowKinds = [new WindowKindRuntime(PROCEDURAL_2D_PLAY_WINDOW_KIND_ID, "Generate", PROCEDURAL_2D_PLAY_BODY_KEY_GENERATE)];
+		this.generateMode.tools = buildFlowGeneratePlayToolbarTools(PROCEDURAL_2D_PLAY_CONTROLLER_ID);
+		this.generateMode.windowKinds = [
+			new WindowKindRuntime(
+				PROCEDURAL_2D_PLAY_WINDOW_KIND_ID,
+				"Generate",
+				PROCEDURAL_2D_PLAY_BODY_KEY_GENERATE,
+				undefined,
+				buildGeneratePlayWindowMeasures(PROCEDURAL_2D_PLAY_WINDOW_KIND_ID, PROCEDURAL_2D_PLAY_CONTROLLER_ID, this.generations, this.selectedGenerationId),
+				buildGeneratePlayWindowEngagement(
+					PROCEDURAL_2D_PLAY_CONTROLLER_ID,
+					this.generateEngagementInput,
+					this.generatePreviewText,
+					procedural2dPlayCmd("generateEngagementInput"),
+					procedural2dPlayCmd("generateEngagementSubmit"),
+				),
+			),
+		];
+		for (const windowKind of this.generateMode.windowKinds) {
+			enforcePlaygroundWindowEngagementInput(windowKind.engagement, `Procedural 2D play generate window "${windowKind.id}"`);
+		}
 	}
 
 	override run(command: string, args?: unknown): void {
+		if (command === "generateEngagementInput") {
+			const value = (args as { value?: string }).value;
+			if (typeof value === "string" && value !== this.generateEngagementInput) {
+				this.generateEngagementInput = value;
+				this.rebuildGenerateMode();
+				this.emit();
+			}
+			return;
+		}
+		if (command === "generateEngagementSubmit") {
+			const name = (args as { value?: string }).value ?? this.generateEngagementInput;
+			const id = this.selectedGenerationId;
+			if (typeof name === "string" && name.trim() && id) {
+				this.run("renameGeneration", { id, name: name.trim() });
+			}
+			return;
+		}
 		if (command === "engagementInput") {
 			const value = (args as { value?: string }).value;
 			if (typeof value === "string" && value !== this.engagementInput) {
@@ -1331,6 +1379,7 @@ export class Procedural2dPlayController extends Controller implements Playground
 				this.generations = [...next.generations];
 				this.selectedGenerationId = next.selectedGenerationId;
 				if (next.generatePreviewText) this.generatePreviewText = next.generatePreviewText;
+				this.rebuildGenerateMode();
 				this.interactionRevision += 1;
 				this.emit();
 			});

@@ -16,7 +16,7 @@ export default createPlaygroundPlayViteConfig({
 	playEntryKind: "procedural-3d",
 	extraAliases: [
 		{ find: "@semio-tech/procedural-3d-react", replacement: path.resolve(playDir, "../react/index.tsx") },
-		{ find: "@semio-tech/geometry-brep-js", replacement: path.resolve(repoRoot, "geometry/brep/js/index.ts") },
+		{ find: "@semio-tech/kernel-3d-js", replacement: path.resolve(repoRoot, "kernel/3d/js/index.ts") },
 		{ find: "@semio-tech/flow-react", replacement: path.resolve(repoRoot, "flow/react/index.tsx") },
 		{ find: "@semio-tech/flow-module-brep", replacement: path.resolve(repoRoot, "flow/module/brep/pkg/flow_module_brep.js") },
 		{ find: "@semio-tech/flow-module-draw", replacement: path.resolve(repoRoot, "flow/module/draw/pkg/flow_module_draw.js") },

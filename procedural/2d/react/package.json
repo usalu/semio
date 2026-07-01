@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@semio-tech/flow-react": "workspace:*",
-    "@semio-tech/geometry-drawing-js": "workspace:*",
+    "@semio-tech/kernel-2d-js": "workspace:*",
     "@semio-tech/infinite-cavas-react-renderer": "workspace:*",
     "@semio-tech/ui-react": "workspace:*",
     "@semio-tech/ui-styling": "workspace:*"

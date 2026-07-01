@@ -547,7 +547,7 @@ const PX_SCAN_ROOTS = [
 	"cad/js",
 	"puzzle",
 	"infinite/world",
-	"gis/map",
+	"gis/2d",
 ] as const;
 
 const PX_SCAN_SKIP = ["/.repo/", "/node_modules/", "/.storybook/", "/fixture/", "tokens.generated.", "session.json", ".plan.md"];

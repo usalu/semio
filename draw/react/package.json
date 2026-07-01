@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@semio-tech/draw-core": "workspace:*",
-    "@semio-tech/geometry-drawing-js": "workspace:*",
+    "@semio-tech/kernel-2d-js": "workspace:*",
     "@semio-tech/ui-react": "workspace:*",
     "@semio-tech/ui-styling": "workspace:*"
   },
