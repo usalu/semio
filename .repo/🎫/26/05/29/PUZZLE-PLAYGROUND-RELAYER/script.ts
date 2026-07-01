@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🧩 Puzzle playground relayer ticket router. */
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../repo/lib/js/src/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../repo/lib/js/index.ts";
 
 const tasks: Record<string, string> = {
   "rename-scopes": "./rename-scopes.ts",

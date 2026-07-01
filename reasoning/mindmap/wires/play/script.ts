@@ -12,7 +12,7 @@ import {
   runCargo,
   runViteBunxDev,
   runVitest,
-} from "../../../../repo/lib/js/src/index.ts";
+} from "../../../../repo/lib/js/index.ts";
 
 class DevScript extends BundleScript {
   run(segments: string[]): void {

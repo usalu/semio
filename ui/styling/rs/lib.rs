@@ -1,6 +1,6 @@
 //! @emoji 🎨 Framework-neutral styling tokens generated from `ui/styling/tokens.json`.
 
-#[path = "src/generated.rs"]
+#[path = "generated.rs"]
 mod generated;
 
 pub use generated::*;

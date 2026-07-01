@@ -304,11 +304,11 @@ export function sidePanelTreeRootItems(
 
 //#region 🔖ComponentKind
 /** @emoji 🧩 Fixed platform component vocabulary wired by renderers (`table`, `virtualFileSystem`, `puzzle2d`, …). */
-export type ComponentKind = "table" | "virtualFileSystem" | "puzzle2d" | "puzzle3d" | "puzzle5d" | "cad" | "gismap" | "flow" | "dag" | "trinity" | "shooting" | "forms" | "raster" | "draw" | "writer" | "semios" | "panel" | "editor";
+export type ComponentKind = "table" | "virtualFileSystem" | "puzzle2d" | "puzzle3d" | "puzzle5d" | "cad" | "gismap" | "flow" | "dag" | "imperative" | "sequence" | "trinity" | "shooting" | "forms" | "raster" | "draw" | "writer" | "semios" | "vcs" | "panel" | "editor";
 
-const CANVAS_COMPONENT_KINDS: readonly ComponentKind[] = ["table", "virtualFileSystem", "puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag", "trinity", "shooting", "forms", "raster", "draw", "writer", "semios", "editor"];
+const CANVAS_COMPONENT_KINDS: readonly ComponentKind[] = ["table", "virtualFileSystem", "puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag", "imperative", "sequence", "trinity", "shooting", "forms", "raster", "draw", "writer", "semios", "vcs", "editor"];
 
-const EDGELESS_WINDOW_COMPONENT_KINDS: readonly ComponentKind[] = ["puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag", "trinity", "shooting", "raster", "draw", "semios", "writer"];
+const EDGELESS_WINDOW_COMPONENT_KINDS: readonly ComponentKind[] = ["puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag", "imperative", "sequence", "trinity", "shooting", "raster", "draw", "semios"];
 //#endregion 🔖ComponentKind
 
 /** @emoji 📊 Host-bound tabular surface; `paneId` disambiguates multiple table slots in one app. */
@@ -390,6 +390,26 @@ export interface UiDagHostSurfaceNode {
 	readonly bindingId?: string;
 }
 
+/** @emoji ⚙️ Host-bound imperative step-list surface. */
+export interface UiImperativeHostSurfaceNode {
+	readonly type: "imperative";
+	readonly componentKind: "imperative";
+	readonly surfaceId: string;
+	readonly controllerId: string;
+	readonly paneId?: string;
+	readonly bindingId?: string;
+}
+
+/** @emoji 📜 Host-bound sequence execution-flow surface. */
+export interface UiSequenceHostSurfaceNode {
+	readonly type: "sequence";
+	readonly componentKind: "sequence";
+	readonly surfaceId: string;
+	readonly controllerId: string;
+	readonly paneId?: string;
+	readonly bindingId?: string;
+}
+
 /** @emoji 🔺 Host-bound trinity directed property port graph surface. */
 export interface UiTrinityHostSurfaceNode {
 	readonly type: "trinity";
@@ -461,6 +481,17 @@ export interface UiDrawHostSurfaceNode {
 	readonly bindingId?: string;
 }
 
+/** @emoji 🗄️ Host-bound version-control surface (`editor` or `history`). */
+export interface UiVcsHostSurfaceNode {
+	readonly type: "vcs";
+	readonly componentKind: "vcs";
+	readonly surfaceId: string;
+	readonly controllerId: string;
+	readonly paneId?: string;
+	readonly view: "editor" | "history";
+	readonly bindingId?: string;
+}
+
 /** @emoji ✍️ Host-bound writer editor surface. */
 export interface UiWriterHostSurfaceNode {
 	readonly type: "writer";
@@ -501,12 +532,15 @@ export type UiComponentHostSurfaceNode =
 	| UiGisMapHostSurfaceNode
 	| UiFlowHostSurfaceNode
 	| UiDagHostSurfaceNode
+	| UiImperativeHostSurfaceNode
+	| UiSequenceHostSurfaceNode
 	| UiTrinityHostSurfaceNode
 	| UiCadHostSurfaceNode
 	| UiShootingHostSurfaceNode
 	| UiFormsHostSurfaceNode
 	| UiRasterHostSurfaceNode
 	| UiDrawHostSurfaceNode
+	| UiVcsHostSurfaceNode
 	| UiWriterHostSurfaceNode
 	| UiSemiosHostSurfaceNode
 	| UiPanelHostSurfaceNode
@@ -776,6 +810,30 @@ export function buildDagWindowBody(surfaceId: string, controllerId: string, pane
 	};
 }
 
+/** @emoji ⚙️ Canonical imperative window body. */
+export function buildImperativeWindowBody(surfaceId: string, controllerId: string, paneId?: string, bindingId?: string): UiImperativeHostSurfaceNode {
+	return {
+		type: "imperative",
+		componentKind: "imperative",
+		surfaceId,
+		controllerId,
+		...(paneId ? { paneId } : {}),
+		...(bindingId ? { bindingId } : {}),
+	};
+}
+
+/** @emoji 📜 Canonical sequence window body. */
+export function buildSequenceWindowBody(surfaceId: string, controllerId: string, paneId?: string, bindingId?: string): UiSequenceHostSurfaceNode {
+	return {
+		type: "sequence",
+		componentKind: "sequence",
+		surfaceId,
+		controllerId,
+		...(paneId ? { paneId } : {}),
+		...(bindingId ? { bindingId } : {}),
+	};
+}
+
 /** @emoji 🔺 Canonical trinity window body. */
 export function buildTrinityWindowBody(surfaceId: string, controllerId: string, paneId?: string, bindingId?: string): UiTrinityHostSurfaceNode {
 	return {
@@ -858,6 +916,25 @@ export function buildDrawWindowBody(
 	};
 }
 
+/** @emoji 🗄️ Canonical vcs window body for editor or history surfaces. */
+export function buildVcsWindowBody(
+	surfaceId: string,
+	controllerId: string,
+	view: "editor" | "history",
+	paneId?: string,
+	bindingId?: string,
+): UiVcsHostSurfaceNode {
+	return {
+		type: "vcs",
+		componentKind: "vcs",
+		surfaceId,
+		controllerId,
+		view,
+		...(paneId ? { paneId } : {}),
+		...(bindingId ? { bindingId } : {}),
+	};
+}
+
 /** @emoji 🖥️ Canonical semios window body for media graph or app host surfaces. */
 export function buildSemiosWindowBody(
 	surfaceId: string,
@@ -898,6 +975,11 @@ export function isEdgelessWindowBody(node: UiNode): boolean {
 		return isEdgelessWindowBody(node.children[0]);
 	}
 	return EDGELESS_WINDOW_COMPONENT_KINDS.includes(node.type as ComponentKind);
+}
+
+/** @emoji 📐 True when window body content needs invisible top clearance below floating chrome (writer, forms, tables, …). */
+export function isChromeAwareWindowBody(node: UiNode): boolean {
+	return !isEdgelessWindowBody(node);
 }
 
 function assertCanvasOnlyWindowBody(bodyKey: string, node: UiNode): void {
@@ -2658,7 +2740,7 @@ if (import.meta.vitest) {
 		it("distinguishes edgeless canvases from framed table and editor bodies", () => {
 			expect(isEdgelessWindowBody(buildPuzzle2dWindowBody("2d", "c"))).toBe(true);
 			expect(isEdgelessWindowBody(buildPuzzle3dWindowBody("3d", "c"))).toBe(true);
-			expect(isEdgelessWindowBody(buildWriterWindowBody("writer", "c"))).toBe(true);
+			expect(isEdgelessWindowBody(buildWriterWindowBody("writer", "c"))).toBe(false);
 			expect(isEdgelessWindowBody(buildTableWindowBody("table", "c"))).toBe(false);
 			expect(isEdgelessWindowBody(buildEditorWindowBody("editor", "c"))).toBe(false);
 			expect(

@@ -151,7 +151,10 @@ function uncommittedEditIds<TProjection, TOp>(
 export function buildHistoryColumns<TProjection, TOp>(
 	envelope: DocumentVcsEnvelope<TProjection, TOp>,
 ): HistoryColumn[] {
-	const checkpoints = [...envelope.vcs.checkpoints].sort((a, b) => a.timestamp.localeCompare(b.timestamp));
+	const checkpointOrder = new Map(envelope.vcs.checkpoints.map((checkpoint, index) => [checkpoint.id, index]));
+	const checkpoints = [...envelope.vcs.checkpoints].sort(
+		(a, b) => (checkpointOrder.get(b.id) ?? 0) - (checkpointOrder.get(a.id) ?? 0),
+	);
 	const checkpointIndex = new Map(checkpoints.map((cp, index) => [cp.id, index]));
 	const laneByAlternative = new Map<string, number>();
 	let nextLane = 0;

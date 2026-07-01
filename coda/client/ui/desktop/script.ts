@@ -1,10 +1,10 @@
 #!/usr/bin/env bun
 /** 🧭 `@semio-tech/coda-desktop` router: `bun ./script.ts <dev|build|publish|policy> [args…]`. */
-import type { FileLinter } from "../../../../repo/lib/js/src/index.ts";
-import { dependencyBoundaryBreachesForFile } from "../../../../repo/lib/js/src/index.ts";
-import { getWorkspaceRoot } from "../../../../repo/lib/js/src/index.ts";
-import { BundleScript, ScriptRouter, runBunx, runBundleScriptMain } from "../../../../repo/lib/js/src/index.ts";
-import { defineLint } from "../../../../repo/lib/js/src/index.ts";
+import type { FileLinter } from "../../../../repo/lib/js/index.ts";
+import { dependencyBoundaryBreachesForFile } from "../../../../repo/lib/js/index.ts";
+import { getWorkspaceRoot } from "../../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBunx, runBundleScriptMain } from "../../../../repo/lib/js/index.ts";
+import { defineLint } from "../../../../repo/lib/js/index.ts";
 
 export const policyFile = "renderer.tsx";
 

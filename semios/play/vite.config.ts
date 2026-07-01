@@ -20,8 +20,21 @@ export default createPlaygroundPlayViteConfig({
 	],
 	resolveDedupe: ["react", "react-dom", "@semio-tech/semios-react"],
 	optimizeDeps: {
-		include: ["react", "react-dom", "@semio-tech/semios-react"],
-		exclude: ["@semio-tech/compose-js", "@semio-tech/compose-sketchpad", "@semio-tech/compose-rs-wasm"],
+		include: ["react", "react-dom"],
+		exclude: [
+			"@semio-tech/semios-react",
+			"@semio-tech/compose-js",
+			"@semio-tech/compose-sketchpad",
+			"@semio-tech/compose-rs-wasm",
+			"playwright",
+			"playwright-core",
+			"@playwright/test",
+			"chromium-bidi",
+			"vitest",
+			"@vitest/expect",
+			"@testing-library/react",
+		],
+		holdUntilCrawlEnd: true,
 		esbuildOptions: { target: "esnext" },
 	},
 });

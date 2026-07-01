@@ -1,10 +1,10 @@
 #!/usr/bin/env bun
 /** 🧭 `@semio-tech/puzzle-5d-react` task router: `bun ./script.ts test|policy [args…]`. */
-import type { FileLinter } from "../../../repo/lib/js/src/index.ts";
-import { dependencyBoundaryBreachesForFile } from "../../../repo/lib/js/src/index.ts";
-import { getWorkspaceRoot } from "../../../repo/lib/js/src/index.ts";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest } from "../../../repo/lib/js/src/index.ts";
-import { defineLint } from "../../../repo/lib/js/src/index.ts";
+import type { FileLinter } from "../../../repo/lib/js/index.ts";
+import { dependencyBoundaryBreachesForFile } from "../../../repo/lib/js/index.ts";
+import { getWorkspaceRoot } from "../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest } from "../../../repo/lib/js/index.ts";
+import { defineLint } from "../../../repo/lib/js/index.ts";
 
 export const policyFile = "index.tsx";
 

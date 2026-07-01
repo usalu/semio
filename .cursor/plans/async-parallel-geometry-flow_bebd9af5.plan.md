@@ -73,7 +73,7 @@ flowchart TB
 ## Phase 1 - Threaded WASM build + cross-origin isolation (foundation)
 
 - Add `rust-toolchain.toml` at repo root: nightly channel, components `rust-src`, target `wasm32-unknown-unknown` (none exists today).
-- Extend `runWasmPackWebBuild` in [repo/lib/js/src/index.ts](repo/lib/js/src/index.ts) with a `threads?: boolean` option that, when set, runs wasm-pack with `RUSTFLAGS="-C target-feature=+atomics,+bulk-memory,+mutable-globals"` and `-Z build-std=panic_abort,std`. Add generated `snippets/**` (wasm-bindgen-rayon worker helper) to each pkg `files` whitelist.
+- Extend `runWasmPackWebBuild` in [repo/lib/js/index.ts](repo/lib/js/index.ts) with a `threads?: boolean` option that, when set, runs wasm-pack with `RUSTFLAGS="-C target-feature=+atomics,+bulk-memory,+mutable-globals"` and `-Z build-std=panic_abort,std`. Add generated `snippets/**` (wasm-bindgen-rayon worker helper) to each pkg `files` whitelist.
 - Add COOP/COEP to dev + preview + build hosting: extend `playgroundIframeEmbedHeadersPlugin` in [ui/styling/vite-elements-assets.ts](ui/styling/vite-elements-assets.ts) to also set `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: credentialless`; mirror in [compose/client/lib/sketchpad/play/vite.config.ts](compose/client/lib/sketchpad/play/vite.config.ts). Document Electron/static-host header requirement.
 
 ## Phase 2 - Async geometry BREP kernel

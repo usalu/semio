@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
 /** 🧭 Elements react UI router: `bun ./script.ts <dev|build|lint|test|policy> [args…]`. */
-import type { BundleLinter } from "../../repo/lib/js/src/index.ts";
-import { dependencyBoundaryBreachesForBundleDir } from "../../repo/lib/js/src/index.ts";
-import { getWorkspaceRoot } from "../../repo/lib/js/src/index.ts";
+import type { BundleLinter } from "../../repo/lib/js/index.ts";
+import { dependencyBoundaryBreachesForBundleDir } from "../../repo/lib/js/index.ts";
+import { getWorkspaceRoot } from "../../repo/lib/js/index.ts";
 import {
   BundleScript,
   ScriptRouter,
@@ -10,8 +10,8 @@ import {
   runBundleScriptMain,
   runBunx,
   spawnBunx,
-} from "../../repo/lib/js/src/index.ts";
-import { defineLint } from "../../repo/lib/js/src/index.ts";
+} from "../../repo/lib/js/index.ts";
+import { defineLint } from "../../repo/lib/js/index.ts";
 
 export const policy = defineLint("@semio-tech/ui-react-bundle", (l: BundleLinter) => {
   const repoRoot = getWorkspaceRoot();

@@ -678,6 +678,110 @@ export interface RasterScreenRect {
 	readonly height: number;
 }
 
+/** @emoji 📐 Maps screen coordinates to world space (matches infinite_cavas camera). */
+export function rasterScreenToWorld(
+	camera: RasterCamera,
+	viewport: RasterViewport,
+	screen: { readonly x: number; readonly y: number },
+): { x: number; y: number } {
+	return {
+		x: (screen.x - viewport.width / 2) / camera.zoom + camera.x,
+		y: (screen.y - viewport.height / 2) / camera.zoom + camera.y,
+	};
+}
+
+export interface RasterWorldRect {
+	readonly minX: number;
+	readonly minY: number;
+	readonly maxX: number;
+	readonly maxY: number;
+}
+
+/** @emoji 📐 World-space bounds of visible pixel layers. */
+export function resolveRasterDocumentWorldBounds(doc: RasterDocument): RasterWorldRect | null {
+	let minX = Number.POSITIVE_INFINITY;
+	let minY = Number.POSITIVE_INFINITY;
+	let maxX = Number.NEGATIVE_INFINITY;
+	let maxY = Number.NEGATIVE_INFINITY;
+	for (const layer of flattenRasterLayers(doc.layers)) {
+		if (layer.kind !== "pixel" || !layer.visible) continue;
+		const w = layer.width ?? 512;
+		const h = layer.height ?? 512;
+		for (const local of [
+			{ x: -w / 2, y: -h / 2 },
+			{ x: w / 2, y: -h / 2 },
+			{ x: w / 2, y: h / 2 },
+			{ x: -w / 2, y: h / 2 },
+		]) {
+			const world = rasterTransformWorldPoint(layer.transform, local);
+			minX = Math.min(minX, world.x);
+			minY = Math.min(minY, world.y);
+			maxX = Math.max(maxX, world.x);
+			maxY = Math.max(maxY, world.y);
+		}
+	}
+	if (!Number.isFinite(minX)) return null;
+	return { minX, minY, maxX, maxY };
+}
+
+/** @emoji 🧭 Fits the navigator overview to document content. */
+export function rasterNavigatorFitCamera(doc: RasterDocument, viewport: RasterViewport, padding = 24): RasterCamera {
+	const bounds = resolveRasterDocumentWorldBounds(doc);
+	if (!bounds) return doc.camera;
+	const contentW = Math.max(bounds.maxX - bounds.minX, 1);
+	const contentH = Math.max(bounds.maxY - bounds.minY, 1);
+	const innerW = Math.max(viewport.width - padding * 2, 1);
+	const innerH = Math.max(viewport.height - padding * 2, 1);
+	const zoom = Math.min(innerW / contentW, innerH / contentH);
+	return {
+		x: (bounds.minX + bounds.maxX) / 2,
+		y: (bounds.minY + bounds.maxY) / 2,
+		zoom: Math.max(0.05, Math.min(64, zoom)),
+	};
+}
+
+/** @emoji 🔍 Zoom-to-cursor wheel step for raster cameras. */
+export function rasterWheelCamera(
+	camera: RasterCamera,
+	viewport: RasterViewport,
+	screen: { readonly x: number; readonly y: number },
+	deltaY: number,
+): RasterCamera {
+	const factor = deltaY < 0 ? 1.1 : 0.9;
+	const zoom = Math.max(0.05, Math.min(64, camera.zoom * factor));
+	const worldBefore = rasterScreenToWorld(camera, viewport, screen);
+	return {
+		x: worldBefore.x - (screen.x - viewport.width / 2) / zoom,
+		y: worldBefore.y - (screen.y - viewport.height / 2) / zoom,
+		zoom,
+	};
+}
+
+/** @emoji 🧭 Maps the composite viewport to navigator screen space for the overview overlay. */
+export function rasterNavigatorViewportOverlay(
+	contentCamera: RasterCamera,
+	contentViewport: RasterViewport,
+	navigatorCamera: RasterCamera,
+	navigatorViewport: RasterViewport,
+): RasterScreenRect {
+	const topLeft = rasterWorldToScreen(
+		navigatorCamera,
+		navigatorViewport,
+		rasterScreenToWorld(contentCamera, contentViewport, { x: 0, y: 0 }),
+	);
+	const bottomRight = rasterWorldToScreen(
+		navigatorCamera,
+		navigatorViewport,
+		rasterScreenToWorld(contentCamera, contentViewport, { x: contentViewport.width, y: contentViewport.height }),
+	);
+	return {
+		x: Math.min(topLeft.x, bottomRight.x),
+		y: Math.min(topLeft.y, bottomRight.y),
+		width: Math.abs(bottomRight.x - topLeft.x),
+		height: Math.abs(bottomRight.y - topLeft.y),
+	};
+}
+
 /** @emoji 📐 Maps world coordinates to viewport screen space (matches infinite_cavas camera). */
 export function rasterWorldToScreen(
 	camera: RasterCamera,
@@ -1220,6 +1324,56 @@ if (import.meta.vitest) {
 		it("compares camera tuples", () => {
 			expect(rasterCameraEqual({ x: 0, y: 0, zoom: 1 }, { x: 0, y: 0, zoom: 1 })).toBe(true);
 			expect(rasterCameraEqual({ x: 0, y: 0, zoom: 1 }, { x: 0, y: 0, zoom: 2 })).toBe(false);
+		});
+	});
+
+	describe("rasterNavigatorFitCamera", () => {
+		it("fits visible pixel layers into the navigator viewport", () => {
+			const doc = parseRasterDocument({
+				schema: "raster.document/v1",
+				id: "t",
+				camera: { x: 0, y: 0, zoom: 1 },
+				layers: [
+					{
+						kind: "pixel",
+						id: "a",
+						name: "A",
+						visible: true,
+						opacity: 1,
+						blendMode: "normal",
+						width: 200,
+						height: 100,
+						transform: { x: 0, y: 0, scaleX: 1, scaleY: 1, rotation: 0 },
+					},
+				],
+			});
+			const fit = rasterNavigatorFitCamera(doc, { width: 400, height: 200 }, 0);
+			expect(fit.zoom).toBeGreaterThan(1);
+			expect(fit.x).toBe(0);
+			expect(fit.y).toBe(0);
+		});
+	});
+
+	describe("rasterWheelCamera", () => {
+		it("zooms toward the cursor", () => {
+			const camera = { x: 0, y: 0, zoom: 1 };
+			const viewport = { width: 400, height: 300 };
+			const zoomedIn = rasterWheelCamera(camera, viewport, { x: 200, y: 150 }, -100);
+			expect(zoomedIn.zoom).toBeGreaterThan(camera.zoom);
+			const zoomedOut = rasterWheelCamera(camera, viewport, { x: 200, y: 150 }, 100);
+			expect(zoomedOut.zoom).toBeLessThan(camera.zoom);
+		});
+	});
+
+	describe("rasterNavigatorViewportOverlay", () => {
+		it("maps the composite viewport into navigator screen space", () => {
+			const contentCamera = { x: 0, y: 0, zoom: 2 };
+			const contentViewport = { width: 800, height: 600 };
+			const navigatorCamera = { x: 0, y: 0, zoom: 0.5 };
+			const navigatorViewport = { width: 200, height: 150 };
+			const overlay = rasterNavigatorViewportOverlay(contentCamera, contentViewport, navigatorCamera, navigatorViewport);
+			expect(overlay.width).toBeGreaterThan(0);
+			expect(overlay.height).toBeGreaterThan(0);
 		});
 	});
 

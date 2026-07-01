@@ -7,46 +7,46 @@ todos:
     status: completed
   - id: imperative-engine
     content: "Implement imperative/engine: Path, Step, Executor (ordered scope-threaded execution), EffectLogEntry, compile_to_text, depending on neural_engine"
-    status: in_progress
+    status: completed
   - id: imperative-module-core
     content: "Implement imperative/module/core: LogPrint, StateSet, StateIncrement, WaitDelay Operation impls + register()"
-    status: pending
+    status: completed
   - id: imperative-core
     content: "Implement imperative/core: wasm-bindgen ImperativeSession/ImperativeHost + index.ts (VCS doc type, performImperativeEffects runtime)"
-    status: pending
+    status: completed
   - id: imperative-react
     content: "Implement imperative/react: step list, param form, effect log components/hooks"
-    status: pending
+    status: completed
   - id: imperative-play
     content: "Implement imperative/play: PlaygroundImperative step-list editor app with dev/build/test/validate targets"
-    status: pending
+    status: completed
   - id: sequence-core
     content: "Implement sequence/core: SequenceFixtureV1 + SequenceHost wrapping DagHost with single-path connect validation + SequenceSession wasm (compileText/run)"
-    status: pending
+    status: completed
   - id: sequence-react
     content: "Implement sequence/react: SequenceCanvas (attach/render/pointer), catalogue palette, inspector, compiled-text & effect-log panels"
-    status: pending
+    status: completed
   - id: sequence-play
     content: "Implement sequence/play: PlaygroundSequence canvas app with dev/build/test/validate targets"
-    status: pending
+    status: completed
   - id: root-wiring
     content: Wire root Cargo.toml members, package.json workspaces/scripts, script.ts dev dispatch for both technologies
-    status: pending
+    status: completed
   - id: launch-json
     content: Add dev launch.json entries for imperative (6076) and sequence (6077) in group 3_dev
-    status: pending
+    status: completed
   - id: renderer-registry
     content: Register imperative/sequence kinds in ui/styling/vite-elements-assets.ts and framework/product/playground/renderer/react (host regions, switches, package exports/deps)
-    status: pending
+    status: completed
   - id: agents-md
     content: Write imperative/AGENTS.md and sequence/AGENTS.md (+ crate-level AGENTS.md) mirroring neural/flow/dag doc style
-    status: pending
+    status: completed
   - id: tests-verify
     content: Add inline tests across new files and run cargo test + bun test + nx build/dev smoke checks for both stacks
-    status: pending
+    status: completed
   - id: ticket-close
     content: Close the ticket with a summary and full list of created/updated files
-    status: pending
+    status: completed
 isProject: false
 ---
 

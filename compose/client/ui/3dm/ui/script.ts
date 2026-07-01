@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🧭 3dm UI router: `bun ./script.ts dev [vite args…]`. */
-import { BundleScript, ScriptRouter, runBundleScriptMain, runViteBunxDevPlain } from "../../../../../repo/lib/js/src/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runViteBunxDevPlain } from "../../../../../repo/lib/js/index.ts";
 
 class DevScript extends BundleScript {
   run(segments: string[]): void {

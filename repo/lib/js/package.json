@@ -4,12 +4,12 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
+    ".": "./index.ts",
     "./nx-plugin": "./nx-plugin.mjs"
   },
   "scripts": {
     "lint": "bun ./script.ts lint",
-    "test": "bun test ./src/index.test.ts"
+    "test": "bun test ./index.test.ts"
   },
   "devDependencies": {
     "@nx/devkit": "21.4.1",

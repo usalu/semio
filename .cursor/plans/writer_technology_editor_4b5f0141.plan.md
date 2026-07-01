@@ -89,7 +89,7 @@ In [framework/product/playground/renderer/react/index.tsx](framework/product/pla
 ### Layer 8 - Repo registration (zero-touch, cross-platform)
 
 - `writer/README.md` (`name: writer`, `kind: user`), `writer/AGENTS.md` (emoji), per-bundle `AGENTS.md` for core/rs/react/play.
-- [repo/lib/js/src/index.ts](repo/lib/js/src/index.ts): add `"writer"` to `PlaygroundHostKind` and `PLAYGROUND_PORTS` (`writer: { dev: 6062, test: 6063, env: "WRITER_PLAY_PORT" }`).
+- [repo/lib/js/index.ts](repo/lib/js/index.ts): add `"writer"` to `PlaygroundHostKind` and `PLAYGROUND_PORTS` (`writer: { dev: 6062, test: 6063, env: "WRITER_PLAY_PORT" }`).
 - Root [script.ts](script.ts) `DevScript`: map `writer` -> `@semio-tech/writer-play:dev`; root `package.json` `dev:writer`; `.vscode/launch.json` entry following existing grouping; jack worker WASM build target wired into project.json/script.ts.
 
 ### Verification (before closing ticket)

@@ -1,6 +1,6 @@
 //! ⚙️ Headless imperative engine: ordered path of side-effect steps.
 
-use neural_engine::{Dictionary, EvalError, Registry, Value, SCHEMA_KEY};
+use neural_engine::{Dictionary, Registry, Value, SCHEMA_KEY};
 use serde::{Deserialize, Serialize};
 
 // #region 🔖Path
@@ -203,7 +203,7 @@ mod tests {
         let result = executor.run(&path, &Dictionary::new());
         assert_eq!(result.effects.len(), 3);
         assert!(result.effects.iter().all(|entry| entry.error.is_none()));
-        let counter = result.scope.get("counter").and_then(|v| v.as_atom()).and_then(|a| a.as_decimal());
+        let counter = result.scope.get("counter").and_then(|v| v.as_atom()).and_then(|a| a.as_f64());
         assert_eq!(counter, Some(3.0));
     }
 

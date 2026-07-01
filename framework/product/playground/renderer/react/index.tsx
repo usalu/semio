@@ -372,6 +372,10 @@ type FlowSurfaceHost = React.ComponentType<{ readonly node: import("@semio-tech/
 const flowSurfaceHosts = new Map<string, FlowSurfaceHost>();
 type DagSurfaceHost = React.ComponentType<{ readonly node: import("@semio-tech/framework-platform-core").UiDagHostSurfaceNode }>;
 const dagSurfaceHosts = new Map<string, DagSurfaceHost>();
+type ImperativeSurfaceHost = React.ComponentType<{ readonly node: import("@semio-tech/framework-platform-core").UiImperativeHostSurfaceNode }>;
+const imperativeSurfaceHosts = new Map<string, ImperativeSurfaceHost>();
+type SequenceSurfaceHost = React.ComponentType<{ readonly node: import("@semio-tech/framework-platform-core").UiSequenceHostSurfaceNode }>;
+const sequenceSurfaceHosts = new Map<string, SequenceSurfaceHost>();
 type TrinitySurfaceHost = React.ComponentType<{ readonly node: import("@semio-tech/framework-platform-core").UiTrinityHostSurfaceNode }>;
 const trinitySurfaceHosts = new Map<string, TrinitySurfaceHost>();
 const tableSurfaceHosts = new Map<string, TableSurfaceHost>();
@@ -381,6 +385,8 @@ type RasterSurfaceHost = React.ComponentType<{ readonly node: import("@semio-tec
 const rasterSurfaceHosts = new Map<string, RasterSurfaceHost>();
 type DrawSurfaceHost = React.ComponentType<{ readonly node: import("@semio-tech/framework-platform-core").UiDrawHostSurfaceNode }>;
 const drawSurfaceHosts = new Map<string, DrawSurfaceHost>();
+type VcsSurfaceHost = React.ComponentType<{ readonly node: import("@semio-tech/framework-platform-core").UiVcsHostSurfaceNode }>;
+const vcsSurfaceHosts = new Map<string, VcsSurfaceHost>();
 type EditorSurfaceHost = React.ComponentType<{ readonly node: import("@semio-tech/framework-platform-core").UiEditorHostSurfaceNode }>;
 const editorSurfaceHosts = new Map<string, EditorSurfaceHost>();
 type WriterSurfaceHost = React.ComponentType<{ readonly node: import("@semio-tech/framework-platform-core").UiWriterHostSurfaceNode }>;
@@ -388,7 +394,7 @@ const writerSurfaceHosts = new Map<string, WriterSurfaceHost>();
 type SemiosSurfaceHost = React.ComponentType<{ readonly node: import("@semio-tech/framework-platform-core").UiSemiosHostSurfaceNode }>;
 const semiosSurfaceHosts = new Map<string, SemiosSurfaceHost>();
 
-const PLAYGROUND_CANVAS_HOST_TYPES = new Set(["puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag", "trinity", "shooting", "forms", "raster", "draw", "writer", "semios", "editor"]);
+const PLAYGROUND_CANVAS_HOST_TYPES = new Set(["puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag", "imperative", "sequence", "trinity", "shooting", "forms", "raster", "draw", "writer", "semios", "vcs", "editor"]);
 
 function isPlaygroundCanvasHostChild(child: UiNode): boolean {
   return PLAYGROUND_CANVAS_HOST_TYPES.has(child.type);
@@ -426,6 +432,18 @@ export function registerUiDagSurfaceHost(surfaceId: string, Component: DagSurfac
   registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
 }
 
+/** @emoji ⚙️ Binds `surfaceId` from {@link UiImperativeHostSurfaceNode} to an imperative editor. */
+export function registerUiImperativeSurfaceHost(surfaceId: string, Component: ImperativeSurfaceHost): void {
+  imperativeSurfaceHosts.set(surfaceId, Component);
+  registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
+}
+
+/** @emoji 📜 Binds `surfaceId` from {@link UiSequenceHostSurfaceNode} to a sequence canvas. */
+export function registerUiSequenceSurfaceHost(surfaceId: string, Component: SequenceSurfaceHost): void {
+  sequenceSurfaceHosts.set(surfaceId, Component);
+  registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
+}
+
 /** @emoji 🔺 Binds `surfaceId` from {@link UiTrinityHostSurfaceNode} to a trinity canvas. */
 export function registerUiTrinitySurfaceHost(surfaceId: string, Component: TrinitySurfaceHost): void {
   trinitySurfaceHosts.set(surfaceId, Component);
@@ -453,6 +471,12 @@ export function registerUiRasterSurfaceHost(surfaceId: string, Component: Raster
 /** @emoji ✏️ Binds `surfaceId` from {@link UiDrawHostSurfaceNode} to a draw canvas. */
 export function registerUiDrawSurfaceHost(surfaceId: string, Component: DrawSurfaceHost): void {
   drawSurfaceHosts.set(surfaceId, Component);
+  registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
+}
+
+/** @emoji 🗄️ Binds `surfaceId` from {@link UiVcsHostSurfaceNode} to a vcs surface. */
+export function registerUiVcsSurfaceHost(surfaceId: string, Component: VcsSurfaceHost): void {
+  vcsSurfaceHosts.set(surfaceId, Component);
   registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
 }
 
@@ -515,6 +539,26 @@ function renderPlaygroundHostSurface(node: UiNode, layout: "canvas" | "panel"): 
       );
     }
   }
+  if (node.type === "imperative") {
+    const Host = imperativeSurfaceHosts.get(node.surfaceId);
+    if (Host) {
+      return (
+        <div className="absolute inset-0 min-h-0 min-w-0">
+          <Host node={node} />
+        </div>
+      );
+    }
+  }
+  if (node.type === "sequence") {
+    const Host = sequenceSurfaceHosts.get(node.surfaceId);
+    if (Host) {
+      return (
+        <div className="absolute inset-0 min-h-0 min-w-0">
+          <Host node={node} />
+        </div>
+      );
+    }
+  }
   if (node.type === "trinity") {
     const Host = trinitySurfaceHosts.get(node.surfaceId);
     if (Host) {
@@ -560,6 +604,16 @@ function renderPlaygroundHostSurface(node: UiNode, layout: "canvas" | "panel"): 
     if (Host) {
       return (
         <div className="absolute inset-0 min-h-0 min-w-0">
+          <Host node={node} />
+        </div>
+      );
+    }
+  }
+  if (node.type === "vcs") {
+    const Host = vcsSurfaceHosts.get(node.surfaceId);
+    if (Host) {
+      return (
+        <div className="absolute inset-0 min-h-0 min-w-0 overflow-auto">
           <Host node={node} />
         </div>
       );
@@ -874,11 +928,14 @@ export function UiRenderer({ node, commandBus }: { readonly node: UiNode; readon
     case "gismap":
     case "flow":
     case "dag":
+    case "imperative":
+    case "sequence":
     case "trinity":
     case "shooting":
     case "forms":
     case "raster":
     case "draw":
+    case "vcs":
     case "writer":
     case "semios":
     case "panel":
@@ -976,7 +1033,7 @@ function getDeclarativeWindowBodyComponent(windowKindId: string, bodyKey: string
       const node = factory?.(ctx) ?? { type: "text", value: `Missing declarative body "${bodyKey}"` };
       return (
         <div
-          data-window-content-layout="edgeless"
+          data-window-content-layout={isEdgelessWindowBody(node) ? "edgeless" : "chrome-aware"}
           className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
         >
           <UiRenderer node={node} commandBus={runtime.commandBus} />
@@ -6959,6 +7016,257 @@ export function bootDagPlay(playground: Playground, rootId = "root"): void {
 }
 //#endregion 🔖DagPlayHost
 
+//#region 🔖ImperativePlayHost
+import {
+  IMPERATIVE_PLAY_APP_ID,
+  IMPERATIVE_PLAY_DEFAULT_DOCUMENT_JSON,
+  IMPERATIVE_PLAY_SURFACE_ID,
+  ImperativePlayController,
+  registerImperativePlayDeclarativeBodies,
+} from "@semio-tech/imperative-play";
+import { ImperativeEditor } from "@semio-tech/imperative-react";
+import type { UiImperativeHostSurfaceNode } from "@semio-tech/framework-platform-core";
+
+let imperativePlayChromeRegistered = false;
+const imperativePlayControllerRef: { current: ImperativePlayController | null } = { current: null };
+
+function useImperativePlayController(runtimeOverride?: Platform): ImperativePlayController | undefined {
+  const appCtx = reactHostPort.useContext(PlaygroundContext);
+  const runtime = runtimeOverride ?? appCtx?.runtime;
+  reactHostPort.useSyncExternalStore(
+    (listener) => (runtime ? runtime.subscribeChrome(listener) : () => {}),
+    () => runtime?.chromeGeneration ?? 0,
+    () => 0,
+  );
+  const ctrl = runtime?.getActiveApp()?.controller as ImperativePlayController | undefined;
+  imperativePlayControllerRef.current = ctrl ?? null;
+  return ctrl;
+}
+
+function ImperativePlayPaneSurfaceHost(_props: { readonly node: UiImperativeHostSurfaceNode }): ReactElement {
+  const ctrl = useImperativePlayController();
+  const onDocumentChange = reactHostPort.useCallback(
+    (json: string) => {
+      ctrl?.run("setDocumentJson", { json });
+    },
+    [ctrl],
+  );
+  return (
+    <ImperativeEditor
+      className="h-full min-h-0"
+      documentJson={ctrl?.getDocumentJson() ?? IMPERATIVE_PLAY_DEFAULT_DOCUMENT_JSON}
+      onDocumentChange={onDocumentChange}
+    />
+  );
+}
+
+export function registerImperativePlaySurfaceHosts(): void {
+  if (imperativePlayChromeRegistered) return;
+  imperativePlayChromeRegistered = true;
+  registerUiImperativeSurfaceHost(IMPERATIVE_PLAY_SURFACE_ID, ImperativePlayPaneSurfaceHost);
+  registerImperativePlayDeclarativeBodies();
+}
+
+function ImperativePlayInner({ runtime }: { readonly runtime: Platform }): ReactElement {
+  useImperativePlayController(runtime);
+  return <PlaygroundView runtime={runtime} defaultAppId={IMPERATIVE_PLAY_APP_ID} />;
+}
+
+function ImperativePlayChrome({ runtime }: { readonly runtime: Platform }): ReactElement {
+  return <ImperativePlayInner runtime={runtime} />;
+}
+
+export function mountImperativePlayChrome(playground: Playground, rootId = "root"): void {
+  mountPlaygroundApp(<ImperativePlayChrome runtime={playground.runtime} />, rootId);
+}
+
+const imperativePlayChromeBoot: PlaygroundChromeBoot = {
+  registerHosts: registerImperativePlaySurfaceHosts,
+  mount: mountImperativePlayChrome,
+};
+
+export function bootImperativePlay(playground: Playground, rootId = "root"): void {
+  bootPlayground(playground, imperativePlayChromeBoot, rootId);
+}
+//#endregion 🔖ImperativePlayHost
+
+//#region 🔖SequencePlayHost
+import {
+  SEQUENCE_PLAY_APP_ID,
+  SEQUENCE_PLAY_CATALOGUE_TAB_ID,
+  SEQUENCE_PLAY_DEFAULT_FIXTURE_JSON,
+  SEQUENCE_PLAY_HIERARCHY_TAB_ID,
+  SEQUENCE_PLAY_INSPECTION_TAB_ID,
+  SEQUENCE_PLAY_SURFACE_ID,
+  SEQUENCE_PLAY_WINDOW_KIND_ID,
+  SequencePlayController,
+  buildSequencePlayCatalogueTree,
+  buildSequencePlayHierarchyTree,
+  buildSequencePlayInspectorTree,
+  registerSequencePlayDeclarativeBodies,
+} from "@semio-tech/sequence-play";
+import { DAG_LOD_MODE_AUTOMATIC as SEQUENCE_HOST_LOD_AUTOMATIC, dagLodCanvasProps as sequenceLodCanvasProps, SequenceCanvas } from "@semio-tech/sequence-react";
+
+let sequencePlayChromeRegistered = false;
+const sequencePlayControllerRef: { current: SequencePlayController | null } = { current: null };
+
+function useSequencePlayController(runtimeOverride?: Platform): SequencePlayController | undefined {
+  const appCtx = reactHostPort.useContext(PlaygroundContext);
+  const runtime = runtimeOverride ?? appCtx?.runtime;
+  reactHostPort.useSyncExternalStore(
+    (listener) => (runtime ? runtime.subscribeChrome(listener) : () => {}),
+    () => runtime?.chromeGeneration ?? 0,
+    () => 0,
+  );
+  const ctrl = runtime?.getActiveApp()?.controller as SequencePlayController | undefined;
+  sequencePlayControllerRef.current = ctrl ?? null;
+  return ctrl;
+}
+
+function useSequencePlayInteractionRevision(runtime: Platform): number {
+  return reactHostPort.useSyncExternalStore(
+    (listener) => {
+      const ctrl = runtime.getActiveApp()?.controller as SequencePlayController | undefined;
+      sequencePlayControllerRef.current = ctrl ?? null;
+      const unsubscribeRuntime = runtime.subscribe(listener);
+      const unsubscribeSnapshot = ctrl?.subscribeSnapshot(listener);
+      return () => {
+        unsubscribeRuntime();
+        unsubscribeSnapshot?.();
+      };
+    },
+    () => (runtime.getActiveApp()?.controller as SequencePlayController | undefined)?.getInteractionRevision() ?? 0,
+    () => 0,
+  );
+}
+
+function SequencePlayPaneSurfaceHost({ node }: { readonly node: import("@semio-tech/framework-platform-core").UiSequenceHostSurfaceNode }): ReactElement {
+  const ctrl = useSequencePlayController();
+  const scopeId = node.paneId ?? SEQUENCE_PLAY_WINDOW_KIND_ID;
+  const lodProps = sequenceLodCanvasProps(ctrl?.lodModeForScope(scopeId) ?? SEQUENCE_HOST_LOD_AUTOMATIC);
+  const onLodChange = reactHostPort.useCallback(
+    (lod: import("@semio-tech/dag-react").DagDrawLodKind) => {
+      ctrl?.run("setEffectiveLod", { lod, instanceId: scopeId });
+    },
+    [ctrl, scopeId],
+  );
+  const onFixtureChange = reactHostPort.useCallback(
+    (json: string) => {
+      ctrl?.run("setFixtureJson", { json });
+    },
+    [ctrl],
+  );
+  const onSelectionChange = reactHostPort.useCallback(
+    (ids: readonly string[]) => {
+      ctrl?.run("setSelection", { ids: [...ids] });
+    },
+    [ctrl],
+  );
+  return (
+    <SequenceCanvas
+      className="h-full min-h-0"
+      fixtureJson={ctrl?.getFixtureJson() ?? SEQUENCE_PLAY_DEFAULT_FIXTURE_JSON}
+      reorganize={ctrl?.getReorganize()}
+      runRequest={ctrl?.getRunRequest()}
+      selectedStepIds={ctrl?.getSelectedStepIds() ?? []}
+      onFixtureChange={onFixtureChange}
+      onSelectionChange={onSelectionChange}
+      {...lodProps}
+      onLodChange={onLodChange}
+    />
+  );
+}
+
+export function registerSequencePlaySurfaceHosts(): void {
+  if (sequencePlayChromeRegistered) return;
+  sequencePlayChromeRegistered = true;
+  registerUiSequenceSurfaceHost(SEQUENCE_PLAY_SURFACE_ID, SequencePlayPaneSurfaceHost);
+  registerSequencePlayDeclarativeBodies();
+}
+
+class SequencePlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
+  buildTab(): SidePanelTabConfig {
+    return {
+      id: SEQUENCE_PLAY_HIERARCHY_TAB_ID,
+      icon: shellTabIconComponent(FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, "workbench"),
+      name: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+      order: 0,
+      tree: new CallbackTreePanelDefinition(() => {
+        const ctrl = sequencePlayControllerRef.current;
+        const bus = new CommandBus();
+        const treeNode = buildSequencePlayHierarchyTree(ctrl?.getFixtureJson() ?? SEQUENCE_PLAY_DEFAULT_FIXTURE_JSON, ctrl?.getSelectedStepIds() ?? []);
+        return uiTreeNodeToTreePanelConfig(treeNode, bus);
+      }),
+    };
+  }
+}
+
+class SequencePlayCataloguePanelDefinition extends PureSidePanelTabDefinition {
+  buildTab(): SidePanelTabConfig {
+    return {
+      id: SEQUENCE_PLAY_CATALOGUE_TAB_ID,
+      icon: shellTabIconComponent(FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, "workbench"),
+      name: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+      order: 1,
+      tree: new CallbackTreePanelDefinition(() => {
+        const bus = new CommandBus();
+        return uiTreeNodeToTreePanelConfig(buildSequencePlayCatalogueTree(), bus);
+      }),
+    };
+  }
+}
+
+class SequencePlayInspectionPanelDefinition extends PureSidePanelTabDefinition {
+  buildTab(): SidePanelTabConfig {
+    return {
+      id: SEQUENCE_PLAY_INSPECTION_TAB_ID,
+      icon: shellTabIconComponent(FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, "details"),
+      name: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+      order: 0,
+      tree: new CallbackTreePanelDefinition(() => {
+        const ctrl = sequencePlayControllerRef.current;
+        const bus = new CommandBus();
+        const treeNode = buildSequencePlayInspectorTree(ctrl?.getFixtureJson() ?? SEQUENCE_PLAY_DEFAULT_FIXTURE_JSON, ctrl?.getSelectedStepIds() ?? []);
+        return uiTreeNodeToTreePanelConfig(treeNode, bus);
+      }),
+    };
+  }
+}
+
+function SequencePlayInner({ runtime }: { readonly runtime: Platform }): ReactElement {
+  useSequencePlayController(runtime);
+  const interactionRevision = useSequencePlayInteractionRevision(runtime);
+  const sequencePlayHierarchyPanel = reactHostPort.useMemo(() => new SequencePlayHierarchyPanelDefinition(), []);
+  const sequencePlayCataloguePanel = reactHostPort.useMemo(() => new SequencePlayCataloguePanelDefinition(), []);
+  const sequencePlayInspectionPanel = reactHostPort.useMemo(() => new SequencePlayInspectionPanelDefinition(), []);
+  const augmentPanelTabs = reactHostPort.useMemo(
+    () => ({
+      workbench: [sequencePlayHierarchyPanel, sequencePlayCataloguePanel],
+      details: [sequencePlayInspectionPanel],
+    }),
+    [interactionRevision, sequencePlayCataloguePanel, sequencePlayHierarchyPanel, sequencePlayInspectionPanel],
+  );
+  return <PlaygroundView runtime={runtime} defaultAppId={SEQUENCE_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} />;
+}
+
+function SequencePlayChrome({ runtime }: { readonly runtime: Platform }): ReactElement {
+  return <SequencePlayInner runtime={runtime} />;
+}
+
+export function mountSequencePlayChrome(playground: Playground, rootId = "root"): void {
+  mountPlaygroundApp(<SequencePlayChrome runtime={playground.runtime} />, rootId);
+}
+
+const sequencePlayChromeBoot: PlaygroundChromeBoot = {
+  registerHosts: registerSequencePlaySurfaceHosts,
+  mount: mountSequencePlayChrome,
+};
+
+export function bootSequencePlay(playground: Playground, rootId = "root"): void {
+  bootPlayground(playground, sequencePlayChromeBoot, rootId);
+}
+//#endregion 🔖SequencePlayHost
+
 //#region 🔖TrinityPlayHost
 import {
   TRINITY_JACK_PLAY_CONTROLLER_ID,
@@ -7009,12 +7317,8 @@ import {
   trinityLodCanvasProps,
   type TrinityDrawLodKind,
 } from "@semio-tech/trinity-react";
-import { FormRenderer } from "@semio-tech/forms-react";
-import { Puzzle2dCanvas, buildPuzzle2dSceneDescriptorFromFixture, type Puzzle2dHoverPayload } from "@semio-tech/puzzle-2d-react";
-import { createWorkerLspTransport, createWriterDocument } from "@semio-tech/writer-core";
-import { WriterCanvas } from "@semio-tech/writer-react";
-import { CodeEditor } from "@semio-tech/framework-platform-renderer-react";
-import type { UiEditorHostSurfaceNode, UiFormsHostSurfaceNode, UiPuzzle2dHostSurfaceNode, UiTrinityHostSurfaceNode } from "@semio-tech/framework-platform-core";
+import { createWorkerLspTransport as createTrinityWriterLspTransport, createWriterDocument as createTrinityWriterDocument } from "@semio-tech/writer-core";
+import { WriterCanvas as TrinityWriterCanvas } from "@semio-tech/writer-react";
 
 let trinityPlayChromeRegistered = false;
 const trinityJackControllerRef: { current: TrinityJackPlayController | null } = { current: null };
@@ -7084,7 +7388,7 @@ function useTrinityRewriteController(runtimeOverride?: Platform): TrinityRewrite
   return ctrl;
 }
 
-function TrinityJackPlaySurfaceHost({ node }: { readonly node: UiTrinityHostSurfaceNode }): ReactElement {
+function TrinityJackPlaySurfaceHost({ node }: { readonly node: import("@semio-tech/framework-platform-core").UiTrinityHostSurfaceNode }): ReactElement {
   const appCtx = reactHostPort.useContext(PlaygroundContext);
   const revision = useTrinityJackInteractionRevision(appCtx?.runtime);
   const ctrl = useTrinityJackController();
@@ -7123,8 +7427,8 @@ function TrinityJackEditorSurfaceHost({ node }: { readonly node: import("@semio-
   const ctrl = useTrinityJackController();
   void revision;
   const fixtureJson = ctrl?.getFixtureJson() ?? TRINITY_JACK_PLAY_DEFAULT_FIXTURE_JSON;
-  const document = ctrl?.getWriterDocument() ?? createWriterDocument({ id: "jack-query", languageId: "jack", text: "MATCH (a:Piece) RETURN a.name" });
-  const createLspTransport = reactHostPort.useCallback(() => createWorkerLspTransport(createJackLspWorker(fixtureJson)), [fixtureJson]);
+  const document = ctrl?.getWriterDocument() ?? createTrinityWriterDocument({ id: "jack-query", languageId: "jack", text: "MATCH (a:Piece) RETURN a.name" });
+  const createLspTransport = reactHostPort.useCallback(() => createTrinityWriterLspTransport(createJackLspWorker(fixtureJson)), [fixtureJson]);
   const onChange = reactHostPort.useCallback((next: import("@semio-tech/writer-core").WriterDocumentV1) => {
     trinityJackControllerRef.current?.run("setJackQuery", { value: next.text });
   }, []);
@@ -7132,7 +7436,7 @@ function TrinityJackEditorSurfaceHost({ node }: { readonly node: import("@semio-
     trinityJackControllerRef.current?.run("runJackQuery");
   }, []);
   return (
-    <WriterCanvas
+    <TrinityWriterCanvas
       document={document}
       onChange={onChange}
       onSubmit={onSubmit}
@@ -7195,7 +7499,7 @@ function TrinityJackResultsSurfaceHost({ node }: { readonly node: UiTableHostSur
   );
 }
 
-function TrinityRewriteBeforeSurfaceHost({ node }: { readonly node: UiTrinityHostSurfaceNode }): ReactElement {
+function TrinityRewriteBeforeSurfaceHost({ node }: { readonly node: import("@semio-tech/framework-platform-core").UiTrinityHostSurfaceNode }): ReactElement {
   const appCtx = reactHostPort.useContext(PlaygroundContext);
   const revision = useTrinityRewriteInteractionRevision(appCtx?.runtime);
   const ctrl = useTrinityRewriteController();
@@ -7232,7 +7536,7 @@ function TrinityRewriteBeforeSurfaceHost({ node }: { readonly node: UiTrinityHos
   );
 }
 
-function TrinityRewriteAfterSurfaceHost({ node }: { readonly node: UiTrinityHostSurfaceNode }): ReactElement {
+function TrinityRewriteAfterSurfaceHost({ node }: { readonly node: import("@semio-tech/framework-platform-core").UiTrinityHostSurfaceNode }): ReactElement {
   const appCtx = reactHostPort.useContext(PlaygroundContext);
   const revision = useTrinityRewriteInteractionRevision(appCtx?.runtime);
   const ctrl = useTrinityRewriteController();
@@ -7259,7 +7563,7 @@ function TrinityRewriteAfterSurfaceHost({ node }: { readonly node: UiTrinityHost
   );
 }
 
-function TrinityRewriteLhsSurfaceHost({ node: _node }: { readonly node: UiPuzzle2dHostSurfaceNode }): ReactElement {
+function TrinityRewriteLhsSurfaceHost({ node: _node }: { readonly node: import("@semio-tech/framework-platform-core").UiPuzzle2dHostSurfaceNode }): ReactElement {
   const appCtx = reactHostPort.useContext(PlaygroundContext);
   const revision = useTrinityRewriteInteractionRevision(appCtx?.runtime);
   const ctrl = useTrinityRewriteController();
@@ -7312,7 +7616,7 @@ function TrinityRewriteLhsSurfaceHost({ node: _node }: { readonly node: UiPuzzle
   );
 }
 
-function TrinityRewriteRhsSurfaceHost({ node: _node }: { readonly node: UiPuzzle2dHostSurfaceNode }): ReactElement {
+function TrinityRewriteRhsSurfaceHost({ node: _node }: { readonly node: import("@semio-tech/framework-platform-core").UiPuzzle2dHostSurfaceNode }): ReactElement {
   const appCtx = reactHostPort.useContext(PlaygroundContext);
   const revision = useTrinityRewriteInteractionRevision(appCtx?.runtime);
   const ctrl = useTrinityRewriteController();
@@ -7372,7 +7676,7 @@ function TrinityRewriteJackSurfaceHost({ node: _node }: { readonly node: import(
   void revision;
   void ctrl?.getHoverEpoch();
   void ctrl?.getSelectEpoch();
-  const document = ctrl?.getWriterDocumentJack() ?? createWriterDocument({ id: "rewrite-jack", languageId: "jack", text: "" });
+  const document = ctrl?.getWriterDocumentJack() ?? createTrinityWriterDocument({ id: "rewrite-jack", languageId: "jack", text: "" });
   const onHoverChange = reactHostPort.useCallback((offset: number | null) => {
     trinityRewriteControllerRef.current?.run("setJackHover", { offset });
   }, []);
@@ -7380,7 +7684,7 @@ function TrinityRewriteJackSurfaceHost({ node: _node }: { readonly node: import(
     trinityRewriteControllerRef.current?.run("setJackSelect", range);
   }, []);
   return (
-    <WriterCanvas
+    <TrinityWriterCanvas
       document={document}
       className="h-full"
       placeholder="Generated Jack query"
@@ -7394,7 +7698,7 @@ function TrinityRewriteJackSurfaceHost({ node: _node }: { readonly node: import(
   );
 }
 
-function TrinityRewriteParametersSurfaceHost({ node: _node }: { readonly node: UiFormsHostSurfaceNode }): ReactElement {
+function TrinityRewriteParametersSurfaceHost({ node: _node }: { readonly node: import("@semio-tech/framework-platform-core").UiFormsHostSurfaceNode }): ReactElement {
   const appCtx = reactHostPort.useContext(PlaygroundContext);
   const revision = useTrinityRewriteInteractionRevision(appCtx?.runtime);
   const ctrl = useTrinityRewriteController();
@@ -9073,8 +9377,19 @@ function useRasterPlayController(runtimeOverride?: Platform): RasterPlayControll
   const appCtx = reactHostPort.useContext(PlaygroundContext);
   const runtime = runtimeOverride ?? appCtx?.runtime;
   reactHostPort.useSyncExternalStore(
-    (listener) => (runtime ? runtime.subscribe(listener) : () => {}),
-    () => runtime?.generation ?? 0,
+    (listener) => {
+      const unsubscribeRuntime = runtime ? runtime.subscribe(listener) : () => {};
+      const ctrl = runtime?.getActiveApp()?.controller as RasterPlayController | undefined;
+      const unsubscribeCtrl = ctrl?.subscribe(listener);
+      return () => {
+        unsubscribeRuntime();
+        unsubscribeCtrl?.();
+      };
+    },
+    () => {
+      const ctrl = runtime?.getActiveApp()?.controller as RasterPlayController | undefined;
+      return ctrl?.getInteractionRevision() ?? runtime?.generation ?? 0;
+    },
     () => 0,
   );
   const ctrl = runtime?.getActiveApp()?.controller as RasterPlayController | undefined;
@@ -9118,6 +9433,9 @@ function RasterPlayPaneSurfaceHost({ node }: { readonly node: UiRasterHostSurfac
   const onHover = reactHostPort.useCallback((payload: import("@semio-tech/raster-core").RasterHoverPayload) => {
     ctrl?.run("setHover", { id: payload.id, kind: payload.kind, sourceId: CANVAS_HOVER_SOURCE_CANVAS });
   }, [ctrl]);
+  const onViewportChange = reactHostPort.useCallback((viewport: import("@semio-tech/raster-core").RasterViewport) => {
+    ctrl?.run("setCompositeViewport", viewport);
+  }, [ctrl]);
   const common = {
     document: doc,
     selectedIds,
@@ -9125,6 +9443,8 @@ function RasterPlayPaneSurfaceHost({ node }: { readonly node: UiRasterHostSurfac
     kindHover,
     activeTool: doc.activeTool,
     camera: doc.camera,
+    contentViewport: ctrl.getCompositeViewport(),
+    onViewportChange: node.view === "composite" ? onViewportChange : undefined,
     onHover,
     onSelect: (ids: readonly string[]) => ctrl?.run("setSelection", { ids: [...ids] }),
     onCommit: (document: typeof doc, selectLayerId?: string) => ctrl?.run("commitDocument", { document, selectLayerId }),
@@ -9617,6 +9937,128 @@ export function bootDrawPlay(playground: Playground, rootId = "root"): void {
   bootPlayground(playground, drawPlayChromeBoot, rootId);
 }
 //#endregion 🔖DrawPlayHost
+
+//#region 🔖VcsPlayHost
+import type { UiVcsHostSurfaceNode } from "@semio-tech/framework-platform-core";
+import { HistoryTable } from "@semio-tech/vcs-react";
+import {
+  VCS_PLAY_APP_ID,
+  VCS_PLAY_CONTROLLER_ID,
+  VCS_PLAY_SURFACE_ID_EDITOR,
+  VCS_PLAY_SURFACE_ID_HISTORY,
+  VcsPlayController,
+  registerVcsPlayDeclarativeBodies,
+} from "@semio-tech/vcs-play";
+
+let vcsPlayChromeRegistered = false;
+const vcsPlayControllerRef: { current: VcsPlayController | null } = { current: null };
+
+function useVcsPlayController(runtimeOverride?: Platform): VcsPlayController | undefined {
+  const appCtx = reactHostPort.useContext(PlaygroundContext);
+  const runtime = runtimeOverride ?? appCtx?.runtime;
+  reactHostPort.useSyncExternalStore(
+    (listener) => (runtime ? runtime.subscribe(listener) : () => {}),
+    () => runtime?.generation ?? 0,
+    () => 0,
+  );
+  const ctrl = runtime?.getActiveApp()?.controller as VcsPlayController | undefined;
+  vcsPlayControllerRef.current = ctrl ?? null;
+  return ctrl;
+}
+
+function useVcsPlayInteractionRevision(runtime: Platform): number {
+  return reactHostPort.useSyncExternalStore(
+    (listener) => {
+      const ctrl = runtime.getActiveApp()?.controller as VcsPlayController | undefined;
+      vcsPlayControllerRef.current = ctrl ?? null;
+      const unsubscribeRuntime = runtime.subscribe(listener);
+      const unsubscribeSnapshot = ctrl?.subscribeSnapshot(listener);
+      return () => {
+        unsubscribeRuntime();
+        unsubscribeSnapshot?.();
+      };
+    },
+    () => (runtime.getActiveApp()?.controller as VcsPlayController | undefined)?.getInteractionRevision() ?? 0,
+    () => 0,
+  );
+}
+
+function VcsPlayEditorSurfaceHost({ node: _node }: { readonly node: UiVcsHostSurfaceNode }): ReactElement {
+  const ctrl = useVcsPlayController();
+  const projection = ctrl?.projection();
+  if (!ctrl || !projection) {
+    return <div className="p-double text-sm text-muted-foreground">No VCS document</div>;
+  }
+  return (
+    <div className="flex h-full min-h-0 flex-col gap-double p-double">
+      <div className="flex flex-wrap items-center gap-single">
+        <button type="button" className="rounded border px-2 py-1 text-xs" onClick={() => ctrl.run("incrementCounter")}>
+          + Counter ({projection.counter})
+        </button>
+        <button type="button" className="rounded border px-2 py-1 text-xs" onClick={() => ctrl.run("commitCheckpoint")}>
+          Commit checkpoint
+        </button>
+        <button type="button" className="rounded border px-2 py-1 text-xs" onClick={() => ctrl.run("undo")}>
+          Undo
+        </button>
+        <button type="button" className="rounded border px-2 py-1 text-xs" onClick={() => ctrl.run("redo")}>
+          Redo
+        </button>
+        <button type="button" className="rounded border px-2 py-1 text-xs" onClick={() => ctrl.run("createAlternative")}>
+          New alternative
+        </button>
+      </div>
+      <section className="rounded border p-double text-sm">
+        <div>
+          <strong>{projection.title}</strong> · counter {projection.counter}
+        </div>
+        <div className="text-muted-foreground">{projection.notes || "—"}</div>
+      </section>
+    </div>
+  );
+}
+
+function VcsPlayHistorySurfaceHost({ node: _node }: { readonly node: UiVcsHostSurfaceNode }): ReactElement {
+  const ctrl = useVcsPlayController();
+  const columns = ctrl?.historyColumns() ?? [];
+  return (
+    <div className="h-full min-h-0 overflow-auto p-single">
+      <HistoryTable columns={columns} />
+    </div>
+  );
+}
+
+function VcsPlayInner({ playground }: { readonly playground: Playground }): ReactElement {
+  useVcsPlayController(playground.runtime);
+  useVcsPlayInteractionRevision(playground.runtime);
+  return <PlaygroundView runtime={playground.runtime} defaultAppId={VCS_PLAY_APP_ID} />;
+}
+
+export function registerVcsPlaySurfaceHosts(): void {
+  if (vcsPlayChromeRegistered) return;
+  vcsPlayChromeRegistered = true;
+  registerUiVcsSurfaceHost(VCS_PLAY_SURFACE_ID_EDITOR, VcsPlayEditorSurfaceHost);
+  registerUiVcsSurfaceHost(VCS_PLAY_SURFACE_ID_HISTORY, VcsPlayHistorySurfaceHost);
+  registerVcsPlayDeclarativeBodies();
+}
+
+function VcsPlayChrome({ playground }: { readonly playground: Playground }): ReactElement {
+  return <VcsPlayInner playground={playground} />;
+}
+
+export function mountVcsPlayChrome(playground: Playground, rootId = "root"): void {
+  mountPlaygroundApp(<VcsPlayChrome playground={playground} />, rootId);
+}
+
+const vcsPlayChromeBoot: PlaygroundChromeBoot = {
+  registerHosts: registerVcsPlaySurfaceHosts,
+  mount: mountVcsPlayChrome,
+};
+
+export function bootVcsPlay(playground: Playground, rootId = "root"): void {
+  bootPlayground(playground, vcsPlayChromeBoot, rootId);
+}
+//#endregion 🔖VcsPlayHost
 
 //#region 🔖WriterPlayHost
 import type { UiWriterHostSurfaceNode } from "@semio-tech/framework-platform-core";
@@ -10485,10 +10927,8 @@ import {
 } from "@semio-tech/semios-core";
 import { defaultDrawDocument, drawDocumentFromJson, drawDocumentToJson, type DrawDocument } from "@semio-tech/draw-core";
 import { defaultRasterDocument, parseRasterDocument, rasterDocumentToJson, type RasterDocument } from "@semio-tech/raster-core";
-import { RasterCanvas } from "@semio-tech/raster-react";
-import { defaultFormSpec, parseFormSpec, type FormSpec } from "@semio-tech/forms-core";
-import { FormEditSurface } from "@semio-tech/forms-react";
-import { ObjectStateProvider, PlayCanvas as Puzzle3dPlayCanvas, parseFixtureV1 as parsePuzzle3dFixtureV1 } from "@semio-tech/puzzle-3d-react";
+import type { FormSpec } from "@semio-tech/forms-core";
+import { PlayCanvas as Puzzle3dPlayCanvas, parseFixtureV1 as parsePuzzle3dFixtureV1 } from "@semio-tech/puzzle-3d-react";
 import { PresentationDeck } from "@semio-tech/framework-presentation-renderer-react";
 import type { PresentationDeckV1 } from "@semio-tech/framework-presentation-core";
 
@@ -10691,7 +11131,7 @@ function SemiosAppHostRouter({ instance }: { readonly instance: import("@semio-t
 	);
 	const writerDoc = reactHostPort.useMemo(() => {
 		const doc = materialized as { text?: string } | null;
-		return createWriterDocument({ id: instance?.id ?? "writer", languageId: "jack", text: doc?.text ?? instance?.sourceDocument.inline ?? "" });
+		return createWriterPlayDocument({ id: instance?.id ?? "writer", languageId: "jack", text: doc?.text ?? instance?.sourceDocument.inline ?? "" });
 	}, [instance, materialized]);
 	const fixtureJson = reactHostPort.useMemo(() => JSON.stringify(materialized ?? {}), [materialized]);
 	const hostChrome = (
@@ -10722,7 +11162,7 @@ function SemiosAppHostRouter({ instance }: { readonly instance: import("@semio-t
 			return (
 				<div className="flex h-full min-h-0 flex-col overflow-hidden">
 					{hostChrome}
-					<WriterCanvas
+					<WriterPlayCanvas
 						document={writerDoc}
 						onChange={(document) => {
 							if (!store) return;
@@ -10776,6 +11216,10 @@ function SemiosAppHostRouter({ instance }: { readonly instance: import("@semio-t
 			return <FlowCanvas fixtureJson={fixtureJson} className="h-full min-h-0" />;
 		case "dag":
 			return <DagCanvas fixtureJson={fixtureJson} className="h-full min-h-0" reorganize />;
+		case "imperative":
+			return <ImperativeEditor documentJson={fixtureJson} className="h-full min-h-0" />;
+		case "sequence":
+			return <SequenceCanvas fixtureJson={fixtureJson} className="h-full min-h-0" />;
 		case "trinity":
 			return <TrinityCanvas fixtureJson={fixtureJson} className="h-full min-h-0" reorganize />;
 		case "gismap":
@@ -10870,22 +11314,21 @@ function SemiosSemiosSurfaceHost({ node }: { readonly node: UiSemiosHostSurfaceN
 
 function SemiosPlayInner({ playground }: { readonly playground: Playground }): ReactElement {
 	const ctrl = useSemiosPlayController(playground.runtime);
-	const generation = ctrl?.getStore().getGeneration() ?? 0;
-	void generation;
 	const bus = playground.runtime.commandBus;
 	const detailTabs = reactHostPort.useMemo(
 		() =>
 			ctrl
 				? [
-						new SemiosPlayInspectionPanelDefinition(() => (ctrl ? buildSemiosPlayInspectorTree(ctrl) : uiDeclarativeSectionsToTree([])), bus).resolveTab(),
+						new SemiosPlayInspectionPanelDefinition(() => buildSemiosPlayInspectorTree(ctrl), bus).resolveTab(),
 					]
 				: [],
-		[ctrl, bus, generation],
+		[ctrl, bus],
 	);
+	const augmentPanelTabs = reactHostPort.useMemo(() => ({ details: detailTabs }), [detailTabs]);
 	if (!ctrl) return <PlaygroundView runtime={playground.runtime} defaultAppId={SEMIOS_PLAY_APP_ID} />;
 	return (
 		<SemiosStudioProvider store={ctrl.getStore()}>
-			<PlaygroundView runtime={playground.runtime} defaultAppId={SEMIOS_PLAY_APP_ID} augmentPanelTabs={{ details: detailTabs }} />
+			<PlaygroundView runtime={playground.runtime} defaultAppId={SEMIOS_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} />
 		</SemiosStudioProvider>
 	);
 }

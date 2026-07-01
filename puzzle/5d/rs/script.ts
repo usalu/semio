@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** 👯 `@semio-tech/puzzle-5d-rs` router: `bun ./script.ts <wasm|test>`. */
 import { execFileSync } from "node:child_process";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runWasmPackWebBuild } from "../../../repo/lib/js/src/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runWasmPackWebBuild } from "../../../repo/lib/js/index.ts";
 
 class WasmScript extends BundleScript {
 	run(): void {

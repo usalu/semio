@@ -1,0 +1,34 @@
+{
+	"$schema": "../../../node_modules/nx/schemas/project-schema.json",
+	"name": "@semio-tech/sequence-react",
+	"version": "0.1.0",
+	"description": "sequence · React execution-flow canvas",
+	"type": "module",
+	"private": true,
+	"exports": {
+		".": "./index.tsx"
+	},
+	"dependencies": {
+		"@semio-tech/dag-react": "workspace:*",
+		"@semio-tech/imperative-core": "workspace:*",
+		"@semio-tech/imperative-react": "workspace:*",
+		"@semio-tech/sequence-core": "workspace:*",
+		"@semio-tech/ui-react": "workspace:*",
+		"@semio-tech/ui-styling": "workspace:*"
+	},
+	"devDependencies": {
+		"@types/react": "^19.2.8",
+		"@types/react-dom": "^19.2.3",
+		"react": "^19.2.3",
+		"react-dom": "^19.2.3",
+		"typescript": "^5.9.3",
+		"vitest": "^4.0.17"
+	},
+	"license": "LGPL-3.0-or-later",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/usalu/semio.git",
+		"directory": "sequence/react"
+	},
+	"bundleKind": "library"
+}

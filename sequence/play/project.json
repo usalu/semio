@@ -1,0 +1,41 @@
+{
+	"name": "@semio-tech/sequence-play",
+	"$schema": "../../../node_modules/nx/schemas/project-schema.json",
+	"targets": {
+		"dev": {
+			"executor": "nx:run-commands",
+			"options": {
+				"cwd": "sequence/play",
+				"command": "bun ./script.ts dev",
+				"env": {
+					"SEQUENCE_PLAY_PORT": "6077"
+				},
+				"forwardAllArgs": true
+			}
+		},
+		"build": {
+			"executor": "nx:run-commands",
+			"options": {
+				"cwd": "sequence/play",
+				"command": "bun ./script.ts build",
+				"forwardAllArgs": true
+			}
+		},
+		"test": {
+			"executor": "nx:run-commands",
+			"options": {
+				"cwd": "sequence/play",
+				"command": "bun ./script.ts test",
+				"forwardAllArgs": true
+			}
+		},
+		"validate": {
+			"executor": "nx:run-commands",
+			"options": {
+				"cwd": "sequence/play",
+				"command": "bun ./script.ts validate",
+				"forwardAllArgs": true
+			}
+		}
+	}
+}

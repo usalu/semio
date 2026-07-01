@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** 🧭 `@semio-tech/draw-react` task router: `bun ./script.ts test`. */
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runBun, runVitest } from "../../repo/lib/js/src/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runBun, runVitest } from "../../repo/lib/js/index.ts";
 
 const flowCoreWasmScript = join(import.meta.dir, "../../flow/core/script.ts");
 

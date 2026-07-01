@@ -1,0 +1,25 @@
+{
+	"$schema": "../../../node_modules/nx/schemas/project-schema.json",
+	"name": "@semio-tech/sequence-core",
+	"version": "0.1.0",
+	"description": "sequence · execution-flow canvas host",
+	"type": "module",
+	"private": true,
+	"exports": {
+		".": "./index.ts"
+	},
+	"dependencies": {
+		"@semio-tech/imperative-core": "workspace:*"
+	},
+	"devDependencies": {
+		"typescript": "^5.9.3",
+		"vitest": "^4.0.17"
+	},
+	"license": "LGPL-3.0-or-later",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/usalu/semio.git",
+		"directory": "sequence/core"
+	},
+	"bundleKind": "library"
+}

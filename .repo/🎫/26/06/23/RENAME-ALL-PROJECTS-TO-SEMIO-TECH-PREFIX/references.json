@@ -14801,7 +14801,7 @@
   "repo/lib/js/src/index.test.ts": [
     "repo"
   ],
-  "repo/lib/js/src/index.ts": [
+  "repo/lib/js/index.ts": [
     "repo",
     "@repo/lib"
   ],

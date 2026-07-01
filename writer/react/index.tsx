@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { clearColorResolveCache, serializeGraphVelloThemePaletteJson } from "@semio-tech/ui-styling";
-import { CanvasPickMenu, ContextMenuController, canvasViewportClass, reactHostPort, readWindowChromeScrollClearancePx, useCanvasPickInteraction, useWindowScrollClearanceActive, useWindowContentScrollClearance, windowContentScrollClearanceClass, type CanvasPickTarget, type ContextMenuItem } from "@semio-tech/ui-react";
+import { CanvasPickMenu, ContextMenuController, canvasViewportClass, reactHostPort, useCanvasPickInteraction, type CanvasPickTarget, type ContextMenuItem } from "@semio-tech/ui-react";
 import { parseCanvasPickTargetKey } from "@semio-tech/framework-core";
 import {
 	applyTextEdits,
@@ -46,12 +46,6 @@ export async function ensureWriterWasmLoaded(): Promise<void> {
 
 export { WriterSession };
 // #endregion 🔖Wasm
-
-function resolveWriterCameraY(cameraY: number, container: HTMLElement | null, windowScrollClearance: boolean): number {
-	if (cameraY > 0) return cameraY;
-	if (!windowScrollClearance || !container) return cameraY;
-	return readWindowChromeScrollClearancePx(container);
-}
 
 export interface WriterCanvasProps {
 	readonly document: WriterDocumentV1;
@@ -253,10 +247,10 @@ export function WriterCanvas({
 	const canvasRef = useRef<HTMLCanvasElement | null>(null);
 	const containerRef = useRef<HTMLDivElement | null>(null);
 	const inputRef = useRef<HTMLTextAreaElement | null>(null);
-	const windowScrollClearance = useWindowScrollClearanceActive();
 	const sessionRef = useRef<WriterSession | null>(null);
 	const lspRef = useRef<LspClient | null>(null);
 	const versionRef = useRef(1);
+	const tickLoopRef = useRef<number | null>(null);
 	const documentRef = useRef(document);
 	const diagnosticsRef = useRef<readonly LspDiagnostic[]>([]);
 	const lastLocalTextRef = useRef(document.text);
@@ -602,7 +596,7 @@ export function WriterCanvas({
 				session.detachGpu();
 				return;
 			}
-			session.setCamera(0, resolveWriterCameraY(documentRef.current.camera.y, container, windowScrollClearance), 1);
+			session.setCamera(0, documentRef.current.camera.y, 1);
 			session.setText(documentRef.current.text);
 			syncEditorSpans(documentRef.current.text, documentRef.current.languageId, session);
 			resize();
@@ -621,12 +615,12 @@ export function WriterCanvas({
 			session.detachGpu();
 			sessionRef.current = null;
 		};
-	}, [focusEditor, renderFrame, windowScrollClearance]);
+	}, [focusEditor, renderFrame]);
 
 	useEffect(() => {
 		const session = sessionRef.current;
 		if (!session?.gpuReady()) return;
-		session.setCamera(0, resolveWriterCameraY(document.camera.y, containerRef.current, windowScrollClearance), 1);
+		session.setCamera(0, document.camera.y, 1);
 		if (document.text !== lastLocalTextRef.current) {
 			session.setText(document.text);
 			lastLocalTextRef.current = document.text;

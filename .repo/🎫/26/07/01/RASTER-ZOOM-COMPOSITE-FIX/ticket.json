@@ -1,0 +1,14 @@
+{
+  "title": "Raster Zoom Composite Fix",
+  "emoji": "🔍",
+  "status": "closed",
+  "description": "Fix raster zoom bugs: composite/navigator camera mismatch, blue selection outline misaligned, content not scaling on zoom.",
+  "summary": "Fixed raster composite/navigator zoom architecture: composite keeps session camera in React/WASM without document re-sync on zoom; navigator uses fit-to-bounds overview camera with React viewport overlay driven by composite camera + composite viewport; WASM selection chrome disabled in navigator view; framework host wires contentViewport/onViewportChange; pick/hover/pan paths restored for composite vs navigator; added core/play tests for navigator camera helpers and composite viewport command.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1789"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪5c2af64e51704d9daa109d393db6a3c6"
+  ]
+}

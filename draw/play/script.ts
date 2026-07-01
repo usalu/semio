@@ -11,7 +11,7 @@ import {
 	runBundleScriptMain,
 	runViteBunxDev,
 	runVitest,
-} from "../../repo/lib/js/src/index.ts";
+} from "../../repo/lib/js/index.ts";
 import { resolveDrawPlayFixtureSlug } from "./fixture-slugs.ts";
 
 class DevScript extends BundleScript {

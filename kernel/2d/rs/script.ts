@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🦀 `kernel/2d/rs` router: `bun ./script.ts test`. */
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../repo/lib/js/src/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../repo/lib/js/index.ts";
 
 class TestScript extends BundleScript {
   run(): void {

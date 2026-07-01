@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🔗 `@semio-tech/reasoning-mindmap-wires-react` router: `bun ./script.ts test`. */
-import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest } from "../../../../repo/lib/js/src/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest } from "../../../../repo/lib/js/index.ts";
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {

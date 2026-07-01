@@ -2905,7 +2905,7 @@ const BuiltinVirtualFileSystemKindRenderer: ComponentKindRenderer = ({ component
 		descriptorValues: row.descriptorValues,
 	}));
 	return (
-		<div className="flex h-full min-h-0 w-full flex-col overflow-hidden p-2" data-component-kind="virtualFileSystem">
+		<div className="flex h-full min-h-0 w-full flex-col overflow-hidden" data-component-kind="virtualFileSystem">
 			<VirtualFileSystemView
 				schema={schema}
 				rows={rows}
@@ -2981,7 +2981,7 @@ const BuiltinTableKindRenderer: ComponentKindRenderer = ({ component, platform }
 	const model = useStore(component as Table);
 	const controllerId = component.controllerId;
 	return (
-		<div className="flex h-full min-h-0 w-full flex-col overflow-auto p-2" data-component-kind="table">
+		<div className="flex h-full min-h-0 w-full flex-col overflow-auto" data-component-kind="table">
 			{model.columns.length === 0 && model.rows.length === 0 ? (
 				<div className="text-xs text-muted-foreground">{model.emptyMessage ?? "No rows"}</div>
 			) : (
@@ -3514,7 +3514,7 @@ export function CodeEditor({ value, onChange, onSubmit, tokenize, complete, clas
 
 	return (
 		<div className={cn("relative flex h-full min-h-0 w-full min-w-0 bg-canvas font-mono text-xs", className)} data-code-editor>
-			<div className="select-none border-r border-border px-2 py-2 text-right text-muted-foreground tabular-nums">
+			<div className="select-none border-r border-border px-2 py-0 text-right text-muted-foreground tabular-nums">
 				{Array.from({ length: lineCount }, (_, index) => (
 					<div key={index}>{index + 1}</div>
 				))}
@@ -3522,13 +3522,13 @@ export function CodeEditor({ value, onChange, onSubmit, tokenize, complete, clas
 			<div className="relative min-h-0 min-w-0 flex-1">
 				<pre
 					ref={preRef}
-					className="pointer-events-none absolute inset-0 m-0 overflow-hidden whitespace-pre-wrap break-words p-2"
+					className="pointer-events-none absolute inset-0 m-0 overflow-hidden whitespace-pre-wrap break-words p-0"
 					aria-hidden
 					dangerouslySetInnerHTML={{ __html: renderHighlightedMarkup(value, tokens) }}
 				/>
 				<textarea
 					ref={textareaRef}
-					className="absolute inset-0 m-0 resize-none overflow-auto bg-transparent p-2 text-transparent caret-foreground outline-none"
+					className="absolute inset-0 m-0 resize-none overflow-auto bg-transparent p-0 text-transparent caret-foreground outline-none"
 					value={value}
 					placeholder={placeholder}
 					spellCheck={false}
@@ -4405,7 +4405,7 @@ function getDeclarativeWindowBodyComponent(windowKindId: string, bodyKey: string
 			const factory = getWindowBodyFactory(bodyKey);
 			const node = factory?.(ctx) ?? { type: "text", value: `Missing declarative body "${bodyKey}"` };
 			return (
-				<div data-window-content-layout="edgeless" className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+				<div data-window-content-layout={isEdgelessWindowBody(node) ? "edgeless" : "chrome-aware"} className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
 					<UiRenderer node={node} commandBus={platform.commandBus} platform={platform} />
 				</div>
 			);

@@ -18,7 +18,7 @@
 import * as fs from "fs";
 import { JSDOM } from "jsdom";
 import * as path from "path";
-import { BundleScript, ScriptRouter, runBundleScriptMain, exportAnimatedSvgToMp4 } from "../../repo/lib/js/src/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, exportAnimatedSvgToMp4 } from "../../repo/lib/js/index.ts";
 
 // #endregion 🔌Adapters
 

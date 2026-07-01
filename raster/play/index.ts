@@ -84,6 +84,7 @@ import {
 	type RasterKindHover,
 	type RasterLayerNode,
 	type RasterToolId,
+	type RasterViewport,
 	RASTER_ADJUSTMENT_KINDS,
 	RASTER_BLEND_MODES,
 	RASTER_FILTER_KINDS,
@@ -739,6 +740,7 @@ export class RasterPlayController extends Controller implements PlaygroundFixtur
 	private interactionRevision = 0;
 	private listeners = new Set<() => void>();
 	private hostBridge: RasterPlayHostBridge | null = null;
+	private compositeViewport: RasterViewport = { width: 1, height: 1 };
 
 	constructor(bus: CommandBus, notifyPlatform: () => void) {
 		super(RASTER_PLAY_CONTROLLER_ID, bus, notifyPlatform);
@@ -906,6 +908,10 @@ export class RasterPlayController extends Controller implements PlaygroundFixtur
 
 	getHoveredKind(): RasterKindHover | null {
 		return this.hoveredKind;
+	}
+
+	getCompositeViewport(): RasterViewport {
+		return this.compositeViewport;
 	}
 
 	getFixtureCatalog(): PlaygroundFixtureCatalog | null {
@@ -1146,6 +1152,15 @@ export class RasterPlayController extends Controller implements PlaygroundFixtur
 				}
 				return;
 			}
+			case "setCompositeViewport": {
+				const width = Number(args.width);
+				const height = Number(args.height);
+				if (width > 0 && height > 0) {
+					this.compositeViewport = { width, height };
+					this.bump();
+				}
+				return;
+			}
 			case "commitDocument": {
 				const document = args.document as RasterDocument;
 				if (!document || document.schema !== "raster.document/v1") return;
@@ -1278,6 +1293,15 @@ if (import.meta.vitest) {
 			const doc = rasterDocumentFromJson(RASTER_PLAY_FILE_FIXTURE_JSON_BY_ID.semio!);
 			const tree = buildRasterPlayMasksTree(doc, [], null, null);
 			expect(tree.sections[0]?.items.some((item) => item.id.includes(".mask."))).toBe(true);
+		});
+	});
+
+	describe("RasterPlayController composite viewport", () => {
+		it("stores composite viewport dimensions for navigator overlay", () => {
+			const bus = new CommandBus();
+			const ctrl = new RasterPlayController(bus, () => {});
+			ctrl.run("setCompositeViewport", { width: 1440, height: 900 });
+			expect(ctrl.getCompositeViewport()).toEqual({ width: 1440, height: 900 });
 		});
 	});
 

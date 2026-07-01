@@ -17,7 +17,7 @@
       "id": "rust-ui-styling",
       "description": "ui_styling crate generated.rs — linear-sRGB themes, strokes, radii, metrics",
       "generator": "script.ts generate",
-      "outputs": ["rs/src/generated.rs"]
+      "outputs": ["rs/generated.rs"]
     },
     {
       "id": "python-ui-styling",

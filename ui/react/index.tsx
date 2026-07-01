@@ -28,7 +28,7 @@ import * as ToggleGroupPrimitive from "@radix-ui/react-toggle-group";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, OnSelectionChangeParams, ReactFlowInstance } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { domSizePx, readSizeVarPx, resolveColorHex, resolveSemanticColorHex, semanticVar, sizeVar, STYLING_COMPACT_ROOT_PX, STYLING_DOM, themeColorVar, tokenVar } from "@semio-tech/ui-styling";
+import { domSizePx, readSizeVarPx, resolveColorHex, resolveSemanticColorHex, semanticVar, sizeVar, STYLING_COMPACT_ROOT_PX, STYLING_DOM, themeColorVar, tokenVar, uiSpacingPx } from "@semio-tech/ui-styling";
 import {
   CANVAS_HOVER_SOURCE_CANVAS,
   CANVAS_HOVER_SOURCE_PICK_MENU,
@@ -4168,34 +4168,35 @@ export const windowEngagementOverlayFoldedClass = windowMeasuresOverlayFoldedCla
 /** @emoji 📐 Command input body below the engagement chrome bar. */
 export const windowEngagementBodyClass = "flex min-h-0 min-w-0 flex-auto flex-col gap-half overflow-hidden p-tiny";
 
-/** @emoji 📐 CSS variable for the first-line scroll clearance under floating window chrome. */
+/** @emoji 📐 CSS variable for invisible top clearance below floating window chrome. */
 export const windowChromeScrollClearanceVar = "--window-chrome-scroll-clearance";
 
-/** @emoji 📐 Scrollable window bodies hide the first line under chrome by default; scroll up to reveal it. */
-export const windowContentScrollClearanceClass =
-  "overscroll-contain [scroll-padding-top:var(--window-chrome-scroll-clearance)]";
+/** @emoji 📐 Chrome-aware window bodies reserve invisible top space so content stays below floating chrome while scrolling. */
+export const windowBodyChromeAwareInsetClass =
+  "has-[[data-window-content-layout=chrome-aware]]:pt-[var(--window-chrome-scroll-clearance)]";
 
-/** @emoji 📐 Resolves {@link windowChromeScrollClearanceVar} to px for canvas camera offsets. */
-export function readWindowChromeScrollClearancePx(element?: Element | null): number {
-  return readSizeVarPx(windowChromeScrollClearanceVar, element);
+/** @emoji 📐 Resolves {@link windowChromeScrollClearanceVar} to px for layout math. */
+export function readWindowChromeScrollClearancePx(element?: Element | null, rootPx = STYLING_COMPACT_ROOT_PX): number {
+  const measured = measureWindowChromeScrollClearancePx(element);
+  if (measured > 0) return measured;
+  const fromCss = readSizeVarPx(windowChromeScrollClearanceVar, element);
+  if (fromCss > 0) return fromCss;
+  return uiSpacingPx(9, rootPx);
 }
 
-const WindowScrollClearanceContext = reactHostPort.createContext(false);
-
-/** @emoji 📐 True when the nearest {@link Window} hosts floating chrome that content may scroll beneath. */
-export function useWindowScrollClearanceActive(): boolean {
-  return reactHostPort.useContext(WindowScrollClearanceContext);
-}
-
-/** @emoji 📐 Sets initial scroll so the first content line sits under window chrome until scrolled up. */
-export function useWindowContentScrollClearance(scrollerRef: React.RefObject<HTMLElement | null>, enabled = true): void {
-  reactHostPort.useLayoutEffect(() => {
-    if (!enabled) return;
-    const el = scrollerRef.current;
-    if (!el) return;
-    const clearance = readWindowChromeScrollClearancePx(el);
-    if (clearance > 0) el.scrollTop = clearance;
-  }, [enabled]);
+/** @emoji 📐 Measures live floating engagement/measures chrome height inside the nearest window body. */
+export function measureWindowChromeScrollClearancePx(element?: Element | null): number {
+  const windowBody = element?.closest('[data-slot="window-body"]');
+  if (!windowBody) return 0;
+  const overlays = windowBody.querySelectorAll('[data-slot="window-engagement-overlay"], [data-slot="window-measures-overlay"]');
+  const bodyTop = windowBody.getBoundingClientRect().top;
+  let maxBottom = bodyTop;
+  for (const overlay of overlays) {
+    if (!(overlay instanceof HTMLElement)) continue;
+    const bottom = overlay.getBoundingClientRect().bottom;
+    if (bottom > maxBottom) maxBottom = bottom;
+  }
+  return Math.max(0, Math.ceil(maxBottom - bodyTop));
 }
 
 /** @emoji 📐 Labelled icon action in window rail chrome bars (options + command). */
@@ -8619,26 +8620,13 @@ export { ResizableHandle, ResizablePanel, ResizablePanelGroup };
 /** @emoji 📜 Native overflow scroll host (avoids Radix ScrollArea `setViewport` / `setScrollbar*Enabled` ref update loops). */
 const Scrollable = reactHostPort.forwardRef<HTMLDivElement, React.ComponentPropsWithoutRef<"div"> & { orientation?: "vertical" | "horizontal" | "both" }>(
   ({ className, children, orientation = "vertical", ...props }, ref) => {
-    const windowScrollClearance = useWindowScrollClearanceActive();
-    const scrollerRef = reactHostPort.useRef<HTMLDivElement | null>(null);
-    const setScrollerRef = reactHostPort.useCallback(
-      (node: HTMLDivElement | null) => {
-        scrollerRef.current = node;
-        if (typeof ref === "function") ref(node);
-        else if (ref) ref.current = node;
-      },
-      [ref],
-    );
-    useWindowContentScrollClearance(scrollerRef, windowScrollClearance);
     return (
       <div
-        ref={setScrollerRef}
+        ref={ref}
         data-slot="scroll-area"
-        data-window-scroll-clearance={windowScrollClearance ? "true" : undefined}
         className={cn(
           "relative min-h-0 min-w-0 size-full focus-visible:ring-ring/50 transition-[color,box-shadow] outline-none focus-visible:ring-[length:var(--stroke-focus)] focus-visible:outline-1",
           orientation === "horizontal" ? "overflow-x-auto overflow-y-hidden" : orientation === "vertical" ? "overflow-y-auto overflow-x-hidden" : "overflow-auto",
-          windowScrollClearance && windowContentScrollClearanceClass,
           className,
         )}
         {...props}
@@ -15183,6 +15171,24 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
     }
   }, [active]);
 
+  reactHostPort.useLayoutEffect(() => {
+    const body = windowBodyRef.current;
+    if (!body || !(engagement || measures)) return;
+    const sync = () => {
+      const px = measureWindowChromeScrollClearancePx(body);
+      if (px > 0) body.style.setProperty(windowChromeScrollClearanceVar, `${px}px`);
+      else body.style.removeProperty(windowChromeScrollClearanceVar);
+    };
+    sync();
+    const ro = new ResizeObserver(sync);
+    ro.observe(body);
+    for (const slot of ["window-engagement-overlay", "window-measures-overlay"] as const) {
+      const overlay = body.querySelector(`[data-slot="${slot}"]`);
+      if (overlay) ro.observe(overlay);
+    }
+    return () => ro.disconnect();
+  }, [active, engagement, measures, showEngagementChrome, measuresFolded, measuresExpanded, engagementActivated, engagementCommandActive]);
+
   const dismissEngagementIfEmpty = reactHostPort.useCallback(
     (relatedTarget: EventTarget | null) => {
       if (engagementPinnedRef.current) return;
@@ -15252,11 +15258,9 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
         <div
           ref={windowBodyRef}
           data-slot="window-body"
-          className={cn("relative flex min-w-0 flex-col overflow-hidden", fill ? "min-h-0 flex-1" : "h-auto shrink-0")}
+          className={cn("relative flex min-w-0 flex-col overflow-hidden", windowBodyChromeAwareInsetClass, fill ? "min-h-0 flex-1" : "h-auto shrink-0")}
         >
-          <WindowScrollClearanceContext.Provider value={!!(engagement || measures)}>
-            {error ? <DefaultErrorDisplay error={error} /> : loading && skeleton ? skeleton : children}
-          </WindowScrollClearanceContext.Provider>
+          {error ? <DefaultErrorDisplay error={error} /> : loading && skeleton ? skeleton : children}
           {measures ? (
             <GlassTierProvider tier="windowOptions">
               <div
@@ -22765,14 +22769,20 @@ if (import.meta.vitest) {
       expect(shouldRouteKeysToWindowEngagement(text)).toBe(false);
     });
 
-    it("Window keeps all body content edgeless and exposes scroll clearance for floating chrome", () => {
-      const { container } = render(
-        <Window id="edgeless-window" active engagement={{ input: { placeholder: "Command" } }} measures={<div>LOD</div>}>
-          <div data-window-content-layout="edgeless">Table</div>
+    it("Window applies invisible top inset for chrome-aware bodies and keeps canvas bodies edgeless", () => {
+      const { container, rerender } = render(
+        <Window id="chrome-aware-window" active engagement={{ input: { placeholder: "Command" } }} measures={<div>LOD</div>}>
+          <div data-window-content-layout="chrome-aware">Writer</div>
         </Window>,
       );
       const body = container.querySelector('[data-slot="window-body"]');
-      expect(body?.className).not.toContain("pt-[calc(var(--size-medium)+2*var(--ui-spacing))]");
+      expect(body?.className).toContain("has-[[data-window-content-layout=chrome-aware]]:pt-[var(--window-chrome-scroll-clearance)]");
+
+      rerender(
+        <Window id="edgeless-window" active engagement={{ input: { placeholder: "Command" } }} measures={<div>LOD</div>}>
+          <div data-window-content-layout="edgeless">Puzzle</div>
+        </Window>,
+      );
       expect(container.querySelector('[data-window-content-layout="edgeless"]')).toBeTruthy();
     });
 

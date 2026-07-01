@@ -43,7 +43,7 @@ impl Operation for StateIncrement {
         let current = input
             .get(&key)
             .and_then(|v| v.as_atom())
-            .and_then(|a| a.as_decimal())
+            .and_then(|a| a.as_f64())
             .unwrap_or(0.0);
         Ok(Dictionary::new().insert(key, Value::Atom(Atom::Decimal(current + by))))
     }
@@ -79,7 +79,7 @@ fn read_number(input: &Dictionary, key: &str) -> Result<f64, EvalError> {
     input
         .get(key)
         .and_then(|v| v.as_atom())
-        .and_then(|a| a.as_decimal())
+        .and_then(|a| a.as_f64())
         .ok_or_else(|| EvalError::MissingInput(key.into()))
 }
 
@@ -174,6 +174,10 @@ pub fn catalogue_json(registry: &Registry) -> String {
                 "abbreviation": info.abbreviation,
                 "icon": info.icon,
                 "summary": info.summary,
+                "inputs": info.inputs.iter().map(|channel| serde_json::json!({
+                    "name": channel.name,
+                    "code": channel.code,
+                })).collect::<Vec<_>>(),
             })
         })
         .collect();
@@ -200,6 +204,21 @@ mod tests {
     use super::*;
 
     #[test]
+    fn catalogue_json_includes_input_channels() {
+        let registry = module_registry();
+        let raw = catalogue_json(&registry);
+        let parsed: serde_json::Value = serde_json::from_str(&raw).expect("catalogue json");
+        let message = parsed["sections"][0]["items"]
+            .as_array()
+            .and_then(|items| items.iter().find(|item| item["kind"] == "log.print"))
+            .and_then(|item| item["inputs"].as_array())
+            .and_then(|inputs| inputs.first().cloned())
+            .expect("log.print inputs");
+        assert_eq!(message["name"], "message");
+        assert_eq!(message["code"], "S");
+    }
+
+    #[test]
     fn state_increment_updates_counter() {
         let registry = module_registry();
         let input = Dictionary::new()
@@ -207,7 +226,7 @@ mod tests {
             .insert("by", Value::Atom(Atom::Decimal(2.0)))
             .insert("counter", Value::Atom(Atom::Decimal(5.0)));
         let output = registry.dispatch("state.increment", &input).expect("dispatch");
-        let value = output.get("counter").and_then(|v| v.as_atom()).and_then(|a| a.as_decimal());
+        let value = output.get("counter").and_then(|v| v.as_atom()).and_then(|a| a.as_f64());
         assert_eq!(value, Some(7.0));
     }
 }

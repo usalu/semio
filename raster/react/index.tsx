@@ -26,12 +26,16 @@ import {
 	resolveRasterPickTargetsAtScreenPoint,
 	resolveRasterMarqueeLayerHits,
 	rasterCameraEqual,
+	rasterNavigatorFitCamera,
+	rasterNavigatorViewportOverlay,
+	rasterWheelCamera,
 	type RasterCamera,
 	type RasterDocument,
 	type RasterHoverPayload,
 	type RasterKindHover,
 	type RasterPickTarget,
 	type RasterToolId,
+	type RasterViewport,
 } from "@semio-tech/raster-core";
 import initRasterWasm, { RasterSession } from "../rs/pkg/raster.js";
 
@@ -104,6 +108,8 @@ export interface RasterCanvasProps {
 	readonly kindHover?: RasterKindHover | null;
 	readonly activeTool?: RasterToolId;
 	readonly className?: string;
+	readonly contentViewport?: RasterViewport;
+	readonly onViewportChange?: (viewport: RasterViewport) => void;
 	readonly onCameraChange?: (camera: RasterCamera) => void;
 	readonly onHover?: (payload: RasterHoverPayload) => void;
 	readonly onSelect?: (ids: readonly string[]) => void;
@@ -256,6 +262,8 @@ export const RasterCanvas: React.FC<RasterCanvasProps> = ({
 	kindHover = null,
 	activeTool,
 	className,
+	contentViewport,
+	onViewportChange,
 	onCameraChange,
 	onHover,
 	onSelect,
@@ -265,7 +273,22 @@ export const RasterCanvas: React.FC<RasterCanvasProps> = ({
 	const containerRef = useRef<HTMLDivElement | null>(null);
 	const viewportRef = useRef({ width: 1, height: 1 });
 	const panningRef = useRef(false);
-	const [sessionCamera, setSessionCamera] = useState<RasterCamera>(() => camera ?? document.camera);
+	const panLastRef = useRef<{ x: number; y: number } | null>(null);
+	const [viewportSize, setViewportSize] = useState<RasterViewport>({ width: 1, height: 1 });
+	const [localCamera, setLocalCamera] = useState<RasterCamera>(() => camera ?? document.camera);
+	const isNavigator = viewMode === "navigator";
+	const contentCamera = camera ?? document.camera;
+	const interactionCamera = isNavigator ? contentCamera : localCamera;
+	const navigatorCamera = React.useMemo(
+		() => (isNavigator ? rasterNavigatorFitCamera(document, viewportSize) : localCamera),
+		[isNavigator, document, viewportSize, localCamera],
+	);
+	const externalCameraKey = `${contentCamera.x}:${contentCamera.y}:${contentCamera.zoom}`;
+	const navigatorOverlay = React.useMemo(() => {
+		if (!isNavigator || !contentViewport) return null;
+		if (contentViewport.width <= 1 || contentViewport.height <= 1) return null;
+		return rasterNavigatorViewportOverlay(contentCamera, contentViewport, navigatorCamera, viewportSize);
+	}, [contentCamera, contentViewport, isNavigator, navigatorCamera, viewportSize]);
 	const marqueeRef = useRef({
 		tracking: false,
 		active: false,
@@ -278,20 +301,12 @@ export const RasterCanvas: React.FC<RasterCanvasProps> = ({
 	const [gpuAttached, setGpuAttached] = useState(false);
 	const selectionMethod = rasterSelectionMethod(activeTool);
 
-	useEffect(() => {
-		const next = camera ?? document.camera;
-		setSessionCamera(next);
-	}, [camera, document.camera]);
-
 	const emitCamera = useCallback(
 		(next: RasterCamera) => {
-			setSessionCamera((previous) => {
-				if (rasterCameraEqual(previous, next)) return previous;
-				onCameraChange?.(next);
-				return next;
-			});
+			if (rasterCameraEqual(contentCamera, next)) return;
+			onCameraChange?.(next);
 		},
-		[onCameraChange],
+		[contentCamera, onCameraChange],
 	);
 
 	useEffect(() => () => renderer.dispose(), [renderer]);
@@ -307,10 +322,33 @@ export const RasterCanvas: React.FC<RasterCanvasProps> = ({
 	}, [renderer, document, gpuAttached]);
 
 	useEffect(() => {
-		if (!gpuAttached) return;
-		renderer.syncCamera(sessionCamera);
+		if (!gpuAttached || !isNavigator) return;
+		renderer.syncCamera(navigatorCamera);
 		renderer.invalidate();
-	}, [gpuAttached, renderer, sessionCamera]);
+	}, [gpuAttached, isNavigator, navigatorCamera, renderer]);
+
+	useEffect(() => {
+		if (!gpuAttached || isNavigator) return;
+		const wasmCamera = renderer.mirrorCameraFromSession();
+		setLocalCamera((previous) => (rasterCameraEqual(previous, contentCamera) ? previous : contentCamera));
+		if (rasterCameraEqual(wasmCamera, contentCamera)) return;
+		renderer.syncCamera(contentCamera);
+		renderer.invalidate();
+	}, [externalCameraKey, gpuAttached, isNavigator, renderer, contentCamera]);
+
+	const applyCompositeCamera = useCallback(
+		(next: RasterCamera) => {
+			setLocalCamera((previous) => (rasterCameraEqual(previous, next) ? previous : next));
+			if (!rasterCameraEqual(contentCamera, next)) onCameraChange?.(next);
+		},
+		[contentCamera, onCameraChange],
+	);
+
+	useEffect(() => {
+		if (isNavigator || !onViewportChange) return;
+		if (viewportSize.width <= 1 || viewportSize.height <= 1) return;
+		onViewportChange(viewportSize);
+	}, [isNavigator, onViewportChange, viewportSize]);
 
 	useEffect(() => {
 		renderer.syncSelection(selectedIds);
@@ -339,6 +377,8 @@ export const RasterCanvas: React.FC<RasterCanvasProps> = ({
 			const w = Math.max(1, Math.floor(rect.width));
 			const h = Math.max(1, Math.floor(rect.height));
 			viewportRef.current = { width: w, height: h };
+			setViewportSize({ width: w, height: h });
+			if (!isNavigator) onViewportChange?.({ width: w, height: h });
 			if (renderer.session.gpuReady()) {
 				renderer.setSize(w, h, dpr);
 			}
@@ -357,6 +397,10 @@ export const RasterCanvas: React.FC<RasterCanvasProps> = ({
 				await renderer.attachCanvas(canvas, w, h, dpr);
 				if (disposed) return;
 				setAttachError(null);
+				const initialCamera = isNavigator
+					? rasterNavigatorFitCamera(document, { width: w, height: h })
+					: (camera ?? document.camera);
+				renderer.syncCamera(initialCamera);
 				setGpuAttached(true);
 				renderer.invalidate();
 			} catch (error) {
@@ -364,6 +408,10 @@ export const RasterCanvas: React.FC<RasterCanvasProps> = ({
 				const message = error instanceof Error ? error.message : String(error);
 				if (message.includes("already attached")) {
 					setAttachError(null);
+					const initialCamera = isNavigator
+						? rasterNavigatorFitCamera(document, { width: w, height: h })
+						: (camera ?? document.camera);
+					renderer.syncCamera(initialCamera);
 					setGpuAttached(true);
 					resize();
 					renderer.invalidate();
@@ -386,7 +434,7 @@ export const RasterCanvas: React.FC<RasterCanvasProps> = ({
 			setGpuAttached(false);
 			observer.disconnect();
 		};
-	}, [renderer]);
+	}, [camera, document, isNavigator, onViewportChange, renderer]);
 
 	const clientPoint = useCallback((event: React.PointerEvent): { x: number; y: number } => {
 		return clientPointFromCanvas(canvasRef.current, event);
@@ -404,11 +452,11 @@ export const RasterCanvas: React.FC<RasterCanvasProps> = ({
 	const resolveTargetsAtClient = useCallback(
 		(client: { readonly x: number; readonly y: number }) => {
 			const screen = clientPointFromCanvas(canvasRef.current, client);
-			return resolveRasterPickTargetsAtScreenPoint(document, sessionCamera, viewportRef.current, screen).map(
+			return resolveRasterPickTargetsAtScreenPoint(document, interactionCamera, viewportRef.current, screen).map(
 				rasterPickTargetToCanvas,
 			);
 		},
-		[document, sessionCamera],
+		[document, interactionCamera],
 	);
 
 	const canvasPick = useCanvasPickInteraction({
@@ -429,11 +477,16 @@ export const RasterCanvas: React.FC<RasterCanvasProps> = ({
 		(event: WheelEvent) => {
 			event.preventDefault();
 			const point = clientPointFromCanvas(canvasRef.current, event);
+			if (isNavigator && contentViewport) {
+				emitCamera(rasterWheelCamera(contentCamera, contentViewport, point, event.deltaY));
+				renderer.invalidate();
+				return;
+			}
 			renderer.session.wheelScreen(point.x, point.y, event.deltaY);
-			emitCamera(renderer.mirrorCameraFromSession());
+			applyCompositeCamera(renderer.mirrorCameraFromSession());
 			renderer.invalidate();
 		},
-		[emitCamera, renderer],
+		[applyCompositeCamera, contentCamera, contentViewport, emitCamera, isNavigator, renderer],
 	);
 
 	useEffect(() => {
@@ -463,13 +516,19 @@ export const RasterCanvas: React.FC<RasterCanvasProps> = ({
 				canvasPick.onCanvasPointerDown({ x: event.clientX, y: event.clientY });
 				return;
 			}
-			if (event.button === 1 || (!isRasterSelectionTool(activeTool) && event.button === 0)) {
-				if (event.button === 1) panningRef.current = true;
+			if (event.button === 1) {
+				panningRef.current = true;
+				panLastRef.current = point;
+				if (!isNavigator) renderer.session.pointerDownScreen(point.x, point.y, event.button);
+				(event.target as HTMLElement).setPointerCapture(event.pointerId);
+				return;
+			}
+			if (!isRasterSelectionTool(activeTool) && event.button === 0) {
 				renderer.session.pointerDownScreen(point.x, point.y, event.button);
 				(event.target as HTMLElement).setPointerCapture(event.pointerId);
 			}
 		},
-		[activeTool, canvasPick, clientPoint, renderer, selectionMethod],
+		[activeTool, canvasPick, clientPoint, isNavigator, renderer, selectionMethod],
 	);
 
 	const updateMarqueeOverlay = useCallback(
@@ -506,10 +565,10 @@ export const RasterCanvas: React.FC<RasterCanvasProps> = ({
 			});
 			const rect = screenRectFromPoints(points);
 			if (!rect) return;
-			const hits = resolveRasterMarqueeLayerHits(document, sessionCamera, viewportRef.current, rect, coverage === "partial");
+			const hits = resolveRasterMarqueeLayerHits(document, localCamera, viewportRef.current, rect, coverage === "partial");
 			onSelect?.(selectionMergeIds(mergeMode, selectedIds, hits));
 		},
-		[document, onSelect, selectedIds, selectionMethod, sessionCamera],
+		[document, localCamera, onSelect, selectedIds, selectionMethod],
 	);
 
 	const handlePointerMove = useCallback(
@@ -526,14 +585,31 @@ export const RasterCanvas: React.FC<RasterCanvasProps> = ({
 				}
 				return;
 			}
-			if (!canvasPick.pickMenuOpen && isRasterSelectionTool(activeTool)) {
+			if (panningRef.current) {
+				if (isNavigator && panLastRef.current) {
+					const last = panLastRef.current;
+					emitCamera({
+						...contentCamera,
+						x: contentCamera.x - (point.x - last.x) / contentCamera.zoom,
+						y: contentCamera.y - (point.y - last.y) / contentCamera.zoom,
+					});
+					panLastRef.current = point;
+				} else {
+					renderer.session.pointerMoveScreen(point.x, point.y);
+					applyCompositeCamera(renderer.mirrorCameraFromSession());
+				}
+				renderer.invalidate();
+				return;
+			}
+			if (!isNavigator && !canvasPick.pickMenuOpen && isRasterSelectionTool(activeTool)) {
 				canvasPick.onCanvasPointerMove({ x: event.clientX, y: event.clientY });
 			}
-			renderer.session.pointerMoveScreen(point.x, point.y);
-			if (panningRef.current) emitCamera(renderer.mirrorCameraFromSession());
-			renderer.invalidate();
+			if (!isNavigator) {
+				renderer.session.pointerMoveScreen(point.x, point.y);
+				renderer.invalidate();
+			}
 		},
-		[activeTool, canvasPick, clientPoint, emitCamera, renderer, selectionMethod, updateMarqueeOverlay],
+		[activeTool, applyCompositeCamera, canvasPick, clientPoint, contentCamera, emitCamera, isNavigator, renderer, selectionMethod, updateMarqueeOverlay],
 	);
 
 	const handlePointerUp = useCallback(
@@ -563,18 +639,25 @@ export const RasterCanvas: React.FC<RasterCanvasProps> = ({
 				setMarqueeOverlay(null);
 				return;
 			}
+			if (panningRef.current) {
+				if (!isNavigator) renderer.session.pointerUpScreen(point.x, point.y);
+				panningRef.current = false;
+				panLastRef.current = null;
+				if (!isNavigator) applyCompositeCamera(renderer.mirrorCameraFromSession());
+				renderer.invalidate();
+				return;
+			}
 			renderer.session.pointerUpScreen(point.x, point.y);
-			if (panningRef.current) emitCamera(renderer.mirrorCameraFromSession());
-			panningRef.current = false;
 			renderer.invalidate();
 		},
 		[
 			activeTool,
+			applyCompositeCamera,
 			canvasPick,
 			clientPoint,
 			commitMarqueeSelection,
-			document,
 			emitCamera,
+			isNavigator,
 			onSelect,
 			renderer,
 			selectedIds,
@@ -596,6 +679,17 @@ export const RasterCanvas: React.FC<RasterCanvasProps> = ({
 				<div className="bg-window/80 text-muted-foreground pointer-events-none absolute inset-0 flex items-center justify-center p-double text-center text-sm">
 					Canvas unavailable: {attachError}
 				</div>
+			) : null}
+			{navigatorOverlay ? (
+				<div
+					className="border-active-base/80 bg-active-base/10 pointer-events-none absolute z-10 border"
+					style={{
+						left: navigatorOverlay.x,
+						top: navigatorOverlay.y,
+						width: navigatorOverlay.width,
+						height: navigatorOverlay.height,
+					}}
+				/>
 			) : null}
 			{marqueeOverlay?.shape === "rect" ? (
 				<SelectionMarquee coverage={marqueeOverlay.coverage} shape="rect" rect={marqueeOverlay.rect} />

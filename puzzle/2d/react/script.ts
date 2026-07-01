@@ -2,9 +2,9 @@
 /** 🧭 `@semio-tech/puzzle-2d-react` task router: `bun ./script.ts test|policy [args…]`. */
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import type { FileLinter } from "../../../repo/lib/js/src/index.ts";
-import { dependencyBoundaryBreachesForFile } from "../../../repo/lib/js/src/index.ts";
-import { getWorkspaceRoot } from "../../../repo/lib/js/src/index.ts";
+import type { FileLinter } from "../../../repo/lib/js/index.ts";
+import { dependencyBoundaryBreachesForFile } from "../../../repo/lib/js/index.ts";
+import { getWorkspaceRoot } from "../../../repo/lib/js/index.ts";
 import {
   BundleScript,
   ScriptRouter,
@@ -12,8 +12,8 @@ import {
   runBun,
   runBundleScriptMain,
   runVitest,
-} from "../../../repo/lib/js/src/index.ts";
-import { defineLint } from "../../../repo/lib/js/src/index.ts";
+} from "../../../repo/lib/js/index.ts";
+import { defineLint } from "../../../repo/lib/js/index.ts";
 
 export const policyFile = "index.tsx";
 

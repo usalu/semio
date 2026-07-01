@@ -2,7 +2,7 @@
 /** 🧭 `@semio-tech/framework-playground-core` task router: `bun ./script.ts test`, `bun ./script.ts audit`. */
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest } from "../../../../repo/lib/js/src/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest } from "../../../../repo/lib/js/index.ts";
 
 const auditTicketDir = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../.repo/🎫/26/07/01/PLAYGROUND-WINDOW-MODE-COMPLETENESS-PASS");
 

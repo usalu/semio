@@ -1008,6 +1008,8 @@ export type PlaygroundHostKind =
 	| "wires"
 	| "flow"
 	| "dag"
+	| "imperative"
+	| "sequence"
 	| "trinity-jack"
 	| "trinity-rewrite"
 	| "procedural-3d"
@@ -1018,6 +1020,7 @@ export type PlaygroundHostKind =
 	| "draw"
 	| "writer"
 	| "semios"
+	| "vcs"
 	| "cad"
 	| "gis-2d"
 	| "projektetage"
@@ -1039,6 +1042,8 @@ export const PLAYGROUND_PORTS: Record<PlaygroundHostKind, PlaygroundPortSpec> = 
 	wires: { dev: 6015, env: "WIRES_PLAY_PORT" },
 	flow: { dev: 6016, test: 6029, env: "FLOW_PLAY_PORT" },
 	dag: { dev: 6017, test: 6030, env: "DAG_PLAY_PORT" },
+	imperative: { dev: 6076, env: "IMPERATIVE_PLAY_PORT" },
+	sequence: { dev: 6077, env: "SEQUENCE_PLAY_PORT" },
 	"trinity-jack": { dev: 6054, test: 6055, env: "TRINITY_JACK_PLAY_PORT" },
 	"trinity-rewrite": { dev: 6056, test: 6057, env: "TRINITY_REWRITE_PLAY_PORT" },
 	forms: { dev: 6058, test: 6059, env: "FORMS_PLAY_PORT" },
@@ -1046,6 +1051,7 @@ export const PLAYGROUND_PORTS: Record<PlaygroundHostKind, PlaygroundPortSpec> = 
 	draw: { dev: 6064, test: 6065, env: "DRAW_PLAY_PORT" },
 	writer: { dev: 6062, test: 6063, env: "WRITER_PLAY_PORT" },
 	semios: { dev: 6066, test: 6067, env: "SEMIOS_PLAY_PORT" },
+	vcs: { dev: 6075, env: "VCS_PLAY_PORT" },
 	"procedural-3d": { dev: 6018, test: 6031, env: "PROCEDURAL_3D_PLAY_PORT" },
 	"procedural-2d": { dev: 6021, test: 6033, env: "PROCEDURAL_2D_PLAY_PORT" },
 	shooting: { dev: 6019, test: 6032, env: "SHOOTING_PLAY_PORT" },

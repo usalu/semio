@@ -109,7 +109,7 @@ describe("bundle-script", () => {
     expect(router.usage()).toContain("b");
   });
 
-  test("gitRepoRoot uses monorepo toplevel from repo/lib/js/src", async () => {
+  test("gitRepoRoot uses monorepo toplevel from repo/lib/js", async () => {
     const { gitRepoRoot } = await import("./index.ts");
     const { spawnSync } = await import("node:child_process");
     const top = gitRepoRoot(import.meta.dir);
@@ -117,7 +117,7 @@ describe("bundle-script", () => {
     expect(n).toBeGreaterThan(1000);
   });
 
-  test("findRepoRoot reaches monorepo from repo/lib/js/src", () => {
+  test("findRepoRoot reaches monorepo from repo/lib/js", () => {
     const root = findRepoRoot(import.meta.dir);
     expect(existsSync(join(root, "nx.json"))).toBe(true);
   });

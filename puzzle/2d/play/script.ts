@@ -14,7 +14,7 @@ import {
   runPlaywright,
   runViteBunxDev,
   runVitest,
-} from "../../../repo/lib/js/src/index.ts";
+} from "../../../repo/lib/js/index.ts";
 import { resolvePuzzle2dPlayFixtureSlug } from "./index.ts";
 
 const wasmScript = join(import.meta.dir, "../rs/script.ts");

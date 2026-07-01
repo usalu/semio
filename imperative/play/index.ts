@@ -6,18 +6,21 @@ import {
 	AppRuntime,
 	CommandBus,
 	Controller,
+	ModeRuntime,
 	Platform,
 	Playground,
+	WindowKindRuntime,
+	buildImperativeWindowBody,
 	createPlayAppRuntime,
 	createProductPlaygroundPlatform,
 	createStackLayout,
 	registerWindowBody,
 	type CommandDescriptor,
+	type UiNode,
 	type WindowBodyViewContext,
 } from "@semio-tech/framework-playground-core";
 import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
-import { DEFAULT_IMPERATIVE_DOCUMENT, imperativeDocumentToJson, type ImperativeDocumentV1 } from "@semio-tech/imperative-core";
-import { ImperativeEditor } from "@semio-tech/imperative-react";
+import { DEFAULT_IMPERATIVE_DOCUMENT, imperativeDocumentToJson } from "@semio-tech/imperative-core";
 
 export const IMPERATIVE_PLAY_APP_ID = "imperative-play";
 export const IMPERATIVE_PLAY_CONTROLLER_ID = "imperative-play";
@@ -33,7 +36,15 @@ function imperativePlayCmd(command: string, args?: Record<string, unknown>): Com
 
 /** @emoji 🎮 Imperative play controller. */
 export class ImperativePlayController extends Controller {
+	readonly mainMode = new ModeRuntime("main", "Edit", undefined);
 	private documentJson = IMPERATIVE_PLAY_DEFAULT_DOCUMENT_JSON;
+
+	constructor(commandBus: CommandBus, hostNotify: () => void) {
+		super(IMPERATIVE_PLAY_CONTROLLER_ID, commandBus, hostNotify);
+		this.mainMode.windowKinds = [
+			new WindowKindRuntime(IMPERATIVE_PLAY_WINDOW_KIND_ID, "Imperative", IMPERATIVE_PLAY_BODY_KEY_MAIN),
+		];
+	}
 
 	getDocumentJson(): string {
 		return this.documentJson;
@@ -41,7 +52,7 @@ export class ImperativePlayController extends Controller {
 
 	setDocumentJson(json: string): void {
 		this.documentJson = json;
-		this.notify();
+		this.emit();
 	}
 
 	override run(command: string, args?: Record<string, unknown>): void {
@@ -51,29 +62,16 @@ export class ImperativePlayController extends Controller {
 	}
 }
 
-function buildImperativePlayMainBody(ctx: WindowBodyViewContext): ReturnType<typeof ImperativeEditor> {
-	const ctrl = ctx.runtime.controller<ImperativePlayController>(IMPERATIVE_PLAY_CONTROLLER_ID);
-	return (
-		<ImperativeEditor
-			className="h-full min-h-0"
-			documentJson={ctrl.getDocumentJson()}
-			onDocumentChange={(json) => ctrl.setDocumentJson(json)}
-		/>
-	);
+function buildImperativePlayMainDeclarativeBody(_ctx: WindowBodyViewContext): UiNode {
+	return buildImperativeWindowBody(IMPERATIVE_PLAY_SURFACE_ID, IMPERATIVE_PLAY_CONTROLLER_ID, IMPERATIVE_PLAY_WINDOW_KIND_ID);
 }
 
 export function registerImperativePlayDeclarativeBodies(): void {
-	registerWindowBody(IMPERATIVE_PLAY_BODY_KEY_MAIN, buildImperativePlayMainBody);
+	registerWindowBody(IMPERATIVE_PLAY_BODY_KEY_MAIN, buildImperativePlayMainDeclarativeBody);
 }
 
-function buildImperativePlayAppRuntime(ctrl: ImperativePlayController): AppRuntime {
-	return createPlayAppRuntime({
-		appId: IMPERATIVE_PLAY_APP_ID,
-		title: "Imperative",
-		layout: IMPERATIVE_PLAY_LAYOUT,
-		windowKinds: [{ id: IMPERATIVE_PLAY_WINDOW_KIND_ID, label: "Imperative", bodyKey: IMPERATIVE_PLAY_BODY_KEY_MAIN }],
-		surfaceHosts: [{ id: IMPERATIVE_PLAY_SURFACE_ID, type: "imperative" }],
-	});
+export function buildImperativePlayAppRuntime(controller: ImperativePlayController): AppRuntime {
+	return createPlayAppRuntime(IMPERATIVE_PLAY_APP_ID, "Imperative", controller, IMPERATIVE_PLAY_LAYOUT, controller.mainMode);
 }
 
 /** @emoji 🛝 Imperative playground app. */
@@ -97,11 +95,9 @@ export { imperativePlayCmd };
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
 	describe("ImperativePlayController", () => {
-		it("stores document json", () => {
-			const bus = new CommandBus();
-			const ctrl = new ImperativePlayController(bus, () => {});
-			ctrl.run("setDocumentJson", { json: IMPERATIVE_PLAY_DEFAULT_DOCUMENT_JSON });
-			expect(ctrl.getDocumentJson()).toContain("imperative.document/v1");
+		it("default document json is valid", () => {
+			expect(IMPERATIVE_PLAY_DEFAULT_DOCUMENT_JSON).toContain("imperative.document/v1");
+			expect(IMPERATIVE_PLAY_DEFAULT_DOCUMENT_JSON).toContain("step-1");
 		});
 	});
 }

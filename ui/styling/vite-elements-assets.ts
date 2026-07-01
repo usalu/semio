@@ -27,7 +27,7 @@ import {
   playgroundTestPortString,
   type PlaygroundHostKind,
   type PlaygroundSiteKind,
-} from "../../repo/lib/js/src/index.ts";
+} from "../../repo/lib/js/index.ts";
 // #endregion 🔌Adapters
 
 export {
@@ -59,6 +59,49 @@ export function playgroundStaticSiteBuildOptions(overrides?: UserConfig["build"]
 /** @emoji 🔗 True when a request targets Vite prebundled `node_modules/.vite/deps` chunks. */
 export function isPlaygroundOptimizedDepUrl(url: string): boolean {
   return url.includes("/node_modules/.vite/deps/");
+}
+
+/** @emoji 🧱 Stubs vitest and testing-library when test regions enter the browser graph. */
+export function playgroundVitestDevStubPlugin(): Plugin {
+  const vitestStubId = "\0playground-vitest-dev-stub";
+  const testingLibraryStubId = "\0playground-testing-library-dev-stub";
+  return {
+    name: "playground-vitest-dev-stub",
+    enforce: "pre",
+    resolveId(id) {
+      if (id === "vitest" || id.startsWith("vitest/") || id.startsWith("@vitest/")) return vitestStubId;
+      if (id === "@testing-library/react" || id.startsWith("@testing-library/")) return testingLibraryStubId;
+      return undefined;
+    },
+    load(id) {
+      if (id === vitestStubId) {
+        return "export default {}; export const describe = () => {}; export const it = () => {}; export const expect = () => ({ toBe: () => {}, toEqual: () => {} }); export const vi = { fn: () => {}, mock: () => {}, spyOn: () => {} };";
+      }
+      if (id === testingLibraryStubId) {
+        return "export default {}; export const render = () => ({}); export const screen = {}; export const fireEvent = {}; export const waitFor = async (fn) => fn();";
+      }
+    },
+  };
+}
+
+const PLAYGROUND_PLAYWRIGHT_DEV_STUB_ID = "\0playground-playwright-dev-stub";
+
+/** @emoji 🧱 Stubs Playwright when test-only regions are pulled into the browser graph. */
+export function playgroundPlaywrightDevStubPlugin(): Plugin {
+  return {
+    name: "playground-playwright-dev-stub",
+    enforce: "pre",
+    resolveId(id) {
+      if (id === "@playwright/test" || id === "playwright" || id === "playwright-core" || id === "chromium-bidi") {
+        return PLAYGROUND_PLAYWRIGHT_DEV_STUB_ID;
+      }
+      return undefined;
+    },
+    load(id) {
+      if (id !== PLAYGROUND_PLAYWRIGHT_DEV_STUB_ID) return;
+      return "export default {}; export const test = () => {}; export const expect = () => ({ toBe: () => {}, toEqual: () => {} });";
+    },
+  };
 }
 
 /** @emoji 🔄 Full-reload connected clients when a stale optimized-dep chunk returns 504. */
@@ -433,7 +476,7 @@ const PLAYGROUND_RENDERER_PUZZLE_HOSTS_START = "//#region 🔖Puzzle3dPlayHost";
 const PLAYGROUND_RENDERER_BOOT_START = "//#region 🔖Boot";
 const PLAYGROUND_RENDERER_VITEST_START = "//#region 🧪Tests";
 
-export type PlaygroundRendererPuzzleKind = "2d" | "3d" | "5d" | "map" | "flow" | "dag" | "trinity-jack" | "trinity-rewrite" | "procedural-3d" | "procedural-2d" | "presentation" | "wires" | "shooting" | "forms" | "raster" | "writer" | "semios";
+export type PlaygroundRendererPuzzleKind = "2d" | "3d" | "5d" | "map" | "flow" | "dag" | "imperative" | "sequence" | "trinity-jack" | "trinity-rewrite" | "procedural-3d" | "procedural-2d" | "presentation" | "wires" | "shooting" | "forms" | "raster" | "writer" | "semios" | "vcs";
 
 const PLAYGROUND_RENDERER_PUZZLE_BOOT_SUBPATHS: Readonly<Record<string, PlaygroundRendererPuzzleKind>> = {
   "@semio-tech/framework-playground-renderer-react/puzzle/2d": "2d",
@@ -442,6 +485,8 @@ const PLAYGROUND_RENDERER_PUZZLE_BOOT_SUBPATHS: Readonly<Record<string, Playgrou
   "@semio-tech/framework-playground-renderer-react/puzzle/map": "map",
   "@semio-tech/framework-playground-renderer-react/flow": "flow",
   "@semio-tech/framework-playground-renderer-react/dag": "dag",
+  "@semio-tech/framework-playground-renderer-react/imperative": "imperative",
+  "@semio-tech/framework-playground-renderer-react/sequence": "sequence",
   "@semio-tech/framework-playground-renderer-react/trinity-jack": "trinity-jack",
   "@semio-tech/framework-playground-renderer-react/trinity-rewrite": "trinity-rewrite",
   "@semio-tech/framework-playground-renderer-react/procedural-3d": "procedural-3d",
@@ -452,6 +497,7 @@ const PLAYGROUND_RENDERER_PUZZLE_BOOT_SUBPATHS: Readonly<Record<string, Playgrou
   "@semio-tech/framework-playground-renderer-react/raster": "raster",
   "@semio-tech/framework-playground-renderer-react/writer": "writer",
   "@semio-tech/framework-playground-renderer-react/semios": "semios",
+  "@semio-tech/framework-playground-renderer-react/vcs": "vcs",
   "@semio-tech/framework-playground-renderer-react/reasoning/wires": "wires",
 };
 
@@ -462,6 +508,8 @@ const PLAYGROUND_RENDERER_PUZZLE_HOST_MARKERS: Readonly<Record<PlaygroundRendere
   map: { start: "//#region 🔖MapPlayHost", end: "//#endregion 🔖MapPlayHost" },
   flow: { start: "//#region 🔖FlowPlayHost", end: "//#endregion 🔖FlowPlayHost" },
   dag: { start: "//#region 🔖DagPlayHost", end: "//#endregion 🔖DagPlayHost" },
+  imperative: { start: "//#region 🔖ImperativePlayHost", end: "//#endregion 🔖ImperativePlayHost" },
+  sequence: { start: "//#region 🔖SequencePlayHost", end: "//#endregion 🔖SequencePlayHost" },
   "trinity-jack": { start: "//#region 🔖TrinityPlayHost", end: "//#endregion 🔖TrinityPlayHost" },
   "trinity-rewrite": { start: "//#region 🔖TrinityPlayHost", end: "//#endregion 🔖TrinityPlayHost" },
   "procedural-3d": { start: "//#region 🔖ProceduralPlayHost", end: "//#endregion 🔖ProceduralPlayHost" },
@@ -471,6 +519,7 @@ const PLAYGROUND_RENDERER_PUZZLE_HOST_MARKERS: Readonly<Record<PlaygroundRendere
   forms: { start: "//#region 🔖FormsPlayHost", end: "//#endregion 🔖FormsPlayHost" },
   raster: { start: "//#region 🔖RasterPlayHost", end: "//#endregion 🔖RasterPlayHost" },
   writer: { start: "//#region 🔖WriterPlayHost", end: "//#endregion 🔖WriterPlayHost" },
+  vcs: { start: "//#region 🔖VcsPlayHost", end: "//#endregion 🔖VcsPlayHost" },
   wires: { start: "//#region 🔖Puzzle2dPlayHost", end: "//#endregion 🔖Puzzle2dPlayHost" },
 };
 
@@ -1060,6 +1109,14 @@ export function playgroundRendererResolveAliases(repoRoot: string): ReadonlyArra
     { find: "@semio-tech/flow-module-list", replacement: resolve(repoRoot, "flow/module/list/pkg/flow_module_list.js") },
     { find: "@semio-tech/dag-play", replacement: resolve(repoRoot, "mathematical/graph/port/directed/dag/play/index.ts") },
     { find: "@semio-tech/dag-react", replacement: resolve(repoRoot, "mathematical/graph/port/directed/dag/react/index.tsx") },
+    { find: "@semio-tech/imperative-play", replacement: resolve(repoRoot, "imperative/play/index.ts") },
+    { find: "@semio-tech/imperative-react", replacement: resolve(repoRoot, "imperative/react/index.tsx") },
+    { find: "@semio-tech/imperative-core", replacement: resolve(repoRoot, "imperative/core/index.ts") },
+    { find: "@semio-tech/imperative-core/pkg/imperative_core.js", replacement: resolve(repoRoot, "imperative/core/pkg/imperative_core.js") },
+    { find: "@semio-tech/sequence-play", replacement: resolve(repoRoot, "sequence/play/index.ts") },
+    { find: "@semio-tech/sequence-react", replacement: resolve(repoRoot, "sequence/react/index.tsx") },
+    { find: "@semio-tech/sequence-core", replacement: resolve(repoRoot, "sequence/core/index.ts") },
+    { find: "@semio-tech/sequence-core/pkg/sequence_core.js", replacement: resolve(repoRoot, "sequence/core/pkg/sequence_core.js") },
     { find: "@semio-tech/trinity-jack-play", replacement: resolve(repoRoot, "trinity/jack/play/index.ts") },
     { find: "@semio-tech/trinity-rewrite-play", replacement: resolve(repoRoot, "trinity/rewrite/play/index.ts") },
     { find: "@semio-tech/trinity-react", replacement: resolve(repoRoot, "trinity/react/index.tsx") },
@@ -1071,10 +1128,16 @@ export function playgroundRendererResolveAliases(repoRoot: string): ReadonlyArra
     { find: "@semio-tech/shooting-react", replacement: resolve(repoRoot, "shooting/react/index.tsx") },
     { find: "@semio-tech/kernel-3d-js", replacement: resolve(repoRoot, "kernel/3d/js/index.ts") },
     { find: "@semio-tech/kernel-2d-js", replacement: resolve(repoRoot, "kernel/2d/js/index.ts") },
+    { find: "@semio-tech/vcs-react", replacement: resolve(repoRoot, "vcs/react/index.tsx") },
+    { find: "@semio-tech/vcs-play", replacement: resolve(repoRoot, "vcs/play/index.ts") },
     { find: "@semio-tech/compose-rs-wasm", replacement: resolve(repoRoot, "compose/client/lib/rs/pkg/compose.js") },
-    { find: "@semio-tech/compose-js", replacement: resolve(repoRoot, "compose/client/lib/js/index.ts") },
-    { find: "@semio-tech/compose-sketchpad", replacement: resolve(repoRoot, "compose/client/lib/sketchpad/js/index.ts") },
-    { find: "@semio-tech/compose-react", replacement: resolve(repoRoot, "compose/client/lib/react/index.tsx") },
+    { find: "@semio-tech/compose-js", replacement: resolve(repoRoot, "compose/client/lib/js") },
+    { find: "@semio-tech/compose-sketchpad", replacement: resolve(repoRoot, "compose/client/lib/sketchpad/js") },
+    { find: "@semio-tech/compose-react", replacement: resolve(repoRoot, "compose/client/lib/react") },
+    {
+      find: "@semio-tech/mit-bestand-praesentation-projektetage-spec",
+      replacement: resolve(repoRoot, "mit-bestand/präsentation/33.projektetage/spec.ts"),
+    },
   ];
 }
 
@@ -1221,6 +1284,8 @@ export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOption
         : []),
       tailwindcss(),
       react(),
+      playgroundPlaywrightDevStubPlugin(),
+      playgroundVitestDevStubPlugin(),
       playgroundIframeEmbedHeadersPlugin(),
       playgroundStaleOptimizeDepPlugin(),
       playgroundRendererShellEntryPlugin(rendererIndex),
@@ -1409,6 +1474,18 @@ if (import.meta.vitest) {
       expect(stripped).toMatch(/import\s*\{[^}]*createWriterDocument[^}]*\}\s*from\s*["']@semio-tech\/writer-core["']/);
       expect(stripped).toMatch(/import\s*\{[^}]*createJackLspWorker[^}]*\}\s*from\s*["']@semio-tech\/trinity-react["']/);
       expect(stripped).not.toContain("//#region 🔖RasterPlayHost");
+    });
+
+    it("trinity-rewrite virtual entry imports puzzle2d and forms helpers in the host slice", () => {
+      const rendererIndex = resolve(repoRoot, "framework/product/playground/renderer/react/index.tsx");
+      const stripped = stripPlaygroundRendererForPuzzleKind(readFileSync(rendererIndex, "utf8"), "trinity-rewrite");
+      expect(stripped).toContain("//#region 🔖TrinityPlayHost");
+      expect(stripped).toContain("bootTrinityRewritePlay");
+      expect(stripped).toMatch(/import\s*\{[^}]*Puzzle2dCanvas[^}]*\}\s*from\s*["']@semio-tech\/puzzle-2d-react["']/);
+      expect(stripped).toMatch(/import\s*\{[^}]*buildPuzzle2dSceneDescriptorFromFixture[^}]*\}\s*from\s*["']@semio-tech\/puzzle-2d-react["']/);
+      expect(stripped).toMatch(/import\s*\{[^}]*FormRenderer[^}]*\}\s*from\s*["']@semio-tech\/forms-react["']/);
+      expect(stripped).not.toContain("//#region 🔖Puzzle2dPlayHost");
+      expect(duplicateNamedImportsForModule(stripped, "@semio-tech/puzzle-2d-react")).toEqual([]);
     });
   });
 }

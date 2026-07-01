@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** 🧭 `@semio-tech/trinity-react` task router. */
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, playPollingEnv, runBun, runBundleScriptMain, runVitest } from "../../repo/lib/js/src/index.ts";
+import { BundleScript, ScriptRouter, playPollingEnv, runBun, runBundleScriptMain, runVitest } from "../../repo/lib/js/index.ts";
 
 const wasmScript = join(import.meta.dir, "../rewrite/engine/script.ts");
 

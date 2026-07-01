@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** @emoji ⚙️ Runs `cargo test` for the `ui_styling` crate. */
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCmd } from "../../../repo/lib/js/src/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runCmd } from "../../../repo/lib/js/index.ts";
 
 class TestScript extends BundleScript {
 	run(): void {

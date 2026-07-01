@@ -381,6 +381,44 @@
       }
     },
     {
+      "name": "🛠️dev⚙️imperative",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:imperative",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "IMPERATIVE_PLAY_PORT": "6076"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 155
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6076)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev📜sequence",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:sequence",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEQUENCE_PLAY_PORT": "6077"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 156
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6077)",
+        "uriFormat": "%s"
+      }
+    },
+    {
       "name": "🛠️dev🌐gis📍2d",
       "type": "node-terminal",
       "request": "launch",

@@ -3143,6 +3143,36 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "09e54e57b4c48b40f7aec75635392b12b3421fa26fe8b4332e63138ed278459c"
 
 [[package]]
+name = "imperative_core"
+version = "0.1.0"
+dependencies = [
+ "imperative_engine",
+ "imperative_module_core",
+ "neural_engine",
+ "serde",
+ "serde_json",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "imperative_engine"
+version = "0.1.0"
+dependencies = [
+ "imperative_module_core",
+ "neural_engine",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "imperative_module_core"
+version = "0.1.0"
+dependencies = [
+ "neural_engine",
+ "serde_json",
+]
+
+[[package]]
 name = "indexmap"
 version = "1.9.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5329,6 +5359,23 @@ name = "semver"
 version = "1.0.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8a7852d02fc848982e0c167ef163aaff9cd91dc640ba85e263cb1ce46fae51cd"
+
+[[package]]
+name = "sequence_core"
+version = "0.1.0"
+dependencies = [
+ "imperative_engine",
+ "imperative_module_core",
+ "infinite_cavas",
+ "js-sys",
+ "mathematical_graph_port_directed_dag",
+ "neural_engine",
+ "serde",
+ "serde_json",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+]
 
 [[package]]
 name = "serde"

@@ -11,7 +11,7 @@
 // #region 🔌Adapters
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
-import { BundleScript, getWorkspaceRoot, ScriptRouter, runBundleScriptMain } from "../../repo/lib/js/src/index.ts";
+import { BundleScript, getWorkspaceRoot, ScriptRouter, runBundleScriptMain } from "../../repo/lib/js/index.ts";
 // #endregion 🔌Adapters
 
 //#region 🔖Constants

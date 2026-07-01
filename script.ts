@@ -14,7 +14,7 @@ import {
   runMicroCommit,
   runWorkspaceScriptMain,
   tryRun,
-} from "./repo/lib/js/src/index.ts";
+} from "./repo/lib/js/index.ts";
 import { existsSync, linkSync, mkdirSync, chmodSync, chownSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { extname, join, resolve } from "node:path";
@@ -251,6 +251,14 @@ export class DevScript extends Script {
     }
     if (segments[0] === "dag") {
       runCmd("bun", ["nx", "run", "@semio-tech/dag-play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
+      return;
+    }
+    if (segments[0] === "imperative") {
+      runCmd("bun", ["nx", "run", "@semio-tech/imperative-play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
+      return;
+    }
+    if (segments[0] === "sequence") {
+      runCmd("bun", ["nx", "run", "@semio-tech/sequence-play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
       return;
     }
     if (segments[0] === "trinity") {

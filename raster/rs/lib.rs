@@ -389,6 +389,7 @@ pub struct RasterHost {
     painting: bool,
     last_paint: Option<Point>,
     pan_last: Option<Point>,
+    show_selection_chrome: bool,
     theme_clear: Color,
 }
 
@@ -416,6 +417,7 @@ impl RasterHost {
             painting: false,
             last_paint: None,
             pan_last: None,
+            show_selection_chrome: true,
             theme_clear: Color::from_rgba8(32, 32, 36, 255),
         }
     }
@@ -424,6 +426,10 @@ impl RasterHost {
         self.viewport.width = width.max(1);
         self.viewport.height = height.max(1);
         self.viewport.dpr = dpr.max(1.0);
+    }
+
+    pub fn set_show_selection_chrome(&mut self, enabled: bool) {
+        self.show_selection_chrome = enabled;
     }
 
     pub fn set_camera(&mut self, x: f64, y: f64, zoom: f64) {
@@ -647,7 +653,9 @@ impl RasterHost {
                 }
                 cavas::raster::draw_image_arc(scene, &img, Affine::IDENTITY);
                 scene.pop_layer();
-                if self.hovered_id.as_deref() == Some(id.as_str()) || self.selected_ids.iter().any(|s| s == id) {
+                if self.show_selection_chrome
+                    && (self.hovered_id.as_deref() == Some(id.as_str()) || self.selected_ids.iter().any(|s| s == id))
+                {
                     let stroke = Rect::new(0.0, 0.0, *width as f64, *height as f64);
                     scene.stroke(
                         &Stroke::new(2.0 / self.camera.zoom.max(0.1)),
@@ -943,6 +951,8 @@ impl RasterSession {
         let mut g = self.state.borrow_mut();
         g.view_mode = mode.to_string();
         g.isolated_view = layer_id;
+        g.host
+            .set_show_selection_chrome(mode != "navigator");
     }
 }
 // #endregion 🔖WasmSession

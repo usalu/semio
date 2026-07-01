@@ -12,7 +12,7 @@ import {
     runBundleScriptMain,
     runViteBunxDev,
     runVitest,
-} from "../../../repo/lib/js/src/index.js";
+} from "../../../repo/lib/js/index.ts";
 import { resolveProceduralPlayFixtureSlug } from "./fixture-slugs.js";
 
 const wasmScript = join(import.meta.dir, "../../../flow/core/script.ts");

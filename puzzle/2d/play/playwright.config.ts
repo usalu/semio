@@ -7,7 +7,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { defineConfig, devices } from "@playwright/test";
-import { playgroundTestPortString } from "../../../repo/lib/js/src/index.ts";
+import { playgroundTestPortString } from "../../../repo/lib/js/index.ts";
 // #endregion 🔌Adapters
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

@@ -1,11 +1,11 @@
 #!/usr/bin/env bun
 /** 🧭 Coordinator package router: `bun ./script.ts build|policy`. */
 import { execFileSync } from "node:child_process";
-import type { BundleLinter } from "../../lib/js/src/index.ts";
-import { dependencyBoundaryBreachesForBundleDir } from "../../lib/js/src/index.ts";
-import { getWorkspaceRoot } from "../../lib/js/src/index.ts";
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../lib/js/src/index.ts";
-import { defineLint } from "../../lib/js/src/index.ts";
+import type { BundleLinter } from "../../lib/js/index.ts";
+import { dependencyBoundaryBreachesForBundleDir } from "../../lib/js/index.ts";
+import { getWorkspaceRoot } from "../../lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../lib/js/index.ts";
+import { defineLint } from "../../lib/js/index.ts";
 
 export const policy = defineLint("@repo/server/coordinator-bundle", (l: BundleLinter) => {
   const repoRoot = getWorkspaceRoot();

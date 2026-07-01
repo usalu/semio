@@ -9,12 +9,14 @@ import {
 	runViteBunxDev,
 	runViteBuild,
 	runVitest,
-} from "../../repo/lib/js/src/index.ts";
+} from "../../repo/lib/js/index.ts";
 
 class DevScript extends BundleScript {
 	run(segments: string[]): void {
 		runViteBunxDev(this.root, segments, {
-			...playgroundPortEnv("VCS_PLAY_PORT", "6075"),
+			portEnv: playgroundPortEnv("vcs"),
+			defaultPort: playgroundDevPortString("vcs"),
+			fixedPort: true,
 		});
 	}
 }

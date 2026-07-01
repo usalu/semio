@@ -12,7 +12,7 @@ import {
   runPlaywright,
   runViteBunxDev,
   runVitest,
-} from "../../../repo/lib/js/src/index.ts";
+} from "../../../repo/lib/js/index.ts";
 import { resolvePuzzle3dPlayFixtureSlug } from "./index.ts";
 
 class DevScript extends BundleScript {

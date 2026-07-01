@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import initImperativeWasm, { ImperativeSession, initSync } from "../core/pkg/imperative_core.js";
 import {
 	DEFAULT_IMPERATIVE_DOCUMENT,
+	DEFAULT_IMPERATIVE_CATALOGUE,
 	imperativeDocumentToJson,
 	parseImperativeDocumentJson,
 	performImperativeEffects,
@@ -213,21 +214,30 @@ export function ImperativeEditor({ documentJson, className, onDocumentChange, on
 
 export interface StepParamFormProps {
 	readonly step: ImperativeStepV1;
+	readonly catalogue?: readonly ImperativeCatalogueSection[];
 	readonly onChange: (key: string, value: unknown) => void;
 	readonly onRemove: () => void;
 }
 
+function catalogueFieldsForStep(step: ImperativeStepV1, catalogue: readonly ImperativeCatalogueSection[]): readonly { readonly key: string; readonly label: string; readonly type: "text" | "number" }[] {
+	const item = catalogue.flatMap((section) => section.items).find((entry) => entry.kind === step.kind);
+	if (!item?.inputs.length) {
+		return Object.keys(step.params).map((key) => ({
+			key,
+			label: key,
+			type: typeof step.params[key] === "number" ? ("number" as const) : ("text" as const),
+		}));
+	}
+	return item.inputs.map((input) => ({
+		key: input.name,
+		label: input.name,
+		type: input.code === "N" ? ("number" as const) : ("text" as const),
+	}));
+}
+
 /** @emoji 🎛️ Edits params for one imperative step. */
-export function StepParamForm({ step, onChange, onRemove }: StepParamFormProps): React.JSX.Element {
-	const fields =
-		step.kind === "log.print"
-			? [{ key: "message", label: "Message", type: "text" as const }]
-			: step.kind === "wait.delay"
-				? [{ key: "ms", label: "Delay (ms)", type: "number" as const }]
-				: [
-						{ key: "key", label: "Key", type: "text" as const },
-						...(step.kind === "state.increment" ? [{ key: "by", label: "By", type: "number" as const }] : [{ key: "value", label: "Value", type: "number" as const }]),
-					];
+export function StepParamForm({ step, catalogue = DEFAULT_IMPERATIVE_CATALOGUE.sections, onChange, onRemove }: StepParamFormProps): React.JSX.Element {
+	const fields = catalogueFieldsForStep(step, catalogue);
 
 	return (
 		<div className="flex flex-col gap-2">
@@ -266,8 +276,19 @@ export function EffectLogPanel({ entries }: { readonly entries: readonly EffectL
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
 	describe("StepParamForm fields", () => {
-		it("derives log.print fields", () => {
-			expect(DEFAULT_IMPERATIVE_DOCUMENT.path.steps[1]?.kind).toBe("log.print");
+		it("derives log.print fields from catalogue", () => {
+			const fields = catalogueFieldsForStep(
+				{ id: "s1", kind: "log.print", params: { message: "hi" } },
+				DEFAULT_IMPERATIVE_CATALOGUE.sections,
+			);
+			expect(fields.map((field) => field.key)).toEqual(["message"]);
+		});
+		it("derives wait.delay number field from catalogue", () => {
+			const fields = catalogueFieldsForStep(
+				{ id: "s1", kind: "wait.delay", params: { ms: 10 } },
+				DEFAULT_IMPERATIVE_CATALOGUE.sections,
+			);
+			expect(fields[0]?.type).toBe("number");
 		});
 	});
 }

@@ -1,0 +1,21 @@
+import path from "node:path";
+import { defineConfig } from "vitest/config";
+
+export default defineConfig({
+	resolve: {
+		alias: {
+			"@semio-tech/framework-playground-core": path.resolve(__dirname, "../../framework/product/playground/core/index.ts"),
+			"@semio-tech/framework-platform-core": path.resolve(__dirname, "../../framework/product/platform/core/index.ts"),
+			"@semio-tech/sequence-core": path.resolve(__dirname, "../core/index.ts"),
+			"@semio-tech/sequence-react": path.resolve(__dirname, "../react/index.tsx"),
+			"@semio-tech/imperative-core": path.resolve(__dirname, "../../imperative/core/index.ts"),
+			"@semio-tech/imperative-react": path.resolve(__dirname, "../../imperative/react/index.tsx"),
+		},
+	},
+	test: {
+		environment: "node",
+		include: ["index.ts"],
+		includeSource: ["index.ts"],
+		passWithNoTests: false,
+	},
+});

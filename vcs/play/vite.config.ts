@@ -14,6 +14,7 @@ export default createPlaygroundPlayViteConfig({
 	repoRoot,
 	playEntryKind: "vcs",
 	extraAliases: [
+		{ find: "@semio-tech/vcs-play", replacement: path.resolve(playDir, "./index.ts") },
 		{ find: "@semio-tech/vcs-react", replacement: path.resolve(playDir, "../react/index.tsx") },
 		{ find: "@semio-tech/vcs-core", replacement: path.resolve(playDir, "../core/index.ts") },
 	],

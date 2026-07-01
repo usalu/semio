@@ -31,12 +31,18 @@ export type RunResult = {
 	readonly effects: readonly EffectLogEntry[];
 };
 
+export type ImperativeCatalogueInput = {
+	readonly name: string;
+	readonly code: string;
+};
+
 export type ImperativeCatalogueItem = {
 	readonly kind: string;
 	readonly name: string;
 	readonly abbreviation: string;
 	readonly icon: string;
 	readonly summary: string;
+	readonly inputs: readonly ImperativeCatalogueInput[];
 };
 
 export type ImperativeCatalogueSection = {
@@ -48,6 +54,56 @@ export type ImperativeCatalogueSection = {
 export type ImperativeCatalogueV1 = {
 	readonly schema: "imperative.catalogue/v1";
 	readonly sections: readonly ImperativeCatalogueSection[];
+};
+
+export const DEFAULT_IMPERATIVE_CATALOGUE: ImperativeCatalogueV1 = {
+	schema: "imperative.catalogue/v1",
+	sections: [
+		{
+			id: "actions",
+			title: "Actions",
+			items: [
+				{
+					kind: "log.print",
+					name: "Log Print",
+					abbreviation: "Log",
+					icon: "emoji:📝",
+					summary: "Writes a message to the effect log.",
+					inputs: [{ name: "message", code: "S" }],
+				},
+				{
+					kind: "state.set",
+					name: "State Set",
+					abbreviation: "Set",
+					icon: "emoji:⚡",
+					summary: "Sets a scope key to a value.",
+					inputs: [
+						{ name: "key", code: "S" },
+						{ name: "value", code: "V" },
+					],
+				},
+				{
+					kind: "state.increment",
+					name: "State Increment",
+					abbreviation: "Inc",
+					icon: "emoji:⚡",
+					summary: "Increments a numeric scope key.",
+					inputs: [
+						{ name: "key", code: "S" },
+						{ name: "by", code: "N" },
+					],
+				},
+				{
+					kind: "wait.delay",
+					name: "Wait Delay",
+					abbreviation: "Wait",
+					icon: "emoji:⚡",
+					summary: "Records a delay effect.",
+					inputs: [{ name: "ms", code: "N" }],
+				},
+			],
+		},
+	],
 };
 
 export interface EffectSink {

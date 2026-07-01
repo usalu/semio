@@ -36,7 +36,7 @@ isProject: false
 
 Create the JS sibling of [repo/lib/go](repo/lib/go):
 
-- `repo/lib/js/package.json` — name `@semio-tech/repo-lib`, type `module`, exports `./src/index.ts`, deps: just `typescript`/`@types/node`. Bun runs `.ts` directly so no build step needed.
+- `repo/lib/js/package.json` — name `@semio-tech/repo-lib`, type `module`, exports `./index.ts`, deps: just `typescript`/`@types/node`. Bun runs `.ts` directly so no build step needed.
 - `repo/lib/js/project.json` — nx project `@semio-tech/repo-lib`, with `lint`, `test` targets.
 - `repo/lib/js/tsconfig.json` — strict, `module: ESNext`, `moduleResolution: Bundler`.
 - `repo/lib/js/src/`:

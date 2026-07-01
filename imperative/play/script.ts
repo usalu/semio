@@ -12,7 +12,7 @@ import {
 	runCargo,
 	runViteBunxDev,
 	runVitest,
-} from "../../repo/lib/js/src/index.ts";
+} from "../../repo/lib/js/index.ts";
 
 const wasmScript = join(import.meta.dir, "../core/script.ts");
 
@@ -20,8 +20,8 @@ class DevScript extends BundleScript {
 	run(segments: string[]): void {
 		runBun([wasmScript, "wasm"], this.root, playPollingEnv());
 		runViteBunxDev(this.root, segments, {
-			portEnv: playgroundPortEnv("IMPERATIVE_PLAY_PORT"),
-			defaultPort: process.env.IMPERATIVE_PLAY_PORT ?? "6076",
+			portEnv: playgroundPortEnv("imperative"),
+			defaultPort: playgroundDevPortString("imperative"),
 			fixedPort: true,
 		});
 	}

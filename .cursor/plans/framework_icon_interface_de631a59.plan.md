@@ -38,7 +38,7 @@ flowchart TD
 
 ## 1. New `@semio-tech/ui-asset` package (source of truth + codegen)
 
-- Add [ui/asset/package.json](ui/asset/package.json) (`@semio-tech/ui-asset`, library, no lucide dep), [ui/asset/project.json](ui/asset/project.json) with `build`/`dev` targets calling `bun ./script.ts generate ...` (mirror [compose/asset/logo/project.json](compose/asset/logo/project.json)), and a single [ui/asset/script.ts](ui/asset/script.ts) using `BundleScript`/`ScriptRouter`/`runBundleScriptMain` from `repo/lib/js/src/index.ts` (mirror [compose/asset/logo/script.ts](compose/asset/logo/script.ts)).
+- Add [ui/asset/package.json](ui/asset/package.json) (`@semio-tech/ui-asset`, library, no lucide dep), [ui/asset/project.json](ui/asset/project.json) with `build`/`dev` targets calling `bun ./script.ts generate ...` (mirror [compose/asset/logo/project.json](compose/asset/logo/project.json)), and a single [ui/asset/script.ts](ui/asset/script.ts) using `BundleScript`/`ScriptRouter`/`runBundleScriptMain` from `repo/lib/js/index.ts` (mirror [compose/asset/logo/script.ts](compose/asset/logo/script.ts)).
 - `script.ts generate {js|net|py|all}` reads `ui/asset/icon/*.svg`, normalizes (strip fixed width/height, force `stroke="currentColor"`/`fill` conventions), and writes into `ui/asset/icon/generated/`:
   - `icons.ts`: `export const ICONS = { ... } as const; export type IconName = keyof typeof ICONS;`
   - `Icons.cs`: static class with name constants + `IReadOnlyDictionary<string,string>`.

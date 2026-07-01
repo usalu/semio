@@ -114,7 +114,7 @@ Add to existing `#region`s (no new files; ui stays business-logic-free):
 ## Part 4 — Registration / wiring
 - Root [package.json](package.json): add `forms/core`, `forms/react`, `forms/play` to `workspaces` + `dev:forms`/`build:forms`/`test:forms` scripts.
 - Root [script.ts](script.ts): route `forms` segment to `@semio-tech/forms-play:dev`.
-- [repo/lib/js/src/index.ts](repo/lib/js/src/index.ts): add `"forms"` to `PlaygroundHostKind` and `PLAYGROUND_PORTS` (dev `6058`, test `6059` — next free after 6056/6057).
+- [repo/lib/js/index.ts](repo/lib/js/index.ts): add `"forms"` to `PlaygroundHostKind` and `PLAYGROUND_PORTS` (dev `6058`, test `6059` — next free after 6056/6057).
 - [.vscode/launch.json](.vscode/launch.json): add a `3_dev` group entry `dev:forms` with port env + `serverReadyAction` (follow existing order/grouping/naming).
 - [framework/product/playground/renderer/react/package.json](framework/product/playground/renderer/react/package.json): add `"./forms"` export; implement `bootFormsPlay` region in the renderer mirroring `bootProcedural2dPlay`.
 

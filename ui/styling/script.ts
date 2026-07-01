@@ -2,14 +2,14 @@
 /** @emoji ⚙️ Reads `ui/styling/tokens.json`; emits palette CSS, TS, C#, Rust, and Python styling artifacts. */
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../repo/lib/js/src/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../repo/lib/js/index.ts";
 
 const stylingRoot = import.meta.dir;
 const tokensPath = join(stylingRoot, "tokens.json");
 const generatedDir = join(stylingRoot, "generated");
 const jsGeneratedDir = join(stylingRoot, "js");
 const netPaletteDir = join(stylingRoot, "net", "Elements.Styling", "Generated");
-const rustGeneratedDir = join(stylingRoot, "rs", "src");
+const rustGeneratedDir = join(stylingRoot, "rs");
 const pyGeneratedDir = join(stylingRoot, "py", "styling");
 const repoRoot = join(stylingRoot, "..", "..");
 

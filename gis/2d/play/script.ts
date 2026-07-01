@@ -21,7 +21,7 @@ import {
   runCargo,
   runViteBunxDev,
   runVitest,
-} from "../../../repo/lib/js/src/index.ts";
+} from "../../../repo/lib/js/index.ts";
 
 const wasmScript = join(import.meta.dir, "../rs/script.ts");
 const graphFixturePath = join(import.meta.dir, "../fixture/reuse.graph.gis.json");

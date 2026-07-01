@@ -5,21 +5,21 @@ const root = join(import.meta.dirname, "../../../../../../");
 const SKIP = new Set(["node_modules", ".git", "dist", ".next", "target"]);
 
 const REPLACERS: [RegExp, string][] = [
-  [/repo\/lib\/js\/src\/bundle-script\.ts/g, "repo/lib/js/src/index.ts"],
-  [/repo\/lib\/js\/src\/linter\.ts/g, "repo/lib/js/src/index.ts"],
-  [/repo\/lib\/js\/src\/cli\.ts/g, "repo/lib/js/src/index.ts"],
-  [/repo\/lib\/js\/src\/dependency-boundary\.ts/g, "repo/lib/js/src/index.ts"],
-  [/repo\/lib\/js\/src\/script\.ts/g, "repo/lib/js/src/index.ts"],
-  [/\.\/src\/bundle-script\.ts/g, "./src/index.ts"],
-  [/\.\/src\/linter\.ts/g, "./src/index.ts"],
-  [/\.\/src\/cli\.ts/g, "./src/index.ts"],
-  [/\.\/src\/dependency-boundary\.ts/g, "./src/index.ts"],
-  [/\.\/src\/script\.ts/g, "./src/index.ts"],
-  [/lib\/js\/src\/bundle-script\.ts/g, "lib/js/src/index.ts"],
-  [/lib\/js\/src\/linter\.ts/g, "lib/js/src/index.ts"],
-  [/lib\/js\/src\/cli\.ts/g, "lib/js/src/index.ts"],
-  [/lib\/js\/src\/dependency-boundary\.ts/g, "lib/js/src/index.ts"],
-  [/lib\/js\/src\/script\.ts/g, "lib/js/src/index.ts"],
+  [/repo\/lib\/js\/src\/bundle-script\.ts/g, "repo/lib/js/index.ts"],
+  [/repo\/lib\/js\/src\/linter\.ts/g, "repo/lib/js/index.ts"],
+  [/repo\/lib\/js\/src\/cli\.ts/g, "repo/lib/js/index.ts"],
+  [/repo\/lib\/js\/src\/dependency-boundary\.ts/g, "repo/lib/js/index.ts"],
+  [/repo\/lib\/js\/src\/script\.ts/g, "repo/lib/js/index.ts"],
+  [/\.\/src\/bundle-script\.ts/g, "./index.ts"],
+  [/\.\/src\/linter\.ts/g, "./index.ts"],
+  [/\.\/src\/cli\.ts/g, "./index.ts"],
+  [/\.\/src\/dependency-boundary\.ts/g, "./index.ts"],
+  [/\.\/src\/script\.ts/g, "./index.ts"],
+  [/lib\/js\/src\/bundle-script\.ts/g, "lib/js/index.ts"],
+  [/lib\/js\/src\/linter\.ts/g, "lib/js/index.ts"],
+  [/lib\/js\/src\/cli\.ts/g, "lib/js/index.ts"],
+  [/lib\/js\/src\/dependency-boundary\.ts/g, "lib/js/index.ts"],
+  [/lib\/js\/src\/script\.ts/g, "lib/js/index.ts"],
 ];
 
 function walk(dir: string): string[] {

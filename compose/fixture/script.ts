@@ -2,7 +2,7 @@
 /** @emoji 🧪 `@semio-tech/compose-fixture` router: `bun ./script.ts regenerate-metabolism-light`. */
 import fs from "node:fs";
 import path from "node:path";
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../repo/lib/js/src/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../repo/lib/js/index.ts";
 
 //#region 🔖AssembleSplitInitialKit
 /** @emoji 📎 Reads `{ hash, items }` or a legacy array collection from kit snapshot JSON. */

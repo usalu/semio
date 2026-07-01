@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
 /** 🧭 `@semio-tech/cad-js-renderer` task router: `bun ./script.ts <dev|build|test|policy> [fixture <id>] [args…]`. */
-import type { FileLinter } from "../../../repo/lib/js/src/index.ts";
-import { dependencyBoundaryBreachesForFile } from "../../../repo/lib/js/src/index.ts";
-import { getWorkspaceRoot } from "../../../repo/lib/js/src/index.ts";
+import type { FileLinter } from "../../../repo/lib/js/index.ts";
+import { dependencyBoundaryBreachesForFile } from "../../../repo/lib/js/index.ts";
+import { getWorkspaceRoot } from "../../../repo/lib/js/index.ts";
 import {
   BundleScript,
   ScriptRouter,
@@ -15,8 +15,8 @@ import {
   runViteBuild,
   runViteDev,
   runVitest,
-} from "../../../repo/lib/js/src/index.ts";
-import { defineLint } from "../../../repo/lib/js/src/index.ts";
+} from "../../../repo/lib/js/index.ts";
+import { defineLint } from "../../../repo/lib/js/index.ts";
 import { resolveCadPlayFixtureSlug } from "./play/fixture-slugs.ts";
 
 export const policyFile = "index.tsx";

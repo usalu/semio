@@ -2,7 +2,7 @@
 import { defineConfig, devices } from "@playwright/test";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { playgroundTestPortString } from "../../../repo/lib/js/src/index.ts";
+import { playgroundTestPortString } from "../../../repo/lib/js/index.ts";
 // #endregion 🔌Adapters
 
 const playDir = dirname(fileURLToPath(import.meta.url));

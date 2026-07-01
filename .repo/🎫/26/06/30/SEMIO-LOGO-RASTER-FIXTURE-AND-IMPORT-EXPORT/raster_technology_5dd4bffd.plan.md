@@ -87,7 +87,7 @@ Vello natively supports per-layer compositing via `scene.push_layer(BlendMode, a
 - `[framework/product/platform/renderer/react/index.tsx](framework/product/platform/renderer/react/index.tsx)`: register `registerUiRasterSurfaceHost`.
 - `[framework/product/playground/renderer/react/package.json](framework/product/playground/renderer/react/package.json)`: add `"./raster"` export + workspace deps on raster-core/react.
 - `[ui/styling/vite-elements-assets.ts](ui/styling/vite-elements-assets.ts)`: add `"raster"` to the play-entry kind union + boot subpath map.
-- `[repo/lib/js/src/index.ts](repo/lib/js/src/index.ts)`: add `raster` host to `PLAYGROUND_PORTS` (e.g. dev `6060`, test `6061` — confirm next free pair).
+- `[repo/lib/js/index.ts](repo/lib/js/index.ts)`: add `raster` host to `PLAYGROUND_PORTS` (e.g. dev `6060`, test `6061` — confirm next free pair).
 - Root `package.json`: add `raster/core`, `raster/react`, `raster/play` workspaces + `dev:raster`/`build:raster`/`test:raster` scripts; root `script.ts`: route `raster` → `@semio-tech/raster-play:dev`.
 - `[.vscode/launch.json](.vscode/launch.json)`: register the raster dev launch config following existing grouping/order.
 
