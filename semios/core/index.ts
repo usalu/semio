@@ -101,6 +101,7 @@ export interface SemiosStudioOperation {
 		| "connectMediaPorts"
 		| "disconnectMediaEdge"
 		| "moveMediaNode"
+		| "patchAppInstance"
 		| "patchAppSource"
 		| "applyAppOperation"
 		| "setStudioName"
@@ -272,7 +273,7 @@ const TECHNOLOGY_PLAY_PROGRAMS: readonly SemiosProgramDefinition[] = [
 		id: "forms",
 		name: "Forms",
 		apiVersion: "1",
-		apps: [{ id: "forms", label: "Forms", yields: "form.dictionary", sourceFormat: "forms.dictionary/v1", componentKind: "forms", modes: [{ id: "edit", label: "Edit" }] }],
+		apps: [{ id: "forms", label: "Forms", yields: "form.dictionary", sourceFormat: "forms.form/v1", componentKind: "forms", modes: [{ id: "edit", label: "Edit" }] }],
 		createPlatformApi: () => ({}),
 	},
 	{
@@ -509,6 +510,8 @@ registerAppVcsHandler(createPuzzle3dAppVcsHandler());
 registerAppVcsHandler(createPuzzle5dAppVcsHandler());
 registerAppVcsHandler(createJsonAppVcsHandler("cad.scene/v1", "cad.scene/v1", () => ({})));
 registerAppVcsHandler(createJsonAppVcsHandler("forms.dictionary/v1", "forms.dictionary/v1", () => ({})));
+registerAppVcsHandler(createJsonAppVcsHandler("compose.design/v1", "compose.design/v1", () => ({})));
+registerAppVcsHandler(createJsonAppVcsHandler("compose.type/v1", "compose.type/v1", () => ({})));
 registerAppVcsHandler(createJsonAppVcsHandler("compose.kit/v1", "compose.kit/v1", () => ({})));
 
 export function resolvePayloadRef(payloadRef: string): string | null {
@@ -807,6 +810,14 @@ function applyStudioOperation(projection: SemiosStudioProjection, operation: Sem
 			);
 			return next;
 		}
+		case "patchAppInstance": {
+			const instanceId = String(operation.payload.instanceId);
+			const label = typeof operation.payload.label === "string" ? operation.payload.label : undefined;
+			next.appInstances = next.appInstances.map((instance) =>
+				instance.id === instanceId && label !== undefined ? { ...instance, label } : instance,
+			);
+			return next;
+		}
 		default:
 			return next;
 	}
@@ -845,6 +856,7 @@ export type StudioCommand =
 	| { readonly kind: "connectMediaPorts"; readonly sourceNodeId: string; readonly sourcePortId: string; readonly targetNodeId: string; readonly targetPortId: string }
 	| { readonly kind: "disconnectMediaEdge"; readonly edgeId: string }
 	| { readonly kind: "moveMediaNode"; readonly nodeId: string; readonly x: number; readonly y: number }
+	| { readonly kind: "patchAppInstances"; readonly instanceIds: readonly string[]; readonly field: "label"; readonly value?: string }
 	| { readonly kind: "patchAppSource"; readonly instanceId: string; readonly inline: string }
 	| { readonly kind: "applyAppOperation"; readonly instanceId: string; readonly forwards: readonly unknown[]; readonly backwards: readonly unknown[] }
 	| { readonly kind: "openProgram"; readonly programId: string }
@@ -1110,6 +1122,20 @@ export class StudioStore {
 					backwards: [{ op: "patchAppSource", payload: { instanceId: command.instanceId, inline: previous } }],
 				};
 			}
+			case "patchAppInstances": {
+				if (command.field !== "label" || typeof command.value !== "string") return null;
+				const projection = this.projection();
+				const forwards: SemiosStudioOperation[] = [];
+				const backwards: SemiosStudioOperation[] = [];
+				for (const instanceId of command.instanceIds) {
+					const instance = projection.appInstances.find((entry) => entry.id === instanceId);
+					if (!instance) continue;
+					forwards.push({ op: "patchAppInstance", payload: { instanceId, label: command.value } });
+					backwards.push({ op: "patchAppInstance", payload: { instanceId, label: instance.label } });
+				}
+				if (!forwards.length) return null;
+				return { id: createSemiosId("change"), forwards, backwards };
+			}
 			case "applyAppOperation": {
 				const instance = this.projection().appInstances.find((entry) => entry.id === command.instanceId);
 				if (!instance) return null;
@@ -1125,6 +1151,8 @@ export class StudioStore {
 	}
 }
 //#endregion 🔖StudioStore
+
+export { RustStudioStore } from "./rust-studio.ts";
 
 //#region 🔖DevJsonBackbone
 export interface StudioBackbonePort {
@@ -1254,6 +1282,15 @@ if (import.meta.vitest) {
 			expect(store.projection().mediaGraph.nodes).toHaveLength(1);
 		});
 
+		it("patchAppInstances updates labels in batch", () => {
+			const store = new StudioStore(createEmptyStudioDocument());
+			store.dispatch({ kind: "spawnAppInstance", programId: "draw", appId: "draw", position: { x: 0, y: 0 } });
+			store.dispatch({ kind: "spawnAppInstance", programId: "writer", appId: "writer", position: { x: 220, y: 0 } });
+			const ids = store.projection().appInstances.map((row) => row.id);
+			store.dispatch({ kind: "patchAppInstances", instanceIds: ids, field: "label", value: "Renamed" });
+			expect(store.projection().appInstances.every((row) => row.label === "Renamed")).toBe(true);
+		});
+
 		it("validates resource-compatible media edges", () => {
 			const store = new StudioStore(createEmptyStudioDocument());
 			store.dispatch({ kind: "spawnAppInstance", programId: "draw", appId: "draw", position: { x: 0, y: 0 } });
@@ -1360,15 +1397,49 @@ if (import.meta.vitest) {
 			expect(remote.status().conflict?.kind).toBe("studio-conflict");
 		});
 
-		it("spawns every technology program id", () => {
+		it("spawns and materializes every technology program id", async () => {
+			const [
+				{ createDrawAppVcsHandler },
+				{ createWriterAppVcsHandler },
+				{ createRasterAppVcsHandler },
+				{ createFormsAppVcsHandler },
+				{ createFlowAppVcsHandler },
+				{ createPresentationAppVcsHandler },
+			] = await Promise.all([
+				import("@semio-tech/draw-core"),
+				import("@semio-tech/writer-core"),
+				import("@semio-tech/raster-core"),
+				import("@semio-tech/forms-core"),
+				import("@semio-tech/flow-core"),
+				import("@semio-tech/framework-presentation-core"),
+			]);
+			registerAppVcsHandler(createDrawAppVcsHandler());
+			registerAppVcsHandler(createWriterAppVcsHandler());
+			registerAppVcsHandler(createRasterAppVcsHandler());
+			registerAppVcsHandler(createFormsAppVcsHandler());
+			registerAppVcsHandler(createFlowAppVcsHandler());
+			registerAppVcsHandler(createPresentationAppVcsHandler());
 			const store = new StudioStore(createEmptyStudioDocument());
+			const spawned: Array<{ programId: string; appId: string; instanceId: string; sourceFormat: string }> = [];
 			for (const program of listSemiosPrograms()) {
 				if (program.id === "semios.system") continue;
 				const app = program.apps[0];
 				if (!app) continue;
 				store.dispatch({ kind: "spawnAppInstance", programId: program.id, appId: app.id, position: { x: 0, y: 0 } });
+				const instance = store.projection().appInstances.at(-1)!;
+				spawned.push({ programId: program.id, appId: app.id, instanceId: instance.id, sourceFormat: app.sourceFormat });
 			}
-			expect(store.projection().appInstances.length).toBeGreaterThanOrEqual(14);
+			expect(spawned.length).toBeGreaterThanOrEqual(14);
+			for (const row of spawned) {
+				const instance = store.projection().appInstances.find((entry) => entry.id === row.instanceId)!;
+				expect(() => materializeAppInstanceProjection(instance)).not.toThrow();
+				const projection = materializeAppInstanceProjection(instance);
+				expect(projection).not.toBeNull();
+				expect(projection).not.toBeUndefined();
+				if (row.sourceFormat === "forms.form/v1") {
+					expect((projection as { schema?: string }).schema).toBe("forms.form/v1");
+				}
+			}
 		});
 	});
 }

@@ -16,6 +16,12 @@ import {
 	createProductPlaygroundPlatform,
 	playgroundResolvedFixtureId,
 	registerWindowBody,
+	type CommandDescriptor,
+	type UiNode,
+	type UiTreeNode,
+	uiDeclarativeSectionsToTree,
+	uiInspectorAllEqual,
+	FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 } from "@semio-tech/framework-playground-core";
 import {
 	DevJsonBackbone,
@@ -39,6 +45,7 @@ import {
 	createPuzzle5dAppVcsHandler,
 	StudioStore,
 	type SemiosAppInstance,
+	type SemiosMediaGraphNode,
 	type SemiosStudioDocumentV1,
 	type StudioCommand,
 } from "@semio-tech/semios-core";
@@ -149,6 +156,8 @@ function createStudioStore(document: SemiosStudioDocumentV1): StudioStore {
 export class SemiosPlayController extends Controller {
 	private store: StudioStore;
 	private activeInstanceId: string | null = null;
+	private selectedMediaNodeIds: string[] = [];
+	private selectedAppInstanceIds: string[] = [];
 	private fixtureId = SEMIOS_PLAY_FIXTURE_DEFAULT_ID;
 	readonly mainMode = new ModeRuntime("main", "Semios", undefined);
 
@@ -178,6 +187,14 @@ export class SemiosPlayController extends Controller {
 		return this.store.projection().appInstances.find((instance) => instance.id === this.activeInstanceId) ?? null;
 	}
 
+	getSelectedMediaNodeIds(): readonly string[] {
+		return this.selectedMediaNodeIds;
+	}
+
+	getSelectedAppInstanceIds(): readonly string[] {
+		return this.selectedAppInstanceIds;
+	}
+
 	getFixtureId(): string {
 		return this.fixtureId;
 	}
@@ -189,8 +206,68 @@ export class SemiosPlayController extends Controller {
 
 	run(command: string, args?: Record<string, unknown>): void {
 		switch (command) {
+			case "setMediaNodeSelection": {
+				const nodeIds = Array.isArray(args?.nodeIds) ? args!.nodeIds.map((id) => String(id)) : [];
+				this.selectedMediaNodeIds = nodeIds;
+				const projection = this.store.projection();
+				this.selectedAppInstanceIds = nodeIds
+					.map((nodeId) => projection.mediaGraph.nodes.find((node) => node.id === nodeId)?.instanceId)
+					.filter((id): id is string => Boolean(id));
+				if (this.selectedAppInstanceIds.length === 1) {
+					this.activeInstanceId = this.selectedAppInstanceIds[0]!;
+				}
+				this.emit();
+				return;
+			}
+			case "setAppInstanceSelection": {
+				const instanceIds = Array.isArray(args?.instanceIds) ? args!.instanceIds.map((id) => String(id)) : [];
+				this.selectedAppInstanceIds = instanceIds;
+				const projection = this.store.projection();
+				this.selectedMediaNodeIds = instanceIds
+					.map((instanceId) => projection.mediaGraph.nodes.find((node) => node.instanceId === instanceId)?.id)
+					.filter((id): id is string => Boolean(id));
+				if (instanceIds.length === 1) {
+					this.activeInstanceId = instanceIds[0]!;
+				}
+				this.emit();
+				return;
+			}
+			case "patchMediaNodes": {
+				const nodeIds = Array.isArray(args?.nodeIds) ? (args!.nodeIds as readonly string[]) : [];
+				const field = args?.field;
+				const axis = args?.axis;
+				const numeric = typeof args?.value === "number" ? args.value : Number(args?.value);
+				if (!nodeIds.length || field !== "position" || (axis !== "x" && axis !== "y") || !Number.isFinite(numeric)) return;
+				const projection = this.store.projection();
+				for (const nodeId of nodeIds) {
+					const node = projection.mediaGraph.nodes.find((row) => row.id === nodeId);
+					if (!node) continue;
+					const x = axis === "x" ? numeric : node.x;
+					const y = axis === "y" ? numeric : node.y;
+					this.store.dispatch({ kind: "moveMediaNode", nodeId, x, y });
+				}
+				this.emit();
+				return;
+			}
+			case "patchAppInstances": {
+				const instanceIds = Array.isArray(args?.instanceIds) ? (args!.instanceIds as readonly string[]) : [];
+				const field = args?.field;
+				const value = args?.value;
+				if (!instanceIds.length || field !== "label" || typeof value !== "string") return;
+				this.store.dispatch({ kind: "patchAppInstances", instanceIds, field: "label", value });
+				this.emit();
+				return;
+			}
 			case "selectInstance": {
 				this.activeInstanceId = typeof args?.instanceId === "string" ? args.instanceId : null;
+				if (this.activeInstanceId) {
+					this.selectedAppInstanceIds = [this.activeInstanceId];
+					const node = this.store.projection().mediaGraph.nodes.find((row) => row.instanceId === this.activeInstanceId);
+					this.selectedMediaNodeIds = node ? [node.id] : [];
+				} else {
+					this.selectedAppInstanceIds = [];
+					this.selectedMediaNodeIds = [];
+				}
 				this.emit();
 				return;
 			}
@@ -233,6 +310,139 @@ export class SemiosPlayController extends Controller {
 
 export function buildSemiosPlayAppRuntime(ctrl: SemiosPlayController): AppRuntime {
 	return createPlayAppRuntime(SEMIOS_PLAY_APP_ID, "Semios", ctrl, SEMIOS_PLAY_LAYOUT, ctrl.mainMode);
+}
+
+function semiosPlayCmd(command: string, args?: Record<string, unknown>): CommandDescriptor {
+	return { controllerId: SEMIOS_PLAY_CONTROLLER_ID, command, args };
+}
+
+/** @emoji 🔎 Declarative inspection tree for semios play media graph and app instances. */
+export function buildSemiosPlayInspectorTree(ctrl: SemiosPlayController): UiTreeNode {
+	const projection = ctrl.getStore().projection();
+	const mediaNodeIds = [...ctrl.getSelectedMediaNodeIds()];
+	const instanceIds = [...ctrl.getSelectedAppInstanceIds()];
+	const children: UiNode[] = [
+		{
+			type: "section",
+			id: "semios-play-inspector.header",
+			label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+			children: [
+				{
+					type: "text",
+					value: `${mediaNodeIds.length} media node(s) · ${instanceIds.length} app instance(s)`,
+				},
+			],
+		},
+	];
+	if (mediaNodeIds.length > 0) {
+		const nodes = mediaNodeIds
+			.map((nodeId) => projection.mediaGraph.nodes.find((node) => node.id === nodeId))
+			.filter((node): node is SemiosMediaGraphNode => node !== undefined);
+		const xs = nodes.map((node) => node.x);
+		const ys = nodes.map((node) => node.y);
+		const xUniform = uiInspectorAllEqual(xs);
+		const yUniform = uiInspectorAllEqual(ys);
+		const nodeFields: UiNode[] = [];
+		if (mediaNodeIds.length === 1) {
+			nodeFields.push({
+				type: "field",
+				id: "semios-play-inspector.media-node.id",
+				label: "Node id",
+				child: { type: "text", value: mediaNodeIds[0]! },
+			});
+		}
+		nodeFields.push(
+			{
+				type: "field",
+				id: "semios-play-inspector.media-node.x",
+				label: "X",
+				child: {
+					type: "input",
+					id: "semios-play-inspector.media-node.x.input",
+					inputKind: "number",
+					value: xUniform ? String(xs[0] ?? 0) : "",
+					placeholder: xUniform ? undefined : "Mixed",
+					onChange: semiosPlayCmd("patchMediaNodes", { nodeIds: mediaNodeIds, field: "position", axis: "x" }),
+				},
+			},
+			{
+				type: "field",
+				id: "semios-play-inspector.media-node.y",
+				label: "Y",
+				child: {
+					type: "input",
+					id: "semios-play-inspector.media-node.y.input",
+					inputKind: "number",
+					value: yUniform ? String(ys[0] ?? 0) : "",
+					placeholder: yUniform ? undefined : "Mixed",
+					onChange: semiosPlayCmd("patchMediaNodes", { nodeIds: mediaNodeIds, field: "position", axis: "y" }),
+				},
+			},
+		);
+		children.push({
+			type: "section",
+			id: "semios-play-inspector.media-nodes",
+			label: mediaNodeIds.length === 1 ? "Media graph node" : `Media graph nodes (${mediaNodeIds.length})`,
+			children: nodeFields,
+		});
+	}
+	if (instanceIds.length > 0) {
+		const instances = instanceIds
+			.map((instanceId) => projection.appInstances.find((instance) => instance.id === instanceId))
+			.filter((instance): instance is SemiosAppInstance => instance !== undefined);
+		const labels = instances.map((instance) => instance.label);
+		const programIds = instances.map((instance) => instance.programId);
+		const appIds = instances.map((instance) => instance.appId);
+		const labelUniform = uiInspectorAllEqual(labels);
+		const programUniform = uiInspectorAllEqual(programIds);
+		const appUniform = uiInspectorAllEqual(appIds);
+		const instanceFields: UiNode[] = [];
+		if (instanceIds.length === 1) {
+			instanceFields.push({
+				type: "field",
+				id: "semios-play-inspector.app-instance.id",
+				label: "Instance id",
+				child: { type: "text", value: instanceIds[0]! },
+			});
+		}
+		instanceFields.push(
+			{
+				type: "field",
+				id: "semios-play-inspector.app-instance.label",
+				label: "Label",
+				child: {
+					type: "input",
+					id: "semios-play-inspector.app-instance.label.input",
+					inputKind: "text",
+					value: labelUniform ? (labels[0] ?? "") : "",
+					placeholder: labelUniform ? undefined : "Mixed",
+					onChange: semiosPlayCmd("patchAppInstances", { instanceIds, field: "label" }),
+				},
+			},
+			{
+				type: "field",
+				id: "semios-play-inspector.app-instance.program",
+				label: "Program",
+				child: { type: "text", value: programUniform ? (programIds[0] ?? "") : "Mixed" },
+			},
+			{
+				type: "field",
+				id: "semios-play-inspector.app-instance.app",
+				label: "App",
+				child: { type: "text", value: appUniform ? (appIds[0] ?? "") : "Mixed" },
+			},
+		);
+		children.push({
+			type: "section",
+			id: "semios-play-inspector.app-instances",
+			label: instanceIds.length === 1 ? "App instance" : `App instances (${instanceIds.length})`,
+			children: instanceFields,
+		});
+	}
+	if (mediaNodeIds.length === 0 && instanceIds.length === 0) {
+		children[0]!.children!.push({ type: "text", value: "Select media graph nodes or app instances in the canvas." });
+	}
+	return uiDeclarativeSectionsToTree(children);
 }
 
 export function registerSemiosPlayDeclarativeBodies(): void {
@@ -340,6 +550,30 @@ if (import.meta.vitest) {
 				drawInstance!.id,
 			);
 			expect(bundle?.projection).toBeTruthy();
+		});
+
+		it("buildSemiosPlayInspectorTree exposes batch label editing for selected instances", () => {
+			const runtime = createProductPlaygroundPlatform("semios-test");
+			const ctrl = new SemiosPlayController(runtime.commandBus, () => runtime.notify());
+			ctrl.run("setActiveFixture", { fixtureId: "demo" });
+			const instances = ctrl.getStore().projection().appInstances;
+			expect(instances.length).toBeGreaterThanOrEqual(2);
+			ctrl.run("setAppInstanceSelection", { instanceIds: instances.slice(0, 2).map((row) => row.id) });
+			const tree = buildSemiosPlayInspectorTree(ctrl);
+			const section = tree.sections.find((row) => row.id === "semios-play-inspector.app-instances");
+			const labelField = section?.items.find((item) => item.id === "semios-play-inspector.app-instance.label");
+			expect(labelField?.control?.type).toBe("input");
+			expect(labelField?.control?.onChange?.command).toBe("patchAppInstances");
+		});
+
+		it("patchAppInstances updates labels in batch", () => {
+			const runtime = createProductPlaygroundPlatform("semios-test");
+			const ctrl = new SemiosPlayController(runtime.commandBus, () => runtime.notify());
+			ctrl.run("setActiveFixture", { fixtureId: "demo" });
+			const ids = ctrl.getStore().projection().appInstances.slice(0, 2).map((row) => row.id);
+			ctrl.run("patchAppInstances", { instanceIds: ids, field: "label", value: "Batch Label" });
+			const labels = ctrl.getStore().projection().appInstances.filter((row) => ids.includes(row.id)).map((row) => row.label);
+			expect(labels.every((label) => label === "Batch Label")).toBe(true);
 		});
 	});
 }

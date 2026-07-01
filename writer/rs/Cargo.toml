@@ -12,6 +12,7 @@ crate-type = ["rlib", "cdylib"]
 path = "lib.rs"
 
 [dependencies]
+framework_vcs = { path = "../../framework/rs" }
 ui_styling = { path = "../../ui/styling/rs" }
 infinite_cavas = { path = "../../infinite/cavas/rs" }
 serde = { version = "1.0.219", features = ["derive"] }

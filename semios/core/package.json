@@ -14,9 +14,16 @@
   "dependencies": {
     "@semio-tech/framework-core": "workspace:*",
     "@semio-tech/framework-platform-core": "workspace:*",
-    "@semio-tech/graph-manifest": "workspace:*"
+    "@semio-tech/graph-manifest": "workspace:*",
+    "@semio-tech/semios-studio-rs": "workspace:*"
   },
   "devDependencies": {
+    "@semio-tech/draw-core": "workspace:*",
+    "@semio-tech/flow-core": "workspace:*",
+    "@semio-tech/forms-core": "workspace:*",
+    "@semio-tech/framework-presentation-core": "workspace:*",
+    "@semio-tech/raster-core": "workspace:*",
+    "@semio-tech/writer-core": "workspace:*",
     "typescript": "^5.9.3",
     "vitest": "^4.0.17"
   },

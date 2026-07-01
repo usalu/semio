@@ -437,6 +437,22 @@ export class TrinityRewritePlayController extends Controller {
       this.bump();
       return;
     }
+    if (command === "patchTrinityNodes") {
+      const nodeIds = (args as { nodeIds?: readonly string[] }).nodeIds ?? [];
+      const field = (args as { field?: string }).field;
+      const value = (args as { value?: unknown }).value;
+      if (!nodeIds.length || field !== "name" || typeof value !== "string") return;
+      const targets = new Set(nodeIds);
+      const fixture = this.projection();
+      const nextName = value.trim();
+      if (!nextName) return;
+      this.commitFixture({
+        ...fixture,
+        nodes: fixture.nodes.map((node) => (targets.has(node.id) ? { ...node, name: nextName } : node)),
+      });
+      this.bump();
+      return;
+    }
     if (command === "setLodMode") {
       const { value, instanceId } = args as { value?: string; instanceId?: string };
       const scopeId = instanceId ?? TRINITY_REWRITE_PLAY_WINDOW_KIND_BEFORE;
@@ -569,6 +585,15 @@ if (import.meta.vitest) {
       const core = after?.nodes.find((node) => node.name === "b");
       expect(core?.properties?.label).toBe("override-core");
       expect(ctrl.getBeforeFixtureJson()).toBe(before);
+    });
+
+    it("patchTrinityNodes renames selected pieces in before fixture", () => {
+      const bus = new CommandBus();
+      const ctrl = new TrinityRewritePlayController(bus, () => undefined);
+      const nodeId = parseTrinityFixtureJson(ctrl.getBeforeFixtureJson())!.nodes[0]!.id;
+      ctrl.run("patchTrinityNodes", { nodeIds: [nodeId], field: "name", value: "rewrite-renamed" });
+      const updated = parseTrinityFixtureJson(ctrl.getBeforeFixtureJson())!.nodes.find((node) => node.id === nodeId);
+      expect(updated?.name).toBe("rewrite-renamed");
     });
 
     it("subscribeSnapshot notifies listeners", () => {

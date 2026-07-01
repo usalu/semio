@@ -3,6 +3,13 @@
 // #endregion 🧲Header
 
 import React, { useCallback, useEffect, useRef } from "react";
+import {
+  UI_INSPECTOR_MIXED_PLACEHOLDER,
+  uiDeclarativeSectionsToTree,
+  uiInspectorGroupsToTree,
+  uiInspectorMixedText,
+  uiInspectorReadonlyField,
+} from "@semio-tech/framework-playground-core";
 import { clearColorResolveCache, serializeGraphVelloThemePaletteJson } from "@semio-tech/ui-styling";
 import initTrinityWasm, { TrinitySession, initSync, ruleQueryJson } from "../rewrite/engine/pkg/trinity_rewrite.js";
 import nakaginFixtureJson from "../fixture/nakagin-capsule-tower.trinity.json";
@@ -191,31 +198,93 @@ export function buildTrinityPlayCatalogueTree(): import("@semio-tech/framework-p
   };
 }
 
-export function buildTrinityPlayInspectorTree(fixtureJson: string, selectedNodeIds: readonly string[]): import("@semio-tech/framework-playground-core").UiNode {
+export function buildTrinityPlayInspectorTree(
+  fixtureJson: string,
+  selectedNodeIds: readonly string[],
+  controllerId: string,
+): import("@semio-tech/framework-playground-core").UiNode {
   const fixture = parseTrinityFixtureJson(fixtureJson);
-  if (!fixture || selectedNodeIds.length !== 1) {
-    return { type: "tree", sections: [{ id: "trinity-inspector.empty", label: "Inspection", defaultOpen: true, items: [{ id: "trinity-inspector.empty.msg", label: "Select one piece" }] }] };
-  }
-  const node = fixture.nodes.find((row) => row.id === selectedNodeIds[0]);
-  if (!node) {
-    return { type: "tree", sections: [{ id: "trinity-inspector.missing", label: "Inspection", defaultOpen: true, items: [{ id: "trinity-inspector.missing.msg", label: "Piece not found" }] }] };
-  }
-  const flat = node.properties?.flatPosition as { u?: number; v?: number } | undefined;
-  return {
-    type: "tree",
-    sections: [
+  if (!fixture || selectedNodeIds.length === 0) {
+    return uiDeclarativeSectionsToTree([
       {
-        id: "trinity-inspector.node",
-        label: node.name,
-        defaultOpen: true,
-        items: [
-          { id: "trinity-inspector.kind", label: "Kind", description: node.kind },
-          { id: "trinity-inspector.flat", label: "Flat position", description: flat ? `u=${flat.u ?? 0}, v=${flat.v ?? 0}` : "(derived)" },
-          { id: "trinity-inspector.ports", label: "Connectors", description: String(node.ports?.length ?? 0) },
-        ],
+        type: "section",
+        id: "trinity-inspector.empty",
+        label: "Inspection",
+        children: [{ type: "text", value: "Select one or more pieces" }],
       },
-    ],
-  };
+    ]);
+  }
+  const nodes = selectedNodeIds
+    .map((id) => fixture.nodes.find((row) => row.id === id))
+    .filter((node): node is TrinityNodeV1 => Boolean(node));
+  if (!nodes.length) {
+    return uiDeclarativeSectionsToTree([
+      {
+        type: "section",
+        id: "trinity-inspector.missing",
+        label: "Inspection",
+        children: [{ type: "text", value: "Piece not found" }],
+      },
+    ]);
+  }
+  const nodeIds = nodes.map((node) => node.id);
+  const nameMixed = uiInspectorMixedText(nodes.map((node) => node.name));
+  const kindMixed = uiInspectorMixedText(nodes.map((node) => node.kind));
+  const flatLabels = nodes.map((node) => {
+    const flat = node.properties?.flatPosition as { u?: number; v?: number } | undefined;
+    return flat ? `u=${flat.u ?? 0}, v=${flat.v ?? 0}` : "(derived)";
+  });
+  const flatMixed = uiInspectorMixedText(flatLabels);
+  const portCounts = nodes.map((node) => String(node.ports?.length ?? 0));
+  const portsMixed = uiInspectorMixedText(portCounts);
+  const trinityPlayCmd = (command: string, args?: Record<string, unknown>) => ({ controllerId, command, args });
+  return uiInspectorGroupsToTree([
+    {
+      id: "trinity-inspector.geometry",
+      label: "Geometry",
+      fields: [
+        uiInspectorReadonlyField(
+          "trinity-inspector.flat",
+          "Flat position",
+          flatMixed.uniform ? (flatLabels[0] ?? "") : flatMixed.placeholder ?? UI_INSPECTOR_MIXED_PLACEHOLDER,
+        ),
+        uiInspectorReadonlyField(
+          "trinity-inspector.ports",
+          "Connectors",
+          portsMixed.uniform ? (portCounts[0] ?? "") : portsMixed.placeholder ?? UI_INSPECTOR_MIXED_PLACEHOLDER,
+        ),
+      ],
+    },
+    {
+      id: "trinity-inspector.identity",
+      label: "Identity",
+      fields: [
+        {
+          type: "field",
+          id: "trinity-inspector.name",
+          label: "Name",
+          child: {
+            type: "input",
+            id: "trinity-inspector.name.input",
+            inputKind: "text",
+            value: nameMixed.value,
+            placeholder: nameMixed.placeholder,
+            onChange: trinityPlayCmd("patchTrinityNodes", { nodeIds, field: "name" }),
+          },
+        },
+        uiInspectorReadonlyField(
+          "trinity-inspector.kind",
+          "Kind",
+          kindMixed.uniform ? (nodes[0]?.kind ?? "") : kindMixed.placeholder ?? UI_INSPECTOR_MIXED_PLACEHOLDER,
+        ),
+        uiInspectorReadonlyField(
+          "trinity-inspector.id",
+          "Id",
+          nodeIds.length === 1 ? (nodeIds[0] ?? "") : `${nodeIds.length} selected`,
+        ),
+      ],
+    },
+  ]);
 }
 // #endregion 🔖Panels
 
@@ -555,6 +624,18 @@ if (import.meta.vitest) {
     it("buildTrinityPlayHierarchyTree lists nodes", () => {
       const tree = buildTrinityPlayHierarchyTree(TRINITY_DEFAULT_FIXTURE_JSON, []);
       expect(tree.type).toBe("tree");
+    });
+
+    it("buildTrinityPlayInspectorTree exposes batch name field", () => {
+      const fixture = parseTrinityFixtureJson(TRINITY_DEFAULT_FIXTURE_JSON);
+      expect(fixture).not.toBeNull();
+      const nodeIds = fixture!.nodes.slice(0, 2).map((node) => node.id);
+      const tree = buildTrinityPlayInspectorTree(TRINITY_DEFAULT_FIXTURE_JSON, nodeIds, "trinity-jack-play");
+      expect(tree.type).toBe("tree");
+      const identitySection = tree.sections.find((section) => section.id === "trinity-inspector.identity");
+      const nameField = identitySection?.items.find((item) => item.id === "trinity-inspector.name");
+      expect(nameField?.control?.onChange?.command).toBe("patchTrinityNodes");
+      expect(nameField?.control?.onChange?.args).toMatchObject({ nodeIds, field: "name" });
     });
 
     it("runJackOnFixture returns nakagin core name", () => {

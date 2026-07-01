@@ -3036,7 +3036,7 @@ function cadPlayCmd(command: string, args?: Record<string, unknown>): CommandDes
 
 type CadPlayReferencePatchField = "origin" | "rotation" | "scale" | "scaleUniform" | "widthWorld" | "opacity";
 
-export type CadPlaySelectionPatchField = "typology" | "hidden" | "locked";
+export type CadPlaySelectionPatchField = "typology" | "hidden" | "locked" | "name";
 
 function cadPlaySelectionFlagInputValue(value: unknown): boolean {
   return value === true || value === "true";
@@ -3092,6 +3092,14 @@ export function patchCadPlaySelectionTarget(
     next.setEntityFlag(target.id, field, cadPlaySelectionFlagInputValue(value));
     return next;
   }
+  if (field === "name") {
+    const trimmed = typeof value === "string" ? value.trim() : "";
+    if (!trimmed) {
+      return null;
+    }
+    next.metadata.setField(target.id, "name", trimmed);
+    return next;
+  }
   return null;
 }
 
@@ -3106,6 +3114,8 @@ function cadPlaySelectionTargetRows(
   const rows: UiNode[] = [];
   for (const [index, target] of targets.entries()) {
     const flags = model?.getEntityFlags(target.id) ?? {};
+    const metadataName = model?.metadata.get(target.id)?.name;
+    const displayName = typeof metadataName === "string" && metadataName.trim() ? metadataName : target.id;
     const typology = target.kind === "object" ? (model?.objects[target.id as ObjectRef]?.typology ?? "") : "";
     const prefix = `cad-play-details.selection.target.${index}`;
     rows.push({
@@ -3119,6 +3129,19 @@ function cadPlaySelectionTargetRows(
       id: `${prefix}.id`,
       label: targets.length === 1 ? "Id" : `Id ${index + 1}`,
       child: { type: "text", value: target.id },
+    });
+    rows.push({
+      type: "field",
+      id: `${prefix}.name`,
+      label: "Name",
+      child: {
+        type: "input",
+        id: `${prefix}.name.input`,
+        inputKind: "text",
+        value: displayName,
+        commit: "blur",
+        onChange: patch(target.kind, target.id, "name"),
+      },
     });
     if (target.kind === "object") {
       rows.push({
@@ -3381,6 +3404,10 @@ export function buildCadPlaySelectionInspectorChildren(snapshot: CadPlayChromeSn
     .map((target) => model?.objects[target.id as ObjectRef]?.typology ?? "");
   const hiddens = editableTargets.map((target) => model?.getEntityFlags(target.id).hidden === true);
   const lockeds = editableTargets.map((target) => model?.getEntityFlags(target.id).locked === true);
+  const names = editableTargets.map((target) => {
+    const metadataName = model?.metadata.get(target.id)?.name;
+    return typeof metadataName === "string" && metadataName.trim() ? metadataName : target.id;
+  });
   const modelDefinitionId = snapshot.activeModelDefinitionId;
   const patchAll = (field: CadPlaySelectionPatchField) =>
     cadPlayCmd("patchCadPlaySelection", {
@@ -3405,6 +3432,20 @@ export function buildCadPlaySelectionInspectorChildren(snapshot: CadPlayChromeSn
       },
     });
   }
+  children.push({
+    type: "field",
+    id: "cad-play-details.selection.name",
+    label: "Name",
+    child: {
+      type: "input",
+      id: "cad-play-details.selection.name.input",
+      inputKind: "text",
+      value: cadPlaySelectionAllEqual(names) ? (names[0] ?? "") : "",
+      placeholder: cadPlaySelectionAllEqual(names) ? undefined : "Mixed",
+      commit: "blur",
+      onChange: patchAll("name"),
+    },
+  });
   children.push(
     {
       type: "field",
@@ -4077,6 +4118,43 @@ if (import.meta.vitest) {
       const typologyField = selectionSection!.items.find((item) => item.id === "cad-play-details.selection.target.0.typology");
       expect(typologyField?.control?.type).toBe("input");
       expect(typologyField?.control?.onChange?.command).toBe("patchCadPlaySelection");
+    });
+
+    it("buildCadPlaySelectionInspectorChildren batches shared name field for multi-select", () => {
+      const modelDefinitionId = defaultModelDefinitionId();
+      const model = new Model();
+      model.metadata.setField("wall-a", "name", "Wall A");
+      model.metadata.setField("wall-b", "name", "Wall B");
+      const snapshot: CadPlayChromeSnapshot = {
+        modelsByDefinitionId: { [modelDefinitionId]: model },
+        referencesByModelDefinitionId: {},
+        activeModelDefinitionId: modelDefinitionId,
+        selection: [
+          { kind: "object", id: "wall-a", editable: true },
+          { kind: "object", id: "wall-b", editable: true },
+        ],
+        selectedReference: null,
+        hoveredKey: null,
+        fileStatus: "",
+        selectTarget: () => {},
+        hoverTarget: () => {},
+        toggleHidden: () => {},
+        toggleLocked: () => {},
+        selectReference: () => {},
+        hoverReference: () => {},
+        toggleReferenceHidden: () => {},
+        toggleReferenceLocked: () => {},
+      };
+      const rows = buildCadPlaySelectionInspectorChildren(snapshot);
+      const nameField = rows.find((row) => row.id === "cad-play-details.selection.name") as { child?: { type?: string; placeholder?: string } } | undefined;
+      expect(nameField?.child?.type).toBe("input");
+      expect(nameField?.child?.placeholder).toBe("Mixed");
+    });
+
+    it("patchCadPlaySelectionTarget stores display name in metadata", () => {
+      const model = new Model();
+      const patched = patchCadPlaySelectionTarget(model, { kind: "object", id: "wall-a", editable: true }, "name", "Renamed");
+      expect(patched?.metadata.get("wall-a")?.name).toBe("Renamed");
     });
 
     it("updateCadPlayReferenceInMap toggles reference flags", () => {

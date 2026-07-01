@@ -39,6 +39,7 @@ import {
   uiDeclarativeSectionsToTree,
   FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
   FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+  uiInspectorAllEqual,
 } from "@semio-tech/framework-playground-core";
 import {
   DocumentVcsStore,
@@ -396,19 +397,6 @@ export function buildPuzzle5dPlayKindsTree(snapshot: Puzzle5dPlaySnapshot): UiTr
 //#endregion 🔖Puzzle5dPlayKinds
 
 //#region 🔖Puzzle5dPlayInspection
-function puzzle5dPlayInspectorAllEqual<T>(values: readonly T[]): boolean {
-  if (values.length <= 1) {
-    return true;
-  }
-  const first = values[0];
-  for (let index = 1; index < values.length; index += 1) {
-    if (values[index] !== first) {
-      return false;
-    }
-  }
-  return true;
-}
-
 function puzzle5dPlayInspectorVec3Value(value: readonly [number, number, number] | null | undefined): readonly [number, number, number] | null {
   if (value == null || !Array.isArray(value) || value.length < 3) {
     return null;
@@ -423,7 +411,7 @@ function puzzle5dPlayInspectorVec3Value(value: readonly [number, number, number]
 }
 
 function puzzle5dPlayInspectorUniformVec3(values: readonly (readonly [number, number, number] | null | undefined)[]): readonly [number, number, number] | null {
-  if (!values.length || !puzzle5dPlayInspectorAllEqual(values)) {
+  if (!values.length || !uiInspectorAllEqual(values)) {
     return null;
   }
   return puzzle5dPlayInspectorVec3Value(values[0]);
@@ -481,13 +469,13 @@ export function buildPuzzle5dPlayInspectorTree(snapshot: Puzzle5dPlaySnapshot): 
       });
     } else {
     const partKinds = parts.map((part) => part.partKind ?? "");
-    const partKindUniform = puzzle5dPlayInspectorAllEqual(partKinds);
+    const partKindUniform = uiInspectorAllEqual(partKinds);
     const labels = parts.map((part) => part["3d"]?.label ?? part["2d"]?.text ?? "");
-    const labelUniform = puzzle5dPlayInspectorAllEqual(labels);
+    const labelUniform = uiInspectorAllEqual(labels);
     const xs = parts.map((part) => part["2d"]?.x ?? Number.NaN);
     const ys = parts.map((part) => part["2d"]?.y ?? Number.NaN);
-    const xUniform = puzzle5dPlayInspectorAllEqual(xs);
-    const yUniform = puzzle5dPlayInspectorAllEqual(ys);
+    const xUniform = uiInspectorAllEqual(xs);
+    const yUniform = uiInspectorAllEqual(ys);
     const origins = parts.map((part) => part["3d"]?.origin ?? null);
     const partFields: UiNode[] = [
       {
@@ -676,12 +664,103 @@ export function buildPuzzle5dPlayInspectorTree(snapshot: Puzzle5dPlaySnapshot): 
       });
     }
   } else if (selection.gripIds.length > 1) {
-    children.push({
-      type: "section",
-      id: "puzzle-5d-play-inspector.grips",
-      label: `Grips (${selection.gripIds.length})`,
-      children: [{ type: "text", value: "Select a single grip to edit grip fields." }],
-    });
+    const gripRows: { readonly gripFull: string; readonly grip: (typeof model.parts)[number]["grips"][number] }[] = [];
+    for (const gripFull of selection.gripIds) {
+      const parsed = parseGripFullId(gripFull);
+      const hostPart = parsed ? model.parts.find((part) => part.id === parsed.partId) : undefined;
+      const grip = hostPart?.grips.find((row) => row.id === parsed?.gripId);
+      if (grip && parsed) gripRows.push({ gripFull, grip });
+    }
+    if (gripRows.length === 0) {
+      children.push({
+        type: "section",
+        id: "puzzle-5d-play-inspector.grips",
+        label: `Grips (${selection.gripIds.length})`,
+        children: [{ type: "text", value: "Selected grips are not available in the model yet." }],
+      });
+    } else {
+      const gripFullIds = gripRows.map((row) => row.gripFull);
+      const gripKinds = gripRows.map((row) => row.grip.gripKind ?? "");
+      const labels = gripRows.map((row) => row.grip["3d"]?.label ?? "");
+      const angles = gripRows.map((row) => row.grip["2d"]?.angle ?? Number.NaN);
+      const radii = gripRows.map((row) => row.grip["3d"]?.radius ?? row.grip["2d"]?.radius ?? Number.NaN);
+      const positions = gripRows.map((row) => row.grip["3d"]?.position ?? null);
+      const gripKindUniform = uiInspectorAllEqual(gripKinds);
+      const labelUniform = uiInspectorAllEqual(labels);
+      const angleUniform = uiInspectorAllEqual(angles);
+      const radiusUniform = uiInspectorAllEqual(radii);
+      const gripFields: UiNode[] = [
+        {
+          type: "field",
+          id: "puzzle-5d-play-inspector.grip.kind",
+          label: "Grip kind",
+          child: {
+            type: "select",
+            id: "puzzle-5d-play-inspector.grip.kind.select",
+            value: gripKindUniform ? (gripKinds[0] ?? "") : "",
+            placeholder: gripKindUniform ? "kind" : "Mixed",
+            items: puzzle5dPlayInspectorKindItems(bundle?.grips),
+            onChange: puzzle5dPlayCmd("patchPuzzle5dGrips", { gripFullIds, field: "gripKind" satisfies Puzzle5dGripPatchField }),
+          },
+        },
+        {
+          type: "field",
+          id: "puzzle-5d-play-inspector.grip.label",
+          label: "Label",
+          child: {
+            type: "input",
+            id: "puzzle-5d-play-inspector.grip.label.input",
+            inputKind: "text",
+            value: labelUniform ? (labels[0] ?? "") : "",
+            placeholder: labelUniform ? undefined : "Mixed",
+            onChange: puzzle5dPlayCmd("patchPuzzle5dGrips", { gripFullIds, field: "label" satisfies Puzzle5dGripPatchField }),
+          },
+        },
+        {
+          type: "field",
+          id: "puzzle-5d-play-inspector.grip.angle",
+          label: "Flat angle",
+          child: {
+            type: "numberStepper",
+            id: "puzzle-5d-play-inspector.grip.angle.stepper",
+            value: angleUniform ? angles[0]! : Number.NaN,
+            step: 1,
+            uniform: angleUniform,
+            onAbsolute: puzzle5dPlayCmd("patchPuzzle5dGrips", { gripFullIds, field: "angle" satisfies Puzzle5dGripPatchField }),
+          },
+        },
+        {
+          type: "field",
+          id: "puzzle-5d-play-inspector.grip.radius",
+          label: "Radius",
+          child: {
+            type: "input",
+            id: "puzzle-5d-play-inspector.grip.radius.input",
+            inputKind: "number",
+            value: radiusUniform ? String(radii[0]) : "",
+            placeholder: radiusUniform ? undefined : "Mixed",
+            onChange: puzzle5dPlayCmd("patchPuzzle5dGrips", { gripFullIds, field: "radius" satisfies Puzzle5dGripPatchField }),
+          },
+        },
+        {
+          type: "field",
+          id: "puzzle-5d-play-inspector.grip.position",
+          label: "Position",
+          child: {
+            type: "vec3",
+            id: "puzzle-5d-play-inspector.grip.position.vec3",
+            value: puzzle5dPlayInspectorUniformVec3(positions),
+            onChange: puzzle5dPlayCmd("patchPuzzle5dGrips", { gripFullIds, field: "position" satisfies Puzzle5dGripPatchField }),
+          },
+        },
+      ];
+      children.push({
+        type: "section",
+        id: "puzzle-5d-play-inspector.grips",
+        label: `Grips (${gripRows.length})`,
+        children: gripFields,
+      });
+    }
   }
   return uiDeclarativeSectionsToTree(children);
 }
@@ -1738,6 +1817,21 @@ if (import.meta.vitest) {
       expect(partId).toBeTruthy();
       controller.run("patchPuzzle5dParts", { partIds: [partId], field: "partKind", value: "test-kind" });
       expect(controller.puzzle5dStore.read().parts.find((part) => part.id === partId)?.partKind).toBe("test-kind");
+    });
+
+    it("buildPuzzle5dPlayInspectorTree exposes batch grip fields for multi grip selection", async () => {
+      const runtime = buildPuzzle5dPlayRuntime();
+      const controller = runtime.getActiveApp()?.controller as Puzzle5dPlayShellController;
+      const snapshot = await puzzle5dPlaySnapshotWithConcreteForest(controller!);
+      const part = snapshot.model.parts.find((row) => row.grips.length >= 2);
+      expect(part).toBeTruthy();
+      const gripIds = part!.grips.slice(0, 2).map((grip) => `${part!.id}:${grip.id}`);
+      controller.puzzle5dStore.setSelection({ partIds: [], gripIds });
+      const tree = buildPuzzle5dPlayInspectorTree(controller.getSnapshot());
+      const gripSection = tree.sections.find((section) => section.id === "puzzle-5d-play-inspector.grips");
+      expect(gripSection?.label).toContain("Grips (2)");
+      const kindField = gripSection?.items.find((item) => item.id === "puzzle-5d-play-inspector.grip.kind");
+      expect(kindField?.control?.onChange?.command).toBe("patchPuzzle5dGrips");
     });
   });
 

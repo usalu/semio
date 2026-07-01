@@ -18845,6 +18845,26 @@ mod tests {
 
     use crate::gql::AppSchema;
 
+    /// @emoji 🗄️ `framework_vcs` integration — compose shares generic document VCS primitives with semios technologies.
+    #[test]
+    fn framework_vcs_json_replace_materializes_projection() {
+        use framework_vcs::{create_document_vcs_envelope, materialize_document_projection, DocumentVcsCommand, DocumentVcsStore, JsonReplaceApplier, json_replace_op};
+        use std::sync::Arc;
+        let envelope = create_document_vcs_envelope("compose.kit/v1", "kit-test", json!({ "id": "base" }), None);
+        let mut store = DocumentVcsStore::new(envelope, Arc::new(JsonReplaceApplier));
+        store
+            .dispatch(DocumentVcsCommand::Apply {
+                forwards: vec![json_replace_op(json!({ "id": "patched" }))],
+                backwards: vec![json_replace_op(json!({ "id": "base" }))],
+                description: None,
+            })
+            .expect("apply");
+        let projection = store.projection().expect("projection");
+        assert_eq!(projection["id"], "patched");
+        let replayed = materialize_document_projection(store.envelope(), store.applied_change_ids(), &JsonReplaceApplier).expect("materialize");
+        assert_eq!(replayed["id"], "patched");
+    }
+
     /// @emoji 📜 Collects `(kind, name)` for top-level GraphQL declarations (first line of each declaration block).
     fn collect_schema_decl_keys(sdl: &str) -> BTreeSet<(String, String)> {
         let mut out = BTreeSet::new();

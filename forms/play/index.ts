@@ -23,6 +23,13 @@ import {
 	FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
 	FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 	uiDeclarativeSectionsToTree,
+	UI_INSPECTOR_MIXED_PLACEHOLDER,
+	uiInspectorGroupsToTree,
+	uiInspectorMixedNumber,
+	uiInspectorMixedText,
+	uiInspectorMixedToggle,
+	uiInspectorReadonlyField,
+	type UiInspectorFieldGroup,
 	type AppTools,
 	type CommandDescriptor,
 	type PlaygroundFixtureCatalog,
@@ -331,14 +338,19 @@ export function buildFormsPlayCatalogueTree(): UiTreeNode {
 	};
 }
 
+function formsPlayInspectorPatch(questionIds: readonly string[], field: string) {
+	return formsPlayCmd("patchQuestions", { questionIds, field });
+}
+
 function formsPlayInspectorInput(
 	id: string,
 	label: string,
-	questionId: string,
+	questionIds: readonly string[],
 	field: string,
-	value: string,
+	values: readonly string[],
 	inputKind: "text" | "number" = "text",
 ): UiNode {
+	const mixed = inputKind === "number" ? uiInspectorMixedNumber(values.map(Number)) : uiInspectorMixedText(values);
 	return {
 		type: "field",
 		id,
@@ -347,14 +359,16 @@ function formsPlayInspectorInput(
 			type: "input",
 			id: `${id}.input`,
 			inputKind,
-			value,
+			value: inputKind === "number" ? (mixed.uniform ? String(mixed.value) : "") : mixed.value,
+			placeholder: inputKind === "number" ? (mixed.uniform ? undefined : UI_INSPECTOR_MIXED_PLACEHOLDER) : mixed.placeholder,
 			commit: "blur",
-			onChange: formsPlayCmd("patchQuestion", { questionId, field }),
+			onChange: formsPlayInspectorPatch(questionIds, field),
 		},
 	};
 }
 
-function formsPlayInspectorToggle(id: string, label: string, questionId: string, field: string, pressed: boolean): UiNode {
+function formsPlayInspectorToggle(id: string, label: string, questionIds: readonly string[], field: string, values: readonly boolean[]): UiNode {
+	const mixed = uiInspectorMixedToggle(values);
 	return {
 		type: "field",
 		id,
@@ -363,27 +377,33 @@ function formsPlayInspectorToggle(id: string, label: string, questionId: string,
 			type: "toggle",
 			id: `${id}.toggle`,
 			iconId: "check",
-			pressed,
-			text: pressed ? "Yes" : "No",
-			onChange: formsPlayCmd("patchQuestion", { questionId, field }),
+			pressed: mixed.pressed,
+			text: mixed.uniform ? (mixed.pressed ? "Yes" : "No") : UI_INSPECTOR_MIXED_PLACEHOLDER,
+			onChange: formsPlayInspectorPatch(questionIds, field),
 		},
 	};
 }
 
-function formsPlayInspectorOptionFields(question: FormQuestion & { readonly options: readonly FormSelectOption[] }): UiNode[] {
+function formsPlayInspectorOptionFields(questions: readonly (FormQuestion & { readonly options: readonly FormSelectOption[] })[]): UiNode[] {
+	const questionIds = questions.map((entry) => entry.id);
 	const fields: UiNode[] = [
 		{
 			type: "button",
-			id: `forms-play-inspector.${question.id}.add-option`,
+			id: `forms-play-inspector.${questionIds[0] ?? "batch"}.add-option`,
 			iconId: "plus",
 			label: "Add Option",
-			command: formsPlayCmd("addQuestionOption", { questionId: question.id }),
+			command: formsPlayCmd("addQuestionOption", { questionId: questionIds[0] }),
 		},
 	];
+	if (questionIds.length !== 1) {
+		fields.unshift(uiInspectorReadonlyField("forms-play-inspector.options-hint", "Options", `${questionIds.length} questions — edit individually`));
+		return fields;
+	}
+	const question = questions[0]!;
 	for (const [index, option] of question.options.entries()) {
 		fields.push(
-			formsPlayInspectorInput(`forms-play-inspector.${question.id}.option.${index}.value`, `Option ${index + 1} Value`, question.id, `option:${index}:value`, option.value),
-			formsPlayInspectorInput(`forms-play-inspector.${question.id}.option.${index}.label`, `Option ${index + 1} Label`, question.id, `option:${index}:label`, option.label),
+			formsPlayInspectorInput(`forms-play-inspector.${question.id}.option.${index}.value`, `Option ${index + 1} Value`, questionIds, `option:${index}:value`, [option.value]),
+			formsPlayInspectorInput(`forms-play-inspector.${question.id}.option.${index}.label`, `Option ${index + 1} Label`, questionIds, `option:${index}:label`, [option.label]),
 			{
 				type: "button",
 				id: `forms-play-inspector.${question.id}.option.${index}.remove`,
@@ -396,32 +416,38 @@ function formsPlayInspectorOptionFields(question: FormQuestion & { readonly opti
 	return fields;
 }
 
-function formsPlayInspectorVectorFields(question: FormQuestion & { readonly fields: readonly FormVectorField[] }): UiNode[] {
+function formsPlayInspectorVectorFields(questions: readonly (FormQuestion & { readonly fields: readonly FormVectorField[] })[]): UiNode[] {
+	const questionIds = questions.map((entry) => entry.id);
 	const fields: UiNode[] = [
 		{
 			type: "button",
-			id: `forms-play-inspector.${question.id}.add-field`,
+			id: `forms-play-inspector.${questionIds[0] ?? "batch"}.add-field`,
 			iconId: "plus",
 			label: "Add Field",
-			command: formsPlayCmd("addVectorField", { questionId: question.id }),
+			command: formsPlayCmd("addVectorField", { questionId: questionIds[0] }),
 		},
 	];
+	if (questionIds.length !== 1) {
+		fields.unshift(uiInspectorReadonlyField("forms-play-inspector.vector-hint", "Vector Fields", `${questionIds.length} questions — edit individually`));
+		return fields;
+	}
+	const question = questions[0]!;
 	for (const [index, field] of question.fields.entries()) {
 		fields.push(
-			formsPlayInspectorInput(`forms-play-inspector.${question.id}.field.${index}.key`, `Field ${index + 1} Key`, question.id, `vectorField:${index}:key`, field.key),
+			formsPlayInspectorInput(`forms-play-inspector.${question.id}.field.${index}.key`, `Field ${index + 1} Key`, questionIds, `vectorField:${index}:key`, [field.key]),
 			formsPlayInspectorInput(
 				`forms-play-inspector.${question.id}.field.${index}.label`,
 				`Field ${index + 1} Label`,
-				question.id,
+				questionIds,
 				`vectorField:${index}:label`,
-				field.label ?? "",
+				[field.label ?? ""],
 			),
 			formsPlayInspectorInput(
 				`forms-play-inspector.${question.id}.field.${index}.value`,
 				`Field ${index + 1} Default`,
-				question.id,
+				questionIds,
 				`vectorField:${index}:value`,
-				String(field.value ?? 0),
+				[String(field.value ?? 0)],
 				"number",
 			),
 			{
@@ -436,124 +462,129 @@ function formsPlayInspectorVectorFields(question: FormQuestion & { readonly fiel
 	return fields;
 }
 
-function formsPlayInspectorFields(question: FormQuestion): UiNode[] {
-	const fields: UiNode[] = [
-		formsPlayInspectorInput("forms-play-inspector.label", "Label", question.id, "label", question.label),
-		{
-			type: "field",
-			id: "forms-play-inspector.kind",
-			label: "Kind",
-			child: { type: "text", value: question.kind },
-		},
-		formsPlayInspectorInput("forms-play-inspector.description", "Description", question.id, "description", question.description ?? ""),
-		formsPlayInspectorToggle("forms-play-inspector.required", "Required", question.id, "required", Boolean(question.required)),
-	];
-	if (question.kind === "text" || question.kind === "longText") {
+function formsPlayInspectorKindGroup(kind: string, questions: readonly FormQuestion[]): UiInspectorFieldGroup | null {
+	if (!questions.length) return null;
+	const questionIds = questions.map((entry) => entry.id);
+	const fields: UiNode[] = [];
+	const question = questions[0]!;
+	if (kind === "text" || kind === "longText") {
 		fields.push(
-			formsPlayInspectorInput("forms-play-inspector.placeholder", "Placeholder", question.id, "placeholder", question.placeholder ?? ""),
-			formsPlayInspectorInput("forms-play-inspector.default", "Default", question.id, "default", String(question.default ?? "")),
+			formsPlayInspectorInput("forms-play-inspector.placeholder", "Placeholder", questionIds, "placeholder", questions.map((entry) => (entry.kind === kind ? (entry.placeholder ?? "") : ""))),
+			formsPlayInspectorInput("forms-play-inspector.default", "Default", questionIds, "default", questions.map((entry) => (entry.kind === kind ? String(entry.default ?? "") : ""))),
 		);
 	}
-	if (question.kind === "number" || question.kind === "slider") {
+	if (kind === "number" || kind === "slider") {
 		fields.push(
-			formsPlayInspectorInput("forms-play-inspector.min", "Min", question.id, "min", String(question.min ?? 0), "number"),
-			formsPlayInspectorInput("forms-play-inspector.max", "Max", question.id, "max", String(question.max ?? 100), "number"),
-			formsPlayInspectorInput("forms-play-inspector.step", "Step", question.id, "step", String(question.step ?? 1), "number"),
-			formsPlayInspectorInput("forms-play-inspector.default", "Default", question.id, "default", String(question.default ?? 0), "number"),
+			formsPlayInspectorInput("forms-play-inspector.min", "Min", questionIds, "min", questions.map((entry) => (entry.kind === kind ? String(entry.min ?? 0) : "0")), "number"),
+			formsPlayInspectorInput("forms-play-inspector.max", "Max", questionIds, "max", questions.map((entry) => (entry.kind === kind ? String(entry.max ?? 100) : "100")), "number"),
+			formsPlayInspectorInput("forms-play-inspector.step", "Step", questionIds, "step", questions.map((entry) => (entry.kind === kind ? String(entry.step ?? 1) : "1")), "number"),
+			formsPlayInspectorInput("forms-play-inspector.default", "Default", questionIds, "default", questions.map((entry) => (entry.kind === kind ? String(entry.default ?? 0) : "0")), "number"),
 		);
 	}
-	if (question.kind === "slider") {
-		fields.push(formsPlayInspectorInput("forms-play-inspector.unit", "Unit", question.id, "unit", question.unit ?? ""));
+	if (kind === "slider") {
+		fields.push(formsPlayInspectorInput("forms-play-inspector.unit", "Unit", questionIds, "unit", questions.map((entry) => (entry.kind === "slider" ? (entry.unit ?? "") : ""))));
 	}
-	if (question.kind === "boolean") {
-		fields.push(formsPlayInspectorToggle("forms-play-inspector.default", "Default", question.id, "default", Boolean(question.default)));
+	if (kind === "boolean") {
+		fields.push(formsPlayInspectorToggle("forms-play-inspector.default", "Default", questionIds, "default", questions.map((entry) => (entry.kind === "boolean" ? Boolean(entry.default) : false))));
 	}
-	if (question.kind === "single" || question.kind === "multi") {
-		fields.push(...formsPlayInspectorOptionFields(question));
+	if (kind === "single" || kind === "multi") {
+		const optionQuestions = questions.filter((entry): entry is FormQuestion & { readonly options: readonly FormSelectOption[] } => entry.kind === kind);
+		fields.push(...formsPlayInspectorOptionFields(optionQuestions));
 		fields.push(
 			formsPlayInspectorInput(
 				"forms-play-inspector.default",
 				"Default",
-				question.id,
+				questionIds,
 				"default",
-				question.kind === "multi" ? (question.default ?? []).join(",") : String(question.default ?? ""),
+				questions.map((entry) =>
+					entry.kind === "multi" ? (entry.default ?? []).join(",") : entry.kind === "single" ? String(entry.default ?? "") : "",
+				),
 			),
 		);
 	}
-	if (question.kind === "date" || question.kind === "color") {
-		fields.push(formsPlayInspectorInput("forms-play-inspector.default", "Default", question.id, "default", String(question.default ?? "")));
+	if (kind === "date" || kind === "color") {
+		fields.push(formsPlayInspectorInput("forms-play-inspector.default", "Default", questionIds, "default", questions.map((entry) => (entry.kind === kind ? String(entry.default ?? "") : ""))));
 	}
-	if (question.kind === "vector") {
+	if (kind === "vector") {
+		const vectorQuestions = questions.filter((entry): entry is FormQuestion & { readonly fields: readonly FormVectorField[] } => entry.kind === "vector");
 		fields.push(
-			formsPlayInspectorInput("forms-play-inspector.schema", "Schema", question.id, "schema", question.schema ?? ""),
-			formsPlayInspectorInput("forms-play-inspector.step", "Step", question.id, "step", String(question.step ?? 0.1), "number"),
-			...formsPlayInspectorVectorFields(question),
+			formsPlayInspectorInput("forms-play-inspector.schema", "Schema", questionIds, "schema", questions.map((entry) => (entry.kind === "vector" ? (entry.schema ?? "") : ""))),
+			formsPlayInspectorInput("forms-play-inspector.step", "Step", questionIds, "step", questions.map((entry) => (entry.kind === "vector" ? String(entry.step ?? 0.1) : "0.1")), "number"),
+			...formsPlayInspectorVectorFields(vectorQuestions),
 		);
 	}
-	if (question.kind === "note") {
-		fields.push(formsPlayInspectorInput("forms-play-inspector.text", "Text", question.id, "text", question.text));
+	if (kind === "note") {
+		fields.push(formsPlayInspectorInput("forms-play-inspector.text", "Text", questionIds, "text", questions.map((entry) => (entry.kind === "note" ? entry.text : ""))));
 	}
-	if (question.kind === "image") {
-		fields.push(formsPlayInspectorInput("forms-play-inspector.src", "Source URL", question.id, "src", question.src ?? ""));
+	if (kind === "image") {
+		fields.push(formsPlayInspectorInput("forms-play-inspector.src", "Source URL", questionIds, "src", questions.map((entry) => (entry.kind === "image" ? (entry.src ?? "") : ""))));
 	}
-	if (question.kind === "file") {
-		fields.push(formsPlayInspectorInput("forms-play-inspector.accept", "Accept", question.id, "accept", question.accept ?? ""));
+	if (kind === "file") {
+		fields.push(formsPlayInspectorInput("forms-play-inspector.accept", "Accept", questionIds, "accept", questions.map((entry) => (entry.kind === "file" ? (entry.accept ?? "") : ""))));
 	}
 	if (isExtensionFormQuestion(question)) {
 		const contribution = questionKindContribution(question);
 		const fixtureSlug = question.fixtureSlug ?? contribution?.controls?.fixtureSlug ?? contribution?.edit?.fixtureSlug ?? contribution?.preview?.fixtureSlug;
 		if (fixtureSlug) {
-			fields.push({
-				type: "field",
-				id: "forms-play-inspector.fixtureSlug",
-				label: "Flow Fixture",
-				child: { type: "text", value: fixtureSlug },
-			});
+			fields.push(uiInspectorReadonlyField("forms-play-inspector.fixtureSlug", "Flow Fixture", fixtureSlug));
 		}
 		if (contribution?.edit?.surface === "flow3d" || contribution?.preview?.surface === "flow3d") {
-			fields.push({
-				type: "field",
-				id: "forms-play-inspector.editSurface",
-				label: "Edit Surface",
-				child: { type: "text", value: "flow3d (params + preview in Edit window)" },
-			});
+			fields.push(uiInspectorReadonlyField("forms-play-inspector.editSurface", "Edit Surface", "flow3d (params + preview in Edit window)"));
 		}
 	}
-	return fields;
+	if (!fields.length) return null;
+	const label = kind.charAt(0).toUpperCase() + kind.slice(1);
+	return { id: `forms-play-inspector.kind.${kind}`, label, fields };
+}
+
+function formsPlayInspectorBaseGroup(questions: readonly FormQuestion[]): UiInspectorFieldGroup {
+	const questionIds = questions.map((entry) => entry.id);
+	const labels = questions.map((entry) => entry.label);
+	const kinds = questions.map((entry) => entry.kind);
+	const descriptions = questions.map((entry) => entry.description ?? "");
+	const required = questions.map((entry) => Boolean(entry.required));
+	const kindMixed = uiInspectorMixedText(kinds);
+	return {
+		id: "forms-play-inspector.base",
+		label: "Question",
+		fields: [
+			formsPlayInspectorInput("forms-play-inspector.label", "Label", questionIds, "label", labels),
+			uiInspectorReadonlyField(
+				"forms-play-inspector.kind",
+				"Kind",
+				kindMixed.uniform ? (kinds[0] ?? "") : (kindMixed.placeholder ?? UI_INSPECTOR_MIXED_PLACEHOLDER),
+			),
+			uiInspectorReadonlyField("forms-play-inspector.id", "Id", questionIds.length === 1 ? (questionIds[0] ?? "") : `${questionIds.length} selected`),
+			formsPlayInspectorInput("forms-play-inspector.description", "Description", questionIds, "description", descriptions),
+			formsPlayInspectorToggle("forms-play-inspector.required", "Required", questionIds, "required", required),
+		],
+	};
 }
 
 /** @emoji 🔍 Details inspection: editable properties for the selected question. */
 export function buildFormsPlayInspectorTree(spec: FormSpec, selectedIds: readonly string[]): UiNode {
-	const questionId = selectedIds[0];
-	if (!questionId) {
+	const questions = selectedIds
+		.map((questionId) => findQuestionLocation(spec, questionId)?.question)
+		.filter((question): question is FormQuestion => Boolean(question));
+	if (!questions.length) {
 		return uiDeclarativeSectionsToTree([
 			{
 				type: "section",
 				id: "forms-play-inspector.empty",
 				label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-				children: [{ type: "text", value: "Select a question in the hierarchy." }],
+				children: [{ type: "text", value: selectedIds.length ? "Question not found." : "Select a question in the hierarchy." }],
 			},
 		]);
 	}
-	const location = findQuestionLocation(spec, questionId);
-	if (!location) {
-		return uiDeclarativeSectionsToTree([
-			{
-				type: "section",
-				id: "forms-play-inspector.missing",
-				label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-				children: [{ type: "text", value: "Question not found." }],
-			},
-		]);
+	const groups: UiInspectorFieldGroup[] = [];
+	const kinds = [...new Set(questions.map((entry) => entry.kind))];
+	for (const kind of kinds) {
+		const kindQuestions = questions.filter((entry) => entry.kind === kind);
+		const kindGroup = formsPlayInspectorKindGroup(kind, kindQuestions);
+		if (kindGroup) groups.push(kindGroup);
 	}
-	return uiDeclarativeSectionsToTree([
-		{
-			type: "section",
-			id: "forms-play-inspector.question",
-			label: location.question.label,
-			children: formsPlayInspectorFields(location.question),
-		},
-	]);
+	groups.push(formsPlayInspectorBaseGroup(questions));
+	return uiInspectorGroupsToTree(groups);
 }
 
 export function buildFormsPlayToolbarTools(controllerId: string): AppTools {
@@ -849,6 +880,17 @@ export class FormsPlayController extends Controller implements PlaygroundFixture
 			this.patchQuestionField(questionId, field, rawValue);
 			return;
 		}
+		if (command === "patchQuestions") {
+			const questionIds = (Array.isArray((args as { questionIds?: string[] }).questionIds) ? (args as { questionIds?: string[] }).questionIds : []).map(String).filter(Boolean);
+			const field = (args as { field?: string }).field;
+			const patch = args as { value?: unknown; pressed?: boolean };
+			const rawValue = patch.value ?? patch.pressed;
+			if (!questionIds.length || !field) return;
+			for (const questionId of questionIds) {
+				this.patchQuestionField(questionId, field, rawValue);
+			}
+			return;
+		}
 		if (command === "addQuestionOption") {
 			const questionId = (args as { questionId?: string }).questionId;
 			if (!questionId) return;
@@ -1083,6 +1125,30 @@ if (import.meta.vitest) {
 			});
 			expect(ctrl.getSpec().steps[0]?.questions.length).toBe(initial + 1);
 			expect(ctrl.getSpec().steps[0]?.questions.at(-1)?.kind).toBe("note");
+		});
+
+		it("batch-patches shared fields across multiple questions", () => {
+			const bus = new CommandBus();
+			const ctrl = new FormsPlayController(bus, () => {});
+			const stepId = ctrl.getSpec().steps[0]?.id;
+			if (!stepId) return;
+			ctrl.run("addQuestion", { kind: "text", stepId });
+			ctrl.run("addQuestion", { kind: "text", stepId });
+			const questions = ctrl.getSpec().steps[0]?.questions.filter((entry) => entry.kind === "text").slice(-2) ?? [];
+			if (questions.length < 2) return;
+			ctrl.run("patchQuestions", { questionIds: questions.map((entry) => entry.id), field: "required", pressed: true });
+			for (const question of questions) {
+				expect(findQuestionLocation(ctrl.getSpec(), question.id)?.question.required).toBe(true);
+			}
+		});
+
+		it("orders inspector sections kind-specific before base", () => {
+			const spec = defaultFormSpec();
+			const question = spec.steps[0]?.questions[0];
+			if (!question) return;
+			const tree = buildFormsPlayInspectorTree(spec, [question.id]);
+			const labels = (tree.type === "tree" ? tree.sections : []).map((section) => section.label);
+			expect(labels.indexOf("Text")).toBeLessThan(labels.indexOf("Question"));
 		});
 	});
 }

@@ -62,6 +62,8 @@ import {
   normalizeKindWeightGroup,
   syncKindWeightMap,
   type KindWeightMap,
+  uiInspectorAllEqual,
+  uiInspectorMixedVec3,
 } from "@semio-tech/framework-playground-core";
 
 import {
@@ -2963,6 +2965,36 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
         this.patchFixture((fixture) => updatePuzzle3dVortexInFixture(fixture, vortexFullId, patch));
         return;
       }
+      case "patchPuzzle3dVortices": {
+        const { vortexFullIds, field, value } = args as {
+          vortexFullIds: readonly string[];
+          field: "label" | "vortexKind" | "position" | "direction" | "radius";
+          value?: unknown;
+        };
+        if (!vortexFullIds.length || !field) return;
+        this.patchFixture((fixture) => {
+          let next = fixture;
+          for (const vortexFullId of vortexFullIds) {
+            const patch: Partial<VortexProps> = {};
+            if (field === "label" && typeof value === "string") patch.label = value;
+            if (field === "vortexKind" && typeof value === "string") patch.vortexKind = value;
+            if (field === "position" && Array.isArray(value) && value.length === 3) {
+              patch.position = [Number(value[0]), Number(value[1]), Number(value[2])] as [number, number, number];
+            }
+            if (field === "direction" && Array.isArray(value) && value.length === 3) {
+              patch.direction = [Number(value[0]), Number(value[1]), Number(value[2])] as [number, number, number];
+            }
+            if (field === "radius" && typeof value === "number") patch.radius = value;
+            if (field === "radius" && typeof value === "string") {
+              const parsed = Number(value);
+              if (Number.isFinite(parsed)) patch.radius = parsed;
+            }
+            next = updatePuzzle3dVortexInFixture(next, vortexFullId, patch);
+          }
+          return next;
+        });
+        return;
+      }
       case "patchPuzzle3dAttraction": {
         const { attractionId, field, value } = args as {
           attractionId: string;
@@ -2974,6 +3006,26 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
         if (field === "attracted" && typeof value === "string") patch.attracted = value.trim() as AttractionProps["attracted"];
         if (field === "attractionKind" && typeof value === "string") patch.attractionKind = value;
         this.patchFixture((fixture) => updatePuzzle3dAttractionInFixture(fixture, attractionId, patch));
+        return;
+      }
+      case "patchPuzzle3dAttractions": {
+        const { attractionIds, field, value } = args as {
+          attractionIds: readonly string[];
+          field: "attracting" | "attracted" | "attractionKind";
+          value?: unknown;
+        };
+        if (!attractionIds.length || !field) return;
+        this.patchFixture((fixture) => {
+          let next = fixture;
+          for (const attractionId of attractionIds) {
+            const patch: Partial<AttractionProps> = {};
+            if (field === "attracting" && typeof value === "string") patch.attracting = value.trim() as AttractionProps["attracting"];
+            if (field === "attracted" && typeof value === "string") patch.attracted = value.trim() as AttractionProps["attracted"];
+            if (field === "attractionKind" && typeof value === "string") patch.attractionKind = value;
+            next = updatePuzzle3dAttractionInFixture(next, attractionId, patch);
+          }
+          return next;
+        });
         return;
       }
       case "patchPuzzle3dReference": {
@@ -3326,15 +3378,6 @@ export function buildPuzzle3dPlayDeclarativeBody(ctx: WindowBodyViewContext): Ui
   return buildPuzzle3dWindowBody(PUZZLE_3D_PLAY_VIEWPORT_SURFACE_ID, PUZZLE_3D_PLAY_CONTROLLER_ID);
 }
 
-function puzzle3dPlayAllEqual<T>(values: readonly T[]): boolean {
-  if (values.length <= 1) return true;
-  const first = values[0];
-  for (let i = 1; i < values.length; i += 1) {
-    if (values[i] !== first) return false;
-  }
-  return true;
-}
-
 function puzzle3dPlayVec3AllEqual(values: readonly (readonly [number, number, number])[]): boolean {
   if (values.length <= 1) return true;
   const first = values[0];
@@ -3472,11 +3515,11 @@ export function buildPuzzle3dPlayInspectorBody(ctx: WindowBodyViewContext): UiTr
   if (selection.objectIds.length > 0) {
     const objects = fixture.objects.filter((object) => selectedObjectIdSet.has(object.id));
     const labels = objects.map((object) => object.label ?? "");
-    const labelUniform = puzzle3dPlayAllEqual(labels);
+    const labelUniform = uiInspectorAllEqual(labels);
     const kinds = objects.map((object) => object.objectKind ?? "");
-    const kindUniform = puzzle3dPlayAllEqual(kinds);
+    const kindUniform = uiInspectorAllEqual(kinds);
     const origins = objects.map((object) => object.origin);
-    const originUniform = puzzle3dPlayAllEqual(origins);
+    const originUniform = uiInspectorAllEqual(origins);
     const objectFields: UiNode[] = [];
     if (selection.objectIds.length === 1) {
       objectFields.push({
@@ -3617,14 +3660,15 @@ export function buildPuzzle3dPlayInspectorBody(ctx: WindowBodyViewContext): UiTr
       children: vortexFields,
     });
   } else if (selectedVortexRows.length > 1) {
+    const vortexFullIds = selectedVortexRows.map((row) => row.fullId);
     const labels = selectedVortexRows.map((row) => row.vortex.label ?? "");
     const kinds = selectedVortexRows.map((row) => row.vortex.vortexKind ?? "");
     const positions = selectedVortexRows.map((row) => row.vortex.position);
     const radii = selectedVortexRows.map((row) => row.vortex.radius ?? 0.35);
-    const labelUniform = puzzle3dPlayAllEqual(labels);
-    const kindUniform = puzzle3dPlayAllEqual(kinds);
-    const positionUniform = puzzle3dPlayVec3AllEqual(positions);
-    const radiusUniform = puzzle3dPlayAllEqual(radii);
+    const labelUniform = uiInspectorAllEqual(labels);
+    const kindUniform = uiInspectorAllEqual(kinds);
+    const positionUniform = uiInspectorMixedVec3(positions);
+    const radiusUniform = uiInspectorAllEqual(radii);
     children.push({
       type: "section",
       id: "puzzle-3d-play-inspector.vortices",
@@ -3635,30 +3679,50 @@ export function buildPuzzle3dPlayInspectorBody(ctx: WindowBodyViewContext): UiTr
           id: "puzzle-3d-play-inspector.vortices.label",
           label: "Label",
           child: {
-            type: "text",
-            value: labelUniform ? (labels[0] ?? "") || "—" : "Mixed",
+            type: "input",
+            id: "puzzle-3d-play-inspector.vortices.label.input",
+            inputKind: "text",
+            value: labelUniform ? (labels[0] ?? "") : "",
+            placeholder: labelUniform ? undefined : "Mixed",
+            onChange: puzzle3dPlayCmd("patchPuzzle3dVortices", { vortexFullIds, field: "label" }),
           },
         },
         {
           type: "field",
           id: "puzzle-3d-play-inspector.vortices.kind",
           label: "Vortex kind",
-          child: { type: "text", value: kindUniform ? kinds[0] || "—" : "Mixed" },
+          child: {
+            type: "select",
+            id: "puzzle-3d-play-inspector.vortices.kind.select",
+            value: kindUniform ? (kinds[0] ?? "") : "",
+            placeholder: kindUniform ? "kind" : "Mixed",
+            items: puzzle3dPlayKindCatalogSelectItems(vortexKinds),
+            onChange: puzzle3dPlayCmd("patchPuzzle3dVortices", { vortexFullIds, field: "vortexKind" }),
+          },
         },
         {
           type: "field",
           id: "puzzle-3d-play-inspector.vortices.position",
           label: "Position",
           child: {
-            type: "text",
-            value: positionUniform ? `[${positions[0]!.map(formatNumber).join(", ")}]` : "Mixed",
+            type: "vec3",
+            id: "puzzle-3d-play-inspector.vortices.position.vec3",
+            value: positionUniform,
+            onChange: puzzle3dPlayCmd("patchPuzzle3dVortices", { vortexFullIds, field: "position" }),
           },
         },
         {
           type: "field",
           id: "puzzle-3d-play-inspector.vortices.radius",
           label: "Radius",
-          child: { type: "text", value: radiusUniform ? String(radii[0]) : "Mixed" },
+          child: {
+            type: "input",
+            id: "puzzle-3d-play-inspector.vortices.radius.input",
+            inputKind: "number",
+            value: radiusUniform ? String(radii[0]) : "",
+            placeholder: radiusUniform ? undefined : "Mixed",
+            onChange: puzzle3dPlayCmd("patchPuzzle3dVortices", { vortexFullIds, field: "radius" }),
+          },
         },
       ],
     });
@@ -3712,9 +3776,13 @@ export function buildPuzzle3dPlayInspectorBody(ctx: WindowBodyViewContext): UiTr
       ],
     });
   } else if (selectedAttractions.length > 1) {
+    const attractionIds = selection.attractionIds;
     const kinds = selectedAttractions.map((row) => row.attractionKind ?? "");
     const attracting = selectedAttractions.map((row) => row.attracting);
     const attracted = selectedAttractions.map((row) => row.attracted);
+    const kindUniform = uiInspectorAllEqual(kinds);
+    const attractingUniform = uiInspectorAllEqual(attracting);
+    const attractedUniform = uiInspectorAllEqual(attracted);
     children.push({
       type: "section",
       id: "puzzle-3d-play-inspector.attractions",
@@ -3724,19 +3792,40 @@ export function buildPuzzle3dPlayInspectorBody(ctx: WindowBodyViewContext): UiTr
           type: "field",
           id: "puzzle-3d-play-inspector.attractions.kind",
           label: "Attraction kind",
-          child: { type: "text", value: puzzle3dPlayAllEqual(kinds) ? kinds[0] || "—" : "Mixed" },
+          child: {
+            type: "select",
+            id: "puzzle-3d-play-inspector.attractions.kind.select",
+            value: kindUniform ? (kinds[0] ?? "") : "",
+            placeholder: kindUniform ? "kind" : "Mixed",
+            items: puzzle3dPlayKindCatalogSelectItems(attractionKinds),
+            onChange: puzzle3dPlayCmd("patchPuzzle3dAttractions", { attractionIds, field: "attractionKind" }),
+          },
         },
         {
           type: "field",
           id: "puzzle-3d-play-inspector.attractions.attracting",
           label: "Attracting",
-          child: { type: "text", value: puzzle3dPlayAllEqual(attracting) ? attracting[0]! : "Mixed" },
+          child: {
+            type: "input",
+            id: "puzzle-3d-play-inspector.attractions.attracting.input",
+            inputKind: "text",
+            value: attractingUniform ? attracting[0]! : "",
+            placeholder: attractingUniform ? undefined : "Mixed",
+            onChange: puzzle3dPlayCmd("patchPuzzle3dAttractions", { attractionIds, field: "attracting" }),
+          },
         },
         {
           type: "field",
           id: "puzzle-3d-play-inspector.attractions.attracted",
           label: "Attracted",
-          child: { type: "text", value: puzzle3dPlayAllEqual(attracted) ? attracted[0]! : "Mixed" },
+          child: {
+            type: "input",
+            id: "puzzle-3d-play-inspector.attractions.attracted.input",
+            inputKind: "text",
+            value: attractedUniform ? attracted[0]! : "",
+            placeholder: attractedUniform ? undefined : "Mixed",
+            onChange: puzzle3dPlayCmd("patchPuzzle3dAttractions", { attractionIds, field: "attracted" }),
+          },
         },
       ],
     });
@@ -3883,8 +3972,8 @@ export function buildPuzzle3dPlayInspectorBody(ctx: WindowBodyViewContext): UiTr
     const tiltUniform = puzzle3dPlayVec3AllEqual(tilts);
     const scaleUniform = puzzle3dPlayVec3AllEqual(scales);
     const orientationUniform = puzzle3dPlayQuatAllEqual(orientations);
-    const widthUniform = puzzle3dPlayAllEqual(widthWorlds);
-    const opacityUniform = puzzle3dPlayAllEqual(opacities);
+    const widthUniform = uiInspectorAllEqual(widthWorlds);
+    const opacityUniform = uiInspectorAllEqual(opacities);
     children.push({
       type: "section",
       id: "puzzle-3d-play-inspector.references",
@@ -5221,6 +5310,34 @@ if (import.meta.vitest) {
       expect(labels).toContain("Vortices (2)");
       expect(labels).toContain("Attractions (2)");
       expect(labels.filter((label) => label?.startsWith("a:v1")).length).toBe(0);
+      const vortexSection = tree.sections.find((section) => section.id === "puzzle-3d-play-inspector.vortices");
+      const labelField = vortexSection?.items.find((item) => item.id === "puzzle-3d-play-inspector.vortices.label");
+      expect(labelField?.control?.type).toBe("input");
+      expect(labelField?.control?.onChange?.command).toBe("patchPuzzle3dVortices");
+      const attractionSection = tree.sections.find((section) => section.id === "puzzle-3d-play-inspector.attractions");
+      const kindField = attractionSection?.items.find((item) => item.id === "puzzle-3d-play-inspector.attractions.kind");
+      expect(kindField?.control?.type).toBe("select");
+      expect(kindField?.control?.onChange?.command).toBe("patchPuzzle3dAttractions");
+    });
+
+    it("patchPuzzle3dVortices updates labels in batch", () => {
+      const bus = new CommandBus();
+      const wb = new Platform();
+      const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
+      const fixture = parseFixtureV1({
+        schema: "puzzle.3d.fixture/v1",
+        camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
+        attractions: [],
+        objects: [
+          { id: "a", meshUrl: "/m.glb", origin: [0, 0, 0], vortices: [{ id: "v1", label: "A", position: [0, 0, 0] }] },
+          { id: "b", meshUrl: "/m.glb", origin: [1, 0, 0], vortices: [{ id: "v2", label: "B", position: [0, 0, 0] }] },
+        ],
+      });
+      expect(fixture).not.toBeNull();
+      ctrl.patchFixture(() => fixture!);
+      ctrl.run("patchPuzzle3dVortices", { vortexFullIds: ["a:v1", "b:v2"], field: "label", value: "Batch" });
+      const rows = puzzle3dPlayInspectorVortexRows(ctrl.getFixture()!, ["a:v1", "b:v2"]);
+      expect(rows.every((row) => row.vortex.label === "Batch")).toBe(true);
     });
 
     it("puzzle3dPlayInspectorVortexRows resolves rows via object map", () => {

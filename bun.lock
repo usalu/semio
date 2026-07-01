@@ -726,6 +726,9 @@
     "framework/core": {
       "name": "@semio-tech/framework-core",
       "version": "0.1.0",
+      "dependencies": {
+        "@semio-tech/framework-vcs-rs": "workspace:*",
+      },
       "devDependencies": {
         "typescript": "^5.9.3",
       },
@@ -885,6 +888,9 @@
         "@vitejs/plugin-react": "^5.1.2",
         "typescript": "^5.9.3",
       },
+    },
+    "framework/rs": {
+      "name": "@semio-tech/framework-vcs-rs",
     },
     "geometry/brep/js": {
       "name": "@semio-tech/geometry-brep-js",
@@ -1408,8 +1414,15 @@
         "@semio-tech/framework-core": "workspace:*",
         "@semio-tech/framework-platform-core": "workspace:*",
         "@semio-tech/graph-manifest": "workspace:*",
+        "@semio-tech/semios-studio-rs": "workspace:*",
       },
       "devDependencies": {
+        "@semio-tech/draw-core": "workspace:*",
+        "@semio-tech/flow-core": "workspace:*",
+        "@semio-tech/forms-core": "workspace:*",
+        "@semio-tech/framework-presentation-core": "workspace:*",
+        "@semio-tech/raster-core": "workspace:*",
+        "@semio-tech/writer-core": "workspace:*",
         "typescript": "^5.9.3",
         "vitest": "^4.0.17",
       },
@@ -1456,6 +1469,9 @@
         "typescript": "^5.9.3",
         "vitest": "^4.0.17",
       },
+    },
+    "semios/rs": {
+      "name": "@semio-tech/semios-studio-rs",
     },
     "shooting/play": {
       "name": "@semio-tech/shooting-play",
@@ -2719,6 +2735,8 @@
 
     "@semio-tech/framework-presentation-renderer-react": ["@semio-tech/framework-presentation-renderer-react@workspace:framework/product/presentation/renderer/react"],
 
+    "@semio-tech/framework-vcs-rs": ["@semio-tech/framework-vcs-rs@workspace:framework/rs"],
+
     "@semio-tech/geometry-brep-js": ["@semio-tech/geometry-brep-js@workspace:geometry/brep/js"],
 
     "@semio-tech/geometry-drawing-js": ["@semio-tech/geometry-drawing-js@workspace:geometry/drawing/js"],
@@ -2792,6 +2810,8 @@
     "@semio-tech/semios-play": ["@semio-tech/semios-play@workspace:semios/play"],
 
     "@semio-tech/semios-react": ["@semio-tech/semios-react@workspace:semios/react"],
+
+    "@semio-tech/semios-studio-rs": ["@semio-tech/semios-studio-rs@workspace:semios/rs"],
 
     "@semio-tech/shooting-play": ["@semio-tech/shooting-play@workspace:shooting/play"],
 

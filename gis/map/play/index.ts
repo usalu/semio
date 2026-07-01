@@ -22,7 +22,14 @@ import {
   FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
   FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
   FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+  UI_INSPECTOR_MIXED_PLACEHOLDER,
   uiDeclarativeSectionsToTree,
+  uiInspectorGroupsToTree,
+  uiInspectorMixedNumber,
+  uiInspectorMixedSelect,
+  uiInspectorMixedText,
+  uiInspectorReadonlyField,
+  type UiInspectorFieldGroup,
   type CommandDescriptor,
   type WindowBodyViewContext,
   type UiNode,
@@ -378,6 +385,120 @@ export function buildMapPlayCatalogueTree(): UiNode {
   };
 }
 
+function mapPlayInspectorPatchPositions(positionIds: readonly string[], field: string) {
+  return mapPlayCmd("patchPositions", { positionIds, field });
+}
+
+function mapPlayInspectorPatchRoutes(routeIds: readonly string[], field: string) {
+  return mapPlayCmd("patchRoutes", { routeIds, field });
+}
+
+function mapPlayInspectorNumberField(
+  positionIds: readonly string[],
+  fieldId: string,
+  label: string,
+  values: readonly number[],
+  field: string,
+): UiNode {
+  const mixed = uiInspectorMixedNumber(values);
+  return {
+    type: "field",
+    id: fieldId,
+    label,
+    child: {
+      type: "input",
+      id: `${fieldId}.input`,
+      inputKind: "number",
+      value: mixed.uniform ? String(mixed.value) : "",
+      placeholder: mixed.uniform ? undefined : UI_INSPECTOR_MIXED_PLACEHOLDER,
+      onChange: mapPlayInspectorPatchPositions(positionIds, field),
+    },
+  };
+}
+
+function mapPlayInspectorTextField(
+  positionIds: readonly string[],
+  fieldId: string,
+  label: string,
+  values: readonly string[],
+  field: string,
+): UiNode {
+  const mixed = uiInspectorMixedText(values);
+  return {
+    type: "field",
+    id: fieldId,
+    label,
+    child: {
+      type: "input",
+      id: `${fieldId}.input`,
+      inputKind: "text",
+      value: mixed.value,
+      placeholder: mixed.placeholder,
+      onChange: mapPlayInspectorPatchPositions(positionIds, field),
+    },
+  };
+}
+
+function mapPlayInspectorPositionGroup(positions: readonly GisMapFixturePositionV1[]): UiInspectorFieldGroup {
+  const positionIds = positions.map((entry) => entry.id);
+  const kindMixed = uiInspectorMixedSelect(positions.map((entry) => entry.kind));
+  return {
+    id: "gis-map-play-inspector.positions",
+    label: positions.length === 1 ? "Position" : "Positions",
+    fields: [
+      mapPlayInspectorNumberField(positionIds, "gis-map-play-inspector.position.lat", "Latitude", positions.map((entry) => entry.lat), "lat"),
+      mapPlayInspectorNumberField(positionIds, "gis-map-play-inspector.position.lon", "Longitude", positions.map((entry) => entry.lon), "lon"),
+      mapPlayInspectorTextField(positionIds, "gis-map-play-inspector.position.label", "Label", positions.map((entry) => entry.label), "label"),
+      mapPlayInspectorTextField(positionIds, "gis-map-play-inspector.position.name", "Name", positions.map((entry) => entry.name), "name"),
+      {
+        type: "field",
+        id: "gis-map-play-inspector.position.kind",
+        label: "Kind",
+        child: {
+          type: "select",
+          id: "gis-map-play-inspector.position.kind.select",
+          value: kindMixed.value,
+          placeholder: kindMixed.placeholder,
+          items: [
+            { id: "receiver", value: "receiver", label: "Receiver" },
+            { id: "donor", value: "donor", label: "Donor" },
+          ],
+          onChange: mapPlayInspectorPatchPositions(positionIds, "kind"),
+        },
+      },
+    ],
+  };
+}
+
+function mapPlayInspectorRouteGroup(routes: readonly GisMapFixtureRouteV1[]): UiInspectorFieldGroup {
+  const routeIds = routes.map((entry) => entry.id);
+  const labelMixed = uiInspectorMixedText(routes.map((entry) => entry.label ?? ""));
+  return {
+    id: "gis-map-play-inspector.routes",
+    label: routes.length === 1 ? "Route" : "Routes",
+    fields: [
+      {
+        type: "field",
+        id: "gis-map-play-inspector.route.label",
+        label: "Label",
+        child: {
+          type: "input",
+          id: "gis-map-play-inspector.route.label.input",
+          inputKind: "text",
+          value: labelMixed.value,
+          placeholder: labelMixed.placeholder,
+          onChange: mapPlayInspectorPatchRoutes(routeIds, "label"),
+        },
+      },
+      uiInspectorReadonlyField(
+        "gis-map-play-inspector.route.points",
+        "Points",
+        routes.length === 1 ? String(routes[0]?.points.length ?? 0) : UI_INSPECTOR_MIXED_PLACEHOLDER,
+      ),
+    ],
+  };
+}
+
 export function buildMapPlayInspectorTree(
   fixture: GisMapFixtureV1 | null,
   selectedPositionIds: readonly string[],
@@ -388,8 +509,7 @@ export function buildMapPlayInspectorTree(
       { type: "section", id: "gis-map-play-inspector.invalid", label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, children: [{ type: "text", value: "No fixture loaded" }] },
     ]);
   }
-  const totalSelected = selectedPositionIds.length + selectedRouteIds.length;
-  if (totalSelected === 0) {
+  if (selectedPositionIds.length === 0 && selectedRouteIds.length === 0) {
     return uiDeclarativeSectionsToTree([
       {
         type: "section",
@@ -399,128 +519,29 @@ export function buildMapPlayInspectorTree(
       },
     ]);
   }
-  if (totalSelected > 1) {
-    return uiDeclarativeSectionsToTree([
-      {
-        type: "section",
-        id: "gis-map-play-inspector.multi",
-        label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-        children: [
-          { type: "text", value: `${selectedPositionIds.length} position(s), ${selectedRouteIds.length} route(s) selected` },
-        ],
-      },
-    ]);
-  }
-  if (selectedPositionIds.length === 1) {
-    const selectedFeatureId = selectedPositionIds[0]!;
-    const position = fixture.positions.find((entry) => entry.id === selectedFeatureId);
-    if (!position) {
-      return uiDeclarativeSectionsToTree([
-        { type: "section", id: "gis-map-play-inspector.missing", label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, children: [{ type: "text", value: "Position not found" }] },
-      ]);
+  const groups: UiInspectorFieldGroup[] = [];
+  if (selectedPositionIds.length > 0) {
+    const positions = selectedPositionIds
+      .map((id) => fixture.positions.find((entry) => entry.id === id))
+      .filter((entry): entry is GisMapFixturePositionV1 => Boolean(entry));
+    if (positions.length > 0) {
+      groups.push(mapPlayInspectorPositionGroup(positions));
     }
-    return uiDeclarativeSectionsToTree([
-      {
-        type: "section",
-        id: "gis-map-play-inspector.position",
-        label: position.label || position.id,
-        children: [
-          {
-            type: "field",
-            id: "gis-map-play-inspector.position.label",
-            label: "Label",
-            child: {
-              type: "input",
-              id: "gis-map-play-inspector.position.label.input",
-              inputKind: "text",
-              value: position.label,
-              onChange: mapPlayCmd("patchPosition", { positionId: position.id, field: "label" }),
-            },
-          },
-          {
-            type: "field",
-            id: "gis-map-play-inspector.position.name",
-            label: "Name",
-            child: {
-              type: "input",
-              id: "gis-map-play-inspector.position.name.input",
-              inputKind: "text",
-              value: position.name,
-              onChange: mapPlayCmd("patchPosition", { positionId: position.id, field: "name" }),
-            },
-          },
-          {
-            type: "field",
-            id: "gis-map-play-inspector.position.lat",
-            label: "Latitude",
-            child: {
-              type: "input",
-              id: "gis-map-play-inspector.position.lat.input",
-              inputKind: "number",
-              value: String(position.lat),
-              onChange: mapPlayCmd("patchPosition", { positionId: position.id, field: "lat" }),
-            },
-          },
-          {
-            type: "field",
-            id: "gis-map-play-inspector.position.lon",
-            label: "Longitude",
-            child: {
-              type: "input",
-              id: "gis-map-play-inspector.position.lon.input",
-              inputKind: "number",
-              value: String(position.lon),
-              onChange: mapPlayCmd("patchPosition", { positionId: position.id, field: "lon" }),
-            },
-          },
-          {
-            type: "field",
-            id: "gis-map-play-inspector.position.kind",
-            label: "Kind",
-            child: {
-              type: "select",
-              id: "gis-map-play-inspector.position.kind.select",
-              value: position.kind,
-              items: [
-                { id: "receiver", value: "receiver", label: "Receiver" },
-                { id: "donor", value: "donor", label: "Donor" },
-              ],
-              onChange: mapPlayCmd("patchPosition", { positionId: position.id, field: "kind" }),
-            },
-          },
-        ],
-      },
-    ] as readonly UiSectionNode[]);
   }
-  const selectedFeatureId = selectedRouteIds[0]!;
-  const route = fixture.routes.find((entry) => entry.id === selectedFeatureId);
-  if (!route) {
+  if (selectedRouteIds.length > 0) {
+    const routes = selectedRouteIds
+      .map((id) => fixture.routes.find((entry) => entry.id === id))
+      .filter((entry): entry is GisMapFixtureRouteV1 => Boolean(entry));
+    if (routes.length > 0) {
+      groups.push(mapPlayInspectorRouteGroup(routes));
+    }
+  }
+  if (!groups.length) {
     return uiDeclarativeSectionsToTree([
-      { type: "section", id: "gis-map-play-inspector.missing", label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, children: [{ type: "text", value: "Route not found" }] },
+      { type: "section", id: "gis-map-play-inspector.missing", label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, children: [{ type: "text", value: "Selection not found" }] },
     ]);
   }
-  return uiDeclarativeSectionsToTree([
-    {
-      type: "section",
-      id: "gis-map-play-inspector.route",
-      label: route.label || route.id,
-      children: [
-        {
-          type: "field",
-          id: "gis-map-play-inspector.route.label",
-          label: "Label",
-          child: {
-            type: "input",
-            id: "gis-map-play-inspector.route.label.input",
-            inputKind: "text",
-            value: route.label ?? "",
-            onChange: mapPlayCmd("patchRoute", { routeId: route.id, field: "label" }),
-          },
-        },
-        { type: "field", id: "gis-map-play-inspector.route.points", label: "Points", child: { type: "text", value: String(route.points.length) } },
-      ],
-    },
-  ] as readonly UiSectionNode[]);
+  return uiInspectorGroupsToTree(groups);
 }
 
 export interface MapPlayToolbarState {
@@ -952,32 +973,45 @@ export class MapPlayController extends Controller implements PlaygroundFixtureHo
     this.bumpSnapshot();
   }
 
-  private patchPosition(positionId: string, field: string, value: unknown): void {
-    if (!this.activeFixture) return;
-    const positions = this.activeFixture.positions.map((position) => {
-      if (position.id !== positionId) return position;
-      if (field === "lat" || field === "lon") {
-        const numeric = typeof value === "number" ? value : Number(value);
-        if (!Number.isFinite(numeric)) return position;
-        return { ...position, [field]: numeric };
-      }
-      if (field === "kind" && (value === "receiver" || value === "donor")) {
-        return { ...position, kind: value };
-      }
-      if (typeof value !== "string") return position;
-      return { ...position, [field]: value };
-    });
+  private patchPositionField(position: GisMapFixturePositionV1, field: string, value: unknown): GisMapFixturePositionV1 {
+    if (field === "lat" || field === "lon") {
+      const numeric = typeof value === "number" ? value : Number(value);
+      if (!Number.isFinite(numeric)) return position;
+      return { ...position, [field]: numeric };
+    }
+    if (field === "kind" && (value === "receiver" || value === "donor")) {
+      return { ...position, kind: value };
+    }
+    if (typeof value !== "string") return position;
+    return { ...position, [field]: value };
+  }
+
+  private patchPositions(positionIds: readonly string[], field: string, value: unknown): void {
+    if (!this.activeFixture || !positionIds.length) return;
+    const targets = new Set(positionIds);
+    const positions = this.activeFixture.positions.map((position) =>
+      targets.has(position.id) ? this.patchPositionField(position, field, value) : position,
+    );
     this.patchActiveFixture({ ...this.activeFixture, positions });
   }
 
-  private patchRoute(routeId: string, field: string, value: unknown): void {
-    if (!this.activeFixture) return;
+  private patchPosition(positionId: string, field: string, value: unknown): void {
+    this.patchPositions([positionId], field, value);
+  }
+
+  private patchRoutes(routeIds: readonly string[], field: string, value: unknown): void {
+    if (!this.activeFixture || !routeIds.length) return;
+    const targets = new Set(routeIds);
     const routes = this.activeFixture.routes.map((route) => {
-      if (route.id !== routeId) return route;
+      if (!targets.has(route.id)) return route;
       if (typeof value !== "string") return route;
       return { ...route, [field]: value };
     });
     this.patchActiveFixture({ ...this.activeFixture, routes });
+  }
+
+  private patchRoute(routeId: string, field: string, value: unknown): void {
+    this.patchRoutes([routeId], field, value);
   }
 
   getSnapshot(): MapPlaySnapshot {
@@ -1128,12 +1162,30 @@ export class MapPlayController extends Controller implements PlaygroundFixtureHo
       }
       return;
     }
+    if (command === "patchPositions") {
+      const positionIds = (args as { positionIds?: readonly string[] }).positionIds ?? [];
+      const field = (args as { field?: string }).field;
+      const value = (args as { value?: unknown }).value;
+      if (positionIds.length > 0 && typeof field === "string") {
+        this.patchPositions(positionIds, field, value);
+      }
+      return;
+    }
     if (command === "patchPosition") {
       const positionId = (args as { positionId?: string }).positionId;
       const field = (args as { field?: string }).field;
       const value = (args as { value?: unknown }).value;
       if (typeof positionId === "string" && typeof field === "string") {
         this.patchPosition(positionId, field, value);
+      }
+      return;
+    }
+    if (command === "patchRoutes") {
+      const routeIds = (args as { routeIds?: readonly string[] }).routeIds ?? [];
+      const field = (args as { field?: string }).field;
+      const value = (args as { value?: unknown }).value;
+      if (routeIds.length > 0 && typeof field === "string") {
+        this.patchRoutes(routeIds, field, value);
       }
       return;
     }
@@ -1599,6 +1651,30 @@ if (import.meta.vitest) {
         GIS_MAP_PLAY_CONTROLLER_ID,
       );
       expect(tools.selection?.length).toBeGreaterThan(0);
+    });
+
+    it("buildMapPlayInspectorTree batches position fields for multi-select", () => {
+      const fixture = GIS_MAP_PLAY_DEFAULT_FIXTURE;
+      const positionIds = fixture.positions.slice(0, 2).map((row) => row.id);
+      const tree = buildMapPlayInspectorTree(fixture, positionIds, []);
+      expect(tree.type).toBe("tree");
+      const latField = tree.sections[0]?.items.find((item) => item.id === "gis-map-play-inspector.position.lat");
+      expect(latField?.control?.type).toBe("input");
+      expect(latField?.control?.onChange?.command).toBe("patchPositions");
+      expect(latField?.control?.onChange?.args).toMatchObject({ positionIds, field: "lat" });
+    });
+
+    it("patchPositions updates every selected position", () => {
+      const runtime = new Platform({ id: "test" });
+      const ctrl = new MapPlayController(runtime.commandBus, () => runtime.notify());
+      const fixture = ctrl.getActiveFixture();
+      expect(fixture).not.toBeNull();
+      const positionIds = fixture!.positions.slice(0, 2).map((row) => row.id);
+      ctrl.run("patchPositions", { positionIds, field: "label", value: "batch-label" });
+      const updated = ctrl.getActiveFixture()!;
+      for (const positionId of positionIds) {
+        expect(updated.positions.find((row) => row.id === positionId)?.label).toBe("batch-label");
+      }
     });
   });
 }

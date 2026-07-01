@@ -1537,3 +1537,56 @@ mod tests {
     }
 }
 // #endregion 🔖Tests
+
+// #region 🔖DocumentVcs
+#[cfg(target_arch = "wasm32")]
+use std::cell::RefCell;
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
+pub struct WriterDocumentVcs {
+    store: RefCell<framework_vcs::JsonDocumentStore>,
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
+impl WriterDocumentVcs {
+    #[wasm_bindgen(constructor)]
+    pub fn new(envelope_json: &str) -> Result<WriterDocumentVcs, JsValue> {
+        let store = framework_vcs::JsonDocumentStore::from_envelope_json(envelope_json)
+            .map_err(|e| JsValue::from_str(&e.to_string()))?;
+        Ok(Self {
+            store: RefCell::new(store),
+        })
+    }
+
+    #[wasm_bindgen(js_name = dispatchJson)]
+    pub fn dispatch_json(&self, command_json: &str) -> Result<(), JsValue> {
+        self.store
+            .borrow_mut()
+            .dispatch_json(command_json)
+            .map_err(|e| JsValue::from_str(&e.to_string()))
+    }
+
+    #[wasm_bindgen(js_name = projectionJson)]
+    pub fn projection_json(&self) -> Result<String, JsValue> {
+        self.store
+            .borrow()
+            .projection_json()
+            .map_err(|e| JsValue::from_str(&e.to_string()))
+    }
+
+    #[wasm_bindgen(js_name = envelopeJson)]
+    pub fn envelope_json(&self) -> Result<String, JsValue> {
+        self.store
+            .borrow()
+            .envelope_json()
+            .map_err(|e| JsValue::from_str(&e.to_string()))
+    }
+
+    #[wasm_bindgen(js_name = generation)]
+    pub fn generation(&self) -> u32 {
+        self.store.borrow().generation() as u32
+    }
+}
+// #endregion 🔖DocumentVcs

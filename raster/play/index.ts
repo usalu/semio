@@ -28,7 +28,13 @@ import {
 	type ToolLeaf,
 	toolCollection,
 	uiDeclarativeSectionsToTree,
+	UI_INSPECTOR_MIXED_PLACEHOLDER,
 	uiInspectorGroupsToTree,
+	uiInspectorMixedNumber,
+	uiInspectorMixedSelect,
+	uiInspectorMixedSlider,
+	uiInspectorMixedText,
+	uiInspectorMixedToggle,
 	uiInspectorReadonlyField,
 	type UiInspectorFieldGroup,
 	type UiNode,
@@ -341,7 +347,18 @@ export function buildRasterPlayMasksTree(
 	};
 }
 
-function rasterPlayInspectorNumberField(layerId: string, fieldId: string, label: string, value: number, field: string): UiNode {
+function rasterPlayInspectorPatch(layerIds: readonly string[], field: string) {
+	return rasterPlayCmd("patchLayers", { layerIds, field });
+}
+
+function rasterPlayInspectorNumberField(
+	layerIds: readonly string[],
+	fieldId: string,
+	label: string,
+	values: readonly number[],
+	field: string,
+): UiNode {
+	const mixed = uiInspectorMixedNumber(values);
 	return {
 		type: "field",
 		id: fieldId,
@@ -350,13 +367,21 @@ function rasterPlayInspectorNumberField(layerId: string, fieldId: string, label:
 			type: "input",
 			id: `${fieldId}.input`,
 			inputKind: "number",
-			value: String(value),
-			onChange: rasterPlayCmd("patchLayer", { layerId, field }),
+			value: mixed.uniform ? String(mixed.value) : "",
+			placeholder: mixed.uniform ? undefined : UI_INSPECTOR_MIXED_PLACEHOLDER,
+			onChange: rasterPlayInspectorPatch(layerIds, field),
 		},
 	};
 }
 
-function rasterPlayInspectorTextField(layerId: string, fieldId: string, label: string, value: string, field: string): UiNode {
+function rasterPlayInspectorTextField(
+	layerIds: readonly string[],
+	fieldId: string,
+	label: string,
+	values: readonly string[],
+	field: string,
+): UiNode {
+	const mixed = uiInspectorMixedText(values);
 	return {
 		type: "field",
 		id: fieldId,
@@ -365,32 +390,43 @@ function rasterPlayInspectorTextField(layerId: string, fieldId: string, label: s
 			type: "input",
 			id: `${fieldId}.input`,
 			inputKind: "text",
-			value,
-			onChange: rasterPlayCmd("patchLayer", { layerId, field }),
+			value: mixed.value,
+			placeholder: mixed.placeholder,
+			onChange: rasterPlayInspectorPatch(layerIds, field),
 		},
 	};
+}
+
+function rasterPlayLayersUniformKind(layers: readonly RasterLayerNode[]): RasterLayerNode[] | null {
+	if (!layers.length) return null;
+	const kindKey = rasterPlayLayerKindLabel(layers[0]!);
+	return layers.every((layer) => rasterPlayLayerKindLabel(layer) === kindKey) ? [...layers] : null;
 }
 
 function rasterPlayLayerKindLabel(layer: RasterLayerNode): string {
 	return layer.kind === "adjustment" ? `adjustment:${layer.adjustmentKind}` : layer.kind;
 }
 
-function rasterPlayInspectorPixelGroup(layer: RasterLayerNode): UiInspectorFieldGroup | null {
-	if (layer.kind !== "pixel") return null;
-	const layerId = layer.id;
+function rasterPlayInspectorPixelGroup(layers: readonly RasterLayerNode[]): UiInspectorFieldGroup | null {
+	const uniformLayers = rasterPlayLayersUniformKind(layers);
+	if (!uniformLayers || uniformLayers[0]!.kind !== "pixel") return null;
+	const layerIds = uniformLayers.map((entry) => entry.id);
 	return {
 		id: "raster-play-inspector.pixel",
 		label: "Pixel",
 		fields: [
-			rasterPlayInspectorNumberField(layerId, "raster-play-inspector.width", "Width", layer.width ?? 512, "width"),
-			rasterPlayInspectorNumberField(layerId, "raster-play-inspector.height", "Height", layer.height ?? 512, "height"),
+			rasterPlayInspectorNumberField(layerIds, "raster-play-inspector.width", "Width", uniformLayers.map((entry) => entry.width ?? 512), "width"),
+			rasterPlayInspectorNumberField(layerIds, "raster-play-inspector.height", "Height", uniformLayers.map((entry) => entry.height ?? 512), "height"),
 		],
 	};
 }
 
-function rasterPlayInspectorAdjustmentGroup(layer: RasterLayerNode): UiInspectorFieldGroup | null {
-	if (layer.kind !== "adjustment") return null;
-	const layerId = layer.id;
+function rasterPlayInspectorAdjustmentGroup(layers: readonly RasterLayerNode[]): UiInspectorFieldGroup | null {
+	const uniformLayers = rasterPlayLayersUniformKind(layers);
+	if (!uniformLayers || uniformLayers[0]!.kind !== "adjustment") return null;
+	const layerIds = uniformLayers.map((entry) => entry.id);
+	const kinds = uniformLayers.map((entry) => (entry.kind === "adjustment" ? entry.adjustmentKind : ""));
+	const kindMixed = uiInspectorMixedSelect(kinds);
 	return {
 		id: "raster-play-inspector.adjustment",
 		label: "Adjustment",
@@ -402,29 +438,38 @@ function rasterPlayInspectorAdjustmentGroup(layer: RasterLayerNode): UiInspector
 				child: {
 					type: "select",
 					id: "raster-play-inspector.adjustmentKind.select",
-					value: layer.adjustmentKind,
+					value: kindMixed.value,
+					placeholder: kindMixed.placeholder,
 					items: RASTER_ADJUSTMENT_KINDS.map((kind) => ({ id: kind, value: kind, label: kind })),
-					onChange: rasterPlayCmd("patchLayer", { layerId, field: "adjustmentKind" }),
+					onChange: rasterPlayInspectorPatch(layerIds, "adjustmentKind"),
 				},
 			},
 		],
 	};
 }
 
-function rasterPlayInspectorMaskGroup(layer: RasterLayerNode): UiInspectorFieldGroup | null {
-	if (!layer.mask?.enabled) return null;
+function rasterPlayInspectorMaskGroup(layers: readonly RasterLayerNode[]): UiInspectorFieldGroup | null {
+	if (!layers.length || !layers.every((layer) => layer.mask?.enabled)) return null;
+	const layerIds = layers.map((entry) => entry.id);
 	return {
 		id: "raster-play-inspector.mask",
 		label: "Mask",
 		fields: [
-			uiInspectorReadonlyField("raster-play-inspector.mask-linked", "Linked Layer", layer.id),
-			{ type: "button", id: "raster-play-inspector.mask-select", label: "Focus Mask", command: rasterPlayCmd("setSelection", { ids: [layer.id] }) },
+			uiInspectorReadonlyField(
+				"raster-play-inspector.mask-linked",
+				"Linked Layer",
+				layerIds.length === 1 ? (layerIds[0] ?? "") : `${layerIds.length} selected`,
+			),
+			...(layerIds.length === 1
+				? [{ type: "button" as const, id: "raster-play-inspector.mask-select", label: "Focus Mask", command: rasterPlayCmd("setSelection", { ids: [layerIds[0]!] }) }]
+				: []),
 		],
 	};
 }
 
-function rasterPlayInspectorActionsGroup(layer: RasterLayerNode): UiInspectorFieldGroup {
-	const layerId = layer.id;
+function rasterPlayInspectorActionsGroup(layers: readonly RasterLayerNode[]): UiInspectorFieldGroup | null {
+	if (layers.length !== 1) return null;
+	const layerId = layers[0]!.id;
 	return {
 		id: "raster-play-inspector.actions",
 		label: "Actions",
@@ -435,15 +480,24 @@ function rasterPlayInspectorActionsGroup(layer: RasterLayerNode): UiInspectorFie
 	};
 }
 
-function rasterPlayInspectorLayerGroup(layer: RasterLayerNode): UiInspectorFieldGroup {
-	const layerId = layer.id;
+function rasterPlayInspectorLayerGroup(layers: readonly RasterLayerNode[]): UiInspectorFieldGroup {
+	const layerIds = layers.map((entry) => entry.id);
+	const names = layers.map((entry) => entry.name);
+	const kinds = layers.map((entry) => rasterPlayLayerKindLabel(entry));
+	const visibles = layers.map((entry) => entry.visible);
+	const opacities = layers.map((entry) => entry.opacity);
+	const blends = layers.map((entry) => entry.blendMode);
+	const visibleMixed = uiInspectorMixedToggle(visibles);
+	const opacityMixed = uiInspectorMixedSlider(opacities);
+	const blendMixed = uiInspectorMixedSelect(blends);
+	const kindMixed = uiInspectorMixedText(kinds);
 	return {
 		id: "raster-play-inspector.layer",
 		label: "Layer",
 		fields: [
-			rasterPlayInspectorTextField(layerId, "raster-play-inspector.name", "Name", layer.name, "name"),
-			uiInspectorReadonlyField("raster-play-inspector.id", "Id", layer.id),
-			uiInspectorReadonlyField("raster-play-inspector.kind", "Kind", rasterPlayLayerKindLabel(layer)),
+			rasterPlayInspectorTextField(layerIds, "raster-play-inspector.name", "Name", names, "name"),
+			uiInspectorReadonlyField("raster-play-inspector.id", "Id", layerIds.length === 1 ? (layerIds[0] ?? "") : `${layerIds.length} selected`),
+			uiInspectorReadonlyField("raster-play-inspector.kind", "Kind", kindMixed.uniform ? (kinds[0] ?? "") : (kindMixed.placeholder ?? UI_INSPECTOR_MIXED_PLACEHOLDER)),
 			{
 				type: "field",
 				id: "raster-play-inspector.visible",
@@ -451,8 +505,10 @@ function rasterPlayInspectorLayerGroup(layer: RasterLayerNode): UiInspectorField
 				child: {
 					type: "toggle",
 					id: "raster-play-inspector.visible.toggle",
-					pressed: layer.visible,
-					onChange: rasterPlayCmd("patchLayer", { layerId, field: "visible" }),
+					iconId: "check",
+					pressed: visibleMixed.pressed,
+					text: visibleMixed.uniform ? undefined : UI_INSPECTOR_MIXED_PLACEHOLDER,
+					onChange: rasterPlayInspectorPatch(layerIds, "visible"),
 				},
 			},
 			{
@@ -465,8 +521,8 @@ function rasterPlayInspectorLayerGroup(layer: RasterLayerNode): UiInspectorField
 					min: 0,
 					max: 1,
 					step: 0.01,
-					value: layer.opacity,
-					onChange: rasterPlayCmd("patchLayer", { layerId, field: "opacity" }),
+					value: opacityMixed.uniform ? opacityMixed.value : 0,
+					onChange: rasterPlayInspectorPatch(layerIds, "opacity"),
 				},
 			},
 			{
@@ -476,9 +532,10 @@ function rasterPlayInspectorLayerGroup(layer: RasterLayerNode): UiInspectorField
 				child: {
 					type: "select",
 					id: "raster-play-inspector.blend.select",
-					value: layer.blendMode,
+					value: blendMixed.value,
+					placeholder: blendMixed.placeholder,
 					items: RASTER_BLEND_MODES.map((mode) => ({ id: mode, value: mode, label: mode })),
-					onChange: rasterPlayCmd("patchLayer", { layerId, field: "blendMode" }),
+					onChange: rasterPlayInspectorPatch(layerIds, "blendMode"),
 				},
 			},
 		],
@@ -486,9 +543,8 @@ function rasterPlayInspectorLayerGroup(layer: RasterLayerNode): UiInspectorField
 }
 
 export function buildRasterPlayInspectorTree(doc: RasterDocument, selectedIds: readonly string[]): UiNode {
-	const layerId = selectedIds[0];
-	const layer = layerId ? findRasterLayer(doc, layerId) : undefined;
-	if (!layer) {
+	const layers = selectedIds.map((layerId) => findRasterLayer(doc, layerId)).filter((layer): layer is RasterLayerNode => Boolean(layer));
+	if (!layers.length) {
 		return uiDeclarativeSectionsToTree([
 			{
 				type: "section",
@@ -499,14 +555,15 @@ export function buildRasterPlayInspectorTree(doc: RasterDocument, selectedIds: r
 		]);
 	}
 	const groups: UiInspectorFieldGroup[] = [];
-	const pixel = rasterPlayInspectorPixelGroup(layer);
+	const pixel = rasterPlayInspectorPixelGroup(layers);
 	if (pixel) groups.push(pixel);
-	const adjustment = rasterPlayInspectorAdjustmentGroup(layer);
+	const adjustment = rasterPlayInspectorAdjustmentGroup(layers);
 	if (adjustment) groups.push(adjustment);
-	const mask = rasterPlayInspectorMaskGroup(layer);
+	const mask = rasterPlayInspectorMaskGroup(layers);
 	if (mask) groups.push(mask);
-	groups.push(rasterPlayInspectorActionsGroup(layer));
-	groups.push(rasterPlayInspectorLayerGroup(layer));
+	const actions = rasterPlayInspectorActionsGroup(layers);
+	if (actions) groups.push(actions);
+	groups.push(rasterPlayInspectorLayerGroup(layers));
 	return uiInspectorGroupsToTree(groups);
 }
 
@@ -637,6 +694,32 @@ export function createRasterPlayHierarchyTreeDragController(getController: () =>
 
 export interface RasterPlayHostBridge {
 	runHostCommand(command: string, args?: unknown): void;
+}
+
+/** @emoji 🔧 Applies one inspector field patch to a single raster layer. */
+function rasterPlayPatchLayerField(doc: RasterDocument, layerId: string, field: string, value: unknown): RasterDocument {
+	switch (field) {
+		case "name":
+			return applyRasterEditOp(doc, { op: "setLayerName", layerId, name: String(value ?? "") });
+		case "opacity":
+			return applyRasterEditOp(doc, { op: "setLayerOpacity", layerId, opacity: Number(value) });
+		case "blendMode":
+			return applyRasterEditOp(doc, { op: "setLayerBlendMode", layerId, blendMode: String(value) as RasterBlendMode });
+		case "visible":
+			return applyRasterEditOp(doc, { op: "setLayerVisible", layerId, visible: Boolean(value) });
+		case "width":
+			return applyRasterEditOp(doc, { op: "setLayerSize", layerId, width: Number(value) });
+		case "height":
+			return applyRasterEditOp(doc, { op: "setLayerSize", layerId, height: Number(value) });
+		case "adjustmentKind":
+			return applyRasterEditOp(doc, {
+				op: "setAdjustmentKind",
+				layerId,
+				adjustmentKind: String(value) as (typeof RASTER_ADJUSTMENT_KINDS)[number],
+			});
+		default:
+			return doc;
+	}
 }
 
 export class RasterPlayController extends Controller implements PlaygroundFixtureHost {
@@ -924,29 +1007,20 @@ export class RasterPlayController extends Controller implements PlaygroundFixtur
 				const field = String(args.field ?? "");
 				const value = args.value ?? args.pressed;
 				if (!layerId || !field) return;
+				this.patchDocument((doc) => rasterPlayPatchLayerField(doc, layerId, field, value));
+				return;
+			}
+			case "patchLayers": {
+				const layerIds = (Array.isArray(args.layerIds) ? args.layerIds : []).map(String).filter(Boolean);
+				const field = String(args.field ?? "");
+				const value = args.value ?? args.pressed;
+				if (!layerIds.length || !field) return;
 				this.patchDocument((doc) => {
-					switch (field) {
-						case "name":
-							return applyRasterEditOp(doc, { op: "setLayerName", layerId, name: String(value ?? "") });
-						case "opacity":
-							return applyRasterEditOp(doc, { op: "setLayerOpacity", layerId, opacity: Number(value) });
-						case "blendMode":
-							return applyRasterEditOp(doc, { op: "setLayerBlendMode", layerId, blendMode: String(value) as RasterBlendMode });
-						case "visible":
-							return applyRasterEditOp(doc, { op: "setLayerVisible", layerId, visible: Boolean(value) });
-						case "width":
-							return applyRasterEditOp(doc, { op: "setLayerSize", layerId, width: Number(value) });
-						case "height":
-							return applyRasterEditOp(doc, { op: "setLayerSize", layerId, height: Number(value) });
-						case "adjustmentKind":
-							return applyRasterEditOp(doc, {
-								op: "setAdjustmentKind",
-								layerId,
-								adjustmentKind: String(value) as (typeof RASTER_ADJUSTMENT_KINDS)[number],
-							});
-						default:
-							return doc;
+					let next = doc;
+					for (const layerId of layerIds) {
+						next = rasterPlayPatchLayerField(next, layerId, field, value);
 					}
+					return next;
 				});
 				return;
 			}
@@ -1147,6 +1221,30 @@ if (import.meta.vitest) {
 			ctrl.run("setFixtureJson", { json: exported, resetInteraction: true });
 			expect(ctrl.getDocument().id).toBe("semio");
 			expect(ctrl.getDocument().assets?.["semio-emblem"]?.mime).toBe("image/png");
+		});
+	});
+
+	describe("buildRasterPlayInspectorTree", () => {
+		it("orders inspector sections specific to general for pixel layers", () => {
+			const doc = rasterDocumentFromJson(RASTER_PLAY_FILE_FIXTURE_JSON_BY_ID.semio!);
+			const layer = flattenRasterLayers(doc.layers).find((entry) => entry.kind === "pixel");
+			if (!layer) return;
+			const tree = buildRasterPlayInspectorTree(doc, [layer.id]);
+			const labels = (tree.type === "tree" ? tree.sections : []).map((section) => section.label);
+			expect(labels.indexOf("Pixel")).toBeLessThan(labels.indexOf("Layer"));
+		});
+
+		it("batch-patches shared fields across multiple layers", () => {
+			const doc = rasterDocumentFromJson(RASTER_PLAY_FILE_FIXTURE_JSON_BY_ID.semio!);
+			const layers = flattenRasterLayers(doc.layers).slice(0, 2);
+			if (layers.length < 2) return;
+			const bus = new CommandBus();
+			const ctrl = new RasterPlayController(bus, () => {});
+			ctrl.run("setFixtureJson", { json: rasterDocumentToExportJson(doc), resetInteraction: false });
+			ctrl.run("patchLayers", { layerIds: layers.map((entry) => entry.id), field: "opacity", value: 0.25 });
+			for (const layer of layers) {
+				expect(findRasterLayer(ctrl.getDocument(), layer.id)?.opacity).toBe(0.25);
+			}
 		});
 	});
 

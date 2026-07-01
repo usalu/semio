@@ -4385,6 +4385,12 @@ mod force_graph_tests {
         assert!((y - 40.0).abs() < 2.0, "expected image bbox near y=40, got {y}");
         assert!((w - 50.0).abs() < 2.0 && (h - 50.0).abs() < 2.0, "expected ~50×50 bbox, got {w}×{h}");
     }
+
+    #[test]
+    fn puzzle_document_vcs_uses_framework_engine() {
+        let store = framework_vcs::JsonDocumentStore::new("puzzle.2d/v1", "puzzle2d", serde_json::json!({ "nodes": [] }));
+        assert!(store.projection_json().expect("projection").contains("nodes"));
+    }
 }
 
 // #endregion 🔖Tests

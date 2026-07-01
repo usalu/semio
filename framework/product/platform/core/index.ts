@@ -2626,6 +2626,15 @@ export class PlatformPluginActivationHost<TProductApi = unknown> {
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
 
+	describe("uiInspector mixed helpers", () => {
+		it("detects uniform and mixed multi-selection values", () => {
+			expect(uiInspectorAllEqual(["a", "a"])).toBe(true);
+			expect(uiInspectorAllEqual(["a", "b"])).toBe(false);
+			expect(uiInspectorMixedText(["x", "x"]).placeholder).toBeUndefined();
+			expect(uiInspectorMixedText(["x", "y"]).placeholder).toBe(UI_INSPECTOR_MIXED_PLACEHOLDER);
+		});
+	});
+
 	describe("canvas-only declarative window bodies", () => {
 		it("accepts lone puzzle and table nodes", () => {
 			expect(isCanvasOnlyWindowBody(buildPuzzle3dWindowBody("s", "c"))).toBe(true);
@@ -2651,7 +2660,7 @@ if (import.meta.vitest) {
 						buildPuzzle5dWindowBody("s", "c"),
 					],
 				}),
-			).toThrow(/table, virtualFileSystem, puzzle2d, puzzle3d, puzzle5d, or cad/);
+			).toThrow(/table, virtualFileSystem, puzzle2d, puzzle3d, puzzle5d, cad, shooting, forms, raster, or editor/);
 		});
 	});
 

@@ -24,8 +24,13 @@ import {
   FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
   FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
   uiDeclarativeSectionsToTree,
+  UI_INSPECTOR_MIXED_PLACEHOLDER,
+  uiInspectorGroupsToTree,
+  uiInspectorMixedNumber,
+  uiInspectorMixedText,
+  uiInspectorReadonlyField,
+  type UiInspectorFieldGroup,
   type UiNode,
-  type UiSectionNode,
   type UiTreeItemNode,
   type UiTreeSectionNode,
 } from "@semio-tech/framework-playground-core";
@@ -303,10 +308,105 @@ export function buildFlowPlayCatalogueTree(sections: readonly CatalogueSection[]
   return { type: "tree", sections: merged };
 }
 
-function flowPlayInspectorWidgetFields(widget: FlowWidgetV1, controllerId: string): UiNode[] {
-  const widgetId = widget.id;
-  const fields: UiNode[] = [
-    {
+function flowPlayInspectorPatch(widgetIds: readonly string[], field: string, controllerId: string) {
+  return flowPlayPanelCmd(controllerId, "patchFlowWidgets", { widgetIds, field });
+}
+
+function flowPlayInspectorNumberField(
+  widgetIds: readonly string[],
+  fieldId: string,
+  label: string,
+  values: readonly number[],
+  field: string,
+  controllerId: string,
+): UiNode {
+  const mixed = uiInspectorMixedNumber(values);
+  return {
+    type: "field",
+    id: fieldId,
+    label,
+    child: {
+      type: "input",
+      id: `${fieldId}.input`,
+      inputKind: "number",
+      value: mixed.uniform ? String(mixed.value) : "",
+      placeholder: mixed.uniform ? undefined : UI_INSPECTOR_MIXED_PLACEHOLDER,
+      onChange: flowPlayInspectorPatch(widgetIds, field, controllerId),
+    },
+  };
+}
+
+function flowPlayInspectorTextField(
+  widgetIds: readonly string[],
+  fieldId: string,
+  label: string,
+  values: readonly string[],
+  field: string,
+  controllerId: string,
+): UiNode {
+  const mixed = uiInspectorMixedText(values);
+  return {
+    type: "field",
+    id: fieldId,
+    label,
+    child: {
+      type: "input",
+      id: `${fieldId}.input`,
+      inputKind: "text",
+      value: mixed.value,
+      placeholder: mixed.placeholder,
+      commit: "blur",
+      onChange: flowPlayInspectorPatch(widgetIds, field, controllerId),
+    },
+  };
+}
+
+function flowPlayInspectorKindGroup(kind: FlowWidgetV1["kind"], widgets: readonly FlowWidgetV1[], controllerId: string): UiInspectorFieldGroup | null {
+  if (!widgets.length) return null;
+  const widgetIds = widgets.map((entry) => entry.id);
+  const fields: UiNode[] = [];
+  if (kind === "neuron") {
+    fields.push(
+      flowPlayInspectorTextField(
+        widgetIds,
+        "flow-play-inspector.neuron-kind",
+        "Neuron kind",
+        widgets.map((entry) => (entry.kind === "neuron" ? entry.neuronKind : "")),
+        "neuronKind",
+        controllerId,
+      ),
+    );
+  }
+  if (kind === "inputSlider") {
+    fields.push(
+      flowPlayInspectorNumberField(widgetIds, "flow-play-inspector.slider-value", "Value", widgets.map((entry) => (entry.kind === "inputSlider" ? entry.value : 0)), "value", controllerId),
+      flowPlayInspectorNumberField(widgetIds, "flow-play-inspector.slider-min", "Min", widgets.map((entry) => (entry.kind === "inputSlider" ? (entry.min ?? 0) : 0)), "min", controllerId),
+      flowPlayInspectorNumberField(widgetIds, "flow-play-inspector.slider-max", "Max", widgets.map((entry) => (entry.kind === "inputSlider" ? (entry.max ?? 10) : 10)), "max", controllerId),
+    );
+  }
+  if (kind === "inputNote") {
+    fields.push(
+      flowPlayInspectorTextField(widgetIds, "flow-play-inspector.note-text", "Text", widgets.map((entry) => (entry.kind === "inputNote" ? entry.text : "")), "text", controllerId),
+    );
+  }
+  if (kind === "variable") {
+    fields.push(
+      flowPlayInspectorTextField(widgetIds, "flow-play-inspector.variable-name", "Name", widgets.map((entry) => (entry.kind === "variable" ? entry.name : "")), "name", controllerId),
+      flowPlayInspectorTextField(widgetIds, "flow-play-inspector.variable-schema", "Schema", widgets.map((entry) => (entry.kind === "variable" ? entry.schema : "")), "schema", controllerId),
+    );
+  }
+  if (!fields.length) return null;
+  return { id: `flow-play-inspector.kind.${kind}`, label: kind, fields };
+}
+
+function flowPlayInspectorBaseGroup(widgets: readonly FlowWidgetV1[], controllerId: string): UiInspectorFieldGroup {
+  const widgetIds = widgets.map((entry) => entry.id);
+  const kinds = widgets.map((entry) => entry.kind);
+  const kindMixed = uiInspectorMixedText(kinds);
+  const fields: UiNode[] = [];
+  if (widgetIds.length === 1) {
+    const widgetId = widgetIds[0]!;
+    fields.push({
       type: "field",
       id: "flow-play-inspector.id",
       label: "Id",
@@ -318,111 +418,18 @@ function flowPlayInspectorWidgetFields(widget: FlowWidgetV1, controllerId: strin
         commit: "blur",
         onChange: flowPlayPanelCmd(controllerId, "renameFlowWidget", { oldId: widgetId }),
       },
-    },
-    {
-      type: "field",
-      id: "flow-play-inspector.kind",
-      label: "Kind",
-      child: { type: "text", value: widget.kind },
-    },
-  ];
-  if (widget.kind === "neuron") {
-    fields.push({
-      type: "field",
-      id: "flow-play-inspector.neuron-kind",
-      label: "Neuron kind",
-      child: {
-        type: "input",
-        id: "flow-play-inspector.neuron-kind.input",
-        inputKind: "text",
-        value: widget.neuronKind,
-        onChange: flowPlayPanelCmd(controllerId, "patchFlowWidget", { widgetId, field: "neuronKind" }),
-      },
     });
+  } else {
+    fields.push(uiInspectorReadonlyField("flow-play-inspector.id", "Id", `${widgetIds.length} selected`));
   }
-  if (widget.kind === "inputSlider") {
-    fields.push(
-      {
-        type: "field",
-        id: "flow-play-inspector.slider-value",
-        label: "Value",
-        child: {
-          type: "input",
-          id: "flow-play-inspector.slider-value.input",
-          inputKind: "number",
-          value: String(widget.value),
-          onChange: flowPlayPanelCmd(controllerId, "patchFlowWidget", { widgetId, field: "value" }),
-        },
-      },
-      {
-        type: "field",
-        id: "flow-play-inspector.slider-min",
-        label: "Min",
-        child: {
-          type: "input",
-          id: "flow-play-inspector.slider-min.input",
-          inputKind: "number",
-          value: String(widget.min ?? 0),
-          onChange: flowPlayPanelCmd(controllerId, "patchFlowWidget", { widgetId, field: "min" }),
-        },
-      },
-      {
-        type: "field",
-        id: "flow-play-inspector.slider-max",
-        label: "Max",
-        child: {
-          type: "input",
-          id: "flow-play-inspector.slider-max.input",
-          inputKind: "number",
-          value: String(widget.max ?? 10),
-          onChange: flowPlayPanelCmd(controllerId, "patchFlowWidget", { widgetId, field: "max" }),
-        },
-      },
-    );
-  }
-  if (widget.kind === "inputNote") {
-    fields.push({
-      type: "field",
-      id: "flow-play-inspector.note-text",
-      label: "Text",
-      child: {
-        type: "input",
-        id: "flow-play-inspector.note-text.input",
-        inputKind: "text",
-        value: widget.text,
-        onChange: flowPlayPanelCmd(controllerId, "patchFlowWidget", { widgetId, field: "text" }),
-      },
-    });
-  }
-  if (widget.kind === "variable") {
-    fields.push(
-      {
-        type: "field",
-        id: "flow-play-inspector.variable-name",
-        label: "Name",
-        child: {
-          type: "input",
-          id: "flow-play-inspector.variable-name.input",
-          inputKind: "text",
-          value: widget.name,
-          onChange: flowPlayPanelCmd(controllerId, "patchFlowWidget", { widgetId, field: "name" }),
-        },
-      },
-      {
-        type: "field",
-        id: "flow-play-inspector.variable-schema",
-        label: "Schema",
-        child: {
-          type: "input",
-          id: "flow-play-inspector.variable-schema.input",
-          inputKind: "text",
-          value: widget.schema,
-          onChange: flowPlayPanelCmd(controllerId, "patchFlowWidget", { widgetId, field: "schema" }),
-        },
-      },
-    );
-  }
-  return fields;
+  fields.push(
+    uiInspectorReadonlyField(
+      "flow-play-inspector.kind",
+      "Kind",
+      kindMixed.uniform ? (kinds[0] ?? "") : (kindMixed.placeholder ?? UI_INSPECTOR_MIXED_PLACEHOLDER),
+    ),
+  );
+  return { id: "flow-play-inspector.base", label: "Widget", fields };
 }
 
 /** @emoji 🔍 Details inspection: editable fields for the selected widget. */
@@ -447,30 +454,23 @@ export function buildFlowPlayInspectorTree(
       },
     ]);
   }
-  if (selectedNodeIds.length > 1) {
-    return uiDeclarativeSectionsToTree([
-      {
-        type: "section",
-        id: "flow-play-inspector.multi",
-        label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-        children: [{ type: "text", value: `${selectedNodeIds.length} widgets selected` }],
-      },
-    ]);
-  }
-  const widget = fixture.widgets.find((entry) => entry.id === selectedNodeIds[0]);
-  if (!widget) {
+  const widgets = selectedNodeIds
+    .map((id) => fixture.widgets.find((entry) => entry.id === id))
+    .filter((widget): widget is FlowWidgetV1 => Boolean(widget));
+  if (!widgets.length) {
     return uiDeclarativeSectionsToTree([
       { type: "section", id: "flow-play-inspector.missing", label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, children: [{ type: "text", value: "Widget not found" }] },
     ]);
   }
-  return uiDeclarativeSectionsToTree([
-    {
-      type: "section",
-      id: "flow-play-inspector.widget",
-      label: flowPlayWidgetTreeLabel(widget),
-      children: flowPlayInspectorWidgetFields(widget, controllerId),
-    },
-  ] as readonly UiSectionNode[]);
+  const groups: UiInspectorFieldGroup[] = [];
+  const kinds = [...new Set(widgets.map((entry) => entry.kind))];
+  for (const kind of kinds) {
+    const kindWidgets = widgets.filter((entry) => entry.kind === kind);
+    const kindGroup = flowPlayInspectorKindGroup(kind, kindWidgets, controllerId);
+    if (kindGroup) groups.push(kindGroup);
+  }
+  groups.push(flowPlayInspectorBaseGroup(widgets, controllerId));
+  return uiInspectorGroupsToTree(groups);
 }
 // #endregion 🔖FlowPlayPanels
 
@@ -851,6 +851,31 @@ export class FlowPlayController extends Controller {
       if (typeof widgetId === "string" && typeof field === "string") {
         this.patchFlowWidget(widgetId, field, value);
       }
+      return;
+    }
+    if (command === "patchFlowWidgets") {
+      const widgetIds = (Array.isArray((args as { widgetIds?: string[] }).widgetIds) ? (args as { widgetIds?: string[] }).widgetIds : []).map(String).filter(Boolean);
+      const field = (args as { field?: string }).field;
+      const value = (args as { value?: unknown }).value ?? (args as { pressed?: boolean }).pressed;
+      if (!widgetIds.length || typeof field !== "string") return;
+      const fixture = this.projection();
+      let widgets = fixture.widgets;
+      for (const widgetId of widgetIds) {
+        widgets = widgets.map((widget) => {
+          if (widget.id !== widgetId) return widget;
+          if (field === "value" || field === "min" || field === "max" || field === "step") {
+            const numeric = typeof value === "number" ? value : Number(value);
+            if (!Number.isFinite(numeric)) return widget;
+            return { ...widget, [field]: numeric } as FlowWidgetV1;
+          }
+          if (typeof value !== "string") return widget;
+          return { ...widget, [field]: value } as FlowWidgetV1;
+        });
+      }
+      this.commitFixture({ ...fixture, widgets });
+      this.interactionRevision += 1;
+      this.notifySnapshot();
+      this.emit();
       return;
     }
     if (command === "setLodMode") {
@@ -1254,7 +1279,24 @@ if (import.meta.vitest) {
       const tree = buildFlowPlayInspectorTree(FLOW_PLAY_DEFAULT_FIXTURE_JSON, ["slider"]);
       const serialized = JSON.stringify(tree);
       expect(serialized).toContain("Value");
-      expect(serialized).toContain("patchFlowWidget");
+      expect(serialized).toContain("patchFlowWidgets");
+    });
+
+    it("batch-patches shared fields across multiple widgets", () => {
+      const bus = new CommandBus();
+      const ctrl = new FlowPlayController(bus, () => {});
+      const json = JSON.parse(FLOW_PLAY_DEFAULT_FIXTURE_JSON) as FlowFixtureV1;
+      const baseSlider = json.widgets.find((entry) => entry.kind === "inputSlider");
+      if (!baseSlider || baseSlider.kind !== "inputSlider") return;
+      const secondSlider = { ...baseSlider, id: "slider-copy", value: 1 };
+      const fixture: FlowFixtureV1 = { ...json, widgets: [...json.widgets, secondSlider] };
+      ctrl.run("setFixtureJson", { json: flowFixtureToJson(fixture) });
+      ctrl.run("patchFlowWidgets", { widgetIds: [baseSlider.id, secondSlider.id], field: "value", value: 7 });
+      const updated = JSON.parse(ctrl.getFixtureJson()) as FlowFixtureV1;
+      for (const id of [baseSlider.id, secondSlider.id]) {
+        const widget = updated.widgets.find((entry) => entry.id === id);
+        expect(widget?.kind === "inputSlider" ? widget.value : undefined).toBe(7);
+      }
     });
 
     it("registers generate mode and maps fixture widgets to form spec", () => {

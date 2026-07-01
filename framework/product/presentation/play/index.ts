@@ -40,6 +40,12 @@ import {
 	FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
 	FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
 	FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+	UI_INSPECTOR_MIXED_PLACEHOLDER,
+	uiInspectorGroupsToTree,
+	uiInspectorMixedNumber,
+	uiInspectorMixedText,
+	uiInspectorReadonlyField,
+	type UiInspectorFieldGroup,
 } from "@semio-tech/framework-playground-core";
 import { Store, DocumentVcsStore, applyJsonReplaceOp, createDocumentVcsEnvelope, recordJsonProjectionChange, type JsonReplaceOp } from "@semio-tech/framework-core";
 import {
@@ -443,30 +449,53 @@ export class PresentationPlayController extends Controller implements Playground
 				this.selectedIds = [];
 				break;
 			}
+			case "renameTiles": {
+				const { ids, name, value } = args as { ids?: readonly string[]; name?: string; value?: string };
+				const nextName = (value ?? name)?.trim();
+				const targetIds = (ids ?? []).filter((id) => this.tiles.some((tile) => tile.id === id));
+				if (!nextName || targetIds.length === 0) {
+					break;
+				}
+				const targets = new Set(targetIds);
+				const deck = this.projection();
+				this.commitDeck({
+					...deck,
+					tiles: deck.tiles.map((tile) => (targets.has(tile.id) ? { ...tile, name: nextName } : tile)),
+				});
+				break;
+			}
 			case "renameTile": {
 				const { id, name, value } = args as { id?: string; name?: string; value?: string };
 				const nextName = name ?? value;
 				if (typeof id === "string" && typeof nextName === "string") {
-					const deck = this.projection();
-					this.commitDeck({
-						...deck,
-						tiles: deck.tiles.map((tile) => (tile.id === id ? { ...tile, name: nextName.trim() || tile.name } : tile)),
-					});
+					this.run("renameTiles", { ids: [id], value: nextName });
 				}
+				break;
+			}
+			case "patchTileCrops": {
+				const { ids, field, value } = args as { ids?: readonly string[]; field?: keyof FigureTileDraft["crop"]; value?: number };
+				if (!field || typeof value !== "number" || !Number.isFinite(value)) {
+					break;
+				}
+				const targetIds = new Set((ids ?? []).filter((id) => this.tiles.some((tile) => tile.id === id)));
+				if (targetIds.size === 0) {
+					break;
+				}
+				const deck = this.projection();
+				this.commitDeck({
+					...deck,
+					tiles: deck.tiles.map((row) => {
+						if (!targetIds.has(row.id)) return row;
+						return { ...row, crop: clampTileCrop({ ...row.crop, [field]: value }) };
+					}),
+				});
 				break;
 			}
 			case "patchTileCrop": {
 				const { id, field, value } = args as { id?: string; field?: keyof FigureTileDraft["crop"]; value?: number };
-				if (typeof id !== "string" || !field || typeof value !== "number" || !Number.isFinite(value)) {
-					break;
+				if (typeof id === "string" && field && typeof value === "number" && Number.isFinite(value)) {
+					this.run("patchTileCrops", { ids: [id], field, value });
 				}
-				const deck = this.projection();
-				const tile = deck.tiles.find((row) => row.id === id);
-				if (!tile) {
-					break;
-				}
-				const crop = clampTileCrop({ ...tile.crop, [field]: value });
-				this.commitDeck({ ...deck, tiles: deck.tiles.map((row) => (row.id === id ? { ...row, crop } : row)) });
 				break;
 			}
 			case "setTileCrop": {
@@ -548,23 +577,29 @@ function buildPresentationPlayHierarchyBody(ctx: SidePanelBodyViewContext): UiNo
 	};
 }
 
-function cropField(
-	tileId: string,
+function presentationPlayInspectorPatch(tileIds: readonly string[], field: keyof FigureTileDraft["crop"]) {
+	return presentationPlayCmd("patchTileCrops", { ids: tileIds, field });
+}
+
+function presentationPlayInspectorCropField(
+	tileIds: readonly string[],
 	field: keyof FigureTileDraft["crop"],
 	label: string,
-	value: number,
+	values: readonly number[],
 ): UiNode {
+	const mixed = uiInspectorMixedNumber(values);
 	return {
 		type: "field",
-		id: `presentation.play.tile.${tileId}.${field}`,
+		id: `presentation.play.tile.crop.${field}`,
 		label,
 		child: {
 			type: "input",
-			id: `presentation.play.tile.${tileId}.${field}.input`,
+			id: `presentation.play.tile.crop.${field}.input`,
 			inputKind: "number",
-			value: value.toFixed(6),
+			value: mixed.uniform ? values[0]!.toFixed(6) : "",
+			placeholder: mixed.uniform ? undefined : UI_INSPECTOR_MIXED_PLACEHOLDER,
 			commit: "blur",
-			onChange: presentationPlayCmd("patchTileCrop", { id: tileId, field }),
+			onChange: presentationPlayInspectorPatch(tileIds, field),
 		},
 	};
 }
@@ -577,60 +612,70 @@ export function buildPresentationPlayDetailsBody(ctx: SidePanelBodyViewContext):
 		]);
 	}
 	const snapshot = controller.getSnapshot();
-	if (snapshot.selectedIds.length !== 1) {
+	if (snapshot.selectedIds.length === 0) {
 		return uiDeclarativeSectionsToTree([
 			{
 				type: "section",
 				id: "presentation.play.details.empty",
 				label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-				children: [
-					{
-						type: "text",
-						value:
-							snapshot.selectedIds.length === 0
-								? "Select a tile in the canvas or workbench hierarchy."
-								: `${snapshot.selectedIds.length} tiles selected — pick one in the hierarchy to edit.`,
-					},
-				],
+				children: [{ type: "text", value: "Select a tile in the canvas or workbench hierarchy." }],
 			},
 		]);
 	}
-	const tile = snapshot.tiles.find((row) => row.id === snapshot.selectedIds[0]);
-	if (!tile) {
+	const tiles = snapshot.selectedIds
+		.map((id) => snapshot.tiles.find((row) => row.id === id))
+		.filter((tile): tile is FigureTileDraft => Boolean(tile));
+	if (!tiles.length) {
 		return uiDeclarativeSectionsToTree([
 			{ type: "section", id: "presentation.play.details.not-found", label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, children: [{ type: "text", value: "Selected tile not found." }] },
 		]);
 	}
-	return uiDeclarativeSectionsToTree([
+	const tileIds = tiles.map((tile) => tile.id);
+	const nameMixed = uiInspectorMixedText(tiles.map((tile) => tile.name));
+	const groups: UiInspectorFieldGroup[] = [
 		{
-			type: "section",
-			id: "presentation.play.details.tile",
-			label: tile.name,
-			children: [
+			id: "presentation.play.details.crop",
+			label: "Crop",
+			fields: [
+				presentationPlayInspectorCropField(tileIds, "x", "X", tiles.map((tile) => tile.crop.x)),
+				presentationPlayInspectorCropField(tileIds, "y", "Y", tiles.map((tile) => tile.crop.y)),
+				presentationPlayInspectorCropField(tileIds, "width", "Width", tiles.map((tile) => tile.crop.width)),
+				presentationPlayInspectorCropField(tileIds, "height", "Height", tiles.map((tile) => tile.crop.height)),
+			],
+		},
+		{
+			id: "presentation.play.details.identity",
+			label: "Identity",
+			fields: [
 				{
 					type: "field",
-					id: `presentation.play.tile.${tile.id}.name`,
+					id: "presentation.play.tile.name",
 					label: "Name",
 					child: {
 						type: "input",
-						id: `presentation.play.tile.${tile.id}.name.input`,
+						id: "presentation.play.tile.name.input",
 						inputKind: "text",
-						value: tile.name,
+						value: nameMixed.value,
+						placeholder: nameMixed.placeholder,
 						commit: "blur",
-						onChange: presentationPlayCmd("renameTile", { id: tile.id }),
+						onChange: presentationPlayCmd("renameTiles", { ids: tileIds }),
 					},
 				},
-				{ type: "field", id: `presentation.play.tile.${tile.id}.id`, label: "Id", child: { type: "text", value: tile.id } },
-				cropField(tile.id, "x", "X", tile.crop.x),
-				cropField(tile.id, "y", "Y", tile.crop.y),
-				cropField(tile.id, "width", "Width", tile.crop.width),
-				cropField(tile.id, "height", "Height", tile.crop.height),
-				{
-					type: "button",
-					id: `presentation.play.tile.${tile.id}.delete`,
-					label: "Delete tile",
-					command: presentationPlayCmd("deleteTile", { id: tile.id }),
-				},
+				uiInspectorReadonlyField(
+					"presentation.play.tile.id",
+					"Id",
+					tileIds.length === 1 ? (tileIds[0] ?? "") : `${tileIds.length} selected`,
+				),
+				...(tileIds.length === 1
+					? [
+							{
+								type: "button" as const,
+								id: `presentation.play.tile.${tileIds[0]}.delete`,
+								label: "Delete tile",
+								command: presentationPlayCmd("deleteTile", { id: tileIds[0] }),
+							},
+						]
+					: []),
 				{
 					type: "button",
 					id: "presentation.play.details.delete-selection",
@@ -639,7 +684,8 @@ export function buildPresentationPlayDetailsBody(ctx: SidePanelBodyViewContext):
 				},
 			],
 		},
-	]);
+	];
+	return uiInspectorGroupsToTree(groups);
 }
 
 function buildPresentationPlayCatalogueBody(ctx: SidePanelBodyViewContext): UiTreeNode {
@@ -878,8 +924,41 @@ if (import.meta.vitest) {
 				generation: runtime.generation,
 			});
 			expect(body.type).toBe("tree");
-			const items = body.sections[0]?.items ?? [];
-			expect(items.some((item) => item.control?.type === "input" && item.id === `presentation.play.tile.${tileId}.name`)).toBe(true);
+			const items = body.sections.flatMap((section) => section.items);
+			expect(items.some((item) => item.control?.type === "input" && item.id === "presentation.play.tile.name")).toBe(true);
+		});
+
+		it("builds mixed crop inspector for multi-select tiles", () => {
+			const bus = new CommandBus();
+			const runtime = new Platform({ id: PRESENTATION_PLAY_APP_ID });
+			const ctrl = new PresentationPlayController(bus, () => runtime.notify());
+			runtime.addApp(buildPresentationPlayAppRuntime(ctrl));
+			bus.dispatch(PRESENTATION_PLAY_CONTROLLER_ID, "seedGrid", { rows: 2, columns: 2 });
+			const tileIds = ctrl.tiles.slice(0, 2).map((tile) => tile.id);
+			bus.dispatch(PRESENTATION_PLAY_CONTROLLER_ID, "setSelectedIds", { ids: tileIds });
+			const body = buildPresentationPlayDetailsBody({
+				runtime,
+				windowKindId: `${PRESENTATION_PLAY_APP_ID}.details`,
+				bodyKey: PRESENTATION_PLAY_BODY_KEY_DETAILS,
+				activeModeId: null,
+				generation: runtime.generation,
+			});
+			const cropSection = body.sections.find((section) => section.id === "presentation.play.details.crop");
+			expect(cropSection).toBeDefined();
+			const widthField = cropSection!.items.find((item) => item.id === "presentation.play.tile.crop.width");
+			expect(widthField?.control?.onChange?.command).toBe("patchTileCrops");
+			expect(widthField?.control?.onChange?.args).toMatchObject({ ids: tileIds, field: "width" });
+		});
+
+		it("patchTileCrops updates every selected tile", () => {
+			const bus = new CommandBus();
+			const ctrl = new PresentationPlayController(bus, () => undefined);
+			bus.dispatch(PRESENTATION_PLAY_CONTROLLER_ID, "seedGrid", { rows: 1, columns: 2 });
+			const tileIds = ctrl.tiles.map((tile) => tile.id);
+			bus.dispatch(PRESENTATION_PLAY_CONTROLLER_ID, "patchTileCrops", { ids: tileIds, field: "x", value: 0.25 });
+			for (const tile of ctrl.tiles) {
+				expect(tile.crop.x).toBe(0.25);
+			}
 		});
 
 		it("selects and deletes tiles", () => {

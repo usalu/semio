@@ -363,6 +363,22 @@ export class TrinityJackPlayController extends Controller implements PlaygroundF
       this.bump();
       return;
     }
+    if (command === "patchTrinityNodes") {
+      const nodeIds = (args as { nodeIds?: readonly string[] }).nodeIds ?? [];
+      const field = (args as { field?: string }).field;
+      const value = (args as { value?: unknown }).value;
+      if (!nodeIds.length || field !== "name" || typeof value !== "string") return;
+      const targets = new Set(nodeIds);
+      const fixture = this.projection();
+      const nextName = value.trim();
+      if (!nextName) return;
+      this.commitFixture({
+        ...fixture,
+        nodes: fixture.nodes.map((node) => (targets.has(node.id) ? { ...node, name: nextName } : node)),
+      });
+      this.bump();
+      return;
+    }
     if (command === "setActiveFixture") {
       const fixtureId = (args as { fixtureId?: string }).fixtureId;
       if (typeof fixtureId !== "string") return;
@@ -503,6 +519,15 @@ if (import.meta.vitest) {
       const result = JSON.parse(ctrl.getJackResultJson()) as { kind: string; graphFixture?: { nodes: unknown[] } };
       expect(result.kind).toBe("graph");
       expect(result.graphFixture?.nodes.length).toBeGreaterThan(0);
+    });
+
+    it("patchTrinityNodes renames selected pieces", () => {
+      const bus = new CommandBus();
+      const ctrl = new TrinityJackPlayController(bus, () => undefined);
+      const nodeId = parseTrinityFixtureJson(ctrl.getFixtureJson())!.nodes[0]!.id;
+      ctrl.run("patchTrinityNodes", { nodeIds: [nodeId], field: "name", value: "renamed-piece" });
+      const updated = parseTrinityFixtureJson(ctrl.getFixtureJson())!.nodes.find((node) => node.id === nodeId);
+      expect(updated?.name).toBe("renamed-piece");
     });
 
     it("subscribeSnapshot notifies listeners", () => {

@@ -23,15 +23,21 @@ import {
 	FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
 	FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
 	FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+	UI_INSPECTOR_MIXED_PLACEHOLDER,
 	uiDeclarativeSectionsToTree,
+	uiInspectorGroupsToTree,
+	uiInspectorMixedNumber,
+	uiInspectorMixedSelect,
+	uiInspectorMixedText,
+	uiInspectorReadonlyField,
 	type AppTools,
 	type CommandDescriptor,
 	type PlaygroundFixtureCatalog,
 	type PlaygroundFixtureHost,
 	type ToolLeaf,
+	type UiInspectorFieldGroup,
 	toolCollection,
 	type UiNode,
-	type UiSectionNode,
 	type UiTreeItemNode,
 	type WindowEngagement,
 	type WindowMeasure,
@@ -169,21 +175,43 @@ function shootingPlayCmd(command: string, args?: Record<string, unknown>): Comma
 	return { controllerId: SHOOTING_PLAY_CONTROLLER_ID, command, args };
 }
 
+function shootingPlaySelectionFromTreeRowIds(rawIds: readonly string[]): { shotIds: string[]; assetIds: string[] } {
+	const shotIds: string[] = [];
+	const assetIds: string[] = [];
+	for (const rawId of rawIds) {
+		const shotPrefix = "shooting-play-hierarchy.shot.";
+		const assetPrefix = "shooting-play-hierarchy.asset.";
+		if (rawId.startsWith(shotPrefix)) {
+			shotIds.push(rawId.slice(shotPrefix.length));
+		} else if (rawId.startsWith(assetPrefix)) {
+			assetIds.push(rawId.slice(assetPrefix.length));
+		}
+	}
+	return { shotIds, assetIds };
+}
+
 // #region 🔖ShootingPlayPanels
-export function buildShootingPlayHierarchyTree(fixture: ShootingFixtureV1, selectedId: string | null, selectedKind: ShootingPlaySelectionKind | null): UiNode {
+export function buildShootingPlayHierarchyTree(
+	fixture: ShootingFixtureV1,
+	selectedShotIds: readonly string[],
+	selectedAssetIds: readonly string[],
+): UiNode {
 	const shotItems: UiTreeItemNode[] = fixture.shots.map((shot) => ({
 		id: `shooting-play-hierarchy.shot.${shot.id}`,
 		label: shot.label || shot.id,
 		description: `${shot.width}×${shot.height} ${shot.format.toUpperCase()}`,
-		command: shootingPlayCmd("setSelection", { selectedId: shot.id, selectedKind: "shot" }),
+		command: shootingPlayCmd("setSelection", { shotIds: [shot.id], assetIds: [] }),
 	}));
 	const assetItems: UiTreeItemNode[] = fixture.assets.map((asset) => ({
 		id: `shooting-play-hierarchy.asset.${asset.id}`,
 		label: asset.name || asset.id,
 		description: asset.format,
-		command: shootingPlayCmd("setSelection", { selectedId: asset.id, selectedKind: "asset" }),
+		command: shootingPlayCmd("setSelection", { assetIds: [asset.id], shotIds: [] }),
 	}));
-	const selectedIds = selectedId && selectedKind ? [`shooting-play-hierarchy.${selectedKind}.${selectedId}`] : [];
+	const selectedIds = [
+		...selectedShotIds.map((id) => `shooting-play-hierarchy.shot.${id}`),
+		...selectedAssetIds.map((id) => `shooting-play-hierarchy.asset.${id}`),
+	];
 	return {
 		type: "tree",
 		sections: [
@@ -201,6 +229,7 @@ export function buildShootingPlayHierarchyTree(fixture: ShootingFixtureV1, selec
 			},
 		],
 		selectedIds,
+		selectionChange: shootingPlayCmd("setSelection"),
 	};
 }
 
@@ -227,8 +256,152 @@ export function buildShootingPlayCatalogueTree(): UiNode {
 	};
 }
 
-export function buildShootingPlayInspectorTree(fixture: ShootingFixtureV1, selectedId: string | null, selectedKind: ShootingPlaySelectionKind | null): UiNode {
-	if (!selectedId || !selectedKind) {
+function shootingPlayInspectorPatchShots(shotIds: readonly string[], field: string) {
+	return shootingPlayCmd("patchShots", { shotIds, field });
+}
+
+function shootingPlayInspectorPatchAssets(assetIds: readonly string[], field: string) {
+	return shootingPlayCmd("patchAssets", { assetIds, field });
+}
+
+function shootingPlayInspectorNumberField(
+	shotIds: readonly string[],
+	fieldId: string,
+	label: string,
+	values: readonly number[],
+	field: string,
+): UiNode {
+	const mixed = uiInspectorMixedNumber(values);
+	return {
+		type: "field",
+		id: fieldId,
+		label,
+		child: {
+			type: "input",
+			id: `${fieldId}.input`,
+			inputKind: "number",
+			value: mixed.uniform ? String(mixed.value) : "",
+			placeholder: mixed.uniform ? undefined : UI_INSPECTOR_MIXED_PLACEHOLDER,
+			onChange: shootingPlayInspectorPatchShots(shotIds, field),
+		},
+	};
+}
+
+function shootingPlayInspectorTextField(
+	ids: readonly string[],
+	fieldId: string,
+	label: string,
+	values: readonly string[],
+	field: string,
+	patch: (ids: readonly string[], field: string) => CommandDescriptor,
+): UiNode {
+	const mixed = uiInspectorMixedText(values);
+	return {
+		type: "field",
+		id: fieldId,
+		label,
+		child: {
+			type: "input",
+			id: `${fieldId}.input`,
+			inputKind: "text",
+			value: mixed.value,
+			placeholder: mixed.placeholder,
+			onChange: patch(ids, field),
+		},
+	};
+}
+
+function shootingPlayInspectorShotGroup(shots: readonly ShootingShotV1[]): UiInspectorFieldGroup {
+	const shotIds = shots.map((entry) => entry.id);
+	const formatMixed = uiInspectorMixedSelect(shots.map((entry) => entry.format));
+	const shapeMixed = uiInspectorMixedSelect(shots.map((entry) => entry.shape ?? "rectangle"));
+	return {
+		id: "shooting-play-inspector.shots",
+		label: shots.length === 1 ? "Shot" : "Shots",
+		fields: [
+			shootingPlayInspectorTextField(shotIds, "shooting-play-inspector.shot.label", "Label", shots.map((entry) => entry.label), "label", shootingPlayInspectorPatchShots),
+			{
+				type: "field",
+				id: "shooting-play-inspector.shot.format",
+				label: "Format",
+				child: {
+					type: "select",
+					id: "shooting-play-inspector.shot.format.select",
+					value: formatMixed.value,
+					placeholder: formatMixed.placeholder,
+					items: [
+						{ id: "svg", value: "svg", label: "SVG" },
+						{ id: "png", value: "png", label: "PNG" },
+					],
+					onChange: shootingPlayInspectorPatchShots(shotIds, "format"),
+				},
+			},
+			{
+				type: "field",
+				id: "shooting-play-inspector.shot.shape",
+				label: "Shape",
+				child: {
+					type: "select",
+					id: "shooting-play-inspector.shot.shape.select",
+					value: shapeMixed.value,
+					placeholder: shapeMixed.placeholder,
+					items: [
+						{ id: "rectangle", value: "rectangle", label: "Rectangle" },
+						{ id: "ellipse", value: "ellipse", label: "Ellipse" },
+					],
+					onChange: shootingPlayInspectorPatchShots(shotIds, "shape"),
+				},
+			},
+			shootingPlayInspectorNumberField(shotIds, "shooting-play-inspector.shot.width", "Width", shots.map((entry) => entry.width), "width"),
+			shootingPlayInspectorNumberField(shotIds, "shooting-play-inspector.shot.height", "Height", shots.map((entry) => entry.height), "height"),
+			...(shotIds.length === 1
+				? [
+						{
+							type: "button" as const,
+							id: "shooting-play-inspector.shot.activate",
+							label: "Set active shot",
+							command: shootingPlayCmd("setActiveShot", { value: shotIds[0] }),
+						},
+					]
+				: []),
+		],
+	};
+}
+
+function shootingPlayInspectorAssetGroup(
+	assets: readonly { readonly id: string; readonly name: string; readonly url: string; readonly format: string }[],
+): UiInspectorFieldGroup {
+	const assetIds = assets.map((entry) => entry.id);
+	return {
+		id: "shooting-play-inspector.assets",
+		label: assets.length === 1 ? "Asset" : "Assets",
+		fields: [
+			shootingPlayInspectorTextField(assetIds, "shooting-play-inspector.asset.name", "Name", assets.map((entry) => entry.name), "name", shootingPlayInspectorPatchAssets),
+			uiInspectorReadonlyField(
+				"shooting-play-inspector.asset.url",
+				"URL",
+				assets.length === 1 ? (assets[0]?.url ?? "") : UI_INSPECTOR_MIXED_PLACEHOLDER,
+			),
+			...(assetIds.length === 1
+				? [
+						{
+							type: "button" as const,
+							id: "shooting-play-inspector.asset.activate",
+							label: "Set active asset",
+							command: shootingPlayCmd("setActiveAsset", { value: assetIds[0] }),
+						},
+					]
+				: []),
+		],
+	};
+}
+
+export function buildShootingPlayInspectorTree(
+	fixture: ShootingFixtureV1,
+	selectedShotIds: readonly string[],
+	selectedAssetIds: readonly string[],
+): UiNode {
+	if (selectedShotIds.length === 0 && selectedAssetIds.length === 0) {
 		return uiDeclarativeSectionsToTree([
 			{
 				type: "section",
@@ -238,129 +411,29 @@ export function buildShootingPlayInspectorTree(fixture: ShootingFixtureV1, selec
 			},
 		]);
 	}
-	if (selectedKind === "shot") {
-		const shot = fixture.shots.find((entry) => entry.id === selectedId);
-		if (!shot) {
-			return uiDeclarativeSectionsToTree([
-				{ type: "section", id: "shooting-play-inspector.missing", label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, children: [{ type: "text", value: "Shot not found" }] },
-			]);
+	const groups: UiInspectorFieldGroup[] = [];
+	if (selectedShotIds.length > 0) {
+		const shots = selectedShotIds
+			.map((id) => fixture.shots.find((entry) => entry.id === id))
+			.filter((entry): entry is ShootingShotV1 => Boolean(entry));
+		if (shots.length > 0) {
+			groups.push(shootingPlayInspectorShotGroup(shots));
 		}
-		return uiDeclarativeSectionsToTree([
-			{
-				type: "section",
-				id: "shooting-play-inspector.shot",
-				label: shot.label || shot.id,
-				children: [
-					{
-						type: "field",
-						id: "shooting-play-inspector.shot.label",
-						label: "Label",
-						child: {
-							type: "input",
-							id: "shooting-play-inspector.shot.label.input",
-							inputKind: "text",
-							value: shot.label,
-							onChange: shootingPlayCmd("patchShot", { shotId: shot.id, field: "label" }),
-						},
-					},
-					{
-						type: "field",
-						id: "shooting-play-inspector.shot.format",
-						label: "Format",
-						child: {
-							type: "select",
-							id: "shooting-play-inspector.shot.format.select",
-							value: shot.format,
-							items: [
-								{ id: "svg", value: "svg", label: "SVG" },
-								{ id: "png", value: "png", label: "PNG" },
-							],
-							onChange: shootingPlayCmd("patchShot", { shotId: shot.id, field: "format" }),
-						},
-					},
-					{
-						type: "field",
-						id: "shooting-play-inspector.shot.shape",
-						label: "Shape",
-						child: {
-							type: "select",
-							id: "shooting-play-inspector.shot.shape.select",
-							value: shot.shape ?? "rectangle",
-							items: [
-								{ id: "rectangle", value: "rectangle", label: "Rectangle" },
-								{ id: "ellipse", value: "ellipse", label: "Ellipse" },
-							],
-							onChange: shootingPlayCmd("patchShot", { shotId: shot.id, field: "shape" }),
-						},
-					},
-					{
-						type: "field",
-						id: "shooting-play-inspector.shot.width",
-						label: "Width",
-						child: {
-							type: "input",
-							id: "shooting-play-inspector.shot.width.input",
-							inputKind: "number",
-							value: String(shot.width),
-							onChange: shootingPlayCmd("patchShot", { shotId: shot.id, field: "width" }),
-						},
-					},
-					{
-						type: "field",
-						id: "shooting-play-inspector.shot.height",
-						label: "Height",
-						child: {
-							type: "input",
-							id: "shooting-play-inspector.shot.height.input",
-							inputKind: "number",
-							value: String(shot.height),
-							onChange: shootingPlayCmd("patchShot", { shotId: shot.id, field: "height" }),
-						},
-					},
-					{
-						type: "button",
-						id: "shooting-play-inspector.shot.activate",
-						label: "Set active shot",
-						command: shootingPlayCmd("setActiveShot", { value: shot.id }),
-					},
-				],
-			},
-		] as readonly UiSectionNode[]);
 	}
-	const asset = fixture.assets.find((entry) => entry.id === selectedId);
-	if (!asset) {
+	if (selectedAssetIds.length > 0) {
+		const assets = selectedAssetIds
+			.map((id) => fixture.assets.find((entry) => entry.id === id))
+			.filter((entry): entry is ShootingFixtureV1["assets"][number] => Boolean(entry));
+		if (assets.length > 0) {
+			groups.push(shootingPlayInspectorAssetGroup(assets));
+		}
+	}
+	if (!groups.length) {
 		return uiDeclarativeSectionsToTree([
-			{ type: "section", id: "shooting-play-inspector.missing", label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, children: [{ type: "text", value: "Asset not found" }] },
+			{ type: "section", id: "shooting-play-inspector.missing", label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, children: [{ type: "text", value: "Selection not found" }] },
 		]);
 	}
-	return uiDeclarativeSectionsToTree([
-		{
-			type: "section",
-			id: "shooting-play-inspector.asset",
-			label: asset.name || asset.id,
-			children: [
-				{
-					type: "field",
-					id: "shooting-play-inspector.asset.name",
-					label: "Name",
-					child: {
-						type: "input",
-						id: "shooting-play-inspector.asset.name.input",
-						inputKind: "text",
-						value: asset.name,
-						onChange: shootingPlayCmd("patchAsset", { assetId: asset.id, field: "name" }),
-					},
-				},
-				{ type: "field", id: "shooting-play-inspector.asset.url", label: "URL", child: { type: "text", value: asset.url } },
-				{
-					type: "button",
-					id: "shooting-play-inspector.asset.activate",
-					label: "Set active asset",
-					command: shootingPlayCmd("setActiveAsset", { value: asset.id }),
-				},
-			],
-		},
-	] as readonly UiSectionNode[]);
+	return uiInspectorGroupsToTree(groups);
 }
 // #endregion 🔖ShootingPlayPanels
 
@@ -495,8 +568,8 @@ export class ShootingPlayController extends Controller implements PlaygroundFixt
 	private centerModel = true;
 	private cameraDraftLabel = "Camera 1";
 	private readonly snapshotListeners = new Set<() => void>();
-	private selectedId: string | null = null;
-	private selectedKind: ShootingPlaySelectionKind | null = null;
+	private selectedShotIds: string[] = [];
+	private selectedAssetIds: string[] = [];
 	private interactionRevision = 0;
 
 	constructor(commandBus: CommandBus, hostNotify: () => void, fixtureStore: ShootingPlayFixtureStore = createShootingPlayFixtureStore()) {
@@ -533,12 +606,12 @@ export class ShootingPlayController extends Controller implements PlaygroundFixt
 		return this.fitRevision;
 	}
 
-	getSelectedId(): string | null {
-		return this.selectedId;
+	getSelectedShotIds(): readonly string[] {
+		return this.selectedShotIds;
 	}
 
-	getSelectedKind(): ShootingPlaySelectionKind | null {
-		return this.selectedKind;
+	getSelectedAssetIds(): readonly string[] {
+		return this.selectedAssetIds;
 	}
 
 	getInteractionRevision(): number {
@@ -801,45 +874,102 @@ export class ShootingPlayController extends Controller implements PlaygroundFixt
 		this.applyFixture({ ...this.projection(), scene: { ...this.projection().scene, ...patch } });
 	}
 
-	private patchShot(shotId: string, field: string, value: unknown): void {
-		const shots = this.projection().shots.map((shot) => {
-			if (shot.id !== shotId) return shot;
-			if (field === "width" || field === "height") {
-				const numeric = typeof value === "number" ? value : Number(value);
-				if (!Number.isFinite(numeric)) return shot;
-				return { ...shot, [field]: Math.round(numeric) };
-			}
-			if (field === "format" && (value === "svg" || value === "png")) {
-				return { ...shot, format: value };
-			}
-			if (field === "shape" && (value === "rectangle" || value === "ellipse")) {
-				return { ...shot, shape: value };
-			}
-			if (typeof value !== "string") return shot;
-			return { ...shot, [field]: value };
-		});
+	private patchShotField(shot: ShootingShotV1, field: string, value: unknown): ShootingShotV1 {
+		if (field === "width" || field === "height") {
+			const numeric = typeof value === "number" ? value : Number(value);
+			if (!Number.isFinite(numeric)) return shot;
+			return { ...shot, [field]: Math.round(numeric) };
+		}
+		if (field === "format" && (value === "svg" || value === "png")) {
+			return { ...shot, format: value };
+		}
+		if (field === "shape" && (value === "rectangle" || value === "ellipse")) {
+			return { ...shot, shape: value };
+		}
+		if (typeof value !== "string") return shot;
+		return { ...shot, [field]: value };
+	}
+
+	private patchShots(shotIds: readonly string[], field: string, value: unknown): void {
+		if (!shotIds.length) return;
+		const targets = new Set(shotIds);
+		const shots = this.projection().shots.map((shot) => (targets.has(shot.id) ? this.patchShotField(shot, field, value) : shot));
 		this.applyFixture({ ...this.projection(), shots });
 	}
 
-	private patchAsset(assetId: string, field: string, value: unknown): void {
+	private patchShot(shotId: string, field: string, value: unknown): void {
+		this.patchShots([shotId], field, value);
+	}
+
+	private patchAssets(assetIds: readonly string[], field: string, value: unknown): void {
+		if (!assetIds.length) return;
+		const targets = new Set(assetIds);
 		const assets = this.projection().assets.map((asset) => {
-			if (asset.id !== assetId) return asset;
+			if (!targets.has(asset.id)) return asset;
 			if (typeof value !== "string") return asset;
 			return { ...asset, [field]: value };
 		});
 		this.applyFixture({ ...this.projection(), assets });
 	}
 
+	private patchAsset(assetId: string, field: string, value: unknown): void {
+		this.patchAssets([assetId], field, value);
+	}
+
 	override run(command: string, args?: unknown): void {
 		if (command === "setSelection") {
-			const selectedId = (args as { selectedId?: string | null }).selectedId ?? null;
-			const selectedKind = (args as { selectedKind?: ShootingPlaySelectionKind | null }).selectedKind ?? null;
-			if (this.selectedId === selectedId && this.selectedKind === selectedKind) return;
-			this.selectedId = selectedId;
-			this.selectedKind = selectedKind;
+			const payload = args as {
+				shotIds?: readonly string[];
+				assetIds?: readonly string[];
+				ids?: readonly string[];
+				mode?: "default" | "additive";
+				selectedId?: string | null;
+				selectedKind?: ShootingPlaySelectionKind | null;
+			};
+			let nextShotIds = this.selectedShotIds;
+			let nextAssetIds = this.selectedAssetIds;
+			if (Array.isArray(payload.ids)) {
+				const resolved = shootingPlaySelectionFromTreeRowIds(payload.ids.map(String));
+				nextShotIds = resolved.shotIds;
+				nextAssetIds = resolved.assetIds;
+			} else {
+				const mode = payload.mode ?? "default";
+				const incomingShots =
+					payload.shotIds ??
+					(payload.selectedKind === "shot" && typeof payload.selectedId === "string" ? [payload.selectedId] : []);
+				const incomingAssets =
+					payload.assetIds ??
+					(payload.selectedKind === "asset" && typeof payload.selectedId === "string" ? [payload.selectedId] : []);
+				if (mode === "additive") {
+					nextShotIds = [...new Set([...this.selectedShotIds, ...incomingShots])];
+					nextAssetIds = [...new Set([...this.selectedAssetIds, ...incomingAssets])];
+				} else {
+					nextShotIds = [...incomingShots];
+					nextAssetIds = [...incomingAssets];
+				}
+			}
+			if (
+				nextShotIds.length === this.selectedShotIds.length &&
+				nextAssetIds.length === this.selectedAssetIds.length &&
+				nextShotIds.every((id, index) => id === this.selectedShotIds[index]) &&
+				nextAssetIds.every((id, index) => id === this.selectedAssetIds[index])
+			) {
+				return;
+			}
+			this.selectedShotIds = nextShotIds;
+			this.selectedAssetIds = nextAssetIds;
 			this.interactionRevision += 1;
 			this.notifySnapshot();
 			this.emit();
+			return;
+		}
+		if (command === "patchShots") {
+			const shotIds = (args as { shotIds?: readonly string[] }).shotIds ?? [];
+			const field = (args as { field?: string }).field;
+			const value = (args as { value?: unknown }).value;
+			if (shotIds.length > 0 && typeof field === "string") {
+				this.patchShots(shotIds, field, value);
+			}
 			return;
 		}
 		if (command === "patchShot") {
@@ -848,6 +978,15 @@ export class ShootingPlayController extends Controller implements PlaygroundFixt
 			const value = (args as { value?: unknown }).value;
 			if (typeof shotId === "string" && typeof field === "string") {
 				this.patchShot(shotId, field, value);
+			}
+			return;
+		}
+		if (command === "patchAssets") {
+			const assetIds = (args as { assetIds?: readonly string[] }).assetIds ?? [];
+			const field = (args as { field?: string }).field;
+			const value = (args as { value?: unknown }).value;
+			if (assetIds.length > 0 && typeof field === "string") {
+				this.patchAssets(assetIds, field, value);
 			}
 			return;
 		}
@@ -1130,6 +1269,39 @@ if (import.meta.vitest) {
 			ctrl.run("setFixtureJson", { json: shootingFixtureToJson(DEFAULT_SHOOTING_FIXTURE) });
 			ctrl.run("setActiveShotShape", { value: "ellipse" });
 			expect(ctrl.getFixture().shots[0]?.shape).toBe("ellipse");
+		});
+
+		it("setSelection resolves hierarchy row ids for multi-select", () => {
+			const bus = new CommandBus();
+			const ctrl = new ShootingPlayController(bus, () => {});
+			ctrl.run("setFixtureJson", { json: shootingFixtureToJson(DEFAULT_SHOOTING_FIXTURE) });
+			const shotIds = ctrl.getFixture().shots.slice(0, 2).map((shot) => shot.id);
+			ctrl.run("setSelection", {
+				ids: shotIds.map((id) => `shooting-play-hierarchy.shot.${id}`),
+			});
+			expect(ctrl.getSelectedShotIds()).toEqual(shotIds);
+			expect(ctrl.getSelectedAssetIds()).toEqual([]);
+		});
+
+		it("buildShootingPlayInspectorTree batches shot label edits", () => {
+			const fixture = DEFAULT_SHOOTING_FIXTURE;
+			const shotIds = fixture.shots.slice(0, 2).map((shot) => shot.id);
+			const tree = buildShootingPlayInspectorTree(fixture, shotIds, []);
+			const shotSection = tree.sections.find((section) => section.id === "shooting-play-inspector.shots");
+			const labelField = shotSection?.items.find((item) => item.id === "shooting-play-inspector.shot.label");
+			expect(labelField?.control?.onChange?.command).toBe("patchShots");
+			expect(labelField?.control?.onChange?.args).toMatchObject({ shotIds, field: "label" });
+		});
+
+		it("patchShots updates every selected shot", () => {
+			const bus = new CommandBus();
+			const ctrl = new ShootingPlayController(bus, () => {});
+			ctrl.run("setFixtureJson", { json: shootingFixtureToJson(DEFAULT_SHOOTING_FIXTURE) });
+			const shotIds = ctrl.getFixture().shots.map((shot) => shot.id);
+			ctrl.run("patchShots", { shotIds, field: "label", value: "batch-shot" });
+			for (const shot of ctrl.getFixture().shots) {
+				expect(shot.label).toBe("batch-shot");
+			}
 		});
 	});
 }

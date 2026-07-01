@@ -11433,6 +11433,61 @@ export function findPieceInDesign(design: Design, pieceId: string | null | undef
 	return design.pieces?.find((p) => p.id === pieceId);
 }
 
+/** @emoji 🧬 Resolves a type's parent type id from kit snapshot rows. */
+function sketchpadTypeParentId(type: Type | Record<string, unknown> | undefined): string | null {
+	if (!type) return null;
+	return (
+		sketchpadReadEntityId((type as Record<string, unknown>)["parent"]) ??
+		sketchpadReadEntityId((type as Record<string, unknown>)["parentType"]) ??
+		sketchpadReadEntityId((type as Record<string, unknown>)["inheritsFrom"])
+	);
+}
+
+/** @emoji 🧬 Walks parent^{type} chain from most specific to root. */
+function sketchpadTypeInheritanceChain(kit: Kit, typeId: string): readonly Type[] {
+	const chain: Type[] = [];
+	const seen = new Set<string>();
+	let currentId: string | null = typeId;
+	while (currentId && !seen.has(currentId)) {
+		seen.add(currentId);
+		const type = findTypeInKit(kit, currentId);
+		if (!type) break;
+		chain.push(type);
+		currentId = sketchpadTypeParentId(type);
+	}
+	return chain;
+}
+
+/** @emoji ⛓️ Patches connection scalar fields on an in-memory kit snapshot. */
+function sketchpadPatchRouteConnectionsInKit(
+	kit: Kit,
+	designId: string,
+	connectionIds: readonly string[],
+	field: "gap",
+	value: unknown,
+): Kit {
+	const parsed = Number(value);
+	if (!Number.isFinite(parsed)) return kit;
+	const patchDesign = (design: Design): Design => {
+		if (design.id !== designId) return design;
+		const connections = ((design as { connections?: readonly SketchpadKitConnection[] }).connections ?? []) as SketchpadKitConnection[];
+		const nextConnections = connections.map((connection) => {
+			if (!connection.id || !connectionIds.includes(connection.id)) return connection;
+			return { ...connection, gap: parsed };
+		});
+		return { ...design, connections: nextConnections } as Design;
+	};
+	const rootDesigns = sketchpadKitItemsOf<Design>(kit.designs).map(patchDesign);
+	if (rootDesigns.length > 0) {
+		return { ...kit, designs: rootDesigns } as Kit;
+	}
+	const typologies = sketchpadKitTypologyRows(kit).map((typology) => ({
+		...typology,
+		designs: sketchpadKitItemsOf<Design>(typology.designs).map(patchDesign),
+	}));
+	return { ...kit, typologies } as Kit;
+}
+
 function sketchpadReadEntityId(ref: unknown): string | null {
 	if (ref == null) return null;
 	if (typeof ref === "string") return ref;
@@ -14551,8 +14606,12 @@ function buildSketchpadInspectionPanelBody(ctx: WindowBodyViewContext): UiTreeNo
 				id: "sketchpad.inspection.connection.gap",
 				label: "Gap",
 				child: {
-					type: "text",
-					value: gapUniform ? String(gaps[0] ?? 0) : "Mixed",
+					type: "input",
+					id: "sketchpad.inspection.connection.gap.input",
+					inputKind: "number",
+					value: gapUniform ? String(gaps[0] ?? 0) : "",
+					placeholder: gapUniform ? undefined : "Mixed",
+					onChange: sketchpadShellCmd("patchRouteConnections", { kitId, designId, connectionIds: selection.connectionIds, field: "gap" }),
 				},
 			});
 		}
@@ -14579,17 +14638,46 @@ function buildSketchpadInspectionPanelBody(ctx: WindowBodyViewContext): UiTreeNo
 		});
 	}
 	if (typeId && selection.pieceIds.length === 0 && selection.connectionIds.length === 0 && selection.kitWiresNodeIds.length === 0) {
-		const type = findTypeInKit(kit, typeId);
+		const chain = sketchpadTypeInheritanceChain(kit, typeId);
+		const ownType = chain[0];
+		const ownFields: UiNode[] = [
+			{
+				type: "field",
+				id: "sketchpad.inspection.type.name",
+				label: "Name",
+				child: { type: "text", value: ownType?.name ?? typeId },
+			},
+			{
+				type: "field",
+				id: "sketchpad.inspection.type.description",
+				label: "Description",
+				child: { type: "text", value: ownType?.description ?? "" },
+			},
+			{
+				type: "field",
+				id: "sketchpad.inspection.type.representations",
+				label: "Representations",
+				child: { type: "text", value: String(ownType?.representations?.length ?? 0) },
+			},
+		];
 		children.push({
 			type: "section",
 			id: "sketchpad.inspection.type",
-			label: "Type",
-			children: [
-				{ type: "text", value: type?.name ?? typeId },
-				{ type: "text", value: type?.description ?? "" },
-				{ type: "text", value: `${type?.representations?.length ?? 0} representation(s)` },
-			],
+			label: ownType?.name ?? typeId,
+			children: ownFields,
 		});
+		for (const [index, ancestor] of chain.slice(1).entries()) {
+			children.push({
+				type: "section",
+				id: `sketchpad.inspection.type.ancestor.${index}`,
+				label: `Inherited · ${ancestor.name ?? ancestor.id}`,
+				children: [
+					{ type: "text", value: ancestor.description ?? "" },
+					{ type: "text", value: `${ancestor.representations?.length ?? 0} representation(s)` },
+					{ type: "text", value: `${(ancestor as { connectors?: readonly unknown[] }).connectors?.length ?? 0} connector(s)` },
+				],
+			});
+		}
 	}
 	if (qualityId && selection.pieceIds.length === 0 && selection.connectionIds.length === 0) {
 		const quality = findQualityInKit(kit, qualityId);
@@ -15471,6 +15559,21 @@ export class SketchpadShellController extends VirtualFileSystemController {
 						if (!result.ok) console.error("[compose.sketchpad] patchRoutePieces failed:", result.error?.message);
 					})
 					.catch((error) => console.error("[compose.sketchpad] patchRoutePieces failed:", error));
+				break;
+			}
+			case "patchRouteConnections": {
+				const payload = args as {
+					kitId: string;
+					designId: string;
+					connectionIds: readonly string[];
+					field: "gap";
+					value?: unknown;
+				};
+				if (!payload.kitId || !payload.designId || !payload.connectionIds.length || payload.field !== "gap") break;
+				const store = this.getKitStore(payload.kitId);
+				if (!store) break;
+				const current = store.getSnapshot().kit;
+				store.replaceKit(sketchpadPatchRouteConnectionsInKit(current, payload.designId, payload.connectionIds, payload.field, payload.value));
 				break;
 			}
 			case "closeKit": {
@@ -16930,6 +17033,46 @@ if (import.meta.vitest) {
 			const tree = buildSketchpadInspectionPanelBody({ platform, windowKindId: "vfs", bus: platform.commandBus });
 			const text = JSON.stringify(tree);
 			expect(text).toContain("Column");
+			ctrl.dispose();
+		});
+
+		it("batch-edits connection gap for selected connections", async () => {
+			const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+			const designId = "66666666-7777-8888-9999-aaaaaaaaaaaa";
+			const connectionA = "11111111-2222-3333-4444-555555555555";
+			const connectionB = "22222222-3333-4444-5555-666666666666";
+			const platform = await buildSketchpadPlatform();
+			const ctrl = getSketchpadShellController()!;
+			ctrl.registerKitStore(
+				kitId,
+				new InMemoryComposeKitStore({
+					id: kitId,
+					name: "Kit",
+					designs: [
+						{
+							id: designId,
+							name: "Layout",
+							connections: [
+								{ id: connectionA, gap: 1 },
+								{ id: connectionB, gap: 2 },
+							],
+						},
+					],
+				} as Kit),
+			);
+			ctrl.navigateTo(`/kits/${kitId}/design/${designId}`);
+			platform.uri = `/kits/${kitId}/design/${designId}`;
+			ctrl.setRouteSelection({ pieceIds: [], connectionIds: [connectionA, connectionB], kitWiresNodeIds: [], kitWiresHoveredNodeId: null });
+			const tree = buildSketchpadInspectionPanelBody({ platform, windowKindId: "design", bus: platform.commandBus });
+			const gapField = tree.sections
+				.flatMap((section) => section.items)
+				.find((item) => item.id === "sketchpad.inspection.connection.gap");
+			expect(gapField?.control?.type).toBe("input");
+			expect(gapField?.control?.onChange?.command).toBe("patchRouteConnections");
+			ctrl.run("patchRouteConnections", { kitId, designId, connectionIds: [connectionA, connectionB], field: "gap", value: 5 });
+			const design = findDesignInKit(ctrl.getKitStore(kitId)!.getSnapshot().kit, designId);
+			const gaps = ((design as { connections?: readonly { gap?: number }[] }).connections ?? []).map((row) => row.gap);
+			expect(gaps).toEqual([5, 5]);
 			ctrl.dispose();
 		});
 	});

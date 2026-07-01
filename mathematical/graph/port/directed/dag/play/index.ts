@@ -20,11 +20,16 @@ import {
   FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
   FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
   uiDeclarativeSectionsToTree,
+  UI_INSPECTOR_MIXED_PLACEHOLDER,
+  uiInspectorGroupsToTree,
+  uiInspectorMixedNumber,
+  uiInspectorMixedText,
+  uiInspectorReadonlyField,
+  type UiInspectorFieldGroup,
   type CommandDescriptor,
   type WindowBodyViewContext,
   type WindowEngagement,
   type UiNode,
-  type UiSectionNode,
   type UiTreeItemNode,
   type UiTreeSectionNode,
 } from "@semio-tech/framework-playground-core";
@@ -168,10 +173,74 @@ export function buildDagPlayCatalogueTree(): UiNode {
   };
 }
 
-function dagPlayInspectorNodeFields(node: DagNodeV1): UiNode[] {
-  const nodeId = node.id;
-  const fields: UiNode[] = [
-    {
+function dagPlayInspectorPatch(nodeIds: readonly string[], field: string) {
+  return dagPlayCmd("patchDagNodes", { nodeIds, field });
+}
+
+function dagPlayInspectorNumberField(nodeIds: readonly string[], fieldId: string, label: string, values: readonly number[], field: string): UiNode {
+  const mixed = uiInspectorMixedNumber(values);
+  return {
+    type: "field",
+    id: fieldId,
+    label,
+    child: {
+      type: "input",
+      id: `${fieldId}.input`,
+      inputKind: "number",
+      value: mixed.uniform ? String(mixed.value) : "",
+      placeholder: mixed.uniform ? undefined : UI_INSPECTOR_MIXED_PLACEHOLDER,
+      onChange: dagPlayInspectorPatch(nodeIds, field),
+    },
+  };
+}
+
+function dagPlayInspectorTextField(nodeIds: readonly string[], fieldId: string, label: string, values: readonly string[], field: string): UiNode {
+  const mixed = uiInspectorMixedText(values);
+  return {
+    type: "field",
+    id: fieldId,
+    label,
+    child: {
+      type: "input",
+      id: `${fieldId}.input`,
+      inputKind: "text",
+      value: mixed.value,
+      placeholder: mixed.placeholder,
+      commit: "blur",
+      onChange: dagPlayInspectorPatch(nodeIds, field),
+    },
+  };
+}
+
+function dagPlayInspectorKindGroup(kind: DagNodeV1["kind"], nodes: readonly DagNodeV1[]): UiInspectorFieldGroup | null {
+  if (!nodes.length) return null;
+  const nodeIds = nodes.map((entry) => entry.id);
+  const fields: UiNode[] = [];
+  if (kind === "slider") {
+    fields.push(
+      dagPlayInspectorNumberField(nodeIds, "dag-play-inspector.slider-value", "Value", nodes.map((entry) => (entry.kind === "slider" ? entry.value : 0)), "value"),
+      dagPlayInspectorNumberField(nodeIds, "dag-play-inspector.slider-min", "Min", nodes.map((entry) => (entry.kind === "slider" ? entry.min : 0)), "min"),
+      dagPlayInspectorNumberField(nodeIds, "dag-play-inspector.slider-max", "Max", nodes.map((entry) => (entry.kind === "slider" ? entry.max : 0)), "max"),
+    );
+  }
+  if (kind === "select") {
+    fields.push(
+      dagPlayInspectorNumberField(nodeIds, "dag-play-inspector.select-index", "Selected option", nodes.map((entry) => (entry.kind === "select" ? entry.selected : 0)), "selected"),
+    );
+  }
+  if (!fields.length) return null;
+  return { id: `dag-play-inspector.kind.${kind}`, label: kind, fields };
+}
+
+function dagPlayInspectorBaseGroup(nodes: readonly DagNodeV1[]): UiInspectorFieldGroup {
+  const nodeIds = nodes.map((entry) => entry.id);
+  const names = nodes.map((entry) => entry.name);
+  const kinds = nodes.map((entry) => entry.kind);
+  const kindMixed = uiInspectorMixedText(kinds);
+  const fields: UiNode[] = [];
+  if (nodeIds.length === 1) {
+    const nodeId = nodeIds[0]!;
+    fields.push({
       type: "field",
       id: "dag-play-inspector.id",
       label: "Id",
@@ -183,81 +252,19 @@ function dagPlayInspectorNodeFields(node: DagNodeV1): UiNode[] {
         commit: "blur",
         onChange: dagPlayCmd("renameDagNode", { oldId: nodeId }),
       },
-    },
-    {
-      type: "field",
-      id: "dag-play-inspector.name",
-      label: "Name",
-      child: {
-        type: "input",
-        id: "dag-play-inspector.name.input",
-        inputKind: "text",
-        value: node.name,
-        onChange: dagPlayCmd("patchDagNode", { nodeId, field: "name" }),
-      },
-    },
-    {
-      type: "field",
-      id: "dag-play-inspector.kind",
-      label: "Kind",
-      child: { type: "text", value: node.kind },
-    },
-  ];
-  if (node.kind === "slider") {
-    fields.push(
-      {
-        type: "field",
-        id: "dag-play-inspector.slider-value",
-        label: "Value",
-        child: {
-          type: "input",
-          id: "dag-play-inspector.slider-value.input",
-          inputKind: "number",
-          value: String(node.value),
-          onChange: dagPlayCmd("patchDagNode", { nodeId, field: "value" }),
-        },
-      },
-      {
-        type: "field",
-        id: "dag-play-inspector.slider-min",
-        label: "Min",
-        child: {
-          type: "input",
-          id: "dag-play-inspector.slider-min.input",
-          inputKind: "number",
-          value: String(node.min),
-          onChange: dagPlayCmd("patchDagNode", { nodeId, field: "min" }),
-        },
-      },
-      {
-        type: "field",
-        id: "dag-play-inspector.slider-max",
-        label: "Max",
-        child: {
-          type: "input",
-          id: "dag-play-inspector.slider-max.input",
-          inputKind: "number",
-          value: String(node.max),
-          onChange: dagPlayCmd("patchDagNode", { nodeId, field: "max" }),
-        },
-      },
-    );
-  }
-  if (node.kind === "select") {
-    fields.push({
-      type: "field",
-      id: "dag-play-inspector.select-index",
-      label: "Selected option",
-      child: {
-        type: "input",
-        id: "dag-play-inspector.select-index.input",
-        inputKind: "number",
-        value: String(node.selected),
-        onChange: dagPlayCmd("patchDagNode", { nodeId, field: "selected" }),
-      },
     });
+  } else {
+    fields.push(uiInspectorReadonlyField("dag-play-inspector.id", "Id", `${nodeIds.length} selected`));
   }
-  return fields;
+  fields.push(
+    dagPlayInspectorTextField(nodeIds, "dag-play-inspector.name", "Name", names, "name"),
+    uiInspectorReadonlyField(
+      "dag-play-inspector.kind",
+      "Kind",
+      kindMixed.uniform ? (kinds[0] ?? "") : (kindMixed.placeholder ?? UI_INSPECTOR_MIXED_PLACEHOLDER),
+    ),
+  );
+  return { id: "dag-play-inspector.base", label: "Node", fields };
 }
 
 export function buildDagPlayInspectorTree(fixtureJson: string, selectedNodeIds: readonly string[]): UiNode {
@@ -277,30 +284,23 @@ export function buildDagPlayInspectorTree(fixtureJson: string, selectedNodeIds: 
       },
     ]);
   }
-  if (selectedNodeIds.length > 1) {
-    return uiDeclarativeSectionsToTree([
-      {
-        type: "section",
-        id: "dag-play-inspector.multi",
-        label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-        children: [{ type: "text", value: `${selectedNodeIds.length} nodes selected` }],
-      },
-    ]);
-  }
-  const node = fixture.nodes.find((entry) => entry.id === selectedNodeIds[0]);
-  if (!node) {
+  const nodes = selectedNodeIds
+    .map((id) => fixture.nodes.find((entry) => entry.id === id))
+    .filter((node): node is DagNodeV1 => Boolean(node));
+  if (!nodes.length) {
     return uiDeclarativeSectionsToTree([
       { type: "section", id: "dag-play-inspector.missing", label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, children: [{ type: "text", value: "Node not found" }] },
     ]);
   }
-  return uiDeclarativeSectionsToTree([
-    {
-      type: "section",
-      id: "dag-play-inspector.node",
-      label: node.name || node.id,
-      children: dagPlayInspectorNodeFields(node),
-    },
-  ] as readonly UiSectionNode[]);
+  const groups: UiInspectorFieldGroup[] = [];
+  const kinds = [...new Set(nodes.map((entry) => entry.kind))];
+  for (const kind of kinds) {
+    const kindNodes = nodes.filter((entry) => entry.kind === kind);
+    const kindGroup = dagPlayInspectorKindGroup(kind, kindNodes);
+    if (kindGroup) groups.push(kindGroup);
+  }
+  groups.push(dagPlayInspectorBaseGroup(nodes));
+  return uiInspectorGroupsToTree(groups);
 }
 // #endregion 🔖DagPlayPanels
 
@@ -572,6 +572,32 @@ export class DagPlayController extends Controller {
       }
       return;
     }
+    if (command === "patchDagNodes") {
+      const nodeIds = (Array.isArray((args as { nodeIds?: string[] }).nodeIds) ? (args as { nodeIds?: string[] }).nodeIds : []).map(String).filter(Boolean);
+      const field = (args as { field?: string }).field;
+      const value = (args as { value?: unknown }).value ?? (args as { pressed?: boolean }).pressed;
+      if (!nodeIds.length || typeof field !== "string") return;
+      let next = this.projection();
+      for (const nodeId of nodeIds) {
+        const fixture = next;
+        const nodes = fixture.nodes.map((node) => {
+          if (node.id !== nodeId) return node;
+          if (field === "value" || field === "min" || field === "max" || field === "step" || field === "selected") {
+            const numeric = typeof value === "number" ? value : Number(value);
+            if (!Number.isFinite(numeric)) return node;
+            return { ...node, [field]: numeric } as DagNodeV1;
+          }
+          if (typeof value !== "string") return node;
+          return { ...node, [field]: value } as DagNodeV1;
+        });
+        next = { ...fixture, nodes };
+      }
+      this.commitFixture(next);
+      this.interactionRevision += 1;
+      this.notifySnapshot();
+      this.emit();
+      return;
+    }
     if (command === "setLodMode") {
       const { value, instanceId } = args as { value?: string; instanceId?: string };
       const scopeId = instanceId ?? DAG_PLAY_WINDOW_KIND_ID;
@@ -690,6 +716,31 @@ if (import.meta.vitest) {
       ctrl.run("setSelection", { ids: ["slider"] });
       expect(ctrl.getSelectedNodeIds()).toEqual(["slider"]);
       expect(ctrl.getInteractionRevision()).toBeGreaterThan(0);
+    });
+
+    it("inspector tree exposes slider fields for single selection", () => {
+      const tree = buildDagPlayInspectorTree(DAG_PLAY_DEFAULT_FIXTURE_JSON, ["slider"]);
+      const serialized = JSON.stringify(tree);
+      expect(serialized).toContain("Value");
+      expect(serialized).toContain("patchDagNodes");
+    });
+
+    it("batch-patches shared fields across multiple nodes", () => {
+      const bus = new CommandBus();
+      const ctrl = new DagPlayController(bus, () => {});
+      const fixture = parseDagPlayFixtureJson(DAG_PLAY_DEFAULT_FIXTURE_JSON);
+      if (!fixture) return;
+      const baseSlider = fixture.nodes.find((entry) => entry.kind === "slider");
+      if (!baseSlider || baseSlider.kind !== "slider") return;
+      const secondSlider = { ...baseSlider, id: "slider-copy" };
+      const expanded = { ...fixture, nodes: [...fixture.nodes, secondSlider] };
+      ctrl.run("setFixtureJson", { json: dagFixtureToJson(expanded) });
+      ctrl.run("patchDagNodes", { nodeIds: [baseSlider.id, secondSlider.id], field: "value", value: 5 });
+      const updated = parseDagPlayFixtureJson(ctrl.getFixtureJson());
+      for (const id of [baseSlider.id, secondSlider.id]) {
+        const node = updated?.nodes.find((entry) => entry.id === id);
+        expect(node?.kind === "slider" ? node.value : undefined).toBe(5);
+      }
     });
   });
 }

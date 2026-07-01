@@ -201,7 +201,8 @@ export {
     getSidePanelBodyFactory,
     getWindowBodyFactory, playgroundTreePanelRootItems, registerSidePanelBody,
     registerWindowBody,
-    resolveAppState
+    resolveAppState,
+    uiInspectorAllEqual,
 } from "@semio-tech/framework-playground-core";
 
 export { uiTreeNodeToTreePanelConfig, useControllerStore, useStore } from "@semio-tech/framework-platform-renderer-react";
@@ -4344,14 +4345,6 @@ function findHandle(fixture: Puzzle2dFixtureV1, handleId: string): Puzzle2dFixtu
   return undefined;
 }
 
-function allEqual<T>(values: T[]): boolean {
-  if (values.length === 0) {
-    return true;
-  }
-  const first = values[0];
-  return values.every((v) => v === first);
-}
-
 function listHandleIds(fixture: Puzzle2dFixtureV1): string[] {
   const out: string[] = [];
   for (const node of fixture.nodes) {
@@ -4409,15 +4402,15 @@ export function buildPuzzle2dPlayInspectorTree(fixture: Puzzle2dFixtureV1, selec
   if (nodeIds.length > 0) {
     const targets = nodeIds.map((id) => findNode(fixture, id)).filter((n): n is Puzzle2dFixtureNodeV1 => Boolean(n));
     const textValues = targets.map((n) => puzzle2dFixtureNodeCaption(n) ?? '');
-    const textUniform = allEqual(textValues);
+    const textUniform = uiInspectorAllEqual(textValues);
     const nodeKinds = targets.map((n) => n.nodeKind ?? '');
-    const nodeKindUniform = allEqual(nodeKinds);
+    const nodeKindUniform = uiInspectorAllEqual(nodeKinds);
     const iconKinds = targets.map((n) => n.iconKind ?? '');
-    const iconKindUniform = allEqual(iconKinds);
+    const iconKindUniform = uiInspectorAllEqual(iconKinds);
     const xs = targets.map((n) => n.x);
     const ys = targets.map((n) => n.y);
-    const xUniform = allEqual(xs);
-    const yUniform = allEqual(ys);
+    const xUniform = uiInspectorAllEqual(xs);
+    const yUniform = uiInspectorAllEqual(ys);
     sections.push({
       type: 'section',
       id: 'puzzle-2d-play-inspector-nodes',
@@ -4496,17 +4489,17 @@ export function buildPuzzle2dPlayInspectorTree(fixture: Puzzle2dFixtureV1, selec
   if (handleIds.length > 0) {
     const handles = handleIds.map((id) => findHandle(fixture, id)).filter((h): h is Puzzle2dFixtureHandleV1 => Boolean(h));
     const handleKinds = handles.map((h) => h.handleKind);
-    const handleKindUniform = allEqual(handleKinds);
+    const handleKindUniform = uiInspectorAllEqual(handleKinds);
     const angles = handles.map((h) => h.angle);
-    const angleUniform = allEqual(angles);
+    const angleUniform = uiInspectorAllEqual(angles);
     const angleValue = angleUniform ? angles[0]! : 0;
     const radii = handles.map((h) => h.radius ?? 8);
-    const radiusUniform = allEqual(radii);
+    const radiusUniform = uiInspectorAllEqual(radii);
     const iconKinds = handles.map((h) => h.iconKind ?? '');
-    const iconKindUniform = allEqual(iconKinds);
+    const iconKindUniform = uiInspectorAllEqual(iconKinds);
     const ringParentNodes = handles.map((h) => findHandleOwner(fixture, h.id)?.node).filter((n): n is Puzzle2dFixtureNodeV1 => Boolean(n));
     const ringParentShapes = ringParentNodes.map((n) => n.shape ?? 'circle');
-    const ringParentShapeUniform = allEqual(ringParentShapes);
+    const ringParentShapeUniform = uiInspectorAllEqual(ringParentShapes);
     const ringParentNode = ringParentShapeUniform ? ringParentNodes[0] : undefined;
     const ringEnabled = angleUniform && ringParentNode !== undefined;
     const ringOrbT = ringEnabled ? puzzle2dHandleAngleToRingT(ringParentNode, angleValue) : 0;
@@ -4590,10 +4583,10 @@ export function buildPuzzle2dPlayInspectorTree(fixture: Puzzle2dFixtureV1, selec
     const edges = edgeIds.map((id) => findEdge(fixture, id)).filter((e): e is Puzzle2dFixtureEdgeV1 => Boolean(e));
     const sources = edges.map((e) => e.source);
     const targets = edges.map((e) => e.target);
-    const sourceUniform = allEqual(sources);
-    const targetUniform = allEqual(targets);
+    const sourceUniform = uiInspectorAllEqual(sources);
+    const targetUniform = uiInspectorAllEqual(targets);
     const edgeKinds = edges.map((e) => e.edgeKind ?? '');
-    const edgeKindUniform = allEqual(edgeKinds);
+    const edgeKindUniform = uiInspectorAllEqual(edgeKinds);
     const handleOptions = PUZZLE_2D_PLAY_IS_WIRES ? fixture.nodes.map((node) => node.id) : listHandleIds(fixture);
     const endpointItems = handleOptions.map((hid) => ({
       value: hid,
@@ -4602,7 +4595,7 @@ export function buildPuzzle2dPlayInspectorTree(fixture: Puzzle2dFixtureV1, selec
     const edgeFields: UiNode[] = [];
     if (PUZZLE_2D_PLAY_IS_WIRES) {
       const wiresRelationshipKinds = edges.map((edge) => wiresPlayRelationshipKindDisplayName(edge.id) ?? '');
-      const wiresRelationshipKindUniform = allEqual(wiresRelationshipKinds);
+      const wiresRelationshipKindUniform = uiInspectorAllEqual(wiresRelationshipKinds);
       edgeFields.push({
         type: 'field',
         id: 'puzzle-2d-play.inspector.edge.relationship-kind',
@@ -6965,6 +6958,7 @@ export function bootDagPlay(playground: Playground, rootId = "root"): void {
 
 //#region 🔖TrinityPlayHost
 import {
+  TRINITY_JACK_PLAY_CONTROLLER_ID,
   TRINITY_JACK_PLAY_APP_ID,
   TRINITY_JACK_PLAY_CATALOGUE_TAB_ID,
   TRINITY_JACK_PLAY_DEFAULT_FIXTURE_JSON,
@@ -6981,6 +6975,7 @@ import {
   registerTrinityJackPlayDeclarativeBodies,
 } from "@semio-tech/trinity-jack-play";
 import {
+  TRINITY_REWRITE_PLAY_CONTROLLER_ID,
   TRINITY_REWRITE_PLAY_APP_ID,
   TRINITY_REWRITE_PLAY_SURFACE_ID_AFTER,
   TRINITY_REWRITE_PLAY_SURFACE_ID_BEFORE,
@@ -7349,7 +7344,11 @@ class TrinityJackInspectionPanelDefinition extends PureSidePanelTabDefinition {
         const ctrl = trinityJackControllerRef.current;
         const bus = new CommandBus();
         return uiTreeNodeToTreePanelConfig(
-          buildTrinityPlayInspectorTree(ctrl?.getFixtureJson() ?? TRINITY_JACK_PLAY_DEFAULT_FIXTURE_JSON, ctrl?.getSelectedNodeIds() ?? []),
+          buildTrinityPlayInspectorTree(
+            ctrl?.getFixtureJson() ?? TRINITY_JACK_PLAY_DEFAULT_FIXTURE_JSON,
+            ctrl?.getSelectedNodeIds() ?? [],
+            TRINITY_JACK_PLAY_CONTROLLER_ID,
+          ),
           bus,
         );
       }),
@@ -7402,7 +7401,11 @@ class TrinityRewriteInspectionPanelDefinition extends PureSidePanelTabDefinition
         const ctrl = trinityRewriteControllerRef.current;
         const bus = new CommandBus();
         return uiTreeNodeToTreePanelConfig(
-          buildTrinityPlayInspectorTree(ctrl?.getBeforeFixtureJson() ?? TRINITY_DEFAULT_FIXTURE_JSON, ctrl?.getSelectedNodeIds() ?? []),
+          buildTrinityPlayInspectorTree(
+            ctrl?.getBeforeFixtureJson() ?? TRINITY_DEFAULT_FIXTURE_JSON,
+            ctrl?.getSelectedNodeIds() ?? [],
+            TRINITY_REWRITE_PLAY_CONTROLLER_ID,
+          ),
           bus,
         );
       }),
@@ -8593,7 +8596,7 @@ class ShootingPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
 				if (!fixture) {
 					return [{ id: "shooting-play-hierarchy.loading", label: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, items: [{ id: "loading", label: "…" }] }];
 				}
-				const treeNode = buildShootingPlayHierarchyTree(fixture, ctrl?.getSelectedId() ?? null, ctrl?.getSelectedKind() ?? null);
+				const treeNode = buildShootingPlayHierarchyTree(fixture, ctrl?.getSelectedShotIds() ?? [], ctrl?.getSelectedAssetIds() ?? []);
 				return uiTreeNodeToTreePanelConfig(treeNode, bus);
 			}),
 		};
@@ -8629,7 +8632,7 @@ class ShootingPlayInspectionPanelDefinition extends PureSidePanelTabDefinition {
 				if (!fixture) {
 					return [{ id: "shooting-play-inspector.loading", label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, items: [{ id: "loading", label: "…" }] }];
 				}
-				const treeNode = buildShootingPlayInspectorTree(fixture, ctrl?.getSelectedId() ?? null, ctrl?.getSelectedKind() ?? null);
+				const treeNode = buildShootingPlayInspectorTree(fixture, ctrl?.getSelectedShotIds() ?? [], ctrl?.getSelectedAssetIds() ?? []);
 				return uiTreeNodeToTreePanelConfig(treeNode, bus);
 			}),
 		};
@@ -10321,6 +10324,7 @@ import {
 	SEMIOS_PLAY_SURFACE_LAUNCHER,
 	SEMIOS_PLAY_SURFACE_MEDIA_GRAPH,
 	SemiosPlayController,
+	buildSemiosPlayInspectorTree,
 	registerSemiosPlayDeclarativeBodies,
 } from "@semio-tech/semios-play";
 import {
@@ -10439,7 +10443,11 @@ function SemiosMediaGraphSurfaceHost({ node: _node }: { readonly node: UiSemiosH
 	const activeInstanceId = ctrl?.getActiveInstanceId() ?? null;
 	const store = ctrl?.getStore();
 	const onSelect = reactHostPort.useCallback((instanceId: string) => {
-		semiosPlayControllerRef.current?.run("selectInstance", { instanceId });
+		const current = semiosPlayControllerRef.current;
+		if (!current) return;
+		const node = current.getStore().projection().mediaGraph.nodes.find((row) => row.instanceId === instanceId);
+		current.run("setMediaNodeSelection", { nodeIds: node ? [node.id] : [] });
+		current.run("selectInstance", { instanceId });
 	}, []);
 	return (
 		<SemiosMediaGraphCanvas
@@ -10718,12 +10726,43 @@ function SemiosSemiosSurfaceHost({ node }: { readonly node: UiSemiosHostSurfaceN
 
 function SemiosPlayInner({ playground }: { readonly playground: Playground }): ReactElement {
 	const ctrl = useSemiosPlayController(playground.runtime);
+	const generation = ctrl?.getStore().getGeneration() ?? 0;
+	void generation;
+	const bus = playground.runtime.commandBus;
+	const detailTabs = reactHostPort.useMemo(
+		() =>
+			ctrl
+				? [
+						new SemiosPlayInspectionPanelDefinition(() => (ctrl ? buildSemiosPlayInspectorTree(ctrl) : uiDeclarativeSectionsToTree([])), bus).resolveTab(),
+					]
+				: [],
+		[ctrl, bus, generation],
+	);
 	if (!ctrl) return <PlaygroundView runtime={playground.runtime} defaultAppId={SEMIOS_PLAY_APP_ID} />;
 	return (
 		<SemiosStudioProvider store={ctrl.getStore()}>
-			<PlaygroundView runtime={playground.runtime} defaultAppId={SEMIOS_PLAY_APP_ID} />
+			<PlaygroundView runtime={playground.runtime} defaultAppId={SEMIOS_PLAY_APP_ID} augmentPanelTabs={{ details: detailTabs }} />
 		</SemiosStudioProvider>
 	);
+}
+
+class SemiosPlayInspectionPanelDefinition extends PureSidePanelTabDefinition {
+	constructor(
+		private readonly buildTree: () => UiTreeNode,
+		private readonly commandBus: CommandBus,
+	) {
+		super();
+	}
+
+	buildTab(): SidePanelTabConfig {
+		return {
+			id: "semios-play-inspector",
+			icon: createIconComponent(FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID),
+			name: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+			order: 0,
+			tree: new CallbackTreePanelDefinition(() => uiTreeNodeToTreePanelConfig(this.buildTree(), this.commandBus)),
+		};
+	}
 }
 
 export function registerSemiosPlaySurfaceHosts(): void {

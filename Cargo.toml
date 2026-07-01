@@ -1,5 +1,12 @@
 [workspace]
 members = [
+    "framework/rs",
+    "semios/rs",
+    "draw/rs",
+    "forms/rs",
+    "shooting/rs",
+    "cad/rs",
+    "framework/product/presentation/rs",
     "ui/styling/rs",
     "infinite/cavas/rs",
     "mathematical/core",

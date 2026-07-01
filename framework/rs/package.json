@@ -1,0 +1,8 @@
+{
+  "name": "@semio-tech/framework-vcs-rs",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./pkg/framework_vcs.js"
+  }
+}
