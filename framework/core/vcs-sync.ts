@@ -41,7 +41,7 @@ export interface DocumentVcsEnvelope<TProjection, TOp> {
 }
 
 export type DocumentVcsCommand<TOp> =
-	| { readonly kind: "apply"; readonly forwards: readonly TOp[]; readonly backwards: readonly TOp[]; readonly description?: string }
+	| { readonly kind: "apply"; readonly operations: readonly TOp[]; readonly description?: string }
 	| { readonly kind: "undo" }
 	| { readonly kind: "redo" }
 	| { readonly kind: "commitCheckpoint"; readonly message?: string }
@@ -51,6 +51,7 @@ export type DocumentVcsCommand<TOp> =
 export interface DocumentVcsStoreOptions<TProjection, TOp> {
 	readonly envelope: DocumentVcsEnvelope<TProjection, TOp>;
 	readonly applyOp: (projection: TProjection, operation: TOp) => TProjection;
+	readonly backwardsOp?: (projection: TProjection, operation: TOp) => readonly TOp[];
 	readonly cloneProjection?: (projection: TProjection) => TProjection;
 	readonly createId?: (prefix?: string) => string;
 }
@@ -99,6 +100,7 @@ export function materializeDocumentProjection<TProjection, TOp>(
 export class DocumentVcsStore<TProjection, TOp> {
 	private envelope: DocumentVcsEnvelope<TProjection, TOp>;
 	private readonly applyOp: (projection: TProjection, operation: TOp) => TProjection;
+	private readonly backwardsOp?: (projection: TProjection, operation: TOp) => readonly TOp[];
 	private readonly cloneProjection: (projection: TProjection) => TProjection;
 	private readonly createId: (prefix?: string) => string;
 	private appliedChangeIds: string[] = [];
@@ -109,6 +111,7 @@ export class DocumentVcsStore<TProjection, TOp> {
 	constructor(options: DocumentVcsStoreOptions<TProjection, TOp>) {
 		this.envelope = options.envelope;
 		this.applyOp = options.applyOp;
+		this.backwardsOp = options.backwardsOp;
 		this.cloneProjection = options.cloneProjection ?? defaultClone;
 		this.createId = options.createId ?? createDocumentVcsId;
 	}
@@ -202,11 +205,21 @@ export class DocumentVcsStore<TProjection, TOp> {
 			this.bump();
 			return;
 		}
-		if (command.kind !== "apply" || command.forwards.length === 0) return;
+		if (command.kind !== "apply" || command.operations.length === 0) return;
+		let projection = this.projection();
+		const forwards = [...command.operations];
+		const backwards: TOp[] = [];
+		for (const operation of command.operations) {
+			if (this.backwardsOp) {
+				const back = [...this.backwardsOp(projection, operation)].reverse();
+				backwards.push(...back);
+			}
+			projection = this.applyOp(projection, operation);
+		}
 		const change: DocumentChange<TOp> = {
 			id: this.createId("change"),
-			forwards: command.forwards,
-			backwards: command.backwards,
+			forwards,
+			backwards,
 			description: command.description,
 			savedAt: new Date().toISOString(),
 		};
@@ -225,24 +238,9 @@ export class DocumentVcsStore<TProjection, TOp> {
 	}
 }
 
-export interface JsonReplaceOp<TProjection> {
-	readonly op: "replaceProjection";
-	readonly projection: TProjection;
-}
-
-export function applyJsonReplaceOp<TProjection>(projection: TProjection, operation: JsonReplaceOp<TProjection>): TProjection {
-	void projection;
-	return operation.projection;
-}
-
-export function recordJsonProjectionChange<TProjection>(
-	store: DocumentVcsStore<TProjection, JsonReplaceOp<TProjection>>,
-	next: TProjection,
+export function recordProjectionChange<TProjection, TOp>(
+	store: DocumentVcsStore<TProjection, TOp>,
+	operations: readonly TOp[],
 ): void {
-	const previous = store.projection();
-	store.dispatch({
-		kind: "apply",
-		forwards: [{ op: "replaceProjection", projection: next }],
-		backwards: [{ op: "replaceProjection", projection: previous }],
-	});
+	store.dispatch({ kind: "apply", operations });
 }

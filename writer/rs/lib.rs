@@ -1,7 +1,7 @@
-//! ✍️ Infinite-canvas code editor engine on Vello/WebGPU.
+//! ✍️ Text editor engine on Vello/WebGPU.
 
 pub use infinite_cavas::{self as cavas, *};
-use cavas::camera::{camera_content_affine, screen_to_world, world_to_screen, Camera, Viewport};
+use cavas::camera::{Camera, Viewport};
 use cavas::text as canvas_text;
 use serde::Deserialize;
 use vello::kurbo::{Affine, Point, Rect};
@@ -71,12 +71,57 @@ impl WriterVelloTheme {
 }
 // #endregion 🔖Theme
 
-// #region 🔖EditorState
-const LINE_HEIGHT: f64 = 22.0;
-const GUTTER_WIDTH: f64 = 56.0;
+// #region 🔖EditorViewport
 const PAD_X: f64 = 12.0;
-const LINE_ORIGIN_X: f64 = GUTTER_WIDTH + PAD_X;
-const FONT_PX: f64 = 14.0;
+const PAD_Y: f64 = 8.0;
+const DEFAULT_GUTTER_WIDTH: f64 = 56.0;
+const DEFAULT_FONT_PX: f64 = 14.0;
+const DEFAULT_LINE_HEIGHT: f64 = 22.0;
+const DEFAULT_TAB_SIZE: usize = 2;
+
+fn editor_screen_to_world(camera: &Camera, p: Point) -> Point {
+    Point::new(p.x + camera.x, p.y + camera.y)
+}
+
+fn editor_world_to_screen(camera: &Camera, p: Point) -> Point {
+    Point::new(p.x - camera.x, p.y - camera.y)
+}
+
+fn editor_content_affine(camera: &Camera) -> Affine {
+    Affine::new([1.0, 0.0, 0.0, 1.0, -camera.x, -camera.y])
+}
+// #endregion 🔖EditorViewport
+
+// #region 🔖EditorState
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct EditorSettingsJson {
+    #[serde(default = "default_font_px")]
+    font_px: f64,
+    #[serde(default = "default_line_height")]
+    line_height: f64,
+    #[serde(default = "default_show_line_numbers")]
+    show_line_numbers: bool,
+    #[serde(default = "default_tab_size")]
+    tab_size: usize,
+}
+
+fn default_font_px() -> f64 {
+    DEFAULT_FONT_PX
+}
+
+fn default_line_height() -> f64 {
+    DEFAULT_LINE_HEIGHT
+}
+
+fn default_show_line_numbers() -> bool {
+    true
+}
+
+fn default_tab_size() -> usize {
+    DEFAULT_TAB_SIZE
+}
 
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -152,8 +197,10 @@ pub struct WriterHost {
     hover_occurrences: Vec<ByteRangeJson>,
     selection_occurrences: Vec<ByteRangeJson>,
     extra_carets: Vec<usize>,
-    panning: bool,
-    pan_last: Option<Point>,
+    font_px: f64,
+    line_height: f64,
+    show_line_numbers: bool,
+    tab_size: usize,
     drag_selecting: bool,
     hover_token_start: Option<usize>,
     hover_token_end: Option<usize>,
@@ -182,8 +229,10 @@ impl WriterHost {
             hover_occurrences: Vec::new(),
             selection_occurrences: Vec::new(),
             extra_carets: Vec::new(),
-            panning: false,
-            pan_last: None,
+            font_px: DEFAULT_FONT_PX,
+            line_height: DEFAULT_LINE_HEIGHT,
+            show_line_numbers: true,
+            tab_size: DEFAULT_TAB_SIZE,
             drag_selecting: false,
             hover_token_start: None,
             hover_token_end: None,
@@ -198,6 +247,81 @@ impl WriterHost {
 
     pub fn set_caret_visible(&mut self, visible: bool) {
         self.caret_visible = visible;
+    }
+
+    pub fn set_editor_settings_json(&mut self, json: &str) {
+        let settings: EditorSettingsJson = serde_json::from_str(json).unwrap_or(EditorSettingsJson {
+            font_px: DEFAULT_FONT_PX,
+            line_height: DEFAULT_LINE_HEIGHT,
+            show_line_numbers: true,
+            tab_size: DEFAULT_TAB_SIZE,
+        });
+        self.font_px = settings.font_px.clamp(10.0, 28.0);
+        self.line_height = settings.line_height.clamp(16.0, 48.0);
+        self.show_line_numbers = settings.show_line_numbers;
+        self.tab_size = settings.tab_size.clamp(1, 8);
+        self.clamp_camera();
+    }
+
+    pub fn tab_insert_text(&self) -> String {
+        " ".repeat(self.tab_size)
+    }
+
+    fn gutter_width(&self) -> f64 {
+        if self.show_line_numbers {
+            DEFAULT_GUTTER_WIDTH
+        } else {
+            0.0
+        }
+    }
+
+    fn line_origin_x(&self) -> f64 {
+        self.gutter_width() + PAD_X
+    }
+
+    fn line_y(&self, line: usize) -> f64 {
+        PAD_Y + line as f64 * self.line_height + self.line_height * 0.75
+    }
+
+    fn line_top_y(&self, line: usize) -> f64 {
+        PAD_Y + line as f64 * self.line_height
+    }
+
+    fn content_height(&self, line_count: usize) -> f64 {
+        PAD_Y * 2.0 + line_count as f64 * self.line_height
+    }
+
+    fn gutter_number_x(&self, label: &str) -> f64 {
+        let advance = canvas_text::label_advance(label, self.font_px);
+        (self.gutter_width() - PAD_X * 0.75 - advance).max(4.0)
+    }
+
+    fn clamp_camera(&mut self) {
+        self.camera.x = 0.0;
+        self.camera.zoom = 1.0;
+        let line_count = self.text.matches('\n').count() + 1;
+        let content_h = self.content_height(line_count);
+        let view_h = self.viewport.height as f64;
+        let max_y = (content_h - view_h).max(0.0);
+        self.camera.y = self.camera.y.clamp(0.0, max_y);
+    }
+
+    fn scroll_caret_into_view(&mut self) {
+        let (line, _) = offset_line_col(&self.text, self.caret);
+        let caret_top = self.line_top_y(line);
+        let view_h = self.viewport.height as f64;
+        let top = self.camera.y;
+        let bottom = top + view_h - self.line_height;
+        if caret_top < top {
+            self.camera.y = caret_top;
+        } else if caret_top + self.line_height > bottom {
+            self.camera.y = (caret_top + self.line_height - view_h).max(0.0);
+        }
+        self.clamp_camera();
+    }
+
+    fn finish_caret_update(&mut self) {
+        self.scroll_caret_into_view();
     }
 
     pub fn anchor(&self) -> usize {
@@ -223,6 +347,7 @@ impl WriterHost {
             self.anchor = start;
             self.caret = end;
         }
+        self.finish_caret_update();
     }
 
     pub fn hover_token_range(&self) -> Option<(usize, usize)> {
@@ -275,6 +400,7 @@ impl WriterHost {
                     if span.kind != "atomic" && offset >= span.start && offset < span.end {
                         self.anchor = span.start;
                         self.caret = span.end;
+                        self.finish_caret_update();
                         return;
                     }
                 }
@@ -298,11 +424,12 @@ impl WriterHost {
         if let Some(span) = best {
             self.anchor = span.start;
             self.caret = span.end;
-            return;
+        } else {
+            let snapped = self.snap_offset_for_atomic(offset);
+            self.anchor = snapped;
+            self.caret = snapped;
         }
-        let snapped = self.snap_offset_for_atomic(offset);
-        self.anchor = snapped;
-        self.caret = snapped;
+        self.finish_caret_update();
     }
 
     pub fn selection_text(&self) -> String {
@@ -357,60 +484,48 @@ impl WriterHost {
         self.set_text(text);
     }
 
-    pub fn set_camera(&mut self, x: f64, y: f64, zoom: f64) {
-        self.camera.x = x;
+    pub fn set_camera(&mut self, _x: f64, y: f64, _zoom: f64) {
+        self.camera.x = 0.0;
         self.camera.y = y;
-        self.camera.zoom = zoom.max(0.1);
+        self.camera.zoom = 1.0;
+        self.clamp_camera();
     }
 
     pub fn camera_json(&self) -> String {
-        serde_json::json!({ "x": self.camera.x, "y": self.camera.y, "zoom": self.camera.zoom }).to_string()
+        serde_json::json!({ "x": 0, "y": self.camera.y, "zoom": 1 }).to_string()
     }
 
     pub fn set_size(&mut self, width: u32, height: u32, dpr: f64) {
         self.viewport.width = width.max(1);
         self.viewport.height = height.max(1);
         self.viewport.dpr = dpr.max(1.0);
+        self.clamp_camera();
     }
 
-    pub fn wheel_screen(&mut self, sx: f64, sy: f64, delta_y: f64) {
-        cavas::camera::wheel_screen(&mut self.camera, &self.viewport, sx, sy, delta_y);
+    pub fn wheel_scroll_screen(&mut self, delta_y: f64) {
+        self.camera.y = (self.camera.y + delta_y * 0.5).max(0.0);
+        self.clamp_camera();
     }
 
     pub fn pointer_down_screen(&mut self, sx: f64, sy: f64, button: i32) {
-        if button == 1 {
-            self.panning = true;
-            self.drag_selecting = false;
-            self.pan_last = Some(Point::new(sx, sy));
+        if button != 0 {
             return;
         }
-        if button == 0 {
-            self.drag_selecting = true;
-            let world = screen_to_world(&self.camera, &self.viewport, Point::new(sx, sy));
-            let offset = self.snap_offset_for_atomic(self.hit_test_offset(world));
-            self.caret = offset;
-            self.anchor = offset;
-            self.set_hover_at_offset(offset);
-        }
+        self.drag_selecting = true;
+        let world = editor_screen_to_world(&self.camera, Point::new(sx, sy));
+        let offset = self.snap_offset_for_atomic(self.hit_test_offset(world));
+        self.caret = offset;
+        self.anchor = offset;
+        self.set_hover_at_offset(offset);
     }
 
-    pub fn pointer_move_screen(&mut self, sx: f64, sy: f64, buttons: i32) {
-        if self.panning || (buttons & 4) != 0 {
-            if let Some(last) = self.pan_last {
-                let dx = (sx - last.x) / self.camera.zoom;
-                let dy = (sy - last.y) / self.camera.zoom;
-                self.camera.x -= dx;
-                self.camera.y -= dy;
-            }
-            self.pan_last = Some(Point::new(sx, sy));
-            return;
-        }
+    pub fn pointer_move_screen(&mut self, sx: f64, sy: f64, _buttons: i32) {
         if self.drag_selecting {
-            let world = screen_to_world(&self.camera, &self.viewport, Point::new(sx, sy));
+            let world = editor_screen_to_world(&self.camera, Point::new(sx, sy));
             self.caret = self.snap_offset_for_atomic(self.hit_test_offset(world));
             return;
         }
-        let world = screen_to_world(&self.camera, &self.viewport, Point::new(sx, sy));
+        let world = editor_screen_to_world(&self.camera, Point::new(sx, sy));
         self.set_hover_at_offset(self.hit_test_offset(world));
     }
 
@@ -422,9 +537,8 @@ impl WriterHost {
                 self.anchor = start;
                 self.caret = end;
             }
+            self.finish_caret_update();
         }
-        self.panning = false;
-        self.pan_last = None;
     }
 
     pub fn insert_text(&mut self, chunk: &str) {
@@ -454,6 +568,7 @@ impl WriterHost {
         self.text.replace_range(start..end, &insert);
         self.caret = start + insert.len();
         self.anchor = self.caret;
+        self.finish_caret_update();
     }
 
     fn should_prefix_auto_space(&self, offset: usize, chunk: &str) -> bool {
@@ -538,6 +653,7 @@ impl WriterHost {
         self.caret = offset_at_line_col(&self.text, line, 0);
         if !extend {
             self.anchor = self.caret;
+            self.finish_caret_update();
         }
     }
 
@@ -547,6 +663,7 @@ impl WriterHost {
         self.caret = offset_at_line_col(&self.text, line, line_len);
         if !extend {
             self.anchor = self.caret;
+            self.finish_caret_update();
         }
     }
 
@@ -557,6 +674,7 @@ impl WriterHost {
         self.caret = next;
         if !extend {
             self.anchor = self.caret;
+            self.finish_caret_update();
         }
     }
 
@@ -571,6 +689,7 @@ impl WriterHost {
         self.caret = next;
         if !extend {
             self.anchor = self.caret;
+            self.finish_caret_update();
         }
     }
 
@@ -583,6 +702,7 @@ impl WriterHost {
         }
         if !extend {
             self.anchor = self.caret;
+            self.finish_caret_update();
         }
     }
 
@@ -592,11 +712,12 @@ impl WriterHost {
         self.caret = offset_at_line_col(&self.text, (line + 1).min(max_line), col);
         if !extend {
             self.anchor = self.caret;
+            self.finish_caret_update();
         }
     }
 
     pub fn world_to_screen_json(&self, wx: f64, wy: f64) -> String {
-        let p = world_to_screen(&self.camera, &self.viewport, Point::new(wx, wy));
+        let p = editor_world_to_screen(&self.camera, Point::new(wx, wy));
         serde_json::json!({ "x": p.x, "y": p.y }).to_string()
     }
 
@@ -729,25 +850,27 @@ impl WriterHost {
         if start >= end {
             return;
         }
+        let origin_x = self.line_origin_x();
+        let font_px = self.font_px;
         let (s_line, s_byte) = offset_line_col(&self.text, start);
         let (e_line, e_byte) = offset_line_col(&self.text, end);
         if s_line == e_line {
             let line_text = self.text.split('\n').nth(s_line).unwrap_or("");
-            let y = s_line as f64 * LINE_HEIGHT + LINE_HEIGHT * 0.75;
-            let (x0, x1) = canvas_text::label_span_world_x(line_text, s_byte, e_byte, LINE_ORIGIN_X, FONT_PX);
+            let y = self.line_y(s_line);
+            let (x0, x1) = canvas_text::label_span_world_x(line_text, s_byte, e_byte, origin_x, font_px);
             self.fill_highlight_rect(scene, x0, x1, y, color);
             return;
         }
         for line in s_line..=e_line {
             let line_text = self.text.split('\n').nth(line).unwrap_or("");
-            let y = line as f64 * LINE_HEIGHT + LINE_HEIGHT * 0.75;
+            let y = self.line_y(line);
             let byte_start = if line == s_line { s_byte } else { 0 };
             let byte_end = if line == e_line {
                 e_byte
             } else {
                 line_text.len()
             };
-            let (x0, x1) = canvas_text::label_span_world_x(line_text, byte_start, byte_end, LINE_ORIGIN_X, FONT_PX);
+            let (x0, x1) = canvas_text::label_span_world_x(line_text, byte_start, byte_end, origin_x, font_px);
             self.fill_highlight_rect(scene, x0, x1, y, color);
         }
     }
@@ -758,7 +881,8 @@ impl WriterHost {
         if right <= left {
             return;
         }
-        let rect = Rect::new(left, y - LINE_HEIGHT * 0.8, right, y + LINE_HEIGHT * 0.2);
+        let lh = self.line_height;
+        let rect = Rect::new(left, y - lh * 0.8, right, y + lh * 0.2);
         scene.fill(vello::peniko::Fill::NonZero, Affine::IDENTITY, fill, None, &rect);
     }
 
@@ -768,21 +892,21 @@ impl WriterHost {
         if rel_y < 0.0 {
             return 0;
         }
-        let line = (rel_y / LINE_HEIGHT).floor().max(0.0) as usize;
+        let line = (rel_y / self.line_height).floor().max(0.0) as usize;
         let line_text = self.text.split('\n').nth(line).unwrap_or("");
-        let col = hit_byte_in_line(line_text, rel_x);
+        let col = hit_byte_in_line(line_text, rel_x, self.line_origin_x(), self.font_px);
         offset_at_line_col(&self.text, line, col)
     }
 
     pub fn hit_test_offset_screen(&self, sx: f64, sy: f64) -> usize {
-        let world = screen_to_world(&self.camera, &self.viewport, Point::new(sx, sy));
+        let world = editor_screen_to_world(&self.camera, Point::new(sx, sy));
         self.hit_test_offset(world)
     }
 
     /// @emoji 🎯 Returns pick-target rows at a screen point for DOM disambiguation menus.
     pub fn pick_targets_at_screen_json(&self, sx: f64, sy: f64) -> String {
         let offset = self.hit_test_offset_screen(sx, sy);
-        let (line, col) = offset_line_col(&self.text, offset);
+        let (line, _col) = offset_line_col(&self.text, offset);
         let mut rows = Vec::new();
         rows.push(serde_json::json!({
             "domain": "line",
@@ -817,6 +941,24 @@ impl WriterHost {
             &Rect::new(-10_000.0, -10_000.0, 10_000.0, 10_000.0),
         );
         let lines: Vec<&str> = if self.text.is_empty() { vec![""] } else { self.text.split('\n').collect() };
+        let content_h = self.content_height(lines.len());
+        if self.show_line_numbers {
+            let gutter_bg = self.theme.grid_minor_stroke.multiply_alpha(0.12);
+            world_scene.fill(
+                vello::peniko::Fill::NonZero,
+                Affine::IDENTITY,
+                gutter_bg,
+                None,
+                &Rect::new(0.0, 0.0, self.gutter_width(), content_h),
+            );
+            world_scene.fill(
+                vello::peniko::Fill::NonZero,
+                Affine::IDENTITY,
+                self.theme.grid_minor_stroke.multiply_alpha(0.35),
+                None,
+                &Rect::new(self.gutter_width() - 1.0, 0.0, self.gutter_width(), content_h),
+            );
+        }
         let (sel_start, sel_end) = self.selection_range();
         if !self.selection_occurrences.is_empty() {
             for range in &self.selection_occurrences {
@@ -831,16 +973,18 @@ impl WriterHost {
             }
         }
         for (i, line) in lines.iter().enumerate() {
-            let y = i as f64 * LINE_HEIGHT + LINE_HEIGHT * 0.75;
-            let gutter = format!("{}", i + 1);
-            canvas_text::append_label(
-                &mut world_scene,
-                &gutter,
-                Point::new(PAD_X, y),
-                FONT_PX,
-                self.theme.grid_minor_stroke,
-                self.theme.label_halo,
-            );
+            let y = self.line_y(i);
+            if self.show_line_numbers {
+                let gutter = format!("{}", i + 1);
+                canvas_text::append_label(
+                    &mut world_scene,
+                    &gutter,
+                    Point::new(self.gutter_number_x(&gutter), y),
+                    self.font_px,
+                    self.theme.label_fill.multiply_alpha(0.62),
+                    self.theme.label_halo,
+                );
+            }
             if self.hover_occurrences.is_empty() {
                 if let (Some(hs), Some(he)) = (self.hover_token_start, self.hover_token_end) {
                     if sel_start == sel_end || he <= sel_start || hs >= sel_end {
@@ -868,7 +1012,7 @@ impl WriterHost {
         for diag in &self.diagnostics {
             self.render_diagnostic(&mut world_scene, diag);
         }
-        let aff = camera_content_affine(&self.camera, &self.viewport);
+        let aff = editor_content_affine(&self.camera);
         let mut scene = Scene::new();
         scene.append(&world_scene, Some(aff));
         cavas::render::scale_scene_for_device_pixel_ratio(scene, self.viewport.dpr)
@@ -901,8 +1045,8 @@ impl WriterHost {
             canvas_text::append_label(
                 scene,
                 line,
-                Point::new(LINE_ORIGIN_X, y),
-                FONT_PX,
+                Point::new(self.line_origin_x(), y),
+                self.font_px,
                 self.theme.label_fill,
                 self.theme.label_halo,
             );
@@ -920,8 +1064,8 @@ impl WriterHost {
             scene,
             line,
             &color_spans,
-            Point::new(GUTTER_WIDTH + PAD_X, y),
-            FONT_PX,
+            Point::new(self.line_origin_x(), y),
+            self.font_px,
             self.theme.label_halo,
         );
     }
@@ -933,7 +1077,7 @@ impl WriterHost {
                 scene,
                 &placeholder.label,
                 Point::new(x, y),
-                FONT_PX,
+                self.font_px,
                 self.theme.grid_minor_stroke,
                 self.theme.label_halo,
             );
@@ -942,7 +1086,8 @@ impl WriterHost {
 
     fn render_caret_bar(&self, scene: &mut Scene, offset: usize) {
         let (x, y) = offset_to_world(self, offset);
-        let rect = Rect::new(x, y - LINE_HEIGHT * 0.8, x + 1.5, y + LINE_HEIGHT * 0.2);
+        let lh = self.line_height;
+        let rect = Rect::new(x, y - lh * 0.8, x + 1.5, y + lh * 0.2);
         scene.fill(
             vello::peniko::Fill::NonZero,
             Affine::IDENTITY,
@@ -979,7 +1124,7 @@ fn ranges_overlap(a_start: usize, a_end: usize, b_start: usize, b_end: usize) ->
     a_start < b_end && b_start < a_end
 }
 
-fn hit_byte_in_line(line: &str, world_x: f64) -> usize {
+fn hit_byte_in_line(line: &str, world_x: f64, line_origin_x: f64, font_px: f64) -> usize {
     if line.is_empty() {
         return 0;
     }
@@ -995,8 +1140,8 @@ fn hit_byte_in_line(line: &str, world_x: f64) -> usize {
     for pair in boundaries.windows(2) {
         let start = pair[0];
         let end = pair[1];
-        let x0 = canvas_text::label_byte_world_x(line, start, LINE_ORIGIN_X, FONT_PX);
-        let x1 = canvas_text::label_byte_world_x(line, end, LINE_ORIGIN_X, FONT_PX);
+        let x0 = canvas_text::label_byte_world_x(line, start, line_origin_x, font_px);
+        let x1 = canvas_text::label_byte_world_x(line, end, line_origin_x, font_px);
         if world_x < (x0 + x1) * 0.5 {
             return start;
         }
@@ -1045,8 +1190,8 @@ fn offset_at_line_col(text: &str, line: usize, col: usize) -> usize {
 fn offset_to_world(host: &WriterHost, offset: usize) -> (f64, f64) {
     let (line, byte) = offset_line_col(&host.text, offset);
     let line_text = host.text.split('\n').nth(line).unwrap_or("");
-    let x = canvas_text::label_byte_world_x(line_text, byte, LINE_ORIGIN_X, FONT_PX);
-    let y = line as f64 * LINE_HEIGHT + LINE_HEIGHT * 0.75;
+    let x = canvas_text::label_byte_world_x(line_text, byte, host.line_origin_x(), host.font_px);
+    let y = host.line_y(line);
     (x, y)
 }
 
@@ -1294,9 +1439,19 @@ impl WriterSession {
         self.state.borrow_mut().host.select_all();
     }
 
-    #[wasm_bindgen(js_name = wheelScreen)]
-    pub fn wheel_screen(&mut self, sx: f64, sy: f64, delta_y: f64) {
-        self.state.borrow_mut().host.wheel_screen(sx, sy, delta_y);
+    #[wasm_bindgen(js_name = tabInsertText)]
+    pub fn tab_insert_text(&self) -> String {
+        self.state.borrow().host.tab_insert_text()
+    }
+
+    #[wasm_bindgen(js_name = setEditorSettingsJson)]
+    pub fn set_editor_settings_json(&mut self, json: &str) {
+        self.state.borrow_mut().host.set_editor_settings_json(json);
+    }
+
+    #[wasm_bindgen(js_name = wheelScrollScreen)]
+    pub fn wheel_scroll_screen(&mut self, delta_y: f64) {
+        self.state.borrow_mut().host.wheel_scroll_screen(delta_y);
     }
 
     #[wasm_bindgen(js_name = pointerDownScreen)]
@@ -1522,8 +1677,9 @@ mod tests {
     #[test]
     fn label_span_world_x_matches_scaled_render() {
         let line = "MATCH (a:Piece)";
-        let (x0, x5) = canvas_text::label_span_world_x(line, 0, 5, LINE_ORIGIN_X, FONT_PX);
-        let estimate = canvas_text::label_advance("MATCH", FONT_PX);
+        let origin = DEFAULT_GUTTER_WIDTH + PAD_X;
+        let (x0, x5) = canvas_text::label_span_world_x(line, 0, 5, origin, DEFAULT_FONT_PX);
+        let estimate = canvas_text::label_advance("MATCH", DEFAULT_FONT_PX);
         assert!(x5 - x0 < estimate);
         assert!(x5 > x0);
     }
@@ -1539,13 +1695,76 @@ mod tests {
 // #endregion 🔖Tests
 
 // #region 🔖DocumentVcs
-#[cfg(target_arch = "wasm32")]
-use std::cell::RefCell;
+use framework_vcs::{
+    create_document_vcs_envelope, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff,
+};
+
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WriterProjection {
+    pub schema: String,
+    pub id: String,
+    pub text: String,
+}
+
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(tag = "op", rename_all = "camelCase")]
+pub enum WriterOp {
+    SetText { text: String },
+}
+
+#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WriterDiff {
+    pub text: Option<String>,
+}
+
+impl OperationDiff<WriterProjection> for WriterDiff {
+    fn apply(&self, projection: &WriterProjection) -> WriterProjection {
+        WriterProjection {
+            text: self.text.clone().unwrap_or_else(|| projection.text.clone()),
+            ..projection.clone()
+        }
+    }
+
+    fn absorb(&mut self, other: Self) {
+        if other.text.is_some() {
+            self.text = other.text;
+        }
+    }
+}
+
+impl Operation<WriterProjection> for WriterOp {
+    type Diff = WriterDiff;
+
+    fn diff(&self, _projection: &WriterProjection) -> WriterDiff {
+        match self {
+            WriterOp::SetText { text } => WriterDiff { text: Some(text.clone()) },
+        }
+    }
+
+    fn backwards(&self, projection: &WriterProjection) -> Vec<Self> {
+        vec![WriterOp::SetText {
+            text: projection.text.clone(),
+        }]
+    }
+}
+
+pub type WriterEnvelope = DocumentVcsEnvelope<WriterProjection, WriterOp>;
+pub type WriterStore = DocumentVcsStore<WriterProjection, WriterOp>;
+
+pub fn empty_writer_projection() -> WriterProjection {
+    WriterProjection {
+        schema: "writer.document/v1".into(),
+        id: "writer".into(),
+        text: String::new(),
+    }
+}
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
 pub struct WriterDocumentVcs {
-    store: RefCell<framework_vcs::JsonDocumentStore>,
+    store: RefCell<WriterStore>,
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -1553,10 +1772,10 @@ pub struct WriterDocumentVcs {
 impl WriterDocumentVcs {
     #[wasm_bindgen(constructor)]
     pub fn new(envelope_json: &str) -> Result<WriterDocumentVcs, JsValue> {
-        let store = framework_vcs::JsonDocumentStore::from_envelope_json(envelope_json)
-            .map_err(|e| JsValue::from_str(&e.to_string()))?;
+        let envelope: WriterEnvelope =
+            serde_json::from_str(envelope_json).map_err(|e| JsValue::from_str(&e.to_string()))?;
         Ok(Self {
-            store: RefCell::new(store),
+            store: RefCell::new(WriterStore::new(envelope)),
         })
     }
 
@@ -1587,6 +1806,29 @@ impl WriterDocumentVcs {
     #[wasm_bindgen(js_name = generation)]
     pub fn generation(&self) -> u32 {
         self.store.borrow().generation() as u32
+    }
+}
+
+#[cfg(test)]
+mod writer_vcs_tests {
+    use super::*;
+    use framework_vcs::DocumentVcsCommand;
+
+    #[test]
+    fn writer_document_vcs_replays_text_ops() {
+        let mut store = WriterStore::new(create_document_vcs_envelope(
+            "writer.document/v1",
+            "writer",
+            empty_writer_projection(),
+            None,
+        ));
+        store
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![WriterOp::SetText { text: "hello".into() }],
+                description: None,
+            })
+            .expect("apply");
+        assert_eq!(store.projection().expect("projection").text, "hello");
     }
 }
 // #endregion 🔖DocumentVcs

@@ -11,6 +11,7 @@ import {
   Playground,
   WindowKindRuntime,
   buildFormsWindowBody,
+  buildPuzzle2dWindowBody,
   buildTrinityWindowBody,
   buildWriterWindowBody,
   createPlayAppRuntime,
@@ -24,12 +25,20 @@ import {
 import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
 import {
   DocumentVcsStore,
-  applyJsonReplaceOp,
   createDocumentVcsEnvelope,
-  recordJsonProjectionChange,
-  type JsonReplaceOp,
+  recordProjectionChange,
 } from "@semio-tech/framework-core";
 import { createWriterDocument, type WriterDocumentV1 } from "@semio-tech/writer-core";
+import type { Puzzle2dFixtureV1 } from "@semio-tech/puzzle-2d-react";
+import {
+  REWRITE_DEFAULT_LHS_FIXTURE,
+  REWRITE_DEFAULT_LHS_FIXTURE_JSON,
+  REWRITE_DEFAULT_RHS_FIXTURE,
+  REWRITE_DEFAULT_RHS_FIXTURE_JSON,
+  parseRewriteGraphFixtureJson,
+  rewriteLhsGraphToJson,
+  rewriteRhsGraphToJson,
+} from "@semio-tech/trinity-rewrite-react";
 import {
   type FormSpec,
   type FormQuestion,
@@ -56,6 +65,12 @@ import {
   type TrinityLodModeKind,
 } from "@semio-tech/trinity-react";
 
+type TrinityFixtureEditOp = { readonly op: "setDocument"; readonly document: TrinityFixtureV1 };
+
+function applyTrinityFixtureEditOp(_fixture: TrinityFixtureV1, op: TrinityFixtureEditOp): TrinityFixtureV1 {
+  return op.document;
+}
+
 export const TRINITY_REWRITE_PLAY_APP_ID = "trinity-rewrite-play";
 export const TRINITY_REWRITE_PLAY_CONTROLLER_ID = "trinity-rewrite-play";
 export const TRINITY_REWRITE_PLAY_SURFACE_ID_BEFORE = "trinity.rewrite.before/v1";
@@ -78,23 +93,18 @@ export const TRINITY_REWRITE_PLAY_WINDOW_KIND_JACK = "trinity-rewrite-jack";
 export const TRINITY_REWRITE_PLAY_WINDOW_KIND_PARAMETERS = "trinity-rewrite-parameters";
 export const TRINITY_REWRITE_PLAY_RULE_NAME = "label-core";
 
-export const TRINITY_REWRITE_PLAY_DEFAULT_LHS_JSON = JSON.stringify(
-  { pattern: { leftVar: "a", leftKind: "Piece" }, whereClause: "a.name = 'b'" },
-  null,
-  2,
-);
+export {
+  REWRITE_DEFAULT_LHS_FIXTURE,
+  REWRITE_DEFAULT_LHS_FIXTURE_JSON,
+  REWRITE_DEFAULT_RHS_FIXTURE,
+  REWRITE_DEFAULT_RHS_FIXTURE_JSON,
+  rewriteLhsKindCatalogs,
+  rewriteRhsKindCatalogs,
+} from "@semio-tech/trinity-rewrite-react";
 
-export const TRINITY_REWRITE_PLAY_DEFAULT_RHS_JSON = JSON.stringify(
-  {
-    create: [],
-    delete: [],
-    set: [{ var: "a", prop: "label", value: "$label" }],
-    merge: [],
-    parameters: [{ name: "label", kind: "string", default: "nakagin-core" }],
-  },
-  null,
-  2,
-);
+export const TRINITY_REWRITE_PLAY_DEFAULT_LHS_JSON = rewriteLhsGraphToJson(REWRITE_DEFAULT_LHS_FIXTURE);
+
+export const TRINITY_REWRITE_PLAY_DEFAULT_RHS_JSON = rewriteRhsGraphToJson(REWRITE_DEFAULT_RHS_FIXTURE);
 
 function parseRhsParameters(rhsJson: string): readonly RuleParameterV1[] {
   try {
@@ -186,11 +196,11 @@ export function buildTrinityRewritePlayAfterDeclarativeBody(_ctx: WindowBodyView
 }
 
 export function buildTrinityRewritePlayLhsDeclarativeBody(_ctx: WindowBodyViewContext): UiNode {
-  return buildWriterWindowBody(TRINITY_REWRITE_PLAY_SURFACE_ID_LHS, TRINITY_REWRITE_PLAY_CONTROLLER_ID, TRINITY_REWRITE_PLAY_WINDOW_KIND_LHS);
+  return buildPuzzle2dWindowBody(TRINITY_REWRITE_PLAY_SURFACE_ID_LHS, TRINITY_REWRITE_PLAY_CONTROLLER_ID, TRINITY_REWRITE_PLAY_WINDOW_KIND_LHS);
 }
 
 export function buildTrinityRewritePlayRhsDeclarativeBody(_ctx: WindowBodyViewContext): UiNode {
-  return buildWriterWindowBody(TRINITY_REWRITE_PLAY_SURFACE_ID_RHS, TRINITY_REWRITE_PLAY_CONTROLLER_ID, TRINITY_REWRITE_PLAY_WINDOW_KIND_RHS);
+  return buildPuzzle2dWindowBody(TRINITY_REWRITE_PLAY_SURFACE_ID_RHS, TRINITY_REWRITE_PLAY_CONTROLLER_ID, TRINITY_REWRITE_PLAY_WINDOW_KIND_RHS);
 }
 
 export function buildTrinityRewritePlayJackDeclarativeBody(_ctx: WindowBodyViewContext): UiNode {
@@ -212,12 +222,12 @@ export function registerTrinityRewritePlayDeclarativeBodies(): void {
 
 export class TrinityRewritePlayController extends Controller {
   readonly mainMode = new ModeRuntime("explore", "Explore", undefined);
-  private readonly docStore = new DocumentVcsStore<TrinityFixtureV1, JsonReplaceOp<TrinityFixtureV1>>({
+  private readonly docStore = new DocumentVcsStore<TrinityFixtureV1, TrinityFixtureEditOp>({
     envelope: createDocumentVcsEnvelope("trinity.fixture/v1", "trinity-rewrite-play", TRINITY_DEFAULT_FIXTURE),
-    applyOp: applyJsonReplaceOp,
+    applyOp: applyTrinityFixtureEditOp,
   });
-  private lhsJson = TRINITY_REWRITE_PLAY_DEFAULT_LHS_JSON;
-  private rhsJson = TRINITY_REWRITE_PLAY_DEFAULT_RHS_JSON;
+  private lhsFixture: Puzzle2dFixtureV1 = REWRITE_DEFAULT_LHS_FIXTURE;
+  private rhsFixture: Puzzle2dFixtureV1 = REWRITE_DEFAULT_RHS_FIXTURE;
   private parameterValues: FormValues = parameterDefaultValues(parseRhsParameters(TRINITY_REWRITE_PLAY_DEFAULT_RHS_JSON));
   private jackQueryText = "";
   private afterFixtureJson = TRINITY_DEFAULT_FIXTURE_JSON;
@@ -258,7 +268,7 @@ export class TrinityRewritePlayController extends Controller {
     return this.afterFixtureJson;
   }
 
-  getDocumentVcsStore(): DocumentVcsStore<TrinityFixtureV1, JsonReplaceOp<TrinityFixtureV1>> {
+  getDocumentVcsStore(): DocumentVcsStore<TrinityFixtureV1, TrinityFixtureEditOp> {
     return this.docStore;
   }
 
@@ -267,19 +277,28 @@ export class TrinityRewritePlayController extends Controller {
   }
 
   private commitFixture(next: TrinityFixtureV1): void {
-    recordJsonProjectionChange(this.docStore, next);
+    const previous = this.projection();
+    recordProjectionChange(this.docStore, [{ op: "setDocument", document: next }]);
+  }
+
+  getLhsFixtureJson(): string {
+    return JSON.stringify(this.lhsFixture);
+  }
+
+  getRhsFixtureJson(): string {
+    return JSON.stringify(this.rhsFixture);
   }
 
   getLhsJson(): string {
-    return this.lhsJson;
+    return rewriteLhsGraphToJson(this.lhsFixture);
   }
 
   getRhsJson(): string {
-    return this.rhsJson;
+    return rewriteRhsGraphToJson(this.rhsFixture);
   }
 
   getRuleJson(): string {
-    return buildRuleJson(TRINITY_REWRITE_PLAY_RULE_NAME, this.lhsJson, this.rhsJson);
+    return buildRuleJson(TRINITY_REWRITE_PLAY_RULE_NAME, this.getLhsJson(), this.getRhsJson());
   }
 
   getBindingsJson(): string {
@@ -287,7 +306,7 @@ export class TrinityRewritePlayController extends Controller {
   }
 
   getParameterFormSpec(): FormSpec {
-    return buildParameterFormSpec(parseRhsParameters(this.rhsJson));
+    return buildParameterFormSpec(parseRhsParameters(this.getRhsJson()));
   }
 
   getParameterValues(): FormValues {
@@ -296,24 +315,6 @@ export class TrinityRewritePlayController extends Controller {
 
   getJackQueryText(): string {
     return this.jackQueryText;
-  }
-
-  getWriterDocumentLhs(): WriterDocumentV1 {
-    return createWriterDocument({
-      id: "rewrite-lhs",
-      languageId: "json",
-      uri: "writer://rewrite-lhs",
-      text: this.lhsJson,
-    });
-  }
-
-  getWriterDocumentRhs(): WriterDocumentV1 {
-    return createWriterDocument({
-      id: "rewrite-rhs",
-      languageId: "json",
-      uri: "writer://rewrite-rhs",
-      text: this.rhsJson,
-    });
   }
 
   getWriterDocumentJack(): WriterDocumentV1 {
@@ -357,7 +358,7 @@ export class TrinityRewritePlayController extends Controller {
   }
 
   private syncParameterDefaultsFromRhs(): void {
-    const defaults = parameterDefaultValues(parseRhsParameters(this.rhsJson));
+    const defaults = parameterDefaultValues(parseRhsParameters(this.getRhsJson()));
     const next: FormValues = { ...defaults };
     for (const [key, value] of Object.entries(this.parameterValues)) {
       if (key in defaults) {
@@ -406,18 +407,20 @@ export class TrinityRewritePlayController extends Controller {
       }
       return;
     }
-    if (command === "setLhsJson") {
-      const value = (args as { value?: string }).value;
-      if (typeof value === "string") {
-        this.lhsJson = value;
+    if (command === "setLhsFixtureJson") {
+      const json = (args as { json?: string }).json;
+      const parsed = typeof json === "string" ? parseRewriteGraphFixtureJson(json) : null;
+      if (parsed) {
+        this.lhsFixture = parsed;
         this.bump();
       }
       return;
     }
-    if (command === "setRhsJson") {
-      const value = (args as { value?: string }).value;
-      if (typeof value === "string") {
-        this.rhsJson = value;
+    if (command === "setRhsFixtureJson") {
+      const json = (args as { json?: string }).json;
+      const parsed = typeof json === "string" ? parseRewriteGraphFixtureJson(json) : null;
+      if (parsed) {
+        this.rhsFixture = parsed;
         this.syncParameterDefaultsFromRhs();
         this.bump();
       }
@@ -540,8 +543,8 @@ if (import.meta.vitest) {
         activeModeId: "explore",
         generation: 0,
       };
-      expect(buildTrinityRewritePlayLhsDeclarativeBody(ctx).type).toBe("writer");
-      expect(buildTrinityRewritePlayRhsDeclarativeBody(ctx).type).toBe("writer");
+      expect(buildTrinityRewritePlayLhsDeclarativeBody(ctx).type).toBe("puzzle2d");
+      expect(buildTrinityRewritePlayRhsDeclarativeBody(ctx).type).toBe("puzzle2d");
       expect(buildTrinityRewritePlayJackDeclarativeBody(ctx).type).toBe("writer");
       expect(buildTrinityRewritePlayParametersDeclarativeBody(ctx).type).toBe("forms");
       expect(buildTrinityRewritePlayBeforeDeclarativeBody(ctx).type).toBe("trinity");
@@ -596,6 +599,19 @@ if (import.meta.vitest) {
       expect(updated?.name).toBe("rewrite-renamed");
     });
 
+    it("lhs graph edits recompile into jack query", () => {
+      const bus = new CommandBus();
+      const ctrl = new TrinityRewritePlayController(bus, () => {});
+      const fixture = parseRewriteGraphFixtureJson(ctrl.getLhsFixtureJson());
+      expect(fixture).not.toBeNull();
+      const next = {
+        ...fixture!,
+        nodes: fixture!.nodes.map((node) => (node.id === "where-b" ? { ...node, text: "a.name = 'core'" } : node)),
+      };
+      ctrl.run("setLhsFixtureJson", { json: JSON.stringify(next) });
+      expect(ctrl.getJackQueryText()).toContain("a.name = 'core'");
+    });
+
     it("subscribeSnapshot notifies listeners", () => {
       const bus = new CommandBus();
       const ctrl = new TrinityRewritePlayController(bus, () => {});
@@ -603,7 +619,7 @@ if (import.meta.vitest) {
       ctrl.subscribeSnapshot(() => {
         revision = ctrl.getInteractionRevision();
       });
-      ctrl.run("setLhsJson", { value: TRINITY_REWRITE_PLAY_DEFAULT_LHS_JSON });
+      ctrl.run("setLhsFixtureJson", { json: REWRITE_DEFAULT_LHS_FIXTURE_JSON });
       expect(revision).toBeGreaterThan(0);
     });
   });

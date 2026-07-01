@@ -5,11 +5,9 @@
 // #endregion 🧲Header
 
 import {
-	applyJsonReplaceOp,
 	createDocumentVcsEnvelope,
 	type DocumentVcsEnvelope,
 	materializeDocumentProjection,
-	type JsonReplaceOp,
 } from "@semio-tech/framework-core";
 
 // #region 📐Types
@@ -242,7 +240,8 @@ export type FormEditOp =
 			readonly index: number;
 	  }
 	| { readonly op: "updateQuestion"; readonly stepId: string; readonly question: FormQuestion }
-	| { readonly op: "updateStep"; readonly step: FormStep };
+	| { readonly op: "updateStep"; readonly step: FormStep }
+	| { readonly op: "setDocument"; readonly document: FormSpec };
 
 export interface FormValidationError {
 	readonly questionId: string;
@@ -928,6 +927,8 @@ export function applyFormEditOp(spec: FormSpec, op: FormEditOp): FormSpec {
 				...spec,
 				steps: spec.steps.map((step) => (step.id === op.step.id ? op.step : step)),
 			};
+		case "setDocument":
+			return op.document;
 		default:
 			return spec;
 	}
@@ -1065,7 +1066,6 @@ export class FormRuntime {
 
 //#region 🔖DocumentVcs
 export type FormSpecVcsEnvelope = DocumentVcsEnvelope<FormSpec, FormEditOp>;
-export type FormSpecJsonVcsEnvelope = DocumentVcsEnvelope<FormSpec, JsonReplaceOp<FormSpec>>;
 
 /** @emoji 📦 Default empty form spec for VCS envelopes and fixtures. */
 export function defaultFormSpec(id = "default"): FormSpec {

@@ -42,7 +42,7 @@ import {
   type ToolLeaf,
   toolCollection,
 } from "@semio-tech/framework-playground-core";
-import { Store, DocumentVcsStore, applyJsonReplaceOp, createDocumentVcsEnvelope, recordJsonProjectionChange, type JsonReplaceOp } from "@semio-tech/framework-core";
+import { Store, DocumentVcsStore, createDocumentVcsEnvelope, recordProjectionChange } from "@semio-tech/framework-core";
 
 import { bootstrapElementsSurfaceChromeDocument, selectionMergeIds, type SelectionMarqueeMethod, type SelectionMergeMode } from "@semio-tech/ui-react";
 
@@ -763,12 +763,18 @@ function mapPlayWindowMeasures(
   ];
 }
 
+type GisMapFixtureEditOp = { readonly op: "setDocument"; readonly document: GisMapFixtureV1 | null };
+
+function applyGisMapFixtureEditOp(_fixture: GisMapFixtureV1 | null, op: GisMapFixtureEditOp): GisMapFixtureV1 | null {
+  return op.document;
+}
+
 export class MapPlayController extends Controller implements PlaygroundFixtureHost {
   readonly mainMode = new ModeRuntime("explore", "Explore", undefined);
   private activeFixtureId = GIS_MAP_PLAY_FIXTURE_REUSE_ID;
-  private readonly docStore = new DocumentVcsStore<GisMapFixtureV1 | null, JsonReplaceOp<GisMapFixtureV1 | null>>({
+  private readonly docStore = new DocumentVcsStore<GisMapFixtureV1 | null, GisMapFixtureEditOp>({
     envelope: createDocumentVcsEnvelope("gis.map.fixture/v1", "gis-map-play", GIS_MAP_PLAY_DEFAULT_FIXTURE),
-    applyOp: applyJsonReplaceOp,
+    applyOp: applyGisMapFixtureEditOp,
   });
   private readonly snapshotStore: MapPlaySnapshotStore;
   private snapshotCache: MapPlaySnapshot | null = null;
@@ -956,7 +962,7 @@ export class MapPlayController extends Controller implements PlaygroundFixtureHo
     return this.activeFixture;
   }
 
-  getDocumentVcsStore(): DocumentVcsStore<GisMapFixtureV1 | null, JsonReplaceOp<GisMapFixtureV1 | null>> {
+  getDocumentVcsStore(): DocumentVcsStore<GisMapFixtureV1 | null, GisMapFixtureEditOp> {
     return this.docStore;
   }
 
@@ -965,7 +971,8 @@ export class MapPlayController extends Controller implements PlaygroundFixtureHo
   }
 
   private setActiveFixtureProjection(next: GisMapFixtureV1 | null): void {
-    recordJsonProjectionChange(this.docStore, next);
+    const previous = this.activeFixture;
+    recordProjectionChange(this.docStore, [{ op: "setDocument", document: next }]);
   }
 
   private patchActiveFixture(nextFixture: GisMapFixtureV1): void {

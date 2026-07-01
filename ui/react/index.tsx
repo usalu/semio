@@ -3612,6 +3612,16 @@ function findGhostRegionAncestor(target: Element): Element | null {
   return null;
 }
 
+/** @emoji 👻 Keeps automatic ghosting on interaction surfaces and direct tree rows, not nested UI controls. */
+function shouldBeginAutomaticGhostInteraction(target: EventTarget | null): boolean {
+  if (!(target instanceof Element)) return false;
+  const region = findGhostRegionAncestor(target);
+  const dimmed = target.closest("[data-dim]");
+  if (!dimmed || (region && !region.contains(dimmed))) return true;
+  if (!region) return false;
+  return resolveHoverRow(target as HTMLElement, region as HTMLElement) === dimmed;
+}
+
 function useGhostController(): GhostController {
   const [active, setActive] = reactHostPort.useState(false);
   const [activeInteraction, setActiveInteractionState] = reactHostPort.useState<string | undefined>(undefined);
@@ -3681,6 +3691,12 @@ function useGhostController(): GhostController {
       const dx = pointerEvent.clientX - pending.x;
       const dy = pointerEvent.clientY - pending.y;
       if (dx * dx + dy * dy < PANEL_GHOST_MOVE_THRESHOLD_PX * PANEL_GHOST_MOVE_THRESHOLD_PX) return;
+      const shouldBegin = shouldBeginAutomaticGhostInteraction(pending.target);
+      console.debug("[DEBUG] panel ghost automatic drag", { shouldBegin });
+      if (!shouldBegin) {
+        pendingRef.current = null;
+        return;
+      }
       controllerRef.current?.begin(pending.target);
       beganViaPointerDragRef.current = true;
       pendingRef.current = null;
@@ -8348,12 +8364,13 @@ const RESIZABLE_HIT_TARGET_MINIMUM_SIZE = {
 
 type ResizableJoinCornerResizeHandler = (spec: ResizableJoinCornerSpec, deltaXPx: number, deltaYPx: number) => void;
 
-const resizableJoinCornerResizeRef: { current: ResizableJoinCornerResizeHandler | null } = { current: null };
+type ResizableJoinCornerElement = HTMLDivElement & {
+  __composeResizableJoinCornerResize?: ResizableJoinCornerResizeHandler;
+};
 
-/** @emoji ↔️ Mode registers the live corner-resize handler (module interceptor calls this). */
-export function registerResizableJoinCornerResizeHandler(handler: ResizableJoinCornerResizeHandler | null): void {
-  resizableJoinCornerResizeRef.current = handler;
-}
+type ResizableCornerWindow = Window & typeof globalThis & {
+  __composeResizableCornerInterceptorV2?: boolean;
+};
 
 function readResizableJoinCornerSpec(element: HTMLElement): ResizableJoinCornerSpec | null {
   const raw = element.dataset.joinSpec;
@@ -8371,19 +8388,19 @@ function writeResizableJoinCornerSpec(element: HTMLElement, spec: ResizableJoinC
 
 //#region ↔️ResizableCornerInterceptor
 
-/** @emoji ↔️ Document capture hook so corner grabs win over react-resizable-panels (registered at module load). */
+/** @emoji ↔️ Window capture hook so corner grabs win over react-resizable-panels and survive hot reloads. */
 function installResizableCornerInterceptor(): void {
-  if (typeof document === "undefined") return;
-  const marker = "__composeResizableCornerInterceptor";
-  if ((document as Document & Record<string, boolean>)[marker]) return;
-  (document as Document & Record<string, boolean>)[marker] = true;
-  let drag: { pointerId: number; x: number; y: number; spec: ResizableJoinCornerSpec } | null = null;
+  if (typeof window === "undefined") return;
+  const interceptorWindow = window as ResizableCornerWindow;
+  if (interceptorWindow.__composeResizableCornerInterceptorV2) return;
+  interceptorWindow.__composeResizableCornerInterceptorV2 = true;
+  let drag: { pointerId: number; x: number; y: number; corner: ResizableJoinCornerElement; spec: ResizableJoinCornerSpec } | null = null;
   const onPointerMove = (event: PointerEvent) => {
     if (!drag || drag.pointerId !== event.pointerId) return;
     const deltaXPx = event.clientX - drag.x;
     const deltaYPx = event.clientY - drag.y;
     if (deltaXPx !== 0 || deltaYPx !== 0) {
-      resizableJoinCornerResizeRef.current?.(drag.spec, deltaXPx, deltaYPx);
+      drag.corner.__composeResizableJoinCornerResize?.(drag.spec, deltaXPx, deltaYPx);
       drag = { ...drag, x: event.clientX, y: event.clientY };
     }
   };
@@ -8391,25 +8408,25 @@ function installResizableCornerInterceptor(): void {
     if (!drag || drag.pointerId !== event.pointerId) return;
     drag = null;
     document.body.style.removeProperty("cursor");
-    document.removeEventListener("pointermove", onPointerMove, true);
-    document.removeEventListener("pointerup", endDrag, true);
-    document.removeEventListener("pointercancel", endDrag, true);
+    window.removeEventListener("pointermove", onPointerMove, true);
+    window.removeEventListener("pointerup", endDrag, true);
+    window.removeEventListener("pointercancel", endDrag, true);
   };
-  document.addEventListener(
+  window.addEventListener(
     "pointerdown",
     (event) => {
       if (event.button !== 0) return;
-      const corner = (event.target as Element | null)?.closest<HTMLElement>('[data-slot="resizable-corner"]');
+      const corner = (event.target as Element | null)?.closest<ResizableJoinCornerElement>('[data-slot="resizable-corner"]');
       if (!corner) return;
       const spec = readResizableJoinCornerSpec(corner);
-      if (!spec) return;
+      if (!spec || !corner.__composeResizableJoinCornerResize) return;
       event.preventDefault();
       event.stopImmediatePropagation();
-      drag = { pointerId: event.pointerId, x: event.clientX, y: event.clientY, spec };
+      drag = { pointerId: event.pointerId, x: event.clientX, y: event.clientY, corner, spec };
       document.body.style.cursor = "move";
-      document.addEventListener("pointermove", onPointerMove, true);
-      document.addEventListener("pointerup", endDrag, true);
-      document.addEventListener("pointercancel", endDrag, true);
+      window.addEventListener("pointermove", onPointerMove, true);
+      window.addEventListener("pointerup", endDrag, true);
+      window.addEventListener("pointercancel", endDrag, true);
     },
     true,
   );
@@ -8464,18 +8481,25 @@ function ResizableJoinCornerGrab({
   edgeSide,
   alongFraction,
   spec,
+  onResize,
 }: {
   orientation: "horizontal" | "vertical";
   edgeSide: ResizableJoinEdgeSide;
   alongFraction: number;
   spec: ResizableJoinCornerSpec;
+  onResize: ResizableJoinCornerResizeHandler;
 }) {
-  const elementRef = reactHostPort.useRef<HTMLDivElement>(null);
+  const elementRef = reactHostPort.useRef<ResizableJoinCornerElement>(null);
   reactHostPort.useLayoutEffect(() => {
+    installResizableCornerInterceptor();
     const element = elementRef.current;
     if (!element) return;
     writeResizableJoinCornerSpec(element, spec);
-  }, [spec]);
+    element.__composeResizableJoinCornerResize = onResize;
+    return () => {
+      if (element.__composeResizableJoinCornerResize === onResize) delete element.__composeResizableJoinCornerResize;
+    };
+  }, [onResize, spec]);
 
   return (
     <div
@@ -8517,11 +8541,13 @@ function ResizableHandle({
   className,
   orientation = "horizontal",
   joinCorners,
+  onJoinCornerResize,
   style,
   ...props
 }: React.ComponentProps<typeof ResizablePrimitive.Separator> & {
   orientation?: "horizontal" | "vertical";
   joinCorners?: readonly ResizableJoinCornerSpec[];
+  onJoinCornerResize?: ResizableJoinCornerResizeHandler;
 }) {
   const horizontal = orientation === "horizontal";
 
@@ -8543,15 +8569,16 @@ function ResizableHandle({
       }}
       {...(props as any)}
     >
-      {joinCorners?.map((spec) => (
+      {onJoinCornerResize ? joinCorners?.map((spec) => (
         <ResizableJoinCornerGrab
           key={`${spec.mainAxisPath}-${spec.mainSeparatorIndex}-${spec.crossAxisPath}-${spec.crossSeparatorIndex}-${spec.edgeSide}-${spec.alongFraction}`}
           alongFraction={spec.alongFraction}
           edgeSide={spec.edgeSide}
+          onResize={onJoinCornerResize}
           orientation={orientation}
           spec={spec}
         />
-      ))}
+      )) : null}
     </ResizablePrimitive.Separator>
   );
 }
@@ -19669,8 +19696,9 @@ export function applyAxisResizeDelta(
     const count = node.children.length;
     const leftSize = node.children[leftIndex]?.size ?? 100 / count;
     const rightSize = node.children[rightIndex]?.size ?? 100 / count;
-    const nextLeft = Math.max(minPct, Math.min(100 - minPct, leftSize + deltaPct));
-    const nextRight = Math.max(minPct, Math.min(100 - minPct, rightSize - deltaPct));
+    const pairSize = leftSize + rightSize;
+    const nextLeft = Math.max(minPct, Math.min(pairSize - minPct, leftSize + deltaPct));
+    const nextRight = pairSize - nextLeft;
     const children = node.children.map((child, index) => {
       if (index === leftIndex) return { ...child, size: nextLeft };
       if (index === rightIndex) return { ...child, size: nextRight };
@@ -19691,14 +19719,45 @@ export function resolveJoinCornerResizeDeltas(
   if (mainAxisPixelSize <= 0 || crossAxisPixelSize <= 0) return { mainDeltaPct: 0, crossDeltaPct: 0 };
   if (parentKind === "row") {
     return {
-      mainDeltaPct: -(deltaXPx / mainAxisPixelSize) * 100,
-      crossDeltaPct: -(deltaYPx / crossAxisPixelSize) * 100,
+      mainDeltaPct: (deltaXPx / mainAxisPixelSize) * 100,
+      crossDeltaPct: (deltaYPx / crossAxisPixelSize) * 100,
     };
   }
   return {
-    mainDeltaPct: -(deltaYPx / mainAxisPixelSize) * 100,
-    crossDeltaPct: -(deltaXPx / crossAxisPixelSize) * 100,
+    mainDeltaPct: (deltaYPx / mainAxisPixelSize) * 100,
+    crossDeltaPct: (deltaXPx / crossAxisPixelSize) * 100,
   };
+}
+
+/** @emoji ↔️ Applies a separator percentage delta to a live resizable group layout. */
+export function applyAxisGroupLayoutDelta(
+  layout: Record<string, number>,
+  axisPath: ModeLayoutPath,
+  separatorIndex: number,
+  deltaPct: number,
+  minPct = 8,
+): Record<string, number> {
+  const leadingId = modeJoinPath(axisPath, separatorIndex - 1);
+  const trailingId = modeJoinPath(axisPath, separatorIndex);
+  const leadingSize = layout[leadingId];
+  const trailingSize = layout[trailingId];
+  if (leadingSize === undefined || trailingSize === undefined) return layout;
+  const pairSize = leadingSize + trailingSize;
+  const nextLeading = Math.max(minPct, Math.min(pairSize - minPct, leadingSize + deltaPct));
+  return {
+    ...layout,
+    [leadingId]: nextLeading,
+    [trailingId]: pairSize - nextLeading,
+  };
+}
+
+/** @emoji ↔️ Resolves persisted percentages for one resizable axis. */
+export function modeAxisGroupLayout(layout: WindowLayoutNode, axisPath: ModeLayoutPath): Record<string, number> {
+  const node = axisPath ? readLayoutAtPath(layout, axisPath) : layout;
+  if (!node || (node.kind !== "row" && node.kind !== "column")) return {};
+  return Object.fromEntries(
+    node.children.map((child, index) => [modeJoinPath(axisPath, index), child.size ?? 100 / node.children.length]),
+  );
 }
 
 /** @emoji ↔️ Applies a corner grab delta to both the main and cross layout axes. */
@@ -19722,9 +19781,7 @@ export function applyModeJoinCornerResize(
   return next;
 }
 
-function readModeAxisPixelSize(axisPath: ModeLayoutPath, kind: "row" | "column"): number {
-  if (typeof document === "undefined") return 0;
-  const element = document.getElementById(`mode-axis-${axisPath || "root"}`);
+function readModeAxisPixelSize(element: HTMLElement | null | undefined, kind: "row" | "column"): number {
   if (!element) return 0;
   const rect = element.getBoundingClientRect();
   return kind === "row" ? rect.width : rect.height;
@@ -20354,6 +20411,9 @@ interface ModeRenderContext {
   windowsById: ReadonlyMap<string, ModeWindowDescriptor>;
   activeWindowId: string | null;
   onAxisLayoutChanged: (axisPath: ModeLayoutPath, sizes: Record<string, number>) => void;
+  onJoinCornerResize: ResizableJoinCornerResizeHandler;
+  registerAxisGroup: (axisPath: ModeLayoutPath, group: ResizablePrimitive.GroupImperativeHandle | null) => void;
+  registerAxisElement: (axisPath: ModeLayoutPath, element: HTMLDivElement | null) => void;
 }
 
 interface ModeRenderParentAxis {
@@ -20385,6 +20445,7 @@ function renderModeDockNode(
         <ResizableHandle
           key={`sep-${childPath}`}
           joinCorners={joinCorners}
+          onJoinCornerResize={ctx.onJoinCornerResize}
           orientation={orientation}
         />,
       );
@@ -20399,6 +20460,8 @@ function renderModeDockNode(
     <ResizablePanelGroup
       key={path || "root-axis"}
       id={`mode-axis-${path || "root"}`}
+      elementRef={(element) => ctx.registerAxisElement(path, element)}
+      groupRef={(group) => ctx.registerAxisGroup(path, group)}
       orientation={orientation}
       onLayoutChanged={(sizes) => ctx.onAxisLayoutChanged(path, sizes)}
       className="h-full min-h-0 w-full min-w-0"
@@ -20424,6 +20487,8 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
   const [dropZone, setDropZone] = reactHostPort.useState<ModeDropZone | null>(null);
   const dropZoneRef = reactHostPort.useRef<ModeDropZone | null>(null);
   const modeBodyRef = reactHostPort.useRef<HTMLDivElement>(null);
+  const axisGroupRefsRef = reactHostPort.useRef(new Map<ModeLayoutPath, ResizablePrimitive.GroupImperativeHandle>());
+  const axisGroupElementsRef = reactHostPort.useRef(new Map<ModeLayoutPath, HTMLDivElement>());
   const stackDropElementsRef = reactHostPort.useRef(new Map<ModeLayoutPath, { tabBar: HTMLElement | null; body: HTMLElement | null }>());
   const layoutStateRef = reactHostPort.useRef(layoutState);
   const dragLayoutSnapshotRef = reactHostPort.useRef<WindowLayoutNode | null>(null);
@@ -20652,21 +20717,40 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
     setLayoutState((prev) => applyAxisSizes(prev, axisPath, sizes));
   }, []);
 
-  const onJoinCornerResize = reactHostPort.useCallback((spec: ResizableJoinCornerSpec, deltaXPx: number, deltaYPx: number) => {
-    setLayoutState((prev) => {
-      const mainKind = readModeAxisKind(prev, spec.mainAxisPath);
-      const crossKind = readModeAxisKind(prev, spec.crossAxisPath);
-      if (!mainKind || !crossKind) return prev;
-      const mainSize = readModeAxisPixelSize(spec.mainAxisPath, mainKind);
-      const crossSize = readModeAxisPixelSize(spec.crossAxisPath, crossKind);
-      return applyModeJoinCornerResize(prev, spec, deltaXPx, deltaYPx, mainSize, crossSize);
-    });
+  const registerAxisGroup = reactHostPort.useCallback((axisPath: ModeLayoutPath, group: ResizablePrimitive.GroupImperativeHandle | null) => {
+    if (group) axisGroupRefsRef.current.set(axisPath, group);
+    else axisGroupRefsRef.current.delete(axisPath);
   }, []);
 
-  reactHostPort.useEffect(() => {
-    registerResizableJoinCornerResizeHandler(onJoinCornerResize);
-    return () => registerResizableJoinCornerResizeHandler(null);
-  }, [onJoinCornerResize]);
+  const registerAxisElement = reactHostPort.useCallback((axisPath: ModeLayoutPath, element: HTMLDivElement | null) => {
+    if (element) axisGroupElementsRef.current.set(axisPath, element);
+    else axisGroupElementsRef.current.delete(axisPath);
+  }, []);
+
+  const onJoinCornerResize = reactHostPort.useCallback((spec: ResizableJoinCornerSpec, deltaXPx: number, deltaYPx: number) => {
+    const current = layoutStateRef.current;
+    const mainKind = readModeAxisKind(current, spec.mainAxisPath);
+    const crossKind = readModeAxisKind(current, spec.crossAxisPath);
+    const mainGroup = axisGroupRefsRef.current.get(spec.mainAxisPath);
+    const crossGroup = axisGroupRefsRef.current.get(spec.crossAxisPath);
+    if (!mainKind || !crossKind || !mainGroup || !crossGroup) return;
+    const deltas = resolveJoinCornerResizeDeltas(
+      spec.parentKind,
+      deltaXPx,
+      deltaYPx,
+      readModeAxisPixelSize(axisGroupElementsRef.current.get(spec.mainAxisPath), mainKind),
+      readModeAxisPixelSize(axisGroupElementsRef.current.get(spec.crossAxisPath), crossKind),
+    );
+    const liveMainLayout = mainGroup.getLayout();
+    const liveCrossLayout = crossGroup.getLayout();
+    const currentMainLayout = Object.keys(liveMainLayout).length > 0 ? liveMainLayout : modeAxisGroupLayout(current, spec.mainAxisPath);
+    const currentCrossLayout = Object.keys(liveCrossLayout).length > 0 ? liveCrossLayout : modeAxisGroupLayout(current, spec.crossAxisPath);
+    const mainLayout = applyAxisGroupLayoutDelta(currentMainLayout, spec.mainAxisPath, spec.mainSeparatorIndex, deltas.mainDeltaPct);
+    const crossLayout = applyAxisGroupLayoutDelta(currentCrossLayout, spec.crossAxisPath, spec.crossSeparatorIndex, deltas.crossDeltaPct);
+    mainGroup.setLayout(mainLayout);
+    crossGroup.setLayout(crossLayout);
+    setLayoutState((prev) => applyAxisSizes(applyAxisSizes(prev, spec.mainAxisPath, mainLayout), spec.crossAxisPath, crossLayout));
+  }, []);
 
   const clearTemplateDragPreview = reactHostPort.useCallback(() => {
     setTemplateDrag(null);
@@ -20839,8 +20923,8 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
   );
 
   const renderContext = reactHostPort.useMemo<ModeRenderContext>(
-    () => ({ windowsById, activeWindowId, onAxisLayoutChanged }),
-    [windowsById, activeWindowId, onAxisLayoutChanged],
+    () => ({ windowsById, activeWindowId, onAxisLayoutChanged, onJoinCornerResize, registerAxisGroup, registerAxisElement }),
+    [windowsById, activeWindowId, onAxisLayoutChanged, onJoinCornerResize, registerAxisGroup, registerAxisElement],
   );
 
   const dockOutLayout = reactHostPort.useMemo(
@@ -21961,7 +22045,7 @@ if (import.meta.vitest) {
         edgeSide: "leading",
         alongFraction: 0.5,
       };
-      const next = applyModeJoinCornerResize(layout, spec, -20, -10, 400, 300);
+      const next = applyModeJoinCornerResize(layout, spec, 20, 10, 400, 300);
       expect(next.kind).toBe("row");
       if (next.kind === "row") {
         expect(next.children[0]?.size).toBeGreaterThan(50);
@@ -21972,6 +22056,72 @@ if (import.meta.vitest) {
           expect(leftColumn.children[1]?.size).toBeLessThan(50);
         }
       }
+    });
+
+    it("applyAxisGroupLayoutDelta resizes a live panel pair without changing its total", () => {
+      const next = applyAxisGroupLayoutDelta({ "0": 50, "1": 50 }, "", 1, 5);
+      expect(next).toEqual({ "0": 55, "1": 45 });
+      expect(applyAxisGroupLayoutDelta(next, "", 1, 100)).toEqual({ "0": 92, "1": 8 });
+    });
+
+    it("Mode corner pointer drag resizes both mounted panel groups", async () => {
+      const onLayoutChange = vi.fn();
+      const { container } = render(
+        <div className="h-layout-story w-layout-story-md">
+          <Mode
+            windows={[
+              { id: "lt", title: "Left Top", children: <div>Left Top</div> },
+              { id: "lb", title: "Left Bottom", children: <div>Left Bottom</div> },
+              { id: "rt", title: "Right Top", children: <div>Right Top</div> },
+              { id: "rb", title: "Right Bottom", children: <div>Right Bottom</div> },
+            ]}
+            layout={{
+              kind: "row",
+              children: [
+                {
+                  kind: "column",
+                  children: [
+                    { kind: "stack", children: [{ kind: "window", id: "lt" }], activeId: "lt" },
+                    { kind: "stack", children: [{ kind: "window", id: "lb" }], activeId: "lb" },
+                  ],
+                },
+                {
+                  kind: "column",
+                  children: [
+                    { kind: "stack", children: [{ kind: "window", id: "rt" }], activeId: "rt" },
+                    { kind: "stack", children: [{ kind: "window", id: "rb" }], activeId: "rb" },
+                  ],
+                },
+              ],
+            }}
+            activeWindowId="lt"
+            onActiveWindowChange={() => {}}
+            onLayoutChange={onLayoutChange}
+          />
+        </div>,
+      );
+      const rootGroup = container.querySelector<HTMLElement>("#mode-axis-root")!;
+      const leftGroup = container.querySelector<HTMLElement>("#mode-axis-0")!;
+      rootGroup.getBoundingClientRect = () => ({ width: 400, height: 300 }) as DOMRect;
+      leftGroup.getBoundingClientRect = () => ({ width: 200, height: 300 }) as DOMRect;
+      const corner = [...container.querySelectorAll<HTMLElement>('[data-slot="resizable-corner"]')].find((element) => {
+        const spec = readResizableJoinCornerSpec(element);
+        return spec?.mainAxisPath === "" && spec.crossAxisPath === "0";
+      })!;
+      fireEvent(corner, new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: 200, clientY: 150 }));
+      fireEvent(window, new MouseEvent("pointermove", { bubbles: true, clientX: 220, clientY: 165 }));
+      fireEvent(window, new MouseEvent("pointerup", { bubbles: true, clientX: 220, clientY: 165 }));
+      await waitFor(() => expect(onLayoutChange).toHaveBeenCalled());
+      const resized = onLayoutChange.mock.lastCall?.[0] as WindowLayoutNode;
+      expect(resized.kind).toBe("row");
+      if (resized.kind !== "row") return;
+      expect(resized.children[0]?.size).toBe(55);
+      expect(resized.children[1]?.size).toBe(45);
+      const left = resized.children[0];
+      expect(left.kind).toBe("column");
+      if (left.kind !== "column") return;
+      expect(left.children[0]?.size).toBe(55);
+      expect(left.children[1]?.size).toBe(45);
     });
 
     it("computeModeDropZone treats tab bar hits as tab drops not body splits", () => {
@@ -23337,6 +23487,28 @@ if (treeVitest) {
 
       expect(markGhostTreeInteraction(command, region)).toEqual([]);
       expect(command.hasAttribute("data-active-interaction")).toBe(false);
+    });
+
+    it("automatic ghosting ignores nested controls while preserving canvas and direct tree-row drags", () => {
+      document.body.innerHTML = `
+        <div data-ghost-region id="region">
+          <div id="canvas"></div>
+          <div data-slot="control-tree-row" data-dim id="row">
+            <span id="row-label">Size</span>
+            <div data-slot="slider-content" data-dim>
+              <div data-slot="slider" id="slider"></div>
+            </div>
+          </div>
+          <div data-slot="window-measures-stack" data-dim>
+            <button id="window-option">Option</button>
+          </div>
+        </div>
+      `;
+
+      expect(shouldBeginAutomaticGhostInteraction(document.getElementById("canvas"))).toBe(true);
+      expect(shouldBeginAutomaticGhostInteraction(document.getElementById("row-label"))).toBe(true);
+      expect(shouldBeginAutomaticGhostInteraction(document.getElementById("slider"))).toBe(false);
+      expect(shouldBeginAutomaticGhostInteraction(document.getElementById("window-option"))).toBe(false);
     });
 
     it("treeRowChromeClasses uses hover tokens for highlight and active tokens for selection", () => {

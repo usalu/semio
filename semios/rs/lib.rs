@@ -1,11 +1,11 @@
 //! 🖥️ Semios studio CQRS — programs, app instances, media graph on `framework_vcs`.
 
 use framework_vcs::{
-    materialize_document_projection, ApplyDocumentOp, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, VcsError,
+    create_document_vcs_envelope, materialize_document_projection, DocumentBackboneRef, DocumentVcs,
+    DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff, VcsError,
 };
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
-use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 
 pub const SEMIOS_STUDIO_SCHEMA: &str = "semios.studio/v1";
 pub const SEMIOS_MEDIA_GRAPH_SCHEMA: &str = "semios.media-graph/v1";
@@ -84,23 +84,70 @@ pub struct SemiosStudioProjection {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct MediaGraphPosition {
+    pub x: f64,
+    pub y: f64,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "op", rename_all = "camelCase")]
+pub enum StudioOp {
+    SetActiveProgram {
+        #[serde(skip_serializing_if = "Option::is_none")]
+        program_id: Option<String>,
+    },
+    SetActiveAlternative {
+        #[serde(skip_serializing_if = "Option::is_none")]
+        alternative_id: Option<String>,
+    },
+    ApplyAppOperation {
+        instance_id: String,
+        next_source: SemiosSourceDocument,
+    },
+    SpawnAppInstance {
+        instance: SemiosAppInstance,
+        position: MediaGraphPosition,
+    },
+    RemoveAppInstance {
+        instance_id: String,
+    },
+    ConnectMediaPorts {
+        edge: SemiosMediaGraphEdge,
+    },
+    DisconnectMediaEdge {
+        edge_id: String,
+    },
+    MoveMediaNode {
+        node_id: String,
+        x: f64,
+        y: f64,
+    },
+    PatchAppSource {
+        instance_id: String,
+        inline: String,
+    },
+}
+
+pub type SemiosStudioVcs = DocumentVcs<SemiosStudioProjection, StudioOp>;
+pub type SemiosStudioEnvelope = DocumentVcsEnvelope<SemiosStudioProjection, StudioOp>;
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SemiosStudioDocumentV1 {
     pub schema: String,
     pub id: String,
     pub name: String,
-    pub vcs: framework_vcs::DocumentVcs,
+    pub vcs: SemiosStudioVcs,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub backbone: Option<framework_vcs::DocumentBackboneRef>,
+    pub backbone: Option<DocumentBackboneRef>,
 }
-
-pub type SemiosStudioEnvelope = DocumentVcsEnvelope;
 //#endregion 🔖Schemas
 
 //#region 🔖Projection
-static SEMIOS_ID: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+static SEMIOS_ID: AtomicU64 = AtomicU64::new(0);
 
 pub fn create_semios_id(prefix: &str) -> String {
-    let n = SEMIOS_ID.fetch_add(1, std::sync::atomic::Ordering::Relaxed) + 1;
+    let n = SEMIOS_ID.fetch_add(1, Ordering::Relaxed) + 1;
     format!("{prefix}-{n}")
 }
 
@@ -127,156 +174,313 @@ pub fn create_empty_studio_document(id: &str, name: &str) -> SemiosStudioDocumen
         schema: SEMIOS_STUDIO_SCHEMA.into(),
         id: id.into(),
         name: name.into(),
-        vcs: framework_vcs::DocumentVcs {
-            initial_projection: serde_json::to_value(default_studio_projection()).expect("projection"),
-            operations: Vec::new(),
-            checkpoints: Vec::new(),
-            alternatives: Vec::new(),
-        },
-        backbone: Some(framework_vcs::DocumentBackboneRef {
+        vcs: create_document_vcs_envelope(SEMIOS_STUDIO_SCHEMA, id, default_studio_projection(), None).vcs,
+        backbone: Some(DocumentBackboneRef {
             kind: "dev".into(),
             uri: "dev://studio.json".into(),
         }),
     }
 }
 
-fn projection_from_value(value: &Value) -> SemiosStudioProjection {
-    serde_json::from_value(value.clone()).expect("studio projection")
-}
-
-fn value_from_projection(projection: &SemiosStudioProjection) -> Value {
-    serde_json::to_value(projection).expect("studio projection value")
-}
-
-fn apply_studio_operation(projection: &SemiosStudioProjection, operation: &Value) -> SemiosStudioProjection {
+pub fn apply_studio_operation(projection: &SemiosStudioProjection, operation: &StudioOp) -> SemiosStudioProjection {
     let mut next = projection.clone();
-    let op = operation.get("op").and_then(|v| v.as_str()).unwrap_or("");
-    let payload = operation.get("payload").cloned().unwrap_or(json!({}));
-    match op {
-        "setActiveProgram" => {
-            next.active_program_id = payload.get("programId").and_then(|v| v.as_str()).map(str::to_string);
+    match operation {
+        StudioOp::SetActiveProgram { program_id } => {
+            next.active_program_id = program_id.clone();
         }
-        "setActiveAlternative" => {
-            next.active_alternative_id = payload.get("alternativeId").and_then(|v| v.as_str()).map(str::to_string);
+        StudioOp::SetActiveAlternative { alternative_id } => {
+            next.active_alternative_id = alternative_id.clone();
         }
-        "applyAppOperation" => {
-            let instance_id = payload.get("instanceId").and_then(|v| v.as_str()).unwrap_or("");
-            let next_source: SemiosSourceDocument =
-                serde_json::from_value(payload.get("nextSource").cloned().unwrap_or(json!({}))).unwrap_or(SemiosSourceDocument {
-                    format: "unknown".into(),
-                    vcs_json: None,
-                    inline: None,
-                    payload_ref: None,
-                });
+        StudioOp::ApplyAppOperation {
+            instance_id,
+            next_source,
+        } => {
             for instance in &mut next.app_instances {
-                if instance.id == instance_id {
+                if instance.id == *instance_id {
                     instance.source_document = next_source.clone();
                 }
             }
         }
-        "spawnAppInstance" => {
-            if let Ok(instance) = serde_json::from_value::<SemiosAppInstance>(payload.get("instance").cloned().unwrap_or(json!({}))) {
-                if !next.programs.contains(&instance.program_id) {
-                    next.programs.push(instance.program_id.clone());
-                }
-                let position = payload.get("position").cloned().unwrap_or(json!({ "x": 0.0, "y": 0.0 }));
-                let x = position.get("x").and_then(|v| v.as_f64()).unwrap_or(0.0);
-                let y = position.get("y").and_then(|v| v.as_f64()).unwrap_or(0.0);
-                let node = SemiosMediaGraphNode {
-                    id: create_semios_id("node"),
-                    instance_id: instance.id.clone(),
-                    label: instance.label.clone(),
-                    x,
-                    y,
-                    inputs: Vec::new(),
-                    outputs: Vec::new(),
-                };
-                next.media_graph.nodes.push(node);
-                next.app_instances.push(instance);
+        StudioOp::SpawnAppInstance { instance, position } => {
+            if !next.programs.contains(&instance.program_id) {
+                next.programs.push(instance.program_id.clone());
             }
+            let node = SemiosMediaGraphNode {
+                id: create_semios_id("node"),
+                instance_id: instance.id.clone(),
+                label: instance.label.clone(),
+                x: position.x,
+                y: position.y,
+                inputs: Vec::new(),
+                outputs: Vec::new(),
+            };
+            next.media_graph.nodes.push(node);
+            next.app_instances.push(instance.clone());
         }
-        "removeAppInstance" => {
-            let instance_id = payload.get("instanceId").and_then(|v| v.as_str()).unwrap_or("");
+        StudioOp::RemoveAppInstance { instance_id } => {
             let node_id = next
                 .media_graph
                 .nodes
                 .iter()
-                .find(|node| node.instance_id == instance_id)
+                .find(|node| node.instance_id == *instance_id)
                 .map(|node| node.id.clone());
-            next.app_instances.retain(|instance| instance.id != instance_id);
-            next.media_graph.nodes.retain(|node| node.instance_id != instance_id);
+            next.app_instances.retain(|instance| instance.id != *instance_id);
+            next.media_graph.nodes.retain(|node| node.instance_id != *instance_id);
             if let Some(node_id) = node_id {
                 next.media_graph
                     .edges
                     .retain(|edge| edge.source_node_id != node_id && edge.target_node_id != node_id);
             }
         }
-        "connectMediaPorts" => {
-            if let Ok(edge) = serde_json::from_value::<SemiosMediaGraphEdge>(payload.get("edge").cloned().unwrap_or(json!({}))) {
-                next.media_graph.edges.push(edge);
-            }
+        StudioOp::ConnectMediaPorts { edge } => {
+            next.media_graph.edges.push(edge.clone());
         }
-        "disconnectMediaEdge" => {
-            let edge_id = payload.get("edgeId").and_then(|v| v.as_str()).unwrap_or("");
-            next.media_graph.edges.retain(|edge| edge.id != edge_id);
+        StudioOp::DisconnectMediaEdge { edge_id } => {
+            next.media_graph.edges.retain(|edge| edge.id != *edge_id);
         }
-        "moveMediaNode" => {
-            let node_id = payload.get("nodeId").and_then(|v| v.as_str()).unwrap_or("");
-            let x = payload.get("x").and_then(|v| v.as_f64()).unwrap_or(0.0);
-            let y = payload.get("y").and_then(|v| v.as_f64()).unwrap_or(0.0);
+        StudioOp::MoveMediaNode { node_id, x, y } => {
             for node in &mut next.media_graph.nodes {
-                if node.id == node_id {
-                    node.x = x;
-                    node.y = y;
+                if node.id == *node_id {
+                    node.x = *x;
+                    node.y = *y;
                 }
             }
         }
-        "patchAppSource" => {
-            let instance_id = payload.get("instanceId").and_then(|v| v.as_str()).unwrap_or("");
-            let inline = payload.get("inline").and_then(|v| v.as_str()).unwrap_or("").to_string();
+        StudioOp::PatchAppSource { instance_id, inline } => {
             for instance in &mut next.app_instances {
-                if instance.id == instance_id {
+                if instance.id == *instance_id {
                     instance.source_document.inline = Some(inline.clone());
                 }
             }
         }
-        _ => {}
     }
     next
 }
 
-pub struct StudioApplier;
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum StudioDiff {
+    #[default]
+    Empty,
+    SetActiveProgram {
+        #[serde(skip_serializing_if = "Option::is_none")]
+        program_id: Option<String>,
+    },
+    SetActiveAlternative {
+        #[serde(skip_serializing_if = "Option::is_none")]
+        alternative_id: Option<String>,
+    },
+    ApplyAppOperation {
+        instance_id: String,
+        next_source: SemiosSourceDocument,
+    },
+    SpawnAppInstance {
+        instance: SemiosAppInstance,
+        position: MediaGraphPosition,
+    },
+    RemoveAppInstance {
+        instance_id: String,
+    },
+    ConnectMediaPorts {
+        edge: SemiosMediaGraphEdge,
+    },
+    DisconnectMediaEdge {
+        edge_id: String,
+    },
+    MoveMediaNode {
+        node_id: String,
+        x: f64,
+        y: f64,
+    },
+    PatchAppSource {
+        instance_id: String,
+        inline: String,
+    },
+}
 
-impl ApplyDocumentOp for StudioApplier {
-    fn apply(&self, projection: &Value, operation: &Value) -> Result<Value, VcsError> {
-        let current = projection_from_value(projection);
-        let next = apply_studio_operation(&current, operation);
-        Ok(value_from_projection(&next))
+impl OperationDiff<SemiosStudioProjection> for StudioDiff {
+    fn apply(&self, projection: &SemiosStudioProjection) -> SemiosStudioProjection {
+        let op = match self {
+            StudioDiff::Empty => return projection.clone(),
+            StudioDiff::SetActiveProgram { program_id } => StudioOp::SetActiveProgram {
+                program_id: program_id.clone(),
+            },
+            StudioDiff::SetActiveAlternative { alternative_id } => StudioOp::SetActiveAlternative {
+                alternative_id: alternative_id.clone(),
+            },
+            StudioDiff::ApplyAppOperation { instance_id, next_source } => StudioOp::ApplyAppOperation {
+                instance_id: instance_id.clone(),
+                next_source: next_source.clone(),
+            },
+            StudioDiff::SpawnAppInstance { instance, position } => StudioOp::SpawnAppInstance {
+                instance: instance.clone(),
+                position: position.clone(),
+            },
+            StudioDiff::RemoveAppInstance { instance_id } => StudioOp::RemoveAppInstance {
+                instance_id: instance_id.clone(),
+            },
+            StudioDiff::ConnectMediaPorts { edge } => StudioOp::ConnectMediaPorts { edge: edge.clone() },
+            StudioDiff::DisconnectMediaEdge { edge_id } => StudioOp::DisconnectMediaEdge {
+                edge_id: edge_id.clone(),
+            },
+            StudioDiff::MoveMediaNode { node_id, x, y } => StudioOp::MoveMediaNode {
+                node_id: node_id.clone(),
+                x: *x,
+                y: *y,
+            },
+            StudioDiff::PatchAppSource { instance_id, inline } => StudioOp::PatchAppSource {
+                instance_id: instance_id.clone(),
+                inline: inline.clone(),
+            },
+        };
+        apply_studio_operation(projection, &op)
+    }
+
+    fn absorb(&mut self, other: Self) {
+        if !matches!(other, StudioDiff::Empty) {
+            *self = other;
+        }
+    }
+}
+
+impl Operation<SemiosStudioProjection> for StudioOp {
+    type Diff = StudioDiff;
+
+    fn diff(&self, _projection: &SemiosStudioProjection) -> StudioDiff {
+        match self {
+            StudioOp::SetActiveProgram { program_id } => StudioDiff::SetActiveProgram {
+                program_id: program_id.clone(),
+            },
+            StudioOp::SetActiveAlternative { alternative_id } => StudioDiff::SetActiveAlternative {
+                alternative_id: alternative_id.clone(),
+            },
+            StudioOp::ApplyAppOperation { instance_id, next_source } => StudioDiff::ApplyAppOperation {
+                instance_id: instance_id.clone(),
+                next_source: next_source.clone(),
+            },
+            StudioOp::SpawnAppInstance { instance, position } => StudioDiff::SpawnAppInstance {
+                instance: instance.clone(),
+                position: position.clone(),
+            },
+            StudioOp::RemoveAppInstance { instance_id } => StudioDiff::RemoveAppInstance {
+                instance_id: instance_id.clone(),
+            },
+            StudioOp::ConnectMediaPorts { edge } => StudioDiff::ConnectMediaPorts { edge: edge.clone() },
+            StudioOp::DisconnectMediaEdge { edge_id } => StudioDiff::DisconnectMediaEdge {
+                edge_id: edge_id.clone(),
+            },
+            StudioOp::MoveMediaNode { node_id, x, y } => StudioDiff::MoveMediaNode {
+                node_id: node_id.clone(),
+                x: *x,
+                y: *y,
+            },
+            StudioOp::PatchAppSource { instance_id, inline } => StudioDiff::PatchAppSource {
+                instance_id: instance_id.clone(),
+                inline: inline.clone(),
+            },
+        }
+    }
+
+    fn backwards(&self, projection: &SemiosStudioProjection) -> Vec<Self> {
+        match self {
+            StudioOp::SetActiveProgram { .. } => vec![StudioOp::SetActiveProgram {
+                program_id: projection.active_program_id.clone(),
+            }],
+            StudioOp::SetActiveAlternative { .. } => vec![StudioOp::SetActiveAlternative {
+                alternative_id: projection.active_alternative_id.clone(),
+            }],
+            StudioOp::ApplyAppOperation { instance_id, .. } => projection
+                .app_instances
+                .iter()
+                .find(|i| i.id == *instance_id)
+                .map(|instance| {
+                    vec![StudioOp::ApplyAppOperation {
+                        instance_id: instance_id.clone(),
+                        next_source: instance.source_document.clone(),
+                    }]
+                })
+                .unwrap_or_default(),
+            StudioOp::SpawnAppInstance { instance, position } => vec![StudioOp::RemoveAppInstance {
+                instance_id: instance.id.clone(),
+            }],
+            StudioOp::RemoveAppInstance { instance_id } => projection
+                .app_instances
+                .iter()
+                .find(|i| i.id == *instance_id)
+                .map(|instance| {
+                    let node = projection
+                        .media_graph
+                        .nodes
+                        .iter()
+                        .find(|n| n.instance_id == *instance_id);
+                    vec![StudioOp::SpawnAppInstance {
+                        instance: instance.clone(),
+                        position: MediaGraphPosition {
+                            x: node.map(|n| n.x).unwrap_or(0.0),
+                            y: node.map(|n| n.y).unwrap_or(0.0),
+                        },
+                    }]
+                })
+                .unwrap_or_default(),
+            StudioOp::ConnectMediaPorts { edge } => vec![StudioOp::DisconnectMediaEdge {
+                edge_id: edge.id.clone(),
+            }],
+            StudioOp::DisconnectMediaEdge { edge_id } => projection
+                .media_graph
+                .edges
+                .iter()
+                .find(|e| e.id == *edge_id)
+                .map(|edge| vec![StudioOp::ConnectMediaPorts { edge: edge.clone() }])
+                .unwrap_or_default(),
+            StudioOp::MoveMediaNode { node_id, .. } => projection
+                .media_graph
+                .nodes
+                .iter()
+                .find(|n| n.id == *node_id)
+                .map(|node| {
+                    vec![StudioOp::MoveMediaNode {
+                        node_id: node_id.clone(),
+                        x: node.x,
+                        y: node.y,
+                    }]
+                })
+                .unwrap_or_default(),
+            StudioOp::PatchAppSource { instance_id, .. } => projection
+                .app_instances
+                .iter()
+                .find(|i| i.id == *instance_id)
+                .map(|instance| {
+                    vec![StudioOp::PatchAppSource {
+                        instance_id: instance_id.clone(),
+                        inline: instance.source_document.inline.clone().unwrap_or_default(),
+                    }]
+                })
+                .unwrap_or_default(),
+        }
     }
 }
 
 pub fn materialize_studio_projection(document: &SemiosStudioDocumentV1, applied_change_ids: &[String]) -> Result<SemiosStudioProjection, VcsError> {
-    let envelope = DocumentVcsEnvelope {
+    let envelope = SemiosStudioEnvelope {
         schema: document.schema.clone(),
         id: document.id.clone(),
         vcs: document.vcs.clone(),
         backbone: document.backbone.clone(),
         active_alternative_id: None,
     };
-    let value = materialize_document_projection(&envelope, applied_change_ids, &StudioApplier)?;
-    Ok(projection_from_value(&value))
+    materialize_document_projection(&envelope, applied_change_ids)
 }
 //#endregion 🔖Projection
 
 //#region 🔖StudioStore
 pub struct StudioStore {
-    inner: DocumentVcsStore,
+    inner: DocumentVcsStore<SemiosStudioProjection, StudioOp>,
     name: String,
 }
 
 impl StudioStore {
     pub fn new(document: SemiosStudioDocumentV1) -> Self {
-        let envelope = DocumentVcsEnvelope {
+        let envelope = SemiosStudioEnvelope {
             schema: document.schema,
             id: document.id,
             vcs: document.vcs,
@@ -284,7 +488,7 @@ impl StudioStore {
             active_alternative_id: None,
         };
         Self {
-            inner: DocumentVcsStore::new(envelope, Arc::new(StudioApplier)),
+            inner: DocumentVcsStore::new(envelope),
             name: document.name,
         }
     }
@@ -294,8 +498,7 @@ impl StudioStore {
     }
 
     pub fn projection(&self) -> Result<SemiosStudioProjection, VcsError> {
-        let value = self.inner.projection()?;
-        Ok(projection_from_value(&value))
+        self.inner.projection()
     }
 
     pub fn document(&self) -> SemiosStudioDocumentV1 {
@@ -310,17 +513,22 @@ impl StudioStore {
     }
 
     pub fn dispatch_json(&mut self, command_json: &str) -> Result<(), VcsError> {
-        let command: DocumentVcsCommand =
-            serde_json::from_str(command_json).map_err(|e| VcsError::Json(e.to_string()))?;
-        self.inner.dispatch(command)
+        self.inner.dispatch_json(command_json)
     }
 
-    pub fn dispatch_apply(&mut self, forwards: Vec<Value>, backwards: Vec<Value>) -> Result<(), VcsError> {
+    pub fn dispatch_apply(&mut self, operations: Vec<StudioOp>) -> Result<(), VcsError> {
         self.inner.dispatch(DocumentVcsCommand::Apply {
-            forwards,
-            backwards,
+            operations,
             description: None,
         })
+    }
+
+    pub fn sync_backbone(&self) -> Result<(), VcsError> {
+        self.inner.sync_backbone()
+    }
+
+    pub fn load_backbone(&mut self) -> Result<(), VcsError> {
+        self.inner.load_backbone()
     }
 }
 //#endregion 🔖StudioStore
@@ -391,16 +599,10 @@ mod tests {
             },
         };
         store
-            .dispatch_apply(
-                vec![json!({
-                    "op": "spawnAppInstance",
-                    "payload": {
-                        "instance": instance,
-                        "position": { "x": 0, "y": 0 }
-                    }
-                })],
-                vec![json!({ "op": "removeAppInstance", "payload": { "instanceId": "app-1" } })],
-            )
+            .dispatch_apply(vec![StudioOp::SpawnAppInstance {
+                instance: instance.clone(),
+                position: MediaGraphPosition { x: 0.0, y: 0.0 },
+            }])
             .expect("spawn");
         let projection = store.projection().expect("projection");
         assert_eq!(projection.app_instances.len(), 1);
@@ -423,13 +625,10 @@ mod tests {
             },
         };
         store
-            .dispatch_apply(
-                vec![json!({
-                    "op": "spawnAppInstance",
-                    "payload": { "instance": instance, "position": { "x": 0, "y": 0 } }
-                })],
-                vec![json!({ "op": "removeAppInstance", "payload": { "instanceId": "app-1" } })],
-            )
+            .dispatch_apply(vec![StudioOp::SpawnAppInstance {
+                instance,
+                position: MediaGraphPosition { x: 0.0, y: 0.0 },
+            }])
             .expect("spawn");
         store
             .dispatch_json(r#"{"kind":"undo"}"#)

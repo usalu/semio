@@ -1,0 +1,14 @@
+{
+  "title": "Raster Zoom Camera Fix",
+  "emoji": "🔍",
+  "status": "closed",
+  "description": "Fix raster zoom: wheel zoom should scale the view without changing content appearance (logo should scale with zoom, not change).",
+  "summary": "Fixed raster zoom so the view scales content instead of re-syncing layers on every wheel tick. Root cause: camera was included in WASM compositor sync JSON, so each zoom re-parsed layers and re-uploaded embedded assets (logo appeared to change). Fix: compositor sync omits camera/session fields; RasterCanvas keeps local sessionCamera (draw pattern) and only persists camera when it actually changes; wheel/pan use cavas::camera::wheel_screen; panning implemented with pan_last; pointer move no longer commits document every frame.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1778"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪b0521e6522824353a9e55fad7293247f"
+  ]
+}

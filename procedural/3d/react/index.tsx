@@ -22,6 +22,7 @@ import {
     createDefaultBrepWasmBridge,
     ensureBrepWasmLoaded,
     isRenderableMeshTransfer,
+    meshTransferFromPreviewPayload,
     meshTransferToGeometryData,
     type BrepWasmBridge,
     type GeometryRef,
@@ -1395,6 +1396,27 @@ export function preferGeometryPreviewItems(items: readonly ProceduralPreviewItem
 	return geometry.length > 0 ? geometry : items.filter((item) => item.kind !== "vector");
 }
 
+function previewMeshItemKey(item: ProceduralPreviewItem): string {
+	return `${item.widgetId}:${item.port}:${item.direction}`;
+}
+
+/** @emoji 🧩 Attaches worker-tessellated meshes to geometry preview items. */
+export function attachPreviewMeshesToItems(
+	items: readonly ProceduralPreviewItem[],
+	previewMeshes?: Readonly<Record<string, unknown>>,
+	previous: readonly ProceduralPreviewItem[] = [],
+): readonly ProceduralPreviewItem[] {
+	const previousByKey = new Map(previous.map((item) => [previewMeshItemKey(item), item]));
+	return items.map((item) => {
+		if (item.kind !== "geometry" || item.direction !== "out") return item;
+		const previousItem = previousByKey.get(previewMeshItemKey(item));
+		const mesh =
+			meshTransferFromPreviewPayload(previewMeshes?.[item.handle]) ??
+			(previousItem?.kind === "geometry" && previousItem.handle === item.handle ? previousItem.mesh : undefined);
+		return mesh ? { ...item, mesh } : item;
+	});
+}
+
 /** @emoji 🔍 Back-compat alias for channel preview extraction. */
 export const extractPreviewItems = extractChannelPreviewItems;
 // #endregion 🔖ProceduralPreview
@@ -1617,6 +1639,15 @@ if (import.meta.vitest) {
 			);
 			expect((cut as { error?: string }).error).toBeUndefined();
 			expect(cut.handle).toMatch(/^solid-/);
+		});
+
+		it("attachPreviewMeshesToItems binds worker meshes to geometry items", async () => {
+			const { attachPreviewMeshesToItems } = await import("./index.js");
+			const items = [{ widgetId: "extrude", port: "solid", direction: "out" as const, kind: "geometry" as const, handle: "solid-1" }];
+			const meshes = { "solid-1": { position: [0, 0, 0, 1, 0, 0, 0, 1, 0], normal: [0, 0, 1, 0, 0, 1, 0, 0, 1], index: [0, 1, 2] } };
+			const attached = attachPreviewMeshesToItems(items, meshes);
+			expect(attached[0]?.kind).toBe("geometry");
+			if (attached[0]?.kind === "geometry") expect(attached[0].mesh).toBeTruthy();
 		});
 
 		it("preferGeometryPreviewItems keeps geometry and drops vectors", async () => {

@@ -5940,3 +5940,112 @@ mod tests {
     }
 }
 // #endregion 🔖Tests
+
+// #region 🔖DocumentVcs
+use framework_vcs::{
+    create_document_vcs_envelope, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff,
+};
+
+pub const FLOW_DAG_SCHEMA: &str = "flow.dag/v1";
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FlowDagDocument {
+    pub nodes: Vec<serde_json::Value>,
+    pub edges: Vec<serde_json::Value>,
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FlowDagDiff {
+    pub nodes: Option<Vec<serde_json::Value>>,
+    pub edges: Option<Vec<serde_json::Value>>,
+}
+
+impl OperationDiff<FlowDagDocument> for FlowDagDiff {
+    fn apply(&self, projection: &FlowDagDocument) -> FlowDagDocument {
+        FlowDagDocument {
+            nodes: self.nodes.clone().unwrap_or_else(|| projection.nodes.clone()),
+            edges: self.edges.clone().unwrap_or_else(|| projection.edges.clone()),
+        }
+    }
+
+    fn absorb(&mut self, other: Self) {
+        if other.nodes.is_some() {
+            self.nodes = other.nodes;
+        }
+        if other.edges.is_some() {
+            self.edges = other.edges;
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "op", rename_all = "camelCase")]
+pub enum FlowDagOp {
+    SetNodes { nodes: Vec<serde_json::Value> },
+    SetEdges { edges: Vec<serde_json::Value> },
+}
+
+impl Operation<FlowDagDocument> for FlowDagOp {
+    type Diff = FlowDagDiff;
+
+    fn diff(&self, _projection: &FlowDagDocument) -> FlowDagDiff {
+        match self {
+            FlowDagOp::SetNodes { nodes } => FlowDagDiff {
+                nodes: Some(nodes.clone()),
+                ..Default::default()
+            },
+            FlowDagOp::SetEdges { edges } => FlowDagDiff {
+                edges: Some(edges.clone()),
+                ..Default::default()
+            },
+        }
+    }
+
+    fn backwards(&self, projection: &FlowDagDocument) -> Vec<Self> {
+        match self {
+            FlowDagOp::SetNodes { .. } => vec![FlowDagOp::SetNodes {
+                nodes: projection.nodes.clone(),
+            }],
+            FlowDagOp::SetEdges { .. } => vec![FlowDagOp::SetEdges {
+                edges: projection.edges.clone(),
+            }],
+        }
+    }
+}
+
+pub type FlowDagEnvelope = DocumentVcsEnvelope<FlowDagDocument, FlowDagOp>;
+pub type FlowDagStore = DocumentVcsStore<FlowDagDocument, FlowDagOp>;
+
+pub fn empty_flow_dag_projection() -> FlowDagDocument {
+    FlowDagDocument {
+        nodes: Vec::new(),
+        edges: Vec::new(),
+    }
+}
+
+#[cfg(test)]
+mod flow_dag_vcs_tests {
+    use super::*;
+
+    #[test]
+    fn flow_dag_document_vcs_replays_ops() {
+        let mut store = FlowDagStore::new(create_document_vcs_envelope(
+            FLOW_DAG_SCHEMA,
+            "dag",
+            empty_flow_dag_projection(),
+            None,
+        ));
+        store
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![FlowDagOp::SetNodes {
+                    nodes: vec![serde_json::json!({ "id": "n1" })],
+                }],
+                description: None,
+            })
+            .expect("apply");
+        assert_eq!(store.projection().expect("projection").nodes.len(), 1);
+    }
+}
+// #endregion 🔖DocumentVcs

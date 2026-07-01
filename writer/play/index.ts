@@ -29,16 +29,16 @@ import {
 	type UiNode,
 	type UiTreeItemNode,
 	type UiTreeNode,
+	type WindowEngagement,
 } from "@semio-tech/framework-playground-core";
 import {
 	DocumentVcsStore,
-	applyJsonReplaceOp,
 	createDocumentVcsEnvelope,
-	recordJsonProjectionChange,
-	type JsonReplaceOp,
+	recordProjectionChange,
 } from "@semio-tech/framework-core";
 import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
 import {
+	applyWriterEditOp,
 	createWriterDocument,
 	findDeepestJackAstNodeAt,
 	jackAstNodeById,
@@ -46,8 +46,11 @@ import {
 	parseJackAst,
 	parseWriterDocumentJson,
 	writerDocumentToJson,
+	WRITER_DEFAULT_EDITOR_SETTINGS,
 	type JackAstNode,
 	type WriterDocumentV1,
+	type WriterEditOp,
+	type WriterEditorSettings,
 } from "@semio-tech/writer-core";
 import { WRITER_PLAY_FIXTURE_DEFAULT_ID, resolveWriterPlayFixtureSlug } from "./fixture-slugs.ts";
 
@@ -231,9 +234,9 @@ export function buildWriterPlayInspectorTree(doc: WriterDocumentV1, lintMessages
 
 export class WriterPlayController extends Controller implements PlaygroundFixtureHost {
 	readonly mainMode = new ModeRuntime("main", "Writer", undefined);
-	private readonly docStore = new DocumentVcsStore<WriterDocumentV1, JsonReplaceOp<WriterDocumentV1>>({
+	private readonly docStore = new DocumentVcsStore<WriterDocumentV1, WriterEditOp>({
 		envelope: createDocumentVcsEnvelope("writer.document/v1", "writer-play", WRITER_PLAY_EMPTY_DOCUMENT),
-		applyOp: applyJsonReplaceOp,
+		applyOp: applyWriterEditOp,
 	});
 	private revision = 0;
 	private formatSignal = 0;
@@ -246,6 +249,7 @@ export class WriterPlayController extends Controller implements PlaygroundFixtur
 	private editorSelection: { start: number; end: number } = { start: 0, end: 0 };
 	private editorSelectionSignal = 0;
 	private externalHoverSignal = 0;
+	private editorSettings: WriterEditorSettings = { ...WRITER_DEFAULT_EDITOR_SETTINGS };
 
 	constructor(commandBus: CommandBus, hostNotify: () => void, initialJson: string) {
 		super(WRITER_PLAY_CONTROLLER_ID, commandBus, hostNotify);
@@ -258,7 +262,8 @@ export class WriterPlayController extends Controller implements PlaygroundFixtur
 	}
 
 	private commitDocument(next: WriterDocumentV1): void {
-		recordJsonProjectionChange(this.docStore, next);
+		const previous = this.projection();
+		recordProjectionChange(this.docStore, [{ op: "setDocument", document: next }]);
 		this.refreshAst();
 		this.revision += 1;
 		this.emit();
@@ -323,7 +328,7 @@ export class WriterPlayController extends Controller implements PlaygroundFixtur
 		return writerDocumentToJson(this.projection());
 	}
 
-	getDocumentVcsStore(): DocumentVcsStore<WriterDocumentV1, JsonReplaceOp<WriterDocumentV1>> {
+	getDocumentVcsStore(): DocumentVcsStore<WriterDocumentV1, WriterEditOp> {
 		return this.docStore;
 	}
 
@@ -337,6 +342,10 @@ export class WriterPlayController extends Controller implements PlaygroundFixtur
 
 	getLintSignal(): number {
 		return this.lintSignal;
+	}
+
+	getEditorSettings(): WriterEditorSettings {
+		return this.editorSettings;
 	}
 
 	setLintMessages(messages: readonly string[]): void {
@@ -457,12 +466,87 @@ export class WriterPlayController extends Controller implements PlaygroundFixtur
 				this.emit();
 				return;
 			}
+			case "toggleLineNumbers": {
+				this.editorSettings = { ...this.editorSettings, showLineNumbers: !this.editorSettings.showLineNumbers };
+				this.rebuildShellMode();
+				this.revision += 1;
+				this.emit();
+				return;
+			}
+			case "setEditorSetting": {
+				const field = String(args?.field ?? "");
+				const value = args?.value;
+				if (field === "fontPx" && typeof value === "number") {
+					this.editorSettings = { ...this.editorSettings, fontPx: Math.round(value) };
+				} else if (field === "lineHeight" && typeof value === "number") {
+					this.editorSettings = { ...this.editorSettings, lineHeight: Math.round(value) };
+				} else if (field === "tabSize" && typeof value === "number") {
+					this.editorSettings = { ...this.editorSettings, tabSize: Math.max(1, Math.round(value)) };
+				} else {
+					return;
+				}
+				this.rebuildShellMode();
+				this.revision += 1;
+				this.emit();
+				return;
+			}
 		}
+	}
+
+	private windowEngagement(): WindowEngagement {
+		const settings = this.editorSettings;
+		return {
+			sessionActive: false,
+			options: [
+				{
+					id: "writer-line-numbers",
+					label: "Line numbers",
+					iconId: "list-ordered",
+					pressed: settings.showLineNumbers,
+					command: writerPlayCmd("toggleLineNumbers"),
+				},
+			],
+			controls: [
+				{
+					kind: "slider",
+					id: "writer-font-size",
+					label: "Font size",
+					value: settings.fontPx,
+					min: 10,
+					max: 24,
+					step: 1,
+					onChange: writerPlayCmd("setEditorSetting", { field: "fontPx" }),
+				},
+				{
+					kind: "slider",
+					id: "writer-line-height",
+					label: "Line height",
+					value: settings.lineHeight,
+					min: 16,
+					max: 40,
+					step: 1,
+					onChange: writerPlayCmd("setEditorSetting", { field: "lineHeight" }),
+				},
+				{
+					kind: "stepper",
+					id: "writer-tab-size",
+					label: "Tab size",
+					value: settings.tabSize,
+					min: 1,
+					max: 8,
+					step: 1,
+					onChange: writerPlayCmd("setEditorSetting", { field: "tabSize" }),
+				},
+			],
+			status: [{ id: "writer-editor-mode", text: "Text editor" }],
+		};
 	}
 
 	private rebuildShellMode(): void {
 		this.mainMode.tools = buildWriterPlayToolbarTools();
-		this.mainMode.windowKinds = [new WindowKindRuntime(WRITER_PLAY_WINDOW_KIND, "Jack", WRITER_PLAY_BODY_KEY)];
+		this.mainMode.windowKinds = [
+			new WindowKindRuntime(WRITER_PLAY_WINDOW_KIND, "Jack", WRITER_PLAY_BODY_KEY, undefined, [], this.windowEngagement()),
+		];
 	}
 }
 

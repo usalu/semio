@@ -748,6 +748,7 @@ name = "cad_document"
 version = "0.1.0"
 dependencies = [
  "framework_vcs",
+ "serde",
  "serde_json",
  "wasm-bindgen",
 ]
@@ -1647,6 +1648,7 @@ dependencies = [
  "flow_module_logic",
  "flow_module_math",
  "flow_module_text",
+ "framework_vcs",
  "geometry_brep_engine",
  "infinite_cavas",
  "js-sys",
@@ -1894,6 +1896,7 @@ name = "forms"
 version = "0.1.0"
 dependencies = [
  "framework_vcs",
+ "serde",
  "serde_json",
  "wasm-bindgen",
 ]
@@ -1903,6 +1906,7 @@ name = "framework_vcs"
 version = "0.1.0"
 dependencies = [
  "js-sys",
+ "rusqlite",
  "serde",
  "serde-wasm-bindgen",
  "serde_json",
@@ -2175,6 +2179,7 @@ dependencies = [
 name = "gis_map"
 version = "0.1.0"
 dependencies = [
+ "framework_vcs",
  "image",
  "infinite_cavas",
  "js-sys",
@@ -3614,6 +3619,7 @@ dependencies = [
 name = "mathematical_graph_port_directed_dag"
 version = "0.1.0"
 dependencies = [
+ "framework_vcs",
  "infinite_cavas",
  "js-sys",
  "mathematical_core",
@@ -4471,6 +4477,7 @@ name = "presentation_deck"
 version = "0.1.0"
 dependencies = [
  "framework_vcs",
+ "serde",
  "serde_json",
  "wasm-bindgen",
 ]
@@ -4513,6 +4520,26 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8fd00f0bb2e90d81d1044c2b32617f68fcb9fa3bb7640c23e9c748e53fb30934"
 dependencies = [
  "unicode-ident",
+]
+
+[[package]]
+name = "procedural_2d"
+version = "0.1.0"
+dependencies = [
+ "framework_vcs",
+ "serde",
+ "serde_json",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "procedural_3d"
+version = "0.1.0"
+dependencies = [
+ "framework_vcs",
+ "serde",
+ "serde_json",
+ "wasm-bindgen",
 ]
 
 [[package]]
@@ -4586,11 +4613,22 @@ dependencies = [
 name = "puzzle_3d"
 version = "0.1.0"
 dependencies = [
+ "framework_vcs",
  "js-sys",
  "nalgebra 0.33.3",
  "parry3d",
  "serde",
  "serde-wasm-bindgen",
+ "serde_json",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "puzzle_5d"
+version = "0.1.0"
+dependencies = [
+ "framework_vcs",
+ "serde",
  "serde_json",
  "wasm-bindgen",
 ]
@@ -4856,8 +4894,11 @@ dependencies = [
 name = "reasoning_mindmap"
 version = "0.1.0"
 dependencies = [
+ "framework_vcs",
  "infinite_cavas",
  "mathematical_graph_normal_directed",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -5487,6 +5528,7 @@ name = "shooting"
 version = "0.1.0"
 dependencies = [
  "framework_vcs",
+ "serde",
  "serde_json",
  "wasm-bindgen",
 ]
@@ -6463,6 +6505,7 @@ dependencies = [
 name = "trinity_rewrite"
 version = "0.1.0"
 dependencies = [
+ "framework_vcs",
  "infinite_cavas",
  "js-sys",
  "mathematical_core",

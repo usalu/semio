@@ -6985,7 +6985,13 @@ import {
   TRINITY_REWRITE_PLAY_SURFACE_ID_RHS,
   TRINITY_REWRITE_PLAY_WINDOW_KIND_AFTER,
   TRINITY_REWRITE_PLAY_WINDOW_KIND_BEFORE,
+  TRINITY_REWRITE_PLAY_WINDOW_KIND_LHS,
+  TRINITY_REWRITE_PLAY_WINDOW_KIND_RHS,
   TrinityRewritePlayController,
+  REWRITE_DEFAULT_LHS_FIXTURE_JSON,
+  REWRITE_DEFAULT_RHS_FIXTURE_JSON,
+  rewriteLhsKindCatalogs,
+  rewriteRhsKindCatalogs,
   buildTrinityPlayCatalogueTree,
   registerTrinityRewritePlayDeclarativeBodies,
 } from "@semio-tech/trinity-rewrite-play";
@@ -6998,10 +7004,11 @@ import {
   type TrinityDrawLodKind,
 } from "@semio-tech/trinity-react";
 import { FormRenderer } from "@semio-tech/forms-react";
+import { Puzzle2dCanvas } from "@semio-tech/puzzle-2d-react";
 import { createWorkerLspTransport, createWriterDocument } from "@semio-tech/writer-core";
 import { WriterCanvas } from "@semio-tech/writer-react";
 import { CodeEditor } from "@semio-tech/framework-platform-renderer-react";
-import type { UiEditorHostSurfaceNode, UiFormsHostSurfaceNode, UiTrinityHostSurfaceNode } from "@semio-tech/framework-platform-core";
+import type { UiEditorHostSurfaceNode, UiFormsHostSurfaceNode, UiPuzzle2dHostSurfaceNode, UiTrinityHostSurfaceNode } from "@semio-tech/framework-platform-core";
 
 let trinityPlayChromeRegistered = false;
 const trinityJackControllerRef: { current: TrinityJackPlayController | null } = { current: null };
@@ -7226,28 +7233,44 @@ function TrinityRewriteAfterSurfaceHost({ node }: { readonly node: UiTrinityHost
   );
 }
 
-function TrinityRewriteLhsEditorSurfaceHost({ node: _node }: { readonly node: import("@semio-tech/framework-platform-core").UiWriterHostSurfaceNode }): ReactElement {
+function TrinityRewriteLhsSurfaceHost({ node: _node }: { readonly node: UiPuzzle2dHostSurfaceNode }): ReactElement {
   const appCtx = reactHostPort.useContext(PlaygroundContext);
   const revision = useTrinityRewriteInteractionRevision(appCtx?.runtime);
   const ctrl = useTrinityRewriteController();
-  void revision;
-  const document = ctrl?.getWriterDocumentLhs() ?? createWriterDocument({ id: "rewrite-lhs", languageId: "json", text: "{}" });
-  const onChange = reactHostPort.useCallback((next: import("@semio-tech/writer-core").WriterDocumentV1) => {
-    trinityRewriteControllerRef.current?.run("setLhsJson", { value: next.text });
+  const kindCatalogs = reactHostPort.useMemo(() => rewriteLhsKindCatalogs(), []);
+  const onFixtureChange = reactHostPort.useCallback((json: string) => {
+    trinityRewriteControllerRef.current?.run("setLhsFixtureJson", { json });
   }, []);
-  return <WriterCanvas document={document} onChange={onChange} className="h-full" />;
+  void revision;
+  return (
+    <Puzzle2dCanvas
+      fixtureJson={ctrl?.getLhsFixtureJson() ?? REWRITE_DEFAULT_LHS_FIXTURE_JSON}
+      kindCatalogs={kindCatalogs}
+      fixtureDragDrop
+      onFixtureChange={onFixtureChange}
+      className="h-full min-h-0"
+    />
+  );
 }
 
-function TrinityRewriteRhsEditorSurfaceHost({ node: _node }: { readonly node: import("@semio-tech/framework-platform-core").UiWriterHostSurfaceNode }): ReactElement {
+function TrinityRewriteRhsSurfaceHost({ node: _node }: { readonly node: UiPuzzle2dHostSurfaceNode }): ReactElement {
   const appCtx = reactHostPort.useContext(PlaygroundContext);
   const revision = useTrinityRewriteInteractionRevision(appCtx?.runtime);
   const ctrl = useTrinityRewriteController();
-  void revision;
-  const document = ctrl?.getWriterDocumentRhs() ?? createWriterDocument({ id: "rewrite-rhs", languageId: "json", text: "{}" });
-  const onChange = reactHostPort.useCallback((next: import("@semio-tech/writer-core").WriterDocumentV1) => {
-    trinityRewriteControllerRef.current?.run("setRhsJson", { value: next.text });
+  const kindCatalogs = reactHostPort.useMemo(() => rewriteRhsKindCatalogs(), []);
+  const onFixtureChange = reactHostPort.useCallback((json: string) => {
+    trinityRewriteControllerRef.current?.run("setRhsFixtureJson", { json });
   }, []);
-  return <WriterCanvas document={document} onChange={onChange} className="h-full" />;
+  void revision;
+  return (
+    <Puzzle2dCanvas
+      fixtureJson={ctrl?.getRhsFixtureJson() ?? REWRITE_DEFAULT_RHS_FIXTURE_JSON}
+      kindCatalogs={kindCatalogs}
+      fixtureDragDrop
+      onFixtureChange={onFixtureChange}
+      className="h-full min-h-0"
+    />
+  );
 }
 
 function TrinityRewriteJackSurfaceHost({ node: _node }: { readonly node: import("@semio-tech/framework-platform-core").UiWriterHostSurfaceNode }): ReactElement {
@@ -7291,8 +7314,8 @@ export function registerTrinityJackPlaySurfaceHosts(): void {
 export function registerTrinityRewritePlaySurfaceHosts(): void {
   registerUiTrinitySurfaceHost(TRINITY_REWRITE_PLAY_SURFACE_ID_BEFORE, TrinityRewriteBeforeSurfaceHost);
   registerUiTrinitySurfaceHost(TRINITY_REWRITE_PLAY_SURFACE_ID_AFTER, TrinityRewriteAfterSurfaceHost);
-  registerUiWriterSurfaceHost(TRINITY_REWRITE_PLAY_SURFACE_ID_LHS, TrinityRewriteLhsEditorSurfaceHost);
-  registerUiWriterSurfaceHost(TRINITY_REWRITE_PLAY_SURFACE_ID_RHS, TrinityRewriteRhsEditorSurfaceHost);
+  registerUiPuzzle2dSurfaceHost(TRINITY_REWRITE_PLAY_SURFACE_ID_LHS, TrinityRewriteLhsSurfaceHost);
+  registerUiPuzzle2dSurfaceHost(TRINITY_REWRITE_PLAY_SURFACE_ID_RHS, TrinityRewriteRhsSurfaceHost);
   registerUiWriterSurfaceHost(TRINITY_REWRITE_PLAY_SURFACE_ID_JACK, TrinityRewriteJackSurfaceHost);
   registerUiFormsSurfaceHost(TRINITY_REWRITE_PLAY_SURFACE_ID_PARAMETERS, TrinityRewriteParametersSurfaceHost);
   registerTrinityRewritePlayDeclarativeBodies();
@@ -9524,6 +9547,7 @@ function WriterPlaySurfaceHost({ node: _node }: { readonly node: UiWriterHostSur
   const editorSelectionSignal = ctrl?.getEditorSelectionSignal() ?? 0;
   const externalHoverRange = ctrl?.getHoveredAstSpan() ?? null;
   const externalHoverSignal = ctrl?.getExternalHoverSignal() ?? 0;
+  const editorSettings = ctrl?.getEditorSettings();
   const createLspTransport = reactHostPort.useCallback(() => createWriterPlayWorkerLspTransport(createWriterJackLspWorker()), []);
   const onChange = reactHostPort.useCallback((next: import("@semio-tech/writer-core").WriterDocumentV1) => {
     writerPlayControllerRef.current?.run("setDocument", { document: next });
@@ -9551,6 +9575,7 @@ function WriterPlaySurfaceHost({ node: _node }: { readonly node: UiWriterHostSur
       externalHoverSignal={externalHoverSignal}
       onSelectionChange={onSelectionChange}
       onHoverChange={onHoverChange}
+      editorSettings={editorSettings}
       className="h-full"
     />
   );

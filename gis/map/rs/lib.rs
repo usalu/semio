@@ -3920,3 +3920,93 @@ mod tests {
     }
 }
 // #endregion 🔖Tests
+
+// #region 🔖DocumentVcs
+use framework_vcs::{
+    create_document_vcs_envelope, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff,
+};
+use serde::{Deserialize, Serialize};
+
+pub const GIS_MAP_SCHEMA: &str = "gis.map/v1";
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GisMapDocument {
+    pub layers: Vec<serde_json::Value>,
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GisMapDiff {
+    pub layers: Option<Vec<serde_json::Value>>,
+}
+
+impl OperationDiff<GisMapDocument> for GisMapDiff {
+    fn apply(&self, projection: &GisMapDocument) -> GisMapDocument {
+        GisMapDocument {
+            layers: self.layers.clone().unwrap_or_else(|| projection.layers.clone()),
+        }
+    }
+
+    fn absorb(&mut self, other: Self) {
+        if other.layers.is_some() {
+            self.layers = other.layers;
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "op", rename_all = "camelCase")]
+pub enum GisMapOp {
+    SetLayers { layers: Vec<serde_json::Value> },
+}
+
+impl Operation<GisMapDocument> for GisMapOp {
+    type Diff = GisMapDiff;
+
+    fn diff(&self, _projection: &GisMapDocument) -> GisMapDiff {
+        match self {
+            GisMapOp::SetLayers { layers } => GisMapDiff {
+                layers: Some(layers.clone()),
+            },
+        }
+    }
+
+    fn backwards(&self, projection: &GisMapDocument) -> Vec<Self> {
+        vec![GisMapOp::SetLayers {
+            layers: projection.layers.clone(),
+        }]
+    }
+}
+
+pub type GisMapEnvelope = DocumentVcsEnvelope<GisMapDocument, GisMapOp>;
+pub type GisMapStore = DocumentVcsStore<GisMapDocument, GisMapOp>;
+
+pub fn empty_gis_map_projection() -> GisMapDocument {
+    GisMapDocument { layers: Vec::new() }
+}
+
+#[cfg(test)]
+mod gis_map_vcs_tests {
+    use super::*;
+
+    #[test]
+    fn gis_map_document_vcs_replays_ops() {
+        let mut store = GisMapStore::new(create_document_vcs_envelope(
+            GIS_MAP_SCHEMA,
+            "gis",
+            empty_gis_map_projection(),
+            None,
+        ));
+        store
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![GisMapOp::SetLayers {
+                    layers: vec![serde_json::json!({ "id": "base" })],
+                }],
+                description: None,
+            })
+            .expect("apply");
+        assert_eq!(store.projection().expect("projection").layers.len(), 1);
+    }
+}
+// #endregion 🔖DocumentVcs

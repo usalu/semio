@@ -3617,6 +3617,169 @@ pub fn dispose(handle: &str) {
 }
 // #endregion 🔖WasmSession
 
+// #region 🔖DocumentVcs
+use framework_vcs::{
+    create_document_vcs_envelope, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff,
+};
+
+pub const FLOW_DOCUMENT_SCHEMA: &str = "flow.document/v1";
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FlowDocument {
+    pub flow: serde_json::Value,
+    pub tree: serde_json::Value,
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FlowDiff {
+    pub flow: Option<serde_json::Value>,
+    pub tree: Option<serde_json::Value>,
+}
+
+impl OperationDiff<FlowDocument> for FlowDiff {
+    fn apply(&self, projection: &FlowDocument) -> FlowDocument {
+        FlowDocument {
+            flow: self.flow.clone().unwrap_or_else(|| projection.flow.clone()),
+            tree: self.tree.clone().unwrap_or_else(|| projection.tree.clone()),
+        }
+    }
+
+    fn absorb(&mut self, other: Self) {
+        if other.flow.is_some() {
+            self.flow = other.flow;
+        }
+        if other.tree.is_some() {
+            self.tree = other.tree;
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "op", rename_all = "camelCase")]
+pub enum FlowOp {
+    SetFlow { flow: serde_json::Value },
+    SetTree { tree: serde_json::Value },
+}
+
+impl Operation<FlowDocument> for FlowOp {
+    type Diff = FlowDiff;
+
+    fn diff(&self, _projection: &FlowDocument) -> FlowDiff {
+        match self {
+            FlowOp::SetFlow { flow } => FlowDiff {
+                flow: Some(flow.clone()),
+                ..Default::default()
+            },
+            FlowOp::SetTree { tree } => FlowDiff {
+                tree: Some(tree.clone()),
+                ..Default::default()
+            },
+        }
+    }
+
+    fn backwards(&self, projection: &FlowDocument) -> Vec<Self> {
+        match self {
+            FlowOp::SetFlow { .. } => vec![FlowOp::SetFlow {
+                flow: projection.flow.clone(),
+            }],
+            FlowOp::SetTree { .. } => vec![FlowOp::SetTree {
+                tree: projection.tree.clone(),
+            }],
+        }
+    }
+}
+
+pub type FlowEnvelope = DocumentVcsEnvelope<FlowDocument, FlowOp>;
+pub type FlowStore = DocumentVcsStore<FlowDocument, FlowOp>;
+
+pub fn empty_flow_projection() -> FlowDocument {
+    FlowDocument {
+        flow: serde_json::json!({}),
+        tree: serde_json::json!({}),
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+mod flow_vcs_wasm {
+    use super::*;
+    use std::cell::RefCell;
+    use wasm_bindgen::prelude::*;
+
+    #[wasm_bindgen]
+    pub struct FlowDocumentVcs {
+        store: RefCell<FlowStore>,
+    }
+
+    #[wasm_bindgen]
+    impl FlowDocumentVcs {
+        #[wasm_bindgen(constructor)]
+        pub fn new(envelope_json: Option<String>) -> Result<FlowDocumentVcs, JsValue> {
+            let store = match envelope_json {
+                Some(json) => {
+                    let envelope: FlowEnvelope =
+                        serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
+                    FlowStore::new(envelope)
+                }
+                None => FlowStore::new(create_document_vcs_envelope(
+                    FLOW_DOCUMENT_SCHEMA,
+                    "flow",
+                    empty_flow_projection(),
+                    None,
+                )),
+            };
+            Ok(Self {
+                store: RefCell::new(store),
+            })
+        }
+
+        #[wasm_bindgen(js_name = dispatchJson)]
+        pub fn dispatch_json(&self, command_json: &str) -> Result<(), JsValue> {
+            self.store
+                .borrow_mut()
+                .dispatch_json(command_json)
+                .map_err(|e| JsValue::from_str(&e.to_string()))
+        }
+
+        #[wasm_bindgen(js_name = projectionJson)]
+        pub fn projection_json(&self) -> Result<String, JsValue> {
+            self.store
+                .borrow()
+                .projection_json()
+                .map_err(|e| JsValue::from_str(&e.to_string()))
+        }
+    }
+}
+
+#[cfg(test)]
+mod flow_vcs_tests {
+    use super::*;
+
+    #[test]
+    fn flow_document_vcs_replays_ops() {
+        let mut store = FlowStore::new(create_document_vcs_envelope(
+            FLOW_DOCUMENT_SCHEMA,
+            "flow",
+            empty_flow_projection(),
+            None,
+        ));
+        store
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![FlowOp::SetFlow {
+                    flow: serde_json::json!({ "id": "f1" }),
+                }],
+                description: None,
+            })
+            .expect("apply");
+        assert_eq!(
+            store.projection().expect("projection").flow,
+            serde_json::json!({ "id": "f1" })
+        );
+    }
+}
+// #endregion 🔖DocumentVcs
+
 // #region 🔖Tests
 #[cfg(test)]
 mod tests {

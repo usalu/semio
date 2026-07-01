@@ -1,7 +1,7 @@
 {
   "title": "Panel Ghost Interaction Mode",
   "emoji": "👻",
-  "status": "closed",
+  "status": "open",
   "description": "When UI interaction starts in a panel, active element stays visible, rest dims to 5% opacity, panel becomes click-through to canvas.",
   "summary": "Completed global panel hiding for window and panel interactions. Ghosted controls now resolve to fully hidden opacity even when inline opacity is present; window command chrome, desktop/mobile panel frames, tree gutters, and vertical guides participate in ghost visibility. Only a directly interacted tree row remains active, with its logical parent rows and connecting indentation guides preserved. Added regression coverage for tree ancestry and non-tree controls. Focused Nx tests and lint pass; the full package suite retains six unrelated existing tree-render failures, typecheck retains the package's existing broad error set, and Storybook's Layout preview is blocked by its current empty-root/docgen failure.",
   "github": {
@@ -14,6 +14,7 @@
     "local": "panel-ghost-interaction_dc3e8955.plan.md"
   },
   "sessions": [
-    "⚪e98db6d2949a4f69bdf37381ac1f1138"
+    "⚪e98db6d2949a4f69bdf37381ac1f1138",
+    "⚪5a7fbeb472b744b8bdface28a8d8ae1e"
   ]
 }

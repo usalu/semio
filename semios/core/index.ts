@@ -4,13 +4,11 @@
 // #endregion 🧲Header
 
 import {
-	applyJsonReplaceOp,
 	createDocumentVcsEnvelope,
 	createDocumentVcsId,
 	type DocumentVcsEnvelope,
 	DocumentVcsStore,
 	materializeDocumentProjection,
-	type JsonReplaceOp,
 } from "@semio-tech/framework-core";
 import {
 	SEMIOSRESOURCES_DESCRIPTOR_IDS,
@@ -421,80 +419,139 @@ export function appVcsHandlerForFormat(format: string): AppVcsHandler | undefine
 	return appVcsHandlers.get(format);
 }
 
-/** @emoji 📦 Json-replace VCS handler for technologies without typed edit ops. */
-export function createJsonAppVcsHandler(format: string, schema: string, empty: () => unknown): AppVcsHandler<unknown, JsonReplaceOp<unknown>> {
-	type T = unknown;
+/** @emoji 📦 Typed VCS handler factory for technologies without a dedicated core export yet. */
+export function createTypedAppVcsHandler<TProjection, TOp>(
+	format: string,
+	schema: string,
+	empty: () => TProjection,
+	applyOp: (projection: TProjection, operation: TOp) => TProjection,
+): AppVcsHandler<TProjection, TOp> {
 	return {
 		format,
-		createEnvelope: (id) => createDocumentVcsEnvelope<T, JsonReplaceOp<T>>(schema, id, empty()),
-		applyOp: applyJsonReplaceOp,
+		createEnvelope: (id) => createDocumentVcsEnvelope<TProjection, TOp>(schema, id, empty()),
+		applyOp,
 		serializeEnvelope: (envelope) => JSON.stringify(envelope),
-		deserializeEnvelope: (json) => JSON.parse(json) as DocumentVcsEnvelope<T, JsonReplaceOp<T>>,
+		deserializeEnvelope: (json) => JSON.parse(json) as DocumentVcsEnvelope<TProjection, TOp>,
 		materializeProjection: (source) => {
 			if (source.vcsJson) {
-				const envelope = JSON.parse(source.vcsJson) as DocumentVcsEnvelope<T, JsonReplaceOp<T>>;
+				const envelope = JSON.parse(source.vcsJson) as DocumentVcsEnvelope<TProjection, TOp>;
 				const appliedIds = envelope.vcs.operations.map((change) => change.id);
-				return materializeDocumentProjection(envelope, appliedIds, applyJsonReplaceOp);
+				return materializeDocumentProjection(envelope, appliedIds, applyOp);
 			}
-			if (source.inline) return JSON.parse(source.inline) as T;
+			if (source.inline) return JSON.parse(source.inline) as TProjection;
 			return empty();
 		},
 	};
 }
 
+type ShootingScene = { readonly schema: string; readonly id: string; readonly entities: readonly { readonly id: string; readonly label: string }[] };
+type ShootingOp =
+	| { readonly op: "addEntity"; readonly entity: { readonly id: string; readonly label: string } }
+	| { readonly op: "removeEntity"; readonly entityId: string };
+
+function applyShootingOp(scene: ShootingScene, op: ShootingOp): ShootingScene {
+	switch (op.op) {
+		case "addEntity":
+			return { ...scene, entities: [...scene.entities, op.entity] };
+		case "removeEntity":
+			return { ...scene, entities: scene.entities.filter((entity) => entity.id !== op.entityId) };
+	}
+}
+
 /** @emoji 🌊 Semios app VCS handler for flow documents. */
 export function createFlowDocumentAppVcsHandler() {
-	return createJsonAppVcsHandler("flow.document/v1", "flow.document/v1", () => ({ flow: {}, tree: {} }));
+	return createTypedAppVcsHandler("flow.document/v1", "flow.document/v1", () => ({ flow: {}, tree: {} }), (doc, op) => {
+		if (op.op === "setFlow") return { ...doc, flow: op.flow };
+		return { ...doc, tree: op.tree };
+	});
 }
 
 /** @emoji 🌳 Semios app VCS handler for DAG documents. */
 export function createFlowDagAppVcsHandler() {
-	return createJsonAppVcsHandler("flow.dag/v1", "flow.dag/v1", () => ({ nodes: [], edges: [] }));
+	type DagDoc = { readonly nodes: readonly unknown[]; readonly edges: readonly unknown[] };
+	type DagOp = { readonly op: "setNodes"; readonly nodes: readonly unknown[] } | { readonly op: "setEdges"; readonly edges: readonly unknown[] };
+	return createTypedAppVcsHandler<DagDoc, DagOp>("flow.dag/v1", "flow.dag/v1", () => ({ nodes: [], edges: [] }), (doc, op) => {
+		if (op.op === "setNodes") return { ...doc, nodes: op.nodes };
+		return { ...doc, edges: op.edges };
+	});
 }
 
 /** @emoji 📏 Semios app VCS handler for procedural 2d documents. */
 export function createProcedural2dAppVcsHandler() {
-	return createJsonAppVcsHandler("procedural.2d/v1", "procedural.2d/v1", () => ({}));
+	type Doc = { readonly revision: number };
+	type Op = { readonly op: "setRevision"; readonly revision: number };
+	return createTypedAppVcsHandler<Doc, Op>("procedural.2d/v1", "procedural.2d/v1", () => ({ revision: 0 }), (doc, op) => ({ revision: op.revision }));
 }
 
 /** @emoji 📐 Semios app VCS handler for procedural 3d documents. */
 export function createProcedural3dAppVcsHandler() {
-	return createJsonAppVcsHandler("procedural.3d/v1", "procedural.3d/v1", () => ({}));
+	type Doc = { readonly revision: number };
+	type Op = { readonly op: "setRevision"; readonly revision: number };
+	return createTypedAppVcsHandler<Doc, Op>("procedural.3d/v1", "procedural.3d/v1", () => ({ revision: 0 }), (doc, op) => ({ revision: op.revision }));
 }
 
 /** @emoji 📸 Semios app VCS handler for shooting scene documents. */
 export function createShootingAppVcsHandler() {
-	return createJsonAppVcsHandler("shooting.scene/v1", "shooting.scene/v1", () => ({}));
+	return createTypedAppVcsHandler<ShootingScene, ShootingOp>(
+		"shooting.scene/v1",
+		"shooting.scene/v1",
+		() => ({ schema: "shooting.scene/v1", id: "shooting", entities: [] }),
+		applyShootingOp,
+	);
 }
 
 /** @emoji 🔺 Semios app VCS handler for trinity graph documents. */
 export function createTrinityGraphAppVcsHandler() {
-	return createJsonAppVcsHandler("trinity.graph/v1", "trinity.graph/v1", () => ({}));
+	type Doc = { readonly nodes: readonly unknown[] };
+	type Op = { readonly op: "setNodes"; readonly nodes: readonly unknown[] };
+	return createTypedAppVcsHandler<Doc, Op>("trinity.graph/v1", "trinity.graph/v1", () => ({ nodes: [] }), (doc, op) => ({ nodes: op.nodes }));
 }
 
 /** @emoji 🗺️ Semios app VCS handler for GIS map documents. */
 export function createGisMapAppVcsHandler() {
-	return createJsonAppVcsHandler("gis.map/v1", "gis.map/v1", () => ({}));
+	type Doc = { readonly layers: readonly unknown[] };
+	type Op = { readonly op: "setLayers"; readonly layers: readonly unknown[] };
+	return createTypedAppVcsHandler<Doc, Op>("gis.map/v1", "gis.map/v1", () => ({ layers: [] }), (doc, op) => ({ layers: op.layers }));
 }
 
 /** @emoji 📽 Semios app VCS handler for presentation deck documents. */
 export function createPresentationDeckAppVcsHandler() {
-	return createJsonAppVcsHandler("presentation.deck/v1", "presentation.deck/v1", () => ({ tiles: [] }));
+	type Tile = { readonly id: string; readonly name: string };
+	type Doc = { readonly schema: string; readonly tiles: readonly Tile[] };
+	type Op = { readonly op: "addTile"; readonly tile: Tile } | { readonly op: "removeTile"; readonly tileId: string };
+	return createTypedAppVcsHandler<Doc, Op>(
+		"presentation.deck/v1",
+		"presentation.deck/v1",
+		() => ({ schema: "presentation.deck/v1", tiles: [] }),
+		(doc, op) => {
+			if (op.op === "addTile") return { ...doc, tiles: [...doc.tiles, op.tile] };
+			return { ...doc, tiles: doc.tiles.filter((tile) => tile.id !== op.tileId) };
+		},
+	);
 }
 
 /** @emoji 🩻 Semios app VCS handler for puzzle 2d documents. */
 export function createPuzzle2dAppVcsHandler() {
-	return createJsonAppVcsHandler("puzzle.2d/v1", "puzzle.2d/v1", () => ({}));
+	type Doc = { readonly nodes: readonly string[] };
+	type Op = { readonly op: "addNode"; readonly nodeId: string } | { readonly op: "removeNode"; readonly nodeId: string };
+	return createTypedAppVcsHandler<Doc, Op>("puzzle.2d/v1", "puzzle.2d/v1", () => ({ nodes: [] }), (doc, op) => {
+		if (op.op === "addNode") return { ...doc, nodes: [...doc.nodes, op.nodeId] };
+		return { ...doc, nodes: doc.nodes.filter((id) => id !== op.nodeId) };
+	});
 }
 
 /** @emoji 🏙️ Semios app VCS handler for puzzle 3d documents. */
 export function createPuzzle3dAppVcsHandler() {
-	return createJsonAppVcsHandler("puzzle.3d/v1", "puzzle.3d/v1", () => ({}));
+	type Doc = { readonly revision: number };
+	type Op = { readonly op: "setRevision"; readonly revision: number };
+	return createTypedAppVcsHandler<Doc, Op>("puzzle.3d/v1", "puzzle.3d/v1", () => ({ revision: 0 }), (doc, op) => ({ revision: op.revision }));
 }
 
 /** @emoji 👯 Semios app VCS handler for puzzle 5d documents. */
 export function createPuzzle5dAppVcsHandler() {
-	return createJsonAppVcsHandler("puzzle.5d/v1", "puzzle.5d/v1", () => ({}));
+	type Doc = { readonly revision: number };
+	type Op = { readonly op: "setRevision"; readonly revision: number };
+	return createTypedAppVcsHandler<Doc, Op>("puzzle.5d/v1", "puzzle.5d/v1", () => ({ revision: 0 }), (doc, op) => ({ revision: op.revision }));
 }
 
 registerAppVcsHandler(createFlowDocumentAppVcsHandler());
@@ -508,11 +565,40 @@ registerAppVcsHandler(createPresentationDeckAppVcsHandler());
 registerAppVcsHandler(createPuzzle2dAppVcsHandler());
 registerAppVcsHandler(createPuzzle3dAppVcsHandler());
 registerAppVcsHandler(createPuzzle5dAppVcsHandler());
-registerAppVcsHandler(createJsonAppVcsHandler("cad.scene/v1", "cad.scene/v1", () => ({})));
-registerAppVcsHandler(createJsonAppVcsHandler("forms.dictionary/v1", "forms.dictionary/v1", () => ({})));
-registerAppVcsHandler(createJsonAppVcsHandler("compose.design/v1", "compose.design/v1", () => ({})));
-registerAppVcsHandler(createJsonAppVcsHandler("compose.type/v1", "compose.type/v1", () => ({})));
-registerAppVcsHandler(createJsonAppVcsHandler("compose.kit/v1", "compose.kit/v1", () => ({})));
+registerAppVcsHandler(
+	createTypedAppVcsHandler<
+		{ readonly schema: string; readonly id: string; readonly nodes: readonly { readonly id: string; readonly label: string }[] },
+		| { readonly op: "addNode"; readonly node: { readonly id: string; readonly label: string } }
+		| { readonly op: "removeNode"; readonly nodeId: string }
+	>("cad.scene/v1", "cad.scene/v1", () => ({ schema: "cad.scene/v1", id: "cad", nodes: [] }), (doc, op) => {
+		if (op.op === "addNode") return { ...doc, nodes: [...doc.nodes, op.node] };
+		return { ...doc, nodes: doc.nodes.filter((node) => node.id !== op.nodeId) };
+	}),
+);
+registerAppVcsHandler(
+	createTypedAppVcsHandler<{ readonly id: string }, { readonly op: "setId"; readonly id: string }>(
+		"compose.design/v1",
+		"compose.design/v1",
+		() => ({ id: "design" }),
+		(doc, op) => ({ id: op.id }),
+	),
+);
+registerAppVcsHandler(
+	createTypedAppVcsHandler<{ readonly id: string }, { readonly op: "setId"; readonly id: string }>(
+		"compose.type/v1",
+		"compose.type/v1",
+		() => ({ id: "type" }),
+		(doc, op) => ({ id: op.id }),
+	),
+);
+registerAppVcsHandler(
+	createTypedAppVcsHandler<{ readonly id: string }, { readonly op: "setId"; readonly id: string }>(
+		"compose.kit/v1",
+		"compose.kit/v1",
+		() => ({ id: "kit" }),
+		(doc, op) => ({ id: op.id }),
+	),
+);
 
 export function resolvePayloadRef(payloadRef: string): string | null {
 	if (payloadRef.startsWith("fixture:")) return payloadRef.slice("fixture:".length);
@@ -1380,8 +1466,8 @@ if (import.meta.vitest) {
 			store.dispatch({
 				kind: "applyAppOperation",
 				instanceId: instance.id,
-				forwards: [{ op: "replaceProjection", projection: { flow: { id: "patched" }, tree: {} } }],
-				backwards: [{ op: "replaceProjection", projection: { flow: {}, tree: {} } }],
+				forwards: [{ op: "setFlow", flow: { id: "patched" } }],
+				backwards: [{ op: "setFlow", flow: {} }],
 			});
 			const updated = store.projection().appInstances[0]!;
 			const projection = materializeAppInstanceProjection(updated) as { flow?: { id?: string } };

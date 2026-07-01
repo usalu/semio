@@ -1,0 +1,14 @@
+{
+  "title": "Fix Writer Console Warnings and Piece Unknown Label Property",
+  "emoji": "📝",
+  "status": "closed",
+  "description": "Fix multiple instances of Three.js being imported warning, and the unknown property label on nodes/Piece/properties/label error when running writer.",
+  "summary": "Fixed console warnings and validation errors in writer and trinity apps, including Three.js multiple imports, passive event listener on wheel, and re-generated/recompiled manifests/WASM targets.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1777"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪ff6747a5408a49cfb67d6ba80e3fefef"
+  ]
+}

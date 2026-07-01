@@ -37,10 +37,8 @@ import {
 import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
 import {
   DocumentVcsStore,
-  applyJsonReplaceOp,
   createDocumentVcsEnvelope,
-  recordJsonProjectionChange,
-  type JsonReplaceOp,
+  recordProjectionChange,
 } from "@semio-tech/framework-core";
 import {
   DAG_DEFAULT_FIXTURE,
@@ -75,6 +73,12 @@ const DEFAULT_SIBLING_GAP = 40;
 
 export const DAG_PLAY_DEFAULT_FIXTURE: DagFixtureV1 = DAG_DEFAULT_FIXTURE;
 export const DAG_PLAY_DEFAULT_FIXTURE_JSON = dagFixtureToJson(DAG_PLAY_DEFAULT_FIXTURE);
+
+type DagFixtureEditOp = { readonly op: "setDocument"; readonly document: DagFixtureV1 };
+
+function applyDagFixtureEditOp(_fixture: DagFixtureV1, op: DagFixtureEditOp): DagFixtureV1 {
+  return op.document;
+}
 
 export const DAG_PLAY_LAYOUT = createStackLayout([DAG_PLAY_WINDOW_KIND_ID], ["DAG"]);
 export const DAG_PLAY_HIERARCHY_TAB_ID = "framework.panel.hierarchy";
@@ -307,9 +311,9 @@ export function buildDagPlayInspectorTree(fixtureJson: string, selectedNodeIds: 
 /** @emoji 🎛 DAG play shell controller. */
 export class DagPlayController extends Controller {
   readonly mainMode = new ModeRuntime("main", "Edit", undefined);
-  private readonly docStore = new DocumentVcsStore<DagFixtureV1, JsonReplaceOp<DagFixtureV1>>({
+  private readonly docStore = new DocumentVcsStore<DagFixtureV1, DagFixtureEditOp>({
     envelope: createDocumentVcsEnvelope("dag.fixture/v1", "dag-play", DAG_PLAY_DEFAULT_FIXTURE),
-    applyOp: applyJsonReplaceOp,
+    applyOp: applyDagFixtureEditOp,
   });
   private engagementInput = "";
   private layerSpacing = DEFAULT_LAYER_SPACING;
@@ -333,7 +337,7 @@ export class DagPlayController extends Controller {
     return dagFixtureToJson(this.projection());
   }
 
-  getDocumentVcsStore(): DocumentVcsStore<DagFixtureV1, JsonReplaceOp<DagFixtureV1>> {
+  getDocumentVcsStore(): DocumentVcsStore<DagFixtureV1, DagFixtureEditOp> {
     return this.docStore;
   }
 
@@ -342,7 +346,8 @@ export class DagPlayController extends Controller {
   }
 
   private commitFixture(next: DagFixtureV1): void {
-    recordJsonProjectionChange(this.docStore, next);
+    const previous = this.projection();
+    recordProjectionChange(this.docStore, [{ op: "setDocument", document: next }]);
   }
 
   getReorganize(): DagReorganizeRequest {

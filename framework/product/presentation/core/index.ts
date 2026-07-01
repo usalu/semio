@@ -1978,12 +1978,22 @@ export function analogy(spec: AnalogySpec): Presentation {
 
 //#region 🔖DocumentVcs
 import {
-	applyJsonReplaceOp,
 	createDocumentVcsEnvelope,
 	materializeDocumentProjection,
 	type DocumentVcsEnvelope,
-	type JsonReplaceOp,
 } from "@semio-tech/framework-core";
+
+export type FigureTileSource = {
+	readonly src: string;
+	readonly kind: string;
+	readonly frame: { readonly x: number; readonly y: number; readonly width: number; readonly height: number };
+};
+
+export type FigureTileDraft = {
+	readonly id: string;
+	readonly name: string;
+	readonly crop: { readonly x: number; readonly y: number; readonly width: number; readonly height: number };
+};
 
 export type PresentationDeckV1 = {
 	readonly schema: "presentation.deck/v1";
@@ -1991,7 +2001,14 @@ export type PresentationDeckV1 = {
 	readonly tiles: readonly FigureTileDraft[];
 };
 
-export type PresentationDeckJsonVcsEnvelope = DocumentVcsEnvelope<PresentationDeckV1, JsonReplaceOp<PresentationDeckV1>>;
+export type PresentationEditOp =
+	| { readonly op: "setSource"; readonly source: FigureTileSource }
+	| { readonly op: "addTile"; readonly tile: FigureTileDraft; readonly index?: number }
+	| { readonly op: "removeTile"; readonly tileId: string }
+	| { readonly op: "renameTile"; readonly tileId: string; readonly name: string }
+	| { readonly op: "setDocument"; readonly document: PresentationDeckV1 };
+
+export type PresentationDeckVcsEnvelope = DocumentVcsEnvelope<PresentationDeckV1, PresentationEditOp>;
 
 const PRESENTATION_DECK_EMPTY = (): PresentationDeckV1 => ({
 	schema: "presentation.deck/v1",
@@ -1999,18 +2016,39 @@ const PRESENTATION_DECK_EMPTY = (): PresentationDeckV1 => ({
 	tiles: [],
 });
 
+export function applyPresentationEditOp(deck: PresentationDeckV1, op: PresentationEditOp): PresentationDeckV1 {
+	switch (op.op) {
+		case "setSource":
+			return { ...deck, source: op.source };
+		case "addTile": {
+			const tiles = [...deck.tiles];
+			tiles.splice(op.index ?? tiles.length, 0, op.tile);
+			return { ...deck, tiles };
+		}
+		case "removeTile":
+			return { ...deck, tiles: deck.tiles.filter((tile) => tile.id !== op.tileId) };
+		case "renameTile":
+			return {
+				...deck,
+				tiles: deck.tiles.map((tile) => (tile.id === op.tileId ? { ...tile, name: op.name } : tile)),
+			};
+		case "setDocument":
+			return op.document;
+	}
+}
+
 /** @emoji 🧩 Semios app VCS handler factory for presentation deck documents. */
 export function createPresentationAppVcsHandler() {
 	return {
 		format: "presentation.deck/v1",
 		createEnvelope: (id: string) => createDocumentVcsEnvelope("presentation.deck/v1", id, PRESENTATION_DECK_EMPTY()),
-		applyOp: applyJsonReplaceOp,
-		serializeEnvelope: (envelope: PresentationDeckJsonVcsEnvelope) => JSON.stringify(envelope),
-		deserializeEnvelope: (json: string) => JSON.parse(json) as PresentationDeckJsonVcsEnvelope,
+		applyOp: applyPresentationEditOp,
+		serializeEnvelope: (envelope: PresentationDeckVcsEnvelope) => JSON.stringify(envelope),
+		deserializeEnvelope: (json: string) => JSON.parse(json) as PresentationDeckVcsEnvelope,
 		materializeProjection: (source: { readonly vcsJson?: string; readonly inline?: string }) => {
 			if (source.vcsJson) {
-				const envelope = JSON.parse(source.vcsJson) as PresentationDeckJsonVcsEnvelope;
-				return materializeDocumentProjection(envelope, envelope.vcs.operations.map((change) => change.id), applyJsonReplaceOp);
+				const envelope = JSON.parse(source.vcsJson) as PresentationDeckVcsEnvelope;
+				return materializeDocumentProjection(envelope, envelope.vcs.operations.map((change) => change.id), applyPresentationEditOp);
 			}
 			if (source.inline) return JSON.parse(source.inline) as PresentationDeckV1;
 			return PRESENTATION_DECK_EMPTY();

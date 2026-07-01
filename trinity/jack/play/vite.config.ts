@@ -10,7 +10,7 @@ export default createPlaygroundPlayViteConfig({
   repoRoot,
   playEntryKind: "trinity-jack",
   extraAliases: [{ find: "@semio-tech/trinity-react", replacement: path.resolve(playDir, "../../react/index.tsx") }],
-  resolveDedupe: ["react", "react-dom"],
+  resolveDedupe: ["react", "react-dom", "three"],
   optimizeDeps: {
     include: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime"],
     exclude: ["@semio-tech/framework-playground-renderer-react/trinity-jack", "@semio-tech/trinity-react"],

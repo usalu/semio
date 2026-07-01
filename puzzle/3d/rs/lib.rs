@@ -1506,3 +1506,90 @@ impl Puzzle3dPrecomputeSession {
         serde_json::to_string(&progress).unwrap_or_else(|_| "{}".to_string())
     }
 }
+
+// #region 🔖DocumentVcs
+use framework_vcs::{
+    create_document_vcs_envelope, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff,
+};
+
+pub const PUZZLE_3D_SCHEMA: &str = "puzzle.3d/v1";
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Puzzle3dDocument {
+    pub revision: i64,
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Puzzle3dDiff {
+    pub revision: Option<i64>,
+}
+
+impl OperationDiff<Puzzle3dDocument> for Puzzle3dDiff {
+    fn apply(&self, projection: &Puzzle3dDocument) -> Puzzle3dDocument {
+        Puzzle3dDocument {
+            revision: self.revision.unwrap_or(projection.revision),
+        }
+    }
+
+    fn absorb(&mut self, other: Self) {
+        if other.revision.is_some() {
+            self.revision = other.revision;
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "op", rename_all = "camelCase")]
+pub enum Puzzle3dOp {
+    SetRevision { revision: i64 },
+}
+
+impl Operation<Puzzle3dDocument> for Puzzle3dOp {
+    type Diff = Puzzle3dDiff;
+
+    fn diff(&self, _projection: &Puzzle3dDocument) -> Puzzle3dDiff {
+        match self {
+            Puzzle3dOp::SetRevision { revision } => Puzzle3dDiff {
+                revision: Some(*revision),
+            },
+        }
+    }
+
+    fn backwards(&self, projection: &Puzzle3dDocument) -> Vec<Self> {
+        vec![Puzzle3dOp::SetRevision {
+            revision: projection.revision,
+        }]
+    }
+}
+
+pub type Puzzle3dEnvelope = DocumentVcsEnvelope<Puzzle3dDocument, Puzzle3dOp>;
+pub type Puzzle3dStore = DocumentVcsStore<Puzzle3dDocument, Puzzle3dOp>;
+
+pub fn empty_puzzle3d_projection() -> Puzzle3dDocument {
+    Puzzle3dDocument { revision: 0 }
+}
+
+#[cfg(test)]
+mod puzzle3d_vcs_tests {
+    use super::*;
+
+    #[test]
+    fn puzzle3d_document_vcs_replays_ops() {
+        let mut store = Puzzle3dStore::new(create_document_vcs_envelope(
+            PUZZLE_3D_SCHEMA,
+            "puzzle3d",
+            empty_puzzle3d_projection(),
+            None,
+        ));
+        store
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![Puzzle3dOp::SetRevision { revision: 3 }],
+                description: None,
+            })
+            .expect("apply");
+        assert_eq!(store.projection().expect("projection").revision, 3);
+    }
+}
+// #endregion 🔖DocumentVcs

@@ -1560,7 +1560,9 @@
         "@semio-tech/forms-core": "workspace:*",
         "@semio-tech/framework-core": "workspace:*",
         "@semio-tech/framework-playground-core": "workspace:*",
+        "@semio-tech/graph-manifest": "workspace:*",
         "@semio-tech/trinity-react": "workspace:*",
+        "@semio-tech/trinity-rewrite-react": "workspace:*",
         "@semio-tech/ui-react": "workspace:*",
         "@semio-tech/writer-core": "workspace:*",
       },
@@ -1571,6 +1573,15 @@
         "typescript": "^5.9.3",
         "vite": "^7.3.1",
         "vitest": "^4.0.17",
+      },
+    },
+    "trinity/rewrite/react": {
+      "name": "@semio-tech/trinity-rewrite-react",
+      "version": "0.1.0",
+      "dependencies": {
+        "@semio-tech/graph-manifest": "workspace:*",
+        "@semio-tech/puzzle-2d-react": "workspace:*",
+        "@semio-tech/trinity-react": "workspace:*",
       },
     },
     "ui/asset": {
@@ -2824,6 +2835,8 @@
     "@semio-tech/trinity-react": ["@semio-tech/trinity-react@workspace:trinity/react"],
 
     "@semio-tech/trinity-rewrite-play": ["@semio-tech/trinity-rewrite-play@workspace:trinity/rewrite/play"],
+
+    "@semio-tech/trinity-rewrite-react": ["@semio-tech/trinity-rewrite-react@workspace:trinity/rewrite/react"],
 
     "@semio-tech/ui-asset": ["@semio-tech/ui-asset@workspace:ui/asset"],
 

@@ -6,11 +6,9 @@
 
 import { DRAWLAYERS_LAYER_IDS, type DrawLayersLayerKindId } from "@semio-tech/graph-manifest";
 import {
-	applyJsonReplaceOp,
 	createDocumentVcsEnvelope,
 	type DocumentVcsEnvelope,
 	materializeDocumentProjection,
-	type JsonReplaceOp,
 } from "@semio-tech/framework-core";
 
 // #region 📐Types
@@ -251,7 +249,8 @@ export type DrawEditOp =
 	| { readonly op: "removeLayer"; readonly layerId: string }
 	| { readonly op: "reorderLayer"; readonly layerId: string; readonly parentId?: string; readonly index: number }
 	| { readonly op: "setActiveTool"; readonly tool: DrawToolId }
-	| { readonly op: "setCamera"; readonly camera: DrawCamera };
+	| { readonly op: "setCamera"; readonly camera: DrawCamera }
+	| { readonly op: "setDocument"; readonly document: DrawDocument };
 // #endregion 📐Types
 
 // #region 🔧Helpers
@@ -1302,6 +1301,8 @@ export function applyDrawEditOp(doc: DrawDocument, edit: DrawEditOp): DrawDocume
 			return { ...doc, activeTool: edit.tool };
 		case "setCamera":
 			return { ...doc, camera: edit.camera };
+		case "setDocument":
+			return edit.document;
 		default:
 			return doc;
 	}
@@ -1310,7 +1311,6 @@ export function applyDrawEditOp(doc: DrawDocument, edit: DrawEditOp): DrawDocume
 
 //#region 🔖DocumentVcs
 export type DrawDocumentVcsEnvelope = DocumentVcsEnvelope<DrawDocument, DrawEditOp>;
-export type DrawDocumentJsonVcsEnvelope = DocumentVcsEnvelope<DrawDocument, JsonReplaceOp<DrawDocument>>;
 
 /** @emoji 📦 Creates a draw document VCS envelope with an empty or seeded projection. */
 export function createDrawDocumentVcsEnvelope(id: string, projection: DrawDocument = defaultDrawDocument(id)): DrawDocumentVcsEnvelope {

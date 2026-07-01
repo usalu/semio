@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji ✍️ `@semio-tech/writer-react` — infinite-canvas writer editor with LSP overlays. */
+/** @emoji ✍️ `@semio-tech/writer-react` — text editor with LSP overlays and line numbers. */
 // #endregion 🧲Header
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -19,10 +19,12 @@ import {
 	positionToOffset,
 	selectableSpansForLanguage,
 	tokenizeWithGrammar,
+	writerNewlineAllowedAt,
 	type LspCompletionItem,
 	type LspDiagnostic,
 	type LspTransport,
-	type JackSymbolOccurrence,
+	WRITER_DEFAULT_EDITOR_SETTINGS,
+	type WriterEditorSettings,
 	type WriterDocumentV1,
 } from "@semio-tech/writer-core";
 import initWriterWasm, { WriterSession, initSync } from "../rs/pkg/writer.js";
@@ -60,6 +62,7 @@ export interface WriterCanvasProps {
 	readonly externalHoverSignal?: number;
 	readonly onSelectionChange?: (range: { readonly start: number; readonly end: number }) => void;
 	readonly onHoverChange?: (offset: number | null) => void;
+	readonly editorSettings?: WriterEditorSettings;
 	readonly className?: string;
 	readonly placeholder?: string;
 }
@@ -106,6 +109,7 @@ export function WriterCanvas({
 	externalHoverSignal = 0,
 	onSelectionChange,
 	onHoverChange,
+	editorSettings = WRITER_DEFAULT_EDITOR_SETTINGS,
 	className,
 	placeholder,
 }: WriterCanvasProps): React.ReactElement {
@@ -444,7 +448,7 @@ export function WriterCanvas({
 				session.detachGpu();
 				return;
 			}
-			session.setCamera(documentRef.current.camera.x, documentRef.current.camera.y, documentRef.current.camera.zoom);
+			session.setCamera(0, documentRef.current.camera.y, 1);
 			session.setText(documentRef.current.text);
 			syncEditorSpans(documentRef.current.text, documentRef.current.languageId, session);
 			resize();
@@ -468,7 +472,7 @@ export function WriterCanvas({
 	useEffect(() => {
 		const session = sessionRef.current;
 		if (!session?.gpuReady()) return;
-		session.setCamera(document.camera.x, document.camera.y, document.camera.zoom);
+		session.setCamera(0, document.camera.y, 1);
 		if (document.text !== lastLocalTextRef.current) {
 			session.setText(document.text);
 			lastLocalTextRef.current = document.text;
@@ -477,7 +481,14 @@ export function WriterCanvas({
 		session.setSelectableSpansJson(JSON.stringify(selectableSpans));
 		session.setPlaceholdersJson(JSON.stringify(editorPlaceholders));
 		renderFrame();
-	}, [document.camera.x, document.camera.y, document.camera.zoom, document.text, editorPlaceholders, grammarTokens, selectableSpans, renderFrame]);
+	}, [document.camera.y, document.text, editorPlaceholders, grammarTokens, selectableSpans, renderFrame]);
+
+	useEffect(() => {
+		const session = sessionRef.current;
+		if (!session?.gpuReady()) return;
+		session.setEditorSettingsJson(JSON.stringify(editorSettings));
+		renderFrame();
+	}, [editorSettings, renderFrame]);
 
 	useEffect(() => {
 		const session = sessionRef.current;
@@ -620,6 +631,23 @@ export function WriterCanvas({
 				await refreshCompletions();
 				return;
 			}
+			if (event.key === "Enter") {
+				event.preventDefault();
+				const caret = session.caret();
+				const canNewline = writerNewlineAllowedAt(documentRef.current.text, documentRef.current.languageId, caret);
+				if (canNewline) {
+					setCompletions([]);
+					session.insertText("\n");
+					pushDocument(session.text());
+					return;
+				}
+				if (completions.length > 0) {
+					applyCompletion(completions[completionIndex]!);
+					return;
+				}
+				await refreshCompletions();
+				return;
+			}
 			if (completions.length > 0) {
 				if (event.key === "ArrowDown") {
 					event.preventDefault();
@@ -631,7 +659,7 @@ export function WriterCanvas({
 					setCompletionIndex((i) => (i - 1 + completions.length) % completions.length);
 					return;
 				}
-				if (event.key === "Tab" || event.key === "Enter") {
+				if (event.key === "Tab") {
 					event.preventDefault();
 					applyCompletion(completions[completionIndex]!);
 					return;
@@ -673,7 +701,7 @@ export function WriterCanvas({
 			}
 			if (event.key === "Tab") {
 				event.preventDefault();
-				session.insertText("  ");
+				session.insertText(session.tabInsertText());
 				pushDocument(session.text());
 				return;
 			}
@@ -736,19 +764,23 @@ export function WriterCanvas({
 		[applyCompletion, completionIndex, completions, onSubmit, pushDocument, refreshCompletions, runFormat, syncCaret],
 	);
 
-	const onWheel = useCallback(
-		(event: React.WheelEvent<HTMLCanvasElement>) => {
+	useEffect(() => {
+		const canvas = canvasRef.current;
+		if (!canvas) return;
+		const handleWheel = (event: WheelEvent) => {
 			event.preventDefault();
 			const session = sessionRef.current;
 			if (!session) return;
-			const rect = event.currentTarget.getBoundingClientRect();
-			session.wheelScreen(event.clientX - rect.left, event.clientY - rect.top, event.deltaY);
+			session.wheelScrollScreen(event.deltaY);
 			const camera = JSON.parse(session.cameraJson()) as { x: number; y: number; zoom: number };
-			onChange?.({ ...document, camera });
+			onChange?.({ ...documentRef.current, camera: { x: 0, y: camera.y, zoom: 1 } });
 			scheduleFrame();
-		},
-		[document, onChange, scheduleFrame],
-	);
+		};
+		canvas.addEventListener("wheel", handleWheel, { passive: false });
+		return () => {
+			canvas.removeEventListener("wheel", handleWheel);
+		};
+	}, [onChange, scheduleFrame]);
 
 	return (
 		<div
@@ -792,7 +824,6 @@ export function WriterCanvas({
 			<canvas
 				ref={canvasRef}
 				className={`${canvasViewportClass} block h-full w-full cursor-text touch-none`}
-				onWheel={onWheel}
 				onPointerDown={(e) => {
 					if (e.button !== 0) return;
 					e.preventDefault();

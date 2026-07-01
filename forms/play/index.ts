@@ -42,10 +42,8 @@ import {
 } from "@semio-tech/framework-playground-core";
 import {
 	DocumentVcsStore,
-	applyJsonReplaceOp,
 	createDocumentVcsEnvelope,
-	recordJsonProjectionChange,
-	type JsonReplaceOp,
+	recordProjectionChange,
 } from "@semio-tech/framework-core";
 import { bootstrapElementsSurfaceChromeDocument, type TreeDataItem, type TreeDragAndDropController, type TreeDropPosition } from "@semio-tech/ui-react";
 import {
@@ -58,6 +56,7 @@ import {
 	formsExtensionHost,
 	isExtensionFormQuestion,
 	questionKindContribution,
+	type FormEditOp,
 	type FormQuestion,
 	type FormSelectOption,
 	type FormSpec,
@@ -608,9 +607,9 @@ export function buildFormsPlayToolbarTools(controllerId: string): AppTools {
 /** @emoji 🎛 Forms play shell controller. */
 export class FormsPlayController extends Controller implements PlaygroundFixtureHost {
 	readonly mainMode = new ModeRuntime("main", "Forms", undefined);
-	private readonly docStore = new DocumentVcsStore<FormSpec, JsonReplaceOp<FormSpec>>({
+	private readonly docStore = new DocumentVcsStore<FormSpec, FormEditOp>({
 		envelope: createDocumentVcsEnvelope("forms.form/v1", "forms-play", defaultFormSpec()),
-		applyOp: applyJsonReplaceOp,
+		applyOp: applyFormEditOp,
 	});
 	private selectedIds: string[] = [];
 	private tryValues: FormValues = {};
@@ -636,7 +635,8 @@ export class FormsPlayController extends Controller implements PlaygroundFixture
 	}
 
 	private commitDocument(next: FormSpec): void {
-		recordJsonProjectionChange(this.docStore, next);
+		const previous = this.projection();
+		recordProjectionChange(this.docStore, [{ op: "setDocument", document: next }]);
 		this.tryValues = {};
 		this.notifySnapshot();
 		this.emit();
@@ -654,7 +654,7 @@ export class FormsPlayController extends Controller implements PlaygroundFixture
 		return formSpecToJson(this.projection());
 	}
 
-	getDocumentVcsStore(): DocumentVcsStore<FormSpec, JsonReplaceOp<FormSpec>> {
+	getDocumentVcsStore(): DocumentVcsStore<FormSpec, FormEditOp> {
 		return this.docStore;
 	}
 

@@ -9,8 +9,11 @@ export default createPlaygroundPlayViteConfig({
   playDir,
   repoRoot,
   playEntryKind: "trinity-rewrite",
-  extraAliases: [{ find: "@semio-tech/trinity-react", replacement: path.resolve(playDir, "../../react/index.tsx") }],
-  resolveDedupe: ["react", "react-dom"],
+  extraAliases: [
+    { find: "@semio-tech/trinity-react", replacement: path.resolve(playDir, "../../react/index.tsx") },
+    { find: "@semio-tech/trinity-rewrite-react", replacement: path.resolve(playDir, "../react/index.tsx") },
+  ],
+  resolveDedupe: ["react", "react-dom", "three"],
   optimizeDeps: {
     include: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime"],
     exclude: ["@semio-tech/framework-playground-renderer-react/trinity-rewrite", "@semio-tech/trinity-react"],

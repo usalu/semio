@@ -39,6 +39,7 @@ import {
 	ensureProceduralBrepBridge,
 	extractChannelPreviewItems,
 	preferGeometryPreviewItems,
+	attachPreviewMeshesToItems,
 	ProceduralPreview,
 	type ProceduralPreviewItem,
 } from "@semio-tech/procedural-3d-react";
@@ -547,6 +548,7 @@ function Flow3dQuestionControl({
 	const paramValues = (typeof value === "object" && value != null && !Array.isArray(value) ? value : {}) as FormValues;
 	const paramValuesKey = React.useMemo(() => JSON.stringify(paramValues), [paramValues]);
 	const [previewItems, setPreviewItems] = React.useState<readonly ProceduralPreviewItem[]>([]);
+	const previewItemsRef = React.useRef<readonly ProceduralPreviewItem[]>([]);
 	const [kernel, setKernel] = React.useState<Awaited<ReturnType<typeof ensureProceduralBrepBridge>>>();
 	const evalGenRef = React.useRef(0);
 
@@ -565,7 +567,15 @@ function Flow3dQuestionControl({
 					await client.loadFixtureJson(patched);
 					const result = await client.evaluate();
 					if (gen !== evalGenRef.current) return;
-					setPreviewItems(preferGeometryPreviewItems(extractChannelPreviewItems(result.outputsJson)));
+					const previewMeshes = await client.tessellatePreviews(result.outputsJson);
+					if (gen !== evalGenRef.current) return;
+					const nextItems = attachPreviewMeshesToItems(
+						preferGeometryPreviewItems(extractChannelPreviewItems(result.outputsJson)),
+						previewMeshes,
+						previewItemsRef.current,
+					);
+					previewItemsRef.current = nextItems;
+					setPreviewItems(nextItems);
 				} catch (error) {
 					console.log("[DEBUG] forms flow3d preview eval failed", error);
 				}
@@ -581,7 +591,7 @@ function Flow3dQuestionControl({
 	return (
 		<div className="grid min-h-0 gap-double lg:grid-cols-[minmax(0,1fr)_minmax(12rem,18rem)]" data-slot="forms-flow3d-question">
 			<FormRenderer spec={paramSpec} values={paramValues} interactive={interactive} onChange={(next) => onValue(next)} />
-			<div className="min-h-[12rem] rounded-md border border-border">
+			<div className="relative min-h-[12rem] rounded-md border border-border">
 				<ProceduralPreview items={previewItems} kernel={kernel ?? undefined} className="h-full min-h-[12rem]" />
 			</div>
 		</div>

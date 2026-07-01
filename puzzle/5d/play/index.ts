@@ -43,10 +43,8 @@ import {
 } from "@semio-tech/framework-playground-core";
 import {
   DocumentVcsStore,
-  applyJsonReplaceOp,
   createDocumentVcsEnvelope,
-  recordJsonProjectionChange,
-  type JsonReplaceOp,
+  recordProjectionChange,
 } from "@semio-tech/framework-core";
 
 import {
@@ -134,6 +132,12 @@ import {
 } from "../react/index.tsx";
 
 //#region 🔖Ids
+type Puzzle5dModelEditOp = { readonly op: "setDocument"; readonly document: Puzzle5dModel };
+
+function applyPuzzle5dModelEditOp(_model: Puzzle5dModel, op: Puzzle5dModelEditOp): Puzzle5dModel {
+  return op.document;
+}
+
 export const PUZZLE_5D_PLAY_APP_ID = "puzzle-5d-play";
 export const PUZZLE_5D_PLAY_CONTROLLER_ID = "puzzle-5d-play";
 export const PUZZLE_5D_PLAY_2D_WINDOW_ID = "puzzle-5d-2d";
@@ -964,9 +968,9 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
   private activeFixtureId = playgroundResolvedFixtureId(PUZZLE_5D_PLAY_FIXTURE_CONCRETE_FOREST_ID);
   readonly puzzle5dStore: Puzzle5dStore = createStore(puzzle5dPlayEmptyModel());
   readonly puzzle5dStoreBridge: Puzzle5dStoreBridge;
-  private readonly modelDocStore = new DocumentVcsStore<Puzzle5dModel, JsonReplaceOp<Puzzle5dModel>>({
+  private readonly modelDocStore = new DocumentVcsStore<Puzzle5dModel, Puzzle5dModelEditOp>({
     envelope: createDocumentVcsEnvelope("puzzle.5d/v1", "puzzle5d-play", puzzle5dPlayEmptyModel()),
-    applyOp: applyJsonReplaceOp,
+    applyOp: applyPuzzle5dModelEditOp,
   });
   private gumballConfig: GumballConfig = { ...PUZZLE_3D_GUMBALL_CONFIG };
   private selected2d: ReadonlySet<string> = new Set();
@@ -1272,12 +1276,13 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
     return windowKinds;
   }
 
-  getDocumentVcsStore(): DocumentVcsStore<Puzzle5dModel, JsonReplaceOp<Puzzle5dModel>> {
+  getDocumentVcsStore(): DocumentVcsStore<Puzzle5dModel, Puzzle5dModelEditOp> {
     return this.modelDocStore;
   }
 
   private commitModel(model: Puzzle5dModel): void {
-    recordJsonProjectionChange(this.modelDocStore, model);
+    const previous = this.modelDocStore.projection();
+    recordProjectionChange(this.modelDocStore, [{ op: "setDocument", document: model }]);
   }
 
   getFixtureCatalog(): PlaygroundFixtureCatalog | null {

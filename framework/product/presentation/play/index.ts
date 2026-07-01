@@ -47,8 +47,9 @@ import {
 	uiInspectorReadonlyField,
 	type UiInspectorFieldGroup,
 } from "@semio-tech/framework-playground-core";
-import { Store, DocumentVcsStore, applyJsonReplaceOp, createDocumentVcsEnvelope, recordJsonProjectionChange, type JsonReplaceOp } from "@semio-tech/framework-core";
+import { Store, DocumentVcsStore, createDocumentVcsEnvelope, recordProjectionChange } from "@semio-tech/framework-core";
 import {
+	applyPresentationEditOp,
 	buildTileMorphPrompt,
 	clampNormalizedFraction,
 	NORMALIZED_RECT_MIN_FRACTION,
@@ -57,6 +58,7 @@ import {
 	type FigureTileDraft,
 	type FigureTileSource,
 	type PresentationDeckV1,
+	type PresentationEditOp,
 } from "@semio-tech/framework-presentation-core";
 
 import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
@@ -138,13 +140,13 @@ function newTileId(prefix = "tile"): string {
 export class PresentationPlayController extends Controller implements PlaygroundFixtureHost {
 	readonly mainMode = new ModeRuntime("main", "Edit", undefined);
 	private activeFixtureId = PLAYGROUND_NO_FIXTURE_ID;
-	private readonly docStore = new DocumentVcsStore<PresentationDeckV1, JsonReplaceOp<PresentationDeckV1>>({
+	private readonly docStore = new DocumentVcsStore<PresentationDeckV1, PresentationEditOp>({
 		envelope: createDocumentVcsEnvelope("presentation.deck/v1", "presentation-tile-play", {
 			schema: "presentation.deck/v1",
 			source: PRESENTATION_PLAY_DEFAULT_SOURCE,
 			tiles: [],
 		}),
-		applyOp: applyJsonReplaceOp,
+		applyOp: applyPresentationEditOp,
 	});
 	private readonly snapshotStore: PresentationPlaySnapshotStore;
 	private snapshotCache: PresentationPlaySnapshot | null = null;
@@ -165,7 +167,8 @@ export class PresentationPlayController extends Controller implements Playground
 	}
 
 	private commitDeck(next: PresentationDeckV1): void {
-		recordJsonProjectionChange(this.docStore, next);
+		const previous = this.projection();
+		recordProjectionChange(this.docStore, [{ op: "setDocument", document: next }]);
 	}
 
 	get source(): FigureTileSource {
@@ -176,7 +179,7 @@ export class PresentationPlayController extends Controller implements Playground
 		return this.projection().tiles;
 	}
 
-	getDocumentVcsStore(): DocumentVcsStore<PresentationDeckV1, JsonReplaceOp<PresentationDeckV1>> {
+	getDocumentVcsStore(): DocumentVcsStore<PresentationDeckV1, PresentationEditOp> {
 		return this.docStore;
 	}
 

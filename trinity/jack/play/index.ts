@@ -30,10 +30,8 @@ import {
 import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
 import {
   DocumentVcsStore,
-  applyJsonReplaceOp,
   createDocumentVcsEnvelope,
-  recordJsonProjectionChange,
-  type JsonReplaceOp,
+  recordProjectionChange,
 } from "@semio-tech/framework-core";
 import { createWriterDocument, type WriterDocumentV1 } from "@semio-tech/writer-core";
 import {
@@ -58,6 +56,12 @@ import {
   TRINITY_JACK_PLAY_PRESET_QUERIES,
   resolveTrinityJackPlayFixtureSlug,
 } from "./fixture-slugs.ts";
+
+type TrinityFixtureEditOp = { readonly op: "setDocument"; readonly document: TrinityFixtureV1 };
+
+function applyTrinityFixtureEditOp(_fixture: TrinityFixtureV1, op: TrinityFixtureEditOp): TrinityFixtureV1 {
+  return op.document;
+}
 
 export const TRINITY_JACK_PLAY_APP_ID = "trinity-jack-play";
 export const TRINITY_JACK_PLAY_CONTROLLER_ID = "trinity-jack-play";
@@ -195,9 +199,9 @@ export function buildTrinityJackPlayLayout(): WindowLayout {
 
 export class TrinityJackPlayController extends Controller implements PlaygroundFixtureHost {
   readonly mainMode = new ModeRuntime("explore", "Explore", undefined);
-  private readonly docStore = new DocumentVcsStore<TrinityFixtureV1, JsonReplaceOp<TrinityFixtureV1>>({
+  private readonly docStore = new DocumentVcsStore<TrinityFixtureV1, TrinityFixtureEditOp>({
     envelope: createDocumentVcsEnvelope("trinity.fixture/v1", "trinity-jack-play", TRINITY_DEFAULT_FIXTURE),
-    applyOp: applyJsonReplaceOp,
+    applyOp: applyTrinityFixtureEditOp,
   });
   private activeFixtureId = TRINITY_JACK_PLAY_FIXTURE_DEFAULT_ID;
   private jackQuery = TRINITY_JACK_PLAY_PRESET_QUERIES[TRINITY_JACK_PLAY_FIXTURE_DEFAULT_ID] ?? "MATCH (a:Piece) RETURN a.name";
@@ -231,7 +235,7 @@ export class TrinityJackPlayController extends Controller implements PlaygroundF
     return trinityFixtureToJson(this.projection());
   }
 
-  getDocumentVcsStore(): DocumentVcsStore<TrinityFixtureV1, JsonReplaceOp<TrinityFixtureV1>> {
+  getDocumentVcsStore(): DocumentVcsStore<TrinityFixtureV1, TrinityFixtureEditOp> {
     return this.docStore;
   }
 
@@ -240,7 +244,8 @@ export class TrinityJackPlayController extends Controller implements PlaygroundF
   }
 
   private commitFixture(next: TrinityFixtureV1): void {
-    recordJsonProjectionChange(this.docStore, next);
+    const previous = this.projection();
+    recordProjectionChange(this.docStore, [{ op: "setDocument", document: next }]);
   }
 
   getJackQuery(): string {

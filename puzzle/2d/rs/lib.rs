@@ -4388,8 +4388,99 @@ mod force_graph_tests {
 
     #[test]
     fn puzzle_document_vcs_uses_framework_engine() {
-        let store = framework_vcs::JsonDocumentStore::new("puzzle.2d/v1", "puzzle2d", serde_json::json!({ "nodes": [] }));
-        assert!(store.projection_json().expect("projection").contains("nodes"));
+        use framework_vcs::{
+            create_document_vcs_envelope, CollectionDiff, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore,
+            Operation, OperationDiff,
+        };
+        use serde::{Deserialize, Serialize};
+
+        #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+        struct Puzzle2dProjection {
+            nodes: Vec<String>,
+        }
+
+        #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+        struct Puzzle2dDiff {
+            nodes: Option<CollectionDiff<String, (), String>>,
+        }
+
+        impl OperationDiff<Puzzle2dProjection> for Puzzle2dDiff {
+            fn apply(&self, projection: &Puzzle2dProjection) -> Puzzle2dProjection {
+                let mut next = projection.clone();
+                if let Some(nodes) = &self.nodes {
+                    for id in &nodes.removed {
+                        next.nodes.retain(|entry| entry != id);
+                    }
+                    next.nodes.extend(nodes.added.clone());
+                }
+                next
+            }
+
+            fn absorb(&mut self, other: Self) {
+                if let Some(b) = other.nodes {
+                    self.nodes.get_or_insert_with(Default::default).removed.extend(b.removed);
+                    if let Some(a) = &mut self.nodes {
+                        a.added.extend(b.added);
+                    }
+                }
+            }
+        }
+
+        #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+        #[serde(tag = "op")]
+        enum Puzzle2dOp {
+            AddNode { node_id: String },
+            RemoveNode { node_id: String },
+        }
+
+        impl Operation<Puzzle2dProjection> for Puzzle2dOp {
+            type Diff = Puzzle2dDiff;
+
+            fn diff(&self, _projection: &Puzzle2dProjection) -> Puzzle2dDiff {
+                match self {
+                    Puzzle2dOp::AddNode { node_id } => Puzzle2dDiff {
+                        nodes: Some(CollectionDiff {
+                            added: vec![node_id.clone()],
+                            ..Default::default()
+                        }),
+                    },
+                    Puzzle2dOp::RemoveNode { node_id } => Puzzle2dDiff {
+                        nodes: Some(CollectionDiff {
+                            removed: vec![node_id.clone()],
+                            ..Default::default()
+                        }),
+                    },
+                }
+            }
+
+            fn backwards(&self, projection: &Puzzle2dProjection) -> Vec<Self> {
+                match self {
+                    Puzzle2dOp::AddNode { node_id } => vec![Puzzle2dOp::RemoveNode {
+                        node_id: node_id.clone(),
+                    }],
+                    Puzzle2dOp::RemoveNode { node_id } => {
+                        if projection.nodes.iter().any(|id| id == node_id) {
+                            vec![Puzzle2dOp::AddNode {
+                                node_id: node_id.clone(),
+                            }]
+                        } else {
+                            Vec::new()
+                        }
+                    }
+                }
+            }
+        }
+
+        let mut store: DocumentVcsStore<Puzzle2dProjection, Puzzle2dOp> = DocumentVcsStore::new(
+            create_document_vcs_envelope("puzzle.2d/v1", "puzzle2d", Puzzle2dProjection { nodes: Vec::new() }, None),
+        );
+        store
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![Puzzle2dOp::AddNode { node_id: "n1".into() }],
+                description: None,
+            })
+            .expect("apply");
+        assert_eq!(store.projection().expect("projection").nodes, vec!["n1"]);
     }
 }
 

@@ -27,10 +27,8 @@ import {
 import type { WindowMeasure } from "@semio-tech/framework-playground-core";
 import {
 	DocumentVcsStore,
-	applyJsonReplaceOp,
 	createDocumentVcsEnvelope,
-	recordJsonProjectionChange,
-	type JsonReplaceOp,
+	recordProjectionChange,
 } from "@semio-tech/framework-core";
 import {
     AppRuntime,
@@ -113,6 +111,13 @@ export const PROCEDURAL_2D_PLAY_SURFACE_ID_GENERATE = "procedural2d.play.generat
 
 export const PROCEDURAL_2D_PLAY_DEFAULT_FIXTURE: FlowFixtureV1 = PROCEDURAL_DEFAULT_FIXTURE;
 export const PROCEDURAL_2D_PLAY_DEFAULT_FIXTURE_JSON = proceduralFixtureToJson(PROCEDURAL_DEFAULT_FIXTURE);
+
+type FlowFixtureEditOp = { readonly op: "setDocument"; readonly document: FlowFixtureV1 };
+
+function applyFlowFixtureEditOp(_fixture: FlowFixtureV1, op: FlowFixtureEditOp): FlowFixtureV1 {
+	return op.document;
+}
+
 export const PROCEDURAL_2D_PLAY_LAYOUT = createDefaultLayout(
 	[PROCEDURAL_2D_PLAY_WINDOW_KIND_ID, PROCEDURAL_2D_PLAY_WINDOW_KIND_PREVIEW],
 	"row",
@@ -571,13 +576,13 @@ export class Procedural2dPlayController extends Controller implements Playground
 	readonly mainMode = new ModeRuntime("main", "Edit", undefined);
 	readonly generateMode = new ModeRuntime("generate", "Generate", undefined);
 	private activeFixtureId = playgroundResolvedFixtureId(PLAYGROUND_NO_FIXTURE_ID);
-	private readonly docStore = new DocumentVcsStore<FlowFixtureV1, JsonReplaceOp<FlowFixtureV1>>({
+	private readonly docStore = new DocumentVcsStore<FlowFixtureV1, FlowFixtureEditOp>({
 		envelope: createDocumentVcsEnvelope(
 			"flow.fixture/v1",
 			"procedural-2d-play",
 			parseFlowPlayFixtureJson(proceduralFixtureJsonForId(playgroundResolvedFixtureId(PLAYGROUND_NO_FIXTURE_ID))) ?? PROCEDURAL_2D_PLAY_EMPTY_FIXTURE,
 		),
-		applyOp: applyJsonReplaceOp,
+		applyOp: applyFlowFixtureEditOp,
 	});
 	private generations: FlowGeneration[] = createDefaultGenerations();
 	private selectedGenerationId: string | null = null;
@@ -703,10 +708,11 @@ export class Procedural2dPlayController extends Controller implements Playground
 	}
 
 	private commitFixture(next: FlowFixtureV1): void {
-		recordJsonProjectionChange(this.docStore, next);
+		const previous = this.projection();
+		recordProjectionChange(this.docStore, [{ op: "setDocument", document: next }]);
 	}
 
-	getDocumentVcsStore(): DocumentVcsStore<FlowFixtureV1, JsonReplaceOp<FlowFixtureV1>> {
+	getDocumentVcsStore(): DocumentVcsStore<FlowFixtureV1, FlowFixtureEditOp> {
 		return this.docStore;
 	}
 

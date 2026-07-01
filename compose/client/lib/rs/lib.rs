@@ -18845,24 +18845,72 @@ mod tests {
 
     use crate::gql::AppSchema;
 
-    /// @emoji 🗄️ `framework_vcs` integration — compose shares generic document VCS primitives with semios technologies.
+    /// @emoji 🗄️ `framework_vcs` integration — compose shares generic typed document VCS primitives with semios technologies.
     #[test]
-    fn framework_vcs_json_replace_materializes_projection() {
-        use framework_vcs::{create_document_vcs_envelope, materialize_document_projection, DocumentVcsCommand, DocumentVcsStore, JsonReplaceApplier, json_replace_op};
-        use std::sync::Arc;
-        let envelope = create_document_vcs_envelope("compose.kit/v1", "kit-test", json!({ "id": "base" }), None);
-        let mut store = DocumentVcsStore::new(envelope, Arc::new(JsonReplaceApplier));
+    fn framework_vcs_typed_ops_materialize_projection() {
+        use framework_vcs::{
+            create_document_vcs_envelope, materialize_document_projection, DocumentVcsCommand, DocumentVcsStore,
+            Operation, OperationDiff,
+        };
+        use serde::{Deserialize, Serialize};
+
+        #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+        struct KitProjection {
+            id: String,
+        }
+
+        #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+        struct KitDiff {
+            id: Option<String>,
+        }
+
+        impl OperationDiff<KitProjection> for KitDiff {
+            fn apply(&self, projection: &KitProjection) -> KitProjection {
+                KitProjection {
+                    id: self.id.clone().unwrap_or_else(|| projection.id.clone()),
+                }
+            }
+
+            fn absorb(&mut self, other: Self) {
+                if other.id.is_some() {
+                    self.id = other.id;
+                }
+            }
+        }
+
+        #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+        #[serde(tag = "op")]
+        enum KitOp {
+            SetId { id: String },
+        }
+
+        impl Operation<KitProjection> for KitOp {
+            type Diff = KitDiff;
+
+            fn diff(&self, _projection: &KitProjection) -> KitDiff {
+                match self {
+                    KitOp::SetId { id } => KitDiff { id: Some(id.clone()) },
+                }
+            }
+
+            fn backwards(&self, projection: &KitProjection) -> Vec<Self> {
+                vec![KitOp::SetId {
+                    id: projection.id.clone(),
+                }]
+            }
+        }
+
+        let envelope = create_document_vcs_envelope("compose.kit/v1", "kit-test", KitProjection { id: "base".into() }, None);
+        let mut store = DocumentVcsStore::new(envelope);
         store
             .dispatch(DocumentVcsCommand::Apply {
-                forwards: vec![json_replace_op(json!({ "id": "patched" }))],
-                backwards: vec![json_replace_op(json!({ "id": "base" }))],
+                operations: vec![KitOp::SetId { id: "patched".into() }],
                 description: None,
             })
             .expect("apply");
-        let projection = store.projection().expect("projection");
-        assert_eq!(projection["id"], "patched");
-        let replayed = materialize_document_projection(store.envelope(), store.applied_change_ids(), &JsonReplaceApplier).expect("materialize");
-        assert_eq!(replayed["id"], "patched");
+        assert_eq!(store.projection().expect("projection").id, "patched");
+        let replayed = materialize_document_projection(store.envelope(), store.applied_change_ids()).expect("materialize");
+        assert_eq!(replayed.id, "patched");
     }
 
     /// @emoji 📜 Collects `(kind, name)` for top-level GraphQL declarations (first line of each declaration block).

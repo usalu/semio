@@ -6,10 +6,8 @@ import { WORLD_REFERENCE_DEFAULT_WIDTH } from "@semio-tech/infinite-world-r3f";
 import { bootstrapElementsSurfaceChromeDocument, formatNumber, referenceMediaKindFromUrl, type GumballConfig } from "@semio-tech/ui-react";
 import {
   DocumentVcsStore,
-  applyJsonReplaceOp,
   createDocumentVcsEnvelope,
-  recordJsonProjectionChange,
-  type JsonReplaceOp,
+  recordProjectionChange,
 } from "@semio-tech/framework-core";
 import {
   AppRuntime,
@@ -1701,15 +1699,21 @@ function puzzle3dPlayPickKindLabel(kind: Puzzle3dPlayPickKind): string {
   return "Attractions";
 }
 
+type Puzzle3dFixtureEditOp = { readonly op: "setDocument"; readonly document: FixtureV1 | null };
+
+function applyPuzzle3dFixtureEditOp(_fixture: FixtureV1 | null, op: Puzzle3dFixtureEditOp): FixtureV1 | null {
+  return op.document;
+}
+
 /** @emoji 🎬 Playground puzzle 3D play controller: fixture, LOD, selection/filter tools, and interaction counters. */
 export class Puzzle3dPlayShellController extends Controller implements PlaygroundFixtureHost {
   private activeFixtureId = playgroundResolvedFixtureId(PUZZLE_3D_PLAY_FIXTURE_CONCRETE_FOREST_ID);
   readonly mainMode = new ModeRuntime("main", "Edit", undefined);
   readonly selectableKinds: Record<Puzzle3dPlayPickKind, boolean> = { object: true, vortex: true, attraction: true };
   readonly visibleKinds: Record<Puzzle3dPlayPickKind, boolean> = { object: true, vortex: true, attraction: true };
-  private readonly docStore = new DocumentVcsStore<FixtureV1 | null, JsonReplaceOp<FixtureV1 | null>>({
+  private readonly docStore = new DocumentVcsStore<FixtureV1 | null, Puzzle3dFixtureEditOp>({
     envelope: createDocumentVcsEnvelope("puzzle.3d.fixture/v1", "puzzle3d-play", null),
-    applyOp: applyJsonReplaceOp,
+    applyOp: applyPuzzle3dFixtureEditOp,
   });
   private fixtureRevision: number;
   private automaticLod: boolean;
@@ -1991,7 +1995,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
     return this.fixture;
   }
 
-  getDocumentVcsStore(): DocumentVcsStore<FixtureV1 | null, JsonReplaceOp<FixtureV1 | null>> {
+  getDocumentVcsStore(): DocumentVcsStore<FixtureV1 | null, Puzzle3dFixtureEditOp> {
     return this.docStore;
   }
 
@@ -2000,7 +2004,8 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
   }
 
   private setFixtureProjection(next: FixtureV1 | null): void {
-    recordJsonProjectionChange(this.docStore, next);
+    const previous = this.fixture;
+    recordProjectionChange(this.docStore, [{ op: "setDocument", document: next }]);
   }
 
   getFixtureCatalog(): PlaygroundFixtureCatalog | null {

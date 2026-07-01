@@ -125,7 +125,7 @@ struct AdjustmentParamsJson {
     levels_white: Option<f32>,
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Default, Deserialize)]
 struct CameraJson {
     #[serde(default)]
     x: f64,
@@ -140,6 +140,7 @@ struct CameraJson {
 struct DocumentJson {
     schema: String,
     id: String,
+    #[serde(default)]
     camera: CameraJson,
     layers: Vec<LayerNodeJson>,
     #[serde(default)]
@@ -387,6 +388,7 @@ pub struct RasterHost {
     panning: bool,
     painting: bool,
     last_paint: Option<Point>,
+    pan_last: Option<Point>,
     theme_clear: Color,
 }
 
@@ -413,6 +415,7 @@ impl RasterHost {
             panning: false,
             painting: false,
             last_paint: None,
+            pan_last: None,
             theme_clear: Color::from_rgba8(32, 32, 36, 255),
         }
     }
@@ -426,16 +429,11 @@ impl RasterHost {
     pub fn set_camera(&mut self, x: f64, y: f64, zoom: f64) {
         self.camera.x = x;
         self.camera.y = y;
-        self.camera.zoom = zoom.max(0.05);
+        self.camera.zoom = cavas::camera::clamp_zoom(zoom);
     }
 
     pub fn wheel_screen(&mut self, sx: f64, sy: f64, delta_y: f64) {
-        let factor = if delta_y < 0.0 { 1.1 } else { 1.0 / 1.1 };
-        let world_before = self.screen_to_world(sx, sy);
-        self.camera.zoom = (self.camera.zoom * factor).clamp(0.05, 64.0);
-        let world_after = self.screen_to_world(sx, sy);
-        self.camera.x += world_before.x - world_after.x;
-        self.camera.y += world_before.y - world_after.y;
+        cavas::camera::wheel_screen(&mut self.camera, &self.viewport, sx, sy, delta_y);
     }
 
     fn screen_to_world(&self, sx: f64, sy: f64) -> Point {
@@ -445,6 +443,7 @@ impl RasterHost {
     pub fn pointer_down_screen(&mut self, sx: f64, sy: f64, button: u8) {
         if button == 1 {
             self.panning = true;
+            self.pan_last = Some(Point::new(sx, sy));
             return;
         }
         if self.active_tool.starts_with("paint") {
@@ -455,18 +454,17 @@ impl RasterHost {
     }
 
     pub fn pointer_move_screen(&mut self, sx: f64, sy: f64) {
-        let world = self.screen_to_world(sx, sy);
         if self.panning {
-            let cx = self.viewport.width as f64 * 0.5;
-            let cy = self.viewport.height as f64 * 0.5;
-            let prev = cavas::camera::screen_to_world(
-                &self.camera,
-                &self.viewport,
-                Point::new(world.x * 0.0 + cx, world.y * 0.0 + cy),
-            );
-            let _ = prev;
+            if let Some(last) = self.pan_last {
+                let dx = (sx - last.x) / self.camera.zoom;
+                let dy = (sy - last.y) / self.camera.zoom;
+                self.camera.x -= dx;
+                self.camera.y -= dy;
+            }
+            self.pan_last = Some(Point::new(sx, sy));
             return;
         }
+        let world = self.screen_to_world(sx, sy);
         if self.painting {
             if let Some(last) = self.last_paint {
                 self.stroke_paint(last, world);
@@ -477,6 +475,7 @@ impl RasterHost {
 
     pub fn pointer_up_screen(&mut self, _sx: f64, _sy: f64) {
         self.panning = false;
+        self.pan_last = None;
         self.painting = false;
         self.last_paint = None;
     }
@@ -975,13 +974,184 @@ mod tests {
 // #endregion 🧪Tests
 
 // #region 🔖DocumentVcs
-#[cfg(target_arch = "wasm32")]
-use std::cell::RefCell;
+use framework_vcs::{
+    create_document_vcs_envelope, CollectionDiff, DocumentVcsEnvelope, DocumentVcsStore, ItemPatch, Operation,
+    OperationDiff,
+};
+
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RasterLayerRef {
+    pub id: String,
+    pub name: String,
+    pub visible: bool,
+}
+
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RasterProjection {
+    pub schema: String,
+    pub id: String,
+    pub layers: Vec<RasterLayerRef>,
+}
+
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(tag = "op", rename_all = "camelCase")]
+pub enum RasterOp {
+    AddLayer { layer: RasterLayerRef },
+    RemoveLayer { layer_id: String },
+    SetLayerVisible { layer_id: String, visible: bool },
+    RenameLayer { layer_id: String, name: String },
+}
+
+#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RasterLayerPatch {
+    pub name: Option<String>,
+    pub visible: Option<bool>,
+}
+
+#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RasterDiff {
+    pub layers: Option<CollectionDiff<String, RasterLayerPatch, RasterLayerRef>>,
+}
+
+impl OperationDiff<RasterProjection> for RasterDiff {
+    fn apply(&self, projection: &RasterProjection) -> RasterProjection {
+        let mut next = projection.clone();
+        if let Some(layers) = &self.layers {
+            for id in &layers.removed {
+                next.layers.retain(|layer| layer.id != *id);
+            }
+            for patch in &layers.modified {
+                for layer in &mut next.layers {
+                    if layer.id == patch.id {
+                        if let Some(name) = &patch.patch.name {
+                            layer.name = name.clone();
+                        }
+                        if let Some(visible) = patch.patch.visible {
+                            layer.visible = visible;
+                        }
+                    }
+                }
+            }
+            for added in &layers.added {
+                next.layers.push(added.clone());
+            }
+        }
+        next
+    }
+
+    fn absorb(&mut self, other: Self) {
+        match (&mut self.layers, other.layers) {
+            (Some(a), Some(b)) => {
+                a.removed.extend(b.removed);
+                a.modified.extend(b.modified);
+                a.added.extend(b.added);
+            }
+            (None, Some(b)) => self.layers = Some(b),
+            _ => {}
+        }
+    }
+}
+
+impl Operation<RasterProjection> for RasterOp {
+    type Diff = RasterDiff;
+
+    fn diff(&self, _projection: &RasterProjection) -> RasterDiff {
+        match self {
+            RasterOp::AddLayer { layer } => RasterDiff {
+                layers: Some(CollectionDiff {
+                    added: vec![layer.clone()],
+                    ..Default::default()
+                }),
+            },
+            RasterOp::RemoveLayer { layer_id } => RasterDiff {
+                layers: Some(CollectionDiff {
+                    removed: vec![layer_id.clone()],
+                    ..Default::default()
+                }),
+            },
+            RasterOp::SetLayerVisible { layer_id, visible } => RasterDiff {
+                layers: Some(CollectionDiff {
+                    modified: vec![ItemPatch {
+                        id: layer_id.clone(),
+                        patch: RasterLayerPatch {
+                            visible: Some(*visible),
+                            ..Default::default()
+                        },
+                    }],
+                    ..Default::default()
+                }),
+            },
+            RasterOp::RenameLayer { layer_id, name } => RasterDiff {
+                layers: Some(CollectionDiff {
+                    modified: vec![ItemPatch {
+                        id: layer_id.clone(),
+                        patch: RasterLayerPatch {
+                            name: Some(name.clone()),
+                            ..Default::default()
+                        },
+                    }],
+                    ..Default::default()
+                }),
+            },
+        }
+    }
+
+    fn backwards(&self, projection: &RasterProjection) -> Vec<Self> {
+        match self {
+            RasterOp::AddLayer { layer } => vec![RasterOp::RemoveLayer {
+                layer_id: layer.id.clone(),
+            }],
+            RasterOp::RemoveLayer { layer_id } => projection
+                .layers
+                .iter()
+                .find(|l| l.id == *layer_id)
+                .map(|layer| vec![RasterOp::AddLayer { layer: layer.clone() }])
+                .unwrap_or_default(),
+            RasterOp::SetLayerVisible { layer_id, visible } => projection
+                .layers
+                .iter()
+                .find(|l| l.id == *layer_id)
+                .map(|layer| {
+                    vec![RasterOp::SetLayerVisible {
+                        layer_id: layer_id.clone(),
+                        visible: layer.visible,
+                    }]
+                })
+                .unwrap_or_default(),
+            RasterOp::RenameLayer { layer_id, .. } => projection
+                .layers
+                .iter()
+                .find(|l| l.id == *layer_id)
+                .map(|layer| {
+                    vec![RasterOp::RenameLayer {
+                        layer_id: layer_id.clone(),
+                        name: layer.name.clone(),
+                    }]
+                })
+                .unwrap_or_default(),
+        }
+    }
+}
+
+pub type RasterEnvelope = DocumentVcsEnvelope<RasterProjection, RasterOp>;
+pub type RasterStore = DocumentVcsStore<RasterProjection, RasterOp>;
+
+pub fn empty_raster_projection() -> RasterProjection {
+    RasterProjection {
+        schema: "raster.document/v1".into(),
+        id: "raster".into(),
+        layers: Vec::new(),
+    }
+}
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
 pub struct RasterDocumentVcs {
-    store: RefCell<framework_vcs::JsonDocumentStore>,
+    store: RefCell<RasterStore>,
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -989,10 +1159,10 @@ pub struct RasterDocumentVcs {
 impl RasterDocumentVcs {
     #[wasm_bindgen(constructor)]
     pub fn new(envelope_json: &str) -> Result<RasterDocumentVcs, JsValue> {
-        let store = framework_vcs::JsonDocumentStore::from_envelope_json(envelope_json)
-            .map_err(|e| JsValue::from_str(&e.to_string()))?;
+        let envelope: RasterEnvelope =
+            serde_json::from_str(envelope_json).map_err(|e| JsValue::from_str(&e.to_string()))?;
         Ok(Self {
-            store: RefCell::new(store),
+            store: RefCell::new(RasterStore::new(envelope)),
         })
     }
 
@@ -1023,6 +1193,35 @@ impl RasterDocumentVcs {
     #[wasm_bindgen(js_name = generation)]
     pub fn generation(&self) -> u32 {
         self.store.borrow().generation() as u32
+    }
+}
+
+#[cfg(test)]
+mod raster_vcs_tests {
+    use super::*;
+    use framework_vcs::DocumentVcsCommand;
+
+    #[test]
+    fn raster_document_vcs_uses_framework_engine() {
+        let mut store = RasterStore::new(create_document_vcs_envelope(
+            "raster.document/v1",
+            "raster",
+            empty_raster_projection(),
+            None,
+        ));
+        store
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![RasterOp::AddLayer {
+                    layer: RasterLayerRef {
+                        id: "l1".into(),
+                        name: "Base".into(),
+                        visible: true,
+                    },
+                }],
+                description: None,
+            })
+            .expect("apply");
+        assert_eq!(store.projection().expect("projection").layers.len(), 1);
     }
 }
 // #endregion 🔖DocumentVcs

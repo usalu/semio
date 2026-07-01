@@ -38,10 +38,8 @@ import {
 import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
 import {
   DocumentVcsStore,
-  applyJsonReplaceOp,
   createDocumentVcsEnvelope,
-  recordJsonProjectionChange,
-  type JsonReplaceOp,
+  recordProjectionChange,
 } from "@semio-tech/framework-core";
 import {
   DAG_LOD_MODE_AUTOMATIC,
@@ -92,6 +90,12 @@ const DEFAULT_SIBLING_GAP = 40;
 
 export const FLOW_PLAY_DEFAULT_FIXTURE: FlowFixtureV1 = FLOW_DEFAULT_FIXTURE;
 export const FLOW_PLAY_DEFAULT_FIXTURE_JSON = flowFixtureToJson(FLOW_PLAY_DEFAULT_FIXTURE);
+
+type FlowFixtureEditOp = { readonly op: "setDocument"; readonly document: FlowFixtureV1 };
+
+function applyFlowFixtureEditOp(_fixture: FlowFixtureV1, op: FlowFixtureEditOp): FlowFixtureV1 {
+  return op.document;
+}
 
 export const FLOW_PLAY_LAYOUT = createStackLayout([FLOW_PLAY_WINDOW_KIND_ID], ["Flow"]);
 export const FLOW_PLAY_KINDS_BODY_KEY = "flow.play.kinds";
@@ -478,9 +482,9 @@ export function buildFlowPlayInspectorTree(
 export class FlowPlayController extends Controller {
   readonly mainMode = new ModeRuntime("main", "Edit", undefined);
   readonly generateMode = new ModeRuntime("generate", "Generate", undefined);
-  private readonly docStore = new DocumentVcsStore<FlowFixtureV1, JsonReplaceOp<FlowFixtureV1>>({
+  private readonly docStore = new DocumentVcsStore<FlowFixtureV1, FlowFixtureEditOp>({
     envelope: createDocumentVcsEnvelope("flow.fixture/v1", "flow-play", FLOW_PLAY_DEFAULT_FIXTURE),
-    applyOp: applyJsonReplaceOp,
+    applyOp: applyFlowFixtureEditOp,
   });
   private previewText = "—";
   private generatePreviewText = "—";
@@ -523,10 +527,11 @@ export class FlowPlayController extends Controller {
   }
 
   private commitFixture(next: FlowFixtureV1): void {
-    recordJsonProjectionChange(this.docStore, next);
+    const previous = this.projection();
+    recordProjectionChange(this.docStore, [{ op: "setDocument", document: next }]);
   }
 
-  getDocumentVcsStore(): DocumentVcsStore<FlowFixtureV1, JsonReplaceOp<FlowFixtureV1>> {
+  getDocumentVcsStore(): DocumentVcsStore<FlowFixtureV1, FlowFixtureEditOp> {
     return this.docStore;
   }
 

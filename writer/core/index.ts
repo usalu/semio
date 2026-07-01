@@ -4,11 +4,9 @@
 // #endregion 🧲Header
 
 import {
-	applyJsonReplaceOp,
 	createDocumentVcsEnvelope,
 	type DocumentVcsEnvelope,
 	materializeDocumentProjection,
-	type JsonReplaceOp,
 } from "@semio-tech/framework-core";
 import { WRITERLANGUAGES_LANGUAGE_IDS, type WriterLanguagesLanguageKindId } from "@semio-tech/graph-manifest";
 
@@ -34,6 +32,21 @@ export type WriterLanguageKindId = WriterLanguagesLanguageKindId;
 export { WRITERLANGUAGES_LANGUAGE_IDS as WRITER_LANGUAGE_KIND_IDS };
 
 export const WRITER_DEFAULT_CAMERA: WriterCamera = { x: 0, y: 0, zoom: 1 };
+
+/** @emoji ⚙️ Text editor chrome controlled from the playground window engagement panel. */
+export interface WriterEditorSettings {
+	readonly fontPx: number;
+	readonly lineHeight: number;
+	readonly showLineNumbers: boolean;
+	readonly tabSize: number;
+}
+
+export const WRITER_DEFAULT_EDITOR_SETTINGS: WriterEditorSettings = {
+	fontPx: 14,
+	lineHeight: 22,
+	showLineNumbers: true,
+	tabSize: 2,
+};
 
 export function createWriterDocument(input: {
 	readonly id: string;
@@ -1039,6 +1052,78 @@ export function jackEditorPlaceholders(text: string, caret: number): readonly Ja
 	return out;
 }
 
+const JACK_NEWLINE_AFTER_KEYWORDS = new Set<JackLexToken["kind"]>([
+	"kwMatch",
+	"kwWhere",
+	"kwReturn",
+	"kwCreate",
+	"kwDelete",
+	"kwSet",
+	"kwMerge",
+	"kwAnd",
+	"kwOr",
+]);
+
+function jackLexTokenAtOffset(tokens: readonly JackLexToken[], offset: number): JackLexToken | undefined {
+	for (const tok of tokens) {
+		if (tok.kind === "eof") break;
+		if (offset >= tok.start && offset <= tok.end) return tok;
+	}
+	return undefined;
+}
+
+/** @emoji ↩️ Whether a jack query may break onto a new line at a byte offset for readability. */
+export function jackNewlineAllowedAt(text: string, offset: number): boolean {
+	const clamped = Math.max(0, Math.min(offset, text.length));
+	const tokens = tokenizeJackSource(text);
+	const at = jackLexTokenAtOffset(tokens, clamped);
+	if (at && clamped > at.start && clamped < at.end) return false;
+
+	const before = text.slice(0, clamped);
+	const after = text.slice(clamped);
+	if (/[A-Za-z0-9_]$/.test(before.trimEnd()) && /^\s*\./.test(after)) return false;
+	if (/:\s*$/.test(before) && /^\s*[A-Za-z_]/.test(after)) return false;
+	if (/\.\s*$/.test(before) && /^\s*[A-Za-z_]/.test(after)) return false;
+
+	let prev: JackLexToken | undefined;
+	let next: JackLexToken | undefined;
+	for (const tok of tokens) {
+		if (tok.kind === "eof") break;
+		if (tok.end <= clamped) prev = tok;
+		if (tok.start >= clamped && !next) {
+			next = tok;
+			break;
+		}
+	}
+
+	if (!before.trim()) return true;
+	if (prev) {
+		const gap = text.slice(prev.end, clamped);
+		if (!/^\s*$/.test(gap)) return false;
+		if (JACK_NEWLINE_AFTER_KEYWORDS.has(prev.kind)) return true;
+		if (prev.kind === "comma" || prev.kind === "rparen" || prev.kind === "rbracket" || prev.kind === "arrow") return true;
+		if (prev.kind === "ident" || prev.kind === "number" || prev.kind === "string") return next?.kind !== "dot";
+		if (
+			prev.kind === "lparen" ||
+			prev.kind === "lbracket" ||
+			prev.kind === "colon" ||
+			prev.kind === "eq" ||
+			prev.kind === "ne" ||
+			prev.kind === "dash"
+		) {
+			return true;
+		}
+	}
+	if (/^\s*$/.test(before) && /^\s*$/.test(after)) return true;
+	return false;
+}
+
+/** @emoji ↩️ Whether Enter may insert a newline at a byte offset for the active writer language. */
+export function writerNewlineAllowedAt(text: string, languageId: string, offset: number): boolean {
+	if (languageId === "jack") return jackNewlineAllowedAt(text, offset);
+	return true;
+}
+
 // #region 🔖JackSymbols
 /** @emoji 📍 One source span for a jack symbol occurrence. */
 export interface JackSymbolOccurrence {
@@ -1132,7 +1217,17 @@ export function applyJackRename(
 // #endregion 🔖JackAst
 
 //#region 🔖DocumentVcs
-export type WriterDocumentVcsEnvelope = DocumentVcsEnvelope<WriterDocumentV1, JsonReplaceOp<WriterDocumentV1>>;
+export type WriterEditOp = { readonly op: "setDocument"; readonly document: WriterDocumentV1 };
+
+/** @emoji ✏️ Applies a writer document edit operation. */
+export function applyWriterEditOp(doc: WriterDocumentV1, op: WriterEditOp): WriterDocumentV1 {
+	switch (op.op) {
+		case "setDocument":
+			return op.document;
+	}
+}
+
+export type WriterDocumentVcsEnvelope = DocumentVcsEnvelope<WriterDocumentV1, WriterEditOp>;
 
 /** @emoji 📦 Creates a writer document VCS envelope with an empty or seeded projection. */
 export function createWriterDocumentVcsEnvelope(
@@ -1144,7 +1239,7 @@ export function createWriterDocumentVcsEnvelope(
 
 /** @emoji 🔁 Materializes a writer document from its VCS envelope. */
 export function materializeWriterDocument(envelope: WriterDocumentVcsEnvelope, appliedChangeIds: readonly string[] = []): WriterDocumentV1 {
-	return materializeDocumentProjection(envelope, appliedChangeIds, applyJsonReplaceOp);
+	return materializeDocumentProjection(envelope, appliedChangeIds, applyWriterEditOp);
 }
 
 /** @emoji 🧩 Semios app VCS handler factory for writer documents. */
@@ -1152,7 +1247,7 @@ export function createWriterAppVcsHandler() {
 	return {
 		format: WRITER_DOCUMENT_SCHEMA,
 		createEnvelope: (id: string) => createWriterDocumentVcsEnvelope(id),
-		applyOp: applyJsonReplaceOp,
+		applyOp: applyWriterEditOp,
 		serializeEnvelope: (envelope: WriterDocumentVcsEnvelope) => JSON.stringify(envelope),
 		deserializeEnvelope: (json: string) => JSON.parse(json) as WriterDocumentVcsEnvelope,
 		materializeProjection: (source: { readonly vcsJson?: string; readonly inline?: string }) => {
@@ -1248,6 +1343,38 @@ if (import.meta.vitest) {
 			expect(atLabel?.kind).toBe("label");
 			const selected = jackAstNodeForSelection(root, 7, 14);
 			expect(selected?.kind).toBe("patternNode");
+		});
+	});
+
+	describe("jack newline insertion", () => {
+		const query = "MATCH (a:Piece) RETURN a.name";
+
+		it("allows newline after keywords", () => {
+			expect(jackNewlineAllowedAt(query, "MATCH".length)).toBe(true);
+			expect(jackNewlineAllowedAt(query, query.indexOf("RETURN") + "RETURN".length)).toBe(true);
+		});
+
+		it("allows newline after closing pattern paren", () => {
+			expect(jackNewlineAllowedAt(query, query.indexOf(")") + 1)).toBe(true);
+		});
+
+		it("disallows newline inside tokens", () => {
+			expect(jackNewlineAllowedAt(query, 2)).toBe(false);
+			expect(jackNewlineAllowedAt(query, query.indexOf("Piece") + 2)).toBe(false);
+		});
+
+		it("disallows newline before property access", () => {
+			const dot = query.indexOf(".");
+			expect(jackNewlineAllowedAt(query, dot)).toBe(false);
+		});
+
+		it("disallows newline between colon and label", () => {
+			const colon = query.indexOf(":");
+			expect(jackNewlineAllowedAt(query, colon + 1)).toBe(false);
+		});
+
+		it("allows newline for non-jack languages via writerNewlineAllowedAt", () => {
+			expect(writerNewlineAllowedAt("hello world", "plaintext", 5)).toBe(true);
 		});
 	});
 

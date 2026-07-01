@@ -5,11 +5,9 @@
 // #endregion 🧲Header
 
 import {
-	applyJsonReplaceOp,
 	createDocumentVcsEnvelope,
 	type DocumentVcsEnvelope,
 	materializeDocumentProjection,
-	type JsonReplaceOp,
 } from "@semio-tech/framework-core";
 
 // #region 📐Types
@@ -170,7 +168,8 @@ export type RasterEditOp =
 	| { readonly op: "reorderLayer"; readonly layerId: string; readonly parentId?: string; readonly index: number }
 	| { readonly op: "setActiveTool"; readonly tool: RasterToolId }
 	| { readonly op: "setBrushSize"; readonly size: number }
-	| { readonly op: "setCamera"; readonly camera: RasterCamera };
+	| { readonly op: "setCamera"; readonly camera: RasterCamera }
+	| { readonly op: "setDocument"; readonly document: RasterDocument };
 // #endregion 📐Types
 
 // #region 🔧Helpers
@@ -441,10 +440,20 @@ export function rasterDocumentToExportJson(doc: RasterDocument): string {
 	return `${JSON.stringify(doc, null, 2)}\n`;
 }
 
+/** @emoji 📡 Serializes document JSON for the WASM compositor (omits embedded assets and session camera). */
+export function rasterDocumentToCompositorSyncJson(doc: RasterDocument): string {
+	const { assets: _assets, camera: _camera, activeTool: _activeTool, brushSize: _brushSize, brushOpacity: _brushOpacity, ...syncDoc } = doc;
+	return JSON.stringify(syncDoc);
+}
+
 /** @emoji 📡 Serializes document JSON for the WASM compositor (omits embedded assets). */
 export function rasterDocumentToSyncJson(doc: RasterDocument): string {
-	const { assets: _assets, ...syncDoc } = doc;
-	return JSON.stringify(syncDoc);
+	return rasterDocumentToCompositorSyncJson(doc);
+}
+
+/** @emoji 📐 Returns whether two raster cameras are equal. */
+export function rasterCameraEqual(a: RasterCamera, b: RasterCamera): boolean {
+	return a.x === b.x && a.y === b.y && a.zoom === b.zoom;
 }
 
 /** @emoji 🧩 Decodes a base64 raster image asset payload. */
@@ -1013,6 +1022,8 @@ export function applyRasterEditOp(doc: RasterDocument, edit: RasterEditOp): Rast
 			return { ...doc, brushSize: edit.size };
 		case "setCamera":
 			return { ...doc, camera: edit.camera };
+		case "setDocument":
+			return edit.document;
 		default:
 			return doc;
 	}
@@ -1021,7 +1032,6 @@ export function applyRasterEditOp(doc: RasterDocument, edit: RasterEditOp): Rast
 
 //#region 🔖DocumentVcs
 export type RasterDocumentVcsEnvelope = DocumentVcsEnvelope<RasterDocument, RasterEditOp>;
-export type RasterDocumentJsonVcsEnvelope = DocumentVcsEnvelope<RasterDocument, JsonReplaceOp<RasterDocument>>;
 
 /** @emoji 📦 Creates a raster document VCS envelope with an empty or seeded projection. */
 export function createRasterDocumentVcsEnvelope(id: string, projection: RasterDocument = defaultRasterDocument(id)): RasterDocumentVcsEnvelope {
@@ -1152,6 +1162,22 @@ if (import.meta.vitest) {
 			});
 			const hits = resolveRasterMarqueeLayerHits(doc, doc.camera, { width: 800, height: 600 }, { x: 350, y: 250, width: 100, height: 100 }, false);
 			expect(hits).toEqual(["a"]);
+		});
+	});
+
+	describe("rasterDocumentToSyncJson", () => {
+		it("omits camera so zoom does not re-sync compositor layers", () => {
+			const doc = defaultRasterDocument("t");
+			const zoomed = applyRasterEditOp(doc, { op: "setCamera", camera: { x: 12, y: -4, zoom: 2.5 } });
+			expect(rasterDocumentToSyncJson(doc)).toBe(rasterDocumentToSyncJson(zoomed));
+			expect(zoomed.camera.zoom).toBe(2.5);
+		});
+	});
+
+	describe("rasterCameraEqual", () => {
+		it("compares camera tuples", () => {
+			expect(rasterCameraEqual({ x: 0, y: 0, zoom: 1 }, { x: 0, y: 0, zoom: 1 })).toBe(true);
+			expect(rasterCameraEqual({ x: 0, y: 0, zoom: 1 }, { x: 0, y: 0, zoom: 2 })).toBe(false);
 		});
 	});
 

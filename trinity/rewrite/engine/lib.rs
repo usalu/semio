@@ -982,6 +982,22 @@ mod tests {
     }
 
     #[test]
+    fn rewrite_labeled_fixture_reloads() {
+        let json = include_str!("../../fixture/nakagin-capsule-tower.trinity.json");
+        let mut g = Graph::load_json(json).unwrap();
+        let rule = Rule {
+            name: "label-core".into(),
+            lhs: Lhs { pattern: PatternJson { left_var: "a".into(), left_kind: "Piece".into(), edge_var: None, edge_kind: None, right_var: None, right_kind: None }, where_clause: Some("a.name = 'b'".into()) },
+            rhs: Rhs { create: vec![], delete: vec![], set: vec![AssignmentJson { var: "a".into(), prop: "label".into(), value: PropertyValue::String("nakagin-core".into()) }], merge: vec![], parameters: vec![] },
+        };
+        apply_rule(&mut g, &rule, &HashMap::new()).unwrap();
+        let fixture_json = g.fixture_json().unwrap();
+        let reloaded = Graph::load_json(&fixture_json).unwrap();
+        let core = reloaded.node("7dc5b737-3b6b-4068-b315-b7bacc91c2e1").unwrap();
+        assert_eq!(core.properties.get("label"), Some(&PropertyValue::String("nakagin-core".into())));
+    }
+
+    #[test]
     fn trinity_host_rebuilds_engine() {
         let host = TrinityHost::from_graph(nakagin_graph());
         assert_eq!(host.engine.nodes.len(), 6);
@@ -1005,3 +1021,92 @@ mod tests {
     }
 }
 // #endregion 🔖Tests
+
+// #region 🔖DocumentVcs
+use framework_vcs::{
+    create_document_vcs_envelope, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff,
+};
+
+pub const TRINITY_GRAPH_SCHEMA: &str = "trinity.graph/v1";
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TrinityGraphDocument {
+    pub nodes: Vec<serde_json::Value>,
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TrinityGraphDiff {
+    pub nodes: Option<Vec<serde_json::Value>>,
+}
+
+impl OperationDiff<TrinityGraphDocument> for TrinityGraphDiff {
+    fn apply(&self, projection: &TrinityGraphDocument) -> TrinityGraphDocument {
+        TrinityGraphDocument {
+            nodes: self.nodes.clone().unwrap_or_else(|| projection.nodes.clone()),
+        }
+    }
+
+    fn absorb(&mut self, other: Self) {
+        if other.nodes.is_some() {
+            self.nodes = other.nodes;
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "op", rename_all = "camelCase")]
+pub enum TrinityGraphOp {
+    SetNodes { nodes: Vec<serde_json::Value> },
+}
+
+impl Operation<TrinityGraphDocument> for TrinityGraphOp {
+    type Diff = TrinityGraphDiff;
+
+    fn diff(&self, _projection: &TrinityGraphDocument) -> TrinityGraphDiff {
+        match self {
+            TrinityGraphOp::SetNodes { nodes } => TrinityGraphDiff {
+                nodes: Some(nodes.clone()),
+            },
+        }
+    }
+
+    fn backwards(&self, projection: &TrinityGraphDocument) -> Vec<Self> {
+        vec![TrinityGraphOp::SetNodes {
+            nodes: projection.nodes.clone(),
+        }]
+    }
+}
+
+pub type TrinityGraphEnvelope = DocumentVcsEnvelope<TrinityGraphDocument, TrinityGraphOp>;
+pub type TrinityGraphStore = DocumentVcsStore<TrinityGraphDocument, TrinityGraphOp>;
+
+pub fn empty_trinity_graph_projection() -> TrinityGraphDocument {
+    TrinityGraphDocument { nodes: Vec::new() }
+}
+
+#[cfg(test)]
+mod trinity_graph_vcs_tests {
+    use super::*;
+
+    #[test]
+    fn trinity_graph_document_vcs_replays_ops() {
+        let mut store = TrinityGraphStore::new(create_document_vcs_envelope(
+            TRINITY_GRAPH_SCHEMA,
+            "trinity",
+            empty_trinity_graph_projection(),
+            None,
+        ));
+        store
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![TrinityGraphOp::SetNodes {
+                    nodes: vec![serde_json::json!({ "id": "n1" })],
+                }],
+                description: None,
+            })
+            .expect("apply");
+        assert_eq!(store.projection().expect("projection").nodes.len(), 1);
+    }
+}
+// #endregion 🔖DocumentVcs

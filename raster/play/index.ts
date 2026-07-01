@@ -49,10 +49,8 @@ import {
 	CANVAS_HOVER_SOURCE_HIERARCHY,
 	CANVAS_HOVER_SOURCE_PICK_MENU,
 	DocumentVcsStore,
-	applyJsonReplaceOp,
 	createDocumentVcsEnvelope,
-	recordJsonProjectionChange,
-	type JsonReplaceOp,
+	recordProjectionChange,
 } from "@semio-tech/framework-core";
 import { bootstrapElementsSurfaceChromeDocument, type TreeDataItem, type TreeDragAndDropController, type TreeDropPosition } from "@semio-tech/ui-react";
 import {
@@ -78,6 +76,7 @@ import {
 	resolveRasterPlayReorderTarget,
 	type RasterBlendMode,
 	type RasterDocument,
+	type RasterEditOp,
 	type RasterHoverPayload,
 	type RasterKindHover,
 	type RasterLayerNode,
@@ -724,9 +723,9 @@ function rasterPlayPatchLayerField(doc: RasterDocument, layerId: string, field: 
 
 export class RasterPlayController extends Controller implements PlaygroundFixtureHost {
 	readonly mainMode = new ModeRuntime("main", "Raster", undefined);
-	private readonly docStore = new DocumentVcsStore<RasterDocument, JsonReplaceOp<RasterDocument>>({
+	private readonly docStore = new DocumentVcsStore<RasterDocument, RasterEditOp>({
 		envelope: createDocumentVcsEnvelope("raster.document/v1", "raster-play", RASTER_PLAY_EMPTY_DOCUMENT),
-		applyOp: applyJsonReplaceOp,
+		applyOp: applyRasterEditOp,
 	});
 	private selectedIds: string[] = [];
 	private hoveredId: string | null = null;
@@ -769,7 +768,8 @@ export class RasterPlayController extends Controller implements PlaygroundFixtur
 	}
 
 	private commitDocument(next: RasterDocument, selectLayerId?: string, resetSelection = false): void {
-		recordJsonProjectionChange(this.docStore, next);
+		const previous = this.projection();
+		recordProjectionChange(this.docStore, [{ op: "setDocument", document: next }]);
 		if (resetSelection) this.selectedIds = next.layers[0] ? [next.layers[0].id] : [];
 		else if (selectLayerId) this.selectedIds = [selectLayerId];
 		this.bump();
@@ -787,7 +787,7 @@ export class RasterPlayController extends Controller implements PlaygroundFixtur
 		return rasterDocumentToExportJson(this.projection());
 	}
 
-	getDocumentVcsStore(): DocumentVcsStore<RasterDocument, JsonReplaceOp<RasterDocument>> {
+	getDocumentVcsStore(): DocumentVcsStore<RasterDocument, RasterEditOp> {
 		return this.docStore;
 	}
 

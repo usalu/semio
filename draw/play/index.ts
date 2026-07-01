@@ -48,14 +48,12 @@ import {
 } from "@semio-tech/framework-playground-core";
 import {
 	DocumentVcsStore,
-	applyJsonReplaceOp,
-	createDocumentVcsEnvelope,
-	recordJsonProjectionChange,
-	type JsonReplaceOp,
+	recordProjectionChange,
 } from "@semio-tech/framework-core";
 import { bootstrapElementsSurfaceChromeDocument, type TreeDataItem, type TreeDragAndDropController, type TreeDropPosition } from "@semio-tech/ui-react";
 import {
 	applyDrawEditOp,
+	createDrawDocumentVcsEnvelope,
 	createDrawBooleanLayer,
 	createDrawGroupLayer,
 	createDrawImageLayer,
@@ -85,6 +83,7 @@ import {
 	type DrawBlendMode,
 	type DrawBooleanOp,
 	type DrawDocument,
+	type DrawEditOp,
 	type DrawHoverPayload,
 	type DrawKindHover,
 	type DrawLayerNode,
@@ -1007,9 +1006,9 @@ function drawPlayPatchLayerField(doc: DrawDocument, layerId: string, field: stri
 
 export class DrawPlayController extends Controller implements PlaygroundFixtureHost {
 	readonly mainMode = new ModeRuntime("main", "Draw", undefined);
-	private readonly docStore = new DocumentVcsStore<DrawDocument, JsonReplaceOp<DrawDocument>>({
-		envelope: createDocumentVcsEnvelope("draw.document/v1", "draw-play", DRAW_PLAY_EMPTY_DOCUMENT),
-		applyOp: applyJsonReplaceOp,
+	private readonly docStore = new DocumentVcsStore<DrawDocument, DrawEditOp>({
+		envelope: createDrawDocumentVcsEnvelope("draw-play", DRAW_PLAY_EMPTY_DOCUMENT),
+		applyOp: applyDrawEditOp,
 	});
 	private selectedIds: string[] = [];
 	private hoveredId: string | null = null;
@@ -1037,7 +1036,8 @@ export class DrawPlayController extends Controller implements PlaygroundFixtureH
 	}
 
 	private commitDocument(next: DrawDocument, selectLayerId?: string, resetSelection = false): void {
-		recordJsonProjectionChange(this.docStore, next);
+		const previous = this.projection();
+		recordProjectionChange(this.docStore, [{ op: "setDocument", document: next }]);
 		if (resetSelection) this.selectedIds = next.layers[0] ? [next.layers[0].id] : [];
 		else if (selectLayerId) this.selectedIds = [selectLayerId];
 		this.bump();
@@ -1098,7 +1098,7 @@ export class DrawPlayController extends Controller implements PlaygroundFixtureH
 		return this.docStore.projection();
 	}
 
-	getDocumentVcsStore(): DocumentVcsStore<DrawDocument, JsonReplaceOp<DrawDocument>> {
+	getDocumentVcsStore(): DocumentVcsStore<DrawDocument, DrawEditOp> {
 		return this.docStore;
 	}
 

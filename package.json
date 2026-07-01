@@ -67,6 +67,7 @@
     "trinity/jack/lsp",
     "trinity/jack/play",
     "trinity/rewrite/play",
+    "trinity/rewrite/react",
     "cad/js/core",
     "cad/js/runtime",
     "cad/js/module/spatial-shape",

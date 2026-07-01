@@ -18,7 +18,7 @@ export default createPlaygroundPlayViteConfig({
 		{ find: "@semio-tech/writer-core", replacement: path.resolve(playDir, "../core/index.ts") },
 		{ find: "@semio-tech/trinity-jack-lsp-worker", replacement: path.resolve(playDir, "../../trinity/jack/lsp/worker.ts") },
 	],
-	resolveDedupe: ["react", "react-dom", "@semio-tech/writer-react"],
+	resolveDedupe: ["react", "react-dom", "three", "@semio-tech/writer-react"],
 	optimizeDeps: {
 		include: ["react", "react-dom"],
 		esbuildOptions: { target: "esnext" },

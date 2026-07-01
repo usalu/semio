@@ -45,10 +45,8 @@ import {
 import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
 import {
 	DocumentVcsStore,
-	applyJsonReplaceOp,
 	createDocumentVcsEnvelope,
-	recordJsonProjectionChange,
-	type JsonReplaceOp,
+	recordProjectionChange,
 } from "@semio-tech/framework-core";
 import {
 	DEFAULT_SHOOTING_FIXTURE,
@@ -77,6 +75,12 @@ export const SHOOTING_PLAY_CATALOGUE_TAB_ID = "framework.panel.catalogue";
 export const SHOOTING_PLAY_INSPECTION_TAB_ID = "framework.panel.inspection";
 
 export type ShootingPlaySelectionKind = "shot" | "asset";
+
+type ShootingFixtureEditOp = { readonly op: "setDocument"; readonly document: ShootingFixtureV1 };
+
+function applyShootingFixtureEditOp(_fixture: ShootingFixtureV1, op: ShootingFixtureEditOp): ShootingFixtureV1 {
+	return op.document;
+}
 
 export const SHOOTING_PLAY_LAYOUT = createDefaultLayout(
 	[SHOOTING_PLAY_WINDOW_KIND_MODEL, SHOOTING_PLAY_WINDOW_KIND_ICON],
@@ -549,7 +553,7 @@ export function buildShootingPlayToolbarTools(state: ShootingPlayToolbarState, c
 export class ShootingPlayController extends Controller implements PlaygroundFixtureHost {
 	readonly mainMode = new ModeRuntime("main", "Edit", undefined);
 	private activeFixtureId = playgroundResolvedFixtureId(PLAYGROUND_NO_FIXTURE_ID);
-	private readonly docStore = new DocumentVcsStore<ShootingFixtureV1, JsonReplaceOp<ShootingFixtureV1>>({
+	private readonly docStore = new DocumentVcsStore<ShootingFixtureV1, ShootingFixtureEditOp>({
 		envelope: createDocumentVcsEnvelope(
 			"shooting.fixture/v1",
 			"shooting-play",
@@ -559,7 +563,7 @@ export class ShootingPlayController extends Controller implements PlaygroundFixt
 				shots: [],
 			},
 		),
-		applyOp: applyJsonReplaceOp,
+		applyOp: applyShootingFixtureEditOp,
 	});
 	private readonly fixtureStore: ShootingPlayFixtureStore;
 	private hostBridge: ShootingPlayHostBridge | null = null;
@@ -582,7 +586,7 @@ export class ShootingPlayController extends Controller implements PlaygroundFixt
 		return this.projection();
 	}
 
-	getDocumentVcsStore(): DocumentVcsStore<ShootingFixtureV1, JsonReplaceOp<ShootingFixtureV1>> {
+	getDocumentVcsStore(): DocumentVcsStore<ShootingFixtureV1, ShootingFixtureEditOp> {
 		return this.docStore;
 	}
 
@@ -662,8 +666,9 @@ export class ShootingPlayController extends Controller implements PlaygroundFixt
 	}
 
 	private applyFixture(fixture: ShootingFixtureV1): void {
-		const previousAssetUrl = resolveActiveAsset(this.projection())?.url;
-		recordJsonProjectionChange(this.docStore, fixture);
+		const previous = this.projection();
+		const previousAssetUrl = resolveActiveAsset(previous)?.url;
+		recordProjectionChange(this.docStore, [{ op: "setDocument", document: fixture }]);
 		this.renderRevision += 1;
 		this.interactionRevision += 1;
 		const nextAssetUrl = resolveActiveAsset(fixture)?.url;

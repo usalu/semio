@@ -1508,7 +1508,7 @@ export function createBodyRegistry<TNode>() {
 //#endregion 🔖BodyViewContext
 
 //#region 🔖DocumentVcs
-/** @emoji 🗄️ Document VCS types and sync mirror — runtime authority is `framework_vcs` Rust/WASM (`./vcs-rust.ts`). */
+/** @emoji 🗄️ Document VCS types and sync store — runtime authority is per-technology Rust/WASM crates. */
 export type {
 	DocumentBackboneRef,
 	DocumentChange,
@@ -1518,23 +1518,14 @@ export type {
 	DocumentVcsEnvelope,
 	DocumentVcsCommand,
 	DocumentVcsStoreOptions,
-	JsonReplaceOp,
 } from "./vcs-sync.ts";
 export {
 	createDocumentVcsId,
 	createDocumentVcsEnvelope,
 	materializeDocumentProjection,
 	DocumentVcsStore,
-	applyJsonReplaceOp,
-	recordJsonProjectionChange,
+	recordProjectionChange,
 } from "./vcs-sync.ts";
-export {
-	DocumentVcsStore as RustDocumentVcsStore,
-	createDocumentVcsEnvelope as createRustDocumentVcsEnvelope,
-	materializeDocumentProjection as materializeRustDocumentProjection,
-	applyJsonReplaceOp as applyRustJsonReplaceOp,
-	recordJsonProjectionChange as recordRustJsonProjectionChange,
-} from "./vcs-rust.ts";
 //#endregion 🔖DocumentVcs
 
 //#region 🧪Tests
@@ -1972,7 +1963,7 @@ if (import.meta.vitest) {
 				envelope: createDocumentVcsEnvelope("counter/v1", "c1", 0),
 				applyOp: applyCounterOp,
 			});
-			store.dispatch({ kind: "apply", forwards: [{ op: "add", delta: 2 }], backwards: [{ op: "add", delta: -2 }] });
+			store.dispatch({ kind: "apply", operations: [{ op: "add", delta: 2 }] });
 			expect(store.projection()).toBe(2);
 			store.dispatch({ kind: "undo" });
 			expect(store.projection()).toBe(0);

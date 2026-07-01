@@ -1,0 +1,18 @@
+{
+  "title": "Playground Window Mode Completeness Pass",
+  "emoji": "🎮",
+  "status": "open",
+  "description": "Bring every playground's windows and modes up to the same completeness bar: every WindowKindRuntime gets populated measures rail and WindowEngagement; every ModeRuntime gets populated tools footer toolbar. Add runtime auditor to enforce.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1780"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "plan": {
+    "client": "cursor",
+    "id": "50a02130",
+    "source": "/Users/ueli/Documents/semio/.cursor/plans/playground_window_mode_completeness_50a02130.plan.md"
+  },
+  "sessions": [
+    "⚪582791f419104def97c4794ad9458023"
+  ]
+}
