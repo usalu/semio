@@ -32,13 +32,27 @@ import {
 	type ToolLeaf,
 	toolCollection,
 	uiDeclarativeSectionsToTree,
+	UI_INSPECTOR_MIXED_PLACEHOLDER,
+	uiInspectorAllEqual,
 	uiInspectorGroupsToTree,
+	uiInspectorMixedNumber,
+	uiInspectorMixedSelect,
+	uiInspectorMixedSlider,
+	uiInspectorMixedText,
+	uiInspectorMixedToggle,
 	uiInspectorReadonlyField,
 	type UiInspectorFieldGroup,
 	type UiNode,
 	type UiTreeItemNode,
 	type UiTreeNode,
 } from "@semio-tech/framework-playground-core";
+import {
+	DocumentVcsStore,
+	applyJsonReplaceOp,
+	createDocumentVcsEnvelope,
+	recordJsonProjectionChange,
+	type JsonReplaceOp,
+} from "@semio-tech/framework-core";
 import { bootstrapElementsSurfaceChromeDocument, type TreeDataItem, type TreeDragAndDropController, type TreeDropPosition } from "@semio-tech/ui-react";
 import {
 	applyDrawEditOp,
@@ -379,7 +393,18 @@ export function buildDrawPlayCatalogueTree(
 	};
 }
 
-function drawPlayInspectorNumberField(layerId: string, fieldId: string, label: string, value: number, field: string): UiNode {
+function drawPlayInspectorPatch(layerIds: readonly string[], field: string) {
+	return drawPlayCmd("patchLayers", { layerIds, field });
+}
+
+function drawPlayInspectorNumberField(
+	layerIds: readonly string[],
+	fieldId: string,
+	label: string,
+	values: readonly number[],
+	field: string,
+): UiNode {
+	const mixed = uiInspectorMixedNumber(values);
 	return {
 		type: "field",
 		id: fieldId,
@@ -388,13 +413,21 @@ function drawPlayInspectorNumberField(layerId: string, fieldId: string, label: s
 			type: "input",
 			id: `${fieldId}.input`,
 			inputKind: "number",
-			value: String(value),
-			onChange: drawPlayCmd("patchLayer", { layerId, field }),
+			value: mixed.uniform ? String(mixed.value) : "",
+			placeholder: mixed.uniform ? undefined : UI_INSPECTOR_MIXED_PLACEHOLDER,
+			onChange: drawPlayInspectorPatch(layerIds, field),
 		},
 	};
 }
 
-function drawPlayInspectorTextField(layerId: string, fieldId: string, label: string, value: string, field: string): UiNode {
+function drawPlayInspectorTextField(
+	layerIds: readonly string[],
+	fieldId: string,
+	label: string,
+	values: readonly string[],
+	field: string,
+): UiNode {
+	const mixed = uiInspectorMixedText(values);
 	return {
 		type: "field",
 		id: fieldId,
@@ -403,10 +436,17 @@ function drawPlayInspectorTextField(layerId: string, fieldId: string, label: str
 			type: "input",
 			id: `${fieldId}.input`,
 			inputKind: "text",
-			value,
-			onChange: drawPlayCmd("patchLayer", { layerId, field }),
+			value: mixed.value,
+			placeholder: mixed.placeholder,
+			onChange: drawPlayInspectorPatch(layerIds, field),
 		},
 	};
+}
+
+function drawPlayLayersUniformKind(layers: readonly DrawLayerNode[]): DrawLayerNode[] | null {
+	if (!layers.length) return null;
+	const kindKey = drawPlayLayerKindLabel(layers[0]!);
+	return layers.every((layer) => drawPlayLayerKindLabel(layer) === kindKey) ? [...layers] : null;
 }
 
 function drawPlayLayerKindLabel(layer: DrawLayerNode): string {
@@ -414,10 +454,15 @@ function drawPlayLayerKindLabel(layer: DrawLayerNode): string {
 	return layer.kind;
 }
 
-function drawPlayInspectorKindSpecificGroup(doc: DrawDocument, layer: DrawLayerNode): UiInspectorFieldGroup | null {
-	const layerId = layer.id;
+function drawPlayInspectorKindSpecificGroup(doc: DrawDocument, layers: readonly DrawLayerNode[]): UiInspectorFieldGroup | null {
+	const uniformLayers = drawPlayLayersUniformKind(layers);
+	if (!uniformLayers) return null;
+	const layer = uniformLayers[0]!;
+	const layerIds = uniformLayers.map((entry) => entry.id);
 	const fields: UiNode[] = [];
 	if (layer.kind === "boolean") {
+		const ops = uniformLayers.map((entry) => (entry.kind === "boolean" ? entry.op : ""));
+		const opMixed = uiInspectorMixedSelect(ops);
 		fields.push({
 			type: "field",
 			id: "draw-play-inspector.boolean-op",
@@ -425,20 +470,30 @@ function drawPlayInspectorKindSpecificGroup(doc: DrawDocument, layer: DrawLayerN
 			child: {
 				type: "select",
 				id: "draw-play-inspector.boolean-op.select",
-				value: layer.op,
+				value: opMixed.value,
+				placeholder: opMixed.placeholder,
 				items: DRAW_BOOLEAN_OPS.map((op) => ({ value: op, label: op })),
-				onChange: drawPlayCmd("patchLayer", { layerId, field: "booleanOp" }),
+				onChange: drawPlayInspectorPatch(layerIds, "booleanOp"),
 			},
 		});
-		const childLabels = layer.children
-			.map((childId) => findDrawLayer(doc, childId))
-			.filter((child): child is DrawLayerNode => Boolean(child))
-			.map((child) => child.name || child.id)
+		const childLabels = uniformLayers
+			.flatMap((entry) =>
+				entry.kind === "boolean"
+					? entry.children
+							.map((childId) => findDrawLayer(doc, childId))
+							.filter((child): child is DrawLayerNode => Boolean(child))
+							.map((child) => child.name || child.id)
+					: [],
+			)
 			.join(", ");
 		fields.push(uiInspectorReadonlyField("draw-play-inspector.boolean-children", "Children", childLabels || "—"));
 		return { id: "draw-play-inspector.kind.boolean", label: "Boolean", fields };
 	}
 	if (layer.kind === "trace") {
+		const thresholds = uniformLayers.map((entry) => (entry.kind === "trace" ? entry.params.threshold : 0));
+		const simplifies = uniformLayers.map((entry) => (entry.kind === "trace" ? entry.params.simplifyEpsilon : 0));
+		const thresholdMixed = uiInspectorMixedSlider(thresholds);
+		const simplifyMixed = uiInspectorMixedSlider(simplifies);
 		fields.push(
 			{
 				type: "field",
@@ -447,11 +502,11 @@ function drawPlayInspectorKindSpecificGroup(doc: DrawDocument, layer: DrawLayerN
 				child: {
 					type: "slider",
 					id: "draw-play-inspector.trace-threshold.slider",
-					value: layer.params.threshold,
+					value: thresholdMixed.uniform ? thresholdMixed.value : 0,
 					min: 0,
 					max: 1,
 					step: 0.01,
-					onChange: drawPlayCmd("patchLayer", { layerId, field: "traceThreshold" }),
+					onChange: drawPlayInspectorPatch(layerIds, "traceThreshold"),
 				},
 			},
 			{
@@ -461,11 +516,11 @@ function drawPlayInspectorKindSpecificGroup(doc: DrawDocument, layer: DrawLayerN
 				child: {
 					type: "slider",
 					id: "draw-play-inspector.trace-simplify.slider",
-					value: layer.params.simplifyEpsilon,
+					value: simplifyMixed.uniform ? simplifyMixed.value : 0,
 					min: 0,
 					max: 10,
 					step: 0.1,
-					onChange: drawPlayCmd("patchLayer", { layerId, field: "traceSimplify" }),
+					onChange: drawPlayInspectorPatch(layerIds, "traceSimplify"),
 				},
 			},
 			uiInspectorReadonlyField("draw-play-inspector.trace-source", "Source Key", layer.sourceKey),
@@ -474,28 +529,28 @@ function drawPlayInspectorKindSpecificGroup(doc: DrawDocument, layer: DrawLayerN
 	}
 	if (layer.kind === "shape" && layer.shapeKind === "rect" && layer.rect) {
 		fields.push(
-			drawPlayInspectorNumberField(layerId, "draw-play-inspector.rect-width", "Width", layer.rect.width, "rectWidth"),
-			drawPlayInspectorNumberField(layerId, "draw-play-inspector.rect-height", "Height", layer.rect.height, "rectHeight"),
+			drawPlayInspectorNumberField(layerIds, "draw-play-inspector.rect-width", "Width", uniformLayers.map((entry) => (entry.kind === "shape" && entry.rect ? entry.rect.width : 0)), "rectWidth"),
+			drawPlayInspectorNumberField(layerIds, "draw-play-inspector.rect-height", "Height", uniformLayers.map((entry) => (entry.kind === "shape" && entry.rect ? entry.rect.height : 0)), "rectHeight"),
 		);
 		return { id: "draw-play-inspector.kind.rect", label: "Rectangle", fields };
 	}
 	if (layer.kind === "shape" && layer.shapeKind === "ellipse" && layer.ellipse) {
 		fields.push(
-			drawPlayInspectorNumberField(layerId, "draw-play-inspector.ellipse-rx", "RX", layer.ellipse.rx, "ellipseRx"),
-			drawPlayInspectorNumberField(layerId, "draw-play-inspector.ellipse-ry", "RY", layer.ellipse.ry, "ellipseRy"),
+			drawPlayInspectorNumberField(layerIds, "draw-play-inspector.ellipse-rx", "RX", uniformLayers.map((entry) => (entry.kind === "shape" && entry.ellipse ? entry.ellipse.rx : 0)), "ellipseRx"),
+			drawPlayInspectorNumberField(layerIds, "draw-play-inspector.ellipse-ry", "RY", uniformLayers.map((entry) => (entry.kind === "shape" && entry.ellipse ? entry.ellipse.ry : 0)), "ellipseRy"),
 		);
 		return { id: "draw-play-inspector.kind.ellipse", label: "Ellipse", fields };
 	}
 	if (layer.kind === "shape" && layer.shapeKind === "circle" && layer.circle) {
-		fields.push(drawPlayInspectorNumberField(layerId, "draw-play-inspector.circle-r", "R", layer.circle.r, "circleR"));
+		fields.push(drawPlayInspectorNumberField(layerIds, "draw-play-inspector.circle-r", "R", uniformLayers.map((entry) => (entry.kind === "shape" && entry.circle ? entry.circle.r : 0)), "circleR"));
 		return { id: "draw-play-inspector.kind.circle", label: "Circle", fields };
 	}
 	if (layer.kind === "shape" && layer.shapeKind === "line" && layer.line) {
 		fields.push(
-			drawPlayInspectorNumberField(layerId, "draw-play-inspector.line-x1", "X1", layer.line.x1, "lineX1"),
-			drawPlayInspectorNumberField(layerId, "draw-play-inspector.line-y1", "Y1", layer.line.y1, "lineY1"),
-			drawPlayInspectorNumberField(layerId, "draw-play-inspector.line-x2", "X2", layer.line.x2, "lineX2"),
-			drawPlayInspectorNumberField(layerId, "draw-play-inspector.line-y2", "Y2", layer.line.y2, "lineY2"),
+			drawPlayInspectorNumberField(layerIds, "draw-play-inspector.line-x1", "X1", uniformLayers.map((entry) => (entry.kind === "shape" && entry.line ? entry.line.x1 : 0)), "lineX1"),
+			drawPlayInspectorNumberField(layerIds, "draw-play-inspector.line-y1", "Y1", uniformLayers.map((entry) => (entry.kind === "shape" && entry.line ? entry.line.y1 : 0)), "lineY1"),
+			drawPlayInspectorNumberField(layerIds, "draw-play-inspector.line-x2", "X2", uniformLayers.map((entry) => (entry.kind === "shape" && entry.line ? entry.line.x2 : 0)), "lineX2"),
+			drawPlayInspectorNumberField(layerIds, "draw-play-inspector.line-y2", "Y2", uniformLayers.map((entry) => (entry.kind === "shape" && entry.line ? entry.line.y2 : 0)), "lineY2"),
 		);
 		return { id: "draw-play-inspector.kind.line", label: "Line", fields };
 	}
@@ -511,8 +566,8 @@ function drawPlayInspectorKindSpecificGroup(doc: DrawDocument, layer: DrawLayerN
 	}
 	if (layer.kind === "text") {
 		fields.push(
-			drawPlayInspectorTextField(layerId, "draw-play-inspector.text-content", "Content", layer.content, "textContent"),
-			drawPlayInspectorNumberField(layerId, "draw-play-inspector.text-size", "Size", layer.size, "textSize"),
+			drawPlayInspectorTextField(layerIds, "draw-play-inspector.text-content", "Content", uniformLayers.map((entry) => (entry.kind === "text" ? entry.content : "")), "textContent"),
+			drawPlayInspectorNumberField(layerIds, "draw-play-inspector.text-size", "Size", uniformLayers.map((entry) => (entry.kind === "text" ? entry.size : 0)), "textSize"),
 		);
 		return { id: "draw-play-inspector.kind.text", label: "Text", fields };
 	}
@@ -535,67 +590,70 @@ function drawPlayInspectorKindSpecificGroup(doc: DrawDocument, layer: DrawLayerN
 	return null;
 }
 
-function drawPlayInspectorPositionGroup(layer: DrawLayerNode): UiInspectorFieldGroup | null {
-	const layerId = layer.id;
+function drawPlayInspectorPositionGroup(layers: readonly DrawLayerNode[]): UiInspectorFieldGroup | null {
+	const uniformLayers = drawPlayLayersUniformKind(layers);
+	if (!uniformLayers) return null;
+	const layer = uniformLayers[0]!;
+	const layerIds = uniformLayers.map((entry) => entry.id);
 	const fields: UiNode[] = [];
 	if (layer.kind === "shape" && layer.shapeKind === "rect" && layer.rect) {
 		fields.push(
-			drawPlayInspectorNumberField(layerId, "draw-play-inspector.rect-x", "X", layer.rect.x, "rectX"),
-			drawPlayInspectorNumberField(layerId, "draw-play-inspector.rect-y", "Y", layer.rect.y, "rectY"),
+			drawPlayInspectorNumberField(layerIds, "draw-play-inspector.rect-x", "X", uniformLayers.map((entry) => (entry.kind === "shape" && entry.rect ? entry.rect.x : 0)), "rectX"),
+			drawPlayInspectorNumberField(layerIds, "draw-play-inspector.rect-y", "Y", uniformLayers.map((entry) => (entry.kind === "shape" && entry.rect ? entry.rect.y : 0)), "rectY"),
 		);
 	}
 	if (layer.kind === "shape" && layer.shapeKind === "ellipse" && layer.ellipse) {
 		fields.push(
-			drawPlayInspectorNumberField(layerId, "draw-play-inspector.ellipse-cx", "CX", layer.ellipse.cx, "ellipseCx"),
-			drawPlayInspectorNumberField(layerId, "draw-play-inspector.ellipse-cy", "CY", layer.ellipse.cy, "ellipseCy"),
+			drawPlayInspectorNumberField(layerIds, "draw-play-inspector.ellipse-cx", "CX", uniformLayers.map((entry) => (entry.kind === "shape" && entry.ellipse ? entry.ellipse.cx : 0)), "ellipseCx"),
+			drawPlayInspectorNumberField(layerIds, "draw-play-inspector.ellipse-cy", "CY", uniformLayers.map((entry) => (entry.kind === "shape" && entry.ellipse ? entry.ellipse.cy : 0)), "ellipseCy"),
 		);
 	}
 	if (layer.kind === "shape" && layer.shapeKind === "circle" && layer.circle) {
 		fields.push(
-			drawPlayInspectorNumberField(layerId, "draw-play-inspector.circle-cx", "CX", layer.circle.cx, "circleCx"),
-			drawPlayInspectorNumberField(layerId, "draw-play-inspector.circle-cy", "CY", layer.circle.cy, "circleCy"),
+			drawPlayInspectorNumberField(layerIds, "draw-play-inspector.circle-cx", "CX", uniformLayers.map((entry) => (entry.kind === "shape" && entry.circle ? entry.circle.cx : 0)), "circleCx"),
+			drawPlayInspectorNumberField(layerIds, "draw-play-inspector.circle-cy", "CY", uniformLayers.map((entry) => (entry.kind === "shape" && entry.circle ? entry.circle.cy : 0)), "circleCy"),
 		);
 	}
 	if (layer.kind === "text") {
 		fields.push(
-			drawPlayInspectorNumberField(layerId, "draw-play-inspector.text-x", "X", layer.x, "textX"),
-			drawPlayInspectorNumberField(layerId, "draw-play-inspector.text-y", "Y", layer.y, "textY"),
+			drawPlayInspectorNumberField(layerIds, "draw-play-inspector.text-x", "X", uniformLayers.map((entry) => (entry.kind === "text" ? entry.x : 0)), "textX"),
+			drawPlayInspectorNumberField(layerIds, "draw-play-inspector.text-y", "Y", uniformLayers.map((entry) => (entry.kind === "text" ? entry.y : 0)), "textY"),
 		);
 	}
 	if (fields.length === 0) return null;
 	return { id: "draw-play-inspector.position", label: "Position", fields };
 }
 
-function drawPlayInspectorOrientationGroup(layer: DrawLayerNode): UiInspectorFieldGroup {
-	const layerId = layer.id;
-	const matrix = drawTransformToMatrix(layer.transform);
+function drawPlayInspectorOrientationGroup(layers: readonly DrawLayerNode[]): UiInspectorFieldGroup {
+	const layerIds = layers.map((entry) => entry.id);
 	const fields: UiNode[] = [
-		drawPlayInspectorNumberField(layerId, "draw-play-inspector.transform-x", "Position X", layer.transform.x, "transformX"),
-		drawPlayInspectorNumberField(layerId, "draw-play-inspector.transform-y", "Position Y", layer.transform.y, "transformY"),
-		drawPlayInspectorNumberField(layerId, "draw-play-inspector.transform-scale-x", "Scale X", layer.transform.scaleX, "transformScaleX"),
-		drawPlayInspectorNumberField(layerId, "draw-play-inspector.transform-scale-y", "Scale Y", layer.transform.scaleY, "transformScaleY"),
-		drawPlayInspectorNumberField(layerId, "draw-play-inspector.transform-rotation", "Rotation", layer.transform.rotation, "transformRotation"),
-		drawPlayInspectorNumberField(layerId, "draw-play-inspector.matrix-a", "Matrix A", matrix[0], "transformMatrixA"),
-		drawPlayInspectorNumberField(layerId, "draw-play-inspector.matrix-b", "Matrix B", matrix[1], "transformMatrixB"),
-		drawPlayInspectorNumberField(layerId, "draw-play-inspector.matrix-c", "Matrix C", matrix[2], "transformMatrixC"),
-		drawPlayInspectorNumberField(layerId, "draw-play-inspector.matrix-d", "Matrix D", matrix[3], "transformMatrixD"),
-		drawPlayInspectorNumberField(layerId, "draw-play-inspector.matrix-e", "Matrix E", matrix[4], "transformMatrixE"),
-		drawPlayInspectorNumberField(layerId, "draw-play-inspector.matrix-f", "Matrix F", matrix[5], "transformMatrixF"),
+		drawPlayInspectorNumberField(layerIds, "draw-play-inspector.transform-x", "Position X", layers.map((entry) => entry.transform.x), "transformX"),
+		drawPlayInspectorNumberField(layerIds, "draw-play-inspector.transform-y", "Position Y", layers.map((entry) => entry.transform.y), "transformY"),
+		drawPlayInspectorNumberField(layerIds, "draw-play-inspector.transform-scale-x", "Scale X", layers.map((entry) => entry.transform.scaleX), "transformScaleX"),
+		drawPlayInspectorNumberField(layerIds, "draw-play-inspector.transform-scale-y", "Scale Y", layers.map((entry) => entry.transform.scaleY), "transformScaleY"),
+		drawPlayInspectorNumberField(layerIds, "draw-play-inspector.transform-rotation", "Rotation", layers.map((entry) => entry.transform.rotation), "transformRotation"),
+		drawPlayInspectorNumberField(layerIds, "draw-play-inspector.matrix-a", "Matrix A", layers.map((entry) => drawTransformToMatrix(entry.transform)[0]), "transformMatrixA"),
+		drawPlayInspectorNumberField(layerIds, "draw-play-inspector.matrix-b", "Matrix B", layers.map((entry) => drawTransformToMatrix(entry.transform)[1]), "transformMatrixB"),
+		drawPlayInspectorNumberField(layerIds, "draw-play-inspector.matrix-c", "Matrix C", layers.map((entry) => drawTransformToMatrix(entry.transform)[2]), "transformMatrixC"),
+		drawPlayInspectorNumberField(layerIds, "draw-play-inspector.matrix-d", "Matrix D", layers.map((entry) => drawTransformToMatrix(entry.transform)[3]), "transformMatrixD"),
+		drawPlayInspectorNumberField(layerIds, "draw-play-inspector.matrix-e", "Matrix E", layers.map((entry) => drawTransformToMatrix(entry.transform)[4]), "transformMatrixE"),
+		drawPlayInspectorNumberField(layerIds, "draw-play-inspector.matrix-f", "Matrix F", layers.map((entry) => drawTransformToMatrix(entry.transform)[5]), "transformMatrixF"),
 	];
 	return { id: "draw-play-inspector.orientation", label: "Orientation", fields };
 }
 
-function drawPlayInspectorAppearanceGroup(layer: DrawLayerNode): UiInspectorFieldGroup {
-	const layerId = layer.id;
-	const fillColor = layer.attributes.fill?.kind === "solid" ? rgbaToHex(layer.attributes.fill.color) : "#000000";
-	const fillAlpha = layer.attributes.fill?.kind === "solid" ? layer.attributes.fill.color[3] : 1;
-	const strokeColor = layer.attributes.stroke ? rgbaToHex(layer.attributes.stroke.color) : "#000000";
-	const strokeWidth = layer.attributes.stroke?.width ?? 1;
+function drawPlayInspectorAppearanceGroup(layers: readonly DrawLayerNode[]): UiInspectorFieldGroup {
+	const layerIds = layers.map((entry) => entry.id);
+	const fillColors = layers.map((entry) => (entry.attributes.fill?.kind === "solid" ? rgbaToHex(entry.attributes.fill.color) : "#000000"));
+	const fillAlphas = layers.map((entry) => (entry.attributes.fill?.kind === "solid" ? entry.attributes.fill.color[3] : 1));
+	const strokeColors = layers.map((entry) => (entry.attributes.stroke ? rgbaToHex(entry.attributes.stroke.color) : "#000000"));
+	const strokeWidths = layers.map((entry) => entry.attributes.stroke?.width ?? 1);
+	const fillAlphaMixed = uiInspectorMixedSlider(fillAlphas);
 	return {
 		id: "draw-play-inspector.appearance",
 		label: "Appearance",
 		fields: [
-			drawPlayInspectorTextField(layerId, "draw-play-inspector.fill", "Fill", fillColor, "fillColor"),
+			drawPlayInspectorTextField(layerIds, "draw-play-inspector.fill", "Fill", fillColors, "fillColor"),
 			{
 				type: "field",
 				id: "draw-play-inspector.fill-alpha",
@@ -603,28 +661,39 @@ function drawPlayInspectorAppearanceGroup(layer: DrawLayerNode): UiInspectorFiel
 				child: {
 					type: "slider",
 					id: "draw-play-inspector.fill-alpha.slider",
-					value: fillAlpha,
+					value: fillAlphaMixed.uniform ? fillAlphaMixed.value : 0,
 					min: 0,
 					max: 1,
 					step: 0.01,
-					onChange: drawPlayCmd("patchLayer", { layerId, field: "fillAlpha" }),
+					onChange: drawPlayInspectorPatch(layerIds, "fillAlpha"),
 				},
 			},
-			drawPlayInspectorTextField(layerId, "draw-play-inspector.stroke", "Stroke", strokeColor, "strokeColor"),
-			drawPlayInspectorNumberField(layerId, "draw-play-inspector.stroke-width", "Stroke Width", strokeWidth, "strokeWidth"),
+			drawPlayInspectorTextField(layerIds, "draw-play-inspector.stroke", "Stroke", strokeColors, "strokeColor"),
+			drawPlayInspectorNumberField(layerIds, "draw-play-inspector.stroke-width", "Stroke Width", strokeWidths, "strokeWidth"),
 		],
 	};
 }
 
-function drawPlayInspectorLayerGroup(layer: DrawLayerNode): UiInspectorFieldGroup {
-	const layerId = layer.id;
+function drawPlayInspectorLayerGroup(layers: readonly DrawLayerNode[]): UiInspectorFieldGroup {
+	const layerIds = layers.map((entry) => entry.id);
+	const names = layers.map((entry) => entry.name);
+	const kinds = layers.map((entry) => drawPlayLayerKindLabel(entry));
+	const visibles = layers.map((entry) => entry.visible);
+	const locked = layers.map((entry) => entry.locked);
+	const opacities = layers.map((entry) => entry.opacity);
+	const blends = layers.map((entry) => entry.blendMode);
+	const visibleMixed = uiInspectorMixedToggle(visibles);
+	const lockedMixed = uiInspectorMixedToggle(locked);
+	const opacityMixed = uiInspectorMixedSlider(opacities);
+	const blendMixed = uiInspectorMixedSelect(blends);
+	const kindMixed = uiInspectorMixedText(kinds);
 	return {
 		id: "draw-play-inspector.layer",
 		label: "Layer",
 		fields: [
-			drawPlayInspectorTextField(layerId, "draw-play-inspector.name", "Name", layer.name, "name"),
-			uiInspectorReadonlyField("draw-play-inspector.id", "Id", layer.id),
-			uiInspectorReadonlyField("draw-play-inspector.kind", "Kind", drawPlayLayerKindLabel(layer)),
+			drawPlayInspectorTextField(layerIds, "draw-play-inspector.name", "Name", names, "name"),
+			uiInspectorReadonlyField("draw-play-inspector.id", "Id", layerIds.length === 1 ? (layerIds[0] ?? "") : `${layerIds.length} selected`),
+			uiInspectorReadonlyField("draw-play-inspector.kind", "Kind", kindMixed.uniform ? (kinds[0] ?? "") : kindMixed.placeholder ?? UI_INSPECTOR_MIXED_PLACEHOLDER),
 			{
 				type: "field",
 				id: "draw-play-inspector.visible",
@@ -632,8 +701,10 @@ function drawPlayInspectorLayerGroup(layer: DrawLayerNode): UiInspectorFieldGrou
 				child: {
 					type: "toggle",
 					id: "draw-play-inspector.visible.toggle",
-					pressed: layer.visible,
-					onChange: drawPlayCmd("patchLayer", { layerId, field: "visible" }),
+					iconId: "check",
+					pressed: visibleMixed.pressed,
+					text: visibleMixed.uniform ? undefined : UI_INSPECTOR_MIXED_PLACEHOLDER,
+					onChange: drawPlayInspectorPatch(layerIds, "visible"),
 				},
 			},
 			{
@@ -643,8 +714,10 @@ function drawPlayInspectorLayerGroup(layer: DrawLayerNode): UiInspectorFieldGrou
 				child: {
 					type: "toggle",
 					id: "draw-play-inspector.locked.toggle",
-					pressed: layer.locked,
-					onChange: drawPlayCmd("patchLayer", { layerId, field: "locked" }),
+					iconId: "check",
+					pressed: lockedMixed.pressed,
+					text: lockedMixed.uniform ? undefined : UI_INSPECTOR_MIXED_PLACEHOLDER,
+					onChange: drawPlayInspectorPatch(layerIds, "locked"),
 				},
 			},
 			{
@@ -654,11 +727,11 @@ function drawPlayInspectorLayerGroup(layer: DrawLayerNode): UiInspectorFieldGrou
 				child: {
 					type: "slider",
 					id: "draw-play-inspector.opacity.slider",
-					value: layer.opacity,
+					value: opacityMixed.uniform ? opacityMixed.value : 0,
 					min: 0,
 					max: 1,
 					step: 0.01,
-					onChange: drawPlayCmd("patchLayer", { layerId, field: "opacity" }),
+					onChange: drawPlayInspectorPatch(layerIds, "opacity"),
 				},
 			},
 			{
@@ -668,9 +741,10 @@ function drawPlayInspectorLayerGroup(layer: DrawLayerNode): UiInspectorFieldGrou
 				child: {
 					type: "select",
 					id: "draw-play-inspector.blend.select",
-					value: layer.blendMode,
+					value: blendMixed.value,
+					placeholder: blendMixed.placeholder,
 					items: DRAW_BLEND_MODES.map((mode) => ({ value: mode, label: mode })),
-					onChange: drawPlayCmd("patchLayer", { layerId, field: "blendMode" }),
+					onChange: drawPlayInspectorPatch(layerIds, "blendMode"),
 				},
 			},
 		],
@@ -678,9 +752,8 @@ function drawPlayInspectorLayerGroup(layer: DrawLayerNode): UiInspectorFieldGrou
 }
 
 export function buildDrawPlayInspectorTree(doc: DrawDocument, selectedIds: readonly string[]): UiNode {
-	const layerId = selectedIds[0];
-	const layer = layerId ? findDrawLayer(doc, layerId) : undefined;
-	if (!layer) {
+	const layers = selectedIds.map((layerId) => findDrawLayer(doc, layerId)).filter((layer): layer is DrawLayerNode => Boolean(layer));
+	if (!layers.length) {
 		return uiDeclarativeSectionsToTree([
 			{
 				type: "section",
@@ -691,13 +764,13 @@ export function buildDrawPlayInspectorTree(doc: DrawDocument, selectedIds: reado
 		]);
 	}
 	const groups: UiInspectorFieldGroup[] = [];
-	const kindSpecific = drawPlayInspectorKindSpecificGroup(doc, layer);
+	const kindSpecific = drawPlayInspectorKindSpecificGroup(doc, layers);
 	if (kindSpecific) groups.push(kindSpecific);
-	const position = drawPlayInspectorPositionGroup(layer);
+	const position = drawPlayInspectorPositionGroup(layers);
 	if (position) groups.push(position);
-	groups.push(drawPlayInspectorOrientationGroup(layer));
-	groups.push(drawPlayInspectorAppearanceGroup(layer));
-	groups.push(drawPlayInspectorLayerGroup(layer));
+	groups.push(drawPlayInspectorOrientationGroup(layers));
+	groups.push(drawPlayInspectorAppearanceGroup(layers));
+	groups.push(drawPlayInspectorLayerGroup(layers));
 	return uiInspectorGroupsToTree(groups);
 }
 
@@ -766,9 +839,178 @@ export interface DrawPlayHostBridge {
 	runHostCommand(command: string, args?: unknown): void;
 }
 
+/** @emoji 🔧 Applies one inspector field patch to a single draw layer. */
+function drawPlayPatchLayerField(doc: DrawDocument, layerId: string, field: string, value: unknown): DrawDocument {
+	const layer = findDrawLayer(doc, layerId);
+	if (!layer) return doc;
+	switch (field) {
+		case "name":
+			return applyDrawEditOp(doc, { op: "setLayerName", layerId, name: String(value ?? "") });
+		case "opacity":
+			return applyDrawEditOp(doc, { op: "setLayerOpacity", layerId, opacity: Number(value) });
+		case "blendMode":
+			return applyDrawEditOp(doc, { op: "setLayerBlendMode", layerId, blendMode: String(value) as DrawBlendMode });
+		case "visible":
+			return applyDrawEditOp(doc, { op: "setLayerVisible", layerId, visible: Boolean(value) });
+		case "locked":
+			return applyDrawEditOp(doc, { op: "setLayerLocked", layerId, locked: Boolean(value) });
+		case "booleanOp":
+			return applyDrawEditOp(doc, { op: "setBooleanOp", layerId, booleanOp: String(value) as DrawBooleanOp });
+		case "fillColor": {
+			const alpha = layer.attributes.fill?.kind === "solid" ? layer.attributes.fill.color[3] : 1;
+			return applyDrawEditOp(doc, { op: "setFill", layerId, fill: { kind: "solid", color: [...hexToRgba(String(value ?? "#000000"), alpha)] } });
+		}
+		case "fillAlpha": {
+			const color = layer.attributes.fill?.kind === "solid" ? [...layer.attributes.fill.color] : [0, 0, 0, 1];
+			color[3] = Number(value);
+			return applyDrawEditOp(doc, { op: "setFill", layerId, fill: { kind: "solid", color: color as [number, number, number, number] } });
+		}
+		case "strokeColor": {
+			const stroke = layer.attributes.stroke ?? { color: [0, 0, 0, 1] as [number, number, number, number], width: 1, cap: "butt" as const, join: "miter" as const };
+			return applyDrawEditOp(doc, {
+				op: "setStroke",
+				layerId,
+				stroke: { ...stroke, color: [...hexToRgba(String(value ?? "#000000"), stroke.color[3])] as [number, number, number, number] },
+			});
+		}
+		case "strokeWidth": {
+			const stroke = layer.attributes.stroke ?? { color: [0, 0, 0, 1] as [number, number, number, number], width: 1, cap: "butt" as const, join: "miter" as const };
+			return applyDrawEditOp(doc, { op: "setStroke", layerId, stroke: { ...stroke, width: Number(value) } });
+		}
+		case "transformX":
+		case "transformY":
+		case "transformScaleX":
+		case "transformScaleY":
+		case "transformRotation": {
+			const key =
+				field === "transformX"
+					? "x"
+					: field === "transformY"
+						? "y"
+						: field === "transformScaleX"
+							? "scaleX"
+							: field === "transformScaleY"
+								? "scaleY"
+								: "rotation";
+			return applyDrawEditOp(doc, { op: "setLayerTransform", layerId, transform: { ...layer.transform, [key]: Number(value) } });
+		}
+		case "transformMatrixA":
+		case "transformMatrixB":
+		case "transformMatrixC":
+		case "transformMatrixD":
+		case "transformMatrixE":
+		case "transformMatrixF": {
+			const matrix = drawTransformToMatrix(layer.transform);
+			const index =
+				field === "transformMatrixA"
+					? 0
+					: field === "transformMatrixB"
+						? 1
+						: field === "transformMatrixC"
+							? 2
+							: field === "transformMatrixD"
+								? 3
+								: field === "transformMatrixE"
+									? 4
+									: 5;
+			const next: [number, number, number, number, number, number] = [...matrix];
+			next[index] = Number(value);
+			return applyDrawEditOp(doc, { op: "setLayerTransform", layerId, transform: drawMatrixToTransform(next) });
+		}
+		case "textContent":
+			if (layer.kind !== "text") return doc;
+			return mutateDrawLayer(doc, layerId, (node) => (node.kind === "text" ? { ...node, content: String(value ?? "") } : node));
+		case "textSize":
+			if (layer.kind !== "text") return doc;
+			return mutateDrawLayer(doc, layerId, (node) => (node.kind === "text" ? { ...node, size: Number(value) } : node));
+		case "textX":
+		case "textY":
+			if (layer.kind !== "text") return doc;
+			return mutateDrawLayer(doc, layerId, (node) => {
+				if (node.kind !== "text") return node;
+				return field === "textX" ? { ...node, x: Number(value) } : { ...node, y: Number(value) };
+			});
+		case "rectX":
+		case "rectY":
+		case "rectWidth":
+		case "rectHeight":
+			if (layer.kind !== "shape" || !layer.rect) return doc;
+			return mutateDrawLayer(doc, layerId, (node) => {
+				if (node.kind !== "shape" || !node.rect) return node;
+				const rect = { ...node.rect };
+				if (field === "rectX") rect.x = Number(value);
+				if (field === "rectY") rect.y = Number(value);
+				if (field === "rectWidth") rect.width = Number(value);
+				if (field === "rectHeight") rect.height = Number(value);
+				return { ...node, rect };
+			});
+		case "ellipseCx":
+		case "ellipseCy":
+		case "ellipseRx":
+		case "ellipseRy":
+			if (layer.kind !== "shape" || !layer.ellipse) return doc;
+			return mutateDrawLayer(doc, layerId, (node) => {
+				if (node.kind !== "shape" || !node.ellipse) return node;
+				const ellipse = { ...node.ellipse };
+				if (field === "ellipseCx") ellipse.cx = Number(value);
+				if (field === "ellipseCy") ellipse.cy = Number(value);
+				if (field === "ellipseRx") ellipse.rx = Number(value);
+				if (field === "ellipseRy") ellipse.ry = Number(value);
+				return { ...node, ellipse };
+			});
+		case "circleCx":
+		case "circleCy":
+		case "circleR":
+			if (layer.kind !== "shape" || !layer.circle) return doc;
+			return mutateDrawLayer(doc, layerId, (node) => {
+				if (node.kind !== "shape" || !node.circle) return node;
+				const circle = { ...node.circle };
+				if (field === "circleCx") circle.cx = Number(value);
+				if (field === "circleCy") circle.cy = Number(value);
+				if (field === "circleR") circle.r = Number(value);
+				return { ...node, circle };
+			});
+		case "lineX1":
+		case "lineY1":
+		case "lineX2":
+		case "lineY2":
+			if (layer.kind !== "shape" || !layer.line) return doc;
+			return mutateDrawLayer(doc, layerId, (node) => {
+				if (node.kind !== "shape" || !node.line) return node;
+				const line = { ...node.line };
+				if (field === "lineX1") line.x1 = Number(value);
+				if (field === "lineY1") line.y1 = Number(value);
+				if (field === "lineX2") line.x2 = Number(value);
+				if (field === "lineY2") line.y2 = Number(value);
+				return { ...node, line };
+			});
+		case "traceThreshold": {
+			if (layer.kind !== "trace") return doc;
+			return applyDrawEditOp(doc, {
+				op: "setTraceParams",
+				layerId,
+				params: { ...layer.params, threshold: Number(value) },
+			});
+		}
+		case "traceSimplify": {
+			if (layer.kind !== "trace") return doc;
+			return applyDrawEditOp(doc, {
+				op: "setTraceParams",
+				layerId,
+				params: { ...layer.params, simplifyEpsilon: Number(value) },
+			});
+		}
+		default:
+			return doc;
+	}
+}
+
 export class DrawPlayController extends Controller implements PlaygroundFixtureHost {
 	readonly mainMode = new ModeRuntime("main", "Draw", undefined);
-	private document: DrawDocument = DRAW_PLAY_EMPTY_DOCUMENT;
+	private readonly docStore = new DocumentVcsStore<DrawDocument, JsonReplaceOp<DrawDocument>>({
+		envelope: createDocumentVcsEnvelope("draw.document/v1", "draw-play", DRAW_PLAY_EMPTY_DOCUMENT),
+		applyOp: applyJsonReplaceOp,
+	});
 	private selectedIds: string[] = [];
 	private hoveredId: string | null = null;
 	private hoveredKind: DrawKindHover | null = null;
@@ -790,8 +1032,19 @@ export class DrawPlayController extends Controller implements PlaygroundFixtureH
 		];
 	}
 
+	private projection(): DrawDocument {
+		return this.docStore.projection();
+	}
+
+	private commitDocument(next: DrawDocument, selectLayerId?: string, resetSelection = false): void {
+		recordJsonProjectionChange(this.docStore, next);
+		if (resetSelection) this.selectedIds = next.layers[0] ? [next.layers[0].id] : [];
+		else if (selectLayerId) this.selectedIds = [selectLayerId];
+		this.bump();
+	}
+
 	private buildTools(): AppTools {
-		const activeTool = this.document.activeTool ?? "selectDirect";
+		const activeTool = this.projection().activeTool ?? "selectDirect";
 		const toolToggle = (id: string, label: string, iconId: string, tool: DrawToolId): ToolLeaf => ({
 			id,
 			kind: "toggle",
@@ -842,11 +1095,15 @@ export class DrawPlayController extends Controller implements PlaygroundFixtureH
 	}
 
 	getDocument(): DrawDocument {
-		return this.document;
+		return this.docStore.projection();
+	}
+
+	getDocumentVcsStore(): DocumentVcsStore<DrawDocument, JsonReplaceOp<DrawDocument>> {
+		return this.docStore;
 	}
 
 	getDocumentJson(): string {
-		return drawDocumentToJson(this.document);
+		return drawDocumentToJson(this.projection());
 	}
 
 	setHostBridge(bridge: DrawPlayHostBridge | null): void {
@@ -854,9 +1111,7 @@ export class DrawPlayController extends Controller implements PlaygroundFixtureH
 	}
 
 	private applyDocument(doc: DrawDocument, resetSelection = false): void {
-		this.document = doc;
-		if (resetSelection) this.selectedIds = doc.layers[0] ? [doc.layers[0].id] : [];
-		this.bump();
+		this.commitDocument(doc, undefined, resetSelection);
 	}
 
 	getSelectedIds(): readonly string[] {
@@ -875,7 +1130,7 @@ export class DrawPlayController extends Controller implements PlaygroundFixtureH
 		if (isPlaygroundFixtureLocked()) return null;
 		return {
 			activeFixtureId: playgroundResolvedFixtureId(
-				this.document.id === "empty" ? PLAYGROUND_NO_FIXTURE_ID : this.document.id,
+				this.projection().id === "empty" ? PLAYGROUND_NO_FIXTURE_ID : this.projection().id,
 				DRAW_PLAY_FIXTURE_DEFAULT_ID,
 			),
 			options: DRAW_PLAY_FIXTURE_OPTIONS,
@@ -883,9 +1138,7 @@ export class DrawPlayController extends Controller implements PlaygroundFixtureH
 	}
 
 	private patchDocument(edit: (doc: DrawDocument) => DrawDocument, selectLayerId?: string): void {
-		this.document = edit(this.document);
-		if (selectLayerId) this.selectedIds = [selectLayerId];
-		this.bump();
+		this.commitDocument(edit(this.projection()), selectLayerId);
 	}
 
 	run(command: string, args: Record<string, unknown> = {}): void {
@@ -893,7 +1146,7 @@ export class DrawPlayController extends Controller implements PlaygroundFixtureH
 			case "setActiveFixture": {
 				const fixtureId = String(args.fixtureId ?? "");
 				if (isPlaygroundNoFixtureId(fixtureId)) {
-					this.document = DRAW_PLAY_EMPTY_DOCUMENT;
+					this.commitDocument(DRAW_PLAY_EMPTY_DOCUMENT, undefined, true);
 					this.selectedIds = [];
 					this.bump();
 					return;
@@ -943,7 +1196,7 @@ export class DrawPlayController extends Controller implements PlaygroundFixtureH
 				return;
 			}
 			case "setActiveTool": {
-				this.document = applyDrawEditOp(this.document, { op: "setActiveTool", tool: String(args.tool) as DrawToolId });
+				this.commitDocument(applyDrawEditOp(this.projection(), { op: "setActiveTool", tool: String(args.tool) as DrawToolId }));
 				this.bump();
 				return;
 			}
@@ -958,16 +1211,16 @@ export class DrawPlayController extends Controller implements PlaygroundFixtureH
 				const targetRowId = String(args.targetRowId ?? "draw-play-layers");
 				const dropPosition = (args.dropPosition ?? "inside") as TreeDropPosition;
 				const layer = drawPlayCreateLayerByKind(kind);
-				const target = resolveDrawPlayReorderTarget(this.document, targetRowId, dropPosition === "before" || dropPosition === "after" ? dropPosition : "inside");
+				const target = resolveDrawPlayReorderTarget(this.projection(), targetRowId, dropPosition === "before" || dropPosition === "after" ? dropPosition : "inside");
 				const parentId = target?.parentId;
-				const index = target?.index ?? this.document.layers.length;
+				const index = target?.index ?? this.projection().layers.length;
 				this.patchDocument((doc) => applyDrawEditOp(doc, drawPlayAddLayerOp(kind, layer, parentId, index)), layer.id);
 				return;
 			}
 			case "commitDocument": {
 				const document = args.document as DrawDocument;
 				if (!document || document.schema !== "draw.document/v1") return;
-				this.document = document;
+				this.commitDocument(document, selectLayerId);
 				if (typeof args.selectLayerId === "string") this.selectedIds = [args.selectLayerId];
 				this.bump();
 				return;
@@ -976,26 +1229,26 @@ export class DrawPlayController extends Controller implements PlaygroundFixtureH
 				const layerId = String(args.layerId ?? "");
 				const targetRowId = String(args.targetRowId ?? "");
 				const dropPosition = (args.dropPosition ?? "after") as TreeDropPosition;
-				const target = resolveDrawPlayReorderTarget(this.document, targetRowId, dropPosition);
+				const target = resolveDrawPlayReorderTarget(this.projection(), targetRowId, dropPosition);
 				if (!target || !layerId) return;
 				this.patchDocument((doc) => applyDrawEditOp(doc, { op: "reorderLayer", layerId, parentId: target.parentId, index: target.index }));
 				return;
 			}
 			case "deleteLayer": {
 				const layerId = String(args.layerId ?? "");
-				this.document = applyDrawEditOp(this.document, { op: "removeLayer", layerId });
+				this.commitDocument(applyDrawEditOp(this.projection(), { op: "removeLayer", layerId }));
 				this.selectedIds = this.selectedIds.filter((id) => id !== layerId);
 				this.bump();
 				return;
 			}
 			case "duplicateLayer": {
-				this.document = applyDrawEditOp(this.document, { op: "duplicateLayer", layerId: String(args.layerId) });
+				this.commitDocument(applyDrawEditOp(this.projection(), { op: "duplicateLayer", layerId: String(args.layerId) }));
 				this.bump();
 				return;
 			}
 			case "toggleLayerVisible": {
 				const layerId = String(args.layerId ?? "");
-				const layer = findDrawLayer(this.document, layerId);
+				const layer = findDrawLayer(this.projection(), layerId);
 				if (!layer) return;
 				this.patchDocument((doc) => applyDrawEditOp(doc, { op: "setLayerVisible", layerId, visible: !layer.visible }));
 				return;
@@ -1012,169 +1265,20 @@ export class DrawPlayController extends Controller implements PlaygroundFixtureH
 				const field = String(args.field ?? "");
 				const value = args.value ?? args.pressed;
 				if (!layerId || !field) return;
+				this.patchDocument((doc) => drawPlayPatchLayerField(doc, layerId, field, value));
+				return;
+			}
+			case "patchLayers": {
+				const layerIds = (Array.isArray(args.layerIds) ? args.layerIds : []).map(String).filter(Boolean);
+				const field = String(args.field ?? "");
+				const value = args.value ?? args.pressed;
+				if (!layerIds.length || !field) return;
 				this.patchDocument((doc) => {
-					const layer = findDrawLayer(doc, layerId);
-					if (!layer) return doc;
-					switch (field) {
-						case "name":
-							return applyDrawEditOp(doc, { op: "setLayerName", layerId, name: String(value ?? "") });
-						case "opacity":
-							return applyDrawEditOp(doc, { op: "setLayerOpacity", layerId, opacity: Number(value) });
-						case "blendMode":
-							return applyDrawEditOp(doc, { op: "setLayerBlendMode", layerId, blendMode: String(value) as DrawBlendMode });
-						case "visible":
-							return applyDrawEditOp(doc, { op: "setLayerVisible", layerId, visible: Boolean(value) });
-						case "locked":
-							return applyDrawEditOp(doc, { op: "setLayerLocked", layerId, locked: Boolean(value) });
-						case "booleanOp":
-							return applyDrawEditOp(doc, { op: "setBooleanOp", layerId, booleanOp: String(value) as DrawBooleanOp });
-						case "fillColor": {
-							const alpha = layer.attributes.fill?.kind === "solid" ? layer.attributes.fill.color[3] : 1;
-							return applyDrawEditOp(doc, { op: "setFill", layerId, fill: { kind: "solid", color: [...hexToRgba(String(value ?? "#000000"), alpha)] } });
-						}
-						case "fillAlpha": {
-							const color = layer.attributes.fill?.kind === "solid" ? [...layer.attributes.fill.color] : [0, 0, 0, 1];
-							color[3] = Number(value);
-							return applyDrawEditOp(doc, { op: "setFill", layerId, fill: { kind: "solid", color: color as [number, number, number, number] } });
-						}
-						case "strokeColor": {
-							const stroke = layer.attributes.stroke ?? { color: [0, 0, 0, 1] as [number, number, number, number], width: 1, cap: "butt" as const, join: "miter" as const };
-							return applyDrawEditOp(doc, {
-								op: "setStroke",
-								layerId,
-								stroke: { ...stroke, color: [...hexToRgba(String(value ?? "#000000"), stroke.color[3])] as [number, number, number, number] },
-							});
-						}
-						case "strokeWidth": {
-							const stroke = layer.attributes.stroke ?? { color: [0, 0, 0, 1] as [number, number, number, number], width: 1, cap: "butt" as const, join: "miter" as const };
-							return applyDrawEditOp(doc, { op: "setStroke", layerId, stroke: { ...stroke, width: Number(value) } });
-						}
-						case "transformX":
-						case "transformY":
-						case "transformScaleX":
-						case "transformScaleY":
-						case "transformRotation": {
-							const key =
-								field === "transformX"
-									? "x"
-									: field === "transformY"
-										? "y"
-										: field === "transformScaleX"
-											? "scaleX"
-											: field === "transformScaleY"
-												? "scaleY"
-												: "rotation";
-							return applyDrawEditOp(doc, { op: "setLayerTransform", layerId, transform: { ...layer.transform, [key]: Number(value) } });
-						}
-						case "transformMatrixA":
-						case "transformMatrixB":
-						case "transformMatrixC":
-						case "transformMatrixD":
-						case "transformMatrixE":
-						case "transformMatrixF": {
-							const matrix = drawTransformToMatrix(layer.transform);
-							const index =
-								field === "transformMatrixA"
-									? 0
-									: field === "transformMatrixB"
-										? 1
-										: field === "transformMatrixC"
-											? 2
-											: field === "transformMatrixD"
-												? 3
-												: field === "transformMatrixE"
-													? 4
-													: 5;
-							const next: [number, number, number, number, number, number] = [...matrix];
-							next[index] = Number(value);
-							return applyDrawEditOp(doc, { op: "setLayerTransform", layerId, transform: drawMatrixToTransform(next) });
-						}
-						case "textContent":
-							if (layer.kind !== "text") return doc;
-							return mutateDrawLayer(doc, layerId, (node) => (node.kind === "text" ? { ...node, content: String(value ?? "") } : node));
-						case "textSize":
-							if (layer.kind !== "text") return doc;
-							return mutateDrawLayer(doc, layerId, (node) => (node.kind === "text" ? { ...node, size: Number(value) } : node));
-						case "textX":
-						case "textY":
-							if (layer.kind !== "text") return doc;
-							return mutateDrawLayer(doc, layerId, (node) => {
-								if (node.kind !== "text") return node;
-								return field === "textX" ? { ...node, x: Number(value) } : { ...node, y: Number(value) };
-							});
-						case "rectX":
-						case "rectY":
-						case "rectWidth":
-						case "rectHeight":
-							if (layer.kind !== "shape" || !layer.rect) return doc;
-							return mutateDrawLayer(doc, layerId, (node) => {
-								if (node.kind !== "shape" || !node.rect) return node;
-								const rect = { ...node.rect };
-								if (field === "rectX") rect.x = Number(value);
-								if (field === "rectY") rect.y = Number(value);
-								if (field === "rectWidth") rect.width = Number(value);
-								if (field === "rectHeight") rect.height = Number(value);
-								return { ...node, rect };
-							});
-						case "ellipseCx":
-						case "ellipseCy":
-						case "ellipseRx":
-						case "ellipseRy":
-							if (layer.kind !== "shape" || !layer.ellipse) return doc;
-							return mutateDrawLayer(doc, layerId, (node) => {
-								if (node.kind !== "shape" || !node.ellipse) return node;
-								const ellipse = { ...node.ellipse };
-								if (field === "ellipseCx") ellipse.cx = Number(value);
-								if (field === "ellipseCy") ellipse.cy = Number(value);
-								if (field === "ellipseRx") ellipse.rx = Number(value);
-								if (field === "ellipseRy") ellipse.ry = Number(value);
-								return { ...node, ellipse };
-							});
-						case "circleCx":
-						case "circleCy":
-						case "circleR":
-							if (layer.kind !== "shape" || !layer.circle) return doc;
-							return mutateDrawLayer(doc, layerId, (node) => {
-								if (node.kind !== "shape" || !node.circle) return node;
-								const circle = { ...node.circle };
-								if (field === "circleCx") circle.cx = Number(value);
-								if (field === "circleCy") circle.cy = Number(value);
-								if (field === "circleR") circle.r = Number(value);
-								return { ...node, circle };
-							});
-						case "lineX1":
-						case "lineY1":
-						case "lineX2":
-						case "lineY2":
-							if (layer.kind !== "shape" || !layer.line) return doc;
-							return mutateDrawLayer(doc, layerId, (node) => {
-								if (node.kind !== "shape" || !node.line) return node;
-								const line = { ...node.line };
-								if (field === "lineX1") line.x1 = Number(value);
-								if (field === "lineY1") line.y1 = Number(value);
-								if (field === "lineX2") line.x2 = Number(value);
-								if (field === "lineY2") line.y2 = Number(value);
-								return { ...node, line };
-							});
-						case "traceThreshold": {
-							if (layer.kind !== "trace") return doc;
-							return applyDrawEditOp(doc, {
-								op: "setTraceParams",
-								layerId,
-								params: { ...layer.params, threshold: Number(value) },
-							});
-						}
-						case "traceSimplify": {
-							if (layer.kind !== "trace") return doc;
-							return applyDrawEditOp(doc, {
-								op: "setTraceParams",
-								layerId,
-								params: { ...layer.params, simplifyEpsilon: Number(value) },
-							});
-						}
-						default:
-							return doc;
+					let next = doc;
+					for (const layerId of layerIds) {
+						next = drawPlayPatchLayerField(next, layerId, field, value);
 					}
+					return next;
 				});
 				return;
 			}
@@ -1184,7 +1288,7 @@ export class DrawPlayController extends Controller implements PlaygroundFixtureH
 				return;
 			}
 			case "selectAll": {
-				this.selectedIds = flattenDrawLayers(this.document.layers).map((layer) => layer.id);
+				this.selectedIds = flattenDrawLayers(this.projection().layers).map((layer) => layer.id);
 				this.bump();
 				return;
 			}
@@ -1286,6 +1390,18 @@ if (import.meta.vitest) {
 			expect(findDrawLayer(ctrl.getDocument(), layer.id)?.locked).toBe(true);
 			ctrl.run("patchLayer", { layerId: layer.id, field: "transformMatrixE", value: 42 });
 			expect(ctrl.getDocument().layers[0]?.transform.x).toBeCloseTo(42);
+		});
+
+		it("batch-patches shared fields across multiple layers", () => {
+			const first = createDrawPathLayer("A");
+			const second = createDrawPathLayer("B");
+			const doc: DrawDocument = { ...defaultDrawDocument("batch"), layers: [first, second] };
+			const bus = new CommandBus();
+			const ctrl = new DrawPlayController(bus, () => {});
+			ctrl.run("setFixtureJson", { json: drawDocumentToJson(doc), resetInteraction: false });
+			ctrl.run("patchLayers", { layerIds: [first.id, second.id], field: "opacity", value: 0.5 });
+			expect(findDrawLayer(ctrl.getDocument(), first.id)?.opacity).toBe(0.5);
+			expect(findDrawLayer(ctrl.getDocument(), second.id)?.opacity).toBe(0.5);
 		});
 	});
 }

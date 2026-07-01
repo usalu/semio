@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useRef } from "react";
 import { clearColorResolveCache, serializeGraphVelloThemePaletteJson } from "@semio-tech/ui-styling";
-import initTrinityWasm, { TrinitySession, initSync } from "../rewrite/engine/pkg/trinity_rewrite.js";
+import initTrinityWasm, { TrinitySession, initSync, ruleQueryJson } from "../rewrite/engine/pkg/trinity_rewrite.js";
 import nakaginFixtureJson from "../fixture/nakagin-capsule-tower.trinity.json";
 
 // #region 🔖GpuWasmBridge
@@ -77,10 +77,18 @@ export interface TrinityReorganizeRequest {
   readonly optionsJson: string;
 }
 
-export interface TrinityJackResultV1 {
+export type TrinityJackResultKind = "table" | "graph";
+
+export interface TrinityJackRunV1 {
+  readonly kind: TrinityJackResultKind;
   readonly columns: readonly string[];
   readonly rows: readonly (readonly unknown[])[];
+  readonly graphFixture?: TrinityFixtureV1;
+  readonly fixtureJson: string;
 }
+
+/** @deprecated Use TrinityJackRunV1 */
+export type TrinityJackResultV1 = Pick<TrinityJackRunV1, "columns" | "rows">;
 
 export interface TrinityJackTokenV1 {
   readonly class: "keyword" | "ident" | "number" | "string" | "operator" | "punctuation" | "error";
@@ -95,10 +103,18 @@ export interface TrinityJackCompletionV1 {
   readonly insert: string;
 }
 
-export function runJackOnFixture(fixtureJson: string, query: string): TrinityJackResultV1 {
+export type RuleParameterKindV1 = "string" | "number" | "boolean";
+
+export interface RuleParameterV1 {
+  readonly name: string;
+  readonly kind: RuleParameterKindV1;
+  readonly default: string | number | boolean | null;
+}
+
+export function runJackOnFixture(fixtureJson: string, query: string): TrinityJackRunV1 {
   const session = new TrinitySession();
   session.loadFixtureJson(fixtureJson);
-  return JSON.parse(session.runJackJson(query)) as TrinityJackResultV1;
+  return JSON.parse(session.runJackJsonWithFixture(query)) as TrinityJackRunV1;
 }
 
 export function tokenizeJackOnFixture(fixtureJson: string, source: string): readonly TrinityJackTokenV1[] {
@@ -119,10 +135,15 @@ export function createJackLspWorker(fixtureJson?: string): Worker {
   return worker;
 }
 
-export function applyRewriteOnFixture(fixtureJson: string, ruleJson: string): string {
+export function applyRewriteOnFixture(fixtureJson: string, ruleJson: string, bindingsJson = "{}"): string {
   const session = new TrinitySession();
   session.loadFixtureJson(fixtureJson);
-  return session.applyRewriteJson(ruleJson);
+  return session.applyRewriteJson(ruleJson, bindingsJson);
+}
+
+export function ruleQueryOnFixture(ruleJson: string, bindingsJson = "{}"): string {
+  const parsed = JSON.parse(ruleQueryJson(ruleJson, bindingsJson)) as { query?: string };
+  return parsed.query ?? "";
 }
 // #endregion 🔖Fixture
 
@@ -198,12 +219,69 @@ export function buildTrinityPlayInspectorTree(fixtureJson: string, selectedNodeI
 }
 // #endregion 🔖Panels
 
+// #region 🔖Lod
+export type TrinityDrawLodKind = "minimap" | "overview" | "compact" | "normal" | "detail" | "micro";
+
+export interface TrinityLodRow {
+  readonly id: TrinityDrawLodKind;
+  readonly name: string;
+  readonly description: string;
+  readonly maxZoom: number;
+}
+
+const TRINITY_DRAW_LOD_KINDS = new Set<TrinityDrawLodKind>(["minimap", "overview", "compact", "normal", "detail", "micro"]);
+
+export function isTrinityDrawLodKind(value: string): value is TrinityDrawLodKind {
+  return TRINITY_DRAW_LOD_KINDS.has(value as TrinityDrawLodKind);
+}
+
+export const TRINITY_LOD_MODE_AUTOMATIC = "automatic" as const;
+
+export type TrinityLodModeKind = typeof TRINITY_LOD_MODE_AUTOMATIC | TrinityDrawLodKind;
+
+let trinityLodScaleCache: readonly TrinityLodRow[] | null = null;
+
+export function getTrinityLodScale(): readonly TrinityLodRow[] {
+  if (!trinityLodScaleCache) {
+    const session = new TrinitySession();
+    trinityLodScaleCache = JSON.parse(session.lodScaleJson()) as TrinityLodRow[];
+  }
+  return trinityLodScaleCache;
+}
+
+export function trinityPlayLodTiers(): readonly TrinityDrawLodKind[] {
+  return getTrinityLodScale().map((lod) => lod.id);
+}
+
+export function trinityLodCanvasProps(mode: TrinityLodModeKind): { automaticLod: boolean; lod?: TrinityDrawLodKind } {
+  if (mode === TRINITY_LOD_MODE_AUTOMATIC) {
+    return { automaticLod: true };
+  }
+  return { automaticLod: false, lod: mode };
+}
+
+export function trinityLodAutomaticSelectLabel(effectiveTier: TrinityDrawLodKind): string {
+  const row = getTrinityLodScale().find((lod) => lod.id === effectiveTier);
+  const name = row?.name ?? effectiveTier;
+  return `Automatic · ${name}`;
+}
+
+export function trinityPlayLodTierMenuLabel(tier: TrinityDrawLodKind): string {
+  const row = getTrinityLodScale().find((lod) => lod.id === tier);
+  return row?.name ?? tier.charAt(0).toUpperCase() + tier.slice(1);
+}
+// #endregion 🔖Lod
+
 // #region 🔖TrinityCanvas
 export interface TrinityCanvasProps {
   readonly fixtureJson?: string;
   readonly className?: string;
   readonly reorganize?: TrinityReorganizeRequest;
   readonly onFixtureChange?: (fixtureJson: string) => void;
+  readonly onSelectionChange?: (nodeIds: readonly string[]) => void;
+  readonly automaticLod?: boolean;
+  readonly lod?: TrinityDrawLodKind;
+  readonly onLodChange?: (lod: TrinityDrawLodKind) => void;
 }
 
 function waitForLayoutSize(container: HTMLElement, min = 8): Promise<void> {
@@ -226,12 +304,26 @@ function waitForLayoutSize(container: HTMLElement, min = 8): Promise<void> {
   });
 }
 
-export function TrinityCanvas({ fixtureJson, className, reorganize, onFixtureChange }: TrinityCanvasProps): React.JSX.Element {
+export function TrinityCanvas({
+  fixtureJson,
+  className,
+  reorganize,
+  onFixtureChange,
+  onSelectionChange,
+  automaticLod = true,
+  lod,
+  onLodChange,
+}: TrinityCanvasProps): React.JSX.Element {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const sessionRef = useRef<TrinitySession | null>(null);
   const rafRef = useRef<number | null>(null);
   const onFixtureChangeRef = useRef(onFixtureChange);
+  const onSelectionChangeRef = useRef(onSelectionChange);
+  const onLodChangeRef = useRef(onLodChange);
+  const lastAutomaticLodRef = useRef<boolean | null>(null);
+  const lastForcedLodRef = useRef<string | null>(null);
+  const lastReportedLodRef = useRef<TrinityDrawLodKind | null>(null);
 
   const syncVelloTheme = useCallback(() => {
     const session = sessionRef.current;
@@ -244,19 +336,75 @@ export function TrinityCanvas({ fixtureJson, className, reorganize, onFixtureCha
     }
   }, []);
 
+  const syncLodMode = useCallback(() => {
+    const session = sessionRef.current;
+    if (!session) return;
+    const nextAutomatic = automaticLod ?? true;
+    if (lastAutomaticLodRef.current !== nextAutomatic) {
+      session.setAutomaticLod(nextAutomatic);
+      lastAutomaticLodRef.current = nextAutomatic;
+    }
+    const forced = nextAutomatic ? "" : lod && isTrinityDrawLodKind(lod) ? lod : "";
+    if (lastForcedLodRef.current !== forced) {
+      session.setForcedDrawLodLabel(forced);
+      lastForcedLodRef.current = forced;
+    }
+  }, [automaticLod, lod]);
+
+  const reportDrawLod = useCallback(() => {
+    const session = sessionRef.current;
+    if (!session || !onLodChangeRef.current) return;
+    try {
+      const label = session.drawLodLabel();
+      if (!isTrinityDrawLodKind(label)) return;
+      if (lastReportedLodRef.current === label) return;
+      lastReportedLodRef.current = label;
+      onLodChangeRef.current(label);
+    } catch {
+      /* session not ready */
+    }
+  }, []);
+
+  const reportSelection = useCallback(() => {
+    const session = sessionRef.current;
+    if (!session || !onSelectionChangeRef.current) return;
+    try {
+      const ids = JSON.parse(session.selectedNodeIdsJson()) as string[];
+      onSelectionChangeRef.current(ids);
+    } catch {
+      /* selection not ready */
+    }
+  }, []);
+
   const renderFrame = useCallback(() => {
     try {
       if (!sessionRef.current?.gpuReady()) return;
+      syncLodMode();
       syncVelloTheme();
       sessionRef.current?.renderFrame();
+      reportDrawLod();
     } catch {
       /* gpu not ready */
     }
-  }, [syncVelloTheme]);
+  }, [reportDrawLod, syncLodMode, syncVelloTheme]);
 
   useEffect(() => {
     onFixtureChangeRef.current = onFixtureChange;
   }, [onFixtureChange]);
+
+  useEffect(() => {
+    onSelectionChangeRef.current = onSelectionChange;
+  }, [onSelectionChange]);
+
+  useEffect(() => {
+    onLodChangeRef.current = onLodChange;
+  }, [onLodChange]);
+
+  useEffect(() => {
+    lastAutomaticLodRef.current = null;
+    lastForcedLodRef.current = null;
+    renderFrame();
+  }, [automaticLod, lod, renderFrame]);
 
   useEffect(() => {
     const session = sessionRef.current;
@@ -265,8 +413,8 @@ export function TrinityCanvas({ fixtureJson, className, reorganize, onFixtureCha
       session.reorganize(reorganize.optionsJson);
       onFixtureChangeRef.current?.(session.fixtureJson());
       renderFrame();
-    } catch (err) {
-      console.log(`[DEBUG] trinity canvas reorganize failed: ${String(err)}`);
+    } catch {
+      /* reorganize not ready */
     }
   }, [reorganize?.epoch, reorganize?.optionsJson, renderFrame]);
 
@@ -343,6 +491,18 @@ export function TrinityCanvas({ fixtureJson, className, reorganize, onFixtureCha
         session.pointerUp(ev.clientX - r.left, ev.clientY - r.top);
         try {
           onFixtureChangeRef.current?.(session.fixtureJson());
+          reportSelection();
+        } catch {
+          /* fixture not ready */
+        }
+        renderFrame();
+      };
+      const onWheel = (ev: WheelEvent) => {
+        ev.preventDefault();
+        const r = canvas.getBoundingClientRect();
+        session.wheelScreen(ev.clientX - r.left, ev.clientY - r.top, ev.deltaY);
+        try {
+          onFixtureChangeRef.current?.(session.fixtureJson());
         } catch {
           /* fixture not ready */
         }
@@ -352,12 +512,14 @@ export function TrinityCanvas({ fixtureJson, className, reorganize, onFixtureCha
       canvas.addEventListener("pointermove", onPointerMove);
       canvas.addEventListener("pointerup", onPointerUp);
       canvas.addEventListener("pointerleave", onPointerUp);
+      canvas.addEventListener("wheel", onWheel, { passive: false });
       cleanupInner = () => {
         ro.disconnect();
         canvas.removeEventListener("pointerdown", onPointerDown);
         canvas.removeEventListener("pointermove", onPointerMove);
         canvas.removeEventListener("pointerup", onPointerUp);
         canvas.removeEventListener("pointerleave", onPointerUp);
+        canvas.removeEventListener("wheel", onWheel);
         if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
       };
     })();
@@ -369,7 +531,7 @@ export function TrinityCanvas({ fixtureJson, className, reorganize, onFixtureCha
       session.detachGpu();
       sessionRef.current = null;
     };
-  }, [fixtureJson, renderFrame]);
+  }, [fixtureJson, renderFrame, reportSelection]);
 
   return (
     <div ref={containerRef} className={className ?? "relative h-full w-full min-h-0 min-w-0 bg-canvas"}>
@@ -397,7 +559,13 @@ if (import.meta.vitest) {
 
     it("runJackOnFixture returns nakagin core name", () => {
       const result = runJackOnFixture(TRINITY_DEFAULT_FIXTURE_JSON, "MATCH (a:Piece) WHERE a.name = 'b' RETURN a.name");
+      expect(result.kind).toBe("table");
       expect(result.rows.length).toBe(1);
+      expect(result.fixtureJson.length).toBeGreaterThan(0);
+    });
+
+    it("getTrinityLodScale exposes six bands", () => {
+      expect(getTrinityLodScale().length).toBe(6);
     });
 
     it("tokenizeJackOnFixture highlights keywords", () => {
@@ -408,6 +576,23 @@ if (import.meta.vitest) {
     it("completeJackOnFixture suggests MATCH", () => {
       const items = completeJackOnFixture(TRINITY_DEFAULT_FIXTURE_JSON, "MAT", 3);
       expect(items.some((row) => row.label === "MATCH")).toBe(true);
+    });
+
+    it("ruleQueryOnFixture builds MATCH query from rule", () => {
+      const rule = JSON.stringify({
+        name: "label-core",
+        lhs: { pattern: { leftVar: "a", leftKind: "Piece" }, whereClause: "a.name = 'b'" },
+        rhs: {
+          create: [],
+          delete: [],
+          set: [{ var: "a", prop: "label", value: "$label" }],
+          merge: [],
+          parameters: [{ name: "label", kind: "string", default: "nakagin-core" }],
+        },
+      });
+      const query = ruleQueryOnFixture(rule, JSON.stringify({ label: "override-core" }));
+      expect(query).toContain("MATCH (a:Piece)");
+      expect(query).toContain("SET a.label = 'override-core'");
     });
   });
 }

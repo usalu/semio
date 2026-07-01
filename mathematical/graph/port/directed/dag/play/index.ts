@@ -31,6 +31,13 @@ import {
 
 import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
 import {
+  DocumentVcsStore,
+  applyJsonReplaceOp,
+  createDocumentVcsEnvelope,
+  recordJsonProjectionChange,
+  type JsonReplaceOp,
+} from "@semio-tech/framework-core";
+import {
   DAG_DEFAULT_FIXTURE,
   DAG_LOD_MODE_AUTOMATIC,
   dagPlayLodTiers,
@@ -300,7 +307,10 @@ export function buildDagPlayInspectorTree(fixtureJson: string, selectedNodeIds: 
 /** @emoji 🎛 DAG play shell controller. */
 export class DagPlayController extends Controller {
   readonly mainMode = new ModeRuntime("main", "Edit", undefined);
-  private fixtureJson = DAG_PLAY_DEFAULT_FIXTURE_JSON;
+  private readonly docStore = new DocumentVcsStore<DagFixtureV1, JsonReplaceOp<DagFixtureV1>>({
+    envelope: createDocumentVcsEnvelope("dag.fixture/v1", "dag-play", DAG_PLAY_DEFAULT_FIXTURE),
+    applyOp: applyJsonReplaceOp,
+  });
   private engagementInput = "";
   private layerSpacing = DEFAULT_LAYER_SPACING;
   private siblingGap = DEFAULT_SIBLING_GAP;
@@ -320,7 +330,19 @@ export class DagPlayController extends Controller {
   }
 
   getFixtureJson(): string {
-    return this.fixtureJson;
+    return dagFixtureToJson(this.projection());
+  }
+
+  getDocumentVcsStore(): DocumentVcsStore<DagFixtureV1, JsonReplaceOp<DagFixtureV1>> {
+    return this.docStore;
+  }
+
+  private projection(): DagFixtureV1 {
+    return this.docStore.projection();
+  }
+
+  private commitFixture(next: DagFixtureV1): void {
+    recordJsonProjectionChange(this.docStore, next);
   }
 
   getReorganize(): DagReorganizeRequest {
@@ -351,8 +373,9 @@ export class DagPlayController extends Controller {
   }
 
   private applyFixtureJson(json: string): void {
-    if (!json.includes("dag.fixture/v1") || json === this.fixtureJson) return;
-    this.fixtureJson = json;
+    const parsed = parseDagPlayFixtureJson(json);
+    if (!parsed || dagFixtureToJson(parsed) === this.getFixtureJson()) return;
+    this.commitFixture(parsed);
     this.interactionRevision += 1;
     this.notifySnapshot();
     this.emit();
@@ -361,8 +384,8 @@ export class DagPlayController extends Controller {
   private renameDagNode(oldId: string, newId: string): void {
     const trimmed = newId.trim();
     if (!trimmed || trimmed === oldId) return;
-    const fixture = parseDagPlayFixtureJson(this.fixtureJson);
-    if (!fixture || fixture.nodes.some((node) => node.id === trimmed)) return;
+    const fixture = this.projection();
+    if (fixture.nodes.some((node) => node.id === trimmed)) return;
     const nodes = fixture.nodes.map((node) => (node.id === oldId ? ({ ...node, id: trimmed } as DagNodeV1) : node));
     const remapPort = (port: string) => (port.startsWith(`${oldId}:`) ? `${trimmed}:${port.slice(oldId.length + 1)}` : port);
     const edges = fixture.edges.map((edge) => ({
@@ -371,15 +394,14 @@ export class DagPlayController extends Controller {
       target: remapPort(edge.target),
     }));
     this.selectedNodeIds = this.selectedNodeIds.map((id) => (id === oldId ? trimmed : id));
-    this.fixtureJson = dagFixtureToJson({ ...fixture, nodes, edges });
+    this.commitFixture({ ...fixture, nodes, edges });
     this.interactionRevision += 1;
     this.notifySnapshot();
     this.emit();
   }
 
   private patchDagNode(nodeId: string, field: string, value: unknown): void {
-    const fixture = parseDagPlayFixtureJson(this.fixtureJson);
-    if (!fixture) return;
+    const fixture = this.projection();
     const nodes = fixture.nodes.map((node) => {
       if (node.id !== nodeId) return node;
       if (field === "value" || field === "min" || field === "max" || field === "step" || field === "selected") {
@@ -390,7 +412,7 @@ export class DagPlayController extends Controller {
       if (typeof value !== "string") return node;
       return { ...node, [field]: value } as DagNodeV1;
     });
-    this.fixtureJson = dagFixtureToJson({ ...fixture, nodes });
+    this.commitFixture({ ...fixture, nodes });
     this.interactionRevision += 1;
     this.notifySnapshot();
     this.emit();

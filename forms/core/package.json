@@ -11,6 +11,9 @@
   "scripts": {
     "test": "bun nx run @semio-tech/forms-core:test"
   },
+  "dependencies": {
+    "@semio-tech/framework-core": "workspace:*"
+  },
   "devDependencies": {
     "typescript": "^5.9.3",
     "vitest": "^4.0.17"

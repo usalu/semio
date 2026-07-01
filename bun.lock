@@ -538,6 +538,7 @@
       "name": "@semio-tech/draw-core",
       "version": "0.1.0",
       "dependencies": {
+        "@semio-tech/framework-core": "workspace:*",
         "@semio-tech/graph-manifest": "workspace:*",
       },
       "devDependencies": {
@@ -551,6 +552,7 @@
       "dependencies": {
         "@semio-tech/draw-core": "workspace:*",
         "@semio-tech/draw-react": "workspace:*",
+        "@semio-tech/framework-core": "workspace:*",
         "@semio-tech/framework-playground-core": "workspace:*",
         "@semio-tech/ui-react": "workspace:*",
       },
@@ -582,6 +584,18 @@
         "react-dom": "^19.2.3",
         "typescript": "^5.9.3",
         "vite": "^7.3.1",
+        "vitest": "^4.0.17",
+      },
+    },
+    "flow/core": {
+      "name": "@semio-tech/flow-core",
+      "version": "0.1.0",
+      "dependencies": {
+        "@semio-tech/framework-core": "workspace:*",
+        "@semio-tech/graph-manifest": "workspace:*",
+      },
+      "devDependencies": {
+        "typescript": "^5.9.3",
         "vitest": "^4.0.17",
       },
     },
@@ -628,6 +642,7 @@
         "@semio-tech/flow-react": "workspace:*",
         "@semio-tech/forms-core": "workspace:*",
         "@semio-tech/forms-react": "workspace:*",
+        "@semio-tech/framework-core": "workspace:*",
         "@semio-tech/framework-playground-core": "workspace:*",
       },
       "devDependencies": {
@@ -661,6 +676,9 @@
     "forms/core": {
       "name": "@semio-tech/forms-core",
       "version": "0.1.0",
+      "dependencies": {
+        "@semio-tech/framework-core": "workspace:*",
+      },
       "devDependencies": {
         "typescript": "^5.9.3",
         "vitest": "^4.0.17",
@@ -672,6 +690,7 @@
       "dependencies": {
         "@semio-tech/forms-core": "workspace:*",
         "@semio-tech/forms-react": "workspace:*",
+        "@semio-tech/framework-core": "workspace:*",
         "@semio-tech/framework-playground-core": "workspace:*",
       },
       "devDependencies": {
@@ -759,6 +778,8 @@
       "name": "@semio-tech/framework-playground-renderer-react",
       "version": "0.1.0",
       "dependencies": {
+        "@semio-tech/cad-js-renderer": "workspace:*",
+        "@semio-tech/compose-sketchpad": "workspace:*",
         "@semio-tech/draw-core": "workspace:*",
         "@semio-tech/draw-play": "workspace:*",
         "@semio-tech/draw-react": "workspace:*",
@@ -772,6 +793,7 @@
         "@semio-tech/framework-playground-core": "workspace:*",
         "@semio-tech/framework-presentation-core": "workspace:*",
         "@semio-tech/framework-presentation-play": "workspace:*",
+        "@semio-tech/framework-presentation-renderer-react": "workspace:*",
         "@semio-tech/gis-map-play": "workspace:*",
         "@semio-tech/gis-map-react": "workspace:*",
         "@semio-tech/procedural-2d-play": "workspace:*",
@@ -789,6 +811,9 @@
         "@semio-tech/raster-react": "workspace:*",
         "@semio-tech/reasoning-mindmap-react": "workspace:*",
         "@semio-tech/reasoning-mindmap-wires-play": "workspace:*",
+        "@semio-tech/semios-core": "workspace:*",
+        "@semio-tech/semios-play": "workspace:*",
+        "@semio-tech/semios-react": "workspace:*",
         "@semio-tech/shooting-play": "workspace:*",
         "@semio-tech/shooting-react": "workspace:*",
         "@semio-tech/trinity-jack-play": "workspace:*",
@@ -877,6 +902,7 @@
       "name": "@semio-tech/gis-map-play",
       "version": "0.1.0",
       "dependencies": {
+        "@semio-tech/framework-core": "workspace:*",
         "@semio-tech/framework-playground-core": "workspace:*",
       },
       "devDependencies": {
@@ -955,6 +981,7 @@
       "version": "0.1.0",
       "dependencies": {
         "@semio-tech/dag-react": "workspace:*",
+        "@semio-tech/framework-core": "workspace:*",
         "@semio-tech/framework-playground-core": "workspace:*",
       },
       "devDependencies": {
@@ -1002,8 +1029,10 @@
       "name": "@semio-tech/procedural-2d-play",
       "version": "0.1.0",
       "dependencies": {
+        "@semio-tech/flow-play": "workspace:*",
         "@semio-tech/flow-react": "workspace:*",
         "@semio-tech/forms-react": "workspace:*",
+        "@semio-tech/framework-core": "workspace:*",
         "@semio-tech/framework-playground-core": "workspace:*",
         "@semio-tech/procedural-2d-react": "workspace:*",
       },
@@ -1035,8 +1064,10 @@
       "name": "@semio-tech/procedural-3d-play",
       "version": "0.1.0",
       "dependencies": {
+        "@semio-tech/flow-play": "workspace:*",
         "@semio-tech/flow-react": "workspace:*",
         "@semio-tech/forms-react": "workspace:*",
+        "@semio-tech/framework-core": "workspace:*",
         "@semio-tech/framework-playground-core": "workspace:*",
         "@semio-tech/procedural-3d-react": "workspace:*",
       },
@@ -1078,6 +1109,7 @@
       "name": "@semio-tech/puzzle-2d-play",
       "version": "0.1.0",
       "dependencies": {
+        "@semio-tech/framework-core": "workspace:*",
         "@semio-tech/framework-playground-core": "workspace:*",
         "@semio-tech/puzzle-2d-react": "workspace:*",
         "@semio-tech/ui-react": "workspace:*",
@@ -1120,6 +1152,7 @@
       "name": "@semio-tech/puzzle-3d-play",
       "version": "0.1.0",
       "dependencies": {
+        "@semio-tech/framework-core": "workspace:*",
         "@semio-tech/framework-playground-core": "workspace:*",
         "@semio-tech/infinite-world-r3f": "workspace:*",
         "@semio-tech/puzzle-3d-react": "workspace:*",
@@ -1167,6 +1200,7 @@
       "name": "@semio-tech/puzzle-5d-play",
       "version": "0.1.0",
       "dependencies": {
+        "@semio-tech/framework-core": "workspace:*",
         "@semio-tech/framework-playground-core": "workspace:*",
       },
       "devDependencies": {
@@ -1212,6 +1246,9 @@
     "raster/core": {
       "name": "@semio-tech/raster-core",
       "version": "0.1.0",
+      "dependencies": {
+        "@semio-tech/framework-core": "workspace:*",
+      },
       "devDependencies": {
         "typescript": "^5.9.3",
         "vitest": "^4.0.17",
@@ -1221,6 +1258,7 @@
       "name": "@semio-tech/raster-play",
       "version": "0.1.0",
       "dependencies": {
+        "@semio-tech/framework-core": "workspace:*",
         "@semio-tech/framework-playground-core": "workspace:*",
         "@semio-tech/raster-core": "workspace:*",
         "@semio-tech/raster-react": "workspace:*",
@@ -1363,10 +1401,67 @@
         "typescript": "^5.8.3",
       },
     },
+    "semios/core": {
+      "name": "@semio-tech/semios-core",
+      "version": "0.1.0",
+      "dependencies": {
+        "@semio-tech/framework-core": "workspace:*",
+        "@semio-tech/framework-platform-core": "workspace:*",
+        "@semio-tech/graph-manifest": "workspace:*",
+      },
+      "devDependencies": {
+        "typescript": "^5.9.3",
+        "vitest": "^4.0.17",
+      },
+    },
+    "semios/play": {
+      "name": "@semio-tech/semios-play",
+      "version": "0.1.0",
+      "dependencies": {
+        "@semio-tech/compose-sketchpad": "workspace:*",
+        "@semio-tech/draw-core": "workspace:*",
+        "@semio-tech/flow-core": "workspace:*",
+        "@semio-tech/forms-core": "workspace:*",
+        "@semio-tech/framework-playground-core": "workspace:*",
+        "@semio-tech/framework-presentation-core": "workspace:*",
+        "@semio-tech/raster-core": "workspace:*",
+        "@semio-tech/semios-core": "workspace:*",
+        "@semio-tech/semios-react": "workspace:*",
+        "@semio-tech/ui-react": "workspace:*",
+        "@semio-tech/writer-core": "workspace:*",
+      },
+      "devDependencies": {
+        "@types/react": "^19.2.8",
+        "@types/react-dom": "^19.2.3",
+        "@vitejs/plugin-react": "^5.1.2",
+        "react": "^19.2.3",
+        "react-dom": "^19.2.3",
+        "typescript": "^5.9.3",
+        "vite": "^7.3.1",
+        "vitest": "^4.0.17",
+      },
+    },
+    "semios/react": {
+      "name": "@semio-tech/semios-react",
+      "version": "0.1.0",
+      "dependencies": {
+        "@semio-tech/semios-core": "workspace:*",
+        "@semio-tech/ui-react": "workspace:*",
+      },
+      "devDependencies": {
+        "@types/react": "^19.2.8",
+        "@types/react-dom": "^19.2.3",
+        "react": "^19.2.3",
+        "react-dom": "^19.2.3",
+        "typescript": "^5.9.3",
+        "vitest": "^4.0.17",
+      },
+    },
     "shooting/play": {
       "name": "@semio-tech/shooting-play",
       "version": "0.1.0",
       "dependencies": {
+        "@semio-tech/framework-core": "workspace:*",
         "@semio-tech/framework-playground-core": "workspace:*",
         "@semio-tech/shooting-react": "workspace:*",
       },
@@ -1411,6 +1506,7 @@
       "name": "@semio-tech/trinity-jack-play",
       "version": "0.1.0",
       "dependencies": {
+        "@semio-tech/framework-core": "workspace:*",
         "@semio-tech/framework-playground-core": "workspace:*",
         "@semio-tech/trinity-react": "workspace:*",
         "@semio-tech/ui-react": "workspace:*",
@@ -1445,9 +1541,12 @@
       "name": "@semio-tech/trinity-rewrite-play",
       "version": "0.1.0",
       "dependencies": {
+        "@semio-tech/forms-core": "workspace:*",
+        "@semio-tech/framework-core": "workspace:*",
         "@semio-tech/framework-playground-core": "workspace:*",
         "@semio-tech/trinity-react": "workspace:*",
         "@semio-tech/ui-react": "workspace:*",
+        "@semio-tech/writer-core": "workspace:*",
       },
       "devDependencies": {
         "@semio-tech/framework-playground-renderer-react": "workspace:*",
@@ -1561,6 +1660,7 @@
       "name": "@semio-tech/writer-core",
       "version": "0.1.0",
       "dependencies": {
+        "@semio-tech/framework-core": "workspace:*",
         "@semio-tech/graph-manifest": "workspace:*",
       },
       "devDependencies": {
@@ -1572,6 +1672,7 @@
       "name": "@semio-tech/writer-play",
       "version": "0.1.0",
       "dependencies": {
+        "@semio-tech/framework-core": "workspace:*",
         "@semio-tech/framework-playground-core": "workspace:*",
         "@semio-tech/ui-react": "workspace:*",
         "@semio-tech/writer-core": "workspace:*",
@@ -2572,6 +2673,8 @@
 
     "@semio-tech/draw-react": ["@semio-tech/draw-react@workspace:draw/react"],
 
+    "@semio-tech/flow-core": ["@semio-tech/flow-core@workspace:flow/core"],
+
     "@semio-tech/flow-module-bim": ["@semio-tech/flow-module-bim@workspace:flow/module/bim/pkg"],
 
     "@semio-tech/flow-module-brep": ["@semio-tech/flow-module-brep@workspace:flow/module/brep/pkg"],
@@ -2683,6 +2786,12 @@
     "@semio-tech/semio-image": ["@semio-tech/semio-image@workspace:asset/image"],
 
     "@semio-tech/semio-logo": ["@semio-tech/semio-logo@workspace:asset/logo"],
+
+    "@semio-tech/semios-core": ["@semio-tech/semios-core@workspace:semios/core"],
+
+    "@semio-tech/semios-play": ["@semio-tech/semios-play@workspace:semios/play"],
+
+    "@semio-tech/semios-react": ["@semio-tech/semios-react@workspace:semios/react"],
 
     "@semio-tech/shooting-play": ["@semio-tech/shooting-play@workspace:shooting/play"],
 

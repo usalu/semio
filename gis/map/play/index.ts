@@ -35,7 +35,7 @@ import {
   type ToolLeaf,
   toolCollection,
 } from "@semio-tech/framework-playground-core";
-import { Store } from "@semio-tech/framework-core";
+import { Store, DocumentVcsStore, applyJsonReplaceOp, createDocumentVcsEnvelope, recordJsonProjectionChange, type JsonReplaceOp } from "@semio-tech/framework-core";
 
 import { bootstrapElementsSurfaceChromeDocument, selectionMergeIds, type SelectionMarqueeMethod, type SelectionMergeMode } from "@semio-tech/ui-react";
 
@@ -745,7 +745,10 @@ function mapPlayWindowMeasures(
 export class MapPlayController extends Controller implements PlaygroundFixtureHost {
   readonly mainMode = new ModeRuntime("explore", "Explore", undefined);
   private activeFixtureId = GIS_MAP_PLAY_FIXTURE_REUSE_ID;
-  private activeFixture: GisMapFixtureV1 | null = GIS_MAP_PLAY_DEFAULT_FIXTURE;
+  private readonly docStore = new DocumentVcsStore<GisMapFixtureV1 | null, JsonReplaceOp<GisMapFixtureV1 | null>>({
+    envelope: createDocumentVcsEnvelope("gis.map.fixture/v1", "gis-map-play", GIS_MAP_PLAY_DEFAULT_FIXTURE),
+    applyOp: applyJsonReplaceOp,
+  });
   private readonly snapshotStore: MapPlaySnapshotStore;
   private snapshotCache: MapPlaySnapshot | null = null;
   renderMode: MapRenderMode = "vector";
@@ -893,10 +896,6 @@ export class MapPlayController extends Controller implements PlaygroundFixtureHo
     console.log(`[DEBUG] gis map focus route ${featureId} at ${lon},${lat}`);
   }
 
-  getActiveFixture(): GisMapFixtureV1 | null {
-    return this.activeFixture;
-  }
-
   getSelectedFeatureId(): string | null {
     if (this.selectedPositionIds.length === 1 && this.selectedRouteIds.length === 0) {
       return this.selectedPositionIds[0] ?? null;
@@ -932,8 +931,24 @@ export class MapPlayController extends Controller implements PlaygroundFixtureHo
     }
   }
 
+  getActiveFixture(): GisMapFixtureV1 | null {
+    return this.activeFixture;
+  }
+
+  getDocumentVcsStore(): DocumentVcsStore<GisMapFixtureV1 | null, JsonReplaceOp<GisMapFixtureV1 | null>> {
+    return this.docStore;
+  }
+
+  private get activeFixture(): GisMapFixtureV1 | null {
+    return this.docStore.projection();
+  }
+
+  private setActiveFixtureProjection(next: GisMapFixtureV1 | null): void {
+    recordJsonProjectionChange(this.docStore, next);
+  }
+
   private patchActiveFixture(nextFixture: GisMapFixtureV1): void {
-    this.activeFixture = nextFixture;
+    this.setActiveFixtureProjection(nextFixture);
     this.bumpSnapshot();
   }
 
@@ -1137,7 +1152,7 @@ export class MapPlayController extends Controller implements PlaygroundFixtureHo
       if (nextId === this.activeFixtureId) return;
       this.activeFixtureId = nextId;
       if (isPlaygroundNoFixtureId(nextId)) {
-        this.activeFixture = null;
+        this.setActiveFixtureProjection(null);
         this.layerVisibility = defaultMapLayerVisibility();
         this.layerVisibilityByInstance = {};
         this.layerStrokeScale = defaultMapLayerStrokeScale();
@@ -1147,7 +1162,7 @@ export class MapPlayController extends Controller implements PlaygroundFixtureHo
         return;
       }
       if (nextId === GIS_MAP_PLAY_FIXTURE_REUSE_ID) {
-        this.activeFixture = GIS_MAP_PLAY_DEFAULT_FIXTURE;
+        this.setActiveFixtureProjection(GIS_MAP_PLAY_DEFAULT_FIXTURE);
         this.applyFixtureLayersForData();
         this.rebuildShellMode();
         this.bumpSnapshot();

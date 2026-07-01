@@ -433,7 +433,7 @@ const PLAYGROUND_RENDERER_PUZZLE_HOSTS_START = "//#region 🔖Puzzle3dPlayHost";
 const PLAYGROUND_RENDERER_BOOT_START = "//#region 🔖Boot";
 const PLAYGROUND_RENDERER_VITEST_START = "//#region 🧪Tests";
 
-export type PlaygroundRendererPuzzleKind = "2d" | "3d" | "5d" | "map" | "flow" | "dag" | "trinity-jack" | "trinity-rewrite" | "procedural-3d" | "procedural-2d" | "presentation" | "wires" | "shooting" | "forms" | "raster" | "writer";
+export type PlaygroundRendererPuzzleKind = "2d" | "3d" | "5d" | "map" | "flow" | "dag" | "trinity-jack" | "trinity-rewrite" | "procedural-3d" | "procedural-2d" | "presentation" | "wires" | "shooting" | "forms" | "raster" | "writer" | "semios";
 
 const PLAYGROUND_RENDERER_PUZZLE_BOOT_SUBPATHS: Readonly<Record<string, PlaygroundRendererPuzzleKind>> = {
   "@semio-tech/framework-playground-renderer-react/puzzle/2d": "2d",
@@ -451,6 +451,7 @@ const PLAYGROUND_RENDERER_PUZZLE_BOOT_SUBPATHS: Readonly<Record<string, Playgrou
   "@semio-tech/framework-playground-renderer-react/forms": "forms",
   "@semio-tech/framework-playground-renderer-react/raster": "raster",
   "@semio-tech/framework-playground-renderer-react/writer": "writer",
+  "@semio-tech/framework-playground-renderer-react/semios": "semios",
   "@semio-tech/framework-playground-renderer-react/reasoning/wires": "wires",
 };
 
@@ -558,6 +559,9 @@ export function playgroundRendererShellEntryPlugin(rendererIndexPath: string): P
         return stripPlaygroundRendererPuzzleHosts(source, { includeVitest: false });
       }
       const puzzleMatch = id.match(/playgroundEntry=puzzle-([^&?]+)/);
+      if (puzzleMatch && puzzleMatch[1] === "semios") {
+        return source;
+      }
       if (puzzleMatch && puzzleMatch[1] in PLAYGROUND_RENDERER_PUZZLE_HOST_MARKERS) {
         return stripPlaygroundRendererForPuzzleKind(source, puzzleMatch[1] as PlaygroundRendererPuzzleKind, { includeVitest: false });
       }

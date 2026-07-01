@@ -30,6 +30,13 @@ import {
 	type UiTreeItemNode,
 	type UiTreeNode,
 } from "@semio-tech/framework-playground-core";
+import {
+	DocumentVcsStore,
+	applyJsonReplaceOp,
+	createDocumentVcsEnvelope,
+	recordJsonProjectionChange,
+	type JsonReplaceOp,
+} from "@semio-tech/framework-core";
 import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
 import {
 	createWriterDocument,
@@ -54,6 +61,8 @@ export const WRITER_PLAY_CATALOGUE_TAB_ID = "framework.panel.catalogue";
 export const WRITER_PLAY_INSPECTION_TAB_ID = "framework.panel.inspection";
 
 export const WRITER_PLAY_LAYOUT = createDefaultLayout([WRITER_PLAY_WINDOW_KIND], "row", [100], ["Jack"]);
+
+export const WRITER_PLAY_EMPTY_DOCUMENT: WriterDocumentV1 = createWriterDocument({ id: "empty", languageId: "plaintext", text: "" });
 
 export { WRITER_PLAY_FIXTURE_DEFAULT_ID, resolveWriterPlayFixtureSlug };
 
@@ -222,7 +231,10 @@ export function buildWriterPlayInspectorTree(doc: WriterDocumentV1, lintMessages
 
 export class WriterPlayController extends Controller implements PlaygroundFixtureHost {
 	readonly mainMode = new ModeRuntime("main", "Writer", undefined);
-	private document: WriterDocumentV1;
+	private readonly docStore = new DocumentVcsStore<WriterDocumentV1, JsonReplaceOp<WriterDocumentV1>>({
+		envelope: createDocumentVcsEnvelope("writer.document/v1", "writer-play", WRITER_PLAY_EMPTY_DOCUMENT),
+		applyOp: applyJsonReplaceOp,
+	});
 	private revision = 0;
 	private formatSignal = 0;
 	private lintSignal = 0;
@@ -237,13 +249,27 @@ export class WriterPlayController extends Controller implements PlaygroundFixtur
 
 	constructor(commandBus: CommandBus, hostNotify: () => void, initialJson: string) {
 		super(WRITER_PLAY_CONTROLLER_ID, commandBus, hostNotify);
-		this.document = parseWriterDocumentJson(initialJson);
-		this.refreshAst();
+		this.replaceDocument(parseWriterDocumentJson(initialJson));
 		this.rebuildShellMode();
 	}
 
+	private projection(): WriterDocumentV1 {
+		return this.docStore.projection();
+	}
+
+	private commitDocument(next: WriterDocumentV1): void {
+		recordJsonProjectionChange(this.docStore, next);
+		this.refreshAst();
+		this.revision += 1;
+		this.emit();
+	}
+
+	replaceDocument(next: WriterDocumentV1): void {
+		this.commitDocument(next);
+	}
+
 	private refreshAst(): void {
-		this.astRoot = this.document.languageId === "jack" ? parseJackAst(this.document.text) : null;
+		this.astRoot = this.projection().languageId === "jack" ? parseJackAst(this.projection().text) : null;
 		if (this.astRoot && this.selectedAstIds.length > 0) {
 			const id = this.selectedAstIds[0]!;
 			const node = jackAstNodeById(this.astRoot, id);
@@ -290,11 +316,15 @@ export class WriterPlayController extends Controller implements PlaygroundFixtur
 	}
 
 	getDocument(): WriterDocumentV1 {
-		return this.document;
+		return this.projection();
 	}
 
 	getDocumentJson(): string {
-		return writerDocumentToJson(this.document);
+		return writerDocumentToJson(this.projection());
+	}
+
+	getDocumentVcsStore(): DocumentVcsStore<WriterDocumentV1, JsonReplaceOp<WriterDocumentV1>> {
+		return this.docStore;
 	}
 
 	getLintMessages(): readonly string[] {
@@ -324,10 +354,7 @@ export class WriterPlayController extends Controller implements PlaygroundFixtur
 	}
 
 	loadFixtureJson(json: string): void {
-		this.document = parseWriterDocumentJson(json);
-		this.refreshAst();
-		this.revision += 1;
-		this.emit();
+		this.replaceDocument(parseWriterDocumentJson(json));
 	}
 
 	run(command: string, args?: Record<string, unknown>): void {
@@ -338,18 +365,15 @@ export class WriterPlayController extends Controller implements PlaygroundFixtur
 				return;
 			}
 			case "setDocument": {
-				this.document = args?.document as WriterDocumentV1;
-				this.refreshAst();
-				this.revision += 1;
-				this.emit();
+				const document = args?.document as WriterDocumentV1;
+				if (!document || document.schema !== "writer.document/v1") return;
+				this.replaceDocument(document);
 				return;
 			}
 			case "setActiveFixture": {
 				const fixtureId = String(args?.fixtureId ?? "");
 				if (isPlaygroundNoFixtureId(fixtureId)) {
-					this.document = createWriterDocument({ id: "empty", languageId: "plaintext", text: "" });
-					this.revision += 1;
-					this.emit();
+					this.replaceDocument(WRITER_PLAY_EMPTY_DOCUMENT);
 					return;
 				}
 				const json = WRITER_PLAY_FILE_FIXTURE_JSON_BY_ID[fixtureId];

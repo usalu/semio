@@ -48,6 +48,7 @@ import {
 	type ComponentKind,
 	type PanelModel,
 	type PlatformSpec,
+	type PlatformDefinition,
 	type PluginManifest,
 	type PluginModule,
 	type Puzzle2dModel,
@@ -15858,6 +15859,24 @@ const SKETCHPAD_PLATFORM_SPEC: PlatformSpec = {
 	defaultActiveAppId: SKETCHPAD_HOME_APP_ID,
 	initialPanelVisibility: PRODUCT_SHELL_DEFAULT_PANEL_VISIBILITY,
 };
+
+/** @emoji 🖥️ Sketchpad as a semios {@link PlatformDefinition} program (apps mirror {@link buildSketchpadExtensionManifest}). */
+export function buildSketchpadProgramDefinition(): PlatformDefinition {
+	return {
+		id: SKETCHPAD_PLATFORM_SPEC.id,
+		name: SKETCHPAD_PLATFORM_SPEC.name,
+		apiVersion: "1",
+		apps: [
+			{ id: SKETCHPAD_HOME_APP_ID, label: "Home", controllerId: SKETCHPAD_SHELL_CONTROLLER_ID, modes: [{ id: "explore", label: "Explore" }] },
+			{ id: SKETCHPAD_KIT_APP_ID, label: "Kit", controllerId: SKETCHPAD_SHELL_CONTROLLER_ID, modes: [{ id: "explore", label: "Explore" }] },
+			{ id: SKETCHPAD_DESIGN_APP_ID, label: "Design", controllerId: SKETCHPAD_SHELL_CONTROLLER_ID, modes: [{ id: "edit", label: "Edit" }] },
+			{ id: SKETCHPAD_TYPE_APP_ID, label: "Type", controllerId: SKETCHPAD_SHELL_CONTROLLER_ID, modes: [{ id: "edit", label: "Edit" }] },
+			{ id: SKETCHPAD_DOCS_APP_ID, label: "Docs", controllerId: SKETCHPAD_SHELL_CONTROLLER_ID, modes: [{ id: "explore", label: "Explore" }] },
+			{ id: SKETCHPAD_FEEDBACK_APP_ID, label: "Feedback", controllerId: SKETCHPAD_SHELL_CONTROLLER_ID, modes: [{ id: "explore", label: "Explore" }] },
+		],
+		createPlatformApi: () => ({}),
+	};
+}
 
 /** @emoji 🧱 Builds the sketchpad {@link Platform} (apps, window bodies, {@link Component} registry). */
 export async function buildSketchpadPlatform(): Promise<Platform> {

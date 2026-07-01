@@ -5,6 +5,10 @@
   "description": "🧭 CAD renderer (R3F) for factory snapshots + interaction.",
   "type": "module",
   "private": true,
+  "exports": {
+    ".": "./index.tsx",
+    "./play": "./play/index.tsx"
+  },
   "scripts": {
     "dev": "bun nx run @semio-tech/cad-js-renderer:dev",
     "build": "bun nx run @semio-tech/cad-js-renderer:build",

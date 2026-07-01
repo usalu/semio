@@ -1976,6 +1976,49 @@ export function analogy(spec: AnalogySpec): Presentation {
 }
 //#endregion 🔖Analogy
 
+//#region 🔖DocumentVcs
+import {
+	applyJsonReplaceOp,
+	createDocumentVcsEnvelope,
+	materializeDocumentProjection,
+	type DocumentVcsEnvelope,
+	type JsonReplaceOp,
+} from "@semio-tech/framework-core";
+
+export type PresentationDeckV1 = {
+	readonly schema: "presentation.deck/v1";
+	readonly source: FigureTileSource;
+	readonly tiles: readonly FigureTileDraft[];
+};
+
+export type PresentationDeckJsonVcsEnvelope = DocumentVcsEnvelope<PresentationDeckV1, JsonReplaceOp<PresentationDeckV1>>;
+
+const PRESENTATION_DECK_EMPTY = (): PresentationDeckV1 => ({
+	schema: "presentation.deck/v1",
+	source: { src: "", kind: "figure", frame: { x: 0, y: 0, width: 1, height: 1 } },
+	tiles: [],
+});
+
+/** @emoji 🧩 Semios app VCS handler factory for presentation deck documents. */
+export function createPresentationAppVcsHandler() {
+	return {
+		format: "presentation.deck/v1",
+		createEnvelope: (id: string) => createDocumentVcsEnvelope("presentation.deck/v1", id, PRESENTATION_DECK_EMPTY()),
+		applyOp: applyJsonReplaceOp,
+		serializeEnvelope: (envelope: PresentationDeckJsonVcsEnvelope) => JSON.stringify(envelope),
+		deserializeEnvelope: (json: string) => JSON.parse(json) as PresentationDeckJsonVcsEnvelope,
+		materializeProjection: (source: { readonly vcsJson?: string; readonly inline?: string }) => {
+			if (source.vcsJson) {
+				const envelope = JSON.parse(source.vcsJson) as PresentationDeckJsonVcsEnvelope;
+				return materializeDocumentProjection(envelope, envelope.vcs.operations.map((change) => change.id), applyJsonReplaceOp);
+			}
+			if (source.inline) return JSON.parse(source.inline) as PresentationDeckV1;
+			return PRESENTATION_DECK_EMPTY();
+		},
+	};
+}
+//#endregion 🔖DocumentVcs
+
 //#region 🧪Tests
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
@@ -3103,6 +3146,16 @@ if (import.meta.vitest) {
 			);
 			expect(pdfPrompt).toContain("kind: pdf");
 			expect(pdfPrompt).toContain("pdfPage: 2");
+		});
+	});
+
+	describe("createPresentationAppVcsHandler", () => {
+		it("materializes deck projection from inline json", () => {
+			const handler = createPresentationAppVcsHandler();
+			const projection = handler.materializeProjection({
+				inline: JSON.stringify({ schema: "presentation.deck/v1", source: { src: "/a.png" }, tiles: [{ id: "t1", name: "A", crop: { x: 0, y: 0, width: 1, height: 1 } }] }),
+			}) as { tiles: readonly unknown[] };
+			expect(projection.tiles).toHaveLength(1);
 		});
 	});
 }

@@ -3,6 +3,13 @@
 /** @emoji ✍️ `@semio-tech/writer-core` — writer documents, LSP client, and grammar registry. */
 // #endregion 🧲Header
 
+import {
+	applyJsonReplaceOp,
+	createDocumentVcsEnvelope,
+	type DocumentVcsEnvelope,
+	materializeDocumentProjection,
+	type JsonReplaceOp,
+} from "@semio-tech/framework-core";
 import { WRITERLANGUAGES_LANGUAGE_IDS, type WriterLanguagesLanguageKindId } from "@semio-tech/graph-manifest";
 
 // #region 📐WriterDocument
@@ -1124,6 +1131,42 @@ export function applyJackRename(
 // #endregion 🔖JackSymbols
 // #endregion 🔖JackAst
 
+//#region 🔖DocumentVcs
+export type WriterDocumentVcsEnvelope = DocumentVcsEnvelope<WriterDocumentV1, JsonReplaceOp<WriterDocumentV1>>;
+
+/** @emoji 📦 Creates a writer document VCS envelope with an empty or seeded projection. */
+export function createWriterDocumentVcsEnvelope(
+	id: string,
+	projection: WriterDocumentV1 = createWriterDocument({ id, languageId: "plaintext", text: "" }),
+): WriterDocumentVcsEnvelope {
+	return createDocumentVcsEnvelope(WRITER_DOCUMENT_SCHEMA, id, projection);
+}
+
+/** @emoji 🔁 Materializes a writer document from its VCS envelope. */
+export function materializeWriterDocument(envelope: WriterDocumentVcsEnvelope, appliedChangeIds: readonly string[] = []): WriterDocumentV1 {
+	return materializeDocumentProjection(envelope, appliedChangeIds, applyJsonReplaceOp);
+}
+
+/** @emoji 🧩 Semios app VCS handler factory for writer documents. */
+export function createWriterAppVcsHandler() {
+	return {
+		format: WRITER_DOCUMENT_SCHEMA,
+		createEnvelope: (id: string) => createWriterDocumentVcsEnvelope(id),
+		applyOp: applyJsonReplaceOp,
+		serializeEnvelope: (envelope: WriterDocumentVcsEnvelope) => JSON.stringify(envelope),
+		deserializeEnvelope: (json: string) => JSON.parse(json) as WriterDocumentVcsEnvelope,
+		materializeProjection: (source: { readonly vcsJson?: string; readonly inline?: string }) => {
+			if (source.vcsJson) {
+				const envelope = JSON.parse(source.vcsJson) as WriterDocumentVcsEnvelope;
+				return materializeWriterDocument(envelope, envelope.vcs.operations.map((change) => change.id));
+			}
+			if (source.inline) return parseWriterDocumentJson(source.inline);
+			return createWriterDocument({ id: "writer", languageId: "plaintext", text: "" });
+		},
+	};
+}
+//#endregion 🔖DocumentVcs
+
 // #region 🧪Tests
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
@@ -1134,6 +1177,14 @@ if (import.meta.vitest) {
 			const parsed = parseWriterDocumentJson(writerDocumentToJson(doc));
 			expect(parsed.text).toBe(doc.text);
 			expect(parsed.languageId).toBe("jack");
+		});
+	});
+
+	describe("createWriterAppVcsHandler", () => {
+		it("materializes inline writer documents", () => {
+			const doc = createWriterDocument({ id: "t", languageId: "jack", text: "RETURN 1" });
+			const projection = createWriterAppVcsHandler().materializeProjection({ inline: writerDocumentToJson(doc) });
+			expect(projection.text).toBe("RETURN 1");
 		});
 	});
 

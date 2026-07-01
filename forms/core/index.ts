@@ -4,6 +4,14 @@
 /** @emoji 📋 `@semio-tech/forms-core` — declarative form specs, runtime, and edit operations. */
 // #endregion 🧲Header
 
+import {
+	applyJsonReplaceOp,
+	createDocumentVcsEnvelope,
+	type DocumentVcsEnvelope,
+	materializeDocumentProjection,
+	type JsonReplaceOp,
+} from "@semio-tech/framework-core";
+
 // #region 📐Types
 export type FormQuestionKind =
 	| "text"
@@ -1055,6 +1063,51 @@ export class FormRuntime {
 }
 // #endregion 🏃Runtime
 
+//#region 🔖DocumentVcs
+export type FormSpecVcsEnvelope = DocumentVcsEnvelope<FormSpec, FormEditOp>;
+export type FormSpecJsonVcsEnvelope = DocumentVcsEnvelope<FormSpec, JsonReplaceOp<FormSpec>>;
+
+/** @emoji 📦 Default empty form spec for VCS envelopes and fixtures. */
+export function defaultFormSpec(id = "default"): FormSpec {
+	return {
+		schema: "forms.form/v1",
+		id,
+		version: "1",
+		title: "New Form",
+		steps: [{ id: "step-1", title: "Step 1", questions: [{ id: "q-text", kind: "text", label: "Name" }] }],
+	};
+}
+
+/** @emoji 📦 Creates a forms document VCS envelope with an empty or seeded projection. */
+export function createFormSpecVcsEnvelope(id: string, projection: FormSpec = defaultFormSpec(id)): FormSpecVcsEnvelope {
+	return createDocumentVcsEnvelope("forms.form/v1", id, projection);
+}
+
+/** @emoji 🔁 Materializes a form spec from its VCS envelope. */
+export function materializeFormSpec(envelope: FormSpecVcsEnvelope, appliedChangeIds: readonly string[] = []): FormSpec {
+	return materializeDocumentProjection(envelope, appliedChangeIds, applyFormEditOp);
+}
+
+/** @emoji 🧩 Semios app VCS handler factory for form documents. */
+export function createFormsAppVcsHandler() {
+	return {
+		format: "forms.form/v1",
+		createEnvelope: (id: string) => createFormSpecVcsEnvelope(id),
+		applyOp: applyFormEditOp,
+		serializeEnvelope: (envelope: FormSpecVcsEnvelope) => JSON.stringify(envelope),
+		deserializeEnvelope: (json: string) => JSON.parse(json) as FormSpecVcsEnvelope,
+		materializeProjection: (source: { readonly vcsJson?: string; readonly inline?: string }) => {
+			if (source.vcsJson) {
+				const envelope = JSON.parse(source.vcsJson) as FormSpecVcsEnvelope;
+				return materializeFormSpec(envelope, envelope.vcs.operations.map((change) => change.id));
+			}
+			if (source.inline) return parseFormSpec(JSON.parse(source.inline));
+			return defaultFormSpec("forms");
+		},
+	};
+}
+//#endregion 🔖DocumentVcs
+
 // #region 🧪Tests
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
@@ -1156,6 +1209,11 @@ if (import.meta.vitest) {
 
 	it("registers extension kinds in the host", () => {
 		expect(formsExtensionHost.findQuestionKind("buildingComponent")?.preview?.surface).toBe("flow3d");
+	});
+
+	it("materializes inline form specs via app VCS handler", () => {
+		const projection = createFormsAppVcsHandler().materializeProjection({ inline: formSpecToJson(sampleSpec) });
+		expect(projection.id).toBe("sample");
 	});
 
 	it("maps flow fixture widgets to form spec", () => {

@@ -40,6 +40,13 @@ import {
   FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
   FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 } from "@semio-tech/framework-playground-core";
+import {
+  DocumentVcsStore,
+  applyJsonReplaceOp,
+  createDocumentVcsEnvelope,
+  recordJsonProjectionChange,
+  type JsonReplaceOp,
+} from "@semio-tech/framework-core";
 
 import {
   buildPuzzle2dPlayToolbarTools,
@@ -878,6 +885,10 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
   private activeFixtureId = playgroundResolvedFixtureId(PUZZLE_5D_PLAY_FIXTURE_CONCRETE_FOREST_ID);
   readonly puzzle5dStore: Puzzle5dStore = createStore(puzzle5dPlayEmptyModel());
   readonly puzzle5dStoreBridge: Puzzle5dStoreBridge;
+  private readonly modelDocStore = new DocumentVcsStore<Puzzle5dModel, JsonReplaceOp<Puzzle5dModel>>({
+    envelope: createDocumentVcsEnvelope("puzzle.5d/v1", "puzzle5d-play", puzzle5dPlayEmptyModel()),
+    applyOp: applyJsonReplaceOp,
+  });
   private gumballConfig: GumballConfig = { ...PUZZLE_3D_GUMBALL_CONFIG };
   private selected2d: ReadonlySet<string> = new Set();
   private selected3d: string | null = null;
@@ -1182,6 +1193,14 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
     return windowKinds;
   }
 
+  getDocumentVcsStore(): DocumentVcsStore<Puzzle5dModel, JsonReplaceOp<Puzzle5dModel>> {
+    return this.modelDocStore;
+  }
+
+  private commitModel(model: Puzzle5dModel): void {
+    recordJsonProjectionChange(this.modelDocStore, model);
+  }
+
   getFixtureCatalog(): PlaygroundFixtureCatalog | null {
     if (isPlaygroundFixtureLocked()) return null;
     return { activeFixtureId: this.activeFixtureId, options: PUZZLE_5D_PLAY_FIXTURE_OPTIONS };
@@ -1198,6 +1217,7 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
       model = { ...model, camera2d };
     }
     this.puzzle5dStore.replaceModel(model);
+    this.commitModel(model);
     this.selected2d = new Set();
     this.selected3d = null;
     this.activeTool = "select";

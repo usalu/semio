@@ -33,10 +33,18 @@ import {
 	type UiTreeItemNode,
 	type UiTreeNode,
 } from "@semio-tech/framework-playground-core";
+import {
+	DocumentVcsStore,
+	applyJsonReplaceOp,
+	createDocumentVcsEnvelope,
+	recordJsonProjectionChange,
+	type JsonReplaceOp,
+} from "@semio-tech/framework-core";
 import { bootstrapElementsSurfaceChromeDocument, type TreeDataItem, type TreeDragAndDropController, type TreeDropPosition } from "@semio-tech/ui-react";
 import {
 	applyFormEditOp,
 	createFormId,
+	defaultFormSpec,
 	defaultQuestionForKind,
 	findQuestionLocation,
 	formSpecToJson,
@@ -49,7 +57,7 @@ import {
 	type FormValues,
 	type FormVectorField,
 } from "@semio-tech/forms-core";
-import { FORMS_QUESTION_DRAG_MIME, abortFormsQuestionPaletteDrag, defaultFormSpec, formSpecFromJson, formsQuestionPaletteTreeDragController } from "@semio-tech/forms-react";
+import { FORMS_QUESTION_DRAG_MIME, abortFormsQuestionPaletteDrag, formSpecFromJson, formsQuestionPaletteTreeDragController } from "@semio-tech/forms-react";
 import { FORMS_PLAY_FIXTURE_DEFAULT_ID, resolveFormsPlayFixtureSlug } from "./fixture-slugs.ts";
 
 export const FORMS_PLAY_APP_ID = "forms-play";
@@ -569,10 +577,10 @@ export function buildFormsPlayToolbarTools(controllerId: string): AppTools {
 /** @emoji 🎛 Forms play shell controller. */
 export class FormsPlayController extends Controller implements PlaygroundFixtureHost {
 	readonly mainMode = new ModeRuntime("main", "Forms", undefined);
-	private spec: FormSpec = (() => {
-		const json = FORMS_PLAY_FILE_FIXTURE_JSON_BY_ID["building-component"];
-		return json ? formSpecFromJson(json) : defaultFormSpec();
-	})();
+	private readonly docStore = new DocumentVcsStore<FormSpec, JsonReplaceOp<FormSpec>>({
+		envelope: createDocumentVcsEnvelope("forms.form/v1", "forms-play", defaultFormSpec()),
+		applyOp: applyJsonReplaceOp,
+	});
 	private selectedIds: string[] = [];
 	private tryValues: FormValues = {};
 	private interactionRevision = 0;
@@ -581,6 +589,8 @@ export class FormsPlayController extends Controller implements PlaygroundFixture
 
 	constructor(commandBus: CommandBus, hostNotify: () => void) {
 		super(FORMS_PLAY_CONTROLLER_ID, commandBus, hostNotify);
+		const json = FORMS_PLAY_FILE_FIXTURE_JSON_BY_ID["building-component"];
+		if (json) this.replaceDocument(formSpecFromJson(json));
 		formsExtensionHost.subscribe(() => {
 			this.extensionRevision += 1;
 			this.notifySnapshot();
@@ -590,12 +600,31 @@ export class FormsPlayController extends Controller implements PlaygroundFixture
 		this.rebuildShellMode();
 	}
 
+	private projection(): FormSpec {
+		return this.docStore.projection();
+	}
+
+	private commitDocument(next: FormSpec): void {
+		recordJsonProjectionChange(this.docStore, next);
+		this.tryValues = {};
+		this.notifySnapshot();
+		this.emit();
+	}
+
+	replaceDocument(spec: FormSpec): void {
+		this.commitDocument(spec);
+	}
+
 	getSpec(): FormSpec {
-		return this.spec;
+		return this.projection();
 	}
 
 	getSpecJson(): string {
-		return formSpecToJson(this.spec);
+		return formSpecToJson(this.projection());
+	}
+
+	getDocumentVcsStore(): DocumentVcsStore<FormSpec, JsonReplaceOp<FormSpec>> {
+		return this.docStore;
 	}
 
 	getSelectedIds(): readonly string[] {
@@ -627,10 +656,7 @@ export class FormsPlayController extends Controller implements PlaygroundFixture
 	}
 
 	private setSpec(spec: FormSpec): void {
-		this.spec = spec;
-		this.tryValues = {};
-		this.notifySnapshot();
-		this.emit();
+		this.commitDocument(spec);
 	}
 
 	private rebuildShellMode(): void {
@@ -642,7 +668,7 @@ export class FormsPlayController extends Controller implements PlaygroundFixture
 	}
 
 	private patchQuestionField(questionId: string, field: string, rawValue: unknown): void {
-		const location = findQuestionLocation(this.spec, questionId);
+		const location = findQuestionLocation(this.projection(), questionId);
 		if (!location) return;
 		const question = location.question;
 		if (field.startsWith("option:")) {
@@ -654,8 +680,8 @@ export class FormsPlayController extends Controller implements PlaygroundFixture
 			if (!entry) return;
 			options[index] = { ...entry, [part!]: String(rawValue ?? "") };
 			this.setSpec({
-				...this.spec,
-				steps: this.spec.steps.map((step) =>
+				...this.projection(),
+				steps: this.projection().steps.map((step) =>
 					step.id === location.stepId
 						? { ...step, questions: step.questions.map((entry) => (entry.id === questionId ? ({ ...question, options } as FormQuestion) : entry)) }
 						: step,
@@ -673,8 +699,8 @@ export class FormsPlayController extends Controller implements PlaygroundFixture
 			const nextValue = part === "value" ? Number(rawValue) : String(rawValue ?? "");
 			vectorFields[index] = { ...entry, [part!]: nextValue };
 			this.setSpec({
-				...this.spec,
-				steps: this.spec.steps.map((step) =>
+				...this.projection(),
+				steps: this.projection().steps.map((step) =>
 					step.id === location.stepId
 						? { ...step, questions: step.questions.map((entry) => (entry.id === questionId ? ({ ...question, fields: vectorFields } as FormQuestion) : entry)) }
 						: step,
@@ -686,8 +712,8 @@ export class FormsPlayController extends Controller implements PlaygroundFixture
 		if (field === "options" || field === "fields") {
 			const nextQuestion = { ...question, [field]: rawValue } as FormQuestion;
 			this.setSpec({
-				...this.spec,
-				steps: this.spec.steps.map((step) =>
+				...this.projection(),
+				steps: this.projection().steps.map((step) =>
 					step.id === location.stepId ? { ...step, questions: step.questions.map((entry) => (entry.id === questionId ? nextQuestion : entry)) } : step,
 				),
 			});
@@ -701,15 +727,15 @@ export class FormsPlayController extends Controller implements PlaygroundFixture
 		else if (field === "min" || field === "max" || field === "step" || (field === "default" && (question.kind === "number" || question.kind === "slider"))) value = Number(rawValue);
 		const nextQuestion = { ...question, [field]: value } as FormQuestion;
 		this.setSpec({
-			...this.spec,
-			steps: this.spec.steps.map((step) =>
+			...this.projection(),
+			steps: this.projection().steps.map((step) =>
 				step.id === location.stepId ? { ...step, questions: step.questions.map((entry) => (entry.id === questionId ? nextQuestion : entry)) } : step,
 			),
 		});
 	}
 
 	getFixtureCatalog(): PlaygroundFixtureCatalog {
-		const activeFixtureId = playgroundResolvedFixtureId(this.spec.id, FORMS_PLAY_FIXTURE_DEFAULT_ID);
+		const activeFixtureId = playgroundResolvedFixtureId(this.projection().id, FORMS_PLAY_FIXTURE_DEFAULT_ID);
 		return {
 			activeFixtureId,
 			options: FORMS_PLAY_FIXTURE_OPTIONS,
@@ -749,19 +775,19 @@ export class FormsPlayController extends Controller implements PlaygroundFixture
 		if (command === "addStep") {
 			const stepId = createFormId("step");
 			this.setSpec(
-				applyFormEditOp(this.spec, {
+				applyFormEditOp(this.projection(), {
 					op: "addStep",
-					step: { id: stepId, title: `Step ${this.spec.steps.length + 1}`, questions: [] },
+					step: { id: stepId, title: `Step ${this.projection().steps.length + 1}`, questions: [] },
 				}),
 			);
 			return;
 		}
 		if (command === "addQuestion") {
 			const kind = (args as { kind?: string }).kind ?? "text";
-			const stepId = (args as { stepId?: string }).stepId ?? this.spec.steps[0]?.id;
+			const stepId = (args as { stepId?: string }).stepId ?? this.projection().steps[0]?.id;
 			if (!stepId) return;
 			this.setSpec(
-				applyFormEditOp(this.spec, {
+				applyFormEditOp(this.projection(), {
 					op: "addQuestion",
 					stepId,
 					question: defaultQuestionForKind(kind, createFormId("q")),
@@ -774,11 +800,11 @@ export class FormsPlayController extends Controller implements PlaygroundFixture
 			const targetId = (args as { targetId?: string }).targetId;
 			const dropPosition = (args as { dropPosition?: TreeDropPosition }).dropPosition;
 			if (!kind || !targetId) return;
-			const stepId = resolveStepIdFromTreeTarget(this.spec, targetId);
+			const stepId = resolveStepIdFromTreeTarget(this.projection(), targetId);
 			if (!stepId) return;
-			const index = resolveQuestionInsertIndex(this.spec, stepId, targetId, dropPosition);
+			const index = resolveQuestionInsertIndex(this.projection(), stepId, targetId, dropPosition);
 			this.setSpec(
-				applyFormEditOp(this.spec, {
+				applyFormEditOp(this.projection(), {
 					op: "addQuestion",
 					stepId,
 					index,
@@ -793,11 +819,11 @@ export class FormsPlayController extends Controller implements PlaygroundFixture
 			const targetId = (args as { targetId?: string }).targetId ?? questionId;
 			const position = (args as { position?: TreeDropPosition }).position ?? "inside";
 			if (!questionId || !toStepId) return;
-			const source = findQuestionLocation(this.spec, questionId);
+			const source = findQuestionLocation(this.projection(), questionId);
 			if (!source) return;
-			const index = resolveQuestionInsertIndex(this.spec, toStepId, targetId, position);
+			const index = resolveQuestionInsertIndex(this.projection(), toStepId, targetId, position);
 			this.setSpec(
-				applyFormEditOp(this.spec, {
+				applyFormEditOp(this.projection(), {
 					op: "moveQuestion",
 					questionId,
 					fromStepId: source.stepId,
@@ -811,7 +837,7 @@ export class FormsPlayController extends Controller implements PlaygroundFixture
 			const stepId = (args as { stepId?: string }).stepId;
 			const index = (args as { index?: number }).index;
 			if (!stepId || typeof index !== "number") return;
-			this.setSpec(applyFormEditOp(this.spec, { op: "moveStep", stepId, index }));
+			this.setSpec(applyFormEditOp(this.projection(), { op: "moveStep", stepId, index }));
 			return;
 		}
 		if (command === "patchQuestion") {
@@ -826,7 +852,7 @@ export class FormsPlayController extends Controller implements PlaygroundFixture
 		if (command === "addQuestionOption") {
 			const questionId = (args as { questionId?: string }).questionId;
 			if (!questionId) return;
-			const location = findQuestionLocation(this.spec, questionId);
+			const location = findQuestionLocation(this.projection(), questionId);
 			if (!location || (location.question.kind !== "single" && location.question.kind !== "multi")) return;
 			const options = [...location.question.options, { value: createFormId("opt"), label: "New Option" }];
 			this.patchQuestionField(questionId, "options", options);
@@ -836,7 +862,7 @@ export class FormsPlayController extends Controller implements PlaygroundFixture
 			const questionId = (args as { questionId?: string }).questionId;
 			const index = (args as { index?: number }).index;
 			if (!questionId || typeof index !== "number") return;
-			const location = findQuestionLocation(this.spec, questionId);
+			const location = findQuestionLocation(this.projection(), questionId);
 			if (!location || (location.question.kind !== "single" && location.question.kind !== "multi")) return;
 			const options = location.question.options.filter((_, entryIndex) => entryIndex !== index);
 			if (options.length === 0) return;
@@ -846,7 +872,7 @@ export class FormsPlayController extends Controller implements PlaygroundFixture
 		if (command === "addVectorField") {
 			const questionId = (args as { questionId?: string }).questionId;
 			if (!questionId) return;
-			const location = findQuestionLocation(this.spec, questionId);
+			const location = findQuestionLocation(this.projection(), questionId);
 			if (!location || location.question.kind !== "vector") return;
 			const fields = [...location.question.fields, { key: createFormId("axis"), label: "Axis", value: 0 }];
 			this.patchQuestionField(questionId, "fields", fields);
@@ -856,7 +882,7 @@ export class FormsPlayController extends Controller implements PlaygroundFixture
 			const questionId = (args as { questionId?: string }).questionId;
 			const index = (args as { index?: number }).index;
 			if (!questionId || typeof index !== "number") return;
-			const location = findQuestionLocation(this.spec, questionId);
+			const location = findQuestionLocation(this.projection(), questionId);
 			if (!location || location.question.kind !== "vector") return;
 			const fields = location.question.fields.filter((_, entryIndex) => entryIndex !== index);
 			if (fields.length === 0) return;

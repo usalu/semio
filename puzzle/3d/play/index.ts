@@ -5,6 +5,13 @@
 import { WORLD_REFERENCE_DEFAULT_WIDTH } from "@semio-tech/infinite-world-r3f";
 import { bootstrapElementsSurfaceChromeDocument, formatNumber, referenceMediaKindFromUrl, type GumballConfig } from "@semio-tech/ui-react";
 import {
+  DocumentVcsStore,
+  applyJsonReplaceOp,
+  createDocumentVcsEnvelope,
+  recordJsonProjectionChange,
+  type JsonReplaceOp,
+} from "@semio-tech/framework-core";
+import {
   AppRuntime,
   CommandBus,
   Controller,
@@ -1698,7 +1705,10 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
   readonly mainMode = new ModeRuntime("main", "Edit", undefined);
   readonly selectableKinds: Record<Puzzle3dPlayPickKind, boolean> = { object: true, vortex: true, attraction: true };
   readonly visibleKinds: Record<Puzzle3dPlayPickKind, boolean> = { object: true, vortex: true, attraction: true };
-  private fixture: FixtureV1 | null;
+  private readonly docStore = new DocumentVcsStore<FixtureV1 | null, JsonReplaceOp<FixtureV1 | null>>({
+    envelope: createDocumentVcsEnvelope("puzzle.3d.fixture/v1", "puzzle3d-play", null),
+    applyOp: applyJsonReplaceOp,
+  });
   private fixtureRevision: number;
   private automaticLod: boolean;
   private depthVariableLod: boolean;
@@ -1741,7 +1751,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
 
   constructor(commandBus: CommandBus, hostNotify: () => void) {
     super(PUZZLE_3D_PLAY_CONTROLLER_ID, commandBus, hostNotify);
-    this.fixture = parseFixtureV1(puzzle3dPlayFixtureJson(this.activeFixtureId));
+    this.setFixtureProjection(parseFixtureV1(puzzle3dPlayFixtureJson(this.activeFixtureId)));
     this.fixtureRevision = 0;
     this.automaticLod = true;
     this.depthVariableLod = false;
@@ -1979,6 +1989,18 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
     return this.fixture;
   }
 
+  getDocumentVcsStore(): DocumentVcsStore<FixtureV1 | null, JsonReplaceOp<FixtureV1 | null>> {
+    return this.docStore;
+  }
+
+  private get fixture(): FixtureV1 | null {
+    return this.docStore.projection();
+  }
+
+  private setFixtureProjection(next: FixtureV1 | null): void {
+    recordJsonProjectionChange(this.docStore, next);
+  }
+
   getFixtureCatalog(): PlaygroundFixtureCatalog | null {
     if (isPlaygroundFixtureLocked()) return null;
     if (!this.fixtureCatalogCache || this.fixtureCatalogCache.activeFixtureId !== this.activeFixtureId) {
@@ -1988,7 +2010,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
   }
 
   private clearFixture(): void {
-    this.fixture = null;
+    this.setFixtureProjection(null);
     this.fixtureRevision += 1;
     this.selection = PUZZLE_3D_PLAY_EMPTY_SELECTION;
     this.hierarchySectionsCache = null;
@@ -2005,7 +2027,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
     if (!raw) return;
     const parsed = parseFixtureV1(raw);
     if (!parsed) return;
-    this.fixture = parsed;
+    this.setFixtureProjection(parsed);
     this.fixtureRevision += 1;
     this.selection = PUZZLE_3D_PLAY_EMPTY_SELECTION;
     this.objectKindWeights = {};
@@ -2027,7 +2049,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
     if (next === prev) {
       return;
     }
-    this.fixture = next;
+    this.setFixtureProjection(next);
     const structureChanged = fixtureStateFingerprint(next) !== fixtureStateFingerprint(prev);
     if (structureChanged) {
       this.fixtureRevision += 1;
@@ -2054,7 +2076,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
     if (next === this.fixture) {
       return;
     }
-    this.fixture = next;
+    this.setFixtureProjection(next);
   }
 
   /** @emoji 🧊 Persists a target-volume gumball relocate on the fixture. */
@@ -2066,7 +2088,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
     if (next === this.fixture) {
       return;
     }
-    this.fixture = next;
+    this.setFixtureProjection(next);
     this.fixtureRevision += 1;
     invalidatePuzzle3dFillForTargetVolumesChange();
     this.notifySnapshot();
@@ -2104,7 +2126,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
     if (next === this.fixture) {
       return;
     }
-    this.fixture = next;
+    this.setFixtureProjection(next);
     this.fixtureRevision += 1;
     this.notifySnapshot();
     console.log("[DEBUG] puzzle3d patchReferenceRelocate", payload.referenceId);
@@ -2151,7 +2173,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
     if (next === this.fixture) {
       return;
     }
-    this.fixture = next;
+    this.setFixtureProjection(next);
     this.notifySnapshot();
   }
 
@@ -2172,7 +2194,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
       if (updated === this.fixture) {
         return;
       }
-      this.fixture = updated;
+      this.setFixtureProjection(updated);
     }
     this.cameraSeedEpoch += 1;
     this.notifySnapshot();

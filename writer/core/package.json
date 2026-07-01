@@ -12,6 +12,7 @@
     "test": "bun nx run @semio-tech/writer-core:test"
   },
   "dependencies": {
+    "@semio-tech/framework-core": "workspace:*",
     "@semio-tech/graph-manifest": "workspace:*"
   },
   "devDependencies": {

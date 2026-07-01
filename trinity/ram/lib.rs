@@ -2,7 +2,7 @@
 
 use mathematical_graph_manifest::{manifest_by_id, GraphManifest, ManifestValidationError, TrinityManifest};
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 pub use mathematical_graph_manifest::{ManifestValidator, PropertyBag, PropertyDef, PropertyKind, PropertyValue, PortDirection};
 
@@ -179,6 +179,23 @@ impl Graph {
 
     pub fn fixture_json(&self) -> Result<String, String> {
         self.to_fixture().to_json()
+    }
+
+    /// 🧩 Build a `trinity.graph/v1` fixture containing only the given node and edge ids.
+    pub fn subgraph_fixture(&self, node_ids: &BTreeSet<String>, edge_ids: &BTreeSet<String>) -> GraphFixtureV1 {
+        let nodes: Vec<Node> = node_ids.iter().filter_map(|id| self.nodes.get(id).cloned()).collect();
+        let edges: Vec<Edge> = edge_ids.iter().filter_map(|id| self.edges.get(id).cloned()).collect();
+        let root_node_id = self.root_node_id.clone().filter(|id| node_ids.contains(id));
+        GraphFixtureV1 {
+            schema: GraphFixtureV1::SCHEMA.to_string(),
+            name: format!("{} subgraph", self.name),
+            manifest_id: Some("nakagin".into()),
+            manifest: self.manifest.clone(),
+            camera: self.camera.clone(),
+            nodes,
+            edges,
+            root_node_id,
+        }
     }
 
     pub fn node(&self, id: &str) -> Option<&Node> {

@@ -32,6 +32,13 @@ import {
 
 import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
 import {
+  DocumentVcsStore,
+  applyJsonReplaceOp,
+  createDocumentVcsEnvelope,
+  recordJsonProjectionChange,
+  type JsonReplaceOp,
+} from "@semio-tech/framework-core";
+import {
   DAG_LOD_MODE_AUTOMATIC,
   dagPlayLodTiers,
   FLOW_DEFAULT_FIXTURE,
@@ -471,7 +478,10 @@ export function buildFlowPlayInspectorTree(
 export class FlowPlayController extends Controller {
   readonly mainMode = new ModeRuntime("main", "Edit", undefined);
   readonly generateMode = new ModeRuntime("generate", "Generate", undefined);
-  private fixtureJson = FLOW_PLAY_DEFAULT_FIXTURE_JSON;
+  private readonly docStore = new DocumentVcsStore<FlowFixtureV1, JsonReplaceOp<FlowFixtureV1>>({
+    envelope: createDocumentVcsEnvelope("flow.fixture/v1", "flow-play", FLOW_PLAY_DEFAULT_FIXTURE),
+    applyOp: applyJsonReplaceOp,
+  });
   private previewText = "—";
   private generatePreviewText = "—";
   private generations: FlowGeneration[] = [{ id: createFormId("generation"), name: "Generation 1", values: {} }];
@@ -508,8 +518,20 @@ export class FlowPlayController extends Controller {
     return this.evalClient;
   }
 
+  private projection(): FlowFixtureV1 {
+    return this.docStore.projection();
+  }
+
+  private commitFixture(next: FlowFixtureV1): void {
+    recordJsonProjectionChange(this.docStore, next);
+  }
+
+  getDocumentVcsStore(): DocumentVcsStore<FlowFixtureV1, JsonReplaceOp<FlowFixtureV1>> {
+    return this.docStore;
+  }
+
   getFixtureJson(): string {
-    return this.fixtureJson;
+    return flowFixtureToJson(this.projection());
   }
 
   getPreviewText(): string {
@@ -529,7 +551,7 @@ export class FlowPlayController extends Controller {
   }
 
   getGenerateFormSpecJson(): string {
-    return JSON.stringify(flowFixtureToFormSpec(this.fixtureJson));
+    return JSON.stringify(flowFixtureToFormSpec(this.getFixtureJson()));
   }
 
   getCatalogueSections(): readonly CatalogueSection[] {
@@ -557,8 +579,9 @@ export class FlowPlayController extends Controller {
   }
 
   private applyFixtureJson(json: string): void {
-    if (!json.includes("flow.fixture/v1") || json === this.fixtureJson) return;
-    this.fixtureJson = json;
+    const parsed = parseFlowPlayFixtureJson(json);
+    if (!parsed || flowFixtureToJson(parsed) === this.getFixtureJson()) return;
+    this.commitFixture(parsed);
     this.interactionRevision += 1;
     this.notifySnapshot();
     this.emit();
@@ -567,8 +590,8 @@ export class FlowPlayController extends Controller {
   private renameFlowWidget(oldId: string, newId: string): void {
     const trimmed = newId.trim();
     if (!trimmed || trimmed === oldId) return;
-    const fixture = parseFlowPlayFixtureJson(this.fixtureJson);
-    if (!fixture || fixture.widgets.some((widget) => widget.id === trimmed)) return;
+    const fixture = this.projection();
+    if (fixture.widgets.some((widget) => widget.id === trimmed)) return;
     const widgets = fixture.widgets.map((widget) => (widget.id === oldId ? ({ ...widget, id: trimmed } as FlowWidgetV1) : widget));
     const synapses = fixture.synapses.map((synapse) => ({
       ...synapse,
@@ -576,7 +599,7 @@ export class FlowPlayController extends Controller {
       to: synapse.to === oldId ? trimmed : synapse.to,
     }));
     this.selectedNodeIds = this.selectedNodeIds.map((id) => (id === oldId ? trimmed : id));
-    this.fixtureJson = flowFixtureToJson({ ...fixture, widgets, synapses });
+    this.commitFixture({ ...fixture, widgets, synapses });
     this.interactionRevision += 1;
     this.commandRequestPayload = { command: "setSelection", argsJson: JSON.stringify({ ids: [...this.selectedNodeIds] }) };
     this.commandRequestEpoch += 1;
@@ -585,8 +608,7 @@ export class FlowPlayController extends Controller {
   }
 
   private patchFlowWidget(widgetId: string, field: string, value: unknown): void {
-    const fixture = parseFlowPlayFixtureJson(this.fixtureJson);
-    if (!fixture) return;
+    const fixture = this.projection();
     const widgets = fixture.widgets.map((widget) => {
       if (widget.id !== widgetId) return widget;
       if (field === "value" || field === "min" || field === "max" || field === "step") {
@@ -597,7 +619,7 @@ export class FlowPlayController extends Controller {
       if (typeof value !== "string") return widget;
       return { ...widget, [field]: value } as FlowWidgetV1;
     });
-    this.fixtureJson = flowFixtureToJson({ ...fixture, widgets });
+    this.commitFixture({ ...fixture, widgets });
     this.interactionRevision += 1;
     this.notifySnapshot();
     this.emit();
@@ -890,7 +912,7 @@ export class FlowPlayController extends Controller {
         args,
         generations: this.generations,
         selectedGenerationId: this.selectedGenerationId,
-        fixtureJson: this.fixtureJson,
+        fixtureJson: this.getFixtureJson(),
         client: this.getEvalClient(),
       }).then((next) => {
         if (!next) return;
@@ -1250,6 +1272,15 @@ if (import.meta.vitest) {
       const initial = ctrl.getGenerations().length;
       ctrl.run("addGeneration");
       expect(ctrl.getGenerations().length).toBe(initial + 1);
+    });
+
+    it("commits fixture changes through DocumentVcsStore", () => {
+      const bus = new CommandBus();
+      const ctrl = new FlowPlayController(bus, () => {});
+      const before = ctrl.getDocumentVcsStore().getGeneration();
+      ctrl.run("setFixtureJson", { json: FLOW_PLAY_DEFAULT_FIXTURE_JSON });
+      expect(ctrl.getDocumentVcsStore().getGeneration()).toBeGreaterThanOrEqual(before);
+      expect(ctrl.getFixtureJson()).toContain("flow.fixture/v1");
     });
   });
 }

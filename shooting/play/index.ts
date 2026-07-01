@@ -38,6 +38,13 @@ import {
 } from "@semio-tech/framework-playground-core";
 import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
 import {
+	DocumentVcsStore,
+	applyJsonReplaceOp,
+	createDocumentVcsEnvelope,
+	recordJsonProjectionChange,
+	type JsonReplaceOp,
+} from "@semio-tech/framework-core";
+import {
 	DEFAULT_SHOOTING_FIXTURE,
 	parseShootingFixture,
 	resolveActiveShot,
@@ -469,11 +476,18 @@ export function buildShootingPlayToolbarTools(state: ShootingPlayToolbarState, c
 export class ShootingPlayController extends Controller implements PlaygroundFixtureHost {
 	readonly mainMode = new ModeRuntime("main", "Edit", undefined);
 	private activeFixtureId = playgroundResolvedFixtureId(PLAYGROUND_NO_FIXTURE_ID);
-	private fixture: ShootingFixtureV1 = parseShootingFixture(shootingFixtureJsonForId(playgroundResolvedFixtureId(PLAYGROUND_NO_FIXTURE_ID))) ?? {
-		...DEFAULT_SHOOTING_FIXTURE,
-		assets: [],
-		shots: [],
-	};
+	private readonly docStore = new DocumentVcsStore<ShootingFixtureV1, JsonReplaceOp<ShootingFixtureV1>>({
+		envelope: createDocumentVcsEnvelope(
+			"shooting.fixture/v1",
+			"shooting-play",
+			parseShootingFixture(shootingFixtureJsonForId(playgroundResolvedFixtureId(PLAYGROUND_NO_FIXTURE_ID))) ?? {
+				...DEFAULT_SHOOTING_FIXTURE,
+				assets: [],
+				shots: [],
+			},
+		),
+		applyOp: applyJsonReplaceOp,
+	});
 	private readonly fixtureStore: ShootingPlayFixtureStore;
 	private hostBridge: ShootingPlayHostBridge | null = null;
 	private renderRevision = 0;
@@ -492,11 +506,19 @@ export class ShootingPlayController extends Controller implements PlaygroundFixt
 	}
 
 	getFixture(): ShootingFixtureV1 {
-		return this.fixture;
+		return this.projection();
+	}
+
+	getDocumentVcsStore(): DocumentVcsStore<ShootingFixtureV1, JsonReplaceOp<ShootingFixtureV1>> {
+		return this.docStore;
+	}
+
+	private projection(): ShootingFixtureV1 {
+		return this.docStore.projection();
 	}
 
 	getFixtureJson(): string {
-		return shootingFixtureToJson(this.fixture);
+		return shootingFixtureToJson(this.projection());
 	}
 
 	getRenderRevision(): number {
@@ -553,7 +575,7 @@ export class ShootingPlayController extends Controller implements PlaygroundFixt
 		return (
 			this.hostBridge?.getToolbarState() ?? {
 				hasStoredFixture: this.hasStoredFixture(),
-				activeShotId: this.fixture.activeShotId ?? resolveActiveShot(this.fixture)?.id ?? null,
+				activeShotId: this.projection().activeShotId ?? resolveActiveShot(this.projection())?.id ?? null,
 			}
 		);
 	}
@@ -567,8 +589,8 @@ export class ShootingPlayController extends Controller implements PlaygroundFixt
 	}
 
 	private applyFixture(fixture: ShootingFixtureV1): void {
-		const previousAssetUrl = resolveActiveAsset(this.fixture)?.url;
-		this.fixture = fixture;
+		const previousAssetUrl = resolveActiveAsset(this.projection())?.url;
+		recordJsonProjectionChange(this.docStore, fixture);
 		this.renderRevision += 1;
 		this.interactionRevision += 1;
 		const nextAssetUrl = resolveActiveAsset(fixture)?.url;
@@ -616,7 +638,7 @@ export class ShootingPlayController extends Controller implements PlaygroundFixt
 	}
 
 	private modelMeasures(): readonly WindowMeasure[] {
-		const scene = this.fixture.scene;
+		const scene = this.projection().scene;
 		return [
 			...this.viewportMeasures(),
 			{
@@ -681,14 +703,14 @@ export class ShootingPlayController extends Controller implements PlaygroundFixt
 	}
 
 	private iconMeasures(): readonly WindowMeasure[] {
-		const activeShot = resolveActiveShot(this.fixture);
+		const activeShot = resolveActiveShot(this.projection());
 		return [
 			{
 				kind: "select",
 				id: "shooting-active-shot",
 				label: "Shot",
 				value: activeShot?.id ?? "",
-				items: this.fixture.shots.map((shot) => ({ id: shot.id, value: shot.id, label: shot.label })),
+				items: this.projection().shots.map((shot) => ({ id: shot.id, value: shot.id, label: shot.label })),
 				onChange: shootingPlayCmd("setActiveShot"),
 			},
 			{
@@ -726,17 +748,17 @@ export class ShootingPlayController extends Controller implements PlaygroundFixt
 				onChange: shootingPlayCmd("setCameraDraftLabel"),
 				onSubmit: shootingPlayCmd("saveCamera"),
 			},
-			possibleEngagements: this.fixture.savedCameras.map((entry) => ({
+			possibleEngagements: this.projection().savedCameras.map((entry) => ({
 				id: `shooting.camera.${entry.id}`,
 				label: entry.label,
 				command: shootingPlayCmd("loadSavedCamera", { id: entry.id }),
 			})),
-			status: [{ id: "shooting-asset-count", text: `${this.fixture.assets.length} assets · ${this.fixture.shots.length} shots` }],
+			status: [{ id: "shooting-asset-count", text: `${this.projection().assets.length} assets · ${this.projection().shots.length} shots` }],
 		};
 	}
 
 	private iconEngagement(): WindowEngagement {
-		const shot = resolveActiveShot(this.fixture);
+		const shot = resolveActiveShot(this.projection());
 		return {
 			sessionActive: false,
 			input: {
@@ -776,11 +798,11 @@ export class ShootingPlayController extends Controller implements PlaygroundFixt
 	}
 
 	private patchScene(patch: Partial<ShootingSceneV1>): void {
-		this.applyFixture({ ...this.fixture, scene: { ...this.fixture.scene, ...patch } });
+		this.applyFixture({ ...this.projection(), scene: { ...this.projection().scene, ...patch } });
 	}
 
 	private patchShot(shotId: string, field: string, value: unknown): void {
-		const shots = this.fixture.shots.map((shot) => {
+		const shots = this.projection().shots.map((shot) => {
 			if (shot.id !== shotId) return shot;
 			if (field === "width" || field === "height") {
 				const numeric = typeof value === "number" ? value : Number(value);
@@ -796,16 +818,16 @@ export class ShootingPlayController extends Controller implements PlaygroundFixt
 			if (typeof value !== "string") return shot;
 			return { ...shot, [field]: value };
 		});
-		this.applyFixture({ ...this.fixture, shots });
+		this.applyFixture({ ...this.projection(), shots });
 	}
 
 	private patchAsset(assetId: string, field: string, value: unknown): void {
-		const assets = this.fixture.assets.map((asset) => {
+		const assets = this.projection().assets.map((asset) => {
 			if (asset.id !== assetId) return asset;
 			if (typeof value !== "string") return asset;
 			return { ...asset, [field]: value };
 		});
-		this.applyFixture({ ...this.fixture, assets });
+		this.applyFixture({ ...this.projection(), assets });
 	}
 
 	override run(command: string, args?: unknown): void {
@@ -841,7 +863,7 @@ export class ShootingPlayController extends Controller implements PlaygroundFixt
 		if (command === "setActiveAsset") {
 			const value = (args as { value?: string }).value ?? (args as { id?: string }).id;
 			if (typeof value !== "string" || !value) return;
-			this.applyFixture({ ...this.fixture, activeAssetId: value });
+			this.applyFixture({ ...this.projection(), activeAssetId: value });
 			return;
 		}
 		if (command === "setFixtureJson") {
@@ -858,16 +880,16 @@ export class ShootingPlayController extends Controller implements PlaygroundFixt
 		if (command === "setCamera") {
 			const camera = (args as { camera?: ShootingCameraV1 }).camera;
 			if (!camera) return;
-			this.applyFixture({ ...this.fixture, camera });
+			this.applyFixture({ ...this.projection(), camera });
 			return;
 		}
 		if (command === "setShotCamera") {
 			const camera = (args as { camera?: ShootingCameraV1 }).camera;
 			const shotId = (args as { shotId?: string }).shotId;
 			if (!camera) return;
-			const shot = shotId ? this.fixture.shots.find((entry) => entry.id === shotId) : resolveActiveShot(this.fixture);
+			const shot = shotId ? this.projection().shots.find((entry) => entry.id === shotId) : resolveActiveShot(this.projection());
 			if (!shot) return;
-			this.applyFixture(applyShootingCameraToFixture(this.fixture, shot, camera));
+			this.applyFixture(applyShootingCameraToFixture(this.projection(), shot, camera));
 			return;
 		}
 		if (command === "setCenterModel") {
@@ -892,56 +914,56 @@ export class ShootingPlayController extends Controller implements PlaygroundFixt
 			const label = ((args as { value?: string }).value ?? this.cameraDraftLabel).trim() || "Camera";
 			const id = `camera_${Date.now()}`;
 			this.applyFixture({
-				...this.fixture,
-				savedCameras: [...this.fixture.savedCameras, { id, label, camera: this.fixture.camera }],
+				...this.projection(),
+				savedCameras: [...this.projection().savedCameras, { id, label, camera: this.projection().camera }],
 			});
 			console.log(`[DEBUG] shooting saved camera ${id} ${label}`);
 			return;
 		}
 		if (command === "loadSavedCamera") {
 			const id = (args as { id?: string }).id;
-			const saved = this.fixture.savedCameras.find((entry) => entry.id === id);
+			const saved = this.projection().savedCameras.find((entry) => entry.id === id);
 			if (!saved) return;
-			this.applyFixture({ ...this.fixture, camera: saved.camera });
+			this.applyFixture({ ...this.projection(), camera: saved.camera });
 			console.log(`[DEBUG] shooting loaded camera ${saved.id}`);
 			return;
 		}
 		if (command === "loadCameraMenu") {
-			const first = this.fixture.savedCameras[0];
+			const first = this.projection().savedCameras[0];
 			if (first) this.run("loadSavedCamera", { id: first.id });
 			return;
 		}
 		if (command === "setActiveShot") {
 			const value = (args as { value?: string }).value ?? (args as { id?: string }).id;
 			if (typeof value !== "string" || !value) return;
-			this.applyFixture({ ...this.fixture, activeShotId: value });
+			this.applyFixture({ ...this.projection(), activeShotId: value });
 			return;
 		}
 		if (command === "setActiveShotFormat") {
 			const value = (args as { value?: string }).value;
 			if (value !== "svg" && value !== "png") return;
-			const active = resolveActiveShot(this.fixture);
+			const active = resolveActiveShot(this.projection());
 			if (!active) return;
-			const shots = this.fixture.shots.map((shot) => (shot.id === active.id ? { ...shot, format: value } : shot));
-			this.applyFixture({ ...this.fixture, shots });
+			const shots = this.projection().shots.map((shot) => (shot.id === active.id ? { ...shot, format: value } : shot));
+			this.applyFixture({ ...this.projection(), shots });
 			return;
 		}
 		if (command === "setActiveShotShape") {
 			const value = (args as { value?: string }).value;
 			if (value !== "rectangle" && value !== "ellipse") return;
-			const active = resolveActiveShot(this.fixture);
+			const active = resolveActiveShot(this.projection());
 			if (!active) return;
-			const shots = this.fixture.shots.map((shot) => (shot.id === active.id ? { ...shot, shape: value } : shot));
-			this.applyFixture({ ...this.fixture, shots });
+			const shots = this.projection().shots.map((shot) => (shot.id === active.id ? { ...shot, shape: value } : shot));
+			this.applyFixture({ ...this.projection(), shots });
 			return;
 		}
 		if (command === "setActiveShotLabel") {
 			const value = (args as { value?: string }).value;
 			if (typeof value !== "string") return;
-			const active = resolveActiveShot(this.fixture);
+			const active = resolveActiveShot(this.projection());
 			if (!active) return;
-			const shots = this.fixture.shots.map((shot) => (shot.id === active.id ? { ...shot, label: value } : shot));
-			this.applyFixture({ ...this.fixture, shots });
+			const shots = this.projection().shots.map((shot) => (shot.id === active.id ? { ...shot, label: value } : shot));
+			this.applyFixture({ ...this.projection(), shots });
 			return;
 		}
 		if (command === "commitActiveShotLabel") {
@@ -952,37 +974,37 @@ export class ShootingPlayController extends Controller implements PlaygroundFixt
 		if (command === "setSunAzimuth") {
 			const value = (args as { value?: number }).value;
 			if (typeof value !== "number") return;
-			this.patchScene({ sun: { ...this.fixture.scene.sun, azimuth: value } });
+			this.patchScene({ sun: { ...this.projection().scene.sun, azimuth: value } });
 			return;
 		}
 		if (command === "setSunElevation") {
 			const value = (args as { value?: number }).value;
 			if (typeof value !== "number") return;
-			this.patchScene({ sun: { ...this.fixture.scene.sun, elevation: value } });
+			this.patchScene({ sun: { ...this.projection().scene.sun, elevation: value } });
 			return;
 		}
 		if (command === "setSunIntensity") {
 			const value = (args as { value?: number }).value;
 			if (typeof value !== "number") return;
-			this.patchScene({ sun: { ...this.fixture.scene.sun, intensity: value } });
+			this.patchScene({ sun: { ...this.projection().scene.sun, intensity: value } });
 			return;
 		}
 		if (command === "setAmbientIntensity") {
 			const value = (args as { value?: number }).value;
 			if (typeof value !== "number") return;
-			this.patchScene({ ambient: { ...this.fixture.scene.ambient, intensity: value } });
+			this.patchScene({ ambient: { ...this.projection().scene.ambient, intensity: value } });
 			return;
 		}
 		if (command === "setShadowEnabled") {
 			const value = (args as { value?: boolean; pressed?: boolean }).value ?? (args as { pressed?: boolean }).pressed;
 			if (typeof value !== "boolean") return;
-			this.patchScene({ shadow: { ...this.fixture.scene.shadow, enabled: value } });
+			this.patchScene({ shadow: { ...this.projection().scene.shadow, enabled: value } });
 			return;
 		}
 		if (command === "setMaterialRoughness") {
 			const value = (args as { value?: number }).value;
 			if (typeof value !== "number") return;
-			this.patchScene({ material: { ...this.fixture.scene.material, roughness: value } });
+			this.patchScene({ material: { ...this.projection().scene.material, roughness: value } });
 			return;
 		}
 		if (command === "saveStored") {
@@ -1010,8 +1032,8 @@ export class ShootingPlayController extends Controller implements PlaygroundFixt
 			const asset = (args as { asset?: ShootingFixtureV1["assets"][number] }).asset;
 			if (!asset) return;
 			this.applyFixture({
-				...this.fixture,
-				assets: [...this.fixture.assets, asset],
+				...this.projection(),
+				assets: [...this.projection().assets, asset],
 				activeAssetId: asset.id,
 			});
 			console.log(`[DEBUG] shooting imported asset ${asset.id}`);

@@ -14,6 +14,7 @@
     "test": "bun nx run @semio-tech/puzzle-5d-play:test"
   },
   "dependencies": {
+    "@semio-tech/framework-core": "workspace:*",
     "@semio-tech/framework-playground-core": "workspace:*"
   },
   "devDependencies": {

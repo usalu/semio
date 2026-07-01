@@ -849,6 +849,25 @@
       }
     },
     {
+      "name": "🛠️dev🖥️semios",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:semios",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIOS_PLAY_PORT": "6066"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 386
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6066)",
+        "uriFormat": "%s"
+      }
+    },
+    {
       "name": "🛠️dev✏️draw",
       "type": "node-terminal",
       "request": "launch",

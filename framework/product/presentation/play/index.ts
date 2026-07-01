@@ -41,7 +41,7 @@ import {
 	FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
 	FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 } from "@semio-tech/framework-playground-core";
-import { Store } from "@semio-tech/framework-core";
+import { Store, DocumentVcsStore, applyJsonReplaceOp, createDocumentVcsEnvelope, recordJsonProjectionChange, type JsonReplaceOp } from "@semio-tech/framework-core";
 import {
 	buildTileMorphPrompt,
 	clampNormalizedFraction,
@@ -50,6 +50,7 @@ import {
 	populateTileDraftsFromGrid,
 	type FigureTileDraft,
 	type FigureTileSource,
+	type PresentationDeckV1,
 } from "@semio-tech/framework-presentation-core";
 
 import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
@@ -131,10 +132,16 @@ function newTileId(prefix = "tile"): string {
 export class PresentationPlayController extends Controller implements PlaygroundFixtureHost {
 	readonly mainMode = new ModeRuntime("main", "Edit", undefined);
 	private activeFixtureId = PLAYGROUND_NO_FIXTURE_ID;
+	private readonly docStore = new DocumentVcsStore<PresentationDeckV1, JsonReplaceOp<PresentationDeckV1>>({
+		envelope: createDocumentVcsEnvelope("presentation.deck/v1", "presentation-tile-play", {
+			schema: "presentation.deck/v1",
+			source: PRESENTATION_PLAY_DEFAULT_SOURCE,
+			tiles: [],
+		}),
+		applyOp: applyJsonReplaceOp,
+	});
 	private readonly snapshotStore: PresentationPlaySnapshotStore;
 	private snapshotCache: PresentationPlaySnapshot | null = null;
-	source: FigureTileSource = { ...PRESENTATION_PLAY_DEFAULT_SOURCE };
-	tiles: FigureTileDraft[] = [];
 	selectedIds: string[] = [];
 	clipboardPrompt: string | null = null;
 	clipboardEpoch = 0;
@@ -147,10 +154,31 @@ export class PresentationPlayController extends Controller implements Playground
 		this.rebuildShellMode();
 	}
 
+	private projection(): PresentationDeckV1 {
+		return this.docStore.projection();
+	}
+
+	private commitDeck(next: PresentationDeckV1): void {
+		recordJsonProjectionChange(this.docStore, next);
+	}
+
+	get source(): FigureTileSource {
+		return this.projection().source;
+	}
+
+	get tiles(): readonly FigureTileDraft[] {
+		return this.projection().tiles;
+	}
+
+	getDocumentVcsStore(): DocumentVcsStore<PresentationDeckV1, JsonReplaceOp<PresentationDeckV1>> {
+		return this.docStore;
+	}
+
 	private rebuildSnapshotCache(): void {
+		const deck = this.projection();
 		this.snapshotCache = {
-			source: this.source,
-			tiles: [...this.tiles],
+			source: deck.source,
+			tiles: [...deck.tiles],
 			selectedIds: [...this.selectedIds],
 			clipboardPrompt: this.clipboardPrompt,
 			clipboardEpoch: this.clipboardEpoch,
@@ -267,8 +295,9 @@ export class PresentationPlayController extends Controller implements Playground
 	}
 
 	private seedGrid(rows: number, columns: number): void {
-		this.tiles = populateTileDraftsFromGrid({ source: this.source, rows, columns });
-		this.selectedIds = this.tiles.length > 0 ? [this.tiles[0]!.id] : [];
+		const tiles = populateTileDraftsFromGrid({ source: this.source, rows, columns });
+		this.commitDeck({ ...this.projection(), tiles });
+		this.selectedIds = tiles.length > 0 ? [tiles[0]!.id] : [];
 		this.syncShell();
 	}
 
@@ -323,8 +352,11 @@ export class PresentationPlayController extends Controller implements Playground
 				if (nextId === this.activeFixtureId) break;
 				this.activeFixtureId = nextId;
 				if (isPlaygroundNoFixtureId(nextId)) {
-					this.source = { ...PRESENTATION_PLAY_DEFAULT_SOURCE };
-					this.tiles = [];
+					this.commitDeck({
+						schema: "presentation.deck/v1",
+						source: { ...PRESENTATION_PLAY_DEFAULT_SOURCE },
+						tiles: [],
+					});
 					this.selectedIds = [];
 					this.syncShell();
 				}
@@ -341,31 +373,34 @@ export class PresentationPlayController extends Controller implements Playground
 					break;
 				}
 				const trimmed = src.trim();
+				const deck = this.projection();
 				if (!trimmed) {
-					this.source = { ...PRESENTATION_PLAY_DEFAULT_SOURCE };
-					this.tiles = [];
+					this.commitDeck({
+						schema: "presentation.deck/v1",
+						source: { ...PRESENTATION_PLAY_DEFAULT_SOURCE },
+						tiles: [],
+					});
 					this.selectedIds = [];
 					break;
 				}
-				const replaced = trimmed !== this.source.src;
-				const mediaKind = kind ?? this.source.kind ?? "figure";
-				this.source = {
+				const replaced = trimmed !== deck.source.src;
+				const mediaKind = kind ?? deck.source.kind ?? "figure";
+				const source: FigureTileSource = {
 					src: trimmed,
 					kind: mediaKind,
 					frame: { x: 0, y: 0, width: 1, height: 1 },
-					...(sourceAspect !== undefined ? { sourceAspect } : this.source.sourceAspect !== undefined ? { sourceAspect: this.source.sourceAspect } : {}),
-					...(mediaKind === "pdf" ? { pdfPage: pdfPage ?? this.source.pdfPage ?? 1 } : {}),
+					...(sourceAspect !== undefined ? { sourceAspect } : deck.source.sourceAspect !== undefined ? { sourceAspect: deck.source.sourceAspect } : {}),
+					...(mediaKind === "pdf" ? { pdfPage: pdfPage ?? deck.source.pdfPage ?? 1 } : {}),
 				};
-				if (replaced) {
-					this.tiles = [];
-					this.selectedIds = [];
-				}
+				this.commitDeck({ ...deck, source, tiles: replaced ? [] : deck.tiles });
+				if (replaced) this.selectedIds = [];
 				break;
 			}
 			case "setFrame": {
 				const { frame } = args as { frame?: FigureTileSource["frame"] };
 				if (frame) {
-					this.source = { ...this.source, frame };
+					const deck = this.projection();
+					this.commitDeck({ ...deck, source: { ...deck.source, frame } });
 				}
 				break;
 			}
@@ -381,7 +416,8 @@ export class PresentationPlayController extends Controller implements Playground
 				const { crop } = (args ?? {}) as { crop?: FigureTileDraft["crop"] };
 				const id = newTileId();
 				const nextCrop = crop ?? { x: 0.1, y: 0.1, width: 0.2, height: 0.2 };
-				this.tiles = [...this.tiles, { id, name: id, crop: nextCrop }];
+				const deck = this.projection();
+				this.commitDeck({ ...deck, tiles: [...deck.tiles, { id, name: id, crop: nextCrop }] });
 				this.selectedIds = [id];
 				break;
 			}
@@ -392,7 +428,8 @@ export class PresentationPlayController extends Controller implements Playground
 					break;
 				}
 				const remove = new Set(targetIds);
-				this.tiles = this.tiles.filter((tile) => !remove.has(tile.id));
+				const deck = this.projection();
+				this.commitDeck({ ...deck, tiles: deck.tiles.filter((tile) => !remove.has(tile.id)) });
 				this.selectedIds = this.selectedIds.filter((selected) => !remove.has(selected));
 				break;
 			}
@@ -401,7 +438,8 @@ export class PresentationPlayController extends Controller implements Playground
 					break;
 				}
 				const remove = new Set(this.selectedIds);
-				this.tiles = this.tiles.filter((tile) => !remove.has(tile.id));
+				const deck = this.projection();
+				this.commitDeck({ ...deck, tiles: deck.tiles.filter((tile) => !remove.has(tile.id)) });
 				this.selectedIds = [];
 				break;
 			}
@@ -409,7 +447,11 @@ export class PresentationPlayController extends Controller implements Playground
 				const { id, name, value } = args as { id?: string; name?: string; value?: string };
 				const nextName = name ?? value;
 				if (typeof id === "string" && typeof nextName === "string") {
-					this.tiles = this.tiles.map((tile) => (tile.id === id ? { ...tile, name: nextName.trim() || tile.name } : tile));
+					const deck = this.projection();
+					this.commitDeck({
+						...deck,
+						tiles: deck.tiles.map((tile) => (tile.id === id ? { ...tile, name: nextName.trim() || tile.name } : tile)),
+					});
 				}
 				break;
 			}
@@ -418,18 +460,20 @@ export class PresentationPlayController extends Controller implements Playground
 				if (typeof id !== "string" || !field || typeof value !== "number" || !Number.isFinite(value)) {
 					break;
 				}
-				const tile = this.tiles.find((row) => row.id === id);
+				const deck = this.projection();
+				const tile = deck.tiles.find((row) => row.id === id);
 				if (!tile) {
 					break;
 				}
 				const crop = clampTileCrop({ ...tile.crop, [field]: value });
-				this.tiles = this.tiles.map((row) => (row.id === id ? { ...row, crop } : row));
+				this.commitDeck({ ...deck, tiles: deck.tiles.map((row) => (row.id === id ? { ...row, crop } : row)) });
 				break;
 			}
 			case "setTileCrop": {
 				const { id, crop } = args as { id?: string; crop?: FigureTileDraft["crop"] };
 				if (typeof id === "string" && crop) {
-					this.tiles = this.tiles.map((tile) => (tile.id === id ? { ...tile, crop } : tile));
+					const deck = this.projection();
+					this.commitDeck({ ...deck, tiles: deck.tiles.map((tile) => (tile.id === id ? { ...tile, crop } : tile)) });
 				}
 				break;
 			}
@@ -440,12 +484,12 @@ export class PresentationPlayController extends Controller implements Playground
 				break;
 			}
 			case "clearTiles": {
-				this.tiles = [];
+				this.commitDeck({ ...this.projection(), tiles: [] });
 				this.selectedIds = [];
 				break;
 			}
 			case "copyPrompt": {
-				this.clipboardPrompt = buildTileMorphPrompt(this.source, this.tiles);
+				this.clipboardPrompt = buildTileMorphPrompt(this.source, [...this.tiles]);
 				this.clipboardEpoch += 1;
 				break;
 			}

@@ -115,7 +115,15 @@ export {
 	collectUiTreeItemDragData,
 	sidePanelTreeRootItems,
 	uiDeclarativeSectionsToTree,
+	UI_INSPECTOR_MIXED_PLACEHOLDER,
+	uiInspectorAllEqual,
 	uiInspectorGroupsToTree,
+	uiInspectorMixedNumber,
+	uiInspectorMixedSelect,
+	uiInspectorMixedSlider,
+	uiInspectorMixedText,
+	uiInspectorMixedToggle,
+	uiInspectorMixedVec3,
 	uiInspectorReadonlyField,
 	type UiInspectorFieldGroup,
 } from "@semio-tech/framework-platform-core";
@@ -139,6 +147,7 @@ export type UiNode =
   | import("@semio-tech/framework-platform-core").UiFormsHostSurfaceNode
   | import("@semio-tech/framework-platform-core").UiRasterHostSurfaceNode
   | import("@semio-tech/framework-platform-core").UiDrawHostSurfaceNode
+  | import("@semio-tech/framework-platform-core").UiSemiosHostSurfaceNode
   | import("@semio-tech/framework-platform-core").UiEditorHostSurfaceNode
   | UiTableHostSurfaceNode
   | import("@semio-tech/framework-platform-core").UiTreeNode;
@@ -154,6 +163,7 @@ import {
   buildFormsWindowBody,
   buildRasterWindowBody,
   buildDrawWindowBody,
+  buildSemiosWindowBody,
   buildWriterWindowBody,
   buildEditorWindowBody,
   buildTableWindowBody,
@@ -173,6 +183,7 @@ export {
   buildFormsWindowBody,
   buildRasterWindowBody,
   buildDrawWindowBody,
+  buildSemiosWindowBody,
   buildWriterWindowBody,
   buildEditorWindowBody,
   buildTableWindowBody,

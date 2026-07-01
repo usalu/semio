@@ -5,6 +5,13 @@
 // #endregion 🧲Header
 
 import { DRAWLAYERS_LAYER_IDS, type DrawLayersLayerKindId } from "@semio-tech/graph-manifest";
+import {
+	applyJsonReplaceOp,
+	createDocumentVcsEnvelope,
+	type DocumentVcsEnvelope,
+	materializeDocumentProjection,
+	type JsonReplaceOp,
+} from "@semio-tech/framework-core";
 
 // #region 📐Types
 export type Vec2 = readonly [number, number];
@@ -1300,6 +1307,40 @@ export function applyDrawEditOp(doc: DrawDocument, edit: DrawEditOp): DrawDocume
 	}
 }
 // #endregion ✏️EditOps
+
+//#region 🔖DocumentVcs
+export type DrawDocumentVcsEnvelope = DocumentVcsEnvelope<DrawDocument, DrawEditOp>;
+export type DrawDocumentJsonVcsEnvelope = DocumentVcsEnvelope<DrawDocument, JsonReplaceOp<DrawDocument>>;
+
+/** @emoji 📦 Creates a draw document VCS envelope with an empty or seeded projection. */
+export function createDrawDocumentVcsEnvelope(id: string, projection: DrawDocument = defaultDrawDocument(id)): DrawDocumentVcsEnvelope {
+	return createDocumentVcsEnvelope("draw.document/v1", id, projection);
+}
+
+/** @emoji 🔁 Materializes a draw document from its VCS envelope. */
+export function materializeDrawDocument(envelope: DrawDocumentVcsEnvelope, appliedChangeIds: readonly string[] = []): DrawDocument {
+	return materializeDocumentProjection(envelope, appliedChangeIds, applyDrawEditOp);
+}
+
+/** @emoji 🧩 Semios app VCS handler factory for draw documents. */
+export function createDrawAppVcsHandler() {
+	return {
+		format: "draw.document/v1",
+		createEnvelope: (id: string) => createDrawDocumentVcsEnvelope(id),
+		applyOp: applyDrawEditOp,
+		serializeEnvelope: (envelope: DrawDocumentVcsEnvelope) => JSON.stringify(envelope),
+		deserializeEnvelope: (json: string) => JSON.parse(json) as DrawDocumentVcsEnvelope,
+		materializeProjection: (source: { readonly vcsJson?: string; readonly inline?: string }) => {
+			if (source.vcsJson) {
+				const envelope = JSON.parse(source.vcsJson) as DrawDocumentVcsEnvelope;
+				return materializeDrawDocument(envelope, envelope.vcs.operations.map((change) => change.id));
+			}
+			if (source.inline) return drawDocumentFromJson(source.inline);
+			return defaultDrawDocument("draw");
+		},
+	};
+}
+//#endregion 🔖DocumentVcs
 
 // #region 🧪Tests
 if (import.meta.vitest) {

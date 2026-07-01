@@ -14,8 +14,10 @@
     "test": "bun nx run @semio-tech/procedural-2d-play:test"
   },
   "dependencies": {
+    "@semio-tech/flow-play": "workspace:*",
     "@semio-tech/flow-react": "workspace:*",
     "@semio-tech/forms-react": "workspace:*",
+    "@semio-tech/framework-core": "workspace:*",
     "@semio-tech/framework-playground-core": "workspace:*",
     "@semio-tech/procedural-2d-react": "workspace:*"
   },

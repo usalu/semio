@@ -4,6 +4,14 @@
 /** @emoji 🖼️ `@semio-tech/raster-core` — non-destructive raster document model, edit ops, hover/selection mapping. */
 // #endregion 🧲Header
 
+import {
+	applyJsonReplaceOp,
+	createDocumentVcsEnvelope,
+	type DocumentVcsEnvelope,
+	materializeDocumentProjection,
+	type JsonReplaceOp,
+} from "@semio-tech/framework-core";
+
 // #region 📐Types
 export const RASTER_BLEND_MODES = [
 	"normal",
@@ -486,7 +494,39 @@ export function findRasterLayerLocation(doc: RasterDocument, layerId: string): R
 /** @emoji 🌳 Parses a hierarchy tree row id back to a layer id. */
 export function rasterPlayLayerIdFromTreeRowId(rowId: string): string | null {
 	const layerMatch = rowId.match(/^raster-play-layers\.(layer|group|adjustment)\.(.+)$/);
-	return layerMatch?.[2] ?? null;
+	if (layerMatch?.[2]) return layerMatch[2];
+	const maskMatch = rowId.match(/^raster-play-layers\.mask\.(.+)$/);
+	return maskMatch?.[1] ?? null;
+}
+
+/** @emoji ✅ Maps tree row ids (or raw layer ids) to layer selection ids. */
+export function rasterPlaySelectionIdsFromTreeRowIds(doc: RasterDocument, treeRowIds: readonly string[]): string[] {
+	const out: string[] = [];
+	for (const rowId of treeRowIds) {
+		const layerId = rasterPlayLayerIdFromTreeRowId(rowId);
+		if (layerId && findRasterLayer(doc, layerId)) {
+			out.push(layerId);
+			continue;
+		}
+		if (findRasterLayer(doc, rowId)) out.push(rowId);
+	}
+	return [...new Set(out)];
+}
+
+/** @emoji 🌳 Maps layer selection ids to hierarchy tree row ids. */
+export function rasterPlayTreeRowIdsForSelectionIds(doc: RasterDocument, layerIds: readonly string[]): string[] {
+	return layerIds
+		.map((id) => findRasterLayer(doc, id))
+		.filter((layer): layer is RasterLayerNode => Boolean(layer))
+		.map((layer) => rasterPlayLayersTreeRowId(layer));
+}
+
+/** @emoji 🌳 Maps layer selection ids to mask tree row ids when a mask exists. */
+export function rasterPlayMaskTreeRowIdsForSelectionIds(doc: RasterDocument, layerIds: readonly string[]): string[] {
+	return layerIds
+		.map((id) => findRasterLayer(doc, id))
+		.filter((layer): layer is RasterLayerNode => Boolean(layer?.mask?.enabled))
+		.map((layer) => rasterPlayMaskTreeRowId(layer.id));
 }
 
 /** @emoji 📍 Resolves a tree drop gesture into a layer insert location. */
@@ -979,6 +1019,40 @@ export function applyRasterEditOp(doc: RasterDocument, edit: RasterEditOp): Rast
 }
 // #endregion ✏️EditOps
 
+//#region 🔖DocumentVcs
+export type RasterDocumentVcsEnvelope = DocumentVcsEnvelope<RasterDocument, RasterEditOp>;
+export type RasterDocumentJsonVcsEnvelope = DocumentVcsEnvelope<RasterDocument, JsonReplaceOp<RasterDocument>>;
+
+/** @emoji 📦 Creates a raster document VCS envelope with an empty or seeded projection. */
+export function createRasterDocumentVcsEnvelope(id: string, projection: RasterDocument = defaultRasterDocument(id)): RasterDocumentVcsEnvelope {
+	return createDocumentVcsEnvelope("raster.document/v1", id, projection);
+}
+
+/** @emoji 🔁 Materializes a raster document from its VCS envelope. */
+export function materializeRasterDocument(envelope: RasterDocumentVcsEnvelope, appliedChangeIds: readonly string[] = []): RasterDocument {
+	return materializeDocumentProjection(envelope, appliedChangeIds, applyRasterEditOp);
+}
+
+/** @emoji 🧩 Semios app VCS handler factory for raster documents. */
+export function createRasterAppVcsHandler() {
+	return {
+		format: "raster.document/v1",
+		createEnvelope: (id: string) => createRasterDocumentVcsEnvelope(id),
+		applyOp: applyRasterEditOp,
+		serializeEnvelope: (envelope: RasterDocumentVcsEnvelope) => JSON.stringify(envelope),
+		deserializeEnvelope: (json: string) => JSON.parse(json) as RasterDocumentVcsEnvelope,
+		materializeProjection: (source: { readonly vcsJson?: string; readonly inline?: string }) => {
+			if (source.vcsJson) {
+				const envelope = JSON.parse(source.vcsJson) as RasterDocumentVcsEnvelope;
+				return materializeRasterDocument(envelope, envelope.vcs.operations.map((change) => change.id));
+			}
+			if (source.inline) return rasterDocumentFromJson(source.inline);
+			return defaultRasterDocument("raster");
+		},
+	};
+}
+//#endregion 🔖DocumentVcs
+
 // #region 🧪Tests
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
@@ -1081,6 +1155,34 @@ if (import.meta.vitest) {
 		});
 	});
 
+	describe("rasterPlaySelectionIdsFromTreeRowIds", () => {
+		it("maps hierarchy and mask tree rows to layer ids", () => {
+			const doc = parseRasterDocument({
+				schema: "raster.document/v1",
+				id: "t",
+				camera: { x: 0, y: 0, zoom: 1 },
+				layers: [
+					{
+						kind: "pixel",
+						id: "logo",
+						name: "Logo",
+						visible: true,
+						opacity: 1,
+						blendMode: "normal",
+						transform: defaultRasterTransform(),
+						mask: { enabled: true, width: 64, height: 64 },
+					},
+				],
+			});
+			const layerRow = rasterPlayLayersTreeRowId(doc.layers[0]!);
+			const maskRow = rasterPlayMaskTreeRowId("logo");
+			expect(rasterPlaySelectionIdsFromTreeRowIds(doc, [layerRow])).toEqual(["logo"]);
+			expect(rasterPlaySelectionIdsFromTreeRowIds(doc, [maskRow])).toEqual(["logo"]);
+			expect(rasterPlayTreeRowIdsForSelectionIds(doc, ["logo"])).toEqual([layerRow]);
+			expect(rasterPlayMaskTreeRowIdsForSelectionIds(doc, ["logo"])).toEqual([maskRow]);
+		});
+	});
+
 	describe("rasterPlayLayersTreeHighlightedIdsForKind", () => {
 		it("highlights all layers sharing a blend mode", () => {
 			const doc = parseRasterDocument({
@@ -1095,6 +1197,14 @@ if (import.meta.vitest) {
 			});
 			const ids = rasterPlayLayersTreeHighlightedIdsForKind(doc, { domain: "blendMode", kindId: "screen" });
 			expect(ids).toHaveLength(2);
+		});
+	});
+
+	describe("createRasterAppVcsHandler", () => {
+		it("materializes inline raster documents", () => {
+			const doc = defaultRasterDocument("inline");
+			const projection = createRasterAppVcsHandler().materializeProjection({ inline: rasterDocumentToJson(doc) });
+			expect(projection.id).toBe("inline");
 		});
 	});
 }

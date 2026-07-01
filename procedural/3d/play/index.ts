@@ -35,6 +35,13 @@ import {
 } from "@semio-tech/flow-react";
 import type { WindowMeasure } from "@semio-tech/framework-playground-core";
 import {
+	DocumentVcsStore,
+	applyJsonReplaceOp,
+	createDocumentVcsEnvelope,
+	recordJsonProjectionChange,
+	type JsonReplaceOp,
+} from "@semio-tech/framework-core";
+import {
     AppRuntime,
     buildFlowWindowBody,
     buildFormsWindowBody,
@@ -692,7 +699,14 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 	readonly mainMode = new ModeRuntime("main", "Edit", undefined);
 	readonly generateMode = new ModeRuntime("generate", "Generate", undefined);
 	private activeFixtureId = playgroundResolvedFixtureId(PLAYGROUND_NO_FIXTURE_ID);
-	private fixtureJson = proceduralFixtureJsonForId(playgroundResolvedFixtureId(PLAYGROUND_NO_FIXTURE_ID));
+	private readonly docStore = new DocumentVcsStore<FlowFixtureV1, JsonReplaceOp<FlowFixtureV1>>({
+		envelope: createDocumentVcsEnvelope(
+			"flow.fixture/v1",
+			"procedural-3d-play",
+			parseFlowPlayFixtureJson(proceduralFixtureJsonForId(playgroundResolvedFixtureId(PLAYGROUND_NO_FIXTURE_ID))) ?? PROCEDURAL_PLAY_EMPTY_FIXTURE,
+		),
+		applyOp: applyJsonReplaceOp,
+	});
 	private generations: FlowGeneration[] = createDefaultGenerations();
 	private selectedGenerationId: string | null = null;
 	private generatePreviewText = "—";
@@ -738,7 +752,7 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 	constructor(commandBus: CommandBus, hostNotify: () => void, fixtureStore: ProceduralPlayFixtureStore = createProceduralPlayFixtureStore()) {
 		super(PROCEDURAL_3D_PLAY_CONTROLLER_ID, commandBus, hostNotify);
 		this.fixtureStore = fixtureStore;
-		this.fixtureEdges = this.parseFixtureEdges(this.fixtureJson);
+		this.fixtureEdges = this.parseFixtureEdges(this.getFixtureJson());
 		this.selectedGenerationId = this.generations[0]?.id ?? null;
 		this.rebuildShellMode();
 		this.rebuildGenerateMode();
@@ -824,13 +838,27 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 		}
 	}
 
+	private projection(): FlowFixtureV1 {
+		return this.docStore.projection();
+	}
+
+	private commitFixture(next: FlowFixtureV1): void {
+		recordJsonProjectionChange(this.docStore, next);
+	}
+
+	getDocumentVcsStore(): DocumentVcsStore<FlowFixtureV1, JsonReplaceOp<FlowFixtureV1>> {
+		return this.docStore;
+	}
+
 	private applyFixtureJson(json: string, resetInteraction = false): void {
-		if (!json.includes("flow.fixture/v1")) return;
-		const unchanged = json === this.fixtureJson;
+		const parsed = parseFlowPlayFixtureJson(json);
+		if (!parsed) return;
+		const nextJson = proceduralFixtureToJson(parsed);
+		const unchanged = nextJson === this.getFixtureJson();
 		if (unchanged && !resetInteraction) return;
 		if (!unchanged) {
-			this.fixtureJson = json;
-			this.fixtureEdges = this.parseFixtureEdges(json);
+			this.commitFixture(parsed);
+			this.fixtureEdges = this.parseFixtureEdges(nextJson);
 		}
 		if (resetInteraction) this.resetInteractionState();
 		this.interactionRevision += 1;
@@ -842,8 +870,8 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 	private renameFlowWidget(oldId: string, newId: string): void {
 		const trimmed = newId.trim();
 		if (!trimmed || trimmed === oldId) return;
-		const fixture = parseFlowPlayFixtureJson(this.fixtureJson);
-		if (!fixture || fixture.widgets.some((widget) => widget.id === trimmed)) return;
+		const fixture = this.projection();
+		if (fixture.widgets.some((widget) => widget.id === trimmed)) return;
 		const widgets = fixture.widgets.map((widget) => (widget.id === oldId ? ({ ...widget, id: trimmed } as import("@semio-tech/flow-react").FlowWidgetV1) : widget));
 		const synapses = fixture.synapses.map((synapse) => ({
 			...synapse,
@@ -855,8 +883,7 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 	}
 
 	private patchFlowWidget(widgetId: string, field: string, value: unknown): void {
-		const fixture = parseFlowPlayFixtureJson(this.fixtureJson);
-		if (!fixture) return;
+		const fixture = this.projection();
 		const widgets = fixture.widgets.map((widget) => {
 			if (widget.id !== widgetId) return widget;
 			if (field === "value" || field === "min" || field === "max" || field === "step") {
@@ -873,13 +900,13 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 	private loadFixtureById(fixtureId: string): void {
 		const nextId = isPlaygroundNoFixtureId(fixtureId) ? PLAYGROUND_NO_FIXTURE_ID : fixtureId;
 		const nextJson = proceduralFixtureJsonForId(nextId);
-		if (nextId === this.activeFixtureId && nextJson === this.fixtureJson) return;
+		if (nextId === this.activeFixtureId && nextJson === this.getFixtureJson()) return;
 		this.activeFixtureId = nextId;
 		this.applyFixtureJson(nextJson, true);
 	}
 
 	getFixtureJson(): string {
-		return this.fixtureJson;
+		return proceduralFixtureToJson(this.projection());
 	}
 
 	getPreviewText(): string {
@@ -899,7 +926,7 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 	}
 
 	getGenerateFormSpecJson(): string {
-		return JSON.stringify(flowFixtureToFormSpec(this.fixtureJson));
+		return JSON.stringify(flowFixtureToFormSpec(this.getFixtureJson()));
 	}
 
 	private getEvalClient(): FlowOrchestratorClient {
@@ -1146,7 +1173,7 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 		delta: ProceduralGumballTransformDelta,
 		granularity: ProceduralTransformGranularity,
 	): { ops: FlowGraphEditOp[]; binding: GumballTransformBinding } {
-		const sourceLayout = widgetLayoutFromFixture(this.fixtureJson, sourceWidgetId);
+		const sourceLayout = widgetLayoutFromFixture(this.getFixtureJson(), sourceWidgetId);
 		const edgeGap = gumballColumnEdgeGap(this.layerSpacing, this.siblingGap);
 		const valueRowGap = gumballValueRowGap(this.siblingGap);
 		const sourceHalf = GUMBALL_SOURCE_HALF_WIDTH;
@@ -1484,7 +1511,7 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 			return;
 		}
 		if (command === "saveStored") {
-			this.fixtureStore.save(this.fixtureJson);
+			this.fixtureStore.save(this.getFixtureJson());
 			this.rebuildShellMode();
 			this.emit();
 			return;
@@ -1779,7 +1806,7 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 				args,
 				generations: this.generations,
 				selectedGenerationId: this.selectedGenerationId,
-				fixtureJson: this.fixtureJson,
+				fixtureJson: this.getFixtureJson(),
 				client: this.getEvalClient(),
 			}).then((next) => {
 				if (!next) return;

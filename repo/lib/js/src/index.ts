@@ -1017,6 +1017,7 @@ export type PlaygroundHostKind =
 	| "raster"
 	| "draw"
 	| "writer"
+	| "semios"
 	| "cad"
 	| "gis-map"
 	| "projektetage"
@@ -1044,6 +1045,7 @@ export const PLAYGROUND_PORTS: Record<PlaygroundHostKind, PlaygroundPortSpec> = 
 	raster: { dev: 6060, test: 6061, env: "RASTER_PLAY_PORT" },
 	draw: { dev: 6064, test: 6065, env: "DRAW_PLAY_PORT" },
 	writer: { dev: 6062, test: 6063, env: "WRITER_PLAY_PORT" },
+	semios: { dev: 6066, test: 6067, env: "SEMIOS_PLAY_PORT" },
 	"procedural-3d": { dev: 6018, test: 6031, env: "PROCEDURAL_3D_PLAY_PORT" },
 	"procedural-2d": { dev: 6021, test: 6033, env: "PROCEDURAL_2D_PLAY_PORT" },
 	shooting: { dev: 6019, test: 6032, env: "SHOOTING_PLAY_PORT" },

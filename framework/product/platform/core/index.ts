@@ -304,9 +304,9 @@ export function sidePanelTreeRootItems(
 
 //#region 🔖ComponentKind
 /** @emoji 🧩 Fixed platform component vocabulary wired by renderers (`table`, `virtualFileSystem`, `puzzle2d`, …). */
-export type ComponentKind = "table" | "virtualFileSystem" | "puzzle2d" | "puzzle3d" | "puzzle5d" | "cad" | "gismap" | "flow" | "dag" | "trinity" | "shooting" | "forms" | "raster" | "draw" | "writer" | "panel" | "editor";
+export type ComponentKind = "table" | "virtualFileSystem" | "puzzle2d" | "puzzle3d" | "puzzle5d" | "cad" | "gismap" | "flow" | "dag" | "trinity" | "shooting" | "forms" | "raster" | "draw" | "writer" | "semios" | "panel" | "editor";
 
-const CANVAS_COMPONENT_KINDS: readonly ComponentKind[] = ["table", "virtualFileSystem", "puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag", "trinity", "shooting", "forms", "raster", "draw", "writer", "editor"];
+const CANVAS_COMPONENT_KINDS: readonly ComponentKind[] = ["table", "virtualFileSystem", "puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag", "trinity", "shooting", "forms", "raster", "draw", "writer", "semios", "editor"];
 //#endregion 🔖ComponentKind
 
 /** @emoji 📊 Host-bound tabular surface; `paneId` disambiguates multiple table slots in one app. */
@@ -469,6 +469,17 @@ export interface UiWriterHostSurfaceNode {
 	readonly bindingId?: string;
 }
 
+/** @emoji 🖥️ Host-bound semios studio surface (`mediaGraph` or `appHost`). */
+export interface UiSemiosHostSurfaceNode {
+	readonly type: "semios";
+	readonly componentKind: "semios";
+	readonly surfaceId: string;
+	readonly controllerId: string;
+	readonly view: "mediaGraph" | "appHost" | "launcher" | "history";
+	readonly paneId?: string;
+	readonly bindingId?: string;
+}
+
 /** @emoji ✍️ Host-bound code editor surface. */
 export interface UiEditorHostSurfaceNode {
 	readonly type: "editor";
@@ -495,6 +506,7 @@ export type UiComponentHostSurfaceNode =
 	| UiRasterHostSurfaceNode
 	| UiDrawHostSurfaceNode
 	| UiWriterHostSurfaceNode
+	| UiSemiosHostSurfaceNode
 	| UiPanelHostSurfaceNode
 	| UiEditorHostSurfaceNode;
 
@@ -504,6 +516,59 @@ export interface UiInspectorFieldGroup {
 	readonly label: string;
 	readonly defaultOpen?: boolean;
 	readonly fields: readonly UiNode[];
+}
+
+/** @emoji 🔀 Placeholder shown when a multi-selection field has differing values. */
+export const UI_INSPECTOR_MIXED_PLACEHOLDER = "Mixed";
+
+/** @emoji ⚖️ Returns whether every value in a multi-selection row is identical. */
+export function uiInspectorAllEqual<T>(values: readonly T[]): boolean {
+	if (values.length <= 1) {
+		return true;
+	}
+	const first = values[0];
+	for (let index = 1; index < values.length; index += 1) {
+		if (values[index] !== first) {
+			return false;
+		}
+	}
+	return true;
+}
+
+/** @emoji ✏️ Text input value and placeholder for uniform or mixed multi-selection. */
+export function uiInspectorMixedText(values: readonly string[]): { readonly value: string; readonly placeholder?: string } {
+	const uniform = uiInspectorAllEqual(values);
+	return { value: uniform ? (values[0] ?? "") : "", placeholder: uniform ? undefined : UI_INSPECTOR_MIXED_PLACEHOLDER };
+}
+
+/** @emoji 🔢 Numeric stepper value and uniform flag for multi-selection. */
+export function uiInspectorMixedNumber(values: readonly number[]): { readonly value: number; readonly uniform: boolean } {
+	const uniform = uiInspectorAllEqual(values);
+	return { value: uniform ? (values[0] ?? 0) : Number.NaN, uniform };
+}
+
+/** @emoji 📋 Select value and placeholder for uniform or mixed multi-selection. */
+export function uiInspectorMixedSelect(values: readonly string[]): { readonly value: string; readonly placeholder?: string } {
+	return uiInspectorMixedText(values);
+}
+
+/** @emoji 🔘 Toggle pressed state and uniform flag for multi-selection. */
+export function uiInspectorMixedToggle(values: readonly boolean[]): { readonly pressed: boolean; readonly uniform: boolean } {
+	const uniform = uiInspectorAllEqual(values);
+	return { pressed: uniform ? (values[0] ?? false) : false, uniform };
+}
+
+/** @emoji 🎚️ Slider value for uniform or mixed multi-selection (mixed uses 0). */
+export function uiInspectorMixedSlider(values: readonly number[]): { readonly value: number; readonly uniform: boolean } {
+	return uiInspectorMixedNumber(values);
+}
+
+/** @emoji 📐 Vec3 tuple for uniform multi-selection or null when mixed. */
+export function uiInspectorMixedVec3(
+	values: readonly (readonly [number, number, number])[],
+): { readonly value: readonly [number, number, number] | null; readonly uniform: boolean } {
+	const uniform = uiInspectorAllEqual(values.map((row) => JSON.stringify(row)));
+	return { value: uniform && values[0] ? values[0] : null, uniform };
 }
 
 /** @emoji 📋 Read-only inspector field row. */
@@ -783,6 +848,25 @@ export function buildDrawWindowBody(
 	return {
 		type: "draw",
 		componentKind: "draw",
+		surfaceId,
+		controllerId,
+		view,
+		...(paneId ? { paneId } : {}),
+		...(bindingId ? { bindingId } : {}),
+	};
+}
+
+/** @emoji 🖥️ Canonical semios window body for media graph or app host surfaces. */
+export function buildSemiosWindowBody(
+	surfaceId: string,
+	controllerId: string,
+	view: "mediaGraph" | "appHost" | "launcher" | "history",
+	paneId?: string,
+	bindingId?: string,
+): UiSemiosHostSurfaceNode {
+	return {
+		type: "semios",
+		componentKind: "semios",
 		surfaceId,
 		controllerId,
 		view,

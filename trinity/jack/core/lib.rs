@@ -3,7 +3,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 use trinity_ram::{
-    Edge, EntityRef, Graph, Node, Port, PortDirection, PropertyBag, PropertyValue, port_key,
+    Edge, EntityRef, Graph, GraphFixtureV1, Node, Port, PortDirection, PropertyBag, PropertyValue, port_key,
 };
 
 // #region 🔖Ast
@@ -67,9 +67,36 @@ pub enum Expr {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub enum QueryResultKind {
+    Table,
+    Graph,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct QueryResult {
+    #[serde(default)]
+    pub kind: QueryResultKind,
     pub columns: Vec<String>,
     pub rows: Vec<Vec<PropertyValue>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub graph_fixture: Option<GraphFixtureV1>,
+}
+
+impl Default for QueryResultKind {
+    fn default() -> Self {
+        Self::Table
+    }
+}
+
+impl QueryResult {
+    pub fn table(columns: Vec<String>, rows: Vec<Vec<PropertyValue>>) -> Self {
+        Self { kind: QueryResultKind::Table, columns, rows, graph_fixture: None }
+    }
+
+    pub fn graph(columns: Vec<String>, graph_fixture: GraphFixtureV1) -> Self {
+        Self { kind: QueryResultKind::Graph, columns, rows: vec![], graph_fixture: Some(graph_fixture) }
+    }
 }
 // #endregion 🔖Ast
 
@@ -1226,7 +1253,7 @@ pub fn execute(graph: &mut Graph, query: &Query) -> Result<QueryResult, String> 
     if let Some(items) = return_items {
         return Ok(build_return(graph, &bindings, &items));
     }
-    Ok(QueryResult { columns: vec![], rows: vec![] })
+    Ok(QueryResult::table(vec![], vec![]))
 }
 
 /// ▶️ Parse and execute jack in one step.
@@ -1331,6 +1358,35 @@ fn binding_value(graph: &Graph, binding: &Binding, var: &str, prop: &str) -> Opt
     }
 }
 
+fn binding_has_entity(binding: &Binding, var: &str) -> bool {
+    binding.nodes.contains_key(var) || binding.edges.contains_key(var)
+}
+
+fn return_items_want_graph(items: &[ReturnItem], bindings: &[Binding]) -> bool {
+    items.iter().any(|item| {
+        let ReturnItem::Var(v) = item else { return false };
+        bindings.iter().any(|b| binding_has_entity(b, v))
+    })
+}
+
+fn collect_graph_entities(bindings: &[Binding], items: &[ReturnItem]) -> (BTreeSet<String>, BTreeSet<String>) {
+    let mut node_ids = BTreeSet::new();
+    let mut edge_ids = BTreeSet::new();
+    for binding in bindings {
+        for item in items {
+            if let ReturnItem::Var(v) = item {
+                if let Some(id) = binding.nodes.get(v) {
+                    node_ids.insert(id.clone());
+                }
+                if let Some(id) = binding.edges.get(v) {
+                    edge_ids.insert(id.clone());
+                }
+            }
+        }
+    }
+    (node_ids, edge_ids)
+}
+
 fn build_return(graph: &Graph, bindings: &[Binding], items: &[ReturnItem]) -> QueryResult {
     let columns: Vec<String> = items
         .iter()
@@ -1339,6 +1395,11 @@ fn build_return(graph: &Graph, bindings: &[Binding], items: &[ReturnItem]) -> Qu
             ReturnItem::Property { var, prop } => format!("{var}.{prop}"),
         })
         .collect();
+    if return_items_want_graph(items, bindings) {
+        let (node_ids, edge_ids) = collect_graph_entities(bindings, items);
+        let graph_fixture = graph.subgraph_fixture(&node_ids, &edge_ids);
+        return QueryResult::graph(columns, graph_fixture);
+    }
     let mut rows = Vec::new();
     for binding in bindings {
         let mut row = Vec::new();
@@ -1356,7 +1417,7 @@ fn build_return(graph: &Graph, bindings: &[Binding], items: &[ReturnItem]) -> Qu
         }
         rows.push(row);
     }
-    QueryResult { columns, rows }
+    QueryResult::table(columns, rows)
 }
 
 fn apply_create(graph: &mut Graph, pattern: &Pattern) -> Result<(), String> {
@@ -1480,8 +1541,19 @@ mod tests {
     fn run_match_return() {
         let mut g = mini_graph();
         let result = run(&mut g, "MATCH (a:Piece)-[r:Connection]->(b:Piece) RETURN a.name, b.name").unwrap();
+        assert_eq!(result.kind, QueryResultKind::Table);
         assert_eq!(result.rows.len(), 1);
         assert_eq!(result.rows[0][0], PropertyValue::String("core".into()));
+    }
+
+    #[test]
+    fn run_match_return_graph() {
+        let mut g = mini_graph();
+        let result = run(&mut g, "MATCH (a:Piece)-[r:Connection]->(b:Piece) RETURN a, r, b").unwrap();
+        assert_eq!(result.kind, QueryResultKind::Graph);
+        let fixture = result.graph_fixture.expect("graph fixture");
+        assert_eq!(fixture.nodes.len(), 2);
+        assert_eq!(fixture.edges.len(), 1);
     }
 
     #[test]

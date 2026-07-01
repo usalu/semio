@@ -12,6 +12,7 @@
     "test": "bun nx run @semio-tech/draw-core:test"
   },
   "dependencies": {
+    "@semio-tech/framework-core": "workspace:*",
     "@semio-tech/graph-manifest": "workspace:*"
   },
   "devDependencies": {

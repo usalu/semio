@@ -1,0 +1,60 @@
+{
+  "schema": "trinity.graph/v1",
+  "name": "Branch Chain",
+  "manifestId": "nakagin",
+  "camera": { "x": 0, "y": 0, "zoom": 1 },
+  "rootNodeId": "branch-root",
+  "nodes": [
+    {
+      "id": "branch-root",
+      "kind": "Piece",
+      "name": "root",
+      "x": -120,
+      "y": 0,
+      "width": 88,
+      "height": 40,
+      "ports": [
+        { "id": "out-a", "kind": "Connector", "direction": "out" }
+      ]
+    },
+    {
+      "id": "branch-mid",
+      "kind": "Piece",
+      "name": "mid",
+      "x": 0,
+      "y": 0,
+      "width": 88,
+      "height": 40,
+      "ports": [
+        { "id": "in-a", "kind": "Connector", "direction": "in" },
+        { "id": "out-b", "kind": "Connector", "direction": "out" }
+      ]
+    },
+    {
+      "id": "branch-leaf",
+      "kind": "Piece",
+      "name": "leaf",
+      "x": 120,
+      "y": 0,
+      "width": 88,
+      "height": 40,
+      "ports": [
+        { "id": "in-b", "kind": "Connector", "direction": "in" }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-root-mid",
+      "kind": "Connection",
+      "source": "branch-root:out-a",
+      "target": "branch-mid:in-a"
+    },
+    {
+      "id": "e-mid-leaf",
+      "kind": "Connection",
+      "source": "branch-mid:out-b",
+      "target": "branch-leaf:in-b"
+    }
+  ]
+}

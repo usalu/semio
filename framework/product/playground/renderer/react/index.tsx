@@ -72,7 +72,7 @@ const _playgroundCadToolbarI18nKeys = [
   "ui.toolbar.parent.transfer",
 ] as const satisfies readonly UiTranslationKey[];
 //#endregion 🪁I18n Compile Gate
-import { CANVAS_HOVER_SOURCE_CANVAS, CANVAS_HOVER_SOURCE_HIERARCHY, NamedLayoutStore } from "@semio-tech/framework-core";
+import { CANVAS_HOVER_SOURCE_CANVAS, CANVAS_HOVER_SOURCE_CATALOG, CANVAS_HOVER_SOURCE_HIERARCHY, NamedLayoutStore } from "@semio-tech/framework-core";
 import {
     DisplayHostContext,
     ProductShell,
@@ -383,8 +383,10 @@ type EditorSurfaceHost = React.ComponentType<{ readonly node: import("@semio-tec
 const editorSurfaceHosts = new Map<string, EditorSurfaceHost>();
 type WriterSurfaceHost = React.ComponentType<{ readonly node: import("@semio-tech/framework-platform-core").UiWriterHostSurfaceNode }>;
 const writerSurfaceHosts = new Map<string, WriterSurfaceHost>();
+type SemiosSurfaceHost = React.ComponentType<{ readonly node: import("@semio-tech/framework-platform-core").UiSemiosHostSurfaceNode }>;
+const semiosSurfaceHosts = new Map<string, SemiosSurfaceHost>();
 
-const PLAYGROUND_CANVAS_HOST_TYPES = new Set(["puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag", "trinity", "shooting", "forms", "raster", "draw", "writer", "editor"]);
+const PLAYGROUND_CANVAS_HOST_TYPES = new Set(["puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag", "trinity", "shooting", "forms", "raster", "draw", "writer", "semios", "editor"]);
 
 function isPlaygroundCanvasHostChild(child: UiNode): boolean {
   return PLAYGROUND_CANVAS_HOST_TYPES.has(child.type);
@@ -461,6 +463,12 @@ export function registerUiEditorSurfaceHost(surfaceId: string, Component: Editor
 /** @emoji ✍️ Binds `surfaceId` from {@link UiWriterHostSurfaceNode} to a writer canvas body. */
 export function registerUiWriterSurfaceHost(surfaceId: string, Component: WriterSurfaceHost): void {
   writerSurfaceHosts.set(surfaceId, Component);
+  registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
+}
+
+/** @emoji 🖥️ Binds `surfaceId` from {@link UiSemiosHostSurfaceNode} to a semios studio surface. */
+export function registerUiSemiosSurfaceHost(surfaceId: string, Component: SemiosSurfaceHost): void {
+  semiosSurfaceHosts.set(surfaceId, Component);
   registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
 }
 
@@ -557,6 +565,16 @@ function renderPlaygroundHostSurface(node: UiNode, layout: "canvas" | "panel"): 
   }
   if (node.type === "writer") {
     const Host = writerSurfaceHosts.get(node.surfaceId);
+    if (Host) {
+      return (
+        <div className="absolute inset-0 min-h-0 min-w-0">
+          <Host node={node} />
+        </div>
+      );
+    }
+  }
+  if (node.type === "semios") {
+    const Host = semiosSurfaceHosts.get(node.surfaceId);
     if (Host) {
       return (
         <div className="absolute inset-0 min-h-0 min-w-0">
@@ -860,6 +878,7 @@ export function UiRenderer({ node, commandBus }: { readonly node: UiNode; readon
     case "raster":
     case "draw":
     case "writer":
+    case "semios":
     case "panel":
     case "table":
     case "editor":
@@ -6956,23 +6975,38 @@ import {
   TRINITY_JACK_PLAY_SURFACE_ID,
   TRINITY_JACK_PLAY_WINDOW_KIND_ID,
   TrinityJackPlayController,
-  buildTrinityPlayCatalogueTree,
+  buildTrinityJackPlayCatalogueTree,
   buildTrinityPlayHierarchyTree,
   buildTrinityPlayInspectorTree,
   registerTrinityJackPlayDeclarativeBodies,
 } from "@semio-tech/trinity-jack-play";
 import {
   TRINITY_REWRITE_PLAY_APP_ID,
-  TRINITY_REWRITE_PLAY_SURFACE_ID,
-  TRINITY_REWRITE_PLAY_WINDOW_KIND_ID,
+  TRINITY_REWRITE_PLAY_SURFACE_ID_AFTER,
+  TRINITY_REWRITE_PLAY_SURFACE_ID_BEFORE,
+  TRINITY_REWRITE_PLAY_SURFACE_ID_JACK,
+  TRINITY_REWRITE_PLAY_SURFACE_ID_LHS,
+  TRINITY_REWRITE_PLAY_SURFACE_ID_PARAMETERS,
+  TRINITY_REWRITE_PLAY_SURFACE_ID_RHS,
+  TRINITY_REWRITE_PLAY_WINDOW_KIND_AFTER,
+  TRINITY_REWRITE_PLAY_WINDOW_KIND_BEFORE,
   TrinityRewritePlayController,
+  buildTrinityPlayCatalogueTree,
   registerTrinityRewritePlayDeclarativeBodies,
 } from "@semio-tech/trinity-rewrite-play";
-import { TRINITY_DEFAULT_FIXTURE_JSON, TrinityCanvas, createJackLspWorker } from "@semio-tech/trinity-react";
+import {
+  TRINITY_DEFAULT_FIXTURE_JSON,
+  TRINITY_LOD_MODE_AUTOMATIC,
+  TrinityCanvas,
+  createJackLspWorker,
+  trinityLodCanvasProps,
+  type TrinityDrawLodKind,
+} from "@semio-tech/trinity-react";
+import { FormRenderer } from "@semio-tech/forms-react";
 import { createWorkerLspTransport, createWriterDocument } from "@semio-tech/writer-core";
 import { WriterCanvas } from "@semio-tech/writer-react";
 import { CodeEditor } from "@semio-tech/framework-platform-renderer-react";
-import type { UiEditorHostSurfaceNode, UiTrinityHostSurfaceNode } from "@semio-tech/framework-platform-core";
+import type { UiEditorHostSurfaceNode, UiFormsHostSurfaceNode, UiTrinityHostSurfaceNode } from "@semio-tech/framework-platform-core";
 
 let trinityPlayChromeRegistered = false;
 const trinityJackControllerRef: { current: TrinityJackPlayController | null } = { current: null };
@@ -6991,6 +7025,44 @@ function useTrinityJackController(runtimeOverride?: Platform): TrinityJackPlayCo
   return ctrl;
 }
 
+function useTrinityJackInteractionRevision(runtime?: Platform): number {
+  const appCtx = reactHostPort.useContext(PlaygroundContext);
+  const resolved = runtime ?? appCtx?.runtime;
+  return reactHostPort.useSyncExternalStore(
+    (listener) => {
+      const ctrl = resolved?.getActiveApp()?.controller as TrinityJackPlayController | undefined;
+      trinityJackControllerRef.current = ctrl ?? null;
+      const unsubscribeRuntime = resolved ? resolved.subscribe(listener) : () => {};
+      const unsubscribeSnapshot = ctrl?.subscribeSnapshot(listener);
+      return () => {
+        unsubscribeRuntime();
+        unsubscribeSnapshot?.();
+      };
+    },
+    () => (resolved?.getActiveApp()?.controller as TrinityJackPlayController | undefined)?.getInteractionRevision() ?? 0,
+    () => 0,
+  );
+}
+
+function useTrinityRewriteInteractionRevision(runtime?: Platform): number {
+  const appCtx = reactHostPort.useContext(PlaygroundContext);
+  const resolved = runtime ?? appCtx?.runtime;
+  return reactHostPort.useSyncExternalStore(
+    (listener) => {
+      const ctrl = resolved?.getActiveApp()?.controller as TrinityRewritePlayController | undefined;
+      trinityRewriteControllerRef.current = ctrl ?? null;
+      const unsubscribeRuntime = resolved ? resolved.subscribe(listener) : () => {};
+      const unsubscribeSnapshot = ctrl?.subscribeSnapshot(listener);
+      return () => {
+        unsubscribeRuntime();
+        unsubscribeSnapshot?.();
+      };
+    },
+    () => (resolved?.getActiveApp()?.controller as TrinityRewritePlayController | undefined)?.getInteractionRevision() ?? 0,
+    () => 0,
+  );
+}
+
 function useTrinityRewriteController(runtimeOverride?: Platform): TrinityRewritePlayController | undefined {
   const appCtx = reactHostPort.useContext(PlaygroundContext);
   const runtime = runtimeOverride ?? appCtx?.runtime;
@@ -7005,20 +7077,37 @@ function useTrinityRewriteController(runtimeOverride?: Platform): TrinityRewrite
 }
 
 function TrinityJackPlaySurfaceHost({ node }: { readonly node: UiTrinityHostSurfaceNode }): ReactElement {
+  const appCtx = reactHostPort.useContext(PlaygroundContext);
+  const revision = useTrinityJackInteractionRevision(appCtx?.runtime);
   const ctrl = useTrinityJackController();
+  const scopeId = node.paneId ?? TRINITY_JACK_PLAY_WINDOW_KIND_ID;
+  const lodProps = trinityLodCanvasProps(ctrl?.lodModeForScope(scopeId) ?? TRINITY_LOD_MODE_AUTOMATIC);
   const onFixtureChange = reactHostPort.useCallback((json: string) => ctrl?.run("setFixtureJson", { json }), [ctrl]);
-  console.log("[DEBUG] trinity jack play surface mount");
+  const onSelectionChange = reactHostPort.useCallback((ids: readonly string[]) => ctrl?.run("setSelection", { ids: [...ids] }), [ctrl]);
+  const onLodChange = reactHostPort.useCallback(
+    (lod: TrinityDrawLodKind) => {
+      ctrl?.run("setEffectiveLod", { lod, instanceId: scopeId });
+    },
+    [ctrl, scopeId],
+  );
+  void revision;
   return (
     <TrinityCanvas
       fixtureJson={ctrl?.getFixtureJson() ?? TRINITY_JACK_PLAY_DEFAULT_FIXTURE_JSON}
       reorganize={ctrl?.getReorganize()}
       onFixtureChange={onFixtureChange}
+      onSelectionChange={onSelectionChange}
+      {...lodProps}
+      onLodChange={onLodChange}
     />
   );
 }
 
 function TrinityJackEditorSurfaceHost({ node }: { readonly node: import("@semio-tech/framework-platform-core").UiWriterHostSurfaceNode }): ReactElement {
+  const appCtx = reactHostPort.useContext(PlaygroundContext);
+  const revision = useTrinityJackInteractionRevision(appCtx?.runtime);
   const ctrl = useTrinityJackController();
+  void revision;
   const fixtureJson = ctrl?.getFixtureJson() ?? TRINITY_JACK_PLAY_DEFAULT_FIXTURE_JSON;
   const document = ctrl?.getWriterDocument() ?? createWriterDocument({ id: "jack-query", languageId: "jack", text: "MATCH (a:Piece) RETURN a.name" });
   const createLspTransport = reactHostPort.useCallback(() => createWorkerLspTransport(createJackLspWorker(fixtureJson)), [fixtureJson]);
@@ -7042,15 +7131,24 @@ function TrinityJackEditorSurfaceHost({ node }: { readonly node: import("@semio-
 }
 
 function TrinityJackResultsSurfaceHost({ node }: { readonly node: UiTableHostSurfaceNode }): ReactElement {
+  const appCtx = reactHostPort.useContext(PlaygroundContext);
+  const revision = useTrinityJackInteractionRevision(appCtx?.runtime);
   const ctrl = useTrinityJackController();
   const result = reactHostPort.useMemo(() => {
     try {
-      return JSON.parse(ctrl?.getJackResultJson() || '{"columns":[],"rows":[]}') as { columns: string[]; rows: unknown[][] };
+      return JSON.parse(ctrl?.getJackResultJson() || '{"kind":"table","columns":[],"rows":[]}') as {
+        kind?: "table" | "graph";
+        columns: string[];
+        rows: unknown[][];
+        graphFixture?: import("@semio-tech/trinity-react").TrinityFixtureV1;
+      };
     } catch {
-      return { columns: ["error"], rows: [["Invalid result json"]] };
+      return { kind: "table" as const, columns: ["error"], rows: [["Invalid result json"]] };
     }
-  }, [ctrl?.getJackResultJson(), ctrl?.getInteractionRevision()]);
-  console.log(`[DEBUG] trinity jack results surface rows=${result.rows.length}`);
+  }, [ctrl, revision]);
+  if (result.kind === "graph" && result.graphFixture) {
+    return <TrinityCanvas fixtureJson={JSON.stringify(result.graphFixture)} className="h-full min-h-0" />;
+  }
   return (
     <div className="h-full min-h-0 overflow-auto p-2">
       {result.columns.length === 0 ? (
@@ -7083,15 +7181,105 @@ function TrinityJackResultsSurfaceHost({ node }: { readonly node: UiTableHostSur
   );
 }
 
-function TrinityRewritePlaySurfaceHost({ node }: { readonly node: UiTrinityHostSurfaceNode }): ReactElement {
+function TrinityRewriteBeforeSurfaceHost({ node }: { readonly node: UiTrinityHostSurfaceNode }): ReactElement {
+  const appCtx = reactHostPort.useContext(PlaygroundContext);
+  const revision = useTrinityRewriteInteractionRevision(appCtx?.runtime);
   const ctrl = useTrinityRewriteController();
+  const scopeId = node.paneId ?? TRINITY_REWRITE_PLAY_WINDOW_KIND_BEFORE;
+  const lodProps = trinityLodCanvasProps(ctrl?.lodModeForScope(scopeId) ?? TRINITY_LOD_MODE_AUTOMATIC);
   const onFixtureChange = reactHostPort.useCallback((json: string) => ctrl?.run("setFixtureJson", { json }), [ctrl]);
-  console.log("[DEBUG] trinity rewrite play surface mount");
+  const onSelectionChange = reactHostPort.useCallback((ids: readonly string[]) => ctrl?.run("setSelection", { ids: [...ids] }), [ctrl]);
+  const onLodChange = reactHostPort.useCallback(
+    (lod: TrinityDrawLodKind) => {
+      ctrl?.run("setEffectiveLod", { lod, instanceId: scopeId });
+    },
+    [ctrl, scopeId],
+  );
+  void revision;
   return (
     <TrinityCanvas
-      fixtureJson={ctrl?.getFixtureJson() ?? TRINITY_DEFAULT_FIXTURE_JSON}
+      fixtureJson={ctrl?.getBeforeFixtureJson() ?? TRINITY_DEFAULT_FIXTURE_JSON}
       reorganize={ctrl?.getReorganize()}
       onFixtureChange={onFixtureChange}
+      onSelectionChange={onSelectionChange}
+      {...lodProps}
+      onLodChange={onLodChange}
+    />
+  );
+}
+
+function TrinityRewriteAfterSurfaceHost({ node }: { readonly node: UiTrinityHostSurfaceNode }): ReactElement {
+  const appCtx = reactHostPort.useContext(PlaygroundContext);
+  const revision = useTrinityRewriteInteractionRevision(appCtx?.runtime);
+  const ctrl = useTrinityRewriteController();
+  const scopeId = node.paneId ?? TRINITY_REWRITE_PLAY_WINDOW_KIND_AFTER;
+  const lodProps = trinityLodCanvasProps(ctrl?.lodModeForScope(scopeId) ?? TRINITY_LOD_MODE_AUTOMATIC);
+  const onLodChange = reactHostPort.useCallback(
+    (lod: TrinityDrawLodKind) => {
+      ctrl?.run("setEffectiveLod", { lod, instanceId: scopeId });
+    },
+    [ctrl, scopeId],
+  );
+  void revision;
+  return (
+    <TrinityCanvas
+      fixtureJson={ctrl?.getAfterFixtureJson() ?? TRINITY_DEFAULT_FIXTURE_JSON}
+      {...lodProps}
+      onLodChange={onLodChange}
+      className="h-full min-h-0"
+    />
+  );
+}
+
+function TrinityRewriteLhsEditorSurfaceHost({ node: _node }: { readonly node: import("@semio-tech/framework-platform-core").UiWriterHostSurfaceNode }): ReactElement {
+  const appCtx = reactHostPort.useContext(PlaygroundContext);
+  const revision = useTrinityRewriteInteractionRevision(appCtx?.runtime);
+  const ctrl = useTrinityRewriteController();
+  void revision;
+  const document = ctrl?.getWriterDocumentLhs() ?? createWriterDocument({ id: "rewrite-lhs", languageId: "json", text: "{}" });
+  const onChange = reactHostPort.useCallback((next: import("@semio-tech/writer-core").WriterDocumentV1) => {
+    trinityRewriteControllerRef.current?.run("setLhsJson", { value: next.text });
+  }, []);
+  return <WriterCanvas document={document} onChange={onChange} className="h-full" />;
+}
+
+function TrinityRewriteRhsEditorSurfaceHost({ node: _node }: { readonly node: import("@semio-tech/framework-platform-core").UiWriterHostSurfaceNode }): ReactElement {
+  const appCtx = reactHostPort.useContext(PlaygroundContext);
+  const revision = useTrinityRewriteInteractionRevision(appCtx?.runtime);
+  const ctrl = useTrinityRewriteController();
+  void revision;
+  const document = ctrl?.getWriterDocumentRhs() ?? createWriterDocument({ id: "rewrite-rhs", languageId: "json", text: "{}" });
+  const onChange = reactHostPort.useCallback((next: import("@semio-tech/writer-core").WriterDocumentV1) => {
+    trinityRewriteControllerRef.current?.run("setRhsJson", { value: next.text });
+  }, []);
+  return <WriterCanvas document={document} onChange={onChange} className="h-full" />;
+}
+
+function TrinityRewriteJackSurfaceHost({ node: _node }: { readonly node: import("@semio-tech/framework-platform-core").UiWriterHostSurfaceNode }): ReactElement {
+  const appCtx = reactHostPort.useContext(PlaygroundContext);
+  const revision = useTrinityRewriteInteractionRevision(appCtx?.runtime);
+  const ctrl = useTrinityRewriteController();
+  void revision;
+  const document = ctrl?.getWriterDocumentJack() ?? createWriterDocument({ id: "rewrite-jack", languageId: "jack", text: "" });
+  return <WriterCanvas document={document} className="h-full" placeholder="Generated Jack query" />;
+}
+
+function TrinityRewriteParametersSurfaceHost({ node: _node }: { readonly node: UiFormsHostSurfaceNode }): ReactElement {
+  const appCtx = reactHostPort.useContext(PlaygroundContext);
+  const revision = useTrinityRewriteInteractionRevision(appCtx?.runtime);
+  const ctrl = useTrinityRewriteController();
+  void revision;
+  const spec = ctrl?.getParameterFormSpec();
+  const values = ctrl?.getParameterValues() ?? {};
+  if (!spec || spec.steps[0]?.questions.length === 0) {
+    return <div className="p-double text-sm text-muted-foreground">No parameters declared on RHS.</div>;
+  }
+  return (
+    <FormRenderer
+      spec={spec}
+      values={values}
+      className="h-full"
+      onChange={(next) => ctrl?.run("setParameterValues", { values: next })}
     />
   );
 }
@@ -7106,7 +7294,12 @@ export function registerTrinityJackPlaySurfaceHosts(): void {
 }
 
 export function registerTrinityRewritePlaySurfaceHosts(): void {
-  registerUiTrinitySurfaceHost(TRINITY_REWRITE_PLAY_SURFACE_ID, TrinityRewritePlaySurfaceHost);
+  registerUiTrinitySurfaceHost(TRINITY_REWRITE_PLAY_SURFACE_ID_BEFORE, TrinityRewriteBeforeSurfaceHost);
+  registerUiTrinitySurfaceHost(TRINITY_REWRITE_PLAY_SURFACE_ID_AFTER, TrinityRewriteAfterSurfaceHost);
+  registerUiWriterSurfaceHost(TRINITY_REWRITE_PLAY_SURFACE_ID_LHS, TrinityRewriteLhsEditorSurfaceHost);
+  registerUiWriterSurfaceHost(TRINITY_REWRITE_PLAY_SURFACE_ID_RHS, TrinityRewriteRhsEditorSurfaceHost);
+  registerUiWriterSurfaceHost(TRINITY_REWRITE_PLAY_SURFACE_ID_JACK, TrinityRewriteJackSurfaceHost);
+  registerUiFormsSurfaceHost(TRINITY_REWRITE_PLAY_SURFACE_ID_PARAMETERS, TrinityRewriteParametersSurfaceHost);
   registerTrinityRewritePlayDeclarativeBodies();
 }
 
@@ -7137,8 +7330,9 @@ class TrinityJackCataloguePanelDefinition extends PureSidePanelTabDefinition {
       name: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
       order: 1,
       tree: new CallbackTreePanelDefinition(() => {
+        const ctrl = trinityJackControllerRef.current;
         const bus = new CommandBus();
-        return uiTreeNodeToTreePanelConfig(buildTrinityPlayCatalogueTree(), bus);
+        return uiTreeNodeToTreePanelConfig(buildTrinityJackPlayCatalogueTree(ctrl?.getActiveFixtureId()), bus);
       }),
     };
   }
@@ -7163,6 +7357,59 @@ class TrinityJackInspectionPanelDefinition extends PureSidePanelTabDefinition {
   }
 }
 
+class TrinityRewriteHierarchyPanelDefinition extends PureSidePanelTabDefinition {
+  buildTab(): SidePanelTabConfig {
+    return {
+      id: TRINITY_JACK_PLAY_HIERARCHY_TAB_ID,
+      icon: shellTabIconComponent(FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, "workbench"),
+      name: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+      order: 0,
+      tree: new CallbackTreePanelDefinition(() => {
+        const ctrl = trinityRewriteControllerRef.current;
+        const bus = new CommandBus();
+        return uiTreeNodeToTreePanelConfig(
+          buildTrinityPlayHierarchyTree(ctrl?.getBeforeFixtureJson() ?? TRINITY_DEFAULT_FIXTURE_JSON, ctrl?.getSelectedNodeIds() ?? []),
+          bus,
+        );
+      }),
+    };
+  }
+}
+
+class TrinityRewriteCataloguePanelDefinition extends PureSidePanelTabDefinition {
+  buildTab(): SidePanelTabConfig {
+    return {
+      id: TRINITY_JACK_PLAY_CATALOGUE_TAB_ID,
+      icon: shellTabIconComponent(FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, "workbench"),
+      name: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+      order: 1,
+      tree: new CallbackTreePanelDefinition(() => {
+        const bus = new CommandBus();
+        return uiTreeNodeToTreePanelConfig(buildTrinityPlayCatalogueTree(), bus);
+      }),
+    };
+  }
+}
+
+class TrinityRewriteInspectionPanelDefinition extends PureSidePanelTabDefinition {
+  buildTab(): SidePanelTabConfig {
+    return {
+      id: TRINITY_JACK_PLAY_INSPECTION_TAB_ID,
+      icon: shellTabIconComponent(FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, "details"),
+      name: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+      order: 0,
+      tree: new CallbackTreePanelDefinition(() => {
+        const ctrl = trinityRewriteControllerRef.current;
+        const bus = new CommandBus();
+        return uiTreeNodeToTreePanelConfig(
+          buildTrinityPlayInspectorTree(ctrl?.getBeforeFixtureJson() ?? TRINITY_DEFAULT_FIXTURE_JSON, ctrl?.getSelectedNodeIds() ?? []),
+          bus,
+        );
+      }),
+    };
+  }
+}
+
 function TrinityJackPlayInner({ runtime }: { readonly runtime: Platform }): ReactElement {
   useTrinityJackController(runtime);
   const hierarchy = reactHostPort.useMemo(() => new TrinityJackHierarchyPanelDefinition(), []);
@@ -7179,9 +7426,9 @@ function TrinityJackPlayInner({ runtime }: { readonly runtime: Platform }): Reac
 
 function TrinityRewritePlayInner({ runtime }: { readonly runtime: Platform }): ReactElement {
   useTrinityRewriteController(runtime);
-  const hierarchy = reactHostPort.useMemo(() => new TrinityJackHierarchyPanelDefinition(), []);
-  const catalogue = reactHostPort.useMemo(() => new TrinityJackCataloguePanelDefinition(), []);
-  const inspection = reactHostPort.useMemo(() => new TrinityJackInspectionPanelDefinition(), []);
+  const hierarchy = reactHostPort.useMemo(() => new TrinityRewriteHierarchyPanelDefinition(), []);
+  const catalogue = reactHostPort.useMemo(() => new TrinityRewriteCataloguePanelDefinition(), []);
+  const inspection = reactHostPort.useMemo(() => new TrinityRewriteInspectionPanelDefinition(), []);
   return (
     <PlaygroundView
       runtime={runtime}
@@ -8742,6 +8989,7 @@ function RasterPlayPaneSurfaceHost({ node }: { readonly node: UiRasterHostSurfac
     camera: doc.camera,
     onHover,
     onSelect: (ids: readonly string[]) => ctrl?.run("setSelection", { ids: [...ids] }),
+    onCommit: (document: typeof doc, selectLayerId?: string) => ctrl?.run("commitDocument", { document, selectLayerId }),
     onCameraChange: (camera: typeof doc.camera) => ctrl?.run("setCamera", { camera }),
     className: "h-full",
   };
@@ -8807,7 +9055,7 @@ class RasterPlayCataloguePanelDefinition extends PureSidePanelTabDefinition {
         const bus = new CommandBus();
         const treeNode = buildRasterPlayCatalogueTree(
           ctrl?.getSelectedIds() ?? [],
-          (payload) => ctrl?.run("setHover", { id: payload.id, kind: payload.kind, sourceId: CANVAS_HOVER_SOURCE_HIERARCHY }),
+          (payload) => ctrl?.run("setHover", { id: payload.id, kind: payload.kind, sourceId: CANVAS_HOVER_SOURCE_CATALOG }),
         );
         return uiTreeNodeToTreePanelConfig(treeNode, bus);
       }),
@@ -10062,6 +10310,466 @@ export function bootPresentationPlay(playground: Playground, rootId = "root"): v
 	bootPlayground(playground, presentationPlayChromeBoot, rootId);
 }
 //#endregion 🔖PresentationPlayHost
+
+//#region 🔖SemiosPlayHost
+import type { UiSemiosHostSurfaceNode } from "@semio-tech/framework-platform-core";
+import {
+	SEMIOS_PLAY_APP_ID,
+	SEMIOS_PLAY_CONTROLLER_ID,
+	SEMIOS_PLAY_SURFACE_APP_HOST,
+	SEMIOS_PLAY_SURFACE_HISTORY,
+	SEMIOS_PLAY_SURFACE_LAUNCHER,
+	SEMIOS_PLAY_SURFACE_MEDIA_GRAPH,
+	SemiosPlayController,
+	registerSemiosPlayDeclarativeBodies,
+} from "@semio-tech/semios-play";
+import {
+	SemiosAppHostSurface,
+	SemiosMediaGraphCanvas,
+	SemiosProgramLauncherPanel,
+	SemiosStudioHistoryPanel,
+	SemiosStudioProvider,
+} from "@semio-tech/semios-react";
+import {
+	appInstanceResourceProjection,
+	materializeAppInstanceProjection,
+	semiosResourceDescriptor,
+} from "@semio-tech/semios-core";
+import { defaultDrawDocument, drawDocumentFromJson, drawDocumentToJson, type DrawDocument } from "@semio-tech/draw-core";
+import { defaultRasterDocument, parseRasterDocument, rasterDocumentToJson, type RasterDocument } from "@semio-tech/raster-core";
+import { RasterCanvas } from "@semio-tech/raster-react";
+import { defaultFormSpec, parseFormSpec, type FormSpec } from "@semio-tech/forms-core";
+import { FormEditSurface } from "@semio-tech/forms-react";
+import { ObjectStateProvider, PlayCanvas as Puzzle3dPlayCanvas, parseFixtureV1 as parsePuzzle3dFixtureV1 } from "@semio-tech/puzzle-3d-react";
+import { PresentationDeck } from "@semio-tech/framework-presentation-renderer-react";
+import type { PresentationDeckV1 } from "@semio-tech/framework-presentation-core";
+
+const EMPTY_PUZZLE3D_FIXTURE = {
+	schema: "puzzle.3d.fixture/v1",
+	camera: { position: [4, 4, 4], target: [0, 0, 0], zoom: 1 },
+	objects: [],
+	attractions: [],
+	references: [],
+	targetVolumes: [],
+} as const;
+
+function SemiosPuzzle3dHost({ fixtureJson }: { readonly fixtureJson: string }): ReactElement {
+	const fixture = reactHostPort.useMemo(() => parsePuzzle3dFixtureV1(JSON.parse(fixtureJson)) ?? EMPTY_PUZZLE3D_FIXTURE, [fixtureJson]);
+	const [selectedId, setSelectedId] = reactHostPort.useState<string | null>(null);
+	return (
+		<ObjectStateProvider fixture={fixture}>
+			<Puzzle3dPlayCanvas fixture={fixture} setSelectedId={setSelectedId} selectedId={selectedId} className="h-full" />
+		</ObjectStateProvider>
+	);
+}
+
+function SemiosPresentationDeckHost({ deck }: { readonly deck: PresentationDeckV1 }): ReactElement {
+	return <PresentationDeck presentation={deck as never} />;
+}
+
+const SemiosCadPlayRoot = reactHostPort.lazy(() =>
+	import("@semio-tech/cad-js-renderer/play").then((module) => ({ default: module.CadPlayRoot })),
+);
+
+function SemiosUpstreamBadge({
+	upstreamInstanceId,
+	instances,
+}: {
+	readonly upstreamInstanceId: string | null;
+	readonly instances: readonly import("@semio-tech/semios-core").SemiosAppInstance[];
+}): ReactElement | null {
+	if (!upstreamInstanceId) return null;
+	const upstream = instances.find((entry) => entry.id === upstreamInstanceId);
+	if (!upstream) return null;
+	return (
+		<div className="border-b border-border/60 bg-muted/40 px-3 py-1 text-xs text-muted-foreground">
+			Upstream · {upstream.label} ({upstream.yields})
+		</div>
+	);
+}
+
+function SemiosSketchpadHost({ appId }: { readonly appId: string }): ReactElement {
+	const [platform, setPlatform] = reactHostPort.useState<Platform | null>(null);
+	reactHostPort.useEffect(() => {
+		let active = true;
+		void import("@semio-tech/compose-sketchpad").then(({ ensureSketchpadPlatform }) =>
+			ensureSketchpadPlatform().then((runtime) => {
+				if (!active) return;
+				runtime.activeAppId = appId;
+				runtime.notify();
+				setPlatform(runtime);
+			}),
+		);
+		return () => {
+			active = false;
+		};
+	}, [appId]);
+	if (!platform) {
+		return <div className="flex h-full items-center justify-center p-6 text-sm text-muted-foreground">Loading sketchpad…</div>;
+	}
+	return <PlaygroundView runtime={platform} defaultAppId={appId} />;
+}
+
+let semiosPlayChromeRegistered = false;
+const semiosPlayControllerRef: { current: SemiosPlayController | null } = { current: null };
+
+function useSemiosPlayController(runtimeOverride?: Platform): SemiosPlayController | undefined {
+	const appCtx = reactHostPort.useContext(PlaygroundContext);
+	const runtime = runtimeOverride ?? appCtx?.runtime;
+	reactHostPort.useSyncExternalStore(
+		(listener) => (runtime ? runtime.subscribe(listener) : () => {}),
+		() => runtime?.generation ?? 0,
+		() => 0,
+	);
+	const ctrl = runtime?.getActiveApp()?.controller as SemiosPlayController | undefined;
+	semiosPlayControllerRef.current = ctrl ?? null;
+	return ctrl;
+}
+
+function SemiosMediaGraphSurfaceHost({ node: _node }: { readonly node: UiSemiosHostSurfaceNode }): ReactElement {
+	const ctrl = useSemiosPlayController();
+	const generation = ctrl?.getStore().getGeneration() ?? 0;
+	void generation;
+	const projection = ctrl?.getStore().projection() ?? {
+		activeProgramId: null,
+		activeAlternativeId: null,
+		appInstances: [],
+		mediaGraph: { schema: "semios.media-graph/v1", nodes: [], edges: [] },
+	};
+	const activeInstanceId = ctrl?.getActiveInstanceId() ?? null;
+	const store = ctrl?.getStore();
+	const onSelect = reactHostPort.useCallback((instanceId: string) => {
+		semiosPlayControllerRef.current?.run("selectInstance", { instanceId });
+	}, []);
+	return (
+		<SemiosMediaGraphCanvas
+			graph={projection.mediaGraph}
+			instances={projection.appInstances}
+			activeInstanceId={activeInstanceId}
+			onSelectInstance={onSelect}
+			editable
+			onMoveNode={(nodeId, x, y) => store?.dispatch({ kind: "moveMediaNode", nodeId, x, y })}
+			onConnectPorts={(sourceNodeId, sourcePortId, targetNodeId, targetPortId) =>
+				store?.dispatch({ kind: "connectMediaPorts", sourceNodeId, sourcePortId, targetNodeId, targetPortId })
+			}
+			onRemoveInstance={(instanceId) => store?.dispatch({ kind: "removeAppInstance", instanceId })}
+		/>
+	);
+}
+
+function SemiosLauncherSurfaceHost({ node: _node }: { readonly node: UiSemiosHostSurfaceNode }): ReactElement {
+	return <SemiosProgramLauncherPanel />;
+}
+
+function SemiosHistorySurfaceHost({ node: _node }: { readonly node: UiSemiosHostSurfaceNode }): ReactElement {
+	return <SemiosStudioHistoryPanel />;
+}
+
+function SemiosAppHostRouter({ instance }: { readonly instance: import("@semio-tech/semios-core").SemiosAppInstance | null }): ReactElement {
+	const ctrl = useSemiosPlayController();
+	const store = ctrl?.getStore();
+	const generation = store?.getGeneration() ?? 0;
+	const projection = store?.projection();
+	const resourceBundle = reactHostPort.useMemo(() => {
+		if (!instance || !store) return null;
+		const current = store.projection();
+		return appInstanceResourceProjection(current.mediaGraph, current.appInstances, instance.id);
+	}, [instance, store, generation]);
+	const materialized = resourceBundle?.projection;
+	const upstreamInstanceId = resourceBundle?.upstreamInstanceId ?? null;
+	const resource = instance ? semiosResourceDescriptor(instance.yields) : null;
+	const dispatchDraw = reactHostPort.useCallback(
+		(document: DrawDocument) => {
+			if (!instance || !store) return;
+			store.dispatch({
+				kind: "patchAppSource",
+				instanceId: instance.id,
+				inline: drawDocumentToJson(document),
+			});
+		},
+		[instance, store],
+	);
+	const drawDoc = reactHostPort.useMemo(() => {
+		if (instance?.sourceDocument.payloadRef === "fixture:semio.draw.json") return defaultDrawDocument("semio", "Semio Emblem");
+		if (materialized && typeof materialized === "object" && (materialized as DrawDocument).schema === "draw.document/v1") return materialized as DrawDocument;
+		return defaultDrawDocument(instance?.id ?? "draw");
+	}, [instance, materialized]);
+	const rasterDoc = reactHostPort.useMemo(() => {
+		if (materialized && typeof materialized === "object" && (materialized as RasterDocument).schema === "raster.document/v1") {
+			return materialized as RasterDocument;
+		}
+		return defaultRasterDocument(instance?.id ?? "raster");
+	}, [instance, materialized]);
+	const formsSpec = reactHostPort.useMemo(() => {
+		if (materialized && typeof materialized === "object" && (materialized as FormSpec).schema === "forms.form/v1") {
+			return materialized as FormSpec;
+		}
+		if (instance?.sourceDocument.inline) {
+			try {
+				return parseFormSpec(JSON.parse(instance.sourceDocument.inline));
+			} catch {
+				return defaultFormSpec(instance?.id ?? "forms");
+			}
+		}
+		return defaultFormSpec(instance?.id ?? "forms");
+	}, [instance, materialized]);
+	const dispatchRaster = reactHostPort.useCallback(
+		(document: RasterDocument) => {
+			if (!instance || !store) return;
+			store.dispatch({
+				kind: "applyAppOperation",
+				instanceId: instance.id,
+				forwards: [{ op: "replaceProjection", projection: document }],
+				backwards: [{ op: "replaceProjection", projection: rasterDoc }],
+			});
+		},
+		[instance, store, rasterDoc],
+	);
+	const dispatchForms = reactHostPort.useCallback(
+		(spec: FormSpec) => {
+			if (!instance || !store) return;
+			store.dispatch({
+				kind: "applyAppOperation",
+				instanceId: instance.id,
+				forwards: [{ op: "replaceProjection", projection: spec }],
+				backwards: [{ op: "replaceProjection", projection: formsSpec }],
+			});
+		},
+		[instance, store, formsSpec],
+	);
+	const writerDoc = reactHostPort.useMemo(() => {
+		const doc = materialized as { text?: string } | null;
+		return createWriterDocument({ id: instance?.id ?? "writer", languageId: "jack", text: doc?.text ?? instance?.sourceDocument.inline ?? "" });
+	}, [instance, materialized]);
+	const fixtureJson = reactHostPort.useMemo(() => JSON.stringify(materialized ?? {}), [materialized]);
+	const hostChrome = (
+		<SemiosUpstreamBadge upstreamInstanceId={upstreamInstanceId} instances={projection?.appInstances ?? []} />
+	);
+	if (!instance || !resource) {
+		return <div className="flex h-full items-center justify-center p-6 text-sm text-muted-foreground">No active app</div>;
+	}
+	if (instance.programId === "compose.sketchpad") {
+		return (
+			<div className="flex h-full min-h-0 flex-col overflow-hidden">
+				{hostChrome}
+				<div className="min-h-0 flex-1">
+					<SemiosSketchpadHost appId={instance.appId} />
+				</div>
+			</div>
+		);
+	}
+	switch (resource.componentKind) {
+		case "draw":
+			return (
+				<div className="flex h-full min-h-0 flex-col overflow-hidden">
+					{hostChrome}
+					<DrawCanvas document={drawDoc} onCommit={(document) => dispatchDraw(document)} className="min-h-0 flex-1" />
+				</div>
+			);
+		case "writer":
+			return (
+				<div className="flex h-full min-h-0 flex-col overflow-hidden">
+					{hostChrome}
+					<WriterCanvas
+						document={writerDoc}
+						onChange={(document) => {
+							if (!store) return;
+							store.dispatch({
+								kind: "patchAppSource",
+								instanceId: instance.id,
+								inline: JSON.stringify(document),
+							});
+						}}
+						createLspTransport={() => ({ dispose() {} } as never)}
+						className="min-h-0 flex-1"
+					/>
+				</div>
+			);
+		case "raster":
+			return (
+				<div className="flex h-full min-h-0 flex-col overflow-hidden">
+					{hostChrome}
+					<RasterCanvas
+						document={rasterDoc}
+						selectedIds={[]}
+						hoveredId={null}
+						kindHover={null}
+						activeTool={rasterDoc.activeTool}
+						camera={rasterDoc.camera}
+						onSelect={() => {}}
+						onHover={() => {}}
+						onCameraChange={(camera) => dispatchRaster({ ...rasterDoc, camera })}
+						className="min-h-0 flex-1"
+						viewMode="composite"
+					/>
+				</div>
+			);
+		case "forms":
+			return (
+				<div className="flex h-full min-h-0 flex-col overflow-hidden">
+					{hostChrome}
+					<FormEditSurface spec={formsSpec} onChange={(spec) => dispatchForms(spec)} className="min-h-0 flex-1 overflow-auto p-4" />
+				</div>
+			);
+		case "cad":
+			return (
+				<div className="relative h-full min-h-0 overflow-hidden">
+					{hostChrome}
+					<reactHostPort.Suspense fallback={<div className="p-6 text-sm text-muted-foreground">Loading CAD…</div>}>
+						<SemiosCadPlayRoot />
+					</reactHostPort.Suspense>
+				</div>
+			);
+		case "flow":
+			return <FlowCanvas fixtureJson={fixtureJson} className="h-full min-h-0" />;
+		case "dag":
+			return <DagCanvas fixtureJson={fixtureJson} className="h-full min-h-0" reorganize />;
+		case "trinity":
+			return <TrinityCanvas fixtureJson={fixtureJson} className="h-full min-h-0" reorganize />;
+		case "gismap":
+			return (
+				<div className="relative h-full min-h-0">
+					<MapCanvas className="h-full" />
+				</div>
+			);
+		case "puzzle2d":
+			return (
+				<div className="relative h-full min-h-0">
+					<Puzzle2dCanvas className="h-full" />
+				</div>
+			);
+		case "puzzle3d":
+			return (
+				<div className="relative h-full min-h-0">
+					{hostChrome}
+					<SemiosPuzzle3dHost fixtureJson={fixtureJson} />
+				</div>
+			);
+		case "puzzle5d":
+			return (
+				<div className="relative h-full min-h-0">
+					{hostChrome}
+					<SemiosPuzzle3dHost fixtureJson={fixtureJson} />
+				</div>
+			);
+		case "shooting":
+			return (
+				<div className="relative h-full min-h-0">
+					<ShootingModelCanvas fixture={JSON.parse(fixtureJson) as never} className="h-full" />
+				</div>
+			);
+		case "forms":
+		case "raster":
+		case "panel":
+			if (materialized && typeof materialized === "object" && (materialized as PresentationDeckV1).schema === "presentation.deck/v1") {
+				return (
+					<div className="flex h-full min-h-0 flex-col overflow-hidden">
+						{hostChrome}
+						<SemiosPresentationDeckHost deck={materialized as PresentationDeckV1} />
+					</div>
+				);
+			}
+			return (
+				<div className="h-full overflow-auto p-4 text-xs text-muted-foreground">
+					<div className="mb-2 font-medium text-foreground">
+						{resource.name} ({resource.componentKind})
+					</div>
+					<pre className="whitespace-pre-wrap">{fixtureJson}</pre>
+				</div>
+			);
+		case "virtualFileSystem":
+		case "semios":
+			return (
+				<div className="h-full overflow-auto p-4 text-xs text-muted-foreground">
+					<div className="mb-2 font-medium text-foreground">
+						{resource.name} ({resource.componentKind})
+					</div>
+					<pre className="whitespace-pre-wrap">{fixtureJson}</pre>
+				</div>
+			);
+		default:
+			return (
+				<div className="flex h-full items-center justify-center p-6 text-sm text-muted-foreground">
+					{resource.name} ({resource.componentKind})
+				</div>
+			);
+	}
+}
+
+function SemiosAppHostSurfaceHost({ node: _node }: { readonly node: UiSemiosHostSurfaceNode }): ReactElement {
+	const ctrl = useSemiosPlayController();
+	const generation = ctrl?.getStore().getGeneration() ?? 0;
+	void generation;
+	const instance = ctrl?.getActiveInstance() ?? null;
+	return (
+		<SemiosAppHostSurface instance={instance}>
+			<SemiosAppHostRouter instance={instance} />
+		</SemiosAppHostSurface>
+	);
+}
+
+function SemiosSemiosSurfaceHost({ node }: { readonly node: UiSemiosHostSurfaceNode }): ReactElement {
+	if (node.view === "mediaGraph") return <SemiosMediaGraphSurfaceHost node={node} />;
+	if (node.view === "appHost") return <SemiosAppHostSurfaceHost node={node} />;
+	if (node.view === "launcher") return <SemiosLauncherSurfaceHost node={node} />;
+	if (node.view === "history") return <SemiosHistorySurfaceHost node={node} />;
+	return <SemiosMediaGraphSurfaceHost node={node} />;
+}
+
+function SemiosPlayInner({ playground }: { readonly playground: Playground }): ReactElement {
+	const ctrl = useSemiosPlayController(playground.runtime);
+	if (!ctrl) return <PlaygroundView runtime={playground.runtime} defaultAppId={SEMIOS_PLAY_APP_ID} />;
+	return (
+		<SemiosStudioProvider store={ctrl.getStore()}>
+			<PlaygroundView runtime={playground.runtime} defaultAppId={SEMIOS_PLAY_APP_ID} />
+		</SemiosStudioProvider>
+	);
+}
+
+export function registerSemiosPlaySurfaceHosts(): void {
+	if (semiosPlayChromeRegistered) return;
+	semiosPlayChromeRegistered = true;
+	registerUiSemiosSurfaceHost(SEMIOS_PLAY_SURFACE_MEDIA_GRAPH, SemiosSemiosSurfaceHost);
+	registerUiSemiosSurfaceHost(SEMIOS_PLAY_SURFACE_APP_HOST, SemiosSemiosSurfaceHost);
+	registerUiSemiosSurfaceHost(SEMIOS_PLAY_SURFACE_LAUNCHER, SemiosSemiosSurfaceHost);
+	registerUiSemiosSurfaceHost(SEMIOS_PLAY_SURFACE_HISTORY, SemiosSemiosSurfaceHost);
+	registerSemiosPlayDeclarativeBodies();
+	registerDrawPlaySurfaceHosts();
+	registerWriterPlaySurfaceHosts();
+	registerRasterPlaySurfaceHosts();
+	registerFlowPlaySurfaceHosts();
+	registerDagPlaySurfaceHosts();
+	registerMapPlaySurfaceHosts();
+	registerPuzzle2dPlaySurfaceHosts();
+	registerPuzzle3dPlaySurfaceHosts();
+	registerPuzzle5dPlaySurfaceHosts();
+	registerTrinityJackPlaySurfaceHosts();
+	registerTrinityRewritePlaySurfaceHosts();
+	registerProceduralPlaySurfaceHosts();
+	registerProcedural2dPlaySurfaceHosts();
+	registerShootingPlaySurfaceHosts();
+	registerFormsPlaySurfaceHosts();
+	registerPresentationPlaySurfaceHosts();
+	void import("@semio-tech/cad-js-renderer/play").then((module) => module.registerCadPlaySurfaceHosts());
+}
+
+function SemiosPlayChrome({ playground }: { readonly playground: Playground }): ReactElement {
+	return <SemiosPlayInner playground={playground} />;
+}
+
+export function mountSemiosPlayChrome(playground: Playground, rootId = "root"): void {
+	mountPlaygroundApp(<SemiosPlayChrome playground={playground} />, rootId);
+}
+
+const semiosPlayChromeBoot: PlaygroundChromeBoot = {
+	registerHosts: registerSemiosPlaySurfaceHosts,
+	mount: mountSemiosPlayChrome,
+};
+
+export function bootSemiosPlay(playground: Playground, rootId = "root"): void {
+	bootPlayground(playground, semiosPlayChromeBoot, rootId);
+}
+//#endregion 🔖SemiosPlayHost
 
 //#region 🔖Boot
 
