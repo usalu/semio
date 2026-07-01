@@ -261,6 +261,10 @@ export class DevScript extends Script {
       runCmd("bun", ["nx", "run", "@semio-tech/sequence-play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
       return;
     }
+    if (segments[0] === "lowpoly") {
+      runCmd("bun", ["nx", "run", "@semio-tech/lowpoly-play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
+      return;
+    }
     if (segments[0] === "trinity") {
       if (segments[1] === "jack") {
         runCmd("bun", ["nx", "run", "@semio-tech/trinity-jack-play:dev", ...segments.slice(2)], { cwd: this.root, env: devToolingEnv() });

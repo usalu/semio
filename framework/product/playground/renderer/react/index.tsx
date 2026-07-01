@@ -7192,6 +7192,7 @@ function SequencePlayPaneSurfaceHost({ node }: { readonly node: import("@semio-t
       fixtureJson={ctrl?.getFixtureJson() ?? SEQUENCE_PLAY_DEFAULT_FIXTURE_JSON}
       reorganize={ctrl?.getReorganize()}
       runRequest={ctrl?.getRunRequest()}
+      runStopRequest={ctrl?.getRunStopRequest()}
       selectedStepIds={ctrl?.getSelectedStepIds() ?? []}
       fixtureDragDrop
       onFixtureChange={onFixtureChange}
@@ -7319,6 +7320,251 @@ export function bootSequencePlay(playground: Playground, rootId = "root"): void 
   bootPlayground(playground, sequencePlayChromeBoot, rootId);
 }
 //#endregion 🔖SequencePlayHost
+
+//#region 🔖LowpolyPlayHost
+import {
+  LOWPOLY_PLAY_APP_ID,
+  LOWPOLY_PLAY_CATALOGUE_TAB_ID,
+  LOWPOLY_PLAY_DEFAULT_FIXTURE_JSON,
+  LOWPOLY_PLAY_HIERARCHY_TAB_ID,
+  LOWPOLY_PLAY_INSPECTION_TAB_ID,
+  LOWPOLY_PLAY_SURFACE_ID,
+  LOWPOLY_PLAY_WINDOW_KIND_ID,
+  LowpolyPlayController,
+  buildLowpolyPlayCatalogueTree,
+  buildLowpolyPlayHierarchyTree,
+  buildLowpolyPlayInspectorTree,
+  registerLowpolyPlayDeclarativeBodies,
+} from "@semio-tech/lowpoly-play";
+import {
+  LowpolyCanvas,
+  createLowpolySession,
+  tessellationFromWasm,
+  type LowpolySessionWasm,
+} from "@semio-tech/lowpoly-react";
+import type { LowpolyTessellation } from "@semio-tech/lowpoly-core";
+
+let lowpolyPlayChromeRegistered = false;
+const lowpolyPlayControllerRef: { current: LowpolyPlayController | null } = { current: null };
+
+function useLowpolyPlayController(runtimeOverride?: Platform): LowpolyPlayController | undefined {
+  const appCtx = reactHostPort.useContext(PlaygroundContext);
+  const runtime = runtimeOverride ?? appCtx?.runtime;
+  reactHostPort.useSyncExternalStore(
+    (listener) => (runtime ? runtime.subscribeChrome(listener) : () => {}),
+    () => runtime?.chromeGeneration ?? 0,
+    () => 0,
+  );
+  const ctrl = runtime?.getActiveApp()?.controller as LowpolyPlayController | undefined;
+  lowpolyPlayControllerRef.current = ctrl ?? null;
+  return ctrl;
+}
+
+function useLowpolyPlayInteractionRevision(runtime: Platform): number {
+  return reactHostPort.useSyncExternalStore(
+    (listener) => {
+      const ctrl = runtime.getActiveApp()?.controller as LowpolyPlayController | undefined;
+      lowpolyPlayControllerRef.current = ctrl ?? null;
+      const unsubscribeRuntime = runtime.subscribe(listener);
+      const unsubscribeSnapshot = ctrl?.subscribeSnapshot(listener);
+      return () => {
+        unsubscribeRuntime();
+        unsubscribeSnapshot?.();
+      };
+    },
+    () => (runtime.getActiveApp()?.controller as LowpolyPlayController | undefined)?.getInteractionRevision() ?? 0,
+    () => 0,
+  );
+}
+
+function LowpolyPlaySurfaceHost({ node: _node }: { readonly node: UiPuzzle3dHostSurfaceNode }): ReactElement {
+  const ctrl = useLowpolyPlayController();
+  const [session, setSession] = reactHostPort.useState<LowpolySessionWasm | null>(null);
+  const [tessellation, setTessellation] = reactHostPort.useState<LowpolyTessellation | null>(null);
+  const meshEpoch = ctrl?.getMeshCommandEpoch() ?? 0;
+  const toolParams = ctrl?.getToolParams() ?? {};
+
+  reactHostPort.useEffect(() => {
+    let cancelled = false;
+    void createLowpolySession().then((s) => {
+      if (cancelled) return;
+      const json = ctrl?.getFixtureJson() ?? LOWPOLY_PLAY_DEFAULT_FIXTURE_JSON;
+      if (!json.includes('"obj-')) {
+        s.loadFixtureJson(s.fixtureJson());
+        ctrl?.run("setFixtureJson", { json: s.fixtureJson() });
+      } else {
+        s.loadFixtureJson(json);
+      }
+      setSession(s);
+      setTessellation(tessellationFromWasm(s.tessellateActive()));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  reactHostPort.useEffect(() => {
+    if (!session || !ctrl) return;
+    session.loadFixtureJson(ctrl.getFixtureJson());
+    session.setSelection(ctrl.getSelectionMode(), [...ctrl.getSelectedIds()]);
+    const lastCommand = meshEpoch;
+    void lastCommand;
+    setTessellation(tessellationFromWasm(session.tessellateActive()));
+  }, [session, ctrl, meshEpoch, ctrl?.getFixtureJson(), ctrl?.getSelectionMode(), ctrl?.getSelectedIds()]);
+
+  reactHostPort.useEffect(() => {
+    if (!session || !ctrl || meshEpoch === 0) return;
+    const pending = ctrl.getPendingMeshCommand();
+    if (!pending) return;
+    try {
+      if (pending.startsWith("addPrimitive:")) {
+        const kind = pending.slice("addPrimitive:".length);
+        session.addPrimitive(kind);
+      } else if (pending === "extrude") session.extrudeFaces(toolParams.extrudeDistance ?? 0.25);
+      else if (pending === "inset") session.insetFaces(toolParams.insetAmount ?? 0.1);
+      else if (pending === "bevel") session.bevelEdges(toolParams.bevelAmount ?? 0.05, toolParams.bevelSegments ?? 1);
+      else if (pending === "loopCut") session.loopCut(toolParams.loopCuts ?? 1);
+      else if (pending === "merge") session.mergeVertices();
+      else if (pending === "dissolve") session.dissolveEdges();
+      else if (pending === "subdivide") session.subdivideFaces();
+      else if (pending === "triangulate") session.triangulate();
+      else if (pending === "mirror") session.mirror("x", 0.001);
+      else if (pending === "decimate") session.decimate(toolParams.decimateRatio ?? 0.5);
+      else if (pending === "snap") session.snapToGrid(toolParams.snapGrid ?? 0.25);
+      else if (pending === "toggleSmooth") session.setSmoothShading(!ctrl.getSmoothShading());
+      ctrl.run("setFixtureJson", { json: session.fixtureJson() });
+      setTessellation(tessellationFromWasm(session.tessellateActive()));
+    } catch {
+      /* mesh command may fail on empty selection */
+    } finally {
+      ctrl.clearPendingMeshCommand();
+    }
+  }, [meshEpoch, session, ctrl, toolParams]);
+
+  const onFixtureChange = reactHostPort.useCallback(
+    (json: string) => {
+      ctrl?.run("setFixtureJson", { json });
+    },
+    [ctrl],
+  );
+  const onSelectionChange = reactHostPort.useCallback(
+    (mode: import("@semio-tech/lowpoly-core").LowpolySelectionModeV1, ids: readonly number[]) => {
+      ctrl?.run("setSelection", { mode, ids: [...ids] });
+    },
+    [ctrl],
+  );
+  const onTessellationChange = reactHostPort.useCallback((tess: LowpolyTessellation) => {
+    setTessellation(tess);
+  }, []);
+
+  return (
+    <LowpolyCanvas
+      fixtureJson={ctrl?.getFixtureJson() ?? LOWPOLY_PLAY_DEFAULT_FIXTURE_JSON}
+      selectionMode={ctrl?.getSelectionMode() ?? "object"}
+      selectedIds={ctrl?.getSelectedIds() ?? []}
+      transformTool={ctrl?.getTransformTool() ?? "move"}
+      session={session}
+      tessellation={tessellation}
+      onFixtureChange={onFixtureChange}
+      onSelectionChange={onSelectionChange}
+      onTessellationChange={onTessellationChange}
+      className="h-full min-h-0"
+    />
+  );
+}
+
+export function registerLowpolyPlaySurfaceHosts(): void {
+  if (lowpolyPlayChromeRegistered) return;
+  lowpolyPlayChromeRegistered = true;
+  registerUiPuzzle3dSurfaceHost(LOWPOLY_PLAY_SURFACE_ID, LowpolyPlaySurfaceHost);
+  registerLowpolyPlayDeclarativeBodies();
+}
+
+class LowpolyPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
+  buildTab(): SidePanelTabConfig {
+    return {
+      id: LOWPOLY_PLAY_HIERARCHY_TAB_ID,
+      icon: shellTabIconComponent(FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, "workbench"),
+      name: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+      order: 0,
+      tree: new CallbackTreePanelDefinition(() => {
+        const ctrl = lowpolyPlayControllerRef.current;
+        const bus = new CommandBus();
+        const fixture = ctrl?.getFixtureJson() ?? LOWPOLY_PLAY_DEFAULT_FIXTURE_JSON;
+        const selected = ctrl?.getSelectedIds()[0] ?? null;
+        const treeNode = buildLowpolyPlayHierarchyTree(fixture, selected);
+        return uiTreeNodeToTreePanelConfig(treeNode, bus);
+      }),
+    };
+  }
+}
+
+class LowpolyPlayCataloguePanelDefinition extends PureSidePanelTabDefinition {
+  buildTab(): SidePanelTabConfig {
+    return {
+      id: LOWPOLY_PLAY_CATALOGUE_TAB_ID,
+      icon: shellTabIconComponent(FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, "workbench"),
+      name: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+      order: 1,
+      tree: new CallbackTreePanelDefinition(() => {
+        const bus = new CommandBus();
+        const treeNode = buildLowpolyPlayCatalogueTree();
+        return uiTreeNodeToTreePanelConfig(treeNode, bus);
+      }),
+    };
+  }
+}
+
+class LowpolyPlayInspectionPanelDefinition extends PureSidePanelTabDefinition {
+  buildTab(): SidePanelTabConfig {
+    return {
+      id: LOWPOLY_PLAY_INSPECTION_TAB_ID,
+      icon: shellTabIconComponent(FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, "details"),
+      name: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+      order: 0,
+      tree: new CallbackTreePanelDefinition(() => {
+        const ctrl = lowpolyPlayControllerRef.current;
+        const bus = new CommandBus();
+        const treeNode = buildLowpolyPlayInspectorTree(ctrl?.getFixtureJson() ?? LOWPOLY_PLAY_DEFAULT_FIXTURE_JSON, { ...(ctrl?.getToolParams() ?? {}) });
+        return uiTreeNodeToTreePanelConfig(treeNode, bus);
+      }),
+    };
+  }
+}
+
+function LowpolyPlayInner({ runtime }: { readonly runtime: Platform }): ReactElement {
+  useLowpolyPlayController(runtime);
+  const interactionRevision = useLowpolyPlayInteractionRevision(runtime);
+  const hierarchyPanel = reactHostPort.useMemo(() => new LowpolyPlayHierarchyPanelDefinition(), []);
+  const cataloguePanel = reactHostPort.useMemo(() => new LowpolyPlayCataloguePanelDefinition(), []);
+  const inspectionPanel = reactHostPort.useMemo(() => new LowpolyPlayInspectionPanelDefinition(), []);
+  const augmentPanelTabs = reactHostPort.useMemo(
+    () => ({
+      workbench: [hierarchyPanel, cataloguePanel],
+      details: [inspectionPanel],
+    }),
+    [interactionRevision, cataloguePanel, hierarchyPanel, inspectionPanel],
+  );
+  return <PlaygroundView runtime={runtime} defaultAppId={LOWPOLY_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} />;
+}
+
+function LowpolyPlayChrome({ runtime }: { readonly runtime: Platform }): ReactElement {
+  return <LowpolyPlayInner runtime={runtime} />;
+}
+
+export function mountLowpolyPlayChrome(playground: Playground, rootId = "root"): void {
+  mountPlaygroundApp(<LowpolyPlayChrome runtime={playground.runtime} />, rootId);
+}
+
+const lowpolyPlayChromeBoot: PlaygroundChromeBoot = {
+  registerHosts: registerLowpolyPlaySurfaceHosts,
+  mount: mountLowpolyPlayChrome,
+};
+
+export function bootLowpolyPlay(playground: Playground, rootId = "root"): void {
+  bootPlayground(playground, lowpolyPlayChromeBoot, rootId);
+}
+//#endregion 🔖LowpolyPlayHost
 
 //#region 🔖TrinityPlayHost
 import {

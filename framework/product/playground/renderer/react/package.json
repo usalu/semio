@@ -27,6 +27,7 @@
     "./dag": "./index.tsx",
     "./imperative": "./index.tsx",
     "./sequence": "./index.tsx",
+    "./lowpoly": "./index.tsx",
     "./trinity-jack": "./index.tsx",
     "./trinity-rewrite": "./index.tsx",
     "./presentation": "./index.tsx"
@@ -54,6 +55,8 @@
     "@semio-tech/imperative-react": "workspace:*",
     "@semio-tech/sequence-play": "workspace:*",
     "@semio-tech/sequence-react": "workspace:*",
+    "@semio-tech/lowpoly-play": "workspace:*",
+    "@semio-tech/lowpoly-react": "workspace:*",
     "@semio-tech/procedural-3d-play": "workspace:*",
     "@semio-tech/procedural-3d-react": "workspace:*",
     "@semio-tech/procedural-2d-play": "workspace:*",

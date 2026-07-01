@@ -744,9 +744,13 @@ export async function semiosSketchpadProgramFromCompose() {
 if (typeof document !== "undefined" && document.getElementById("root") != null && !import.meta.vitest && import.meta.env.PUZZLE_PLAY_ENTRY === "semios") {
 	bootstrapElementsSurfaceChromeDocument("system");
 	void (async () => {
-		await import("./globals.css");
-		const { bootSemiosPlay } = await import("@semio-tech/framework-playground-renderer-react/semios");
-		bootSemiosPlay(new PlaygroundSemios());
+		try {
+			await import("./globals.css");
+			const { bootSemiosPlay } = await import("@semio-tech/framework-playground-renderer-react/semios");
+			bootSemiosPlay(new PlaygroundSemios());
+		} catch (error) {
+			console.error("[DEBUG] Semios play boot failed:", error);
+		}
 	})();
 }
 

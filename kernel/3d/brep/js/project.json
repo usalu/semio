@@ -1,12 +1,12 @@
 {
   "name": "@semio-tech/kernel-3d-js",
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "test": {
       "executor": "nx:run-commands",
       "dependsOn": [],
       "options": {
-        "cwd": "kernel/3d/js",
+        "cwd": "kernel/3d/brep/js",
         "command": "bun ./script.ts test",
         "forwardAllArgs": true
       }

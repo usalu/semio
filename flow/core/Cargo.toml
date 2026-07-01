@@ -22,7 +22,7 @@ flow_module_list = { path = "../module/list", default-features = false }
 flow_module_logic = { path = "../module/logic", default-features = false }
 flow_module_math = { path = "../module/math", default-features = false }
 flow_module_text = { path = "../module/text", default-features = false }
-kernel_3d_engine = { path = "../../kernel/3d/engine", features = ["parallel"] }
+kernel_3d_engine = { path = "../../kernel/3d/brep/engine", features = ["parallel"] }
 neural_engine = { path = "../../neural/engine", features = ["parallel"] }
 mathematical_graph_port_directed_dag = { path = "../../mathematical/graph/port/directed/dag" }
 infinite_cavas = { path = "../../infinite/cavas/rs" }

@@ -967,6 +967,8 @@ export class StudioStore {
 	private redoChangeIds: string[] = [];
 	private listeners = new Set<() => void>();
 	private generation = 0;
+	private projectionSnapshot: SemiosStudioProjection | undefined;
+	private projectionSnapshotGeneration = -1;
 	private onAfterMutation?: () => void;
 
 	constructor(document: SemiosStudioDocumentV1, options?: { readonly onAfterMutation?: () => void }) {
@@ -992,7 +994,12 @@ export class StudioStore {
 	}
 
 	projection(): SemiosStudioProjection {
-		return materializeStudioProjection(this.document, this.appliedChangeIds);
+		if (this.projectionSnapshotGeneration === this.generation && this.projectionSnapshot) {
+			return this.projectionSnapshot;
+		}
+		this.projectionSnapshot = materializeStudioProjection(this.document, this.appliedChangeIds);
+		this.projectionSnapshotGeneration = this.generation;
+		return this.projectionSnapshot;
 	}
 
 	mediaGraphSnapshot(): SemiosMediaGraphV1 {

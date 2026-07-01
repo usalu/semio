@@ -1,9 +1,10 @@
 /** @emoji ⚙️ `@semio-tech/imperative-react` — step list editor components. */
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import initImperativeWasm, { ImperativeSession, initSync } from "../core/pkg/imperative_core.js";
 import {
 	DEFAULT_IMPERATIVE_DOCUMENT,
 	DEFAULT_IMPERATIVE_CATALOGUE,
+	CONTROL_MODULE_CATALOGUE_SECTION,
 	imperativeDocumentToJson,
 	parseImperativeDocumentJson,
 	performImperativeEffects,
@@ -11,9 +12,11 @@ import {
 	type ImperativeCatalogueItem,
 	type ImperativeCatalogueSection,
 	type ImperativeDocumentV1,
+	type ImperativePathRefV1,
 	type ImperativeStepV1,
 	type RunResult,
 } from "@semio-tech/imperative-core";
+import { ImperativeRunClient } from "@semio-tech/imperative-core";
 
 // #region 🔖WasmBridge
 if (import.meta.env.VITEST) {
@@ -33,7 +36,7 @@ export async function ensureImperativeWasmLoaded(): Promise<void> {
 export { ImperativeSession };
 // #endregion 🔖WasmBridge
 
-export type { EffectLogEntry, ImperativeCatalogueItem, ImperativeCatalogueSection, ImperativeDocumentV1, ImperativeStepV1, RunResult };
+export type { EffectLogEntry, ImperativeCatalogueItem, ImperativeCatalogueSection, ImperativeDocumentV1, ImperativePathRefV1, ImperativeStepV1, RunResult };
 
 export interface ImperativeEditorProps {
 	readonly documentJson?: string;
@@ -59,9 +62,127 @@ function parseRunResult(raw: string): RunResult | null {
 	}
 }
 
+function isControlKind(kind: string): boolean {
+	return kind.startsWith("control.");
+}
+
+function controlSlots(kind: string): readonly string[] {
+	if (kind === "control.if") return ["then", "else"];
+	if (kind === "control.while" || kind === "control.repeat") return ["body"];
+	return [];
+}
+
+function pathRefKey(pathRef: ImperativePathRefV1): string {
+	return pathRef.owner && pathRef.slot ? `${pathRef.owner}/${pathRef.slot}` : "root";
+}
+
+function pathRefJson(pathRef: ImperativePathRefV1): string {
+	return JSON.stringify(pathRef);
+}
+
+export interface StepListEditorProps {
+	readonly session: ImperativeSession;
+	readonly document: ImperativeDocumentV1;
+	readonly catalogue: readonly ImperativeCatalogueSection[];
+	readonly pathRef: ImperativePathRefV1;
+	readonly depth: number;
+	readonly selectedStepId: string | null;
+	readonly onSelect: (stepId: string) => void;
+	readonly onSync: () => void;
+}
+
+/** @emoji 📝 Recursive imperative step list editor. */
+export function StepListEditor({
+	session,
+	document,
+	catalogue,
+	pathRef,
+	depth,
+	selectedStepId,
+	onSelect,
+	onSync,
+}: StepListEditorProps): React.JSX.Element {
+	const steps = useMemo(() => {
+		if (!pathRef.owner || !pathRef.slot) return document.path.steps;
+		const owner = document.path.steps.find((step) => step.id === pathRef.owner);
+		return owner?.bodies?.[pathRef.slot]?.steps ?? [];
+	}, [document, pathRef]);
+
+	const addStep = (kind: string) => {
+		if (pathRef.owner && pathRef.slot) {
+			session.addStepAt(pathRefJson(pathRef), kind, undefined);
+		} else {
+			session.addStep(kind, undefined);
+		}
+		onSync();
+		onSelect(session.pathJson().includes(kind) ? selectedStepId ?? "" : selectedStepId ?? "");
+	};
+
+	const moveStep = (id: string, direction: -1 | 1) => {
+		const index = steps.findIndex((step) => step.id === id);
+		if (index < 0) return;
+		const target = index + direction;
+		if (target < 0 || target >= steps.length) return;
+		if (pathRef.owner && pathRef.slot) {
+			session.moveStepAt(pathRefJson(pathRef), id, target);
+		} else {
+			session.moveStep(id, target);
+		}
+		onSync();
+	};
+
+	return (
+		<ul className="min-h-0 flex-1 overflow-auto p-2 text-sm" style={{ paddingLeft: `${depth * 12 + 8}px` }}>
+			{pathRef.owner && pathRef.slot ? (
+				<li className="mb-2 text-xs font-medium text-[var(--muted-foreground)]">{pathRef.slot}</li>
+			) : null}
+			{steps.map((step, index) => (
+				<li key={step.id} className="mb-2">
+					<div className={`flex items-center gap-1 rounded border px-2 py-1 ${selectedStepId === step.id ? "bg-[var(--accent)]/10" : ""}`}>
+						<button type="button" className="flex-1 text-left" onClick={() => onSelect(step.id)}>
+							{index + 1}. {step.kind}
+						</button>
+						<button type="button" className="text-xs" onClick={() => moveStep(step.id, -1)} aria-label="Move up">
+							↑
+						</button>
+						<button type="button" className="text-xs" onClick={() => moveStep(step.id, 1)} aria-label="Move down">
+							↓
+						</button>
+					</div>
+					{isControlKind(step.kind)
+						? controlSlots(step.kind).map((slotName) => (
+								<StepListEditor
+									key={`${step.id}-${slotName}`}
+									session={session}
+									document={document}
+									catalogue={catalogue}
+									pathRef={{ owner: step.id, slot: slotName }}
+									depth={depth + 1}
+									selectedStepId={selectedStepId}
+									onSelect={onSelect}
+									onSync={onSync}
+								/>
+							))
+						: null}
+				</li>
+			))}
+			<li className="mt-2 flex flex-wrap gap-1">
+				{catalogue.flatMap((section) =>
+					section.items.slice(0, 2).map((item) => (
+						<button key={`${pathRefKey(pathRef)}-${item.kind}`} type="button" className="rounded border px-2 py-0.5 text-xs" onClick={() => addStep(item.kind)}>
+							+ {item.abbreviation}
+						</button>
+					)),
+				)}
+			</li>
+		</ul>
+	);
+}
+
 /** @emoji 📝 Ordered step-list imperative editor. */
 export function ImperativeEditor({ documentJson, className, onDocumentChange, onRunResult }: ImperativeEditorProps): React.JSX.Element {
 	const session = useMemo(() => new ImperativeSession(), []);
+	const runClientRef = useRef<ImperativeRunClient | null>(null);
 	const [document, setDocument] = useState<ImperativeDocumentV1>(DEFAULT_IMPERATIVE_DOCUMENT);
 	const [catalogue, setCatalogue] = useState<readonly ImperativeCatalogueSection[]>([]);
 	const [selectedStepId, setSelectedStepId] = useState<string | null>(null);
@@ -79,6 +200,15 @@ export function ImperativeEditor({ documentJson, className, onDocumentChange, on
 	}, [onDocumentChange, session]);
 
 	useEffect(() => {
+		const client = new ImperativeRunClient();
+		runClientRef.current = client;
+		return () => {
+			client.terminate();
+			runClientRef.current = null;
+		};
+	}, []);
+
+	useEffect(() => {
 		const json = documentJson ?? imperativeDocumentToJson(DEFAULT_IMPERATIVE_DOCUMENT);
 		session.loadPathJson(json);
 		setCatalogue(parseCatalogue(session.catalogueJson()));
@@ -86,7 +216,21 @@ export function ImperativeEditor({ documentJson, className, onDocumentChange, on
 		setSelectedStepId(parseImperativeDocumentJson(json)?.path.steps[0]?.id ?? null);
 	}, [documentJson, session, syncFromSession]);
 
-	const selectedStep = document.path.steps.find((step) => step.id === selectedStepId) ?? null;
+	const selectedStep = useMemo(() => {
+		const findStep = (steps: readonly ImperativeStepV1[]): ImperativeStepV1 | null => {
+			for (const step of steps) {
+				if (step.id === selectedStepId) return step;
+				if (step.bodies) {
+					for (const body of Object.values(step.bodies)) {
+						const nested = findStep(body.steps);
+						if (nested) return nested;
+					}
+				}
+			}
+			return null;
+		};
+		return findStep(document.path.steps);
+	}, [document.path.steps, selectedStepId]);
 
 	const addStep = (kind: string) => {
 		const id = session.addStep(kind, undefined);
@@ -101,15 +245,6 @@ export function ImperativeEditor({ documentJson, className, onDocumentChange, on
 		setSelectedStepId(document.path.steps[0]?.id ?? null);
 	};
 
-	const moveStep = (id: string, direction: -1 | 1) => {
-		const index = document.path.steps.findIndex((step) => step.id === id);
-		if (index < 0) return;
-		const target = index + direction;
-		if (target < 0 || target >= document.path.steps.length) return;
-		session.moveStep(id, target);
-		syncFromSession();
-	};
-
 	const updateParam = (key: string, value: unknown) => {
 		if (!selectedStep) return;
 		const params = { ...selectedStep.params, [key]: value };
@@ -118,11 +253,11 @@ export function ImperativeEditor({ documentJson, className, onDocumentChange, on
 	};
 
 	const runPath = async () => {
+		const client = runClientRef.current;
+		if (!client) return;
 		setRunning(true);
 		try {
-			const raw = session.run();
-			const result = parseRunResult(raw);
-			if (!result) return;
+			const result = await client.runDocument(session.pathJson());
 			setEffectLog(result.effects);
 			setScope(result.scope);
 			onRunResult?.(result);
@@ -145,6 +280,12 @@ export function ImperativeEditor({ documentJson, className, onDocumentChange, on
 		}
 	};
 
+	const stopRun = () => {
+		runClientRef.current?.stop();
+		setRunning(false);
+		setEffectLog((prev) => [...prev, { stepId: "", kind: "control.stop", input: {}, error: "Stopped by user" }]);
+	};
+
 	return (
 		<div className={className ?? "flex h-full min-h-0 flex-col gap-3 p-3"}>
 			<header className="flex flex-wrap items-center gap-2">
@@ -159,29 +300,27 @@ export function ImperativeEditor({ documentJson, className, onDocumentChange, on
 				<button type="button" className="rounded border px-2 py-1 text-xs" disabled={running} onClick={() => void runPath()}>
 					{running ? "Running…" : "Run"}
 				</button>
+				<button type="button" className="rounded border px-2 py-1 text-xs" disabled={!running} onClick={stopRun}>
+					Stop
+				</button>
 			</header>
 			<div className="grid min-h-0 flex-1 grid-cols-[minmax(12rem,1fr)_minmax(12rem,1fr)] gap-3">
 				<section className="flex min-h-0 flex-col rounded border">
 					<div className="border-b px-2 py-1 text-xs font-medium">Steps</div>
-					<ul className="min-h-0 flex-1 overflow-auto p-2 text-sm">
-						{document.path.steps.map((step, index) => (
-							<li key={step.id} className={`mb-1 flex items-center gap-1 rounded border px-2 py-1 ${selectedStepId === step.id ? "bg-[var(--accent)]/10" : ""}`}>
-								<button type="button" className="flex-1 text-left" onClick={() => setSelectedStepId(step.id)}>
-									{index + 1}. {step.kind}
-								</button>
-								<button type="button" className="text-xs" onClick={() => moveStep(step.id, -1)} aria-label="Move up">
-									↑
-								</button>
-								<button type="button" className="text-xs" onClick={() => moveStep(step.id, 1)} aria-label="Move down">
-									↓
-								</button>
-							</li>
-						))}
-					</ul>
+					<StepListEditor
+						session={session}
+						document={document}
+						catalogue={catalogue.length ? catalogue : [...DEFAULT_IMPERATIVE_CATALOGUE.sections, CONTROL_MODULE_CATALOGUE_SECTION]}
+						pathRef={{}}
+						depth={0}
+						selectedStepId={selectedStepId}
+						onSelect={setSelectedStepId}
+						onSync={syncFromSession}
+					/>
 					{selectedStep ? (
 						<div className="border-t p-2 text-xs">
 							<div className="mb-2 font-medium">Params · {selectedStep.kind}</div>
-							<StepParamForm step={selectedStep} onChange={updateParam} onRemove={removeSelected} />
+							<StepParamForm step={selectedStep} catalogue={catalogue} onChange={updateParam} onRemove={removeSelected} />
 						</div>
 					) : null}
 				</section>
@@ -194,8 +333,8 @@ export function ImperativeEditor({ documentJson, className, onDocumentChange, on
 						<div className="border-b px-2 py-1 text-xs font-medium">Effect Log</div>
 						<ul className="overflow-auto p-2 text-xs">
 							{effectLog.length === 0 ? <li className="text-[var(--muted-foreground)]">Run to see effects</li> : null}
-							{effectLog.map((entry) => (
-								<li key={entry.stepId} className="mb-1 rounded border px-2 py-1">
+							{effectLog.map((entry, index) => (
+								<li key={`${entry.stepId}-${index}`} className="mb-1 rounded border px-2 py-1">
 									<strong>{entry.kind}</strong>
 									{entry.error ? <span className="text-red-500"> · {entry.error}</span> : null}
 								</li>
@@ -263,8 +402,8 @@ export function StepParamForm({ step, catalogue = DEFAULT_IMPERATIVE_CATALOGUE.s
 export function EffectLogPanel({ entries }: { readonly entries: readonly EffectLogEntry[] }): React.JSX.Element {
 	return (
 		<ul className="overflow-auto p-2 text-xs">
-			{entries.map((entry) => (
-				<li key={entry.stepId} className="mb-1 rounded border px-2 py-1">
+			{entries.map((entry, index) => (
+				<li key={`${entry.stepId}-${index}`} className="mb-1 rounded border px-2 py-1">
 					<strong>{entry.kind}</strong>
 					{entry.error ? <span className="text-red-500"> · {entry.error}</span> : null}
 				</li>
@@ -289,6 +428,11 @@ if (import.meta.vitest) {
 				DEFAULT_IMPERATIVE_CATALOGUE.sections,
 			);
 			expect(fields[0]?.type).toBe("number");
+		});
+	});
+	describe("controlSlots", () => {
+		it("returns then/else for control.if", () => {
+			expect(controlSlots("control.if")).toEqual(["then", "else"]);
 		});
 	});
 }

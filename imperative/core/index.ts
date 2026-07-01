@@ -6,10 +6,16 @@ export type ImperativeStepV1 = {
 	readonly id: string;
 	readonly kind: string;
 	readonly params: Record<string, unknown>;
+	readonly bodies?: Record<string, ImperativePathV1>;
 };
 
 export type ImperativePathV1 = {
 	readonly steps: readonly ImperativeStepV1[];
+};
+
+export type ImperativePathRefV1 = {
+	readonly owner?: string;
+	readonly slot?: string;
 };
 
 export type ImperativeDocumentV1 = {
@@ -144,7 +150,46 @@ export const TEXT_MODULE_CATALOGUE_SECTION: ImperativeCatalogueSection = {
 	],
 };
 
-export const IMPERATIVE_INSTALLED_MODULE_IDS = ["core", "text"] as const;
+export const MATH_MODULE_CATALOGUE_SECTION: ImperativeCatalogueSection = {
+	id: "math",
+	title: "Math",
+	items: [
+		{ kind: "math.add", name: "Add", abbreviation: "Add", icon: "emoji:🔢", summary: "Adds two numbers.", module: "math", inputs: [{ name: "a", code: "N" }, { name: "b", code: "N" }, { name: "into", code: "S" }] },
+		{ kind: "math.subtract", name: "Subtract", abbreviation: "Sub", icon: "emoji:🔢", summary: "Subtracts two numbers.", module: "math", inputs: [{ name: "a", code: "N" }, { name: "b", code: "N" }, { name: "into", code: "S" }] },
+		{ kind: "math.multiply", name: "Multiply", abbreviation: "Mul", icon: "emoji:🔢", summary: "Multiplies two numbers.", module: "math", inputs: [{ name: "a", code: "N" }, { name: "b", code: "N" }, { name: "into", code: "S" }] },
+		{ kind: "math.divide", name: "Divide", abbreviation: "Div", icon: "emoji:🔢", summary: "Divides two numbers.", module: "math", inputs: [{ name: "a", code: "N" }, { name: "b", code: "N" }, { name: "into", code: "S" }] },
+		{ kind: "math.modulo", name: "Modulo", abbreviation: "Mod", icon: "emoji:🔢", summary: "Remainder of division.", module: "math", inputs: [{ name: "a", code: "N" }, { name: "b", code: "N" }, { name: "into", code: "S" }] },
+		{ kind: "math.power", name: "Power", abbreviation: "Pow", icon: "emoji:🔢", summary: "Raises a to the power of b.", module: "math", inputs: [{ name: "a", code: "N" }, { name: "b", code: "N" }, { name: "into", code: "S" }] },
+		{ kind: "math.min", name: "Min", abbreviation: "Min", icon: "emoji:🔢", summary: "Minimum of two numbers.", module: "math", inputs: [{ name: "a", code: "N" }, { name: "b", code: "N" }, { name: "into", code: "S" }] },
+		{ kind: "math.max", name: "Max", abbreviation: "Max", icon: "emoji:🔢", summary: "Maximum of two numbers.", module: "math", inputs: [{ name: "a", code: "N" }, { name: "b", code: "N" }, { name: "into", code: "S" }] },
+		{ kind: "math.round", name: "Round", abbreviation: "Rnd", icon: "emoji:🔢", summary: "Rounds a number.", module: "math", inputs: [{ name: "value", code: "N" }, { name: "into", code: "S" }] },
+		{ kind: "math.floor", name: "Floor", abbreviation: "Flr", icon: "emoji:🔢", summary: "Floors a number.", module: "math", inputs: [{ name: "value", code: "N" }, { name: "into", code: "S" }] },
+		{ kind: "math.ceil", name: "Ceil", abbreviation: "Ceil", icon: "emoji:🔢", summary: "Ceils a number.", module: "math", inputs: [{ name: "value", code: "N" }, { name: "into", code: "S" }] },
+	],
+};
+
+export const LOGIC_MODULE_CATALOGUE_SECTION: ImperativeCatalogueSection = {
+	id: "logic",
+	title: "Logic",
+	items: [
+		{ kind: "logic.compare", name: "Compare", abbreviation: "Cmp", icon: "emoji:🧠", summary: "Compares two numeric scope keys.", module: "logic", inputs: [{ name: "left", code: "S" }, { name: "right", code: "S" }, { name: "operator", code: "S" }, { name: "into", code: "S" }] },
+		{ kind: "logic.and", name: "And", abbreviation: "And", icon: "emoji:🧠", summary: "Logical AND of two boolean keys.", module: "logic", inputs: [{ name: "left", code: "S" }, { name: "right", code: "S" }, { name: "into", code: "S" }] },
+		{ kind: "logic.or", name: "Or", abbreviation: "Or", icon: "emoji:🧠", summary: "Logical OR of two boolean keys.", module: "logic", inputs: [{ name: "left", code: "S" }, { name: "right", code: "S" }, { name: "into", code: "S" }] },
+		{ kind: "logic.not", name: "Not", abbreviation: "Not", icon: "emoji:🧠", summary: "Logical NOT of a boolean key.", module: "logic", inputs: [{ name: "source", code: "S" }, { name: "into", code: "S" }] },
+	],
+};
+
+export const CONTROL_MODULE_CATALOGUE_SECTION: ImperativeCatalogueSection = {
+	id: "control",
+	title: "Control",
+	items: [
+		{ kind: "control.if", name: "If", abbreviation: "If", icon: "emoji:🔀", summary: "Runs then or else body based on a boolean key.", module: "control", inputs: [{ name: "key", code: "S" }] },
+		{ kind: "control.while", name: "While", abbreviation: "Whl", icon: "emoji:🔁", summary: "Repeats body while a boolean key is true.", module: "control", inputs: [{ name: "key", code: "S" }] },
+		{ kind: "control.repeat", name: "Repeat", abbreviation: "Rpt", icon: "emoji:🔁", summary: "Repeats body a fixed number of times.", module: "control", inputs: [{ name: "count", code: "N" }] },
+	],
+};
+
+export const IMPERATIVE_INSTALLED_MODULE_IDS = ["core", "text", "math", "logic", "control"] as const;
 export type ImperativeModuleId = (typeof IMPERATIVE_INSTALLED_MODULE_IDS)[number];
 
 export type ImperativeExtensionEntry = {
@@ -170,7 +215,7 @@ export class ImperativeExtensionHost {
 	listEntries(): readonly ImperativeExtensionEntry[] {
 		return IMPERATIVE_INSTALLED_MODULE_IDS.map((id) => ({
 			id,
-			title: id === "core" ? "Actions" : "Text",
+			title: id === "core" ? "Actions" : id.charAt(0).toUpperCase() + id.slice(1),
 			active: true,
 		}));
 	}
@@ -178,7 +223,13 @@ export class ImperativeExtensionHost {
 	getCatalogue(): ImperativeCatalogueV1 {
 		return {
 			schema: "imperative.catalogue/v1",
-			sections: [...DEFAULT_IMPERATIVE_CATALOGUE.sections, TEXT_MODULE_CATALOGUE_SECTION],
+			sections: [
+				...DEFAULT_IMPERATIVE_CATALOGUE.sections,
+				TEXT_MODULE_CATALOGUE_SECTION,
+				MATH_MODULE_CATALOGUE_SECTION,
+				LOGIC_MODULE_CATALOGUE_SECTION,
+				CONTROL_MODULE_CATALOGUE_SECTION,
+			],
 		};
 	}
 
@@ -191,6 +242,8 @@ export class ImperativeExtensionHost {
 }
 
 export const imperativeExtensionHost = new ImperativeExtensionHost();
+
+export { ImperativeRunClient, createImperativeRunWorker } from "./worker-client.ts";
 
 export interface EffectSink {
 	readonly onLog?: (message: string) => void;
@@ -273,9 +326,9 @@ export function parseImperativeDocumentJson(json: string): ImperativeDocumentV1 
 	if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
 	describe("ImperativeExtensionHost", () => {
-		it("merges core and text catalogue sections", () => {
+		it("merges all installed catalogue sections", () => {
 			const sections = imperativeExtensionHost.getCatalogue().sections.map((section) => section.id);
-			expect(sections).toEqual(["actions", "text"]);
+			expect(sections).toEqual(["actions", "text", "math", "logic", "control"]);
 		});
 	});
 	describe("performImperativeEffects", () => {

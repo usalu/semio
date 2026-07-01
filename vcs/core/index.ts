@@ -157,22 +157,12 @@ export function buildHistoryColumns<TProjection, TOp>(
 		(a, b) => (checkpointOrder.get(b.id) ?? 0) - (checkpointOrder.get(a.id) ?? 0),
 	);
 	const checkpointIndex = new Map(checkpoints.map((cp, index) => [cp.id, index]));
-	const laneByAlternative = new Map<string, number>();
-	let nextLane = 0;
-	for (const alternative of envelope.vcs.alternatives) {
-		if (!laneByAlternative.has(alternative.id)) {
-			laneByAlternative.set(alternative.id, nextLane);
-			nextLane += 1;
-		}
-	}
+	const laneByCheckpointId = assignHistoryCheckpointLanes(envelope);
 	return checkpoints.map((checkpoint) => {
 		const alternativeIds = envelope.vcs.alternatives
 			.filter((alt) => alt.checkpointIds.includes(checkpoint.id))
 			.map((alt) => alt.id);
-		const lane =
-			alternativeIds.length > 0
-				? Math.min(...alternativeIds.map((id) => laneByAlternative.get(id) ?? 0))
-				: 0;
+		const lane = laneByCheckpointId.get(checkpoint.id) ?? 0;
 		const labels = [
 			...alternativeIds.map((id) => envelope.vcs.alternatives.find((alt) => alt.id === id)?.name ?? id),
 		];
@@ -188,6 +178,55 @@ export function buildHistoryColumns<TProjection, TOp>(
 			alternativeIds,
 		};
 	});
+}
+
+function assignHistoryCheckpointLanes<TProjection, TOp>(
+	envelope: DocumentVcsEnvelope<TProjection, TOp>,
+): Map<string, number> {
+	const checkpoints = envelope.vcs.checkpoints;
+	const laneByAlternative = new Map<string, number>();
+	let nextLane = 1;
+	for (const alternative of envelope.vcs.alternatives) {
+		laneByAlternative.set(alternative.id, nextLane);
+		nextLane += 1;
+	}
+	const childrenOf = new Map<string, Checkpoint[]>();
+	for (const checkpoint of checkpoints) {
+		if (!checkpoint.parentId) continue;
+		const siblings = childrenOf.get(checkpoint.parentId) ?? [];
+		siblings.push(checkpoint);
+		childrenOf.set(checkpoint.parentId, siblings);
+	}
+	const alternativesFor = (checkpointId: string) =>
+		envelope.vcs.alternatives.filter((alternative) => alternative.checkpointIds.includes(checkpointId));
+	const isMainOnly = (checkpointId: string) => alternativesFor(checkpointId).length === 0;
+	const hasMainOnlyDescendant = (checkpointId: string, seen = new Set<string>()): boolean => {
+		if (seen.has(checkpointId)) return false;
+		seen.add(checkpointId);
+		for (const child of childrenOf.get(checkpointId) ?? []) {
+			if (isMainOnly(child.id) || hasMainOnlyDescendant(child.id, seen)) return true;
+		}
+		return false;
+	};
+	const laneByCheckpointId = new Map<string, number>();
+	for (const checkpoint of checkpoints) {
+		if (!checkpoint.parentId) {
+			laneByCheckpointId.set(checkpoint.id, 0);
+			continue;
+		}
+		if (isMainOnly(checkpoint.id) || hasMainOnlyDescendant(checkpoint.id)) {
+			laneByCheckpointId.set(checkpoint.id, 0);
+			continue;
+		}
+		const alternatives = alternativesFor(checkpoint.id);
+		if (alternatives.length === 1) {
+			laneByCheckpointId.set(checkpoint.id, laneByAlternative.get(alternatives[0]!.id) ?? 0);
+			continue;
+		}
+		const lanes = alternatives.map((alternative) => laneByAlternative.get(alternative.id) ?? 0);
+		laneByCheckpointId.set(checkpoint.id, Math.min(...lanes));
+	}
+	return laneByCheckpointId;
 }
 
 export class DocumentVcsStore<TProjection, TOp> {
@@ -471,6 +510,27 @@ if (import.meta.vitest) {
 				parentCounts.set(checkpoint.parentId, (parentCounts.get(checkpoint.parentId) ?? 0) + 1);
 			}
 			expect(parentCounts.get(c1)).toBe(2);
+		});
+
+		it("assigns distinct swimlanes for branches", () => {
+			type P = { n: number };
+			type Op = { op: "setN"; n: number };
+			const store = new DocumentVcsStore<P, Op>({
+				envelope: createDocumentVcsEnvelope("test/v1", "t", { n: 0 }),
+				applyOp: (p, o) => ({ n: o.n }),
+				backwardsOp: (p) => [{ op: "setN", n: p.n }],
+				diffOp: (_p, o) => o,
+			});
+			store.dispatch({ kind: "apply", operations: [{ op: "setN", n: 1 }] });
+			store.dispatch({ kind: "commitCheckpoint", message: "main" });
+			const main = store.getEnvelope().vcs.checkpoints[0]!.id;
+			store.dispatch({ kind: "checkoutCheckpoint", checkpointId: main });
+			store.dispatch({ kind: "createAlternative", name: "feature" });
+			store.dispatch({ kind: "apply", operations: [{ op: "setN", n: 2 }] });
+			store.dispatch({ kind: "commitCheckpoint", message: "feature" });
+			const columns = store.historyColumns();
+			const lanes = new Set(columns.map((column) => column.lane));
+			expect(lanes.size).toBeGreaterThanOrEqual(2);
 		});
 	});
 }

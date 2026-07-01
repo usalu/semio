@@ -29,7 +29,14 @@ export function useStudioStore(): StudioStore {
 
 export function useStudioProjection(): ReturnType<StudioStore["projection"]> {
 	const store = useStudioStore();
-	return useSyncExternalStore(store.subscribe.bind(store), () => store.projection(), () => store.projection());
+	return useSyncExternalStore(
+		store.subscribe.bind(store),
+		() => {
+			void store.getGeneration();
+			return store.projection();
+		},
+		() => store.projection(),
+	);
 }
 
 export function useStudioGeneration(): number {

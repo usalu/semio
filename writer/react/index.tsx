@@ -47,13 +47,6 @@ export async function ensureWriterWasmLoaded(): Promise<void> {
 export { WriterSession };
 // #endregion 🔖Wasm
 
-function resolveWriterDeadLineCameraY(cameraY: number, container: HTMLElement | null, userScrolled: boolean): number {
-	if (userScrolled || cameraY > 0) return cameraY;
-	if (!container || !isWindowContentDeadLineHost(container)) return cameraY;
-	const deadLine = readWindowContentDeadLinePx(container);
-	return deadLine > 0 ? deadLine : cameraY;
-}
-
 export interface WriterCanvasProps {
 	readonly document: WriterDocumentV1;
 	readonly onChange?: (next: WriterDocumentV1) => void;
@@ -496,6 +489,16 @@ export function WriterCanvas({
 		containerRef.current?.focus({ preventScroll: true });
 	}, []);
 
+	const syncWriterDeadLine = useCallback((session: WriterSession) => {
+		const container = containerRef.current;
+		if (!container || !isWindowContentDeadLineHost(container)) {
+			session.setDeadLineY(0);
+			return;
+		}
+		session.setDeadLineY(readWindowContentDeadLinePx(container));
+		session.setChromeEdgelessScroll(userScrolledRef.current);
+	}, []);
+
 	const syncCaret = useCallback(() => {
 		scheduleFrame();
 		syncTextareaSelection();
@@ -607,7 +610,8 @@ export function WriterCanvas({
 				session.detachGpu();
 				return;
 			}
-			session.setCamera(0, resolveWriterDeadLineCameraY(documentRef.current.camera.y, container, userScrolledRef.current), 1);
+			session.setCamera(0, documentRef.current.camera.y, 1);
+			syncWriterDeadLine(session);
 			session.setText(documentRef.current.text);
 			syncEditorSpans(documentRef.current.text, documentRef.current.languageId, session);
 			resize();
@@ -626,12 +630,30 @@ export function WriterCanvas({
 			session.detachGpu();
 			sessionRef.current = null;
 		};
-	}, [focusEditor, renderFrame]);
+	}, [focusEditor, renderFrame, syncWriterDeadLine]);
+
+	reactHostPort.useLayoutEffect(() => {
+		const session = sessionRef.current;
+		const container = containerRef.current;
+		if (!session?.gpuReady() || !container) return;
+		const apply = () => syncWriterDeadLine(session);
+		apply();
+		const body = container.closest('[data-slot="window-body"]');
+		if (!body) return;
+		const ro = new ResizeObserver(apply);
+		ro.observe(body);
+		for (const slot of ["window-engagement-overlay", "window-measures-overlay"] as const) {
+			const overlay = body.querySelector(`[data-slot="${slot}"]`);
+			if (overlay) ro.observe(overlay);
+		}
+		return () => ro.disconnect();
+	}, [syncWriterDeadLine]);
 
 	useEffect(() => {
 		const session = sessionRef.current;
 		if (!session?.gpuReady()) return;
-		session.setCamera(0, resolveWriterDeadLineCameraY(document.camera.y, containerRef.current, userScrolledRef.current), 1);
+		session.setCamera(0, document.camera.y, 1);
+		syncWriterDeadLine(session);
 		if (document.text !== lastLocalTextRef.current) {
 			session.setText(document.text);
 			lastLocalTextRef.current = document.text;
@@ -640,7 +662,7 @@ export function WriterCanvas({
 		session.setSelectableSpansJson(JSON.stringify(selectableSpans));
 		session.setPlaceholdersJson(JSON.stringify(editorPlaceholders));
 		renderFrame();
-	}, [document.camera.y, document.text, editorPlaceholders, grammarTokens, selectableSpans, renderFrame]);
+	}, [document.camera.y, document.text, editorPlaceholders, grammarTokens, selectableSpans, renderFrame, syncWriterDeadLine]);
 
 	useEffect(() => {
 		const session = sessionRef.current;
@@ -1100,6 +1122,7 @@ export function WriterCanvas({
 			const session = sessionRef.current;
 			if (!session) return;
 			userScrolledRef.current = true;
+			session.setChromeEdgelessScroll(true);
 			session.wheelScrollScreen(event.deltaY);
 			const camera = JSON.parse(session.cameraJson()) as { x: number; y: number; zoom: number };
 			onChange?.({ ...documentRef.current, camera: { x: 0, y: camera.y, zoom: 1 } });

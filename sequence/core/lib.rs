@@ -15,7 +15,30 @@ use std::collections::{BTreeMap, HashMap};
 const FLOW_INPUT_PORT: &str = "prev";
 const FLOW_OUTPUT_PORT: &str = "next";
 
+fn is_control_kind(kind: &str) -> bool {
+    matches!(kind, "control.if" | "control.while" | "control.repeat")
+}
+
+fn control_slots(kind: &str) -> &'static [&'static str] {
+    match kind {
+        "control.if" => &["then", "else"],
+        "control.while" | "control.repeat" => &["body"],
+        _ => &[],
+    }
+}
+
+fn slot_key(slot: Option<&SlotRef>) -> Option<(String, String)> {
+    slot.map(|entry| (entry.owner.clone(), entry.name.clone()))
+}
+
 // #region 🔖Fixture
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SlotRef {
+    pub owner: String,
+    pub name: String,
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StepWidgetV1 {
@@ -27,6 +50,10 @@ pub struct StepWidgetV1 {
     pub x: f64,
     #[serde(default)]
     pub y: f64,
+    #[serde(default)]
+    pub slot: Option<SlotRef>,
+    #[serde(default)]
+    pub collapsed: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -65,6 +92,8 @@ pub fn default_fixture() -> SequenceFixtureV1 {
                     .insert("value", Value::Atom(Atom::Decimal(0.0))),
                 x: 0.0,
                 y: 0.0,
+                slot: None,
+                collapsed: false,
             },
             StepWidgetV1 {
                 id: "step-2".into(),
@@ -72,6 +101,8 @@ pub fn default_fixture() -> SequenceFixtureV1 {
                 params: Dictionary::new().insert("message", Value::Atom(Atom::String("hello sequence".into()))),
                 x: 280.0,
                 y: 0.0,
+                slot: None,
+                collapsed: false,
             },
         ],
         edges: vec![SequenceEdgeV1 { id: "edge-1".into(), from: "step-1".into(), to: "step-2".into() }],
@@ -151,6 +182,10 @@ impl SequenceHost {
     }
 
     pub fn add_step(&mut self, kind: &str, x: f64, y: f64) -> String {
+        self.add_step_in_slot(kind, x, y, None)
+    }
+
+    pub fn add_step_in_slot(&mut self, kind: &str, x: f64, y: f64, slot: Option<SlotRef>) -> String {
         self.next_serial += 1;
         let id = format!("step-{}", self.next_serial);
         self.fixture.steps.push(StepWidgetV1 {
@@ -159,15 +194,41 @@ impl SequenceHost {
             params: Dictionary::new(),
             x,
             y,
+            slot,
+            collapsed: false,
         });
         self.rebuild_dag();
         id
     }
 
+    pub fn set_step_collapsed(&mut self, id: &str, collapsed: bool) -> bool {
+        let Some(step) = self.fixture.steps.iter_mut().find(|step| step.id == id) else {
+            return false;
+        };
+        if !is_control_kind(&step.kind) {
+            return false;
+        }
+        step.collapsed = collapsed;
+        self.rebuild_dag();
+        true
+    }
+
     pub fn remove_step(&mut self, id: &str) -> bool {
         let before = self.fixture.steps.len();
-        self.fixture.steps.retain(|step| step.id != id);
-        self.fixture.edges.retain(|edge| edge.from != id && edge.to != id);
+        let mut remove_ids = vec![id.to_string()];
+        if self.fixture.steps.iter().any(|step| step.id == id && is_control_kind(&step.kind)) {
+            for step in &self.fixture.steps {
+                if step.slot.as_ref().is_some_and(|slot| slot.owner == id) {
+                    remove_ids.push(step.id.clone());
+                }
+            }
+        }
+        self.fixture
+            .steps
+            .retain(|step| !remove_ids.iter().any(|remove_id| remove_id == &step.id));
+        self.fixture
+            .edges
+            .retain(|edge| !remove_ids.iter().any(|remove_id| remove_id == &edge.from || remove_id == &edge.to));
         if self.fixture.steps.len() == before {
             return false;
         }
@@ -189,11 +250,20 @@ impl SequenceHost {
         if from_id == to_id {
             return Err("cannot connect step to itself".into());
         }
-        if !self.fixture.steps.iter().any(|step| step.id == from_id) {
-            return Err(format!("{from_id} not found"));
-        }
-        if !self.fixture.steps.iter().any(|step| step.id == to_id) {
-            return Err(format!("{to_id} not found"));
+        let from_step = self
+            .fixture
+            .steps
+            .iter()
+            .find(|step| step.id == from_id)
+            .ok_or_else(|| format!("{from_id} not found"))?;
+        let to_step = self
+            .fixture
+            .steps
+            .iter()
+            .find(|step| step.id == to_id)
+            .ok_or_else(|| format!("{to_id} not found"))?;
+        if slot_key(from_step.slot.as_ref()) != slot_key(to_step.slot.as_ref()) {
+            return Err("steps must share the same slot scope".into());
         }
         let existing: Vec<(String, String)> = self.fixture.edges.iter().map(|edge| (edge.from.clone(), edge.to.clone())).collect();
         if would_create_cycle(&existing, from_id, to_id) {
@@ -258,30 +328,42 @@ impl SequenceHost {
     }
 
     pub fn build_path(&self) -> Path {
-        let incoming: HashMap<&str, &str> = self.fixture.edges.iter().map(|edge| (edge.to.as_str(), edge.from.as_str())).collect();
-        let outgoing: HashMap<&str, &str> = self.fixture.edges.iter().map(|edge| (edge.from.as_str(), edge.to.as_str())).collect();
-        let heads: Vec<&StepWidgetV1> = self
+        self.build_path_for_slot(None)
+    }
+
+    pub fn build_path_json(&self) -> Result<String, String> {
+        serde_json::to_string(&self.build_path()).map_err(|err| err.to_string())
+    }
+
+    fn build_path_for_slot(&self, slot: Option<&SlotRef>) -> Path {
+        let slot_filter = slot_key(slot);
+        let scoped_steps: Vec<&StepWidgetV1> = self
             .fixture
             .steps
             .iter()
+            .filter(|step| slot_key(step.slot.as_ref()) == slot_filter)
+            .collect();
+        let incoming: HashMap<&str, &str> = self.fixture.edges.iter().map(|edge| (edge.to.as_str(), edge.from.as_str())).collect();
+        let outgoing: HashMap<&str, &str> = self.fixture.edges.iter().map(|edge| (edge.from.as_str(), edge.to.as_str())).collect();
+        let heads: Vec<&StepWidgetV1> = scoped_steps
+            .iter()
+            .copied()
             .filter(|step| !incoming.contains_key(step.id.as_str()))
             .collect();
         let start = if heads.len() == 1 {
             heads[0].id.as_str()
-        } else if self.fixture.edges.is_empty() && self.fixture.steps.len() == 1 {
-            self.fixture.steps[0].id.as_str()
+        } else if scoped_steps.len() == 1 {
+            scoped_steps[0].id.as_str()
         } else {
             return Path {
-                steps: self
-                    .fixture
-                    .steps
+                steps: scoped_steps
                     .iter()
-                    .map(|step| Step { id: step.id.clone(), kind: step.kind.clone(), params: step.params.clone() })
+                    .map(|step| self.step_to_imperative_step(step))
                     .collect(),
             };
         };
         let mut ordered = Vec::new();
-        let mut by_id: BTreeMap<&str, &StepWidgetV1> = self.fixture.steps.iter().map(|step| (step.id.as_str(), step)).collect();
+        let mut by_id: BTreeMap<&str, &StepWidgetV1> = scoped_steps.into_iter().map(|step| (step.id.as_str(), step)).collect();
         let mut current = Some(start);
         let mut visited = std::collections::HashSet::new();
         while let Some(id) = current {
@@ -289,14 +371,91 @@ impl SequenceHost {
                 break;
             }
             if let Some(step) = by_id.remove(id) {
-                ordered.push(Step { id: step.id.clone(), kind: step.kind.clone(), params: step.params.clone() });
+                ordered.push(self.step_to_imperative_step(step));
             }
             current = outgoing.get(id).copied();
         }
         for step in by_id.values() {
-            ordered.push(Step { id: step.id.clone(), kind: step.kind.clone(), params: step.params.clone() });
+            ordered.push(self.step_to_imperative_step(step));
         }
         Path { steps: ordered }
+    }
+
+    fn step_to_imperative_step(&self, step: &StepWidgetV1) -> Step {
+        let mut bodies = BTreeMap::new();
+        if is_control_kind(&step.kind) {
+            for slot_name in control_slots(&step.kind) {
+                let slot_ref = SlotRef {
+                    owner: step.id.clone(),
+                    name: slot_name.to_string(),
+                };
+                bodies.insert(slot_name.to_string(), self.build_path_for_slot(Some(&slot_ref)));
+            }
+        }
+        Step {
+            id: step.id.clone(),
+            kind: step.kind.clone(),
+            params: step.params.clone(),
+            bodies,
+        }
+    }
+
+    fn is_step_visible(&self, step: &StepWidgetV1) -> bool {
+        let Some(slot) = &step.slot else {
+            return true;
+        };
+        let Some(owner) = self.fixture.steps.iter().find(|entry| entry.id == slot.owner) else {
+            return false;
+        };
+        !owner.collapsed
+    }
+
+    fn slot_member_count(&self, owner_id: &str) -> usize {
+        self.fixture
+            .steps
+            .iter()
+            .filter(|step| step.slot.as_ref().is_some_and(|slot| slot.owner == owner_id))
+            .count()
+    }
+
+    pub fn layout_expanded_slots(&mut self) {
+        let control_steps: Vec<(String, String, bool)> = self
+            .fixture
+            .steps
+            .iter()
+            .filter(|step| is_control_kind(&step.kind))
+            .map(|step| (step.id.clone(), step.kind.clone(), step.collapsed))
+            .collect();
+        for (owner_id, kind, collapsed) in control_steps {
+            if collapsed {
+                continue;
+            }
+            let owner = self.fixture.steps.iter().find(|step| step.id == owner_id);
+            let Some(owner) = owner else { continue };
+            let base_x = owner.x;
+            let base_y = owner.y + 160.0;
+            for (index, slot_name) in control_slots(&kind).iter().enumerate() {
+                let slot_ref = SlotRef {
+                    owner: owner_id.clone(),
+                    name: (*slot_name).into(),
+                };
+                let members: Vec<String> = self
+                    .fixture
+                    .steps
+                    .iter()
+                    .filter(|step| step.slot.as_ref() == Some(&slot_ref))
+                    .map(|step| step.id.clone())
+                    .collect();
+                let offset_x = base_x + (index as f64 - (control_slots(&kind).len() as f64 - 1.0) * 0.5) * 320.0;
+                for (member_index, member_id) in members.iter().enumerate() {
+                    if let Some(step) = self.fixture.steps.iter_mut().find(|step| step.id == *member_id) {
+                        step.x = offset_x + member_index as f64 * 280.0;
+                        step.y = base_y;
+                    }
+                }
+            }
+        }
+        self.rebuild_dag();
     }
 
     pub fn run(&self) -> RunResult {
@@ -314,12 +473,20 @@ impl SequenceHost {
     }
 
     fn build_dag_fixture(&self) -> DagFixtureV1 {
-        let nodes: Vec<DagNodeSpec> = self.fixture.steps.iter().map(|step| self.step_to_dag_node(step)).collect();
+        let nodes: Vec<DagNodeSpec> = self
+            .fixture
+            .steps
+            .iter()
+            .filter(|step| self.is_step_visible(step))
+            .map(|step| self.step_to_dag_node(step))
+            .collect();
+        let visible_ids: std::collections::HashSet<String> = nodes.iter().map(|node| node.id.clone()).collect();
         let existing: Vec<(String, String)> = self.fixture.edges.iter().map(|edge| (edge.from.clone(), edge.to.clone())).collect();
         let edges: Vec<DagFixtureEdgeV1> = self
             .fixture
             .edges
             .iter()
+            .filter(|edge| visible_ids.contains(&edge.from) && visible_ids.contains(&edge.to))
             .filter(|edge| !would_create_cycle(&existing, &edge.from, &edge.to))
             .map(|edge| DagFixtureEdgeV1 {
                 id: edge.id.clone(),
@@ -337,9 +504,17 @@ impl SequenceHost {
 
     fn step_to_dag_node(&self, step: &StepWidgetV1) -> DagNodeSpec {
         let info = self.registry.operator_info(&step.kind);
-        let (name, abbreviation, icon) = info
+        let (name, mut abbreviation, icon) = info
             .map(|entry| (entry.name.clone(), entry.abbreviation.clone(), entry.icon.clone()))
             .unwrap_or_else(|| (step.kind.clone(), step.kind.clone(), "emoji:⚡".into()));
+        if is_control_kind(&step.kind) {
+            let count = self.slot_member_count(&step.id);
+            abbreviation = if step.collapsed {
+                format!("▸ {count}")
+            } else {
+                format!("▾ {count}")
+            };
+        }
         let inputs = vec![IoPortSpec::named("P", "Prv", FLOW_INPUT_PORT, "Previous")];
         let outputs = vec![IoPortSpec::named("N", "Nxt", FLOW_OUTPUT_PORT, "Next")];
         let width = dag::computation_node_width(&name, &inputs, &outputs);
@@ -414,6 +589,30 @@ mod wasm_session {
         #[wasm_bindgen(js_name = addStep)]
         pub fn add_step(&self, kind: &str, x: f64, y: f64) -> String {
             self.state.borrow_mut().host.add_step(kind, x, y)
+        }
+
+        #[wasm_bindgen(js_name = addStepToSlot)]
+        pub fn add_step_to_slot(&self, kind: &str, x: f64, y: f64, owner: &str, slot_name: &str) -> String {
+            self.state
+                .borrow_mut()
+                .host
+                .add_step_in_slot(kind, x, y, Some(SlotRef { owner: owner.into(), name: slot_name.into() }))
+        }
+
+        #[wasm_bindgen(js_name = setStepCollapsed)]
+        pub fn set_step_collapsed(&self, id: &str, collapsed: bool) -> bool {
+            self.state.borrow_mut().host.set_step_collapsed(id, collapsed)
+        }
+
+        #[wasm_bindgen(js_name = pickStepIdAtScreen)]
+        pub fn pick_step_id_at_screen(&self, sx: f64, sy: f64) -> Option<String> {
+            let inner = self.state.borrow();
+            inner.host.pick_step_id_at_screen(sx, sy, inner.width, inner.height, inner.dpr)
+        }
+
+        #[wasm_bindgen(js_name = buildPathJson)]
+        pub fn build_path_json(&self) -> Result<String, JsValue> {
+            self.state.borrow().host.build_path_json().map_err(|err| JsValue::from_str(&err))
         }
 
         #[wasm_bindgen(js_name = removeStep)]
@@ -587,6 +786,7 @@ mod wasm_session {
             let opts: DagLayoutOptions = serde_json::from_str(opts_json).map_err(|err| JsValue::from_str(&err.to_string()))?;
             self.state.borrow_mut().host.dag.reorganize(&opts).map_err(|err| JsValue::from_str(&err))?;
             self.state.borrow_mut().host.sync_from_dag();
+            self.state.borrow_mut().host.layout_expanded_slots();
             Ok(())
         }
 
@@ -674,17 +874,39 @@ mod tests {
             params: Dictionary::new().insert("ms", Value::Atom(Atom::Decimal(10.0))),
             x: 560.0,
             y: 0.0,
+            slot: None,
+            collapsed: false,
         });
         assert!(host.connect_steps("step-1", "step-2").is_ok());
         assert!(host.connect_steps("step-1", "step-3").is_err());
     }
 
     #[test]
-    fn build_path_follows_edges() {
-        let host = SequenceHost::default();
+    fn build_path_includes_control_bodies() {
+        let mut host = SequenceHost::default();
+        host.fixture.steps.push(StepWidgetV1 {
+            id: "step-3".into(),
+            kind: "control.if".into(),
+            params: Dictionary::new().insert("key", Value::Atom(Atom::String("flag".into()))),
+            x: 560.0,
+            y: 0.0,
+            slot: None,
+            collapsed: false,
+        });
+        host.fixture.steps.push(StepWidgetV1 {
+            id: "step-4".into(),
+            kind: "log.print".into(),
+            params: Dictionary::new().insert("message", Value::Atom(Atom::String("yes".into()))),
+            x: 560.0,
+            y: 160.0,
+            slot: Some(SlotRef { owner: "step-3".into(), name: "then".into() }),
+            collapsed: false,
+        });
+        host.fixture.edges.push(SequenceEdgeV1 { id: "edge-2".into(), from: "step-2".into(), to: "step-3".into() });
         let path = host.build_path();
-        assert_eq!(path.steps.len(), 2);
-        assert_eq!(path.steps[0].id, "step-1");
-        assert_eq!(path.steps[1].id, "step-2");
+        assert_eq!(path.steps.len(), 3);
+        let control = path.steps.iter().find(|step| step.id == "step-3").expect("control step");
+        assert!(control.bodies.contains_key("then"));
+        assert_eq!(control.bodies.get("then").map(|body| body.steps.len()), Some(1));
     }
 }

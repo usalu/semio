@@ -419,6 +419,25 @@
       }
     },
     {
+      "name": "🛠️dev🔷lowpoly",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:lowpoly",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "LOWPOLY_PLAY_PORT": "6078"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 157
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6078)",
+        "uriFormat": "%s"
+      }
+    },
+    {
       "name": "🛠️dev🌐gis📍2d",
       "type": "node-terminal",
       "request": "launch",

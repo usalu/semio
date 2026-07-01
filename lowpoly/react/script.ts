@@ -1,10 +1,10 @@
 #!/usr/bin/env bun
-/** 🧭 `@semio-tech/geometry-brep-js` task router: `bun ./script.ts test [args…]`. */
-import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest } from "../../../repo/lib/js/index.ts";
+/** 🧭 `@semio-tech/lowpoly-react` task router. */
+import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest } from "../../repo/lib/js/index.ts";
 
 class TestScript extends BundleScript {
 	run(segments: string[]): void {
-		runVitest(this.root, segments);
+		runVitest(this.root, segments, "vitest.config.ts");
 	}
 }
 

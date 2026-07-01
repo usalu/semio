@@ -1010,6 +1010,7 @@ export type PlaygroundHostKind =
 	| "dag"
 	| "imperative"
 	| "sequence"
+	| "lowpoly"
 	| "trinity-jack"
 	| "trinity-rewrite"
 	| "procedural-3d"
@@ -1044,6 +1045,7 @@ export const PLAYGROUND_PORTS: Record<PlaygroundHostKind, PlaygroundPortSpec> = 
 	dag: { dev: 6017, test: 6030, env: "DAG_PLAY_PORT" },
 	imperative: { dev: 6076, env: "IMPERATIVE_PLAY_PORT" },
 	sequence: { dev: 6077, env: "SEQUENCE_PLAY_PORT" },
+	lowpoly: { dev: 6078, env: "LOWPOLY_PLAY_PORT" },
 	"trinity-jack": { dev: 6054, test: 6055, env: "TRINITY_JACK_PLAY_PORT" },
 	"trinity-rewrite": { dev: 6056, test: 6057, env: "TRINITY_REWRITE_PLAY_PORT" },
 	forms: { dev: 6058, test: 6059, env: "FORMS_PLAY_PORT" },

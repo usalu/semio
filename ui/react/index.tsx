@@ -719,6 +719,16 @@ export type CanvasPickMenuProps = {
   readonly title?: string;
 };
 
+export {
+  CANVAS_HOVER_SOURCE_CANVAS,
+  CANVAS_HOVER_SOURCE_PICK_MENU,
+  canvasHoverFocusFromTarget,
+  canvasPickTargetKey,
+  pickMostSpecificCanvasTarget,
+  sortCanvasPickTargetsGeneralFirst,
+} from "@semio-tech/framework-core";
+export type { CanvasHoverFocus, CanvasPickRequest, CanvasPickTarget } from "@semio-tech/framework-core";
+
 /** @emoji 🎯 Fixed DOM pick list for overlapping canvas targets (not painted on the infinite canvas). */
 export function CanvasPickMenu({ request, hoveredKey, onHoverKey, onPick, onDismiss, renderRow, title = "Select target" }: CanvasPickMenuProps): React.ReactNode {
   const menuRef = React.useRef<HTMLDivElement | null>(null);
@@ -4248,29 +4258,42 @@ export function isWindowContentDeadLineHost(element: Element | null): boolean {
 /** @emoji 🏝️ Resolves the default dead-line scroll offset for chrome-aware window bodies. */
 export function readWindowContentDeadLinePx(element?: Element | null, rootPx = STYLING_COMPACT_ROOT_PX): number {
   if (!element || !isWindowContentDeadLineHost(element)) return 0;
+  const measured = measureWindowChromeScrollClearancePx(element);
+  if (measured > 0) return measured;
   return readWindowChromeScrollClearancePx(element, rootPx);
 }
 
 /** @emoji 🏝️ Clears the first line under floating chrome by default; scrolling up reveals it edgelessly. */
 export function useWindowContentDeadLineScroll(scrollerRef: React.RefObject<HTMLElement | null>): void {
+  const edgelessScrollRef = reactHostPort.useRef(false);
   reactHostPort.useLayoutEffect(() => {
     const el = scrollerRef.current;
     if (!el) return;
-    const apply = () => {
+    const applyDefault = () => {
       if (!isWindowContentDeadLineHost(el)) return;
       const deadLine = readWindowContentDeadLinePx(el);
-      if (deadLine > 0 && el.scrollTop < deadLine) el.scrollTop = deadLine;
+      if (deadLine <= 0 || edgelessScrollRef.current) return;
+      if (el.scrollTop < deadLine) el.scrollTop = deadLine;
     };
-    apply();
+    const onScroll = () => {
+      if (!isWindowContentDeadLineHost(el)) return;
+      const deadLine = readWindowContentDeadLinePx(el);
+      if (deadLine > 0 && el.scrollTop < deadLine - 1) edgelessScrollRef.current = true;
+    };
+    applyDefault();
+    el.addEventListener("scroll", onScroll, { passive: true });
     const body = el.closest('[data-slot="window-body"]');
-    if (!body) return;
-    const ro = new ResizeObserver(apply);
+    if (!body) return () => el.removeEventListener("scroll", onScroll);
+    const ro = new ResizeObserver(applyDefault);
     ro.observe(body);
     for (const slot of ["window-engagement-overlay", "window-measures-overlay"] as const) {
       const overlay = body.querySelector(`[data-slot="${slot}"]`);
       if (overlay) ro.observe(overlay);
     }
-    return () => ro.disconnect();
+    return () => {
+      el.removeEventListener("scroll", onScroll);
+      ro.disconnect();
+    };
   }, []);
 }
 

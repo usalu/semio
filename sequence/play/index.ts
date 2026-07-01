@@ -81,12 +81,17 @@ export const SEQUENCE_PLAY_INSPECTION_TAB_ID = "framework.panel.inspection";
 
 export const SEQUENCE_ENGAGEMENT_REORGANIZE_ID = "sequence.tool.reorganize";
 export const SEQUENCE_ENGAGEMENT_RUN_ID = "sequence.tool.run";
+export const SEQUENCE_ENGAGEMENT_STOP_ID = "sequence.tool.stop";
 export const SEQUENCE_ENGAGEMENT_ORIENTATION_LR_ID = "sequence.layout.leftRight";
 export const SEQUENCE_ENGAGEMENT_ORIENTATION_TB_ID = "sequence.layout.topBottom";
 
 export type SequenceLayoutOrientation = "leftRight" | "topBottom";
 
 export interface SequenceRunRequest {
+	readonly epoch: number;
+}
+
+export interface SequenceRunStopRequest {
 	readonly epoch: number;
 }
 
@@ -116,6 +121,7 @@ export function buildSequencePlayToolbarTools(controllerId: string, orientation:
 	return [
 		toolCollection("execution", "play", [
 			{ kind: "button", id: "sequence.run", label: "Run", iconId: "play", controllerId, command: "run" },
+			{ kind: "button", id: "sequence.stop", label: "Stop", iconId: "square", controllerId, command: "stop" },
 		]),
 		toolCollection("layout", "layout-grid", [
 			{ kind: "button", id: "sequence.reorganize", label: "Reorganize", iconId: "refresh-cw", controllerId, command: "reorganize" },
@@ -277,6 +283,19 @@ function sequencePlayInspectorBaseGroup(steps: readonly SequenceStepV1[]): UiIns
 	} else {
 		fields.push(uiInspectorReadonlyField("sequence-play-inspector.id", "Id", `${stepIds.length} selected`));
 	}
+	if (stepIds.length === 1 && steps[0]?.kind.startsWith("control.")) {
+		fields.push({
+			type: "field",
+			id: "sequence-play-inspector.collapse",
+			label: "Bodies",
+			child: {
+				type: "button",
+				id: "sequence-play-inspector.collapse.button",
+				label: steps[0].collapsed ? "Expand bodies" : "Collapse bodies",
+				onClick: sequencePlayCmd("toggleStepCollapsed", { stepId: stepIds[0] }),
+			},
+		});
+	}
 	fields.push(
 		uiInspectorReadonlyField("sequence-play-inspector.kind", "Kind", steps[0]?.kind ?? ""),
 		{
@@ -350,6 +369,7 @@ export class SequencePlayController extends Controller {
 	private reorganizeEpoch = 0;
 	private reorganizeOptionsJson = buildSequenceLayoutOptionsJson(DEFAULT_LAYER_SPACING, DEFAULT_SIBLING_GAP, "leftRight");
 	private runEpoch = 0;
+	private runStopEpoch = 0;
 	private lodMode: DagLodModeKind = DAG_LOD_MODE_AUTOMATIC;
 	private lodModeByInstance: Record<string, DagLodModeKind> = {};
 	private effectiveLod: DagDrawLodKind = "normal";
@@ -374,6 +394,10 @@ export class SequencePlayController extends Controller {
 
 	getRunRequest(): SequenceRunRequest {
 		return { epoch: this.runEpoch };
+	}
+
+	getRunStopRequest(): SequenceRunStopRequest {
+		return { epoch: this.runStopEpoch };
 	}
 
 	lodModeForScope(scopeId: string): DagLodModeKind {
@@ -464,14 +488,26 @@ export class SequencePlayController extends Controller {
 		this.selectedStepIds = [id];
 	}
 
+	private collectRemoveStepIds(fixture: SequenceFixtureV1, stepId: string): string[] {
+		const ids = [stepId];
+		const step = fixture.steps.find((entry) => entry.id === stepId);
+		if (step?.kind.startsWith("control.")) {
+			for (const member of fixture.steps) {
+				if (member.slot?.owner === stepId) ids.push(member.id);
+			}
+		}
+		return ids;
+	}
+
 	private removeSequenceStep(stepId: string): void {
 		const fixture = parseSequencePlayFixtureJson(this.fixtureJson);
 		if (!fixture) return;
-		this.selectedStepIds = this.selectedStepIds.filter((id) => id !== stepId);
+		const removeIds = new Set(this.collectRemoveStepIds(fixture, stepId));
+		this.selectedStepIds = this.selectedStepIds.filter((id) => !removeIds.has(id));
 		this.commitFixture({
 			...fixture,
-			steps: fixture.steps.filter((step) => step.id !== stepId),
-			edges: fixture.edges.filter((edge) => edge.from !== stepId && edge.to !== stepId),
+			steps: fixture.steps.filter((step) => !removeIds.has(step.id)),
+			edges: fixture.edges.filter((edge) => !removeIds.has(edge.from) && !removeIds.has(edge.to)),
 		});
 	}
 
@@ -529,6 +565,11 @@ export class SequencePlayController extends Controller {
 		this.emit();
 	}
 
+	private triggerStop(): void {
+		this.runStopEpoch += 1;
+		this.emit();
+	}
+
 	private windowEngagement(): WindowEngagement {
 		return {
 			sessionActive: false,
@@ -541,6 +582,7 @@ export class SequencePlayController extends Controller {
 			},
 			possibleEngagements: [
 				{ id: SEQUENCE_ENGAGEMENT_RUN_ID, label: "Run", command: sequencePlayCmd("run") },
+				{ id: SEQUENCE_ENGAGEMENT_STOP_ID, label: "Stop", command: sequencePlayCmd("stop") },
 				{ id: SEQUENCE_ENGAGEMENT_REORGANIZE_ID, label: "Reorganize", command: sequencePlayCmd("reorganize") },
 				{ id: SEQUENCE_ENGAGEMENT_ORIENTATION_LR_ID, label: "Left to Right", command: sequencePlayCmd("setOrientation", { orientation: "leftRight" }) },
 				{ id: SEQUENCE_ENGAGEMENT_ORIENTATION_TB_ID, label: "Top to Bottom", command: sequencePlayCmd("setOrientation", { orientation: "topBottom" }) },
@@ -677,6 +719,25 @@ export class SequencePlayController extends Controller {
 		}
 		if (command === "run") {
 			this.triggerRun();
+			return;
+		}
+		if (command === "stop") {
+			this.triggerStop();
+			return;
+		}
+		if (command === "toggleStepCollapsed") {
+			const stepId = (args as { stepId?: string }).stepId;
+			if (typeof stepId !== "string") return;
+			const fixture = parseSequencePlayFixtureJson(this.fixtureJson);
+			if (!fixture) return;
+			this.commitFixture({
+				...fixture,
+				steps: fixture.steps.map((step) =>
+					step.id === stepId && step.kind.startsWith("control.")
+						? { ...step, collapsed: !step.collapsed }
+						: step,
+				),
+			});
 			return;
 		}
 		if (command === "setFixtureJson") {

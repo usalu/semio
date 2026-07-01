@@ -11,16 +11,19 @@ import {
 } from "@semio-tech/dag-react";
 import {
 	DEFAULT_SEQUENCE_FIXTURE,
+	parseSequenceFixtureJson,
 	sequenceFixtureToJson,
 	type SequenceFixtureV1,
 	type SequenceStepV1,
 } from "@semio-tech/sequence-core";
 import {
+	IMPERATIVE_DOCUMENT_SCHEMA,
 	performImperativeEffects,
 	type EffectLogEntry,
 	type ImperativeCatalogueItem,
 	type RunResult,
 } from "@semio-tech/imperative-core";
+import { ImperativeRunClient } from "@semio-tech/imperative-core";
 import initSequenceWasm, { SequenceSession, initSync } from "../core/pkg/sequence_core.js";
 
 // #region 🔖WasmBridge
@@ -48,11 +51,24 @@ export interface SequenceRunRequest {
 	readonly epoch: number;
 }
 
+export interface SequenceRunStopRequest {
+	readonly epoch: number;
+}
+
+function isControlKind(kind: string): boolean {
+	return kind.startsWith("control.");
+}
+
+function defaultControlSlot(kind: string): string {
+	return kind === "control.if" ? "then" : "body";
+}
+
 export interface SequenceCanvasProps {
 	readonly fixtureJson?: string;
 	readonly className?: string;
 	readonly reorganize?: DagReorganizeRequest;
 	readonly runRequest?: SequenceRunRequest;
+	readonly runStopRequest?: SequenceRunStopRequest;
 	readonly automaticLod?: boolean;
 	readonly lod?: DagDrawLodKind;
 	readonly selectedStepIds?: readonly string[];
@@ -161,6 +177,7 @@ export function SequenceCanvas({
 	className,
 	reorganize,
 	runRequest,
+	runStopRequest,
 	onFixtureChange,
 	onSelectionChange,
 	onLodChange,
@@ -186,6 +203,8 @@ export function SequenceCanvas({
 	const lastReportedLodRef = useRef<DagDrawLodKind | null>(null);
 	const lastSelectionRef = useRef<string>("");
 	const lastRunEpochRef = useRef(0);
+	const lastRunStopEpochRef = useRef(0);
+	const runClientRef = useRef<ImperativeRunClient | null>(null);
 	const fixtureDragDepthRef = useRef(0);
 	const [fixtureDragActive, setFixtureDragActive] = useState(false);
 
@@ -275,7 +294,14 @@ export function SequenceCanvas({
 			const sy = clientY - rect.top;
 			try {
 				const world = JSON.parse(session.worldFromScreen(sx, sy)) as { x: number; y: number };
-				session.addStep(kind, world.x, world.y);
+				const pickedId = session.pickStepIdAtScreen(sx, sy) ?? undefined;
+				const fixture = parseSequenceFixtureJson(session.fixtureJson());
+				const owner = pickedId ? fixture?.steps.find((step) => step.id === pickedId) : undefined;
+				if (owner && isControlKind(owner.kind) && !owner.collapsed) {
+					session.addStepToSlot(kind, world.x, world.y, owner.id, defaultControlSlot(owner.kind));
+				} else {
+					session.addStep(kind, world.x, world.y);
+				}
 				sequencePaletteDropCommittedRef.current = true;
 				emitFixtureChange();
 				renderFrame();
@@ -373,13 +399,39 @@ export function SequenceCanvas({
 	}, [emitFixtureChange, reorganize?.epoch, reorganize?.optionsJson, renderFrame]);
 
 	useEffect(() => {
+		const client = new ImperativeRunClient();
+		runClientRef.current = client;
+		return () => {
+			client.terminate();
+			runClientRef.current = null;
+		};
+	}, []);
+
+	useEffect(() => {
+		const client = runClientRef.current;
+		if (!client || !runStopRequest || runStopRequest.epoch <= 0 || runStopRequest.epoch === lastRunStopEpochRef.current) return;
+		lastRunStopEpochRef.current = runStopRequest.epoch;
+		client.stop();
+		onRunResultRef.current?.({
+			scope: {},
+			effects: [{ stepId: "", kind: "control.stop", input: {}, error: "Stopped by user" }],
+		});
+	}, [runStopRequest?.epoch]);
+
+	useEffect(() => {
 		const session = sessionRef.current;
-		if (!session || !runRequest || runRequest.epoch <= 0 || runRequest.epoch === lastRunEpochRef.current) return;
+		const client = runClientRef.current;
+		if (!session || !client || !runRequest || runRequest.epoch <= 0 || runRequest.epoch === lastRunEpochRef.current) return;
 		lastRunEpochRef.current = runRequest.epoch;
 		void (async () => {
 			try {
-				const result = parseRunResult(session.run());
-				if (!result) return;
+				const pathJson = session.buildPathJson();
+				const documentJson = JSON.stringify({
+					schema: IMPERATIVE_DOCUMENT_SCHEMA,
+					path: JSON.parse(pathJson),
+					seed: {},
+				});
+				const result = await client.runDocument(documentJson);
 				onRunResultRef.current?.(result);
 				await performImperativeEffects(result.effects, {
 					onLog: () => {},
@@ -520,12 +572,26 @@ export function SequenceCanvas({
 				emitFixtureChange();
 				renderFrame();
 			};
+			const onDoubleClick = (event: MouseEvent) => {
+				const r = canvas.getBoundingClientRect();
+				const sx = event.clientX - r.left;
+				const sy = event.clientY - r.top;
+				const pickedId = session.pickStepIdAtScreen(sx, sy);
+				if (!pickedId) return;
+				const fixture = parseSequenceFixtureJson(session.fixtureJson());
+				const step = fixture?.steps.find((entry) => entry.id === pickedId);
+				if (!step || !isControlKind(step.kind)) return;
+				session.setStepCollapsed(pickedId, !step.collapsed);
+				emitFixtureChange();
+				renderFrame();
+			};
 			canvas.addEventListener("pointerdown", onPointerDown);
 			canvas.addEventListener("pointermove", onPointerMove);
 			canvas.addEventListener("pointerup", finishPointer);
 			canvas.addEventListener("pointercancel", finishPointer);
 			canvas.addEventListener("pointerleave", finishPointer);
 			canvas.addEventListener("wheel", onWheel, { passive: false });
+			canvas.addEventListener("dblclick", onDoubleClick);
 			cleanupInner = () => {
 				ro.disconnect();
 				visualViewport?.removeEventListener("resize", resize);
@@ -535,6 +601,7 @@ export function SequenceCanvas({
 				canvas.removeEventListener("pointercancel", finishPointer);
 				canvas.removeEventListener("pointerleave", finishPointer);
 				canvas.removeEventListener("wheel", onWheel);
+				canvas.removeEventListener("dblclick", onDoubleClick);
 				if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
 			};
 		})();

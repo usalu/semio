@@ -21,7 +21,7 @@ export default defineConfig({
 			"@semio-tech/cad-js-kernel-brepjs": resolve(jsRoot, "kernel/brepjs/index.ts"),
 			"@semio-tech/cad-js-machine-stately": resolve(jsRoot, "machine/stately/index.ts"),
 			"@semio-tech/cad-js-query": resolve(jsRoot, "query/index.ts"),
-			"@semio-tech/kernel-3d-js": resolve(root, "../../../kernel/3d/js/index.ts"),
+			"@semio-tech/kernel-3d-js": resolve(root, "../../../kernel/3d/brep/js/index.ts"),
 		},
 	},
 	test: {

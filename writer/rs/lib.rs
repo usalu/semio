@@ -198,6 +198,8 @@ pub struct WriterHost {
     hover_token_end: Option<usize>,
     theme: WriterVelloTheme,
     caret_visible: bool,
+    dead_line_y: f64,
+    chrome_edgeless_scroll: bool,
 }
 
 impl Default for WriterHost {
@@ -230,7 +232,19 @@ impl WriterHost {
             hover_token_end: None,
             theme: WriterVelloTheme::default(),
             caret_visible: true,
+            dead_line_y: 0.0,
+            chrome_edgeless_scroll: false,
         }
+    }
+
+    pub fn set_dead_line_y(&mut self, y: f64) {
+        self.dead_line_y = y.max(0.0);
+        self.clamp_camera();
+    }
+
+    pub fn set_chrome_edgeless_scroll(&mut self, enabled: bool) {
+        self.chrome_edgeless_scroll = enabled;
+        self.clamp_camera();
     }
 
     pub fn set_vello_theme_from_json(&mut self, json: &str) -> Result<(), String> {
@@ -294,8 +308,11 @@ impl WriterHost {
         let line_count = self.text.matches('\n').count() + 1;
         let content_h = self.content_height(line_count);
         let view_h = self.viewport.height as f64;
-        let max_y = (content_h - view_h).max(0.0);
-        self.camera.y = self.camera.y.clamp(0.0, max_y);
+        let scroll_max = (content_h - view_h).max(0.0);
+        self.camera.y = self.camera.y.clamp(0.0, scroll_max);
+        if !self.chrome_edgeless_scroll && self.dead_line_y > 0.0 {
+            self.camera.y = self.camera.y.max(self.dead_line_y);
+        }
     }
 
     fn scroll_caret_into_view(&mut self) {
@@ -495,6 +512,9 @@ impl WriterHost {
     }
 
     pub fn wheel_scroll_screen(&mut self, delta_y: f64) {
+        if delta_y < 0.0 {
+            self.chrome_edgeless_scroll = true;
+        }
         self.camera.y = (self.camera.y + delta_y * 0.5).max(0.0);
         self.clamp_camera();
     }
@@ -1443,6 +1463,16 @@ impl WriterSession {
         self.state.borrow_mut().host.set_editor_settings_json(json);
     }
 
+    #[wasm_bindgen(js_name = setDeadLineY)]
+    pub fn set_dead_line_y(&mut self, y: f64) {
+        self.state.borrow_mut().host.set_dead_line_y(y);
+    }
+
+    #[wasm_bindgen(js_name = setChromeEdgelessScroll)]
+    pub fn set_chrome_edgeless_scroll(&mut self, enabled: bool) {
+        self.state.borrow_mut().host.set_chrome_edgeless_scroll(enabled);
+    }
+
     #[wasm_bindgen(js_name = wheelScrollScreen)]
     pub fn wheel_scroll_screen(&mut self, delta_y: f64) {
         self.state.borrow_mut().host.wheel_scroll_screen(delta_y);
@@ -1621,6 +1651,19 @@ mod tests {
         host.set_selection(2, 4);
         assert_eq!(host.anchor(), 0);
         assert_eq!(host.caret(), 5);
+    }
+
+    #[test]
+    fn dead_line_floors_camera_until_edgeless_scroll() {
+        let mut host = WriterHost::new();
+        host.set_size(400, 300, 1.0);
+        host.set_text("line one\nline two".into());
+        host.set_dead_line_y(32.0);
+        assert!(host.camera.y >= 32.0);
+        host.finish_caret_update();
+        assert!(host.camera.y >= 32.0);
+        host.wheel_scroll_screen(-40.0);
+        assert!(host.camera.y < 32.0);
     }
 
     #[test]

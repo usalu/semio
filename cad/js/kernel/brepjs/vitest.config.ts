@@ -12,7 +12,7 @@ export default defineConfig({
 	assetsInclude: ["**/*.wasm"],
 	resolve: {
 		alias: {
-			"@semio-tech/kernel-3d-js": resolve(root, "../../../../kernel/3d/js/index.ts"),
+			"@semio-tech/kernel-3d-js": resolve(root, "../../../../kernel/3d/brep/js/index.ts"),
 			"@semio-tech/cad-js-core": coreEntry,
 			"@semio-tech/cad-js-runtime": resolve(root, "../../runtime/index.ts"),
 			"@semio-tech/cad-js-module-aec-building": resolve(root, "../../module/aec-building/index.ts"),

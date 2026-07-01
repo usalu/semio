@@ -2,12 +2,19 @@
 
 export const SEQUENCE_FIXTURE_SCHEMA = "sequence.fixture/v1";
 
+export type SequenceSlotRefV1 = {
+	readonly owner: string;
+	readonly name: string;
+};
+
 export type SequenceStepV1 = {
 	readonly id: string;
 	readonly kind: string;
 	readonly params: Record<string, unknown>;
 	readonly x?: number;
 	readonly y?: number;
+	readonly slot?: SequenceSlotRefV1;
+	readonly collapsed?: boolean;
 };
 
 export type SequenceEdgeV1 = {

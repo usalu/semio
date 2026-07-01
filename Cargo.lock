@@ -3158,7 +3158,10 @@ dependencies = [
 name = "imperative_engine"
 version = "0.1.0"
 dependencies = [
+ "imperative_module_control",
  "imperative_module_core",
+ "imperative_module_logic",
+ "imperative_module_math",
  "imperative_module_text",
  "neural_engine",
  "serde",
@@ -3166,7 +3169,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "imperative_module_control"
+version = "0.1.0"
+dependencies = [
+ "serde_json",
+]
+
+[[package]]
 name = "imperative_module_core"
+version = "0.1.0"
+dependencies = [
+ "neural_engine",
+ "serde_json",
+]
+
+[[package]]
+name = "imperative_module_logic"
+version = "0.1.0"
+dependencies = [
+ "neural_engine",
+ "serde_json",
+]
+
+[[package]]
+name = "imperative_module_math"
 version = "0.1.0"
 dependencies = [
  "neural_engine",
@@ -3364,6 +3390,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "kernel_3d_mesh"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "khronos-egl"
 version = "6.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3534,6 +3568,18 @@ name = "log"
 version = "0.4.29"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5e5032e24019045c762d3c0f28f5b6b8bbf38563a65908389bf7978758920897"
+
+[[package]]
+name = "lowpoly_core"
+version = "0.1.0"
+dependencies = [
+ "js-sys",
+ "kernel_3d_mesh",
+ "serde",
+ "serde-wasm-bindgen",
+ "serde_json",
+ "wasm-bindgen",
+]
 
 [[package]]
 name = "lru-slab"
