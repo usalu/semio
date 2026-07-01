@@ -21,6 +21,13 @@ class WasmScript extends BundleScript {
   }
 }
 
+class SetupScript extends BundleScript {
+  run(): void {
+    execFileSync("rustup", ["target", "add", "wasm32-unknown-unknown"], { stdio: "inherit" });
+    execFileSync("cargo", ["fetch", "--manifest-path", "Cargo.toml"], { stdio: "inherit", cwd: this.root });
+  }
+}
+
 class BuildScript extends BundleScript {
   run(): void {
     new WasmScript(this.root, this.repoRoot).run();
@@ -35,6 +42,7 @@ class TestScript extends BundleScript {
 }
 
 const router = new ScriptRouter(import.meta.dir)
+  .register("setup", SetupScript)
   .register("wasm", WasmScript)
   .register("build", BuildScript)
   .register("test", TestScript);

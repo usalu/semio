@@ -6,8 +6,8 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "compose/client/ui/gh/Compose.Grasshopper",
-        "commands": ["bun ./script.ts build", "bun ./yak/script.ts build"],
-        "parallel": false
+        "command": "bun ./script.ts build",
+        "forwardAllArgs": true
       }
     },
     "test": {
@@ -22,7 +22,15 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "compose/client/ui/gh/Compose.Grasshopper",
-        "command": "bun ./yak/script.ts publish",
+        "command": "bun ./script.ts publish",
+        "forwardAllArgs": true
+      }
+    },
+    "setup": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "compose/client/ui/gh/Compose.Grasshopper",
+        "command": "bun ./script.ts setup",
         "forwardAllArgs": true
       }
     }

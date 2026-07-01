@@ -22,6 +22,7 @@ members = [
     "neural/engine",
     "imperative/engine",
     "imperative/module/core",
+    "imperative/module/text",
     "imperative/core",
     "sequence/core",
     "flow/module/wasm",

@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🧭 Compose.NET build router: `bun ./script.ts build`. */
-import { spawnSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../../repo/lib/js/index.ts";
 
 class BuildScript extends BundleScript {
@@ -14,6 +14,12 @@ class BuildScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("build", BuildScript);
+class TestScript extends BundleScript {
+  run(): void {
+    execFileSync("dotnet", ["test", "../Compose.Tests/Compose.Tests.csproj"], { cwd: this.root, stdio: "inherit" });
+  }
+}
+
+const router = new ScriptRouter(import.meta.dir).register("build", BuildScript).register("test", TestScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "build" });

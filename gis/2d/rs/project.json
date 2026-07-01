@@ -8,13 +8,15 @@
         "cwd": "gis/2d/rs",
         "command": "bun ./script.ts wasm"
       },
-      "outputs": ["{projectRoot}/pkg"]
+      "outputs": [
+        "{projectRoot}/pkg"
+      ]
     },
     "test": {
       "executor": "nx:run-commands",
       "options": {
         "cwd": "gis/2d/rs",
-        "command": "cargo test -p gis_2d",
+        "command": "bun ./script.ts test",
         "forwardAllArgs": true
       }
     }

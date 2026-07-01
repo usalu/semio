@@ -8,13 +8,15 @@
         "cwd": "puzzle/5d/rs",
         "command": "bun ./script.ts wasm"
       },
-      "outputs": ["{projectRoot}/pkg"]
+      "outputs": [
+        "{projectRoot}/pkg"
+      ]
     },
     "test": {
       "executor": "nx:run-commands",
       "options": {
         "cwd": "puzzle/5d/rs",
-        "command": "cargo test -p puzzle_5d",
+        "command": "bun ./script.ts test",
         "forwardAllArgs": true
       }
     }

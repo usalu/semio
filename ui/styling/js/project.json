@@ -14,7 +14,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "ui/styling/js",
-        "command": "bun test"
+        "command": "bun ./script.ts test"
       }
     }
   }

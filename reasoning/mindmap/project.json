@@ -8,13 +8,15 @@
         "cwd": "reasoning/mindmap",
         "command": "bun ./script.ts wasm"
       },
-      "outputs": ["{projectRoot}/pkg"]
+      "outputs": [
+        "{projectRoot}/pkg"
+      ]
     },
     "test": {
       "executor": "nx:run-commands",
       "options": {
         "cwd": "reasoning/mindmap",
-        "command": "cargo test -p reasoning_mindmap",
+        "command": "bun ./script.ts test",
         "forwardAllArgs": true
       }
     }

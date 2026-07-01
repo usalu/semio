@@ -9,7 +9,7 @@ import {
 	serializeGraphVelloThemePaletteJson,
 	tokenHex,
 	tokenVar,
-} from "./resolve.ts";
+} from "./index.ts";
 import { STYLING_BOARD_THEMES } from "./tokens.generated.ts";
 import { puzzle3dLockedFixtureMeshBasenames, puzzle3dMeshBasenamesInJson } from "../vite-elements-assets.ts";
 import { PLAYGROUND_LOCKED_FIXTURE_ENV } from "../../../repo/lib/js/index.ts";

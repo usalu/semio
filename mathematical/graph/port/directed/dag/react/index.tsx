@@ -3,7 +3,8 @@
 // #endregion 🧲Header
 
 import React, { useCallback, useEffect, useRef } from "react";
-import { clearColorResolveCache, serializeGraphVelloThemePaletteJson } from "@semio-tech/ui-styling";
+import { syncSessionVelloTheme } from "@semio-tech/ui-styling";
+import { useVelloThemeSync } from "@semio-tech/ui-react";
 import initDagWasm, { DagSession, initSync } from "../pkg/mathematical_graph_port_directed_dag.js";
 
 // #region 🔖GpuWasmBridge
@@ -397,16 +398,10 @@ export function DagCanvas({ fixtureJson, className, reorganize, onFixtureChange,
   const lastReportedLodRef = useRef<DagDrawLodKind | null>(null);
 
   const syncVelloTheme = useCallback(() => {
-    if (typeof document === "undefined") return;
-    const session = sessionRef.current;
-    if (!session) return;
-    try {
-      clearColorResolveCache();
-      session.setVelloThemeJson(serializeGraphVelloThemePaletteJson());
-    } catch {
-      /* document theme tokens not ready */
-    }
+    syncSessionVelloTheme(sessionRef.current);
   }, []);
+
+  useVelloThemeSync(syncVelloTheme);
 
   const syncLodMode = useCallback(() => {
     const session = sessionRef.current;

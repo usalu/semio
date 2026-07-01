@@ -3,9 +3,9 @@
 // #endregion 🧲Header
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { borderNormalBottomClass, canvasViewportClass, cn, CanvasPickMenu, ContextMenuController, floatingMenuItemClass, floatingMenuSurfaceClass, floatingToolbarSurfaceClass, Icon, menuListItemClassName, SelectionMarquee, useCanvasPickInteraction, type CanvasPickTarget, type ContextMenuItem, type ScreenRect, type SelectionMarqueeCoverage } from "@semio-tech/ui-react";
+import { borderNormalBottomClass, canvasViewportClass, cn, CanvasPickMenu, ContextMenuController, floatingMenuItemClass, floatingMenuSurfaceClass, floatingToolbarSurfaceClass, Icon, menuListItemClassName, SelectionMarquee, useCanvasPickInteraction, useVelloThemeSync, type CanvasPickTarget, type ContextMenuItem, type ScreenRect, type SelectionMarqueeCoverage } from "@semio-tech/ui-react";
 import { parseCanvasPickTargetKey } from "@semio-tech/framework-core";
-import { clearColorResolveCache, resolveColorHex, resolveSemanticColorHex, serializeGraphVelloThemePaletteJson, tokenVar } from "@semio-tech/ui-styling";
+import { resolveColorHex, resolveSemanticColorHex, syncSessionVelloTheme, tokenVar } from "@semio-tech/ui-styling";
 import { isDagDrawLodKind, type DagDrawLodKind } from "@semio-tech/dag-react";
 import initFlowWasm, { FlowSession, initSync } from "../core/pkg/flow_core.js";
 import flowCoreWasmUrl from "../core/pkg/flow_core_bg.wasm?url";
@@ -3091,24 +3091,10 @@ export function FlowCanvas({
   const alignSelectionRef = useRef<(mode: FlowSelectionAlignMode) => void>(() => {});
 
   const syncVelloTheme = useCallback(() => {
-    if (typeof document === "undefined") return;
-    const session = sessionRef.current;
-    if (!session) return;
-    try {
-      clearColorResolveCache();
-      session.setVelloThemeJson(serializeGraphVelloThemePaletteJson());
-    } catch {
-      /* document theme tokens not ready */
-    }
+    syncSessionVelloTheme(sessionRef.current);
   }, []);
 
-  useEffect(() => {
-    if (typeof document === "undefined") return;
-    const root = document.documentElement;
-    const obs = new MutationObserver(() => syncVelloTheme());
-    obs.observe(root, { attributes: true, attributeFilter: ["class", "style", "data-theme"] });
-    return () => obs.disconnect();
-  }, [syncVelloTheme]);
+  useVelloThemeSync(syncVelloTheme);
 
   useEffect(() => {
     onPreviewTextRef.current = onPreviewText;

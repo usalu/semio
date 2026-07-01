@@ -8,13 +8,15 @@
         "cwd": "procedural/3d/rs",
         "command": "bun ./script.ts wasm"
       },
-      "outputs": ["{projectRoot}/pkg"]
+      "outputs": [
+        "{projectRoot}/pkg"
+      ]
     },
     "test": {
       "executor": "nx:run-commands",
       "options": {
         "cwd": "procedural/3d/rs",
-        "command": "cargo test -p procedural_3d",
+        "command": "bun ./script.ts test",
         "forwardAllArgs": true
       }
     }

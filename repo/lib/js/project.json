@@ -8,14 +8,14 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "{workspaceRoot}/repo/lib/js",
-        "command": "bunx tsc -p tsconfig.json --noEmit"
+        "command": "bun ./script.ts lint"
       }
     },
     "test": {
       "executor": "nx:run-commands",
       "options": {
         "cwd": "{workspaceRoot}/repo/lib/js",
-        "command": "bun test"
+        "command": "bun ./script.ts test"
       }
     }
   }

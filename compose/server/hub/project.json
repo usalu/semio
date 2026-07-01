@@ -7,21 +7,21 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "compose/server/hub",
-        "command": "cargo fetch --manifest-path Cargo.toml"
+        "command": "bun ./script.ts setup"
       }
     },
     "build": {
       "executor": "nx:run-commands",
       "options": {
         "cwd": "compose/server/hub",
-        "command": "cargo build --release --manifest-path Cargo.toml"
+        "command": "bun ./script.ts build"
       }
     },
     "test": {
       "executor": "nx:run-commands",
       "options": {
         "cwd": "compose/server/hub",
-        "command": "cargo test --manifest-path Cargo.toml"
+        "command": "bun ./script.ts test"
       }
     }
   }

@@ -6,7 +6,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "asset",
-        "command": "bun -e \"console.log('@semio-tech/semio-asset is a source-only workspace and does not require a build step.')\"",
+        "command": "bun ./script.ts build",
         "forwardAllArgs": true
       }
     }

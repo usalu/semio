@@ -20,7 +20,7 @@ import {
   type RenderMode,
 } from "@semio-tech/infinite-cavas-react-renderer";
 import { parseCanvasPickTargetKey } from "@semio-tech/framework-core";
-import { type TreeDragAndDropController, CanvasPickMenu, cn, glassMenuClass, normalizeEngagementCommandText, resolveIconUrlsInBoardJson, useCanvasPickInteraction, type CanvasPickTarget } from "@semio-tech/ui-react";
+import { type TreeDragAndDropController, CanvasPickMenu, cn, glassMenuClass, normalizeEngagementCommandText, resolveIconUrlsInBoardJson, useCanvasPickInteraction, useVelloThemeSync, type CanvasPickTarget } from "@semio-tech/ui-react";
 import { createPortal } from "react-dom";
 import {
   blendTokenHex,
@@ -14587,38 +14587,9 @@ export function Puzzle2dCanvas({
     };
   }, [contextRenderer, renderMode]);
 
-  reactHostPort.useEffect(() => {
-    const renderer = rendererRef.current;
-    if (!renderer || typeof document === "undefined" || typeof MutationObserver === "undefined") {
-      return undefined;
-    }
-    if (renderMode === "headless-test") {
-      return undefined;
-    }
-    const root = document.documentElement;
-    const observer = new MutationObserver((records) => {
-      for (const record of records) {
-        if (record.type !== "attributes") {
-          continue;
-        }
-        const name = record.attributeName;
-        if (name !== "class" && name !== "style") {
-          continue;
-        }
-        const target = record.target as HTMLElement;
-        const next = target.getAttribute(name);
-        if (record.oldValue === next) {
-          continue;
-        }
-        renderer.invalidate();
-        return;
-      }
-    });
-    observer.observe(root, { attributeFilter: ["class", "style"], attributeOldValue: true, attributes: true });
-    return () => {
-      observer.disconnect();
-    };
-  }, [contextRenderer, renderMode]);
+  useVelloThemeSync(() => {
+    rendererRef.current?.invalidate();
+  }, renderMode !== "headless-test");
 
   reactHostPort.useLayoutEffect(() => {
     const renderer = rendererRef.current;

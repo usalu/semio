@@ -1,5 +1,5 @@
 import type { SlideFile } from "@semio-tech/framework-presentation-core";
-import { baukomponentenGridArtifacts } from "../../../../spec.ts";
+import { baukomponentenGridArtifacts } from "../../../../index.ts";
 
 const { participants, embodiments, dispositions } = baukomponentenGridArtifacts();
 

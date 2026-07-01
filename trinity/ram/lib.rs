@@ -632,9 +632,10 @@ pub fn dispatch_trinity_graph_ops(store: &mut TrinityGraphStore, ops: Vec<Trinit
     if ops.is_empty() {
         return Ok(());
     }
-    let projection = store.projection().map_err(|e| e.to_string())?;
+    let mut projection = store.projection().map_err(|e| e.to_string())?;
     for op in &ops {
         validate_trinity_graph_op(op, &projection)?;
+        projection = apply_operation(&projection, op);
     }
     store
         .dispatch(DocumentVcsCommand::Apply {
@@ -1352,6 +1353,71 @@ mod tests {
         assert_eq!(store.projection().expect("projection").nodes.len(), 3);
         store.dispatch(DocumentVcsCommand::Undo).expect("undo");
         assert_eq!(store.projection().expect("projection").nodes.len(), 2);
+    }
+
+    #[test]
+    fn graph_op_dispatch_validates_create_edge_batch_incrementally() {
+        let mut fixture = mini_fixture();
+        while fixture.nodes.len() < 9 {
+            fixture.nodes.push(Node {
+                id: format!("pad-{}", fixture.nodes.len()),
+                kind: "Piece".into(),
+                name: format!("pad-{}", fixture.nodes.len()),
+                x: 0.0,
+                y: 0.0,
+                width: 80.0,
+                height: 40.0,
+                properties: PropertyBag::new(),
+                ports: vec![],
+            });
+        }
+        let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", fixture));
+        dispatch_trinity_graph_ops(
+            &mut store,
+            vec![
+                TrinityGraphOp::CreateNode {
+                    id: "x-9".into(),
+                    kind: "Piece".into(),
+                    name: "x".into(),
+                    x: 1080.0,
+                    y: 0.0,
+                    width: 80.0,
+                    height: 40.0,
+                    ports: vec![Port {
+                        id: "out".into(),
+                        kind: "Connector".into(),
+                        direction: PortDirection::Out,
+                        properties: PropertyBag::new(),
+                    }],
+                },
+                TrinityGraphOp::CreateNode {
+                    id: "y-10".into(),
+                    kind: "Piece".into(),
+                    name: "y".into(),
+                    x: 1200.0,
+                    y: 80.0,
+                    width: 80.0,
+                    height: 40.0,
+                    ports: vec![Port {
+                        id: "in".into(),
+                        kind: "Connector".into(),
+                        direction: PortDirection::In,
+                        properties: PropertyBag::new(),
+                    }],
+                },
+                TrinityGraphOp::CreateEdge {
+                    id: "e-batch".into(),
+                    kind: "Connection".into(),
+                    source: port_key("x-9", "out"),
+                    target: port_key("y-10", "in"),
+                    properties: PropertyBag::new(),
+                },
+            ],
+        )
+        .expect("batch create edge");
+        let projection = store.projection().expect("projection");
+        assert_eq!(projection.nodes.len(), 11);
+        assert_eq!(projection.edges.len(), 2);
     }
 
     #[test]

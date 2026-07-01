@@ -12,10 +12,11 @@ import {
 	WindowKindRuntime,
 	buildSequenceWindowBody,
 	createPlayAppRuntime,
+	createDefaultLayout,
 	createProductPlaygroundPlatform,
-	createStackLayout,
 	enforcePlaygroundWindowEngagementInput,
 	registerWindowBody,
+	buildWriterWindowBody,
 	FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
 	FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
 	FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -35,9 +36,12 @@ import {
 } from "@semio-tech/framework-playground-core";
 import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
 import {
-	DEFAULT_IMPERATIVE_CATALOGUE,
+	type EffectLogEntry,
 	type ImperativeCatalogueItem,
+	type RunResult,
+	imperativeExtensionHost,
 } from "@semio-tech/imperative-core";
+import { sequenceStepCatalogueItemDragData } from "@semio-tech/sequence-react";
 import {
 	DAG_LOD_MODE_AUTOMATIC,
 	dagLodAutomaticSelectLabel,
@@ -58,11 +62,19 @@ import {
 
 export const SEQUENCE_PLAY_APP_ID = "sequence-play";
 export const SEQUENCE_PLAY_CONTROLLER_ID = "sequence-play";
-export const SEQUENCE_PLAY_SURFACE_ID = "sequence.play/v1";
 export const SEQUENCE_PLAY_BODY_KEY_MAIN = "sequence.play.main";
+export const SEQUENCE_PLAY_BODY_KEY_SCRIPT = "sequence.play.script";
+export const SEQUENCE_PLAY_SURFACE_ID = "sequence.play/v1";
+export const SEQUENCE_PLAY_SCRIPT_SURFACE_ID = "sequence.play.script/v1";
 export const SEQUENCE_PLAY_WINDOW_KIND_ID = "sequence-main";
+export const SEQUENCE_PLAY_SCRIPT_WINDOW_KIND_ID = "sequence-script";
 export const SEQUENCE_PLAY_DEFAULT_FIXTURE_JSON = sequenceFixtureToJson(DEFAULT_SEQUENCE_FIXTURE);
-export const SEQUENCE_PLAY_LAYOUT = createStackLayout([SEQUENCE_PLAY_WINDOW_KIND_ID], ["Sequence"]);
+export const SEQUENCE_PLAY_LAYOUT = createDefaultLayout(
+	[SEQUENCE_PLAY_WINDOW_KIND_ID, SEQUENCE_PLAY_SCRIPT_WINDOW_KIND_ID],
+	"row",
+	[65, 35],
+	["Sequence", "Compiled Script"],
+);
 export const SEQUENCE_PLAY_HIERARCHY_TAB_ID = "framework.panel.hierarchy";
 export const SEQUENCE_PLAY_CATALOGUE_TAB_ID = "framework.panel.catalogue";
 export const SEQUENCE_PLAY_INSPECTION_TAB_ID = "framework.panel.inspection";
@@ -166,9 +178,10 @@ export function buildSequencePlayHierarchyTree(fixtureJson: string, selectedStep
 }
 
 export function buildSequencePlayCatalogueTree(): UiNode {
+	const catalogue = imperativeExtensionHost.getCatalogue();
 	return {
 		type: "tree",
-		sections: DEFAULT_IMPERATIVE_CATALOGUE.sections.map((section) => ({
+		sections: catalogue.sections.map((section) => ({
 			id: `sequence-play-catalogue.${section.id}`,
 			label: section.title,
 			defaultOpen: true,
@@ -176,6 +189,8 @@ export function buildSequencePlayCatalogueTree(): UiNode {
 				id: `sequence-play-catalogue.kind.${item.kind}`,
 				label: item.name,
 				description: item.kind,
+				draggable: true,
+				dragData: sequenceStepCatalogueItemDragData(item),
 				command: sequencePlayCmd("addStep", { kind: item.kind }),
 			})),
 		})),
@@ -226,7 +241,10 @@ function sequencePlayInspectorParamGroup(steps: readonly SequenceStepV1[]): UiIn
 	const stepIds = steps.map((step) => step.id);
 	const kind = steps[0]?.kind;
 	if (!kind || steps.some((step) => step.kind !== kind)) return null;
-	const item = DEFAULT_IMPERATIVE_CATALOGUE.sections.flatMap((section) => section.items).find((entry) => entry.kind === kind);
+	const item = imperativeExtensionHost
+		.getCatalogue()
+		.sections.flatMap((section) => section.items)
+		.find((entry) => entry.kind === kind);
 	if (!item?.inputs.length) return null;
 	const fields: UiNode[] = item.inputs.map((input) => {
 		const values = steps.map((step) => step.params[input.name]);
@@ -276,7 +294,11 @@ function sequencePlayInspectorBaseGroup(steps: readonly SequenceStepV1[]): UiIns
 	return { id: "sequence-play-inspector.base", label: "Step", fields };
 }
 
-export function buildSequencePlayInspectorTree(fixtureJson: string, selectedStepIds: readonly string[]): UiNode {
+export function buildSequencePlayInspectorTree(
+	fixtureJson: string,
+	selectedStepIds: readonly string[],
+	effectLog: readonly EffectLogEntry[] = [],
+): UiNode {
 	const fixture = parseSequencePlayFixtureJson(fixtureJson);
 	if (!fixture) {
 		return uiDeclarativeSectionsToTree([
@@ -305,6 +327,14 @@ export function buildSequencePlayInspectorTree(fixtureJson: string, selectedStep
 	const paramGroup = sequencePlayInspectorParamGroup(steps);
 	if (paramGroup) groups.push(paramGroup);
 	groups.push(sequencePlayInspectorBaseGroup(steps));
+	const runLogFields: UiNode[] =
+		effectLog.length === 0
+			? [{ type: "text", value: "Run to see effects." }]
+			: effectLog.map((entry, index) => ({
+					type: "text" as const,
+					value: entry.error ? `${entry.kind} · ${entry.error}` : entry.kind,
+				}));
+	groups.push({ id: "sequence-play-inspector.run-log", label: "Run Log", fields: runLogFields });
 	return uiInspectorGroupsToTree(groups);
 }
 // #endregion 🔖SequencePlayPanels
@@ -324,6 +354,8 @@ export class SequencePlayController extends Controller {
 	private lodModeByInstance: Record<string, DagLodModeKind> = {};
 	private effectiveLod: DagDrawLodKind = "normal";
 	private selectedStepIds: string[] = [];
+	private compiledText = "";
+	private effectLog: EffectLogEntry[] = [];
 	private interactionRevision = 0;
 	private readonly snapshotListeners = new Set<() => void>();
 
@@ -350,6 +382,18 @@ export class SequencePlayController extends Controller {
 
 	getSelectedStepIds(): readonly string[] {
 		return this.selectedStepIds;
+	}
+
+	getCompiledText(): string {
+		return this.compiledText;
+	}
+
+	getEffectLog(): readonly EffectLogEntry[] {
+		return this.effectLog;
+	}
+
+	getExtensionRevision(): number {
+		return imperativeExtensionHost.getRevision();
 	}
 
 	getInteractionRevision(): number {
@@ -380,6 +424,21 @@ export class SequencePlayController extends Controller {
 		const parsed = parseSequencePlayFixtureJson(json);
 		if (!parsed || sequenceFixtureToJson(parsed) === this.fixtureJson) return;
 		this.fixtureJson = sequenceFixtureToJson(parsed);
+		this.interactionRevision += 1;
+		this.notifySnapshot();
+		this.emit();
+	}
+
+	private setCompiledText(text: string): void {
+		if (text === this.compiledText) return;
+		this.compiledText = text;
+		this.interactionRevision += 1;
+		this.notifySnapshot();
+		this.emit();
+	}
+
+	private setRunResult(result: RunResult): void {
+		this.effectLog = [...result.effects];
 		this.interactionRevision += 1;
 		this.notifySnapshot();
 		this.emit();
@@ -512,10 +571,34 @@ export class SequencePlayController extends Controller {
 		};
 	}
 
+	private scriptWindowEngagement(): WindowEngagement {
+		return {
+			sessionActive: false,
+			input: {
+				id: "sequence-script-engagement",
+				value: "",
+				placeholder: "Compiled script is read-only",
+				onChange: sequencePlayCmd("engagementInput"),
+				onSubmit: sequencePlayCmd("engagementSubmit"),
+			},
+			possibleEngagements: [],
+			controls: [],
+			status: [{ id: "sequence-script-status", text: this.compiledText ? "Compiled" : "Empty" }],
+		};
+	}
+
 	private rebuildShellMode(): void {
 		this.mainMode.tools = buildSequencePlayToolbarTools(SEQUENCE_PLAY_CONTROLLER_ID, this.orientation);
 		this.mainMode.windowKinds = [
 			new WindowKindRuntime(SEQUENCE_PLAY_WINDOW_KIND_ID, "Sequence", SEQUENCE_PLAY_BODY_KEY_MAIN, undefined, this.windowMeasures(), this.windowEngagement()),
+			new WindowKindRuntime(
+				SEQUENCE_PLAY_SCRIPT_WINDOW_KIND_ID,
+				"Compiled Script",
+				SEQUENCE_PLAY_BODY_KEY_SCRIPT,
+				undefined,
+				[],
+				this.scriptWindowEngagement(),
+			),
 		];
 		for (const windowKind of this.mainMode.windowKinds) {
 			enforcePlaygroundWindowEngagementInput(windowKind.engagement, `Sequence play window "${windowKind.id}"`);
@@ -603,6 +686,20 @@ export class SequencePlayController extends Controller {
 			}
 			return;
 		}
+		if (command === "setCompiledText") {
+			const text = (args as { text?: string }).text;
+			if (typeof text === "string") {
+				this.setCompiledText(text);
+			}
+			return;
+		}
+		if (command === "setRunResult") {
+			const result = (args as { result?: RunResult }).result;
+			if (result && Array.isArray(result.effects)) {
+				this.setRunResult(result);
+			}
+			return;
+		}
 		if (command === "addStep") {
 			const kind = (args as { kind?: string }).kind;
 			if (typeof kind === "string") {
@@ -675,8 +772,13 @@ function buildSequencePlayMainDeclarativeBody(_ctx: WindowBodyViewContext): UiNo
 	return buildSequenceWindowBody(SEQUENCE_PLAY_SURFACE_ID, SEQUENCE_PLAY_CONTROLLER_ID, SEQUENCE_PLAY_WINDOW_KIND_ID);
 }
 
+function buildSequencePlayScriptDeclarativeBody(_ctx: WindowBodyViewContext): UiNode {
+	return buildWriterWindowBody(SEQUENCE_PLAY_SCRIPT_SURFACE_ID, SEQUENCE_PLAY_CONTROLLER_ID, SEQUENCE_PLAY_SCRIPT_WINDOW_KIND_ID);
+}
+
 export function registerSequencePlayDeclarativeBodies(): void {
 	registerWindowBody(SEQUENCE_PLAY_BODY_KEY_MAIN, buildSequencePlayMainDeclarativeBody);
+	registerWindowBody(SEQUENCE_PLAY_BODY_KEY_SCRIPT, buildSequencePlayScriptDeclarativeBody);
 }
 
 export function buildSequencePlayAppRuntime(controller: SequencePlayController): AppRuntime {
@@ -722,6 +824,10 @@ if (import.meta.vitest) {
 			const ctrl = new SequencePlayController(bus, () => {});
 			ctrl.run("disconnectSteps", { from: "step-1", to: "step-2" });
 			expect(ctrl.getFixtureJson()).not.toContain('"from":"step-1","to":"step-2"');
+		});
+		it("layout exposes sequence and compiled script windows", () => {
+			expect(SEQUENCE_PLAY_LAYOUT.root.kind).toBe("row");
+			expect(SEQUENCE_PLAY_SCRIPT_WINDOW_KIND_ID).toBe("sequence-script");
 		});
 	});
 }

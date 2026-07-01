@@ -239,9 +239,9 @@ export type {
   IconRenderPort,
   IconRenderRequest,
   IconRenderResult,
-} from "@semio-tech/ui-styling/icon-render-port";
+} from "@semio-tech/ui-styling";
 
-import type { IconRenderPort, IconRenderRequest, IconRenderResult, IconRenderShape } from "@semio-tech/ui-styling/icon-render-port";
+import type { IconRenderPort, IconRenderRequest, IconRenderResult, IconRenderShape } from "@semio-tech/ui-styling";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { SVGRenderer } from "three/examples/jsm/renderers/SVGRenderer.js";
 
@@ -2016,6 +2016,20 @@ export function useElementsSurfaceChrome({ theme, device, expertise, compact = f
   return { mobile: device === "mobile" };
 }
 
+/**
+ * @emoji 🌓 Observes document theme attributes and runs `sync` on mount and whenever the root theme changes.
+ */
+export function useVelloThemeSync(sync: () => void, enabled = true): void {
+  reactHostPort.useEffect(() => {
+    if (!enabled || typeof document === "undefined" || typeof MutationObserver === "undefined") return;
+    sync();
+    const root = document.documentElement;
+    const observer = new MutationObserver(() => sync());
+    observer.observe(root, { attributes: true, attributeFilter: ["class", "style", "data-theme"] });
+    return () => observer.disconnect();
+  }, [enabled, sync]);
+}
+
 /** @emoji 🧪 Clears surface-chrome leases and DOM overrides between vitest cases. */
 export function resetElementsSurfaceChromeForTests(): void {
   cancelElementsSurfaceChromeDeferredClear();
@@ -2388,6 +2402,13 @@ export type UiTranslationSchema = {
         readonly general: UiLabelValue;
         readonly mode: UiLabelValue;
         readonly expertise: UiLabelValue;
+        readonly app: UiLabelValue;
+        readonly theme: UiLabelValue;
+      };
+      readonly theme: {
+        readonly light: UiLabelValue;
+        readonly dark: UiLabelValue;
+        readonly system: UiLabelValue;
       };
     };
     readonly toolbar: {
@@ -2669,6 +2690,13 @@ export const uiChromeTranslationBundles = {
         general: { label: { normal: "Allgemein", beginner: "Allgemein" } },
         mode: { label: { normal: "Modus", beginner: "Modus" } },
         expertise: { label: { normal: "Expertise", beginner: "Expertise" } },
+        app: { label: { normal: "App", beginner: "App" } },
+        theme: { label: { normal: "Design", beginner: "Design" } },
+      },
+      theme: {
+        light: { label: { normal: "Hell", beginner: "Hell" } },
+        dark: { label: { normal: "Dunkel", beginner: "Dunkel" } },
+        system: { label: { normal: "System", beginner: "System" } },
       },
     },
     toolbar: {
@@ -3010,6 +3038,13 @@ export const uiChromeTranslationBundles = {
         general: { label: { normal: "General", beginner: "General" } },
         mode: { label: { normal: "Mode", beginner: "Mode" } },
         expertise: { label: { normal: "Expertise", beginner: "Expertise" } },
+        app: { label: { normal: "App", beginner: "App" } },
+        theme: { label: { normal: "Theme", beginner: "Theme" } },
+      },
+      theme: {
+        light: { label: { normal: "Light", beginner: "Light" } },
+        dark: { label: { normal: "Dark", beginner: "Dark" } },
+        system: { label: { normal: "System", beginner: "System" } },
       },
     },
     toolbar: {
@@ -4171,9 +4206,12 @@ export const windowEngagementBodyClass = "flex min-h-0 min-w-0 flex-auto flex-co
 /** @emoji 📐 CSS variable for invisible top clearance below floating window chrome. */
 export const windowChromeScrollClearanceVar = "--window-chrome-scroll-clearance";
 
-/** @emoji 📐 Chrome-aware window bodies reserve invisible top space so content stays below floating chrome while scrolling. */
-export const windowBodyChromeAwareInsetClass =
-  "has-[[data-window-content-layout=chrome-aware]]:pt-[var(--window-chrome-scroll-clearance)]";
+/** @emoji 🏝️ CSS variable for the default cleared line under floating window chrome (dead-island). */
+export const windowContentDeadLineVar = "--window-content-dead-line";
+
+/** @emoji 🏝️ Chrome-aware scroll hosts stay edgeless but reserve scroll-padding for the dead line. */
+export const windowContentDeadLineScrollClass =
+  "overscroll-contain [scroll-padding-top:var(--window-content-dead-line)]";
 
 /** @emoji 📐 Resolves {@link windowChromeScrollClearanceVar} to px for layout math. */
 export function readWindowChromeScrollClearancePx(element?: Element | null, rootPx = STYLING_COMPACT_ROOT_PX): number {
@@ -4198,6 +4236,70 @@ export function measureWindowChromeScrollClearancePx(element?: Element | null): 
   }
   return Math.max(0, Math.ceil(maxBottom - bodyTop));
 }
+
+/** @emoji 🏝️ True when an element scrolls inside a chrome-aware window with floating chrome overlays. */
+export function isWindowContentDeadLineHost(element: Element | null): boolean {
+  if (!element?.closest('[data-window-content-layout=chrome-aware]')) return false;
+  const windowBody = element.closest('[data-slot="window-body"]');
+  if (!windowBody) return false;
+  return windowBody.querySelector('[data-slot="window-engagement-overlay"], [data-slot="window-measures-overlay"]') != null;
+}
+
+/** @emoji 🏝️ Resolves the default dead-line scroll offset for chrome-aware window bodies. */
+export function readWindowContentDeadLinePx(element?: Element | null, rootPx = STYLING_COMPACT_ROOT_PX): number {
+  if (!element || !isWindowContentDeadLineHost(element)) return 0;
+  return readWindowChromeScrollClearancePx(element, rootPx);
+}
+
+/** @emoji 🏝️ Clears the first line under floating chrome by default; scrolling up reveals it edgelessly. */
+export function useWindowContentDeadLineScroll(scrollerRef: React.RefObject<HTMLElement | null>): void {
+  reactHostPort.useLayoutEffect(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    const apply = () => {
+      if (!isWindowContentDeadLineHost(el)) return;
+      const deadLine = readWindowContentDeadLinePx(el);
+      if (deadLine > 0 && el.scrollTop < deadLine) el.scrollTop = deadLine;
+    };
+    apply();
+    const body = el.closest('[data-slot="window-body"]');
+    if (!body) return;
+    const ro = new ResizeObserver(apply);
+    ro.observe(body);
+    for (const slot of ["window-engagement-overlay", "window-measures-overlay"] as const) {
+      const overlay = body.querySelector(`[data-slot="${slot}"]`);
+      if (overlay) ro.observe(overlay);
+    }
+    return () => ro.disconnect();
+  }, []);
+}
+
+/** @emoji 🏝️ Full-bleed scroll surface for chrome-aware window bodies (writer hosts, forms, tables). */
+export const ChromeAwareWindowScrollSurface = reactHostPort.forwardRef<HTMLDivElement, React.ComponentPropsWithoutRef<"div">>(
+  ({ className, children, ...props }, ref) => {
+    const scrollerRef = reactHostPort.useRef<HTMLDivElement | null>(null);
+    const setScrollerRef = reactHostPort.useCallback(
+      (node: HTMLDivElement | null) => {
+        scrollerRef.current = node;
+        if (typeof ref === "function") ref(node);
+        else if (ref) ref.current = node;
+      },
+      [ref],
+    );
+    useWindowContentDeadLineScroll(scrollerRef);
+    return (
+      <div
+        ref={setScrollerRef}
+        data-slot="window-dead-line-scroll"
+        className={cn("min-h-0 min-w-0 overflow-auto", windowContentDeadLineScrollClass, className)}
+        {...props}
+      >
+        {children}
+      </div>
+    );
+  },
+);
+ChromeAwareWindowScrollSurface.displayName = "ChromeAwareWindowScrollSurface";
 
 /** @emoji 📐 Labelled icon action in window rail chrome bars (options + command). */
 export const windowRailChromeLabelActionClass = cn(
@@ -8620,13 +8722,24 @@ export { ResizableHandle, ResizablePanel, ResizablePanelGroup };
 /** @emoji 📜 Native overflow scroll host (avoids Radix ScrollArea `setViewport` / `setScrollbar*Enabled` ref update loops). */
 const Scrollable = reactHostPort.forwardRef<HTMLDivElement, React.ComponentPropsWithoutRef<"div"> & { orientation?: "vertical" | "horizontal" | "both" }>(
   ({ className, children, orientation = "vertical", ...props }, ref) => {
+    const scrollerRef = reactHostPort.useRef<HTMLDivElement | null>(null);
+    const setScrollerRef = reactHostPort.useCallback(
+      (node: HTMLDivElement | null) => {
+        scrollerRef.current = node;
+        if (typeof ref === "function") ref(node);
+        else if (ref) ref.current = node;
+      },
+      [ref],
+    );
+    useWindowContentDeadLineScroll(scrollerRef);
     return (
       <div
-        ref={ref}
+        ref={setScrollerRef}
         data-slot="scroll-area"
         className={cn(
           "relative min-h-0 min-w-0 size-full focus-visible:ring-ring/50 transition-[color,box-shadow] outline-none focus-visible:ring-[length:var(--stroke-focus)] focus-visible:outline-1",
           orientation === "horizontal" ? "overflow-x-auto overflow-y-hidden" : orientation === "vertical" ? "overflow-y-auto overflow-x-hidden" : "overflow-auto",
+          windowContentDeadLineScrollClass,
           className,
         )}
         {...props}
@@ -15176,8 +15289,13 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
     if (!body || !(engagement || measures)) return;
     const sync = () => {
       const px = measureWindowChromeScrollClearancePx(body);
-      if (px > 0) body.style.setProperty(windowChromeScrollClearanceVar, `${px}px`);
-      else body.style.removeProperty(windowChromeScrollClearanceVar);
+      if (px > 0) {
+        body.style.setProperty(windowChromeScrollClearanceVar, `${px}px`);
+        body.style.setProperty(windowContentDeadLineVar, `${px}px`);
+      } else {
+        body.style.removeProperty(windowChromeScrollClearanceVar);
+        body.style.removeProperty(windowContentDeadLineVar);
+      }
     };
     sync();
     const ro = new ResizeObserver(sync);
@@ -15258,7 +15376,7 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
         <div
           ref={windowBodyRef}
           data-slot="window-body"
-          className={cn("relative flex min-w-0 flex-col overflow-hidden", windowBodyChromeAwareInsetClass, fill ? "min-h-0 flex-1" : "h-auto shrink-0")}
+          className={cn("relative flex min-w-0 flex-col overflow-hidden", fill ? "min-h-0 flex-1" : "h-auto shrink-0")}
         >
           {error ? <DefaultErrorDisplay error={error} /> : loading && skeleton ? skeleton : children}
           {measures ? (
@@ -22769,21 +22887,35 @@ if (import.meta.vitest) {
       expect(shouldRouteKeysToWindowEngagement(text)).toBe(false);
     });
 
-    it("Window applies invisible top inset for chrome-aware bodies and keeps canvas bodies edgeless", () => {
-      const { container, rerender } = render(
+    it("Window keeps bodies edgeless and chrome-aware scroll hosts start below the dead line", () => {
+      const { container } = render(
         <Window id="chrome-aware-window" active engagement={{ input: { placeholder: "Command" } }} measures={<div>LOD</div>}>
-          <div data-window-content-layout="chrome-aware">Writer</div>
+          <div data-window-content-layout="chrome-aware" className="flex min-h-0 flex-1 flex-col">
+            <Scrollable className="h-40">
+              <div style={{ height: 240 }}>Line one</div>
+            </Scrollable>
+          </div>
         </Window>,
       );
       const body = container.querySelector('[data-slot="window-body"]');
-      expect(body?.className).toContain("has-[[data-window-content-layout=chrome-aware]]:pt-[var(--window-chrome-scroll-clearance)]");
+      expect(body?.className).not.toContain("has-[[data-window-content-layout=chrome-aware]]:pt-");
+      const scroller = container.querySelector('[data-slot="scroll-area"]') as HTMLDivElement;
+      expect(scroller?.className).toContain("scroll-padding-top:var(--window-content-dead-line)");
+      expect(scroller.scrollTop).toBeGreaterThan(0);
+    });
 
-      rerender(
-        <Window id="edgeless-window" active engagement={{ input: { placeholder: "Command" } }} measures={<div>LOD</div>}>
-          <div data-window-content-layout="edgeless">Puzzle</div>
+    it("Window edgeless bodies do not apply a dead-line scroll offset", () => {
+      const { container } = render(
+        <Window id="edgeless-window" active engagement={{ input: { placeholder: "Command" } }}>
+          <div data-window-content-layout="edgeless" className="h-40">
+            <Scrollable className="h-full">
+              <div style={{ height: 240 }}>Canvas</div>
+            </Scrollable>
+          </div>
         </Window>,
       );
-      expect(container.querySelector('[data-window-content-layout="edgeless"]')).toBeTruthy();
+      const scroller = container.querySelector('[data-slot="scroll-area"]') as HTMLDivElement;
+      expect(scroller.scrollTop).toBe(0);
     });
 
     it("Window does not route keys to engagement while another input is focused", () => {

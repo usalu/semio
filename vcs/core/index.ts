@@ -65,7 +65,8 @@ export type DocumentVcsCommand<TOp> =
 	| { readonly kind: "redo" }
 	| { readonly kind: "commitCheckpoint"; readonly message?: string; readonly authors?: readonly Author[] }
 	| { readonly kind: "createAlternative"; readonly name: string }
-	| { readonly kind: "switchAlternative"; readonly alternativeId: string };
+	| { readonly kind: "switchAlternative"; readonly alternativeId: string }
+	| { readonly kind: "checkoutCheckpoint"; readonly checkpointId: string };
 
 export interface DocumentVcsStoreOptions<TProjection, TOp> {
 	readonly envelope: DocumentVcsEnvelope<TProjection, TOp>;
@@ -200,6 +201,7 @@ export class DocumentVcsStore<TProjection, TOp> {
 	private editSequence = 0;
 	private listeners = new Set<() => void>();
 	private generation = 0;
+	private currentCheckpointId: string | undefined;
 
 	constructor(options: DocumentVcsStoreOptions<TProjection, TOp>) {
 		this.envelope = options.envelope;
@@ -208,6 +210,7 @@ export class DocumentVcsStore<TProjection, TOp> {
 		this.cloneProjection = options.cloneProjection ?? defaultClone;
 		this.createId = options.createId ?? createDocumentVcsId;
 		this.editSequence = options.envelope.vcs.edits.reduce((max, edit) => Math.max(max, edit.sequenceNumber), 0);
+		this.currentCheckpointId = options.envelope.vcs.checkpoints.at(-1)?.id;
 	}
 
 	subscribe(listener: () => void): () => void {
@@ -232,6 +235,7 @@ export class DocumentVcsStore<TProjection, TOp> {
 		this.appliedEditIds = [...appliedEditIds];
 		this.redoEditIds = [];
 		this.editSequence = envelope.vcs.edits.reduce((max, edit) => Math.max(max, edit.sequenceNumber), 0);
+		this.currentCheckpointId = envelope.vcs.checkpoints.at(-1)?.id;
 		this.bump();
 	}
 
@@ -267,7 +271,9 @@ export class DocumentVcsStore<TProjection, TOp> {
 				description: command.message,
 				savedAt: new Date().toISOString(),
 			};
-			const parent = this.envelope.vcs.checkpoints.at(-1);
+			const parent = this.currentCheckpointId
+				? this.envelope.vcs.checkpoints.find((entry) => entry.id === this.currentCheckpointId)
+				: undefined;
 			const changeIds = [...(parent?.changeIds ?? []), change.id];
 			const checkpoint: Checkpoint = {
 				id: this.createId("checkpoint"),
@@ -277,14 +283,22 @@ export class DocumentVcsStore<TProjection, TOp> {
 				message: command.message,
 				timestamp: new Date().toISOString(),
 			};
+			const activeAltId = this.envelope.activeAlternativeId;
+			const alternatives = activeAltId
+				? this.envelope.vcs.alternatives.map((alt) =>
+						alt.id === activeAltId ? { ...alt, checkpointIds: [...alt.checkpointIds, checkpoint.id] } : alt,
+					)
+				: this.envelope.vcs.alternatives;
 			this.envelope = {
 				...this.envelope,
 				vcs: {
 					...this.envelope.vcs,
 					changes: [...this.envelope.vcs.changes, change],
 					checkpoints: [...this.envelope.vcs.checkpoints, checkpoint],
+					alternatives,
 				},
 			};
+			this.currentCheckpointId = checkpoint.id;
 			this.bump();
 			return;
 		}
@@ -292,7 +306,7 @@ export class DocumentVcsStore<TProjection, TOp> {
 			if (this.envelope.vcs.checkpoints.length === 0) {
 				this.dispatch({ kind: "commitCheckpoint" });
 			}
-			const checkpointId = this.envelope.vcs.checkpoints.at(-1)?.id;
+			const checkpointId = this.currentCheckpointId ?? this.envelope.vcs.checkpoints.at(-1)?.id;
 			if (!checkpointId) return;
 			const altId = this.createId("alternative");
 			this.envelope = {
@@ -303,9 +317,7 @@ export class DocumentVcsStore<TProjection, TOp> {
 					alternatives: [...this.envelope.vcs.alternatives, { id: altId, name: command.name, checkpointIds: [checkpointId] }],
 				},
 			};
-			const checkpoint = this.envelope.vcs.checkpoints.at(-1);
-			this.appliedEditIds = checkpoint ? editIdsForChanges(this.envelope, checkpoint.changeIds) : [];
-			this.redoEditIds = [];
+			this.checkoutCheckpointInternal(checkpointId);
 			this.bump();
 			return;
 		}
@@ -316,9 +328,17 @@ export class DocumentVcsStore<TProjection, TOp> {
 			if (!checkpointId) return;
 			const checkpoint = this.envelope.vcs.checkpoints.find((entry) => entry.id === checkpointId);
 			if (!checkpoint) return;
-			this.appliedEditIds = editIdsForChanges(this.envelope, checkpoint.changeIds);
-			this.redoEditIds = [];
+			this.checkoutCheckpointInternal(checkpointId);
 			this.envelope = { ...this.envelope, activeAlternativeId: command.alternativeId };
+			this.bump();
+			return;
+		}
+		if (command.kind === "checkoutCheckpoint") {
+			const checkpoint = this.envelope.vcs.checkpoints.find((entry) => entry.id === command.checkpointId);
+			if (!checkpoint) return;
+			this.checkoutCheckpointInternal(command.checkpointId);
+			const activeAlternative = this.envelope.vcs.alternatives.find((alt) => alt.checkpointIds.at(-1) === command.checkpointId);
+			this.envelope = { ...this.envelope, activeAlternativeId: activeAlternative?.id };
 			this.bump();
 			return;
 		}
@@ -349,6 +369,13 @@ export class DocumentVcsStore<TProjection, TOp> {
 		this.appliedEditIds.push(edit.id);
 		this.redoEditIds = [];
 		this.bump();
+	}
+
+	private checkoutCheckpointInternal(checkpointId: string): void {
+		const checkpoint = this.envelope.vcs.checkpoints.find((entry) => entry.id === checkpointId);
+		this.appliedEditIds = checkpoint ? editIdsForChanges(this.envelope, checkpoint.changeIds) : [];
+		this.redoEditIds = [];
+		this.currentCheckpointId = checkpointId;
 	}
 
 	private bump(): void {
@@ -401,6 +428,49 @@ if (import.meta.vitest) {
 			expect(store.historyColumns()).toHaveLength(1);
 			expect(store.getEnvelope().vcs.edits).toHaveLength(1);
 			expect(store.getEnvelope().vcs.changes).toHaveLength(1);
+		});
+
+		it("checkoutCheckpoint restores projection", () => {
+			type P = { n: number };
+			type Op = { op: "setN"; n: number };
+			const store = new DocumentVcsStore<P, Op>({
+				envelope: createDocumentVcsEnvelope("test/v1", "t", { n: 0 }),
+				applyOp: (p, o) => ({ n: o.n }),
+				backwardsOp: (p) => [{ op: "setN", n: p.n }],
+				diffOp: (_p, o) => o,
+			});
+			store.dispatch({ kind: "apply", operations: [{ op: "setN", n: 5 }] });
+			store.dispatch({ kind: "commitCheckpoint", message: "saved" });
+			store.dispatch({ kind: "apply", operations: [{ op: "setN", n: 10 }] });
+			const checkpointId = store.getEnvelope().vcs.checkpoints[0]!.id;
+			store.dispatch({ kind: "checkoutCheckpoint", checkpointId });
+			expect(store.projection().n).toBe(5);
+		});
+
+		it("checkoutCheckpoint and createAlternative produce a real fork", () => {
+			type P = { n: number };
+			type Op = { op: "setN"; n: number };
+			const store = new DocumentVcsStore<P, Op>({
+				envelope: createDocumentVcsEnvelope("test/v1", "t", { n: 0 }),
+				applyOp: (p, o) => ({ n: o.n }),
+				backwardsOp: (p) => [{ op: "setN", n: p.n }],
+				diffOp: (_p, o) => o,
+			});
+			store.dispatch({ kind: "apply", operations: [{ op: "setN", n: 1 }] });
+			store.dispatch({ kind: "commitCheckpoint", message: "c1" });
+			const c1 = store.getEnvelope().vcs.checkpoints[0]!.id;
+			store.dispatch({ kind: "apply", operations: [{ op: "setN", n: 2 }] });
+			store.dispatch({ kind: "commitCheckpoint", message: "c2" });
+			store.dispatch({ kind: "checkoutCheckpoint", checkpointId: c1 });
+			store.dispatch({ kind: "createAlternative", name: "fork" });
+			store.dispatch({ kind: "apply", operations: [{ op: "setN", n: 3 }] });
+			store.dispatch({ kind: "commitCheckpoint", message: "fork-tip" });
+			const checkpoints = store.getEnvelope().vcs.checkpoints;
+			const parentCounts = new Map<string | undefined, number>();
+			for (const checkpoint of checkpoints) {
+				parentCounts.set(checkpoint.parentId, (parentCounts.get(checkpoint.parentId) ?? 0) + 1);
+			}
+			expect(parentCounts.get(c1)).toBe(2);
 		});
 	});
 }

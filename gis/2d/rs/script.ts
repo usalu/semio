@@ -1,5 +1,6 @@
 #!/usr/bin/env bun
 /** 🦀 `@semio-tech/gis-2d-rs` router: `bun ./script.ts wasm`. */
+import { execFileSync } from "node:child_process";
 import { BundleScript, ScriptRouter, runBundleScriptMain, runWasmPackWebBuild } from "../../../repo/lib/js/index.ts";
 
 class WasmScript extends BundleScript {
@@ -20,6 +21,12 @@ class WasmScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("wasm", WasmScript);
+class TestScript extends BundleScript {
+  run(segments: string[]): void {
+    execFileSync("cargo", ["test", "-p", "gis_2d", ...segments], { stdio: "inherit", cwd: this.repoRoot });
+  }
+}
+
+const router = new ScriptRouter(import.meta.dir).register("wasm", WasmScript).register("test", TestScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "wasm" });

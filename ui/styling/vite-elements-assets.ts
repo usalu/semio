@@ -1136,7 +1136,7 @@ export function playgroundRendererResolveAliases(repoRoot: string): ReadonlyArra
     { find: "@semio-tech/compose-react", replacement: resolve(repoRoot, "compose/client/lib/react") },
     {
       find: "@semio-tech/mit-bestand-praesentation-projektetage-spec",
-      replacement: resolve(repoRoot, "mit-bestand/präsentation/33.projektetage/spec.ts"),
+      replacement: resolve(repoRoot, "mit-bestand/präsentation/33.projektetage/index.ts"),
     },
   ];
 }

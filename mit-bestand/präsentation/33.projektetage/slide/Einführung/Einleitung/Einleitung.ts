@@ -1,4 +1,4 @@
 import { introThoughtFile } from "@semio-tech/framework-presentation-core";
-import { introSpec } from "../../../spec.ts";
+import { introSpec } from "../../../index.ts";
 
 export default introThoughtFile(introSpec);

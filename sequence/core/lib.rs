@@ -1,6 +1,6 @@
 //! 📜 Sequence core: execution-flow canvas host wrapping DagHost.
 
-pub use imperative_engine::{compile_to_text, EffectLogEntry, Executor, Path, RunResult, Step};
+pub use imperative_engine::{compile_to_text, EffectLogEntry, Executor, imperative_catalogue_json, imperative_module_registry, Path, RunResult, Step};
 pub use imperative_module_core::{catalogue_json, module_registry};
 pub use mathematical_graph_port_directed_dag as dag;
 
@@ -103,7 +103,7 @@ impl SequenceHost {
                 nodes: vec![],
                 edges: vec![],
             }),
-            registry: module_registry(),
+            registry: imperative_module_registry(),
             next_serial: 100,
         };
         host.rebuild_dag();
@@ -123,7 +123,31 @@ impl SequenceHost {
     }
 
     pub fn catalogue_json(&self) -> String {
-        catalogue_json(&self.registry)
+        imperative_catalogue_json(&self.registry)
+    }
+
+    pub fn pick_step_id_at_screen(&self, sx: f64, sy: f64, width: u32, height: u32, dpr: f64) -> Option<String> {
+        use infinite_cavas::camera::{screen_to_world, Camera as CavasCamera, Viewport};
+        use infinite_cavas::vello::kurbo::Point;
+        let viewport = Viewport {
+            width: width.max(1),
+            height: height.max(1),
+            dpr: dpr.max(1.0),
+        };
+        let camera = CavasCamera {
+            x: self.dag.fixture.camera.x,
+            y: self.dag.fixture.camera.y,
+            zoom: self.dag.fixture.camera.zoom,
+        };
+        let world = screen_to_world(&camera, &viewport, Point::new(sx, sy));
+        for node in self.dag.fixture.nodes.iter().rev() {
+            let hw = node.width * 0.5;
+            let hh = node.height * 0.5;
+            if world.x >= node.x - hw && world.x <= node.x + hw && world.y >= node.y - hh && world.y <= node.y + hh {
+                return Some(node.id.clone());
+            }
+        }
+        None
     }
 
     pub fn add_step(&mut self, kind: &str, x: f64, y: f64) -> String {
@@ -200,17 +224,24 @@ impl SequenceHost {
 
     pub fn sync_edges_from_dag(&mut self) {
         let mut edges = Vec::new();
-        let mut serial = self.next_serial;
         for dag_edge in &self.dag.fixture.edges {
             let Some(from) = dag_edge.source.split(':').next() else { continue };
             let Some(to) = dag_edge.target.split(':').next() else { continue };
             if from == to {
                 continue;
             }
-            serial += 1;
-            edges.push(SequenceEdgeV1 { id: format!("edge-{serial}"), from: from.into(), to: to.into() });
+            let id = self
+                .fixture
+                .edges
+                .iter()
+                .find(|edge| edge.from == from && edge.to == to)
+                .map(|edge| edge.id.clone())
+                .unwrap_or_else(|| {
+                    self.next_serial += 1;
+                    format!("edge-{}", self.next_serial)
+                });
+            edges.push(SequenceEdgeV1 { id, from: from.into(), to: to.into() });
         }
-        self.next_serial = serial;
         self.fixture.edges = edges;
     }
 
@@ -334,6 +365,9 @@ mod wasm_session {
         width: u32,
         height: u32,
         dpr: f64,
+        pointer_down_sx: f64,
+        pointer_down_sy: f64,
+        pointer_down_button: u8,
     }
 
     #[wasm_bindgen]
@@ -352,6 +386,9 @@ mod wasm_session {
                     width: 1,
                     height: 1,
                     dpr: 1.0,
+                    pointer_down_sx: 0.0,
+                    pointer_down_sy: 0.0,
+                    pointer_down_button: 255,
                 })),
             }
         }
@@ -453,7 +490,6 @@ mod wasm_session {
         #[wasm_bindgen(js_name = renderFrame)]
         pub fn render_frame(&self) -> Result<(), JsValue> {
             let mut inner = self.state.borrow_mut();
-            inner.host.sync_edges_from_dag();
             inner.host.fixture.camera = inner.host.dag.fixture.camera.clone();
             let mut scene = infinite_cavas::vello::Scene::new();
             let clear = inner.host.dag.vello_theme.raster_clear;
@@ -462,8 +498,33 @@ mod wasm_session {
             inner.gpu.render_frame(&scene, clear)
         }
 
+        #[wasm_bindgen(js_name = worldFromScreen)]
+        pub fn world_from_screen(&self, sx: f64, sy: f64) -> Result<String, JsValue> {
+            use infinite_cavas::camera::{screen_to_world, Camera as CavasCamera, Viewport};
+            use infinite_cavas::vello::kurbo::Point;
+            let inner = self.state.borrow();
+            let viewport = Viewport {
+                width: inner.width.max(1),
+                height: inner.height.max(1),
+                dpr: inner.dpr.max(1.0),
+            };
+            let camera = CavasCamera {
+                x: inner.host.dag.fixture.camera.x,
+                y: inner.host.dag.fixture.camera.y,
+                zoom: inner.host.dag.fixture.camera.zoom,
+            };
+            let world = screen_to_world(&camera, &viewport, Point::new(sx, sy));
+            Ok(format!("{{\"x\":{},\"y\":{}}}", world.x, world.y))
+        }
+
         #[wasm_bindgen(js_name = pointerDownScreen)]
         pub fn pointer_down_screen(&self, sx: f64, sy: f64, button: u8, shift: bool, ctrl: bool, alt: bool) {
+            {
+                let mut inner = self.state.borrow_mut();
+                inner.pointer_down_sx = sx;
+                inner.pointer_down_sy = sy;
+                inner.pointer_down_button = button;
+            }
             self.state.borrow_mut().host.dag.pointer_down_screen(sx, sy, button, shift, ctrl, alt);
         }
 
@@ -474,8 +535,51 @@ mod wasm_session {
 
         #[wasm_bindgen(js_name = pointerUpScreen)]
         pub fn pointer_up_screen(&self, sx: f64, sy: f64, shift: bool, ctrl: bool, alt: bool) {
+            let (down_sx, down_sy, button, width, height, dpr) = {
+                let inner = self.state.borrow();
+                (inner.pointer_down_sx, inner.pointer_down_sy, inner.pointer_down_button, inner.width, inner.height, inner.dpr)
+            };
             self.state.borrow_mut().host.dag.pointer_up_screen(sx, sy, shift, ctrl, alt);
             self.state.borrow_mut().host.sync_from_dag();
+            if button == 0 && !shift && !ctrl && !alt {
+                let dx = sx - down_sx;
+                let dy = sy - down_sy;
+                if dx * dx + dy * dy <= 64.0 {
+                    let selected = self.state.borrow().host.dag.selected_node_ids();
+                    if selected.is_empty() {
+                        if let Some(id) = self.state.borrow().host.pick_step_id_at_screen(sx, sy, width, height, dpr) {
+                            self.state.borrow_mut().host.dag.set_selection(&[id]);
+                        }
+                    } else if selected.len() == 1 {
+                        if let Some(id) = self.state.borrow().host.pick_step_id_at_screen(sx, sy, width, height, dpr) {
+                            if !selected.iter().any(|selected_id| selected_id == &id) {
+                                self.state.borrow_mut().host.dag.set_selection(&[id]);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        #[wasm_bindgen(js_name = wheelScreen)]
+        pub fn wheel_screen(&self, sx: f64, sy: f64, delta_y: f64) {
+            use infinite_cavas::camera::{wheel_screen, Camera as CavasCamera, Viewport};
+            let mut inner = self.state.borrow_mut();
+            inner.host.dag.set_wheel_zoom_active(true);
+            let viewport = Viewport {
+                width: inner.width.max(1),
+                height: inner.height.max(1),
+                dpr: inner.dpr.max(1.0),
+            };
+            let mut camera = CavasCamera {
+                x: inner.host.dag.fixture.camera.x,
+                y: inner.host.dag.fixture.camera.y,
+                zoom: inner.host.dag.fixture.camera.zoom,
+            };
+            wheel_screen(&mut camera, &viewport, sx, sy, delta_y);
+            inner.host.dag.set_camera(camera.x, camera.y, camera.zoom);
+            inner.host.dag.set_wheel_zoom_active(false);
+            inner.host.sync_from_dag();
         }
 
         #[wasm_bindgen(js_name = reorganize)]
@@ -548,6 +652,16 @@ mod tests {
         let step = host.fixture.steps.iter().find(|step| step.id == "step-1").expect("step-1");
         assert_eq!(step.x, 120.0);
         assert_eq!(step.y, 80.0);
+    }
+
+    #[test]
+    fn sync_edges_from_dag_preserves_existing_edge_ids() {
+        let mut host = SequenceHost::default();
+        let first_id = host.fixture.edges[0].id.clone();
+        host.sync_edges_from_dag();
+        assert_eq!(host.fixture.edges[0].id, first_id);
+        host.sync_edges_from_dag();
+        assert_eq!(host.fixture.edges[0].id, first_id);
     }
 
     #[test]

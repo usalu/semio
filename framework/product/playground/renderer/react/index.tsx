@@ -7,6 +7,7 @@ import {
     Button,
     ButtonGroup,
     ButtonGroupItem,
+    ChromeAwareWindowScrollSurface,
     Icon,
     Input,
     LevelProvider,
@@ -583,9 +584,9 @@ function renderPlaygroundHostSurface(node: UiNode, layout: "canvas" | "panel"): 
     const Host = formsSurfaceHosts.get(node.surfaceId);
     if (Host) {
       return (
-        <div className="absolute inset-0 min-h-0 min-w-0 overflow-auto">
+        <ChromeAwareWindowScrollSurface className="absolute inset-0 min-h-0 min-w-0">
           <Host node={node} />
-        </div>
+        </ChromeAwareWindowScrollSurface>
       );
     }
   }
@@ -643,9 +644,9 @@ function renderPlaygroundHostSurface(node: UiNode, layout: "canvas" | "panel"): 
     const Host = tableSurfaceHosts.get(node.surfaceId);
     if (Host) {
       return (
-        <div className="relative min-h-0 min-w-0 flex-1 overflow-auto">
+        <ChromeAwareWindowScrollSurface className="relative min-h-0 min-w-0 flex-1">
           <Host node={node} />
-        </div>
+        </ChromeAwareWindowScrollSurface>
       );
     }
   }
@@ -1561,6 +1562,9 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, playgro
     [shell.activeApp?.id],
   );
   const [displayHost, setDisplayHost] = reactHostPort.useState<DisplayHostApi | null>(null);
+  const onDisplayHostReady = reactHostPort.useCallback((host: DisplayHostApi) => {
+    setDisplayHost((previous) => (previous?.windowKinds === host.windowKinds ? previous : host));
+  }, []);
   const displayTabs = reactHostPort.useMemo(
     () => (shell.activeApp && shell.activeApp.windowKinds.length > 0 ? createFrameworkDisplayPanelTabs(() => displayHost, shell.bus) : []),
     [displayHost, shell.activeApp, shell.bus],
@@ -1795,7 +1799,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, playgro
         namedLayouts={shell.activeApp.namedLayouts}
         namedLayoutStore={namedLayoutStore}
         commandBus={shell.bus}
-        onDisplayHostReady={setDisplayHost}
+        onDisplayHostReady={onDisplayHostReady}
         defaultLayout={shell.activeApp.defaultLayout}
         activeWindowKindId={shell.activeWindowKindId}
         onActiveWindowKindChange={shell.onActiveWindowKindChange}
@@ -7097,6 +7101,8 @@ import {
   SEQUENCE_PLAY_DEFAULT_FIXTURE_JSON,
   SEQUENCE_PLAY_HIERARCHY_TAB_ID,
   SEQUENCE_PLAY_INSPECTION_TAB_ID,
+  SEQUENCE_PLAY_SCRIPT_SURFACE_ID,
+  SEQUENCE_PLAY_SCRIPT_WINDOW_KIND_ID,
   SEQUENCE_PLAY_SURFACE_ID,
   SEQUENCE_PLAY_WINDOW_KIND_ID,
   SequencePlayController,
@@ -7105,7 +7111,14 @@ import {
   buildSequencePlayInspectorTree,
   registerSequencePlayDeclarativeBodies,
 } from "@semio-tech/sequence-play";
-import { DAG_LOD_MODE_AUTOMATIC as SEQUENCE_HOST_LOD_AUTOMATIC, dagLodCanvasProps as sequenceLodCanvasProps, SequenceCanvas } from "@semio-tech/sequence-react";
+import {
+  DAG_LOD_MODE_AUTOMATIC as SEQUENCE_HOST_LOD_AUTOMATIC,
+  dagLodCanvasProps as sequenceLodCanvasProps,
+  SequenceCanvas,
+  sequenceStepPaletteTreeDragController,
+} from "@semio-tech/sequence-react";
+import { createWriterDocument } from "@semio-tech/writer-core";
+import { WriterCanvas } from "@semio-tech/writer-react";
 
 let sequencePlayChromeRegistered = false;
 const sequencePlayControllerRef: { current: SequencePlayController | null } = { current: null };
@@ -7162,25 +7175,56 @@ function SequencePlayPaneSurfaceHost({ node }: { readonly node: import("@semio-t
     },
     [ctrl],
   );
+  const onCompiledTextChange = reactHostPort.useCallback(
+    (text: string) => {
+      ctrl?.run("setCompiledText", { text });
+    },
+    [ctrl],
+  );
+  const onRunResult = reactHostPort.useCallback(
+    (result: import("@semio-tech/imperative-core").RunResult) => {
+      ctrl?.run("setRunResult", { result });
+    },
+    [ctrl],
+  );
   return (
     <SequenceCanvas
-      className="h-full min-h-0"
       fixtureJson={ctrl?.getFixtureJson() ?? SEQUENCE_PLAY_DEFAULT_FIXTURE_JSON}
       reorganize={ctrl?.getReorganize()}
       runRequest={ctrl?.getRunRequest()}
       selectedStepIds={ctrl?.getSelectedStepIds() ?? []}
+      fixtureDragDrop
       onFixtureChange={onFixtureChange}
       onSelectionChange={onSelectionChange}
+      onCompiledTextChange={onCompiledTextChange}
+      onRunResult={onRunResult}
       {...lodProps}
       onLodChange={onLodChange}
     />
   );
 }
 
+function SequencePlayScriptSurfaceHost({ node: _node }: { readonly node: import("@semio-tech/framework-platform-core").UiWriterHostSurfaceNode }): ReactElement {
+  const appCtx = reactHostPort.useContext(PlaygroundContext);
+  const ctrl = useSequencePlayController();
+  const interactionRevision = useSequencePlayInteractionRevision(appCtx?.runtime as Platform);
+  const document = reactHostPort.useMemo(
+    () =>
+      createWriterDocument({
+        id: "sequence-compiled-script",
+        languageId: "plaintext",
+        text: ctrl?.getCompiledText() ?? "",
+      }),
+    [ctrl?.getCompiledText(), interactionRevision],
+  );
+  return <WriterCanvas document={document} className="h-full min-h-0" />;
+}
+
 export function registerSequencePlaySurfaceHosts(): void {
   if (sequencePlayChromeRegistered) return;
   sequencePlayChromeRegistered = true;
   registerUiSequenceSurfaceHost(SEQUENCE_PLAY_SURFACE_ID, SequencePlayPaneSurfaceHost);
+  registerUiWriterSurfaceHost(SEQUENCE_PLAY_SCRIPT_SURFACE_ID, SequencePlayScriptSurfaceHost);
   registerSequencePlayDeclarativeBodies();
 }
 
@@ -7210,7 +7254,12 @@ class SequencePlayCataloguePanelDefinition extends PureSidePanelTabDefinition {
       order: 1,
       tree: new CallbackTreePanelDefinition(() => {
         const bus = new CommandBus();
-        return uiTreeNodeToTreePanelConfig(buildSequencePlayCatalogueTree(), bus);
+        const treeNode = buildSequencePlayCatalogueTree();
+        const config = uiTreeNodeToTreePanelConfig(treeNode, bus);
+        return {
+          ...config,
+          dragAndDropController: sequenceStepPaletteTreeDragController(collectUiTreeItemDragData(treeNode.sections)),
+        };
       }),
     };
   }
@@ -7226,7 +7275,11 @@ class SequencePlayInspectionPanelDefinition extends PureSidePanelTabDefinition {
       tree: new CallbackTreePanelDefinition(() => {
         const ctrl = sequencePlayControllerRef.current;
         const bus = new CommandBus();
-        const treeNode = buildSequencePlayInspectorTree(ctrl?.getFixtureJson() ?? SEQUENCE_PLAY_DEFAULT_FIXTURE_JSON, ctrl?.getSelectedStepIds() ?? []);
+        const treeNode = buildSequencePlayInspectorTree(
+          ctrl?.getFixtureJson() ?? SEQUENCE_PLAY_DEFAULT_FIXTURE_JSON,
+          ctrl?.getSelectedStepIds() ?? [],
+          ctrl?.getEffectLog() ?? [],
+        );
         return uiTreeNodeToTreePanelConfig(treeNode, bus);
       }),
     };
@@ -7273,6 +7326,7 @@ import {
   TRINITY_JACK_PLAY_APP_ID,
   TRINITY_JACK_PLAY_CATALOGUE_TAB_ID,
   TRINITY_JACK_PLAY_DEFAULT_FIXTURE_JSON,
+  TRINITY_JACK_PLAY_DEFAULT_QUERY,
   TRINITY_JACK_PLAY_EDITOR_SURFACE_ID,
   TRINITY_JACK_PLAY_HIERARCHY_TAB_ID,
   TRINITY_JACK_PLAY_INSPECTION_TAB_ID,
@@ -7427,7 +7481,7 @@ function TrinityJackEditorSurfaceHost({ node }: { readonly node: import("@semio-
   const ctrl = useTrinityJackController();
   void revision;
   const fixtureJson = ctrl?.getFixtureJson() ?? TRINITY_JACK_PLAY_DEFAULT_FIXTURE_JSON;
-  const document = ctrl?.getWriterDocument() ?? createTrinityWriterDocument({ id: "jack-query", languageId: "jack", text: "MATCH (a:Piece) RETURN a.name" });
+  const document = ctrl?.getWriterDocument() ?? createTrinityWriterDocument({ id: "jack-query", languageId: "jack", text: TRINITY_JACK_PLAY_DEFAULT_QUERY });
   const createLspTransport = reactHostPort.useCallback(() => createTrinityWriterLspTransport(createJackLspWorker(fixtureJson)), [fixtureJson]);
   const onChange = reactHostPort.useCallback((next: import("@semio-tech/writer-core").WriterDocumentV1) => {
     trinityJackControllerRef.current?.run("setJackQuery", { value: next.text });
@@ -7442,7 +7496,7 @@ function TrinityJackEditorSurfaceHost({ node }: { readonly node: import("@semio-
       onSubmit={onSubmit}
       createLspTransport={createLspTransport}
       fixtureJsonForLsp={fixtureJson}
-      placeholder="MATCH (a:Piece) RETURN a.name"
+      placeholder={TRINITY_JACK_PLAY_DEFAULT_QUERY}
       className="h-full"
     />
   );

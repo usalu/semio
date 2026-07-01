@@ -18,13 +18,13 @@ export default defineConfig({
 			{ find: "@semio-tech/ui-react", replacement: resolve(root, "../../../../../ui/react/index.tsx") },
 			{
 				find: "@semio-tech/mit-bestand-praesentation-projektetage-spec",
-				replacement: resolve(root, "../../../../../mit-bestand/präsentation/33.projektetage/spec.ts"),
+				replacement: resolve(root, "../../../../../mit-bestand/präsentation/33.projektetage/index.ts"),
 			},
 		],
 	},
 	test: {
 		environment: "jsdom",
-		include: ["index.tsx", "markdown.ts", "json.tsx"],
+		include: ["index.tsx", "markdown.ts", "index.tsx"],
 		passWithNoTests: false,
 		setupFiles: ["./vitest.setup.ts"],
 	},

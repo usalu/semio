@@ -35,7 +35,7 @@ export default defineConfig({
 			{ find: "@semio-tech/framework-core", replacement: frameworkCore },
 			{
 				find: "@semio-tech/mit-bestand-praesentation-projektetage-spec",
-				replacement: resolve(dir, "spec.ts"),
+				replacement: resolve(dir, "index.ts"),
 			},
 		],
 	},

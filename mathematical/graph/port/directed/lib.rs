@@ -455,19 +455,11 @@ pub mod types {
         }
 
         fn color_from_json_rgba8(arr: &[serde_json::Value]) -> Option<Color> {
-            let r = u8::try_from(arr.get(0)?.as_u64().unwrap_or(0).min(255)).ok()?;
-            let g = u8::try_from(arr.get(1)?.as_u64().unwrap_or(0).min(255)).ok()?;
-            let b = u8::try_from(arr.get(2)?.as_u64().unwrap_or(0).min(255)).ok()?;
-            let a = u8::try_from(arr.get(3).and_then(|x| x.as_u64()).unwrap_or(255).min(255)).ok()?;
-            Some(Color::from_rgba8(r, g, b, a))
+            infinite_cavas::theme::color_from_json_rgba8(arr)
         }
 
         fn merge_color_field(next: &mut Color, v: &serde_json::Value, key: &str) {
-            if let Some(arr) = v.get(key).and_then(|x| x.as_array()) {
-                if let Some(c) = Self::color_from_json_rgba8(arr) {
-                    *next = c;
-                }
-            }
+            infinite_cavas::theme::merge_color_field(next, v, key);
         }
 
         /// @emoji 🎨 Replaces this palette from the React host UI theme JSON payload.

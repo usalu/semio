@@ -3,8 +3,8 @@
 // #endregion 🧲Header
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { clearColorResolveCache, serializeGraphVelloThemePaletteJson } from "@semio-tech/ui-styling";
-import { CanvasPickMenu, ContextMenuController, canvasViewportClass, reactHostPort, useCanvasPickInteraction, type CanvasPickTarget, type ContextMenuItem } from "@semio-tech/ui-react";
+import { syncSessionVelloTheme } from "@semio-tech/ui-styling";
+import { CanvasPickMenu, ContextMenuController, canvasViewportClass, reactHostPort, isWindowContentDeadLineHost, readWindowContentDeadLinePx, useCanvasPickInteraction, useVelloThemeSync, type CanvasPickTarget, type ContextMenuItem } from "@semio-tech/ui-react";
 import { parseCanvasPickTargetKey } from "@semio-tech/framework-core";
 import {
 	applyTextEdits,
@@ -46,6 +46,13 @@ export async function ensureWriterWasmLoaded(): Promise<void> {
 
 export { WriterSession };
 // #endregion 🔖Wasm
+
+function resolveWriterDeadLineCameraY(cameraY: number, container: HTMLElement | null, userScrolled: boolean): number {
+	if (userScrolled || cameraY > 0) return cameraY;
+	if (!container || !isWindowContentDeadLineHost(container)) return cameraY;
+	const deadLine = readWindowContentDeadLinePx(container);
+	return deadLine > 0 ? deadLine : cameraY;
+}
 
 export interface WriterCanvasProps {
 	readonly document: WriterDocumentV1;
@@ -247,6 +254,7 @@ export function WriterCanvas({
 	const canvasRef = useRef<HTMLCanvasElement | null>(null);
 	const containerRef = useRef<HTMLDivElement | null>(null);
 	const inputRef = useRef<HTMLTextAreaElement | null>(null);
+	const userScrolledRef = useRef(false);
 	const sessionRef = useRef<WriterSession | null>(null);
 	const lspRef = useRef<LspClient | null>(null);
 	const versionRef = useRef(1);
@@ -254,6 +262,10 @@ export function WriterCanvas({
 	const documentRef = useRef(document);
 	const diagnosticsRef = useRef<readonly LspDiagnostic[]>([]);
 	const lastLocalTextRef = useRef(document.text);
+	const syncVelloTheme = useCallback(() => {
+		syncSessionVelloTheme(sessionRef.current);
+	}, []);
+	useVelloThemeSync(syncVelloTheme);
 	const [completions, setCompletions] = useState<readonly LspCompletionItem[]>([]);
 	const [completionIndex, setCompletionIndex] = useState(0);
 	const [completionsOpen, setCompletionsOpen] = useState(false);
@@ -460,8 +472,7 @@ export function WriterCanvas({
 		const session = sessionRef.current;
 		if (!session?.gpuReady()) return;
 		try {
-			clearColorResolveCache();
-			session.setVelloThemeJson(serializeGraphVelloThemePaletteJson());
+			syncSessionVelloTheme(session);
 			const blinkOn = Math.floor(performance.now() / 530) % 2 === 0;
 			session.setCaretVisible(blinkOn);
 			syncSemanticVisuals(session);
@@ -596,7 +607,7 @@ export function WriterCanvas({
 				session.detachGpu();
 				return;
 			}
-			session.setCamera(0, documentRef.current.camera.y, 1);
+			session.setCamera(0, resolveWriterDeadLineCameraY(documentRef.current.camera.y, container, userScrolledRef.current), 1);
 			session.setText(documentRef.current.text);
 			syncEditorSpans(documentRef.current.text, documentRef.current.languageId, session);
 			resize();
@@ -620,7 +631,7 @@ export function WriterCanvas({
 	useEffect(() => {
 		const session = sessionRef.current;
 		if (!session?.gpuReady()) return;
-		session.setCamera(0, document.camera.y, 1);
+		session.setCamera(0, resolveWriterDeadLineCameraY(document.camera.y, containerRef.current, userScrolledRef.current), 1);
 		if (document.text !== lastLocalTextRef.current) {
 			session.setText(document.text);
 			lastLocalTextRef.current = document.text;
@@ -1088,6 +1099,7 @@ export function WriterCanvas({
 			event.preventDefault();
 			const session = sessionRef.current;
 			if (!session) return;
+			userScrolledRef.current = true;
 			session.wheelScrollScreen(event.deltaY);
 			const camera = JSON.parse(session.cameraJson()) as { x: number; y: number; zoom: number };
 			onChange?.({ ...documentRef.current, camera: { x: 0, y: camera.y, zoom: 1 } });

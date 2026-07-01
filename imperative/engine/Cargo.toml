@@ -12,6 +12,9 @@ path = "lib.rs"
 neural_engine = { path = "../../neural/engine" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
+imperative_module_core = { path = "../module/core" }
+imperative_module_text = { path = "../module/text" }
 
 [dev-dependencies]
 imperative_module_core = { path = "../module/core" }
+imperative_module_text = { path = "../module/text" }

@@ -1707,6 +1707,42 @@ mod tests {
     }
 
     #[test]
+    fn run_create_edge() {
+        let mut g = mini_graph();
+        while g.nodes.len() < 9 {
+            run(&mut g, "CREATE (n:Piece)").unwrap();
+        }
+        run(&mut g, "CREATE (x:Piece)-[:Connection]->(y:Piece)").unwrap();
+        assert_eq!(g.nodes.len(), 11);
+        assert_eq!(g.edges.len(), 2);
+    }
+
+    #[test]
+    fn run_delete() {
+        let mut g = mini_graph();
+        run(&mut g, "MATCH (n:Piece) WHERE n.name = 'capsule' DELETE n").unwrap();
+        assert_eq!(g.nodes.len(), 1);
+        assert_eq!(g.edges.len(), 0);
+    }
+
+    #[test]
+    fn run_merge_noop_when_pattern_exists() {
+        let mut g = mini_graph();
+        run(&mut g, "MERGE (a:Piece)-[:Connection]->(b:Piece)").unwrap();
+        assert_eq!(g.nodes.len(), 2);
+        assert_eq!(g.edges.len(), 1);
+    }
+
+    #[test]
+    fn run_merge_creates_disconnected_pattern() {
+        let mut g = mini_graph();
+        g.edges.clear();
+        run(&mut g, "MERGE (x:Piece)-[:Connection]->(y:Piece)").unwrap();
+        assert_eq!(g.nodes.len(), 4);
+        assert_eq!(g.edges.len(), 1);
+    }
+
+    #[test]
     fn lex_not_equal() {
         let tokens = lex("WHERE a.name != 'core'").unwrap();
         assert!(tokens.iter().any(|t| matches!(t, Token::Ne)));

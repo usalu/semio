@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🧭 `@semio-tech/ui-styling` task router: `bun ./script.ts <generate|fonts>`. */
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runCmd } from "../../../repo/lib/js/index.ts";
 import { fetchElementsFonts, generateStylingArtifacts } from "../script.ts";
 
 class GenerateScript extends BundleScript {
@@ -10,11 +10,20 @@ class GenerateScript extends BundleScript {
 }
 
 class FontsScript extends BundleScript {
-  async run(): Promise<void> {
-    await fetchElementsFonts();
-  }
+	async run(): Promise<void> {
+		await fetchElementsFonts();
+	}
 }
 
-const router = new ScriptRouter(import.meta.dir).register("generate", GenerateScript).register("fonts", FontsScript);
+class TestScript extends BundleScript {
+	run(): void {
+		runCmd(process.execPath, ["test"], { cwd: this.root });
+	}
+}
+
+const router = new ScriptRouter(import.meta.dir)
+	.register("generate", GenerateScript)
+	.register("fonts", FontsScript)
+	.register("test", TestScript);
 
 await runBundleScriptMain(router, import.meta.url);

@@ -10,25 +10,25 @@ todos:
     status: completed
   - id: flatten-ui-styling-rs-src
     content: Flatten ui/styling/rs/src/generated.rs to ui/styling/rs/generated.rs and update lib.rs path + generator
-    status: in_progress
+    status: completed
   - id: merge-yak-script
     content: Merge Compose.Grasshopper/yak/script.ts commands into parent script.ts, delete yak/script.ts, fix project.json
-    status: pending
+    status: completed
   - id: merge-scattered-files
     content: Merge remaining scattered same-bundle files into single entry files (ts/tsx/rs/py/go list in Phase 3)
-    status: pending
+    status: completed
   - id: investigate-graph-manifest-generated
     content: Investigate mathematical/graph/manifest/generated/ for a generator before consolidating the 11 manifest documents
-    status: pending
+    status: completed
   - id: add-missing-package-scripts
     content: Add missing package.json scripts blocks to sequence/core, sequence/react, imperative/core, imperative/react, framework/core
-    status: pending
+    status: completed
   - id: route-project-json-bypasses
     content: Wrap remaining cargo/go/dotnet/vite/uv/bun-test project.json bypasses through script.ts using existing repo/lib/js helpers
-    status: pending
+    status: completed
   - id: validate-and-close
     content: Run typecheck/build/test across all touched bundles and update/close the ticket
-    status: pending
+    status: completed
 isProject: false
 ---
 

@@ -1,5 +1,5 @@
 import type { SlideFile } from "@semio-tech/framework-presentation-core";
-import { catalogueFocusDispositions, mediaEmbodiments, mediaParticipants } from "../../../../spec.ts";
+import { catalogueFocusDispositions, mediaEmbodiments, mediaParticipants } from "../../../../index.ts";
 
 export default {
 	order: 2,

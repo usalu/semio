@@ -20,6 +20,12 @@ class WasmScript extends BundleScript {
 	}
 }
 
-const router = new ScriptRouter(import.meta.dir).register("wasm", WasmScript);
+class TestScript extends BundleScript {
+	run(segments: string[]): void {
+		execFileSync("cargo", ["test", "-p", "trinity_jack_lsp", ...segments], { stdio: "inherit", cwd: this.repoRoot });
+	}
+}
+
+const router = new ScriptRouter(import.meta.dir).register("wasm", WasmScript).register("test", TestScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "wasm" });

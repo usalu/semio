@@ -208,6 +208,7 @@ import {
 	type WindowTemplateDropPayload,
 	cn,
 	resolveTranslationLabel,
+	uiI18n,
 	useUiTranslation,
 	useCommandHotkey,
 	useMediaQuery,
@@ -261,6 +262,8 @@ import {
 	SemioLogo,
 	interactiveActiveFillClass,
 	shellChromeTitleClassName,
+	useWindowContentDeadLineScroll,
+	windowContentDeadLineScrollClass,
 } from "@semio-tech/ui-react";
 // #endregion 🔌Adapters
 
@@ -844,7 +847,7 @@ function groupNamedLayoutsToTreeItems(
 	const layoutLeaf = (entry: NamedLayout): import("@semio-tech/ui-react").TreeDataItem => ({
 		id: `framework.display.layout.${entry.id}`,
 		label: entry.label,
-		description: entry.origin === "user" ? resolveTranslationLabel("ui.display.deleteLayout") : undefined,
+		description: entry.origin === "user" ? resolveTranslationLabel(uiI18n.t("ui.display.deleteLayout")) : undefined,
 		onClick: () => onApply(entry.id),
 		...(entry.origin === "user" && onDeleteUser
 			? {
@@ -1383,12 +1386,12 @@ function buildDisplayLayoutTree(host: DisplayHostApi, bus: CommandBus): TreePane
 		sections: [
 			{
 				id: "framework.display.layout.save",
-				label: resolveTranslationLabel("ui.display.saveLayout"),
+				label: resolveTranslationLabel(uiI18n.t("ui.display.saveLayout")),
 				defaultOpen: false,
 				items: [
 					{
 						id: "framework.display.layout.save.label",
-						label: resolveTranslationLabel("ui.display.saveLayoutPlaceholder"),
+						label: resolveTranslationLabel(uiI18n.t("ui.display.saveLayoutPlaceholder")),
 						control: (
 							<Input
 								id="framework.display.save-label"
@@ -1396,18 +1399,18 @@ function buildDisplayLayoutTree(host: DisplayHostApi, bus: CommandBus): TreePane
 								onChange={(event) => {
 									displayLayoutSaveLabel = event.target.value;
 								}}
-								placeholder={resolveTranslationLabel("ui.display.saveLayoutPlaceholder")}
+								placeholder={resolveTranslationLabel(uiI18n.t("ui.display.saveLayoutPlaceholder"))}
 							/>
 						),
 					},
 					{
 						id: "framework.display.layout.save.action",
-						label: resolveTranslationLabel("ui.display.saveLayout"),
+						label: resolveTranslationLabel(uiI18n.t("ui.display.saveLayout")),
 						control: (
 							<Button
 								id="framework.display.save"
 								size="sm"
-								text={resolveTranslationLabel("ui.display.saveLayout")}
+								text={resolveTranslationLabel(uiI18n.t("ui.display.saveLayout"))}
 								disabled={!displayLayoutSaveLabel.trim()}
 								onClick={() => {
 									const label = displayLayoutSaveLabel.trim();
@@ -1422,7 +1425,7 @@ function buildDisplayLayoutTree(host: DisplayHostApi, bus: CommandBus): TreePane
 			},
 			{
 				id: "framework.display.layout.list",
-				label: resolveTranslationLabel("ui.display.tab.layout"),
+				label: resolveTranslationLabel(uiI18n.t("ui.display.tab.layout")),
 				defaultOpen: false,
 				items: [...builtinItems, ...userItems],
 			},
@@ -1522,11 +1525,11 @@ const SETTINGS_THEME_OPTIONS: readonly ElementsSurfaceTheme[] = ["system", "ligh
 function settingsThemeLabel(theme: ElementsSurfaceTheme): string {
 	switch (theme) {
 		case "light":
-			return resolveTranslationLabel("ui.settings.theme.light");
+			return resolveTranslationLabel(uiI18n.t("ui.settings.theme.light"));
 		case "dark":
-			return resolveTranslationLabel("ui.settings.theme.dark");
+			return resolveTranslationLabel(uiI18n.t("ui.settings.theme.dark"));
 		default:
-			return resolveTranslationLabel("ui.settings.theme.system");
+			return resolveTranslationLabel(uiI18n.t("ui.settings.theme.system"));
 	}
 }
 
@@ -1535,11 +1538,11 @@ const SETTINGS_EXPERTISE_OPTIONS: readonly Expertise[] = [Expertise.BEGINNER, Ex
 function settingsExpertiseLabel(expertise: Expertise): string {
 	switch (expertise) {
 		case Expertise.BEGINNER:
-			return resolveTranslationLabel("settings.expertise.beginner");
+			return resolveTranslationLabel(uiI18n.t("settings.expertise.beginner"));
 		case Expertise.EXPERT:
-			return resolveTranslationLabel("settings.expertise.expert");
+			return resolveTranslationLabel(uiI18n.t("settings.expertise.expert"));
 		default:
-			return resolveTranslationLabel("settings.expertise.normal");
+			return resolveTranslationLabel(uiI18n.t("settings.expertise.normal"));
 	}
 }
 
@@ -1547,7 +1550,7 @@ function buildFrameworkSettingsGeneralTree(host: SettingsHostApi): TreePanelConf
 	const items: TreeDataItem[] = [
 		{
 			id: "framework.settings.general.compact",
-			label: resolveTranslationLabel("settings.compact"),
+			label: resolveTranslationLabel(uiI18n.t("settings.compact")),
 			control: (
 				<Toggle
 					id="framework.settings.compact"
@@ -1562,7 +1565,7 @@ function buildFrameworkSettingsGeneralTree(host: SettingsHostApi): TreePanelConf
 		},
 		{
 			id: "framework.settings.general.expertise",
-			label: resolveTranslationLabel("ui.settings.tab.expertise"),
+			label: resolveTranslationLabel(uiI18n.t("ui.settings.tab.expertise")),
 			control: (
 				<Select value={host.expertise} onValueChange={(value) => host.setExpertise(value as Expertise)}>
 					<SelectTrigger id="framework.settings.expertise" className="h-medium w-full min-w-0" size="sm">
@@ -1602,7 +1605,7 @@ function buildFrameworkSettingsGeneralTree(host: SettingsHostApi): TreePanelConf
 		sections: [
 			{
 				id: "framework.settings.general.section",
-				label: resolveTranslationLabel("ui.settings.tab.general"),
+				label: resolveTranslationLabel(uiI18n.t("ui.settings.tab.general")),
 				defaultOpen: false,
 				items,
 			},
@@ -1622,16 +1625,16 @@ function buildFrameworkSettingsModeTree(host: SettingsHostApi): TreePanelConfig 
 		sections: [
 			{
 				id: "framework.settings.mode.section",
-				label: resolveTranslationLabel("ui.settings.tab.mode"),
+				label: resolveTranslationLabel(uiI18n.t("ui.settings.tab.mode")),
 				defaultOpen: false,
 				items: [
 					{
 						id: "framework.settings.mode.select",
-						label: resolveTranslationLabel("ui.settings.tab.mode"),
+						label: resolveTranslationLabel(uiI18n.t("ui.settings.tab.mode")),
 						control: (
 							<Select value={activeModeId} onValueChange={(modeId) => host.setActiveModeId(modeId)}>
 								<SelectTrigger id="framework.settings.mode" className="h-medium w-full min-w-0" size="sm">
-									<SelectValue placeholder={resolveTranslationLabel("ui.settings.tab.mode")} />
+									<SelectValue placeholder={resolveTranslationLabel(uiI18n.t("ui.settings.tab.mode"))} />
 								</SelectTrigger>
 								<SelectContent>
 									{modes.map((mode) => (
@@ -1663,7 +1666,7 @@ function buildFrameworkSettingsAppTree(host: SettingsHostApi, displayHost: Displ
 		},
 		{
 			id: "framework.settings.app.theme",
-			label: resolveTranslationLabel("ui.settings.tab.theme"),
+			label: resolveTranslationLabel(uiI18n.t("ui.settings.tab.theme")),
 			control: (
 				<Select value={host.theme} onValueChange={(value) => host.setTheme(value as ElementsSurfaceTheme)}>
 					<SelectTrigger id="framework.settings.theme" className="h-medium w-full min-w-0" size="sm">
@@ -1685,7 +1688,7 @@ function buildFrameworkSettingsAppTree(host: SettingsHostApi, displayHost: Displ
 		sections: [
 			{
 				id: "framework.settings.app.identity",
-				label: resolveTranslationLabel("ui.settings.tab.app"),
+				label: resolveTranslationLabel(uiI18n.t("ui.settings.tab.app")),
 				defaultOpen: false,
 				items: identityItems,
 			},
@@ -1768,21 +1771,21 @@ export function createFrameworkSettingsPanelTabs(
 		{
 			id: FRAMEWORK_SETTINGS_MODE_TAB_ID,
 			icon: shellTabIconComponent("framework.settings.mode", "settings"),
-			name: resolveTranslationLabel("ui.settings.tab.mode"),
+			name: resolveTranslationLabel(uiI18n.t("ui.settings.tab.mode")),
 			order: -300,
 			tree: new FrameworkSettingsModeTreeDefinition(getHost),
 		},
 		{
 			id: FRAMEWORK_SETTINGS_APP_TAB_ID,
 			icon: shellTabIconComponent("framework.settings.app", "settings"),
-			name: resolveTranslationLabel("ui.settings.tab.app"),
+			name: resolveTranslationLabel(uiI18n.t("ui.settings.tab.app")),
 			order: -200,
 			tree: new FrameworkSettingsAppTreeDefinition(getHost, getDisplayHost, getPlatform, bus),
 		},
 		{
 			id: FRAMEWORK_SETTINGS_GENERAL_TAB_ID,
 			icon: shellTabIconComponent("framework.settings.general", "settings"),
-			name: resolveTranslationLabel("ui.settings.tab.general"),
+			name: resolveTranslationLabel(uiI18n.t("ui.settings.tab.general")),
 			order: -100,
 			tree: new FrameworkSettingsGeneralTreeDefinition(getHost),
 		},
@@ -2980,8 +2983,14 @@ const BuiltinVirtualFileSystemKindRenderer: ComponentKindRenderer = ({ component
 const BuiltinTableKindRenderer: ComponentKindRenderer = ({ component, platform }) => {
 	const model = useStore(component as Table);
 	const controllerId = component.controllerId;
+	const scrollRef = reactHostPort.useRef<HTMLDivElement>(null);
+	useWindowContentDeadLineScroll(scrollRef);
 	return (
-		<div className="flex h-full min-h-0 w-full flex-col overflow-auto" data-component-kind="table">
+		<div
+			ref={scrollRef}
+			className={cn("flex h-full min-h-0 w-full flex-col overflow-auto", windowContentDeadLineScrollClass)}
+			data-component-kind="table"
+		>
 			{model.columns.length === 0 && model.rows.length === 0 ? (
 				<div className="text-xs text-muted-foreground">{model.emptyMessage ?? "No rows"}</div>
 			) : (
@@ -3410,6 +3419,7 @@ function caretOffsetCoordinates(textarea: HTMLTextAreaElement, position: number)
 export function CodeEditor({ value, onChange, onSubmit, tokenize, complete, className, placeholder }: CodeEditorProps): React.ReactElement {
 	const textareaRef = React.useRef<HTMLTextAreaElement>(null);
 	const preRef = React.useRef<HTMLPreElement>(null);
+	useWindowContentDeadLineScroll(textareaRef);
 	const [suggestions, setSuggestions] = React.useState<readonly CodeEditorCompletion[]>([]);
 	const [activeSuggestion, setActiveSuggestion] = React.useState(0);
 	const [popup, setPopup] = React.useState<{ top: number; left: number } | null>(null);
@@ -3528,7 +3538,10 @@ export function CodeEditor({ value, onChange, onSubmit, tokenize, complete, clas
 				/>
 				<textarea
 					ref={textareaRef}
-					className="absolute inset-0 m-0 resize-none overflow-auto bg-transparent p-0 text-transparent caret-foreground outline-none"
+					className={cn(
+						"absolute inset-0 m-0 resize-none overflow-auto bg-transparent p-0 text-transparent caret-foreground outline-none",
+						windowContentDeadLineScrollClass,
+					)}
 					value={value}
 					placeholder={placeholder}
 					spellCheck={false}
@@ -4158,12 +4171,16 @@ if (import.meta.vitest) {
 			]);
 			for (const tab of tabs) {
 				expect(tab.tree && typeof tab.tree === "object" && "resolveTree" in tab.tree).toBe(true);
+				expect(tab.name).toBeTruthy();
+				expect(tab.name).not.toMatch(/^ui\./u);
+				expect(tab.name).not.toContain("ui.settings");
 				if (tab.tree && typeof tab.tree === "object" && "resolveTree" in tab.tree) {
 					const config = tab.tree.resolveTree();
 					expect(config.sections.length).toBeGreaterThan(0);
 					expect(config.sections[0]?.items?.length).toBeGreaterThan(0);
 				}
 			}
+			expect(tabs.map((tab) => tab.name)).toEqual(["Mode", "App", "General"]);
 		});
 	});
 

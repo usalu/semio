@@ -43,6 +43,7 @@ export type ImperativeCatalogueItem = {
 	readonly icon: string;
 	readonly summary: string;
 	readonly inputs: readonly ImperativeCatalogueInput[];
+	readonly module?: string;
 };
 
 export type ImperativeCatalogueSection = {
@@ -105,6 +106,91 @@ export const DEFAULT_IMPERATIVE_CATALOGUE: ImperativeCatalogueV1 = {
 		},
 	],
 };
+
+export const TEXT_MODULE_CATALOGUE_SECTION: ImperativeCatalogueSection = {
+	id: "text",
+	title: "Text",
+	items: [
+		{
+			kind: "text.concat",
+			name: "Text Concat",
+			abbreviation: "Cat",
+			icon: "emoji:📝",
+			summary: "Concatenates two strings.",
+			module: "text",
+			inputs: [
+				{ name: "left", code: "S" },
+				{ name: "right", code: "S" },
+			],
+		},
+		{
+			kind: "text.uppercase",
+			name: "Text Uppercase",
+			abbreviation: "Up",
+			icon: "emoji:📝",
+			summary: "Uppercases a string.",
+			module: "text",
+			inputs: [{ name: "text", code: "S" }],
+		},
+		{
+			kind: "text.length",
+			name: "Text Length",
+			abbreviation: "Len",
+			icon: "emoji:📝",
+			summary: "Returns the character length of a string.",
+			module: "text",
+			inputs: [{ name: "text", code: "S" }],
+		},
+	],
+};
+
+export const IMPERATIVE_INSTALLED_MODULE_IDS = ["core", "text"] as const;
+export type ImperativeModuleId = (typeof IMPERATIVE_INSTALLED_MODULE_IDS)[number];
+
+export type ImperativeExtensionEntry = {
+	readonly id: ImperativeModuleId;
+	readonly title: string;
+	readonly active: boolean;
+};
+
+/** @emoji 🧩 Merges installed imperative module catalogues for palette trees. */
+export class ImperativeExtensionHost {
+	private revision = 0;
+	private readonly listeners = new Set<() => void>();
+
+	getRevision(): number {
+		return this.revision;
+	}
+
+	subscribe(listener: () => void): () => void {
+		this.listeners.add(listener);
+		return () => this.listeners.delete(listener);
+	}
+
+	listEntries(): readonly ImperativeExtensionEntry[] {
+		return IMPERATIVE_INSTALLED_MODULE_IDS.map((id) => ({
+			id,
+			title: id === "core" ? "Actions" : "Text",
+			active: true,
+		}));
+	}
+
+	getCatalogue(): ImperativeCatalogueV1 {
+		return {
+			schema: "imperative.catalogue/v1",
+			sections: [...DEFAULT_IMPERATIVE_CATALOGUE.sections, TEXT_MODULE_CATALOGUE_SECTION],
+		};
+	}
+
+	bumpRevision(): void {
+		this.revision += 1;
+		for (const listener of this.listeners) {
+			listener();
+		}
+	}
+}
+
+export const imperativeExtensionHost = new ImperativeExtensionHost();
 
 export interface EffectSink {
 	readonly onLog?: (message: string) => void;
@@ -184,8 +270,14 @@ export function parseImperativeDocumentJson(json: string): ImperativeDocumentV1 
 	}
 }
 
-if (import.meta.vitest) {
+	if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
+	describe("ImperativeExtensionHost", () => {
+		it("merges core and text catalogue sections", () => {
+			const sections = imperativeExtensionHost.getCatalogue().sections.map((section) => section.id);
+			expect(sections).toEqual(["actions", "text"]);
+		});
+	});
 	describe("performImperativeEffects", () => {
 		it("runs log and delay effects in order", async () => {
 			const log: string[] = [];

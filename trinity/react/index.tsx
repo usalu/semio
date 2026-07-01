@@ -10,7 +10,8 @@ import {
   uiInspectorMixedText,
   uiInspectorReadonlyField,
 } from "@semio-tech/framework-playground-core";
-import { clearColorResolveCache, serializeGraphVelloThemePaletteJson } from "@semio-tech/ui-styling";
+import { syncSessionVelloTheme } from "@semio-tech/ui-styling";
+import { useVelloThemeSync } from "@semio-tech/ui-react";
 import initTrinityWasm, { TrinitySession, initSync, ruleQueryJson } from "../rewrite/engine/pkg/trinity_rewrite.js";
 import nakaginFixtureJson from "../fixture/nakagin-capsule-tower.trinity.json";
 
@@ -423,15 +424,10 @@ export function TrinityCanvas({
   const lastHighlightedJsonRef = useRef<string>("[]");
 
   const syncVelloTheme = useCallback(() => {
-    const session = sessionRef.current;
-    if (!session || typeof document === "undefined") return;
-    try {
-      clearColorResolveCache();
-      session.setVelloThemeJson(serializeGraphVelloThemePaletteJson());
-    } catch {
-      /* theme not ready */
-    }
+    syncSessionVelloTheme(sessionRef.current);
   }, []);
+
+  useVelloThemeSync(syncVelloTheme);
 
   const syncLodMode = useCallback(() => {
     const session = sessionRef.current;
@@ -722,10 +718,14 @@ if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
 
   describe("trinity fixture", () => {
-    it("default nakagin fixture parses", () => {
+    it("default nakagin fixture parses expanded graph", () => {
       const fixture = parseTrinityFixtureJson(TRINITY_DEFAULT_FIXTURE_JSON);
       expect(fixture?.schema).toBe("trinity.graph/v1");
-      expect(fixture?.nodes.length).toBeGreaterThan(0);
+      expect(fixture?.nodes.length).toBe(9);
+      expect(fixture?.edges.length).toBe(6);
+      const root = fixture?.nodes.find((node) => node.id === fixture?.rootNodeId);
+      expect(root?.name).toBe("b");
+      expect(root?.properties?.label).toBe("tower-core");
     });
 
     it("buildTrinityPlayHierarchyTree lists nodes", () => {

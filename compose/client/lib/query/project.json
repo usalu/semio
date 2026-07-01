@@ -6,11 +6,7 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "commands": [
-          "rustup target add wasm32-unknown-unknown",
-          "cargo fetch --manifest-path Cargo.toml"
-        ],
-        "parallel": false,
+        "command": "bun ./script.ts setup",
         "cwd": "compose/client/lib/query"
       }
     },
@@ -23,12 +19,14 @@
         "{workspaceRoot}/Cargo.toml",
         "{workspaceRoot}/Cargo.lock"
       ],
-      "outputs": ["{projectRoot}/pkg"],
+      "outputs": [
+        "{projectRoot}/pkg"
+      ],
       "options": {
         "cwd": "compose/client/lib/query",
         "commands": [
-          "bun script.ts wasm",
-          "cargo build --release"
+          "bun ./script.ts wasm",
+          "bun ./script.ts build"
         ],
         "parallel": false
       }
@@ -37,7 +35,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "compose/client/lib/query",
-        "command": "cargo test",
+        "command": "bun ./script.ts test",
         "forwardAllArgs": true
       }
     }

@@ -7,7 +7,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "coda/client/lib/programming/go",
-        "command": "go test ./..."
+        "command": "bun ./script.ts test"
       }
     }
   }

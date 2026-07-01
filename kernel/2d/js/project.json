@@ -7,7 +7,7 @@
       "dependsOn": [],
       "options": {
         "cwd": "kernel/2d/js",
-        "command": "bun vitest run --config vitest.config.ts"
+        "command": "bun ./script.ts test"
       }
     }
   }

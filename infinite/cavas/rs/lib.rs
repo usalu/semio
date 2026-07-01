@@ -5,8 +5,72 @@ pub use vello_svg;
 pub use vello_svg::usvg;
 pub use vello_svg::vello;
 
-#[path = "theme.rs"]
-pub mod theme;
+pub mod theme {
+// #region theme
+//! @emoji 🎨 Default Vello canvas paint helpers from centralized styling tokens.
+
+use crate::vello::peniko::Color;
+use ui_styling::{theme::ThemeName, CANVAS_LIGHT};
+
+/// @emoji 🌈 Maps a linear-sRGB token color to `peniko::Color`.
+pub fn linear_color(rgba: [f32; 4]) -> Color {
+    Color::new(rgba)
+}
+
+/// @emoji 🎨 Shared default clear color for graph board canvases.
+pub fn default_raster_clear() -> Color {
+    linear_color(CANVAS_LIGHT.raster_clear)
+}
+
+/// @emoji 🎨 Default themed icon foreground paint.
+pub fn default_icon_fg() -> Color {
+    linear_color(CANVAS_LIGHT.icon_fg)
+}
+
+/// @emoji 🎨 Default themed icon background paint.
+pub fn default_icon_bg() -> Color {
+    linear_color(CANVAS_LIGHT.icon_bg)
+}
+
+/// @emoji 🎨 Resolves canvas paints for a theme name.
+pub fn canvas_clear_for(theme: ThemeName) -> Color {
+    linear_color(theme.canvas().raster_clear)
+}
+
+/// @emoji 🌈 Parses an sRGB8888 JSON array into `peniko::Color`.
+pub fn color_from_json_rgba8(arr: &[serde_json::Value]) -> Option<Color> {
+    let r = u8::try_from(arr.first()?.as_u64().unwrap_or(0).min(255)).ok()?;
+    let g = u8::try_from(arr.get(1)?.as_u64().unwrap_or(0).min(255)).ok()?;
+    let b = u8::try_from(arr.get(2)?.as_u64().unwrap_or(0).min(255)).ok()?;
+    let a = u8::try_from(arr.get(3).and_then(|x| x.as_u64()).unwrap_or(255).min(255)).ok()?;
+    Some(Color::from_rgba8(r, g, b, a))
+}
+
+/// @emoji 🎨 Merges one camelCase color field from a Vello theme JSON object.
+pub fn merge_color_field(next: &mut Color, v: &serde_json::Value, key: &str) {
+    if let Some(arr) = v.get(key).and_then(|x| x.as_array()) {
+        if let Some(c) = color_from_json_rgba8(arr) {
+            *next = c;
+        }
+    }
+}
+
+/// @emoji 🌓 Returns whether a canvas clear color reads as a light background.
+pub fn clear_is_light(clear: Color) -> bool {
+    let [r, g, b, _] = clear.components;
+    0.2126 * f64::from(r) + 0.7152 * f64::from(g) + 0.0722 * f64::from(b) > 0.5
+}
+
+/// @emoji 🎨 Checkerboard cell shades for transparent raster layers.
+pub fn checkerboard_shades_for_clear(clear: Color) -> (u8, u8) {
+    if clear_is_light(clear) {
+        (220, 180)
+    } else {
+        (64, 48)
+    }
+}
+// #endregion theme
+}
 
 // #region 🏷️IconAssets
 

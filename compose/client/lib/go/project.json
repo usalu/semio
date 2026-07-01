@@ -14,7 +14,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "compose/client/lib/go",
-        "command": "go test -v ./...",
+        "command": "bun ./script.ts test",
         "forwardAllArgs": true
       }
     }

@@ -14,7 +14,7 @@ import {
 	WorldOrbitViewControls,
 	WorldOrbitViewSnapGateProvider,
 } from "@semio-tech/infinite-world-r3f";
-import type { IconRenderRequest, IconRenderShape } from "@semio-tech/ui-styling/icon-render-port";
+import type { IconRenderRequest, IconRenderShape } from "@semio-tech/ui-styling";
 import { cn, iconRenderPort, reactHostPort, sceneHostPort } from "@semio-tech/ui-react";
 import type { Object3D } from "three";
 

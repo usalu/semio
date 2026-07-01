@@ -55,9 +55,16 @@ import {
   type TrinityVcsRequest,
 } from "@semio-tech/trinity-react";
 import {
+  TRINITY_JACK_PLAY_DEFAULT_QUERY,
+  TRINITY_JACK_PLAY_EXAMPLE_QUERIES,
   TRINITY_JACK_PLAY_FIXTURE_DEFAULT_ID,
   TRINITY_JACK_PLAY_PRESET_QUERIES,
   resolveTrinityJackPlayFixtureSlug,
+} from "./fixture-slugs.ts";
+
+export {
+  TRINITY_JACK_PLAY_DEFAULT_QUERY,
+  TRINITY_JACK_PLAY_EXAMPLE_QUERIES,
 } from "./fixture-slugs.ts";
 
 export const TRINITY_JACK_PLAY_APP_ID = "trinity-jack-play";
@@ -128,6 +135,21 @@ export function buildTrinityJackPlayCatalogueTree(activeFixtureId?: string): UiN
           id: `trinity-jack-catalogue.fixture.${row.id}`,
           label: row.label,
           description: TRINITY_JACK_PLAY_PRESET_QUERIES[row.id] ?? "",
+        })),
+      },
+      {
+        id: "trinity-jack-catalogue.examples",
+        label: "Example queries",
+        defaultOpen: true,
+        items: TRINITY_JACK_PLAY_EXAMPLE_QUERIES.map((row) => ({
+          id: `trinity-jack-catalogue.example.${row.id}`,
+          label: row.label,
+          description: row.query,
+          command: {
+            controllerId: TRINITY_JACK_PLAY_CONTROLLER_ID,
+            command: "loadExampleQuery",
+            args: { query: row.query },
+          },
         })),
       },
       {
@@ -213,7 +235,7 @@ export class TrinityJackPlayController extends Controller implements PlaygroundF
   readonly mainMode = new ModeRuntime("explore", "Explore", undefined);
   private fixtureJson = TRINITY_DEFAULT_FIXTURE_JSON;
   private activeFixtureId = TRINITY_JACK_PLAY_FIXTURE_DEFAULT_ID;
-  private jackQuery = TRINITY_JACK_PLAY_PRESET_QUERIES[TRINITY_JACK_PLAY_FIXTURE_DEFAULT_ID] ?? "MATCH (a:Piece) RETURN a.name";
+  private jackQuery = TRINITY_JACK_PLAY_PRESET_QUERIES[TRINITY_JACK_PLAY_FIXTURE_DEFAULT_ID] ?? TRINITY_JACK_PLAY_DEFAULT_QUERY;
   private jackResultJson = "";
   private jackDispatchEpoch = 0;
   private jackDispatchQuery = "";
@@ -456,6 +478,15 @@ export class TrinityJackPlayController extends Controller implements PlaygroundF
       this.bump();
       return;
     }
+    if (command === "loadExampleQuery") {
+      const query = (args as { query?: string }).query;
+      if (typeof query === "string") {
+        this.jackQuery = query;
+        this.bump();
+        this.run("runJackQuery");
+      }
+      return;
+    }
     if (command === "setJackQuery") {
       const value = (args as { value?: string }).value;
       if (typeof value === "string") {
@@ -674,16 +705,35 @@ if (import.meta.vitest) {
       }
     }
 
-    it("runJackQuery returns nakagin table row", () => {
+    it("catalogue tree lists example queries with commands", () => {
+      const tree = buildTrinityJackPlayCatalogueTree("nakagin");
+      const section = tree.sections.find((row) => row.id === "trinity-jack-catalogue.examples");
+      expect(section?.items.length).toBe(TRINITY_JACK_PLAY_EXAMPLE_QUERIES.length);
+      expect(section?.items.every((row) => row.command?.command === "loadExampleQuery")).toBe(true);
+    });
+
+    it("runJackQuery returns nakagin default table rows", () => {
       const bus = new CommandBus();
       const ctrl = new TrinityJackPlayController(bus, () => {});
-      const query = "MATCH (a:Piece) WHERE a.name = 'b' RETURN a.name";
+      const query = TRINITY_JACK_PLAY_DEFAULT_QUERY;
       ctrl.run("runJackQuery", { query });
       completeJackDispatch(ctrl, query);
       const result = JSON.parse(ctrl.getJackResultJson()) as { kind: string; rows: unknown[][] };
       expect(result.kind).toBe("table");
-      expect(result.rows.length).toBe(1);
+      expect(result.rows.length).toBe(2);
     });
+
+    it.each(TRINITY_JACK_PLAY_EXAMPLE_QUERIES.map((row) => [row.id, row.query, row.label] as const))(
+      "example query %s runs without error",
+      (_id, query) => {
+        const bus = new CommandBus();
+        const ctrl = new TrinityJackPlayController(bus, () => {});
+        ctrl.run("loadExampleQuery", { query });
+        completeJackDispatch(ctrl, query);
+        const result = JSON.parse(ctrl.getJackResultJson()) as { kind: string };
+        expect(["table", "graph"]).toContain(result.kind);
+      },
+    );
 
     it("branch-chain preset returns graph result", () => {
       const bus = new CommandBus();

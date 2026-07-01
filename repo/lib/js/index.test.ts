@@ -8,7 +8,7 @@ import {
   joinNeo4jGraphDatabaseName,
   parseExtraNeo4jGraphDatabaseNamesFromEnv,
   partitionNeo4jGraphCliArgv,
-} from "../../../../generate.neo4j.gen.ts";
+} from "../../../generate.neo4j.gen.ts";
 import { BundleScript, ScriptRouter, canReuseDevPort, describeDevPortOccupant, devServerUrl, dispatchSubcommand, findRepoRoot, isDevPortInUse, resolveDevPort } from "./index.ts";
 import { defineLint, type FileLinter } from "./index.ts";
 import {
@@ -27,7 +27,7 @@ import {
   playgroundEmbedUrl,
   playgroundPlayViteDefine,
 } from "./index.ts";
-import { playgroundStaticSiteBuildOptions } from "../../../../ui/styling/vite-elements-assets.ts";
+import { playgroundStaticSiteBuildOptions } from "../../../ui/styling/vite-elements-assets.ts";
 describe("Neo4j graph database registry", () => {
   test("joins name segments with hyphen", () => {
     expect(joinNeo4jGraphDatabaseName(["compose", "kit"])).toBe("compose-kit");
@@ -161,7 +161,7 @@ describe("dependency-boundary", () => {
     const content = `import { z } from "zod";\nexport const a = 1;\n`;
     const file = "compose/client/lib/js/boundary-probe.ts";
     const breachs = dependencyBoundaryBreachesForFile(
-      new URL("../../../../", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1"),
+      new URL("../../../", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1"),
       file,
       content,
       file,
@@ -171,7 +171,7 @@ describe("dependency-boundary", () => {
   });
 
   test("dependencyBoundaryBreachesForBundleDir walks nested tsx", () => {
-    const repoRoot = new URL("../../../../", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1");
+    const repoRoot = new URL("../../../", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1");
     const dir = "framework/playground/renderer/react/puzzle";
     const breachs = dependencyBoundaryBreachesForBundleDir(repoRoot, dir);
     expect(breachs.every((b) => b.scope.startsWith("framework/playground/renderer/react/puzzle"))).toBe(true);
@@ -181,7 +181,7 @@ describe("dependency-boundary", () => {
     const content = `// #region 🔌Adapters\nimport { NextResponse } from "next/server";\n// #endregion 🔌Adapters\nexport async function GET() { return NextResponse.json({}); }\n`;
     const file = "repo/server/coordinator/app/api/v1/health/route.ts";
     const breachs = dependencyBoundaryBreachesForFile(
-      new URL("../../../../", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1"),
+      new URL("../../../", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1"),
       file,
       content,
       file,

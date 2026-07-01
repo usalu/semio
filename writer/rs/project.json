@@ -13,7 +13,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "writer/rs",
-        "command": "cargo test -p writer"
+        "command": "bun ./script.ts test"
       }
     }
   }

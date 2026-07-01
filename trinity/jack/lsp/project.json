@@ -13,7 +13,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "trinity/jack/lsp",
-        "command": "cargo test -p trinity_jack_lsp"
+        "command": "bun ./script.ts test"
       }
     }
   }

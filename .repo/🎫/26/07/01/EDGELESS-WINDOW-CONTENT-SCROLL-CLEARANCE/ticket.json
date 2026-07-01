@@ -3,13 +3,14 @@
   "emoji": "🪟",
   "status": "closed",
   "description": "All content inside all windows must be edgeless. Remove padding inset; use scroll clearance so the first line is hidden under chrome by default but scrolls into view when scrolling up. Applies to writer, tables, and all window bodies.",
-  "summary": "Reverted scroll-through-first-line overlap behavior. Chrome-aware windows (writer, forms, table, editor, vfs) use invisible top inset via `data-window-content-layout=chrome-aware` and `windowBodyChromeAwareInsetClass`; puzzle/canvas windows stay `edgeless` with no inset. Window measures live chrome height into `--window-chrome-scroll-clearance`. Writer camera offset removed; padding keeps content below chrome while scrolling.",
+  "summary": "Chrome-aware windows (writer, forms, table, editor, vfs) are edgeless again: no body padding. Dead-island default clears the first line under floating chrome via initial scroll/camera offset (`--window-content-dead-line`); scrolling up reveals content edgelessly under chrome. Puzzle/canvas windows stay fully edgeless with no dead-line offset.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1787"
   },
   "goal": "🎯r2602/🎯runningsketchpad",
   "sessions": [
     "⚪251faa2967134c90aaf448038d5ecdba",
-    "⚪ec82fba37ae64dc596f038218b106795"
+    "⚪ec82fba37ae64dc596f038218b106795",
+    "⚪58b7afc3269847d99f4cc80feaa5ccd9"
   ]
 }

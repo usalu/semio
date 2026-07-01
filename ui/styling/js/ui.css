@@ -678,6 +678,7 @@
   --size-workbench: calc(1.5 * var(--size-small));
   --size-medium: calc(7 * var(--ui-spacing));
   --window-chrome-scroll-clearance: calc(var(--size-medium) + 2 * var(--ui-spacing));
+  --window-content-dead-line: var(--window-chrome-scroll-clearance);
   --size-large: calc(9 * var(--ui-spacing));
   --size-huge: calc(11 * var(--ui-spacing));
   --size-mega: calc(13 * var(--ui-spacing));

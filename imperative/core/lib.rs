@@ -1,6 +1,6 @@
 //! ⚙️ Imperative core: path host and WASM session.
 
-pub use imperative_engine::{compile_to_text, EffectLogEntry, Executor, Path, RunResult, Step};
+pub use imperative_engine::{compile_to_text, EffectLogEntry, Executor, imperative_catalogue_json, imperative_module_registry, Path, RunResult, Step};
 pub use imperative_module_core::{catalogue_json, module_registry, register};
 pub use neural_engine::{Dictionary, Registry};
 
@@ -71,7 +71,7 @@ impl ImperativeHost {
     pub fn from_document(document: ImperativeDocumentV1) -> Self {
         Self {
             document,
-            registry: module_registry(),
+            registry: imperative_module_registry(),
             next_serial: 100,
         }
     }
@@ -89,7 +89,7 @@ impl ImperativeHost {
     }
 
     pub fn catalogue_json(&self) -> String {
-        catalogue_json(&self.registry)
+        imperative_catalogue_json(&self.registry)
     }
 
     pub fn add_step(&mut self, kind: &str, index: Option<usize>) -> String {

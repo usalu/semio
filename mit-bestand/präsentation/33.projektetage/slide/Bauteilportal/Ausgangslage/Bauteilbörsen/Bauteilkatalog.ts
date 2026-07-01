@@ -6,7 +6,7 @@ import {
 	catalogueFocusMorphTo,
 	mediaEmbodiments,
 	mediaParticipants,
-} from "../../../../spec.ts";
+} from "../../../../index.ts";
 
 export default {
 	order: 1,

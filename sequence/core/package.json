@@ -8,6 +8,9 @@
 	"exports": {
 		".": "./index.ts"
 	},
+	"scripts": {
+		"test": "bun nx run @semio-tech/sequence-core:test"
+	},
 	"dependencies": {
 		"@semio-tech/imperative-core": "workspace:*"
 	},

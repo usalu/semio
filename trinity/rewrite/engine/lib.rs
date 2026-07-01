@@ -1249,8 +1249,8 @@ mod tests {
     #[test]
     fn nakagin_fixture_loads() {
         let g = nakagin_graph();
-        assert_eq!(g.nodes.len(), 6);
-        assert_eq!(g.edges.len(), 5);
+        assert_eq!(g.nodes.len(), 9);
+        assert_eq!(g.edges.len(), 6);
     }
 
     #[test]
@@ -1336,10 +1336,10 @@ mod tests {
     #[test]
     fn trinity_host_rebuilds_engine() {
         let host = TrinityHost::from_graph(nakagin_graph());
-        assert_eq!(host.engine.nodes.len(), 6);
+        assert_eq!(host.engine.nodes.len(), 9);
         assert!(!host.engine.edges.is_empty());
         assert!(!host.engine.enforce_acyclic);
-        assert_eq!(host.board.nodes.len(), 6);
+        assert_eq!(host.board.nodes.len(), 9);
         assert!(host.board.nodes.values().all(|node| matches!(node.shape, mathematical_graph_port_directed::NodeShape::Circle)));
     }
 

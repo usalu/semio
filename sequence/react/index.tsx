@@ -1,6 +1,7 @@
 /** @emoji 📜 `@semio-tech/sequence-react` — execution-flow canvas. */
-import React, { useCallback, useEffect, useRef } from "react";
-import { clearColorResolveCache, serializeGraphVelloThemePaletteJson } from "@semio-tech/ui-styling";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { syncSessionVelloTheme } from "@semio-tech/ui-styling";
+import { useVelloThemeSync } from "@semio-tech/ui-react";
 import {
 	isDagDrawLodKind,
 	DAG_LOD_MODE_AUTOMATIC,
@@ -17,6 +18,7 @@ import {
 import {
 	performImperativeEffects,
 	type EffectLogEntry,
+	type ImperativeCatalogueItem,
 	type RunResult,
 } from "@semio-tech/imperative-core";
 import initSequenceWasm, { SequenceSession, initSync } from "../core/pkg/sequence_core.js";
@@ -54,10 +56,66 @@ export interface SequenceCanvasProps {
 	readonly automaticLod?: boolean;
 	readonly lod?: DagDrawLodKind;
 	readonly selectedStepIds?: readonly string[];
+	readonly fixtureDragDrop?: boolean;
 	readonly onFixtureChange?: (fixtureJson: string) => void;
 	readonly onSelectionChange?: (ids: readonly string[]) => void;
 	readonly onLodChange?: (lod: DagDrawLodKind) => void;
+	readonly onCompiledTextChange?: (text: string) => void;
 	readonly onRunResult?: (result: RunResult) => void;
+}
+
+export const SEQUENCE_STEP_DRAG_V1_MIME = "application/x-semio-sequence-step-v1";
+export const SEQUENCE_STEP_DRAG_PLAIN_MIME = "text/plain";
+
+export function sequenceStepCatalogueItemDragData(item: Pick<ImperativeCatalogueItem, "kind">): Record<string, string> {
+	const encoded = JSON.stringify({ kind: item.kind });
+	return { [SEQUENCE_STEP_DRAG_V1_MIME]: encoded, [SEQUENCE_STEP_DRAG_PLAIN_MIME]: encoded };
+}
+
+export function decodeSequenceStepDragPayload(encoded: string): string | null {
+	const trimmed = encoded.trim();
+	if (!trimmed) return null;
+	try {
+		const parsed = JSON.parse(trimmed) as { kind?: string };
+		return typeof parsed.kind === "string" ? parsed.kind : null;
+	} catch {
+		return null;
+	}
+}
+
+export function readSequenceStepDragDataTransfer(dataTransfer: DataTransfer): string | null {
+	const custom = dataTransfer.getData(SEQUENCE_STEP_DRAG_V1_MIME);
+	if (custom?.trim()) return decodeSequenceStepDragPayload(custom);
+	const plain = dataTransfer.getData(SEQUENCE_STEP_DRAG_PLAIN_MIME);
+	if (plain?.trim()) return decodeSequenceStepDragPayload(plain);
+	return null;
+}
+
+export function sequenceStepDragAcceptsTransfer(types: readonly string[]): boolean {
+	return types.includes(SEQUENCE_STEP_DRAG_V1_MIME) || types.includes(SEQUENCE_STEP_DRAG_PLAIN_MIME);
+}
+
+const sequencePaletteDragRef = { active: false };
+const sequencePaletteDropCommittedRef = { current: false };
+
+export function sequenceStepPaletteTreeDragController(
+	dragDataByItemId: ReadonlyMap<string, Record<string, string>>,
+): import("@semio-tech/framework-platform-core").TreeDragAndDropController {
+	const readKind = (dragData: Record<string, string> | undefined): string | undefined => {
+		const payload = dragData?.[SEQUENCE_STEP_DRAG_V1_MIME];
+		if (!payload?.trim()) return undefined;
+		return decodeSequenceStepDragPayload(payload) ?? undefined;
+	};
+	return {
+		getDragData: ({ sourceItem }) => dragDataByItemId.get(sourceItem.id),
+		onDragStart: ({ sourceItem }) => {
+			sequencePaletteDropCommittedRef.current = false;
+			sequencePaletteDragRef.active = Boolean(readKind(dragDataByItemId.get(sourceItem.id)));
+		},
+		onDragEnd: () => {
+			sequencePaletteDragRef.active = false;
+		},
+	};
 }
 
 function parseRunResult(raw: string): RunResult | null {
@@ -77,7 +135,27 @@ function arrayToIds(array: { readonly length: number; get(index: number): unknow
 	return ids;
 }
 
-/** @emoji 🖼️ Sequence execution-flow canvas with compiled-text and effect-log readouts. */
+function waitForLayoutSize(container: HTMLElement, min = 8): Promise<void> {
+	return new Promise((resolve) => {
+		let attempts = 0;
+		const probe = () => {
+			const rect = container.getBoundingClientRect();
+			if (rect.width >= min && rect.height >= min) {
+				resolve();
+				return;
+			}
+			attempts += 1;
+			if (attempts > 120) {
+				resolve();
+				return;
+			}
+			requestAnimationFrame(probe);
+		};
+		probe();
+	});
+}
+
+/** @emoji 🖼️ Sequence execution-flow canvas surface. */
 export function SequenceCanvas({
 	fixtureJson,
 	className,
@@ -86,37 +164,36 @@ export function SequenceCanvas({
 	onFixtureChange,
 	onSelectionChange,
 	onLodChange,
+	onCompiledTextChange,
 	onRunResult,
 	automaticLod = true,
 	lod,
 	selectedStepIds = [],
+	fixtureDragDrop = false,
 }: SequenceCanvasProps): React.JSX.Element {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 	const sessionRef = useRef<SequenceSession | null>(null);
 	const rafRef = useRef<number | null>(null);
+	const lastFixtureJsonRef = useRef<string | null>(null);
 	const onFixtureChangeRef = useRef(onFixtureChange);
 	const onSelectionChangeRef = useRef(onSelectionChange);
 	const onLodChangeRef = useRef(onLodChange);
+	const onCompiledTextChangeRef = useRef(onCompiledTextChange);
 	const onRunResultRef = useRef(onRunResult);
 	const lastAutomaticLodRef = useRef<boolean | null>(null);
 	const lastForcedLodRef = useRef<string | null>(null);
 	const lastReportedLodRef = useRef<DagDrawLodKind | null>(null);
 	const lastSelectionRef = useRef<string>("");
 	const lastRunEpochRef = useRef(0);
-	const [compiledText, setCompiledText] = React.useState("");
-	const [effectLog, setEffectLog] = React.useState<readonly EffectLogEntry[]>([]);
+	const fixtureDragDepthRef = useRef(0);
+	const [fixtureDragActive, setFixtureDragActive] = useState(false);
 
 	const syncVelloTheme = useCallback(() => {
-		const session = sessionRef.current;
-		if (!session) return;
-		try {
-			clearColorResolveCache();
-			session.setVelloThemeJson(serializeGraphVelloThemePaletteJson());
-		} catch {
-			/* theme not ready */
-		}
+		syncSessionVelloTheme(sessionRef.current);
 	}, []);
+
+	useVelloThemeSync(syncVelloTheme);
 
 	const syncLodMode = useCallback(() => {
 		const session = sessionRef.current;
@@ -151,11 +228,25 @@ export function SequenceCanvas({
 		const session = sessionRef.current;
 		if (!session) return;
 		try {
-			setCompiledText(session.compileText());
+			onCompiledTextChangeRef.current?.(session.compileText());
 		} catch {
 			/* session not ready */
 		}
 	}, []);
+
+	const emitFixtureChange = useCallback(() => {
+		const session = sessionRef.current;
+		if (!session) return;
+		try {
+			const json = session.fixtureJson();
+			if (json === lastFixtureJsonRef.current) return;
+			lastFixtureJsonRef.current = json;
+			onFixtureChangeRef.current?.(json);
+			syncCompiledText();
+		} catch {
+			/* fixture not ready */
+		}
+	}, [syncCompiledText]);
 
 	const renderFrame = useCallback(() => {
 		const session = sessionRef.current;
@@ -169,6 +260,80 @@ export function SequenceCanvas({
 		}
 	}, [reportDrawLod, syncLodMode, syncVelloTheme]);
 
+	const resetFixtureDragDepth = useCallback(() => {
+		fixtureDragDepthRef.current = 0;
+		setFixtureDragActive(false);
+	}, []);
+
+	const commitStepDropAtClient = useCallback(
+		(clientX: number, clientY: number, kind: string) => {
+			const session = sessionRef.current;
+			const host = containerRef.current ?? canvasRef.current;
+			if (!session || !host) return false;
+			const rect = host.getBoundingClientRect();
+			const sx = clientX - rect.left;
+			const sy = clientY - rect.top;
+			try {
+				const world = JSON.parse(session.worldFromScreen(sx, sy)) as { x: number; y: number };
+				session.addStep(kind, world.x, world.y);
+				sequencePaletteDropCommittedRef.current = true;
+				emitFixtureChange();
+				renderFrame();
+				return true;
+			} catch {
+				return false;
+			}
+		},
+		[emitFixtureChange, renderFrame],
+	);
+
+	const onDragEnter = useCallback(
+		(event: React.DragEvent<HTMLDivElement>) => {
+			if (!fixtureDragDrop) return;
+			if (!sequenceStepDragAcceptsTransfer([...event.dataTransfer.types])) return;
+			fixtureDragDepthRef.current += 1;
+			setFixtureDragActive(true);
+		},
+		[fixtureDragDrop],
+	);
+
+	const onDragLeave = useCallback(
+		(event: React.DragEvent<HTMLDivElement>) => {
+			if (!fixtureDragDrop) return;
+			const target = event.currentTarget as HTMLElement;
+			const related = event.relatedTarget as Node | null;
+			if (related && target.contains(related)) return;
+			fixtureDragDepthRef.current = Math.max(0, fixtureDragDepthRef.current - 1);
+			if (fixtureDragDepthRef.current === 0) {
+				setFixtureDragActive(false);
+			}
+		},
+		[fixtureDragDrop],
+	);
+
+	const onDragOver = useCallback(
+		(event: React.DragEvent<HTMLDivElement>) => {
+			if (!fixtureDragDrop) return;
+			if (!sequenceStepDragAcceptsTransfer([...event.dataTransfer.types])) return;
+			event.preventDefault();
+			event.dataTransfer.dropEffect = "copy";
+		},
+		[fixtureDragDrop],
+	);
+
+	const onDrop = useCallback(
+		(event: React.DragEvent<HTMLDivElement>) => {
+			if (!fixtureDragDrop) return;
+			const kind = readSequenceStepDragDataTransfer(event.dataTransfer);
+			if (!kind && !sequenceStepDragAcceptsTransfer([...event.dataTransfer.types])) return;
+			event.preventDefault();
+			resetFixtureDragDepth();
+			if (!kind) return;
+			commitStepDropAtClient(event.clientX, event.clientY, kind);
+		},
+		[commitStepDropAtClient, fixtureDragDrop, resetFixtureDragDepth],
+	);
+
 	useEffect(() => {
 		onFixtureChangeRef.current = onFixtureChange;
 	}, [onFixtureChange]);
@@ -180,6 +345,10 @@ export function SequenceCanvas({
 	useEffect(() => {
 		onLodChangeRef.current = onLodChange;
 	}, [onLodChange]);
+
+	useEffect(() => {
+		onCompiledTextChangeRef.current = onCompiledTextChange;
+	}, [onCompiledTextChange]);
 
 	useEffect(() => {
 		onRunResultRef.current = onRunResult;
@@ -196,14 +365,12 @@ export function SequenceCanvas({
 		if (!session || !reorganize || reorganize.epoch <= 0) return;
 		try {
 			session.reorganize(reorganize.optionsJson);
-			const json = session.fixtureJson();
-			onFixtureChangeRef.current?.(json);
-			syncCompiledText();
+			emitFixtureChange();
 			renderFrame();
 		} catch {
 			/* reorganize failed */
 		}
-	}, [reorganize?.epoch, reorganize?.optionsJson, renderFrame, syncCompiledText]);
+	}, [emitFixtureChange, reorganize?.epoch, reorganize?.optionsJson, renderFrame]);
 
 	useEffect(() => {
 		const session = sessionRef.current;
@@ -213,7 +380,6 @@ export function SequenceCanvas({
 			try {
 				const result = parseRunResult(session.run());
 				if (!result) return;
-				setEffectLog(result.effects);
 				onRunResultRef.current?.(result);
 				await performImperativeEffects(result.effects, {
 					onLog: () => {},
@@ -240,46 +406,86 @@ export function SequenceCanvas({
 	}, [renderFrame, selectedStepIds]);
 
 	useEffect(() => {
+		const session = sessionRef.current;
+		if (!session) return;
+		const nextFixture = fixtureJson ?? sequenceFixtureToJson(DEFAULT_SEQUENCE_FIXTURE);
+		try {
+			if (session.fixtureJson() !== nextFixture) {
+				session.loadFixtureJson(nextFixture);
+				lastFixtureJsonRef.current = nextFixture;
+				syncCompiledText();
+				renderFrame();
+			}
+		} catch {
+			session.loadFixtureJson(nextFixture);
+			lastFixtureJsonRef.current = nextFixture;
+			syncCompiledText();
+			renderFrame();
+		}
+	}, [fixtureJson, renderFrame, syncCompiledText]);
+
+	useEffect(() => {
 		const canvas = canvasRef.current;
 		const container = containerRef.current;
 		if (!canvas || !container) return;
+		let cancelled = false;
+		let cleanupInner: (() => void) | undefined;
 		const session = new SequenceSession();
 		sessionRef.current = session;
-		const json = fixtureJson ?? sequenceFixtureToJson(DEFAULT_SEQUENCE_FIXTURE);
-		session.loadFixtureJson(json);
+		const initialJson = fixtureJson ?? sequenceFixtureToJson(DEFAULT_SEQUENCE_FIXTURE);
+		session.loadFixtureJson(initialJson);
+		lastFixtureJsonRef.current = initialJson;
 		syncCompiledText();
-		const rect = container.getBoundingClientRect();
-		const dpr = globalThis.devicePixelRatio || 1;
-		const initW = Math.max(1, Math.round(rect.width));
-		const initH = Math.max(1, Math.round(rect.height));
-		canvas.width = Math.round(initW * dpr);
-		canvas.height = Math.round(initH * dpr);
-		canvas.style.width = `${initW}px`;
-		canvas.style.height = `${initH}px`;
-		void session.attachCanvas(canvas, initW, initH, dpr).then(() => {
-			const resize = () => {
-				const nextRect = container.getBoundingClientRect();
-				const nextDpr = globalThis.devicePixelRatio || 1;
-				const w = Math.max(1, Math.round(nextRect.width));
-				const h = Math.max(1, Math.round(nextRect.height));
-				canvas.width = Math.round(w * nextDpr);
-				canvas.height = Math.round(h * nextDpr);
-				canvas.style.width = `${w}px`;
-				canvas.style.height = `${h}px`;
-				session.setSize(w, h, nextDpr);
-				renderFrame();
-			};
+
+		const resize = () => {
+			if (cancelled) return;
+			const rect = container.getBoundingClientRect();
+			const dpr = globalThis.devicePixelRatio || 1;
+			const w = Math.max(8, Math.round(rect.width));
+			const h = Math.max(8, Math.round(rect.height));
+			const pw = Math.max(1, Math.round(w * dpr));
+			const ph = Math.max(1, Math.round(h * dpr));
+			if (canvas.width !== pw || canvas.height !== ph) {
+				canvas.width = pw;
+				canvas.height = ph;
+			}
+			canvas.style.width = `${w}px`;
+			canvas.style.height = `${h}px`;
+			session.setSize(w, h, dpr);
+			renderFrame();
+		};
+
+		void (async () => {
+			await new Promise<void>((resolve) => {
+				requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+			});
+			if (cancelled) return;
+			await waitForLayoutSize(container);
+			if (cancelled) return;
+			resize();
+			const rect = container.getBoundingClientRect();
+			const dpr = globalThis.devicePixelRatio || 1;
+			const initW = Math.max(8, Math.round(rect.width));
+			const initH = Math.max(8, Math.round(rect.height));
+			try {
+				await session.attachCanvas(canvas, initW, initH, dpr);
+			} catch {
+				return;
+			}
+			if (cancelled) return;
 			resize();
 			const ro = new ResizeObserver(resize);
 			ro.observe(container);
 			const visualViewport = globalThis.visualViewport;
 			visualViewport?.addEventListener("resize", resize);
 			const tick = () => {
+				if (cancelled) return;
 				renderFrame();
 				rafRef.current = requestAnimationFrame(tick);
 			};
 			rafRef.current = requestAnimationFrame(tick);
 			const onPointerDown = (event: PointerEvent) => {
+				canvas.setPointerCapture(event.pointerId);
 				const r = canvas.getBoundingClientRect();
 				session.pointerDownScreen(event.clientX - r.left, event.clientY - r.top, event.button, event.shiftKey, event.ctrlKey || event.metaKey, event.altKey);
 				renderFrame();
@@ -289,66 +495,68 @@ export function SequenceCanvas({
 				session.pointerMoveScreen(event.clientX - r.left, event.clientY - r.top, event.shiftKey, event.ctrlKey || event.metaKey, event.altKey);
 				renderFrame();
 			};
-			const onPointerUp = (event: PointerEvent) => {
+			const finishPointer = (event: PointerEvent) => {
+				if (canvas.hasPointerCapture(event.pointerId)) {
+					canvas.releasePointerCapture(event.pointerId);
+				}
 				const r = canvas.getBoundingClientRect();
 				session.pointerUpScreen(event.clientX - r.left, event.clientY - r.top, event.shiftKey, event.ctrlKey || event.metaKey, event.altKey);
 				try {
 					const ids = arrayToIds(session.selectedNodeIds());
-					if (JSON.stringify(ids) !== lastSelectionRef.current) {
+					if (ids.join("\0") !== lastSelectionRef.current) {
 						lastSelectionRef.current = ids.join("\0");
 						onSelectionChangeRef.current?.(ids);
 					}
-					const nextFixture = session.fixtureJson();
-					onFixtureChangeRef.current?.(nextFixture);
-					syncCompiledText();
+					emitFixtureChange();
 				} catch {
 					/* fixture not ready */
 				}
 				renderFrame();
 			};
+			const onWheel = (event: WheelEvent) => {
+				event.preventDefault();
+				const r = canvas.getBoundingClientRect();
+				session.wheelScreen(event.clientX - r.left, event.clientY - r.top, event.deltaY);
+				emitFixtureChange();
+				renderFrame();
+			};
 			canvas.addEventListener("pointerdown", onPointerDown);
 			canvas.addEventListener("pointermove", onPointerMove);
-			canvas.addEventListener("pointerup", onPointerUp);
-			canvas.addEventListener("pointerleave", onPointerUp);
-			return () => {
+			canvas.addEventListener("pointerup", finishPointer);
+			canvas.addEventListener("pointercancel", finishPointer);
+			canvas.addEventListener("pointerleave", finishPointer);
+			canvas.addEventListener("wheel", onWheel, { passive: false });
+			cleanupInner = () => {
 				ro.disconnect();
 				visualViewport?.removeEventListener("resize", resize);
 				canvas.removeEventListener("pointerdown", onPointerDown);
 				canvas.removeEventListener("pointermove", onPointerMove);
-				canvas.removeEventListener("pointerup", onPointerUp);
-				canvas.removeEventListener("pointerleave", onPointerUp);
+				canvas.removeEventListener("pointerup", finishPointer);
+				canvas.removeEventListener("pointercancel", finishPointer);
+				canvas.removeEventListener("pointerleave", finishPointer);
+				canvas.removeEventListener("wheel", onWheel);
 				if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
 			};
-		});
+		})();
+
 		return () => {
+			cancelled = true;
+			cleanupInner?.();
 			if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
 			sessionRef.current = null;
 		};
-	}, [fixtureJson, renderFrame, syncCompiledText]);
+	}, [emitFixtureChange, renderFrame, syncCompiledText]);
 
 	return (
-		<div className={className ?? "grid h-full min-h-0 grid-cols-[1fr_minmax(14rem,18rem)] gap-2 p-2"}>
-			<div ref={containerRef} className="relative min-h-0 flex-1 overflow-hidden rounded border bg-canvas">
-				<canvas ref={canvasRef} className="block h-full w-full touch-none" />
-			</div>
-			<aside className="flex min-h-0 flex-col gap-2 overflow-auto text-xs">
-				<section className="rounded border">
-					<div className="border-b px-2 py-1 font-medium">Compiled Text</div>
-					<pre className="overflow-auto p-2 whitespace-pre-wrap">{compiledText || "—"}</pre>
-				</section>
-				<section className="rounded border">
-					<div className="border-b px-2 py-1 font-medium">Effect Log</div>
-					<ul className="p-2">
-						{effectLog.length === 0 ? <li className="text-[var(--muted-foreground)]">Run to see effects</li> : null}
-						{effectLog.map((entry, index) => (
-							<li key={`${entry.stepId}-${index}`} className="mb-1 rounded border px-2 py-1">
-								<strong>{entry.kind}</strong>
-								{entry.error ? <span className="text-red-500"> · {entry.error}</span> : null}
-							</li>
-						))}
-					</ul>
-				</section>
-			</aside>
+		<div
+			ref={containerRef}
+			className={`relative h-full w-full min-h-0 min-w-0 bg-canvas ${fixtureDragActive ? "ring-2 ring-inset ring-accent" : ""} ${className ?? ""}`}
+			onDragEnter={onDragEnter}
+			onDragLeave={onDragLeave}
+			onDragOver={onDragOver}
+			onDrop={onDrop}
+		>
+			<canvas ref={canvasRef} className="block h-full w-full touch-none" />
 		</div>
 	);
 }
@@ -360,10 +568,10 @@ if (import.meta.vitest) {
 			expect(DEFAULT_SEQUENCE_FIXTURE.edges.length).toBe(1);
 		});
 	});
-	describe("SequenceRunRequest", () => {
-		it("tracks run epoch", () => {
-			const request: SequenceRunRequest = { epoch: 1 };
-			expect(request.epoch).toBe(1);
+	describe("sequenceStepCatalogueItemDragData", () => {
+		it("encodes step kind", () => {
+			const payload = sequenceStepCatalogueItemDragData({ kind: "log.print" });
+			expect(decodeSequenceStepDragPayload(payload[SEQUENCE_STEP_DRAG_V1_MIME] ?? "")).toBe("log.print");
 		});
 	});
 }

@@ -1,0 +1,13 @@
+[package]
+name = "imperative_module_text"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[lib]
+crate-type = ["rlib"]
+path = "lib.rs"
+
+[dependencies]
+neural_engine = { path = "../../../neural/engine" }
+serde_json = "1.0.140"

@@ -22,14 +22,6 @@ import {
 } from "@semio-tech/framework-playground-core";
 import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
 import type { DocumentVcsStore } from "@semio-tech/vcs-core";
-import {
-	createVcsDemoStore,
-	seedVcsDemoHistory,
-	VCS_DEMO_AUTHORS,
-	type VcsDemoOp,
-	type VcsDemoProjection,
-} from "./demo.ts";
-
 export const VCS_PLAY_APP_ID = "vcs-play";
 export const VCS_PLAY_CONTROLLER_ID = "vcs-play";
 export const VCS_PLAY_SURFACE_ID_EDITOR = "vcs.play.editor/v1";
@@ -220,9 +212,15 @@ if (import.meta.vitest) {
 		it("creates checkpoints and alternatives", () => {
 			const local = createVcsDemoStore();
 			seedVcsDemoHistory(local);
-			expect(local.getEnvelope().vcs.checkpoints.length).toBeGreaterThanOrEqual(3);
-			expect(local.getEnvelope().vcs.alternatives.length).toBeGreaterThanOrEqual(2);
-			expect(local.historyColumns().length).toBeGreaterThanOrEqual(3);
+			const envelope = local.getEnvelope();
+			expect(envelope.vcs.checkpoints.length).toBeGreaterThanOrEqual(15);
+			expect(envelope.vcs.alternatives.length).toBeGreaterThanOrEqual(5);
+			expect(local.historyColumns().length).toBeGreaterThanOrEqual(15);
+			const parentCounts = new Map<string | undefined, number>();
+			for (const checkpoint of envelope.vcs.checkpoints) {
+				parentCounts.set(checkpoint.parentId, (parentCounts.get(checkpoint.parentId) ?? 0) + 1);
+			}
+			expect([...parentCounts.values()].some((count) => count >= 2)).toBe(true);
 		});
 	});
 
@@ -248,3 +246,188 @@ if (typeof document !== "undefined" && document.getElementById("root") != null &
 	})();
 }
 // #endregion 🔖Boot
+
+//#region 🔖demo
+/** @emoji 🗄️ VCS play demo projection and semantic edit operations. */
+
+import {
+	DocumentVcsStore,
+	createDocumentVcsEnvelope,
+	type Author,
+	type DocumentVcsEnvelope,
+} from "@semio-tech/vcs-core";
+
+export const VCS_DEMO_SCHEMA = "vcs.demo/v1";
+
+export interface VcsDemoProjection {
+	readonly schema: string;
+	readonly title: string;
+	readonly counter: number;
+	readonly notes: string;
+	readonly status: string;
+	readonly tags: readonly string[];
+}
+
+export type VcsDemoOp =
+	| { readonly op: "setCounter"; readonly counter: number }
+	| { readonly op: "setTitle"; readonly title: string }
+	| { readonly op: "setNotes"; readonly notes: string }
+	| { readonly op: "setStatus"; readonly status: string }
+	| { readonly op: "addTag"; readonly tag: string }
+	| { readonly op: "removeTag"; readonly tag: string };
+
+export const VCS_DEMO_AUTHORS: readonly Author[] = [
+	{ id: "author-alice", name: "Alice", avatar: undefined },
+	{ id: "author-bob", name: "Bob", avatar: undefined },
+	{ id: "author-carol", name: "Carol", avatar: undefined },
+];
+
+export function emptyVcsDemoProjection(): VcsDemoProjection {
+	return { schema: VCS_DEMO_SCHEMA, title: "VCS Demo", counter: 0, notes: "", status: "new", tags: [] };
+}
+
+export function applyVcsDemoOp(projection: VcsDemoProjection, operation: VcsDemoOp): VcsDemoProjection {
+	switch (operation.op) {
+		case "setCounter":
+			return { ...projection, counter: operation.counter };
+		case "setTitle":
+			return { ...projection, title: operation.title };
+		case "setNotes":
+			return { ...projection, notes: operation.notes };
+		case "setStatus":
+			return { ...projection, status: operation.status };
+		case "addTag":
+			return projection.tags.includes(operation.tag)
+				? projection
+				: { ...projection, tags: [...projection.tags, operation.tag] };
+		case "removeTag":
+			return { ...projection, tags: projection.tags.filter((tag) => tag !== operation.tag) };
+	}
+}
+
+export function backwardsVcsDemoOp(projection: VcsDemoProjection, operation: VcsDemoOp): readonly VcsDemoOp[] {
+	switch (operation.op) {
+		case "setCounter":
+			return [{ op: "setCounter", counter: projection.counter }];
+		case "setTitle":
+			return [{ op: "setTitle", title: projection.title }];
+		case "setNotes":
+			return [{ op: "setNotes", notes: projection.notes }];
+		case "setStatus":
+			return [{ op: "setStatus", status: projection.status }];
+		case "addTag":
+			return [{ op: "removeTag", tag: operation.tag }];
+		case "removeTag":
+			return [{ op: "addTag", tag: operation.tag }];
+	}
+}
+
+export function diffVcsDemoOp(_projection: VcsDemoProjection, operation: VcsDemoOp): unknown {
+	return operation;
+}
+
+export function createVcsDemoStore(envelope?: DocumentVcsEnvelope<VcsDemoProjection, VcsDemoOp>): DocumentVcsStore<VcsDemoProjection, VcsDemoOp> {
+	return new DocumentVcsStore({
+		envelope: envelope ?? createDocumentVcsEnvelope(VCS_DEMO_SCHEMA, "vcs-demo", emptyVcsDemoProjection()),
+		applyOp: applyVcsDemoOp,
+		backwardsOp: backwardsVcsDemoOp,
+		diffOp: diffVcsDemoOp,
+	});
+}
+
+export function seedVcsDemoHistory(store: DocumentVcsStore<VcsDemoProjection, VcsDemoOp>): void {
+	const alice = VCS_DEMO_AUTHORS[0]!;
+	const bob = VCS_DEMO_AUTHORS[1]!;
+	const carol = VCS_DEMO_AUTHORS[2]!;
+	const lastCheckpointId = () => store.getEnvelope().vcs.checkpoints.at(-1)!.id;
+
+	store.dispatch({
+		kind: "apply",
+		operations: [{ op: "setCounter", counter: 1 }, { op: "setTitle", title: "VCS Demo" }],
+		description: "bootstrap",
+	});
+	store.dispatch({ kind: "commitCheckpoint", message: "Bootstrap", authors: [alice] });
+	const c1 = lastCheckpointId();
+
+	store.dispatch({
+		kind: "apply",
+		operations: [{ op: "setNotes", notes: "main line" }, { op: "setStatus", status: "draft" }],
+	});
+	store.dispatch({ kind: "commitCheckpoint", message: "Annotate main draft", authors: [alice, bob] });
+	const c2 = lastCheckpointId();
+
+	store.dispatch({ kind: "apply", operations: [{ op: "setCounter", counter: 2 }] });
+	store.dispatch({ kind: "commitCheckpoint", message: "Main milestone", authors: [alice, bob, carol] });
+	const c3 = lastCheckpointId();
+
+	store.dispatch({ kind: "checkoutCheckpoint", checkpointId: c3 });
+	store.dispatch({ kind: "createAlternative", name: "feature-a" });
+	store.dispatch({
+		kind: "apply",
+		operations: [{ op: "setTitle", title: "Feature A" }, { op: "addTag", tag: "feature-a" }],
+	});
+	store.dispatch({ kind: "commitCheckpoint", message: "Start feature A", authors: [alice] });
+	const c4 = lastCheckpointId();
+	const featureAId = store.getEnvelope().activeAlternativeId!;
+
+	store.dispatch({ kind: "apply", operations: [{ op: "setCounter", counter: 10 }] });
+	store.dispatch({ kind: "commitCheckpoint", message: "Feature A progress", authors: [alice, bob] });
+
+	store.dispatch({ kind: "checkoutCheckpoint", checkpointId: c3 });
+	store.dispatch({ kind: "createAlternative", name: "feature-b" });
+	store.dispatch({
+		kind: "apply",
+		operations: [{ op: "setTitle", title: "Feature B" }, { op: "setNotes", notes: "branch b" }],
+	});
+	store.dispatch({ kind: "commitCheckpoint", message: "Start feature B", authors: [bob] });
+	const featureBId = store.getEnvelope().activeAlternativeId!;
+
+	store.dispatch({ kind: "apply", operations: [{ op: "setCounter", counter: 20 }] });
+	store.dispatch({ kind: "commitCheckpoint", message: "Feature B try", authors: [bob, carol] });
+
+	store.dispatch({ kind: "checkoutCheckpoint", checkpointId: c3 });
+	store.dispatch({ kind: "apply", operations: [{ op: "setStatus", status: "active" }] });
+	store.dispatch({ kind: "commitCheckpoint", message: "Resume main", authors: [carol] });
+	const c8 = lastCheckpointId();
+
+	store.dispatch({ kind: "switchAlternative", alternativeId: featureAId });
+	store.dispatch({
+		kind: "apply",
+		operations: [{ op: "setCounter", counter: 11 }, { op: "addTag", tag: "wip" }],
+	});
+	store.dispatch({ kind: "commitCheckpoint", message: "Feature A sprint", authors: [alice, carol] });
+
+	store.dispatch({ kind: "checkoutCheckpoint", checkpointId: c4 });
+	store.dispatch({ kind: "createAlternative", name: "feature-a-hotfix" });
+	store.dispatch({ kind: "apply", operations: [{ op: "setStatus", status: "hotfix" }] });
+	store.dispatch({ kind: "commitCheckpoint", message: "Hotfix off feature A", authors: [bob] });
+
+	store.dispatch({ kind: "switchAlternative", alternativeId: featureBId });
+	store.dispatch({ kind: "apply", operations: [{ op: "addTag", tag: "review" }] });
+	store.dispatch({ kind: "commitCheckpoint", message: "Feature B review", authors: [bob] });
+
+	store.dispatch({ kind: "checkoutCheckpoint", checkpointId: c8 });
+	store.dispatch({
+		kind: "apply",
+		operations: [
+			{ op: "setCounter", counter: 3 },
+			{ op: "setNotes", notes: "main polish" },
+			{ op: "addTag", tag: "release" },
+		],
+	});
+	store.dispatch({ kind: "commitCheckpoint", message: "Main batch polish", authors: [alice, bob, carol] });
+
+	store.dispatch({ kind: "apply", operations: [{ op: "setStatus", status: "done" }] });
+	store.dispatch({ kind: "commitCheckpoint", message: "Main release", authors: [alice] });
+
+	store.dispatch({ kind: "checkoutCheckpoint", checkpointId: c2 });
+	store.dispatch({ kind: "createAlternative", name: "docs" });
+	store.dispatch({ kind: "apply", operations: [{ op: "setNotes", notes: "documentation pass" }] });
+	store.dispatch({ kind: "commitCheckpoint", message: "Docs branch", authors: [carol] });
+
+	store.dispatch({ kind: "checkoutCheckpoint", checkpointId: c1 });
+	store.dispatch({ kind: "createAlternative", name: "spike" });
+	store.dispatch({ kind: "apply", operations: [{ op: "setTitle", title: "Spike prototype" }] });
+	store.dispatch({ kind: "commitCheckpoint", message: "Spike experiment", authors: [bob, carol] });
+}
+//#endregion 🔖demo

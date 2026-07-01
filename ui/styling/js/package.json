@@ -10,8 +10,6 @@
     "./ui.css": "./ui.css",
     "./palette.css": "./palette.css",
     "./tailwind.config": "./tailwind.config.ts",
-    "./resolve": "./resolve.ts",
-    "./icon-render-port": "./icon-render-port.ts",
     "./tokens.generated": "./tokens.generated.ts"
   },
   "dependencies": {

@@ -303,14 +303,14 @@ fn parse_document(json: &str) -> Result<RasterDocument, String> {
 // #endregion 🔖Document
 
 // #region 🔖Pixels
-fn checkerboard_rgba(width: u32, height: u32, light: bool) -> Vec<u8> {
+fn checkerboard_rgba(width: u32, height: u32, light_cell: u8, dark_cell: u8) -> Vec<u8> {
     let mut rgba = vec![0u8; (width * height * 4) as usize];
     let cell = 16u32;
     for y in 0..height {
         for x in 0..width {
             let idx = ((y * width + x) * 4) as usize;
             let on = ((x / cell) + (y / cell)) % 2 == 0;
-            let v = if on == light { 220u8 } else { 180u8 };
+            let v = if on { light_cell } else { dark_cell };
             rgba[idx] = v;
             rgba[idx + 1] = v;
             rgba[idx + 2] = v;
@@ -391,6 +391,8 @@ pub struct RasterHost {
     pan_last: Option<Point>,
     show_selection_chrome: bool,
     theme_clear: Color,
+    checkerboard_light_cell: u8,
+    checkerboard_dark_cell: u8,
 }
 
 impl Default for RasterHost {
@@ -401,6 +403,8 @@ impl Default for RasterHost {
 
 impl RasterHost {
     pub fn new() -> Self {
+        let theme_clear = cavas::theme::canvas_clear_for(ui_styling::theme::ThemeName::Light);
+        let (checkerboard_light_cell, checkerboard_dark_cell) = cavas::theme::checkerboard_shades_for_clear(theme_clear);
         Self {
             camera: Camera { x: 0.0, y: 0.0, zoom: 1.0 },
             viewport: Viewport { width: 800, height: 600, dpr: 1.0 },
@@ -418,8 +422,19 @@ impl RasterHost {
             last_paint: None,
             pan_last: None,
             show_selection_chrome: true,
-            theme_clear: Color::from_rgba8(32, 32, 36, 255),
+            theme_clear,
+            checkerboard_light_cell,
+            checkerboard_dark_cell,
         }
+    }
+
+    pub fn set_vello_theme_from_json(&mut self, json: &str) -> Result<(), String> {
+        let v: serde_json::Value = serde_json::from_str(json).map_err(|e| e.to_string())?;
+        cavas::theme::merge_color_field(&mut self.theme_clear, &v, "rasterClear");
+        let (checkerboard_light_cell, checkerboard_dark_cell) = cavas::theme::checkerboard_shades_for_clear(self.theme_clear);
+        self.checkerboard_light_cell = checkerboard_light_cell;
+        self.checkerboard_dark_cell = checkerboard_dark_cell;
+        Ok(())
     }
 
     pub fn set_size(&mut self, width: u32, height: u32, dpr: f64) {
@@ -495,10 +510,10 @@ impl RasterHost {
         let len = (width * height * 4) as usize;
         self.paint_buffers
             .entry(key)
-            .or_insert_with(|| checkerboard_rgba(width, height, true));
+            .or_insert_with(|| checkerboard_rgba(width, height, self.checkerboard_light_cell, self.checkerboard_dark_cell));
         let buf = self.paint_buffers.get_mut(&Self::layer_pixel_buffer_key(id)).unwrap();
         if buf.len() != len {
-            *buf = checkerboard_rgba(width, height, true);
+            *buf = checkerboard_rgba(width, height, self.checkerboard_light_cell, self.checkerboard_dark_cell);
         }
         buf
     }
@@ -604,7 +619,7 @@ impl RasterHost {
             let image = image_from_rgba(width, height, buf);
             return self.images.insert(key, image);
         }
-        let rgba = checkerboard_rgba(width, height, false);
+        let rgba = checkerboard_rgba(width, height, self.checkerboard_light_cell, self.checkerboard_dark_cell);
         self.paint_buffers.insert(key.clone(), rgba.clone());
         self.images.insert(key, image_from_rgba(width, height, rgba))
     }
@@ -939,6 +954,11 @@ impl RasterSession {
             .host
             .set_selection_ids_json(json)
             .map_err(|e| JsValue::from_str(&e))
+    }
+
+    #[wasm_bindgen(js_name = setVelloThemeJson)]
+    pub fn set_vello_theme_json(&mut self, json: &str) {
+        let _ = self.state.borrow_mut().host.set_vello_theme_from_json(json);
     }
 
     #[wasm_bindgen(js_name = cameraJson)]

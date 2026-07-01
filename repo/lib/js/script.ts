@@ -1,13 +1,19 @@
 #!/usr/bin/env bun
-/** 🧭 `@semio-tech/repo-lib` router: `bun ./script.ts lint` runs the package lint target via Nx from the monorepo root. */
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCmd } from "./index.ts";
+/** 🧭 `@semio-tech/repo-lib` router: `bun ./script.ts <lint|test>`. */
+import { BundleScript, ScriptRouter, runBundleScriptMain, runBunx, runCmd } from "./index.ts";
 
 class LintScript extends BundleScript {
-  run(): void {
-    runCmd(process.execPath, ["nx", "run", "@semio-tech/repo-lib:lint"], { cwd: this.repoRoot });
-  }
+	run(): void {
+		runBunx(["tsc", "-p", "tsconfig.json", "--noEmit"], this.root);
+	}
 }
 
-const router = new ScriptRouter(import.meta.dir).register("lint", LintScript);
+class TestScript extends BundleScript {
+	run(): void {
+		runCmd(process.execPath, ["test", "./index.test.ts"], { cwd: this.root });
+	}
+}
+
+const router = new ScriptRouter(import.meta.dir).register("lint", LintScript).register("test", TestScript);
 
 await runBundleScriptMain(router, import.meta.url);
