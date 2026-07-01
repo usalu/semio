@@ -70,7 +70,45 @@ These pass the letter of `Operation<P>` but not the spirit of the Trinity plan (
 
 ---
 
-## Recommended remediation order
+## Status (2026-07-01)
+
+**Tier A remediated.** All listed play controllers now route structural edits through semantic `*EditOp` types and `recordProjectionChange(docStore, [op])` instead of blind projection spreads.
+
+| Technology | Semantic ops | Play gate |
+|------------|--------------|-----------|
+| Flow | `FlowFixtureEditOp` | `applyFixtureEdit` |
+| DAG | `DagFixtureEditOp` | `applyFixtureEdit` |
+| Procedural 2d/3d | reuses `FlowFixtureEditOp` | `applyFixtureEdit` |
+| GIS 2d | `GisMapFixtureEditOp` | `applyFixtureEdit` |
+| Puzzle 3d | `Puzzle3dFixtureEditOp` (24 ops) | `applyFixtureEdit` |
+| Puzzle 5d | `Puzzle5dModelEditOp` | `applyModelEdit` + store sync |
+| Presentation | `PresentationEditOp` (extended) | `applyDeckEdit` |
+| Shooting | `ShootingFixtureEditOp` | `applyFixtureEdit` |
+| Forms | `FormEditOp` | `applySpecEdit` |
+| Trinity jack/rewrite | `jackDispatch` / `beforeJackDispatch` | canvas WASM gate |
+
+**Tier D (Trinity):** `patchTrinityNodes` in jack + rewrite play now dispatches Jack queries through canvas session instead of `runJackOnFixture` mutation shim. Read-only `runJackOnFixture` for LHS highlight preview retained.
+
+**Remaining (out of scope):** Tier B coarse Rust ops; Tier E TS mirror retirement to WASM-only dispatch.
+
+### Phase 2 (2026-07-01) — All DocumentVcs technologies
+
+| Technology | Forwards gate | Semantic backwards undo |
+|------------|---------------|-------------------------|
+| Flow / Procedural | `FlowFixtureEditOp` | `backwardsFlowFixtureEditOp` |
+| DAG | `DagFixtureEditOp` | `backwardsDagFixtureEditOp` |
+| GIS 2d | `GisMapFixtureEditOp` | `backwardsGisMapFixtureEditOp` |
+| Shooting | `ShootingFixtureEditOp` | `backwardsShootingFixtureEditOp` |
+| Puzzle 3d | `Puzzle3dFixtureEditOp` | `backwardsPuzzle3dFixtureEditOp` |
+| Puzzle 5d | `Puzzle5dModelEditOp` | `backwardsPuzzle5dModelEditOp` |
+| Presentation | `PresentationEditOp` | `backwardsPresentationEditOp` |
+| Forms | `FormEditOp` | `backwardsFormEditOp` |
+| Draw | `DrawEditOp` | `backwardsDrawEditOp` (property inverses + snapshot fallback) |
+| Raster | `RasterEditOp` + `setBrushOpacity` | `backwardsRasterEditOp` |
+| Writer | `WriterEditOp` + `setText` | `backwardsWriterEditOp` |
+
+**Canvas-native (no play DocumentVcsStore):** Puzzle 2d (Rust `Puzzle2dOp` + renderer graph), Semios app store (`dispatch`), Trinity WASM graph store.
+
 
 1. **Flow + DAG** — foundational graph techs; same shape as Trinity; play must call WASM `dispatchJson` / Rust store instead of `commitFixture` spread.
 2. **Procedural 2d/3d** — reuses flow fixtures; fix after flow gate exists.

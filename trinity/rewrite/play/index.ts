@@ -66,6 +66,7 @@ import {
   type TrinityFixtureV1,
   type TrinityLodModeKind,
   type TrinityVcsCommandKind,
+  type TrinityJackDispatchRequest,
   type TrinityVcsRequest,
 } from "@semio-tech/trinity-react";
 
@@ -251,6 +252,8 @@ export class TrinityRewritePlayController extends Controller {
   private vcsEpoch = 0;
   private vcsKind: TrinityVcsCommandKind = "undo";
   private vcsMessage = "";
+  private beforeJackDispatchEpoch = 0;
+  private beforeJackDispatchQuery = "";
   private storeGeneration = 0;
   private selectedNodeIds: string[] = [];
   private activeHoverVar: string | null = null;
@@ -301,6 +304,10 @@ export class TrinityRewritePlayController extends Controller {
     return this.vcsEpoch > 0 ? { kind: this.vcsKind, epoch: this.vcsEpoch, message: this.vcsMessage || undefined } : undefined;
   }
 
+  getBeforeJackDispatch(): TrinityJackDispatchRequest | undefined {
+    return this.beforeJackDispatchEpoch > 0 ? { query: this.beforeJackDispatchQuery, epoch: this.beforeJackDispatchEpoch } : undefined;
+  }
+
   getStoreGeneration(): number {
     return this.storeGeneration;
   }
@@ -313,6 +320,23 @@ export class TrinityRewritePlayController extends Controller {
     this.vcsKind = kind;
     this.vcsMessage = message;
     this.vcsEpoch += 1;
+  }
+
+  private dispatchBeforeJackQuery(query: string): void {
+    this.beforeJackDispatchQuery = query;
+    this.beforeJackDispatchEpoch += 1;
+  }
+
+  onBeforeJackDispatchComplete(resultJson: string): void {
+    try {
+      const result = JSON.parse(resultJson) as { fixtureJson?: string };
+      if (typeof result.fixtureJson === "string" && parseTrinityFixtureJson(result.fixtureJson)) {
+        this.setBeforeFixtureJson(result.fixtureJson);
+      }
+    } catch {
+      /* dispatch result unavailable */
+    }
+    this.bump();
   }
 
   onVcsApplied(generation: number): void {
@@ -675,15 +699,14 @@ export class TrinityRewritePlayController extends Controller {
       const escaped = nextName.replace(/'/g, "\\'");
       const fixture = parseTrinityFixtureJson(this.beforeFixtureJson);
       if (!fixture) return;
-      let json = this.beforeFixtureJson;
-      for (const id of nodeIds) {
-        const node = fixture.nodes.find((row) => row.id === id);
-        if (!node) continue;
-        const result = runJackOnFixture(json, `MATCH (n:${node.kind}) WHERE n.id = '${id}' SET n.name = '${escaped}'`);
-        json = result.fixtureJson;
-      }
-      this.setBeforeFixtureJson(json);
-      this.bump();
+      const queries = nodeIds
+        .map((id) => {
+          const node = fixture.nodes.find((row) => row.id === id);
+          if (!node) return null;
+          return `MATCH (n:${node.kind}) WHERE n.id = '${id}' SET n.name = '${escaped}'`;
+        })
+        .filter((query): query is string => query !== null);
+      if (queries.length) this.dispatchBeforeJackQuery(queries.join("\n"));
       return;
     }
     if (command === "setLodMode") {
@@ -825,6 +848,13 @@ if (import.meta.vitest) {
       const ctrl = new TrinityRewritePlayController(bus, () => undefined);
       const nodeId = parseTrinityFixtureJson(ctrl.getBeforeFixtureJson())!.nodes[0]!.id;
       ctrl.run("patchTrinityNodes", { nodeIds: [nodeId], field: "name", value: "rewrite-renamed" });
+      const dispatch = ctrl.getBeforeJackDispatch();
+      expect(dispatch).toBeDefined();
+      const result = runJackOnFixture(ctrl.getBeforeFixtureJson(), dispatch!.query);
+      ctrl.onBeforeJackDispatchComplete(JSON.stringify(result));
+      if (result.fixtureJson !== ctrl.getBeforeFixtureJson()) {
+        ctrl.run("setFixtureJson", { json: result.fixtureJson });
+      }
       const updated = parseTrinityFixtureJson(ctrl.getBeforeFixtureJson())!.nodes.find((node) => node.id === nodeId);
       expect(updated?.name).toBe("rewrite-renamed");
     });

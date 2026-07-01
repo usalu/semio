@@ -581,7 +581,7 @@ impl TrinityHost {
     }
 
     pub fn undo(&mut self) -> Result<(), String> {
-        use framework_vcs::DocumentVcsCommand;
+        use vcs::DocumentVcsCommand;
         self.store.dispatch(DocumentVcsCommand::Undo).map_err(|e| e.to_string())?;
         self.refresh_graph_from_store()?;
         self.rebuild_engine();
@@ -589,7 +589,7 @@ impl TrinityHost {
     }
 
     pub fn redo(&mut self) -> Result<(), String> {
-        use framework_vcs::DocumentVcsCommand;
+        use vcs::DocumentVcsCommand;
         self.store.dispatch(DocumentVcsCommand::Redo).map_err(|e| e.to_string())?;
         self.refresh_graph_from_store()?;
         self.rebuild_engine();
@@ -597,9 +597,12 @@ impl TrinityHost {
     }
 
     pub fn commit_checkpoint(&mut self, message: Option<String>) -> Result<(), String> {
-        use framework_vcs::DocumentVcsCommand;
+        use vcs::DocumentVcsCommand;
         self.store
-            .dispatch(DocumentVcsCommand::CommitCheckpoint { message })
+            .dispatch(DocumentVcsCommand::CommitCheckpoint {
+                message,
+                authors: Vec::new(),
+            })
             .map_err(|e| e.to_string())
     }
 
@@ -930,6 +933,66 @@ struct JackRunWithFixture {
     fixture_json: String,
 }
 // #endregion 🔖TrinityHost
+
+//#region 🔖WasmBridge
+#[cfg(target_arch = "wasm32")]
+mod wasm_bridge {
+    use super::*;
+    use std::cell::RefCell;
+    use trinity_ram::{create_trinity_graph_envelope, empty_trinity_graph_fixture, TrinityGraphEnvelope, TrinityGraphStore};
+    use wasm_bindgen::prelude::*;
+
+    #[wasm_bindgen]
+    pub struct TrinityRewriteDocumentVcs {
+        store: RefCell<TrinityGraphStore>,
+    }
+
+    #[wasm_bindgen]
+    impl TrinityRewriteDocumentVcs {
+        #[wasm_bindgen(constructor)]
+        pub fn new(envelope_json: Option<String>) -> Result<TrinityRewriteDocumentVcs, JsValue> {
+            let store = match envelope_json {
+                Some(json) => {
+                    let envelope: TrinityGraphEnvelope =
+                        serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
+                    TrinityGraphStore::new(envelope)
+                }
+                None => TrinityGraphStore::new(create_trinity_graph_envelope("trinity-rewrite", empty_trinity_graph_fixture())),
+            };
+            Ok(Self { store: RefCell::new(store) })
+        }
+
+        #[wasm_bindgen(js_name = dispatchJson)]
+        pub fn dispatch_json(&self, command_json: &str) -> Result<(), JsValue> {
+            self.store
+                .borrow_mut()
+                .dispatch_json(command_json)
+                .map_err(|e| JsValue::from_str(&e.to_string()))
+        }
+
+        #[wasm_bindgen(js_name = projectionJson)]
+        pub fn projection_json(&self) -> Result<String, JsValue> {
+            self.store
+                .borrow()
+                .projection_json()
+                .map_err(|e| JsValue::from_str(&e.to_string()))
+        }
+
+        #[wasm_bindgen(js_name = envelopeJson)]
+        pub fn envelope_json(&self) -> Result<String, JsValue> {
+            self.store
+                .borrow()
+                .envelope_json()
+                .map_err(|e| JsValue::from_str(&e.to_string()))
+        }
+
+        #[wasm_bindgen(js_name = generation)]
+        pub fn generation(&self) -> u32 {
+            self.store.borrow().generation() as u32
+        }
+    }
+}
+//#endregion 🔖WasmBridge
 
 // #region 🔖WasmSession
 #[cfg(target_arch = "wasm32")]

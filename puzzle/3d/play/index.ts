@@ -8,7 +8,7 @@ import {
   DocumentVcsStore,
   createDocumentVcsEnvelope,
   recordProjectionChange,
-} from "@semio-tech/framework-core";
+} from "@semio-tech/vcs-core";
 import {
   AppRuntime,
   CommandBus,
@@ -1264,6 +1264,37 @@ export function applyPuzzle3dFixtureEditOp(fixture: FixtureV1 | null, op: Puzzle
   }
 }
 
+/** @emoji ↩️ Inverts a puzzle 3D fixture edit from the pre-apply projection. */
+export function backwardsPuzzle3dFixtureEditOp(fixture: FixtureV1 | null, op: Puzzle3dFixtureEditOp): readonly Puzzle3dFixtureEditOp[] {
+  const snapshot = (): readonly Puzzle3dFixtureEditOp[] => [{ op: "setDocument", document: fixture }];
+  switch (op.op) {
+    case "setDocument":
+      return snapshot();
+    case "renameObject":
+      return [{ op: "renameObject", oldId: op.newId, newId: op.oldId }];
+    case "toggleEntityFlag":
+      return [{ op: "toggleEntityFlag", target: op.target, flag: op.flag }];
+    case "setSelectionFlag":
+      return [{ op: "setSelectionFlag", objectIds: op.objectIds, vortexIds: op.vortexIds, attractionIds: op.attractionIds, referenceIds: op.referenceIds, flag: op.flag, value: !op.value }];
+    case "patchObject": {
+      const object = fixture?.objects.find((row) => row.id === op.objectId);
+      if (!object) return snapshot();
+      const patch: Partial<Omit<FixtureObjectV1, "id" | "vortices">> = {};
+      for (const key of Object.keys(op.patch) as (keyof typeof op.patch)[]) {
+        patch[key] = object[key] as never;
+      }
+      return [{ op: "patchObject", objectId: op.objectId, patch }];
+    }
+    default:
+      return snapshot();
+  }
+}
+
+/** @emoji 📊 Returns the puzzle 3D fixture edit payload for persistence diffs. */
+export function diffPuzzle3dFixtureEditOp(_fixture: FixtureV1 | null, operation: Puzzle3dFixtureEditOp): unknown {
+  return operation;
+}
+
 function patchPuzzle3dObject(objects: readonly FixtureObjectV1[], objectId: string, patch: (object: FixtureObjectV1) => FixtureObjectV1): FixtureObjectV1[] {
   return objects.map((object) => (object.id === objectId ? patch(object) : object));
 }
@@ -1923,6 +1954,8 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
   private readonly docStore = new DocumentVcsStore<FixtureV1 | null, Puzzle3dFixtureEditOp>({
     envelope: createDocumentVcsEnvelope("puzzle.3d.fixture/v1", "puzzle3d-play", null),
     applyOp: applyPuzzle3dFixtureEditOp,
+    backwardsOp: backwardsPuzzle3dFixtureEditOp,
+    diffOp: diffPuzzle3dFixtureEditOp,
   });
   private fixtureRevision: number;
   private automaticLod: boolean;

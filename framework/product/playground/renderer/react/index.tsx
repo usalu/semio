@@ -976,7 +976,7 @@ function getDeclarativeWindowBodyComponent(windowKindId: string, bodyKey: string
       const node = factory?.(ctx) ?? { type: "text", value: `Missing declarative body "${bodyKey}"` };
       return (
         <div
-          data-window-content-layout={isEdgelessWindowBody(node) ? "edgeless" : "framed"}
+          data-window-content-layout="edgeless"
           className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
         >
           <UiRenderer node={node} commandBus={runtime.commandBus} />
@@ -7202,6 +7202,7 @@ function TrinityRewriteBeforeSurfaceHost({ node }: { readonly node: UiTrinityHos
   const scopeId = node.paneId ?? TRINITY_REWRITE_PLAY_WINDOW_KIND_BEFORE;
   const lodProps = trinityLodCanvasProps(ctrl?.lodModeForScope(scopeId) ?? TRINITY_LOD_MODE_AUTOMATIC);
   const onFixtureChange = reactHostPort.useCallback((json: string) => ctrl?.run("setFixtureJson", { json }), [ctrl]);
+  const onJackDispatchComplete = reactHostPort.useCallback((resultJson: string) => ctrl?.onBeforeJackDispatchComplete(resultJson), [ctrl]);
   const onVcsApplied = reactHostPort.useCallback((generation: number) => ctrl?.onVcsApplied(generation), [ctrl]);
   const onSelectionChange = reactHostPort.useCallback((ids: readonly string[]) => ctrl?.run("setSelection", { ids: [...ids] }), [ctrl]);
   const onLodChange = reactHostPort.useCallback(
@@ -7217,10 +7218,12 @@ function TrinityRewriteBeforeSurfaceHost({ node }: { readonly node: UiTrinityHos
     <TrinityCanvas
       fixtureJson={ctrl?.getBeforeFixtureJson() ?? TRINITY_DEFAULT_FIXTURE_JSON}
       reorganize={ctrl?.getReorganize()}
+      jackDispatch={ctrl?.getBeforeJackDispatch()}
       vcsRequest={ctrl?.getVcsRequest()}
       highlightedNodeIds={ctrl?.getBeforeHighlightedNodeIds()}
       highlightedNodeIdsSignal={ctrl?.getHoverEpoch() + ctrl?.getSelectEpoch()}
       onFixtureChange={onFixtureChange}
+      onJackDispatchComplete={onJackDispatchComplete}
       onVcsApplied={onVcsApplied}
       onSelectionChange={onSelectionChange}
       {...lodProps}
@@ -9659,7 +9662,14 @@ function WriterPlaySurfaceHost({ node: _node }: { readonly node: UiWriterHostSur
   const editorSettings = ctrl?.getEditorSettings();
   const createLspTransport = reactHostPort.useCallback(() => createWriterPlayWorkerLspTransport(createWriterJackLspWorker()), []);
   const onChange = reactHostPort.useCallback((next: import("@semio-tech/writer-core").WriterDocumentV1) => {
-    writerPlayControllerRef.current?.run("setDocument", { document: next });
+    const ctrl = writerPlayControllerRef.current;
+    if (!ctrl) return;
+    const prev = ctrl.getDocument();
+    if (prev.id === next.id && prev.languageId === next.languageId && prev.uri === next.uri && prev.schema === next.schema) {
+      ctrl.run("setText", { text: next.text });
+      return;
+    }
+    ctrl.run("setDocument", { document: next });
   }, []);
   const onLintMessages = reactHostPort.useCallback((messages: readonly string[]) => {
     writerPlayControllerRef.current?.setLintMessages(messages);

@@ -1,6 +1,6 @@
-//! ✏️ Draw document domain + typed VCS on `framework_vcs`.
+//! ✏️ Draw document domain + typed VCS on `vcs`.
 
-use framework_vcs::{
+use vcs::{
     create_document_vcs_envelope, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff,
 };
 use serde::{Deserialize, Serialize};

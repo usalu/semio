@@ -49,14 +49,13 @@ import {
 	type WindowEngagement,
 	enforcePlaygroundWindowEngagementInput,
 } from "@semio-tech/framework-playground-core";
-import {
-	DocumentVcsStore,
-	recordProjectionChange,
-} from "@semio-tech/framework-core";
+import { DocumentVcsStore, recordProjectionChange } from "@semio-tech/vcs-core";
 import { bootstrapElementsSurfaceChromeDocument, type TreeDataItem, type TreeDragAndDropController, type TreeDropPosition } from "@semio-tech/ui-react";
 import {
 	applyDrawEditOp,
+	backwardsDrawEditOp,
 	createDrawDocumentVcsEnvelope,
+	diffDrawEditOp,
 	createDrawBooleanLayer,
 	createDrawGroupLayer,
 	createDrawImageLayer,
@@ -1012,6 +1011,8 @@ export class DrawPlayController extends Controller implements PlaygroundFixtureH
 	private readonly docStore = new DocumentVcsStore<DrawDocument, DrawEditOp>({
 		envelope: createDrawDocumentVcsEnvelope("draw-play", DRAW_PLAY_EMPTY_DOCUMENT),
 		applyOp: applyDrawEditOp,
+		backwardsOp: backwardsDrawEditOp,
+		diffOp: diffDrawEditOp,
 	});
 	private selectedIds: string[] = [];
 	private hoveredId: string | null = null;
@@ -1114,12 +1115,19 @@ export class DrawPlayController extends Controller implements PlaygroundFixtureH
 		return this.docStore.projection();
 	}
 
-	private commitDocument(next: DrawDocument, selectLayerId?: string, resetSelection = false): void {
-		const previous = this.projection();
-		recordProjectionChange(this.docStore, [{ op: "setDocument", document: next }]);
-		if (resetSelection) this.selectedIds = next.layers[0] ? [next.layers[0].id] : [];
+	private dispatchEditOp(op: DrawEditOp, selectLayerId?: string, resetSelection = false): void {
+		recordProjectionChange(this.docStore, [op]);
+		const doc = this.projection();
+		if (resetSelection) this.selectedIds = doc.layers[0] ? [doc.layers[0].id] : [];
 		else if (selectLayerId) this.selectedIds = [selectLayerId];
 		this.bump();
+	}
+
+	private dispatchProjectionEdit(edit: (doc: DrawDocument) => DrawDocument, selectLayerId?: string, resetSelection = false): void {
+		const previous = this.projection();
+		const next = edit(previous);
+		if (next === previous) return;
+		this.dispatchEditOp({ op: "setDocument", document: next }, selectLayerId, resetSelection);
 	}
 
 	private buildTools(): AppTools {
@@ -1190,7 +1198,7 @@ export class DrawPlayController extends Controller implements PlaygroundFixtureH
 	}
 
 	private applyDocument(doc: DrawDocument, resetSelection = false): void {
-		this.commitDocument(doc, undefined, resetSelection);
+		this.dispatchEditOp({ op: "setDocument", document: doc }, undefined, resetSelection);
 	}
 
 	getSelectedIds(): readonly string[] {
@@ -1214,10 +1222,6 @@ export class DrawPlayController extends Controller implements PlaygroundFixtureH
 			),
 			options: DRAW_PLAY_FIXTURE_OPTIONS,
 		};
-	}
-
-	private patchDocument(edit: (doc: DrawDocument) => DrawDocument, selectLayerId?: string): void {
-		this.commitDocument(edit(this.projection()), selectLayerId);
 	}
 
 	run(command: string, args: Record<string, unknown> = {}): void {
@@ -1244,7 +1248,7 @@ export class DrawPlayController extends Controller implements PlaygroundFixtureH
 				const zoom = typeof args.value === "number" ? args.value : Number(args.value);
 				if (!Number.isFinite(zoom)) return;
 				const camera = { ...this.projection().camera, zoom };
-				this.patchDocument((doc) => applyDrawEditOp(doc, { op: "setCamera", camera }));
+				this.dispatchEditOp({ op: "setCamera", camera });
 				return;
 			}
 			case "setSelectedOpacity": {
@@ -1256,9 +1260,7 @@ export class DrawPlayController extends Controller implements PlaygroundFixtureH
 			case "setActiveFixture": {
 				const fixtureId = String(args.fixtureId ?? "");
 				if (isPlaygroundNoFixtureId(fixtureId)) {
-					this.commitDocument(DRAW_PLAY_EMPTY_DOCUMENT, undefined, true);
-					this.selectedIds = [];
-					this.bump();
+					this.dispatchEditOp({ op: "setDocument", document: DRAW_PLAY_EMPTY_DOCUMENT }, undefined, true);
 					return;
 				}
 				const json = DRAW_PLAY_FILE_FIXTURE_JSON_BY_ID[fixtureId];
@@ -1306,14 +1308,13 @@ export class DrawPlayController extends Controller implements PlaygroundFixtureH
 				return;
 			}
 			case "setActiveTool": {
-				this.commitDocument(applyDrawEditOp(this.projection(), { op: "setActiveTool", tool: String(args.tool) as DrawToolId }));
-				this.bump();
+				this.dispatchEditOp({ op: "setActiveTool", tool: String(args.tool) as DrawToolId });
 				return;
 			}
 			case "addLayer": {
 				const kind = String(args.kind ?? "path") as DrawCatalogueLayerKind;
 				const layer = drawPlayCreateLayerByKind(kind);
-				this.patchDocument((doc) => applyDrawEditOp(doc, drawPlayAddLayerOp(kind, layer)), layer.id);
+				this.dispatchEditOp(drawPlayAddLayerOp(kind, layer), layer.id);
 				return;
 			}
 			case "dropLayerKind": {
@@ -1324,15 +1325,15 @@ export class DrawPlayController extends Controller implements PlaygroundFixtureH
 				const target = resolveDrawPlayReorderTarget(this.projection(), targetRowId, dropPosition === "before" || dropPosition === "after" ? dropPosition : "inside");
 				const parentId = target?.parentId;
 				const index = target?.index ?? this.projection().layers.length;
-				this.patchDocument((doc) => applyDrawEditOp(doc, drawPlayAddLayerOp(kind, layer, parentId, index)), layer.id);
+				this.dispatchEditOp(drawPlayAddLayerOp(kind, layer, parentId, index), layer.id);
 				return;
 			}
 			case "commitDocument": {
 				const document = args.document as DrawDocument;
 				if (!document || document.schema !== "draw.document/v1") return;
-				this.commitDocument(document, selectLayerId);
-				if (typeof args.selectLayerId === "string") this.selectedIds = [args.selectLayerId];
-				this.bump();
+				const selectLayerId = typeof args.selectLayerId === "string" ? args.selectLayerId : undefined;
+				this.dispatchEditOp({ op: "setDocument", document }, selectLayerId);
+				if (selectLayerId) this.selectedIds = [selectLayerId];
 				return;
 			}
 			case "moveLayer": {
@@ -1341,33 +1342,31 @@ export class DrawPlayController extends Controller implements PlaygroundFixtureH
 				const dropPosition = (args.dropPosition ?? "after") as TreeDropPosition;
 				const target = resolveDrawPlayReorderTarget(this.projection(), targetRowId, dropPosition);
 				if (!target || !layerId) return;
-				this.patchDocument((doc) => applyDrawEditOp(doc, { op: "reorderLayer", layerId, parentId: target.parentId, index: target.index }));
+				this.dispatchEditOp({ op: "reorderLayer", layerId, parentId: target.parentId, index: target.index });
 				return;
 			}
 			case "deleteLayer": {
 				const layerId = String(args.layerId ?? "");
-				this.commitDocument(applyDrawEditOp(this.projection(), { op: "removeLayer", layerId }));
+				this.dispatchEditOp({ op: "removeLayer", layerId });
 				this.selectedIds = this.selectedIds.filter((id) => id !== layerId);
-				this.bump();
 				return;
 			}
 			case "duplicateLayer": {
-				this.commitDocument(applyDrawEditOp(this.projection(), { op: "duplicateLayer", layerId: String(args.layerId) }));
-				this.bump();
+				this.dispatchEditOp({ op: "duplicateLayer", layerId: String(args.layerId) });
 				return;
 			}
 			case "toggleLayerVisible": {
 				const layerId = String(args.layerId ?? "");
 				const layer = findDrawLayer(this.projection(), layerId);
 				if (!layer) return;
-				this.patchDocument((doc) => applyDrawEditOp(doc, { op: "setLayerVisible", layerId, visible: !layer.visible }));
+				this.dispatchEditOp({ op: "setLayerVisible", layerId, visible: !layer.visible });
 				return;
 			}
 			case "combineBoolean": {
 				const ids = Array.isArray(args.ids) ? args.ids.map(String) : this.selectedIds;
 				if (ids.length < 2) return;
 				const layer = createDrawBooleanLayer("Boolean", String(args.op ?? "union") as DrawBooleanOp, ids);
-				this.patchDocument((doc) => applyDrawEditOp(doc, { op: "addBooleanLayer", layer }), layer.id);
+				this.dispatchEditOp({ op: "addBooleanLayer", layer }, layer.id);
 				return;
 			}
 			case "patchLayer": {
@@ -1375,7 +1374,7 @@ export class DrawPlayController extends Controller implements PlaygroundFixtureH
 				const field = String(args.field ?? "");
 				const value = args.value ?? args.pressed;
 				if (!layerId || !field) return;
-				this.patchDocument((doc) => drawPlayPatchLayerField(doc, layerId, field, value));
+				this.dispatchProjectionEdit((doc) => drawPlayPatchLayerField(doc, layerId, field, value));
 				return;
 			}
 			case "patchLayers": {
@@ -1383,7 +1382,7 @@ export class DrawPlayController extends Controller implements PlaygroundFixtureH
 				const field = String(args.field ?? "");
 				const value = args.value ?? args.pressed;
 				if (!layerIds.length || !field) return;
-				this.patchDocument((doc) => {
+				this.dispatchProjectionEdit((doc) => {
 					let next = doc;
 					for (const layerId of layerIds) {
 						next = drawPlayPatchLayerField(next, layerId, field, value);
@@ -1394,7 +1393,7 @@ export class DrawPlayController extends Controller implements PlaygroundFixtureH
 			}
 			case "setCamera": {
 				const camera = args.camera as DrawDocument["camera"];
-				if (camera) this.patchDocument((doc) => applyDrawEditOp(doc, { op: "setCamera", camera }));
+				if (camera) this.dispatchEditOp({ op: "setCamera", camera });
 				return;
 			}
 			case "selectAll": {

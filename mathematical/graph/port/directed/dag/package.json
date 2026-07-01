@@ -1,0 +1,8 @@
+{
+  "name": "@semio-tech/dag-core",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./pkg/mathematical_graph_port_directed_dag.js"
+  }
+}

@@ -308,7 +308,7 @@ export type ComponentKind = "table" | "virtualFileSystem" | "puzzle2d" | "puzzle
 
 const CANVAS_COMPONENT_KINDS: readonly ComponentKind[] = ["table", "virtualFileSystem", "puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag", "trinity", "shooting", "forms", "raster", "draw", "writer", "semios", "editor"];
 
-const EDGELESS_WINDOW_COMPONENT_KINDS: readonly ComponentKind[] = ["puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag", "trinity", "shooting", "raster", "draw", "semios"];
+const EDGELESS_WINDOW_COMPONENT_KINDS: readonly ComponentKind[] = ["puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag", "trinity", "shooting", "raster", "draw", "semios", "writer"];
 //#endregion 🔖ComponentKind
 
 /** @emoji 📊 Host-bound tabular surface; `paneId` disambiguates multiple table slots in one app. */
@@ -2658,7 +2658,7 @@ if (import.meta.vitest) {
 		it("distinguishes edgeless canvases from framed table and editor bodies", () => {
 			expect(isEdgelessWindowBody(buildPuzzle2dWindowBody("2d", "c"))).toBe(true);
 			expect(isEdgelessWindowBody(buildPuzzle3dWindowBody("3d", "c"))).toBe(true);
-			expect(isEdgelessWindowBody(buildWriterWindowBody("writer", "c"))).toBe(false);
+			expect(isEdgelessWindowBody(buildWriterWindowBody("writer", "c"))).toBe(true);
 			expect(isEdgelessWindowBody(buildTableWindowBody("table", "c"))).toBe(false);
 			expect(isEdgelessWindowBody(buildEditorWindowBody("editor", "c"))).toBe(false);
 			expect(

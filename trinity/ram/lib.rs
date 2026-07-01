@@ -394,7 +394,7 @@ pub fn port_key(node_id: &str, port_id: &str) -> String {
 // #endregion 🔖Runtime
 
 // #region 🔖GraphOps
-use framework_vcs::{
+use vcs::{
     apply_operation, create_document_vcs_envelope, CollectionDiff, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore,
     ItemPatch, Operation, OperationDiff,
 };
@@ -1058,6 +1058,78 @@ impl Default for NodeGeometryPatch {
     }
 }
 // #endregion 🔖GraphOps
+
+pub fn empty_trinity_graph_fixture() -> GraphFixtureV1 {
+    GraphFixtureV1 {
+        schema: GraphFixtureV1::SCHEMA.into(),
+        name: "trinity".into(),
+        manifest_id: Some("nakagin".into()),
+        manifest: Manifest::nakagin_default(),
+        camera: CameraV1::default(),
+        nodes: Vec::new(),
+        edges: Vec::new(),
+        root_node_id: None,
+    }
+}
+
+//#region 🔖WasmBridge
+#[cfg(target_arch = "wasm32")]
+mod wasm_bridge {
+    use super::*;
+    use std::cell::RefCell;
+    use wasm_bindgen::prelude::*;
+
+    #[wasm_bindgen]
+    pub struct TrinityGraphDocumentVcs {
+        store: RefCell<TrinityGraphStore>,
+    }
+
+    #[wasm_bindgen]
+    impl TrinityGraphDocumentVcs {
+        #[wasm_bindgen(constructor)]
+        pub fn new(envelope_json: Option<String>) -> Result<TrinityGraphDocumentVcs, JsValue> {
+            let store = match envelope_json {
+                Some(json) => {
+                    let envelope: TrinityGraphEnvelope =
+                        serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
+                    TrinityGraphStore::new(envelope)
+                }
+                None => TrinityGraphStore::new(create_trinity_graph_envelope("trinity", empty_trinity_graph_fixture())),
+            };
+            Ok(Self { store: RefCell::new(store) })
+        }
+
+        #[wasm_bindgen(js_name = dispatchJson)]
+        pub fn dispatch_json(&self, command_json: &str) -> Result<(), JsValue> {
+            self.store
+                .borrow_mut()
+                .dispatch_json(command_json)
+                .map_err(|e| JsValue::from_str(&e.to_string()))
+        }
+
+        #[wasm_bindgen(js_name = projectionJson)]
+        pub fn projection_json(&self) -> Result<String, JsValue> {
+            self.store
+                .borrow()
+                .projection_json()
+                .map_err(|e| JsValue::from_str(&e.to_string()))
+        }
+
+        #[wasm_bindgen(js_name = envelopeJson)]
+        pub fn envelope_json(&self) -> Result<String, JsValue> {
+            self.store
+                .borrow()
+                .envelope_json()
+                .map_err(|e| JsValue::from_str(&e.to_string()))
+        }
+
+        #[wasm_bindgen(js_name = generation)]
+        pub fn generation(&self) -> u32 {
+            self.store.borrow().generation() as u32
+        }
+    }
+}
+//#endregion 🔖WasmBridge
 
 // #region 🔖Tests
 #[cfg(test)]

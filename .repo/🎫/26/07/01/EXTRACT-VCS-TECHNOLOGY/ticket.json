@@ -1,8 +1,9 @@
 {
   "title": "Extract VCS Technology",
   "emoji": "🗄️",
-  "status": "open",
+  "status": "closed",
   "description": "Extract version control from framework into vcs technology with 5-entity model, history playground, and wire all consumers.",
+  "summary": "Extracted version control into top-level `vcs` technology with 5-entity model (Operation/Edit/Change/Checkpoint/Alternative/Author), Rust engine in `vcs/rs` (crate `vcs`), TS mirror in `vcs/core` with required backwardsOp/diffOp, HistoryTable in `vcs/react`, and `vcs/play` demo on port 6075. Retired `framework/rs` and `framework/core/vcs-sync.ts`; repointed all technology Rust crates and TS plays/cores to `@semio-tech/vcs-core`. Added wasm DocumentVcs wrappers and packaging for gis, puzzle 3d/5d, procedural 2d/3d, dag, mindmap, trinity ram/rewrite. Updated root workspaces, launch.json (`dev:vcs`, `build:vcs`), and `vcs/AGENTS.md`. Tests: `cargo test -p vcs` 9/9, vcs-core 2/2, vcs-play 1/1, draw-core 13/13, draw-play 6/6, framework-core 36/36.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1785"
   },
@@ -10,7 +11,7 @@
   "plan": {
     "client": "cursor",
     "id": "0a322e7e",
-    "source": "/Users/ueli/Documents/semio/.cursor/plans/extract_vcs_technology_0a322e7e.plan.md"
+    "local": "extract_vcs_technology_0a322e7e.plan.md"
   },
   "sessions": [
     "⚪9a358e904f744bdb94a0f7fb551b3a4b"

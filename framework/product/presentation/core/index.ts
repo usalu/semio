@@ -1981,7 +1981,7 @@ import {
 	createDocumentVcsEnvelope,
 	materializeDocumentProjection,
 	type DocumentVcsEnvelope,
-} from "@semio-tech/framework-core";
+} from "@semio-tech/vcs-core";
 
 export type FigureTileSource = {
 	readonly src: string;
@@ -2020,6 +2020,48 @@ export type PresentationEditOp =
 			readonly value: number;
 	  }
 	| { readonly op: "setDocument"; readonly document: PresentationDeckV1 };
+
+/** @emoji ↩️ Inverts a presentation edit from the pre-apply projection. */
+export function backwardsPresentationEditOp(deck: PresentationDeckV1, operation: PresentationEditOp): readonly PresentationEditOp[] {
+	const snapshot = (): readonly PresentationEditOp[] => [{ op: "setDocument", document: deck }];
+	switch (operation.op) {
+		case "setDocument":
+			return snapshot();
+		case "setSource":
+			return [{ op: "setSource", source: deck.source }];
+		case "replaceSource":
+			return [{ op: "replaceSource", source: deck.source, resetTiles: false }];
+		case "setSourceFrame":
+			return [{ op: "setSourceFrame", frame: deck.source.frame }];
+		case "addTile":
+			return [{ op: "removeTile", tileId: operation.tile.id }];
+		case "removeTile":
+			return snapshot();
+		case "removeTiles":
+			return snapshot();
+		case "renameTile":
+			return snapshot();
+		case "renameTiles": {
+			const targets = new Set(operation.tileIds);
+			return deck.tiles
+				.filter((tile) => targets.has(tile.id))
+				.map((tile) => ({ op: "renameTile", tileId: tile.id, name: tile.name }));
+		}
+		case "setTiles":
+			return [{ op: "setTiles", tiles: deck.tiles }];
+		case "clearTiles":
+			return [{ op: "setTiles", tiles: deck.tiles }];
+		case "patchTileCrop":
+			return snapshot();
+		case "patchTileCrops":
+			return snapshot();
+	}
+}
+
+/** @emoji 📊 Returns the presentation edit payload for persistence diffs. */
+export function diffPresentationEditOp(_projection: PresentationDeckV1, operation: PresentationEditOp): unknown {
+	return operation;
+}
 
 export type PresentationDeckVcsEnvelope = DocumentVcsEnvelope<PresentationDeckV1, PresentationEditOp>;
 
@@ -2100,7 +2142,7 @@ export function createPresentationAppVcsHandler() {
 		materializeProjection: (source: { readonly vcsJson?: string; readonly inline?: string }) => {
 			if (source.vcsJson) {
 				const envelope = JSON.parse(source.vcsJson) as PresentationDeckVcsEnvelope;
-				return materializeDocumentProjection(envelope, envelope.vcs.operations.map((change) => change.id), applyPresentationEditOp);
+				return materializeDocumentProjection(envelope, envelope.vcs.edits.map((edit) => edit.id), applyPresentationEditOp);
 			}
 			if (source.inline) return JSON.parse(source.inline) as PresentationDeckV1;
 			return PRESENTATION_DECK_EMPTY();

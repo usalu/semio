@@ -1,0 +1,13 @@
+{
+  "title": "Edgeless Window Content Scroll Clearance",
+  "emoji": "🪟",
+  "status": "open",
+  "description": "All content inside all windows must be edgeless. Remove padding inset; use scroll clearance so the first line is hidden under chrome by default but scrolls into view when scrolling up. Applies to writer, tables, and all window bodies.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1787"
+  },
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "sessions": [
+    "⚪251faa2967134c90aaf448038d5ecdba"
+  ]
+}

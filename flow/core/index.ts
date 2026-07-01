@@ -11,7 +11,7 @@ import {
 	createDocumentVcsEnvelope,
 	materializeDocumentProjection,
 	type DocumentVcsEnvelope,
-} from "@semio-tech/framework-core";
+} from "@semio-tech/vcs-core";
 
 export type FlowDocument = {
 	readonly flow: Record<string, unknown>;
@@ -46,7 +46,7 @@ export function createFlowAppVcsHandler() {
 		materializeProjection: (source: { readonly vcsJson?: string; readonly inline?: string }) => {
 			if (source.vcsJson) {
 				const envelope = JSON.parse(source.vcsJson) as FlowDocumentVcsEnvelope;
-				return materializeDocumentProjection(envelope, envelope.vcs.operations.map((change) => change.id), applyFlowEditOp);
+				return materializeDocumentProjection(envelope, envelope.vcs.edits.map((edit) => edit.id), applyFlowEditOp);
 			}
 			if (source.inline) return JSON.parse(source.inline) as FlowDocument;
 			return FLOW_DOCUMENT_EMPTY();

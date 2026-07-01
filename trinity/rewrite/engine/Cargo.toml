@@ -9,7 +9,7 @@ crate-type = ["rlib", "cdylib"]
 path = "lib.rs"
 
 [dependencies]
-framework_vcs = { path = "../../../framework/rs" }
+vcs = { path = "../../../vcs/rs" }
 trinity_jack = { path = "../../jack/core" }
 trinity_ram = { path = "../../ram" }
 mathematical_graph_port_directed = { path = "../../../mathematical/graph/port/directed" }

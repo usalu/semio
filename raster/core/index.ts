@@ -8,7 +8,7 @@ import {
 	createDocumentVcsEnvelope,
 	type DocumentVcsEnvelope,
 	materializeDocumentProjection,
-} from "@semio-tech/framework-core";
+} from "@semio-tech/vcs-core";
 
 // #region 📐Types
 export const RASTER_BLEND_MODES = [
@@ -168,6 +168,7 @@ export type RasterEditOp =
 	| { readonly op: "reorderLayer"; readonly layerId: string; readonly parentId?: string; readonly index: number }
 	| { readonly op: "setActiveTool"; readonly tool: RasterToolId }
 	| { readonly op: "setBrushSize"; readonly size: number }
+	| { readonly op: "setBrushOpacity"; readonly opacity: number }
 	| { readonly op: "setCamera"; readonly camera: RasterCamera }
 	| { readonly op: "setDocument"; readonly document: RasterDocument };
 // #endregion 📐Types
@@ -1020,6 +1021,8 @@ export function applyRasterEditOp(doc: RasterDocument, edit: RasterEditOp): Rast
 			return { ...doc, activeTool: edit.tool };
 		case "setBrushSize":
 			return { ...doc, brushSize: edit.size };
+		case "setBrushOpacity":
+			return { ...doc, brushOpacity: edit.opacity };
 		case "setCamera":
 			return { ...doc, camera: edit.camera };
 		case "setDocument":
@@ -1032,6 +1035,45 @@ export function applyRasterEditOp(doc: RasterDocument, edit: RasterEditOp): Rast
 
 //#region 🔖DocumentVcs
 export type RasterDocumentVcsEnvelope = DocumentVcsEnvelope<RasterDocument, RasterEditOp>;
+
+/** @emoji ↩️ Inverts a raster edit from the pre-apply projection. */
+export function backwardsRasterEditOp(projection: RasterDocument, operation: RasterEditOp): readonly RasterEditOp[] {
+	switch (operation.op) {
+		case "setDocument":
+			return [{ op: "setDocument", document: projection }];
+		case "setCamera":
+			return [{ op: "setCamera", camera: projection.camera }];
+		case "setBrushSize":
+			return [{ op: "setBrushSize", size: projection.brushSize }];
+		case "setBrushOpacity":
+			return [{ op: "setBrushOpacity", opacity: projection.brushOpacity }];
+		case "setActiveTool":
+			return [{ op: "setActiveTool", tool: projection.activeTool }];
+		case "setLayerVisible": {
+			const layer = findRasterLayer(projection, operation.layerId);
+			return layer ? [{ op: "setLayerVisible", layerId: operation.layerId, visible: layer.visible }] : [{ op: "setDocument", document: projection }];
+		}
+		case "setLayerOpacity": {
+			const layer = findRasterLayer(projection, operation.layerId);
+			return layer ? [{ op: "setLayerOpacity", layerId: operation.layerId, opacity: layer.opacity }] : [{ op: "setDocument", document: projection }];
+		}
+		case "setLayerBlendMode": {
+			const layer = findRasterLayer(projection, operation.layerId);
+			return layer ? [{ op: "setLayerBlendMode", layerId: operation.layerId, blendMode: layer.blendMode }] : [{ op: "setDocument", document: projection }];
+		}
+		case "setLayerName": {
+			const layer = findRasterLayer(projection, operation.layerId);
+			return layer ? [{ op: "setLayerName", layerId: operation.layerId, name: layer.name }] : [{ op: "setDocument", document: projection }];
+		}
+		default:
+			return [{ op: "setDocument", document: projection }];
+	}
+}
+
+/** @emoji 📊 Returns the raster edit payload for persistence diffs. */
+export function diffRasterEditOp(_projection: RasterDocument, operation: RasterEditOp): unknown {
+	return operation;
+}
 
 /** @emoji 📦 Creates a raster document VCS envelope with an empty or seeded projection. */
 export function createRasterDocumentVcsEnvelope(id: string, projection: RasterDocument = defaultRasterDocument(id)): RasterDocumentVcsEnvelope {
@@ -1054,7 +1096,7 @@ export function createRasterAppVcsHandler() {
 		materializeProjection: (source: { readonly vcsJson?: string; readonly inline?: string }) => {
 			if (source.vcsJson) {
 				const envelope = JSON.parse(source.vcsJson) as RasterDocumentVcsEnvelope;
-				return materializeRasterDocument(envelope, envelope.vcs.operations.map((change) => change.id));
+				return materializeRasterDocument(envelope, envelope.vcs.edits.map((edit) => edit.id));
 			}
 			if (source.inline) return rasterDocumentFromJson(source.inline);
 			return defaultRasterDocument("raster");

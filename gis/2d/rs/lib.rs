@@ -3922,7 +3922,7 @@ mod tests {
 // #endregion 🔖Tests
 
 // #region 🔖DocumentVcs
-use framework_vcs::{
+use vcs::{
     create_document_vcs_envelope, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff,
 };
 use serde::{Deserialize, Serialize};
@@ -3985,6 +3985,70 @@ pub type GisMapStore = DocumentVcsStore<GisMapDocument, GisMapOp>;
 pub fn empty_gis_map_projection() -> GisMapDocument {
     GisMapDocument { layers: Vec::new() }
 }
+
+//#region 🔖WasmBridge
+#[cfg(target_arch = "wasm32")]
+mod wasm_bridge {
+    use super::*;
+    use std::cell::RefCell;
+    use wasm_bindgen::prelude::*;
+
+    #[wasm_bindgen]
+    pub struct GisMapDocumentVcs {
+        store: RefCell<GisMapStore>,
+    }
+
+    #[wasm_bindgen]
+    impl GisMapDocumentVcs {
+        #[wasm_bindgen(constructor)]
+        pub fn new(envelope_json: Option<String>) -> Result<GisMapDocumentVcs, JsValue> {
+            let store = match envelope_json {
+                Some(json) => {
+                    let envelope: GisMapEnvelope =
+                        serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
+                    GisMapStore::new(envelope)
+                }
+                None => GisMapStore::new(create_document_vcs_envelope(
+                    GIS_MAP_SCHEMA,
+                    "gis",
+                    empty_gis_map_projection(),
+                    None,
+                )),
+            };
+            Ok(Self { store: RefCell::new(store) })
+        }
+
+        #[wasm_bindgen(js_name = dispatchJson)]
+        pub fn dispatch_json(&self, command_json: &str) -> Result<(), JsValue> {
+            self.store
+                .borrow_mut()
+                .dispatch_json(command_json)
+                .map_err(|e| JsValue::from_str(&e.to_string()))
+        }
+
+        #[wasm_bindgen(js_name = projectionJson)]
+        pub fn projection_json(&self) -> Result<String, JsValue> {
+            self.store
+                .borrow()
+                .projection_json()
+                .map_err(|e| JsValue::from_str(&e.to_string()))
+        }
+
+        #[wasm_bindgen(js_name = envelopeJson)]
+        pub fn envelope_json(&self) -> Result<String, JsValue> {
+            self.store
+                .borrow()
+                .envelope_json()
+                .map_err(|e| JsValue::from_str(&e.to_string()))
+        }
+
+        #[wasm_bindgen(js_name = generation)]
+        pub fn generation(&self) -> u32 {
+            self.store.borrow().generation() as u32
+        }
+    }
+}
+//#endregion 🔖WasmBridge
 
 #[cfg(test)]
 mod gis_map_vcs_tests {

@@ -1,0 +1,12 @@
+{
+  "title": "Imperative and Sequence Technologies",
+  "emoji": "📜",
+  "status": "open",
+  "description": "Add imperative headless ordered side-effect engine and sequence canvas UI technology with playgrounds.",
+  "goal": "🎯semios🎯fullcqrsunification",
+  "plan": {
+    "client": "cursor",
+    "id": "2fa78baa",
+    "local": "imperative_and_sequence_technologies_2fa78baa.plan.md"
+  }
+}

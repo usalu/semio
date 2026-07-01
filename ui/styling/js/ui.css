@@ -582,8 +582,8 @@
 .touch {
   --ui-spacing: var(--spacing-touch);
   --toolbar-item-height: var(--size-large);
-  --toolbar-gap: var(--spacing-double);
-  --toolbar-padding-inline: var(--spacing-double);
+  --toolbar-gap: var(--spacing-single);
+  --toolbar-padding-inline: var(--spacing-single);
   --text-xs: 0.75rem;
   --text-xs--line-height: calc(1 / 0.75);
   --text-sm: 0.875rem;
@@ -677,6 +677,7 @@
   --size-small: calc(5 * var(--ui-spacing));
   --size-workbench: calc(1.5 * var(--size-small));
   --size-medium: calc(7 * var(--ui-spacing));
+  --window-chrome-scroll-clearance: calc(var(--size-medium) + 2 * var(--ui-spacing));
   --size-large: calc(9 * var(--ui-spacing));
   --size-huge: calc(11 * var(--ui-spacing));
   --size-mega: calc(13 * var(--ui-spacing));
@@ -736,7 +737,7 @@
   --drop-shadow-2xl: 0 0 rgb(0 0 0 / 0);
   --toolbar-item-height: var(--size-medium);
   --toolbar-gap: var(--spacing-single);
-  --toolbar-group-gap: var(--spacing-double);
+  --toolbar-group-gap: var(--spacing-single);
   --toolbar-padding-inline: var(--spacing-single);
   --toolbar-divider-height: var(--size-small);
   --text-2xs: 0.6rem;

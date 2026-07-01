@@ -1,0 +1,8 @@
+{
+  "name": "@semio-tech/trinity-core",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./pkg/trinity_rewrite.js"
+  }
+}

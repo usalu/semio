@@ -2,6 +2,14 @@
   "name": "@semio-tech/trinity-ram",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "targets": {
+    "wasm": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "trinity/ram",
+        "command": "bun ./script.ts wasm"
+      },
+      "outputs": ["{projectRoot}/pkg"]
+    },
     "test": {
       "executor": "nx:run-commands",
       "options": {

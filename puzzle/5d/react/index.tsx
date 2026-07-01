@@ -1897,6 +1897,25 @@ export function applyPuzzle5dModelEditOp(model: Model, op: Puzzle5dModelEditOp):
   }
 }
 
+/** @emoji ↩️ Inverts a puzzle 5d model edit from the pre-apply projection. */
+export function backwardsPuzzle5dModelEditOp(model: Model, op: Puzzle5dModelEditOp): readonly Puzzle5dModelEditOp[] {
+  switch (op.op) {
+    case "setDocument":
+      return [{ op: "setDocument", document: model }];
+    case "patchParts":
+    case "patchGrips":
+    case "applyBrushPlacement":
+    case "deletePartsAndGrips":
+    case "applyFillPrefix":
+      return [{ op: "setDocument", document: model }];
+  }
+}
+
+/** @emoji 📊 Returns the puzzle 5d model edit payload for persistence diffs. */
+export function diffPuzzle5dModelEditOp(_model: Model, operation: Puzzle5dModelEditOp): unknown {
+  return operation;
+}
+
 /** @emoji 🪣 Volume-authoritative fill sequence mapped to unified placements (2d aspects synthesized). */
 export function buildPuzzle5dFillSequence(args: {
   readonly model: Model;

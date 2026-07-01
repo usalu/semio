@@ -39,16 +39,14 @@ import {
 } from "@semio-tech/framework-playground-core";
 
 import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
-import {
-  DocumentVcsStore,
-  createDocumentVcsEnvelope,
-  recordProjectionChange,
-} from "@semio-tech/framework-core";
+import { DocumentVcsStore, createDocumentVcsEnvelope, recordProjectionChange } from "@semio-tech/vcs-core";
 import {
   DAG_LOD_MODE_AUTOMATIC,
   dagPlayLodTiers,
   FLOW_DEFAULT_FIXTURE,
   applyFlowFixtureEditOp,
+  backwardsFlowFixtureEditOp,
+  diffFlowFixtureEditOp,
   dagLodAutomaticSelectLabel,
   flowExtensionHost,
   flowFixtureToJson,
@@ -559,6 +557,8 @@ export class FlowPlayController extends Controller {
   private readonly docStore = new DocumentVcsStore<FlowFixtureV1, FlowFixtureEditOp>({
     envelope: createDocumentVcsEnvelope("flow.fixture/v1", "flow-play", FLOW_PLAY_DEFAULT_FIXTURE),
     applyOp: applyFlowFixtureEditOp,
+    backwardsOp: backwardsFlowFixtureEditOp,
+    diffOp: diffFlowFixtureEditOp,
   });
   private previewText = "—";
   private generatePreviewText = "—";

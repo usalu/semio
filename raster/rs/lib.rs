@@ -974,7 +974,7 @@ mod tests {
 // #endregion 🧪Tests
 
 // #region 🔖DocumentVcs
-use framework_vcs::{
+use vcs::{
     create_document_vcs_envelope, CollectionDiff, DocumentVcsEnvelope, DocumentVcsStore, ItemPatch, Operation,
     OperationDiff,
 };
@@ -1199,7 +1199,7 @@ impl RasterDocumentVcs {
 #[cfg(test)]
 mod raster_vcs_tests {
     use super::*;
-    use framework_vcs::DocumentVcsCommand;
+    use vcs::DocumentVcsCommand;
 
     #[test]
     fn raster_document_vcs_uses_framework_engine() {

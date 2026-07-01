@@ -12,7 +12,7 @@
     "test": "bun nx run @semio-tech/forms-core:test"
   },
   "dependencies": {
-    "@semio-tech/framework-core": "workspace:*"
+    "@semio-tech/vcs-core": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.9.3",

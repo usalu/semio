@@ -1,6 +1,6 @@
-//! 📸 Shooting scene document + typed VCS on `framework_vcs`.
+//! 📸 Shooting scene document + typed VCS on `vcs`.
 
-use framework_vcs::{
+use vcs::{
     create_document_vcs_envelope, CollectionDiff, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore,
     ItemPatch, Operation, OperationDiff,
 };

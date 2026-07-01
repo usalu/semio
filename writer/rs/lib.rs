@@ -1710,7 +1710,7 @@ mod tests {
 // #endregion 🔖Tests
 
 // #region 🔖DocumentVcs
-use framework_vcs::{
+use vcs::{
     create_document_vcs_envelope, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff,
 };
 
@@ -1827,7 +1827,7 @@ impl WriterDocumentVcs {
 #[cfg(test)]
 mod writer_vcs_tests {
     use super::*;
-    use framework_vcs::DocumentVcsCommand;
+    use vcs::DocumentVcsCommand;
 
     #[test]
     fn writer_document_vcs_replays_text_ops() {

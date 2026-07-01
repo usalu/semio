@@ -9,7 +9,7 @@ import {
 	type DocumentVcsEnvelope,
 	DocumentVcsStore,
 	materializeDocumentProjection,
-} from "@semio-tech/framework-core";
+} from "@semio-tech/vcs-core";
 import {
 	SEMIOSRESOURCES_DESCRIPTOR_IDS,
 	SEMIOSRESOURCES_MANIFEST_DOCUMENT,
@@ -437,7 +437,7 @@ export function createTypedAppVcsHandler<TProjection, TOp>(
 		materializeProjection: (source) => {
 			if (source.vcsJson) {
 				const envelope = JSON.parse(source.vcsJson) as DocumentVcsEnvelope<TProjection, TOp>;
-				const appliedIds = envelope.vcs.operations.map((change) => change.id);
+				const appliedIds = envelope.vcs.edits.map((edit) => edit.id);
 				return materializeDocumentProjection(envelope, appliedIds, applyOp);
 			}
 			if (source.inline) return JSON.parse(source.inline) as TProjection;
@@ -673,7 +673,11 @@ export function applyAppOperationToSource(
 	const store = new DocumentVcsStore({
 		envelope,
 		applyOp: handler.applyOp as (projection: unknown, operation: unknown) => unknown,
-		backwardsOp: handler.backwardsOp as ((projection: unknown, operation: unknown) => readonly unknown[]) | undefined,
+		backwardsOp: (handler.backwardsOp ?? ((projection, _operation) => [{ op: "setDocument", document: projection }])) as (
+			projection: unknown,
+			operation: unknown,
+		) => readonly unknown[],
+		diffOp: (_projection, operation) => operation,
 	});
 	store.dispatch({ kind: "apply", operations: forwards as never[] });
 	return { ...source, vcsJson: handler.serializeEnvelope(store.getEnvelope()) };

@@ -1312,9 +1312,34 @@ export function applyDrawEditOp(doc: DrawDocument, edit: DrawEditOp): DrawDocume
 //#region 🔖DocumentVcs
 export type DrawDocumentVcsEnvelope = DocumentVcsEnvelope<DrawDocument, DrawEditOp>;
 
-/** @emoji ↩️ Inverts a draw edit from the current projection (setDocument snapshot). */
-export function backwardsDrawEditOp(projection: DrawDocument, _operation: DrawEditOp): readonly DrawEditOp[] {
-	return [{ op: "setDocument", document: projection }];
+/** @emoji ↩️ Inverts a draw edit from the pre-apply projection. */
+export function backwardsDrawEditOp(projection: DrawDocument, operation: DrawEditOp): readonly DrawEditOp[] {
+	switch (operation.op) {
+		case "setDocument":
+			return [{ op: "setDocument", document: projection }];
+		case "setCamera":
+			return [{ op: "setCamera", camera: projection.camera }];
+		case "setActiveTool":
+			return [{ op: "setActiveTool", tool: projection.activeTool }];
+		case "setLayerVisible": {
+			const layer = findDrawLayer(projection, operation.layerId);
+			return layer ? [{ op: "setLayerVisible", layerId: operation.layerId, visible: layer.visible }] : [{ op: "setDocument", document: projection }];
+		}
+		case "setLayerLocked": {
+			const layer = findDrawLayer(projection, operation.layerId);
+			return layer ? [{ op: "setLayerLocked", layerId: operation.layerId, locked: layer.locked }] : [{ op: "setDocument", document: projection }];
+		}
+		case "setLayerOpacity": {
+			const layer = findDrawLayer(projection, operation.layerId);
+			return layer ? [{ op: "setLayerOpacity", layerId: operation.layerId, opacity: layer.opacity }] : [{ op: "setDocument", document: projection }];
+		}
+		case "setLayerName": {
+			const layer = findDrawLayer(projection, operation.layerId);
+			return layer ? [{ op: "setLayerName", layerId: operation.layerId, name: layer.name }] : [{ op: "setDocument", document: projection }];
+		}
+		default:
+			return [{ op: "setDocument", document: projection }];
+	}
 }
 
 /** @emoji 📊 Returns the draw edit payload for persistence diffs. */

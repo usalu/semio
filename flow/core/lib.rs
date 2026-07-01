@@ -3618,7 +3618,7 @@ pub fn dispose(handle: &str) {
 // #endregion 🔖WasmSession
 
 // #region 🔖DocumentVcs
-use framework_vcs::{
+use vcs::{
     create_document_vcs_envelope, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff,
 };
 

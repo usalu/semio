@@ -361,3 +361,44 @@ export function recordProjectionChange<TProjection, TOp>(
 ): void {
 	store.dispatch({ kind: "apply", operations, description });
 }
+
+// #region 🧪Tests
+if (import.meta.vitest) {
+	const { describe, expect, it } = import.meta.vitest;
+
+	describe("DocumentVcsStore", () => {
+		it("apply undo redo round trip", () => {
+			type P = { n: number };
+			type Op = { op: "setN"; n: number };
+			const store = new DocumentVcsStore<P, Op>({
+				envelope: createDocumentVcsEnvelope("test/v1", "t", { n: 0 }),
+				applyOp: (p, o) => ({ n: o.n }),
+				backwardsOp: (p) => [{ op: "setN", n: p.n }],
+				diffOp: (_p, o) => o,
+			});
+			store.dispatch({ kind: "apply", operations: [{ op: "setN", n: 3 }] });
+			expect(store.projection().n).toBe(3);
+			store.dispatch({ kind: "undo" });
+			expect(store.projection().n).toBe(0);
+			store.dispatch({ kind: "redo" });
+			expect(store.projection().n).toBe(3);
+		});
+
+		it("commit checkpoint builds history columns", () => {
+			type P = { n: number };
+			type Op = { op: "setN"; n: number };
+			const store = new DocumentVcsStore<P, Op>({
+				envelope: createDocumentVcsEnvelope("test/v1", "t", { n: 0 }),
+				applyOp: (p, o) => ({ n: o.n }),
+				backwardsOp: (p) => [{ op: "setN", n: p.n }],
+				diffOp: (_p, o) => o,
+			});
+			store.dispatch({ kind: "apply", operations: [{ op: "setN", n: 1 }] });
+			store.dispatch({ kind: "commitCheckpoint", message: "init", authors: [{ id: "a", name: "A" }] });
+			expect(store.historyColumns()).toHaveLength(1);
+			expect(store.getEnvelope().vcs.edits).toHaveLength(1);
+			expect(store.getEnvelope().vcs.changes).toHaveLength(1);
+		});
+	});
+}
+// #endregion 🧪Tests

@@ -1,0 +1,14 @@
+{
+	"name": "@semio-tech/imperative-react",
+	"$schema": "../../../node_modules/nx/schemas/project-schema.json",
+	"targets": {
+		"test": {
+			"executor": "nx:run-commands",
+			"options": {
+				"cwd": "imperative/react",
+				"command": "bun ./script.ts test",
+				"forwardAllArgs": true
+			}
+		}
+	}
+}

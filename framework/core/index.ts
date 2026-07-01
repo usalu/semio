@@ -2,6 +2,11 @@
 /** 🧱 `@semio-tech/framework-core` — Render-independent shared framework: declarative {@link UiPrimitiveNode}, layout, toolbar, {@link CommandBus}, {@link Platform} shell, and generic body registries. */
 // #endregion 🧱Header
 
+import {
+	DocumentVcsStore,
+	createDocumentVcsEnvelope,
+} from "@semio-tech/vcs-core";
+
 //#region 🔖JsonValue
 export type JsonPrimitive = string | number | boolean | null;
 export type JsonValue = JsonPrimitive | readonly JsonValue[] | { readonly [key: string]: JsonValue };

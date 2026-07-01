@@ -33,15 +33,13 @@ import {
 	type WindowEngagement,
 	type WindowMeasure,
 } from "@semio-tech/framework-playground-core";
-import {
-	DocumentVcsStore,
-	createDocumentVcsEnvelope,
-	recordProjectionChange,
-} from "@semio-tech/framework-core";
+import { DocumentVcsStore, createDocumentVcsEnvelope, recordProjectionChange } from "@semio-tech/vcs-core";
 import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
 import {
 	applyWriterEditOp,
+	backwardsWriterEditOp,
 	createWriterDocument,
+	diffWriterEditOp,
 	findDeepestJackAstNodeAt,
 	jackAstNodeById,
 	jackAstNodeForSelection,
@@ -239,6 +237,8 @@ export class WriterPlayController extends Controller implements PlaygroundFixtur
 	private readonly docStore = new DocumentVcsStore<WriterDocumentV1, WriterEditOp>({
 		envelope: createDocumentVcsEnvelope("writer.document/v1", "writer-play", WRITER_PLAY_EMPTY_DOCUMENT),
 		applyOp: applyWriterEditOp,
+		backwardsOp: backwardsWriterEditOp,
+		diffOp: diffWriterEditOp,
 	});
 	private revision = 0;
 	private formatSignal = 0;
@@ -264,12 +264,15 @@ export class WriterPlayController extends Controller implements PlaygroundFixtur
 		return this.docStore.projection();
 	}
 
-	private commitDocument(next: WriterDocumentV1): void {
-		const previous = this.projection();
-		recordProjectionChange(this.docStore, [{ op: "setDocument", document: next }]);
+	private applyDocumentEdit(op: WriterEditOp): void {
+		recordProjectionChange(this.docStore, [op]);
 		this.refreshAst();
 		this.revision += 1;
 		this.emit();
+	}
+
+	private commitDocument(next: WriterDocumentV1): void {
+		this.applyDocumentEdit({ op: "setDocument", document: next });
 	}
 
 	replaceDocument(next: WriterDocumentV1): void {
@@ -394,6 +397,12 @@ export class WriterPlayController extends Controller implements PlaygroundFixtur
 				const document = args?.document as WriterDocumentV1;
 				if (!document || document.schema !== "writer.document/v1") return;
 				this.replaceDocument(document);
+				return;
+			}
+			case "setText": {
+				const text = typeof args?.text === "string" ? args.text : null;
+				if (text === null) return;
+				this.applyDocumentEdit({ op: "setText", text });
 				return;
 			}
 			case "setActiveFixture": {

@@ -1508,7 +1508,7 @@ impl Puzzle3dPrecomputeSession {
 }
 
 // #region 🔖DocumentVcs
-use framework_vcs::{
+use vcs::{
     create_document_vcs_envelope, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff,
 };
 
@@ -1570,6 +1570,70 @@ pub type Puzzle3dStore = DocumentVcsStore<Puzzle3dDocument, Puzzle3dOp>;
 pub fn empty_puzzle3d_projection() -> Puzzle3dDocument {
     Puzzle3dDocument { revision: 0 }
 }
+
+//#region 🔖WasmBridge
+#[cfg(target_arch = "wasm32")]
+mod wasm_bridge {
+    use super::*;
+    use std::cell::RefCell;
+    use wasm_bindgen::prelude::*;
+
+    #[wasm_bindgen]
+    pub struct Puzzle3dDocumentVcs {
+        store: RefCell<Puzzle3dStore>,
+    }
+
+    #[wasm_bindgen]
+    impl Puzzle3dDocumentVcs {
+        #[wasm_bindgen(constructor)]
+        pub fn new(envelope_json: Option<String>) -> Result<Puzzle3dDocumentVcs, JsValue> {
+            let store = match envelope_json {
+                Some(json) => {
+                    let envelope: Puzzle3dEnvelope =
+                        serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
+                    Puzzle3dStore::new(envelope)
+                }
+                None => Puzzle3dStore::new(create_document_vcs_envelope(
+                    PUZZLE_3D_SCHEMA,
+                    "puzzle3d",
+                    empty_puzzle3d_projection(),
+                    None,
+                )),
+            };
+            Ok(Self { store: RefCell::new(store) })
+        }
+
+        #[wasm_bindgen(js_name = dispatchJson)]
+        pub fn dispatch_json(&self, command_json: &str) -> Result<(), JsValue> {
+            self.store
+                .borrow_mut()
+                .dispatch_json(command_json)
+                .map_err(|e| JsValue::from_str(&e.to_string()))
+        }
+
+        #[wasm_bindgen(js_name = projectionJson)]
+        pub fn projection_json(&self) -> Result<String, JsValue> {
+            self.store
+                .borrow()
+                .projection_json()
+                .map_err(|e| JsValue::from_str(&e.to_string()))
+        }
+
+        #[wasm_bindgen(js_name = envelopeJson)]
+        pub fn envelope_json(&self) -> Result<String, JsValue> {
+            self.store
+                .borrow()
+                .envelope_json()
+                .map_err(|e| JsValue::from_str(&e.to_string()))
+        }
+
+        #[wasm_bindgen(js_name = generation)]
+        pub fn generation(&self) -> u32 {
+            self.store.borrow().generation() as u32
+        }
+    }
+}
+//#endregion 🔖WasmBridge
 
 #[cfg(test)]
 mod puzzle3d_vcs_tests {

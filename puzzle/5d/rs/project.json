@@ -1,0 +1,22 @@
+{
+  "name": "@semio-tech/puzzle-5d-rs",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "wasm": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "puzzle/5d/rs",
+        "command": "bun ./script.ts wasm"
+      },
+      "outputs": ["{projectRoot}/pkg"]
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "puzzle/5d/rs",
+        "command": "cargo test -p puzzle_5d",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

@@ -45,7 +45,7 @@ import {
   DocumentVcsStore,
   createDocumentVcsEnvelope,
   recordProjectionChange,
-} from "@semio-tech/framework-core";
+} from "@semio-tech/vcs-core";
 
 import {
   buildPuzzle2dPlayToolbarTools,
@@ -126,6 +126,8 @@ import {
   type Puzzle5dGripPatchField,
   applyBrushPlacementToModel,
   applyPuzzle5dModelEditOp,
+  backwardsPuzzle5dModelEditOp,
+  diffPuzzle5dModelEditOp,
   type Puzzle5dModelEditOp,
   type FastenerKind,
   type GripKind,
@@ -968,6 +970,8 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
   private readonly modelDocStore = new DocumentVcsStore<Puzzle5dModel, Puzzle5dModelEditOp>({
     envelope: createDocumentVcsEnvelope("puzzle.5d/v1", "puzzle5d-play", puzzle5dPlayEmptyModel()),
     applyOp: applyPuzzle5dModelEditOp,
+    backwardsOp: backwardsPuzzle5dModelEditOp,
+    diffOp: diffPuzzle5dModelEditOp,
   });
   private gumballConfig: GumballConfig = { ...PUZZLE_3D_GUMBALL_CONFIG };
   private selected2d: ReadonlySet<string> = new Set();

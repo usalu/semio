@@ -8,7 +8,7 @@ import {
 	createDocumentVcsEnvelope,
 	type DocumentVcsEnvelope,
 	materializeDocumentProjection,
-} from "@semio-tech/framework-core";
+} from "@semio-tech/vcs-core";
 
 // #region 📐Types
 export type FormQuestionKind =
@@ -1067,6 +1067,48 @@ export class FormRuntime {
 //#region 🔖DocumentVcs
 export type FormSpecVcsEnvelope = DocumentVcsEnvelope<FormSpec, FormEditOp>;
 
+/** @emoji ↩️ Inverts a forms edit from the pre-apply projection. */
+export function backwardsFormEditOp(spec: FormSpec, operation: FormEditOp): readonly FormEditOp[] {
+	const snapshot = (): readonly FormEditOp[] => [{ op: "setDocument", document: spec }];
+	switch (operation.op) {
+		case "setDocument":
+			return snapshot();
+		case "addStep":
+			return [{ op: "removeStep", stepId: operation.step.id }];
+		case "removeStep": {
+			const step = spec.steps.find((row) => row.id === operation.stepId);
+			return step ? [{ op: "addStep", step, index: spec.steps.findIndex((row) => row.id === operation.stepId) }] : snapshot();
+		}
+		case "moveStep": {
+			const index = spec.steps.findIndex((row) => row.id === operation.stepId);
+			return index >= 0 ? [{ op: "moveStep", stepId: operation.stepId, index }] : snapshot();
+		}
+		case "addQuestion":
+			return [{ op: "removeQuestion", stepId: operation.stepId, questionId: operation.question.id }];
+		case "removeQuestion": {
+			const step = spec.steps.find((row) => row.id === operation.stepId);
+			const question = step?.questions.find((row) => row.id === operation.questionId);
+			return question ? [{ op: "addQuestion", stepId: operation.stepId, question, index: step?.questions.findIndex((row) => row.id === operation.questionId) }] : snapshot();
+		}
+		case "moveQuestion":
+			return snapshot();
+		case "updateQuestion": {
+			const step = spec.steps.find((row) => row.id === operation.stepId);
+			const question = step?.questions.find((row) => row.id === operation.question.id);
+			return question ? [{ op: "updateQuestion", stepId: operation.stepId, question }] : snapshot();
+		}
+		case "updateStep": {
+			const step = spec.steps.find((row) => row.id === operation.step.id);
+			return step ? [{ op: "updateStep", step }] : snapshot();
+		}
+	}
+}
+
+/** @emoji 📊 Returns the forms edit payload for persistence diffs. */
+export function diffFormEditOp(_projection: FormSpec, operation: FormEditOp): unknown {
+	return operation;
+}
+
 /** @emoji 📦 Default empty form spec for VCS envelopes and fixtures. */
 export function defaultFormSpec(id = "default"): FormSpec {
 	return {
@@ -1099,7 +1141,7 @@ export function createFormsAppVcsHandler() {
 		materializeProjection: (source: { readonly vcsJson?: string; readonly inline?: string }) => {
 			if (source.vcsJson) {
 				const envelope = JSON.parse(source.vcsJson) as FormSpecVcsEnvelope;
-				return materializeFormSpec(envelope, envelope.vcs.operations.map((change) => change.id));
+				return materializeFormSpec(envelope, envelope.vcs.edits.map((edit) => edit.id));
 			}
 			if (source.inline) return parseFormSpec(JSON.parse(source.inline));
 			return defaultFormSpec("forms");

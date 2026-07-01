@@ -19,6 +19,8 @@ import {
     buildCatalogueKindsTreeSections,
     buildFlowContextMenuItems,
     applyFlowFixtureEditOp,
+    backwardsFlowFixtureEditOp,
+    diffFlowFixtureEditOp,
     flowPlayCatalogueItemDragData,
     type CatalogueSection,
     type FlowCanvasCommandRequest,
@@ -30,11 +32,7 @@ import {
     type FlowReorganizeRequest,
 } from "@semio-tech/flow-react";
 import type { WindowMeasure } from "@semio-tech/framework-playground-core";
-import {
-	DocumentVcsStore,
-	createDocumentVcsEnvelope,
-	recordProjectionChange,
-} from "@semio-tech/framework-core";
+import { DocumentVcsStore, createDocumentVcsEnvelope, recordProjectionChange } from "@semio-tech/vcs-core";
 import {
     AppRuntime,
     buildFlowWindowBody,
@@ -582,6 +580,8 @@ export class Procedural2dPlayController extends Controller implements Playground
 			parseFlowPlayFixtureJson(proceduralFixtureJsonForId(playgroundResolvedFixtureId(PLAYGROUND_NO_FIXTURE_ID))) ?? PROCEDURAL_2D_PLAY_EMPTY_FIXTURE,
 		),
 		applyOp: applyFlowFixtureEditOp,
+		backwardsOp: backwardsFlowFixtureEditOp,
+		diffOp: diffFlowFixtureEditOp,
 	});
 	private generations: FlowGeneration[] = createDefaultGenerations();
 	private selectedGenerationId: string | null = null;

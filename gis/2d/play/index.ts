@@ -43,7 +43,8 @@ import {
   type ToolLeaf,
   toolCollection,
 } from "@semio-tech/framework-playground-core";
-import { Store, DocumentVcsStore, createDocumentVcsEnvelope, recordProjectionChange } from "@semio-tech/framework-core";
+import { Store } from "@semio-tech/framework-core";
+import { DocumentVcsStore, createDocumentVcsEnvelope, recordProjectionChange } from "@semio-tech/vcs-core";
 
 import { bootstrapElementsSurfaceChromeDocument, selectionMergeIds, type SelectionMarqueeMethod, type SelectionMergeMode } from "@semio-tech/ui-react";
 
@@ -811,12 +812,43 @@ function applyGisMapFixtureEditOp(fixture: GisMapFixtureV1 | null, op: GisMapFix
   }
 }
 
+function gisMapFixtureSnapshot(fixture: GisMapFixtureV1 | null): GisMapFixtureEditOp {
+  return { op: "setDocument", document: fixture };
+}
+
+/** @emoji ↩️ Inverts a GIS map fixture edit from the pre-apply projection. */
+export function backwardsGisMapFixtureEditOp(fixture: GisMapFixtureV1 | null, op: GisMapFixtureEditOp): readonly GisMapFixtureEditOp[] {
+  switch (op.op) {
+    case "setDocument":
+      return [gisMapFixtureSnapshot(fixture)];
+    case "patchPositions":
+      return op.positionIds.flatMap((positionId) => {
+        const position = fixture?.positions.find((row) => row.id === positionId);
+        if (!position) return [];
+        return [{ op: "patchPositions", positionIds: [positionId], field: op.field, value: (position as Record<string, unknown>)[op.field] }];
+      });
+    case "patchRoutes":
+      return op.routeIds.flatMap((routeId) => {
+        const route = fixture?.routes.find((row) => row.id === routeId);
+        if (!route) return [];
+        return [{ op: "patchRoutes", routeIds: [routeId], field: op.field, value: (route as Record<string, unknown>)[op.field] }];
+      });
+  }
+}
+
+/** @emoji 📊 Returns the GIS map fixture edit payload for persistence diffs. */
+export function diffGisMapFixtureEditOp(_fixture: GisMapFixtureV1 | null, operation: GisMapFixtureEditOp): unknown {
+  return operation;
+}
+
 export class MapPlayController extends Controller implements PlaygroundFixtureHost {
   readonly mainMode = new ModeRuntime("explore", "Explore", undefined);
   private activeFixtureId = GIS_MAP_PLAY_FIXTURE_REUSE_ID;
   private readonly docStore = new DocumentVcsStore<GisMapFixtureV1 | null, GisMapFixtureEditOp>({
     envelope: createDocumentVcsEnvelope("gis.map.fixture/v1", "gis-map-play", GIS_MAP_PLAY_DEFAULT_FIXTURE),
     applyOp: applyGisMapFixtureEditOp,
+    backwardsOp: backwardsGisMapFixtureEditOp,
+    diffOp: diffGisMapFixtureEditOp,
   });
   private readonly snapshotStore: MapPlaySnapshotStore;
   private snapshotCache: MapPlaySnapshot | null = null;

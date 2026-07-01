@@ -1,6 +1,6 @@
-//! 🖥️ Semios studio CQRS — programs, app instances, media graph on `framework_vcs`.
+//! 🖥️ Semios studio CQRS — programs, app instances, media graph on `vcs`.
 
-use framework_vcs::{
+use vcs::{
     create_document_vcs_envelope, materialize_document_projection, DocumentBackboneRef, DocumentVcs,
     DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff, VcsError,
 };
@@ -460,7 +460,7 @@ impl Operation<SemiosStudioProjection> for StudioOp {
     }
 }
 
-pub fn materialize_studio_projection(document: &SemiosStudioDocumentV1, applied_change_ids: &[String]) -> Result<SemiosStudioProjection, VcsError> {
+pub fn materialize_studio_projection(document: &SemiosStudioDocumentV1, applied_edit_ids: &[String]) -> Result<SemiosStudioProjection, VcsError> {
     let envelope = SemiosStudioEnvelope {
         schema: document.schema.clone(),
         id: document.id.clone(),
@@ -468,7 +468,7 @@ pub fn materialize_studio_projection(document: &SemiosStudioDocumentV1, applied_
         backbone: document.backbone.clone(),
         active_alternative_id: None,
     };
-    materialize_document_projection(&envelope, applied_change_ids)
+    materialize_document_projection(&envelope, applied_edit_ids)
 }
 //#endregion 🔖Projection
 

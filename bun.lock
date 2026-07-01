@@ -538,8 +538,8 @@
       "name": "@semio-tech/draw-core",
       "version": "0.1.0",
       "dependencies": {
-        "@semio-tech/framework-core": "workspace:*",
         "@semio-tech/graph-manifest": "workspace:*",
+        "@semio-tech/vcs-core": "workspace:*",
       },
       "devDependencies": {
         "typescript": "^5.9.3",
@@ -587,12 +587,15 @@
         "vitest": "^4.0.17",
       },
     },
+    "draw/rs": {
+      "name": "@semio-tech/draw-rs",
+    },
     "flow/core": {
       "name": "@semio-tech/flow-core",
       "version": "0.1.0",
       "dependencies": {
-        "@semio-tech/framework-core": "workspace:*",
         "@semio-tech/graph-manifest": "workspace:*",
+        "@semio-tech/vcs-core": "workspace:*",
       },
       "devDependencies": {
         "typescript": "^5.9.3",
@@ -677,7 +680,7 @@
       "name": "@semio-tech/forms-core",
       "version": "0.1.0",
       "dependencies": {
-        "@semio-tech/framework-core": "workspace:*",
+        "@semio-tech/vcs-core": "workspace:*",
       },
       "devDependencies": {
         "typescript": "^5.9.3",
@@ -727,7 +730,7 @@
       "name": "@semio-tech/framework-core",
       "version": "0.1.0",
       "dependencies": {
-        "@semio-tech/framework-vcs-rs": "workspace:*",
+        "@semio-tech/vcs-core": "workspace:*",
       },
       "devDependencies": {
         "typescript": "^5.9.3",
@@ -841,7 +844,7 @@
       "name": "@semio-tech/framework-presentation-core",
       "version": "0.1.0",
       "dependencies": {
-        "@semio-tech/framework-core": "workspace:*",
+        "@semio-tech/vcs-core": "workspace:*",
       },
       "devDependencies": {
         "typescript": "^5.9.3",
@@ -1253,7 +1256,7 @@
       "name": "@semio-tech/raster-core",
       "version": "0.1.0",
       "dependencies": {
-        "@semio-tech/framework-core": "workspace:*",
+        "@semio-tech/vcs-core": "workspace:*",
       },
       "devDependencies": {
         "typescript": "^5.9.3",
@@ -1415,6 +1418,7 @@
         "@semio-tech/framework-platform-core": "workspace:*",
         "@semio-tech/graph-manifest": "workspace:*",
         "@semio-tech/semios-studio-rs": "workspace:*",
+        "@semio-tech/vcs-core": "workspace:*",
       },
       "devDependencies": {
         "@semio-tech/draw-core": "workspace:*",
@@ -1683,12 +1687,25 @@
         "typescript": "^5.9.3",
       },
     },
+    "vcs/core": {
+      "name": "@semio-tech/vcs-core",
+      "version": "0.1.0",
+      "dependencies": {
+        "@semio-tech/vcs-rs": "workspace:*",
+      },
+      "devDependencies": {
+        "typescript": "^5.9.3",
+      },
+    },
+    "vcs/rs": {
+      "name": "@semio-tech/vcs-rs",
+    },
     "writer/core": {
       "name": "@semio-tech/writer-core",
       "version": "0.1.0",
       "dependencies": {
-        "@semio-tech/framework-core": "workspace:*",
         "@semio-tech/graph-manifest": "workspace:*",
+        "@semio-tech/vcs-core": "workspace:*",
       },
       "devDependencies": {
         "typescript": "^5.9.3",
@@ -2700,6 +2717,8 @@
 
     "@semio-tech/draw-react": ["@semio-tech/draw-react@workspace:draw/react"],
 
+    "@semio-tech/draw-rs": ["@semio-tech/draw-rs@workspace:draw/rs"],
+
     "@semio-tech/flow-core": ["@semio-tech/flow-core@workspace:flow/core"],
 
     "@semio-tech/flow-module-bim": ["@semio-tech/flow-module-bim@workspace:flow/module/bim/pkg"],
@@ -2843,6 +2862,10 @@
     "@semio-tech/ui-react": ["@semio-tech/ui-react@workspace:ui/react"],
 
     "@semio-tech/ui-styling": ["@semio-tech/ui-styling@workspace:ui/styling/js"],
+
+    "@semio-tech/vcs-core": ["@semio-tech/vcs-core@workspace:vcs/core"],
+
+    "@semio-tech/vcs-rs": ["@semio-tech/vcs-rs@workspace:vcs/rs"],
 
     "@semio-tech/writer-core": ["@semio-tech/writer-core@workspace:writer/core"],
 

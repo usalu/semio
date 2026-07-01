@@ -618,6 +618,32 @@ export function applyFlowFixtureEditOp(fixture: FlowFixtureV1, op: FlowFixtureEd
   }
 }
 
+/** @emoji ↩️ Inverts a flow fixture edit from the pre-apply projection. */
+export function backwardsFlowFixtureEditOp(fixture: FlowFixtureV1, op: FlowFixtureEditOp): readonly FlowFixtureEditOp[] {
+  switch (op.op) {
+    case "setDocument":
+      return [{ op: "setDocument", document: fixture }];
+    case "renameWidget":
+      return [{ op: "renameWidget", oldId: op.newId, newId: op.oldId }];
+    case "patchWidget": {
+      const widget = fixture.widgets.find((row) => row.id === op.widgetId);
+      if (!widget) return [{ op: "setDocument", document: fixture }];
+      return [{ op: "patchWidget", widgetId: op.widgetId, field: op.field, value: (widget as Record<string, unknown>)[op.field] }];
+    }
+    case "patchWidgets":
+      return op.widgetIds.flatMap((widgetId) => {
+        const widget = fixture.widgets.find((row) => row.id === widgetId);
+        if (!widget) return [];
+        return [{ op: "patchWidget", widgetId, field: op.field, value: (widget as Record<string, unknown>)[op.field] }];
+      });
+  }
+}
+
+/** @emoji 📊 Returns the flow fixture edit payload for persistence diffs. */
+export function diffFlowFixtureEditOp(_fixture: FlowFixtureV1, operation: FlowFixtureEditOp): unknown {
+  return operation;
+}
+
 /** @emoji 🧠 Neuron widget ids from a flow fixture JSON blob. */
 export function neuronWidgetIdsFromFixtureJson(fixtureJson: string): string[] {
   try {

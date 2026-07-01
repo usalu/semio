@@ -7,7 +7,7 @@ import {
 	createDocumentVcsEnvelope,
 	type DocumentVcsEnvelope,
 	materializeDocumentProjection,
-} from "@semio-tech/framework-core";
+} from "@semio-tech/vcs-core";
 import { WRITERLANGUAGES_LANGUAGE_IDS, type WriterLanguagesLanguageKindId } from "@semio-tech/graph-manifest";
 
 // #region 📐WriterDocument
@@ -1217,14 +1217,33 @@ export function applyJackRename(
 // #endregion 🔖JackAst
 
 //#region 🔖DocumentVcs
-export type WriterEditOp = { readonly op: "setDocument"; readonly document: WriterDocumentV1 };
+export type WriterEditOp =
+	| { readonly op: "setDocument"; readonly document: WriterDocumentV1 }
+	| { readonly op: "setText"; readonly text: string };
 
 /** @emoji ✏️ Applies a writer document edit operation. */
 export function applyWriterEditOp(doc: WriterDocumentV1, op: WriterEditOp): WriterDocumentV1 {
 	switch (op.op) {
 		case "setDocument":
 			return op.document;
+		case "setText":
+			return { ...doc, text: op.text };
 	}
+}
+
+/** @emoji ↩️ Inverts a writer edit from the pre-apply projection. */
+export function backwardsWriterEditOp(projection: WriterDocumentV1, operation: WriterEditOp): readonly WriterEditOp[] {
+	switch (operation.op) {
+		case "setDocument":
+			return [{ op: "setDocument", document: projection }];
+		case "setText":
+			return [{ op: "setText", text: projection.text }];
+	}
+}
+
+/** @emoji 📊 Returns the writer edit payload for persistence diffs. */
+export function diffWriterEditOp(_projection: WriterDocumentV1, operation: WriterEditOp): unknown {
+	return operation;
 }
 
 export type WriterDocumentVcsEnvelope = DocumentVcsEnvelope<WriterDocumentV1, WriterEditOp>;
@@ -1253,7 +1272,7 @@ export function createWriterAppVcsHandler() {
 		materializeProjection: (source: { readonly vcsJson?: string; readonly inline?: string }) => {
 			if (source.vcsJson) {
 				const envelope = JSON.parse(source.vcsJson) as WriterDocumentVcsEnvelope;
-				return materializeWriterDocument(envelope, envelope.vcs.operations.map((change) => change.id));
+				return materializeWriterDocument(envelope, envelope.vcs.edits.map((edit) => edit.id));
 			}
 			if (source.inline) return parseWriterDocumentJson(source.inline);
 			return createWriterDocument({ id: "writer", languageId: "plaintext", text: "" });

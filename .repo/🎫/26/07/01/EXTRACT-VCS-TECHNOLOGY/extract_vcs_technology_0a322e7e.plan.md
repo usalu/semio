@@ -13,61 +13,61 @@ todos:
     status: completed
   - id: vcs-react-history-table
     content: "Build HistoryTable in vcs/react: 3-row grid (labels / avatar-stack+track-lines / description), columns sorted chronologically, lane-assignment for alternatives, reusing ui/react Avatar/TableAvatar"
-    status: in_progress
+    status: completed
   - id: vcs-play
     content: "Build vcs/play: demo projection + fixture with 2 authors and 2 forked alternatives, window hosting HistoryTable, apply/commit/branch engagement controls, script.ts/project.json/package.json/vite.config.ts"
-    status: pending
+    status: completed
   - id: retire-framework-vcs
     content: Delete framework/rs and framework/core/vcs-sync.ts; drop the vcs-sync import from framework/core/index.ts
-    status: pending
+    status: completed
   - id: cargo-dep-rename
     content: Rename the framework_vcs Cargo dependency to vcs across every crate's Cargo.toml (~20 files) and update `[workspace] members` path framework/rs -> vcs/rs
-    status: pending
+    status: completed
   - id: wire-draw
     content: Package draw/rs (script.ts/project.json/package.json), register in root package.json, rewrite draw/play to dispatch real DrawOp via DrawDocumentVcs instead of local reducer + setDocument
-    status: pending
+    status: completed
   - id: wire-forms
     content: Package forms/rs, register workspace, rewrite forms/play onto FormsDocumentVcs
-    status: pending
+    status: completed
   - id: wire-shooting
     content: Package shooting/rs, register workspace, rewrite shooting/play onto ShootingDocumentVcs
-    status: pending
+    status: completed
   - id: wire-cad
     content: Package cad/rs, register workspace, rewrite cad play surface onto CadDocumentVcs
-    status: pending
+    status: completed
   - id: wire-presentation
     content: Package framework/product/presentation/rs, register workspace, rewrite presentation/play onto PresentationDocumentVcs
-    status: pending
+    status: completed
   - id: wire-gis
     content: Add wasm_bindgen GisMapDocumentVcs wrapper to gis/2d/rs, package it, rewrite gis/2d/play
-    status: pending
+    status: completed
   - id: wire-puzzle3d5d
     content: Add wasm wrapper to puzzle/3d/rs and puzzle/5d/rs, package both, rewrite puzzle/3d/play and puzzle/5d/play
-    status: pending
+    status: completed
   - id: wire-procedural
     content: Add wasm wrapper to procedural/2d/rs and procedural/3d/rs, package both, rewrite procedural/2d/play and procedural/3d/play
-    status: pending
+    status: completed
   - id: wire-dag-flow
     content: Add wasm wrapper to mathematical/graph/port/directed/dag, package it, rewrite dag/play and flow/play off commitFixture
-    status: pending
+    status: completed
   - id: wire-mindmap
     content: Add wasm wrapper to reasoning/mindmap, package it, rewrite reasoning/mindmap/play and wires/play
-    status: pending
+    status: completed
   - id: wire-trinity
     content: Add wasm wrapper to trinity/ram and trinity/rewrite/engine, package both, rewrite trinity/jack/play and trinity/rewrite/play off throwaway sessions
-    status: pending
+    status: completed
   - id: wire-already-packaged
     content: Rewire writer/play (WriterOp), raster/play (RasterOp), and semios trinity residuals onto real dispatch (crates already packaged, only play/core logic needs fixing)
-    status: pending
+    status: completed
   - id: puzzle2d-testdemo
     content: Update puzzle/2d/rs's internal test-only Puzzle2dOp/Puzzle2dProjection demo module onto vcs's new Operation/Edit types; leave production board engine untouched
-    status: pending
+    status: completed
   - id: root-wiring
     content: Update root package.json workspaces, .vscode/launch.json entries (rename framework-vcs build entry, add vcs play + newly packaged crate build entries), vcs/AGENTS.md spec
-    status: pending
+    status: completed
   - id: tests-regression
     content: cargo test across the whole workspace, nx test across every touched TS package, extend each migrated technology's core test file with an Apply/undo round-trip case, manually verify dev:semios and dev:vcs
-    status: pending
+    status: completed
 isProject: false
 ---
 

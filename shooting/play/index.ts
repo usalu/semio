@@ -43,11 +43,7 @@ import {
 	type WindowMeasure,
 } from "@semio-tech/framework-playground-core";
 import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
-import {
-	DocumentVcsStore,
-	createDocumentVcsEnvelope,
-	recordProjectionChange,
-} from "@semio-tech/framework-core";
+import { DocumentVcsStore, createDocumentVcsEnvelope, recordProjectionChange } from "@semio-tech/vcs-core";
 import {
 	DEFAULT_SHOOTING_FIXTURE,
 	parseShootingFixture,
@@ -55,6 +51,8 @@ import {
 	resolveActiveAsset,
 	shootingFixtureToJson,
 	applyShootingFixtureEditOp,
+	backwardsShootingFixtureEditOp,
+	diffShootingFixtureEditOp,
 	type ShootingCameraV1,
 	type ShootingFixtureEditOp,
 	type ShootingFixtureV1,
@@ -559,6 +557,8 @@ export class ShootingPlayController extends Controller implements PlaygroundFixt
 			},
 		),
 		applyOp: applyShootingFixtureEditOp,
+		backwardsOp: backwardsShootingFixtureEditOp,
+		diffOp: diffShootingFixtureEditOp,
 	});
 	private readonly fixtureStore: ShootingPlayFixtureStore;
 	private hostBridge: ShootingPlayHostBridge | null = null;

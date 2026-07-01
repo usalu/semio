@@ -38,15 +38,13 @@ import {
 } from "@semio-tech/framework-playground-core";
 
 import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
-import {
-  DocumentVcsStore,
-  createDocumentVcsEnvelope,
-  recordProjectionChange,
-} from "@semio-tech/framework-core";
+import { DocumentVcsStore, createDocumentVcsEnvelope, recordProjectionChange } from "@semio-tech/vcs-core";
 import {
   DAG_DEFAULT_FIXTURE,
   DAG_LOD_MODE_AUTOMATIC,
   applyDagFixtureEditOp,
+  backwardsDagFixtureEditOp,
+  diffDagFixtureEditOp,
   dagPlayLodTiers,
   dagFixtureToJson,
   dagLodAutomaticSelectLabel,
@@ -334,6 +332,8 @@ export class DagPlayController extends Controller {
   private readonly docStore = new DocumentVcsStore<DagFixtureV1, DagFixtureEditOp>({
     envelope: createDocumentVcsEnvelope("dag.fixture/v1", "dag-play", DAG_PLAY_DEFAULT_FIXTURE),
     applyOp: applyDagFixtureEditOp,
+    backwardsOp: backwardsDagFixtureEditOp,
+    diffOp: diffDagFixtureEditOp,
   });
   private engagementInput = "";
   private layerSpacing = DEFAULT_LAYER_SPACING;

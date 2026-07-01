@@ -747,9 +747,9 @@ dependencies = [
 name = "cad_document"
 version = "0.1.0"
 dependencies = [
- "framework_vcs",
  "serde",
  "serde_json",
+ "vcs",
  "wasm-bindgen",
 ]
 
@@ -926,7 +926,6 @@ dependencies = [
  "blake3",
  "chrono",
  "console_error_panic_hook",
- "framework_vcs",
  "futures-channel",
  "futures-lite",
  "futures-util",
@@ -945,6 +944,7 @@ dependencies = [
  "thiserror 2.0.18",
  "ureq",
  "uuid",
+ "vcs",
  "walkdir",
  "wasm-bindgen",
  "wasm-bindgen-futures",
@@ -1396,9 +1396,9 @@ checksum = "75b325c5dbd37f80359721ad39aca5a29fb04c89279657cffdda8736d0c0b9d2"
 name = "draw"
 version = "0.1.0"
 dependencies = [
- "framework_vcs",
  "serde",
  "serde_json",
+ "vcs",
  "wasm-bindgen",
 ]
 
@@ -1648,7 +1648,6 @@ dependencies = [
  "flow_module_logic",
  "flow_module_math",
  "flow_module_text",
- "framework_vcs",
  "infinite_cavas",
  "js-sys",
  "kernel_3d_engine",
@@ -1658,6 +1657,7 @@ dependencies = [
  "serde-wasm-bindgen",
  "serde_json",
  "ui_styling",
+ "vcs",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
@@ -1895,25 +1895,10 @@ dependencies = [
 name = "forms"
 version = "0.1.0"
 dependencies = [
- "framework_vcs",
  "serde",
  "serde_json",
+ "vcs",
  "wasm-bindgen",
-]
-
-[[package]]
-name = "framework_vcs"
-version = "0.1.0"
-dependencies = [
- "js-sys",
- "rusqlite",
- "serde",
- "serde-wasm-bindgen",
- "serde_json",
- "tempfile",
- "thiserror 2.0.18",
- "wasm-bindgen",
- "wasm-bindgen-futures",
 ]
 
 [[package]]
@@ -2132,7 +2117,6 @@ dependencies = [
 name = "gis_2d"
 version = "0.1.0"
 dependencies = [
- "framework_vcs",
  "image",
  "infinite_cavas",
  "js-sys",
@@ -2141,6 +2125,7 @@ dependencies = [
  "serde-wasm-bindgen",
  "serde_json",
  "ui_styling",
+ "vcs",
  "vello",
  "wasm-bindgen",
  "wasm-bindgen-futures",
@@ -3619,7 +3604,6 @@ dependencies = [
 name = "mathematical_graph_port_directed_dag"
 version = "0.1.0"
 dependencies = [
- "framework_vcs",
  "infinite_cavas",
  "js-sys",
  "mathematical_core",
@@ -3628,6 +3612,7 @@ dependencies = [
  "serde",
  "serde_json",
  "ui_styling",
+ "vcs",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
@@ -4476,9 +4461,9 @@ dependencies = [
 name = "presentation_deck"
 version = "0.1.0"
 dependencies = [
- "framework_vcs",
  "serde",
  "serde_json",
+ "vcs",
  "wasm-bindgen",
 ]
 
@@ -4526,9 +4511,9 @@ dependencies = [
 name = "procedural_2d"
 version = "0.1.0"
 dependencies = [
- "framework_vcs",
  "serde",
  "serde_json",
+ "vcs",
  "wasm-bindgen",
 ]
 
@@ -4536,9 +4521,9 @@ dependencies = [
 name = "procedural_3d"
 version = "0.1.0"
 dependencies = [
- "framework_vcs",
  "serde",
  "serde_json",
+ "vcs",
  "wasm-bindgen",
 ]
 
@@ -4590,7 +4575,6 @@ dependencies = [
  "data-url",
  "ecow",
  "fontdb",
- "framework_vcs",
  "gis_2d",
  "image",
  "js-sys",
@@ -4602,6 +4586,7 @@ dependencies = [
  "typst",
  "typst-assets",
  "typst-svg",
+ "vcs",
  "vello",
  "vello_svg",
  "wasm-bindgen",
@@ -4613,13 +4598,13 @@ dependencies = [
 name = "puzzle_3d"
 version = "0.1.0"
 dependencies = [
- "framework_vcs",
  "js-sys",
  "nalgebra 0.33.3",
  "parry3d",
  "serde",
  "serde-wasm-bindgen",
  "serde_json",
+ "vcs",
  "wasm-bindgen",
 ]
 
@@ -4627,9 +4612,9 @@ dependencies = [
 name = "puzzle_5d"
 version = "0.1.0"
 dependencies = [
- "framework_vcs",
  "serde",
  "serde_json",
+ "vcs",
  "wasm-bindgen",
 ]
 
@@ -4824,7 +4809,6 @@ checksum = "ca45419789ae5a7899559e9512e58ca889e41f04f1f2445e9f4b290ceccd1d08"
 name = "raster"
 version = "0.1.0"
 dependencies = [
- "framework_vcs",
  "image",
  "infinite_cavas",
  "js-sys",
@@ -4832,6 +4816,7 @@ dependencies = [
  "serde-wasm-bindgen",
  "serde_json",
  "ui_styling",
+ "vcs",
  "vello",
  "wasm-bindgen",
  "wasm-bindgen-futures",
@@ -4894,11 +4879,12 @@ dependencies = [
 name = "reasoning_mindmap"
 version = "0.1.0"
 dependencies = [
- "framework_vcs",
  "infinite_cavas",
  "mathematical_graph_normal_directed",
  "serde",
  "serde_json",
+ "vcs",
+ "wasm-bindgen",
 ]
 
 [[package]]
@@ -5329,12 +5315,12 @@ dependencies = [
 name = "semios_studio"
 version = "0.1.0"
 dependencies = [
- "framework_vcs",
  "js-sys",
  "serde",
  "serde-wasm-bindgen",
  "serde_json",
  "thiserror 2.0.18",
+ "vcs",
  "wasm-bindgen",
 ]
 
@@ -5527,9 +5513,9 @@ checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
 name = "shooting"
 version = "0.1.0"
 dependencies = [
- "framework_vcs",
  "serde",
  "serde_json",
+ "vcs",
  "wasm-bindgen",
 ]
 
@@ -6495,18 +6481,18 @@ dependencies = [
 name = "trinity_ram"
 version = "0.1.0"
 dependencies = [
- "framework_vcs",
  "mathematical_core",
  "mathematical_graph_manifest",
  "serde",
  "serde_json",
+ "vcs",
+ "wasm-bindgen",
 ]
 
 [[package]]
 name = "trinity_rewrite"
 version = "0.1.0"
 dependencies = [
- "framework_vcs",
  "infinite_cavas",
  "js-sys",
  "mathematical_core",
@@ -6517,6 +6503,7 @@ dependencies = [
  "trinity_jack",
  "trinity_ram",
  "ui_styling",
+ "vcs",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
@@ -8172,12 +8159,12 @@ checksum = "1ffae5123b2d3fc086436f8834ae3ab053a283cfac8fe0a0b8eaae044768a4c4"
 name = "writer"
 version = "0.1.0"
 dependencies = [
- "framework_vcs",
  "infinite_cavas",
  "js-sys",
  "serde",
  "serde_json",
  "ui_styling",
+ "vcs",
  "vello",
  "wasm-bindgen",
  "wasm-bindgen-futures",

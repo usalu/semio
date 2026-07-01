@@ -297,6 +297,38 @@ export function applyShootingFixtureEditOp(fixture: ShootingFixtureV1, op: Shoot
 	}
 }
 
+/** @emoji ↩️ Inverts a shooting fixture edit from the pre-apply projection. */
+export function backwardsShootingFixtureEditOp(fixture: ShootingFixtureV1, op: ShootingFixtureEditOp): readonly ShootingFixtureEditOp[] {
+	switch (op.op) {
+		case "setDocument":
+			return [{ op: "setDocument", document: fixture }];
+		case "setActiveShot":
+			return [{ op: "setActiveShot", shotId: fixture.activeShotId ?? fixture.shots[0]?.id ?? op.shotId }];
+		case "setActiveAsset":
+			return [{ op: "setActiveAsset", assetId: fixture.activeAssetId ?? fixture.assets[0]?.id ?? op.assetId }];
+		case "setCamera":
+			return [{ op: "setCamera", camera: fixture.camera }];
+		case "setShotCamera":
+			return [{ op: "setShotCamera", shotId: op.shotId, camera: resolveShotCamera(fixture, fixture.shots.find((shot) => shot.id === op.shotId) ?? fixture.shots[0]!) }];
+		case "addSavedCamera":
+			return [{ op: "setDocument", document: fixture }];
+		case "loadSavedCamera":
+			return [{ op: "setCamera", camera: fixture.camera }];
+		case "importAsset":
+			return [{ op: "setDocument", document: fixture }];
+		case "patchScene":
+		case "patchShots":
+		case "patchShot":
+		case "patchAssets":
+			return [{ op: "setDocument", document: fixture }];
+	}
+}
+
+/** @emoji 📊 Returns the shooting fixture edit payload for persistence diffs. */
+export function diffShootingFixtureEditOp(_fixture: ShootingFixtureV1, operation: ShootingFixtureEditOp): unknown {
+	return operation;
+}
+
 export function shootingIconRenderRequest(fixture: ShootingFixtureV1, shot: ShootingShotV1, asset: ShootingAssetV1): IconRenderRequest {
 	const camera = resolveShotCamera(fixture, shot);
 	const background = shot.background ?? fixture.scene.background;

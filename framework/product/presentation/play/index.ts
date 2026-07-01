@@ -48,13 +48,13 @@ import {
 	uiInspectorReadonlyField,
 	type UiInspectorFieldGroup,
 } from "@semio-tech/framework-playground-core";
-import { Store, DocumentVcsStore, createDocumentVcsEnvelope, recordProjectionChange } from "@semio-tech/framework-core";
+import { Store } from "@semio-tech/framework-core";
+import { DocumentVcsStore, createDocumentVcsEnvelope, recordProjectionChange } from "@semio-tech/vcs-core";
 import {
 	applyPresentationEditOp,
+	backwardsPresentationEditOp,
 	buildTileMorphPrompt,
-	clampTileCrop,
-	clampNormalizedFraction,
-	NORMALIZED_RECT_MIN_FRACTION,
+	diffPresentationEditOp,
 	parseGridEngagement,
 	populateTileDraftsFromGrid,
 	type FigureTileDraft,
@@ -142,6 +142,8 @@ export class PresentationPlayController extends Controller implements Playground
 			tiles: [],
 		}),
 		applyOp: applyPresentationEditOp,
+		backwardsOp: backwardsPresentationEditOp,
+		diffOp: diffPresentationEditOp,
 	});
 	private readonly snapshotStore: PresentationPlaySnapshotStore;
 	private snapshotCache: PresentationPlaySnapshot | null = null;

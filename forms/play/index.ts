@@ -43,17 +43,15 @@ import {
 	type WindowEngagement,
 	enforcePlaygroundWindowEngagementInput,
 } from "@semio-tech/framework-playground-core";
-import {
-	DocumentVcsStore,
-	createDocumentVcsEnvelope,
-	recordProjectionChange,
-} from "@semio-tech/framework-core";
+import { DocumentVcsStore, createDocumentVcsEnvelope, recordProjectionChange } from "@semio-tech/vcs-core";
 import { bootstrapElementsSurfaceChromeDocument, type TreeDataItem, type TreeDragAndDropController, type TreeDropPosition } from "@semio-tech/ui-react";
 import {
 	applyFormEditOp,
+	backwardsFormEditOp,
 	createFormId,
 	defaultFormSpec,
 	defaultQuestionForKind,
+	diffFormEditOp,
 	findQuestionLocation,
 	formSpecToJson,
 	formsExtensionHost,
@@ -613,6 +611,8 @@ export class FormsPlayController extends Controller implements PlaygroundFixture
 	private readonly docStore = new DocumentVcsStore<FormSpec, FormEditOp>({
 		envelope: createDocumentVcsEnvelope("forms.form/v1", "forms-play", defaultFormSpec()),
 		applyOp: applyFormEditOp,
+		backwardsOp: backwardsFormEditOp,
+		diffOp: diffFormEditOp,
 	});
 	private selectedIds: string[] = [];
 	private tryValues: FormValues = {};

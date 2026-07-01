@@ -4388,7 +4388,7 @@ mod force_graph_tests {
 
     #[test]
     fn puzzle_document_vcs_uses_framework_engine() {
-        use framework_vcs::{
+        use vcs::{
             create_document_vcs_envelope, CollectionDiff, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore,
             Operation, OperationDiff,
         };

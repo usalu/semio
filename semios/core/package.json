@@ -15,7 +15,8 @@
     "@semio-tech/framework-core": "workspace:*",
     "@semio-tech/framework-platform-core": "workspace:*",
     "@semio-tech/graph-manifest": "workspace:*",
-    "@semio-tech/semios-studio-rs": "workspace:*"
+    "@semio-tech/semios-studio-rs": "workspace:*",
+    "@semio-tech/vcs-core": "workspace:*"
   },
   "devDependencies": {
     "@semio-tech/draw-core": "workspace:*",

@@ -7861,7 +7861,7 @@ pub mod vcs {
 
     //#region 🔖kit_vcs
     pub mod kit_vcs {
-        use framework_vcs::{
+        use vcs::{
             create_document_vcs_envelope, materialize_document_projection, DocumentVcsCommand, DocumentVcsEnvelope,
             DocumentVcsStore, Operation as VcsOperation, OperationDiff,
         };
@@ -8033,7 +8033,7 @@ pub mod vcs {
         pub the_kit_unsaved_edits: RwLock<Vec<Arc<Edit>>>,
         pub the_kit_workspace_seq: AtomicU64,
         pub op_history: RwLock<Vec<Arc<crate::operation::OperationInterface>>>,
-        /// @emoji 🗄️ Authoritative [`framework_vcs`] engine for [`TheKit`](../../../schema/graphql/schema.golden.graphql) kit projection replay.
+        /// @emoji 🗄️ Authoritative [`vcs`] engine for [`TheKit`](../../../schema/graphql/schema.golden.graphql) kit projection replay.
         pub the_kit_snapshot_store: std::sync::Mutex<kit_vcs::KitSnapshotStore>,
     }
 
@@ -8208,7 +8208,7 @@ pub mod vcs {
             let mat = if ws == self.id {
                 let snap = {
                     let store = self.the_kit_snapshot_store.lock().expect("kit vcs store");
-                    kit_vcs::materialize_kit_snapshot(store.envelope(), store.applied_change_ids())
+                    kit_vcs::materialize_kit_snapshot(store.envelope(), store.applied_edit_ids())
                 };
                 let mat = base.deep_clone().await;
                 let _ = crate::kit_backbone::hydrate_kit_from_initial_projection_value(&mat, &snap.0).await;
@@ -8318,7 +8318,7 @@ pub mod vcs {
                 self.the_kit_snapshot_store
                     .lock()
                     .map_err(|_| ComposeError::invalid("kit vcs store lock poisoned"))?
-                    .dispatch(framework_vcs::DocumentVcsCommand::Apply {
+                    .dispatch(vcs::DocumentVcsCommand::Apply {
                         operations: vec![wire],
                         description: None,
                     })
@@ -19031,10 +19031,10 @@ mod tests {
 
     use crate::gql::AppSchema;
 
-    /// @emoji 🗄️ `framework_vcs` integration — compose shares generic typed document VCS primitives with semios technologies.
+    /// @emoji 🗄️ `vcs` integration — compose shares generic typed document VCS primitives with semios technologies.
     #[test]
-    fn framework_vcs_typed_ops_materialize_projection() {
-        use framework_vcs::{
+    fn vcs_typed_ops_materialize_projection() {
+        use vcs::{
             create_document_vcs_envelope, materialize_document_projection, DocumentVcsCommand, DocumentVcsStore,
             Operation, OperationDiff,
         };
@@ -19095,7 +19095,7 @@ mod tests {
             })
             .expect("apply");
         assert_eq!(store.projection().expect("projection").id, "patched");
-        let replayed = materialize_document_projection(store.envelope(), store.applied_change_ids()).expect("materialize");
+        let replayed = materialize_document_projection(store.envelope(), store.applied_edit_ids()).expect("materialize");
         assert_eq!(replayed.id, "patched");
     }
 

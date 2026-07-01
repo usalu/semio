@@ -262,6 +262,32 @@ export function applyDagFixtureEditOp(fixture: DagFixtureV1, op: DagFixtureEditO
   }
 }
 
+/** @emoji ↩️ Inverts a DAG fixture edit from the pre-apply projection. */
+export function backwardsDagFixtureEditOp(fixture: DagFixtureV1, op: DagFixtureEditOp): readonly DagFixtureEditOp[] {
+  switch (op.op) {
+    case "setDocument":
+      return [{ op: "setDocument", document: fixture }];
+    case "renameNode":
+      return [{ op: "renameNode", oldId: op.newId, newId: op.oldId }];
+    case "patchNode": {
+      const node = fixture.nodes.find((row) => row.id === op.nodeId);
+      if (!node) return [{ op: "setDocument", document: fixture }];
+      return [{ op: "patchNode", nodeId: op.nodeId, field: op.field, value: (node as Record<string, unknown>)[op.field] }];
+    }
+    case "patchNodes":
+      return op.nodeIds.flatMap((nodeId) => {
+        const node = fixture.nodes.find((row) => row.id === nodeId);
+        if (!node) return [];
+        return [{ op: "patchNode", nodeId, field: op.field, value: (node as Record<string, unknown>)[op.field] }];
+      });
+  }
+}
+
+/** @emoji 📊 Returns the DAG fixture edit payload for persistence diffs. */
+export function diffDagFixtureEditOp(_fixture: DagFixtureV1, operation: DagFixtureEditOp): unknown {
+  return operation;
+}
+
 export type DagLayoutOrientation = "leftRight" | "topBottom";
 
 export interface DagReorganizeRequest {

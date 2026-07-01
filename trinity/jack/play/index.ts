@@ -531,15 +531,14 @@ export class TrinityJackPlayController extends Controller implements PlaygroundF
       const escaped = nextName.replace(/'/g, "\\'");
       const fixture = parseTrinityFixtureJson(this.fixtureJson);
       if (!fixture) return;
-      let json = this.fixtureJson;
-      for (const id of nodeIds) {
-        const node = fixture.nodes.find((row) => row.id === id);
-        if (!node) continue;
-        const result = runJackOnFixture(json, `MATCH (n:${node.kind}) WHERE n.id = '${id}' SET n.name = '${escaped}'`);
-        json = result.fixtureJson;
-      }
-      this.setFixtureJson(json);
-      this.bump();
+      const queries = nodeIds
+        .map((id) => {
+          const node = fixture.nodes.find((row) => row.id === id);
+          if (!node) return null;
+          return `MATCH (n:${node.kind}) WHERE n.id = '${id}' SET n.name = '${escaped}'`;
+        })
+        .filter((query): query is string => query !== null);
+      if (queries.length) this.dispatchJackQuery(queries.join("\n"));
       return;
     }
     if (command === "setActiveFixture") {
@@ -701,6 +700,7 @@ if (import.meta.vitest) {
       const ctrl = new TrinityJackPlayController(bus, () => undefined);
       const nodeId = parseTrinityFixtureJson(ctrl.getFixtureJson())!.nodes[0]!.id;
       ctrl.run("patchTrinityNodes", { nodeIds: [nodeId], field: "name", value: "renamed-piece" });
+      completeJackDispatch(ctrl, ctrl.getJackDispatch()?.query);
       const updated = parseTrinityFixtureJson(ctrl.getFixtureJson())!.nodes.find((node) => node.id === nodeId);
       expect(updated?.name).toBe("renamed-piece");
     });

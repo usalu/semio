@@ -51,17 +51,17 @@ import {
 	CANVAS_HOVER_SOURCE_CATALOG,
 	CANVAS_HOVER_SOURCE_HIERARCHY,
 	CANVAS_HOVER_SOURCE_PICK_MENU,
-	DocumentVcsStore,
-	createDocumentVcsEnvelope,
-	recordProjectionChange,
 } from "@semio-tech/framework-core";
+import { DocumentVcsStore, createDocumentVcsEnvelope, recordProjectionChange } from "@semio-tech/vcs-core";
 import { bootstrapElementsSurfaceChromeDocument, type TreeDataItem, type TreeDragAndDropController, type TreeDropPosition } from "@semio-tech/ui-react";
 import {
 	applyRasterEditOp,
+	backwardsRasterEditOp,
 	createRasterAdjustmentLayer,
 	createRasterGroupLayer,
 	createRasterPixelLayer,
 	defaultRasterDocument,
+	diffRasterEditOp,
 	findRasterLayer,
 	flattenRasterLayers,
 	parseRasterDocument,
@@ -729,6 +729,8 @@ export class RasterPlayController extends Controller implements PlaygroundFixtur
 	private readonly docStore = new DocumentVcsStore<RasterDocument, RasterEditOp>({
 		envelope: createDocumentVcsEnvelope("raster.document/v1", "raster-play", RASTER_PLAY_EMPTY_DOCUMENT),
 		applyOp: applyRasterEditOp,
+		backwardsOp: backwardsRasterEditOp,
+		diffOp: diffRasterEditOp,
 	});
 	private selectedIds: string[] = [];
 	private hoveredId: string | null = null;
@@ -855,16 +857,23 @@ export class RasterPlayController extends Controller implements PlaygroundFixtur
 		return this.docStore.projection();
 	}
 
-	private commitDocument(next: RasterDocument, selectLayerId?: string, resetSelection = false): void {
-		const previous = this.projection();
-		recordProjectionChange(this.docStore, [{ op: "setDocument", document: next }]);
-		if (resetSelection) this.selectedIds = next.layers[0] ? [next.layers[0].id] : [];
+	private dispatchEditOp(op: RasterEditOp, selectLayerId?: string, resetSelection = false): void {
+		recordProjectionChange(this.docStore, [op]);
+		const doc = this.projection();
+		if (resetSelection) this.selectedIds = doc.layers[0] ? [doc.layers[0].id] : [];
 		else if (selectLayerId) this.selectedIds = [selectLayerId];
 		this.bump();
 	}
 
+	private dispatchProjectionEdit(edit: (doc: RasterDocument) => RasterDocument, selectLayerId?: string, resetSelection = false): void {
+		const previous = this.projection();
+		const next = edit(previous);
+		if (next === previous) return;
+		this.dispatchEditOp({ op: "setDocument", document: next }, selectLayerId, resetSelection);
+	}
+
 	replaceDocument(doc: RasterDocument, resetSelection = false): void {
-		this.commitDocument(doc, undefined, resetSelection);
+		this.dispatchEditOp({ op: "setDocument", document: doc }, undefined, resetSelection);
 	}
 
 	getDocument(): RasterDocument {
@@ -910,10 +919,6 @@ export class RasterPlayController extends Controller implements PlaygroundFixtur
 		};
 	}
 
-	private patchDocument(edit: (doc: RasterDocument) => RasterDocument, selectLayerId?: string): void {
-		this.commitDocument(edit(this.projection()), selectLayerId);
-	}
-
 	private insertLayerAt(kind: RasterCatalogueLayerKind, targetRowId: string, dropPosition: TreeDropPosition): string {
 		const layer = rasterPlayCreateLayerByKind(kind);
 		const target = resolveRasterPlayReorderTarget(this.projection(), targetRowId, dropPosition === "before" || dropPosition === "after" ? dropPosition : "inside");
@@ -925,8 +930,7 @@ export class RasterPlayController extends Controller implements PlaygroundFixtur
 				: kind === "adjustment"
 					? ({ op: "addAdjustmentLayer", parentId, index, layer } as const)
 					: ({ op: "addPixelLayer", parentId, index, layer } as const);
-		const next = applyRasterEditOp(this.projection(), op);
-		this.commitDocument(next, layer.id);
+		this.dispatchEditOp(op, layer.id);
 		return layer.id;
 	}
 
@@ -939,19 +943,19 @@ export class RasterPlayController extends Controller implements PlaygroundFixtur
 				const zoom = typeof args.value === "number" ? args.value : Number(args.value);
 				if (!Number.isFinite(zoom)) return;
 				const camera = { ...this.projection().camera, zoom };
-				this.commitDocument(applyRasterEditOp(this.projection(), { op: "setCamera", camera }));
+				this.dispatchEditOp({ op: "setCamera", camera });
 				return;
 			}
 			case "setBrushSize": {
 				const size = typeof args.value === "number" ? args.value : Number(args.value);
 				if (!Number.isFinite(size)) return;
-				this.commitDocument(applyRasterEditOp(this.projection(), { op: "setBrushSize", size }));
+				this.dispatchEditOp({ op: "setBrushSize", size });
 				return;
 			}
 			case "setBrushOpacity": {
 				const opacity = typeof args.value === "number" ? args.value : Number(args.value);
 				if (!Number.isFinite(opacity)) return;
-				this.commitDocument({ ...this.projection(), brushOpacity: opacity });
+				this.dispatchEditOp({ op: "setBrushOpacity", opacity });
 				return;
 			}
 			case "setActiveFixture": {
@@ -1012,17 +1016,15 @@ export class RasterPlayController extends Controller implements PlaygroundFixtur
 			}
 			case "setActiveTool": {
 				const tool = String(args.tool ?? "") as RasterToolId;
-				this.commitDocument(applyRasterEditOp(this.projection(), { op: "setActiveTool", tool }));
+				this.dispatchEditOp({ op: "setActiveTool", tool });
 				return;
 			}
 			case "setLayerVisible": {
-				this.commitDocument(
-					applyRasterEditOp(this.projection(), {
-						op: "setLayerVisible",
-						layerId: String(args.layerId),
-						visible: args.visible !== false,
-					}),
-				);
+				this.dispatchEditOp({
+					op: "setLayerVisible",
+					layerId: String(args.layerId),
+					visible: args.visible !== false,
+				});
 				return;
 			}
 			case "addLayer": {
@@ -1035,7 +1037,7 @@ export class RasterPlayController extends Controller implements PlaygroundFixtur
 						: kind === "adjustment"
 							? ({ op: "addAdjustmentLayer", parentId, layer } as const)
 							: ({ op: "addPixelLayer", parentId, layer } as const);
-				this.patchDocument((doc) => applyRasterEditOp(doc, op), layer.id);
+				this.dispatchEditOp(op, layer.id);
 				return;
 			}
 			case "dropLayerKind": {
@@ -1054,34 +1056,33 @@ export class RasterPlayController extends Controller implements PlaygroundFixtur
 				const dropPosition = (args.dropPosition ?? "after") as TreeDropPosition;
 				const target = resolveRasterPlayReorderTarget(this.projection(), targetRowId, dropPosition);
 				if (!target || !layerId) return;
-				this.patchDocument((doc) => applyRasterEditOp(doc, { op: "reorderLayer", layerId, parentId: target.parentId, index: target.index }));
+				this.dispatchEditOp({ op: "reorderLayer", layerId, parentId: target.parentId, index: target.index });
 				return;
 			}
 			case "deleteLayer": {
 				const layerId = String(args.layerId ?? "");
 				if (!layerId) return;
-				const next = applyRasterEditOp(this.projection(), { op: "removeLayer", layerId });
+				this.dispatchEditOp({ op: "removeLayer", layerId });
 				this.selectedIds = this.selectedIds.filter((id) => id !== layerId);
 				if (this.selectedIds.length === 0) {
-					this.selectedIds = flattenRasterLayers(next.layers).map((layer) => layer.id).slice(0, 1);
+					this.selectedIds = flattenRasterLayers(this.projection().layers).map((layer) => layer.id).slice(0, 1);
 				}
-				this.commitDocument(next);
 				return;
 			}
 			case "duplicateLayer": {
 				const layerId = String(args.layerId ?? "");
 				const source = findRasterLayer(this.projection(), layerId);
 				if (!source) return;
-				const next = applyRasterEditOp(this.projection(), { op: "duplicateLayer", layerId });
-				const duplicate = flattenRasterLayers(next.layers).find((layer) => layer.id !== layerId && layer.name === `${source.name} copy`);
-				this.commitDocument(next, duplicate?.id);
+				this.dispatchEditOp({ op: "duplicateLayer", layerId });
+				const duplicate = flattenRasterLayers(this.projection().layers).find((layer) => layer.id !== layerId && layer.name === `${source.name} copy`);
+				if (duplicate) this.selectedIds = [duplicate.id];
 				return;
 			}
 			case "toggleLayerVisible": {
 				const layerId = String(args.layerId ?? "");
 				const layer = findRasterLayer(this.projection(), layerId);
 				if (!layer) return;
-				this.patchDocument((doc) => applyRasterEditOp(doc, { op: "setLayerVisible", layerId, visible: !layer.visible }));
+				this.dispatchEditOp({ op: "setLayerVisible", layerId, visible: !layer.visible });
 				return;
 			}
 			case "addLayerMask": {
@@ -1090,26 +1091,22 @@ export class RasterPlayController extends Controller implements PlaygroundFixtur
 				if (!layer || layer.kind !== "pixel") return;
 				const width = layer.width ?? 512;
 				const height = layer.height ?? 512;
-				this.patchDocument((doc) =>
-					applyRasterEditOp(doc, {
-						op: "setLayerMask",
-						layerId,
-						mask: { enabled: true, linked: true, invert: false, width, height },
-					}),
-				);
+				this.dispatchEditOp({
+					op: "setLayerMask",
+					layerId,
+					mask: { enabled: true, linked: true, invert: false, width, height },
+				});
 				return;
 			}
 			case "appendFilter": {
 				const layerId = String(args.layerId ?? "");
 				const filterKind = String(args.filterKind ?? "");
 				if (!(RASTER_FILTER_KINDS as readonly string[]).includes(filterKind)) return;
-				this.patchDocument((doc) =>
-					applyRasterEditOp(doc, {
-						op: "appendLayerFilter",
-						layerId,
-						filter: { kind: filterKind as (typeof RASTER_FILTER_KINDS)[number], radius: 8 },
-					}),
-				);
+				this.dispatchEditOp({
+					op: "appendLayerFilter",
+					layerId,
+					filter: { kind: filterKind as (typeof RASTER_FILTER_KINDS)[number], radius: 8 },
+				});
 				return;
 			}
 			case "patchLayer": {
@@ -1117,7 +1114,7 @@ export class RasterPlayController extends Controller implements PlaygroundFixtur
 				const field = String(args.field ?? "");
 				const value = args.value ?? args.pressed;
 				if (!layerId || !field) return;
-				this.patchDocument((doc) => rasterPlayPatchLayerField(doc, layerId, field, value));
+				this.dispatchProjectionEdit((doc) => rasterPlayPatchLayerField(doc, layerId, field, value));
 				return;
 			}
 			case "patchLayers": {
@@ -1125,7 +1122,7 @@ export class RasterPlayController extends Controller implements PlaygroundFixtur
 				const field = String(args.field ?? "");
 				const value = args.value ?? args.pressed;
 				if (!layerIds.length || !field) return;
-				this.patchDocument((doc) => {
+				this.dispatchProjectionEdit((doc) => {
 					let next = doc;
 					for (const layerId of layerIds) {
 						next = rasterPlayPatchLayerField(next, layerId, field, value);
@@ -1135,27 +1132,26 @@ export class RasterPlayController extends Controller implements PlaygroundFixtur
 				return;
 			}
 			case "setLayerBlendMode": {
-				this.commitDocument(
-					applyRasterEditOp(this.projection(), {
-						op: "setLayerBlendMode",
-						layerId: String(args.layerId),
-						blendMode: String(args.blendMode) as RasterBlendMode,
-					}),
-				);
+				this.dispatchEditOp({
+					op: "setLayerBlendMode",
+					layerId: String(args.layerId),
+					blendMode: String(args.blendMode) as RasterBlendMode,
+				});
 				return;
 			}
 			case "setCamera": {
 				const camera = args.camera as RasterDocument["camera"];
 				if (camera) {
-					this.commitDocument(applyRasterEditOp(this.projection(), { op: "setCamera", camera }));
+					this.dispatchEditOp({ op: "setCamera", camera });
 				}
 				return;
 			}
 			case "commitDocument": {
 				const document = args.document as RasterDocument;
 				if (!document || document.schema !== "raster.document/v1") return;
-				this.commitDocument(document, typeof args.selectLayerId === "string" ? args.selectLayerId : undefined);
-				if (typeof args.selectLayerId === "string") this.selectedIds = [args.selectLayerId];
+				const selectLayerId = typeof args.selectLayerId === "string" ? args.selectLayerId : undefined;
+				this.dispatchEditOp({ op: "setDocument", document }, selectLayerId);
+				if (selectLayerId) this.selectedIds = [selectLayerId];
 				return;
 			}
 			case "selectAll": {

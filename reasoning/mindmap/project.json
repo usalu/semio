@@ -1,11 +1,11 @@
 {
-  "name": "@semio-tech/framework-vcs-rs",
+  "name": "@semio-tech/reasoning-mindmap-rs",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "wasm": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "framework/rs",
+        "cwd": "reasoning/mindmap",
         "command": "bun ./script.ts wasm"
       },
       "outputs": ["{projectRoot}/pkg"]
@@ -13,8 +13,9 @@
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "framework/rs",
-        "command": "bun ./script.ts test"
+        "cwd": "reasoning/mindmap",
+        "command": "cargo test -p reasoning_mindmap",
+        "forwardAllArgs": true
       }
     }
   }

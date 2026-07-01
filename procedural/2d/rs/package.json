@@ -1,0 +1,8 @@
+{
+  "name": "@semio-tech/procedural-2d-rs",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./pkg/procedural_2d.js"
+  }
+}

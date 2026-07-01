@@ -1,0 +1,8 @@
+{
+  "name": "@semio-tech/reasoning-mindmap-rs",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./pkg/reasoning_mindmap.js"
+  }
+}

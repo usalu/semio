@@ -28,7 +28,7 @@ import * as ToggleGroupPrimitive from "@radix-ui/react-toggle-group";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, OnSelectionChangeParams, ReactFlowInstance } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { domSizePx, resolveColorHex, resolveSemanticColorHex, semanticVar, sizeVar, STYLING_COMPACT_ROOT_PX, STYLING_DOM, themeColorVar, tokenVar } from "@semio-tech/ui-styling";
+import { domSizePx, readSizeVarPx, resolveColorHex, resolveSemanticColorHex, semanticVar, sizeVar, STYLING_COMPACT_ROOT_PX, STYLING_DOM, themeColorVar, tokenVar } from "@semio-tech/ui-styling";
 import {
   CANVAS_HOVER_SOURCE_CANVAS,
   CANVAS_HOVER_SOURCE_PICK_MENU,
@@ -4168,9 +4168,35 @@ export const windowEngagementOverlayFoldedClass = windowMeasuresOverlayFoldedCla
 /** @emoji 📐 Command input body below the engagement chrome bar. */
 export const windowEngagementBodyClass = "flex min-h-0 min-w-0 flex-auto flex-col gap-half overflow-hidden p-tiny";
 
-/** @emoji 📐 Framed window content starts below chrome; edgeless canvas content remains full-bleed. */
-export const windowBodyContentInsetClass =
-  "pt-[calc(var(--size-medium)+2*var(--ui-spacing))] has-[[data-window-content-layout=edgeless]]:pt-0";
+/** @emoji 📐 CSS variable for the first-line scroll clearance under floating window chrome. */
+export const windowChromeScrollClearanceVar = "--window-chrome-scroll-clearance";
+
+/** @emoji 📐 Scrollable window bodies hide the first line under chrome by default; scroll up to reveal it. */
+export const windowContentScrollClearanceClass =
+  "overscroll-contain [scroll-padding-top:var(--window-chrome-scroll-clearance)]";
+
+/** @emoji 📐 Resolves {@link windowChromeScrollClearanceVar} to px for canvas camera offsets. */
+export function readWindowChromeScrollClearancePx(element?: Element | null): number {
+  return readSizeVarPx(windowChromeScrollClearanceVar, element);
+}
+
+const WindowScrollClearanceContext = reactHostPort.createContext(false);
+
+/** @emoji 📐 True when the nearest {@link Window} hosts floating chrome that content may scroll beneath. */
+export function useWindowScrollClearanceActive(): boolean {
+  return reactHostPort.useContext(WindowScrollClearanceContext);
+}
+
+/** @emoji 📐 Sets initial scroll so the first content line sits under window chrome until scrolled up. */
+export function useWindowContentScrollClearance(scrollerRef: React.RefObject<HTMLElement | null>, enabled = true): void {
+  reactHostPort.useLayoutEffect(() => {
+    if (!enabled) return;
+    const el = scrollerRef.current;
+    if (!el) return;
+    const clearance = readWindowChromeScrollClearancePx(el);
+    if (clearance > 0) el.scrollTop = clearance;
+  }, [enabled]);
+}
 
 /** @emoji 📐 Labelled icon action in window rail chrome bars (options + command). */
 export const windowRailChromeLabelActionClass = cn(
@@ -8559,14 +8585,14 @@ function ResizableHandle({
       data-resize-orientation={orientation}
       className={cn(
         "relative flex shrink-0 items-center justify-center border-0 bg-transparent",
-        horizontal ? "h-full min-h-0 w-double cursor-ew-resize" : "w-full min-w-0 h-double cursor-ns-resize",
+        horizontal ? "h-full min-h-0 w-single cursor-ew-resize" : "w-full min-w-0 h-single cursor-ns-resize",
         "data-[separator=hover]:bg-accent/25 data-[separator=active]:bg-accent/25",
         "focus-visible:ring-ring focus-visible:ring-1 focus-visible:ring-offset-1 focus-visible:outline-none",
         "after:hidden",
         className,
       )}
       style={{
-        ...(horizontal ? { width: "var(--spacing-double)" } : { height: "var(--spacing-double)" }),
+        ...(horizontal ? { width: "var(--spacing-single)" } : { height: "var(--spacing-single)" }),
         ...style,
       }}
       {...(props as any)}
@@ -8593,13 +8619,26 @@ export { ResizableHandle, ResizablePanel, ResizablePanelGroup };
 /** @emoji 📜 Native overflow scroll host (avoids Radix ScrollArea `setViewport` / `setScrollbar*Enabled` ref update loops). */
 const Scrollable = reactHostPort.forwardRef<HTMLDivElement, React.ComponentPropsWithoutRef<"div"> & { orientation?: "vertical" | "horizontal" | "both" }>(
   ({ className, children, orientation = "vertical", ...props }, ref) => {
+    const windowScrollClearance = useWindowScrollClearanceActive();
+    const scrollerRef = reactHostPort.useRef<HTMLDivElement | null>(null);
+    const setScrollerRef = reactHostPort.useCallback(
+      (node: HTMLDivElement | null) => {
+        scrollerRef.current = node;
+        if (typeof ref === "function") ref(node);
+        else if (ref) ref.current = node;
+      },
+      [ref],
+    );
+    useWindowContentScrollClearance(scrollerRef, windowScrollClearance);
     return (
       <div
-        ref={ref}
+        ref={setScrollerRef}
         data-slot="scroll-area"
+        data-window-scroll-clearance={windowScrollClearance ? "true" : undefined}
         className={cn(
           "relative min-h-0 min-w-0 size-full focus-visible:ring-ring/50 transition-[color,box-shadow] outline-none focus-visible:ring-[length:var(--stroke-focus)] focus-visible:outline-1",
           orientation === "horizontal" ? "overflow-x-auto overflow-y-hidden" : orientation === "vertical" ? "overflow-y-auto overflow-x-hidden" : "overflow-auto",
+          windowScrollClearance && windowContentScrollClearanceClass,
           className,
         )}
         {...props}
@@ -13475,11 +13514,11 @@ const Panel: React.FC<PanelProps> = ({
   const isHorizontal = resizeSide === "left" || resizeSide === "right";
   const positionStyle = isHorizontal
     ? resizeSide === "right"
-      ? { left: "var(--spacing-double)", top: "var(--spacing-double)", bottom: "var(--spacing-double)", width: `${size}px`, zIndex }
-      : { right: "var(--spacing-double)", top: "var(--spacing-double)", bottom: "var(--spacing-double)", width: `${size}px`, zIndex }
+      ? { left: "var(--spacing-single)", top: "var(--spacing-single)", bottom: "var(--spacing-single)", width: `${size}px`, zIndex }
+      : { right: "var(--spacing-single)", top: "var(--spacing-single)", bottom: "var(--spacing-single)", width: `${size}px`, zIndex }
     : resizeSide === "top"
-      ? { top: "var(--spacing-double)", left: "var(--spacing-double)", right: "var(--spacing-double)", height: `${size}px`, zIndex }
-      : { bottom: "var(--spacing-double)", left: "var(--spacing-double)", right: "var(--spacing-double)", height: `${size}px`, zIndex };
+      ? { top: "var(--spacing-single)", left: "var(--spacing-single)", right: "var(--spacing-single)", height: `${size}px`, zIndex }
+      : { bottom: "var(--spacing-single)", left: "var(--spacing-single)", right: "var(--spacing-single)", height: `${size}px`, zIndex };
   const resizeHandleClass = isHorizontal ? `absolute top-0 bottom-0 ${resizeSide === "left" ? "left-0" : "right-0"} w-single cursor-ew-resize` : `absolute left-0 right-0 ${resizeSide === "top" ? "top-0" : "bottom-0"} h-single cursor-ns-resize`;
   const treeSections = reactHostPort.useMemo<TreeDataSection[]>(() => {
     const nextSections: TreeDataSection[] = [];
@@ -13901,8 +13940,8 @@ const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 
 
   const positionStyle =
     position === "left"
-      ? { left: "var(--spacing-double)", top: "var(--spacing-double)", bottom: "var(--spacing-double)", width: `${size}px`, zIndex }
-      : { right: "var(--spacing-double)", top: "var(--spacing-double)", bottom: "var(--spacing-double)", width: `${size}px`, zIndex };
+      ? { left: "var(--spacing-single)", top: "var(--spacing-single)", bottom: "var(--spacing-single)", width: `${size}px`, zIndex }
+      : { right: "var(--spacing-single)", top: "var(--spacing-single)", bottom: "var(--spacing-single)", width: `${size}px`, zIndex };
 
   const resizeHandleClass = `absolute top-0 bottom-0 z-20 ${resizeSide === "left" ? "left-0" : "right-0"} w-single cursor-ew-resize`;
 
@@ -15213,9 +15252,11 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
         <div
           ref={windowBodyRef}
           data-slot="window-body"
-          className={cn("relative flex min-w-0 flex-col overflow-hidden", windowBodyContentInsetClass, fill ? "min-h-0 flex-1" : "h-auto shrink-0")}
+          className={cn("relative flex min-w-0 flex-col overflow-hidden", fill ? "min-h-0 flex-1" : "h-auto shrink-0")}
         >
-          {error ? <DefaultErrorDisplay error={error} /> : loading && skeleton ? skeleton : children}
+          <WindowScrollClearanceContext.Provider value={!!(engagement || measures)}>
+            {error ? <DefaultErrorDisplay error={error} /> : loading && skeleton ? skeleton : children}
+          </WindowScrollClearanceContext.Provider>
           {measures ? (
             <GlassTierProvider tier="windowOptions">
               <div
@@ -19216,7 +19257,7 @@ VirtualFileSystem.displayName = "VirtualFileSystem";
 export const Canvas: React.FC<{ children: React.ReactNode; id?: string }> = ({ children, id }) => {
   return (
     <LevelProvider level="canvas">
-      <div id={id} data-slot="canvas" className="box-border h-full w-full bg-canvas p-double">
+      <div id={id} data-slot="canvas" className="box-border h-full w-full bg-canvas p-single">
         {children}
       </div>
     </LevelProvider>
@@ -19227,14 +19268,14 @@ export const Canvas: React.FC<{ children: React.ReactNode; id?: string }> = ({ c
  * Layout component arranging windows horizontally.
  **/
 export const HorizontalWindows: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  return <div className="flex flex-row h-full w-full gap-double">{children}</div>;
+  return <div className="flex flex-row h-full w-full gap-single">{children}</div>;
 };
 
 /**
  * Layout component arranging windows vertically.
  **/
 export const VerticalWindows: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  return <div className="flex flex-col h-full w-full gap-double">{children}</div>;
+  return <div className="flex flex-col h-full w-full gap-single">{children}</div>;
 };
 
 // #region 🧭Mode
@@ -19362,8 +19403,8 @@ export interface ModeProps {
 
 //#region 🧭ModeCanvasSpacing
 
-/** @emoji 📐 Canvas inset on {@link Mode} body; inter-panel splitters use the same {@link --spacing-double} step. */
-const MODE_CANVAS_INSET_CLASS = "p-double";
+/** @emoji 📐 Canvas inset on {@link Mode} body; inter-panel splitters use the same {@link --spacing-single} step as navbar and footer chrome. */
+const MODE_CANVAS_INSET_CLASS = "p-single";
 
 //#endregion 🧭ModeCanvasSpacing
 
@@ -21698,9 +21739,9 @@ if (import.meta.vitest) {
       }
       const horizontalHandle = container.querySelector('[data-slot="resizable-handle"]');
       expect(horizontalHandle).toBeTruthy();
-      expect(horizontalHandle!.className).toContain("w-double");
-      expect(horizontalHandle!.className).not.toContain("data-[panel-group-direction=horizontal]:w-double");
-      expect((horizontalHandle as HTMLElement).style.width).toBe("var(--spacing-double)");
+      expect(horizontalHandle!.className).toContain("w-single");
+      expect(horizontalHandle!.className).not.toContain("data-[panel-group-direction=horizontal]:w-single");
+      expect((horizontalHandle as HTMLElement).style.width).toBe("var(--spacing-single)");
     });
 
     it("Mode uses the same gutter for vertical splits as canvas inset", () => {
@@ -21730,8 +21771,8 @@ if (import.meta.vitest) {
       const verticalHandle = container.querySelector('[data-slot="resizable-handle"]') as HTMLElement | null;
       expect(verticalHandle).toBeTruthy();
       expect(verticalHandle!.getAttribute("data-resize-orientation")).toBe("vertical");
-      expect(verticalHandle!.className).toContain("h-double");
-      expect(verticalHandle!.style.height).toBe("var(--spacing-double)");
+      expect(verticalHandle!.className).toContain("h-single");
+      expect(verticalHandle!.style.height).toBe("var(--spacing-single)");
     });
 
     it("Mode renders corner grabs at perpendicular split intersections", () => {
@@ -22724,22 +22765,15 @@ if (import.meta.vitest) {
       expect(shouldRouteKeysToWindowEngagement(text)).toBe(false);
     });
 
-    it("Window reserves the chrome row for framed content and keeps edgeless content full bleed", () => {
-      const { container, rerender } = render(
-        <Window id="framed-window" active engagement={{ input: { placeholder: "Command" } }} measures={<div>LOD</div>}>
-          <div data-window-content-layout="framed">Table</div>
-        </Window>,
-      );
-      const framedBody = container.querySelector('[data-slot="window-body"]');
-      expect(framedBody?.className).toContain("pt-[calc(var(--size-medium)+2*var(--ui-spacing))]");
-      expect(framedBody?.className).toContain("has-[[data-window-content-layout=edgeless]]:pt-0");
-
-      rerender(
+    it("Window keeps all body content edgeless and exposes scroll clearance for floating chrome", () => {
+      const { container } = render(
         <Window id="edgeless-window" active engagement={{ input: { placeholder: "Command" } }} measures={<div>LOD</div>}>
-          <div data-window-content-layout="edgeless">Canvas</div>
+          <div data-window-content-layout="edgeless">Table</div>
         </Window>,
       );
-      expect(container.querySelector('[data-slot="window-body"] [data-window-content-layout="edgeless"]')).toBeTruthy();
+      const body = container.querySelector('[data-slot="window-body"]');
+      expect(body?.className).not.toContain("pt-[calc(var(--size-medium)+2*var(--ui-spacing))]");
+      expect(container.querySelector('[data-window-content-layout="edgeless"]')).toBeTruthy();
     });
 
     it("Window does not route keys to engagement while another input is focused", () => {
