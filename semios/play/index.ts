@@ -56,7 +56,6 @@ import {
 	type StudioCommand,
 } from "@semio-tech/semios-core";
 import { createDrawAppVcsHandler } from "@semio-tech/draw-core";
-import { createFlowAppVcsHandler } from "@semio-tech/flow-core";
 import { createFormsAppVcsHandler } from "@semio-tech/forms-core";
 import { createPresentationAppVcsHandler } from "@semio-tech/framework-presentation-core";
 import { createRasterAppVcsHandler } from "@semio-tech/raster-core";
@@ -121,7 +120,6 @@ function registerSemiosTechnologyAppVcsHandlers(): void {
 	registerAppVcsHandler(createWriterAppVcsHandler());
 	registerAppVcsHandler(createRasterAppVcsHandler());
 	registerAppVcsHandler(createFormsAppVcsHandler());
-	registerAppVcsHandler(createFlowAppVcsHandler());
 	registerAppVcsHandler(createFlowDocumentAppVcsHandler());
 	registerAppVcsHandler(createFlowDagAppVcsHandler());
 	registerAppVcsHandler(createProcedural2dAppVcsHandler());

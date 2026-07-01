@@ -2,11 +2,6 @@
 /** 🧱 `@semio-tech/framework-core` — Render-independent shared framework: declarative {@link UiPrimitiveNode}, layout, toolbar, {@link CommandBus}, {@link Platform} shell, and generic body registries. */
 // #endregion 🧱Header
 
-import {
-	DocumentVcsStore,
-	createDocumentVcsEnvelope,
-} from "./vcs-sync.ts";
-
 //#region 🔖JsonValue
 export type JsonPrimitive = string | number | boolean | null;
 export type JsonValue = JsonPrimitive | readonly JsonValue[] | { readonly [key: string]: JsonValue };
@@ -1508,24 +1503,29 @@ export function createBodyRegistry<TNode>() {
 //#endregion 🔖BodyViewContext
 
 //#region 🔖DocumentVcs
-/** @emoji 🗄️ Document VCS types and sync store — runtime authority is per-technology Rust/WASM crates. */
+/** @emoji 🗄️ Document VCS types and sync store — re-exported from `@semio-tech/vcs-core`. */
 export type {
 	DocumentBackboneRef,
-	DocumentChange,
-	DocumentCheckpoint,
-	DocumentAlternative,
+	Author,
+	Edit,
+	Change,
+	Checkpoint,
+	Alternative,
 	DocumentVcs,
 	DocumentVcsEnvelope,
 	DocumentVcsCommand,
 	DocumentVcsStoreOptions,
-} from "./vcs-sync.ts";
+	HistoryColumn,
+} from "@semio-tech/vcs-core";
 export {
 	createDocumentVcsId,
 	createDocumentVcsEnvelope,
 	materializeDocumentProjection,
+	editIdsForChanges,
+	buildHistoryColumns,
 	DocumentVcsStore,
 	recordProjectionChange,
-} from "./vcs-sync.ts";
+} from "@semio-tech/vcs-core";
 //#endregion 🔖DocumentVcs
 
 //#region 🧪Tests
@@ -1957,11 +1957,17 @@ if (import.meta.vitest) {
 	describe("DocumentVcsStore", () => {
 		type CounterOp = { readonly op: "add"; readonly delta: number };
 		const applyCounterOp = (value: number, operation: CounterOp) => value + operation.delta;
+		const backwardsCounterOp = (value: number, operation: CounterOp): readonly CounterOp[] => [
+			{ op: "add", delta: value - operation.delta },
+		];
+		const diffCounterOp = (_value: number, operation: CounterOp) => operation;
 
 		it("materializes projection through applied changes", () => {
 			const store = new DocumentVcsStore({
 				envelope: createDocumentVcsEnvelope("counter/v1", "c1", 0),
 				applyOp: applyCounterOp,
+				backwardsOp: backwardsCounterOp,
+				diffOp: diffCounterOp,
 			});
 			store.dispatch({ kind: "apply", operations: [{ op: "add", delta: 2 }] });
 			expect(store.projection()).toBe(2);

@@ -4,6 +4,7 @@
   "targets": {
     "test": {
       "executor": "nx:run-commands",
+      "dependsOn": [],
       "options": {
         "cwd": "kernel/2d/js",
         "command": "bun vitest run --config vitest.config.ts"

@@ -9,6 +9,7 @@ crate-type = ["rlib"]
 path = "lib.rs"
 
 [dependencies]
+framework_vcs = { path = "../../framework/rs" }
 mathematical_core = { path = "../../mathematical/core" }
 mathematical_graph_manifest = { path = "../../mathematical/graph/manifest" }
 serde = { version = "1.0.219", features = ["derive"] }

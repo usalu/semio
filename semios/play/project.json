@@ -4,6 +4,7 @@
   "targets": {
     "dev": {
       "executor": "nx:run-commands",
+      "dependsOn": ["@semio-tech/compose-rs:wasm"],
       "options": {
         "cwd": "semios/play",
         "command": "bun ./script.ts dev",

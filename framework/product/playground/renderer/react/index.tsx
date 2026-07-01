@@ -122,6 +122,7 @@ import {
     enforceWindowKindsEngagementInput,
     getSidePanelBodyFactory,
     getWindowBodyFactory,
+    isEdgelessWindowBody,
     isPlaygroundFixtureLocked,
     isPlaygroundNoFixtureId,
     playgroundResolvedFixtureId,
@@ -974,7 +975,10 @@ function getDeclarativeWindowBodyComponent(windowKindId: string, bodyKey: string
       const factory = getWindowBodyFactory(bodyKey);
       const node = factory?.(ctx) ?? { type: "text", value: `Missing declarative body "${bodyKey}"` };
       return (
-        <div className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+        <div
+          data-window-content-layout={isEdgelessWindowBody(node) ? "edgeless" : "framed"}
+          className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
+        >
           <UiRenderer node={node} commandBus={runtime.commandBus} />
         </div>
       );
@@ -6226,8 +6230,8 @@ import {
     buildMapPlayInspectorTree,
     buildMapPlayMainDeclarativeBody,
     type MapPlayController
-} from "@semio-tech/gis-map-play";
-import { MapCanvas, Position, Route, type GisMapLodId, type MapContextMenuContext, type MapHoveredFeature, type MapSelectPayload } from "@semio-tech/gis-map-react";
+} from "@semio-tech/gis-2d-play";
+import { MapCanvas, Position, Route, type GisMapLodId, type MapContextMenuContext, type MapHoveredFeature, type MapSelectPayload } from "@semio-tech/gis-2d-react";
 
 let mapPlayChromeRegistered = false;
 const mapPlayControllerRef: { current: MapPlayController | null } = { current: null };
@@ -6987,10 +6991,13 @@ import {
   TRINITY_REWRITE_PLAY_WINDOW_KIND_LHS,
   TRINITY_REWRITE_PLAY_WINDOW_KIND_RHS,
   TrinityRewritePlayController,
+  REWRITE_DEFAULT_LHS_FIXTURE,
   REWRITE_DEFAULT_LHS_FIXTURE_JSON,
+  REWRITE_DEFAULT_RHS_FIXTURE,
   REWRITE_DEFAULT_RHS_FIXTURE_JSON,
   rewriteLhsKindCatalogs,
   rewriteRhsKindCatalogs,
+  parseRewriteGraphFixtureJson,
   buildTrinityPlayCatalogueTree,
   registerTrinityRewritePlayDeclarativeBodies,
 } from "@semio-tech/trinity-rewrite-play";
@@ -7003,7 +7010,7 @@ import {
   type TrinityDrawLodKind,
 } from "@semio-tech/trinity-react";
 import { FormRenderer } from "@semio-tech/forms-react";
-import { Puzzle2dCanvas } from "@semio-tech/puzzle-2d-react";
+import { Puzzle2dCanvas, buildPuzzle2dSceneDescriptorFromFixture, type Puzzle2dHoverPayload } from "@semio-tech/puzzle-2d-react";
 import { createWorkerLspTransport, createWriterDocument } from "@semio-tech/writer-core";
 import { WriterCanvas } from "@semio-tech/writer-react";
 import { CodeEditor } from "@semio-tech/framework-platform-renderer-react";
@@ -7084,6 +7091,8 @@ function TrinityJackPlaySurfaceHost({ node }: { readonly node: UiTrinityHostSurf
   const scopeId = node.paneId ?? TRINITY_JACK_PLAY_WINDOW_KIND_ID;
   const lodProps = trinityLodCanvasProps(ctrl?.lodModeForScope(scopeId) ?? TRINITY_LOD_MODE_AUTOMATIC);
   const onFixtureChange = reactHostPort.useCallback((json: string) => ctrl?.run("setFixtureJson", { json }), [ctrl]);
+  const onJackDispatchComplete = reactHostPort.useCallback((resultJson: string) => ctrl?.onJackDispatchComplete(resultJson), [ctrl]);
+  const onVcsApplied = reactHostPort.useCallback((generation: number) => ctrl?.onVcsApplied(generation), [ctrl]);
   const onSelectionChange = reactHostPort.useCallback((ids: readonly string[]) => ctrl?.run("setSelection", { ids: [...ids] }), [ctrl]);
   const onLodChange = reactHostPort.useCallback(
     (lod: TrinityDrawLodKind) => {
@@ -7096,7 +7105,11 @@ function TrinityJackPlaySurfaceHost({ node }: { readonly node: UiTrinityHostSurf
     <TrinityCanvas
       fixtureJson={ctrl?.getFixtureJson() ?? TRINITY_JACK_PLAY_DEFAULT_FIXTURE_JSON}
       reorganize={ctrl?.getReorganize()}
+      jackDispatch={ctrl?.getJackDispatch()}
+      vcsRequest={ctrl?.getVcsRequest()}
       onFixtureChange={onFixtureChange}
+      onJackDispatchComplete={onJackDispatchComplete}
+      onVcsApplied={onVcsApplied}
       onSelectionChange={onSelectionChange}
       {...lodProps}
       onLodChange={onLodChange}
@@ -7189,6 +7202,7 @@ function TrinityRewriteBeforeSurfaceHost({ node }: { readonly node: UiTrinityHos
   const scopeId = node.paneId ?? TRINITY_REWRITE_PLAY_WINDOW_KIND_BEFORE;
   const lodProps = trinityLodCanvasProps(ctrl?.lodModeForScope(scopeId) ?? TRINITY_LOD_MODE_AUTOMATIC);
   const onFixtureChange = reactHostPort.useCallback((json: string) => ctrl?.run("setFixtureJson", { json }), [ctrl]);
+  const onVcsApplied = reactHostPort.useCallback((generation: number) => ctrl?.onVcsApplied(generation), [ctrl]);
   const onSelectionChange = reactHostPort.useCallback((ids: readonly string[]) => ctrl?.run("setSelection", { ids: [...ids] }), [ctrl]);
   const onLodChange = reactHostPort.useCallback(
     (lod: TrinityDrawLodKind) => {
@@ -7197,11 +7211,17 @@ function TrinityRewriteBeforeSurfaceHost({ node }: { readonly node: UiTrinityHos
     [ctrl, scopeId],
   );
   void revision;
+  void ctrl?.getHoverEpoch();
+  void ctrl?.getSelectEpoch();
   return (
     <TrinityCanvas
       fixtureJson={ctrl?.getBeforeFixtureJson() ?? TRINITY_DEFAULT_FIXTURE_JSON}
       reorganize={ctrl?.getReorganize()}
+      vcsRequest={ctrl?.getVcsRequest()}
+      highlightedNodeIds={ctrl?.getBeforeHighlightedNodeIds()}
+      highlightedNodeIdsSignal={ctrl?.getHoverEpoch() + ctrl?.getSelectEpoch()}
       onFixtureChange={onFixtureChange}
+      onVcsApplied={onVcsApplied}
       onSelectionChange={onSelectionChange}
       {...lodProps}
       onLodChange={onLodChange}
@@ -7222,9 +7242,13 @@ function TrinityRewriteAfterSurfaceHost({ node }: { readonly node: UiTrinityHost
     [ctrl, scopeId],
   );
   void revision;
+  void ctrl?.getHoverEpoch();
+  void ctrl?.getSelectEpoch();
   return (
     <TrinityCanvas
       fixtureJson={ctrl?.getAfterFixtureJson() ?? TRINITY_DEFAULT_FIXTURE_JSON}
+      highlightedNodeIds={ctrl?.getAfterHighlightedNodeIds()}
+      highlightedNodeIdsSignal={ctrl?.getHoverEpoch() + ctrl?.getSelectEpoch()}
       {...lodProps}
       onLodChange={onLodChange}
       className="h-full min-h-0"
@@ -7237,16 +7261,49 @@ function TrinityRewriteLhsSurfaceHost({ node: _node }: { readonly node: UiPuzzle
   const revision = useTrinityRewriteInteractionRevision(appCtx?.runtime);
   const ctrl = useTrinityRewriteController();
   const kindCatalogs = reactHostPort.useMemo(() => rewriteLhsKindCatalogs(), []);
-  const onFixtureChange = reactHostPort.useCallback((json: string) => {
-    trinityRewriteControllerRef.current?.run("setLhsFixtureJson", { json });
+  const fixture = reactHostPort.useMemo(() => {
+    return parseRewriteGraphFixtureJson(ctrl?.getLhsFixtureJson() ?? REWRITE_DEFAULT_LHS_FIXTURE_JSON) ?? REWRITE_DEFAULT_LHS_FIXTURE;
+  }, [ctrl, revision]);
+  const declarativeSceneDescriptor = reactHostPort.useMemo(() => buildPuzzle2dSceneDescriptorFromFixture(fixture), [fixture]);
+  const onDragEnd = reactHostPort.useCallback(
+    (payload: { moves: Array<{ id: string; x: number; y: number }> }) => {
+      if (!payload.moves.length) return;
+      const current = parseRewriteGraphFixtureJson(trinityRewriteControllerRef.current?.getLhsFixtureJson() ?? REWRITE_DEFAULT_LHS_FIXTURE_JSON);
+      if (!current) return;
+      const byId = new Map(payload.moves.map((move) => [move.id, move]));
+      trinityRewriteControllerRef.current?.run("setLhsFixtureJson", {
+        json: JSON.stringify({
+          ...current,
+          nodes: current.nodes.map((entry) => {
+            const move = byId.get(entry.id);
+            return move ? { ...entry, x: move.x, y: move.y } : entry;
+          }),
+        }),
+      });
+    },
+    [],
+  );
+  const onHover = reactHostPort.useCallback((payload: Puzzle2dHoverPayload) => {
+    trinityRewriteControllerRef.current?.run("setLhsGraphHover", { id: payload.id });
+  }, []);
+  const onSelect = reactHostPort.useCallback((snapshot: { ids: readonly string[] }) => {
+    trinityRewriteControllerRef.current?.run("setLhsGraphSelect", { ids: [...snapshot.ids] });
   }, []);
   void revision;
+  void ctrl?.getHoverEpoch();
+  void ctrl?.getSelectEpoch();
   return (
     <Puzzle2dCanvas
-      fixtureJson={ctrl?.getLhsFixtureJson() ?? REWRITE_DEFAULT_LHS_FIXTURE_JSON}
+      declarativeSceneDescriptor={declarativeSceneDescriptor}
+      camera={fixture.camera}
       kindCatalogs={kindCatalogs}
       fixtureDragDrop
-      onFixtureChange={onFixtureChange}
+      hoveredId={ctrl?.getLhsHoveredNodeId() ?? null}
+      preselection={ctrl?.getLhsVarPreselection()}
+      selection={ctrl?.getLhsVarSelection()}
+      onDragEnd={onDragEnd}
+      onHover={onHover}
+      onSelect={onSelect}
       className="h-full min-h-0"
     />
   );
@@ -7257,16 +7314,49 @@ function TrinityRewriteRhsSurfaceHost({ node: _node }: { readonly node: UiPuzzle
   const revision = useTrinityRewriteInteractionRevision(appCtx?.runtime);
   const ctrl = useTrinityRewriteController();
   const kindCatalogs = reactHostPort.useMemo(() => rewriteRhsKindCatalogs(), []);
-  const onFixtureChange = reactHostPort.useCallback((json: string) => {
-    trinityRewriteControllerRef.current?.run("setRhsFixtureJson", { json });
+  const fixture = reactHostPort.useMemo(() => {
+    return parseRewriteGraphFixtureJson(ctrl?.getRhsFixtureJson() ?? REWRITE_DEFAULT_RHS_FIXTURE_JSON) ?? REWRITE_DEFAULT_RHS_FIXTURE;
+  }, [ctrl, revision]);
+  const declarativeSceneDescriptor = reactHostPort.useMemo(() => buildPuzzle2dSceneDescriptorFromFixture(fixture), [fixture]);
+  const onDragEnd = reactHostPort.useCallback(
+    (payload: { moves: Array<{ id: string; x: number; y: number }> }) => {
+      if (!payload.moves.length) return;
+      const current = parseRewriteGraphFixtureJson(trinityRewriteControllerRef.current?.getRhsFixtureJson() ?? REWRITE_DEFAULT_RHS_FIXTURE_JSON);
+      if (!current) return;
+      const byId = new Map(payload.moves.map((move) => [move.id, move]));
+      trinityRewriteControllerRef.current?.run("setRhsFixtureJson", {
+        json: JSON.stringify({
+          ...current,
+          nodes: current.nodes.map((entry) => {
+            const move = byId.get(entry.id);
+            return move ? { ...entry, x: move.x, y: move.y } : entry;
+          }),
+        }),
+      });
+    },
+    [],
+  );
+  const onHover = reactHostPort.useCallback((payload: Puzzle2dHoverPayload) => {
+    trinityRewriteControllerRef.current?.run("setRhsGraphHover", { id: payload.id });
+  }, []);
+  const onSelect = reactHostPort.useCallback((snapshot: { ids: readonly string[] }) => {
+    trinityRewriteControllerRef.current?.run("setRhsGraphSelect", { ids: [...snapshot.ids] });
   }, []);
   void revision;
+  void ctrl?.getHoverEpoch();
+  void ctrl?.getSelectEpoch();
   return (
     <Puzzle2dCanvas
-      fixtureJson={ctrl?.getRhsFixtureJson() ?? REWRITE_DEFAULT_RHS_FIXTURE_JSON}
+      declarativeSceneDescriptor={declarativeSceneDescriptor}
+      camera={fixture.camera}
       kindCatalogs={kindCatalogs}
       fixtureDragDrop
-      onFixtureChange={onFixtureChange}
+      hoveredId={ctrl?.getRhsHoveredNodeId() ?? null}
+      preselection={ctrl?.getRhsVarPreselection()}
+      selection={ctrl?.getRhsVarSelection()}
+      onDragEnd={onDragEnd}
+      onHover={onHover}
+      onSelect={onSelect}
       className="h-full min-h-0"
     />
   );
@@ -7277,8 +7367,28 @@ function TrinityRewriteJackSurfaceHost({ node: _node }: { readonly node: import(
   const revision = useTrinityRewriteInteractionRevision(appCtx?.runtime);
   const ctrl = useTrinityRewriteController();
   void revision;
+  void ctrl?.getHoverEpoch();
+  void ctrl?.getSelectEpoch();
   const document = ctrl?.getWriterDocumentJack() ?? createWriterDocument({ id: "rewrite-jack", languageId: "jack", text: "" });
-  return <WriterCanvas document={document} className="h-full" placeholder="Generated Jack query" />;
+  const onHoverChange = reactHostPort.useCallback((offset: number | null) => {
+    trinityRewriteControllerRef.current?.run("setJackHover", { offset });
+  }, []);
+  const onSelectionChange = reactHostPort.useCallback((range: { start: number; end: number }) => {
+    trinityRewriteControllerRef.current?.run("setJackSelect", range);
+  }, []);
+  return (
+    <WriterCanvas
+      document={document}
+      className="h-full"
+      placeholder="Generated Jack query"
+      onHoverChange={onHoverChange}
+      onSelectionChange={onSelectionChange}
+      externalHoverOccurrences={ctrl?.getJackHoverOccurrences()}
+      externalHoverOccurrencesSignal={ctrl?.getHoverEpoch()}
+      externalSelectionOccurrences={ctrl?.getJackSelectOccurrences()}
+      externalSelectionOccurrencesSignal={ctrl?.getSelectEpoch()}
+    />
+  );
 }
 
 function TrinityRewriteParametersSurfaceHost({ node: _node }: { readonly node: UiFormsHostSurfaceNode }): ReactElement {

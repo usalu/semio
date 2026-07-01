@@ -1,0 +1,18 @@
+{
+  "title": "Extract VCS Technology",
+  "emoji": "🗄️",
+  "status": "open",
+  "description": "Extract version control from framework into vcs technology with 5-entity model, history playground, and wire all consumers.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1785"
+  },
+  "goal": "🎯semios🎯fullcqrsunification",
+  "plan": {
+    "client": "cursor",
+    "id": "0a322e7e",
+    "source": "/Users/ueli/Documents/semio/.cursor/plans/extract_vcs_technology_0a322e7e.plan.md"
+  },
+  "sessions": [
+    "⚪9a358e904f744bdb94a0f7fb551b3a4b"
+  ]
+}

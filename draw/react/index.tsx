@@ -25,7 +25,7 @@ import {
 	createDefaultDrawingWasmBridge,
 	type DrawingExportBridge,
 	type PathSegment as KernelPathSegment,
-} from "@semio-tech/geometry-drawing-js";
+} from "@semio-tech/kernel-2d-js";
 import {
 	applyDrawEditOp,
 	createDrawPathLayer,

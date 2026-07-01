@@ -9,7 +9,7 @@ import {
 	createDocumentVcsEnvelope,
 	type DocumentVcsEnvelope,
 	materializeDocumentProjection,
-} from "@semio-tech/framework-core";
+} from "@semio-tech/vcs-core";
 
 // #region 📐Types
 export type Vec2 = readonly [number, number];
@@ -1312,6 +1312,16 @@ export function applyDrawEditOp(doc: DrawDocument, edit: DrawEditOp): DrawDocume
 //#region 🔖DocumentVcs
 export type DrawDocumentVcsEnvelope = DocumentVcsEnvelope<DrawDocument, DrawEditOp>;
 
+/** @emoji ↩️ Inverts a draw edit from the current projection (setDocument snapshot). */
+export function backwardsDrawEditOp(projection: DrawDocument, _operation: DrawEditOp): readonly DrawEditOp[] {
+	return [{ op: "setDocument", document: projection }];
+}
+
+/** @emoji 📊 Returns the draw edit payload for persistence diffs. */
+export function diffDrawEditOp(_projection: DrawDocument, operation: DrawEditOp): unknown {
+	return operation;
+}
+
 /** @emoji 📦 Creates a draw document VCS envelope with an empty or seeded projection. */
 export function createDrawDocumentVcsEnvelope(id: string, projection: DrawDocument = defaultDrawDocument(id)): DrawDocumentVcsEnvelope {
 	return createDocumentVcsEnvelope("draw.document/v1", id, projection);
@@ -1333,7 +1343,7 @@ export function createDrawAppVcsHandler() {
 		materializeProjection: (source: { readonly vcsJson?: string; readonly inline?: string }) => {
 			if (source.vcsJson) {
 				const envelope = JSON.parse(source.vcsJson) as DrawDocumentVcsEnvelope;
-				return materializeDrawDocument(envelope, envelope.vcs.operations.map((change) => change.id));
+				return materializeDrawDocument(envelope, envelope.vcs.edits.map((edit) => edit.id));
 			}
 			if (source.inline) return drawDocumentFromJson(source.inline);
 			return defaultDrawDocument("draw");

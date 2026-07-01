@@ -637,13 +637,16 @@ export class FormsPlayController extends Controller implements PlaygroundFixture
 		return this.docStore.projection();
 	}
 
-	private commitDocument(next: FormSpec): void {
-		const previous = this.projection();
-		recordProjectionChange(this.docStore, [{ op: "setDocument", document: next }]);
+	private applySpecEdit(op: FormEditOp): void {
+		recordProjectionChange(this.docStore, [op]);
 		this.tryValues = {};
 		this.rebuildShellMode();
 		this.notifySnapshot();
 		this.emit();
+	}
+
+	private commitDocument(next: FormSpec): void {
+		this.applySpecEdit({ op: "setDocument", document: next });
 	}
 
 	replaceDocument(spec: FormSpec): void {
@@ -691,7 +694,7 @@ export class FormsPlayController extends Controller implements PlaygroundFixture
 	}
 
 	private setSpec(spec: FormSpec): void {
-		this.commitDocument(spec);
+		this.applySpecEdit({ op: "setDocument", document: spec });
 	}
 
 	private editMeasures(): readonly WindowMeasure[] {
@@ -781,13 +784,10 @@ export class FormsPlayController extends Controller implements PlaygroundFixture
 			const entry = options[index];
 			if (!entry) return;
 			options[index] = { ...entry, [part!]: String(rawValue ?? "") };
-			this.setSpec({
-				...this.projection(),
-				steps: this.projection().steps.map((step) =>
-					step.id === location.stepId
-						? { ...step, questions: step.questions.map((entry) => (entry.id === questionId ? ({ ...question, options } as FormQuestion) : entry)) }
-						: step,
-				),
+			this.applySpecEdit({
+				op: "updateQuestion",
+				stepId: location.stepId,
+				question: { ...question, options } as FormQuestion,
 			});
 			return;
 		}
@@ -800,25 +800,17 @@ export class FormsPlayController extends Controller implements PlaygroundFixture
 			if (!entry) return;
 			const nextValue = part === "value" ? Number(rawValue) : String(rawValue ?? "");
 			vectorFields[index] = { ...entry, [part!]: nextValue };
-			this.setSpec({
-				...this.projection(),
-				steps: this.projection().steps.map((step) =>
-					step.id === location.stepId
-						? { ...step, questions: step.questions.map((entry) => (entry.id === questionId ? ({ ...question, fields: vectorFields } as FormQuestion) : entry)) }
-						: step,
-				),
+			this.applySpecEdit({
+				op: "updateQuestion",
+				stepId: location.stepId,
+				question: { ...question, fields: vectorFields } as FormQuestion,
 			});
 			return;
 		}
 		let value: unknown = rawValue;
 		if (field === "options" || field === "fields") {
 			const nextQuestion = { ...question, [field]: rawValue } as FormQuestion;
-			this.setSpec({
-				...this.projection(),
-				steps: this.projection().steps.map((step) =>
-					step.id === location.stepId ? { ...step, questions: step.questions.map((entry) => (entry.id === questionId ? nextQuestion : entry)) } : step,
-				),
-			});
+			this.applySpecEdit({ op: "updateQuestion", stepId: location.stepId, question: nextQuestion });
 			return;
 		}
 		if (field === "required") value = Boolean(rawValue);
@@ -828,12 +820,7 @@ export class FormsPlayController extends Controller implements PlaygroundFixture
 		else if (field === "default" && question.kind === "vector" && Array.isArray(rawValue)) value = rawValue;
 		else if (field === "min" || field === "max" || field === "step" || (field === "default" && (question.kind === "number" || question.kind === "slider"))) value = Number(rawValue);
 		const nextQuestion = { ...question, [field]: value } as FormQuestion;
-		this.setSpec({
-			...this.projection(),
-			steps: this.projection().steps.map((step) =>
-				step.id === location.stepId ? { ...step, questions: step.questions.map((entry) => (entry.id === questionId ? nextQuestion : entry)) } : step,
-			),
-		});
+		this.applySpecEdit({ op: "updateQuestion", stepId: location.stepId, question: nextQuestion });
 	}
 
 	getFixtureCatalog(): PlaygroundFixtureCatalog {
@@ -876,25 +863,21 @@ export class FormsPlayController extends Controller implements PlaygroundFixture
 		}
 		if (command === "addStep") {
 			const stepId = createFormId("step");
-			this.setSpec(
-				applyFormEditOp(this.projection(), {
-					op: "addStep",
-					step: { id: stepId, title: `Step ${this.projection().steps.length + 1}`, questions: [] },
-				}),
-			);
+			this.applySpecEdit({
+				op: "addStep",
+				step: { id: stepId, title: `Step ${this.projection().steps.length + 1}`, questions: [] },
+			});
 			return;
 		}
 		if (command === "addQuestion") {
 			const kind = (args as { kind?: string }).kind ?? "text";
 			const stepId = (args as { stepId?: string }).stepId ?? this.projection().steps[0]?.id;
 			if (!stepId) return;
-			this.setSpec(
-				applyFormEditOp(this.projection(), {
-					op: "addQuestion",
-					stepId,
-					question: defaultQuestionForKind(kind, createFormId("q")),
-				}),
-			);
+			this.applySpecEdit({
+				op: "addQuestion",
+				stepId,
+				question: defaultQuestionForKind(kind, createFormId("q")),
+			});
 			return;
 		}
 		if (command === "dropQuestionKind") {
@@ -905,14 +888,12 @@ export class FormsPlayController extends Controller implements PlaygroundFixture
 			const stepId = resolveStepIdFromTreeTarget(this.projection(), targetId);
 			if (!stepId) return;
 			const index = resolveQuestionInsertIndex(this.projection(), stepId, targetId, dropPosition);
-			this.setSpec(
-				applyFormEditOp(this.projection(), {
-					op: "addQuestion",
-					stepId,
-					index,
-					question: defaultQuestionForKind(kind, createFormId("q")),
-				}),
-			);
+			this.applySpecEdit({
+				op: "addQuestion",
+				stepId,
+				index,
+				question: defaultQuestionForKind(kind, createFormId("q")),
+			});
 			return;
 		}
 		if (command === "moveQuestion") {
@@ -924,22 +905,20 @@ export class FormsPlayController extends Controller implements PlaygroundFixture
 			const source = findQuestionLocation(this.projection(), questionId);
 			if (!source) return;
 			const index = resolveQuestionInsertIndex(this.projection(), toStepId, targetId, position);
-			this.setSpec(
-				applyFormEditOp(this.projection(), {
-					op: "moveQuestion",
-					questionId,
-					fromStepId: source.stepId,
-					toStepId,
-					index: index ?? 0,
-				}),
-			);
+			this.applySpecEdit({
+				op: "moveQuestion",
+				questionId,
+				fromStepId: source.stepId,
+				toStepId,
+				index: index ?? 0,
+			});
 			return;
 		}
 		if (command === "moveStep") {
 			const stepId = (args as { stepId?: string }).stepId;
 			const index = (args as { index?: number }).index;
 			if (!stepId || typeof index !== "number") return;
-			this.setSpec(applyFormEditOp(this.projection(), { op: "moveStep", stepId, index }));
+			this.applySpecEdit({ op: "moveStep", stepId, index });
 			return;
 		}
 		if (command === "patchQuestion") {

@@ -2003,9 +2003,22 @@ export type PresentationDeckV1 = {
 
 export type PresentationEditOp =
 	| { readonly op: "setSource"; readonly source: FigureTileSource }
+	| { readonly op: "replaceSource"; readonly source: FigureTileSource; readonly resetTiles: boolean }
+	| { readonly op: "setSourceFrame"; readonly frame: FigureTileSource["frame"] }
 	| { readonly op: "addTile"; readonly tile: FigureTileDraft; readonly index?: number }
 	| { readonly op: "removeTile"; readonly tileId: string }
+	| { readonly op: "removeTiles"; readonly tileIds: readonly string[] }
 	| { readonly op: "renameTile"; readonly tileId: string; readonly name: string }
+	| { readonly op: "renameTiles"; readonly tileIds: readonly string[]; readonly name: string }
+	| { readonly op: "setTiles"; readonly tiles: readonly FigureTileDraft[] }
+	| { readonly op: "clearTiles" }
+	| { readonly op: "patchTileCrop"; readonly tileId: string; readonly crop: FigureTileDraft["crop"] }
+	| {
+			readonly op: "patchTileCrops";
+			readonly tileIds: readonly string[];
+			readonly field: keyof FigureTileDraft["crop"];
+			readonly value: number;
+	  }
 	| { readonly op: "setDocument"; readonly document: PresentationDeckV1 };
 
 export type PresentationDeckVcsEnvelope = DocumentVcsEnvelope<PresentationDeckV1, PresentationEditOp>;
@@ -2016,10 +2029,23 @@ const PRESENTATION_DECK_EMPTY = (): PresentationDeckV1 => ({
 	tiles: [],
 });
 
+/** @emoji 📐 Clamps one tile crop rect to normalized source bounds. */
+export function clampTileCrop(crop: FigureTileDraft["crop"]): FigureTileDraft["crop"] {
+	const width = Math.max(NORMALIZED_RECT_MIN_FRACTION, crop.width);
+	const height = Math.max(NORMALIZED_RECT_MIN_FRACTION, crop.height);
+	const x = clampNormalizedFraction(Math.min(crop.x, 1 - width));
+	const y = clampNormalizedFraction(Math.min(crop.y, 1 - height));
+	return { x, y, width, height };
+}
+
 export function applyPresentationEditOp(deck: PresentationDeckV1, op: PresentationEditOp): PresentationDeckV1 {
 	switch (op.op) {
 		case "setSource":
 			return { ...deck, source: op.source };
+		case "replaceSource":
+			return { ...deck, source: op.source, tiles: op.resetTiles ? [] : deck.tiles };
+		case "setSourceFrame":
+			return { ...deck, source: { ...deck.source, frame: op.frame } };
 		case "addTile": {
 			const tiles = [...deck.tiles];
 			tiles.splice(op.index ?? tiles.length, 0, op.tile);
@@ -2027,11 +2053,37 @@ export function applyPresentationEditOp(deck: PresentationDeckV1, op: Presentati
 		}
 		case "removeTile":
 			return { ...deck, tiles: deck.tiles.filter((tile) => tile.id !== op.tileId) };
+		case "removeTiles": {
+			const remove = new Set(op.tileIds);
+			return { ...deck, tiles: deck.tiles.filter((tile) => !remove.has(tile.id)) };
+		}
 		case "renameTile":
+			return applyPresentationEditOp(deck, { op: "renameTiles", tileIds: [op.tileId], name: op.name });
+		case "renameTiles": {
+			const targets = new Set(op.tileIds);
 			return {
 				...deck,
-				tiles: deck.tiles.map((tile) => (tile.id === op.tileId ? { ...tile, name: op.name } : tile)),
+				tiles: deck.tiles.map((tile) => (targets.has(tile.id) ? { ...tile, name: op.name } : tile)),
 			};
+		}
+		case "setTiles":
+			return { ...deck, tiles: [...op.tiles] };
+		case "clearTiles":
+			return { ...deck, tiles: [] };
+		case "patchTileCrop":
+			return {
+				...deck,
+				tiles: deck.tiles.map((tile) => (tile.id === op.tileId ? { ...tile, crop: clampTileCrop(op.crop) } : tile)),
+			};
+		case "patchTileCrops": {
+			const targets = new Set(op.tileIds);
+			return {
+				...deck,
+				tiles: deck.tiles.map((tile) =>
+					targets.has(tile.id) ? { ...tile, crop: clampTileCrop({ ...tile.crop, [op.field]: op.value }) } : tile,
+				),
+			};
+		}
 		case "setDocument":
 			return op.document;
 	}

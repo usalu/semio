@@ -1071,6 +1071,10 @@ export function playgroundRendererResolveAliases(repoRoot: string): ReadonlyArra
     { find: "@semio-tech/shooting-react", replacement: resolve(repoRoot, "shooting/react/index.tsx") },
     { find: "@semio-tech/kernel-3d-js", replacement: resolve(repoRoot, "kernel/3d/js/index.ts") },
     { find: "@semio-tech/kernel-2d-js", replacement: resolve(repoRoot, "kernel/2d/js/index.ts") },
+    { find: "@semio-tech/compose-rs-wasm", replacement: resolve(repoRoot, "compose/client/lib/rs/pkg/compose.js") },
+    { find: "@semio-tech/compose-js", replacement: resolve(repoRoot, "compose/client/lib/js/index.ts") },
+    { find: "@semio-tech/compose-sketchpad", replacement: resolve(repoRoot, "compose/client/lib/sketchpad/js/index.ts") },
+    { find: "@semio-tech/compose-react", replacement: resolve(repoRoot, "compose/client/lib/react/index.tsx") },
   ];
 }
 

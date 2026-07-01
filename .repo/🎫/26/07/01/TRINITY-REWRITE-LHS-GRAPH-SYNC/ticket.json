@@ -1,0 +1,19 @@
+{
+  "title": "Trinity Rewrite Lhs Graph Sync",
+  "emoji": "♻️",
+  "status": "closed",
+  "description": "Fix trinity/rewrite LHS/RHS pattern graph rendering (broken Puzzle2dCanvas wiring), add variable-name label clarity, bidirectional hover/selection bridge between LHS/RHS graphs and generated Jack query text, and extend to Before/After bound-node highlighting.",
+  "summary": "Fixed Trinity Rewrite LHS/RHS pattern graph rendering and completed the bidirectional hover/selection bridge.\n\n**Root cause (rendering):** Rewrite fixture handles used short ids (`out`/`in`) while edges referenced qualified endpoints (`match-a:out`). Puzzle2d deferred WASM scene push until edges synced, so nodes never painted.\n\n**Fix:** `rewriteGraphNode` now emits node-qualified handle ids (`${nodeId}:in|out`). Added `rewrite-lhs`/`rewrite-rhs` to `fixtureMetaKindCatalogBundle`.\n\n**Also delivered:** Puzzle2dCanvas wiring for LHS/RHS hosts, `var : Kind` labels, writer external occurrence props, controller bridge (LHS/RHS/Jack + Before/After highlighted_ids), tests (28 vitest in trinity-rewrite-play). Browser verified on :6069 — LHS/RHS graphs render with nodes and flow edges.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1783"
+  },
+  "goal": "🎯trinity",
+  "plan": {
+    "client": "cursor",
+    "id": "e3116e2a",
+    "local": "trinity_rewrite_lhs_graph_sync_e3116e2a.plan.md"
+  },
+  "sessions": [
+    "⚪d06e73ded98b4a5c847c7be6384167d1"
+  ]
+}

@@ -4168,6 +4168,10 @@ export const windowEngagementOverlayFoldedClass = windowMeasuresOverlayFoldedCla
 /** @emoji 📐 Command input body below the engagement chrome bar. */
 export const windowEngagementBodyClass = "flex min-h-0 min-w-0 flex-auto flex-col gap-half overflow-hidden p-tiny";
 
+/** @emoji 📐 Framed window content starts below chrome; edgeless canvas content remains full-bleed. */
+export const windowBodyContentInsetClass =
+  "pt-[calc(var(--size-medium)+2*var(--ui-spacing))] has-[[data-window-content-layout=edgeless]]:pt-0";
+
 /** @emoji 📐 Labelled icon action in window rail chrome bars (options + command). */
 export const windowRailChromeLabelActionClass = cn(
   "flex h-medium w-auto items-center justify-center border-0 bg-transparent text-element px-single gap-single",
@@ -14386,6 +14390,7 @@ export function isUiTypingTarget(t: EventTarget | null): boolean {
   if (!(t instanceof HTMLElement)) return false;
   if (t instanceof HTMLTextAreaElement || t instanceof HTMLSelectElement) return true;
   if (t.isContentEditable) return true;
+  if (t.closest('[role="textbox"]')) return true;
   if (t instanceof HTMLInputElement) {
     const kind = (t.type || "text").toLowerCase();
     return kind !== "button" && kind !== "checkbox" && kind !== "radio" && kind !== "file" && kind !== "range" && kind !== "color";
@@ -15207,7 +15212,8 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
         {hasControls ? <div className="absolute top-1 right-1 z-panel flex items-stretch gap-single">{controlsContent}</div> : null}
         <div
           ref={windowBodyRef}
-          className={cn("relative flex min-w-0 flex-col overflow-hidden", fill ? "min-h-0 flex-1" : "h-auto shrink-0")}
+          data-slot="window-body"
+          className={cn("relative flex min-w-0 flex-col overflow-hidden", windowBodyContentInsetClass, fill ? "min-h-0 flex-1" : "h-auto shrink-0")}
         >
           {error ? <DefaultErrorDisplay error={error} /> : loading && skeleton ? skeleton : children}
           {measures ? (
@@ -22710,7 +22716,30 @@ if (import.meta.vitest) {
       const command = document.createElement("input");
       command.setAttribute("data-slot", "command-input");
       expect(isUiTypingTarget(command)).toBe(true);
+      const writer = document.createElement("div");
+      writer.setAttribute("role", "textbox");
+      writer.tabIndex = 0;
+      expect(isUiTypingTarget(writer)).toBe(true);
+      expect(shouldRouteKeysToWindowEngagement(writer)).toBe(false);
       expect(shouldRouteKeysToWindowEngagement(text)).toBe(false);
+    });
+
+    it("Window reserves the chrome row for framed content and keeps edgeless content full bleed", () => {
+      const { container, rerender } = render(
+        <Window id="framed-window" active engagement={{ input: { placeholder: "Command" } }} measures={<div>LOD</div>}>
+          <div data-window-content-layout="framed">Table</div>
+        </Window>,
+      );
+      const framedBody = container.querySelector('[data-slot="window-body"]');
+      expect(framedBody?.className).toContain("pt-[calc(var(--size-medium)+2*var(--ui-spacing))]");
+      expect(framedBody?.className).toContain("has-[[data-window-content-layout=edgeless]]:pt-0");
+
+      rerender(
+        <Window id="edgeless-window" active engagement={{ input: { placeholder: "Command" } }} measures={<div>LOD</div>}>
+          <div data-window-content-layout="edgeless">Canvas</div>
+        </Window>,
+      );
+      expect(container.querySelector('[data-slot="window-body"] [data-window-content-layout="edgeless"]')).toBeTruthy();
     });
 
     it("Window does not route keys to engagement while another input is focused", () => {

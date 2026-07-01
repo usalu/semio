@@ -1,0 +1,8 @@
+{
+  "name": "@semio-tech/vcs-rs",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./pkg/vcs.js"
+  }
+}

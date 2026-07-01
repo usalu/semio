@@ -72,8 +72,8 @@ export async function auditAllPlaygrounds(): Promise<string[]> {
 	const { ShootingPlayController } = await import("@semio-tech/shooting-play");
 	register("shooting", (b, n) => new ShootingPlayController(b, n));
 
-	const { MapPlayController } = await import("@semio-tech/gis-map-play");
-	register("gis/map", (b, n) => new MapPlayController(b, n));
+	const { MapPlayController } = await import("@semio-tech/gis-2d-play");
+	register("gis/2d", (b, n) => new MapPlayController(b, n));
 
 	const { Procedural2dPlayController } = await import("@semio-tech/procedural-2d-play");
 	register("procedural/2d", (b, n) => new Procedural2dPlayController(b, n), true);

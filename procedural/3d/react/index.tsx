@@ -28,7 +28,7 @@ import {
     type GeometryRef,
     type MeshTransfer,
     type Vec3,
-} from "@semio-tech/geometry-brep-js";
+} from "@semio-tech/kernel-3d-js";
 import {
     DEFAULT_LOD_GRID_FACTOR,
     DEFAULT_MANUAL_LOD,
@@ -1548,7 +1548,7 @@ if (import.meta.vitest) {
 		proceduralPreviewCameraSeed,
 	} = await import("./index.js");
 	const { applyOrbitProjectionToCameraState } = await import("@semio-tech/infinite-world-r3f");
-	const { ensureBrepWasmLoaded, isRenderableMeshTransfer } = await import("@semio-tech/geometry-brep-js");
+	const { ensureBrepWasmLoaded, isRenderableMeshTransfer } = await import("@semio-tech/kernel-3d-js");
 
 	function numberDict(value: number) {
 		return { $schema: "number", value };
@@ -1614,7 +1614,7 @@ if (import.meta.vitest) {
 				) as { geometry: { handle: string } },
 				"geometry",
 			);
-			const mesh = await bridge.tessellateGeometry(moved.handle as import("@semio-tech/geometry-brep-js").GeometryRef, 0.05);
+			const mesh = await bridge.tessellateGeometry(moved.handle as import("@semio-tech/kernel-3d-js").GeometryRef, 0.05);
 			expect(isRenderableMeshTransfer(mesh)).toBe(true);
 		});
 

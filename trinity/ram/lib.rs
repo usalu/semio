@@ -361,7 +361,8 @@ fn manifest_err(error: ManifestValidationError) -> String {
 }
 
 /// 🎯 Entity reference for mutations.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", tag = "entity", content = "id")]
 pub enum EntityRef {
     Node(String),
     Edge(String),
@@ -391,6 +392,672 @@ pub fn port_key(node_id: &str, port_id: &str) -> String {
     format!("{node_id}:{port_id}")
 }
 // #endregion 🔖Runtime
+
+// #region 🔖GraphOps
+use framework_vcs::{
+    apply_operation, create_document_vcs_envelope, CollectionDiff, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore,
+    ItemPatch, Operation, OperationDiff,
+};
+
+pub const TRINITY_GRAPH_SCHEMA: &str = GraphFixtureV1::SCHEMA;
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NodeGeometryPatch {
+    pub name: Option<String>,
+    pub x: Option<f64>,
+    pub y: Option<f64>,
+    pub width: Option<f64>,
+    pub height: Option<f64>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PropertyPatch {
+    pub key: String,
+    pub value: Option<PropertyValue>,
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TrinityGraphDiff {
+    pub nodes: CollectionDiff<String, NodeGeometryPatch, Node>,
+    pub edges: CollectionDiff<String, PropertyPatch, Edge>,
+    pub node_properties: Vec<ItemPatch<String, PropertyPatch>>,
+    pub edge_properties: Vec<ItemPatch<String, PropertyPatch>>,
+    pub recompute_derived: bool,
+}
+
+impl OperationDiff<GraphFixtureV1> for TrinityGraphDiff {
+    fn apply(&self, projection: &GraphFixtureV1) -> GraphFixtureV1 {
+        let mut next = projection.clone();
+        for id in &self.nodes.removed {
+            remove_node_from_fixture(&mut next, id);
+        }
+        for patch in &self.nodes.modified {
+            if let Some(node) = next.nodes.iter_mut().find(|node| node.id == patch.id) {
+                if let Some(name) = &patch.patch.name {
+                    node.name = name.clone();
+                }
+                if let Some(x) = patch.patch.x {
+                    node.x = x;
+                }
+                if let Some(y) = patch.patch.y {
+                    node.y = y;
+                }
+                if let Some(width) = patch.patch.width {
+                    node.width = width;
+                }
+                if let Some(height) = patch.patch.height {
+                    node.height = height;
+                }
+            }
+        }
+        for node in &self.nodes.added {
+            next.nodes.push(node.clone());
+        }
+        for id in &self.edges.removed {
+            next.edges.retain(|edge| edge.id != *id);
+        }
+        for edge in &self.edges.added {
+            next.edges.push(edge.clone());
+        }
+        for patch in &self.node_properties {
+            if let Some(node) = next.nodes.iter_mut().find(|node| node.id == patch.id) {
+                match &patch.patch.value {
+                    Some(value) => {
+                        node.properties.insert(patch.patch.key.clone(), value.clone());
+                    }
+                    None => {
+                        node.properties.remove(&patch.patch.key);
+                    }
+                }
+            }
+        }
+        for patch in &self.edge_properties {
+            if let Some(edge) = next.edges.iter_mut().find(|edge| edge.id == patch.id) {
+                match &patch.patch.value {
+                    Some(value) => {
+                        edge.properties.insert(patch.patch.key.clone(), value.clone());
+                    }
+                    None => {
+                        edge.properties.remove(&patch.patch.key);
+                    }
+                }
+            }
+        }
+        if self.recompute_derived {
+            if let Ok(mut graph) = Graph::from_fixture(next.clone()) {
+                graph.recompute_derived();
+                next = graph.to_fixture();
+            }
+        }
+        next
+    }
+
+    fn absorb(&mut self, other: Self) {
+        self.nodes.removed.extend(other.nodes.removed);
+        self.nodes.modified.extend(other.nodes.modified);
+        self.nodes.added.extend(other.nodes.added);
+        self.edges.removed.extend(other.edges.removed);
+        self.edges.added.extend(other.edges.added);
+        self.node_properties.extend(other.node_properties);
+        self.edge_properties.extend(other.edge_properties);
+        self.recompute_derived |= other.recompute_derived;
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "op", rename_all = "camelCase")]
+pub enum TrinityGraphOp {
+    CreateNode {
+        id: String,
+        kind: String,
+        name: String,
+        x: f64,
+        y: f64,
+        width: f64,
+        height: f64,
+        ports: Vec<Port>,
+    },
+    DeleteNode {
+        id: String,
+    },
+    CreateEdge {
+        id: String,
+        kind: String,
+        source: String,
+        target: String,
+        properties: PropertyBag,
+    },
+    DeleteEdge {
+        id: String,
+    },
+    Rename {
+        id: String,
+        name: String,
+    },
+    Reposition {
+        id: String,
+        x: f64,
+        y: f64,
+    },
+    SetDataProperty {
+        entity: EntityRef,
+        key: String,
+        value: PropertyValue,
+    },
+    ClearDataProperty {
+        entity: EntityRef,
+        key: String,
+    },
+}
+
+pub type TrinityGraphEnvelope = DocumentVcsEnvelope<GraphFixtureV1, TrinityGraphOp>;
+pub type TrinityGraphStore = DocumentVcsStore<GraphFixtureV1, TrinityGraphOp>;
+
+pub fn create_trinity_graph_envelope(id: &str, fixture: GraphFixtureV1) -> TrinityGraphEnvelope {
+    create_document_vcs_envelope(TRINITY_GRAPH_SCHEMA, id, fixture, None)
+}
+
+pub fn validate_trinity_graph_op(op: &TrinityGraphOp, fixture: &GraphFixtureV1) -> Result<(), String> {
+    match op {
+        TrinityGraphOp::CreateNode { id, kind, ports, .. } => {
+            if fixture.nodes.iter().any(|node| node.id == *id) {
+                return Err(format!("node {id} already exists"));
+            }
+            validate_node_kind_trinity(&fixture.manifest, kind)?;
+            if let Some(node_def) = fixture.manifest.node_kind(kind) {
+                for port in ports {
+                    validate_port_kind_trinity(&fixture.manifest, &port.kind)?;
+                    if !node_def.port_kinds.is_empty() && !node_def.port_kinds.iter().any(|p| p == &port.kind) {
+                        return Err(format!(
+                            "nodes/{id}/ports/{}: port kind {} not declared on node kind {}",
+                            port.id, port.kind, kind
+                        ));
+                    }
+                }
+            }
+        }
+        TrinityGraphOp::DeleteNode { id } => {
+            if !fixture.nodes.iter().any(|node| node.id == *id) {
+                return Err(format!("node {id} not found"));
+            }
+        }
+        TrinityGraphOp::CreateEdge { id, kind, source, target, properties } => {
+            if fixture.edges.iter().any(|edge| edge.id == *id) {
+                return Err(format!("edge {id} already exists"));
+            }
+            validate_edge_kind_trinity(&fixture.manifest, kind)?;
+            validate_edge_properties_trinity(&fixture.manifest, kind, properties)?;
+            let source_node = port_node_id(source).ok_or_else(|| format!("invalid source port key {source}"))?;
+            let target_node = port_node_id(target).ok_or_else(|| format!("invalid target port key {target}"))?;
+            if !fixture.nodes.iter().any(|node| node.id == source_node) {
+                return Err(format!("source node {source_node} not found"));
+            }
+            if !fixture.nodes.iter().any(|node| node.id == target_node) {
+                return Err(format!("target node {target_node} not found"));
+            }
+        }
+        TrinityGraphOp::DeleteEdge { id } => {
+            if !fixture.edges.iter().any(|edge| edge.id == *id) {
+                return Err(format!("edge {id} not found"));
+            }
+        }
+        TrinityGraphOp::Rename { id, .. } | TrinityGraphOp::Reposition { id, .. } => {
+            if !fixture.nodes.iter().any(|node| node.id == *id) {
+                return Err(format!("node {id} not found"));
+            }
+        }
+        TrinityGraphOp::SetDataProperty { entity, key, value } => {
+            validate_set_data_property(fixture, entity, key, value)?;
+        }
+        TrinityGraphOp::ClearDataProperty { entity, key } => {
+            validate_clear_data_property(fixture, entity, key)?;
+        }
+    }
+    Ok(())
+}
+
+pub fn apply_trinity_graph_ops(fixture: GraphFixtureV1, ops: &[TrinityGraphOp]) -> Result<GraphFixtureV1, String> {
+    let mut projection = fixture;
+    for op in ops {
+        validate_trinity_graph_op(op, &projection)?;
+        projection = apply_operation(&projection, op);
+    }
+    Ok(projection)
+}
+
+pub fn dispatch_trinity_graph_ops(store: &mut TrinityGraphStore, ops: Vec<TrinityGraphOp>) -> Result<(), String> {
+    if ops.is_empty() {
+        return Ok(());
+    }
+    let projection = store.projection().map_err(|e| e.to_string())?;
+    for op in &ops {
+        validate_trinity_graph_op(op, &projection)?;
+    }
+    store
+        .dispatch(DocumentVcsCommand::Apply {
+            operations: ops,
+            description: None,
+        })
+        .map_err(|e| e.to_string())
+}
+
+fn validate_clear_data_property(fixture: &GraphFixtureV1, entity: &EntityRef, key: &str) -> Result<(), String> {
+    match entity {
+        EntityRef::Node(id) => {
+            fixture.nodes.iter().find(|node| node.id == *id).ok_or_else(|| format!("node {id} not found"))?;
+        }
+        EntityRef::Edge(id) => {
+            fixture.edges.iter().find(|edge| edge.id == *id).ok_or_else(|| format!("edge {id} not found"))?;
+        }
+    }
+    let _ = key;
+    Ok(())
+}
+
+fn validate_set_data_property(
+    fixture: &GraphFixtureV1,
+    entity: &EntityRef,
+    key: &str,
+    value: &PropertyValue,
+) -> Result<(), String> {
+    let (defs, path_prefix) = match entity {
+        EntityRef::Node(id) => {
+            let node = fixture.nodes.iter().find(|node| node.id == *id).ok_or_else(|| format!("node {id} not found"))?;
+            (
+                fixture.manifest.node_kind(&node.kind).map(|def| &def.properties[..]),
+                format!("nodes/{id}/properties/{key}"),
+            )
+        }
+        EntityRef::Edge(id) => {
+            let edge = fixture.edges.iter().find(|edge| edge.id == *id).ok_or_else(|| format!("edge {id} not found"))?;
+            (
+                fixture.manifest.edge_kind(&edge.kind).map(|def| &def.properties[..]),
+                format!("edges/{id}/properties/{key}"),
+            )
+        }
+    };
+    let Some(defs) = defs else {
+        return Err(format!("{path_prefix}: unknown kind"));
+    };
+    let Some(def) = defs.iter().find(|def| def.name == key) else {
+        return Err(format!("{path_prefix}: unknown property {key:?}"));
+    };
+    if def.kind == PropertyKind::Derived {
+        return Err(format!("{path_prefix}: property {key:?} is derived and cannot be set"));
+    }
+    let mut bag = PropertyBag::new();
+    bag.insert(key.to_string(), value.clone());
+    validate_property_bag_trinity(&path_prefix, defs, &bag)
+}
+
+fn validate_node_kind_trinity(manifest: &Manifest, kind: &str) -> Result<(), String> {
+    if manifest.node_kind(kind).is_some() {
+        Ok(())
+    } else {
+        Err(format!("nodes/{kind}: unknown node kind {kind:?}"))
+    }
+}
+
+fn validate_edge_kind_trinity(manifest: &Manifest, kind: &str) -> Result<(), String> {
+    if manifest.edge_kind(kind).is_some() {
+        Ok(())
+    } else {
+        Err(format!("edges/{kind}: unknown edge kind {kind:?}"))
+    }
+}
+
+fn validate_port_kind_trinity(manifest: &Manifest, kind: &str) -> Result<(), String> {
+    if manifest.port_kind(kind).is_some() {
+        Ok(())
+    } else {
+        Err(format!("ports/{kind}: unknown port kind {kind:?}"))
+    }
+}
+
+fn validate_edge_properties_trinity(manifest: &Manifest, kind: &str, properties: &PropertyBag) -> Result<(), String> {
+    let Some(def) = manifest.edge_kind(kind) else {
+        return validate_edge_kind_trinity(manifest, kind);
+    };
+    validate_property_bag_trinity(&format!("edges/{kind}/properties"), &def.properties, properties)
+}
+
+fn validate_property_bag_trinity(path: &str, defs: &[PropertyDef], bag: &PropertyBag) -> Result<(), String> {
+    for def in defs {
+        if def.kind == PropertyKind::Derived {
+            continue;
+        }
+        let Some(value) = bag.get(&def.name) else {
+            continue;
+        };
+        if !property_value_matches_type_trinity(value, def) {
+            return Err(format!(
+                "{path}/{}: property type mismatch for {}",
+                def.name,
+                def.value_type.id()
+            ));
+        }
+    }
+    for key in bag.keys() {
+        if !defs.iter().any(|def| def.name == *key) {
+            return Err(format!("{path}/{key}: unknown property {key:?}"));
+        }
+    }
+    Ok(())
+}
+
+fn property_value_matches_type_trinity(value: &PropertyValue, def: &PropertyDef) -> bool {
+    match value {
+        PropertyValue::Null => def.value_type.id() == "null",
+        PropertyValue::Bool(_) => def.value_type.id() == "boolean",
+        PropertyValue::Number(_) => {
+            let id = def.value_type.id();
+            id == "decimal" || id == "integer" || id == "number"
+        }
+        PropertyValue::String(_) => {
+            let id = def.value_type.id();
+            id == "string" || id == "text"
+        }
+        PropertyValue::Object(_) => {
+            let id = def.value_type.id();
+            id.starts_with("schema:") || id == "object"
+        }
+        PropertyValue::Array(_) => def.value_type.id() == "array",
+    }
+}
+
+fn remove_node_from_fixture(fixture: &mut GraphFixtureV1, id: &str) {
+    fixture.nodes.retain(|node| node.id != id);
+    fixture.edges.retain(|edge| {
+        port_node_id(&edge.source) != Some(id.as_ref()) && port_node_id(&edge.target) != Some(id.as_ref())
+    });
+    if fixture.root_node_id.as_deref() == Some(id) {
+        fixture.root_node_id = None;
+    }
+}
+
+fn delete_node_snapshot(fixture: &GraphFixtureV1, id: &str) -> (Option<Node>, Vec<Edge>) {
+    let node = fixture.nodes.iter().find(|node| node.id == id).cloned();
+    let edges: Vec<Edge> = fixture
+        .edges
+        .iter()
+        .filter(|edge| port_node_id(&edge.source) == Some(id) || port_node_id(&edge.target) == Some(id))
+        .cloned()
+        .collect();
+    (node, edges)
+}
+
+fn entity_property_value(fixture: &GraphFixtureV1, entity: &EntityRef, key: &str) -> Option<PropertyValue> {
+    match entity {
+        EntityRef::Node(id) => fixture
+            .nodes
+            .iter()
+            .find(|node| node.id == *id)
+            .and_then(|node| node.properties.get(key).cloned()),
+        EntityRef::Edge(id) => fixture
+            .edges
+            .iter()
+            .find(|edge| edge.id == *id)
+            .and_then(|edge| edge.properties.get(key).cloned()),
+    }
+}
+
+impl Operation<GraphFixtureV1> for TrinityGraphOp {
+    type Diff = TrinityGraphDiff;
+
+    fn diff(&self, projection: &GraphFixtureV1) -> TrinityGraphDiff {
+        match self {
+            TrinityGraphOp::CreateNode {
+                id,
+                kind,
+                name,
+                x,
+                y,
+                width,
+                height,
+                ports,
+            } => TrinityGraphDiff {
+                nodes: CollectionDiff {
+                    added: vec![Node {
+                        id: id.clone(),
+                        kind: kind.clone(),
+                        name: name.clone(),
+                        x: *x,
+                        y: *y,
+                        width: *width,
+                        height: *height,
+                        properties: PropertyBag::new(),
+                        ports: ports.clone(),
+                    }],
+                    ..Default::default()
+                },
+                recompute_derived: true,
+                ..Default::default()
+            },
+            TrinityGraphOp::DeleteNode { id } => {
+                let (node, edges) = delete_node_snapshot(projection, id);
+                TrinityGraphDiff {
+                    nodes: CollectionDiff {
+                        removed: node.as_ref().map(|node| vec![node.id.clone()]).unwrap_or_default(),
+                        ..Default::default()
+                    },
+                    edges: CollectionDiff {
+                        removed: edges.iter().map(|edge| edge.id.clone()).collect(),
+                        ..Default::default()
+                    },
+                    recompute_derived: true,
+                    ..Default::default()
+                }
+            }
+            TrinityGraphOp::CreateEdge {
+                id,
+                kind,
+                source,
+                target,
+                properties,
+            } => TrinityGraphDiff {
+                edges: CollectionDiff {
+                    added: vec![Edge {
+                        id: id.clone(),
+                        kind: kind.clone(),
+                        source: source.clone(),
+                        target: target.clone(),
+                        properties: properties.clone(),
+                    }],
+                    ..Default::default()
+                },
+                recompute_derived: true,
+                ..Default::default()
+            },
+            TrinityGraphOp::DeleteEdge { id } => TrinityGraphDiff {
+                edges: CollectionDiff {
+                    removed: vec![id.clone()],
+                    ..Default::default()
+                },
+                recompute_derived: true,
+                ..Default::default()
+            },
+            TrinityGraphOp::Rename { id, name } => TrinityGraphDiff {
+                nodes: CollectionDiff {
+                    modified: vec![ItemPatch {
+                        id: id.clone(),
+                        patch: NodeGeometryPatch {
+                            name: Some(name.clone()),
+                            ..Default::default()
+                        },
+                    }],
+                    ..Default::default()
+                },
+                ..Default::default()
+            },
+            TrinityGraphOp::Reposition { id, x, y } => TrinityGraphDiff {
+                nodes: CollectionDiff {
+                    modified: vec![ItemPatch {
+                        id: id.clone(),
+                        patch: NodeGeometryPatch {
+                            x: Some(*x),
+                            y: Some(*y),
+                            ..Default::default()
+                        },
+                    }],
+                    ..Default::default()
+                },
+                ..Default::default()
+            },
+            TrinityGraphOp::SetDataProperty { entity, key, value } => {
+                let patch = PropertyPatch {
+                    key: key.clone(),
+                    value: Some(value.clone()),
+                };
+                let recompute = matches!(entity, EntityRef::Edge(_)) && (key == "u" || key == "v");
+                match entity {
+                    EntityRef::Node(id) => TrinityGraphDiff {
+                        node_properties: vec![ItemPatch { id: id.clone(), patch }],
+                        recompute_derived: key == "flatPosition",
+                        ..Default::default()
+                    },
+                    EntityRef::Edge(id) => TrinityGraphDiff {
+                        edge_properties: vec![ItemPatch { id: id.clone(), patch }],
+                        recompute_derived: recompute,
+                        ..Default::default()
+                    },
+                }
+            }
+            TrinityGraphOp::ClearDataProperty { entity, key } => {
+                let patch = PropertyPatch {
+                    key: key.clone(),
+                    value: None,
+                };
+                match entity {
+                    EntityRef::Node(id) => TrinityGraphDiff {
+                        node_properties: vec![ItemPatch { id: id.clone(), patch }],
+                        ..Default::default()
+                    },
+                    EntityRef::Edge(id) => TrinityGraphDiff {
+                        edge_properties: vec![ItemPatch { id: id.clone(), patch }],
+                        recompute_derived: key == "u" || key == "v",
+                        ..Default::default()
+                    },
+                }
+            }
+        }
+    }
+
+    fn backwards(&self, projection: &GraphFixtureV1) -> Vec<Self> {
+        match self {
+            TrinityGraphOp::CreateNode { id, .. } => vec![TrinityGraphOp::DeleteNode { id: id.clone() }],
+            TrinityGraphOp::DeleteNode { id } => {
+                let (node, edges) = delete_node_snapshot(projection, id);
+                let mut out = Vec::new();
+                if let Some(node) = node {
+                    out.push(TrinityGraphOp::CreateNode {
+                        id: node.id,
+                        kind: node.kind,
+                        name: node.name,
+                        x: node.x,
+                        y: node.y,
+                        width: node.width,
+                        height: node.height,
+                        ports: node.ports,
+                    });
+                    for edge in edges {
+                        out.push(TrinityGraphOp::CreateEdge {
+                            id: edge.id,
+                            kind: edge.kind,
+                            source: edge.source,
+                            target: edge.target,
+                            properties: edge.properties,
+                        });
+                    }
+                }
+                out
+            }
+            TrinityGraphOp::CreateEdge {
+                id,
+                kind,
+                source,
+                target,
+                properties,
+            } => vec![TrinityGraphOp::DeleteEdge { id: id.clone() }],
+            TrinityGraphOp::DeleteEdge { id } => projection
+                .edges
+                .iter()
+                .find(|edge| edge.id == *id)
+                .map(|edge| {
+                    vec![TrinityGraphOp::CreateEdge {
+                        id: edge.id.clone(),
+                        kind: edge.kind.clone(),
+                        source: edge.source.clone(),
+                        target: edge.target.clone(),
+                        properties: edge.properties.clone(),
+                    }]
+                })
+                .unwrap_or_default(),
+            TrinityGraphOp::Rename { id, name } => projection
+                .nodes
+                .iter()
+                .find(|node| node.id == *id)
+                .map(|node| vec![TrinityGraphOp::Rename {
+                    id: id.clone(),
+                    name: node.name.clone(),
+                }])
+                .unwrap_or_default(),
+            TrinityGraphOp::Reposition { id, x, y } => projection
+                .nodes
+                .iter()
+                .find(|node| node.id == *id)
+                .map(|node| vec![TrinityGraphOp::Reposition {
+                    id: id.clone(),
+                    x: node.x,
+                    y: node.y,
+                }])
+                .unwrap_or_default(),
+            TrinityGraphOp::SetDataProperty { entity, key, value } => {
+                let prior = entity_property_value(projection, entity, key);
+                match (entity, prior) {
+                    (EntityRef::Node(id), Some(old)) => vec![TrinityGraphOp::SetDataProperty {
+                        entity: EntityRef::Node(id.clone()),
+                        key: key.clone(),
+                        value: old,
+                    }],
+                    (EntityRef::Edge(id), Some(old)) => vec![TrinityGraphOp::SetDataProperty {
+                        entity: EntityRef::Edge(id.clone()),
+                        key: key.clone(),
+                        value: old,
+                    }],
+                    (entity, None) => vec![TrinityGraphOp::ClearDataProperty {
+                        entity: entity.clone(),
+                        key: key.clone(),
+                    }],
+                }
+            }
+            TrinityGraphOp::ClearDataProperty { entity, key } => entity_property_value(projection, entity, key)
+                .map(|old| {
+                    vec![TrinityGraphOp::SetDataProperty {
+                        entity: entity.clone(),
+                        key: key.clone(),
+                        value: old,
+                    }]
+                })
+                .unwrap_or_default(),
+        }
+    }
+}
+
+impl Default for NodeGeometryPatch {
+    fn default() -> Self {
+        Self {
+            name: None,
+            x: None,
+            y: None,
+            width: None,
+            height: None,
+        }
+    }
+}
+// #endregion 🔖GraphOps
 
 // #region 🔖Tests
 #[cfg(test)]
@@ -590,6 +1257,64 @@ mod tests {
         assert_eq!(flat_a.get("v").and_then(PropertyValue::as_f64), Some(1.0));
         assert_eq!(flat_b.get("u").and_then(PropertyValue::as_f64), Some(3.0));
         assert_eq!(flat_b.get("v").and_then(PropertyValue::as_f64), Some(-1.0));
+    }
+
+    #[test]
+    fn graph_op_create_node_and_undo() {
+        let fixture = mini_fixture();
+        let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", fixture));
+        dispatch_trinity_graph_ops(
+            &mut store,
+            vec![TrinityGraphOp::CreateNode {
+                id: "new".into(),
+                kind: "Piece".into(),
+                name: "new-piece".into(),
+                x: 200.0,
+                y: 40.0,
+                width: 80.0,
+                height: 40.0,
+                ports: vec![],
+            }],
+        )
+        .expect("create");
+        assert_eq!(store.projection().expect("projection").nodes.len(), 3);
+        store.dispatch(DocumentVcsCommand::Undo).expect("undo");
+        assert_eq!(store.projection().expect("projection").nodes.len(), 2);
+    }
+
+    #[test]
+    fn graph_op_rejects_unknown_node_kind() {
+        let fixture = mini_fixture();
+        let err = validate_trinity_graph_op(
+            &TrinityGraphOp::CreateNode {
+                id: "new".into(),
+                kind: "Piece2".into(),
+                name: "x".into(),
+                x: 0.0,
+                y: 0.0,
+                width: 80.0,
+                height: 40.0,
+                ports: vec![],
+            },
+            &fixture,
+        )
+        .expect_err("unknown kind");
+        assert!(err.contains("unknown node kind"));
+    }
+
+    #[test]
+    fn graph_op_rejects_derived_property_set() {
+        let fixture = mini_fixture();
+        let err = validate_trinity_graph_op(
+            &TrinityGraphOp::SetDataProperty {
+                entity: EntityRef::Node("root".into()),
+                key: "flatPosition".into(),
+                value: PropertyValue::Null,
+            },
+            &fixture,
+        )
+        .expect_err("derived");
+        assert!(err.contains("derived"));
     }
 }
 // #endregion 🔖Tests

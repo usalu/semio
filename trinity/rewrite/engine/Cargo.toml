@@ -13,6 +13,7 @@ framework_vcs = { path = "../../../framework/rs" }
 trinity_jack = { path = "../../jack/core" }
 trinity_ram = { path = "../../ram" }
 mathematical_graph_port_directed = { path = "../../../mathematical/graph/port/directed" }
+mathematical_graph_port_directed_normal = { path = "../../../mathematical/graph/port/directed/normal" }
 mathematical_core = { path = "../../../mathematical/core" }
 infinite_cavas = { path = "../../../infinite/cavas/rs" }
 ui_styling = { path = "../../../ui/styling/rs" }

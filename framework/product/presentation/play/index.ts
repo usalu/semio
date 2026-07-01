@@ -52,6 +52,7 @@ import { Store, DocumentVcsStore, createDocumentVcsEnvelope, recordProjectionCha
 import {
 	applyPresentationEditOp,
 	buildTileMorphPrompt,
+	clampTileCrop,
 	clampNormalizedFraction,
 	NORMALIZED_RECT_MIN_FRACTION,
 	parseGridEngagement,
@@ -88,13 +89,6 @@ function presentationPlayCmd(command: string, args?: Record<string, unknown>): C
 	return { controllerId: PRESENTATION_PLAY_CONTROLLER_ID, command, args: args as never };
 }
 
-function clampTileCrop(crop: FigureTileDraft["crop"]): FigureTileDraft["crop"] {
-	const width = Math.max(NORMALIZED_RECT_MIN_FRACTION, Math.min(crop.width, 1));
-	const height = Math.max(NORMALIZED_RECT_MIN_FRACTION, Math.min(crop.height, 1));
-	const x = clampNormalizedFraction(Math.min(crop.x, 1 - width));
-	const y = clampNormalizedFraction(Math.min(crop.y, 1 - height));
-	return { x, y, width, height };
-}
 //#endregion 🔖Ids
 
 //#region 🔖Snapshot
@@ -167,9 +161,12 @@ export class PresentationPlayController extends Controller implements Playground
 		return this.docStore.projection();
 	}
 
+	private applyDeckEdit(op: PresentationEditOp): void {
+		recordProjectionChange(this.docStore, [op]);
+	}
+
 	private commitDeck(next: PresentationDeckV1): void {
-		const previous = this.projection();
-		recordProjectionChange(this.docStore, [{ op: "setDocument", document: next }]);
+		this.applyDeckEdit({ op: "setDocument", document: next });
 	}
 
 	get source(): FigureTileSource {
@@ -332,7 +329,7 @@ export class PresentationPlayController extends Controller implements Playground
 
 	private seedGrid(rows: number, columns: number): void {
 		const tiles = populateTileDraftsFromGrid({ source: this.source, rows, columns });
-		this.commitDeck({ ...this.projection(), tiles });
+		this.applyDeckEdit({ op: "setTiles", tiles });
 		this.selectedIds = tiles.length > 0 ? [tiles[0]!.id] : [];
 		this.syncShell();
 	}
@@ -388,10 +385,13 @@ export class PresentationPlayController extends Controller implements Playground
 				if (nextId === this.activeFixtureId) break;
 				this.activeFixtureId = nextId;
 				if (isPlaygroundNoFixtureId(nextId)) {
-					this.commitDeck({
-						schema: "presentation.deck/v1",
-						source: { ...PRESENTATION_PLAY_DEFAULT_SOURCE },
-						tiles: [],
+					this.applyDeckEdit({
+						op: "setDocument",
+						document: {
+							schema: "presentation.deck/v1",
+							source: { ...PRESENTATION_PLAY_DEFAULT_SOURCE },
+							tiles: [],
+						},
 					});
 					this.selectedIds = [];
 					this.syncShell();
@@ -411,10 +411,13 @@ export class PresentationPlayController extends Controller implements Playground
 				const trimmed = src.trim();
 				const deck = this.projection();
 				if (!trimmed) {
-					this.commitDeck({
-						schema: "presentation.deck/v1",
-						source: { ...PRESENTATION_PLAY_DEFAULT_SOURCE },
-						tiles: [],
+					this.applyDeckEdit({
+						op: "setDocument",
+						document: {
+							schema: "presentation.deck/v1",
+							source: { ...PRESENTATION_PLAY_DEFAULT_SOURCE },
+							tiles: [],
+						},
 					});
 					this.selectedIds = [];
 					break;
@@ -428,15 +431,14 @@ export class PresentationPlayController extends Controller implements Playground
 					...(sourceAspect !== undefined ? { sourceAspect } : deck.source.sourceAspect !== undefined ? { sourceAspect: deck.source.sourceAspect } : {}),
 					...(mediaKind === "pdf" ? { pdfPage: pdfPage ?? deck.source.pdfPage ?? 1 } : {}),
 				};
-				this.commitDeck({ ...deck, source, tiles: replaced ? [] : deck.tiles });
+				this.applyDeckEdit({ op: "replaceSource", source, resetTiles: replaced });
 				if (replaced) this.selectedIds = [];
 				break;
 			}
 			case "setFrame": {
 				const { frame } = args as { frame?: FigureTileSource["frame"] };
 				if (frame) {
-					const deck = this.projection();
-					this.commitDeck({ ...deck, source: { ...deck.source, frame } });
+					this.applyDeckEdit({ op: "setSourceFrame", frame });
 				}
 				break;
 			}
@@ -452,8 +454,7 @@ export class PresentationPlayController extends Controller implements Playground
 				const { crop } = (args ?? {}) as { crop?: FigureTileDraft["crop"] };
 				const id = newTileId();
 				const nextCrop = crop ?? { x: 0.1, y: 0.1, width: 0.2, height: 0.2 };
-				const deck = this.projection();
-				this.commitDeck({ ...deck, tiles: [...deck.tiles, { id, name: id, crop: nextCrop }] });
+				this.applyDeckEdit({ op: "addTile", tile: { id, name: id, crop: nextCrop } });
 				this.selectedIds = [id];
 				break;
 			}
@@ -464,8 +465,7 @@ export class PresentationPlayController extends Controller implements Playground
 					break;
 				}
 				const remove = new Set(targetIds);
-				const deck = this.projection();
-				this.commitDeck({ ...deck, tiles: deck.tiles.filter((tile) => !remove.has(tile.id)) });
+				this.applyDeckEdit({ op: "removeTiles", tileIds: [...remove] });
 				this.selectedIds = this.selectedIds.filter((selected) => !remove.has(selected));
 				break;
 			}
@@ -473,9 +473,7 @@ export class PresentationPlayController extends Controller implements Playground
 				if (this.selectedIds.length === 0) {
 					break;
 				}
-				const remove = new Set(this.selectedIds);
-				const deck = this.projection();
-				this.commitDeck({ ...deck, tiles: deck.tiles.filter((tile) => !remove.has(tile.id)) });
+				this.applyDeckEdit({ op: "removeTiles", tileIds: [...this.selectedIds] });
 				this.selectedIds = [];
 				break;
 			}
@@ -486,12 +484,7 @@ export class PresentationPlayController extends Controller implements Playground
 				if (!nextName || targetIds.length === 0) {
 					break;
 				}
-				const targets = new Set(targetIds);
-				const deck = this.projection();
-				this.commitDeck({
-					...deck,
-					tiles: deck.tiles.map((tile) => (targets.has(tile.id) ? { ...tile, name: nextName } : tile)),
-				});
+				this.applyDeckEdit({ op: "renameTiles", tileIds: targetIds, name: nextName });
 				break;
 			}
 			case "renameTile": {
@@ -507,18 +500,11 @@ export class PresentationPlayController extends Controller implements Playground
 				if (!field || typeof value !== "number" || !Number.isFinite(value)) {
 					break;
 				}
-				const targetIds = new Set((ids ?? []).filter((id) => this.tiles.some((tile) => tile.id === id)));
-				if (targetIds.size === 0) {
+				const targetIds = (ids ?? []).filter((id) => this.tiles.some((tile) => tile.id === id));
+				if (targetIds.length === 0) {
 					break;
 				}
-				const deck = this.projection();
-				this.commitDeck({
-					...deck,
-					tiles: deck.tiles.map((row) => {
-						if (!targetIds.has(row.id)) return row;
-						return { ...row, crop: clampTileCrop({ ...row.crop, [field]: value }) };
-					}),
-				});
+				this.applyDeckEdit({ op: "patchTileCrops", tileIds: targetIds, field, value });
 				break;
 			}
 			case "patchTileCrop": {
@@ -531,8 +517,7 @@ export class PresentationPlayController extends Controller implements Playground
 			case "setTileCrop": {
 				const { id, crop } = args as { id?: string; crop?: FigureTileDraft["crop"] };
 				if (typeof id === "string" && crop) {
-					const deck = this.projection();
-					this.commitDeck({ ...deck, tiles: deck.tiles.map((tile) => (tile.id === id ? { ...tile, crop } : tile)) });
+					this.applyDeckEdit({ op: "patchTileCrop", tileId: id, crop });
 				}
 				break;
 			}
@@ -543,7 +528,7 @@ export class PresentationPlayController extends Controller implements Playground
 				break;
 			}
 			case "clearTiles": {
-				this.commitDeck({ ...this.projection(), tiles: [] });
+				this.applyDeckEdit({ op: "clearTiles" });
 				this.selectedIds = [];
 				break;
 			}

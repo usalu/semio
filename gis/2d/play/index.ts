@@ -75,7 +75,7 @@ import {
   type MapVectorStyle,
   type MapHoveredFeature,
   type MapFeatureKind,
-} from "@semio-tech/gis-map-react";
+} from "@semio-tech/gis-2d-react";
 
 import reuseMapFixtureJson from "../fixture/reuse.map.gis.json";
 
@@ -764,10 +764,51 @@ function mapPlayWindowMeasures(
   ];
 }
 
-type GisMapFixtureEditOp = { readonly op: "setDocument"; readonly document: GisMapFixtureV1 | null };
+type GisMapFixtureEditOp =
+  | { readonly op: "setDocument"; readonly document: GisMapFixtureV1 | null }
+  | { readonly op: "patchPositions"; readonly positionIds: readonly string[]; readonly field: string; readonly value: unknown }
+  | { readonly op: "patchRoutes"; readonly routeIds: readonly string[]; readonly field: string; readonly value: unknown };
 
-function applyGisMapFixtureEditOp(_fixture: GisMapFixtureV1 | null, op: GisMapFixtureEditOp): GisMapFixtureV1 | null {
-  return op.document;
+function patchGisMapPositionField(position: GisMapFixturePositionV1, field: string, value: unknown): GisMapFixturePositionV1 {
+  if (field === "lat" || field === "lon") {
+    const numeric = typeof value === "number" ? value : Number(value);
+    if (!Number.isFinite(numeric)) return position;
+    return { ...position, [field]: numeric };
+  }
+  if (field === "kind" && (value === "receiver" || value === "donor")) {
+    return { ...position, kind: value };
+  }
+  if (typeof value !== "string") return position;
+  return { ...position, [field]: value };
+}
+
+function applyGisMapFixtureEditOp(fixture: GisMapFixtureV1 | null, op: GisMapFixtureEditOp): GisMapFixtureV1 | null {
+  switch (op.op) {
+    case "setDocument":
+      return op.document;
+    case "patchPositions": {
+      if (!fixture || !op.positionIds.length) return fixture;
+      const targets = new Set(op.positionIds);
+      return {
+        ...fixture,
+        positions: fixture.positions.map((position) =>
+          targets.has(position.id) ? patchGisMapPositionField(position, op.field, op.value) : position,
+        ),
+      };
+    }
+    case "patchRoutes": {
+      if (!fixture || !op.routeIds.length) return fixture;
+      const targets = new Set(op.routeIds);
+      return {
+        ...fixture,
+        routes: fixture.routes.map((route) => {
+          if (!targets.has(route.id)) return route;
+          if (typeof op.value !== "string") return route;
+          return { ...route, [op.field]: op.value };
+        }),
+      };
+    }
+  }
 }
 
 export class MapPlayController extends Controller implements PlaygroundFixtureHost {
@@ -971,36 +1012,22 @@ export class MapPlayController extends Controller implements PlaygroundFixtureHo
     return this.docStore.projection();
   }
 
-  private setActiveFixtureProjection(next: GisMapFixtureV1 | null): void {
-    const previous = this.activeFixture;
-    recordProjectionChange(this.docStore, [{ op: "setDocument", document: next }]);
-  }
-
-  private patchActiveFixture(nextFixture: GisMapFixtureV1): void {
-    this.setActiveFixtureProjection(nextFixture);
+  private applyFixtureEdit(op: GisMapFixtureEditOp): void {
+    recordProjectionChange(this.docStore, [op]);
     this.bumpSnapshot();
   }
 
+  private setActiveFixtureProjection(next: GisMapFixtureV1 | null): void {
+    this.applyFixtureEdit({ op: "setDocument", document: next });
+  }
+
   private patchPositionField(position: GisMapFixturePositionV1, field: string, value: unknown): GisMapFixturePositionV1 {
-    if (field === "lat" || field === "lon") {
-      const numeric = typeof value === "number" ? value : Number(value);
-      if (!Number.isFinite(numeric)) return position;
-      return { ...position, [field]: numeric };
-    }
-    if (field === "kind" && (value === "receiver" || value === "donor")) {
-      return { ...position, kind: value };
-    }
-    if (typeof value !== "string") return position;
-    return { ...position, [field]: value };
+    return patchGisMapPositionField(position, field, value);
   }
 
   private patchPositions(positionIds: readonly string[], field: string, value: unknown): void {
     if (!this.activeFixture || !positionIds.length) return;
-    const targets = new Set(positionIds);
-    const positions = this.activeFixture.positions.map((position) =>
-      targets.has(position.id) ? this.patchPositionField(position, field, value) : position,
-    );
-    this.patchActiveFixture({ ...this.activeFixture, positions });
+    this.applyFixtureEdit({ op: "patchPositions", positionIds, field, value });
   }
 
   private patchPosition(positionId: string, field: string, value: unknown): void {
@@ -1009,13 +1036,7 @@ export class MapPlayController extends Controller implements PlaygroundFixtureHo
 
   private patchRoutes(routeIds: readonly string[], field: string, value: unknown): void {
     if (!this.activeFixture || !routeIds.length) return;
-    const targets = new Set(routeIds);
-    const routes = this.activeFixture.routes.map((route) => {
-      if (!targets.has(route.id)) return route;
-      if (typeof value !== "string") return route;
-      return { ...route, [field]: value };
-    });
-    this.patchActiveFixture({ ...this.activeFixture, routes });
+    this.applyFixtureEdit({ op: "patchRoutes", routeIds, field, value });
   }
 
   private patchRoute(routeId: string, field: string, value: unknown): void {

@@ -21,6 +21,7 @@ export default createPlaygroundPlayViteConfig({
 	resolveDedupe: ["react", "react-dom", "@semio-tech/semios-react"],
 	optimizeDeps: {
 		include: ["react", "react-dom", "@semio-tech/semios-react"],
+		exclude: ["@semio-tech/compose-js", "@semio-tech/compose-sketchpad", "@semio-tech/compose-rs-wasm"],
 		esbuildOptions: { target: "esnext" },
 	},
 });

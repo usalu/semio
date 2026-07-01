@@ -561,6 +561,63 @@ export function flowFixtureToJson(fixture: FlowFixtureV1): string {
   return JSON.stringify(fixture);
 }
 
+export type FlowFixtureEditOp =
+  | { readonly op: "setDocument"; readonly document: FlowFixtureV1 }
+  | { readonly op: "renameWidget"; readonly oldId: string; readonly newId: string }
+  | { readonly op: "patchWidget"; readonly widgetId: string; readonly field: string; readonly value: unknown }
+  | { readonly op: "patchWidgets"; readonly widgetIds: readonly string[]; readonly field: string; readonly value: unknown };
+
+/** @emoji 🚪 Applies one semantic flow fixture edit (CQRS projection applier). */
+export function applyFlowFixtureEditOp(fixture: FlowFixtureV1, op: FlowFixtureEditOp): FlowFixtureV1 {
+  switch (op.op) {
+    case "setDocument":
+      return op.document;
+    case "renameWidget": {
+      const trimmed = op.newId.trim();
+      if (!trimmed || trimmed === op.oldId || fixture.widgets.some((widget) => widget.id === trimmed)) {
+        return fixture;
+      }
+      const widgets = fixture.widgets.map((widget) =>
+        widget.id === op.oldId ? ({ ...widget, id: trimmed } as FlowWidgetV1) : widget,
+      );
+      const synapses = fixture.synapses.map((synapse) => ({
+        ...synapse,
+        from: synapse.from === op.oldId ? trimmed : synapse.from,
+        to: synapse.to === op.oldId ? trimmed : synapse.to,
+      }));
+      if (!fixture.layout) {
+        return { ...fixture, widgets, synapses };
+      }
+      const layout: Record<string, { readonly x: number; readonly y: number }> = {};
+      for (const [key, value] of Object.entries(fixture.layout)) {
+        layout[key === op.oldId ? trimmed : key] = value;
+      }
+      return { ...fixture, widgets, synapses, layout };
+    }
+    case "patchWidget":
+      return applyFlowFixtureEditOp(fixture, {
+        op: "patchWidgets",
+        widgetIds: [op.widgetId],
+        field: op.field,
+        value: op.value,
+      });
+    case "patchWidgets": {
+      const targets = new Set(op.widgetIds);
+      const widgets = fixture.widgets.map((widget) => {
+        if (!targets.has(widget.id)) return widget;
+        if (op.field === "value" || op.field === "min" || op.field === "max" || op.field === "step") {
+          const numeric = typeof op.value === "number" ? op.value : Number(op.value);
+          if (!Number.isFinite(numeric)) return widget;
+          return { ...widget, [op.field]: numeric } as FlowWidgetV1;
+        }
+        if (typeof op.value !== "string") return widget;
+        return { ...widget, [op.field]: op.value } as FlowWidgetV1;
+      });
+      return { ...fixture, widgets };
+    }
+  }
+}
+
 /** @emoji 🧠 Neuron widget ids from a flow fixture JSON blob. */
 export function neuronWidgetIdsFromFixtureJson(fixtureJson: string): string[] {
   try {

@@ -3,7 +3,8 @@
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 use trinity_ram::{
-    Edge, EntityRef, Graph, GraphFixtureV1, Node, Port, PortDirection, PropertyBag, PropertyValue, port_key,
+    apply_trinity_graph_ops, Edge, EntityRef, Graph, GraphFixtureV1, Node, Port, PortDirection, PropertyBag, PropertyValue,
+    TrinityGraphOp, port_key,
 };
 
 // #region 🔖Ast
@@ -1207,59 +1208,77 @@ pub struct Binding {
     pub edges: BTreeMap<String, String>,
 }
 
-/// ▶️ Execute a jack query against a graph.
-pub fn execute(graph: &mut Graph, query: &Query) -> Result<QueryResult, String> {
+/// ▶️ Execute a jack query against a graph and emit CQRS operations for mutations.
+pub fn execute(graph: &Graph, query: &Query) -> Result<(QueryResult, Vec<TrinityGraphOp>), String> {
+    let mut fixture = graph.to_fixture();
+    let mut view = graph.clone();
     let mut bindings: Vec<Binding> = vec![Binding::default()];
     let mut return_items: Option<Vec<ReturnItem>> = None;
+    let mut ops = Vec::new();
     for clause in &query.clauses {
         match clause {
             Clause::Match(patterns) => {
-                bindings = match_patterns(graph, patterns)?;
+                bindings = match_patterns(&view, patterns)?;
             }
             Clause::Where(expr) => {
-                bindings.retain(|b| eval_expr(graph, b, expr));
+                bindings.retain(|b| eval_expr(&view, b, expr));
             }
             Clause::Return(items) => {
                 return_items = Some(items.clone());
             }
             Clause::Create(pattern) => {
-                apply_create(graph, pattern)?;
+                let batch = emit_create_ops(&fixture, pattern)?;
+                ops.extend(batch.iter().cloned());
+                fixture = apply_trinity_graph_ops(fixture, &batch)?;
+                view = Graph::from_fixture(fixture.clone())?;
             }
             Clause::Delete(vars) => {
                 for var in vars {
                     if let Some(id) = bindings.first().and_then(|b| b.nodes.get(var).cloned()) {
-                        graph.remove_node(&id);
+                        let op = TrinityGraphOp::DeleteNode { id };
+                        ops.push(op.clone());
+                        fixture = apply_trinity_graph_ops(fixture, std::slice::from_ref(&op))?;
+                        view = Graph::from_fixture(fixture.clone())?;
                     }
                 }
-                graph.recompute_derived();
             }
             Clause::Set(items) => {
                 let b = bindings.first().cloned().unwrap_or_default();
                 for item in items {
                     if let Some(node_id) = b.nodes.get(&item.var) {
-                        graph.set_property(EntityRef::Node(node_id.clone()), &item.prop, item.value.clone())?;
+                        let op = emit_set_op(&fixture, node_id, &item.prop, item.value.clone())?;
+                        ops.push(op.clone());
+                        fixture = apply_trinity_graph_ops(fixture, std::slice::from_ref(&op))?;
+                        view = Graph::from_fixture(fixture.clone())?;
                     }
                 }
-                graph.recompute_derived();
             }
             Clause::Merge(pattern) => {
-                let existing = match_patterns(graph, std::slice::from_ref(pattern))?;
+                let existing = match_patterns(&view, std::slice::from_ref(pattern))?;
                 if existing.is_empty() {
-                    apply_create(graph, pattern)?;
+                    let batch = emit_create_ops(&fixture, pattern)?;
+                    ops.extend(batch.iter().cloned());
+                    fixture = apply_trinity_graph_ops(fixture, &batch)?;
+                    view = Graph::from_fixture(fixture.clone())?;
                 }
             }
         }
     }
     if let Some(items) = return_items {
-        return Ok(build_return(graph, &bindings, &items));
+        return Ok((build_return(&view, &bindings, &items), ops));
     }
-    Ok(QueryResult::table(vec![], vec![]))
+    Ok((QueryResult::table(vec![], vec![]), ops))
 }
 
 /// ▶️ Parse and execute jack in one step.
 pub fn run(graph: &mut Graph, source: &str) -> Result<QueryResult, String> {
     let query = parse(source)?;
-    execute(graph, &query)
+    let (result, ops) = execute(graph, &query)?;
+    if !ops.is_empty() {
+        let fixture = apply_trinity_graph_ops(graph.to_fixture(), &ops)?;
+        *graph = Graph::from_fixture(fixture)?;
+    }
+    Ok(result)
 }
 
 /// ▶️ Execute jack and return JSON result.
@@ -1420,9 +1439,50 @@ fn build_return(graph: &Graph, bindings: &[Binding], items: &[ReturnItem]) -> Qu
     QueryResult::table(columns, rows)
 }
 
-fn apply_create(graph: &mut Graph, pattern: &Pattern) -> Result<(), String> {
+fn emit_set_op(fixture: &GraphFixtureV1, node_id: &str, prop: &str, value: PropertyValue) -> Result<TrinityGraphOp, String> {
+    let node = fixture
+        .nodes
+        .iter()
+        .find(|node| node.id == node_id)
+        .ok_or_else(|| format!("node {node_id} not found"))?;
+    match prop {
+        "name" => {
+            let PropertyValue::String(name) = value else {
+                return Err(format!("node {node_id}.name expects string value"));
+            };
+            Ok(TrinityGraphOp::Rename {
+                id: node_id.to_string(),
+                name,
+            })
+        }
+        "x" => {
+            let x = value.as_f64().ok_or_else(|| format!("node {node_id}.x expects number value"))?;
+            Ok(TrinityGraphOp::Reposition {
+                id: node_id.to_string(),
+                x,
+                y: node.y,
+            })
+        }
+        "y" => {
+            let y = value.as_f64().ok_or_else(|| format!("node {node_id}.y expects number value"))?;
+            Ok(TrinityGraphOp::Reposition {
+                id: node_id.to_string(),
+                x: node.x,
+                y,
+            })
+        }
+        _ => Ok(TrinityGraphOp::SetDataProperty {
+            entity: EntityRef::Node(node_id.to_string()),
+            key: prop.to_string(),
+            value,
+        }),
+    }
+}
+
+fn emit_create_ops(fixture: &GraphFixtureV1, pattern: &Pattern) -> Result<Vec<TrinityGraphOp>, String> {
     let left = pattern.nodes.first().ok_or_else(|| "empty create pattern".to_string())?;
-    let left_id = format!("{}-{}", left.var, graph.nodes.len());
+    let left_id = format!("{}-{}", left.var, fixture.nodes.len());
+    let mut ops = Vec::new();
     let mut left_ports = Vec::new();
     if pattern.edge.is_some() {
         left_ports.push(Port {
@@ -1432,28 +1492,26 @@ fn apply_create(graph: &mut Graph, pattern: &Pattern) -> Result<(), String> {
             properties: PropertyBag::new(),
         });
     }
-    graph.add_node(Node {
+    ops.push(TrinityGraphOp::CreateNode {
         id: left_id.clone(),
         kind: left.kind.clone(),
         name: left.var.clone(),
-        x: graph.nodes.len() as f64 * 120.0,
+        x: fixture.nodes.len() as f64 * 120.0,
         y: 0.0,
         width: 80.0,
         height: 40.0,
-        properties: PropertyBag::new(),
         ports: left_ports,
     });
     if let Some(edge_pat) = &pattern.edge {
-        let right_id = format!("{}-{}", edge_pat.right.var, graph.nodes.len());
-        graph.add_node(Node {
+        let right_id = format!("{}-{}", edge_pat.right.var, fixture.nodes.len() + 1);
+        ops.push(TrinityGraphOp::CreateNode {
             id: right_id.clone(),
             kind: edge_pat.right.kind.clone(),
             name: edge_pat.right.var.clone(),
-            x: graph.nodes.len() as f64 * 120.0,
+            x: (fixture.nodes.len() + 1) as f64 * 120.0,
             y: 80.0,
             width: 80.0,
             height: 40.0,
-            properties: PropertyBag::new(),
             ports: vec![Port {
                 id: "in".into(),
                 kind: "Connector".into(),
@@ -1461,17 +1519,15 @@ fn apply_create(graph: &mut Graph, pattern: &Pattern) -> Result<(), String> {
                 properties: PropertyBag::new(),
             }],
         });
-        let edge_id = format!("e-{}", graph.edges.len());
-        graph.add_edge(Edge {
-            id: edge_id,
+        ops.push(TrinityGraphOp::CreateEdge {
+            id: format!("e-{}", fixture.edges.len()),
             kind: edge_pat.kind.clone().unwrap_or_else(|| "Connection".into()),
             source: port_key(&left_id, "out"),
             target: port_key(&right_id, "in"),
             properties: PropertyBag::new(),
         });
     }
-    graph.recompute_derived();
-    Ok(())
+    Ok(ops)
 }
 // #endregion 🔖Executor
 
@@ -1657,103 +1713,3 @@ mod tests {
     }
 }
 // #endregion 🔖Tests
-
-// #region 🔖DocumentVcs
-use framework_vcs::{
-    create_document_vcs_envelope, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff,
-};
-
-pub const TRINITY_FIXTURE_SCHEMA: &str = "trinity.fixture/v1";
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct TrinityFixtureDocument {
-    pub fixture: GraphFixtureV1,
-}
-
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct TrinityFixtureDiff {
-    pub fixture: Option<GraphFixtureV1>,
-}
-
-impl OperationDiff<TrinityFixtureDocument> for TrinityFixtureDiff {
-    fn apply(&self, projection: &TrinityFixtureDocument) -> TrinityFixtureDocument {
-        TrinityFixtureDocument {
-            fixture: self.fixture.clone().unwrap_or_else(|| projection.fixture.clone()),
-        }
-    }
-
-    fn absorb(&mut self, other: Self) {
-        if other.fixture.is_some() {
-            self.fixture = other.fixture;
-        }
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "op", rename_all = "camelCase")]
-pub enum TrinityFixtureOp {
-    SetDocument { fixture: GraphFixtureV1 },
-}
-
-impl Operation<TrinityFixtureDocument> for TrinityFixtureOp {
-    type Diff = TrinityFixtureDiff;
-
-    fn diff(&self, _projection: &TrinityFixtureDocument) -> TrinityFixtureDiff {
-        match self {
-            TrinityFixtureOp::SetDocument { fixture } => TrinityFixtureDiff {
-                fixture: Some(fixture.clone()),
-            },
-        }
-    }
-
-    fn backwards(&self, projection: &TrinityFixtureDocument) -> Vec<Self> {
-        vec![TrinityFixtureOp::SetDocument {
-            fixture: projection.fixture.clone(),
-        }]
-    }
-}
-
-pub type TrinityFixtureEnvelope = DocumentVcsEnvelope<TrinityFixtureDocument, TrinityFixtureOp>;
-pub type TrinityFixtureStore = DocumentVcsStore<TrinityFixtureDocument, TrinityFixtureOp>;
-
-pub fn empty_trinity_fixture_projection() -> TrinityFixtureDocument {
-    TrinityFixtureDocument {
-        fixture: GraphFixtureV1 {
-            schema: GraphFixtureV1::SCHEMA.into(),
-            name: "jack".into(),
-            manifest_id: None,
-            manifest: trinity_ram::Manifest::nakagin_default(),
-            camera: trinity_ram::CameraV1::default(),
-            nodes: Vec::new(),
-            edges: Vec::new(),
-            root_node_id: None,
-        },
-    }
-}
-
-#[cfg(test)]
-mod trinity_fixture_vcs_tests {
-    use super::*;
-
-    #[test]
-    fn trinity_fixture_document_vcs_replays_ops() {
-        let mut store = TrinityFixtureStore::new(create_document_vcs_envelope(
-            TRINITY_FIXTURE_SCHEMA,
-            "jack",
-            empty_trinity_fixture_projection(),
-            None,
-        ));
-        let mut fixture = empty_trinity_fixture_projection().fixture;
-        fixture.name = "patched".into();
-        store
-            .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![TrinityFixtureOp::SetDocument { fixture }],
-                description: None,
-            })
-            .expect("apply");
-        assert_eq!(store.projection().expect("projection").fixture.name, "patched");
-    }
-}
-// #endregion 🔖DocumentVcs

@@ -189,6 +189,7 @@ export {
   buildTableWindowBody,
   buildPanelWindowBody,
   isCanvasOnlyWindowBody,
+  isEdgelessWindowBody,
 } from "@semio-tech/framework-platform-core";
 
 function assertCanvasOnlyWindowBody(bodyKey: string, node: UiNode): void {
@@ -355,6 +356,33 @@ export function enforceWindowKindsEngagementInput(windowKinds: readonly WindowKi
     }
     enforcePlaygroundWindowEngagementInput(windowKind.engagement, `${contextLabel} window "${windowKind.id}"`);
   }
+}
+
+/** @emoji ✍️ Window command-line engagement; writer-bodied windows must use this and never mirror document or query text in {@link WindowEngagementInput.value}. */
+export function createWindowCommandEngagement(
+  inputId: string,
+  controllerId: string,
+  options: {
+    readonly placeholder: string;
+    readonly inputCommand: string;
+    readonly submitCommand: string;
+    readonly value?: string;
+    readonly possibleEngagements?: readonly WindowEngagementPossible[];
+    readonly status?: readonly WindowEngagementStatus[];
+  },
+): WindowEngagement {
+  return {
+    sessionActive: false,
+    input: {
+      id: inputId,
+      value: options.value ?? "",
+      placeholder: options.placeholder,
+      onChange: { controllerId, command: options.inputCommand },
+      onSubmit: { controllerId, command: options.submitCommand },
+    },
+    possibleEngagements: options.possibleEngagements,
+    status: options.status,
+  };
 }
 //#endregion 🔖WindowEngagement
 
@@ -1059,6 +1087,20 @@ if (import.meta.vitest) {
           "Test app",
         ),
       ).toThrow(/engagement\.input/);
+    });
+  });
+
+  describe("createWindowCommandEngagement", () => {
+    it("builds command-only engagement without document text", () => {
+      const engagement = createWindowCommandEngagement("writer-input", "ctrl", {
+        placeholder: "Run query",
+        inputCommand: "engagementInput",
+        submitCommand: "engagementSubmit",
+        possibleEngagements: [{ id: "run", label: "Run", command: { controllerId: "ctrl", command: "run" } }],
+      });
+      expect(engagement.input?.value).toBe("");
+      expect(engagement.input?.placeholder).toBe("Run query");
+      expect(engagement.possibleEngagements?.[0]?.label).toBe("Run");
     });
   });
 

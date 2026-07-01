@@ -203,6 +203,100 @@ export function applyShootingCameraToFixture(fixture: ShootingFixtureV1, shot: S
 	};
 }
 
+function mergeShootingScene(scene: ShootingSceneV1, patch: Partial<ShootingSceneV1>): ShootingSceneV1 {
+	return {
+		...scene,
+		...patch,
+		sun: patch.sun ? { ...scene.sun, ...patch.sun } : scene.sun,
+		ambient: patch.ambient ? { ...scene.ambient, ...patch.ambient } : scene.ambient,
+		shadow: patch.shadow ? { ...scene.shadow, ...patch.shadow } : scene.shadow,
+		material: patch.material ? { ...scene.material, ...patch.material } : scene.material,
+	};
+}
+
+function patchShootingShotField(shot: ShootingShotV1, field: string, value: unknown): ShootingShotV1 {
+	if (field === "width" || field === "height") {
+		const numeric = typeof value === "number" ? value : Number(value);
+		if (!Number.isFinite(numeric)) return shot;
+		return { ...shot, [field]: Math.round(numeric) };
+	}
+	if (field === "format" && (value === "svg" || value === "png")) {
+		return { ...shot, format: value };
+	}
+	if (field === "shape" && (value === "rectangle" || value === "ellipse")) {
+		return { ...shot, shape: value };
+	}
+	if (typeof value !== "string") return shot;
+	return { ...shot, [field]: value };
+}
+
+export type ShootingFixtureEditOp =
+	| { readonly op: "setDocument"; readonly document: ShootingFixtureV1 }
+	| { readonly op: "patchScene"; readonly patch: Partial<ShootingSceneV1> }
+	| { readonly op: "patchShots"; readonly shotIds: readonly string[]; readonly field: string; readonly value: unknown }
+	| { readonly op: "patchShot"; readonly shotId: string; readonly field: string; readonly value: unknown }
+	| { readonly op: "patchAssets"; readonly assetIds: readonly string[]; readonly field: string; readonly value: unknown }
+	| { readonly op: "setActiveShot"; readonly shotId: string }
+	| { readonly op: "setActiveAsset"; readonly assetId: string }
+	| { readonly op: "setCamera"; readonly camera: ShootingCameraV1 }
+	| { readonly op: "setShotCamera"; readonly shotId: string; readonly camera: ShootingCameraV1 }
+	| { readonly op: "addSavedCamera"; readonly entry: ShootingSavedCameraV1 }
+	| { readonly op: "loadSavedCamera"; readonly cameraId: string }
+	| { readonly op: "importAsset"; readonly asset: ShootingAssetV1; readonly setActive: boolean };
+
+/** @emoji 🚪 Applies one semantic shooting fixture edit (CQRS projection applier). */
+export function applyShootingFixtureEditOp(fixture: ShootingFixtureV1, op: ShootingFixtureEditOp): ShootingFixtureV1 {
+	switch (op.op) {
+		case "setDocument":
+			return op.document;
+		case "patchScene":
+			return { ...fixture, scene: mergeShootingScene(fixture.scene, op.patch) };
+		case "patchShots": {
+			const targets = new Set(op.shotIds);
+			return {
+				...fixture,
+				shots: fixture.shots.map((shot) => (targets.has(shot.id) ? patchShootingShotField(shot, op.field, op.value) : shot)),
+			};
+		}
+		case "patchShot":
+			return applyShootingFixtureEditOp(fixture, { op: "patchShots", shotIds: [op.shotId], field: op.field, value: op.value });
+		case "patchAssets": {
+			const targets = new Set(op.assetIds);
+			return {
+				...fixture,
+				assets: fixture.assets.map((asset) => {
+					if (!targets.has(asset.id)) return asset;
+					if (typeof op.value !== "string") return asset;
+					return { ...asset, [op.field]: op.value };
+				}),
+			};
+		}
+		case "setActiveShot":
+			return { ...fixture, activeShotId: op.shotId };
+		case "setActiveAsset":
+			return { ...fixture, activeAssetId: op.assetId };
+		case "setCamera":
+			return { ...fixture, camera: op.camera };
+		case "setShotCamera": {
+			const shot = fixture.shots.find((entry) => entry.id === op.shotId);
+			if (!shot) return fixture;
+			return applyShootingCameraToFixture(fixture, shot, op.camera);
+		}
+		case "addSavedCamera":
+			return { ...fixture, savedCameras: [...fixture.savedCameras, op.entry] };
+		case "loadSavedCamera": {
+			const saved = fixture.savedCameras.find((entry) => entry.id === op.cameraId);
+			return saved ? { ...fixture, camera: saved.camera } : fixture;
+		}
+		case "importAsset":
+			return {
+				...fixture,
+				assets: [...fixture.assets, op.asset],
+				...(op.setActive ? { activeAssetId: op.asset.id } : {}),
+			};
+	}
+}
+
 export function shootingIconRenderRequest(fixture: ShootingFixtureV1, shot: ShootingShotV1, asset: ShootingAssetV1): IconRenderRequest {
 	const camera = resolveShotCamera(fixture, shot);
 	const background = shot.background ?? fixture.scene.background;

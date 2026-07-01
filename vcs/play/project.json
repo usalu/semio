@@ -1,0 +1,33 @@
+{
+	"name": "@semio-tech/vcs-play",
+	"$schema": "../../node_modules/nx/schemas/project-schema.json",
+	"targets": {
+		"dev": {
+			"executor": "nx:run-commands",
+			"options": {
+				"cwd": "vcs/play",
+				"command": "bun ./script.ts dev",
+				"env": {
+					"VCS_PLAY_PORT": "6075"
+				},
+				"forwardAllArgs": true
+			}
+		},
+		"build": {
+			"executor": "nx:run-commands",
+			"options": {
+				"cwd": "vcs/play",
+				"command": "bun ./script.ts build",
+				"forwardAllArgs": true
+			}
+		},
+		"test": {
+			"executor": "nx:run-commands",
+			"options": {
+				"cwd": "vcs/play",
+				"command": "bun ./script.ts test",
+				"forwardAllArgs": true
+			}
+		}
+	}
+}

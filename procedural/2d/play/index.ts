@@ -18,12 +18,14 @@ import { FlowOrchestratorClient } from "../../../flow/worker-client.ts";
 import {
     buildCatalogueKindsTreeSections,
     buildFlowContextMenuItems,
+    applyFlowFixtureEditOp,
     flowPlayCatalogueItemDragData,
     type CatalogueSection,
     type FlowCanvasCommandRequest,
     type FlowCanvasContextMenuContext,
     type FlowContextMenuDispatch,
     type FlowExtensionEntry,
+    type FlowFixtureEditOp,
     type FlowGraphEditOp,
     type FlowReorganizeRequest,
 } from "@semio-tech/flow-react";
@@ -64,7 +66,7 @@ import {
     type WindowBodyViewContext,
     type WindowEngagement,
 } from "@semio-tech/framework-playground-core";
-import { drawingSceneFromPreviewPayload } from "@semio-tech/geometry-drawing-js";
+import { drawingSceneFromPreviewPayload } from "@semio-tech/kernel-2d-js";
 import {
     extractChannelPreviewItems,
     filterVisiblePreviewItems,
@@ -114,12 +116,6 @@ export const PROCEDURAL_2D_PLAY_SURFACE_ID_GENERATE = "procedural2d.play.generat
 
 export const PROCEDURAL_2D_PLAY_DEFAULT_FIXTURE: FlowFixtureV1 = PROCEDURAL_DEFAULT_FIXTURE;
 export const PROCEDURAL_2D_PLAY_DEFAULT_FIXTURE_JSON = proceduralFixtureToJson(PROCEDURAL_DEFAULT_FIXTURE);
-
-type FlowFixtureEditOp = { readonly op: "setDocument"; readonly document: FlowFixtureV1 };
-
-function applyFlowFixtureEditOp(_fixture: FlowFixtureV1, op: FlowFixtureEditOp): FlowFixtureV1 {
-	return op.document;
-}
 
 export const PROCEDURAL_2D_PLAY_LAYOUT = createDefaultLayout(
 	[PROCEDURAL_2D_PLAY_WINDOW_KIND_ID, PROCEDURAL_2D_PLAY_WINDOW_KIND_PREVIEW],
@@ -708,8 +704,11 @@ export class Procedural2dPlayController extends Controller implements Playground
 	}
 
 	private commitFixture(next: FlowFixtureV1): void {
-		const previous = this.projection();
-		recordProjectionChange(this.docStore, [{ op: "setDocument", document: next }]);
+		this.applyFixtureEdit({ op: "setDocument", document: next });
+	}
+
+	private applyFixtureEdit(op: FlowFixtureEditOp): void {
+		recordProjectionChange(this.docStore, [op]);
 	}
 
 	getDocumentVcsStore(): DocumentVcsStore<FlowFixtureV1, FlowFixtureEditOp> {
@@ -738,29 +737,21 @@ export class Procedural2dPlayController extends Controller implements Playground
 		if (!trimmed || trimmed === oldId) return;
 		const fixture = this.projection();
 		if (fixture.widgets.some((widget) => widget.id === trimmed)) return;
-		const widgets = fixture.widgets.map((widget) => (widget.id === oldId ? ({ ...widget, id: trimmed } as import("@semio-tech/flow-react").FlowWidgetV1) : widget));
-		const synapses = fixture.synapses.map((synapse) => ({
-			...synapse,
-			from: synapse.from === oldId ? trimmed : synapse.from,
-			to: synapse.to === oldId ? trimmed : synapse.to,
-		}));
 		this.selectedNodeIds = this.selectedNodeIds.map((id) => (id === oldId ? trimmed : id));
-		this.applyFixtureJson(proceduralFixtureToJson({ ...fixture, widgets, synapses }));
+		this.applyFixtureEdit({ op: "renameWidget", oldId, newId: trimmed });
+		this.fixtureEdges = this.parseFixtureEdges(proceduralFixtureToJson(this.projection()));
+		this.interactionRevision += 1;
+		this.notifySnapshot();
+		this.rebuildShellMode();
+		this.emit();
 	}
 
 	private patchFlowWidget(widgetId: string, field: string, value: unknown): void {
-		const fixture = this.projection();
-		const widgets = fixture.widgets.map((widget) => {
-			if (widget.id !== widgetId) return widget;
-			if (field === "value" || field === "min" || field === "max" || field === "step") {
-				const numeric = typeof value === "number" ? value : Number(value);
-				if (!Number.isFinite(numeric)) return widget;
-				return { ...widget, [field]: numeric } as import("@semio-tech/flow-react").FlowWidgetV1;
-			}
-			if (typeof value !== "string") return widget;
-			return { ...widget, [field]: value } as import("@semio-tech/flow-react").FlowWidgetV1;
-		});
-		this.applyFixtureJson(proceduralFixtureToJson({ ...fixture, widgets }));
+		this.applyFixtureEdit({ op: "patchWidget", widgetId, field, value });
+		this.interactionRevision += 1;
+		this.notifySnapshot();
+		this.rebuildShellMode();
+		this.emit();
 	}
 
 	private loadFixtureById(fixtureId: string): void {

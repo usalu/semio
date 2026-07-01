@@ -11,10 +11,10 @@
   "scripts": {
     "test": "bun nx run @semio-tech/draw-core:test"
   },
-  "dependencies": {
-    "@semio-tech/framework-core": "workspace:*",
-    "@semio-tech/graph-manifest": "workspace:*"
-  },
+	"dependencies": {
+		"@semio-tech/graph-manifest": "workspace:*",
+		"@semio-tech/vcs-core": "workspace:*"
+	},
   "devDependencies": {
     "typescript": "^5.9.3",
     "vitest": "^4.0.17"

@@ -1591,9 +1591,9 @@ When starting session then draft then transaction and then sending multiple kit 
 ---
 
 Kit/Store:
-Introduce a window kind such as gitkraken for the complete history (root, checkpoints, alternatives, drafts)
+Introduce a window kind for the complete history (root, checkpoints, alternatives, drafts)
 
-The best ideas from GitKraken:
+The best ideas:
 
 - Chronological vertical sorting for checkpoints (latest top), leaves good space for message
 - Left column for alternatives

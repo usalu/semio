@@ -16,7 +16,7 @@ todos:
     status: completed
   - id: validate-and-ticket
     content: Run cargo tests across affected crates, verify TS playgrounds still build, and do the work inside a repo ticket (reopen or open new) closed with a summary
-    status: in_progress
+    status: completed
 isProject: false
 ---
 

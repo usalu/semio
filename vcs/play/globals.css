@@ -1,0 +1,5 @@
+@import "@semio-tech/ui-styling/globals.css";
+
+.vcs-play-root button {
+	cursor: pointer;
+}

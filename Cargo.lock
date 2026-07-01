@@ -6467,7 +6467,6 @@ dependencies = [
 name = "trinity_jack"
 version = "0.1.0"
 dependencies = [
- "framework_vcs",
  "serde",
  "serde_json",
  "trinity_ram",
@@ -6496,6 +6495,7 @@ dependencies = [
 name = "trinity_ram"
 version = "0.1.0"
 dependencies = [
+ "framework_vcs",
  "mathematical_core",
  "mathematical_graph_manifest",
  "serde",
@@ -6511,6 +6511,7 @@ dependencies = [
  "js-sys",
  "mathematical_core",
  "mathematical_graph_port_directed",
+ "mathematical_graph_port_directed_normal",
  "serde",
  "serde_json",
  "trinity_jack",
@@ -7139,6 +7140,21 @@ name = "vcpkg"
 version = "0.2.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
+
+[[package]]
+name = "vcs"
+version = "0.1.0"
+dependencies = [
+ "js-sys",
+ "rusqlite",
+ "serde",
+ "serde-wasm-bindgen",
+ "serde_json",
+ "tempfile",
+ "thiserror 2.0.18",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+]
 
 [[package]]
 name = "vello"

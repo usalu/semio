@@ -109,7 +109,7 @@ import {
 	type MeshTransfer,
 	type Vec3,
 	solidRef,
-} from "@semio-tech/geometry-brep-js";
+} from "@semio-tech/kernel-3d-js";
 export { kernelGeometry };
 // #endregion 🔌Adapters
 

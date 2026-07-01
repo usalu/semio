@@ -84,6 +84,19 @@ export interface TrinityReorganizeRequest {
   readonly optionsJson: string;
 }
 
+export type TrinityVcsCommandKind = "undo" | "redo" | "commitCheckpoint";
+
+export interface TrinityVcsRequest {
+  readonly kind: TrinityVcsCommandKind;
+  readonly epoch: number;
+  readonly message?: string;
+}
+
+export interface TrinityJackDispatchRequest {
+  readonly query: string;
+  readonly epoch: number;
+}
+
 export type TrinityJackResultKind = "table" | "graph";
 
 export interface TrinityJackRunV1 {
@@ -346,8 +359,14 @@ export interface TrinityCanvasProps {
   readonly fixtureJson?: string;
   readonly className?: string;
   readonly reorganize?: TrinityReorganizeRequest;
+  readonly jackDispatch?: TrinityJackDispatchRequest;
+  readonly vcsRequest?: TrinityVcsRequest;
   readonly onFixtureChange?: (fixtureJson: string) => void;
+  readonly onJackDispatchComplete?: (resultJson: string) => void;
+  readonly onVcsApplied?: (generation: number) => void;
   readonly onSelectionChange?: (nodeIds: readonly string[]) => void;
+  readonly highlightedNodeIds?: readonly string[];
+  readonly highlightedNodeIdsSignal?: number;
   readonly automaticLod?: boolean;
   readonly lod?: TrinityDrawLodKind;
   readonly onLodChange?: (lod: TrinityDrawLodKind) => void;
@@ -377,8 +396,14 @@ export function TrinityCanvas({
   fixtureJson,
   className,
   reorganize,
+  jackDispatch,
+  vcsRequest,
   onFixtureChange,
+  onJackDispatchComplete,
+  onVcsApplied,
   onSelectionChange,
+  highlightedNodeIds,
+  highlightedNodeIdsSignal = 0,
   automaticLod = true,
   lod,
   onLodChange,
@@ -388,11 +413,14 @@ export function TrinityCanvas({
   const sessionRef = useRef<TrinitySession | null>(null);
   const rafRef = useRef<number | null>(null);
   const onFixtureChangeRef = useRef(onFixtureChange);
+  const onJackDispatchCompleteRef = useRef(onJackDispatchComplete);
+  const onVcsAppliedRef = useRef(onVcsApplied);
   const onSelectionChangeRef = useRef(onSelectionChange);
   const onLodChangeRef = useRef(onLodChange);
   const lastAutomaticLodRef = useRef<boolean | null>(null);
   const lastForcedLodRef = useRef<string | null>(null);
   const lastReportedLodRef = useRef<TrinityDrawLodKind | null>(null);
+  const lastHighlightedJsonRef = useRef<string>("[]");
 
   const syncVelloTheme = useCallback(() => {
     const session = sessionRef.current;
@@ -462,8 +490,30 @@ export function TrinityCanvas({
   }, [onFixtureChange]);
 
   useEffect(() => {
+    onJackDispatchCompleteRef.current = onJackDispatchComplete;
+  }, [onJackDispatchComplete]);
+
+  useEffect(() => {
+    onVcsAppliedRef.current = onVcsApplied;
+  }, [onVcsApplied]);
+
+  useEffect(() => {
     onSelectionChangeRef.current = onSelectionChange;
   }, [onSelectionChange]);
+
+  useEffect(() => {
+    const session = sessionRef.current;
+    if (!session?.gpuReady()) return;
+    const nextJson = JSON.stringify(highlightedNodeIds ?? []);
+    if (lastHighlightedJsonRef.current === nextJson) return;
+    lastHighlightedJsonRef.current = nextJson;
+    try {
+      session.setHighlightedNodeIdsJson(nextJson);
+      renderFrame();
+    } catch {
+      /* highlight not ready */
+    }
+  }, [highlightedNodeIdsSignal, highlightedNodeIds, renderFrame]);
 
   useEffect(() => {
     onLodChangeRef.current = onLodChange;
@@ -486,6 +536,63 @@ export function TrinityCanvas({
       /* reorganize not ready */
     }
   }, [reorganize?.epoch, reorganize?.optionsJson, renderFrame]);
+
+  useEffect(() => {
+    const session = sessionRef.current;
+    if (!session || !jackDispatch || jackDispatch.epoch <= 0) return;
+    try {
+      const resultJson = session.runJackJsonWithFixture(jackDispatch.query);
+      onFixtureChangeRef.current?.(session.fixtureJson());
+      onJackDispatchCompleteRef.current?.(resultJson);
+      renderFrame();
+    } catch (err) {
+      try {
+        onJackDispatchCompleteRef.current?.(
+          JSON.stringify({
+            kind: "table",
+            columns: ["error"],
+            rows: [[String(err)]],
+            fixtureJson: session.fixtureJson(),
+          }),
+        );
+      } catch {
+        /* session not ready */
+      }
+    }
+  }, [jackDispatch?.epoch, jackDispatch?.query, renderFrame]);
+
+  useEffect(() => {
+    const session = sessionRef.current;
+    if (!session || !vcsRequest || vcsRequest.epoch <= 0) return;
+    try {
+      if (vcsRequest.kind === "undo") {
+        session.undo();
+      } else if (vcsRequest.kind === "redo") {
+        session.redo();
+      } else {
+        session.commitCheckpoint(vcsRequest.message ?? "");
+      }
+      onFixtureChangeRef.current?.(session.fixtureJson());
+      onVcsAppliedRef.current?.(session.storeGeneration());
+      renderFrame();
+    } catch {
+      /* vcs not ready */
+    }
+  }, [vcsRequest?.epoch, vcsRequest?.kind, vcsRequest?.message, renderFrame]);
+
+  useEffect(() => {
+    const session = sessionRef.current;
+    if (!session) return;
+    const nextFixture = fixtureJson ?? TRINITY_DEFAULT_FIXTURE_JSON;
+    try {
+      if (session.fixtureJson() !== nextFixture) {
+        session.loadFixtureJson(nextFixture);
+        renderFrame();
+      }
+    } catch {
+      /* fixture not ready */
+    }
+  }, [fixtureJson, renderFrame]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -600,7 +707,7 @@ export function TrinityCanvas({
       session.detachGpu();
       sessionRef.current = null;
     };
-  }, [fixtureJson, renderFrame, reportSelection]);
+  }, [renderFrame, reportSelection]);
 
   return (
     <div ref={containerRef} className={className ?? "relative h-full w-full min-h-0 min-w-0 bg-canvas"}>

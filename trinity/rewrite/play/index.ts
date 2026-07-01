@@ -28,13 +28,8 @@ import {
   enforcePlaygroundWindowEngagementInput,
 } from "@semio-tech/framework-playground-core";
 import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
-import {
-  DocumentVcsStore,
-  createDocumentVcsEnvelope,
-  recordProjectionChange,
-} from "@semio-tech/framework-core";
-import { createWriterDocument, type WriterDocumentV1 } from "@semio-tech/writer-core";
-import type { Puzzle2dFixtureV1 } from "@semio-tech/puzzle-2d-react";
+import { createWriterDocument, jackSymbolAtOffset, jackVariableOccurrences, type WriterDocumentV1 } from "@semio-tech/writer-core";
+import type { Puzzle2dFixtureV1, Puzzle2dPreselectSnapshot } from "@semio-tech/puzzle-2d-react";
 import {
   REWRITE_DEFAULT_LHS_FIXTURE,
   REWRITE_DEFAULT_LHS_FIXTURE_JSON,
@@ -42,7 +37,10 @@ import {
   REWRITE_DEFAULT_RHS_FIXTURE_JSON,
   parseRewriteGraphFixtureJson,
   rewriteLhsGraphToJson,
+  rewriteLhsMatchQuery,
+  rewriteNodeIdsForVar,
   rewriteRhsGraphToJson,
+  rewriteVarForNodeId,
 } from "@semio-tech/trinity-rewrite-react";
 import {
   type FormSpec,
@@ -50,7 +48,6 @@ import {
   type FormValues,
 } from "@semio-tech/forms-core";
 import {
-  TRINITY_DEFAULT_FIXTURE,
   TRINITY_DEFAULT_FIXTURE_JSON,
   TRINITY_LOD_MODE_AUTOMATIC,
   applyRewriteOnFixture,
@@ -60,7 +57,7 @@ import {
   isTrinityDrawLodKind,
   parseTrinityFixtureJson,
   ruleQueryOnFixture,
-  trinityFixtureToJson,
+  runJackOnFixture,
   trinityLodAutomaticSelectLabel,
   trinityPlayLodTierMenuLabel,
   trinityPlayLodTiers,
@@ -68,13 +65,9 @@ import {
   type TrinityDrawLodKind,
   type TrinityFixtureV1,
   type TrinityLodModeKind,
+  type TrinityVcsCommandKind,
+  type TrinityVcsRequest,
 } from "@semio-tech/trinity-react";
-
-type TrinityFixtureEditOp = { readonly op: "setDocument"; readonly document: TrinityFixtureV1 };
-
-function applyTrinityFixtureEditOp(_fixture: TrinityFixtureV1, op: TrinityFixtureEditOp): TrinityFixtureV1 {
-  return op.document;
-}
 
 export const TRINITY_REWRITE_PLAY_APP_ID = "trinity-rewrite-play";
 export const TRINITY_REWRITE_PLAY_CONTROLLER_ID = "trinity-rewrite-play";
@@ -100,6 +93,11 @@ function trinityRewritePlayCmd(command: string, args?: Record<string, unknown>) 
 /** @emoji 🧰 Trinity rewrite play footer toolbar. */
 export function buildTrinityRewritePlayToolbarTools(controllerId: string): AppTools {
   return [
+    toolCollection("history", "history", [
+      { kind: "button", id: "trinity-rewrite.undo", label: "Undo", iconId: "undo-2", controllerId, command: "undo" },
+      { kind: "button", id: "trinity-rewrite.redo", label: "Redo", iconId: "redo-2", controllerId, command: "redo" },
+      { kind: "button", id: "trinity-rewrite.checkpoint", label: "Checkpoint", iconId: "git-commit", controllerId, command: "commitCheckpoint" },
+    ]),
     toolCollection("rewrite", "repeat", [
       { kind: "button", id: "trinity-rewrite.reorganize", label: "Reorganize", iconId: "refresh-cw", controllerId, command: "reorganize" },
     ]),
@@ -118,6 +116,10 @@ export {
   REWRITE_DEFAULT_RHS_FIXTURE_JSON,
   rewriteLhsKindCatalogs,
   rewriteRhsKindCatalogs,
+  parseRewriteGraphFixtureJson,
+  rewriteLhsMatchQuery,
+  rewriteNodeIdsForVar,
+  rewriteVarForNodeId,
 } from "@semio-tech/trinity-rewrite-react";
 
 export const TRINITY_REWRITE_PLAY_DEFAULT_LHS_JSON = rewriteLhsGraphToJson(REWRITE_DEFAULT_LHS_FIXTURE);
@@ -240,16 +242,25 @@ export function registerTrinityRewritePlayDeclarativeBodies(): void {
 
 export class TrinityRewritePlayController extends Controller {
   readonly mainMode = new ModeRuntime("explore", "Explore", undefined);
-  private readonly docStore = new DocumentVcsStore<TrinityFixtureV1, TrinityFixtureEditOp>({
-    envelope: createDocumentVcsEnvelope("trinity.fixture/v1", "trinity-rewrite-play", TRINITY_DEFAULT_FIXTURE),
-    applyOp: applyTrinityFixtureEditOp,
-  });
+  private beforeFixtureJson = TRINITY_DEFAULT_FIXTURE_JSON;
   private lhsFixture: Puzzle2dFixtureV1 = REWRITE_DEFAULT_LHS_FIXTURE;
   private rhsFixture: Puzzle2dFixtureV1 = REWRITE_DEFAULT_RHS_FIXTURE;
   private parameterValues: FormValues = parameterDefaultValues(parseRhsParameters(TRINITY_REWRITE_PLAY_DEFAULT_RHS_JSON));
   private jackQueryText = "";
   private afterFixtureJson = TRINITY_DEFAULT_FIXTURE_JSON;
+  private vcsEpoch = 0;
+  private vcsKind: TrinityVcsCommandKind = "undo";
+  private vcsMessage = "";
+  private storeGeneration = 0;
   private selectedNodeIds: string[] = [];
+  private activeHoverVar: string | null = null;
+  private activeSelectVar: string | null = null;
+  private hoverEpoch = 0;
+  private selectEpoch = 0;
+  private lhsHoveredNodeId: string | null = null;
+  private rhsHoveredNodeId: string | null = null;
+  private lhsSelectedNodeIds: string[] = [];
+  private rhsSelectedNodeIds: string[] = [];
   private reorganizeEpoch = 0;
   private interactionRevision = 0;
   private lodMode: TrinityLodModeKind = TRINITY_LOD_MODE_AUTOMATIC;
@@ -275,7 +286,7 @@ export class TrinityRewritePlayController extends Controller {
   }
 
   getBeforeFixtureJson(): string {
-    return trinityFixtureToJson(this.projection());
+    return this.beforeFixtureJson;
   }
 
   getFixtureJson(): string {
@@ -286,17 +297,27 @@ export class TrinityRewritePlayController extends Controller {
     return this.afterFixtureJson;
   }
 
-  getDocumentVcsStore(): DocumentVcsStore<TrinityFixtureV1, TrinityFixtureEditOp> {
-    return this.docStore;
+  getVcsRequest(): TrinityVcsRequest | undefined {
+    return this.vcsEpoch > 0 ? { kind: this.vcsKind, epoch: this.vcsEpoch, message: this.vcsMessage || undefined } : undefined;
   }
 
-  private projection(): TrinityFixtureV1 {
-    return this.docStore.projection();
+  getStoreGeneration(): number {
+    return this.storeGeneration;
   }
 
-  private commitFixture(next: TrinityFixtureV1): void {
-    const previous = this.projection();
-    recordProjectionChange(this.docStore, [{ op: "setDocument", document: next }]);
+  private setBeforeFixtureJson(next: string): void {
+    this.beforeFixtureJson = next;
+  }
+
+  private requestVcs(kind: TrinityVcsCommandKind, message = ""): void {
+    this.vcsKind = kind;
+    this.vcsMessage = message;
+    this.vcsEpoch += 1;
+  }
+
+  onVcsApplied(generation: number): void {
+    this.storeGeneration = generation;
+    this.bump();
   }
 
   getLhsFixtureJson(): string {
@@ -354,6 +375,109 @@ export class TrinityRewritePlayController extends Controller {
 
   getInteractionRevision(): number {
     return this.interactionRevision;
+  }
+
+  getHoverEpoch(): number {
+    return this.hoverEpoch;
+  }
+
+  getSelectEpoch(): number {
+    return this.selectEpoch;
+  }
+
+  getActiveHoverVar(): string | null {
+    return this.activeHoverVar;
+  }
+
+  getActiveSelectVar(): string | null {
+    return this.activeSelectVar;
+  }
+
+  getLhsHoveredNodeId(): string | null {
+    return this.lhsHoveredNodeId;
+  }
+
+  getRhsHoveredNodeId(): string | null {
+    return this.rhsHoveredNodeId;
+  }
+
+  getLhsHoveredNodeIds(): readonly string[] {
+    return this.activeHoverVar ? rewriteNodeIdsForVar(this.lhsFixture, this.activeHoverVar) : [];
+  }
+
+  getRhsHoveredNodeIds(): readonly string[] {
+    return this.activeHoverVar ? rewriteNodeIdsForVar(this.rhsFixture, this.activeHoverVar) : [];
+  }
+
+  getLhsVarPreselection(): Puzzle2dPreselectSnapshot {
+    if (!this.activeHoverVar) return { ids: [], removedIds: [] };
+    const ids = rewriteNodeIdsForVar(this.lhsFixture, this.activeHoverVar);
+    const removedIds = this.lhsHoveredNodeId ? ids.filter((id) => id !== this.lhsHoveredNodeId) : [...ids];
+    return { ids: [], removedIds };
+  }
+
+  getRhsVarPreselection(): Puzzle2dPreselectSnapshot {
+    if (!this.activeHoverVar) return { ids: [], removedIds: [] };
+    const ids = rewriteNodeIdsForVar(this.rhsFixture, this.activeHoverVar);
+    const removedIds = this.rhsHoveredNodeId ? ids.filter((id) => id !== this.rhsHoveredNodeId) : [...ids];
+    return { ids: [], removedIds: [] };
+  }
+
+  getLhsVarSelection(): readonly string[] {
+    return this.activeSelectVar ? rewriteNodeIdsForVar(this.lhsFixture, this.activeSelectVar) : [];
+  }
+
+  getRhsVarSelection(): readonly string[] {
+    return this.activeSelectVar ? rewriteNodeIdsForVar(this.rhsFixture, this.activeSelectVar) : [];
+  }
+
+  getJackHoverOccurrences(): readonly { readonly start: number; readonly end: number }[] {
+    if (!this.activeHoverVar) return [];
+    return jackVariableOccurrences(this.jackQueryText, this.activeHoverVar);
+  }
+
+  getJackSelectOccurrences(): readonly { readonly start: number; readonly end: number }[] {
+    if (!this.activeSelectVar) return [];
+    return jackVariableOccurrences(this.jackQueryText, this.activeSelectVar);
+  }
+
+  getBeforeHighlightedNodeIds(): readonly string[] {
+    return this.boundNodeIdsForActiveVar(this.beforeFixtureJson);
+  }
+
+  getAfterHighlightedNodeIds(): readonly string[] {
+    return this.boundNodeIdsForActiveVar(this.afterFixtureJson);
+  }
+
+  private boundNodeIdsForActiveVar(fixtureJson: string): readonly string[] {
+    const activeVar = this.activeHoverVar ?? this.activeSelectVar;
+    if (!activeVar) return [];
+    try {
+      const query = rewriteLhsMatchQuery(this.getLhsJson(), activeVar);
+      const result = runJackOnFixture(fixtureJson, query);
+      if (result.kind === "graph" && result.graphFixture?.nodes) {
+        return result.graphFixture.nodes.map((node) => node.id);
+      }
+    } catch {
+      /* match preview unavailable */
+    }
+    return [];
+  }
+
+  private setActiveHoverVar(next: string | null): void {
+    if (this.activeHoverVar === next) return;
+    this.activeHoverVar = next;
+    this.hoverEpoch += 1;
+    this.notifySnapshot();
+    this.emit();
+  }
+
+  private setActiveSelectVar(next: string | null): void {
+    if (this.activeSelectVar === next) return;
+    this.activeSelectVar = next;
+    this.selectEpoch += 1;
+    this.notifySnapshot();
+    this.emit();
   }
 
   lodModeForScope(scopeId: string): TrinityLodModeKind {
@@ -439,11 +563,26 @@ export class TrinityRewritePlayController extends Controller {
   run(command: string, args?: unknown): void {
     if (command === "setFixtureJson") {
       const json = (args as { json?: string }).json;
-      const parsed = typeof json === "string" ? parseTrinityFixtureJson(json) : null;
-      if (parsed) {
-        this.commitFixture(parsed);
+      if (typeof json === "string" && parseTrinityFixtureJson(json)) {
+        this.setBeforeFixtureJson(json);
         this.bump();
       }
+      return;
+    }
+    if (command === "undo") {
+      this.requestVcs("undo");
+      this.bump();
+      return;
+    }
+    if (command === "redo") {
+      this.requestVcs("redo");
+      this.bump();
+      return;
+    }
+    if (command === "commitCheckpoint") {
+      const message = (args as { message?: string }).message;
+      this.requestVcs("commitCheckpoint", typeof message === "string" ? message : "");
+      this.bump();
       return;
     }
     if (command === "setLhsFixtureJson") {
@@ -479,19 +618,71 @@ export class TrinityRewritePlayController extends Controller {
       this.bump();
       return;
     }
+    if (command === "setLhsGraphHover") {
+      const id = (args as { id?: string | null }).id ?? null;
+      this.lhsHoveredNodeId = id;
+      this.setActiveHoverVar(id ? rewriteVarForNodeId(this.lhsFixture, id) : null);
+      return;
+    }
+    if (command === "setRhsGraphHover") {
+      const id = (args as { id?: string | null }).id ?? null;
+      this.rhsHoveredNodeId = id;
+      this.setActiveHoverVar(id ? rewriteVarForNodeId(this.rhsFixture, id) : null);
+      return;
+    }
+    if (command === "setJackHover") {
+      const offset = (args as { offset?: number | null }).offset;
+      if (offset == null) {
+        this.lhsHoveredNodeId = null;
+        this.rhsHoveredNodeId = null;
+        this.setActiveHoverVar(null);
+      } else {
+        const symbol = jackSymbolAtOffset(this.jackQueryText, offset);
+        this.setActiveHoverVar(symbol?.kind === "variable" ? symbol.name : null);
+      }
+      return;
+    }
+    if (command === "setLhsGraphSelect") {
+      const ids = (args as { ids?: string[] }).ids ?? [];
+      this.lhsSelectedNodeIds = [...ids];
+      this.setActiveSelectVar(ids.length === 1 ? rewriteVarForNodeId(this.lhsFixture, ids[0]!) : null);
+      return;
+    }
+    if (command === "setRhsGraphSelect") {
+      const ids = (args as { ids?: string[] }).ids ?? [];
+      this.rhsSelectedNodeIds = [...ids];
+      this.setActiveSelectVar(ids.length === 1 ? rewriteVarForNodeId(this.rhsFixture, ids[0]!) : null);
+      return;
+    }
+    if (command === "setJackSelect") {
+      const { start, end } = args as { start?: number; end?: number };
+      if (start == null || end == null) {
+        this.setActiveSelectVar(null);
+        return;
+      }
+      const offset = Math.floor((start + end) / 2);
+      const symbol = jackSymbolAtOffset(this.jackQueryText, offset);
+      this.setActiveSelectVar(symbol?.kind === "variable" ? symbol.name : null);
+      return;
+    }
     if (command === "patchTrinityNodes") {
       const nodeIds = (args as { nodeIds?: readonly string[] }).nodeIds ?? [];
       const field = (args as { field?: string }).field;
       const value = (args as { value?: unknown }).value;
       if (!nodeIds.length || field !== "name" || typeof value !== "string") return;
-      const targets = new Set(nodeIds);
-      const fixture = this.projection();
       const nextName = value.trim();
       if (!nextName) return;
-      this.commitFixture({
-        ...fixture,
-        nodes: fixture.nodes.map((node) => (targets.has(node.id) ? { ...node, name: nextName } : node)),
-      });
+      const escaped = nextName.replace(/'/g, "\\'");
+      const fixture = parseTrinityFixtureJson(this.beforeFixtureJson);
+      if (!fixture) return;
+      let json = this.beforeFixtureJson;
+      for (const id of nodeIds) {
+        const node = fixture.nodes.find((row) => row.id === id);
+        if (!node) continue;
+        const result = runJackOnFixture(json, `MATCH (n:${node.kind}) WHERE n.id = '${id}' SET n.name = '${escaped}'`);
+        json = result.fixtureJson;
+      }
+      this.setBeforeFixtureJson(json);
       this.bump();
       return;
     }
@@ -660,6 +851,34 @@ if (import.meta.vitest) {
       });
       ctrl.run("setLhsFixtureJson", { json: REWRITE_DEFAULT_LHS_FIXTURE_JSON });
       expect(revision).toBeGreaterThan(0);
+    });
+
+    it("lhs hover bridges variable to jack occurrences and rhs set node", () => {
+      const bus = new CommandBus();
+      const ctrl = new TrinityRewritePlayController(bus, () => {});
+      ctrl.run("setLhsGraphHover", { id: "match-a" });
+      expect(ctrl.getActiveHoverVar()).toBe("a");
+      expect(ctrl.getLhsHoveredNodeIds()).toEqual(["match-a", "where-b"]);
+      expect(ctrl.getRhsHoveredNodeIds()).toEqual(["set-label"]);
+      expect(ctrl.getJackHoverOccurrences().length).toBeGreaterThan(0);
+    });
+
+    it("jack hover bridges variable to lhs nodes", () => {
+      const bus = new CommandBus();
+      const ctrl = new TrinityRewritePlayController(bus, () => {});
+      const offset = ctrl.getJackQueryText().indexOf("a");
+      expect(offset).toBeGreaterThanOrEqual(0);
+      ctrl.run("setJackHover", { offset });
+      expect(ctrl.getActiveHoverVar()).toBe("a");
+      expect(ctrl.getLhsHoveredNodeIds()).toContain("match-a");
+    });
+
+    it("active variable highlights bound before nodes", () => {
+      const bus = new CommandBus();
+      const ctrl = new TrinityRewritePlayController(bus, () => {});
+      ctrl.run("setLhsGraphHover", { id: "match-a" });
+      const highlighted = ctrl.getBeforeHighlightedNodeIds();
+      expect(highlighted.length).toBeGreaterThan(0);
     });
   });
 }

@@ -1,0 +1,14 @@
+{
+  "title": "Generalize Trinity Directed Port Graph",
+  "emoji": "🔺",
+  "status": "closed",
+  "description": "Trinity operates on general directed property port graphs, not DAGs. Remove DAG-only canvas assumptions (enforce_acyclic), wire reorganize to shared force layout, generalize flatPosition derivation for disconnected components, and extend force-graph schema allowlist.",
+  "summary": "Generalized Trinity off DAG constraints and aligned canvas rendering with puzzle 2d port graphs. Removed enforce_acyclic, wired force-directed reorganize, generalized flatPosition for disconnected components, and routed vector rendering through BoardHost. Fixed rectangle node/port caps: trinity_graph_to_board_fixture and force-layout adapter now emit circle nodes (shape circle, radius) with handleKind port at left/right angles; rebuild_engine uses create_node; kind catalogs registered for port handles. Rebuilt trinity_rewrite WASM. Validated cargo test trinity_rewrite (11) and play vitest rewrite (19) + jack (14).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1781"
+  },
+  "goal": "🎯trinity",
+  "sessions": [
+    "⚪481c4ddea0a04a31909d438511466298"
+  ]
+}

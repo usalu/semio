@@ -3,14 +3,18 @@
 pub use infinite_cavas as cavas;
 use mathematical_graph_port_directed::{
     force_graph::{apply_force_graph_layout_to_fixture_v1_value, ForceGraphLayoutOptions},
-    geometry::{compute_edge_bezier_points, distance_between, handle_outward_at_node_rim, handle_exterior_cap_fill_path, handle_exterior_cap_stroke_path},
+    geometry::{compute_edge_bezier_points, distance_between},
     BoardEngine, HandleRole, VelloThemePalette,
 };
+use mathematical_graph_port_directed_normal::BoardHost;
 use serde::{Deserialize, Serialize};
 use std::cell::Cell;
 use std::collections::HashMap;
 use trinity_jack::{execute, parse};
-use trinity_ram::{Graph, GraphFixtureV1, PortDirection, PropertyValue, port_key};
+use trinity_ram::{
+    create_trinity_graph_envelope, dispatch_trinity_graph_ops, Graph, GraphFixtureV1, Node, PortDirection, PropertyValue,
+    TrinityGraphOp, TrinityGraphStore, port_key,
+};
 
 pub use trinity_jack::{
     complete as complete_jack, parse as parse_jack, run as run_jack, run_json as run_jack_json, tokenize as tokenize_jack,
@@ -21,6 +25,10 @@ pub use trinity_ram::{self, CameraV1, Manifest};
 type TrinityBoardEngine = BoardEngine;
 
 const TRINITY_HANDLE_RADIUS: f64 = 5.0;
+const TRINITY_BOARD_PORT_HANDLE_KIND: &str = "port";
+const TRINITY_DEFAULT_NODE_RADIUS: f64 = 44.0;
+const TRINITY_BOARD_KIND_CATALOGS_JSON: &str =
+    "{\"handleKinds\":[{\"id\":\"port\",\"name\":\"Port\",\"color\":\"#6b7280\"}],\"edgeKinds\":[{\"id\":\"Connection\",\"name\":\"Connection\",\"color\":\"#94a3b8\"}]}";
 const TRINITY_EDGE_STROKE: f64 = 1.5;
 
 // #region 🔖Rewrite
@@ -219,7 +227,12 @@ pub fn build_rule_query(rule: &Rule, bindings: &HashMap<String, PropertyValue>) 
 /// ♻️ Apply a rewrite rule to a graph.
 pub fn apply_rule(graph: &mut Graph, rule: &Rule, bindings: &HashMap<String, PropertyValue>) -> Result<QueryResult, String> {
     let query = build_rule_query(rule, bindings);
-    execute(graph, &parse(&query)?)
+    let (result, ops) = execute(graph, &parse(&query)?)?;
+    if !ops.is_empty() {
+        let fixture = trinity_ram::apply_trinity_graph_ops(graph.to_fixture(), &ops)?;
+        *graph = Graph::from_fixture(fixture)?;
+    }
+    Ok(result)
 }
 
 /// ♻️ Apply a rewrite rule from JSON.
@@ -351,13 +364,84 @@ pub fn trinity_lod_scale_json() -> String {
     serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into())
 }
 
+fn trinity_node_radius(node: &Node) -> f64 {
+    let w = if node.width > 0.0 { node.width } else { 88.0 };
+    let h = if node.height > 0.0 { node.height } else { 40.0 };
+    (w.max(h) * 0.5).max(TRINITY_DEFAULT_NODE_RADIUS * 0.5)
+}
+
+fn trinity_circle_port_angle(index: usize, count: usize, left: bool) -> f64 {
+    let base = if left { std::f64::consts::PI } else { 0.0 };
+    let spread = 0.35;
+    let t = (index as f64 + 0.5) / count.max(1) as f64 - 0.5;
+    base + t * spread
+}
+
+fn trinity_graph_to_board_fixture(graph: &Graph) -> serde_json::Value {
+    let nodes: Vec<serde_json::Value> = graph
+        .nodes
+        .values()
+        .map(|node| {
+            let radius = trinity_node_radius(node);
+            let in_ports: Vec<_> = node.ports.iter().filter(|port| port.direction == PortDirection::In).collect();
+            let out_ports: Vec<_> = node.ports.iter().filter(|port| port.direction == PortDirection::Out).collect();
+            let mut handles = Vec::new();
+            for (index, port) in in_ports.iter().enumerate() {
+                handles.push(serde_json::json!({
+                    "id": port_key(&node.id, &port.id),
+                    "handleKind": TRINITY_BOARD_PORT_HANDLE_KIND,
+                    "angle": trinity_circle_port_angle(index, in_ports.len(), true),
+                }));
+            }
+            for (index, port) in out_ports.iter().enumerate() {
+                handles.push(serde_json::json!({
+                    "id": port_key(&node.id, &port.id),
+                    "handleKind": TRINITY_BOARD_PORT_HANDLE_KIND,
+                    "angle": trinity_circle_port_angle(index, out_ports.len(), false),
+                }));
+            }
+            serde_json::json!({
+                "id": node.id,
+                "x": node.x,
+                "y": node.y,
+                "radius": radius,
+                "shape": "circle",
+                "text": node.name,
+                "nodeKind": node.kind,
+                "handles": handles,
+            })
+        })
+        .collect();
+    let edges: Vec<serde_json::Value> = graph
+        .edges
+        .values()
+        .map(|edge| {
+            serde_json::json!({
+                "id": edge.id,
+                "source": edge.source,
+                "target": edge.target,
+                "edgeKind": edge.kind,
+            })
+        })
+        .collect();
+    serde_json::json!({
+        "schema": "puzzle.2d.fixture/v1",
+        "camera": {
+            "x": graph.camera.x,
+            "y": graph.camera.y,
+            "zoom": graph.camera.zoom,
+        },
+        "nodes": nodes,
+        "edges": edges,
+    })
+}
+
 fn trinity_graph_to_force_layout_fixture(graph: &Graph) -> serde_json::Value {
     let nodes: Vec<serde_json::Value> = graph
         .nodes
         .values()
         .map(|node| {
-            let w = if node.width > 0.0 { node.width } else { 88.0 };
-            let h = if node.height > 0.0 { node.height } else { 40.0 };
+            let radius = trinity_node_radius(node);
             let handles: Vec<serde_json::Value> = node
                 .ports
                 .iter()
@@ -367,9 +451,8 @@ fn trinity_graph_to_force_layout_fixture(graph: &Graph) -> serde_json::Value {
                 "id": node.id,
                 "x": node.x,
                 "y": node.y,
-                "width": w,
-                "height": h,
-                "shape": "rectangle",
+                "radius": radius,
+                "shape": "circle",
                 "handles": handles,
             })
         })
@@ -411,6 +494,26 @@ fn apply_force_layout_positions_to_trinity_graph(graph: &mut Graph, fixture: &se
     Ok(())
 }
 
+fn force_layout_reposition_ops(fixture: &GraphFixtureV1) -> Result<Vec<TrinityGraphOp>, String> {
+    let mut graph = Graph::from_fixture(fixture.clone())?;
+    apply_force_layout_to_trinity_graph(&mut graph)?;
+    let next = graph.to_fixture();
+    let mut ops = Vec::new();
+    for node in &next.nodes {
+        let Some(prev) = fixture.nodes.iter().find(|entry| entry.id == node.id) else {
+            continue;
+        };
+        if (prev.x - node.x).abs() > 1e-6 || (prev.y - node.y).abs() > 1e-6 {
+            ops.push(TrinityGraphOp::Reposition {
+                id: node.id.clone(),
+                x: node.x,
+                y: node.y,
+            });
+        }
+    }
+    Ok(ops)
+}
+
 fn apply_force_layout_to_trinity_graph(graph: &mut Graph) -> Result<(), String> {
     let mut fixture = trinity_graph_to_force_layout_fixture(graph);
     apply_force_graph_layout_to_fixture_v1_value(&mut fixture, &ForceGraphLayoutOptions::default())?;
@@ -422,7 +525,9 @@ fn apply_force_layout_to_trinity_graph(graph: &mut Graph) -> Result<(), String> 
 /// 🖥️ Retained trinity graph host on the directed port board engine.
 pub struct TrinityHost {
     pub graph: Graph,
+    store: TrinityGraphStore,
     pub engine: TrinityBoardEngine,
+    board: BoardHost,
     pub vello_theme: VelloThemePalette,
     width: u32,
     height: u32,
@@ -437,9 +542,14 @@ pub struct TrinityHost {
 
 impl TrinityHost {
     pub fn from_graph(graph: Graph) -> Self {
+        let fixture = graph.to_fixture();
+        let store = TrinityGraphStore::new(create_trinity_graph_envelope("trinity-host", fixture));
+        let graph = Graph::from_fixture(store.projection().expect("projection")).expect("graph");
         let mut host = Self {
             graph,
+            store,
             engine: TrinityBoardEngine::new(),
+            board: BoardHost::new(),
             vello_theme: VelloThemePalette::default(),
             width: 1,
             height: 1,
@@ -460,6 +570,43 @@ impl TrinityHost {
         Ok(Self::from_graph(graph))
     }
 
+    fn refresh_graph_from_store(&mut self) -> Result<(), String> {
+        self.graph = Graph::from_fixture(self.store.projection().map_err(|e| e.to_string())?)?;
+        Ok(())
+    }
+
+    fn dispatch(&mut self, ops: Vec<TrinityGraphOp>) -> Result<(), String> {
+        dispatch_trinity_graph_ops(&mut self.store, ops)?;
+        self.refresh_graph_from_store()
+    }
+
+    pub fn undo(&mut self) -> Result<(), String> {
+        use framework_vcs::DocumentVcsCommand;
+        self.store.dispatch(DocumentVcsCommand::Undo).map_err(|e| e.to_string())?;
+        self.refresh_graph_from_store()?;
+        self.rebuild_engine();
+        Ok(())
+    }
+
+    pub fn redo(&mut self) -> Result<(), String> {
+        use framework_vcs::DocumentVcsCommand;
+        self.store.dispatch(DocumentVcsCommand::Redo).map_err(|e| e.to_string())?;
+        self.refresh_graph_from_store()?;
+        self.rebuild_engine();
+        Ok(())
+    }
+
+    pub fn commit_checkpoint(&mut self, message: Option<String>) -> Result<(), String> {
+        use framework_vcs::DocumentVcsCommand;
+        self.store
+            .dispatch(DocumentVcsCommand::CommitCheckpoint { message })
+            .map_err(|e| e.to_string())
+    }
+
+    pub fn store_generation(&self) -> u64 {
+        self.store.generation()
+    }
+
     pub fn fixture_json(&self) -> Result<String, String> {
         self.graph.fixture_json()
     }
@@ -468,6 +615,7 @@ impl TrinityHost {
         self.width = width.max(1);
         self.height = height.max(1);
         self.dpr = dpr.max(1.0);
+        self.board.set_size(self.width, self.height, self.dpr);
     }
 
     pub fn set_camera(&mut self, x: f64, y: f64, zoom: f64) {
@@ -475,49 +623,66 @@ impl TrinityHost {
         self.graph.camera.y = y;
         self.graph.camera.zoom = zoom;
         self.engine.set_camera(x, y, zoom);
+        self.board.set_camera_silent(x, y, zoom);
     }
 
     pub fn set_vello_theme_from_json(&mut self, json: &str) -> Result<(), String> {
-        self.vello_theme.merge_from_json(json)
+        self.vello_theme.merge_from_json(json)?;
+        self.board.vello_theme = self.vello_theme.clone();
+        Ok(())
     }
 
     pub fn pointer_down(&mut self, x: f64, y: f64, extend: bool) {
         let world = self.screen_to_world(x, y);
         self.engine.pointer_down(world.x, world.y, extend);
-        self.sync_positions_from_engine();
     }
 
     pub fn pointer_move(&mut self, x: f64, y: f64) {
         let world = self.screen_to_world(x, y);
         self.engine.pointer_move(world.x, world.y);
-        self.sync_positions_from_engine();
+        self.sync_ephemeral_positions_from_engine();
     }
 
     pub fn pointer_up(&mut self, x: f64, y: f64) {
         let world = self.screen_to_world(x, y);
         self.engine.pointer_up(world.x, world.y);
-        self.sync_positions_from_engine();
-    }
-
-    pub fn reorganize(&mut self) {
-        if let Err(err) = apply_force_layout_to_trinity_graph(&mut self.graph) {
-            eprintln!("[DEBUG] trinity reorganize force layout failed: {err}");
-            return;
+        if let Err(err) = self.commit_drag_positions() {
+            eprintln!("[DEBUG] trinity drag commit failed: {err}");
         }
         self.rebuild_engine();
     }
 
+    pub fn reorganize(&mut self) {
+        match force_layout_reposition_ops(&self.store.projection().unwrap_or_else(|_| self.graph.to_fixture())) {
+            Ok(ops) if !ops.is_empty() => {
+                if let Err(err) = self.dispatch(ops) {
+                    eprintln!("[DEBUG] trinity reorganize dispatch failed: {err}");
+                    return;
+                }
+                self.rebuild_engine();
+            }
+            Ok(_) => {}
+            Err(err) => eprintln!("[DEBUG] trinity reorganize force layout failed: {err}"),
+        }
+    }
+
     pub fn run_jack(&mut self, query: &str) -> Result<QueryResult, String> {
-        run_jack(&mut self.graph, query)
+        let parsed = parse(query)?;
+        let (result, ops) = execute(&self.graph, &parsed)?;
+        if !ops.is_empty() {
+            self.dispatch(ops)?;
+            self.rebuild_engine();
+        }
+        Ok(result)
     }
 
     pub fn run_jack_json(&mut self, query: &str) -> Result<String, String> {
-        run_jack_json(&mut self.graph, query)
+        let result = self.run_jack(query)?;
+        serde_json::to_string(&result).map_err(|e| e.to_string())
     }
 
     pub fn run_jack_with_fixture_json(&mut self, query: &str) -> Result<String, String> {
-        let result = run_jack(&mut self.graph, query)?;
-        self.rebuild_engine();
+        let result = self.run_jack(query)?;
         let fixture_json = self.fixture_json()?;
         let out = JackRunWithFixture { result, fixture_json };
         serde_json::to_string(&out).map_err(|e| e.to_string())
@@ -534,9 +699,19 @@ impl TrinityHost {
     }
 
     pub fn apply_rewrite_json(&mut self, rule_json: &str, bindings_json: &str) -> Result<String, String> {
-        let out = apply_rule_json(&mut self.graph, rule_json, bindings_json)?;
-        self.rebuild_engine();
-        Ok(out)
+        let rule: Rule = serde_json::from_str(rule_json).map_err(|e| e.to_string())?;
+        let bindings = parse_bindings_json(bindings_json)?;
+        let query = build_rule_query(&rule, &bindings);
+        let (result, ops) = execute(&self.graph, &parse(&query)?)?;
+        if !ops.is_empty() {
+            self.dispatch(ops)?;
+            self.rebuild_engine();
+        }
+        Ok(serde_json::to_string(&ApplyRuleResult {
+            fixture: self.fixture_json()?,
+            query: result,
+        })
+        .map_err(|e| e.to_string())?)
     }
 
     pub fn node_overlays_json(&self) -> Result<String, String> {
@@ -549,10 +724,12 @@ impl TrinityHost {
 
     pub fn set_automatic_lod(&mut self, enabled: bool) {
         self.automatic_lod = enabled;
+        self.board.set_automatic_lod(enabled);
     }
 
     pub fn set_forced_draw_lod_label(&mut self, label: &str) {
         self.forced_draw_lod = if label.is_empty() { None } else { TrinityDrawLod::from_id(label) };
+        self.board.set_forced_draw_lod_label(label);
     }
 
     fn draw_lod_for_frame(&self) -> TrinityDrawLod {
@@ -595,6 +772,12 @@ impl TrinityHost {
         serde_json::to_string(&ids).map_err(|e| e.to_string())
     }
 
+    pub fn set_highlighted_node_ids_json(&mut self, json: &str) -> Result<(), String> {
+        let ids: Vec<String> = serde_json::from_str(json).map_err(|e| e.to_string())?;
+        self.board.set_highlighted_ids(ids);
+        Ok(())
+    }
+
     fn screen_to_world(&self, sx: f64, sy: f64) -> cavas::vello::kurbo::Point {
         use cavas::camera::{screen_to_world, Camera as CavasCamera, Viewport};
         use cavas::vello::kurbo::Point;
@@ -603,7 +786,7 @@ impl TrinityHost {
         screen_to_world(&cam, &viewport, Point::new(sx, sy))
     }
 
-    fn sync_positions_from_engine(&mut self) {
+    fn sync_ephemeral_positions_from_engine(&mut self) {
         for (&nid, widget_id) in &self.node_id_map {
             if let Some(node) = self.engine.nodes.get(&nid) {
                 if let Some(entry) = self.graph.nodes.get_mut(widget_id) {
@@ -611,6 +794,49 @@ impl TrinityHost {
                     entry.y = node.center.y;
                 }
             }
+        }
+        self.sync_board_from_graph();
+    }
+
+    fn commit_drag_positions(&mut self) -> Result<(), String> {
+        let projection = self.store.projection().map_err(|e| e.to_string())?;
+        let mut ops = Vec::new();
+        for (nid, widget_id) in &self.node_id_map {
+            let Some(engine_node) = self.engine.nodes.get(nid) else {
+                continue;
+            };
+            let Some(fixture_node) = projection.nodes.iter().find(|node| node.id == *widget_id) else {
+                continue;
+            };
+            if (fixture_node.x - engine_node.center.x).abs() > 1e-6 || (fixture_node.y - engine_node.center.y).abs() > 1e-6 {
+                ops.push(TrinityGraphOp::Reposition {
+                    id: widget_id.clone(),
+                    x: engine_node.center.x,
+                    y: engine_node.center.y,
+                });
+            }
+        }
+        if ops.is_empty() {
+            return Ok(());
+        }
+        self.dispatch(ops)
+    }
+
+    fn sync_positions_from_engine(&mut self) {
+        self.sync_ephemeral_positions_from_engine();
+    }
+
+    fn sync_board_from_graph(&mut self) {
+        let _ = self.board.set_board_kind_catalogs_from_json(TRINITY_BOARD_KIND_CATALOGS_JSON);
+        let fixture = trinity_graph_to_board_fixture(&self.graph);
+        if !self.board.parse_fixture_v1(&fixture) {
+            eprintln!("[DEBUG] trinity board fixture parse failed");
+        }
+        self.board.set_size(self.width, self.height, self.dpr);
+        self.board.vello_theme = self.vello_theme.clone();
+        self.board.set_automatic_lod(self.automatic_lod);
+        if let Some(lod) = self.forced_draw_lod {
+            self.board.set_forced_draw_lod_label(lod.label());
         }
     }
 
@@ -629,23 +855,27 @@ impl TrinityHost {
             let nid = next_node;
             next_node += 1;
             self.node_id_map.insert(nid, node.id.clone());
-            let w = if node.width > 0.0 { node.width } else { 88.0 };
-            let h = if node.height > 0.0 { node.height } else { 40.0 };
-            self.engine.create_rect_node(nid, node.x, node.y, w, h, true);
+            let radius = trinity_node_radius(node);
+            self.engine.create_node(nid, node.x, node.y, radius, true);
+            let in_count = node.ports.iter().filter(|port| port.direction == PortDirection::In).count();
+            let out_count = node.ports.iter().filter(|port| port.direction == PortDirection::Out).count();
             let mut in_idx = 0usize;
             let mut out_idx = 0usize;
             for port in &node.ports {
                 let hid = next_handle;
                 next_handle += 1;
                 let angle = match port.direction {
-                    PortDirection::In => std::f64::consts::FRAC_PI_2 + (in_idx as f64 * 0.2),
-                    PortDirection::Out => -std::f64::consts::FRAC_PI_2 - (out_idx as f64 * 0.2),
+                    PortDirection::In => {
+                        let angle = trinity_circle_port_angle(in_idx, in_count, true);
+                        in_idx += 1;
+                        angle
+                    }
+                    PortDirection::Out => {
+                        let angle = trinity_circle_port_angle(out_idx, out_count, false);
+                        out_idx += 1;
+                        angle
+                    }
                 };
-                if port.direction == PortDirection::In {
-                    in_idx += 1;
-                } else {
-                    out_idx += 1;
-                }
                 let public_key = port_key(&node.id, &port.id);
                 handle_map.insert(trinity_port_handle_key(&node.id, &port.id, port.direction == PortDirection::In), hid);
                 self.handle_key_map.insert(hid, public_key);
@@ -669,67 +899,16 @@ impl TrinityHost {
             }
         }
         self.engine.set_next_edge_id(eid);
+        self.sync_board_from_graph();
     }
 
-    pub fn paint_scene(&self, scene: &mut cavas::vello::Scene, viewport_w: u32, viewport_h: u32, dpr: f64) {
-        use cavas::camera::{camera_content_affine, world_to_screen, Camera as CavasCamera, Viewport};
-        use cavas::text::append_label;
-        use cavas::vello::kurbo::{Circle, Point, Rect, Stroke};
-        use cavas::vello::peniko::Fill;
-
-        let theme = &self.vello_theme;
-        let cam = CavasCamera { x: self.graph.camera.x, y: self.graph.camera.y, zoom: self.graph.camera.zoom };
-        let viewport = Viewport { width: viewport_w.max(1), height: viewport_h.max(1), dpr: dpr.max(1.0) };
-        let aff = camera_content_affine(&cam, &viewport);
-        let lod = self.draw_lod_for_frame();
-        let lod_index = trinity_lod_index(cam.zoom) as i8;
+    pub fn paint_scene(&self, scene: &mut cavas::vello::Scene, _viewport_w: u32, _viewport_h: u32, _dpr: f64) {
+        let lod_index = trinity_lod_index(self.graph.camera.zoom) as i8;
         if self.last_logged_lod.get() != lod_index {
             self.last_logged_lod.set(lod_index);
         }
-        let edge_stroke = TRINITY_EDGE_STROKE / cam.zoom.max(0.05);
-        let show_handles = lod.handles_visible();
-        let show_labels = lod.labels_visible();
-        let label_px = (12.0 / cam.zoom.max(0.05)).clamp(8.0, 18.0);
-        let snap = self.engine.render_snapshot();
-        for (&eid, _) in &self.engine.edges {
-            if let Some(curve) = self.engine.edge_curve(eid) {
-                scene.stroke(&Stroke::new(edge_stroke), aff, theme.edge_stroke, None, &curve);
-            }
-        }
-        for node in self.graph.nodes.values() {
-            let hw = if node.width > 0.0 { node.width } else { 88.0 } * 0.5;
-            let hh = if node.height > 0.0 { node.height } else { 40.0 } * 0.5;
-            let rect = Rect::new(node.x - hw, node.y - hh, node.x + hw, node.y + hh);
-            scene.fill(Fill::NonZero, aff, theme.node_fill, None, &rect);
-            scene.stroke(&Stroke::new(edge_stroke), aff, theme.node_stroke, None, &rect);
-            if show_labels {
-                let label = if lod.full_labels() {
-                    node.name.clone()
-                } else {
-                    trinity_abbreviate_label(&node.name)
-                };
-                let screen = world_to_screen(&cam, &viewport, Point::new(node.x, node.y - hh + 4.0 / cam.zoom.max(0.05)));
-                append_label(scene, &label, screen, label_px, theme.label_fill, theme.label_halo);
-            }
-        }
-        if show_handles {
-            for (hid, center, _radius) in &snap.handles {
-                let node_id = self.engine.handles.get(hid).map(|h| h.node_id);
-                let outward = node_id.and_then(|nid| {
-                    self.engine.nodes.get(&nid).and_then(|node| {
-                        handle_outward_at_node_rim(*center, node.center, node.shape, node.radius, node.width, node.height)
-                    })
-                });
-                if let Some(out) = outward {
-                    scene.fill(Fill::NonZero, aff, theme.handle_fill, None, &handle_exterior_cap_fill_path(*center, out, TRINITY_HANDLE_RADIUS));
-                    scene.stroke(&Stroke::new(edge_stroke), aff, theme.handle_stroke, None, &handle_exterior_cap_stroke_path(*center, out, TRINITY_HANDLE_RADIUS));
-                } else {
-                    let circle = Circle::new(*center, TRINITY_HANDLE_RADIUS);
-                    scene.fill(Fill::NonZero, aff, theme.handle_fill, None, &circle);
-                    scene.stroke(&Stroke::new(edge_stroke), aff, theme.handle_stroke, None, &circle);
-                }
-            }
-        }
+        let board_scene = self.board.build_vector_scene();
+        scene.append(&board_scene, None);
         let _ = distance_between;
         let _ = compute_edge_bezier_points;
     }
@@ -895,6 +1074,11 @@ mod wasm_session {
             self.state.borrow().host.selected_node_ids_json().map_err(|e| JsValue::from_str(&e))
         }
 
+        #[wasm_bindgen(js_name = setHighlightedNodeIdsJson)]
+        pub fn set_highlighted_node_ids_json(&mut self, json: &str) -> Result<(), JsValue> {
+            self.state.borrow_mut().host.set_highlighted_node_ids_json(json).map_err(|e| JsValue::from_str(&e))
+        }
+
         #[wasm_bindgen(js_name = reorganize)]
         pub fn reorganize(&self, _options_json: &str) -> Result<(), JsValue> {
             self.state.borrow_mut().host.reorganize();
@@ -909,10 +1093,8 @@ mod wasm_session {
         #[wasm_bindgen(js_name = renderFrame)]
         pub fn render_frame(&self) -> Result<(), JsValue> {
             let mut inner = self.state.borrow_mut();
-            let mut scene = cavas::vello::Scene::new();
             let clear = inner.host.vello_theme.raster_clear;
-            inner.host.paint_scene(&mut scene, inner.width, inner.height, inner.dpr);
-            let scene = cavas::render::scale_scene_for_device_pixel_ratio(scene, inner.dpr);
+            let scene = inner.host.board.build_vector_scene();
             inner.gpu.render_frame(&scene, clear)
         }
 
@@ -951,6 +1133,31 @@ mod wasm_session {
                 .host
                 .apply_rewrite_json(rule_json, bindings_json)
                 .map_err(|e| JsValue::from_str(&e))
+        }
+
+        #[wasm_bindgen(js_name = undo)]
+        pub fn undo(&self) -> Result<(), JsValue> {
+            self.state.borrow_mut().host.undo().map_err(|e| JsValue::from_str(&e))
+        }
+
+        #[wasm_bindgen(js_name = redo)]
+        pub fn redo(&self) -> Result<(), JsValue> {
+            self.state.borrow_mut().host.redo().map_err(|e| JsValue::from_str(&e))
+        }
+
+        #[wasm_bindgen(js_name = commitCheckpoint)]
+        pub fn commit_checkpoint(&self, message: &str) -> Result<(), JsValue> {
+            let message = if message.is_empty() { None } else { Some(message.to_string()) };
+            self.state
+                .borrow_mut()
+                .host
+                .commit_checkpoint(message)
+                .map_err(|e| JsValue::from_str(&e))
+        }
+
+        #[wasm_bindgen(js_name = storeGeneration)]
+        pub fn store_generation(&self) -> u64 {
+            self.state.borrow().host.store_generation()
         }
     }
 
@@ -1069,6 +1276,8 @@ mod tests {
         assert_eq!(host.engine.nodes.len(), 6);
         assert!(!host.engine.edges.is_empty());
         assert!(!host.engine.enforce_acyclic);
+        assert_eq!(host.board.nodes.len(), 6);
+        assert!(host.board.nodes.values().all(|node| matches!(node.shape, mathematical_graph_port_directed::NodeShape::Circle)));
     }
 
     #[test]
@@ -1095,94 +1304,17 @@ mod tests {
         let items: Vec<JackCompletion> = serde_json::from_str(&json).unwrap();
         assert!(items.iter().any(|row| row.label == "MATCH"));
     }
+
+    #[test]
+    fn trinity_host_jack_create_undo() {
+        let mut host = TrinityHost::from_graph(nakagin_graph());
+        let before = host.graph.nodes.len();
+        host.run_jack("CREATE (n:Piece)").unwrap();
+        assert_eq!(host.graph.nodes.len(), before + 1);
+        host.undo().unwrap();
+        assert_eq!(host.graph.nodes.len(), before);
+    }
 }
 // #endregion 🔖Tests
 
-// #region 🔖DocumentVcs
-use framework_vcs::{
-    create_document_vcs_envelope, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff,
-};
-
-pub const TRINITY_GRAPH_SCHEMA: &str = "trinity.graph/v1";
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct TrinityGraphDocument {
-    pub nodes: Vec<serde_json::Value>,
-}
-
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct TrinityGraphDiff {
-    pub nodes: Option<Vec<serde_json::Value>>,
-}
-
-impl OperationDiff<TrinityGraphDocument> for TrinityGraphDiff {
-    fn apply(&self, projection: &TrinityGraphDocument) -> TrinityGraphDocument {
-        TrinityGraphDocument {
-            nodes: self.nodes.clone().unwrap_or_else(|| projection.nodes.clone()),
-        }
-    }
-
-    fn absorb(&mut self, other: Self) {
-        if other.nodes.is_some() {
-            self.nodes = other.nodes;
-        }
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "op", rename_all = "camelCase")]
-pub enum TrinityGraphOp {
-    SetNodes { nodes: Vec<serde_json::Value> },
-}
-
-impl Operation<TrinityGraphDocument> for TrinityGraphOp {
-    type Diff = TrinityGraphDiff;
-
-    fn diff(&self, _projection: &TrinityGraphDocument) -> TrinityGraphDiff {
-        match self {
-            TrinityGraphOp::SetNodes { nodes } => TrinityGraphDiff {
-                nodes: Some(nodes.clone()),
-            },
-        }
-    }
-
-    fn backwards(&self, projection: &TrinityGraphDocument) -> Vec<Self> {
-        vec![TrinityGraphOp::SetNodes {
-            nodes: projection.nodes.clone(),
-        }]
-    }
-}
-
-pub type TrinityGraphEnvelope = DocumentVcsEnvelope<TrinityGraphDocument, TrinityGraphOp>;
-pub type TrinityGraphStore = DocumentVcsStore<TrinityGraphDocument, TrinityGraphOp>;
-
-pub fn empty_trinity_graph_projection() -> TrinityGraphDocument {
-    TrinityGraphDocument { nodes: Vec::new() }
-}
-
-#[cfg(test)]
-mod trinity_graph_vcs_tests {
-    use super::*;
-
-    #[test]
-    fn trinity_graph_document_vcs_replays_ops() {
-        let mut store = TrinityGraphStore::new(create_document_vcs_envelope(
-            TRINITY_GRAPH_SCHEMA,
-            "trinity",
-            empty_trinity_graph_projection(),
-            None,
-        ));
-        store
-            .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![TrinityGraphOp::SetNodes {
-                    nodes: vec![serde_json::json!({ "id": "n1" })],
-                }],
-                description: None,
-            })
-            .expect("apply");
-        assert_eq!(store.projection().expect("projection").nodes.len(), 1);
-    }
-}
-// #endregion 🔖DocumentVcs
+pub use trinity_ram::TRINITY_GRAPH_SCHEMA;

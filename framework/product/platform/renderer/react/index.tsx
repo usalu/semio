@@ -71,6 +71,7 @@ import {
 	createWindowLayout,
 	getSidePanelBodyFactory,
 	getWindowBodyFactory,
+	isEdgelessWindowBody,
 	registerSidePanelBody,
 	unregisterSidePanelBody,
 	type ResolvedAppState,
@@ -4403,7 +4404,11 @@ function getDeclarativeWindowBodyComponent(windowKindId: string, bodyKey: string
 			};
 			const factory = getWindowBodyFactory(bodyKey);
 			const node = factory?.(ctx) ?? { type: "text", value: `Missing declarative body "${bodyKey}"` };
-			return <UiRenderer node={node} commandBus={platform.commandBus} platform={platform} />;
+			return (
+				<div data-window-content-layout={isEdgelessWindowBody(node) ? "edgeless" : "framed"} className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+					<UiRenderer node={node} commandBus={platform.commandBus} platform={platform} />
+				</div>
+			);
 		};
 		declarativeWindowBodyComponents.set(cacheKey, component);
 	}

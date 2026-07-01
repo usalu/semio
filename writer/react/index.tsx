@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { clearColorResolveCache, serializeGraphVelloThemePaletteJson } from "@semio-tech/ui-styling";
-import { CanvasPickMenu, canvasViewportClass, reactHostPort, useCanvasPickInteraction, type CanvasPickTarget } from "@semio-tech/ui-react";
+import { CanvasPickMenu, ContextMenuController, canvasViewportClass, reactHostPort, useCanvasPickInteraction, type CanvasPickTarget, type ContextMenuItem } from "@semio-tech/ui-react";
 import { parseCanvasPickTargetKey } from "@semio-tech/framework-core";
 import {
 	applyTextEdits,
@@ -60,6 +60,10 @@ export interface WriterCanvasProps {
 	readonly externalSelectionSignal?: number;
 	readonly externalHoverRange?: { readonly start: number; readonly end: number } | null;
 	readonly externalHoverSignal?: number;
+	readonly externalHoverOccurrences?: readonly { readonly start: number; readonly end: number }[];
+	readonly externalHoverOccurrencesSignal?: number;
+	readonly externalSelectionOccurrences?: readonly { readonly start: number; readonly end: number }[];
+	readonly externalSelectionOccurrencesSignal?: number;
 	readonly onSelectionChange?: (range: { readonly start: number; readonly end: number }) => void;
 	readonly onHoverChange?: (offset: number | null) => void;
 	readonly editorSettings?: WriterEditorSettings;
@@ -94,6 +98,129 @@ function waitForLayoutSize(container: HTMLElement, min = 8): Promise<void> {
 	});
 }
 
+/** @emoji 🖱️ Context-menu inputs for the writer canvas (puzzle-style suggest + editor actions). */
+export type WriterEditorContextMenuInput = {
+	readonly canSuggest: boolean;
+	readonly hasSelection: boolean;
+	readonly canRename: boolean;
+	readonly pickTargets: readonly CanvasPickTarget[];
+};
+
+/** @emoji 🖱️ Builds writer editor context menu rows; Alt+right-click bypasses this and opens suggestions directly. */
+export function buildWriterEditorContextMenuItems(
+	input: WriterEditorContextMenuInput,
+	actions: {
+		readonly onSuggest: () => void;
+		readonly onSelectToken: () => void;
+		readonly onSelectLine: () => void;
+		readonly onSelectAll: () => void;
+		readonly onRename: () => void;
+		readonly onCut: () => void;
+		readonly onCopy: () => void;
+		readonly onPaste: () => void;
+		readonly onFormat: () => void;
+		readonly onLint: () => void;
+		readonly onPickTarget: (target: CanvasPickTarget) => void;
+	},
+): ContextMenuItem[] {
+	const items: ContextMenuItem[] = [];
+	if (input.canSuggest) {
+		items.push({
+			id: "writer-suggest",
+			label: "Suggest completions",
+			icon: "sparkles",
+			shortcut: "Alt+Right click",
+			onSelect: () => actions.onSuggest(),
+		});
+		items.push({ id: "writer-suggest-sep", separator: true });
+	}
+	if (input.pickTargets.length > 1) {
+		for (const target of input.pickTargets) {
+			items.push({
+				id: `writer-pick-${target.domain}-${target.id}`,
+				label: target.label ? `Select ${target.label}` : `Select ${target.domain}`,
+				icon: target.domain === "token" ? "text-cursor" : "list-ordered",
+				onSelect: () => actions.onPickTarget(target),
+			});
+		}
+		items.push({ id: "writer-pick-sep", separator: true });
+	}
+	items.push({
+		id: "writer-select-token",
+		label: "Select token",
+		icon: "text-cursor",
+		onSelect: () => actions.onSelectToken(),
+	});
+	items.push({
+		id: "writer-select-line",
+		label: "Select line",
+		icon: "list-ordered",
+		onSelect: () => actions.onSelectLine(),
+	});
+	items.push({
+		id: "writer-select-all",
+		label: "Select all",
+		icon: "maximize-2",
+		shortcut: "⌘A",
+		onSelect: () => actions.onSelectAll(),
+	});
+	if (input.canRename) {
+		items.push({
+			id: "writer-rename",
+			label: "Rename symbol",
+			icon: "edit-3",
+			shortcut: "F2",
+			onSelect: () => actions.onRename(),
+		});
+	}
+	items.push({ id: "writer-clipboard-sep", separator: true });
+	items.push({
+		id: "writer-cut",
+		label: "Cut",
+		icon: "scissors",
+		shortcut: "⌘X",
+		disabled: !input.hasSelection,
+		onSelect: () => actions.onCut(),
+	});
+	items.push({
+		id: "writer-copy",
+		label: "Copy",
+		icon: "copy",
+		shortcut: "⌘C",
+		disabled: !input.hasSelection,
+		onSelect: () => actions.onCopy(),
+	});
+	items.push({
+		id: "writer-paste",
+		label: "Paste",
+		icon: "clipboard",
+		shortcut: "⌘V",
+		onSelect: () => actions.onPaste(),
+	});
+	items.push({ id: "writer-actions-sep", separator: true });
+	items.push({
+		id: "writer-format",
+		label: "Format document",
+		icon: "align-left",
+		shortcut: "⇧⌘F",
+		onSelect: () => actions.onFormat(),
+	});
+	items.push({
+		id: "writer-lint",
+		label: "Lint document",
+		icon: "alert-circle",
+		onSelect: () => actions.onLint(),
+	});
+	return items;
+}
+
+function selectLineRange(text: string, line: number): { readonly start: number; readonly end: number } {
+	const start = positionToOffset(text, { line, character: 0 });
+	const nextLine = positionToOffset(text, { line: line + 1, character: 0 });
+	const end = nextLine > start ? (text[nextLine - 1] === "\n" ? nextLine - 1 : nextLine) : text.length;
+	return { start, end };
+}
+
 export function WriterCanvas({
 	document,
 	onChange,
@@ -107,6 +234,10 @@ export function WriterCanvas({
 	externalSelectionSignal = 0,
 	externalHoverRange,
 	externalHoverSignal = 0,
+	externalHoverOccurrences,
+	externalHoverOccurrencesSignal = 0,
+	externalSelectionOccurrences,
+	externalSelectionOccurrencesSignal = 0,
 	onSelectionChange,
 	onHoverChange,
 	editorSettings = WRITER_DEFAULT_EDITOR_SETTINGS,
@@ -125,6 +256,12 @@ export function WriterCanvas({
 	const lastLocalTextRef = useRef(document.text);
 	const [completions, setCompletions] = useState<readonly LspCompletionItem[]>([]);
 	const [completionIndex, setCompletionIndex] = useState(0);
+	const [completionsOpen, setCompletionsOpen] = useState(false);
+	const [surfaceContextMenu, setSurfaceContextMenu] = useState<{
+		readonly clientX: number;
+		readonly clientY: number;
+		readonly items: readonly ContextMenuItem[];
+	} | null>(null);
 	const [diagnostics, setDiagnostics] = useState<readonly LspDiagnostic[]>([]);
 	const [caretScreen, setCaretScreen] = useState<{ readonly x: number; readonly y: number } | null>(null);
 	const [caretOffset, setCaretOffset] = useState(0);
@@ -138,6 +275,8 @@ export function WriterCanvas({
 	const lastReportedSelectionRef = useRef<{ readonly start: number; readonly end: number } | null>(null);
 	const lastReportedHoverRef = useRef<number | null>(null);
 	const suppressSelectionReportRef = useRef(false);
+	const externalHoverOccurrencesRef = useRef<readonly { readonly start: number; readonly end: number }[] | null>(null);
+	const externalSelectionOccurrencesRef = useRef<readonly { readonly start: number; readonly end: number }[] | null>(null);
 
 	documentRef.current = document;
 	diagnosticsRef.current = diagnostics;
@@ -165,17 +304,26 @@ export function WriterCanvas({
 			return;
 		}
 		if (inRename) return;
+		if (externalHoverOccurrencesRef.current?.length) {
+			session.setHoverOccurrencesJson(JSON.stringify(externalHoverOccurrencesRef.current));
+		} else {
+			const hoverRaw = session.hoverTokenRangeJson();
+			if (hoverRaw !== "null") {
+				const range = JSON.parse(hoverRaw) as { start: number; end: number };
+				const hoverOffset = Math.floor((range.start + range.end) / 2);
+				const hoverSymbol = jackSymbolAtOffset(text, hoverOffset);
+				session.setHoverOccurrencesJson(JSON.stringify(hoverSymbol?.kind === "variable" ? hoverSymbol.occurrences : []));
+			} else {
+				session.setHoverOccurrencesJson("[]");
+			}
+		}
+		if (externalSelectionOccurrencesRef.current?.length) {
+			session.setSelectionOccurrencesJson(JSON.stringify(externalSelectionOccurrencesRef.current));
+			session.setExtraCaretsJson(JSON.stringify(externalSelectionOccurrencesRef.current.map((occ) => occ.start)));
+			return;
+		}
 		const caret = session.caret();
 		const anchor = session.anchor();
-		const hoverRaw = session.hoverTokenRangeJson();
-		if (hoverRaw !== "null") {
-			const range = JSON.parse(hoverRaw) as { start: number; end: number };
-			const hoverOffset = Math.floor((range.start + range.end) / 2);
-			const hoverSymbol = jackSymbolAtOffset(text, hoverOffset);
-			session.setHoverOccurrencesJson(JSON.stringify(hoverSymbol?.kind === "variable" ? hoverSymbol.occurrences : []));
-		} else {
-			session.setHoverOccurrencesJson("[]");
-		}
 		if (caret === anchor) {
 			const selectSymbol = jackSymbolAtOffset(text, caret);
 			if (selectSymbol?.kind === "variable") {
@@ -512,6 +660,32 @@ export function WriterCanvas({
 	}, [externalHoverSignal, externalHoverRange, scheduleFrame]);
 
 	useEffect(() => {
+		externalHoverOccurrencesRef.current = externalHoverOccurrences ?? null;
+		const session = sessionRef.current;
+		if (!session?.gpuReady()) return;
+		if (externalHoverOccurrences?.length) {
+			session.setHoverOccurrencesJson(JSON.stringify(externalHoverOccurrences));
+		} else if (!externalHoverRange) {
+			session.setHoverOccurrencesJson("[]");
+		}
+		scheduleFrame();
+	}, [externalHoverOccurrencesSignal, externalHoverOccurrences, externalHoverRange, scheduleFrame]);
+
+	useEffect(() => {
+		externalSelectionOccurrencesRef.current = externalSelectionOccurrences ?? null;
+		const session = sessionRef.current;
+		if (!session?.gpuReady()) return;
+		if (externalSelectionOccurrences?.length) {
+			session.setSelectionOccurrencesJson(JSON.stringify(externalSelectionOccurrences));
+			session.setExtraCaretsJson(JSON.stringify(externalSelectionOccurrences.map((occ) => occ.start)));
+		} else if (!externalSelection) {
+			session.setSelectionOccurrencesJson("[]");
+			session.setExtraCaretsJson("[]");
+		}
+		scheduleFrame();
+	}, [externalSelectionOccurrencesSignal, externalSelectionOccurrences, externalSelection, scheduleFrame]);
+
+	useEffect(() => {
 		if (!createLspTransport) return;
 		const transport = createLspTransport();
 		const client = new LspClient(transport, { formatting: true });
@@ -562,18 +736,50 @@ export function WriterCanvas({
 		}
 	}, [lintSignal, onLintMessages]);
 
-	const refreshCompletions = useCallback(async () => {
+	const fetchCompletionsAtCaret = useCallback(async (): Promise<readonly LspCompletionItem[]> => {
 		const client = lspRef.current;
 		const session = sessionRef.current;
-		if (!client || !session) {
-			setCompletions([]);
-			return;
-		}
-		const pos = offsetToPosition(document.text, session.caret());
-		const items = await client.completion(pos);
+		if (!client || !session) return [];
+		const pos = offsetToPosition(documentRef.current.text, session.caret());
+		return client.completion(pos);
+	}, []);
+
+	const openCompletions = useCallback(async () => {
+		const items = await fetchCompletionsAtCaret();
 		setCompletions(items);
 		setCompletionIndex(0);
-	}, [document.text]);
+		setCompletionsOpen(items.length > 0);
+	}, [fetchCompletionsAtCaret]);
+
+	const refreshCompletions = useCallback(async () => {
+		const items = await fetchCompletionsAtCaret();
+		setCompletions(items);
+		setCompletionIndex(0);
+	}, [fetchCompletionsAtCaret]);
+
+	const runLint = useCallback(() => {
+		const items = lspRef.current?.getDiagnostics() ?? [];
+		onLintMessages?.(items.map((d) => d.message));
+	}, [onLintMessages]);
+
+	const startRenameAtCaret = useCallback(() => {
+		const session = sessionRef.current;
+		if (!session) return;
+		const focus = Math.min(session.caret(), session.anchor());
+		const symbol = documentRef.current.languageId === "jack" ? jackSymbolAtOffset(documentRef.current.text, focus) : null;
+		if (!symbol || symbol.kind !== "variable") return;
+		const world = JSON.parse(session.caretWorldJson()) as { x: number; y: number };
+		const screen = JSON.parse(session.worldToScreenJson(world.x, world.y)) as { x: number; y: number };
+		session.setSelectionOccurrencesJson(JSON.stringify(symbol.occurrences));
+		session.setExtraCaretsJson(JSON.stringify(symbol.occurrences.map((occ) => occ.start)));
+		setRename({
+			baseText: documentRef.current.text,
+			originalOccurrences: symbol.occurrences,
+			text: symbol.name,
+			x: screen.x,
+			y: screen.y,
+		});
+	}, []);
 
 	const applyCompletion = useCallback(
 		(item: LspCompletionItem) => {
@@ -591,6 +797,7 @@ export function WriterCanvas({
 			const next = `${text.slice(0, start)}${insert}${text.slice(caret)}`;
 			pushDocument(next);
 			setCompletions([]);
+			setCompletionsOpen(false);
 			scheduleFrame();
 		},
 		[pushDocument, scheduleFrame],
@@ -628,7 +835,7 @@ export function WriterCanvas({
 			}
 			if (event.key === " " && (event.metaKey || event.ctrlKey)) {
 				event.preventDefault();
-				await refreshCompletions();
+				await openCompletions();
 				return;
 			}
 			if (event.key === "Enter") {
@@ -637,18 +844,18 @@ export function WriterCanvas({
 				const canNewline = writerNewlineAllowedAt(documentRef.current.text, documentRef.current.languageId, caret);
 				if (canNewline) {
 					setCompletions([]);
+					setCompletionsOpen(false);
 					session.insertText("\n");
 					pushDocument(session.text());
 					return;
 				}
-				if (completions.length > 0) {
+				if (completionsOpen && completions.length > 0) {
 					applyCompletion(completions[completionIndex]!);
 					return;
 				}
-				await refreshCompletions();
 				return;
 			}
-			if (completions.length > 0) {
+			if (completionsOpen && completions.length > 0) {
 				if (event.key === "ArrowDown") {
 					event.preventDefault();
 					setCompletionIndex((i) => (i + 1) % completions.length);
@@ -666,6 +873,7 @@ export function WriterCanvas({
 				}
 				if (event.key === "Escape") {
 					setCompletions([]);
+					setCompletionsOpen(false);
 					return;
 				}
 			}
@@ -676,21 +884,8 @@ export function WriterCanvas({
 				if (start === end) {
 					session.selectSpanAt(start);
 				}
-				const focus = Math.min(session.caret(), session.anchor());
-				const symbol = documentRef.current.languageId === "jack" ? jackSymbolAtOffset(documentRef.current.text, focus) : null;
-				if (!symbol || symbol.kind !== "variable") return;
 				syncCaret();
-				const world = JSON.parse(session.caretWorldJson()) as { x: number; y: number };
-				const screen = JSON.parse(session.worldToScreenJson(world.x, world.y)) as { x: number; y: number };
-				session.setSelectionOccurrencesJson(JSON.stringify(symbol.occurrences));
-				session.setExtraCaretsJson(JSON.stringify(symbol.occurrences.map((occ) => occ.start)));
-				setRename({
-					baseText: documentRef.current.text,
-					originalOccurrences: symbol.occurrences,
-					text: symbol.name,
-					x: screen.x,
-					y: screen.y,
-				});
+				startRenameAtCaret();
 				return;
 			}
 			if (event.key === " ") {
@@ -759,9 +954,131 @@ export function WriterCanvas({
 				pushDocument(session.text());
 				return;
 			}
-			await refreshCompletions();
 		},
-		[applyCompletion, completionIndex, completions, onSubmit, pushDocument, refreshCompletions, runFormat, syncCaret],
+		[
+			applyCompletion,
+			completionIndex,
+			completions,
+			completionsOpen,
+			onSubmit,
+			openCompletions,
+			pushDocument,
+			runFormat,
+			startRenameAtCaret,
+			syncCaret,
+		],
+	);
+
+	const handleContextMenu = useCallback(
+		async (event: React.MouseEvent<HTMLCanvasElement>) => {
+			event.preventDefault();
+			event.stopPropagation();
+			canvasPick.dismissPickMenu();
+			setSurfaceContextMenu(null);
+			focusEditor();
+			const session = sessionRef.current;
+			const canvas = canvasRef.current;
+			if (!session || !canvas) return;
+			const rect = canvas.getBoundingClientRect();
+			const sx = event.clientX - rect.left;
+			const sy = event.clientY - rect.top;
+			session.pointerDownScreen(sx, sy, 0);
+			session.pointerUpScreen(sx, sy, 0);
+			applySemanticSelectionAt(session, session.caret());
+			syncCaret();
+			const pickTargets = resolveWriterPickTargetsAtClient({ x: event.clientX, y: event.clientY });
+			const completionItems = await fetchCompletionsAtCaret();
+			if (event.altKey && completionItems.length > 0) {
+				setCompletions(completionItems);
+				setCompletionIndex(0);
+				setCompletionsOpen(true);
+				return;
+			}
+			const start = Math.min(session.caret(), session.anchor());
+			const end = Math.max(session.caret(), session.anchor());
+			const focus = Math.min(session.caret(), session.anchor());
+			const symbol = documentRef.current.languageId === "jack" ? jackSymbolAtOffset(documentRef.current.text, focus) : null;
+			const items = buildWriterEditorContextMenuItems(
+				{
+					canSuggest: completionItems.length > 0,
+					hasSelection: start !== end,
+					canRename: symbol?.kind === "variable",
+					pickTargets,
+				},
+				{
+					onSuggest: () => {
+						setCompletions(completionItems);
+						setCompletionIndex(0);
+						setCompletionsOpen(completionItems.length > 0);
+					},
+					onSelectToken: () => {
+						session.selectSpanAtScreen(sx, sy);
+						applySemanticSelectionAt(session, session.caret());
+						syncCaret();
+					},
+					onSelectLine: () => {
+						const { line } = offsetToPosition(documentRef.current.text, focus);
+						const range = selectLineRange(documentRef.current.text, line);
+						session.setSelectionRange(range.start, range.end);
+						syncCaret();
+					},
+					onSelectAll: () => {
+						session.selectAll();
+						syncCaret();
+					},
+					onRename: () => startRenameAtCaret(),
+					onCut: () => {
+						if (start === end) return;
+						void navigator.clipboard.writeText(session.text().slice(start, end)).then(() => {
+							session.insertText("");
+							pushDocument(session.text());
+						});
+					},
+					onCopy: () => {
+						if (start === end) return;
+						void navigator.clipboard.writeText(session.text().slice(start, end));
+					},
+					onPaste: () => {
+						void navigator.clipboard.readText().then((text) => {
+							if (!text) return;
+							session.insertText(text);
+							pushDocument(session.text());
+						});
+					},
+					onFormat: () => void runFormat(),
+					onLint: () => runLint(),
+					onPickTarget: (target) => {
+						if (target.domain === "token") {
+							const [ts, te] = target.id.split(":").map(Number);
+							if (Number.isFinite(ts) && Number.isFinite(te)) {
+								session.setSelectionRange(ts!, te!);
+								applySemanticSelectionAt(session, Math.floor((ts! + te!) / 2));
+							}
+						} else if (target.domain === "line") {
+							const line = Number(target.id);
+							if (Number.isFinite(line)) {
+								const range = selectLineRange(documentRef.current.text, line);
+								session.setSelectionRange(range.start, range.end);
+							}
+						}
+						syncCaret();
+					},
+				},
+			);
+			setSurfaceContextMenu({ clientX: event.clientX, clientY: event.clientY, items });
+		},
+		[
+			applySemanticSelectionAt,
+			canvasPick,
+			fetchCompletionsAtCaret,
+			focusEditor,
+			pushDocument,
+			resolveWriterPickTargetsAtClient,
+			runFormat,
+			runLint,
+			startRenameAtCaret,
+			syncCaret,
+		],
 	);
 
 	useEffect(() => {
@@ -824,6 +1141,7 @@ export function WriterCanvas({
 			<canvas
 				ref={canvasRef}
 				className={`${canvasViewportClass} block h-full w-full cursor-text touch-none`}
+				onContextMenu={(event) => void handleContextMenu(event)}
 				onPointerDown={(e) => {
 					if (e.button !== 0) return;
 					e.preventDefault();
@@ -861,7 +1179,9 @@ export function WriterCanvas({
 						e.currentTarget.releasePointerCapture(e.pointerId);
 					}
 					const rect = e.currentTarget.getBoundingClientRect();
-					canvasPick.onCanvasPointerUp({ x: e.clientX, y: e.clientY });
+					if (e.button === 0) {
+						canvasPick.onCanvasPointerUp({ x: e.clientX, y: e.clientY });
+					}
 					session.pointerUpScreen(e.clientX - rect.left, e.clientY - rect.top, e.button);
 					syncCaret();
 				}}
@@ -881,6 +1201,14 @@ export function WriterCanvas({
 				onHoverKey={canvasPick.onMenuHoverKey}
 				onPick={canvasPick.onMenuPick}
 				onDismiss={canvasPick.dismissPickMenu}
+			/>
+			<ContextMenuController
+				open={surfaceContextMenu !== null}
+				position={surfaceContextMenu ? { x: surfaceContextMenu.clientX, y: surfaceContextMenu.clientY } : null}
+				items={[...(surfaceContextMenu?.items ?? [])]}
+				onOpenChange={(nextOpen) => {
+					if (!nextOpen) setSurfaceContextMenu(null);
+				}}
 			/>
 			<textarea
 				ref={inputRef}
@@ -953,7 +1281,7 @@ export function WriterCanvas({
 					}}
 				/>
 			) : null}
-			{caretScreen && completions.length > 0 ? (
+			{caretScreen && completionsOpen && completions.length > 0 ? (
 				<div
 					className="pointer-events-auto absolute z-20 max-h-48 overflow-auto rounded-md border border-border bg-popover p-1 text-sm shadow-md"
 					style={{ left: caretScreen.x, top: caretScreen.y + 18 }}
@@ -1003,6 +1331,57 @@ if (import.meta.vitest) {
 			expect(grammar).toBeTruthy();
 			const tokens = tokenizeWithGrammar("MATCH (a:Piece)", grammar!);
 			expect(tokens.some((t) => t.class === "keyword")).toBe(true);
+		});
+	});
+
+	describe("writer editor context menu", () => {
+		it("prepends suggest when completions are available", () => {
+			const items = buildWriterEditorContextMenuItems(
+				{ canSuggest: true, hasSelection: false, canRename: false, pickTargets: [] },
+				{
+					onSuggest: () => {},
+					onSelectToken: () => {},
+					onSelectLine: () => {},
+					onSelectAll: () => {},
+					onRename: () => {},
+					onCut: () => {},
+					onCopy: () => {},
+					onPaste: () => {},
+					onFormat: () => {},
+					onLint: () => {},
+					onPickTarget: () => {},
+				},
+			);
+			expect(items[0]?.id).toBe("writer-suggest");
+			expect(items[0]?.label).toBe("Suggest completions");
+		});
+
+		it("includes pick rows when multiple targets overlap", () => {
+			const items = buildWriterEditorContextMenuItems(
+				{
+					canSuggest: false,
+					hasSelection: false,
+					canRename: false,
+					pickTargets: [
+						{ domain: "line", id: "0", generality: 0, label: "Line 1" },
+						{ domain: "token", id: "0:5", generality: 2, label: "MATCH" },
+					],
+				},
+				{
+					onSuggest: () => {},
+					onSelectToken: () => {},
+					onSelectLine: () => {},
+					onSelectAll: () => {},
+					onRename: () => {},
+					onCut: () => {},
+					onCopy: () => {},
+					onPaste: () => {},
+					onFormat: () => {},
+					onLint: () => {},
+					onPickTarget: () => {},
+				},
+			);
+			expect(items.some((item) => item.id === "writer-pick-token-0:5")).toBe(true);
 		});
 	});
 

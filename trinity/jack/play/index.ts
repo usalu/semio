@@ -30,17 +30,12 @@ import {
   type AppTools,
   type ToolLeaf,
   toolCollection,
+  createWindowCommandEngagement,
   enforcePlaygroundWindowEngagementInput,
 } from "@semio-tech/framework-playground-core";
 import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
-import {
-  DocumentVcsStore,
-  createDocumentVcsEnvelope,
-  recordProjectionChange,
-} from "@semio-tech/framework-core";
 import { createWriterDocument, type WriterDocumentV1 } from "@semio-tech/writer-core";
 import {
-  TRINITY_DEFAULT_FIXTURE,
   TRINITY_DEFAULT_FIXTURE_JSON,
   TRINITY_LOD_MODE_AUTOMATIC,
   buildTrinityPlayHierarchyTree,
@@ -54,19 +49,16 @@ import {
   trinityPlayLodTiers,
   type TrinityDrawLodKind,
   type TrinityFixtureV1,
+  type TrinityJackDispatchRequest,
   type TrinityLodModeKind,
+  type TrinityVcsCommandKind,
+  type TrinityVcsRequest,
 } from "@semio-tech/trinity-react";
 import {
   TRINITY_JACK_PLAY_FIXTURE_DEFAULT_ID,
   TRINITY_JACK_PLAY_PRESET_QUERIES,
   resolveTrinityJackPlayFixtureSlug,
 } from "./fixture-slugs.ts";
-
-type TrinityFixtureEditOp = { readonly op: "setDocument"; readonly document: TrinityFixtureV1 };
-
-function applyTrinityFixtureEditOp(_fixture: TrinityFixtureV1, op: TrinityFixtureEditOp): TrinityFixtureV1 {
-  return op.document;
-}
 
 export const TRINITY_JACK_PLAY_APP_ID = "trinity-jack-play";
 export const TRINITY_JACK_PLAY_CONTROLLER_ID = "trinity-jack-play";
@@ -205,6 +197,11 @@ export function buildTrinityJackPlayLayout(): WindowLayout {
 /** @emoji 🧰 Trinity jack play footer toolbar. */
 export function buildTrinityJackPlayToolbarTools(controllerId: string): AppTools {
   return [
+    toolCollection("history", "history", [
+      { kind: "button", id: "trinity-jack.undo", label: "Undo", iconId: "undo-2", controllerId, command: "undo" },
+      { kind: "button", id: "trinity-jack.redo", label: "Redo", iconId: "redo-2", controllerId, command: "redo" },
+      { kind: "button", id: "trinity-jack.checkpoint", label: "Checkpoint", iconId: "git-commit", controllerId, command: "commitCheckpoint" },
+    ]),
     toolCollection("query", "terminal", [
       { kind: "button", id: "trinity-jack.run", label: "Run query", iconId: "play", controllerId, command: "runJackQuery" },
       { kind: "button", id: "trinity-jack.reorganize", label: "Reorganize", iconId: "refresh-cw", controllerId, command: "reorganize" },
@@ -214,16 +211,22 @@ export function buildTrinityJackPlayToolbarTools(controllerId: string): AppTools
 
 export class TrinityJackPlayController extends Controller implements PlaygroundFixtureHost {
   readonly mainMode = new ModeRuntime("explore", "Explore", undefined);
-  private readonly docStore = new DocumentVcsStore<TrinityFixtureV1, TrinityFixtureEditOp>({
-    envelope: createDocumentVcsEnvelope("trinity.fixture/v1", "trinity-jack-play", TRINITY_DEFAULT_FIXTURE),
-    applyOp: applyTrinityFixtureEditOp,
-  });
+  private fixtureJson = TRINITY_DEFAULT_FIXTURE_JSON;
   private activeFixtureId = TRINITY_JACK_PLAY_FIXTURE_DEFAULT_ID;
   private jackQuery = TRINITY_JACK_PLAY_PRESET_QUERIES[TRINITY_JACK_PLAY_FIXTURE_DEFAULT_ID] ?? "MATCH (a:Piece) RETURN a.name";
   private jackResultJson = "";
+  private jackDispatchEpoch = 0;
+  private jackDispatchQuery = "";
+  private vcsEpoch = 0;
+  private vcsKind: TrinityVcsCommandKind = "undo";
+  private vcsMessage = "";
+  private storeGeneration = 0;
   private selectedNodeIds: string[] = [];
   private reorganizeEpoch = 0;
   private interactionRevision = 0;
+  private editorEngagementInput = "";
+  private graphEngagementInput = "";
+  private resultsEngagementInput = "";
   private lodMode: TrinityLodModeKind = TRINITY_LOD_MODE_AUTOMATIC;
   private lodModeByInstance: Record<string, TrinityLodModeKind> = {};
   private effectiveLod: TrinityDrawLodKind = "normal";
@@ -247,20 +250,44 @@ export class TrinityJackPlayController extends Controller implements PlaygroundF
   }
 
   getFixtureJson(): string {
-    return trinityFixtureToJson(this.projection());
+    return this.fixtureJson;
   }
 
-  getDocumentVcsStore(): DocumentVcsStore<TrinityFixtureV1, TrinityFixtureEditOp> {
-    return this.docStore;
+  getJackDispatch(): TrinityJackDispatchRequest | undefined {
+    return this.jackDispatchEpoch > 0 ? { query: this.jackDispatchQuery, epoch: this.jackDispatchEpoch } : undefined;
   }
 
-  private projection(): TrinityFixtureV1 {
-    return this.docStore.projection();
+  getVcsRequest(): TrinityVcsRequest | undefined {
+    return this.vcsEpoch > 0 ? { kind: this.vcsKind, epoch: this.vcsEpoch, message: this.vcsMessage || undefined } : undefined;
   }
 
-  private commitFixture(next: TrinityFixtureV1): void {
-    const previous = this.projection();
-    recordProjectionChange(this.docStore, [{ op: "setDocument", document: next }]);
+  getStoreGeneration(): number {
+    return this.storeGeneration;
+  }
+
+  private setFixtureJson(next: string): void {
+    this.fixtureJson = next;
+  }
+
+  private dispatchJackQuery(query: string): void {
+    this.jackDispatchQuery = query;
+    this.jackDispatchEpoch += 1;
+  }
+
+  private requestVcs(kind: TrinityVcsCommandKind, message = ""): void {
+    this.vcsKind = kind;
+    this.vcsMessage = message;
+    this.vcsEpoch += 1;
+  }
+
+  onJackDispatchComplete(resultJson: string): void {
+    this.jackResultJson = resultJson;
+    this.bump();
+  }
+
+  onVcsApplied(generation: number): void {
+    this.storeGeneration = generation;
+    this.bump();
   }
 
   getJackQuery(): string {
@@ -326,51 +353,42 @@ export class TrinityJackPlayController extends Controller implements PlaygroundF
   }
 
   private graphEngagement(): WindowEngagement {
-    return {
-      sessionActive: false,
-      input: {
-        id: "trinity-jack-graph-input",
-        value: "",
-        placeholder: "Reorganize graph",
-        onChange: { controllerId: TRINITY_JACK_PLAY_CONTROLLER_ID, command: "graphEngagementInput" },
-        onSubmit: { controllerId: TRINITY_JACK_PLAY_CONTROLLER_ID, command: "reorganize" },
-      },
+    return createWindowCommandEngagement("trinity-jack-graph-input", TRINITY_JACK_PLAY_CONTROLLER_ID, {
+      placeholder: "Reorganize graph",
+      inputCommand: "graphEngagementInput",
+      submitCommand: "reorganize",
+      value: this.graphEngagementInput,
       possibleEngagements: [
         { id: "trinity-jack-reorganize", label: "Reorganize", command: { controllerId: TRINITY_JACK_PLAY_CONTROLLER_ID, command: "reorganize" } },
       ],
-    };
+    });
   }
 
   private editorEngagement(): WindowEngagement {
-    return {
-      sessionActive: false,
-      input: {
-        id: "trinity-jack-query-input",
-        value: this.jackQuery,
-        placeholder: "Jack query",
-        onChange: { controllerId: TRINITY_JACK_PLAY_CONTROLLER_ID, command: "setJackQuery" },
-        onSubmit: { controllerId: TRINITY_JACK_PLAY_CONTROLLER_ID, command: "runJackQuery" },
-      },
-      possibleEngagements: TRINITY_JACK_PLAY_FIXTURE_OPTIONS.map((row) => ({
-        id: `trinity-jack-preset-${row.id}`,
-        label: row.label,
-        command: { controllerId: TRINITY_JACK_PLAY_CONTROLLER_ID, command: "setActiveFixture", args: { fixtureId: row.id } },
-      })),
-    };
+    return createWindowCommandEngagement("trinity-jack-editor-input", TRINITY_JACK_PLAY_CONTROLLER_ID, {
+      placeholder: "Run query, preset",
+      inputCommand: "editorEngagementInput",
+      submitCommand: "editorEngagementSubmit",
+      value: this.editorEngagementInput,
+      possibleEngagements: [
+        { id: "trinity-jack-run", label: "Run query", command: { controllerId: TRINITY_JACK_PLAY_CONTROLLER_ID, command: "runJackQuery" } },
+        ...TRINITY_JACK_PLAY_FIXTURE_OPTIONS.map((row) => ({
+          id: `trinity-jack-preset-${row.id}`,
+          label: row.label,
+          command: { controllerId: TRINITY_JACK_PLAY_CONTROLLER_ID, command: "setActiveFixture", args: { fixtureId: row.id } },
+        })),
+      ],
+    });
   }
 
   private resultsEngagement(): WindowEngagement {
-    return {
-      sessionActive: false,
-      input: {
-        id: "trinity-jack-results-input",
-        value: "",
-        placeholder: "Run query",
-        onChange: { controllerId: TRINITY_JACK_PLAY_CONTROLLER_ID, command: "resultsEngagementInput" },
-        onSubmit: { controllerId: TRINITY_JACK_PLAY_CONTROLLER_ID, command: "runJackQuery" },
-      },
+    return createWindowCommandEngagement("trinity-jack-results-input", TRINITY_JACK_PLAY_CONTROLLER_ID, {
+      placeholder: "Run query",
+      inputCommand: "resultsEngagementInput",
+      submitCommand: "runJackQuery",
+      value: this.resultsEngagementInput,
       status: [{ id: "trinity-jack-results-status", text: `${this.selectedNodeIds.length} selected` }],
-    };
+    });
   }
 
   private bump(): void {
@@ -416,11 +434,26 @@ export class TrinityJackPlayController extends Controller implements PlaygroundF
   run(command: string, args?: unknown): void {
     if (command === "setFixtureJson") {
       const json = (args as { json?: string }).json;
-      const parsed = typeof json === "string" ? parseTrinityFixtureJson(json) : null;
-      if (parsed) {
-        this.commitFixture(parsed);
+      if (typeof json === "string" && parseTrinityFixtureJson(json)) {
+        this.setFixtureJson(json);
         this.bump();
       }
+      return;
+    }
+    if (command === "undo") {
+      this.requestVcs("undo");
+      this.bump();
+      return;
+    }
+    if (command === "redo") {
+      this.requestVcs("redo");
+      this.bump();
+      return;
+    }
+    if (command === "commitCheckpoint") {
+      const message = (args as { message?: string }).message;
+      this.requestVcs("commitCheckpoint", typeof message === "string" ? message : "");
+      this.bump();
       return;
     }
     if (command === "setJackQuery") {
@@ -431,23 +464,54 @@ export class TrinityJackPlayController extends Controller implements PlaygroundF
       }
       return;
     }
-    if (command === "runJackQuery") {
-      const value = (args as { value?: string } | undefined)?.value;
-      const query = typeof value === "string" && value.trim() ? value : this.jackQuery;
-      this.jackQuery = query;
-      try {
-        const beforeJson = this.getFixtureJson();
-        const result = runJackOnFixture(beforeJson, query);
-        this.jackResultJson = JSON.stringify(result);
-        if (result.fixtureJson && result.fixtureJson !== beforeJson) {
-          const parsed = parseTrinityFixtureJson(result.fixtureJson);
-          if (parsed) {
-            this.commitFixture(parsed);
-          }
-        }
-      } catch (err) {
-        this.jackResultJson = JSON.stringify({ kind: "table", columns: ["error"], rows: [[String(err)]], fixtureJson: this.getFixtureJson() });
+    if (command === "graphEngagementInput") {
+      const value = (args as { value?: string }).value;
+      if (typeof value === "string") {
+        this.graphEngagementInput = value;
+        this.rebuildShellMode();
+        this.emit();
       }
+      return;
+    }
+    if (command === "editorEngagementInput") {
+      const value = (args as { value?: string }).value;
+      if (typeof value === "string") {
+        this.editorEngagementInput = value;
+        this.rebuildShellMode();
+        this.emit();
+      }
+      return;
+    }
+    if (command === "editorEngagementSubmit") {
+      const token = String((args as { value?: string }).value ?? this.editorEngagementInput).trim().toLowerCase();
+      this.editorEngagementInput = "";
+      if (!token || token === "run" || token === "run query") {
+        this.run("runJackQuery");
+        return;
+      }
+      const preset = TRINITY_JACK_PLAY_FIXTURE_OPTIONS.find((row) => row.label.toLowerCase() === token || row.id === token);
+      if (preset) {
+        this.run("setActiveFixture", { fixtureId: preset.id });
+        return;
+      }
+      this.rebuildShellMode();
+      this.emit();
+      return;
+    }
+    if (command === "resultsEngagementInput") {
+      const value = (args as { value?: string }).value;
+      if (typeof value === "string") {
+        this.resultsEngagementInput = value;
+        this.rebuildShellMode();
+        this.emit();
+      }
+      return;
+    }
+    if (command === "runJackQuery") {
+      const explicit = (args as { query?: string } | undefined)?.query;
+      const query = typeof explicit === "string" && explicit.trim() ? explicit : this.jackQuery;
+      this.dispatchJackQuery(query);
+      this.resultsEngagementInput = "";
       this.bump();
       return;
     }
@@ -462,14 +526,19 @@ export class TrinityJackPlayController extends Controller implements PlaygroundF
       const field = (args as { field?: string }).field;
       const value = (args as { value?: unknown }).value;
       if (!nodeIds.length || field !== "name" || typeof value !== "string") return;
-      const targets = new Set(nodeIds);
-      const fixture = this.projection();
       const nextName = value.trim();
       if (!nextName) return;
-      this.commitFixture({
-        ...fixture,
-        nodes: fixture.nodes.map((node) => (targets.has(node.id) ? { ...node, name: nextName } : node)),
-      });
+      const escaped = nextName.replace(/'/g, "\\'");
+      const fixture = parseTrinityFixtureJson(this.fixtureJson);
+      if (!fixture) return;
+      let json = this.fixtureJson;
+      for (const id of nodeIds) {
+        const node = fixture.nodes.find((row) => row.id === id);
+        if (!node) continue;
+        const result = runJackOnFixture(json, `MATCH (n:${node.kind}) WHERE n.id = '${id}' SET n.name = '${escaped}'`);
+        json = result.fixtureJson;
+      }
+      this.setFixtureJson(json);
       this.bump();
       return;
     }
@@ -481,7 +550,7 @@ export class TrinityJackPlayController extends Controller implements PlaygroundF
       if (!parsed) return;
       this.activeFixtureId = fixtureId;
       this.jackQuery = TRINITY_JACK_PLAY_PRESET_QUERIES[fixtureId] ?? this.jackQuery;
-      this.commitFixture(parsed);
+      this.setFixtureJson(json);
       this.bump();
       this.run("runJackQuery");
       return;
@@ -597,10 +666,21 @@ if (import.meta.vitest) {
   });
 
   describe("TrinityJackPlayController", () => {
+    function completeJackDispatch(ctrl: TrinityJackPlayController, query?: string): void {
+      const q = query ?? ctrl.getJackQuery();
+      const result = runJackOnFixture(ctrl.getFixtureJson(), q);
+      ctrl.onJackDispatchComplete(JSON.stringify(result));
+      if (result.fixtureJson !== ctrl.getFixtureJson()) {
+        ctrl.run("setFixtureJson", { json: result.fixtureJson });
+      }
+    }
+
     it("runJackQuery returns nakagin table row", () => {
       const bus = new CommandBus();
       const ctrl = new TrinityJackPlayController(bus, () => {});
-      ctrl.run("runJackQuery", { value: "MATCH (a:Piece) WHERE a.name = 'b' RETURN a.name" });
+      const query = "MATCH (a:Piece) WHERE a.name = 'b' RETURN a.name";
+      ctrl.run("runJackQuery", { query });
+      completeJackDispatch(ctrl, query);
       const result = JSON.parse(ctrl.getJackResultJson()) as { kind: string; rows: unknown[][] };
       expect(result.kind).toBe("table");
       expect(result.rows.length).toBe(1);
@@ -610,6 +690,7 @@ if (import.meta.vitest) {
       const bus = new CommandBus();
       const ctrl = new TrinityJackPlayController(bus, () => {});
       ctrl.run("setActiveFixture", { fixtureId: "branch-chain" });
+      completeJackDispatch(ctrl);
       const result = JSON.parse(ctrl.getJackResultJson()) as { kind: string; graphFixture?: { nodes: unknown[] } };
       expect(result.kind).toBe("graph");
       expect(result.graphFixture?.nodes.length).toBeGreaterThan(0);
@@ -643,6 +724,25 @@ if (import.meta.vitest) {
         TRINITY_JACK_PLAY_EDITOR_WINDOW_KIND_ID,
         TRINITY_JACK_PLAY_RESULTS_WINDOW_KIND_ID,
       ]);
+    });
+
+    it("keeps jack query out of the editor window command line", () => {
+      const bus = new CommandBus();
+      const ctrl = new TrinityJackPlayController(bus, () => {});
+      const editor = ctrl.mainMode.windowKinds?.find((row) => row.id === TRINITY_JACK_PLAY_EDITOR_WINDOW_KIND_ID);
+      expect(editor?.engagement?.input?.value).toBe("");
+      expect(editor?.engagement?.input?.value).not.toBe(ctrl.getJackQuery());
+      ctrl.run("setJackQuery", { value: "MATCH (n) RETURN n" });
+      const next = ctrl.mainMode.windowKinds?.find((row) => row.id === TRINITY_JACK_PLAY_EDITOR_WINDOW_KIND_ID);
+      expect(next?.engagement?.input?.value).toBe("");
+    });
+
+    it("runJackQuery uses writer document text, not command-line input", () => {
+      const bus = new CommandBus();
+      const ctrl = new TrinityJackPlayController(bus, () => {});
+      ctrl.run("setJackQuery", { value: "MATCH (a:Piece) WHERE a.name = 'b' RETURN a.name" });
+      ctrl.run("runJackQuery", { value: "MATCH (a:Piece) RETURN a.name" });
+      expect(ctrl.getJackDispatch()?.query).toBe("MATCH (a:Piece) WHERE a.name = 'b' RETURN a.name");
     });
   });
 }

@@ -23,7 +23,7 @@ import {
 	paintDrawingScene,
 	type DrawingExportBridge,
 	type DrawingScene,
-} from "@semio-tech/geometry-drawing-js";
+} from "@semio-tech/kernel-2d-js";
 import { CavasEventBindingController } from "@semio-tech/infinite-cavas-react-renderer";
 import type { ContextMenuItem } from "@semio-tech/ui-react";
 import {

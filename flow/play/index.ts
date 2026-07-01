@@ -48,6 +48,7 @@ import {
   DAG_LOD_MODE_AUTOMATIC,
   dagPlayLodTiers,
   FLOW_DEFAULT_FIXTURE,
+  applyFlowFixtureEditOp,
   dagLodAutomaticSelectLabel,
   flowExtensionHost,
   flowFixtureToJson,
@@ -64,6 +65,7 @@ import {
   type FlowCanvasContextMenuContext,
   type FlowContextMenuDispatch,
   type FlowExtensionEntry,
+  type FlowFixtureEditOp,
   type FlowFixtureV1,
   type FlowReorganizeRequest,
   type FlowWidgetV1,
@@ -93,12 +95,6 @@ const DEFAULT_SIBLING_GAP = 40;
 
 export const FLOW_PLAY_DEFAULT_FIXTURE: FlowFixtureV1 = FLOW_DEFAULT_FIXTURE;
 export const FLOW_PLAY_DEFAULT_FIXTURE_JSON = flowFixtureToJson(FLOW_PLAY_DEFAULT_FIXTURE);
-
-type FlowFixtureEditOp = { readonly op: "setDocument"; readonly document: FlowFixtureV1 };
-
-function applyFlowFixtureEditOp(_fixture: FlowFixtureV1, op: FlowFixtureEditOp): FlowFixtureV1 {
-  return op.document;
-}
 
 export const FLOW_PLAY_LAYOUT = createStackLayout([FLOW_PLAY_WINDOW_KIND_ID], ["Flow"]);
 export const FLOW_PLAY_KINDS_BODY_KEY = "flow.play.kinds";
@@ -606,8 +602,11 @@ export class FlowPlayController extends Controller {
   }
 
   private commitFixture(next: FlowFixtureV1): void {
-    const previous = this.projection();
-    recordProjectionChange(this.docStore, [{ op: "setDocument", document: next }]);
+    this.applyFixtureEdit({ op: "setDocument", document: next });
+  }
+
+  private applyFixtureEdit(op: FlowFixtureEditOp): void {
+    recordProjectionChange(this.docStore, [op]);
   }
 
   getDocumentVcsStore(): DocumentVcsStore<FlowFixtureV1, FlowFixtureEditOp> {
@@ -665,7 +664,7 @@ export class FlowPlayController extends Controller {
   private applyFixtureJson(json: string): void {
     const parsed = parseFlowPlayFixtureJson(json);
     if (!parsed || flowFixtureToJson(parsed) === this.getFixtureJson()) return;
-    this.commitFixture(parsed);
+    this.applyFixtureEdit({ op: "setDocument", document: parsed });
     this.interactionRevision += 1;
     this.notifySnapshot();
     this.emit();
@@ -676,14 +675,8 @@ export class FlowPlayController extends Controller {
     if (!trimmed || trimmed === oldId) return;
     const fixture = this.projection();
     if (fixture.widgets.some((widget) => widget.id === trimmed)) return;
-    const widgets = fixture.widgets.map((widget) => (widget.id === oldId ? ({ ...widget, id: trimmed } as FlowWidgetV1) : widget));
-    const synapses = fixture.synapses.map((synapse) => ({
-      ...synapse,
-      from: synapse.from === oldId ? trimmed : synapse.from,
-      to: synapse.to === oldId ? trimmed : synapse.to,
-    }));
     this.selectedNodeIds = this.selectedNodeIds.map((id) => (id === oldId ? trimmed : id));
-    this.commitFixture({ ...fixture, widgets, synapses });
+    this.applyFixtureEdit({ op: "renameWidget", oldId, newId: trimmed });
     this.interactionRevision += 1;
     this.commandRequestPayload = { command: "setSelection", argsJson: JSON.stringify({ ids: [...this.selectedNodeIds] }) };
     this.commandRequestEpoch += 1;
@@ -692,18 +685,7 @@ export class FlowPlayController extends Controller {
   }
 
   private patchFlowWidget(widgetId: string, field: string, value: unknown): void {
-    const fixture = this.projection();
-    const widgets = fixture.widgets.map((widget) => {
-      if (widget.id !== widgetId) return widget;
-      if (field === "value" || field === "min" || field === "max" || field === "step") {
-        const numeric = typeof value === "number" ? value : Number(value);
-        if (!Number.isFinite(numeric)) return widget;
-        return { ...widget, [field]: numeric } as FlowWidgetV1;
-      }
-      if (typeof value !== "string") return widget;
-      return { ...widget, [field]: value } as FlowWidgetV1;
-    });
-    this.commitFixture({ ...fixture, widgets });
+    this.applyFixtureEdit({ op: "patchWidget", widgetId, field, value });
     this.interactionRevision += 1;
     this.notifySnapshot();
     this.emit();
@@ -987,21 +969,7 @@ export class FlowPlayController extends Controller {
       const field = (args as { field?: string }).field;
       const value = (args as { value?: unknown }).value ?? (args as { pressed?: boolean }).pressed;
       if (!widgetIds.length || typeof field !== "string") return;
-      const fixture = this.projection();
-      let widgets = fixture.widgets;
-      for (const widgetId of widgetIds) {
-        widgets = widgets.map((widget) => {
-          if (widget.id !== widgetId) return widget;
-          if (field === "value" || field === "min" || field === "max" || field === "step") {
-            const numeric = typeof value === "number" ? value : Number(value);
-            if (!Number.isFinite(numeric)) return widget;
-            return { ...widget, [field]: numeric } as FlowWidgetV1;
-          }
-          if (typeof value !== "string") return widget;
-          return { ...widget, [field]: value } as FlowWidgetV1;
-        });
-      }
-      this.commitFixture({ ...fixture, widgets });
+      this.applyFixtureEdit({ op: "patchWidgets", widgetIds, field, value });
       this.interactionRevision += 1;
       this.notifySnapshot();
       this.emit();

@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    "framework/rs",
+    "vcs/rs",
     "semios/rs",
     "draw/rs",
     "forms/rs",

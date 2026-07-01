@@ -1,7 +1,7 @@
 // #region 🧲Header
 /** @emoji 🧭 `@semio-tech/cad-js-core` — model-definition runtime: `Model`, typology/action/interaction catalogs, `ActionRegistry`, `InteractionRegistry`, `StateEngine`, `SpatialKernel`. See `cad/AGENTS.md` and `cad/asset/modelDefinition`. */
-import type { ArcPlaneFrame, EdgeCurve, EdgeGroup, EdgeInfo, FaceGroup, FaceInfo, MeshTransfer, Vec3 } from "@semio-tech/geometry-brep-js";
-import { emptyMeshTransfer, kernelGeometry, solidRef } from "@semio-tech/geometry-brep-js";
+import type { ArcPlaneFrame, EdgeCurve, EdgeGroup, EdgeInfo, FaceGroup, FaceInfo, MeshTransfer, Vec3 } from "@semio-tech/kernel-3d-js";
+import { emptyMeshTransfer, kernelGeometry, solidRef } from "@semio-tech/kernel-3d-js";
 export type { ArcPlaneFrame, EdgeCurve, EdgeGroup, EdgeInfo, FaceGroup, FaceInfo, MeshTransfer, Vec3 };
 export { emptyMeshTransfer, kernelGeometry, solidRef };
 // #endregion 🧲Header

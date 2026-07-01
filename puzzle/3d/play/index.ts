@@ -1049,6 +1049,221 @@ export function deletePuzzle3dAttractionFromFixture(fixture: FixtureV1, attracti
   };
 }
 
+export type Puzzle3dFixtureEditOp =
+  | { readonly op: "setDocument"; readonly document: FixtureV1 | null }
+  | { readonly op: "toggleEntityFlag"; readonly target: HoverTarget; readonly flag: "hidden" | "locked" }
+  | { readonly op: "addVoxel"; readonly cad: Vec3; readonly scale: Vec3 }
+  | { readonly op: "addTargetVolume"; readonly volume: WorldVolumeProps }
+  | { readonly op: "addReference"; readonly reference: WorldReferenceProps }
+  | { readonly op: "removeTargetVolumes"; readonly volumeIds: readonly string[] }
+  | { readonly op: "applyFillCount"; readonly count: number }
+  | { readonly op: "applyBrushPlacement"; readonly payload: BrushPlacePayload }
+  | { readonly op: "patchObjects"; readonly objectIds: readonly string[]; readonly field: "label" | "objectKind" | "origin" | "wormhole"; readonly value?: unknown }
+  | { readonly op: "patchObject"; readonly objectId: string; readonly patch: Partial<Omit<FixtureObjectV1, "id" | "vortices">> }
+  | { readonly op: "renameObject"; readonly oldId: string; readonly newId: string }
+  | { readonly op: "removeObjects"; readonly objectIds: readonly string[] }
+  | { readonly op: "patchVortex"; readonly vortexFullId: string; readonly patch: Partial<VortexProps> }
+  | { readonly op: "patchVortices"; readonly vortexFullIds: readonly string[]; readonly patch: Partial<VortexProps> }
+  | { readonly op: "patchAttraction"; readonly attractionId: string; readonly patch: Partial<AttractionProps> }
+  | { readonly op: "patchAttractions"; readonly attractionIds: readonly string[]; readonly patch: Partial<AttractionProps> }
+  | { readonly op: "patchReference"; readonly referenceId: string; readonly patch: Partial<Omit<WorldReferenceProps, "id">> }
+  | { readonly op: "deleteSelection"; readonly objectIds: readonly string[]; readonly vortexIds: readonly string[]; readonly attractionIds: readonly string[] }
+  | { readonly op: "setSelectionFlag"; readonly objectIds: readonly string[]; readonly vortexIds: readonly string[]; readonly attractionIds: readonly string[]; readonly referenceIds: readonly string[]; readonly flag: "hidden" | "locked"; readonly value: boolean }
+  | { readonly op: "duplicateObjects"; readonly objectIds: readonly string[] }
+  | { readonly op: "relocate"; readonly payload: RelocatePayload; readonly attractingByObjectId?: ReadonlyMap<string, readonly string[]> }
+  | { readonly op: "targetVolumeRelocate"; readonly payload: WorldVolumeRelocatePayload }
+  | { readonly op: "referenceRelocate"; readonly payload: WorldReferenceRelocatePayload };
+
+/** @emoji 🚪 Applies one semantic puzzle 3D fixture edit (CQRS projection applier). */
+export function applyPuzzle3dFixtureEditOp(fixture: FixtureV1 | null, op: Puzzle3dFixtureEditOp): FixtureV1 | null {
+  if (op.op === "setDocument") {
+    return op.document;
+  }
+  if (!fixture) {
+    return fixture;
+  }
+  switch (op.op) {
+    case "toggleEntityFlag": {
+      const { target, flag } = op;
+      if (target.kind === "reference") {
+        const reference = (fixture.references ?? []).find((row) => row.id === target.id);
+        if (!reference) {
+          return fixture;
+        }
+        return updatePuzzle3dReferenceInFixture(fixture, target.id, { [flag]: !(reference[flag] === true) });
+      }
+      if (target.kind === "targetVolume") {
+        const volume = (fixture.targetVolumes ?? []).find((row) => row.id === target.id);
+        if (!volume) {
+          return fixture;
+        }
+        return updatePuzzle3dTargetVolumeInFixture(fixture, target.id, { [flag]: !(volume[flag] === true) });
+      }
+      if (target.kind === "object") {
+        const object = fixture.objects.find((row) => row.id === target.id);
+        if (!object) {
+          return fixture;
+        }
+        return updatePuzzle3dObjectInFixture(fixture, target.id, { [flag]: !(object[flag] === true) });
+      }
+      if (target.kind === "vortex") {
+        const { objectId, vortexId } = parseVortexFullId(target.fullId);
+        const object = fixture.objects.find((row) => row.id === objectId);
+        const vortex = object?.vortices.find((row) => row.id === vortexId || puzzle3dVortexFullId(objectId, row.id) === target.fullId);
+        if (!object || !vortex) {
+          return fixture;
+        }
+        return updatePuzzle3dVortexInFixture(fixture, target.fullId, { [flag]: !(vortex[flag] === true) });
+      }
+      const attraction = fixture.attractions.find((row) => row.id === target.id);
+      if (!attraction) {
+        return fixture;
+      }
+      return updatePuzzle3dAttractionInFixture(fixture, target.id, { [flag]: !(attraction[flag] === true) });
+    }
+    case "addVoxel":
+      return addVoxelToFixture(fixture, op.cad, op.scale);
+    case "addTargetVolume":
+      return addTargetVolumeToFixture(fixture, op.volume);
+    case "addReference":
+      return addReferenceToFixture(fixture, op.reference);
+    case "removeTargetVolumes":
+      return op.volumeIds.reduce((next, id) => removeTargetVolumeFromFixture(next, id), fixture);
+    case "applyFillCount": {
+      const catalogs = parseKindCatalogs(fixture.meta as Record<string, unknown> | undefined);
+      const applied = applyPuzzle3dFillCount(op.count, catalogs);
+      if (!applied) {
+        return fixture;
+      }
+      return { ...applied, camera: fixture.camera };
+    }
+    case "applyBrushPlacement": {
+      const catalogs = parseKindCatalogs(fixture.meta as Record<string, unknown> | undefined);
+      return applyBrushPlacementToFixture(fixture, op.payload, catalogs);
+    }
+    case "patchObjects": {
+      const catalogs = parseKindCatalogs(fixture.meta as Record<string, unknown> | undefined);
+      let next = fixture;
+      for (const objectId of op.objectIds) {
+        if (op.field === "objectKind" && typeof op.value === "string") {
+          const object = next.objects.find((row) => row.id === objectId);
+          if (!object) {
+            continue;
+          }
+          next = {
+            ...next,
+            objects: patchPuzzle3dObject(next.objects, objectId, (row) => applyObjectKindToFixtureObject(row, op.value as string, catalogs, next)),
+          };
+          continue;
+        }
+        const patch: Partial<Omit<FixtureObjectV1, "id" | "vortices">> = {};
+        if (op.field === "label" && typeof op.value === "string") patch.label = op.value;
+        if (op.field === "wormhole" && typeof op.value === "string") patch.wormhole = op.value === "true";
+        if (op.field === "origin" && Array.isArray(op.value) && op.value.length === 3) {
+          patch.origin = [Number(op.value[0]), Number(op.value[1]), Number(op.value[2])] as [number, number, number];
+        }
+        next = updatePuzzle3dObjectInFixture(next, objectId, patch);
+      }
+      return next;
+    }
+    case "patchObject":
+      return updatePuzzle3dObjectInFixture(fixture, op.objectId, op.patch);
+    case "renameObject": {
+      const trimmed = op.newId.trim();
+      if (!trimmed || trimmed === op.oldId) {
+        return fixture;
+      }
+      return {
+        ...fixture,
+        objects: fixture.objects.map((object) => (object.id === op.oldId ? { ...object, id: trimmed } : object)),
+      };
+    }
+    case "removeObjects":
+      return op.objectIds.reduce((next, objectId) => deletePuzzle3dObjectFromFixture(next, objectId), fixture);
+    case "patchVortex":
+      return updatePuzzle3dVortexInFixture(fixture, op.vortexFullId, op.patch);
+    case "patchVortices": {
+      let next = fixture;
+      for (const vortexFullId of op.vortexFullIds) {
+        next = updatePuzzle3dVortexInFixture(next, vortexFullId, op.patch);
+      }
+      return next;
+    }
+    case "patchAttraction":
+      return updatePuzzle3dAttractionInFixture(fixture, op.attractionId, op.patch);
+    case "patchAttractions": {
+      let next = fixture;
+      for (const attractionId of op.attractionIds) {
+        next = updatePuzzle3dAttractionInFixture(next, attractionId, op.patch);
+      }
+      return next;
+    }
+    case "patchReference":
+      return updatePuzzle3dReferenceInFixture(fixture, op.referenceId, op.patch);
+    case "deleteSelection": {
+      let next = fixture;
+      for (const objectId of op.objectIds) {
+        next = deletePuzzle3dObjectFromFixture(next, objectId);
+      }
+      for (const vortexFullId of op.vortexIds) {
+        next = deletePuzzle3dVortexFromFixture(next, vortexFullId);
+      }
+      for (const attractionId of op.attractionIds) {
+        next = deletePuzzle3dAttractionFromFixture(next, attractionId);
+      }
+      return next;
+    }
+    case "setSelectionFlag": {
+      let next = fixture;
+      for (const objectId of op.objectIds) {
+        next = updatePuzzle3dObjectInFixture(next, objectId, { [op.flag]: op.value });
+      }
+      for (const vortexFullId of op.vortexIds) {
+        next = updatePuzzle3dVortexInFixture(next, vortexFullId, { [op.flag]: op.value });
+      }
+      for (const attractionId of op.attractionIds) {
+        next = updatePuzzle3dAttractionInFixture(next, attractionId, { [op.flag]: op.value });
+      }
+      for (const referenceId of op.referenceIds) {
+        next = updatePuzzle3dReferenceInFixture(next, referenceId, { [op.flag]: op.value });
+      }
+      return next;
+    }
+    case "duplicateObjects": {
+      let next = fixture;
+      const existingIds = new Set(next.objects.map((row) => row.id));
+      for (const objectId of op.objectIds) {
+        const object = next.objects.find((row) => row.id === objectId);
+        if (!object) {
+          continue;
+        }
+        let newId = `${objectId}-copy`;
+        let suffix = 2;
+        while (existingIds.has(newId)) {
+          newId = `${objectId}-copy-${suffix}`;
+          suffix += 1;
+        }
+        existingIds.add(newId);
+        const clone: FixtureObjectV1 = {
+          ...object,
+          id: newId,
+          ...(object.label ? { label: `${object.label} copy` } : {}),
+          origin: [object.origin[0] + 0.5, object.origin[1], object.origin[2]],
+          vortices: object.vortices.map((vortex) => ({ ...vortex })),
+        };
+        next = { ...next, objects: [...next.objects, clone] };
+      }
+      return next;
+    }
+    case "relocate":
+      return applyRelocateToFixture(fixture, op.payload, op.attractingByObjectId);
+    case "targetVolumeRelocate":
+      return applyTargetVolumeRelocateToFixture(fixture, op.payload);
+    case "referenceRelocate":
+      return applyReferenceRelocateToFixture(fixture, op.payload);
+  }
+}
+
 function patchPuzzle3dObject(objects: readonly FixtureObjectV1[], objectId: string, patch: (object: FixtureObjectV1) => FixtureObjectV1): FixtureObjectV1[] {
   return objects.map((object) => (object.id === objectId ? patch(object) : object));
 }
@@ -1699,12 +1914,6 @@ function puzzle3dPlayPickKindLabel(kind: Puzzle3dPlayPickKind): string {
   return "Attractions";
 }
 
-type Puzzle3dFixtureEditOp = { readonly op: "setDocument"; readonly document: FixtureV1 | null };
-
-function applyPuzzle3dFixtureEditOp(_fixture: FixtureV1 | null, op: Puzzle3dFixtureEditOp): FixtureV1 | null {
-  return op.document;
-}
-
 /** @emoji 🎬 Playground puzzle 3D play controller: fixture, LOD, selection/filter tools, and interaction counters. */
 export class Puzzle3dPlayShellController extends Controller implements PlaygroundFixtureHost {
   private activeFixtureId = playgroundResolvedFixtureId(PUZZLE_3D_PLAY_FIXTURE_CONCRETE_FOREST_ID);
@@ -1846,43 +2055,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
   }
 
   private toggleEntityFlag(target: HoverTarget, flag: "hidden" | "locked"): void {
-    this.patchFixture((fixture) => {
-      if (target.kind === "reference") {
-        const reference = (fixture.references ?? []).find((row) => row.id === target.id);
-        if (!reference) {
-          return fixture;
-        }
-        return updatePuzzle3dReferenceInFixture(fixture, target.id, { [flag]: !(reference[flag] === true) });
-      }
-      if (target.kind === "targetVolume") {
-        const volume = (fixture.targetVolumes ?? []).find((row) => row.id === target.id);
-        if (!volume) {
-          return fixture;
-        }
-        return updatePuzzle3dTargetVolumeInFixture(fixture, target.id, { [flag]: !(volume[flag] === true) });
-      }
-      if (target.kind === "object") {
-        const object = fixture.objects.find((row) => row.id === target.id);
-        if (!object) {
-          return fixture;
-        }
-        return updatePuzzle3dObjectInFixture(fixture, target.id, { [flag]: !(object[flag] === true) });
-      }
-      if (target.kind === "vortex") {
-        const { objectId, vortexId } = parseVortexFullId(target.fullId);
-        const object = fixture.objects.find((row) => row.id === objectId);
-        const vortex = object?.vortices.find((row) => row.id === vortexId || puzzle3dVortexFullId(objectId, row.id) === target.fullId);
-        if (!object || !vortex) {
-          return fixture;
-        }
-        return updatePuzzle3dVortexInFixture(fixture, target.fullId, { [flag]: !(vortex[flag] === true) });
-      }
-      const attraction = fixture.attractions.find((row) => row.id === target.id);
-      if (!attraction) {
-        return fixture;
-      }
-      return updatePuzzle3dAttractionInFixture(fixture, target.id, { [flag]: !(attraction[flag] === true) });
-    });
+    this.applyFixtureEdit({ op: "toggleEntityFlag", target, flag });
     this.selection = this.filterSelectionByPlaygroundKinds(this.selection);
     this.notifySelection();
     console.log("[DEBUG] puzzle3d toggleEntityFlag", flag, target);
@@ -2047,23 +2220,23 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
     return this.fixtureRevision;
   }
 
-  patchFixture(updater: (prev: FixtureV1) => FixtureV1): void {
-    if (!this.fixture) {
+  applyFixtureEdit(op: Puzzle3dFixtureEditOp): void {
+    if (!this.fixture && op.op !== "setDocument") {
       return;
     }
     const prev = this.fixture;
-    const next = updater(prev);
+    const next = applyPuzzle3dFixtureEditOp(prev, op);
     if (next === prev) {
       return;
     }
-    this.setFixtureProjection(next);
-    const structureChanged = fixtureStateFingerprint(next) !== fixtureStateFingerprint(prev);
+    recordProjectionChange(this.docStore, [op]);
+    const structureChanged = prev && next ? fixtureStateFingerprint(next) !== fixtureStateFingerprint(prev) : prev !== next;
     if (structureChanged) {
       this.fixtureRevision += 1;
       this.syncBrushKindWeightsFromFixture();
     }
-    const poseChanged = fixturePoseFingerprint(next) !== fixturePoseFingerprint(prev);
-    const appearanceChanged = fixtureAppearanceFingerprint(next) !== fixtureAppearanceFingerprint(prev);
+    const poseChanged = prev && next ? fixturePoseFingerprint(next) !== fixturePoseFingerprint(prev) : false;
+    const appearanceChanged = prev && next ? fixtureAppearanceFingerprint(next) !== fixtureAppearanceFingerprint(prev) : false;
     if (appearanceChanged) {
       this.hierarchySectionsCache = null;
     }
@@ -2079,11 +2252,11 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
     if (!this.fixture) {
       return;
     }
-    const next = applyRelocateToFixture(this.fixture, payload, attractingByObjectId);
-    if (next === this.fixture) {
+    const prev = this.fixture;
+    this.applyFixtureEdit({ op: "relocate", payload, attractingByObjectId });
+    if (this.fixture === prev) {
       return;
     }
-    this.setFixtureProjection(next);
   }
 
   /** @emoji 🧊 Persists a target-volume gumball relocate on the fixture. */
@@ -2091,11 +2264,11 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
     if (!this.fixture) {
       return;
     }
-    const next = applyTargetVolumeRelocateToFixture(this.fixture, payload);
-    if (next === this.fixture) {
+    const prev = this.fixture;
+    this.applyFixtureEdit({ op: "targetVolumeRelocate", payload });
+    if (this.fixture === prev) {
       return;
     }
-    this.setFixtureProjection(next);
     this.fixtureRevision += 1;
     invalidatePuzzle3dFillForTargetVolumesChange();
     this.notifySnapshot();
@@ -2108,7 +2281,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
       return;
     }
     const box = scale ?? this.voxelBrushDimensions;
-    this.patchFixture((fixture) => addVoxelToFixture(fixture, cad, box));
+    this.applyFixtureEdit({ op: "addVoxel", cad, scale: box });
     invalidatePuzzle3dFillForTargetVolumesChange();
     console.log("[DEBUG] puzzle3d paintVoxel", cad, box);
   }
@@ -2117,7 +2290,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
     if (!this.fixture) {
       return;
     }
-    this.patchFixture((fixture) => addTargetVolumeToFixture(fixture, volume));
+    this.applyFixtureEdit({ op: "addTargetVolume", volume });
     this.selection = { objectIds: [], vortexIds: [], attractionIds: [], referenceIds: [], targetVolumeIds: [volume.id] };
     invalidatePuzzle3dFillForTargetVolumesChange();
     this.notifySelection();
@@ -2129,11 +2302,11 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
     if (!this.fixture) {
       return;
     }
-    const next = applyReferenceRelocateToFixture(this.fixture, payload);
-    if (next === this.fixture) {
+    const prev = this.fixture;
+    this.applyFixtureEdit({ op: "referenceRelocate", payload });
+    if (this.fixture === prev) {
       return;
     }
-    this.setFixtureProjection(next);
     this.fixtureRevision += 1;
     this.notifySnapshot();
     console.log("[DEBUG] puzzle3d patchReferenceRelocate", payload.referenceId);
@@ -2155,7 +2328,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
       origin: args.origin ?? [this.fixture.camera.target[0], this.fixture.camera.target[1], 0.01],
       widthWorld: WORLD_REFERENCE_DEFAULT_WIDTH,
     };
-    this.patchFixture((fixture) => addReferenceToFixture(fixture, reference));
+    this.applyFixtureEdit({ op: "addReference", reference });
     this.selection = { objectIds: [], vortexIds: [], attractionIds: [], referenceIds: [id], targetVolumeIds: [] };
     this.notifySelection();
     console.log("[DEBUG] puzzle3d importReference", id, args.url);
@@ -2633,7 +2806,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
         if (!ids.length) {
           return;
         }
-        this.patchFixture((fixture) => ids.reduce((next, id) => removeTargetVolumeFromFixture(next, id), fixture));
+        this.applyFixtureEdit({ op: "removeTargetVolumes", volumeIds: ids });
         this.selection = {
           ...this.selection,
           targetVolumeIds: this.selection.targetVolumeIds.filter((id) => !ids.includes(id)),
@@ -2655,14 +2828,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
         if (!Number.isFinite(count) || !this.fixture) {
           return;
         }
-        const catalogs = parseKindCatalogs(this.fixture.meta);
-        this.patchFixture((prev) => {
-          const applied = applyPuzzle3dFillCount(count, catalogs);
-          if (!applied) {
-            return prev;
-          }
-          return { ...applied, camera: prev.camera };
-        });
+        this.applyFixtureEdit({ op: "applyFillCount", count });
         this.notifySnapshot();
         return;
       }
@@ -2786,8 +2952,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
         if (!payload?.targetVortexFullId || !payload.objectKindId) {
           return;
         }
-        const catalogs = parseKindCatalogs(this.fixture?.meta);
-        this.patchFixture((fixture) => applyBrushPlacementToFixture(fixture, payload, catalogs));
+        this.applyFixtureEdit({ op: "applyBrushPlacement", payload });
         this.notifySnapshot();
         return;
       }
@@ -2908,41 +3073,14 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
           value?: unknown;
         };
         if (!objectIds.length || !field) return;
-        const catalogs = parseKindCatalogs(this.fixture?.meta);
-        this.patchFixture((fixture) => {
-          let next = fixture;
-          for (const objectId of objectIds) {
-            if (field === "objectKind" && typeof value === "string") {
-              const object = next.objects.find((row) => row.id === objectId);
-              if (!object) {
-                continue;
-              }
-              next = {
-                ...next,
-                objects: patchPuzzle3dObject(next.objects, objectId, (row) => applyObjectKindToFixtureObject(row, value, catalogs, next)),
-              };
-              continue;
-            }
-            const patch: Partial<Omit<FixtureObjectV1, "id" | "vortices">> = {};
-            if (field === "label" && typeof value === "string") patch.label = value;
-            if (field === "wormhole" && typeof value === "string") patch.wormhole = value === "true";
-            if (field === "origin" && Array.isArray(value) && value.length === 3) {
-              patch.origin = [Number(value[0]), Number(value[1]), Number(value[2])] as [number, number, number];
-            }
-            next = updatePuzzle3dObjectInFixture(next, objectId, patch);
-          }
-          return next;
-        });
+        this.applyFixtureEdit({ op: "patchObjects", objectIds, field, value });
         return;
       }
       case "renamePuzzle3dObject": {
         const { oldId, value } = args as { oldId: string; value?: string };
         const trimmed = (typeof value === "string" ? value : "").trim();
         if (!trimmed || trimmed === oldId) return;
-        this.patchFixture((fixture) => ({
-          ...fixture,
-          objects: fixture.objects.map((object) => (object.id === oldId ? { ...object, id: trimmed } : object)),
-        }));
+        this.applyFixtureEdit({ op: "renameObject", oldId, newId: trimmed });
         this.selection = { objectIds: [trimmed], vortexIds: [], attractionIds: [], referenceIds: [], targetVolumeIds: [] };
         this.notifySnapshot();
         return;
@@ -2967,7 +3105,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
           const parsed = Number(value);
           if (Number.isFinite(parsed)) patch.radius = parsed;
         }
-        this.patchFixture((fixture) => updatePuzzle3dVortexInFixture(fixture, vortexFullId, patch));
+        this.applyFixtureEdit({ op: "patchVortex", vortexFullId, patch });
         return;
       }
       case "patchPuzzle3dVortices": {
@@ -2977,27 +3115,21 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
           value?: unknown;
         };
         if (!vortexFullIds.length || !field) return;
-        this.patchFixture((fixture) => {
-          let next = fixture;
-          for (const vortexFullId of vortexFullIds) {
-            const patch: Partial<VortexProps> = {};
-            if (field === "label" && typeof value === "string") patch.label = value;
-            if (field === "vortexKind" && typeof value === "string") patch.vortexKind = value;
-            if (field === "position" && Array.isArray(value) && value.length === 3) {
-              patch.position = [Number(value[0]), Number(value[1]), Number(value[2])] as [number, number, number];
-            }
-            if (field === "direction" && Array.isArray(value) && value.length === 3) {
-              patch.direction = [Number(value[0]), Number(value[1]), Number(value[2])] as [number, number, number];
-            }
-            if (field === "radius" && typeof value === "number") patch.radius = value;
-            if (field === "radius" && typeof value === "string") {
-              const parsed = Number(value);
-              if (Number.isFinite(parsed)) patch.radius = parsed;
-            }
-            next = updatePuzzle3dVortexInFixture(next, vortexFullId, patch);
-          }
-          return next;
-        });
+        const vortexPatch: Partial<VortexProps> = {};
+        if (field === "label" && typeof value === "string") vortexPatch.label = value;
+        if (field === "vortexKind" && typeof value === "string") vortexPatch.vortexKind = value;
+        if (field === "position" && Array.isArray(value) && value.length === 3) {
+          vortexPatch.position = [Number(value[0]), Number(value[1]), Number(value[2])] as [number, number, number];
+        }
+        if (field === "direction" && Array.isArray(value) && value.length === 3) {
+          vortexPatch.direction = [Number(value[0]), Number(value[1]), Number(value[2])] as [number, number, number];
+        }
+        if (field === "radius" && typeof value === "number") vortexPatch.radius = value;
+        if (field === "radius" && typeof value === "string") {
+          const parsed = Number(value);
+          if (Number.isFinite(parsed)) vortexPatch.radius = parsed;
+        }
+        this.applyFixtureEdit({ op: "patchVortices", vortexFullIds, patch: vortexPatch });
         return;
       }
       case "patchPuzzle3dAttraction": {
@@ -3010,7 +3142,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
         if (field === "attracting" && typeof value === "string") patch.attracting = value.trim() as AttractionProps["attracting"];
         if (field === "attracted" && typeof value === "string") patch.attracted = value.trim() as AttractionProps["attracted"];
         if (field === "attractionKind" && typeof value === "string") patch.attractionKind = value;
-        this.patchFixture((fixture) => updatePuzzle3dAttractionInFixture(fixture, attractionId, patch));
+        this.applyFixtureEdit({ op: "patchAttraction", attractionId, patch });
         return;
       }
       case "patchPuzzle3dAttractions": {
@@ -3020,17 +3152,11 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
           value?: unknown;
         };
         if (!attractionIds.length || !field) return;
-        this.patchFixture((fixture) => {
-          let next = fixture;
-          for (const attractionId of attractionIds) {
-            const patch: Partial<AttractionProps> = {};
-            if (field === "attracting" && typeof value === "string") patch.attracting = value.trim() as AttractionProps["attracting"];
-            if (field === "attracted" && typeof value === "string") patch.attracted = value.trim() as AttractionProps["attracted"];
-            if (field === "attractionKind" && typeof value === "string") patch.attractionKind = value;
-            next = updatePuzzle3dAttractionInFixture(next, attractionId, patch);
-          }
-          return next;
-        });
+        const attractionPatch: Partial<AttractionProps> = {};
+        if (field === "attracting" && typeof value === "string") attractionPatch.attracting = value.trim() as AttractionProps["attracting"];
+        if (field === "attracted" && typeof value === "string") attractionPatch.attracted = value.trim() as AttractionProps["attracted"];
+        if (field === "attractionKind" && typeof value === "string") attractionPatch.attractionKind = value;
+        this.applyFixtureEdit({ op: "patchAttractions", attractionIds, patch: attractionPatch });
         return;
       }
       case "patchPuzzle3dReference": {
@@ -3076,7 +3202,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
         if (!Object.keys(patch).length) {
           return;
         }
-        this.patchFixture((fixture) => updatePuzzle3dReferenceInFixture(fixture, referenceId, patch));
+        this.applyFixtureEdit({ op: "patchReference", referenceId, patch });
         return;
       }
       case "setSelectionMode": {
@@ -3172,19 +3298,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
     if (objectIds.length === 0 && vortexIds.length === 0 && attractionIds.length === 0) {
       return;
     }
-    this.patchFixture((fixture) => {
-      let next = fixture;
-      for (const objectId of objectIds) {
-        next = deletePuzzle3dObjectFromFixture(next, objectId);
-      }
-      for (const vortexFullId of vortexIds) {
-        next = deletePuzzle3dVortexFromFixture(next, vortexFullId);
-      }
-      for (const attractionId of attractionIds) {
-        next = deletePuzzle3dAttractionFromFixture(next, attractionId);
-      }
-      return next;
-    });
+    this.applyFixtureEdit({ op: "deleteSelection", objectIds, vortexIds, attractionIds });
     this.selection = PUZZLE_3D_PLAY_EMPTY_SELECTION;
     this.notifySelection();
   }
@@ -3200,21 +3314,14 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
     if (objectIds.length === 0 && vortexIds.length === 0 && attractionIds.length === 0 && referenceIds.length === 0) {
       return;
     }
-    this.patchFixture((fixture) => {
-      let next = fixture;
-      for (const objectId of objectIds) {
-        next = updatePuzzle3dObjectInFixture(next, objectId, { [flag]: value });
-      }
-      for (const vortexFullId of vortexIds) {
-        next = updatePuzzle3dVortexInFixture(next, vortexFullId, { [flag]: value });
-      }
-      for (const attractionId of attractionIds) {
-        next = updatePuzzle3dAttractionInFixture(next, attractionId, { [flag]: value });
-      }
-      for (const referenceId of referenceIds) {
-        next = updatePuzzle3dReferenceInFixture(next, referenceId, { [flag]: value });
-      }
-      return next;
+    this.applyFixtureEdit({
+      op: "setSelectionFlag",
+      objectIds,
+      vortexIds,
+      attractionIds,
+      referenceIds,
+      flag,
+      value,
     });
     this.selection = this.filterSelectionByPlaygroundKinds(this.selection);
     this.notifySelection();
@@ -3225,37 +3332,17 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
     if (!this.fixture || this.selection.objectIds.length === 0) {
       return;
     }
-    const newIds: string[] = [];
-    this.patchFixture((fixture) => {
-      let next = fixture;
-      const existingIds = new Set(next.objects.map((row) => row.id));
-      for (const objectId of this.selection.objectIds) {
-        const object = next.objects.find((row) => row.id === objectId);
-        if (!object) {
-          continue;
-        }
-        let newId = `${objectId}-copy`;
-        let suffix = 2;
-        while (existingIds.has(newId)) {
-          newId = `${objectId}-copy-${suffix}`;
-          suffix += 1;
-        }
-        existingIds.add(newId);
-        const clone: FixtureObjectV1 = {
-          ...object,
-          id: newId,
-          ...(object.label ? { label: `${object.label} copy` } : {}),
-          origin: [object.origin[0] + 0.5, object.origin[1], object.origin[2]],
-          vortices: object.vortices.map((vortex) => ({ ...vortex })),
-        };
-        next = { ...next, objects: [...next.objects, clone] };
-        newIds.push(newId);
-      }
-      return next;
-    });
+    const objectIds = [...this.selection.objectIds];
+    const preview = applyPuzzle3dFixtureEditOp(this.fixture, { op: "duplicateObjects", objectIds });
+    if (!preview || preview === this.fixture) {
+      return;
+    }
+    const prevIds = new Set(this.fixture.objects.map((row) => row.id));
+    const newIds = preview.objects.filter((row) => !prevIds.has(row.id)).map((row) => row.id);
     if (newIds.length === 0) {
       return;
     }
+    this.applyFixtureEdit({ op: "duplicateObjects", objectIds });
     this.selection = this.filterSelectionByPlaygroundKinds({ objectIds: newIds, vortexIds: [], attractionIds: [], referenceIds: [], targetVolumeIds: [] });
     this.notifySelection();
     console.log("[DEBUG] puzzle3d duplicateSelection", newIds);
@@ -4798,22 +4885,23 @@ if (import.meta.vitest) {
       expect(ctrl.getFixture()?.camera?.zoom).toBe(liveCamera.zoom);
     });
 
-    it("patchFixture bumps revision only when structure changes", () => {
+    it("applyFixtureEdit bumps revision only when structure changes", () => {
       const bus = new CommandBus();
       const wb = new Platform();
       const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
       const base = ctrl.getFixture();
       expect(base).not.toBeNull();
       const revisionBefore = ctrl.getFixtureRevision();
-      ctrl.patchFixture((fixture) => ({
-        ...fixture,
-        objects: fixture.objects.map((object, index) => (index === 0 ? { ...object, origin: [object.origin[0]! + 1, object.origin[1]!, object.origin[2]!] as const } : object)),
-      }));
+      const firstObject = base!.objects[0]!;
+      ctrl.applyFixtureEdit({
+        op: "patchObjects",
+        objectIds: [firstObject.id],
+        field: "origin",
+        value: [firstObject.origin[0]! + 1, firstObject.origin[1]!, firstObject.origin[2]!],
+      });
       expect(ctrl.getFixtureRevision()).toBe(revisionBefore);
-      ctrl.patchFixture((fixture) => ({
-        ...fixture,
-        objects: fixture.objects.slice(0, -1),
-      }));
+      const lastObject = base!.objects[base!.objects.length - 1]!;
+      ctrl.applyFixtureEdit({ op: "removeObjects", objectIds: [lastObject.id] });
       expect(ctrl.getFixtureRevision()).toBe(revisionBefore + 1);
     });
 
@@ -4836,7 +4924,7 @@ if (import.meta.vitest) {
         objects: [{ id: "obj", objectKind: "kind-a", meshUrl: "/mesh/a.glb", origin: [0, 0, 0], vortices: [] }],
       });
       expect(fixture).not.toBeNull();
-      ctrl.patchFixture(() => fixture!);
+      ctrl.applyFixtureEdit({ op: "setDocument", document: fixture! });
       let snapshotCount = 0;
       const unsubscribe = ctrl.subscribeSnapshot(() => {
         snapshotCount += 1;
@@ -4900,7 +4988,7 @@ if (import.meta.vitest) {
         ],
       });
       expect(fixture).not.toBeNull();
-      ctrl.patchFixture(() => fixture!);
+      ctrl.applyFixtureEdit({ op: "setDocument", document: fixture! });
       ctrl.run("setSelection", {
         selection: { objectIds: ["obj-a"], vortexIds: [puzzle3dVortexFullId("obj-b", "v1")], attractionIds: ["att-1"] },
       });
@@ -4922,7 +5010,7 @@ if (import.meta.vitest) {
         objects: [{ id: "tower-a", objectKind: "Capsule", meshUrl: "/a.glb", origin: [0, 0, 0], vortices: [] }],
       });
       expect(fixture).not.toBeNull();
-      ctrl.patchFixture(() => fixture!);
+      ctrl.applyFixtureEdit({ op: "setDocument", document: fixture! });
       ctrl.run("setSelection", { selection: { objectIds: ["tower-a"], vortexIds: [], attractionIds: [], referenceIds: [] } });
       ctrl.run("duplicateSelection");
       const next = ctrl.getFixture()!;
@@ -4948,7 +5036,7 @@ if (import.meta.vitest) {
         ],
       });
       expect(fixture).not.toBeNull();
-      ctrl.patchFixture(() => fixture!);
+      ctrl.applyFixtureEdit({ op: "setDocument", document: fixture! });
       ctrl.run("setSelection", { selection: { objectIds: ["a1"], vortexIds: [], attractionIds: [], referenceIds: [] } });
       ctrl.run("selectSameKind");
       expect(ctrl.getSnapshot().selection.objectIds.sort()).toEqual(["a1", "a2"]);
@@ -5175,7 +5263,7 @@ if (import.meta.vitest) {
         ],
       });
       expect(fixture).not.toBeNull();
-      ctrl.patchFixture(() => fixture!);
+      ctrl.applyFixtureEdit({ op: "setDocument", document: fixture! });
       ctrl.run("setSelection", {
         selection: { objectIds: [], vortexIds: [], attractionIds: [], referenceIds: ["ref-hidden"], targetVolumeIds: [] },
       });
@@ -5201,7 +5289,7 @@ if (import.meta.vitest) {
         ],
       });
       expect(fixture).not.toBeNull();
-      ctrl.patchFixture(() => fixture!);
+      ctrl.applyFixtureEdit({ op: "setDocument", document: fixture! });
       ctrl.run("setSelection", {
         selection: { objectIds: [], vortexIds: [], attractionIds: [], referenceIds: ["ref-locked"], targetVolumeIds: [] },
       });
@@ -5231,7 +5319,7 @@ if (import.meta.vitest) {
         ],
       });
       expect(fixture).not.toBeNull();
-      ctrl.patchFixture(() => fixture!);
+      ctrl.applyFixtureEdit({ op: "setDocument", document: fixture! });
       ctrl.run("setSelection", { selection: { objectIds: [], vortexIds: [], attractionIds: [], referenceIds: ["ref-a"], targetVolumeIds: [] } });
       const tree = buildPuzzle3dPlayInspectorBody({
         runtime: wb,
@@ -5296,7 +5384,7 @@ if (import.meta.vitest) {
         ],
       });
       expect(fixture).not.toBeNull();
-      ctrl.patchFixture(() => fixture!);
+      ctrl.applyFixtureEdit({ op: "setDocument", document: fixture! });
       ctrl.run("setSelection", {
         selection: {
           objectIds: [],
@@ -5339,7 +5427,7 @@ if (import.meta.vitest) {
         ],
       });
       expect(fixture).not.toBeNull();
-      ctrl.patchFixture(() => fixture!);
+      ctrl.applyFixtureEdit({ op: "setDocument", document: fixture! });
       ctrl.run("patchPuzzle3dVortices", { vortexFullIds: ["a:v1", "b:v2"], field: "label", value: "Batch" });
       const rows = puzzle3dPlayInspectorVortexRows(ctrl.getFixture()!, ["a:v1", "b:v2"]);
       expect(rows.every((row) => row.vortex.label === "Batch")).toBe(true);
@@ -5625,7 +5713,7 @@ if (import.meta.vitest) {
       const treeBefore = ctrl.getHierarchyPanelTree(PUZZLE_3D_PLAY_EMPTY_SELECTION);
       const objectRowBefore = treeBefore.sections[0]?.items?.find((row) => row.id === `puzzle-3d-play-hierarchy.object.${objectId}`);
       expect(objectRowBefore?.isHidden).not.toBe(true);
-      ctrl.patchFixture((current) => updatePuzzle3dObjectInFixture(current, objectId, { hidden: true }));
+      ctrl.applyFixtureEdit({ op: "patchObject", objectId, patch: { hidden: true } });
       expect(ctrl.getFixtureRevision()).toBe(revisionBefore);
       const treeAfter = ctrl.getHierarchyPanelTree(PUZZLE_3D_PLAY_EMPTY_SELECTION);
       expect(treeAfter.sections).not.toBe(treeBefore.sections);

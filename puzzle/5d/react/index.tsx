@@ -1831,6 +1831,72 @@ export function applyFillPlacementsToModel(base: Model, placements: readonly Puz
   return next;
 }
 
+export type Puzzle5dModelEditOp =
+  | { readonly op: "setDocument"; readonly document: Model }
+  | { readonly op: "patchParts"; readonly partIds: readonly string[]; readonly field: Puzzle5dPartPatchField; readonly value: unknown }
+  | { readonly op: "patchGrips"; readonly gripFullIds: readonly string[]; readonly field: Puzzle5dGripPatchField; readonly value: unknown }
+  | { readonly op: "applyBrushPlacement"; readonly placement: Puzzle5dBrushPlacement }
+  | { readonly op: "deletePartsAndGrips"; readonly partIds: readonly string[]; readonly gripIds: readonly string[] }
+  | {
+      readonly op: "applyFillPrefix";
+      readonly baseModel: Model;
+      readonly placements: readonly Puzzle5dBrushPlacement[];
+      readonly count: number;
+    };
+
+/** @emoji 🚪 Applies one semantic puzzle 5d model edit (CQRS projection applier). */
+export function applyPuzzle5dModelEditOp(model: Model, op: Puzzle5dModelEditOp): Model {
+  switch (op.op) {
+    case "setDocument":
+      return op.document;
+    case "patchParts": {
+      if (!op.partIds.length) return model;
+      const idSet = new Set(op.partIds);
+      return {
+        ...model,
+        parts: model.parts.map((part) => (idSet.has(part.id) ? patchPuzzle5dPartRow(part, op.field, op.value) : part)),
+      };
+    }
+    case "patchGrips": {
+      if (!op.gripFullIds.length) return model;
+      const idSet = new Set(op.gripFullIds);
+      return {
+        ...model,
+        parts: model.parts.map((part) => {
+          let changed = false;
+          const grips = part.grips.map((grip) => {
+            const fullId = gripFullId(part.id, grip.id);
+            if (!idSet.has(fullId)) return grip;
+            changed = true;
+            return patchPuzzle5dGripRow(grip, op.field, op.value);
+          });
+          return changed ? { ...part, grips } : part;
+        }),
+      };
+    }
+    case "applyBrushPlacement": {
+      const result = applyBrushPlacementToModel(model, op.placement);
+      return result.kind === "placed" ? result.model : model;
+    }
+    case "deletePartsAndGrips": {
+      let next = model;
+      for (const partId of op.partIds) {
+        const removed = removePartFromModel(next, partId);
+        if (removed) next = removed;
+      }
+      for (const gripId of op.gripIds) {
+        const removed = removeGripFromModel(next, gripId);
+        if (removed) next = removed;
+      }
+      return next;
+    }
+    case "applyFillPrefix": {
+      const clamped = Math.max(0, Math.min(PUZZLE_5D_FILL_COUNT_MAX, Math.round(op.count)));
+      return applyFillPlacementsToModel(op.baseModel, op.placements.slice(0, clamped));
+    }
+  }
+}
+
 /** @emoji 🪣 Volume-authoritative fill sequence mapped to unified placements (2d aspects synthesized). */
 export function buildPuzzle5dFillSequence(args: {
   readonly model: Model;
@@ -2696,6 +2762,15 @@ export class Store {
     });
     clearVolumePaletteDragSession();
     return part.id;
+  }
+
+  /** @emoji 🪣 Syncs fill-count UI state after play commits a fill-prefix model edit. */
+  syncFillCount(count: number): void {
+    const clamped = Math.max(0, Math.min(PUZZLE_5D_FILL_COUNT_MAX, Math.round(count)));
+    if (this.snapshot.fillCount === clamped && this.snapshot.fillBuildDone) {
+      return;
+    }
+    this.setSnapshot({ ...this.snapshot, fillCount: clamped, fillBuildDone: true });
   }
 
   /** @emoji 🪣 Applies a fill prefix count from the cached session onto the store model. */

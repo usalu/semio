@@ -46,12 +46,14 @@ import {
 import {
   DAG_DEFAULT_FIXTURE,
   DAG_LOD_MODE_AUTOMATIC,
+  applyDagFixtureEditOp,
   dagPlayLodTiers,
   dagFixtureToJson,
   dagLodAutomaticSelectLabel,
   dagPlayLodTierMenuLabel,
   isDagDrawLodKind,
   type DagDrawLodKind,
+  type DagFixtureEditOp,
   type DagFixtureV1,
   type DagLodModeKind,
   type DagNodeV1,
@@ -76,12 +78,6 @@ const DEFAULT_SIBLING_GAP = 40;
 
 export const DAG_PLAY_DEFAULT_FIXTURE: DagFixtureV1 = DAG_DEFAULT_FIXTURE;
 export const DAG_PLAY_DEFAULT_FIXTURE_JSON = dagFixtureToJson(DAG_PLAY_DEFAULT_FIXTURE);
-
-type DagFixtureEditOp = { readonly op: "setDocument"; readonly document: DagFixtureV1 };
-
-function applyDagFixtureEditOp(_fixture: DagFixtureV1, op: DagFixtureEditOp): DagFixtureV1 {
-  return op.document;
-}
 
 export const DAG_PLAY_LAYOUT = createStackLayout([DAG_PLAY_WINDOW_KIND_ID], ["DAG"]);
 export const DAG_PLAY_HIERARCHY_TAB_ID = "framework.panel.hierarchy";
@@ -370,8 +366,11 @@ export class DagPlayController extends Controller {
   }
 
   private commitFixture(next: DagFixtureV1): void {
-    const previous = this.projection();
-    recordProjectionChange(this.docStore, [{ op: "setDocument", document: next }]);
+    this.applyFixtureEdit({ op: "setDocument", document: next });
+  }
+
+  private applyFixtureEdit(op: DagFixtureEditOp): void {
+    recordProjectionChange(this.docStore, [op]);
   }
 
   getReorganize(): DagReorganizeRequest {
@@ -404,7 +403,7 @@ export class DagPlayController extends Controller {
   private applyFixtureJson(json: string): void {
     const parsed = parseDagPlayFixtureJson(json);
     if (!parsed || dagFixtureToJson(parsed) === this.getFixtureJson()) return;
-    this.commitFixture(parsed);
+    this.applyFixtureEdit({ op: "setDocument", document: parsed });
     this.interactionRevision += 1;
     this.notifySnapshot();
     this.emit();
@@ -415,33 +414,15 @@ export class DagPlayController extends Controller {
     if (!trimmed || trimmed === oldId) return;
     const fixture = this.projection();
     if (fixture.nodes.some((node) => node.id === trimmed)) return;
-    const nodes = fixture.nodes.map((node) => (node.id === oldId ? ({ ...node, id: trimmed } as DagNodeV1) : node));
-    const remapPort = (port: string) => (port.startsWith(`${oldId}:`) ? `${trimmed}:${port.slice(oldId.length + 1)}` : port);
-    const edges = fixture.edges.map((edge) => ({
-      ...edge,
-      source: remapPort(edge.source),
-      target: remapPort(edge.target),
-    }));
     this.selectedNodeIds = this.selectedNodeIds.map((id) => (id === oldId ? trimmed : id));
-    this.commitFixture({ ...fixture, nodes, edges });
+    this.applyFixtureEdit({ op: "renameNode", oldId, newId: trimmed });
     this.interactionRevision += 1;
     this.notifySnapshot();
     this.emit();
   }
 
   private patchDagNode(nodeId: string, field: string, value: unknown): void {
-    const fixture = this.projection();
-    const nodes = fixture.nodes.map((node) => {
-      if (node.id !== nodeId) return node;
-      if (field === "value" || field === "min" || field === "max" || field === "step" || field === "selected") {
-        const numeric = typeof value === "number" ? value : Number(value);
-        if (!Number.isFinite(numeric)) return node;
-        return { ...node, [field]: numeric } as DagNodeV1;
-      }
-      if (typeof value !== "string") return node;
-      return { ...node, [field]: value } as DagNodeV1;
-    });
-    this.commitFixture({ ...fixture, nodes });
+    this.applyFixtureEdit({ op: "patchNode", nodeId, field, value });
     this.interactionRevision += 1;
     this.notifySnapshot();
     this.emit();
@@ -607,22 +588,7 @@ export class DagPlayController extends Controller {
       const field = (args as { field?: string }).field;
       const value = (args as { value?: unknown }).value ?? (args as { pressed?: boolean }).pressed;
       if (!nodeIds.length || typeof field !== "string") return;
-      let next = this.projection();
-      for (const nodeId of nodeIds) {
-        const fixture = next;
-        const nodes = fixture.nodes.map((node) => {
-          if (node.id !== nodeId) return node;
-          if (field === "value" || field === "min" || field === "max" || field === "step" || field === "selected") {
-            const numeric = typeof value === "number" ? value : Number(value);
-            if (!Number.isFinite(numeric)) return node;
-            return { ...node, [field]: numeric } as DagNodeV1;
-          }
-          if (typeof value !== "string") return node;
-          return { ...node, [field]: value } as DagNodeV1;
-        });
-        next = { ...fixture, nodes };
-      }
-      this.commitFixture(next);
+      this.applyFixtureEdit({ op: "patchNodes", nodeIds, field, value });
       this.interactionRevision += 1;
       this.notifySnapshot();
       this.emit();

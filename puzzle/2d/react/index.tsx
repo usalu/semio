@@ -84,6 +84,8 @@ import {
 	type WireKind,
   nakaginManifestCatalogBundle,
   puzzle2d_defaultManifestCatalogBundle,
+  rewrite_lhsManifestCatalogBundle,
+  rewrite_rhsManifestCatalogBundle,
 } from "@semio-tech/graph-manifest";
 
 export type { EdgeKind, EdgeTip, HandleKind, KindCatalogBundle, NodeKind, NodeKindHandleTemplate, WireKind };
@@ -517,6 +519,12 @@ export function fixtureMetaKindCatalogBundle(raw: unknown): KindCatalogBundle | 
   }
   if (manifestId === "puzzle2d-default") {
     return puzzle2d_defaultManifestCatalogBundle();
+  }
+  if (manifestId === "rewrite-lhs") {
+    return rewrite_lhsManifestCatalogBundle();
+  }
+  if (manifestId === "rewrite-rhs") {
+    return rewrite_rhsManifestCatalogBundle();
   }
   const kc = meta.kindCatalogs;
   if (!kc || typeof kc !== "object") {

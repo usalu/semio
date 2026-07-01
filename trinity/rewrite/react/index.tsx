@@ -26,8 +26,11 @@ export const REWRITE_PORT_HANDLE = "port" as const;
 export const REWRITE_LHS_MANIFEST_ID = "rewrite-lhs" as const;
 export const REWRITE_RHS_MANIFEST_ID = "rewrite-rhs" as const;
 
-const PORT_OUT: Puzzle2dFixtureHandleV1 = { id: "out", handleKind: REWRITE_PORT_HANDLE, angle: 0 };
-const PORT_IN: Puzzle2dFixtureHandleV1 = { id: "in", handleKind: REWRITE_PORT_HANDLE, angle: Math.PI };
+type RewritePortKind = "in" | "out";
+
+function rewritePortHandle(nodeId: string, port: RewritePortKind): Puzzle2dFixtureHandleV1 {
+  return { id: `${nodeId}:${port}`, handleKind: REWRITE_PORT_HANDLE, angle: port === "out" ? 0 : Math.PI };
+}
 
 function rewriteGraphNode(
   id: string,
@@ -35,14 +38,112 @@ function rewriteGraphNode(
   text: string,
   x: number,
   y: number,
-  handles: readonly Puzzle2dFixtureHandleV1[],
+  ports: readonly RewritePortKind[],
 ): Puzzle2dFixtureCircleNodeV1 {
-  return { id, nodeKind, text, x, y, radius: 44, shape: "circle", handles: [...handles] };
+  return { id, nodeKind, text, x, y, radius: 44, shape: "circle", handles: ports.map((port) => rewritePortHandle(id, port)) };
 }
 
 function parseHandleEndpoint(ref: string): string {
   const idx = ref.indexOf(":");
   return idx >= 0 ? ref.slice(0, idx) : ref;
+}
+
+function formatMatchLabel(parsed: { var: string; kind: string }): string {
+  return `${parsed.var} : ${parsed.kind}`;
+}
+
+function parseWhereVars(text: string): readonly string[] {
+  const vars = new Set<string>();
+  for (const match of text.matchAll(/\b([a-zA-Z_$][\w$]*)\./g)) {
+    vars.add(match[1]!);
+  }
+  return [...vars];
+}
+
+function rewriteNodeVar(node: Puzzle2dFixtureCircleNodeV1): string | null {
+  if (
+    node.nodeKind === REWRITE_NODE_MATCH ||
+    node.nodeKind === REWRITE_NODE_CREATE ||
+    node.nodeKind === REWRITE_NODE_DELETE ||
+    node.nodeKind === REWRITE_NODE_MERGE
+  ) {
+    return parseMatchLabel(node.text ?? "").var;
+  }
+  if (node.nodeKind === REWRITE_NODE_SET) {
+    return parseSetLabel(node.text ?? "")?.var ?? null;
+  }
+  if (node.nodeKind === REWRITE_NODE_WHERE) {
+    return parseWhereVars(node.text ?? "")[0] ?? null;
+  }
+  return null;
+}
+
+/** @emoji 🏷️ Resolve the Jack variable name bound to a rewrite rule-graph node id. */
+export function rewriteVarForNodeId(fixture: Puzzle2dFixtureV1, nodeId: string): string | null {
+  const node = fixture.nodes.find((entry) => entry.id === nodeId);
+  if (!node) return null;
+  return rewriteNodeVar(node);
+}
+
+/** @emoji 🔗 Resolve rewrite rule-graph node ids that reference a Jack variable name. */
+export function rewriteNodeIdsForVar(fixture: Puzzle2dFixtureV1, varName: string): readonly string[] {
+  const ids: string[] = [];
+  for (const node of fixture.nodes) {
+    const bound = rewriteNodeVar(node);
+    if (bound === varName) {
+      ids.push(node.id);
+    }
+    if (node.nodeKind === REWRITE_NODE_WHERE && parseWhereVars(node.text ?? "").includes(varName)) {
+      ids.push(node.id);
+    }
+  }
+  return [...new Set(ids)];
+}
+
+function lhsPatternToMatchClause(pattern: {
+  leftVar: string;
+  leftKind: string;
+  edgeVar?: string;
+  edgeKind?: string;
+  rightVar?: string;
+  rightKind?: string;
+}): string {
+  if (pattern.rightVar && pattern.rightKind) {
+    const edgeVar = pattern.edgeVar ?? "e";
+    const edgeKind = pattern.edgeKind ?? "Connection";
+    return `(${pattern.leftVar}:${pattern.leftKind})-[${edgeVar}:${edgeKind}]->(${pattern.rightVar}:${pattern.rightKind})`;
+  }
+  return `(${pattern.leftVar}:${pattern.leftKind})`;
+}
+
+/** @emoji 🧵 Build a Jack MATCH query for the LHS pattern returning one variable binding. */
+export function rewriteLhsMatchQuery(lhsJson: string, returnVar: string): string {
+  const lhs = JSON.parse(lhsJson) as {
+    pattern?: {
+      leftVar?: string;
+      leftKind?: string;
+      edgeVar?: string;
+      edgeKind?: string;
+      rightVar?: string;
+      rightKind?: string;
+    };
+    whereClause?: string;
+  };
+  const pattern = {
+    leftVar: lhs.pattern?.leftVar ?? "a",
+    leftKind: lhs.pattern?.leftKind ?? "Piece",
+    edgeVar: lhs.pattern?.edgeVar,
+    edgeKind: lhs.pattern?.edgeKind,
+    rightVar: lhs.pattern?.rightVar,
+    rightKind: lhs.pattern?.rightKind,
+  };
+  let query = `MATCH ${lhsPatternToMatchClause(pattern)}`;
+  const where = lhs.whereClause?.trim();
+  if (where) {
+    query += ` WHERE ${where}`;
+  }
+  query += ` RETURN ${returnVar}`;
+  return query;
 }
 
 function parseMatchLabel(text: string): { var: string; kind: string } {
@@ -96,8 +197,8 @@ export const REWRITE_DEFAULT_LHS_FIXTURE: Puzzle2dFixtureV1 = {
   camera: { x: 0, y: 0, zoom: 1 },
   meta: { manifestId: REWRITE_LHS_MANIFEST_ID },
   nodes: [
-    rewriteGraphNode("match-a", REWRITE_NODE_MATCH, "a:Piece", -140, 0, [PORT_OUT]),
-    rewriteGraphNode("where-b", REWRITE_NODE_WHERE, "a.name = 'b'", 140, 0, [PORT_IN]),
+    rewriteGraphNode("match-a", REWRITE_NODE_MATCH, formatMatchLabel({ var: "a", kind: "Piece" }), -140, 0, ["out"]),
+    rewriteGraphNode("where-b", REWRITE_NODE_WHERE, "a.name = 'b'", 140, 0, ["in"]),
   ],
   edges: [{ id: "lhs-flow", source: "match-a:out", target: "where-b:in", edgeKind: REWRITE_EDGE_FLOW }],
 };
@@ -107,8 +208,8 @@ export const REWRITE_DEFAULT_RHS_FIXTURE: Puzzle2dFixtureV1 = {
   camera: { x: 0, y: 0, zoom: 1 },
   meta: { manifestId: REWRITE_RHS_MANIFEST_ID },
   nodes: [
-    rewriteGraphNode("param-label", REWRITE_NODE_PARAMETER, "label:string=nakagin-core", -260, 0, [PORT_OUT]),
-    rewriteGraphNode("set-label", REWRITE_NODE_SET, "a.label = $label", 40, 0, [PORT_IN, PORT_OUT]),
+    rewriteGraphNode("param-label", REWRITE_NODE_PARAMETER, "label:string=nakagin-core", -260, 0, ["out"]),
+    rewriteGraphNode("set-label", REWRITE_NODE_SET, "a.label = $label", 40, 0, ["in", "out"]),
   ],
   edges: [{ id: "rhs-flow", source: "param-label:out", target: "set-label:in", edgeKind: REWRITE_EDGE_FLOW }],
 };
@@ -227,8 +328,8 @@ export function rewriteLhsJsonToGraph(lhsJson: string): Puzzle2dFixtureV1 {
     const edges: Puzzle2dFixtureV1["edges"] = [];
     if (pattern.rightVar && pattern.rightKind) {
       nodes.push(
-        rewriteGraphNode("match-left", REWRITE_NODE_MATCH, `${pattern.leftVar}:${pattern.leftKind}`, -220, 0, [PORT_OUT]),
-        rewriteGraphNode("match-right", REWRITE_NODE_MATCH, `${pattern.rightVar}:${pattern.rightKind}`, 0, 0, [PORT_IN, PORT_OUT]),
+        rewriteGraphNode("match-left", REWRITE_NODE_MATCH, formatMatchLabel({ var: pattern.leftVar!, kind: pattern.leftKind! }), -220, 0, ["out"]),
+        rewriteGraphNode("match-right", REWRITE_NODE_MATCH, formatMatchLabel({ var: pattern.rightVar!, kind: pattern.rightKind! }), 0, 0, ["in", "out"]),
       );
       edges.push({
         id: "pattern-edge",
@@ -237,13 +338,13 @@ export function rewriteLhsJsonToGraph(lhsJson: string): Puzzle2dFixtureV1 {
         edgeKind: REWRITE_EDGE_PATTERN,
       });
       if (lhs.whereClause) {
-        nodes.push(rewriteGraphNode("where", REWRITE_NODE_WHERE, lhs.whereClause, 220, 0, [PORT_IN]));
+        nodes.push(rewriteGraphNode("where", REWRITE_NODE_WHERE, lhs.whereClause, 220, 0, ["in"]));
         edges.push({ id: "where-flow", source: "match-right:out", target: "where:in", edgeKind: REWRITE_EDGE_FLOW });
       }
     } else {
-      nodes.push(rewriteGraphNode("match-a", REWRITE_NODE_MATCH, `${pattern.leftVar}:${pattern.leftKind}`, -140, 0, [PORT_OUT]));
+      nodes.push(rewriteGraphNode("match-a", REWRITE_NODE_MATCH, formatMatchLabel({ var: pattern.leftVar!, kind: pattern.leftKind! }), -140, 0, ["out"]));
       if (lhs.whereClause) {
-        nodes.push(rewriteGraphNode("where", REWRITE_NODE_WHERE, lhs.whereClause, 140, 0, [PORT_IN]));
+        nodes.push(rewriteGraphNode("where", REWRITE_NODE_WHERE, lhs.whereClause, 140, 0, ["in"]));
         edges.push({ id: "where-flow", source: "match-a:out", target: "where:in", edgeKind: REWRITE_EDGE_FLOW });
       }
     }
@@ -272,13 +373,13 @@ export function rewriteRhsJsonToGraph(rhsJson: string): Puzzle2dFixtureV1 {
     for (const param of rhs.parameters ?? []) {
       const id = `param-${param.name}`;
       nodes.push(
-        rewriteGraphNode(id, REWRITE_NODE_PARAMETER, `${param.name}:${param.kind}=${formatParameterDefault(param)}`, -260, bumpY(), [PORT_OUT]),
+        rewriteGraphNode(id, REWRITE_NODE_PARAMETER, `${param.name}:${param.kind}=${formatParameterDefault(param)}`, -260, bumpY(), ["out"]),
       );
     }
     for (const row of rhs.set ?? []) {
       if (!row.var || !row.prop || row.value == null) continue;
       const id = `set-${row.var}-${row.prop}`;
-      const node = rewriteGraphNode(id, REWRITE_NODE_SET, `${row.var}.${row.prop} = ${row.value}`, 60, bumpY(), [PORT_IN, PORT_OUT]);
+      const node = rewriteGraphNode(id, REWRITE_NODE_SET, `${row.var}.${row.prop} = ${row.value}`, 60, bumpY(), ["in", "out"]);
       nodes.push(node);
       const paramName = String(row.value).startsWith("$") ? String(row.value).slice(1) : null;
       if (paramName) {
@@ -290,15 +391,15 @@ export function rewriteRhsJsonToGraph(rhsJson: string): Puzzle2dFixtureV1 {
     }
     for (const row of rhs.create ?? []) {
       if (!row.leftVar || !row.leftKind) continue;
-      nodes.push(rewriteGraphNode(`create-${row.leftVar}`, REWRITE_NODE_CREATE, `${row.leftVar}:${row.leftKind}`, 60, bumpY(), [PORT_OUT]));
+      nodes.push(rewriteGraphNode(`create-${row.leftVar}`, REWRITE_NODE_CREATE, formatMatchLabel({ var: row.leftVar, kind: row.leftKind }), 60, bumpY(), ["out"]));
     }
     for (const row of rhs.delete ?? []) {
       if (!row.leftVar || !row.leftKind) continue;
-      nodes.push(rewriteGraphNode(`delete-${row.leftVar}`, REWRITE_NODE_DELETE, `${row.leftVar}:${row.leftKind}`, 60, bumpY(), [PORT_OUT]));
+      nodes.push(rewriteGraphNode(`delete-${row.leftVar}`, REWRITE_NODE_DELETE, formatMatchLabel({ var: row.leftVar, kind: row.leftKind }), 60, bumpY(), ["out"]));
     }
     for (const row of rhs.merge ?? []) {
       if (!row.leftVar || !row.leftKind) continue;
-      nodes.push(rewriteGraphNode(`merge-${row.leftVar}`, REWRITE_NODE_MERGE, `${row.leftVar}:${row.leftKind}`, 60, bumpY(), [PORT_OUT]));
+      nodes.push(rewriteGraphNode(`merge-${row.leftVar}`, REWRITE_NODE_MERGE, formatMatchLabel({ var: row.leftVar, kind: row.leftKind }), 60, bumpY(), ["out"]));
     }
     if (!nodes.length) return REWRITE_DEFAULT_RHS_FIXTURE;
     return { ...REWRITE_DEFAULT_RHS_FIXTURE, nodes, edges };
@@ -328,10 +429,30 @@ if (import.meta.vitest) {
       expect(rhs.parameters[0]?.default).toBe("nakagin-core");
     });
 
+    it("var mapping resolves match and where nodes", () => {
+      expect(rewriteVarForNodeId(REWRITE_DEFAULT_LHS_FIXTURE, "match-a")).toBe("a");
+      expect(rewriteVarForNodeId(REWRITE_DEFAULT_LHS_FIXTURE, "where-b")).toBe("a");
+      expect(rewriteNodeIdsForVar(REWRITE_DEFAULT_LHS_FIXTURE, "a")).toEqual(["match-a", "where-b"]);
+    });
+
+    it("rewriteLhsMatchQuery builds RETURN query", () => {
+      const lhsJson = rewriteLhsGraphToJson(REWRITE_DEFAULT_LHS_FIXTURE);
+      const query = rewriteLhsMatchQuery(lhsJson, "a");
+      expect(query).toContain("MATCH (a:Piece)");
+      expect(query).toContain("WHERE a.name = 'b'");
+      expect(query).toContain("RETURN a");
+    });
+
     it("lhs json round-trips through graph adapter", () => {
       const json = rewriteLhsGraphToJson(REWRITE_DEFAULT_LHS_FIXTURE);
       const graph = rewriteLhsJsonToGraph(json);
       expect(rewriteLhsGraphToJson(graph)).toContain('"leftVar": "a"');
+    });
+
+    it("default lhs graph uses node-qualified handle ids for edge sync", () => {
+      expect(REWRITE_DEFAULT_LHS_FIXTURE.nodes[0]?.handles[0]?.id).toBe("match-a:out");
+      expect(REWRITE_DEFAULT_LHS_FIXTURE.edges[0]?.source).toBe("match-a:out");
+      expect(REWRITE_DEFAULT_LHS_FIXTURE.edges[0]?.target).toBe("where-b:in");
     });
   });
 }

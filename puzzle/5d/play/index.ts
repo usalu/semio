@@ -124,6 +124,9 @@ import {
   parseGripFullId,
   type Puzzle5dPartPatchField,
   type Puzzle5dGripPatchField,
+  applyBrushPlacementToModel,
+  applyPuzzle5dModelEditOp,
+  type Puzzle5dModelEditOp,
   type FastenerKind,
   type GripKind,
   type PartKind,
@@ -132,12 +135,6 @@ import {
 } from "../react/index.tsx";
 
 //#region 🔖Ids
-type Puzzle5dModelEditOp = { readonly op: "setDocument"; readonly document: Puzzle5dModel };
-
-function applyPuzzle5dModelEditOp(_model: Puzzle5dModel, op: Puzzle5dModelEditOp): Puzzle5dModel {
-  return op.document;
-}
-
 export const PUZZLE_5D_PLAY_APP_ID = "puzzle-5d-play";
 export const PUZZLE_5D_PLAY_CONTROLLER_ID = "puzzle-5d-play";
 export const PUZZLE_5D_PLAY_2D_WINDOW_ID = "puzzle-5d-2d";
@@ -1280,9 +1277,13 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
     return this.modelDocStore;
   }
 
+  private applyModelEdit(op: Puzzle5dModelEditOp): void {
+    recordProjectionChange(this.modelDocStore, [op]);
+    this.puzzle5dStore.replaceModel(this.modelDocStore.projection());
+  }
+
   private commitModel(model: Puzzle5dModel): void {
-    const previous = this.modelDocStore.projection();
-    recordProjectionChange(this.modelDocStore, [{ op: "setDocument", document: model }]);
+    this.applyModelEdit({ op: "setDocument", document: model });
   }
 
   getFixtureCatalog(): PlaygroundFixtureCatalog | null {
@@ -1431,18 +1432,26 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
           changed = false;
           break;
         }
-        if (this.puzzle5dStore.applyBrushPlacement(placement)) {
+        const result = applyBrushPlacementToModel(this.modelDocStore.projection(), placement);
+        if (result.kind === "placed") {
+          this.applyModelEdit({ op: "applyBrushPlacement", placement });
+          this.puzzle5dStore.setSelection({ partIds: [result.partId], gripIds: [] });
           this.emit();
         }
         changed = false;
         break;
       }
       case "deleteSelection": {
-        if (this.puzzle5dStore.applySelectionDelete()) {
-          this.selected2d = new Set();
-          this.selected3d = null;
-          this.emit();
+        const selection = this.puzzle5dStore.read().selection;
+        if (selection.partIds.length === 0 && selection.gripIds.length === 0) {
+          changed = false;
+          break;
         }
+        this.applyModelEdit({ op: "deletePartsAndGrips", partIds: selection.partIds, gripIds: selection.gripIds });
+        this.puzzle5dStore.setSelection({ partIds: [], gripIds: [] });
+        this.selected2d = new Set();
+        this.selected3d = null;
+        this.emit();
         changed = false;
         break;
       }
@@ -1456,7 +1465,7 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
           changed = false;
           break;
         }
-        this.puzzle5dStore.patchParts(partIds, field, value);
+        this.applyModelEdit({ op: "patchParts", partIds, field, value });
         changed = false;
         break;
       }
@@ -1470,7 +1479,7 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
           changed = false;
           break;
         }
-        this.puzzle5dStore.patchGrips(gripFullIds, field, value);
+        this.applyModelEdit({ op: "patchGrips", gripFullIds, field, value });
         changed = false;
         break;
       }
@@ -1480,7 +1489,18 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
           changed = false;
           break;
         }
-        this.puzzle5dStore.applyFillCount(count);
+        const session = this.puzzle5dStore.getFillSession();
+        if (!session) {
+          changed = false;
+          break;
+        }
+        this.applyModelEdit({
+          op: "applyFillPrefix",
+          baseModel: session.baseModel,
+          placements: session.sequence,
+          count,
+        });
+        this.puzzle5dStore.syncFillCount(count);
         this.rebuildShellMode();
         this.emit();
         changed = false;
@@ -1538,7 +1558,16 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
         if (this.activeTool === "fill") {
           const value = Number((args as { value?: number }).value);
           if (Number.isFinite(value)) {
-            this.puzzle5dStore.applyFillCount(value);
+            const session = this.puzzle5dStore.getFillSession();
+            if (session) {
+              this.applyModelEdit({
+                op: "applyFillPrefix",
+                baseModel: session.baseModel,
+                placements: session.sequence,
+                count: value,
+              });
+              this.puzzle5dStore.syncFillCount(value);
+            }
             this.rebuildShellMode();
             this.emit();
           }

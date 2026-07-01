@@ -307,6 +307,8 @@ export function sidePanelTreeRootItems(
 export type ComponentKind = "table" | "virtualFileSystem" | "puzzle2d" | "puzzle3d" | "puzzle5d" | "cad" | "gismap" | "flow" | "dag" | "trinity" | "shooting" | "forms" | "raster" | "draw" | "writer" | "semios" | "panel" | "editor";
 
 const CANVAS_COMPONENT_KINDS: readonly ComponentKind[] = ["table", "virtualFileSystem", "puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag", "trinity", "shooting", "forms", "raster", "draw", "writer", "semios", "editor"];
+
+const EDGELESS_WINDOW_COMPONENT_KINDS: readonly ComponentKind[] = ["puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag", "trinity", "shooting", "raster", "draw", "semios"];
 //#endregion 🔖ComponentKind
 
 /** @emoji 📊 Host-bound tabular surface; `paneId` disambiguates multiple table slots in one app. */
@@ -459,7 +461,7 @@ export interface UiDrawHostSurfaceNode {
 	readonly bindingId?: string;
 }
 
-/** @emoji ✍️ Host-bound writer infinite-canvas editor surface. */
+/** @emoji ✍️ Host-bound writer editor surface. */
 export interface UiWriterHostSurfaceNode {
 	readonly type: "writer";
 	readonly componentKind: "writer";
@@ -668,7 +670,7 @@ export function buildTableWindowBody(surfaceId: string, controllerId: string, pa
 	};
 }
 
-/** @emoji ✍️ Canonical writer window body for infinite-canvas editor surfaces. */
+/** @emoji ✍️ Canonical writer window body for framed (chrome-aware) editor surfaces. */
 export function buildWriterWindowBody(surfaceId: string, controllerId: string, paneId?: string, bindingId?: string): UiWriterHostSurfaceNode {
 	return {
 		type: "writer",
@@ -888,6 +890,14 @@ export function isCanvasOnlyWindowBody(node: UiNode): boolean {
 		return isCanvasComponentNode(node.children[0]);
 	}
 	return false;
+}
+
+/** @emoji 🌊 True when a window body is a full-bleed canvas surface rather than chrome-aware framed content. */
+export function isEdgelessWindowBody(node: UiNode): boolean {
+	if (node.type === "stack" && node.padding === "none" && node.children.length === 1) {
+		return isEdgelessWindowBody(node.children[0]);
+	}
+	return EDGELESS_WINDOW_COMPONENT_KINDS.includes(node.type as ComponentKind);
 }
 
 function assertCanvasOnlyWindowBody(bodyKey: string, node: UiNode): void {
@@ -2643,6 +2653,22 @@ if (import.meta.vitest) {
 			expect(isCanvasOnlyWindowBody(buildVirtualFileSystemWindowBody("vfs", "c"))).toBe(true);
 			expect(isCanvasOnlyWindowBody(buildPanelWindowBody("p", "c"))).toBe(true);
 			expect(isCanvasOnlyWindowBody({ type: "text", value: "loading" })).toBe(true);
+		});
+
+		it("distinguishes edgeless canvases from framed table and editor bodies", () => {
+			expect(isEdgelessWindowBody(buildPuzzle2dWindowBody("2d", "c"))).toBe(true);
+			expect(isEdgelessWindowBody(buildPuzzle3dWindowBody("3d", "c"))).toBe(true);
+			expect(isEdgelessWindowBody(buildWriterWindowBody("writer", "c"))).toBe(false);
+			expect(isEdgelessWindowBody(buildTableWindowBody("table", "c"))).toBe(false);
+			expect(isEdgelessWindowBody(buildEditorWindowBody("editor", "c"))).toBe(false);
+			expect(
+				isEdgelessWindowBody({
+					type: "stack",
+					direction: "vertical",
+					padding: "none",
+					children: [buildPuzzle2dWindowBody("wrapped", "c")],
+				}),
+			).toBe(true);
 		});
 
 		it("rejects window bodies with toolbar buttons", () => {

@@ -252,6 +252,8 @@ pub struct BoardHost {
     pub hovered_id: Option<String>,
     /// @emoji 🖱️ Transitive same-kind hover `(domain, kind_id)` when hovering a kind row or derived from `hovered_id`.
     pub hovered_kind: Option<(String, String)>,
+    /// @emoji 💠 Externally driven highlight ids (e.g. cross-panel variable binding); below hover, above neutral.
+    pub highlighted_ids: BTreeSet<String>,
     pub interaction: Interaction,
     pub width: u32,
     pub height: u32,
@@ -334,6 +336,7 @@ impl Default for BoardHost {
             selection_options: SelectionOptions { method: "rectangle".into(), mode: "replace".into(), select_nodes: true, select_edges: true, select_handles: true },
             hovered_id: None,
             hovered_kind: None,
+            highlighted_ids: BTreeSet::new(),
             interaction: Interaction::None,
             width: 1,
             height: 1,
@@ -962,6 +965,19 @@ impl BoardHost {
         None
     }
 
+    fn highlighted_style_kind(&self, id: &str) -> Option<BoardElementStyleKind> {
+        if self.is_preselect_active() || self.selection.contains(id) {
+            return None;
+        }
+        if self.hovered_id.as_deref() == Some(id) {
+            return None;
+        }
+        if self.highlighted_ids.contains(id) {
+            return Some(BoardElementStyleKind::Highlighted);
+        }
+        None
+    }
+
     fn resolve_element_kind_hover(&self, id: &str) -> Option<(String, String)> {
         if let Some(node) = self.nodes.get(id) {
             return Some(("node".to_string(), node.node_kind.clone()));
@@ -1035,6 +1051,9 @@ impl BoardHost {
         if self.selection.contains(id) {
             return BoardElementStyleKind::Selected;
         }
+        if self.highlighted_ids.contains(id) {
+            return BoardElementStyleKind::Highlighted;
+        }
         BoardElementStyleKind::Neutral
     }
 
@@ -1062,6 +1081,9 @@ impl BoardHost {
                 if let Some(kind) = self.hovered_style_kind(n.id.as_str(), "node", n.node_kind.as_str()) {
                     return Self::locked_style_dim(kind, n.locked);
                 }
+                if let Some(kind) = self.highlighted_style_kind(n.id.as_str()) {
+                    return Self::locked_style_dim(kind, n.locked);
+                }
                 self.resolve_interaction_style_kind(n.id.as_str())
             }
         };
@@ -1084,6 +1106,9 @@ impl BoardHost {
                 if let Some(kind) = self.hovered_style_kind(h.id.as_str(), "handle", h.handle_kind.as_str()) {
                     return Self::locked_style_dim(kind, h.locked);
                 }
+                if let Some(kind) = self.highlighted_style_kind(h.id.as_str()) {
+                    return Self::locked_style_dim(kind, h.locked);
+                }
                 self.resolve_interaction_style_kind(h.id.as_str())
             }
         };
@@ -1100,6 +1125,9 @@ impl BoardHost {
                 if let Some(kind) = self.hovered_style_kind(e.id.as_str(), "edge", e.edge_kind.as_str()) {
                     return Self::locked_style_dim(kind, e.locked);
                 }
+                if let Some(kind) = self.highlighted_style_kind(e.id.as_str()) {
+                    return Self::locked_style_dim(kind, e.locked);
+                }
                 self.resolve_interaction_style_kind(e.id.as_str())
             }
         };
@@ -1114,6 +1142,9 @@ impl BoardHost {
             StyleChromePass::CachedBase => BoardElementStyleKind::Neutral,
             StyleChromePass::InteractionOverlay => {
                 if let Some(kind) = self.hovered_style_kind(w.id.as_str(), "wire", w.wire_kind.as_str()) {
+                    return Self::locked_style_dim(kind, w.locked);
+                }
+                if let Some(kind) = self.highlighted_style_kind(w.id.as_str()) {
                     return Self::locked_style_dim(kind, w.locked);
                 }
                 self.resolve_interaction_style_kind(w.id.as_str())
@@ -1141,6 +1172,11 @@ impl BoardHost {
         if self.hovered_id.is_none() && !self.is_preselect_active() {
             for id in self.ids_matching_kind_hover() {
                 ids.insert(id);
+            }
+        }
+        for id in self.highlighted_ids.iter() {
+            if !self.selection.contains(id) && self.hovered_id.as_deref() != Some(id.as_str()) {
+                ids.insert(id.clone());
             }
         }
         ids
@@ -3569,7 +3605,7 @@ impl BoardHost {
 
     /// @emoji 🎯 All pick targets under a screen point as JSON (`domain`, `id`, `generality`).
     pub fn pick_targets_at_screen_json(&self, sx: f64, sy: f64) -> String {
-        let world = self.screen_to_world_point(sx, sy);
+        let world = self.screen_to_world(Point::new(sx, sy));
         serde_json::to_string(&self.resolve_pick_targets_world(world)).unwrap_or_else(|_| "[]".into())
     }
 
@@ -4735,6 +4771,21 @@ impl BoardHost {
         self.bump_content_scene_generation();
         self.hovered_id = id;
         self.hovered_kind = None;
+    }
+
+    /// @emoji 💠 Externally driven highlight set (cross-panel binding); does not emit events.
+    pub fn set_highlighted_ids(&mut self, ids: Vec<String>) {
+        let next: BTreeSet<String> = ids.into_iter().collect();
+        if self.highlighted_ids == next {
+            return;
+        }
+        self.bump_content_scene_generation();
+        self.highlighted_ids = next;
+    }
+
+    /// @emoji 💠 Current externally driven highlight ids as JSON array.
+    pub fn highlighted_ids_json(&self) -> Result<String, String> {
+        serde_json::to_string(&self.highlighted_ids.iter().cloned().collect::<Vec<_>>()).map_err(|e| e.to_string())
     }
 
     /// @emoji 🔇 Mirrors controlled kind hover without emitting `hover`.

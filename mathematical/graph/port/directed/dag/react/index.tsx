@@ -210,6 +210,58 @@ export function dagFixtureToJson(fixture: DagFixtureV1): string {
   return JSON.stringify(fixture);
 }
 
+export type DagFixtureEditOp =
+  | { readonly op: "setDocument"; readonly document: DagFixtureV1 }
+  | { readonly op: "renameNode"; readonly oldId: string; readonly newId: string }
+  | { readonly op: "patchNode"; readonly nodeId: string; readonly field: string; readonly value: unknown }
+  | { readonly op: "patchNodes"; readonly nodeIds: readonly string[]; readonly field: string; readonly value: unknown };
+
+function dagRemapPortId(port: string, oldId: string, newId: string): string {
+  return port.startsWith(`${oldId}:`) ? `${newId}:${port.slice(oldId.length + 1)}` : port;
+}
+
+/** @emoji 🚪 Applies one semantic DAG fixture edit (CQRS projection applier). */
+export function applyDagFixtureEditOp(fixture: DagFixtureV1, op: DagFixtureEditOp): DagFixtureV1 {
+  switch (op.op) {
+    case "setDocument":
+      return op.document;
+    case "renameNode": {
+      const trimmed = op.newId.trim();
+      if (!trimmed || trimmed === op.oldId || fixture.nodes.some((node) => node.id === trimmed)) {
+        return fixture;
+      }
+      const nodes = fixture.nodes.map((node) => (node.id === op.oldId ? ({ ...node, id: trimmed } as DagNodeV1) : node));
+      const edges = fixture.edges.map((edge) => ({
+        ...edge,
+        source: dagRemapPortId(edge.source, op.oldId, trimmed),
+        target: dagRemapPortId(edge.target, op.oldId, trimmed),
+      }));
+      return { ...fixture, nodes, edges };
+    }
+    case "patchNode":
+      return applyDagFixtureEditOp(fixture, {
+        op: "patchNodes",
+        nodeIds: [op.nodeId],
+        field: op.field,
+        value: op.value,
+      });
+    case "patchNodes": {
+      const targets = new Set(op.nodeIds);
+      const nodes = fixture.nodes.map((node) => {
+        if (!targets.has(node.id)) return node;
+        if (op.field === "value" || op.field === "min" || op.field === "max" || op.field === "step" || op.field === "selected") {
+          const numeric = typeof op.value === "number" ? op.value : Number(op.value);
+          if (!Number.isFinite(numeric)) return node;
+          return { ...node, [op.field]: numeric } as DagNodeV1;
+        }
+        if (typeof op.value !== "string") return node;
+        return { ...node, [op.field]: op.value } as DagNodeV1;
+      });
+      return { ...fixture, nodes };
+    }
+  }
+}
+
 export type DagLayoutOrientation = "leftRight" | "topBottom";
 
 export interface DagReorganizeRequest {
