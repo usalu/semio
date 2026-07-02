@@ -43,5 +43,8 @@
     "url": "https://github.com/usalu"
   },
   "license": "AGPL-3.0-or-later",
-  "bundleKind": "ui"
+  "bundleKind": "ui",
+  "exports": {
+    ".": "./js/index.ts"
+  }
 }

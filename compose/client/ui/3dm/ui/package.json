@@ -39,5 +39,8 @@
     "url": "https://github.com/usalu/semio.git",
     "directory": "compose/client/ui/3dm/ui"
   },
-  "bundleKind": "ui"
+  "bundleKind": "ui",
+  "exports": {
+    ".": "./js/index.tsx"
+  }
 }

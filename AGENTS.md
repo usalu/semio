@@ -71,4 +71,3 @@ You MUST follow the following rules unless explicitly asked to do otherwise:
   - You MUST use all external libraries behind an interface.
     - You MUST NOT export api that directly or indirectly requires an interface/class/type outside of this codebase.
       - You MUST reexport explicitly if the client needs it.
-  - 

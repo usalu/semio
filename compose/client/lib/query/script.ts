@@ -2,11 +2,12 @@
 /** 🏛️ `@semio-tech/compose-query` — `bun script.ts <build|test|wasm>`. */
 import { execFileSync } from "node:child_process";
 import { BundleScript, ScriptRouter, runBundleScriptMain, runWasmPackWebBuild } from "../../../../repo/lib/js/index.ts";
+import { join } from "node:path";
 
 class WasmScript extends BundleScript {
   run(): void {
     runWasmPackWebBuild({
-      rsDir: this.root,
+      rsDir: join(this.root, "rs"),
       skipEnvVar: "COMPOSE_SKIP_WASM_BUILD",
       logPrefix: "compose/query",
       wasmBaseName: "compose_query",
@@ -24,20 +25,20 @@ class WasmScript extends BundleScript {
 class SetupScript extends BundleScript {
   run(): void {
     execFileSync("rustup", ["target", "add", "wasm32-unknown-unknown"], { stdio: "inherit" });
-    execFileSync("cargo", ["fetch", "--manifest-path", "Cargo.toml"], { stdio: "inherit", cwd: this.root });
+    execFileSync("cargo", ["fetch", "--manifest-path", "Cargo.toml"], { stdio: "inherit", cwd: join(this.root, "rs") });
   }
 }
 
 class BuildScript extends BundleScript {
   run(): void {
     new WasmScript(this.root, this.repoRoot).run();
-    execFileSync("cargo", ["build", "--release"], { stdio: "inherit", cwd: this.root });
+    execFileSync("cargo", ["build", "--release"], { stdio: "inherit", cwd: join(this.root, "rs") });
   }
 }
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {
-    execFileSync("cargo", ["test", ...segments], { stdio: "inherit", cwd: this.root });
+    execFileSync("cargo", ["test", ...segments], { stdio: "inherit", cwd: join(this.root, "rs") });
   }
 }
 

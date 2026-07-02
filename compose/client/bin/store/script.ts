@@ -2,6 +2,7 @@
 /** 🏪 `@semio-tech/compose-store` router: `bun script.ts <build|dev|test>`. */
 import { execFileSync } from "node:child_process";
 import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../repo/lib/js/index.ts";
+import { join } from "node:path";
 
 const crate = "compose-store";
 

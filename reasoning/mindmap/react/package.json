@@ -29,5 +29,8 @@
     "url": "https://github.com/usalu/semio.git",
     "directory": "reasoning/mindmap/react"
   },
-  "bundleKind": "library"
+  "bundleKind": "library",
+  "exports": {
+    ".": "./js/index.tsx"
+  }
 }

@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 /** 🧭 `compose-hub` router: `bun ./script.ts <setup|build|test>`. */
 import { BundleScript, ScriptRouter, runBundleScriptMain, runCargo, runCmd } from "../../../repo/lib/js/index.ts";
+import { join } from "node:path";
 
 class SetupScript extends BundleScript {
 	run(): void {

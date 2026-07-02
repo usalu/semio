@@ -1,36 +1,36 @@
 {
-	"$schema": "../../../../node_modules/nx/schemas/project-schema.json",
-	"name": "@semio-tech/framework-platform-renderer-react",
-	"version": "0.1.0",
-	"description": "framework · React renderer for @semio-tech/framework-platform-core",
-	"type": "module",
-	"private": true,
-	"exports": {
-		".": "./index.tsx"
-	},
-	"dependencies": {
-		"@semio-tech/cad-js-renderer": "workspace:*",
-		"@semio-tech/framework-platform-core": "workspace:*",
-		"@semio-tech/puzzle-2d-react": "workspace:*",
-		"@semio-tech/puzzle-3d-react": "workspace:*",
-		"@semio-tech/puzzle-5d-react": "workspace:*",
-		"@semio-tech/ui-react": "workspace:*",
-		"clsx": "^2.1.1",
-		"fuse.js": "^7.1.0",
-		"react": "^19.2.3",
-		"react-dom": "^19.2.3",
-		"react-i18next": "^16.5.2",
-		"tailwind-merge": "^3.3.1"
-	},
-	"devDependencies": {
-		"@types/react": "^19.2.8",
-		"typescript": "^5.9.3"
-	},
-	"license": "LGPL-3.0-or-later",
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/usalu/semio.git",
-		"directory": "framework/product/platform/renderer/react"
-	},
-	"bundleKind": "library"
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "@semio-tech/framework-platform-renderer-react",
+  "version": "0.1.0",
+  "description": "framework · React renderer for @semio-tech/framework-platform-core",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": "./js/index.tsx"
+  },
+  "dependencies": {
+    "@semio-tech/cad-js-renderer": "workspace:*",
+    "@semio-tech/framework-platform-core": "workspace:*",
+    "@semio-tech/puzzle-2d-react": "workspace:*",
+    "@semio-tech/puzzle-3d-react": "workspace:*",
+    "@semio-tech/puzzle-5d-react": "workspace:*",
+    "@semio-tech/ui-react": "workspace:*",
+    "clsx": "^2.1.1",
+    "fuse.js": "^7.1.0",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "react-i18next": "^16.5.2",
+    "tailwind-merge": "^3.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.8",
+    "typescript": "^5.9.3"
+  },
+  "license": "LGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/usalu/semio.git",
+    "directory": "framework/product/platform/renderer/react"
+  },
+  "bundleKind": "library"
 }

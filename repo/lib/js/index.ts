@@ -54,6 +54,14 @@ export function getWorkspaceRoot(): string {
   return process.cwd();
 }
 
+/** @emoji 📎 Reads `{ hash, items }` collection blocks from kit snapshot JSON. */
+export function fixtureItemsOf<T = Record<string, unknown>>(node: unknown): readonly T[] {
+  if (node && typeof node === "object" && Array.isArray((node as { items?: unknown[] }).items)) {
+    return (node as { items: T[] }).items;
+  }
+  return [];
+}
+
 function defaultCliBin(root: string): string {
   const win = process.platform === "win32";
   return join(root, "repo", "client", win ? "client.exe" : "client");

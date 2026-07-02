@@ -1,11 +1,12 @@
 #!/usr/bin/env bun
 /** 🦀 `@semio-tech/flow-module-draw` router: `bun ./script.ts wasm`. */
 import { BundleScript, ScriptRouter, runBundleScriptMain, runWasmPackWebBuild } from "../../../repo/lib/js/index.ts";
+import { join } from "node:path";
 
 class WasmScript extends BundleScript {
   run(): void {
     runWasmPackWebBuild({
-      rsDir: this.root,
+      rsDir: join(this.root, "rs"),
       skipEnvVar: "FLOW_MODULE_DRAW_SKIP_WASM_BUILD",
       logPrefix: "flow/module/draw",
       wasmBaseName: "flow_module_draw",
@@ -23,7 +24,7 @@ class WasmScript extends BundleScript {
 
 class TestScript extends BundleScript {
   run(): void {
-    Bun.spawnSync(["cargo", "test", "-p", "flow_module_draw"], { cwd: this.root, stdio: "inherit" });
+    Bun.spawnSync(["cargo", "test", "-p", "flow_module_draw"], { cwd: join(this.root, "rs"), stdio: "inherit" });
   }
 }
 

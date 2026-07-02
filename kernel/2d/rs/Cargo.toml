@@ -14,6 +14,6 @@ trace = []
 
 [dependencies]
 async-trait = "0.1.88"
-kernel_2d_engine = { path = "../engine" }
+kernel_2d_engine = { path = "../engine/rs" }
 geo = { version = "0.29", optional = true }
 serde = { version = "1.0.219", features = ["derive"] }

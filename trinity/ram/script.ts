@@ -1,11 +1,12 @@
 #!/usr/bin/env bun
 /** 🔺 `@semio-tech/trinity-ram-rs` router: `bun ./script.ts <wasm|test>`. */
 import { BundleScript, ScriptRouter, playPollingEnv, runBundleScriptMain, runCargo, runWasmPackWebBuild } from "../../repo/lib/js/index.ts";
+import { join } from "node:path";
 
 class WasmScript extends BundleScript {
 	run(): void {
 		runWasmPackWebBuild({
-			rsDir: this.root,
+			rsDir: join(this.root, "rs"),
 			skipEnvVar: "TRINITY_RAM_RS_SKIP_WASM_BUILD",
 			logPrefix: "trinity/ram",
 			wasmBaseName: "trinity_ram",

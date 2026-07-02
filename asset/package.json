@@ -14,5 +14,8 @@
     "@semio-tech/ui-asset": "workspace:*",
     "@semio-tech/ui-react": "workspace:*"
   },
-  "bundleKind": "asset"
+  "bundleKind": "asset",
+  "exports": {
+    ".": "./js/index.ts"
+  }
 }

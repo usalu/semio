@@ -304,7 +304,7 @@ export default defineConfig(async ({ mode }) => {
     { find: "@semio-tech/puzzle-2d-react", replacement: path.resolve(__dirname, "../../../../../puzzle/2d/react/index.tsx") },
     { find: "@semio-tech/puzzle-3d-react", replacement: path.resolve(__dirname, "../../../../../puzzle/3d/react/index.tsx") },
     { find: "@semio-tech/puzzle-5d-react", replacement: path.resolve(__dirname, "../../../../../puzzle/5d/react/index.tsx") },
-    { find: "@semio-tech/cad-js-renderer", replacement: path.resolve(__dirname, "../../../../../cad/js/renderer/index.tsx") },
+    { find: "@semio-tech/cad-js-renderer", replacement: path.resolve(__dirname, "../../../../../cad/renderer/index.tsx") },
     { find: /^@elements\/board$/, replacement: path.resolve(__dirname, "../../../../../puzzle/2d/react/index.tsx") },
     { find: /^@elements\/scene$/, replacement: path.resolve(__dirname, "../../../../../elements/client/lib/scene/index.tsx") },
     { find: /^@elements\/topology$/, replacement: path.resolve(__dirname, "../../../../../elements/client/lib/topology/react/index.tsx") },

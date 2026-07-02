@@ -6,8 +6,8 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "./index.ts",
-    "./pkg/flow_core.js": "./pkg/flow_core.js"
+    ".": "./js/index.ts",
+    "./pkg/flow_core.js": "./rs/pkg/flow_core.js"
   },
   "dependencies": {
     "@semio-tech/vcs-core": "workspace:*",

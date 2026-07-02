@@ -1,0 +1,13 @@
+{
+  "name": "@semio-tech/cad-js-renderer-core",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "cad/renderer/core",
+        "command": "bun ./script.ts test"
+      }
+    }
+  }
+}

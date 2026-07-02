@@ -5,13 +5,19 @@
   "description": "trinity · rewrite react",
   "type": "module",
   "private": true,
-  "exports": { ".": "./index.tsx" },
+  "exports": {
+    ".": "./js/index.tsx"
+  },
   "dependencies": {
     "@semio-tech/graph-manifest": "workspace:*",
     "@semio-tech/puzzle-2d-react": "workspace:*",
     "@semio-tech/trinity-react": "workspace:*"
   },
   "license": "LGPL-3.0-or-later",
-  "repository": { "type": "git", "url": "https://github.com/usalu/semio.git", "directory": "trinity/rewrite/react" },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/usalu/semio.git",
+    "directory": "trinity/rewrite/react"
+  },
   "bundleKind": "library"
 }

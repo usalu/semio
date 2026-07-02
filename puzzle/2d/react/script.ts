@@ -33,7 +33,7 @@ class TestScript extends BundleScript {
       PUZZLE_2D_RS_SKIP_WASM_BUILD: existsSync(wasmJs) ? "1" : "0",
     };
     runBun([wasmScript, "wasm"], this.root, wasmEnv);
-    runVitest(this.root, segments);
+    runVitest(this.root, segments, "js/vitest.config.ts");
   }
 }
 

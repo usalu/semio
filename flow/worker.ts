@@ -1,7 +1,7 @@
 /** @emoji 👷 Dedicated flow orchestrator worker — runs FlowSession WASM off the UI thread. */
 
-import initFlowWasm, { FlowSession, initSync, render_drawing_scene, tessellate } from "./core/pkg/flow_core.js";
-import flowCoreWasmUrl from "./core/pkg/flow_core_bg.wasm?url";
+import initFlowWasm, { FlowSession, initSync, render_drawing_scene, tessellate } from "./core/rs/pkg/flow_core.js";
+import flowCoreWasmUrl from "./core/rs/pkg/flow_core_bg.wasm?url";
 
 type FlowWorkerRequest =
   | { readonly op: "init" }

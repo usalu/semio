@@ -10,5 +10,7 @@
     "email": "ueli@semio-tech.com",
     "url": "https://github.com/usalu"
   },
-  "bundleKind": "asset"
+  "exports": {
+    ".": "./js/index.ts"
+  }
 }

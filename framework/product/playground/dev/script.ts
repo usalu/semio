@@ -43,7 +43,7 @@ const PACKAGE_ROOT_BY_ENTRY: Readonly<Record<string, string>> = {
 	"trinity-jack": "trinity/jack/host-core",
 	"trinity-rewrite": "trinity/rewrite",
 	presentation: "framework/product/presentation",
-	cad: "cad/js/renderer",
+	cad: "cad/renderer",
 	"2d": "puzzle/2d",
 	"3d": "puzzle/3d",
 	"5d": "puzzle/5d",
@@ -100,7 +100,7 @@ class BuildScript extends BundleScript {
 
 class TestScript extends BundleScript {
 	run(segments: string[]): void {
-		runVitest(this.root, segments);
+		runVitest(this.root, segments, "js/vitest.config.ts");
 	}
 }
 

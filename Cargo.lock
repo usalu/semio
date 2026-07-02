@@ -5184,14 +5184,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "reasoning_mindmap_rs"
-version = "0.1.0"
-dependencies = [
- "puzzle_2d",
- "reasoning_mindmap",
-]
-
-[[package]]
 name = "reasoning_mindmap_wires"
 version = "0.1.0"
 dependencies = [

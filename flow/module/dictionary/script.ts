@@ -1,11 +1,12 @@
 #!/usr/bin/env bun
 /** 🦀 `@semio-tech/flow-module-dictionary` router: `bun ./script.ts wasm`. */
 import { BundleScript, ScriptRouter, runBundleScriptMain, runWasmPackWebBuild } from "../../../repo/lib/js/index.ts";
+import { join } from "node:path";
 
 class WasmScript extends BundleScript {
   run(): void {
     runWasmPackWebBuild({
-      rsDir: this.root,
+      rsDir: join(this.root, "rs"),
       skipEnvVar: "FLOW_MODULE_DICTIONARY_SKIP_WASM_BUILD",
       logPrefix: "flow/module/dictionary",
       wasmBaseName: "flow_module_dictionary",

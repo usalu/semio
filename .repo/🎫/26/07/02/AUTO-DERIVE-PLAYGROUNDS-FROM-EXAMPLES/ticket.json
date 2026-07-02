@@ -1,14 +1,16 @@
 {
   "title": "Auto-Derive Playgrounds From Examples",
   "emoji": "🛝",
-  "status": "closed",
+  "status": "open",
   "description": "Eliminate hand-written core/playground.ts across all 24 playground apps by introducing a generic config-driven playground factory in framework-playground-core, and split fixture vs example concepts: internal test fixtures vs user-facing examples that auto-populate the navbar dropdown.",
-  "summary": "Eliminated all 24 per-app `core/playground.ts` files; playground wiring now lives in each app `core/index.ts` `//#region 🔖Play` via `createPlaygroundApp()` and `loadPlaygroundExampleCatalog()` where applicable.\n\n**Core framework**\n- Renamed Fixture→Example API in `framework/product/playground/core/index.ts` (`PlaygroundExampleHost`, `loadPlaygroundExampleCatalog`, `playgroundResolvedExampleId`, `PLAYGROUND_LOCKED_EXAMPLE_ID`, etc.)\n- Added `createPlaygroundApp(config)` factory\n- `app-registry.ts` imports `@semio-tech/*-core` directly (no `/playground` subpath)\n- Dropped `/playground` alias from `framework/product/playground/dev/vite.config.ts`\n\n**Shared plumbing**\n- `NavbarExampleSelect` / `NAVBAR_NO_EXAMPLE_ID` in `ui/react`\n- `PLAYGROUND_LOCKED_EXAMPLE_ENV` in `repo/lib/js` and `ui/styling/vite-elements-assets.ts`\n- Renderer + CAD react updated for example naming; fixed `flow_core.js` import via `@semio-tech/flow-core/pkg/flow_core.js` export\n\n**Migration**\n- Renamed `fixture/` → `example/` across playground apps; deleted all `core/playground.ts`\n- Repaired merge-script corruption (imports, circular `./index.ts` self-imports, broken function signatures)\n- `trinity/jack/host-core` consolidated with `createPlaygroundApp`; wires uses `buildPuzzle2dPlayRuntime()`\n\n**Examples materialized**\n- Authored `flow/example/default.flow.json`, `sequence/example/default.sequence.json`, `imperative/example/default.imperative.json`, `lowpoly/example/default.lowpoly.json` from inline defaults\n\n**Validation**\n- All 25 playground app builds pass (`build-all-verify-log.md`)\n- `framework-playground-core` tests: 19/19 pass",
+  "summary": "Fixed runtime boot failures for playgrounds after the example/playground migration. Root causes were merge corruption: note used `this.id` in arrow fn createRuntime, writer missing imports, gis MapPlayController constructor typo, puzzle-3d missing PUZZLE_3D_PLAY_KINDS, procedural-3d missing createProceduralPlayFixtureStore, s missing sPlayAppDefinition. Added static example JSON fallbacks for note/writer outside Vite. Removed stale `./playground` package.json exports from 23 core packages. createRuntime smoke test: 22/24 pass (trinity-jack/rewrite fail only in Node due to WASM).",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1802"
   },
   "goal": "🎯framework🎯product🎯playground",
   "sessions": [
-    "⚪be1cda10f4154d44b89b50753d59f598"
+    "⚪be1cda10f4154d44b89b50753d59f598",
+    "⚪cce8edd7bd924ea7bc1552c680548cac",
+    "⚪1a15a8c46b01413390ae2eff0780638d"
   ]
 }

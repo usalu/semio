@@ -393,15 +393,15 @@ export async function ensureDrawingWasmLoaded(): Promise<DrawingWasmModule> {
 		const { dirname, join } = await import("node:path");
 		const { fileURLToPath } = await import("node:url");
 		const here = dirname(fileURLToPath(import.meta.url));
-		const mod = (await import("../../../flow/core/pkg/flow_core.js")) as DrawingWasmModule;
-		mod.initSync?.({ module: readFileSync(join(here, "../../../flow/core/pkg/flow_core_bg.wasm")) });
+		const mod = (await import("../../../flow/core/rs/pkg/flow_core.js")) as DrawingWasmModule;
+		mod.initSync?.({ module: readFileSync(join(here, "../../../flow/core/rs/pkg/flow_core_bg.wasm")) });
 		drawingWasm = mod;
 		return mod;
 	}
 	const [{ default: initFlow, render_drawing_scene, export_drawing_svg, export_drawing_pdf, dispose_drawing, trace_drawing_bitmap, boolean_drawing_segments }, { default: wasmUrl }] =
 		await Promise.all([
-			import("../../../flow/core/pkg/flow_core.js"),
-			import("../../../flow/core/pkg/flow_core_bg.wasm?url"),
+			import("../../../flow/core/rs/pkg/flow_core.js"),
+			import("../../../flow/core/rs/pkg/flow_core_bg.wasm?url"),
 		]);
 	if (
 		typeof render_drawing_scene !== "function" ||

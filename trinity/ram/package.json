@@ -3,6 +3,6 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./pkg/trinity_ram.js"
+    ".": "./rs/pkg/trinity_ram.js"
   }
 }

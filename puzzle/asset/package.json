@@ -6,7 +6,7 @@
   "sourceRoot": ".",
   "projectType": "library",
   "exports": {
-    ".": "./index.ts"
+    ".": "./js/index.ts"
   },
   "author": {
     "name": "Ueli Saluz",

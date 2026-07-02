@@ -1,0 +1,26 @@
+[package]
+name = "imperative_engine"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[lib]
+crate-type = ["rlib"]
+path = "lib.rs"
+
+[dependencies]
+neural_engine = { path = "../../../neural/engine/rs" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+imperative_module_core = { path = "../../module/core/rs" }
+imperative_module_text = { path = "../../module/text/rs" }
+imperative_module_math = { path = "../../module/math/rs" }
+imperative_module_logic = { path = "../../module/logic/rs" }
+imperative_module_control = { path = "../../module/control/rs" }
+
+[dev-dependencies]
+imperative_module_core = { path = "../../module/core/rs" }
+imperative_module_text = { path = "../../module/text/rs" }
+imperative_module_math = { path = "../../module/math/rs" }
+imperative_module_logic = { path = "../../module/logic/rs" }
+imperative_module_control = { path = "../../module/control/rs" }

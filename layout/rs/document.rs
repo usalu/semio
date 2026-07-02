@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-pub const LAYOUT_FIXTURE_SCHEMA: &str = "layout.fixture/v1";
+pub const LAYOUT_FIXTURE_SCHEMA: &str = "layout.fixture";
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct LayoutCamera {
@@ -347,7 +347,7 @@ mod tests {
 
     #[test]
     fn parse_minimal_document() {
-        let json = r#"{"schema":"layout.fixture/v1","name":"t","camera":{"x":0,"y":0,"zoom":1},"previewCamera":{"x":0,"y":0,"zoom":1},"grid":{"baselineGrid":12,"baselineOffset":0,"snapToBaseline":true},"paragraphStyles":[],"characterStyles":[],"stories":[],"links":[],"parentPages":[],"spreads":[],"pages":[]}"#;
+        let json = r#"{"schema":"layout.fixture","name":"t","camera":{"x":0,"y":0,"zoom":1},"previewCamera":{"x":0,"y":0,"zoom":1},"grid":{"baselineGrid":12,"baselineOffset":0,"snapToBaseline":true},"paragraphStyles":[],"characterStyles":[],"stories":[],"links":[],"parentPages":[],"spreads":[],"pages":[]}"#;
         let doc = parse_layout_document(json).expect("parse");
         assert_eq!(doc.name, "t");
     }

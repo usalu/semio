@@ -1,0 +1,18 @@
+[package]
+name = "mathematical_graph_dsl"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[lib]
+crate-type = ["rlib", "cdylib"]
+path = "lib.rs"
+
+[dependencies]
+mathematical_graph_manifest = { path = "../../manifest/rs" }
+mathematical_graph_port_directed = { path = "../../port/directed/rs" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2.106"

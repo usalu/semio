@@ -1,0 +1,29 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { createPlaygroundPlayViteConfig } from "../../../../../ui/styling/vite-elements-assets.ts";
+
+const configDir = path.dirname(fileURLToPath(import.meta.url));
+const playDir = path.resolve(configDir, "..");
+const repoRoot = path.resolve(playDir, "../../../..");
+const playEntryKind = process.env.PUZZLE_PLAY_ENTRY ?? process.env.PLAYGROUND_APP ?? "draw";
+const packageRoot = process.env.PLAYGROUND_PACKAGE_ROOT;
+const extraAliases = [
+	...(packageRoot
+		? [
+				{ find: `@semio-tech/${packageRoot}-react`, replacement: path.resolve(repoRoot, packageRoot, "react/js/index.tsx") },
+				{ find: `@semio-tech/${packageRoot}-core`, replacement: path.resolve(repoRoot, packageRoot, "core/js/index.ts") },
+			]
+		: []),
+	{
+		find: "@semio-tech/framework-playground-core/app-registry",
+		replacement: path.resolve(repoRoot, "framework/product/playground/core/js/app-registry.ts"),
+	},
+];
+
+export default createPlaygroundPlayViteConfig({
+	playDir,
+	repoRoot,
+	playEntryKind,
+	extraAliases,
+	resolveDedupe: ["react", "react-dom"],
+});

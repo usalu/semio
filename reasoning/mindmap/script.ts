@@ -2,11 +2,12 @@
 /** 🗺️ `@semio-tech/reasoning-mindmap-rs` router: `bun ./script.ts <wasm|test>`. */
 import { execFileSync } from "node:child_process";
 import { BundleScript, ScriptRouter, runBundleScriptMain, runWasmPackWebBuild } from "../../repo/lib/js/index.ts";
+import { join } from "node:path";
 
 class WasmScript extends BundleScript {
 	run(): void {
 		runWasmPackWebBuild({
-			rsDir: this.root,
+			rsDir: join(this.root, "rs"),
 			skipEnvVar: "REASONING_MINDMAP_RS_SKIP_WASM_BUILD",
 			logPrefix: "reasoning/mindmap",
 			wasmBaseName: "reasoning_mindmap",

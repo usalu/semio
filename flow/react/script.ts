@@ -16,7 +16,7 @@ class TestScript extends BundleScript {
   run(segments: string[]): void {
     runBun([wasmScript, "wasm"], this.root, playPollingEnv());
     runFlowModuleWasmBuilds();
-    runVitest(this.root, segments);
+    runVitest(this.root, segments, "js/vitest.config.ts");
   }
 }
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 /** 🦀 `kernel/3d/mesh` router: `bun ./script.ts test`. */
 import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../repo/lib/js/index.ts";
+import { join } from "node:path";
 
 class TestScript extends BundleScript {
   run(): void {

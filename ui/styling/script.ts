@@ -544,7 +544,7 @@ const PX_SCAN_ROOTS = [
 	"framework/product",
 	"coda/client/ui",
 	"flow/react",
-	"cad/js",
+	"cad/renderer",
 	"puzzle",
 	"infinite/world",
 	"gis/2d",

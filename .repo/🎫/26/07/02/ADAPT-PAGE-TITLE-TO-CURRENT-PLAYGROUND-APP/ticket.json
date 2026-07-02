@@ -1,0 +1,14 @@
+{
+  "title": "Adapt Page Title to Current Playground App",
+  "emoji": "🎫",
+  "status": "closed",
+  "description": "The page title should adapt to the selected app, e.g. show semio cad instead of semio playground when running the cad app.",
+  "summary": "Updated playground dev index.ts to dynamically set document.title based on the loaded app label (e.g. 'semio · cad') instead of using a static 'semio · playground'.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1804"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪f4f663defefe45e497852b9a999f622a"
+  ]
+}

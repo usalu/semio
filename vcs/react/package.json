@@ -1,33 +1,33 @@
 {
-	"$schema": "../../node_modules/nx/schemas/project-schema.json",
-	"name": "@semio-tech/vcs-react",
-	"version": "0.1.0",
-	"description": "vcs · react history UI",
-	"type": "module",
-	"private": true,
-	"exports": {
-		".": "./index.tsx"
-	},
-	"scripts": {
-		"test": "bun nx run @semio-tech/vcs-react:test"
-	},
-	"dependencies": {
-		"@semio-tech/ui-react": "workspace:*",
-		"@semio-tech/vcs-core": "workspace:*"
-	},
-	"devDependencies": {
-		"@types/react": "^19.2.8",
-		"@types/react-dom": "^19.2.3",
-		"react": "^19.2.3",
-		"react-dom": "^19.2.3",
-		"typescript": "^5.9.3",
-		"vitest": "^4.0.17"
-	},
-	"license": "LGPL-3.0-or-later",
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/usalu/semio.git",
-		"directory": "vcs/react"
-	},
-	"bundleKind": "library"
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "@semio-tech/vcs-react",
+  "version": "0.1.0",
+  "description": "vcs · react history UI",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": "./js/index.tsx"
+  },
+  "scripts": {
+    "test": "bun nx run @semio-tech/vcs-react:test"
+  },
+  "dependencies": {
+    "@semio-tech/ui-react": "workspace:*",
+    "@semio-tech/vcs-core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.8",
+    "@types/react-dom": "^19.2.3",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.17"
+  },
+  "license": "LGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/usalu/semio.git",
+    "directory": "vcs/react"
+  },
+  "bundleKind": "library"
 }

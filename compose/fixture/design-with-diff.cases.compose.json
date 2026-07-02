@@ -4,7 +4,7 @@
       "name": "nakagin_capsule_tower",
       "kit": "kit/dev/metabolism/wip/initialKit/kit.compose.json",
       "designName": "Nakagin Capsule Tower",
-      "diff": "nakgin-capsule-tower.diff.design.compose.json",
+      "diff": "nakagin-capsule-tower.diff.design.compose.json",
       "expected": "nakagin-capsule-tower.with-diff.design.compose.json",
       "expectedPieceCounts": {
         "unchanged": 163,

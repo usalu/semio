@@ -11457,7 +11457,7 @@ pub mod kit_backbone {
 
     //#region 🧾 wire format
 
-    /// @emoji 🪪 On-disk schema marker stamped at the bundle root; matches `compose/asset/compose/metabolism.new.kit.compose.json`.
+    /// @emoji 🪪 On-disk schema marker stamped at the bundle root; matches `compose/fixture/kit-store.bundle.example.compose.json`.
     pub const KIT_STORE_BUNDLE_SCHEMA: &str = "🎆26🌙06⬆️1";
 
     /// @emoji 🧾 Blake3 hex (empty-input digest) used on the wire until per-entity merkle is filled.
@@ -13111,7 +13111,7 @@ pub mod kit_backbone {
         pub hash: String,
     }
 
-    /// @emoji 📦 Top-level on-disk kit store bundle (mirrors `metabolism.new.kit.compose.json`: `schema / wip / authoritative / stage / conflicts / blobs`; each graph snapshot holds kit seed JSON under `initialKit`).
+    /// @emoji 📦 Top-level on-disk kit store bundle (mirrors `kit-store.bundle.example.compose.json`: `schema / wip / authoritative / stage / conflicts / blobs`; each graph snapshot holds kit seed JSON under `initialKit`).
     #[derive(Clone, Debug, crate::external_adapters::serde::Deserialize, crate::external_adapters::serde::Serialize)]
     pub struct DevBackboneBundleDoc {
         pub schema: String,
@@ -20808,12 +20808,12 @@ mod tests {
 
     #[test]
     fn kit_store_bundle_metabolism_new_has_contract_shape() {
-        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../fixture/metabolism.new.kit.compose.json");
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../fixture/kit-store.bundle.example.compose.json");
         let v: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(path).expect("read metabolism.new bundle")).expect("parse");
         for k in ["schema", "wip", "authoritative", "stage", "conflicts", "blobs"] {
-            assert!(v.get(k).is_some(), "metabolism.new.kit.compose.json missing `{k}`");
+            assert!(v.get(k).is_some(), "kit-store.bundle.example.compose.json missing `{k}`");
         }
-        assert_eq!(v.get("schema").and_then(|s| s.as_str()), Some(crate::kit_backbone::KIT_STORE_BUNDLE_SCHEMA), "metabolism.new.kit.compose.json schema marker drift");
+        assert_eq!(v.get("schema").and_then(|s| s.as_str()), Some(crate::kit_backbone::KIT_STORE_BUNDLE_SCHEMA), "kit-store.bundle.example.compose.json schema marker drift");
     }
 
     #[cfg(not(target_arch = "wasm32"))]

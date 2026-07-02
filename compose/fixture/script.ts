@@ -2,16 +2,11 @@
 /** @emoji 🧪 `@semio-tech/compose-fixture` router: `bun ./script.ts regenerate-metabolism-light`. */
 import fs from "node:fs";
 import path from "node:path";
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, fixtureItemsOf, runBundleScriptMain } from "../../repo/lib/js/index.ts";
 
 //#region 🔖AssembleSplitInitialKit
 /** @emoji 📎 Reads `{ hash, items }` collection blocks from kit snapshot JSON. */
-export function fixtureItemsOf(node: unknown): Record<string, unknown>[] {
-	if (node && typeof node === "object" && Array.isArray((node as { items?: unknown[] }).items)) {
-		return (node as { items: Record<string, unknown>[] }).items;
-	}
-	return [];
-}
+export { fixtureItemsOf } from "../../repo/lib/js/index.ts";
 
 /** @emoji 🧩 Merges `types/*.type.compose.json` and `designs/*.design.compose.json` into a split `kit.compose.json` shell. */
 export function assembleSplitInitialKitFromDirectory(initialKitDir: string): Record<string, unknown> {
@@ -114,9 +109,13 @@ function annotateValue(value: unknown): unknown {
 
 /** @param {Record<string, unknown>} kit */
 function annotateKitSemantics(kit: Record<string, unknown>): void {
-	for (const type of (kit.types ?? []) as Record<string, unknown>[]) {
+	const types = [
+		...fixtureItemsOf(kit.types),
+		...fixtureItemsOf(kit.typologies).flatMap((topo) => fixtureItemsOf(topo.types)),
+	];
+	for (const type of types) {
 		if (typeof type.id === "string") type.nodeKind = `compose.metabolism.light.node.${type.id}`;
-		for (const connector of (type.connectors ?? []) as Record<string, unknown>[]) {
+		for (const connector of fixtureItemsOf(type.connectors)) {
 			const port = connector.port;
 			if (port != null && typeof port === "object" && !Array.isArray(port)) {
 				const portRow = port as Record<string, unknown>;
@@ -124,8 +123,8 @@ function annotateKitSemantics(kit: Record<string, unknown>): void {
 			}
 		}
 	}
-	for (const family of (kit.families ?? []) as Record<string, unknown>[]) {
-		for (const port of (family.ports ?? []) as Record<string, unknown>[]) {
+	for (const family of fixtureItemsOf(kit.families)) {
+		for (const port of fixtureItemsOf(family.ports)) {
 			if (typeof port.id === "string") port.handleKind = `compose.metabolism.light.handle.${port.id}`;
 		}
 	}
@@ -133,11 +132,11 @@ function annotateKitSemantics(kit: Record<string, unknown>): void {
 
 class RegenerateMetabolismLightScript extends BundleScript {
 	run(): void {
-		const snapshotPath = path.join(this.root, "metabolism.kit.snapshot.compose.json");
+		const splitKitDir = path.join(this.root, "kit/dev/metabolism/wip/initialKit");
 		const outPath = path.join(this.root, "metabolism.kit.light.compose.json");
-		const snapshot = JSON.parse(fs.readFileSync(snapshotPath, "utf8")) as Record<string, unknown>;
-		annotateKitSemantics(snapshot);
-		const initialKit = annotateValue(snapshot);
+		const assembled = assembleSplitInitialKitFromDirectory(splitKitDir);
+		annotateKitSemantics(assembled);
+		const initialKit = annotateValue(assembled);
 		const bundle = {
 			schema: SCHEMA,
 			wip: { id: KIT_ID, hash: HASH, authors: { hash: HASH, items: [] }, initialKit },

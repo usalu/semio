@@ -2,8 +2,11 @@
   "name": "@semio-tech/graph-dsl-core",
   "private": true,
   "type": "module",
-  "main": "./index.ts",
+  "main": "./js/index.ts",
   "dependencies": {
     "@semio-tech/writer-core": "workspace:*"
+  },
+  "exports": {
+    ".": "./js/index.ts"
   }
 }

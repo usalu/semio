@@ -1,0 +1,13 @@
+[package]
+name = "trinity_jack_shell"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[[bin]]
+name = "trinity_jack_shell"
+path = "bin.rs"
+
+[dependencies]
+trinity_jack = { path = "../../core/rs" }
+trinity_ram = { path = "../../../ram/rs" }

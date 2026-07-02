@@ -10,7 +10,7 @@ export default defineConfig({
 	root,
 	resolve: {
 		alias: {
-			"@semio-tech/flow-core": resolve(root, "../../../flow/core/pkg/flow_core.js"),
+			"@semio-tech/flow-core": resolve(root, "../../../flow/core/rs/pkg/flow_core.js"),
 		},
 	},
 	test: {

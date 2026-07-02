@@ -1,11 +1,12 @@
 #!/usr/bin/env bun
 /** 🦀 `@semio-tech/dag-core` router: `bun ./script.ts wasm`. */
 import { BundleScript, ScriptRouter, runBundleScriptMain, runWasmPackWebBuild } from "../../../../../repo/lib/js/index.ts";
+import { join } from "node:path";
 
 class WasmScript extends BundleScript {
   run(): void {
     runWasmPackWebBuild({
-      rsDir: this.root,
+      rsDir: join(this.root, "rs"),
       skipEnvVar: "DAG_CORE_SKIP_WASM_BUILD",
       logPrefix: "graph/dag",
       wasmBaseName: "mathematical_graph_port_directed_dag",

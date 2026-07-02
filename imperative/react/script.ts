@@ -8,7 +8,7 @@ const wasmScript = join(import.meta.dir, "../core/script.ts");
 class TestScript extends BundleScript {
 	run(segments: string[]): void {
 		runBun([wasmScript, "wasm"], this.root);
-		runVitest(this.root, segments, "vitest.config.ts");
+		runVitest(this.root, segments, "js/vitest.config.ts");
 	}
 }
 

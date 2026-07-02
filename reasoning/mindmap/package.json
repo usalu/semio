@@ -3,6 +3,6 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./pkg/reasoning_mindmap.js"
+    ".": "./rs/pkg/reasoning_mindmap.js"
   }
 }

@@ -26,5 +26,8 @@
     "url": "https://github.com/usalu/semio.git",
     "directory": "mit-bestand/präsentation/33.projektetage"
   },
-  "bundleKind": "application"
+  "bundleKind": "application",
+  "exports": {
+    ".": "./js/index.ts"
+  }
 }

@@ -1,0 +1,15 @@
+{
+  "name": "@semio-tech/cad-js-module-aec-building-energy",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "cwd": "cad/module/aec-building-energy",
+        "command": "bun ./script.ts test",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

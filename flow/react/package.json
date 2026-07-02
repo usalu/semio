@@ -29,5 +29,8 @@
     "url": "https://github.com/usalu/semio.git",
     "directory": "flow/react"
   },
-  "bundleKind": "library"
+  "bundleKind": "library",
+  "exports": {
+    ".": "./js/index.tsx"
+  }
 }

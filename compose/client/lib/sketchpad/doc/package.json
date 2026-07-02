@@ -16,5 +16,8 @@
     "url": "https://github.com/usalu"
   },
   "license": "AGPL-3.0-or-later",
-  "bundleKind": "site"
+  "bundleKind": "site",
+  "exports": {
+    ".": "./js/index.tsx"
+  }
 }

@@ -16,7 +16,7 @@ export const policy = defineLint("@semio-tech/puzzle-5d-react-index", (l: FileLi
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {
-    runVitest(this.root, segments);
+    runVitest(this.root, segments, "js/vitest.config.ts");
   }
 }
 

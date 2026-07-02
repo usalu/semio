@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 /** @emoji 🧭 `os-hub` router: `bun ./script.ts <setup|build|test|dev>`. */
 import { BundleScript, ScriptRouter, OS_HUB_PORT, OS_HUB_PORT_ENV, runBundleScriptMain, runCargo, runCmd } from "../../../../repo/lib/js/index.ts";
+import { join } from "node:path";
 
 class SetupScript extends BundleScript {
 	run(): void {

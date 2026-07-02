@@ -1,0 +1,15 @@
+{
+  "name": "@semio-tech/cad-js-query",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "cwd": "cad/query",
+        "command": "bun ./script.ts test",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}
