@@ -1,0 +1,14 @@
+{
+  "title": "Note Infinite Canvas App",
+  "emoji": "📝",
+  "status": "closed",
+  "description": "Create a new fully-featured S technology app 'note' — an infinite canvas with text blocks, images, tables, math, pencil drawing, fully integrated with hover, selection, hierarchy, window options, VCS persistence, playground dev host, and S program registration.",
+  "summary": "Implemented the Note infinite-canvas S technology app with text, image, table, math, ink, and group blocks; full playground shell (Canvas + Navigator windows, tools, measures, engagement, hierarchy/catalogue/inspector panels); React NoteCanvas with pan/zoom, selection, marquee, pencil strokes, and KaTeX math renderer interface; platform ComponentKind note + UiNoteHostSurfaceNode; playground renderer bootNotePlay host; app-registry/dev ports/launch.json; S resource 2d.note with program extension and VCS handler. Fixed circular import via note/core/play-ids.ts. Tests pass (test:note); dev:note boots on port 6080.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1800"
+  },
+  "goal": "🎯s🎯platform",
+  "sessions": [
+    "⚪db0aa60f86e241eab772b179d7abde6b"
+  ]
+}

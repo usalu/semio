@@ -13,7 +13,7 @@ import {
 	runViteBunxDev,
 	type PlaygroundHostKind,
 } from "../../../../repo/lib/js/index.ts";
-import { playgroundAppByEntryKind } from "@semio-tech/framework-playground-core/app-registry";
+import { loadPlaygroundApp } from "@semio-tech/framework-playground-core/app-registry";
 
 const ENTRY_TO_HOST: Readonly<Record<string, PlaygroundHostKind>> = {
 	"2d": "puzzle-2d",
@@ -44,15 +44,21 @@ const PACKAGE_ROOT_BY_ENTRY: Readonly<Record<string, string>> = {
 	"trinity-jack": "trinity/jack/host-core",
 	"trinity-rewrite": "trinity/rewrite",
 	presentation: "framework/product/presentation",
+	cad: "cad/js/renderer",
 	"2d": "puzzle/2d",
 	"3d": "puzzle/3d",
 	"5d": "puzzle/5d",
 };
 
-function resolveAppArg(segments: string[]): string {
+function resolveAppArg(segments: string[]): { readonly app: string; readonly viteArgs: string[] } {
 	const flag = segments.findIndex((segment) => segment === "--app");
-	if (flag >= 0 && segments[flag + 1]) return segments[flag + 1]!;
-	return segments[0] ?? process.env.PLAYGROUND_APP ?? "draw";
+	if (flag >= 0 && segments[flag + 1]) {
+		const app = segments[flag + 1]!;
+		const viteArgs = [...segments.slice(0, flag), ...segments.slice(flag + 2)];
+		return { app, viteArgs };
+	}
+	const app = segments[0] ?? process.env.PLAYGROUND_APP ?? "draw";
+	return { app, viteArgs: segments[0] === app ? segments.slice(1) : segments };
 }
 
 function hostKindForEntry(entry: string): PlaygroundHostKind {
@@ -60,12 +66,12 @@ function hostKindForEntry(entry: string): PlaygroundHostKind {
 }
 
 class DevScript extends BundleScript {
-	run(segments: string[]): void {
-		const appEntry = resolveAppArg(segments);
-		const app = playgroundAppByEntryKind(appEntry);
+	async run(segments: string[]): Promise<void> {
+		const { app: appEntry, viteArgs } = resolveAppArg(segments);
+		const app = await loadPlaygroundApp(appEntry);
 		if (!app) throw new Error(`unknown playground app: ${appEntry}`);
 		const prebuild = app.devHost?.prebuild;
-		if (prebuild) void prebuild(this.root);
+		if (prebuild) await prebuild(this.root);
 		const hostKind = hostKindForEntry(appEntry);
 		const env = {
 			...playPollingEnv(),
@@ -73,7 +79,7 @@ class DevScript extends BundleScript {
 			PUZZLE_PLAY_ENTRY: app.devHost?.playEntryKind ?? appEntry,
 			PLAYGROUND_PACKAGE_ROOT: PACKAGE_ROOT_BY_ENTRY[appEntry] ?? "",
 		};
-		runViteBunxDev(this.root, segments, {
+		runViteBunxDev(this.root, viteArgs, {
 			portEnv: playgroundPortEnv(hostKind),
 			defaultPort: playgroundDevPortString(hostKind),
 			fixedPort: true,
@@ -83,12 +89,12 @@ class DevScript extends BundleScript {
 }
 
 class BuildScript extends BundleScript {
-	run(segments: string[]): void {
-		const appEntry = resolveAppArg(segments);
-		runBun(["run", "vite", "build", "--config", "vite.config.ts", ...segments], this.root, {
+	async run(segments: string[]): Promise<void> {
+		const { app: appEntry, viteArgs } = resolveAppArg(segments);
+		runBun(["run", "vite", "build", "--config", "vite.config.ts", ...viteArgs], this.root, {
 			...playPollingEnv(),
 			PLAYGROUND_APP: appEntry,
-			PUZZLE_PLAY_ENTRY: playgroundAppByEntryKind(appEntry)?.devHost?.playEntryKind ?? appEntry,
+			PUZZLE_PLAY_ENTRY: appEntry,
 			PLAYGROUND_PACKAGE_ROOT: PACKAGE_ROOT_BY_ENTRY[appEntry] ?? "",
 		});
 	}

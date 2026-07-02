@@ -68,6 +68,7 @@ function SketchpadDocsMdxHost({
 		| { readonly status: "ready"; readonly module: SketchpadMdxModule }
 		| { readonly status: "error"; readonly message: string }
 	>({ status: "loading" });
+	const [title, setTitle] = useState(docsPath);
 
 	useEffect(() => {
 		let cancelled = false;
@@ -85,6 +86,17 @@ function SketchpadDocsMdxHost({
 		};
 	}, [docsPath]);
 
+	useEffect(() => {
+		if (state.status !== "ready") return;
+		let active = true;
+		void sketchpadMdxTitle(state.module, docsPath).then((next) => {
+			if (active) setTitle(next);
+		});
+		return () => {
+			active = false;
+		};
+	}, [docsPath, state]);
+
 	if (state.status === "loading") {
 		return <div className="p-4 text-sm text-muted-foreground">Loading documentation…</div>;
 	}
@@ -92,7 +104,6 @@ function SketchpadDocsMdxHost({
 		return <div className="p-4 text-sm text-destructive">{state.message}</div>;
 	}
 	const Content = state.module.default as React.ComponentType<Record<string, never>>;
-	const title = sketchpadMdxTitle(state.module, docsPath);
 	return (
 		<article className="prose prose-sm dark:prose-invert max-w-none p-4">
 			<h1 className="not-prose mb-4 text-xl font-semibold">{title}</h1>

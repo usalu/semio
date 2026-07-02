@@ -4,15 +4,10 @@ import {
 	COMPOSE_SKETCHPAD_PROGRAM_ID,
 	mergeSProgramDefinition,
 	registerAppVcsHandler,
-	createDrawAppVcsHandler,
-	createWriterAppVcsHandler,
-	createRasterAppVcsHandler,
-	createFormsAppVcsHandler,
 	createFlowDocumentAppVcsHandler,
 	createFlowDagAppVcsHandler,
 	createProcedural2dAppVcsHandler,
 	createProcedural3dAppVcsHandler,
-	createShootingAppVcsHandler,
 	createTrinityGraphAppVcsHandler,
 	createGisMapAppVcsHandler,
 	createPresentationDeckAppVcsHandler,
@@ -24,7 +19,12 @@ import {
 	createImperativeAppVcsHandler,
 	createLowpolyAppVcsHandler,
 	createVcsDemoAppVcsHandler,
-} from "@semio-tech/s-core";
+} from "./internal.ts";
+import { createDrawAppVcsHandler } from "@semio-tech/draw-core";
+import { createWriterAppVcsHandler } from "@semio-tech/writer-core";
+import { createRasterAppVcsHandler } from "@semio-tech/raster-core";
+import { createFormsAppVcsHandler } from "@semio-tech/forms-core";
+import { createSPlayShootingAppVcsHandler } from "./shooting-extension.ts";
 import { createPresentationAppVcsHandler } from "@semio-tech/framework-presentation-core";
 import { puzzle5dDefaultManifestCatalogBundle } from "@semio-tech/puzzle-5d-react";
 
@@ -35,6 +35,11 @@ const extensionLoaders: readonly SProgramExtensionLoader[] = [
 		const { buildDrawProgramDefinition } = await import("@semio-tech/draw-core");
 		mergeSProgramDefinition("draw", buildDrawProgramDefinition());
 		registerAppVcsHandler(createDrawAppVcsHandler());
+	},
+	async () => {
+		const { buildNoteProgramDefinition, createNoteAppVcsHandler } = await import("@semio-tech/note-core");
+		mergeSProgramDefinition("note", buildNoteProgramDefinition());
+		registerAppVcsHandler(createNoteAppVcsHandler());
 	},
 	async () => {
 		const { buildWriterProgramDefinition } = await import("@semio-tech/writer-core");
@@ -78,23 +83,8 @@ const extensionLoaders: readonly SProgramExtensionLoader[] = [
 	},
 	async () => {
 		const { buildShootingProgramDefinition } = await import("@semio-tech/shooting-core");
-		const { createSPlayShootingAppVcsHandler } = await import("./shooting-extension.ts");
 		mergeSProgramDefinition("shooting", buildShootingProgramDefinition());
 		registerAppVcsHandler(createSPlayShootingAppVcsHandler());
-	},
-	async () => {
-		const { buildGisMapProgramDefinition } = await import("@semio-tech/gis-2d-core");
-		mergeSProgramDefinition("gis.map", buildGisMapProgramDefinition());
-		registerAppVcsHandler(createGisMapAppVcsHandler());
-	},
-	async () => {
-		const { buildCadProgramDefinition } = await import("@semio-tech/cad-js-renderer/play");
-		mergeSProgramDefinition("cad", buildCadProgramDefinition());
-	},
-	async () => {
-		const { buildDagProgramDefinition } = await import("@semio-tech/dag-host-core");
-		mergeSProgramDefinition("dag", buildDagProgramDefinition());
-		registerAppVcsHandler(createFlowDagAppVcsHandler());
 	},
 	async () => {
 		const { buildProcedural2dProgramDefinition } = await import("@semio-tech/procedural-2d-core");
@@ -107,23 +97,19 @@ const extensionLoaders: readonly SProgramExtensionLoader[] = [
 		registerAppVcsHandler(createProcedural3dAppVcsHandler());
 	},
 	async () => {
-		const { buildReasoningWiresProgramDefinition } = await import("@semio-tech/reasoning-mindmap-wires-core");
-		mergeSProgramDefinition("reasoning.wires", buildReasoningWiresProgramDefinition());
+		const { buildGisMapProgramDefinition } = await import("@semio-tech/gis-2d-core");
+		mergeSProgramDefinition("gis.map", buildGisMapProgramDefinition());
+		registerAppVcsHandler(createGisMapAppVcsHandler());
+	},
+	async () => {
+		const { buildPresentationDeckProgramDefinition } = await import("@semio-tech/framework-presentation-core");
+		mergeSProgramDefinition("presentation.deck", buildPresentationDeckProgramDefinition());
+		registerAppVcsHandler(createPresentationDeckAppVcsHandler());
 	},
 	async () => {
 		const { buildPresentationProgramDefinition } = await import("@semio-tech/framework-presentation-core");
 		mergeSProgramDefinition("presentation", buildPresentationProgramDefinition());
-		registerAppVcsHandler(createPresentationDeckAppVcsHandler());
 		registerAppVcsHandler(createPresentationAppVcsHandler());
-	},
-	async () => {
-		const { buildSketchpadProgramDefinition } = await import("@semio-tech/compose-sketchpad");
-		mergeSProgramDefinition(COMPOSE_SKETCHPAD_PROGRAM_ID, buildSketchpadProgramDefinition());
-	},
-	async () => {
-		const { buildLowpolyProgramDefinition } = await import("@semio-tech/lowpoly-core");
-		mergeSProgramDefinition("lowpoly", buildLowpolyProgramDefinition());
-		registerAppVcsHandler(createLowpolyAppVcsHandler());
 	},
 	async () => {
 		const { buildSequenceProgramDefinition } = await import("@semio-tech/sequence-core");
@@ -141,20 +127,38 @@ const extensionLoaders: readonly SProgramExtensionLoader[] = [
 		registerAppVcsHandler(createImperativeAppVcsHandler());
 	},
 	async () => {
+		const { buildLowpolyProgramDefinition } = await import("@semio-tech/lowpoly-core");
+		mergeSProgramDefinition("lowpoly", buildLowpolyProgramDefinition());
+		registerAppVcsHandler(createLowpolyAppVcsHandler());
+	},
+	async () => {
 		const { buildVcsProgramDefinition } = await import("@semio-tech/vcs-core");
 		mergeSProgramDefinition("vcs", buildVcsProgramDefinition());
 		registerAppVcsHandler(createVcsDemoAppVcsHandler());
 	},
 	async () => {
-		registerAppVcsHandler(createCatalogueKindsAppVcsHandler(() => puzzle5dDefaultManifestCatalogBundle() ?? {}));
+		const { buildDagProgramDefinition } = await import("@semio-tech/dag-host-core");
+		mergeSProgramDefinition("dag", buildDagProgramDefinition());
+		registerAppVcsHandler(createFlowDagAppVcsHandler());
+	},
+	async () => {
+		const { buildCadProgramDefinition } = await import("@semio-tech/cad-js-renderer-core");
+		mergeSProgramDefinition("cad", buildCadProgramDefinition());
+	},
+	async () => {
+		const { buildSketchpadProgramDefinition } = await import("@semio-tech/compose-sketchpad");
+		mergeSProgramDefinition(COMPOSE_SKETCHPAD_PROGRAM_ID, buildSketchpadProgramDefinition());
+	},
+	async () => {
+		registerAppVcsHandler(
+			createCatalogueKindsAppVcsHandler(() => puzzle5dDefaultManifestCatalogBundle() ?? {}),
+		);
 	},
 ];
 
-let extensionsLoaded = false;
-
-/** @emoji 📦 Dynamically imports and registers every technology s program extension. */
+/** @emoji 🧩 Loads every registered technology extension into the s registry. */
 export async function loadAllSProgramExtensions(): Promise<void> {
-	if (extensionsLoaded) return;
-	await Promise.all(extensionLoaders.map((loader) => loader()));
-	extensionsLoaded = true;
+	for (const loader of extensionLoaders) {
+		await loader();
+	}
 }

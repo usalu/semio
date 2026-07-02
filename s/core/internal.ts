@@ -182,6 +182,7 @@ const SKETCHPAD_APP_RESOURCE: Readonly<Record<string, SAppResourceSpec>> = {
 
 export const TECHNOLOGY_APP_RESOURCE_BY_PROGRAM: Readonly<Record<string, Readonly<Record<string, SAppResourceSpec>>>> = {
 	draw: { draw: sBaselineResource("2d.drawing", "draw.document", "draw") },
+	note: { note: sBaselineResource("2d.note", "note.document", "note") },
 	writer: { writer: sBaselineResource("text.document", "writer.document", "writer") },
 	raster: { raster: sBaselineResource("2d.raster", "raster.document", "raster") },
 	flow: { flow: sBaselineResource("computation.flow", "flow.document", "flow") },
@@ -358,18 +359,21 @@ if (import.meta.vitest) {
 		seedSProgramRegistryFromResourceMap();
 		const [
 			{ createDrawAppVcsHandler },
+			{ createNoteAppVcsHandler },
 			{ createWriterAppVcsHandler },
 			{ createRasterAppVcsHandler },
 			{ createFormsAppVcsHandler },
 			{ createPresentationAppVcsHandler },
 		] = await Promise.all([
 			import("@semio-tech/draw-core"),
+			import("@semio-tech/note-core"),
 			import("@semio-tech/writer-core"),
 			import("@semio-tech/raster-core"),
 			import("@semio-tech/forms-core"),
 			import("@semio-tech/framework-presentation-core"),
 		]);
 		registerAppVcsHandler(createDrawAppVcsHandler());
+		registerAppVcsHandler(createNoteAppVcsHandler());
 		registerAppVcsHandler(createWriterAppVcsHandler());
 		registerAppVcsHandler(createRasterAppVcsHandler());
 		registerAppVcsHandler(createFormsAppVcsHandler());

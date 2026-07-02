@@ -148,7 +148,7 @@ import Fuse, { type FuseResult } from "fuse.js";
 import { Puzzle2dCanvas, parsePuzzle2dFixture, type Puzzle2dPreselectSnapshot, type Puzzle2dSelectionSnapshot } from "@semio-tech/puzzle-2d-react";
 import { parseFixture, puzzle3dFixturePaletteTreeDragController, type SelectionSnapshot as Puzzle3dSelectionSnapshot } from "@semio-tech/puzzle-3d-react";
 import { PUZZLE_2D_FIXTURE_DRAG_MIME, puzzle2dFixturePaletteTreeDragController, classifyIconSelectorMode } from "@semio-tech/puzzle-2d-react";
-import { FiveD, StoreProvider, compose5d, createStore, prepareTopologyModel } from "@semio-tech/puzzle-5d-react";
+import { FiveD, StoreProvider, compose5d, createStore, mergeLiveForceGraphTopologyModel, prepareTopologyModel } from "@semio-tech/puzzle-5d-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import {
@@ -3010,7 +3010,11 @@ function usePlatformTopologyStore(
 		const existing = topologyStoreRef.current;
 		if (existing) {
 			if (lastStructureKeyRef.current !== structureKey) {
-				existing.replaceModel(model);
+				const nextModel =
+					instanceId.endsWith(":kit:wires")
+						? mergeLiveForceGraphTopologyModel(model, existing.read().model)
+						: model;
+				existing.replaceModel(nextModel);
 				lastStructureKeyRef.current = structureKey;
 			}
 			return;

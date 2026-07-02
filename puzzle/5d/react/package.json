@@ -12,6 +12,7 @@
     "@semio-tech/graph-manifest": "workspace:*",
     "@semio-tech/puzzle-2d-react": "workspace:*",
     "@semio-tech/puzzle-3d-react": "workspace:*",
+    "@semio-tech/puzzle-5d-core": "workspace:*",
     "@semio-tech/ui-react": "workspace:*",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.4.2",

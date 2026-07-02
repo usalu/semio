@@ -4,31 +4,31 @@ overview: Introduce a generic `os` product framework (peer of platform/playgroun
 todos:
   - id: os-core-skeleton
     content: Create framework/product/os/core + renderer/react generalizing StudioStore/SMediaGraph/SAppInstance/program registry/resolveAppHost out of s/core and s/play
-    status: in_progress
+    status: completed
   - id: interaction-contract
     content: Formalize AppPointerFocusStore as the mandatory hover+selection contract on base Controller; migrate JackHoverBridge to adapt to it
-    status: pending
+    status: completed
   - id: s-as-os
     content: Slim s/core to S-specific branding on top of os/core; rebuild s/play's SAppHostRouter using generic resolveAppHost
-    status: pending
+    status: completed
   - id: domain-app-definitions
     content: Extend AppDefinition with createController/registerBodies/registerSurfaceHosts/devHost; fold each domain's play/index.ts logic into its core/index.ts as one exported AppDefinition
-    status: pending
+    status: completed
   - id: migrate-hover-selection
     content: Migrate every domain (lowpoly, draw, flow, dag, puzzle 2d/3d/5d, procedural 2d/3d, gis/2d, trinity/jack, sequence, layout, imperative, vcs, writer, forms, raster, presentation, shooting, reasoning/mindmap, cad) off bespoke hover/selection onto the shared AppPointerFocusStore contract
-    status: pending
+    status: completed
   - id: generic-playground-runner
     content: Build one generic framework/product/playground/dev runner (package.json/project.json/vite.config.ts/index.html/script.ts) that boots any domain's AppDefinition standalone via a runtime arg
-    status: pending
+    status: completed
   - id: root-config-fallout
     content: Update root package.json workspaces/scripts, root script.ts DevScript router, PLAYGROUND_PORTS, .vscode/launch.json for the collapsed runner
-    status: pending
+    status: completed
   - id: delete-play-packages
     content: Delete all ~24 per-domain */play packages after folding logic into core/index.ts; handle compose sketchpad, cad, reasoning/mindmap stub as special cases
-    status: pending
+    status: completed
   - id: tests-and-docs
     content: Extend existing test files per touched package for the new contracts; add framework/product/os/AGENTS.md and update related AGENTS.md docs
-    status: pending
+    status: completed
 isProject: false
 ---
 

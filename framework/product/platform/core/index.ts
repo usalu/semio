@@ -304,11 +304,11 @@ export function sidePanelTreeRootItems(
 
 //#region 🔖ComponentKind
 /** @emoji 🧩 Fixed platform component vocabulary wired by renderers (`table`, `virtualFileSystem`, `puzzle2d`, …). */
-export type ComponentKind = "table" | "virtualFileSystem" | "puzzle2d" | "puzzle3d" | "puzzle5d" | "cad" | "gismap" | "flow" | "dag" | "imperative" | "sequence" | "layout" | "trinity" | "trinityRewrite" | "shooting" | "forms" | "raster" | "draw" | "writer" | "s" | "vcs" | "panel" | "editor" | "mesh" | "catalogue" | "lowpoly";
+export type ComponentKind = "table" | "virtualFileSystem" | "puzzle2d" | "puzzle3d" | "puzzle5d" | "cad" | "gismap" | "flow" | "dag" | "imperative" | "sequence" | "layout" | "trinity" | "trinityRewrite" | "shooting" | "forms" | "raster" | "draw" | "note" | "writer" | "s" | "vcs" | "panel" | "editor" | "mesh" | "catalogue" | "lowpoly";
 
-const CANVAS_COMPONENT_KINDS: readonly ComponentKind[] = ["table", "virtualFileSystem", "puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag", "imperative", "sequence", "layout", "trinity", "trinityRewrite", "shooting", "forms", "raster", "draw", "writer", "s", "vcs", "editor", "mesh", "catalogue", "lowpoly"];
+const CANVAS_COMPONENT_KINDS: readonly ComponentKind[] = ["table", "virtualFileSystem", "puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag", "imperative", "sequence", "layout", "trinity", "trinityRewrite", "shooting", "forms", "raster", "draw", "note", "writer", "s", "vcs", "editor", "mesh", "catalogue", "lowpoly"];
 
-const EDGELESS_WINDOW_COMPONENT_KINDS: readonly ComponentKind[] = ["puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag", "imperative", "sequence", "layout", "trinity", "trinityRewrite", "shooting", "raster", "draw", "s", "lowpoly"];
+const EDGELESS_WINDOW_COMPONENT_KINDS: readonly ComponentKind[] = ["puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag", "imperative", "sequence", "layout", "trinity", "trinityRewrite", "shooting", "raster", "draw", "note", "s", "lowpoly"];
 //#endregion 🔖ComponentKind
 
 /** @emoji 📊 Host-bound tabular surface; `paneId` disambiguates multiple table slots in one app. */
@@ -481,6 +481,17 @@ export interface UiRasterHostSurfaceNode {
 	readonly bindingId?: string;
 }
 
+/** @emoji 📝 Host-bound note surface (`composite` or `navigator`). */
+export interface UiNoteHostSurfaceNode {
+	readonly type: "note";
+	readonly componentKind: "note";
+	readonly surfaceId: string;
+	readonly controllerId: string;
+	readonly paneId?: string;
+	readonly bindingId?: string;
+	readonly view: "composite" | "navigator";
+}
+
 /** @emoji ✏️ Host-bound draw surface (`composite` or `navigator`). */
 export interface UiDrawHostSurfaceNode {
 	readonly type: "draw";
@@ -552,6 +563,7 @@ export type UiComponentHostSurfaceNode =
 	| UiFormsHostSurfaceNode
 	| UiRasterHostSurfaceNode
 	| UiDrawHostSurfaceNode
+	| UiNoteHostSurfaceNode
 	| UiVcsHostSurfaceNode
 	| UiWriterHostSurfaceNode
 	| UiSHostSurfaceNode
@@ -924,6 +936,25 @@ export function buildRasterWindowBody(
 		view,
 		...(paneId ? { paneId } : {}),
 		...(layerId ? { layerId } : {}),
+		...(bindingId ? { bindingId } : {}),
+	};
+}
+
+/** @emoji 📝 Canonical note window body for composite or navigator surfaces. */
+export function buildNoteWindowBody(
+	surfaceId: string,
+	controllerId: string,
+	view: "composite" | "navigator",
+	paneId?: string,
+	bindingId?: string,
+): UiNoteHostSurfaceNode {
+	return {
+		type: "note",
+		componentKind: "note",
+		surfaceId,
+		controllerId,
+		view,
+		...(paneId ? { paneId } : {}),
 		...(bindingId ? { bindingId } : {}),
 	};
 }
@@ -1534,27 +1565,7 @@ export abstract class VirtualFileSystemController extends Controller {
 	}
 
 	protected ensureChildrenLoaded(parentId: string, scope: VirtualFileSystemScope): void {
-		const childrenStore = this.childrenStore(scope);
-		const snapshot = childrenStore.getSnapshot();
-		const key = parentId === this.getRoot(scope).id ? "__root__" : parentId;
-		if (snapshot[key]) return;
-		const scopeKey = virtualFileSystemScopeKey(scope);
-		let pending = this.pendingChildrenLoadsByScope.get(scopeKey);
-		if (!pending) {
-			pending = new Set();
-			this.pendingChildrenLoadsByScope.set(scopeKey, pending);
-		}
-		if (pending.has(key)) return;
-		if (!this.virtualFileSystemUsesAsyncChildren()) {
-			childrenStore.setChildren(key, this.loadChildren(parentId, scope));
-			return;
-		}
-		pending.add(key);
-		void this.loadChildrenAsync(parentId, scope).then((loaded) => {
-			pending!.delete(key);
-			childrenStore.setChildren(key, loaded);
-			this.emit();
-		});
+		void this.ensureChildrenLoadedAsync(parentId, scope);
 	}
 
 	/** @emoji 📁 Like {@link ensureChildrenLoaded} but resolves when children are present (sync or async). */
@@ -1575,15 +1586,24 @@ export abstract class VirtualFileSystemController extends Controller {
 		if (existing) {
 			return existing;
 		}
+		let pending = this.pendingChildrenLoadsByScope.get(scopeKey);
+		if (!pending) {
+			pending = new Set();
+			this.pendingChildrenLoadsByScope.set(scopeKey, pending);
+		}
+		pending.add(key);
 		const load = (async () => {
 			if (!this.virtualFileSystemUsesAsyncChildren()) {
-				this.ensureChildrenLoaded(parentId, scope);
+				if (childrenStore.getSnapshot()[key] === undefined) {
+					childrenStore.setChildren(key, this.loadChildren(parentId, scope));
+				}
 				return;
 			}
 			const loaded = await this.loadChildrenAsync(parentId, scope);
 			childrenStore.setChildren(key, loaded);
 			this.emit();
 		})().finally(() => {
+			pending!.delete(key);
 			promises!.delete(key);
 		});
 		promises.set(key, load);
@@ -3118,6 +3138,56 @@ if (import.meta.vitest) {
 			expect(ctrl.virtualFileSystemUsesAsyncChildren()).toBe(true);
 			const rows = await ctrl.loadChildrenAsync("root", scope);
 			expect(rows.map((row) => row.id)).toEqual(["root-async"]);
+		});
+
+		it("ensureChildrenLoadedAsync shares one in-flight load with ensureChildrenLoaded", async () => {
+			let loadCount = 0;
+			class AsyncVfsDemoController extends VirtualFileSystemController {
+				constructor(commandBus: CommandBus, hostNotify: () => void) {
+					super("async-vfs-demo", commandBus, hostNotify);
+				}
+				protected override virtualFileSystemUsesAsyncChildren(): boolean {
+					return true;
+				}
+				protected override getSchema(_scope: VirtualFileSystemScope): VirtualFileSystemSchemaModel {
+					return PLATFORM_VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA;
+				}
+				protected override getRoot(_scope: VirtualFileSystemScope): VirtualFileSystemNodeRecord {
+					return {
+						id: "root",
+						fileNodeKindId: "root",
+						name: "Root",
+						hasChildren: true,
+						descriptorValues: platformVirtualFileSystemDemoDescriptorValues("workspace", "/"),
+					};
+				}
+				protected override loadChildren(_parentId: string, _scope: VirtualFileSystemScope): readonly VirtualFileSystemNodeRecord[] {
+					return [];
+				}
+				protected override loadChildrenAsync(
+					parentId: string,
+					_scope: VirtualFileSystemScope,
+				): Promise<readonly VirtualFileSystemNodeRecord[]> {
+					loadCount += 1;
+					return Promise.resolve([
+						{
+							id: `${parentId}-async`,
+							fileNodeKindId: "leaf",
+							name: "Async child",
+							parentId,
+							hasChildren: false,
+							descriptorValues: platformVirtualFileSystemDemoDescriptorValues("leaf", "/Async"),
+						},
+					]);
+				}
+			}
+			const bus = new CommandBus();
+			const ctrl = new AsyncVfsDemoController(bus, () => {});
+			const scope: VirtualFileSystemScope = { appId: "async", surfaceId: "vfs:async" };
+			ctrl.ensureChildrenLoaded("root", scope);
+			await Promise.all([ctrl.ensureChildrenLoadedAsync("root", scope), ctrl.ensureChildrenLoadedAsync("root", scope)]);
+			expect(loadCount).toBe(1);
+			expect(ctrl.childrenStore(scope).getSnapshot().__root__?.map((row) => row.id)).toEqual(["root-async"]);
 		});
 	});
 

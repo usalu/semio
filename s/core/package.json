@@ -6,7 +6,8 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "./index.ts"
+    ".": "./index.ts",
+    "./playground": "./playground.ts"
   },
   "scripts": {
     "test": "bun nx run @semio-tech/s-core:test"
@@ -21,6 +22,7 @@
   },
   "devDependencies": {
     "@semio-tech/draw-core": "workspace:*",
+    "@semio-tech/note-core": "workspace:*",
     "@semio-tech/flow-core": "workspace:*",
     "@semio-tech/forms-core": "workspace:*",
     "@semio-tech/framework-presentation-core": "workspace:*",

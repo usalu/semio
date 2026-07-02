@@ -166,6 +166,7 @@ import {
   buildFormsWindowBody,
   buildRasterWindowBody,
   buildDrawWindowBody,
+  buildNoteWindowBody,
   buildVcsWindowBody,
   buildSWindowBody,
   buildWriterWindowBody,
@@ -191,6 +192,7 @@ export {
   buildFormsWindowBody,
   buildRasterWindowBody,
   buildDrawWindowBody,
+  buildNoteWindowBody,
   buildVcsWindowBody,
   buildSWindowBody,
   buildWriterWindowBody,
@@ -574,6 +576,19 @@ export interface PlaygroundAppDefinition extends AppDefinition {
 	readonly bootRenderer: (playground: Playground, rootId?: string) => void | Promise<void>;
 }
 //#endregion 🔖PlaygroundAppDefinition
+
+//#region 🔖PlayFixtureGlob
+type PlayFixtureGlobModule = Record<string, { default: unknown }>;
+
+/** @emoji 📂 Vite eager fixture glob with empty fallback outside Vite (Bun prebuild, vitest). */
+export function eagerPlayFixtureGlob(pattern: string | readonly string[]): PlayFixtureGlobModule {
+	const glob = (import.meta as ImportMeta & {
+		glob?: (entry: string | readonly string[], options?: { eager?: boolean }) => PlayFixtureGlobModule;
+	}).glob;
+	if (typeof glob !== "function") return {};
+	return glob(pattern, { eager: true });
+}
+//#endregion 🔖PlayFixtureGlob
 
 //#region 🔖Playground
 export interface PlaygroundPanelVisibility {

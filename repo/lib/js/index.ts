@@ -1020,6 +1020,7 @@ export type PlaygroundHostKind =
 	| "forms"
 	| "raster"
 	| "draw"
+	| "note"
 	| "writer"
 	| "s"
 	| "vcs"
@@ -1053,6 +1054,7 @@ export const PLAYGROUND_PORTS: Record<PlaygroundHostKind, PlaygroundPortSpec> = 
 	forms: { dev: 6058, test: 6059, env: "FORMS_PLAY_PORT" },
 	raster: { dev: 6060, test: 6061, env: "RASTER_PLAY_PORT" },
 	draw: { dev: 6064, test: 6065, env: "DRAW_PLAY_PORT" },
+	note: { dev: 6080, test: 6081, env: "NOTE_PLAY_PORT" },
 	writer: { dev: 6062, test: 6063, env: "WRITER_PLAY_PORT" },
 	s: { dev: 6066, test: 6067, env: "S_PLAY_PORT" },
 	vcs: { dev: 6075, env: "VCS_PLAY_PORT" },

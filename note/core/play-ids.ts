@@ -1,0 +1,12 @@
+export const NOTE_PLAY_APP_ID = "note-play";
+export const NOTE_PLAY_CONTROLLER_ID = "note-play";
+export const NOTE_PLAY_SURFACE_ID_COMPOSITE = "note.play.composite/v1";
+export const NOTE_PLAY_SURFACE_ID_NAVIGATOR = "note.play.navigator/v1";
+export const NOTE_PLAY_BODY_KEY_COMPOSITE = "note.play.composite";
+export const NOTE_PLAY_BODY_KEY_NAVIGATOR = "note.play.navigator";
+export const NOTE_PLAY_WINDOW_KIND_COMPOSITE = "note-composite";
+export const NOTE_PLAY_WINDOW_KIND_NAVIGATOR = "note-navigator";
+export const NOTE_PLAY_HIERARCHY_TAB_ID = "framework.panel.hierarchy";
+export const NOTE_PLAY_CATALOGUE_TAB_ID = "framework.panel.catalogue";
+export const NOTE_PLAY_PROPERTIES_TAB_ID = "framework.panel.inspection";
+export const NOTE_BLOCK_KIND_DRAG_MIME = "application/x-semio-note-block-kind";

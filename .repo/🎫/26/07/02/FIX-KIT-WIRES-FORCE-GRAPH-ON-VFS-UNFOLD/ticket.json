@@ -1,8 +1,9 @@
 {
   "title": "Fix Kit Wires Force Graph on VFS Unfold",
   "emoji": "🐛",
-  "status": "open",
+  "status": "closed",
   "description": "When unfolding in kit app in vfs, the force graph in wires sometimes doesnt update properly and the nodes jump out of screen.",
+  "summary": "Fixed kit wires force graph jumping off screen when unfolding VFS branches. Topology updates now merge settled node positions and camera instead of resetting to grid layout; new nodes spawn near their parent. Unified async VFS child loading so wires topology always waits for the same in-flight branch load. Live force RAF restarts when node ids change.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1798"
   },

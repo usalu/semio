@@ -157,6 +157,7 @@ export interface OsDocument {
 export interface OsAppRegistration {
 	readonly id: string;
 	readonly label: string;
+	readonly controllerId: string;
 	readonly inputs: readonly OsPortSpec[];
 	readonly outputs: readonly OsPortSpec[];
 	readonly sourceFormat: string;
@@ -235,11 +236,11 @@ export function osBaselineResource(
 	sourceFormat: string,
 	componentKind: ComponentKind,
 	modes: readonly { readonly id: string; readonly label: string }[] = [{ id: "edit", label: "Edit" }],
-): Omit<OsAppRegistration, "id" | "label"> & { readonly modes: readonly { readonly id: string; readonly label: string }[] } {
+): Omit<OsAppRegistration, "id" | "label" | "controllerId"> & { readonly modes: readonly { readonly id: string; readonly label: string }[] } {
 	return { inputs: [], outputs: [osOutPort(resourceKind)], sourceFormat, componentKind, modes };
 }
 
-export type OsAppResourceSpec = Omit<OsAppRegistration, "id" | "label"> & { readonly modes: readonly { readonly id: string; readonly label: string }[] };
+export type OsAppResourceSpec = Omit<OsAppRegistration, "id" | "label" | "controllerId"> & { readonly modes: readonly { readonly id: string; readonly label: string }[] };
 
 const osProgramExtensionRegistry = new Map<string, OsProgramDefinition>();
 
@@ -266,6 +267,7 @@ export function mergeOsProgramDefinition(
 			return {
 				id: app.id,
 				label: app.label,
+				controllerId: app.controllerId,
 				inputs: resource.inputs,
 				outputs: resource.outputs,
 				sourceFormat: resource.sourceFormat,
@@ -319,8 +321,17 @@ export function osAppRegistration(programId: string, appId: string): OsAppRegist
 
 /** @emoji 🧩 Resolves the {@link AppDefinition} backing an embedded os app instance. */
 export function resolveOsAppDefinition(instance: OsAppInstance): AppDefinition | undefined {
+	const registration = osAppRegistration(instance.programId, instance.appId);
+	if (!registration) return undefined;
 	const program = osProgramById(instance.programId);
-	return program?.apps.find((app) => app.id === instance.appId);
+	const app = program?.apps.find((entry) => entry.id === instance.appId);
+	return {
+		id: registration.id,
+		label: registration.label,
+		controllerId: registration.controllerId,
+		modes: app?.modes ?? [{ id: "edit", label: "Edit" }],
+		defaultModeId: app?.defaultModeId ?? registration.defaultModeId,
+	};
 }
 //#endregion 🔖ProgramRegistry
 
@@ -971,7 +982,7 @@ export function osMediaGraphToDagFixture(
 	return { schema: "dag.fixture", camera, nodes, edges };
 }
 
-export function oosMediaGraphToDagFixtureJson(
+export function osMediaGraphToDagFixtureJson(
 	graph: OsMediaGraph,
 	instances: readonly OsAppInstance[],
 	camera?: { readonly x: number; readonly y: number; readonly zoom: number },
@@ -1623,6 +1634,22 @@ if (import.meta.vitest) {
 		it("validates media graph cycles", () => {
 			const graph = emptyMediaGraph();
 			expect(validateMediaGraph(graph).ok).toBe(true);
+		});
+
+		it("resolves app definitions for embedded instances", () => {
+			mergeOsProgramDefinition("writer", {
+				id: "writer",
+				name: "Writer",
+				apiVersion: "1",
+				apps: [{ id: "writer", label: "Writer", controllerId: "writer-play", modes: [{ id: "edit", label: "Edit" }] }],
+				createPlatformApi: () => ({}),
+			}, {
+				writer: { inputs: [], outputs: [osOutPort("writer.document")], sourceFormat: "writer.document", componentKind: "panel", modes: [{ id: "edit", label: "Edit" }] },
+			});
+			const store = new OsStore(createEmptyOsDocument());
+			store.dispatch({ kind: "spawnAppInstance", programId: "writer", appId: "writer" });
+			const instance = store.projection().appInstances[0]!;
+			expect(resolveOsAppDefinition(instance)?.controllerId).toBe("writer-play");
 		});
 	});
 }

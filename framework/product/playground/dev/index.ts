@@ -3,7 +3,7 @@
 // #endregion 🧲Header
 
 import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
-import { playgroundAppByEntryKind } from "@semio-tech/framework-playground-core/app-registry";
+import { loadPlaygroundApp } from "@semio-tech/framework-playground-core/app-registry";
 
 const playEntryKind = import.meta.env.PUZZLE_PLAY_ENTRY as string | undefined;
 
@@ -11,7 +11,7 @@ if (typeof document !== "undefined" && document.getElementById("root") != null &
 	bootstrapElementsSurfaceChromeDocument("system");
 	void (async () => {
 		await import("./globals.css");
-		const app = playgroundAppByEntryKind(playEntryKind);
+		const app = await loadPlaygroundApp(playEntryKind);
 		if (!app) throw new Error(`[playground-dev] unknown app entry kind: ${playEntryKind}`);
 		const playground = app.createPlayground();
 		await app.bootRenderer(playground);

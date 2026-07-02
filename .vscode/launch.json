@@ -75,7 +75,7 @@
       "name": "🛠️dev📐cad",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun run dev:cad",
+      "command": "bun ./script.ts dev cad",
       "cwd": "${workspaceFolder}",
       "env": {
         "CAD_JS_RENDERER_PLAY_PORT": "6020"
@@ -94,7 +94,7 @@
       "name": "🛠️dev📐cad🧩concrete🌲forest",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun run dev:cad:concrete-forest",
+      "command": "bun ./script.ts dev cad fixture concrete",
       "cwd": "${workspaceFolder}",
       "env": {
         "CAD_JS_RENDERER_PLAY_PORT": "6020"
@@ -979,6 +979,25 @@
       "serverReadyAction": {
         "action": "openExternally",
         "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6064)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev📝note",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:note",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NOTE_PLAY_PORT": "6080"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 388
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6080)",
         "uriFormat": "%s"
       }
     },

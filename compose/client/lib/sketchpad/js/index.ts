@@ -10879,68 +10879,44 @@ export type SketchpadMdxModule = {
 	readonly frontmatter?: Readonly<Record<string, unknown>>;
 };
 
-const SKETCHPAD_MDX_MODULE_LOADERS = import.meta.glob<SketchpadMdxModule>("./page/**/*.mdx");
-const SKETCHPAD_MDX_MODULE_PATHS = Object.keys(SKETCHPAD_MDX_MODULE_LOADERS);
+const SKETCHPAD_DOCS_REGISTRY_FALLBACK: readonly SketchpadDocSection[] = [
+	{
+		id: "getting-started",
+		label: "Getting started",
+		pages: [
+			{ path: "getting-started/index", title: "Getting started" },
+			{ path: "getting-started/installation", title: "Installation" },
+		],
+	},
+];
+
+let sketchpadDocsRegistryCache: readonly SketchpadDocSection[] | null = null;
+
+/** @emoji 📚 Sync docs registry (fallback until {@link sketchpadWarmDocsRegistry} runs). */
+export function sketchpadBuildDocsRegistry(): readonly SketchpadDocSection[] {
+	return sketchpadDocsRegistryCache ?? SKETCHPAD_DOCS_REGISTRY_FALLBACK;
+}
+
+/** @emoji 📚 Loads the full MDX-backed docs registry when docs routes are used. */
+export async function sketchpadWarmDocsRegistry(): Promise<void> {
+	if (sketchpadDocsRegistryCache) return;
+	const { sketchpadBuildDocsRegistry: build } = await import("./docs-mdx.ts");
+	sketchpadDocsRegistryCache = build();
+}
 
 /** @emoji 🔍 Resolves a docs route path to a Vite MDX module key. */
-export function sketchpadResolveMdxModuleKey(docsPath: string): string | null {
-	const clean = docsPath.replace(/^\/+/, "").replace(/\.mdx$/, "");
-	const matches = SKETCHPAD_MDX_MODULE_PATHS.filter((key) => {
-		const keyPath = key.replace(/^\.\/page\//, "").replace(/\.mdx$/, "");
-		return keyPath === clean || keyPath === `${clean}/index`;
-	});
-	return matches[0] ?? null;
+export async function sketchpadResolveMdxModuleKey(docsPath: string): Promise<string | null> {
+	return (await import("./docs-mdx.ts")).sketchpadResolveMdxModuleKey(docsPath);
 }
 
 /** @emoji 📥 Loads an MDX page module for a docs route (`getting-started/index`, …). */
 export async function sketchpadLoadMdxModule(docsPath: string): Promise<SketchpadMdxModule | null> {
-	const moduleKey = sketchpadResolveMdxModuleKey(docsPath);
-	if (!moduleKey) return null;
-	try {
-		return await SKETCHPAD_MDX_MODULE_LOADERS[moduleKey]!();
-	} catch {
-		return null;
-	}
+	return (await import("./docs-mdx.ts")).sketchpadLoadMdxModule(docsPath);
 }
 
 /** @emoji 🏷️ Reads a display title from MDX frontmatter or route path. */
-export function sketchpadMdxTitle(module: SketchpadMdxModule | null, docsPath: string): string {
-	const frontmatter = module?.frontmatter;
-	if (frontmatter && typeof frontmatter["title"] === "string" && frontmatter["title"].length > 0) {
-		return frontmatter["title"];
-	}
-	return sketchpadTitleFromDocPath(docsPath);
-}
-
-/** @emoji 📚 Builds the sketchpad docs tree from bundled MDX pages (Vite glob). */
-export function sketchpadBuildDocsRegistry(): readonly SketchpadDocSection[] {
-	const sectionMap = new Map<string, SketchpadDocPage[]>();
-	for (const modulePath of SKETCHPAD_MDX_MODULE_PATHS) {
-		const relative = modulePath.replace(/^\.\/pages\//, "").replace(/\.mdx$/, "");
-		const sectionId = relative.split("/")[0] ?? "root";
-		const pages = sectionMap.get(sectionId) ?? [];
-		pages.push({ path: relative, title: sketchpadTitleFromDocPath(relative) });
-		sectionMap.set(sectionId, pages);
-	}
-	if (sectionMap.size === 0) {
-		return [
-			{
-				id: "getting-started",
-				label: "Getting started",
-				pages: [
-					{ path: "getting-started/index", title: "Getting started" },
-					{ path: "getting-started/installation", title: "Installation" },
-				],
-			},
-		];
-	}
-	return [...sectionMap.entries()]
-		.map(([id, pages]) => ({
-			id,
-			label: sketchpadTitleFromDocPath(id),
-			pages: pages.sort((left, right) => left.path.localeCompare(right.path)),
-		}))
-		.sort((left, right) => left.label.localeCompare(right.label));
+export async function sketchpadMdxTitle(module: SketchpadMdxModule | null, docsPath: string): Promise<string> {
+	return (await import("./docs-mdx.ts")).sketchpadMdxTitle(module, docsPath);
 }
 
 /** @emoji 🔌 Backend contract for {@link ComposeKitStore} (memory, WASM worker, HTTP, …). */
@@ -17085,9 +17061,9 @@ if (import.meta.vitest) {
 	});
 
 	describe("sketchpadResolveMdxModuleKey", () => {
-		it("resolves index and leaf docs paths", () => {
-			expect(sketchpadResolveMdxModuleKey("getting-started/index")).toMatch(/getting-started\/index\.mdx$/);
-			expect(sketchpadResolveMdxModuleKey("getting-started/installation")).toMatch(/installation\.mdx$/);
+		it("resolves index and leaf docs paths", async () => {
+			expect(await sketchpadResolveMdxModuleKey("getting-started/index")).toMatch(/getting-started\/index\.mdx$/);
+			expect(await sketchpadResolveMdxModuleKey("getting-started/installation")).toMatch(/installation\.mdx$/);
 		});
 	});
 

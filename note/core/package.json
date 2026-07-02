@@ -1,0 +1,29 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "@semio-tech/note-core",
+  "version": "0.1.0",
+  "description": "note · core",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": "./index.ts",
+    "./playground": "./playground.ts"
+  },
+  "scripts": {
+    "test": "bun nx run @semio-tech/note-core:test"
+  },
+  "dependencies": {
+    "@semio-tech/vcs-core": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.17"
+  },
+  "license": "LGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/usalu/semio.git",
+    "directory": "note/core"
+  },
+  "bundleKind": "library"
+}

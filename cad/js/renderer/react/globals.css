@@ -4,4 +4,5 @@
 @source "../../../../framework/product/platform/renderer/react";
 @source "../../../../ui/react";
 @source "..";
+@source "../core";
 @source ".";

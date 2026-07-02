@@ -2915,30 +2915,9 @@ export interface FiveDProps {
   readonly puzzle3d?: Omit<Puzzle3dCanvasProps, "children">;
 }
 
-const FIVE_D_LIVE_FORCE_ITERS_PER_FRAME = 24;
+import { mergeLiveForceGraphTopologyModel, fiveDApplyLiveForceGraphStep } from "@semio-tech/puzzle-5d-core";
 
-/** @emoji 🕸️ Applies one WASM force-graph tick to a puzzle 5d store snapshot (same path as WIRES play). */
-export function fiveDApplyLiveForceGraphStep(store: Store, _instanceId: string, drag?: Puzzle2dLiveForceGraphDragState): void {
-  const fixture = project2d(store.read());
-  if (fixture.nodes.length === 0) {
-    return;
-  }
-  const laid = puzzle2dApplyLiveForceGraphLayoutTick(
-    fixture,
-    {
-      forceGraph: {
-        gravity: 0,
-        idealEdgeLength: 64,
-        iterations: FIVE_D_LIVE_FORCE_ITERS_PER_FRAME,
-        repulsionStrength: 80,
-      },
-      mode: "force-graph",
-      redrawHandlesAfter: false,
-    } satisfies Puzzle2dRedrawLayoutOptions,
-    drag,
-  );
-  store.applyPart2dCenters(new Map(laid.nodes.map((node) => [node.id, { x: node.x, y: node.y }])));
-}
+export { mergeLiveForceGraphTopologyModel, fiveDApplyLiveForceGraphStep };
 
 function fiveDLinkSessionFromStore(session: ConnectSession | null): Puzzle2dLinkSessionSnapshot | null {
   if (!session) return null;
@@ -3208,6 +3187,14 @@ const FiveD2d = reactHostPort.memo(function FiveD2d(props: FiveDProps) {
     onBrushCandidatesHostRef.current?.(payload);
   }, []);
 
+  const liveForceNodeIds = reactHostPort.useMemo(
+    () =>
+      fixture2d.nodes
+        .map((node) => node.id)
+        .sort()
+        .join(","),
+    [fixture2d.nodes],
+  );
   reactHostPort.useEffect(() => {
     if (!liveForceGraph || fixture2d.nodes.length === 0) return;
     let raf = 0;
@@ -3220,7 +3207,7 @@ const FiveD2d = reactHostPort.memo(function FiveD2d(props: FiveDProps) {
     };
     raf = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf);
-  }, [fixture2d.nodes.length, liveForceGraph, props.instanceId]);
+  }, [fixture2d.nodes.length, liveForceGraph, liveForceNodeIds, props.instanceId]);
 
   return (
     <div className={FIVE_D_ROOT_CLASS} data-five-d-indirect-active={snap.connectSession ? "true" : "false"} data-five-d-mode="2d" data-five-d-instance={props.instanceId}>
@@ -5078,6 +5065,67 @@ if (import.meta.vitest) {
       const added = store.read().parts.find((part) => part.id === "fill-1");
       expect(added?.["2d"]).toBeTruthy();
       expect(added?.["3d"]).toBeTruthy();
+    });
+  });
+
+  describe("mergeLiveForceGraphTopologyModel", () => {
+    it("preserves settled flat centers and camera while placing new nodes near their parent", () => {
+      const existing = compose5d(
+        {
+          schema: "puzzle.2d.fixture",
+          camera: { x: 10, y: 20, zoom: 0.8 },
+          nodes: [
+            { id: "parent", shape: "circle", x: 0, y: 0, radius: 20, handles: [] },
+            { id: "child-a", shape: "circle", x: 4, y: 0, radius: 20, handles: [] },
+          ],
+          edges: [{ id: "e1", source: "parent", target: "child-a" }],
+        },
+        {
+          schema: "puzzle.3d.fixture",
+          domain: "architecture",
+          camera: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 },
+          objects: [],
+          attractions: [],
+        },
+      );
+      const settled = prepareTopologyModel(existing);
+      const incoming = prepareTopologyModel(
+        compose5d(
+          {
+            schema: "puzzle.2d.fixture",
+            camera: { x: 0, y: 0, zoom: 1 },
+            nodes: [
+              { id: "parent", shape: "circle", x: 200, y: 200, radius: 20, handles: [] },
+              { id: "child-a", shape: "circle", x: 300, y: 300, radius: 20, handles: [] },
+              { id: "child-b", shape: "circle", x: 0, y: 0, radius: 20, handles: [] },
+            ],
+            edges: [
+              { id: "e1", source: "parent", target: "child-a" },
+              { id: "e2", source: "parent", target: "child-b" },
+            ],
+          },
+          {
+            schema: "puzzle.3d.fixture",
+            domain: "architecture",
+            camera: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 },
+            objects: [],
+            attractions: [],
+          },
+        ),
+      );
+      const merged = mergeLiveForceGraphTopologyModel(incoming, settled);
+      const parent = merged.parts.find((part) => part.id === "parent")?.["2d"];
+      const childA = merged.parts.find((part) => part.id === "child-a")?.["2d"];
+      const childB = merged.parts.find((part) => part.id === "child-b")?.["2d"];
+      const settledParent = settled.parts.find((part) => part.id === "parent")?.["2d"];
+      const settledChildA = settled.parts.find((part) => part.id === "child-a")?.["2d"];
+      expect(parent?.x).toBe(settledParent?.x);
+      expect(parent?.y).toBe(settledParent?.y);
+      expect(childA?.x).toBe(settledChildA?.x);
+      expect(childA?.y).toBe(settledChildA?.y);
+      expect(childB?.x).toBeCloseTo((parent?.x ?? 0), 0);
+      expect(childB?.y).toBeLessThan(parent?.y ?? 0);
+      expect(merged.camera2d).toEqual(settled.camera2d);
     });
   });
 
