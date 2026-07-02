@@ -1,0 +1,13 @@
+{
+  "title": "Fix Kit Wires Force Graph on VFS Unfold",
+  "emoji": "🐛",
+  "status": "open",
+  "description": "When unfolding in kit app in vfs, the force graph in wires sometimes doesnt update properly and the nodes jump out of screen.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1798"
+  },
+  "goal": "🎯compose🎯sketchpad",
+  "sessions": [
+    "⚪74c613f4d2fd43ada55611445713e63a"
+  ]
+}

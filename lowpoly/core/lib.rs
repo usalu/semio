@@ -66,7 +66,18 @@ impl LowpolyPaintLayer {
 }
 
 fn empty_paint_pixels() -> Vec<u8> {
-    vec![0u8; LOWPOLY_PAINT_TEXTURE_SIZE * LOWPOLY_PAINT_TEXTURE_SIZE * 4]
+    let mut pixels = vec![0u8; LOWPOLY_PAINT_TEXTURE_SIZE * LOWPOLY_PAINT_TEXTURE_SIZE * 4];
+    for chunk in pixels.chunks_mut(4) {
+        chunk[0] = 255;
+        chunk[1] = 255;
+        chunk[2] = 255;
+        chunk[3] = 255;
+    }
+    pixels
+}
+
+fn prepare_paint_mesh(mesh: &mut HalfedgeMesh) {
+    let _ = mesh.unwrap_uv();
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -99,6 +110,7 @@ impl Default for LowpolyFixture {
 pub fn default_fixture() -> LowpolyFixture {
     let mut mesh = HalfedgeMesh::ico_sphere_prim(1.0, 1).unwrap_or_else(|_| HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap());
     let _ = mesh.extrude_faces(&[FaceId(0)], 0.3);
+    prepare_paint_mesh(&mut mesh);
     let mesh_json = mesh.to_json().unwrap_or_else(|_| "{}".into());
     LowpolyFixture {
         schema: "lowpoly.fixture".into(),
@@ -151,8 +163,14 @@ impl LowpolyDocument {
     }
 
     fn ensure_all_paint_buffers(&mut self) {
-        for obj in &self.fixture.objects {
-            self.ensure_object_paint_buffers(&obj.id, obj.paint_layers.len());
+        let specs: Vec<(String, usize)> = self
+            .fixture
+            .objects
+            .iter()
+            .map(|obj| (obj.id.clone(), obj.paint_layers.len()))
+            .collect();
+        for (object_id, layer_count) in specs {
+            self.ensure_object_paint_buffers(&object_id, layer_count);
         }
     }
 
@@ -244,7 +262,7 @@ impl LowpolyDocument {
     }
 
     fn add_primitive(&mut self, kind: &str) -> Result<String, String> {
-        let mesh = match kind {
+        let mut mesh = match kind {
             "box" => HalfedgeMesh::box_prim(1.0, 1.0, 1.0),
             "plane" => HalfedgeMesh::plane_prim(2.0, 2.0),
             "cylinder" => HalfedgeMesh::cylinder_prim(0.5, 1.0, 12),
@@ -253,6 +271,7 @@ impl LowpolyDocument {
             _ => return Err(format!("unknown primitive: {kind}")),
         }
         .map_err(|e| format!("{e:?}"))?;
+        prepare_paint_mesh(&mut mesh);
         self.next_object_serial += 1;
         let id = format!("obj-{}", self.next_object_serial);
         let mesh_json = mesh.to_json().map_err(|e| format!("{e:?}"))?;
@@ -292,6 +311,8 @@ impl LowpolyDocument {
             "faceIds": transfer.face_ids,
             "vertexIds": transfer.vertex_ids,
             "edgeIds": transfer.edge_ids,
+            "edgeUvs": transfer.edge_uvs,
+            "edgeIsSeam": transfer.edge_is_seam,
             "uvs": transfer.uvs,
         }))
     }
@@ -906,6 +927,22 @@ mod tests {
         doc.replace_fixture(fixture, preserved).unwrap();
         let after = doc.layer_pixels(&object_id, 0).unwrap();
         assert_eq!(before, after);
+    }
+
+    #[test]
+    fn default_fixture_mesh_has_unwrapped_uvs() {
+        let doc = LowpolyDocument::new(default_fixture()).unwrap();
+        let transfer = doc.active_mesh().unwrap().tessellate().unwrap();
+        assert!(transfer.uvs.iter().any(|uv| *uv > 0.0));
+    }
+
+    #[test]
+    fn empty_paint_pixels_are_opaque_white() {
+        let pixels = empty_paint_pixels();
+        assert_eq!(pixels[0], 255);
+        assert_eq!(pixels[1], 255);
+        assert_eq!(pixels[2], 255);
+        assert_eq!(pixels[3], 255);
     }
 
     #[test]

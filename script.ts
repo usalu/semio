@@ -28,6 +28,38 @@ const NATIVE_BOOTSTRAP_DIR = join(WORKSPACE_ROOT, "repo", "native", "bootstrap")
 
 export { Script };
 
+function resolvePlaygroundDevApp(segments: string[]): { readonly app: string; readonly rest: string[] } | null {
+  const [head, second, third, ...tail] = segments;
+  if (!head) return null;
+  if (head === "puzzle" && second) return { app: second, rest: third ? [third, ...tail] : tail };
+  if (head === "procedural" && second) return { app: `procedural-${second}`, rest: third ? [third, ...tail] : tail };
+  if (head === "trinity" && second === "jack") return { app: "trinity-jack", rest: third ? [third, ...tail] : tail };
+  if (head === "trinity" && second === "rewrite") return { app: "trinity-rewrite", rest: third ? [third, ...tail] : tail };
+  if (head === "gis" && second === "2d") return { app: "gis-2d", rest: third ? [third, ...tail] : tail };
+  if (head === "presentation") return { app: "presentation", rest: segments.slice(1) };
+  if (head === "vcs") return { app: "vcs", rest: segments.slice(1) };
+  if (head === "layout") return { app: "layout", rest: segments.slice(1) };
+  const direct = new Set([
+    "2d",
+    "3d",
+    "5d",
+    "wires",
+    "flow",
+    "dag",
+    "imperative",
+    "sequence",
+    "lowpoly",
+    "shooting",
+    "forms",
+    "raster",
+    "draw",
+    "s",
+    "writer",
+  ]);
+  if (direct.has(head)) return { app: head, rest: segments.slice(1) };
+  return null;
+}
+
 //#region 🔖NativeOsScript
 /** 🖥️Runs native bootstrap shells under `repo/native/bootstrap` (setup|start). */
 export class NativeOsScript extends Script {
@@ -229,84 +261,12 @@ export class DevScript extends Script {
       await this.runStorybookStatic();
       return;
     }
-    if (segments[0] === "2d") {
-      runCmd("bun", ["nx", "run", "@semio-tech/puzzle-2d-play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
-      return;
-    }
-    if (segments[0] === "wires") {
-      runCmd("bun", ["nx", "run", "@semio-tech/reasoning-mindmap-wires-play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
-      return;
-    }
-    if (segments[0] === "3d") {
-      runCmd("bun", ["nx", "run", "@semio-tech/puzzle-3d-play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
-      return;
-    }
-    if (segments[0] === "5d") {
-      runCmd("bun", ["nx", "run", "@semio-tech/puzzle-5d-play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
-      return;
-    }
-    if (segments[0] === "flow") {
-      runCmd("bun", ["nx", "run", "@semio-tech/flow-play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
-      return;
-    }
-    if (segments[0] === "dag") {
-      runCmd("bun", ["nx", "run", "@semio-tech/dag-play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
-      return;
-    }
-    if (segments[0] === "imperative") {
-      runCmd("bun", ["nx", "run", "@semio-tech/imperative-play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
-      return;
-    }
-    if (segments[0] === "sequence") {
-      runCmd("bun", ["nx", "run", "@semio-tech/sequence-play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
-      return;
-    }
-    if (segments[0] === "lowpoly") {
-      runCmd("bun", ["nx", "run", "@semio-tech/lowpoly-play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
-      return;
-    }
-    if (segments[0] === "trinity") {
-      if (segments[1] === "jack") {
-        runCmd("bun", ["nx", "run", "@semio-tech/trinity-jack-play:dev", ...segments.slice(2)], { cwd: this.root, env: devToolingEnv() });
-        return;
-      }
-      if (segments[1] === "rewrite") {
-        runCmd("bun", ["nx", "run", "@semio-tech/trinity-rewrite-play:dev", ...segments.slice(2)], { cwd: this.root, env: devToolingEnv() });
-        return;
-      }
-    }
-    if (segments[0] === "procedural") {
-      if (segments[1] === "3d") {
-        runCmd("bun", ["nx", "run", "@semio-tech/procedural-3d-play:dev", ...segments.slice(2)], { cwd: this.root, env: devToolingEnv() });
-        return;
-      }
-      if (segments[1] === "2d") {
-        runCmd("bun", ["nx", "run", "@semio-tech/procedural-2d-play:dev", ...segments.slice(2)], { cwd: this.root, env: devToolingEnv() });
-        return;
-      }
-    }
-    if (segments[0] === "shooting") {
-      runCmd("bun", ["nx", "run", "@semio-tech/shooting-play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
-      return;
-    }
-    if (segments[0] === "forms") {
-      runCmd("bun", ["nx", "run", "@semio-tech/forms-play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
-      return;
-    }
-    if (segments[0] === "raster") {
-      runCmd("bun", ["nx", "run", "@semio-tech/raster-play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
-      return;
-    }
-    if (segments[0] === "draw") {
-      runCmd("bun", ["nx", "run", "@semio-tech/draw-play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
-      return;
-    }
-    if (segments[0] === "s") {
-      runCmd("bun", ["nx", "run", "@semio-tech/s-play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
-      return;
-    }
-    if (segments[0] === "writer") {
-      runCmd("bun", ["nx", "run", "@semio-tech/writer-play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
+    const playgroundApp = resolvePlaygroundDevApp(segments);
+    if (playgroundApp) {
+      runCmd("bun", ["nx", "run", "@semio-tech/framework-playground-dev:dev", "--", "--app", playgroundApp.app, ...playgroundApp.rest], {
+        cwd: this.root,
+        env: devToolingEnv(),
+      });
       return;
     }
     if (segments[0] === "cad") {

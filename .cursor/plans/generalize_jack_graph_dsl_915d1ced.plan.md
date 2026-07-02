@@ -13,16 +13,16 @@ todos:
     status: completed
   - id: phase2-trinity-thin
     content: Shrink trinity/jack/core/lib.rs to a thin specialization re-exporting the shared DSL + trinity_ram QueryableGraph impl + TrinityGraphOp mutations
-    status: in_progress
+    status: completed
   - id: phase2-lsp-domain
     content: Generalize trinity/jack/lsp to accept a graphDomain selector and dispatch to the right adapter
-    status: pending
+    status: completed
   - id: phase3-puzzle3d-adapter
     content: Implement QueryableGraph adapter for puzzle/3d's manifest-driven entity model
-    status: pending
+    status: completed
   - id: phase3-s-adapter
     content: Implement QueryableGraph adapter for s/core's SMediaGraph
-    status: pending
+    status: completed
   - id: phase4-writer-fixture
     content: Add writer/fixture/dag.jack.writer.json demonstrating the DSL against a non-Trinity domain
     status: completed
@@ -31,28 +31,28 @@ todos:
     status: completed
   - id: phase5-flow-jack
     content: Add Jack window kind + hover bridge to flow/play
-    status: pending
+    status: completed
   - id: phase5-sequence-jack
     content: Add Jack window kind + hover bridge to sequence/play
-    status: pending
+    status: completed
   - id: phase5-dag-jack
     content: Add Jack window kind + hover bridge to mathematical/graph/port/directed/dag/play
-    status: in_progress
+    status: completed
   - id: phase5-puzzle2d-jack
     content: Add Jack window kind + hover bridge to puzzle/2d/play (inherited by wires)
-    status: pending
+    status: completed
   - id: phase5-puzzle3d-jack
     content: Add Jack window kind + hover bridge to puzzle/3d/play
-    status: pending
+    status: completed
   - id: phase5-puzzle5d-jack
     content: Add Jack window kind + hover bridge to puzzle/5d/play
-    status: pending
+    status: completed
   - id: phase5-s-jack
     content: Add Jack window kind + hover bridge to s/play
-    status: pending
+    status: completed
   - id: verify-regressions
     content: Run existing trinity/jack, trinity/rewrite, and all touched playground test suites to confirm no regressions
-    status: pending
+    status: completed
 isProject: false
 ---
 

@@ -4,7 +4,7 @@ use std::cell::Cell;
 
 use serde::{Deserialize, Serialize};
 
-use mathematical_graph_manifest::{flow_dag::flow_dag_manifest, ManifestValidator};
+use mathematical_graph_manifest::{flow_dag::flow_dag_manifest, ManifestValidator, PropertyBag};
 
 use graph::{handle_position, world_box_from_points, BoardEvent, WorldBox};
 pub use infinite_cavas as cavas;
@@ -677,21 +677,72 @@ pub struct DagNodeSpec {
     pub width: f64,
     #[serde(default = "default_node_height")]
     pub height: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub operator_kind: Option<String>,
+    #[serde(default)]
+    pub properties: PropertyBag,
     #[serde(flatten)]
     pub kind: DagNodeKind,
+}
+
+impl Default for DagNodeSpec {
+    fn default() -> Self {
+        Self {
+            id: String::new(),
+            name: String::new(),
+            abbreviation: String::new(),
+            icon: String::new(),
+            x: 0.0,
+            y: 0.0,
+            width: default_node_width(),
+            height: default_node_height(),
+            operator_kind: None,
+            properties: PropertyBag::new(),
+            kind: DagNodeKind::Computation {
+                inputs: vec![],
+                outputs: vec![],
+                variadic_inputs: false,
+                variadic_outputs: false,
+            },
+        }
+    }
 }
 
 impl DagNodeSpec {
     /// 🔧 Builds a computation node with explicit IO ports.
     pub fn computation(id: String, name: String, abbreviation: String, icon: String, inputs: Vec<IoPortSpec>, outputs: Vec<IoPortSpec>, variadic_inputs: bool, variadic_outputs: bool, x: f64, y: f64, width: f64, height: f64) -> Self {
         let (name, abbreviation) = normalize_node_display(&name, &abbreviation);
-        Self { id, name, abbreviation, icon, x, y, width, height, kind: DagNodeKind::Computation { inputs, outputs, variadic_inputs, variadic_outputs } }
+        Self {
+            id,
+            name,
+            abbreviation,
+            icon,
+            x,
+            y,
+            width,
+            height,
+            operator_kind: None,
+            properties: PropertyBag::new(),
+            kind: DagNodeKind::Computation { inputs, outputs, variadic_inputs, variadic_outputs },
+        }
     }
 
     /// 🧩 Builds a cluster node with contract IO ports.
     pub fn cluster(id: String, name: String, abbreviation: String, icon: String, inputs: Vec<IoPortSpec>, outputs: Vec<IoPortSpec>, x: f64, y: f64, width: f64, height: f64) -> Self {
         let (name, abbreviation) = normalize_node_display(&name, &abbreviation);
-        Self { id, name, abbreviation, icon, x, y, width, height, kind: DagNodeKind::Cluster { inputs, outputs } }
+        Self {
+            id,
+            name,
+            abbreviation,
+            icon,
+            x,
+            y,
+            width,
+            height,
+            operator_kind: None,
+            properties: PropertyBag::new(),
+            kind: DagNodeKind::Cluster { inputs, outputs },
+        }
     }
 
     /// ➕ Whether the node exposes variadic input insert controls.
@@ -1768,11 +1819,19 @@ pub struct DagFixtureEdge {
     pub target: String,
     #[serde(default)]
     pub route_style: EdgeRouteStyle,
+    #[serde(default)]
+    pub properties: PropertyBag,
 }
 
 impl Default for DagFixtureEdge {
     fn default() -> Self {
-        Self { id: String::new(), source: String::new(), target: String::new(), route_style: EdgeRouteStyle::default() }
+        Self {
+            id: String::new(),
+            source: String::new(),
+            target: String::new(),
+            route_style: EdgeRouteStyle::default(),
+            properties: PropertyBag::new(),
+        }
     }
 }
 
@@ -1780,6 +1839,96 @@ impl Default for DagFixture {
     fn default() -> Self {
         serde_json::from_str(include_str!("fixture/demo.dag.json")).unwrap_or_else(|_| Self { schema: "dag.fixture".into(), camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![], edges: vec![] })
     }
+}
+
+fn split_dag_endpoint(endpoint: &str) -> (String, String) {
+    if let Some((node, port)) = endpoint.rsplit_once(':') {
+        return (node.to_string(), port.to_string());
+    }
+    (endpoint.to_string(), "out".into())
+}
+
+fn dag_visual_kind(node: &DagNodeSpec) -> String {
+    node.operator_kind
+        .clone()
+        .unwrap_or_else(|| dag_node_kind_tag(&node.kind).to_string())
+}
+
+/// 📝 Render a DAG fixture as wire-literal compiled text.
+pub fn dag_fixture_to_wire_literal(fixture: &DagFixture) -> String {
+    use mathematical_graph_dsl::{wire_literal_from_dag, WireEdge, WireNode};
+    let nodes = fixture
+        .nodes
+        .iter()
+        .map(|node| WireNode {
+            id: node.id.clone(),
+            kind: dag_visual_kind(node),
+            port: None,
+            properties: node.properties.clone(),
+        })
+        .collect::<Vec<_>>();
+    let edges = fixture
+        .edges
+        .iter()
+        .map(|edge| {
+            let (from, from_port) = split_dag_endpoint(&edge.source);
+            let (to, to_port) = split_dag_endpoint(&edge.target);
+            WireEdge {
+                from,
+                from_port,
+                to,
+                to_port,
+                directed: true,
+                properties: edge.properties.clone(),
+            }
+        })
+        .collect::<Vec<_>>();
+    wire_literal_from_dag(&nodes, &edges)
+}
+
+/// 🧵 Build execution wire rows from an enriched DAG fixture.
+pub fn dag_fixture_execution_rows(
+    fixture: &DagFixture,
+) -> (
+    Vec<mathematical_graph_dsl::WireNode>,
+    Vec<mathematical_graph_dsl::WireEdge>,
+) {
+    use mathematical_graph_dsl::{WireEdge, WireNode};
+    use std::collections::HashSet;
+    let executable: HashSet<String> = fixture.nodes.iter().filter_map(|node| node.operator_kind.as_ref().map(|_| node.id.clone())).collect();
+    let nodes = fixture
+        .nodes
+        .iter()
+        .filter_map(|node| {
+            let kind = node.operator_kind.clone()?;
+            Some(WireNode {
+                id: node.id.clone(),
+                kind,
+                port: None,
+                properties: node.properties.clone(),
+            })
+        })
+        .collect();
+    let edges = fixture
+        .edges
+        .iter()
+        .filter_map(|edge| {
+            let (from, from_port) = split_dag_endpoint(&edge.source);
+            let (to, to_port) = split_dag_endpoint(&edge.target);
+            if !executable.contains(&from) || !executable.contains(&to) {
+                return None;
+            }
+            Some(WireEdge {
+                from,
+                from_port,
+                to,
+                to_port,
+                directed: true,
+                properties: edge.properties.clone(),
+            })
+        })
+        .collect();
+    (nodes, edges)
 }
 
 impl DagHost {
@@ -4503,6 +4652,7 @@ mod tests {
                 inputs: vec![IoPortSpec::simple("in-a", "In")],
                 outputs: vec![IoPortSpec::simple("out-a", "Out"), IoPortSpec::simple("out-b", "Mesh")],
             },
+        ..Default::default()
         };
         assert_eq!(dag_node_kind_tag(&node.kind), "appInstance");
         assert_eq!(node.inputs().len(), 1);
@@ -4633,6 +4783,7 @@ mod tests {
                 width: 180.0,
                 height: 80.0,
                 kind: DagNodeKind::Slider { min: 0.0, max: 10.0, step: 0.5, value: 3.0, output: IoPortSpec { id: "out".into(), label: "value".into(), ..Default::default() } },
+                ..Default::default()
             },
             DagNodeSpec {
                 id: "m".into(),
@@ -4644,6 +4795,7 @@ mod tests {
                 width: 180.0,
                 height: 80.0,
                 kind: DagNodeKind::Select { options: vec!["A".into(), "B".into()], selected: 1, output: IoPortSpec { id: "out".into(), label: "mode".into(), ..Default::default() } },
+                ..Default::default()
             },
             DagNodeSpec {
                 id: "p".into(),
@@ -4655,6 +4807,7 @@ mod tests {
                 width: 200.0,
                 height: 140.0,
                 kind: DagNodeKind::Screen { media: Some(DagMedia { kind: DagMediaKind::Svg, src: "data:image/svg+xml,test".into() }), input: IoPortSpec { id: "in".into(), label: "result".into(), ..Default::default() } },
+                ..Default::default()
             },
         ];
         for node in nodes {
@@ -4731,6 +4884,7 @@ mod tests {
             width: 180.0,
             height: 80.0,
             kind: DagNodeKind::Slider { min: 0.0, max: 1.0, step: 0.1, value: 0.5, output: IoPortSpec { id: "out".into(), label: "value".into(), ..Default::default() } },
+            ..Default::default()
         };
         assert!(slider.inputs().is_empty());
         assert_eq!(slider.outputs().len(), 1);
@@ -4744,6 +4898,7 @@ mod tests {
             width: 200.0,
             height: 140.0,
             kind: DagNodeKind::Screen { media: None, input: IoPortSpec { id: "in".into(), label: "in".into(), ..Default::default() } },
+            ..Default::default()
         };
         assert_eq!(screen.inputs().len(), 1);
         assert!(screen.outputs().is_empty());
@@ -4859,6 +5014,7 @@ mod tests {
             width: slider_widget_width("Amount", &output),
             height: slider_widget_height(),
             kind: DagNodeKind::Slider { min: 0.0, max: 10.0, step: 0.5, value: 2.0, output },
+        ..Default::default()
         };
         let hw = node.width * 0.5;
         let hh = node.height * 0.5;
@@ -4886,6 +5042,7 @@ mod tests {
                 width: slider_widget_width("Amount", &output),
                 height: slider_widget_height(),
                 kind: DagNodeKind::Slider { min: 0.0, max: 10.0, step: 0.5, value: 2.0, output },
+                ..Default::default()
             }],
             edges: vec![],
         });
@@ -4917,6 +5074,7 @@ mod tests {
                 width: slider_widget_width("Amount", &output),
                 height: slider_widget_height(),
                 kind: DagNodeKind::Slider { min: 0.0, max: 10.0, step: 0.5, value: 2.0, output },
+                ..Default::default()
             }],
             edges: vec![],
         });
@@ -4949,6 +5107,7 @@ mod tests {
                 width: 180.0,
                 height: 80.0,
                 kind: DagNodeKind::Select { options: vec!["Add".into(), "Multiply".into()], selected: 0, output: IoPortSpec { id: "out".into(), label: "mode".into(), ..Default::default() } },
+                ..Default::default()
             }],
             edges: vec![],
         });
@@ -4990,6 +5149,7 @@ mod tests {
                 width: 120.0,
                 height: 32.0,
                 kind: DagNodeKind::Slider { min: 0.0, max: 10.0, step: 0.5, value: 3.0, output: IoPortSpec { id: "out".into(), label: "value".into(), ..Default::default() } },
+                ..Default::default()
             }],
             edges: vec![],
         });
@@ -5021,6 +5181,7 @@ mod tests {
                     variadic_inputs: false,
                     variadic_outputs: false,
                 },
+                ..Default::default()
             }],
             edges: vec![],
         });
@@ -5063,6 +5224,7 @@ mod tests {
             width: 96.0,
             height: 42.0,
             kind: DagNodeKind::Computation { inputs: vec![IoPortSpec::named("W", "Wid", "width", "BoxWidth")], outputs: vec![IoPortSpec::named("S", "Sld", "solid", "BoxSolid")], variadic_inputs: false, variadic_outputs: false },
+            ..Default::default()
         };
         let port_texts = |lod: &str| -> Vec<String> {
             let mut host = DagHost::from_fixture_without_layout(DagFixture { schema: "dag.fixture".into(), camera: DagCamera { x: 0.0, y: 0.0, zoom: 2.0 }, nodes: vec![node.clone()], edges: vec![] });
@@ -5095,6 +5257,7 @@ mod tests {
                 width: 200.0,
                 height: 140.0,
                 kind: DagNodeKind::Screen { media: Some(DagMedia { kind: DagMediaKind::Svg, src: "data:image/svg+xml,test".into() }), input: IoPortSpec { id: "in".into(), label: "result".into(), ..Default::default() } },
+                ..Default::default()
             }],
             edges: vec![],
         });
@@ -6017,6 +6180,7 @@ mod tests {
                 width: 80.0,
                 height: 80.0,
                 kind: DagNodeKind::Note { text: "hi".into(), output: IoPortSpec { id: "out".into(), label: "out".into(), ..Default::default() } },
+                ..Default::default()
             }],
             edges: vec![],
         });
@@ -6045,6 +6209,7 @@ mod tests {
                 width: note_widget_size("hello").0,
                 height: note_widget_size("hello").1,
                 kind: DagNodeKind::Note { text: "hello".into(), output: IoPortSpec { id: "out".into(), label: "out".into(), ..Default::default() } },
+                ..Default::default()
             }],
             edges: vec![],
         });
@@ -6066,6 +6231,7 @@ mod tests {
             width: note_widget_size("hi").0,
             height: note_widget_size("hi").1,
             kind: DagNodeKind::Note { text: "hi".into(), output: IoPortSpec { id: "out".into(), label: "out".into(), ..Default::default() } },
+            ..Default::default()
         };
         assert!(note.inputs().is_empty());
         assert_eq!(note.outputs().len(), 1);
@@ -6079,6 +6245,7 @@ mod tests {
             width: 120.0,
             height: 48.0,
             kind: DagNodeKind::Preview { content: DagPreviewContent::Scalar { text: "3".into() }, expanded: BTreeSet::new(), input: IoPortSpec { id: "in".into(), label: "in".into(), ..Default::default() } },
+            ..Default::default()
         };
         assert_eq!(preview.inputs().len(), 1);
         assert!(preview.outputs().is_empty());
@@ -6149,6 +6316,7 @@ mod tests {
                 width: 80.0,
                 height: 80.0,
                 kind: DagNodeKind::Preview { content: DagPreviewContent::Tree { json }, expanded: BTreeSet::new(), input: IoPortSpec { id: "in".into(), label: "in".into(), ..Default::default() } },
+                ..Default::default()
             }],
             edges: vec![],
         });

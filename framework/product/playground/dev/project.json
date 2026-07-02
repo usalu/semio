@@ -1,0 +1,30 @@
+{
+	"name": "@semio-tech/framework-playground-dev",
+	"$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+	"targets": {
+		"dev": {
+			"executor": "nx:run-commands",
+			"options": {
+				"cwd": "framework/product/playground/dev",
+				"command": "bun ./script.ts dev",
+				"forwardAllArgs": true
+			}
+		},
+		"build": {
+			"executor": "nx:run-commands",
+			"options": {
+				"cwd": "framework/product/playground/dev",
+				"command": "bun ./script.ts build",
+				"forwardAllArgs": true
+			}
+		},
+		"test": {
+			"executor": "nx:run-commands",
+			"options": {
+				"cwd": "framework/product/playground/dev",
+				"command": "bun ./script.ts test",
+				"forwardAllArgs": true
+			}
+		}
+	}
+}

@@ -479,7 +479,7 @@
       "name": "🛠️dev📽️presentationplay",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-presentation-play:dev",
+      "command": "bun run dev:presentation",
       "cwd": "${workspaceFolder}",
       "env": {
         "PRESENTATION_PLAY_PORT": "6051"
@@ -1128,7 +1128,7 @@
       "name": "📦build🌐gis📍2d",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/gis-2d-play:build",
+      "command": "bun nx run @semio-tech/framework-playground-dev:build -- --app gis-2d",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
@@ -1139,7 +1139,7 @@
       "name": "📦build📽️presentationplay",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-presentation-play:build",
+      "command": "bun nx run @semio-tech/framework-playground-dev:build -- --app presentation",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",

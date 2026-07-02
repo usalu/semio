@@ -2254,6 +2254,17 @@ export interface ModeDefinition {
 	readonly panelTabs?: readonly SideTabSpec[];
 }
 
+
+export interface AppDevHostConfig {
+	readonly defaultPort?: number;
+	readonly playEntryKind: string;
+	readonly prebuild?: (playRoot: string) => void | Promise<void>;
+	readonly extraAliases?: Readonly<Record<string, string>>;
+	readonly resolveDedupe?: readonly string[];
+	readonly optimizeDeps?: { readonly include?: readonly string[]; readonly exclude?: readonly string[] };
+	readonly watchIgnored?: readonly string[];
+}
+
 export interface AppDefinition {
 	readonly id: string;
 	readonly label: string;
@@ -2261,6 +2272,10 @@ export interface AppDefinition {
 	readonly controllerId: string;
 	readonly modes: readonly ModeDefinition[];
 	readonly defaultModeId?: string;
+	readonly createController?: (commandBus: CommandBus, notify: () => void) => Controller;
+	readonly registerBodies?: () => void;
+	readonly registerSurfaceHosts?: () => void;
+	readonly devHost?: AppDevHostConfig;
 }
 
 export interface PlatformDefinition<TProductApi = unknown> {
@@ -2764,8 +2779,11 @@ export class PlatformPluginActivationHost<TProductApi = unknown> {
 //#endregion 🔖PlatformPluginActivationHost
 
 //#region 🔖JackHoverBridge
+import type { AppPointerFocusStore } from "@semio-tech/framework-core";
 import { jackHoverOccurrencesForQuery, jackVarAtOffset, jackVarForBoardNodeId, nodeIdsForJackVar } from "@semio-tech/graph-dsl-core";
-import { jackVariableOccurrences } from "@semio-tech/writer-core";
+import { jackVariableOccurrences } from "@semio-tech/writer-core/internal";
+
+const JACK_POINTER_HOVER_PREFIX = "jack:" as const;
 
 /** 🃏 Shared variable-centric hover/selection bridge between graph canvases and Jack query editors. */
 export class JackHoverBridge {
@@ -2776,6 +2794,57 @@ export class JackHoverBridge {
 	private jackQueryText = "";
 	private fixtureJson = "";
 	private readonly listeners = new Set<() => void>();
+	private pointerFocus: AppPointerFocusStore<string> | null = null;
+	private pointerUnsub: (() => void) | null = null;
+	private syncingPointer = false;
+	private graphSourceId = "graph";
+	private jackSourceId = "jack";
+
+	/** @emoji 🖱️ Mirrors graph/jack hover+selection through {@link AppPointerFocusStore}. */
+	bindPointerFocus(
+		store: AppPointerFocusStore<string>,
+		sourceIds?: { readonly graph?: string; readonly jack?: string },
+	): () => void {
+		this.unbindPointerFocus();
+		this.pointerFocus = store;
+		if (sourceIds?.graph) this.graphSourceId = sourceIds.graph;
+		if (sourceIds?.jack) this.jackSourceId = sourceIds.jack;
+		this.pointerUnsub = store.subscribe(() => {
+			if (this.syncingPointer) return;
+			const snap = store.getSnapshot();
+			this.applyPointerSnapshot(snap.selection, snap.hover, snap.hoverSourceId);
+		});
+		const snap = store.getSnapshot();
+		this.applyPointerSnapshot(snap.selection, snap.hover, snap.hoverSourceId);
+		return () => this.unbindPointerFocus();
+	}
+
+	private unbindPointerFocus(): void {
+		this.pointerUnsub?.();
+		this.pointerUnsub = null;
+		this.pointerFocus = null;
+	}
+
+	private applyPointerSnapshot(selection: readonly string[], hover: string | null, hoverSourceId: string | null): void {
+		const first = selection[0] ?? null;
+		const selectVar = first ? jackVarForBoardNodeId(this.fixtureJson, this.jackQueryText, first) : null;
+		if (selectVar !== this.activeSelectVar) {
+			this.activeSelectVar = selectVar;
+			this.selectEpoch += 1;
+			this.notify();
+		}
+		let hoverVar: string | null = null;
+		if (hover) {
+			if (hover.startsWith(JACK_POINTER_HOVER_PREFIX)) hoverVar = hover.slice(JACK_POINTER_HOVER_PREFIX.length) || null;
+			else if (hoverSourceId === this.jackSourceId) hoverVar = hover;
+			else hoverVar = jackVarForBoardNodeId(this.fixtureJson, this.jackQueryText, hover);
+		}
+		if (hoverVar !== this.activeHoverVar) {
+			this.activeHoverVar = hoverVar;
+			this.hoverEpoch += 1;
+			this.notify();
+		}
+	}
 
 	subscribe(listener: () => void): () => void {
 		this.listeners.add(listener);
@@ -2835,12 +2904,31 @@ export class JackHoverBridge {
 	setGraphHover(nodeId: string | null): void {
 		this.activeHoverVar = nodeId ? jackVarForBoardNodeId(this.fixtureJson, this.jackQueryText, nodeId) : null;
 		this.hoverEpoch += 1;
+		if (this.pointerFocus) {
+			this.syncingPointer = true;
+			try {
+				if (nodeId) this.pointerFocus.setHoverFromSource(this.graphSourceId, nodeId);
+				else this.pointerFocus.clearHoverFromSource(this.graphSourceId);
+			} finally {
+				this.syncingPointer = false;
+			}
+		}
 		this.notify();
 	}
 
 	setJackHover(offset: number | null): void {
 		this.activeHoverVar = jackVarAtOffset(this.jackQueryText, offset);
 		this.hoverEpoch += 1;
+		if (this.pointerFocus) {
+			this.syncingPointer = true;
+			try {
+				const key = this.activeHoverVar ? `${JACK_POINTER_HOVER_PREFIX}${this.activeHoverVar}` : null;
+				if (key) this.pointerFocus.setHoverFromSource(this.jackSourceId, key);
+				else this.pointerFocus.clearHoverFromSource(this.jackSourceId);
+			} finally {
+				this.syncingPointer = false;
+			}
+		}
 		this.notify();
 	}
 
@@ -2848,12 +2936,29 @@ export class JackHoverBridge {
 		const first = nodeIds[0] ?? null;
 		this.activeSelectVar = first ? jackVarForBoardNodeId(this.fixtureJson, this.jackQueryText, first) : null;
 		this.selectEpoch += 1;
+		if (this.pointerFocus) {
+			this.syncingPointer = true;
+			try {
+				this.pointerFocus.setSelection([...nodeIds]);
+			} finally {
+				this.syncingPointer = false;
+			}
+		}
 		this.notify();
 	}
 
 	setJackSelect(range: { start: number; end: number } | null): void {
 		this.activeSelectVar = range ? jackVarAtOffset(this.jackQueryText, range.start) : null;
 		this.selectEpoch += 1;
+		if (this.pointerFocus) {
+			this.syncingPointer = true;
+			try {
+				const ids = this.activeSelectVar ? nodeIdsForJackVar(this.fixtureJson, this.jackQueryText, this.activeSelectVar) : [];
+				this.pointerFocus.setSelection(ids);
+			} finally {
+				this.syncingPointer = false;
+			}
+		}
 		this.notify();
 	}
 }

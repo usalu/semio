@@ -1671,7 +1671,9 @@ dependencies = [
  "infinite_cavas",
  "js-sys",
  "kernel_3d_engine",
+ "mathematical_graph_manifest",
  "mathematical_graph_port_directed_dag",
+ "neural_dag",
  "neural_engine",
  "serde",
  "serde-wasm-bindgen",
@@ -3811,6 +3813,7 @@ dependencies = [
  "infinite_cavas",
  "js-sys",
  "mathematical_core",
+ "mathematical_graph_dsl",
  "mathematical_graph_manifest",
  "mathematical_graph_port_directed",
  "serde",
@@ -4101,6 +4104,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ee6cda3051665f1fb8d9e08fc35c96d5a244fb1be711a03b71118828afc9a873"
 dependencies = [
  "jni-sys 0.3.1",
+]
+
+[[package]]
+name = "neural_dag"
+version = "0.1.0"
+dependencies = [
+ "mathematical_graph_dsl",
+ "mathematical_graph_manifest",
+ "neural_engine",
+ "serde_json",
 ]
 
 [[package]]
@@ -5621,6 +5634,7 @@ dependencies = [
  "imperative_module_core",
  "infinite_cavas",
  "js-sys",
+ "mathematical_graph_manifest",
  "mathematical_graph_port_directed_dag",
  "neural_engine",
  "serde",
@@ -6774,6 +6788,8 @@ dependencies = [
 name = "trinity_jack"
 version = "0.1.0"
 dependencies = [
+ "mathematical_graph_dsl",
+ "mathematical_graph_manifest",
  "serde",
  "serde_json",
  "trinity_ram",
@@ -6783,6 +6799,7 @@ dependencies = [
 name = "trinity_jack_lsp"
 version = "0.1.0"
 dependencies = [
+ "mathematical_graph_dsl",
  "serde",
  "serde_json",
  "trinity_jack",

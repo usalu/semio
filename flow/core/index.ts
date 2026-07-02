@@ -55,11 +55,22 @@ export function createFlowAppVcsHandler() {
 }
 //#endregion 🔖DocumentVcs
 
+export { flowPlayAppDefinition } from "./playground.ts";
+export * from "./playground.ts";
+
 //#region 🔖SExtension
-import { baselineSingleAppPlatformDefinition, type PlatformDefinition } from "@semio-tech/framework-platform-core";
+import type { PlatformDefinition } from "@semio-tech/framework-platform-core";
+import { flowPlayAppDefinition } from "./playground.ts";
 
 /** @emoji 🧩 S program definition for flow. */
 export function buildFlowProgramDefinition(): PlatformDefinition {
-	return baselineSingleAppPlatformDefinition("flow", "Flow", "flow", "Flow", "flow-play");
+	const app = flowPlayAppDefinition;
+	return {
+		id: "flow",
+		name: "Flow",
+		apiVersion: "1",
+		apps: [{ id: "flow", label: app.label, controllerId: app.controllerId, modes: app.modes, defaultModeId: app.defaultModeId }],
+		createPlatformApi: () => ({}),
+	};
 }
 //#endregion 🔖SExtension

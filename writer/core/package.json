@@ -6,13 +6,14 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "./index.ts"
+    ".": "./index.ts",
+    "./internal": "./internal.ts",
+    "./playground": "./playground.ts"
   },
   "scripts": {
     "test": "bun nx run @semio-tech/writer-core:test"
   },
   "dependencies": {
-    "@semio-tech/framework-platform-core": "workspace:*",
     "@semio-tech/vcs-core": "workspace:*",
     "@semio-tech/graph-manifest": "workspace:*"
   },

@@ -9,9 +9,10 @@ use std::hash::{Hash, Hasher};
 use std::sync::OnceLock;
 
 use dag::{
-    computation_node_height, computation_node_width, fit_node_size, image_widget_size, io_widget_height, io_widget_width, normalize_node_display, note_widget_size, preview_widget_size, slider_widget_height, slider_widget_width, stepper_widget_height, stepper_widget_width, would_create_cycle,
+    computation_node_height, computation_node_width, dag_fixture_execution_rows, dag_fixture_to_wire_literal, fit_node_size, image_widget_size, io_widget_height, io_widget_width, normalize_node_display, note_widget_size, preview_widget_size, slider_widget_height, slider_widget_width, stepper_widget_height, stepper_widget_width, would_create_cycle,
     DagFixtureEdge, DagFixture, DagHost, DagLayoutOptions, DagNodeKind, DagNodeSpec, DagPreviewContent, DagStepperField, EdgeRouteStyle, IoPortSpec,
 };
+use mathematical_graph_manifest::{PropertyBag, PropertyValue};
 use neural::{channel_output, cluster_operator_info, Atom, ChannelSpec, Dictionary, EvalChannels, EvalError, Evaluator, NeuralCache, Neuron, OperatorInfo, Synapse, Tree, Value as NeuralValue, CLUSTER_KIND, INPUT_KIND, OUTPUT_KIND};
 use serde::{Deserialize, Serialize};
 
@@ -799,6 +800,75 @@ fn widget_node_size(widget: &Widget, synapses: &[SynapseSpec], kind_infos: &Hash
     }
 }
 
+fn property_bag_from_dictionary(dict: &Dictionary) -> PropertyBag {
+    serde_json::from_value(serde_json::to_value(dict).unwrap_or(serde_json::Value::Null)).unwrap_or_default()
+}
+
+fn widget_operator_kind(widget: &Widget) -> Option<String> {
+    match widget {
+        Widget::Neuron { neuronKind, .. } => Some(neuronKind.clone()),
+        Widget::InputSlider { .. } => Some("core.number".into()),
+        Widget::InputStepper { .. } => Some("core.stepper".into()),
+        Widget::InputNote { .. } => Some("core.text".into()),
+        Widget::InputImage { .. } => Some("core.image".into()),
+        Widget::Variable { .. } => Some("core.variable".into()),
+        Widget::Cluster { .. } => Some(CLUSTER_KIND.into()),
+        _ => None,
+    }
+}
+
+fn widget_properties(widget: &Widget, kind_infos: &HashMap<String, OperatorInfo>) -> PropertyBag {
+    match widget {
+        Widget::Neuron { neuronKind, params, output_ports, .. } => {
+            let mut bag = property_bag_from_dictionary(params);
+            if !output_ports.is_empty() {
+                bag.insert("count".into(), PropertyValue::Number(output_ports.len() as f64));
+            } else if let Some(spec) = kind_infos.get(neuronKind).and_then(|info| info.variadic_output.as_ref()) {
+                bag.insert("count".into(), PropertyValue::Number(spec.min as f64));
+            }
+            bag
+        }
+        Widget::InputSlider { value, .. } => {
+            let mut bag = PropertyBag::new();
+            bag.insert("value".into(), PropertyValue::Number(*value));
+            bag
+        }
+        Widget::InputStepper { schema, fields, .. } => {
+            let effective = effective_stepper_fields(schema, fields);
+            let mut bag = PropertyBag::new();
+            for field in &effective {
+                bag.insert(field.key.clone(), PropertyValue::Number(field.value));
+            }
+            bag
+        }
+        Widget::InputNote { text, .. } => {
+            let mut bag = PropertyBag::new();
+            bag.insert("value".into(), PropertyValue::String(text.clone()));
+            bag
+        }
+        Widget::InputImage { src, .. } => {
+            let mut bag = PropertyBag::new();
+            bag.insert("dataUrl".into(), PropertyValue::String(src.clone()));
+            bag
+        }
+        Widget::Variable { name, schema, .. } => {
+            let mut bag = PropertyBag::new();
+            bag.insert("name".into(), PropertyValue::String(name.clone()));
+            bag.insert("schema".into(), PropertyValue::String(schema.clone()));
+            bag
+        }
+        Widget::Cluster { name, tree, .. } => {
+            let mut bag = PropertyBag::new();
+            bag.insert("name".into(), PropertyValue::String(name.clone()));
+            if let Ok(json) = serde_json::to_string(tree) {
+                bag.insert("clusterTree".into(), PropertyValue::String(json));
+            }
+            bag
+        }
+        _ => PropertyBag::new(),
+    }
+}
+
 fn widget_to_dag_node(widget: &Widget, index: usize, layout: &BTreeMap<String, WidgetLayout>, synapses: &[SynapseSpec], kind_infos: &HashMap<String, OperatorInfo>) -> DagNodeSpec {
     let id = match widget {
         Widget::Neuron { id, .. } | Widget::InputSlider { id, .. } | Widget::InputStepper { id, .. } | Widget::InputNote { id, .. } | Widget::InputImage { id, .. } | Widget::Variable { id, .. } | Widget::OutputPreview { id, .. } | Widget::OutputAction { id, .. } | Widget::Cluster { id, .. } => id.clone(),
@@ -806,26 +876,26 @@ fn widget_to_dag_node(widget: &Widget, index: usize, layout: &BTreeMap<String, W
     let (width, height) = widget_node_size(widget, synapses, kind_infos);
     let (x, y) = layout.get(&id).map(|p| (p.x, p.y)).unwrap_or(((index as f64) * 200.0, 0.0));
     let (name, abbreviation, icon) = widget_display_meta(widget, kind_infos);
-    match widget {
+    let mut node = match widget {
         Widget::Neuron { id: neuron_id, neuronKind, params, input_ports, output_ports, .. } => {
             let (inputs, outputs, variadic_inputs, variadic_outputs) = neuron_io_layout(neuron_id, neuronKind, input_ports, output_ports, params, synapses, kind_infos);
             DagNodeSpec::computation(id, name, abbreviation, icon, inputs, outputs, variadic_inputs, variadic_outputs, x, y, width, height)
         }
         Widget::InputSlider { value, min, max, step, .. } => {
-            DagNodeSpec { id, name, abbreviation, icon, x, y, width, height, kind: DagNodeKind::Slider { min: *min, max: *max, step: *step, value: *value, output: IoPortSpec::named("N", "Num", "number", "Number") } }
+            DagNodeSpec { id, name, abbreviation, icon, x, y, width, height, operator_kind: None, properties: PropertyBag::new(), kind: DagNodeKind::Slider { min: *min, max: *max, step: *step, value: *value, output: IoPortSpec::named("N", "Num", "number", "Number") } }
         }
         Widget::InputStepper { schema, fields, step, .. } => {
             let effective = effective_stepper_fields(schema, fields);
             let dag_fields = effective.iter().map(|f| DagStepperField { key: f.key.clone(), label: f.key.clone(), value: f.value, step: *step }).collect();
             let output = stepper_output_port(schema);
-            DagNodeSpec { id, name, abbreviation, icon, x, y, width, height, kind: DagNodeKind::Stepper { fields: dag_fields, output } }
+            DagNodeSpec { id, name, abbreviation, icon, x, y, width, height, operator_kind: None, properties: PropertyBag::new(), kind: DagNodeKind::Stepper { fields: dag_fields, output } }
         }
-        Widget::InputNote { text, .. } => DagNodeSpec { id, name, abbreviation, icon, x, y, width, height, kind: DagNodeKind::Note { text: text.clone(), output: IoPortSpec::named("T", "Txt", "text", "Text") } },
-        Widget::InputImage { src, .. } => DagNodeSpec { id, name, abbreviation, icon, x, y, width, height, kind: DagNodeKind::Image { src: src.clone(), output: IoPortSpec::named("I", "Img", "image", "Image") } },
+        Widget::InputNote { text, .. } => DagNodeSpec { id, name, abbreviation, icon, x, y, width, height, operator_kind: None, properties: PropertyBag::new(), kind: DagNodeKind::Note { text: text.clone(), output: IoPortSpec::named("T", "Txt", "text", "Text") } },
+        Widget::InputImage { src, .. } => DagNodeSpec { id, name, abbreviation, icon, x, y, width, height, operator_kind: None, properties: PropertyBag::new(), kind: DagNodeKind::Image { src: src.clone(), output: IoPortSpec::named("I", "Img", "image", "Image") } },
         Widget::OutputPreview { preview, expanded, .. } => {
-            DagNodeSpec { id, name, abbreviation, icon, x, y, width, height, kind: DagNodeKind::Preview { content: dag_preview_content_from_dict(preview), expanded: expanded.clone(), input: IoPortSpec::named("", "", "", "PreviewInput") } }
+            DagNodeSpec { id, name, abbreviation, icon, x, y, width, height, operator_kind: None, properties: PropertyBag::new(), kind: DagNodeKind::Preview { content: dag_preview_content_from_dict(preview), expanded: expanded.clone(), input: IoPortSpec::named("", "", "", "PreviewInput") } }
         }
-        Widget::OutputAction { action, .. } => DagNodeSpec { id, name, abbreviation, icon, x, y, width, height, kind: DagNodeKind::Action { label: action.clone(), input: IoPortSpec::named("", "", "", "ActionInput") } },
+        Widget::OutputAction { action, .. } => DagNodeSpec { id, name, abbreviation, icon, x, y, width, height, operator_kind: None, properties: PropertyBag::new(), kind: DagNodeKind::Action { label: action.clone(), input: IoPortSpec::named("", "", "", "ActionInput") } },
         Widget::Variable { name, schema, .. } => {
             let (inputs, outputs) = variable_io_ports(name, schema);
             DagNodeSpec::computation(id, name.clone(), abbreviation, icon, inputs, outputs, false, false, x, y, width, height)
@@ -834,7 +904,10 @@ fn widget_to_dag_node(widget: &Widget, index: usize, layout: &BTreeMap<String, W
             let (inputs, outputs) = cluster_io_layout(cluster_id, cluster_name, tree, synapses);
             DagNodeSpec::cluster(id, name, abbreviation, icon, inputs, outputs, x, y, width, height)
         }
-    }
+    };
+    node.operator_kind = widget_operator_kind(widget);
+    node.properties = widget_properties(widget, kind_infos);
+    node
 }
 
 fn parse_port_endpoint(endpoint: &str, default_port: &str) -> (String, String) {
@@ -2256,7 +2329,14 @@ impl FlowHost {
     }
 
     fn build_tree(&self) -> Tree {
-        tree_from_fixture(&self.fixture, &self.kind_infos)
+        let fixture = self.build_dag_fixture_v1();
+        let (nodes, edges) = dag_fixture_execution_rows(&fixture);
+        neural_dag::tree_from_dag(&nodes, &edges)
+    }
+
+    /// 📝 Renders the compiled DAG fixture as wire-literal text.
+    pub fn compiled_wire_literal(&self) -> String {
+        dag_fixture_to_wire_literal(&self.build_dag_fixture_v1())
     }
 
     fn build_seeds(&self) -> HashMap<String, Dictionary> {
@@ -2519,6 +2599,7 @@ impl FlowHost {
                 source: format!("{}:{}", syn.from, syn.from_port),
                 target: format!("{}:{}", syn.to, syn.to_port),
                 route_style: EdgeRouteStyle::default(),
+                properties: PropertyBag::new(),
             })
             .collect();
         DagFixture { schema: "dag.fixture".into(), camera: dag::DagCamera { x: self.fixture.camera.x, y: self.fixture.camera.y, zoom: self.fixture.camera.zoom }, nodes, edges }
@@ -3181,6 +3262,11 @@ impl FlowSession {
     #[wasm_bindgen(js_name = evaluateSync)]
     pub fn evaluate_sync(&self) -> Result<String, JsValue> {
         self.state.borrow_mut().host.evaluate().map_err(|e| JsValue::from_str(&e))
+    }
+
+    #[wasm_bindgen(js_name = compiledWireLiteral)]
+    pub fn compiled_wire_literal(&self) -> String {
+        self.state.borrow().host.compiled_wire_literal()
     }
 
     #[wasm_bindgen(js_name = applyEvalOutputsJson)]
@@ -5136,6 +5222,14 @@ mod tests {
         let mesh: serde_json::Value = serde_json::from_str(&flow_module_brep::tessellate_geometry_json(handle, 0.05)).expect("solid mesh json");
         assert!(mesh.get("error").is_none(), "solid tessellation: {mesh}");
         assert!(mesh.get("position").and_then(serde_json::Value::as_array).is_some_and(|positions| !positions.is_empty()));
+    }
+
+    #[test]
+    fn compiled_wire_literal_includes_operator_kinds() {
+        let host = host_with_test_bridge();
+        let text = host.compiled_wire_literal();
+        assert!(text.contains("core.number"));
+        assert!(text.contains("math.add"));
     }
 }
 // #endregion 🔖Tests

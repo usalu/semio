@@ -135,6 +135,8 @@ export function tessellationFromWasm(raw: {
 	faceIds?: number[];
 	vertexIds?: number[];
 	edgeIds?: number[];
+	edgeUvs?: number[];
+	edgeIsSeam?: number[];
 	uvs?: number[];
 }): LowpolyTessellation {
 	return {
@@ -146,6 +148,8 @@ export function tessellationFromWasm(raw: {
 		vertexIds: toUint32Array(raw.vertexIds),
 		edgeIds: toUint32Array(raw.edgeIds),
 		uvs: new Float32Array(raw.uvs ?? []),
+		edgeUvs: new Float32Array(raw.edgeUvs ?? []),
+		edgeIsSeam: new Uint8Array(raw.edgeIsSeam ?? []),
 	};
 }
 
@@ -277,6 +281,26 @@ function buildEdgeOverlayGeometry(tessellation: LowpolyTessellation, ids: Readon
 	return geometry;
 }
 
+function buildVertexPickGeometry(tessellation: LowpolyTessellation): THREE.BufferGeometry | null {
+	if (!tessellation.positions.length) return null;
+	const positions: number[] = [];
+	const emitted = new Set<number>();
+	for (let index = 0; index < tessellation.vertexIds.length; index += 1) {
+		const id = tessellation.vertexIds[index]!;
+		if (emitted.has(id)) continue;
+		emitted.add(id);
+		positions.push(
+			tessellation.positions[index * 3]!,
+			tessellation.positions[index * 3 + 1]!,
+			tessellation.positions[index * 3 + 2]!,
+		);
+	}
+	if (!positions.length) return null;
+	const geometry = new THREE.BufferGeometry();
+	geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+	return geometry;
+}
+
 function buildVertexOverlayGeometry(tessellation: LowpolyTessellation, ids: ReadonlySet<number>): THREE.BufferGeometry | null {
 	if (!ids.size) return null;
 	const positions: number[] = [];
@@ -374,6 +398,8 @@ export interface LowpolyCanvasProps {
 	readonly onSceneChange?: (objects: readonly LowpolySceneObject[]) => void;
 	readonly onPaintStrokeBegin?: () => void;
 	readonly onPaintStrokeEnd?: () => void;
+	readonly paintTextureRevision?: number;
+	readonly onPaintTextureRefresh?: () => void;
 }
 
 function LowpolySceneInvalidator({ token }: { readonly token: number }): null {
@@ -408,6 +434,8 @@ function LowpolyCameraBridge({
 function LowpolyMeshLayer({
 	object,
 	selectedIds,
+	previewAddIds,
+	previewRemoveIds,
 	hoveredTarget,
 	selectionMode,
 	meshColor,
@@ -422,6 +450,8 @@ function LowpolyMeshLayer({
 }: {
 	readonly object: LowpolySceneObject;
 	readonly selectedIds: readonly number[];
+	readonly previewAddIds: readonly number[];
+	readonly previewRemoveIds: readonly number[];
 	readonly hoveredTarget: LowpolyTarget | null;
 	readonly selectionMode: LowpolySelectionMode;
 	readonly meshColor: string;
@@ -436,39 +466,78 @@ function LowpolyMeshLayer({
 }): React.ReactElement | null {
 	const tessellation = object.tessellation;
 	const { surface, edges } = reactHostPort.useMemo(() => buildMeshGeometry(tessellation), [tessellation]);
-	const isObjectSelected = selectionMode === "object" && selectedIds.includes(object.index);
+	const isObjectSelected = selectionMode === "object" && (selectedIds.includes(object.index) || previewAddIds.includes(object.index)) && !previewRemoveIds.includes(object.index);
 	const hoveredId = hoveredTarget?.objectId === object.id && hoveredTarget.mode === selectionMode ? hoveredTarget.id : null;
-	const isObjectHovered = selectionMode === "object" && hoveredId === object.index;
-	const selectedSet = reactHostPort.useMemo(() => new Set(selectedIds), [selectedIds]);
+	const isObjectHovered = selectionMode === "object" && (hoveredId === object.index || previewRemoveIds.includes(object.index));
+	const selectedSet = reactHostPort.useMemo(() => {
+		const next = new Set(selectedIds);
+		for (const id of previewAddIds) next.add(id);
+		for (const id of previewRemoveIds) next.delete(id);
+		return next;
+	}, [previewAddIds, previewRemoveIds, selectedIds]);
 	const selectedFaceGeometry = reactHostPort.useMemo(
 		() => selectionMode === "face" ? buildFaceOverlayGeometry(tessellation, selectedSet) : null,
 		[selectedSet, selectionMode, tessellation],
 	);
 	const hoveredFaceGeometry = reactHostPort.useMemo(
-		() => selectionMode === "face" && hoveredId != null && !selectedSet.has(hoveredId)
-			? buildFaceOverlayGeometry(tessellation, new Set([hoveredId]))
+		() => selectionMode === "face"
+			? buildFaceOverlayGeometry(
+				tessellation,
+				new Set([
+					...(hoveredId != null && !selectedSet.has(hoveredId) ? [hoveredId] : []),
+					...previewRemoveIds.filter((id) => !selectedSet.has(id)),
+				]),
+			)
 			: null,
-		[hoveredId, selectedSet, selectionMode, tessellation],
+		[hoveredId, previewRemoveIds, selectedSet, selectionMode, tessellation],
 	);
 	const selectedEdgeGeometry = reactHostPort.useMemo(
 		() => selectionMode === "edge" ? buildEdgeOverlayGeometry(tessellation, selectedSet) : null,
 		[selectedSet, selectionMode, tessellation],
 	);
 	const hoveredEdgeGeometry = reactHostPort.useMemo(
-		() => selectionMode === "edge" && hoveredId != null && !selectedSet.has(hoveredId)
-			? buildEdgeOverlayGeometry(tessellation, new Set([hoveredId]))
+		() => selectionMode === "edge"
+			? buildEdgeOverlayGeometry(
+				tessellation,
+				new Set([
+					...(hoveredId != null && !selectedSet.has(hoveredId) ? [hoveredId] : []),
+					...previewRemoveIds.filter((id) => !selectedSet.has(id)),
+				]),
+			)
 			: null,
-		[hoveredId, selectedSet, selectionMode, tessellation],
+		[hoveredId, previewRemoveIds, selectedSet, selectionMode, tessellation],
 	);
 	const selectedVertexGeometry = reactHostPort.useMemo(
 		() => selectionMode === "vertex" ? buildVertexOverlayGeometry(tessellation, selectedSet) : null,
 		[selectedSet, selectionMode, tessellation],
 	);
+	const vertexPickGeometry = reactHostPort.useMemo(
+		() => selectionMode === "vertex" ? buildVertexPickGeometry(tessellation) : null,
+		[selectionMode, tessellation],
+	);
+	const vertexPickIds = reactHostPort.useMemo(() => {
+		if (selectionMode !== "vertex") return [] as number[];
+		const ids: number[] = [];
+		const emitted = new Set<number>();
+		for (let index = 0; index < tessellation.vertexIds.length; index += 1) {
+			const id = tessellation.vertexIds[index]!;
+			if (emitted.has(id)) continue;
+			emitted.add(id);
+			ids.push(id);
+		}
+		return ids;
+	}, [selectionMode, tessellation]);
 	const hoveredVertexGeometry = reactHostPort.useMemo(
-		() => selectionMode === "vertex" && hoveredId != null && !selectedSet.has(hoveredId)
-			? buildVertexOverlayGeometry(tessellation, new Set([hoveredId]))
+		() => selectionMode === "vertex"
+			? buildVertexOverlayGeometry(
+				tessellation,
+				new Set([
+					...(hoveredId != null && !selectedSet.has(hoveredId) ? [hoveredId] : []),
+					...previewRemoveIds.filter((id) => !selectedSet.has(id)),
+				]),
+			)
 			: null,
-		[hoveredId, selectedSet, selectionMode, tessellation],
+		[hoveredId, previewRemoveIds, selectedSet, selectionMode, tessellation],
 	);
 	if (!surface) return null;
 
@@ -587,27 +656,25 @@ function LowpolyMeshLayer({
 					<lineBasicMaterial color={hoverColor} linewidth={3} />
 				</lineSegments>
 			) : null}
-			{selectionMode === "vertex" ? (
+			{selectionMode === "vertex" && vertexPickGeometry ? (
 				<points
+					geometry={vertexPickGeometry}
 					onClick={(event) => {
 						if (!pickEnabled) return;
 						const idx = (event as unknown as { index?: number }).index;
 						if (typeof idx !== "number") return;
-						const vertexId = tessellation.vertexIds[idx];
+						const vertexId = vertexPickIds[idx];
 						if (vertexId == null) return;
 						handlePick(vertexId, event);
 					}}
 					onPointerMove={(event) => {
 						if (!pickEnabled) return;
 						const index = (event as unknown as { index?: number }).index;
-						const vertexId = typeof index === "number" ? tessellation.vertexIds[index] : undefined;
+						const vertexId = typeof index === "number" ? vertexPickIds[index] : undefined;
 						if (vertexId != null) handleHover(vertexId, event);
 					}}
 					onPointerOut={() => onHover(null)}
 				>
-					<bufferGeometry>
-						<bufferAttribute attach="attributes-position" args={[tessellation.positions, 3]} />
-					</bufferGeometry>
 					<pointsMaterial color={edgeColor} size={5} sizeAttenuation={false} />
 				</points>
 			) : null}
@@ -658,6 +725,7 @@ function LowpolyMarqueeBridge({
 	sizeRef,
 	onCommit,
 	onMarqueeOverlay,
+	onLivePreview,
 }: {
 	readonly containerRef: React.RefObject<HTMLDivElement | null>;
 	readonly sceneObjects: readonly LowpolySceneObject[];
@@ -667,8 +735,10 @@ function LowpolyMarqueeBridge({
 	readonly sizeRef: React.RefObject<{ width: number; height: number }>;
 	readonly onCommit: (ids: readonly number[], mode: SelectionMergeMode) => void;
 	readonly onMarqueeOverlay: (overlay: { coverage: SelectionMarqueeCoverage; rect: { x: number; y: number; width: number; height: number } } | null) => void;
+	readonly onLivePreview: (snapshot: { addIds: readonly number[]; removeIds: readonly number[] }) => void;
 }): null {
 	const gl = sceneHostPort.fiber.useThree((state) => state.gl);
+	const invalidate = sceneHostPort.fiber.useThree((state) => state.invalidate);
 	const marqueeRef = reactHostPort.useRef<{ tracking: boolean; active: boolean; start: { x: number; y: number }; initial: number[] }>({
 		tracking: false,
 		active: false,
@@ -783,7 +853,15 @@ function LowpolyMarqueeBridge({
 				coverage,
 				rect: { x: Math.min(start.x, point.x), y: Math.min(start.y, point.y), width: Math.abs(point.x - start.x), height: Math.abs(point.y - start.y) },
 			});
-			void resolveHits(start, point, crossing);
+			const mode = marqueeModeFromModifiers(event);
+			const hits = resolveHits(start, point, crossing);
+			const merged = selectionMergeIds(mode, marqueeRef.current.initial, hits);
+			const removed = marqueeRef.current.initial.filter((id) => !merged.includes(id));
+			onLivePreview({
+				addIds: merged.filter((id) => !marqueeRef.current.initial.includes(id)),
+				removeIds: removed,
+			});
+			invalidate();
 		};
 		const onPointerUp = (event: PointerEvent) => {
 			if (!marqueeRef.current.tracking) return;
@@ -797,6 +875,7 @@ function LowpolyMarqueeBridge({
 			}
 			marqueeRef.current = { tracking: false, active: false, start: { x: 0, y: 0 }, initial: [] };
 			onMarqueeOverlay(null);
+			onLivePreview({ addIds: [], removeIds: [] });
 		};
 		canvas.addEventListener("pointerdown", onPointerDown, { capture: true });
 		window.addEventListener("pointermove", onPointerMove);
@@ -806,7 +885,7 @@ function LowpolyMarqueeBridge({
 			window.removeEventListener("pointermove", onPointerMove);
 			window.removeEventListener("pointerup", onPointerUp);
 		};
-	}, [clientToLocal, gl.domElement, onCommit, onMarqueeOverlay, resolveHits]);
+	}, [clientToLocal, gl.domElement, invalidate, onCommit, onLivePreview, onMarqueeOverlay, resolveHits]);
 
 	return null;
 }
@@ -823,12 +902,13 @@ export function LowpolyCanvas(props: LowpolyCanvasProps): React.ReactElement {
 		zoom: 1,
 	});
 	const [canvasBackground, setCanvasBackground] = reactHostPort.useState(() => resolveSemanticColorHex("--canvas", "light-8-9"));
-	const [meshColor, setMeshColor] = reactHostPort.useState(() => resolveSemanticColorHex("--accent-8"));
-	const [edgeColor, setEdgeColor] = reactHostPort.useState(() => resolveSemanticColorHex("--dark-4"));
-	const [selectColor, setSelectColor] = reactHostPort.useState(() => resolveSemanticColorHex("--primary-9"));
-	const [hoverColor, setHoverColor] = reactHostPort.useState(() => resolveSemanticColorHex("--primary-6"));
+	const [meshColor, setMeshColor] = reactHostPort.useState(() => resolveSemanticColorHex("--panel"));
+	const [edgeColor, setEdgeColor] = reactHostPort.useState(() => resolveSemanticColorHex("--border-normal-color"));
+	const [selectColor, setSelectColor] = reactHostPort.useState(() => resolveSemanticColorHex("--active-base"));
+	const [hoverColor, setHoverColor] = reactHostPort.useState(() => resolveSemanticColorHex("--hover-base"));
 	const gumballTargetRef = reactHostPort.useRef<THREE.Object3D>(new THREE.Object3D());
 	const [marquee, setMarquee] = reactHostPort.useState<{ coverage: SelectionMarqueeCoverage; rect: { x: number; y: number; width: number; height: number } } | null>(null);
+	const [previewSelection, setPreviewSelection] = reactHostPort.useState<{ addIds: readonly number[]; removeIds: readonly number[] }>({ addIds: [], removeIds: [] });
 	const [gumballDragActive, setGumballDragActive] = reactHostPort.useState(false);
 	const paintTexturesRef = reactHostPort.useRef<Map<string, THREE.DataTexture>>(new Map());
 	const strokeActiveRef = reactHostPort.useRef(false);
@@ -857,8 +937,9 @@ export function LowpolyCanvas(props: LowpolyCanvasProps): React.ReactElement {
 				texture.needsUpdate = true;
 			}
 			setPaintTextureTick((tick) => tick + 1);
+			props.onPaintTextureRefresh?.();
 		},
-		[props.session],
+		[props.onPaintTextureRefresh, props.session],
 	);
 
 	reactHostPort.useEffect(() => {
@@ -866,10 +947,10 @@ export function LowpolyCanvas(props: LowpolyCanvasProps): React.ReactElement {
 		const sync = () => {
 			clearColorResolveCache();
 			setCanvasBackground(resolveSemanticColorHex("--canvas", "light-8-9"));
-			setMeshColor(resolveSemanticColorHex("--accent-8"));
-			setEdgeColor(resolveSemanticColorHex("--dark-4"));
-			setSelectColor(resolveSemanticColorHex("--primary-9"));
-			setHoverColor(resolveSemanticColorHex("--primary-6"));
+			setMeshColor(resolveSemanticColorHex("--panel"));
+			setEdgeColor(resolveSemanticColorHex("--border-normal-color"));
+			setSelectColor(resolveSemanticColorHex("--active-base"));
+			setHoverColor(resolveSemanticColorHex("--hover-base"));
 		};
 		sync();
 		const observer = new MutationObserver(sync);
@@ -906,9 +987,11 @@ export function LowpolyCanvas(props: LowpolyCanvasProps): React.ReactElement {
 	const activeObject = props.sceneObjects.find((object) => object.active) ?? props.sceneObjects[0] ?? null;
 
 	reactHostPort.useEffect(() => {
-		if (interactionMode !== "paint" || !props.session || !activeObject) return;
-		refreshPaintTexture(activeObject.id);
-	}, [activeObject?.id, interactionMode, paintTextureTick, props.session, refreshPaintTexture]);
+		if (interactionMode !== "paint" || !props.session) return;
+		for (const object of props.sceneObjects) {
+			refreshPaintTexture(object.id);
+		}
+	}, [interactionMode, props.paintTextureRevision, props.sceneObjects, props.session, refreshPaintTexture]);
 
 	const gumballCentroid = reactHostPort.useMemo(() => {
 		if (props.selectionMode === "object") {
@@ -1032,6 +1115,7 @@ export function LowpolyCanvas(props: LowpolyCanvasProps): React.ReactElement {
 	}, []);
 
 	const paintHandler = interactionMode === "paint" && activeObject ? applyPaintAt : undefined;
+	const marqueeActive = marquee != null;
 
 	return (
 		<div
@@ -1081,6 +1165,7 @@ export function LowpolyCanvas(props: LowpolyCanvasProps): React.ReactElement {
 							sizeRef={sizeRef}
 							onCommit={(ids, mode) => commitSelection(ids, mode)}
 							onMarqueeOverlay={setMarquee}
+							onLivePreview={setPreviewSelection}
 						/>
 						<LowpolySceneInvalidator token={props.sceneObjects.length} />
 						<ambientLight intensity={0.45} />
@@ -1091,14 +1176,16 @@ export function LowpolyCanvas(props: LowpolyCanvasProps): React.ReactElement {
 								<LowpolyMeshLayer
 									object={object}
 									selectedIds={props.selectedIds}
+									previewAddIds={previewSelection.addIds}
+									previewRemoveIds={previewSelection.removeIds}
 									hoveredTarget={props.hoveredTarget ?? null}
 									selectionMode={props.selectionMode}
 									meshColor={meshColor}
 									edgeColor={edgeColor}
 									selectColor={selectColor}
 									hoverColor={hoverColor}
-									paintTexture={interactionMode === "paint" && object.active ? paintTexturesRef.current.get(object.id) ?? null : null}
-									pickEnabled={!gumballDragActive}
+									paintTexture={interactionMode === "paint" ? paintTexturesRef.current.get(object.id) ?? null : null}
+									pickEnabled={!gumballDragActive && !marqueeActive}
 									onPick={onPick}
 									onHover={(target) => props.onHoverChange?.(target)}
 									onPaintAt={object.active ? paintHandler : undefined}
@@ -1132,9 +1219,12 @@ export interface LowpolyUvCanvasProps {
 	readonly paintBrushSize?: number;
 	readonly paintBrushOpacity?: number;
 	readonly paintBrushHardness?: number;
+	readonly paintTextureRevision?: number;
 	readonly className?: string;
 	readonly onFixtureChange?: (json: string) => void;
+	readonly onPaintStrokeBegin?: () => void;
 	readonly onPaintStrokeEnd?: () => void;
+	readonly onPaintTextureRefresh?: () => void;
 }
 
 export function LowpolyUvCanvas(props: LowpolyUvCanvasProps): React.ReactElement {
@@ -1157,13 +1247,37 @@ export function LowpolyUvCanvas(props: LowpolyUvCanvasProps): React.ReactElement
 		if (!ctx) return;
 		const width = canvas.width;
 		const height = canvas.height;
+		const checkerA = resolveSemanticColorHex("--panel");
+		const checkerB = resolveSemanticColorHex("--hover-base");
+		const edgeStroke = resolveSemanticColorHex("--border-normal-color");
+		const seamStroke = resolveSemanticColorHex("--accent-secondary");
+		const unitBorder = resolveSemanticColorHex("--active-base");
 		ctx.setTransform(1, 0, 0, 1, 0, 0);
 		ctx.clearRect(0, 0, width, height);
-		ctx.fillStyle = resolveSemanticColorHex("--canvas", "light-8-9");
-		ctx.fillRect(0, 0, width, height);
 		ctx.save();
 		ctx.translate(pan.x, pan.y);
 		ctx.scale(zoom, zoom);
+		const cell = Math.max(8, Math.round(width / 16));
+		for (let row = 0; row < Math.ceil(height / cell); row += 1) {
+			for (let col = 0; col < Math.ceil(width / cell); col += 1) {
+				ctx.fillStyle = (row + col) % 2 === 0 ? checkerA : checkerB;
+				ctx.fillRect(col * cell, row * cell, cell, cell);
+			}
+		}
+		ctx.strokeStyle = edgeStroke;
+		ctx.lineWidth = 1 / zoom;
+		for (let x = 0; x <= width; x += cell) {
+			ctx.beginPath();
+			ctx.moveTo(x, 0);
+			ctx.lineTo(x, height);
+			ctx.stroke();
+		}
+		for (let y = 0; y <= height; y += cell) {
+			ctx.beginPath();
+			ctx.moveTo(0, y);
+			ctx.lineTo(width, y);
+			ctx.stroke();
+		}
 		const pixels = props.session.compositePaintTexture(object.id);
 		const image = new ImageData(new Uint8ClampedArray(pixels), 1024, 1024);
 		const offscreen = document.createElement("canvas");
@@ -1172,32 +1286,31 @@ export function LowpolyUvCanvas(props: LowpolyUvCanvasProps): React.ReactElement
 		offscreen.getContext("2d")?.putImageData(image, 0, 0);
 		ctx.drawImage(offscreen, 0, 0, width, height);
 		const tess = object.tessellation;
-		ctx.strokeStyle = resolveSemanticColorHex("--dark-6");
-		ctx.lineWidth = 1 / zoom;
-		for (let tri = 0; tri < tess.indices.length; tri += 3) {
-			const i0 = tess.indices[tri]!;
-			const i1 = tess.indices[tri + 1]!;
-			const i2 = tess.indices[tri + 2]!;
-			if (tess.uvs.length < 6) continue;
-			const u0 = tess.uvs[i0 * 2]! * width;
-			const v0 = (1 - tess.uvs[i0 * 2 + 1]!) * height;
-			const u1 = tess.uvs[i1 * 2]! * width;
-			const v1 = (1 - tess.uvs[i1 * 2 + 1]!) * height;
-			const u2 = tess.uvs[i2 * 2]! * width;
-			const v2 = (1 - tess.uvs[i2 * 2 + 1]!) * height;
-			ctx.beginPath();
-			ctx.moveTo(u0, v0);
-			ctx.lineTo(u1, v1);
-			ctx.lineTo(u2, v2);
-			ctx.closePath();
-			ctx.stroke();
+		if (tess.edgeUvs.length >= 4 && tess.edgeIds.length > 0) {
+			for (let edge = 0; edge < tess.edgeIds.length; edge += 1) {
+				const u0 = tess.edgeUvs[edge * 4]! * width;
+				const v0 = (1 - tess.edgeUvs[edge * 4 + 1]!) * height;
+				const u1 = tess.edgeUvs[edge * 4 + 2]! * width;
+				const v1 = (1 - tess.edgeUvs[edge * 4 + 3]!) * height;
+				const isSeam = tess.edgeIsSeam[edge] === 1;
+				ctx.strokeStyle = isSeam ? seamStroke : edgeStroke;
+				ctx.setLineDash(isSeam ? [6 / zoom, 4 / zoom] : []);
+				ctx.beginPath();
+				ctx.moveTo(u0, v0);
+				ctx.lineTo(u1, v1);
+				ctx.stroke();
+			}
 		}
+		ctx.setLineDash([]);
+		ctx.strokeStyle = unitBorder;
+		ctx.lineWidth = 2 / zoom;
+		ctx.strokeRect(0, 0, width, height);
 		ctx.restore();
 	}, [pan.x, pan.y, props.sceneObject, props.session, zoom]);
 
 	reactHostPort.useEffect(() => {
 		draw();
-	}, [draw, props.sceneObject, props.session]);
+	}, [draw, props.paintTextureRevision, props.sceneObject, props.session]);
 
 	const paintAt = reactHostPort.useCallback(
 		(clientX: number, clientY: number) => {
@@ -1216,10 +1329,10 @@ export function LowpolyUvCanvas(props: LowpolyUvCanvasProps): React.ReactElement
 				props.session.fillBucket(object.id, paintLayerIndex, x, y, r, g, b, a);
 				props.onPaintStrokeEnd?.();
 			}
-			props.onFixtureChange?.(props.session.fixtureJson());
 			draw();
+			props.onPaintTextureRefresh?.();
 		},
-		[draw, paintBrushHardness, paintBrushOpacity, paintBrushSize, paintColor, paintLayerIndex, paintTool, pan.x, pan.y, props, zoom],
+		[draw, paintBrushHardness, paintBrushOpacity, paintBrushSize, paintColor, paintLayerIndex, paintTool, props.onPaintStrokeEnd, props.onPaintTextureRefresh, props.sceneObject, props.session, pan.x, pan.y, zoom],
 	);
 
 	reactHostPort.useEffect(() => {
@@ -1233,6 +1346,7 @@ export function LowpolyUvCanvas(props: LowpolyUvCanvasProps): React.ReactElement
 				return;
 			}
 			dragRef.current.painting = true;
+			props.onPaintStrokeBegin?.();
 			paintAt(event.clientX, event.clientY);
 		};
 		const onPointerMove = (event: PointerEvent) => {
@@ -1266,7 +1380,7 @@ export function LowpolyUvCanvas(props: LowpolyUvCanvasProps): React.ReactElement
 			window.removeEventListener("pointerup", onPointerUp);
 			canvas.removeEventListener("wheel", onWheel);
 		};
-	}, [paintAt, props.onPaintStrokeEnd]);
+	}, [paintAt, props.onPaintStrokeBegin, props.onPaintStrokeEnd]);
 
 	reactHostPort.useEffect(() => {
 		const canvas = canvasRef.current;
@@ -1301,10 +1415,14 @@ if (import.meta.vitest) {
 				faceIds: [0],
 				vertexIds: [0, 1],
 				edgeIds: [0],
+				edgeUvs: [0, 0, 1, 0],
+				edgeIsSeam: [1],
 				uvs: [0, 0, 1, 0],
 			});
 			expect(tess.positions.length).toBe(6);
 			expect(tess.faceIds.length).toBe(1);
+			expect(tess.edgeUvs.length).toBe(4);
+			expect(tess.edgeIsSeam[0]).toBe(1);
 		});
 	});
 	describe("safeLoadLowpolyFixture", () => {

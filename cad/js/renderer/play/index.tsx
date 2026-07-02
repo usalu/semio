@@ -4335,10 +4335,16 @@ if (import.meta.vitest) {
 //#endregion 🧪Tests
 
 //#region 🔖SExtension
-import { baselineSingleAppPlatformDefinition, type PlatformDefinition } from "@semio-tech/framework-platform-core";
+import type { PlatformDefinition } from "@semio-tech/framework-platform-core";
 
 /** @emoji 🧩 S program definition for cad. */
 export function buildCadProgramDefinition(): PlatformDefinition {
-	return baselineSingleAppPlatformDefinition("cad", "CAD", "cad", "CAD", CAD_PLAY_CONTROLLER_ID);
+	return {
+		id: "cad",
+		name: "CAD",
+		apiVersion: "1",
+		apps: [{ id: "cad", label: "CAD", controllerId: CAD_PLAY_CONTROLLER_ID, modes: [{ id: "edit", label: "Edit" }], defaultModeId: "edit" }],
+		createPlatformApi: () => ({}),
+	};
 }
 //#endregion 🔖SExtension

@@ -21,6 +21,7 @@ members = [
     "mathematical/graph/port/directed/dag",
     "mathematical/graph/port/undirected",
     "neural/engine",
+    "neural/dag",
     "imperative/engine",
     "imperative/module/core",
     "imperative/module/text",

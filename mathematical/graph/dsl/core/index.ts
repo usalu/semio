@@ -1,5 +1,5 @@
 /** 🃏 Jack query execution for board-style graph fixtures in TypeScript. */
-import { jackSymbolAtOffset, jackVariableOccurrences } from "@semio-tech/writer-core";
+import { jackSymbolAtOffset, jackVariableOccurrences } from "@semio-tech/writer-core/internal";
 
 export type JackResultKind = "table" | "graph";
 
@@ -139,11 +139,134 @@ export function jackVarForBoardNodeId(fixtureJson: string, query: string, nodeId
   return null;
 }
 
-export function runJackOnMediaGraph(graph: { readonly nodes: readonly { readonly id: string; readonly kind: string; readonly label?: string }[] }, query: string): JackRunResult {
-  const fixtureJson = JSON.stringify({ nodes: graph.nodes.map((node) => ({ id: node.id, kind: node.kind, text: node.label ?? node.id, nodeKind: node.kind })), edges: [] });
+export function runJackOnMediaGraph(
+  graph: { readonly nodes: readonly { readonly id: string; readonly instanceId: string }[] },
+  instances: readonly { readonly id: string; readonly programId: string }[],
+  query: string,
+): JackRunResult {
+  const instanceById = new Map(instances.map((row) => [row.id, row]));
+  const fixtureJson = JSON.stringify({
+    nodes: graph.nodes.map((node) => {
+      const instance = instanceById.get(node.instanceId);
+      const kind = instance?.programId ?? "app";
+      return { id: node.id, kind, nodeKind: kind, text: instance?.programId ?? node.id };
+    }),
+    edges: [],
+  });
   return runJackOnBoardFixture(fixtureJson, query);
 }
 
+export function mediaGraphFixtureJson(
+  graph: { readonly nodes: readonly { readonly id: string; readonly instanceId: string }[] },
+  instances: readonly { readonly id: string; readonly programId: string }[],
+): string {
+  const instanceById = new Map(instances.map((row) => [row.id, row]));
+  return JSON.stringify({
+    nodes: graph.nodes.map((node) => {
+      const instance = instanceById.get(node.instanceId);
+      const kind = instance?.programId ?? "app";
+      return { id: node.id, kind, nodeKind: kind, text: instance?.programId ?? node.id };
+    }),
+    edges: [],
+  });
+}
+
 export function runJackOnPuzzle3dFixture(fixtureJson: string, query: string): JackRunResult {
+  const raw = JSON.parse(fixtureJson) as Record<string, unknown>;
+  if (!Array.isArray(raw.nodes) && Array.isArray(raw.objects)) {
+    const objects = raw.objects as Record<string, unknown>[];
+    const nodes = objects
+      .map((obj) => {
+        const id = typeof obj.id === "string" ? obj.id : null;
+        if (!id) return null;
+        const kind = (typeof obj.objectKind === "string" ? obj.objectKind : typeof obj.kind === "string" ? obj.kind : "Object") as string;
+        const name = (typeof obj.name === "string" ? obj.name : typeof obj.label === "string" ? obj.label : id) as string;
+        return { id, nodeKind: kind, text: name };
+      })
+      .filter((row): row is { id: string; nodeKind: string; text: string } => Boolean(row));
+    return runJackOnBoardFixture(JSON.stringify({ ...raw, nodes }), query);
+  }
   return runJackOnBoardFixture(fixtureJson, query);
+}
+
+function formatWirePropertyValue(value: unknown): string {
+  if (value == null) return "null";
+  if (typeof value === "string") return `'${value.replace(/'/g, "\\'")}'`;
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  if (Array.isArray(value)) return `[${value.map(formatWirePropertyValue).join(", ")}]`;
+  if (typeof value === "object") {
+    const entries = Object.entries(value as Record<string, unknown>).map(([key, row]) => `${key}: ${formatWirePropertyValue(row)}`);
+    return `{${entries.join(", ")}}`;
+  }
+  return "null";
+}
+
+function formatWireProperties(properties: Readonly<Record<string, unknown>> | undefined): string {
+  if (!properties || Object.keys(properties).length === 0) return "";
+  const inner = Object.entries(properties).map(([key, value]) => `${key}: ${formatWirePropertyValue(value)}`).join(", ");
+  return `{${inner}}`;
+}
+
+function splitWireEndpoint(endpoint: string): { readonly node: string; readonly port: string } {
+  if (endpoint.includes(":")) {
+    const [node, port] = endpoint.split(":");
+    return { node: node ?? endpoint, port: port ?? "out" };
+  }
+  if (endpoint.includes(".")) {
+    const [node, port] = endpoint.split(".");
+    return { node: node ?? endpoint, port: port ?? "out" };
+  }
+  if (endpoint.includes("@")) {
+    const [node, port] = endpoint.split("@");
+    return { node: node ?? endpoint, port: port ?? "out" };
+  }
+  return { node: endpoint, port: "out" };
+}
+
+function dagNodeKind(row: Record<string, unknown>): string {
+  return (
+    readString(row.operatorKind) ??
+    readString(row.operator_kind) ??
+    readString(row.programId) ??
+    readString(row.nodeKind) ??
+    readString(row.kind) ??
+    "node"
+  );
+}
+
+/** @emoji 🔌 Render a DAG fixture JSON document as wire-literal compiled text. */
+export function wireLiteralFromDagFixtureJson(fixtureJson: string): string {
+  const raw = JSON.parse(fixtureJson) as Record<string, unknown>;
+  const nodeRows = Array.isArray(raw.nodes) ? raw.nodes : [];
+  const edgeRows = Array.isArray(raw.edges) ? raw.edges : [];
+  const nodes = nodeRows
+    .filter((row): row is Record<string, unknown> => Boolean(row && typeof row === "object"))
+    .map((row) => ({
+      id: readString(row.id) ?? "",
+      kind: dagNodeKind(row),
+      properties: (row.properties && typeof row.properties === "object" && !Array.isArray(row.properties) ? row.properties : {}) as Record<string, unknown>,
+    }))
+    .filter((row) => row.id);
+  const lines: string[] = [];
+  for (const node of nodes) {
+    const props = formatWireProperties(node.properties);
+    lines.push(props ? `${node.id}:${node.kind}${props}` : `${node.id}:${node.kind}`);
+  }
+  for (const row of edgeRows) {
+    if (!row || typeof row !== "object") continue;
+    const source = readString((row as Record<string, unknown>).source);
+    const target = readString((row as Record<string, unknown>).target);
+    if (!source || !target) continue;
+    const from = splitWireEndpoint(source);
+    const to = splitWireEndpoint(target);
+    const fromKind = nodes.find((node) => node.id === from.node)?.kind ?? "node";
+    const toKind = nodes.find((node) => node.id === to.node)?.kind ?? "node";
+    const props = formatWireProperties(
+      (row as Record<string, unknown>).properties && typeof (row as Record<string, unknown>).properties === "object"
+        ? ((row as Record<string, unknown>).properties as Record<string, unknown>)
+        : undefined,
+    );
+    lines.push(`${from.node}:${fromKind}@${from.port}->${to.node}:${toKind}@${to.port}${props}`);
+  }
+  return lines.join("\n");
 }

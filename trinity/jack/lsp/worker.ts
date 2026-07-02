@@ -10,16 +10,24 @@ import init, { JackLspSession } from "./pkg/trinity_jack_lsp.js";
 
 let session: JackLspSession | null = null;
 let fixtureJson = "";
+let graphDomain = "trinity";
 let initPromise: Promise<void> | null = null;
+
+function applyFixtureToSession(): void {
+	if (!session || !fixtureJson) return;
+	if (typeof session.loadFixtureForDomain === "function") {
+		session.loadFixtureForDomain(fixtureJson, graphDomain);
+		return;
+	}
+	session.loadFixtureJson(fixtureJson);
+}
 
 function ensureSession(): Promise<void> {
 	if (!initPromise) {
 		initPromise = (async () => {
 			await init();
 			session = new JackLspSession();
-			if (fixtureJson) {
-				session.loadFixtureJson(fixtureJson);
-			}
+			applyFixtureToSession();
 		})();
 	}
 	return initPromise;
@@ -29,11 +37,14 @@ const server: LanguageServer = {
 	handle(message) {
 		if (!session) return [];
 		if (isJsonRpcRequest(message) && message.method === "jack/loadFixture" && message.params) {
-			const params = message.params as { json?: string };
+			const params = message.params as { json?: string; graphDomain?: string };
 			if (params.json) {
 				fixtureJson = params.json;
-				session.loadFixtureJson(fixtureJson);
 			}
+			if (params.graphDomain) {
+				graphDomain = params.graphDomain;
+			}
+			applyFixtureToSession();
 			return message.id == null ? [] : [{ jsonrpc: "2.0", id: message.id, result: null }];
 		}
 		return JSON.parse(session.handleMessageJson(JSON.stringify(message))) as LspMessage[];

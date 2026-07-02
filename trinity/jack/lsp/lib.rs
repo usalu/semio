@@ -1,11 +1,10 @@
 //! 📡 Jack language server — JSON-RPC LSP subset over trinity graphs.
 
+use mathematical_graph_dsl::{complete, format, hover, lint, semantic_tokens, BoardQueryableGraph, Completion, Diagnostic, DiagnosticSeverity, Hover, QueryableGraph};
 use serde::Deserialize;
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
-use trinity_jack::{
-    complete, format, hover, lint, semantic_tokens, Completion, Diagnostic, DiagnosticSeverity, Hover,
-};
+use trinity_jack::{TrinityQueryableGraph};
 use trinity_ram::{Camera, Edge, Graph, GraphFixture, Manifest, Node, Port, PortDirection, PropertyBag};
 
 // #region 🔖LspTypes
@@ -82,8 +81,23 @@ struct FormattingParams {
 // #endregion 🔖LspTypes
 
 // #region 🔖JackLanguageServer
+enum JackGraphBackend {
+    Trinity(Graph),
+    Board(BoardQueryableGraph),
+}
+
+impl JackGraphBackend {
+    fn as_queryable(&self) -> &dyn QueryableGraph {
+        match self {
+            Self::Trinity(graph) => &TrinityQueryableGraph(graph),
+            Self::Board(board) => board,
+        }
+    }
+}
+
 pub struct JackLanguageServer {
-    graph: Graph,
+    backend: JackGraphBackend,
+    graph_domain: String,
     documents: BTreeMap<String, DocumentState>,
 }
 
@@ -134,13 +148,37 @@ impl JackLanguageServer {
         };
         let graph = Graph::from_fixture(fixture).expect("jack lsp default fixture");
         Self {
-            graph,
+            backend: JackGraphBackend::Trinity(graph),
+            graph_domain: "trinity".into(),
             documents: BTreeMap::new(),
         }
     }
 
+    pub fn set_graph_domain(&mut self, domain: &str) {
+        self.graph_domain = domain.to_string();
+    }
+
+    pub fn graph_domain(&self) -> &str {
+        &self.graph_domain
+    }
+
     pub fn load_fixture_json(&mut self, json: &str) -> Result<(), String> {
-        self.graph = Graph::load_json(json)?;
+        self.load_fixture_for_domain(json, &self.graph_domain.clone())
+    }
+
+    pub fn load_fixture_for_domain(&mut self, json: &str, domain: &str) -> Result<(), String> {
+        self.graph_domain = domain.to_string();
+        self.backend = match domain {
+            "trinity" | "nakagin" => JackGraphBackend::Trinity(Graph::load_json(json)?),
+            "dag" => JackGraphBackend::Board(BoardQueryableGraph::from_dag_fixture_json(json)?),
+            "puzzle2d" | "2d" => JackGraphBackend::Board(BoardQueryableGraph::from_puzzle2d_fixture_json(json)?),
+            "puzzle3d" | "3d" => JackGraphBackend::Board(BoardQueryableGraph::from_puzzle3d_fixture_json(json)?),
+            "s-media-graph" | "s" => JackGraphBackend::Board(BoardQueryableGraph::from_fixture_json(json, Some("s-resources"))?),
+            "flow" => JackGraphBackend::Board(BoardQueryableGraph::from_fixture_json(json, Some("flow-dag"))?),
+            "sequence" => JackGraphBackend::Board(BoardQueryableGraph::from_fixture_json(json, Some("flow-dag"))?),
+            "wires" => JackGraphBackend::Board(BoardQueryableGraph::from_fixture_json(json, Some("wires-default"))?),
+            _ => JackGraphBackend::Board(BoardQueryableGraph::from_fixture_json(json, None)?),
+        };
         self.refresh_all();
         Ok(())
     }
@@ -215,7 +253,7 @@ impl JackLanguageServer {
                 return vec![ok_response(id, json!({ "isIncomplete": false, "items": [] }))];
             };
             let offset = position_to_offset(&doc.text, &params.position);
-            let items = complete(&self.graph, &doc.text, offset)
+            let items = complete(self.backend.as_queryable(), &doc.text, offset)
                 .into_iter()
                 .map(completion_to_lsp)
                 .collect::<Vec<_>>();
@@ -230,7 +268,7 @@ impl JackLanguageServer {
                 return vec![ok_response(id, Value::Null)];
             };
             let offset = position_to_offset(&doc.text, &params.position);
-            let result = hover(&self.graph, &doc.text, offset).map(hover_to_lsp);
+            let result = hover(self.backend.as_queryable(), &doc.text, offset).map(hover_to_lsp);
             return vec![ok_response(id, result.unwrap_or(Value::Null))];
         }
         if method == "textDocument/formatting" {
@@ -282,7 +320,7 @@ impl JackLanguageServer {
                 Vec::new()
             };
         };
-        let diagnostics = lint(&self.graph, &doc.text).into_iter().map(|d| diagnostic_to_lsp(&doc.text, d)).collect::<Vec<_>>();
+        let diagnostics = lint(self.backend.as_queryable(), &doc.text).into_iter().map(|d| diagnostic_to_lsp(&doc.text, d)).collect::<Vec<_>>();
         let tokens = semantic_tokens(&doc.text);
         let mut out = Vec::new();
         if let Some(id) = request_id {
@@ -324,6 +362,18 @@ impl JackLspSession {
     #[wasm_bindgen(js_name = loadFixtureJson)]
     pub fn load_fixture_json(&mut self, json: &str) -> Result<(), JsValue> {
         self.server.load_fixture_json(json).map_err(|e| JsValue::from_str(&e))
+    }
+
+    #[wasm_bindgen(js_name = loadFixtureForDomain)]
+    pub fn load_fixture_for_domain(&mut self, json: &str, graph_domain: &str) -> Result<(), JsValue> {
+        self.server
+            .load_fixture_for_domain(json, graph_domain)
+            .map_err(|e| JsValue::from_str(&e))
+    }
+
+    #[wasm_bindgen(js_name = setGraphDomain)]
+    pub fn set_graph_domain(&mut self, graph_domain: &str) {
+        self.server.set_graph_domain(graph_domain);
     }
 
     #[wasm_bindgen(js_name = handleMessageJson)]

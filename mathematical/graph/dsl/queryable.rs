@@ -12,6 +12,8 @@ pub struct QueryableEdge {
     pub kind: String,
     pub source_node_id: String,
     pub target_node_id: String,
+    pub source_port: Option<String>,
+    pub target_port: Option<String>,
     pub properties: PropertyBag,
 }
 // #endregion 🔖QueryableEdge
@@ -72,6 +74,24 @@ pub fn manifest_property_names(graph: &dyn QueryableGraph) -> Vec<String> {
     }
     props.into_iter().collect()
 }
+
+pub fn manifest_port_kinds(graph: &dyn QueryableGraph) -> Vec<String> {
+    let mut kinds = BTreeSet::new();
+    for edge in graph.edges() {
+        if let Some(port) = &edge.source_port {
+            kinds.insert(port.clone());
+        }
+        if let Some(port) = &edge.target_port {
+            kinds.insert(port.clone());
+        }
+    }
+    if let Some(manifest) = graph.manifest() {
+        for def in &manifest.port_kinds {
+            kinds.insert(def.id.clone());
+        }
+    }
+    kinds.into_iter().collect()
+}
 // #endregion 🔖QueryableGraph
 
 // #region 🔖BoardQueryableGraph
@@ -79,11 +99,25 @@ fn json_to_property_bag(value: &Value) -> PropertyBag {
     serde_json::from_value(value.clone()).unwrap_or_default()
 }
 
-fn handle_node_id(handle_id: &str, handle_to_node: &BTreeMap<String, String>) -> Option<String> {
-    if let Some(node_id) = handle_to_node.get(handle_id) {
-        return Some(node_id.clone());
+fn split_endpoint(endpoint: &str, handle_to_node: &BTreeMap<String, String>) -> (String, Option<String>) {
+    if let Some(node_id) = handle_to_node.get(endpoint) {
+        return (node_id.clone(), None);
     }
-    handle_id.split(':').next().map(str::to_string)
+    if let Some((node, port)) = endpoint.split_once('@') {
+        let node_id = handle_to_node.get(node).cloned().unwrap_or_else(|| node.to_string());
+        return (node_id, Some(port.to_string()));
+    }
+    if let Some((node, port)) = endpoint.rsplit_once(':') {
+        let node_id = handle_to_node.get(node).cloned().unwrap_or_else(|| node.to_string());
+        return (node_id, Some(port.to_string()));
+    }
+    if let Some((node, port)) = endpoint.rsplit_once('.') {
+        if handle_to_node.contains_key(endpoint) {
+            return (handle_to_node[endpoint].clone(), None);
+        }
+        return (node.to_string(), Some(port.to_string()));
+    }
+    (endpoint.to_string(), None)
 }
 
 /// 🧩 Jack query target over board/scene fixture JSON.
@@ -155,9 +189,17 @@ impl BoardQueryableGraph {
                     .unwrap_or("")
                     .to_string();
                 let properties = obj.get("userData").or_else(|| obj.get("user_data")).map(json_to_property_bag).unwrap_or_default();
-                let source_node_id = handle_node_id(source, &handle_to_node).unwrap_or_else(|| source.to_string());
-                let target_node_id = handle_node_id(target, &handle_to_node).unwrap_or_else(|| target.to_string());
-                edges.push(QueryableEdge { id: id.to_string(), kind, source_node_id, target_node_id, properties });
+                let (source_node_id, source_port) = split_endpoint(source, &handle_to_node);
+                let (target_node_id, target_port) = split_endpoint(target, &handle_to_node);
+                edges.push(QueryableEdge {
+                    id: id.to_string(),
+                    kind,
+                    source_node_id,
+                    target_node_id,
+                    source_port,
+                    target_port,
+                    properties,
+                });
             }
         }
         Ok(Self { manifest, nodes, edges, raw_fixture: raw })
@@ -169,6 +211,39 @@ impl BoardQueryableGraph {
 
     pub fn from_puzzle2d_fixture_json(json: &str) -> Result<Self, String> {
         Self::from_fixture_json(json, Some("puzzle2d-default"))
+    }
+
+    pub fn from_puzzle3d_fixture_json(json: &str) -> Result<Self, String> {
+        let raw: Value = serde_json::from_str(json).map_err(|e| e.to_string())?;
+        let mut fixture = raw.clone();
+        if fixture.get("nodes").and_then(|v| v.as_array()).is_none() {
+            if let Some(objects) = raw.get("objects").and_then(|v| v.as_array()) {
+                let nodes: Vec<Value> = objects
+                    .iter()
+                    .filter_map(|row| {
+                        let obj = row.as_object()?;
+                        let id = obj.get("id").and_then(|v| v.as_str())?;
+                        let kind = obj
+                            .get("objectKind")
+                            .or_else(|| obj.get("kind"))
+                            .and_then(|v| v.as_str())
+                            .unwrap_or("Object");
+                        let name = obj
+                            .get("name")
+                            .or_else(|| obj.get("label"))
+                            .and_then(|v| v.as_str())
+                            .unwrap_or(id);
+                        Some(serde_json::json!({
+                            "id": id,
+                            "nodeKind": kind,
+                            "text": name,
+                        }))
+                    })
+                    .collect();
+                fixture["nodes"] = Value::Array(nodes);
+            }
+        }
+        Self::from_fixture_json(&serde_json::to_string(&fixture).map_err(|e| e.to_string())?, Some("nakagin"))
     }
 }
 

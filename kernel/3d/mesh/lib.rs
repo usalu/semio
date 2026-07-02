@@ -146,6 +146,10 @@ pub struct MeshTransfer {
     pub edge_ids: Vec<u32>,
     #[serde(default)]
     pub uvs: Vec<f32>,
+    #[serde(default)]
+    pub edge_uvs: Vec<f32>,
+    #[serde(default)]
+    pub edge_is_seam: Vec<u8>,
 }
 
 //#endregion Types
@@ -1366,6 +1370,8 @@ impl HalfedgeMesh {
         let mut vertex_ids = Vec::new();
         let mut edge_ids = Vec::new();
         let mut uvs = Vec::new();
+        let mut edge_uvs = Vec::new();
+        let mut edge_is_seam = Vec::new();
         let mut edge_seen: HashMap<(u32, u32), bool> = HashMap::new();
 
         for fi in 0..self.faces.len() {
@@ -1437,7 +1443,15 @@ impl HalfedgeMesh {
                 let p1 = self.vertices[v1 as usize].position;
                 edge_positions.extend_from_slice(&p0);
                 edge_positions.extend_from_slice(&p1);
-                edge_ids.push(topology_hes[i]);
+                let he_id = topology_hes[i];
+                let he = &self.halfedges[he_id as usize];
+                let he_next = &self.halfedges[he.next as usize];
+                edge_ids.push(he_id);
+                edge_uvs.push(he.uv[0]);
+                edge_uvs.push(he.uv[1]);
+                edge_uvs.push(he_next.uv[0]);
+                edge_uvs.push(he_next.uv[1]);
+                edge_is_seam.push(if self.uv_seams.contains(&he_id) { 1 } else { 0 });
             }
         }
 
@@ -1450,6 +1464,8 @@ impl HalfedgeMesh {
             vertex_ids,
             edge_ids,
             uvs,
+            edge_uvs,
+            edge_is_seam,
         })
     }
 
@@ -1556,6 +1572,8 @@ mod tests {
         assert_eq!(transfer.vertex_ids.len(), transfer.positions.len() / 3);
         assert_eq!(transfer.edge_ids.len() * 2, transfer.edge_positions.len() / 3);
         assert_eq!(transfer.uvs.len(), transfer.positions.len() / 3 * 2);
+        assert_eq!(transfer.edge_uvs.len(), transfer.edge_ids.len() * 4);
+        assert_eq!(transfer.edge_is_seam.len(), transfer.edge_ids.len());
     }
 
     #[test]

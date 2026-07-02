@@ -1,0 +1,14 @@
+{
+	"name": "@semio-tech/reasoning-mindmap-wires-core",
+	"$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+	"targets": {
+		"test": {
+			"executor": "nx:run-commands",
+			"options": {
+				"cwd": "reasoning/mindmap/wires/core",
+				"command": "bun ./script.ts test",
+				"forwardAllArgs": true
+			}
+		}
+	}
+}

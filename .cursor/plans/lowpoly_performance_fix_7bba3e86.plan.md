@@ -7,19 +7,19 @@ todos:
     status: completed
   - id: decouple-hover-revision
     content: Give hover its own revision/listener channel in LowpolyPlayController (lowpoly/play/index.ts) separate from interactionRevision, and subscribe LowpolyPlaySurfaceHost to it directly instead of relying on the panel-rebuild-triggering emit
-    status: in_progress
+    status: completed
   - id: fix-marquee-wasted-hittest
     content: Remove the discarded synchronous resolveHits call in LowpolyMarqueeBridge.onPointerMove and gate mesh pickEnabled during an in-flight marquee drag
-    status: pending
+    status: completed
   - id: remove-redundant-reload
     content: Skip LowpolyCanvas's safeLoadLowpolyFixture/session reconstruction when props.fixtureJson matches what the same session just emitted
-    status: pending
+    status: completed
   - id: dedupe-vertex-points
     content: Dedupe the vertex-mode points cloud in LowpolyMeshLayer to one point per unique vertex id instead of per tessellated corner
-    status: pending
+    status: completed
   - id: tests-and-verification
     content: Update/add Rust and Vitest tests for the trimmed fixture JSON shape and pixel-survival across reload; manually verify marquee/hover/selection responsiveness and paint persistence in the browser
-    status: pending
+    status: completed
 isProject: false
 ---
 

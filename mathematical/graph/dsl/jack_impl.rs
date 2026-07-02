@@ -27,6 +27,7 @@ pub struct Pattern {
 pub struct PatternNode {
     pub var: String,
     pub kind: String,
+    pub port: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -137,6 +138,7 @@ enum Token {
     Ne,
     Dash,
     Arrow,
+    At,
     And,
     Or,
     Eof,
@@ -163,7 +165,7 @@ fn token_class(token: &Token) -> TokenClass {
         Token::Ident(_) => TokenClass::Ident,
         Token::Number(_) => TokenClass::Number,
         Token::StringLit(_) => TokenClass::String,
-        Token::Eq | Token::Ne | Token::Dash | Token::Arrow => TokenClass::Operator,
+        Token::Eq | Token::Ne | Token::Dash | Token::Arrow | Token::At => TokenClass::Operator,
         Token::LParen
         | Token::RParen
         | Token::LBracket
@@ -209,6 +211,10 @@ fn lex_spanned(input: &str, forgiving: bool) -> Result<Vec<SpannedToken>, String
             }
             b':' => {
                 push_spanned(&mut tokens, Token::Colon, start, start + 1);
+                i += 1;
+            }
+            b'@' => {
+                push_spanned(&mut tokens, Token::At, start, start + 1);
                 i += 1;
             }
             b',' => {
@@ -467,6 +473,20 @@ fn graph_property_names(graph: &dyn QueryableGraph) -> Vec<String> {
     manifest_property_names(graph)
 }
 
+fn graph_port_kinds(graph: &dyn QueryableGraph) -> Vec<String> {
+    manifest_port_kinds(graph)
+}
+
+fn after_at_port_context(source: &str, cursor: usize) -> bool {
+    let cursor = cursor.min(source.len());
+    let before = &source[..cursor];
+    let Some(at) = before.rfind('@') else {
+        return false;
+    };
+    let after = &before[at + 1..];
+    !after.chars().any(|c| c.is_whitespace() || matches!(c, '(' | ')' | '[' | ']' | ',' | '-' | '>' | '@'))
+}
+
 fn filter_completions(candidates: impl IntoIterator<Item = (String, String, Option<String>)>, prefix: &str) -> Vec<Completion> {
     let prefix_lower = prefix.to_ascii_lowercase();
     let mut out = Vec::new();
@@ -514,7 +534,22 @@ pub fn complete(graph: &dyn QueryableGraph, source: &str, cursor: usize) -> Vec<
         return filter_completions(props, &prefix);
     }
 
+    if after_at_port_context(source, cursor) {
+        let ports = graph_port_kinds(graph)
+            .into_iter()
+            .map(|name| (name, "portKind".into(), None))
+            .collect::<Vec<_>>();
+        return filter_completions(ports, &prefix);
+    }
+
     if let Some(last) = before.last() {
+        if matches!(last.token, Token::At) {
+            let ports = graph_port_kinds(graph)
+                .into_iter()
+                .map(|name| (name, "portKind".into(), None))
+                .collect::<Vec<_>>();
+            return filter_completions(ports, &prefix);
+        }
         if matches!(last.token, Token::Colon) {
             let kinds = if open_bracket_kind(before) == Some('[') {
                 graph_edge_kinds(graph)
@@ -829,6 +864,7 @@ fn format_token(tok: &Token) -> String {
         Token::Ne => "!=".into(),
         Token::Dash => "-".into(),
         Token::Arrow => "->".into(),
+        Token::At => "@".into(),
         Token::Eof => String::new(),
     }
 }
@@ -1056,26 +1092,36 @@ impl Parser {
         self.expect(Token::RParen)?;
         if matches!(self.peek(), Token::Dash) {
             self.bump();
-            self.expect(Token::LBracket)?;
-            let edge_var = if matches!(self.peek(), Token::Ident(_)) {
-                Some(self.expect_ident()?)
-            } else {
-                None
-            };
-            let edge_kind = if matches!(self.peek(), Token::Colon) {
+            let (edge_var, edge_kind) = if matches!(self.peek(), Token::LBracket) {
                 self.bump();
-                Some(self.expect_ident()?)
+                let edge_var = if matches!(self.peek(), Token::Ident(_)) {
+                    Some(self.expect_ident()?)
+                } else {
+                    None
+                };
+                let edge_kind = if matches!(self.peek(), Token::Colon) {
+                    self.bump();
+                    Some(self.expect_ident()?)
+                } else {
+                    None
+                };
+                self.expect(Token::RBracket)?;
+                (edge_var, edge_kind)
             } else {
-                None
+                (None, None)
             };
-            self.expect(Token::RBracket)?;
-            self.expect(Token::Arrow)?;
+            let directed = if matches!(self.peek(), Token::Arrow) {
+                self.bump();
+                true
+            } else {
+                false
+            };
             self.expect(Token::LParen)?;
             let right = self.parse_pattern_node()?;
             self.expect(Token::RParen)?;
             Ok(Pattern {
                 nodes: vec![left],
-                edge: Some(PatternEdge { var: edge_var, kind: edge_kind, directed: true, right }),
+                edge: Some(PatternEdge { var: edge_var, kind: edge_kind, directed, right }),
             })
         } else {
             Ok(Pattern { nodes: vec![left], edge: None })
@@ -1086,7 +1132,13 @@ impl Parser {
         let var = self.expect_ident()?;
         self.expect(Token::Colon)?;
         let kind = self.expect_ident()?;
-        Ok(PatternNode { var, kind })
+        let port = if matches!(self.peek(), Token::At) {
+            self.bump();
+            Some(self.expect_ident()?)
+        } else {
+            None
+        };
+        Ok(PatternNode { var, kind, port })
     }
 
     fn parse_return_item(&mut self) -> Result<ReturnItem, String> {
@@ -1237,22 +1289,38 @@ fn match_pattern(graph: &dyn QueryableGraph, pattern: &Pattern, base: &Binding) 
                 if edge_pat.kind.as_ref().is_some_and(|k| *k != edge.kind) {
                     continue;
                 }
-                if edge.source_node_id != node_id {
-                    continue;
+                let pairs = if edge_pat.directed {
+                    vec![(edge.source_node_id.as_str(), edge.target_node_id.as_str(), edge.source_port.as_deref(), edge.target_port.as_deref())]
+                } else {
+                    vec![
+                        (edge.source_node_id.as_str(), edge.target_node_id.as_str(), edge.source_port.as_deref(), edge.target_port.as_deref()),
+                        (edge.target_node_id.as_str(), edge.source_node_id.as_str(), edge.target_port.as_deref(), edge.source_port.as_deref()),
+                    ]
+                };
+                for (src_id, tgt_id, src_port, tgt_port) in pairs {
+                    if src_id != node_id {
+                        continue;
+                    }
+                    if left.port.as_ref().is_some_and(|want| src_port != Some(want.as_str())) {
+                        continue;
+                    }
+                    if graph.node_kind(tgt_id).as_deref() != Some(edge_pat.right.kind.as_str()) {
+                        continue;
+                    }
+                    if edge_pat.right.port.as_ref().is_some_and(|want| tgt_port != Some(want.as_str())) {
+                        continue;
+                    }
+                    let mut b = base.clone();
+                    b.nodes.insert(left.var.clone(), node_id.clone());
+                    if let Some(ev) = &edge_pat.var {
+                        b.edges.insert(ev.clone(), edge.id.clone());
+                    }
+                    if binding_conflicts(base, &edge_pat.right.var, tgt_id) {
+                        continue;
+                    }
+                    b.nodes.insert(edge_pat.right.var.clone(), tgt_id.to_string());
+                    out.push(b);
                 }
-                if graph.node_kind(edge.target_node_id.as_str()).as_deref() != Some(edge_pat.right.kind.as_str()) {
-                    continue;
-                }
-                let mut b = base.clone();
-                b.nodes.insert(left.var.clone(), node_id.clone());
-                if let Some(ev) = &edge_pat.var {
-                    b.edges.insert(ev.clone(), edge.id.clone());
-                }
-                if binding_conflicts(base, &edge_pat.right.var, edge.target_node_id.as_str()) {
-                    continue;
-                }
-                b.nodes.insert(edge_pat.right.var.clone(), edge.target_node_id.clone());
-                out.push(b);
             }
         }
         return Ok(out);
@@ -1371,6 +1439,29 @@ mod tests {
         let graph = BoardQueryableGraph::from_dag_fixture_json(fixture).unwrap();
         let result = run_query(&graph, "MATCH (n:computation) RETURN n.name").unwrap();
         assert!(!result.rows.is_empty());
+    }
+
+    #[test]
+    fn parse_match_with_port() {
+        let q = parse("MATCH (a:computation@out) RETURN a.name").unwrap();
+        let Clause::Match(patterns) = &q.clauses[0] else { panic!("expected match") };
+        assert_eq!(patterns[0].nodes[0].port.as_deref(), Some("out"));
+    }
+
+    #[test]
+    fn parse_undirected_edge() {
+        let q = parse("MATCH (a:computation)-(b:slider) RETURN a.name").unwrap();
+        let Clause::Match(patterns) = &q.clauses[0] else { panic!("expected match") };
+        let edge = patterns[0].edge.as_ref().expect("edge");
+        assert!(!edge.directed);
+    }
+
+    #[test]
+    fn run_port_filtered_query() {
+        let fixture = include_str!("../port/directed/dag/fixture/demo.dag.json");
+        let graph = BoardQueryableGraph::from_dag_fixture_json(fixture).unwrap();
+        let result = run_query(&graph, "MATCH (n:computation@out)-[:wire]->(m:slider) RETURN n.name, m.name");
+        assert!(result.is_ok());
     }
 }
 // #endregion 🔖Tests

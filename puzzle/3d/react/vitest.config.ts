@@ -15,7 +15,7 @@ export default defineConfig({
 			"@semio-tech/infinite-world-r3f": resolve(root, "../../../infinite/world/r3f/index.tsx"),
 			"@semio-tech/puzzle-3d-rs": resolve(root, "../rs/pkg/puzzle_3d.js"),
 			"@semio-tech/ui-react": resolve(root, "../../../ui/react/index.tsx"),
-			"@semio-tech/puzzle-3d-play": resolve(root, "../play/index.ts"),
+			"@semio-tech/puzzle-3d-core": resolve(root, "../core/index.ts"),
 			"@semio-tech/framework-playground-core": resolve(root, "../../../framework/product/playground/core/index.ts"),
 			"@semio-tech/framework-playground-renderer-react/puzzle/3d": resolve(playgroundRendererRoot, "index.tsx"),
 			"@semio-tech/framework-platform-core": resolve(root, "../../../framework/product/platform/core/index.ts"),

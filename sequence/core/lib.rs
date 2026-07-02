@@ -5,15 +5,20 @@ pub use imperative_module_core::{catalogue_json, module_registry};
 pub use mathematical_graph_port_directed_dag as dag;
 
 use dag::{
-    would_create_cycle, DagCamera, DagFixtureEdge, DagFixture, DagHost, DagLayoutOptions, DagNodeSpec, EdgeRouteStyle, IoPortSpec, PortShape,
+    dag_fixture_to_wire_literal, would_create_cycle, DagCamera, DagFixtureEdge, DagFixture, DagHost, DagLayoutOptions, DagNodeSpec, EdgeRouteStyle, IoPortSpec, PortShape,
 };
 use imperative_engine::compile_to_text as imperative_compile_to_text;
+use mathematical_graph_manifest::{PropertyBag, PropertyValue};
 use neural_engine::{Atom, ChannelSpec, Dictionary, Registry, Value};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 
 const FLOW_INPUT_PORT: &str = "prev";
 const FLOW_OUTPUT_PORT: &str = "next";
+
+fn property_bag_from_dictionary(dict: &Dictionary) -> PropertyBag {
+    serde_json::from_value(serde_json::to_value(dict).unwrap_or(serde_json::Value::Null)).unwrap_or_default()
+}
 
 fn is_control_kind(kind: &str) -> bool {
     matches!(kind, "control.if" | "control.while" | "control.repeat")
@@ -609,6 +614,11 @@ impl SequenceHost {
         imperative_compile_to_text(&self.build_path())
     }
 
+    /// 📝 Renders the compiled DAG fixture as wire-literal text.
+    pub fn compiled_wire_literal(&self) -> String {
+        dag_fixture_to_wire_literal(&self.build_dag_fixture())
+    }
+
     fn rebuild_dag(&mut self) {
         let selected = self.dag.selected_node_ids();
         let dag_fixture = self.build_dag_fixture();
@@ -640,6 +650,7 @@ impl SequenceHost {
                 source: format!("{}:{}", edge.from, FLOW_OUTPUT_PORT),
                 target: format!("{}:{}", edge.to, FLOW_INPUT_PORT),
                 route_style: EdgeRouteStyle::SharpSz,
+                properties: PropertyBag::new(),
             })
             .collect();
         DagFixture {
@@ -682,7 +693,10 @@ impl SequenceHost {
         };
         let width = dag::computation_node_width(&name, &inputs, &outputs);
         let height = dag::computation_node_height(inputs.len(), outputs.len(), false, false);
-        DagNodeSpec::computation(step.id.clone(), name, abbreviation, icon, inputs, outputs, false, false, step.x, step.y, width, height)
+        let mut node = DagNodeSpec::computation(step.id.clone(), name, abbreviation, icon, inputs, outputs, false, false, step.x, step.y, width, height);
+        node.operator_kind = Some(step.kind.clone());
+        node.properties = property_bag_from_dictionary(&step.params);
+        node
     }
 
     pub fn set_ghost_step(&mut self, kind: &str, x: f64, y: f64) {
@@ -830,6 +844,11 @@ mod wasm_session {
         #[wasm_bindgen(js_name = compileText)]
         pub fn compile_text(&self) -> String {
             self.state.borrow().host.compile_text()
+        }
+
+        #[wasm_bindgen(js_name = compiledWireLiteral)]
+        pub fn compiled_wire_literal(&self) -> String {
+            self.state.borrow().host.compiled_wire_literal()
         }
 
         #[wasm_bindgen]

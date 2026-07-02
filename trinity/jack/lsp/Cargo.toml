@@ -12,6 +12,7 @@ crate-type = ["rlib", "cdylib"]
 path = "lib.rs"
 
 [dependencies]
+mathematical_graph_dsl = { path = "../../../mathematical/graph/dsl" }
 trinity_jack = { path = "../core" }
 trinity_ram = { path = "../../ram" }
 serde = { version = "1.0.219", features = ["derive"] }

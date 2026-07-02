@@ -99,6 +99,7 @@ export interface SequenceCanvasProps {
 	readonly onSelectionChange?: (ids: readonly string[]) => void;
 	readonly onLodChange?: (lod: DagDrawLodKind) => void;
 	readonly onCompiledTextChange?: (text: string) => void;
+	readonly onCompiledWireLiteralChange?: (text: string) => void;
 	readonly onRunResult?: (result: RunResult) => void;
 }
 
@@ -397,6 +398,7 @@ export function SequenceCanvas({
 	onSelectionChange,
 	onLodChange,
 	onCompiledTextChange,
+	onCompiledWireLiteralChange,
 	onRunResult,
 	automaticLod = true,
 	lod,
@@ -413,6 +415,7 @@ export function SequenceCanvas({
 	const onSelectionChangeRef = useRef(onSelectionChange);
 	const onLodChangeRef = useRef(onLodChange);
 	const onCompiledTextChangeRef = useRef(onCompiledTextChange);
+	const onCompiledWireLiteralChangeRef = useRef(onCompiledWireLiteralChange);
 	const onRunResultRef = useRef(onRunResult);
 	const lastAutomaticLodRef = useRef<boolean | null>(null);
 	const lastForcedLodRef = useRef<string | null>(null);
@@ -466,6 +469,7 @@ export function SequenceCanvas({
 		if (!session) return;
 		try {
 			onCompiledTextChangeRef.current?.(session.compileText());
+			onCompiledWireLiteralChangeRef.current?.(session.compiledWireLiteral());
 		} catch {
 			/* session not ready */
 		}
@@ -706,6 +710,10 @@ export function SequenceCanvas({
 	useEffect(() => {
 		onCompiledTextChangeRef.current = onCompiledTextChange;
 	}, [onCompiledTextChange]);
+
+	useEffect(() => {
+		onCompiledWireLiteralChangeRef.current = onCompiledWireLiteralChange;
+	}, [onCompiledWireLiteralChange]);
 
 	useEffect(() => {
 		onRunResultRef.current = onRunResult;

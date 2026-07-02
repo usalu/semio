@@ -299,7 +299,7 @@ export default defineConfig(async ({ mode }) => {
     { find: "@semio-tech/reasoning-mindmap-react", replacement: path.resolve(__dirname, "../../../../../reasoning/mindmap/react/index.tsx") },
     { find: "@semio-tech/infinite-cavas-react-renderer", replacement: path.resolve(__dirname, "../../../../../infinite/cavas/react-renderer/index.tsx") },
     { find: "@semio-tech/infinite-world-r3f", replacement: path.resolve(__dirname, "../../../../../infinite/world/r3f/index.tsx") },
-    { find: "@semio-tech/gis-2d-play", replacement: path.resolve(__dirname, "../../../../../gis/2d/play/index.ts") },
+    { find: "@semio-tech/gis-2d-core", replacement: path.resolve(__dirname, "../../../../../gis/2d/core/index.ts") },
     { find: "@semio-tech/gis-2d-react", replacement: path.resolve(__dirname, "../../../../../gis/2d/react/index.tsx") },
     { find: "@semio-tech/puzzle-2d-react", replacement: path.resolve(__dirname, "../../../../../puzzle/2d/react/index.tsx") },
     { find: "@semio-tech/puzzle-3d-react", replacement: path.resolve(__dirname, "../../../../../puzzle/3d/react/index.tsx") },

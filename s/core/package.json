@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@semio-tech/framework-core": "workspace:*",
+    "@semio-tech/framework-os-core": "workspace:*",
     "@semio-tech/framework-platform-core": "workspace:*",
     "@semio-tech/graph-manifest": "workspace:*",
     "@semio-tech/s-studio-rs": "workspace:*",

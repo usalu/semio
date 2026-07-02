@@ -1877,6 +1877,7 @@ export const mountReactApp = mountPlaygroundApp;
 import {
     PUZZLE_3D_FILL_COUNT_MAX,
     PUZZLE_3D_PLAY_APP_ID,
+    PUZZLE_3D_PLAY_BODY_KEY_JACK,
     PUZZLE_3D_PLAY_CONTROLLER_ID,
     PUZZLE_3D_PLAY_FIXTURE_CONCRETE_FOREST_ID,
     PUZZLE_3D_PLAY_ICON_HIERARCHY,
@@ -1887,6 +1888,8 @@ import {
     PUZZLE_3D_PLAY_SNAPSHOT_PANEL_BODY_KEYS,
     PUZZLE_3D_PLAY_STORE_ID,
     PUZZLE_3D_PLAY_VIEWPORT_SURFACE_ID,
+    PUZZLE_3D_PLAY_SURFACE_ID_JACK,
+    PUZZLE_3D_PLAY_WINDOW_KIND_JACK,
     Puzzle3dPlayShellController,
     clearPuzzle3dFillSession,
     getPuzzle3dFillSessionReadyEpoch,
@@ -1905,13 +1908,17 @@ import {
     subscribePuzzle3dFillTargetVolumesInvalidated,
     type Puzzle3dPlayHostBridge,
     type Puzzle3dPlaySnapshot
-} from "@semio-tech/puzzle-3d-play";
+} from "@semio-tech/puzzle-3d-core";
 import {
     ORBIT_CAMERA_VIEW_COMMAND,
     ObjectStateProvider,
     PlayCanvas,
+    applyBrushPlacementToFixture,
     applyConnectToFixture,
     applyPaletteObjectDropToFixture,
+    applyReferenceRelocateToFixture,
+    applyRelocateToFixture,
+    applyTargetVolumeRelocateToFixture,
     blockedVortexFullIdsFromAttractions,
     brushMeshUrlsForFillSession,
     buildPuzzle3dPlayEngagement,
@@ -1933,6 +1940,9 @@ import {
     type Puzzle3dHoverPayload,
     type RelocatePayload
 } from "@semio-tech/puzzle-3d-react";
+import { buildWriterWindowBody } from "@semio-tech/framework-platform-core";
+import { createWriterDocument } from "@semio-tech/writer-core";
+import { WriterCanvas } from "@semio-tech/writer-react";
 import { sceneHostPort } from "@semio-tech/ui-react";
 // #endregion 🔌Adapters
 
@@ -2594,6 +2604,31 @@ const Puzzle3dPlayViewportHost = reactHostPort.memo(function Puzzle3dPlayViewpor
   );
 }, (prev, next) => prev.node.surfaceId === next.node.surfaceId && prev.node.controllerId === next.node.controllerId);
 
+function Puzzle3dPlayJackSurfaceHost({ node: _node }: { readonly node: import("@semio-tech/framework-platform-core").UiWriterHostSurfaceNode }): React.ReactElement {
+  const ctrl = usePuzzle3dPlayController();
+  void ctrl?.getHoverEpoch();
+  void ctrl?.getSelectEpoch();
+  const document = ctrl?.getWriterDocumentJack() ?? createWriterDocument({ id: "puzzle-3d-jack", languageId: "jack", text: "" });
+  const onHoverChange = reactHostPort.useCallback((offset: number | null) => {
+    ctrl?.run("setJackHover", { offset });
+  }, [ctrl]);
+  const onSelectionChange = reactHostPort.useCallback((range: { start: number; end: number }) => {
+    ctrl?.run("setJackSelect", range);
+  }, [ctrl]);
+  return (
+    <WriterCanvas
+      document={document}
+      className="h-full"
+      onHoverChange={onHoverChange}
+      onSelectionChange={onSelectionChange}
+      externalHoverOccurrences={ctrl?.getJackHoverOccurrences()}
+      externalHoverOccurrencesSignal={ctrl?.getHoverEpoch()}
+      externalSelectionOccurrences={ctrl?.getJackSelectOccurrences()}
+      externalSelectionOccurrencesSignal={ctrl?.getSelectEpoch()}
+    />
+  );
+}
+
 let puzzle3dPlayChromeRegistered = false;
 
 /** @emoji 🧊 Registers puzzle 3D play surface host, tab icons, and mesh preload. */
@@ -2601,6 +2636,9 @@ export function registerPuzzle3dPlaySurfaceHosts(): void {
   if (puzzle3dPlayChromeRegistered) return;
   puzzle3dPlayChromeRegistered = true;
   registerUiPuzzle3dSurfaceHost(PUZZLE_3D_PLAY_VIEWPORT_SURFACE_ID, Puzzle3dPlayViewportHost);
+  registerUiWriterSurfaceHost(PUZZLE_3D_PLAY_SURFACE_ID_JACK, Puzzle3dPlayJackSurfaceHost);
+  registerWindowBody(PUZZLE_3D_PLAY_BODY_KEY_JACK, () =>
+    buildWriterWindowBody(PUZZLE_3D_PLAY_SURFACE_ID_JACK, PUZZLE_3D_PLAY_CONTROLLER_ID, PUZZLE_3D_PLAY_WINDOW_KIND_JACK));
   registerTabIcon(PUZZLE_3D_PLAY_ICON_INSPECTOR, "clipboard-list");
   registerTabIcon(PUZZLE_3D_PLAY_ICON_KINDS, "tags");
   registerTabIcon(PUZZLE_3D_PLAY_ICON_HIERARCHY, "list-tree");
@@ -2644,6 +2682,9 @@ import {
     PUZZLE_5D_PLAY_2D_WINDOW_ID,
     PUZZLE_5D_PLAY_3D_BODY_KEY,
     PUZZLE_5D_PLAY_3D_SURFACE_ID,
+    PUZZLE_5D_PLAY_JACK_BODY_KEY,
+    PUZZLE_5D_PLAY_JACK_SURFACE_ID,
+    PUZZLE_5D_PLAY_JACK_WINDOW_ID,
     PUZZLE_5D_PLAY_APP_ID,
     PUZZLE_5D_PLAY_CONTROLLER_ID,
     PUZZLE_5D_PLAY_HIERARCHY_TAB_ID,
@@ -2660,7 +2701,10 @@ import {
     puzzle5dFixturePaletteTreeDragController,
     type Puzzle5dPlayHostBridge,
     type Puzzle5dPlaySnapshot
-} from "@semio-tech/puzzle-5d-play";
+} from "@semio-tech/puzzle-5d-core";
+import { buildWriterWindowBody } from "@semio-tech/framework-platform-core";
+import { createWriterDocument } from "@semio-tech/writer-core";
+import { WriterCanvas } from "@semio-tech/writer-react";
 import {
     FiveD,
     Puzzle5dBrushPairedSync,
@@ -3157,6 +3201,31 @@ function Puzzle5d3dSurfaceHost({ node }: { readonly node: UiPuzzle3dHostSurfaceN
 }
 //#endregion 🔖Surfaces
 
+function Puzzle5dPlayJackSurfaceHost({ node: _node }: { readonly node: import("@semio-tech/framework-platform-core").UiWriterHostSurfaceNode }): React.ReactElement {
+  const { controller } = usePuzzle5dPlaySnapshot();
+  void controller?.getHoverEpoch();
+  void controller?.getSelectEpoch();
+  const document = controller?.getWriterDocumentJack() ?? createWriterDocument({ id: "puzzle-5d-jack", languageId: "jack", text: "" });
+  const onHoverChange = reactHostPort.useCallback((offset: number | null) => {
+    puzzle5dPlayControllerRef.current?.run("setJackHover", { offset });
+  }, []);
+  const onSelectionChange = reactHostPort.useCallback((range: { start: number; end: number }) => {
+    puzzle5dPlayControllerRef.current?.run("setJackSelect", range);
+  }, []);
+  return (
+    <WriterCanvas
+      document={document}
+      className="h-full"
+      onHoverChange={onHoverChange}
+      onSelectionChange={onSelectionChange}
+      externalHoverOccurrences={controller?.getJackHoverOccurrences()}
+      externalHoverOccurrencesSignal={controller?.getHoverEpoch()}
+      externalSelectionOccurrences={controller?.getJackSelectOccurrences()}
+      externalSelectionOccurrencesSignal={controller?.getSelectEpoch()}
+    />
+  );
+}
+
 //#region 🔖Mount
 let topologyPlayChromeRegistered = false;
 
@@ -3166,9 +3235,12 @@ export function registerPuzzle5dPlaySurfaceHosts(): void {
   topologyPlayChromeRegistered = true;
   registerUiPuzzle2dSurfaceHost(PUZZLE_5D_PLAY_2D_SURFACE_ID, Puzzle5d2dSurfaceHost);
   registerUiPuzzle3dSurfaceHost(PUZZLE_5D_PLAY_3D_SURFACE_ID, Puzzle5d3dSurfaceHost);
+  registerUiWriterSurfaceHost(PUZZLE_5D_PLAY_JACK_SURFACE_ID, Puzzle5dPlayJackSurfaceHost);
   registerTabIcon(PUZZLE_5D_PLAY_ICON_KINDS, "tags");
   registerWindowBody(PUZZLE_5D_PLAY_2D_BODY_KEY, buildPuzzle5d2dDeclarativeBody);
   registerWindowBody(PUZZLE_5D_PLAY_3D_BODY_KEY, buildPuzzle5d3dDeclarativeBody);
+  registerWindowBody(PUZZLE_5D_PLAY_JACK_BODY_KEY, () =>
+    buildWriterWindowBody(PUZZLE_5D_PLAY_JACK_SURFACE_ID, PUZZLE_5D_PLAY_CONTROLLER_ID, PUZZLE_5D_PLAY_JACK_WINDOW_ID));
 }
 
 function Puzzle5dPlayChrome({
@@ -3254,6 +3326,7 @@ import {
     PUZZLE_2D_FILL_COUNT_MAX,
     PUZZLE_2D_PLAY_APP_ID,
     PUZZLE_2D_PLAY_BODY_KEY_DETAIL,
+    PUZZLE_2D_PLAY_BODY_KEY_JACK,
     PUZZLE_2D_PLAY_BODY_KEY_OVERVIEW,
     PUZZLE_2D_PLAY_BODY_KEY_SELECTION,
     PUZZLE_2D_PLAY_CONTROLLER_ID,
@@ -3267,6 +3340,9 @@ import {
     PUZZLE_2D_PLAY_KINDS_TAB_ID,
     PUZZLE_2D_PLAY_SETTINGS_BODY_KEY,
     PUZZLE_2D_PLAY_SURFACE_ID,
+    PUZZLE_2D_PLAY_SURFACE_ID_JACK,
+    PUZZLE_2D_PLAY_SURFACE_ID_COMPILED_DAG,
+    PUZZLE_2D_PLAY_WINDOW_KIND_JACK,
     Puzzle2dPlayShellController,
     applyPuzzle2dFillCount,
     buildPuzzle2dPlayDetailDeclarativeBody,
@@ -3287,6 +3363,7 @@ import {
     puzzle2dPlayDuplicateSelection,
     puzzle2dPlayFixtureForId,
     puzzle2dPlayFixtureJson,
+    puzzle2dFixtureToJson,
     puzzle2dPlayForwardsCanvasStructuralDelete,
     puzzle2dPlayHierarchyGraphIdFromTreeItemId,
     puzzle2dPlayHierarchyTreeHighlightedIds,
@@ -3303,7 +3380,10 @@ import {
     type Puzzle2dPlayHostBridge,
     type Puzzle2dPlayPaneId,
     type Puzzle2dPlayStructuralDeleteItem,
-} from "@semio-tech/puzzle-2d-play";
+} from "@semio-tech/puzzle-2d-core";
+import { buildWriterWindowBody } from "@semio-tech/framework-platform-core";
+import { createWriterDocument } from "@semio-tech/writer-core";
+import { WriterCanvas } from "@semio-tech/writer-react";
 import {
     BUILTIN_PORT_HANDLE_KIND,
     DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX,
@@ -3385,7 +3465,7 @@ import {
     wiresPlayHierarchyTreeSelectedIds,
     wiresPlayIdentityLabelForNodeId,
     wiresPlayRelationshipKindDisplayName,
-} from "@semio-tech/reasoning-mindmap-wires-play";
+} from "@semio-tech/reasoning-mindmap-wires-core";
 import type { ReactNode } from "react";
 // #endregion 🔌Adapters
 
@@ -3429,7 +3509,7 @@ function puzzle2dPlayResolvedDefaultFixture(): Puzzle2dFixture {
 const PUZZLE_2D_PLAY_DEFAULT_KIND_CATALOGS = puzzle2dFixtureMergedKindCatalogs(puzzle2dPlayResolvedDefaultFixture());
 
 // #region 🔖Kinds
-export type { Puzzle2dPlayPaneId } from "@semio-tech/puzzle-2d-play";
+export type { Puzzle2dPlayPaneId } from "@semio-tech/puzzle-2d-core";
 
 const puzzle2dPlayOverviewWindowContextMenu: ContextMenuItem[] = [{ id: "win-demo", label: "Overview window menu demo" }];
 const puzzle2dPlayDemoNodeContextMenu: ContextMenuItem[] = [
@@ -3801,6 +3881,7 @@ const Puzzle2dPlayShellContext = reactHostPort.createContext<Puzzle2dPlayShellVa
 const puzzle2dPlayShellRef: { current: Puzzle2dPlayShellValue | null } = { current: null };
 const puzzle2dPlaySelectionRef: { current: Puzzle2dPlaySelectionValue | null } = { current: null };
 const puzzle2dPlayRuntimeRef: { current: Platform | null } = { current: null };
+const puzzle2dPlayShellControllerRef: { current: Puzzle2dPlayShellController | null } = { current: null };
 
 const Puzzle2dPlaySelectionContext = reactHostPort.createContext<Puzzle2dPlaySelectionValue | null>(null);
 
@@ -4237,7 +4318,25 @@ const Puzzle2dPlayPaneCanvas = React.memo(function Puzzle2dPlayPaneCanvas({
   const reportEffectiveLod = reactHostPort.useContext(Puzzle2dPlayLodRuntimeContext);
   const onLodChange = reactHostPort.useCallback((lod: Puzzle2dDrawLodKind) => reportEffectiveLod?.(paneId, lod), [paneId, reportEffectiveLod]);
   const { applyCanvasSelection } = usePuzzle2dPlayCanvasSelection();
-  const onSelect = reactHostPort.useCallback((snapshot: Puzzle2dSelectionSnapshot) => applyCanvasSelection(snapshot.ids), [applyCanvasSelection]);
+  const { preselection: jackPreselection } = usePuzzle2dPlaySelection();
+  const puzzle2dShellCtrl = puzzle2dPlayRuntimeRef.current?.getActiveApp()?.controller as Puzzle2dPlayShellController | undefined;
+  const jackBridgeEpoch = reactHostPort.useSyncExternalStore(
+    (listener) => puzzle2dShellCtrl?.subscribeSnapshot(listener) ?? (() => {}),
+    () => (puzzle2dShellCtrl?.getHoverEpoch() ?? 0) + (puzzle2dShellCtrl?.getSelectEpoch() ?? 0),
+    () => 0,
+  );
+  void jackBridgeEpoch;
+  const jackPreselect = reactHostPort.useMemo((): Puzzle2dPreselectSnapshot => {
+    const highlighted = puzzle2dShellCtrl?.getGraphHighlightedNodeIds() ?? [];
+    return highlighted.length ? { ids: [], removedIds: [...highlighted] } : jackPreselection;
+  }, [jackBridgeEpoch, jackPreselection, puzzle2dShellCtrl]);
+  const onSelect = reactHostPort.useCallback(
+    (snapshot: Puzzle2dSelectionSnapshot) => {
+      applyCanvasSelection(snapshot.ids);
+      puzzle2dPlayShellControllerRef.current?.run("setGraphSelect", { ids: [...snapshot.ids] });
+    },
+    [applyCanvasSelection],
+  );
   reactHostPort.useEffect(() => {
     puzzle2dSelectionActionsRef.current = {
       toggleHidden: (value) => puzzle2dPlayRuntimeRef.current?.commandBus.dispatch(PUZZLE_2D_PLAY_CONTROLLER_ID, "setSelectionFlag", { flag: "hidden", value }),
@@ -4305,6 +4404,7 @@ const Puzzle2dPlayPaneCanvas = React.memo(function Puzzle2dPlayPaneCanvas({
   const onCanvasHover = reactHostPort.useCallback(
     (payload: Puzzle2dHoverPayload) => {
       setHoverForPane(paneId, payload);
+      puzzle2dPlayShellControllerRef.current?.run("setGraphHover", { id: payload.id });
     },
     [paneId, setHoverForPane],
   );
@@ -4334,6 +4434,7 @@ const Puzzle2dPlayPaneCanvas = React.memo(function Puzzle2dPlayPaneCanvas({
         onFixtureDrop={isWiresPlay ? undefined : (d) => handleCanvasFixtureDrop(paneId, d)}
         onSelect={onSelect}
         onBrushCandidates={notifyBrushCandidates}
+        preselection={jackPreselect}
         hoveredId={hoveredId}
         kindHover={hoveredKind}
         onHover={onCanvasHover}
@@ -4360,6 +4461,42 @@ function Puzzle2dPlayPaneSurfaceHost({ node }: { readonly node: UiPuzzle2dHostSu
   return <Puzzle2dPlayPaneCanvas paneId={paneId} scopeId={scopeId} lodMode={lodMode} showBackgroundMenu={paneId === "2d-overview"} />;
 }
 
+function Puzzle2dPlayJackSurfaceHost({ node: _node }: { readonly node: import("@semio-tech/framework-platform-core").UiWriterHostSurfaceNode }): ReactElement {
+  const ctrl = puzzle2dPlayShellControllerRef.current ?? undefined;
+  void ctrl?.getHoverEpoch();
+  void ctrl?.getSelectEpoch();
+  const document = ctrl?.getWriterDocumentJack() ?? createWriterDocument({ id: "puzzle-2d-jack", languageId: "jack", text: "" });
+  const onHoverChange = reactHostPort.useCallback((offset: number | null) => {
+    puzzle2dPlayShellControllerRef.current?.run("setJackHover", { offset });
+  }, []);
+  const onSelectionChange = reactHostPort.useCallback((range: { start: number; end: number }) => {
+    puzzle2dPlayShellControllerRef.current?.run("setJackSelect", range);
+  }, []);
+  return (
+    <WriterCanvas
+      document={document}
+      className="h-full"
+      onHoverChange={onHoverChange}
+      onSelectionChange={onSelectionChange}
+      externalHoverOccurrences={ctrl?.getJackHoverOccurrences()}
+      externalHoverOccurrencesSignal={ctrl?.getHoverEpoch()}
+      externalSelectionOccurrences={ctrl?.getJackSelectOccurrences()}
+      externalSelectionOccurrencesSignal={ctrl?.getSelectEpoch()}
+    />
+  );
+}
+
+function Puzzle2dPlayCompiledDagSurfaceHost({ node: _node }: { readonly node: import("@semio-tech/framework-platform-core").UiWriterHostSurfaceNode }): ReactElement {
+  const ctrl = puzzle2dPlayShellControllerRef.current ?? undefined;
+  const [revision, setRevision] = reactHostPort.useState(0);
+  reactHostPort.useEffect(() => ctrl?.subscribeSnapshot(() => setRevision((value) => value + 1)) ?? undefined, [ctrl]);
+  const document = reactHostPort.useMemo(
+    () => ctrl?.getWriterDocumentCompiledDag() ?? createWriterDocument({ id: "puzzle-2d-compiled-dag", languageId: "wire", text: "" }),
+    [ctrl, revision],
+  );
+  return <WriterCanvas document={document} className="h-full min-h-0" />;
+}
+
 let puzzle2dPlayChromeRegistered = false;
 
 /** @emoji 🧊 Registers puzzle 2d play surface host, window bodies, and tab icons (called from `@semio-tech/framework-playground-renderer-react`). */
@@ -4367,6 +4504,10 @@ export function registerPuzzle2dPlaySurfaceHosts(): void {
   if (puzzle2dPlayChromeRegistered) return;
   puzzle2dPlayChromeRegistered = true;
   registerUiPuzzle2dSurfaceHost(PUZZLE_2D_PLAY_SURFACE_ID, Puzzle2dPlayPaneSurfaceHost);
+  registerUiWriterSurfaceHost(PUZZLE_2D_PLAY_SURFACE_ID_JACK, Puzzle2dPlayJackSurfaceHost);
+  registerUiWriterSurfaceHost(PUZZLE_2D_PLAY_SURFACE_ID_COMPILED_DAG, Puzzle2dPlayCompiledDagSurfaceHost);
+  registerWindowBody(PUZZLE_2D_PLAY_BODY_KEY_JACK, () =>
+    buildWriterWindowBody(PUZZLE_2D_PLAY_SURFACE_ID_JACK, PUZZLE_2D_PLAY_CONTROLLER_ID, PUZZLE_2D_PLAY_WINDOW_KIND_JACK));
   registerWindowBody(PUZZLE_2D_PLAY_BODY_KEY_OVERVIEW, buildPuzzle2dPlayOverviewDeclarativeBody);
   registerWindowBody(PUZZLE_2D_PLAY_BODY_KEY_DETAIL, buildPuzzle2dPlayDetailDeclarativeBody);
   registerWindowBody(PUZZLE_2D_PLAY_BODY_KEY_SELECTION, buildPuzzle2dPlaySelectionDeclarativeBody);
@@ -5045,6 +5186,7 @@ function Puzzle2dPlayInner({
     setHoverSourcePane(null);
     catalogRawFixtureRef.current = undefined;
     setPuzzle2dPlayPaneCamerasBaseline(triptychCamerasForFixture(next));
+    puzzle2dPlayShellControllerRef.current?.run("notifyFixtureRevision");
   }, [bumpSceneAuthoringEpoch, guardFixtureAuthoringFromStructuralDeletes, triptychCamerasForFixture]);
 
   const patchFixture = reactHostPort.useCallback(
@@ -5053,6 +5195,7 @@ function Puzzle2dPlayInner({
       catalogRawFixtureRef.current = undefined;
       setFixtureState((prev) => updater(prev));
       bumpSceneAuthoringEpoch();
+      puzzle2dPlayShellControllerRef.current?.run("notifyFixtureRevision");
     },
     [bumpSceneAuthoringEpoch, guardFixtureAuthoringFromStructuralDeletes],
   );
@@ -5064,6 +5207,7 @@ function Puzzle2dPlayInner({
   const setSelectionIds = reactHostPort.useCallback((ids: readonly string[]) => {
     setSelectionIdsState(new Set(ids));
     puzzle2dSyncSelectionToAllAuthoringPeers(ids);
+    puzzle2dPlayShellControllerRef.current?.run("setGraphSelect", { ids: [...ids] });
   }, []);
 
   const setHoverPane = reactHostPort.useCallback((pane: Puzzle2dPlayPaneId) => {
@@ -5084,6 +5228,7 @@ function Puzzle2dPlayInner({
       hoverSourcePaneRef.current = pane;
       setHoverSourcePane(pane);
       applyHoverFocus(payload);
+      puzzle2dPlayShellControllerRef.current?.run("setGraphHover", { id: payload.id });
     },
     [applyHoverFocus],
   );
@@ -5103,6 +5248,7 @@ function Puzzle2dPlayInner({
       hoverSourcePaneRef.current = null;
       setHoverSourcePane(null);
       applyHoverFocus(payload);
+      puzzle2dPlayShellControllerRef.current?.run("setGraphHover", { id: payload.id });
     },
     [applyHoverFocus],
   );
@@ -5864,6 +6010,7 @@ function Puzzle2dPlayInner({
         puzzle2dSelectionMode,
         puzzle2dSelectionTargets,
       }),
+      getFixtureJson: () => puzzle2dFixtureToJson(fixture),
       runHostCommand: (command, args) => {
         const h = puzzle2dPlayToolbarHostRef.current;
         switch (command) {
@@ -6221,6 +6368,7 @@ function Puzzle2dPlayInner({
   }, [activeFixtureId, applyNavbarFixtureId]);
 
   puzzle2dPlayRuntimeRef.current = puzzle2dRuntime;
+  puzzle2dPlayShellControllerRef.current = puzzle2dShellController ?? null;
   puzzle2dPlayShellRef.current = shellValue;
   puzzle2dPlaySelectionRef.current = selectionValue;
   reactHostPort.useEffect(
@@ -6228,6 +6376,7 @@ function Puzzle2dPlayInner({
       puzzle2dPlayShellRef.current = null;
       puzzle2dPlaySelectionRef.current = null;
       puzzle2dPlayRuntimeRef.current = null;
+      puzzle2dPlayShellControllerRef.current = null;
     },
     [],
   );
@@ -6292,8 +6441,9 @@ import {
     buildMapPlayHierarchyTree,
     buildMapPlayInspectorTree,
     buildMapPlayMainDeclarativeBody,
+    parseGisMapFixtureV1,
     type MapPlayController
-} from "@semio-tech/gis-2d-play";
+} from "@semio-tech/gis-2d-core";
 import { MapCanvas, Position, Route, type GisMapLodId, type MapContextMenuContext, type MapHoveredFeature, type MapSelectPayload } from "@semio-tech/gis-2d-react";
 
 let mapPlayChromeRegistered = false;
@@ -6596,6 +6746,7 @@ import {
     FLOW_PLAY_SURFACE_ID,
     FLOW_PLAY_SURFACE_ID_GENERATE,
     FLOW_PLAY_SURFACE_ID_JACK,
+    FLOW_PLAY_SURFACE_ID_COMPILED_DAG,
     FLOW_PLAY_WINDOW_KIND_ID,
     FlowPlayController,
     buildFlowPlayCanvasContextMenu,
@@ -6603,7 +6754,7 @@ import {
     buildFlowPlayHierarchyTree,
     buildFlowPlayInspectorTree,
     registerFlowPlayDeclarativeBodies
-} from "@semio-tech/flow-play";
+} from "@semio-tech/flow-core";
 import {
     DAG_LOD_MODE_AUTOMATIC,
     FLOW_DEFAULT_PROXIMITY_DISTANCE,
@@ -6712,6 +6863,12 @@ function FlowPlayPaneSurfaceHost({ node }: { readonly node: UiFlowHostSurfaceNod
     },
     [ctrl],
   );
+  const onCompiledWireLiteralChange = reactHostPort.useCallback(
+    (text: string) => {
+      ctrl?.run("setCompiledWireLiteral", { text });
+    },
+    [ctrl],
+  );
   return (
     <FlowCanvas
       fixtureJson={ctrl?.getFixtureJson() ?? FLOW_PLAY_DEFAULT_FIXTURE_JSON}
@@ -6722,6 +6879,7 @@ function FlowPlayPaneSurfaceHost({ node }: { readonly node: UiFlowHostSurfaceNod
       onPreviewText={onPreviewText}
       onCatalogueReady={onCatalogueReady}
       onFixtureChange={onFixtureChange}
+      onCompiledWireLiteralChange={onCompiledWireLiteralChange}
       contextMenu={(ctx) => buildFlowPlayCanvasContextMenu(ctx, onCanvasCommand)}
       selectedNodeIds={ctrl?.getSelectedNodeIds()}
       onSelectionChange={onSelectionChange}
@@ -6755,6 +6913,17 @@ function FlowPlayJackSurfaceHost({ node: _node }: { readonly node: import("@semi
       externalSelectionOccurrencesSignal={ctrl?.getSelectEpoch()}
     />
   );
+}
+
+function FlowPlayCompiledDagSurfaceHost({ node: _node }: { readonly node: import("@semio-tech/framework-platform-core").UiWriterHostSurfaceNode }): ReactElement {
+  const { runtime } = useApp();
+  const ctrl = useFlowPlayController();
+  const interactionRevision = useFlowPlayInteractionRevision(runtime);
+  const document = reactHostPort.useMemo(
+    () => ctrl?.getWriterDocumentCompiledDag() ?? createWriterDocument({ id: "flow-compiled-dag", languageId: "wire", text: "" }),
+    [ctrl, interactionRevision],
+  );
+  return <WriterCanvas document={document} className="h-full min-h-0" />;
 }
 
 class FlowPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
@@ -6861,6 +7030,7 @@ export function registerFlowPlaySurfaceHosts(): void {
   registerUiFlowSurfaceHost(FLOW_PLAY_SURFACE_ID, FlowPlayPaneSurfaceHost);
   registerUiFormsSurfaceHost(FLOW_PLAY_SURFACE_ID_GENERATE, FlowPlayGenerateSurfaceHost);
   registerUiWriterSurfaceHost(FLOW_PLAY_SURFACE_ID_JACK, FlowPlayJackSurfaceHost);
+  registerUiWriterSurfaceHost(FLOW_PLAY_SURFACE_ID_COMPILED_DAG, FlowPlayCompiledDagSurfaceHost);
   registerFlowPlayDeclarativeBodies();
 }
 
@@ -6897,7 +7067,7 @@ import {
     buildDagPlayHierarchyTree,
     buildDagPlayInspectorTree,
     registerDagPlayDeclarativeBodies
-} from "@semio-tech/dag-play";
+} from "@semio-tech/dag-host-core";
 import { DAG_LOD_MODE_AUTOMATIC as DAG_HOST_LOD_AUTOMATIC, DagCanvas } from "@semio-tech/dag-react";
 import type { UiDagHostSurfaceNode } from "@semio-tech/framework-platform-core";
 import { createWriterDocument } from "@semio-tech/writer-core";
@@ -7087,7 +7257,7 @@ import {
   IMPERATIVE_PLAY_SURFACE_ID,
   ImperativePlayController,
   registerImperativePlayDeclarativeBodies,
-} from "@semio-tech/imperative-play";
+} from "@semio-tech/imperative-core";
 import { ImperativeEditor } from "@semio-tech/imperative-react";
 import type { UiImperativeHostSurfaceNode } from "@semio-tech/framework-platform-core";
 
@@ -7165,13 +7335,14 @@ import {
   SEQUENCE_PLAY_SCRIPT_WINDOW_KIND_ID,
   SEQUENCE_PLAY_SURFACE_ID,
   SEQUENCE_PLAY_SURFACE_ID_JACK,
+  SEQUENCE_PLAY_SURFACE_ID_COMPILED_DAG,
   SEQUENCE_PLAY_WINDOW_KIND_ID,
   SequencePlayController,
   buildSequencePlayCatalogueTree,
   buildSequencePlayHierarchyTree,
   buildSequencePlayInspectorTree,
   registerSequencePlayDeclarativeBodies,
-} from "@semio-tech/sequence-play";
+} from "@semio-tech/sequence-core";
 import {
   DAG_LOD_MODE_AUTOMATIC as SEQUENCE_HOST_LOD_AUTOMATIC,
   dagLodCanvasProps as sequenceLodCanvasProps,
@@ -7242,6 +7413,12 @@ function SequencePlayPaneSurfaceHost({ node }: { readonly node: import("@semio-t
     },
     [ctrl],
   );
+  const onCompiledWireLiteralChange = reactHostPort.useCallback(
+    (text: string) => {
+      ctrl?.run("setCompiledWireLiteral", { text });
+    },
+    [ctrl],
+  );
   const onRunResult = reactHostPort.useCallback(
     (result: import("@semio-tech/imperative-core").RunResult) => {
       ctrl?.run("setRunResult", { result });
@@ -7259,6 +7436,7 @@ function SequencePlayPaneSurfaceHost({ node }: { readonly node: import("@semio-t
       onFixtureChange={onFixtureChange}
       onSelectionChange={onSelectionChange}
       onCompiledTextChange={onCompiledTextChange}
+      onCompiledWireLiteralChange={onCompiledWireLiteralChange}
       onRunResult={onRunResult}
       {...lodProps}
       onLodChange={onLodChange}
@@ -7307,12 +7485,24 @@ function SequencePlayJackSurfaceHost({ node: _node }: { readonly node: import("@
   );
 }
 
+function SequencePlayCompiledDagSurfaceHost({ node: _node }: { readonly node: import("@semio-tech/framework-platform-core").UiWriterHostSurfaceNode }): ReactElement {
+  const appCtx = reactHostPort.useContext(PlaygroundContext);
+  const ctrl = useSequencePlayController();
+  const interactionRevision = useSequencePlayInteractionRevision(appCtx?.runtime as Platform);
+  const document = reactHostPort.useMemo(
+    () => ctrl?.getWriterDocumentCompiledDag() ?? createWriterDocument({ id: "sequence-compiled-dag", languageId: "wire", text: "" }),
+    [ctrl, interactionRevision],
+  );
+  return <WriterCanvas document={document} className="h-full min-h-0" />;
+}
+
 export function registerSequencePlaySurfaceHosts(): void {
   if (sequencePlayChromeRegistered) return;
   sequencePlayChromeRegistered = true;
   registerUiSequenceSurfaceHost(SEQUENCE_PLAY_SURFACE_ID, SequencePlayPaneSurfaceHost);
   registerUiWriterSurfaceHost(SEQUENCE_PLAY_SCRIPT_SURFACE_ID, SequencePlayScriptSurfaceHost);
   registerUiWriterSurfaceHost(SEQUENCE_PLAY_SURFACE_ID_JACK, SequencePlayJackSurfaceHost);
+  registerUiWriterSurfaceHost(SEQUENCE_PLAY_SURFACE_ID_COMPILED_DAG, SequencePlayCompiledDagSurfaceHost);
   registerSequencePlayDeclarativeBodies();
 }
 
@@ -7424,7 +7614,7 @@ import {
   buildLayoutPlayInspectorTree,
   buildLayoutPlayPreflightTree,
   registerLayoutPlayDeclarativeBodies,
-} from "@semio-tech/layout-play";
+} from "@semio-tech/layout-core";
 import { LayoutCanvas } from "@semio-tech/layout-react";
 import { DEFAULT_LAYOUT_DOCUMENT_JSON } from "@semio-tech/layout-core";
 
@@ -7592,7 +7782,7 @@ import {
   buildLowpolyPlayInspectorTree,
   buildLowpolyPlayLayersTree,
   registerLowpolyPlayDeclarativeBodies,
-} from "@semio-tech/lowpoly-play";
+} from "@semio-tech/lowpoly-core";
 import {
   LowpolyCanvas,
   LowpolyUvCanvas,
@@ -7606,6 +7796,45 @@ import { isLowpolyFixtureReady, parseLowpolyFixtureJson, type LowpolySceneObject
 
 let lowpolyPlayChromeRegistered = false;
 const lowpolyPlayControllerRef: { current: LowpolyPlayController | null } = { current: null };
+
+type LowpolySharedPlaySnapshot = {
+	readonly session: LowpolySessionWasm | null;
+	readonly sceneObjects: readonly LowpolySceneObject[];
+	readonly paintTextureRevision: number;
+	readonly generation: number;
+};
+
+const lowpolySharedPlaySnapshot: LowpolySharedPlaySnapshot = {
+	session: null,
+	sceneObjects: [],
+	paintTextureRevision: 0,
+	generation: 0,
+};
+const lowpolySharedPlayListeners = new Set<() => void>();
+const lowpolyPaintStrokeHandlersRef: { current: { onBegin?: () => void; onEnd?: () => void } } = { current: {} };
+
+function notifyLowpolySharedPlay(next?: Partial<Pick<LowpolySharedPlaySnapshot, "session" | "sceneObjects" | "paintTextureRevision">>): void {
+	if (next?.session !== undefined) (lowpolySharedPlaySnapshot as { session: LowpolySessionWasm | null }).session = next.session;
+	if (next?.sceneObjects !== undefined) (lowpolySharedPlaySnapshot as { sceneObjects: readonly LowpolySceneObject[] }).sceneObjects = next.sceneObjects;
+	if (next?.paintTextureRevision !== undefined) (lowpolySharedPlaySnapshot as { paintTextureRevision: number }).paintTextureRevision = next.paintTextureRevision;
+	(lowpolySharedPlaySnapshot as { generation: number }).generation += 1;
+	for (const listener of lowpolySharedPlayListeners) listener();
+}
+
+function bumpLowpolyPaintTextureRevision(): void {
+	notifyLowpolySharedPlay({ paintTextureRevision: lowpolySharedPlaySnapshot.paintTextureRevision + 1 });
+}
+
+function useLowpolySharedPlaySnapshot(): LowpolySharedPlaySnapshot {
+	return reactHostPort.useSyncExternalStore(
+		(listener) => {
+			lowpolySharedPlayListeners.add(listener);
+			return () => lowpolySharedPlayListeners.delete(listener);
+		},
+		() => lowpolySharedPlaySnapshot,
+		() => lowpolySharedPlaySnapshot,
+	);
+}
 
 function useLowpolyPlayController(runtimeOverride?: Platform): LowpolyPlayController | undefined {
   const appCtx = reactHostPort.useContext(PlaygroundContext);
@@ -7663,54 +7892,52 @@ function lowpolyMirrorAxis(toolParams: Record<string, number>): string {
   return axisIndex === 1 ? "y" : axisIndex === 2 ? "z" : "x";
 }
 
-function LowpolyPlaySurfaceHost({ node: _node }: { readonly node: UiPuzzle3dHostSurfaceNode }): ReactElement {
+function LowpolyPlaySessionBridge(): null {
   const ctrl = useLowpolyPlayController();
-  const { activeModeId, runtime } = useApp();
-  const hoveredTarget = useLowpolyPlayHoverTarget(runtime);
-  const [session, setSession] = reactHostPort.useState<LowpolySessionWasm | null>(null);
-  const [sceneObjects, setSceneObjects] = reactHostPort.useState<readonly LowpolySceneObject[]>([]);
   const meshEpoch = ctrl?.getMeshCommandEpoch() ?? 0;
   const toolParams = ctrl?.getToolParams() ?? {};
-  const controllerFixtureJson = ctrl?.getFixtureJson() ?? LOWPOLY_PLAY_DEFAULT_FIXTURE_JSON;
-  const fixtureJson =
-    session && isLowpolyFixtureReady(controllerFixtureJson)
-      ? controllerFixtureJson
-      : session?.fixtureJson() ?? controllerFixtureJson;
-  const interactionMode = activeModeId === "paint" ? "paint" : "model";
   const paintStrokeBeforeRef = reactHostPort.useRef<Uint8Array | null>(null);
-  const activeObjectId = sceneObjects.find((object) => object.active)?.id;
+  const activeObjectId = lowpolySharedPlaySnapshot.sceneObjects.find((object) => object.active)?.id;
 
   reactHostPort.useEffect(() => {
     let cancelled = false;
     void (async () => {
-      const s = await createLowpolySession();
+      if (lowpolySharedPlaySnapshot.session) {
+        notifyLowpolySharedPlay();
+        return;
+      }
+      const session = await createLowpolySession();
       if (cancelled) return;
       const json = ctrl?.getFixtureJson() ?? LOWPOLY_PLAY_DEFAULT_FIXTURE_JSON;
       if (isLowpolyFixtureReady(json)) {
-        safeLoadLowpolyFixture(s, json);
+        safeLoadLowpolyFixture(session, json);
       } else {
         const defaultJson = await loadDefaultLowpolyFixtureJson();
-        safeLoadLowpolyFixture(s, defaultJson);
-        if (ctrl) syncLowpolyControllerFromSession(ctrl, s);
+        safeLoadLowpolyFixture(session, defaultJson);
+        if (ctrl) syncLowpolyControllerFromSession(ctrl, session);
       }
-      setSession(s);
-      setSceneObjects(tessellateAllLowpolySession(s));
+      notifyLowpolySharedPlay({
+        session,
+        sceneObjects: tessellateAllLowpolySession(session),
+      });
     })();
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [ctrl]);
 
   reactHostPort.useEffect(() => {
+    const session = lowpolySharedPlaySnapshot.session;
     if (!session || !ctrl) return;
     const json = ctrl.getFixtureJson();
     if (!isLowpolyFixtureReady(json)) return;
     safeLoadLowpolyFixture(session, json);
     session.setSelection(ctrl.getSelectionMode(), [...ctrl.getSelectedIds()]);
-    setSceneObjects(tessellateAllLowpolySession(session));
-  }, [session, ctrl, ctrl?.getFixtureJson(), ctrl?.getSelectionMode(), ctrl?.getSelectedIds()]);
+    notifyLowpolySharedPlay({ sceneObjects: tessellateAllLowpolySession(session) });
+  }, [ctrl, ctrl?.getFixtureJson(), ctrl?.getSelectionMode(), ctrl?.getSelectedIds(), ctrl?.getInteractionRevision()]);
 
   reactHostPort.useEffect(() => {
+    const session = lowpolySharedPlaySnapshot.session;
     if (!session || !ctrl || meshEpoch === 0) return;
     const pending = ctrl.getPendingMeshCommand();
     const paintPending = ctrl.getPendingPaintCommand();
@@ -7743,14 +7970,83 @@ function LowpolyPlaySurfaceHost({ node: _node }: { readonly node: UiPuzzle3dHost
         session.markUvSeam(Boolean(paintPending.args?.seam), [...ctrl.getSelectedIds()]);
       }
       syncLowpolyControllerFromSession(ctrl, session);
-      setSceneObjects(tessellateAllLowpolySession(session));
+      notifyLowpolySharedPlay({ sceneObjects: tessellateAllLowpolySession(session) });
     } catch {
       /* mesh command may fail on empty selection */
     } finally {
       ctrl.clearPendingMeshCommand();
       ctrl.clearPendingPaintCommand();
     }
-  }, [meshEpoch, session, ctrl, toolParams]);
+  }, [meshEpoch, ctrl, toolParams]);
+
+  const paintVcsGeneration = reactHostPort.useSyncExternalStore(
+    (listener) => ctrl?.subscribePaintVcs(listener) ?? (() => {}),
+    () => ctrl?.getPaintVcsGeneration() ?? 0,
+    () => 0,
+  );
+
+  reactHostPort.useEffect(() => {
+    const session = lowpolySharedPlaySnapshot.session;
+    if (!session || !ctrl) return;
+    const projection = ctrl.getPaintProjection();
+    const expected = 1024 * 1024 * 4;
+    if (projection.pixels.length !== expected) return;
+    session.setPaintLayerPixels(projection.objectId, projection.layerIndex, new Uint8Array(projection.pixels));
+    bumpLowpolyPaintTextureRevision();
+  }, [paintVcsGeneration, ctrl]);
+
+  reactHostPort.useEffect(() => {
+    lowpolyPaintStrokeHandlersRef.current.onBegin = () => {
+      const session = lowpolySharedPlaySnapshot.session;
+      if (!session || !activeObjectId) return;
+      const layerIndex = ctrl?.getActivePaintLayerIndex() ?? 0;
+      paintStrokeBeforeRef.current = new Uint8Array(session.paintLayerPixels(activeObjectId, layerIndex));
+    };
+    lowpolyPaintStrokeHandlersRef.current.onEnd = () => {
+      const session = lowpolySharedPlaySnapshot.session;
+      if (!session || !ctrl || !activeObjectId) return;
+      const layerIndex = ctrl.getActivePaintLayerIndex();
+      const before = paintStrokeBeforeRef.current;
+      const after = session.paintLayerPixels(activeObjectId, layerIndex);
+      if (before) {
+        ctrl.dispatchPaintVcs({
+          kind: "apply",
+          operations: [
+            {
+              kind: "layerPixels",
+              objectId: activeObjectId,
+              layerIndex,
+              before: [...before],
+              after: [...after],
+            },
+          ],
+        });
+      }
+      paintStrokeBeforeRef.current = null;
+      bumpLowpolyPaintTextureRevision();
+    };
+    return () => {
+      lowpolyPaintStrokeHandlersRef.current = {};
+    };
+  }, [activeObjectId, ctrl]);
+
+  return null;
+}
+
+function LowpolyPlaySurfaceHost({ node: _node }: { readonly node: UiPuzzle3dHostSurfaceNode }): ReactElement {
+  const ctrl = useLowpolyPlayController();
+  const { activeModeId, runtime } = useApp();
+  const hoveredTarget = useLowpolyPlayHoverTarget(runtime);
+  const shared = useLowpolySharedPlaySnapshot();
+  const session = shared.session;
+  const sceneObjects = shared.sceneObjects;
+  const toolParams = ctrl?.getToolParams() ?? {};
+  const controllerFixtureJson = ctrl?.getFixtureJson() ?? LOWPOLY_PLAY_DEFAULT_FIXTURE_JSON;
+  const fixtureJson =
+    session && isLowpolyFixtureReady(controllerFixtureJson)
+      ? controllerFixtureJson
+      : session?.fixtureJson() ?? controllerFixtureJson;
+  const interactionMode = activeModeId === "paint" ? "paint" : "model";
 
   const onFixtureChange = reactHostPort.useCallback(
     (json: string) => {
@@ -7768,46 +8064,14 @@ function LowpolyPlaySurfaceHost({ node: _node }: { readonly node: UiPuzzle3dHost
     [ctrl, session],
   );
   const onPaintStrokeBegin = reactHostPort.useCallback(() => {
-    if (!session || !activeObjectId) return;
-    const layerIndex = ctrl?.getActivePaintLayerIndex() ?? 0;
-    paintStrokeBeforeRef.current = new Uint8Array(session.paintLayerPixels(activeObjectId, layerIndex));
-  }, [activeObjectId, ctrl, session]);
-
+    lowpolyPaintStrokeHandlersRef.current.onBegin?.();
+  }, []);
   const onPaintStrokeEnd = reactHostPort.useCallback(() => {
-    if (!session || !ctrl || !activeObjectId) return;
-    const layerIndex = ctrl.getActivePaintLayerIndex();
-    const before = paintStrokeBeforeRef.current;
-    const after = session.paintLayerPixels(activeObjectId, layerIndex);
-    if (before) {
-      ctrl.dispatchPaintVcs({
-        kind: "apply",
-        operations: [
-          {
-            kind: "layerPixels",
-            objectId: activeObjectId,
-            layerIndex,
-            before: [...before],
-            after: [...after],
-          },
-        ],
-      });
-    }
-    paintStrokeBeforeRef.current = null;
-  }, [activeObjectId, ctrl, session]);
-
-  const paintVcsGeneration = reactHostPort.useSyncExternalStore(
-    (listener) => ctrl?.subscribePaintVcs(listener) ?? (() => {}),
-    () => ctrl?.getPaintVcsGeneration() ?? 0,
-    () => 0,
-  );
-
-  reactHostPort.useEffect(() => {
-    if (!session || !ctrl) return;
-    const projection = ctrl.getPaintProjection();
-    const expected = 1024 * 1024 * 4;
-    if (projection.pixels.length !== expected) return;
-    session.setPaintLayerPixels(projection.objectId, projection.layerIndex, new Uint8Array(projection.pixels));
-  }, [paintVcsGeneration, ctrl, session]);
+    lowpolyPaintStrokeHandlersRef.current.onEnd?.();
+  }, []);
+  const onSceneChange = reactHostPort.useCallback((objects: readonly LowpolySceneObject[]) => {
+    notifyLowpolySharedPlay({ sceneObjects: objects });
+  }, []);
 
   return (
     <div className="absolute inset-0 min-h-0 min-w-0">
@@ -7826,12 +8090,14 @@ function LowpolyPlaySurfaceHost({ node: _node }: { readonly node: UiPuzzle3dHost
         paintBrushSize={toolParams.brushSize ?? 16}
         paintBrushOpacity={toolParams.brushOpacity ?? 1}
         paintBrushHardness={toolParams.brushHardness ?? 0.5}
+        paintTextureRevision={shared.paintTextureRevision}
         onFixtureChange={onFixtureChange}
         onSelectionChange={onSelectionChange}
         onHoverChange={(target) => ctrl?.run("setHover", { target })}
-        onSceneChange={(objects) => setSceneObjects(objects)}
+        onSceneChange={onSceneChange}
         onPaintStrokeBegin={onPaintStrokeBegin}
         onPaintStrokeEnd={onPaintStrokeEnd}
+        onPaintTextureRefresh={bumpLowpolyPaintTextureRevision}
         className="h-full w-full"
       />
     </div>
@@ -7840,31 +8106,43 @@ function LowpolyPlaySurfaceHost({ node: _node }: { readonly node: UiPuzzle3dHost
 
 function LowpolyUvSurfaceHost({ node: _node }: { readonly node: UiPuzzle3dHostSurfaceNode }): ReactElement {
   const ctrl = useLowpolyPlayController();
-  const [session, setSession] = reactHostPort.useState<LowpolySessionWasm | null>(null);
-  const [sceneObjects, setSceneObjects] = reactHostPort.useState<readonly LowpolySceneObject[]>([]);
+  const shared = useLowpolySharedPlaySnapshot();
+  const session = shared.session;
+  const sceneObjects = shared.sceneObjects;
   const toolParams = ctrl?.getToolParams() ?? {};
   const fixtureJson = ctrl?.getFixtureJson() ?? LOWPOLY_PLAY_DEFAULT_FIXTURE_JSON;
   const activeObject = sceneObjects.find((object) => object.active) ?? sceneObjects[0] ?? null;
+  const paintStrokeBeforeRef = reactHostPort.useRef<Uint8Array | null>(null);
 
-  reactHostPort.useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      const s = await createLowpolySession();
-      if (cancelled) return;
-      if (isLowpolyFixtureReady(fixtureJson)) safeLoadLowpolyFixture(s, fixtureJson);
-      setSession(s);
-      setSceneObjects(tessellateAllLowpolySession(s));
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const onPaintStrokeBegin = reactHostPort.useCallback(() => {
+    if (!session || !activeObject) return;
+    const layerIndex = ctrl?.getActivePaintLayerIndex() ?? 0;
+    paintStrokeBeforeRef.current = new Uint8Array(session.paintLayerPixels(activeObject.id, layerIndex));
+  }, [activeObject, ctrl, session]);
 
-  reactHostPort.useEffect(() => {
-    if (!session || !isLowpolyFixtureReady(fixtureJson)) return;
-    safeLoadLowpolyFixture(session, fixtureJson);
-    setSceneObjects(tessellateAllLowpolySession(session));
-  }, [fixtureJson, session, ctrl?.getInteractionRevision()]);
+  const onPaintStrokeEnd = reactHostPort.useCallback(() => {
+    if (!session || !ctrl || !activeObject) return;
+    const layerIndex = ctrl.getActivePaintLayerIndex();
+    const before = paintStrokeBeforeRef.current;
+    const after = session.paintLayerPixels(activeObject.id, layerIndex);
+    if (before) {
+      ctrl.dispatchPaintVcs({
+        kind: "apply",
+        operations: [
+          {
+            kind: "layerPixels",
+            objectId: activeObject.id,
+            layerIndex,
+            before: [...before],
+            after: [...after],
+          },
+        ],
+      });
+    }
+    paintStrokeBeforeRef.current = null;
+    bumpLowpolyPaintTextureRevision();
+    ctrl.run("setFixtureJson", { json: session.fixtureJson() });
+  }, [activeObject, ctrl, session]);
 
   return (
     <div className="absolute inset-0 min-h-0 min-w-0">
@@ -7877,8 +8155,11 @@ function LowpolyUvSurfaceHost({ node: _node }: { readonly node: UiPuzzle3dHostSu
         paintBrushSize={toolParams.brushSize ?? 16}
         paintBrushOpacity={toolParams.brushOpacity ?? 1}
         paintBrushHardness={toolParams.brushHardness ?? 0.5}
+        paintTextureRevision={shared.paintTextureRevision}
         onFixtureChange={(json) => ctrl?.run("setFixtureJson", { json })}
-        onPaintStrokeEnd={() => ctrl?.run("setFixtureJson", { json: session?.fixtureJson() ?? fixtureJson })}
+        onPaintStrokeBegin={onPaintStrokeBegin}
+        onPaintStrokeEnd={onPaintStrokeEnd}
+        onPaintTextureRefresh={bumpLowpolyPaintTextureRevision}
         className="h-full w-full"
       />
     </div>
@@ -7984,7 +8265,12 @@ function LowpolyPlayInner({ runtime }: { readonly runtime: Platform }): ReactEle
     }),
     [interactionRevision, cataloguePanel, hierarchyPanel, inspectionPanel, layersPanel],
   );
-  return <PlaygroundView runtime={runtime} defaultAppId={LOWPOLY_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} />;
+  return (
+    <>
+      <LowpolyPlaySessionBridge />
+      <PlaygroundView runtime={runtime} defaultAppId={LOWPOLY_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} />
+    </>
+  );
 }
 
 function LowpolyPlayChrome({ runtime }: { readonly runtime: Platform }): ReactElement {
@@ -8032,7 +8318,7 @@ import {
   buildTrinityPlayHierarchyTree,
   buildTrinityPlayInspectorTree,
   registerTrinityJackPlayDeclarativeBodies,
-} from "@semio-tech/trinity-jack-play";
+} from "@semio-tech/trinity-jack-host-core";
 import {
   TRINITY_REWRITE_PLAY_CONTROLLER_ID,
   TRINITY_REWRITE_PLAY_APP_ID,
@@ -8056,7 +8342,7 @@ import {
   parseRewriteGraphFixtureJson,
   buildTrinityPlayCatalogueTree,
   registerTrinityRewritePlayDeclarativeBodies,
-} from "@semio-tech/trinity-rewrite-play";
+} from "@semio-tech/trinity-rewrite-core";
 import {
   TRINITY_DEFAULT_FIXTURE_JSON,
   TRINITY_LOD_MODE_AUTOMATIC,
@@ -8680,7 +8966,7 @@ import {
     buildProceduralPlayInspectorTree,
     registerProceduralPlayDeclarativeBodies,
     type ProceduralPlayHostBridge,
-} from "../../../../../procedural/3d/play/index.js";
+} from "@semio-tech/procedural-3d-core";
 
 let proceduralPlayChromeRegistered = false;
 const proceduralPlayControllerRef: { current: ProceduralPlayController | null } = { current: null };
@@ -9132,7 +9418,7 @@ import {
     buildProcedural2dPlayInspectorTree,
     registerProcedural2dPlayDeclarativeBodies,
     type Procedural2dPlayHostBridge,
-} from "../../../../../procedural/2d/play/index.js";
+} from "@semio-tech/procedural-2d-core";
 
 let procedural2dPlayChromeRegistered = false;
 const procedural2dPlayControllerRef: { current: Procedural2dPlayController | null } = { current: null };
@@ -9593,7 +9879,7 @@ import {
     buildShootingPlayInspectorTree,
     registerShootingPlayDeclarativeBodies,
     type ShootingPlayHostBridge
-} from "@semio-tech/shooting-play";
+} from "@semio-tech/shooting-core";
 import { ShootingIconCanvas, ShootingModelCanvas, renderShootingShot, resolveActiveShot } from "@semio-tech/shooting-react";
 
 type ShootingSurfaceHost = React.ComponentType<{ readonly node: UiShootingHostSurfaceNode }>;
@@ -9890,7 +10176,7 @@ import {
   commitFormsPlayQuestionDropAtClient,
   createFormsPlayHierarchyTreeDragController,
   registerFormsPlayDeclarativeBodies,
-} from "@semio-tech/forms-play";
+} from "@semio-tech/forms-core";
 import {
   FormEditSurface,
   FormRenderer,
@@ -10115,7 +10401,7 @@ import {
   registerRasterPlayDeclarativeBodies,
   type RasterPlayHierarchyBuildOptions,
   type RasterPlayHostBridge,
-} from "@semio-tech/raster-play";
+} from "@semio-tech/raster-core";
 import { RasterCanvas, RasterLayerView, RasterMaskView } from "@semio-tech/raster-react";
 
 let rasterPlayChromeRegistered = false;
@@ -10433,7 +10719,7 @@ import {
   registerDrawPlayDeclarativeBodies,
   type DrawPlayHierarchyBuildOptions,
   type DrawPlayHostBridge,
-} from "@semio-tech/draw-play";
+} from "@semio-tech/draw-core";
 import { DrawCanvas } from "@semio-tech/draw-react";
 
 let drawPlayChromeRegistered = false;
@@ -10696,7 +10982,7 @@ import {
   VCS_PLAY_SURFACE_ID_HISTORY,
   VcsPlayController,
   registerVcsPlayDeclarativeBodies,
-} from "@semio-tech/vcs-play";
+} from "@semio-tech/vcs-core";
 
 let vcsPlayChromeRegistered = false;
 const vcsPlayControllerRef: { current: VcsPlayController | null } = { current: null };
@@ -10822,7 +11108,7 @@ import {
   buildWriterPlayHierarchyTree,
   buildWriterPlayInspectorTree,
   registerWriterPlayDeclarativeBodies,
-} from "@semio-tech/writer-play";
+} from "@semio-tech/writer-core";
 
 let writerPlayChromeRegistered = false;
 const writerPlayControllerRef: { current: WriterPlayController | null } = { current: null };
@@ -11008,7 +11294,7 @@ import {
     PresentationPlayController,
     registerPresentationPlayDeclarativeBodies,
     type PresentationPlaySnapshot
-} from "@semio-tech/framework-presentation-play";
+} from "@semio-tech/framework-presentation-core";
 
 const PRESENTATION_TILE_HANDLES: readonly NormalizedRectHandle[] = ["nw", "n", "ne", "e", "se", "s", "sw", "w"];
 const PRESENTATION_TILE_VIEWPORT_MIN_ZOOM = 0.2;
@@ -11657,10 +11943,14 @@ import {
 	S_PLAY_SURFACE_HISTORY,
 	S_PLAY_SURFACE_LAUNCHER,
 	S_PLAY_SURFACE_MEDIA_GRAPH,
+	S_PLAY_SURFACE_JACK,
+	S_PLAY_SURFACE_COMPILED_DAG,
+	S_PLAY_BODY_JACK,
+	S_PLAY_WINDOW_JACK,
 	SPlayController,
 	buildSPlayInspectorTree,
 	registerSPlayDeclarativeBodies,
-} from "@semio-tech/s-play";
+} from "@semio-tech/s-core";
 import {
 	SAppHostSurface,
 	SMediaGraphCanvas,
@@ -11678,6 +11968,8 @@ import { defaultDrawDocument, drawDocumentFromJson, drawDocumentToJson, type Dra
 import { defaultRasterDocument, parseRasterDocument, rasterDocumentToJson, type RasterDocument } from "@semio-tech/raster-core";
 import type { FormSpec } from "@semio-tech/forms-core";
 import { PlayCanvas as Puzzle3dPlayCanvas, parseFixture as parsePuzzle3dFixture } from "@semio-tech/puzzle-3d-react";
+import { FiveD, StoreProvider, createStore, parseModel, type Model } from "@semio-tech/puzzle-5d-react";
+import { LayoutCanvas } from "@semio-tech/layout-react";
 import { PresentationDeck } from "@semio-tech/framework-presentation-renderer-react";
 import type { PresentationDeck as PresentationDeckDocument } from "@semio-tech/framework-presentation-core";
 
@@ -11690,13 +11982,371 @@ const EMPTY_PUZZLE3D_FIXTURE = {
 	targetVolumes: [],
 } as const;
 
-function SPuzzle3dHost({ fixtureJson }: { readonly fixtureJson: string }): ReactElement {
+function SPuzzle3dHost({
+	fixtureJson,
+	onFixtureChange,
+}: {
+	readonly fixtureJson: string;
+	readonly onFixtureChange: (json: string) => void;
+}): ReactElement {
 	const fixture = reactHostPort.useMemo(() => parsePuzzle3dFixture(JSON.parse(fixtureJson)) ?? EMPTY_PUZZLE3D_FIXTURE, [fixtureJson]);
 	const [selectedId, setSelectedId] = reactHostPort.useState<string | null>(null);
+	const kindCatalogs = reactHostPort.useMemo(() => parseKindCatalogs(fixture.meta as Record<string, unknown> | undefined), [fixture]);
+	const patchFixture = reactHostPort.useCallback(
+		(updater: (prev: Fixture) => Fixture) => {
+			onFixtureChange(JSON.stringify(updater(fixture)));
+		},
+		[fixture, onFixtureChange],
+	);
 	return (
 		<ObjectStateProvider fixture={fixture}>
-			<Puzzle3dPlayCanvas fixture={fixture} setSelectedId={setSelectedId} selectedId={selectedId} className="h-full" />
+			<Puzzle3dPlayCanvas
+				fixture={fixture}
+				kindCatalogs={kindCatalogs}
+				setSelectedId={setSelectedId}
+				selectedId={selectedId}
+				fixtureDragDrop
+				onBrushPlace={(payload) => patchFixture((prev) => applyBrushPlacementToFixture(prev, payload, kindCatalogs))}
+				onConnect={(payload) => patchFixture((prev) => applyConnectToFixture(prev, payload))}
+				onReferenceRelocate={(payload) => patchFixture((prev) => applyReferenceRelocateToFixture(prev, payload))}
+				onTargetVolumeRelocate={(payload) => patchFixture((prev) => applyTargetVolumeRelocateToFixture(prev, payload))}
+				onCamera={(camera) => patchFixture((prev) => ({ ...prev, camera }))}
+				className="h-full"
+			/>
 		</ObjectStateProvider>
+	);
+}
+
+function SPuzzle2dHost({
+	fixtureJson,
+	onFixtureChange,
+}: {
+	readonly fixtureJson: string;
+	readonly onFixtureChange: (json: string) => void;
+}): ReactElement {
+	const fixture = reactHostPort.useMemo(() => {
+		try {
+			return JSON.parse(fixtureJson);
+		} catch {
+			return null;
+		}
+	}, [fixtureJson]);
+	const declarativeSceneDescriptor = reactHostPort.useMemo(
+		() => (fixture ? buildPuzzle2dSceneDescriptorFromFixture(fixture) : undefined),
+		[fixture],
+	);
+	const patchFixture = reactHostPort.useCallback(
+		(updater: (prev: Record<string, unknown>) => Record<string, unknown>) => {
+			if (!fixture) return;
+			onFixtureChange(JSON.stringify(updater(fixture)));
+		},
+		[fixture, onFixtureChange],
+	);
+	const onDragEnd = reactHostPort.useCallback(
+		(payload: { moves: Array<{ id: string; x: number; y: number }> }) => {
+			if (!payload.moves.length || !fixture) return;
+			const byId = new Map(payload.moves.map((move) => [move.id, move]));
+			patchFixture((prev) => ({
+				...prev,
+				nodes: (prev.nodes as Array<{ id: string; x: number; y: number }>).map((node) => {
+					const move = byId.get(node.id);
+					return move ? { ...node, x: move.x, y: move.y } : node;
+				}),
+			}));
+		},
+		[fixture, patchFixture],
+	);
+	const onConnect = reactHostPort.useCallback(
+		(payload: { id: string; source: string; target: string }) => {
+			patchFixture((prev) => ({
+				...prev,
+				edges: [...((prev.edges as unknown[]) ?? []), { id: payload.id, source: payload.source, target: payload.target }],
+			}));
+		},
+		[patchFixture],
+	);
+	const onDelete = reactHostPort.useCallback(
+		(payload: { kind: "node" | "edge"; id: string }) => {
+			if (payload.kind === "node") {
+				patchFixture((prev) => ({
+					...prev,
+					nodes: (prev.nodes as Array<{ id: string }>).filter((node) => node.id !== payload.id),
+					edges: (prev.edges as Array<{ source: string; target: string }>).filter(
+						(edge) => edge.source !== payload.id && edge.target !== payload.id,
+					),
+				}));
+				return;
+			}
+			patchFixture((prev) => ({
+				...prev,
+				edges: (prev.edges as Array<{ id: string }>).filter((edge) => edge.id !== payload.id),
+			}));
+		},
+		[patchFixture],
+	);
+	if (!declarativeSceneDescriptor) {
+		return <div className="p-4 text-sm text-muted-foreground">Invalid puzzle 2D fixture</div>;
+	}
+	return (
+		<Puzzle2dCanvas
+			declarativeSceneDescriptor={declarativeSceneDescriptor}
+			camera={fixture?.camera}
+			fixtureDragDrop
+			onDragEnd={onDragEnd}
+			onConnect={onConnect}
+			onDelete={onDelete}
+			className="h-full"
+		/>
+	);
+}
+
+function SLowpolyHost({
+	fixtureJson,
+	onFixtureChange,
+}: {
+	readonly fixtureJson: string;
+	readonly onFixtureChange: (json: string) => void;
+}): ReactElement {
+	const [session, setSession] = reactHostPort.useState<LowpolySessionWasm | null>(null);
+	const [sceneObjects, setSceneObjects] = reactHostPort.useState<readonly LowpolySceneObject[]>([]);
+	const [selectedIds, setSelectedIds] = reactHostPort.useState<readonly number[]>([]);
+	reactHostPort.useEffect(() => {
+		let cancelled = false;
+		void (async () => {
+			const nextSession = await createLowpolySession();
+			if (cancelled) return;
+			const json = isLowpolyFixtureReady(fixtureJson) ? fixtureJson : loadDefaultLowpolyFixtureJson();
+			safeLoadLowpolyFixture(nextSession, json);
+			setSession(nextSession);
+			setSceneObjects(tessellateAllLowpolySession(nextSession));
+		})();
+		return () => {
+			cancelled = true;
+		};
+	}, []);
+	reactHostPort.useEffect(() => {
+		if (!session || !isLowpolyFixtureReady(fixtureJson)) return;
+		safeLoadLowpolyFixture(session, fixtureJson);
+		setSceneObjects(tessellateAllLowpolySession(session));
+	}, [fixtureJson, session]);
+	return (
+		<LowpolyCanvas
+			fixtureJson={fixtureJson}
+			sceneObjects={sceneObjects}
+			selectionMode="object"
+			selectedIds={selectedIds}
+			transformTool="move"
+			session={session}
+			onFixtureChange={onFixtureChange}
+			onSelectionChange={(_mode, ids) => setSelectedIds(ids)}
+			onSceneChange={(objects) => setSceneObjects(objects)}
+			className="h-full w-full"
+		/>
+	);
+}
+
+function SVcsHost({
+	projection,
+	onIncrement,
+	onCommitCheckpoint,
+}: {
+	readonly projection: { readonly title: string; readonly counter: number; readonly notes?: string };
+	readonly onIncrement: () => void;
+	readonly onCommitCheckpoint: () => void;
+}): ReactElement {
+	return (
+		<div className="flex h-full min-h-0 flex-col gap-3 p-4">
+			<div className="flex flex-wrap items-center gap-2">
+				<button type="button" className="rounded border px-2 py-1 text-xs" onClick={onIncrement}>
+					+ Counter ({projection.counter})
+				</button>
+				<button type="button" className="rounded border px-2 py-1 text-xs" onClick={onCommitCheckpoint}>
+					Commit checkpoint
+				</button>
+			</div>
+			<section className="rounded border p-3 text-sm">
+				<div>
+					<strong>{projection.title}</strong> · counter {projection.counter}
+				</div>
+				<div className="text-muted-foreground">{projection.notes || "—"}</div>
+			</section>
+			<div className="min-h-0 flex-1 overflow-auto rounded border">
+				<HistoryTable columns={[]} />
+			</div>
+		</div>
+	);
+}
+
+function STrinityRewriteHost({
+	fixtureJson,
+	onFixtureChange,
+}: {
+	readonly fixtureJson: string;
+	readonly onFixtureChange: (json: string) => void;
+}): ReactElement {
+	const [lhsJson, setLhsJson] = reactHostPort.useState(REWRITE_DEFAULT_LHS_FIXTURE_JSON);
+	const [rhsJson, setRhsJson] = reactHostPort.useState(REWRITE_DEFAULT_RHS_FIXTURE_JSON);
+	const lhsFixture = reactHostPort.useMemo(
+		() => parseRewriteGraphFixtureJson(lhsJson) ?? REWRITE_DEFAULT_LHS_FIXTURE,
+		[lhsJson],
+	);
+	const rhsFixture = reactHostPort.useMemo(
+		() => parseRewriteGraphFixtureJson(rhsJson) ?? REWRITE_DEFAULT_RHS_FIXTURE,
+		[rhsJson],
+	);
+	const lhsScene = reactHostPort.useMemo(() => buildPuzzle2dSceneDescriptorFromFixture(lhsFixture), [lhsFixture]);
+	const rhsScene = reactHostPort.useMemo(() => buildPuzzle2dSceneDescriptorFromFixture(rhsFixture), [rhsFixture]);
+	const patchLhs = reactHostPort.useCallback(
+		(payload: { moves: Array<{ id: string; x: number; y: number }> }) => {
+			if (!payload.moves.length) return;
+			const current = parseRewriteGraphFixtureJson(lhsJson) ?? REWRITE_DEFAULT_LHS_FIXTURE;
+			const byId = new Map(payload.moves.map((move) => [move.id, move]));
+			setLhsJson(
+				JSON.stringify({
+					...current,
+					nodes: current.nodes.map((entry) => {
+						const move = byId.get(entry.id);
+						return move ? { ...entry, x: move.x, y: move.y } : entry;
+					}),
+				}),
+			);
+		},
+		[lhsJson],
+	);
+	const patchRhs = reactHostPort.useCallback(
+		(payload: { moves: Array<{ id: string; x: number; y: number }> }) => {
+			if (!payload.moves.length) return;
+			const current = parseRewriteGraphFixtureJson(rhsJson) ?? REWRITE_DEFAULT_RHS_FIXTURE;
+			const byId = new Map(payload.moves.map((move) => [move.id, move]));
+			setRhsJson(
+				JSON.stringify({
+					...current,
+					nodes: current.nodes.map((entry) => {
+						const move = byId.get(entry.id);
+						return move ? { ...entry, x: move.x, y: move.y } : entry;
+					}),
+				}),
+			);
+		},
+		[rhsJson],
+	);
+	return (
+		<div className="grid h-full min-h-0 grid-cols-2 grid-rows-2 gap-1">
+			<TrinityCanvas fixtureJson={fixtureJson} onFixtureChange={onFixtureChange} reorganize className="min-h-0" />
+			<TrinityCanvas fixtureJson={fixtureJson} className="min-h-0" />
+			<Puzzle2dCanvas
+				declarativeSceneDescriptor={lhsScene}
+				camera={lhsFixture.camera}
+				kindCatalogs={rewriteLhsKindCatalogs()}
+				fixtureDragDrop
+				onDragEnd={patchLhs}
+				className="min-h-0"
+			/>
+			<Puzzle2dCanvas
+				declarativeSceneDescriptor={rhsScene}
+				camera={rhsFixture.camera}
+				kindCatalogs={rewriteRhsKindCatalogs()}
+				fixtureDragDrop
+				onDragEnd={patchRhs}
+				className="min-h-0"
+			/>
+		</div>
+	);
+}
+
+function SGisMapHost({ fixtureJson }: { readonly fixtureJson: string }): ReactElement {
+	const mapFixture = reactHostPort.useMemo(() => parseGisMapFixtureV1(JSON.parse(fixtureJson)), [fixtureJson]);
+	const [selectedPositionIds, setSelectedPositionIds] = reactHostPort.useState<readonly string[]>([]);
+	const [selectedRouteIds, setSelectedRouteIds] = reactHostPort.useState<readonly string[]>([]);
+	const [hoveredFeature, setHoveredFeature] = reactHostPort.useState<MapHoveredFeature | null>(null);
+	if (!mapFixture) {
+		return <div className="p-4 text-sm text-destructive">Invalid GIS map fixture</div>;
+	}
+	return (
+		<MapCanvas
+			className="h-full"
+			selectedPositionIds={selectedPositionIds}
+			selectedRouteIds={selectedRouteIds}
+			hoveredFeature={hoveredFeature}
+			onSelect={(payload) => {
+				setSelectedPositionIds(payload.positions);
+				setSelectedRouteIds(payload.routes);
+			}}
+			onHoverChange={setHoveredFeature}
+		>
+			{mapFixture.positions.map((position) => (
+				<Position
+					key={position.id}
+					id={position.id}
+					lon={position.lon}
+					lat={position.lat}
+					label={position.label}
+					name={position.name}
+					icon={position.icon}
+					sourceUrl={position.sourceUrl}
+					kind={position.kind}
+				/>
+			))}
+			{mapFixture.routes.map((route) => (
+				<Route key={route.id} id={route.id} points={route.points} />
+			))}
+		</MapCanvas>
+	);
+}
+
+function SCatalogueHost({ bundle }: { readonly bundle: unknown }): ReactElement {
+	const sections = (bundle as { sections?: readonly { id: string; label?: string; kinds?: readonly { id: string; name?: string }[] }[] })?.sections ?? [];
+	const kinds = (bundle as { kinds?: readonly { id: string; name?: string }[] })?.kinds ?? [];
+	return (
+		<div className="h-full overflow-auto p-4 text-sm">
+			{kinds.length > 0 ? (
+				<ul className="space-y-1">
+					{kinds.map((kind) => (
+						<li key={kind.id}>
+							{kind.name ?? kind.id} <span className="text-muted-foreground">({kind.id})</span>
+						</li>
+					))}
+				</ul>
+			) : null}
+			{sections.map((section) => (
+				<section key={section.id} className="mb-4">
+					<div className="mb-2 font-medium">{section.label ?? section.id}</div>
+					<ul className="space-y-1 pl-3">
+						{(section.kinds ?? []).map((kind) => (
+							<li key={kind.id}>
+								{kind.name ?? kind.id} <span className="text-muted-foreground">({kind.id})</span>
+							</li>
+						))}
+					</ul>
+				</section>
+			))}
+			{kinds.length === 0 && sections.length === 0 ? (
+				<pre className="whitespace-pre-wrap text-xs text-muted-foreground">{JSON.stringify(bundle, null, 2)}</pre>
+			) : null}
+		</div>
+	);
+}
+
+function SPuzzle5dHost({
+	model,
+	instanceId,
+	onModelChange,
+}: {
+	readonly model: Model;
+	readonly instanceId: string;
+	readonly onModelChange: (model: Model) => void;
+}): ReactElement {
+	const store = reactHostPort.useMemo(() => createStore(model), [model]);
+	reactHostPort.useEffect(() => {
+		const unsub = store.subscribe(() => {
+			onModelChange(store.read());
+		});
+		return unsub;
+	}, [store, onModelChange]);
+	return (
+		<StoreProvider store={store}>
+			<FiveD mode="3d" instanceId={instanceId} className="h-full" />
+		</StoreProvider>
 	);
 }
 
@@ -11813,7 +12463,7 @@ function SAppHostContent({ instance }: { readonly instance: import("@semio-tech/
 	return <SAppHostRouter instance={instance} />;
 }
 
-function SAppHostRouter({ instance }: { readonly instance: import("@semio-tech/s-core").SAppInstance | null }): ReactElement {
+export function SAppHostRouter({ instance }: { readonly instance: import("@semio-tech/s-core").SAppInstance | null }): ReactElement {
 	const ctrl = useSPlayController();
 	const store = ctrl?.getStore();
 	const generation = store?.getGeneration() ?? 0;
@@ -11885,11 +12535,93 @@ function SAppHostRouter({ instance }: { readonly instance: import("@semio-tech/s
 		},
 		[instance, store, formsSpec],
 	);
+	const dispatchFixtureJson = reactHostPort.useCallback(
+		(json: string) => {
+			if (!instance || !store) return;
+			let document: unknown;
+			try {
+				document = JSON.parse(json);
+			} catch {
+				return;
+			}
+			store.dispatch({
+				kind: "applyAppOperation",
+				instanceId: instance.id,
+				forwards: [{ op: "setDocument", document }],
+				backwards: [{ op: "setDocument", document: materialized }],
+			});
+		},
+		[instance, store, materialized],
+	);
+	const dispatchInlineJson = reactHostPort.useCallback(
+		(json: string) => {
+			if (!instance || !store) return;
+			store.dispatch({ kind: "patchAppSource", instanceId: instance.id, inline: json });
+		},
+		[instance, store],
+	);
+	const [rasterSelectedIds, setRasterSelectedIds] = reactHostPort.useState<readonly string[]>([]);
+	const [rasterHoveredId, setRasterHoveredId] = reactHostPort.useState<string | null>(null);
+	const puzzle5dModel = reactHostPort.useMemo(() => {
+		if (materialized && typeof materialized === "object" && (materialized as Model).schema === "puzzle.5d") {
+			return materialized as Model;
+		}
+		return (
+			parseModel(materialized) ??
+			parseModel({
+				schema: "puzzle.5d",
+				domain: "architecture",
+				camera2d: { x: 0, y: 0, zoom: 1 },
+				camera3d: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 },
+				parts: [],
+				fasteners: [],
+			})!
+		);
+	}, [materialized]);
+	const dispatchPuzzle5dModel = reactHostPort.useCallback(
+		(model: Model) => {
+			if (!instance || !store) return;
+			store.dispatch({
+				kind: "patchAppSource",
+				instanceId: instance.id,
+				inline: JSON.stringify(model),
+			});
+		},
+		[instance, store],
+	);
 	const writerDoc = reactHostPort.useMemo(() => {
 		const doc = materialized as { text?: string } | null;
 		return createWriterPlayDocument({ id: instance?.id ?? "writer", languageId: "jack", text: doc?.text ?? instance?.sourceDocument.inline ?? "" });
 	}, [instance, materialized]);
 	const fixtureJson = reactHostPort.useMemo(() => JSON.stringify(materialized ?? {}), [materialized]);
+	const layoutPageId = reactHostPort.useMemo(() => {
+		try {
+			const doc = JSON.parse(fixtureJson) as { pages?: readonly { id: string }[] };
+			return doc.pages?.[0]?.id ?? "page-1";
+		} catch {
+			return "page-1";
+		}
+	}, [fixtureJson]);
+	const vcsProjection = reactHostPort.useMemo(() => {
+		if (materialized && typeof materialized === "object" && (materialized as { schema?: string }).schema === "vcs.demo/v1") {
+			return materialized as { title: string; counter: number; notes?: string };
+		}
+		return { title: "VCS Demo", counter: 0, notes: "" };
+	}, [materialized]);
+	const dispatchVcsCounter = reactHostPort.useCallback(() => {
+		if (!instance || !store) return;
+		store.dispatch({
+			kind: "applyAppOperation",
+			instanceId: instance.id,
+			forwards: [{ op: "setCounter", counter: vcsProjection.counter + 1 }],
+			backwards: [{ op: "setCounter", counter: vcsProjection.counter }],
+		});
+	}, [instance, store, vcsProjection.counter]);
+	const dispatchVcsCheckpoint = reactHostPort.useCallback(() => {
+		store?.dispatch({ kind: "commitCheckpoint", message: "vcs" });
+	}, [store]);
+	const [jackEpoch, setJackEpoch] = reactHostPort.useState(0);
+	const [jackQuery, setJackQuery] = reactHostPort.useState("MATCH (n) RETURN n");
 	const hostChrome = (
 		<SUpstreamBadge upstreamInstanceId={upstreamInstanceId} instances={projection?.appInstances ?? []} />
 	);
@@ -11939,13 +12671,14 @@ function SAppHostRouter({ instance }: { readonly instance: import("@semio-tech/s
 					{hostChrome}
 					<RasterCanvas
 						document={rasterDoc}
-						selectedIds={[]}
-						hoveredId={null}
+						selectedIds={rasterSelectedIds}
+						hoveredId={rasterHoveredId}
 						kindHover={null}
 						activeTool={rasterDoc.activeTool}
 						camera={rasterDoc.camera}
-						onSelect={() => {}}
-						onHover={() => {}}
+						onSelect={(ids) => setRasterSelectedIds(ids)}
+						onHover={(id) => setRasterHoveredId(id)}
+						onDocumentChange={(document) => dispatchRaster(document)}
 						onCameraChange={(camera) => dispatchRaster({ ...rasterDoc, camera })}
 						className="min-h-0 flex-1"
 						viewMode="composite"
@@ -11969,49 +12702,162 @@ function SAppHostRouter({ instance }: { readonly instance: import("@semio-tech/s
 				</div>
 			);
 		case "flow":
-			return <FlowCanvas fixtureJson={fixtureJson} className="h-full min-h-0" />;
+			return (
+				<div className="flex h-full min-h-0 flex-col overflow-hidden">
+					{hostChrome}
+					<FlowCanvas fixtureJson={fixtureJson} onFixtureChange={dispatchFixtureJson} className="min-h-0 flex-1" />
+				</div>
+			);
 		case "dag":
-			return <DagCanvas fixtureJson={fixtureJson} className="h-full min-h-0" reorganize />;
+			return (
+				<div className="flex h-full min-h-0 flex-col overflow-hidden">
+					{hostChrome}
+					<DagCanvas fixtureJson={fixtureJson} onFixtureChange={dispatchFixtureJson} className="min-h-0 flex-1" reorganize />
+				</div>
+			);
 		case "imperative":
-			return <ImperativeEditor documentJson={fixtureJson} className="h-full min-h-0" />;
+			return (
+				<div className="flex h-full min-h-0 flex-col overflow-hidden">
+					{hostChrome}
+					<ImperativeEditor documentJson={fixtureJson} onDocumentChange={dispatchInlineJson} className="min-h-0 flex-1" />
+				</div>
+			);
 		case "sequence":
-			return <SequenceCanvas fixtureJson={fixtureJson} className="h-full min-h-0" />;
+			return (
+				<div className="flex h-full min-h-0 flex-col overflow-hidden">
+					{hostChrome}
+					<SequenceCanvas fixtureJson={fixtureJson} onFixtureChange={dispatchFixtureJson} className="min-h-0 flex-1" />
+				</div>
+			);
+		case "layout":
+			return (
+				<div className="flex h-full min-h-0 flex-col overflow-hidden">
+					{hostChrome}
+					<LayoutCanvas documentJson={fixtureJson} pageId={layoutPageId} className="min-h-0 flex-1" />
+				</div>
+			);
+		case "lowpoly":
+			return (
+				<div className="relative h-full min-h-0 overflow-hidden">
+					{hostChrome}
+					<SLowpolyHost fixtureJson={fixtureJson} onFixtureChange={dispatchInlineJson} />
+				</div>
+			);
+		case "vcs":
+			return (
+				<div className="flex h-full min-h-0 flex-col overflow-hidden">
+					{hostChrome}
+					<SVcsHost projection={vcsProjection} onIncrement={dispatchVcsCounter} onCommitCheckpoint={dispatchVcsCheckpoint} />
+				</div>
+			);
 		case "trinity":
-			return <TrinityCanvas fixtureJson={fixtureJson} className="h-full min-h-0" reorganize />;
+			if (instance.appId === "jack") {
+				return (
+					<div className="flex h-full min-h-0 flex-col overflow-hidden">
+						{hostChrome}
+						<div className="flex items-center gap-2 border-b border-border/60 p-2">
+							<WriterPlayCanvas
+								document={createWriterPlayDocument({ id: instance.id, languageId: "jack", text: jackQuery })}
+								onChange={(document) => setJackQuery(document.text)}
+								createLspTransport={() => ({ dispose() {} } as never)}
+								className="min-h-24 flex-1"
+							/>
+							<button type="button" className="rounded border px-2 py-1 text-xs" onClick={() => setJackEpoch((epoch) => epoch + 1)}>
+								Run Jack
+							</button>
+						</div>
+						<TrinityCanvas
+							fixtureJson={fixtureJson}
+							onFixtureChange={dispatchFixtureJson}
+							jackDispatch={{ query: jackQuery, epoch: jackEpoch }}
+							onJackDispatchComplete={dispatchFixtureJson}
+							reorganize
+							className="min-h-0 flex-1"
+						/>
+					</div>
+				);
+			}
+			return (
+				<div className="flex h-full min-h-0 flex-col overflow-hidden">
+					{hostChrome}
+					<TrinityCanvas fixtureJson={fixtureJson} onFixtureChange={dispatchFixtureJson} className="min-h-0 flex-1" reorganize />
+				</div>
+			);
+		case "trinityRewrite":
+			return (
+				<div className="flex h-full min-h-0 flex-col overflow-hidden">
+					{hostChrome}
+					<STrinityRewriteHost fixtureJson={fixtureJson} onFixtureChange={dispatchFixtureJson} />
+				</div>
+			);
+		case "catalogue":
+			return (
+				<div className="relative h-full min-h-0 overflow-hidden">
+					{hostChrome}
+					<SCatalogueHost bundle={materialized} />
+				</div>
+			);
 		case "gismap":
 			return (
 				<div className="relative h-full min-h-0">
-					<MapCanvas className="h-full" />
+					{hostChrome}
+					<SGisMapHost fixtureJson={fixtureJson} />
 				</div>
 			);
 		case "puzzle2d":
 			return (
 				<div className="relative h-full min-h-0">
-					<Puzzle2dCanvas className="h-full" />
+					{hostChrome}
+					<SPuzzle2dHost fixtureJson={fixtureJson} onFixtureChange={dispatchFixtureJson} />
 				</div>
 			);
 		case "puzzle3d":
 			return (
 				<div className="relative h-full min-h-0">
 					{hostChrome}
-					<SPuzzle3dHost fixtureJson={fixtureJson} />
+					<SPuzzle3dHost fixtureJson={fixtureJson} onFixtureChange={dispatchFixtureJson} />
+				</div>
+			);
+		case "presentation":
+			return (
+				<div className="flex h-full min-h-0 flex-col overflow-hidden">
+					{hostChrome}
+					<div className="grid min-h-0 flex-1 grid-rows-[1fr_auto]">
+						<SPresentationDeckHost deck={(materialized as PresentationDeckDocument) ?? { schema: "presentation.deck", tiles: [] }} />
+						<textarea
+							className="min-h-28 border-t bg-muted/20 p-3 font-mono text-xs"
+							value={fixtureJson}
+							spellCheck={false}
+							onChange={(event) => dispatchInlineJson(event.target.value)}
+						/>
+					</div>
 				</div>
 			);
 		case "puzzle5d":
 			return (
 				<div className="relative h-full min-h-0">
 					{hostChrome}
-					<SPuzzle3dHost fixtureJson={fixtureJson} />
+					<SPuzzle5dHost model={puzzle5dModel} instanceId={instance.id} onModelChange={dispatchPuzzle5dModel} />
 				</div>
 			);
 		case "shooting":
 			return (
 				<div className="relative h-full min-h-0">
-					<ShootingModelCanvas fixture={JSON.parse(fixtureJson) as never} className="h-full" />
+					{hostChrome}
+					<ShootingModelCanvas
+						fixture={JSON.parse(fixtureJson) as never}
+						className="h-full"
+						onCamera={(camera) =>
+							store?.dispatch({
+								kind: "applyAppOperation",
+								instanceId: instance.id,
+								forwards: [{ op: "setCamera", camera }],
+								backwards: [{ op: "setCamera", camera: (materialized as { camera?: unknown })?.camera }],
+							})
+						}
+					/>
 				</div>
 			);
-		case "forms":
-		case "raster":
 		case "panel":
 			if (materialized && typeof materialized === "object" && (materialized as PresentationDeckDocument).schema === "presentation.deck") {
 				return (
@@ -12041,8 +12887,11 @@ function SAppHostRouter({ instance }: { readonly instance: import("@semio-tech/s
 			);
 		default:
 			return (
-				<div className="flex h-full items-center justify-center p-6 text-sm text-muted-foreground">
-					{resource.name} ({resource.componentKind})
+				<div className="h-full overflow-auto p-4 text-xs text-muted-foreground">
+					<div className="mb-2 font-medium text-foreground">
+						{resource.name} ({resource.componentKind})
+					</div>
+					<pre className="whitespace-pre-wrap">{fixtureJson}</pre>
 				</div>
 			);
 	}
@@ -12151,6 +13000,42 @@ class SPlayInspectionPanelDefinition extends PureSidePanelTabDefinition {
 	}
 }
 
+function SPlayJackSurfaceHost({ node: _node }: { readonly node: import("@semio-tech/framework-platform-core").UiWriterHostSurfaceNode }): ReactElement {
+	const ctrl = useSPlayController();
+	void ctrl?.getHoverEpoch();
+	void ctrl?.getSelectEpoch();
+	const document = ctrl?.getWriterDocumentJack() ?? createWriterDocument({ id: "s-jack", languageId: "jack", text: "" });
+	const onHoverChange = reactHostPort.useCallback((offset: number | null) => {
+		sPlayControllerRef.current?.run("setJackHover", { offset });
+	}, []);
+	const onSelectionChange = reactHostPort.useCallback((range: { start: number; end: number }) => {
+		sPlayControllerRef.current?.run("setJackSelect", range);
+	}, []);
+	return (
+		<WriterCanvas
+			document={document}
+			className="h-full"
+			onHoverChange={onHoverChange}
+			onSelectionChange={onSelectionChange}
+			externalHoverOccurrences={ctrl?.getJackHoverOccurrences()}
+			externalHoverOccurrencesSignal={ctrl?.getHoverEpoch()}
+			externalSelectionOccurrences={ctrl?.getJackSelectOccurrences()}
+			externalSelectionOccurrencesSignal={ctrl?.getSelectEpoch()}
+		/>
+	);
+}
+
+function SPlayCompiledDagSurfaceHost({ node: _node }: { readonly node: import("@semio-tech/framework-platform-core").UiWriterHostSurfaceNode }): ReactElement {
+	const ctrl = useSPlayController();
+	const [revision, setRevision] = reactHostPort.useState(0);
+	reactHostPort.useEffect(() => ctrl?.subscribeSnapshot(() => setRevision((value) => value + 1)) ?? undefined, [ctrl]);
+	const document = reactHostPort.useMemo(
+		() => ctrl?.getWriterDocumentCompiledDag() ?? createWriterDocument({ id: "s-compiled-dag", languageId: "wire", text: "" }),
+		[ctrl, revision],
+	);
+	return <WriterCanvas document={document} className="h-full min-h-0" />;
+}
+
 export function registerSPlaySurfaceHosts(): void {
 	if (sPlayChromeRegistered) return;
 	sPlayChromeRegistered = true;
@@ -12158,6 +13043,8 @@ export function registerSPlaySurfaceHosts(): void {
 	registerUiSSurfaceHost(S_PLAY_SURFACE_APP_HOST, SSSurfaceHost);
 	registerUiSSurfaceHost(S_PLAY_SURFACE_LAUNCHER, SSSurfaceHost);
 	registerUiSSurfaceHost(S_PLAY_SURFACE_HISTORY, SSSurfaceHost);
+	registerUiWriterSurfaceHost(S_PLAY_SURFACE_JACK, SPlayJackSurfaceHost);
+	registerUiWriterSurfaceHost(S_PLAY_SURFACE_COMPILED_DAG, SPlayCompiledDagSurfaceHost);
 	registerSPlayDeclarativeBodies();
 	registerDrawPlaySurfaceHosts();
 	registerWriterPlaySurfaceHosts();

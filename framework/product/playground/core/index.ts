@@ -396,6 +396,16 @@ export function createWindowCommandEngagement(
 }
 //#endregion 🔖WindowEngagement
 
+/** @emoji 🃏 Command-line engagement for Jack query editor windows in graph playgrounds. */
+export function createJackPlayWindowEngagement(windowKindId: string, controllerId: string, value: string): WindowEngagement {
+  return createWindowCommandEngagement(`${windowKindId}-jack-input`, controllerId, {
+    placeholder: "Jack query",
+    inputCommand: "jackEngagementInput",
+    submitCommand: "runJackQuery",
+    value,
+  });
+}
+
 //#region 🔖WindowKindRuntime
 export class WindowKindRuntime extends BaseWindowKindRuntime {
   /** @emoji 💬 Optional floating engagement (options/input/status); mutable so controllers can rebuild it per snapshot. */
@@ -554,6 +564,16 @@ export {
   unregisterSidePanelBody,
 } from "@semio-tech/framework-platform-core";
 //#endregion 🔖SidePanelBodyViewContext
+
+//#region 🔖PlaygroundAppDefinition
+import type { AppDefinition } from "@semio-tech/framework-platform-core";
+
+/** @emoji 🛝 Playground app contract: runtime factory plus renderer boot hook. */
+export interface PlaygroundAppDefinition extends AppDefinition {
+	readonly createPlayground: () => Playground;
+	readonly bootRenderer: (playground: Playground, rootId?: string) => void | Promise<void>;
+}
+//#endregion 🔖PlaygroundAppDefinition
 
 //#region 🔖Playground
 export interface PlaygroundPanelVisibility {

@@ -5,7 +5,7 @@
 import {
 	DocumentVcsStore,
 	createDocumentVcsEnvelope,
-} from "@semio-tech/vcs-core";
+} from "@semio-tech/vcs-core/internal";
 
 //#region 🔖JsonValue
 export type JsonPrimitive = string | number | boolean | null;
@@ -1062,6 +1062,8 @@ export class CommandBus {
 	}
 }
 
+export const POINTER_FOCUS_STORE_ID = "pointerFocus";
+
 /** @emoji 🎮 Base class for imperative app controllers participating in {@link CommandBus}. */
 export abstract class Controller {
 	readonly id: string;
@@ -1074,6 +1076,12 @@ export abstract class Controller {
 		this.commandBus = commandBus;
 		this.hostNotify = hostNotify;
 		commandBus.register(this);
+		this.provideStore(POINTER_FOCUS_STORE_ID, new AppPointerFocusStore<string>());
+	}
+
+	/** @emoji 🖱️ Unified hover + selection store for this app session. */
+	get pointerFocus(): AppPointerFocusStore<string> {
+		return this.getStore(POINTER_FOCUS_STORE_ID) as AppPointerFocusStore<string>;
 	}
 
 	protected emit(): void {
@@ -1521,7 +1529,7 @@ export type {
 	DocumentVcsCommand,
 	DocumentVcsStoreOptions,
 	HistoryColumn,
-} from "@semio-tech/vcs-core";
+} from "@semio-tech/vcs-core/internal";
 export {
 	createDocumentVcsId,
 	createDocumentVcsEnvelope,
@@ -1530,7 +1538,7 @@ export {
 	buildHistoryColumns,
 	DocumentVcsStore,
 	recordProjectionChange,
-} from "@semio-tech/vcs-core";
+} from "@semio-tech/vcs-core/internal";
 //#endregion 🔖DocumentVcs
 
 //#region 🧪Tests

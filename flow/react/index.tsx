@@ -2706,6 +2706,7 @@ export interface FlowCanvasProps {
   readonly onPreviewText?: (text: string) => void;
   readonly onEvalOutputs?: (outputsJson: string, previewMeshes?: Readonly<Record<string, unknown>>) => void;
   readonly onFixtureChange?: (fixtureJson: string) => void;
+  readonly onCompiledWireLiteralChange?: (text: string) => void;
   readonly onCatalogueReady?: (sections: readonly CatalogueSection[]) => void;
   readonly onWidgetDrop?: (detail: FlowWidgetDropDetail) => void;
   readonly onSelectionChange?: (ids: readonly string[]) => void;
@@ -2799,6 +2800,7 @@ export function FlowCanvas({
   onPreviewText,
   onEvalOutputs,
   onFixtureChange,
+  onCompiledWireLiteralChange,
   onCatalogueReady,
   onWidgetDrop,
   onSelectionChange,
@@ -2832,6 +2834,7 @@ export function FlowCanvas({
   const onPreviewTextRef = useRef(onPreviewText);
   const onEvalOutputsRef = useRef(onEvalOutputs);
   const onFixtureChangeRef = useRef(onFixtureChange);
+  const onCompiledWireLiteralChangeRef = useRef(onCompiledWireLiteralChange);
   const onCatalogueReadyRef = useRef(onCatalogueReady);
   const onWidgetDropRef = useRef(onWidgetDrop);
   const onSelectionChangeRef = useRef(onSelectionChange);
@@ -2895,6 +2898,10 @@ export function FlowCanvas({
   useEffect(() => {
     onFixtureChangeRef.current = onFixtureChange;
   }, [onFixtureChange]);
+
+  useEffect(() => {
+    onCompiledWireLiteralChangeRef.current = onCompiledWireLiteralChange;
+  }, [onCompiledWireLiteralChange]);
 
   useEffect(() => {
     onCatalogueReadyRef.current = onCatalogueReady;
@@ -3041,6 +3048,11 @@ export function FlowCanvas({
       const json = session.fixtureJson();
       storeRef.current.save(json);
       onFixtureChangeRef.current?.(json);
+      try {
+        onCompiledWireLiteralChangeRef.current?.(session.compiledWireLiteral());
+      } catch {
+        /* compiled dag not ready */
+      }
     } catch {
       /* fixture not ready */
     }
@@ -3540,6 +3552,11 @@ export function FlowCanvas({
       syncExtensionSurface(session);
       syncVelloTheme();
       evaluate();
+      try {
+        onCompiledWireLiteralChangeRef.current?.(session.compiledWireLiteral());
+      } catch {
+        /* compiled dag not ready */
+      }
       try {
         const layout = JSON.parse(session.fixtureJson()).layout ?? {};
         console.log(`[DEBUG] flow fixture layout: ${JSON.stringify(layout)}`);

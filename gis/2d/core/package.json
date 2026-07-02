@@ -1,0 +1,33 @@
+{
+	"$schema": "../../../node_modules/nx/schemas/project-schema.json",
+	"name": "@semio-tech/gis-2d-core",
+	"version": "0.1.0",
+	"description": "gis/2d · playground harness core",
+	"type": "module",
+	"private": true,
+	"exports": {
+		".": "./index.ts",
+		"./playground": "./playground.ts"
+	},
+	"scripts": {
+		"test": "bun nx run @semio-tech/gis-2d-core:test"
+	},
+	"dependencies": {
+		"@semio-tech/framework-core": "workspace:*",
+		"@semio-tech/framework-playground-core": "workspace:*",
+		"@semio-tech/framework-platform-core": "workspace:*"
+	},
+	"devDependencies": {
+		"typescript": "^5.9.3",
+		"vitest": "^4.0.17",
+		"@semio-tech/framework-playground-renderer-react": "workspace:*",
+		"@semio-tech/ui-react": "workspace:*"
+	},
+	"license": "LGPL-3.0-or-later",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/usalu/semio.git",
+		"directory": "gis/2d/core"
+	},
+	"bundleKind": "library"
+}

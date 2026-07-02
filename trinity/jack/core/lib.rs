@@ -1,10 +1,17 @@
 //! 🃏 Cypher-inspired query language for trinity graphs.
 
+pub mod queryable;
+
+pub use queryable::TrinityQueryableGraph;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 use trinity_ram::{
     apply_trinity_graph_ops, Edge, EntityRef, Graph, GraphFixture, Node, Port, PortDirection, PropertyBag, PropertyValue,
     TrinityGraphOp, port_key,
+};
+
+pub use mathematical_graph_dsl::{
+    Completion, Diagnostic, DiagnosticSeverity, Hover, SemanticToken,
 };
 
 // #region 🔖Ast
@@ -350,16 +357,6 @@ pub fn tokenize(input: &str) -> Vec<TokenSpan> {
 // #endregion 🔖Lexer
 
 // #region 🔖Language
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Completion {
-    pub label: String,
-    pub kind: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub detail: Option<String>,
-    pub insert: String,
-}
-
 const CLAUSE_KEYWORDS: &[&str] = &["MATCH", "WHERE", "RETURN", "CREATE", "DELETE", "SET", "MERGE"];
 const LOGIC_KEYWORDS: &[&str] = &["AND", "OR"];
 
@@ -514,125 +511,11 @@ fn filter_completions(candidates: impl IntoIterator<Item = (String, String, Opti
 
 /// 🔎 Context-aware jack completions for the editor.
 pub fn complete(graph: &Graph, source: &str, cursor: usize) -> Vec<Completion> {
-    let cursor = cursor.min(source.len());
-    let prefix = completion_prefix(source, cursor);
-    let tokens = lex_spanned(source, true).unwrap_or_default();
-    let before = tokens_before_cursor(&tokens, cursor);
-
-    if let Some(in_bracket) = after_colon_kind_context(source, cursor) {
-        let kinds = if in_bracket {
-            graph_edge_kinds(graph)
-                .into_iter()
-                .map(|name| (name, "edgeKind".into(), None))
-                .collect::<Vec<_>>()
-        } else {
-            graph_node_kinds(graph)
-                .into_iter()
-                .map(|name| (name, "nodeKind".into(), None))
-                .collect::<Vec<_>>()
-        };
-        return filter_completions(kinds, &prefix);
-    }
-
-    if after_dot_property_context(source, cursor) {
-        let props = graph_property_names(graph)
-            .into_iter()
-            .map(|name| (name, "property".into(), None))
-            .collect::<Vec<_>>();
-        return filter_completions(props, &prefix);
-    }
-
-    if let Some(last) = before.last() {
-        if matches!(last.token, Token::Colon) {
-            let kinds = if open_bracket_kind(before) == Some('[') {
-                graph_edge_kinds(graph)
-                    .into_iter()
-                    .map(|name| (name, "edgeKind".into(), None))
-                    .collect::<Vec<_>>()
-            } else {
-                graph_node_kinds(graph)
-                    .into_iter()
-                    .map(|name| (name, "nodeKind".into(), None))
-                    .collect::<Vec<_>>()
-            };
-            return filter_completions(kinds, &prefix);
-        }
-        if matches!(last.token, Token::Dot) {
-            let props = graph_property_names(graph)
-                .into_iter()
-                .map(|name| (name, "property".into(), None))
-                .collect::<Vec<_>>();
-            return filter_completions(props, &prefix);
-        }
-    }
-
-    if in_where_clause(before) {
-        let logic = filter_completions(
-            LOGIC_KEYWORDS
-                .iter()
-                .map(|kw| (kw.to_string(), "keyword".into(), None)),
-            &prefix,
-        );
-        if !logic.is_empty() {
-            return logic;
-        }
-    }
-
-    let vars = collect_bound_vars(before);
-    if !vars.is_empty() && prefix.chars().next().is_some_and(|c| c.is_ascii_alphabetic() || c == '_') {
-        let var_items = vars.into_iter().map(|name| (name, "variable".into(), None)).collect::<Vec<_>>();
-        let filtered = filter_completions(var_items, &prefix);
-        if !filtered.is_empty() {
-            return filtered;
-        }
-    }
-
-    filter_completions(
-        CLAUSE_KEYWORDS
-            .iter()
-            .map(|kw| (kw.to_string(), "keyword".into(), None)),
-        &prefix,
-    )
+    mathematical_graph_dsl::complete(&TrinityQueryableGraph(graph), source, cursor)
 }
 // #endregion 🔖Language
 
 // #region 🔖LanguageService
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum DiagnosticSeverity {
-    Error,
-    Warning,
-    Information,
-    Hint,
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Diagnostic {
-    pub start: usize,
-    pub end: usize,
-    pub severity: DiagnosticSeverity,
-    pub message: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub code: Option<String>,
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Hover {
-    pub start: usize,
-    pub end: usize,
-    pub contents: String,
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct SemanticToken {
-    pub start: usize,
-    pub end: usize,
-    pub class: String,
-}
-
 fn collect_pattern_vars(pattern: &Pattern, out: &mut BTreeSet<String>) {
     for node in &pattern.nodes {
         out.insert(node.var.clone());
@@ -798,34 +681,10 @@ fn find_ident_span(source: &str, ident: &str) -> Option<(usize, usize)> {
 
 /// 🩺 Lint jack source with syntax and semantic diagnostics.
 pub fn lint(graph: &Graph, source: &str) -> Vec<Diagnostic> {
-    let mut out = Vec::new();
-    for span in tokenize(source) {
-        if span.class == TokenClass::Error {
-            out.push(Diagnostic {
-                start: span.start,
-                end: span.end,
-                severity: DiagnosticSeverity::Error,
-                message: "unterminated string literal".into(),
-                code: Some("jack/unterminated-string".into()),
-            });
-        }
-    }
-    match parse(source) {
-        Ok(query) => out.extend(semantic_lints(graph, &query, source)),
-        Err(message) => {
-            let end = source.len().max(1);
-            out.push(Diagnostic {
-                start: 0,
-                end,
-                severity: DiagnosticSeverity::Error,
-                message,
-                code: Some("jack/parse-error".into()),
-            });
-        }
-    }
-    out
+    mathematical_graph_dsl::lint(&TrinityQueryableGraph(graph), source)
 }
 
+#[allow(dead_code)]
 fn format_token(tok: &Token) -> String {
     match tok {
         Token::KwMatch => "MATCH".into(),
@@ -863,55 +722,10 @@ fn format_token(tok: &Token) -> String {
 
 /// 🪞 Format jack source canonically (idempotent).
 pub fn format(source: &str) -> Result<String, String> {
-    let tokens = lex_spanned(source, false)?;
-    let mut out = String::new();
-    let mut line_open = false;
-    let mut i = 0;
-    while i < tokens.len() {
-        let row = &tokens[i];
-        if matches!(row.token, Token::Eof) {
-            break;
-        }
-        match &row.token {
-            Token::KwMatch | Token::KwWhere | Token::KwReturn | Token::KwCreate | Token::KwDelete | Token::KwSet | Token::KwMerge => {
-                if !out.is_empty() {
-                    out.push('\n');
-                }
-                out.push_str(&format_token(&row.token));
-                out.push(' ');
-                line_open = true;
-            }
-            Token::Comma => {
-                out.push_str(", ");
-            }
-            Token::Arrow => {
-                out.push_str("->");
-            }
-            Token::And | Token::Or => {
-                out.push(' ');
-                out.push_str(&format_token(&row.token));
-                out.push(' ');
-            }
-            Token::Eq | Token::Ne => {
-                out.push(' ');
-                out.push_str(&format_token(&row.token));
-                out.push(' ');
-            }
-            _ => {
-                if line_open && !out.ends_with(' ') && !out.ends_with('\n') && !matches!(row.token, Token::RParen | Token::RBracket | Token::Comma | Token::Dot) {
-                    let prev = tokens.get(i.saturating_sub(1)).map(|t| &t.token);
-                    if !matches!(prev, Some(Token::LParen | Token::LBracket | Token::Colon | Token::Dot | Token::Dash)) {
-                        out.push(' ');
-                    }
-                }
-                out.push_str(&format_token(&row.token));
-            }
-        }
-        i += 1;
-    }
-    Ok(out.trim().to_string())
+    mathematical_graph_dsl::format(source)
 }
 
+#[allow(dead_code)]
 fn hover_word_at(source: &str, cursor: usize) -> Option<(usize, usize, String)> {
     let cursor = cursor.min(source.len());
     if cursor > source.len() {
@@ -944,45 +758,12 @@ fn hover_word_at(source: &str, cursor: usize) -> Option<(usize, usize, String)> 
 
 /// 💬 Hover information at cursor.
 pub fn hover(graph: &Graph, source: &str, cursor: usize) -> Option<Hover> {
-    let (start, end, word) = hover_word_at(source, cursor)?;
-    let upper = word.to_ascii_uppercase();
-    if CLAUSE_KEYWORDS.iter().any(|kw| *kw == upper) || LOGIC_KEYWORDS.iter().any(|kw| *kw == upper) {
-        return Some(Hover { start, end, contents: format!("Jack keyword `{upper}`") });
-    }
-    if graph_node_kinds(graph).iter().any(|kind| kind == &word) {
-        return Some(Hover { start, end, contents: format!("Node kind `{word}`") });
-    }
-    if graph_edge_kinds(graph).iter().any(|kind| kind == &word) {
-        return Some(Hover { start, end, contents: format!("Edge kind `{word}`") });
-    }
-    if graph_property_names(graph).iter().any(|prop| prop == &word) {
-        return Some(Hover { start, end, contents: format!("Property `{word}`") });
-    }
-    if collect_bound_vars(&lex_spanned(source, true).unwrap_or_default()).contains(&word) {
-        return Some(Hover { start, end, contents: format!("Bound variable `{word}`") });
-    }
-    None
+    mathematical_graph_dsl::hover(&TrinityQueryableGraph(graph), source, cursor)
 }
 
 /// 🎨 Semantic token classes for LSP highlighting.
 pub fn semantic_tokens(source: &str) -> Vec<SemanticToken> {
-    tokenize(source)
-        .into_iter()
-        .map(|span| SemanticToken {
-            start: span.start,
-            end: span.end,
-            class: match span.class {
-                TokenClass::Keyword => "keyword",
-                TokenClass::Ident => "ident",
-                TokenClass::Number => "number",
-                TokenClass::String => "string",
-                TokenClass::Operator => "operator",
-                TokenClass::Punctuation => "punctuation",
-                TokenClass::Error => "error",
-            }
-            .into(),
-        })
-        .collect()
+    mathematical_graph_dsl::semantic_tokens(source)
 }
 // #endregion 🔖LanguageService
 

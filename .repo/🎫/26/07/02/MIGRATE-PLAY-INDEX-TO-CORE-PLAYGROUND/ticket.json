@@ -1,0 +1,15 @@
+{
+  "title": "Migrate Play Index To Core Playground",
+  "emoji": "🛝",
+  "status": "closed",
+  "description": "Migrate all domain play/index.ts files into core/playground.ts with PlaygroundAppDefinition exports and app-registry.ts",
+  "summary": "Deleted 23 migrated */play package directories after moving s/play extension files to s/core. Updated playground renderer and vite aliases to depend on *-core packages only.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1797"
+  },
+  "goal": "🎯framework🎯playground",
+  "sessions": [
+    "⚪ce93b5516ff445a38950190d5fc26ff3",
+    "⚪34824c8cb66e4cb19c50946c8570b209"
+  ]
+}
